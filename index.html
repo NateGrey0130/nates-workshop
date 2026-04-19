@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nate's Workshop</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0c10;
+  --bg-card: #12151c;
+  --border: #1e2230;
+  --text: #e8ecf4;
+  --text-sub: #8b92a8;
+  --text-muted: #5a6178;
+  --accent: #4f8eff;
+  --accent2: #7c5cfc;
+  --success: #34d399;
+  --warning: #fbbf24;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 24px;
+}
+.hero {
+  text-align: center;
+  margin-bottom: 56px;
+}
+.hero h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+.hero p {
+  color: var(--text-sub);
+  font-size: 16px;
+  font-weight: 400;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+  max-width: 960px;
+  width: 100%;
+}
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 32px 28px;
+  text-decoration: none;
+  color: var(--text);
+  transition: all 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(79,142,255,0.04), rgba(124,92,252,0.04));
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.card:hover {
+  border-color: var(--accent);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(79,142,255,0.12);
+}
+.card:hover::before { opacity: 1; }
+.card-icon {
+  font-size: 36px;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(79,142,255,0.08);
+  border-radius: 12px;
+}
+.card h2 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  position: relative;
+}
+.card p {
+  font-size: 14px;
+  color: var(--text-sub);
+  line-height: 1.6;
+  position: relative;
+}
+.card-tag {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(52,211,153,0.1);
+  color: var(--success);
+  position: relative;
+}
+.card-soon .card-tag {
+  background: rgba(251,191,36,0.1);
+  color: var(--warning);
+}
+.card-soon {
+  opacity: 0.5;
+  pointer-events: none;
+}
+footer {
+  margin-top: 80px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-family: 'JetBrains Mono', monospace;
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Nate's Workshop</h1>
+  <p>Tools, toys, and experiments — built with Claude.</p>
+</div>
+
+<div class="grid">
+
+  <a class="card" href="/apps/filament-forge/">
+    <div class="card-icon">🧵</div>
+    <h2>FilamentForge</h2>
+    <p>AI-powered 3D print settings engine. Pick your printer and filament, get optimized slicer settings in seconds.</p>
+    <span class="card-tag">live</span>
+  </a>
+
+  <!-- Add more apps here as you build them -->
+  <!--
+  <a class="card" href="/apps/keep-3/">
+    <div class="card-icon">🎮</div>
+    <h2>Keep 3, Cut 5</h2>
+    <p>The multiplayer party game. Pick your favorites, argue about the cuts.</p>
+    <span class="card-tag">live</span>
+  </a>
+  -->
+
+  <div class="card card-soon">
+    <div class="card-icon">🔧</div>
+    <h2>More Coming Soon</h2>
+    <p>Keep 3 Cut 5, Model Router, and more — stay tuned.</p>
+    <span class="card-tag">soon</span>
+  </div>
+
+</div>
+
+<footer>powered by vibes & claude</footer>
+
+</body>
+</html>

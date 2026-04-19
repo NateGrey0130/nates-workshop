@@ -1,0 +1,2581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FilamentForge — 3D Print Settings Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-primary: #0a0c10;
+  --bg-secondary: #12151c;
+  --bg-tertiary: #1a1e28;
+  --bg-card: #161a24;
+  --bg-input: #1e2230;
+  --border: #2a2f3e;
+  --border-focus: #4f8eff;
+  --text-primary: #e8ecf4;
+  --text-secondary: #8b92a8;
+  --text-muted: #5a6178;
+  --accent: #4f8eff;
+  --accent-glow: rgba(79, 142, 255, 0.15);
+  --accent-secondary: #7c5cfc;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --orange: #fb923c;
+  --tag-pla: #34d399;
+  --tag-petg: #60a5fa;
+  --tag-abs: #f87171;
+  --tag-tpu: #c084fc;
+  --tag-other: #fbbf24;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-lg: 14px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --transition: 0.2s ease;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ─── HEADER ─── */
+.header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.logo-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 400;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn:hover { border-color: var(--text-muted); background: var(--bg-input); }
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.btn-primary:hover { background: #3a7aee; }
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+.btn-icon {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── LAYOUT ─── */
+.app-layout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  min-height: calc(100vh - 65px);
+}
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow-y: auto;
+  max-height: calc(100vh - 65px);
+}
+
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.config-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.config-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.config-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.config-row:last-child { margin-bottom: 0; }
+
+.field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.field select,
+.field input {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color var(--transition);
+  width: 100%;
+}
+
+.field select:focus,
+.field input:focus { border-color: var(--accent); }
+
+.field select { cursor: pointer; appearance: none; padding-right: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238b92a8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+
+/* ─── SEARCH INPUT ─── */
+.search-wrap {
+  position: relative;
+}
+
+.search-wrap input {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  padding: 10px 12px 10px 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  outline: none;
+  width: 100%;
+  transition: border-color var(--transition);
+}
+
+.search-wrap input:focus { border-color: var(--accent); }
+
+.search-wrap .search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+/* ─── FILAMENT LIST ─── */
+.filament-list {
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  display: none;
+}
+
+.filament-list.active { display: block; }
+
+.filament-item {
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+
+.filament-item:last-child { border-bottom: none; }
+.filament-item:hover { background: var(--bg-tertiary); }
+
+.filament-item .fil-name { font-weight: 500; }
+
+.filament-item .fil-brand {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.material-tag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+}
+
+.material-tag.PLA { background: rgba(52, 211, 153, 0.15); color: var(--tag-pla); }
+.material-tag.PETG { background: rgba(96, 165, 250, 0.15); color: var(--tag-petg); }
+.material-tag.ABS { background: rgba(248, 113, 113, 0.15); color: var(--tag-abs); }
+.material-tag.TPU { background: rgba(192, 132, 252, 0.15); color: var(--tag-tpu); }
+.material-tag.other { background: rgba(251, 191, 36, 0.15); color: var(--tag-other); }
+
+/* ─── SELECTED FILAMENT ─── */
+.selected-filament {
+  background: var(--accent-glow);
+  border: 1px solid rgba(79, 142, 255, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.selected-filament.active { display: flex; }
+
+.selected-filament .sf-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.selected-filament .sf-name { font-weight: 600; font-size: 14px; }
+
+.selected-filament .sf-detail {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.sf-clear {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px;
+  line-height: 1;
+}
+
+.sf-clear:hover { color: var(--danger); }
+
+/* ─── TABS ─── */
+.tab-row {
+  display: flex;
+  gap: 0;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab-btn {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all var(--transition);
+}
+
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.tab-btn:hover { color: var(--text-secondary); }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ─── MANUAL ENTRY ─── */
+.manual-entry { display: flex; flex-direction: column; gap: 10px; }
+
+/* ─── PRINT INTENT ─── */
+.intent-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.intent-btn {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+  text-align: center;
+}
+
+.intent-btn:hover { border-color: var(--text-muted); color: var(--text-primary); }
+
+.intent-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+  color: var(--accent);
+}
+
+.intent-icon { font-size: 18px; display: block; margin-bottom: 4px; }
+
+/* ─── GENERATE BUTTON ─── */
+.generate-wrap {
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.btn-generate {
+  width: 100%;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: var(--radius);
+  border: none;
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  color: #fff;
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-generate:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(79,142,255,0.3); }
+.btn-generate:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.btn-generate.loading {
+  pointer-events: none;
+}
+
+/* ─── MAIN CONTENT ─── */
+.main-content {
+  padding: 24px 28px;
+  overflow-y: auto;
+  max-height: calc(100vh - 65px);
+}
+
+/* ─── EMPTY STATE ─── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+  gap: 16px;
+}
+
+.empty-icon {
+  font-size: 64px;
+  opacity: 0.3;
+}
+
+.empty-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.empty-sub {
+  font-size: 14px;
+  color: var(--text-muted);
+  max-width: 400px;
+  line-height: 1.6;
+}
+
+/* ─── SETTINGS OUTPUT ─── */
+.settings-output { display: none; }
+.settings-output.active { display: block; }
+
+.output-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.output-title {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.output-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.setting-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  transition: border-color var(--transition);
+}
+
+.setting-card:hover { border-color: var(--text-muted); }
+
+.setting-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.setting-card-icon { font-size: 16px; }
+
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(42, 47, 62, 0.5);
+}
+
+.setting-row:last-child { border-bottom: none; }
+
+.setting-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.setting-value {
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-primary);
+}
+
+/* ─── NOTES SECTION ─── */
+.notes-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-top: 16px;
+}
+
+.notes-card h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notes-card p, .notes-card li {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.notes-card ul { padding-left: 18px; }
+
+/* ─── FILAMENT SPECS BAR ─── */
+.specs-bar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.spec-chip {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.spec-chip .spec-label { color: var(--text-muted); }
+.spec-chip .spec-val { color: var(--text-primary); font-weight: 600; }
+
+/* ─── MODEL UPLOAD ─── */
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.upload-zone:hover { border-color: var(--accent); background: var(--accent-glow); }
+
+.upload-zone.has-file {
+  border-color: var(--success);
+  border-style: solid;
+  background: rgba(52, 211, 153, 0.05);
+}
+
+.upload-icon { font-size: 28px; margin-bottom: 6px; }
+.upload-text { font-size: 13px; color: var(--text-secondary); }
+.upload-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+.model-info {
+  display: none;
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-top: 8px;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-secondary);
+}
+
+.model-info.active { display: block; }
+
+/* ─── API KEY MODAL ─── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(6px);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.active { display: flex; }
+
+.modal {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  width: 440px;
+  max-width: 90vw;
+  box-shadow: var(--shadow);
+}
+
+.modal h2 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+.modal p { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.5; }
+
+.modal input {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  outline: none;
+  width: 100%;
+  margin-bottom: 14px;
+}
+
+.modal input:focus { border-color: var(--accent); }
+
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ─── LOADING SPINNER ─── */
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── STATUS BADGE ─── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.status-badge.connected { background: rgba(52,211,153,0.12); color: var(--success); }
+.status-badge.disconnected { background: rgba(248,113,113,0.12); color: var(--danger); }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 900px) {
+  .app-layout {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    max-height: none;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 16px;
+  }
+  .main-content {
+    max-height: none;
+    padding: 16px;
+  }
+  .header {
+    padding: 12px 16px;
+  }
+  .logo { font-size: 18px; }
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+  .output-header {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .specs-bar {
+    gap: 8px;
+  }
+  .spec-chip {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 500px) {
+  .header-left .logo-sub { display: none; }
+  .intent-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .intent-btn { padding: 8px; font-size: 11px; }
+  .config-row { flex-direction: column; }
+  .tab-row { overflow-x: auto; }
+  .tab-btn { white-space: nowrap; padding: 8px 10px; font-size: 11px; }
+  .main-tab { padding: 8px 12px; font-size: 12px; }
+  .field select, .field input { font-size: 16px; padding: 10px; } /* prevent iOS zoom */
+  .btn-generate { padding: 16px; font-size: 16px; }
+  .modal { padding: 20px; }
+  .modal input { font-size: 16px; }
+}
+
+/* ─── SIDEBAR COLLAPSE ON MOBILE ─── */
+.sidebar-toggle {
+  display: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  margin-bottom: 12px;
+  transition: all var(--transition);
+}
+
+.sidebar-toggle:hover { border-color: var(--text-muted); }
+
+@media (max-width: 900px) {
+  .sidebar-toggle { display: block; }
+  .sidebar-collapsible { display: none; }
+  .sidebar-collapsible.expanded { display: flex; flex-direction: column; gap: 18px; }
+  .sidebar .generate-wrap { display: block; } /* always show generate */
+}
+
+/* ─── OFD LOADING ─── */
+.ofd-status {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ofd-status .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.ofd-status .dot.loaded { background: var(--success); }
+.ofd-status .dot.error { background: var(--danger); }
+.ofd-status .dot.loading { background: var(--warning); animation: pulse 1s ease-in-out infinite; }
+
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+/* ─── RAW RESPONSE TOGGLE ─── */
+.raw-response {
+  display: none;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.raw-response.active { display: block; }
+
+/* ─── HISTORY & PRESETS ─── */
+.history-panel {
+  margin-top: 20px;
+}
+
+.history-panel h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.history-item:hover { border-color: var(--text-muted); }
+
+.history-item .hi-info { flex: 1; min-width: 0; }
+
+.history-item .hi-title {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-item .hi-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: 2px;
+}
+
+.history-item .hi-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.hi-action-btn {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  padding: 3px 7px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.hi-action-btn:hover { border-color: var(--text-muted); color: var(--text-primary); }
+.hi-action-btn.delete:hover { border-color: var(--danger); color: var(--danger); }
+
+.saved-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 5px;
+  border-radius: 3px;
+  background: rgba(79, 142, 255, 0.15);
+  color: var(--accent);
+  margin-left: 6px;
+}
+
+/* ─── CUSTOM FILAMENTS SECTION ─── */
+.custom-filaments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.custom-fil-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+}
+
+.custom-fil-item .cfi-name { font-weight: 500; }
+.custom-fil-item .cfi-mat { color: var(--text-muted); font-size: 11px; }
+
+.custom-fil-delete {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px;
+}
+
+.custom-fil-delete:hover { color: var(--danger); }
+
+/* ─── TAB NAV FOR MAIN CONTENT ─── */
+.main-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.main-tab {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all var(--transition);
+}
+
+.main-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.main-tab:hover { color: var(--text-secondary); }
+
+.main-tab-content { display: none; }
+.main-tab-content.active { display: block; }
+
+.empty-history {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* ─── ONBOARDING ─── */
+.onboarding-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(8px);
+  z-index: 300;
+  align-items: center;
+  justify-content: center;
+}
+
+.onboarding-overlay.active { display: flex; }
+
+.onboarding {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  width: 520px;
+  max-width: 92vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.5);
+}
+
+.onboarding .ob-logo {
+  font-size: 28px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 4px;
+}
+
+.onboarding .ob-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.ob-step {
+  display: flex;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.ob-step:last-of-type { border-bottom: none; }
+
+.ob-step-num {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent-glow);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ob-step-content h4 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.ob-step-content p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.ob-step-content code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--bg-input);
+  color: var(--accent);
+}
+
+.ob-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ob-skip {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+}
+
+.ob-skip:hover { color: var(--text-secondary); }
+
+/* ─── EXPORT MODAL ─── */
+.export-textarea {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  width: 100%;
+  height: 280px;
+  resize: vertical;
+  outline: none;
+  line-height: 1.6;
+}
+
+.export-textarea:focus { border-color: var(--accent); }
+
+/* ─── POWERED BY BADGE ─── */
+.powered-by {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 8px;
+  border-top: 1px solid var(--border);
+  margin-top: 12px;
+}
+
+.powered-by a {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.powered-by a:hover { color: var(--accent); }
+
+/* ─── LOADING OVERLAY ─── */
+.generating-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 12, 16, 0.85);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  border-radius: var(--radius);
+}
+
+.generating-overlay.active { display: flex; }
+
+.generating-overlay .spinner {
+  width: 32px;
+  height: 32px;
+  border-width: 3px;
+  margin: 0;
+}
+
+.generating-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.generating-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+</style>
+</head>
+<body>
+
+<!-- ─── HEADER ─── -->
+<header class="header">
+  <div class="header-left">
+    <div>
+      <div class="logo">FilamentForge</div>
+      <div class="logo-sub">3D Print Settings Engine</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="ofd-status" id="ofdStatus">
+      <span class="dot loading" id="ofdDot"></span>
+      <span id="ofdText">Loading OFD...</span>
+    </div>
+    <button class="btn btn-sm" onclick="openApiModal()">⚙ API Key</button>
+  </div>
+</header>
+
+<!-- ─── MAIN LAYOUT ─── -->
+<div class="app-layout">
+
+  <!-- ─── SIDEBAR ─── -->
+  <aside class="sidebar">
+
+    <button class="sidebar-toggle" onclick="toggleSidebar()" id="sidebarToggle">
+      ▼ Configure Settings
+    </button>
+    <div class="sidebar-collapsible expanded" id="sidebarContent">
+
+    <!-- PRINTER CONFIG -->
+    <div class="config-card">
+      <div class="config-card-title">🖨️ Printer</div>
+      <div class="config-row">
+        <div class="field">
+          <label>Model</label>
+          <select id="printerModel">
+            <option value="bambu-p2s">Bambu Lab P2S</option>
+            <option value="bambu-p1s">Bambu Lab P1S</option>
+            <option value="bambu-p1p">Bambu Lab P1P</option>
+            <option value="bambu-x1c">Bambu Lab X1C</option>
+            <option value="bambu-a1">Bambu Lab A1</option>
+            <option value="bambu-a1-mini">Bambu Lab A1 Mini</option>
+          </select>
+        </div>
+      </div>
+      <div class="config-row">
+        <div class="field">
+          <label>Nozzle Size</label>
+          <select id="nozzleSize">
+            <option value="0.2">0.2mm</option>
+            <option value="0.4" selected>0.4mm</option>
+            <option value="0.6">0.6mm</option>
+            <option value="0.8">0.8mm</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>AMS</label>
+          <select id="hasAms">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- FILAMENT SELECTION -->
+    <div class="config-card">
+      <div class="config-card-title">🧵 Filament</div>
+
+      <div class="tab-row">
+        <button class="tab-btn active" data-tab="search" onclick="switchTab('search')">OFD Database</button>
+        <button class="tab-btn" data-tab="custom" onclick="switchTab('custom')">My Filaments</button>
+        <button class="tab-btn" data-tab="manual" onclick="switchTab('manual')">Manual</button>
+      </div>
+
+      <!-- OFD Search Tab -->
+      <div class="tab-content active" id="tab-search">
+        <div class="field" style="margin-bottom:10px">
+          <label>Brand</label>
+          <select id="ofdBrandSelect" onchange="onBrandChange()">
+            <option value="">Loading brands...</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Filament</label>
+          <select id="ofdFilamentSelect" onchange="onFilamentChange()" disabled>
+            <option value="">Select a brand first</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- My Filaments Tab -->
+      <div class="tab-content" id="tab-custom">
+        <div id="customFilamentsPanel">
+          <div class="empty-history" id="noCustomFilaments" style="padding:16px;font-size:12px">
+            No saved filaments yet. Use the Manual tab to add and save filaments.
+          </div>
+          <div class="custom-filaments-list" id="customFilamentSelectList"></div>
+        </div>
+      </div>
+
+      <!-- Manual Entry Tab -->
+      <div class="tab-content" id="tab-manual">
+        <div class="manual-entry">
+          <div class="field">
+            <label>Brand</label>
+            <input type="text" id="manualBrand" placeholder="e.g. Sunlu">
+          </div>
+          <div class="field">
+            <label>Filament Name</label>
+            <input type="text" id="manualName" placeholder="e.g. Silk PLA">
+          </div>
+          <div class="config-row">
+            <div class="field">
+              <label>Material Type</label>
+              <select id="manualMaterial">
+                <option value="PLA">PLA</option>
+                <option value="PETG">PETG</option>
+                <option value="ABS">ABS</option>
+                <option value="ASA">ASA</option>
+                <option value="TPU">TPU</option>
+                <option value="PA">Nylon (PA)</option>
+                <option value="PC">Polycarbonate</option>
+                <option value="PVA">PVA</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="config-row">
+            <div class="field">
+              <label>Nozzle Temp Min (°C)</label>
+              <input type="number" id="manualTempMin" placeholder="190">
+            </div>
+            <div class="field">
+              <label>Nozzle Temp Max (°C)</label>
+              <input type="number" id="manualTempMax" placeholder="230">
+            </div>
+          </div>
+          <div class="config-row">
+            <div class="field">
+              <label>Bed Temp Min (°C)</label>
+              <input type="number" id="manualBedMin" placeholder="50">
+            </div>
+            <div class="field">
+              <label>Bed Temp Max (°C)</label>
+              <input type="number" id="manualBedMax" placeholder="70">
+            </div>
+          </div>
+          <button class="btn btn-sm" style="align-self:flex-start" onclick="useManualFilament()">Use This Filament</button>
+          <button class="btn btn-sm" style="align-self:flex-start" onclick="saveCustomFilament()">💾 Save to My Filaments</button>
+        </div>
+        <div class="custom-filaments-list" id="customFilamentsList"></div>
+      </div>
+
+      <!-- Selected Filament Display -->
+      <div class="selected-filament" id="selectedFilament">
+        <div class="sf-info">
+          <span class="sf-name" id="sfName"></span>
+          <span class="sf-detail" id="sfDetail"></span>
+        </div>
+        <button class="sf-clear" onclick="clearFilament()">✕</button>
+      </div>
+    </div>
+
+    <!-- MODEL UPLOAD -->
+    <div class="config-card">
+      <div class="config-card-title">📐 Model (Optional)</div>
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon">📁</div>
+        <div class="upload-text">Drop 3MF or STL file here</div>
+        <div class="upload-hint">or click to browse</div>
+      </div>
+      <input type="file" id="fileInput" accept=".3mf,.stl" style="display:none" onchange="handleFileUpload(event)">
+      <div class="model-info" id="modelInfo"></div>
+    </div>
+
+    <!-- PRINT INTENT -->
+    <div class="config-card">
+      <div class="config-card-title">🎯 Print Intent</div>
+      <div class="intent-grid">
+        <button class="intent-btn active" data-intent="quality" onclick="setIntent(this)">
+          <span class="intent-icon">✨</span>Quality
+        </button>
+        <button class="intent-btn" data-intent="balanced" onclick="setIntent(this)">
+          <span class="intent-icon">⚖️</span>Balanced
+        </button>
+        <button class="intent-btn" data-intent="speed" onclick="setIntent(this)">
+          <span class="intent-icon">⚡</span>Speed
+        </button>
+        <button class="intent-btn" data-intent="prototype" onclick="setIntent(this)">
+          <span class="intent-icon">🧪</span>Prototype
+        </button>
+      </div>
+    </div>
+
+    </div><!-- end sidebar-collapsible -->
+
+    <!-- GENERATE -->
+    <div class="generate-wrap">
+      <button class="btn-generate" id="btnGenerate" onclick="generateSettings()">
+        Generate Settings
+      </button>
+    </div>
+
+    <div class="powered-by">
+      Filament data by <a href="https://github.com/OpenFilamentCollective/open-filament-database" target="_blank">Open Filament Database</a> · AI by <a href="https://anthropic.com" target="_blank">Anthropic</a>
+    </div>
+
+  </aside>
+
+  <!-- ─── MAIN CONTENT ─── -->
+  <main class="main-content">
+
+    <div class="main-tabs">
+      <button class="main-tab active" data-mtab="results" onclick="switchMainTab('results')">⚙️ Results</button>
+      <button class="main-tab" data-mtab="history" onclick="switchMainTab('history')">📋 History <span id="historyCount" style="font-size:11px;color:var(--text-muted)"></span></button>
+    </div>
+
+    <!-- RESULTS TAB -->
+    <div class="main-tab-content active" id="mtab-results">
+
+      <!-- EMPTY STATE -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">⚙️</div>
+        <div class="empty-title">Configure & Generate</div>
+        <div class="empty-sub">
+          Select your printer, pick a filament from the Open Filament Database (or enter one manually), optionally upload a model file, and hit Generate.
+        </div>
+      </div>
+
+      <!-- SETTINGS OUTPUT -->
+      <div class="settings-output" id="settingsOutput">
+        <div class="output-header">
+          <div>
+            <div class="output-title" id="outputTitle">Print Settings</div>
+            <div class="output-meta" id="outputMeta"></div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-sm" onclick="savePreset()" id="btnSavePreset">⭐ Save</button>
+            <button class="btn btn-sm" onclick="exportSettings()">📤 Export</button>
+            <button class="btn btn-sm" onclick="copySettings()">📋 Copy</button>
+            <button class="btn btn-sm" onclick="toggleRaw()">{ } Raw</button>
+          </div>
+        </div>
+
+        <div class="specs-bar" id="specsBar"></div>
+        <div class="settings-grid" id="settingsGrid"></div>
+        <div class="notes-card" id="notesCard" style="display:none"></div>
+        <div class="raw-response" id="rawResponse"></div>
+      </div>
+
+    </div>
+
+    <!-- HISTORY & PRESETS TAB -->
+    <div class="main-tab-content" id="mtab-history">
+
+      <!-- SAVED PRESETS -->
+      <div class="history-panel">
+        <h3>⭐ Saved Presets <button class="btn btn-sm" onclick="clearAllPresets()" style="font-size:11px">Clear All</button></h3>
+        <div class="history-list" id="presetsList">
+          <div class="empty-history">No saved presets yet. Generate settings and click ⭐ Save.</div>
+        </div>
+      </div>
+
+      <!-- HISTORY -->
+      <div class="history-panel" style="margin-top:28px">
+        <h3>🕐 Recent History <button class="btn btn-sm" onclick="clearAllHistory()" style="font-size:11px">Clear All</button></h3>
+        <div class="history-list" id="historyList">
+          <div class="empty-history">No history yet. Generate some settings to see them here.</div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<!-- ─── API KEY MODAL ─── -->
+<div class="modal-overlay" id="apiModal">
+  <div class="modal">
+    <h2>Anthropic API Key</h2>
+    <p>Your key is stored locally in your browser and never sent anywhere except directly to the Anthropic API.</p>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-...">
+    <div class="modal-actions">
+      <button class="btn" onclick="closeApiModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveApiKey()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── ONBOARDING MODAL ─── -->
+<div class="onboarding-overlay" id="onboardingModal">
+  <div class="onboarding">
+    <div class="ob-logo">FilamentForge</div>
+    <div class="ob-sub">Your AI-powered 3D print settings engine</div>
+
+    <div class="ob-step">
+      <div class="ob-step-num">1</div>
+      <div class="ob-step-content">
+        <h4>Add Your API Key</h4>
+        <p>FilamentForge uses Claude AI to generate optimized settings. You'll need an Anthropic API key — get one at <code>console.anthropic.com</code>. It's stored locally in your browser only.</p>
+      </div>
+    </div>
+
+    <div class="ob-step">
+      <div class="ob-step-num">2</div>
+      <div class="ob-step-content">
+        <h4>Select Printer & Filament</h4>
+        <p>Pick your Bambu Lab printer model and nozzle size. Then choose a filament from the Open Filament Database (1,900+ entries) or add your own custom filaments.</p>
+      </div>
+    </div>
+
+    <div class="ob-step">
+      <div class="ob-step-num">3</div>
+      <div class="ob-step-content">
+        <h4>Upload a Model (Optional)</h4>
+        <p>Drop in a <code>.3mf</code> or <code>.stl</code> file and FilamentForge will analyze the geometry to give model-specific recommendations — support placement, wall count, infill, etc.</p>
+      </div>
+    </div>
+
+    <div class="ob-step">
+      <div class="ob-step-num">4</div>
+      <div class="ob-step-content">
+        <h4>Generate & Save</h4>
+        <p>Hit Generate to get a complete settings card. Save presets for your favorite combos, build up a library of custom filaments, and reference your full history anytime.</p>
+      </div>
+    </div>
+
+    <div class="ob-actions">
+      <button class="ob-skip" onclick="closeOnboarding()">Skip</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="closeOnboarding(); openApiModal();">Set API Key & Start</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── EXPORT MODAL ─── -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal" style="width:520px">
+    <h2>Export Settings</h2>
+    <p>Copy this text and share it, or save it for reference.</p>
+    <textarea class="export-textarea" id="exportText" readonly></textarea>
+    <div class="modal-actions" style="margin-top:12px">
+      <button class="btn" onclick="closeExportModal()">Close</button>
+      <button class="btn btn-primary" onclick="copyExport()">📋 Copy to Clipboard</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ───
+let ofdBrands = [];
+let ofdFilaments = [];
+let selectedFilament = null;
+let currentIntent = 'quality';
+let modelData = null;
+let apiKey = localStorage.getItem('ff_api_key') || '';
+
+// ─── PRINTER SPECS DATABASE ───
+const PRINTER_SPECS = {
+  'bambu-p2s': { name: 'Bambu Lab P2S', maxSpeed: 500, maxAccel: 20000, maxVolFlow: 32, hasChamber: false, bedType: 'textured PEI' },
+  'bambu-p1s': { name: 'Bambu Lab P1S', maxSpeed: 500, maxAccel: 20000, maxVolFlow: 32, hasChamber: true, bedType: 'textured PEI' },
+  'bambu-p1p': { name: 'Bambu Lab P1P', maxSpeed: 500, maxAccel: 20000, maxVolFlow: 32, hasChamber: false, bedType: 'cool plate' },
+  'bambu-x1c': { name: 'Bambu Lab X1C', maxSpeed: 500, maxAccel: 20000, maxVolFlow: 32, hasChamber: true, bedType: 'textured PEI' },
+  'bambu-a1': { name: 'Bambu Lab A1', maxSpeed: 500, maxAccel: 10000, maxVolFlow: 28, hasChamber: false, bedType: 'textured PEI' },
+  'bambu-a1-mini': { name: 'Bambu Lab A1 Mini', maxSpeed: 500, maxAccel: 10000, maxVolFlow: 28, hasChamber: false, bedType: 'textured PEI' },
+};
+
+// ─── INIT ───
+document.addEventListener('DOMContentLoaded', () => {
+  loadOFD();
+  loadSavedConfig();
+
+  // Drag and drop
+  const uz = document.getElementById('uploadZone');
+  uz.addEventListener('dragover', e => { e.preventDefault(); uz.style.borderColor = 'var(--accent)'; });
+  uz.addEventListener('dragleave', () => { uz.style.borderColor = ''; });
+  uz.addEventListener('drop', e => {
+    e.preventDefault();
+    uz.style.borderColor = '';
+    if (e.dataTransfer.files.length) {
+      document.getElementById('fileInput').files = e.dataTransfer.files;
+      handleFileUpload({ target: { files: e.dataTransfer.files }});
+    }
+  });
+});
+
+// ─── OFD LOADING ───
+async function loadOFD() {
+  const dot = document.getElementById('ofdDot');
+  const txt = document.getElementById('ofdText');
+  try {
+    const [brandsRes, filamentsRes] = await Promise.all([
+      fetch('https://api.openfilamentdatabase.org/csv/brands.csv'),
+      fetch('https://api.openfilamentdatabase.org/csv/filaments.csv')
+    ]);
+
+    if (!brandsRes.ok || !filamentsRes.ok) throw new Error('Failed to fetch OFD data');
+
+    const brandsCSV = await brandsRes.text();
+    const filamentsCSV = await filamentsRes.text();
+
+    ofdBrands = parseCSV(brandsCSV);
+    ofdFilaments = parseCSV(filamentsCSV);
+
+    // Build brand lookup
+    const brandMap = {};
+    ofdBrands.forEach(b => { brandMap[b.id] = b.name; });
+
+    // Enrich filaments with brand name
+    ofdFilaments.forEach(f => {
+      f._brandName = brandMap[f.brand_id] || 'Unknown';
+    });
+
+    dot.className = 'dot loaded';
+    txt.textContent = `${ofdFilaments.length} filaments loaded`;
+    populateBrandDropdown();
+  } catch (err) {
+    console.error('OFD load error:', err);
+    dot.className = 'dot error';
+    txt.textContent = 'OFD unavailable — use manual entry';
+  }
+}
+
+function parseCSV(text) {
+  const lines = text.split('\n').filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const headers = parseCSVLine(lines[0]);
+  const results = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = parseCSVLine(lines[i]);
+    if (vals.length < headers.length - 2) continue; // skip garbage lines
+    const obj = {};
+    headers.forEach((h, idx) => { obj[h] = vals[idx] || ''; });
+    results.push(obj);
+  }
+  return results;
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') {
+      if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (c === ',' && !inQuotes) {
+      result.push(current);
+      current = '';
+    } else {
+      current += c;
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+// ─── SEARCH ───
+// (replaced by cascading dropdowns)
+
+function populateBrandDropdown() {
+  const sel = document.getElementById('ofdBrandSelect');
+  // Sort brands alphabetically, filter to those with filaments
+  const brandsWithFilaments = ofdBrands
+    .filter(b => ofdFilaments.some(f => f.brand_id === b.id))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  sel.innerHTML = '<option value="">— Select Brand —</option>';
+  brandsWithFilaments.forEach(b => {
+    const count = ofdFilaments.filter(f => f.brand_id === b.id).length;
+    const opt = document.createElement('option');
+    opt.value = b.id;
+    opt.textContent = `${b.name} (${count})`;
+    sel.appendChild(opt);
+  });
+}
+
+function onBrandChange() {
+  const brandId = document.getElementById('ofdBrandSelect').value;
+  const filSel = document.getElementById('ofdFilamentSelect');
+
+  if (!brandId) {
+    filSel.innerHTML = '<option value="">Select a brand first</option>';
+    filSel.disabled = true;
+    clearFilament();
+    return;
+  }
+
+  // Get filaments for this brand, sorted by material then name
+  const brandFilaments = ofdFilaments
+    .filter(f => f.brand_id === brandId)
+    .sort((a, b) => {
+      if (a.material !== b.material) return a.material.localeCompare(b.material);
+      return a.name.localeCompare(b.name);
+    });
+
+  filSel.innerHTML = '<option value="">— Select Filament —</option>';
+
+  // Group by material type for cleaner display
+  const grouped = {};
+  brandFilaments.forEach(f => {
+    const mat = f.material || 'Other';
+    if (!grouped[mat]) grouped[mat] = [];
+    grouped[mat].push(f);
+  });
+
+  Object.keys(grouped).sort().forEach(mat => {
+    const optgroup = document.createElement('optgroup');
+    optgroup.label = mat;
+    grouped[mat].forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f.id;
+      const temps = (f.min_print_temperature && f.max_print_temperature)
+        ? ` — ${f.min_print_temperature}–${f.max_print_temperature}°C`
+        : '';
+      opt.textContent = `${f.name}${temps}`;
+      optgroup.appendChild(opt);
+    });
+    filSel.appendChild(optgroup);
+  });
+
+  filSel.disabled = false;
+  clearFilament();
+}
+
+function onFilamentChange() {
+  const filId = document.getElementById('ofdFilamentSelect').value;
+  if (!filId) {
+    clearFilament();
+    return;
+  }
+  const f = ofdFilaments.find(x => x.id === filId);
+  if (f) selectOFDFilament(f);
+}
+
+function selectOFDFilament(f) {
+  selectedFilament = {
+    source: 'ofd',
+    brand: f._brandName,
+    name: f.name,
+    material: f.material,
+    density: f.density,
+    diameter_tolerance: f.diameter_tolerance,
+    min_print_temp: f.min_print_temperature,
+    max_print_temp: f.max_print_temperature,
+    min_bed_temp: f.min_bed_temperature,
+    max_bed_temp: f.max_bed_temperature,
+    max_dry_temp: f.max_dry_temperature,
+    slicer_settings: f.slicer_settings,
+  };
+  showSelectedFilament();
+}
+
+function useManualFilament() {
+  const brand = document.getElementById('manualBrand').value.trim();
+  const name = document.getElementById('manualName').value.trim();
+  const material = document.getElementById('manualMaterial').value;
+  if (!brand && !name) return;
+  selectedFilament = {
+    source: 'manual',
+    brand: brand || 'Unknown',
+    name: name || material,
+    material,
+    min_print_temp: document.getElementById('manualTempMin').value || '',
+    max_print_temp: document.getElementById('manualTempMax').value || '',
+    min_bed_temp: document.getElementById('manualBedMin').value || '',
+    max_bed_temp: document.getElementById('manualBedMax').value || '',
+  };
+  showSelectedFilament();
+}
+
+function showSelectedFilament() {
+  const el = document.getElementById('selectedFilament');
+  document.getElementById('sfName').textContent = `${selectedFilament.brand} ${selectedFilament.name}`;
+  const temps = [];
+  if (selectedFilament.min_print_temp && selectedFilament.max_print_temp) {
+    temps.push(`nozzle: ${selectedFilament.min_print_temp}–${selectedFilament.max_print_temp}°C`);
+  }
+  if (selectedFilament.min_bed_temp && selectedFilament.max_bed_temp) {
+    temps.push(`bed: ${selectedFilament.min_bed_temp}–${selectedFilament.max_bed_temp}°C`);
+  }
+  document.getElementById('sfDetail').textContent = `${selectedFilament.material} · ${temps.join(' · ') || 'no temp data'}`;
+  el.classList.add('active');
+}
+
+function clearFilament() {
+  selectedFilament = null;
+  document.getElementById('selectedFilament').classList.remove('active');
+}
+
+// ─── TABS ───
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === `tab-${tab}`));
+}
+
+// ─── INTENT ───
+function setIntent(btn) {
+  document.querySelectorAll('.intent-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentIntent = btn.dataset.intent;
+}
+
+// ─── FILE UPLOAD (3MF / STL) ───
+async function handleFileUpload(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  const zone = document.getElementById('uploadZone');
+  const info = document.getElementById('modelInfo');
+
+  zone.classList.add('has-file');
+  zone.innerHTML = `<div class="upload-icon">✅</div><div class="upload-text">${file.name}</div><div class="upload-hint">${(file.size / 1024).toFixed(0)} KB — click to change</div>`;
+
+  try {
+    if (file.name.toLowerCase().endsWith('.3mf')) {
+      modelData = await parse3MF(file);
+    } else if (file.name.toLowerCase().endsWith('.stl')) {
+      modelData = await parseSTL(file);
+    }
+
+    if (modelData) {
+      info.classList.add('active');
+      info.innerHTML = `
+        <strong>${modelData.filename}</strong><br>
+        Dimensions: ${modelData.width.toFixed(1)} × ${modelData.depth.toFixed(1)} × ${modelData.height.toFixed(1)} mm<br>
+        Triangles: ${modelData.triangles.toLocaleString()}<br>
+        Volume est: ~${modelData.volumeEst ? modelData.volumeEst.toFixed(1) + ' cm³' : 'N/A'}
+      `;
+    }
+  } catch (err) {
+    console.error('File parse error:', err);
+    info.classList.add('active');
+    info.innerHTML = `⚠️ Could not parse geometry — file will still be mentioned in settings context.`;
+    modelData = { filename: file.name, error: true };
+  }
+}
+
+async function parse3MF(file) {
+  const JSZip = await loadJSZip();
+  const zip = await JSZip.loadAsync(file);
+  const modelFile = zip.file(/3D\/3dmodel\.model/i)?.[0] || zip.file(/\.model$/i)?.[0];
+  if (!modelFile) throw new Error('No model file found in 3MF');
+
+  const xml = await modelFile.async('text');
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xml, 'application/xml');
+
+  // Namespace handling
+  const ns = doc.documentElement.namespaceURI || '';
+  const vertices = doc.querySelectorAll('vertex') || [];
+  const triangles = doc.querySelectorAll('triangle') || [];
+
+  let xs = [], ys = [], zs = [];
+  vertices.forEach(v => {
+    xs.push(parseFloat(v.getAttribute('x')));
+    ys.push(parseFloat(v.getAttribute('y')));
+    zs.push(parseFloat(v.getAttribute('z')));
+  });
+
+  const width = Math.max(...xs) - Math.min(...xs);
+  const depth = Math.max(...ys) - Math.min(...ys);
+  const height = Math.max(...zs) - Math.min(...zs);
+
+  return {
+    filename: file.name,
+    format: '3MF',
+    width, depth, height,
+    triangles: triangles.length,
+    vertices: vertices.length,
+    volumeEst: (width * depth * height) / 1000, // rough bounding box vol in cm³
+  };
+}
+
+async function parseSTL(file) {
+  const buffer = await file.arrayBuffer();
+  const view = new DataView(buffer);
+
+  // Check if binary STL (80 byte header + 4 byte triangle count)
+  if (buffer.byteLength > 84) {
+    const triCount = view.getUint32(80, true);
+    const expectedSize = 80 + 4 + triCount * 50;
+
+    if (Math.abs(expectedSize - buffer.byteLength) < 100) {
+      // Binary STL
+      let xs = [], ys = [], zs = [];
+      for (let i = 0; i < triCount; i++) {
+        const offset = 84 + i * 50 + 12; // skip normal (12 bytes)
+        for (let v = 0; v < 3; v++) {
+          const voff = offset + v * 12;
+          xs.push(view.getFloat32(voff, true));
+          ys.push(view.getFloat32(voff + 4, true));
+          zs.push(view.getFloat32(voff + 8, true));
+        }
+      }
+      const width = Math.max(...xs) - Math.min(...xs);
+      const depth = Math.max(...ys) - Math.min(...ys);
+      const height = Math.max(...zs) - Math.min(...zs);
+      return {
+        filename: file.name,
+        format: 'STL (binary)',
+        width, depth, height,
+        triangles: triCount,
+        vertices: triCount * 3,
+        volumeEst: (width * depth * height) / 1000,
+      };
+    }
+  }
+
+  // ASCII STL fallback
+  const text = new TextDecoder().decode(buffer);
+  const vertexMatches = [...text.matchAll(/vertex\s+([\d.eE+-]+)\s+([\d.eE+-]+)\s+([\d.eE+-]+)/gi)];
+  let xs = [], ys = [], zs = [];
+  vertexMatches.forEach(m => {
+    xs.push(parseFloat(m[1]));
+    ys.push(parseFloat(m[2]));
+    zs.push(parseFloat(m[3]));
+  });
+
+  const width = xs.length ? Math.max(...xs) - Math.min(...xs) : 0;
+  const depth = ys.length ? Math.max(...ys) - Math.min(...ys) : 0;
+  const height = zs.length ? Math.max(...zs) - Math.min(...zs) : 0;
+
+  return {
+    filename: file.name,
+    format: 'STL (ASCII)',
+    width, depth, height,
+    triangles: Math.floor(vertexMatches.length / 3),
+    vertices: vertexMatches.length,
+    volumeEst: (width * depth * height) / 1000,
+  };
+}
+
+let jsZipLoaded = null;
+async function loadJSZip() {
+  if (jsZipLoaded) return jsZipLoaded;
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+    s.onload = () => { jsZipLoaded = window.JSZip; resolve(window.JSZip); };
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+// ─── API KEY ───
+function openApiModal() {
+  document.getElementById('apiKeyInput').value = apiKey;
+  document.getElementById('apiModal').classList.add('active');
+}
+
+function closeApiModal() {
+  document.getElementById('apiModal').classList.remove('active');
+}
+
+function saveApiKey() {
+  apiKey = document.getElementById('apiKeyInput').value.trim();
+  localStorage.setItem('ff_api_key', apiKey);
+  closeApiModal();
+}
+
+// ─── SAVE/LOAD CONFIG ───
+function loadSavedConfig() {
+  const saved = localStorage.getItem('ff_config');
+  if (saved) {
+    try {
+      const cfg = JSON.parse(saved);
+      if (cfg.printer) document.getElementById('printerModel').value = cfg.printer;
+      if (cfg.nozzle) document.getElementById('nozzleSize').value = cfg.nozzle;
+      if (cfg.ams) document.getElementById('hasAms').value = cfg.ams;
+    } catch(e) {}
+  }
+}
+
+function saveConfig() {
+  const cfg = {
+    printer: document.getElementById('printerModel').value,
+    nozzle: document.getElementById('nozzleSize').value,
+    ams: document.getElementById('hasAms').value,
+  };
+  localStorage.setItem('ff_config', JSON.stringify(cfg));
+}
+
+// Save config on change
+['printerModel', 'nozzleSize', 'hasAms'].forEach(id => {
+  document.getElementById(id).addEventListener('change', saveConfig);
+});
+
+// ─── GENERATE SETTINGS ───
+async function generateSettings() {
+  if (!selectedFilament) {
+    alert('Please select a filament first.');
+    return;
+  }
+
+  if (!apiKey) {
+    openApiModal();
+    return;
+  }
+
+  const btn = document.getElementById('btnGenerate');
+  btn.innerHTML = '<span class="spinner"></span> Generating...';
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  const printer = document.getElementById('printerModel').value;
+  const nozzle = document.getElementById('nozzleSize').value;
+  const ams = document.getElementById('hasAms').value;
+  const printerSpec = PRINTER_SPECS[printer];
+
+  // Build prompt
+  let filamentCtx = `Brand: ${selectedFilament.brand}
+Filament: ${selectedFilament.name}
+Material: ${selectedFilament.material}`;
+
+  if (selectedFilament.min_print_temp) filamentCtx += `\nManufacturer nozzle temp range: ${selectedFilament.min_print_temp}–${selectedFilament.max_print_temp}°C`;
+  if (selectedFilament.min_bed_temp) filamentCtx += `\nManufacturer bed temp range: ${selectedFilament.min_bed_temp}–${selectedFilament.max_bed_temp}°C`;
+  if (selectedFilament.density) filamentCtx += `\nDensity: ${selectedFilament.density} g/cm³`;
+  if (selectedFilament.source === 'ofd') filamentCtx += `\nSource: Open Filament Database (verified community data)`;
+
+  let modelCtx = '';
+  if (modelData && !modelData.error) {
+    modelCtx = `\n\nModel Information:
+Filename: ${modelData.filename}
+Format: ${modelData.format}
+Dimensions: ${modelData.width.toFixed(1)} × ${modelData.depth.toFixed(1)} × ${modelData.height.toFixed(1)} mm
+Triangle count: ${modelData.triangles.toLocaleString()}
+Bounding box volume: ~${modelData.volumeEst?.toFixed(1) || 'unknown'} cm³`;
+  }
+
+  const systemPrompt = `You are an expert 3D printing settings engine. You provide optimized slicer settings for Bambu Studio.
+
+RESPOND ONLY WITH A JSON OBJECT. No markdown, no backticks, no explanation outside the JSON.
+
+The JSON must have this exact structure:
+{
+  "temperature": {
+    "nozzle": "NUMBER°C",
+    "nozzle_first_layer": "NUMBER°C",
+    "bed": "NUMBER°C",
+    "bed_first_layer": "NUMBER°C"
+  },
+  "speed": {
+    "outer_wall": "NUMBERmm/s",
+    "inner_wall": "NUMBERmm/s",
+    "infill": "NUMBERmm/s",
+    "top_surface": "NUMBERmm/s",
+    "travel": "NUMBERmm/s",
+    "first_layer": "NUMBERmm/s"
+  },
+  "layers": {
+    "layer_height": "NUMBERmm",
+    "first_layer_height": "NUMBERmm",
+    "walls": "NUMBER",
+    "top_layers": "NUMBER",
+    "bottom_layers": "NUMBER"
+  },
+  "infill": {
+    "density": "NUMBER%",
+    "pattern": "PATTERN_NAME"
+  },
+  "cooling": {
+    "fan_speed": "NUMBER%",
+    "fan_first_layers": "NUMBER layers off",
+    "min_layer_time": "NUMBERs",
+    "aux_fan": "on/off"
+  },
+  "support": {
+    "enabled": "yes/no/depends on model",
+    "type": "TYPE or N/A",
+    "threshold": "NUMBER° or N/A"
+  },
+  "adhesion": {
+    "brim": "yes/no/recommended",
+    "brim_width": "NUMBERmm or N/A"
+  },
+  "advanced": {
+    "pressure_advance": "NUMBER",
+    "retraction_length": "NUMBERmm",
+    "retraction_speed": "NUMBERmm/s",
+    "z_hop": "NUMBERmm or off"
+  },
+  "bambu_studio_profile": "PROFILE_NAME to start from",
+  "notes": ["array", "of", "important", "tips", "and", "warnings"],
+  "model_specific_notes": ["array", "of", "notes", "about", "the", "uploaded", "model"] 
+}
+
+Important rules:
+- All values should be specific numbers, not ranges
+- Optimize for the stated print intent
+- Consider the printer's capabilities and limitations
+- Factor in model geometry if provided
+- Include practical tips in notes`;
+
+  const userPrompt = `Generate optimized Bambu Studio slicer settings for:
+
+Printer: ${printerSpec.name}
+Nozzle: ${nozzle}mm
+AMS: ${ams}
+Max volumetric flow: ${printerSpec.maxVolFlow} mm³/s
+Has enclosed chamber: ${printerSpec.hasChamber}
+Bed surface: ${printerSpec.bedType}
+
+Filament:
+${filamentCtx}
+
+Print Intent: ${currentIntent.toUpperCase()}
+${currentIntent === 'quality' ? '(Prioritize surface finish, accuracy, minimal artifacts)' : ''}
+${currentIntent === 'balanced' ? '(Good balance of quality and speed)' : ''}
+${currentIntent === 'speed' ? '(Maximize speed while maintaining structural integrity)' : ''}
+${currentIntent === 'prototype' ? '(Fastest possible, minimal material, just needs to hold shape)' : ''}
+${modelCtx}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }],
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `API error ${res.status}`);
+    }
+
+    const data = await res.json();
+    const text = data.content.map(c => c.text || '').join('');
+    const cleaned = text.replace(/```json|```/g, '').trim();
+
+    document.getElementById('rawResponse').textContent = cleaned;
+
+    const settings = JSON.parse(cleaned);
+    renderSettings(settings);
+
+    // Save to history and track for preset saving
+    const printerSpec = PRINTER_SPECS[printer];
+    const histEntry = addToHistory(selectedFilament, printerSpec.name, nozzle, currentIntent, settings, cleaned);
+    lastGeneratedResult = histEntry;
+
+  } catch (err) {
+    console.error('Generate error:', err);
+    alert(`Error: ${err.message}`);
+  } finally {
+    btn.innerHTML = 'Generate Settings';
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+}
+
+// ─── RENDER SETTINGS ───
+function renderSettings(s) {
+  document.getElementById('emptyState').style.display = 'none';
+  const output = document.getElementById('settingsOutput');
+  output.classList.add('active');
+
+  // Title
+  document.getElementById('outputTitle').textContent = `${selectedFilament.brand} ${selectedFilament.name} — Settings`;
+  const printerSpec = PRINTER_SPECS[document.getElementById('printerModel').value];
+  document.getElementById('outputMeta').textContent = `${printerSpec.name} · ${document.getElementById('nozzleSize').value}mm nozzle · ${currentIntent} mode`;
+
+  // Specs bar
+  const specsBar = document.getElementById('specsBar');
+  specsBar.innerHTML = '';
+  const chips = [
+    { label: 'Material', val: selectedFilament.material },
+    { label: 'Nozzle', val: s.temperature?.nozzle || '?' },
+    { label: 'Bed', val: s.temperature?.bed || '?' },
+    { label: 'Layer', val: s.layers?.layer_height || '?' },
+    { label: 'Infill', val: s.infill?.density || '?' },
+    { label: 'Profile', val: s.bambu_studio_profile || 'Generic' },
+  ];
+  chips.forEach(c => {
+    specsBar.innerHTML += `<div class="spec-chip"><span class="spec-label">${c.label}</span><span class="spec-val">${c.val}</span></div>`;
+  });
+
+  // Settings grid
+  const grid = document.getElementById('settingsGrid');
+  grid.innerHTML = '';
+
+  const sections = [
+    { icon: '🌡️', title: 'Temperature', data: s.temperature },
+    { icon: '⚡', title: 'Speed', data: s.speed },
+    { icon: '📏', title: 'Layers & Walls', data: s.layers },
+    { icon: '🔲', title: 'Infill', data: s.infill },
+    { icon: '❄️', title: 'Cooling', data: s.cooling },
+    { icon: '🏗️', title: 'Support', data: s.support },
+    { icon: '📎', title: 'Adhesion', data: s.adhesion },
+    { icon: '🔧', title: 'Advanced', data: s.advanced },
+  ];
+
+  sections.forEach(sec => {
+    if (!sec.data) return;
+    const card = document.createElement('div');
+    card.className = 'setting-card';
+    let rows = '';
+    Object.entries(sec.data).forEach(([key, val]) => {
+      const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      rows += `<div class="setting-row"><span class="setting-label">${label}</span><span class="setting-value">${val}</span></div>`;
+    });
+    card.innerHTML = `<div class="setting-card-header"><span class="setting-card-icon">${sec.icon}</span>${sec.title}</div>${rows}`;
+    grid.appendChild(card);
+  });
+
+  // Notes
+  const notesCard = document.getElementById('notesCard');
+  const allNotes = [...(s.notes || []), ...(s.model_specific_notes || [])];
+  if (allNotes.length > 0) {
+    notesCard.style.display = 'block';
+    notesCard.innerHTML = `<h3>💡 Notes & Tips</h3><ul>${allNotes.map(n => `<li>${n}</li>`).join('')}</ul>`;
+  } else {
+    notesCard.style.display = 'none';
+  }
+
+  // Scroll to top of output
+  document.querySelector('.main-content').scrollTop = 0;
+}
+
+// ─── COPY SETTINGS ───
+function copySettings() {
+  const text = buildSettingsText();
+  navigator.clipboard.writeText(text).then(() => {
+    const btns = document.querySelectorAll('#settingsOutput .output-header .btn-sm');
+    const copyBtn = [...btns].find(b => b.textContent.includes('Copy'));
+    if (copyBtn) {
+      const orig = copyBtn.textContent;
+      copyBtn.textContent = '✅ Copied!';
+      setTimeout(() => copyBtn.textContent = orig, 1500);
+    }
+  });
+}
+
+function toggleRaw() {
+  document.getElementById('rawResponse').classList.toggle('active');
+}
+
+// ─── MAIN TABS ───
+function switchMainTab(tab) {
+  document.querySelectorAll('.main-tab').forEach(b => b.classList.toggle('active', b.dataset.mtab === tab));
+  document.querySelectorAll('.main-tab-content').forEach(c => c.classList.toggle('active', c.id === `mtab-${tab}`));
+}
+
+// ─── HISTORY SYSTEM ───
+let history = JSON.parse(localStorage.getItem('ff_history') || '[]');
+let presets = JSON.parse(localStorage.getItem('ff_presets') || '[]');
+let customFilaments = JSON.parse(localStorage.getItem('ff_custom_filaments') || '[]');
+let lastGeneratedResult = null;
+
+function addToHistory(filament, printer, nozzle, intent, settings, rawJSON) {
+  const entry = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    timestamp: new Date().toISOString(),
+    filament: { brand: filament.brand, name: filament.name, material: filament.material },
+    printer,
+    nozzle,
+    intent,
+    settings,
+    rawJSON,
+  };
+  history.unshift(entry);
+  if (history.length > 50) history = history.slice(0, 50); // cap at 50
+  localStorage.setItem('ff_history', JSON.stringify(history));
+  renderHistory();
+  updateHistoryCount();
+  return entry;
+}
+
+function savePreset() {
+  if (!lastGeneratedResult) return;
+  const name = prompt('Name this preset:', `${lastGeneratedResult.filament.brand} ${lastGeneratedResult.filament.name} — ${lastGeneratedResult.intent}`);
+  if (!name) return;
+
+  const preset = { ...lastGeneratedResult, presetName: name, savedAt: new Date().toISOString() };
+  presets.unshift(preset);
+  localStorage.setItem('ff_presets', JSON.stringify(presets));
+  renderPresets();
+
+  const btn = document.getElementById('btnSavePreset');
+  btn.textContent = '✅ Saved!';
+  setTimeout(() => { btn.textContent = '⭐ Save'; }, 1500);
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (history.length === 0) {
+    list.innerHTML = '<div class="empty-history">No history yet. Generate some settings to see them here.</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  history.forEach((entry, idx) => {
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    const date = new Date(entry.timestamp);
+    const timeStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    item.innerHTML = `
+      <div class="hi-info" onclick="loadHistoryEntry(${idx})">
+        <div class="hi-title">${entry.filament.brand} ${entry.filament.name}</div>
+        <div class="hi-meta">${entry.printer} · ${entry.nozzle}mm · ${entry.intent} · ${timeStr}</div>
+      </div>
+      <div class="hi-actions">
+        <button class="hi-action-btn" onclick="loadHistoryEntry(${idx})">Load</button>
+        <button class="hi-action-btn delete" onclick="deleteHistoryEntry(${idx})">✕</button>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function renderPresets() {
+  const list = document.getElementById('presetsList');
+  if (presets.length === 0) {
+    list.innerHTML = '<div class="empty-history">No saved presets yet. Generate settings and click ⭐ Save.</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  presets.forEach((entry, idx) => {
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    item.innerHTML = `
+      <div class="hi-info" onclick="loadPreset(${idx})">
+        <div class="hi-title">${entry.presetName}<span class="saved-badge">preset</span></div>
+        <div class="hi-meta">${entry.filament.brand} ${entry.filament.name} · ${entry.printer} · ${entry.nozzle}mm · ${entry.intent}</div>
+      </div>
+      <div class="hi-actions">
+        <button class="hi-action-btn" onclick="loadPreset(${idx})">Load</button>
+        <button class="hi-action-btn delete" onclick="deletePreset(${idx})">✕</button>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function loadHistoryEntry(idx) {
+  const entry = history[idx];
+  if (!entry) return;
+  displaySavedResult(entry);
+}
+
+function loadPreset(idx) {
+  const entry = presets[idx];
+  if (!entry) return;
+  displaySavedResult(entry);
+}
+
+function displaySavedResult(entry) {
+  switchMainTab('results');
+  lastGeneratedResult = entry;
+
+  selectedFilament = {
+    source: 'history',
+    brand: entry.filament.brand,
+    name: entry.filament.name,
+    material: entry.filament.material,
+  };
+  showSelectedFilament();
+
+  const settings = entry.settings;
+  document.getElementById('rawResponse').textContent = entry.rawJSON || JSON.stringify(settings, null, 2);
+  renderSettings(settings);
+}
+
+function deleteHistoryEntry(idx) {
+  history.splice(idx, 1);
+  localStorage.setItem('ff_history', JSON.stringify(history));
+  renderHistory();
+  updateHistoryCount();
+}
+
+function deletePreset(idx) {
+  presets.splice(idx, 1);
+  localStorage.setItem('ff_presets', JSON.stringify(presets));
+  renderPresets();
+}
+
+function clearAllHistory() {
+  if (!confirm('Clear all history?')) return;
+  history = [];
+  localStorage.setItem('ff_history', JSON.stringify(history));
+  renderHistory();
+  updateHistoryCount();
+}
+
+function clearAllPresets() {
+  if (!confirm('Clear all saved presets?')) return;
+  presets = [];
+  localStorage.setItem('ff_presets', JSON.stringify(presets));
+  renderPresets();
+}
+
+function updateHistoryCount() {
+  const el = document.getElementById('historyCount');
+  const total = history.length + presets.length;
+  el.textContent = total > 0 ? `(${total})` : '';
+}
+
+// ─── CUSTOM FILAMENTS ───
+function saveCustomFilament() {
+  const brand = document.getElementById('manualBrand').value.trim();
+  const name = document.getElementById('manualName').value.trim();
+  const material = document.getElementById('manualMaterial').value;
+  if (!brand || !name) {
+    alert('Please enter at least a brand and filament name.');
+    return;
+  }
+
+  const custom = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    source: 'custom',
+    brand,
+    name,
+    material,
+    min_print_temp: document.getElementById('manualTempMin').value || '',
+    max_print_temp: document.getElementById('manualTempMax').value || '',
+    min_bed_temp: document.getElementById('manualBedMin').value || '',
+    max_bed_temp: document.getElementById('manualBedMax').value || '',
+  };
+
+  // Check for duplicates
+  const exists = customFilaments.find(f => f.brand === brand && f.name === name);
+  if (exists) {
+    if (!confirm(`"${brand} ${name}" already exists. Replace it?`)) return;
+    customFilaments = customFilaments.filter(f => f.id !== exists.id);
+  }
+
+  customFilaments.push(custom);
+  localStorage.setItem('ff_custom_filaments', JSON.stringify(customFilaments));
+  renderCustomFilaments();
+
+  // Clear the manual form
+  document.getElementById('manualBrand').value = '';
+  document.getElementById('manualName').value = '';
+  document.getElementById('manualTempMin').value = '';
+  document.getElementById('manualTempMax').value = '';
+  document.getElementById('manualBedMin').value = '';
+  document.getElementById('manualBedMax').value = '';
+}
+
+function renderCustomFilaments() {
+  // Render in the My Filaments tab
+  const selectList = document.getElementById('customFilamentSelectList');
+  const noCustom = document.getElementById('noCustomFilaments');
+
+  if (customFilaments.length === 0) {
+    selectList.innerHTML = '';
+    noCustom.style.display = 'block';
+    return;
+  }
+
+  noCustom.style.display = 'none';
+  selectList.innerHTML = '';
+
+  customFilaments.forEach((f, idx) => {
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    const temps = [];
+    if (f.min_print_temp && f.max_print_temp) temps.push(`${f.min_print_temp}–${f.max_print_temp}°C nozzle`);
+    if (f.min_bed_temp && f.max_bed_temp) temps.push(`${f.min_bed_temp}–${f.max_bed_temp}°C bed`);
+    item.innerHTML = `
+      <div class="hi-info" onclick="useCustomFilament(${idx})">
+        <div class="hi-title">${f.brand} ${f.name} <span class="material-tag ${['PLA','PETG','ABS','TPU'].includes(f.material) ? f.material : 'other'}" style="font-size:9px;vertical-align:middle">${f.material}</span></div>
+        <div class="hi-meta">${temps.join(' · ') || 'no temp data'}</div>
+      </div>
+      <div class="hi-actions">
+        <button class="hi-action-btn" onclick="useCustomFilament(${idx})">Use</button>
+        <button class="hi-action-btn delete" onclick="deleteCustomFilament(${idx})">✕</button>
+      </div>
+    `;
+    selectList.appendChild(item);
+  });
+
+  // Also render in the manual tab's list
+  const manualList = document.getElementById('customFilamentsList');
+  if (customFilaments.length > 0) {
+    manualList.innerHTML = `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;margin-bottom:4px">💾 Saved filaments (${customFilaments.length})</div>`;
+    customFilaments.forEach((f, idx) => {
+      const chip = document.createElement('div');
+      chip.className = 'custom-fil-item';
+      chip.innerHTML = `
+        <div>
+          <span class="cfi-name">${f.brand} ${f.name}</span>
+          <span class="cfi-mat">${f.material}</span>
+        </div>
+        <button class="custom-fil-delete" onclick="deleteCustomFilament(${idx})">✕</button>
+      `;
+      chip.style.cursor = 'pointer';
+      chip.querySelector('.cfi-name').addEventListener('click', () => useCustomFilament(idx));
+      manualList.appendChild(chip);
+    });
+  } else {
+    manualList.innerHTML = '';
+  }
+}
+
+function useCustomFilament(idx) {
+  const f = customFilaments[idx];
+  if (!f) return;
+  selectedFilament = { ...f, source: 'custom' };
+  showSelectedFilament();
+}
+
+function deleteCustomFilament(idx) {
+  customFilaments.splice(idx, 1);
+  localStorage.setItem('ff_custom_filaments', JSON.stringify(customFilaments));
+  renderCustomFilaments();
+}
+
+// ─── INIT HISTORY/PRESETS/CUSTOM ON LOAD ───
+document.addEventListener('DOMContentLoaded', () => {
+  renderHistory();
+  renderPresets();
+  renderCustomFilaments();
+  updateHistoryCount();
+  checkOnboarding();
+});
+
+// ─── ONBOARDING ───
+function checkOnboarding() {
+  const seen = localStorage.getItem('ff_onboarding_done');
+  if (!seen) {
+    document.getElementById('onboardingModal').classList.add('active');
+  }
+}
+
+function closeOnboarding() {
+  localStorage.setItem('ff_onboarding_done', 'true');
+  document.getElementById('onboardingModal').classList.remove('active');
+}
+
+// ─── SIDEBAR TOGGLE (MOBILE) ───
+function toggleSidebar() {
+  const content = document.getElementById('sidebarContent');
+  const btn = document.getElementById('sidebarToggle');
+  const expanded = content.classList.toggle('expanded');
+  btn.textContent = expanded ? '▼ Configure Settings' : '▶ Configure Settings';
+}
+
+// ─── EXPORT ───
+function exportSettings() {
+  const text = buildSettingsText();
+  document.getElementById('exportText').value = text;
+  document.getElementById('exportModal').classList.add('active');
+}
+
+function closeExportModal() {
+  document.getElementById('exportModal').classList.remove('active');
+}
+
+function copyExport() {
+  const textarea = document.getElementById('exportText');
+  textarea.select();
+  navigator.clipboard.writeText(textarea.value).then(() => {
+    const btns = document.querySelectorAll('#exportModal .btn-primary');
+    if (btns.length) {
+      btns[0].textContent = '✅ Copied!';
+      setTimeout(() => { btns[0].textContent = '📋 Copy to Clipboard'; }, 1500);
+    }
+  });
+}
+
+function buildSettingsText() {
+  let text = '═══════════════════════════════════════\n';
+  text += '  FILAMENTFORGE — PRINT SETTINGS\n';
+  text += '═══════════════════════════════════════\n\n';
+
+  text += document.getElementById('outputTitle').textContent + '\n';
+  text += document.getElementById('outputMeta').textContent + '\n\n';
+
+  // Specs line
+  const chips = document.querySelectorAll('#specsBar .spec-chip');
+  if (chips.length) {
+    chips.forEach(c => {
+      const label = c.querySelector('.spec-label').textContent;
+      const val = c.querySelector('.spec-val').textContent;
+      text += `${label}: ${val}  `;
+    });
+    text += '\n\n';
+  }
+
+  text += '───────────────────────────────────────\n';
+
+  const grid = document.getElementById('settingsGrid');
+  grid.querySelectorAll('.setting-card').forEach(card => {
+    const title = card.querySelector('.setting-card-header').textContent.trim();
+    text += `\n${title}\n`;
+    card.querySelectorAll('.setting-row').forEach(row => {
+      const label = row.querySelector('.setting-label').textContent;
+      const val = row.querySelector('.setting-value').textContent;
+      text += `  ${label.padEnd(24)} ${val}\n`;
+    });
+  });
+
+  const notes = document.getElementById('notesCard');
+  if (notes.style.display !== 'none') {
+    text += '\n───────────────────────────────────────\n';
+    text += '\nNotes & Tips\n';
+    notes.querySelectorAll('li').forEach(li => {
+      text += `  • ${li.textContent}\n`;
+    });
+  }
+
+  text += '\n═══════════════════════════════════════\n';
+  text += '  Generated by FilamentForge\n';
+  text += '  Filament data: Open Filament Database\n';
+  text += '  AI: Claude by Anthropic\n';
+  text += '═══════════════════════════════════════\n';
+
+  return text;
+}
+</script>
+</body>
+</html>
