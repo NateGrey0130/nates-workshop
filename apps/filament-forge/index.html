@@ -1164,7 +1164,7 @@ body {
       <span class="dot loading" id="ofdDot"></span>
       <span id="ofdText">Loading OFD...</span>
     </div>
-    <button class="btn btn-sm" onclick="openApiModal()">⚙ API Key</button>
+    
   </div>
 </header>
 
@@ -1427,18 +1427,7 @@ body {
   </main>
 </div>
 
-<!-- ─── API KEY MODAL ─── -->
-<div class="modal-overlay" id="apiModal">
-  <div class="modal">
-    <h2>Anthropic API Key</h2>
-    <p>Your key is stored locally in your browser and never sent anywhere except directly to the Anthropic API.</p>
-    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-...">
-    <div class="modal-actions">
-      <button class="btn" onclick="closeApiModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveApiKey()">Save</button>
-    </div>
-  </div>
-</div>
+
 
 <!-- ─── ONBOARDING MODAL ─── -->
 <div class="onboarding-overlay" id="onboardingModal">
@@ -1449,21 +1438,13 @@ body {
     <div class="ob-step">
       <div class="ob-step-num">1</div>
       <div class="ob-step-content">
-        <h4>Add Your API Key</h4>
-        <p>FilamentForge uses Claude AI to generate optimized settings. You'll need an Anthropic API key — get one at <code>console.anthropic.com</code>. It's stored locally in your browser only.</p>
-      </div>
-    </div>
-
-    <div class="ob-step">
-      <div class="ob-step-num">2</div>
-      <div class="ob-step-content">
         <h4>Select Printer & Filament</h4>
         <p>Pick your Bambu Lab printer model and nozzle size. Then choose a filament from the Open Filament Database (1,900+ entries) or add your own custom filaments.</p>
       </div>
     </div>
 
     <div class="ob-step">
-      <div class="ob-step-num">3</div>
+      <div class="ob-step-num">2</div>
       <div class="ob-step-content">
         <h4>Upload a Model (Optional)</h4>
         <p>Drop in a <code>.3mf</code> or <code>.stl</code> file and FilamentForge will analyze the geometry to give model-specific recommendations — support placement, wall count, infill, etc.</p>
@@ -1471,7 +1452,7 @@ body {
     </div>
 
     <div class="ob-step">
-      <div class="ob-step-num">4</div>
+      <div class="ob-step-num">3</div>
       <div class="ob-step-content">
         <h4>Generate & Save</h4>
         <p>Hit Generate to get a complete settings card. Save presets for your favorite combos, build up a library of custom filaments, and reference your full history anytime.</p>
@@ -1481,7 +1462,7 @@ body {
     <div class="ob-actions">
       <button class="ob-skip" onclick="closeOnboarding()">Skip</button>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-primary" onclick="closeOnboarding(); openApiModal();">Set API Key & Start</button>
+        <button class="btn btn-primary" onclick="closeOnboarding();">Get Started</button>
       </div>
     </div>
   </div>
@@ -1507,7 +1488,7 @@ let ofdFilaments = [];
 let selectedFilament = null;
 let currentIntent = 'quality';
 let modelData = null;
-let apiKey = localStorage.getItem('ff_api_key') || '';
+let apiKey = ''; // handled by server-side proxy
 
 // ─── PRINTER SPECS DATABASE ───
 const PRINTER_SPECS = {
@@ -1902,22 +1883,6 @@ async function loadJSZip() {
   });
 }
 
-// ─── API KEY ───
-function openApiModal() {
-  document.getElementById('apiKeyInput').value = apiKey;
-  document.getElementById('apiModal').classList.add('active');
-}
-
-function closeApiModal() {
-  document.getElementById('apiModal').classList.remove('active');
-}
-
-function saveApiKey() {
-  apiKey = document.getElementById('apiKeyInput').value.trim();
-  localStorage.setItem('ff_api_key', apiKey);
-  closeApiModal();
-}
-
 // ─── SAVE/LOAD CONFIG ───
 function loadSavedConfig() {
   const saved = localStorage.getItem('ff_config');
@@ -1949,11 +1914,6 @@ function saveConfig() {
 async function generateSettings() {
   if (!selectedFilament) {
     alert('Please select a filament first.');
-    return;
-  }
-
-  if (!apiKey) {
-    openApiModal();
     return;
   }
 
@@ -2071,13 +2031,10 @@ ${currentIntent === 'prototype' ? '(Fastest possible, minimal material, just nee
 ${modelCtx}`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('/api/claude', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
