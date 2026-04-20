@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediaVault — Personal Media Library</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-primary: #0a0c10;
+  --bg-secondary: #12151c;
+  --bg-tertiary: #1a1e28;
+  --bg-card: #161a24;
+  --bg-input: #1e2230;
+  --border: #2a2f3e;
+  --border-focus: #e07a3a;
+  --text-primary: #e8ecf4;
+  --text-secondary: #8b92a8;
+  --text-muted: #5a6178;
+  --accent: #e07a3a;
+  --accent-glow: rgba(224, 122, 58, 0.15);
+  --accent-secondary: #d4a853;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --tag-audiobook: #c084fc;
+  --tag-movie: #60a5fa;
+  --tag-physical: #34d399;
+  --tag-digital: #fbbf24;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-lg: 14px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --transition: 0.2s ease;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ─── HEADER ─── */
+.header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.logo {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.logo-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.home-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 13px;
+  font-family: 'JetBrains Mono', monospace;
+  transition: color var(--transition);
+}
+.home-link:hover { color: var(--text-primary); }
+
+/* ─── BUTTONS ─── */
+.btn {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--text-muted); background: var(--bg-input); }
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+.btn-primary:hover { background: #c86a2e; border-color: #c86a2e; }
+.btn-sm { font-size: 12px; padding: 5px 10px; }
+.btn-danger { border-color: var(--danger); color: var(--danger); }
+.btn-danger:hover { background: rgba(248,113,113,0.1); }
+
+/* ─── TOOLBAR ─── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 24px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.search-box {
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+}
+.search-box input {
+  width: 100%;
+  padding: 9px 14px 9px 36px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+.search-box input:focus { border-color: var(--accent); }
+.search-box input::placeholder { color: var(--text-muted); }
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 14px;
+  pointer-events: none;
+}
+.filter-group {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.filter-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.filter-btn:hover { border-color: var(--text-muted); color: var(--text-primary); }
+.filter-btn.active {
+  background: var(--accent-glow);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.view-toggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.view-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 7px 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all var(--transition);
+}
+.view-btn:hover { color: var(--text-primary); }
+.view-btn.active { background: var(--accent-glow); color: var(--accent); }
+select.toolbar-select {
+  padding: 7px 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  outline: none;
+  cursor: pointer;
+}
+select.toolbar-select:focus { border-color: var(--accent); }
+
+/* ─── STATS BAR ─── */
+.stats-bar {
+  display: flex;
+  gap: 20px;
+  padding: 10px 24px;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.stat-item span { color: var(--text-secondary); font-weight: 600; }
+
+/* ─── GRID VIEW ─── */
+.library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 18px;
+  padding: 24px;
+}
+.media-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative;
+}
+.media-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(224,122,58,0.1);
+}
+.media-card-cover {
+  width: 100%;
+  aspect-ratio: 2/3;
+  background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+.media-card-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.media-card-cover .no-cover {
+  font-size: 40px;
+  opacity: 0.3;
+}
+.media-card-type {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.type-audiobook { background: var(--tag-audiobook); color: #1a1e28; }
+.type-movie { background: var(--tag-movie); color: #1a1e28; }
+.media-card-info {
+  padding: 12px;
+}
+.media-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.media-card-author {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.media-card-meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.meta-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.05);
+  color: var(--text-muted);
+}
+.meta-tag.physical { color: var(--tag-physical); background: rgba(52,211,153,0.1); }
+.meta-tag.digital { color: var(--tag-digital); background: rgba(251,191,36,0.1); }
+
+/* ─── LIST VIEW ─── */
+.library-list {
+  display: none;
+  flex-direction: column;
+  padding: 12px 24px;
+}
+.library-list.active { display: flex; }
+.library-grid.active { display: grid; }
+.library-grid:not(.active) { display: none; }
+
+.list-header {
+  display: grid;
+  grid-template-columns: 40px 2fr 1.2fr 1fr 0.8fr 0.8fr 1fr 50px;
+  gap: 12px;
+  padding: 10px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.list-header > div:hover { color: var(--text-secondary); }
+.list-header .sort-active { color: var(--accent); }
+
+.list-row {
+  display: grid;
+  grid-template-columns: 40px 2fr 1.2fr 1fr 0.8fr 0.8fr 1fr 50px;
+  gap: 12px;
+  padding: 10px 14px;
+  align-items: center;
+  border-bottom: 1px solid rgba(42,47,62,0.5);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.list-row:hover { background: var(--bg-card); }
+.list-row-cover {
+  width: 34px;
+  height: 48px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.list-row-cover img { width: 100%; height: 100%; object-fit: cover; }
+.list-row-cover .no-cover { font-size: 16px; opacity: 0.3; }
+.list-row-title { font-weight: 600; }
+.list-row-secondary { color: var(--text-secondary); font-size: 12px; }
+.list-row-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+.list-row:hover .list-row-actions { opacity: 1; }
+.list-action-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all var(--transition);
+}
+.list-action-btn:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+.list-action-btn.delete:hover { color: var(--danger); }
+
+/* ─── EMPTY STATE ─── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+}
+.empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+.empty-title { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+.empty-sub { font-size: 14px; color: var(--text-secondary); max-width: 400px; line-height: 1.6; margin-bottom: 24px; }
+
+/* ─── MODAL ─── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px;
+}
+.modal h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.modal-close {
+  float: right;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+}
+.modal-close:hover { color: var(--text-primary); }
+
+.form-group {
+  margin-bottom: 16px;
+}
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus { border-color: var(--accent); }
+.form-group textarea { resize: vertical; min-height: 60px; }
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ─── LOOKUP SECTION ─── */
+.lookup-section {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.lookup-section h3 {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+}
+.lookup-row {
+  display: flex;
+  gap: 8px;
+}
+.lookup-row input { flex: 1; }
+.lookup-status {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 8px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.lookup-status.success { color: var(--success); }
+.lookup-status.error { color: var(--danger); }
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* ─── DETAIL MODAL ─── */
+.detail-modal {
+  max-width: 500px;
+}
+.detail-cover {
+  width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  background: var(--bg-tertiary);
+}
+.detail-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.detail-author {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+.detail-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.detail-field-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+.detail-field-value {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+/* ─── CSV MODAL ─── */
+.csv-preview {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 12px;
+  white-space: pre;
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+  .toolbar { padding: 12px 16px; }
+  .library-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; padding: 16px; }
+  .list-header, .list-row { grid-template-columns: 34px 2fr 1fr 0.8fr 50px; }
+  .list-header > div:nth-child(4),
+  .list-header > div:nth-child(5),
+  .list-header > div:nth-child(7),
+  .list-row > div:nth-child(4),
+  .list-row > div:nth-child(5),
+  .list-row > div:nth-child(7) { display: none; }
+  .form-row { grid-template-columns: 1fr; }
+  .stats-bar { flex-wrap: wrap; gap: 12px; }
+}
+
+/* ─── ANIMATIONS ─── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.media-card { animation: fadeIn 0.3s ease forwards; }
+.list-row { animation: fadeIn 0.2s ease forwards; }
+
+/* ─── SPINNER ─── */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- ─── HEADER ─── -->
+<header class="header">
+  <div class="header-left">
+    <div>
+      <div class="logo">MediaVault</div>
+      <div class="logo-sub">personal media library</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <a href="/" class="home-link">← workshop</a>
+    <button class="btn btn-sm" onclick="openImportModal()">📥 Import</button>
+    <button class="btn btn-sm" onclick="exportCSV()">📤 Export</button>
+    <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Item</button>
+  </div>
+</header>
+
+<!-- ─── TOOLBAR ─── -->
+<div class="toolbar">
+  <div class="search-box">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search titles, authors, genres, series..." oninput="renderLibrary()">
+  </div>
+  <div class="filter-group">
+    <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">All</button>
+    <button class="filter-btn" data-filter="audiobook" onclick="setFilter('audiobook', this)">📚 Audiobooks</button>
+    <button class="filter-btn" data-filter="movie" onclick="setFilter('movie', this)">🎬 Movies</button>
+  </div>
+  <select class="toolbar-select" id="sortSelect" onchange="renderLibrary()">
+    <option value="title-asc">Title A→Z</option>
+    <option value="title-desc">Title Z→A</option>
+    <option value="author-asc">Author A→Z</option>
+    <option value="author-desc">Author Z→A</option>
+    <option value="genre-asc">Genre A→Z</option>
+    <option value="added-desc">Newest Added</option>
+    <option value="added-asc">Oldest Added</option>
+  </select>
+  <div class="view-toggle">
+    <button class="view-btn active" id="viewGrid" onclick="setView('grid')" title="Grid view">▦</button>
+    <button class="view-btn" id="viewList" onclick="setView('list')" title="List view">☰</button>
+  </div>
+</div>
+
+<!-- ─── STATS ─── -->
+<div class="stats-bar">
+  <div class="stat-item">Total: <span id="statTotal">0</span></div>
+  <div class="stat-item">Audiobooks: <span id="statAudiobooks">0</span></div>
+  <div class="stat-item">Movies: <span id="statMovies">0</span></div>
+  <div class="stat-item">Physical: <span id="statPhysical">0</span></div>
+  <div class="stat-item">Digital: <span id="statDigital">0</span></div>
+</div>
+
+<!-- ─── LIBRARY ─── -->
+<div class="library-grid active" id="libraryGrid"></div>
+<div class="library-list" id="libraryList">
+  <div class="list-header" id="listHeader">
+    <div></div>
+    <div onclick="setSortFromHeader('title')" id="lh-title">Title</div>
+    <div onclick="setSortFromHeader('author')" id="lh-author">Author/Dir</div>
+    <div onclick="setSortFromHeader('genre')" id="lh-genre">Genre</div>
+    <div>Format</div>
+    <div>Type</div>
+    <div>Location</div>
+    <div></div>
+  </div>
+  <div id="listRows"></div>
+</div>
+<div class="empty-state" id="emptyState" style="display:none">
+  <div class="empty-icon">📀</div>
+  <div class="empty-title">Your vault is empty</div>
+  <div class="empty-sub">Add your first audiobook or movie to start building your collection. Use ISBN or title lookup to auto-fill details.</div>
+  <button class="btn btn-primary" onclick="openAddModal()">+ Add First Item</button>
+</div>
+
+<!-- ─── ADD/EDIT MODAL ─── -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeAddModal()">✕</button>
+    <h2 id="modalTitle">Add to Vault</h2>
+
+    <!-- LOOKUP -->
+    <div class="lookup-section">
+      <h3>🔍 Quick Lookup</h3>
+      <div class="lookup-row">
+        <input type="text" id="lookupInput" placeholder="ISBN, book title, or movie title...">
+        <button class="btn" onclick="lookupISBN()" id="btnLookupISBN">ISBN</button>
+        <button class="btn" onclick="lookupBook()" id="btnLookupBook">Book</button>
+        <button class="btn" onclick="lookupMovie()" id="btnLookupMovie">Movie</button>
+      </div>
+      <div class="lookup-status" id="lookupStatus"></div>
+    </div>
+
+    <input type="hidden" id="editId">
+    <input type="hidden" id="coverUrl">
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Type</label>
+        <select id="itemType">
+          <option value="audiobook">Audiobook</option>
+          <option value="movie">Movie</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Format</label>
+        <select id="itemFormat">
+          <option value="digital">Digital</option>
+          <option value="physical">Physical</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Title</label>
+      <input type="text" id="itemTitle" placeholder="e.g. Project Hail Mary">
+    </div>
+
+    <div class="form-group">
+      <label>Author / Director</label>
+      <input type="text" id="itemAuthor" placeholder="e.g. Andy Weir">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Genre</label>
+        <input type="text" id="itemGenre" placeholder="e.g. Sci-Fi, Thriller">
+      </div>
+      <div class="form-group">
+        <label>Series</label>
+        <input type="text" id="itemSeries" placeholder="e.g. Harry Potter">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Location</label>
+        <input type="text" id="itemLocation" placeholder="e.g. Audible, Shelf A, Plex">
+      </div>
+      <div class="form-group">
+        <label>Cover Image URL</label>
+        <input type="text" id="itemCoverInput" placeholder="Auto-filled from lookup">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Notes</label>
+      <textarea id="itemNotes" placeholder="Optional notes..."></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn" onclick="closeAddModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveItem()" id="btnSave">Add to Vault</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── DETAIL MODAL ─── -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal detail-modal">
+    <button class="modal-close" onclick="closeDetailModal()">✕</button>
+    <div id="detailContent"></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger btn-sm" onclick="deleteFromDetail()" id="btnDeleteDetail">🗑 Delete</button>
+      <button class="btn" onclick="editFromDetail()" id="btnEditDetail">✏️ Edit</button>
+      <button class="btn" onclick="closeDetailModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── IMPORT MODAL ─── -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeImportModal()">✕</button>
+    <h2>Import CSV</h2>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">
+      CSV should have headers: type, title, author, genre, series, format, location, cover, notes
+    </p>
+    <div class="form-group">
+      <input type="file" id="csvFileInput" accept=".csv" onchange="previewCSV(this)" style="font-size:13px;">
+    </div>
+    <div class="csv-preview" id="csvPreview" style="display:none"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeImportModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="importCSV()" id="btnImport" disabled>Import</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ───
+let library = JSON.parse(localStorage.getItem('mv_library') || '[]');
+let currentFilter = 'all';
+let currentView = 'grid';
+let detailItemId = null;
+let csvData = null;
+
+const OMDB_KEY = '4a744ef7'; // free tier key
+
+// ─── RENDER ───
+function renderLibrary() {
+  const query = document.getElementById('searchInput').value.toLowerCase().trim();
+  const sortVal = document.getElementById('sortSelect').value;
+  
+  let filtered = library.filter(item => {
+    if (currentFilter !== 'all' && item.type !== currentFilter) return false;
+    if (query) {
+      const searchable = [item.title, item.author, item.genre, item.series, item.location, item.notes].join(' ').toLowerCase();
+      return searchable.includes(query);
+    }
+    return true;
+  });
+
+  // Sort
+  const [sortKey, sortDir] = sortVal.split('-');
+  filtered.sort((a, b) => {
+    let va, vb;
+    if (sortKey === 'added') {
+      va = a.addedAt || 0;
+      vb = b.addedAt || 0;
+    } else {
+      va = (a[sortKey] || '').toLowerCase();
+      vb = (b[sortKey] || '').toLowerCase();
+    }
+    if (va < vb) return sortDir === 'asc' ? -1 : 1;
+    if (va > vb) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  // Stats
+  document.getElementById('statTotal').textContent = library.length;
+  document.getElementById('statAudiobooks').textContent = library.filter(i => i.type === 'audiobook').length;
+  document.getElementById('statMovies').textContent = library.filter(i => i.type === 'movie').length;
+  document.getElementById('statPhysical').textContent = library.filter(i => i.format === 'physical').length;
+  document.getElementById('statDigital').textContent = library.filter(i => i.format === 'digital').length;
+
+  // Empty state
+  const showEmpty = filtered.length === 0;
+  document.getElementById('emptyState').style.display = showEmpty ? 'flex' : 'none';
+  document.getElementById('libraryGrid').style.display = (!showEmpty && currentView === 'grid') ? 'grid' : 'none';
+  document.getElementById('libraryList').style.display = (!showEmpty && currentView === 'list') ? 'flex' : 'none';
+
+  if (showEmpty) return;
+
+  // Grid
+  document.getElementById('libraryGrid').innerHTML = filtered.map((item, i) => `
+    <div class="media-card" onclick="openDetail('${item.id}')" style="animation-delay: ${i * 0.03}s">
+      <div class="media-card-cover">
+        ${item.cover ? `<img src="${item.cover}" alt="${esc(item.title)}" onerror="this.parentElement.innerHTML='<div class=\\'no-cover\\'>${item.type === 'movie' ? '🎬' : '📚'}</div>'">` : `<div class="no-cover">${item.type === 'movie' ? '🎬' : '📚'}</div>`}
+        <span class="media-card-type type-${item.type}">${item.type}</span>
+      </div>
+      <div class="media-card-info">
+        <div class="media-card-title">${esc(item.title)}</div>
+        <div class="media-card-author">${esc(item.author || '')}</div>
+        <div class="media-card-meta">
+          ${item.genre ? `<span class="meta-tag">${esc(item.genre.split(',')[0].trim())}</span>` : ''}
+          <span class="meta-tag ${item.format}">${item.format}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // List
+  document.getElementById('listRows').innerHTML = filtered.map((item, i) => `
+    <div class="list-row" onclick="openDetail('${item.id}')" style="animation-delay: ${i * 0.02}s">
+      <div class="list-row-cover">
+        ${item.cover ? `<img src="${item.cover}" alt="" onerror="this.parentElement.innerHTML='<div class=\\'no-cover\\'>${item.type === 'movie' ? '🎬' : '📚'}</div>'">` : `<div class="no-cover">${item.type === 'movie' ? '🎬' : '📚'}</div>`}
+      </div>
+      <div>
+        <div class="list-row-title">${esc(item.title)}</div>
+        ${item.series ? `<div class="list-row-secondary">${esc(item.series)}</div>` : ''}
+      </div>
+      <div class="list-row-secondary">${esc(item.author || '')}</div>
+      <div class="list-row-secondary">${esc(item.genre || '')}</div>
+      <div><span class="meta-tag ${item.format}">${item.format}</span></div>
+      <div><span class="meta-tag type-${item.type}" style="font-size:10px;padding:2px 6px;border-radius:3px;">${item.type}</span></div>
+      <div class="list-row-secondary">${esc(item.location || '')}</div>
+      <div class="list-row-actions">
+        <button class="list-action-btn" onclick="event.stopPropagation(); editItem('${item.id}')">✏️</button>
+        <button class="list-action-btn delete" onclick="event.stopPropagation(); deleteItem('${item.id}')">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function esc(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// ─── FILTER / VIEW / SORT ───
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLibrary();
+}
+
+function setView(view) {
+  currentView = view;
+  document.getElementById('viewGrid').classList.toggle('active', view === 'grid');
+  document.getElementById('viewList').classList.toggle('active', view === 'list');
+  renderLibrary();
+}
+
+function setSortFromHeader(key) {
+  const sel = document.getElementById('sortSelect');
+  const current = sel.value;
+  if (current === `${key}-asc`) sel.value = `${key}-desc`;
+  else sel.value = `${key}-asc`;
+  renderLibrary();
+}
+
+// ─── ADD/EDIT MODAL ───
+function openAddModal() {
+  document.getElementById('editId').value = '';
+  document.getElementById('modalTitle').textContent = 'Add to Vault';
+  document.getElementById('btnSave').textContent = 'Add to Vault';
+  clearForm();
+  document.getElementById('addModal').classList.add('active');
+}
+
+function closeAddModal() {
+  document.getElementById('addModal').classList.remove('active');
+}
+
+function clearForm() {
+  ['itemType', 'itemFormat', 'itemTitle', 'itemAuthor', 'itemGenre', 'itemSeries', 'itemLocation', 'itemCoverInput', 'itemNotes', 'lookupInput', 'coverUrl'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el.tagName === 'SELECT') el.selectedIndex = 0;
+    else el.value = '';
+  });
+  document.getElementById('lookupStatus').textContent = '';
+}
+
+function editItem(id) {
+  const item = library.find(i => i.id === id);
+  if (!item) return;
+  document.getElementById('editId').value = id;
+  document.getElementById('modalTitle').textContent = 'Edit Item';
+  document.getElementById('btnSave').textContent = 'Save Changes';
+  document.getElementById('itemType').value = item.type;
+  document.getElementById('itemFormat').value = item.format;
+  document.getElementById('itemTitle').value = item.title;
+  document.getElementById('itemAuthor').value = item.author || '';
+  document.getElementById('itemGenre').value = item.genre || '';
+  document.getElementById('itemSeries').value = item.series || '';
+  document.getElementById('itemLocation').value = item.location || '';
+  document.getElementById('itemCoverInput').value = item.cover || '';
+  document.getElementById('coverUrl').value = item.cover || '';
+  document.getElementById('itemNotes').value = item.notes || '';
+  document.getElementById('lookupStatus').textContent = '';
+  document.getElementById('addModal').classList.add('active');
+}
+
+function saveItem() {
+  const title = document.getElementById('itemTitle').value.trim();
+  if (!title) { alert('Title is required'); return; }
+
+  const editId = document.getElementById('editId').value;
+  const coverFromInput = document.getElementById('itemCoverInput').value.trim();
+  const coverFromLookup = document.getElementById('coverUrl').value.trim();
+
+  const item = {
+    id: editId || crypto.randomUUID(),
+    type: document.getElementById('itemType').value,
+    format: document.getElementById('itemFormat').value,
+    title: title,
+    author: document.getElementById('itemAuthor').value.trim(),
+    genre: document.getElementById('itemGenre').value.trim(),
+    series: document.getElementById('itemSeries').value.trim(),
+    location: document.getElementById('itemLocation').value.trim(),
+    cover: coverFromInput || coverFromLookup || '',
+    notes: document.getElementById('itemNotes').value.trim(),
+    addedAt: editId ? (library.find(i => i.id === editId)?.addedAt || Date.now()) : Date.now(),
+  };
+
+  if (editId) {
+    const idx = library.findIndex(i => i.id === editId);
+    if (idx >= 0) library[idx] = item;
+  } else {
+    library.push(item);
+  }
+
+  saveLibrary();
+  closeAddModal();
+  closeDetailModal();
+  renderLibrary();
+}
+
+function deleteItem(id) {
+  if (!confirm('Delete this item?')) return;
+  library = library.filter(i => i.id !== id);
+  saveLibrary();
+  renderLibrary();
+}
+
+// ─── DETAIL MODAL ───
+function openDetail(id) {
+  const item = library.find(i => i.id === id);
+  if (!item) return;
+  detailItemId = id;
+
+  document.getElementById('detailContent').innerHTML = `
+    ${item.cover ? `<img src="${item.cover}" class="detail-cover" alt="${esc(item.title)}" onerror="this.style.display='none'">` : ''}
+    <div class="detail-title">${esc(item.title)}</div>
+    <div class="detail-author">${esc(item.author || 'Unknown')}</div>
+    <div class="detail-fields">
+      <div><div class="detail-field-label">Type</div><div class="detail-field-value">${item.type}</div></div>
+      <div><div class="detail-field-label">Format</div><div class="detail-field-value">${item.format}</div></div>
+      <div><div class="detail-field-label">Genre</div><div class="detail-field-value">${esc(item.genre || '—')}</div></div>
+      <div><div class="detail-field-label">Series</div><div class="detail-field-value">${esc(item.series || '—')}</div></div>
+      <div><div class="detail-field-label">Location</div><div class="detail-field-value">${esc(item.location || '—')}</div></div>
+      <div><div class="detail-field-label">Added</div><div class="detail-field-value">${new Date(item.addedAt).toLocaleDateString()}</div></div>
+    </div>
+    ${item.notes ? `<div style="font-size:13px;color:var(--text-secondary);line-height:1.6;padding:12px;background:var(--bg-tertiary);border-radius:var(--radius-sm);">${esc(item.notes)}</div>` : ''}
+  `;
+
+  document.getElementById('detailModal').classList.add('active');
+}
+
+function closeDetailModal() {
+  document.getElementById('detailModal').classList.remove('active');
+  detailItemId = null;
+}
+
+function editFromDetail() {
+  if (detailItemId) {
+    closeDetailModal();
+    editItem(detailItemId);
+  }
+}
+
+function deleteFromDetail() {
+  if (detailItemId) {
+    deleteItem(detailItemId);
+    closeDetailModal();
+  }
+}
+
+// ─── LOOKUPS ───
+async function lookupISBN() {
+  const isbn = document.getElementById('lookupInput').value.trim().replace(/[-\s]/g, '');
+  if (!isbn) return;
+  const status = document.getElementById('lookupStatus');
+  status.innerHTML = '<span class="spinner"></span> Looking up ISBN...';
+  status.className = 'lookup-status';
+
+  try {
+    const res = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
+    const data = await res.json();
+    const book = data[`ISBN:${isbn}`];
+
+    if (!book) {
+      status.textContent = 'No results found for that ISBN.';
+      status.className = 'lookup-status error';
+      return;
+    }
+
+    document.getElementById('itemTitle').value = book.title || '';
+    document.getElementById('itemAuthor').value = (book.authors || []).map(a => a.name).join(', ');
+    document.getElementById('itemGenre').value = (book.subjects || []).slice(0, 3).map(s => s.name).join(', ');
+    document.getElementById('itemType').value = 'audiobook';
+
+    if (book.cover) {
+      const coverUrl = book.cover.large || book.cover.medium || book.cover.small || '';
+      document.getElementById('coverUrl').value = coverUrl;
+      document.getElementById('itemCoverInput').value = coverUrl;
+    }
+
+    status.textContent = '✓ Found! Fields auto-filled.';
+    status.className = 'lookup-status success';
+  } catch (err) {
+    status.textContent = 'Lookup failed: ' + err.message;
+    status.className = 'lookup-status error';
+  }
+}
+
+async function lookupBook() {
+  const query = document.getElementById('lookupInput').value.trim();
+  if (!query) return;
+  const status = document.getElementById('lookupStatus');
+  status.innerHTML = '<span class="spinner"></span> Searching Open Library...';
+  status.className = 'lookup-status';
+
+  try {
+    const res = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=1`);
+    const data = await res.json();
+    
+    if (!data.docs || data.docs.length === 0) {
+      status.textContent = 'No results found.';
+      status.className = 'lookup-status error';
+      return;
+    }
+
+    const book = data.docs[0];
+    document.getElementById('itemTitle').value = book.title || '';
+    document.getElementById('itemAuthor').value = (book.author_name || []).join(', ');
+    document.getElementById('itemGenre').value = (book.subject || []).slice(0, 3).join(', ');
+    document.getElementById('itemType').value = 'audiobook';
+
+    if (book.cover_i) {
+      const coverUrl = `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg`;
+      document.getElementById('coverUrl').value = coverUrl;
+      document.getElementById('itemCoverInput').value = coverUrl;
+    }
+
+    status.textContent = `✓ Found: "${book.title}" — fields auto-filled.`;
+    status.className = 'lookup-status success';
+  } catch (err) {
+    status.textContent = 'Lookup failed: ' + err.message;
+    status.className = 'lookup-status error';
+  }
+}
+
+async function lookupMovie() {
+  const query = document.getElementById('lookupInput').value.trim();
+  if (!query) return;
+  const status = document.getElementById('lookupStatus');
+  status.innerHTML = '<span class="spinner"></span> Searching OMDB...';
+  status.className = 'lookup-status';
+
+  try {
+    const res = await fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(query)}&apikey=${OMDB_KEY}`);
+    const data = await res.json();
+    
+    if (data.Response === 'False') {
+      status.textContent = 'No results found: ' + (data.Error || '');
+      status.className = 'lookup-status error';
+      return;
+    }
+
+    document.getElementById('itemTitle').value = data.Title || '';
+    document.getElementById('itemAuthor').value = data.Director || '';
+    document.getElementById('itemGenre').value = data.Genre || '';
+    document.getElementById('itemType').value = 'movie';
+
+    if (data.Poster && data.Poster !== 'N/A') {
+      document.getElementById('coverUrl').value = data.Poster;
+      document.getElementById('itemCoverInput').value = data.Poster;
+    }
+
+    if (data.Year) {
+      const notes = document.getElementById('itemNotes');
+      const extra = [];
+      if (data.Year) extra.push(`Year: ${data.Year}`);
+      if (data.Runtime) extra.push(`Runtime: ${data.Runtime}`);
+      if (data.imdbRating && data.imdbRating !== 'N/A') extra.push(`IMDb: ${data.imdbRating}/10`);
+      if (data.Plot && data.Plot !== 'N/A') extra.push(`\n${data.Plot}`);
+      notes.value = extra.join(' · ');
+    }
+
+    status.textContent = `✓ Found: "${data.Title}" (${data.Year}) — fields auto-filled.`;
+    status.className = 'lookup-status success';
+  } catch (err) {
+    status.textContent = 'Lookup failed: ' + err.message;
+    status.className = 'lookup-status error';
+  }
+}
+
+// ─── CSV IMPORT/EXPORT ───
+function exportCSV() {
+  if (library.length === 0) { alert('Nothing to export.'); return; }
+  const headers = ['type', 'title', 'author', 'genre', 'series', 'format', 'location', 'cover', 'notes'];
+  const csvRows = [headers.join(',')];
+  
+  library.forEach(item => {
+    csvRows.push(headers.map(h => {
+      let val = item[h] || '';
+      if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+        val = '"' + val.replace(/"/g, '""') + '"';
+      }
+      return val;
+    }).join(','));
+  });
+
+  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `mediavault-export-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function openImportModal() {
+  document.getElementById('importModal').classList.add('active');
+  document.getElementById('csvPreview').style.display = 'none';
+  document.getElementById('btnImport').disabled = true;
+  document.getElementById('csvFileInput').value = '';
+  csvData = null;
+}
+
+function closeImportModal() {
+  document.getElementById('importModal').classList.remove('active');
+}
+
+function previewCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    const lines = text.trim().split('\n');
+    
+    if (lines.length < 2) {
+      document.getElementById('csvPreview').textContent = 'CSV appears empty or has no data rows.';
+      document.getElementById('csvPreview').style.display = 'block';
+      return;
+    }
+
+    const headers = parseCSVRow(lines[0]).map(h => h.toLowerCase().trim());
+    const requiredHeaders = ['title'];
+    const missing = requiredHeaders.filter(h => !headers.includes(h));
+    
+    if (missing.length) {
+      document.getElementById('csvPreview').textContent = `Missing required headers: ${missing.join(', ')}`;
+      document.getElementById('csvPreview').style.display = 'block';
+      return;
+    }
+
+    csvData = { headers, rows: lines.slice(1).map(l => parseCSVRow(l)) };
+    document.getElementById('csvPreview').textContent = `Found ${csvData.rows.length} items\nHeaders: ${headers.join(', ')}`;
+    document.getElementById('csvPreview').style.display = 'block';
+    document.getElementById('btnImport').disabled = false;
+  };
+  reader.readAsText(file);
+}
+
+function parseCSVRow(row) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < row.length; i++) {
+    const ch = row[i];
+    if (inQuotes) {
+      if (ch === '"' && row[i+1] === '"') { current += '"'; i++; }
+      else if (ch === '"') { inQuotes = false; }
+      else { current += ch; }
+    } else {
+      if (ch === '"') { inQuotes = true; }
+      else if (ch === ',') { result.push(current.trim()); current = ''; }
+      else { current += ch; }
+    }
+  }
+  result.push(current.trim());
+  return result;
+}
+
+function importCSV() {
+  if (!csvData) return;
+  const { headers, rows } = csvData;
+  let count = 0;
+
+  rows.forEach(cols => {
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = cols[i] || ''; });
+    
+    if (!obj.title) return;
+
+    library.push({
+      id: crypto.randomUUID(),
+      type: (obj.type || 'audiobook').toLowerCase(),
+      format: (obj.format || 'digital').toLowerCase(),
+      title: obj.title,
+      author: obj.author || obj.director || '',
+      genre: obj.genre || '',
+      series: obj.series || '',
+      location: obj.location || '',
+      cover: obj.cover || '',
+      notes: obj.notes || '',
+      addedAt: Date.now(),
+    });
+    count++;
+  });
+
+  saveLibrary();
+  closeImportModal();
+  renderLibrary();
+  alert(`Imported ${count} items.`);
+}
+
+// ─── PERSISTENCE ───
+function saveLibrary() {
+  localStorage.setItem('mv_library', JSON.stringify(library));
+}
+
+// ─── KEYBOARD ───
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeAddModal();
+    closeDetailModal();
+    closeImportModal();
+  }
+  // Ctrl+N to add
+  if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+    e.preventDefault();
+    openAddModal();
+  }
+});
+
+// Close modals on overlay click
+['addModal', 'detailModal', 'importModal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target === this) {
+      this.classList.remove('active');
+    }
+  });
+});
+
+// ─── INIT ───
+renderLibrary();
+</script>
+</body>
+</html>
