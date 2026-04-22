@@ -276,6 +276,7 @@ select.toolbar-select:focus { border-color: var(--accent); }
 }
 .type-audiobook { background: var(--tag-audiobook); color: #1a1e28; }
 .type-movie { background: var(--tag-movie); color: #1a1e28; }
+.type-series { background: #34d399; color: #1a1e28; }
 .media-card-info {
   padding: 12px;
 }
@@ -557,6 +558,12 @@ select.toolbar-select:focus { border-color: var(--accent); }
   gap: 8px;
 }
 .lookup-row input { flex: 1; }
+.lookup-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: 8px;
+}
 .lookup-status {
   font-size: 12px;
   color: var(--text-muted);
@@ -764,6 +771,12 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
   border: 1px solid var(--tag-movie);
 }
 .bulk-type-btn.movie:hover { background: rgba(96,165,250,0.3); }
+.bulk-type-btn.series {
+  background: rgba(52,211,153,0.15);
+  color: #34d399;
+  border: 1px solid #34d399;
+}
+.bulk-type-btn.series:hover { background: rgba(52,211,153,0.3); }
 .bulk-select-all {
   font-size: 12px;
   color: var(--text-muted);
@@ -1019,6 +1032,7 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
     <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">All</button>
     <button class="filter-btn" data-filter="audiobook" onclick="setFilter('audiobook', this)">📚 Audiobooks</button>
     <button class="filter-btn" data-filter="movie" onclick="setFilter('movie', this)">🎬 Movies</button>
+    <button class="filter-btn" data-filter="series" onclick="setFilter('series', this)">📺 Series</button>
   </div>
   <select class="toolbar-select" id="sortSelect" onchange="renderLibrary()">
     <option value="title-asc">Title A→Z</option>
@@ -1040,6 +1054,7 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
   <div class="stat-item">Total: <span id="statTotal">0</span></div>
   <div class="stat-item">Audiobooks: <span id="statAudiobooks">0</span></div>
   <div class="stat-item">Movies: <span id="statMovies">0</span></div>
+  <div class="stat-item">Series: <span id="statSeries">0</span></div>
   <div class="stat-item">Physical: <span id="statPhysical">0</span></div>
   <div class="stat-item">Digital: <span id="statDigital">0</span></div>
 </div>
@@ -1076,11 +1091,14 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
     <div class="lookup-section">
       <h3>🔍 Quick Lookup</h3>
       <div class="lookup-row">
-        <input type="text" id="lookupInput" placeholder="ISBN, book title, or movie title...">
+        <input type="text" id="lookupInput" placeholder="Title, ISBN..." onkeydown="if(event.key==='Enter')handleLookupEnter()">
+        <input type="text" id="lookupYear" placeholder="Year" style="width:70px;flex:none;" maxlength="4" onkeydown="if(event.key==='Enter')handleLookupEnter()">
         <button class="btn" onclick="lookupISBN()" id="btnLookupISBN">ISBN</button>
-        <button class="btn" onclick="lookupBook()" id="btnLookupBook">Book</button>
-        <button class="btn" onclick="lookupMovie()" id="btnLookupMovie">Movie</button>
+        <button class="btn" onclick="lookupBook()" id="btnLookupBook">📚</button>
+        <button class="btn" onclick="lookupMovie()" id="btnLookupMovie">🎬</button>
+        <button class="btn" onclick="lookupSeries()" id="btnLookupSeries">📺</button>
       </div>
+      <div class="lookup-hint">📚 Book &nbsp;·&nbsp; 🎬 Movie &nbsp;·&nbsp; 📺 Series &nbsp;·&nbsp; Year is optional but helps narrow results</div>
       <div class="lookup-status" id="lookupStatus"></div>
       <div class="lookup-results" id="lookupResults"></div>
     </div>
@@ -1094,6 +1112,7 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
         <select id="itemType">
           <option value="audiobook">Audiobook</option>
           <option value="movie">Movie</option>
+          <option value="series">Series</option>
         </select>
       </div>
       <div class="form-group">
@@ -1189,6 +1208,7 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
   <span class="bulk-bar-label">Change type to →</span>
   <button class="bulk-type-btn audiobook" onclick="bulkChangeType('audiobook')">📚 Audiobook</button>
   <button class="bulk-type-btn movie" onclick="bulkChangeType('movie')">🎬 Movie</button>
+  <button class="bulk-type-btn series" onclick="bulkChangeType('series')">📺 Series</button>
   <div class="bulk-bar-divider"></div>
   <button class="btn btn-sm btn-danger" onclick="toggleSelectMode()">Cancel</button>
 </div>
@@ -1196,8 +1216,8 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
 <script>
 // ─── SUPABASE CONFIG ───
 // 🔧 REPLACE THESE with your actual Supabase project values
-const SUPABASE_URL = 'https://ahnjzgtdscrcvfmcvsuc.supabase.co/rest/v1/';
-const SUPABASE_ANON_KEY = 'sb_publishable_-bqxBWpfWP3wsYL6mV-UJA_ynaOcgxp';
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -1247,6 +1267,7 @@ function renderLibrary() {
   document.getElementById('statTotal').textContent = library.length;
   document.getElementById('statAudiobooks').textContent = library.filter(i => i.type === 'audiobook').length;
   document.getElementById('statMovies').textContent = library.filter(i => i.type === 'movie').length;
+  document.getElementById('statSeries').textContent = library.filter(i => i.type === 'series').length;
   document.getElementById('statPhysical').textContent = library.filter(i => i.format === 'physical').length;
   document.getElementById('statDigital').textContent = library.filter(i => i.format === 'digital').length;
 
@@ -1550,6 +1571,30 @@ function clearLookupResults() {
   r.classList.remove('visible');
 }
 
+function handleLookupEnter() {
+  // Enter key in lookup row — guess intent from input
+  const val = document.getElementById('lookupInput').value.trim();
+  if (/^\d{10,13}$/.test(val.replace(/[-\s]/g, ''))) lookupISBN();
+  else lookupMovie();
+}
+
+function sortByExactMatch(results, query, titleKey) {
+  const q = query.toLowerCase().trim();
+  return [...results].sort((a, b) => {
+    const at = (a[titleKey] || '').toLowerCase();
+    const bt = (b[titleKey] || '').toLowerCase();
+    const aExact = at === q;
+    const bExact = bt === q;
+    const aStarts = at.startsWith(q);
+    const bStarts = bt.startsWith(q);
+    if (aExact && !bExact) return -1;
+    if (!aExact && bExact) return 1;
+    if (aStarts && !bStarts) return -1;
+    if (!aStarts && bStarts) return 1;
+    return 0;
+  });
+}
+
 async function lookupISBN() {
   const isbn = document.getElementById('lookupInput').value.trim().replace(/[-\s]/g, '');
   if (!isbn) return;
@@ -1569,7 +1614,6 @@ async function lookupISBN() {
       return;
     }
 
-    // ISBN is exact — fill directly
     fillBookFields({
       title: book.title,
       authors: (book.authors || []).map(a => a.name).join(', '),
@@ -1586,6 +1630,7 @@ async function lookupISBN() {
 
 async function lookupBook() {
   const query = document.getElementById('lookupInput').value.trim();
+  const year = document.getElementById('lookupYear').value.trim();
   if (!query) return;
   const status = document.getElementById('lookupStatus');
   clearLookupResults();
@@ -1593,23 +1638,27 @@ async function lookupBook() {
   status.className = 'lookup-status';
 
   try {
-    const res = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=10`);
+    let url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=15`;
+    if (year) url += `&first_publish_year=${year}`;
+
+    const res = await fetch(url);
     const data = await res.json();
 
     if (!data.docs || data.docs.length === 0) {
-      status.textContent = 'No results found.';
+      status.textContent = year ? `No results for "${query}" around ${year}. Try without a year.` : 'No results found.';
       status.className = 'lookup-status error';
       return;
     }
 
-    status.textContent = `${data.docs.length} results — pick one:`;
+    const sorted = sortByExactMatch(data.docs, query, 'title');
+    status.textContent = `${sorted.length} result${sorted.length !== 1 ? 's' : ''}${year ? ` (filtered to ${year})` : ''} — pick one:`;
     status.className = 'lookup-status';
 
     const container = document.getElementById('lookupResults');
-    container.innerHTML = data.docs.map((book, i) => {
+    container.innerHTML = sorted.map(book => {
       const title = book.title || 'Unknown Title';
       const author = (book.author_name || []).join(', ') || 'Unknown Author';
-      const year = book.first_publish_year || '';
+      const bookYear = book.first_publish_year || '';
       const coverId = book.cover_i;
       const thumbUrl = coverId ? `https://covers.openlibrary.org/b/id/${coverId}-S.jpg` : null;
       const genre = (book.subject || []).slice(0, 3).join(', ');
@@ -1621,7 +1670,7 @@ async function lookupBook() {
           : `<div class="lookup-result-thumb-placeholder">📚</div>`}
         <div class="lookup-result-info">
           <div class="lookup-result-title">${esc(title)}</div>
-          <div class="lookup-result-meta">${esc(author)}${year ? ' · ' + year : ''}</div>
+          <div class="lookup-result-meta">${esc(author)}${bookYear ? ' · ' + bookYear : ''}</div>
         </div>
       </div>`;
     }).join('');
@@ -1651,36 +1700,51 @@ function fillBookFields(book) {
 }
 
 async function lookupMovie() {
+  await lookupOMDB('movie');
+}
+
+async function lookupSeries() {
+  await lookupOMDB('series');
+}
+
+async function lookupOMDB(type) {
   const query = document.getElementById('lookupInput').value.trim();
+  const year = document.getElementById('lookupYear').value.trim();
   if (!query) return;
   const status = document.getElementById('lookupStatus');
   clearLookupResults();
-  status.innerHTML = '<span class="spinner"></span> Searching OMDB...';
+  const label = type === 'series' ? 'series' : 'movies';
+  status.innerHTML = `<span class="spinner"></span> Searching OMDB for ${label}...`;
   status.className = 'lookup-status';
 
   try {
-    const res = await fetch(`https://www.omdbapi.com/?s=${encodeURIComponent(query)}&type=movie&apikey=${OMDB_KEY}`);
+    let url = `https://www.omdbapi.com/?s=${encodeURIComponent(query)}&type=${type}&apikey=${OMDB_KEY}`;
+    if (year) url += `&y=${year}`;
+
+    const res = await fetch(url);
     const data = await res.json();
 
     if (data.Response === 'False' || !data.Search || data.Search.length === 0) {
-      status.textContent = 'No results found: ' + (data.Error || '');
+      const yearHint = year ? ` around ${year}` : '';
+      status.textContent = `No ${label} found for "${query}"${yearHint}. ${year ? 'Try without a year.' : ''}`;
       status.className = 'lookup-status error';
       return;
     }
 
-    status.textContent = `${data.Search.length} results — pick one:`;
+    const sorted = sortByExactMatch(data.Search, query, 'Title');
+    status.textContent = `${sorted.length} result${sorted.length !== 1 ? 's' : ''}${year ? ` (filtered to ${year})` : ''} — pick one:`;
     status.className = 'lookup-status';
 
     const container = document.getElementById('lookupResults');
-    container.innerHTML = data.Search.map(movie => {
-      const hasPoster = movie.Poster && movie.Poster !== 'N/A';
-      return `<div class="lookup-result-item" onclick="selectMovieResult('${movie.imdbID}')">
+    container.innerHTML = sorted.map(item => {
+      const hasPoster = item.Poster && item.Poster !== 'N/A';
+      return `<div class="lookup-result-item" onclick="selectOMDBResult('${item.imdbID}', '${type}')">
         ${hasPoster
-          ? `<img class="lookup-result-thumb" src="${movie.Poster}" onerror="this.outerHTML='<div class=\\'lookup-result-thumb-placeholder\\'>🎬</div>'">`
-          : `<div class="lookup-result-thumb-placeholder">🎬</div>`}
+          ? `<img class="lookup-result-thumb" src="${item.Poster}" onerror="this.outerHTML='<div class=\\'lookup-result-thumb-placeholder\\'>${type === 'series' ? '📺' : '🎬'}</div>'">`
+          : `<div class="lookup-result-thumb-placeholder">${type === 'series' ? '📺' : '🎬'}</div>`}
         <div class="lookup-result-info">
-          <div class="lookup-result-title">${esc(movie.Title)}</div>
-          <div class="lookup-result-meta">${movie.Year}${movie.Type ? ' · ' + movie.Type : ''}</div>
+          <div class="lookup-result-title">${esc(item.Title)}</div>
+          <div class="lookup-result-meta">${item.Year}${item.Type ? ' · ' + item.Type : ''}</div>
         </div>
       </div>`;
     }).join('');
@@ -1691,7 +1755,7 @@ async function lookupMovie() {
   }
 }
 
-async function selectMovieResult(imdbID) {
+async function selectOMDBResult(imdbID, type) {
   clearLookupResults();
   const status = document.getElementById('lookupStatus');
   status.innerHTML = '<span class="spinner"></span> Fetching details...';
@@ -1708,9 +1772,9 @@ async function selectMovieResult(imdbID) {
     }
 
     document.getElementById('itemTitle').value = data.Title || '';
-    document.getElementById('itemAuthor').value = data.Director || '';
+    document.getElementById('itemAuthor').value = data.Director !== 'N/A' ? (data.Director || '') : (data.Writer || '');
     document.getElementById('itemGenre').value = data.Genre || '';
-    document.getElementById('itemType').value = 'movie';
+    document.getElementById('itemType').value = type === 'series' ? 'series' : 'movie';
 
     if (data.Poster && data.Poster !== 'N/A') {
       document.getElementById('coverUrl').value = data.Poster;
@@ -1719,7 +1783,8 @@ async function selectMovieResult(imdbID) {
 
     const extra = [];
     if (data.Year) extra.push(`Year: ${data.Year}`);
-    if (data.Runtime) extra.push(`Runtime: ${data.Runtime}`);
+    if (data.Runtime && data.Runtime !== 'N/A') extra.push(`Runtime: ${data.Runtime}`);
+    if (data.totalSeasons) extra.push(`Seasons: ${data.totalSeasons}`);
     if (data.imdbRating && data.imdbRating !== 'N/A') extra.push(`IMDb: ${data.imdbRating}/10`);
     if (data.Plot && data.Plot !== 'N/A') extra.push(`\n${data.Plot}`);
     document.getElementById('itemNotes').value = extra.join(' · ');
