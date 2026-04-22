@@ -1394,6 +1394,7 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
       <div class="lookup-row" style="margin-top:8px;">
         <select id="tmdbSearchBy" class="search-field-select" style="flex:none;border-radius:var(--radius-sm);border:1px solid var(--border);">
           <option value="title">Search by Title</option>
+          <option value="author">Search by Author</option>
           <option value="actor">Search by Actor</option>
           <option value="director">Search by Director</option>
         </select>
@@ -2019,31 +2020,74 @@ async function lookupISBN() {
 async function lookupBook() {
   const query = document.getElementById('lookupInput').value.trim();
   const year = document.getElementById('lookupYear').value.trim();
+  const searchBy = document.getElementById('tmdbSearchBy').value;
   if (!query) return;
+
   const status = document.getElementById('lookupStatus');
   clearLookupResults();
-  status.innerHTML = '<span class="spinner"></span> Searching Open Library...';
-  status.className = 'lookup-status';
 
   try {
-    let url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=15`;
-    if (year) url += `&first_publish_year=${year}`;
+    let docs = [];
 
-    const res = await fetch(url);
-    const data = await res.json();
+    if (searchBy === 'author') {
+      // Step 1: find the author
+      status.innerHTML = '<span class="spinner"></span> Searching for author...';
+      status.className = 'lookup-status';
 
-    if (!data.docs || data.docs.length === 0) {
-      status.textContent = year ? `No results for "${query}" around ${year}. Try without a year.` : 'No results found.';
-      status.className = 'lookup-status error';
-      return;
+      const authorRes = await fetch(`https://openlibrary.org/search/authors.json?q=${encodeURIComponent(query)}&limit=1`);
+      const authorData = await authorRes.json();
+
+      if (!authorData.docs || authorData.docs.length === 0) {
+        status.textContent = `No author found named "${query}".`;
+        status.className = 'lookup-status error';
+        return;
+      }
+
+      const author = authorData.docs[0];
+      const authorName = author.name || query;
+      status.innerHTML = `<span class="spinner"></span> Found ${esc(authorName)} — loading their books...`;
+
+      // Step 2: get their works
+      let worksUrl = `https://openlibrary.org/search.json?author=${encodeURIComponent(authorName)}&limit=20&sort=editions`;
+      if (year) worksUrl += `&first_publish_year=${year}`;
+
+      const worksRes = await fetch(worksUrl);
+      const worksData = await worksRes.json();
+
+      if (!worksData.docs || worksData.docs.length === 0) {
+        status.textContent = `No books found for ${authorName}.`;
+        status.className = 'lookup-status error';
+        return;
+      }
+
+      docs = worksData.docs;
+      status.textContent = `${docs.length} book${docs.length !== 1 ? 's' : ''} by ${authorName}${year ? ` (${year})` : ''} — pick one:`;
+
+    } else {
+      // Title search
+      status.innerHTML = '<span class="spinner"></span> Searching Open Library...';
+      status.className = 'lookup-status';
+
+      let url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=15`;
+      if (year) url += `&first_publish_year=${year}`;
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (!data.docs || data.docs.length === 0) {
+        status.textContent = year ? `No results for "${query}" around ${year}. Try without a year.` : 'No results found.';
+        status.className = 'lookup-status error';
+        return;
+      }
+
+      docs = sortByExactMatch(data.docs, query, 'title');
+      status.textContent = `${docs.length} result${docs.length !== 1 ? 's' : ''}${year ? ` (${year})` : ''} — pick one:`;
     }
 
-    const sorted = sortByExactMatch(data.docs, query, 'title');
-    status.textContent = `${sorted.length} result${sorted.length !== 1 ? 's' : ''}${year ? ` (filtered to ${year})` : ''} — pick one:`;
     status.className = 'lookup-status';
 
     const container = document.getElementById('lookupResults');
-    container.innerHTML = sorted.map(book => {
+    container.innerHTML = docs.map(book => {
       const title = book.title || 'Unknown Title';
       const author = (book.author_name || []).join(', ') || 'Unknown Author';
       const bookYear = book.first_publish_year || '';
@@ -2063,6 +2107,7 @@ async function lookupBook() {
       </div>`;
     }).join('');
     container.classList.add('visible');
+
   } catch (err) {
     status.textContent = 'Lookup failed: ' + err.message;
     status.className = 'lookup-status error';
