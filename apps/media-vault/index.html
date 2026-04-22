@@ -134,13 +134,16 @@ body {
   flex: 1;
   min-width: 200px;
   position: relative;
+  display: flex;
 }
 .search-box input {
+  flex: 1;
   width: 100%;
   padding: 9px 14px 9px 36px;
   background: var(--bg-input);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-right: none;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
   color: var(--text-primary);
   font-family: 'Outfit', sans-serif;
   font-size: 14px;
@@ -149,6 +152,60 @@ body {
 }
 .search-box input:focus { border-color: var(--accent); }
 .search-box input::placeholder { color: var(--text-muted); }
+.search-field-select {
+  flex: none;
+  padding: 7px 10px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  outline: none;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.search-field-select:focus { border-color: var(--accent); color: var(--text-primary); }
+
+/* ─── PAGINATION ─── */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.pagination-info {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.pagination-pages {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.page-btn {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.page-btn:hover { border-color: var(--text-muted); color: var(--text-primary); }
+.page-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.page-btn.ellipsis { border: none; background: none; cursor: default; color: var(--text-muted); }
+.page-btn.ellipsis:hover { color: var(--text-muted); border: none; }
 .search-icon {
   position: absolute;
   left: 12px;
@@ -950,6 +1007,157 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
 .merge-option:hover { border-color: var(--accent); background: var(--accent-glow); }
 .merge-option h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
 .merge-option p { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+
+/* ─── STATS PAGE ─── */
+.stats-page {
+  display: none;
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.stats-page.active { display: block; }
+.stats-page-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.stats-page-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 28px;
+}
+.stats-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 32px;
+}
+.stats-overview-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+}
+.stats-overview-card .val {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.stats-overview-card .lbl {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.stats-sections {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+@media (max-width: 768px) { .stats-sections { grid-template-columns: 1fr; } }
+.stats-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.stats-section-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.stats-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.stats-section-count {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+.stats-list {
+  padding: 8px 0;
+  max-height: 340px;
+  overflow-y: auto;
+}
+.stats-list-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 18px;
+  gap: 12px;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.stats-list-item:hover { background: var(--bg-tertiary); }
+.stats-list-rank {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  width: 20px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.stats-list-bar-wrap {
+  flex: 1;
+  min-width: 0;
+}
+.stats-list-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+.stats-list-bar {
+  height: 4px;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+  opacity: 0.5;
+}
+.stats-list-item:hover .stats-list-bar { opacity: 1; }
+.stats-list-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.stats-empty {
+  padding: 24px 18px;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+.nav-tab {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.nav-tab:hover { color: var(--text-primary); }
+.nav-tab.active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
 </style>
 </head>
 <body>
@@ -1008,6 +1216,10 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
       <div class="logo">MediaVault</div>
       <div class="logo-sub">personal media library</div>
     </div>
+    <div style="display:flex;gap:6px;margin-left:20px;">
+      <button class="nav-tab active" id="navLibrary" onclick="switchView('library')">📚 Library</button>
+      <button class="nav-tab" id="navStats" onclick="switchView('stats')">📊 Stats</button>
+    </div>
   </div>
   <div class="header-right">
     <div class="user-pill" id="userPill" style="display:none">
@@ -1016,18 +1228,27 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
       <button class="btn-signout" onclick="signOut()">Sign out</button>
     </div>
     <a href="/" class="home-link">← workshop</a>
-    <button class="btn btn-sm" onclick="openImportModal()">📥 Import</button>
-    <button class="btn btn-sm" onclick="exportCSV()">📤 Export</button>
+    <button class="btn btn-sm" id="btnImportHeader" onclick="openImportModal()">📥 Import</button>
+    <button class="btn btn-sm" id="btnExportHeader" onclick="exportCSV()">📤 Export</button>
     <button class="btn btn-sm btn-select-mode" id="btnSelectMode" onclick="toggleSelectMode()">☑ Select</button>
     <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Item</button>
   </div>
 </header>
 
 <!-- ─── TOOLBAR ─── -->
-<div class="toolbar">
+<div class="toolbar" id="toolbar">
   <div class="search-box">
     <span class="search-icon">🔍</span>
-    <input type="text" id="searchInput" placeholder="Search titles, authors, genres, series..." oninput="renderLibrary()">
+    <input type="text" id="searchInput" placeholder="Search..." oninput="resetPageAndRender()">
+    <select id="searchField" class="search-field-select" onchange="resetPageAndRender()">
+      <option value="all">All Fields</option>
+      <option value="title">Title</option>
+      <option value="author">Author / Director</option>
+      <option value="genre">Genre</option>
+      <option value="series">Series</option>
+      <option value="location">Location</option>
+      <option value="notes">Notes</option>
+    </select>
   </div>
   <div class="filter-group">
     <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">All</button>
@@ -1082,6 +1303,77 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
   <button class="btn btn-primary" onclick="openAddModal()">+ Add First Item</button>
 </div>
 
+<!-- ─── PAGINATION ─── -->
+<div class="pagination" id="pagination" style="display:none">
+  <div class="pagination-info" id="paginationInfo"></div>
+  <div class="pagination-pages" id="paginationPages"></div>
+</div>
+
+<!-- ─── STATS PAGE ─── -->
+<div class="stats-page" id="statsPage">
+  <div class="stats-page-title">Collection Stats</div>
+  <div class="stats-page-sub" id="statsSubtitle">Loading...</div>
+
+  <!-- Overview cards -->
+  <div class="stats-overview" id="statsOverview"></div>
+
+  <!-- Audiobook sections -->
+  <div id="statsAudiobookSections">
+    <h3 style="font-size:15px;font-weight:700;color:var(--tag-audiobook);margin-bottom:14px;">📚 Audiobooks</h3>
+    <div class="stats-sections" style="margin-bottom:28px;">
+      <div class="stats-section">
+        <div class="stats-section-header">
+          <span class="stats-section-title">Authors</span>
+          <span class="stats-section-count" id="countAuthors"></span>
+        </div>
+        <div class="stats-list" id="listAuthors"></div>
+      </div>
+      <div class="stats-section">
+        <div class="stats-section-header">
+          <span class="stats-section-title">Genres</span>
+          <span class="stats-section-count" id="countAudiobookGenres"></span>
+        </div>
+        <div class="stats-list" id="listAudiobookGenres"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Movie/Series sections -->
+  <div id="statsVideoSections">
+    <h3 style="font-size:15px;font-weight:700;color:var(--tag-movie);margin-bottom:14px;">🎬 Movies & Series</h3>
+    <div class="stats-sections" style="margin-bottom:28px;">
+      <div class="stats-section">
+        <div class="stats-section-header">
+          <span class="stats-section-title">Directors</span>
+          <span class="stats-section-count" id="countDirectors"></span>
+        </div>
+        <div class="stats-list" id="listDirectors"></div>
+      </div>
+      <div class="stats-section">
+        <div class="stats-section-header">
+          <span class="stats-section-title">Actors</span>
+          <span class="stats-section-count" id="countActors"></span>
+        </div>
+        <div class="stats-list" id="listActors"></div>
+      </div>
+      <div class="stats-section">
+        <div class="stats-section-header">
+          <span class="stats-section-title">Producers</span>
+          <span class="stats-section-count" id="countProducers"></span>
+        </div>
+        <div class="stats-list" id="listProducers"></div>
+      </div>
+      <div class="stats-section">
+        <div class="stats-section-header">
+          <span class="stats-section-title">Genres</span>
+          <span class="stats-section-count" id="countVideoGenres"></span>
+        </div>
+        <div class="stats-list" id="listVideoGenres"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ─── ADD/EDIT MODAL ─── -->
 <div class="modal-overlay" id="addModal">
   <div class="modal">
@@ -1133,6 +1425,17 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
     <div class="form-group">
       <label>Author / Director</label>
       <input type="text" id="itemAuthor" placeholder="e.g. Andy Weir">
+    </div>
+
+    <div class="form-row" id="actorsRow">
+      <div class="form-group">
+        <label>Actors <span style="color:var(--text-muted);font-weight:400">(comma separated)</span></label>
+        <input type="text" id="itemActors" placeholder="e.g. Tom Hanks, Meryl Streep">
+      </div>
+      <div class="form-group">
+        <label>Producers <span style="color:var(--text-muted);font-weight:400">(comma separated)</span></label>
+        <input type="text" id="itemProducers" placeholder="e.g. Steven Spielberg">
+      </div>
     </div>
 
     <div class="form-row">
@@ -1231,18 +1534,33 @@ let detailItemId = null;
 let csvData = null;
 let selectMode = false;
 let selectedIds = new Set();
+let currentPage = 1;
+const ITEMS_PER_PAGE = 20;
 
 const OMDB_KEY = 'f268b0f'; // free tier key
 
 // ─── RENDER ───
+function resetPageAndRender() {
+  currentPage = 1;
+  renderLibrary();
+}
+
 function renderLibrary() {
   const query = document.getElementById('searchInput').value.toLowerCase().trim();
   const sortVal = document.getElementById('sortSelect').value;
-  
+  const searchField = document.getElementById('searchField').value;
+
   let filtered = library.filter(item => {
     if (currentFilter !== 'all' && item.type !== currentFilter) return false;
     if (query) {
-      const searchable = [item.title, item.author, item.genre, item.series, item.location, item.notes].join(' ').toLowerCase();
+      let searchable;
+      if (searchField === 'all') {
+        searchable = [item.title, item.author, item.genre, item.series, item.location, item.notes].join(' ').toLowerCase();
+      } else if (searchField === 'author') {
+        searchable = (item.author || '').toLowerCase();
+      } else {
+        searchable = (item[searchField] || '').toLowerCase();
+      }
       return searchable.includes(query);
     }
     return true;
@@ -1264,7 +1582,7 @@ function renderLibrary() {
     return 0;
   });
 
-  // Stats
+  // Stats (always off full library)
   document.getElementById('statTotal').textContent = library.length;
   document.getElementById('statAudiobooks').textContent = library.filter(i => i.type === 'audiobook').length;
   document.getElementById('statMovies').textContent = library.filter(i => i.type === 'movie').length;
@@ -1275,13 +1593,32 @@ function renderLibrary() {
   // Empty state
   const showEmpty = filtered.length === 0;
   document.getElementById('emptyState').style.display = showEmpty ? 'flex' : 'none';
-  document.getElementById('libraryGrid').style.display = (!showEmpty && currentView === 'grid') ? 'grid' : 'none';
-  document.getElementById('libraryList').style.display = (!showEmpty && currentView === 'list') ? 'flex' : 'none';
+  document.getElementById('pagination').style.display = showEmpty ? 'none' : 'flex';
 
-  if (showEmpty) return;
+  if (showEmpty) {
+    document.getElementById('libraryGrid').style.display = 'none';
+    document.getElementById('libraryList').style.display = 'none';
+    return;
+  }
+
+  // Pagination
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  if (currentPage > totalPages) currentPage = totalPages;
+  const start = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginated = filtered.slice(start, start + ITEMS_PER_PAGE);
+
+  document.getElementById('libraryGrid').style.display = currentView === 'grid' ? 'grid' : 'none';
+  document.getElementById('libraryList').style.display = currentView === 'list' ? 'flex' : 'none';
+
+  // Pagination controls
+  const fieldLabel = document.getElementById('searchField').options[document.getElementById('searchField').selectedIndex].text;
+  const filterLabel = query ? ` matching "${query}"${searchField !== 'all' ? ` in ${fieldLabel}` : ''}` : '';
+  document.getElementById('paginationInfo').textContent =
+    `Showing ${start + 1}–${Math.min(start + ITEMS_PER_PAGE, filtered.length)} of ${filtered.length}${filterLabel}`;
+  renderPaginationButtons(totalPages);
 
   // Grid
-  document.getElementById('libraryGrid').innerHTML = filtered.map((item, i) => `
+  document.getElementById('libraryGrid').innerHTML = paginated.map((item, i) => `
     <div class="media-card${selectedIds.has(item.id) ? ' selected' : ''}" id="card-${item.id}" onclick="handleCardClick(event, '${item.id}')" style="animation-delay: ${i * 0.03}s">
       <input type="checkbox" class="card-checkbox" id="chk-${item.id}" ${selectedIds.has(item.id) ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelect('${item.id}')">
       <div class="media-card-cover">
@@ -1300,11 +1637,11 @@ function renderLibrary() {
   `).join('');
 
   // List
-  document.getElementById('listRows').innerHTML = filtered.map((item, i) => `
+  document.getElementById('listRows').innerHTML = paginated.map((item, i) => `
     <div class="list-row${selectedIds.has(item.id) ? ' selected' : ''}" id="row-${item.id}" onclick="handleCardClick(event, '${item.id}')" style="animation-delay: ${i * 0.02}s">
       <div style="display:flex;align-items:center;justify-content:center;">
         <input type="checkbox" class="row-checkbox" ${selectedIds.has(item.id) ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelect('${item.id}')">
-        ${!selectMode ? `<div class="list-row-cover" style="display:${selectMode?'none':'flex'}">
+        ${!selectMode ? `<div class="list-row-cover" style="display:flex">
           ${item.cover ? `<img src="${item.cover}" alt="" onerror="this.parentElement.innerHTML='<div class=\\'no-cover\\'>${item.type === 'movie' ? '🎬' : '📚'}</div>'">` : `<div class="no-cover">${item.type === 'movie' ? '🎬' : '📚'}</div>`}
         </div>` : ''}
       </div>
@@ -1325,6 +1662,34 @@ function renderLibrary() {
   `).join('');
 }
 
+function renderPaginationButtons(totalPages) {
+  const container = document.getElementById('paginationPages');
+  if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+  const pages = [];
+  // Always show first, last, current, and neighbors
+  const show = new Set();
+  show.add(1);
+  show.add(totalPages);
+  for (let p = Math.max(1, currentPage - 2); p <= Math.min(totalPages, currentPage + 2); p++) show.add(p);
+
+  const sorted = [...show].sort((a, b) => a - b);
+  let html = '';
+  let prev = 0;
+  for (const p of sorted) {
+    if (p - prev > 1) html += `<button class="page-btn ellipsis">…</button>`;
+    html += `<button class="page-btn${p === currentPage ? ' active' : ''}" onclick="goToPage(${p})">${p}</button>`;
+    prev = p;
+  }
+  container.innerHTML = html;
+}
+
+function goToPage(p) {
+  currentPage = p;
+  renderLibrary();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 function esc(str) {
   const d = document.createElement('div');
   d.textContent = str;
@@ -1334,6 +1699,7 @@ function esc(str) {
 // ─── FILTER / VIEW / SORT ───
 function setFilter(filter, btn) {
   currentFilter = filter;
+  currentPage = 1;
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderLibrary();
@@ -1369,7 +1735,7 @@ function closeAddModal() {
 }
 
 function clearForm() {
-  ['itemType', 'itemFormat', 'itemTitle', 'itemAuthor', 'itemGenre', 'itemSeries', 'itemLocation', 'itemCoverInput', 'itemNotes', 'lookupInput', 'coverUrl'].forEach(id => {
+  ['itemType', 'itemFormat', 'itemTitle', 'itemAuthor', 'itemActors', 'itemProducers', 'itemGenre', 'itemSeries', 'itemLocation', 'itemCoverInput', 'itemNotes', 'lookupInput', 'coverUrl'].forEach(id => {
     const el = document.getElementById(id);
     if (el.tagName === 'SELECT') el.selectedIndex = 0;
     else el.value = '';
@@ -1387,6 +1753,8 @@ function editItem(id) {
   document.getElementById('itemFormat').value = item.format;
   document.getElementById('itemTitle').value = item.title;
   document.getElementById('itemAuthor').value = item.author || '';
+  document.getElementById('itemActors').value = item.actors || '';
+  document.getElementById('itemProducers').value = item.producers || '';
   document.getElementById('itemGenre').value = item.genre || '';
   document.getElementById('itemSeries').value = item.series || '';
   document.getElementById('itemLocation').value = item.location || '';
@@ -1411,6 +1779,8 @@ function saveItem() {
     format: document.getElementById('itemFormat').value,
     title: title,
     author: document.getElementById('itemAuthor').value.trim(),
+    actors: document.getElementById('itemActors').value.trim(),
+    producers: document.getElementById('itemProducers').value.trim(),
     genre: document.getElementById('itemGenre').value.trim(),
     series: document.getElementById('itemSeries').value.trim(),
     location: document.getElementById('itemLocation').value.trim(),
@@ -1532,10 +1902,18 @@ function bulkSelectAll() {
 
 function getFilteredIds() {
   const query = document.getElementById('searchInput').value.toLowerCase().trim();
+  const searchField = document.getElementById('searchField').value;
   return library.filter(item => {
     if (currentFilter !== 'all' && item.type !== currentFilter) return false;
     if (query) {
-      const searchable = [item.title, item.author, item.genre, item.series, item.location, item.notes].join(' ').toLowerCase();
+      let searchable;
+      if (searchField === 'all') {
+        searchable = [item.title, item.author, item.genre, item.series, item.location, item.notes].join(' ').toLowerCase();
+      } else if (searchField === 'author') {
+        searchable = (item.author || '').toLowerCase();
+      } else {
+        searchable = (item[searchField] || '').toLowerCase();
+      }
       return searchable.includes(query);
     }
     return true;
@@ -1774,6 +2152,8 @@ async function selectOMDBResult(imdbID, type) {
 
     document.getElementById('itemTitle').value = data.Title || '';
     document.getElementById('itemAuthor').value = data.Director !== 'N/A' ? (data.Director || '') : (data.Writer || '');
+    document.getElementById('itemActors').value = data.Actors && data.Actors !== 'N/A' ? data.Actors : '';
+    document.getElementById('itemProducers').value = data.Production && data.Production !== 'N/A' ? data.Production : '';
     document.getElementById('itemGenre').value = data.Genre || '';
     document.getElementById('itemType').value = type === 'series' ? 'series' : 'movie';
 
@@ -1801,7 +2181,7 @@ async function selectOMDBResult(imdbID, type) {
 // ─── CSV IMPORT/EXPORT ───
 function exportCSV() {
   if (library.length === 0) { alert('Nothing to export.'); return; }
-  const headers = ['type', 'title', 'author', 'genre', 'series', 'format', 'location', 'cover', 'notes'];
+  const headers = ['type', 'title', 'author', 'actors', 'producers', 'genre', 'series', 'format', 'location', 'cover', 'notes'];
   const csvRows = [headers.join(',')];
   
   library.forEach(item => {
@@ -1905,6 +2285,8 @@ function importCSV() {
       format: (obj.format || 'digital').toLowerCase(),
       title: obj.title,
       author: obj.author || obj.director || '',
+      actors: obj.actors || '',
+      producers: obj.producers || '',
       genre: obj.genre || '',
       series: obj.series || '',
       location: obj.location || '',
@@ -2024,6 +2406,8 @@ async function loadFromCloud() {
       format: row.format,
       title: row.title,
       author: row.author || '',
+      actors: row.actors || '',
+      producers: row.producers || '',
       genre: row.genre || '',
       series: row.series || '',
       location: row.location || '',
@@ -2052,6 +2436,8 @@ async function pushAllToCloud(items) {
         format: item.format,
         title: item.title,
         author: item.author || '',
+        actors: item.actors || '',
+        producers: item.producers || '',
         genre: item.genre || '',
         series: item.series || '',
         location: item.location || '',
@@ -2148,6 +2534,145 @@ sb.auth.onAuthStateChange(async (event, session) => {
     currentUser = null;
   }
 });
+
+// ─── VIEW SWITCHING ───
+let currentMainView = 'library';
+
+function switchView(view) {
+  currentMainView = view;
+  const isLibrary = view === 'library';
+
+  document.getElementById('navLibrary').classList.toggle('active', isLibrary);
+  document.getElementById('navStats').classList.toggle('active', !isLibrary);
+
+  // Show/hide library elements
+  document.getElementById('toolbar').style.display = isLibrary ? '' : 'none';
+  document.querySelector('.stats-bar').style.display = isLibrary ? '' : 'none';
+  document.getElementById('libraryGrid').style.display = isLibrary && currentView === 'grid' ? 'grid' : 'none';
+  document.getElementById('libraryList').style.display = isLibrary && currentView === 'list' ? 'flex' : 'none';
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('pagination').style.display = isLibrary ? '' : 'none';
+
+  // Header action buttons — hide select/import/export on stats page
+  document.getElementById('btnSelectMode').style.display = isLibrary ? '' : 'none';
+  document.getElementById('btnImportHeader').style.display = isLibrary ? '' : 'none';
+  document.getElementById('btnExportHeader').style.display = isLibrary ? '' : 'none';
+
+  // Stats page
+  document.getElementById('statsPage').classList.toggle('active', !isLibrary);
+
+  if (!isLibrary) {
+    renderStats();
+  } else {
+    renderLibrary();
+  }
+}
+
+// ─── STATS ───
+function buildRankedList(items, field, splitByComma) {
+  const counts = {};
+  items.forEach(item => {
+    const raw = item[field] || '';
+    if (!raw.trim()) return;
+    const entries = splitByComma
+      ? raw.split(',').map(s => s.trim()).filter(Boolean)
+      : [raw.trim()];
+    entries.forEach(e => {
+      if (e && e !== 'N/A') counts[e] = (counts[e] || 0) + 1;
+    });
+  });
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 50); // cap at 50
+}
+
+function renderRankedList(containerId, countId, items, field, splitByComma, filterField, filterType) {
+  const ranked = buildRankedList(items, field, splitByComma);
+  const countEl = document.getElementById(countId);
+  const listEl = document.getElementById(containerId);
+
+  if (countEl) countEl.textContent = `${ranked.length} unique`;
+
+  if (ranked.length === 0) {
+    listEl.innerHTML = `<div class="stats-empty">No data yet</div>`;
+    return;
+  }
+
+  const max = ranked[0][1];
+  listEl.innerHTML = ranked.map(([name, count], i) => {
+    const pct = Math.round((count / max) * 100);
+    const encodedName = encodeURIComponent(name);
+    return `
+      <div class="stats-list-item" onclick="jumpToSearch('${encodedName}', '${filterField}', '${filterType}')">
+        <div class="stats-list-rank">#${i + 1}</div>
+        <div class="stats-list-bar-wrap">
+          <div class="stats-list-name">${esc(name)}</div>
+          <div class="stats-list-bar" style="width:${pct}%"></div>
+        </div>
+        <div class="stats-list-count">${count}</div>
+      </div>`;
+  }).join('');
+}
+
+function jumpToSearch(encodedName, field, typeFilter) {
+  // Switch to library, set search field and query, apply type filter
+  switchView('library');
+  document.getElementById('searchInput').value = decodeURIComponent(encodedName);
+  document.getElementById('searchField').value = field;
+
+  // Set the type filter button
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  const targetBtn = [...document.querySelectorAll('.filter-btn')].find(b => b.dataset.filter === typeFilter);
+  if (targetBtn) {
+    targetBtn.classList.add('active');
+    currentFilter = typeFilter;
+  } else {
+    document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
+    currentFilter = 'all';
+  }
+  currentPage = 1;
+  renderLibrary();
+}
+
+function renderStats() {
+  const audiobooks = library.filter(i => i.type === 'audiobook');
+  const video = library.filter(i => i.type === 'movie' || i.type === 'series');
+  const movies = library.filter(i => i.type === 'movie');
+  const series = library.filter(i => i.type === 'series');
+
+  // Subtitle
+  document.getElementById('statsSubtitle').textContent =
+    `${library.length} items · ${audiobooks.length} audiobooks · ${movies.length} movies · ${series.length} series`;
+
+  // Overview cards
+  document.getElementById('statsOverview').innerHTML = [
+    { val: library.length, lbl: 'Total Items' },
+    { val: audiobooks.length, lbl: 'Audiobooks' },
+    { val: movies.length, lbl: 'Movies' },
+    { val: series.length, lbl: 'Series' },
+    { val: library.filter(i => i.format === 'physical').length, lbl: 'Physical' },
+    { val: library.filter(i => i.format === 'digital').length, lbl: 'Digital' },
+  ].map(c => `
+    <div class="stats-overview-card">
+      <div class="val">${c.val}</div>
+      <div class="lbl">${c.lbl}</div>
+    </div>`).join('');
+
+  // Audiobook sections — search by author field, no type filter needed since audiobooks only
+  renderRankedList('listAuthors', 'countAuthors', audiobooks, 'author', false, 'author', 'audiobook');
+  renderRankedList('listAudiobookGenres', 'countAudiobookGenres', audiobooks, 'genre', true, 'genre', 'audiobook');
+
+  // Show/hide audiobook section
+  document.getElementById('statsAudiobookSections').style.display = audiobooks.length ? '' : 'none';
+
+  // Video sections
+  renderRankedList('listDirectors', 'countDirectors', video, 'author', false, 'author', 'all');
+  renderRankedList('listActors', 'countActors', video, 'actors', true, 'all', 'all');
+  renderRankedList('listProducers', 'countProducers', video, 'producers', true, 'all', 'all');
+  renderRankedList('listVideoGenres', 'countVideoGenres', video, 'genre', true, 'genre', 'all');
+
+  document.getElementById('statsVideoSections').style.display = video.length ? '' : 'none';
+}
 
 // ─── KEYBOARD ───
 document.addEventListener('keydown', e => {
