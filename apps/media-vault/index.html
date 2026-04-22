@@ -595,6 +595,128 @@ select.toolbar-select:focus { border-color: var(--accent); }
 .media-card { animation: fadeIn 0.3s ease forwards; }
 .list-row { animation: fadeIn 0.2s ease forwards; }
 
+/* ─── BULK EDIT ─── */
+.btn-select-mode {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.btn-select-mode:hover { border-color: var(--text-muted); color: var(--text-primary); }
+.btn-select-mode.active {
+  background: var(--accent-glow);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.media-card .card-checkbox {
+  display: none;
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 10;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+body.select-mode .media-card .card-checkbox { display: block; }
+body.select-mode .media-card { cursor: default; }
+body.select-mode .media-card:hover {
+  border-color: var(--border);
+  transform: none;
+  box-shadow: none;
+}
+body.select-mode .media-card.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.list-row .row-checkbox {
+  display: none;
+  accent-color: var(--accent);
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+body.select-mode .list-row .row-checkbox { display: block; }
+body.select-mode .list-row { cursor: default; }
+body.select-mode .list-row.selected { background: var(--accent-glow); }
+
+/* Floating bulk action bar */
+.bulk-bar {
+  position: fixed;
+  bottom: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-secondary);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-lg);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 300;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px var(--accent-glow);
+  transition: bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  white-space: nowrap;
+}
+.bulk-bar.visible { bottom: 28px; }
+.bulk-bar-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 600;
+  min-width: 80px;
+}
+.bulk-bar-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.bulk-bar-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+}
+.bulk-type-btn {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.bulk-type-btn.audiobook {
+  background: rgba(192,132,252,0.15);
+  color: var(--tag-audiobook);
+  border: 1px solid var(--tag-audiobook);
+}
+.bulk-type-btn.audiobook:hover { background: rgba(192,132,252,0.3); }
+.bulk-type-btn.movie {
+  background: rgba(96,165,250,0.15);
+  color: var(--tag-movie);
+  border: 1px solid var(--tag-movie);
+}
+.bulk-type-btn.movie:hover { background: rgba(96,165,250,0.3); }
+.bulk-select-all {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  transition: color var(--transition);
+  padding: 4px 0;
+}
+.bulk-select-all:hover { color: var(--text-secondary); }
+
 /* ─── SPINNER ─── */
 .spinner {
   display: inline-block;
@@ -622,6 +744,7 @@ select.toolbar-select:focus { border-color: var(--accent); }
     <a href="/" class="home-link">← workshop</a>
     <button class="btn btn-sm" onclick="openImportModal()">📥 Import</button>
     <button class="btn btn-sm" onclick="exportCSV()">📤 Export</button>
+    <button class="btn btn-sm btn-select-mode" id="btnSelectMode" onclick="toggleSelectMode()">☑ Select</button>
     <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Item</button>
   </div>
 </header>
@@ -797,6 +920,18 @@ select.toolbar-select:focus { border-color: var(--accent); }
   </div>
 </div>
 
+<!-- ─── BULK ACTION BAR ─── -->
+<div class="bulk-bar" id="bulkBar">
+  <div class="bulk-bar-count" id="bulkCount">0 selected</div>
+  <button class="bulk-select-all" id="bulkSelectAllBtn" onclick="bulkSelectAll()">Select All</button>
+  <div class="bulk-bar-divider"></div>
+  <span class="bulk-bar-label">Change type to →</span>
+  <button class="bulk-type-btn audiobook" onclick="bulkChangeType('audiobook')">📚 Audiobook</button>
+  <button class="bulk-type-btn movie" onclick="bulkChangeType('movie')">🎬 Movie</button>
+  <div class="bulk-bar-divider"></div>
+  <button class="btn btn-sm btn-danger" onclick="toggleSelectMode()">Cancel</button>
+</div>
+
 <script>
 // ─── STATE ───
 let library = JSON.parse(localStorage.getItem('mv_library') || '[]');
@@ -804,6 +939,8 @@ let currentFilter = 'all';
 let currentView = 'grid';
 let detailItemId = null;
 let csvData = null;
+let selectMode = false;
+let selectedIds = new Set();
 
 const OMDB_KEY = 'f268b0f'; // free tier key
 
@@ -854,7 +991,8 @@ function renderLibrary() {
 
   // Grid
   document.getElementById('libraryGrid').innerHTML = filtered.map((item, i) => `
-    <div class="media-card" onclick="openDetail('${item.id}')" style="animation-delay: ${i * 0.03}s">
+    <div class="media-card${selectedIds.has(item.id) ? ' selected' : ''}" id="card-${item.id}" onclick="handleCardClick(event, '${item.id}')" style="animation-delay: ${i * 0.03}s">
+      <input type="checkbox" class="card-checkbox" id="chk-${item.id}" ${selectedIds.has(item.id) ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelect('${item.id}')">
       <div class="media-card-cover">
         ${item.cover ? `<img src="${item.cover}" alt="${esc(item.title)}" onerror="this.parentElement.innerHTML='<div class=\\'no-cover\\'>${item.type === 'movie' ? '🎬' : '📚'}</div>'">` : `<div class="no-cover">${item.type === 'movie' ? '🎬' : '📚'}</div>`}
         <span class="media-card-type type-${item.type}">${item.type}</span>
@@ -872,9 +1010,12 @@ function renderLibrary() {
 
   // List
   document.getElementById('listRows').innerHTML = filtered.map((item, i) => `
-    <div class="list-row" onclick="openDetail('${item.id}')" style="animation-delay: ${i * 0.02}s">
-      <div class="list-row-cover">
-        ${item.cover ? `<img src="${item.cover}" alt="" onerror="this.parentElement.innerHTML='<div class=\\'no-cover\\'>${item.type === 'movie' ? '🎬' : '📚'}</div>'">` : `<div class="no-cover">${item.type === 'movie' ? '🎬' : '📚'}</div>`}
+    <div class="list-row${selectedIds.has(item.id) ? ' selected' : ''}" id="row-${item.id}" onclick="handleCardClick(event, '${item.id}')" style="animation-delay: ${i * 0.02}s">
+      <div style="display:flex;align-items:center;justify-content:center;">
+        <input type="checkbox" class="row-checkbox" ${selectedIds.has(item.id) ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelect('${item.id}')">
+        ${!selectMode ? `<div class="list-row-cover" style="display:${selectMode?'none':'flex'}">
+          ${item.cover ? `<img src="${item.cover}" alt="" onerror="this.parentElement.innerHTML='<div class=\\'no-cover\\'>${item.type === 'movie' ? '🎬' : '📚'}</div>'">` : `<div class="no-cover">${item.type === 'movie' ? '🎬' : '📚'}</div>`}
+        </div>` : ''}
       </div>
       <div>
         <div class="list-row-title">${esc(item.title)}</div>
@@ -1047,6 +1188,89 @@ function deleteFromDetail() {
     deleteItem(detailItemId);
     closeDetailModal();
   }
+}
+
+// ─── BULK EDIT ───
+function toggleSelectMode() {
+  selectMode = !selectMode;
+  selectedIds.clear();
+  document.body.classList.toggle('select-mode', selectMode);
+  const btn = document.getElementById('btnSelectMode');
+  btn.classList.toggle('active', selectMode);
+  btn.textContent = selectMode ? '✕ Cancel' : '☑ Select';
+  updateBulkBar();
+  renderLibrary();
+}
+
+function handleCardClick(event, id) {
+  if (selectMode) {
+    toggleSelect(id);
+  } else {
+    openDetail(id);
+  }
+}
+
+function toggleSelect(id) {
+  if (selectedIds.has(id)) {
+    selectedIds.delete(id);
+  } else {
+    selectedIds.add(id);
+  }
+  // Update card/row visual without full re-render
+  const card = document.getElementById('card-' + id);
+  const row = document.getElementById('row-' + id);
+  const chk = document.getElementById('chk-' + id);
+  if (card) card.classList.toggle('selected', selectedIds.has(id));
+  if (row) row.classList.toggle('selected', selectedIds.has(id));
+  if (chk) chk.checked = selectedIds.has(id);
+  updateBulkBar();
+}
+
+function bulkSelectAll() {
+  const allVisible = getFilteredIds();
+  const allSelected = allVisible.every(id => selectedIds.has(id));
+  if (allSelected) {
+    allVisible.forEach(id => selectedIds.delete(id));
+  } else {
+    allVisible.forEach(id => selectedIds.add(id));
+  }
+  updateBulkBar();
+  renderLibrary();
+}
+
+function getFilteredIds() {
+  const query = document.getElementById('searchInput').value.toLowerCase().trim();
+  return library.filter(item => {
+    if (currentFilter !== 'all' && item.type !== currentFilter) return false;
+    if (query) {
+      const searchable = [item.title, item.author, item.genre, item.series, item.location, item.notes].join(' ').toLowerCase();
+      return searchable.includes(query);
+    }
+    return true;
+  }).map(i => i.id);
+}
+
+function updateBulkBar() {
+  const bar = document.getElementById('bulkBar');
+  const count = selectedIds.size;
+  document.getElementById('bulkCount').textContent = `${count} selected`;
+  bar.classList.toggle('visible', selectMode);
+  const allVisible = getFilteredIds();
+  const allSelected = allVisible.length > 0 && allVisible.every(id => selectedIds.has(id));
+  document.getElementById('bulkSelectAllBtn').textContent = allSelected ? 'Deselect All' : 'Select All';
+}
+
+function bulkChangeType(newType) {
+  if (selectedIds.size === 0) return;
+  const label = newType === 'audiobook' ? 'Audiobooks' : 'Movies';
+  if (!confirm(`Change ${selectedIds.size} item(s) to ${label}?`)) return;
+  library.forEach(item => {
+    if (selectedIds.has(item.id)) item.type = newType;
+  });
+  saveLibrary();
+  selectedIds.clear();
+  updateBulkBar();
+  renderLibrary();
 }
 
 // ─── LOOKUPS ───
@@ -1300,6 +1524,7 @@ function saveLibrary() {
 // ─── KEYBOARD ───
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
+    if (selectMode) { toggleSelectMode(); return; }
     closeAddModal();
     closeDetailModal();
     closeImportModal();
