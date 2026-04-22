@@ -478,6 +478,65 @@ select.toolbar-select:focus { border-color: var(--accent); }
   gap: 12px;
 }
 
+/* ─── LOOKUP RESULTS ─── */
+.lookup-results {
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  max-height: 220px;
+  overflow-y: auto;
+  display: none;
+}
+.lookup-results.visible { display: block; }
+.lookup-result-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(42,47,62,0.5);
+  transition: background var(--transition);
+  font-size: 13px;
+}
+.lookup-result-item:last-child { border-bottom: none; }
+.lookup-result-item:hover { background: var(--bg-input); }
+.lookup-result-thumb {
+  width: 28px;
+  height: 40px;
+  border-radius: 3px;
+  object-fit: cover;
+  background: var(--bg-tertiary);
+  flex-shrink: 0;
+}
+.lookup-result-thumb-placeholder {
+  width: 28px;
+  height: 40px;
+  border-radius: 3px;
+  background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+  opacity: 0.4;
+}
+.lookup-result-info { flex: 1; min-width: 0; }
+.lookup-result-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lookup-result-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: 2px;
+}
+.lookup-result-item:hover .lookup-result-title { color: var(--accent); }
+
 /* ─── LOOKUP SECTION ─── */
 .lookup-section {
   background: var(--bg-tertiary);
@@ -822,6 +881,7 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
         <button class="btn" onclick="lookupMovie()" id="btnLookupMovie">Movie</button>
       </div>
       <div class="lookup-status" id="lookupStatus"></div>
+      <div class="lookup-results" id="lookupResults"></div>
     </div>
 
     <input type="hidden" id="editId">
@@ -1074,6 +1134,7 @@ function openAddModal() {
 
 function closeAddModal() {
   document.getElementById('addModal').classList.remove('active');
+  clearLookupResults();
 }
 
 function clearForm() {
@@ -1274,10 +1335,17 @@ function bulkChangeType(newType) {
 }
 
 // ─── LOOKUPS ───
+function clearLookupResults() {
+  const r = document.getElementById('lookupResults');
+  r.innerHTML = '';
+  r.classList.remove('visible');
+}
+
 async function lookupISBN() {
   const isbn = document.getElementById('lookupInput').value.trim().replace(/[-\s]/g, '');
   if (!isbn) return;
   const status = document.getElementById('lookupStatus');
+  clearLookupResults();
   status.innerHTML = '<span class="spinner"></span> Looking up ISBN...';
   status.className = 'lookup-status';
 
@@ -1292,17 +1360,13 @@ async function lookupISBN() {
       return;
     }
 
-    document.getElementById('itemTitle').value = book.title || '';
-    document.getElementById('itemAuthor').value = (book.authors || []).map(a => a.name).join(', ');
-    document.getElementById('itemGenre').value = (book.subjects || []).slice(0, 3).map(s => s.name).join(', ');
-    document.getElementById('itemType').value = 'audiobook';
-
-    if (book.cover) {
-      const coverUrl = book.cover.large || book.cover.medium || book.cover.small || '';
-      document.getElementById('coverUrl').value = coverUrl;
-      document.getElementById('itemCoverInput').value = coverUrl;
-    }
-
+    // ISBN is exact — fill directly
+    fillBookFields({
+      title: book.title,
+      authors: (book.authors || []).map(a => a.name).join(', '),
+      genre: (book.subjects || []).slice(0, 3).map(s => s.name).join(', '),
+      cover: book.cover ? (book.cover.large || book.cover.medium || book.cover.small || '') : ''
+    });
     status.textContent = '✓ Found! Fields auto-filled.';
     status.className = 'lookup-status success';
   } catch (err) {
@@ -1315,36 +1379,65 @@ async function lookupBook() {
   const query = document.getElementById('lookupInput').value.trim();
   if (!query) return;
   const status = document.getElementById('lookupStatus');
+  clearLookupResults();
   status.innerHTML = '<span class="spinner"></span> Searching Open Library...';
   status.className = 'lookup-status';
 
   try {
-    const res = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=1`);
+    const res = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=10`);
     const data = await res.json();
-    
+
     if (!data.docs || data.docs.length === 0) {
       status.textContent = 'No results found.';
       status.className = 'lookup-status error';
       return;
     }
 
-    const book = data.docs[0];
-    document.getElementById('itemTitle').value = book.title || '';
-    document.getElementById('itemAuthor').value = (book.author_name || []).join(', ');
-    document.getElementById('itemGenre').value = (book.subject || []).slice(0, 3).join(', ');
-    document.getElementById('itemType').value = 'audiobook';
+    status.textContent = `${data.docs.length} results — pick one:`;
+    status.className = 'lookup-status';
 
-    if (book.cover_i) {
-      const coverUrl = `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg`;
-      document.getElementById('coverUrl').value = coverUrl;
-      document.getElementById('itemCoverInput').value = coverUrl;
-    }
+    const container = document.getElementById('lookupResults');
+    container.innerHTML = data.docs.map((book, i) => {
+      const title = book.title || 'Unknown Title';
+      const author = (book.author_name || []).join(', ') || 'Unknown Author';
+      const year = book.first_publish_year || '';
+      const coverId = book.cover_i;
+      const thumbUrl = coverId ? `https://covers.openlibrary.org/b/id/${coverId}-S.jpg` : null;
+      const genre = (book.subject || []).slice(0, 3).join(', ');
+      const largeUrl = coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` : '';
 
-    status.textContent = `✓ Found: "${book.title}" — fields auto-filled.`;
-    status.className = 'lookup-status success';
+      return `<div class="lookup-result-item" onclick="selectBookResult(${JSON.stringify({title, authors: author, genre, cover: largeUrl}).replace(/'/g, '&#39;')})">
+        ${thumbUrl
+          ? `<img class="lookup-result-thumb" src="${thumbUrl}" onerror="this.outerHTML='<div class=\\'lookup-result-thumb-placeholder\\'>📚</div>'">`
+          : `<div class="lookup-result-thumb-placeholder">📚</div>`}
+        <div class="lookup-result-info">
+          <div class="lookup-result-title">${esc(title)}</div>
+          <div class="lookup-result-meta">${esc(author)}${year ? ' · ' + year : ''}</div>
+        </div>
+      </div>`;
+    }).join('');
+    container.classList.add('visible');
   } catch (err) {
     status.textContent = 'Lookup failed: ' + err.message;
     status.className = 'lookup-status error';
+  }
+}
+
+function selectBookResult(book) {
+  fillBookFields(book);
+  clearLookupResults();
+  document.getElementById('lookupStatus').textContent = `✓ Selected: "${book.title}"`;
+  document.getElementById('lookupStatus').className = 'lookup-status success';
+}
+
+function fillBookFields(book) {
+  document.getElementById('itemTitle').value = book.title || '';
+  document.getElementById('itemAuthor').value = book.authors || '';
+  document.getElementById('itemGenre').value = book.genre || '';
+  document.getElementById('itemType').value = 'audiobook';
+  if (book.cover) {
+    document.getElementById('coverUrl').value = book.cover;
+    document.getElementById('itemCoverInput').value = book.cover;
   }
 }
 
@@ -1352,15 +1445,55 @@ async function lookupMovie() {
   const query = document.getElementById('lookupInput').value.trim();
   if (!query) return;
   const status = document.getElementById('lookupStatus');
+  clearLookupResults();
   status.innerHTML = '<span class="spinner"></span> Searching OMDB...';
   status.className = 'lookup-status';
 
   try {
-    const res = await fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(query)}&apikey=${OMDB_KEY}`);
+    const res = await fetch(`https://www.omdbapi.com/?s=${encodeURIComponent(query)}&type=movie&apikey=${OMDB_KEY}`);
     const data = await res.json();
-    
-    if (data.Response === 'False') {
+
+    if (data.Response === 'False' || !data.Search || data.Search.length === 0) {
       status.textContent = 'No results found: ' + (data.Error || '');
+      status.className = 'lookup-status error';
+      return;
+    }
+
+    status.textContent = `${data.Search.length} results — pick one:`;
+    status.className = 'lookup-status';
+
+    const container = document.getElementById('lookupResults');
+    container.innerHTML = data.Search.map(movie => {
+      const hasPoster = movie.Poster && movie.Poster !== 'N/A';
+      return `<div class="lookup-result-item" onclick="selectMovieResult('${movie.imdbID}')">
+        ${hasPoster
+          ? `<img class="lookup-result-thumb" src="${movie.Poster}" onerror="this.outerHTML='<div class=\\'lookup-result-thumb-placeholder\\'>🎬</div>'">`
+          : `<div class="lookup-result-thumb-placeholder">🎬</div>`}
+        <div class="lookup-result-info">
+          <div class="lookup-result-title">${esc(movie.Title)}</div>
+          <div class="lookup-result-meta">${movie.Year}${movie.Type ? ' · ' + movie.Type : ''}</div>
+        </div>
+      </div>`;
+    }).join('');
+    container.classList.add('visible');
+  } catch (err) {
+    status.textContent = 'Lookup failed: ' + err.message;
+    status.className = 'lookup-status error';
+  }
+}
+
+async function selectMovieResult(imdbID) {
+  clearLookupResults();
+  const status = document.getElementById('lookupStatus');
+  status.innerHTML = '<span class="spinner"></span> Fetching details...';
+  status.className = 'lookup-status';
+
+  try {
+    const res = await fetch(`https://www.omdbapi.com/?i=${imdbID}&apikey=${OMDB_KEY}`);
+    const data = await res.json();
+
+    if (data.Response === 'False') {
+      status.textContent = 'Failed to fetch details.';
       status.className = 'lookup-status error';
       return;
     }
@@ -1375,20 +1508,17 @@ async function lookupMovie() {
       document.getElementById('itemCoverInput').value = data.Poster;
     }
 
-    if (data.Year) {
-      const notes = document.getElementById('itemNotes');
-      const extra = [];
-      if (data.Year) extra.push(`Year: ${data.Year}`);
-      if (data.Runtime) extra.push(`Runtime: ${data.Runtime}`);
-      if (data.imdbRating && data.imdbRating !== 'N/A') extra.push(`IMDb: ${data.imdbRating}/10`);
-      if (data.Plot && data.Plot !== 'N/A') extra.push(`\n${data.Plot}`);
-      notes.value = extra.join(' · ');
-    }
+    const extra = [];
+    if (data.Year) extra.push(`Year: ${data.Year}`);
+    if (data.Runtime) extra.push(`Runtime: ${data.Runtime}`);
+    if (data.imdbRating && data.imdbRating !== 'N/A') extra.push(`IMDb: ${data.imdbRating}/10`);
+    if (data.Plot && data.Plot !== 'N/A') extra.push(`\n${data.Plot}`);
+    document.getElementById('itemNotes').value = extra.join(' · ');
 
-    status.textContent = `✓ Found: "${data.Title}" (${data.Year}) — fields auto-filled.`;
+    status.textContent = `✓ Selected: "${data.Title}" (${data.Year})`;
     status.className = 'lookup-status success';
   } catch (err) {
-    status.textContent = 'Lookup failed: ' + err.message;
+    status.textContent = 'Failed to fetch details: ' + err.message;
     status.className = 'lookup-status error';
   }
 }
