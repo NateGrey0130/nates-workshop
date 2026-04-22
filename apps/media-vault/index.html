@@ -1538,6 +1538,7 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let library = JSON.parse(localStorage.getItem('mv_library') || '[]');
 let currentFilter = 'all';
 let currentView = 'grid';
+let _lookupResultsCache = []; // stores book/TMDB results so onclick can reference by index safely
 let detailItemId = null;
 let csvData = null;
 let selectMode = false;
@@ -1959,6 +1960,7 @@ function clearLookupResults() {
   const r = document.getElementById('lookupResults');
   r.innerHTML = '';
   r.classList.remove('visible');
+  _lookupResultsCache = [];
 }
 
 function handleLookupEnter() {
@@ -2086,23 +2088,29 @@ async function lookupBook() {
 
     status.className = 'lookup-status';
 
-    const container = document.getElementById('lookupResults');
-    container.innerHTML = docs.map(book => {
+    // Cache results so onclick can safely reference by index
+    _lookupResultsCache = docs.map(book => {
       const title = book.title || 'Unknown Title';
       const author = (book.author_name || []).join(', ') || 'Unknown Author';
-      const bookYear = book.first_publish_year || '';
       const coverId = book.cover_i;
-      const thumbUrl = coverId ? `https://covers.openlibrary.org/b/id/${coverId}-S.jpg` : null;
       const genre = (book.subject || []).slice(0, 3).join(', ');
       const largeUrl = coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` : '';
+      return { title, authors: author, genre, cover: largeUrl };
+    });
 
-      return `<div class="lookup-result-item" onclick="selectBookResult(${JSON.stringify({title, authors: author, genre, cover: largeUrl}).replace(/'/g, '&#39;')})">
+    const container = document.getElementById('lookupResults');
+    container.innerHTML = _lookupResultsCache.map((book, idx) => {
+      const coverId = docs[idx]?.cover_i;
+      const thumbUrl = coverId ? `https://covers.openlibrary.org/b/id/${coverId}-S.jpg` : null;
+      const bookYear = docs[idx]?.first_publish_year || '';
+
+      return `<div class="lookup-result-item" onclick="selectBookResult(${idx})">
         ${thumbUrl
           ? `<img class="lookup-result-thumb" src="${thumbUrl}" onerror="this.outerHTML='<div class=\\'lookup-result-thumb-placeholder\\'>📚</div>'">`
           : `<div class="lookup-result-thumb-placeholder">📚</div>`}
         <div class="lookup-result-info">
-          <div class="lookup-result-title">${esc(title)}</div>
-          <div class="lookup-result-meta">${esc(author)}${bookYear ? ' · ' + bookYear : ''}</div>
+          <div class="lookup-result-title">${esc(book.title)}</div>
+          <div class="lookup-result-meta">${esc(book.authors)}${bookYear ? ' · ' + bookYear : ''}</div>
         </div>
       </div>`;
     }).join('');
@@ -2114,7 +2122,9 @@ async function lookupBook() {
   }
 }
 
-function selectBookResult(book) {
+function selectBookResult(idx) {
+  const book = _lookupResultsCache[idx];
+  if (!book) return;
   fillBookFields(book);
   clearLookupResults();
   document.getElementById('lookupStatus').textContent = `✓ Selected: "${book.title}"`;
