@@ -1384,14 +1384,21 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
     <div class="lookup-section">
       <h3>🔍 Quick Lookup</h3>
       <div class="lookup-row">
-        <input type="text" id="lookupInput" placeholder="Title, ISBN..." onkeydown="if(event.key==='Enter')handleLookupEnter()">
+        <input type="text" id="lookupInput" placeholder="Search..." onkeydown="if(event.key==='Enter')handleLookupEnter()">
         <input type="text" id="lookupYear" placeholder="Year" style="width:70px;flex:none;" maxlength="4" onkeydown="if(event.key==='Enter')handleLookupEnter()">
         <button class="btn" onclick="lookupISBN()" id="btnLookupISBN">ISBN</button>
         <button class="btn" onclick="lookupBook()" id="btnLookupBook">📚</button>
         <button class="btn" onclick="lookupMovie()" id="btnLookupMovie">🎬</button>
         <button class="btn" onclick="lookupSeries()" id="btnLookupSeries">📺</button>
       </div>
-      <div class="lookup-hint">📚 Book &nbsp;·&nbsp; 🎬 Movie &nbsp;·&nbsp; 📺 Series &nbsp;·&nbsp; Year is optional but helps narrow results</div>
+      <div class="lookup-row" style="margin-top:8px;">
+        <select id="tmdbSearchBy" class="search-field-select" style="flex:none;border-radius:var(--radius-sm);border:1px solid var(--border);">
+          <option value="title">Search by Title</option>
+          <option value="actor">Search by Actor</option>
+          <option value="director">Search by Director</option>
+        </select>
+        <span style="font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;align-self:center;margin-left:8px;">📚 Book &nbsp;·&nbsp; 🎬 Movie &nbsp;·&nbsp; 📺 Series</span>
+      </div>
       <div class="lookup-status" id="lookupStatus"></div>
       <div class="lookup-results" id="lookupResults"></div>
     </div>
@@ -1537,7 +1544,10 @@ let selectedIds = new Set();
 let currentPage = 1;
 const ITEMS_PER_PAGE = 20;
 
-const OMDB_KEY = 'f268b0f'; // free tier key
+const TMDB_KEY = '99927f44afc159f2ebe2d1194cd777e7';
+const TMDB_BASE = 'https://api.themoviedb.org/3';
+const TMDB_IMG = 'https://image.tmdb.org/t/p/w92'; // thumbnail
+const TMDB_IMG_LG = 'https://image.tmdb.org/t/p/w500'; // full poster
 
 // ─── RENDER ───
 function resetPageAndRender() {
@@ -1951,7 +1961,6 @@ function clearLookupResults() {
 }
 
 function handleLookupEnter() {
-  // Enter key in lookup row — guess intent from input
   const val = document.getElementById('lookupInput').value.trim();
   if (/^\d{10,13}$/.test(val.replace(/[-\s]/g, ''))) lookupISBN();
   else lookupMovie();
@@ -2079,98 +2088,180 @@ function fillBookFields(book) {
 }
 
 async function lookupMovie() {
-  await lookupOMDB('movie');
+  await lookupTMDB('movie');
 }
 
 async function lookupSeries() {
-  await lookupOMDB('series');
+  await lookupTMDB('tv');
 }
 
-async function lookupOMDB(type) {
+async function lookupTMDB(mediaType) {
   const query = document.getElementById('lookupInput').value.trim();
   const year = document.getElementById('lookupYear').value.trim();
+  const searchBy = document.getElementById('tmdbSearchBy').value;
   if (!query) return;
+
   const status = document.getElementById('lookupStatus');
   clearLookupResults();
-  const label = type === 'series' ? 'series' : 'movies';
-  status.innerHTML = `<span class="spinner"></span> Searching OMDB for ${label}...`;
+  const label = mediaType === 'tv' ? 'series' : 'movies';
+  status.innerHTML = `<span class="spinner"></span> Searching TMDB for ${label}...`;
   status.className = 'lookup-status';
 
   try {
-    let url = `https://www.omdbapi.com/?s=${encodeURIComponent(query)}&type=${type}&apikey=${OMDB_KEY}`;
-    if (year) url += `&y=${year}`;
+    let results = [];
 
-    const res = await fetch(url);
-    const data = await res.json();
+    if (searchBy === 'actor' || searchBy === 'director') {
+      // Step 1: find the person
+      const personRes = await fetch(`${TMDB_BASE}/search/person?query=${encodeURIComponent(query)}&api_key=${TMDB_KEY}`);
+      const personData = await personRes.json();
 
-    if (data.Response === 'False' || !data.Search || data.Search.length === 0) {
-      const yearHint = year ? ` around ${year}` : '';
-      status.textContent = `No ${label} found for "${query}"${yearHint}. ${year ? 'Try without a year.' : ''}`;
-      status.className = 'lookup-status error';
-      return;
+      if (!personData.results || personData.results.length === 0) {
+        status.textContent = `No person found named "${query}".`;
+        status.className = 'lookup-status error';
+        return;
+      }
+
+      // Pick best person match
+      const person = personData.results[0];
+      status.innerHTML = `<span class="spinner"></span> Found ${esc(person.name)} — loading their ${label}...`;
+
+      // Step 2: get their credits
+      const credType = mediaType === 'tv' ? 'tv' : 'movie';
+      const credRes = await fetch(`${TMDB_BASE}/person/${person.id}/${credType}_credits?api_key=${TMDB_KEY}`);
+      const credData = await credRes.json();
+
+      let credits = [];
+      if (searchBy === 'actor') {
+        credits = credData.cast || [];
+      } else {
+        credits = (credData.crew || []).filter(c => c.job === 'Director');
+      }
+
+      // Dedupe by id, sort by popularity
+      const seen = new Set();
+      results = credits
+        .filter(c => { if (seen.has(c.id)) return false; seen.add(c.id); return true; })
+        .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
+        .slice(0, 20)
+        .map(c => ({
+          id: c.id,
+          title: c.title || c.name || '',
+          year: (c.release_date || c.first_air_date || '').slice(0, 4),
+          poster: c.poster_path ? TMDB_IMG + c.poster_path : null,
+          posterLg: c.poster_path ? TMDB_IMG_LG + c.poster_path : null,
+          mediaType: credType,
+          overview: c.overview || '',
+        }));
+
+      if (results.length === 0) {
+        status.textContent = `No ${label} found for ${person.name} as ${searchBy}.`;
+        status.className = 'lookup-status error';
+        return;
+      }
+      status.textContent = `${results.length} ${label} by ${person.name} as ${searchBy} — pick one:`;
+
+    } else {
+      // Title search
+      const endpoint = mediaType === 'tv' ? 'search/tv' : 'search/movie';
+      let url = `${TMDB_BASE}/${endpoint}?query=${encodeURIComponent(query)}&api_key=${TMDB_KEY}`;
+      if (year) url += `&year=${year}`;
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (!data.results || data.results.length === 0) {
+        status.textContent = `No ${label} found for "${query}"${year ? ` in ${year}` : ''}. ${year ? 'Try without a year.' : ''}`;
+        status.className = 'lookup-status error';
+        return;
+      }
+
+      const sorted = sortByExactMatch(data.results, query, mediaType === 'tv' ? 'name' : 'title');
+      results = sorted.slice(0, 15).map(c => ({
+        id: c.id,
+        title: c.title || c.name || '',
+        year: (c.release_date || c.first_air_date || '').slice(0, 4),
+        poster: c.poster_path ? TMDB_IMG + c.poster_path : null,
+        posterLg: c.poster_path ? TMDB_IMG_LG + c.poster_path : null,
+        mediaType,
+        overview: c.overview || '',
+      }));
+
+      status.textContent = `${results.length} result${results.length !== 1 ? 's' : ''}${year ? ` (${year})` : ''} — pick one:`;
     }
 
-    const sorted = sortByExactMatch(data.Search, query, 'Title');
-    status.textContent = `${sorted.length} result${sorted.length !== 1 ? 's' : ''}${year ? ` (filtered to ${year})` : ''} — pick one:`;
     status.className = 'lookup-status';
-
     const container = document.getElementById('lookupResults');
-    container.innerHTML = sorted.map(item => {
-      const hasPoster = item.Poster && item.Poster !== 'N/A';
-      return `<div class="lookup-result-item" onclick="selectOMDBResult('${item.imdbID}', '${type}')">
-        ${hasPoster
-          ? `<img class="lookup-result-thumb" src="${item.Poster}" onerror="this.outerHTML='<div class=\\'lookup-result-thumb-placeholder\\'>${type === 'series' ? '📺' : '🎬'}</div>'">`
-          : `<div class="lookup-result-thumb-placeholder">${type === 'series' ? '📺' : '🎬'}</div>`}
+    container.innerHTML = results.map(item => `
+      <div class="lookup-result-item" onclick="selectTMDBResult(${item.id}, '${item.mediaType}')">
+        ${item.poster
+          ? `<img class="lookup-result-thumb" src="${item.poster}" onerror="this.outerHTML='<div class=\\'lookup-result-thumb-placeholder\\'>${item.mediaType === 'tv' ? '📺' : '🎬'}</div>'">`
+          : `<div class="lookup-result-thumb-placeholder">${item.mediaType === 'tv' ? '📺' : '🎬'}</div>`}
         <div class="lookup-result-info">
-          <div class="lookup-result-title">${esc(item.Title)}</div>
-          <div class="lookup-result-meta">${item.Year}${item.Type ? ' · ' + item.Type : ''}</div>
+          <div class="lookup-result-title">${esc(item.title)}</div>
+          <div class="lookup-result-meta">${item.year ? item.year + ' · ' : ''}${item.mediaType === 'tv' ? 'Series' : 'Movie'}${item.overview ? ' · ' + item.overview.slice(0, 60) + '…' : ''}</div>
         </div>
-      </div>`;
-    }).join('');
+      </div>`).join('');
     container.classList.add('visible');
+
   } catch (err) {
     status.textContent = 'Lookup failed: ' + err.message;
     status.className = 'lookup-status error';
   }
 }
 
-async function selectOMDBResult(imdbID, type) {
+async function selectTMDBResult(tmdbId, mediaType) {
   clearLookupResults();
   const status = document.getElementById('lookupStatus');
   status.innerHTML = '<span class="spinner"></span> Fetching details...';
   status.className = 'lookup-status';
 
   try {
-    const res = await fetch(`https://www.omdbapi.com/?i=${imdbID}&apikey=${OMDB_KEY}`);
+    const endpoint = mediaType === 'tv' ? 'tv' : 'movie';
+    const res = await fetch(`${TMDB_BASE}/${endpoint}/${tmdbId}?api_key=${TMDB_KEY}&append_to_response=credits`);
     const data = await res.json();
 
-    if (data.Response === 'False') {
-      status.textContent = 'Failed to fetch details.';
-      status.className = 'lookup-status error';
-      return;
-    }
+    const title = data.title || data.name || '';
+    const year = (data.release_date || data.first_air_date || '').slice(0, 4);
+    const genres = (data.genres || []).map(g => g.name).join(', ');
+    const posterUrl = data.poster_path ? TMDB_IMG_LG + data.poster_path : '';
 
-    document.getElementById('itemTitle').value = data.Title || '';
-    document.getElementById('itemAuthor').value = data.Director !== 'N/A' ? (data.Director || '') : (data.Writer || '');
-    document.getElementById('itemActors').value = data.Actors && data.Actors !== 'N/A' ? data.Actors : '';
-    document.getElementById('itemProducers').value = data.Production && data.Production !== 'N/A' ? data.Production : '';
-    document.getElementById('itemGenre').value = data.Genre || '';
-    document.getElementById('itemType').value = type === 'series' ? 'series' : 'movie';
+    // Director(s)
+    const directors = (data.credits?.crew || [])
+      .filter(c => c.job === 'Director')
+      .map(c => c.name).join(', ');
 
-    if (data.Poster && data.Poster !== 'N/A') {
-      document.getElementById('coverUrl').value = data.Poster;
-      document.getElementById('itemCoverInput').value = data.Poster;
+    // Top billed cast (first 5)
+    const actors = (data.credits?.cast || [])
+      .slice(0, 5)
+      .map(c => c.name).join(', ');
+
+    // Producers
+    const producers = (data.credits?.crew || [])
+      .filter(c => c.job === 'Producer' || c.job === 'Executive Producer')
+      .slice(0, 3)
+      .map(c => c.name).join(', ');
+
+    document.getElementById('itemTitle').value = title;
+    document.getElementById('itemAuthor').value = directors;
+    document.getElementById('itemActors').value = actors;
+    document.getElementById('itemProducers').value = producers;
+    document.getElementById('itemGenre').value = genres;
+    document.getElementById('itemType').value = mediaType === 'tv' ? 'series' : 'movie';
+
+    if (posterUrl) {
+      document.getElementById('coverUrl').value = posterUrl;
+      document.getElementById('itemCoverInput').value = posterUrl;
     }
 
     const extra = [];
-    if (data.Year) extra.push(`Year: ${data.Year}`);
-    if (data.Runtime && data.Runtime !== 'N/A') extra.push(`Runtime: ${data.Runtime}`);
-    if (data.totalSeasons) extra.push(`Seasons: ${data.totalSeasons}`);
-    if (data.imdbRating && data.imdbRating !== 'N/A') extra.push(`IMDb: ${data.imdbRating}/10`);
-    if (data.Plot && data.Plot !== 'N/A') extra.push(`\n${data.Plot}`);
+    if (year) extra.push(`Year: ${year}`);
+    if (data.runtime) extra.push(`Runtime: ${data.runtime} min`);
+    if (data.number_of_seasons) extra.push(`Seasons: ${data.number_of_seasons}`);
+    if (data.vote_average) extra.push(`TMDB: ${data.vote_average.toFixed(1)}/10`);
+    if (data.overview) extra.push(`\n${data.overview}`);
     document.getElementById('itemNotes').value = extra.join(' · ');
 
-    status.textContent = `✓ Selected: "${data.Title}" (${data.Year})`;
+    status.textContent = `✓ Selected: "${title}"${year ? ` (${year})` : ''}`;
     status.className = 'lookup-status success';
   } catch (err) {
     status.textContent = 'Failed to fetch details: ' + err.message;
