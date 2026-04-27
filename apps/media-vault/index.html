@@ -1522,7 +1522,8 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
   <button class="bulk-type-btn movie" onclick="bulkChangeType('movie')">🎬 Movie</button>
   <button class="bulk-type-btn series" onclick="bulkChangeType('series')">📺 Series</button>
   <div class="bulk-bar-divider"></div>
-  <button class="btn btn-sm btn-danger" onclick="toggleSelectMode()">Cancel</button>
+  <button class="btn btn-sm btn-danger" onclick="bulkDelete()">🗑 Delete</button>
+  <button class="btn btn-sm" onclick="toggleSelectMode()">Cancel</button>
 </div>
 
 <script>
@@ -1949,6 +1950,16 @@ function bulkChangeType(newType) {
   library.forEach(item => {
     if (selectedIds.has(item.id)) item.type = newType;
   });
+  saveLibrary();
+  selectedIds.clear();
+  updateBulkBar();
+  renderLibrary();
+}
+
+function bulkDelete() {
+  if (selectedIds.size === 0) return;
+  if (!confirm(`Permanently delete ${selectedIds.size} item(s)? This cannot be undone.`)) return;
+  library = library.filter(item => !selectedIds.has(item.id));
   saveLibrary();
   selectedIds.clear();
   updateBulkBar();
@@ -2430,11 +2441,11 @@ function importCSV() {
       type: (obj.type || 'audiobook').toLowerCase(),
       format: (obj.format || 'digital').toLowerCase(),
       title: obj.title,
-      author: obj.author || obj.authors || obj.director || '',
+      author: obj.author || obj.director || '',
       actors: obj.actors || '',
       producers: obj.producers || '',
       genre: obj.genre || '',
-      series: obj.series || obj['series names'] || obj['series name'] || '',
+      series: obj.series || '',
       location: obj.location || '',
       cover: obj.cover || '',
       notes: obj.notes || '',
