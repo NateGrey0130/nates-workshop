@@ -857,9 +857,7 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
   animation: spin 0.6s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-</style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
+
 /* ─── AUTH SCREEN ─── */
 #authScreen {
   position: fixed;
@@ -1159,6 +1157,7 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
 .nav-tab:hover { color: var(--text-primary); }
 .nav-tab.active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -1536,7 +1535,14 @@ const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ─── STATE ───
-let library = JSON.parse(localStorage.getItem('mv_library') || '[]');
+let library = (() => {
+  try {
+    return JSON.parse(localStorage.getItem('mv_library') || '[]');
+  } catch (err) {
+    console.error('Corrupted mv_library in localStorage, resetting:', err);
+    return [];
+  }
+})();
 let currentFilter = 'all';
 let currentView = 'grid';
 let _lookupResultsCache = []; // stores book/TMDB results so onclick can reference by index safely
@@ -1558,12 +1564,10 @@ function resetPageAndRender() {
   renderLibrary();
 }
 
-function renderLibrary() {
+function getFilteredLibrary() {
   const query = document.getElementById('searchInput').value.toLowerCase().trim();
-  const sortVal = document.getElementById('sortSelect').value;
   const searchField = document.getElementById('searchField').value;
-
-  let filtered = library.filter(item => {
+  return library.filter(item => {
     if (currentFilter !== 'all' && item.type !== currentFilter) return false;
     if (query) {
       let searchable;
@@ -1578,6 +1582,14 @@ function renderLibrary() {
     }
     return true;
   });
+}
+
+function renderLibrary() {
+  const query = document.getElementById('searchInput').value.toLowerCase().trim();
+  const sortVal = document.getElementById('sortSelect').value;
+  const searchField = document.getElementById('searchField').value;
+
+  let filtered = getFilteredLibrary();
 
   // Sort
   const [sortKey, sortDir] = sortVal.split('-');
@@ -1595,13 +1607,21 @@ function renderLibrary() {
     return 0;
   });
 
-  // Stats (always off full library)
-  document.getElementById('statTotal').textContent = library.length;
-  document.getElementById('statAudiobooks').textContent = library.filter(i => i.type === 'audiobook').length;
-  document.getElementById('statMovies').textContent = library.filter(i => i.type === 'movie').length;
-  document.getElementById('statSeries').textContent = library.filter(i => i.type === 'series').length;
-  document.getElementById('statPhysical').textContent = library.filter(i => i.format === 'physical').length;
-  document.getElementById('statDigital').textContent = library.filter(i => i.format === 'digital').length;
+  // Stats (always off full library) — single pass instead of 6 filters
+  const stats = { total: library.length, audiobook: 0, movie: 0, series: 0, physical: 0, digital: 0 };
+  for (const i of library) {
+    if (i.type === 'audiobook') stats.audiobook++;
+    else if (i.type === 'movie') stats.movie++;
+    else if (i.type === 'series') stats.series++;
+    if (i.format === 'physical') stats.physical++;
+    else if (i.format === 'digital') stats.digital++;
+  }
+  document.getElementById('statTotal').textContent = stats.total;
+  document.getElementById('statAudiobooks').textContent = stats.audiobook;
+  document.getElementById('statMovies').textContent = stats.movie;
+  document.getElementById('statSeries').textContent = stats.series;
+  document.getElementById('statPhysical').textContent = stats.physical;
+  document.getElementById('statDigital').textContent = stats.digital;
 
   // Empty state
   const showEmpty = filtered.length === 0;
@@ -1914,23 +1934,7 @@ function bulkSelectAll() {
 }
 
 function getFilteredIds() {
-  const query = document.getElementById('searchInput').value.toLowerCase().trim();
-  const searchField = document.getElementById('searchField').value;
-  return library.filter(item => {
-    if (currentFilter !== 'all' && item.type !== currentFilter) return false;
-    if (query) {
-      let searchable;
-      if (searchField === 'all') {
-        searchable = [item.title, item.author, item.genre, item.series, item.location, item.notes].join(' ').toLowerCase();
-      } else if (searchField === 'author') {
-        searchable = (item.author || '').toLowerCase();
-      } else {
-        searchable = (item[searchField] || '').toLowerCase();
-      }
-      return searchable.includes(query);
-    }
-    return true;
-  }).map(i => i.id);
+  return getFilteredLibrary().map(i => i.id);
 }
 
 function updateBulkBar() {
