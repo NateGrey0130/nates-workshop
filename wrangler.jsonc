@@ -5,5 +5,12 @@
   "pages_build_output_dir": ".",
   "compatibility_flags": [
     "nodejs_compat"
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "nates-workshop-media",
+      "database_id": "6de15679-1b2e-4f87-8dc2-ac64b24e33d2"
+    }
   ]
 }

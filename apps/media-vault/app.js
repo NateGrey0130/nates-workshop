@@ -1,11 +1,3 @@
-// ─── SUPABASE CONFIG ───
-// 🔧 REPLACE THESE with your actual Supabase project values
-const SUPABASE_URL = 'https://ahnjzgtdscrcvfmcvsuc.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_-bqxBWpfWP3wsYL6mV-UJA_ynaOcgxp';
-
-const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 // ─── STATE ───
 let library = (() => {
   try {
@@ -942,80 +934,8 @@ function saveLibrary() {
   syncToCloud();
 }
 
-// ─── AUTH UI ───
-let authMode = 'signin';
-
-function switchAuthTab(mode) {
-  authMode = mode;
-  document.getElementById('tabSignIn').classList.toggle('active', mode === 'signin');
-  document.getElementById('tabSignUp').classList.toggle('active', mode === 'signup');
-  document.getElementById('confirmGroup').style.display = mode === 'signup' ? 'block' : 'none';
-  document.getElementById('authSubmitBtn').textContent = mode === 'signin' ? 'Sign In' : 'Create Account';
-  document.getElementById('authError').classList.remove('visible');
-  document.getElementById('authSuccess').classList.remove('visible');
-}
-
-async function submitAuth() {
-  const email = document.getElementById('authEmail').value.trim();
-  const password = document.getElementById('authPassword').value;
-  const confirm = document.getElementById('authConfirm').value;
-  const errEl = document.getElementById('authError');
-  const successEl = document.getElementById('authSuccess');
-  const btn = document.getElementById('authSubmitBtn');
-
-  errEl.classList.remove('visible');
-  successEl.classList.remove('visible');
-
-  if (!email || !password) { showAuthError('Email and password are required.'); return; }
-  if (authMode === 'signup' && password !== confirm) { showAuthError('Passwords do not match.'); return; }
-  if (authMode === 'signup' && password.length < 6) { showAuthError('Password must be at least 6 characters.'); return; }
-
-  btn.disabled = true;
-  btn.textContent = authMode === 'signin' ? 'Signing in...' : 'Creating account...';
-
-  try {
-    let result;
-    if (authMode === 'signin') {
-      result = await sb.auth.signInWithPassword({ email, password });
-    } else {
-      result = await sb.auth.signUp({ email, password });
-    }
-
-    if (result.error) {
-      showAuthError(result.error.message);
-      btn.disabled = false;
-      btn.textContent = authMode === 'signin' ? 'Sign In' : 'Create Account';
-    } else if (authMode === 'signup' && !result.data.session) {
-      // Email confirmation required
-      successEl.textContent = '✓ Check your email to confirm your account, then sign in.';
-      successEl.classList.add('visible');
-      btn.disabled = false;
-      btn.textContent = 'Create Account';
-    }
-    // If signin succeeded, onAuthStateChange will handle the rest
-  } catch (err) {
-    showAuthError('Unexpected error: ' + err.message);
-    btn.disabled = false;
-    btn.textContent = authMode === 'signin' ? 'Sign In' : 'Create Account';
-  }
-}
-
-function showAuthError(msg) {
-  const el = document.getElementById('authError');
-  el.textContent = msg;
-  el.classList.add('visible');
-}
-
-async function signOut() {
-  await sb.auth.signOut();
-  document.getElementById('authScreen').classList.remove('hidden');
-  document.getElementById('userPill').style.display = 'none';
-  library = [];
-  renderLibrary();
-}
-
-// ─── SYNC ───
-let currentUser = null;
+// ─── SYNC (D1 via /api/media, identity from Cloudflare Access) ───
+let currentUser = null; // the Access-authenticated email, or null when offline
 let syncTimeout = null;
 
 function setSyncStatus(status) {
@@ -1024,30 +944,14 @@ function setSyncStatus(status) {
 }
 
 async function loadFromCloud() {
-  if (!currentUser) return;
   setSyncStatus('syncing');
   try {
-    const { data, error } = await sb
-      .from('media_library')
-      .select('*')
-      .eq('user_id', currentUser.id);
-    if (error) throw error;
+    const res = await fetch('/api/media');
+    if (!res.ok) throw new Error(`API error ${res.status}`);
+    const data = await res.json();
+    currentUser = data.email;
     setSyncStatus('synced');
-    return (data || []).map(row => ({
-      id: row.item_id,
-      type: row.type,
-      format: row.format,
-      title: row.title,
-      author: row.author || '',
-      actors: row.actors || '',
-      producers: row.producers || '',
-      genre: row.genre || '',
-      series: row.series || '',
-      location: row.location || '',
-      cover: row.cover || '',
-      notes: row.notes || '',
-      addedAt: row.added_at ? new Date(row.added_at).getTime() : Date.now(),
-    }));
+    return data.items;
   } catch (err) {
     console.error('Load error:', err);
     setSyncStatus('error');
@@ -1059,27 +963,14 @@ async function pushAllToCloud(items) {
   if (!currentUser) return;
   setSyncStatus('syncing');
   try {
-    // Delete all existing rows for user, then re-insert
-    await sb.from('media_library').delete().eq('user_id', currentUser.id);
-    if (items.length > 0) {
-      const rows = items.map(item => ({
-        user_id: currentUser.id,
-        item_id: item.id,
-        type: item.type,
-        format: item.format,
-        title: item.title,
-        author: item.author || '',
-        actors: item.actors || '',
-        producers: item.producers || '',
-        genre: item.genre || '',
-        series: item.series || '',
-        location: item.location || '',
-        cover: item.cover || '',
-        notes: item.notes || '',
-        added_at: new Date(item.addedAt || Date.now()).toISOString(),
-      }));
-      const { error } = await sb.from('media_library').insert(rows);
-      if (error) throw error;
+    const res = await fetch('/api/media', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `API error ${res.status}`);
     }
     setSyncStatus('synced');
   } catch (err) {
@@ -1129,44 +1020,41 @@ async function handleMerge(choice) {
   renderLibrary();
 }
 
-// ─── AUTH STATE LISTENER ───
-sb.auth.onAuthStateChange(async (event, session) => {
-  if (session && session.user) {
-    currentUser = session.user;
-    document.getElementById('authScreen').classList.add('hidden');
-    document.getElementById('userPill').style.display = 'flex';
-    document.getElementById('userEmail').textContent = session.user.email;
+// ─── STARTUP SYNC ───
+// Cloudflare Access authenticates every visitor before they reach the app,
+// so there is no in-app login: just load the caller's library from D1.
+// localStorage stays as an offline cache/fallback.
+async function initSync() {
+  const localItems = JSON.parse(localStorage.getItem('mv_library') || '[]');
+  const cloudItems = await loadFromCloud();
 
-    const localItems = JSON.parse(localStorage.getItem('mv_library') || '[]');
-    const cloudItems = await loadFromCloud();
-
-    if (cloudItems === null) {
-      // Cloud load failed — just use local
-      library = localItems;
-      renderLibrary();
-      return;
-    }
-
-    if (localItems.length > 0 && cloudItems.length > 0) {
-      // Both have data — ask user
-      library = cloudItems; // show cloud while they decide
-      renderLibrary();
-      openMergeModal(localItems, cloudItems);
-    } else if (localItems.length > 0 && cloudItems.length === 0) {
-      // Local only — push to cloud automatically
-      library = localItems;
-      await pushAllToCloud(library);
-      renderLibrary();
-    } else {
-      // Cloud only or both empty — use cloud
-      library = cloudItems;
-      localStorage.setItem('mv_library', JSON.stringify(library));
-      renderLibrary();
-    }
-  } else {
-    currentUser = null;
+  if (cloudItems === null) {
+    // API unreachable (e.g. local file preview) — stay on the local cache
+    library = localItems;
+    renderLibrary();
+    return;
   }
-});
+
+  document.getElementById('userPill').style.display = 'flex';
+  document.getElementById('userEmail').textContent = currentUser;
+
+  if (localItems.length > 0 && cloudItems.length > 0) {
+    // Both have data — ask user
+    library = cloudItems; // show cloud while they decide
+    renderLibrary();
+    openMergeModal(localItems, cloudItems);
+  } else if (localItems.length > 0 && cloudItems.length === 0) {
+    // Local only — push to cloud automatically
+    library = localItems;
+    await pushAllToCloud(library);
+    renderLibrary();
+  } else {
+    // Cloud only or both empty — use cloud
+    library = cloudItems;
+    localStorage.setItem('mv_library', JSON.stringify(library));
+    renderLibrary();
+  }
+}
 
 // ─── VIEW SWITCHING ───
 let currentMainView = 'library';
@@ -1331,4 +1219,5 @@ document.addEventListener('keydown', e => {
 });
 
 // ─── INIT ───
-renderLibrary(); // render from localStorage while auth loads
+renderLibrary(); // render from the local cache immediately
+initSync();      // then reconcile with D1
