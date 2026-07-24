@@ -13,7 +13,15 @@ export async function onRequestPost(context) {
   }
 
   try {
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
 
     // Basic guardrails — only allow specific models & cap tokens
     const allowedModels = [
@@ -26,6 +34,27 @@ export async function onRequestPost(context) {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
+    }
+
+    // Request-shape validation: messages must be a non-empty array of
+    // { role, content } with sane sizes; system, if present, a string.
+    const badRequest = (msg) => new Response(JSON.stringify({ error: msg }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!Array.isArray(body.messages) || body.messages.length === 0 || body.messages.length > 50) {
+      return badRequest('messages must be a non-empty array (max 50)');
+    }
+    for (const m of body.messages) {
+      if (!m || typeof m !== 'object') return badRequest('Each message must be an object');
+      if (m.role !== 'user' && m.role !== 'assistant') return badRequest('Message role must be user or assistant');
+      if (typeof m.content !== 'string' || !m.content || m.content.length > 100000) {
+        return badRequest('Message content must be a non-empty string under 100k chars');
+      }
+    }
+    if (body.system !== undefined && (typeof body.system !== 'string' || body.system.length > 50000)) {
+      return badRequest('system must be a string under 50k chars');
     }
 
     body.max_tokens = Math.min(body.max_tokens || 2000, 4000);
