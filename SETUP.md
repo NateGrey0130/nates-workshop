@@ -3,17 +3,28 @@
 ## Project Structure
 
 ```
-nates-apps/
-├── index.html                        ← Dashboard landing page
+nates-workshop/
+├── index.html                ← Dashboard — renders cards from apps/manifest.json
+├── wrangler.jsonc            ← Pages config (D1 binding lives here)
+├── shared/
+│   ├── styles.css            ← Shared design system (tokens, header, buttons, modals)
+│   └── js/
+│       ├── ui.js             ← openModal/closeModal, escHtml, copyWithFeedback
+│       └── api.js            ← claudeRequest() wrapper for /api/claude
 ├── apps/
-│   └── filament-forge/
-│       └── index.html                ← FilamentForge (refactored)
+│   ├── manifest.json         ← One entry per app; the dashboard reads this
+│   ├── _template/            ← Skeleton to copy when starting a new app
+│   ├── filament-forge/       ← index.html + styles.css + app.js
+│   └── media-vault/          ← index.html + styles.css + app.js
+├── db/
+│   └── schema.sql            ← D1 schema for MediaVault
 └── functions/
     └── api/
-        └── claude.js                 ← Cloudflare Worker proxy (auto-detected)
+        ├── claude.js         ← Anthropic API proxy (model allowlist + token cap)
+        └── media.js          ← MediaVault CRUD against D1, per-user via Access email
 ```
 
-Cloudflare Pages automatically detects the `functions/` directory and deploys those files as serverless Workers. The `claude.js` file becomes an endpoint at `/api/claude` — no extra config needed.
+Cloudflare Pages automatically detects the `functions/` directory and deploys those files as serverless Workers — `claude.js` becomes `/api/claude`, `media.js` becomes `/api/media`. The D1 database (`nates-workshop-media`) is bound as `DB` in `wrangler.jsonc`.
 
 ---
 
@@ -131,25 +142,38 @@ This puts an email-based login in front of your entire site. Free for up to 50 u
 
 ---
 
-## Adding More Apps Later
+## Adding a New App
 
-1. Create a new folder under `apps/`:
-   ```
-   apps/
-   ├── filament-forge/
-   │   └── index.html
-   └── keep-3/
-       └── index.html
+1. Copy the template folder:
+   ```bash
+   cp -r apps/_template apps/my-new-app
+   rm apps/my-new-app/manifest-entry.example.json
    ```
 
-2. Add a card to `index.html` (uncomment the Keep 3 card or copy the pattern)
+2. Add an entry to `apps/manifest.json` (see `apps/_template/manifest-entry.example.json`):
+   ```json
+   {
+     "slug": "my-new-app",
+     "name": "My New App",
+     "icon": "🚀",
+     "description": "One or two sentences describing what the app does.",
+     "status": "live"
+   }
+   ```
+   The dashboard renders its cards from this file — no HTML edits needed.
+   Use `"status": "soon"` (with `"slug": null`) for a greyed-out teaser card.
 
-3. If the new app also calls the Anthropic API, point its fetch to `/api/claude` — the same proxy works for all apps.
+3. Build the app in `apps/my-new-app/`:
+   - `index.html` already imports `/shared/styles.css` (design system) and the shared JS helpers
+   - Put app-specific styles in `styles.css` — override `--accent` there to give the app its own color
+   - Put app logic in `app.js`; call Claude through `claudeRequest()` (proxied server-side, same key for all apps)
+   - Need per-user storage? Follow the `functions/api/media.js` pattern: read the
+     `Cf-Access-Authenticated-User-Email` header and add a table to `db/schema.sql`
 
 4. Commit and push:
    ```bash
    git add .
-   git commit -m "Add Keep 3 Cut 5"
+   git commit -m "Add My New App"
    git push
    ```
    Cloudflare auto-deploys on push.
