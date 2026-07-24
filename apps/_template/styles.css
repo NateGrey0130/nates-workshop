@@ -1,0 +1,27 @@
+/* App-specific styles. Override the shared accent to give the app its own color. */
+
+:root {
+  --accent: #4f8eff;
+  --accent-glow: rgba(79, 142, 255, 0.15);
+  --accent-secondary: #7c5cfc;
+  --border-focus: var(--accent);
+}
+
+.header { padding: 16px 28px; }
+.header-right { gap: 10px; }
+
+.home-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 13px;
+  font-family: 'JetBrains Mono', monospace;
+  transition: color var(--transition);
+}
+.home-link:hover { color: var(--text-primary); }
+
+.btn {
+  padding: 8px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}

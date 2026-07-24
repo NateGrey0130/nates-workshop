@@ -1,0 +1,25 @@
+{
+  "apps": [
+    {
+      "slug": "filament-forge",
+      "name": "FilamentForge",
+      "icon": "🧵",
+      "description": "AI-powered 3D print settings engine. Pick your printer and filament, get optimized slicer settings in seconds.",
+      "status": "live"
+    },
+    {
+      "slug": "media-vault",
+      "name": "MediaVault",
+      "icon": "📀",
+      "description": "Personal media library. Catalog your audiobooks and movies with ISBN and title lookup, search, sort, and filter.",
+      "status": "live"
+    },
+    {
+      "slug": null,
+      "name": "More Coming Soon",
+      "icon": "🔧",
+      "description": "Keep 3 Cut 5, Model Router, and more — stay tuned.",
+      "status": "soon"
+    }
+  ]
+}

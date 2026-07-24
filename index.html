@@ -137,32 +137,36 @@ footer {
   <p>Tools, toys, and experiments — built with Claude.</p>
 </div>
 
-<div class="grid">
-
-  <a class="card" href="/apps/filament-forge/index.html">
-    <div class="card-icon">🧵</div>
-    <h2>FilamentForge</h2>
-    <p>AI-powered 3D print settings engine. Pick your printer and filament, get optimized slicer settings in seconds.</p>
-    <span class="card-tag">live</span>
-  </a>
-
-  <a class="card" href="/apps/media-vault/index.html">
-    <div class="card-icon">📀</div>
-    <h2>MediaVault</h2>
-    <p>Personal media library. Catalog your audiobooks and movies with ISBN and title lookup, search, sort, and filter.</p>
-    <span class="card-tag">live</span>
-  </a>
-
-  <div class="card card-soon">
-    <div class="card-icon">🔧</div>
-    <h2>More Coming Soon</h2>
-    <p>Keep 3 Cut 5, Model Router, and more — stay tuned.</p>
-    <span class="card-tag">soon</span>
-  </div>
-
-</div>
+<div class="grid" id="appGrid"></div>
 
 <footer>powered by vibes & claude</footer>
+
+<script>
+function esc(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+fetch('/apps/manifest.json')
+  .then(res => res.json())
+  .then(({ apps }) => {
+    document.getElementById('appGrid').innerHTML = apps.map(app => {
+      const inner = `
+        <div class="card-icon">${app.icon}</div>
+        <h2>${esc(app.name)}</h2>
+        <p>${esc(app.description)}</p>
+        <span class="card-tag">${esc(app.status)}</span>`;
+      return app.status === 'live' && app.slug
+        ? `<a class="card" href="/apps/${encodeURIComponent(app.slug)}/">${inner}</a>`
+        : `<div class="card card-soon">${inner}</div>`;
+    }).join('');
+  })
+  .catch(err => {
+    document.getElementById('appGrid').innerHTML =
+      `<p style="color:var(--text-muted)">Could not load app list: ${esc(err.message)}</p>`;
+  });
+</script>
 
 </body>
 </html>
