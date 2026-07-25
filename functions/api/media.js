@@ -2,6 +2,8 @@
 // Cloudflare Access fronts the whole site, so every request carries the
 // authenticated user's email; each user only ever sees their own rows.
 
+import { getAccessEmail as getUserEmail } from './_lib/access.js';
+
 const ITEM_FIELDS = ['type', 'format', 'title', 'author', 'actors', 'producers', 'genre', 'series', 'location', 'cover', 'notes'];
 const MAX_ITEMS = 5000;
 const MAX_FIELD_LEN = 4000;
@@ -11,10 +13,6 @@ function json(body, status = 200) {
     status,
     headers: { 'Content-Type': 'application/json' },
   });
-}
-
-function getUserEmail(request) {
-  return request.headers.get('Cf-Access-Authenticated-User-Email');
 }
 
 function rowToItem(row) {

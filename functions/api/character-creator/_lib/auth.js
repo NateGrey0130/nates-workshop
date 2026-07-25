@@ -1,8 +1,10 @@
 // Auth via the existing Zero Trust setup: Cloudflare Access sits in front of the
 // whole site and injects the verified identity as a request header. No new auth here.
 
+import { getAccessEmail } from '../../_lib/access.js';
+
 export function getUserEmail(request) {
-  const email = request.headers.get('cf-access-authenticated-user-email');
+  const email = getAccessEmail(request);
   if (email) return email;
   // Local dev (wrangler pages dev) has no Access in front of it.
   const host = new URL(request.url).hostname;
