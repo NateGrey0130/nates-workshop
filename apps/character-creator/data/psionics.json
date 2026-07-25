@@ -1,0 +1,31 @@
+{
+  "_note": "Minimal psionic power catalog — categories Healing/Physical/Sensitive/Super, ISP costs approximate the official ones (variable costs flattened to a single number). Expand as content work later.",
+  "powers": [
+    { "name": "Bio-Regenerate (self)", "category": "Healing", "isp": 6 },
+    { "name": "Deaden Pain", "category": "Healing", "isp": 4 },
+    { "name": "Healing Touch", "category": "Healing", "isp": 6 },
+    { "name": "Induce Sleep", "category": "Healing", "isp": 4 },
+    { "name": "Alter Aura", "category": "Physical", "isp": 2 },
+    { "name": "Death Trance", "category": "Physical", "isp": 1 },
+    { "name": "Impervious to Cold", "category": "Physical", "isp": 2 },
+    { "name": "Impervious to Fire", "category": "Physical", "isp": 4 },
+    { "name": "Levitation (psionic)", "category": "Physical", "isp": 2 },
+    { "name": "Mind Block", "category": "Physical", "isp": 4 },
+    { "name": "Nightvision (psionic)", "category": "Physical", "isp": 4 },
+    { "name": "Resist Fatigue", "category": "Physical", "isp": 4 },
+    { "name": "Summon Inner Strength", "category": "Physical", "isp": 4 },
+    { "name": "Telekinesis (minor)", "category": "Physical", "isp": 3 },
+    { "name": "Clairvoyance", "category": "Sensitive", "isp": 4 },
+    { "name": "Empathy", "category": "Sensitive", "isp": 4 },
+    { "name": "Object Read", "category": "Sensitive", "isp": 6 },
+    { "name": "Presence Sense", "category": "Sensitive", "isp": 4 },
+    { "name": "See Aura", "category": "Sensitive", "isp": 6 },
+    { "name": "Sixth Sense", "category": "Sensitive", "isp": 2 },
+    { "name": "Telepathy", "category": "Sensitive", "isp": 4 },
+    { "name": "Bio-Manipulation", "category": "Super", "isp": 10 },
+    { "name": "Electrokinesis", "category": "Super", "isp": 4 },
+    { "name": "Hydrokinesis", "category": "Super", "isp": 4 },
+    { "name": "Mind Bolt", "category": "Super", "isp": 4 },
+    { "name": "Pyrokinesis", "category": "Super", "isp": 4 }
+  ]
+}

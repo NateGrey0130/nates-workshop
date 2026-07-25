@@ -15,6 +15,13 @@
       "status": "live"
     },
     {
+      "slug": "character-creator",
+      "name": "Character Creator",
+      "icon": "🎲",
+      "description": "Palladium Fantasy & Rifts character builder and campaign journal. Roll a character, log your sessions, level up.",
+      "status": "live"
+    },
+    {
       "slug": null,
       "name": "More Coming Soon",
       "icon": "🔧",

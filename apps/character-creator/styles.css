@@ -1,0 +1,200 @@
+/* Character Creator — app styles on top of /shared/styles.css.
+   One stylesheet for all three pages (wizard, sheet, dashboard); they share
+   most of their vocabulary (panels, tags, tables, pools). */
+
+:root {
+  --accent: #9d7cff;
+  --accent-glow: rgba(157, 124, 255, 0.15);
+  --accent-secondary: #f0a04b;
+  --border-focus: var(--accent);
+}
+
+/* ─── LAYOUT ─── */
+.header { padding: 16px 28px; }
+.header-right { gap: 10px; }
+
+.home-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 13px;
+  font-family: 'JetBrains Mono', monospace;
+  transition: color var(--transition);
+}
+.home-link:hover { color: var(--text-primary); }
+
+.wrap {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 28px 60px;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin-bottom: 16px;
+}
+.panel h2 { font-size: 21px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 4px; }
+.panel h3 {
+  font-size: 14px; font-weight: 600; color: var(--text-primary);
+  margin: 16px 0 7px;
+}
+
+/* ─── TEXT ─── */
+.muted { color: var(--text-secondary); font-size: 13px; }
+.small { font-size: 13px; }
+.err { color: var(--danger); }
+.ok { color: var(--success); }
+.warn { color: var(--warning); font-size: 13px; margin-top: 8px; }
+
+/* ─── TAGS ─── */
+.tag {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;
+  padding: 2px 7px; border-radius: 999px;
+  background: var(--bg-tertiary); border: 1px solid var(--border);
+  color: var(--text-secondary);
+  margin-right: 5px;
+}
+.tag.gm { background: rgba(52, 211, 153, 0.1); border-color: rgba(52, 211, 153, 0.35); color: var(--success); }
+.tag.ro { background: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.35); color: var(--danger); }
+.tag.score { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
+
+/* ─── CONTROLS ─── */
+button { font-family: 'Outfit', sans-serif; cursor: pointer; }
+.btn { padding: 8px 16px; display: inline-flex; align-items: center; gap: 6px; }
+.btn-sm { padding: 3px 10px; font-size: 12px; }
+.btn-ghost { background: transparent; border-color: var(--border); color: var(--text-secondary); }
+.btn-ghost:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+
+input[type=text], input[type=number], select, textarea {
+  font-family: 'Outfit', sans-serif; font-size: 13px;
+  background: var(--bg-input); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  transition: border-color var(--transition);
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--border-focus); }
+input[type=number] { width: 76px; }
+textarea { width: 100%; min-height: 68px; resize: vertical; }
+input[type=checkbox] { accent-color: var(--accent); cursor: pointer; }
+
+/* ─── TABLES ─── */
+table { border-collapse: collapse; width: 100%; }
+td, th {
+  padding: 7px 10px; text-align: left;
+  border-bottom: 1px solid var(--border); font-size: 13px;
+}
+th {
+  color: var(--text-muted); font-weight: 500; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+
+/* ─── SHARED BITS ─── */
+.rowline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 7px 0; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+@media (max-width: 700px) { .cols { grid-template-columns: 1fr; } }
+
+.statline { display: inline-block; margin: 0 16px 6px 0; font-size: 13px; }
+.statline b { color: var(--text-primary); font-size: 15px; }
+
+.pools { display: flex; gap: 20px; flex-wrap: wrap; }
+.pool { text-align: center; }
+.pool .lbl {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.pool .val { font-size: 17px; margin-top: 2px; }
+
+.entry {
+  border-left: 3px solid var(--border);
+  padding: 6px 14px; margin: 10px 0;
+}
+.entry.campaign { border-left-color: var(--success); }
+.entry .body {
+  font-size: 13px; line-height: 1.5; white-space: pre-wrap;
+  color: var(--text-secondary); margin-top: 4px;
+}
+
+#msg { min-height: 18px; font-size: 13px; }
+
+/* ─── WIZARD ─── */
+.stepper { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-bottom: 22px; }
+.stepper .st {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  padding: 4px 11px; border-radius: 999px;
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.stepper .st.done { color: var(--accent); border-color: var(--accent); cursor: pointer; }
+.stepper .st.cur { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.pick {
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px;
+  cursor: pointer; transition: all var(--transition);
+}
+.pick:hover { border-color: var(--accent); transform: translateY(-2px); }
+.pick.sel { border-color: var(--accent); background: var(--accent-glow); }
+.pick h4 { font-size: 15px; font-weight: 600; margin-bottom: 5px; }
+
+.toggle {
+  display: inline-flex; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 14px;
+}
+.toggle button {
+  border: 0; border-radius: 0; background: transparent;
+  color: var(--text-secondary); padding: 7px 14px; font-size: 13px;
+}
+.toggle button.on { background: var(--accent-glow); color: var(--accent); }
+
+.chkrow { display: flex; align-items: baseline; gap: 7px; padding: 3px 0; font-size: 13px; }
+.chkrow .pct { color: var(--text-muted); font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+.attr-note { font-size: 11px; color: var(--text-muted); }
+.nav { display: flex; justify-content: space-between; margin-top: 16px; }
+
+.levelup {
+  border: 1px solid var(--accent); border-radius: var(--radius);
+  padding: 14px; margin: 10px 0; background: var(--accent-glow);
+}
+
+/* ─── DASHBOARD ─── */
+.pools-cell { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+
+/* ═══ PRINT / SAVE AS PDF ═══
+   Strips interactive chrome and re-renders for paper. Owner views show current
+   values as inputs on screen; .print-only elements carry the same values for
+   print. */
+.print-only { display: none; }
+
+@media print {
+  @page { margin: 0.5in; }
+  body { background: #fff !important; color: #000; font-size: 10pt; }
+  .wrap { max-width: none; padding: 0; }
+  a { color: #000; text-decoration: none; }
+  header, .header, button, input, textarea, select, #msg, .noprint { display: none !important; }
+  .print-only { display: inline; }
+  .panel {
+    background: #fff !important; border: 1px solid #999; border-radius: 0;
+    padding: 8px 10px; margin-bottom: 8px;
+  }
+  .panel h2 { font-size: 15pt; }
+  .panel h3 { font-size: 10.5pt; color: #000; margin: 8px 0 2px; break-after: avoid; }
+  .muted, .small, .pool .lbl, .entry .body { color: #222 !important; }
+  .statline b, .pool .val, .pool .val b { color: #000; }
+  .statline { margin: 0 14px 2px 0; }
+  .pools { gap: 14px; }
+  .tag { background: #fff !important; border-color: #999; color: #000; }
+  .tag.ro, .tag.gm { display: none; }
+  td, th { padding: 3px 6px; border-bottom: 1px solid #ccc; }
+  th { color: #333; }
+  tr, .pool, .entry, .rowline { break-inside: avoid; }
+  .entry { border-left: 2px solid #999; margin: 6px 0; padding: 3px 10px; }
+}

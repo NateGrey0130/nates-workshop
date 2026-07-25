@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Character Sheet — Nate's Workshop</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shared/styles.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div>
+      <div class="logo">Character Sheet</div>
+      <div class="logo-sub">palladium &amp; rifts</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-sm" onclick="window.print()">🖨 Print / Save as PDF</button>
+    <a href="/apps/character-creator/" class="home-link">← character creator</a>
+    <a href="/" class="home-link">← workshop</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="app"><p class="muted">Loading sheet…</p></div>
+</main>
+
+<script src="/shared/js/ui.js"></script>
+<script src="sheet.js"></script>
+</body>
+</html>
