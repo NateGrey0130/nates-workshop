@@ -1,4 +1,6 @@
--- Test rows only — delete this migration (or its rows) before real campaign data matters.
+-- Optional local-dev seed data. Not part of db/schema.sql and never applied to
+-- production. Apply from the repo root after the schema:
+--   npx wrangler d1 execute DB --local --file apps/character-creator/db/seed-dev.sql
 
 INSERT INTO campaigns (name, system, gm_email, description)
 VALUES ('Test Campaign — Chi-Town Burbs', 'rifts', 'test-gm@example.com', 'Smoke-test campaign, safe to delete.');

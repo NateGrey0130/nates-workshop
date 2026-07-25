@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { parseClassMarkdown } from '../js/parser.js';
 
 const appDir = join(dirname(fileURLToPath(import.meta.url)), '..');
+const repoRoot = join(appDir, '..', '..');
 let failures = 0;
 
 function check(label, cond, detail) {
@@ -58,26 +59,32 @@ check('invalid file rejected', !bad.ok && bad.errors.some((e) => e.includes('id'
 const noFm = parseClassMarkdown('# just markdown, no frontmatter');
 check('missing frontmatter rejected', !noFm.ok);
 
-// ---------- 2. D1 migration ----------
-console.log('\n[2/2] D1 migration (local)');
+// ---------- 2. D1 schema ----------
+// Runs against the shared workshop database (binding DB in the root
+// wrangler.jsonc), so this executes from the repo root, not the app dir.
+console.log('\n[2/2] D1 schema (local, shared DB)');
 
 function wrangler(args) {
-  return spawnSync('npx', ['wrangler', ...args], { cwd: appDir, shell: true, encoding: 'utf8', timeout: 120000 });
+  return spawnSync('npx', ['wrangler', ...args], { cwd: repoRoot, shell: true, encoding: 'utf8', timeout: 120000 });
 }
 
-const apply = wrangler(['d1', 'migrations', 'apply', 'DB', '--local']);
-check('migrations apply cleanly', apply.status === 0, (apply.stderr || apply.stdout || '').slice(-500));
+const apply = wrangler(['d1', 'execute', 'DB', '--local', '--file', 'db/schema.sql']);
+check('schema applies cleanly', apply.status === 0, (apply.stderr || apply.stdout || '').slice(-500));
 
 // SQL goes through a temp file — a quoted --command string doesn't survive the Windows shell.
 const checkSql = join(appDir, 'test', '.smoke-check.sql');
 writeFileSync(checkSql,
-  "SELECT (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('campaigns','characters','journal_entries','level_history','items','character_items')) AS tables, (SELECT count(*) FROM characters JOIN campaigns ON characters.campaign_id = campaigns.id JOIN character_items ON character_items.character_id = characters.id JOIN items ON items.id = character_items.item_id) AS joined;\n");
+  "SELECT (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('campaigns','characters','journal_entries','level_history','items','character_items')) AS cc_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'media_items') AS media_tables;\n");
 const query = wrangler(['d1', 'execute', 'DB', '--local', '--json', '--file', checkSql]);
 rmSync(checkSql, { force: true });
 let row = null;
 try { row = JSON.parse(query.stdout)[0].results[0]; } catch { /* fall through to checks */ }
-check('all 6 tables exist', row?.tables === 6, query.stdout?.slice(-300));
-check('test rows join across tables', row?.joined === 1);
+check('all 6 character-creator tables exist', row?.cc_tables === 6, query.stdout?.slice(-300));
+check('media_items still intact alongside them', row?.media_tables === 1);
+
+// Re-applying must be a no-op (every statement is IF NOT EXISTS).
+const reapply = wrangler(['d1', 'execute', 'DB', '--local', '--file', 'db/schema.sql']);
+check('schema is idempotent (re-apply is clean)', reapply.status === 0, (reapply.stderr || '').slice(-300));
 
 console.log(failures === 0 ? '\nSMOKE TEST PASSED' : `\nSMOKE TEST FAILED (${failures} failure(s))`);
 process.exit(failures === 0 ? 0 : 1);

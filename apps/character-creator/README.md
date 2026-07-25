@@ -1,76 +1,100 @@
 # Character Creator — Palladium Fantasy & Rifts
 
 Character builder + campaign journal. Spec: `rifts-character-creator-spec.md`.
-**Status: all 7 build phases complete.** Remaining work is content
-(more RCC/OCC markdown files, fuller skill/item/spell catalogs, per-class XP tables).
+**Status: all 7 build phases complete**, conformed to the shared workshop framework.
+Remaining work is content (more RCC/OCC markdown files, fuller skill/item/spell
+catalogs, per-class XP tables).
 
 ## Layout
 
 ```
 apps/character-creator/
-├── index.html              Creation wizard: system → class (browse/guided) → attributes → skills → equipment → powers → review/save
-├── sheet.html              Character sheet: stats/skills/powers/inventory/journal, edits for owner+GM, print/PDF via @media print
-├── dashboard.html          GM dashboard: roster, GM notes (GM-only), campaign journal feed
-├── js/parser.js            RCC/OCC markdown parser (browser + Node + Functions)
-├── data/classes/           One markdown file per RCC/OCC + index.json manifest
-├── data/skills.json        Minimal skill catalog (name/category/base %) — expand as content work
-├── data/spells.json        Minimal spell catalog (name/level/ppe) — expand as content work
-├── data/psionics.json      Minimal psionic catalog (name/category/isp) — expand as content work
-├── migrations/             D1 schema (0001) + deletable test rows (0002)
-├── wrangler.toml           Local dev/migrations only — prod config is in the dashboard
-└── test/smoke.mjs          Phase 1 smoke test
+├── index.html / app.js       Creation wizard: system → class → attributes → skills → equipment → powers → review
+├── sheet.html / sheet.js     Character sheet: stats, inventory, journal, level-up, print/PDF
+├── dashboard.html / dashboard.js  GM dashboard: roster, GM notes, campaign journal
+├── styles.css                App styles (all three pages) on top of /shared/styles.css
+├── js/parser.js              RCC/OCC markdown parser (ES module — also imported by the API)
+├── js/dice.js                Dice evaluator (ES module — also imported by the API)
+├── data/classes/             One markdown file per RCC/OCC + index.json manifest
+├── data/skills.json          Skill catalog (name/category/base %)
+├── data/spells.json          Spell catalog (name/level/ppe)
+├── data/psionics.json        Psionic catalog (name/category/isp)
+├── db/seed-dev.sql           Optional local-dev seed rows (never applied to production)
+└── test/smoke.mjs            Parser + schema smoke test
 
 functions/api/character-creator/
-├── _lib/auth.js            Reads the Zero Trust identity header (no new auth)
-├── me.js                   GET /api/character-creator/me
-├── classes.js              GET /api/character-creator/classes?system=&category=
-├── campaigns.js            GET/POST /api/character-creator/campaigns
-├── campaigns/[id].js       GET (gm_notes stripped for non-GM) · PATCH gm_notes (GM only)
-├── items.js                GET /api/character-creator/items?system=
-├── characters.js           GET list · POST save at level 1
-├── characters/[id].js      GET sheet (+can_write/is_gm) · PATCH current stats/notes
-├── characters/[id]/items.js        POST add inventory row (catalog slug or freeform)
-├── characters/[id]/items/[itemId].js  PATCH qty/equipped/notes · DELETE (sets removed_at)
-├── characters/[id]/xp.js           POST {delta|total} — updates XP, returns proposed level-up diff
-├── characters/[id]/level-confirm.js  POST — applies confirmed/tweaked diff + logs level_history
-└── journal.js              GET by campaign (+character filter) · POST entry
+├── _lib/auth.js              Owner/GM authorization (identity via functions/api/_lib/access.js)
+├── _lib/class-loader.js      Resolves a class_id slug to parsed frontmatter
+├── _lib/leveling.js          XP curve + level-up diff calculation
+├── me.js                     GET the caller's identity
+├── classes.js                GET parsed RCC/OCC definitions
+├── campaigns.js              GET list · POST create
+├── campaigns/[id].js         GET (gm_notes stripped for non-GM) · PATCH gm_notes (GM only)
+├── items.js                  GET shared gear catalog
+├── characters.js             GET list · POST save at level 1
+├── characters/[id].js        GET sheet (+can_write/is_gm) · PATCH current stats/notes
+├── characters/[id]/items.js  POST add inventory row
+├── characters/[id]/items/[itemId].js  PATCH qty/equipped/notes · DELETE (soft, sets removed_at)
+├── characters/[id]/xp.js     POST {delta|total} — updates XP, returns proposed level-up diff
+├── characters/[id]/level-confirm.js  POST — applies confirmed diff + logs level_history
+└── journal.js                GET by campaign (+character filter) · POST entry
+```
 
-Leveling (`_lib/leveling.js`): default XP curve (house rule, level cap 15) used by
-every class until a class file adds a cumulative `xp_table: [...]` frontmatter
-override — no schema change needed. Pools grow on level-up only when their formula
-has an explicit per-level dice ("P.E. + 1d6 per level"); skills advance by their
-stored per_level × levels gained, capped at 98%.
+Storage lives in the shared workshop D1 database (`nates-workshop-media`, bound as
+`DB` in the root `wrangler.jsonc`); the six tables are defined in `db/schema.sql`
+alongside MediaVault's.
 
-Write permissions (in `_lib/auth.js`): reads are open to any authenticated friend;
-writes require `characterAccess` (owner or campaign GM) or `campaignAccess` (GM only
-for campaign-level journal entries). Every write endpoint uses these helpers.
+## Local dev
+
+One binding, one local database, run from the repo root:
+
+```bash
+npx wrangler d1 execute DB --local --file db/schema.sql
+```
+
+```bash
+npx wrangler pages dev
+```
+
+Optional seed rows for a non-empty local DB:
+
+```bash
+npx wrangler d1 execute DB --local --file apps/character-creator/db/seed-dev.sql
+```
+
+Local dev has no Cloudflare Access in front of it, so `_lib/auth.js` falls back to
+`dev@localhost` on localhost. To exercise owner/GM rules, send an explicit
+`Cf-Access-Authenticated-User-Email` header.
+
+Smoke test (parser + schema):
+
+```bash
+node apps/character-creator/test/smoke.mjs
 ```
 
 ## Adding a class
 
-Drop a new `.md` file in `data/classes/` (copy an existing one for the schema)
-and add its filename to `index.json`. Frontmatter drives creation/leveling;
+Drop a new `.md` file in `data/classes/` (copy an existing one for the schema) and
+add its filename to `index.json`. Frontmatter drives creation and leveling;
 `## Lore` and `## GM Notes` body sections are display-only.
 
-## One-time production setup (Cloudflare dashboard)
+## House rules
 
-1. **D1**: Workers & Pages → D1 → Create database → name it `character-creator-db`.
-2. Pages project → Settings → Functions → **D1 database bindings** → add binding
-   `DB` → `character-creator-db`. (Same dashboard-config pattern as `ANTHROPIC_API_KEY`.)
-3. Copy the database ID into `wrangler.toml`, then apply migrations:
-   ```
-   cd apps/character-creator
-   npx wrangler d1 migrations apply DB --remote
-   ```
-   `0002_test_rows.sql` is throwaway seed data — delete it before real campaigns start.
+Palladium has no single answer for these, so the app invents one and lets a class
+file override it without a schema change:
 
-Auth is the existing site-wide Zero Trust gate; functions read the caller's
-identity from the `Cf-Access-Authenticated-User-Email` header.
+| Rule | Default | Per-class override |
+|---|---|---|
+| Point-buy curve | 8 base, 40 pts, +1 costs 1 pt to 15 / 2 pts to 18, cap 18, floor 3 | — |
+| XP table | shared 15-level curve in `_lib/leveling.js` | `xp_table: [...]` frontmatter |
+| Psionic starting powers | minor 2, major 6, master 8; Super is master-only | `psionics.powers_starting` / `psionics.categories_allowed` |
+| Attribute rolls | 3d6, bonus d6 on 16+ | `attribute_dice` frontmatter |
 
-## Smoke test / local dev
+## Framework notes
 
-```
-node apps/character-creator/test/smoke.mjs   # parser + local D1 migration
-# from repo root — serves site + functions + the same local D1 the migrations target:
-npx wrangler pages dev . --d1 DB=00000000-0000-0000-0000-000000000000 --persist-to apps/character-creator/.wrangler/state
-```
+- `app.js` is loaded as `<script type="module">` (the other two pages are classic
+  scripts) so the wizard can import `js/dice.js` — the same module the server-side
+  leveling code uses. Inline `onclick` handlers therefore need explicit
+  `window` exposure; see the `Object.assign(window, …)` block at the bottom of `app.js`.
+- `/shared/js/ui.js` provides `escHtml()`, used throughout. `/shared/js/api.js` is
+  not loaded — its only helper is the Claude proxy wrapper, which this app doesn't use.
