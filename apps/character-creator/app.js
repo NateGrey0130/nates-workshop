@@ -19,13 +19,13 @@ const S = {
   step: 0, system: null, classMode: 'browse', quiz: [null, null, null],
   classes: [], cls: null,
   attrMethods: {}, attrs: {},
-  related: [], secondary: [],
+  related: [], secondary: [], groupPicks: {},
   equipment: [], equipInit: false,
   charName: '', campaignId: null, newCampaign: '',
   spells: [], psi: [],
   pools: null, savedId: null, saving: false,
   skillCatalog: [], items: [], campaigns: [], existing: [],
-  spellCatalog: [], psiCatalog: [], me: null,
+  spellCatalog: [], psiCatalog: [], me: null, isAdmin: false,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -146,6 +146,9 @@ function renderSystem() {
         <h4>☢️ Rifts</h4><p class="muted">Mega-damage, magic, and machines on post-apocalyptic Earth.</p>
       </div>
     </div>
+    ${S.isAdmin ? `<h3>Admin</h3>
+    <p class="small"><a href="import.html">📄 Import a class from a PDF</a>
+      <span class="muted">— extract an O.C.C./R.C.C. from a sourcebook page range</span></p>` : ''}
     ${gmCampaigns().length ? `<h3>Your campaigns (GM)</h3>
     <p class="small">${gmCampaigns().map((c) =>
       `<a href="dashboard.html?campaign_id=${c.id}">🗺 ${esc(c.name)}</a> <span class="muted">(${esc(c.system)})</span>`
@@ -161,7 +164,7 @@ function pickSystem(sys) {
   S.system = sys; S.step = 1; render();
 }
 function resetBuild() {
-  S.attrMethods = {}; S.attrs = {}; S.related = []; S.secondary = [];
+  S.attrMethods = {}; S.attrs = {}; S.related = []; S.secondary = []; S.groupPicks = {};
   S.equipment = []; S.equipInit = false; S.pools = null;
   S.spells = []; S.psi = [];
 }
@@ -219,9 +222,20 @@ function classDetail(c) {
       &nbsp;·&nbsp; Related picks: ${sk.occ_related_skills?.count ?? 0} &nbsp;·&nbsp; Secondary picks: ${sk.secondary_skills?.count ?? 0}
       ${c.psionics ? ' · Psionics: ' + esc(c.psionics.type) : ''}${c.magic ? ' · Magic: ' + esc(c.magic.type) : ''}</p>
     <p class="small" style="margin-top:8px; line-height:1.55">${esc(c.lore || '')}</p>
+    ${listOrText('Side effects', c.side_effects)}
+    ${listOrText('Restrictions', c.restrictions)}
     ${c.gm_notes ? `<p class="muted small" style="margin-top:8px"><b>GM notes:</b> ${esc(c.gm_notes)}</p>` : ''}
   </div>`;
 }
+// side_effects / restrictions are free text — a string or a list, advisory only.
+function listOrText(label, value) {
+  if (!value || (Array.isArray(value) && !value.length)) return '';
+  const body = Array.isArray(value)
+    ? `<ul style="margin:4px 0 0 18px">${value.map((v) => `<li class="small">${esc(v)}</li>`).join('')}</ul>`
+    : `<span class="small"> ${esc(value)}</span>`;
+  return `<p class="small" style="margin-top:8px"><b>${label}:</b>${body}</p>`;
+}
+
 function classMode(m) { S.classMode = m; render(); }
 function quizPick(i, val) { S.quiz[i] = val; render(); }
 function pickClass(id) { const c = S.classes.find((x) => x.id === id); if (S.cls?.id !== id) resetBuild(); S.cls = c; render(); }
@@ -300,9 +314,27 @@ function catalogFor(categories) {
     (!categories || categories.includes(sk.category)) &&
     (!sk.systems || sk.systems.includes(S.system)));
 }
+const isGroup = (s) => !!s && (s.choose !== undefined || s.from !== undefined);
+
+// Class files may omit base/per_level for a required skill — sourcebook class
+// pages usually state only the bonus, with the base living in the skill table.
+// Fall back to the catalog so imported classes still show real percentages.
+function resolveSkill(name, explicit = {}) {
+  const cat = S.skillCatalog.find((sk) => sk.name === name) || {};
+  return {
+    base: explicit.base ?? cat.base ?? 0,
+    per_level: explicit.per_level ?? cat.per_level ?? 0,
+    category: cat.category || 'Class',
+  };
+}
+
+// Names already spoken for: fixed class skills, every choice-group pick made so
+// far, and anything chosen as related/secondary.
 function takenNames() {
-  const occ = (S.cls.skills?.occ_skills || []).map((s) => s.name.toLowerCase());
-  return new Set([...occ, ...S.related.map((n) => n.toLowerCase()), ...S.secondary.map((n) => n.toLowerCase())]);
+  const occ = (S.cls.skills?.occ_skills || [])
+    .filter((s) => !isGroup(s)).map((s) => String(s.name).toLowerCase());
+  const groups = Object.values(S.groupPicks).flat().map((n) => String(n).toLowerCase());
+  return new Set([...occ, ...groups, ...S.related.map((n) => n.toLowerCase()), ...S.secondary.map((n) => n.toLowerCase())]);
 }
 function renderSkills() {
   const sk = S.cls.skills || {};
@@ -310,9 +342,35 @@ function renderSkills() {
   const secondaryCfg = sk.secondary_skills || { count: 0 };
   const taken = takenNames();
 
-  const occRows = (sk.occ_skills || []).map((s) =>
-    `<div class="chkrow">✔ <span>${esc(s.name)}</span>
-     <span class="pct">${s.base ? s.base + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—'}</span></div>`).join('');
+  // Fixed skills auto-populate; choice-groups ("pick N of these") get an inline
+  // pick control. Either kind may carry an advisory `note`.
+  const occRows = (sk.occ_skills || []).map((s, gi) => {
+    const noteHtml = s.note ? `<div class="attr-note" style="margin:0 0 4px 18px">↳ ${esc(s.note)}</div>` : '';
+    if (!isGroup(s)) {
+      const r = resolveSkill(s.name, s);
+      return `<div class="chkrow">✔ <span>${esc(s.name)}</span>
+        <span class="pct">${r.base ? r.base + '%' + (r.per_level ? ' +' + r.per_level + '/lvl' : '') : '—'}</span></div>${noteHtml}`;
+    }
+    const picked = S.groupPicks[gi] || [];
+    // Either an enumerated `from` list, or `categories` — "two piloting skills
+    // of choice" resolves against the catalog.
+    const optionNames = (s.from || []).length
+      ? (s.from || []).map((raw) => (typeof raw === 'string' ? raw : raw?.name))
+      : catalogFor(s.categories).map((sk) => sk.name);
+    const opts = optionNames.map((name) => {
+      const on = picked.includes(name);
+      const blocked = !on && picked.length >= s.choose;
+      return `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}; margin-left:18px">
+        <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
+          onchange="toggleGroupPick(${gi}, '${esc(name)}', ${s.choose})">
+        <span>${esc(name)}</span>
+        <span class="pct">${s.base ? s.base + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—'}</span></label>`;
+    }).join('');
+    return `<div class="chkrow"><b>Pick ${s.choose}</b>
+      <span class="pct">${esc((s.categories || []).join(', '))} ${picked.length}/${s.choose} chosen</span></div>${noteHtml}${opts}`;
+  }).join('');
+
+  const schedule = relatedCfg.schedule || [];
 
   const pickList = (catalog, chosen, kind, limit) => catalog.map((s) => {
     const on = chosen.includes(s.name);
@@ -333,6 +391,8 @@ function renderSkills() {
       <div>
         <h3>Related skills — ${S.related.length}/${relatedCfg.count}</h3>
         <p class="muted small">Allowed: ${esc((relatedCfg.categories || []).join(', ') || '—')}</p>
+        ${schedule.length ? `<p class="attr-note">Also grants ${schedule.map((s) => `+${s.count} at level ${s.level}`).join(', ')}
+          — recorded on the class, not yet prompted at level-up.</p>` : ''}
         ${pickList(catalogFor(relatedCfg.categories), S.related, 'related', relatedCfg.count)}
       </div>
       <div>
@@ -345,6 +405,14 @@ function renderSkills() {
   <div class="nav"><button class="btn btn-ghost" onclick="goStep(2)">&larr; Back</button>
   <button class="btn btn-primary" onclick="goStep(4)">Equipment &rarr;</button></div>`;
 }
+function toggleGroupPick(groupIndex, name, limit) {
+  const list = S.groupPicks[groupIndex] || (S.groupPicks[groupIndex] = []);
+  const i = list.indexOf(name);
+  if (i >= 0) list.splice(i, 1);
+  else if (list.length < limit) list.push(name);
+  render();
+}
+
 function toggleSkill(kind, name) {
   const list = kind === 'related' ? S.related : S.secondary;
   const i = list.indexOf(name);
@@ -481,8 +549,20 @@ function powersPayload() {
 // Step 6 — review & save
 function skillsPayload() {
   const find = (n) => S.skillCatalog.find((s) => s.name === n) || {};
+  const occ = S.cls.skills?.occ_skills || [];
+  // Choice-group picks are stored exactly like fixed class skills, inheriting
+  // the group's base/per_level.
+  const groupPicks = occ.flatMap((s, gi) => !isGroup(s) ? [] :
+    (S.groupPicks[gi] || []).map((name) => {
+      const r = resolveSkill(name, s);
+      return { name, category: 'Class', pct: r.base, per_level: r.per_level, type: 'occ' };
+    }));
   return [
-    ...(S.cls.skills?.occ_skills || []).map((s) => ({ name: s.name, category: 'Class', pct: s.base || 0, per_level: s.per_level || 0, type: 'occ' })),
+    ...occ.filter((s) => !isGroup(s)).map((s) => {
+      const r = resolveSkill(s.name, s);
+      return { name: s.name, category: 'Class', pct: r.base, per_level: r.per_level, type: 'occ' };
+    }),
+    ...groupPicks,
     ...S.related.map((n) => ({ name: n, category: find(n).category, pct: find(n).base || 0, per_level: find(n).per_level || 0, type: 'related' })),
     ...S.secondary.map((n) => ({ name: n, category: find(n).category, pct: find(n).base || 0, per_level: 0, type: 'secondary' })),
   ];
@@ -613,6 +693,7 @@ async function boot(first = true) {
     S.spellCatalog = spellsRes.spells;
     S.psiCatalog = psiRes.powers;
     S.me = meRes.email ?? null;
+    S.isAdmin = !!meRes.is_admin;
     if (classesRes.failures?.length) console.error('Class parse failures:', classesRes.failures);
     if (first) render();
   } catch (err) {
@@ -625,7 +706,7 @@ async function boot(first = true) {
 Object.assign(window, {
   S, render, computePools, goStep, pickSystem, classMode, quizPick, pickClass,
   confirmClass, setMethod, setAllMethod, doRoll, rollAll, manualSet, pbAdj,
-  toggleSkill, rmEquip, addCatalog, addCustom, togglePower, save, startOver,
+  toggleSkill, toggleGroupPick, rmEquip, addCatalog, addCustom, togglePower, save, startOver,
 });
 
 boot();

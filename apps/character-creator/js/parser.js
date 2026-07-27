@@ -13,6 +13,15 @@
 const VALID_SYSTEMS = ['rifts', 'palladium-fantasy'];
 const VALID_CATEGORIES = ['rcc', 'occ'];
 
+// YAML block scalar introducers: | and > with optional chomping/indent modifiers.
+const BLOCK_SCALAR = /^[|>][-+]?\d*$/;
+
+// A "pick N from this list" entry inside occ_skills, as opposed to a fixed skill.
+export function isChoiceGroup(entry) {
+  return !!entry && typeof entry === 'object' &&
+    (entry.choose !== undefined || entry.from !== undefined);
+}
+
 // ---------- scalar helpers ----------
 
 function stripComment(line) {
@@ -130,7 +139,14 @@ function parseMap(lines, start, indent) {
     if (!kv) throw new Error(`Expected "key: value" at: "${lines[i].text}"`);
     const [key, val] = kv;
     i++;
-    if (val !== '') {
+    if (BLOCK_SCALAR.test(val)) {
+      // `key: |` / `key: >` — long free text continued on indented lines.
+      // Note: blank lines were already dropped by toLines(), so paragraph
+      // breaks inside a block collapse to a single break.
+      const body = [];
+      while (i < lines.length && lines[i].indent > indent) { body.push(lines[i].text); i++; }
+      map[key] = body.join(val[0] === '|' ? '\n' : ' ').trim();
+    } else if (val !== '') {
       map[key] = parseInlineValue(val);
     } else if (i < lines.length && lines[i].indent > indent) {
       const [child, next] = parseBlock(lines, i, lines[i].indent);
@@ -228,12 +244,40 @@ export function parseClassMarkdown(text) {
 
   // Shape checks on optional structures
   if (data.skills) {
+    // An occ_skills entry is either a fixed skill ({name, base, per_level}) or a
+    // choice-group ({choose, from: [...]}) — some classes bundle "pick N of
+    // these" into the required list itself. Both may carry a free-text `note`
+    // for conditional substitutions (advisory only, never enforced).
     for (const s of data.skills.occ_skills || []) {
-      if (!s || typeof s !== 'object' || !s.name) errors.push('skills.occ_skills entries need a name');
-      else if (typeof s.base !== 'number') warnings.push(`occ_skill "${s.name}" has no numeric base %`);
+      if (!s || typeof s !== 'object') { errors.push('skills.occ_skills entries must be objects'); continue; }
+      if (isChoiceGroup(s)) {
+        // Two flavours: an enumerated `from` list, or `categories` when the book
+        // says "any N skills from <category>" (e.g. "two piloting skills of choice").
+        if (typeof s.choose !== 'number' || s.choose < 1) errors.push('occ_skills choice-group needs a numeric choose >= 1');
+        const hasFrom = Array.isArray(s.from) && s.from.length > 0;
+        const hasCats = Array.isArray(s.categories) && s.categories.length > 0;
+        if (!hasFrom && !hasCats) {
+          errors.push('occ_skills choice-group needs a non-empty from list or categories list');
+        } else if (hasFrom && !hasCats && s.choose > s.from.length) {
+          errors.push(`occ_skills choice-group asks for ${s.choose} of only ${s.from.length} options`);
+        }
+      } else if (!s.name) {
+        errors.push('skills.occ_skills entries need a name (or choose/from for a choice-group)');
+      } else if (typeof s.base !== 'number') {
+        warnings.push(`occ_skill "${s.name}" has no numeric base %`);
+      }
     }
     const related = data.skills.occ_related_skills;
-    if (related && typeof related.count !== 'number') errors.push('skills.occ_related_skills.count must be a number');
+    if (related) {
+      if (typeof related.count !== 'number') errors.push('skills.occ_related_skills.count must be a number');
+      // Optional staged picks: [{ level, count }] granted beyond the starting
+      // count. Stored for future use — the leveling flow does not act on it yet.
+      for (const step of related.schedule || []) {
+        if (!step || typeof step.level !== 'number' || typeof step.count !== 'number') {
+          errors.push('occ_related_skills.schedule entries need numeric level and count');
+        }
+      }
+    }
     const secondary = data.skills.secondary_skills;
     if (secondary && typeof secondary.count !== 'number') errors.push('skills.secondary_skills.count must be a number');
   }
