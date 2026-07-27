@@ -26,6 +26,12 @@ export function buildUserPrompt(examples, hints) {
 
 ## Target schema (YAML frontmatter)
 
+Omitting fields: when the page explicitly states that something does NOT apply —
+"Attribute Requirements: None", "no psionics", "cannot cast spells" — omit that
+field entirely. Do not encode the absence as a note, an empty value, or the
+string "none". An absent field already means "does not apply"; recording the
+absence adds a field a human then has to delete.
+
 Required:
 - id: kebab-case slug (e.g. \`juicer\`)
 - name: display name (e.g. \`Juicer O.C.C.\` → use \`Juicer\`)
