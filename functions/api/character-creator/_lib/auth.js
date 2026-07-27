@@ -1,7 +1,7 @@
 // Auth via the existing Zero Trust setup: Cloudflare Access sits in front of the
 // whole site and injects the verified identity as a request header. No new auth here.
 
-import { getAccessEmail } from '../../_lib/access.js';
+import { getAccessEmail, isAdminEmail } from '../../_lib/access.js';
 
 export function getUserEmail(request) {
   const email = getAccessEmail(request);
@@ -24,6 +24,21 @@ export function json(data, status = 200) {
     status,
     headers: { 'Content-Type': 'application/json' },
   });
+}
+
+export function isAdmin(request, env) {
+  return isAdminEmail(getUserEmail(request), env);
+}
+
+// Guard for admin-only endpoints: returns { email } when allowed, or { res }
+// holding the response to return. Admin is global, not campaign-scoped.
+export function requireAdmin(request, env) {
+  const email = getUserEmail(request);
+  if (!email) return { res: unauthorized() };
+  if (!isAdminEmail(email, env)) {
+    return { res: json({ error: 'Admin only' }, 403) };
+  }
+  return { email };
 }
 
 export function forbidden() {
