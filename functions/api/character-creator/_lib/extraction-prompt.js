@@ -68,7 +68,16 @@ Optional — include only what the page actually states:
     secondary_skills: { count: N }
 - equipment_starting: list of { item_id: "kebab-case-slug", qty: N }
 - psionics: { type: "minor"|"major"|"master", isp_base: "formula" }
+    If the class AUTOMATICALLY KNOWS specific named psionic powers, list their
+    names in \`powers: ["Sixth Sense", "Clairvoyance"]\`. Put them here as well as
+    describing them in prose — the app cross-references these names against its
+    power catalog, and a power named only inside a special_abilities description
+    is invisible to it.
 - magic: { type: "...", spells_starting: N, spell_levels_allowed: [1, 2] }
+    Likewise, if the class automatically knows specific named spells, list their
+    names in \`spells: ["Globe of Daylight", "Sense Magic"]\`. Only list spells the
+    book actually names; if the class simply chooses N spells of a given level,
+    give spells_starting/spell_levels_allowed and no \`spells\` list.
 - special_abilities / natural_abilities: list of { name, description }
 - level_progression: list of { level: N, grants: ["...", "..."] }
 - restrictions: list of free-text strings (things the class may not do)

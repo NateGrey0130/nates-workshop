@@ -81,6 +81,7 @@ const SKILL_PATTERNS = [
   [/^hand to hand/i, 'Physical', false],
   [/^(boxing|wrestling|gymnastics|acrobatics|running|climbing|swimming|prowl|athletics|body building)/i, 'Physical', true],
   [/^language\b|^literacy\b/i, 'Communications', true],
+  [/^(dance|sing|play musical|cook|sewing|fish|brewing|housekeeping|wardrobe)/i, 'Domestic', true],
   [/^radio\b|^cryptography|^laser communications/i, 'Communications', true],
   [/^pilot:/i, 'Pilot', true],
   [/^(read sensory|weapon systems|navigation)/i, 'Pilot Related', true],
@@ -104,6 +105,21 @@ function inferSkill(name) {
   return { name, category: 'TODO', base: 0, per_level: 0, _note: 'set category and base/per_level' };
 }
 
+// Psionic powers fall into four categories; names are fairly diagnostic.
+const PSIONIC_PATTERNS = [
+  [/^(exorcism|bio-manipulation|electrokinesis|hydrokinesis|pyrokinesis|telekinetic|psi-sword|psi-shield|mind bolt|group mind)/i, 'Super'],
+  [/^(sense|see |detect|presence|clairvoyance|telepathy|empathy|object read|sixth sense|read dedication|total recall|mind block auto)/i, 'Sensitive'],
+  [/^(heal|bio-regenerate|deaden pain|induce sleep|psychic (purification|diagnosis|surgery)|stop bleeding)/i, 'Healing'],
+  [/^(impervious|levitation|mind block|nightvision|resist|summon inner strength|death trance|alter aura|telekinesis|ectoplasm|float|swim|breathe)/i, 'Physical'],
+];
+
+function inferPsionic(name) {
+  for (const [re, category] of PSIONIC_PATTERNS) {
+    if (re.test(name)) return { name, category, isp: 0, _note: 'set the I.S.P. cost' };
+  }
+  return { name, category: 'TODO', isp: 0, _note: 'set category and I.S.P. cost' };
+}
+
 // Ready-to-merge JSON snippets for the static catalogs. Categories are inferred
 // where possible; base/per_level still need the real numbers from the skill
 // table before committing.
@@ -113,10 +129,12 @@ export function buildSnippets(missing) {
     snippets['data/skills.json'] = missing.skills.map(inferSkill);
   }
   if (missing.spells.length) {
-    snippets['data/spells.json'] = missing.spells.map((name) => ({ name, level: 0, ppe: 0 }));
+    snippets['data/spells.json'] = missing.spells.map((name) => ({
+      name, level: 0, ppe: 0, _note: 'set the spell level and P.P.E. cost',
+    }));
   }
   if (missing.psionics.length) {
-    snippets['data/psionics.json'] = missing.psionics.map((name) => ({ name, category: 'TODO', isp: 0 }));
+    snippets['data/psionics.json'] = missing.psionics.map(inferPsionic);
   }
   return snippets;
 }

@@ -17,9 +17,12 @@ const VALID_CATEGORIES = ['rcc', 'occ'];
 const BLOCK_SCALAR = /^[|>][-+]?\d*$/;
 
 // A "pick N from this list" entry inside occ_skills, as opposed to a fixed skill.
+// A choice-group has no name of its own — it is "pick N from these". A named
+// entry that also carries `choose` is a fixed skill taken N times (e.g.
+// "Play Musical Instrument, select two instruments"), not a group.
 export function isChoiceGroup(entry) {
-  return !!entry && typeof entry === 'object' &&
-    (entry.choose !== undefined || entry.from !== undefined);
+  return !!entry && typeof entry === 'object' && !entry.name &&
+    (entry.choose !== undefined || entry.from !== undefined || entry.categories !== undefined);
 }
 
 // ---------- scalar helpers ----------

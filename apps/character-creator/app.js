@@ -314,7 +314,10 @@ function catalogFor(categories) {
     (!categories || categories.includes(sk.category)) &&
     (!sk.systems || sk.systems.includes(S.system)));
 }
-const isGroup = (s) => !!s && (s.choose !== undefined || s.from !== undefined);
+// Mirrors isChoiceGroup() in js/parser.js: a group has no name of its own.
+// A named entry with `choose` is a fixed skill taken that many times.
+const isGroup = (s) => !!s && !s.name &&
+  (s.choose !== undefined || s.from !== undefined || s.categories !== undefined);
 
 // Class files may omit base/per_level for a required skill — sourcebook class
 // pages usually state only the bonus, with the base living in the skill table.
@@ -348,7 +351,8 @@ function renderSkills() {
     const noteHtml = s.note ? `<div class="attr-note" style="margin:0 0 4px 18px">↳ ${esc(s.note)}</div>` : '';
     if (!isGroup(s)) {
       const r = resolveSkill(s.name, s);
-      return `<div class="chkrow">✔ <span>${esc(s.name)}</span>
+      // A named skill with `choose` is taken that many times.
+      return `<div class="chkrow">✔ <span>${esc(s.name)}${s.choose > 1 ? ` ×${s.choose}` : ''}</span>
         <span class="pct">${r.base ? r.base + '%' + (r.per_level ? ' +' + r.per_level + '/lvl' : '') : '—'}</span></div>${noteHtml}`;
     }
     const picked = S.groupPicks[gi] || [];
