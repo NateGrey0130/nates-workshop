@@ -1,0 +1,12 @@
+# Copy to .dev.vars for local development (.dev.vars is gitignored).
+# In production these are set in the Cloudflare Pages dashboard instead:
+#   Settings -> Environment variables
+
+# Anthropic API key used by functions/api/claude.js (FilamentForge + class import).
+ANTHROPIC_API_KEY=sk-ant-...
+
+# The single email allowed to use admin-only features (the OCC/RCC class import).
+# Locally, Cloudflare Access isn't in front of the site and the identity helper
+# falls back to dev@localhost, so use that to exercise admin locally.
+# In production set this to your real Access email.
+ADMIN_EMAIL=dev@localhost

@@ -168,6 +168,43 @@ th {
 /* ─── DASHBOARD ─── */
 .pools-cell { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
 
+/* ─── IMPORT (admin) ─── */
+.notes-banner {
+  border: 1px solid var(--warning);
+  background: rgba(251, 191, 36, 0.08);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.notes-banner h3 { margin-top: 0; color: var(--warning); }
+.notes-banner .body { font-size: 13px; line-height: 1.55; white-space: pre-wrap; }
+
+.mono, textarea.mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+textarea.mono { min-height: 460px; }
+pre.snippet {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.miss-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 0; font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+.miss-row:last-child { border-bottom: 0; }
+.miss-row .slug { font-family: 'JetBrains Mono', monospace; color: var(--text-secondary); font-size: 12px; }
+.badge-live { color: var(--success); font-size: 12px; }
+.badge-file { color: var(--warning); font-size: 12px; }
+
 /* ═══ PRINT / SAVE AS PDF ═══
    Strips interactive chrome and re-renders for paper. Owner views show current
    values as inputs on screen; .print-only elements carry the same values for
