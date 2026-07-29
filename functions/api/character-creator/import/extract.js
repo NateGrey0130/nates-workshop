@@ -8,6 +8,7 @@
 import { requireAdmin, json } from '../_lib/auth.js';
 import { crossReference } from '../_lib/catalog.js';
 import { SYSTEM_PROMPT, buildUserPrompt } from '../_lib/extraction-prompt.js';
+import { validateClaudeRequest, callAnthropic } from '../../_lib/claude-client.js';
 import { parseClassMarkdown } from '../../../../apps/character-creator/js/parser.js';
 
 const CLASSES_PATH = '/apps/character-creator/data/classes/';
@@ -52,30 +53,62 @@ export async function onRequestPost({ request, env }) {
   }
   if (!examples.length) return json({ error: 'Could not load any example class files' }, 500);
 
-  const proxyRes = await fetch(new URL('/api/claude', request.url), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model,
-      max_tokens: 12000,
-      system: SYSTEM_PROMPT,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b.pdf_base64 } },
-          { type: 'text', text: buildUserPrompt(examples, b.hints) },
-        ],
-      }],
-    }),
-  });
+  if (!env.ANTHROPIC_API_KEY) return json({ error: 'API key not configured on server' }, 500);
 
-  const payload = await proxyRes.json().catch(() => ({}));
-  if (!proxyRes.ok) {
-    const detail = payload.error?.message || payload.error || `proxy returned ${proxyRes.status}`;
-    return json({ error: 'Extraction call failed: ' + detail }, 502);
+  // Calls the shared client directly. Fetching this site's own /api/claude
+  // would be intercepted by Cloudflare Access in production and return the
+  // login page as HTML.
+  const claudeRequest = {
+    model,
+    max_tokens: 12000,
+    system: SYSTEM_PROMPT,
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b.pdf_base64 } },
+        { type: 'text', text: buildUserPrompt(examples, b.hints) },
+      ],
+    }],
+  };
+  const invalid = validateClaudeRequest(claudeRequest);
+  if (invalid) return json({ error: 'Built an invalid extraction request: ' + invalid }, 400);
+
+  const upstream = await callAnthropic(claudeRequest, env);
+  let payload;
+  try {
+    payload = JSON.parse(upstream.text);
+  } catch {
+    return json({
+      error: `Anthropic returned a non-JSON response (status ${upstream.status})`,
+      body_preview: upstream.text.slice(0, 300),
+    }, 502);
   }
-  const text = (payload.content || []).filter((c) => c.type === 'text').map((c) => c.text).join('\n').trim();
-  if (!text) return json({ error: 'Model returned no text', raw: payload }, 502);
+  if (upstream.status !== 200) {
+    const detail = payload.error?.message || payload.error || `status ${upstream.status}`;
+    return json({ error: 'Extraction call failed: ' + detail, status: upstream.status }, 502);
+  }
+  const blocks = Array.isArray(payload.content) ? payload.content : [];
+  const text = blocks.filter((c) => c.type === 'text').map((c) => c.text).join('\n').trim();
+  if (!text) {
+    // Several genuinely different failures land here — an empty content array,
+    // content with no text block (e.g. only thinking), or a truncated response.
+    // Report which one it was instead of a generic "no text".
+    const diag = {
+      stop_reason: payload.stop_reason ?? null,
+      stop_sequence: payload.stop_sequence ?? null,
+      block_types: blocks.map((c) => c.type),
+      block_count: blocks.length,
+      usage: payload.usage ?? null,
+      api_error: payload.error ?? null,
+      model: payload.model ?? model,
+    };
+    const why = diag.stop_reason === 'max_tokens'
+      ? `ran out of output budget (stop_reason=max_tokens, ${diag.usage?.output_tokens ?? '?'} tokens produced)`
+      : blocks.length === 0
+        ? 'the response contained no content blocks at all'
+        : `the response had only ${diag.block_types.join(', ')} block(s) and no text`;
+    return json({ error: `Extraction produced no usable text — ${why}`, diagnostics: diag }, 502);
+  }
 
   const markdown = repairFrontmatter(stripFences(text));
   const parsed = parseClassMarkdown(markdown);
