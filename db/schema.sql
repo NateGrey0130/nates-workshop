@@ -110,3 +110,21 @@ CREATE TABLE IF NOT EXISTS character_items (
   CHECK (item_id IS NOT NULL OR custom_name IS NOT NULL)
 );
 CREATE INDEX IF NOT EXISTS idx_character_items_character ON character_items (character_id);
+
+-- Classes created by the PDF import tool. Committed markdown under
+-- apps/character-creator/data/classes still works and takes precedence; this
+-- table lets an imported class go live immediately without a redeploy.
+-- A row is saved as 'draft' the moment extraction succeeds (so a closed tab
+-- never loses the work) and flips to 'published' when the import is confirmed.
+CREATE TABLE IF NOT EXISTS imported_classes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  class_id TEXT NOT NULL UNIQUE,        -- kebab-case slug from the frontmatter
+  name TEXT,
+  system TEXT,
+  markdown TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
+  created_by TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_imported_classes_status ON imported_classes (status);

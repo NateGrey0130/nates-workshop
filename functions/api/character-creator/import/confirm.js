@@ -8,6 +8,7 @@
 
 import { requireAdmin, json } from '../_lib/auth.js';
 import { crossReference, buildSnippets } from '../_lib/catalog.js';
+import { publish } from '../_lib/class-store.js';
 import { parseClassMarkdown } from '../../../../apps/character-creator/js/parser.js';
 
 const titleize = (slug) => String(slug)
@@ -42,8 +43,18 @@ export async function onRequestPost({ request, env }) {
     inserted.push(...missing.items.map((slug) => ({ slug, name: titleize(slug) })));
   }
 
+  // Publishing makes the class live immediately — no redeploy, no commit.
+  await publish(env, {
+    classId: parsed.data.id,
+    name: parsed.data.name,
+    system: parsed.data.system,
+    markdown: b.markdown,
+    email: guard.email,
+  });
+
   return json({
     class_id: parsed.data.id,
+    published: true,
     inserted_items: inserted,
     snippets: buildSnippets(missing),
     missing,
