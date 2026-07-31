@@ -212,19 +212,21 @@ async function confirmImport() {
 // ─── Step 3: output ───
 function renderConfirmed() {
   const c = I.confirmed;
-  const snippetBlocks = Object.entries(c.snippets || {}).map(([file, entries]) => `
-    <h3>${escHtml(file)} <span class="muted small">— merge these entries by hand</span></h3>
-    <pre class="snippet">${escHtml(JSON.stringify(entries, null, 2))}</pre>
-    <div class="rowline"><button class="btn btn-sm" onclick="copyText(${JSON.stringify(file)})">Copy</button></div>`).join('');
+  const cr = c.created || {};
+  const group = (label, rows, fmt) => rows?.length ? `
+    <h3>${label} <span class="badge-live">created — live now</span></h3>
+    ${rows.map((r) => `<div class="miss-row">${fmt(r)}</div>`).join('')}` : '';
+  const createdBlocks =
+    group('Items', cr.items, (r) => `<span class="slug">${escHtml(r.slug)}</span><span>${escHtml(r.name)}</span>`) +
+    group('Skills', cr.skills, (r) => `<span class="slug">${escHtml(r.name)}</span><span class="muted small">${escHtml(r.category || 'category not inferred')}</span>`) +
+    group('Spells', cr.spells, (r) => `<span class="slug">${escHtml(r.name)}</span>`) +
+    group('Psionic powers', cr.psionics, (r) => `<span class="slug">${escHtml(r.name)}</span><span class="muted small">${escHtml(r.category || 'category not inferred')}</span>`);
 
   $('app').innerHTML = `
   <div class="panel">
     <h2>✅ ${escHtml(c.class_id)} is live</h2>
-    <p class="muted">${c.published ? 'Published — it already appears in the character creator, no redeploy needed. ' : ''}
-      To also keep it in git, save the file below as
-      <span class="mono">apps/character-creator/data/classes/${escHtml(c.class_id)}.md</span>
-      and add <span class="mono">"${escHtml(c.class_id)}.md"</span> to <span class="mono">data/classes/index.json</span>;
-      a committed file takes precedence over the stored copy.</p>
+    <p class="muted">Published — it already appears in the character creator, no commit and no redeploy.
+      A copy of the file is below if you want one for your own records.</p>
     <div class="rowline">
       <button class="btn btn-primary" onclick="downloadMd()">⬇ Download ${escHtml(c.class_id)}.md</button>
       <button class="btn btn-sm" onclick="copyMd()">Copy markdown</button>
@@ -233,21 +235,13 @@ function renderConfirmed() {
     <pre class="snippet" id="final-md">${escHtml(c.markdown)}</pre>
   </div>
 
-  ${c.inserted_items?.length ? `<div class="panel">
-    <h3 style="margin-top:0">Item stubs created <span class="badge-live">live in D1 now</span></h3>
-    ${c.inserted_items.map((it) => `<div class="miss-row"><span class="slug">${escHtml(it.slug)}</span>
-      <span>${escHtml(it.name)}</span></div>`).join('')}
-    <p class="muted small" style="margin-top:8px">Name and slug only — fill in weight, cost, and stats when you get to them.</p>
-  </div>` : ''}
-
-  ${snippetBlocks ? `<div class="panel">${snippetBlocks}</div>` : ''}
+  ${createdBlocks ? `<div class="panel">
+    ${createdBlocks}
+    <p class="muted small" style="margin-top:8px">Stubs carry a name and an inferred category only — fill in
+      percentages, costs, and stats when you get to them. Nothing here needs a redeploy.</p>
+  </div>` : '<div class="panel"><p class="muted small">Everything this class references already existed — no stubs needed.</p></div>'}
 
   <div class="nav"><button class="btn btn-ghost" onclick="startOver()">← Import another</button><span></span></div>`;
-}
-
-function copyText(file) {
-  const entries = I.confirmed.snippets[file];
-  copyWithFeedback(JSON.stringify(entries, null, 2), event.target);
 }
 function copyMd() { copyWithFeedback(I.confirmed.markdown, event.target); }
 function downloadMd() {

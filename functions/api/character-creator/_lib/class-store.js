@@ -36,6 +36,24 @@ export async function publish(env, { classId, name, system, markdown, email }) {
   ).bind(classId, name ?? null, system ?? null, markdown, email).run();
 }
 
+// Published classes used as format examples in the extraction prompt. Pulled
+// from the database so the examples stay current as classes are added.
+export async function getExamples(env, limit = 2) {
+  const { results } = await env.DB.prepare(
+    `SELECT class_id, markdown FROM imported_classes
+     WHERE status = 'published' ORDER BY created_at, class_id LIMIT 6`
+  ).all();
+  // Prefer one of each category so the model sees both shapes.
+  const occ = results.filter((r) => /^category:\s*occ\b/m.test(r.markdown));
+  const rcc = results.filter((r) => /^category:\s*rcc\b/m.test(r.markdown));
+  const picked = [occ[0], rcc[0]].filter(Boolean);
+  for (const r of results) {
+    if (picked.length >= limit) break;
+    if (!picked.includes(r)) picked.push(r);
+  }
+  return picked.slice(0, limit).map((r) => ({ name: `${r.class_id}.md`, text: r.markdown.trim() }));
+}
+
 export async function listStored(env) {
   const { results } = await env.DB.prepare(
     `SELECT class_id, name, system, status, created_by, created_at, updated_at,

@@ -679,23 +679,23 @@ function startOver() {
 // ---------- boot ----------
 async function boot(first = true) {
   try {
-    const [classesRes, skillsRes, itemsRes, campaignsRes, charsRes, spellsRes, psiRes, meRes] = await Promise.all([
+    // Everything comes from the database now — classes, catalogs, and items —
+    // so content changes take effect without a redeploy.
+    const [classesRes, catalogsRes, itemsRes, campaignsRes, charsRes, meRes] = await Promise.all([
       api('classes'),
-      fetch('data/skills.json').then((r) => r.json()),
+      api('catalogs'),
       api('items'),
       api('campaigns'),
       api('characters'),
-      fetch('data/spells.json').then((r) => r.json()).catch(() => ({ spells: [] })),
-      fetch('data/psionics.json').then((r) => r.json()).catch(() => ({ powers: [] })),
       api('me').catch(() => ({})),
     ]);
     S.classes = classesRes.classes;
-    S.skillCatalog = skillsRes.skills;
+    S.skillCatalog = catalogsRes.skills;
+    S.spellCatalog = catalogsRes.spells;
+    S.psiCatalog = catalogsRes.psionics;
     S.items = itemsRes.items;
     S.campaigns = campaignsRes.campaigns;
     S.existing = charsRes.characters;
-    S.spellCatalog = spellsRes.spells;
-    S.psiCatalog = psiRes.powers;
     S.me = meRes.email ?? null;
     S.isAdmin = !!meRes.is_admin;
     if (classesRes.failures?.length) console.error('Class parse failures:', classesRes.failures);
