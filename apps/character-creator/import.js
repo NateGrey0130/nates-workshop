@@ -4,7 +4,7 @@
 // escHtml() comes from /shared/js/ui.js.
 'use strict';
 
-const I = { isAdmin: false, email: null, extracting: false, result: null, confirmed: null };
+const I = { isAdmin: false, email: null, extracting: false, result: null, confirmed: null, stored: [] };
 const $ = (id) => document.getElementById(id);
 
 async function api(path, opts) {
@@ -20,8 +20,14 @@ async function boot() {
     const me = await api('me');
     I.isAdmin = !!me.is_admin;
     I.email = me.email;
+    if (I.isAdmin) await loadStored();
   } catch { /* falls through to the denied view */ }
   render();
+}
+
+async function loadStored() {
+  try { I.stored = (await api('import/stored')).stored || []; }
+  catch { I.stored = []; }
 }
 
 function render() {
@@ -58,7 +64,48 @@ function renderUpload() {
       <button class="btn btn-primary" id="go" onclick="runExtract()">Extract class</button>
       <span id="msg" class="muted small"></span>
     </div>
+  </div>
+  ${storedPanel()}`;
+}
+
+// Saved imports. Drafts are autosaved the moment an extraction succeeds, so a
+// closed tab never loses one; published rows are live classes in the app.
+function storedPanel() {
+  if (!I.stored.length) return '';
+  const rows = I.stored.map((s) => `
+    <div class="miss-row">
+      <span class="slug">${escHtml(s.class_id)}</span>
+      <span>${escHtml(s.name || '')}</span>
+      <span class="tag ${s.status === 'published' ? 'gm' : ''}">${escHtml(s.status)}</span>
+      <span class="muted small">${escHtml(s.system || '')} · ${escHtml(s.updated_at)}</span>
+      <span style="margin-left:auto; display:flex; gap:6px">
+        <button class="btn btn-sm" onclick="reopenStored('${escHtml(s.class_id)}')">Open</button>
+        <button class="btn btn-sm btn-ghost" onclick="removeStored('${escHtml(s.class_id)}')">Delete</button>
+      </span>
+    </div>`).join('');
+  return `
+  <div class="panel">
+    <h3 style="margin-top:0">Saved imports <span class="muted small">(drafts autosave on extraction; published classes are live in the app)</span></h3>
+    ${rows}
   </div>`;
+}
+
+async function reopenStored(classId) {
+  try {
+    const { stored } = await api('import/stored?class_id=' + encodeURIComponent(classId));
+    const check = await api('import/recheck', jsonReq({ markdown: stored.markdown }));
+    I.result = { ...check, markdown: stored.markdown, model: 'saved draft', usage: null };
+    render();
+  } catch (err) { alert('Could not open: ' + err.message); }
+}
+
+async function removeStored(classId) {
+  if (!confirm(`Delete the saved import "${classId}"? If it is published, the class stops appearing in the app.`)) return;
+  try {
+    await api('import/stored?class_id=' + encodeURIComponent(classId), { method: 'DELETE' });
+    await loadStored();
+    render();
+  } catch (err) { alert('Delete failed: ' + err.message); }
 }
 
 async function runExtract() {
@@ -118,7 +165,9 @@ function renderReview() {
   <div class="panel">
     <h2>Review${r.class_id ? ` — <span class="mono">${escHtml(r.class_id)}.md</span>` : ''}</h2>
     <p class="muted">Extracted with ${escHtml(r.model)}${r.usage ? ` · ${r.usage.input_tokens} in / ${r.usage.output_tokens} out` : ''}.
-      Edit anything below — it's the actual file. Nothing is saved until you confirm.</p>
+      Edit anything below — it's the actual file.
+      ${r.autosaved ? '<span class="badge-live">Saved as a draft, so closing this tab won\'t lose it.</span>' : ''}
+      Confirming publishes it and creates any missing item stubs.</p>
     ${r.errors?.length ? `<p class="warn err">Parse errors: ${escHtml(r.errors.join('; '))}</p>` : ''}
     ${r.warnings?.length ? `<p class="warn">${escHtml(r.warnings.join('; '))}</p>` : ''}
     <textarea id="md" class="mono" spellcheck="false">${escHtml(r.markdown)}</textarea>
@@ -155,6 +204,7 @@ async function confirmImport() {
     $('msg').textContent = 'Confirming…';
     const res = await api('import/confirm', jsonReq({ markdown }));
     I.confirmed = { ...res, markdown };
+    await loadStored();
     render();
   } catch (err) { $('msg').innerHTML = `<span class="err">${escHtml(err.message)}</span>`; }
 }
@@ -169,9 +219,12 @@ function renderConfirmed() {
 
   $('app').innerHTML = `
   <div class="panel">
-    <h2>✅ Ready to commit</h2>
-    <p class="muted">Save this as <span class="mono">apps/character-creator/data/classes/${escHtml(c.class_id)}.md</span>
-      and add <span class="mono">"${escHtml(c.class_id)}.md"</span> to <span class="mono">data/classes/index.json</span>.</p>
+    <h2>✅ ${escHtml(c.class_id)} is live</h2>
+    <p class="muted">${c.published ? 'Published — it already appears in the character creator, no redeploy needed. ' : ''}
+      To also keep it in git, save the file below as
+      <span class="mono">apps/character-creator/data/classes/${escHtml(c.class_id)}.md</span>
+      and add <span class="mono">"${escHtml(c.class_id)}.md"</span> to <span class="mono">data/classes/index.json</span>;
+      a committed file takes precedence over the stored copy.</p>
     <div class="rowline">
       <button class="btn btn-primary" onclick="downloadMd()">⬇ Download ${escHtml(c.class_id)}.md</button>
       <button class="btn btn-sm" onclick="copyMd()">Copy markdown</button>
@@ -205,6 +258,6 @@ function downloadMd() {
   a.click();
   URL.revokeObjectURL(a.href);
 }
-function startOver() { I.result = null; I.confirmed = null; render(); }
+async function startOver() { I.result = null; I.confirmed = null; await loadStored(); render(); }
 
 boot();

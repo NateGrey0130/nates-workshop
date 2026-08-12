@@ -9,6 +9,7 @@ import { requireAdmin, json } from '../_lib/auth.js';
 import { crossReference } from '../_lib/catalog.js';
 import { SYSTEM_PROMPT, buildUserPrompt } from '../_lib/extraction-prompt.js';
 import { validateClaudeRequest, callAnthropic } from '../../_lib/claude-client.js';
+import { saveDraft } from '../_lib/class-store.js';
 import { parseClassMarkdown } from '../../../../apps/character-creator/js/parser.js';
 
 const CLASSES_PATH = '/apps/character-creator/data/classes/';
@@ -114,8 +115,27 @@ export async function onRequestPost({ request, env }) {
   const parsed = parseClassMarkdown(markdown);
   const missing = parsed.data ? await crossReference(env, request.url, parsed.data) : { items: [], skills: [], spells: [], psionics: [] };
 
+  // Autosave immediately: an extraction costs a real API call, and losing it to
+  // a closed tab is the difference between a saved draft and paying again.
+  let autosaved = false;
+  if (parsed.data?.id) {
+    try {
+      await saveDraft(env, {
+        classId: parsed.data.id,
+        name: parsed.data.name,
+        system: parsed.data.system,
+        markdown,
+        email: guard.email,
+      });
+      autosaved = true;
+    } catch (err) {
+      console.error('Draft autosave failed:', err.message);
+    }
+  }
+
   return json({
     markdown,
+    autosaved,
     ok: parsed.ok,
     errors: parsed.errors,
     warnings: parsed.warnings,

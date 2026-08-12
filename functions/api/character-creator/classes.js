@@ -4,6 +4,7 @@
 
 import { parseClassMarkdown } from '../../../apps/character-creator/js/parser.js';
 import { getUserEmail, unauthorized, json } from './_lib/auth.js';
+import { loadPublished } from './_lib/class-store.js';
 
 const DATA_PATH = '/apps/character-creator/data/classes/';
 
@@ -33,8 +34,21 @@ export async function onRequestGet({ request, env }) {
     }
     if (systemFilter && parsed.data.system !== systemFilter) continue;
     if (categoryFilter && parsed.data.category !== categoryFilter) continue;
-    classes.push(parsed.data);
+    classes.push({ ...parsed.data, _source: 'file' });
   }
 
-  return json({ classes, failures });
+  // Imported classes go live without a redeploy, but a committed file with the
+  // same id always wins — a deliberate commit is never silently shadowed.
+  const committed = new Set(classes.map((c) => c.id));
+  const imported = await loadPublished(env);
+  const shadowed = [];
+  for (const c of imported.classes) {
+    if (committed.has(c.id)) { shadowed.push(c.id); continue; }
+    if (systemFilter && c.system !== systemFilter) continue;
+    if (categoryFilter && c.category !== categoryFilter) continue;
+    classes.push(c);
+  }
+  failures.push(...imported.failures);
+
+  return json({ classes, failures, shadowed });
 }
