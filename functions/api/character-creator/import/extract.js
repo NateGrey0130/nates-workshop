@@ -9,12 +9,9 @@ import { requireAdmin, json } from '../_lib/auth.js';
 import { crossReference } from '../_lib/catalog.js';
 import { SYSTEM_PROMPT, buildUserPrompt } from '../_lib/extraction-prompt.js';
 import { validateClaudeRequest, callAnthropic } from '../../_lib/claude-client.js';
-import { saveDraft } from '../_lib/class-store.js';
+import { saveDraft, getExamples } from '../_lib/class-store.js';
 import { parseClassMarkdown } from '../../../../apps/character-creator/js/parser.js';
 
-const CLASSES_PATH = '/apps/character-creator/data/classes/';
-// One OCC and one RCC, so the model sees both shapes.
-const EXAMPLE_FILES = ['cyber-knight.md', 'dragon-hatchling.md'];
 const DEFAULT_MODEL = 'claude-sonnet-5';
 const ALLOWED_MODELS = ['claude-sonnet-5', 'claude-opus-5'];
 
@@ -47,12 +44,10 @@ export async function onRequestPost({ request, env }) {
   if (!b?.pdf_base64) return json({ error: 'pdf_base64 is required' }, 400);
   const model = ALLOWED_MODELS.includes(b.model) ? b.model : DEFAULT_MODEL;
 
-  const examples = [];
-  for (const file of EXAMPLE_FILES) {
-    const res = await env.ASSETS.fetch(new URL(CLASSES_PATH + file, request.url));
-    if (res.ok) examples.push({ name: file, text: (await res.text()).trim() });
+  const examples = await getExamples(env);
+  if (!examples.length) {
+    return json({ error: 'No published classes to use as format examples — seed the catalogs first' }, 500);
   }
-  if (!examples.length) return json({ error: 'Could not load any example class files' }, 500);
 
   if (!env.ANTHROPIC_API_KEY) return json({ error: 'API key not configured on server' }, 500);
 

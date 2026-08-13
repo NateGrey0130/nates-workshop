@@ -22,7 +22,7 @@ function check(label, cond, detail) {
 }
 
 function parseFile(name) {
-  return parseClassMarkdown(readFileSync(join(appDir, 'data', 'classes', name), 'utf8'));
+  return parseClassMarkdown(readFileSync(join(appDir, 'test', 'fixtures', name), 'utf8'));
 }
 
 // ---------- 1. Parser ----------
@@ -74,13 +74,14 @@ check('schema applies cleanly', apply.status === 0, (apply.stderr || apply.stdou
 // SQL goes through a temp file — a quoted --command string doesn't survive the Windows shell.
 const checkSql = join(appDir, 'test', '.smoke-check.sql');
 writeFileSync(checkSql,
-  "SELECT (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('campaigns','characters','journal_entries','level_history','items','character_items')) AS cc_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'media_items') AS media_tables;\n");
+  "SELECT (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('campaigns','characters','journal_entries','level_history','items','character_items')) AS cc_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'media_items') AS media_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('imported_classes','skills','spells','psionic_powers')) AS catalog_tables;\n");
 const query = wrangler(['d1', 'execute', 'DB', '--local', '--json', '--file', checkSql]);
 rmSync(checkSql, { force: true });
 let row = null;
 try { row = JSON.parse(query.stdout)[0].results[0]; } catch { /* fall through to checks */ }
 check('all 6 character-creator tables exist', row?.cc_tables === 6, query.stdout?.slice(-300));
 check('media_items still intact alongside them', row?.media_tables === 1);
+check('class + catalog tables exist', row?.catalog_tables === 4, query.stdout?.slice(-300));
 
 // Re-applying must be a no-op (every statement is IF NOT EXISTS).
 const reapply = wrangler(['d1', 'execute', 'DB', '--local', '--file', 'db/schema.sql']);

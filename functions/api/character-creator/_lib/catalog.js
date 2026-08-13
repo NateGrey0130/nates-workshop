@@ -1,30 +1,22 @@
-// Cross-references an extracted class against the live catalogs, so the import
-// review can show what it references that doesn't exist yet.
+// Cross-references an extracted class against the live catalogs, and creates
+// stub rows for anything it references that does not exist yet.
 //
-// Items live in D1 (a stub row can go live immediately). Skills, spells, and
-// psionic powers are static JSON shipped with the deploy, so those can only be
-// surfaced as snippets to merge by hand.
+// All four catalogs (items, skills, spells, psionic powers) live in D1, so a
+// stub goes live immediately with no redeploy. Stubs carry the bare minimum —
+// a name and whatever category can be inferred — and are flagged so they are
+// easy to find and fill in later.
 
 import { isChoiceGroup } from '../../../../apps/character-creator/js/parser.js';
-
-const DATA_PATH = '/apps/character-creator/data/';
-
-async function loadJson(env, requestUrl, file) {
-  const res = await env.ASSETS.fetch(new URL(DATA_PATH + file, requestUrl));
-  if (!res.ok) return null;
-  return res.json().catch(() => null);
-}
 
 const norm = (s) => String(s ?? '').trim().toLowerCase();
 
 // Every skill name the class references: fixed occ_skills plus every option
-// inside a choice-group (any of them could be picked, so all must exist).
+// inside an enumerated choice-group (any of them could be picked, so all must
+// exist). Category-based groups resolve against the catalog at pick time.
 export function referencedSkills(data) {
   const names = [];
   for (const s of data.skills?.occ_skills || []) {
     if (isChoiceGroup(s)) {
-      // Category-based groups resolve against the catalog at pick time, so only
-      // explicitly named options are checked for existence here.
       for (const opt of s.from || []) names.push(typeof opt === 'string' ? opt : opt?.name);
     } else if (s?.name) {
       names.push(s.name);
@@ -33,49 +25,34 @@ export function referencedSkills(data) {
   return names.filter(Boolean);
 }
 
-export async function crossReference(env, requestUrl, data) {
-  const missing = { items: [], skills: [], spells: [], psionics: [] };
+const nameList = (arr) => (arr || [])
+  .map((x) => (typeof x === 'string' ? x : x?.name))
+  .filter(Boolean);
 
-  // Items — D1, matched on slug
-  const slugs = (data.equipment_starting || []).map((e) => e?.item_id).filter(Boolean);
-  if (slugs.length) {
-    const placeholders = slugs.map(() => '?').join(',');
-    const { results } = await env.DB
-      .prepare(`SELECT slug FROM items WHERE slug IN (${placeholders})`)
-      .bind(...slugs).all();
-    const known = new Set(results.map((r) => norm(r.slug)));
-    missing.items = [...new Set(slugs.filter((s) => !known.has(norm(s))))];
-  }
-
-  const [skillsCat, spellsCat, psiCat] = await Promise.all([
-    loadJson(env, requestUrl, 'skills.json'),
-    loadJson(env, requestUrl, 'spells.json'),
-    loadJson(env, requestUrl, 'psionics.json'),
-  ]);
-
-  if (skillsCat?.skills) {
-    const known = new Set(skillsCat.skills.map((s) => norm(s.name)));
-    missing.skills = [...new Set(referencedSkills(data).filter((n) => !known.has(norm(n))))];
-  }
-  // Classes don't normally name individual spells/powers, but an extraction may
-  // surface them (e.g. magic.spells or psionics.powers); check whatever is there.
-  if (spellsCat?.spells) {
-    const known = new Set(spellsCat.spells.map((s) => norm(s.name)));
-    const refs = (data.magic?.spells || []).map((s) => (typeof s === 'string' ? s : s?.name)).filter(Boolean);
-    missing.spells = [...new Set(refs.filter((n) => !known.has(norm(n))))];
-  }
-  if (psiCat?.powers) {
-    const known = new Set(psiCat.powers.map((p) => norm(p.name)));
-    const refs = (data.psionics?.powers || []).map((p) => (typeof p === 'string' ? p : p?.name)).filter(Boolean);
-    missing.psionics = [...new Set(refs.filter((n) => !known.has(norm(n))))];
-  }
-
-  return missing;
+async function missingFrom(env, table, column, names) {
+  const wanted = [...new Set(names)];
+  if (!wanted.length) return [];
+  const placeholders = wanted.map(() => '?').join(',');
+  const { results } = await env.DB
+    .prepare(`SELECT ${column} AS key FROM ${table} WHERE ${column} IN (${placeholders})`)
+    .bind(...wanted).all();
+  const known = new Set(results.map((r) => norm(r.key)));
+  return wanted.filter((w) => !known.has(norm(w)));
 }
 
-// Best-effort category from the skill name, so snippets land closer to
-// mergeable than a wall of TODOs. Percentile-less families (W.P.s, hand to
-// hand, physical training) correctly carry base 0.
+export async function crossReference(env, requestUrl, data) {
+  const [items, skills, spells, psionics] = await Promise.all([
+    missingFrom(env, 'items', 'slug', (data.equipment_starting || []).map((e) => e?.item_id).filter(Boolean)),
+    missingFrom(env, 'skills', 'name', referencedSkills(data)),
+    missingFrom(env, 'spells', 'name', nameList(data.magic?.spells)),
+    missingFrom(env, 'psionic_powers', 'name', nameList(data.psionics?.powers)),
+  ]);
+  return { items, skills, spells, psionics };
+}
+
+// ─── stub inference ───
+// Best-effort categories from names, so created entries land closer to usable
+// than a wall of TODOs. Percentile-less families correctly carry base 0.
 const SKILL_PATTERNS = [
   [/^w\.?p\.?\b/i, 'Weapon Proficiencies', false],
   [/^hand to hand/i, 'Physical', false],
@@ -93,48 +70,58 @@ const SKILL_PATTERNS = [
   [/^lore:|^computer|^art\b/i, 'Technical', true],
 ];
 
-function inferSkill(name) {
-  for (const [re, category, percentile] of SKILL_PATTERNS) {
-    if (!re.test(name)) continue;
-    // Non-percentile families (W.P.s, hand to hand) are complete at base 0;
-    // percentile skills still need their real numbers from the skill table.
-    return percentile
-      ? { name, category, base: 0, per_level: 0, _note: 'set base/per_level from the skill table' }
-      : { name, category, base: 0, per_level: 0 };
-  }
-  return { name, category: 'TODO', base: 0, per_level: 0, _note: 'set category and base/per_level' };
-}
-
-// Psionic powers fall into four categories; names are fairly diagnostic.
 const PSIONIC_PATTERNS = [
   [/^(exorcism|bio-manipulation|electrokinesis|hydrokinesis|pyrokinesis|telekinetic|psi-sword|psi-shield|mind bolt|group mind)/i, 'Super'],
-  [/^(sense|see |detect|presence|clairvoyance|telepathy|empathy|object read|sixth sense|read dedication|total recall|mind block auto)/i, 'Sensitive'],
+  [/^(sense|see |detect|presence|clairvoyance|telepathy|empathy|object read|sixth sense|read dedication|total recall)/i, 'Sensitive'],
   [/^(heal|bio-regenerate|deaden pain|induce sleep|psychic (purification|diagnosis|surgery)|stop bleeding)/i, 'Healing'],
   [/^(impervious|levitation|mind block|nightvision|resist|summon inner strength|death trance|alter aura|telekinesis|ectoplasm|float|swim|breathe)/i, 'Physical'],
 ];
 
-function inferPsionic(name) {
-  for (const [re, category] of PSIONIC_PATTERNS) {
-    if (re.test(name)) return { name, category, isp: 0, _note: 'set the I.S.P. cost' };
-  }
-  return { name, category: 'TODO', isp: 0, _note: 'set category and I.S.P. cost' };
-}
+const matchCategory = (patterns, name) => {
+  for (const [re, category] of patterns) if (re.test(name)) return category;
+  return null;
+};
 
-// Ready-to-merge JSON snippets for the static catalogs. Categories are inferred
-// where possible; base/per_level still need the real numbers from the skill
-// table before committing.
-export function buildSnippets(missing) {
-  const snippets = {};
-  if (missing.skills.length) {
-    snippets['data/skills.json'] = missing.skills.map(inferSkill);
+const titleize = (slug) => String(slug).split('-')
+  .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w)).join(' ');
+
+/**
+ * Inserts stub rows for everything missing. Returns what was created, grouped
+ * by catalog, so the UI can report it. INSERT OR IGNORE keeps this safe against
+ * a concurrent import creating the same name.
+ */
+export async function createStubs(env, missing, { system, sourceBook }) {
+  const created = { items: [], skills: [], spells: [], psionics: [] };
+  const statements = [];
+
+  for (const slug of missing.items) {
+    created.items.push({ slug, name: titleize(slug) });
+    statements.push(env.DB.prepare(
+      `INSERT OR IGNORE INTO items (slug, name, system, description, source_book)
+       VALUES (?, ?, ?, ?, ?)`
+    ).bind(slug, titleize(slug), system, 'STUB — created by class import, needs stats', sourceBook ?? null));
   }
-  if (missing.spells.length) {
-    snippets['data/spells.json'] = missing.spells.map((name) => ({
-      name, level: 0, ppe: 0, _note: 'set the spell level and P.P.E. cost',
-    }));
+  for (const name of missing.skills) {
+    const category = matchCategory(SKILL_PATTERNS, name);
+    created.skills.push({ name, category });
+    statements.push(env.DB.prepare(
+      'INSERT OR IGNORE INTO skills (name, category, base, per_level, source) VALUES (?, ?, 0, 0, ?)'
+    ).bind(name, category, 'import'));
   }
-  if (missing.psionics.length) {
-    snippets['data/psionics.json'] = missing.psionics.map(inferPsionic);
+  for (const name of missing.spells) {
+    created.spells.push({ name });
+    statements.push(env.DB.prepare(
+      'INSERT OR IGNORE INTO spells (name, level, ppe, source) VALUES (?, 0, 0, ?)'
+    ).bind(name, 'import'));
   }
-  return snippets;
+  for (const name of missing.psionics) {
+    const category = matchCategory(PSIONIC_PATTERNS, name);
+    created.psionics.push({ name, category });
+    statements.push(env.DB.prepare(
+      'INSERT OR IGNORE INTO psionic_powers (name, category, isp, source) VALUES (?, ?, 0, ?)'
+    ).bind(name, category, 'import'));
+  }
+
+  if (statements.length) await env.DB.batch(statements);
+  return created;
 }

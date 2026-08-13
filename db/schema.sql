@@ -128,3 +128,32 @@ CREATE TABLE IF NOT EXISTS imported_classes (
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_imported_classes_status ON imported_classes (status);
+
+-- Reference catalogs. These began as static JSON shipped with the deploy, which
+-- meant a commit and a redeploy to add a single skill. They live here so the
+-- import tool can create missing entries live, the same way it does for items.
+CREATE TABLE IF NOT EXISTS skills (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
+  category TEXT,
+  base INTEGER NOT NULL DEFAULT 0,        -- 0 = non-percentile (W.P.s, hand to hand)
+  per_level INTEGER NOT NULL DEFAULT 0,
+  systems TEXT,                           -- JSON array; NULL means both systems
+  source TEXT NOT NULL DEFAULT 'seed'     -- seed | import
+);
+
+CREATE TABLE IF NOT EXISTS spells (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
+  level INTEGER NOT NULL DEFAULT 0,
+  ppe INTEGER NOT NULL DEFAULT 0,
+  source TEXT NOT NULL DEFAULT 'seed'
+);
+
+CREATE TABLE IF NOT EXISTS psionic_powers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
+  category TEXT,                          -- Healing | Physical | Sensitive | Super
+  isp INTEGER NOT NULL DEFAULT 0,
+  source TEXT NOT NULL DEFAULT 'seed'
+);
