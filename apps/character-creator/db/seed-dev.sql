@@ -8,7 +8,7 @@ VALUES ('Test Campaign — Chi-Town Burbs', 'rifts', 'test-gm@example.com', 'Smo
 INSERT INTO characters (campaign_id, player_email, name, class_id, level, attributes, hp_max, hp_current, sdc_max, sdc_current, isp_max, isp_current)
 VALUES (1, 'test-gm@example.com', 'Test Knight', 'cyber-knight', 1, '{"IQ":12,"ME":14,"MA":13,"PS":15,"PP":12,"PE":16,"PB":10,"Spd":14}', 19, 19, 30, 30, 42, 42);
 
-INSERT INTO items (slug, name, system, category, weight_lbs, cost, stats, source_book)
+INSERT INTO gear (slug, name, system, category, weight_lbs, cost, stats, source_book)
 VALUES ('survival-knife', 'Survival Knife', 'rifts', 'weapon', 1.0, 40, '{"damage":"1d6 S.D.C."}', 'rifts-core');
 
 INSERT INTO character_items (character_id, item_id, qty, equipped)

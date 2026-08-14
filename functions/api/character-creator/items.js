@@ -9,8 +9,8 @@ export async function onRequestGet({ request, env }) {
   // per referenced item on every class import, and `stats` is a JSON blob.
   const cols = 'id, slug, name, system, category, weight_lbs, cost';
   const stmt = system
-    ? env.DB.prepare(`SELECT ${cols} FROM items WHERE system = ? OR system = 'both' ORDER BY name`).bind(system)
-    : env.DB.prepare(`SELECT ${cols} FROM items ORDER BY name`);
+    ? env.DB.prepare(`SELECT ${cols} FROM gear WHERE system = ? OR system = 'both' ORDER BY name`).bind(system)
+    : env.DB.prepare(`SELECT ${cols} FROM gear ORDER BY name`);
   const { results } = await stmt.all();
   return json({ items: results });
 }

@@ -18,8 +18,8 @@ export async function onRequestGet({ request, env, params }) {
   if (!character) return json({ error: 'Character not found' }, 404);
 
   const { results: items } = await env.DB.prepare(
-    `SELECT character_items.*, items.name AS item_name, items.slug AS item_slug
-     FROM character_items LEFT JOIN items ON items.id = character_items.item_id
+    `SELECT character_items.*, gear.name AS item_name, gear.slug AS item_slug
+     FROM character_items LEFT JOIN gear ON gear.id = character_items.item_id
      WHERE character_items.character_id = ? AND character_items.removed_at IS NULL
      ORDER BY character_items.id`
   ).bind(params.id).all();
