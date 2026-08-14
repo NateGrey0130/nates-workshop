@@ -5,7 +5,7 @@
 'use strict';
 
 const I = { isAdmin: false, email: null, extracting: false, result: null, confirmed: null, stored: [],
-            mode: 'class', skills: null, skillsDone: null };
+            mode: 'class', skills: null, skillsDone: null, retiredView: false, retiredCount: 0 };
 const $ = (id) => document.getElementById(id);
 
 async function api(path, opts) {
@@ -27,8 +27,11 @@ async function boot() {
 }
 
 async function loadStored() {
-  try { I.stored = (await api('import/stored')).stored || []; }
-  catch { I.stored = []; }
+  try {
+    const res = await api('import/stored' + (I.retiredView ? '?retired=1' : ''));
+    I.stored = res.stored || [];
+    I.retiredCount = res.retired_count || 0;
+  } catch { I.stored = []; I.retiredCount = 0; }
 }
 
 function render() {
@@ -252,8 +255,17 @@ function renderUpload() {
 
 // Saved imports. Drafts are autosaved the moment an extraction succeeds, so a
 // closed tab never loses one; published rows are live classes in the app.
+//
+// Retiring a published class hides it from the app without destroying it. The
+// retired list is behind a toggle here rather than on its own page, so the
+// undo sits next to the action that needs undoing.
 function storedPanel() {
-  if (!I.stored.length) return '';
+  const viewingRetired = I.retiredView;
+  // Still render while viewing the retired list even when it is empty —
+  // restoring the last retired class would otherwise remove the panel, and the
+  // way back out with it.
+  if (!I.stored.length && !I.retiredCount && !viewingRetired) return '';
+
   const rows = I.stored.map((s) => `
     <div class="miss-row">
       <span class="slug">${escHtml(s.class_id)}</span>
@@ -261,15 +273,48 @@ function storedPanel() {
       <span class="tag ${s.status === 'published' ? 'gm' : ''}">${escHtml(s.status)}</span>
       <span class="muted small">${escHtml(s.system || '')} · ${escHtml(s.updated_at)}</span>
       <span style="margin-left:auto; display:flex; gap:6px">
-        <button class="btn btn-sm" onclick="reopenStored('${escHtml(s.class_id)}')">Open</button>
-        <button class="btn btn-sm btn-ghost" onclick="removeStored('${escHtml(s.class_id)}')">Delete</button>
+        ${viewingRetired
+          ? `<button class="btn btn-sm" onclick="restoreStored('${escHtml(s.class_id)}')">Restore</button>`
+          : `<button class="btn btn-sm" onclick="reopenStored('${escHtml(s.class_id)}')">Open</button>
+             <button class="btn btn-sm btn-ghost" onclick="removeStored('${escHtml(s.class_id)}')">${s.status === 'published' ? 'Retire' : 'Delete'}</button>`}
       </span>
     </div>`).join('');
+
+  const empty = viewingRetired
+    ? '<p class="muted small">Nothing retired.</p>'
+    : '<p class="muted small">No saved imports.</p>';
+
+  const toggle = I.retiredCount || viewingRetired
+    ? `<button class="btn btn-sm btn-ghost" onclick="toggleRetiredView()">
+         ${viewingRetired ? '← Back to saved imports' : `Retired (${I.retiredCount})`}
+       </button>`
+    : '';
+
   return `
   <div class="panel">
-    <h3 style="margin-top:0">Saved imports <span class="muted small">(drafts autosave on extraction; published classes are live in the app)</span></h3>
-    ${rows}
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px">
+      <h3 style="margin:0">${viewingRetired ? 'Retired classes' : 'Saved imports'}
+        <span class="muted small">${viewingRetired
+          ? '(hidden from the app; characters built on them still work)'
+          : '(drafts autosave on extraction; published classes are live in the app)'}</span></h3>
+      <span style="margin-left:auto">${toggle}</span>
+    </div>
+    ${rows || empty}
   </div>`;
+}
+
+async function toggleRetiredView() {
+  I.retiredView = !I.retiredView;
+  await loadStored();
+  render();
+}
+
+async function restoreStored(classId) {
+  try {
+    await api('import/stored?class_id=' + encodeURIComponent(classId), { method: 'POST' });
+    await loadStored();
+    render();
+  } catch (err) { alert('Restore failed: ' + err.message); }
 }
 
 async function reopenStored(classId) {
@@ -281,13 +326,20 @@ async function reopenStored(classId) {
   } catch (err) { alert('Could not open: ' + err.message); }
 }
 
+// The wording differs by status because the consequences genuinely differ:
+// retiring a published class is undoable, deleting a draft is not.
 async function removeStored(classId) {
-  if (!confirm(`Delete the saved import "${classId}"? If it is published, the class stops appearing in the app.`)) return;
+  const row = I.stored.find((s) => s.class_id === classId);
+  const published = row?.status === 'published';
+  const prompt = published
+    ? `Retire "${classId}"? It stops appearing in the app and can't be chosen for new characters. Existing characters keep working, and you can restore it from the retired list.`
+    : `Delete the draft "${classId}"? Drafts are not recoverable.`;
+  if (!confirm(prompt)) return;
   try {
     await api('import/stored?class_id=' + encodeURIComponent(classId), { method: 'DELETE' });
     await loadStored();
     render();
-  } catch (err) { alert('Delete failed: ' + err.message); }
+  } catch (err) { alert((published ? 'Retire' : 'Delete') + ' failed: ' + err.message); }
 }
 
 async function runExtract() {

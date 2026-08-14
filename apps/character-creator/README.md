@@ -116,7 +116,7 @@ ppe and isp.
 
 | Table | Notes |
 |---|---|
-| `imported_classes` | Class definitions as markdown. `status` is `draft` or `published`; only published classes appear in the app. |
+| `imported_classes` | Class definitions as markdown. `status` is `draft` or `published`; only published classes appear in the app. `deleted_at` NULL means live — retiring a published class hides it from the pickers without destroying it, and drafts are still deleted outright. |
 | `items` | Gear catalog. `slug` is what `equipment_starting[].item_id` references. |
 | `skills` | `base` 0 means non-percentile (W.P.s, hand to hand). `systems` is a JSON array; NULL means both. `note` carries oddities like `40%/30% climb/rappel`. |
 | `spells` | name, level, ppe. |
@@ -215,7 +215,7 @@ writes are gated (see [Permissions](#permissions)).
 | Endpoint | Method | Purpose |
 |---|---|---|
 | `me` | GET | Caller's email and `is_admin` |
-| `classes` | GET | Published classes, parsed. `?system=` `?category=` |
+| `classes` | GET | Published classes, parsed. `?system=` `?category=` `?include_retired=1` |
 | `catalogs` | GET | Skills, spells, psionic powers in one call |
 | `items` | GET | Gear catalog. `?system=` |
 | `campaigns` | GET / POST | List; create (caller becomes GM) |
@@ -230,7 +230,7 @@ writes are gated (see [Permissions](#permissions)).
 | `import/extract` | POST | Admin. PDF → class markdown; autosaves a draft |
 | `import/recheck` | POST | Admin. Re-parse edited markdown, no API spend |
 | `import/confirm` | POST | Admin. Publish class + create catalog stubs |
-| `import/stored` | GET / DELETE | Admin. List/fetch/delete stored classes |
+| `import/stored` | GET / DELETE / POST | Admin. List (`?retired=1`), fetch, retire-or-delete, and POST to restore |
 | `import/skills/extract` | POST | Admin. PDF → many skills, each classified against the catalog |
 | `import/skills/confirm` | POST | Admin. Apply per-skill insert/update/ignore decisions |
 
@@ -322,6 +322,24 @@ a confusing empty-response error.
 5. **Confirm** — publishes the class (live immediately) and creates stub rows
    for anything it references.
 
+#### Retiring a class
+
+Deleting a **published** class retires it: `deleted_at` is stamped, and it
+vanishes from the creation wizard, the extraction prompt's examples, and the
+saved-imports list. It does **not** vanish from anything that resolves a class a
+character already has — `getStored()` and therefore the sheet, the GM dashboard's
+roster labels, and the XP and level-up endpoints all deliberately ignore
+`deleted_at`. The sheet shows a "Retired class" advisory so the state is visible
+rather than mysterious.
+
+Retired classes live behind a **Retired (n)** toggle in the saved-imports panel,
+where a Restore button undoes it. There is no permanent delete for a retired
+class, by design.
+
+Deleting a **draft** is still a real delete — a draft is an in-progress
+extraction, usually one being cleared on purpose, and keeping every discarded
+attempt would turn the retired list into noise.
+
 ### Skill importer
 
 1. **Upload** a page range from a skill chapter, with an optional source-book
@@ -401,6 +419,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 |---|---|
 | `001-character-detail.sql` | `bio`, `combat`, `saves`, `armor` on `characters` |
 | `002-catalog-provenance.sql` | `source_book` + `note` on `skills`; `source_book` on `spells`, `psionic_powers` |
+| `003-class-soft-delete.sql` | `deleted_at` on `imported_classes` |
 
 ### The migration convention
 
@@ -456,14 +475,10 @@ calls.
 **No UI for editing catalog rows.** Only the importers write them. A single wrong
 percentage currently needs a re-import or SQL.
 
-**Class deletion is permanent.** When classes lived in files, a commit could
-override a bad row. Now D1 is the only source and deletes are hard. A `deleted_at`
-soft-delete column would restore the safety net.
-
-**Migrations are half-solved.** `schema.sql` re-runs safely for additive changes;
-`db/migrations/` handles ALTERs but is manual, unordered, and has no record of
-what has been applied to which environment. A third migration would justify a
-`schema_migrations` table.
+**Migrations are still applied by hand.** `schema_migrations` records what has
+run where and the smoke test checks it, but applying a migration is still a
+manual `wrangler d1 execute` per environment. That is a deliberate stopping
+point, not an oversight — see [`docs/plans/01-migration-tracking.md`](docs/plans/01-migration-tracking.md).
 
 **Rule enforcement is client-side.** Skill counts, category restrictions, and
 attribute minimums are enforced in the wizard; the server validates shape,

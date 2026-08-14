@@ -143,9 +143,13 @@ CREATE TABLE IF NOT EXISTS imported_classes (
   status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
   created_by TEXT NOT NULL,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  -- NULL = live, timestamp = retired. Characters built on a retired class keep
+  -- working; only the pickers and the published list filter on it.
+  deleted_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_imported_classes_status ON imported_classes (status);
+CREATE INDEX IF NOT EXISTS idx_imported_classes_deleted ON imported_classes (deleted_at);
 
 -- Reference catalogs. These began as static JSON shipped with the deploy, which
 -- meant a commit and a redeploy to add a single skill. They live here so the
@@ -205,3 +209,7 @@ WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'bio');
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '002-catalog-provenance.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('skills') WHERE name = 'note');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '003-class-soft-delete.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('imported_classes') WHERE name = 'deleted_at');
