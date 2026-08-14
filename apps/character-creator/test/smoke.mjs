@@ -8,6 +8,7 @@ import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseClassMarkdown } from '../js/parser.js';
+import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 
 const appDir = join(dirname(fileURLToPath(import.meta.url)), '..');
 const repoRoot = join(appDir, '..', '..');
@@ -59,6 +60,44 @@ const bad = parseClassMarkdown('---\nname: Nameless\nsystem: gurps\ncategory: oc
 check('invalid file rejected', !bad.ok && bad.errors.some((e) => e.includes('id')) && bad.errors.some((e) => e.includes('system')));
 const noFm = parseClassMarkdown('# just markdown, no frontmatter');
 check('missing frontmatter rejected', !noFm.ok);
+
+// ---------- 1b. Catalog field config ----------
+// The editor, the write endpoints and the importers all generate themselves
+// from this, so an inconsistent entry breaks three things at once.
+const catalogProblems = [];
+for (const [key, c] of Object.entries(CATALOGS)) {
+  const names = c.fields.map((f) => f.name);
+  if (!c.table || !c.displayField || !c.uniqueField) catalogProblems.push(`${key}: missing table/displayField/uniqueField`);
+  if (!names.includes(c.displayField)) catalogProblems.push(`${key}: displayField "${c.displayField}" is not a field`);
+  if (!names.includes(c.uniqueField)) catalogProblems.push(`${key}: uniqueField "${c.uniqueField}" is not a field`);
+  if (new Set(names).size !== names.length) catalogProblems.push(`${key}: duplicate field names`);
+  for (const f of c.fields) {
+    if (!f.label || !f.type) catalogProblems.push(`${key}.${f.name}: missing label or type`);
+    if (f.type === 'select' && !Array.isArray(f.options)) catalogProblems.push(`${key}.${f.name}: select without options`);
+  }
+}
+check('catalog configs are internally consistent', catalogProblems.length === 0, catalogProblems.join('; '));
+
+// A blank NOT NULL column must coerce to its default, not NULL, or the insert
+// dies on a constraint. This is the bug that made every "create" 500.
+const notNullBlanks = [];
+for (const [key, c] of Object.entries(CATALOGS)) {
+  for (const f of c.fields.filter((x) => x.blankAs !== undefined)) {
+    const { value } = coerceField(f, '');
+    if (value !== f.blankAs) notNullBlanks.push(`${key}.${f.name} blank -> ${value}, expected ${f.blankAs}`);
+  }
+}
+check('blank NOT NULL fields coerce to their default', notNullBlanks.length === 0, notNullBlanks.join('; '));
+
+// Required fields must be rejected when empty rather than silently nulled.
+const req = CATALOGS.skills.fields.find((f) => f.name === 'name');
+check('required field rejects blank', !!coerceField(req, '').error);
+// systems: neither system picked and both picked both mean "applies to both".
+const sysField = CATALOGS.skills.fields.find((f) => f.name === 'systems');
+check('systems: empty and all-selected both store NULL',
+  coerceField(sysField, []).value === null && coerceField(sysField, ['rifts', 'palladium-fantasy']).value === null);
+check('systems: one system stores a JSON array',
+  coerceField(sysField, ['rifts']).value === '["rifts"]');
 
 // ---------- 2. D1 schema ----------
 // Runs against the shared workshop database (binding DB in the root

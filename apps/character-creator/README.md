@@ -18,6 +18,7 @@ Access gate. No build step, no framework, no dependencies.
 - [API surface](#api-surface)
 - [Permissions](#permissions)
 - [House rules and derived values](#house-rules-and-derived-values)
+- [The catalog field config](#the-catalog-field-config)
 - [The PDF importers](#the-pdf-importers)
 - [Local development](#local-development)
 - [Production configuration](#production-configuration)
@@ -36,9 +37,14 @@ apps/character-creator/
 ├── sheet.html / sheet.js     Character sheet, laid out after the printed Rifts sheet
 ├── dashboard.html / dashboard.js  GM dashboard: roster, GM notes, campaign journal
 ├── import.html / import.js   Admin-only PDF import — Class and Skills tabs
+├── catalog.html / catalog.js Admin-only catalog editor, generated from the
+│                             field config. catalog.js is an ES module.
 ├── styles.css                All four pages, layered on /shared/styles.css
 ├── js/parser.js              RCC/OCC markdown parser (ES module — also used by the API)
 ├── js/dice.js                Dice evaluator (ES module — also used by the API)
+├── js/catalog-fields.js      What every catalog row looks like (ES module — the
+│                             editor, the write endpoints and the importers all
+│                             build themselves from it)
 ├── js/derive.js              Attribute tables → combat bonuses, saves, percentages
 │                             (classic script; both the wizard and the sheet use it)
 ├── db/seed-dev.sql           Optional local-dev seed rows; never applied to production
@@ -216,7 +222,8 @@ writes are gated (see [Permissions](#permissions)).
 |---|---|---|
 | `me` | GET | Caller's email and `is_admin` |
 | `classes` | GET | Published classes, parsed. `?system=` `?category=` `?include_retired=1` |
-| `catalogs` | GET | Skills, spells, psionic powers in one call |
+| `catalogs` | GET | Skills, spells, psionic powers in one call — trimmed projection the wizard boots on |
+| `catalogs/rows` | GET / POST / PATCH | Admin. Whole rows for one catalog (`?catalog=`), create, and update (`&id=`). No delete |
 | `items` | GET | Gear catalog (table is `gear`). `?system=` |
 | `campaigns` | GET / POST | List; create (caller becomes GM) |
 | `campaigns/[id]` | GET / PATCH | Details (`gm_notes` stripped for non-GM); edit `gm_notes` |
@@ -294,6 +301,37 @@ this app does not model, so they are plain editable fields.
 
 Skills omitting `base` fall back to the catalog value — sourcebook class pages
 state the *bonus*, with the base living in the skill table.
+
+---
+
+## The catalog field config
+
+`js/catalog-fields.js` is one declarative description of every editable catalog,
+imported by both the browser and the Workers runtime. It is the single place that
+knows what a row looks like:
+
+- the catalog editor builds its table and its row form from `fields`
+- `catalogs/rows` validates and coerces against `fields`, and **builds its SQL
+  from the config rather than from anything a caller sent** — a caller names a
+  catalog key, never a table or a column
+- the PDF importers build their extraction prompts and review tables from it
+
+Adding a column means adding it in one place. Two details that are easy to miss:
+
+- **`blankAs` mirrors a `NOT NULL DEFAULT` in the schema.** `skills.base`,
+  `skills.per_level`, `spells.level`, `spells.ppe` and `psionic_powers.isp` are
+  all `NOT NULL DEFAULT 0`, so an empty form field has to coerce to `0`, not
+  `NULL`. Without it the insert fails a constraint.
+- **`allowOther` on a `select`** keeps a stored value that is not one of the
+  options selectable, instead of silently rewriting it. Psionic categories use
+  it, because a later book may add one the core four do not cover.
+
+`gear` is the odd catalog: unique on `slug` rather than `name`, and it has no
+`source` column. Both facts live in the config.
+
+Editing or hand-creating a row sets `source = 'manual'` where the table has that
+column, so a later import can tell curated data from extracted data — the
+importers default a curated row to *ignore*.
 
 ---
 
@@ -473,8 +511,10 @@ has names but no weight, cost, or stats. A spell importer is the largest of thes
 — hundreds of entries across many levels, so several page ranges and several
 calls.
 
-**No UI for editing catalog rows.** Only the importers write them. A single wrong
-percentage currently needs a re-import or SQL.
+**The catalog editor has no delete and no duplicate-merge.** Rows are created and
+corrected by hand, never removed, so undoing a bad "keep both" import decision
+still needs SQL. Deliberate for now — see
+[`docs/plans/04-catalog-edit-ui.md`](docs/plans/04-catalog-edit-ui.md).
 
 **Migrations are still applied by hand.** `schema_migrations` records what has
 run where and the smoke test checks it, but applying a migration is still a

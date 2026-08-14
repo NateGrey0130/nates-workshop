@@ -333,7 +333,10 @@ pre.snippet {
   gap: 10px;
   margin-bottom: 16px;
 }
-@media (max-width: 620px) { .imp-tabs { grid-template-columns: 1fr; } }
+/* The catalog editor has four of them rather than two. */
+.imp-tabs.cols-4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 780px) { .imp-tabs.cols-4 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 620px) { .imp-tabs, .imp-tabs.cols-4 { grid-template-columns: 1fr; } }
 .imp-tab {
   display: flex; flex-direction: column; gap: 2px;
   text-align: left; padding: 11px 14px;
@@ -382,6 +385,45 @@ pre.snippet {
 .miss-row .slug { font-family: 'JetBrains Mono', monospace; color: var(--text-secondary); font-size: 12px; }
 .badge-live { color: var(--success); font-size: 12px; }
 .badge-file { color: var(--warning); font-size: 12px; }
+
+/* ─── Catalog editor ───
+   Rows collapse to a one-line summary and expand in place into a form, so
+   fixing one wrong percentage never means leaving the list. */
+.cat-toolbar {
+  display: flex; align-items: center; gap: 10px;
+  flex-wrap: wrap; margin-bottom: 12px;
+}
+.cat-toolbar input[type="search"] { flex: 1 1 260px; min-width: 200px; }
+
+.cat-row {
+  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+  padding: 7px 4px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.cat-row:last-child { border-bottom: 0; }
+.cat-row:hover { background: var(--bg-secondary); }
+.cat-row .slug { font-weight: 600; color: var(--text-primary); font-family: inherit; }
+
+/* The open row is a form, not a list item — drop the row affordances. */
+.cat-row.open {
+  display: block; cursor: default;
+  background: var(--bg-secondary);
+  padding: 12px; border-radius: var(--radius);
+}
+.cat-row.open:hover { background: var(--bg-secondary); }
+
+.cat-form { display: grid; gap: 10px; }
+.cat-field { display: flex; flex-direction: column; gap: 3px; }
+.cat-field > label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+.cat-form-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+
+.sys-picker { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.inline-check { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; cursor: pointer; }
+
+.kv-editor { display: grid; gap: 6px; }
+.kv-row { display: grid; grid-template-columns: 1fr 2fr auto; gap: 6px; }
+@media (max-width: 620px) { .kv-row { grid-template-columns: 1fr 1fr auto; } }
 
 /* ═══ PRINT / SAVE AS PDF ═══
    Strips interactive chrome and re-renders for paper. Owner views show current
