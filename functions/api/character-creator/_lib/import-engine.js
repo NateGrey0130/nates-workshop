@@ -1,0 +1,306 @@
+// Shared machinery for the catalog PDF importers.
+//
+// Extracted from the skill importer, which was the only one. Spells, psionic
+// powers and gear are configurations of this rather than copies of it, so a fix
+// here is a fix everywhere instead of the same fix four times.
+//
+// The pipeline is the same for every catalog:
+//   extractRows   send the PDF, parse the reply, reject a truncated one
+//   normaliseRows keep only well-formed rows; one bad element must not sink the batch
+//   classifyRows  match against the live catalog so review can ask about duplicates
+//   applyDecisions write the reviewed decisions as one all-or-nothing batch
+//
+// What differs per catalog lives in IMPORT_SPECS below. Column names and types
+// come from apps/character-creator/js/catalog-fields.js — the same config the
+// catalog editor and the write endpoints use.
+//
+// The PDF goes to the model as a document attachment, never as pre-extracted
+// text: layout-preserving extraction splices neighbouring columns together
+// mid-line on two-column sourcebook pages. Do not add a text pre-pass.
+//
+// Server-side callers use claude-client directly. Never fetch the site's own
+// /api/claude URL — in production Access intercepts the subrequest and returns
+// the login page as HTML.
+
+import { validateClaudeRequest, callAnthropic } from '../../_lib/claude-client.js';
+import { CATALOGS } from '../../../../apps/character-creator/js/catalog-fields.js';
+
+export const DEFAULT_MODEL = 'claude-sonnet-5';
+export const ALLOWED_MODELS = ['claude-sonnet-5', 'claude-opus-5'];
+const LOOKUP_BATCH = 50;
+const MAX_NAME_LENGTH = 120;
+export const MAX_DECISIONS = 500;
+
+// Per-catalog import behaviour. `catalog` names an entry in CATALOGS, which
+// supplies the columns; this supplies what the importer does with them.
+export const IMPORT_SPECS = {
+  skills: {
+    catalog: 'skills',
+    table: 'skills',
+    // Written by the importer. Everything else on the row keeps its default.
+    extractFields: ['name', 'category', 'base', 'per_level', 'note'],
+    // A duplicate "differs" when one of these disagrees with the book.
+    compareFields: ['base', 'per_level'],
+    // A stub is a name the class importer created with no numbers — exactly
+    // what this importer exists to fill in, so it defaults to update. A row
+    // edited by hand has source 'manual' and is therefore never a stub.
+    isStub: (row) => row.source === 'import' && row.base === 0 && row.per_level === 0,
+  },
+};
+
+export function getImportSpec(key) {
+  return Object.prototype.hasOwnProperty.call(IMPORT_SPECS, key) ? IMPORT_SPECS[key] : null;
+}
+
+// A model sometimes wraps JSON in a code fence despite being told not to.
+export function stripFences(text) {
+  const t = text.trim();
+  const fenced = t.match(/^```(?:json)?\s*\n([\s\S]*?)\n```$/);
+  return (fenced ? fenced[1] : t).trim();
+}
+
+const int = (v) => {
+  const n = parseInt(v, 10);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+};
+
+function fieldType(spec, name) {
+  const cat = CATALOGS[spec.catalog];
+  return cat?.fields.find((f) => f.name === name)?.type ?? 'text';
+}
+
+// Keeps only well-formed rows. A malformed element is dropped rather than
+// failing the batch — one unreadable entry on a dense page should not cost you
+// the other thirty.
+export function normaliseRows(spec, raw) {
+  const rows = [];
+  for (const r of Array.isArray(raw) ? raw : []) {
+    // Book headings carry a trailing colon; the catalog name never does.
+    const name = typeof r?.name === 'string' ? r.name.trim().replace(/:$/, '') : '';
+    if (!name || name.length > MAX_NAME_LENGTH) continue;
+
+    const row = { name };
+    for (const f of spec.extractFields) {
+      if (f === 'name') continue;
+      const v = r[f];
+      const type = fieldType(spec, f);
+      if (type === 'int' || type === 'real') {
+        row[f] = int(v);
+      } else {
+        row[f] = typeof v === 'string' && v.trim() ? v.trim() : null;
+      }
+    }
+    rows.push(row);
+  }
+  return rows;
+}
+
+// Match extracted rows against the catalog. Lookups are batched because a spell
+// chapter can be hundreds of names and one query per name would be absurd.
+export async function classifyRows(env, spec, rows) {
+  const cat = CATALOGS[spec.catalog];
+  const key = cat.uniqueField;
+  const cols = ['id', ...new Set([key, ...spec.extractFields, ...spec.compareFields])];
+  if (cat.hasSource) cols.push('source');
+  cols.push('source_book');
+
+  const existing = new Map();
+  const keys = rows.map((r) => r[key]).filter(Boolean);
+  for (let i = 0; i < keys.length; i += LOOKUP_BATCH) {
+    const batch = keys.slice(i, i + LOOKUP_BATCH);
+    const { results } = await env.DB
+      .prepare(`SELECT ${[...new Set(cols)].join(', ')} FROM ${spec.table}
+                WHERE ${key} COLLATE NOCASE IN (${batch.map(() => '?').join(',')})`)
+      .bind(...batch).all();
+    for (const r of results) existing.set(String(r[key]).toLowerCase(), r);
+  }
+
+  return rows.map((r) => {
+    const match = existing.get(String(r[key] ?? '').toLowerCase()) || null;
+    if (!match) return { ...r, status: 'new', existing: null, differs: false };
+    const differs = spec.compareFields.some((f) => match[f] !== r[f]);
+    const isStub = spec.isStub ? spec.isStub(match) : false;
+    return {
+      ...r,
+      status: 'duplicate',
+      existing: match,
+      differs,
+      is_stub: isStub,
+      // Anything already curated defaults to ignore, so hand-corrected numbers
+      // are never silently overwritten by a second book.
+      suggested: isStub ? 'update' : 'ignore',
+    };
+  });
+}
+
+export function countRows(classified) {
+  return {
+    total: classified.length,
+    new: classified.filter((r) => r.status === 'new').length,
+    duplicates: classified.filter((r) => r.status === 'duplicate').length,
+    stubs: classified.filter((r) => r.is_stub).length,
+  };
+}
+
+// Send the PDF and give back the model's rows, or an error shaped for the API.
+// Returns { rows } or { error, status, extra }.
+export async function extractRows(env, spec, { pdfBase64, model, systemPrompt, userPrompt }) {
+  if (!env.ANTHROPIC_API_KEY) return { error: 'API key not configured on server', status: 500 };
+
+  const claudeRequest = {
+    model,
+    max_tokens: 16000,
+    system: systemPrompt,
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: pdfBase64 } },
+        { type: 'text', text: userPrompt },
+      ],
+    }],
+  };
+  const invalid = validateClaudeRequest(claudeRequest);
+  if (invalid) return { error: 'Built an invalid extraction request: ' + invalid, status: 400 };
+
+  const upstream = await callAnthropic(claudeRequest, env);
+  let payload;
+  try { payload = JSON.parse(upstream.text); }
+  catch {
+    return { error: `Anthropic returned a non-JSON response (status ${upstream.status})`, status: 502,
+             extra: { body_preview: upstream.text.slice(0, 300) } };
+  }
+  if (upstream.status !== 200) {
+    return { error: 'Extraction call failed: ' + (payload.error?.message || `status ${upstream.status}`), status: 502 };
+  }
+
+  const blocks = Array.isArray(payload.content) ? payload.content : [];
+  const text = blocks.filter((c) => c.type === 'text').map((c) => c.text).join('\n').trim();
+  if (!text) {
+    return { error: 'Extraction produced no usable text', status: 502,
+             extra: { diagnostics: { stop_reason: payload.stop_reason ?? null,
+                                     block_types: blocks.map((c) => c.type),
+                                     usage: payload.usage ?? null } } };
+  }
+
+  // A truncated reply must not be treated as a complete one. Staging half a
+  // page as though it were the whole page is worse than failing: you would
+  // confirm it without ever knowing the tail was missing.
+  if (payload.stop_reason === 'max_tokens') {
+    return { error: 'The reply hit the output limit, so those pages were only partly read. Narrow the page range and try again.',
+             status: 502, extra: { stop_reason: payload.stop_reason, usage: payload.usage ?? null } };
+  }
+
+  let parsed;
+  try { parsed = JSON.parse(stripFences(text)); }
+  catch {
+    return { error: 'Model did not return valid JSON', status: 502, extra: { body_preview: text.slice(0, 400) } };
+  }
+
+  return { rows: parsed, usage: payload.usage ?? null };
+}
+
+// Apply reviewed decisions as one all-or-nothing batch.
+//
+//   insert  add a new row. Also carries "keep both", where the caller supplies
+//           a distinguished as_name because the key column is UNIQUE.
+//   update  overwrite the existing row from the book
+//   ignore  do nothing
+export async function applyDecisions(env, spec, decisions, { sourceBook }) {
+  const cat = CATALOGS[spec.catalog];
+  const key = cat.uniqueField;
+  const writable = spec.extractFields.filter((f) => f !== key);
+
+  const statements = [];
+  const applied = { inserted: [], updated: [], ignored: [] };
+  const conflicts = [];
+
+  const inserts = [];
+  for (const d of decisions) {
+    const action = d?.action;
+    if (action === 'ignore' || !action) { if (d?.[key]) applied.ignored.push(d[key]); continue; }
+    if (action !== 'insert' && action !== 'update') {
+      return { error: `Unknown action: ${action}`, status: 400 };
+    }
+    const name = typeof d[key] === 'string' ? d[key].trim() : '';
+    if (!name) return { error: `Every decision needs a ${key}`, status: 400 };
+    if (action === 'insert') {
+      const target = typeof d.as_name === 'string' && d.as_name.trim() ? d.as_name.trim() : name;
+      inserts.push({ d, target });
+    } else {
+      applied.updated.push(name);
+      statements.push(buildUpdate(env, spec, cat, writable, d, name, sourceBook));
+    }
+  }
+
+  // One batched lookup for every proposed insert, rather than a query per row.
+  const taken = new Set();
+  const targets = inserts.map((i) => i.target);
+  for (let i = 0; i < targets.length; i += LOOKUP_BATCH) {
+    const batch = targets.slice(i, i + LOOKUP_BATCH);
+    const { results } = await env.DB
+      .prepare(`SELECT ${key} FROM ${spec.table} WHERE ${key} COLLATE NOCASE IN (${batch.map(() => '?').join(',')})`)
+      .bind(...batch).all();
+    for (const r of results) taken.add(String(r[key]).toLowerCase());
+  }
+
+  // Names claimed twice inside THIS batch. Checking only the database would miss
+  // them, and the UNIQUE constraint would fail the whole import with an opaque
+  // error instead of naming the offender.
+  const queued = new Set();
+  for (const { d, target } of inserts) {
+    const lower = target.toLowerCase();
+    if (queued.has(lower)) { conflicts.push({ name: target, reason: 'Named twice in this same import' }); continue; }
+    if (taken.has(lower)) { conflicts.push({ name: target, reason: `A row with that ${key} already exists` }); continue; }
+    queued.add(lower);
+    statements.push(buildInsert(env, spec, cat, writable, d, target, sourceBook));
+    applied.inserted.push(target);
+  }
+
+  try {
+    if (statements.length) await env.DB.batch(statements);
+  } catch (err) {
+    // All-or-nothing: nothing was written, so say so rather than leaving the
+    // caller to guess which half landed.
+    return { error: 'Nothing was imported — the database rejected the batch: ' + err.message, status: 409 };
+  }
+
+  return {
+    ok: true,
+    counts: { inserted: applied.inserted.length, updated: applied.updated.length, ignored: applied.ignored.length },
+    applied,
+    conflicts,
+  };
+}
+
+function valueFor(spec, field, d) {
+  const type = fieldType(spec, field);
+  if (type === 'int' || type === 'real') return int(d[field]);
+  return typeof d[field] === 'string' && d[field].trim() ? d[field].trim() : null;
+}
+
+function buildInsert(env, spec, cat, writable, d, target, sourceBook) {
+  const cols = [cat.uniqueField, ...writable, 'source_book'];
+  const vals = [target, ...writable.map((f) => valueFor(spec, f, d)), sourceBook];
+  if (cat.hasSource) { cols.push('source'); vals.push('import'); }
+  return env.DB.prepare(
+    `INSERT INTO ${spec.table} (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`
+  ).bind(...vals);
+}
+
+function buildUpdate(env, spec, cat, writable, d, name, sourceBook) {
+  // COALESCE on the nullable descriptive fields: a book that is silent about a
+  // category or a note must not blank one the catalog already has. Numbers are
+  // set outright, because that is the correction you asked for.
+  const sets = [];
+  const vals = [];
+  for (const f of writable) {
+    const type = fieldType(spec, f);
+    if (type === 'int' || type === 'real') { sets.push(`${f} = ?`); vals.push(valueFor(spec, f, d)); }
+    else { sets.push(`${f} = COALESCE(?, ${f})`); vals.push(valueFor(spec, f, d)); }
+  }
+  sets.push('source_book = COALESCE(?, source_book)');
+  vals.push(sourceBook);
+  return env.DB.prepare(
+    `UPDATE ${spec.table} SET ${sets.join(', ')} WHERE ${cat.uniqueField} COLLATE NOCASE = ?`
+  ).bind(...vals, name);
+}

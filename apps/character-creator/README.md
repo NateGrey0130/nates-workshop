@@ -62,6 +62,8 @@ functions/api/
     ├── _lib/class-loader.js  Resolve a class_id to parsed frontmatter
     ├── _lib/class-store.js   Read/write stored classes; per-isolate parse cache
     ├── _lib/extraction-prompt.js  Class import prompt
+    ├── _lib/import-engine.js  Shared catalog-import pipeline: extract,
+    │                         normalise, classify duplicates, batch-confirm
     ├── _lib/skill-prompt.js  Skill chapter import prompt
     ├── _lib/leveling.js      XP curve + level-up diff
     └── (endpoints — see API surface below)
@@ -337,8 +339,16 @@ importers default a curated row to *ignore*.
 
 ## The PDF importers
 
-Both live on `import.html`, admin only, behind Class / Skills tabs. Both send
-the PDF to Claude as a **document attachment**, never as extracted text:
+Both live on `import.html`, admin only, behind Class / Skills tabs.
+
+The **catalog** importers (skills today; spells, psionics and gear to come) share
+one pipeline in `_lib/import-engine.js` — extract, normalise, classify against
+the catalog, batch-confirm — with the per-catalog differences in `IMPORT_SPECS`
+and the columns coming from the field config. A fix there is a fix for all of
+them rather than the same fix four times. The **class** importer is a different
+shape (one class, markdown out) and stays on its own path.
+
+Both send the PDF to Claude as a **document attachment**, never as extracted text:
 layout-preserving text extraction splices neighbouring columns together mid-line
 on two-column sourcebook pages, destroying the column boundary before extraction
 starts. Do not add a text pre-pass.
@@ -390,6 +400,10 @@ attempt would turn the retired list into noise.
    "Keep both" needs a distinguishing name, defaulting to `<name> (<book>)`.
 4. **Confirm** — applied as one batch. Names claimed twice in a single import
    are reported as conflicts rather than failing the whole run.
+
+A reply that hits the output ceiling is **rejected, not staged**. Half a page
+saved as though it were the whole page is worse than a failure, because you
+would confirm it without knowing the tail was missing. Narrow the page range.
 
 In the Rifts core book the skill chapter is roughly **pp. 26–34**, about one or
 two categories a page. Two pages yielded 33 skills in ~28 seconds.
