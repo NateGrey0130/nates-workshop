@@ -4,7 +4,8 @@
 // escHtml() comes from /shared/js/ui.js.
 'use strict';
 
-const I = { isAdmin: false, email: null, extracting: false, result: null, confirmed: null, stored: [] };
+const I = { isAdmin: false, email: null, extracting: false, result: null, confirmed: null, stored: [],
+            mode: 'class', skills: null, skillsDone: null };
 const $ = (id) => document.getElementById(id);
 
 async function api(path, opts) {
@@ -38,14 +39,188 @@ function render() {
     </div>`;
     return;
   }
+  if (I.mode === 'skills') {
+    if (I.skillsDone) return renderSkillsDone();
+    if (I.skills) return renderSkillsReview();
+    return renderSkillsUpload();
+  }
   if (I.confirmed) return renderConfirmed();
   if (I.result) return renderReview();
   renderUpload();
 }
 
+function modeTabs() {
+  return `<div class="toggle noprint">
+    <button class="${I.mode === 'class' ? 'on' : ''}" onclick="setMode('class')">Class (O.C.C./R.C.C.)</button>
+    <button class="${I.mode === 'skills' ? 'on' : ''}" onclick="setMode('skills')">Skills</button>
+  </div>`;
+}
+function setMode(m) { I.mode = m; render(); }
+
+// ─── Skills: upload ───
+function renderSkillsUpload() {
+  $('app').innerHTML = `
+  ${modeTabs()}
+  <div class="panel">
+    <h2>Import skills from a book</h2>
+    <p class="muted">Upload the page range covering a skill chapter or category. Many skills come back at
+      once; anything already in the catalog is flagged so you can decide per skill.</p>
+    <div class="rowline" style="margin-top:14px"><input type="file" id="pdf" accept="application/pdf"></div>
+    <div class="rowline">
+      <input type="text" id="source-book" placeholder="Source book (e.g. rifts-core)" style="width:210px">
+      <input type="text" id="category" placeholder="Category, if the pages are all one (e.g. Physical)" style="width:290px">
+    </div>
+    <h3>Hints <span class="muted small">(optional)</span></h3>
+    <textarea id="hints" placeholder="e.g. &quot;ignore the sidebar on page 2&quot;"></textarea>
+    <div class="rowline" style="margin-top:10px">
+      <label class="small">Model:</label>
+      <select id="model">
+        <option value="claude-sonnet-5">claude-sonnet-5 (default)</option>
+        <option value="claude-opus-5">claude-opus-5 (slower, pricier)</option>
+      </select>
+      <button class="btn btn-primary" id="go" onclick="runSkillExtract()">Extract skills</button>
+      <span id="msg" class="muted small"></span>
+    </div>
+  </div>`;
+}
+
+async function runSkillExtract() {
+  const file = $('pdf').files[0];
+  if (!file) { $('msg').textContent = 'Pick a PDF first.'; return; }
+  if (I.extracting) return;
+  I.extracting = true; $('go').disabled = true;
+  $('msg').textContent = `Reading ${file.name}…`;
+  try {
+    const b64 = await new Promise((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onload = () => resolve(String(fr.result).split(',')[1]);
+      fr.onerror = () => reject(new Error('Could not read the file'));
+      fr.readAsDataURL(file);
+    });
+    $('msg').textContent = 'Extracting — a dense skill chapter takes a while…';
+    const res = await api('import/skills/extract', jsonReq({
+      pdf_base64: b64,
+      source_book: $('source-book').value.trim() || undefined,
+      category: $('category').value.trim() || undefined,
+      hints: $('hints').value.trim() || undefined,
+      model: $('model').value,
+    }));
+    // Each row starts on its suggested action; stubs default to update.
+    res.rows.forEach((r) => {
+      r.action = r.status === 'new' ? 'insert' : (r.suggested || 'ignore');
+      r.as_name = `${r.name} (${res.source_book || 'imported'})`;
+    });
+    I.skills = res;
+    render();
+  } catch (err) {
+    $('msg').innerHTML = `<span class="err">${escHtml(err.message)}</span>`;
+  } finally {
+    I.extracting = false;
+    if ($('go')) $('go').disabled = false;
+  }
+}
+
+// ─── Skills: review, with the three-way duplicate decision ───
+function renderSkillsReview() {
+  const s = I.skills;
+  const rowHtml = (r, i) => {
+    const ex = r.existing;
+    const pct = (b, p) => `${b || 0}%${p ? ` +${p}/lvl` : ''}`;
+    const choice = (val, label, title) => `<label class="small" title="${title}">
+      <input type="radio" name="act-${i}" value="${val}" ${r.action === val ? 'checked' : ''}
+        onchange="setSkillAction(${i}, '${val}')"> ${label}</label>`;
+    return `<div class="imp-row ${r.status}">
+      <div class="imp-main">
+        <span class="imp-name">${escHtml(r.name)}</span>
+        <span class="muted small">${escHtml(r.category || 'no category')} · ${pct(r.base, r.per_level)}</span>
+        ${r.note ? `<span class="muted small">↳ ${escHtml(r.note)}</span>` : ''}
+      </div>
+      <div class="imp-status">
+        ${r.status === 'new'
+          ? '<span class="badge-live">new</span>'
+          : `<span class="${r.is_stub ? 'badge-file' : 'err'}">${r.is_stub ? 'fills a stub' : 'already exists'}</span>
+             <span class="muted small">catalog: ${pct(ex.base, ex.per_level)}${ex.source_book ? ' · ' + escHtml(ex.source_book) : ''}</span>`}
+      </div>
+      <div class="imp-actions">
+        ${r.status === 'new'
+          ? choice('insert', 'Add', 'Add this skill to the catalog') + choice('ignore', 'Skip', 'Do not import')
+          : choice('update', 'Update', 'Overwrite the existing percentages') +
+            choice('insert', 'Keep both', 'Add as a separate entry under a distinguished name') +
+            choice('ignore', 'Ignore', 'Leave the catalog untouched')}
+        ${r.status === 'duplicate' && r.action === 'insert'
+          ? `<input type="text" class="mini-in wide" value="${escHtml(r.as_name)}"
+               onchange="setSkillName(${i}, this.value)" title="Name for the new entry — must be unique">` : ''}
+      </div>
+    </div>`;
+  };
+
+  $('app').innerHTML = `
+  ${modeTabs()}
+  <div class="panel">
+    <h2>Review — ${s.counts.total} skill${s.counts.total === 1 ? '' : 's'}</h2>
+    <p class="muted">${s.counts.new} new · ${s.counts.duplicates} already in the catalog${s.counts.stubs ? ` · ${s.counts.stubs} of those are empty stubs, defaulted to update` : ''}
+      ${s.usage ? ` · ${s.usage.input_tokens} in / ${s.usage.output_tokens} out` : ''}</p>
+    <div class="rowline noprint">
+      <button class="btn btn-sm btn-ghost" onclick="setAllSkills('insert')">All: add/keep both</button>
+      <button class="btn btn-sm btn-ghost" onclick="setAllSkills('update')">All duplicates: update</button>
+      <button class="btn btn-sm btn-ghost" onclick="setAllSkills('ignore')">All duplicates: ignore</button>
+    </div>
+    <div style="margin-top:10px">${s.rows.map(rowHtml).join('')}</div>
+  </div>
+  <div class="nav">
+    <button class="btn btn-ghost" onclick="I.skills=null; render()">← Start over</button>
+    <button class="btn btn-primary" onclick="confirmSkills()">Apply to catalog</button>
+  </div>`;
+}
+
+function setSkillAction(i, action) { I.skills.rows[i].action = action; render(); }
+function setSkillName(i, name) { I.skills.rows[i].as_name = name; }
+function setAllSkills(action) {
+  for (const r of I.skills.rows) {
+    if (action === 'insert') r.action = 'insert';
+    else if (r.status === 'duplicate') r.action = action;
+  }
+  render();
+}
+
+async function confirmSkills() {
+  try {
+    const res = await api('import/skills/confirm', jsonReq({
+      source_book: I.skills.source_book,
+      decisions: I.skills.rows.map((r) => ({
+        action: r.action, name: r.name, category: r.category,
+        base: r.base, per_level: r.per_level, note: r.note,
+        as_name: r.status === 'duplicate' && r.action === 'insert' ? r.as_name : undefined,
+      })),
+    }));
+    I.skillsDone = res;
+    render();
+  } catch (err) { alert('Import failed: ' + err.message); }
+}
+
+function renderSkillsDone() {
+  const d = I.skillsDone;
+  const list = (label, names, cls) => names.length
+    ? `<h3>${label} — ${names.length}</h3><p class="small ${cls}">${names.map(escHtml).join(' · ')}</p>` : '';
+  $('app').innerHTML = `
+  ${modeTabs()}
+  <div class="panel">
+    <h2>✅ Catalog updated</h2>
+    <p class="muted">${d.counts.inserted} added · ${d.counts.updated} updated · ${d.counts.ignored} ignored.
+      Changes are live — no redeploy needed.</p>
+    ${list('Added', d.applied.inserted, '')}
+    ${list('Updated', d.applied.updated, '')}
+    ${d.conflicts.length ? `<h3 class="err">Skipped — name already taken</h3>
+      <p class="small err">${d.conflicts.map((c) => escHtml(c.name)).join(' · ')}</p>
+      <p class="muted small">Re-run those with a different "keep both" name.</p>` : ''}
+  </div>
+  <div class="nav"><button class="btn btn-ghost" onclick="I.skills=null; I.skillsDone=null; render()">← Import more</button><span></span></div>`;
+}
+
 // ─── Step 1: upload ───
 function renderUpload() {
   $('app').innerHTML = `
+  ${modeTabs()}
   <div class="panel">
     <h2>Import a class from a PDF</h2>
     <p class="muted">Upload a focused page range covering exactly one O.C.C./R.C.C. The PDF is sent

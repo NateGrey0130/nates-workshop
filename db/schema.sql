@@ -139,6 +139,9 @@ CREATE INDEX IF NOT EXISTS idx_imported_classes_status ON imported_classes (stat
 -- Reference catalogs. These began as static JSON shipped with the deploy, which
 -- meant a commit and a redeploy to add a single skill. They live here so the
 -- import tool can create missing entries live, the same way it does for items.
+-- `name` is unique: the same skill imported from a second book with different
+-- numbers is stored under a distinguished name (e.g. "Climbing (Rifts UE)"),
+-- decided during import review rather than silently merged or duplicated.
 CREATE TABLE IF NOT EXISTS skills (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL UNIQUE,
@@ -146,7 +149,9 @@ CREATE TABLE IF NOT EXISTS skills (
   base INTEGER NOT NULL DEFAULT 0,        -- 0 = non-percentile (W.P.s, hand to hand)
   per_level INTEGER NOT NULL DEFAULT 0,
   systems TEXT,                           -- JSON array; NULL means both systems
-  source TEXT NOT NULL DEFAULT 'seed'     -- seed | import
+  source TEXT NOT NULL DEFAULT 'seed',    -- seed | import
+  source_book TEXT,
+  note TEXT                               -- "40%/30% climb/rappel", "counts as two skills"
 );
 
 CREATE TABLE IF NOT EXISTS spells (
@@ -154,7 +159,8 @@ CREATE TABLE IF NOT EXISTS spells (
   name TEXT NOT NULL UNIQUE,
   level INTEGER NOT NULL DEFAULT 0,
   ppe INTEGER NOT NULL DEFAULT 0,
-  source TEXT NOT NULL DEFAULT 'seed'
+  source TEXT NOT NULL DEFAULT 'seed',
+  source_book TEXT
 );
 
 CREATE TABLE IF NOT EXISTS psionic_powers (
@@ -162,5 +168,6 @@ CREATE TABLE IF NOT EXISTS psionic_powers (
   name TEXT NOT NULL UNIQUE,
   category TEXT,                          -- Healing | Physical | Sensitive | Super
   isp INTEGER NOT NULL DEFAULT 0,
-  source TEXT NOT NULL DEFAULT 'seed'
+  source TEXT NOT NULL DEFAULT 'seed',
+  source_book TEXT
 );
