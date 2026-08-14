@@ -8,7 +8,7 @@ const POOLS = [['hp', 'H.P.'], ['sdc', 'S.D.C.'], ['mdc', 'M.D.C.'], ['ppe', 'P.
 const POOL_LABELS = { hp_max: 'H.P. max', sdc_max: 'S.D.C. max', mdc_max: 'M.D.C. max', ppe_max: 'P.P.E. max', isp_max: 'I.S.P. max' };
 const id = new URLSearchParams(location.search).get('id');
 
-const C = { data: null, items: [], journal: [], catalog: [], canWrite: false, isGm: false,
+const C = { data: null, items: [], journal: [], catalog: [], cls: null, canWrite: false, isGm: false,
             proposal: null, nextThreshold: null };
 const $ = (i) => document.getElementById(i);
 
@@ -24,11 +24,15 @@ async function load() {
   try {
     const res = await api('characters/' + id);
     C.data = res.character; C.items = res.items; C.canWrite = res.can_write; C.isGm = res.is_gm;
-    const [journal, catalog] = await Promise.all([
+    const [journal, catalog, classes] = await Promise.all([
       api(`journal?campaign_id=${C.data.campaign_id}&character_id=${id}&include_campaign=1`),
       api('items?system=' + encodeURIComponent(C.data.campaign_system)),
+      api('classes').catch(() => ({ classes: [] })),
     ]);
     C.journal = journal.entries; C.catalog = catalog.items;
+    // The class supplies its display name plus the advisory text the sheet
+    // shows (side_effects, restrictions) — none of which is stored per character.
+    C.cls = (classes.classes || []).find((x) => x.id === C.data.class_id) || null;
     render();
   } catch (err) {
     $('app').innerHTML = `<div class="panel"><p class="err">Failed to load: ${escHtml(err.message)}</p></div>`;
@@ -40,22 +44,60 @@ function flash(text, isError) {
   if (el) { el.textContent = text; el.className = isError ? 'err small' : 'muted small'; }
 }
 
+// ─── small builders for the sheet's boxed idiom ───
+const box = (title, body, extra = '') =>
+  `<div class="box"><div class="box-title"><span>${title}</span>${extra}</div><div class="box-body">${body}</div></div>`;
+
+const field = (label, value, dim) =>
+  `<div class="field"><span class="lbl">${label}</span><span class="dots"></span>` +
+  `<span class="val${dim ? ' dim' : ''}">${value}</span></div>`;
+
+// side_effects / restrictions come off the class as free text or a list.
+const advisory = (label, value) => {
+  if (!value || (Array.isArray(value) && !value.length)) return '';
+  const text = Array.isArray(value) ? value.map((v) => `• ${v}`).join('\n') : String(value);
+  return `<div class="advisory"><b>${label}:</b> ${escHtml(text)}</div>`;
+};
+
 function render() {
   const c = C.data, w = C.canWrite;
   const skills = Array.isArray(c.skills) ? c.skills : [];
   const powers = Array.isArray(c.powers) ? c.powers : [];
   const byType = (t) => skills.filter((s) => s.type === t);
-  const skillLine = (list) => list.map((s) =>
-    escHtml(s.name) + (s.pct ? ` ${s.pct}%` + (s.per_level ? ` <span class="muted">(+${s.per_level}/lvl)</span>` : '') : '')
-  ).join(' · ') || '—';
 
-  const poolCells = POOLS.map(([key, label]) => {
+  // Skills carry +%/Lvl and % columns, as on the printed sheet.
+  const skillBox = (title, list) => box(title, list.length ? `
+    <div class="skill-head"><span>Skill</span><span style="text-align:right">+%/Lvl</span><span style="text-align:right">%</span></div>
+    ${list.map((s) => `<div class="skill-row">
+      <span>${escHtml(s.name)}</span>
+      <span class="num">${s.per_level ? '+' + s.per_level : '—'}</span>
+      <span class="num pct">${s.pct ? s.pct + '%' : '—'}</span>
+      ${s.note ? `<span class="note">↳ ${escHtml(s.note)}</span>` : ''}
+    </div>`).join('')}` : '<p class="muted small">None.</p>');
+
+  const vitals = POOLS.map(([key, label]) => {
     const max = c[key + '_max'], cur = c[key + '_current'];
     if (max == null && cur == null) return '';
     const curHtml = w
-      ? `<input type="number" id="stat-${key}" value="${cur ?? ''}" style="width:64px"><b class="print-only">${cur ?? '—'}</b>`
+      ? `<input type="number" id="stat-${key}" value="${cur ?? ''}"><b class="print-only">${cur ?? '—'}</b>`
       : `<b>${cur ?? '—'}</b>`;
-    return `<div class="pool"><div class="lbl">${label}</div><div class="val">${curHtml} / ${max ?? '—'}</div></div>`;
+    return `<div class="vital"><div class="lbl">${label}</div>
+      <div class="val">${curHtml} <span class="max">/ ${max ?? '—'}</span></div></div>`;
+  }).join('');
+
+  const powerRows = powers.map((p, i) => {
+    const pool = p.type === 'spell' ? 'ppe' : 'isp';
+    const cost = typeof p.cost === 'number' ? p.cost : null;
+    const kind = p.type === 'spell'
+      ? (p.level != null ? `spell · L${p.level}` : 'spell')
+      : (p.category ? `psionic · ${p.category}` : 'psionic');
+    const useBtn = w && cost != null && c[pool + '_current'] != null
+      ? `<button class="btn btn-sm btn-ghost noprint" onclick="usePower(${i})">⚡ use</button>` : '';
+    return `<div class="power-row">
+      <span>${escHtml(p.name)} <span class="muted small">${escHtml(kind)}</span></span>
+      <span class="cost">${cost != null ? cost + (pool === 'ppe' ? ' P.P.E.' : ' I.S.P.') : '—'}</span>
+      ${useBtn}
+    </div>`;
   }).join('');
 
   const invRows = C.items.map((it) => {
@@ -86,76 +128,92 @@ function render() {
 
   const catalogOpts = C.catalog.map((it) => `<option value="${escHtml(it.slug)}">${escHtml(it.name)}</option>`).join('');
 
+  const attrs = c.attributes || {};
+  const cls = C.cls || {};
+
   $('app').innerHTML = `
-  <div class="panel">
-    <h2>${escHtml(c.name)}
-      ${w ? '' : '<span class="tag ro">read-only</span>'}${C.isGm ? '<span class="tag gm">GM</span>' : ''}</h2>
-    <p class="muted">${escHtml(c.class_id)} · Level ${c.level} · ${c.xp} XP · Campaign: ${escHtml(c.campaign_name)} (${escHtml(c.campaign_system)}) · Player: ${escHtml(c.player_email)}</p>
+  ${box(`${escHtml(c.name)}${w ? '' : ' <span class="tag ro">read-only</span>'}${C.isGm ? ' <span class="tag gm">GM</span>' : ''}`, `
+    <div class="sheet-grid cols-2">
+      <div>
+        ${field('O.C.C.', escHtml(cls.name || c.class_id))}
+        ${field('Level', c.level)}
+        ${field('Experience', `${c.xp} XP`)}
+      </div>
+      <div>
+        ${field('Campaign', escHtml(c.campaign_name), true)}
+        ${field('System', escHtml(c.campaign_system), true)}
+        ${field('Player', escHtml(c.player_email), true)}
+      </div>
+    </div>`)}
 
-    <h3>Attributes</h3>
-    <div>${ATTRS.map((a) => `<span class="statline">${a}: <b>${(c.attributes || {})[a] ?? '—'}</b></span>`).join('')}</div>
+  <div class="sheet-grid rail" style="margin-top:12px">
+    ${box('Attributes', `<div class="attr-stack">
+      ${ATTRS.map((a) => field(a, attrs[a] ?? '—')).join('')}
+    </div>`)}
 
-    <h3>Pools <span class="muted small">(current / max)</span></h3>
-    <div class="pools">${poolCells}</div>
-    ${powers.length ? `<h3>Spells &amp; Psionics</h3>${powers.map((p, i) => {
-      const pool = p.type === 'spell' ? 'ppe' : 'isp';
-      const cost = typeof p.cost === 'number' ? p.cost : null;
-      const meta = [p.type === 'spell' ? (p.level != null ? 'spell L' + p.level : 'spell') : (p.category ? 'psionic · ' + p.category : 'psionic'),
-                    cost != null ? cost + ' ' + (pool === 'ppe' ? 'P.P.E.' : 'I.S.P.') : null].filter(Boolean).join(' · ');
-      const useBtn = w && cost != null && c[pool + '_current'] != null
-        ? ` <button class="btn btn-sm btn-ghost" onclick="usePower(${i})">⚡ use</button>` : '';
-      return `<div class="rowline" style="margin:2px 0"><span class="small">${escHtml(p.name)}
-        <span class="muted">(${escHtml(meta)})</span></span>${useBtn}</div>`;
-    }).join('')}` : ''}
+    ${box('Vitals', `<div class="vitals">${vitals || '<span class="muted small">None recorded.</span>'}</div>
+      ${w ? `<div class="rowline noprint" style="margin-top:8px">
+        <button class="btn btn-sm btn-primary" onclick="saveStats()">Save</button><span id="msg"></span></div>` : ''}`,
+      '<span class="muted" style="font-size:9px">CURRENT / MAX</span>')}
 
-    <h3>Experience</h3>
-    <div class="rowline">
-      <span class="small">XP: <b>${c.xp}</b> · Level <b>${c.level}</b>${C.nextThreshold != null ? ` <span class="muted">(next level at ${C.nextThreshold} XP)</span>` : ''}</span>
-      ${w ? `<input type="number" id="xp-delta" placeholder="+XP" style="width:84px">
-             <button class="btn btn-sm" onclick="logXp()">Log XP</button>` : ''}
-    </div>
-    ${w && C.proposal ? levelUpPanel() : ''}
-
-    <h3>Notes</h3>
-    ${w ? `<textarea id="stat-notes">${escHtml(c.notes || '')}</textarea>
-           <p class="print-only small" style="white-space:pre-wrap">${escHtml(c.notes || '—')}</p>` : `<p class="small" style="white-space:pre-wrap">${escHtml(c.notes || '—')}</p>`}
-    ${w ? `<div class="rowline noprint"><button class="btn btn-primary" onclick="saveStats()">💾 Save stats &amp; notes</button><span id="msg"></span></div>` : ''}
-
-    <h3>Skills</h3>
-    <p class="small"><b>Class:</b> ${skillLine(byType('occ'))}</p>
-    <p class="small"><b>Related:</b> ${skillLine(byType('related'))}</p>
-    <p class="small"><b>Secondary:</b> ${skillLine(byType('secondary'))}</p>
-
+    ${box('Experience', `
+      ${field('Level', c.level)}
+      ${field('Points', c.xp)}
+      ${C.nextThreshold != null ? field('Next level at', `${C.nextThreshold} XP`, true) : ''}
+      ${w ? `<div class="rowline noprint" style="margin-top:6px">
+        <input type="number" id="xp-delta" placeholder="+XP" style="width:78px">
+        <button class="btn btn-sm" onclick="logXp()">Log XP</button></div>` : ''}`)}
   </div>
 
-  <div class="panel">
-    <h3 style="margin-top:0">Inventory</h3>
-    <table><tr><th>Item</th><th>Qty</th><th>Equipped</th><th>Notes</th><th></th></tr>${invRows || '<tr><td class="muted" colspan="5">Empty.</td></tr>'}</table>
-    ${w ? `<div class="noprint">
-    <h3>Add item</h3>
-    <div class="rowline">
-      ${C.catalog.length ? `<select id="add-slug"><option value="">— catalog —</option>${catalogOpts}</select> <span class="muted small">or</span>` : ''}
-      <input type="text" id="add-name" placeholder="Custom item name">
-      <input type="number" id="add-qty" value="1" min="1">
-      <input type="text" id="add-notes" placeholder="Notes (optional)" style="width:150px">
-    </div>
-    <div class="rowline">
-      <label class="small"><input type="checkbox" id="add-log"> also log to journal</label>
-      <button class="btn btn-sm" onclick="addItem()">Add to inventory</button>
-    </div></div>` : ''}
+  ${w && C.proposal ? levelUpPanel() : ''}
+
+  <div class="sheet-grid cols-3" style="margin-top:12px">
+    ${skillBox('Class Skills', byType('occ'))}
+    ${skillBox('Related Skills', byType('related'))}
+    ${skillBox('Secondary Skills', byType('secondary'))}
   </div>
 
-  <div class="panel">
-    <h3 style="margin-top:0">Journal <span class="muted small">(newest first — campaign-level entries shown alongside this character's)</span></h3>
-    ${w ? `<div class="noprint">
-    <div class="rowline">
-      <input type="text" id="j-title" placeholder="Title">
-      <input type="text" id="j-date" placeholder="Session date (optional)" style="width:150px">
-      ${C.isGm ? `<label class="small"><input type="checkbox" id="j-campaign"> campaign-level (GM)</label>` : ''}
-    </div>
-    <textarea id="j-body" placeholder="What happened this session…"></textarea>
-    <div class="rowline"><button class="btn btn-sm" onclick="addJournal()">Add entry</button></div></div>` : ''}
-    <div id="journal-list">${journalHtml}</div>
+  <div class="sheet-grid cols-2" style="margin-top:12px">
+    ${box('Psionics &amp; Magic', powers.length
+      ? powerRows
+      : '<p class="muted small">None.</p>')}
+
+    ${box('Equipment', `
+      <table><tr><th>Item</th><th>Qty</th><th>Eq</th><th>Notes</th><th></th></tr>
+        ${invRows || '<tr><td class="muted" colspan="5">Empty.</td></tr>'}</table>
+      ${w ? `<div class="noprint" style="margin-top:8px">
+        <div class="rowline">
+          ${C.catalog.length ? `<select id="add-slug"><option value="">— catalog —</option>${catalogOpts}</select>` : ''}
+          <input type="text" id="add-name" placeholder="or custom item">
+          <input type="number" id="add-qty" value="1" min="1">
+        </div>
+        <div class="rowline">
+          <input type="text" id="add-notes" placeholder="Notes (optional)" style="width:150px">
+          <label class="small"><input type="checkbox" id="add-log"> log it</label>
+          <button class="btn btn-sm" onclick="addItem()">Add</button>
+        </div></div>` : ''}`)}
+  </div>
+
+  <div class="sheet-grid cols-2" style="margin-top:12px">
+    ${box('Notes', `
+      ${w ? `<textarea id="stat-notes" class="noprint">${escHtml(c.notes || '')}</textarea>
+             <p class="print-only small" style="white-space:pre-wrap">${escHtml(c.notes || '—')}</p>`
+          : `<p class="small" style="white-space:pre-wrap">${escHtml(c.notes || '—')}</p>`}
+      ${advisory('Side effects', cls.side_effects)}
+      ${advisory('Restrictions', cls.restrictions)}`)}
+
+    ${box('Journal', `
+      ${w ? `<div class="noprint">
+        <div class="rowline">
+          <input type="text" id="j-title" placeholder="Title">
+          <input type="text" id="j-date" placeholder="Session date" style="width:120px">
+          ${C.isGm ? `<label class="small"><input type="checkbox" id="j-campaign"> campaign</label>` : ''}
+        </div>
+        <textarea id="j-body" placeholder="What happened this session…"></textarea>
+        <div class="rowline"><button class="btn btn-sm" onclick="addJournal()">Add entry</button></div>
+      </div>` : ''}
+      <div id="journal-list">${journalHtml}</div>`,
+      '<span class="muted" style="font-size:9px">NEWEST FIRST</span>')}
   </div>`;
 }
 
