@@ -166,6 +166,27 @@ check('a zeroed imported spell is a stub',
   && spellSpec.isStub({ source: 'seed', ppe: 10 }) === false
   && spellSpec.isStub({ source: 'manual', ppe: 0 }) === false);
 
+// Psionics: same engine again. The interesting part is `flag`, which is
+// advisory — an unknown category must be surfaced, never rejected, or a
+// supplement that adds one becomes unimportable.
+const psiSpec = getImportSpec('psionics');
+check('psionics import spec exists', !!psiSpec);
+check('a known category and tier raise no flag',
+  psiSpec.flag({ category: 'Super', min_tier: 'master' }).length === 0);
+check('category matching ignores case', psiSpec.flag({ category: 'healing' }).length === 0);
+check('an unknown category is flagged, not rejected',
+  psiSpec.flag({ category: 'Temporal' }).some((f) => f.includes('Temporal')));
+check('an unknown psychic tier is flagged',
+  psiSpec.flag({ min_tier: 'grandmaster' }).some((f) => f.includes('grandmaster')));
+check('an absent category or tier raises nothing', psiSpec.flag({}).length === 0);
+check('min_tier is left absent rather than inferred', (() => {
+  const [r] = normaliseRows(psiSpec, [{ name: 'Mind Block', category: 'Sensitive', isp: 4 }]);
+  return r.min_tier === null;
+})());
+check('a zeroed imported power is a stub',
+  psiSpec.isStub({ source: 'import', isp: 0 }) === true
+  && psiSpec.isStub({ source: 'seed', isp: 4 }) === false);
+
 check('countRows tallies new, duplicates and stubs', (() => {
   const c = countRows([
     { status: 'new' }, { status: 'new' },

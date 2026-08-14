@@ -82,6 +82,16 @@ export const CATALOGS = {
       { name: 'category', label: 'Category', type: 'select', allowOther: true,
         options: ['Healing', 'Physical', 'Sensitive', 'Super'] },
       { name: 'isp', label: 'I.S.P.', type: 'int', blankAs: 0 },
+      // Same field names as spells, so the sheet renders both the same way.
+      { name: 'range', label: 'Range', type: 'text' },
+      { name: 'duration', label: 'Duration', type: 'text' },
+      { name: 'saving_throw', label: 'Saving throw', type: 'text' },
+      { name: 'description', label: 'Description', type: 'longtext' },
+      // Blank means no restriction beyond the power's category — which is what
+      // most book entries actually say. Nothing enforces this yet.
+      { name: 'min_tier', label: 'Minimum psychic tier', type: 'select',
+        options: ['minor', 'major', 'master'],
+        help: 'Only when the book states one. Blank = whatever the category already allows.' },
       { name: 'source_book', label: 'Source book', type: 'text' },
     ],
   },
