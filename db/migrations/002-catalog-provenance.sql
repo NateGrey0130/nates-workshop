@@ -14,3 +14,6 @@ ALTER TABLE skills ADD COLUMN source_book TEXT;
 ALTER TABLE skills ADD COLUMN note TEXT;
 ALTER TABLE spells ADD COLUMN source_book TEXT;
 ALTER TABLE psionic_powers ADD COLUMN source_book TEXT;
+
+-- Record this migration as applied. See db/schema.sql for the convention.
+INSERT OR IGNORE INTO schema_migrations (filename) VALUES ('002-catalog-provenance.sql');

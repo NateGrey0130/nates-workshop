@@ -1,8 +1,9 @@
-// Phase 1 smoke test: (1) the RCC/OCC markdown files parse correctly,
-// (2) the D1 schema migrates cleanly into a local D1 instance.
+// Smoke test: (1) the RCC/OCC markdown files parse correctly, (2) the D1 schema
+// migrates cleanly into a local D1 instance, (3) every migration on disk is
+// recorded as applied to that database.
 // Run from anywhere:  node apps/character-creator/test/smoke.mjs
 
-import { readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync, rmSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,7 +27,7 @@ function parseFile(name) {
 }
 
 // ---------- 1. Parser ----------
-console.log('\n[1/2] Parser');
+console.log('\n[1/3] Parser');
 
 const ck = parseFile('cyber-knight.md');
 check('cyber-knight parses', ck.ok, JSON.stringify(ck.errors));
@@ -62,7 +63,7 @@ check('missing frontmatter rejected', !noFm.ok);
 // ---------- 2. D1 schema ----------
 // Runs against the shared workshop database (binding DB in the root
 // wrangler.jsonc), so this executes from the repo root, not the app dir.
-console.log('\n[2/2] D1 schema (local, shared DB)');
+console.log('\n[2/3] D1 schema (local, shared DB)');
 
 function wrangler(args) {
   return spawnSync('npx', ['wrangler', ...args], { cwd: repoRoot, shell: true, encoding: 'utf8', timeout: 120000 });
@@ -86,6 +87,38 @@ check('class + catalog tables exist', row?.catalog_tables === 4, query.stdout?.s
 // Re-applying must be a no-op (every statement is IF NOT EXISTS).
 const reapply = wrangler(['d1', 'execute', 'DB', '--local', '--file', 'db/schema.sql']);
 check('schema is idempotent (re-apply is clean)', reapply.status === 0, (reapply.stderr || '').slice(-300));
+
+// ---------- 3. Migration state ----------
+// Every file in db/migrations/ should have a schema_migrations row. A missing
+// one means this database never had that migration applied — the question that
+// used to be answered by guessing at pragma_table_info output.
+console.log('\n[3/3] Migration state');
+
+const onDisk = readdirSync(join(repoRoot, 'db', 'migrations'))
+  .filter((f) => f.endsWith('.sql'))
+  .sort();
+check('migration files found on disk', onDisk.length > 0, 'db/migrations/ is empty');
+
+const migSql = join(appDir, 'test', '.smoke-migrations.sql');
+writeFileSync(migSql, 'SELECT filename FROM schema_migrations ORDER BY filename;\n');
+const migQuery = wrangler(['d1', 'execute', 'DB', '--local', '--json', '--file', migSql]);
+rmSync(migSql, { force: true });
+
+let recorded = null;
+try { recorded = JSON.parse(migQuery.stdout)[0].results.map((r) => r.filename); } catch { /* checked below */ }
+check('schema_migrations is queryable', Array.isArray(recorded), migQuery.stdout?.slice(-300));
+
+if (Array.isArray(recorded)) {
+  const missing = onDisk.filter((f) => !recorded.includes(f));
+  check('every migration on disk is recorded as applied', missing.length === 0,
+    'not recorded: ' + missing.join(', ') + ' — apply it, or re-run db/schema.sql if the schema is already current');
+
+  // A row with no matching file means a migration was renamed or deleted after
+  // being applied somewhere, which breaks the convention that they are immutable.
+  const orphans = recorded.filter((f) => !onDisk.includes(f));
+  check('no recorded migration is missing its file', orphans.length === 0,
+    'recorded but not on disk: ' + orphans.join(', '));
+}
 
 console.log(failures === 0 ? '\nSMOKE TEST PASSED' : `\nSMOKE TEST FAILED (${failures} failure(s))`);
 process.exit(failures === 0 ? 0 : 1);
