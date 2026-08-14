@@ -10,7 +10,17 @@ import { d, evalDice } from './js/dice.js';
 import { isChoiceGroup } from './js/parser.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
-const STEPS = ['System', 'Class', 'Attributes', 'Skills', 'Equipment', 'Powers', 'Review'];
+const STEPS = ['System', 'Class', 'Attributes', 'Skills', 'Equipment', 'Powers', 'Details', 'Review'];
+
+// The printed sheet's identity block. Everything here is optional flavour —
+// nothing in the app's rules depends on it.
+const BIO_FIELDS = [
+  ['race', 'Race'], ['alignment', 'Alignment'], ['true_name', 'True Name'],
+  ['occupation', 'Occupation'], ['age', 'Age'], ['sex', 'Sex'],
+  ['height', 'Height'], ['weight', 'Weight'],
+  ['family_origin', 'Family Origin'], ['environment', 'Environment'],
+  ['native_languages', 'Native Language(s)'], ['insanity', 'Insanity (if any)'],
+];
 // Point-buy (house rule — Palladium has no native point-buy):
 // all 8 attributes start at 8; 40-point pool; +1 costs 1 point up to 15,
 // 2 points from 16-18 (cap 18, floor 3); lowering below 8 refunds 1/point.
@@ -23,7 +33,7 @@ const S = {
   related: [], secondary: [], groupPicks: {},
   equipment: [], equipInit: false,
   charName: '', campaignId: null, newCampaign: '',
-  spells: [], psi: [],
+  spells: [], psi: [], bio: {},
   pools: null, savedId: null, saving: false,
   skillCatalog: [], items: [], campaigns: [], existing: [],
   spellCatalog: [], psiCatalog: [], me: null, isAdmin: false,
@@ -126,7 +136,8 @@ function renderStepper() {
 function render() {
   if (S.savedId) { renderStepper(); return renderSaved(); }
   renderStepper();
-  [renderSystem, renderClass, renderAttributes, renderSkills, renderEquipment, renderPowers, renderReview][S.step]();
+  [renderSystem, renderClass, renderAttributes, renderSkills, renderEquipment,
+   renderPowers, renderDetails, renderReview][S.step]();
 }
 
 function goStep(i) { S.step = i; render(); }
@@ -167,7 +178,7 @@ function pickSystem(sys) {
 function resetBuild() {
   S.attrMethods = {}; S.attrs = {}; S.related = []; S.secondary = []; S.groupPicks = {};
   S.equipment = []; S.equipInit = false; S.pools = null;
-  S.spells = []; S.psi = [];
+  S.spells = []; S.psi = []; S.bio = {};
 }
 
 // Step 1 — class select (browse | guided)
@@ -541,7 +552,41 @@ function renderPowers() {
     ${inner}
   </div>
   <div class="nav"><button class="btn btn-ghost" onclick="goStep(4)">&larr; Back</button>
-  <button class="btn btn-primary" onclick="goStep(6)">Review &rarr;</button></div>`;
+  <button class="btn btn-primary" onclick="goStep(6)">Details &rarr;</button></div>`;
+}
+
+// Step 6 — bio details. Optional; the derived percentages come straight from
+// the attribute tables and are shown so the numbers are not a surprise later.
+function renderDetails() {
+  const d = derive.bio(S.attrs);
+  $('app').innerHTML = `
+  <div class="panel">
+    <h2>Details <span class="muted small">— ${esc(S.cls.name)}</span></h2>
+    <p class="muted">All optional — the identity block from the printed sheet. Anything left blank
+      can be filled in later on the character sheet.</p>
+    <div class="cols" style="margin-top:12px">
+      <div>${BIO_FIELDS.slice(0, 6).map(bioInput).join('')}</div>
+      <div>${BIO_FIELDS.slice(6).map(bioInput).join('')}</div>
+    </div>
+    <h3>Derived from attributes</h3>
+    <p class="small">Invoke Trust/Intimidate <b>${d.invoke_trust_pct}%</b> (M.A. ${S.attrs.MA ?? '—'})
+      &nbsp;·&nbsp; Charm/Impress <b>${d.charm_impress_pct}%</b> (P.B. ${S.attrs.PB ?? '—'})</p>
+    <p class="muted small">Combat bonuses and saving throws are derived the same way and appear on the
+      sheet, where any of them can be overridden.</p>
+  </div>
+  <div class="nav"><button class="btn btn-ghost" onclick="goStep(5)">&larr; Back</button>
+  <button class="btn btn-primary" onclick="goStep(7)">Review &rarr;</button></div>`;
+}
+
+function bioInput([key, label]) {
+  return `<div class="rowline">
+    <label class="small" style="min-width:132px">${label}</label>
+    <input type="text" value="${esc(S.bio[key] ?? '')}" onchange="setBio('${key}', this.value)" style="flex:1">
+  </div>`;
+}
+function setBio(key, value) {
+  const v = String(value).trim();
+  if (v) S.bio[key] = v; else delete S.bio[key];
 }
 function togglePower(kind, name) {
   const list = kind === 'spell' ? S.spells : S.psi;
@@ -619,7 +664,7 @@ function renderReview() {
       ).join(' · ')}</p>` : ''}
     <p class="warn" id="save-msg"></p>
   </div>
-  <div class="nav"><button class="btn btn-ghost" onclick="goStep(5)">&larr; Back</button>
+  <div class="nav"><button class="btn btn-ghost" onclick="goStep(6)">&larr; Back</button>
   <button class="btn btn-primary" ${S.saving ? 'disabled' : ''} onclick="save()">💾 Save character</button></div>`;
 }
 async function save() {
@@ -638,6 +683,7 @@ async function save() {
     const body = {
       campaign_id: campaignId, name: S.charName, class_id: S.cls.id,
       attributes: S.attrs, skills: skillsPayload(), powers: powersPayload(), pools: S.pools,
+      bio: S.bio,
       items: S.equipment.map((e) => ({ item_id: e.item_id, custom_name: e.custom_name, qty: e.qty, notes: e.notes })),
     };
     const res = await api('characters', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -736,7 +782,7 @@ $('app').addEventListener('change', (ev) => {
 Object.assign(window, {
   S, render, computePools, goStep, pickSystem, classMode, quizPick, pickClass,
   confirmClass, setMethod, setAllMethod, doRoll, rollAll, manualSet, pbAdj,
-  toggleSkill, toggleGroupPick, rmEquip, addCatalog, addCustom, togglePower, save, startOver,
+  toggleSkill, toggleGroupPick, rmEquip, addCatalog, addCustom, togglePower, setBio, save, startOver,
 });
 
 boot();

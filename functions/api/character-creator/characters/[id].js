@@ -24,7 +24,8 @@ export async function onRequestGet({ request, env, params }) {
      ORDER BY character_items.id`
   ).bind(params.id).all();
 
-  for (const col of ['attributes', 'skills', 'powers']) {
+  for (const col of ['attributes', 'skills', 'powers', 'bio', 'combat', 'saves', 'armor']) {
+    if (character[col] === undefined) continue; // column not migrated yet
     try { character[col] = JSON.parse(character[col]); } catch { /* leave as stored */ }
   }
   const can_write = email === character.player_email || email === character.campaign_gm;
@@ -32,6 +33,9 @@ export async function onRequestGet({ request, env, params }) {
 }
 
 const PATCHABLE = ['hp_current', 'sdc_current', 'mdc_current', 'ppe_current', 'isp_current', 'notes'];
+// Sheet sections stored as JSON. Sent as objects/arrays and re-serialised here,
+// so a malformed section can't corrupt the column.
+const JSON_SECTIONS = { bio: 'object', combat: 'object', saves: 'object', armor: 'array' };
 
 export async function onRequestPatch({ request, env, params }) {
   const email = getUserEmail(request);
@@ -65,6 +69,16 @@ export async function onRequestPatch({ request, env, params }) {
     sets.push(`${field} = ?`);
     binds.push(v);
   }
+
+  for (const [section, kind] of Object.entries(JSON_SECTIONS)) {
+    if (!(section in body)) continue;
+    const v = body[section];
+    const okShape = kind === 'array' ? Array.isArray(v) : (v && typeof v === 'object' && !Array.isArray(v));
+    if (!okShape) return json({ error: `${section} must be ${kind === 'array' ? 'an array' : 'an object'}` }, 400);
+    sets.push(`${section} = ?`);
+    binds.push(JSON.stringify(v));
+  }
+
   if (!sets.length) return json({ error: 'No editable fields in body' }, 400);
 
   await env.DB.prepare(
