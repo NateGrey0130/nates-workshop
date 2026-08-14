@@ -7,8 +7,8 @@
 // redeploy or a manual copy-paste step.
 
 import { requireAdmin, json } from '../_lib/auth.js';
-import { crossReference, createStubs } from '../_lib/catalog.js';
-import { publish } from '../_lib/class-store.js';
+import { crossReference, buildStubStatements } from '../_lib/catalog.js';
+import { publishStatement } from '../_lib/class-store.js';
 import { parseClassMarkdown } from '../../../../apps/character-creator/js/parser.js';
 
 export async function onRequestPost({ request, env }) {
@@ -23,18 +23,23 @@ export async function onRequestPost({ request, env }) {
   if (!parsed.ok) return json({ error: 'Fix these before confirming: ' + parsed.errors.join('; '), errors: parsed.errors }, 400);
 
   const missing = await crossReference(env, request.url, parsed.data);
-  const created = await createStubs(env, missing, {
+  const { created, statements } = buildStubStatements(env, missing, {
     system: parsed.data.system === 'palladium-fantasy' ? 'palladium-fantasy' : 'rifts',
     sourceBook: parsed.data.source_book,
   });
 
-  await publish(env, {
-    classId: parsed.data.id,
-    name: parsed.data.name,
-    system: parsed.data.system,
-    markdown: b.markdown,
-    email: guard.email,
-  });
+  // Stubs and the class itself go in one batch — a failure part-way through
+  // must not leave orphaned catalog rows referenced by no class.
+  await env.DB.batch([
+    ...statements,
+    publishStatement(env, {
+      classId: parsed.data.id,
+      name: parsed.data.name,
+      system: parsed.data.system,
+      markdown: b.markdown,
+      email: guard.email,
+    }),
+  ]);
 
   return json({
     class_id: parsed.data.id,

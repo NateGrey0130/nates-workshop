@@ -25,7 +25,7 @@ async function load() {
     const res = await api('characters/' + id);
     C.data = res.character; C.items = res.items; C.canWrite = res.can_write; C.isGm = res.is_gm;
     const [journal, catalog] = await Promise.all([
-      api('journal?campaign_id=' + C.data.campaign_id),
+      api(`journal?campaign_id=${C.data.campaign_id}&character_id=${id}&include_campaign=1`),
       api('items?system=' + encodeURIComponent(C.data.campaign_system)),
     ]);
     C.journal = journal.entries; C.catalog = catalog.items;

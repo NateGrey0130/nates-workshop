@@ -7,6 +7,7 @@
 // inline onclick handlers need their entry points on window — see the
 // Object.assign at the bottom.
 import { d, evalDice } from './js/dice.js';
+import { isChoiceGroup } from './js/parser.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
 const STEPS = ['System', 'Class', 'Attributes', 'Skills', 'Equipment', 'Powers', 'Review'];
@@ -314,16 +315,24 @@ function catalogFor(categories) {
     (!categories || categories.includes(sk.category)) &&
     (!sk.systems || sk.systems.includes(S.system)));
 }
-// Mirrors isChoiceGroup() in js/parser.js: a group has no name of its own.
-// A named entry with `choose` is a fixed skill taken that many times.
-const isGroup = (s) => !!s && !s.name &&
-  (s.choose !== undefined || s.from !== undefined || s.categories !== undefined);
+// Single definition, shared with the server-side validator — the two copies
+// drifted once already.
+const isGroup = isChoiceGroup;
+
+// Name -> catalog entry, built once per catalog load. The skills step performs
+// one lookup per rendered skill and re-renders on every toggle, so a linear
+// scan here is the difference between constant and quadratic work.
+let _skillIndex = null;
+function skillByName() {
+  if (!_skillIndex) _skillIndex = new Map(S.skillCatalog.map((sk) => [sk.name, sk]));
+  return _skillIndex;
+}
 
 // Class files may omit base/per_level for a required skill — sourcebook class
 // pages usually state only the bonus, with the base living in the skill table.
 // Fall back to the catalog so imported classes still show real percentages.
 function resolveSkill(name, explicit = {}) {
-  const cat = S.skillCatalog.find((sk) => sk.name === name) || {};
+  const cat = skillByName().get(name) || {};
   return {
     base: explicit.base ?? cat.base ?? 0,
     per_level: explicit.per_level ?? cat.per_level ?? 0,
@@ -366,7 +375,7 @@ function renderSkills() {
       const blocked = !on && picked.length >= s.choose;
       return `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}; margin-left:18px">
         <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
-          onchange="toggleGroupPick(${gi}, '${esc(name)}', ${s.choose})">
+          data-act="group" data-group="${gi}" data-limit="${s.choose}" data-name="${esc(name)}">
         <span>${esc(name)}</span>
         <span class="pct">${s.base ? s.base + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—'}</span></label>`;
     }).join('');
@@ -380,7 +389,8 @@ function renderSkills() {
     const on = chosen.includes(s.name);
     const blocked = !on && (taken.has(s.name.toLowerCase()) || chosen.length >= limit);
     return `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
-      <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''} onchange="toggleSkill('${kind}', '${esc(s.name)}')">
+      <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
+        data-act="skill" data-kind="${kind}" data-name="${esc(s.name)}">
       <span>${esc(s.name)}</span>
       <span class="pct">${s.category} · ${s.base ? s.base + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—'}</span>
     </label>`;
@@ -507,7 +517,8 @@ function renderPowers() {
         const on = S.spells.includes(sp.name);
         const blocked = !on && S.spells.length >= count;
         return `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
-          <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''} onchange="togglePower('spell', '${esc(sp.name)}')">
+          <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
+            data-act="power" data-kind="spell" data-name="${esc(sp.name)}">
           <span>${esc(sp.name)}</span><span class="pct">L${sp.level} · ${sp.ppe} P.P.E.</span></label>`;
       }).join('');
   }
@@ -519,7 +530,8 @@ function renderPowers() {
         const on = S.psi.includes(p.name);
         const blocked = !on && S.psi.length >= psi.count;
         return `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
-          <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''} onchange="togglePower('psi', '${esc(p.name)}')">
+          <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
+            data-act="power" data-kind="psi" data-name="${esc(p.name)}">
           <span>${esc(p.name)}</span><span class="pct">${p.category} · ${p.isp} I.S.P.</span></label>`;
       }).join('');
   }
@@ -552,7 +564,7 @@ function powersPayload() {
 
 // Step 6 — review & save
 function skillsPayload() {
-  const find = (n) => S.skillCatalog.find((s) => s.name === n) || {};
+  const find = (n) => skillByName().get(n) || {};
   const occ = S.cls.skills?.occ_skills || [];
   // Choice-group picks are stored exactly like fixed class skills, inheriting
   // the group's base/per_level.
@@ -691,6 +703,7 @@ async function boot(first = true) {
     ]);
     S.classes = classesRes.classes;
     S.skillCatalog = catalogsRes.skills;
+    _skillIndex = null;
     S.spellCatalog = catalogsRes.spells;
     S.psiCatalog = catalogsRes.psionics;
     S.items = itemsRes.items;
@@ -704,6 +717,19 @@ async function boot(first = true) {
     $('app').innerHTML = `<div class="panel"><p class="err">Failed to load app data: ${esc(err.message)}</p></div>`;
   }
 }
+
+// Checkbox toggles carry their value in data- attributes and are dispatched
+// here rather than interpolated into an inline handler. Catalog names come from
+// sourcebook PDFs and routinely contain apostrophes and quotes, which would
+// terminate a JS string literal inside an HTML attribute.
+$('app').addEventListener('change', (ev) => {
+  const el = ev.target;
+  switch (el.dataset?.act) {
+    case 'skill': return toggleSkill(el.dataset.kind, el.dataset.name);
+    case 'group': return toggleGroupPick(+el.dataset.group, el.dataset.name, +el.dataset.limit);
+    case 'power': return togglePower(el.dataset.kind, el.dataset.name);
+  }
+});
 
 // Inline onclick handlers live in the global scope; this module does not, so
 // every entry point the generated markup references is exposed explicitly.

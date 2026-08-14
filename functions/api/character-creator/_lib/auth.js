@@ -41,6 +41,16 @@ export function requireAdmin(request, env) {
   return { email };
 }
 
+// Parses a JSON body without throwing. A malformed body should be a 400 from
+// the handler, not an opaque 500 from an unhandled rejection.
+export async function readJson(request) {
+  try {
+    return await request.json();
+  } catch {
+    return null;
+  }
+}
+
 export function forbidden() {
   return json({ error: 'Not allowed — only the character owner or campaign GM can do that' }, 403);
 }

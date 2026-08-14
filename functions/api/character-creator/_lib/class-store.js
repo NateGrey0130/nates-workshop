@@ -23,8 +23,10 @@ export async function saveDraft(env, { classId, name, system, markdown, email })
   ).bind(classId, name ?? null, system ?? null, markdown, email).run();
 }
 
-export async function publish(env, { classId, name, system, markdown, email }) {
-  await env.DB.prepare(
+// Returned as a statement so callers can batch publishing together with the
+// catalog stubs, making the whole confirm step all-or-nothing.
+export function publishStatement(env, { classId, name, system, markdown, email }) {
+  return env.DB.prepare(
     `INSERT INTO imported_classes (class_id, name, system, markdown, status, created_by)
      VALUES (?, ?, ?, ?, 'published', ?)
      ON CONFLICT(class_id) DO UPDATE SET
@@ -33,7 +35,11 @@ export async function publish(env, { classId, name, system, markdown, email }) {
        system = excluded.system,
        status = 'published',
        updated_at = datetime('now')`
-  ).bind(classId, name ?? null, system ?? null, markdown, email).run();
+  ).bind(classId, name ?? null, system ?? null, markdown, email);
+}
+
+export async function publish(env, opts) {
+  await publishStatement(env, opts).run();
 }
 
 // Published classes used as format examples in the extraction prompt. Pulled
@@ -72,6 +78,11 @@ export async function deleteStored(env, classId) {
   return res.meta?.changes ?? 0;
 }
 
+// Parsing is deterministic for a given markdown, so results are memoised per
+// isolate and keyed on updated_at. Three pages request the class list on load;
+// without this, each request re-parses every class in the catalog.
+const parseCache = new Map(); // class_id -> { updated_at, parsed }
+
 // Published rows, parsed. Anything that no longer parses is skipped and
 // reported rather than breaking the class list for everyone.
 export async function loadPublished(env) {
@@ -80,13 +91,18 @@ export async function loadPublished(env) {
   let results = [];
   try {
     ({ results } = await env.DB.prepare(
-      "SELECT class_id, markdown FROM imported_classes WHERE status = 'published'"
+      "SELECT class_id, markdown, updated_at FROM imported_classes WHERE status = 'published'"
     ).all());
   } catch {
     return { classes, failures }; // table not migrated yet — behave as before
   }
   for (const row of results) {
-    const parsed = parseClassMarkdown(row.markdown);
+    const hit = parseCache.get(row.class_id);
+    let parsed = hit && hit.updated_at === row.updated_at ? hit.parsed : null;
+    if (!parsed) {
+      parsed = parseClassMarkdown(row.markdown);
+      parseCache.set(row.class_id, { updated_at: row.updated_at, parsed });
+    }
     if (parsed.ok) classes.push({ ...parsed.data, _source: 'imported' });
     else failures.push({ file: `${row.class_id} (imported)`, errors: parsed.errors });
   }
