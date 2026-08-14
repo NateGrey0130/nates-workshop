@@ -27,7 +27,10 @@ async function load() {
     const [journal, catalog, classes] = await Promise.all([
       api(`journal?campaign_id=${C.data.campaign_id}&character_id=${id}&include_campaign=1`),
       api('items?system=' + encodeURIComponent(C.data.campaign_system)),
-      api('classes').catch(() => ({ classes: [] })),
+      // include_retired: this character's class may have been retired since it
+      // was built. It must still resolve, or the sheet loses the class name and
+      // its advisory text.
+      api('classes?include_retired=1').catch(() => ({ classes: [] })),
     ]);
     C.journal = journal.entries; C.catalog = catalog.items;
     // The class supplies its display name plus the advisory text the sheet
@@ -278,7 +281,10 @@ function render() {
              <p class="print-only small" style="white-space:pre-wrap">${escHtml(c.notes || '—')}</p>`
           : `<p class="small" style="white-space:pre-wrap">${escHtml(c.notes || '—')}</p>`}
       ${advisory('Side effects', cls.side_effects)}
-      ${advisory('Restrictions', cls.restrictions)}`)}
+      ${advisory('Restrictions', cls.restrictions)}
+      ${C.cls?._retired
+        ? advisory('Retired class', 'This class has been retired and can no longer be chosen for new characters. This character is unaffected.')
+        : ''}`)}
 
     ${box('Journal', `
       ${w ? `<div class="noprint">

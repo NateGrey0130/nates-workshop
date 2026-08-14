@@ -20,7 +20,9 @@ async function load() {
       api('campaigns/' + campaignId),
       api('characters?campaign_id=' + campaignId),
       api('journal?campaign_id=' + campaignId),
-      api('classes'),
+      // include_retired: the roster labels characters by class name, and a
+      // character on a retired class must not lose its label.
+      api('classes?include_retired=1'),
     ]);
     D.campaign = campRes.campaign; D.isGm = campRes.is_gm;
     D.roster = rosterRes.characters;
