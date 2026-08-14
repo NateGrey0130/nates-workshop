@@ -9,6 +9,9 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseClassMarkdown } from '../js/parser.js';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
+import {
+  getImportSpec, stripFences, normaliseRows, countRows,
+} from '../../../functions/api/character-creator/_lib/import-engine.js';
 
 const appDir = join(dirname(fileURLToPath(import.meta.url)), '..');
 const repoRoot = join(appDir, '..', '..');
@@ -64,6 +67,7 @@ check('missing frontmatter rejected', !noFm.ok);
 // ---------- 1b. Catalog field config ----------
 // The editor, the write endpoints and the importers all generate themselves
 // from this, so an inconsistent entry breaks three things at once.
+console.log('\n[1b] Catalog field config');
 const catalogProblems = [];
 for (const [key, c] of Object.entries(CATALOGS)) {
   const names = c.fields.map((f) => f.name);
@@ -98,6 +102,57 @@ check('systems: empty and all-selected both store NULL',
   coerceField(sysField, []).value === null && coerceField(sysField, ['rifts', 'palladium-fantasy']).value === null);
 check('systems: one system stores a JSON array',
   coerceField(sysField, ['rifts']).value === '["rifts"]');
+
+// ---------- 1c. Import engine ----------
+// Pins the skill importer's behaviour so the shared engine cannot quietly
+// change it. Every expectation here matches what the pre-refactor inline
+// implementation produced.
+console.log('\n[1c] Import engine');
+const skillSpec = getImportSpec('skills');
+check('skills import spec exists', !!skillSpec);
+
+check('stripFences unwraps a json fence',
+  stripFences('```json\n[{"name":"A"}]\n```') === '[{"name":"A"}]');
+check('stripFences unwraps a bare fence',
+  stripFences('```\n[1]\n```') === '[1]');
+check('stripFences leaves unfenced text alone',
+  stripFences('  [{"name":"A"}]  ') === '[{"name":"A"}]');
+
+const normalised = normaliseRows(skillSpec, [
+  { name: 'Climbing:', category: 'Physical', base: '40', per_level: '5', note: ' rope work ' },
+  { name: '  Prowl  ', category: ' Espionage ', base: 35, per_level: 5 },
+  { name: '', category: 'Physical' },                    // no name — dropped
+  { name: 'x'.repeat(121) },                             // absurd name — dropped
+  { name: 'Boxing', base: -10, per_level: 'abc' },       // bad numbers clamp to 0
+  'not an object',
+]);
+check('normalise strips a trailing colon from the name', normalised[0]?.name === 'Climbing');
+check('normalise trims names and categories',
+  normalised[1]?.name === 'Prowl' && normalised[1]?.category === 'Espionage');
+check('normalise coerces numeric strings', normalised[0]?.base === 40 && normalised[0]?.per_level === 5);
+check('normalise trims a note', normalised[0]?.note === 'rope work');
+check('normalise nulls an absent note', normalised[1]?.note === null);
+check('normalise clamps negative and non-numeric to 0',
+  normalised[2]?.base === 0 && normalised[2]?.per_level === 0);
+check('normalise drops nameless, over-long and non-object rows', normalised.length === 3,
+  'got ' + normalised.length + ': ' + normalised.map((r) => r.name).join(', '));
+
+// Classification defaults, which decide what review pre-selects. A curated row
+// must never default to being overwritten by a second book.
+const stubRow = { source: 'import', base: 0, per_level: 0 };
+const seedRow = { source: 'seed', base: 30, per_level: 5 };
+const manualRow = { source: 'manual', base: 0, per_level: 0 };
+check('a zeroed imported row is a stub', skillSpec.isStub(stubRow) === true);
+check('a seeded row is not a stub', skillSpec.isStub(seedRow) === false);
+check('a hand-edited row is never a stub', skillSpec.isStub(manualRow) === false);
+
+check('countRows tallies new, duplicates and stubs', (() => {
+  const c = countRows([
+    { status: 'new' }, { status: 'new' },
+    { status: 'duplicate', is_stub: true }, { status: 'duplicate', is_stub: false },
+  ]);
+  return c.total === 4 && c.new === 2 && c.duplicates === 2 && c.stubs === 1;
+})());
 
 // ---------- 2. D1 schema ----------
 // Runs against the shared workshop database (binding DB in the root
