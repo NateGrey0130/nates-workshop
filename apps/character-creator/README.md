@@ -407,6 +407,10 @@ a fully successful run.
 
 Honest list, roughly by value.
 
+Most of these are planned out as eleven PRs under
+[`docs/plans/`](docs/plans/README.md), with the design decisions and the
+rejected alternatives recorded per PR.
+
 **Staged skill picks are stored but never prompted.** `occ_related_skills.schedule`
 records that a class grants extra picks at levels 3/6/9/12, and the level-up flow
 ignores it — it computes pool and percentage diffs and surfaces `grants` as text.
