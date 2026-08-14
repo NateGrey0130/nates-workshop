@@ -51,6 +51,13 @@ CREATE TABLE IF NOT EXISTS characters (
   mdc_max INTEGER, mdc_current INTEGER,   -- M.D.C. beings (e.g. dragon hatchlings) use this instead of HP/SDC
   ppe_max INTEGER, ppe_current INTEGER,
   isp_max INTEGER, isp_current INTEGER,
+  -- Sheet sections stored as JSON rather than ~40 scalar columns, because the
+  -- shapes are sparse and this file only ever CREATEs. See db/migrations/ for
+  -- the one-shot ALTERs that add these to an existing database.
+  bio TEXT NOT NULL DEFAULT '{}',        -- race, alignment, age, height, sentiments, …
+  combat TEXT NOT NULL DEFAULT '{}',     -- attacks, initiative, strike/parry/dodge, punches
+  saves TEXT NOT NULL DEFAULT '{}',      -- save vs magic, psionics, poison, insanity, …
+  armor TEXT NOT NULL DEFAULT '[]',      -- [{ name, ar, mdc_max, mdc_current, weight, cost, prowl }]
   notes TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))

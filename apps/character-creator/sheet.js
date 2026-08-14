@@ -130,6 +130,63 @@ function render() {
 
   const attrs = c.attributes || {};
   const cls = C.cls || {};
+  const bio = derive.bio(attrs, c.bio);
+  const combat = derive.combat(attrs, c.combat);
+  const saves = derive.saves(attrs, c.saves);
+  const armorList = Array.isArray(c.armor) ? c.armor : [];
+
+  // An editable field: an input for owner/GM, plain text otherwise. Values that
+  // came from the attribute tables rather than being typed are marked, so it is
+  // obvious what is calculated and what a human set.
+  const editField = (section, key, label, value, stored, opts = {}) => {
+    const isDerived = derive.isDerived(stored, key);
+    const suffix = opts.suffix || '';
+    if (!w) {
+      return `<div class="field"><span class="lbl">${label}</span><span class="dots"></span>
+        <span class="val${isDerived ? ' dim' : ''}">${escHtml(String(value ?? '—'))}${suffix}</span></div>`;
+    }
+    return `<div class="field"><span class="lbl">${label}</span><span class="dots"></span>
+      <span class="val">
+        <input class="mini-in${isDerived ? ' derived' : ''}" data-sec="${section}" data-key="${key}"
+          type="${opts.type || 'text'}" value="${escHtml(stored?.[key] ?? '')}"
+          placeholder="${escHtml(String(value ?? ''))}" title="${isDerived ? 'Derived from attributes — type to override' : 'Set manually'}">${suffix}
+        <b class="print-only">${escHtml(String(value ?? '—'))}${suffix}</b>
+      </span></div>`;
+  };
+
+  const BIO_FIELDS = [
+    ['race', 'Race'], ['true_name', 'True Name'], ['occupation', 'Occupation'],
+    ['alignment', 'Alignment'], ['age', 'Age'], ['sex', 'Sex'],
+    ['height', 'Height'], ['weight', 'Weight'],
+    ['family_origin', 'Family Origin'], ['environment', 'Environment'],
+    ['native_languages', 'Native Language(s)'], ['insanity', 'Insanity (if any)'],
+  ];
+  const COMBAT_FIELDS = [
+    ['attacks', '# of Attacks'], ['initiative', 'Initiative'], ['strike', 'Strike'],
+    ['parry', 'Parry'], ['dodge', 'Dodge'], ['roll', 'Roll w/ Punch'],
+    ['damage_bonus', 'Damage'], ['punch', 'Punch'], ['power_punch', 'Power Punch'],
+    ['kick', 'Kick'], ['knockout', 'Knock Out'], ['critical', 'Critical'],
+    ['run_yards_per_melee', 'Run (yds/melee)'],
+  ];
+  const SAVE_FIELDS = [
+    ['spell_magic', 'vs Spell Magic'], ['ritual_magic', 'vs Ritual Magic'],
+    ['psionics', 'vs Psionics'], ['toxins_poisons', 'vs Toxins/Poisons'],
+    ['harmful_drugs', 'vs Harmful Drugs'], ['insanity', 'vs Insanity'],
+    ['possession', 'vs Possession'], ['horror_factor', 'vs Horror Factor'],
+    ['coma_death_pct', 'vs Coma/Death'], ['pain', 'vs Pain'],
+  ];
+
+  const armorRows = armorList.map((a, i) => `
+    <div class="armor-slot">
+      <div class="field"><span class="lbl">Armor</span><span class="dots"></span>
+        <span class="val">${w ? `<input class="mini-in wide" data-armor="${i}" data-key="name" value="${escHtml(a.name ?? '')}">` : escHtml(a.name || '—')}</span></div>
+      <div class="armor-stats">
+        ${['ar', 'mdc_current', 'mdc_max', 'weight', 'cost', 'prowl'].map((k) => `
+          <div class="field"><span class="lbl">${{ ar: 'A.R.', mdc_current: 'M.D.C.', mdc_max: 'of', weight: 'Weight', cost: 'Cost', prowl: 'Prowl' }[k]}</span>
+            <span class="val">${w ? `<input class="mini-in" data-armor="${i}" data-key="${k}" value="${escHtml(a[k] ?? '')}">` : escHtml(String(a[k] ?? '—'))}</span></div>`).join('')}
+      </div>
+      ${w ? `<button class="btn btn-sm btn-ghost noprint" onclick="removeArmor(${i})">Remove</button>` : ''}
+    </div>`).join('');
 
   $('app').innerHTML = `
   ${box(`${escHtml(c.name)}${w ? '' : ' <span class="tag ro">read-only</span>'}${C.isGm ? ' <span class="tag gm">GM</span>' : ''}`, `
@@ -144,6 +201,14 @@ function render() {
         ${field('System', escHtml(c.campaign_system), true)}
         ${field('Player', escHtml(c.player_email), true)}
       </div>
+    </div>
+    <div class="sheet-grid cols-2" style="margin-top:6px">
+      <div>${BIO_FIELDS.slice(0, 6).map(([k, l]) => editField('bio', k, l, bio[k], c.bio)).join('')}</div>
+      <div>${BIO_FIELDS.slice(6).map(([k, l]) => editField('bio', k, l, bio[k], c.bio)).join('')}</div>
+    </div>
+    <div class="sheet-grid cols-2">
+      <div>${editField('bio', 'invoke_trust_pct', 'Invoke Trust/Intimidate', bio.invoke_trust_pct, c.bio, { suffix: '%' })}</div>
+      <div>${editField('bio', 'charm_impress_pct', 'Charm/Impress', bio.charm_impress_pct, c.bio, { suffix: '%' })}</div>
     </div>`)}
 
   <div class="sheet-grid rail" style="margin-top:12px">
@@ -166,6 +231,19 @@ function render() {
   </div>
 
   ${w && C.proposal ? levelUpPanel() : ''}
+
+  <div class="sheet-grid rail" style="margin-top:12px">
+    ${box('Saving Throws', SAVE_FIELDS.map(([k, l]) =>
+      editField('saves', k, l, saves[k], c.saves, { suffix: k === 'coma_death_pct' ? '%' : '' })).join(''),
+      '<span class="muted" style="font-size:9px">DERIVED · OVERRIDABLE</span>')}
+
+    ${box('Combat', COMBAT_FIELDS.map(([k, l]) =>
+      editField('combat', k, l, combat[k], c.combat)).join(''))}
+
+    ${box('Armor', (armorRows || '<p class="muted small">No armor recorded.</p>') +
+      (w ? `<div class="rowline noprint" style="margin-top:8px">
+        <button class="btn btn-sm" onclick="addArmor()">+ Add armor</button></div>` : ''))}
+  </div>
 
   <div class="sheet-grid cols-3" style="margin-top:12px">
     ${skillBox('Class Skills', byType('occ'))}
@@ -288,8 +366,46 @@ async function usePower(index) {
   } catch (err) { alert('Failed: ' + err.message); }
 }
 
+// Armor is edited in place and persisted with the rest of the sheet. Adding or
+// removing a slot re-renders, so anything typed into the other section inputs
+// is captured first — otherwise unsaved edits would silently vanish.
+function keepEdits() {
+  if (!C.canWrite) return;
+  const { bio, combat, saves, armor } = collectSections();
+  Object.assign(C.data, { bio, combat, saves, armor });
+}
+function addArmor() {
+  keepEdits();
+  C.data.armor = [...(Array.isArray(C.data.armor) ? C.data.armor : []), { name: '' }];
+  render();
+}
+function removeArmor(i) {
+  keepEdits();
+  const list = Array.isArray(C.data.armor) ? [...C.data.armor] : [];
+  list.splice(i, 1);
+  C.data.armor = list;
+  render();
+}
+
+// Reads the section inputs back out of the DOM. Blank means "no override" —
+// the value falls back to the derived default rather than being stored as 0.
+function collectSections() {
+  const out = { bio: {}, combat: {}, saves: {} };
+  for (const el of document.querySelectorAll('input[data-sec]')) {
+    const v = el.value.trim();
+    if (v !== '') out[el.dataset.sec][el.dataset.key] = v;
+  }
+  const armor = [];
+  for (const el of document.querySelectorAll('input[data-armor]')) {
+    const i = +el.dataset.armor;
+    (armor[i] ||= {})[el.dataset.key] = el.value.trim();
+  }
+  out.armor = armor.filter((a) => a && Object.values(a).some((v) => v !== ''));
+  return out;
+}
+
 async function saveStats() {
-  const body = { notes: $('stat-notes').value };
+  const body = { notes: $('stat-notes').value, ...collectSections() };
   for (const [key] of POOLS) {
     const el = $('stat-' + key);
     if (el) body[key + '_current'] = el.value === '' ? null : +el.value;

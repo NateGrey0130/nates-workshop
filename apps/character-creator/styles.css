@@ -273,6 +273,21 @@ th {
 }
 .power-row .cost { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); white-space: nowrap; }
 
+/* Compact inline inputs used across the sheet's field rows. A "derived" input
+   shows its calculated value as a placeholder until someone overrides it. */
+.mini-in {
+  width: 66px; padding: 1px 5px; font-size: 12px;
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 3px; color: var(--text-primary);
+}
+.mini-in.wide { width: 100%; }
+.mini-in.derived { color: var(--text-secondary); border-style: dashed; }
+.mini-in.derived::placeholder { color: var(--accent); opacity: 0.75; }
+
+.armor-slot { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 9px; margin-bottom: 8px; }
+.armor-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; margin-top: 4px; }
+.armor-stats .field > .val { flex: 0 0 auto; }
+
 .advisory {
   border-left: 2px solid var(--warning);
   padding: 4px 0 4px 9px;

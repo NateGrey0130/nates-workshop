@@ -42,14 +42,17 @@ export async function onRequestPost({ request, env }) {
        campaign_id, player_email, name, class_id, level, xp,
        attributes, skills, powers,
        hp_max, hp_current, sdc_max, sdc_current, mdc_max, mdc_current,
-       ppe_max, ppe_current, isp_max, isp_current, notes
-     ) VALUES (?, ?, ?, ?, 1, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ppe_max, ppe_current, isp_max, isp_current,
+       bio, combat, saves, armor, notes
+     ) VALUES (?, ?, ?, ?, 1, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      RETURNING id`
   ).bind(
     b.campaign_id, email, b.name, b.class_id,
     JSON.stringify(b.attributes || {}), JSON.stringify(b.skills || []), JSON.stringify(b.powers || []),
     p.hp ?? null, p.hp ?? null, p.sdc ?? null, p.sdc ?? null, p.mdc ?? null, p.mdc ?? null,
-    p.ppe ?? null, p.ppe ?? null, p.isp ?? null, p.isp ?? null, b.notes ?? null
+    p.ppe ?? null, p.ppe ?? null, p.isp ?? null, p.isp ?? null,
+    JSON.stringify(b.bio || {}), JSON.stringify(b.combat || {}),
+    JSON.stringify(b.saves || {}), JSON.stringify(b.armor || []), b.notes ?? null
   ).first();
 
   const items = (b.items || []).filter((it) => it.item_id || it.custom_name);
