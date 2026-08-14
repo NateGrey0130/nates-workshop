@@ -1,0 +1,136 @@
+// The session-based import endpoints, minus the catalog.
+//
+// Spells and psionic powers do exactly the same thing: take a page range into
+// an open session, stage what comes back, then apply the reviewed batch. The
+// only differences are which catalog is being written and which prompt is used,
+// so both live here and the endpoints under import/<catalog>/ are three lines
+// each. Gear will be the third.
+
+import { requireAdmin, json, readJson } from './auth.js';
+import {
+  getImportSpec, extractRows, normaliseRows, classifyRows, countRows,
+  applyDecisions, MAX_DECISIONS, DEFAULT_MODEL, ALLOWED_MODELS,
+} from './import-engine.js';
+import { getSession, stageRows, getStaged, markConfirmed } from './import-sessions.js';
+
+const ACTIONS = ['insert', 'update', 'ignore'];
+
+// Shared preamble: admin, valid body, and a session that is open and belongs to
+// this catalog. Returns { res } to bail, or { b, session }.
+async function openSessionFor(request, env, catalogKey, { requirePdf }) {
+  const guard = requireAdmin(request, env);
+  if (guard.res) return { res: guard.res };
+
+  const b = await readJson(request);
+  if (!b) return { res: json({ error: 'Body must be JSON' }, 400) };
+  if (requirePdf && !b.pdf_base64) return { res: json({ error: 'pdf_base64 is required' }, 400) };
+
+  const sessionId = parseInt(b.session_id, 10);
+  if (!Number.isFinite(sessionId)) return { res: json({ error: 'session_id is required' }, 400) };
+
+  const session = await getSession(env, sessionId);
+  if (!session) return { res: json({ error: 'No session with that id' }, 404) };
+  if (session.catalog !== catalogKey) {
+    return { res: json({ error: `That session is not a ${catalogKey} import` }, 400) };
+  }
+  return { b, session, sessionId };
+}
+
+// One page range into a session. Writes to the staging tables, never to the
+// catalog itself — nothing lands until it has been reviewed and confirmed.
+export async function handleSessionExtract(request, env, catalogKey, prompt, promptArgs = () => ({})) {
+  const ctx = await openSessionFor(request, env, catalogKey, { requirePdf: true });
+  if (ctx.res) return ctx.res;
+  const { b, session, sessionId } = ctx;
+  if (session.closed_at) return json({ error: 'That session is closed' }, 409);
+
+  const model = ALLOWED_MODELS.includes(b.model) ? b.model : DEFAULT_MODEL;
+  const spec = getImportSpec(catalogKey);
+
+  const result = await extractRows(env, spec, {
+    pdfBase64: b.pdf_base64,
+    model,
+    systemPrompt: prompt.SYSTEM_PROMPT,
+    userPrompt: prompt.buildUserPrompt({ sourceBook: session.source_book, hints: b.hints, ...promptArgs(b) }),
+  });
+  if (result.error) return json({ error: result.error, ...(result.extra || {}) }, result.status);
+
+  const rows = normaliseRows(spec, result.rows);
+  if (!rows.length) return json({ error: 'Nothing found on those pages', staged: 0, usage: result.usage });
+
+  const classified = await classifyRows(env, spec, rows);
+  // Re-submitting a range you already did is a normal mistake on a long import,
+  // so names already staged in this session are skipped rather than duplicated.
+  const { staged, skipped } = await stageRows(env, sessionId, b.page_range ?? null, classified, catalogKey);
+
+  return json({
+    ok: true,
+    staged,
+    skipped,
+    counts: countRows(classified),
+    flagged: classified.filter((r) => r.flags?.length).length,
+    pending: (await getStaged(env, sessionId)).length,
+    usage: result.usage,
+    model,
+  });
+}
+
+// Apply a session's pending rows as one batch. `overrides` carries whatever the
+// reviewer changed, keyed on staged row id, so the UI sends its decisions once
+// rather than writing one per click.
+export async function handleSessionConfirm(request, env, catalogKey) {
+  const ctx = await openSessionFor(request, env, catalogKey, { requirePdf: false });
+  if (ctx.res) return ctx.res;
+  const { b, session, sessionId } = ctx;
+
+  const pending = await getStaged(env, sessionId, { pendingOnly: true });
+  if (!pending.length) return json({ error: 'Nothing pending in that session' }, 400);
+  if (pending.length > MAX_DECISIONS) {
+    return json({ error: `Too many staged rows to confirm at once (max ${MAX_DECISIONS}). Confirm in smaller batches.` }, 400);
+  }
+
+  const overrides = new Map();
+  for (const o of Array.isArray(b.overrides) ? b.overrides : []) {
+    const id = parseInt(o?.id, 10);
+    if (!Number.isFinite(id)) continue;
+    if (o.action && !ACTIONS.includes(o.action)) return json({ error: `Unknown action: ${o.action}` }, 400);
+    overrides.set(id, o);
+  }
+
+  const decisions = pending.map((row) => {
+    const o = overrides.get(row.id) || {};
+    const action = o.action || row.action;
+    const asName = o.resolved_name ?? row.resolved_name ?? null;
+    // Strip the staging bookkeeping; what is left is the extracted row.
+    const { id, page_range, match_name, is_stub, differs, confirmed_at, status,
+            resolved_name, flags, action: _a, ...payload } = row;
+    // "Keep both" is an insert under a distinguishing name; the key column is
+    // UNIQUE, so without one it would simply collide.
+    return { ...payload, action, ...(action === 'insert' && asName ? { as_name: asName } : {}) };
+  });
+
+  const result = await applyDecisions(env, getImportSpec(catalogKey), decisions, {
+    sourceBook: session.source_book,
+  });
+  if (result.error) return json({ error: result.error }, result.status);
+
+  // Only rows that actually landed are marked done. A row reported as a
+  // conflict stays pending so it can be renamed and retried rather than being
+  // silently lost.
+  const conflicted = new Set(result.conflicts.map((c) => String(c.name).toLowerCase()));
+  const done = pending
+    .filter((row) => {
+      const o = overrides.get(row.id) || {};
+      const target = String(o.resolved_name ?? row.resolved_name ?? row.name ?? '').toLowerCase();
+      return !conflicted.has(target);
+    })
+    .map((row) => row.id);
+  await markConfirmed(env, done);
+
+  return json({
+    ...result,
+    session_id: sessionId,
+    confirmed: done.length,
+    still_pending: (await getStaged(env, sessionId)).length,
+  });
+}

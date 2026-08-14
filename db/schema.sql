@@ -195,7 +195,17 @@ CREATE TABLE IF NOT EXISTS psionic_powers (
   category TEXT,                          -- Healing | Physical | Sensitive | Super
   isp INTEGER NOT NULL DEFAULT 0,
   source TEXT NOT NULL DEFAULT 'seed',
-  source_book TEXT
+  source_book TEXT,
+  -- Field names match spells on purpose, so the sheet renders both the same way.
+  range TEXT,
+  duration TEXT,
+  saving_throw TEXT,
+  description TEXT,
+  -- minor | major | master. NULL = no restriction beyond the power's category,
+  -- which is today's behaviour. Books state tier at the category level far more
+  -- often than per power, so most rows legitimately have none. Nothing enforces
+  -- this yet — that needs real imported data behind it first.
+  min_tier TEXT
 );
 
 -- ═══════════════════════════════════════════════════════════════════
@@ -271,3 +281,7 @@ WHERE EXISTS (SELECT 1 FROM pragma_table_info('spells') WHERE name = 'saving_thr
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '006-import-sessions.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'import_staged');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '007-psionic-detail.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('psionic_powers') WHERE name = 'min_tier');

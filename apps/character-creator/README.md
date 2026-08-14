@@ -2,8 +2,8 @@
 
 A persistent, multi-campaign character creator and journal. Build a character
 through a guided wizard, keep a running session log, level up semi-automatically,
-print a sheet laid out after the official form, and import classes, skills and
-spells straight out of a sourcebook PDF.
+print a sheet laid out after the official form, and import classes, skills,
+spells and psionic powers straight out of a sourcebook PDF.
 
 Part of Nate's Workshop. Cloudflare Pages + D1, behind the site-wide Cloudflare
 Access gate. No build step, no framework, no dependencies.
@@ -36,7 +36,8 @@ apps/character-creator/
 ├── index.html / app.js       Creation wizard (8 steps). app.js is an ES module.
 ├── sheet.html / sheet.js     Character sheet, laid out after the printed Rifts sheet
 ├── dashboard.html / dashboard.js  GM dashboard: roster, GM notes, campaign journal
-├── import.html / import.js   Admin-only PDF import — Class, Skills, Spells tabs
+├── import.html / import.js   Admin-only PDF import — Class, Skills, Spells,
+│                             Psionics tabs
 ├── catalog.html / catalog.js Admin-only catalog editor, generated from the
 │                             field config. catalog.js is an ES module.
 ├── styles.css                All five pages, layered on /shared/styles.css
@@ -65,8 +66,11 @@ functions/api/
     ├── _lib/import-engine.js  Shared catalog-import pipeline: extract,
     │                         normalise, classify duplicates, batch-confirm
     ├── _lib/import-sessions.js  Resumable imports: sessions + staged rows
+    ├── _lib/session-import.js  The session-based import endpoints, minus
+    │                         the catalog — spells and psionics share them
     ├── _lib/skill-prompt.js  Skill chapter import prompt
     ├── _lib/spell-prompt.js  Spell chapter import prompt
+    ├── _lib/psionic-prompt.js  Psionics chapter import prompt
     ├── _lib/leveling.js      XP curve + level-up diff
     └── (endpoints — see API surface below)
 
@@ -131,7 +135,7 @@ ppe and isp.
 | `gear` | Gear catalog. `slug` is what `equipment_starting[].item_id` references. Named `gear`, not `items`, to stay clear of MediaVault's `media_items` in the shared database. |
 | `skills` | `base` 0 means non-percentile (W.P.s, hand to hand). `systems` is a JSON array; NULL means both. `note` carries oddities like `40%/30% climb/rappel`. |
 | `spells` | name, level, ppe, plus a stat block (range, duration, damage, saving throw, area of effect, casting time, description). The stat block is TEXT — books write "100 feet per level" as often as a number. |
-| `psionic_powers` | name, category (Healing/Physical/Sensitive/Super), isp. |
+| `psionic_powers` | name, category (Healing/Physical/Sensitive/Super), isp, plus range, duration, saving throw and description — the same field names spells use. `min_tier` is the psychic tier a book states is required; NULL means no restriction beyond the category, and nothing enforces it yet. |
 
 All catalogs carry `source` (`seed` \| `import`) and `source_book`, so an entry's
 provenance is visible and the same skill from two books can coexist under
@@ -243,8 +247,8 @@ writes are gated (see [Permissions](#permissions)).
 | `import/recheck` | POST | Admin. Re-parse edited markdown, no API spend |
 | `import/confirm` | POST | Admin. Publish class + create catalog stubs |
 | `import/sessions` | GET / POST | Admin. Resumable catalog imports: list (`?catalog=`), fetch one with its staged rows (`?id=`), create, close |
-| `import/spells/extract` | POST | Admin. One page range into a session; stages, writes no catalog rows |
-| `import/spells/confirm` | POST | Admin. Applies a session's pending rows as one batch |
+| `import/spells/extract` `import/psionics/extract` | POST | Admin. One page range into a session; stages, writes no catalog rows |
+| `import/spells/confirm` `import/psionics/confirm` | POST | Admin. Applies a session's pending rows as one batch |
 | `import/stored` | GET / DELETE / POST | Admin. List (`?retired=1`), fetch, retire-or-delete, and POST to restore |
 | `import/skills/extract` | POST | Admin. PDF → many skills, each classified against the catalog |
 | `import/skills/confirm` | POST | Admin. Apply per-skill insert/update/ignore decisions |
@@ -440,6 +444,26 @@ Keep page ranges small. Spell entries carry a stat block plus prose, so they are
 much longer than skill entries, and a reply that overruns the output ceiling is
 rejected rather than half-saved.
 
+### Psionic importer
+
+The same session flow as spells — `_lib/session-import.js` is shared, and the
+two endpoint files are three lines each. Psionic powers take the **same field
+names as spells** (`range`, `duration`, `saving_throw`, `description`) so the
+sheet can render both through one code path.
+
+Two things are specific to psionics:
+
+- **`min_tier`** records the psychic tier a book says a power requires. It is
+  filled in **only when the entry itself states one**. Books state tier access
+  at the *category* level far more often than per power ("Super Psionics are
+  Master only"), so most rows legitimately have none, and the prompt is written
+  to make saying nothing the easy answer. **NULL means no restriction beyond the
+  power's category** — today's behaviour. Nothing enforces this column yet.
+- **Unknown categories and tiers are flagged, never rejected.** A supplement
+  that adds a category the core four do not cover must still be importable, so
+  an unrecognised value imports with a ⚠ against it rather than failing. The
+  same applies to a tier outside minor/major/master.
+
 ---
 
 ## Local development
@@ -507,6 +531,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `004-items-to-gear.sql` | renames `items` to `gear`. **Not additive** — apply immediately before the matching deploy, not ahead of it |
 | `005-spell-detail.sql` | range, duration, damage, saving_throw, area_of_effect, casting_time, description on `spells` |
 | `006-import-sessions.sql` | `import_sessions` + `import_staged` |
+| `007-psionic-detail.sql` | range, duration, saving_throw, description, min_tier on `psionic_powers` |
 
 ### The migration convention
 
@@ -552,11 +577,14 @@ ignores it — it computes pool and percentage diffs and surfaces `grants` as te
 Wiring this in means the level-up proposal needs a skill-picker step. This remains
 the biggest gap between what the data says and what the app does.
 
-**Psionic powers and gear still cannot be imported.** 26 psionic powers are
-hand-seeded, and every gear row in production is a stub created by a class
-import — names with no weight, cost or stats. Both are configurations of the
-shared import engine rather than new machinery; see
+**Gear still cannot be imported.** Every gear row in production is a stub
+created by a class import — names with no weight, cost or stats. It is a
+configuration of the shared import engine rather than new machinery; see
 [`docs/plans/`](docs/plans/README.md).
+
+**`min_tier` is recorded but not enforced.** The psionic importer captures the
+tier a book states, and nothing yet stops a Minor psychic taking a Master-only
+power. That needs real imported data behind it before it can be built or tested.
 
 **The catalog editor has no delete and no duplicate-merge.** Rows are created and
 corrected by hand, never removed, so undoing a bad "keep both" import decision

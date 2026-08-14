@@ -59,6 +59,29 @@ export const IMPORT_SPECS = {
     // 'import') — a name with nothing behind it, which is what this fills in.
     isStub: (row) => row.source === 'import' && row.ppe === 0,
   },
+
+  psionics: {
+    catalog: 'psionics',
+    table: 'psionic_powers',
+    extractFields: ['name', 'category', 'isp', 'range', 'duration', 'saving_throw',
+                    'description', 'min_tier'],
+    compareFields: ['isp'],
+    isStub: (row) => row.source === 'import' && row.isp === 0,
+    // Not a gate. An unrecognised category is surfaced in review so it can be
+    // accepted or corrected — a later supplement may add one the core four do
+    // not cover, and rejecting it outright would make that book unimportable.
+    flag: (row) => {
+      const known = ['Healing', 'Physical', 'Sensitive', 'Super'];
+      const flags = [];
+      if (row.category && !known.some((k) => k.toLowerCase() === row.category.toLowerCase())) {
+        flags.push(`Unrecognised category "${row.category}"`);
+      }
+      if (row.min_tier && !['minor', 'major', 'master'].includes(String(row.min_tier).toLowerCase())) {
+        flags.push(`Unrecognised psychic tier "${row.min_tier}"`);
+      }
+      return flags;
+    },
+  },
 };
 
 export function getImportSpec(key) {
@@ -129,8 +152,11 @@ export async function classifyRows(env, spec, rows) {
   }
 
   return rows.map((r) => {
+    // Advisory only — a flagged row still imports, it just says why it deserves
+    // a second look before you confirm it.
+    const flags = spec.flag ? spec.flag(r) : [];
     const match = existing.get(String(r[key] ?? '').toLowerCase()) || null;
-    if (!match) return { ...r, status: 'new', existing: null, differs: false };
+    if (!match) return { ...r, status: 'new', existing: null, differs: false, flags };
     const differs = spec.compareFields.some((f) => match[f] !== r[f]);
     const isStub = spec.isStub ? spec.isStub(match) : false;
     return {
@@ -139,6 +165,7 @@ export async function classifyRows(env, spec, rows) {
       existing: match,
       differs,
       is_stub: isStub,
+      flags,
       // Anything already curated defaults to ignore, so hand-corrected numbers
       // are never silently overwritten by a second book.
       suggested: isStub ? 'update' : 'ignore',
