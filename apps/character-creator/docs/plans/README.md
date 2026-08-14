@@ -1,6 +1,6 @@
 # Roadmap — planned PRs
 
-Eleven planned PRs closing out the "Known limitations and refactor candidates"
+Twelve planned PRs closing out the "Known limitations and refactor candidates"
 section of the [app README](../../README.md#known-limitations-and-refactor-candidates).
 
 Each item is its own PR, each has its own plan file, and every plan records
@@ -26,10 +26,15 @@ changes and can undo a bad import.
 | 9 | Level-up skill picker | [09-levelup-skill-picker.md](09-levelup-skill-picker.md) | — |
 | 10 | Server-side rule enforcement | [10-server-rule-enforcement.md](10-server-rule-enforcement.md) | 9 |
 | 11 | Sheet targeted re-render | [11-sheet-targeted-render.md](11-sheet-targeted-render.md) | — |
+| 12 | Psionic tier rules | [12-psionic-tier-rules.md](12-psionic-tier-rules.md) | 6, plus a real import |
 
 PRs 8, 9, and 11 have no hard dependency on the infra work and can move earlier
 if something makes that convenient. 5 → 6 → 7 must stay in order: PR 5 builds the
 shared import engine that 6 and 7 are thin configurations of.
+
+**PR 12's dependency is on data, not just code.** It enforces a `min_tier` column
+that PR 6 introduces, and enforcement built against an all-NULL column is either
+a no-op or a broken picker. Run a real psionic import first.
 
 ## Decisions that span several PRs
 
@@ -45,6 +50,12 @@ four times.
 gain a real stat block, and spells and psionics deliberately share field names
 (`range`, `duration`, `saving_throw`, `description`) so the sheet renders both
 through the same code.
+
+**Importers record what the book says; they never infer.** Where a value is
+absent from the page it stays absent, and a NULL means "not stated" rather than
+a computed default. PR 6's `min_tier` is the clearest case — inferring it from
+the category would record a guess as book-sourced data, which is what every
+importer's review step exists to prevent.
 
 **The catalog field config is written once, in PR 4.** The edit UI needs a
 per-catalog description of fields, types, and labels. That same config drives
