@@ -2,8 +2,8 @@
 
 A persistent, multi-campaign character creator and journal. Build a character
 through a guided wizard, keep a running session log, level up semi-automatically,
-print a sheet laid out after the official form, and import classes and skills
-straight out of a sourcebook PDF.
+print a sheet laid out after the official form, and import classes, skills and
+spells straight out of a sourcebook PDF.
 
 Part of Nate's Workshop. Cloudflare Pages + D1, behind the site-wide Cloudflare
 Access gate. No build step, no framework, no dependencies.
@@ -36,10 +36,10 @@ apps/character-creator/
 ├── index.html / app.js       Creation wizard (8 steps). app.js is an ES module.
 ├── sheet.html / sheet.js     Character sheet, laid out after the printed Rifts sheet
 ├── dashboard.html / dashboard.js  GM dashboard: roster, GM notes, campaign journal
-├── import.html / import.js   Admin-only PDF import — Class and Skills tabs
+├── import.html / import.js   Admin-only PDF import — Class, Skills, Spells tabs
 ├── catalog.html / catalog.js Admin-only catalog editor, generated from the
 │                             field config. catalog.js is an ES module.
-├── styles.css                All four pages, layered on /shared/styles.css
+├── styles.css                All five pages, layered on /shared/styles.css
 ├── js/parser.js              RCC/OCC markdown parser (ES module — also used by the API)
 ├── js/dice.js                Dice evaluator (ES module — also used by the API)
 ├── js/catalog-fields.js      What every catalog row looks like (ES module — the
@@ -64,7 +64,9 @@ functions/api/
     ├── _lib/extraction-prompt.js  Class import prompt
     ├── _lib/import-engine.js  Shared catalog-import pipeline: extract,
     │                         normalise, classify duplicates, batch-confirm
+    ├── _lib/import-sessions.js  Resumable imports: sessions + staged rows
     ├── _lib/skill-prompt.js  Skill chapter import prompt
+    ├── _lib/spell-prompt.js  Spell chapter import prompt
     ├── _lib/leveling.js      XP curve + level-up diff
     └── (endpoints — see API surface below)
 
@@ -77,10 +79,11 @@ db/
 ```
 
 Three modules are imported by both the browser and the Workers runtime:
-`js/parser.js`, `js/dice.js`, and `_lib/*`. That is why `app.js` is loaded as
-`<script type="module">` while the other three pages are classic scripts — and
-why inline handlers in the wizard need explicit `window` exposure (see the
-`Object.assign(window, …)` block at the bottom of `app.js`).
+`js/parser.js`, `js/dice.js` and `js/catalog-fields.js`. That is why `app.js` and
+`catalog.js` are loaded as `<script type="module">` while the other pages are
+classic scripts — and why inline handlers in the wizard need explicit `window`
+exposure (see the `Object.assign(window, …)` block at the bottom of `app.js`).
+`catalog.js` avoids the problem entirely by binding with `addEventListener`.
 
 `js/derive.js` is deliberately a *classic* script rather than a module, so the
 sheet's plain script can use it without converting the whole file.
@@ -89,7 +92,7 @@ sheet's plain script can use it without converting the whole file.
 
 ## Data model
 
-Twelve tables in one shared D1 database (`nates-workshop-media`, bound as `DB`).
+Fourteen tables in one shared D1 database (`nates-workshop-media`, bound as `DB`).
 `media_items` belongs to MediaVault and `schema_migrations` is database
 bookkeeping shared by both; the rest are this app.
 
@@ -127,7 +130,7 @@ ppe and isp.
 | `imported_classes` | Class definitions as markdown. `status` is `draft` or `published`; only published classes appear in the app. `deleted_at` NULL means live — retiring a published class hides it from the pickers without destroying it, and drafts are still deleted outright. |
 | `gear` | Gear catalog. `slug` is what `equipment_starting[].item_id` references. Named `gear`, not `items`, to stay clear of MediaVault's `media_items` in the shared database. |
 | `skills` | `base` 0 means non-percentile (W.P.s, hand to hand). `systems` is a JSON array; NULL means both. `note` carries oddities like `40%/30% climb/rappel`. |
-| `spells` | name, level, ppe. |
+| `spells` | name, level, ppe, plus a stat block (range, duration, damage, saving throw, area of effect, casting time, description). The stat block is TEXT — books write "100 feet per level" as often as a number. |
 | `psionic_powers` | name, category (Healing/Physical/Sensitive/Super), isp. |
 
 All catalogs carry `source` (`seed` \| `import`) and `source_book`, so an entry's
@@ -239,6 +242,9 @@ writes are gated (see [Permissions](#permissions)).
 | `import/extract` | POST | Admin. PDF → class markdown; autosaves a draft |
 | `import/recheck` | POST | Admin. Re-parse edited markdown, no API spend |
 | `import/confirm` | POST | Admin. Publish class + create catalog stubs |
+| `import/sessions` | GET / POST | Admin. Resumable catalog imports: list (`?catalog=`), fetch one with its staged rows (`?id=`), create, close |
+| `import/spells/extract` | POST | Admin. One page range into a session; stages, writes no catalog rows |
+| `import/spells/confirm` | POST | Admin. Applies a session's pending rows as one batch |
 | `import/stored` | GET / DELETE / POST | Admin. List (`?retired=1`), fetch, retire-or-delete, and POST to restore |
 | `import/skills/extract` | POST | Admin. PDF → many skills, each classified against the catalog |
 | `import/skills/confirm` | POST | Admin. Apply per-skill insert/update/ignore decisions |
@@ -408,6 +414,32 @@ would confirm it without knowing the tail was missing. Narrow the page range.
 In the Rifts core book the skill chapter is roughly **pp. 26–34**, about one or
 two categories a page. Two pages yielded 33 skills in ~28 seconds.
 
+### Spell importer
+
+A spell chapter is hundreds of entries across many pages and does not fit one
+sitting, so spell imports run inside a **session**:
+
+1. **Start an import**, naming it and optionally labelling the source book.
+2. **Feed it a page range at a time.** Each extraction is staged in the database
+   the moment it parses, so a closed tab costs nothing — the model call is the
+   expensive part and it is what gets saved.
+3. **Review the pending list**, which accumulates across ranges. Duplicates
+   default the same way skills do: a bare stub to *update*, anything curated to
+   *ignore*.
+4. **Import the batch.** The session stays open for the next range.
+
+Two behaviours worth knowing:
+
+- **A row that collides stays pending.** If an insert clashes with a name
+  already in the catalog, it is reported and left in the list so you can give it
+  a distinguishing name and retry, rather than being silently dropped.
+- **Re-submitting a range you already did is harmless.** Names already staged in
+  that session are skipped rather than duplicated.
+
+Keep page ranges small. Spell entries carry a stat block plus prose, so they are
+much longer than skill entries, and a reply that overruns the output ceiling is
+rejected rather than half-saved.
+
 ---
 
 ## Local development
@@ -473,6 +505,8 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `002-catalog-provenance.sql` | `source_book` + `note` on `skills`; `source_book` on `spells`, `psionic_powers` |
 | `003-class-soft-delete.sql` | `deleted_at` on `imported_classes` |
 | `004-items-to-gear.sql` | renames `items` to `gear`. **Not additive** — apply immediately before the matching deploy, not ahead of it |
+| `005-spell-detail.sql` | range, duration, damage, saving_throw, area_of_effect, casting_time, description on `spells` |
+| `006-import-sessions.sql` | `import_sessions` + `import_staged` |
 
 ### The migration convention
 
@@ -518,12 +552,11 @@ ignores it — it computes pool and percentage diffs and surfaces `grants` as te
 Wiring this in means the level-up proposal needs a skill-picker step. This remains
 the biggest gap between what the data says and what the app does.
 
-**Catalogs are thin, and only skills can be imported.** 19 spells and 26 psionic
-powers are all hand-seeded; there is no spell or psionic importer, and no item
-importer. Every item in production is a stub created by a class import, so gear
-has names but no weight, cost, or stats. A spell importer is the largest of these
-— hundreds of entries across many levels, so several page ranges and several
-calls.
+**Psionic powers and gear still cannot be imported.** 26 psionic powers are
+hand-seeded, and every gear row in production is a stub created by a class
+import — names with no weight, cost or stats. Both are configurations of the
+shared import engine rather than new machinery; see
+[`docs/plans/`](docs/plans/README.md).
 
 **The catalog editor has no delete and no duplicate-merge.** Rows are created and
 corrected by hand, never removed, so undoing a bad "keep both" import decision

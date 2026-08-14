@@ -146,6 +146,26 @@ check('a zeroed imported row is a stub', skillSpec.isStub(stubRow) === true);
 check('a seeded row is not a stub', skillSpec.isStub(seedRow) === false);
 check('a hand-edited row is never a stub', skillSpec.isStub(manualRow) === false);
 
+// Spells: same engine, different spec. The stat block is text on purpose —
+// books write "100 feet per level of experience" as often as a number.
+const spellSpec = getImportSpec('spells');
+check('spells import spec exists', !!spellSpec);
+const spellRows = normaliseRows(spellSpec, [
+  { name: 'Fire Bolt:', level: '4', ppe: '7', range: '100 feet per level',
+    duration: 'Instant', damage: '5D6', description: '  A bolt of flame.  ' },
+  { name: 'Sparse Spell' },
+]);
+check('spell numbers coerce, prose stays prose',
+  spellRows[0]?.level === 4 && spellRows[0]?.ppe === 7 && spellRows[0]?.range === '100 feet per level');
+check('spell name loses its trailing colon and description is trimmed',
+  spellRows[0]?.name === 'Fire Bolt' && spellRows[0]?.description === 'A bolt of flame.');
+check('an unstated spell field is null, not invented',
+  spellRows[1]?.range === null && spellRows[1]?.damage === null && spellRows[1]?.ppe === 0);
+check('a zeroed imported spell is a stub',
+  spellSpec.isStub({ source: 'import', ppe: 0 }) === true
+  && spellSpec.isStub({ source: 'seed', ppe: 10 }) === false
+  && spellSpec.isStub({ source: 'manual', ppe: 0 }) === false);
+
 check('countRows tallies new, duplicates and stubs', (() => {
   const c = countRows([
     { status: 'new' }, { status: 'new' },

@@ -46,6 +46,19 @@ export const IMPORT_SPECS = {
     // edited by hand has source 'manual' and is therefore never a stub.
     isStub: (row) => row.source === 'import' && row.base === 0 && row.per_level === 0,
   },
+
+  spells: {
+    catalog: 'spells',
+    table: 'spells',
+    extractFields: ['name', 'level', 'ppe', 'range', 'duration', 'damage',
+                    'saving_throw', 'area_of_effect', 'casting_time', 'description'],
+    // The two numbers. A book disagreeing about PPE or level is worth flagging;
+    // differing prose in a description is not.
+    compareFields: ['level', 'ppe'],
+    // The class importer creates spell stubs as (level 0, ppe 0, source
+    // 'import') — a name with nothing behind it, which is what this fills in.
+    isStub: (row) => row.source === 'import' && row.ppe === 0,
+  },
 };
 
 export function getImportSpec(key) {

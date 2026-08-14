@@ -56,6 +56,15 @@ export const CATALOGS = {
       { name: 'name', label: 'Name', type: 'text', required: true },
       { name: 'level', label: 'Spell level', type: 'int', blankAs: 0 },
       { name: 'ppe', label: 'P.P.E.', type: 'int', blankAs: 0 },
+      // Stat block. Text, not numbers — books write "100 feet per level of
+      // experience" and "2D6 melee rounds" as often as they write a figure.
+      { name: 'range', label: 'Range', type: 'text' },
+      { name: 'duration', label: 'Duration', type: 'text' },
+      { name: 'damage', label: 'Damage', type: 'text' },
+      { name: 'saving_throw', label: 'Saving throw', type: 'text' },
+      { name: 'area_of_effect', label: 'Area of effect', type: 'text' },
+      { name: 'casting_time', label: 'Casting time', type: 'text' },
+      { name: 'description', label: 'Description', type: 'longtext' },
       { name: 'source_book', label: 'Source book', type: 'text' },
     ],
   },
