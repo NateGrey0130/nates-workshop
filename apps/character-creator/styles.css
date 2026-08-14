@@ -168,6 +168,121 @@ th {
 /* ─── DASHBOARD ─── */
 .pools-cell { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
 
+/* ═══ CHARACTER SHEET ═══
+   Laid out after the printed Rifts sheet: boxed panels with small-caps rules,
+   an attribute stack, tri-column skills carrying +%/Lvl and %, and a
+   psionics/magic table. Dark theme retained — the structure is borrowed, not
+   the photocopy. */
+
+.sheet-grid { display: grid; gap: 12px; }
+.sheet-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.sheet-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+.sheet-grid.rail { grid-template-columns: minmax(210px, 0.8fr) 1fr 1fr; }
+@media (max-width: 860px) {
+  .sheet-grid.cols-3, .sheet-grid.cols-2, .sheet-grid.rail { grid-template-columns: 1fr; }
+}
+
+.box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.box > .box-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.box > .box-body { padding: 9px 10px; }
+
+/* Label/value rows with a dotted leader, echoing the form's ruled fields. */
+.field {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 2px 0;
+  font-size: 13px;
+}
+.field > .lbl {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.field > .dots {
+  flex: 1;
+  border-bottom: 1px dotted var(--border);
+  transform: translateY(-3px);
+  min-width: 8px;
+}
+.field > .val { color: var(--text-primary); font-weight: 600; white-space: nowrap; }
+.field > .val.dim { color: var(--text-secondary); font-weight: 400; }
+
+/* Attribute stack — the sheet's I.Q./M.E./M.A./… column. */
+.attr-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+.attr-stack .field > .val { font-size: 15px; font-family: 'JetBrains Mono', monospace; }
+
+/* Pools as current/max pairs. */
+.vitals { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 8px; }
+.vital { text-align: center; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 4px; }
+.vital .lbl {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);
+}
+.vital .val { font-size: 17px; font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+.vital .val input { width: 52px; text-align: center; padding: 2px 4px; font-size: 15px; }
+.vital .max { color: var(--text-muted); font-size: 13px; }
+
+/* Skill rows: name, then +%/Lvl and % columns as on the form. */
+.skill-head, .skill-row {
+  display: grid;
+  grid-template-columns: 1fr 46px 40px;
+  gap: 6px;
+  align-items: baseline;
+  font-size: 12.5px;
+  padding: 2px 0;
+}
+.skill-head {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-muted); border-bottom: 1px solid var(--border);
+  padding-bottom: 4px; margin-bottom: 3px;
+}
+.skill-row { border-bottom: 1px dotted var(--border); }
+.skill-row .num { font-family: 'JetBrains Mono', monospace; text-align: right; color: var(--text-secondary); }
+.skill-row .num.pct { color: var(--text-primary); font-weight: 600; }
+.skill-row .note { grid-column: 1 / -1; font-size: 11px; color: var(--text-muted); padding-left: 10px; }
+
+/* Psionics/magic table, mirroring the form's cost column. */
+.power-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px; align-items: center;
+  padding: 3px 0; border-bottom: 1px dotted var(--border); font-size: 12.5px;
+}
+.power-row .cost { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); white-space: nowrap; }
+
+.advisory {
+  border-left: 2px solid var(--warning);
+  padding: 4px 0 4px 9px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
 /* ─── IMPORT (admin) ─── */
 .notes-banner {
   border: 1px solid var(--warning);
@@ -218,10 +333,23 @@ pre.snippet {
   a { color: #000; text-decoration: none; }
   header, .header, button, input, textarea, select, #msg, .noprint { display: none !important; }
   .print-only { display: inline; }
-  .panel {
+  .panel, .box {
     background: #fff !important; border: 1px solid #999; border-radius: 0;
-    padding: 8px 10px; margin-bottom: 8px;
+    padding: 0; margin-bottom: 8px; break-inside: avoid;
   }
+  .panel { padding: 8px 10px; }
+  .box > .box-title {
+    background: #eee !important; color: #000; border-bottom: 1px solid #999;
+    padding: 3px 8px; font-size: 8.5pt;
+  }
+  .box > .box-body { padding: 6px 8px; }
+  .sheet-grid { gap: 8px; }
+  .field > .dots { border-bottom-color: #bbb; }
+  .field > .lbl, .skill-head, .vital .lbl { color: #333 !important; }
+  .vital { border-color: #999; }
+  .skill-row, .power-row { border-bottom-color: #ddd; }
+  .power-row .cost { color: #000; }
+  .advisory { border-left-color: #999; color: #222 !important; }
   .panel h2 { font-size: 15pt; }
   .panel h3 { font-size: 10.5pt; color: #000; margin: 8px 0 2px; break-after: avoid; }
   .muted, .small, .pool .lbl, .entry .body { color: #222 !important; }
