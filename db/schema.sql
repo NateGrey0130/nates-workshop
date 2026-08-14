@@ -100,8 +100,10 @@ CREATE TABLE IF NOT EXISTS level_history (
 );
 CREATE INDEX IF NOT EXISTS idx_level_history_character ON level_history (character_id);
 
--- Shared gear catalog for character sheets (distinct from media_items above).
-CREATE TABLE IF NOT EXISTS items (
+-- Shared gear catalog for character sheets. Named `gear` rather than `items`
+-- because this database is shared with MediaVault's `media_items`, and a table
+-- called `items` sitting next to it was the most likely future collision.
+CREATE TABLE IF NOT EXISTS gear (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   slug TEXT UNIQUE,                     -- matches equipment_starting item_id refs in class markdown
   name TEXT NOT NULL,
@@ -117,7 +119,7 @@ CREATE TABLE IF NOT EXISTS items (
 CREATE TABLE IF NOT EXISTS character_items (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   character_id INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
-  item_id INTEGER REFERENCES items(id),               -- NULL = freeform custom item
+  item_id INTEGER REFERENCES gear(id),                -- NULL = freeform custom item
   custom_name TEXT,                                   -- required for freeform items
   qty INTEGER NOT NULL DEFAULT 1,
   equipped INTEGER NOT NULL DEFAULT 0,
@@ -213,3 +215,11 @@ WHERE EXISTS (SELECT 1 FROM pragma_table_info('skills') WHERE name = 'note');
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '003-class-soft-delete.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('imported_classes') WHERE name = 'deleted_at');
+
+-- A rename needs both halves checked. The CREATE above makes an empty `gear`
+-- on a database that still has a populated `items`, so "gear exists" alone
+-- would record this migration on a database that has not actually had it.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '004-items-to-gear.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'gear')
+  AND NOT EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'items');

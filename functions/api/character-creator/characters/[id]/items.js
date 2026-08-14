@@ -14,7 +14,7 @@ export async function onRequestPost({ request, env, params }) {
   const b = await request.json();
   let itemId = null;
   if (b.slug) {
-    const item = await env.DB.prepare('SELECT id FROM items WHERE slug = ?').bind(b.slug).first();
+    const item = await env.DB.prepare('SELECT id FROM gear WHERE slug = ?').bind(b.slug).first();
     if (!item) return json({ error: `No catalog item with slug: ${b.slug}` }, 400);
     itemId = item.id;
   } else if (!b.custom_name) {

@@ -50,7 +50,7 @@ async function missingFrom(env, table, column, names) {
 
 export async function crossReference(env, requestUrl, data) {
   const [items, skills, spells, psionics] = await Promise.all([
-    missingFrom(env, 'items', 'slug', (data.equipment_starting || []).map((e) => e?.item_id).filter(Boolean)),
+    missingFrom(env, 'gear', 'slug', (data.equipment_starting || []).map((e) => e?.item_id).filter(Boolean)),
     missingFrom(env, 'skills', 'name', referencedSkills(data)),
     missingFrom(env, 'spells', 'name', nameList(data.magic?.spells)),
     missingFrom(env, 'psionic_powers', 'name', nameList(data.psionics?.powers)),
@@ -105,7 +105,7 @@ export function buildStubStatements(env, missing, { system, sourceBook }) {
   for (const slug of missing.items) {
     created.items.push({ slug, name: titleize(slug) });
     statements.push(env.DB.prepare(
-      `INSERT OR IGNORE INTO items (slug, name, system, description, source_book)
+      `INSERT OR IGNORE INTO gear (slug, name, system, description, source_book)
        VALUES (?, ?, ?, ?, ?)`
     ).bind(slug, titleize(slug), system, 'STUB — created by class import, needs stats', sourceBook ?? null));
   }

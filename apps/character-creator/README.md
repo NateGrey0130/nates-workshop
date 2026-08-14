@@ -117,7 +117,7 @@ ppe and isp.
 | Table | Notes |
 |---|---|
 | `imported_classes` | Class definitions as markdown. `status` is `draft` or `published`; only published classes appear in the app. `deleted_at` NULL means live — retiring a published class hides it from the pickers without destroying it, and drafts are still deleted outright. |
-| `items` | Gear catalog. `slug` is what `equipment_starting[].item_id` references. |
+| `gear` | Gear catalog. `slug` is what `equipment_starting[].item_id` references. Named `gear`, not `items`, to stay clear of MediaVault's `media_items` in the shared database. |
 | `skills` | `base` 0 means non-percentile (W.P.s, hand to hand). `systems` is a JSON array; NULL means both. `note` carries oddities like `40%/30% climb/rappel`. |
 | `spells` | name, level, ppe. |
 | `psionic_powers` | name, category (Healing/Physical/Sensitive/Super), isp. |
@@ -217,7 +217,7 @@ writes are gated (see [Permissions](#permissions)).
 | `me` | GET | Caller's email and `is_admin` |
 | `classes` | GET | Published classes, parsed. `?system=` `?category=` `?include_retired=1` |
 | `catalogs` | GET | Skills, spells, psionic powers in one call |
-| `items` | GET | Gear catalog. `?system=` |
+| `items` | GET | Gear catalog (table is `gear`). `?system=` |
 | `campaigns` | GET / POST | List; create (caller becomes GM) |
 | `campaigns/[id]` | GET / PATCH | Details (`gm_notes` stripped for non-GM); edit `gm_notes` |
 | `characters` | GET / POST | List (`?campaign_id=`); create at level 1 |
@@ -420,6 +420,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `001-character-detail.sql` | `bio`, `combat`, `saves`, `armor` on `characters` |
 | `002-catalog-provenance.sql` | `source_book` + `note` on `skills`; `source_book` on `spells`, `psionic_powers` |
 | `003-class-soft-delete.sql` | `deleted_at` on `imported_classes` |
+| `004-items-to-gear.sql` | renames `items` to `gear`. **Not additive** — apply immediately before the matching deploy, not ahead of it |
 
 ### The migration convention
 
@@ -494,8 +495,11 @@ importers end in a review step. Do not bulk-accept a new book's first run.
 updates would be a real refactor. Editing state is preserved across the
 re-renders that add or remove armor, but that is a patch rather than a fix.
 
-**`items` is a generic name in a shared database.** It sits alongside MediaVault's
-`media_items`. No collision today, but it is the most likely future one.
+**The gear catalog's table is `gear`, its API route is `/items`.** The table was
+renamed away from `items` to stay clear of MediaVault's `media_items`; the route
+was deliberately left alone, since both the wizard and the sheet call it and the
+blast radius was not worth end-to-end naming purity. `character_items` and its
+`item_id` column keep their names too — only the catalog table was ambiguous.
 
 **No pagination.** The journal endpoint takes a `limit` (default 200), but
 character, campaign, item and catalog lists are unbounded. Fine at friends scale.
