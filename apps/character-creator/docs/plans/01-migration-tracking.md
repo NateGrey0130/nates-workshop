@@ -49,22 +49,37 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
    ```sql
    INSERT OR IGNORE INTO schema_migrations (filename) VALUES ('001-character-detail.sql');
    ```
-4. **Backfill production and local.** Both databases already have 001 and 002
-   applied but no rows. Write `db/migrations/003-migration-tracking.sql` that
-   creates the table (for databases that predate the `schema.sql` change) and
-   inserts rows for 001 and 002 with `INSERT OR IGNORE`. This is the one
-   migration that must be safe to run on a database in any prior state.
+4. **Seed the table from `db/schema.sql`, guarded per feature.** A database built
+   from `schema.sql` already contains every column the migrations add, so it is
+   current the moment it exists and should say so.
+
+   But on an *existing* database every `CREATE` in `schema.sql` is skipped —
+   which is why migrations exist at all. An unconditional insert would therefore
+   mark an old, un-migrated database as migrated, exactly the lie this table
+   exists to prevent. So guard each seeded row against the schema feature its
+   migration adds:
+
+   ```sql
+   INSERT OR IGNORE INTO schema_migrations (filename)
+   SELECT '001-character-detail.sql'
+   WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'bio');
+   ```
+
+   This also backfills production and local, since `schema.sql` is safe to
+   re-run. **No `003` backfill migration is needed** — an earlier draft of this
+   plan called for one before the guarded-seed approach made it redundant.
 5. Document the convention in the app README's Production configuration section,
    replacing the `pragma_table_info` advice with:
    ```sql
    SELECT filename, applied_at FROM schema_migrations ORDER BY filename;
    ```
-6. Update the migrations table in the README to include 003.
 
 ## Convention to document
 
 - Filenames are `NNN-kebab-description.sql`, applied in ascending order.
 - Every migration ends with its own `INSERT OR IGNORE INTO schema_migrations`.
+- Every migration also gets a **guarded** seed line in `db/schema.sql`. This is
+  the step easiest to forget; the smoke test is what catches it.
 - Migrations are never edited after being applied anywhere. A mistake gets a new
   numbered file.
 - `db/schema.sql` remains the idempotent full-create path for new databases;
@@ -72,13 +87,22 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
 
 ## Acceptance
 
-- `SELECT filename FROM schema_migrations ORDER BY filename` returns 001, 002,
-  and 003 on both local and production after backfill.
-- Re-running 003 against an already-migrated database succeeds and changes
-  nothing.
+- `SELECT filename FROM schema_migrations ORDER BY filename` returns 001 and 002
+  on both local and production after applying `schema.sql`.
+- A guard on a column that does not exist inserts nothing — verify both
+  directions, not just the matching one.
 - `wrangler d1 execute DB --local --file db/schema.sql` on an empty database
-  still produces a working schema.
+  still produces a working schema, recorded as current.
+- The smoke test fails when a migration file has no row, and when a row has no
+  file.
 - `node apps/character-creator/test/smoke.mjs` passes.
+
+## As built
+
+Landed in [#15](https://github.com/NateGrey0130/nates-workshop/pull/15). Matches
+this plan apart from the dropped `003` file described above. Production verified:
+both guards matched, which independently confirms production really does have
+001's `bio` column and 002's `note` column.
 
 ## Out of scope
 
