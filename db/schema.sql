@@ -177,7 +177,16 @@ CREATE TABLE IF NOT EXISTS spells (
   level INTEGER NOT NULL DEFAULT 0,
   ppe INTEGER NOT NULL DEFAULT 0,
   source TEXT NOT NULL DEFAULT 'seed',
-  source_book TEXT
+  source_book TEXT,
+  -- Stat block. TEXT rather than numbers because book values are prose as often
+  -- as figures: "100 feet per level of experience", "2D6 melee rounds".
+  range TEXT,
+  duration TEXT,
+  damage TEXT,
+  saving_throw TEXT,
+  area_of_effect TEXT,
+  casting_time TEXT,
+  description TEXT
 );
 
 CREATE TABLE IF NOT EXISTS psionic_powers (
@@ -216,6 +225,37 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '003-class-soft-delete.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('imported_classes') WHERE name = 'deleted_at');
 
+-- ═══════════════════════════════════════════════════════════════════
+-- Resumable catalog imports. A spell chapter is hundreds of entries across
+-- many pages, so extracted rows are staged here rather than living in a
+-- browser tab. Catalog-agnostic on purpose — psionics and gear reuse them.
+-- ═══════════════════════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS import_sessions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  catalog TEXT NOT NULL,                -- spells | psionics | gear | skills
+  name TEXT NOT NULL,
+  source_book TEXT,
+  created_by TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  closed_at TEXT                        -- NULL = still open
+);
+CREATE INDEX IF NOT EXISTS idx_import_sessions_open ON import_sessions (catalog, closed_at);
+
+CREATE TABLE IF NOT EXISTS import_staged (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id INTEGER NOT NULL REFERENCES import_sessions(id) ON DELETE CASCADE,
+  page_range TEXT,
+  payload TEXT NOT NULL,                -- JSON: the extracted row
+  match_name TEXT,                      -- catalog row this duplicates, if any
+  is_stub INTEGER NOT NULL DEFAULT 0,
+  differs INTEGER NOT NULL DEFAULT 0,
+  action TEXT NOT NULL DEFAULT 'insert',-- insert | update | ignore
+  resolved_name TEXT,                   -- distinguishing name for "keep both"
+  confirmed_at TEXT,                    -- NULL = not yet applied
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_import_staged_session ON import_staged (session_id, confirmed_at);
+
 -- A rename needs both halves checked. The CREATE above makes an empty `gear`
 -- on a database that still has a populated `items`, so "gear exists" alone
 -- would record this migration on a database that has not actually had it.
@@ -223,3 +263,11 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '004-items-to-gear.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'gear')
   AND NOT EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'items');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '005-spell-detail.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('spells') WHERE name = 'saving_throw');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '006-import-sessions.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'import_staged');

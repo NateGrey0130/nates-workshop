@@ -5,7 +5,10 @@
 'use strict';
 
 const I = { isAdmin: false, email: null, extracting: false, result: null, confirmed: null, stored: [],
-            mode: 'class', skills: null, skillsDone: null, retiredView: false, retiredCount: 0 };
+            mode: 'class', skills: null, skillsDone: null, retiredView: false, retiredCount: 0,
+            // Spell imports run over several sittings, so the work lives in a
+            // session on the server rather than in this tab.
+            sessions: [], session: null, staged: [], spellMsg: null };
 const $ = (id) => document.getElementById(id);
 
 async function api(path, opts) {
@@ -15,6 +18,16 @@ async function api(path, opts) {
   return data;
 }
 const jsonReq = (body) => ({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+
+// The PDF goes to the API as base64 and on to Claude as a document attachment.
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(String(fr.result).split(',')[1]);
+    fr.onerror = () => reject(new Error('Could not read the file'));
+    fr.readAsDataURL(file);
+  });
+}
 
 async function boot() {
   try {
@@ -47,6 +60,9 @@ function render() {
     if (I.skills) return renderSkillsReview();
     return renderSkillsUpload();
   }
+  if (I.mode === 'spells') {
+    return I.session ? renderSpellSession() : renderSpellSessions();
+  }
   if (I.confirmed) return renderConfirmed();
   if (I.result) return renderReview();
   renderUpload();
@@ -60,12 +76,17 @@ function modeTabs() {
       <span class="imp-tab-label">${label}</span>
       <span class="imp-tab-sub">${sub}</span>
     </button>`;
-  return `<div class="imp-tabs noprint">
+  return `<div class="imp-tabs cols-3 noprint">
     ${tab('class', 'Classes', 'One O.C.C./R.C.C. per upload')}
     ${tab('skills', 'Skills', 'A skill chapter — many at once')}
+    ${tab('spells', 'Spells', 'A whole chapter, over several sittings')}
   </div>`;
 }
-function setMode(m) { I.mode = m; render(); }
+function setMode(m) {
+  I.mode = m;
+  if (m === 'spells') { loadSessions(); return; }
+  render();
+}
 
 // ─── Skills: upload ───
 function renderSkillsUpload() {
@@ -101,12 +122,7 @@ async function runSkillExtract() {
   I.extracting = true; $('go').disabled = true;
   $('msg').textContent = `Reading ${file.name}…`;
   try {
-    const b64 = await new Promise((resolve, reject) => {
-      const fr = new FileReader();
-      fr.onload = () => resolve(String(fr.result).split(',')[1]);
-      fr.onerror = () => reject(new Error('Could not read the file'));
-      fr.readAsDataURL(file);
-    });
+    const b64 = await fileToBase64(file);
     $('msg').textContent = 'Extracting — a dense skill chapter takes a while…';
     const res = await api('import/skills/extract', jsonReq({
       pdf_base64: b64,
@@ -350,12 +366,7 @@ async function runExtract() {
   $('go').disabled = true;
   $('msg').textContent = `Reading ${file.name}…`;
   try {
-    const b64 = await new Promise((resolve, reject) => {
-      const fr = new FileReader();
-      fr.onload = () => resolve(String(fr.result).split(',')[1]);
-      fr.onerror = () => reject(new Error('Could not read the file'));
-      fr.readAsDataURL(file);
-    });
+    const b64 = await fileToBase64(file);
     $('msg').textContent = 'Extracting — this takes a while for a dense page…';
     I.result = await api('import/extract', jsonReq({
       pdf_base64: b64,
@@ -487,5 +498,189 @@ function downloadMd() {
   URL.revokeObjectURL(a.href);
 }
 async function startOver() { I.result = null; I.confirmed = null; await loadStored(); render(); }
+
+// ─── Spell import sessions ──────────────────────────────────────────────
+// A spell chapter is hundreds of entries over many pages, so it does not fit
+// one sitting. Extractions are staged server-side the moment they parse; this
+// tab is just a window onto that.
+
+async function loadSessions() {
+  try {
+    I.sessions = (await api('import/sessions?catalog=spells')).sessions || [];
+  } catch (err) { I.sessions = []; I.spellMsg = { text: err.message, error: true }; }
+  I.session = null; I.staged = [];
+  render();
+}
+
+async function openSession(id) {
+  try {
+    const res = await api('import/sessions?id=' + encodeURIComponent(id));
+    I.session = res.session;
+    I.staged = res.staged || [];
+    I.spellMsg = null;
+  } catch (err) { I.spellMsg = { text: err.message, error: true }; }
+  render();
+}
+
+async function newSession() {
+  const name = prompt('Name this import (e.g. "Rifts Core — spell chapter")');
+  if (!name) return;
+  const book = prompt('Source book label (optional)') || null;
+  try {
+    const res = await api('import/sessions', jsonReq({ catalog: 'spells', name, source_book: book }));
+    await openSession(res.id);
+  } catch (err) { I.spellMsg = { text: err.message, error: true }; render(); }
+}
+
+async function closeSession(id) {
+  if (!confirm('Close this import? Anything still pending stays unimported.')) return;
+  try {
+    await api(`import/sessions?id=${encodeURIComponent(id)}&close=1`, { method: 'POST' });
+    await loadSessions();
+  } catch (err) { I.spellMsg = { text: err.message, error: true }; render(); }
+}
+
+function renderSpellSessions() {
+  const rows = I.sessions.map((s) => `
+    <div class="miss-row">
+      <span class="slug">#${s.id}</span>
+      <span><b>${escHtml(s.name)}</b></span>
+      <span class="muted small">${escHtml(s.source_book || 'no book label')}</span>
+      <span class="muted small">${s.confirmed_count}/${s.staged_count} imported</span>
+      <span style="margin-left:auto; display:flex; gap:6px">
+        <button class="btn btn-sm" onclick="openSession(${s.id})">Open</button>
+        <button class="btn btn-sm btn-ghost" onclick="closeSession(${s.id})">Close</button>
+      </span>
+    </div>`).join('');
+
+  $('app').innerHTML = `
+  ${modeTabs()}
+  <div class="panel">
+    <h2 style="margin-top:0">Spell imports</h2>
+    <p class="muted small">A spell chapter is far more than one upload's worth. Start an import,
+      feed it a page range at a time, and confirm in batches — it keeps its place between visits.</p>
+    ${I.spellMsg ? `<p class="${I.spellMsg.error ? 'err' : 'muted'} small">${escHtml(I.spellMsg.text)}</p>` : ''}
+    ${rows || '<p class="muted small">No imports open.</p>'}
+    <div class="imp-actions" style="margin-top:12px">
+      <button class="btn" onclick="newSession()">+ Start an import</button>
+    </div>
+  </div>`;
+}
+
+function renderSpellSession() {
+  const s = I.session;
+  const pending = I.staged.filter((r) => !r.confirmed_at);
+  const done = I.staged.length - pending.length;
+
+  const row = (r) => {
+    const opts = ['insert', 'update', 'ignore']
+      .filter((a) => a !== 'update' || r.status === 'duplicate')
+      .map((a) => `<option value="${a}"${r.action === a ? ' selected' : ''}>${a}</option>`).join('');
+    return `
+    <div class="miss-row">
+      <span><b>${escHtml(r.name || '(unnamed)')}</b></span>
+      <span class="muted small">L${r.level ?? 0} · ${r.ppe ?? 0} P.P.E.</span>
+      ${r.status === 'duplicate'
+        ? `<span class="tag">${r.is_stub ? 'stub' : 'in catalog'}${r.differs ? ' · differs' : ''}</span>`
+        : '<span class="badge-live">new</span>'}
+      <span class="muted small">${escHtml(r.page_range || '')}</span>
+      <span style="margin-left:auto; display:flex; gap:6px; align-items:center">
+        <select data-staged="${r.id}" onchange="setStagedAction(${r.id}, this.value)">${opts}</select>
+        <input type="text" placeholder="keep both as…" value="${escHtml(r.resolved_name || '')}"
+               style="width:180px" oninput="setStagedName(${r.id}, this.value)">
+      </span>
+    </div>`;
+  };
+
+  $('app').innerHTML = `
+  ${modeTabs()}
+  <div class="panel">
+    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap">
+      <h2 style="margin:0">${escHtml(s.name)}</h2>
+      <span class="muted small">${escHtml(s.source_book || 'no book label')} · ${done} imported, ${pending.length} pending</span>
+      <span style="margin-left:auto"><button class="btn btn-sm btn-ghost" onclick="loadSessions()">← all imports</button></span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3 style="margin-top:0">Add a page range</h3>
+    <p class="muted small">Keep it small — spell entries are long, and a reply that overruns the
+      output limit is rejected rather than half-saved.</p>
+    <input type="file" id="spell-pdf" accept="application/pdf">
+    <div class="rowline" style="margin-top:8px">
+      <input type="text" id="spell-pages" placeholder="Page range label, e.g. pp. 180-181" style="flex:1">
+      <input type="number" id="spell-level" placeholder="Level" style="width:90px">
+    </div>
+    <textarea id="spell-hints" rows="2" placeholder="Anything that would help the extraction…"></textarea>
+    <div class="imp-actions" style="margin-top:8px">
+      <button class="btn" id="spell-go" onclick="runSpellExtract()"${I.extracting ? ' disabled' : ''}>
+        ${I.extracting ? 'Extracting…' : 'Extract this range'}</button>
+      <span id="spell-msg" class="${I.spellMsg?.error ? 'err' : 'muted'} small">${escHtml(I.spellMsg?.text || '')}</span>
+    </div>
+  </div>
+
+  ${pending.length ? `<div class="panel">
+    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:8px">
+      <h3 style="margin:0">Pending — ${pending.length}</h3>
+      <span style="margin-left:auto; display:flex; gap:6px">
+        <button class="btn btn-sm btn-ghost" onclick="setAllStaged('ignore')">All ignore</button>
+        <button class="btn btn-sm btn-ghost" onclick="setAllStaged('insert')">All insert</button>
+        <button class="btn" onclick="confirmSpells()">Import these</button>
+      </span>
+    </div>
+    ${pending.map(row).join('')}
+  </div>` : '<div class="panel"><p class="muted small">Nothing pending. Add a page range above.</p></div>'}`;
+}
+
+function setStagedAction(id, action) {
+  const r = I.staged.find((x) => x.id === id);
+  if (r) r.action = action;
+}
+function setStagedName(id, name) {
+  const r = I.staged.find((x) => x.id === id);
+  if (r) r.resolved_name = name.trim() || null;
+}
+function setAllStaged(action) {
+  for (const r of I.staged) if (!r.confirmed_at) r.action = action;
+  render();
+}
+
+async function runSpellExtract() {
+  const file = $('spell-pdf')?.files?.[0];
+  if (!file) { I.spellMsg = { text: 'Choose a PDF first.', error: true }; render(); return; }
+  I.extracting = true; I.spellMsg = { text: 'Reading those pages…' }; render();
+  try {
+    const pdf = await fileToBase64(file);
+    const res = await api('import/spells/extract', jsonReq({
+      session_id: I.session.id,
+      pdf_base64: pdf,
+      page_range: $('spell-pages')?.value || null,
+      level: $('spell-level')?.value || null,
+      hints: $('spell-hints')?.value || null,
+    }));
+    I.extracting = false;
+    I.spellMsg = { text: `Staged ${res.staged}${res.skipped ? `, skipped ${res.skipped} already in this import` : ''}.` };
+    await openSession(I.session.id);
+  } catch (err) {
+    I.extracting = false;
+    I.spellMsg = { text: err.message, error: true };
+    render();
+  }
+}
+
+async function confirmSpells() {
+  const overrides = I.staged.filter((r) => !r.confirmed_at)
+    .map((r) => ({ id: r.id, action: r.action, resolved_name: r.resolved_name }));
+  try {
+    const res = await api('import/spells/confirm', jsonReq({ session_id: I.session.id, overrides }));
+    const c = res.counts;
+    I.spellMsg = {
+      text: `Imported ${c.inserted} new, updated ${c.updated}, ignored ${c.ignored}.`
+        + (res.conflicts.length ? ` ${res.conflicts.length} left pending — give them a distinguishing name.` : ''),
+      error: res.conflicts.length > 0,
+    };
+    await openSession(I.session.id);
+  } catch (err) { I.spellMsg = { text: err.message, error: true }; render(); }
+}
 
 boot();
