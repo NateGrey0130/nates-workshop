@@ -1,3 +1,14 @@
+-- ═══════════════════════════════════════════════════════════════════
+-- Migration bookkeeping. Which db/migrations/*.sql files a database has
+-- had applied. Everything else in this file is CREATE ... IF NOT EXISTS,
+-- so re-running it is safe; the seeding block at the bottom keeps this
+-- table honest on databases that predate it.
+-- ═══════════════════════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS schema_migrations (
+  filename   TEXT PRIMARY KEY,
+  applied_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 -- MediaVault library storage, scoped per Cloudflare Access user email
 CREATE TABLE IF NOT EXISTS media_items (
   user_email TEXT NOT NULL,
@@ -171,3 +182,26 @@ CREATE TABLE IF NOT EXISTS psionic_powers (
   source TEXT NOT NULL DEFAULT 'seed',
   source_book TEXT
 );
+
+-- ═══════════════════════════════════════════════════════════════════
+-- Migration seeding. The CREATEs above already contain the columns that
+-- db/migrations/*.sql add, so a database built from this file is current
+-- the moment it exists and should say so.
+--
+-- But on an EXISTING database every CREATE above is skipped, so this file
+-- alone cannot bring old tables up to date — that is what the migrations
+-- are for. An unconditional insert here would therefore mark an old,
+-- un-migrated database as migrated, which is precisely the lie this table
+-- exists to prevent.
+--
+-- So each row is guarded by the schema feature its migration adds. The
+-- record is derived from what the database actually looks like, never
+-- assumed. Add a guarded line here whenever you add a migration.
+-- ═══════════════════════════════════════════════════════════════════
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '001-character-detail.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'bio');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '002-catalog-provenance.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('skills') WHERE name = 'note');

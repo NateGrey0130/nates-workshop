@@ -43,7 +43,7 @@ apps/character-creator/
 │                             (classic script; both the wizard and the sheet use it)
 ├── db/seed-dev.sql           Optional local-dev seed rows; never applied to production
 └── test/
-    ├── smoke.mjs             Parser + schema smoke test
+    ├── smoke.mjs             Parser + schema + migration-state smoke test
     └── fixtures/*.md         Three real class files, parser test input only
 
 functions/api/
@@ -61,9 +61,11 @@ functions/api/
     └── (endpoints — see API surface below)
 
 db/
-├── schema.sql                All tables, every statement IF NOT EXISTS
+├── schema.sql                All tables, every statement IF NOT EXISTS.
+│                             Also seeds schema_migrations, guarded per feature.
 ├── seed-catalogs.sql         One-time move of the original static content into D1
-└── migrations/               One-shot ALTERs; see Production configuration
+└── migrations/               One-shot ALTERs, each recording itself in
+                              schema_migrations; see Production configuration
 ```
 
 Three modules are imported by both the browser and the Workers runtime:
@@ -79,8 +81,9 @@ sheet's plain script can use it without converting the whole file.
 
 ## Data model
 
-Eleven tables in one shared D1 database (`nates-workshop-media`, bound as `DB`).
-`media_items` belongs to MediaVault; the rest are this app.
+Twelve tables in one shared D1 database (`nates-workshop-media`, bound as `DB`).
+`media_items` belongs to MediaVault and `schema_migrations` is database
+bookkeeping shared by both; the rest are this app.
 
 **Character data**
 
@@ -384,14 +387,40 @@ npx wrangler d1 execute nates-workshop-media --remote --file db/schema.sql
 ```
 
 `db/migrations/*.sql` are **one-shot** and cannot be made idempotent, because
-SQLite has no `ADD COLUMN IF NOT EXISTS`. Run each once per environment; a
-re-run failing with "duplicate column name" means it is already applied. Check
-first with `SELECT name FROM pragma_table_info('characters')`.
+SQLite has no `ADD COLUMN IF NOT EXISTS`. Run each once per environment, in
+filename order.
+
+**Ask the database what it has had applied** rather than inferring it from
+columns:
+
+```bash
+npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename, applied_at FROM schema_migrations ORDER BY filename"
+```
 
 | Migration | Adds |
 |---|---|
 | `001-character-detail.sql` | `bio`, `combat`, `saves`, `armor` on `characters` |
 | `002-catalog-provenance.sql` | `source_book` + `note` on `skills`; `source_book` on `spells`, `psionic_powers` |
+
+### The migration convention
+
+- Filenames are `NNN-kebab-description.sql`, applied in ascending order.
+- Every migration **ends by recording itself**:
+  `INSERT OR IGNORE INTO schema_migrations (filename) VALUES ('NNN-….sql');`
+- Migrations are **never edited after being applied anywhere**. A mistake gets a
+  new numbered file.
+- `db/schema.sql` also seeds `schema_migrations`, because a database created from
+  it already contains every column the migrations add and is current the moment
+  it exists. **Each seeded row is guarded by the schema feature its migration
+  adds** — on an existing database every `CREATE` in `schema.sql` is skipped, so
+  an unguarded insert would mark an old, un-migrated database as migrated, which
+  is exactly the lie this table exists to prevent. Add a guarded line to that
+  block whenever you add a migration.
+- The smoke test fails if a file in `db/migrations/` has no matching row, or if a
+  recorded row has no matching file.
+
+Running `db/schema.sql` against an already-current database is therefore how you
+backfill the records — no separate backfill migration is needed.
 
 Merging to `main` is the deploy — Pages auto-deploys, no CI, no build command.
 Cloudflare Access fronts the whole site with the path left blank, so every route

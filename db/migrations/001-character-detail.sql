@@ -14,3 +14,6 @@ ALTER TABLE characters ADD COLUMN bio TEXT NOT NULL DEFAULT '{}';
 ALTER TABLE characters ADD COLUMN combat TEXT NOT NULL DEFAULT '{}';
 ALTER TABLE characters ADD COLUMN saves TEXT NOT NULL DEFAULT '{}';
 ALTER TABLE characters ADD COLUMN armor TEXT NOT NULL DEFAULT '[]';
+
+-- Record this migration as applied. See db/schema.sql for the convention.
+INSERT OR IGNORE INTO schema_migrations (filename) VALUES ('001-character-detail.sql');
