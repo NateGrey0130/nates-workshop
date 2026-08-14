@@ -49,10 +49,17 @@ function render() {
   renderUpload();
 }
 
+// Full-width tabs rather than a muted pill toggle — the page does two distinct
+// jobs and the second one was easy to miss entirely.
 function modeTabs() {
-  return `<div class="toggle noprint">
-    <button class="${I.mode === 'class' ? 'on' : ''}" onclick="setMode('class')">Class (O.C.C./R.C.C.)</button>
-    <button class="${I.mode === 'skills' ? 'on' : ''}" onclick="setMode('skills')">Skills</button>
+  const tab = (mode, label, sub) => `
+    <button class="imp-tab ${I.mode === mode ? 'on' : ''}" onclick="setMode('${mode}')">
+      <span class="imp-tab-label">${label}</span>
+      <span class="imp-tab-sub">${sub}</span>
+    </button>`;
+  return `<div class="imp-tabs noprint">
+    ${tab('class', 'Classes', 'One O.C.C./R.C.C. per upload')}
+    ${tab('skills', 'Skills', 'A skill chapter — many at once')}
   </div>`;
 }
 function setMode(m) { I.mode = m; render(); }

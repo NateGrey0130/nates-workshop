@@ -325,6 +325,39 @@ pre.snippet {
   font-size: 12px;
   line-height: 1.5;
 }
+/* Import mode tabs. Deliberately prominent: the page does two different jobs
+   and the skills one was easy to miss when this was a small pill toggle. */
+.imp-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+@media (max-width: 620px) { .imp-tabs { grid-template-columns: 1fr; } }
+.imp-tab {
+  display: flex; flex-direction: column; gap: 2px;
+  text-align: left; padding: 11px 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.imp-tab:hover { border-color: var(--text-muted); color: var(--text-primary); }
+.imp-tab.on {
+  background: var(--accent-glow);
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+.imp-tab-label { font-size: 15px; font-weight: 600; }
+.imp-tab.on .imp-tab-label { color: var(--accent); }
+.imp-tab-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
 /* One extracted skill awaiting a decision. */
 .imp-row {
   display: grid;
