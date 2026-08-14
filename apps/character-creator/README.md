@@ -407,7 +407,7 @@ a fully successful run.
 
 Honest list, roughly by value.
 
-Most of these are planned out as eleven PRs under
+Most of these are planned out as twelve PRs under
 [`docs/plans/`](docs/plans/README.md), with the design decisions and the
 rejected alternatives recorded per PR.
 
