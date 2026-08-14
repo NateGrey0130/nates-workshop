@@ -29,14 +29,22 @@ const nameList = (arr) => (arr || [])
   .map((x) => (typeof x === 'string' ? x : x?.name))
   .filter(Boolean);
 
+// Looked up in batches: the name list comes from model-extracted class data and
+// is effectively unbounded, while D1 caps bound parameters per query.
+const LOOKUP_BATCH = 50;
+
 async function missingFrom(env, table, column, names) {
   const wanted = [...new Set(names)];
   if (!wanted.length) return [];
-  const placeholders = wanted.map(() => '?').join(',');
-  const { results } = await env.DB
-    .prepare(`SELECT ${column} AS key FROM ${table} WHERE ${column} IN (${placeholders})`)
-    .bind(...wanted).all();
-  const known = new Set(results.map((r) => norm(r.key)));
+  const known = new Set();
+  for (let i = 0; i < wanted.length; i += LOOKUP_BATCH) {
+    const batch = wanted.slice(i, i + LOOKUP_BATCH);
+    const placeholders = batch.map(() => '?').join(',');
+    const { results } = await env.DB
+      .prepare(`SELECT ${column} AS key FROM ${table} WHERE ${column} IN (${placeholders})`)
+      .bind(...batch).all();
+    for (const r of results) known.add(norm(r.key));
+  }
   return wanted.filter((w) => !known.has(norm(w)));
 }
 
@@ -90,7 +98,7 @@ const titleize = (slug) => String(slug).split('-')
  * by catalog, so the UI can report it. INSERT OR IGNORE keeps this safe against
  * a concurrent import creating the same name.
  */
-export async function createStubs(env, missing, { system, sourceBook }) {
+export function buildStubStatements(env, missing, { system, sourceBook }) {
   const created = { items: [], skills: [], spells: [], psionics: [] };
   const statements = [];
 
@@ -122,6 +130,5 @@ export async function createStubs(env, missing, { system, sourceBook }) {
     ).bind(name, category, 'import'));
   }
 
-  if (statements.length) await env.DB.batch(statements);
-  return created;
+  return { created, statements };
 }

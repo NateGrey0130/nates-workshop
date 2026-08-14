@@ -27,6 +27,9 @@ export function isChoiceGroup(entry) {
 
 // ---------- scalar helpers ----------
 
+// Strips a trailing YAML comment. Per the YAML rule, `#` only starts a comment
+// at the start of a line or after whitespace — so prose like "Note #7" and
+// "don't" survive intact. Sourcebook text is full of both.
 function stripComment(line) {
   let inQuote = null;
   for (let i = 0; i < line.length; i++) {
@@ -35,7 +38,7 @@ function stripComment(line) {
       if (ch === inQuote) inQuote = null;
     } else if (ch === '"' || ch === "'") {
       inQuote = ch;
-    } else if (ch === '#') {
+    } else if (ch === '#' && (i === 0 || line[i - 1] === ' ' || line[i - 1] === '\t')) {
       return line.slice(0, i);
     }
   }
@@ -116,14 +119,42 @@ function parseInlineValue(s) {
 
 // ---------- block (indentation) parser ----------
 
+// Each line keeps both its comment-stripped form (used for structure) and its
+// raw form (used verbatim for block-scalar bodies, where a `#` is content, not
+// a comment). `gap` records that a blank line preceded it, so paragraph breaks
+// inside a block scalar survive.
+//
+// Known limitation: a block-scalar body line whose first non-space character is
+// `#` is still treated as a comment and dropped.
 function toLines(text) {
   const lines = [];
+  let gap = false;
   for (const raw of text.split(/\r?\n/)) {
+    if (raw.trim() === '') { gap = true; continue; }
     const stripped = stripComment(raw);
-    if (stripped.trim() === '') continue;
-    lines.push({ indent: stripped.length - stripped.trimStart().length, text: stripped.trim() });
+    if (stripped.trim() === '') continue; // comment-only line
+    lines.push({
+      indent: stripped.length - stripped.trimStart().length,
+      text: stripped.trim(),
+      rawText: raw.trimEnd(),
+      rawIndent: raw.length - raw.trimStart().length,
+      gap,
+    });
+    gap = false;
   }
   return lines;
+}
+
+// Joins a block-scalar body: `|` keeps line breaks, `>` folds to spaces, and a
+// blank line in the source becomes a paragraph break in either style.
+function joinBlock(body, style) {
+  let out = '';
+  body.forEach((line, idx) => {
+    if (idx === 0) { out = line.text; return; }
+    out += line.gap ? '\n\n' : (style === '|' ? '\n' : ' ');
+    out += line.text;
+  });
+  return out.trim();
 }
 
 // Parses lines[start...] at exactly `indent`; returns [value, nextIndex].
@@ -143,12 +174,18 @@ function parseMap(lines, start, indent) {
     const [key, val] = kv;
     i++;
     if (BLOCK_SCALAR.test(val)) {
-      // `key: |` / `key: >` — long free text continued on indented lines.
-      // Note: blank lines were already dropped by toLines(), so paragraph
-      // breaks inside a block collapse to a single break.
+      // `key: |` / `key: >` — long free text on indented lines. The body is
+      // taken raw: sourcebook prose is full of `#` and apostrophes, and none of
+      // it is YAML syntax.
       const body = [];
-      while (i < lines.length && lines[i].indent > indent) { body.push(lines[i].text); i++; }
-      map[key] = body.join(val[0] === '|' ? '\n' : ' ').trim();
+      let baseIndent = null;
+      while (i < lines.length && lines[i].indent > indent) {
+        const line = lines[i];
+        if (baseIndent === null) baseIndent = line.rawIndent;
+        body.push({ text: line.rawText.slice(Math.min(baseIndent, line.rawIndent)), gap: line.gap });
+        i++;
+      }
+      map[key] = joinBlock(body, val[0]);
     } else if (val !== '') {
       map[key] = parseInlineValue(val);
     } else if (i < lines.length && lines[i].indent > indent) {

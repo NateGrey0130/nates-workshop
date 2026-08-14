@@ -4,7 +4,7 @@
 // Rules enforcement (skill counts/categories, attribute minimums) happens in the
 // creation UI; the server checks shape and ownership-relevant facts only.
 
-import { getUserEmail, unauthorized, json } from './_lib/auth.js';
+import { getUserEmail, unauthorized, json, readJson } from './_lib/auth.js';
 
 // GET /api/character-creator/characters — list for linking to sheets (optionally ?campaign_id=)
 export async function onRequestGet({ request, env }) {
@@ -28,7 +28,8 @@ export async function onRequestPost({ request, env }) {
   const email = getUserEmail(request);
   if (!email) return unauthorized();
 
-  const b = await request.json();
+  const b = await readJson(request);
+  if (!b) return json({ error: 'Invalid JSON body' }, 400);
   for (const field of ['campaign_id', 'name', 'class_id']) {
     if (!b[field]) return json({ error: `Missing required field: ${field}` }, 400);
   }

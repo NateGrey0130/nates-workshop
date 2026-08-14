@@ -4,7 +4,7 @@
 // POST /api/character-creator/journal — character-level entries need owner/GM
 //      of that character; campaign-level entries (no character_id) need the GM.
 
-import { getUserEmail, unauthorized, json, forbidden, characterAccess, campaignAccess } from './_lib/auth.js';
+import { getUserEmail, unauthorized, json, forbidden, characterAccess, campaignAccess, readJson } from './_lib/auth.js';
 
 export async function onRequestGet({ request, env }) {
   if (!getUserEmail(request)) return unauthorized();
@@ -13,13 +13,30 @@ export async function onRequestGet({ request, env }) {
   const characterId = url.searchParams.get('character_id');
   if (!campaignId) return json({ error: 'campaign_id is required' }, 400);
 
-  const stmt = characterId
-    ? env.DB.prepare(
-        'SELECT * FROM journal_entries WHERE campaign_id = ? AND character_id = ? ORDER BY created_at DESC, id DESC'
-      ).bind(campaignId, characterId)
-    : env.DB.prepare(
-        'SELECT * FROM journal_entries WHERE campaign_id = ? ORDER BY created_at DESC, id DESC'
-      ).bind(campaignId);
+  // A character sheet wants that character's entries plus campaign-level ones,
+  // which is a filter only the server can express — it used to fetch the whole
+  // campaign's log and discard the rest client-side.
+  const includeCampaign = url.searchParams.get('include_campaign') === '1';
+  const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit'), 10) || 200, 1), 500);
+
+  let stmt;
+  if (characterId && includeCampaign) {
+    stmt = env.DB.prepare(
+      `SELECT * FROM journal_entries
+       WHERE campaign_id = ? AND (character_id = ? OR character_id IS NULL)
+       ORDER BY created_at DESC, id DESC LIMIT ?`
+    ).bind(campaignId, characterId, limit);
+  } else if (characterId) {
+    stmt = env.DB.prepare(
+      `SELECT * FROM journal_entries WHERE campaign_id = ? AND character_id = ?
+       ORDER BY created_at DESC, id DESC LIMIT ?`
+    ).bind(campaignId, characterId, limit);
+  } else {
+    stmt = env.DB.prepare(
+      `SELECT * FROM journal_entries WHERE campaign_id = ?
+       ORDER BY created_at DESC, id DESC LIMIT ?`
+    ).bind(campaignId, limit);
+  }
   const { results } = await stmt.all();
   return json({ entries: results });
 }
@@ -27,7 +44,8 @@ export async function onRequestGet({ request, env }) {
 export async function onRequestPost({ request, env }) {
   const email = getUserEmail(request);
   if (!email) return unauthorized();
-  const b = await request.json();
+  const b = await readJson(request);
+  if (!b) return json({ error: 'Invalid JSON body' }, 400);
   if (!b.body || typeof b.body !== 'string') return json({ error: 'body is required' }, 400);
 
   let campaignId;

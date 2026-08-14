@@ -3,7 +3,7 @@
 //       spoilers/secrets and is stripped unless the caller is the GM.
 // PATCH /api/character-creator/campaigns/:id — GM only; gm_notes only.
 
-import { getUserEmail, unauthorized, json, forbidden, campaignAccess } from '../_lib/auth.js';
+import { getUserEmail, unauthorized, json, forbidden, campaignAccess, readJson } from '../_lib/auth.js';
 
 export async function onRequestGet({ request, env, params }) {
   const email = getUserEmail(request);
@@ -22,7 +22,8 @@ export async function onRequestPatch({ request, env, params }) {
   if (!access.found) return json({ error: 'Campaign not found' }, 404);
   if (!access.canWrite) return forbidden();
 
-  const body = await request.json();
+  const body = await readJson(request);
+  if (!body) return json({ error: 'Invalid JSON body' }, 400);
   if (!('gm_notes' in body)) return json({ error: 'gm_notes is the only editable field' }, 400);
   await env.DB.prepare('UPDATE campaigns SET gm_notes = ? WHERE id = ?')
     .bind(body.gm_notes ?? null, params.id).run();

@@ -1,7 +1,7 @@
 // GET  /api/character-creator/campaigns            — list campaigns (optionally ?system=)
 // POST /api/character-creator/campaigns {name, system} — create one, GM = caller
 
-import { getUserEmail, unauthorized, json } from './_lib/auth.js';
+import { getUserEmail, unauthorized, json, readJson } from './_lib/auth.js';
 
 export async function onRequestGet({ request, env }) {
   if (!getUserEmail(request)) return unauthorized();
@@ -16,7 +16,8 @@ export async function onRequestGet({ request, env }) {
 export async function onRequestPost({ request, env }) {
   const email = getUserEmail(request);
   if (!email) return unauthorized();
-  const body = await request.json();
+  const body = await readJson(request);
+  if (!body) return json({ error: 'Invalid JSON body' }, 400);
   if (!body.name || !['rifts', 'palladium-fantasy'].includes(body.system)) {
     return json({ error: 'name and a valid system are required' }, 400);
   }

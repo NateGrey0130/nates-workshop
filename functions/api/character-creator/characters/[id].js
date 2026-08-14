@@ -3,7 +3,7 @@
 //       the client whether to show edit controls (server enforces regardless).
 // PATCH /api/character-creator/characters/:id — owner/GM only; current stats + notes.
 
-import { getUserEmail, unauthorized, json, forbidden, characterAccess } from '../_lib/auth.js';
+import { getUserEmail, unauthorized, json, forbidden, characterAccess, readJson } from '../_lib/auth.js';
 
 export async function onRequestGet({ request, env, params }) {
   const email = getUserEmail(request);
@@ -40,7 +40,16 @@ export async function onRequestPatch({ request, env, params }) {
   if (!access.found) return json({ error: 'Character not found' }, 404);
   if (!access.canWrite) return forbidden();
 
-  const body = await request.json();
+  const body = await readJson(request);
+  if (!body) return json({ error: 'Invalid JSON body' }, 400);
+
+  // Current values are clamped to their own maximum: the level-up flow raises
+  // current and max together, and this is the only route that could otherwise
+  // leave them inconsistent (e.g. 9999 / 24 on the sheet).
+  const current = await env.DB.prepare(
+    'SELECT hp_max, sdc_max, mdc_max, ppe_max, isp_max FROM characters WHERE id = ?'
+  ).bind(params.id).first();
+
   const sets = [], binds = [];
   for (const field of PATCHABLE) {
     if (!(field in body)) continue;
@@ -48,6 +57,10 @@ export async function onRequestPatch({ request, env, params }) {
     if (field !== 'notes') {
       v = v === null || v === '' ? null : parseInt(v, 10);
       if (v !== null && !Number.isFinite(v)) return json({ error: `${field} must be a number or null` }, 400);
+      if (v !== null) {
+        const max = current?.[field.replace('_current', '_max')];
+        v = Math.max(0, typeof max === 'number' ? Math.min(v, max) : v);
+      }
     }
     sets.push(`${field} = ?`);
     binds.push(v);
