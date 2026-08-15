@@ -119,6 +119,10 @@ export async function handleSessionConfirm(request, env, catalogKey) {
 
   const result = await applyDecisions(env, getImportSpec(catalogKey), decisions, {
     sourceBook: session.source_book,
+    // Which game system this book is for, chosen once when the session was
+    // opened. Every row confirmed out of it inherits that; NULL stays
+    // unrestricted rather than being guessed at.
+    system: session.system,
   });
   if (result.error) return json({ error: result.error }, result.status);
 

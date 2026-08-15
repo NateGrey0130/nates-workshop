@@ -19,6 +19,7 @@ Access gate. No build step, no framework, no dependencies.
 - [Permissions](#permissions)
 - [House rules and derived values](#house-rules-and-derived-values)
 - [Level-up skill picks](#level-up-skill-picks)
+- [Which system a catalog row belongs to](#which-system-a-catalog-row-belongs-to)
 - [Filtering the catalog pickers](#filtering-the-catalog-pickers)
 - [Unfinished builds are saved](#unfinished-builds-are-saved)
 - [Starting gear the class leaves open](#starting-gear-the-class-leaves-open)
@@ -157,7 +158,7 @@ ppe and isp.
 | `imported_classes` | Class definitions as markdown. `status` is `draft` or `published`; only published classes appear in the app. `deleted_at` NULL means live — retiring a published class hides it from the pickers without destroying it, and drafts are still deleted outright. |
 | `gear` | Gear catalog. `slug` is what `equipment_starting[].item_id` references. Carries a stat block — damage, is_mega_damage, range, payload, rate_of_fire, ar, mdc — null wherever it does not apply, so one table covers weapons, armour and general kit. Named `gear`, not `items`, to stay clear of MediaVault's `media_items`. |
 | `skills` | `base` 0 means non-percentile (W.P.s, hand to hand). `systems` is a JSON array; NULL means both. `note` carries oddities like `40%/30% climb/rappel`. |
-| `spells` | name, level, ppe, plus a stat block (range, duration, damage, saving throw, area of effect, casting time, description). The stat block is TEXT — books write "100 feet per level" as often as a number. |
+| `spells` | `system` NULL means unrestricted. name, level, ppe, plus a stat block (range, duration, damage, saving throw, area of effect, casting time, description). The stat block is TEXT — books write "100 feet per level" as often as a number. |
 | `psionic_powers` | name, category (Healing/Physical/Sensitive/Super), isp, plus range, duration, saving throw and description — the same field names spells use. `min_tier` is the psychic tier a book states is required; NULL means no restriction beyond the category. |
 
 | `character_drafts` | One unfinished wizard build per person, `UNIQUE (owner_email)`. `state` is the build as JSON — deliberately not the catalogs it was built against. Its own table rather than a `draft` status on `characters`; see [Unfinished builds are saved](#unfinished-builds-are-saved). |
@@ -281,7 +282,7 @@ writes are gated (see [Permissions](#permissions)).
 | `import/extract` | POST | Admin. PDF → class markdown; autosaves a draft |
 | `import/recheck` | POST | Admin. Re-parse edited markdown, no API spend |
 | `import/confirm` | POST | Admin. Publish class + create catalog stubs |
-| `import/sessions` | GET / POST | Admin. Resumable catalog imports: list (`?catalog=`), fetch one with its staged rows (`?id=`), create, close |
+| `import/sessions` | GET / POST | Admin. Resumable catalog imports: list (`?catalog=`), fetch one with its staged rows (`?id=`), create, close. `system` on create is stamped on every row the session imports |
 | `import/spells/extract` `import/psionics/extract` `import/gear/extract` | POST | Admin. One page range into a session; stages, writes no catalog rows |
 | `import/spells/confirm` `import/psionics/confirm` `import/gear/confirm` | POST | Admin. Applies a session's pending rows as one batch |
 | `import/stored` | GET / DELETE / POST | Admin. List (`?retired=1`), fetch, retire-or-delete, and POST to restore |
@@ -383,6 +384,47 @@ Spending consumes the oldest grant first, and a grant only partly spent stays
 pending with its count reduced — so two picks earned at level 3 can be taken one
 at a time. Both paths write the skills and the claim in a single batch, because
 a pick that consumed its grant without landing on the sheet would be lost.
+
+---
+
+## Which system a catalog row belongs to
+
+Every catalog row can now say which game system it is for, and an import session
+says it once for the whole book rather than per page.
+
+**Nothing used to set it.** `gear.system` and `skills.systems` existed, but only
+the *class* importer's stub creation wrote them, from the class being imported.
+So the 34 items from the first real gear import landed NULL while the stubs
+around them said `rifts`, and `/items?system=rifts` — which matched only `rifts`
+or `both` — hid every one of them from the character sheet while the wizard
+showed all 74. Spells and psionic powers had no system column at all, which is a
+real modelling gap: Palladium Fantasy and Rifts have substantially different
+spell lists.
+
+| Catalog | Column | Shape |
+|---|---|---|
+| skills | `systems` | JSON array — `["rifts"]` |
+| spells, psionics, gear | `system` | one of `rifts`, `palladium-fantasy`, `both` |
+
+**NULL means unrestricted, everywhere.** That is how `skills.systems` has always
+read, and it is the honest answer when the operator does not know or the book
+covers both — `both` and *unset* both store NULL rather than inventing a
+restriction.
+
+Starting an import asks which system the book is for. Every row confirmed out of
+that session inherits it, with two deliberate limits:
+
+- **Stamped on INSERT only.** An update is a correction to a row's numbers from
+  a book; silently reclassifying which system an existing row belongs to is a
+  much larger claim, and not one you asked for.
+- **The book wins over the session.** If extraction produced the column itself,
+  what the page actually said is kept.
+
+The wizard filters spells and psionic powers by the build's system, the same way
+it already filtered skills. Rows already sitting at NULL can be classified with
+[`db/backfill-gear-system.sql`](db/backfill-gear-system.sql), which infers from
+the source book, only touches rows that are still NULL, and leaves anything it
+cannot recognise alone rather than guessing.
 
 ---
 
@@ -1051,11 +1093,17 @@ exit code — `wrangler d1 execute` has been observed reporting a non-zero exit 
 a fully successful run. Twice now, in different disguises:
 
 - a plain non-zero exit on a run that fully applied
-- `Authentication error [code: 10000]` from `--remote --file`, on a migration
-  that had *already landed*. `--file` does not run your SQL over the query API:
-  it uploads the file, triggers D1's separate **import** endpoint, then polls
-  it. A failure late in that sequence is reported as if the whole thing failed,
-  and an auth-shaped message sends you off checking credentials that are fine.
+- `Authentication error [code: 10000]` from `--remote --file`. `--file` does not
+  run your SQL over the query API: it uploads the file, triggers D1's separate
+  **import** endpoint, then polls it. That endpoint is the unreliable part —
+  the same command, same token, minutes apart, has both **succeeded while
+  printing this error** (011, which had fully landed) and **genuinely failed**
+  (012, which had not applied at all). The message is auth-shaped either way and
+  sends you off checking credentials that are working fine.
+
+  **Prefer `--command` for remote migrations.** It goes over the query API,
+  takes multiple statements separated by `;`, and has not failed. Use `--file`
+  locally, where none of this applies.
 
 The check that settles it, every time:
 

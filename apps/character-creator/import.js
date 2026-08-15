@@ -549,12 +549,34 @@ async function openSession(id) {
   render();
 }
 
+// Which system the book is for, asked once per import rather than per page.
+// Anything unrecognised — including an empty answer — means unrestricted, which
+// is the honest result when the operator does not know or the book covers both.
+// Kept to prompts to match the rest of this flow; the answer matters far more
+// than the widget.
+function askSystem() {
+  const raw = (prompt(
+    'Which game system is this book for?
+
+'
+    + '  r  — Rifts
+'
+    + '  p  — Palladium Fantasy
+'
+    + '  (blank) — both / unsure, imports unrestricted'
+  ) || '').trim().toLowerCase();
+  if (raw.startsWith('r')) return 'rifts';
+  if (raw.startsWith('p')) return 'palladium-fantasy';
+  return null;
+}
+
 async function newSession() {
   const name = prompt('Name this import (e.g. "Rifts Core — spell chapter")');
   if (!name) return;
   const book = prompt('Source book label (optional)') || null;
+  const system = askSystem();
   try {
-    const res = await api('import/sessions', jsonReq({ catalog: I.mode, name, source_book: book }));
+    const res = await api('import/sessions', jsonReq({ catalog: I.mode, name, source_book: book, system }));
     await openSession(res.id);
   } catch (err) { I.sessionMsg = { text: err.message, error: true }; render(); }
 }
@@ -573,6 +595,7 @@ function renderSessions() {
       <span class="slug">#${s.id}</span>
       <span><b>${escHtml(s.name)}</b></span>
       <span class="muted small">${escHtml(s.source_book || 'no book label')}</span>
+      <span class="tag">${escHtml(s.system || 'both systems')}</span>
       <span class="muted small">${s.confirmed_count}/${s.staged_count} imported</span>
       <span style="margin-left:auto; display:flex; gap:6px">
         <button class="btn btn-sm" onclick="openSession(${s.id})">Open</button>
@@ -628,7 +651,7 @@ function renderSession() {
   <div class="panel">
     <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap">
       <h2 style="margin:0">${escHtml(s.name)}</h2>
-      <span class="muted small">${escHtml(s.source_book || 'no book label')} · ${done} imported, ${pending.length} pending</span>
+      <span class="muted small">${escHtml(s.source_book || 'no book label')} · ${escHtml(s.system || 'both systems')} · ${done} imported, ${pending.length} pending</span>
       <span style="margin-left:auto"><button class="btn btn-sm btn-ghost" onclick="loadSessions()">← all imports</button></span>
     </div>
   </div>

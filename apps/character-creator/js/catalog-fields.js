@@ -57,6 +57,8 @@ export const CATALOGS = {
       { name: 'name', label: 'Name', type: 'text', required: true },
       { name: 'level', label: 'Spell level', type: 'int', blankAs: 0 },
       { name: 'ppe', label: 'P.P.E.', type: 'int', blankAs: 0 },
+      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'both'],
+        help: 'Blank means unrestricted — offered to characters in either system.' },
       // Stat block. Text, not numbers — books write "100 feet per level of
       // experience" and "2D6 melee rounds" as often as they write a figure.
       { name: 'range', label: 'Range', type: 'text' },
@@ -83,6 +85,8 @@ export const CATALOGS = {
       { name: 'category', label: 'Category', type: 'select', allowOther: true,
         options: ['Healing', 'Physical', 'Sensitive', 'Super'] },
       { name: 'isp', label: 'I.S.P.', type: 'int', blankAs: 0 },
+      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'both'],
+        help: 'Blank means unrestricted — offered to characters in either system.' },
       // Same field names as spells, so the sheet renders both the same way.
       { name: 'range', label: 'Range', type: 'text' },
       { name: 'duration', label: 'Duration', type: 'text' },

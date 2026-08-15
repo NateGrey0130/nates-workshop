@@ -13,10 +13,12 @@ export async function onRequestGet({ request, env }) {
     // source_book rides along in all three so the pickers can filter on it —
     // typing "rifts main" should narrow a list the same way a name does.
     env.DB.prepare('SELECT name, category, base, per_level, systems, source_book FROM skills ORDER BY category, name').all(),
-    env.DB.prepare('SELECT name, level, ppe, source_book FROM spells ORDER BY level, name').all(),
+    // `system` likewise: the wizard filters spells and powers by the campaign's
+    // system client-side, the same way it already does skills.
+    env.DB.prepare('SELECT name, level, ppe, system, source_book FROM spells ORDER BY level, name').all(),
     // min_tier is in the boot projection because the powers picker filters on
     // it client-side; without it there is nothing to gate against.
-    env.DB.prepare('SELECT name, category, isp, min_tier, source_book FROM psionic_powers ORDER BY category, name').all(),
+    env.DB.prepare('SELECT name, category, isp, min_tier, system, source_book FROM psionic_powers ORDER BY category, name').all(),
   ]);
 
   return json({

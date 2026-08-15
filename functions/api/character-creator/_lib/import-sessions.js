@@ -19,10 +19,16 @@ import { safeParse } from './character-json.js';
 // staged. Keeps the single staging batch a sane size too.
 const MAX_ROWS_PER_RANGE = 300;
 
-export async function createSession(env, { catalog, name, sourceBook, email }) {
+// `system` is the book's game system, chosen once here rather than per page.
+// Only 'rifts' and 'palladium-fantasy' restrict anything — 'both', or leaving it
+// unset, stores NULL, which every catalog reads as unrestricted.
+const SYSTEMS = ['rifts', 'palladium-fantasy'];
+
+export async function createSession(env, { catalog, name, sourceBook, system, email }) {
+  const sys = SYSTEMS.includes(system) ? system : null;
   const res = await env.DB.prepare(
-    `INSERT INTO import_sessions (catalog, name, source_book, created_by) VALUES (?, ?, ?, ?)`
-  ).bind(catalog, name, sourceBook ?? null, email).run();
+    `INSERT INTO import_sessions (catalog, name, source_book, system, created_by) VALUES (?, ?, ?, ?, ?)`
+  ).bind(catalog, name, sourceBook ?? null, sys, email).run();
   return res.meta?.last_row_id ?? null;
 }
 
