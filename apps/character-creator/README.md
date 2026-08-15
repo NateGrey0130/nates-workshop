@@ -19,6 +19,7 @@ Access gate. No build step, no framework, no dependencies.
 - [Permissions](#permissions)
 - [House rules and derived values](#house-rules-and-derived-values)
 - [Level-up skill picks](#level-up-skill-picks)
+- [Filtering the catalog pickers](#filtering-the-catalog-pickers)
 - [Unfinished builds are saved](#unfinished-builds-are-saved)
 - [Starting gear the class leaves open](#starting-gear-the-class-leaves-open)
 - [Psychic tiers](#psychic-tiers)
@@ -56,6 +57,9 @@ apps/character-creator/
 │                             build themselves from it)
 ├── js/derive.js              Attribute tables → combat bonuses, saves, percentages
 │                             (classic script; both the wizard and the sheet use it)
+├── js/picker.js              Catalog picker filtering — matching, the filter
+│                             input, and caret restore (classic script, same
+│                             reason as derive.js)
 ├── db/seed-dev.sql           Optional local-dev seed rows; never applied to production
 └── test/
     ├── smoke.mjs             Parser + schema + migration-state smoke test
@@ -105,8 +109,9 @@ classic scripts — and why inline handlers in the wizard need explicit `window`
 exposure (see the `Object.assign(window, …)` block at the bottom of `app.js`).
 `catalog.js` avoids the problem entirely by binding with `addEventListener`.
 
-`js/derive.js` is deliberately a *classic* script rather than a module, so the
-sheet's plain script can use it without converting the whole file.
+`js/derive.js` and `js/picker.js` are deliberately *classic* scripts rather than
+modules, so the sheet's plain script can use them without converting the whole
+file.
 
 ---
 
@@ -259,7 +264,7 @@ writes are gated (see [Permissions](#permissions)).
 | `catalogs/rows` | GET / POST / PATCH | Admin. Whole rows for one catalog (`?catalog=`), create, and update (`&id=`). No delete |
 | `catalogs/duplicates` | GET / POST | Admin. Suggested duplicate pairs for a catalog; POST merges two rows |
 | `catalogs/redirects` | GET / DELETE | Admin. Retired keys and where they resolve (`?catalog=`); DELETE stops forwarding one (`&id=`). No POST — redirects are written by merges and renames |
-| `items` | GET | Gear catalog (table is `gear`), plus retired slugs as `redirects`. `?system=` |
+| `items` | GET | Gear catalog (table is `gear`), plus retired slugs as `redirects`. `?system=` — a NULL system is unrestricted, matching how `skills.systems` reads |
 | `campaigns` | GET / POST | List (`?system=`, `?limit=`, `?offset=`); create (caller becomes GM) |
 | `campaigns/[id]` | GET / PATCH | Details (`gm_notes` stripped for non-GM); edit `gm_notes` |
 | `draft` | GET / PUT / DELETE | The caller's own unfinished wizard build. No id in the route — a draft belongs to a person, not a collection. One each; PUT upserts |
@@ -377,6 +382,51 @@ Spending consumes the oldest grant first, and a grant only partly spent stays
 pending with its count reduced — so two picks earned at level 3 can be taken one
 at a time. Both paths write the skills and the claim in a single batch, because
 a pick that consumed its grant without landing on the sheet would be lost.
+
+---
+
+## Filtering the catalog pickers
+
+Every picker used to render its whole catalog: 74 gear rows in two places, 128
+skills in a native `<select>`. Spells and psionics looked fine only because
+those chapters have not been imported — they are pre-filtered by level and tier,
+which hides the problem right up until a spell chapter lands.
+
+All six now carry a filter box with a live count (`12 of 128`), backed by
+[`js/picker.js`](js/picker.js):
+
+| Surface | Control underneath |
+|---|---|
+| Wizard — add from item catalog | `<select>`, narrowed |
+| Wizard — related / secondary skills | checkbox list |
+| Wizard — spells, psionics | checkbox list |
+| Sheet — add inventory | `<select>`, narrowed |
+| Sheet — spend level-up skill picks | N `<select>`s over one shared pool |
+
+The control varies because the task does — "add one item" and "pick 6 of these"
+want different things. What is shared is the matching and the input.
+
+- **Matching is name, category and source book**, all terms required, order
+  irrelevant: `wilderness rifts` narrows, it does not widen. Fields the row does
+  **not** display are deliberately not searched — a hit whose reason is
+  invisible reads as a bug.
+- **Enter takes a lone match.** Type until one row remains and press Enter; with
+  several matches it does nothing rather than guessing.
+- **An already-chosen row stays visible** even when the filter excludes it,
+  or narrowing the list would look like it had un-picked something.
+- **`picker.js` is a classic script**, like `js/derive.js`, because the wizard is
+  a module and the sheet is a plain script and both need it.
+
+`Picker.wire()` restores the caret after re-render. Both pages rebuild by
+replacing `innerHTML`, so an input loses focus and drops the caret to the end
+mid-keystroke; the catalog editor had already hand-rolled the fix, and this puts
+it in one place.
+
+**Level-up picks are now held in state, not read off the DOM at submit time.**
+They were collected from the `<select>`s only when you pressed the button, so
+any re-render in between discarded them — the "show all skills" checkbox already
+did that. A filter that re-renders on every keystroke would have done it
+constantly.
 
 ---
 

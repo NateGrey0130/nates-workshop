@@ -442,6 +442,16 @@ pre.snippet {
 .dupe-name { font-weight: 600; }
 .dupe-vs { color: var(--text-muted); font-size: 11px; }
 
+/* Catalog picker filters. The count is half the point — it says whether to keep
+   typing, and whether an empty list means "no match" or "empty catalog". */
+.pick-filter {
+  display: flex; align-items: center; gap: 8px;
+  margin: 6px 0;
+}
+.pick-filter input[type="search"] { flex: 1 1 auto; min-width: 0; }
+.pick-filter .pick-count { flex: 0 0 auto; white-space: nowrap; }
+@media print { .pick-filter { display: none; } }
+
 /* Retired catalog keys and where they now resolve. Shares .dupe-panel's shell. */
 .redirect-row {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
