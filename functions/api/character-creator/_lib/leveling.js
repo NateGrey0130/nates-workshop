@@ -40,6 +40,32 @@ export function perLevelDiceOf(formula) {
 
 const SKILL_PCT_CAP = 98; // Palladium convention: 98% is the practical ceiling
 
+// Extra skill picks the class grants for crossing levels, from
+// skills.occ_related_skills.schedule — a different thing from
+// level_progression[].grants, which is free text for display.
+//
+// Every threshold strictly above fromLevel and up to toLevel counts, so a jump
+// from 2 to 7 collects both the level-3 and the level-6 grants, itemised by the
+// level that earned them rather than merged into one pool.
+export function skillGrantsFor(cls, fromLevel, toLevel) {
+  const related = cls?.skills?.occ_related_skills;
+  const schedule = Array.isArray(related?.schedule) ? related.schedule : [];
+  const categories = Array.isArray(related?.categories) && related.categories.length
+    ? related.categories
+    : null;
+
+  return schedule
+    .filter((e) => Number.isFinite(e?.level) && e.level > fromLevel && e.level <= toLevel)
+    .map((e) => ({
+      level: e.level,
+      count: Number.isFinite(e.count) && e.count > 0 ? e.count : 1,
+      // Copied, not referenced: the class can be re-imported with different
+      // categories later, and what this level-up granted should not change.
+      categories,
+    }))
+    .sort((a, b) => a.level - b.level);
+}
+
 // Proposed (not yet applied) diff for character reaching toLevel.
 // `character` must carry parsed skills and the pool max columns.
 export function buildProposal(character, cls, toLevel) {
@@ -75,5 +101,9 @@ export function buildProposal(character, cls, toLevel) {
       proposal.grants.push({ level: lp.level, grants: lp.grants || [] });
     }
   }
+
+  // Claimable skill picks, as opposed to `grants` above, which is advisory text.
+  proposal.skill_picks = skillGrantsFor(cls, fromLevel, toLevel);
+  proposal.skill_picks_total = proposal.skill_picks.reduce((n, g) => n + g.count, 0);
   return proposal;
 }

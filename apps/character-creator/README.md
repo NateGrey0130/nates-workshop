@@ -18,6 +18,7 @@ Access gate. No build step, no framework, no dependencies.
 - [API surface](#api-surface)
 - [Permissions](#permissions)
 - [House rules and derived values](#house-rules-and-derived-values)
+- [Level-up skill picks](#level-up-skill-picks)
 - [The catalog field config](#the-catalog-field-config)
 - [The PDF importers](#the-pdf-importers)
 - [Local development](#local-development)
@@ -73,6 +74,8 @@ functions/api/
     ├── _lib/psionic-prompt.js  Psionics chapter import prompt
     ├── _lib/gear-prompt.js   Equipment chapter import prompt
     ├── _lib/paging.js        limit/offset + total, for the lists that grow
+    ├── _lib/skill-picks.js   Spending granted skill picks, shared by the
+    │                         level-up flow and the sheet
     ├── _lib/leveling.js      XP curve + level-up diff
     └── (endpoints — see API surface below)
 
@@ -98,7 +101,7 @@ sheet's plain script can use it without converting the whole file.
 
 ## Data model
 
-Fourteen tables in one shared D1 database (`nates-workshop-media`, bound as `DB`).
+Fifteen tables in one shared D1 database (`nates-workshop-media`, bound as `DB`).
 `media_items` belongs to MediaVault and `schema_migrations` is database
 bookkeeping shared by both; the rest are this app.
 
@@ -111,6 +114,7 @@ bookkeeping shared by both; the rest are this app.
 | `character_items` | Inventory join. `item_id` NULL means a freeform item (`custom_name` required). `removed_at` NULL means currently held — removals are soft, so history survives. |
 | `journal_entries` | `character_id` NULL means a campaign-level entry. |
 | `level_history` | One row per confirmed level-up; `changes` is a JSON diff of what was actually applied. |
+| `pending_skill_picks` | Skill picks a level-up granted and nobody has spent yet. One row per **grant**, not per pick, so "2 picks from level 3" stays itemised. `categories` is copied from the class at level-up time — the class can change later, what you were granted cannot. |
 
 `characters` stores seven JSON columns rather than a very wide table:
 
@@ -214,8 +218,11 @@ skill catalog. Any entry may carry a free-text `note`.
 encode absence as `"none"` or a note.
 
 **Advisory-only fields**, captured for display and never mechanically enforced:
-`note`, `restrictions`, `side_effects`, `extraction_notes`,
-`level_progression[].grants`, and `occ_related_skills.schedule`.
+`note`, `restrictions`, `side_effects`, `extraction_notes`, and
+`level_progression[].grants`.
+
+`occ_related_skills.schedule` **is** enforced: crossing one of its levels grants
+that many extra skill picks. See [Level-up skill picks](#level-up-skill-picks).
 
 The parser supports a YAML subset: nested maps, block and inline sequences,
 inline objects, and `|` / `>` block scalars. Block-scalar bodies are taken raw,
@@ -292,6 +299,7 @@ overridable.
 | Attribute rolls | 3d6, plus one bonus d6 on an exceptional 16+ | `attribute_dice` |
 | XP table | Shared 15-level curve: 0, 2000, 4000, 8000, 16000, 25000, 35000, 50000, 70000, 95000, 125000, 160000, 200000, 250000, 300000 | `xp_table: [...]` |
 | Psionic starting powers | minor 2, major 6, master 8; Super is master-only | `psionics.powers_starting`, `psionics.categories_allowed` |
+| Skills gained on level-up | Start at the catalog's base percentage — a skill learned at level 6 is still new | `skills.occ_related_skills.schedule` |
 | Skill percentage cap | 98% | — |
 
 **Attribute-derived values** (`js/derive.js`) follow the standard Palladium
@@ -315,6 +323,39 @@ this app does not model, so they are plain editable fields.
 
 Skills omitting `base` fall back to the catalog value — sourcebook class pages
 state the *bonus*, with the base living in the skill table.
+
+---
+
+## Level-up skill picks
+
+`skills.occ_related_skills.schedule` says a class grants extra skill picks at
+certain levels — `[{ level: 3, count: 2 }, { level: 6, count: 1 }]`. Crossing
+those levels now hands them over.
+
+1. **The proposal lists them**, itemised by the level that earned each one. A
+   jump from 2 to 7 collects both the level-3 and the level-6 grants; every
+   threshold crossed counts, not just the highest.
+2. **Choosing is optional.** Leave a slot blank and the pick is banked in
+   `pending_skill_picks`. Levelling up is never blocked on picking a skill,
+   which matters when it happens mid-session.
+3. **The sheet shows what is unspent** until it is spent, and
+   `characters/[id]/picks` applies it whenever the player comes back.
+
+Two rules worth knowing:
+
+- **A picked skill starts at the catalog's base percentage.** A skill learned at
+  level 6 is new; it does not arrive back-dated with per-level bonuses.
+- **The picker filters to the categories the grant allows**, with a toggle to
+  show everything. Picking outside the allowed categories is permitted and
+  **recorded as `override: true`** on the skill — so a human decision is visible
+  as one, rather than looking like the rules permitted it. This differs on
+  purpose from the psionic tier rules, where out-of-tier powers are simply not
+  selectable: skill categories get bent at the table, psychic tiers do not.
+
+Spending consumes the oldest grant first, and a grant only partly spent stays
+pending with its count reduced — so two picks earned at level 3 can be taken one
+at a time. Both paths write the skills and the claim in a single batch, because
+a pick that consumed its grant without landing on the sheet would be lost.
 
 ---
 
@@ -572,6 +613,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `006-import-sessions.sql` | `import_sessions` + `import_staged` |
 | `007-psionic-detail.sql` | range, duration, saving_throw, description, min_tier on `psionic_powers` |
 | `008-gear-detail.sql` | gear stat block; **drops the `stats` JSON blob**, which was empty in every row |
+| `009-pending-skill-picks.sql` | `pending_skill_picks` |
 
 ### The migration convention
 
@@ -610,12 +652,6 @@ Honest list, roughly by value.
 Most of these are planned out as twelve PRs under
 [`docs/plans/`](docs/plans/README.md), with the design decisions and the
 rejected alternatives recorded per PR.
-
-**Staged skill picks are stored but never prompted.** `occ_related_skills.schedule`
-records that a class grants extra picks at levels 3/6/9/12, and the level-up flow
-ignores it — it computes pool and percentage diffs and surfaces `grants` as text.
-Wiring this in means the level-up proposal needs a skill-picker step. This remains
-the biggest gap between what the data says and what the app does.
 
 **`min_tier` is recorded but not enforced.** The psionic importer captures the
 tier a book states, and nothing yet stops a Minor psychic taking a Master-only

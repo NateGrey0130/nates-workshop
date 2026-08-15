@@ -15,6 +15,7 @@ import {
 } from '../../../functions/api/character-creator/_lib/import-engine.js';
 import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
 import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
+import { skillGrantsFor } from '../../../functions/api/character-creator/_lib/leveling.js';
 
 const appDir = join(dirname(fileURLToPath(import.meta.url)), '..');
 const repoRoot = join(appDir, '..', '..');
@@ -336,6 +337,43 @@ check('countRows tallies new, duplicates and stubs', (() => {
     { status: 'duplicate', is_stub: true }, { status: 'duplicate', is_stub: false },
   ]);
   return c.total === 4 && c.new === 2 && c.duplicates === 2 && c.stubs === 1;
+})());
+
+// ---------- 1c2. Level-up skill grants ----------
+// occ_related_skills.schedule recorded these for a long time and nothing read
+// them. The itemisation matters: a grant knows which level earned it.
+console.log('\n[1c2] Level-up skill grants');
+const juicerish = {
+  skills: {
+    occ_related_skills: {
+      count: 7,
+      categories: ['Physical', 'Rogue'],
+      schedule: [{ level: 3, count: 2 }, { level: 6, count: 1 }, { level: 9, count: 1 }],
+    },
+  },
+};
+check('a jump collects every threshold it crosses', (() => {
+  const g = skillGrantsFor(juicerish, 2, 7);
+  return g.length === 2 && g[0].level === 3 && g[0].count === 2 && g[1].level === 6 && g[1].count === 1;
+})());
+check('thresholds at or below the starting level are not re-granted',
+  skillGrantsFor(juicerish, 6, 7).length === 0);
+check('the level reached is included, the level left is not', (() => {
+  const g = skillGrantsFor(juicerish, 3, 6);
+  return g.length === 1 && g[0].level === 6;
+})());
+check('grants carry the class categories', (() => {
+  const [g] = skillGrantsFor(juicerish, 1, 3);
+  return Array.isArray(g.categories) && g.categories.includes('Rogue');
+})());
+check('a class with no schedule grants nothing',
+  skillGrantsFor({ skills: { occ_related_skills: { count: 4 } } }, 1, 12).length === 0
+  && skillGrantsFor({}, 1, 12).length === 0);
+check('a malformed schedule entry does not break the run', (() => {
+  const g = skillGrantsFor({ skills: { occ_related_skills: {
+    schedule: [{ level: 'x', count: 2 }, { level: 4 }, { level: 5, count: -3 }] } } }, 1, 9);
+  // level 4 defaults to 1 pick; level 5's negative count is floored to 1
+  return g.length === 2 && g[0].count === 1 && g[1].count === 1;
 })());
 
 // ---------- 1d. Paging ----------
