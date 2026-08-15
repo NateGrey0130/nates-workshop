@@ -1,5 +1,7 @@
 # PR 11 — Sheet targeted re-render
 
+> **Delivered** in [#27](https://github.com/NateGrey0130/nates-workshop/pull/27). This file is the record of why, not a to-do.
+
 ## Problem
 
 `sheet.js` re-renders the whole sheet on every edit. It works, but unsaved edits

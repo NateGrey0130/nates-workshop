@@ -833,10 +833,18 @@ run where and the smoke test checks it, but applying a migration is still a
 manual `wrangler d1 execute` per environment. That is a deliberate stopping
 point, not an oversight — see [`docs/plans/01-migration-tracking.md`](docs/plans/01-migration-tracking.md).
 
-**Extraction is good, not infallible.** Observed on real pages: a skill's
-secondary percentage split into its own entry, and a skill read as 0% where the
-catalog had 30%. Both are defensible readings of a dense page — which is why both
-importers end in a review step. Do not bulk-accept a new book's first run.
+**Extraction reads well; naming is the real friction.** Importing the Rifts
+skill chapter (pp. 26–34, 9 pages, ~93s of model time) produced 80 new skills
+with **no column-splicing at all** — every note read coherently, and spot-checks
+matched the book (`Intelligence 32%/+4`, `Sniper 0%`, `Medical Doctor 60%/50%`
+captured as a note). Earlier runs did show a secondary percentage split into its
+own entry and a skill read as 0% where the catalog had 30%, so the review step
+still earns its place — but the failure mode that actually cost time was
+**names**, not numbers: ten skills already existed under different spellings.
+See [Merging duplicate catalog rows](#merging-duplicate-catalog-rows).
+
+Do not bulk-accept a new book's first run. Read the prose, not just the figures —
+a spliced column produces a description that reads fluently and is wrong.
 
 **The gear catalog's table is `gear`, its API route is `/items`.** The table was
 renamed away from `items` to stay clear of MediaVault's `media_items`; the route

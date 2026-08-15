@@ -1,5 +1,7 @@
 # PR 2 — Class soft-delete
 
+> **Delivered** in [#16](https://github.com/NateGrey0130/nates-workshop/pull/16). This file is the record of why, not a to-do.
+
 ## Problem
 
 When classes lived in committed markdown files, a bad row could be overridden by
@@ -26,11 +28,11 @@ Rejected, deliberately:
 
 ## Schema
 
-`db/migrations/004-class-soft-delete.sql`:
+`db/migrations/003-class-soft-delete.sql`:
 
 ```sql
 ALTER TABLE <stored classes table> ADD COLUMN deleted_at TEXT;
-INSERT OR IGNORE INTO schema_migrations (filename) VALUES ('004-class-soft-delete.sql');
+INSERT OR IGNORE INTO schema_migrations (filename) VALUES ('003-class-soft-delete.sql');
 ```
 
 Also add the column to `db/schema.sql`'s create statement for new databases.

@@ -1,5 +1,7 @@
 # PR 6 — Psionic importer
 
+> **Delivered** in [#21](https://github.com/NateGrey0130/nates-workshop/pull/21). This file is the record of why, not a to-do.
+
 Thin by design. PR 5 built the engine; this is a configuration plus a schema
 extension.
 
@@ -54,7 +56,7 @@ most entries. That is the expected result, not a failed extraction.
 
 ## Schema
 
-`db/migrations/008-psionic-detail.sql`:
+`db/migrations/007-psionic-detail.sql`:
 
 ```sql
 ALTER TABLE psionic_powers ADD COLUMN range TEXT;
@@ -62,7 +64,7 @@ ALTER TABLE psionic_powers ADD COLUMN duration TEXT;
 ALTER TABLE psionic_powers ADD COLUMN saving_throw TEXT;
 ALTER TABLE psionic_powers ADD COLUMN description TEXT;
 ALTER TABLE psionic_powers ADD COLUMN min_tier TEXT;   -- minor | major | master; NULL = category rules only
-INSERT OR IGNORE INTO schema_migrations (filename) VALUES ('008-psionic-detail.sql');
+INSERT OR IGNORE INTO schema_migrations (filename) VALUES ('007-psionic-detail.sql');
 ```
 
 `TEXT` for the same reason as spells — book values are prose as often as numbers.

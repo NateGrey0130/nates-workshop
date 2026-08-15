@@ -1,5 +1,7 @@
 # PR 3 — Rename `items` to `gear`
 
+> **Delivered** in [#17](https://github.com/NateGrey0130/nates-workshop/pull/17). This file is the record of why, not a to-do.
+
 ## Problem
 
 `items` is a generic name in a database shared with MediaVault, which already
@@ -45,11 +47,11 @@ catalog table is being disambiguated.
 
 ## Schema
 
-`db/migrations/005-items-to-gear.sql`:
+`db/migrations/004-items-to-gear.sql`:
 
 ```sql
 ALTER TABLE items RENAME TO gear;
-INSERT OR IGNORE INTO schema_migrations (filename) VALUES ('005-items-to-gear.sql');
+INSERT OR IGNORE INTO schema_migrations (filename) VALUES ('004-items-to-gear.sql');
 ```
 
 SQLite rewrites `REFERENCES items(id)` in dependent tables automatically when

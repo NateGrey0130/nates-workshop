@@ -1,5 +1,7 @@
 # PR 9 — Level-up skill picker
 
+> **Delivered** in [#25](https://github.com/NateGrey0130/nates-workshop/pull/25). This file is the record of why, not a to-do.
+
 The biggest gap between what the data says and what the app does.
 
 ## Problem
@@ -35,7 +37,7 @@ undifferentiated pool, and granting only the highest threshold.
 
 ## Schema
 
-Pending picks need to persist. `db/migrations/010-pending-skill-picks.sql`:
+Pending picks need to persist. `db/migrations/009-pending-skill-picks.sql`:
 
 ```sql
 CREATE TABLE pending_skill_picks (
@@ -47,7 +49,7 @@ CREATE TABLE pending_skill_picks (
   claimed_at TEXT
 );
 CREATE INDEX idx_pending_picks_character ON pending_skill_picks (character_id);
-INSERT OR IGNORE INTO schema_migrations (filename) VALUES ('010-pending-skill-picks.sql');
+INSERT OR IGNORE INTO schema_migrations (filename) VALUES ('009-pending-skill-picks.sql');
 ```
 
 One row per grant, not per pick, so "2 picks from Physical or Rogue, earned at

@@ -1,5 +1,8 @@
 # PR 8 — List pagination
 
+> **Delivered** in [#24](https://github.com/NateGrey0130/nates-workshop/pull/24). This file is the record of why, not a to-do.
+> Narrowed: only the lists that grow with play are bounded. See the plans index.
+
 ## Problem
 
 The journal endpoint takes a `limit` (default 200). Character, campaign, gear,

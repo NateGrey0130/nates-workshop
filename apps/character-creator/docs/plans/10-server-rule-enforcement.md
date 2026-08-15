@@ -1,5 +1,8 @@
 # PR 10 — Server-side rule enforcement
 
+> **Delivered** in [#26](https://github.com/NateGrey0130/nates-workshop/pull/26). This file is the record of why, not a to-do.
+> Narrowed: choice groups warn rather than block. See the plans index.
+
 ## Problem
 
 Skill counts, category restrictions, and attribute minimums are enforced in the

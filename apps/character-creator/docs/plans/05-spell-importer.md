@@ -1,5 +1,8 @@
 # PR 5 — Spell importer and the shared import engine
 
+> **Delivered** in [#19](https://github.com/NateGrey0130/nates-workshop/pull/19). This file is the record of why, not a to-do.
+> Split in two: the engine refactor is #19, the spell importer and sessions #20.
+
 The largest PR in the roadmap. It does two things: generalises the working skill
 importer into a reusable engine, and lands the spell importer on top of it.
 
@@ -67,7 +70,7 @@ duplicate-key strategy.
 
 ## Schema
 
-`db/migrations/006-spell-detail.sql`:
+`db/migrations/005-spell-detail.sql`:
 
 ```sql
 ALTER TABLE spells ADD COLUMN range TEXT;
@@ -82,7 +85,7 @@ ALTER TABLE spells ADD COLUMN description TEXT;
 These are `TEXT` on purpose — book values are prose as often as numbers
 ("100 feet per level of experience", "2D6 melee rounds").
 
-`db/migrations/007-import-sessions.sql` — the staging tables:
+`db/migrations/006-import-sessions.sql` — the staging tables:
 
 ```sql
 CREATE TABLE import_sessions (

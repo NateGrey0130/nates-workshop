@@ -1,5 +1,7 @@
 # PR 12 — Psionic tier rules
 
+> **Delivered** in [#28](https://github.com/NateGrey0130/nates-workshop/pull/28). This file is the record of why, not a to-do.
+
 Makes Minor, Major, and Master psychic tiers mechanically real: they gate which
 powers a character may choose, and they change what you roll to save against
 psionic attack.
