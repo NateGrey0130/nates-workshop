@@ -12,7 +12,9 @@ export async function onRequestGet({ request, env }) {
   const [skills, spells, psionics] = await Promise.all([
     env.DB.prepare('SELECT name, category, base, per_level, systems FROM skills ORDER BY category, name').all(),
     env.DB.prepare('SELECT name, level, ppe FROM spells ORDER BY level, name').all(),
-    env.DB.prepare('SELECT name, category, isp FROM psionic_powers ORDER BY category, name').all(),
+    // min_tier is in the boot projection because the powers picker filters on
+    // it client-side; without it there is nothing to gate against.
+    env.DB.prepare('SELECT name, category, isp, min_tier FROM psionic_powers ORDER BY category, name').all(),
   ]);
 
   return json({
