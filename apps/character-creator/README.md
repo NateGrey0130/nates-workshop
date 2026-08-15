@@ -765,6 +765,10 @@ Set in the Cloudflare Pages dashboard, not in the repo:
 npx wrangler d1 execute nates-workshop-media --remote --file db/schema.sql
 ```
 
+Content written this way is **not** safe for non-ASCII on Windows — see the
+em-dash note in [Known limitations](#known-limitations-and-refactor-candidates).
+Schema files are pure ASCII, so this applies to data loads, not migrations.
+
 `db/migrations/*.sql` are **one-shot** and cannot be made idempotent, because
 SQLite has no `ADD COLUMN IF NOT EXISTS`. Run each once per environment, in
 filename order.
@@ -860,6 +864,24 @@ blast radius was not worth end-to-end naming purity. `character_items` and its
 and renders a picker from each, so a truncated response would silently hide
 valid choices rather than showing fewer rows. Those are bounded by book content;
 the others grow with play.
+
+**The three page scripts are long, and deliberately not split.** `app.js` (~800
+lines), `import.js` (~720) and `sheet.js` (~650) each drive one page and each
+does several jobs. Splitting was considered and rejected: there is no build step,
+so there is no bundler — splitting means more `<script>` tags, hand-managed load
+order, and the classic-script/module distinction to keep straight. The cost is
+real and the benefit is aesthetic. `import.js` is the clearest seam if this is
+ever revisited, since its class, skills and session-based flows share a page and
+almost no logic.
+
+**Passing SQL files to `wrangler d1 execute` on Windows can mangle non-ASCII.**
+Importing 80 skills wrote `Chemistry — Analytical` into production as
+`Chemistry â€" Analytical` — the em-dash was mis-decoded somewhere between the
+UTF-8 file and D1. Only the two rows containing an em-dash were affected. If a
+statement must carry a non-ASCII character, build it with `char(8212)` and
+friends rather than embedding the literal, and **compare name sets between
+environments afterwards** rather than trusting row counts, which matched
+perfectly while two names were wrong.
 
 **FilamentForge pins `claude-sonnet-4-20250514`**, which returned
 `404 not_found_error` on the API key used locally. Unrelated to this app, but it
