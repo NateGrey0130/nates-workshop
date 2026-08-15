@@ -442,6 +442,21 @@ pre.snippet {
 .dupe-name { font-weight: 600; }
 .dupe-vs { color: var(--text-muted); font-size: 11px; }
 
+/* The unique key (gear's slug), shown apart from the stat columns because it is
+   identity, not a statistic — and because class markdown cites it. */
+.cat-key {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  color: var(--text-muted); white-space: nowrap;
+}
+
+/* Duplicate count on the Find duplicates button. Only the trustworthy tiers are
+   counted, so a number here always means something worth a look. */
+.dupe-badge {
+  display: inline-block; min-width: 16px; padding: 0 5px; margin-left: 4px;
+  border-radius: 999px; background: var(--warn, #b8860b); color: #fff;
+  font-size: 11px; font-weight: 700; line-height: 16px; text-align: center;
+}
+
 /* Catalog picker filters. The count is half the point — it says whether to keep
    typing, and whether an empty list means "no match" or "empty catalog". */
 .pick-filter {

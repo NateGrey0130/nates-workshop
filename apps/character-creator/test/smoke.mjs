@@ -548,6 +548,13 @@ check('punctuation and ampersands normalise away',
 check('bracketed qualifiers are ignored',
   normaliseName('Tracking (people)') === normaliseName('Tracking'));
 check('an identical pair scores 1', similarity('Skin & Prepare Animal Hides', 'Skin and Prepare Animal Hides') === 1);
+// Found in the real gear catalog. These used to score 0.75 and sit in the
+// loosest tier — a genuine duplicate filed where genuine duplicates get
+// ignored, and below the threshold the duplicate badge counts.
+check('names identical but for spacing score 1',
+  similarity('Back Pack', 'Backpack') === 1 && similarity('Vibro Blade', 'Vibro-Blade') === 1);
+check('collapsing spaces does not merge genuinely different names',
+  similarity('Back Pack', 'Backpacking') < 1);
 check('a reordered/inflected pair scores in the likely band', (() => {
   const s = similarity('Mathematics — Basic', 'Basic Math');
   return s >= 0.9 && s < 1;

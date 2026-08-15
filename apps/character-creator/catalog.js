@@ -26,6 +26,9 @@ const S = {
   // pairs that only match after normalising punctuation and word order.
   dupes: null,
   dupeBusy: false,
+  // Tier counts for the open catalog, fetched on load so a duplicate pair
+  // surfaces without anyone thinking to go looking for it.
+  dupeCounts: null,
   // Forwarding addresses left by merges and hand renames. Listed because they
   // accumulate silently and a hasty merge is otherwise only undoable in SQL.
   redirects: null,
@@ -54,6 +57,22 @@ async function loadRows() {
   }
   S.loading = false;
   render();
+  loadDupeCounts();   // after the rows are on screen; the badge can arrive late
+}
+
+// Counts only — the badge needs three numbers, not both rows of every pair.
+// Failure is silent: a badge that could not be computed is a missing hint, not
+// something worth an error message over the catalog you came here to edit.
+async function loadDupeCounts() {
+  const forCatalog = S.catalog;
+  try {
+    const res = await api('catalogs/duplicates?counts_only=1&catalog=' + encodeURIComponent(forCatalog));
+    // Tabs can be switched while this is in flight; a stale answer would badge
+    // the wrong catalog.
+    if (S.catalog !== forCatalog) return;
+    S.dupeCounts = res.tiers;
+    render();
+  } catch { /* no badge, no complaint */ }
 }
 
 function visibleRows() {
@@ -193,6 +212,8 @@ function render() {
         ? `<div class="cat-row open">${rowForm(r)}</div>`
         : `<div class="cat-row" data-edit="${r.id}">
              <span class="slug">${escHtml(r[c.displayField] || '(unnamed)')}</span>
+             ${c.uniqueField !== c.displayField
+               ? `<code class="cat-key">${escHtml(r[c.uniqueField] || '')}</code>` : ''}
              ${summaryFor(c, r)}
            </div>`).join('')
       : `<p class="muted small">Nothing matches.</p>`;
@@ -208,7 +229,7 @@ function render() {
       </select>` : ''}
       <span class="muted small">${rows.length} of ${S.rows.length}</span>
       <span style="margin-left:auto; display:flex; gap:6px">
-        <button class="btn btn-sm btn-ghost" data-dupes>${S.dupes ? 'Hide duplicates' : 'Find duplicates'}</button>
+        <button class="btn btn-sm btn-ghost" data-dupes>${S.dupes ? 'Hide duplicates' : 'Find duplicates'}${dupeBadge()}</button>
         <button class="btn btn-sm btn-ghost" data-redirects>${S.redirects ? 'Hide redirects' : 'Redirects'}</button>
         <button class="btn btn-sm" data-new>+ New ${escHtml(c.label.replace(/s$/, ''))}</button>
       </span>
@@ -221,6 +242,19 @@ function render() {
   </div>`;
 
   wire();
+}
+
+// Only the two trustworthy tiers are counted. Measured against the real 138-row
+// catalog, `certain` and `likely` produced no false positives while `contains`
+// was right about 40% of the time — a badge including it would never reach zero,
+// and a badge that never reaches zero teaches you to ignore it.
+function dupeBadge() {
+  const t = S.dupeCounts;
+  if (!t) return '';
+  const n = t.certain + t.likely;
+  if (!n) return '';
+  return ` <span class="dupe-badge" title="${n} likely duplicate pair${n === 1 ? '' : 's'}`
+    + `${t.contains ? ` — plus ${t.contains} looser suggestion${t.contains === 1 ? '' : 's'}` : ''}">${n}</span>`;
 }
 
 // Suggested duplicate pairs. Every merge is confirmed individually — the
@@ -303,18 +337,45 @@ function redirectPanel() {
   </div>`;
 }
 
-// The columns worth seeing at a glance differ per catalog, so they come from
-// the config rather than being hardcoded four times.
+// One row's value, or null when it is not worth a column.
+//
+// `0` is deliberately NOT empty: a skill's base 0 means non-percentile (W.P.s,
+// hand to hand), which is a fact about the skill rather than a missing value.
+function summaryValue(f, v) {
+  // NULL systems means "both", which is true of nearly every row — printing it
+  // 128 times says nothing. Show it only when the row is actually restricted.
+  if (f.type === 'systems') return Array.isArray(v) && v.length ? v.join(', ') : null;
+  if (f.type === 'bool') return v ? 'yes' : null;
+  if (v === null || v === undefined || v === '') return null;
+
+  // Books write damage as a sentence — the JA-11's runs to 140 characters and
+  // would swallow the row it is meant to summarise. The whole value is in the
+  // edit form, one click away.
+  const text = String(v);
+  return text.length > 48 ? text.slice(0, 47).trimEnd() + '…' : text;
+}
+
+// The four columns worth seeing at a glance — chosen per ROW, not per catalog.
+//
+// It used to take the first four fields in config order and drop the empties
+// among them, which for gear meant slug, system, category and weight: every row
+// read "System: rifts" and the numbers you actually scan for — cost, damage,
+// A.R., M.D.C. — never appeared at all. Gear is the reason: a rifle, a suit of
+// armour and a backpack have almost disjoint useful columns, so no fixed set of
+// four can serve them. Taking the first four fields the row actually FILLS
+// gives each item its own.
+// The unique key is excluded here and rendered separately. On gear it is the
+// slug, which is identity rather than a statistic — letting it take one of the
+// four slots cost every weapon its damage column.
 function summaryFor(c, r) {
   return c.fields
-    .filter((f) => f.name !== c.displayField && f.type !== 'longtext' && f.type !== 'kv')
+    .filter((f) => f.name !== c.displayField && f.name !== c.uniqueField
+                && f.type !== 'longtext' && f.type !== 'kv')
+    .map((f) => ({ f, text: summaryValue(f, r[f.name]) }))
+    .filter((x) => x.text !== null)
     .slice(0, 4)
-    .map((f) => {
-      let v = r[f.name];
-      if (f.type === 'systems') v = Array.isArray(v) && v.length ? v.join(', ') : 'both';
-      return v === null || v === undefined || v === '' ? '' : `<span class="muted small">${escHtml(f.label)}: ${escHtml(v)}</span>`;
-    })
-    .filter(Boolean).join('');
+    .map(({ f, text }) => `<span class="muted small">${escHtml(f.label)}: ${escHtml(text)}</span>`)
+    .join('');
 }
 
 function wire() {
@@ -323,6 +384,7 @@ function wire() {
       S.catalog = el.dataset.catalog;
       S.filter = ''; S.category = ''; S.openId = null; S.msg = null;
       S.dupes = null;   // suggestions belong to the catalog that produced them
+      S.dupeCounts = null;
       S.redirects = null;
       loadRows();
     });
@@ -459,7 +521,7 @@ async function mergePair(keepId, removeId) {
       bits.push(`Still names the old key: ${res.classes_mentioning.map((c) => c.class_id).join(', ')} (resolves via the redirect).`);
     }
     S.msg = { text: bits.join(' ') };
-    await loadRows();
+    await loadRows();          // also refreshes the badge
     await loadDuplicates();
     if (S.redirects) await loadRedirects();
   } catch (err) {
