@@ -24,15 +24,22 @@ async function load() {
   try {
     const res = await api('characters/' + id);
     C.data = res.character; C.items = res.items; C.canWrite = res.can_write; C.isGm = res.is_gm;
-    const [journal, catalog, classes] = await Promise.all([
+    // Skill picks a level-up granted and nobody has spent yet.
+    C.pendingPicks = res.pending_picks || [];
+    C.pendingPicksTotal = res.pending_picks_total || 0;
+    const [journal, catalog, classes, catalogs] = await Promise.all([
       api(`journal?campaign_id=${C.data.campaign_id}&character_id=${id}&include_campaign=1`),
       api('items?system=' + encodeURIComponent(C.data.campaign_system)),
       // include_retired: this character's class may have been retired since it
       // was built. It must still resolve, or the sheet loses the class name and
       // its advisory text.
       api('classes?include_retired=1').catch(() => ({ classes: [] })),
+      // The skill picker needs the catalog to offer choices and to show what a
+      // skill starts at. Parallel, so it costs nothing on a sheet with no picks.
+      api('catalogs').catch(() => ({ skills: [] })),
     ]);
     C.journal = journal.entries; C.catalog = catalog.items;
+    C.skillCatalog = catalogs.skills || [];
     // Kept so the sheet can say when it is showing fewer entries than exist,
     // rather than quietly ending the log at the page boundary.
     C.journalTotal = journal.total ?? journal.entries.length;
@@ -243,6 +250,7 @@ function render() {
   </div>
 
   ${w && C.proposal ? levelUpPanel() : ''}
+  ${w && !C.proposal && C.pendingPicksTotal ? pendingPicksPanel() : ''}
 
   <div class="sheet-grid rail" style="margin-top:12px">
     ${box('Saving Throws', SAVE_FIELDS.map(([k, l]) =>
@@ -327,12 +335,84 @@ function levelUpPanel() {
       <span class="muted small">— review, tweak if your GM says so, then confirm</span></h3>
     <table>${poolRows}${skillRows}</table>
     ${grants ? `<h3>New abilities</h3><ul style="margin-left:18px">${grants}</ul>` : ''}
+    ${p.skill_picks_total ? pickerBlock(p.skill_picks, p.skill_picks_total, 'lu') : ''}
     <div class="rowline" style="margin-top:10px">
       <button class="btn btn-primary" onclick="confirmLevelUp()">✅ Confirm level-up</button>
       <button class="btn btn-sm btn-ghost" onclick="C.proposal=null; render()">Not now</button>
       <span class="muted small">Nothing is applied until you confirm.</span>
     </div>
   </div>`;
+}
+
+// Picks earned at a level-up and skipped. Shown until they are spent, so a
+// banked grant does not quietly disappear from view.
+function pendingPicksPanel() {
+  const n = C.pendingPicksTotal;
+  if (!C.claiming) {
+    return `
+    <div class="levelup noprint">
+      <h3 style="margin-top:0">🎓 ${n} unspent skill pick${n > 1 ? 's' : ''}
+        <span class="muted small">— earned at ${C.pendingPicks.map((g) => 'level ' + g.granted_at_level).join(', ')}</span></h3>
+      <button class="btn" onclick="C.claiming = true; render()">Choose now</button>
+    </div>`;
+  }
+  return `
+  <div class="levelup noprint">
+    ${pickerBlock(C.pendingPicks.map((g) => ({ level: g.granted_at_level, count: g.count, categories: g.categories })), n, 'claim')}
+    <div class="rowline" style="margin-top:10px">
+      <button class="btn btn-primary" onclick="claimPicks()">Add to sheet</button>
+      <button class="btn btn-sm btn-ghost" onclick="C.claiming = false; C.pickShowAll = false; render()">Later</button>
+    </div>
+  </div>`;
+}
+
+// Shared by the level-up panel and the standalone claim on the sheet, so the
+// two ways of spending a pick look and behave the same.
+//
+// Skipping is deliberately free: the picks are banked either way, so nobody is
+// stuck at the table choosing skills before they can carry on playing.
+function pickerBlock(grants, total, prefix) {
+  const allowed = grants.some((g) => !g.categories)
+    ? null
+    : [...new Set(grants.flatMap((g) => g.categories || []))];
+
+  const held = new Set((C.data.skills || []).map((s) => s.name));
+  const showAll = C.pickShowAll;
+  const options = (C.skillCatalog || [])
+    .filter((s) => !held.has(s.name))
+    .filter((s) => showAll || !allowed || allowed.includes(s.category))
+    .map((s) => `<option value="${escHtml(s.name)}">${escHtml(s.name)} — ${escHtml(s.category || '?')} ${s.base}%</option>`)
+    .join('');
+
+  const hiddenCount = allowed && !showAll
+    ? (C.skillCatalog || []).filter((s) => !held.has(s.name) && !allowed.includes(s.category)).length
+    : 0;
+
+  const rows = Array.from({ length: total }, (_, i) => `
+    <div class="rowline">
+      <select id="${prefix}-pick-${i}"><option value="">— skip —</option>${options}</select>
+    </div>`).join('');
+
+  return `
+  <h3 style="margin-bottom:4px">New skill${total > 1 ? 's' : ''} — ${total} to choose</h3>
+  <p class="muted small" style="margin-top:0">
+    ${grants.map((g) => `${g.count} from level ${g.level}`).join(', ')}.
+    New skills start at their base percentage. Leave any blank and it waits on your sheet.</p>
+  ${rows}
+  ${hiddenCount ? `<label class="inline-check small">
+    <input type="checkbox" ${showAll ? 'checked' : ''} onchange="C.pickShowAll = this.checked; render()">
+    show all skills (${hiddenCount} outside this grant's categories — picking one is flagged as an override)
+  </label>` : ''}`;
+}
+
+// Collect whatever the picker selected. A blank stays unspent.
+function collectPicks(prefix, total) {
+  const picks = [];
+  for (let i = 0; i < total; i++) {
+    const v = $(`${prefix}-pick-${i}`)?.value;
+    if (v) picks.push({ name: v, override: !!C.pickShowAll });
+  }
+  return picks;
 }
 
 async function logXp() {
@@ -358,13 +438,29 @@ async function confirmLevelUp() {
     const v = parseInt($('lu-skill-' + i).value, 10);
     return { name: s.name, pct: Number.isFinite(v) ? v : s.to };
   });
+  const picks = p.skill_picks_total ? collectPicks('lu', p.skill_picks_total) : [];
   try {
     await api(`characters/${id}/level-confirm`, jsonReq('POST', {
-      to_level: p.to_level, pools, skills, grants: p.grants,
+      to_level: p.to_level, pools, skills, grants: p.grants, picks,
     }));
     C.proposal = null;
+    C.pickShowAll = false;
     await load();
   } catch (err) { alert('Level-up failed: ' + err.message); }
+}
+
+// Picks banked from an earlier level-up, spent whenever the player comes back.
+async function claimPicks() {
+  const total = C.pendingPicksTotal;
+  const picks = collectPicks('claim', total);
+  if (!picks.length) { flash('Choose at least one skill, or leave it for later.', true); return; }
+  try {
+    const res = await api(`characters/${id}/picks`, jsonReq('POST', { picks }));
+    C.pickShowAll = false;
+    C.claiming = false;
+    await load();
+    flash(`Added ${res.applied.map((a) => a.name).join(', ')}.`);
+  } catch (err) { flash('Could not add: ' + err.message, true); }
 }
 
 // Spend PPE/ISP on a power — client-side arithmetic + the existing PATCH

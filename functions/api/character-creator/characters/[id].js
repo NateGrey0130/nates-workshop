@@ -4,6 +4,7 @@
 // PATCH /api/character-creator/characters/:id — owner/GM only; current stats + notes.
 
 import { getUserEmail, unauthorized, json, forbidden, characterAccess, readJson } from '../_lib/auth.js';
+import { listPending } from '../_lib/skill-picks.js';
 
 export async function onRequestGet({ request, env, params }) {
   const email = getUserEmail(request);
@@ -29,7 +30,14 @@ export async function onRequestGet({ request, env, params }) {
     try { character[col] = JSON.parse(character[col]); } catch { /* leave as stored */ }
   }
   const can_write = email === character.player_email || email === character.campaign_gm;
-  return json({ character, items, can_write, is_gm: email === character.campaign_gm });
+  // So the sheet can badge unspent skill picks without a second request.
+  const pending_picks = await listPending(env, params.id);
+  return json({
+    character, items, can_write,
+    is_gm: email === character.campaign_gm,
+    pending_picks,
+    pending_picks_total: pending_picks.reduce((n, g) => n + g.count, 0),
+  });
 }
 
 const PATCHABLE = ['hp_current', 'sdc_current', 'mdc_current', 'ppe_current', 'isp_current', 'notes'];

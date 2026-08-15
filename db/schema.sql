@@ -100,6 +100,22 @@ CREATE TABLE IF NOT EXISTS level_history (
 );
 CREATE INDEX IF NOT EXISTS idx_level_history_character ON level_history (character_id);
 
+-- Skill picks a level-up granted but the player has not spent yet. One row per
+-- GRANT rather than per pick, so "2 picks from Physical or Rogue, earned at
+-- level 3" stays itemised. `categories` is copied from the class at the moment
+-- of the level-up — the class can change later, what you were granted cannot.
+CREATE TABLE IF NOT EXISTS pending_skill_picks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  character_id INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  granted_at_level INTEGER NOT NULL,
+  count INTEGER NOT NULL,
+  categories TEXT,                      -- JSON array; NULL = no category restriction
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  claimed_at TEXT                       -- NULL = still unspent
+);
+CREATE INDEX IF NOT EXISTS idx_pending_picks_character
+  ON pending_skill_picks (character_id, claimed_at);
+
 -- Shared gear catalog for character sheets. Named `gear` rather than `items`
 -- because this database is shared with MediaVault's `media_items`, and a table
 -- called `items` sitting next to it was the most likely future collision.
@@ -303,3 +319,7 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '008-gear-detail.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('gear') WHERE name = 'ar')
   AND NOT EXISTS (SELECT 1 FROM pragma_table_info('gear') WHERE name = 'stats');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '009-pending-skill-picks.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'pending_skill_picks');
