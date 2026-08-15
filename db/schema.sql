@@ -344,3 +344,28 @@ CREATE INDEX IF NOT EXISTS idx_catalog_redirects_target ON catalog_redirects (ca
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '010-catalog-redirects.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'catalog_redirects');
+
+-- ═══════════════════════════════════════════════════════════════════
+-- An in-progress character build. Its own table rather than a `draft` status
+-- on `characters`: a half-built character has no name, no campaign and
+-- possibly no attributes, and putting one in `characters` would make every
+-- list, the dashboard, the audit and the validator filter it out forever to
+-- serve a state that lasts minutes. UNIQUE(owner_email) is what enforces one
+-- draft at a time — saving is an upsert.
+-- ═══════════════════════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS character_drafts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  owner_email TEXT NOT NULL UNIQUE,
+  system TEXT,
+  class_id TEXT,
+  class_name TEXT,
+  char_name TEXT,
+  step INTEGER NOT NULL DEFAULT 0,
+  state TEXT NOT NULL,                            -- JSON: the wizard's build state
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '011-character-drafts.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'character_drafts');

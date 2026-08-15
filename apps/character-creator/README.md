@@ -19,6 +19,7 @@ Access gate. No build step, no framework, no dependencies.
 - [Permissions](#permissions)
 - [House rules and derived values](#house-rules-and-derived-values)
 - [Level-up skill picks](#level-up-skill-picks)
+- [Unfinished builds are saved](#unfinished-builds-are-saved)
 - [Starting gear the class leaves open](#starting-gear-the-class-leaves-open)
 - [Psychic tiers](#psychic-tiers)
 - [How the sheet updates](#how-the-sheet-updates)
@@ -111,7 +112,7 @@ sheet's plain script can use it without converting the whole file.
 
 ## Data model
 
-Sixteen tables in one shared D1 database (`nates-workshop-media`, bound as `DB`).
+Seventeen tables in one shared D1 database (`nates-workshop-media`, bound as `DB`).
 `media_items` belongs to MediaVault and `schema_migrations` is database
 bookkeeping shared by both; the rest are this app.
 
@@ -153,6 +154,7 @@ ppe and isp.
 | `spells` | name, level, ppe, plus a stat block (range, duration, damage, saving throw, area of effect, casting time, description). The stat block is TEXT — books write "100 feet per level" as often as a number. |
 | `psionic_powers` | name, category (Healing/Physical/Sensitive/Super), isp, plus range, duration, saving throw and description — the same field names spells use. `min_tier` is the psychic tier a book states is required; NULL means no restriction beyond the category. |
 
+| `character_drafts` | One unfinished wizard build per person, `UNIQUE (owner_email)`. `state` is the build as JSON — deliberately not the catalogs it was built against. Its own table rather than a `draft` status on `characters`; see [Unfinished builds are saved](#unfinished-builds-are-saved). |
 | `catalog_redirects` | Where a retired key went. Written when a merge deletes a row or a key is renamed by hand, so class markdown citing the old slug or name keeps resolving. Polymorphic by design — `catalog` names which table `to_id` points into — so there is no foreign key. See [Retired keys keep resolving](#retired-keys-keep-resolving). |
 
 All catalogs carry `source` (`seed` \| `import`) and `source_book`, so an entry's
@@ -260,6 +262,7 @@ writes are gated (see [Permissions](#permissions)).
 | `items` | GET | Gear catalog (table is `gear`), plus retired slugs as `redirects`. `?system=` |
 | `campaigns` | GET / POST | List (`?system=`, `?limit=`, `?offset=`); create (caller becomes GM) |
 | `campaigns/[id]` | GET / PATCH | Details (`gm_notes` stripped for non-GM); edit `gm_notes` |
+| `draft` | GET / PUT / DELETE | The caller's own unfinished wizard build. No id in the route — a draft belongs to a person, not a collection. One each; PUT upserts |
 | `characters` | GET / POST | List (`?campaign_id=`, `?limit=`, `?offset=`); create at level 1 — **validated against the class rules** |
 | `characters/[id]` | GET / PATCH | Sheet + inventory, with `can_write` / `is_gm`; edit pools, notes, and the bio/combat/saves/armor sections |
 | `characters/[id]/items` | POST | Add inventory row (catalog slug or freeform) |
@@ -374,6 +377,46 @@ Spending consumes the oldest grant first, and a grant only partly spent stays
 pending with its count reduced — so two picks earned at level 3 can be taken one
 at a time. Both paths write the skills and the claim in a single batch, because
 a pick that consumed its grant without landing on the sheet would be lost.
+
+---
+
+## Unfinished builds are saved
+
+The wizard is eight steps and step 3 **rolls**. A refresh, a stray back-gesture
+or a closed tab used to lose all of it — and a roll is the one thing you cannot
+honestly redo: you either accept different numbers or re-roll until you like
+them.
+
+The build now autosaves to `character_drafts`, debounced ~1.5s off `render()`,
+which already runs after every mutation. Returning to the wizard offers
+**resume or discard** rather than dropping you into step 4 of a half-finished
+character with no explanation.
+
+Four things worth knowing:
+
+- **Its own table, not a `draft` status on `characters`.** A half-built
+  character has no name, no campaign and possibly no attributes. Putting one in
+  `characters` would mean every list, the dashboard, the audit and the validator
+  filtering out rows they must never treat as real — forever, to serve a state
+  that lasts minutes. The wizard's state is not a character shape either: it
+  carries which roll method was used per attribute, which choice-group options
+  are ticked, and how far through the steps you are.
+- **An allowlist, not a copy of the state.** `DRAFT_KEYS` in `app.js` names the
+  build itself. The wizard's state also holds the class, skill, spell and gear
+  catalogs, which are large, shared, and stale the moment they are written down.
+  A real draft is ~1.5 KB.
+- **The class is stored as an id and re-resolved on restore**, so an edited
+  class definition takes effect instead of being shadowed by the draft. A draft
+  naming a class that no longer resolves is discarded rather than half-applied.
+  Gear choice *options* are re-derived for the same reason — only which options
+  you **ticked** is persisted.
+- **The unload warning waits for the rolls.** Before that, "losing" the draft
+  costs two clicks; a browser dialog on every exit would be noise. It also stops
+  once the character is saved.
+
+One draft per person, enforced by `UNIQUE (owner_email)` — saving is an upsert.
+Discarding is idempotent, and a draft that cannot be parsed is reported as
+absent rather than partially restored.
 
 ---
 
