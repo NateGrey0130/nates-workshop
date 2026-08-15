@@ -442,6 +442,16 @@ pre.snippet {
 .dupe-name { font-weight: 600; }
 .dupe-vs { color: var(--text-muted); font-size: 11px; }
 
+/* Retired catalog keys and where they now resolve. Shares .dupe-panel's shell. */
+.redirect-row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 7px 0; border-bottom: 1px solid var(--border);
+}
+.redirect-row:last-child { border-bottom: 0; }
+.redirect-row .slug { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+.redirect-row button { margin-left: auto; }
+.redirect-row.broken { opacity: 0.7; }
+
 .kv-editor { display: grid; gap: 6px; }
 .kv-row { display: grid; grid-template-columns: 1fr 2fr auto; gap: 6px; }
 @media (max-width: 620px) { .kv-row { grid-template-columns: 1fr 1fr auto; } }

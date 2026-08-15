@@ -107,7 +107,7 @@ export const CATALOGS = {
     fields: [
       { name: 'name', label: 'Name', type: 'text', required: true },
       { name: 'slug', label: 'Slug', type: 'text', required: true,
-        help: 'What equipment_starting[].item_id references. Changing it breaks that link.' },
+        help: 'What equipment_starting[].item_id references. Changing it leaves the old slug redirecting here.' },
       { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'both'] },
       { name: 'category', label: 'Category', type: 'select', allowOther: true,
         options: ['weapon', 'armor', 'vehicle', 'cybernetics', 'gear'] },

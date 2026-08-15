@@ -323,3 +323,24 @@ WHERE EXISTS (SELECT 1 FROM pragma_table_info('gear') WHERE name = 'ar')
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '009-pending-skill-picks.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'pending_skill_picks');
+
+-- ═══════════════════════════════════════════════════════════════════
+-- Forwarding pointers for retired catalog keys. A merge deletes one of two
+-- rows and repoints the characters that held it, but class markdown cites
+-- gear by slug and skills by name, and a merge never rewrites markdown. This
+-- remembers where the key went so those citations still resolve.
+-- ═══════════════════════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS catalog_redirects (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  catalog TEXT NOT NULL,                          -- skills | spells | psionics | gear
+  from_key TEXT NOT NULL COLLATE NOCASE,          -- the retired slug or name
+  to_id INTEGER NOT NULL,                         -- row in that catalog's table
+  reason TEXT NOT NULL DEFAULT 'merge',           -- merge | rename
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (catalog, from_key)
+);
+CREATE INDEX IF NOT EXISTS idx_catalog_redirects_target ON catalog_redirects (catalog, to_id);
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '010-catalog-redirects.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'catalog_redirects');

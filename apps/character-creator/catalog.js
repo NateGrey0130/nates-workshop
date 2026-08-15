@@ -26,6 +26,9 @@ const S = {
   // pairs that only match after normalising punctuation and word order.
   dupes: null,
   dupeBusy: false,
+  // Forwarding addresses left by merges and hand renames. Listed because they
+  // accumulate silently and a hasty merge is otherwise only undoable in SQL.
+  redirects: null,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -206,10 +209,12 @@ function render() {
       <span class="muted small">${rows.length} of ${S.rows.length}</span>
       <span style="margin-left:auto; display:flex; gap:6px">
         <button class="btn btn-sm btn-ghost" data-dupes>${S.dupes ? 'Hide duplicates' : 'Find duplicates'}</button>
+        <button class="btn btn-sm btn-ghost" data-redirects>${S.redirects ? 'Hide redirects' : 'Redirects'}</button>
         <button class="btn btn-sm" data-new>+ New ${escHtml(c.label.replace(/s$/, ''))}</button>
       </span>
     </div>
     ${S.dupes ? dupePanel() : ''}
+    ${S.redirects ? redirectPanel() : ''}
     ${S.msg ? `<p class="${S.msg.error ? 'err' : 'muted'} small">${escHtml(S.msg.text)}</p>` : ''}
     ${S.openId === 'new' ? `<div class="cat-row open">${rowForm(null)}</div>` : ''}
     ${list}
@@ -257,13 +262,44 @@ function dupePanel() {
   return `
   <div class="dupe-panel">
     <p class="muted small">Merging repoints every character holding the losing name, then deletes that row.
-      Class definitions are reported, not rewritten — they need a hand edit in the importer.</p>
+      The retired key is left redirecting here, so class definitions citing it keep resolving — they are
+      reported, never rewritten.</p>
     ${group(tiers.certain, 'Same name, different punctuation',
       'Identical once <code>&amp;</code>/<code>and</code>, separators and bracketed qualifiers are ignored.')}
     ${group(tiers.likely, 'Same words, reordered or inflected',
       'Such as <em>Basic Math</em> and <em>Mathematics — Basic</em>.')}
     ${group(tiers.contains, 'One name contains the other',
       'The loosest group and the one to read carefully — <em>Chemistry</em> and <em>Chemistry — Analytical</em> look like this too, and are different skills.')}
+  </div>`;
+}
+
+// Retired keys and where they now resolve. Removing one is offered because a
+// redirect is a claim on a key: while it stands, nothing else can take that
+// name back.
+function redirectPanel() {
+  const c = cat();
+  const { redirects } = S.redirects;
+  if (!redirects.length) {
+    return `<div class="dupe-panel"><p class="muted small">No retired ${escHtml(c.label.toLowerCase())} keys.</p></div>`;
+  }
+
+  const row = (r) => `
+    <div class="redirect-row${r.target_name === null ? ' broken' : ''}">
+      <span class="slug">${escHtml(r.from_key)}</span>
+      <span class="muted">→</span>
+      <span>${r.target_name === null
+        ? '<em class="err">target deleted</em>'
+        : escHtml(r.target_name)}</span>
+      <span class="tag">${escHtml(r.reason)}</span>
+      <button class="btn btn-sm btn-ghost" data-unredirect="${r.id}"
+        title="Stop forwarding this key">Remove</button>
+    </div>`;
+
+  return `
+  <div class="dupe-panel">
+    <p class="muted small">Keys that used to name a row here and still resolve, so class definitions
+      citing them keep working. Removing one frees the key for reuse and breaks any citation still using it.</p>
+    ${redirects.map(row).join('')}
   </div>`;
 }
 
@@ -287,6 +323,7 @@ function wire() {
       S.catalog = el.dataset.catalog;
       S.filter = ''; S.category = ''; S.openId = null; S.msg = null;
       S.dupes = null;   // suggestions belong to the catalog that produced them
+      S.redirects = null;
       loadRows();
     });
   }
@@ -313,8 +350,18 @@ function wire() {
     loadDuplicates();
   });
 
+  const redirBtn = document.querySelector('[data-redirects]');
+  if (redirBtn) redirBtn.addEventListener('click', () => {
+    if (S.redirects) { S.redirects = null; render(); return; }
+    loadRedirects();
+  });
+
   for (const el of document.querySelectorAll('[data-merge]')) {
     el.addEventListener('click', () => mergePair(+el.dataset.keep, +el.dataset.remove));
+  }
+
+  for (const el of document.querySelectorAll('[data-unredirect]')) {
+    el.addEventListener('click', () => removeRedirect(+el.dataset.unredirect));
   }
 
   for (const el of document.querySelectorAll('[data-edit]')) {
@@ -361,6 +408,34 @@ async function loadDuplicates() {
   render();
 }
 
+async function loadRedirects() {
+  S.msg = { text: 'Loading redirects…' };
+  render();
+  try {
+    S.redirects = await api('catalogs/redirects?catalog=' + encodeURIComponent(S.catalog));
+    S.msg = null;
+  } catch (err) {
+    S.msg = { text: err.message, error: true };
+  }
+  render();
+}
+
+async function removeRedirect(id) {
+  const r = S.redirects?.redirects.find((x) => x.id === id);
+  if (!confirm(`Stop forwarding "${r?.from_key}"?\n\n`
+    + `Any class definition still citing it will go back to naming nothing, `
+    + `and the key becomes available for a new row.`)) return;
+
+  try {
+    await api(`catalogs/redirects?catalog=${encodeURIComponent(S.catalog)}&id=${id}`, { method: 'DELETE' });
+    S.msg = { text: `Removed the redirect for "${r?.from_key}".` };
+    await loadRedirects();
+  } catch (err) {
+    S.msg = { text: err.message, error: true };
+    render();
+  }
+}
+
 async function mergePair(keepId, removeId) {
   const keep = S.rows.find((r) => r.id === keepId);
   const remove = S.rows.find((r) => r.id === removeId);
@@ -376,14 +451,17 @@ async function mergePair(keepId, removeId) {
     });
     const bits = [`Merged into "${res.kept.name}".`];
     if (res.repointed.length) bits.push(`${res.repointed.length} character${res.repointed.length === 1 ? '' : 's'} repointed.`);
-    // Class markdown is prose plus frontmatter, so it is reported rather than
-    // rewritten — these need a human edit in the class importer.
+    if (res.redirected?.length) bits.push(`${res.redirected.map((k) => `"${k}"`).join(' and ')} now redirects here.`);
+    // Class markdown is prose plus frontmatter, so it is still never rewritten
+    // — but it no longer breaks, because the redirect resolves it. Worth
+    // saying, not worth flagging.
     if (res.classes_mentioning.length) {
-      bits.push(`Still mentions the old name: ${res.classes_mentioning.map((c) => c.class_id).join(', ')} — edit in the importer.`);
+      bits.push(`Still names the old key: ${res.classes_mentioning.map((c) => c.class_id).join(', ')} (resolves via the redirect).`);
     }
-    S.msg = { text: bits.join(' '), error: res.classes_mentioning.length > 0 };
+    S.msg = { text: bits.join(' ') };
     await loadRows();
     await loadDuplicates();
+    if (S.redirects) await loadRedirects();
   } catch (err) {
     S.msg = { text: 'Merge failed: ' + err.message, error: true };
     render();

@@ -17,6 +17,9 @@ import { stageRows } from '../../../functions/api/character-creator/_lib/import-
 import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
 import { skillGrantsFor } from '../../../functions/api/character-creator/_lib/leveling.js';
 import { similarity, normaliseName, classesMentioning } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
+import {
+  keysOf, redirectStatements, collapseStatement, resolveKeys,
+} from '../../../functions/api/character-creator/_lib/catalog-redirects.js';
 import { validateCharacter, relatedAllowance } from '../../../functions/api/character-creator/_lib/validate-character.js';
 
 const appDir = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -582,6 +585,54 @@ check('class-mention lookup skips blank terms', await (async () => {
   return out.length === 0 && !called;
 })());
 
+// ---------- 1c6. Catalog redirects ----------
+// A merge deletes a row that class markdown may still cite by slug or by name.
+// The redirect is what keeps that citation resolving, so the cases that matter
+// are the ones where it must NOT be written: a key the surviving row already
+// answers to would shadow a live key with a forwarding address.
+console.log('\n[1c6] Catalog redirects');
+
+const capturingDb = (results = []) => ({
+  DB: { prepare: (sql) => ({ bind: (...args) => ({ sql, args, all: async () => ({ results }) }) }) },
+});
+
+check('gear answers to both its slug and its name',
+  keysOf(CATALOGS.gear, { slug: 'ja-11-energy-rifle', name: 'JA-11 Energy Rifle' }).length === 2);
+check('a name-keyed catalog yields one key, not the same one twice',
+  keysOf(CATALOGS.skills, { name: 'Track Animals' }).length === 1);
+
+check('one redirect is filed per retired key', (() => {
+  const s = redirectStatements(capturingDb(), 'gear', ['ja-11-energy-rifle', 'JA-11 Energy Rifle'], 7, 'merge');
+  return s.length === 2
+    && s[0].args[0] === 'gear' && s[0].args[1] === 'ja-11-energy-rifle'
+    && s[0].args[2] === 7 && s[0].args[3] === 'merge';
+})());
+
+// Merging two rows whose names differ only by case would otherwise file a
+// redirect that shadows the very key it points at.
+check('a key the survivor already answers to is never redirected', (() => {
+  const s = redirectStatements(capturingDb(), 'skills', ['Track Animals'], 7, 'merge', ['TRACK ANIMALS']);
+  return s.length === 0;
+})());
+check('blank keys file nothing', redirectStatements(capturingDb(), 'gear', [null, '', undefined], 7, 'merge').length === 0);
+
+check('collapsing points existing redirects at the survivor', (() => {
+  const s = collapseStatement(capturingDb(), 'gear', 4, 7);
+  return s.args[0] === 7 && s.args[1] === 'gear' && s.args[2] === 4;
+})());
+
+check('resolving returns a case-insensitive key map', await (async () => {
+  const map = await resolveKeys(capturingDb([{ from_key: 'JA-11-Energy-Rifle', to_id: 7 }]),
+    'gear', ['ja-11-energy-rifle']);
+  return map.get('ja-11-energy-rifle') === 7;
+})());
+check('resolving an empty list never touches the database', await (async () => {
+  let called = false;
+  const db = { DB: { prepare: () => { called = true; return { bind: () => ({ all: async () => ({ results: [] }) }) }; } } };
+  const map = await resolveKeys(db, 'gear', []);
+  return map.size === 0 && !called;
+})());
+
 // ---------- 1d. Paging ----------
 // A stray query string must not turn a list endpoint into a 400, so anything
 // nonsensical falls back to the default rather than erroring.
@@ -616,7 +667,7 @@ check('schema applies cleanly', apply.status === 0, (apply.stderr || apply.stdou
 // SQL goes through a temp file — a quoted --command string doesn't survive the Windows shell.
 const checkSql = join(appDir, 'test', '.smoke-check.sql');
 writeFileSync(checkSql,
-  "SELECT (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('campaigns','characters','journal_entries','level_history','gear','character_items')) AS cc_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'media_items') AS media_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('imported_classes','skills','spells','psionic_powers')) AS catalog_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='items') AS stale_items_table, (SELECT sql FROM sqlite_master WHERE name='character_items') AS ci_ddl;\n");
+  "SELECT (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('campaigns','characters','journal_entries','level_history','gear','character_items')) AS cc_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'media_items') AS media_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('imported_classes','skills','spells','psionic_powers')) AS catalog_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='catalog_redirects') AS redirect_table, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='items') AS stale_items_table, (SELECT sql FROM sqlite_master WHERE name='character_items') AS ci_ddl;\n");
 const query = wrangler(['d1', 'execute', 'DB', '--local', '--json', '--file', checkSql]);
 rmSync(checkSql, { force: true });
 let row = null;
@@ -624,6 +675,7 @@ try { row = JSON.parse(query.stdout)[0].results[0]; } catch { /* fall through to
 check('all 6 character-creator tables exist', row?.cc_tables === 6, query.stdout?.slice(-300));
 check('media_items still intact alongside them', row?.media_tables === 1);
 check('class + catalog tables exist', row?.catalog_tables === 4, query.stdout?.slice(-300));
+check('catalog_redirects exists', row?.redirect_table === 1, query.stdout?.slice(-300));
 
 // The rename must leave nothing behind. A surviving `items` alongside `gear`
 // means schema.sql created an empty gear table on an un-migrated database.
