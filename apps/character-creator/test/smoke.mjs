@@ -10,8 +10,9 @@ import { fileURLToPath } from 'node:url';
 import { parseClassMarkdown } from '../js/parser.js';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import {
-  getImportSpec, stripFences, normaliseRows, countRows,
+  getImportSpec, stripFences, normaliseRows, countRows, applyDecisions,
 } from '../../../functions/api/character-creator/_lib/import-engine.js';
+import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
 
 const appDir = join(dirname(fileURLToPath(import.meta.url)), '..');
 const repoRoot = join(appDir, '..', '..');
@@ -186,6 +187,61 @@ check('min_tier is left absent rather than inferred', (() => {
 check('a zeroed imported power is a stub',
   psiSpec.isStub({ source: 'import', isp: 0 }) === true
   && psiSpec.isStub({ source: 'seed', isp: 4 }) === false);
+
+// applyDecisions against a fake DB. An UPDATE that matches nothing succeeds
+// silently in SQL, so the engine has to check first — otherwise a row is
+// reported as updated, and marked confirmed, while its values are discarded.
+const fakeDb = (existingNames) => {
+  const batched = [];
+  return {
+    batched,
+    // Every prepare(...).bind(...) returns the same shape: .all() answers the
+    // existence lookup, .run() is never reached because writes go through batch.
+    prepare: () => ({
+      bind: (...args) => ({
+        all: async () => ({
+          results: args
+            .filter((a) => existingNames.some((n) => n.toLowerCase() === String(a).toLowerCase()))
+            .map((a) => ({ name: a })),
+        }),
+        run: async () => ({ meta: { changes: 1 } }),
+      }),
+    }),
+    batch: async (statements) => { batched.push(statements.length); },
+  };
+};
+
+const upd = await (async () => {
+  const db = fakeDb(['Climbing']);
+  return applyDecisions({ DB: db }, skillSpec,
+    [{ action: 'update', name: 'Nope Not Here', base: 99 }], { sourceBook: null });
+})();
+check('an update that matches nothing is a conflict, not a success',
+  upd.counts.updated === 0 && upd.conflicts.length === 1
+  && /to update/i.test(upd.conflicts[0].reason),
+  JSON.stringify(upd));
+
+const updOk = await (async () => {
+  const db = fakeDb(['Climbing']);
+  return applyDecisions({ DB: db }, skillSpec,
+    [{ action: 'update', name: 'Climbing', base: 44 }], { sourceBook: null });
+})();
+check('an update that matches a real row still applies',
+  updOk.counts.updated === 1 && updOk.conflicts.length === 0, JSON.stringify(updOk));
+
+const insDup = await (async () => {
+  const db = fakeDb(['Climbing']);
+  return applyDecisions({ DB: db }, skillSpec,
+    [{ action: 'insert', name: 'Climbing' }], { sourceBook: null });
+})();
+check('an insert onto an existing name is still a conflict',
+  insDup.counts.inserted === 0 && insDup.conflicts.length === 1, JSON.stringify(insDup));
+
+// Staging is one batch, so it is all-or-nothing. The cap keeps that batch a
+// sane size and refuses a range too wide to have been read reliably.
+const overCap = await stageRows(null, 1, 'pp. 1', new Array(301).fill({ name: 'x' }), 'spells');
+check('a range over the row cap is refused before touching the database',
+  !!overCap.error && /narrow the page range/i.test(overCap.error), JSON.stringify(overCap));
 
 check('countRows tallies new, duplicates and stubs', (() => {
   const c = countRows([

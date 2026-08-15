@@ -437,6 +437,14 @@ Two behaviours worth knowing:
 - **A row that collides stays pending.** If an insert clashes with a name
   already in the catalog, it is reported and left in the list so you can give it
   a distinguishing name and retry, rather than being silently dropped.
+- **An update whose target has vanished is reported, not swallowed.** A
+  duplicate is staged with the catalog row it matched; if that row is renamed
+  before you confirm, the `UPDATE` would match nothing and succeed silently. The
+  engine checks first and reports it as a conflict, so the row stays pending and
+  can be retried as an insert instead of disappearing with a success message.
+- **Staging a page range is one batch**, so it is all-or-nothing like confirming
+  one. A range yielding more than 300 rows is refused as too wide to have been
+  read reliably.
 - **Re-submitting a range you already did is harmless.** Names already staged in
   that session are skipped rather than duplicated.
 

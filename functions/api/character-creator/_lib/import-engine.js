@@ -255,6 +255,7 @@ export async function applyDecisions(env, spec, decisions, { sourceBook }) {
   const conflicts = [];
 
   const inserts = [];
+  const updates = [];
   for (const d of decisions) {
     const action = d?.action;
     if (action === 'ignore' || !action) { if (d?.[key]) applied.ignored.push(d[key]); continue; }
@@ -267,20 +268,40 @@ export async function applyDecisions(env, spec, decisions, { sourceBook }) {
       const target = typeof d.as_name === 'string' && d.as_name.trim() ? d.as_name.trim() : name;
       inserts.push({ d, target });
     } else {
-      applied.updated.push(name);
-      statements.push(buildUpdate(env, spec, cat, writable, d, name, sourceBook));
+      updates.push({ d, name });
     }
   }
 
-  // One batched lookup for every proposed insert, rather than a query per row.
-  const taken = new Set();
-  const targets = inserts.map((i) => i.target);
-  for (let i = 0; i < targets.length; i += LOOKUP_BATCH) {
-    const batch = targets.slice(i, i + LOOKUP_BATCH);
+  // One batched lookup covering both proposed inserts and proposed updates,
+  // rather than a query per row.
+  //
+  // Updates have to be checked as carefully as inserts. An UPDATE that matches
+  // nothing succeeds silently — it is indistinguishable from one that worked —
+  // so without this a row could be reported as updated, and marked confirmed by
+  // the session flow, while the extracted values were quietly thrown away. That
+  // happens for real: stage a duplicate, rename the catalog row it matched, then
+  // confirm.
+  const present = new Set();
+  const lookups = [...new Set([...inserts.map((i) => i.target), ...updates.map((u) => u.name)])];
+  for (let i = 0; i < lookups.length; i += LOOKUP_BATCH) {
+    const batch = lookups.slice(i, i + LOOKUP_BATCH);
     const { results } = await env.DB
       .prepare(`SELECT ${key} FROM ${spec.table} WHERE ${key} COLLATE NOCASE IN (${batch.map(() => '?').join(',')})`)
       .bind(...batch).all();
-    for (const r of results) taken.add(String(r[key]).toLowerCase());
+    for (const r of results) present.add(String(r[key]).toLowerCase());
+  }
+  const taken = present;
+
+  // An update with nothing to update is reported as a conflict rather than a
+  // success, which also leaves the staged row pending so it can be retried as
+  // an insert instead of vanishing.
+  for (const { d, name } of updates) {
+    if (!present.has(name.toLowerCase())) {
+      conflicts.push({ name, reason: `No row with that ${key} to update — it may have been renamed since this was extracted` });
+      continue;
+    }
+    applied.updated.push(name);
+    statements.push(buildUpdate(env, spec, cat, writable, d, name, sourceBook));
   }
 
   // Names claimed twice inside THIS batch. Checking only the database would miss
