@@ -44,6 +44,9 @@ const S = {
   // Retired gear slugs → the slug they resolve to now. See findItem().
   itemRedirects: {},
   spellCatalog: [], psiCatalog: [], me: null, isAdmin: false,
+  // Picker filter text. Transient view state, never persisted in a draft —
+  // resuming a build should not resume half a search.
+  gearFilter: '', relatedFilter: '', secondaryFilter: '', spellFilter: '', psiFilter: '',
 };
 
 const $ = (id) => document.getElementById(id);
@@ -245,7 +248,30 @@ function render() {
   renderStepper();
   [renderSystem, renderClass, renderAttributes, renderSkills, renderEquipment,
    renderPowers, renderDetails, renderReview][S.step]();
+  wirePickers();
   queueDraftSave();
+}
+
+// Filter inputs are re-created by every render, so their listeners are re-bound
+// here rather than delegated — the input needs its caret restored mid-keystroke,
+// which Picker.wire handles and a delegated listener could not.
+function wirePickers() {
+  const only = (rows) => (rows.length === 1 ? rows[0] : null);
+
+  Picker.wire('cat-filter', {
+    onInput: (v) => { S.gearFilter = v; render(); },
+    lone: only(Picker.filter(S.items, S.gearFilter)),
+    onEnter: (item) => {
+      S.equipment.push({ item_id: item.id, name: item.name, qty: 1, source: 'catalog' });
+      S.gearFilter = '';
+      render();
+    },
+  });
+
+  for (const [id, key] of [['related-filter', 'relatedFilter'], ['secondary-filter', 'secondaryFilter'],
+    ['spell-filter', 'spellFilter'], ['psi-filter', 'psiFilter']]) {
+    Picker.wire(id, { onInput: (v) => { S[key] = v; render(); } });
+  }
 }
 
 function goStep(i) { S.step = i; render(); }
@@ -507,16 +533,28 @@ function renderSkills() {
 
   const schedule = relatedCfg.schedule || [];
 
-  const pickList = (catalog, chosen, kind, limit) => catalog.map((s) => {
-    const on = chosen.includes(s.name);
-    const blocked = !on && (taken.has(s.name.toLowerCase()) || chosen.length >= limit);
-    return `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
-      <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
-        data-act="skill" data-kind="${kind}" data-name="${esc(s.name)}">
-      <span>${esc(s.name)}</span>
-      <span class="pct">${s.category} · ${s.base ? s.base + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—'}</span>
-    </label>`;
-  }).join('');
+  // The category gate already narrows these, which is why 128 skills has been
+  // survivable — but "Any category" on the secondary list is the whole catalog,
+  // and a checkbox list you have to scroll to search is not a search.
+  // A ticked skill always stays visible, or filtering would appear to un-pick it.
+  const pickList = (catalog, chosen, kind, limit, query) => {
+    const shown = Picker.filter(catalog, query)
+      .concat(catalog.filter((s) => chosen.includes(s.name) && !Picker.match(s, query)));
+    if (!shown.length) return '<p class="muted small">Nothing matches that filter.</p>';
+    return shown.map((s) => {
+      const on = chosen.includes(s.name);
+      const blocked = !on && (taken.has(s.name.toLowerCase()) || chosen.length >= limit);
+      return `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
+        <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
+          data-act="skill" data-kind="${kind}" data-name="${esc(s.name)}">
+        <span>${esc(s.name)}</span>
+        <span class="pct">${s.category} · ${s.base ? s.base + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—'}</span>
+      </label>`;
+    }).join('');
+  };
+
+  const relatedPool = catalogFor(relatedCfg.categories);
+  const secondaryPool = catalogFor(null);
 
   $('app').innerHTML = `
   <div class="panel">
@@ -529,12 +567,18 @@ function renderSkills() {
         <p class="muted small">Allowed: ${esc((relatedCfg.categories || []).join(', ') || '—')}</p>
         ${schedule.length ? `<p class="attr-note">Also grants ${schedule.map((s) => `+${s.count} at level ${s.level}`).join(', ')}
           — recorded on the class, not yet prompted at level-up.</p>` : ''}
-        ${pickList(catalogFor(relatedCfg.categories), S.related, 'related', relatedCfg.count)}
+        ${Picker.inputHtml({ id: 'related-filter', value: S.relatedFilter,
+          placeholder: 'Filter…', shown: Picker.filter(relatedPool, S.relatedFilter).length,
+          total: relatedPool.length })}
+        ${pickList(relatedPool, S.related, 'related', relatedCfg.count, S.relatedFilter)}
       </div>
       <div>
         <h3>Secondary skills — ${S.secondary.length}/${secondaryCfg.count}</h3>
         <p class="muted small">Any category, base % only.</p>
-        ${pickList(catalogFor(null), S.secondary, 'secondary', secondaryCfg.count)}
+        ${Picker.inputHtml({ id: 'secondary-filter', value: S.secondaryFilter,
+          placeholder: 'Filter…', shown: Picker.filter(secondaryPool, S.secondaryFilter).length,
+          total: secondaryPool.length })}
+        ${pickList(secondaryPool, S.secondary, 'secondary', secondaryCfg.count, S.secondaryFilter)}
       </div>
     </div>
   </div>
@@ -644,7 +688,11 @@ function renderEquipment() {
     `<tr><td>${esc(e.name || e.custom_name)}</td><td>×${e.qty}</td>
      <td><span class="tag">${e.source}</span></td><td class="muted small">${esc(e.notes || '')}</td>
      <td><button class="btn btn-sm btn-ghost" onclick="rmEquip(${i})">✕</button></td></tr>`).join('');
-  const catalogOpts = S.items.map((it) => `<option value="${it.id}">${esc(it.name)}</option>`).join('');
+  // Filtered rather than dumped: the gear catalog is 74 rows and grows with
+  // every book imported, and picking one item out of a native dropdown that
+  // long means scrolling past everything you did not want.
+  const gearMatches = Picker.filter(S.items, S.gearFilter);
+  const catalogOpts = gearMatches.map((it) => `<option value="${it.id}">${esc(it.name)}</option>`).join('');
 
   // "One energy pistol of choice" — the book leaves it open, so the player
   // closes it here. Same shape as the skill choice-groups on step 3.
@@ -676,11 +724,15 @@ function renderEquipment() {
     ${choiceBlocks ? `<h3>Choose your starting gear</h3>
       <p class="muted small">Your class leaves these open.</p>${choiceBlocks}` : ''}
     <h3>Add from item catalog</h3>
-    ${S.items.length ? `<div class="rowline">
-      <select id="cat-item">${catalogOpts}</select>
-      <input type="number" id="cat-qty" value="1" min="1">
-      <button class="btn btn-sm" onclick="addCatalog()">Add</button>
-    </div>` : '<p class="muted small">Catalog is empty for this system.</p>'}
+    ${S.items.length ? `
+      ${Picker.inputHtml({ id: 'cat-filter', value: S.gearFilter,
+        placeholder: 'Filter gear by name, category or book…',
+        shown: gearMatches.length, total: S.items.length })}
+      <div class="rowline">
+        <select id="cat-item" size="1">${catalogOpts || '<option value="">— no match —</option>'}</select>
+        <input type="number" id="cat-qty" value="1" min="1">
+        <button class="btn btn-sm" ${gearMatches.length ? '' : 'disabled'} onclick="addCatalog()">Add</button>
+      </div>` : '<p class="muted small">Catalog is empty for this system.</p>'}
     <h3>Add custom item</h3>
     <div class="rowline">
       <input type="text" id="cust-name" placeholder="Name">
@@ -730,9 +782,15 @@ function renderPowers() {
   if (magic) {
     const count = magic.spells_starting || 0;
     const levels = Array.isArray(magic.spell_levels_allowed) ? magic.spell_levels_allowed : null;
-    const list = S.spellCatalog.filter((sp) => !levels || levels.includes(sp.level));
+    const pool = S.spellCatalog.filter((sp) => !levels || levels.includes(sp.level));
+    // A chosen spell stays visible whatever the filter says, or narrowing the
+    // list would look like it had un-picked something.
+    const list = Picker.filter(pool, S.spellFilter)
+      .concat(pool.filter((sp) => S.spells.includes(sp.name) && !Picker.match(sp, S.spellFilter)));
     inner += `<h3>Spells — ${S.spells.length}/${count}
       <span class="muted small">(${esc(magic.type)} magic${levels ? ' · levels ' + levels.join(', ') : ''})</span></h3>` +
+      Picker.inputHtml({ id: 'spell-filter', value: S.spellFilter, placeholder: 'Filter spells…',
+        shown: Picker.filter(pool, S.spellFilter).length, total: pool.length }) +
       list.map((sp) => {
         const on = S.spells.includes(sp.name);
         const blocked = !on && S.spells.length >= count;
@@ -748,14 +806,19 @@ function renderPowers() {
     // Two gates, and they are not the same. The category gate has always been
     // here (Super is master-only). This is the per-power one: a book can state
     // that an individual power needs a higher tier than its category implies.
-    const list = inCategory.filter((p) => derive.meetsTier(tier, p.min_tier));
-    const gated = inCategory.length - list.length;
+    const pool = inCategory.filter((p) => derive.meetsTier(tier, p.min_tier));
+    const gated = inCategory.length - pool.length;
+    const list = Picker.filter(pool, S.psiFilter)
+      .concat(pool.filter((p) => S.psi.includes(p.name) && !Picker.match(p, S.psiFilter)));
 
     inner += `<h3>Psionic powers — ${S.psi.length}/${psi.count}
       <span class="muted small">(${esc(tier)} psychic · ${psi.cats.join(', ')})</span></h3>` +
       // Say that something is being withheld, so a short list reads as a rule
-      // rather than as a gap in the catalog.
+      // rather than as a gap in the catalog. Counted against the tier-gated
+      // pool, not the filtered view — the filter is yours, the gate is not.
       (gated ? `<p class="attr-note">${gated} more ${gated === 1 ? 'power needs' : 'powers need'} a higher psychic tier than ${esc(tier)}.</p>` : '') +
+      Picker.inputHtml({ id: 'psi-filter', value: S.psiFilter, placeholder: 'Filter powers…',
+        shown: Picker.filter(pool, S.psiFilter).length, total: pool.length }) +
       list.map((p) => {
         const on = S.psi.includes(p.name);
         const blocked = !on && S.psi.length >= psi.count;

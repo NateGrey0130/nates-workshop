@@ -9,7 +9,10 @@ const POOL_LABELS = { hp_max: 'H.P. max', sdc_max: 'S.D.C. max', mdc_max: 'M.D.C
 const id = new URLSearchParams(location.search).get('id');
 
 const C = { data: null, items: [], journal: [], catalog: [], cls: null, canWrite: false, isGm: false,
-            proposal: null, nextThreshold: null };
+            proposal: null, nextThreshold: null,
+            // Picker filter text, and the skill picks chosen so far. Both are
+            // state rather than DOM so a re-render cannot discard them.
+            invFilter: '', pickFilter: '', pickValues: {} };
 const $ = (i) => document.getElementById(i);
 
 async function api(path, opts) {
@@ -133,7 +136,8 @@ function render() {
     ? `<p class="muted small noprint">Showing the ${C.journal.length} most recent of ${C.journalTotal} entries.</p>`
     : '';
 
-  const catalogOpts = C.catalog.map((it) => `<option value="${escHtml(it.slug)}">${escHtml(it.name)}</option>`).join('');
+  const invMatches = Picker.filter(C.catalog, C.invFilter);
+  const catalogOpts = invMatches.map((it) => `<option value="${escHtml(it.slug)}">${escHtml(it.name)}</option>`).join('');
 
   const attrs = c.attributes || {};
   const cls = C.cls || {};
@@ -272,6 +276,9 @@ function render() {
       <table><thead><tr><th>Item</th><th>Qty</th><th>Eq</th><th>Notes</th><th></th></tr></thead>
         <tbody id="inv-rows">${invRows || '<tr><td class="muted" colspan="5">Empty.</td></tr>'}</tbody></table>
       ${w ? `<div class="noprint" style="margin-top:8px">
+        ${C.catalog.length ? Picker.inputHtml({ id: 'inv-filter', value: C.invFilter,
+          placeholder: 'Filter catalog by name, category or book…',
+          shown: invMatches.length, total: C.catalog.length }) : ''}
         <div class="rowline">
           ${C.catalog.length ? `<select id="add-slug"><option value="">— catalog —</option>${catalogOpts}</select>` : ''}
           <input type="text" id="add-name" placeholder="or custom item">
@@ -309,6 +316,18 @@ function render() {
       ${journalMore}`,
       '<span class="muted" style="font-size:9px">NEWEST FIRST</span>')}
   </div>`;
+
+  wirePickers();
+}
+
+// Filter inputs are destroyed and rebuilt by every render, so their listeners
+// are re-bound here. Picker.wire restores the caret, which a delegated listener
+// could not do.
+function wirePickers() {
+  Picker.wire('inv-filter', { onInput: (v) => { C.invFilter = v; render(); } });
+  for (const el of document.querySelectorAll('[id$="-pick-filter"]')) {
+    Picker.wire(el.id, { onInput: (v) => { C.pickFilter = v; render(); } });
+  }
 }
 
 function levelUpPanel() {
@@ -353,7 +372,7 @@ function pendingPicksPanel() {
     ${pickerBlock(C.pendingPicks.map((g) => ({ level: g.granted_at_level, count: g.count, categories: g.categories })), n, 'claim')}
     <div class="rowline" style="margin-top:10px">
       <button class="btn btn-primary" onclick="claimPicks()">Add to sheet</button>
-      <button class="btn btn-sm btn-ghost" onclick="C.claiming = false; C.pickShowAll = false; render()">Later</button>
+      <button class="btn btn-sm btn-ghost" onclick="C.claiming = false; C.pickShowAll = false; C.pickFilter = ''; C.pickValues = {}; render()">Later</button>
     </div>
   </div>`;
 }
@@ -370,9 +389,15 @@ function pickerBlock(grants, total, prefix) {
 
   const held = new Set((C.data.skills || []).map((s) => s.name));
   const showAll = C.pickShowAll;
-  const options = (C.skillCatalog || [])
+  const pool = (C.skillCatalog || [])
     .filter((s) => !held.has(s.name))
-    .filter((s) => showAll || !allowed || allowed.includes(s.category))
+    .filter((s) => showAll || !allowed || allowed.includes(s.category));
+
+  // One filter feeding every dropdown in the block, because they draw from one
+  // pool — you are picking N different skills out of the same 128, not
+  // searching N times. Narrowing them together is what you actually want.
+  const shown = Picker.filter(pool, C.pickFilter);
+  const options = shown
     .map((s) => `<option value="${escHtml(s.name)}">${escHtml(s.name)} — ${escHtml(s.category || '?')} ${s.base}%</option>`)
     .join('');
 
@@ -380,16 +405,31 @@ function pickerBlock(grants, total, prefix) {
     ? (C.skillCatalog || []).filter((s) => !held.has(s.name) && !allowed.includes(s.category)).length
     : 0;
 
-  const rows = Array.from({ length: total }, (_, i) => `
+  // Selections live in state, not in the DOM. They used to be read off the
+  // <select>s only at submit time, so any re-render in between silently threw
+  // them away — the "show all skills" checkbox already did that, and a filter
+  // that re-renders on every keystroke would do it constantly.
+  const rows = Array.from({ length: total }, (_, i) => {
+    const chosen = C.pickValues[`${prefix}-${i}`] || '';
+    // A skill you have already chosen stays in its own dropdown even when the
+    // filter excludes it, or narrowing the list would un-pick it.
+    const extra = chosen && !shown.some((s) => s.name === chosen)
+      ? `<option value="${escHtml(chosen)}" selected>${escHtml(chosen)}</option>` : '';
+    const opts = options.replace(`value="${escHtml(chosen)}"`, `value="${escHtml(chosen)}" selected`);
+    return `
     <div class="rowline">
-      <select id="${prefix}-pick-${i}"><option value="">— skip —</option>${options}</select>
-    </div>`).join('');
+      <select id="${prefix}-pick-${i}" onchange="C.pickValues['${prefix}-${i}'] = this.value">
+        <option value="">— skip —</option>${extra}${chosen ? opts : options}</select>
+    </div>`;
+  }).join('');
 
   return `
   <h3 style="margin-bottom:4px">New skill${total > 1 ? 's' : ''} — ${total} to choose</h3>
   <p class="muted small" style="margin-top:0">
     ${grants.map((g) => `${g.count} from level ${g.level}`).join(', ')}.
     New skills start at their base percentage. Leave any blank and it waits on your sheet.</p>
+  ${Picker.inputHtml({ id: `${prefix}-pick-filter`, value: C.pickFilter,
+    placeholder: 'Filter skills…', shown: shown.length, total: pool.length })}
   ${rows}
   ${hiddenCount ? `<label class="inline-check small">
     <input type="checkbox" ${showAll ? 'checked' : ''} onchange="C.pickShowAll = this.checked; render()">
@@ -401,7 +441,9 @@ function pickerBlock(grants, total, prefix) {
 function collectPicks(prefix, total) {
   const picks = [];
   for (let i = 0; i < total; i++) {
-    const v = $(`${prefix}-pick-${i}`)?.value;
+    // State first, DOM as the fallback — they agree, but state is the one that
+    // survives a re-render.
+    const v = C.pickValues[`${prefix}-${i}`] ?? $(`${prefix}-pick-${i}`)?.value;
     if (v) picks.push({ name: v, override: !!C.pickShowAll });
   }
   return picks;
@@ -437,6 +479,7 @@ async function confirmLevelUp() {
     }));
     C.proposal = null;
     C.pickShowAll = false;
+    C.pickFilter = ''; C.pickValues = {};
     await load();
   } catch (err) { alert('Level-up failed: ' + err.message); }
 }
@@ -449,6 +492,7 @@ async function claimPicks() {
   try {
     const res = await api(`characters/${id}/picks`, jsonReq('POST', { picks }));
     C.pickShowAll = false;
+    C.pickFilter = ''; C.pickValues = {};
     C.claiming = false;
     await load();
     flash(`Added ${res.applied.map((a) => a.name).join(', ')}.`);

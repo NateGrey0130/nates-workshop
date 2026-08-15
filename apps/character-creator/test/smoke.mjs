@@ -718,6 +718,48 @@ check('draft does NOT persist the resolved class object', !DRAFT_KEYS.includes('
 // restore options that no longer match the class.
 check('draft does NOT persist derived gear choices', !DRAFT_KEYS.includes('gearChoices'));
 
+// ---------- 1c9. Picker filtering ----------
+// js/picker.js is a classic script, because the wizard is a module and the
+// sheet is a plain script and both need it. So it is loaded the way a browser
+// would: evaluated against a stand-in window, then the global it defines is
+// taken off that.
+console.log('\n[1c9] Picker filtering');
+
+const pickerWindow = {};
+new Function('window', readFileSync(join(appDir, 'js', 'picker.js'), 'utf8'))(pickerWindow);
+const Picker = pickerWindow.Picker;
+
+const skill = { name: 'Wilderness Survival', category: 'Wilderness', source_book: 'rifts-main' };
+
+check('matches on a name fragment', Picker.match(skill, 'wilder'));
+check('matches on category', Picker.match(skill, 'wilderness'));
+check('matches on source book', Picker.match(skill, 'rifts'));
+check('is case-insensitive', Picker.match(skill, 'WILDERNESS SURVIVAL'));
+check('an empty query matches everything', Picker.match(skill, '') && Picker.match(skill, '   '));
+
+// Multi-term is AND, not OR: typing more must narrow. A picker that widened as
+// you typed would be worse than no filter at all.
+check('every term must match', Picker.match(skill, 'survival rifts'));
+check('one non-matching term excludes the row', !Picker.match(skill, 'survival palladium'));
+check('term order does not matter', Picker.match(skill, 'rifts survival'));
+
+// Fields the row does not display are deliberately not searched — a hit whose
+// reason is invisible reads as a bug.
+check('undisplayed fields are not searched',
+  !Picker.match({ name: 'Backpack', description: 'holds a laser' }, 'laser'));
+
+check('filter narrows a list', Picker.filter([skill, { name: 'Swimming', category: 'Physical' }], 'wilder').length === 1);
+check('filter returns everything for a blank query', Picker.filter([skill, { name: 'Swimming' }], '').length === 2);
+check('filter tolerates missing fields and empty input',
+  Picker.filter([{ name: 'Nameless' }, {}], 'nameless').length === 1 && Picker.filter(undefined, 'x').length === 0);
+
+// The count is what tells you whether an empty list means "no match" or
+// "nothing in the catalog".
+const html = Picker.inputHtml({ id: 'x-filter', value: 'a "quoted" value', shown: 3, total: 99 });
+check('the input renders its count', html.includes('3 of 99'));
+check('the input escapes quotes in its value', html.includes('&quot;quoted&quot;') && !html.includes('"quoted"'));
+check('the count is omitted when there is no total', !Picker.inputHtml({ id: 'y' }).includes('pick-count'));
+
 // ---------- 1d. Paging ----------
 // A stray query string must not turn a list endpoint into a 400, so anything
 // nonsensical falls back to the default rather than erroring.
