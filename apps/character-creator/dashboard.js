@@ -27,6 +27,7 @@ async function load() {
     D.campaign = campRes.campaign; D.isGm = campRes.is_gm;
     D.roster = rosterRes.characters;
     D.journal = journalRes.entries;
+    D.journalTotal = journalRes.total ?? journalRes.entries.length;
     D.classNames = Object.fromEntries(classesRes.classes.map((c) => [c.id, c.name]));
     render();
   } catch (err) {
@@ -65,6 +66,12 @@ function render() {
     </div>`;
   }).join('') || '<p class="muted small">No journal entries yet.</p>';
 
+  // The dashboard already showed only the newest 20; now that the fetch itself
+  // is bounded, say what the 20 is out of.
+  const journalMore = D.journalTotal > Math.min(D.journal.length, 20)
+    ? `<p class="muted small">Showing the 20 most recent of ${D.journalTotal} entries.</p>`
+    : '';
+
   $('app').innerHTML = `
   <div class="panel">
     <h2>${escHtml(camp.name)} ${D.isGm ? '<span class="tag gm">you are the GM</span>' : ''}</h2>
@@ -85,6 +92,7 @@ function render() {
   <div class="panel">
     <h3 style="margin-top:0">Campaign journal <span class="muted small">(newest first)</span></h3>
     ${journalHtml}
+    ${journalMore}
   </div>`;
 }
 

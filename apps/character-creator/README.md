@@ -72,6 +72,7 @@ functions/api/
     ├── _lib/spell-prompt.js  Spell chapter import prompt
     ├── _lib/psionic-prompt.js  Psionics chapter import prompt
     ├── _lib/gear-prompt.js   Equipment chapter import prompt
+    ├── _lib/paging.js        limit/offset + total, for the lists that grow
     ├── _lib/leveling.js      XP curve + level-up diff
     └── (endpoints — see API surface below)
 
@@ -235,7 +236,7 @@ writes are gated (see [Permissions](#permissions)).
 | `catalogs` | GET | Skills, spells, psionic powers in one call — trimmed projection the wizard boots on |
 | `catalogs/rows` | GET / POST / PATCH | Admin. Whole rows for one catalog (`?catalog=`), create, and update (`&id=`). No delete |
 | `items` | GET | Gear catalog (table is `gear`). `?system=` |
-| `campaigns` | GET / POST | List; create (caller becomes GM) |
+| `campaigns` | GET / POST | List (`?system=`, `?limit=`, `?offset=`); create (caller becomes GM) |
 | `campaigns/[id]` | GET / PATCH | Details (`gm_notes` stripped for non-GM); edit `gm_notes` |
 | `characters` | GET / POST | List (`?campaign_id=`); create at level 1 |
 | `characters/[id]` | GET / PATCH | Sheet + inventory, with `can_write` / `is_gm`; edit pools, notes, and the bio/combat/saves/armor sections |
@@ -243,7 +244,7 @@ writes are gated (see [Permissions](#permissions)).
 | `characters/[id]/items/[itemId]` | PATCH / DELETE | qty/equipped/notes; soft remove |
 | `characters/[id]/xp` | POST | `{delta}` or `{total}`; returns a proposed level-up diff |
 | `characters/[id]/level-confirm` | POST | Apply a confirmed diff, write `level_history` |
-| `journal` | GET / POST | By campaign; `?character_id=` and `?include_campaign=1`, `?limit=` |
+| `journal` | GET / POST | By campaign; `?character_id=`, `?include_campaign=1`, `?limit=`, `?offset=` |
 | `import/extract` | POST | Admin. PDF → class markdown; autosaves a draft |
 | `import/recheck` | POST | Admin. Re-parse edited markdown, no API spend |
 | `import/confirm` | POST | Admin. Publish class + create catalog stubs |
@@ -650,8 +651,12 @@ was deliberately left alone, since both the wizard and the sheet call it and the
 blast radius was not worth end-to-end naming purity. `character_items` and its
 `item_id` column keep their names too — only the catalog table was ambiguous.
 
-**No pagination.** The journal endpoint takes a `limit` (default 200), but
-character, campaign, item and catalog lists are unbounded. Fine at friends scale.
+**Catalog lists are deliberately unbounded.** `characters`, `campaigns` and
+`journal` take `limit` and `offset` (default 200, max 500) and report a `total`.
+`classes`, `catalogs` and `items` do not: the wizard boots by fetching all three
+and renders a picker from each, so a truncated response would silently hide
+valid choices rather than showing fewer rows. Those are bounded by book content;
+the others grow with play.
 
 **FilamentForge pins `claude-sonnet-4-20250514`**, which returned
 `404 not_found_error` on the API key used locally. Unrelated to this app, but it

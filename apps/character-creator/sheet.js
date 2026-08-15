@@ -33,6 +33,9 @@ async function load() {
       api('classes?include_retired=1').catch(() => ({ classes: [] })),
     ]);
     C.journal = journal.entries; C.catalog = catalog.items;
+    // Kept so the sheet can say when it is showing fewer entries than exist,
+    // rather than quietly ending the log at the page boundary.
+    C.journalTotal = journal.total ?? journal.entries.length;
     // The class supplies its display name plus the advisory text the sheet
     // shows (side_effects, restrictions) — none of which is stored per character.
     C.cls = (classes.classes || []).find((x) => x.id === C.data.class_id) || null;
@@ -128,6 +131,12 @@ function render() {
       <div class="body">${escHtml(e.body)}</div>
     </div>`;
   }).join('') || '<p class="muted small">No journal entries yet.</p>';
+
+  // A log longer than one page ends at the boundary; say so rather than looking
+  // like the campaign simply stopped there.
+  const journalMore = C.journalTotal > C.journal.length
+    ? `<p class="muted small noprint">Showing the ${C.journal.length} most recent of ${C.journalTotal} entries.</p>`
+    : '';
 
   const catalogOpts = C.catalog.map((it) => `<option value="${escHtml(it.slug)}">${escHtml(it.name)}</option>`).join('');
 
@@ -296,7 +305,8 @@ function render() {
         <textarea id="j-body" placeholder="What happened this session…"></textarea>
         <div class="rowline"><button class="btn btn-sm" onclick="addJournal()">Add entry</button></div>
       </div>` : ''}
-      <div id="journal-list">${journalHtml}</div>`,
+      <div id="journal-list">${journalHtml}</div>
+      ${journalMore}`,
       '<span class="muted" style="font-size:9px">NEWEST FIRST</span>')}
   </div>`;
 }
