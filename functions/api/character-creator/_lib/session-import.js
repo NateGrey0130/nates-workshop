@@ -61,7 +61,8 @@ export async function handleSessionExtract(request, env, catalogKey, prompt, pro
   const classified = await classifyRows(env, spec, rows);
   // Re-submitting a range you already did is a normal mistake on a long import,
   // so names already staged in this session are skipped rather than duplicated.
-  const { staged, skipped } = await stageRows(env, sessionId, b.page_range ?? null, classified, catalogKey);
+  const { staged, skipped, error } = await stageRows(env, sessionId, b.page_range ?? null, classified, catalogKey);
+  if (error) return json({ error }, 400);
 
   return json({
     ok: true,

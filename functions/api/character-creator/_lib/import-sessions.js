@@ -13,7 +13,10 @@
 
 import { CATALOGS } from '../../../../apps/character-creator/js/catalog-fields.js';
 
-const STAGE_BATCH = 40;
+// A page range that produces more rows than this is almost certainly a range
+// that is too wide to have been read reliably, so it is refused rather than
+// staged. Keeps the single staging batch a sane size too.
+const MAX_ROWS_PER_RANGE = 300;
 
 export async function createSession(env, { catalog, name, sourceBook, email }) {
   const res = await env.DB.prepare(
@@ -54,6 +57,9 @@ export async function closeSession(env, id) {
 // mistake on a long import, and it should not silently double every entry.
 export async function stageRows(env, sessionId, pageRange, classified, catalogKey) {
   const key = CATALOGS[catalogKey].uniqueField;
+  if (classified.length > MAX_ROWS_PER_RANGE) {
+    return { error: `That range produced ${classified.length} rows, more than the ${MAX_ROWS_PER_RANGE} allowed in one go. Narrow the page range.` };
+  }
 
   const { results: already } = await env.DB.prepare(
     'SELECT payload FROM import_staged WHERE session_id = ?'
@@ -85,9 +91,11 @@ export async function stageRows(env, sessionId, pageRange, classified, catalogKe
     );
   });
 
-  for (let i = 0; i < statements.length; i += STAGE_BATCH) {
-    await env.DB.batch(statements.slice(i, i + STAGE_BATCH));
-  }
+  // One batch, so staging a page range is all-or-nothing like confirming one.
+  // This used to be chunked, which meant a failure partway left the earlier
+  // chunks written while the endpoint reported the extraction as failed —
+  // the caller would then re-submit and get a confusing partial count back.
+  if (statements.length) await env.DB.batch(statements);
   return { staged: fresh.length, skipped: classified.length - fresh.length };
 }
 
