@@ -17,7 +17,7 @@ import {
 import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
 import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
 import { skillGrantsFor } from '../../../functions/api/character-creator/_lib/leveling.js';
-import { similarity, normaliseName, classesMentioning } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
+import { similarity, normaliseName, classesMentioning, findDuplicates } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
 import {
   keysOf, redirectStatements, collapseStatement, resolveKeys,
 } from '../../../functions/api/character-creator/_lib/catalog-redirects.js';
@@ -574,6 +574,45 @@ for (const [a, b] of [
   check(`"${a}" vs "${b}" never reaches the confident bands`, similarity(a, b) < 0.9);
 }
 check('unrelated names do not match at all', similarity('Swimming', 'Sewing') < 0.7);
+
+// Different categories mean different rows, however alike the names look.
+// Found importing the Rifts psionics chapter: `Telekinesis` is Physical at
+// 3 I.S.P. and `Telekinesis (Super)` is Super at 10, but normaliseName strips
+// "(Super)" the same way it strips "(people)", scoring them a perfect 1. Three
+// of eight confident suggestions on that catalog were this.
+const catalogDb = (rows) => ({ DB: { prepare: () => ({ all: async () => ({ results: rows }) }) } });
+
+const psiPairs = await findDuplicates(catalogDb([
+  { id: 1, name: 'Telekinesis', category: 'Physical', isp: 3 },
+  { id: 2, name: 'Telekinesis (Super)', category: 'Super', isp: 10 },
+  { id: 3, name: 'Levitation (psionic)', category: 'Physical', isp: 2 },
+  { id: 4, name: 'Levitation', category: 'Physical', isp: 2 },
+]), 'psionics');
+const findPair = (x, y) => psiPairs.find((p) =>
+  (p.a.name === x && p.b.name === y) || (p.a.name === y && p.b.name === x));
+
+check('a category clash is demoted out of the confident tiers', (() => {
+  const p = findPair('Telekinesis', 'Telekinesis (Super)');
+  return p && p.tier === 'contains' && p.category_clash === true;
+})());
+check('the demoted pair says why', (() => {
+  const p = findPair('Telekinesis', 'Telekinesis (Super)');
+  return p && /Physical and Super/.test(p.confidence);
+})());
+check('a real duplicate in one category still reaches certain', (() => {
+  const p = findPair('Levitation (psionic)', 'Levitation');
+  return p && p.tier === 'certain' && !p.category_clash;
+})());
+// Demoted, never dropped: the category itself may be the thing that is wrong.
+check('a clashing pair is still reported', !!findPair('Telekinesis', 'Telekinesis (Super)'));
+
+check('a missing category on either row is not a clash', await (async () => {
+  const pairs = await findDuplicates(catalogDb([
+    { id: 1, name: 'Back Pack', category: null },
+    { id: 2, name: 'Backpack', category: 'gear' },
+  ]), 'gear');
+  return pairs[0]?.tier === 'certain' && !pairs[0].category_clash;
+})());
 
 // Class definitions cite skills by display name and gear by SLUG. A gear merge
 // that only checked the name reported nothing, so a character built from that

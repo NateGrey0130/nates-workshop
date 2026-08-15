@@ -107,17 +107,33 @@ export async function findDuplicates(env, catalogKey) {
       const score = similarity(a[cat.displayField], b[cat.displayField]);
       if (score < THRESHOLD) continue;
       const sameNumbers = numeric.every((f) => a[f] === b[f]);
+
+      // Two rows filed under different categories are not the same row, however
+      // alike the names look. normaliseName strips every bracketed qualifier,
+      // which is right for "Tracking (people)" and wrong for the psionics
+      // chapter: `Telekinesis` is Physical at 3 I.S.P. and `Telekinesis (Super)`
+      // is Super at 10, and stripping "(Super)" made them score a perfect 1.
+      // Three of eight confident suggestions on that catalog were this.
+      //
+      // Demoted rather than dropped, because a category can also simply be
+      // wrong on one of the rows — which is itself worth a look.
+      const clash = a.category && b.category
+        && String(a.category).toLowerCase() !== String(b.category).toLowerCase();
+
       // The tiers have very different precision, measured against a real
       // catalog: `certain` and `likely` produced no false positives at all,
       // while `contains` was right about 40% of the time. Grouping by tier is
       // the difference between a usable list and 27 undifferentiated rows.
-      const tier = score >= 1 ? 'certain' : score >= 0.9 ? 'likely' : 'contains';
+      const tier = clash ? 'contains'
+        : score >= 1 ? 'certain' : score >= 0.9 ? 'likely' : 'contains';
       pairs.push({
         score: Math.round(score * 100) / 100,
         same_numbers: sameNumbers,
         tier,
+        category_clash: !!clash,
         a, b,
-        confidence: tier === 'certain' ? 'identical once punctuation is ignored'
+        confidence: clash ? `same name, but filed as ${a.category} and ${b.category} — probably different powers`
+          : tier === 'certain' ? 'identical once punctuation is ignored'
           : tier === 'likely' ? 'same words, different order or ending'
           : 'one name contains the other — check this one',
       });
