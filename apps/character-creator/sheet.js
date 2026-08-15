@@ -139,7 +139,10 @@ function render() {
   const cls = C.cls || {};
   const bio = derive.bio(attrs, c.bio);
   const combat = derive.combat(attrs, c.combat);
-  const saves = derive.saves(attrs, c.saves);
+  // The class supplies the psychic tier, which only affects the psionic save
+  // TARGET. A character with no psionics block is not psychic and gets 15+,
+  // which is the right number for them anyway.
+  const saves = derive.saves(attrs, c.saves, cls.psionics?.type);
   const armorList = Array.isArray(c.armor) ? c.armor : [];
 
   // An editable field: an input for owner/GM, plain text otherwise. Values that
@@ -231,7 +234,17 @@ function render() {
   ${w && !C.proposal && C.pendingPicksTotal ? pendingPicksPanel() : ''}
 
   <div class="sheet-grid rail" style="margin-top:12px">
-    ${box('Saving Throws', SAVE_FIELDS.map(([k, l]) =>
+    ${box('Saving Throws',
+      // The psionic save target is what you roll against; the rest of this box
+      // is bonuses. It sits at the top because it is the only absolute number
+      // here, and it is overridable like everything else.
+      // Suffix kept to one character: this column is narrow and anything longer
+      // clips. The tier that produced the number goes in the label instead.
+      editField('saves',
+        'psionics_target',
+        `vs Psionics — roll${cls.psionics?.type ? ` (${escHtml(cls.psionics.type)})` : ''}`,
+        saves.psionics_target, c.saves, { suffix: '+' }) +
+      SAVE_FIELDS.map(([k, l]) =>
       editField('saves', k, l, saves[k], c.saves, { suffix: k === 'coma_death_pct' ? '%' : '' })).join(''),
       '<span class="muted" style="font-size:9px">DERIVED · OVERRIDABLE</span>')}
 

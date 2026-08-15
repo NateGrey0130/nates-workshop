@@ -536,9 +536,19 @@ function renderPowers() {
       }).join('');
   }
   if (psi) {
-    const list = S.psiCatalog.filter((p) => psi.cats.includes(p.category));
+    const tier = S.cls.psionics.type;
+    const inCategory = S.psiCatalog.filter((p) => psi.cats.includes(p.category));
+    // Two gates, and they are not the same. The category gate has always been
+    // here (Super is master-only). This is the per-power one: a book can state
+    // that an individual power needs a higher tier than its category implies.
+    const list = inCategory.filter((p) => derive.meetsTier(tier, p.min_tier));
+    const gated = inCategory.length - list.length;
+
     inner += `<h3>Psionic powers — ${S.psi.length}/${psi.count}
-      <span class="muted small">(${esc(S.cls.psionics.type)} psychic · ${psi.cats.join(', ')})</span></h3>` +
+      <span class="muted small">(${esc(tier)} psychic · ${psi.cats.join(', ')})</span></h3>` +
+      // Say that something is being withheld, so a short list reads as a rule
+      // rather than as a gap in the catalog.
+      (gated ? `<p class="attr-note">${gated} more ${gated === 1 ? 'power needs' : 'powers need'} a higher psychic tier than ${esc(tier)}.</p>` : '') +
       list.map((p) => {
         const on = S.psi.includes(p.name);
         const blocked = !on && S.psi.length >= psi.count;

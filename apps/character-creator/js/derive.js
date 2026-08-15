@@ -34,15 +34,44 @@
     };
   }
 
+  // Psychic tiers, weakest first. The only place the ordering is written down —
+  // everything that asks "does this character reach that tier?" goes through
+  // meetsTier() rather than comparing the strings itself.
+  const TIERS = ['minor', 'major', 'master'];
+  const tierRank = (t) => TIERS.indexOf(String(t ?? '').toLowerCase());
+
+  // A character with no tier (not psychic) meets nothing; a requirement of
+  // nothing is met by everyone. Both directions matter: NULL min_tier means
+  // "no restriction", not "master only".
+  function meetsTier(has, needs) {
+    if (!needs) return true;
+    const need = tierRank(needs);
+    if (need < 0) return true;      // an unrecognised requirement gates nothing
+    return tierRank(has) >= need;
+  }
+
+  // Save vs psionic attack. Major and Master psychics are harder to affect —
+  // 12 or better, against 15 for everyone else, non-psychics included: they get
+  // attacked by psionics too and still need a number to roll against.
+  const PSIONIC_SAVE_STRONG = 12;
+  const PSIONIC_SAVE_BASE = 15;
+  function psionicSaveTarget(tier) {
+    return meetsTier(tier, 'major') ? PSIONIC_SAVE_STRONG : PSIONIC_SAVE_BASE;
+  }
+
   // P.E. covers the body (poison, drugs, coma/death), M.E. the mind
   // (psionics, insanity, possession).
-  function deriveSaves(attrs = {}) {
+  //
+  // `psychicTier` is the character's own tier, used only for the psionic save
+  // TARGET — the bonus stays purely M.E.
+  function deriveSaves(attrs = {}, psychicTier = null) {
     const pe = above15(attrs.PE);
     const me = above15(attrs.ME);
     return {
       spell_magic: pe,
       ritual_magic: pe,
       psionics: me,
+      psionics_target: psionicSaveTarget(psychicTier),
       toxins_poisons: pe,
       harmful_drugs: pe,
       insanity: me,
@@ -75,8 +104,13 @@
 
   global.derive = {
     combat: (attrs, stored) => merge(deriveCombat(attrs), stored),
-    saves: (attrs, stored) => merge(deriveSaves(attrs), stored),
+    // psychicTier is optional — callers that do not know it get the 15+ target,
+    // which is correct for a non-psychic.
+    saves: (attrs, stored, psychicTier) => merge(deriveSaves(attrs, psychicTier), stored),
     bio: (attrs, stored) => merge(deriveBio(attrs), stored),
+    // Shared so the powers picker gates on the same ordering the saves use.
+    meetsTier,
+    tiers: TIERS,
     // Which keys came from the tables rather than being typed in — the sheet
     // marks these so it is obvious what is calculated.
     isDerived: (stored, key) => {

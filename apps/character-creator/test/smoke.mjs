@@ -468,6 +468,44 @@ check('the class fixed skill list is not checked', (() => {
 check('relatedAllowance adds base and grants',
   relatedAllowance(vCls, 1) === 2 && relatedAllowance(vCls, 3) === 3 && relatedAllowance(vCls, 9) === 3);
 
+// ---------- 1c4. Psychic tiers ----------
+// derive.js is a classic script, so it is loaded by evaluating it against a
+// stand-in global rather than imported.
+console.log('\n[1c4] Psychic tiers');
+const deriveGlobal = {};
+new Function('globalThis', readFileSync(join(appDir, 'js', 'derive.js'), 'utf8'))
+  .call(deriveGlobal, deriveGlobal);
+const D = deriveGlobal.derive;
+check('derive exposes the tier helpers', !!D?.meetsTier && Array.isArray(D?.tiers));
+
+check('a higher tier meets a lower requirement',
+  D.meetsTier('master', 'major') && D.meetsTier('master', 'minor') && D.meetsTier('major', 'minor'));
+check('the same tier meets its own requirement',
+  D.meetsTier('minor', 'minor') && D.meetsTier('master', 'master'));
+check('a lower tier does not meet a higher requirement',
+  !D.meetsTier('minor', 'major') && !D.meetsTier('major', 'master') && !D.meetsTier('minor', 'master'));
+// NULL min_tier means "no restriction", never "master only" — the whole
+// psionic importer depends on an absent tier gating nothing.
+check('no requirement is met by anyone, including a non-psychic',
+  D.meetsTier('minor', null) && D.meetsTier(null, null) && D.meetsTier(null, undefined));
+check('a non-psychic meets no stated requirement',
+  !D.meetsTier(null, 'minor') && !D.meetsTier('', 'master'));
+check('tier comparison ignores case', D.meetsTier('Master', 'MAJOR'));
+check('an unrecognised requirement gates nothing', D.meetsTier('minor', 'grandmaster'));
+
+check('major and master save vs psionics at 12, everyone else at 15', (() => {
+  const t = (tier) => D.saves({ ME: 10 }, null, tier).psionics_target;
+  return t('major') === 12 && t('master') === 12
+      && t('minor') === 15 && t(null) === 15 && t(undefined) === 15;
+})());
+check('the psionic save BONUS is still purely M.E.', (() => {
+  const strong = D.saves({ ME: 18 }, null, 'master');
+  const weak = D.saves({ ME: 18 }, null, null);
+  return strong.psionics === weak.psionics && strong.psionics === 3;
+})());
+check('a stored override still wins over the derived target',
+  D.saves({ ME: 10 }, { psionics_target: 8 }, 'minor').psionics_target === 8);
+
 // ---------- 1d. Paging ----------
 // A stray query string must not turn a list endpoint into a 400, so anything
 // nonsensical falls back to the default rather than erroring.

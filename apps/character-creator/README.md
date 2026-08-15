@@ -19,6 +19,7 @@ Access gate. No build step, no framework, no dependencies.
 - [Permissions](#permissions)
 - [House rules and derived values](#house-rules-and-derived-values)
 - [Level-up skill picks](#level-up-skill-picks)
+- [Psychic tiers](#psychic-tiers)
 - [How the sheet updates](#how-the-sheet-updates)
 - [Server-side rule enforcement](#server-side-rule-enforcement)
 - [The catalog field config](#the-catalog-field-config)
@@ -144,7 +145,7 @@ ppe and isp.
 | `gear` | Gear catalog. `slug` is what `equipment_starting[].item_id` references. Carries a stat block — damage, is_mega_damage, range, payload, rate_of_fire, ar, mdc — null wherever it does not apply, so one table covers weapons, armour and general kit. Named `gear`, not `items`, to stay clear of MediaVault's `media_items`. |
 | `skills` | `base` 0 means non-percentile (W.P.s, hand to hand). `systems` is a JSON array; NULL means both. `note` carries oddities like `40%/30% climb/rappel`. |
 | `spells` | name, level, ppe, plus a stat block (range, duration, damage, saving throw, area of effect, casting time, description). The stat block is TEXT — books write "100 feet per level" as often as a number. |
-| `psionic_powers` | name, category (Healing/Physical/Sensitive/Super), isp, plus range, duration, saving throw and description — the same field names spells use. `min_tier` is the psychic tier a book states is required; NULL means no restriction beyond the category, and nothing enforces it yet. |
+| `psionic_powers` | name, category (Healing/Physical/Sensitive/Super), isp, plus range, duration, saving throw and description — the same field names spells use. `min_tier` is the psychic tier a book states is required; NULL means no restriction beyond the category. |
 
 All catalogs carry `source` (`seed` \| `import`) and `source_book`, so an entry's
 provenance is visible and the same skill from two books can coexist under
@@ -304,6 +305,7 @@ overridable.
 | Attribute rolls | 3d6, plus one bonus d6 on an exceptional 16+ | `attribute_dice` |
 | XP table | Shared 15-level curve: 0, 2000, 4000, 8000, 16000, 25000, 35000, 50000, 70000, 95000, 125000, 160000, 200000, 250000, 300000 | `xp_table: [...]` |
 | Psionic starting powers | minor 2, major 6, master 8; Super is master-only | `psionics.powers_starting`, `psionics.categories_allowed` |
+| Save vs psionic attack | 12+ for Major and Master psychics, 15+ for everyone else | override `saves.psionics_target` on the character |
 | Skills gained on level-up | Start at the catalog's base percentage — a skill learned at level 6 is still new | `skills.occ_related_skills.schedule` |
 | Skill percentage cap | 98% | — |
 
@@ -361,6 +363,45 @@ Spending consumes the oldest grant first, and a grant only partly spent stays
 pending with its count reduced — so two picks earned at level 3 can be taken one
 at a time. Both paths write the skills and the claim in a single batch, because
 a pick that consumed its grant without landing on the sheet would be lost.
+
+---
+
+## Psychic tiers
+
+Minor, Major and Master differ in three ways, and only the third is new.
+
+**What already worked:** the character's tier comes from class frontmatter
+(`psionics.type`), starting power counts are minor 2 / major 6 / master 8, and
+Super psionics are Master-only through `psionics.categories_allowed`. That is a
+**category** gate.
+
+**What this adds** is a **per-power** gate. `psionic_powers.min_tier` records the
+tier a book states for an individual power, and the picker will not offer one
+above the character's tier. The two gates are not the same: a book can put a
+Major-only power in Physical or Sensitive, which a Minor psychic can otherwise
+reach — and that is the only case where the per-power gate does anything the
+category gate does not.
+
+- **`NULL` means no restriction beyond the category**, which is the overwhelming
+  majority of rows and the behaviour that existed before. Books state tier at the
+  category level far more often than per power.
+- **Gated powers are counted, not listed.** "2 more powers need a higher psychic
+  tier than minor" — so a short list reads as a rule rather than a gap in the
+  catalog.
+- **There is no override.** This differs deliberately from the level-up skill
+  picker, where an out-of-category pick is allowed and flagged: skill categories
+  get bent at the table, psychic tiers do not.
+- **A power a character already holds is never taken away.** The gate applies to
+  choosing, not to having, consistent with every other rule decision here.
+- A class with no `psionics` block has no tier, so nothing is gated.
+
+`derive.meetsTier(has, needs)` is the only place the ordering is written down.
+Compare through it rather than comparing tier strings.
+
+**Save vs psionic attack** now has a target as well as a bonus: 12+ for Major and
+Master psychics, 15+ for everyone else — non-psychics included, since they get
+attacked by psionics too. `deriveSaves()` previously returned only the M.E. bonus
+and no number to roll against. It is overridable like every other derived value.
 
 ---
 
@@ -730,10 +771,6 @@ Honest list, roughly by value.
 Most of these are planned out as twelve PRs under
 [`docs/plans/`](docs/plans/README.md), with the design decisions and the
 rejected alternatives recorded per PR.
-
-**`min_tier` is recorded but not enforced.** The psionic importer captures the
-tier a book states, and nothing yet stops a Minor psychic taking a Master-only
-power. That needs real imported data behind it before it can be built or tested.
 
 **The catalog editor has no delete and no duplicate-merge.** Rows are created and
 corrected by hand, never removed, so undoing a bad "keep both" import decision
