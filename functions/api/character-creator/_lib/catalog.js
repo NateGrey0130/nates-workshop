@@ -6,7 +6,7 @@
 // a name and whatever category can be inferred — and are flagged so they are
 // easy to find and fill in later.
 
-import { isChoiceGroup } from '../../../../apps/character-creator/js/parser.js';
+import { isChoiceGroup, isGearChoice } from '../../../../apps/character-creator/js/parser.js';
 import { resolveKeys } from './catalog-redirects.js';
 
 const norm = (s) => String(s ?? '').trim().toLowerCase();
@@ -24,6 +24,18 @@ export function referencedSkills(data) {
     }
   }
   return names.filter(Boolean);
+}
+
+// Every gear slug the class references: fixed entries plus every option inside
+// a choice. All the options must exist, the same reasoning as skill groups —
+// any one of them could be the one picked.
+export function referencedGear(data) {
+  const slugs = [];
+  for (const eq of data.equipment_starting || []) {
+    if (isGearChoice(eq)) slugs.push(...(eq.from || []));
+    else if (eq?.item_id) slugs.push(eq.item_id);
+  }
+  return slugs.filter(Boolean);
 }
 
 const nameList = (arr) => (arr || [])
@@ -60,7 +72,7 @@ async function missingFrom(env, catalogKey, table, column, names) {
 
 export async function crossReference(env, requestUrl, data) {
   const [items, skills, spells, psionics] = await Promise.all([
-    missingFrom(env, 'gear', 'gear', 'slug', (data.equipment_starting || []).map((e) => e?.item_id).filter(Boolean)),
+    missingFrom(env, 'gear', 'gear', 'slug', referencedGear(data)),
     missingFrom(env, 'skills', 'skills', 'name', referencedSkills(data)),
     missingFrom(env, 'spells', 'spells', 'name', nameList(data.magic?.spells)),
     missingFrom(env, 'psionics', 'psionic_powers', 'name', nameList(data.psionics?.powers)),

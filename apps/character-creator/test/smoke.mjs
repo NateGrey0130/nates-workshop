@@ -7,7 +7,8 @@ import { readFileSync, readdirSync, writeFileSync, rmSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseClassMarkdown } from '../js/parser.js';
+import { parseClassMarkdown, isGearChoice } from '../js/parser.js';
+import { referencedGear } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import {
   getImportSpec, stripFences, normaliseRows, countRows, applyDecisions,
@@ -632,6 +633,64 @@ check('resolving an empty list never touches the database', await (async () => {
   const map = await resolveKeys(db, 'gear', []);
   return map.size === 0 && !called;
 })());
+
+// ---------- 1c7. Gear choice groups ----------
+// Books routinely say "one energy pistol of choice" where equipment_starting
+// only held fixed item ids. The workaround was a placeholder catalog row named
+// after the category, which no book entry can ever match — so the character
+// ended up holding a weapon with no stats.
+console.log('\n[1c7] Gear choice groups');
+
+const classWithGear = (yaml) => parseClassMarkdown(
+  `---
+id: test-class
+name: Test Class
+system: rifts
+source_book: test-book
+category: occ
+equipment_starting:
+${yaml}
+---
+
+## Lore
+
+Body.
+`);
+
+check('a fixed item and a choice can sit side by side', (() => {
+  const p = classWithGear(
+    '  - { item_id: "back-pack", qty: 1 }\n'
+    + '  - { choose: 1, from: ["ng-33-laser-pistol", "wilks-320-laser-pistol"], label: "energy pistol" }');
+  return p.ok && p.data.equipment_starting.length === 2;
+})(), 'errors: ' + JSON.stringify(classWithGear('  - { item_id: "back-pack" }').errors));
+
+check('an entry with neither item_id nor choose is rejected',
+  !classWithGear('  - { qty: 1 }').ok);
+check('a choice asking for more than it offers is rejected',
+  !classWithGear('  - { choose: 3, from: ["a-slug", "b-slug"] }').ok);
+check('a choice with an empty from list is rejected',
+  !classWithGear('  - { choose: 1, from: [] }').ok);
+check('a choice with a non-numeric choose is rejected',
+  !classWithGear('  - { choose: "one", from: ["a-slug"] }').ok);
+
+// An entry that names an item is a fixed item, whatever else it carries — `qty`
+// must not be mistaken for the start of a choice.
+check('a fixed entry with a qty is not read as a choice',
+  isGearChoice({ item_id: 'back-pack', qty: 2 }) === false);
+check('an entry with choose and no item_id is a choice',
+  isGearChoice({ choose: 1, from: ['a-slug'] }) === true);
+
+// Every option must exist in the catalog, the same reasoning skill groups use:
+// any one of them could be the option actually picked.
+check('cross-reference collects fixed items and every option', (() => {
+  const slugs = referencedGear({ equipment_starting: [
+    { item_id: 'back-pack', qty: 1 },
+    { choose: 1, from: ['ng-33-laser-pistol', 'wilks-320-laser-pistol'] },
+  ] });
+  return slugs.length === 3 && slugs.includes('back-pack') && slugs.includes('wilks-320-laser-pistol');
+})());
+check('cross-reference on a class with no equipment yields nothing',
+  referencedGear({}).length === 0);
 
 // ---------- 1d. Paging ----------
 // A stray query string must not turn a list endpoint into a 400, so anything

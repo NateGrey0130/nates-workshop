@@ -7,7 +7,7 @@
 // inline onclick handlers need their entry points on window — see the
 // Object.assign at the bottom.
 import { d, evalDice } from './js/dice.js';
-import { isChoiceGroup } from './js/parser.js';
+import { isChoiceGroup, isGearChoice } from './js/parser.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
 const STEPS = ['System', 'Class', 'Attributes', 'Skills', 'Equipment', 'Powers', 'Details', 'Review'];
@@ -31,6 +31,9 @@ const S = {
   classes: [], cls: null,
   attrMethods: {}, attrs: {},
   related: [], secondary: [], groupPicks: {},
+  // Starting-gear choices the class leaves open, and the slugs picked for each,
+  // keyed by the entry's index in equipment_starting.
+  gearChoices: [], gearPicks: {},
   equipment: [], equipInit: false,
   charName: '', campaignId: null, newCampaign: '',
   spells: [], psi: [], bio: {},
@@ -182,6 +185,7 @@ function pickSystem(sys) {
 function resetBuild() {
   S.attrMethods = {}; S.attrs = {}; S.related = []; S.secondary = []; S.groupPicks = {};
   S.equipment = []; S.equipInit = false; S.pools = null;
+  S.gearChoices = []; S.gearPicks = {};
   S.spells = []; S.psi = []; S.bio = {};
 }
 
@@ -463,15 +467,69 @@ function findItem(slug) {
   return to ? S.items.find((it) => it.slug === to) : null;
 }
 
+// A class's starting gear is a mix of fixed items and "one energy pistol of
+// choice" groups. Fixed entries land in the inventory immediately; the choices
+// are held aside until the player resolves them, because picking for them would
+// be inventing a decision the book left open.
 function initEquipment() {
   if (S.equipInit) return;
-  S.equipment = (S.cls.equipment_starting || []).map((eq) => {
+  S.equipment = [];
+  S.gearChoices = [];
+
+  (S.cls.equipment_starting || []).forEach((eq, gi) => {
+    if (isGearChoice(eq)) {
+      S.gearChoices.push({
+        gi,
+        choose: eq.choose,
+        qty: eq.qty || 1,
+        label: eq.label || '',
+        options: (eq.from || []).map((slug) => ({ slug, item: findItem(slug) })),
+      });
+      return;
+    }
     const item = findItem(eq.item_id);
-    return item
+    S.equipment.push(item
       ? { item_id: item.id, name: item.name, qty: eq.qty || 1, source: 'starting' }
-      : { custom_name: eq.item_id.replace(/-/g, ' '), qty: eq.qty || 1, source: 'starting', notes: 'starting gear (not in item catalog yet)' };
+      : { custom_name: eq.item_id.replace(/-/g, ' '), qty: eq.qty || 1, source: 'starting', notes: 'starting gear (not in item catalog yet)' });
   });
   S.equipInit = true;
+}
+
+// Every choice resolved? Starting gear is finite and the book intends the
+// character to have it, so an unresolved choice is an oversight rather than a
+// deliberate omission — the step will not advance until they are all made.
+function gearChoicesOutstanding() {
+  return S.gearChoices.filter((c) => (S.gearPicks[c.gi] || []).length < c.choose);
+}
+
+// What actually gets saved: the fixed starting gear and anything added by hand,
+// plus the choices the player resolved. Kept as a function rather than pushed
+// into S.equipment so a pick stays reversible — unticking a box must take the
+// item back out, and a copy in the inventory list would survive it.
+function equipmentPayload() {
+  return [...S.equipment, ...pickedGear()];
+}
+
+// Resolved picks, folded into the inventory shape the save endpoint expects.
+function pickedGear() {
+  const out = [];
+  for (const c of S.gearChoices) {
+    for (const slug of S.gearPicks[c.gi] || []) {
+      const item = findItem(slug);
+      out.push(item
+        ? { item_id: item.id, name: item.name, qty: c.qty, source: 'starting' }
+        : { custom_name: slug.replace(/-/g, ' '), qty: c.qty, source: 'starting', notes: 'chosen starting gear (not in item catalog yet)' });
+    }
+  }
+  return out;
+}
+
+function toggleGearPick(gi, slug, limit) {
+  const picked = S.gearPicks[gi] || (S.gearPicks[gi] = []);
+  const at = picked.indexOf(slug);
+  if (at >= 0) picked.splice(at, 1);
+  else if (picked.length < limit) picked.push(slug);
+  render();
 }
 function renderEquipment() {
   initEquipment();
@@ -480,10 +538,36 @@ function renderEquipment() {
      <td><span class="tag">${e.source}</span></td><td class="muted small">${esc(e.notes || '')}</td>
      <td><button class="btn btn-sm btn-ghost" onclick="rmEquip(${i})">✕</button></td></tr>`).join('');
   const catalogOpts = S.items.map((it) => `<option value="${it.id}">${esc(it.name)}</option>`).join('');
+
+  // "One energy pistol of choice" — the book leaves it open, so the player
+  // closes it here. Same shape as the skill choice-groups on step 3.
+  const choiceBlocks = S.gearChoices.map((c) => {
+    const picked = S.gearPicks[c.gi] || [];
+    const opts = c.options.map((o) => {
+      const on = picked.includes(o.slug);
+      const blocked = !on && picked.length >= c.choose;
+      const detail = o.item
+        ? [o.item.category, o.item.weight_lbs ? `${o.item.weight_lbs} lb` : '', o.item.cost ? `${o.item.cost}` : '']
+          .filter(Boolean).join(' · ')
+        : 'not in the catalog yet';
+      return `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}; margin-left:18px">
+        <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
+          data-act="gear" data-group="${c.gi}" data-limit="${c.choose}" data-slug="${esc(o.slug)}">
+        <span>${esc(o.item ? o.item.name : o.slug.replace(/-/g, ' '))}</span>
+        <span class="pct">${esc(detail)}</span></label>`;
+    }).join('');
+    return `<div class="chkrow"><b>Pick ${c.choose}${c.label ? ` — ${esc(c.label)}` : ''}</b>
+      <span class="pct">${picked.length}/${c.choose} chosen</span></div>${opts}`;
+  }).join('');
+
+  const outstanding = gearChoicesOutstanding().length;
+
   $('app').innerHTML = `
   <div class="panel">
     <h2>Equipment <span class="muted small">— ${esc(S.cls.name)}</span></h2>
     <table>${rows || '<tr><td class="muted">Nothing yet.</td></tr>'}</table>
+    ${choiceBlocks ? `<h3>Choose your starting gear</h3>
+      <p class="muted small">Your class leaves these open.</p>${choiceBlocks}` : ''}
     <h3>Add from item catalog</h3>
     ${S.items.length ? `<div class="rowline">
       <select id="cat-item">${catalogOpts}</select>
@@ -499,7 +583,8 @@ function renderEquipment() {
     </div>
   </div>
   <div class="nav"><button class="btn btn-ghost" onclick="goStep(3)">&larr; Back</button>
-  <button class="btn btn-primary" onclick="goStep(5)">Powers &rarr;</button></div>`;
+  <button class="btn btn-primary" ${outstanding ? 'disabled' : ''} onclick="goStep(5)">Powers &rarr;</button>
+  ${outstanding ? `<span class="muted small">${outstanding} gear choice${outstanding === 1 ? '' : 's'} still to make.</span>` : ''}</div>`;
 }
 function rmEquip(i) { S.equipment.splice(i, 1); render(); }
 function addCatalog() {
@@ -682,8 +767,8 @@ function renderReview() {
 
     <h3>Skills (${skillsPayload().length})</h3>
     <p class="small">${skillsPayload().map((s) => esc(s.name) + (s.pct ? ` ${s.pct}%` : '')).join(' · ')}</p>
-    <h3>Equipment (${S.equipment.length})</h3>
-    <p class="small">${S.equipment.map((e) => esc(e.name || e.custom_name) + (e.qty > 1 ? ` ×${e.qty}` : '')).join(' · ') || '—'}</p>
+    <h3>Equipment (${equipmentPayload().length})</h3>
+    <p class="small">${equipmentPayload().map((e) => esc(e.name || e.custom_name) + (e.qty > 1 ? ` ×${e.qty}` : '')).join(' · ') || '—'}</p>
 
     ${powersPayload().length ? `<h3>Powers (${powersPayload().length})</h3>
       <p class="small">${powersPayload().map((p) =>
@@ -711,7 +796,7 @@ async function save() {
       campaign_id: campaignId, name: S.charName, class_id: S.cls.id,
       attributes: S.attrs, skills: skillsPayload(), powers: powersPayload(), pools: S.pools,
       bio: S.bio,
-      items: S.equipment.map((e) => ({ item_id: e.item_id, custom_name: e.custom_name, qty: e.qty, notes: e.notes })),
+      items: equipmentPayload().map((e) => ({ item_id: e.item_id, custom_name: e.custom_name, qty: e.qty, notes: e.notes })),
     };
     const res = await api('characters', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     S.savedId = res.id;
@@ -801,6 +886,7 @@ $('app').addEventListener('change', (ev) => {
   switch (el.dataset?.act) {
     case 'skill': return toggleSkill(el.dataset.kind, el.dataset.name);
     case 'group': return toggleGroupPick(+el.dataset.group, el.dataset.name, +el.dataset.limit);
+    case 'gear': return toggleGearPick(+el.dataset.group, el.dataset.slug, +el.dataset.limit);
     case 'power': return togglePower(el.dataset.kind, el.dataset.name);
   }
 });
