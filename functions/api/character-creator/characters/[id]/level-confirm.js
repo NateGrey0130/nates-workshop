@@ -14,6 +14,7 @@ import { loadClass } from '../../_lib/class-loader.js';
 import { xpTableFor, thresholdFor, skillGrantsFor } from '../../_lib/leveling.js';
 import { insertGrantStatements, resolvePicks, pickErrors } from '../../_lib/skill-picks.js';
 import { validateCharacter, loadSkillCategories } from '../../_lib/validate-character.js';
+import { loadCharacter } from '../../_lib/character-json.js';
 
 const POOL_FIELDS = ['hp_max', 'sdc_max', 'mdc_max', 'ppe_max', 'isp_max'];
 
@@ -25,7 +26,7 @@ export async function onRequestPost({ request, env, params }) {
   if (!access.canWrite) return forbidden();
 
   const b = await request.json();
-  const character = await env.DB.prepare('SELECT * FROM characters WHERE id = ?').bind(params.id).first();
+  const character = await loadCharacter(env, params.id);
   const toLevel = parseInt(b.to_level, 10);
   if (!Number.isFinite(toLevel) || toLevel <= character.level) {
     return json({ error: `to_level must be greater than current level (${character.level})` }, 400);
@@ -51,8 +52,7 @@ export async function onRequestPost({ request, env, params }) {
     }
   }
 
-  let skills = [];
-  try { skills = JSON.parse(character.skills); } catch { /* leave empty */ }
+  let skills = character.skills;
   let skillsChanged = false;
   if (Array.isArray(b.skills) && b.skills.length) {
     const byName = new Map(b.skills.filter((s) => s && typeof s.pct === 'number').map((s) => [s.name, s.pct]));
@@ -90,10 +90,8 @@ export async function onRequestPost({ request, env, params }) {
 
   // Check the result, not the request: the allowance grows with the level being
   // reached, so validate against toLevel rather than the level being left.
-  let attributes = {};
-  try { attributes = JSON.parse(character.attributes); } catch { /* leave empty */ }
   const { violations } = validateCharacter({
-    character: { level: toLevel }, cls, skills, attributes,
+    character: { level: toLevel }, cls, skills, attributes: character.attributes,
     catalog: cls ? await loadSkillCategories(env) : null,
   });
   if (violations.length) {

@@ -9,6 +9,7 @@
 // new regardless of the character's level.
 
 import { json } from './auth.js';
+import { safeParse } from './character-json.js';
 
 export async function listPending(env, characterId) {
   const { results } = await env.DB.prepare(
@@ -24,14 +25,6 @@ export async function listPending(env, characterId) {
     categories: r.categories ? safeParse(r.categories) : null,
     created_at: r.created_at,
   }));
-}
-
-export async function countPending(env, characterId) {
-  const row = await env.DB.prepare(
-    `SELECT coalesce(sum(count), 0) AS n FROM pending_skill_picks
-     WHERE character_id = ? AND claimed_at IS NULL`
-  ).bind(characterId).first();
-  return row?.n ?? 0;
 }
 
 export function insertGrantStatements(env, characterId, grants) {
@@ -137,6 +130,3 @@ export function pickErrors(errors) {
   return json({ error: errors.join('; '), errors }, 422);
 }
 
-function safeParse(text) {
-  try { return JSON.parse(text); } catch { return null; }
-}

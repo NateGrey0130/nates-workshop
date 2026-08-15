@@ -9,6 +9,7 @@ import { getUserEmail, unauthorized, json, forbidden, characterAccess, readJson 
 import { listPending, resolvePicks, claimStatements, pickErrors } from '../../_lib/skill-picks.js';
 import { loadClass } from '../../_lib/class-loader.js';
 import { validateCharacter, loadSkillCategories } from '../../_lib/validate-character.js';
+import { loadCharacter } from '../../_lib/character-json.js';
 
 export async function onRequestGet({ request, env, params }) {
   const email = getUserEmail(request);
@@ -46,10 +47,8 @@ export async function onRequestPost({ request, env, params }) {
     ? null
     : [...new Set(pending.flatMap((g) => g.categories || []))];
 
-  const character = await env.DB.prepare('SELECT level, skills, attributes, class_id FROM characters WHERE id = ?')
-    .bind(params.id).first();
-  let skills = [];
-  try { skills = JSON.parse(character.skills); } catch { /* leave empty */ }
+  const character = await loadCharacter(env, params.id, ['level', 'skills', 'attributes', 'class_id']);
+  const skills = character.skills;
 
   const picked = await resolvePicks(env, {
     picks: b.picks,
@@ -66,10 +65,8 @@ export async function onRequestPost({ request, env, params }) {
   // boundary applies here as everywhere else — one place decides what is legal.
   const merged = skills.concat(picked.skills);
   const cls = await loadClass(env, request.url, character.class_id);
-  let attributes = {};
-  try { attributes = JSON.parse(character.attributes); } catch { /* leave empty */ }
   const { violations } = validateCharacter({
-    character: { level: character.level }, cls, skills: merged, attributes,
+    character: { level: character.level }, cls, skills: merged, attributes: character.attributes,
     catalog: cls ? await loadSkillCategories(env) : null,
   });
   if (violations.length) {

@@ -43,10 +43,6 @@ export function publishStatement(env, { classId, name, system, markdown, email }
   ).bind(classId, name ?? null, system ?? null, markdown, email);
 }
 
-export async function publish(env, opts) {
-  await publishStatement(env, opts).run();
-}
-
 // Published classes used as format examples in the extraction prompt. Pulled
 // from the database so the examples stay current as classes are added.
 export async function getExamples(env, limit = 2) {
