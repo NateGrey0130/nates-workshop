@@ -320,7 +320,7 @@ export async function extractRows(env, spec, { pdfBase64, model, systemPrompt, u
 //           a distinguished as_name because the key column is UNIQUE.
 //   update  overwrite the existing row from the book
 //   ignore  do nothing
-export async function applyDecisions(env, spec, decisions, { sourceBook }) {
+export async function applyDecisions(env, spec, decisions, { sourceBook, system } = {}) {
   const cat = CATALOGS[spec.catalog];
   const key = cat.uniqueField;
   const writable = spec.extractFields.filter((f) => f !== key);
@@ -388,7 +388,7 @@ export async function applyDecisions(env, spec, decisions, { sourceBook }) {
     if (queued.has(lower)) { conflicts.push({ name: target, reason: 'Named twice in this same import' }); continue; }
     if (taken.has(lower)) { conflicts.push({ name: target, reason: `A row with that ${key} already exists` }); continue; }
     queued.add(lower);
-    statements.push(buildInsert(env, spec, cat, writable, d, target, sourceBook));
+    statements.push(buildInsert(env, spec, cat, writable, d, target, sourceBook, system));
     applied.inserted.push(target);
   }
 
@@ -425,10 +425,36 @@ function isScalar(type) {
   return type === 'int' || type === 'real' || type === 'bool';
 }
 
-function buildInsert(env, spec, cat, writable, d, target, sourceBook) {
+// Where a catalog records which game system a row belongs to, and how.
+//
+// Three shapes across four catalogs, all read off the field config rather than
+// hardcoded: skills keep a JSON ARRAY (`systems`), the rest a single string
+// (`system`), and a catalog without either gets nothing stamped.
+//
+// NULL means unrestricted everywhere, so a session that does not name a system
+// — or names "both" — writes nothing rather than inventing a restriction.
+export function systemColumnFor(cat, system) {
+  if (!system || system === 'both') return null;
+  const arrayField = cat.fields.find((f) => f.type === 'systems');
+  if (arrayField) return { col: arrayField.name, value: JSON.stringify([system]) };
+  const scalarField = cat.fields.find((f) => f.name === 'system');
+  if (scalarField) return { col: scalarField.name, value: system };
+  return null;
+}
+
+// Stamped on INSERT only. An update is a correction to a row's numbers from a
+// book; silently reclassifying which system an existing row belongs to is a
+// different and much larger claim, and not one the operator asked for.
+function buildInsert(env, spec, cat, writable, d, target, sourceBook, system) {
   const cols = [cat.uniqueField, ...writable, 'source_book'];
   const vals = [target, ...writable.map((f) => valueFor(spec, f, d)), sourceBook];
   if (cat.hasSource) { cols.push('source'); vals.push('import'); }
+
+  const sys = systemColumnFor(cat, system);
+  // Skipped when the extraction already produced the column itself — gear's
+  // prompt can emit `system`, and what the book actually said wins over the
+  // session default.
+  if (sys && !cols.includes(sys.col)) { cols.push(sys.col); vals.push(sys.value); }
   return env.DB.prepare(
     `INSERT INTO ${spec.table} (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`
   ).bind(...vals);

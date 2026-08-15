@@ -458,6 +458,15 @@ function pbAdj(a, delta) {
 }
 
 // Step 3 — skills
+// A catalog row belongs to this build's system, or to no system at all.
+// NULL/blank means unrestricted, which is how skills.systems has always read and
+// is now how spells, psionics and gear read too. A Palladium Fantasy spell
+// chapter must not offer its spells to a Rifts mage.
+function inSystem(row) {
+  const sys = row?.system;
+  return !sys || sys === 'both' || sys === S.system;
+}
+
 function catalogFor(categories) {
   return S.skillCatalog.filter((sk) =>
     (!categories || categories.includes(sk.category)) &&
@@ -782,7 +791,7 @@ function renderPowers() {
   if (magic) {
     const count = magic.spells_starting || 0;
     const levels = Array.isArray(magic.spell_levels_allowed) ? magic.spell_levels_allowed : null;
-    const pool = S.spellCatalog.filter((sp) => !levels || levels.includes(sp.level));
+    const pool = S.spellCatalog.filter((sp) => inSystem(sp) && (!levels || levels.includes(sp.level)));
     // A chosen spell stays visible whatever the filter says, or narrowing the
     // list would look like it had un-picked something.
     const list = Picker.filter(pool, S.spellFilter)
@@ -802,7 +811,7 @@ function renderPowers() {
   }
   if (psi) {
     const tier = S.cls.psionics.type;
-    const inCategory = S.psiCatalog.filter((p) => psi.cats.includes(p.category));
+    const inCategory = S.psiCatalog.filter((p) => inSystem(p) && psi.cats.includes(p.category));
     // Two gates, and they are not the same. The category gate has always been
     // here (Super is master-only). This is the per-power one: a book can state
     // that an individual power needs a higher tier than its category implies.

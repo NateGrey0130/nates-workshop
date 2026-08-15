@@ -53,6 +53,9 @@ export async function onRequestPost({ request, env }) {
     catalog: b.catalog,
     name,
     sourceBook: typeof b.source_book === 'string' && b.source_book.trim() ? b.source_book.trim() : null,
+    // Validated in createSession — anything that is not a real system, including
+    // 'both', stores NULL and therefore restricts nothing.
+    system: typeof b.system === 'string' ? b.system.trim() : null,
     email: guard.email,
   });
   return json({ ok: true, id: sessionId }, 201);

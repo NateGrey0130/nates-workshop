@@ -205,6 +205,7 @@ CREATE TABLE IF NOT EXISTS spells (
   ppe INTEGER NOT NULL DEFAULT 0,
   source TEXT NOT NULL DEFAULT 'seed',
   source_book TEXT,
+  system TEXT,                            -- rifts | palladium-fantasy | both; NULL = unrestricted
   -- Stat block. TEXT rather than numbers because book values are prose as often
   -- as figures: "100 feet per level of experience", "2D6 melee rounds".
   range TEXT,
@@ -223,6 +224,7 @@ CREATE TABLE IF NOT EXISTS psionic_powers (
   isp INTEGER NOT NULL DEFAULT 0,
   source TEXT NOT NULL DEFAULT 'seed',
   source_book TEXT,
+  system TEXT,                            -- rifts | palladium-fantasy | both; NULL = unrestricted
   -- Field names match spells on purpose, so the sheet renders both the same way.
   range TEXT,
   duration TEXT,
@@ -272,6 +274,7 @@ CREATE TABLE IF NOT EXISTS import_sessions (
   catalog TEXT NOT NULL,                -- spells | psionics | gear | skills
   name TEXT NOT NULL,
   source_book TEXT,
+  system TEXT,                          -- the book's game system; stamped on every row it imports
   created_by TEXT NOT NULL,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   closed_at TEXT                        -- NULL = still open
@@ -369,3 +372,8 @@ CREATE TABLE IF NOT EXISTS character_drafts (
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '011-character-drafts.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'character_drafts');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '012-catalog-system.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('spells') WHERE name = 'system')
+  AND EXISTS (SELECT 1 FROM pragma_table_info('import_sessions') WHERE name = 'system');

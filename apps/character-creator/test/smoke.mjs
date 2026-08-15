@@ -12,7 +12,7 @@ import { referencedGear } from '../../../functions/api/character-creator/_lib/ca
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import {
   getImportSpec, stripFences, normaliseRows, countRows, applyDecisions,
-  classifyRows, slugify,
+  classifyRows, slugify, systemColumnFor,
 } from '../../../functions/api/character-creator/_lib/import-engine.js';
 import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
 import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
@@ -725,6 +725,35 @@ check('draft does NOT persist the resolved class object', !DRAFT_KEYS.includes('
 // restore options that no longer match the class.
 check('draft does NOT persist derived gear choices', !DRAFT_KEYS.includes('gearChoices'));
 
+// ---------- 1c10. Import session system ----------
+// Which game system a book is for is chosen once per import session and stamped
+// on every row it inserts. Three shapes across four catalogs: skills keep a JSON
+// array, the rest a single string, and NULL means unrestricted everywhere.
+console.log('\n[1c10] Import session system');
+
+check('skills get a JSON array', (() => {
+  const s = systemColumnFor(CATALOGS.skills, 'rifts');
+  return s.col === 'systems' && s.value === '["rifts"]';
+})());
+for (const key of ['spells', 'psionics', 'gear']) {
+  check(`${key} gets a single string`, (() => {
+    const s = systemColumnFor(CATALOGS[key], 'rifts');
+    return s.col === 'system' && s.value === 'rifts';
+  })());
+}
+
+// NULL means unrestricted, so neither of these should write anything — a book
+// covering both systems restricts nothing, and nor does not knowing.
+check('"both" stamps nothing', systemColumnFor(CATALOGS.gear, 'both') === null);
+check('an unset system stamps nothing',
+  systemColumnFor(CATALOGS.gear, null) === null && systemColumnFor(CATALOGS.gear, '') === null);
+
+// Every catalog can now record a system; before this only gear and skills could,
+// so a Palladium Fantasy spell chapter had nowhere to say so.
+for (const key of ['skills', 'spells', 'psionics', 'gear']) {
+  check(`${key} has somewhere to record a system`, systemColumnFor(CATALOGS[key], 'rifts') !== null);
+}
+
 // ---------- 1c9. Picker filtering ----------
 // js/picker.js is a classic script, because the wizard is a module and the
 // sheet is a plain script and both need it. So it is loaded the way a browser
@@ -801,7 +830,7 @@ check('schema applies cleanly', apply.status === 0, (apply.stderr || apply.stdou
 // SQL goes through a temp file — a quoted --command string doesn't survive the Windows shell.
 const checkSql = join(appDir, 'test', '.smoke-check.sql');
 writeFileSync(checkSql,
-  "SELECT (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('campaigns','characters','journal_entries','level_history','gear','character_items')) AS cc_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'media_items') AS media_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('imported_classes','skills','spells','psionic_powers')) AS catalog_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='catalog_redirects') AS redirect_table, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='character_drafts') AS draft_table, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='items') AS stale_items_table, (SELECT sql FROM sqlite_master WHERE name='character_items') AS ci_ddl;\n");
+  "SELECT (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('campaigns','characters','journal_entries','level_history','gear','character_items')) AS cc_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'media_items') AS media_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('imported_classes','skills','spells','psionic_powers')) AS catalog_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='catalog_redirects') AS redirect_table, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='character_drafts') AS draft_table, (SELECT count(*) FROM pragma_table_info('spells') WHERE name='system') AS spells_system, (SELECT count(*) FROM pragma_table_info('import_sessions') WHERE name='system') AS session_system, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='items') AS stale_items_table, (SELECT sql FROM sqlite_master WHERE name='character_items') AS ci_ddl;\n");
 const query = wrangler(['d1', 'execute', 'DB', '--local', '--json', '--file', checkSql]);
 rmSync(checkSql, { force: true });
 let row = null;
@@ -811,6 +840,8 @@ check('media_items still intact alongside them', row?.media_tables === 1);
 check('class + catalog tables exist', row?.catalog_tables === 4, query.stdout?.slice(-300));
 check('catalog_redirects exists', row?.redirect_table === 1, query.stdout?.slice(-300));
 check('character_drafts exists', row?.draft_table === 1, query.stdout?.slice(-300));
+check('spells and import_sessions carry a system column',
+  row?.spells_system === 1 && row?.session_system === 1, query.stdout?.slice(-300));
 
 // The rename must leave nothing behind. A surviving `items` alongside `gear`
 // means schema.sql created an empty gear table on an un-migrated database.
