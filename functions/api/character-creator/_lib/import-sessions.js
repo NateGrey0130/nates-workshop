@@ -12,6 +12,7 @@
 // Catalog-agnostic: psionics and gear reuse this untouched.
 
 import { CATALOGS } from '../../../../apps/character-creator/js/catalog-fields.js';
+import { safeParse } from './character-json.js';
 
 // A page range that produces more rows than this is almost certainly a range
 // that is too wide to have been read reliably, so it is refused rather than
@@ -65,7 +66,7 @@ export async function stageRows(env, sessionId, pageRange, classified, catalogKe
     'SELECT payload FROM import_staged WHERE session_id = ?'
   ).bind(sessionId).all();
   const seen = new Set(already.map((r) => {
-    try { return String(JSON.parse(r.payload)[key] ?? '').toLowerCase(); } catch { return ''; }
+    return String(safeParse(r.payload, {})[key] ?? '').toLowerCase();
   }));
 
   const fresh = [];
@@ -106,8 +107,8 @@ export async function getStaged(env, sessionId, { pendingOnly = true } = {}) {
      ORDER BY id`
   ).bind(sessionId).all();
   return results.map((r) => {
-    let payload = {};
-    try { payload = JSON.parse(r.payload); } catch { /* a corrupt row shows as empty rather than breaking review */ }
+    // A corrupt row shows as empty rather than breaking the whole review.
+    const payload = safeParse(r.payload, {});
     return {
       id: r.id,
       page_range: r.page_range,
@@ -129,13 +130,5 @@ export async function markConfirmed(env, ids) {
     `UPDATE import_staged SET confirmed_at = datetime('now')
      WHERE id IN (${ids.map(() => '?').join(',')})`
   ).bind(...ids).run();
-  return res.meta?.changes ?? 0;
-}
-
-export async function deleteStaged(env, sessionId, ids) {
-  if (!ids.length) return 0;
-  const res = await env.DB.prepare(
-    `DELETE FROM import_staged WHERE session_id = ? AND id IN (${ids.map(() => '?').join(',')})`
-  ).bind(sessionId, ...ids).run();
   return res.meta?.changes ?? 0;
 }

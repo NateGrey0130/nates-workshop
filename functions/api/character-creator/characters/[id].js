@@ -5,6 +5,7 @@
 
 import { getUserEmail, unauthorized, json, forbidden, characterAccess, readJson } from '../_lib/auth.js';
 import { listPending } from '../_lib/skill-picks.js';
+import { decodeCharacter } from '../_lib/character-json.js';
 
 export async function onRequestGet({ request, env, params }) {
   const email = getUserEmail(request);
@@ -25,10 +26,7 @@ export async function onRequestGet({ request, env, params }) {
      ORDER BY character_items.id`
   ).bind(params.id).all();
 
-  for (const col of ['attributes', 'skills', 'powers', 'bio', 'combat', 'saves', 'armor']) {
-    if (character[col] === undefined) continue; // column not migrated yet
-    try { character[col] = JSON.parse(character[col]); } catch { /* leave as stored */ }
-  }
+  decodeCharacter(character);
   const can_write = email === character.player_email || email === character.campaign_gm;
   // So the sheet can badge unspent skill picks without a second request.
   const pending_picks = await listPending(env, params.id);

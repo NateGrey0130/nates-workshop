@@ -7,6 +7,7 @@
 import { getUserEmail, unauthorized, json, forbidden, characterAccess } from '../../_lib/auth.js';
 import { loadClass } from '../../_lib/class-loader.js';
 import { xpTableFor, levelForXp, thresholdFor, buildProposal } from '../../_lib/leveling.js';
+import { loadCharacter } from '../../_lib/character-json.js';
 
 export async function onRequestPost({ request, env, params }) {
   const email = getUserEmail(request);
@@ -16,7 +17,7 @@ export async function onRequestPost({ request, env, params }) {
   if (!access.canWrite) return forbidden();
 
   const b = await request.json();
-  const character = await env.DB.prepare('SELECT * FROM characters WHERE id = ?').bind(params.id).first();
+  const character = await loadCharacter(env, params.id);
   let newXp;
   if ('total' in b) newXp = parseInt(b.total, 10);
   else if ('delta' in b) newXp = character.xp + parseInt(b.delta, 10);
@@ -36,7 +37,6 @@ export async function onRequestPost({ request, env, params }) {
   const earnedLevel = levelForXp(table, newXp);
   let proposal = null;
   if (earnedLevel > character.level) {
-    try { character.skills = JSON.parse(character.skills); } catch { character.skills = []; }
     proposal = buildProposal(character, cls, earnedLevel);
   }
   return json({

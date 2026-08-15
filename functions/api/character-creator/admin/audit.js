@@ -11,6 +11,7 @@ import { requireAdmin, json } from '../_lib/auth.js';
 import { loadPublished } from '../_lib/class-store.js';
 import { validateCharacter, loadSkillCategories } from '../_lib/validate-character.js';
 import { paging } from '../_lib/paging.js';
+import { decodeCharacter } from '../_lib/character-json.js';
 
 export async function onRequestGet({ request, env }) {
   const guard = requireAdmin(request, env);
@@ -34,12 +35,10 @@ export async function onRequestGet({ request, env }) {
 
   for (const row of results) {
     const cls = byId.get(row.class_id) || null;
-    let skills = [], attributes = {};
-    try { skills = JSON.parse(row.skills); } catch { /* treat as empty */ }
-    try { attributes = JSON.parse(row.attributes); } catch { /* treat as empty */ }
+    decodeCharacter(row);
 
     const { skipped, violations, warnings } = validateCharacter({
-      character: { level: row.level }, cls, skills, attributes, catalog,
+      character: { level: row.level }, cls, skills: row.skills, attributes: row.attributes, catalog,
     });
 
     if (skipped) {

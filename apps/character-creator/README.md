@@ -64,6 +64,8 @@ functions/api/
 ├── claude.js                 HTTP proxy over claude-client, for browser callers
 └── character-creator/
     ├── _lib/auth.js          Owner/GM/admin authorization, readJson
+    ├── _lib/character-json.js  Decoding the character JSON columns, with the
+    │                         right empty value per column
     ├── _lib/catalog.js       Cross-reference an import; create catalog stubs
     ├── _lib/class-loader.js  Resolve a class_id to parsed frontmatter
     ├── _lib/class-store.js   Read/write stored classes; per-isolate parse cache

@@ -20,6 +20,7 @@
 // for the last.
 
 import { CATALOGS } from '../../../../apps/character-creator/js/catalog-fields.js';
+import { safeParse } from './character-json.js';
 
 export const MERGE_REFS = {
   skills: { kind: 'json', column: 'skills' },
@@ -125,8 +126,7 @@ export async function findDuplicates(env, catalogKey) {
 
 // Rewrite one name to another inside a character's JSON column.
 function rewriteJson(raw, { column, type }, fromName, toName) {
-  let list;
-  try { list = JSON.parse(raw); } catch { return null; }
+  const list = safeParse(raw, null);
   if (!Array.isArray(list)) return null;
 
   let changed = false;
