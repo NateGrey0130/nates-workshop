@@ -415,7 +415,17 @@ Retiring the placeholders that already existed is a one-off per environment:
 [`db/retire-gear-placeholders.sql`](db/retire-gear-placeholders.sql). It
 converts affected inventory rows to freeform lines — the placeholder was never
 a real item, so naming it as text is the truthful representation — rewrites the
-Juicer's two placeholders into choices, and drops the rows. Safe to re-run.
+Juicer's two placeholders into choices, and drops the rows.
+
+**Every statement guards itself**, which matters because a choice is only an
+improvement if its options exist. An environment whose catalog is still
+seed-only would otherwise have two bad references replaced by nine, and the next
+class import would stub every one of them. So each rewrite requires its own
+options to be present, and a placeholder is only dropped once no live class
+still cites it. That makes the script safe to run **early** as well as twice: in
+an environment that has not imported the equipment chapter it does nothing at
+all, and the closing `SELECT` reports what it did and what it is still waiting
+for (`options_available_of_8`). Re-run it after that import and it completes.
 
 ---
 
