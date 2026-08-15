@@ -1,0 +1,53 @@
+// Extraction prompt for a book's equipment chapter.
+//
+// The hardest of the four. A skill or spell chapter is a uniform list; an
+// equipment chapter mixes weapon tables, armour tables and prose gear
+// descriptions on the same page, with entirely different shapes and often no
+// consistent heading between them. So the prompt names the kinds explicitly and
+// leans hard on omitting fields rather than guessing at them — most items use
+// only a handful of the available columns.
+
+export const SYSTEM_PROMPT = `You extract equipment entries from Palladium/Rifts RPG sourcebook pages into structured JSON.
+
+These pages are TWO-COLUMN layouts. Read each column top-to-bottom in full before moving to the next, unless a section is visibly full-width. If an item's description seems to jump topic mid-sentence, you have crossed a column boundary — re-read it.
+
+Output ONLY a JSON array. No prose, no code fences, no commentary.
+
+Rules:
+- One object per item. Equipment pages mix several kinds: energy and projectile weapons, ancient weapons, body armour, vehicles, cybernetics, and general gear. Extract all of them.
+- Most fields apply to only some kinds. Omit every field an entry does not state. An absent key is correct; an invented value is not.
+- Copy values as the book writes them. "2000 feet", "2D6 M.D. single shot, 6D6 M.D. burst" and "20 rounds per clip" are correct answers — do not reduce them to a number.
+- is_mega_damage is true when the item's damage is expressed in M.D. or M.D.C., false when it is S.D.C. or plain damage. If an entry states no damage at all, omit it.
+- A.R. and M.D.C. are body armour's numbers. Give ar and mdc as integers, and only when the entry states them.
+- cost is a plain integer number of credits or gold, with no separators or currency word. If a cost is a range or "varies", omit cost and put the wording in description.
+- Do not emit table headers, section headings, or introductory prose as items.
+- Skip an entry you cannot read confidently rather than guessing at its numbers.`;
+
+export function buildUserPrompt({ sourceBook, category, hints }) {
+  return `Extract every equipment entry on the attached page(s) into a JSON array.
+
+## Object shape
+
+Each element must be:
+
+\`\`\`
+{
+  "name": "JA-11 Energy Rifle",     // exact item name, no trailing colon
+  "category": "weapon",              // weapon | armor | vehicle | cybernetics | gear
+  "weight_lbs": 14,                  // number only; omit if not stated
+  "cost": 32000,                     // integer, no separators; omit if a range or "varies"
+  "damage": "3D6 M.D. per blast",   // as written; omit if not stated
+  "is_mega_damage": true,            // true for M.D./M.D.C., false for S.D.C.; omit if no damage
+  "range": "4000 feet",             // omit if not stated
+  "payload": "20 shots per clip",   // omit if not stated
+  "rate_of_fire": "Single shot",    // omit if not stated
+  "ar": 14,                          // body armour only, integer; omit otherwise
+  "mdc": 90,                         // body armour only, integer; omit otherwise
+  "description": "..."              // what the item is, in the book's own words, trimmed
+}
+\`\`\`
+
+Only \`name\` is required. A suit of armour will typically have ar, mdc and weight but no range or payload; a rifle the reverse; a backpack almost nothing but weight, cost and description. That is expected — omit rather than guess.
+${category ? `\nThese pages are the ${category} entries. Use that category unless an entry says otherwise.\n` : ''}${sourceBook ? `\nThese pages come from: ${sourceBook}.\n` : ''}${hints ? `\n## Notes from the operator\n\n${hints}\n` : ''}
+Return the JSON array and nothing else.`;
+}

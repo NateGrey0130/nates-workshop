@@ -77,6 +77,10 @@ function inputFor(f, value) {
     case 'int':
     case 'real':
       return `<input type="number" id="${id}" value="${escHtml(v)}"${f.type === 'real' ? ' step="0.1"' : ''}>`;
+    case 'bool':
+      // rowForm already renders the field's label above it, so this is bare.
+      return `<label class="inline-check">
+        <input type="checkbox" id="${id}"${value ? ' checked' : ''}> yes</label>`;
     case 'select': {
       // allowOther keeps a stored value that is not in the list selectable,
       // instead of silently snapping it to something else on save.
@@ -129,6 +133,8 @@ function collectDraft() {
         if (k) obj[k] = r.querySelector('.kv-val').value;
       }
       out[f.name] = obj;
+    } else if (f.type === 'bool') {
+      out[f.name] = !!el?.checked;
     } else if (el) {
       out[f.name] = el.value;
     }

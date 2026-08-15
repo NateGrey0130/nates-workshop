@@ -11,6 +11,7 @@ import { parseClassMarkdown } from '../js/parser.js';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import {
   getImportSpec, stripFences, normaliseRows, countRows, applyDecisions,
+  classifyRows, slugify,
 } from '../../../functions/api/character-creator/_lib/import-engine.js';
 import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
 
@@ -229,6 +230,17 @@ const updOk = await (async () => {
 check('an update that matches a real row still applies',
   updOk.counts.updated === 1 && updOk.conflicts.length === 0, JSON.stringify(updOk));
 
+// A NOT NULL 0/1 column must never be handed a null. Getting this wrong made
+// every gear insert fail the batch on gear.is_mega_damage.
+const gearIns = await (async () => {
+  const db = fakeDb([]);
+  const res = await applyDecisions({ DB: db }, getImportSpec('gear'),
+    [{ action: 'insert', slug: 'zz-probe', name: 'Zz Probe' }], { sourceBook: null });
+  return { res, batched: db.batched };
+})();
+check('a gear insert with no mega-damage stated still builds a statement',
+  gearIns.res.counts.inserted === 1 && gearIns.batched[0] === 1, JSON.stringify(gearIns.res));
+
 const insDup = await (async () => {
   const db = fakeDb(['Climbing']);
   return applyDecisions({ DB: db }, skillSpec,
@@ -236,6 +248,80 @@ const insDup = await (async () => {
 })();
 check('an insert onto an existing name is still a conflict',
   insDup.counts.inserted === 0 && insDup.conflicts.length === 1, JSON.stringify(insDup));
+
+// Gear: the only catalog that matches on two fields. Its stubs are keyed on a
+// slug taken from class markdown, and a missed match means a second row while
+// characters keep pointing at the empty one — the worst outcome available here.
+const gearSpec = getImportSpec('gear');
+check('gear import spec exists', !!gearSpec);
+check('gear matches slug first, then name',
+  gearSpec.matchFields[0] === 'slug' && gearSpec.matchFields[1] === 'name');
+check('slugify mirrors the class importer\'s stub slugs',
+  slugify('Air Filter and Gas Mask') === 'air-filter-and-gas-mask'
+  && slugify('JA-11 Energy Rifle') === 'ja-11-energy-rifle'
+  && slugify('  Spaced  Out  ') === 'spaced-out');
+check('gear derives a slug when the book does not print one', (() => {
+  const [r] = normaliseRows(gearSpec, [{ name: 'NG-57 Heavy Duty Ion Blaster' }]);
+  return r.slug === 'ng-57-heavy-duty-ion-blaster';
+})());
+check('a book-supplied slug is respected over the derived one', (() => {
+  const [r] = normaliseRows(gearSpec, [{ name: 'Odd Name', slug: 'canonical-slug' }]);
+  return r.slug === 'canonical-slug';
+})());
+// A nullable number the book does not state must stay null. "No A.R." and
+// "A.R. 0" are different claims, and the sheet renders the second one.
+check('an unstated nullable number stays null, a NOT NULL one falls back', (() => {
+  const [g] = normaliseRows(gearSpec, [{ name: 'Back Pack' }]);
+  const [s] = normaliseRows(skillSpec, [{ name: 'Boxing' }]);
+  return g.ar === null && g.mdc === null && g.cost === null && g.weight_lbs === null
+      && s.base === 0 && s.per_level === 0;
+})());
+check('gear reads mega-damage as a boolean', (() => {
+  const rows = normaliseRows(gearSpec, [
+    { name: 'A', is_mega_damage: true }, { name: 'B', is_mega_damage: false }, { name: 'C' },
+  ]);
+  return rows[0].is_mega_damage === 1 && rows[1].is_mega_damage === 0 && rows[2].is_mega_damage === 0;
+})());
+check('a gear stub is the class importer\'s marker, not an empty row',
+  gearSpec.isStub({ description: 'STUB — created by class import, needs stats' }) === true
+  && gearSpec.isStub({ description: 'A perfectly ordinary free item' }) === false
+  && gearSpec.isStub({ description: null }) === false);
+
+// classifyRows against a fake catalog holding one stub, keyed on slug.
+const gearDb = (rows) => ({
+  prepare: (sql) => ({
+    bind: (...args) => ({
+      all: async () => {
+        const field = /WHERE (\w+) COLLATE/.exec(sql)?.[1];
+        return { results: rows.filter((r) => args.some((a) =>
+          String(a).toLowerCase() === String(r[field] ?? '').toLowerCase())) };
+      },
+    }),
+  }),
+});
+const stubRowInDb = { id: 7, slug: 'air-filter-and-gas-mask', name: 'Air Filter And Gas Mask',
+                      description: 'STUB — created by class import, needs stats', cost: null };
+
+const bySlug = await classifyRows({ DB: gearDb([stubRowInDb]) }, gearSpec,
+  normaliseRows(gearSpec, [{ name: 'Air Filter and Gas Mask', cost: 500 }]));
+check('an extracted item matches its stub on slug and defaults to update',
+  bySlug[0].status === 'duplicate' && bySlug[0].is_stub === true
+  && bySlug[0].suggested === 'update' && bySlug[0].existing.id === 7, JSON.stringify(bySlug[0]));
+
+// A stub whose slug came from class markdown in a form the book's wording does
+// not reproduce — this is the case the name fallback exists for.
+const oddStub = { id: 9, slug: 'ns-turbo-cyclone', name: 'NG Turbo Cyclone',
+                  description: 'STUB — created by class import, needs stats', cost: null };
+const byName = await classifyRows({ DB: gearDb([oddStub]) }, gearSpec,
+  normaliseRows(gearSpec, [{ name: 'NG Turbo Cyclone', cost: 1 }]));
+check('a stub whose slug differs is still found by name',
+  byName[0].status === 'duplicate' && byName[0].existing.id === 9, JSON.stringify(byName[0]));
+check('a fallback match is flagged rather than silently accepted',
+  byName[0].flags.some((f) => /matched .* on name/i.test(f)), JSON.stringify(byName[0].flags));
+
+const noMatch = await classifyRows({ DB: gearDb([stubRowInDb]) }, gearSpec,
+  normaliseRows(gearSpec, [{ name: 'Something Entirely New' }]));
+check('an unrelated item is new, not a false match', noMatch[0].status === 'new');
 
 // Staging is one batch, so it is all-or-nothing. The cap keeps that batch a
 // sane size and refuses a range too wide to have been read reliably.

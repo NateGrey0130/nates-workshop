@@ -111,7 +111,18 @@ CREATE TABLE IF NOT EXISTS gear (
   category TEXT,                        -- weapon | armor | vehicle | cybernetics | gear
   weight_lbs REAL,
   cost INTEGER,                         -- credits (rifts) or gold (palladium-fantasy)
-  stats TEXT NOT NULL DEFAULT '{}',     -- JSON: damage, MDC, range, payload, etc.
+  -- Stat block. TEXT where books write prose as often as figures
+  -- ("2D6 M.D. single shot, 6D6 M.D. burst"); ar and mdc are numbers because
+  -- the sheet's armour block uses them as such. is_mega_damage is structured
+  -- because S.D.C. versus M.D.C. is the distinction that matters most in Rifts
+  -- and reading it back out of a damage string is error-prone.
+  damage TEXT,
+  is_mega_damage INTEGER NOT NULL DEFAULT 0,
+  range TEXT,
+  payload TEXT,
+  rate_of_fire TEXT,
+  ar INTEGER,
+  mdc INTEGER,
   description TEXT,
   source_book TEXT
 );
@@ -285,3 +296,10 @@ WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'impor
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '007-psionic-detail.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('psionic_powers') WHERE name = 'min_tier');
+
+-- Both halves again: 008 adds columns AND drops `stats`, so a database that has
+-- the new columns but still has the blob has not finished the migration.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '008-gear-detail.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('gear') WHERE name = 'ar')
+  AND NOT EXISTS (SELECT 1 FROM pragma_table_info('gear') WHERE name = 'stats');

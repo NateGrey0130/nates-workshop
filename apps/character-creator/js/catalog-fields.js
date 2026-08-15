@@ -17,6 +17,7 @@
 //   longtext  multi-line string
 //   int       integer, stored as-is
 //   real      decimal number
+//   bool      stored as INTEGER 0/1, edited as a checkbox
 //   select    one of `options`; `allowOther` keeps an unrecognised stored value
 //             usable instead of silently rewriting it
 //   systems   the skills.systems JSON array — NULL/absent means "both systems"
@@ -112,7 +113,15 @@ export const CATALOGS = {
         options: ['weapon', 'armor', 'vehicle', 'cybernetics', 'gear'] },
       { name: 'weight_lbs', label: 'Weight (lbs)', type: 'real' },
       { name: 'cost', label: 'Cost', type: 'int', help: 'Credits (Rifts) or gold (Palladium Fantasy)' },
-      { name: 'stats', label: 'Stats', type: 'kv', help: 'damage, MDC, range, payload…' },
+      // Stat block. Null wherever it does not apply — one table covers weapons,
+      // armour and general equipment rather than branching on a type column.
+      { name: 'damage', label: 'Damage', type: 'text', help: 'As written: "2D6 M.D. single shot, 6D6 M.D. burst"' },
+      { name: 'is_mega_damage', label: 'Mega-damage', type: 'bool', blankAs: 0 },
+      { name: 'range', label: 'Range', type: 'text' },
+      { name: 'payload', label: 'Payload', type: 'text' },
+      { name: 'rate_of_fire', label: 'Rate of fire', type: 'text' },
+      { name: 'ar', label: 'A.R.', type: 'int' },
+      { name: 'mdc', label: 'M.D.C.', type: 'int' },
       { name: 'description', label: 'Description', type: 'longtext' },
       { name: 'source_book', label: 'Source book', type: 'text' },
     ],
@@ -146,6 +155,15 @@ export function coerceField(field, raw) {
       const n = field.type === 'int' ? parseInt(raw, 10) : parseFloat(raw);
       if (!Number.isFinite(n)) return { error: `${field.label} must be a number` };
       return { value: n };
+    }
+    case 'bool': {
+      // Accepts a real boolean from the model, a checkbox value, or the strings
+      // a form or a book might produce. Stored as 0/1 because the column is
+      // INTEGER NOT NULL.
+      if (blank) return { value: field.blankAs ?? 0 };
+      if (typeof raw === 'boolean') return { value: raw ? 1 : 0 };
+      const s = String(raw).trim().toLowerCase();
+      return { value: (s === 'true' || s === '1' || s === 'yes' || s === 'on') ? 1 : 0 };
     }
     case 'systems': {
       // NULL means "applies to both systems" — an empty array would mean
@@ -190,6 +208,7 @@ export function decodeRow(cat, row) {
     const v = row[f.name];
     if (f.type === 'systems') out[f.name] = v ? safeParse(v, []) : null;
     else if (f.type === 'kv') out[f.name] = v ? safeParse(v, {}) : {};
+    else if (f.type === 'bool') out[f.name] = !!v;
     else out[f.name] = v;
   }
   if (cat.hasSource) out.source = row.source;

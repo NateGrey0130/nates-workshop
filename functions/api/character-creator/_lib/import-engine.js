@@ -82,6 +82,29 @@ export const IMPORT_SPECS = {
       return flags;
     },
   },
+
+  gear: {
+    catalog: 'gear',
+    table: 'gear',
+    extractFields: ['name', 'slug', 'category', 'weight_lbs', 'cost', 'damage',
+                    'is_mega_damage', 'range', 'payload', 'rate_of_fire', 'ar', 'mdc',
+                    'description'],
+    // Cost is the number worth arguing about; damage and the rest are prose.
+    compareFields: ['cost'],
+    // Books do not print slugs. Derive one the same way the class importer's
+    // titleize() runs in reverse, so a book's "Air Filter and Gas Mask" lands on
+    // the stub already stored as `air-filter-and-gas-mask`.
+    derive: (row) => { row.slug = row.slug || slugify(row.name); },
+    // Slug first, then the display name. A stub's slug comes from class
+    // markdown and does not always match what a book's wording produces; a
+    // missed match creates a second row while characters keep pointing at the
+    // empty one, which is the worst outcome available here.
+    matchFields: ['slug', 'name'],
+    // Gear has no `source` column, so the marker the class importer writes is
+    // the signal. A row edited by hand no longer carries it and correctly stops
+    // counting as a stub.
+    isStub: (row) => typeof row.description === 'string' && row.description.startsWith('STUB —'),
+  },
 };
 
 export function getImportSpec(key) {
@@ -95,14 +118,27 @@ export function stripFences(text) {
   return (fenced ? fenced[1] : t).trim();
 }
 
-const int = (v) => {
+// A number the book states, or what the config says an unstated one means.
+//
+// `blankAs` mirrors a NOT NULL DEFAULT in the schema: skills.base and friends
+// must fall back to 0 because the column cannot hold NULL. Columns that CAN
+// hold NULL — gear's ar, mdc, cost, weight_lbs — must stay null instead, since
+// "this item has no A.R." and "this item has A.R. 0" are different claims and
+// the sheet renders the second one.
+function num(field, v) {
+  const blank = v === undefined || v === null || v === '';
+  if (blank) return field?.blankAs ?? null;
   const n = parseInt(v, 10);
-  return Number.isFinite(n) && n >= 0 ? n : 0;
-};
+  if (!Number.isFinite(n) || n < 0) return field?.blankAs ?? null;
+  return n;
+}
+
+function fieldDef(spec, name) {
+  return CATALOGS[spec.catalog]?.fields.find((f) => f.name === name) ?? null;
+}
 
 function fieldType(spec, name) {
-  const cat = CATALOGS[spec.catalog];
-  return cat?.fields.find((f) => f.name === name)?.type ?? 'text';
+  return fieldDef(spec, name)?.type ?? 'text';
 }
 
 // Keeps only well-formed rows. A malformed element is dropped rather than
@@ -119,16 +155,31 @@ export function normaliseRows(spec, raw) {
     for (const f of spec.extractFields) {
       if (f === 'name') continue;
       const v = r[f];
-      const type = fieldType(spec, f);
+      const def = fieldDef(spec, f);
+      const type = def?.type ?? 'text';
       if (type === 'int' || type === 'real') {
-        row[f] = int(v);
+        row[f] = num(def, v);
+      } else if (type === 'bool') {
+        // The model answers with a real boolean; a book might say "M.D." in
+        // prose and leave this out entirely, which reads as false.
+        row[f] = v === true || String(v).trim().toLowerCase() === 'true' ? 1 : 0;
       } else {
         row[f] = typeof v === 'string' && v.trim() ? v.trim() : null;
       }
     }
+    // A catalog keyed on something the book does not print — gear's slug —
+    // derives it rather than asking the model to invent one.
+    if (spec.derive) spec.derive(row);
     rows.push(row);
   }
   return rows;
+}
+
+// Mirrors the titleize() the class importer uses when it turns an
+// equipment_starting item_id into a stub name, so a book's "Air Filter and Gas
+// Mask" lands on the stub already stored as `air-filter-and-gas-mask`.
+export function slugify(name) {
+  return String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
 // Match extracted rows against the catalog. Lookups are batched because a spell
@@ -136,27 +187,48 @@ export function normaliseRows(spec, raw) {
 export async function classifyRows(env, spec, rows) {
   const cat = CATALOGS[spec.catalog];
   const key = cat.uniqueField;
-  const cols = ['id', ...new Set([key, ...spec.extractFields, ...spec.compareFields])];
+  // Most catalogs match on their unique column alone. Gear also falls back to
+  // the display name, because its stubs are keyed on a slug taken from class
+  // markdown, which does not always match the slug a book's wording produces —
+  // and a missed match means a second row while characters keep pointing at the
+  // empty one.
+  const matchFields = spec.matchFields?.length ? spec.matchFields : [key];
+  const cols = ['id', ...new Set([key, ...matchFields, ...spec.extractFields, ...spec.compareFields])];
   if (cat.hasSource) cols.push('source');
   cols.push('source_book');
 
-  const existing = new Map();
-  const keys = rows.map((r) => r[key]).filter(Boolean);
-  for (let i = 0; i < keys.length; i += LOOKUP_BATCH) {
-    const batch = keys.slice(i, i + LOOKUP_BATCH);
-    const { results } = await env.DB
-      .prepare(`SELECT ${[...new Set(cols)].join(', ')} FROM ${spec.table}
-                WHERE ${key} COLLATE NOCASE IN (${batch.map(() => '?').join(',')})`)
-      .bind(...batch).all();
-    for (const r of results) existing.set(String(r[key]).toLowerCase(), r);
+  // One index per match field, filled from a single batched read per field.
+  const byField = new Map(matchFields.map((f) => [f, new Map()]));
+  for (const field of matchFields) {
+    const values = [...new Set(rows.map((r) => r[field]).filter(Boolean))];
+    for (let i = 0; i < values.length; i += LOOKUP_BATCH) {
+      const batch = values.slice(i, i + LOOKUP_BATCH);
+      const { results } = await env.DB
+        .prepare(`SELECT ${[...new Set(cols)].join(', ')} FROM ${spec.table}
+                  WHERE ${field} COLLATE NOCASE IN (${batch.map(() => '?').join(',')})`)
+        .bind(...batch).all();
+      for (const r of results) {
+        if (r[field] != null) byField.get(field).set(String(r[field]).toLowerCase(), r);
+      }
+    }
   }
 
   return rows.map((r) => {
     // Advisory only — a flagged row still imports, it just says why it deserves
     // a second look before you confirm it.
     const flags = spec.flag ? spec.flag(r) : [];
-    const match = existing.get(String(r[key] ?? '').toLowerCase()) || null;
+    // First match wins, in the order the spec lists them.
+    let match = null;
+    let matchedOn = null;
+    for (const field of matchFields) {
+      const v = r[field];
+      if (!v) continue;
+      const hit = byField.get(field).get(String(v).toLowerCase());
+      if (hit) { match = hit; matchedOn = field; break; }
+    }
     if (!match) return { ...r, status: 'new', existing: null, differs: false, flags };
+    // Surfaced in review so a fallback match is visible rather than assumed.
+    if (matchedOn !== key) flags.push(`Matched an existing row on ${matchedOn}, not ${key}`);
     const differs = spec.compareFields.some((f) => match[f] !== r[f]);
     const isStub = spec.isStub ? spec.isStub(match) : false;
     return {
@@ -334,9 +406,20 @@ export async function applyDecisions(env, spec, decisions, { sourceBook }) {
 }
 
 function valueFor(spec, field, d) {
-  const type = fieldType(spec, field);
-  if (type === 'int' || type === 'real') return int(d[field]);
+  const def = fieldDef(spec, field);
+  const type = def?.type ?? 'text';
+  if (type === 'int' || type === 'real') return num(def, d[field]);
+  // Booleans are stored 0/1 in a NOT NULL column, so an absent one is false,
+  // never null.
+  if (type === 'bool') return d[field] === true || d[field] === 1 ? 1 : 0;
   return typeof d[field] === 'string' && d[field].trim() ? d[field].trim() : null;
+}
+
+// Fields written outright rather than through COALESCE. A number or a flag the
+// book states is the correction you asked for; absent prose must not blank a
+// description the catalog already has.
+function isScalar(type) {
+  return type === 'int' || type === 'real' || type === 'bool';
 }
 
 function buildInsert(env, spec, cat, writable, d, target, sourceBook) {
@@ -355,9 +438,9 @@ function buildUpdate(env, spec, cat, writable, d, name, sourceBook) {
   const sets = [];
   const vals = [];
   for (const f of writable) {
-    const type = fieldType(spec, f);
-    if (type === 'int' || type === 'real') { sets.push(`${f} = ?`); vals.push(valueFor(spec, f, d)); }
-    else { sets.push(`${f} = COALESCE(?, ${f})`); vals.push(valueFor(spec, f, d)); }
+    if (isScalar(fieldType(spec, f))) sets.push(`${f} = ?`);
+    else sets.push(`${f} = COALESCE(?, ${f})`);
+    vals.push(valueFor(spec, f, d));
   }
   sets.push('source_book = COALESCE(?, source_book)');
   vals.push(sourceBook);

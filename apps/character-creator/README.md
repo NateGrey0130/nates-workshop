@@ -3,7 +3,7 @@
 A persistent, multi-campaign character creator and journal. Build a character
 through a guided wizard, keep a running session log, level up semi-automatically,
 print a sheet laid out after the official form, and import classes, skills,
-spells and psionic powers straight out of a sourcebook PDF.
+spells, psionic powers and gear straight out of a sourcebook PDF.
 
 Part of Nate's Workshop. Cloudflare Pages + D1, behind the site-wide Cloudflare
 Access gate. No build step, no framework, no dependencies.
@@ -37,7 +37,7 @@ apps/character-creator/
 ├── sheet.html / sheet.js     Character sheet, laid out after the printed Rifts sheet
 ├── dashboard.html / dashboard.js  GM dashboard: roster, GM notes, campaign journal
 ├── import.html / import.js   Admin-only PDF import — Class, Skills, Spells,
-│                             Psionics tabs
+│                             Psionics, Gear tabs
 ├── catalog.html / catalog.js Admin-only catalog editor, generated from the
 │                             field config. catalog.js is an ES module.
 ├── styles.css                All five pages, layered on /shared/styles.css
@@ -67,10 +67,11 @@ functions/api/
     │                         normalise, classify duplicates, batch-confirm
     ├── _lib/import-sessions.js  Resumable imports: sessions + staged rows
     ├── _lib/session-import.js  The session-based import endpoints, minus
-    │                         the catalog — spells and psionics share them
+    │                         the catalog — spells, psionics and gear share them
     ├── _lib/skill-prompt.js  Skill chapter import prompt
     ├── _lib/spell-prompt.js  Spell chapter import prompt
     ├── _lib/psionic-prompt.js  Psionics chapter import prompt
+    ├── _lib/gear-prompt.js   Equipment chapter import prompt
     ├── _lib/leveling.js      XP curve + level-up diff
     └── (endpoints — see API surface below)
 
@@ -132,7 +133,7 @@ ppe and isp.
 | Table | Notes |
 |---|---|
 | `imported_classes` | Class definitions as markdown. `status` is `draft` or `published`; only published classes appear in the app. `deleted_at` NULL means live — retiring a published class hides it from the pickers without destroying it, and drafts are still deleted outright. |
-| `gear` | Gear catalog. `slug` is what `equipment_starting[].item_id` references. Named `gear`, not `items`, to stay clear of MediaVault's `media_items` in the shared database. |
+| `gear` | Gear catalog. `slug` is what `equipment_starting[].item_id` references. Carries a stat block — damage, is_mega_damage, range, payload, rate_of_fire, ar, mdc — null wherever it does not apply, so one table covers weapons, armour and general kit. Named `gear`, not `items`, to stay clear of MediaVault's `media_items`. |
 | `skills` | `base` 0 means non-percentile (W.P.s, hand to hand). `systems` is a JSON array; NULL means both. `note` carries oddities like `40%/30% climb/rappel`. |
 | `spells` | name, level, ppe, plus a stat block (range, duration, damage, saving throw, area of effect, casting time, description). The stat block is TEXT — books write "100 feet per level" as often as a number. |
 | `psionic_powers` | name, category (Healing/Physical/Sensitive/Super), isp, plus range, duration, saving throw and description — the same field names spells use. `min_tier` is the psychic tier a book states is required; NULL means no restriction beyond the category, and nothing enforces it yet. |
@@ -247,8 +248,8 @@ writes are gated (see [Permissions](#permissions)).
 | `import/recheck` | POST | Admin. Re-parse edited markdown, no API spend |
 | `import/confirm` | POST | Admin. Publish class + create catalog stubs |
 | `import/sessions` | GET / POST | Admin. Resumable catalog imports: list (`?catalog=`), fetch one with its staged rows (`?id=`), create, close |
-| `import/spells/extract` `import/psionics/extract` | POST | Admin. One page range into a session; stages, writes no catalog rows |
-| `import/spells/confirm` `import/psionics/confirm` | POST | Admin. Applies a session's pending rows as one batch |
+| `import/spells/extract` `import/psionics/extract` `import/gear/extract` | POST | Admin. One page range into a session; stages, writes no catalog rows |
+| `import/spells/confirm` `import/psionics/confirm` `import/gear/confirm` | POST | Admin. Applies a session's pending rows as one batch |
 | `import/stored` | GET / DELETE / POST | Admin. List (`?retired=1`), fetch, retire-or-delete, and POST to restore |
 | `import/skills/extract` | POST | Admin. PDF → many skills, each classified against the catalog |
 | `import/skills/confirm` | POST | Admin. Apply per-skill insert/update/ignore decisions |
@@ -330,7 +331,10 @@ knows what a row looks like:
 
 Adding a column means adding it in one place. Two details that are easy to miss:
 
-- **`blankAs` mirrors a `NOT NULL DEFAULT` in the schema.** `skills.base`,
+- **`blankAs` mirrors a `NOT NULL DEFAULT` in the schema**, and its absence is
+  just as meaningful: a nullable number the book does not state stays `NULL`,
+  because "this item has no A.R." and "this item has A.R. 0" are different
+  claims and the sheet renders the second one. `skills.base`,
   `skills.per_level`, `spells.level`, `spells.ppe` and `psionic_powers.isp` are
   all `NOT NULL DEFAULT 0`, so an empty form field has to coerce to `0`, not
   `NULL`. Without it the insert fails a constraint.
@@ -472,6 +476,32 @@ Two things are specific to psionics:
   an unrecognised value imports with a ⚠ against it rather than failing. The
   same applies to a tier outside minor/major/master.
 
+### Gear importer
+
+Same session flow again. Two things are specific to gear.
+
+**It is the only catalog matched on two fields.** Gear is unique on `slug`, and
+every existing row is a stub created by a class import, keyed on the `item_id`
+that class markdown referenced. The importer derives a slug from the book's item
+name and matches on that first, then falls back to the display name — because a
+stub stored as `ns-turbo-cyclone` will not match the slug that "NG-Turbo
+Cyclone" produces, and **a missed match means a second row while characters keep
+pointing at the empty one**. A fallback match is flagged in review so it is
+visible rather than assumed.
+
+**Gear has no `source` column**, so a stub is recognised by the marker the class
+importer writes — `STUB — created by class import, needs stats`. A row edited by
+hand no longer carries it and correctly stops counting as a stub.
+
+Filling in a stub is an `UPDATE` in place, so `gear.id` never changes and
+inventory rows keep resolving.
+
+An equipment chapter is the hardest extraction of the four: weapon tables,
+armour tables and prose gear descriptions share a page with entirely different
+shapes. Most fields apply to only some kinds, and the prompt leans on omitting
+rather than guessing — a backpack legitimately has nothing but weight, cost and
+a description.
+
 ---
 
 ## Local development
@@ -540,6 +570,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `005-spell-detail.sql` | range, duration, damage, saving_throw, area_of_effect, casting_time, description on `spells` |
 | `006-import-sessions.sql` | `import_sessions` + `import_staged` |
 | `007-psionic-detail.sql` | range, duration, saving_throw, description, min_tier on `psionic_powers` |
+| `008-gear-detail.sql` | gear stat block; **drops the `stats` JSON blob**, which was empty in every row |
 
 ### The migration convention
 
@@ -584,11 +615,6 @@ records that a class grants extra picks at levels 3/6/9/12, and the level-up flo
 ignores it — it computes pool and percentage diffs and surfaces `grants` as text.
 Wiring this in means the level-up proposal needs a skill-picker step. This remains
 the biggest gap between what the data says and what the app does.
-
-**Gear still cannot be imported.** Every gear row in production is a stub
-created by a class import — names with no weight, cost or stats. It is a
-configuration of the shared import engine rather than new machinery; see
-[`docs/plans/`](docs/plans/README.md).
 
 **`min_tier` is recorded but not enforced.** The psionic importer captures the
 tier a book states, and nothing yet stops a Minor psychic taking a Master-only

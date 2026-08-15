@@ -11,6 +11,7 @@ import {
   getImportSpec, extractRows, normaliseRows, classifyRows, countRows,
   applyDecisions, MAX_DECISIONS, DEFAULT_MODEL, ALLOWED_MODELS,
 } from './import-engine.js';
+import { CATALOGS } from '../../../../apps/character-creator/js/catalog-fields.js';
 import { getSession, stageRows, getStaged, markConfirmed } from './import-sessions.js';
 
 const ACTIONS = ['insert', 'update', 'ignore'];
@@ -98,6 +99,8 @@ export async function handleSessionConfirm(request, env, catalogKey) {
     overrides.set(id, o);
   }
 
+  const key = CATALOGS[getImportSpec(catalogKey).catalog].uniqueField;
+
   const decisions = pending.map((row) => {
     const o = overrides.get(row.id) || {};
     const action = o.action || row.action;
@@ -105,9 +108,13 @@ export async function handleSessionConfirm(request, env, catalogKey) {
     // Strip the staging bookkeeping; what is left is the extracted row.
     const { id, page_range, match_name, is_stub, differs, confirmed_at, status,
             resolved_name, flags, action: _a, ...payload } = row;
+    // An update has to target the row that was actually matched. Gear can match
+    // on name when the slug derived from the book's wording differs from the
+    // stub's, and in that case the payload's own key would point at nothing.
+    const target = action === 'update' && match_name ? { [key]: match_name } : {};
     // "Keep both" is an insert under a distinguishing name; the key column is
     // UNIQUE, so without one it would simply collide.
-    return { ...payload, action, ...(action === 'insert' && asName ? { as_name: asName } : {}) };
+    return { ...payload, ...target, action, ...(action === 'insert' && asName ? { as_name: asName } : {}) };
   });
 
   const result = await applyDecisions(env, getImportSpec(catalogKey), decisions, {
@@ -118,12 +125,18 @@ export async function handleSessionConfirm(request, env, catalogKey) {
   // Only rows that actually landed are marked done. A row reported as a
   // conflict stays pending so it can be renamed and retried rather than being
   // silently lost.
+  // Conflicts are reported under the key column, which is `slug` for gear and
+  // `name` for the rest — so the comparison has to use the same field the
+  // decision did, not the display name.
   const conflicted = new Set(result.conflicts.map((c) => String(c.name).toLowerCase()));
   const done = pending
     .filter((row) => {
       const o = overrides.get(row.id) || {};
-      const target = String(o.resolved_name ?? row.resolved_name ?? row.name ?? '').toLowerCase();
-      return !conflicted.has(target);
+      const action = o.action || row.action;
+      const target = action === 'update'
+        ? (row.match_name ?? row[key])
+        : (o.resolved_name ?? row.resolved_name ?? row[key]);
+      return !conflicted.has(String(target ?? '').toLowerCase());
     })
     .map((row) => row.id);
   await markConfirmed(env, done);
