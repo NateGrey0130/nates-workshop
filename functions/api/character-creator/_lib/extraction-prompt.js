@@ -67,6 +67,17 @@ Optional — include only what the page actually states:
       ADDITIONAL picks at specific later levels.
     secondary_skills: { count: N }
 - equipment_starting: list of { item_id: "kebab-case-slug", qty: N }
+    When the book leaves an item OPEN TO CHOICE — "one energy pistol of choice",
+    "any two ancient weapons", "pick one of the following" — emit a choice
+    instead of a fixed item:
+      { choose: 1, from: ["ng-33-laser-pistol", "wilks-320-laser-pistol"], label: "energy pistol", qty: 1 }
+    \`from\` must list the actual item slugs the book offers. If the book names
+    the specific options, use exactly those. If it names only a general kind and
+    no options, still describe the kind in \`label\` and list whatever candidate
+    slugs the book mentions elsewhere.
+    Do NOT invent a placeholder item to stand for the category — an item_id of
+    "energy-pistol" or "ancient-weapon" is wrong, because no real catalog entry
+    will ever match it and the character ends up holding a weapon with no stats.
 - psionics: { type: "minor"|"major"|"master", isp_base: "formula" }
     If the class AUTOMATICALLY KNOWS specific named psionic powers, list their
     names in \`powers: ["Sixth Sense", "Clairvoyance"]\`. Put them here as well as

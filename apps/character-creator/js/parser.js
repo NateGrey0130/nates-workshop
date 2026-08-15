@@ -25,6 +25,22 @@ export function isChoiceGroup(entry) {
     (entry.choose !== undefined || entry.from !== undefined || entry.categories !== undefined);
 }
 
+// The same idea for starting equipment, keyed on `item_id` rather than `name`.
+//
+// Books routinely say "one energy pistol of choice" where the format only had
+// fixed item ids, and the workaround was a placeholder catalog row named after
+// the category — `energy-pistol`, `vibro-blade`. Those are not items: no book
+// entry will ever match them, so they sit in the catalog forever with no stats,
+// and a character ends up holding a weapon that does not exist.
+//
+// There is no `categories` flavour here, unlike skills. Gear's `category` is
+// weapon/armor/vehicle/gear — far too coarse to mean "any energy pistol" — so a
+// gear choice enumerates its options explicitly.
+export function isGearChoice(entry) {
+  return !!entry && typeof entry === 'object' && !entry.item_id &&
+    (entry.choose !== undefined || entry.from !== undefined);
+}
+
 // ---------- scalar helpers ----------
 
 // Strips a trailing YAML comment. Per the YAML rule, `#` only starts a comment
@@ -322,7 +338,21 @@ export function parseClassMarkdown(text) {
     if (secondary && typeof secondary.count !== 'number') errors.push('skills.secondary_skills.count must be a number');
   }
   for (const eq of data.equipment_starting || []) {
-    if (!eq || typeof eq !== 'object' || !eq.item_id) errors.push('equipment_starting entries need an item_id');
+    if (!eq || typeof eq !== 'object') { errors.push('equipment_starting entries must be objects'); continue; }
+    if (isGearChoice(eq)) {
+      if (typeof eq.choose !== 'number' || eq.choose < 1) {
+        errors.push('equipment_starting choice needs a numeric choose >= 1');
+      }
+      if (!Array.isArray(eq.from) || !eq.from.length) {
+        errors.push('equipment_starting choice needs a non-empty from list of item slugs');
+      } else if (eq.from.some((s) => typeof s !== 'string' || !s.trim())) {
+        errors.push('equipment_starting choice `from` must be item slugs');
+      } else if (eq.choose > eq.from.length) {
+        errors.push(`equipment_starting choice asks for ${eq.choose} of only ${eq.from.length} options`);
+      }
+    } else if (!eq.item_id) {
+      errors.push('equipment_starting entries need an item_id (or choose/from for a choice)');
+    }
   }
   for (const lp of data.level_progression || []) {
     if (!lp || typeof lp !== 'object' || typeof lp.level !== 'number') {

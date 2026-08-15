@@ -19,6 +19,7 @@ Access gate. No build step, no framework, no dependencies.
 - [Permissions](#permissions)
 - [House rules and derived values](#house-rules-and-derived-values)
 - [Level-up skill picks](#level-up-skill-picks)
+- [Starting gear the class leaves open](#starting-gear-the-class-leaves-open)
 - [Psychic tiers](#psychic-tiers)
 - [How the sheet updates](#how-the-sheet-updates)
 - [Server-side rule enforcement](#server-side-rule-enforcement)
@@ -195,6 +196,7 @@ skills:
     count: 2
 equipment_starting:
   - { item_id: "ns-turbo-cyclone", qty: 1 }
+  - { choose: 1, label: "energy pistol", qty: 1, from: ["ng-33-northern-gun-laser-pistol", "wilk-s-320-laser-pistol"] }
 psionics:
   type: "major"               # minor | major | master
   isp_base: "1d4x10+20"
@@ -372,6 +374,58 @@ Spending consumes the oldest grant first, and a grant only partly spent stays
 pending with its count reduced — so two picks earned at level 3 can be taken one
 at a time. Both paths write the skills and the claim in a single batch, because
 a pick that consumed its grant without landing on the sheet would be lost.
+
+---
+
+## Starting gear the class leaves open
+
+Books routinely say *"one energy pistol of choice"*. `equipment_starting` only
+held fixed `item_id`s, so the importer wrote the **category** as if it were an
+item — `energy-pistol`, `vibro-blade` — and the class importer dutifully created
+a stub catalog row for each. Those rows are not items. No book entry will ever
+match them, so they sat in the catalog with no stats and the character held a
+weapon that does not exist.
+
+An entry may now be a **choice**, the same idea `occ_skills` already used:
+
+```yaml
+equipment_starting:
+  - { item_id: "back-pack", qty: 1 }
+  - { choose: 1, label: "energy pistol", qty: 1,
+      from: ["ng-33-northern-gun-laser-pistol", "wilk-s-320-laser-pistol"] }
+```
+
+- `from` enumerates **item slugs**. There is no `categories` flavour, unlike
+  skills: gear's `category` is weapon/armor/vehicle/gear, far too coarse to mean
+  "any energy pistol". The cost is that a new book's pistols must be added to
+  the classes that offer the choice.
+- `label` is what the player is choosing, shown above the options.
+- **Every option must exist in the catalog** — cross-reference collects them all
+  and stubs any that are missing, on the same reasoning skill groups use: any
+  one of them could be the option actually picked.
+- The wizard **will not advance** until every choice is resolved. Starting gear
+  is finite and the book intends the character to have it, so an unresolved
+  choice is an oversight, not a deliberate omission. (Unspent *skill* picks are
+  banked instead — they are earned over time and often deliberately deferred.)
+- Extraction emits these from the book's own wording (`of choice`,
+  `one of the following`), and is told explicitly not to invent a placeholder
+  item to stand for a category.
+
+Retiring the placeholders that already existed is a one-off per environment:
+[`db/retire-gear-placeholders.sql`](db/retire-gear-placeholders.sql). It
+converts affected inventory rows to freeform lines — the placeholder was never
+a real item, so naming it as text is the truthful representation — rewrites the
+Juicer's two placeholders into choices, and drops the rows.
+
+**Every statement guards itself**, which matters because a choice is only an
+improvement if its options exist. An environment whose catalog is still
+seed-only would otherwise have two bad references replaced by nine, and the next
+class import would stub every one of them. So each rewrite requires its own
+options to be present, and a placeholder is only dropped once no live class
+still cites it. That makes the script safe to run **early** as well as twice: in
+an environment that has not imported the equipment chapter it does nothing at
+all, and the closing `SELECT` reports what it did and what it is still waiting
+for (`options_available_of_8`). Re-run it after that import and it completes.
 
 ---
 
@@ -879,13 +933,13 @@ rejected alternatives recorded per PR.
 hand; the only deletion is the one a merge performs. Deliberate — see
 [`docs/plans/04-catalog-edit-ui.md`](docs/plans/04-catalog-edit-ui.md).
 
-**Some class equipment names a category, not an item.** `equipment_starting`
-only holds fixed `item_id`s, so a class whose book says "one energy pistol of
-choice" gets a placeholder row (`energy-pistol`, `vibro-blade`) that no book
-entry will ever match. `occ_skills` already models this properly with
-`{ choose, from }` choice groups; gear has no equivalent yet. Gear's `category`
-is far too coarse to express "any energy pistol", so a gear choice group would
-need an explicit `from:` list of slugs.
+**A gear choice must enumerate its options.** `{ choose, from }` takes an
+explicit list of slugs, because gear's `category` (weapon/armor/vehicle/gear) is
+far too coarse to express "any energy pistol". So importing a book with new
+pistols does not automatically widen the classes that offer one — the `from`
+list has to be extended by hand. Tagging gear would fix this properly; it was
+deferred as a larger change than the problem currently warrants. See
+[Starting gear the class leaves open](#starting-gear-the-class-leaves-open).
 
 **Migrations are still applied by hand.** `schema_migrations` records what has
 run where and the smoke test checks it, but applying a migration is still a
