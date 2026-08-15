@@ -1,5 +1,7 @@
 # PR 1 — Migration tracking
 
+> **Delivered** in [#15](https://github.com/NateGrey0130/nates-workshop/pull/15). This file is the record of why, not a to-do.
+
 ## Problem
 
 `db/migrations/*.sql` are one-shot, manual, unordered, and leave no record of

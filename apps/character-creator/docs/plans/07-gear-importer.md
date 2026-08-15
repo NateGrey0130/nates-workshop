@@ -1,5 +1,7 @@
 # PR 7 — Gear importer
 
+> **Delivered** in [#23](https://github.com/NateGrey0130/nates-workshop/pull/23). This file is the record of why, not a to-do.
+
 ## Problem
 
 Every gear row in production is a name-only stub created by a class import.
@@ -27,7 +29,7 @@ catalog table filtered to empty rows gets most of the way there.
 
 ## Schema
 
-`db/migrations/009-gear-detail.sql`:
+`db/migrations/008-gear-detail.sql`:
 
 ```sql
 ALTER TABLE gear ADD COLUMN weight TEXT;
@@ -40,7 +42,7 @@ ALTER TABLE gear ADD COLUMN rate_of_fire TEXT;
 ALTER TABLE gear ADD COLUMN ar INTEGER;
 ALTER TABLE gear ADD COLUMN mdc INTEGER;
 ALTER TABLE gear ADD COLUMN description TEXT;
-INSERT OR IGNORE INTO schema_migrations (filename) VALUES ('009-gear-detail.sql');
+INSERT OR IGNORE INTO schema_migrations (filename) VALUES ('008-gear-detail.sql');
 ```
 
 Check `db/schema.sql` first — the existing `gear` table already has some of

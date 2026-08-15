@@ -1,82 +1,94 @@
-# Roadmap — planned PRs
+# Roadmap — delivered
 
-Twelve planned PRs closing out the "Known limitations and refactor candidates"
-section of the [app README](../../README.md#known-limitations-and-refactor-candidates).
+**All twelve PRs are built and merged.** These files are kept as the record of
+*why* things are the way they are, not as a to-do list.
 
-Each item is its own PR, each has its own plan file, and every plan records
-decisions that were made deliberately in a planning interview — not defaults.
-**Where a plan says a choice was rejected, it was rejected on purpose.** Do not
-quietly re-add it.
+Each plan records decisions made deliberately in a planning interview — and, as
+importantly, the alternatives that were **rejected**. Where a plan says a choice
+was rejected, it was rejected on purpose. Do not quietly re-add it.
 
-## Build order
+Several plans also carry an **As built** note where reality diverged from the
+plan. Those divergences are the most useful thing here: they are the places
+where the plan turned out to be wrong once it met the code.
 
-Infrastructure first, so later PRs land on a base that records its own schema
-changes and can undo a bad import.
+## What shipped
 
-| # | PR | Plan | Depends on |
+| # | PR | Plan | Merged |
 |---|---|---|---|
-| 1 | Migration tracking | [01-migration-tracking.md](01-migration-tracking.md) | — |
-| 2 | Class soft-delete | [02-class-soft-delete.md](02-class-soft-delete.md) | 1 |
-| 3 | Rename `items` to `gear` | [03-items-to-gear.md](03-items-to-gear.md) | 1 |
-| 4 | Catalog edit UI | [04-catalog-edit-ui.md](04-catalog-edit-ui.md) | 1, 3 |
-| 5 | Spell importer + shared engine | [05-spell-importer.md](05-spell-importer.md) | 1, 4 |
-| 6 | Psionic importer | [06-psionic-importer.md](06-psionic-importer.md) | 5 |
-| 7 | Gear importer | [07-gear-importer.md](07-gear-importer.md) | 3, 5 |
-| 8 | List pagination | [08-pagination.md](08-pagination.md) | — |
-| 9 | Level-up skill picker | [09-levelup-skill-picker.md](09-levelup-skill-picker.md) | — |
-| 10 | Server-side rule enforcement | [10-server-rule-enforcement.md](10-server-rule-enforcement.md) | 9 |
-| 11 | Sheet targeted re-render | [11-sheet-targeted-render.md](11-sheet-targeted-render.md) | — |
-| 12 | Psionic tier rules | [12-psionic-tier-rules.md](12-psionic-tier-rules.md) | 6, plus a real import |
+| 1 | Migration tracking | [01](01-migration-tracking.md) | [#15](https://github.com/NateGrey0130/nates-workshop/pull/15) |
+| 2 | Class soft-delete | [02](02-class-soft-delete.md) | [#16](https://github.com/NateGrey0130/nates-workshop/pull/16) |
+| 3 | Rename `items` to `gear` | [03](03-items-to-gear.md) | [#17](https://github.com/NateGrey0130/nates-workshop/pull/17) |
+| 4 | Catalog edit UI + field config | [04](04-catalog-edit-ui.md) | [#18](https://github.com/NateGrey0130/nates-workshop/pull/18) |
+| 5a | Shared import engine | [05](05-spell-importer.md) | [#19](https://github.com/NateGrey0130/nates-workshop/pull/19) |
+| 5b | Spell importer + sessions | [05](05-spell-importer.md) | [#20](https://github.com/NateGrey0130/nates-workshop/pull/20) |
+| 6 | Psionic importer | [06](06-psionic-importer.md) | [#21](https://github.com/NateGrey0130/nates-workshop/pull/21) |
+| — | Review fixes | — | [#22](https://github.com/NateGrey0130/nates-workshop/pull/22) |
+| 7 | Gear importer | [07](07-gear-importer.md) | [#23](https://github.com/NateGrey0130/nates-workshop/pull/23) |
+| 8 | List pagination | [08](08-pagination.md) | [#24](https://github.com/NateGrey0130/nates-workshop/pull/24) |
+| 9 | Level-up skill picker | [09](09-levelup-skill-picker.md) | [#25](https://github.com/NateGrey0130/nates-workshop/pull/25) |
+| 10 | Server-side rule enforcement | [10](10-server-rule-enforcement.md) | [#26](https://github.com/NateGrey0130/nates-workshop/pull/26) |
+| 11 | Sheet targeted re-render | [11](11-sheet-targeted-render.md) | [#27](https://github.com/NateGrey0130/nates-workshop/pull/27) |
+| 12 | Psychic tier rules | [12](12-psionic-tier-rules.md) | [#28](https://github.com/NateGrey0130/nates-workshop/pull/28) |
+| — | Duplicate merging | — | [#29](https://github.com/NateGrey0130/nates-workshop/pull/29) |
 
-PRs 8, 9, and 11 have no hard dependency on the infra work and can move earlier
-if something makes that convenient. 5 → 6 → 7 must stay in order: PR 5 builds the
-shared import engine that 6 and 7 are thin configurations of.
+Duplicate merging was not in the roadmap. PR 4 deliberately left it out as
+out of scope, and the first real book import immediately created the demand for
+it — ten duplicate pairs that exact-name matching could not see.
 
-**PR 12's dependency is on data, not just code.** It enforces a `min_tier` column
-that PR 6 introduces, and enforcement built against an all-NULL column is either
-a no-op or a broken picker. Run a real psionic import first.
+## Where the plans were wrong
+
+Worth reading before trusting any plan as a specification:
+
+- **PR 1** called for a `003` backfill migration. Guarded seeding in
+  `schema.sql` made it unnecessary, and the guard — checking the schema feature
+  a migration adds, rather than assuming — became the convention every later
+  migration follows.
+- **PR 2** warned about invalidating a parse cache. Unnecessary: the cache is
+  only consulted for rows the query already returned.
+- **PR 8** wanted uniform pagination across every list endpoint. The wizard
+  boots by fetching five lists and rendering pickers from three of them, so a
+  truncated catalog would silently hide valid choices. Only the lists that grow
+  with play are bounded.
+- **PR 10** assumed a character's stored skill rows were a usable source of
+  category. They are not — the wizard writes `category: "Class"` on every
+  O.C.C. skill — and choice groups turned out to be uncheckable in principle,
+  so they warn rather than block.
+- **PR 11** knew about armour re-renders but not that the inventory paths called
+  `load()`, which refetched and replaced state wholesale. That was the bug
+  actually destroying unsaved edits.
 
 ## Decisions that span several PRs
 
-**One shared catalog import engine.** PR 5 generalises the working skill importer
-into a reusable engine — upload, extract, duplicate detection, update / keep-both
-/ ignore review, batch confirm — driven by a per-catalog configuration. The skill
-importer migrates onto it in the same PR. PRs 6 and 7 then add a config each
-rather than a fourth copy of the flow. The alternative of cloning the skill
-importer three times was considered and rejected: a bug fix would need applying
-four times.
+**One shared catalog import engine.** Skills, spells, psionic powers and gear
+all run through `_lib/import-engine.js` with a per-catalog spec; the session
+endpoints for the latter three are three lines each. Cloning the skill importer
+was considered and rejected — a bug fix would have needed applying four times.
 
-**One field vocabulary across catalogs.** Spells, psionic powers, and gear all
-gain a real stat block, and spells and psionics deliberately share field names
+**One field vocabulary.** Spells and psionics deliberately share field names
 (`range`, `duration`, `saving_throw`, `description`) so the sheet renders both
 through the same code.
 
-**Importers record what the book says; they never infer.** Where a value is
-absent from the page it stays absent, and a NULL means "not stated" rather than
-a computed default. PR 6's `min_tier` is the clearest case — inferring it from
-the category would record a guess as book-sourced data, which is what every
-importer's review step exists to prevent.
+**Importers record what the book says; they never infer.** An absent value stays
+absent, and NULL means "not stated" rather than a computed default. PR 6's
+`min_tier` is the clearest case.
 
-**The catalog field config is written once, in PR 4.** The edit UI needs a
-per-catalog description of fields, types, and labels. That same config drives
-the importers' extraction prompts and review tables. This is why the edit UI is
-sequenced before the importers rather than after.
+**Admin-gated catalog writes.** Catalogs are global — one edit changes every
+character — so every write stays behind the `ADMIN_EMAIL` gate, which fails
+closed.
 
-**Admin-gated writes.** Catalogs are global — one edit changes every character.
-Every catalog write, from the edit UI and from every importer, stays behind the
-existing `ADMIN_EMAIL` gate in `functions/api/_lib/access.js`, which fails closed.
+## Standing constraints
 
-## Standing constraints these plans inherit
-
-From the app README, and non-negotiable in every plan below:
+Non-negotiable, and every plan inherits them:
 
 - **PDFs go to Claude as document attachments, never as pre-extracted text.**
   Layout-preserving extraction splices two-column sourcebook pages together
   mid-line. Do not add a text pre-pass.
 - **Server-side callers use `_lib/claude-client.js` directly.** Never fetch the
-  site's own `/api/claude` URL — Access intercepts the subrequest and returns the
-  login page as HTML.
-- **`db/schema.sql` stays idempotent**; ALTERs live in `db/migrations/`.
+  site's own `/api/claude` URL — Access intercepts the subrequest and returns
+  the login page as HTML.
+- **`db/schema.sql` stays idempotent**; ALTERs live in `db/migrations/`, each
+  recording itself in `schema_migrations` and each with a guarded seed line in
+  `schema.sql`.
 - **Schema changes are applied by hand before the deploy that needs them**, and
-  verified by querying them back rather than by trusting an exit code.
+  verified by querying them back rather than trusting an exit code.
 - No build step, no framework, no dependencies.

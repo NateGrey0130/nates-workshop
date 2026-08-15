@@ -1,5 +1,8 @@
 # PR 4 — Catalog edit UI
 
+> **Delivered** in [#18](https://github.com/NateGrey0130/nates-workshop/pull/18). This file is the record of why, not a to-do.
+> Duplicate merging, explicitly out of scope here, shipped later in #29.
+
 ## Problem
 
 Only the importers write catalog rows. A single wrong percentage — and the
