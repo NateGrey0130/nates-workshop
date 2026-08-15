@@ -16,6 +16,7 @@ import {
 import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
 import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
 import { skillGrantsFor } from '../../../functions/api/character-creator/_lib/leveling.js';
+import { similarity, normaliseName } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
 import { validateCharacter, relatedAllowance } from '../../../functions/api/character-creator/_lib/validate-character.js';
 
 const appDir = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -505,6 +506,52 @@ check('the psionic save BONUS is still purely M.E.', (() => {
 })());
 check('a stored override still wins over the derived target',
   D.saves({ ME: 10 }, { psionics_target: 8 }, 'minor').psionics_target === 8);
+
+// ---------- 1c5. Duplicate detection ----------
+// Every pair below is a REAL clash found importing the Rifts skill chapter:
+// the book and the hand-seeded catalog name the same skill differently, and
+// exact-name dedupe in the importers cannot see any of them.
+console.log('\n[1c5] Duplicate detection');
+const REAL_CLASHES = [
+  ['Skin and Prepare Animal Hides', 'Skin & Prepare Animal Hides'],
+  ['Lore — Demons and Monsters', 'Lore: Demons & Monsters'],
+  ['Tracking', 'Tracking (people)'],
+  ['Mathematics — Basic', 'Basic Math'],
+  ['Mathematics — Advanced', 'Advanced Math'],
+  ['Laser', 'Laser Communications'],
+  ['Horsemanship', 'Horsemanship: General'],
+  ['Language', 'Language: Other'],
+  ['Track Animals', 'Track & Trap Animals'],
+  ['W.P. Archery and Targeting', 'W.P. Archery'],
+];
+const missed = REAL_CLASHES.filter(([a, b]) => similarity(a, b) < 0.7);
+check('every real clash from the Rifts import is detected', missed.length === 0,
+  'missed: ' + missed.map((p) => p.join(' / ')).join('; '));
+
+check('punctuation and ampersands normalise away',
+  normaliseName('Lore — Demons and Monsters') === normaliseName('Lore: Demons & Monsters'));
+check('bracketed qualifiers are ignored',
+  normaliseName('Tracking (people)') === normaliseName('Tracking'));
+check('an identical pair scores 1', similarity('Skin & Prepare Animal Hides', 'Skin and Prepare Animal Hides') === 1);
+check('a reordered/inflected pair scores in the likely band', (() => {
+  const s = similarity('Mathematics — Basic', 'Basic Math');
+  return s >= 0.9 && s < 1;
+})());
+check('a containment pair scores below the likely band', (() => {
+  const s = similarity('Laser', 'Laser Communications');
+  return s >= 0.7 && s < 0.9;
+})());
+
+// Genuinely different skills that share words. These SHOULD score low enough
+// to sit in the loosest group rather than looking confident.
+for (const [a, b] of [
+  ['Chemistry', 'Chemistry — Analytical'],
+  ['Demolitions', 'Demolitions Disposal'],
+  ['Hand to Hand: Basic', 'Hand to Hand: Expert'],
+]) {
+  check(`"${a}" vs "${b}" never reaches the confident bands`, similarity(a, b) < 0.9);
+}
+check('unrelated names do not match at all', similarity('Swimming', 'Sewing') < 0.7);
 
 // ---------- 1d. Paging ----------
 // A stray query string must not turn a list endpoint into a 400, so anything
