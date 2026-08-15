@@ -19,6 +19,7 @@ Access gate. No build step, no framework, no dependencies.
 - [Permissions](#permissions)
 - [House rules and derived values](#house-rules-and-derived-values)
 - [Level-up skill picks](#level-up-skill-picks)
+- [How the sheet updates](#how-the-sheet-updates)
 - [Server-side rule enforcement](#server-side-rule-enforcement)
 - [The catalog field config](#the-catalog-field-config)
 - [The PDF importers](#the-pdf-importers)
@@ -360,6 +361,38 @@ Spending consumes the oldest grant first, and a grant only partly spent stays
 pending with its count reduced — so two picks earned at level 3 can be taken one
 at a time. Both paths write the skills and the claim in a single batch, because
 a pick that consumed its grant without landing on the sheet would be lost.
+
+---
+
+## How the sheet updates
+
+Most of the sheet re-renders wholly — on load, on save, on a level-up, on
+switching character. That is deliberate: correctness over cleverness.
+
+Three paths update in place instead, because they used to destroy work:
+
+| Path | What it does |
+|---|---|
+| Add armour | appends one slot to `#armor-list` |
+| Remove armour | removes that slot, then renumbers the rest |
+| Inventory add / remove / qty / equipped | refreshes `#inv-rows` only |
+
+**Why it matters.** The section inputs (bio, combat, saves, armour) are only
+read back at Save, by `collectSections()`. A full re-render rebuilt them from
+stored state, so anything typed and not yet saved vanished. Armour add/remove
+used to work around that with a `keepEdits()` call that copied the DOM into
+state first — a patch every new interactive block had to remember to join in on.
+
+The inventory paths were worse: they called `load()`, which **refetches the
+character and replaces state wholesale**, so `keepEdits()` could not have helped
+even if they had used it. Adding an item silently discarded your typing.
+
+Now nothing else is touched, so unsaved edits simply survive — the DOM is the
+source of truth for them until Save reads it back. `keepEdits()` is gone.
+
+**If you add another in-place path**, remember `collectSections()` reads
+`data-armor` as an array index. Removing a slot has to renumber the ones after
+it, or the saved array acquires a hole.
 
 ---
 
@@ -716,10 +749,6 @@ point, not an oversight — see [`docs/plans/01-migration-tracking.md`](docs/pla
 secondary percentage split into its own entry, and a skill read as 0% where the
 catalog had 30%. Both are defensible readings of a dense page — which is why both
 importers end in a review step. Do not bulk-accept a new book's first run.
-
-**The sheet re-renders wholly on every edit.** Fine at this scale; targeted
-updates would be a real refactor. Editing state is preserved across the
-re-renders that add or remove armor, but that is a patch rather than a fix.
 
 **The gear catalog's table is `gear`, its API route is `/items`.** The table was
 renamed away from `items` to stay clear of MediaVault's `media_items`; the route
