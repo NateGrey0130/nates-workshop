@@ -13,6 +13,7 @@ import { getUserEmail, unauthorized, json, forbidden, characterAccess } from '..
 import { loadClass } from '../../_lib/class-loader.js';
 import { xpTableFor, thresholdFor, skillGrantsFor } from '../../_lib/leveling.js';
 import { insertGrantStatements, resolvePicks, pickErrors } from '../../_lib/skill-picks.js';
+import { validateCharacter, loadSkillCategories } from '../../_lib/validate-character.js';
 
 const POOL_FIELDS = ['hp_max', 'sdc_max', 'mdc_max', 'ppe_max', 'isp_max'];
 
@@ -86,6 +87,18 @@ export async function onRequestPost({ request, env, params }) {
     changes.picked = picked.skills.map((s) => ({ name: s.name, pct: s.pct, override: !!s.override }));
   }
   if (skillsChanged) { sets.push('skills = ?'); binds.push(JSON.stringify(skills)); }
+
+  // Check the result, not the request: the allowance grows with the level being
+  // reached, so validate against toLevel rather than the level being left.
+  let attributes = {};
+  try { attributes = JSON.parse(character.attributes); } catch { /* leave empty */ }
+  const { violations } = validateCharacter({
+    character: { level: toLevel }, cls, skills, attributes,
+    catalog: cls ? await loadSkillCategories(env) : null,
+  });
+  if (violations.length) {
+    return json({ error: 'That level-up would break the class rules', violations }, 422);
+  }
 
   sets.push("updated_at = datetime('now')");
 
