@@ -17,10 +17,23 @@ const SESSION_CATALOGS = {
   spells: {
     label: 'Spells', noun: 'spell', sub: 'A whole chapter, over several sittings',
     extra: { key: 'level', id: 'sess-level', placeholder: 'Level', type: 'number', width: '90px' },
+    summary: (r) => `L${r.level ?? 0} · ${r.ppe ?? 0} P.P.E.`,
   },
   psionics: {
     label: 'Psionics', noun: 'psionic power', sub: 'A whole chapter, over several sittings',
     extra: { key: 'category', id: 'sess-category', placeholder: 'Category', type: 'text', width: '150px' },
+    summary: (r) => `${escHtml(r.category || 'no category')} · ${r.isp ?? 0} I.S.P.`
+      + (r.min_tier ? ` · ${escHtml(r.min_tier)}` : ''),
+  },
+  gear: {
+    label: 'Gear', noun: 'equipment', sub: 'Weapons, armour and kit',
+    extra: { key: 'category', id: 'sess-category', placeholder: 'weapon / armor / …', type: 'text', width: '150px' },
+    // The slug is worth showing: it is what an existing stub is matched on, and
+    // what equipment_starting[].item_id in class markdown points at.
+    summary: (r) => `<span class="slug">${escHtml(r.slug || '—')}</span>`
+      + ` ${escHtml(r.category || 'uncategorised')}`
+      + (r.damage ? ` · ${escHtml(r.damage)}${r.is_mega_damage ? ' (M.D.)' : ''}` : '')
+      + (r.ar ? ` · A.R. ${r.ar}` : '') + (r.mdc ? ` · ${r.mdc} M.D.C.` : ''),
   },
 };
 
@@ -89,7 +102,8 @@ function modeTabs() {
       <span class="imp-tab-label">${label}</span>
       <span class="imp-tab-sub">${sub}</span>
     </button>`;
-  return `<div class="imp-tabs cols-4 noprint">
+  const count = 2 + Object.keys(SESSION_CATALOGS).length;
+  return `<div class="imp-tabs cols-${count} noprint">
     ${tab('class', 'Classes', 'One O.C.C./R.C.C. per upload')}
     ${tab('skills', 'Skills', 'A skill chapter — many at once')}
     ${Object.entries(SESSION_CATALOGS).map(([k, c]) => tab(k, c.label, c.sub)).join('')}
@@ -593,9 +607,7 @@ function renderSession() {
     return `
     <div class="miss-row">
       <span><b>${escHtml(r.name || '(unnamed)')}</b></span>
-      <span class="muted small">${I.mode === 'spells'
-        ? `L${r.level ?? 0} · ${r.ppe ?? 0} P.P.E.`
-        : `${escHtml(r.category || 'no category')} · ${r.isp ?? 0} I.S.P.${r.min_tier ? ` · ${escHtml(r.min_tier)}` : ''}`}</span>
+      <span class="muted small">${SESSION_CATALOGS[I.mode].summary(r)}</span>
       ${r.status === 'duplicate'
         ? `<span class="tag">${r.is_stub ? 'stub' : 'in catalog'}${r.differs ? ' · differs' : ''}</span>`
         : '<span class="badge-live">new</span>'}

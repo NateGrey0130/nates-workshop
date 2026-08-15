@@ -333,9 +333,12 @@ pre.snippet {
   gap: 10px;
   margin-bottom: 16px;
 }
-/* Four tabs on both the import page and the catalog editor. */
+/* Four in the catalog editor, five on the import page. The count comes from the
+   number of importers, so both variants exist rather than a magic number. */
 .imp-tabs.cols-4 { grid-template-columns: repeat(4, 1fr); }
-@media (max-width: 780px) { .imp-tabs.cols-4 { grid-template-columns: 1fr 1fr; } }
+.imp-tabs.cols-5 { grid-template-columns: repeat(5, 1fr); }
+@media (max-width: 900px) { .imp-tabs.cols-5 { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 780px) { .imp-tabs.cols-4, .imp-tabs.cols-5 { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 620px) { .imp-tabs, .imp-tabs.cols-4 { grid-template-columns: 1fr; } }
 .imp-tab {
   display: flex; flex-direction: column; gap: 2px;
