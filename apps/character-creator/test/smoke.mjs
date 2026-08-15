@@ -692,6 +692,32 @@ check('cross-reference collects fixed items and every option', (() => {
 check('cross-reference on a class with no equipment yields nothing',
   referencedGear({}).length === 0);
 
+// ---------- 1c8. Draft persistence ----------
+// The wizard persists the BUILD, never the catalogs it was built against. S
+// holds the class, skill, spell and gear catalogs too — large, shared, and
+// stale the moment they are written down.
+console.log('\n[1c8] Draft persistence');
+
+const DRAFT_KEYS = readFileSync(join(appDir, 'app.js'), 'utf8')
+  .match(/const DRAFT_KEYS = \[([\s\S]*?)\];/)?.[1]
+  ?.match(/'([^']+)'/g)?.map((s) => s.slice(1, -1)) || [];
+
+check('the persisted key list is found in app.js', DRAFT_KEYS.length > 0);
+for (const k of ['step', 'attrs', 'attrMethods', 'groupPicks', 'gearPicks', 'equipment', 'bio', 'pools']) {
+  check(`draft persists \`${k}\``, DRAFT_KEYS.includes(k));
+}
+// A draft carrying a copy of the catalogs would be large, and would restore a
+// snapshot of content that has since been edited or re-imported.
+for (const k of ['items', 'classes', 'skillCatalog', 'spellCatalog', 'psiCatalog', 'campaigns', 'existing', 'itemRedirects']) {
+  check(`draft does NOT persist \`${k}\``, !DRAFT_KEYS.includes(k));
+}
+// The class is stored as an id and re-resolved on restore, so an edited class
+// definition takes effect rather than being shadowed by the draft.
+check('draft does NOT persist the resolved class object', !DRAFT_KEYS.includes('cls'));
+// Derived from the class and catalog on every render; persisting it would
+// restore options that no longer match the class.
+check('draft does NOT persist derived gear choices', !DRAFT_KEYS.includes('gearChoices'));
+
 // ---------- 1d. Paging ----------
 // A stray query string must not turn a list endpoint into a 400, so anything
 // nonsensical falls back to the default rather than erroring.
@@ -726,7 +752,7 @@ check('schema applies cleanly', apply.status === 0, (apply.stderr || apply.stdou
 // SQL goes through a temp file — a quoted --command string doesn't survive the Windows shell.
 const checkSql = join(appDir, 'test', '.smoke-check.sql');
 writeFileSync(checkSql,
-  "SELECT (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('campaigns','characters','journal_entries','level_history','gear','character_items')) AS cc_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'media_items') AS media_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('imported_classes','skills','spells','psionic_powers')) AS catalog_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='catalog_redirects') AS redirect_table, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='items') AS stale_items_table, (SELECT sql FROM sqlite_master WHERE name='character_items') AS ci_ddl;\n");
+  "SELECT (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('campaigns','characters','journal_entries','level_history','gear','character_items')) AS cc_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'media_items') AS media_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('imported_classes','skills','spells','psionic_powers')) AS catalog_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='catalog_redirects') AS redirect_table, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='character_drafts') AS draft_table, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='items') AS stale_items_table, (SELECT sql FROM sqlite_master WHERE name='character_items') AS ci_ddl;\n");
 const query = wrangler(['d1', 'execute', 'DB', '--local', '--json', '--file', checkSql]);
 rmSync(checkSql, { force: true });
 let row = null;
@@ -735,6 +761,7 @@ check('all 6 character-creator tables exist', row?.cc_tables === 6, query.stdout
 check('media_items still intact alongside them', row?.media_tables === 1);
 check('class + catalog tables exist', row?.catalog_tables === 4, query.stdout?.slice(-300));
 check('catalog_redirects exists', row?.redirect_table === 1, query.stdout?.slice(-300));
+check('character_drafts exists', row?.draft_table === 1, query.stdout?.slice(-300));
 
 // The rename must leave nothing behind. A surviving `items` alongside `gear`
 // means schema.sql created an empty gear table on an un-migrated database.

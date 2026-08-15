@@ -28,6 +28,8 @@ const PB_POOL = 40, PB_BASE = 8, PB_CAP = 18, PB_FLOOR = 3;
 
 const S = {
   step: 0, system: null, classMode: 'browse', quiz: [null, null, null],
+  // An unfinished build found on the server, awaiting resume-or-discard.
+  draftOffer: null,
   classes: [], cls: null,
   attrMethods: {}, attrs: {},
   related: [], secondary: [], groupPicks: {},
@@ -129,6 +131,105 @@ function quizScore(c) {
   return score;
 }
 
+// ---------- draft persistence ----------
+// Eight steps, and step 3 ROLLS. A refresh or a closed tab used to lose all of
+// it, and a roll is the one thing you cannot honestly redo — you either accept
+// different numbers or re-roll until you like them.
+//
+// An explicit allowlist, not a copy of S: the state also holds the class,
+// skill, spell and gear catalogs, which are large, shared, and stale the moment
+// they are written down. Everything here is the build itself.
+const DRAFT_KEYS = [
+  'step', 'system', 'classMode', 'quiz', 'attrMethods', 'attrs',
+  'related', 'secondary', 'groupPicks', 'gearPicks',
+  'equipment', 'equipInit', 'charName', 'campaignId', 'newCampaign',
+  'spells', 'psi', 'bio', 'pools',
+];
+
+let draftTimer = null;
+
+// Nothing is worth saving until a class is picked — before that a "draft" is a
+// radio button, and offering to resume one would be noise.
+function draftWorthSaving() {
+  return !!S.cls && !S.savedId && !S.draftOffer;
+}
+
+// The class is stored as an ID and re-resolved on restore, so a draft never
+// carries a stale copy of a class definition that has since been edited.
+function draftPayload() {
+  const state = {};
+  for (const k of DRAFT_KEYS) state[k] = S[k];
+  return {
+    state,
+    step: S.step,
+    system: S.system,
+    class_id: S.cls?.id ?? null,
+    class_name: S.cls?.name ?? null,
+    char_name: S.charName || null,
+  };
+}
+
+// Debounced from render(), which already runs after every mutation — one hook
+// instead of remembering to call this from thirty handlers.
+function queueDraftSave() {
+  if (!draftWorthSaving()) return;
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(saveDraft, 1500);
+}
+
+async function saveDraft() {
+  if (!draftWorthSaving()) return;
+  try {
+    await api('draft', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(draftPayload()),
+    });
+  } catch {
+    // A draft is a convenience. Failing to store one must never interrupt or
+    // even interject in the build it is trying to protect.
+  }
+}
+
+async function discardDraft() {
+  clearTimeout(draftTimer);
+  try { await api('draft', { method: 'DELETE' }); } catch { /* see above */ }
+}
+
+function resumeDraft() {
+  const d = S.draftOffer;
+  S.draftOffer = null;
+  Object.assign(S, d.state);
+  S.cls = S.classes.find((c) => c.id === d.class_id) || null;
+  S.savedId = null;
+  render();
+}
+
+async function dismissDraft() {
+  S.draftOffer = null;
+  await discardDraft();
+  render();
+}
+
+// Shown before the wizard rather than over it: resuming into step 4 of someone
+// else's half-finished build with no explanation is worse than the data loss
+// this feature exists to prevent.
+function renderDraftOffer() {
+  const d = S.draftOffer;
+  const when = d.updated_at ? d.updated_at.replace('T', ' ').replace('Z', '') : 'earlier';
+  $('app').innerHTML = `
+  <div class="panel">
+    <h2>You have an unfinished character</h2>
+    <p>${esc(d.char_name || 'Unnamed')} — <b>${esc(d.class_name || d.class_id || 'unknown class')}</b>,
+       stopped at step ${d.step + 1} of ${STEPS.length} (${esc(STEPS[d.step] || '?')}).</p>
+    <p class="muted small">Last saved ${esc(when)} UTC.</p>
+    <div class="nav">
+      <button class="btn btn-primary" onclick="resumeDraft()">Resume this build</button>
+      <button class="btn btn-ghost" onclick="dismissDraft()">Discard and start fresh</button>
+    </div>
+  </div>`;
+}
+
 // ---------- rendering ----------
 function renderStepper() {
   $('stepper').innerHTML = STEPS.map((name, i) => {
@@ -139,10 +240,12 @@ function renderStepper() {
 }
 
 function render() {
+  if (S.draftOffer) { renderStepper(); return renderDraftOffer(); }
   if (S.savedId) { renderStepper(); return renderSaved(); }
   renderStepper();
   [renderSystem, renderClass, renderAttributes, renderSkills, renderEquipment,
    renderPowers, renderDetails, renderReview][S.step]();
+  queueDraftSave();
 }
 
 function goStep(i) { S.step = i; render(); }
@@ -472,25 +575,29 @@ function findItem(slug) {
 // are held aside until the player resolves them, because picking for them would
 // be inventing a decision the book left open.
 function initEquipment() {
-  if (S.equipInit) return;
-  S.equipment = [];
-  S.gearChoices = [];
+  const starting = S.cls.equipment_starting || [];
 
-  (S.cls.equipment_starting || []).forEach((eq, gi) => {
-    if (isGearChoice(eq)) {
-      S.gearChoices.push({
-        gi,
-        choose: eq.choose,
-        qty: eq.qty || 1,
-        label: eq.label || '',
-        options: (eq.from || []).map((slug) => ({ slug, item: findItem(slug) })),
-      });
-      return;
-    }
+  // The choices are re-derived every time, not guarded by equipInit. A restored
+  // draft brings back which options were TICKED but not what the options were,
+  // so deriving them once and skipping thereafter would leave the picks with
+  // nothing to render against.
+  S.gearChoices = starting.flatMap((eq, gi) => !isGearChoice(eq) ? [] : [{
+    gi,
+    choose: eq.choose,
+    qty: eq.qty || 1,
+    label: eq.label || '',
+    options: (eq.from || []).map((slug) => ({ slug, item: findItem(slug) })),
+  }]);
+
+  // The inventory itself is guarded, because it is editable — re-deriving it
+  // would undo every hand-added or removed row.
+  if (S.equipInit) return;
+  S.equipment = starting.flatMap((eq) => {
+    if (isGearChoice(eq)) return [];
     const item = findItem(eq.item_id);
-    S.equipment.push(item
+    return [item
       ? { item_id: item.id, name: item.name, qty: eq.qty || 1, source: 'starting' }
-      : { custom_name: eq.item_id.replace(/-/g, ' '), qty: eq.qty || 1, source: 'starting', notes: 'starting gear (not in item catalog yet)' });
+      : { custom_name: eq.item_id.replace(/-/g, ' '), qty: eq.qty || 1, source: 'starting', notes: 'starting gear (not in item catalog yet)' }];
   });
   S.equipInit = true;
 }
@@ -800,6 +907,8 @@ async function save() {
     };
     const res = await api('characters', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     S.savedId = res.id;
+    // The build is a real character now; the draft has nothing left to protect.
+    await discardDraft();
     render();
   } catch (err) {
     msg.textContent = 'Save failed: ' + err.message;
@@ -843,6 +952,7 @@ async function renderSaved() {
 }
 function startOver() {
   S.savedId = null; S.step = 0; S.cls = null; S.charName = ''; S.campaignId = null; S.newCampaign = '';
+  S.draftOffer = null;
   resetBuild(); boot(false); render();
 }
 
@@ -871,6 +981,18 @@ async function boot(first = true) {
     S.me = meRes.email ?? null;
     S.isAdmin = !!meRes.is_admin;
     if (classesRes.failures?.length) console.error('Class parse failures:', classesRes.failures);
+
+    // Only offered on a genuine first load. startOver() calls boot(false) after
+    // deliberately clearing the build, and re-offering the draft it just
+    // finished would be the opposite of helpful.
+    if (first) {
+      const { draft } = await api('draft').catch(() => ({ draft: null }));
+      // A draft naming a class that no longer resolves — retired, renamed,
+      // re-imported under a different id — cannot be restored into anything
+      // coherent, so it is dropped rather than half-applied.
+      if (draft && S.classes.some((c) => c.id === draft.class_id)) S.draftOffer = draft;
+      else if (draft) await discardDraft();
+    }
     if (first) render();
   } catch (err) {
     $('app').innerHTML = `<div class="panel"><p class="err">Failed to load app data: ${esc(err.message)}</p></div>`;
@@ -891,12 +1013,24 @@ $('app').addEventListener('change', (ev) => {
   }
 });
 
+// The draft save is debounced, so the last second or two of work may not have
+// reached the server yet. Warn only once attributes are rolled: a roll is the
+// first thing that cannot be reproduced, and before that the "loss" is picking
+// a system and a class again.
+window.addEventListener('beforeunload', (ev) => {
+  if (S.savedId || !S.cls || S.draftOffer) return;
+  if (!Object.keys(S.attrs || {}).length) return;
+  ev.preventDefault();
+  ev.returnValue = '';
+});
+
 // Inline onclick handlers live in the global scope; this module does not, so
 // every entry point the generated markup references is exposed explicitly.
 Object.assign(window, {
   S, render, computePools, goStep, pickSystem, classMode, quizPick, pickClass,
   confirmClass, setMethod, setAllMethod, doRoll, rollAll, manualSet, pbAdj,
   toggleSkill, toggleGroupPick, rmEquip, addCatalog, addCustom, togglePower, setBio, save, startOver,
+  resumeDraft, dismissDraft,
 });
 
 boot();
