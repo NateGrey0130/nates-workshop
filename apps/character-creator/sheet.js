@@ -113,19 +113,7 @@ function render() {
     </div>`;
   }).join('');
 
-  const invRows = C.items.map((it) => {
-    const name = escHtml(it.item_name || it.custom_name);
-    const kind = it.item_id ? '<span class="tag">catalog</span>' : '<span class="tag">custom</span>';
-    const qty = w
-      ? `<input type="number" min="1" value="${it.qty}" onchange="patchItem(${it.id}, {qty: this.value})"><span class="print-only">×${it.qty}</span>`
-      : `×${it.qty}`;
-    const eq = w
-      ? `<input type="checkbox" ${it.equipped ? 'checked' : ''} onchange="patchItem(${it.id}, {equipped: this.checked})"><span class="print-only">${it.equipped ? '✔' : '—'}</span>`
-      : (it.equipped ? '✔' : '');
-    const rm = w ? `<td><button class="btn btn-sm btn-ghost" onclick="removeItem(${it.id})">✕</button></td>` : '<td></td>';
-    return `<tr><td>${name} ${kind}</td><td>${qty}</td><td>${eq}</td>
-      <td class="muted small">${escHtml(it.notes || '')}</td>${rm}</tr>`;
-  }).join('');
+  const invRows = inventoryRowsHtml();
 
   const journalHtml = C.journal.map((e) => {
     const isCampaign = e.character_id == null;
@@ -195,17 +183,7 @@ function render() {
     ['coma_death_pct', 'vs Coma/Death'], ['pain', 'vs Pain'],
   ];
 
-  const armorRows = armorList.map((a, i) => `
-    <div class="armor-slot">
-      <div class="field"><span class="lbl">Armor</span><span class="dots"></span>
-        <span class="val">${w ? `<input class="mini-in wide" data-armor="${i}" data-key="name" value="${escHtml(a.name ?? '')}">` : escHtml(a.name || '—')}</span></div>
-      <div class="armor-stats">
-        ${['ar', 'mdc_current', 'mdc_max', 'weight', 'cost', 'prowl'].map((k) => `
-          <div class="field"><span class="lbl">${{ ar: 'A.R.', mdc_current: 'M.D.C.', mdc_max: 'of', weight: 'Weight', cost: 'Cost', prowl: 'Prowl' }[k]}</span>
-            <span class="val">${w ? `<input class="mini-in" data-armor="${i}" data-key="${k}" value="${escHtml(a[k] ?? '')}">` : escHtml(String(a[k] ?? '—'))}</span></div>`).join('')}
-      </div>
-      ${w ? `<button class="btn btn-sm btn-ghost noprint" onclick="removeArmor(${i})">Remove</button>` : ''}
-    </div>`).join('');
+  const armorRows = armorList.map((a, i) => armorSlotHtml(a, i, w)).join('');
 
   $('app').innerHTML = `
   ${box(`${escHtml(c.name)}${w ? '' : ' <span class="tag ro">read-only</span>'}${C.isGm ? ' <span class="tag gm">GM</span>' : ''}`, `
@@ -260,7 +238,8 @@ function render() {
     ${box('Combat', COMBAT_FIELDS.map(([k, l]) =>
       editField('combat', k, l, combat[k], c.combat)).join(''))}
 
-    ${box('Armor', (armorRows || '<p class="muted small">No armor recorded.</p>') +
+    ${box('Armor', `<div id="armor-list">${armorRows}</div>` +
+      (armorRows ? '' : '<p class="muted small" id="armor-empty">No armor recorded.</p>') +
       (w ? `<div class="rowline noprint" style="margin-top:8px">
         <button class="btn btn-sm" onclick="addArmor()">+ Add armor</button></div>` : ''))}
   </div>
@@ -277,8 +256,8 @@ function render() {
       : '<p class="muted small">None.</p>')}
 
     ${box('Equipment', `
-      <table><tr><th>Item</th><th>Qty</th><th>Eq</th><th>Notes</th><th></th></tr>
-        ${invRows || '<tr><td class="muted" colspan="5">Empty.</td></tr>'}</table>
+      <table><thead><tr><th>Item</th><th>Qty</th><th>Eq</th><th>Notes</th><th></th></tr></thead>
+        <tbody id="inv-rows">${invRows || '<tr><td class="muted" colspan="5">Empty.</td></tr>'}</tbody></table>
       ${w ? `<div class="noprint" style="margin-top:8px">
         <div class="rowline">
           ${C.catalog.length ? `<select id="add-slug"><option value="">— catalog —</option>${catalogOpts}</select>` : ''}
@@ -478,25 +457,99 @@ async function usePower(index) {
   } catch (err) { alert('Failed: ' + err.message); }
 }
 
-// Armor is edited in place and persisted with the rest of the sheet. Adding or
-// removing a slot re-renders, so anything typed into the other section inputs
-// is captured first — otherwise unsaved edits would silently vanish.
-function keepEdits() {
-  if (!C.canWrite) return;
-  const { bio, combat, saves, armor } = collectSections();
-  Object.assign(C.data, { bio, combat, saves, armor });
+// One armour slot. Hoisted out of render() so addArmor can append a slot
+// without rebuilding the page around it.
+const ARMOR_KEYS = ['ar', 'mdc_current', 'mdc_max', 'weight', 'cost', 'prowl'];
+const ARMOR_LABELS = { ar: 'A.R.', mdc_current: 'M.D.C.', mdc_max: 'of',
+                       weight: 'Weight', cost: 'Cost', prowl: 'Prowl' };
+
+function armorSlotHtml(a, i, w) {
+  return `
+    <div class="armor-slot">
+      <div class="field"><span class="lbl">Armor</span><span class="dots"></span>
+        <span class="val">${w ? `<input class="mini-in wide" data-armor="${i}" data-key="name" value="${escHtml(a.name ?? '')}">` : escHtml(a.name || '—')}</span></div>
+      <div class="armor-stats">
+        ${ARMOR_KEYS.map((k) => `
+          <div class="field"><span class="lbl">${ARMOR_LABELS[k]}</span>
+            <span class="val">${w ? `<input class="mini-in" data-armor="${i}" data-key="${k}" value="${escHtml(a[k] ?? '')}">` : escHtml(String(a[k] ?? '—'))}</span></div>`).join('')}
+      </div>
+      ${w ? `<button class="btn btn-sm btn-ghost noprint" data-armor-remove="${i}" onclick="removeArmor(+this.dataset.armorRemove)">Remove</button>` : ''}
+    </div>`;
 }
+
+// The inventory table's rows. Hoisted for the same reason: an item change
+// re-renders this and nothing else.
+function inventoryRowsHtml() {
+  const w = C.canWrite;
+  return C.items.map((it) => {
+    const name = escHtml(it.item_name || it.custom_name);
+    const kind = it.item_id ? '<span class="tag">catalog</span>' : '<span class="tag">custom</span>';
+    const qty = w
+      ? `<input type="number" min="1" value="${it.qty}" onchange="patchItem(${it.id}, {qty: this.value})"><span class="print-only">×${it.qty}</span>`
+      : `×${it.qty}`;
+    const eq = w
+      ? `<input type="checkbox" ${it.equipped ? 'checked' : ''} onchange="patchItem(${it.id}, {equipped: this.checked})"><span class="print-only">${it.equipped ? '✔' : '—'}</span>`
+      : (it.equipped ? '✔' : '');
+    const rm = w ? `<td><button class="btn btn-sm btn-ghost" onclick="removeItem(${it.id})">✕</button></td>` : '<td></td>';
+    return `<tr><td>${name} ${kind}</td><td>${qty}</td><td>${eq}</td>
+      <td class="muted small">${escHtml(it.notes || '')}</td>${rm}</tr>`;
+  }).join('');
+}
+
+// Refresh the inventory from the server and repaint only that table.
+//
+// These used to call load(), which refetches the character and replaces C.data
+// wholesale — so adding an item silently discarded anything typed into the
+// combat, saves or bio fields. keepEdits() could not help, because load()
+// overwrote the state it had just saved.
+async function refreshInventory() {
+  const res = await api('characters/' + id);
+  C.items = res.items;
+  const body = $('inv-rows');
+  if (body) {
+    body.innerHTML = inventoryRowsHtml() || '<tr><td class="muted" colspan="5">Empty.</td></tr>';
+  }
+}
+
+// ─── targeted updates ───
+//
+// The sheet used to re-render wholly on every edit, which discarded whatever
+// was typed into the other inputs. keepEdits() existed to collect and restore
+// them — a patch around the architecture rather than a fix, and one that every
+// new interactive block had to remember to participate in.
+//
+// These two paths update in place instead. Nothing else is touched, so unsaved
+// edits elsewhere simply survive: the DOM is the source of truth for them until
+// Save reads it back with collectSections().
+//
+// Everything else — load, save, level-up, switching character — still does a
+// full render. Correctness over cleverness.
+
 function addArmor() {
-  keepEdits();
-  C.data.armor = [...(Array.isArray(C.data.armor) ? C.data.armor : []), { name: '' }];
-  render();
+  const list = $('armor-list');
+  if (!list) return;
+  const i = list.querySelectorAll('.armor-slot').length;
+  list.insertAdjacentHTML('beforeend', armorSlotHtml({ name: '' }, i, C.canWrite));
+  $('armor-empty')?.remove();
 }
+
 function removeArmor(i) {
-  keepEdits();
-  const list = Array.isArray(C.data.armor) ? [...C.data.armor] : [];
-  list.splice(i, 1);
-  C.data.armor = list;
-  render();
+  const list = $('armor-list');
+  const slot = list?.querySelectorAll('.armor-slot')[i];
+  if (!slot) return;
+  slot.remove();
+  // collectSections() reads data-armor as an array index, so the slots after
+  // the removed one have to close the gap.
+  reindexArmor();
+}
+
+function reindexArmor() {
+  const slots = $('armor-list')?.querySelectorAll('.armor-slot') || [];
+  slots.forEach((slot, i) => {
+    for (const input of slot.querySelectorAll('input[data-armor]')) input.dataset.armor = i;
+    const btn = slot.querySelector('button[data-armor-remove]');
+    if (btn) btn.dataset.armorRemove = i;
+  });
 }
 
 // Reads the section inputs back out of the DOM. Blank means "no override" —
@@ -530,13 +583,13 @@ async function saveStats() {
 }
 
 async function patchItem(rowId, fields) {
-  try { await api(`characters/${id}/items/${rowId}`, jsonReq('PATCH', fields)); await load(); }
+  try { await api(`characters/${id}/items/${rowId}`, jsonReq('PATCH', fields)); await refreshInventory(); }
   catch (err) { alert('Update failed: ' + err.message); }
 }
 
 async function removeItem(rowId) {
   if (!confirm('Remove this item from inventory? (History is kept.)')) return;
-  try { await api(`characters/${id}/items/${rowId}`, { method: 'DELETE' }); await load(); }
+  try { await api(`characters/${id}/items/${rowId}`, { method: 'DELETE' }); await refreshInventory(); }
   catch (err) { alert('Remove failed: ' + err.message); }
 }
 
