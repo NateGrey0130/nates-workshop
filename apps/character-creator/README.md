@@ -26,6 +26,7 @@ Access gate. No build step, no framework, no dependencies.
 - [How the sheet updates](#how-the-sheet-updates)
 - [Server-side rule enforcement](#server-side-rule-enforcement)
 - [The catalog field config](#the-catalog-field-config)
+  - [What a list row shows](#what-a-list-row-shows)
 - [Merging duplicate catalog rows](#merging-duplicate-catalog-rows)
   - [Retired keys keep resolving](#retired-keys-keep-resolving)
 - [The PDF importers](#the-pdf-importers)
@@ -262,7 +263,7 @@ writes are gated (see [Permissions](#permissions)).
 | `classes` | GET | Published classes, parsed. `?system=` `?category=` `?include_retired=1` |
 | `catalogs` | GET | Skills, spells, psionic powers in one call — trimmed projection the wizard boots on |
 | `catalogs/rows` | GET / POST / PATCH | Admin. Whole rows for one catalog (`?catalog=`), create, and update (`&id=`). No delete |
-| `catalogs/duplicates` | GET / POST | Admin. Suggested duplicate pairs for a catalog; POST merges two rows |
+| `catalogs/duplicates` | GET / POST | Admin. Suggested duplicate pairs for a catalog; POST merges two rows. `?counts_only=1` returns just the per-tier counts, for the badge |
 | `catalogs/redirects` | GET / DELETE | Admin. Retired keys and where they resolve (`?catalog=`); DELETE stops forwarding one (`&id=`). No POST — redirects are written by merges and renames |
 | `items` | GET | Gear catalog (table is `gear`), plus retired slugs as `redirects`. `?system=` — a NULL system is unrestricted, matching how `skills.systems` reads |
 | `campaigns` | GET / POST | List (`?system=`, `?limit=`, `?offset=`); create (caller becomes GM) |
@@ -666,6 +667,30 @@ Editing or hand-creating a row sets `source = 'manual'` where the table has that
 column, so a later import can tell curated data from extracted data — the
 importers default a curated row to *ignore*.
 
+### What a list row shows
+
+Four columns, chosen **per row** rather than per catalog: the first four fields
+that row actually fills, in config order. Gear is the reason. A rifle, a suit of
+armour and a backpack have almost disjoint useful columns, so no fixed set of
+four can serve all three — the old rule took the first four fields and dropped
+the blanks *among them*, which for gear meant slug, system, category and weight
+on every row, while cost, damage, A.R. and M.D.C. never appeared at all.
+
+Three details that make it read well:
+
+- **The unique key is rendered separately**, not counted in the four. On gear
+  that is the slug, which is identity rather than a statistic, and letting it
+  take a slot cost every weapon its damage column.
+- **`0` is not empty.** A skill's `base` of 0 means non-percentile (W.P.s, hand
+  to hand) — a fact about the skill, not a missing value. A `systems` of NULL
+  *is* skipped, because it means "both" and is true of nearly every row.
+- **Long values are clipped to 48 characters.** Books write damage as a
+  sentence; the JA-11's runs to 140 and would swallow the row it is summarising.
+
+The upshot is that a row says only what it knows. The seeded psionic powers have
+no range, duration or `min_tier` at all, so they show category and I.S.P. and
+stop — and `min_tier` will appear on its own the first time a book states one.
+
 ---
 
 ## Merging duplicate catalog rows
@@ -684,21 +709,34 @@ Laser                          /  Laser Communications
 ```
 
 **Find duplicates** in the catalog editor normalises punctuation, ampersands,
-separators and bracketed qualifiers, then suggests pairs. Nothing merges
-automatically; you confirm each one, seeing both rows' numbers side by side.
+separators, spacing and bracketed qualifiers, then suggests pairs. Nothing
+merges automatically; you confirm each one, seeing both rows' numbers side by
+side.
+
+The button carries a **count badge**, fetched whenever a catalog loads, so a
+duplicate surfaces without anyone thinking to look. It counts only the two
+trustworthy tiers — a badge including the loose one would never reach zero, and
+a badge that never reaches zero teaches you to ignore it. The looser number is
+in the tooltip.
 
 Results are grouped by confidence, because the tiers are **not** equally
 trustworthy. Measured against the real 138-row catalog:
 
 | Group | What it means | Precision |
 |---|---|---|
-| Same name, different punctuation | identical once normalised | no false positives |
+| Same name, different punctuation *or spacing* | identical once normalised | no false positives |
 | Same words, reordered or inflected | `Basic Math` / `Mathematics — Basic` | no false positives |
 | One name contains the other | `Laser` / `Laser Communications` | **~40%** — read these |
 
 That last group is unavoidably ambiguous: `Chemistry` / `Chemistry — Analytical`
 and `Demolitions` / `Demolitions Disposal` look identical to it and are genuinely
 different skills. It is a judgement aid, not an oracle.
+
+Spacing was added to the top tier after `Back Pack` / `Backpack` turned up in the
+real gear catalog scoring **0.75** — filed in the loosest group, which is where a
+genuine duplicate goes to be ignored, and below the threshold the badge counts.
+Two names identical once spaces are removed are not similar names; they are one
+name typed two ways.
 
 **What a merge does** differs by catalog, because references do:
 

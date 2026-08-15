@@ -25,6 +25,18 @@ export async function onRequestGet({ request, env }) {
 
   const pairs = await findDuplicates(env, key);
   const byTier = (t) => pairs.filter((p) => p.tier === t);
+
+  // The catalog page asks for counts on every load so duplicates surface
+  // without anyone going looking. It only needs the numbers, and the full
+  // response carries both rows of every pair — 27 of them on a real catalog.
+  if (new URL(request.url).searchParams.get('counts_only') === '1') {
+    return json({
+      catalog: key,
+      count: pairs.length,
+      tiers: { certain: byTier('certain').length, likely: byTier('likely').length, contains: byTier('contains').length },
+    });
+  }
+
   return json({
     catalog: key,
     pairs,

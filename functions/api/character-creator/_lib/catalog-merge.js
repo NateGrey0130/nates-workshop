@@ -65,6 +65,12 @@ export function similarity(nameA, nameB) {
   if (!a.length || !b.length) return 0;
   if (normaliseName(nameA) === normaliseName(nameB)) return 1;
 
+  // Identical once spacing is ignored, which is as safe as ignoring punctuation
+  // — "Back Pack" and "Backpack" are not similar names, they are one name typed
+  // two ways. Without this they scored 0.75 and sat in the loosest tier, which
+  // is where a real duplicate goes to be ignored.
+  if (normaliseName(nameA).replace(/ /g, '') === normaliseName(nameB).replace(/ /g, '')) return 1;
+
   const [small, large] = a.length <= b.length ? [a, b] : [b, a];
   const used = new Set();
   let matched = 0;
