@@ -22,6 +22,10 @@ const S = {
   draft: null,       // in-progress values for the open row
   msg: null,
   loading: true,
+  // Duplicate review. The importers dedupe on an exact name; these are the
+  // pairs that only match after normalising punctuation and word order.
+  dupes: null,
+  dupeBusy: false,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -200,14 +204,67 @@ function render() {
         ${cats.map((k) => `<option value="${escHtml(k)}"${k === S.category ? ' selected' : ''}>${escHtml(k)}</option>`).join('')}
       </select>` : ''}
       <span class="muted small">${rows.length} of ${S.rows.length}</span>
-      <span style="margin-left:auto"><button class="btn btn-sm" data-new>+ New ${escHtml(c.label.replace(/s$/, ''))}</button></span>
+      <span style="margin-left:auto; display:flex; gap:6px">
+        <button class="btn btn-sm btn-ghost" data-dupes>${S.dupes ? 'Hide duplicates' : 'Find duplicates'}</button>
+        <button class="btn btn-sm" data-new>+ New ${escHtml(c.label.replace(/s$/, ''))}</button>
+      </span>
     </div>
+    ${S.dupes ? dupePanel() : ''}
     ${S.msg ? `<p class="${S.msg.error ? 'err' : 'muted'} small">${escHtml(S.msg.text)}</p>` : ''}
     ${S.openId === 'new' ? `<div class="cat-row open">${rowForm(null)}</div>` : ''}
     ${list}
   </div>`;
 
   wire();
+}
+
+// Suggested duplicate pairs. Every merge is confirmed individually — the
+// matcher is deliberately generous, so a false suggestion is expected and
+// rejecting one should cost nothing but a glance.
+function dupePanel() {
+  const c = cat();
+  const { pairs, tiers } = S.dupes;
+  if (!pairs.length) {
+    return `<div class="dupe-panel"><p class="muted small">No likely duplicates in ${escHtml(c.label)}.</p></div>`;
+  }
+
+  const numeric = c.fields.filter((f) => f.type === 'int' || f.type === 'real');
+  const nums = (row) => numeric.map((f) => `${escHtml(f.label)} ${row[f.name] ?? '—'}`).join(' · ');
+
+  const side = (row, other) => `
+    <div class="dupe-side">
+      <div class="dupe-name">${escHtml(row[c.displayField] || '(unnamed)')}</div>
+      <div class="muted small">${nums(row)}${row.source_book ? ` · ${escHtml(row.source_book)}` : ''}</div>
+      <button class="btn btn-sm" data-merge="1" data-keep="${row.id}" data-remove="${other.id}">
+        Keep this one</button>
+    </div>`;
+
+  const pair = (p) => `
+    <div class="dupe-pair${p.same_numbers ? ' strong' : ''}">
+      <span class="tag">${escHtml(p.confidence)}</span>
+      ${side(p.a, p.b)}
+      <span class="dupe-vs">vs</span>
+      ${side(p.b, p.a)}
+    </div>`;
+
+  // Grouped because the tiers are not equally trustworthy, and one flat list
+  // buries the reliable matches among the guesses.
+  const group = (list, heading, blurb) => list.length ? `
+    <h4 class="dupe-head">${heading} <span class="muted small">— ${list.length}</span></h4>
+    <p class="muted small" style="margin:0 0 6px">${blurb}</p>
+    ${list.map(pair).join('')}` : '';
+
+  return `
+  <div class="dupe-panel">
+    <p class="muted small">Merging repoints every character holding the losing name, then deletes that row.
+      Class definitions are reported, not rewritten — they need a hand edit in the importer.</p>
+    ${group(tiers.certain, 'Same name, different punctuation',
+      'Identical once <code>&amp;</code>/<code>and</code>, separators and bracketed qualifiers are ignored.')}
+    ${group(tiers.likely, 'Same words, reordered or inflected',
+      'Such as <em>Basic Math</em> and <em>Mathematics — Basic</em>.')}
+    ${group(tiers.contains, 'One name contains the other',
+      'The loosest group and the one to read carefully — <em>Chemistry</em> and <em>Chemistry — Analytical</em> look like this too, and are different skills.')}
+  </div>`;
 }
 
 // The columns worth seeing at a glance differ per catalog, so they come from
@@ -229,6 +286,7 @@ function wire() {
     el.addEventListener('click', () => {
       S.catalog = el.dataset.catalog;
       S.filter = ''; S.category = ''; S.openId = null; S.msg = null;
+      S.dupes = null;   // suggestions belong to the catalog that produced them
       loadRows();
     });
   }
@@ -248,6 +306,16 @@ function wire() {
 
   const newBtn = document.querySelector('[data-new]');
   if (newBtn) newBtn.addEventListener('click', () => { S.openId = 'new'; S.msg = null; render(); });
+
+  const dupeBtn = document.querySelector('[data-dupes]');
+  if (dupeBtn) dupeBtn.addEventListener('click', () => {
+    if (S.dupes) { S.dupes = null; render(); return; }
+    loadDuplicates();
+  });
+
+  for (const el of document.querySelectorAll('[data-merge]')) {
+    el.addEventListener('click', () => mergePair(+el.dataset.keep, +el.dataset.remove));
+  }
 
   for (const el of document.querySelectorAll('[data-edit]')) {
     el.addEventListener('click', () => {
@@ -276,6 +344,49 @@ function wire() {
   });
   for (const el of document.querySelectorAll('[data-kv-remove]')) {
     el.addEventListener('click', () => el.closest('.kv-row').remove());
+  }
+}
+
+async function loadDuplicates() {
+  S.dupeBusy = true;
+  S.msg = { text: 'Looking for duplicates…' };
+  render();
+  try {
+    S.dupes = await api('catalogs/duplicates?catalog=' + encodeURIComponent(S.catalog));
+    S.msg = null;
+  } catch (err) {
+    S.msg = { text: err.message, error: true };
+  }
+  S.dupeBusy = false;
+  render();
+}
+
+async function mergePair(keepId, removeId) {
+  const keep = S.rows.find((r) => r.id === keepId);
+  const remove = S.rows.find((r) => r.id === removeId);
+  const label = cat().displayField;
+  if (!confirm(`Merge "${remove?.[label]}" into "${keep?.[label]}"?\n\n`
+    + `Characters holding "${remove?.[label]}" will be repointed, and that row is deleted. This cannot be undone.`)) return;
+
+  try {
+    const res = await api('catalogs/duplicates?catalog=' + encodeURIComponent(S.catalog), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ keep_id: keepId, remove_id: removeId }),
+    });
+    const bits = [`Merged into "${res.kept.name}".`];
+    if (res.repointed.length) bits.push(`${res.repointed.length} character${res.repointed.length === 1 ? '' : 's'} repointed.`);
+    // Class markdown is prose plus frontmatter, so it is reported rather than
+    // rewritten — these need a human edit in the class importer.
+    if (res.classes_mentioning.length) {
+      bits.push(`Still mentions the old name: ${res.classes_mentioning.map((c) => c.class_id).join(', ')} — edit in the importer.`);
+    }
+    S.msg = { text: bits.join(' '), error: res.classes_mentioning.length > 0 };
+    await loadRows();
+    await loadDuplicates();
+  } catch (err) {
+    S.msg = { text: 'Merge failed: ' + err.message, error: true };
+    render();
   }
 }
 

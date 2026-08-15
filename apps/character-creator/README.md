@@ -23,6 +23,7 @@ Access gate. No build step, no framework, no dependencies.
 - [How the sheet updates](#how-the-sheet-updates)
 - [Server-side rule enforcement](#server-side-rule-enforcement)
 - [The catalog field config](#the-catalog-field-config)
+- [Merging duplicate catalog rows](#merging-duplicate-catalog-rows)
 - [The PDF importers](#the-pdf-importers)
 - [Local development](#local-development)
 - [Production configuration](#production-configuration)
@@ -80,6 +81,7 @@ functions/api/
     ├── _lib/skill-picks.js   Spending granted skill picks, shared by the
     │                         level-up flow and the sheet
     ├── _lib/validate-character.js  The class rules, checked server-side
+    ├── _lib/catalog-merge.js  Near-duplicate detection and merging
     ├── _lib/leveling.js      XP curve + level-up diff
     └── (endpoints — see API surface below)
 
@@ -246,6 +248,7 @@ writes are gated (see [Permissions](#permissions)).
 | `classes` | GET | Published classes, parsed. `?system=` `?category=` `?include_retired=1` |
 | `catalogs` | GET | Skills, spells, psionic powers in one call — trimmed projection the wizard boots on |
 | `catalogs/rows` | GET / POST / PATCH | Admin. Whole rows for one catalog (`?catalog=`), create, and update (`&id=`). No delete |
+| `catalogs/duplicates` | GET / POST | Admin. Suggested duplicate pairs for a catalog; POST merges two rows |
 | `items` | GET | Gear catalog (table is `gear`). `?system=` |
 | `campaigns` | GET / POST | List (`?system=`, `?limit=`, `?offset=`); create (caller becomes GM) |
 | `campaigns/[id]` | GET / PATCH | Details (`gm_notes` stripped for non-GM); edit `gm_notes` |
@@ -512,6 +515,55 @@ importers default a curated row to *ignore*.
 
 ---
 
+## Merging duplicate catalog rows
+
+The importers dedupe on an **exact** name. That is the right default and it
+misses a whole class of real duplicate — importing the Rifts skill chapter
+(pp. 26–34) produced **ten** pairs it could not see, because the book and the
+hand-seeded catalog name the same skill differently:
+
+```
+Skin and Prepare Animal Hides  /  Skin & Prepare Animal Hides
+Lore — Demons and Monsters     /  Lore: Demons & Monsters
+Mathematics — Basic            /  Basic Math
+Tracking                       /  Tracking (people)
+Laser                          /  Laser Communications
+```
+
+**Find duplicates** in the catalog editor normalises punctuation, ampersands,
+separators and bracketed qualifiers, then suggests pairs. Nothing merges
+automatically; you confirm each one, seeing both rows' numbers side by side.
+
+Results are grouped by confidence, because the tiers are **not** equally
+trustworthy. Measured against the real 138-row catalog:
+
+| Group | What it means | Precision |
+|---|---|---|
+| Same name, different punctuation | identical once normalised | no false positives |
+| Same words, reordered or inflected | `Basic Math` / `Mathematics — Basic` | no false positives |
+| One name contains the other | `Laser` / `Laser Communications` | **~40%** — read these |
+
+That last group is unavoidably ambiguous: `Chemistry` / `Chemistry — Analytical`
+and `Demolitions` / `Demolitions Disposal` look identical to it and are genuinely
+different skills. It is a judgement aid, not an oracle.
+
+**What a merge does** differs by catalog, because references do:
+
+- **Skills, spells, psionics** are referenced *by name* inside characters' JSON
+  columns, so every character holding the losing name is rewritten. A character
+  holding **both** names has them collapsed into one, or the validator would
+  then flag it as a duplicate skill.
+- **Gear** is referenced *by id* through `character_items.item_id`, so that
+  foreign key is repointed instead.
+- The losing row is then deleted, all in one batch.
+
+**Class definitions are reported, never rewritten.** Class markdown is
+frontmatter plus prose, and a blind string replace would hit lore text as
+readily as a skill list — so a merge tells you which classes still mention the
+old name and leaves the edit to you in the importer.
+
+---
+
 ## The PDF importers
 
 Both live on `import.html`, admin only, behind Class / Skills tabs.
@@ -772,9 +824,8 @@ Most of these are planned out as twelve PRs under
 [`docs/plans/`](docs/plans/README.md), with the design decisions and the
 rejected alternatives recorded per PR.
 
-**The catalog editor has no delete and no duplicate-merge.** Rows are created and
-corrected by hand, never removed, so undoing a bad "keep both" import decision
-still needs SQL. Deliberate for now — see
+**The catalog editor has no general delete.** Rows are created and corrected by
+hand; the only deletion is the one a merge performs. Deliberate — see
 [`docs/plans/04-catalog-edit-ui.md`](docs/plans/04-catalog-edit-ui.md).
 
 **Migrations are still applied by hand.** `schema_migrations` records what has
