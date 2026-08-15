@@ -7,6 +7,7 @@
 // easy to find and fill in later.
 
 import { isChoiceGroup } from '../../../../apps/character-creator/js/parser.js';
+import { resolveKeys } from './catalog-redirects.js';
 
 const norm = (s) => String(s ?? '').trim().toLowerCase();
 
@@ -33,7 +34,7 @@ const nameList = (arr) => (arr || [])
 // is effectively unbounded, while D1 caps bound parameters per query.
 const LOOKUP_BATCH = 50;
 
-async function missingFrom(env, table, column, names) {
+async function missingFrom(env, catalogKey, table, column, names) {
   const wanted = [...new Set(names)];
   if (!wanted.length) return [];
   const known = new Set();
@@ -45,15 +46,24 @@ async function missingFrom(env, table, column, names) {
       .bind(...batch).all();
     for (const r of results) known.add(norm(r.key));
   }
-  return wanted.filter((w) => !known.has(norm(w)));
+
+  const missing = wanted.filter((w) => !known.has(norm(w)));
+  if (!missing.length) return [];
+
+  // A key that redirects is not missing — it names a row that was merged away
+  // or renamed, and still resolves. Creating a stub for it would put back
+  // exactly what the merge removed, which is how a merge used to come undone
+  // the next time its class was re-imported.
+  const redirects = await resolveKeys(env, catalogKey, missing);
+  return missing.filter((m) => !redirects.has(norm(m)));
 }
 
 export async function crossReference(env, requestUrl, data) {
   const [items, skills, spells, psionics] = await Promise.all([
-    missingFrom(env, 'gear', 'slug', (data.equipment_starting || []).map((e) => e?.item_id).filter(Boolean)),
-    missingFrom(env, 'skills', 'name', referencedSkills(data)),
-    missingFrom(env, 'spells', 'name', nameList(data.magic?.spells)),
-    missingFrom(env, 'psionic_powers', 'name', nameList(data.psionics?.powers)),
+    missingFrom(env, 'gear', 'gear', 'slug', (data.equipment_starting || []).map((e) => e?.item_id).filter(Boolean)),
+    missingFrom(env, 'skills', 'skills', 'name', referencedSkills(data)),
+    missingFrom(env, 'spells', 'spells', 'name', nameList(data.magic?.spells)),
+    missingFrom(env, 'psionics', 'psionic_powers', 'name', nameList(data.psionics?.powers)),
   ]);
   return { items, skills, spells, psionics };
 }

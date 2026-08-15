@@ -36,6 +36,8 @@ const S = {
   spells: [], psi: [], bio: {},
   pools: null, savedId: null, saving: false,
   skillCatalog: [], items: [], campaigns: [], existing: [],
+  // Retired gear slugs → the slug they resolve to now. See findItem().
+  itemRedirects: {},
   spellCatalog: [], psiCatalog: [], me: null, isAdmin: false,
 };
 
@@ -448,10 +450,23 @@ function toggleSkill(kind, name) {
 }
 
 // Step 4 — equipment
+
+// Class markdown cites gear by slug, and a slug can be retired by a catalog
+// merge or a rename without the markdown ever being touched. Falling through to
+// the redirect is what keeps that class's starting gear resolving to a real
+// item instead of degrading to a bare text line with no stats.
+function findItem(slug) {
+  if (!slug) return null;
+  const direct = S.items.find((it) => it.slug === slug);
+  if (direct) return direct;
+  const to = S.itemRedirects[String(slug).toLowerCase()];
+  return to ? S.items.find((it) => it.slug === to) : null;
+}
+
 function initEquipment() {
   if (S.equipInit) return;
   S.equipment = (S.cls.equipment_starting || []).map((eq) => {
-    const item = S.items.find((it) => it.slug === eq.item_id);
+    const item = findItem(eq.item_id);
     return item
       ? { item_id: item.id, name: item.name, qty: eq.qty || 1, source: 'starting' }
       : { custom_name: eq.item_id.replace(/-/g, ' '), qty: eq.qty || 1, source: 'starting', notes: 'starting gear (not in item catalog yet)' };
@@ -765,6 +780,7 @@ async function boot(first = true) {
     S.spellCatalog = catalogsRes.spells;
     S.psiCatalog = catalogsRes.psionics;
     S.items = itemsRes.items;
+    S.itemRedirects = itemsRes.redirects || {};
     S.campaigns = campaignsRes.campaigns;
     S.existing = charsRes.characters;
     S.me = meRes.email ?? null;

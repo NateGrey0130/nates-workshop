@@ -21,6 +21,7 @@
 
 import { CATALOGS } from '../../../../apps/character-creator/js/catalog-fields.js';
 import { safeParse } from './character-json.js';
+import { keysOf, redirectStatements, collapseStatement } from './catalog-redirects.js';
 
 export const MERGE_REFS = {
   skills: { kind: 'json', column: 'skills' },
@@ -159,9 +160,14 @@ function rewriteJson(raw, { column, type }, fromName, toName) {
 // and psionic powers by DISPLAY NAME in prose-ish frontmatter lists, and gear by
 // SLUG in equipment_starting[].item_id. Both are checked.
 //
-// The slug case matters most and was missed at first: it is a structured
-// reference, so a character built from that class after the merge would
-// re-create the very stub the merge just removed, silently undoing it.
+// The slug case matters most and was missed at first, because it is the one
+// structured reference: after the merge, building a character from that class
+// drops the item to a bare custom line, and re-importing the class re-creates
+// the very stub the merge just removed.
+//
+// A redirect now keeps both of those working (see catalog-redirects.js), so
+// this list is no longer a repair queue — it is the record of which classes
+// still SAY the old key, which is worth knowing but no longer urgent.
 export async function classesMentioning(env, terms) {
   const list = [...new Set(terms.filter(Boolean).map(String))];
   if (!list.length) return [];
@@ -217,11 +223,22 @@ export async function mergeRows(env, catalogKey, keepId, removeId) {
     }
   }
 
+  // Anything already redirecting to the row about to disappear has to move onto
+  // the survivor first, or the chain breaks at the first hop.
+  statements.push(collapseStatement(env, catalogKey, removeId, keepId));
+
+  // Leave a forwarding address for the keys the removed row answered to. Class
+  // markdown still cites them and is never rewritten by a merge.
+  const forwarded = keysOf(cat, remove);
+  statements.push(...redirectStatements(env, catalogKey, forwarded, keepId, 'merge', keysOf(cat, keep)));
+
   statements.push(env.DB.prepare(`DELETE FROM ${cat.table} WHERE id = ?`).bind(removeId));
 
   // One batch: a repoint that landed without the delete would leave both rows
   // in the catalog with everything pointing at one of them, which is a stranger
-  // state than either doing both or doing neither.
+  // state than either doing both or doing neither. The redirects belong in it
+  // for the same reason — a forwarding address to a row that still exists, or a
+  // deleted row with no forwarding address, are both worse than doing nothing.
   await env.DB.batch(statements);
 
   return {
@@ -229,6 +246,7 @@ export async function mergeRows(env, catalogKey, keepId, removeId) {
     kept: { id: keep.id, name: keep[cat.displayField] },
     removed: { id: remove.id, name: remove[cat.displayField] },
     repointed,
+    redirected: forwarded,
     // Advisory: these still reference the removed row and need a human edit in
     // the class importer. Checked for EVERY catalog, by both the display name
     // and the unique key, since classes cite skills by name and gear by slug.

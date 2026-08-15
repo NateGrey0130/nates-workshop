@@ -24,6 +24,7 @@ Access gate. No build step, no framework, no dependencies.
 - [Server-side rule enforcement](#server-side-rule-enforcement)
 - [The catalog field config](#the-catalog-field-config)
 - [Merging duplicate catalog rows](#merging-duplicate-catalog-rows)
+  - [Retired keys keep resolving](#retired-keys-keep-resolving)
 - [The PDF importers](#the-pdf-importers)
 - [Local development](#local-development)
 - [Production configuration](#production-configuration)
@@ -109,7 +110,7 @@ sheet's plain script can use it without converting the whole file.
 
 ## Data model
 
-Fifteen tables in one shared D1 database (`nates-workshop-media`, bound as `DB`).
+Sixteen tables in one shared D1 database (`nates-workshop-media`, bound as `DB`).
 `media_items` belongs to MediaVault and `schema_migrations` is database
 bookkeeping shared by both; the rest are this app.
 
@@ -150,6 +151,8 @@ ppe and isp.
 | `skills` | `base` 0 means non-percentile (W.P.s, hand to hand). `systems` is a JSON array; NULL means both. `note` carries oddities like `40%/30% climb/rappel`. |
 | `spells` | name, level, ppe, plus a stat block (range, duration, damage, saving throw, area of effect, casting time, description). The stat block is TEXT — books write "100 feet per level" as often as a number. |
 | `psionic_powers` | name, category (Healing/Physical/Sensitive/Super), isp, plus range, duration, saving throw and description — the same field names spells use. `min_tier` is the psychic tier a book states is required; NULL means no restriction beyond the category. |
+
+| `catalog_redirects` | Where a retired key went. Written when a merge deletes a row or a key is renamed by hand, so class markdown citing the old slug or name keeps resolving. Polymorphic by design — `catalog` names which table `to_id` points into — so there is no foreign key. See [Retired keys keep resolving](#retired-keys-keep-resolving). |
 
 All catalogs carry `source` (`seed` \| `import`) and `source_book`, so an entry's
 provenance is visible and the same skill from two books can coexist under
@@ -251,7 +254,8 @@ writes are gated (see [Permissions](#permissions)).
 | `catalogs` | GET | Skills, spells, psionic powers in one call — trimmed projection the wizard boots on |
 | `catalogs/rows` | GET / POST / PATCH | Admin. Whole rows for one catalog (`?catalog=`), create, and update (`&id=`). No delete |
 | `catalogs/duplicates` | GET / POST | Admin. Suggested duplicate pairs for a catalog; POST merges two rows |
-| `items` | GET | Gear catalog (table is `gear`). `?system=` |
+| `catalogs/redirects` | GET / DELETE | Admin. Retired keys and where they resolve (`?catalog=`); DELETE stops forwarding one (`&id=`). No POST — redirects are written by merges and renames |
+| `items` | GET | Gear catalog (table is `gear`), plus retired slugs as `redirects`. `?system=` |
 | `campaigns` | GET / POST | List (`?system=`, `?limit=`, `?offset=`); create (caller becomes GM) |
 | `campaigns/[id]` | GET / PATCH | Details (`gm_notes` stripped for non-GM); edit `gm_notes` |
 | `characters` | GET / POST | List (`?campaign_id=`, `?limit=`, `?offset=`); create at level 1 — **validated against the class rules** |
@@ -564,6 +568,47 @@ frontmatter plus prose, and a blind string replace would hit lore text as
 readily as a skill list — so a merge tells you which classes still mention the
 old name and leaves the edit to you in the importer.
 
+### Retired keys keep resolving
+
+Reporting alone was not enough, and the way it failed is worth knowing.
+
+Class markdown cites gear by **slug** in `equipment_starting[].item_id`, and
+skills, spells and psionics by **name**. Merging away a row those cite left the
+citation pointing at a key that no longer existed — and nothing raised an error:
+
+| What you did next | What actually happened |
+|---|---|
+| Built a character from that class | the item degraded to a bare custom line, no stats |
+| Re-imported that class | the stub the merge deleted came straight back |
+
+Both quietly undo the merge. Found the first time it mattered: merging the
+hand-seeded `ja-11-energy-rifle` stub into the book's real JA-11 entry
+repointed both characters correctly, while the Juicer went on naming the
+deleted slug.
+
+So a merge now leaves a **redirect** — a row in `catalog_redirects` saying where
+the key went — and the two places that resolve a key fall through to it:
+
+- `crossReference()` treats a redirecting key as **found**, so no stub is created
+- the wizard's `findItem()` resolves starting gear through it
+
+Renaming a key by hand in the catalog editor records one too, for the same
+reason: it breaks exactly the same citations a merge does.
+
+Three properties worth knowing:
+
+- **A redirect claims its key.** Creating a row with a key that redirects is
+  refused with a 409 naming the target — otherwise the new row would silently
+  shadow the forwarding address, which is the ambiguity this exists to remove.
+- **Chains collapse.** Merging a row that other redirects point at moves them
+  onto the survivor, so nothing dangles at the first hop.
+- **They are listed and removable** on the catalog page's **Redirects** panel.
+  Removing one frees the key and breaks any citation still relying on it.
+
+Keys are matched case-insensitively (`COLLATE NOCASE`), matching every other key
+comparison in the app; a merge never files a redirect for a key the surviving
+row already answers to.
+
 ---
 
 ## The PDF importers
@@ -833,6 +878,14 @@ rejected alternatives recorded per PR.
 **The catalog editor has no general delete.** Rows are created and corrected by
 hand; the only deletion is the one a merge performs. Deliberate — see
 [`docs/plans/04-catalog-edit-ui.md`](docs/plans/04-catalog-edit-ui.md).
+
+**Some class equipment names a category, not an item.** `equipment_starting`
+only holds fixed `item_id`s, so a class whose book says "one energy pistol of
+choice" gets a placeholder row (`energy-pistol`, `vibro-blade`) that no book
+entry will ever match. `occ_skills` already models this properly with
+`{ choose, from }` choice groups; gear has no equivalent yet. Gear's `category`
+is far too coarse to express "any energy pistol", so a gear choice group would
+need an explicit `from:` list of slugs.
 
 **Migrations are still applied by hand.** `schema_migrations` records what has
 run where and the smoke test checks it, but applying a migration is still a

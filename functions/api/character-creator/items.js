@@ -12,5 +12,19 @@ export async function onRequestGet({ request, env }) {
     ? env.DB.prepare(`SELECT ${cols} FROM gear WHERE system = ? OR system = 'both' ORDER BY name`).bind(system)
     : env.DB.prepare(`SELECT ${cols} FROM gear ORDER BY name`);
   const { results } = await stmt.all();
-  return json({ items: results });
+
+  // Retired slugs, so the wizard can still resolve a class whose
+  // equipment_starting cites gear that has since been merged or renamed.
+  // Unfiltered by system on purpose: the redirect says where a slug went, and
+  // whether the target is in this system's list is the caller's business.
+  const { results: redirects } = await env.DB.prepare(
+    `SELECT r.from_key, g.slug AS to_slug
+     FROM catalog_redirects r JOIN gear g ON g.id = r.to_id
+     WHERE r.catalog = 'gear'`
+  ).all();
+
+  return json({
+    items: results,
+    redirects: Object.fromEntries(redirects.map((r) => [String(r.from_key).toLowerCase(), r.to_slug])),
+  });
 }
