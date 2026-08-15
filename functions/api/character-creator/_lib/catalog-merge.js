@@ -155,11 +155,21 @@ function rewriteJson(raw, { column, type }, fromName, toName) {
 // Which class definitions mention the losing name. Reported, never rewritten:
 // class markdown is frontmatter plus prose, and a blind replace would hit lore
 // text as readily as a skill list.
-export async function classesMentioning(env, name) {
+// Class definitions reference catalog rows two different ways: skills, spells
+// and psionic powers by DISPLAY NAME in prose-ish frontmatter lists, and gear by
+// SLUG in equipment_starting[].item_id. Both are checked.
+//
+// The slug case matters most and was missed at first: it is a structured
+// reference, so a character built from that class after the merge would
+// re-create the very stub the merge just removed, silently undoing it.
+export async function classesMentioning(env, terms) {
+  const list = [...new Set(terms.filter(Boolean).map(String))];
+  if (!list.length) return [];
+  const where = list.map(() => 'markdown LIKE ?').join(' OR ');
   const { results } = await env.DB.prepare(
     `SELECT class_id, name FROM imported_classes
-     WHERE deleted_at IS NULL AND markdown LIKE ?`
-  ).bind(`%${name}%`).all();
+     WHERE deleted_at IS NULL AND (${where})`
+  ).bind(...list.map((t) => `%${t}%`)).all();
   return results;
 }
 
@@ -219,9 +229,12 @@ export async function mergeRows(env, catalogKey, keepId, removeId) {
     kept: { id: keep.id, name: keep[cat.displayField] },
     removed: { id: remove.id, name: remove[cat.displayField] },
     repointed,
-    // Advisory: these still say the old name and need a human edit.
-    classes_mentioning: ref.kind === 'json'
-      ? await classesMentioning(env, remove[cat.displayField])
-      : [],
+    // Advisory: these still reference the removed row and need a human edit in
+    // the class importer. Checked for EVERY catalog, by both the display name
+    // and the unique key, since classes cite skills by name and gear by slug.
+    classes_mentioning: await classesMentioning(env, [
+      remove[cat.displayField],
+      remove[cat.uniqueField],
+    ]),
   };
 }
