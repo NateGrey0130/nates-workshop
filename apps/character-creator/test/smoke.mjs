@@ -16,7 +16,7 @@ import {
 import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
 import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
 import { skillGrantsFor } from '../../../functions/api/character-creator/_lib/leveling.js';
-import { similarity, normaliseName } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
+import { similarity, normaliseName, classesMentioning } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
 import { validateCharacter, relatedAllowance } from '../../../functions/api/character-creator/_lib/validate-character.js';
 
 const appDir = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -274,6 +274,17 @@ check('a book-supplied slug is respected over the derived one', (() => {
 })());
 // A nullable number the book does not state must stay null. "No A.R." and
 // "A.R. 0" are different claims, and the sheet renders the second one.
+// `real` columns must not be parsed with parseInt. gear.weight_lbs is the only
+// one, and a two-ounce item imported as 0 lb — weightless rather than light.
+check('a real field keeps its fraction', (() => {
+  const [g] = normaliseRows(gearSpec, [{ name: 'Zz Wand', weight_lbs: 0.125 }]);
+  return g.weight_lbs === 0.125;
+})());
+check('an int field still truncates to a whole number', (() => {
+  const [g] = normaliseRows(gearSpec, [{ name: 'Zz Gun', cost: '8000', ar: '14' }]);
+  return g.cost === 8000 && g.ar === 14;
+})());
+
 check('an unstated nullable number stays null, a NOT NULL one falls back', (() => {
   const [g] = normaliseRows(gearSpec, [{ name: 'Back Pack' }]);
   const [s] = normaliseRows(skillSpec, [{ name: 'Boxing' }]);
@@ -552,6 +563,24 @@ for (const [a, b] of [
   check(`"${a}" vs "${b}" never reaches the confident bands`, similarity(a, b) < 0.9);
 }
 check('unrelated names do not match at all', similarity('Swimming', 'Sewing') < 0.7);
+
+// Class definitions cite skills by display name and gear by SLUG. A gear merge
+// that only checked the name reported nothing, so a character built from that
+// class afterwards would re-create the very stub the merge removed.
+check('class-mention lookup searches every supplied term', await (async () => {
+  const asked = [];
+  const db = { prepare: (sql) => ({ bind: (...t) => { asked.push({ sql, t }); return { all: async () => ({ results: [] }) }; } }) };
+  await classesMentioning({ DB: db }, ['Ja 11 Energy Rifle', 'ja-11-energy-rifle']);
+  const { sql, t } = asked[0];
+  return (sql.match(/markdown LIKE \?/g) || []).length === 2
+      && t.includes('%ja-11-energy-rifle%') && t.includes('%Ja 11 Energy Rifle%');
+})());
+check('class-mention lookup skips blank terms', await (async () => {
+  let called = false;
+  const db = { prepare: () => { called = true; return { bind: () => ({ all: async () => ({ results: [] }) }) }; } };
+  const out = await classesMentioning({ DB: db }, [null, undefined, '']);
+  return out.length === 0 && !called;
+})());
 
 // ---------- 1d. Paging ----------
 // A stray query string must not turn a list endpoint into a 400, so anything

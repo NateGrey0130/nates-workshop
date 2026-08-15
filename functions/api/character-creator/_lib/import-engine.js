@@ -128,7 +128,10 @@ export function stripFences(text) {
 function num(field, v) {
   const blank = v === undefined || v === null || v === '';
   if (blank) return field?.blankAs ?? null;
-  const n = parseInt(v, 10);
+  // parseInt for int columns, parseFloat for real ones. Using parseInt for both
+  // silently truncated every fractional value: gear's weight_lbs is `real`, and
+  // a two-ounce laser wand imported as 0 lb — "weightless" rather than "light".
+  const n = field?.type === 'real' ? parseFloat(v) : parseInt(v, 10);
   if (!Number.isFinite(n) || n < 0) return field?.blankAs ?? null;
   return n;
 }

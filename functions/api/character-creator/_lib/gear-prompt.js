@@ -20,6 +20,7 @@ Rules:
 - is_mega_damage is true when the item's damage is expressed in M.D. or M.D.C., false when it is S.D.C. or plain damage. If an entry states no damage at all, omit it.
 - A.R. and M.D.C. are body armour's numbers. Give ar and mdc as integers, and only when the entry states them.
 - cost is a plain integer number of credits or gold, with no separators or currency word. If a cost is a range or "varies", omit cost and put the wording in description.
+- weight_lbs is in POUNDS and may be fractional. A weight given in ounces converts: "two ounces" is 0.125, "eight ounces" is 0.5. Never round a real weight down to 0 — an item that weighs something must not read as weightless. Omit the field entirely if the book states no weight.
 - Do not emit table headers, section headings, or introductory prose as items.
 - Skip an entry you cannot read confidently rather than guessing at its numbers.`;
 
@@ -34,7 +35,7 @@ Each element must be:
 {
   "name": "JA-11 Energy Rifle",     // exact item name, no trailing colon
   "category": "weapon",              // weapon | armor | vehicle | cybernetics | gear
-  "weight_lbs": 14,                  // number only; omit if not stated
+  "weight_lbs": 14,                  // pounds, may be fractional (0.125 = two ounces); omit if not stated
   "cost": 32000,                     // integer, no separators; omit if a range or "varies"
   "damage": "3D6 M.D. per blast",   // as written; omit if not stated
   "is_mega_damage": true,            // true for M.D./M.D.C., false for S.D.C.; omit if no damage
