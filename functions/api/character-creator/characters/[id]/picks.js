@@ -7,6 +7,8 @@
 
 import { getUserEmail, unauthorized, json, forbidden, characterAccess, readJson } from '../../_lib/auth.js';
 import { listPending, resolvePicks, claimStatements, pickErrors } from '../../_lib/skill-picks.js';
+import { loadClass } from '../../_lib/class-loader.js';
+import { validateCharacter, loadSkillCategories } from '../../_lib/validate-character.js';
 
 export async function onRequestGet({ request, env, params }) {
   const email = getUserEmail(request);
@@ -44,7 +46,7 @@ export async function onRequestPost({ request, env, params }) {
     ? null
     : [...new Set(pending.flatMap((g) => g.categories || []))];
 
-  const character = await env.DB.prepare('SELECT level, skills FROM characters WHERE id = ?')
+  const character = await env.DB.prepare('SELECT level, skills, attributes, class_id FROM characters WHERE id = ?')
     .bind(params.id).first();
   let skills = [];
   try { skills = JSON.parse(character.skills); } catch { /* leave empty */ }
@@ -60,11 +62,25 @@ export async function onRequestPost({ request, env, params }) {
   if (picked.errors?.length) return pickErrors(picked.errors);
   if (!picked.skills.length) return json({ error: 'Nothing to apply' }, 400);
 
+  // The picks endpoint checks its own allowance and categories, but the same
+  // boundary applies here as everywhere else — one place decides what is legal.
+  const merged = skills.concat(picked.skills);
+  const cls = await loadClass(env, request.url, character.class_id);
+  let attributes = {};
+  try { attributes = JSON.parse(character.attributes); } catch { /* leave empty */ }
+  const { violations } = validateCharacter({
+    character: { level: character.level }, cls, skills: merged, attributes,
+    catalog: cls ? await loadSkillCategories(env) : null,
+  });
+  if (violations.length) {
+    return json({ error: 'That would break the class rules', violations }, 422);
+  }
+
   // Skills and the claim in one batch: a pick that consumed its grant without
   // landing on the sheet would be silently lost.
   await env.DB.batch([
     env.DB.prepare("UPDATE characters SET skills = ?, updated_at = datetime('now') WHERE id = ?")
-      .bind(JSON.stringify(skills.concat(picked.skills)), params.id),
+      .bind(JSON.stringify(merged), params.id),
     ...claimStatements(env, pending, picked.skills.length),
   ]);
 

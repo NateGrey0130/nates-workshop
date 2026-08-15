@@ -1,11 +1,14 @@
 // POST /api/character-creator/characters — save a finished level-1 character.
 // Body: { campaign_id, name, class_id, attributes{}, skills[], powers[],
 //         pools{hp,sdc,mdc,ppe,isp}, items[{item_id|custom_name, qty, equipped, notes}], notes }
-// Rules enforcement (skill counts/categories, attribute minimums) happens in the
-// creation UI; the server checks shape and ownership-relevant facts only.
+// Skill counts, category restrictions and attribute minimums are checked here
+// as well as in the wizard — the wizard's checks are a convenience that avoids a
+// round trip, this is the boundary.
 
 import { getUserEmail, unauthorized, json, readJson } from './_lib/auth.js';
 import { paging, pagedQuery } from './_lib/paging.js';
+import { loadClass } from './_lib/class-loader.js';
+import { validateCharacter, loadSkillCategories } from './_lib/validate-character.js';
 
 // GET /api/character-creator/characters — list for linking to sheets.
 // ?campaign_id= filters; ?limit= and ?offset= page (default 200, max 500).
@@ -46,6 +49,20 @@ export async function onRequestPost({ request, env }) {
   }
   const campaign = await env.DB.prepare('SELECT id FROM campaigns WHERE id = ?').bind(b.campaign_id).first();
   if (!campaign) return json({ error: 'Campaign not found' }, 404);
+
+  // The wizard enforces these too; this is the boundary. A class that cannot be
+  // resolved skips the check rather than blocking the save.
+  const cls = await loadClass(env, request.url, b.class_id);
+  const { violations } = validateCharacter({
+    character: { level: 1 },
+    cls,
+    skills: b.skills || [],
+    attributes: b.attributes || {},
+    catalog: cls ? await loadSkillCategories(env) : null,
+  });
+  if (violations.length) {
+    return json({ error: 'This character breaks its class rules', violations }, 422);
+  }
 
   const p = b.pools || {};
   const row = await env.DB.prepare(

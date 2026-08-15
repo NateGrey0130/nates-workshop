@@ -16,6 +16,7 @@ import {
 import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
 import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
 import { skillGrantsFor } from '../../../functions/api/character-creator/_lib/leveling.js';
+import { validateCharacter, relatedAllowance } from '../../../functions/api/character-creator/_lib/validate-character.js';
 
 const appDir = join(dirname(fileURLToPath(import.meta.url)), '..');
 const repoRoot = join(appDir, '..', '..');
@@ -375,6 +376,97 @@ check('a malformed schedule entry does not break the run', (() => {
   // level 4 defaults to 1 pick; level 5's negative count is floored to 1
   return g.length === 2 && g[0].count === 1 && g[1].count === 1;
 })());
+
+// ---------- 1c3. Character validation ----------
+// The rules the wizard enforces, re-checked server-side. Narrow on purpose:
+// what a player CHOOSES, not the class's fixed skill list.
+console.log('\n[1c3] Character validation');
+const vCls = {
+  attribute_requirements: { ME: 12, MA: 'none' },
+  skills: {
+    occ_skills: [
+      { name: 'Radio: Basic', base: 40 },
+      { choose: 2, from: ['Pilot: Hovercycle', 'Pilot: Truck'] },
+    ],
+    occ_related_skills: { count: 2, categories: ['Physical', 'Rogue'],
+                          schedule: [{ level: 3, count: 1 }] },
+    secondary_skills: { count: 1 },
+  },
+};
+const rel = (name, category, extra = {}) => ({ name, category, type: 'related', ...extra });
+const legal = {
+  character: { level: 1 }, cls: vCls,
+  attributes: { ME: 14 },
+  skills: [
+    { name: 'Radio: Basic', category: 'Communications', type: 'occ' },
+    { name: 'Pilot: Hovercycle', category: 'Pilot', type: 'occ' },
+    { name: 'Pilot: Truck', category: 'Pilot', type: 'occ' },
+    rel('Climbing', 'Physical'), rel('Prowl', 'Rogue'),
+    { name: 'Basic Math', category: 'Science', type: 'secondary' },
+  ],
+};
+const vio = (o) => validateCharacter({ ...legal, ...o }).violations.map((v) => v.rule);
+
+check('a legal character produces no violations', vio({}).length === 0, JSON.stringify(vio({})));
+check('no class definition skips validation entirely', (() => {
+  const r = validateCharacter({ ...legal, cls: null });
+  return r.skipped === true && r.violations.length === 0;
+})());
+check('an attribute below the minimum is a violation',
+  vio({ attributes: { ME: 9 } }).includes('attribute_minimum'));
+check('a requirement of "none" imposes nothing',
+  !vio({ attributes: { ME: 14 } }).includes('attribute_minimum'));
+check('a missing required attribute is caught',
+  vio({ attributes: {} }).includes('attribute_missing'));
+check('too many related skills is a violation',
+  vio({ skills: legal.skills.concat([rel('Swimming', 'Physical')]) }).includes('related_count'));
+check('the related allowance grows with scheduled grants', (() => {
+  const withExtra = { skills: legal.skills.concat([rel('Swimming', 'Physical')]) };
+  // Illegal at level 1, legal at level 3 once the schedule has granted one.
+  return vio({ ...withExtra }).includes('related_count')
+      && !vio({ ...withExtra, character: { level: 3 } }).includes('related_count');
+})());
+check('a related skill outside the allowed categories is a violation',
+  vio({ skills: legal.skills.map((s) => s.name === 'Prowl' ? rel('Prowl', 'Science') : s) })
+    .includes('related_category'));
+check('an explicit override makes an out-of-category pick legal',
+  !vio({ skills: legal.skills.map((s) => s.name === 'Prowl' ? rel('Prowl', 'Science', { override: true }) : s) })
+    .includes('related_category'));
+check('secondary skills are not category-restricted',
+  !vio({}).includes('related_category'));
+check('too many secondary skills is a violation',
+  vio({ skills: legal.skills.concat([{ name: 'Astronomy', category: 'Science', type: 'secondary' }]) })
+    .includes('secondary_count'));
+// Choice groups warn but never block: a character does not record which group
+// a skill was taken for, so counting by category is an approximation and must
+// not be able to refuse a save.
+check('an unsatisfied choice group warns rather than blocking', (() => {
+  const r = validateCharacter({ ...legal, skills: legal.skills.filter((s) => s.name !== 'Pilot: Truck') });
+  return r.warnings.some((w) => w.rule === 'choice_group')
+      && !r.violations.some((v) => v.rule === 'choice_group');
+})());
+
+// Stored categories are unreliable — the wizard writes "Class" on every O.C.C.
+// skill — so a supplied catalog wins over the stored value.
+check('the catalog overrides a stored category', (() => {
+  const catalog = new Map([['prowl', 'Science']]);
+  const skills = legal.skills.map((s) => s.name === 'Prowl' ? { ...s, category: 'Rogue' } : s);
+  const r = validateCharacter({ ...legal, skills, catalog });
+  return r.violations.some((v) => v.rule === 'related_category' && v.skill === 'Prowl');
+})());
+check('a skill absent from the catalog falls back to its stored category', (() => {
+  const r = validateCharacter({ ...legal, catalog: new Map() });
+  return r.violations.length === 0;
+})());
+check('a duplicated skill is always a violation',
+  vio({ skills: legal.skills.concat([rel('Climbing', 'Physical')]) }).includes('duplicate_skill'));
+check('the class fixed skill list is not checked', (() => {
+  // Radio: Basic removed — a class change, not the player's doing.
+  const without = legal.skills.filter((s) => s.name !== 'Radio: Basic');
+  return !vio({ skills: without }).some((r) => r.startsWith('occ_'));
+})());
+check('relatedAllowance adds base and grants',
+  relatedAllowance(vCls, 1) === 2 && relatedAllowance(vCls, 3) === 3 && relatedAllowance(vCls, 9) === 3);
 
 // ---------- 1d. Paging ----------
 // A stray query string must not turn a list endpoint into a 400, so anything

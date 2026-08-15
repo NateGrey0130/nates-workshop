@@ -19,6 +19,7 @@ Access gate. No build step, no framework, no dependencies.
 - [Permissions](#permissions)
 - [House rules and derived values](#house-rules-and-derived-values)
 - [Level-up skill picks](#level-up-skill-picks)
+- [Server-side rule enforcement](#server-side-rule-enforcement)
 - [The catalog field config](#the-catalog-field-config)
 - [The PDF importers](#the-pdf-importers)
 - [Local development](#local-development)
@@ -76,6 +77,7 @@ functions/api/
     ├── _lib/paging.js        limit/offset + total, for the lists that grow
     ├── _lib/skill-picks.js   Spending granted skill picks, shared by the
     │                         level-up flow and the sheet
+    ├── _lib/validate-character.js  The class rules, checked server-side
     ├── _lib/leveling.js      XP curve + level-up diff
     └── (endpoints — see API surface below)
 
@@ -245,12 +247,14 @@ writes are gated (see [Permissions](#permissions)).
 | `items` | GET | Gear catalog (table is `gear`). `?system=` |
 | `campaigns` | GET / POST | List (`?system=`, `?limit=`, `?offset=`); create (caller becomes GM) |
 | `campaigns/[id]` | GET / PATCH | Details (`gm_notes` stripped for non-GM); edit `gm_notes` |
-| `characters` | GET / POST | List (`?campaign_id=`); create at level 1 |
+| `characters` | GET / POST | List (`?campaign_id=`, `?limit=`, `?offset=`); create at level 1 — **validated against the class rules** |
 | `characters/[id]` | GET / PATCH | Sheet + inventory, with `can_write` / `is_gm`; edit pools, notes, and the bio/combat/saves/armor sections |
 | `characters/[id]/items` | POST | Add inventory row (catalog slug or freeform) |
 | `characters/[id]/items/[itemId]` | PATCH / DELETE | qty/equipped/notes; soft remove |
 | `characters/[id]/xp` | POST | `{delta}` or `{total}`; returns a proposed level-up diff |
-| `characters/[id]/level-confirm` | POST | Apply a confirmed diff, write `level_history` |
+| `characters/[id]/level-confirm` | POST | Apply a confirmed diff, write `level_history`. `picks` spends granted skill picks; unspent ones are banked. Validated |
+| `characters/[id]/picks` | GET / POST | Owner/GM to spend. Unspent skill picks; POST applies some. Validated |
+| `admin/audit` | GET | Admin, read-only. Which existing characters break their class rules |
 | `journal` | GET / POST | By campaign; `?character_id=`, `?include_campaign=1`, `?limit=`, `?offset=` |
 | `import/extract` | POST | Admin. PDF → class markdown; autosaves a draft |
 | `import/recheck` | POST | Admin. Re-parse edited markdown, no API spend |
@@ -356,6 +360,47 @@ Spending consumes the oldest grant first, and a grant only partly spent stays
 pending with its count reduced — so two picks earned at level 3 can be taken one
 at a time. Both paths write the skills and the claim in a single batch, because
 a pick that consumed its grant without landing on the sheet would be lost.
+
+---
+
+## Server-side rule enforcement
+
+The wizard has always enforced skill counts, categories and attribute minimums.
+`_lib/validate-character.js` now re-checks them on every write that can change
+skills — character create, level-confirm, and spending banked picks. The wizard's
+checks are a convenience that avoids a round trip; this is the boundary.
+
+**Deliberately narrow.** It checks what a player *chooses*, and returns a
+structured `violations` list with a 422 rather than a flat message.
+
+Four things that are not obvious and were each learned the hard way:
+
+- **The fixed `occ_skills` list is not checked.** It is not a choice, so a
+  mismatch means the class was edited or re-imported since the character was
+  built — not the player's fault, and not something that should block their save.
+- **The related-skill allowance grows with level**, by the grants in
+  `occ_related_skills.schedule`. Without that, anyone who levelled up and spent a
+  pick reads as over their limit.
+- **A stored skill row is not a reliable source of category.** The wizard writes
+  `category: "Class"` on every O.C.C. skill, so the validator resolves categories
+  from the skills catalog and only falls back to the stored value.
+- **Choice groups warn, they never block.** A character does not record *which*
+  group a skill was taken for, so a skill the class also grants by name in the
+  same category is indistinguishable from a chosen one. Counting by category both
+  over- and under-counts, and refusing a save on an approximation would be worse
+  than the gap it closes.
+
+A skill marked `override: true` by the level-up picker is legal by definition —
+that flag means a human decided it.
+
+**Existing characters are not retro-validated.** They keep loading and saving
+whatever state they are in; `admin/audit` reports which ones break a rule so you
+can decide case by case. It is read-only and modifies nothing.
+
+A character whose class cannot be resolved — retired, deleted, or no longer
+parsing — **skips validation and saves normally**. Refusing would strand a
+character whose class an admin retired, which is exactly what class soft-delete
+was built to avoid. The audit lists those separately as unvalidatable.
 
 ---
 
@@ -666,11 +711,6 @@ still needs SQL. Deliberate for now — see
 run where and the smoke test checks it, but applying a migration is still a
 manual `wrangler d1 execute` per environment. That is a deliberate stopping
 point, not an oversight — see [`docs/plans/01-migration-tracking.md`](docs/plans/01-migration-tracking.md).
-
-**Rule enforcement is client-side.** Skill counts, category restrictions, and
-attribute minimums are enforced in the wizard; the server validates shape,
-ownership, and campaign existence only. Fine for a friends-only app behind
-Access, but it is not a boundary.
 
 **Extraction is good, not infallible.** Observed on real pages: a skill's
 secondary percentage split into its own entry, and a skill read as 0% where the
