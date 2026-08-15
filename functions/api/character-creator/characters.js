@@ -5,11 +5,15 @@
 // creation UI; the server checks shape and ownership-relevant facts only.
 
 import { getUserEmail, unauthorized, json, readJson } from './_lib/auth.js';
+import { paging, pagedQuery } from './_lib/paging.js';
 
-// GET /api/character-creator/characters — list for linking to sheets (optionally ?campaign_id=)
+// GET /api/character-creator/characters — list for linking to sheets.
+// ?campaign_id= filters; ?limit= and ?offset= page (default 200, max 500).
 export async function onRequestGet({ request, env }) {
   if (!getUserEmail(request)) return unauthorized();
   const campaignId = new URL(request.url).searchParams.get('campaign_id');
+  const { limit, offset } = paging(request);
+
   const base = `SELECT characters.id, characters.name, characters.class_id, characters.level,
                        characters.xp, characters.player_email, characters.campaign_id,
                        characters.hp_current, characters.hp_max, characters.sdc_current, characters.sdc_max,
@@ -17,11 +21,18 @@ export async function onRequestGet({ request, env }) {
                        characters.isp_current, characters.isp_max,
                        campaigns.name AS campaign_name, campaigns.system AS campaign_system
                 FROM characters JOIN campaigns ON campaigns.id = characters.campaign_id`;
-  const stmt = campaignId
-    ? env.DB.prepare(base + ' WHERE campaign_id = ? ORDER BY characters.id DESC').bind(campaignId)
-    : env.DB.prepare(base + ' ORDER BY characters.id DESC');
-  const { results } = await stmt.all();
-  return json({ characters: results });
+  const where = campaignId ? ' WHERE campaign_id = ?' : '';
+  const binds = campaignId ? [campaignId] : [];
+
+  const page = await pagedQuery(env, {
+    countSql: `SELECT count(*) AS n FROM characters${campaignId ? ' WHERE campaign_id = ?' : ''}`,
+    countBinds: binds,
+    rowsSql: base + where + ' ORDER BY characters.id DESC',
+    rowsBinds: binds,
+    limit, offset,
+  });
+
+  return json({ characters: page.results, total: page.total, limit: page.limit, offset: page.offset });
 }
 
 export async function onRequestPost({ request, env }) {

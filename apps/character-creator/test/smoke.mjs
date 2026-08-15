@@ -14,6 +14,7 @@ import {
   classifyRows, slugify,
 } from '../../../functions/api/character-creator/_lib/import-engine.js';
 import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
+import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
 
 const appDir = join(dirname(fileURLToPath(import.meta.url)), '..');
 const repoRoot = join(appDir, '..', '..');
@@ -336,6 +337,25 @@ check('countRows tallies new, duplicates and stubs', (() => {
   ]);
   return c.total === 4 && c.new === 2 && c.duplicates === 2 && c.stubs === 1;
 })());
+
+// ---------- 1d. Paging ----------
+// A stray query string must not turn a list endpoint into a 400, so anything
+// nonsensical falls back to the default rather than erroring.
+console.log('\n[1d] Paging');
+const pageOf = (qs) => paging(new Request('https://x/list' + qs));
+check('defaults with no parameters', (() => {
+  const p = pageOf('');
+  return p.limit === 200 && p.offset === 0;
+})());
+check('honours a sensible limit and offset', (() => {
+  const p = pageOf('?limit=50&offset=100');
+  return p.limit === 50 && p.offset === 100;
+})());
+check('clamps an oversized limit to the maximum', pageOf('?limit=99999').limit === 500);
+check('a negative or zero limit falls back to the default',
+  pageOf('?limit=-1').limit === 200 && pageOf('?limit=0').limit === 200);
+check('a non-numeric limit falls back to the default', pageOf('?limit=abc').limit === 200);
+check('a negative offset floors at zero', pageOf('?offset=-5').offset === 0);
 
 // ---------- 2. D1 schema ----------
 // Runs against the shared workshop database (binding DB in the root

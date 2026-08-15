@@ -5,6 +5,7 @@
 //      of that character; campaign-level entries (no character_id) need the GM.
 
 import { getUserEmail, unauthorized, json, forbidden, characterAccess, campaignAccess, readJson } from './_lib/auth.js';
+import { paging, pagedQuery } from './_lib/paging.js';
 
 export async function onRequestGet({ request, env }) {
   if (!getUserEmail(request)) return unauthorized();
@@ -17,28 +18,31 @@ export async function onRequestGet({ request, env }) {
   // which is a filter only the server can express — it used to fetch the whole
   // campaign's log and discard the rest client-side.
   const includeCampaign = url.searchParams.get('include_campaign') === '1';
-  const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit'), 10) || 200, 1), 500);
+  const { limit, offset } = paging(request);
 
-  let stmt;
+  // The three shapes differ only in their WHERE clause, so build that once and
+  // let the shared pager add LIMIT/OFFSET and the count.
+  let where, binds;
   if (characterId && includeCampaign) {
-    stmt = env.DB.prepare(
-      `SELECT * FROM journal_entries
-       WHERE campaign_id = ? AND (character_id = ? OR character_id IS NULL)
-       ORDER BY created_at DESC, id DESC LIMIT ?`
-    ).bind(campaignId, characterId, limit);
+    where = 'campaign_id = ? AND (character_id = ? OR character_id IS NULL)';
+    binds = [campaignId, characterId];
   } else if (characterId) {
-    stmt = env.DB.prepare(
-      `SELECT * FROM journal_entries WHERE campaign_id = ? AND character_id = ?
-       ORDER BY created_at DESC, id DESC LIMIT ?`
-    ).bind(campaignId, characterId, limit);
+    where = 'campaign_id = ? AND character_id = ?';
+    binds = [campaignId, characterId];
   } else {
-    stmt = env.DB.prepare(
-      `SELECT * FROM journal_entries WHERE campaign_id = ?
-       ORDER BY created_at DESC, id DESC LIMIT ?`
-    ).bind(campaignId, limit);
+    where = 'campaign_id = ?';
+    binds = [campaignId];
   }
-  const { results } = await stmt.all();
-  return json({ entries: results });
+
+  const page = await pagedQuery(env, {
+    countSql: `SELECT count(*) AS n FROM journal_entries WHERE ${where}`,
+    countBinds: binds,
+    rowsSql: `SELECT * FROM journal_entries WHERE ${where} ORDER BY created_at DESC, id DESC`,
+    rowsBinds: binds,
+    limit, offset,
+  });
+
+  return json({ entries: page.results, total: page.total, limit: page.limit, offset: page.offset });
 }
 
 export async function onRequestPost({ request, env }) {
