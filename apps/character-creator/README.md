@@ -960,7 +960,27 @@ including `/api/*` is covered; there is no Access policy-as-code in the repo.
 
 Verify anything applied to production by querying it back, not by trusting an
 exit code — `wrangler d1 execute` has been observed reporting a non-zero exit on
-a fully successful run.
+a fully successful run. Twice now, in different disguises:
+
+- a plain non-zero exit on a run that fully applied
+- `Authentication error [code: 10000]` from `--remote --file`, on a migration
+  that had *already landed*. `--file` does not run your SQL over the query API:
+  it uploads the file, triggers D1's separate **import** endpoint, then polls
+  it. A failure late in that sequence is reported as if the whole thing failed,
+  and an auth-shaped message sends you off checking credentials that are fine.
+
+The check that settles it, every time:
+
+```sh
+npx wrangler d1 execute DB --remote --command \
+  "SELECT name FROM sqlite_master WHERE name='<your_table>';
+   SELECT filename FROM schema_migrations ORDER BY filename;"
+```
+
+`sqlite_master` and `schema_migrations` are authoritative. `pragma_table_info`
+is not — over `--remote` it has returned stale replica data mid-migration.
+Migrations are safe to re-run regardless (`IF NOT EXISTS` plus
+`INSERT OR IGNORE`), so the cost of checking first is nothing.
 
 ---
 
