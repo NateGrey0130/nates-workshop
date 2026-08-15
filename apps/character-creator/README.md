@@ -1093,11 +1093,17 @@ exit code — `wrangler d1 execute` has been observed reporting a non-zero exit 
 a fully successful run. Twice now, in different disguises:
 
 - a plain non-zero exit on a run that fully applied
-- `Authentication error [code: 10000]` from `--remote --file`, on a migration
-  that had *already landed*. `--file` does not run your SQL over the query API:
-  it uploads the file, triggers D1's separate **import** endpoint, then polls
-  it. A failure late in that sequence is reported as if the whole thing failed,
-  and an auth-shaped message sends you off checking credentials that are fine.
+- `Authentication error [code: 10000]` from `--remote --file`. `--file` does not
+  run your SQL over the query API: it uploads the file, triggers D1's separate
+  **import** endpoint, then polls it. That endpoint is the unreliable part —
+  the same command, same token, minutes apart, has both **succeeded while
+  printing this error** (011, which had fully landed) and **genuinely failed**
+  (012, which had not applied at all). The message is auth-shaped either way and
+  sends you off checking credentials that are working fine.
+
+  **Prefer `--command` for remote migrations.** It goes over the query API,
+  takes multiple statements separated by `;`, and has not failed. Use `--file`
+  locally, where none of this applies.
 
 The check that settles it, every time:
 
