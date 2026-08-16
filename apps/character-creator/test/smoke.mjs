@@ -7,7 +7,7 @@ import { readFileSync, readdirSync, writeFileSync, rmSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseClassMarkdown, isGearChoice, applyVariant, parseYaml } from '../js/parser.js';
+import { parseClassMarkdown, isGearChoice, applyVariant, parseYaml, combineClasses } from '../js/parser.js';
 import { referencedGear } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import {
@@ -1286,6 +1286,96 @@ console.log('\n[1c15] Pool formulas');
   // attribute — the bonus is skipped, not treated as zero silently.
   check('an attribute the character lacks falls back to the dice alone',
     between(rollPoolFormula('2D4x10 plus P.E. attribute number', {}), 20, 80));
+}
+
+// ---------- 1c16. An R.C.C. and an O.C.C. together ----------
+// Palladium characters routinely have both, and the two contribute different
+// halves: the race sets the body, the occupation sets what was learned. They
+// are composed into ONE class-shaped object so nothing downstream has to know.
+console.log('\n[1c16] R.C.C. + O.C.C.');
+{
+  const mk = (id, cat, extra) => parseClassMarkdown(
+    `---
+id: ${id}
+name: ${id}
+system: palladium-fantasy
+source_book: B
+category: ${cat}
+${extra}
+---
+
+## Lore
+
+x
+`).data;
+
+  const dragon = mk('dragon', 'rcc', [
+    "attribute_dice: { PS: '3d6+12' }",
+    'attribute_requirements: { PE: 12 }',
+    "mdc_base: '1d4x100'",
+    'psionics: { type: major, isp_base: "3d4x10" }',
+    'bonuses:',
+    '  combat: { parry: 2 }',
+    'skills:',
+    '  occ_skills:',
+    '    - { name: "Wilderness Survival", base: 30 }',
+    '    - { choose: 3, categories: ["Science"] }',
+  ].join('\n'));
+
+  const wizard = mk('wizard', 'occ', [
+    'attribute_requirements: { IQ: 10, PE: 14 }',
+    'hit_points_base: "P.E. + 1d6 per level"',
+    'psionics: { type: minor, isp_base: "2d6" }',
+    'magic: { type: wizardry, spells_starting: 8 }',
+    'bonuses:',
+    '  combat: { parry: 1, strike: 1 }',
+    'skills:',
+    '  occ_skills:',
+    '    - { name: "Wilderness Survival", base: 45 }',
+    '    - { name: "Lore: Magic", base: 40 }',
+    '    - { choose: 3, categories: ["Technical"] }',
+    '  occ_related_skills: { count: 6, categories: ["Science"] }',
+    '  secondary_skills: { count: 4 }',
+  ].join('\n'));
+
+  const both = combineClasses(dragon, wizard);
+
+  // Physiology is the race's. An M.D.C. creature must not pick up the O.C.C.'s
+  // hit points, or a dragon wizard out-lives the book's dragon.
+  check('the race sets the dice and pools', both.attribute_dice.PS === '3d6+12' && both.mdc_base === '1d4x100');
+  check('an M.D.C. race does not take the O.C.C. hit points', both.hit_points_base === undefined);
+  // But a race that simply omits a pool is not making a statement about it.
+  const elf = mk('elf', 'rcc', "attribute_dice: { PS: '3d6' }");
+  check('a race with no pools inherits the occupation\'s',
+    combineClasses(elf, wizard).hit_points_base === 'P.E. + 1d6 per level');
+
+  check('both sets of minimums apply, the stricter winning',
+    both.attribute_requirements.PE === 14 && both.attribute_requirements.IQ === 10);
+
+  // The whole reason this exists: a racial class grants no related or secondary
+  // skills, so without an O.C.C. a character has none at all.
+  check('related and secondary allowances come from the occupation',
+    both.skills.occ_related_skills.count === 6 && both.skills.secondary_skills.count === 4);
+  check('an R.C.C. alone still grants none', combineClasses(dragon, null).skills.occ_related_skills === undefined);
+
+  // Two classes commonly overlap; holding the same skill twice fails validation.
+  const named = both.skills.occ_skills.filter((x) => x.name).map((x) => x.name);
+  check('a skill both classes grant is held once', named.filter((n) => n === 'Wilderness Survival').length === 1);
+  check('the higher base wins when they overlap',
+    both.skills.occ_skills.find((x) => x.name === 'Wilderness Survival').base === 45);
+  // A choice-group has no identity to match on, so two groups stay two.
+  check('choice groups are not collapsed',
+    both.skills.occ_skills.filter((x) => !x.name).length === 2);
+
+  check('bonuses from both classes sum', both.bonuses.combat.parry === 3 && both.bonuses.combat.strike === 1);
+  check('the stronger psychic tier wins', both.psionics.type === 'major');
+  check('magic comes from the occupation', both.magic.type === 'wizardry');
+  check('the identity stays the race', both.id === 'dragon' && both.occ_id === 'wizard');
+
+  // Every caller composes unconditionally, so the no-O.C.C. paths matter most.
+  check('no occupation returns the race unchanged', combineClasses(dragon, null) === dragon);
+  check('no race returns the occupation', combineClasses(null, wizard) === wizard);
+  check('neither returns null', combineClasses(null, null) === null);
 }
 
 // ---------- 1d. Paging ----------

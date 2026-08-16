@@ -10,7 +10,7 @@
 // unspent waits on the sheet. Levelling up is never blocked on choosing.
 
 import { getUserEmail, unauthorized, json, forbidden, characterAccess } from '../../_lib/auth.js';
-import { loadClass } from '../../_lib/class-loader.js';
+import { loadCharacterClass } from '../../_lib/class-loader.js';
 import { xpTableFor, thresholdFor, skillGrantsFor } from '../../_lib/leveling.js';
 import { insertGrantStatements, resolvePicks, pickErrors } from '../../_lib/skill-picks.js';
 import { validateCharacter, loadSkillCategories } from '../../_lib/validate-character.js';
@@ -31,7 +31,7 @@ export async function onRequestPost({ request, env, params }) {
   if (!Number.isFinite(toLevel) || toLevel <= character.level) {
     return json({ error: `to_level must be greater than current level (${character.level})` }, 400);
   }
-  const cls = await loadClass(env, request.url, character.class_id, character.class_variant);
+  const cls = await loadCharacterClass(env, request.url, character);
   const table = xpTableFor(cls);
   const needed = thresholdFor(table, toLevel);
   if (needed == null) return json({ error: `to_level ${toLevel} is past the level cap (${table.length})` }, 400);

@@ -7,7 +7,7 @@
 // inline onclick handlers need their entry points on window — see the
 // Object.assign at the bottom.
 import { d, evalDice, rollPoolFormula } from './js/dice.js';
-import { isChoiceGroup, isGearChoice, applyVariant } from './js/parser.js';
+import { isChoiceGroup, isGearChoice, applyVariant, combineClasses } from './js/parser.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
 const STEPS = ['System', 'Class', 'Attributes', 'Skills', 'Equipment', 'Powers', 'Details', 'Review'];
@@ -39,6 +39,10 @@ const S = {
   // Which stage of the class, for classes that come in stages (a Dragon
   // hatchling vs an adult). NULL for every class that has none.
   variant: null,
+  // The O.C.C. taken alongside an R.C.C., and its own stage. A racial class
+  // grants no related or secondary skills — those come from the occupation —
+  // so an R.C.C. character without one is deliberately thin.
+  occ: null, occVariant: null,
   equipment: [], equipInit: false,
   charName: '', campaignId: null, newCampaign: '',
   spells: [], psi: [], bio: {},
@@ -130,7 +134,7 @@ function quizScore(c) {
 // skill, spell and gear catalogs, which are large, shared, and stale the moment
 // they are written down. Everything here is the build itself.
 const DRAFT_KEYS = [
-  'step', 'system', 'classMode', 'quiz', 'variant', 'attrMethods', 'attrs',
+  'step', 'system', 'classMode', 'quiz', 'variant', 'occ', 'occVariant', 'attrMethods', 'attrs',
   'related', 'secondary', 'groupPicks', 'gearPicks',
   'equipment', 'equipInit', 'charName', 'campaignId', 'newCampaign',
   'spells', 'psi', 'bio', 'pools',
@@ -193,7 +197,9 @@ function resumeDraft() {
   // The draft stores the class id and the stage separately, so the class is
   // resolved from scratch here — an edited class definition takes effect, and
   // the variant is re-applied on top of it.
-  S.cls = applyVariant(S.classes.find((c) => c.id === d.class_id) || null, S.variant);
+  S.cls = combineClasses(
+    applyVariant(S.classes.find((c) => c.id === d.class_id) || null, S.variant),
+    S.occ ? applyVariant(S.classes.find((c) => c.id === S.occ), S.occVariant) : null);
   S.savedId = null;
   render();
 }
@@ -306,6 +312,7 @@ function resetBuild() {
   S.equipment = []; S.equipInit = false; S.pools = null;
   S.gearChoices = []; S.gearPicks = {};
   S.variant = null;
+  S.occ = null; S.occVariant = null;
   S.spells = []; S.psi = []; S.bio = {};
 }
 
@@ -340,6 +347,7 @@ function renderClass() {
     ${inner}
     ${S.cls ? classDetail(S.cls) : ''}
     ${variantPicker()}
+    ${occPicker()}
   </div>
   <div class="nav"><button class="btn btn-ghost" onclick="goStep(0)">&larr; Back</button>
   <button class="btn btn-primary" ${canUseClass() ? '' : 'disabled'} onclick="confirmClass()">Use this class &rarr;</button></div>`;
@@ -414,11 +422,53 @@ function variantPicker() {
 
 function pickVariant(id) { S.variant = id; render(); }
 
+// An O.C.C. alongside a racial class. Offered only for an R.C.C., because that
+// is the pairing the books describe: the race is what you are, the occupation
+// is what you trained as, and the related and secondary skill allowances come
+// entirely from the latter.
+function occPicker() {
+  if (S.cls?.category !== 'rcc') return '';
+  const options = S.classes.filter((c) => c.system === S.system && c.category === 'occ');
+  if (!options.length) return '';
+  const chosen = S.occ ? S.classes.find((c) => c.id === S.occ) : null;
+  return `<div class="panel-inset">
+    <h3>Occupation <span class="muted small">— optional</span></h3>
+    <p class="muted small">A racial class grants no related or secondary skills; those come from the
+      O.C.C. a character trains in. Leave this blank for a creature that has none.</p>
+    <div class="rowline">
+      <select onchange="pickOcc(this.value)">
+        <option value="">— none —</option>
+        ${options.map((c) => `<option value="${esc(c.id)}"${S.occ === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}
+      </select>
+    </div>
+    ${chosen?.variants?.length ? `<div class="rowline">
+      <span class="muted small">Which ${esc(chosen.name)}?</span>
+      <select onchange="S.occVariant = this.value || null; render()">
+        ${chosen.variants.map((v) => `<option value="${esc(v.id)}"${S.occVariant === v.id ? ' selected' : ''}>${esc(v.name || v.id)}</option>`).join('')}
+      </select></div>` : ''}
+    ${chosen ? `<p class="small">Related skills: <b>${chosen.skills?.occ_related_skills?.count ?? 0}</b>
+      · Secondary: <b>${chosen.skills?.secondary_skills?.count ?? 0}</b></p>` : ''}
+  </div>`;
+}
+
+function pickOcc(id) {
+  S.occ = id || null;
+  // A different occupation cannot keep the previous one's stage.
+  S.occVariant = null;
+  const chosen = S.occ ? S.classes.find((c) => c.id === S.occ) : null;
+  if (chosen?.variants?.length) S.occVariant = chosen.variants[0].id;
+  render();
+}
+
 function confirmClass() {
   // The class the rest of the wizard sees is the resolved one — its attribute
   // dice, pools and bonuses are the variant's. Picking a different class puts
   // the base back, so this never compounds.
-  S.cls = applyVariant(S.cls, S.variant);
+  // What the rest of the wizard sees is ONE class: the variant resolved, and
+  // the occupation composed in. Nothing downstream has to know there were two.
+  const rcc = applyVariant(S.cls, S.variant);
+  const occ = S.occ ? applyVariant(S.classes.find((c) => c.id === S.occ), S.occVariant) : null;
+  S.cls = combineClasses(rcc, occ);
   S.step = 2;
   render();
 }
@@ -575,12 +625,13 @@ function renderSkills() {
     //
     // Anything already held is dropped from the options rather than shown
     // disabled: it is not a choice you might make, it is one you already have.
-    const alreadyHeld = new Set([
-      ...(sk.occ_skills || []).filter((x) => !isGroup(x) && x.name).map((x) => String(x.name).toLowerCase()),
-      ...Object.entries(S.groupPicks)
-        .filter(([k]) => Number(k) !== gi)
-        .flatMap(([, v]) => v).map((n) => String(n).toLowerCase()),
-    ]);
+    // Everything the character already has by any route: the class's fixed
+    // skills, picks made in OTHER choice groups, and the related and secondary
+    // skills chosen on this same step. takenNames() is exactly that set, minus
+    // this group's own picks — which must stay selectable so they can be
+    // unticked.
+    const mine = new Set((S.groupPicks[gi] || []).map((n) => String(n).toLowerCase()));
+    const alreadyHeld = new Set([...takenNames()].filter((n) => !mine.has(n)));
     const opts = optionNames.filter((name) => name && !alreadyHeld.has(String(name).toLowerCase())).map((name) => {
       const on = picked.includes(name);
       const blocked = !on && picked.length >= s.choose;
@@ -1060,6 +1111,8 @@ async function save() {
     const body = {
       campaign_id: campaignId, name: S.charName, class_id: S.cls.id,
       class_variant: S.variant || undefined,
+      occ_class_id: S.occ || undefined,
+      occ_class_variant: S.occVariant || undefined,
       attributes: S.attrs, skills: skillsPayload(), powers: powersPayload(), pools: S.pools,
       bio: S.bio,
       items: equipmentPayload().map((e) => ({ item_id: e.item_id, custom_name: e.custom_name, qty: e.qty, notes: e.notes })),
@@ -1195,7 +1248,7 @@ Object.assign(window, {
   S, render, computePools, goStep, pickSystem, classMode, quizPick, pickClass,
   confirmClass, setMethod, setAllMethod, doRoll, rollAll, manualSet, pbAdj,
   toggleSkill, toggleGroupPick, rmEquip, addCatalog, addCustom, togglePower, setBio, save, startOver,
-  resumeDraft, dismissDraft, pickVariant,
+  resumeDraft, dismissDraft, pickVariant, pickOcc,
 });
 
 boot();

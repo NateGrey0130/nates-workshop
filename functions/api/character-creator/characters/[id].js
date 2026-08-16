@@ -7,7 +7,7 @@ import { getUserEmail, unauthorized, json, forbidden, characterAccess, readJson 
 import { listPending } from '../_lib/skill-picks.js';
 import { decodeCharacter } from '../_lib/character-json.js';
 import { getStored } from '../_lib/class-store.js';
-import { parseClassMarkdown, applyVariant } from '../../../../apps/character-creator/js/parser.js';
+import { parseClassMarkdown, applyVariant, combineClasses } from '../../../../apps/character-creator/js/parser.js';
 
 export async function onRequestGet({ request, env, params }) {
   const email = getUserEmail(request);
@@ -45,9 +45,20 @@ export async function onRequestGet({ request, env, params }) {
   // must still resolve, or the sheet loses its name and advisory text.
   const stored = await getStored(env, character.class_id);
   const parsed = stored ? parseClassMarkdown(stored.markdown) : null;
-  const cls = parsed?.ok
+  let cls = parsed?.ok
     ? { ...applyVariant(parsed.data, character.class_variant), _retired: !!stored.deleted_at }
     : null;
+
+  // The O.C.C. taken alongside, composed in. Loaded the same way — directly
+  // rather than through loadClass — so a retired O.C.C. still resolves.
+  if (cls && character.occ_class_id) {
+    const occRow = await getStored(env, character.occ_class_id);
+    const occParsed = occRow ? parseClassMarkdown(occRow.markdown) : null;
+    if (occParsed?.ok) {
+      const retired = cls._retired || !!occRow.deleted_at;
+      cls = { ...combineClasses(cls, applyVariant(occParsed.data, character.occ_class_variant)), _retired: retired };
+    }
+  }
 
   return json({
     character, items, can_write, class: cls,
