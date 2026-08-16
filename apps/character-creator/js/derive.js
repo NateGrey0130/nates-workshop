@@ -3,24 +3,62 @@
 // Loaded as a classic script (both the wizard module and the sheet's plain
 // script use it), so it exposes one global: `derive`.
 //
-// These follow the standard Palladium attribute tables, which are consistent
-// across most of the line: a bonus applies from 16 upward, one point per point
-// above 15. Where a table is genuinely variable between books the value is a
-// documented house rule, same as the XP curve and the point-buy pool. Every
-// number here is a DEFAULT — the sheet stores whatever the player saves, so a
-// GM ruling always wins.
+// The numbers come from the Attribute Bonus Chart, Palladium Fantasy RPG 2nd
+// Edition p.16, transcribed row by row below. Every number here is a DEFAULT —
+// the sheet stores whatever the player saves, so a GM ruling always wins.
 //
 // Not derived, because they depend on rules this app does not model:
 //   attacks per melee beyond the base 2 (comes from Hand to Hand skill + level)
 //   knockout / critical / death-blow thresholds (hand to hand tables)
 
 (function (global) {
-  const above15 = (v) => (typeof v === 'number' && v >= 16 ? v - 15 : 0);
   const n = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
+
+  // ─── the attribute bonus chart ───
+  //
+  // Each row holds the book's printed values for attributes 16 through 30;
+  // index 0 is 16, and anything below 16 gets nothing.
+  //
+  // The rows are NOT one formula. P.S. damage does gain a point per point, but
+  // strike, parry, dodge and most saves gain one per TWO points, and the two
+  // percentile rows flatten near the top. This file used to apply `v - 15` to
+  // every row and call it "the standard Palladium tables", which left every
+  // parry, dodge, strike and save at roughly double the printed value, and let
+  // M.A. and P.B. climb past 100%.
+  //
+  // `per`/`gain` continue a row above 30, where the book stops and dragons do
+  // not: each `per` points beyond 30 adds `gain`, following the step the row
+  // ends on. That extension is a house rule — everything at 30 and below is
+  // the printed chart. `cap` bounds the two percentile rows at the same 98%
+  // ceiling the skill percentages use.
+  const CHART_MIN = 16, CHART_MAX = 30;
+  const row = (values, per, gain, cap = null) => ({ values, per, gain, cap });
+
+  const CHART = {
+    //                16  17  18  19  20  21  22  23  24  25  26  27  28  29  30
+    iq_skills:   row([ 2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16], 1, 1),
+    me_psionic:  row([ 1,  1,  2,  2,  3,  3,  4,  4,  5,  5,  6,  6,  7,  7,  8], 2, 1),
+    me_insanity: row([ 1,  1,  2,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13], 1, 1),
+    ps_damage:   row([ 1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15], 1, 1),
+    pp_combat:   row([ 1,  1,  2,  2,  3,  3,  4,  4,  5,  5,  6,  6,  7,  7,  8], 2, 1),
+    pe_magic:    row([ 1,  1,  2,  2,  3,  3,  4,  4,  5,  5,  6,  6,  7,  7,  8], 2, 1),
+    // Percentages, not flat bonuses.
+    pe_coma_pct: row([ 4,  5,  6,  8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30], 1, 2),
+    ma_trust:    row([40, 45, 50, 55, 60, 65, 70, 75, 80, 84, 88, 92, 94, 96, 97], 1, 1, 98),
+    pb_charm:    row([30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 83, 86, 90, 92], 1, 2, 98),
+  };
+
+  function chart(name, v) {
+    const r = CHART[name];
+    if (!r || typeof v !== 'number' || !Number.isFinite(v) || v < CHART_MIN) return 0;
+    let out = r.values[Math.min(v, CHART_MAX) - CHART_MIN];
+    if (v > CHART_MAX) out += Math.floor((v - CHART_MAX) / r.per) * r.gain;
+    return r.cap == null ? out : Math.min(out, r.cap);
+  }
 
   // P.P. drives strike, parry, and dodge. P.S. drives damage.
   function deriveCombat(attrs = {}) {
-    const pp = above15(attrs.PP);
+    const pp = chart('pp_combat', attrs.PP);
     return {
       attacks: 2,                    // base; Hand to Hand adds more per level
       initiative: 0,
@@ -28,7 +66,7 @@
       parry: pp,
       dodge: pp,
       roll: 0,
-      damage_bonus: above15(attrs.PS),
+      damage_bonus: chart('ps_damage', attrs.PS),
       // Spd × 5 yards per melee round is the standard movement rule.
       run_yards_per_melee: n(attrs.Spd) * 5,
     };
@@ -62,33 +100,40 @@
   // P.E. covers the body (poison, drugs, coma/death), M.E. the mind
   // (psionics, insanity, possession).
   //
+  // The chart names only four saves: M.E. vs psionic attack, M.E. vs insanity,
+  // P.E. vs coma/death, and P.E. vs magic/poison. Possession, horror factor and
+  // pain are not on it, so each borrows the printed row for its own attribute —
+  // a house rule, and the reason they are grouped rather than given rows above.
+  //
   // `psychicTier` is the character's own tier, used only for the psionic save
   // TARGET — the bonus stays purely M.E.
   function deriveSaves(attrs = {}, psychicTier = null) {
-    const pe = above15(attrs.PE);
-    const me = above15(attrs.ME);
+    const peMagic = chart('pe_magic', attrs.PE);
+    const mePsionic = chart('me_psionic', attrs.ME);
     return {
-      spell_magic: pe,
-      ritual_magic: pe,
-      psionics: me,
+      spell_magic: peMagic,
+      ritual_magic: peMagic,
+      psionics: mePsionic,
       psionics_target: psionicSaveTarget(psychicTier),
-      toxins_poisons: pe,
-      harmful_drugs: pe,
-      insanity: me,
-      possession: me,
-      horror_factor: me,
-      coma_death_pct: pe * 2,
-      pain: pe,
+      toxins_poisons: peMagic,
+      harmful_drugs: peMagic,
+      insanity: chart('me_insanity', attrs.ME),
+      possession: mePsionic,
+      horror_factor: mePsionic,
+      coma_death_pct: chart('pe_coma_pct', attrs.PE),
+      pain: peMagic,
     };
   }
 
   // M.A. is how far people trust or fear you; P.B. is how far they are charmed.
-  // Both tables start at 16 and step 5% a point.
+  // The I.Q. row is a one-time bonus added to every skill percentage — exposed
+  // here so the chart is complete in one place; applying it to a skill list is
+  // the skill sheet's job, not this file's.
   function deriveBio(attrs = {}) {
-    const ma = n(attrs.MA), pb = n(attrs.PB);
     return {
-      invoke_trust_pct: ma >= 16 ? 40 + (ma - 16) * 5 : 0,
-      charm_impress_pct: pb >= 16 ? 30 + (pb - 16) * 5 : 0,
+      invoke_trust_pct: chart('ma_trust', attrs.MA),
+      charm_impress_pct: chart('pb_charm', attrs.PB),
+      iq_skill_bonus_pct: chart('iq_skills', attrs.IQ),
     };
   }
 

@@ -588,7 +588,8 @@ check('major and master save vs psionics at 12, everyone else at 15', (() => {
 check('the psionic save BONUS is still purely M.E.', (() => {
   const strong = D.saves({ ME: 18 }, null, 'master');
   const weak = D.saves({ ME: 18 }, null, null);
-  return strong.psionics === weak.psionics && strong.psionics === 3;
+  // 2, not 3: the M.E. row gains one per TWO points, not one per point.
+  return strong.psionics === weak.psionics && strong.psionics === 2;
 })());
 check('a stored override still wins over the derived target',
   D.saves({ ME: 10 }, { psionics_target: 8 }, 'minor').psionics_target === 8);
@@ -914,8 +915,11 @@ check('a direct combat bonus is added on top',
   D2.combat({ PS: 10 }, null, D2.classBonuses(dragon, 1)).attacks === 3);
 check('a human override still wins over both',
   D2.combat({ PS: 10 }, { attacks: 7 }, D2.classBonuses(dragon, 1)).attacks === 7);
-check('omitting bonuses behaves exactly as before',
-  D2.combat({ PP: 18 }).strike === 3 && D2.combat({ PP: 18 }, null, null).strike === 3);
+// Asserted as an equivalence rather than a literal: the point is that the two
+// call shapes agree, and pinning the number here just duplicates [1c17].
+check('omitting bonuses behaves exactly as passing none',
+  D2.combat({ PP: 18 }).strike === D2.combat({ PP: 18 }, null, null).strike
+  && D2.combat({ PP: 18 }).strike === 2);
 
 // The sheet shows one number; the hover has to be able to say why.
 check('parts() separates the attribute half from the class half', (() => {
@@ -1376,6 +1380,101 @@ x
   check('no occupation returns the race unchanged', combineClasses(dragon, null) === dragon);
   check('no race returns the occupation', combineClasses(null, wizard) === wizard);
   check('neither returns null', combineClasses(null, null) === null);
+}
+
+// ---------- 1c17. The attribute bonus chart ----------
+// Transcribed from Palladium Fantasy RPG 2nd Ed. p.16. These assert the PRINTED
+// numbers, not a formula — the whole point is that the rows disagree with each
+// other, which is what the old single `v - 15` got wrong.
+console.log('\n[1c17] Attribute bonus chart');
+{
+  const combatAt = (attr, v) => D.combat({ [attr]: v }, null);
+  const savesAt = (attr, v) => D.saves({ [attr]: v }, null);
+  const bioAt = (attr, v) => D.bio({ [attr]: v }, null);
+
+  // Each entry: attribute value -> printed value. Sampled across the row rather
+  // than exhaustively, including both ends and the irregular steps in between.
+  const rowCheck = (label, read, expected) => {
+    const wrong = Object.entries(expected)
+      .filter(([v, want]) => read(Number(v)) !== want)
+      .map(([v, want]) => `${v}→${read(Number(v))} (book ${want})`);
+    check(label, wrong.length === 0, wrong.join(', '));
+  };
+
+  rowCheck('P.S. damage matches the book', (v) => combatAt('PS', v).damage_bonus,
+    { 15: 0, 16: 1, 18: 3, 24: 9, 30: 15 });
+  // The row that was roughly doubled: +1 per TWO points, not per point.
+  rowCheck('P.P. strike matches the book', (v) => combatAt('PP', v).strike,
+    { 15: 0, 16: 1, 17: 1, 18: 2, 19: 2, 20: 3, 24: 5, 29: 7, 30: 8 });
+  rowCheck('P.P. parry matches the book', (v) => combatAt('PP', v).parry,
+    { 16: 1, 18: 2, 24: 5, 30: 8 });
+  rowCheck('P.P. dodge matches the book', (v) => combatAt('PP', v).dodge,
+    { 16: 1, 18: 2, 24: 5, 30: 8 });
+  rowCheck('M.E. save vs psionic attack matches the book', (v) => savesAt('ME', v).psionics,
+    { 15: 0, 16: 1, 18: 2, 24: 5, 30: 8 });
+  // Insanity is halved only to 19, then gains a point per point — the one row
+  // that changes its own step partway along.
+  rowCheck('M.E. save vs insanity matches the book', (v) => savesAt('ME', v).insanity,
+    { 16: 1, 17: 1, 18: 2, 19: 2, 20: 3, 21: 4, 25: 8, 30: 13 });
+  rowCheck('P.E. save vs magic/poison matches the book', (v) => savesAt('PE', v).spell_magic,
+    { 16: 1, 18: 2, 24: 5, 30: 8 });
+  // The old `pe * 2` was right from 18 up and wrong at both 16 and 17.
+  rowCheck('P.E. save vs coma/death matches the book', (v) => savesAt('PE', v).coma_death_pct,
+    { 15: 0, 16: 4, 17: 5, 18: 6, 19: 8, 24: 18, 30: 30 });
+  rowCheck('M.A. trust/intimidate matches the book', (v) => bioAt('MA', v).invoke_trust_pct,
+    { 15: 0, 16: 40, 20: 60, 24: 80, 25: 84, 27: 92, 30: 97 });
+  rowCheck('P.B. charm/impress matches the book', (v) => bioAt('PB', v).charm_impress_pct,
+    { 15: 0, 16: 30, 20: 50, 26: 80, 27: 83, 29: 90, 30: 92 });
+  rowCheck('I.Q. skill bonus matches the book', (v) => bioAt('IQ', v).iq_skill_bonus_pct,
+    { 15: 0, 16: 2, 18: 4, 24: 10, 30: 16 });
+
+  // Below the chart nothing is granted at all — 15 is not "one less than 16".
+  check('an attribute under 16 grants nothing anywhere', (() => {
+    const c = D.combat({ PS: 15, PP: 15, Spd: 0 }, null);
+    const s = D.saves({ PE: 3, ME: 3 }, null);
+    const b = D.bio({ MA: 15, PB: 15, IQ: 15 }, null);
+    return c.strike === 0 && c.parry === 0 && c.damage_bonus === 0
+      && s.spell_magic === 0 && s.insanity === 0 && s.coma_death_pct === 0
+      && b.invoke_trust_pct === 0 && b.charm_impress_pct === 0 && b.iq_skill_bonus_pct === 0;
+  })());
+
+  // Above 30 the book stops and dragons do not: each row continues the step it
+  // ends on. House rule, asserted so it cannot drift silently.
+  check('rows continue past 30 on the step they end on', (() => {
+    const pp = (v) => D.combat({ PP: v }, null).parry;
+    const pe = (v) => D.saves({ PE: v }, null).coma_death_pct;
+    const ps = (v) => D.combat({ PS: v }, null).damage_bonus;
+    // +1 per two points, so 31 is still 8 and 32 steps to 9.
+    return pp(31) === 8 && pp(32) === 9 && pp(34) === 10
+      && pe(31) === 32 && pe(32) === 34
+      && ps(31) === 16 && ps(40) === 25;
+  })());
+
+  // The bug that made a P.B. 30 character charm literally everyone.
+  check('the percentile rows stop at 98%, never 100', (() => {
+    const ma = (v) => D.bio({ MA: v }, null).invoke_trust_pct;
+    const pb = (v) => D.bio({ PB: v }, null).charm_impress_pct;
+    return ma(30) === 97 && ma(31) === 98 && ma(50) === 98
+      && pb(30) === 92 && pb(33) === 98 && pb(99) === 98;
+  })());
+
+  // The flat rows are bonuses added to a roll, not percentages, so the 98 cap
+  // must not reach them — a P.S. 200 dragon keeps scaling.
+  check('the flat bonus rows are not capped', D.combat({ PS: 200 }, null).damage_bonus > 98);
+
+  // Class bonuses and stored overrides are layered on top of the chart, not
+  // instead of it, and that plumbing is unchanged by the new tables.
+  check('a class attribute bonus is read against the chart, not around it', (() => {
+    // P.P. 17 alone is +1; the class's +1 makes it 18, which the book puts at +2.
+    const bonuses = { attributes: { PP: 1 }, combat: {}, saves: {} };
+    return D.combat({ PP: 17 }, null, bonuses).parry === 2;
+  })());
+  check('a stored value still wins over the chart',
+    D.combat({ PP: 30 }, { parry: 1 }).parry === 1);
+  check('parts() splits chart and class contributions', (() => {
+    const p = D.parts('combat', { PP: 17 }, { attributes: { PP: 1 }, combat: { parry: 3 } });
+    return p.parry.attrs === 1 && p.parry.from_class === 4; // +1 via attribute, +3 direct
+  })());
 }
 
 // ---------- 1d. Paging ----------

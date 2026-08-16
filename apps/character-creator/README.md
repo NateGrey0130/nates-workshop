@@ -354,18 +354,39 @@ overridable.
 | Skills gained on level-up | Start at the catalog's base percentage — a skill learned at level 6 is still new | `skills.occ_related_skills.schedule` |
 | Skill percentage cap | 98% | — |
 
-**Attribute-derived values** (`js/derive.js`) follow the standard Palladium
-pattern — a bonus applies from 16 up, one point per point above 15:
+**Attribute-derived values** (`js/derive.js`) come from the Attribute Bonus
+Chart on p.16, transcribed row by row — see
+[`docs/rules-audit.md`](docs/rules-audit.md) for the full table and
+[`test/smoke.mjs`](test/smoke.mjs) `[1c17]`, which asserts the printed values.
 
-| Attribute | Drives |
-|---|---|
-| P.P. | strike, parry, dodge |
-| P.S. | damage bonus |
-| P.E. | vs poison, drugs, spell/ritual magic, pain; coma/death at 2% a point |
-| M.E. | vs psionics, insanity, possession, horror factor |
-| M.A. | invoke trust/intimidate — 40% at 16, +5% a point |
-| P.B. | charm/impress — 30% at 16, +5% a point |
-| Spd | running distance, Spd × 5 yards per melee |
+The rows deliberately disagree with one another, and that is the point:
+
+| Attribute | Drives | Shape of the row |
+|---|---|---|
+| P.P. | strike, parry, dodge | +1 per **two** points from 16 |
+| P.S. | damage bonus | +1 per point from 16 |
+| P.E. | vs poison, drugs, spell/ritual magic, pain | +1 per **two** points |
+| P.E. | coma/death | +4% at 16, +5% at 17, then +2% a point |
+| M.E. | vs psionics, possession, horror factor | +1 per **two** points |
+| M.E. | vs insanity | +1 per two to 19, then +1 a point |
+| M.A. | invoke trust/intimidate | 40% at 16, +5% a point, flattening after 24 |
+| P.B. | charm/impress | 30% at 16, +5% a point, flattening after 26 |
+| I.Q. | one-time bonus to every skill percentage | +2% at 16, +1% a point |
+| Spd | running distance, Spd × 5 yards per melee | no bonus at any value |
+
+Only P.S. and Spd match the `v - 15` this file used to apply to everything.
+Parry, dodge, strike and three saves were roughly **double** the printed value,
+M.A. and P.B. climbed past 100%, and the I.Q. row was missing outright.
+
+Two house rules where the book stops: rows **continue past 30** on the step they
+end on, since the chart ends there and dragons do not, and the two percentile
+rows are **capped at 98%**, matching the skill ceiling. The flat rows are
+bonuses added to a roll rather than percentages, so the cap does not reach them.
+Possession, horror factor and pain are not on the chart at all; each borrows the
+row for its own attribute.
+
+`iq_skill_bonus_pct` is exposed by `derive.bio()` but not yet applied to any
+skill list — that is the skill sheet's job, and it is not built.
 
 Every derived value shows on the sheet as a placeholder on a dashed input;
 typing overrides it and the field stops being marked derived. **Blank means "use
