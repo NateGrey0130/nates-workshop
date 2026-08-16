@@ -1431,17 +1431,21 @@ Most of these are planned out as twelve PRs under
 [`docs/plans/`](docs/plans/README.md), with the design decisions and the
 rejected alternatives recorded per PR.
 
-**An R.C.C. with no related or secondary skills is correct, not a gap.** In
-Palladium those come from the O.C.C. a character takes *alongside* its race, so
-a racial class legitimately grants none of its own — the Chiang-Ku Dragon lists
-only fixed skills and choice-groups, and `relatedAllowance` returning 0 for it
-is the right answer rather than a missed extraction.
+**An R.C.C. with no related or secondary skills is correct, not a gap.** Those
+come from the O.C.C. a character takes alongside its race, so `relatedAllowance`
+returning 0 for the Chiang-Ku Dragon is the right answer rather than a missed
+extraction. Listed here only so it is not "fixed" — see
+[A race and an occupation together](#a-race-and-an-occupation-together) for how
+the O.C.C. half is now carried.
 
-The consequence is a real limit: a character has **one** `class_id`, so this app
-cannot represent an R.C.C. and an O.C.C. together. A Chiang-Ku who studies
-wizardry is stored as the dragon, and the O.C.C. half — including the related
-and secondary skills it would grant — has nowhere to live. Nothing breaks; the
-character is simply thinner than the books allow.
+**Nothing restricts which O.C.C. a race may take.** The picker offers every
+occupation in the system, and the books do not: plenty of races are barred from
+particular classes, and some classes are open only to one race. A character the
+books forbid saves cleanly here. Left unenforced deliberately for now — the
+restrictions live in prose rather than in any field the importer extracts, so
+enforcing them means first deciding where that data lives. Worth revisiting once
+there are enough O.C.C.s for the rule to bite; with one Palladium O.C.C. in the
+catalog there is currently very little to restrict.
 
 **The catalog editor has no general delete.** Rows are created and corrected by
 hand; the only deletion is the one a merge performs. Deliberate — see
