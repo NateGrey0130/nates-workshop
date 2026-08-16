@@ -16,7 +16,7 @@ steps" and then lists six).
 | 1. The Eight Attributes & bonuses | p.14–16 | yes |
 | 2. Hit Points and S.D.C. | p.18 | yes, via per-class formulas |
 | 3. How to Determine Psionics | p.20–21 | no — class-driven only |
-| 4. Selecting a Race and O.C.C. | p.21–22 | yes; skill percentages incomplete |
+| 4. Selecting a Race and O.C.C. | p.21–22 | yes |
 | 5. Equipment and Money | p.22 | equipment yes, money not at all |
 | 6. Rounding Out One's Character | p.22–23, 32–33 | alignment is free text; tables absent |
 
@@ -110,7 +110,15 @@ Carried per class as `hit_points_base` / `sdc_base` formulas, which is why
   **Secondary skills get no bonus**, but they still advance per level like
   everything else.
 - Level 1 is the base; each level after adds the skill's per-level step.
-- **Maximum 98%**, always.
+- **Maximum 98%**, always — enforced at creation as well as on level-up, which
+  matters now that a large I.Q. bonus can push a high base over it.
+
+The I.Q. bonus reaches secondary skills too. "No skill bonuses are applicable"
+is about the bonus printed in parentheses on the O.C.C. page — the same
+sentence says it "applies only to O.C.C. related skill selections" — while the
+I.Q. bonus is a separate paragraph about the character rather than the
+occupation. A skill with no percentage at all (W.P.s, hand to hand) stays at
+zero, since a percentage bonus has nothing to modify.
 - Not all skill categories are open to every O.C.C., and **not all O.C.C.s are
   open to every race** (p.21).
 - Multiple or split O.C.C.s are explicitly not allowed (p.22) — a character is

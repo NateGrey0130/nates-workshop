@@ -352,7 +352,7 @@ overridable.
 | Psionic starting powers | minor 2, major 6, master 8; Super is master-only | `psionics.powers_starting`, `psionics.categories_allowed` |
 | Save vs psionic attack | 12+ for Major and Master psychics, 15+ for everyone else | override `saves.psionics_target` on the character |
 | Skills gained on level-up | Start at the catalog's base percentage — a skill learned at level 6 is still new | `skills.occ_related_skills.schedule` |
-| Skill percentage cap | 98% | — |
+| Skill percentage cap | 98% — book rule (p.22), applied at creation and on level-up | — |
 
 **Exceptional attribute rolls** (`js/dice.js`, p.14) are the book's, not ours. A
 3d6 attribute rolling 16, 17 or 18 earns one extra 1d6; if that die is a six it
@@ -413,6 +413,24 @@ this app does not model, so they are plain editable fields.
 
 Skills omitting `base` fall back to the catalog value — sourcebook class pages
 state the *bonus*, with the base living in the skill table.
+
+**The I.Q. bonus** (p.22) is a one-time addition to every skill percentage, made
+at creation and never again. It reaches secondary skills too: the book's "no
+skill bonuses are applicable" is about the bonus printed in parentheses on the
+O.C.C. page — the same sentence limits that one to related selections — while
+the I.Q. bonus is a separate paragraph about the character. Skills with no
+percentage at all (W.P.s, hand to hand) stay at zero.
+
+`pct` remains the true current percentage, because level-up increments it and
+the sheet prints it; each skill also carries `iq_bonus` recording how much of it
+came from I.Q., so 39% is distinguishable from a skill whose base genuinely is
+39. The sheet shows it inline after the name.
+
+**Secondary skills are no longer frozen.** The wizard used to write
+`per_level: 0` on every one of them, which is right about the O.C.C. bonus and
+wrong about everything else — the book says plainly that *all* skills increase
+with experience. A level 10 character's hobby skills sat at their level 1
+values. They now carry the catalog's real per-level step.
 
 ---
 

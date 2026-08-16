@@ -82,7 +82,7 @@ function render() {
   const skillBox = (title, list) => box(title, list.length ? `
     <div class="skill-head"><span>Skill</span><span style="text-align:right">+%/Lvl</span><span style="text-align:right">%</span></div>
     ${list.map((s) => `<div class="skill-row">
-      <span>${escHtml(s.name)}</span>
+      <span>${escHtml(s.name)}${s.iq_bonus ? ` <span class="note-inline" title="Includes a one-time +${s.iq_bonus}% from I.Q.">+${s.iq_bonus} I.Q.</span>` : ''}</span>
       <span class="num">${s.per_level ? '+' + s.per_level : '—'}</span>
       <span class="num pct">${s.pct ? s.pct + '%' : '—'}</span>
       ${s.note ? `<span class="note">↳ ${escHtml(s.note)}</span>` : ''}
