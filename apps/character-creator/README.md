@@ -66,6 +66,9 @@ apps/character-creator/
 │                             reason as derive.js)
 ├── js/class-template.js      Annotated OCC/RCC skeletons for writing a class by
 │                             hand (classic script — import.js is one)
+├── js/class-blocks.js        Rewrites ONE frontmatter block in place, so the
+│                             structured editors cannot disturb the rest of the
+│                             file (classic script)
 ├── db/seed-dev.sql           Optional local-dev seed rows; never applied to production
 └── test/
     ├── smoke.mjs             Parser + schema + migration-state smoke test
@@ -288,7 +291,7 @@ writes are gated (see [Permissions](#permissions)).
 | `admin/audit` | GET | Admin, read-only. Which existing characters break their class rules |
 | `journal` | GET / POST | By campaign; `?character_id=`, `?include_campaign=1`, `?limit=`, `?offset=` |
 | `import/extract` | POST | Admin. PDF → class markdown; autosaves a draft |
-| `import/recheck` | POST | Admin. Re-parse edited markdown, no API spend |
+| `import/recheck` | POST | Admin. Re-parse edited markdown, no API spend. Returns the parsed frontmatter as `data` for the structured editors |
 | `import/confirm` | POST | Admin. Publish class + create catalog stubs |
 | `import/sessions` | GET / POST | Admin. Resumable catalog imports: list (`?catalog=`), fetch one with its staged rows (`?id=`), create, close. `system` on create is stamped on every row the session imports |
 | `import/spells/extract` `import/psionics/extract` `import/gear/extract` | POST | Admin. One page range into a session; stages, writes no catalog rows |
@@ -1018,6 +1021,39 @@ Two things make the template worth having over an empty file:
 - **The awkward blocks are shown commented**: `variants`, `bonuses`, skill
   choice-groups and gear choices. Those are the shapes nobody remembers, and
   they are the reason writing a class by hand is worth supporting at all.
+
+#### Structured editors for the two awkward blocks
+
+`bonuses` and `variants` get real UI above the markdown; nothing else does. They
+are the shapes nobody remembers, and everything else in the frontmatter is
+either obvious or prose.
+
+The markdown stays visible and stays the source of truth. Editing a block
+rewrites **only that block**, in place, so you can watch exactly what changed:
+
+- **Bonuses are a flat table** of *(level, group, key, value)*. A bonuses block
+  really is a list of those tuples — `at_level` is the same thing with a level
+  attached — so one small table covers both, instead of a nested editor per
+  group and another inside every `at_level` entry. Leave the level blank for a
+  bonus the class has from the start.
+- **Variants show id and name.** Their overrides (`attribute_dice`, the pool
+  bases, per-variant `bonuses`) are edited in the markdown, and **survive a
+  save**, because each block is rebuilt from its *parsed* value rather than from
+  what the form displays.
+- **A commented-out example is replaced, not duplicated.** The template ships
+  `# variants:` as a worked example; appending a real block beside it would make
+  the file appear to define the same key twice.
+
+Comments *inside* an edited block do not survive — it is rebuilt from structure.
+That is the right way round: the blocks worth a form are structure, and the
+blocks worth comments are the ones this never touches. Regenerating the whole
+frontmatter instead would have been simpler and would have destroyed every
+comment in the file, which is most of what makes a hand-written class
+approachable.
+
+`import/recheck` returns the parsed frontmatter as `data`, so the editors can
+read `bonuses` and `variants` without a YAML parser of their own — `import.js`
+is a classic script and `parser.js` is a module it cannot import.
 
 There are two templates rather than one, because an R.C.C. and an O.C.C. are
 genuinely different shapes — a race rolls its attributes from racial dice and

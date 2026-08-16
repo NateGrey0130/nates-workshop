@@ -186,8 +186,18 @@ function parseScalar(raw) {
   if (s === '' || s === 'null' || s === '~') return null;
   if (s === 'true') return true;
   if (s === 'false') return false;
-  if ((s[0] === '"' && s.endsWith('"')) || (s[0] === "'" && s.endsWith("'"))) {
-    return s.slice(1, -1);
+  // Quoted strings. The two YAML styles escape differently and the difference
+  // matters: a double-quoted string uses backslashes, a single-quoted one
+  // doubles the quote. Stripping the outer pair without unescaping left
+  // `"Adult: the \"big\" one"` reading back with its backslashes still in, and
+  // book text quotes things often enough for that to reach the catalog.
+  if (s.length >= 2 && s[0] === '"' && s.endsWith('"')) {
+    return s.slice(1, -1).replace(/\\(["\\/bfnrt])/g, (_, c) => (
+      { b: '\b', f: '\f', n: '\n', r: '\r', t: '\t' }[c] ?? c
+    ));
+  }
+  if (s.length >= 2 && s[0] === "'" && s.endsWith("'")) {
+    return s.slice(1, -1).replace(/''/g, "'");
   }
   if (/^-?\d+$/.test(s)) return parseInt(s, 10);
   if (/^-?\d*\.\d+$/.test(s)) return parseFloat(s);

@@ -496,6 +496,7 @@ function renderReview() {
       Confirming publishes it and creates any missing item stubs.</p>
     ${r.errors?.length ? `<p class="warn err">Parse errors: ${escHtml(r.errors.join('; '))}</p>` : ''}
     ${r.warnings?.length ? `<p class="warn">${escHtml(r.warnings.join('; '))}</p>` : ''}
+    ${blockEditors()}
     <textarea id="md" class="mono" spellcheck="false">${escHtml(r.markdown)}</textarea>
     <div class="rowline">
       <button class="btn btn-sm" onclick="reparse()">↻ Re-check</button>
@@ -794,3 +795,148 @@ async function confirmSession() {
 }
 
 boot();
+
+// ─── structured editors for the two blocks nobody remembers the shape of ───
+//
+// Above the markdown, not instead of it. The file stays visible and stays the
+// source of truth: editing a block rewrites exactly that block in place, so you
+// can watch what changed and every comment outside it survives.
+//
+// Only `bonuses` and `variants` get one. The rest of the frontmatter is either
+// obvious (a name, a source book) or prose, and a form over the whole file
+// would have to regenerate the frontmatter — losing the template's comments,
+// which are most of what makes a hand-written class approachable.
+
+const BONUS_GROUPS = ['attributes', 'combat', 'saves'];
+const BONUS_ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
+
+// The frontmatter as the server last parsed it. Re-check refreshes it, and
+// every block edit ends in a re-check, so it always describes what is on screen.
+function currentData() {
+  return { md: $('md')?.value ?? I.result?.markdown ?? '', data: I.result?.data || {} };
+}
+
+// Rewrite one block and put the result back in the textarea, then re-check.
+async function applyBlock(key, value) {
+  const { md } = currentData();
+  const next = classBlocks.write(md, key, value);
+  $('md').value = next;
+  I.result = { ...I.result, markdown: next };
+  await reparse();
+}
+
+function blockEditors() {
+  if (!I.result?.markdown) return '';
+  const { data } = currentData();
+  return `<details class="block-editors" ${I.blocksOpen ? 'open' : ''}>
+    <summary onclick="I.blocksOpen = !I.blocksOpen">Bonuses &amp; variants — structured editors</summary>
+    <p class="muted small">These rewrite just their own block in the file below. Comments inside an
+      edited block are replaced; everything outside it is untouched.</p>
+    ${bonusesEditor(data)}
+    ${variantsEditor(data)}
+  </details>`;
+}
+
+// A bonuses block is really a list of (level, group, key, value) tuples —
+// at_level is the same thing with a level attached — so one table covers both
+// instead of a nested editor per group and another inside every at_level entry.
+function bonusesEditor(data) {
+  const rows = classBlocks.bonusesToRows(data.bonuses);
+  const opts = (list, sel) => list.map((o) =>
+    `<option value="${escHtml(o)}"${o === sel ? ' selected' : ''}>${escHtml(o)}</option>`).join('');
+
+  const row = (r, i) => `<tr>
+    <td><input type="number" min="2" style="width:64px" value="${r.level ?? ''}"
+      placeholder="start" data-bonus="${i}" data-field="level"></td>
+    <td><select data-bonus="${i}" data-field="group">${opts(BONUS_GROUPS, r.group)}</select></td>
+    <td>${r.group === 'attributes'
+      ? `<select data-bonus="${i}" data-field="key">${opts(BONUS_ATTRS, r.key)}</select>`
+      : `<input type="text" style="width:130px" value="${escHtml(r.key)}" data-bonus="${i}" data-field="key">`}</td>
+    <td><input type="number" style="width:64px" value="${r.value}" data-bonus="${i}" data-field="value"></td>
+    <td><button class="btn btn-sm btn-ghost" onclick="removeBonusRow(${i})">✕</button></td>
+  </tr>`;
+
+  return `<h4>Bonuses <span class="muted small">— numbers the sheet adds up</span></h4>
+  <p class="muted small">Leave the level blank for a bonus the class has from the start.
+    A conditional bonus ("+2 to strike when flying") belongs in prose, not here — this block is applied unconditionally.</p>
+  <table class="block-table">
+    <tr><th>Level</th><th>Group</th><th>Key</th><th>Value</th><th></th></tr>
+    ${rows.map(row).join('') || '<tr><td colspan="5" class="muted small">No bonuses.</td></tr>'}
+  </table>
+  <div class="rowline">
+    <button class="btn btn-sm" onclick="addBonusRow()">+ Add a bonus</button>
+    <button class="btn btn-sm btn-ghost" onclick="saveBonuses()">Write to the file</button>
+  </div>`;
+}
+
+function readBonusRows() {
+  const rows = [];
+  for (const el of document.querySelectorAll('[data-bonus]')) {
+    const i = +el.dataset.bonus;
+    (rows[i] ||= { level: null, group: 'combat', key: '', value: 0 });
+    const v = el.value;
+    if (el.dataset.field === 'level') rows[i].level = v === '' ? null : parseInt(v, 10);
+    else if (el.dataset.field === 'value') rows[i].value = v === '' ? NaN : Number(v);
+    else rows[i][el.dataset.field] = v;
+  }
+  return rows.filter(Boolean);
+}
+
+function addBonusRow() {
+  I.bonusDraft = [...readBonusRows(), { level: null, group: 'combat', key: 'attacks', value: 1 }];
+  applyBlock('bonuses', classBlocks.rowsToBonuses(I.bonusDraft));
+}
+function removeBonusRow(i) {
+  const rows = readBonusRows().filter((_, n) => n !== i);
+  applyBlock('bonuses', classBlocks.rowsToBonuses(rows));
+}
+function saveBonuses() { applyBlock('bonuses', classBlocks.rowsToBonuses(readBonusRows())); }
+
+// Variants are rebuilt from the PARSED objects, so attribute_dice, pool bases
+// and per-variant bonuses survive a save even though only id and name are
+// editable here. Editing those in the markdown stays the way to change them.
+function variantsEditor(data) {
+  const variants = Array.isArray(data.variants) ? data.variants : [];
+  const row = (v, i) => {
+    const extras = Object.keys(v).filter((k) => k !== 'id' && k !== 'name');
+    return `<tr>
+      <td><input type="text" style="width:120px" value="${escHtml(v.id || '')}" data-variant="${i}" data-field="id"></td>
+      <td><input type="text" style="width:220px" value="${escHtml(v.name || '')}" data-variant="${i}" data-field="name"></td>
+      <td class="muted small">${extras.length ? escHtml(extras.join(', ')) + ' — edit below' : 'inherits everything'}</td>
+      <td><button class="btn btn-sm btn-ghost" onclick="removeVariant(${i})">✕</button></td>
+    </tr>`;
+  };
+  return `<h4>Variants <span class="muted small">— stages of the same class</span></h4>
+  <p class="muted small">A variant may override attribute dice, attribute requirements, the pool bases
+    and bonuses; skills, abilities and lore stay shared. Those overrides are edited in the file below —
+    they are preserved when you save here.</p>
+  <table class="block-table">
+    <tr><th>Id</th><th>Name</th><th>Overrides</th><th></th></tr>
+    ${variants.map(row).join('') || '<tr><td colspan="4" class="muted small">No variants — the class has one form.</td></tr>'}
+  </table>
+  <div class="rowline">
+    <button class="btn btn-sm" onclick="addVariant()">+ Add a variant</button>
+    <button class="btn btn-sm btn-ghost" onclick="saveVariants()">Write to the file</button>
+  </div>`;
+}
+
+function readVariants() {
+  const { data } = currentData();
+  const parsed = Array.isArray(data.variants) ? data.variants : [];
+  const out = [];
+  for (const el of document.querySelectorAll('[data-variant]')) {
+    const i = +el.dataset.variant;
+    // Start from the parsed variant so its overrides survive the rebuild.
+    (out[i] ||= { ...(parsed[i] || {}) });
+    out[i][el.dataset.field] = el.value;
+  }
+  return out.filter(Boolean);
+}
+
+function addVariant() {
+  applyBlock('variants', [...readVariants(), { id: 'new-stage', name: 'New stage' }]);
+}
+function removeVariant(i) {
+  applyBlock('variants', readVariants().filter((_, n) => n !== i));
+}
+function saveVariants() { applyBlock('variants', readVariants()); }
