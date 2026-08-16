@@ -20,8 +20,28 @@ const $ = (i) => document.getElementById(i);
 async function api(path, opts) {
   const res = await fetch('/api/character-creator/' + path, opts);
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || ('API ' + res.status));
+  if (!res.ok) {
+    // The body carries more than a sentence: `violations` says which class rule
+    // broke and why, `errors` which fields failed to parse. Throwing only the
+    // summary meant "This character breaks its class rules" with no way to find
+    // out which one.
+    const err = new Error(data.error || ('API ' + res.status));
+    err.status = res.status;
+    err.detail = data;
+    throw err;
+  }
   return data;
+}
+
+// The readable half of a failed request, as a list. Empty when the failure had
+// no structured detail, so callers can fall back to the plain message.
+function errorDetails(err) {
+  const d = err?.detail || {};
+  return [
+    ...(d.violations || []).map((v) => v.message || `${v.rule}: ${JSON.stringify(v)}`),
+    ...(d.errors || []),
+    ...(d.conflicts || []).map((c) => `${c.name}: ${c.reason}`),
+  ].filter(Boolean);
 }
 const jsonReq = (method, body) => ({ method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
@@ -517,7 +537,10 @@ async function confirmLevelUp() {
     C.pickShowAll = false;
     C.pickFilter = ''; C.pickValues = {};
     await load();
-  } catch (err) { alert('Level-up failed: ' + err.message); }
+  } catch (err) {
+    const details = errorDetails(err);
+    alert(['Level-up failed: ' + err.message, ...details.map((d) => '- ' + d)].join('\n'));
+  }
 }
 
 // Picks banked from an earlier level-up, spent whenever the player comes back.
@@ -672,7 +695,10 @@ async function saveStats() {
     await api('characters/' + id, jsonReq('PATCH', body));
     flash('Saved.');
     await load();
-  } catch (err) { flash('Save failed: ' + err.message, true); }
+  } catch (err) {
+    const details = errorDetails(err);
+    flash('Save failed: ' + err.message + (details.length ? ' — ' + details.join('; ') : ''), true);
+  }
 }
 
 async function patchItem(rowId, fields) {

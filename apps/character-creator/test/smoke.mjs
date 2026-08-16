@@ -518,6 +518,43 @@ check('the class fixed skill list is not checked', (() => {
 check('relatedAllowance adds base and grants',
   relatedAllowance(vCls, 1) === 2 && relatedAllowance(vCls, 3) === 3 && relatedAllowance(vCls, 9) === 3);
 
+// Every violation must carry a readable `message`. The wizard prints these
+// straight to the player, and a violation without one used to surface as
+// "This character breaks its class rules" and nothing else — true, and useless
+// for working out what to change.
+{
+  const cases = [
+    // attribute_missing and attribute_minimum
+    { character: { level: 1 }, cls: vCls, skills: [], attributes: {}, catalog: null },
+    { character: { level: 1 }, cls: vCls, skills: [], attributes: { ME: 3 }, catalog: null },
+    // related_count and secondary_count
+    { character: { level: 1 }, cls: vCls, attributes: { ME: 12 }, catalog: null,
+      skills: Array.from({ length: 9 }, (_, i) => ({ name: 'S' + i, type: 'related', category: 'Physical' })) },
+    { character: { level: 1 }, cls: vCls, attributes: { ME: 12 }, catalog: null,
+      skills: Array.from({ length: 9 }, (_, i) => ({ name: 'T' + i, type: 'secondary' })) },
+    // duplicate_skill
+    { character: { level: 1 }, cls: vCls, attributes: { ME: 12 }, catalog: null,
+      skills: [{ name: 'Climbing', type: 'related', category: 'Physical' },
+               { name: 'Climbing', type: 'related', category: 'Physical' }] },
+  ];
+  const seen = new Set();
+  const unreadable = [];
+  for (const c of cases) {
+    for (const v of validateCharacter(c).violations) {
+      seen.add(v.rule);
+      if (typeof v.message !== 'string' || !v.message.trim()) unreadable.push(v.rule);
+    }
+  }
+  check('the cases between them produce several distinct rules', seen.size >= 4,
+    'only saw: ' + [...seen].join(', '));
+  check('every violation carries a readable message', unreadable.length === 0,
+    'missing on: ' + unreadable.join(', '));
+  // The message has to name the thing, or it cannot be acted on.
+  const attrCase = validateCharacter(cases[1]).violations.find((v) => v.rule === 'attribute_minimum');
+  check('an attribute violation names the attribute and the minimum',
+    !!attrCase && /ME/.test(attrCase.message) && /12/.test(attrCase.message), attrCase?.message);
+}
+
 // ---------- 1c4. Psychic tiers ----------
 // derive.js is a classic script, so it is loaded by evaluating it against a
 // stand-in global rather than imported.
