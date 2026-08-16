@@ -469,6 +469,41 @@ input.class-boosted { border-bottom-width: 2px; }
 }
 
 
+
+/* ─── REVIEW & SAVE ───
+   Attributes and pools sit side by side as two aligned columns, and each list
+   section runs DOWN in columns of fifteen rather than wrapping across as prose.
+   A 31-skill class was previously one unreadable paragraph, which also hid the
+   duplicate entries that make a save fail. */
+.review-stats {
+  display: flex; gap: 28px; flex-wrap: wrap;
+  margin: 10px 0 4px;
+}
+.stat-col { min-width: 150px; }
+.stat-col h4 {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-muted); margin: 0 0 5px;
+}
+.stat-row {
+  display: flex; justify-content: space-between; gap: 16px;
+  font-size: 13px; padding: 2px 0;
+  border-bottom: 1px solid var(--border);
+}
+.stat-row:last-child { border-bottom: 0; }
+.stat-row span { color: var(--text-secondary); }
+.stat-row b { font-family: 'JetBrains Mono', monospace; }
+
+.review-cols { display: flex; gap: 26px; flex-wrap: wrap; align-items: flex-start; }
+.review-col {
+  margin: 0; padding: 0; list-style: none;
+  flex: 0 1 auto; min-width: 170px;
+}
+.review-col li {
+  font-size: 13px; padding: 1px 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+@media (max-width: 620px) { .review-col { min-width: 100%; } }
+
 /* The specific rules a failed save broke, under the summary. */
 .err-list { margin: 6px 0 0 18px; font-size: 13px; color: var(--danger); }
 .err-list li { margin: 2px 0; }
