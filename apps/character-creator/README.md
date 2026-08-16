@@ -1380,6 +1380,18 @@ Most of these are planned out as twelve PRs under
 [`docs/plans/`](docs/plans/README.md), with the design decisions and the
 rejected alternatives recorded per PR.
 
+**An R.C.C. with no related or secondary skills is correct, not a gap.** In
+Palladium those come from the O.C.C. a character takes *alongside* its race, so
+a racial class legitimately grants none of its own — the Chiang-Ku Dragon lists
+only fixed skills and choice-groups, and `relatedAllowance` returning 0 for it
+is the right answer rather than a missed extraction.
+
+The consequence is a real limit: a character has **one** `class_id`, so this app
+cannot represent an R.C.C. and an O.C.C. together. A Chiang-Ku who studies
+wizardry is stored as the dragon, and the O.C.C. half — including the related
+and secondary skills it would grant — has nowhere to live. Nothing breaks; the
+character is simply thinner than the books allow.
+
 **The catalog editor has no general delete.** Rows are created and corrected by
 hand; the only deletion is the one a merge performs. Deliberate — see
 [`docs/plans/04-catalog-edit-ui.md`](docs/plans/04-catalog-edit-ui.md).
