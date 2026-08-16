@@ -555,15 +555,13 @@ async function openSession(id) {
 // Kept to prompts to match the rest of this flow; the answer matters far more
 // than the widget.
 function askSystem() {
-  const raw = (prompt(
-    'Which game system is this book for?
-
-'
-    + '  r  — Rifts
-'
-    + '  p  — Palladium Fantasy
-'
-    + '  (blank) — both / unsure, imports unrestricted'
+  const raw = (prompt([
+    'Which game system is this book for?',
+    '',
+    '  r  — Rifts',
+    '  p  — Palladium Fantasy',
+    '  (blank) — both / unsure, imports unrestricted',
+  ].join('\n')
   ) || '').trim().toLowerCase();
   if (raw.startsWith('r')) return 'rifts';
   if (raw.startsWith('p')) return 'palladium-fantasy';

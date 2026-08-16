@@ -74,6 +74,27 @@ check('invalid file rejected', !bad.ok && bad.errors.some((e) => e.includes('id'
 const noFm = parseClassMarkdown('# just markdown, no frontmatter');
 check('missing frontmatter rejected', !noFm.ok);
 
+// ---------- 1a. Every browser script parses ----------
+// Cheap, and it would have caught a real one: a prompt string written with real
+// newlines inside single quotes shipped a SyntaxError in import.js, which meant
+// the whole page — not just that prompt — did nothing. Nothing else here loads
+// the page scripts, because they are classic scripts full of DOM calls, so a
+// syntax error in one was invisible to the entire suite.
+console.log('\n[1a] Browser scripts parse');
+{
+  const scripts = [
+    ...readdirSync(appDir).filter((f) => f.endsWith('.js')).map((f) => join(appDir, f)),
+    ...readdirSync(join(appDir, 'js')).filter((f) => f.endsWith('.js')).map((f) => join(appDir, 'js', f)),
+  ];
+  check('found the page scripts', scripts.length >= 6, `only ${scripts.length}`);
+  for (const path of scripts) {
+    const res = spawnSync(process.execPath, ['--check', path], { encoding: 'utf8' });
+    const name = path.slice(appDir.length + 1).replace(/\\/g, '/');
+    check(`${name} parses`, res.status === 0,
+      (res.stderr || '').split('\n').slice(0, 3).join(' ').trim());
+  }
+}
+
 // ---------- 1b. Catalog field config ----------
 // The editor, the write endpoints and the importers all generate themselves
 // from this, so an inconsistent entry breaks three things at once.
