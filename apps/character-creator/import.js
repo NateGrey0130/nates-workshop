@@ -37,12 +37,7 @@ const SESSION_CATALOGS = {
   },
 };
 
-async function api(path, opts) {
-  const res = await fetch('/api/character-creator/' + path, opts);
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || ('API ' + res.status));
-  return data;
-}
+// api() and errorDetails() come from js/api.js, loaded first as a classic script.
 const jsonReq = (body) => ({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
 // The PDF goes to the API as base64 and on to Claude as a document attachment.
