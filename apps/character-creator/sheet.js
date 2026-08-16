@@ -12,7 +12,9 @@ const C = { data: null, items: [], journal: [], catalog: [], cls: null, canWrite
             proposal: null, nextThreshold: null,
             // Picker filter text, and the skill picks chosen so far. Both are
             // state rather than DOM so a re-render cannot discard them.
-            invFilter: '', pickFilter: '', pickValues: {} };
+            invFilter: '', pickFilter: '', pickValues: {},
+            // A proposed change of stage, awaiting confirmation.
+            variantProposal: null };
 const $ = (i) => document.getElementById(i);
 
 async function api(path, opts) {
@@ -263,9 +265,12 @@ function render() {
       ${w ? `<div class="rowline noprint" style="margin-top:6px">
         <input type="number" id="xp-delta" placeholder="+XP" style="width:78px">
         <button class="btn btn-sm" onclick="logXp()">Log XP</button></div>` : ''}`)}
+
+    ${w && !C.variantProposal ? variantPanel() : ''}
   </div>
 
   ${w && C.proposal ? levelUpPanel() : ''}
+  ${w && C.variantProposal ? variantProposalPanel() : ''}
   ${w && !C.proposal && C.pendingPicksTotal ? pendingPicksPanel() : ''}
 
   <div class="sheet-grid rail" style="margin-top:12px">
@@ -724,4 +729,106 @@ if (!id) {
   $('app').innerHTML = '<div class="panel"><p class="err">No character id — open a sheet from the character list.</p></div>';
 } else {
   load();
+}
+
+// ─── changing stage ───
+//
+// A hatchling grows into an adult. Two-step for the same reason a level-up is:
+// the rolls are the point, and a roll you did not watch happen is a roll you
+// cannot trust. Old sits beside new and you take each one or keep what you had.
+
+function variantPanel() {
+  const variants = C.cls?.variants || [];
+  if (!variants.length) return '';
+  const current = C.data.class_variant;
+  const options = variants.filter((v) => v.id !== current);
+  if (!options.length) return '';
+
+  return `<div class="box noprint">
+    <div class="box-title"><span>Stage</span></div>
+    <div class="box-body">
+      <p class="muted small" style="margin:0 0 6px">
+        Currently <b>${escHtml(C.cls.name)}</b>. Changing stage re-rolls only what the new
+        stage actually sets, and nothing is applied until you confirm.</p>
+      <div class="rowline">
+        <select id="variant-to">
+          ${options.map((v) => `<option value="${escHtml(v.id)}">${escHtml(v.name || v.id)}</option>`).join('')}
+        </select>
+        <button class="btn btn-sm" onclick="proposeVariant()">Preview the change</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function variantProposalPanel() {
+  const p = C.variantProposal;
+  if (!p) return '';
+
+  const attrRows = Object.entries(p.attributes).map(([a, v]) => `
+    <tr>
+      <td><b>${a}</b> <span class="muted small">${escHtml(v.dice)}</span></td>
+      <td>${v.from ?? '—'}</td>
+      <td>→ <input type="number" id="vc-attr-${a}" value="${v.rolled}"></td>
+      <td><label class="inline-check small">
+        <input type="checkbox" id="vc-keep-${a}"> keep ${v.from ?? '—'}</label></td>
+    </tr>`).join('');
+
+  const poolRows = Object.entries(p.pools).map(([pool, v]) => `
+    <tr>
+      <td>${POOL_LABELS[pool + '_max'] || pool} <span class="muted small">${escHtml(v.formula)}</span></td>
+      <td>${v.from_max}</td>
+      <td>→ <input type="number" id="vc-pool-${pool}" value="${v.rolled_max}"></td>
+      <td class="muted small">current moves by the same amount</td>
+    </tr>`).join('');
+
+  const nothing = !attrRows && !poolRows;
+  return `
+  <div class="levelup noprint">
+    <h3 style="margin-top:0">${escHtml(p.from_name || 'Current')} → ${escHtml(p.to_name)}</h3>
+    ${nothing
+      ? `<p class="small">This stage sets no different dice or pools — only what the class grants
+         changes, and that applies as soon as the stage does.</p>`
+      : `<table>${attrRows}${poolRows}</table>
+         <p class="muted small">Only the attributes this stage actually specifies are offered.
+         Tick <em>keep</em> to hold the number you already had.</p>`}
+    <div class="rowline" style="margin-top:10px">
+      <button class="btn btn-primary" onclick="confirmVariant()">✅ Confirm the change</button>
+      <button class="btn btn-sm btn-ghost" onclick="C.variantProposal=null; render()">Not now</button>
+      <span class="muted small">Nothing is applied until you confirm.</span>
+    </div>
+  </div>`;
+}
+
+async function proposeVariant() {
+  const to = $('variant-to')?.value;
+  if (!to) return;
+  try {
+    const res = await api(`characters/${id}/variant`, jsonReq('POST', { to_variant: to }));
+    C.variantProposal = res.proposal;
+    render();
+  } catch (err) { flash(err.message, true); }
+}
+
+async function confirmVariant() {
+  const p = C.variantProposal;
+  if (!p) return;
+  // A ticked "keep" simply omits the attribute, which leaves it untouched.
+  const attributes = {};
+  for (const a of Object.keys(p.attributes)) {
+    if ($(`vc-keep-${a}`)?.checked) continue;
+    const v = parseInt($(`vc-attr-${a}`)?.value, 10);
+    if (Number.isFinite(v)) attributes[a] = v;
+  }
+  const pools = {};
+  for (const pool of Object.keys(p.pools)) {
+    const v = parseInt($(`vc-pool-${pool}`)?.value, 10);
+    if (Number.isFinite(v)) pools[pool] = v;
+  }
+  try {
+    const res = await api(`characters/${id}/variant`,
+      jsonReq('POST', { to_variant: p.to_variant, confirm: true, attributes, pools }));
+    C.variantProposal = null;
+    flash(`Now ${res.name}.`);
+    await load();
+  } catch (err) { flash(err.message, true); }
 }

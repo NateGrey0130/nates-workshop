@@ -6,7 +6,7 @@
 // /shared/js/ui.js loads first as a classic script, so escHtml() is global;
 // inline onclick handlers need their entry points on window — see the
 // Object.assign at the bottom.
-import { d, evalDice } from './js/dice.js';
+import { d, evalDice, rollPoolFormula } from './js/dice.js';
 import { isChoiceGroup, isGearChoice, applyVariant } from './js/parser.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
@@ -86,25 +86,14 @@ function pbSpent() {
 const method = (a) => S.attrMethods[a] || 'roll';
 
 // ---------- pools ----------
-function rollPoolFormula(expr) {
-  if (expr == null) return null;
-  if (typeof expr === 'number') return expr;
-  const s = String(expr).trim();
-  const dice = evalDice(s);
-  if (dice != null) return dice;
-  const pe = s.match(/p\.?e\.?\s*\+\s*(\d+\s*d\s*\d+(?:\s*x\s*\d+)?(?:\s*[+-]\s*\d+)?)/i);
-  if (pe) return (S.attrs.PE || 0) + evalDice(pe[1]);
-  const n = Number(s);
-  return Number.isFinite(n) ? n : null;
-}
 function computePools() {
   const c = S.cls;
   S.pools = {
-    hp: rollPoolFormula(c.hit_points_base),
-    sdc: rollPoolFormula(c.sdc_base),
-    mdc: rollPoolFormula(c.mdc_base),
-    ppe: rollPoolFormula(c.ppe_base),
-    isp: c.psionics ? rollPoolFormula(c.psionics.isp_base) : null,
+    hp: rollPoolFormula(c.hit_points_base, S.attrs),
+    sdc: rollPoolFormula(c.sdc_base, S.attrs),
+    mdc: rollPoolFormula(c.mdc_base, S.attrs),
+    ppe: rollPoolFormula(c.ppe_base, S.attrs),
+    isp: c.psionics ? rollPoolFormula(c.psionics.isp_base, S.attrs) : null,
   };
 }
 

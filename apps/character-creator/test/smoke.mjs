@@ -1068,6 +1068,19 @@ check('a variant overrides only what it states', (() => (
   // Not stated by the adult, so it comes from the class.
   && asAdult.ppe_base === '2d4x10+40'
 ))());
+
+// attribute_dice and attribute_requirements MERGE per key; everything else
+// replaces. A variant naming one attribute says nothing about the other seven,
+// and replacing the map wholesale left an adult that overrode only P.S. rolling
+// a plain 3d6 for I.Q.
+check('attribute_dice merges per attribute rather than replacing', (() => {
+  const md = dragonMd.replace('attribute_dice: { PS: "4d6+12" }',
+                              'attribute_dice: { PS: "4d6+12", IQ: "3d6+6" }');
+  const adult = applyVariant(parseClassMarkdown(md).data, 'adult');
+  // The adult states only PS.
+  return adult.attribute_dice.PS === '4d6+30' && adult.attribute_dice.IQ === '3d6+6';
+})());
+check('a scalar override still replaces', asAdult.mdc_base === '1d6x1000');
 check('a variant that states nothing inherits everything',
   asHatchling.mdc_base === '1d4x100' && asHatchling.attribute_dice.PS === '4d6+12');
 check('the variant name replaces the class name for display',
