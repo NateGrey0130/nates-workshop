@@ -24,16 +24,49 @@ export function evalDice(expr) {
 // Lives beside evalDice rather than in the wizard because the server rolls the
 // same formulas when a character changes to another variant of its class, and
 // two implementations of "what does this class start with" would drift.
+// One dice expression: 3d6, 2D4x10, 4d6x100+200.
+const DICE_RE = /\d+\s*d\s*\d+(?:\s*x\s*\d+)?(?:\s*[+-]\s*\d+)?/i;
+// The attribute a formula can add in. Books write both orders, and spell the
+// attribute with or without full stops.
+const ATTR_RE = /\b(IQ|ME|MA|PS|PP|PE|PB|Spd)\b|\b([IMPS])\.\s*([QEASPB])\./i;
+
+function attrIn(text, attrs) {
+  const m = ATTR_RE.exec(text);
+  if (!m) return null;
+  const key = (m[1] || (m[2] + m[3])).replace(/\./g, '').toUpperCase();
+  const canon = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'SPD']
+    .find((k) => k === (key === 'SPD' ? 'SPD' : key));
+  if (!canon) return null;
+  const v = attrs[canon === 'SPD' ? 'Spd' : canon];
+  return typeof v === 'number' ? v : null;
+}
+
 export function rollPoolFormula(expr, attrs = {}) {
   if (expr == null) return null;
   if (typeof expr === 'number') return expr;
   const s = String(expr).trim();
 
-  const dice = evalDice(s);
-  if (dice != null) return dice;
+  // A clean expression on its own.
+  const whole = evalDice(s);
+  if (whole != null) return whole;
 
-  const pe = s.match(/p\.?e\.?\s*\+\s*(\d+\s*d\s*\d+(?:\s*x\s*\d+)?(?:\s*[+-]\s*\d+)?)/i);
-  if (pe) return (attrs.PE || 0) + evalDice(pe[1]);
+  // Dice plus an attribute, in either order — "P.E. + 1d6 per level" and
+  // "2D4x100+200 plus P.E. attribute number" are the same statement, and books
+  // use both. Without the second, every class written that way rolled NULL and
+  // the character was created with no pool at all.
+  const dice = DICE_RE.exec(s);
+  if (dice) {
+    const rolled = evalDice(dice[0]);
+    if (rolled != null) {
+      const bonus = attrIn(s, attrs);
+      if (bonus != null) return rolled + bonus;
+      // Dice buried in prose: books qualify these heavily ("3D4x100+1000 when in
+      // serpent form, only 3D4x100 in humanoid form"). Take the leading figure,
+      // which is the one the entry leads with, and leave the qualification to
+      // the prose that carries it.
+      if (s.search(DICE_RE) === 0) return rolled;
+    }
+  }
 
   const n = Number(s);
   return Number.isFinite(n) ? n : null;
