@@ -7,7 +7,7 @@ import { readFileSync, readdirSync, writeFileSync, rmSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseClassMarkdown, isGearChoice } from '../js/parser.js';
+import { parseClassMarkdown, isGearChoice, applyVariant } from '../js/parser.js';
 import { referencedGear } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import {
@@ -815,6 +815,7 @@ check('an unrecognised group warns rather than fails', (() => {
 const deriveWindow = {};
 new Function('globalThis', readFileSync(join(appDir, 'js', 'derive.js'), 'utf8')).call(deriveWindow, deriveWindow);
 const D2 = deriveWindow.derive;
+const derive = D2;
 
 const dragon = { bonuses: { attributes: { PS: 2 }, combat: { attacks: 1 },
                             at_level: [{ level: 5, combat: { attacks: 1 } }] } };
@@ -850,6 +851,87 @@ check('parts() separates the attribute half from the class half', (() => {
   const p = D2.parts('combat', { PS: 24 }, D2.classBonuses(dragon, 1));
   return p.damage_bonus.attrs === 9 && p.damage_bonus.from_class === 2
       && p.attacks.attrs === 2 && p.attacks.from_class === 1;
+})());
+
+// ---------- 1c12. Class variants ----------
+// Several RCCs come in stages: a Dragon is a hatchling, then an adult, sharing
+// lore, skills and abilities while differing in attribute dice, M.D.C. and what
+// the class grants. Four unrelated class files means maintaining the shared 90%
+// four times.
+console.log('\n[1c12] Class variants');
+
+const dragonMd = `---
+id: dragon
+name: Dragon
+system: rifts
+source_book: test-book
+category: rcc
+mdc_base: "1d4x100"
+ppe_base: "2d4x10+40"
+attribute_dice: { PS: "4d6+12" }
+bonuses:
+  combat: { attacks: 1 }
+variants:
+  - id: hatchling
+    name: "Dragon Hatchling"
+  - id: adult
+    name: "Adult Dragon"
+    attribute_dice: { PS: "4d6+30" }
+    mdc_base: "1d6x1000"
+    bonuses:
+      attributes: { PS: 4 }
+      combat: { attacks: 3 }
+---
+
+## Lore
+
+Shared by every stage.
+`;
+const dragonParsed = parseClassMarkdown(dragonMd);
+check('a class with variants parses', dragonParsed.ok, JSON.stringify(dragonParsed.errors));
+
+const asAdult = applyVariant(dragonParsed.data, 'adult');
+const asHatchling = applyVariant(dragonParsed.data, 'hatchling');
+
+check('a variant overrides only what it states', (() => (
+  asAdult.attribute_dice.PS === '4d6+30' && asAdult.mdc_base === '1d6x1000'
+  // Not stated by the adult, so it comes from the class.
+  && asAdult.ppe_base === '2d4x10+40'
+))());
+check('a variant that states nothing inherits everything',
+  asHatchling.mdc_base === '1d4x100' && asHatchling.attribute_dice.PS === '4d6+12');
+check('the variant name replaces the class name for display',
+  asAdult.name === 'Adult Dragon' && asHatchling.name === 'Dragon Hatchling');
+check('the shared half is untouched',
+  asAdult.id === 'dragon' && asAdult.sections !== undefined);
+
+// Replacement, not merging — the same rule mdc_base follows. A variant's
+// bonuses ARE its bonuses, so there is no question of which half won.
+check('variant bonuses replace the class’s rather than merging', (() => {
+  const b = derive.classBonuses(asAdult, 1);
+  return b.combat.attacks === 3 && b.attributes.PS === 4;
+})());
+check('a variant with no bonuses keeps the class’s',
+  derive.classBonuses(asHatchling, 1).combat.attacks === 1);
+
+// Every caller applies this unconditionally, so the no-variant paths matter as
+// much as the variant ones.
+check('no variant id returns the class unchanged',
+  applyVariant(dragonParsed.data, null).name === 'Dragon');
+check('an unknown variant id returns the class unchanged',
+  applyVariant(dragonParsed.data, 'wyrmling').name === 'Dragon');
+check('a class with no variants is unaffected',
+  applyVariant({ name: 'Juicer' }, 'adult').name === 'Juicer');
+
+const variantErr = (yaml) => parseClassMarkdown(dragonMd.replace(/variants:[\s\S]*?---/, yaml + '\n---'));
+check('a variant without an id is rejected',
+  !variantErr('variants:\n  - { name: "Nameless" }').ok);
+check('two variants with the same id are rejected',
+  !variantErr('variants:\n  - { id: a, name: A }\n  - { id: a, name: B }').ok);
+// A field a variant cannot override would silently do nothing.
+check('a variant overriding something it may not warns', (() => {
+  const p = variantErr('variants:\n  - { id: a, name: A, skills: { secondary_skills: { count: 9 } } }');
+  return p.ok && p.warnings.some((w) => /cannot override/.test(w));
 })());
 
 // ---------- 1c10. Import session system ----------

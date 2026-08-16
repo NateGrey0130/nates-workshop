@@ -25,6 +25,66 @@ export function isChoiceGroup(entry) {
     (entry.choose !== undefined || entry.from !== undefined || entry.categories !== undefined);
 }
 
+// ─── class variants ───
+//
+// Several RCCs come in stages rather than as one statblock: a Dragon is a
+// hatchling, then young, then adult, sharing lore, natural abilities and skills
+// while differing in attribute dice, M.D.C. and what the class grants. Four
+// unrelated class files means maintaining the shared 90% four times.
+//
+// A variant may override ONLY these. Skills, abilities, lore and equipment stay
+// shared on purpose: a variant that could override anything is not a variant,
+// it is a second class wearing the first one's name, and the inheritance would
+// obscure rather than explain.
+export const VARIANT_OVERRIDES = [
+  'attribute_dice', 'attribute_requirements',
+  'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',
+  'bonuses',
+];
+
+// The class as this variant plays it. Returns the class unchanged when there is
+// no variant, so every caller can apply it unconditionally.
+export function applyVariant(cls, variantId) {
+  if (!cls || !variantId || !Array.isArray(cls.variants)) return cls;
+  const v = cls.variants.find((x) => x?.id === variantId);
+  if (!v) return cls;
+
+  const out = { ...cls };
+  for (const key of VARIANT_OVERRIDES) {
+    if (v[key] !== undefined) out[key] = v[key];
+  }
+  // The variant's own name replaces the class's for display — "Dragon
+  // Hatchling", not "Dragon" — while class_id keeps pointing at the one class.
+  if (v.name) out.name = v.name;
+  out.variant_id = v.id;
+  return out;
+}
+
+function validateVariants(variants, errors, warnings) {
+  if (!Array.isArray(variants)) {
+    errors.push('variants must be a list');
+    return;
+  }
+  if (!variants.length) warnings.push('variants is empty and will be ignored');
+
+  const seen = new Set();
+  for (const v of variants) {
+    if (!v || typeof v !== 'object') { errors.push('variants entries must be objects'); continue; }
+    if (typeof v.id !== 'string' || !v.id.trim()) { errors.push('variants entries need an id'); continue; }
+    if (seen.has(v.id)) errors.push(`variants has two entries with id "${v.id}"`);
+    seen.add(v.id);
+    if (!v.name) warnings.push(`variant "${v.id}" has no name and will display as the class name`);
+    if (v.bonuses) validateBonuses(v.bonuses, errors, warnings);
+
+    // A field a variant cannot override would silently do nothing, which is
+    // exactly the confusion this list exists to prevent.
+    for (const key of Object.keys(v)) {
+      if (key === 'id' || key === 'name' || VARIANT_OVERRIDES.includes(key)) continue;
+      warnings.push(`variant "${v.id}" sets ${key}, which a variant cannot override — it will be ignored`);
+    }
+  }
+}
+
 // The attributes a class bonus may name. Anything else is a typo — a bonus
 // filed under a key nothing reads would silently do nothing, which is the
 // failure this whole block exists to prevent.
@@ -425,6 +485,7 @@ export function parseClassMarkdown(text) {
   // melee at level 5" were prose that nothing could act on; this is where a
   // number goes so the sheet can actually add it up.
   if (data.bonuses) validateBonuses(data.bonuses, errors, warnings);
+  if (data.variants !== undefined) validateVariants(data.variants, errors, warnings);
 
   const sections = parseBodySections(fm[2]);
   data.sections = sections;
