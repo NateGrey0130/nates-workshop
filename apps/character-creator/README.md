@@ -813,6 +813,22 @@ parsing — **skips validation and saves normally**. Refusing would strand a
 character whose class an admin retired, which is exactly what class soft-delete
 was built to avoid. The audit lists those separately as unvalidatable.
 
+**A rejected save says which rule broke.** The endpoints return a `violations`
+array where every entry carries a readable `message`, and both pages now print
+them — the wizard as a list under the failure, the sheet inline. They used to be
+thrown away, so a failed save read *"This character breaks its class rules"* and
+nothing else: true, and useless for working out what to change.
+
+```
+Save failed: This character breaks its class rules
+  • ME is 3, below the class minimum of 12
+  • MA is 3, below the class minimum of 12
+  • 7 related skills, but this class allows 6 at level 1
+```
+
+A smoke check asserts every violation the validator can emit carries a message,
+so a new rule cannot ship as an unexplained refusal.
+
 ---
 
 ## The catalog field config

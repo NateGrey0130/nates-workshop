@@ -469,6 +469,10 @@ input.class-boosted { border-bottom-width: 2px; }
 }
 
 
+/* The specific rules a failed save broke, under the summary. */
+.err-list { margin: 6px 0 0 18px; font-size: 13px; color: var(--danger); }
+.err-list li { margin: 2px 0; }
+
 /* Structured editors above the markdown. Collapsed by default — the file stays
    the thing you are editing; these are for the two blocks whose shape is hard
    to remember. */
