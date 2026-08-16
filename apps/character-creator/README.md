@@ -61,6 +61,8 @@ apps/character-creator/
 │                             build themselves from it)
 ├── js/derive.js              Attribute tables → combat bonuses, saves, percentages
 │                             (classic script; both the wizard and the sheet use it)
+├── js/api.js                 The one HTTP helper for all five pages, and
+│                             errorDetails() (classic script)
 ├── js/picker.js              Catalog picker filtering — matching, the filter
 │                             input, and caret restore (classic script, same
 │                             reason as derive.js)
@@ -118,9 +120,18 @@ classic scripts — and why inline handlers in the wizard need explicit `window`
 exposure (see the `Object.assign(window, …)` block at the bottom of `app.js`).
 `catalog.js` avoids the problem entirely by binding with `addEventListener`.
 
-`js/derive.js` and `js/picker.js` are deliberately *classic* scripts rather than
-modules, so the sheet's plain script can use them without converting the whole
-file.
+`js/derive.js`, `js/picker.js` and `js/api.js` are deliberately *classic*
+scripts rather than modules, so the plain-script pages can use them without
+converting the whole file. `js/api.js` is loaded by all five pages and defines
+`api()` and `errorDetails()`; there used to be five copies of `api()` in three
+variants, which is a nuisance while they agree and a bug when they do not — the
+wizard and the sheet learned to carry a failed response's `violations` through
+to the reader while the catalog editor and importer kept throwing that half
+away, so the same 422 explained itself on one page and said
+*"Request failed (422)"* on another.
+
+`jsonReq` is deliberately **not** shared: the sheet's takes `(method, body)` and
+the importer's takes `(body)` and always posts.
 
 ---
 
@@ -1396,6 +1407,28 @@ still earns its place — but the failure mode that actually cost time was
 **names**, not numbers: ten skills already existed under different spellings.
 See [Merging duplicate catalog rows](#merging-duplicate-catalog-rows).
 
+**A field the prompt does not mention is a field that never arrives.** `variants`
+shipped as schema and the importer was never told about it, so the first class
+with age stages came back with **both stat blocks dropped** — no attribute dice,
+no hit points, no P.P.E. The skills and psionics were perfect, which is exactly
+what made it look like a good extraction. The same shape bit `bonuses`: the
+prompt named no keys, so the model invented plausible ones (`roll_with_punch`,
+`pull_punch`, `magic`) that nothing reads and which therefore did nothing at all.
+
+A smoke check now pins the prompt against `derive.js`'s real key list and
+asserts it documents each schema block, because neither failure is visible in
+the output — you only notice by going looking for a number that should be there.
+
+**Pool formulas are prose as often as arithmetic.** `rollPoolFormula` originally
+understood bare dice and `P.E. + dice`, and three of the five formulas on one
+real page returned NULL — which meant a character built from that class had no
+hit points, no P.P.E. and no I.S.P. It now reads dice and an attribute in either
+order, for any of the eight attributes, and falls back to the *leading* dice
+expression when the formula is a qualified sentence
+(`3D4x100+1000 when in serpent form, only 3D4x100 in humanoid form`), leaving
+the qualification to the prose that carries it. A formula with no numbers in it
+still returns null rather than guessing.
+
 Do not bulk-accept a new book's first run. Read the prose, not just the figures —
 a spliced column produces a description that reads fluently and is wrong.
 
@@ -1412,9 +1445,9 @@ and renders a picker from each, so a truncated response would silently hide
 valid choices rather than showing fewer rows. Those are bounded by book content;
 the others grow with play.
 
-**The three page scripts are long, and deliberately not split.** `app.js` (~800
-lines), `import.js` (~720) and `sheet.js` (~650) each drive one page and each
-does several jobs. Splitting was considered and rejected: there is no build step,
+**The three page scripts are long, and deliberately not split.** `app.js`
+(~1230 lines), `import.js` (~940) and `sheet.js` (~860) each drive one page and
+each does several jobs. Splitting was considered and rejected: there is no build step,
 so there is no bundler — splitting means more `<script>` tags, hand-managed load
 order, and the classic-script/module distinction to keep straight. The cost is
 real and the benefit is aesthetic. `import.js` is the clearest seam if this is

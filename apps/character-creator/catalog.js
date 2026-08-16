@@ -37,12 +37,7 @@ const S = {
 const $ = (id) => document.getElementById(id);
 const cat = () => CATALOGS[S.catalog];
 
-async function api(path, opts) {
-  const res = await fetch('/api/character-creator/' + path, opts);
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
-  return body;
-}
+// api() and errorDetails() come from js/api.js, loaded first as a classic script.
 
 // ─── data ───
 

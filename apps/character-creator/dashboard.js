@@ -7,12 +7,7 @@ const POOLS = [['hp', 'H.P.'], ['sdc', 'S.D.C.'], ['mdc', 'M.D.C.'], ['ppe', 'P.
 const D = { campaign: null, isGm: false, roster: [], journal: [], classNames: {} };
 const $ = (i) => document.getElementById(i);
 
-async function api(path, opts) {
-  const res = await fetch('/api/character-creator/' + path, opts);
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || ('API ' + res.status));
-  return data;
-}
+// api() and errorDetails() come from js/api.js, loaded first as a classic script.
 
 async function load() {
   try {
