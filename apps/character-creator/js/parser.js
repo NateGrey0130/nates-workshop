@@ -42,6 +42,16 @@ export const VARIANT_OVERRIDES = [
   'bonuses',
 ];
 
+// These two are flat maps of INDEPENDENT per-attribute values, so a variant
+// naming one attribute is saying something about that attribute and nothing
+// about the other seven. Replacing them wholesale meant an adult dragon that
+// overrode only P.S. silently lost the base's I.Q. dice and rolled a plain 3d6.
+//
+// Everything else replaces. A scalar has nothing to merge, and `bonuses` is a
+// nested structure where merging would raise "which half won" on every key —
+// a variant's bonuses ARE its bonuses.
+const VARIANT_MERGED = ['attribute_dice', 'attribute_requirements'];
+
 // The class as this variant plays it. Returns the class unchanged when there is
 // no variant, so every caller can apply it unconditionally.
 export function applyVariant(cls, variantId) {
@@ -51,7 +61,10 @@ export function applyVariant(cls, variantId) {
 
   const out = { ...cls };
   for (const key of VARIANT_OVERRIDES) {
-    if (v[key] !== undefined) out[key] = v[key];
+    if (v[key] === undefined) continue;
+    out[key] = VARIANT_MERGED.includes(key) && cls[key] && typeof cls[key] === 'object'
+      ? { ...cls[key], ...v[key] }
+      : v[key];
   }
   // The variant's own name replaces the class's for display — "Dragon
   // Hatchling", not "Dragon" — while class_id keeps pointing at the one class.

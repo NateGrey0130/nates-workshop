@@ -286,6 +286,7 @@ writes are gated (see [Permissions](#permissions)).
 | `characters/[id]/items` | POST | Add inventory row (catalog slug or freeform) |
 | `characters/[id]/items/[itemId]` | PATCH / DELETE | qty/equipped/notes; soft remove |
 | `characters/[id]/xp` | POST | `{delta}` or `{total}`; returns a proposed level-up diff |
+| `characters/[id]/variant` | POST | Owner/GM. `{to_variant}` proposes a change of stage; add `confirm: true` with the accepted attributes and pools to apply it |
 | `characters/[id]/level-confirm` | POST | Apply a confirmed diff, write `level_history`. `picks` spends granted skill picks; unspent ones are banked. Validated |
 | `characters/[id]/picks` | GET / POST | Owner/GM to spend. Unspent skill picks; POST applies some. Validated |
 | `admin/audit` | GET | Admin, read-only. Which existing characters break their class rules |
@@ -425,9 +426,14 @@ shared on purpose: a variant that could override anything is not a variant, it
 is a second class wearing the first one's name, and the inheritance would
 obscure rather than explain. Setting anything else warns and is ignored.
 
-**Overrides replace, they do not merge** — the same rule `mdc_base` follows. A
-variant's `bonuses` *are* its bonuses, so there is never a question of which
-half won. A variant that states no bonuses inherits the class's.
+**`attribute_dice` and `attribute_requirements` merge per key; everything else
+replaces.** Those two are flat maps of independent per-attribute values, so a
+variant naming one attribute is saying something about that attribute and
+nothing about the other seven — replacing them wholesale left an adult dragon
+that overrode only P.S. rolling a plain 3d6 for I.Q. A scalar like `mdc_base`
+has nothing to merge, and `bonuses` is nested deeply enough that merging would
+raise "which half won" on every key: a variant's bonuses *are* its bonuses, and
+a variant that states none inherits the class's.
 
 The character records `class_variant` alongside `class_id`; NULL means the class
 as written, which is right for every class with no variants. It is its own
@@ -446,9 +452,30 @@ The wizard asks which stage after the class is chosen, and will not continue
 until one is picked: a Dragon is always some particular age, and defaulting to
 the first stage would be choosing for you.
 
-Changing stage later — a hatchling growing up — is deliberately not supported
-yet. That is a GM event with real consequences for rolled attributes and current
-pools, and worth doing on purpose rather than guessing at now.
+### Changing stage
+
+A hatchling grows up. The **Stage** box on the sheet proposes the change and
+applies nothing until it is confirmed — the same two-step a level-up uses, and
+for the same reason: the rolls are the point, and a roll you did not watch
+happen is a roll you cannot trust.
+
+- **Only what the new stage actually sets is offered.** An attribute whose dice
+  the stage does not change is left alone entirely, rather than being re-rolled
+  because something else about the creature changed.
+- **Each attribute is kept or taken individually.** Ticking *keep* holds the
+  number you already had, so a dragon can grow into its body without losing the
+  mind it was played with.
+- **Pools roll new maxima and current moves by the same amount**, exactly as a
+  level-up treats them. Growing up neither heals the damage the character was
+  carrying nor leaves it on a hatchling's current with an adult's maximum — a
+  creature 40 M.D.C. down stays 40 down.
+- **The new stage's rules are checked before it applies.** Its
+  `attribute_requirements` may differ, and a character that would not meet them
+  is refused rather than arriving there quietly.
+- **It is recorded in `level_history`** with `from_level` equal to `to_level`:
+  the character did not gain a level, it became something else.
+
+Owner or GM, like every other stat-changing control on the sheet.
 
 ---
 
