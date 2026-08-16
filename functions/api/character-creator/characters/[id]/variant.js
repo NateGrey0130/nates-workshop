@@ -16,9 +16,10 @@
 
 import { getUserEmail, unauthorized, json, forbidden, characterAccess, readJson } from '../../_lib/auth.js';
 import { getStored } from '../../_lib/class-store.js';
-import { parseClassMarkdown, applyVariant } from '../../../../../apps/character-creator/js/parser.js';
+import { parseClassMarkdown, applyVariant, combineClasses } from '../../../../../apps/character-creator/js/parser.js';
 import { evalDice, rollPoolFormula } from '../../../../../apps/character-creator/js/dice.js';
 import { loadCharacter } from '../../_lib/character-json.js';
+import { loadClass } from '../../_lib/class-loader.js';
 import { validateCharacter, loadSkillCategories } from '../../_lib/validate-character.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
@@ -113,9 +114,15 @@ export async function onRequestPost({ request, env, params }) {
   // The class rules are checked against the stage being moved TO — its
   // attribute_requirements may differ, and a character that would not meet them
   // should not arrive there quietly.
+  // Validated against the stage being moved TO, composed with the O.C.C. if
+  // there is one — otherwise a Chiang-Ku Wizard would fail on skills its
+  // occupation grants and the dragon does not.
+  const occ = character.occ_class_id
+    ? await loadClass(env, request.url, character.occ_class_id, character.occ_class_variant)
+    : null;
   const { violations } = validateCharacter({
     character: { level: character.level },
-    cls: next,
+    cls: combineClasses(next, occ),
     skills: character.skills || [],
     attributes: newAttrs,
     catalog: await loadSkillCategories(env),

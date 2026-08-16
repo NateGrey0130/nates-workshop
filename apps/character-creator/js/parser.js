@@ -98,6 +98,121 @@ function validateVariants(variants, errors, warnings) {
   }
 }
 
+// ─── an R.C.C. and an O.C.C. together ───
+//
+// Palladium characters routinely have both. A Chiang-Ku Dragon who studies
+// wizardry is a dragon AND a wizard, and the two contribute different halves:
+// the race sets the body, the occupation sets what was learned.
+//
+// Composed into ONE class-shaped object rather than threaded through the app as
+// a pair. Every consumer — the validator, the level-up diff, derive's bonuses,
+// the sheet — reads `cls.skills`, `cls.bonuses`, the pool bases and so on, and
+// none of them has to know a second class exists. The same trick applyVariant
+// uses, one layer out.
+//
+// Weakest first. Duplicated from derive.js's ordering, which answers a
+// different question (the psionic save TARGET) — keep the two in step.
+const PSI_TIERS = ['minor', 'major', 'master'];
+const tierRank = (t) => PSI_TIERS.indexOf(String(t ?? '').toLowerCase());
+
+function sumBonusGroups(a, b) {
+  const out = {};
+  for (const group of ['attributes', 'combat', 'saves']) {
+    const merged = { ...(a?.[group] || {}) };
+    for (const [k, v] of Object.entries(b?.[group] || {})) {
+      if (typeof v === 'number') merged[k] = (merged[k] || 0) + v;
+    }
+    if (Object.keys(merged).length) out[group] = merged;
+  }
+  // at_level entries are kept side by side rather than merged by level:
+  // classBonuses() folds every entry at or below the character's level anyway,
+  // so two classes each granting +1 attack at level 5 correctly gives +2.
+  const at = [...(a?.at_level || []), ...(b?.at_level || [])];
+  if (at.length) out.at_level = at;
+  return Object.keys(out).length ? out : undefined;
+}
+
+// `rcc` supplies physiology, `occ` supplies occupation. Returns `rcc` unchanged
+// when there is no second class, so every caller can apply it unconditionally.
+export function combineClasses(rcc, occ) {
+  if (!rcc || !occ) return rcc || occ || null;
+
+  const out = { ...rcc };
+  out.name = `${rcc.name} ${occ.name}`;
+  out.occ_id = occ.id;
+  out.occ_name = occ.name;
+
+  // Physiology is the race's, whatever the character studied — a dragon's dice
+  // and M.D.C. are the dragon's, and the O.C.C.'s formulas are ignored rather
+  // than added, or a Chiang-Ku wizard would out-live the book's dragon.
+  //
+  // But only where the race HAS an opinion. A racial class that states no hit
+  // points because it is an M.D.C. creature is saying something; one that
+  // simply omits them is not, and taking "the R.C.C. alone" literally there
+  // would leave the character with no hit points at all. So a pool the race
+  // does not mention falls through to the occupation.
+  for (const key of ['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base']) {
+    if (rcc[key] == null && occ[key] != null) out[key] = occ[key];
+  }
+  // An M.D.C. race is the one case where silence IS the statement: it tracks
+  // M.D.C. instead of hit points, so an O.C.C.'s hit points must not sneak in.
+  if (rcc.mdc_base != null && rcc.hit_points_base == null) delete out.hit_points_base;
+
+  // Both sets of minimums apply, so the stricter wins.
+  const reqs = { ...(rcc.attribute_requirements || {}) };
+  for (const [k, v] of Object.entries(occ.attribute_requirements || {})) {
+    if (typeof v !== 'number') continue;
+    reqs[k] = typeof reqs[k] === 'number' ? Math.max(reqs[k], v) : v;
+  }
+  if (Object.keys(reqs).length) out.attribute_requirements = reqs;
+
+  // Fixed skills from both; the related and secondary ALLOWANCES from the
+  // O.C.C. alone, which is the whole reason a racial class lists none.
+  //
+  // A skill both classes grant is held ONCE. Two classes commonly overlap —
+  // a Chiang-Ku and a Long Bowman both know Wilderness Survival — and
+  // concatenating blindly produced a character holding it twice, which the
+  // validator correctly refused to save. The higher base wins: being both
+  // things does not make you worse at either.
+  //
+  // Only NAMED entries collapse. A choice-group has no name and no identity to
+  // match on, so two groups stay two groups — "pick 3 Science" from each class
+  // is genuinely six picks.
+  const bySkill = new Map();
+  const groups = [];
+  for (const entry of [...(rcc.skills?.occ_skills || []), ...(occ.skills?.occ_skills || [])]) {
+    if (!entry?.name) { groups.push(entry); continue; }
+    const key = String(entry.name).toLowerCase();
+    const seen = bySkill.get(key);
+    if (!seen || (entry.base ?? 0) > (seen.base ?? 0)) bySkill.set(key, entry);
+  }
+  out.skills = {
+    ...(rcc.skills || {}),
+    occ_skills: [...bySkill.values(), ...groups],
+  };
+  if (occ.skills?.occ_related_skills) out.skills.occ_related_skills = occ.skills.occ_related_skills;
+  if (occ.skills?.secondary_skills) out.skills.secondary_skills = occ.skills.secondary_skills;
+
+  out.bonuses = sumBonusGroups(rcc.bonuses, occ.bonuses);
+
+  // The stronger psychic wins: a dragon that is already a Major psychic does
+  // not become weaker by studying an O.C.C. with minor psionics.
+  if (rcc.psionics || occ.psionics) {
+    out.psionics = tierRank(occ.psionics?.type) > tierRank(rcc.psionics?.type)
+      ? occ.psionics : (rcc.psionics || occ.psionics);
+  }
+  // Magic is what you studied, so the O.C.C. wins when both state it.
+  if (occ.magic || rcc.magic) out.magic = occ.magic || rcc.magic;
+
+  for (const key of ['equipment_starting', 'level_progression', 'special_abilities',
+                     'natural_abilities', 'restrictions']) {
+    const both = [...(rcc[key] || []), ...(occ[key] || [])];
+    if (both.length) out[key] = both;
+  }
+
+  return out;
+}
+
 // The attributes a class bonus may name. Anything else is a typo — a bonus
 // filed under a key nothing reads would silently do nothing, which is the
 // failure this whole block exists to prevent.

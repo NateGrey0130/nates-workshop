@@ -5,7 +5,7 @@
 // confirms (or tweaks) it via level-confirm.
 
 import { getUserEmail, unauthorized, json, forbidden, characterAccess } from '../../_lib/auth.js';
-import { loadClass } from '../../_lib/class-loader.js';
+import { loadCharacterClass } from '../../_lib/class-loader.js';
 import { xpTableFor, levelForXp, thresholdFor, buildProposal } from '../../_lib/leveling.js';
 import { loadCharacter } from '../../_lib/character-json.js';
 
@@ -27,7 +27,7 @@ export async function onRequestPost({ request, env, params }) {
   await env.DB.prepare("UPDATE characters SET xp = ?, updated_at = datetime('now') WHERE id = ?")
     .bind(newXp, params.id).run();
 
-  const cls = await loadClass(env, request.url, character.class_id, character.class_variant);
+  const cls = await loadCharacterClass(env, request.url, character);
   if (!cls) {
     return json({ xp: newXp, level: character.level, next_threshold: null, proposal: null,
                   warning: `Class definition '${character.class_id}' not found — level check skipped` });

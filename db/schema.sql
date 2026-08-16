@@ -53,6 +53,8 @@ CREATE TABLE IF NOT EXISTS characters (
   name TEXT NOT NULL,
   class_id TEXT NOT NULL,               -- slug of the RCC/OCC markdown file, e.g. 'cyber-knight'
   class_variant TEXT,                   -- which `variants` entry, e.g. 'hatchling'; NULL = the class as written
+  occ_class_id TEXT,                    -- the O.C.C. taken alongside an R.C.C.; NULL = none
+  occ_class_variant TEXT,
   level INTEGER NOT NULL DEFAULT 1,
   xp INTEGER NOT NULL DEFAULT 0,
   attributes TEXT NOT NULL DEFAULT '{}',  -- JSON: {"IQ": 12, "ME": 14, ...}
@@ -373,6 +375,10 @@ CREATE TABLE IF NOT EXISTS character_drafts (
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '011-character-drafts.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'character_drafts');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '014-character-occ.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'occ_class_id');
 
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '013-character-variant.sql'

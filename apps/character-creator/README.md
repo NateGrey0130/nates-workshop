@@ -19,6 +19,7 @@ Access gate. No build step, no framework, no dependencies.
 - [Permissions](#permissions)
 - [House rules and derived values](#house-rules-and-derived-values)
 - [Level-up skill picks](#level-up-skill-picks)
+- [A race and an occupation together](#a-race-and-an-occupation-together)
 - [Classes that come in stages](#classes-that-come-in-stages)
 - [What a class grants mechanically](#what-a-class-grants-mechanically)
 - [Which system a catalog row belongs to](#which-system-a-catalog-row-belongs-to)
@@ -146,7 +147,7 @@ bookkeeping shared by both; the rest are this app.
 | Table | Notes |
 |---|---|
 | `campaigns` | Top-level container. `gm_email` owns it. `gm_notes` is GM-only and stripped from non-GM API responses. |
-| `characters` | See below — several JSON columns. `class_variant` names which `variants` entry the character is; NULL means the class as written. |
+| `characters` | See below — several JSON columns. `class_variant` names which `variants` entry the character is; NULL means the class as written. `occ_class_id` is the O.C.C. taken alongside an R.C.C.; NULL means none. |
 | `character_items` | Inventory join. `item_id` NULL means a freeform item (`custom_name` required). `removed_at` NULL means currently held — removals are soft, so history survives. |
 | `journal_entries` | `character_id` NULL means a campaign-level entry. |
 | `level_history` | One row per confirmed level-up; `changes` is a JSON diff of what was actually applied. |
@@ -407,6 +408,50 @@ Spending consumes the oldest grant first, and a grant only partly spent stays
 pending with its count reduced — so two picks earned at level 3 can be taken one
 at a time. Both paths write the skills and the claim in a single batch, because
 a pick that consumed its grant without landing on the sheet would be lost.
+
+## A race and an occupation together
+
+Palladium characters routinely have both. A Chiang-Ku Dragon who studies wizardry
+is a dragon **and** a wizard, and the two contribute different halves: the race
+sets the body, the occupation sets what was learned. This is also why a racial
+class legitimately grants **no** related or secondary skills — those come
+entirely from the O.C.C., so an R.C.C.-only character correctly has none.
+
+A character carries `class_id` (+ `class_variant`) for the race and
+`occ_class_id` (+ `occ_class_variant`) for the occupation. Both optional halves;
+every character created before this has `occ_class_id` NULL and behaves exactly
+as it did.
+
+`combineClasses(rcc, occ)` composes them into **one class-shaped object**, the
+same trick `applyVariant` uses a layer down. The validator, the level-up diff,
+`derive`'s bonuses and the sheet all read `cls.skills`, `cls.bonuses` and the
+pool bases as before — none of them knows a character can have two classes.
+
+| | comes from |
+|---|---|
+| attribute dice, pool formulas | the **race** |
+| attribute minimums | **both** — the stricter of each |
+| fixed skills | **both**, a shared skill held once at the higher base |
+| related & secondary allowances | the **occupation** |
+| bonuses | **both**, summed |
+| psionics | the **stronger tier** |
+| magic | the **occupation** |
+| equipment, abilities, level progression | **both** |
+
+Three rules earned by getting them wrong first:
+
+- **A pool the race does not mention falls through to the occupation** — but an
+  M.D.C. race keeps no hit points. Silence means "not applicable" for a creature
+  that tracks M.D.C. and "no opinion" for one that simply omits the line.
+- **A skill both classes grant is held once**, at the higher base. Concatenating
+  blindly produced a character holding Wilderness Survival twice, which the
+  validator correctly refused to save. Choice-groups are *not* collapsed — they
+  have no identity to match on, so "pick 3 Science" from each class is six picks.
+- **The audit and the stage-change endpoint compose too.** Judging a Chiang-Ku
+  Wizard against the dragon alone reports every skill its occupation grants as a
+  violation.
+
+---
 
 ---
 

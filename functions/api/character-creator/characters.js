@@ -7,7 +7,7 @@
 
 import { getUserEmail, unauthorized, json, readJson } from './_lib/auth.js';
 import { paging, pagedQuery } from './_lib/paging.js';
-import { loadClass } from './_lib/class-loader.js';
+import { loadCharacterClass } from './_lib/class-loader.js';
 import { validateCharacter, loadSkillCategories } from './_lib/validate-character.js';
 
 // GET /api/character-creator/characters — list for linking to sheets.
@@ -56,9 +56,18 @@ export async function onRequestPost({ request, env }) {
   const variant = typeof b.class_variant === 'string' && b.class_variant.trim()
     ? b.class_variant.trim() : null;
 
+  // The O.C.C. taken alongside an R.C.C. Optional: most characters have one
+  // class, and every character created before this had exactly one.
+  const occId = typeof b.occ_class_id === 'string' && b.occ_class_id.trim() ? b.occ_class_id.trim() : null;
+  const occVariant = typeof b.occ_class_variant === 'string' && b.occ_class_variant.trim()
+    ? b.occ_class_variant.trim() : null;
+
   // The wizard enforces these too; this is the boundary. A class that cannot be
   // resolved skips the check rather than blocking the save.
-  const cls = await loadClass(env, request.url, b.class_id, variant);
+  const cls = await loadCharacterClass(env, request.url, {
+    class_id: b.class_id, class_variant: variant,
+    occ_class_id: occId, occ_class_variant: occVariant,
+  });
   const { violations } = validateCharacter({
     character: { level: 1 },
     cls,
@@ -73,15 +82,15 @@ export async function onRequestPost({ request, env }) {
   const p = b.pools || {};
   const row = await env.DB.prepare(
     `INSERT INTO characters (
-       campaign_id, player_email, name, class_id, class_variant, level, xp,
+       campaign_id, player_email, name, class_id, class_variant, occ_class_id, occ_class_variant, level, xp,
        attributes, skills, powers,
        hp_max, hp_current, sdc_max, sdc_current, mdc_max, mdc_current,
        ppe_max, ppe_current, isp_max, isp_current,
        bio, combat, saves, armor, notes
-     ) VALUES (?, ?, ?, ?, ?, 1, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      RETURNING id`
   ).bind(
-    b.campaign_id, email, b.name, b.class_id, variant,
+    b.campaign_id, email, b.name, b.class_id, variant, occId, occVariant,
     JSON.stringify(b.attributes || {}), JSON.stringify(b.skills || []), JSON.stringify(b.powers || []),
     p.hp ?? null, p.hp ?? null, p.sdc ?? null, p.sdc ?? null, p.mdc ?? null, p.mdc ?? null,
     p.ppe ?? null, p.ppe ?? null, p.isp ?? null, p.isp ?? null,

@@ -9,6 +9,7 @@
 
 import { requireAdmin, json } from '../_lib/auth.js';
 import { loadPublished } from '../_lib/class-store.js';
+import { applyVariant, combineClasses } from '../../../../apps/character-creator/js/parser.js';
 import { validateCharacter, loadSkillCategories } from '../_lib/validate-character.js';
 import { paging } from '../_lib/paging.js';
 import { decodeCharacter } from '../_lib/character-json.js';
@@ -26,7 +27,8 @@ export async function onRequestGet({ request, env }) {
   const byId = new Map(classes.map((c) => [c.id, c]));
 
   const { results } = await env.DB.prepare(
-    `SELECT id, name, class_id, level, attributes, skills, player_email, campaign_id
+    `SELECT id, name, class_id, class_variant, occ_class_id, occ_class_variant,
+            level, attributes, skills, player_email, campaign_id
      FROM characters ORDER BY id LIMIT ? OFFSET ?`
   ).bind(limit, offset).all();
 
@@ -34,7 +36,13 @@ export async function onRequestGet({ request, env }) {
   const unvalidatable = [];
 
   for (const row of results) {
-    const cls = byId.get(row.class_id) || null;
+    // Both classes, and the character's variant, or the audit judges a
+    // Chiang-Ku Wizard against the dragon alone — reporting every skill its
+    // O.C.C. legitimately grants as a violation.
+    const rcc = applyVariant(byId.get(row.class_id) || null, row.class_variant);
+    const cls = row.occ_class_id
+      ? combineClasses(rcc, applyVariant(byId.get(row.occ_class_id) || null, row.occ_class_variant))
+      : rcc;
     decodeCharacter(row);
 
     const { skipped, violations, warnings } = validateCharacter({
