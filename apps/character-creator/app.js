@@ -392,6 +392,7 @@ function confirmClass() { S.step = 2; render(); }
 
 // Step 2 — attributes
 function renderAttributes() {
+  const classBonus = derive.classBonuses(S.cls, 1);
   const reqs = S.cls.attribute_requirements || {};
   const spent = pbSpent();
   const rows = ATTRS.map((a) => {
@@ -408,13 +409,19 @@ function renderAttributes() {
       control = `<input type="number" min="1" max="40" value="${v ?? ''}" onchange="manualSet('${a}', this.value)">`;
     }
     const req = reqs[a] ? `<span class="attr-note ${v != null && v < reqs[a] ? 'err' : 'ok'}">need ${reqs[a]}+</span>` : '';
+    // A class bonus is shown here but never rolled into the stored value — what
+    // gets saved is what was rolled, and the bonus is added wherever the number
+    // is actually used.
+    const add = classBonus.attributes[a];
+    const boost = add && v != null
+      ? ` <span class="attr-note ok">${add > 0 ? '+' : ''}${add} from ${esc(S.cls.name)} = ${v + add}</span>` : '';
     return `<tr><td><b>${a}</b></td>
       <td><select onchange="setMethod('${a}', this.value)">
         <option value="roll" ${m === 'roll' ? 'selected' : ''}>Random roll</option>
         <option value="point" ${m === 'point' ? 'selected' : ''}>Point-buy</option>
         <option value="manual" ${m === 'manual' ? 'selected' : ''}>Manual entry</option>
       </select></td>
-      <td>${control}</td><td>${req}${dice ? ` <span class="attr-note">racial dice: ${esc(dice)}</span>` : ''}</td></tr>`;
+      <td>${control}</td><td>${req}${boost}${dice ? ` <span class="attr-note">racial dice: ${esc(dice)}</span>` : ''}</td></tr>`;
   }).join('');
 
   const unmet = Object.entries(reqs).filter(([k, min]) => (S.attrs[k] ?? -1) < min);
@@ -849,7 +856,7 @@ function renderPowers() {
 // Step 6 — bio details. Optional; the derived percentages come straight from
 // the attribute tables and are shown so the numbers are not a surprise later.
 function renderDetails() {
-  const d = derive.bio(S.attrs);
+  const d = derive.bio(S.attrs, null, derive.classBonuses(S.cls, 1));
   $('app').innerHTML = `
   <div class="panel">
     <h2>Details <span class="muted small">— ${esc(S.cls.name)}</span></h2>

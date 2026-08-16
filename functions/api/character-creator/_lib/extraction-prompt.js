@@ -90,6 +90,20 @@ Optional — include only what the page actually states:
     book actually names; if the class simply chooses N spells of a given level,
     give spells_starting/spell_levels_allowed and no \`spells\` list.
 - special_abilities / natural_abilities: list of { name, description }
+- bonuses: the class's MECHANICAL grants, as numbers the app can add up.
+    { attributes: { PS: 2 }, combat: { attacks: 1, strike: 2 }, saves: { magic: 2 },
+      at_level: [ { level: 5, combat: { attacks: 1 } } ] }
+    Use it whenever the book states a flat numeric bonus — "+2 to P.S.",
+    "+1 attack per melee", "+3 to save vs magic", "+1 additional attack at
+    levels 5, 10 and 15" (which is three at_level entries, one each).
+    attributes keys are exactly IQ, ME, MA, PS, PP, PE, PB, Spd.
+    Bonuses granted from the start go in \`bonuses\` itself; ones earned later go
+    in \`at_level\` with the level they arrive at.
+    Do NOT put a bonus here that the book makes conditional ("+2 to strike when
+    flying", "+1 to parry with a sword") — those stay as prose in
+    special_abilities, because the app would apply them unconditionally.
+    Describing the ability in prose as well is correct and expected; this block
+    is in addition to that, not instead of it.
 - level_progression: list of { level: N, grants: ["...", "..."] }
 - restrictions: list of free-text strings (things the class may not do)
 - side_effects: free-text string or list — substantial drawback/cost mechanics

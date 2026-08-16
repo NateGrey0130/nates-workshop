@@ -141,29 +141,53 @@ function render() {
 
   const attrs = c.attributes || {};
   const cls = C.cls || {};
-  const bio = derive.bio(attrs, c.bio);
-  const combat = derive.combat(attrs, c.combat);
+  // What the class grants by this character's level. Attribute bonuses are not
+  // stored on the character — they are added on the way past, so `attributes`
+  // stays the numbers that were actually rolled.
+  const bonuses = derive.classBonuses(cls, c.level);
+  const effAttrs = derive.effective(attrs, bonuses);
+  const combatParts = derive.parts('combat', attrs, bonuses);
+  const savesParts = derive.parts('saves', attrs, bonuses, cls.psionics?.type);
+
+  const bio = derive.bio(attrs, c.bio, bonuses);
+  const combat = derive.combat(attrs, c.combat, bonuses);
   // The class supplies the psychic tier, which only affects the psionic save
   // TARGET. A character with no psionics block is not psychic and gets 15+,
   // which is the right number for them anyway.
-  const saves = derive.saves(attrs, c.saves, cls.psionics?.type);
+  const saves = derive.saves(attrs, c.saves, cls.psionics?.type, bonuses);
   const armorList = Array.isArray(c.armor) ? c.armor : [];
 
   // An editable field: an input for owner/GM, plain text otherwise. Values that
   // came from the attribute tables rather than being typed are marked, so it is
   // obvious what is calculated and what a human set.
+  // Where a derived number came from, for the hover text. A folded-in bonus you
+  // cannot account for is indistinguishable from a bug, so the split is always
+  // available even though the sheet shows one number.
+  const explain = (parts, key) => {
+    const p = parts?.[key];
+    if (!p) return 'Derived from attributes — type to override';
+    const bits = [];
+    if (p.attrs) bits.push(`${p.attrs > 0 ? '+' : ''}${p.attrs} from attributes`);
+    if (p.from_class) bits.push(`${p.from_class > 0 ? '+' : ''}${p.from_class} from ${cls.name || 'the class'}`);
+    if (!bits.length) return 'Derived from attributes — type to override';
+    return `${bits.join(', ')} — type to override`;
+  };
+
   const editField = (section, key, label, value, stored, opts = {}) => {
     const isDerived = derive.isDerived(stored, key);
     const suffix = opts.suffix || '';
+    const why = isDerived ? explain(opts.parts, key) : 'Set manually';
+    // A class contribution is worth seeing without hovering, so it is marked.
+    const fromClass = isDerived && opts.parts?.[key]?.from_class ? ' class-boosted' : '';
     if (!w) {
       return `<div class="field"><span class="lbl">${label}</span><span class="dots"></span>
-        <span class="val${isDerived ? ' dim' : ''}">${escHtml(String(value ?? '—'))}${suffix}</span></div>`;
+        <span class="val${isDerived ? ' dim' : ''}${fromClass}" title="${escHtml(why)}">${escHtml(String(value ?? '—'))}${suffix}</span></div>`;
     }
     return `<div class="field"><span class="lbl">${label}</span><span class="dots"></span>
       <span class="val">
-        <input class="mini-in${isDerived ? ' derived' : ''}" data-sec="${section}" data-key="${key}"
+        <input class="mini-in${isDerived ? ' derived' : ''}${fromClass}" data-sec="${section}" data-key="${key}"
           type="${opts.type || 'text'}" value="${escHtml(stored?.[key] ?? '')}"
-          placeholder="${escHtml(String(value ?? ''))}" title="${isDerived ? 'Derived from attributes — type to override' : 'Set manually'}">${suffix}
+          placeholder="${escHtml(String(value ?? ''))}" title="${escHtml(why)}">${suffix}
         <b class="print-only">${escHtml(String(value ?? '—'))}${suffix}</b>
       </span></div>`;
   };
@@ -217,7 +241,14 @@ function render() {
 
   <div class="sheet-grid rail" style="margin-top:12px">
     ${box('Attributes', `<div class="attr-stack">
-      ${ATTRS.map((a) => field(a, attrs[a] ?? '—')).join('')}
+      ${ATTRS.map((a) => {
+        const add = bonuses.attributes[a];
+        // The stored attribute is what was rolled; the class bonus rides
+        // alongside it so both stay legible, and effAttrs is what the tables read.
+        return field(a, attrs[a] == null ? '—'
+          : add ? `${attrs[a]} <span class="attr-bonus" title="${escHtml(`${add > 0 ? '+' : ''}${add} from ${cls.name || 'the class'}`)}">${add > 0 ? '+' : ''}${add}</span> = ${effAttrs[a]}`
+          : attrs[a]);
+      }).join('')}
     </div>`)}
 
     ${box('Vitals', `<div class="vitals">${vitals || '<span class="muted small">None recorded.</span>'}</div>
@@ -249,11 +280,11 @@ function render() {
         `vs Psionics — roll${cls.psionics?.type ? ` (${escHtml(cls.psionics.type)})` : ''}`,
         saves.psionics_target, c.saves, { suffix: '+' }) +
       SAVE_FIELDS.map(([k, l]) =>
-      editField('saves', k, l, saves[k], c.saves, { suffix: k === 'coma_death_pct' ? '%' : '' })).join(''),
+      editField('saves', k, l, saves[k], c.saves, { suffix: k === 'coma_death_pct' ? '%' : '', parts: savesParts })).join(''),
       '<span class="muted" style="font-size:9px">DERIVED · OVERRIDABLE</span>')}
 
     ${box('Combat', COMBAT_FIELDS.map(([k, l]) =>
-      editField('combat', k, l, combat[k], c.combat)).join(''))}
+      editField('combat', k, l, combat[k], c.combat, { parts: combatParts })).join(''))}
 
     ${box('Armor', `<div id="armor-list">${armorRows}</div>` +
       (armorRows ? '' : '<p class="muted small" id="armor-empty">No armor recorded.</p>') +

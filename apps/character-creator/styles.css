@@ -442,6 +442,17 @@ pre.snippet {
 .dupe-name { font-weight: 600; }
 .dupe-vs { color: var(--text-muted); font-size: 11px; }
 
+/* A class bonus riding alongside the rolled attribute, rather than folded into
+   it — the stored number stays the one that was rolled. */
+.attr-bonus {
+  color: var(--success, #2e7d32); font-weight: 700; font-size: 0.9em;
+  cursor: help;
+}
+/* A derived number the class contributed to. Marked so a boosted value is
+   visible without hovering; the hover says how much came from where. */
+.class-boosted { border-bottom: 1px dotted var(--success, #2e7d32); cursor: help; }
+input.class-boosted { border-bottom-width: 2px; }
+
 /* The unique key (gear's slug), shown apart from the stat columns because it is
    identity, not a statistic — and because class markdown cites it. */
 .cat-key {

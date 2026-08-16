@@ -102,6 +102,23 @@ export function buildProposal(character, cls, toLevel) {
     }
   }
 
+  // Mechanical bonuses the class grants for crossing these levels, as opposed
+  // to `grants` above, which is the book's wording and display-only.
+  //
+  // Reported, not written. Bonuses are applied by reading the class at render
+  // time — derive.classBonuses(cls, level) — so crossing the level IS applying
+  // them, and nothing needs to be stored on the character. This is here so the
+  // level-up diff can say what is about to change rather than having a number
+  // move on its own.
+  proposal.bonuses = (cls.bonuses?.at_level || [])
+    .filter((step) => typeof step?.level === 'number' && step.level > fromLevel && step.level <= toLevel)
+    .map((step) => ({
+      level: step.level,
+      attributes: step.attributes || {},
+      combat: step.combat || {},
+      saves: step.saves || {},
+    }));
+
   // Claimable skill picks, as opposed to `grants` above, which is advisory text.
   proposal.skill_picks = skillGrantsFor(cls, fromLevel, toLevel);
   proposal.skill_picks_total = proposal.skill_picks.reduce((n, g) => n + g.count, 0);
