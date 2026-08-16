@@ -17,6 +17,7 @@ import {
 import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
 import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
 import { skillGrantsFor } from '../../../functions/api/character-creator/_lib/leveling.js';
+import { rollPoolFormula } from '../js/dice.js';
 import { similarity, normaliseName, classesMentioning, findDuplicates } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
 import {
   keysOf, redirectStatements, collapseStatement, resolveKeys,
@@ -1023,6 +1024,39 @@ check('awkward strings survive quoting', (() => {
   return v.name === 'Adult: the "big" one' && v.mdc_base === '1d6x1000';
 })());
 
+// ---------- 1c11b. The class prompt covers the schema ----------
+// A field the schema supports and the prompt never mentions is a field that
+// never gets extracted. `variants` shipped without being added here, so the
+// first real two-stage class came back with BOTH stat blocks dropped — the
+// numbers the entry exists for.
+console.log('\n[1c11b] Class prompt covers the schema');
+{
+  const prompt = readFileSync(
+    join(repoRoot, 'functions', 'api', 'character-creator', '_lib', 'extraction-prompt.js'), 'utf8');
+  for (const key of ['variants', 'bonuses', 'attribute_dice', 'equipment_starting',
+                     'level_progression', 'psionics', 'magic', 'special_abilities']) {
+    check(`the prompt documents \`${key}\``, prompt.includes(key));
+  }
+  // The two rules a variant is easy to get wrong on.
+  check('the prompt says what a variant may override', /may override ONLY/.test(prompt));
+  check('the prompt says shared material stays at the top level', /stays at the top level/.test(prompt));
+
+  // A bonus filed under a key derive.js does not produce is stored and never
+  // read. The first real class came back with four of them — roll_with_punch,
+  // pull_punch, magic, illusionary_magic — all silently inert.
+  const deriveWin = {};
+  new Function('globalThis', readFileSync(join(appDir, 'js', 'derive.js'), 'utf8')).call(deriveWin, deriveWin);
+  const realKeys = [
+    ...Object.keys(deriveWin.derive.combat({})),
+    ...Object.keys(deriveWin.derive.saves({})),
+  ];
+  for (const key of ['attacks', 'strike', 'parry', 'dodge', 'roll', 'spell_magic', 'ritual_magic', 'horror_factor']) {
+    check(`the prompt lists the real bonus key \`${key}\``, prompt.includes(key) && realKeys.includes(key));
+  }
+  check('the prompt warns that an unknown bonus key does nothing',
+    /silently does nothing/.test(prompt));
+}
+
 // ---------- 1c12. Class variants ----------
 // Several RCCs come in stages: a Dragon is a hatchling, then an adult, sharing
 // lore, skills and abilities while differing in attribute dice, M.D.C. and what
@@ -1187,6 +1221,35 @@ const html = Picker.inputHtml({ id: 'x-filter', value: 'a "quoted" value', shown
 check('the input renders its count', html.includes('3 of 99'));
 check('the input escapes quotes in its value', html.includes('&quot;quoted&quot;') && !html.includes('"quoted"'));
 check('the count is omitted when there is no total', !Picker.inputHtml({ id: 'y' }).includes('pick-count'));
+
+// ---------- 1c15. Pool formulas ----------
+// Every one of these is a real formula from a sourcebook. Three of the five
+// returned NULL before, which meant a character imported from that class was
+// created with no hit points, no P.P.E. and no I.S.P. at all.
+console.log('\n[1c15] Pool formulas');
+{
+  const attrs = { PE: 10, ME: 20 };
+  const r = (f) => rollPoolFormula(f, attrs);
+  const between = (v, lo, hi) => typeof v === 'number' && v >= lo && v <= hi;
+
+  check('plain dice', between(r('4D6x100'), 400, 2400));
+  check('a plain number is taken as-is', r('20') === 20);
+  check('attribute then dice', between(r('P.E. + 1d6 per level'), 11, 16));
+  // The order books actually use as often as the other, and the one that used
+  // to fall through to null.
+  check('dice then attribute', between(r('2D4x100+200 plus P.E. attribute number'), 410, 1010));
+  check('dice then a different attribute', between(r('3D4x10 + M.E. attribute number'), 50, 140));
+  // Books qualify these heavily; the leading figure is the one they lead with.
+  check('dice leading a qualified sentence',
+    between(r('3D4x100+1000 when in natural serpent form (only 3D4x100 when in humanoid form)'), 1300, 2200));
+
+  check('no numbers at all stays null', r('varies by GM ruling') === null);
+  check('null and undefined stay null', r(null) === null && r(undefined) === null);
+  // A number the formula cannot supply must not be invented from a missing
+  // attribute — the bonus is skipped, not treated as zero silently.
+  check('an attribute the character lacks falls back to the dice alone',
+    between(rollPoolFormula('2D4x10 plus P.E. attribute number', {}), 20, 80));
+}
 
 // ---------- 1d. Paging ----------
 // A stray query string must not turn a list endpoint into a 400, so anything

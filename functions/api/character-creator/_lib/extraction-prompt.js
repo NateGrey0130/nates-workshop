@@ -43,6 +43,29 @@ Optional — include only what the page actually states:
 - attribute_requirements: map of attribute → minimum (e.g. \`ME: 12\`)
 - attribute_dice: map of attribute → roll string, for RCCs with racial stats
 - hit_points_base / sdc_base / mdc_base / ppe_base: formula strings or numbers
+- variants: use this when the page gives MORE THAN ONE set of statistics for the
+    same creature — most often age stages ("hatchling" and "adult"), sometimes
+    forms or castes. Without it the second stat block has nowhere to go and gets
+    dropped, which loses exactly the numbers the entry exists for.
+      variants:
+        - id: hatchling            # lower-case slug, unique within the class
+          name: "Chiang-Ku Hatchling"
+          attribute_dice: { PS: "4d6+12" }
+          mdc_base: "1d4x100"
+        - id: adult
+          name: "Adult Chiang-Ku"
+          attribute_dice: { PS: "4d6+30" }
+          mdc_base: "1d6x1000"
+          bonuses: { combat: { attacks: 2 } }
+    Everything the stages SHARE — skills, natural_abilities, special_abilities,
+    psionics, magic, equipment, lore — stays at the top level and is written
+    once. A variant may override ONLY attribute_dice, attribute_requirements,
+    hit_points_base, sdc_base, mdc_base, ppe_base and bonuses; anything else in
+    a variant is ignored.
+    attribute_dice and attribute_requirements merge per attribute, so a variant
+    naming only P.S. keeps the others from the top level. The rest replace.
+    If a stat differs between stages, put it in the variants and NOT at the top
+    level. If the page describes only one form, omit variants entirely.
 - skills:
     occ_skills: list. Each entry is EITHER a fixed skill:
         - { name: "Radio: Basic", base: 40, per_level: 5 }
@@ -96,7 +119,17 @@ Optional — include only what the page actually states:
     Use it whenever the book states a flat numeric bonus — "+2 to P.S.",
     "+1 attack per melee", "+3 to save vs magic", "+1 additional attack at
     levels 5, 10 and 15" (which is three at_level entries, one each).
-    attributes keys are exactly IQ, ME, MA, PS, PP, PE, PB, Spd.
+    Use ONLY these keys. A bonus filed under any other name is stored and then
+    never read by anything — it silently does nothing, which is worse than
+    leaving it as prose.
+      attributes: IQ, ME, MA, PS, PP, PE, PB, Spd
+      combat:     attacks, initiative, strike, parry, dodge, roll, damage_bonus
+                  ("roll" is roll with punch/fall/impact)
+      saves:      spell_magic, ritual_magic, psionics, toxins_poisons,
+                  harmful_drugs, insanity, possession, horror_factor, pain
+    A book's flat "+2 to save vs magic" covers both spell_magic and ritual_magic
+    — give both. A bonus the list cannot express (pull punch, save vs
+    illusionary magic) belongs in prose, not under an invented key.
     Bonuses granted from the start go in \`bonuses\` itself; ones earned later go
     in \`at_level\` with the level they arrive at.
     Do NOT put a bonus here that the book makes conditional ("+2 to strike when
