@@ -523,6 +523,25 @@ Extraction fills this in from flat numeric statements, and is told explicitly to
 leave **conditional** bonuses as prose — *"+2 to strike when flying"* would
 otherwise be applied unconditionally.
 
+### The review step
+
+Attributes and pools sit side by side as two aligned columns; every list —
+skills, equipment, spells, psionic powers — runs **down** in columns of fifteen
+rather than wrapping across as one dot-separated paragraph. Spells and psionics
+are separate sections, and a section with nothing in it is omitted rather than
+shown empty.
+
+A Chiang-Ku Hatchling arrives with 34 skills. As prose that was unreadable, and
+it hid the thing that mattered: the same skill appearing twice.
+
+**A choice-group never offers a skill the class already grants.** A category
+group offers the whole category, which includes skills the class hands out
+outright — the Chiang-Ku grants Advanced Math and Art as fixed skills and then
+offers Science and Technical. Picking one listed the skill twice and the save
+was refused for a duplicate, with no indication of which one. Already-held
+skills are now dropped from the options rather than shown disabled: it is not a
+choice you might make, it is one you already have.
+
 ---
 
 ## Which system a catalog row belongs to

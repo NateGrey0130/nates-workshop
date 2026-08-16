@@ -592,7 +592,21 @@ function renderSkills() {
     const optionNames = (s.from || []).length
       ? (s.from || []).map((raw) => (typeof raw === 'string' ? raw : raw?.name))
       : catalogFor(s.categories).map((sk) => sk.name);
-    const opts = optionNames.map((name) => {
+
+    // A category group offers the whole category, which includes skills this
+    // very class already grants outright — the Chiang-Ku grants Advanced Math
+    // and Art as fixed skills and then offers Science and Technical. Picking
+    // one listed the skill twice and the save was refused with a duplicate.
+    //
+    // Anything already held is dropped from the options rather than shown
+    // disabled: it is not a choice you might make, it is one you already have.
+    const alreadyHeld = new Set([
+      ...(sk.occ_skills || []).filter((x) => !isGroup(x) && x.name).map((x) => String(x.name).toLowerCase()),
+      ...Object.entries(S.groupPicks)
+        .filter(([k]) => Number(k) !== gi)
+        .flatMap(([, v]) => v).map((n) => String(n).toLowerCase()),
+    ]);
+    const opts = optionNames.filter((name) => name && !alreadyHeld.has(String(name).toLowerCase())).map((name) => {
       const on = picked.includes(name);
       const blocked = !on && picked.length >= s.choose;
       return `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}; margin-left:18px">
@@ -984,6 +998,32 @@ function skillsPayload() {
     ...S.secondary.map((n) => ({ name: n, category: find(n).category, pct: find(n).base || 0, per_level: 0, type: 'secondary' })),
   ];
 }
+// ---------- review layout ----------
+// The review used to run everything together as one dot-separated paragraph.
+// A Chiang-Ku Hatchling arrives with 31 skills, which as prose is unreadable
+// and — more to the point — hides the duplicates that make a save fail.
+
+const REVIEW_COLUMN = 15;   // entries per column before a new one starts
+
+function poolRow(label, v) {
+  return v == null ? '' : `<div class="stat-row"><span>${label}</span><b>${v}</b></div>`;
+}
+
+// A section laid out in columns of REVIEW_COLUMN, so a long list reads down
+// rather than wrapping across. Omitted entirely when there is nothing in it —
+// a class with no spells should not show an empty Spells heading.
+function listSection(title, entries) {
+  if (!entries.length) return '';
+  const columns = [];
+  for (let i = 0; i < entries.length; i += REVIEW_COLUMN) {
+    columns.push(entries.slice(i, i + REVIEW_COLUMN));
+  }
+  return `<h3>${title} <span class="muted small">(${entries.length})</span></h3>
+    <div class="review-cols">
+      ${columns.map((col) => `<ul class="review-col">${col.map((e) => `<li>${e}</li>`).join('')}</ul>`).join('')}
+    </div>`;
+}
+
 function renderReview() {
   if (!S.pools) computePools();
   const p = S.pools;
@@ -1004,20 +1044,26 @@ function renderReview() {
     </div>
 
     <h3>${esc(S.cls.name)} <span class="muted small">(${esc(S.system)} · ${esc(S.cls.category)})</span> — Level 1, 0 XP</h3>
-    <div>${ATTRS.map((a) => `<span class="statline">${a}: <b>${S.attrs[a]}</b></span>`).join('')}</div>
-    <h3>Pools <button class="btn btn-sm btn-ghost" onclick="computePools(); render()">↻ reroll</button></h3>
-    <div>${stat('H.P.', p.hp)}${stat('S.D.C.', p.sdc)}${stat('M.D.C.', p.mdc)}${stat('P.P.E.', p.ppe)}${stat('I.S.P.', p.isp)}</div>
-    <p class="muted small">Rolled from the class formulas (${esc(S.cls.hit_points_base || S.cls.mdc_base || '')}…). Reroll if your GM lets you.</p>
 
-    <h3>Skills (${skillsPayload().length})</h3>
-    <p class="small">${skillsPayload().map((s) => esc(s.name) + (s.pct ? ` ${s.pct}%` : '')).join(' · ')}</p>
-    <h3>Equipment (${equipmentPayload().length})</h3>
-    <p class="small">${equipmentPayload().map((e) => esc(e.name || e.custom_name) + (e.qty > 1 ? ` ×${e.qty}` : '')).join(' · ') || '—'}</p>
+    <div class="review-stats">
+      <div class="stat-col">
+        <h4>Attributes</h4>
+        ${ATTRS.map((a) => `<div class="stat-row"><span>${a}</span><b>${S.attrs[a] ?? '—'}</b></div>`).join('')}
+      </div>
+      <div class="stat-col">
+        <h4>Pools <button class="btn btn-sm btn-ghost" onclick="computePools(); render()">↻ reroll</button></h4>
+        ${poolRow('H.P.', p.hp)}${poolRow('S.D.C.', p.sdc)}${poolRow('M.D.C.', p.mdc)}
+        ${poolRow('P.P.E.', p.ppe)}${poolRow('I.S.P.', p.isp)}
+        <p class="muted small" style="margin-top:6px">Rolled from the class formulas. Reroll if your GM lets you.</p>
+      </div>
+    </div>
 
-    ${powersPayload().length ? `<h3>Powers (${powersPayload().length})</h3>
-      <p class="small">${powersPayload().map((p) =>
-        esc(p.name) + ` <span class="muted">(${p.type === 'spell' ? 'L' + p.level + ' · ' + p.cost + ' P.P.E.' : esc(p.category) + ' · ' + p.cost + ' I.S.P.'})</span>`
-      ).join(' · ')}</p>` : ''}
+    ${listSection('Skills', skillsPayload().map((s) => esc(s.name) + (s.pct ? ` <span class="muted">${s.pct}%</span>` : '')))}
+    ${listSection('Equipment', equipmentPayload().map((e) => esc(e.name || e.custom_name) + (e.qty > 1 ? ` <span class="muted">×${e.qty}</span>` : '')))}
+    ${listSection('Spells', powersPayload().filter((x) => x.type === 'spell')
+      .map((x) => esc(x.name) + ` <span class="muted">L${x.level} · ${x.cost} P.P.E.</span>`))}
+    ${listSection('Psionic powers', powersPayload().filter((x) => x.type === 'psionic')
+      .map((x) => esc(x.name) + ` <span class="muted">${esc(x.category)} · ${x.cost} I.S.P.</span>`))}
     <p class="warn" id="save-msg"></p>
   </div>
   <div class="nav"><button class="btn btn-ghost" onclick="goStep(6)">&larr; Back</button>
