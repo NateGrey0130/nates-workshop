@@ -13,7 +13,7 @@ steps" and then lists six).
 
 | Step | Printed | Built? |
 |---|---|---|
-| 1. The Eight Attributes & bonuses | p.14–16 | partly — chart done, rolling has gaps |
+| 1. The Eight Attributes & bonuses | p.14–16 | yes |
 | 2. Hit Points and S.D.C. | p.18 | yes, via per-class formulas |
 | 3. How to Determine Psionics | p.20–21 | no — class-driven only |
 | 4. Selecting a Race and O.C.C. | p.21–22 | yes; skill percentages incomplete |
@@ -73,8 +73,9 @@ attribute tables", which is why it went unexamined for so long.
   rolls.
 - A racial bonus may be written into the dice, e.g. `3D6+6`.
 
-Only the first clause of the exceptional rule is implemented, and only when the
-class does not state its own dice. See [Known limitations](../README.md#known-limitations-and-refactor-candidates).
+All of the above is implemented in [`js/dice.js`](../js/dice.js) and asserted in
+smoke `[1c18]`, including the chain stopping at two dice and the threshold
+reading the dice rather than the total.
 
 ## Step 2 — hit points and S.D.C. (p.18)
 

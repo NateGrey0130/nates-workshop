@@ -4,14 +4,70 @@
 
 export const d = (sides) => 1 + Math.floor(Math.random() * sides);
 
+const DICE_EXPR = /^(\d+)\s*d\s*(\d+)(?:\s*x\s*(\d+))?(?:\s*([+-])\s*(\d+))?$/i;
+
 export function evalDice(expr) {
-  const m = String(expr).trim().match(/^(\d+)\s*d\s*(\d+)(?:\s*x\s*(\d+))?(?:\s*([+-])\s*(\d+))?$/i);
+  const m = String(expr).trim().match(DICE_EXPR);
   if (!m) return null;
   let total = 0;
   for (let i = 0; i < +m[1]; i++) total += d(+m[2]);
   if (m[3]) total *= +m[3];
   if (m[4]) total += (m[4] === '-' ? -1 : 1) * +m[5];
   return total;
+}
+
+// ─── exceptional attribute rolls ───
+//
+// Palladium Fantasy RPG 2nd Ed., p.14. An attribute rolled on 3D6 that comes up
+// 16, 17 or 18 earns one extra 1D6. If that die is a six it earns ONE more, and
+// the chain stops there however the second lands — "even if this last roll is a
+// six, the player does not roll again". An attribute rolled on 2D6 earns its
+// extra die on a 12.
+//
+// Nothing else qualifies. 4D6, 5D6 and 6D6 are excluded by name, however high
+// they roll, and the book says nothing about other pools — so they get nothing
+// rather than an invented threshold.
+const EXCEPTIONAL_AT = { 2: 12, 3: 16 };
+
+// The threshold is read on the DICE, before any flat racial bonus. A race
+// written as 3D6+6 is exceptional when its dice show 16, not when the total
+// reaches 16 — otherwise a below-average roll of 10 would earn the reward the
+// rule reserves for the top of the range.
+//
+// Returns the parts rather than a bare number so the wizard can show its work:
+// an unexplained 24 from a 3d6 looks like a bug, and the chained second die
+// looks like one even when it is right.
+export function rollAttribute(expr) {
+  const s = String(expr ?? '').trim() || '3d6';
+  const m = s.match(DICE_EXPR);
+  // An unparseable expression is not a reason to leave the attribute empty;
+  // fall back to the human default rather than returning null.
+  if (!m) return rollAttribute('3d6');
+
+  const count = +m[1], sides = +m[2];
+  const multiplier = m[3] ? +m[3] : 1;
+  const modifier = m[4] ? (m[4] === '-' ? -1 : 1) * +m[5] : 0;
+
+  let base = 0;
+  for (let i = 0; i < count; i++) base += d(sides);
+  base *= multiplier;
+
+  // Only the two six-sided pools the book names, and only when nothing has been
+  // multiplied in — a multiplied pool is a hit-point formula, not an attribute.
+  const threshold = sides === 6 && multiplier === 1 ? EXCEPTIONAL_AT[count] : undefined;
+  const exceptional = [];
+  if (threshold !== undefined && base >= threshold) {
+    exceptional.push(d(6));
+    if (exceptional[0] === 6) exceptional.push(d(6));
+  }
+
+  return {
+    notation: s,
+    base,
+    modifier,
+    exceptional,
+    total: base + modifier + exceptional.reduce((a, b) => a + b, 0),
+  };
 }
 
 // A pool's starting value from its class formula.
