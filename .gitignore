@@ -8,6 +8,9 @@
 # dependencies
 node_modules
 
+# Claude Code: launch.json is shared, local permissions are not
+.claude/settings.local.json
+
 # OS junk
 desktop.ini
 .DS_Store

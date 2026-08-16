@@ -1298,6 +1298,12 @@ npx wrangler d1 execute DB --local --file db/seed-catalogs.sql
 npx wrangler pages dev
 ```
 
+The app is served at <http://localhost:8788/apps/character-creator/> — the path
+mirrors the repo layout, because `pages_build_output_dir` is the repo root and
+nothing rewrites it. `/character-creator/` is *not* the URL; it silently returns
+the workshop landing page, since Pages falls back to the root `index.html` for
+paths it cannot match.
+
 A database created before the `db/migrations/` files existed also needs those,
 once each — see [Production configuration](#production-configuration).
 
