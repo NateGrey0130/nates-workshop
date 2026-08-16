@@ -24,6 +24,10 @@ export async function onRequestPost({ request, env }) {
     warnings: parsed.warnings,
     extraction_notes: parsed.data?.extraction_notes ?? null,
     class_id: parsed.data?.id ?? null,
+    // The parsed frontmatter, so the review page's structured editors can read
+    // `bonuses` and `variants` without a YAML parser of their own — import.js
+    // is a classic script and parser.js is a module it cannot import.
+    data: parsed.data ?? null,
     missing,
   });
 }

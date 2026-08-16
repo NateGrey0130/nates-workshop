@@ -7,7 +7,7 @@ import { readFileSync, readdirSync, writeFileSync, rmSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseClassMarkdown, isGearChoice, applyVariant } from '../js/parser.js';
+import { parseClassMarkdown, isGearChoice, applyVariant, parseYaml } from '../js/parser.js';
 import { referencedGear } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import {
@@ -67,6 +67,18 @@ check('attribute_dice map', dh.data.attribute_dice?.PS === '4d6+12');
 check('mdc_base + magic block', dh.data.mdc_base === '1d4x100' && dh.data.magic?.spell_levels_allowed?.length === 2);
 check('natural_abilities', dh.data.natural_abilities?.length === 4);
 check('restrictions scalar list', dh.data.restrictions?.length === 2);
+
+// Quoted scalars. The two YAML styles escape differently, and stripping the
+// outer pair without unescaping left backslashes in the value — reachable from
+// book text, which quotes things often enough to matter.
+check('a double-quoted string is unescaped', (() => {
+  const y = parseYaml('a: "Adult: the \\"big\\" one"\nb: "back\\\\slash"');
+  return y.a === 'Adult: the "big" one' && y.b === 'back\\slash';
+})());
+check('a single-quoted string doubles its quote instead',
+  parseYaml("a: 'it''s here'").a === "it's here");
+check('an unquoted string is untouched', parseYaml('a: plain value').a === 'plain value');
+check('a lone quote character is not treated as quoting', parseYaml('a: "').a === '"');
 
 // Invalid input must be rejected, not silently accepted.
 const bad = parseClassMarkdown('---\nname: Nameless\nsystem: gurps\ncategory: occ\n---\nbody');
@@ -919,6 +931,97 @@ for (const [what, re] of [['variants', /# variants:/], ['bonuses', /^bonuses:/m]
 }
 check('an unknown kind falls back to the OCC shape',
   parseClassMarkdown(classTemplate('nonsense', { id: 'a', name: 'A', system: 'rifts', sourceBook: 'B' })).data.category === 'occ');
+
+// ---------- 1c14. Frontmatter block editing ----------
+// The structured editors rewrite ONE top-level block and leave every byte
+// outside it alone. Regenerating the whole frontmatter would have been simpler
+// and would have destroyed the template's comments, which are most of what
+// makes a hand-written class approachable.
+console.log('\n[1c14] Frontmatter block editing');
+
+const blkWindow = {};
+new Function('globalThis', readFileSync(join(appDir, 'js', 'class-blocks.js'), 'utf8')).call(blkWindow, blkWindow);
+const B = blkWindow.classBlocks;
+
+check('bonuses flatten to (level, group, key, value) rows', (() => {
+  const rows = B.bonusesToRows({ attributes: { PS: 4 }, at_level: [{ level: 5, combat: { attacks: 1 } }] });
+  return rows.length === 2
+    && rows[0].level === null && rows[0].group === 'attributes' && rows[0].key === 'PS' && rows[0].value === 4
+    && rows[1].level === 5 && rows[1].group === 'combat';
+})());
+check('rows fold back into a bonuses block', (() => {
+  const b = B.rowsToBonuses([
+    { level: null, group: 'attributes', key: 'PS', value: 4 },
+    { level: 5, group: 'combat', key: 'attacks', value: 1 },
+    { level: 5, group: 'saves', key: 'psionics', value: 2 },
+  ]);
+  return b.attributes.PS === 4 && b.at_level.length === 1
+    && b.at_level[0].combat.attacks === 1 && b.at_level[0].saves.psionics === 2;
+})());
+check('an incomplete row is dropped rather than written as junk',
+  Object.keys(B.rowsToBonuses([{ level: null, group: 'combat', key: '', value: 1 },
+                               { level: null, group: 'combat', key: 'attacks', value: NaN }])).length === 0);
+check('rows survive a round trip', (() => {
+  const original = { attributes: { PS: 4 }, combat: { attacks: 2 }, at_level: [{ level: 5, combat: { attacks: 1 } }] };
+  const back = B.rowsToBonuses(B.bonusesToRows(original));
+  return JSON.stringify(back) === JSON.stringify(original);
+})());
+
+const tpl = classTemplate('rcc', { id: 'w', name: 'Wyrm', system: 'rifts', sourceBook: 'RUE' });
+
+check('writing a block leaves the file parseable', (() => {
+  const md = B.write(tpl, 'bonuses', { attributes: { PS: 4 }, at_level: [{ level: 5, combat: { attacks: 1 } }] });
+  const p = parseClassMarkdown(md);
+  return p.ok && p.data.bonuses.attributes.PS === 4 && p.data.bonuses.at_level[0].level === 5;
+})());
+
+// The whole point: everything outside the edited block is untouched.
+check('comments and sibling keys outside the block survive', (() => {
+  const md = B.write(tpl, 'bonuses', { combat: { attacks: 1 } });
+  const p = parseClassMarkdown(md);
+  return /# A choice-group instead of a name/.test(md)
+      && /# When the book says/.test(md)
+      && /## Lore/.test(md)
+      && p.data.mdc_base === '1d4x100'
+      && p.data.skills.secondary_skills.count === 2;
+})());
+
+// Fields the form does not show must survive, or editing a variant's name would
+// silently drop its attribute dice.
+check('unedited keys inside a rebuilt block survive', (() => {
+  const withVariants = B.write(tpl, 'variants', [
+    { id: 'adult', name: 'Adult Wyrm', attribute_dice: { PS: '4d6+30' }, bonuses: { attributes: { PS: 4 } } },
+  ]);
+  const parsed = parseClassMarkdown(withVariants).data.variants;
+  const renamed = B.write(withVariants, 'variants', parsed.map((v) => ({ ...v, name: 'Renamed' })));
+  const after = parseClassMarkdown(renamed).data.variants[0];
+  return after.name === 'Renamed' && after.attribute_dice.PS === '4d6+30' && after.bonuses.attributes.PS === 4;
+})());
+
+// The template ships these commented as worked examples; appending a real block
+// would leave the file appearing to define the same key twice.
+check('a commented-out example is replaced, not duplicated', (() => {
+  const md = B.write(tpl, 'variants', [{ id: 'a', name: 'A' }]);
+  return !/# variants:/.test(md) && /^variants:/m.test(md)
+      && /# Stages of the same creature/.test(md);   // the explanation above it stays
+})());
+
+check('an empty value removes the block', (() => {
+  const md = B.write(B.write(tpl, 'bonuses', { combat: { attacks: 1 } }), 'bonuses', {});
+  return !/^bonuses:/m.test(md) && parseClassMarkdown(md).ok;
+})());
+check('reading a block back returns its text',
+  /attacks: 1/.test(B.read(B.write(tpl, 'bonuses', { combat: { attacks: 1 } }), 'bonuses') || ''));
+check('reading an absent block returns null', B.read(tpl, 'nonexistent') === null);
+check('markdown with no frontmatter is returned unchanged',
+  B.write('just prose', 'bonuses', { combat: { attacks: 1 } }) === 'just prose');
+
+// A value that would change meaning unquoted has to come back as it went in.
+check('awkward strings survive quoting', (() => {
+  const md = B.write(tpl, 'variants', [{ id: 'a', name: 'Adult: the "big" one', mdc_base: '1d6x1000' }]);
+  const v = parseClassMarkdown(md).data.variants[0];
+  return v.name === 'Adult: the "big" one' && v.mdc_base === '1d6x1000';
+})());
 
 // ---------- 1c12. Class variants ----------
 // Several RCCs come in stages: a Dragon is a hatchling, then an adult, sharing

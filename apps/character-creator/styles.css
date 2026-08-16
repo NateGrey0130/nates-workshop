@@ -468,6 +468,24 @@ input.class-boosted { border-bottom-width: 2px; }
   font-size: 11px; font-weight: 700; line-height: 16px; text-align: center;
 }
 
+
+/* Structured editors above the markdown. Collapsed by default — the file stays
+   the thing you are editing; these are for the two blocks whose shape is hard
+   to remember. */
+.block-editors {
+  margin: 10px 0; padding: 8px 10px;
+  background: var(--bg-secondary); border-radius: var(--radius);
+}
+.block-editors > summary { cursor: pointer; font-weight: 600; font-size: 13px; }
+.block-editors h4 { margin: 12px 0 2px; font-size: 13px; }
+.block-table { width: 100%; border-collapse: collapse; margin: 4px 0 6px; }
+.block-table th {
+  text-align: left; font-size: 11px; font-weight: 600;
+  color: var(--text-muted); padding: 2px 6px 2px 0;
+}
+.block-table td { padding: 2px 6px 2px 0; vertical-align: middle; }
+@media print { .block-editors { display: none; } }
+
 /* Catalog picker filters. The count is half the point — it says whether to keep
    typing, and whether an empty list means "no match" or "empty catalog". */
 .pick-filter {
