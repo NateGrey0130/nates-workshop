@@ -874,6 +874,52 @@ check('parts() separates the attribute half from the class half', (() => {
       && p.attacks.attrs === 2 && p.attacks.from_class === 1;
 })());
 
+// ---------- 1c13. Class template ----------
+// A starting point for writing a class by hand. The one thing that must hold is
+// that it PARSES on arrival — a template that fails validation the moment it is
+// created teaches you nothing about which of your own edits broke it.
+console.log('\n[1c13] Class template');
+
+const tplWindow = {};
+new Function('globalThis', readFileSync(join(appDir, 'js', 'class-template.js'), 'utf8')).call(tplWindow, tplWindow);
+const classTemplate = tplWindow.classTemplate;
+
+for (const kind of ['occ', 'rcc']) {
+  const md = classTemplate(kind, {
+    id: 'test-' + kind, name: 'Test Name', system: 'rifts', sourceBook: 'Rifts Ultimate Edition',
+  });
+  const p = parseClassMarkdown(md);
+  check(`the ${kind} template parses clean`, p.ok && !p.warnings.length,
+    JSON.stringify([...p.errors, ...p.warnings]));
+  check(`the ${kind} template carries the values it was given`,
+    p.data.id === 'test-' + kind && p.data.name === 'Test Name'
+    && p.data.system === 'rifts' && p.data.source_book === 'Rifts Ultimate Edition');
+  check(`the ${kind} template is the right category`, p.data.category === kind);
+}
+
+// The two shapes genuinely differ — a race rolls its attributes, a character
+// class has minimums — which is why there are two templates rather than one
+// with half of it commented out.
+const occTpl = classTemplate('occ', { id: 'a', name: 'A', system: 'rifts', sourceBook: 'B' });
+const rccTpl = classTemplate('rcc', { id: 'a', name: 'A', system: 'rifts', sourceBook: 'B' });
+check('the OCC template has requirements and hit points, not racial dice', (() => {
+  const d = parseClassMarkdown(occTpl).data;
+  return d.attribute_requirements && d.hit_points_base && !d.attribute_dice;
+})());
+check('the RCC template has racial dice and M.D.C., not hit points', (() => {
+  const d = parseClassMarkdown(rccTpl).data;
+  return d.attribute_dice?.PS && d.mdc_base && !d.hit_points_base;
+})());
+
+// The fiddly blocks are the reason hand-authoring is worth supporting, so the
+// template has to show their shape even while commented out.
+for (const [what, re] of [['variants', /# variants:/], ['bonuses', /^bonuses:/m],
+                          ['a gear choice', /choose: 1, label:/], ['a skill choice-group', /choose: 2, from:/]]) {
+  check(`the RCC template shows how to write ${what}`, re.test(rccTpl));
+}
+check('an unknown kind falls back to the OCC shape',
+  parseClassMarkdown(classTemplate('nonsense', { id: 'a', name: 'A', system: 'rifts', sourceBook: 'B' })).data.category === 'occ');
+
 // ---------- 1c12. Class variants ----------
 // Several RCCs come in stages: a Dragon is a hatchling, then an adult, sharing
 // lore, skills and abilities while differing in attribute dice, M.D.C. and what

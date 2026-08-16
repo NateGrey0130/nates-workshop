@@ -340,10 +340,64 @@ function storedPanel() {
         <span class="muted small">${viewingRetired
           ? '(hidden from the app; characters built on them still work)'
           : '(drafts autosave on extraction; published classes are live in the app)'}</span></h3>
-      <span style="margin-left:auto">${toggle}</span>
+      <span style="margin-left:auto; display:flex; gap:6px">
+        ${viewingRetired ? '' : '<button class="btn btn-sm" onclick="newClass()">+ Write one by hand</button>'}
+        ${toggle}
+      </span>
     </div>
     ${rows || empty}
   </div>`;
+}
+
+// Start a class from a template instead of a PDF.
+//
+// Not every class comes out of a book cleanly — an RCC with several age stages
+// is quicker to write than to extract — and there was no way in without an
+// extraction to edit. Everything the parser requires is asked for up front so
+// the draft validates the moment it exists; the rest is commented in the
+// template.
+async function newClass() {
+  const name = prompt('Class name (e.g. "Dragon (Great Horned)")');
+  if (!name) return;
+
+  const kindRaw = (prompt([
+    'Is this a character class or a race?',
+    '',
+    '  o — O.C.C., a character class',
+    '  r — R.C.C., a racial class',
+  ].join('\n')) || '').trim().toLowerCase();
+  if (!kindRaw) return;
+  const kind = kindRaw.startsWith('r') ? 'rcc' : 'occ';
+
+  const sysRaw = (prompt([
+    'Which system?',
+    '',
+    '  r — Rifts',
+    '  p — Palladium Fantasy',
+  ].join('\n')) || '').trim().toLowerCase();
+  if (!sysRaw) return;
+  const system = sysRaw.startsWith('p') ? 'palladium-fantasy' : 'rifts';
+
+  const sourceBook = prompt('Source book (required)') || '';
+  if (!sourceBook.trim()) return;
+
+  // The same slug rule the gear importer uses, so a hand-written id looks like
+  // an extracted one.
+  const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  if (I.stored.some((x) => x.class_id === id)) {
+    alert(`A class with the id "${id}" already exists. Open it instead, or choose a different name.`);
+    return;
+  }
+
+  const markdown = classTemplate(kind, { id, name, system, sourceBook: sourceBook.trim() });
+  try {
+    // Saved as a draft straight away, so a closed tab cannot lose it.
+    await api('import/stored', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ markdown }) });
+    await loadStored();
+    const check = await api('import/recheck', jsonReq({ markdown }));
+    I.result = { ...check, markdown, model: 'new from template', usage: null };
+    render();
+  } catch (err) { alert('Could not create: ' + err.message); }
 }
 
 async function toggleRetiredView() {

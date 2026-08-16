@@ -64,6 +64,8 @@ apps/character-creator/
 ├── js/picker.js              Catalog picker filtering — matching, the filter
 │                             input, and caret restore (classic script, same
 │                             reason as derive.js)
+├── js/class-template.js      Annotated OCC/RCC skeletons for writing a class by
+│                             hand (classic script — import.js is one)
 ├── db/seed-dev.sql           Optional local-dev seed rows; never applied to production
 └── test/
     ├── smoke.mjs             Parser + schema + migration-state smoke test
@@ -291,7 +293,7 @@ writes are gated (see [Permissions](#permissions)).
 | `import/sessions` | GET / POST | Admin. Resumable catalog imports: list (`?catalog=`), fetch one with its staged rows (`?id=`), create, close. `system` on create is stamped on every row the session imports |
 | `import/spells/extract` `import/psionics/extract` `import/gear/extract` | POST | Admin. One page range into a session; stages, writes no catalog rows |
 | `import/spells/confirm` `import/psionics/confirm` `import/gear/confirm` | POST | Admin. Applies a session's pending rows as one batch |
-| `import/stored` | GET / DELETE / POST | Admin. List (`?retired=1`), fetch, retire-or-delete, and POST to restore |
+| `import/stored` | GET / PUT / DELETE / POST | Admin. List (`?retired=1`), fetch, PUT saves `{markdown}` as a draft, retire-or-delete, and POST to restore |
 | `import/skills/extract` | POST | Admin. PDF → many skills, each classified against the catalog |
 | `import/skills/confirm` | POST | Admin. Apply per-skill insert/update/ignore decisions |
 
@@ -994,6 +996,41 @@ class, by design.
 Deleting a **draft** is still a real delete — a draft is an in-progress
 extraction, usually one being cleared on purpose, and keeping every discarded
 attempt would turn the retired list into noise.
+
+#### Writing a class by hand
+
+Not every class is best got out of a PDF. An RCC with several age stages is
+quicker to write than to extract and correct, and until recently there was no
+way into the markdown editor without running an extraction first.
+
+**+ Write one by hand** in the saved-imports panel asks for a name, whether it
+is an O.C.C. or an R.C.C., a system and a source book, then opens the editor on
+an annotated skeleton. The **Re-check** button re-parses and re-runs the catalog
+cross-reference for free, so you can iterate against the validator without
+spending an API call; **Confirm** publishes exactly as it does for an extraction.
+
+Two things make the template worth having over an empty file:
+
+- **It parses on arrival**, with no errors and no warnings. A template that
+  failed validation the moment it was created would teach you nothing about
+  which of your own edits broke it — which is why all five fields the parser
+  requires are asked for up front rather than left blank.
+- **The awkward blocks are shown commented**: `variants`, `bonuses`, skill
+  choice-groups and gear choices. Those are the shapes nobody remembers, and
+  they are the reason writing a class by hand is worth supporting at all.
+
+There are two templates rather than one, because an R.C.C. and an O.C.C. are
+genuinely different shapes — a race rolls its attributes from racial dice and
+usually has M.D.C., a character class has attribute *minimums* and hit points.
+One template covering both would be half wrong whichever you were writing.
+
+It is saved as a draft immediately, like an extraction, so a closed tab cannot
+lose it. `PUT import/stored` is deliberately more permissive than confirm: a
+draft only has to **parse**, not validate, because half-written is a draft's
+normal state and refusing to save one until it is correct would lose exactly the
+work most worth keeping. It will not overwrite a **published** class — that is
+what Confirm is for, and Confirm runs the cross-reference and full validation
+this skips.
 
 ### Skill importer
 
