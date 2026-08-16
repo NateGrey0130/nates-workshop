@@ -64,7 +64,7 @@ export async function onRequestPost({ request, env, params }) {
   // The picks endpoint checks its own allowance and categories, but the same
   // boundary applies here as everywhere else — one place decides what is legal.
   const merged = skills.concat(picked.skills);
-  const cls = await loadClass(env, request.url, character.class_id);
+  const cls = await loadClass(env, request.url, character.class_id, character.class_variant);
   const { violations } = validateCharacter({
     character: { level: character.level }, cls, skills: merged, attributes: character.attributes,
     catalog: cls ? await loadSkillCategories(env) : null,

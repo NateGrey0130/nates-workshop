@@ -31,7 +31,7 @@ export async function onRequestPost({ request, env, params }) {
   if (!Number.isFinite(toLevel) || toLevel <= character.level) {
     return json({ error: `to_level must be greater than current level (${character.level})` }, 400);
   }
-  const cls = await loadClass(env, request.url, character.class_id);
+  const cls = await loadClass(env, request.url, character.class_id, character.class_variant);
   const table = xpTableFor(cls);
   const needed = thresholdFor(table, toLevel);
   if (needed == null) return json({ error: `to_level ${toLevel} is past the level cap (${table.length})` }, 400);

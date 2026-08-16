@@ -7,7 +7,7 @@
 // inline onclick handlers need their entry points on window — see the
 // Object.assign at the bottom.
 import { d, evalDice } from './js/dice.js';
-import { isChoiceGroup, isGearChoice } from './js/parser.js';
+import { isChoiceGroup, isGearChoice, applyVariant } from './js/parser.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
 const STEPS = ['System', 'Class', 'Attributes', 'Skills', 'Equipment', 'Powers', 'Details', 'Review'];
@@ -36,6 +36,9 @@ const S = {
   // Starting-gear choices the class leaves open, and the slugs picked for each,
   // keyed by the entry's index in equipment_starting.
   gearChoices: [], gearPicks: {},
+  // Which stage of the class, for classes that come in stages (a Dragon
+  // hatchling vs an adult). NULL for every class that has none.
+  variant: null,
   equipment: [], equipInit: false,
   charName: '', campaignId: null, newCampaign: '',
   spells: [], psi: [], bio: {},
@@ -143,7 +146,7 @@ function quizScore(c) {
 // skill, spell and gear catalogs, which are large, shared, and stale the moment
 // they are written down. Everything here is the build itself.
 const DRAFT_KEYS = [
-  'step', 'system', 'classMode', 'quiz', 'attrMethods', 'attrs',
+  'step', 'system', 'classMode', 'quiz', 'variant', 'attrMethods', 'attrs',
   'related', 'secondary', 'groupPicks', 'gearPicks',
   'equipment', 'equipInit', 'charName', 'campaignId', 'newCampaign',
   'spells', 'psi', 'bio', 'pools',
@@ -203,7 +206,10 @@ function resumeDraft() {
   const d = S.draftOffer;
   S.draftOffer = null;
   Object.assign(S, d.state);
-  S.cls = S.classes.find((c) => c.id === d.class_id) || null;
+  // The draft stores the class id and the stage separately, so the class is
+  // resolved from scratch here — an edited class definition takes effect, and
+  // the variant is re-applied on top of it.
+  S.cls = applyVariant(S.classes.find((c) => c.id === d.class_id) || null, S.variant);
   S.savedId = null;
   render();
 }
@@ -315,6 +321,7 @@ function resetBuild() {
   S.attrMethods = {}; S.attrs = {}; S.related = []; S.secondary = []; S.groupPicks = {};
   S.equipment = []; S.equipInit = false; S.pools = null;
   S.gearChoices = []; S.gearPicks = {};
+  S.variant = null;
   S.spells = []; S.psi = []; S.bio = {};
 }
 
@@ -348,9 +355,10 @@ function renderClass() {
     </div>
     ${inner}
     ${S.cls ? classDetail(S.cls) : ''}
+    ${variantPicker()}
   </div>
   <div class="nav"><button class="btn btn-ghost" onclick="goStep(0)">&larr; Back</button>
-  <button class="btn btn-primary" ${S.cls ? '' : 'disabled'} onclick="confirmClass()">Use this class &rarr;</button></div>`;
+  <button class="btn btn-primary" ${canUseClass() ? '' : 'disabled'} onclick="confirmClass()">Use this class &rarr;</button></div>`;
 }
 function classCard(c, score) {
   const sel = S.cls?.id === c.id ? ' sel' : '';
@@ -388,7 +396,48 @@ function listOrText(label, value) {
 function classMode(m) { S.classMode = m; render(); }
 function quizPick(i, val) { S.quiz[i] = val; render(); }
 function pickClass(id) { const c = S.classes.find((x) => x.id === id); if (S.cls?.id !== id) resetBuild(); S.cls = c; render(); }
-function confirmClass() { S.step = 2; render(); }
+// A class with variants is not usable until one is chosen — a Dragon is always
+// some particular age, and defaulting to the first stage would pick for you.
+function canUseClass() {
+  if (!S.cls) return false;
+  return !(S.cls.variants || []).length || !!S.variant;
+}
+
+// Which stage of the class. Shown only when the class has stages, so every
+// other class is unaffected.
+function variantPicker() {
+  const variants = S.cls?.variants || [];
+  if (!variants.length) return '';
+  return `<div class="panel-inset">
+    <h3>Which ${esc(S.cls.name)}?</h3>
+    <p class="muted small">These share their skills, abilities and lore, and differ in their
+      attribute dice, pools and what the class grants.</p>
+    ${variants.map((v) => {
+      const on = S.variant === v.id;
+      const bits = [
+        v.mdc_base ? `M.D.C. ${esc(v.mdc_base)}` : '',
+        v.hit_points_base ? `H.P. ${esc(v.hit_points_base)}` : '',
+        v.ppe_base ? `P.P.E. ${esc(v.ppe_base)}` : '',
+      ].filter(Boolean).join(' · ');
+      return `<label class="chkrow" style="cursor:pointer">
+        <input type="radio" name="class-variant" ${on ? 'checked' : ''}
+          onchange="pickVariant('${esc(v.id)}')">
+        <span><b>${esc(v.name || v.id)}</b></span>
+        <span class="pct">${bits}</span></label>`;
+    }).join('')}
+  </div>`;
+}
+
+function pickVariant(id) { S.variant = id; render(); }
+
+function confirmClass() {
+  // The class the rest of the wizard sees is the resolved one — its attribute
+  // dice, pools and bonuses are the variant's. Picking a different class puts
+  // the base back, so this never compounds.
+  S.cls = applyVariant(S.cls, S.variant);
+  S.step = 2;
+  render();
+}
 
 // Step 2 — attributes
 function renderAttributes() {
@@ -980,6 +1029,7 @@ async function save() {
     }
     const body = {
       campaign_id: campaignId, name: S.charName, class_id: S.cls.id,
+      class_variant: S.variant || undefined,
       attributes: S.attrs, skills: skillsPayload(), powers: powersPayload(), pools: S.pools,
       bio: S.bio,
       items: equipmentPayload().map((e) => ({ item_id: e.item_id, custom_name: e.custom_name, qty: e.qty, notes: e.notes })),
@@ -1109,7 +1159,7 @@ Object.assign(window, {
   S, render, computePools, goStep, pickSystem, classMode, quizPick, pickClass,
   confirmClass, setMethod, setAllMethod, doRoll, rollAll, manualSet, pbAdj,
   toggleSkill, toggleGroupPick, rmEquip, addCatalog, addCustom, togglePower, setBio, save, startOver,
-  resumeDraft, dismissDraft,
+  resumeDraft, dismissDraft, pickVariant,
 });
 
 boot();

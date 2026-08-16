@@ -30,13 +30,16 @@ async function load() {
     // Skill picks a level-up granted and nobody has spent yet.
     C.pendingPicks = res.pending_picks || [];
     C.pendingPicksTotal = res.pending_picks_total || 0;
-    const [journal, catalog, classes, catalogs] = await Promise.all([
+    // The class comes with the character now, already resolved to this
+    // character's variant and still returned when it has been retired. It used
+    // to mean fetching every class and finding this one, which could not apply
+    // a variant: applyVariant lives in parser.js, a module, and this file is a
+    // classic script.
+    C.cls = res.class || null;
+
+    const [journal, catalog, catalogs] = await Promise.all([
       api(`journal?campaign_id=${C.data.campaign_id}&character_id=${id}&include_campaign=1`),
       api('items?system=' + encodeURIComponent(C.data.campaign_system)),
-      // include_retired: this character's class may have been retired since it
-      // was built. It must still resolve, or the sheet loses the class name and
-      // its advisory text.
-      api('classes?include_retired=1').catch(() => ({ classes: [] })),
       // The skill picker needs the catalog to offer choices and to show what a
       // skill starts at. Parallel, so it costs nothing on a sheet with no picks.
       api('catalogs').catch(() => ({ skills: [] })),
@@ -46,9 +49,6 @@ async function load() {
     // Kept so the sheet can say when it is showing fewer entries than exist,
     // rather than quietly ending the log at the page boundary.
     C.journalTotal = journal.total ?? journal.entries.length;
-    // The class supplies its display name plus the advisory text the sheet
-    // shows (side_effects, restrictions) — none of which is stored per character.
-    C.cls = (classes.classes || []).find((x) => x.id === C.data.class_id) || null;
     render();
   } catch (err) {
     $('app').innerHTML = `<div class="panel"><p class="err">Failed to load: ${escHtml(err.message)}</p></div>`;

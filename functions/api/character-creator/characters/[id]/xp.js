@@ -27,7 +27,7 @@ export async function onRequestPost({ request, env, params }) {
   await env.DB.prepare("UPDATE characters SET xp = ?, updated_at = datetime('now') WHERE id = ?")
     .bind(newXp, params.id).run();
 
-  const cls = await loadClass(env, request.url, character.class_id);
+  const cls = await loadClass(env, request.url, character.class_id, character.class_variant);
   if (!cls) {
     return json({ xp: newXp, level: character.level, next_threshold: null, proposal: null,
                   warning: `Class definition '${character.class_id}' not found — level check skipped` });

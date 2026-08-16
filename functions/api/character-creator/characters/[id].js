@@ -6,6 +6,8 @@
 import { getUserEmail, unauthorized, json, forbidden, characterAccess, readJson } from '../_lib/auth.js';
 import { listPending } from '../_lib/skill-picks.js';
 import { decodeCharacter } from '../_lib/character-json.js';
+import { getStored } from '../_lib/class-store.js';
+import { parseClassMarkdown, applyVariant } from '../../../../apps/character-creator/js/parser.js';
 
 export async function onRequestGet({ request, env, params }) {
   const email = getUserEmail(request);
@@ -30,8 +32,25 @@ export async function onRequestGet({ request, env, params }) {
   const can_write = email === character.player_email || email === character.campaign_gm;
   // So the sheet can badge unspent skill picks without a second request.
   const pending_picks = await listPending(env, params.id);
+
+  // The class as this character plays it, variant already applied.
+  //
+  // Resolved here rather than by the sheet, because applyVariant lives in
+  // parser.js — a module — and sheet.js is a classic script that cannot import
+  // one. Doing it server-side keeps a single implementation instead of a second
+  // copy that drifts.
+  //
+  // Loaded directly rather than through loadClass(), which only returns
+  // published classes: a character whose class was retired after it was built
+  // must still resolve, or the sheet loses its name and advisory text.
+  const stored = await getStored(env, character.class_id);
+  const parsed = stored ? parseClassMarkdown(stored.markdown) : null;
+  const cls = parsed?.ok
+    ? { ...applyVariant(parsed.data, character.class_variant), _retired: !!stored.deleted_at }
+    : null;
+
   return json({
-    character, items, can_write,
+    character, items, can_write, class: cls,
     is_gm: email === character.campaign_gm,
     pending_picks,
     pending_picks_total: pending_picks.reduce((n, g) => n + g.count, 0),

@@ -19,6 +19,7 @@ Access gate. No build step, no framework, no dependencies.
 - [Permissions](#permissions)
 - [House rules and derived values](#house-rules-and-derived-values)
 - [Level-up skill picks](#level-up-skill-picks)
+- [Classes that come in stages](#classes-that-come-in-stages)
 - [What a class grants mechanically](#what-a-class-grants-mechanically)
 - [Which system a catalog row belongs to](#which-system-a-catalog-row-belongs-to)
 - [Filtering the catalog pickers](#filtering-the-catalog-pickers)
@@ -129,7 +130,7 @@ bookkeeping shared by both; the rest are this app.
 | Table | Notes |
 |---|---|
 | `campaigns` | Top-level container. `gm_email` owns it. `gm_notes` is GM-only and stripped from non-GM API responses. |
-| `characters` | See below — several JSON columns. |
+| `characters` | See below — several JSON columns. `class_variant` names which `variants` entry the character is; NULL means the class as written. |
 | `character_items` | Inventory join. `item_id` NULL means a freeform item (`custom_name` required). `removed_at` NULL means currently held — removals are soft, so history survives. |
 | `journal_entries` | `character_id` NULL means a campaign-level entry. |
 | `level_history` | One row per confirmed level-up; `changes` is a JSON diff of what was actually applied. |
@@ -389,6 +390,60 @@ Spending consumes the oldest grant first, and a grant only partly spent stays
 pending with its count reduced — so two picks earned at level 3 can be taken one
 at a time. Both paths write the skills and the claim in a single batch, because
 a pick that consumed its grant without landing on the sheet would be lost.
+
+---
+
+## Classes that come in stages
+
+Several RCCs are not one statblock but several. A Dragon is a hatchling, then
+young, then adult — sharing lore, natural abilities and skills, differing in
+attribute dice, M.D.C. and what the class grants. Four unrelated class files
+means maintaining the shared 90% four times and watching it drift.
+
+```yaml
+mdc_base: "1d4x100"
+variants:
+  - id: hatchling
+    name: "Dragon Hatchling (Great Horned)"
+  - id: adult
+    name: "Adult Dragon (Great Horned)"
+    attribute_dice: { PS: "4d6+30" }
+    mdc_base: "1d6x1000"
+    bonuses:
+      attributes: { PS: 4 }
+      combat: { attacks: 3 }
+```
+
+A variant may override **only** `attribute_dice`, `attribute_requirements`, the
+four pool bases, and `bonuses`. Skills, abilities, lore and equipment stay
+shared on purpose: a variant that could override anything is not a variant, it
+is a second class wearing the first one's name, and the inheritance would
+obscure rather than explain. Setting anything else warns and is ignored.
+
+**Overrides replace, they do not merge** — the same rule `mdc_base` follows. A
+variant's `bonuses` *are* its bonuses, so there is never a question of which
+half won. A variant that states no bonuses inherits the class's.
+
+The character records `class_variant` alongside `class_id`; NULL means the class
+as written, which is right for every class with no variants. It is its own
+column rather than encoded into `class_id`, because every reader of `class_id`
+would otherwise have to know to split it, and the ones that forgot would
+silently fail to resolve the class.
+
+**Resolution happens in one place**, `loadClass(env, url, classId, variantId)`,
+so no caller has to remember that a hatchling and an adult have different pools.
+The sheet gets its class already resolved from `characters/:id` — `applyVariant`
+lives in `parser.js`, a module, and `sheet.js` is a classic script that cannot
+import one. Doing it server-side keeps a single implementation rather than a
+second copy that drifts, and removed a whole `/classes` request from the sheet.
+
+The wizard asks which stage after the class is chosen, and will not continue
+until one is picked: a Dragon is always some particular age, and defaulting to
+the first stage would be choosing for you.
+
+Changing stage later — a hatchling growing up — is deliberately not supported
+yet. That is a GM event with real consequences for rolled attributes and current
+pools, and worth doing on purpose rather than guessing at now.
 
 ---
 

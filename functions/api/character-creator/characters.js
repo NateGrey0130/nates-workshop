@@ -50,9 +50,15 @@ export async function onRequestPost({ request, env }) {
   const campaign = await env.DB.prepare('SELECT id FROM campaigns WHERE id = ?').bind(b.campaign_id).first();
   if (!campaign) return json({ error: 'Campaign not found' }, 404);
 
+  // Which stage of the class this is — a Dragon hatchling rather than an adult.
+  // Blank means the class as written, which is right for every class that has
+  // no variants.
+  const variant = typeof b.class_variant === 'string' && b.class_variant.trim()
+    ? b.class_variant.trim() : null;
+
   // The wizard enforces these too; this is the boundary. A class that cannot be
   // resolved skips the check rather than blocking the save.
-  const cls = await loadClass(env, request.url, b.class_id);
+  const cls = await loadClass(env, request.url, b.class_id, variant);
   const { violations } = validateCharacter({
     character: { level: 1 },
     cls,
@@ -67,15 +73,15 @@ export async function onRequestPost({ request, env }) {
   const p = b.pools || {};
   const row = await env.DB.prepare(
     `INSERT INTO characters (
-       campaign_id, player_email, name, class_id, level, xp,
+       campaign_id, player_email, name, class_id, class_variant, level, xp,
        attributes, skills, powers,
        hp_max, hp_current, sdc_max, sdc_current, mdc_max, mdc_current,
        ppe_max, ppe_current, isp_max, isp_current,
        bio, combat, saves, armor, notes
-     ) VALUES (?, ?, ?, ?, 1, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ) VALUES (?, ?, ?, ?, ?, 1, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      RETURNING id`
   ).bind(
-    b.campaign_id, email, b.name, b.class_id,
+    b.campaign_id, email, b.name, b.class_id, variant,
     JSON.stringify(b.attributes || {}), JSON.stringify(b.skills || []), JSON.stringify(b.powers || []),
     p.hp ?? null, p.hp ?? null, p.sdc ?? null, p.sdc ?? null, p.mdc ?? null, p.mdc ?? null,
     p.ppe ?? null, p.ppe ?? null, p.isp ?? null, p.isp ?? null,
