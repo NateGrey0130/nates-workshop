@@ -25,6 +25,66 @@ export function isChoiceGroup(entry) {
     (entry.choose !== undefined || entry.from !== undefined || entry.categories !== undefined);
 }
 
+// The attributes a class bonus may name. Anything else is a typo — a bonus
+// filed under a key nothing reads would silently do nothing, which is the
+// failure this whole block exists to prevent.
+export const BONUS_ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
+
+// The three groups a bonus can land in. `combat` and `saves` deliberately do
+// not enumerate their keys: both are open sets that derive.js grows, and a
+// bonus to a key it has not heard of is better surfaced as a warning than
+// rejected outright.
+const BONUS_GROUPS = ['attributes', 'combat', 'saves'];
+
+function validateBonusGroup(where, group, block, errors, warnings) {
+  if (block === undefined || block === null) return;
+  if (typeof block !== 'object' || Array.isArray(block)) {
+    errors.push(`${where}.${group} must be a map of name to number`);
+    return;
+  }
+  for (const [k, v] of Object.entries(block)) {
+    if (typeof v !== 'number' || !Number.isFinite(v)) {
+      errors.push(`${where}.${group}.${k} must be a number`);
+    } else if (group === 'attributes' && !BONUS_ATTRS.includes(k)) {
+      errors.push(`${where}.attributes.${k} is not an attribute (${BONUS_ATTRS.join(', ')})`);
+    } else if (v === 0) {
+      warnings.push(`${where}.${group}.${k} is 0 and will do nothing`);
+    }
+  }
+}
+
+export function validateBonuses(bonuses, errors, warnings) {
+  if (typeof bonuses !== 'object' || Array.isArray(bonuses)) {
+    errors.push('bonuses must be a map');
+    return;
+  }
+  for (const g of BONUS_GROUPS) validateBonusGroup('bonuses', g, bonuses[g], errors, warnings);
+
+  const known = new Set([...BONUS_GROUPS, 'at_level']);
+  for (const k of Object.keys(bonuses)) {
+    if (!known.has(k)) warnings.push(`bonuses.${k} is not a recognised group and will be ignored`);
+  }
+
+  // Bonuses earned later. Proposed in the level-up diff and applied on
+  // confirmation, like every other level-up change.
+  if (bonuses.at_level !== undefined) {
+    if (!Array.isArray(bonuses.at_level)) {
+      errors.push('bonuses.at_level must be a list');
+      return;
+    }
+    for (const step of bonuses.at_level) {
+      if (!step || typeof step !== 'object' || typeof step.level !== 'number') {
+        errors.push('bonuses.at_level entries need a numeric level');
+        continue;
+      }
+      if (step.level < 2) warnings.push(`bonuses.at_level level ${step.level} — level 1 belongs in bonuses itself`);
+      for (const g of BONUS_GROUPS) {
+        validateBonusGroup(`bonuses.at_level[${step.level}]`, g, step[g], errors, warnings);
+      }
+    }
+  }
+}
+
 // The same idea for starting equipment, keyed on `item_id` rather than `name`.
 //
 // Books routinely say "one energy pistol of choice" where the format only had
@@ -359,6 +419,12 @@ export function parseClassMarkdown(text) {
       errors.push('level_progression entries need a numeric level');
     }
   }
+
+  // What a class GRANTS mechanically, as opposed to level_progression.grants,
+  // which is free text for display. A Dragon's "+2 to P.S." and "+1 attack per
+  // melee at level 5" were prose that nothing could act on; this is where a
+  // number goes so the sheet can actually add it up.
+  if (data.bonuses) validateBonuses(data.bonuses, errors, warnings);
 
   const sections = parseBodySections(fm[2]);
   data.sections = sections;

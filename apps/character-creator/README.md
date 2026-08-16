@@ -19,6 +19,7 @@ Access gate. No build step, no framework, no dependencies.
 - [Permissions](#permissions)
 - [House rules and derived values](#house-rules-and-derived-values)
 - [Level-up skill picks](#level-up-skill-picks)
+- [What a class grants mechanically](#what-a-class-grants-mechanically)
 - [Which system a catalog row belongs to](#which-system-a-catalog-row-belongs-to)
 - [Filtering the catalog pickers](#filtering-the-catalog-pickers)
 - [Unfinished builds are saved](#unfinished-builds-are-saved)
@@ -217,6 +218,10 @@ magic:
   spells: ["Globe of Daylight"]   # only if the book names specific spells
 special_abilities:
   - { name: "Psi-Sword", description: "..." }
+bonuses:                      # mechanical grants — see the section below
+  attributes: { PS: 2 }
+  combat: { attacks: 1 }
+  at_level: [{ level: 5, combat: { attacks: 1 } }]
 level_progression:
   - { level: 2, grants: ["+1 attack per melee"] }
 restrictions: ["..."]
@@ -384,6 +389,52 @@ Spending consumes the oldest grant first, and a grant only partly spent stays
 pending with its count reduced — so two picks earned at level 3 can be taken one
 at a time. Both paths write the skills and the claim in a single batch, because
 a pick that consumed its grant without landing on the sheet would be lost.
+
+---
+
+## What a class grants mechanically
+
+`natural_abilities`, `special_abilities` and `level_progression.grants` are the
+book's own wording, and display-only. So a Dragon's *"+2 to P.S."* and *"+1
+attack per melee at level 5"* were prose that nothing could act on — and no
+amount of typing them by hand would change that, because there was nowhere for
+a number to go.
+
+`bonuses` is that place:
+
+```yaml
+bonuses:
+  attributes: { PS: 2 }
+  combat: { attacks: 1, strike: 2 }
+  saves: { spell_magic: 2 }
+  at_level:
+    - { level: 5, combat: { attacks: 1 } }
+```
+
+**Three layers, in order:** the attribute tables, then what the class grants,
+then whatever a human typed — which still wins, exactly as overrides always
+have. A GM ruling beats a computed number.
+
+**An attribute bonus is never stored on the character.** `attributes` keeps the
+numbers that were actually rolled, and the class's `+2` is added on the way
+past. That keeps every number's provenance visible, at the cost of one rule:
+**nothing may read a raw attribute for a derived value** — it goes through
+`derive.effective(attrs, bonuses)` instead. Miss that and a bonus becomes
+decorative: P.S. 24 gives a damage bonus of 9, and the class's +2 has to reach
+11 or it has done nothing.
+
+The sheet shows one number and explains it on hover — *"+2 from attributes, +1
+from Juicer"* — with a dotted underline marking the values a class contributed
+to. `derive.parts()` produces that split.
+
+`at_level` bonuses accumulate and apply the moment the level is reached, because
+`derive.classBonuses(cls, level)` is read at render time; nothing is written to
+the character. They appear in the level-up proposal so the change is announced
+rather than simply happening.
+
+Extraction fills this in from flat numeric statements, and is told explicitly to
+leave **conditional** bonuses as prose — *"+2 to strike when flying"* would
+otherwise be applied unconditionally.
 
 ---
 

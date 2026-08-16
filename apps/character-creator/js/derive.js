@@ -92,6 +92,67 @@
     };
   }
 
+  // ─── class bonuses ───
+  //
+  // Three layers, in this order:
+  //
+  //   1. the attribute tables above
+  //   2. what the class grants          ← this
+  //   3. whatever a human typed          (still wins, as it always has)
+  //
+  // Attribute bonuses are kept OUT of the stored attribute: a character's P.S.
+  // stays the number that was rolled, and the class's +2 is added on the way
+  // past. That keeps the provenance of every number visible, at the cost of
+  // needing one funnel — effective() — that everything derived reads through.
+  // Nothing should read a raw attribute for a derived value.
+
+  // Everything the class grants by the level reached, folded into one block.
+  // at_level entries accumulate: a class granting +1 attack at 5 and again at
+  // 10 has given +2 by level 10.
+  function classBonuses(cls, level = 1) {
+    const src = cls?.bonuses;
+    const out = { attributes: {}, combat: {}, saves: {} };
+    if (!src) return out;
+
+    const fold = (from) => {
+      for (const group of ['attributes', 'combat', 'saves']) {
+        for (const [k, v] of Object.entries(from?.[group] || {})) {
+          if (typeof v === 'number' && Number.isFinite(v)) {
+            out[group][k] = (out[group][k] || 0) + v;
+          }
+        }
+      }
+    };
+    fold(src);
+    for (const step of src.at_level || []) {
+      if (typeof step?.level === 'number' && step.level <= n(level)) fold(step);
+    }
+    return out;
+  }
+
+  // The attribute values every table should be read against: rolled plus what
+  // the class grants. A bonus to an attribute the character does not have is
+  // ignored rather than conjuring the attribute from nothing.
+  function effective(attrs = {}, bonuses = null) {
+    const add = bonuses?.attributes;
+    if (!add) return { ...attrs };
+    const out = { ...attrs };
+    for (const [k, v] of Object.entries(add)) {
+      if (typeof v === 'number' && typeof out[k] === 'number') out[k] = out[k] + v;
+    }
+    return out;
+  }
+
+  function addBonus(derived, block) {
+    if (!block) return derived;
+    const out = { ...derived };
+    for (const [k, v] of Object.entries(block)) {
+      if (typeof v !== 'number' || !Number.isFinite(v)) continue;
+      out[k] = (typeof out[k] === 'number' ? out[k] : 0) + v;
+    }
+    return out;
+  }
+
   // Stored values win over derived ones; a blank/absent field falls back to the
   // derived default so a sheet is useful the moment it is created.
   function merge(derived, stored) {
@@ -103,11 +164,45 @@
   }
 
   global.derive = {
-    combat: (attrs, stored) => merge(deriveCombat(attrs), stored),
+    // `bonuses` is optional throughout — a call that omits it behaves exactly
+    // as it did before class bonuses existed.
+    combat: (attrs, stored, bonuses) =>
+      merge(addBonus(deriveCombat(effective(attrs, bonuses)), bonuses?.combat), stored),
     // psychicTier is optional — callers that do not know it get the 15+ target,
     // which is correct for a non-psychic.
-    saves: (attrs, stored, psychicTier) => merge(deriveSaves(attrs, psychicTier), stored),
-    bio: (attrs, stored) => merge(deriveBio(attrs), stored),
+    saves: (attrs, stored, psychicTier, bonuses) =>
+      merge(addBonus(deriveSaves(effective(attrs, bonuses), psychicTier), bonuses?.saves), stored),
+    bio: (attrs, stored, bonuses) => merge(deriveBio(effective(attrs, bonuses)), stored),
+
+    classBonuses,
+    effective,
+
+    // What made a number what it is, for the sheet's hover text: how much came
+    // from the attribute tables and how much from the class. Without this the
+    // only honest thing a tooltip could say is the total.
+    parts(kind, attrs, bonuses, psychicTier) {
+      const eff = effective(attrs, bonuses);
+      const table = kind === 'saves' ? deriveSaves(eff, psychicTier)
+        : kind === 'bio' ? deriveBio(eff)
+        : deriveCombat(eff);
+      // The attribute half of a class bonus shows up inside `table`, because the
+      // table was read against the boosted attribute — so compare against the
+      // same table read against the raw one to separate them.
+      const raw = kind === 'saves' ? deriveSaves(attrs, psychicTier)
+        : kind === 'bio' ? deriveBio(attrs)
+        : deriveCombat(attrs);
+      const direct = (kind === 'combat' ? bonuses?.combat : kind === 'saves' ? bonuses?.saves : null) || {};
+      const out = {};
+      for (const k of Object.keys(table)) {
+        const fromAttrs = typeof raw[k] === 'number' ? raw[k] : 0;
+        const viaAttrBonus = (typeof table[k] === 'number' ? table[k] : 0) - fromAttrs;
+        out[k] = {
+          attrs: fromAttrs,
+          from_class: viaAttrBonus + (typeof direct[k] === 'number' ? direct[k] : 0),
+        };
+      }
+      return out;
+    },
     // Shared so the powers picker gates on the same ordering the saves use.
     meetsTier,
     tiers: TIERS,

@@ -764,6 +764,94 @@ check('draft does NOT persist the resolved class object', !DRAFT_KEYS.includes('
 // restore options that no longer match the class.
 check('draft does NOT persist derived gear choices', !DRAFT_KEYS.includes('gearChoices'));
 
+// ---------- 1c11. Class bonuses ----------
+// What a class GRANTS mechanically. `natural_abilities` and
+// `level_progression.grants` are the book's wording and display-only, so a
+// Dragon's "+2 to P.S." and "+1 attack at level 5" were prose nothing could act
+// on. These are numbers the sheet adds up.
+console.log('\n[1c11] Class bonuses');
+
+const withBonuses = (yaml) => parseClassMarkdown(
+  `---
+id: test-class
+name: Test Class
+system: rifts
+source_book: test-book
+category: occ
+${yaml}
+---
+
+## Lore
+
+Body.
+`);
+
+check('a full bonuses block parses', (() => {
+  const p = withBonuses(`bonuses:
+  attributes: { PS: 2 }
+  combat: { attacks: 1, strike: 2 }
+  saves: { spell_magic: 2 }
+  at_level:
+    - { level: 5, combat: { attacks: 1 } }`);
+  return p.ok && p.data.bonuses.attributes.PS === 2 && p.data.bonuses.at_level.length === 1;
+})(), JSON.stringify(withBonuses('bonuses:\n  attributes: { PS: 2 }').errors));
+
+// A bonus filed under a key nothing reads would silently do nothing, which is
+// the whole failure this validation exists to prevent.
+check('an unknown attribute is rejected', !withBonuses('bonuses:\n  attributes: { STR: 2 }').ok);
+check('a non-numeric bonus is rejected', !withBonuses('bonuses:\n  attributes: { PS: "two" }').ok);
+check('an at_level entry without a level is rejected',
+  !withBonuses('bonuses:\n  at_level:\n    - { combat: { attacks: 1 } }').ok);
+check('a zero bonus warns rather than fails', (() => {
+  const p = withBonuses('bonuses:\n  combat: { strike: 0 }');
+  return p.ok && p.warnings.some((x) => /will do nothing/.test(x));
+})());
+check('an unrecognised group warns rather than fails', (() => {
+  const p = withBonuses('bonuses:\n  skills: { Climbing: 10 }');
+  return p.ok && p.warnings.some((x) => /not a recognised group/.test(x));
+})());
+
+// derive.js is a classic script, loaded the way the browser loads it.
+const deriveWindow = {};
+new Function('globalThis', readFileSync(join(appDir, 'js', 'derive.js'), 'utf8')).call(deriveWindow, deriveWindow);
+const D2 = deriveWindow.derive;
+
+const dragon = { bonuses: { attributes: { PS: 2 }, combat: { attacks: 1 },
+                            at_level: [{ level: 5, combat: { attacks: 1 } }] } };
+
+check('at_level bonuses only count once their level is reached',
+  D2.classBonuses(dragon, 1).combat.attacks === 1 && D2.classBonuses(dragon, 5).combat.attacks === 2);
+check('a class with no bonuses yields empty groups',
+  Object.keys(D2.classBonuses({}, 9).combat).length === 0);
+
+// The attribute bonus is NOT stored on the character — it is added on the way
+// past, so everything derived has to read through effective().
+check('effective() adds the class bonus without touching the input', (() => {
+  const raw = { PS: 24 };
+  const eff = D2.effective(raw, D2.classBonuses(dragon, 1));
+  return eff.PS === 26 && raw.PS === 24;
+})());
+check('a bonus to an attribute the character lacks is ignored',
+  D2.effective({}, { attributes: { PS: 2 } }).PS === undefined);
+
+// P.S. 24 gives a damage bonus of 9; the class's +2 must carry through to 11,
+// or the bonus is decorative.
+check('an attribute bonus reaches the derived numbers',
+  D2.combat({ PS: 24 }, null, D2.classBonuses(dragon, 1)).damage_bonus === 11);
+check('a direct combat bonus is added on top',
+  D2.combat({ PS: 10 }, null, D2.classBonuses(dragon, 1)).attacks === 3);
+check('a human override still wins over both',
+  D2.combat({ PS: 10 }, { attacks: 7 }, D2.classBonuses(dragon, 1)).attacks === 7);
+check('omitting bonuses behaves exactly as before',
+  D2.combat({ PP: 18 }).strike === 3 && D2.combat({ PP: 18 }, null, null).strike === 3);
+
+// The sheet shows one number; the hover has to be able to say why.
+check('parts() separates the attribute half from the class half', (() => {
+  const p = D2.parts('combat', { PS: 24 }, D2.classBonuses(dragon, 1));
+  return p.damage_bonus.attrs === 9 && p.damage_bonus.from_class === 2
+      && p.attacks.attrs === 2 && p.attacks.from_class === 1;
+})());
+
 // ---------- 1c10. Import session system ----------
 // Which game system a book is for is chosen once per import session and stamped
 // on every row it inserts. Three shapes across four catalogs: skills keep a JSON
