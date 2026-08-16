@@ -347,12 +347,29 @@ overridable.
 | Rule | Default | Override |
 |---|---|---|
 | Point-buy curve | All attributes start at 8, 40-point pool, +1 costs 1 point to 15 then 2 points to 18, cap 18, floor 3, refunds below 8 | — |
-| Attribute rolls | 3d6, plus one bonus d6 on an exceptional 16+ | `attribute_dice` |
+| Attribute rolls | Book rule, not a house rule — see below | `attribute_dice` |
 | XP table | Shared 15-level curve: 0, 2000, 4000, 8000, 16000, 25000, 35000, 50000, 70000, 95000, 125000, 160000, 200000, 250000, 300000 | `xp_table: [...]` |
 | Psionic starting powers | minor 2, major 6, master 8; Super is master-only | `psionics.powers_starting`, `psionics.categories_allowed` |
 | Save vs psionic attack | 12+ for Major and Master psychics, 15+ for everyone else | override `saves.psionics_target` on the character |
 | Skills gained on level-up | Start at the catalog's base percentage — a skill learned at level 6 is still new | `skills.occ_related_skills.schedule` |
 | Skill percentage cap | 98% | — |
+
+**Exceptional attribute rolls** (`js/dice.js`, p.14) are the book's, not ours. A
+3d6 attribute rolling 16, 17 or 18 earns one extra 1d6; if that die is a six it
+earns **one** more, and the chain stops there however the second lands. A 2d6
+attribute earns its extra die on a 12. Nothing else does — 4d6, 5d6 and 6d6 are
+excluded by name however high they roll, and pools the book does not mention get
+nothing rather than an invented threshold.
+
+The threshold reads the **dice**, not the total: a race written `3d6+6` is
+exceptional when its dice show 16, not when the total reaches it — otherwise a
+below-average roll of 10 would earn a reward reserved for the top of the range.
+
+A class that spells out its own `3d6` now behaves identically to one that says
+nothing. It used to not: stating the dice took a branch that skipped the bonus
+die entirely, so the same 3d6 produced different characters depending on how the
+class happened to be written. The wizard shows the working (`3d6 18 ·
+exceptional +6, +4`) because an unexplained 28 off a 3d6 reads as a bug.
 
 **Attribute-derived values** (`js/derive.js`) come from the Attribute Bonus
 Chart on p.16, transcribed row by row — see

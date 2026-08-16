@@ -17,7 +17,7 @@ import {
 import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
 import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
 import { skillGrantsFor } from '../../../functions/api/character-creator/_lib/leveling.js';
-import { rollPoolFormula } from '../js/dice.js';
+import { rollPoolFormula, rollAttribute } from '../js/dice.js';
 import { similarity, normaliseName, classesMentioning, findDuplicates } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
 import {
   keysOf, redirectStatements, collapseStatement, resolveKeys,
@@ -1475,6 +1475,87 @@ console.log('\n[1c17] Attribute bonus chart');
     const p = D.parts('combat', { PP: 17 }, { attributes: { PP: 1 }, combat: { parry: 3 } });
     return p.parry.attrs === 1 && p.parry.from_class === 4; // +1 via attribute, +3 direct
   })());
+}
+
+// ---------- 1c18. Exceptional attribute rolls ----------
+// Palladium Fantasy 2nd Ed. p.14. Randomness is stubbed so these assert the
+// rule rather than a distribution — an exceptional roll is rare enough that a
+// statistical test would be both slow and flaky.
+console.log('\n[1c18] Exceptional attribute rolls');
+{
+  // d(sides) is 1 + floor(random * sides), so (face - 1) / 6 forces `face` on a
+  // six-sided die. Every attribute pool here is d6; nothing else is exercised.
+  const withFaces = (faces, fn) => {
+    const real = Math.random;
+    let i = 0;
+    Math.random = () => (faces[i++] - 1) / 6 + 1e-9;
+    try { return fn(); } finally { Math.random = real; }
+  };
+  const roll = (expr, faces) => withFaces(faces, () => rollAttribute(expr));
+
+  check('3d6 under 16 earns no extra die', (() => {
+    const r = roll('3d6', [5, 5, 5]);
+    return r.total === 15 && r.exceptional.length === 0;
+  })());
+  check('3d6 at exactly 16 earns one extra die', (() => {
+    const r = roll('3d6', [5, 5, 6, 3]);
+    return r.base === 16 && r.exceptional.join() === '3' && r.total === 19;
+  })());
+  check('3d6 at 18 earns one extra die', (() => {
+    const r = roll('3d6', [6, 6, 6, 2]);
+    return r.base === 18 && r.total === 20;
+  })());
+  // "If a six is rolled ... roll 1D6 again, and add that number also."
+  check('a six on the extra die earns one more', (() => {
+    const r = roll('3d6', [6, 6, 6, 6, 4]);
+    return r.exceptional.join() === '6,4' && r.total === 28;
+  })());
+  // "However, even if this last roll is a six, the player does not roll again."
+  check('the chain stops at two, even on a second six', (() => {
+    const r = roll('3d6', [6, 6, 6, 6, 6, 6]);
+    return r.exceptional.join() === '6,6' && r.total === 30;
+  })());
+
+  check('2d6 earns its extra die only on a 12', (() => {
+    const hit = roll('2d6', [6, 6, 2]);
+    const miss = roll('2d6', [6, 5]);
+    return hit.base === 12 && hit.total === 14 && miss.total === 11 && miss.exceptional.length === 0;
+  })());
+
+  // Named exclusion: "Characters that get to roll four, five or even six,
+  // six-sided dice for an attribute do not get any additional dice rolls even
+  // if the rolls are exceptional."
+  check('4d6 and above never earn an extra die', (() => {
+    const four = roll('4d6', [6, 6, 6, 6]);
+    const six = roll('6d6', [6, 6, 6, 6, 6, 6]);
+    return four.total === 24 && four.exceptional.length === 0
+      && six.total === 36 && six.exceptional.length === 0;
+  })());
+
+  // The threshold reads the dice, not the total: a flat racial bonus must not
+  // buy an exceptional roll that the dice did not earn.
+  check('a racial modifier does not trigger the threshold', (() => {
+    const r = roll('3d6+6', [3, 3, 4]);
+    return r.base === 10 && r.modifier === 6 && r.total === 16 && r.exceptional.length === 0;
+  })());
+  check('a racial modifier still stacks on a genuine exceptional roll', (() => {
+    const r = roll('3d6+6', [5, 5, 6, 2]);
+    return r.base === 16 && r.modifier === 6 && r.total === 24;
+  })());
+
+  // A multiplied pool is a hit-point formula, not an attribute.
+  check('a multiplied pool earns nothing', roll('1d6x10', [6]).exceptional.length === 0);
+
+  // The bug this replaced: stating 3d6 explicitly took a branch that skipped
+  // the bonus die, so the same dice produced different characters depending on
+  // whether the class bothered to write them down.
+  check('an explicit 3d6 behaves exactly like the default', (() => {
+    const stated = roll('3d6', [6, 6, 6, 4]);
+    const implied = roll('', [6, 6, 6, 4]);
+    return stated.total === implied.total && implied.total === 22;
+  })());
+  check('an unparseable expression falls back to 3d6',
+    roll('two handfuls', [4, 4, 4]).total === 12);
 }
 
 // ---------- 1d. Paging ----------

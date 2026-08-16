@@ -6,7 +6,7 @@
 // /shared/js/ui.js loads first as a classic script, so escHtml() is global;
 // inline onclick handlers need their entry points on window — see the
 // Object.assign at the bottom.
-import { d, evalDice, rollPoolFormula } from './js/dice.js';
+import { evalDice, rollPoolFormula, rollAttribute } from './js/dice.js';
 import { isChoiceGroup, isGearChoice, applyVariant, combineClasses } from './js/parser.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
@@ -31,7 +31,7 @@ const S = {
   // An unfinished build found on the server, awaiting resume-or-discard.
   draftOffer: null,
   classes: [], cls: null,
-  attrMethods: {}, attrs: {},
+  attrMethods: {}, attrs: {}, attrRolls: {},
   related: [], secondary: [], groupPicks: {},
   // Starting-gear choices the class leaves open, and the slugs picked for each,
   // keyed by the entry's index in equipment_starting.
@@ -62,14 +62,21 @@ const esc = escHtml; // from /shared/js/ui.js
 // api() and errorDetails() come from js/api.js, loaded first as a classic script.
 
 // ---------- dice ----------
-// Standard Palladium attribute roll: 3d6, one bonus d6 on an exceptional 16+.
-function rollStandard() {
-  const t = d(6) + d(6) + d(6);
-  return t >= 16 ? t + d(6) : t;
-}
+// The exceptional-roll rule lives in dice.js, so a class that spells out its
+// own `3d6` behaves identically to one that says nothing. It used to not:
+// stating the dice took a different branch that skipped the bonus die entirely,
+// and the same 3d6 produced different characters depending on how the class
+// happened to be written.
+//
+// The roll is kept whole, not flattened to a number, so the step can show how
+// an exceptional total was reached.
 function rollAttr(attr) {
-  const dice = S.cls?.attribute_dice?.[attr];
-  return dice ? (evalDice(dice) ?? rollStandard()) : rollStandard();
+  return rollAttribute(S.cls?.attribute_dice?.[attr] || '3d6');
+}
+function setRoll(a) {
+  const r = rollAttr(a);
+  S.attrs[a] = r.total;
+  S.attrRolls[a] = r.exceptional.length ? r : null;
 }
 
 // ---------- point-buy ----------
@@ -308,7 +315,7 @@ function pickSystem(sys) {
   S.system = sys; S.step = 1; render();
 }
 function resetBuild() {
-  S.attrMethods = {}; S.attrs = {}; S.related = []; S.secondary = []; S.groupPicks = {};
+  S.attrMethods = {}; S.attrs = {}; S.attrRolls = {}; S.related = []; S.secondary = []; S.groupPicks = {};
   S.equipment = []; S.equipInit = false; S.pools = null;
   S.gearChoices = []; S.gearPicks = {};
   S.variant = null;
@@ -484,7 +491,14 @@ function renderAttributes() {
     const dice = S.cls.attribute_dice?.[a];
     let control;
     if (m === 'roll') {
-      control = `<button class="btn btn-sm" onclick="doRoll('${a}')">Roll ${esc(dice || '3d6')}</button> <b>${v ?? '—'}</b>`;
+      // An exceptional roll is rare enough that an unexplained 24 off a 3d6
+      // reads as a bug, and the second die — earned only by rolling a six on
+      // the first — reads as one even when it is correct. So show the working.
+      const r = S.attrRolls[a];
+      const why = r
+        ? ` <span class="attr-note ok">${esc(r.notation)} ${r.base}${r.modifier ? (r.modifier > 0 ? '+' : '') + r.modifier : ''}
+            · exceptional +${r.exceptional.join(', +')}</span>` : '';
+      control = `<button class="btn btn-sm" onclick="doRoll('${a}')">Roll ${esc(dice || '3d6')}</button> <b>${v ?? '—'}</b>${why}`;
     } else if (m === 'point') {
       control = `<button class="btn btn-sm btn-ghost" onclick="pbAdj('${a}',-1)">−</button> <b>${v ?? PB_BASE}</b>
                  <button class="btn btn-sm btn-ghost" onclick="pbAdj('${a}',1)">+</button>`;
@@ -533,16 +547,19 @@ function renderAttributes() {
   <div class="nav"><button class="btn btn-ghost" onclick="goStep(1)">&larr; Back</button>
   <button class="btn btn-primary" ${canNext ? '' : 'disabled'} onclick="goStep(3)">Skills &rarr;</button></div>`;
 }
-function setMethod(a, m) { S.attrMethods[a] = m; if (m === 'point') S.attrs[a] = S.attrs[a] ?? PB_BASE; render(); }
-function setAllMethod(m) { ATTRS.forEach((a) => { S.attrMethods[a] = m; if (m === 'point') S.attrs[a] = S.attrs[a] ?? PB_BASE; }); render(); }
-function doRoll(a) { S.attrs[a] = rollAttr(a); render(); }
-function rollAll() { ATTRS.forEach((a) => { S.attrMethods[a] = 'roll'; S.attrs[a] = rollAttr(a); }); render(); }
-function manualSet(a, v) { const n = parseInt(v, 10); S.attrs[a] = Number.isFinite(n) && n > 0 ? n : null; render(); }
+// A roll's breakdown is cleared whenever the value stops being that roll —
+// otherwise "exceptional +4" hangs beside a number the player typed by hand.
+function setMethod(a, m) { S.attrMethods[a] = m; if (m !== 'roll') S.attrRolls[a] = null; if (m === 'point') S.attrs[a] = S.attrs[a] ?? PB_BASE; render(); }
+function setAllMethod(m) { ATTRS.forEach((a) => { S.attrMethods[a] = m; if (m !== 'roll') S.attrRolls[a] = null; if (m === 'point') S.attrs[a] = S.attrs[a] ?? PB_BASE; }); render(); }
+function doRoll(a) { setRoll(a); render(); }
+function rollAll() { ATTRS.forEach((a) => { S.attrMethods[a] = 'roll'; setRoll(a); }); render(); }
+function manualSet(a, v) { const n = parseInt(v, 10); S.attrs[a] = Number.isFinite(n) && n > 0 ? n : null; S.attrRolls[a] = null; render(); }
 function pbAdj(a, delta) {
   const cur = S.attrs[a] ?? PB_BASE;
   const next = cur + delta;
   if (next < PB_FLOOR || next > PB_CAP) return;
   S.attrs[a] = next;
+  S.attrRolls[a] = null;
   if (pbSpent() > PB_POOL && delta > 0) { S.attrs[a] = cur; return; }
   render();
 }
