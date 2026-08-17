@@ -1170,6 +1170,21 @@ that flag means a human decided it.
 whatever state they are in; `admin/audit` reports which ones break a rule so you
 can decide case by case. It is read-only and modifies nothing.
 
+It is the **Audit characters** button on the catalog page, above the catalog
+tabs rather than in the per-catalog toolbar — it reports characters against the
+classes they were built from, so nothing about it changes when you switch tabs.
+This is the feedback loop for the class corrections in
+`apps/character-creator/db/`: every `fix-*.sql` that rewrites a class against
+the book can retroactively put an existing character out of step with it, and
+this is the only thing that says which. It splits **would be refused on save**
+from **worth a look**, because only violations block — a character carrying
+warnings alone is legal, and listing the two together would send you to fix
+something that is already correct.
+
+The endpoint existed with no caller for some time, which is why a smoke check
+now asserts a page script calls it. Routed and documented is not the same as
+reachable, and an endpoint nobody can run is exercised by nothing.
+
 A character whose class cannot be resolved — retired, deleted, or no longer
 parsing — **skips validation and saves normally**. Refusing would strand a
 character whose class an admin retired, which is exactly what class soft-delete

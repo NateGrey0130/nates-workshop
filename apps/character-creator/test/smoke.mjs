@@ -2439,6 +2439,19 @@ console.log('\n[1c30] Documented counts');
   check('every endpoint appears in the API surface table',
     unlistedRoutes.length === 0, unlistedRoutes.join(', '));
 
+  // Documented and routed is not the same as reachable. `admin/audit` shipped
+  // complete and had no caller in any page script for as long as it existed —
+  // curl-only by accident rather than by decision, and so exercised by nothing.
+  // The routes built dynamically (`import/${mode}/extract`) are why this names
+  // one endpoint rather than sweeping them all.
+  const pageScripts = readdirSync(appDir)
+    .filter((f) => f.endsWith('.js'))
+    .map((f) => readFileSync(join(appDir, f), 'utf8'))
+    .join('\n');
+  check('the character audit is reachable from the UI',
+    pageScripts.includes("'admin/audit'"),
+    'no page script calls it — it is an endpoint nobody can run');
+
   // The class-format example is the reference anyone writing a class by hand
   // copies from. If it stops parsing, the docs teach a shape the parser rejects.
   const lf = readme.replace(/\r\n/g, '\n');
