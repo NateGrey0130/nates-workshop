@@ -248,8 +248,15 @@ Collected across the five, because these recur:
   +2D6 P.S. / +2D6 P.E. / +2D4x10 Spd / +2D4 P.P. are all applied.
 - **Percentage bonuses on a choice group.** "three languages at +30%" — a group
   carries one base and its members have different ones.
-- **Per-category skill restrictions.** "Espionage: Escape Artist only" flattens
-  to "Espionage".
+- ~~**Per-category skill restrictions.**~~ **Resolved.** A category in
+  `occ_related_skills.categories` may now be an object stating what the book
+  allows inside it — `{ name: "Espionage", only: ["Escape Artist"] }` or
+  `{ name: "Physical", except: ["Acrobatics"] }`. Plain strings still mean
+  "any", so nothing already authored had to change. `categoryAllows()` is
+  shared by the wizard's picker and the server-side validator, because two
+  copies of "may this character take this skill" is the pair that drifts.
+  Applied to the Long Bowman (8 of 12 categories), Cyber-Knight (2 of 14) and
+  Juicer (4 of 14).
 - **A schedule on secondary skills**, which `occ_related_skills` has and
   `secondary_skills` does not.
 - **Variant-specific skills.** A Chiang-Ku hatchling's advanced math should start

@@ -8,7 +8,8 @@
 // Object.assign at the bottom.
 import { evalDice, rollPoolFormula, rollAttribute } from './js/dice.js';
 import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSIONIC_TIER_RULES } from './js/psionics.js';
-import { isChoiceGroup, isGearChoice, applyVariant, combineClasses } from './js/parser.js';
+import { isChoiceGroup, isGearChoice, applyVariant, combineClasses,
+         categoryAllows, categoryLabel } from './js/parser.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
 const STEPS = ['System', 'Class', 'Attributes', 'Skills', 'Equipment', 'Powers', 'Details', 'Review'];
@@ -628,9 +629,12 @@ function inSystem(row) {
   return !sys || sys === 'both' || sys === S.system;
 }
 
+// A forbidden skill is never offered rather than offered and rejected: the
+// books state these limits per category, so a player should not be able to
+// build most of a character before being told a pick was never legal.
 function catalogFor(categories) {
   return S.skillCatalog.filter((sk) =>
-    (!categories || categories.includes(sk.category)) &&
+    categoryAllows(categories, sk) &&
     (!sk.systems || sk.systems.includes(S.system)));
 }
 // Single definition, shared with the server-side validator — the two copies
@@ -713,7 +717,7 @@ function renderSkills() {
         <span class="pct">${s.base ? s.base + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—'}</span></label>`;
     }).join('');
     return `<div class="chkrow"><b>Pick ${s.choose}</b>
-      <span class="pct">${esc((s.categories || []).join(', '))} ${picked.length}/${s.choose} chosen</span></div>${noteHtml}${opts}`;
+      <span class="pct">${esc((s.categories || []).map(categoryLabel).join(', '))} ${picked.length}/${s.choose} chosen</span></div>${noteHtml}${opts}`;
   }).join('');
 
   const schedule = relatedCfg.schedule || [];
@@ -749,7 +753,7 @@ function renderSkills() {
     <div class="cols" style="margin-top:14px">
       <div>
         <h3>Related skills — ${S.related.length}/${relatedCfg.count}</h3>
-        <p class="muted small">Allowed: ${esc((relatedCfg.categories || []).join(', ') || '—')}</p>
+        <p class="muted small">Allowed: ${esc((relatedCfg.categories || []).map(categoryLabel).join(', ') || '—')}</p>
         ${schedule.length ? `<p class="attr-note">Also grants ${schedule.map((s) => `+${s.count} at level ${s.level}`).join(', ')}
           — recorded on the class, not yet prompted at level-up.</p>` : ''}
         ${Picker.inputHtml({ id: 'related-filter', value: S.relatedFilter,

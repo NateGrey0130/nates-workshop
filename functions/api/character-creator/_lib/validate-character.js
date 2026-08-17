@@ -33,7 +33,8 @@
 //    category both over- and under-counts. Choice groups are therefore reported
 //    as WARNINGS and never block a save.
 
-import { isChoiceGroup } from '../../../../apps/character-creator/js/parser.js';
+import { isChoiceGroup, categoryAllows, categoryName } from '../../../../apps/character-creator/js/parser.js';
+
 import { skillGrantsFor } from './leveling.js';
 
 const norm = (s) => String(s ?? '').trim().toLowerCase();
@@ -110,13 +111,19 @@ export function validateCharacter({ character, cls, skills, attributes, catalog 
   // override was allowed by a human and is legal — that is what the flag means.
   const allowed = cls.skills?.occ_related_skills?.categories;
   if (Array.isArray(allowed) && allowed.length) {
-    const ok = new Set(allowed.map(norm));
     for (const s of related) {
       if (s.override) continue;
       const cat = categoryOf(s);
-      if (!ok.has(norm(cat))) {
+      // categoryAllows() also enforces the per-category limits the books state
+      // — "Espionage: Escape Artist only", "Physical: any except Acrobatics".
+      // Shared with the wizard's picker so the two cannot disagree about what
+      // is legal.
+      if (!categoryAllows(allowed, { name: s.name, category: cat })) {
+        const known = allowed.some((c) => norm(categoryName(c)) === norm(cat));
         violations.push({ rule: 'related_category', skill: s.name, category: cat ?? null,
-          message: `${s.name} is ${cat || 'uncategorised'}, which this class does not allow as a related skill` });
+          message: known
+            ? `${s.name} is not one this class allows within ${cat}`
+            : `${s.name} is ${cat || 'uncategorised'}, which this class does not allow as a related skill` });
       }
     }
   }
