@@ -2417,6 +2417,47 @@ console.log('\n[1c30] Documented counts');
   check('the README names every VARIANT_OVERRIDES key',
     unlisted.length === 0, unlisted.join(', '));
 
+  // The migration table had listed 001-009 while 017 was on disk — and the same
+  // page discussed 011 and 012 further down, so it was provably stale in place.
+  const migDir = join(appDir, '..', '..', 'db', 'migrations');
+  const undocumented = readdirSync(migDir)
+    .filter((f) => f.endsWith('.sql'))
+    .filter((f) => !readme.includes('`' + f + '`'));
+  check('every migration has a row in the README table',
+    undocumented.length === 0, undocumented.join(', '));
+
+  // Every endpoint must appear in the API surface table, or it is undiscoverable
+  // to anyone reading the docs rather than the routing tree.
+  const walkFns = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+    e.isDirectory() ? (e.name === '_lib' ? [] : walkFns(join(dir, e.name))) : (e.name.endsWith('.js') ? [join(dir, e.name)] : []));
+  const fnRoot = join(appDir, '..', '..', 'functions', 'api', 'character-creator');
+  const surface = readme.slice(readme.indexOf('## API surface'));
+  const surfaceTable = surface.slice(0, surface.indexOf('\n## ', 10));
+  const unlistedRoutes = walkFns(fnRoot)
+    .map((f) => f.slice(fnRoot.length + 1).replace(/\\/g, '/').replace(/\.js$/, ''))
+    .filter((r) => !surfaceTable.includes('`' + r + '`'));
+  check('every endpoint appears in the API surface table',
+    unlistedRoutes.length === 0, unlistedRoutes.join(', '));
+
+  // The class-format example is the reference anyone writing a class by hand
+  // copies from. If it stops parsing, the docs teach a shape the parser rejects.
+  const lf = readme.replace(/\r\n/g, '\n');
+  const example = lf.match(/```yaml\n(---\nid: cyber-knight[\s\S]*?)```/);
+  check('the README class-format example is still there', !!example);
+  if (example) {
+    const parsed = parseClassMarkdown(example[1]);
+    check('and it parses with no errors',
+      (parsed.errors || []).length === 0, (parsed.errors || []).join('; '));
+    // Keys the example must actually demonstrate, because each was documented
+    // only in prose until it was added here.
+    check('and it demonstrates the newer class keys', !!(
+      parsed.data?.starting_money
+      && parsed.data?.bonuses?.attribute_minimums
+      && parsed.data?.skills?.secondary_skills?.schedule
+      && (parsed.data?.skills?.occ_related_skills?.categories || []).some((c) => c && typeof c === 'object')
+    ));
+  }
+
   const schema = readFileSync(join(appDir, '..', '..', 'db', 'schema.sql'), 'utf8');
   const tables = (schema.match(/CREATE TABLE IF NOT EXISTS/g) || []).length;
   const stated = readme.match(/(\w+) tables in one shared D1 database/);
