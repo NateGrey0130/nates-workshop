@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseClassMarkdown, isGearChoice, applyVariant, parseYaml, combineClasses,
-         categoryAllows, categoryLabel } from '../js/parser.js';
+         categoryAllows, categoryLabel, VARIANT_OVERRIDES } from '../js/parser.js';
 import { referencedGear } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import {
@@ -19,6 +19,7 @@ import { stageRows } from '../../../functions/api/character-creator/_lib/import-
 import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
 import { skillGrantsFor, buildProposal, perLevelDiceOf } from '../../../functions/api/character-creator/_lib/leveling.js';
 import { dedupeCategories } from '../../../functions/api/character-creator/_lib/skill-picks.js';
+import { CHARACTER_JSON_COLUMNS } from '../../../functions/api/character-creator/_lib/character-json.js';
 import { rollPoolFormula, rollAttribute, evalDice } from '../js/dice.js';
 import { composeClass } from '../js/compose.js';
 import { psionicTierForRoll, rollPsionics, psionicShape, withRolledPsionics,
@@ -2381,6 +2382,48 @@ variants:
     if (bad.length) console.log('    composing by hand:', bad.join(', '));
     return bad.length === 0;
   })(), 'use composeClass() instead');
+}
+
+// ---------- 1c30. The README's counted claims ----------
+// Counts written into prose rot silently: nothing breaks, the sentence just
+// stops being true. Both of these had already drifted — the JSON-column count
+// missed `attribute_bonuses` from migration 016, and a set of page-script line
+// counts was out by 20%. Pin the ones that are cheap to pin.
+console.log('\n[1c30] Documented counts');
+{
+  const readme = readFileSync(join(appDir, 'README.md'), 'utf8');
+  const WORDS = { five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11,
+    twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17,
+    eighteen: 18, nineteen: 19, twenty: 20 };
+  const num = (word) => WORDS[String(word).toLowerCase()] ?? Number(word);
+
+  const cols = readme.match(/`characters` stores (\w+) JSON columns/);
+  check('README states the character JSON column count',
+    !!cols, 'the sentence itself has changed shape');
+  check('and it matches CHARACTER_JSON_COLUMNS',
+    cols && num(cols[1]) === CHARACTER_JSON_COLUMNS.length,
+    cols ? `README says ${cols[1]} (${num(cols[1])}), code has ${CHARACTER_JSON_COLUMNS.length}` : '');
+
+  // Every JSON column needs a row in the data-model table, or a reader learns
+  // the count is 8 and then finds 7 described.
+  const missing = CHARACTER_JSON_COLUMNS.filter((c) => !readme.includes('| `' + c + '` |'));
+  check('every JSON column has a row in the data-model table',
+    missing.length === 0, missing.join(', '));
+
+  // The variant override list is a closed set the README spells out. It had
+  // already gained `starting_money` and `skill_overrides` without the prose
+  // noticing, so the README claimed a variant could do less than it can.
+  const unlisted = VARIANT_OVERRIDES.filter((k) => !readme.includes('`' + k + '`'));
+  check('the README names every VARIANT_OVERRIDES key',
+    unlisted.length === 0, unlisted.join(', '));
+
+  const schema = readFileSync(join(appDir, '..', '..', 'db', 'schema.sql'), 'utf8');
+  const tables = (schema.match(/CREATE TABLE IF NOT EXISTS/g) || []).length;
+  const stated = readme.match(/(\w+) tables in one shared D1 database/);
+  check('README states the table count', !!stated);
+  check('and it matches schema.sql',
+    stated && num(stated[1]) === tables,
+    stated ? `README says ${stated[1]} (${num(stated[1])}), schema has ${tables}` : '');
 }
 
 // ---------- 1d. Paging ----------
