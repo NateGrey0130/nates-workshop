@@ -189,6 +189,28 @@ function render() {
       </span></div>`;
   };
 
+  // Alignment is a closed set (p.23), so it gets a picker rather than a text
+  // box. It is NOT enforced here: a character created before the field existed
+  // has no alignment, and refusing to save one would make it uneditable until
+  // somebody guessed what it used to be. The sheet says it is missing and
+  // otherwise stays out of the way.
+  const bioField = (key, label, bio, stored) => {
+    if (key !== 'alignment') return editField('bio', key, label, bio[key], stored);
+    const current = stored?.alignment ?? bio.alignment ?? '';
+    const group = window.rules?.alignmentGroup(current);
+    if (!w) {
+      return `<div class="field"><span class="lbl">${label}</span><span class="dots"></span>
+        <span class="val${current ? '' : ' dim'}">${escHtml(current || '—')}${group ? ` (${group})` : ''}</span></div>`;
+    }
+    return `<div class="field"><span class="lbl">${label}</span><span class="dots"></span>
+      <span class="val">
+        <select class="mini-in${current ? '' : ' derived'}" data-sec="bio" data-key="alignment"
+          title="${current ? escHtml(group ? group + ' alignment' : 'Not one of the seven standard alignments') : 'No alignment set — the book requires one'}"
+          >${window.rules.alignmentOptions(current)}</select>
+        <b class="print-only">${escHtml(current || '—')}</b>
+      </span></div>`;
+  };
+
   const BIO_FIELDS = [
     ['race', 'Race'], ['true_name', 'True Name'], ['occupation', 'Occupation'],
     ['alignment', 'Alignment'], ['age', 'Age'], ['sex', 'Sex'],
@@ -228,8 +250,8 @@ function render() {
       </div>
     </div>
     <div class="sheet-grid cols-2" style="margin-top:6px">
-      <div>${BIO_FIELDS.slice(0, 6).map(([k, l]) => editField('bio', k, l, bio[k], c.bio)).join('')}</div>
-      <div>${BIO_FIELDS.slice(6).map(([k, l]) => editField('bio', k, l, bio[k], c.bio)).join('')}</div>
+      <div>${BIO_FIELDS.slice(0, 6).map(([k, l]) => bioField(k, l, bio, c.bio)).join('')}</div>
+      <div>${BIO_FIELDS.slice(6).map(([k, l]) => bioField(k, l, bio, c.bio)).join('')}</div>
     </div>
     <div class="sheet-grid cols-2">
       <div>${editField('bio', 'invoke_trust_pct', 'Invoke Trust/Intimidate', bio.invoke_trust_pct, c.bio, { suffix: '%' })}</div>
@@ -647,7 +669,9 @@ function reindexArmor() {
 // the value falls back to the derived default rather than being stored as 0.
 function collectSections() {
   const out = { bio: {}, combat: {}, saves: {} };
-  for (const el of document.querySelectorAll('input[data-sec]')) {
+  // Selects as well as inputs: alignment is a picker, and matching only
+  // `input[data-sec]` would drop it on every save without saying so.
+  for (const el of document.querySelectorAll('input[data-sec], select[data-sec]')) {
     const v = el.value.trim();
     if (v !== '') out[el.dataset.sec][el.dataset.key] = v;
   }
