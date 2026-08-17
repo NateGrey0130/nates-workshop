@@ -89,8 +89,8 @@ function render() {
   renderUpload();
 }
 
-// Full-width tabs rather than a muted pill toggle — the page does two distinct
-// jobs and the second one was easy to miss entirely.
+// Full-width tabs rather than a muted pill toggle — the page drives several
+// distinct importers and the ones past the first were easy to miss entirely.
 function modeTabs() {
   const tab = (mode, label, sub) => `
     <button class="imp-tab ${I.mode === mode ? 'on' : ''}" onclick="setMode('${mode}')">

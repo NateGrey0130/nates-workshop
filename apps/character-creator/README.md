@@ -231,10 +231,17 @@ skills:
     - { name: "Hand to Hand: Expert", note: "May swap for Martial Arts at a cost." }
   occ_related_skills:
     count: 6
-    categories: ["Physical", "Espionage"]
+    # A category is a plain string (any skill in it) or an object narrowing it.
+    # `only` and `except` are mutually exclusive — setting both is an error.
+    categories:
+      - "Physical"
+      - { name: "Espionage", only: ["Escape Artist"] }
+      - { name: "Science", except: ["Anthropology"] }
     schedule: [{ level: 3, count: 1 }, { level: 6, count: 1 }]
   secondary_skills:
     count: 2
+    schedule: [{ level: 4, count: 1 }]   # secondary grants schedule too
+starting_money: "2d6x10"      # a formula or a flat number; coin only
 equipment_starting:
   - { item_id: "ns-turbo-cyclone", qty: 1 }
   - { choose: 1, label: "energy pistol", qty: 1, from: ["ng-33-northern-gun-laser-pistol", "wilk-s-320-laser-pistol"] }
@@ -242,6 +249,8 @@ psionics:
   type: "major"               # minor | major | master
   isp_base: "1d4x10+20"
   powers: ["Sixth Sense"]     # powers the class automatically knows
+# psionics_allowed: false     # a race with NO psychic potential (troll, orc);
+                              # skips the Random Psionics Table entirely
 magic:
   type: "innate"
   spells_starting: 6
@@ -250,7 +259,10 @@ magic:
 special_abilities:
   - { name: "Psi-Sword", description: "..." }
 bonuses:                      # mechanical grants — see the section below
-  attributes: { PS: 2 }
+  attributes: { PS: 2, PE: "1d4" }   # a flat number OR dice
+  attribute_minimums: { PS: 22 }     # a floor applied AFTER the bonus lands.
+                                     # NOT attribute_requirements, which gates
+                                     # whether the class may be taken at all
   combat: { attacks: 1 }
   at_level: [{ level: 5, combat: { attacks: 1 } }]
 level_progression:
@@ -692,6 +704,11 @@ mdc_base: "1d4x100"
 variants:
   - id: hatchling
     name: "Dragon Hatchling (Great Horned)"
+    starting_money: 100
+    # Restates the percentage of a skill the class ALREADY grants. It cannot
+    # add or remove one — naming an ungranted skill is an error.
+    skill_overrides:
+      - { name: "Mathematics: Advanced", base: 45, per_level: 5 }
   - id: adult
     name: "Adult Dragon (Great Horned)"
     attribute_dice: { PS: "4d6+30" }
@@ -1339,9 +1356,12 @@ row already answers to.
 
 ## The PDF importers
 
-Both live on `import.html`, admin only, behind Class / Skills tabs.
+They all live on `import.html`, admin only, behind five tabs: **Classes**,
+**Skills**, **Spells**, **Psionics** and **Gear**. The last three are built from
+`SESSION_CATALOGS` in `import.js`, so adding a sixth is a config entry rather
+than a new tab.
 
-The **catalog** importers (skills today; spells, psionics and gear to come) share
+The **catalog** importers — skills, spells, psionics and gear — share
 one pipeline in `_lib/import-engine.js` — extract, normalise, classify against
 the catalog, batch-confirm — with the per-catalog differences in `IMPORT_SPECS`
 and the columns coming from the field config. A fix there is a fix for all of
@@ -1490,7 +1510,7 @@ sitting, so spell imports run inside a **session**:
    *ignore*.
 4. **Import the batch.** The session stays open for the next range.
 
-Two behaviours worth knowing:
+Four behaviours worth knowing:
 
 - **A row that collides stays pending.** If an insert clashes with a name
   already in the catalog, it is reported and left in the list so you can give it
@@ -1524,7 +1544,9 @@ Two things are specific to psionics:
   at the *category* level far more often than per power ("Super Psionics are
   Master only"), so most rows legitimately have none, and the prompt is written
   to make saying nothing the easy answer. **NULL means no restriction beyond the
-  power's category** — today's behaviour. Nothing enforces this column yet.
+  power's category.** The column *is* enforced: the picker filters through
+  `derive.meetsTier()` and will not offer a power above the character's tier —
+  see [Psychic tiers](#psychic-tiers).
 - **Unknown categories and tiers are flagged, never rejected.** A supplement
   that adds a category the core four do not cover must still be importable, so
   an unrecognised value imports with a ⚠ against it rather than failing. The
@@ -1636,6 +1658,14 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `007-psionic-detail.sql` | range, duration, saving_throw, description, min_tier on `psionic_powers` |
 | `008-gear-detail.sql` | gear stat block; **drops the `stats` JSON blob**, which was empty in every row |
 | `009-pending-skill-picks.sql` | `pending_skill_picks` |
+| `010-catalog-redirects.sql` | `catalog_redirects` — where a retired key forwards to |
+| `011-character-drafts.sql` | `character_drafts` — one unfinished wizard build per person |
+| `012-catalog-system.sql` | `system` on `spells` and `psionic_powers`; `system` on `import_sessions` |
+| `013-character-variant.sql` | `class_variant` on `characters` |
+| `014-character-occ.sql` | `occ_class_id` + `occ_class_variant` on `characters` |
+| `015-character-psychic-tier.sql` | `psychic_tier` + `psychic_shape` on `characters` — a tier the character **rolled** |
+| `016-character-attribute-bonuses.sql` | `attribute_bonuses` on `characters` — what a class's **dice** bonuses came up |
+| `017-pick-kind.sql` | `kind` on `pending_skill_picks`, so a scheduled grant records whether it was related or secondary |
 
 ### The migration convention
 
