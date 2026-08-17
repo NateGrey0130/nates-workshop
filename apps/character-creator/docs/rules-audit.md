@@ -183,6 +183,14 @@ dropped, so merely opening such a character cannot erase what it had.
 - The XP award table on p.31 is per action: 25 for performing a skill, 100 for a
   clever useful idea, 150–300 for a great menace, and so on.
 
+## Setting decisions, not book rules
+
+**Skills and psionic powers are available in every system.** The two lines share
+a multiverse, so a campaign can hold both and a psychic is a psychic whichever
+realm they walk into. Both catalogs are untagged on purpose; gear is not, since
+a laser rifle in a medieval realm is an event in play rather than a creation
+choice. See the README for why tagging skills from `source_book` is a trap.
+
 ## Play-time values not currently derived
 
 From p.17 and p.19, all sheet-display candidates rather than creation rules:
