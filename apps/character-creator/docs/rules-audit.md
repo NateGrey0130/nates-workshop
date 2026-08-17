@@ -183,6 +183,89 @@ dropped, so merely opening such a character cannot erase what it had.
 - The XP award table on p.31 is per action: 25 for performing a skill, 100 for a
   clever useful idea, 150–300 for a great menace, and so on.
 
+## Class data accuracy
+
+The rules above are only as good as the class definitions they run on. Audited
+against their source books:
+
+| Class | Book | State |
+|---|---|---|
+| Long Bowman | PF main, p.83-85 | **corrected** — `db/fix-long-bowman.sql` |
+| Chiang-Ku Dragon | Dragons and Gods, p.22-23 | **corrected** — `db/fix-chiang-ku.sql` |
+| Cyber-Knight | Rifts, p.63-64 | **corrected** — `db/fix-cyber-knight.sql` |
+| Juicer | Rifts, p.69-71 | **corrected** — `db/fix-juicer.sql` |
+| Dragon Hatchling (Great Horned) | Rifts, p.98, p.100 | **corrected** — `db/fix-dragon-hatchling.sql` |
+
+The two audited failed in **completely different ways**, which is the useful
+finding.
+
+The **Long Bowman** was hand-written and largely invented: six of eight fields
+disagreed, including the attribute requirements, the entire O.C.C. skill list,
+the related-skill categories and schedule, and the S.D.C. formula. Only
+Wilderness Survival and W.P. Archery survived.
+
+The **Chiang-Ku** was model-imported and every *number* was right — both stages'
+attribute dice, hit points, S.D.C., P.P.E., natural A.R., Horror Factor and the
+I.S.P. formula all matched. What it got wrong was **applying** the bonuses:
+seven skill bonuses sat in `note` prose with no `base`, so each fell back to the
+catalog value and the bonus vanished. Climbing read 40 where the book gives 50;
+faerie lore read 25 for 40. Psionics granted six powers where the book gives
+seven.
+
+So a hand-written class fails on facts, and an imported one fails on the
+difference between recording a rule and encoding it. Reviewing an import for
+plausible prose will not catch the second kind.
+
+All five are now corrected, and the split held across the rest:
+
+**Hand-written (Long Bowman, Cyber-Knight, Dragon Hatchling)** — invented.
+The Cyber-Knight had six related skills where the book gives twelve, two
+secondary for six, P.P.E. of 1d6x10 for 6d6, and three O.C.C. skills that are
+not Cyber-Knight skills at all. The Dragon Hatchling was worst: **not one of its
+eight attribute dice matched**, and it granted four spells to a creature the
+book says knows none.
+
+**Model-imported (Chiang-Ku, Juicer)** — accurate prose, inert mechanics. The
+Juicer had **no pool formulas at all**, so a Juicer was created with no hit
+points and no S.D.C.; and its signature bonuses (+4 initiative, two extra
+attacks, +8 vs toxins) were description only. Every word about them was correct.
+
+The Juicer also carried **mojibake**: two dashes stored as raw UTF-8 bytes
+decoded as latin-1. Worth knowing that an import can corrupt text silently — and
+worth not over-reacting to, since the Chiang-Ku's em-dash *looked* identical in a
+terminal and was perfectly fine.
+
+### What the schema still cannot say
+
+Collected across the five, because these recur:
+
+- **Dice-valued attribute bonuses.** "+1D4 to five attributes" (Cyber-Knight),
+  "+2D6 P.S." (Juicer). `bonuses.attributes` takes flat numbers.
+- **Percentage bonuses on a choice group.** "three languages at +30%" — a group
+  carries one base and its members have different ones.
+- **Per-category skill restrictions.** "Espionage: Escape Artist only" flattens
+  to "Espionage".
+- **A schedule on secondary skills**, which `occ_related_skills` has and
+  `secondary_skills` does not.
+- **Variant-specific skills.** A Chiang-Ku hatchling's advanced math should start
+  at first level; variants override dice, pools and bonuses only.
+- **Missing derive keys**: pull punch, save vs illusionary magic, save vs mind
+  control. A bonus written for any of them would do nothing at all.
+
+**Correcting a class does not change characters already built from it** — skills
+are stored per character. The existing production Long Bowman keeps the skills
+it was created with, and still validates cleanly against the corrected class.
+
+Two limits met while doing it:
+
+- **Starting equipment could not be corrected.** The gear catalog holds four
+  Palladium rows against seventy-four Rifts ones, so most of the book's list has
+  nothing to reference. The Palladium equipment chapter has never been imported.
+- **`secondary_skills` takes only a count.** The book grants one more at levels
+  4, 7, 10 and 13, and there is no `schedule` on that block the way there is on
+  `occ_related_skills`. Nor can a category's per-skill restrictions be
+  expressed — "Espionage: Escape Artist only" becomes plain "Espionage".
+
 ## Setting decisions, not book rules
 
 **Skills and psionic powers are available in every system.** The two lines share
