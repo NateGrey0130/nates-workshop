@@ -17,6 +17,7 @@
 import { getUserEmail, unauthorized, json, forbidden, characterAccess, readJson } from '../../_lib/auth.js';
 import { getStored } from '../../_lib/class-store.js';
 import { parseClassMarkdown, applyVariant, combineClasses } from '../../../../../apps/character-creator/js/parser.js';
+import { withRolledPsionics } from '../../../../../apps/character-creator/js/psionics.js';
 import { evalDice, rollPoolFormula } from '../../../../../apps/character-creator/js/dice.js';
 import { loadCharacter } from '../../_lib/character-json.js';
 import { loadClass } from '../../_lib/class-loader.js';
@@ -122,7 +123,7 @@ export async function onRequestPost({ request, env, params }) {
     : null;
   const { violations } = validateCharacter({
     character: { level: character.level },
-    cls: combineClasses(next, occ),
+    cls: withRolledPsionics(combineClasses(next, occ), character),
     skills: character.skills || [],
     attributes: newAttrs,
     catalog: await loadSkillCategories(env),

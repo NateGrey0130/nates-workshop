@@ -33,8 +33,13 @@ export function thresholdFor(table, level) {
 
 // "P.E. + 1d6 per level" / "1d6/level" → "1d6"; null when a formula has no
 // per-level component (those pools don't grow automatically on level-up).
+//
+// The trailing modifier is part of the capture, because a major psionic gains
+// "1d6+1 per level" — matching only the dice silently dropped the +1 and cost
+// the character a point of I.S.P. at every level for the life of the character.
 export function perLevelDiceOf(formula) {
-  const m = String(formula ?? '').match(/(\d+\s*d\s*\d+(?:\s*x\s*\d+)?)\s*(?:per level|per lvl|\/\s*(?:level|lvl))/i);
+  const m = String(formula ?? '')
+    .match(/(\d+\s*d\s*\d+(?:\s*x\s*\d+)?(?:\s*[+-]\s*\d+)?)\s*(?:per level|per lvl|\/\s*(?:level|lvl))/i);
   return m ? m[1] : null;
 }
 
