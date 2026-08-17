@@ -360,7 +360,7 @@ const BONUS_GROUPS = ['attributes', 'combat', 'saves'];
 // a fixed number — "add 2D6 to P.S.", "add 2D4x10 to Spd". Only `attributes`
 // accepts one: a combat or save bonus is always printed as a flat number.
 const DICE_BONUS = /^\d+\s*d\s*\d+(?:\s*x\s*\d+)?(?:\s*[+-]\s*\d+)?$/i;
-export const isDiceBonus = (v) => typeof v === 'string' && DICE_BONUS.test(v.trim());
+const isDiceBonus = (v) => typeof v === 'string' && DICE_BONUS.test(v.trim());
 
 function validateBonusGroup(where, group, block, errors, warnings) {
   if (block === undefined || block === null) return;
@@ -400,7 +400,7 @@ function validateAttributeMinimums(block, errors) {
   }
 }
 
-export function validateBonuses(bonuses, errors, warnings) {
+function validateBonuses(bonuses, errors, warnings) {
   if (typeof bonuses !== 'object' || Array.isArray(bonuses)) {
     errors.push('bonuses must be a map');
     return;

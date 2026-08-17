@@ -14,7 +14,7 @@ export const ALLOWED_MODELS = [
   'claude-opus-5',
 ];
 
-export const MAX_TOKENS_CEILING = 16000;
+const MAX_TOKENS_CEILING = 16000;
 const MAX_DOC_CHARS = 20000000; // ~15MB of base64
 
 function checkBlocks(blocks) {

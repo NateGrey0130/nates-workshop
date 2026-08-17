@@ -33,7 +33,7 @@ export const MAX_DECISIONS = 500;
 
 // Per-catalog import behaviour. `catalog` names an entry in CATALOGS, which
 // supplies the columns; this supplies what the importer does with them.
-export const IMPORT_SPECS = {
+const IMPORT_SPECS = {
   skills: {
     catalog: 'skills',
     table: 'skills',

@@ -28,7 +28,7 @@ export function safeParse(text, fallback = null) {
   }
 }
 
-export function emptyFor(column) {
+function emptyFor(column) {
   return ARRAY_COLUMNS.has(column) ? [] : {};
 }
 
