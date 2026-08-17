@@ -15,7 +15,7 @@ steps" and then lists six).
 |---|---|---|
 | 1. The Eight Attributes & bonuses | p.14–16 | yes |
 | 2. Hit Points and S.D.C. | p.18 | yes, via per-class formulas |
-| 3. How to Determine Psionics | p.20–21 | the roll, I.S.P. and powers; penalties not yet |
+| 3. How to Determine Psionics | p.20–21 | yes |
 | 4. Selecting a Race and O.C.C. | p.21–22 | yes |
 | 5. Equipment and Money | p.22 | yes |
 | 6. Rounding Out One's Character | p.22–23, 32–33 | alignment done; background tables absent |
@@ -108,13 +108,26 @@ targets, the power gating and the level-up I.S.P. growth all keep reading one
 place. Four call sites compose a class and every one of them has to remember
 that step.
 
-**Not built yet.** The major psionic's cost — *"all skill bonuses are reduced by
-half ... and the number of 'other' skills are also reduced by half"* — and the
-racial exclusions. Halving the related-skill count is straightforward; halving
-the **bonuses** is not expressible today, because a class skill stores a single
-`base` with the O.C.C. parenthetical bonus already folded in, leaving no
-separable bonus to halve. Splitting it out would mean changing the class schema,
-the importer prompt and every authored class. Recorded here rather than faked.
+**The major psionic's price is charged.** Rolling major halves the starting
+related-skill count, rounding down, and leaves secondary skills alone as the
+book says. Only the starting count — the rule sits in the paragraph about what
+the character begins with, and the scheduled grants at later levels are a
+separate sentence about advancement. A psychic O.C.C. never rolls, so it never
+pays.
+
+This wizard asks for skills **before** powers where the book asks in the other
+order, so a roll can invalidate picks already made. The excess is trimmed from
+the end and the step says how many went, rather than letting the character reach
+Review holding more than the class allows.
+
+**Racial exclusions** are a class flag: `psionics_allowed: false` skips Step 3
+entirely. Troll and orc are the races the book names; neither is imported yet.
+
+**Still not expressible:** the other half of the sentence, *"all skill bonuses
+are reduced by half"*. A class skill stores a single `base` with the O.C.C.
+parenthetical bonus already folded in, so there is no separable bonus to halve.
+Splitting it out would mean changing the class schema, the importer prompt and
+every authored class.
 
 ## Step 4 — skills (p.22)
 
@@ -274,8 +287,13 @@ Collected across the five, because these recur:
   grants, and `secondaryAllowance()` was added — without it the class's starting
   count stayed the ceiling and spending a pick the class had just granted failed
   validation.
-- **Variant-specific skills.** A Chiang-Ku hatchling's advanced math should start
-  at first level; variants override dice, pools and bonuses only.
+- ~~**Variant-specific skills.**~~ **Resolved.** A variant takes
+  `skill_overrides`: a list restating the `base` and `per_level` of skills the
+  class already grants. Naming a skill the class does not grant is an error
+  rather than a way to add one, so the rule that a variant cannot restructure
+  the skill list still holds. The Chiang-Ku hatchling now starts its advanced
+  math at 45 and its domestic skills at 25, where the adult has them at 96 and
+  80.
 - ~~**Missing derive keys**: pull punch, save vs illusionary magic, save vs mind
   control.~~ **Resolved.** All three exist now, and the bonuses the books grant
   are applied: the adult Chiang-Ku is +2 to pull punch and +3 to save vs

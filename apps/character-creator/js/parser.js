@@ -41,6 +41,9 @@ export const VARIANT_OVERRIDES = [
   'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',
   'starting_money',
   'bonuses',
+  // NOT the skills block. `skill_overrides` below restates numbers on skills
+  // the class already grants, which is a different and much smaller power.
+  'skill_overrides',
 ];
 
 // These two are flat maps of INDEPENDENT per-attribute values, so a variant
@@ -67,6 +70,34 @@ export function applyVariant(cls, variantId) {
       ? { ...cls[key], ...v[key] }
       : v[key];
   }
+  // Skills a stage holds at a different percentage. A Chiang-Ku hatchling
+  // starts its advanced math and domestic skills at first-level proficiency
+  // where the adult has them at 96% and 80%.
+  //
+  // Restating a number, not restructuring the list: an override names a skill
+  // the class already grants and may change only its base and per-level step.
+  // Naming anything else is a validation error rather than a way to smuggle a
+  // skill in, which keeps the rule that a variant cannot rewrite what the class
+  // teaches.
+  if (Array.isArray(v.skill_overrides) && v.skill_overrides.length && out.skills?.occ_skills) {
+    const byName = new Map(v.skill_overrides
+      .filter((o) => o && typeof o.name === 'string')
+      .map((o) => [o.name.trim().toLowerCase(), o]));
+    out.skills = {
+      ...out.skills,
+      occ_skills: out.skills.occ_skills.map((s) => {
+        const o = s?.name ? byName.get(s.name.trim().toLowerCase()) : null;
+        if (!o) return s;
+        return {
+          ...s,
+          ...(o.base !== undefined ? { base: o.base } : {}),
+          ...(o.per_level !== undefined ? { per_level: o.per_level } : {}),
+        };
+      }),
+    };
+  }
+  delete out.skill_overrides;
+
   // The variant's own name replaces the class's for display — "Dragon
   // Hatchling", not "Dragon" — while class_id keeps pointing at the one class.
   if (v.name) out.name = v.name;
@@ -74,7 +105,35 @@ export function applyVariant(cls, variantId) {
   return out;
 }
 
-function validateVariants(variants, errors, warnings) {
+// An override restates a number on a skill the class already grants. Naming
+// anything else is an error rather than a silent no-op: it is either a typo or
+// an attempt to add a skill, and both should be said out loud.
+function validateSkillOverrides(v, granted, errors) {
+  if (v.skill_overrides === undefined) return;
+  if (!Array.isArray(v.skill_overrides)) {
+    errors.push(`variant "${v.id}".skill_overrides must be a list`);
+    return;
+  }
+  for (const o of v.skill_overrides) {
+    if (!o || typeof o !== 'object' || typeof o.name !== 'string' || !o.name.trim()) {
+      errors.push(`variant "${v.id}".skill_overrides entries need a name`);
+      continue;
+    }
+    for (const key of ['base', 'per_level']) {
+      if (o[key] !== undefined && (typeof o[key] !== 'number' || !Number.isFinite(o[key]))) {
+        errors.push(`variant "${v.id}".skill_overrides.${o.name}.${key} must be a number`);
+      }
+    }
+    if (o.base === undefined && o.per_level === undefined) {
+      errors.push(`variant "${v.id}".skill_overrides.${o.name} changes nothing`);
+    }
+    if (granted && !granted.has(o.name.trim().toLowerCase())) {
+      errors.push(`variant "${v.id}".skill_overrides names "${o.name}", which this class does not grant`);
+    }
+  }
+}
+
+function validateVariants(variants, errors, warnings, granted = null) {
   if (!Array.isArray(variants)) {
     errors.push('variants must be a list');
     return;
@@ -89,6 +148,7 @@ function validateVariants(variants, errors, warnings) {
     seen.add(v.id);
     if (!v.name) warnings.push(`variant "${v.id}" has no name and will display as the class name`);
     if (v.bonuses) validateBonuses(v.bonuses, errors, warnings);
+    validateSkillOverrides(v, granted, errors);
 
     // A field a variant cannot override would silently do nothing, which is
     // exactly the confusion this list exists to prevent.
@@ -743,7 +803,14 @@ export function parseClassMarkdown(text) {
   // melee at level 5" were prose that nothing could act on; this is where a
   // number goes so the sheet can actually add it up.
   if (data.bonuses) validateBonuses(data.bonuses, errors, warnings);
-  if (data.variants !== undefined) validateVariants(data.variants, errors, warnings);
+  if (data.variants !== undefined) {
+    // The names the class grants by name, so an override that names anything
+    // else can be called out rather than silently doing nothing.
+    const granted = new Set((data.skills?.occ_skills || [])
+      .filter((s) => s && typeof s.name === 'string')
+      .map((s) => s.name.trim().toLowerCase()));
+    validateVariants(data.variants, errors, warnings, granted);
+  }
 
   const sections = parseBodySections(fm[2]);
   data.sections = sections;

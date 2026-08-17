@@ -80,7 +80,7 @@ export function withRolledPsionics(cls, character) {
   const spec = PSIONIC_TIER_RULES[tier];
   if (!spec) return cls;
   const shape = psionicShape(tier, character.psychic_shape);
-  return {
+  const out = {
     ...cls,
     psionics: {
       type: tier,
@@ -90,4 +90,35 @@ export function withRolledPsionics(cls, character) {
       from_roll: true,
     },
   };
+
+  // What a major psionic pays for those powers (p.21): "all skill bonuses are
+  // reduced by half (round down fractions) and the number of 'other' skills are
+  // also reduced by half. Secondary skills are not affected."
+  //
+  // Only the starting related count is halved. The rule sits in the paragraph
+  // describing what the character starts with; the scheduled grants at later
+  // levels are a separate sentence about advancement, and secondary skills the
+  // book excludes by name.
+  //
+  // The other half of the sentence — halving the skill BONUSES — is still not
+  // expressible: a class skill stores one `base` with the O.C.C. parenthetical
+  // bonus already folded in, so there is no separable bonus to halve.
+  if (tier === 'major') {
+    const related = out.skills?.occ_related_skills;
+    if (related && Number.isFinite(related.count) && related.count > 0) {
+      out.skills = {
+        ...out.skills,
+        occ_related_skills: {
+          ...related,
+          count: Math.floor(related.count / 2),
+          halved_for_major_psionic: true,
+        },
+      };
+    }
+  }
+  return out;
 }
+
+// Some races have no psychic potential at all — troll and orc are named (p.21).
+// A class saying so skips Step 3 entirely rather than rolling and discarding.
+export const rollsForPsionics = (cls) => !cls?.psionics && cls?.psionics_allowed !== false;
