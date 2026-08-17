@@ -6,7 +6,7 @@
 // until the player comes back to it. Owner/GM only, same as any character write.
 
 import { getUserEmail, unauthorized, json, forbidden, characterAccess, readJson } from '../../_lib/auth.js';
-import { listPending, resolvePicks, claimStatements, pickErrors } from '../../_lib/skill-picks.js';
+import { listPending, resolvePicks, claimStatements, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
 import { loadCharacterClass } from '../../_lib/class-loader.js';
 import { validateCharacter, loadSkillCategories } from '../../_lib/validate-character.js';
 import { loadCharacter } from '../../_lib/character-json.js';
@@ -43,9 +43,13 @@ export async function onRequestPost({ request, env, params }) {
 
   // One unrestricted grant makes the whole remaining allowance unrestricted,
   // matching how level-confirm combines them.
-  const categories = pending.some((g) => !g.categories)
+  const related = pending.filter((g) => g.kind !== 'secondary');
+  const secondaryAllowance = pending
+    .filter((g) => g.kind === 'secondary')
+    .reduce((n, g) => n + g.count, 0);
+  const categories = related.some((g) => !g.categories)
     ? null
-    : [...new Set(pending.flatMap((g) => g.categories || []))];
+    : dedupeCategories(related.flatMap((g) => g.categories || []));
 
   const character = await loadCharacter(env, params.id, ['level', 'skills', 'attributes', 'class_id']);
   const skills = character.skills;
@@ -55,6 +59,7 @@ export async function onRequestPost({ request, env, params }) {
     existingSkills: skills,
     allowance,
     categories,
+    secondaryAllowance,
     // A pick spent later still belongs to the level the character is now.
     level: character.level,
   });

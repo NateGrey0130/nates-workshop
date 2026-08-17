@@ -12,7 +12,7 @@
 import { getUserEmail, unauthorized, json, forbidden, characterAccess } from '../../_lib/auth.js';
 import { loadCharacterClass } from '../../_lib/class-loader.js';
 import { xpTableFor, thresholdFor, skillGrantsFor } from '../../_lib/leveling.js';
-import { insertGrantStatements, resolvePicks, pickErrors } from '../../_lib/skill-picks.js';
+import { insertGrantStatements, resolvePicks, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
 import { validateCharacter, loadSkillCategories } from '../../_lib/validate-character.js';
 import { loadCharacter } from '../../_lib/character-json.js';
 
@@ -68,15 +68,23 @@ export async function onRequestPost({ request, env, params }) {
   // What this level-up earns. Banked whether or not it is spent right now.
   const grants = skillGrantsFor(cls, character.level, toLevel);
   const allowance = grants.reduce((n, g) => n + g.count, 0);
-  const categories = grants.some((g) => !g.categories)
-    ? null // one unrestricted grant makes the whole allowance unrestricted
-    : [...new Set(grants.flatMap((g) => g.categories || []))];
+  // Related and secondary grants are kept apart: a secondary grant is
+  // unrestricted, and folding it into the same list would unrestrict the
+  // related picks with it.
+  const related = grants.filter((g) => g.kind !== 'secondary');
+  const secondaryAllowance = grants
+    .filter((g) => g.kind === 'secondary')
+    .reduce((n, g) => n + g.count, 0);
+  const categories = related.some((g) => !g.categories)
+    ? null // one unrestricted related grant makes the related picks unrestricted
+    : dedupeCategories(related.flatMap((g) => g.categories || []));
 
   const picked = await resolvePicks(env, {
     picks: b.picks,
     existingSkills: skills,
     allowance,
     categories,
+    secondaryAllowance,
     level: toLevel,
   });
   if (picked.errors?.length) return pickErrors(picked.errors);

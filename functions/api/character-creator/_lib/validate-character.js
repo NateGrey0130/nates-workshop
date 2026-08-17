@@ -50,7 +50,24 @@ export async function loadSkillCategories(env) {
 // who levelled up and spent a pick would read as over their limit.
 export function relatedAllowance(cls, level) {
   const base = cls?.skills?.occ_related_skills?.count ?? 0;
-  const granted = skillGrantsFor(cls, 1, level).reduce((n, g) => n + g.count, 0);
+  // Only related-kind grants. A class can schedule secondary picks too, and
+  // counting those here would let a character hold more related skills than the
+  // class ever allowed.
+  const granted = skillGrantsFor(cls, 1, level)
+    .filter((g) => g.kind !== 'secondary')
+    .reduce((n, g) => n + g.count, 0);
+  return base + granted;
+}
+
+// The same for secondary skills, which can also arrive on a schedule — the Long
+// Bowman gets one more at levels 4, 7, 10 and 13. Without this the class's
+// starting count was the permanent ceiling, so spending a pick the class had
+// just granted failed validation.
+export function secondaryAllowance(cls, level) {
+  const base = cls?.skills?.secondary_skills?.count ?? 0;
+  const granted = skillGrantsFor(cls, 1, level)
+    .filter((g) => g.kind === 'secondary')
+    .reduce((n, g) => n + g.count, 0);
   return base + granted;
 }
 
@@ -99,10 +116,10 @@ export function validateCharacter({ character, cls, skills, attributes, catalog 
       message: `${related.length} related skills, but this class allows ${relatedMax} at level ${level}` });
   }
 
-  const secondaryMax = cls.skills?.secondary_skills?.count ?? 0;
+  const secondaryMax = secondaryAllowance(cls, level);
   if (secondary.length > secondaryMax) {
     violations.push({ rule: 'secondary_count', have: secondary.length, allowed: secondaryMax,
-      message: `${secondary.length} secondary skills, but this class allows ${secondaryMax}` });
+      message: `${secondary.length} secondary skills, but this class allows ${secondaryMax} at level ${level}` });
   }
 
   // ─── categories ───

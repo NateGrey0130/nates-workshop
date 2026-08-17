@@ -653,10 +653,19 @@ function skillByName() {
 // Class files may omit base/per_level for a required skill — sourcebook class
 // pages usually state only the bonus, with the base living in the skill table.
 // Fall back to the catalog so imported classes still show real percentages.
+// `base` states the percentage outright; `bonus` adds to whatever the skill's
+// own base is. A choice group needs the second: "three languages of choice at
+// +30%" cannot be one number, because the members of a category start at
+// different percentages. Writing 80 there gave every pick 80 regardless.
+//
+// A non-percentile skill (a W.P., hand to hand) stays at zero: a percentage
+// bonus has nothing to modify, exactly as the I.Q. bonus already works.
 function resolveSkill(name, explicit = {}) {
   const cat = skillByName().get(name) || {};
+  const catBase = cat.base ?? 0;
+  const base = explicit.base ?? (explicit.bonus && catBase ? catBase + explicit.bonus : catBase);
   return {
-    base: explicit.base ?? cat.base ?? 0,
+    base,
     per_level: explicit.per_level ?? cat.per_level ?? 0,
     category: cat.category || 'Class',
   };
