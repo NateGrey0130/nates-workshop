@@ -975,8 +975,9 @@ function renderDetails() {
   $('app').innerHTML = `
   <div class="panel">
     <h2>Details <span class="muted small">— ${esc(S.cls.name)}</span></h2>
-    <p class="muted">All optional — the identity block from the printed sheet. Anything left blank
-      can be filled in later on the character sheet.</p>
+    <p class="muted">The identity block from the printed sheet. <b>Alignment is required</b> — the book
+      calls it the one mandatory part of this step, and there is deliberately no neutral. Everything
+      else is optional and can be filled in later on the character sheet.</p>
     <div class="cols" style="margin-top:12px">
       <div>${BIO_FIELDS.slice(0, 6).map(bioInput).join('')}</div>
       <div>${BIO_FIELDS.slice(6).map(bioInput).join('')}</div>
@@ -992,9 +993,15 @@ function renderDetails() {
 }
 
 function bioInput([key, label]) {
+  // Alignment is the one field on this step the book calls mandatory, and the
+  // only one with a closed set of answers. Everything else here is free text
+  // flavour that can stay blank forever.
+  const control = key === 'alignment'
+    ? `<select onchange="setBio('alignment', this.value)" style="flex:1">${rules.alignmentOptions(S.bio.alignment)}</select>`
+    : `<input type="text" value="${esc(S.bio[key] ?? '')}" onchange="setBio('${key}', this.value)" style="flex:1">`;
   return `<div class="rowline">
-    <label class="small" style="min-width:132px">${label}</label>
-    <input type="text" value="${esc(S.bio[key] ?? '')}" onchange="setBio('${key}', this.value)" style="flex:1">
+    <label class="small" style="min-width:132px">${label}${key === 'alignment' ? ' <span class="req">*</span>' : ''}</label>
+    ${control}
   </div>`;
 }
 function setBio(key, value) {
@@ -1119,6 +1126,9 @@ function renderReview() {
     </div>
 
     <h3>${esc(S.cls.name)} <span class="muted small">(${esc(S.system)} · ${esc(S.cls.category)})</span> — Level 1, 0 XP</h3>
+    <p class="small">Alignment: ${S.bio.alignment
+      ? `<b>${esc(S.bio.alignment)}</b>${rules.alignmentGroup(S.bio.alignment) ? ` <span class="muted">(${rules.alignmentGroup(S.bio.alignment)})</span>` : ''}`
+      : '<span class="warn">not chosen — required, see Details</span>'}</p>
 
     <div class="review-stats">
       <div class="stat-col">
@@ -1152,6 +1162,13 @@ async function save() {
   const msg = $('save-msg');
   if (!S.charName) { msg.textContent = 'Give your character a name.'; return; }
   if (!S.campaignId && !S.newCampaign) { msg.textContent = 'Pick a campaign or name a new one.'; return; }
+  // "ALL players must choose an alignment for their character" (p.23). Caught
+  // here rather than server-side so it cannot retroactively lock the editing of
+  // characters created before the field existed.
+  if (!S.bio.alignment) {
+    msg.textContent = 'Choose an alignment on the Details step — the book requires one, and there is no neutral.';
+    return;
+  }
   S.saving = true; msg.textContent = 'Saving…';
   try {
     let campaignId = S.campaignId;

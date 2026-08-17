@@ -50,6 +50,8 @@ a:hover { text-decoration: underline; }
 .err { color: var(--danger); }
 .ok { color: var(--success); }
 .warn { color: var(--warning); font-size: 13px; margin-top: 8px; }
+/* Marks the one field on the Details step the book actually requires. */
+.req { color: var(--warning); font-weight: 700; }
 
 /* ─── TAGS ─── */
 .tag {

@@ -18,7 +18,7 @@ steps" and then lists six).
 | 3. How to Determine Psionics | p.20–21 | no — class-driven only |
 | 4. Selecting a Race and O.C.C. | p.21–22 | yes |
 | 5. Equipment and Money | p.22 | equipment yes, money not at all |
-| 6. Rounding Out One's Character | p.22–23, 32–33 | alignment is free text; tables absent |
+| 6. Rounding Out One's Character | p.22–23, 32–33 | alignment done; background tables absent |
 
 ---
 
@@ -132,6 +132,16 @@ no neutral.
 - Good: Principled, Scrupulous
 - Selfish: Unprincipled, Anarchist
 - Evil: Miscreant, Aberrant, Diabolic
+
+The list lives in [`js/rules.js`](../js/rules.js), closed, asserted in smoke
+`[1c20]` — including a check that nothing named "neutral" has crept into it.
+
+Required in the wizard, which will not save without one. **Not** enforced
+server-side: a character created before the field existed has no alignment, and
+rejecting its updates would make it uneditable until somebody guessed what it
+used to be. The sheet offers the picker, says when one is missing, and saves
+either way. A value that is not one of the seven is preserved rather than
+dropped, so merely opening such a character cannot erase what it had.
 
 ## Experience (p.30–31)
 

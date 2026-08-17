@@ -1617,6 +1617,68 @@ console.log('\n[1c19] Skill percentages');
   })());
 }
 
+// ---------- 1c20. Alignments ----------
+// p.23: seven alignments in three groups, and deliberately no neutral.
+console.log('\n[1c20] Alignments');
+{
+  const rulesGlobal = {};
+  new Function('globalThis', readFileSync(join(appDir, 'js', 'rules.js'), 'utf8'))
+    .call(rulesGlobal, rulesGlobal);
+  const R = rulesGlobal.rules;
+
+  check('rules.js exposes the alignment helpers',
+    !!R && Array.isArray(R.ALIGNMENTS) && typeof R.alignmentOptions === 'function');
+  check('there are exactly seven alignments', R.ALIGNMENTS.length === 7, R.ALIGNMENTS.join(', '));
+  check('all seven are the book\'s', (() => {
+    const want = ['Principled', 'Scrupulous', 'Unprincipled', 'Anarchist',
+                  'Miscreant', 'Aberrant', 'Diabolic'];
+    return want.every((a) => R.ALIGNMENTS.includes(a)) && R.ALIGNMENTS.length === want.length;
+  })());
+  check('they fall into Good, Selfish and Evil',
+    R.ALIGNMENT_GROUPS.map(([g]) => g).join(',') === 'Good,Selfish,Evil');
+  check('each alignment reports its group',
+    R.alignmentGroup('Principled') === 'Good' && R.alignmentGroup('Anarchist') === 'Selfish'
+    && R.alignmentGroup('Diabolic') === 'Evil');
+
+  // The book rules neutral out by name, in a paragraph explaining why. If it
+  // ever appears in this list, something has widened it by accident.
+  check('there is no neutral', !R.ALIGNMENTS.some((a) => /neutral/i.test(a))
+    && !R.isAlignment('Neutral') && R.alignmentGroup('Neutral') === null);
+
+  check('an unknown value is not an alignment',
+    !R.isAlignment('') && !R.isAlignment('Lawful Good') && R.alignmentGroup('Lawful Good') === null);
+
+  // Rendering a character that predates the list must not be a way to erase
+  // what it had — the old value survives as its own selected option.
+  check('a legacy value is preserved as an option', (() => {
+    const html = R.alignmentOptions('Chaotic Neutral');
+    return html.includes('Chaotic Neutral') && /Chaotic Neutral[^<]*<\/option>/.test(html)
+      && html.includes('not a standard alignment');
+  })());
+  check('a known value is selected without a legacy option', (() => {
+    const html = R.alignmentOptions('Aberrant');
+    return html.includes('<option value="Aberrant" selected>') && !html.includes('not a standard alignment');
+  })());
+  check('an empty value selects the placeholder',
+    R.alignmentOptions('').includes('<option value="" selected>'));
+  check('options are grouped for the picker', (() => {
+    const html = R.alignmentOptions('');
+    return (html.match(/<optgroup/g) || []).length === 3;
+  })());
+  // The legacy value goes through an attribute, so it has to be escaped.
+  check('a legacy value is escaped', !R.alignmentOptions('"><script>').includes('<script>'));
+
+  // The sheet reads edited fields out of the DOM by selector. Alignment is the
+  // first <select> among them, and matching only inputs would drop it silently.
+  check('the sheet collects selects, not just inputs', (() => {
+    const src = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    return /querySelectorAll\('input\[data-sec\], select\[data-sec\]'\)/.test(src);
+  })());
+  // Both pages must actually load the shared list.
+  check('both pages load rules.js', ['index.html', 'sheet.html'].every((f) =>
+    readFileSync(join(appDir, f), 'utf8').includes('js/rules.js')));
+}
+
 // ---------- 1d. Paging ----------
 // A stray query string must not turn a list endpoint into a 400, so anything
 // nonsensical falls back to the default rather than erroring.

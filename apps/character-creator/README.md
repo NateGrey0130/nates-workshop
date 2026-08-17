@@ -62,6 +62,8 @@ apps/character-creator/
 │                             build themselves from it)
 ├── js/derive.js              Attribute tables → combat bonuses, saves, percentages
 │                             (classic script; both the wizard and the sheet use it)
+├── js/rules.js               Closed lists the book fixes — the seven alignments
+│                             (classic script, same reason as derive.js)
 ├── js/api.js                 The one HTTP helper for all five pages, and
 │                             errorDetails() (classic script)
 ├── js/picker.js              Catalog picker filtering — matching, the filter
@@ -353,6 +355,18 @@ overridable.
 | Save vs psionic attack | 12+ for Major and Master psychics, 15+ for everyone else | override `saves.psionics_target` on the character |
 | Skills gained on level-up | Start at the catalog's base percentage — a skill learned at level 6 is still new | `skills.occ_related_skills.schedule` |
 | Skill percentage cap | 98% — book rule (p.22), applied at creation and on level-up | — |
+
+**Alignment is required** and closed (p.23). Seven values in three groups —
+Good (Principled, Scrupulous), Selfish (Unprincipled, Anarchist) and Evil
+(Miscreant, Aberrant, Diabolic) — with deliberately **no neutral**; the book
+spends a paragraph ruling it out. The list lives in `js/rules.js`.
+
+The wizard will not save a character without one. It is *not* enforced
+server-side, because a character created before the field existed has none and
+rejecting its updates would make it uneditable until somebody guessed what it
+used to be. The sheet offers the picker, marks a missing alignment, and saves
+either way — and a value that is not one of the seven is preserved rather than
+dropped, so opening such a character cannot erase what it had.
 
 **Exceptional attribute rolls** (`js/dice.js`, p.14) are the book's, not ours. A
 3d6 attribute rolling 16, 17 or 18 earns one extra 1d6; if that die is a six it
