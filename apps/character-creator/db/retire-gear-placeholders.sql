@@ -40,7 +40,7 @@ SET markdown = replace(markdown,
       '  - { choose: 1, label: "energy pistol", qty: 1, from: ["ng-33-northern-gun-laser-pistol", "wilk-s-320-laser-pistol", "ng-57-northern-gun-heavy-duty-ion-blaster", "ng-super-laser-pistol-and-grenade-launcher"] }'),
     updated_at = datetime('now')
 WHERE class_id = 'juicer'
-  AND markdown LIKE '%item_id: "energy-pistol"%'
+  AND instr(markdown, 'item_id: "energy-pistol"') > 0
   AND (SELECT count(*) FROM gear WHERE slug IN (
         'ng-33-northern-gun-laser-pistol', 'wilk-s-320-laser-pistol',
         'ng-57-northern-gun-heavy-duty-ion-blaster', 'ng-super-laser-pistol-and-grenade-launcher')) = 4;
@@ -51,7 +51,7 @@ SET markdown = replace(markdown,
       '  - { choose: 1, label: "vibro-blade", qty: 1, from: ["vibro-knife", "vibro-saber", "vibro-sword", "vibro-claws"] }'),
     updated_at = datetime('now')
 WHERE class_id = 'juicer'
-  AND markdown LIKE '%item_id: "vibro-blade"%'
+  AND instr(markdown, 'item_id: "vibro-blade"') > 0
   AND (SELECT count(*) FROM gear WHERE slug IN (
         'vibro-knife', 'vibro-saber', 'vibro-sword', 'vibro-claws')) = 4;
 
@@ -65,7 +65,7 @@ SET markdown = replace(markdown,
       '  - { item_id: "ja-11-juicer-assassin-s-energy-rifle", qty: 1 }'),
     updated_at = datetime('now')
 WHERE class_id = 'juicer'
-  AND markdown LIKE '%item_id: "ja-11-energy-rifle"%'
+  AND instr(markdown, 'item_id: "ja-11-energy-rifle"') > 0
   AND EXISTS (SELECT 1 FROM gear WHERE slug = 'ja-11-juicer-assassin-s-energy-rifle');
 
 -- ── 2. Characters keep what they hold, as freeform lines ──
@@ -82,7 +82,7 @@ WHERE item_id IN (
   SELECT g.id FROM gear g
   WHERE g.slug IN ('energy-pistol', 'energy-rifle', 'vibro-blade', 'ancient-weapon')
     AND NOT EXISTS (SELECT 1 FROM imported_classes c
-                    WHERE c.deleted_at IS NULL AND c.markdown LIKE '%item_id: "' || g.slug || '"%'));
+                    WHERE c.deleted_at IS NULL AND instr(c.markdown, 'item_id: "' || g.slug || '"') > 0));
 
 -- ── 3. Drop the placeholders no class still cites ──
 -- In an environment where step 1 could not run, the Juicer still names two of
@@ -90,14 +90,14 @@ WHERE item_id IN (
 DELETE FROM gear
 WHERE slug IN ('energy-pistol', 'energy-rifle', 'vibro-blade', 'ancient-weapon')
   AND NOT EXISTS (SELECT 1 FROM imported_classes c
-                  WHERE c.deleted_at IS NULL AND c.markdown LIKE '%item_id: "' || gear.slug || '"%');
+                  WHERE c.deleted_at IS NULL AND instr(c.markdown, 'item_id: "' || gear.slug || '"') > 0);
 
 -- ── 4. Report ──
 SELECT (SELECT count(*) FROM gear
         WHERE slug IN ('energy-pistol', 'energy-rifle', 'vibro-blade', 'ancient-weapon')) AS placeholders_left,
        (SELECT count(*) FROM imported_classes
         WHERE deleted_at IS NULL
-          AND (markdown LIKE '%item_id: "energy-pistol"%' OR markdown LIKE '%item_id: "vibro-blade"%')) AS classes_still_citing,
+          AND (instr(markdown, 'item_id: "energy-pistol"') > 0 OR instr(markdown, 'item_id: "vibro-blade"') > 0)) AS classes_still_citing,
        (SELECT count(*) FROM character_items ci JOIN gear g ON g.id = ci.item_id
         WHERE g.slug IN ('energy-pistol', 'energy-rifle', 'vibro-blade', 'ancient-weapon')) AS inventory_rows_still_attached,
        -- 0 means the equipment chapter has not been imported here yet; re-run

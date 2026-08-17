@@ -226,6 +226,7 @@ function render() {
     ['parry', 'Parry'], ['dodge', 'Dodge'], ['roll', 'Roll w/ Punch'],
     ['damage_bonus', 'Damage'], ['punch', 'Punch'], ['power_punch', 'Power Punch'],
     ['kick', 'Kick'], ['knockout', 'Knock Out'], ['critical', 'Critical'],
+    ['pull_punch', 'Pull Punch'],
     ['run_yards_per_melee', 'Run (yds/melee)'],
   ];
   const SAVE_FIELDS = [
@@ -234,6 +235,7 @@ function render() {
     ['harmful_drugs', 'vs Harmful Drugs'], ['insanity', 'vs Insanity'],
     ['possession', 'vs Possession'], ['horror_factor', 'vs Horror Factor'],
     ['coma_death_pct', 'vs Coma/Death'], ['pain', 'vs Pain'],
+    ['illusionary_magic', 'vs Illusionary Magic'], ['mind_control', 'vs Mind Control'],
   ];
 
   const armorRows = armorList.map((a, i) => armorSlotHtml(a, i, w)).join('');
