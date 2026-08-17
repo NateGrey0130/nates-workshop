@@ -368,6 +368,28 @@ nothing is deducted from the other — the gear step is unchanged and the purse 
 simply recorded. Only coin goes in `starting_money`; saleable goods and
 artifacts belong in `equipment_starting`.
 
+**A related-skill category may be restricted.** Books state limits per
+category — "Espionage: Escape Artist only", "Physical: any except Acrobatics,
+Gymnastics and Wrestling", "Medical: none" — and a bare category name offered
+all of it. An entry is now either a plain string, meaning any, or an object:
+
+```yaml
+categories:
+  - "Wilderness"
+  - { name: "Espionage", only: ["Escape Artist"] }
+  - { name: "Physical", except: ["Acrobatics", "Gymnastics"] }
+```
+
+Setting both `only` and `except` is an error rather than a guess. A forbidden
+skill is **never offered**, rather than offered and rejected on save; the
+server-side validator enforces the same rule as a backstop, through the same
+`categoryAllows()` helper, so the picker and the validator cannot disagree about
+what is legal.
+
+Naming a skill the catalog does not hold yet is harmless: an `except` for a
+missing skill excludes nothing, and an `only` narrows the category to what does
+exist, so the restriction is already right for the day it is imported.
+
 **An attribute bonus may be dice.** Some books state one as a roll rather than a
 number — the Cyber-Knight adds +1D4 to five attributes, the Juicer +2D6 to P.S.
 and +2D4x10 to Spd. `bonuses.attributes` accepts either, and

@@ -215,6 +215,76 @@ export function combineClasses(rcc, occ) {
   return out;
 }
 
+// ─── related-skill categories ───
+//
+// A category is either a plain string ("Wilderness: Any") or an object saying
+// what the book allows inside it. Every entry the books print is one of two
+// shapes, so those are the two supported:
+//
+//   { name: "Espionage", only: ["Escape Artist"] }
+//   { name: "Physical", except: ["Acrobatics", "Gymnastics", "Wrestling"] }
+//
+// Strings keep working, so nothing already authored has to change. Shared by
+// the wizard's picker and the server-side validator, because two copies of
+// "may this character take this skill" is exactly the pair that drifts.
+
+const normName = (s) => String(s ?? '').trim().toLowerCase();
+
+export const categoryName = (entry) => (typeof entry === 'string' ? entry : entry?.name ?? null);
+
+// A human label for the picker: "Espionage (Escape Artist only)".
+export function categoryLabel(entry) {
+  const name = categoryName(entry);
+  if (typeof entry === 'string' || !entry) return name ?? '';
+  if (Array.isArray(entry.only) && entry.only.length) return `${name} (${entry.only.join(', ')} only)`;
+  if (Array.isArray(entry.except) && entry.except.length) return `${name} (except ${entry.except.join(', ')})`;
+  return name ?? '';
+}
+
+// Does this category list admit `skill` — an object with `name` and `category`?
+// An empty or absent list restricts nothing, which is what "any" means.
+export function categoryAllows(categories, skill) {
+  if (!Array.isArray(categories) || !categories.length) return true;
+  const cat = normName(skill?.category);
+  const entry = categories.find((c) => normName(categoryName(c)) === cat);
+  if (entry === undefined) return false;
+  if (typeof entry === 'string') return true;
+  const name = normName(skill?.name);
+  if (Array.isArray(entry.only) && entry.only.length) {
+    return entry.only.some((n) => normName(n) === name);
+  }
+  if (Array.isArray(entry.except) && entry.except.length) {
+    return !entry.except.some((n) => normName(n) === name);
+  }
+  return true;
+}
+
+function validateCategories(where, categories, errors) {
+  if (!Array.isArray(categories)) return;
+  for (const c of categories) {
+    if (typeof c === 'string') continue;
+    if (!c || typeof c !== 'object' || Array.isArray(c)) {
+      errors.push(`${where} entries must be a category name or an object with a name`);
+      continue;
+    }
+    if (typeof c.name !== 'string' || !c.name.trim()) {
+      errors.push(`${where} object entries need a name`);
+    }
+    for (const key of ['only', 'except']) {
+      if (c[key] === undefined) continue;
+      if (!Array.isArray(c[key]) || c[key].some((s) => typeof s !== 'string' || !s.trim())) {
+        errors.push(`${where}.${c.name}.${key} must be a list of skill names`);
+      }
+    }
+    // Both at once has no single reading: "only these, except some of them" is
+    // just a shorter `only` list, and guessing which the author meant is worse
+    // than saying so.
+    if (Array.isArray(c.only) && Array.isArray(c.except)) {
+      errors.push(`${where}.${c.name} sets both only and except; use one`);
+    }
+  }
+}
+
 // The attributes a class bonus may name. Anything else is a typo — a bonus
 // filed under a key nothing reads would silently do nothing, which is the
 // failure this whole block exists to prevent.
@@ -615,6 +685,7 @@ export function parseClassMarkdown(text) {
     const related = data.skills.occ_related_skills;
     if (related) {
       if (typeof related.count !== 'number') errors.push('skills.occ_related_skills.count must be a number');
+      validateCategories('skills.occ_related_skills.categories', related.categories, errors);
       // Optional staged picks: [{ level, count }] granted beyond the starting
       // count. Stored for future use — the leveling flow does not act on it yet.
       for (const step of related.schedule || []) {

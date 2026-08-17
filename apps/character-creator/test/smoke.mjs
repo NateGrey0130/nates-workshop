@@ -7,7 +7,8 @@ import { readFileSync, readdirSync, writeFileSync, rmSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseClassMarkdown, isGearChoice, applyVariant, parseYaml, combineClasses } from '../js/parser.js';
+import { parseClassMarkdown, isGearChoice, applyVariant, parseYaml, combineClasses,
+         categoryAllows, categoryLabel } from '../js/parser.js';
 import { referencedGear } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import {
@@ -1988,6 +1989,62 @@ console.log('\n[1c24] Dice attribute bonuses');
   check('the sheet passes rolled bonuses to classBonuses', (() => {
     const src = readFileSync(join(appDir, 'sheet.js'), 'utf8');
     return /classBonuses\(cls, c\.level, c\.attribute_bonuses\)/.test(src);
+  })());
+}
+
+// ---------- 1c25. Per-category skill restrictions ----------
+// Every book states what a category allows: "Espionage: Escape Artist only",
+// "Physical: any except Acrobatics, Gymnastics and Wrestling". We offered each
+// category wholesale, so a Long Bowman could take Pick Pockets as Espionage.
+console.log('\n[1c25] Category restrictions');
+{
+  const cats = ['Domestic',
+    { name: 'Espionage', only: ['Escape Artist'] },
+    { name: 'Physical', except: ['Acrobatics', 'Gymnastics'] }];
+  const allows = (name, category) => categoryAllows(cats, { name, category });
+
+  check('an unrestricted category admits anything in it', allows('Cook', 'Domestic'));
+  check('a category not listed at all is refused', !allows('Basic Math', 'Science'));
+  check('only-lists admit just what they name',
+    allows('Escape Artist', 'Espionage') && !allows('Pick Pockets', 'Espionage'));
+  check('except-lists admit everything but what they name',
+    allows('Climbing', 'Physical') && !allows('Acrobatics', 'Physical') && !allows('Gymnastics', 'Physical'));
+  check('matching ignores case and padding',
+    categoryAllows(cats, { name: '  escape artist ', category: 'ESPIONAGE' }));
+  // An empty or absent list means "any", which is what most classes state.
+  check('no list restricts nothing',
+    categoryAllows([], { name: 'X', category: 'Y' }) && categoryAllows(null, { name: 'X', category: 'Y' }));
+
+  check('a label says what the restriction is', (() => {
+    const l = cats.map(categoryLabel);
+    return l[0] === 'Domestic' && l[1] === 'Espionage (Escape Artist only)'
+      && l[2] === 'Physical (except Acrobatics, Gymnastics)';
+  })());
+
+  const mk = (catsYaml) => parseClassMarkdown(
+    `---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: occ\nskills:\n  occ_related_skills:\n    count: 2\n    categories:\n${catsYaml}\n---\n\n## Lore\n\nx\n`);
+
+  check('plain strings still parse', mk('      - "Wilderness"').ok);
+  check('an object entry parses', mk('      - { name: "Espionage", only: ["Escape Artist"] }').ok);
+  check('an object without a name is rejected', !mk('      - { only: ["X"] }').ok);
+  check('a non-list only is rejected', !mk('      - { name: "Espionage", only: "Escape Artist" }').ok);
+  // "only these, except some of them" is just a shorter only-list; guessing
+  // which was meant is worse than refusing.
+  check('setting both only and except is rejected', (() => {
+    const r = mk('      - { name: "Espionage", only: ["A"], except: ["B"] }');
+    return !r.ok && r.errors.some((e) => /both only and except/.test(e));
+  })());
+
+  // The picker and the server-side validator must not disagree about what is
+  // legal, which is why they share one helper rather than each having a copy.
+  check('the wizard filters through the shared helper', (() => {
+    const src = readFileSync(join(appDir, 'app.js'), 'utf8');
+    return /categoryAllows\(categories, sk\)/.test(src);
+  })());
+  check('the validator uses the same helper', (() => {
+    const src = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
+      '_lib', 'validate-character.js'), 'utf8');
+    return src.includes('categoryAllows(allowed,');
   })());
 }
 
