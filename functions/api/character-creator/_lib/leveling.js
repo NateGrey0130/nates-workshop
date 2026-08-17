@@ -89,7 +89,11 @@ export function buildProposal(character, cls, toLevel) {
   }
 
   for (const s of Array.isArray(character.skills) ? character.skills : []) {
-    if (!s.pct || !s.per_level) continue; // non-percentile skills and frozen secondaries don't advance
+    // A skill with no percentage (W.P.s, hand to hand) or no per-level step
+    // does not advance. Secondary skills used to land here because the wizard
+    // wrote per_level 0 on every one of them — the book gives them no O.C.C.
+    // bonus, but they still "increase as the character grows in experience".
+    if (!s.pct || !s.per_level) continue;
     proposal.skills.push({
       name: s.name, type: s.type,
       from: s.pct, to: Math.min(SKILL_PCT_CAP, s.pct + s.per_level * gained),

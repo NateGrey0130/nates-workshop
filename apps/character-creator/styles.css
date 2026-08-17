@@ -263,6 +263,9 @@ th {
 .skill-row .num { font-family: 'JetBrains Mono', monospace; text-align: right; color: var(--text-secondary); }
 .skill-row .num.pct { color: var(--text-primary); font-weight: 600; }
 .skill-row .note { grid-column: 1 / -1; font-size: 11px; color: var(--text-muted); padding-left: 10px; }
+/* Where a skill's percentage came from. Sits inline after the name rather than
+   on its own line, so it does not push every skill to double height. */
+.skill-row .note-inline { font-size: 10px; color: var(--text-muted); white-space: nowrap; }
 
 /* Psionics/magic table, mirroring the form's cost column. */
 .power-row {

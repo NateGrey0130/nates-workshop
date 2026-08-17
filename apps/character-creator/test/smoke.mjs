@@ -16,7 +16,7 @@ import {
 } from '../../../functions/api/character-creator/_lib/import-engine.js';
 import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
 import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
-import { skillGrantsFor } from '../../../functions/api/character-creator/_lib/leveling.js';
+import { skillGrantsFor, buildProposal } from '../../../functions/api/character-creator/_lib/leveling.js';
 import { rollPoolFormula, rollAttribute } from '../js/dice.js';
 import { similarity, normaliseName, classesMentioning, findDuplicates } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
 import {
@@ -1556,6 +1556,65 @@ console.log('\n[1c18] Exceptional attribute rolls');
   })());
   check('an unparseable expression falls back to 3d6',
     roll('two handfuls', [4, 4, 4]).total === 12);
+}
+
+// ---------- 1c19. Skill percentages ----------
+// The I.Q. bonus is a ONE-TIME addition to every skill percentage (p.22), and
+// secondary skills advance per level even though they get no O.C.C. bonus.
+console.log('\n[1c19] Skill percentages');
+{
+  // skillsPayload() lives inside the wizard module and depends on wizard state,
+  // so the rule it applies is restated here against the same derive call the
+  // wizard makes. What is pinned is the arithmetic and the cap.
+  const CAP = 98;
+  const iqOf = (iq) => D.bio({ IQ: iq }, null).iq_skill_bonus_pct || 0;
+  const apply = (pct, iq) => (!pct ? { pct, iq_bonus: 0 }
+    : { pct: Math.min(CAP, pct + iqOf(iq)), iq_bonus: iqOf(iq) });
+
+  check('an average I.Q. adds nothing', (() => {
+    const r = apply(35, 12);
+    return r.pct === 35 && r.iq_bonus === 0;
+  })());
+  check('I.Q. 16 adds its printed 2%', apply(35, 16).pct === 37);
+  check('I.Q. 18 adds its printed 4%', apply(35, 18).pct === 39);
+  check('I.Q. 30 adds its printed 16%', apply(35, 30).pct === 51);
+
+  // A W.P. or hand to hand has no percentage to modify; inventing one would
+  // imply a roll the skill does not have.
+  check('a non-percentile skill stays at zero', (() => {
+    const r = apply(0, 30);
+    return r.pct === 0 && r.iq_bonus === 0;
+  })());
+
+  // The cap matters now in a way it did not before: a high base plus a large
+  // I.Q. bonus is the first thing at creation that can exceed 98.
+  check('the I.Q. bonus cannot push a skill past 98%', (() => {
+    const r = apply(90, 30);           // 90 + 16 = 106
+    return r.pct === CAP && r.iq_bonus === 16;
+  })());
+  check('a skill already at the cap stays there', apply(98, 24).pct === CAP);
+
+  // The bonus is recorded, not just folded in, so 39% is distinguishable from a
+  // skill whose base genuinely is 39.
+  check('the bonus is recorded alongside the total', apply(35, 18).iq_bonus === 4);
+
+  // Secondary skills carry a real per-level step now, so the level-up flow
+  // advances them. Previously the wizard wrote 0 and they were frozen for life.
+  check('a secondary skill with a per-level step advances', (() => {
+    const cls = { skills: {} };
+    const character = { level: 1, skills: [
+      { name: 'Fishing', type: 'secondary', pct: 29, per_level: 5 },
+      { name: 'W.P. Sword', type: 'occ', pct: 0, per_level: 0 },
+    ] };
+    const p = buildProposal(character, cls, 3);
+    const fishing = p.skills.find((s) => s.name === 'Fishing');
+    return fishing && fishing.from === 29 && fishing.to === 39   // two levels × +5
+      && !p.skills.some((s) => s.name === 'W.P. Sword');
+  })());
+  check('level-up still respects the 98% cap', (() => {
+    const character = { level: 1, skills: [{ name: 'Prowl', type: 'occ', pct: 95, per_level: 5 }] };
+    return buildProposal(character, { skills: {} }, 4).skills[0].to === CAP;
+  })());
 }
 
 // ---------- 1d. Paging ----------

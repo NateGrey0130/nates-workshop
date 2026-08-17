@@ -1021,9 +1021,37 @@ function powersPayload() {
 }
 
 // Step 6 — review & save
+//
+// A character's I.Q. adds a ONE-TIME bonus to every skill percentage (p.22).
+// One-time is the operative word: it lands in the starting number and never
+// again, which is why it is added here at creation rather than anywhere that
+// runs per level.
+//
+// It reaches secondary skills too. The book's "no skill bonuses are applicable"
+// is about the bonus printed in parentheses on the O.C.C. page — it says so in
+// the same breath, "the bonus indicated in parentheses applies only to O.C.C.
+// related skill selections". The I.Q. bonus is a separate paragraph about the
+// character rather than the occupation, and withholding it would make a
+// genius's hobby skills identical to a dullard's.
+//
+// A skill with no percentage at all — W.P.s, hand to hand — stays at zero. It
+// is not a percentile skill, so there is nothing for a percentage bonus to
+// modify, and giving it a number would invent a roll that does not exist.
+const SKILL_PCT_CAP = 98;   // p.22: "there is always a margin for error"
+
 function skillsPayload() {
   const find = (n) => skillByName().get(n) || {};
   const occ = S.cls.skills?.occ_skills || [];
+  const iq = derive.bio(S.attrs, null, derive.classBonuses(S.cls, 1)).iq_skill_bonus_pct || 0;
+
+  // pct stays the true current percentage, because level-up increments it and
+  // the sheet prints it. iq_bonus records how much of it came from I.Q. so the
+  // number can explain itself rather than being unexplained arithmetic.
+  const withIq = (row) => {
+    if (!row.pct) return { ...row, iq_bonus: 0 };
+    return { ...row, pct: Math.min(SKILL_PCT_CAP, row.pct + iq), iq_bonus: iq };
+  };
+
   // Choice-group picks are stored exactly like fixed class skills, inheriting
   // the group's base/per_level.
   const groupPicks = occ.flatMap((s, gi) => !isGroup(s) ? [] :
@@ -1038,8 +1066,12 @@ function skillsPayload() {
     }),
     ...groupPicks,
     ...S.related.map((n) => ({ name: n, category: find(n).category, pct: find(n).base || 0, per_level: find(n).per_level || 0, type: 'related' })),
-    ...S.secondary.map((n) => ({ name: n, category: find(n).category, pct: find(n).base || 0, per_level: 0, type: 'secondary' })),
-  ];
+    // Secondary skills get no O.C.C. bonus, but they are not frozen: "all
+    // skills increase as the character grows in experience". Storing 0 here
+    // stopped them advancing forever, so a level 10 character's hobby skills
+    // sat at their level 1 values.
+    ...S.secondary.map((n) => ({ name: n, category: find(n).category, pct: find(n).base || 0, per_level: find(n).per_level || 0, type: 'secondary' })),
+  ].map(withIq);
 }
 // ---------- review layout ----------
 // The review used to run everything together as one dot-separated paragraph.
@@ -1101,7 +1133,9 @@ function renderReview() {
       </div>
     </div>
 
-    ${listSection('Skills', skillsPayload().map((s) => esc(s.name) + (s.pct ? ` <span class="muted">${s.pct}%</span>` : '')))}
+    ${listSection('Skills', skillsPayload().map((s) => esc(s.name)
+      + (s.pct ? ` <span class="muted">${s.pct}%</span>` : '')
+      + (s.iq_bonus ? ` <span class="muted small">+${s.iq_bonus} I.Q.</span>` : '')))}
     ${listSection('Equipment', equipmentPayload().map((e) => esc(e.name || e.custom_name) + (e.qty > 1 ? ` <span class="muted">×${e.qty}</span>` : '')))}
     ${listSection('Spells', powersPayload().filter((x) => x.type === 'spell')
       .map((x) => esc(x.name) + ` <span class="muted">L${x.level} · ${x.cost} P.P.E.</span>`))}
