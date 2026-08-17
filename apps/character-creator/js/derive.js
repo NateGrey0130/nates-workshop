@@ -66,6 +66,10 @@
       parry: pp,
       dodge: pp,
       roll: 0,
+      // Pull punch is in the Hand to Hand tables (p.49) and in three class
+      // entries, but on no attribute row — it is trained, not innate. Zero
+      // until a class or a human says otherwise.
+      pull_punch: 0,
       damage_bonus: chart('ps_damage', attrs.PS),
       // Spd × 5 yards per melee round is the standard movement rule.
       run_yards_per_melee: n(attrs.Spd) * 5,
@@ -101,9 +105,16 @@
   // (psionics, insanity, possession).
   //
   // The chart names only four saves: M.E. vs psionic attack, M.E. vs insanity,
-  // P.E. vs coma/death, and P.E. vs magic/poison. Possession, horror factor and
-  // pain are not on it, so each borrows the printed row for its own attribute —
-  // a house rule, and the reason they are grouped rather than given rows above.
+  // P.E. vs coma/death, and P.E. vs magic/poison. Possession, horror factor,
+  // pain, illusionary magic and mind control are not on it, so each borrows the
+  // printed row for its own attribute — a house rule, and the reason they are
+  // grouped rather than given rows above.
+  //
+  // Illusionary magic borrows the magic/poison row because it IS magic; mind
+  // control borrows the psionic row because the books call it "psionic and
+  // chemical". Both exist because real classes grant bonuses to them — the
+  // adult Chiang-Ku is +3 to save vs illusionary magic, the Juicer +6 vs mind
+  // control — and until there was a key, writing either did nothing at all.
   //
   // `psychicTier` is the character's own tier, used only for the psionic save
   // TARGET — the bonus stays purely M.E.
@@ -120,6 +131,8 @@
       insanity: chart('me_insanity', attrs.ME),
       possession: mePsionic,
       horror_factor: mePsionic,
+      illusionary_magic: peMagic,
+      mind_control: mePsionic,
       coma_death_pct: chart('pe_coma_pct', attrs.PE),
       pain: peMagic,
     };

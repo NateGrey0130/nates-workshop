@@ -1860,6 +1860,69 @@ console.log('\n[1c22] Random psionics');
   })());
 }
 
+// ---------- 1c23. Keys a class can actually grant ----------
+// A bonus written for a key derive does not expose is silently inert: it parses,
+// it stores, it renders nowhere. Three real class bonuses sat as prose for
+// exactly that reason before these keys existed.
+console.log('\n[1c23] Bonus keys');
+{
+  const combat = D.combat({ PS: 10, PP: 10 }, null);
+  const saves = D.saves({ PE: 10, ME: 10 }, null);
+
+  check('pull punch is a combat key', 'pull_punch' in combat);
+  check('the illusionary magic and mind control saves exist',
+    'illusionary_magic' in saves && 'mind_control' in saves);
+
+  // Pull punch is in the Hand to Hand tables, not on the attribute chart: it is
+  // trained, not innate, so no attribute moves it.
+  check('pull punch derives nothing from attributes', (() => {
+    const low = D.combat({ PS: 3, PP: 3 }, null).pull_punch;
+    const high = D.combat({ PS: 30, PP: 30 }, null).pull_punch;
+    return low === 0 && high === 0;
+  })());
+  // The two saves borrow the printed row for their own attribute.
+  check('illusionary magic follows the P.E. magic row', (() => {
+    const s = (pe) => D.saves({ PE: pe }, null);
+    return s(15).illusionary_magic === 0 && s(18).illusionary_magic === s(18).spell_magic
+      && s(30).illusionary_magic === 8;
+  })());
+  check('mind control follows the M.E. psionic row', (() => {
+    const s = (me) => D.saves({ ME: me }, null);
+    return s(15).mind_control === 0 && s(18).mind_control === s(18).psionics
+      && s(30).mind_control === 8;
+  })());
+
+  // The point of the exercise: a class bonus for each now reaches the sheet.
+  check('a class can grant all three', (() => {
+    const bonuses = { attributes: {}, combat: { pull_punch: 2 },
+                      saves: { illusionary_magic: 3, mind_control: 6 } };
+    const c = D.combat({ PS: 10 }, null, bonuses);
+    const s = D.saves({ PE: 10, ME: 10 }, null, null, bonuses);
+    return c.pull_punch === 2 && s.illusionary_magic === 3 && s.mind_control === 6;
+  })());
+
+  // The sheet has to list them, or the value is computed and never shown.
+  check('the sheet prints all three', (() => {
+    const src = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    return ['pull_punch', 'illusionary_magic', 'mind_control'].every((k) => src.includes(`'${k}'`));
+  })());
+
+  // Guard scripts: `_` is a single-character WILDCARD in a LIKE pattern, so
+  // '%mind_control%' also matches the words "mind control". A guard written that
+  // way silently matches nothing and the migration does nothing.
+  check('no data script guards an underscored key with LIKE', (() => {
+    const dir = join(appDir, 'db');
+    const bad = [];
+    for (const f of readdirSync(dir).filter((x) => x.endsWith('.sql'))) {
+      const src = readFileSync(join(dir, f), 'utf8');
+      // Any LIKE pattern containing an underscore, including one built by
+      // concatenation -- '%item_id: "' || slug || '"%' has the same hazard.
+      for (const m of src.matchAll(/LIKE\s+('[^']*_[^']*')/gi)) bad.push(`${f}: ${m[1]}`);
+    }
+    return bad.length === 0;
+  })(), 'use instr() instead: ');
+}
+
 // ---------- 1d. Paging ----------
 // A stray query string must not turn a list endpoint into a 400, so anything
 // nonsensical falls back to the default rather than erroring.

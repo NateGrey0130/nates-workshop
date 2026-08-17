@@ -425,9 +425,9 @@ The rows deliberately disagree with one another, and that is the point:
 |---|---|---|
 | P.P. | strike, parry, dodge | +1 per **two** points from 16 |
 | P.S. | damage bonus | +1 per point from 16 |
-| P.E. | vs poison, drugs, spell/ritual magic, pain | +1 per **two** points |
+| P.E. | vs poison, drugs, spell/ritual magic, pain, illusionary magic | +1 per **two** points |
 | P.E. | coma/death | +4% at 16, +5% at 17, then +2% a point |
-| M.E. | vs psionics, possession, horror factor | +1 per **two** points |
+| M.E. | vs psionics, possession, horror factor, mind control | +1 per **two** points |
 | M.E. | vs insanity | +1 per two to 19, then +1 a point |
 | M.A. | invoke trust/intimidate | 40% at 16, +5% a point, flattening after 24 |
 | P.B. | charm/impress | 30% at 16, +5% a point, flattening after 26 |

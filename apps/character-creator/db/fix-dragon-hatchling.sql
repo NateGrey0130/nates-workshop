@@ -140,4 +140,4 @@ creature''s abilities, only its shape.
 ',
        updated_at = datetime('now')
  WHERE class_id = 'dragon-hatchling'
-   AND markdown LIKE '%spells_starting: 4%';
+   AND instr(markdown, 'spells_starting: 4') > 0;

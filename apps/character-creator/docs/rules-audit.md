@@ -249,8 +249,16 @@ Collected across the five, because these recur:
   `secondary_skills` does not.
 - **Variant-specific skills.** A Chiang-Ku hatchling's advanced math should start
   at first level; variants override dice, pools and bonuses only.
-- **Missing derive keys**: pull punch, save vs illusionary magic, save vs mind
-  control. A bonus written for any of them would do nothing at all.
+- ~~**Missing derive keys**: pull punch, save vs illusionary magic, save vs mind
+  control.~~ **Resolved.** All three exist now, and the bonuses the books grant
+  are applied: the adult Chiang-Ku is +2 to pull punch and +3 to save vs
+  illusionary magic, the hatchling +1, and the Juicer +6 vs mind control.
+
+  Checked before widening further: Palladium 2nd Ed.'s Hand to Hand tables
+  (p.49) use only strike, parry, dodge, damage, roll with punch and pull punch,
+  and the book has no consolidated saving-throw table. Pull punch was the *only*
+  combat key missing, and these three are the complete grounded set. Anything
+  more would be invented.
 
 **Correcting a class does not change characters already built from it** — skills
 are stored per character. The existing production Long Bowman keeps the skills
@@ -265,6 +273,21 @@ Two limits met while doing it:
   4, 7, 10 and 13, and there is no `schedule` on that block the way there is on
   `occ_related_skills`. Nor can a category's per-skill restrictions be
   expressed — "Espionage: Escape Artist only" becomes plain "Espionage".
+
+## A guard that silently does nothing
+
+`_` is a single-character **wildcard** in a SQL `LIKE` pattern. A guard written
+`markdown NOT LIKE '%mind_control%'` therefore also matches the plain words
+"mind control" -- which the Juicer's own notes contain -- so the guard excluded
+the row and the update applied to nothing, reporting success.
+
+Every data script under `db/` now guards with `instr()` instead, and a smoke
+check fails the build if an underscored `LIKE` pattern reappears, including one
+built by concatenation (`'%item_id: "' || slug || '"%'` has the same hazard).
+
+The others were latent rather than live: `'%spells_starting: 4%'` and
+`'%item_id: "energy-pistol"%'` happened never to meet the alternative spelling.
+They are converted anyway, because these scripts are meant to be re-runnable.
 
 ## Setting decisions, not book rules
 

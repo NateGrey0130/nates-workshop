@@ -9,5 +9,5 @@ UPDATE imported_classes
                           'ppe_base: "2d6"' || char(13) || char(10) || 'starting_money: 170'),
        updated_at = datetime('now')
  WHERE class_id = 'long-bowman'
-   AND markdown LIKE '%ppe_base: "2d6"%'
-   AND markdown NOT LIKE '%starting_money%';
+   AND instr(markdown, 'ppe_base: "2d6"') > 0
+   AND instr(markdown, 'starting_money') = 0;
