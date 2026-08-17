@@ -23,8 +23,14 @@ const BIO_FIELDS = [
   ['height', 'Height'], ['weight', 'Weight'],
   ['family_origin', 'Family Origin'], ['environment', 'Environment'],
   ['native_languages', 'Native Language(s)'], ['insanity', 'Insanity (if any)'],
+  ['birth_order', 'Birth Order'], ['land_of_origin', 'Land of Origin'],
+  ['disposition', 'Disposition'], ['racial_bias', 'Racial Bias'],
   ['money', null],   // label depends on the system — see bioLabel()
 ];
+// Split evenly rather than at a fixed index: the list has grown twice and a
+// hard-coded 6 left one column noticeably longer each time.
+const BIO_HALF = Math.ceil(BIO_FIELDS.length / 2);
+
 // Gold in Palladium, credits in Rifts. Resolved at render because the system is
 // not known when this list is declared.
 const bioLabel = ([key, label]) => label ?? (key === 'money' ? rules.currencyLabel(S.system) : key);
@@ -57,6 +63,9 @@ const S = {
   // and a tier of null is a real result (26-00, no psionics) rather than an
   // absence, so the two must stay distinguishable.
   psiRoll: null, psiShape: null, psiCategory: null, psiTrimmed: 0,
+  // The Age table's ×2 for long-lived races, and the percentile each field
+  // last rolled — shown so a result can be checked against the book.
+  longLived: false, bioRolls: {},
   // A class may state an attribute bonus as dice ("add 2D6 to P.S."). Rolled
   // once here and stored, because it cannot be re-evaluated on every render.
   attrBonuses: {},
@@ -189,7 +198,7 @@ const DRAFT_KEYS = [
   'step', 'system', 'classMode', 'quiz', 'variant', 'occ', 'occVariant', 'attrMethods', 'attrs',
   'related', 'secondary', 'groupPicks', 'gearPicks',
   'equipment', 'equipInit', 'charName', 'campaignId', 'newCampaign',
-  'spells', 'psi', 'bio', 'pools',
+  'spells', 'psi', 'bio', 'pools', 'longLived', 'bioRolls',
   'psiRoll', 'psiShape', 'psiCategory', 'attrBonuses',
 ];
 
@@ -366,7 +375,7 @@ function resetBuild() {
   S.gearChoices = []; S.gearPicks = {};
   S.variant = null;
   S.occ = null; S.occVariant = null;
-  S.spells = []; S.psi = []; S.bio = {};
+  S.spells = []; S.psi = []; S.bio = {}; S.longLived = false; S.bioRolls = {};
   S.psiRoll = null; S.psiShape = null; S.psiCategory = null; S.attrBonuses = {};
 }
 
@@ -1172,9 +1181,12 @@ function renderDetails() {
     <p class="muted">The identity block from the printed sheet. <b>Alignment is required</b> — the book
       calls it the one mandatory part of this step, and there is deliberately no neutral. Everything
       else is optional and can be filled in later on the character sheet.</p>
+    <p><button class="btn btn-sm" onclick="rollBioAll()">🎲 Roll the background tables</button>
+      <span class="muted small">Fills only what is still blank. Every 🎲 rolls its own table (p.32-33);
+      all of it is optional.</span></p>
     <div class="cols" style="margin-top:12px">
-      <div>${BIO_FIELDS.slice(0, 7).map(bioInput).join('')}</div>
-      <div>${BIO_FIELDS.slice(7).map(bioInput).join('')}</div>
+      <div>${BIO_FIELDS.slice(0, BIO_HALF).map(bioInput).join('')}</div>
+      <div>${BIO_FIELDS.slice(BIO_HALF).map(bioInput).join('')}</div>
     </div>
     <h3>Derived from attributes</h3>
     <p class="small">Invoke Trust/Intimidate <b>${d.invoke_trust_pct}%</b> (M.A. ${S.attrs.MA ?? '—'})
@@ -1193,11 +1205,46 @@ function bioInput([key, label]) {
   const control = key === 'alignment'
     ? `<select onchange="setBio('alignment', this.value)" style="flex:1">${rules.alignmentOptions(S.bio.alignment)}</select>`
     : `<input type="text" value="${esc(S.bio[key] ?? '')}" onchange="setBio('${key}', this.value)" style="flex:1">`;
+  // Every field the book prints a table for gets a die beside it. The rest are
+  // free text: there is no table for a character's name.
+  const rollable = !!rules.BACKGROUND_TABLES[key];
+  const die = rollable ? ` <button class="btn btn-sm btn-ghost" title="Roll on the ${esc(rules.BACKGROUND_TABLES[key].label)} table"
+    onclick="rollBio('${key}')">🎲</button>` : '';
+  // The Age table's own note: double the years for an elf, dwarf or changeling.
+  const ageOpt = key === 'age'
+    ? ` <label class="small" title="Multiply the rolled age by two, per the table's note">
+        <input type="checkbox" ${S.longLived ? 'checked' : ''} onchange="setLongLived(this.checked)"> long-lived race (×2)</label>` : '';
   return `<div class="rowline">
     <label class="small" style="min-width:132px">${esc(bioLabel([key, label]))}${key === 'alignment' ? ' <span class="req">*</span>' : ''}</label>
-    ${control}
+    ${control}${die}${ageOpt}
   </div>`;
 }
+// The book's tables are optional and nothing derives from them, so a roll just
+// fills the field — no confirmation, and typing over it is always allowed.
+function rollBio(key) {
+  const r = rules.rollBackground(key, { double: key === 'age' && S.longLived });
+  if (!r || r.text == null) return;
+  S.bio[key] = r.text;
+  S.bioRolls[key] = r.roll;
+  render();
+}
+
+// Fills only what is still blank, so a name and age already decided survive.
+function rollBioAll() {
+  for (const key of Object.keys(rules.BACKGROUND_TABLES)) {
+    if (S.bio[key]) continue;
+    rollBio(key);
+  }
+  render();
+}
+
+// Re-rolls the age when the multiplier changes, since the old value was rolled
+// under the other assumption and leaving it would be quietly wrong.
+function setLongLived(on) {
+  S.longLived = !!on;
+  if (S.bio.age) rollBio('age'); else render();
+}
+
 function setBio(key, value) {
   const v = String(value).trim();
   if (v) S.bio[key] = v; else delete S.bio[key];
@@ -1514,6 +1561,7 @@ Object.assign(window, {
   S, render, computePools, goStep, pickSystem, classMode, quizPick, pickClass,
   confirmClass, setMethod, setAllMethod, doRoll, rollAll, manualSet, pbAdj,
   doPsiRoll, skipPsiRoll, setPsiShape, setPsiCategory,
+  rollBio, rollBioAll, setLongLived,
   toggleSkill, toggleGroupPick, rmEquip, addCatalog, addCustom, togglePower, setBio, save, startOver,
   resumeDraft, dismissDraft, pickVariant, pickOcc,
 });

@@ -18,7 +18,7 @@ steps" and then lists six).
 | 3. How to Determine Psionics | p.20–21 | yes |
 | 4. Selecting a Race and O.C.C. | p.21–22 | yes |
 | 5. Equipment and Money | p.22 | yes |
-| 6. Rounding Out One's Character | p.22–23, 32–33 | alignment done; background tables absent |
+| 6. Rounding Out One's Character | p.22–23, 32–33 | yes |
 
 ---
 
@@ -195,6 +195,35 @@ dropped, so merely opening such a character cannot erase what it had.
   with one shared curve (a documented house rule — see the README).
 - The XP award table on p.31 is per action: 25 for performing a skill, 100 for a
   clever useful idea, 150–300 for a great menace, and so on.
+
+## Step 6 — character background (p.32–33)
+
+Nine percentile tables, and the book opens by calling all of them **optional**.
+Nothing derives from a result and nothing requires one.
+
+Birth Order · Weight · Height · Age · Disposition · Land of Origin ·
+Type of Environment · Social or Family Background · Racial Hostilities
+
+Transcribed in [`js/rules.js`](../js/rules.js) as `[maxRoll, text]` pairs, the
+same shape as the psionics table, and asserted in smoke `[1c28]` — which checks
+each table covers 01-00 with no gap or overlap, since a transcription slip there
+would silently return nothing for some rolls.
+
+Kept as printed, including the Birth Order table's jump from Fourth Born to
+**Sixth Born**. That is the book's own oddity, not a slip here.
+
+Five map to bio fields that already existed; the other four — birth order,
+disposition, land of origin, racial bias — are new fields in the same `bio`
+blob, so no migration. The printed sheet has lines for them, and a rolled
+disposition put in a notes field would be invisible.
+
+**Age doubles for an elf, dwarf or changeling.** Offered as a checkbox beside
+the roll rather than detected: race is free text, so matching on it would be
+wrong as often as right, and a Chiang-Ku lives 6000 years anyway.
+
+**Land of Origin is the Palladium world's map**, but the tables are offered in
+both systems — a rift opens onto that map, and 97-00 on that very table is
+"other world, dimension or time".
 
 ## Class data accuracy
 
