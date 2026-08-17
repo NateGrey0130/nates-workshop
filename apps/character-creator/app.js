@@ -7,7 +7,8 @@
 // inline onclick handlers need their entry points on window — see the
 // Object.assign at the bottom.
 import { evalDice, rollPoolFormula, rollAttribute } from './js/dice.js';
-import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSIONIC_TIER_RULES } from './js/psionics.js';
+import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSIONIC_TIER_RULES,
+         rollsForPsionics as classRollsForPsionics } from './js/psionics.js';
 import { isChoiceGroup, isGearChoice, applyVariant, combineClasses,
          categoryAllows, categoryLabel } from './js/parser.js';
 
@@ -55,7 +56,7 @@ const S = {
   // Step 3. psiRoll is {roll, tier} once rolled — null means not yet rolled,
   // and a tier of null is a real result (26-00, no psionics) rather than an
   // absence, so the two must stay distinguishable.
-  psiRoll: null, psiShape: null, psiCategory: null,
+  psiRoll: null, psiShape: null, psiCategory: null, psiTrimmed: 0,
   // A class may state an attribute bonus as dice ("add 2D6 to P.S."). Rolled
   // once here and stored, because it cannot be re-evaluated on every render.
   attrBonuses: {},
@@ -680,7 +681,9 @@ function takenNames() {
   return new Set([...occ, ...groups, ...S.related.map((n) => n.toLowerCase()), ...S.secondary.map((n) => n.toLowerCase())]);
 }
 function renderSkills() {
-  const sk = S.cls.skills || {};
+  // The COMPOSED class: a rolled major psionic has half the related-skill
+  // allowance, and the Skills step has to show the number that actually applies.
+  const sk = psiClass().skills || {};
   const relatedCfg = sk.occ_related_skills || { count: 0, categories: [] };
   const secondaryCfg = sk.secondary_skills || { count: 0 };
   const taken = takenNames();
@@ -979,12 +982,27 @@ function psiClass() {
   return withRolledPsionics(S.cls, { psychic_tier: S.psiRoll?.tier, psychic_shape: S.psiShape });
 }
 
-// Only a class that grants no psionics of its own rolls. The book offers the
-// table and the psychic O.C.C.s as alternatives, not as things that stack.
-const rollsForPsionics = () => !S.cls?.psionics;
+// Only a class that grants no psionics of its own rolls, and only if its race
+// has psychic potential at all. The book offers the table and the psychic
+// O.C.C.s as alternatives, not as things that stack.
+const canRollPsionics = () => classRollsForPsionics(S.cls);
+
+// Rolling a major psionic halves the related-skill allowance (p.21), and this
+// wizard asks for skills BEFORE powers — the book asks in the other order. So a
+// roll can invalidate picks already made. Trim the excess and say so, rather
+// than letting the character reach Review holding more than the class allows.
+//
+// Trims from the end, so the picks made first survive.
+function trimRelatedToAllowance() {
+  const limit = psiClass().skills?.occ_related_skills?.count ?? 0;
+  if (S.related.length <= limit) { S.psiTrimmed = 0; return; }
+  S.psiTrimmed = S.related.length - limit;
+  S.related = S.related.slice(0, limit);
+}
 
 function doPsiRoll() {
   S.psiRoll = rollPsionics();
+  trimRelatedToAllowance();
   // A new roll invalidates whatever the previous one allowed.
   S.psiShape = S.psiRoll.tier ? PSIONIC_TIER_RULES[S.psiRoll.tier].shapes[0].id : null;
   S.psiCategory = null;
@@ -995,6 +1013,7 @@ function doPsiRoll() {
 // with psionics." Recorded as a deliberate no rather than an unrolled blank.
 function skipPsiRoll() {
   S.psiRoll = { roll: null, tier: null, skipped: true };
+  trimRelatedToAllowance();
   S.psiShape = null; S.psiCategory = null; S.psi = [];
   render();
 }
@@ -1027,6 +1046,12 @@ function psiRollHtml() {
     ? `<b>Skipped</b> — this character has no psychic powers.`
     : `Rolled <b>${r.roll}</b> — ${r.tier ? `<b>${esc(r.tier)} psionic</b>` : '<b>no psionics</b>'}.`;
 
+  // The major psionic's price, and what it cost this character in particular.
+  const penalty = r.tier === 'major'
+    ? `<p class="attr-note">A major psionic's related-skill allowance is halved
+       (now ${psiClass().skills?.occ_related_skills?.count ?? 0}).
+       ${S.psiTrimmed ? `<b>${S.psiTrimmed} already-chosen ${S.psiTrimmed === 1 ? 'skill was' : 'skills were'} removed.</b>` : ''}</p>` : '';
+
   // A tier the roll produced brings a choice of allowance with it, where the
   // book gives one. A minor psychic has only the single shape, so no radio
   // group is drawn for it.
@@ -1051,6 +1076,7 @@ function psiRollHtml() {
   return `<h3>Psionics</h3>
     <p>${outcome}</p>
     ${r.tier ? `<p class="muted small">I.S.P. ${esc(spec.isp_base)} — rolled on Review.</p>` : odds}
+    ${penalty}
     ${shapes}${cats}
     <p style="margin-top:8px"><button class="btn btn-sm btn-ghost" onclick="doPsiRoll()">↻ reroll</button>
       ${r.tier ? `<button class="btn btn-sm btn-ghost" onclick="skipPsiRoll()">Take none</button>` : ''}</p>`;
@@ -1060,7 +1086,7 @@ function renderPowers() {
   const magic = S.cls.magic || null;
   const cls = psiClass();
   const psi = psiConfig(cls);
-  const rolling = rollsForPsionics();
+  const rolling = canRollPsionics();
   let inner = '';
   if (!magic && !psi && !rolling) {
     inner = `<p class="muted">This class has no spellcasting or psionics — carry on.</p>`;

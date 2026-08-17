@@ -21,7 +21,7 @@ import { skillGrantsFor, buildProposal, perLevelDiceOf } from '../../../function
 import { dedupeCategories } from '../../../functions/api/character-creator/_lib/skill-picks.js';
 import { rollPoolFormula, rollAttribute, evalDice } from '../js/dice.js';
 import { psionicTierForRoll, rollPsionics, psionicShape, withRolledPsionics,
-         PSIONIC_TIER_RULES } from '../js/psionics.js';
+         PSIONIC_TIER_RULES, rollsForPsionics } from '../js/psionics.js';
 import { similarity, normaliseName, classesMentioning, findDuplicates } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
 import {
   keysOf, redirectStatements, collapseStatement, resolveKeys,
@@ -2125,6 +2125,81 @@ console.log('\n[1c26] Secondary schedules & group bonuses');
   // A W.P. has no percentage for a percentage bonus to modify.
   check('a bonus leaves a non-percentile skill at zero', resolve(0, { bonus: 30 }) === 0);
   check('no base and no bonus falls back to the catalog', resolve(45, {}) === 45);
+}
+
+// ---------- 1c27. Variant skill overrides & the major-psionic penalty ----------
+console.log('\n[1c27] Variant skills & psionic penalty');
+{
+  const mk = (variantBody) => parseClassMarkdown(
+    `---\nid: t\nname: T\nsystem: palladium-fantasy\nsource_book: B\ncategory: rcc\nskills:\n  occ_skills:\n    - { name: "Basic Math", base: 96, per_level: 0 }\n    - { name: "Advanced Math", base: 96, per_level: 0 }\n  occ_related_skills:\n    count: 8\n    categories: ["Wilderness"]\n  secondary_skills:\n    count: 4\nvariants:\n  - id: hatchling\n    name: "T Hatchling"\n${variantBody}\n  - id: adult\n    name: "T Adult"\n---\n\n## Lore\n\nx\n`);
+
+  const ok = mk('    skill_overrides:\n      - { name: "Advanced Math", base: 45, per_level: 5 }');
+  check('a skill override parses', ok.ok, JSON.stringify(ok.errors));
+  check('the override applies to its own stage only', (() => {
+    const get = (c, n) => c.skills.occ_skills.find((s) => s.name === n)?.base;
+    return get(applyVariant(ok.data, 'hatchling'), 'Advanced Math') === 45
+      && get(applyVariant(ok.data, 'adult'), 'Advanced Math') === 96;
+  })());
+  check('skills the override does not name are untouched', (() => {
+    const c = applyVariant(ok.data, 'hatchling');
+    return c.skills.occ_skills.find((s) => s.name === 'Basic Math').base === 96;
+  })());
+  check('per_level can be overridden too', (() => {
+    const c = applyVariant(ok.data, 'hatchling');
+    return c.skills.occ_skills.find((s) => s.name === 'Advanced Math').per_level === 5;
+  })());
+  // The base class must not be mutated: applyVariant is called repeatedly on
+  // the same parsed object, and a stage bleeding into the next would be silent.
+  check('applying a variant does not mutate the class', (() => {
+    applyVariant(ok.data, 'hatchling');
+    return ok.data.skills.occ_skills.find((s) => s.name === 'Advanced Math').base === 96;
+  })());
+  check('skill_overrides does not leak onto the resolved class',
+    !('skill_overrides' in applyVariant(ok.data, 'hatchling')));
+
+  // An override restates a number; it is not a way to add a skill.
+  check('naming a skill the class does not grant is an error', (() => {
+    const r = mk('    skill_overrides:\n      - { name: "Prowl", base: 30 }');
+    return !r.ok && r.errors.some((e) => /does not grant/.test(e));
+  })());
+  check('an override that changes nothing is an error',
+    !mk('    skill_overrides:\n      - { name: "Basic Math" }').ok);
+  check('a non-numeric override is an error',
+    !mk('    skill_overrides:\n      - { name: "Basic Math", base: "lots" }').ok);
+  check('skill_overrides must be a list',
+    !mk('    skill_overrides: "Basic Math"').ok);
+
+  // ── the major psionic's price (p.21) ──
+  const cls = mk('').data;
+  const rolled = (tier) => withRolledPsionics(cls, { psychic_tier: tier, psychic_shape: 'broad' });
+
+  check('a rolled major halves the related-skill count',
+    rolled('major').skills.occ_related_skills.count === 4);
+  check('a rolled minor pays nothing',
+    rolled('minor').skills.occ_related_skills.count === 8);
+  check('halving rounds down', (() => {
+    const odd = mk('').data;
+    odd.skills.occ_related_skills = { ...odd.skills.occ_related_skills, count: 7 };
+    return withRolledPsionics(odd, { psychic_tier: 'major' }).skills.occ_related_skills.count === 3;
+  })());
+  // "Secondary skills are not affected."
+  check('secondary skills are untouched',
+    rolled('major').skills.secondary_skills.count === 4);
+  check('the class is not mutated by the penalty',
+    cls.skills.occ_related_skills.count === 8);
+  // A psychic O.C.C. never rolls, so it never pays this price.
+  check('a class-granted major psionic pays nothing', (() => {
+    const mage = { skills: { occ_related_skills: { count: 8 } }, psionics: { type: 'major' } };
+    return withRolledPsionics(mage, { psychic_tier: 'major' }).skills.occ_related_skills.count === 8;
+  })());
+
+  // ── races with no psychic potential (p.21: troll, orc) ──
+  check('a class may declare no psionics at all', (() => (
+    rollsForPsionics({ psionics_allowed: false }) === false
+  ))());
+  check('an ordinary class still rolls', rollsForPsionics({}) === true);
+  check('a class with its own psionics does not roll',
+    rollsForPsionics({ psionics: { type: 'major' } }) === false);
 }
 
 // ---------- 1d. Paging ----------

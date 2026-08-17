@@ -418,6 +418,21 @@ can show it beside the roll it modifies, and re-rolled only by Review's Reroll
 button — walking to a later step used to re-roll it silently, which changed a
 number the player had already read.
 
+**A variant may restate a skill's percentage.** `skill_overrides` names skills
+the class already grants and changes only their `base` and `per_level` — a
+Chiang-Ku hatchling starts its advanced math and domestic skills at first-level
+proficiency where the adult has them at 96% and 80%. Naming a skill the class
+does **not** grant is an error, not a way to add one, so the rule that a variant
+cannot restructure the skill list still holds.
+
+**A rolled major psionic pays for it.** The starting related-skill count is
+halved, rounding down; secondary skills are untouched, as the book says. This
+wizard asks for skills before powers where the book asks in the other order, so
+rolling major trims any picks already made beyond the new allowance and says how
+many went. A psychic O.C.C. never rolls and never pays. A class may also declare
+`psionics_allowed: false` — troll and orc have no psychic potential at all —
+which skips Step 3 entirely.
+
 **Psionics can be rolled for** (p.20–21). A class granting no psychic powers
 sends the character to the Random Psionics Table — 01-09 major, 10-25 minor,
 26-00 none, so three quarters of characters get nothing and that is the ordinary
