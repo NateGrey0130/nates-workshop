@@ -86,6 +86,22 @@ const DICE_RE = /\d+\s*d\s*\d+(?:\s*x\s*\d+)?(?:\s*[+-]\s*\d+)?/i;
 // attribute with or without full stops.
 const ATTR_RE = /\b(IQ|ME|MA|PS|PP|PE|PB|Spd)\b|\b([IMPS])\.\s*([QEASPB])\./i;
 
+// A multiplier the book attaches to the attribute itself — "M.D.C.: P.E. x 10",
+// "S.D.C.: P.E. x 12", "Hit Points: P.E. x 3 plus 2D6 per level". Supernatural
+// and mega-damage races state their pools this way as a matter of course, and
+// without this the multiplier was silently dropped: a Godling written
+// "P.E. x 3 plus 2D6 per level" rolled P.E. + 2D6, a third of the right number
+// and entirely plausible-looking.
+//
+// Anchored to the text IMMEDIATELY after the attribute, because an `x N`
+// anywhere else belongs to the dice: in "M.E. number plus 1D6x10" the x10
+// multiplies the die. Only "number" and "attribute" may sit between, since
+// books write "P.E. number x 10" as readily as "P.E. x 10".
+const ATTR_MULT_RE = /^\s*(?:number|attribute)?\s*[x×*]\s*(\d+)/i;
+
+// The attribute term of a formula: the attribute's value, times whatever the
+// book multiplies it by. Null when the formula names no attribute, or names one
+// the character does not have a number for.
 function attrIn(text, attrs) {
   const m = ATTR_RE.exec(text);
   if (!m) return null;
@@ -94,7 +110,9 @@ function attrIn(text, attrs) {
     .find((k) => k === (key === 'SPD' ? 'SPD' : key));
   if (!canon) return null;
   const v = attrs[canon === 'SPD' ? 'Spd' : canon];
-  return typeof v === 'number' ? v : null;
+  if (typeof v !== 'number') return null;
+  const mult = ATTR_MULT_RE.exec(text.slice(m.index + m[0].length));
+  return mult ? v * +mult[1] : v;
 }
 
 export function rollPoolFormula(expr, attrs = {}) {
@@ -111,10 +129,19 @@ export function rollPoolFormula(expr, attrs = {}) {
   // use both. Without the second, every class written that way rolled NULL and
   // the character was created with no pool at all.
   const dice = DICE_RE.exec(s);
-  if (dice) {
+  const bonus = attrIn(s, attrs);
+
+  // An attribute alone is a whole formula, not a fragment of one: "M.D.C.:
+  // P.E. x 10" states the pool completely and has no dice to find.
+  if (!dice) {
+    if (bonus != null) return bonus;
+    const only = Number(s);
+    return Number.isFinite(only) ? only : null;
+  }
+
+  {
     const rolled = evalDice(dice[0]);
     if (rolled != null) {
-      const bonus = attrIn(s, attrs);
       if (bonus != null) return rolled + bonus;
       // Dice buried in prose: books qualify these heavily ("3D4x100+1000 when in
       // serpent form, only 3D4x100 in humanoid form"). Take the leading figure,

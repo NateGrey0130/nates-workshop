@@ -70,14 +70,63 @@ async function missingFrom(env, catalogKey, table, column, names) {
   return missing.filter((m) => !redirects.has(norm(m)));
 }
 
+// A category restriction names skills by hand — "Espionage: Escape Artist only",
+// "Medical: any except cybernetics". A name matching no catalog row does not
+// fail loudly: `categoryAllows` compares literal names, so an unmatched `except`
+// excludes NOTHING and an unmatched `only` offers nothing. Both are silent, and
+// the `except` direction fails open, which is the dangerous way round.
+//
+// Harmless for a skill not imported yet, and indistinguishable from a name the
+// catalog spells differently — which is the common case. The Godling R.C.C.
+// forbids robots, power armor and cybernetics; the catalog calls those "Robots
+// and Power Armor", "Robot Combat: Basic" and "M.D. in Cybernetics", so every
+// one of those exclusions quietly did nothing and the class offered skills the
+// book forbids.
+//
+// Redirects are deliberately NOT consulted here, unlike `missingFrom`.
+// `categoryAllows` does a literal name comparison, so a key that resolves only
+// through a redirect still will not match, and reporting it as fine would be a
+// lie about what the picker does.
+// Split from the lookup so the collecting half is testable without a database.
+export function restrictionNames(data) {
+  const wanted = [];
+  for (const group of [data?.skills?.occ_related_skills, data?.skills?.secondary_skills]) {
+    for (const c of group?.categories || []) {
+      // A bare string is "any skill in this category" and names nothing.
+      if (!c || typeof c !== 'object') continue;
+      for (const kind of ['only', 'except']) {
+        for (const name of c[kind] || []) wanted.push({ category: c.name, kind, name });
+      }
+    }
+  }
+  return wanted;
+}
+
+async function unresolvedRestrictions(env, data) {
+  const wanted = restrictionNames(data);
+  if (!wanted.length) return [];
+
+  const names = [...new Set(wanted.map((w) => w.name))];
+  const known = new Set();
+  for (let i = 0; i < names.length; i += LOOKUP_BATCH) {
+    const batch = names.slice(i, i + LOOKUP_BATCH);
+    const { results } = await env.DB
+      .prepare(`SELECT name FROM skills WHERE name IN (${batch.map(() => '?').join(',')})`)
+      .bind(...batch).all();
+    for (const r of results) known.add(norm(r.name));
+  }
+  return wanted.filter((w) => !known.has(norm(w.name)));
+}
+
 export async function crossReference(env, requestUrl, data) {
-  const [items, skills, spells, psionics] = await Promise.all([
+  const [items, skills, spells, psionics, restrictions] = await Promise.all([
     missingFrom(env, 'gear', 'gear', 'slug', referencedGear(data)),
     missingFrom(env, 'skills', 'skills', 'name', referencedSkills(data)),
     missingFrom(env, 'spells', 'spells', 'name', nameList(data.magic?.spells)),
     missingFrom(env, 'psionics', 'psionic_powers', 'name', nameList(data.psionics?.powers)),
+    unresolvedRestrictions(env, data),
   ]);
-  return { items, skills, spells, psionics };
+  return { items, skills, spells, psionics, restrictions };
 }
 
 // ─── stub inference ───

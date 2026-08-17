@@ -9,7 +9,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseClassMarkdown, isGearChoice, applyVariant, parseYaml, combineClasses,
          categoryAllows, categoryLabel, VARIANT_OVERRIDES } from '../js/parser.js';
-import { referencedGear } from '../../../functions/api/character-creator/_lib/catalog.js';
+import { referencedGear, restrictionNames } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import {
   getImportSpec, stripFences, normaliseRows, countRows, applyDecisions,
@@ -1296,6 +1296,26 @@ console.log('\n[1c15] Pool formulas');
   // attribute — the bonus is skipped, not treated as zero silently.
   check('an attribute the character lacks falls back to the dice alone',
     between(rollPoolFormula('2D4x10 plus P.E. attribute number', {}), 20, 80));
+
+  // An attribute the book MULTIPLIES. Supernatural and mega-damage races state
+  // their pools this way as a matter of course, and the Godling R.C.C. is
+  // written entirely in it. Both failure modes were live: a formula that is
+  // only a multiplied attribute returned null, and one with dice as well
+  // silently DROPPED the multiplier — "P.E. x 3 plus 2D6" rolled P.E. + 2D6,
+  // a third of the right number and completely plausible-looking.
+  check('a multiplied attribute alone', r('P.E. x 10') === 100);
+  check('spelled with the word "number"', r('P.E. number x 10') === 100);
+  check('spelled with a multiplication sign', r('P.E. × 10') === 100);
+  check('a multiplied attribute plus dice', between(r('P.E. x 3 plus 2D6 per level'), 32, 42));
+  check('and the multiplier is not dropped', r('P.E. x 3 plus 2D6 per level') > 30);
+  check('base and per-level growth together', between(r('P.E. x 10, plus 1D4x10 per level'), 110, 140));
+
+  // The other half of the same rule: an `x N` that belongs to the DICE must not
+  // be read as multiplying the attribute. M.E. is 20 here, so mistaking the x10
+  // for the attribute's would put these an order of magnitude out.
+  check('a dice multiplier stays with the dice',
+    between(r('M.E. number plus 1D6x10'), 30, 80));
+  check('even when the dice lead', between(r('4D6x10 plus the M.E. number'), 60, 260));
 }
 
 // ---------- 1c16. An R.C.C. and an O.C.C. together ----------
@@ -2049,6 +2069,75 @@ console.log('\n[1c25] Category restrictions');
       '_lib', 'validate-character.js'), 'utf8');
     return src.includes('categoryAllows(allowed,');
   })());
+}
+
+// ---------- 1c25b. Restrictions that name nothing ----------
+// A category restriction names skills by hand, and `categoryAllows` compares
+// literal names. So a name no catalog row has does not fail — an `except`
+// excludes NOTHING and the class silently offers a skill the book forbids.
+// Found importing the Godling R.C.C.: it bars robots, power armor and
+// cybernetics, and the catalog spells those "Robots and Power Armor",
+// "Robot Combat: Basic" and "M.D. in Cybernetics", so all three did nothing.
+console.log('\n[1c25b] Unresolved category restrictions');
+{
+  const cls = parseClassMarkdown(`---
+id: t
+name: T
+system: rifts
+source_book: b
+category: rcc
+skills:
+  occ_related_skills:
+    count: 8
+    categories:
+      - "Physical"
+      - { name: "Medical", except: ["Cybernetics"] }
+      - { name: "Pilot", except: ["Robot Combat", "Power Armor Combat"] }
+      - { name: "Rogue", except: ["Computer Hacking"] }
+      - { name: "Mechanical", only: ["Locksmith"] }
+  secondary_skills:
+    count: 5
+    categories:
+      - { name: "Science", only: ["Astrophysics"] }
+---
+
+## Lore
+
+x
+`).data;
+
+  const named = restrictionNames(cls);
+  check('every named skill in every restriction is collected', named.length === 6,
+    `got ${named.length}: ${named.map((n) => n.name).join(', ')}`);
+  check('a bare category name contributes nothing',
+    !named.some((n) => n.category === 'Physical'));
+  check('secondary restrictions are collected too',
+    named.some((n) => n.category === 'Science' && n.kind === 'only'));
+  check('each carries its category and which kind it is',
+    named.every((n) => n.category && (n.kind === 'only' || n.kind === 'except') && n.name));
+
+  // The filter the endpoint applies, with a stand-in catalog.
+  const catalogHas = new Set(['computer hacking', 'locksmith', 'astrophysics']);
+  const unresolved = named.filter((n) => !catalogHas.has(n.name.toLowerCase()));
+  check('the three the catalog spells differently are reported',
+    unresolved.length === 3
+    && unresolved.every((n) => ['Cybernetics', 'Robot Combat', 'Power Armor Combat'].includes(n.name)),
+    unresolved.map((n) => n.name).join(', '));
+  check('and the ones that do resolve are not',
+    !unresolved.some((n) => ['Computer Hacking', 'Locksmith', 'Astrophysics'].includes(n.name)));
+
+  // The point of reporting it: this is what the unmatched `except` actually does.
+  check('an unmatched except really does fail open',
+    categoryAllows(cls.skills.occ_related_skills.categories,
+      { name: 'M.D. in Cybernetics', category: 'Medical' }) === true);
+  // While `only` fails closed, which is why the two are labelled differently.
+  check('while an unmatched only fails closed',
+    categoryAllows(cls.skills.secondary_skills.categories,
+      { name: 'Astronomy', category: 'Science' }) === false);
+
+  check('a class with no restrictions collects nothing',
+    restrictionNames({ skills: { occ_related_skills: { categories: ['Physical'] } } }).length === 0);
+  check('and nothing at all does not throw', restrictionNames(undefined).length === 0);
 }
 
 // ---------- 1c26. Secondary schedules and group bonuses ----------

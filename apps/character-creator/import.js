@@ -460,10 +460,34 @@ async function runExtract() {
 }
 
 // ─── Step 2: review ───
+// A category restriction naming a skill the catalog does not hold. Reported
+// apart from the missing lists because it is not a stub to create — it is a
+// rule that currently does nothing. An `except` fails OPEN, so the class offers
+// a skill the book forbids, and nothing else in the pipeline says so.
+function restrictionBlock() {
+  const rows = I.result.missing.restrictions || [];
+  if (!rows.length) return '';
+  return `
+    <h3>Category restrictions that match nothing — ${rows.length}
+      <span class="badge-file">check the spelling against the catalog</span></h3>
+    <p class="muted small">These name a skill no catalog row has, so they do not restrict anything.
+      Correct if the catalog spells it differently; leave it if the skill simply is not imported yet.</p>
+    ${rows.map((r) => `<div class="miss-row">
+      <span class="slug">${escHtml(r.category)}: ${escHtml(r.kind)} ${escHtml(r.name)}</span>
+      <span class="${r.kind === 'except' ? 'err' : 'muted'} small">${r.kind === 'except'
+        ? 'excludes nothing — the skill stays on offer'
+        : 'offers nothing under this name'}</span>
+    </div>`).join('')}`;
+}
+
 function missingBlock() {
   const m = I.result.missing;
   const total = m.items.length + m.skills.length + m.spells.length + m.psionics.length;
-  if (!total) return '<p class="muted small">Everything this class references already exists in the catalogs.</p>';
+  const restrictions = restrictionBlock();
+  if (!total) {
+    return (restrictions
+      || '<p class="muted small">Everything this class references already exists in the catalogs.</p>');
+  }
 
   const group = (label, list, live) => list.length ? `
     <h3>${label} — ${list.length} missing
@@ -471,7 +495,8 @@ function missingBlock() {
     ${list.map((n) => `<div class="miss-row"><span class="slug">${escHtml(n)}</span></div>`).join('')}` : '';
 
   return group('Items', m.items, true) + group('Skills', m.skills, false) +
-         group('Spells', m.spells, false) + group('Psionic powers', m.psionics, false);
+         group('Spells', m.spells, false) + group('Psionic powers', m.psionics, false) +
+         restrictions;
 }
 
 function renderReview() {
