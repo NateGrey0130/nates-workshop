@@ -356,6 +356,18 @@ overridable.
 | Skills gained on level-up | Start at the catalog's base percentage — a skill learned at level 6 is still new | `skills.occ_related_skills.schedule` |
 | Skill percentage cap | 98% — book rule (p.22), applied at creation and on level-up | — |
 
+**Starting money** (p.22) is `starting_money` on the class — a formula string
+like `"2d6x10"` or a flat number — rolled through the same `rollPoolFormula` the
+pools use, so Review's Reroll button covers it. It lands in the character's
+`bio` rather than a column, because it is a running number the player edits.
+Labelled Gold in Palladium Fantasy and Credits in Rifts, from
+`rules.currencyLabel()`; an unknown system gets the neutral "Money".
+
+The book gives a character its O.C.C. equipment list **and** a sum of coin, so
+nothing is deducted from the other — the gear step is unchanged and the purse is
+simply recorded. Only coin goes in `starting_money`; saleable goods and
+artifacts belong in `equipment_starting`.
+
 **Alignment is required** and closed (p.23). Seven values in three groups —
 Good (Principled, Scrupulous), Selfish (Unprincipled, Anarchist) and Evil
 (Miscreant, Aberrant, Diabolic) — with deliberately **no neutral**; the book

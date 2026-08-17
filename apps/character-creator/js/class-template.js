@@ -87,6 +87,7 @@ attribute_requirements:           # minimums enforced at creation; omit if none
 hit_points_base: "P.E. + 1d6 per level"
 sdc_base: 20
 ppe_base: "2d6"
+starting_money: "2d6x10"          # gold (Palladium) or credits (Rifts); coin only
 ${skillsBlock}
 ${equipmentBlock}
 ${bonusesBlock}
@@ -117,6 +118,7 @@ attribute_dice:                   # a race ROLLS its attributes from these
   Spd: "3d6"
 mdc_base: "1d4x100"               # M.D.C. beings use this instead of hp/sdc
 ppe_base: "2d6"
+starting_money: "2d6x10"          # gold (Palladium) or credits (Rifts); coin only
 # Stages of the same creature — a hatchling and an adult. Each overrides only
 # attribute_dice, attribute_requirements, the pool bases and bonuses; skills,
 # abilities and lore stay shared. Delete this block if the class has one form.

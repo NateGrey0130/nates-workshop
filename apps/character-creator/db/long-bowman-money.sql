@@ -1,0 +1,13 @@
+-- Long Bowman O.C.C. starting money, Palladium Fantasy RPG 2nd Ed. p.85:
+-- "Money: The character starts with 170 in gold."
+--
+-- Guarded on the field being absent, so re-running it cannot append a second
+-- line, and so it does nothing to a class that has already been re-imported
+-- with the value in place.
+UPDATE imported_classes
+   SET markdown = replace(markdown, 'ppe_base: "2d6"',
+                          'ppe_base: "2d6"' || char(13) || char(10) || 'starting_money: 170'),
+       updated_at = datetime('now')
+ WHERE class_id = 'long-bowman'
+   AND markdown LIKE '%ppe_base: "2d6"%'
+   AND markdown NOT LIKE '%starting_money%';

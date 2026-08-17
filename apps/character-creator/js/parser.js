@@ -39,6 +39,7 @@ export function isChoiceGroup(entry) {
 export const VARIANT_OVERRIDES = [
   'attribute_dice', 'attribute_requirements',
   'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',
+  'starting_money',
   'bonuses',
 ];
 
@@ -151,7 +152,8 @@ export function combineClasses(rcc, occ) {
   // simply omits them is not, and taking "the R.C.C. alone" literally there
   // would leave the character with no hit points at all. So a pool the race
   // does not mention falls through to the occupation.
-  for (const key of ['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base']) {
+  for (const key of ['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',
+                     'starting_money']) {
     if (rcc[key] == null && occ[key] != null) out[key] = occ[key];
   }
   // An M.D.C. race is the one case where silence IS the statement: it tracks

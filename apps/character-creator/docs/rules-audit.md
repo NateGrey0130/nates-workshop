@@ -17,7 +17,7 @@ steps" and then lists six).
 | 2. Hit Points and S.D.C. | p.18 | yes, via per-class formulas |
 | 3. How to Determine Psionics | p.20–21 | no — class-driven only |
 | 4. Selecting a Race and O.C.C. | p.21–22 | yes |
-| 5. Equipment and Money | p.22 | equipment yes, money not at all |
+| 5. Equipment and Money | p.22 | yes |
 | 6. Rounding Out One's Character | p.22–23, 32–33 | alignment done; background tables absent |
 
 ---
@@ -123,6 +123,24 @@ zero, since a percentage bonus has nothing to modify.
   open to every race** (p.21).
 - Multiple or split O.C.C.s are explicitly not allowed (p.22) — a character is
   one race and one occupation, which is exactly what `combineClasses` models.
+
+## Step 5 — equipment and money (p.22)
+
+Every class starts with its O.C.C. equipment list **and** a sum of coin. The two
+are independent: the gear is not bought out of the purse, so nothing deducts
+one from the other.
+
+Carried on the class as `starting_money`, a formula string or a flat number,
+rolled through the same parser as the pools — so the Reroll button on Review
+covers it. Stored in the character's `bio`, because it is a running number the
+player edits rather than anything the rules derive. Gold in Palladium Fantasy,
+credits in Rifts; an unknown system gets the neutral word rather than a guess.
+
+Only coin belongs here. Saleable goods, gems and artifacts an entry also lists
+go in `equipment_starting`.
+
+Worked example, Long Bowman O.C.C. (p.85): *"Money: The character starts with
+170 in gold."* → `starting_money: 170`.
 
 ## Step 6 — alignment (p.23)
 
