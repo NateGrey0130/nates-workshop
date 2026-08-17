@@ -226,6 +226,12 @@ export const BONUS_ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
 // rejected outright.
 const BONUS_GROUPS = ['attributes', 'combat', 'saves'];
 
+// A dice expression, for an attribute bonus a book states as a roll rather than
+// a fixed number — "add 2D6 to P.S.", "add 2D4x10 to Spd". Only `attributes`
+// accepts one: a combat or save bonus is always printed as a flat number.
+const DICE_BONUS = /^\d+\s*d\s*\d+(?:\s*x\s*\d+)?(?:\s*[+-]\s*\d+)?$/i;
+export const isDiceBonus = (v) => typeof v === 'string' && DICE_BONUS.test(v.trim());
+
 function validateBonusGroup(where, group, block, errors, warnings) {
   if (block === undefined || block === null) return;
   if (typeof block !== 'object' || Array.isArray(block)) {
@@ -233,12 +239,33 @@ function validateBonusGroup(where, group, block, errors, warnings) {
     return;
   }
   for (const [k, v] of Object.entries(block)) {
-    if (typeof v !== 'number' || !Number.isFinite(v)) {
-      errors.push(`${where}.${group}.${k} must be a number`);
+    const dice = group === 'attributes' && isDiceBonus(v);
+    if (!dice && (typeof v !== 'number' || !Number.isFinite(v))) {
+      errors.push(group === 'attributes'
+        ? `${where}.attributes.${k} must be a number or a dice expression like "2d6"`
+        : `${where}.${group}.${k} must be a number`);
     } else if (group === 'attributes' && !BONUS_ATTRS.includes(k)) {
       errors.push(`${where}.attributes.${k} is not an attribute (${BONUS_ATTRS.join(', ')})`);
     } else if (v === 0) {
       warnings.push(`${where}.${group}.${k} is 0 and will do nothing`);
+    }
+  }
+}
+
+// "Minimum P.S. is 22; if lower, adjust up to P.S. 22" (Juicer, Rifts p.69).
+// A floor applied AFTER the dice bonus lands — deliberately not
+// attribute_requirements, which gates whether the class may be taken at all.
+function validateAttributeMinimums(block, errors) {
+  if (block === undefined || block === null) return;
+  if (typeof block !== 'object' || Array.isArray(block)) {
+    errors.push('bonuses.attribute_minimums must be a map of attribute to number');
+    return;
+  }
+  for (const [k, v] of Object.entries(block)) {
+    if (!BONUS_ATTRS.includes(k)) {
+      errors.push(`bonuses.attribute_minimums.${k} is not an attribute`);
+    } else if (typeof v !== 'number' || !Number.isFinite(v)) {
+      errors.push(`bonuses.attribute_minimums.${k} must be a number`);
     }
   }
 }
@@ -250,7 +277,9 @@ export function validateBonuses(bonuses, errors, warnings) {
   }
   for (const g of BONUS_GROUPS) validateBonusGroup('bonuses', g, bonuses[g], errors, warnings);
 
-  const known = new Set([...BONUS_GROUPS, 'at_level']);
+  validateAttributeMinimums(bonuses.attribute_minimums, errors);
+
+  const known = new Set([...BONUS_GROUPS, 'at_level', 'attribute_minimums']);
   for (const k of Object.keys(bonuses)) {
     if (!known.has(k)) warnings.push(`bonuses.${k} is not a recognised group and will be ignored`);
   }

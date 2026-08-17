@@ -167,23 +167,49 @@
   // Everything the class grants by the level reached, folded into one block.
   // at_level entries accumulate: a class granting +1 attack at 5 and again at
   // 10 has given +2 by level 10.
-  function classBonuses(cls, level = 1) {
+  // `rolled` is the character's stored attribute_bonuses: the result of rolling
+  // the class's dice bonuses once at creation. A book that says "add 2D6 to
+  // P.S." cannot be re-evaluated on every render, so the class states the dice
+  // and the character remembers what they came up. An unrolled dice bonus
+  // contributes nothing rather than guessing an average.
+  function classBonuses(cls, level = 1, rolled = null) {
     const src = cls?.bonuses;
-    const out = { attributes: {}, combat: {}, saves: {} };
+    const out = { attributes: {}, combat: {}, saves: {}, attribute_minimums: {} };
     if (!src) return out;
 
     const fold = (from) => {
       for (const group of ['attributes', 'combat', 'saves']) {
         for (const [k, v] of Object.entries(from?.[group] || {})) {
-          if (typeof v === 'number' && Number.isFinite(v)) {
-            out[group][k] = (out[group][k] || 0) + v;
-          }
+          const val = typeof v === 'number' ? v
+            : (group === 'attributes' && typeof v === 'string' ? n(rolled?.[k]) : NaN);
+          if (Number.isFinite(val)) out[group][k] = (out[group][k] || 0) + val;
         }
       }
     };
     fold(src);
     for (const step of src.at_level || []) {
       if (typeof step?.level === 'number' && step.level <= n(level)) fold(step);
+    }
+    // A floor the class guarantees, applied by effective() once the bonus has
+    // landed. The stricter of any two wins, as attribute requirements do.
+    for (const [k, v] of Object.entries(src.attribute_minimums || {})) {
+      if (typeof v === 'number' && Number.isFinite(v)) {
+        out.attribute_minimums[k] = Math.max(out.attribute_minimums[k] ?? 0, v);
+      }
+    }
+    return out;
+  }
+
+  // Which attributes a class rolls a bonus for, and the dice for each. The
+  // wizard rolls these once at creation; nothing else needs them.
+  function diceBonuses(cls) {
+    const out = {};
+    const src = cls?.bonuses;
+    if (!src) return out;
+    for (const block of [src, ...(src.at_level || [])]) {
+      for (const [k, v] of Object.entries(block?.attributes || {})) {
+        if (typeof v === 'string' && v.trim()) out[k] = v.trim();
+      }
     }
     return out;
   }
@@ -193,10 +219,17 @@
   // ignored rather than conjuring the attribute from nothing.
   function effective(attrs = {}, bonuses = null) {
     const add = bonuses?.attributes;
-    if (!add) return { ...attrs };
+    const floors = bonuses?.attribute_minimums;
+    if (!add && !floors) return { ...attrs };
     const out = { ...attrs };
-    for (const [k, v] of Object.entries(add)) {
+    for (const [k, v] of Object.entries(add || {})) {
       if (typeof v === 'number' && typeof out[k] === 'number') out[k] = out[k] + v;
+    }
+    // "Minimum P.S. is 22; if lower, adjust up." Applied after the bonus, and
+    // only to an attribute the character actually has — a floor must not
+    // conjure an attribute from nothing any more than a bonus does.
+    for (const [k, v] of Object.entries(floors || {})) {
+      if (typeof v === 'number' && typeof out[k] === 'number' && out[k] < v) out[k] = v;
     }
     return out;
   }
@@ -233,6 +266,7 @@
     bio: (attrs, stored, bonuses) => merge(deriveBio(effective(attrs, bonuses)), stored),
 
     classBonuses,
+    diceBonuses,
     effective,
 
     // What made a number what it is, for the sheet's hover text: how much came

@@ -141,7 +141,9 @@ function render() {
   // What the class grants by this character's level. Attribute bonuses are not
   // stored on the character — they are added on the way past, so `attributes`
   // stays the numbers that were actually rolled.
-  const bonuses = derive.classBonuses(cls, c.level);
+  // attribute_bonuses are what the class's dice bonuses came up at creation.
+  // Without them a Juicer's +2D6 P.S. would silently contribute nothing here.
+  const bonuses = derive.classBonuses(cls, c.level, c.attribute_bonuses);
   const effAttrs = derive.effective(attrs, bonuses);
   const combatParts = derive.parts('combat', attrs, bonuses);
   const savesParts = derive.parts('saves', attrs, bonuses, cls.psionics?.type);
