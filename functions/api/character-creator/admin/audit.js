@@ -9,8 +9,7 @@
 
 import { requireAdmin, json } from '../_lib/auth.js';
 import { loadPublished } from '../_lib/class-store.js';
-import { applyVariant, combineClasses } from '../../../../apps/character-creator/js/parser.js';
-import { withRolledPsionics } from '../../../../apps/character-creator/js/psionics.js';
+import { composeClass } from '../../../../apps/character-creator/js/compose.js';
 import { validateCharacter, loadSkillCategories } from '../_lib/validate-character.js';
 import { paging } from '../_lib/paging.js';
 import { decodeCharacter } from '../_lib/character-json.js';
@@ -40,10 +39,11 @@ export async function onRequestGet({ request, env }) {
     // Both classes, and the character's variant, or the audit judges a
     // Chiang-Ku Wizard against the dragon alone — reporting every skill its
     // O.C.C. legitimately grants as a violation.
-    const rcc = applyVariant(byId.get(row.class_id) || null, row.class_variant);
-    const cls = withRolledPsionics(row.occ_class_id
-      ? combineClasses(rcc, applyVariant(byId.get(row.occ_class_id) || null, row.occ_class_variant))
-      : rcc, row);
+    const cls = composeClass({
+      rcc: byId.get(row.class_id) || null,
+      occ: row.occ_class_id ? byId.get(row.occ_class_id) || null : null,
+      character: row,
+    });
     decodeCharacter(row);
 
     const { skipped, violations, warnings } = validateCharacter({

@@ -105,8 +105,13 @@ Implemented in [`js/psionics.js`](../js/psionics.js), asserted in smoke `[1c22]`
 A rolled tier is stored on the *character* (`psychic_tier`, `psychic_shape`) and
 folded into the class-shaped object by `withRolledPsionics()`, so the save
 targets, the power gating and the level-up I.S.P. growth all keep reading one
-place. Four call sites compose a class and every one of them has to remember
-that step.
+place.
+
+Six call sites used to compose a class by hand and every one had to remember
+that step; **one did not**, and the sheet showed a rolled major psychic a save
+target of 15 where level-up correctly had 12. They now all go through
+[`js/compose.js`](../js/compose.js), and a smoke check fails the build if any
+file composes by hand again.
 
 **The major psionic's price is charged.** Rolling major halves the starting
 related-skill count, rounding down, and leaves secondary skills alone as the

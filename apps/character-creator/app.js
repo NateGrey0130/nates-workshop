@@ -9,8 +9,9 @@
 import { evalDice, rollPoolFormula, rollAttribute } from './js/dice.js';
 import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSIONIC_TIER_RULES,
          rollsForPsionics as classRollsForPsionics } from './js/psionics.js';
-import { isChoiceGroup, isGearChoice, applyVariant, combineClasses,
+import { isChoiceGroup, isGearChoice, applyVariant,
          categoryAllows, categoryLabel } from './js/parser.js';
+import { composeClass } from './js/compose.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
 const STEPS = ['System', 'Class', 'Attributes', 'Skills', 'Equipment', 'Powers', 'Details', 'Review'];
@@ -259,9 +260,13 @@ function resumeDraft() {
   // The draft stores the class id and the stage separately, so the class is
   // resolved from scratch here — an edited class definition takes effect, and
   // the variant is re-applied on top of it.
-  S.cls = combineClasses(
-    applyVariant(S.classes.find((c) => c.id === d.class_id) || null, S.variant),
-    S.occ ? applyVariant(S.classes.find((c) => c.id === S.occ), S.occVariant) : null);
+  S.cls = composeClass({
+    rcc: S.classes.find((c) => c.id === d.class_id) || null,
+    occ: S.occ ? S.classes.find((c) => c.id === S.occ) || null : null,
+    // No psychic tier here: the roll happens on the Powers step, and psiClass()
+    // folds it in from there while a build is in progress.
+    character: { class_variant: S.variant, occ_class_variant: S.occVariant },
+  });
   S.savedId = null;
   render();
 }
@@ -529,9 +534,11 @@ function confirmClass() {
   // the base back, so this never compounds.
   // What the rest of the wizard sees is ONE class: the variant resolved, and
   // the occupation composed in. Nothing downstream has to know there were two.
-  const rcc = applyVariant(S.cls, S.variant);
-  const occ = S.occ ? applyVariant(S.classes.find((c) => c.id === S.occ), S.occVariant) : null;
-  S.cls = combineClasses(rcc, occ);
+  S.cls = composeClass({
+    rcc: S.cls,
+    occ: S.occ ? S.classes.find((c) => c.id === S.occ) || null : null,
+    character: { class_variant: S.variant, occ_class_variant: S.occVariant },
+  });
   // Rolled here so the Attributes step, which comes next, can show the bonus
   // beside the roll it modifies. computePools() re-rolls it later if asked.
   rollAttrBonuses(true);

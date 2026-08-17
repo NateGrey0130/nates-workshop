@@ -3,8 +3,8 @@
 // Classes are stored in D1 rather than shipped as files, so this is a lookup.
 // Used by the XP, level-up, picks, variant and create endpoints.
 
-import { parseClassMarkdown, applyVariant, combineClasses } from '../../../../apps/character-creator/js/parser.js';
-import { withRolledPsionics } from '../../../../apps/character-creator/js/psionics.js';
+import { parseClassMarkdown, applyVariant } from '../../../../apps/character-creator/js/parser.js';
+import { composeClass } from '../../../../apps/character-creator/js/compose.js';
 import { getStored } from './class-store.js';
 
 // `variantId` is the character's class_variant. Resolution happens HERE, in the
@@ -29,9 +29,11 @@ export async function loadClass(env, requestUrl, classId, variantId = null) {
 // character, and refusing to load a sheet because one of two classes was
 // retired would be worse than showing the half that works.
 export async function loadCharacterClass(env, requestUrl, character) {
+  // loadClass() already applies the variant, so the pieces handed to
+  // composeClass() are pre-resolved and it re-applies nothing.
   const rcc = await loadClass(env, requestUrl, character.class_id, character.class_variant);
-  const composed = character.occ_class_id
-    ? combineClasses(rcc, await loadClass(env, requestUrl, character.occ_class_id, character.occ_class_variant))
-    : rcc;
-  return withRolledPsionics(composed, character);
+  const occ = character.occ_class_id
+    ? await loadClass(env, requestUrl, character.occ_class_id, character.occ_class_variant)
+    : null;
+  return composeClass({ rcc, occ, character: { ...character, class_variant: null, occ_class_variant: null } });
 }

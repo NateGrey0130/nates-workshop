@@ -20,6 +20,7 @@ Access gate. No build step, no framework, no dependencies.
 - [House rules and derived values](#house-rules-and-derived-values)
 - [Level-up skill picks](#level-up-skill-picks)
 - [A race and an occupation together](#a-race-and-an-occupation-together)
+- [One place composes a class](#one-place-composes-a-class)
 - [Classes that come in stages](#classes-that-come-in-stages)
 - [What a class grants mechanically](#what-a-class-grants-mechanically)
 - [Which system a catalog row belongs to](#which-system-a-catalog-row-belongs-to)
@@ -62,8 +63,14 @@ apps/character-creator/
 │                             build themselves from it)
 ├── js/derive.js              Attribute tables → combat bonuses, saves, percentages
 │                             (classic script; both the wizard and the sheet use it)
-├── js/rules.js               Closed lists the book fixes — the seven alignments
+├── js/rules.js               Closed lists the book fixes — the seven alignments,
+│                             the currency names, the nine background tables
 │                             (classic script, same reason as derive.js)
+├── js/psionics.js            Step 3: the Random Psionics Table, the tier rules,
+│                             and folding a rolled tier into a class (ES module —
+│                             the Workers runtime needs it too)
+├── js/compose.js             The ONE place a character's classes become the
+│                             thing it is played as (ES module)
 ├── js/api.js                 The one HTTP helper for all five pages, and
 │                             errorDetails() (classic script)
 ├── js/picker.js              Catalog picker filtering — matching, the filter
@@ -88,6 +95,8 @@ functions/api/
     ├── _lib/character-json.js  Decoding the character JSON columns, with the
     │                         right empty value per column
     ├── _lib/catalog.js       Cross-reference an import; create catalog stubs
+    ├── _lib/catalog-redirects.js  Retired catalog keys keep resolving to their
+    │                         replacement, so an old class file still loads
     ├── _lib/class-loader.js  Resolve a class_id to parsed frontmatter
     ├── _lib/class-store.js   Read/write stored classes; per-isolate parse cache
     ├── _lib/extraction-prompt.js  Class import prompt
@@ -600,7 +609,11 @@ every character created before this has `occ_class_id` NULL and behaves exactly
 as it did.
 
 `combineClasses(rcc, occ)` composes them into **one class-shaped object**, the
-same trick `applyVariant` uses a layer down. The validator, the level-up diff,
+same trick `applyVariant` uses a layer down. Callers do not reach for it
+directly: [`js/compose.js`](js/compose.js) is the single place that knows the
+whole order — variant, then race + occupation, then any rolled psionics — and
+every site goes through it. See
+[One place composes a class](#one-place-composes-a-class). The validator, the level-up diff,
 `derive`'s bonuses and the sheet all read `cls.skills`, `cls.bonuses` and the
 pool bases as before — none of them knows a character can have two classes.
 
@@ -631,6 +644,36 @@ Three rules earned by getting them wrong first:
 ---
 
 ---
+
+## One place composes a class
+
+Turning a character's classes into the thing it is played as takes three steps,
+and the order matters:
+
+1. **apply each class's variant** — a Dragon hatchling is not an adult
+2. **compose race with occupation** — into one class-shaped object
+3. **fold in rolled psionics** — a tier the character rolled, not one the class declared
+
+Six places did this by hand: the class loader, the sheet's endpoint, the
+stage-change endpoint, the admin audit, and the wizard twice. They agreed only
+by luck, and each time a step was added, all six had to learn it.
+
+Adding the O.C.C. step meant touching all six. Adding the psionics step meant
+touching all six again — and **one was missed**, so the sheet showed a rolled
+major psychic a save target of 15 where the level-up path correctly had 12. That
+bug is why [`js/compose.js`](js/compose.js) exists.
+
+```js
+composeClass({ rcc, occ, character })
+```
+
+What still differs per caller is how a class is **fetched** — some await D1, the
+audit reads a preloaded map, the sheet's endpoint tolerates a retired class, the
+wizard has them in memory. That part is genuinely different and stays at the call
+site. What is identical everywhere is what to do once you have them.
+
+A smoke check fails the build if any source file calls `combineClasses(`
+directly, because that is what re-implementing the sequence looks like.
 
 ## Classes that come in stages
 
@@ -979,10 +1022,17 @@ for (`options_available_of_8`). Re-run it after that import and it completes.
 
 Minor, Major and Master differ in three ways, and only the third is new.
 
-**What already worked:** the character's tier comes from class frontmatter
-(`psionics.type`), starting power counts are minor 2 / major 6 / master 8, and
-Super psionics are Master-only through `psionics.categories_allowed`. That is a
-**category** gate.
+**Where a tier comes from:** either the class (`psionics.type`) or the character
+(`psychic_tier`, rolled on the Random Psionics Table — see
+[Psionics can be rolled for](#house-rules-and-derived-values)). `composeClass()`
+folds a rolled tier into the class-shaped object, so everything below applies
+the same either way.
+
+Starting power counts are minor 2 / major 6 / master 8 when a class states the
+tier, and a class may override with `psionics.powers_starting`. A *rolled* tier
+uses the book's own counts instead: 2 for a minor, and 8-from-one-category or
+6-from-any for a major. Super psionics are Master-only through
+`psionics.categories_allowed`, which is a **category** gate.
 
 **What this adds** is a **per-power** gate. `psionic_powers.min_tier` records the
 tier a book states for an individual power, and the picker will not offer one
@@ -1002,7 +1052,9 @@ category gate does not.
   get bent at the table, psychic tiers do not.
 - **A power a character already holds is never taken away.** The gate applies to
   choosing, not to having, consistent with every other rule decision here.
-- A class with no `psionics` block has no tier, so nothing is gated.
+- A class with no `psionics` block has no tier of its own — but its character
+  may still have rolled one, and then the gate applies normally. A class that
+  sets `psionics_allowed: false` has no tier and never will.
 
 `derive.meetsTier(has, needs)` is the only place the ordering is written down.
 Compare through it rather than comparing tier strings.
@@ -1624,9 +1676,15 @@ Migrations are safe to re-run regardless (`IF NOT EXISTS` plus
 
 Honest list, roughly by value.
 
-Most of these are planned out as twelve PRs under
-[`docs/plans/`](docs/plans/README.md), with the design decisions and the
-rejected alternatives recorded per PR.
+The original twelve PRs are recorded under
+[`docs/plans/`](docs/plans/README.md) with their design decisions and rejected
+alternatives. Everything since — the rules audit against the source books, the
+class-data corrections and the schema work that came out of them — is in
+[`docs/rules-audit.md`](docs/rules-audit.md).
+
+The one refactor candidate that had earned itself is done: six places composed a
+class by hand and now none do. See
+[One place composes a class](#one-place-composes-a-class).
 
 **An R.C.C. with no related or secondary skills is correct, not a gap.** Those
 come from the O.C.C. a character takes alongside its race, so `relatedAllowance`
@@ -1677,7 +1735,10 @@ with age stages came back with **both stat blocks dropped** — no attribute dic
 no hit points, no P.P.E. The skills and psionics were perfect, which is exactly
 what made it look like a good extraction. The same shape bit `bonuses`: the
 prompt named no keys, so the model invented plausible ones (`roll_with_punch`,
-`pull_punch`, `magic`) that nothing reads and which therefore did nothing at all.
+`pull_punch`, `magic`) that nothing read and which therefore did nothing at all.
+Two of those have since become real — `roll` and `pull_punch` — because actual
+classes needed them, but they were invented before they were implemented, which
+is the point: a bonus written for a key `derive.js` does not expose is silent.
 
 A smoke check now pins the prompt against `derive.js`'s real key list and
 asserts it documents each schema block, because neither failure is visible in
