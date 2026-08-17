@@ -2478,6 +2478,33 @@ console.log('\n[1c30] Documented counts');
   check('and it matches schema.sql',
     stated && num(stated[1]) === tables,
     stated ? `README says ${stated[1]} (${num(stated[1])}), schema has ${tables}` : '');
+
+  // A correct count over an incomplete description is the worse failure of the
+  // two, because the number reassures you the list is whole. The README said
+  // seventeen and described fifteen — `import_sessions` and `import_staged` had
+  // a migration row and an API section but no data-model row anywhere.
+  const named = new Set([...readme.matchAll(/^\| `([a-z_]+)` \|/gm)].map((m) => m[1]));
+  // The two the section explicitly disclaims: not this app's tables.
+  const notOurs = ['media_items', 'schema_migrations'];
+  const undescribed = [...schema.matchAll(/CREATE TABLE IF NOT EXISTS ([a-z_]+)/g)]
+    .map((m) => m[1])
+    .filter((t) => !named.has(t) && !notOurs.includes(t));
+  check('every table has a row in a data-model table',
+    undescribed.length === 0, undescribed.join(', '));
+  check('and the two it disclaims are still disclaimed',
+    notOurs.every((t) => readme.includes('`' + t + '`')));
+
+  // The data scripts grow with the audit — five landed in two days — and nothing
+  // else records that one exists. A script nobody knows to run is a correction
+  // that silently did not happen.
+  const dataScripts = readdirSync(join(appDir, 'db')).filter((f) => f.endsWith('.sql'));
+  const ds = readme.slice(readme.indexOf('### Data scripts'));
+  const dsSection = ds.slice(0, ds.indexOf('\n## ', 10));
+  const patterns = [...dsSection.matchAll(/`([a-z0-9*-]+\.sql)`/g)].map((m) =>
+    new RegExp('^' + m[1].replace(/[.]/g, '\\.').replace(/\*/g, '.*') + '$'));
+  const uncovered = dataScripts.filter((f) => !patterns.some((p) => p.test(f)));
+  check('every data script is covered by the Data scripts table',
+    uncovered.length === 0, uncovered.join(', '));
 }
 
 // ---------- 1d. Paging ----------
