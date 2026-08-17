@@ -191,16 +191,30 @@ against their source books:
 | Class | Book | State |
 |---|---|---|
 | Long Bowman | PF main, p.83-85 | **corrected** — `db/fix-long-bowman.sql` |
-| Chiang-Ku Dragon | Dragons and Gods, p.23-24 | not audited |
+| Chiang-Ku Dragon | Dragons and Gods, p.22-23 | **corrected** — `db/fix-chiang-ku.sql` |
 | Cyber-Knight | Rifts main | not audited |
 | Juicer | Rifts main | not audited |
 | Dragon Hatchling (Great Horned) | Rifts main | not audited |
 
-The Long Bowman was largely invented: six of eight fields disagreed with the
-book, including the attribute requirements, the entire O.C.C. skill list, the
-related-skill categories and schedule, and the S.D.C. formula. Only Wilderness
-Survival and W.P. Archery survived, and Wilderness Survival was missing its
-+10%. Assume the others are no better until checked.
+The two audited failed in **completely different ways**, which is the useful
+finding.
+
+The **Long Bowman** was hand-written and largely invented: six of eight fields
+disagreed, including the attribute requirements, the entire O.C.C. skill list,
+the related-skill categories and schedule, and the S.D.C. formula. Only
+Wilderness Survival and W.P. Archery survived.
+
+The **Chiang-Ku** was model-imported and every *number* was right — both stages'
+attribute dice, hit points, S.D.C., P.P.E., natural A.R., Horror Factor and the
+I.S.P. formula all matched. What it got wrong was **applying** the bonuses:
+seven skill bonuses sat in `note` prose with no `base`, so each fell back to the
+catalog value and the bonus vanished. Climbing read 40 where the book gives 50;
+faerie lore read 25 for 40. Psionics granted six powers where the book gives
+seven.
+
+So a hand-written class fails on facts, and an imported one fails on the
+difference between recording a rule and encoding it. Reviewing an import for
+plausible prose will not catch the second kind.
 
 **Correcting a class does not change characters already built from it** — skills
 are stored per character. The existing production Long Bowman keeps the skills
