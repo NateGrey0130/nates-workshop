@@ -16,8 +16,8 @@
 
 import { getUserEmail, unauthorized, json, forbidden, characterAccess, readJson } from '../../_lib/auth.js';
 import { getStored } from '../../_lib/class-store.js';
-import { parseClassMarkdown, applyVariant, combineClasses } from '../../../../../apps/character-creator/js/parser.js';
-import { withRolledPsionics } from '../../../../../apps/character-creator/js/psionics.js';
+import { parseClassMarkdown, applyVariant } from '../../../../../apps/character-creator/js/parser.js';
+import { composeClass } from '../../../../../apps/character-creator/js/compose.js';
 import { evalDice, rollPoolFormula } from '../../../../../apps/character-creator/js/dice.js';
 import { loadCharacter } from '../../_lib/character-json.js';
 import { loadClass } from '../../_lib/class-loader.js';
@@ -121,9 +121,12 @@ export async function onRequestPost({ request, env, params }) {
   const occ = character.occ_class_id
     ? await loadClass(env, request.url, character.occ_class_id, character.occ_class_variant)
     : null;
+  // `next` is already the target stage and `occ` already has its own variant
+  // applied, so the variants are blanked here rather than applied twice.
+  const target = composeClass({ rcc: next, occ, character: { ...character, class_variant: null, occ_class_variant: null } });
   const { violations } = validateCharacter({
     character: { level: character.level },
-    cls: withRolledPsionics(combineClasses(next, occ), character),
+    cls: target,
     skills: character.skills || [],
     attributes: newAttrs,
     catalog: await loadSkillCategories(env),

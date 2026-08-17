@@ -20,6 +20,7 @@ import { paging } from '../../../functions/api/character-creator/_lib/paging.js'
 import { skillGrantsFor, buildProposal, perLevelDiceOf } from '../../../functions/api/character-creator/_lib/leveling.js';
 import { dedupeCategories } from '../../../functions/api/character-creator/_lib/skill-picks.js';
 import { rollPoolFormula, rollAttribute, evalDice } from '../js/dice.js';
+import { composeClass } from '../js/compose.js';
 import { psionicTierForRoll, rollPsionics, psionicShape, withRolledPsionics,
          PSIONIC_TIER_RULES, rollsForPsionics } from '../js/psionics.js';
 import { similarity, normaliseName, classesMentioning, findDuplicates } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
@@ -2297,6 +2298,79 @@ console.log('\n[1c28] Background tables');
     const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
     return /BIO_FIELDS\.length \/ 2/.test(app) && /BIO_FIELDS\.length \/ 2/.test(sheet);
   })());
+}
+
+// ---------- 1c29. One place composes a class ----------
+// Three steps in a fixed order: variant, then race+occupation, then any rolled
+// psionics. Six sites used to do this by hand and agreed only by luck; adding
+// the psionics step missed one, and the sheet showed a rolled major psychic the
+// wrong save target while level-up had it right.
+console.log('\n[1c29] Class composition');
+{
+  const mk = (id, cat, extra) => parseClassMarkdown(
+    `---\nid: ${id}\nname: ${id}\nsystem: palladium-fantasy\nsource_book: B\ncategory: ${cat}\n${extra}\n---\n\n## Lore\n\nx\n`).data;
+
+  const dragon = mk('dragon', 'rcc', `mdc_base: "1d4x100"
+skills:
+  occ_related_skills:
+    count: 8
+    categories: ["Wilderness"]
+variants:
+  - { id: hatchling, name: "Dragon Hatchling", mdc_base: "1d4x10" }`);
+  const bowman = mk('bowman', 'occ', 'hit_points_base: "P.E. + 1d6 per level"');
+
+  check('nothing in, nothing out', composeClass() === null && composeClass({}) === null);
+  check('a race alone composes to itself', (() => {
+    const c = composeClass({ rcc: dragon });
+    return c.id === 'dragon' && !c.occ_id;
+  })());
+  check('an occupation alone still resolves',
+    composeClass({ occ: bowman })?.id === 'bowman');
+
+  check('the variant is applied', (() => {
+    const c = composeClass({ rcc: dragon, character: { class_variant: 'hatchling' } });
+    return c.mdc_base === '1d4x10' && c.name === 'Dragon Hatchling';
+  })());
+  check('race and occupation compose', (() => {
+    const c = composeClass({ rcc: dragon, occ: bowman });
+    return c.occ_id === 'bowman' && /dragon/i.test(c.name) && /bowman/i.test(c.name);
+  })());
+
+  // The step that was missed when it was added.
+  check('a rolled psychic tier is folded in', (() => {
+    const c = composeClass({ rcc: dragon, occ: bowman, character: { psychic_tier: 'minor' } });
+    return c.psionics?.type === 'minor' && c.psionics.from_roll === true;
+  })());
+  check('no roll leaves psionics alone',
+    composeClass({ rcc: dragon, occ: bowman }).psionics === undefined);
+
+  // Order matters: the variant must land before the composition, or a
+  // hatchling's M.D.C. would be overwritten by the base class's.
+  check('the variant is applied before composing', (() => {
+    const c = composeClass({ rcc: dragon, occ: bowman, character: { class_variant: 'hatchling' } });
+    return c.mdc_base === '1d4x10';
+  })());
+  // And the psionics fold must come last, after the O.C.C. has contributed its
+  // related-skill count, or a major psychic's halving would hit the wrong number.
+  check('psionics fold after composition', (() => {
+    const withOcc = mk('scholar', 'occ', 'skills:\n  occ_related_skills:\n    count: 6\n    categories: ["Science"]');
+    const c = composeClass({ rcc: dragon, occ: withOcc, character: { psychic_tier: 'major' } });
+    // The OCCUPATION supplies related allowances, so composing gives its 6, and
+    // the major psionic halves that to 3. Folding psionics first would have
+    // halved the dragon's 8 instead and landed on 4.
+    return c.skills.occ_related_skills.count === 3;
+  })());
+
+  // The whole point: no caller re-implements the sequence.
+  check('no source file composes a class by hand', (() => {
+    const roots = [join(appDir, 'app.js'), join(appDir, 'sheet.js')];
+    const fnDir = join(appDir, '..', '..', 'functions', 'api', 'character-creator');
+    const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+      e.isDirectory() ? walk(join(dir, e.name)) : (e.name.endsWith('.js') ? [join(dir, e.name)] : []));
+    const files = [...roots, ...walk(fnDir)];
+    const bad = files.filter((f) => readFileSync(f, 'utf8').includes('combineClasses('));
+    return bad.length === 0;
+  })(), 'use composeClass() instead');
 }
 
 // ---------- 1d. Paging ----------

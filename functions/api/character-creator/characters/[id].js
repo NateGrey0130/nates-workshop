@@ -7,8 +7,8 @@ import { getUserEmail, unauthorized, json, forbidden, characterAccess, readJson 
 import { listPending } from '../_lib/skill-picks.js';
 import { decodeCharacter } from '../_lib/character-json.js';
 import { getStored } from '../_lib/class-store.js';
-import { parseClassMarkdown, applyVariant, combineClasses } from '../../../../apps/character-creator/js/parser.js';
-import { withRolledPsionics } from '../../../../apps/character-creator/js/psionics.js';
+import { parseClassMarkdown } from '../../../../apps/character-creator/js/parser.js';
+import { composeClass } from '../../../../apps/character-creator/js/compose.js';
 
 export async function onRequestGet({ request, env, params }) {
   const email = getUserEmail(request);
@@ -44,28 +44,22 @@ export async function onRequestGet({ request, env, params }) {
   // Loaded directly rather than through loadClass(), which only returns
   // published classes: a character whose class was retired after it was built
   // must still resolve, or the sheet loses its name and advisory text.
+  // Fetched directly rather than through loadClass(), which returns only
+  // published classes: a character whose class was retired after it was built
+  // must still resolve, or the sheet loses its name and advisory text. Only the
+  // FETCH differs — composeClass() does the rest, the same as everywhere else.
   const stored = await getStored(env, character.class_id);
   const parsed = stored ? parseClassMarkdown(stored.markdown) : null;
-  let cls = parsed?.ok
-    ? { ...applyVariant(parsed.data, character.class_variant), _retired: !!stored.deleted_at }
-    : null;
 
-  // The O.C.C. taken alongside, composed in. Loaded the same way — directly
-  // rather than through loadClass — so a retired O.C.C. still resolves.
-  if (cls && character.occ_class_id) {
-    const occRow = await getStored(env, character.occ_class_id);
-    const occParsed = occRow ? parseClassMarkdown(occRow.markdown) : null;
-    if (occParsed?.ok) {
-      const retired = cls._retired || !!occRow.deleted_at;
-      cls = { ...combineClasses(cls, applyVariant(occParsed.data, character.occ_class_variant)), _retired: retired };
-    }
-  }
+  const occRow = character.occ_class_id ? await getStored(env, character.occ_class_id) : null;
+  const occParsed = occRow ? parseClassMarkdown(occRow.markdown) : null;
 
-  // Psionics the character rolled for itself, folded in last. This endpoint
-  // composes by hand rather than through loadCharacterClass() so that a retired
-  // class still resolves — which means it has to remember this step too, or the
-  // sheet shows a rolled psychic with no powers and the wrong save target.
-  cls = withRolledPsionics(cls, character);
+  let cls = composeClass({
+    rcc: parsed?.ok ? parsed.data : null,
+    occ: occParsed?.ok ? occParsed.data : null,
+    character,
+  });
+  if (cls) cls = { ...cls, _retired: !!stored?.deleted_at || !!occRow?.deleted_at };
 
   return json({
     character, items, can_write, class: cls,
