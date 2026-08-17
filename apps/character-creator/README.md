@@ -22,7 +22,9 @@ Access gate. No build step, no framework, no dependencies.
 - [A race and an occupation together](#a-race-and-an-occupation-together)
 - [One place composes a class](#one-place-composes-a-class)
 - [Classes that come in stages](#classes-that-come-in-stages)
+  - [Changing stage](#changing-stage)
 - [What a class grants mechanically](#what-a-class-grants-mechanically)
+  - [The review step](#the-review-step)
 - [Which system a catalog row belongs to](#which-system-a-catalog-row-belongs-to)
 - [Filtering the catalog pickers](#filtering-the-catalog-pickers)
 - [Unfinished builds are saved](#unfinished-builds-are-saved)
@@ -35,8 +37,15 @@ Access gate. No build step, no framework, no dependencies.
 - [Merging duplicate catalog rows](#merging-duplicate-catalog-rows)
   - [Retired keys keep resolving](#retired-keys-keep-resolving)
 - [The PDF importers](#the-pdf-importers)
+  - [Class importer](#class-importer)
+  - [Skill importer](#skill-importer)
+  - [Spell importer](#spell-importer)
+  - [Psionic importer](#psionic-importer)
+  - [Gear importer](#gear-importer)
 - [Local development](#local-development)
 - [Production configuration](#production-configuration)
+  - [The migration convention](#the-migration-convention)
+  - [Data scripts](#data-scripts)
 - [Known limitations and refactor candidates](#known-limitations-and-refactor-candidates)
 
 ---
@@ -81,7 +90,11 @@ apps/character-creator/
 ├── js/class-blocks.js        Rewrites ONE frontmatter block in place, so the
 │                             structured editors cannot disturb the rest of the
 │                             file (classic script)
-├── db/seed-dev.sql           Optional local-dev seed rows; never applied to production
+├── db/*.sql                  One-shot SQL. NOT migrations — these change rows,
+│                             not schema. See Data scripts below
+├── docs/rules-audit.md       Where each implemented rule comes from, by page
+├── docs/plans/               The twelve original PRs, with their rejected
+│                             alternatives
 └── test/
     ├── smoke.mjs             Parser + schema + migration-state smoke test
     └── fixtures/*.md         Three real class files, parser test input only
@@ -193,13 +206,19 @@ ppe and isp.
 | `spells` | `system` NULL means unrestricted. name, level, ppe, plus a stat block (range, duration, damage, saving throw, area of effect, casting time, description). The stat block is TEXT — books write "100 feet per level" as often as a number. |
 | `psionic_powers` | name, category (Healing/Physical/Sensitive/Super), isp, plus range, duration, saving throw and description — the same field names spells use. `min_tier` is the psychic tier a book states is required; NULL means no restriction beyond the category. |
 
-| `character_drafts` | One unfinished wizard build per person, `UNIQUE (owner_email)`. `state` is the build as JSON — deliberately not the catalogs it was built against. Its own table rather than a `draft` status on `characters`; see [Unfinished builds are saved](#unfinished-builds-are-saved). |
-| `catalog_redirects` | Where a retired key went. Written when a merge deletes a row or a key is renamed by hand, so class markdown citing the old slug or name keeps resolving. Polymorphic by design — `catalog` names which table `to_id` points into — so there is no foreign key. See [Retired keys keep resolving](#retired-keys-keep-resolving). |
-
 All catalogs carry `source` (`seed` \| `import`) and `source_book`, so an entry's
 provenance is visible and the same skill from two books can coexist under
 distinguished names. Rows created as stubs by the class importer have zeroed
 numbers — the skill importer exists to fill them in.
+
+**Working state** — not content, and not a character
+
+| Table | Notes |
+|---|---|
+| `character_drafts` | One unfinished wizard build per person, `UNIQUE (owner_email)`. `state` is the build as JSON — deliberately not the catalogs it was built against. Its own table rather than a `draft` status on `characters`; see [Unfinished builds are saved](#unfinished-builds-are-saved). |
+| `catalog_redirects` | Where a retired key went. Written when a merge deletes a row or a key is renamed by hand, so class markdown citing the old slug or name keeps resolving. Polymorphic by design — `catalog` names which table `to_id` points into — so there is no foreign key. See [Retired keys keep resolving](#retired-keys-keep-resolving). |
+| `import_sessions` | One resumable catalog import. `catalog` is which of the four it feeds, `system` is stamped on every row the session confirms, `closed_at` NULL means still open. |
+| `import_staged` | Rows one page range extracted, held until confirmed. `payload` is the extracted row as JSON, `match_name` the catalog row it duplicates, `action` the `insert` / `update` / `ignore` decision, `confirmed_at` NULL means still pending. Cascades from its session. |
 
 ---
 
@@ -1599,6 +1618,13 @@ paths it cannot match.
 A database created before the `db/migrations/` files existed also needs those,
 once each — see [Production configuration](#production-configuration).
 
+**`seed-catalogs.sql` seeds the three classes as they were originally written,
+not as the rules audit corrected them.** The corrections live in
+`apps/character-creator/db/fix-*.sql` and `apply-*.sql` and have to be applied on
+top, or you are developing against class definitions the audit found wrong — see
+[Data scripts](#data-scripts). Each guards on the text it replaces, so applying
+them to an already-corrected database does nothing.
+
 Optional character/campaign test rows:
 
 ```bash
@@ -1686,6 +1712,33 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 
 Running `db/schema.sql` against an already-current database is therefore how you
 backfill the records — no separate backfill migration is needed.
+
+### Data scripts
+
+`apps/character-creator/db/*.sql` are a different thing from `db/migrations/`
+and are easy to mistake for them. A migration changes **schema** and is tracked
+in `schema_migrations`; these change **rows**, are tracked nowhere, and are run
+by hand once per environment as needed.
+
+| Kind | Files | What they are |
+|---|---|---|
+| Dev seed | `seed-dev.sql` | Optional local character/campaign rows. Never applied to production |
+| Data cleanup | `backfill-gear-system.sql`, `retire-gear-placeholders.sql`, `untag-cross-system.sql` | One-off corrections to rows an earlier import got wrong or left NULL |
+| Class corrections | `fix-*.sql`, `apply-*.sql`, `long-bowman-money.sql` | The rules audit's output: stored class definitions rewritten against the books, and class data written for a schema feature the day it landed |
+
+Two conventions hold across all of them, and both matter more here than in a
+migration, because nothing records that one has run:
+
+- **Every statement guards itself**, so a script is safe to run twice and safe
+  to run *early*. `retire-gear-placeholders.sql` is the clearest case — it does
+  nothing at all until the options it rewrites toward exist, and its closing
+  `SELECT` reports what it did and what it is still waiting for. See
+  [Starting gear the class leaves open](#starting-gear-the-class-leaves-open).
+- **Each one opens with the book and page it is correcting against**, because a
+  script that rewrites a class is a claim about a source, and six months later
+  the citation is the only way to check it.
+
+The audit that produced most of them is [`docs/rules-audit.md`](docs/rules-audit.md).
 
 Merging to `main` is the deploy — Pages auto-deploys, no CI, no build command.
 Cloudflare Access fronts the whole site with the path left blank, so every route
@@ -1822,7 +1875,7 @@ valid choices rather than showing fewer rows. Those are bounded by book content;
 the others grow with play.
 
 **The three page scripts are long, and deliberately not split.** `app.js` is
-roughly 1,500 lines, `import.js` and `sheet.js` roughly 800 each — treat those
+roughly 1,600 lines, `import.js` and `sheet.js` roughly 900 each — treat those
 as orders of magnitude, not figures, since they move with every change and the
 last written-down set had drifted by 20%. Each drives one page and each does
 several jobs. Splitting was considered and rejected: there is no build step,
