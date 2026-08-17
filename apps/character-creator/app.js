@@ -55,6 +55,9 @@ const S = {
   // and a tier of null is a real result (26-00, no psionics) rather than an
   // absence, so the two must stay distinguishable.
   psiRoll: null, psiShape: null, psiCategory: null,
+  // A class may state an attribute bonus as dice ("add 2D6 to P.S."). Rolled
+  // once here and stored, because it cannot be re-evaluated on every render.
+  attrBonuses: {},
   pools: null, savedId: null, saving: false,
   skillCatalog: [], items: [], campaigns: [], existing: [],
   // Retired gear slugs → the slug they resolve to now. See findItem().
@@ -100,8 +103,28 @@ function pbSpent() {
 }
 const method = (a) => S.attrMethods[a] || 'roll';
 
+// A class may state an attribute bonus as dice — "add 2D6 to P.S." Rolled once
+// and stored, because it cannot be re-evaluated on every render.
+//
+// Called both when the class is confirmed and from computePools(), so the value
+// is present on the Attributes step (where it is shown beside the roll) and is
+// re-rolled by Review's Reroll button along with the pools.
+function rollAttrBonuses(force = false) {
+  // Idempotent unless forced. computePools() is called lazily whenever a later
+  // step needs pools, and without this guard simply walking to Details silently
+  // re-rolled a bonus the player had already read off the Attributes step.
+  if (!force && S.attrBonuses && Object.keys(S.attrBonuses).length) return;
+  S.attrBonuses = {};
+  for (const [attr, dice] of Object.entries(derive.diceBonuses(S.cls))) {
+    const v = evalDice(dice);
+    if (v != null) S.attrBonuses[attr] = v;
+  }
+}
+
 // ---------- pools ----------
-function computePools() {
+// `force` distinguishes the lazy first computation from the Reroll button.
+// Only the button re-rolls what has already been rolled.
+function computePools(force = false) {
   const c = S.cls;
   // I.S.P. may come from a tier the character rolled rather than from the
   // class, so the pool is read off the composed object.
@@ -117,6 +140,8 @@ function computePools() {
   // coin as well as its kit. Rolled from the same formula parser as the pools,
   // so the Reroll button on Review covers it, and stored in bio because it is a
   // running number the player edits rather than anything the rules derive.
+  rollAttrBonuses(force);
+
   const money = rollPoolFormula(c.starting_money, S.attrs);
   if (money == null) delete S.bio.money; else S.bio.money = String(money);
 }
@@ -163,7 +188,7 @@ const DRAFT_KEYS = [
   'related', 'secondary', 'groupPicks', 'gearPicks',
   'equipment', 'equipInit', 'charName', 'campaignId', 'newCampaign',
   'spells', 'psi', 'bio', 'pools',
-  'psiRoll', 'psiShape', 'psiCategory',
+  'psiRoll', 'psiShape', 'psiCategory', 'attrBonuses',
 ];
 
 let draftTimer = null;
@@ -340,7 +365,7 @@ function resetBuild() {
   S.variant = null;
   S.occ = null; S.occVariant = null;
   S.spells = []; S.psi = []; S.bio = {};
-  S.psiRoll = null; S.psiShape = null; S.psiCategory = null;
+  S.psiRoll = null; S.psiShape = null; S.psiCategory = null; S.attrBonuses = {};
 }
 
 // Step 1 — class select (browse | guided)
@@ -496,13 +521,16 @@ function confirmClass() {
   const rcc = applyVariant(S.cls, S.variant);
   const occ = S.occ ? applyVariant(S.classes.find((c) => c.id === S.occ), S.occVariant) : null;
   S.cls = combineClasses(rcc, occ);
+  // Rolled here so the Attributes step, which comes next, can show the bonus
+  // beside the roll it modifies. computePools() re-rolls it later if asked.
+  rollAttrBonuses(true);
   S.step = 2;
   render();
 }
 
 // Step 2 — attributes
 function renderAttributes() {
-  const classBonus = derive.classBonuses(S.cls, 1);
+  const classBonus = derive.classBonuses(S.cls, 1, S.attrBonuses);
   const reqs = S.cls.attribute_requirements || {};
   const spent = pbSpent();
   const rows = ATTRS.map((a) => {
@@ -530,15 +558,21 @@ function renderAttributes() {
     // gets saved is what was rolled, and the bonus is added wherever the number
     // is actually used.
     const add = classBonus.attributes[a];
+    const floor = classBonus.attribute_minimums?.[a];
+    // A dice bonus reads the same as a flat one here; what differs is that the
+    // number was rolled, which the class name beside it already implies.
+    const raised = v != null && floor != null && (v + (add || 0)) < floor;
     const boost = add && v != null
       ? ` <span class="attr-note ok">${add > 0 ? '+' : ''}${add} from ${esc(S.cls.name)} = ${v + add}</span>` : '';
+    const floorNote = raised
+      ? ` <span class="attr-note ok">minimum ${floor} for ${esc(S.cls.name)}</span>` : '';
     return `<tr><td><b>${a}</b></td>
       <td><select onchange="setMethod('${a}', this.value)">
         <option value="roll" ${m === 'roll' ? 'selected' : ''}>Random roll</option>
         <option value="point" ${m === 'point' ? 'selected' : ''}>Point-buy</option>
         <option value="manual" ${m === 'manual' ? 'selected' : ''}>Manual entry</option>
       </select></td>
-      <td>${control}</td><td>${req}${boost}${dice ? ` <span class="attr-note">racial dice: ${esc(dice)}</span>` : ''}</td></tr>`;
+      <td>${control}</td><td>${req}${boost}${floorNote}${dice ? ` <span class="attr-note">racial dice: ${esc(dice)}</span>` : ''}</td></tr>`;
   }).join('');
 
   const unmet = Object.entries(reqs).filter(([k, min]) => (S.attrs[k] ?? -1) < min);
@@ -1092,7 +1126,7 @@ function renderDetails() {
   // shown — without this the field sits empty here and mysteriously fills in on
   // Review. Lazy and idempotent, so arriving via Review does not re-roll.
   if (!S.pools) computePools();
-  const d = derive.bio(S.attrs, null, derive.classBonuses(S.cls, 1));
+  const d = derive.bio(S.attrs, null, derive.classBonuses(S.cls, 1, S.attrBonuses));
   $('app').innerHTML = `
   <div class="panel">
     <h2>Details <span class="muted small">— ${esc(S.cls.name)}</span></h2>
@@ -1170,7 +1204,7 @@ const SKILL_PCT_CAP = 98;   // p.22: "there is always a margin for error"
 function skillsPayload() {
   const find = (n) => skillByName().get(n) || {};
   const occ = S.cls.skills?.occ_skills || [];
-  const iq = derive.bio(S.attrs, null, derive.classBonuses(S.cls, 1)).iq_skill_bonus_pct || 0;
+  const iq = derive.bio(S.attrs, null, derive.classBonuses(S.cls, 1, S.attrBonuses)).iq_skill_bonus_pct || 0;
 
   // pct stays the true current percentage, because level-up increments it and
   // the sheet prints it. iq_bonus records how much of it came from I.Q. so the
@@ -1257,7 +1291,7 @@ function renderReview() {
         ${ATTRS.map((a) => `<div class="stat-row"><span>${a}</span><b>${S.attrs[a] ?? '—'}</b></div>`).join('')}
       </div>
       <div class="stat-col">
-        <h4>Pools <button class="btn btn-sm btn-ghost" onclick="computePools(); render()">↻ reroll</button></h4>
+        <h4>Pools <button class="btn btn-sm btn-ghost" onclick="computePools(true); render()">↻ reroll</button></h4>
         ${poolRow('H.P.', p.hp)}${poolRow('S.D.C.', p.sdc)}${poolRow('M.D.C.', p.mdc)}
         ${poolRow('P.P.E.', p.ppe)}${poolRow('I.S.P.', p.isp)}
         ${S.bio.money ? poolRow(rules.currencyLabel(S.system), S.bio.money) : ''}
@@ -1305,7 +1339,8 @@ async function save() {
       occ_class_variant: S.occVariant || undefined,
       psychic_tier: S.psiRoll?.tier || undefined,
       psychic_shape: S.psiRoll?.tier ? (S.psiShape || undefined) : undefined,
-      attributes: S.attrs, skills: skillsPayload(), powers: powersPayload(), pools: S.pools,
+      attributes: S.attrs, attribute_bonuses: S.attrBonuses,
+      skills: skillsPayload(), powers: powersPayload(), pools: S.pools,
       bio: S.bio,
       items: equipmentPayload().map((e) => ({ item_id: e.item_id, custom_name: e.custom_name, qty: e.qty, notes: e.notes })),
     };

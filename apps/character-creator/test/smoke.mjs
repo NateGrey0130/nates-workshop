@@ -1923,6 +1923,74 @@ console.log('\n[1c23] Bonus keys');
   })(), 'use instr() instead: ');
 }
 
+// ---------- 1c24. Dice-valued attribute bonuses ----------
+// A book states some attribute bonuses as a roll: "add 2D6 to P.S." (Juicer),
+// "+1D4 to M.A., M.E., P.S., P.E. and Spd" (Cyber-Knight). The dice belong to
+// the class; what they came up belongs to the character, because a roll cannot
+// be re-evaluated on every render.
+console.log('\n[1c24] Dice attribute bonuses');
+{
+  const mk = (bonuses) => parseClassMarkdown(
+    `---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: occ\n${bonuses}\n---\n\n## Lore\n\nx\n`);
+
+  check('a dice attribute bonus is accepted', mk('bonuses:\n  attributes: { PS: "2d6" }').ok);
+  check('a multiplied dice bonus is accepted', mk('bonuses:\n  attributes: { Spd: "2d4x10" }').ok);
+  check('a flat attribute bonus still works', mk('bonuses:\n  attributes: { PS: 2 }').ok);
+  check('nonsense is still rejected', (() => {
+    const r = mk('bonuses:\n  attributes: { PS: "a lot" }');
+    return !r.ok && r.errors.some((e) => /number or a dice expression/.test(e));
+  })());
+  // Only attributes take dice. A combat or save bonus is always a flat number.
+  check('a dice bonus is refused outside attributes',
+    !mk('bonuses:\n  combat: { strike: "1d4" }').ok);
+
+  // An unrolled dice bonus must contribute nothing rather than guess an average.
+  const cls = mk('bonuses:\n  attributes: { PS: "2d6", Spd: "2d4x10" }').data;
+  check('an unrolled dice bonus contributes nothing', (() => {
+    const b = D.classBonuses(cls, 1);
+    return (b.attributes.PS ?? 0) === 0 && (b.attributes.Spd ?? 0) === 0;
+  })());
+  check('the rolled value is what applies', (() => {
+    const b = D.classBonuses(cls, 1, { PS: 7, Spd: 40 });
+    const eff = D.effective({ PS: 14, Spd: 12 }, b);
+    return b.attributes.PS === 7 && eff.PS === 21 && eff.Spd === 52;
+  })());
+  check('diceBonuses lists what needs rolling', (() => {
+    const d = D.diceBonuses(cls);
+    return d.PS === '2d6' && d.Spd === '2d4x10' && Object.keys(d).length === 2;
+  })());
+  check('a class with no dice bonuses needs no roll',
+    Object.keys(D.diceBonuses(mk('bonuses:\n  attributes: { PS: 2 }').data)).length === 0);
+
+  // "Minimum P.S. is 22; if lower, adjust up to P.S. 22."
+  const floored = mk('bonuses:\n  attributes: { PS: "2d6" }\n  attribute_minimums: { PS: 22 }').data;
+  check('a minimum is accepted and parsed', !!floored.bonuses.attribute_minimums);
+  check('the floor lifts a low total', (() => {
+    const b = D.classBonuses(floored, 1, { PS: 4 });
+    return D.effective({ PS: 11 }, b).PS === 22;   // 11 + 4 = 15, floored to 22
+  })());
+  check('the floor never lowers a high total', (() => {
+    const b = D.classBonuses(floored, 1, { PS: 12 });
+    return D.effective({ PS: 18 }, b).PS === 30;   // 18 + 12 = 30, above the floor
+  })());
+  // A floor must not conjure an attribute the character does not have, any more
+  // than a bonus does.
+  check('a floor on an absent attribute is ignored', (() => {
+    const b = D.classBonuses(floored, 1, { PS: 4 });
+    return D.effective({ ME: 10 }, b).PS === undefined;
+  })());
+  check('a bad minimum is rejected',
+    !mk('bonuses:\n  attribute_minimums: { PS: "lots" }').ok
+    && !mk('bonuses:\n  attribute_minimums: { Wisdom: 12 }').ok);
+
+  // The sheet has to pass the character's rolled values through, or a Juicer's
+  // +2D6 P.S. silently contributes nothing there.
+  check('the sheet passes rolled bonuses to classBonuses', (() => {
+    const src = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    return /classBonuses\(cls, c\.level, c\.attribute_bonuses\)/.test(src);
+  })());
+}
+
 // ---------- 1d. Paging ----------
 // A stray query string must not turn a list endpoint into a 400, so anything
 // nonsensical falls back to the default rather than erroring.

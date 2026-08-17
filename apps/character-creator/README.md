@@ -368,6 +368,20 @@ nothing is deducted from the other — the gear step is unchanged and the purse 
 simply recorded. Only coin goes in `starting_money`; saleable goods and
 artifacts belong in `equipment_starting`.
 
+**An attribute bonus may be dice.** Some books state one as a roll rather than a
+number — the Cyber-Knight adds +1D4 to five attributes, the Juicer +2D6 to P.S.
+and +2D4x10 to Spd. `bonuses.attributes` accepts either, and
+`bonuses.attribute_minimums` expresses a guaranteed floor ("minimum P.S. is 22;
+if lower, adjust up"), applied *after* the bonus lands. That is deliberately not
+`attribute_requirements`, which gates whether the class may be taken at all.
+
+The dice belong to the class and the result belongs to the character
+(`attribute_bonuses`, migration 016), because a roll cannot be re-evaluated on
+every render. It is rolled when the class is confirmed, so the Attributes step
+can show it beside the roll it modifies, and re-rolled only by Review's Reroll
+button — walking to a later step used to re-roll it silently, which changed a
+number the player had already read.
+
 **Psionics can be rolled for** (p.20–21). A class granting no psychic powers
 sends the character to the Random Psionics Table — 01-09 major, 10-25 minor,
 26-00 none, so three quarters of characters get nothing and that is the ordinary

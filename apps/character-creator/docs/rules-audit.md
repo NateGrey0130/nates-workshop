@@ -239,8 +239,13 @@ terminal and was perfectly fine.
 
 Collected across the five, because these recur:
 
-- **Dice-valued attribute bonuses.** "+1D4 to five attributes" (Cyber-Knight),
-  "+2D6 P.S." (Juicer). `bonuses.attributes` takes flat numbers.
+- ~~**Dice-valued attribute bonuses.**~~ **Resolved.** `bonuses.attributes` now
+  takes a dice expression as well as a number, and `bonuses.attribute_minimums`
+  expresses a floor like the Juicer's "minimum P.S. is 22". The dice belong to
+  the class; what they rolled belongs to the character
+  (`attribute_bonuses`, migration 016), because a roll cannot be re-evaluated on
+  every render. The Cyber-Knight's +1D4 to five attributes and the Juicer's
+  +2D6 P.S. / +2D6 P.E. / +2D4x10 Spd / +2D4 P.P. are all applied.
 - **Percentage bonuses on a choice group.** "three languages at +30%" — a group
   carries one base and its members have different ones.
 - **Per-category skill restrictions.** "Espionage: Escape Artist only" flattens
