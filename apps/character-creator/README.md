@@ -701,6 +701,26 @@ choice you might make, it is one you already have.
 
 ## Which system a catalog row belongs to
 
+
+**Skills and psionic powers are deliberately cross-system.** Rifts and Palladium
+Fantasy share a multiverse — rifts open onto the Palladium world — so a campaign
+can legitimately hold both, and a skill or a psychic power is not bound to the
+book it was first printed in. Both catalogs are left untagged on purpose, which
+the pickers already read as "every system".
+
+**Do not tag them from `source_book`.** It looks like an obvious cleanup and it
+is wrong: eighty skills carry a Rifts source book, and roughly half of those are
+Carpentry, Sniper, First Aid, Hunting, Horsemanship, Locksmith and Lore — Faerie.
+Tagging by source would strip them from Palladium characters, including skills
+the Long Bowman's own O.C.C. list grants.
+
+Untagging the psionics is also what makes a major psionic's "eight powers from
+one category" possible in Palladium at all: the largest category visible there
+held six.
+
+**Gear is the exception and stays tagged.** A laser rifle turning up in a
+medieval realm is an event in play, not something every character picks off the
+starting-equipment list.
 Every catalog row can now say which game system it is for, and an import session
 says it once for the whole book rather than per page.
 
