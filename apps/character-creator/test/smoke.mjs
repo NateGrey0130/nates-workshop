@@ -2361,14 +2361,24 @@ variants:
     return c.skills.occ_related_skills.count === 3;
   })());
 
-  // The whole point: no caller re-implements the sequence.
+  // The whole point: no caller re-implements the sequence. Every page script and
+  // every function is in scope — a page that does not compose a class today is
+  // exactly the one that will grow the need tomorrow. Only the two files the
+  // sequence is BUILT from are exempt: parser.js declares combineClasses and
+  // compose.js is the one legitimate caller.
   check('no source file composes a class by hand', (() => {
-    const roots = [join(appDir, 'app.js'), join(appDir, 'sheet.js')];
-    const fnDir = join(appDir, '..', '..', 'functions', 'api', 'character-creator');
     const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
       e.isDirectory() ? walk(join(dir, e.name)) : (e.name.endsWith('.js') ? [join(dir, e.name)] : []));
-    const files = [...roots, ...walk(fnDir)];
+    const exempt = new Set([join(appDir, 'js', 'parser.js'), join(appDir, 'js', 'compose.js')]);
+    const files = [
+      ...readdirSync(appDir, { withFileTypes: true })
+        .filter((e) => e.isFile() && e.name.endsWith('.js'))
+        .map((e) => join(appDir, e.name)),
+      ...walk(join(appDir, 'js')),
+      ...walk(join(appDir, '..', '..', 'functions', 'api', 'character-creator')),
+    ].filter((f) => !exempt.has(f));
     const bad = files.filter((f) => readFileSync(f, 'utf8').includes('combineClasses('));
+    if (bad.length) console.log('    composing by hand:', bad.join(', '));
     return bad.length === 0;
   })(), 'use composeClass() instead');
 }
