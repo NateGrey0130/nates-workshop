@@ -115,7 +115,8 @@ CREATE TABLE IF NOT EXISTS pending_skill_picks (
   character_id INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
   granted_at_level INTEGER NOT NULL,
   count INTEGER NOT NULL,
-  categories TEXT,                      -- JSON array; NULL = no category restriction
+  categories TEXT,
+  kind TEXT,                             -- 'related' | 'secondary'; NULL means related                      -- JSON array; NULL = no category restriction
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   claimed_at TEXT                       -- NULL = still unspent
 );
@@ -390,6 +391,10 @@ WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'psychi
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '016-character-attribute-bonuses.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'attribute_bonuses');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '017-pick-kind.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('pending_skill_picks') WHERE name = 'kind');
 
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '013-character-variant.sql'

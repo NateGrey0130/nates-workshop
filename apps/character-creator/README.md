@@ -368,6 +368,20 @@ nothing is deducted from the other — the gear step is unchanged and the purse 
 simply recorded. Only coin goes in `starting_money`; saleable goods and
 artifacts belong in `equipment_starting`.
 
+**A choice group may carry a bonus rather than a base.** `base` states the
+percentage outright; `bonus` adds to whatever each pick's own base is. A group
+spanning a category needs the second — "three languages of choice at +30%"
+cannot be one number, because the members start at different percentages.
+Setting both is an error. A skill with no percentage (a W.P.) stays at zero,
+exactly as the I.Q. bonus already works.
+
+**Secondary skills can arrive on a schedule**, like related ones. A grant
+records which kind it is, because the two are not interchangeable: related picks
+are bounded by the class's categories and secondary picks are not. The call
+sites keep them apart, or one unrestricted secondary grant would unrestrict the
+related picks with it. A pick inside the categories spends a related slot; one
+outside spends a secondary slot and is stored as a secondary skill.
+
 **A related-skill category may be restricted.** Books state limits per
 category — "Espionage: Escape Artist only", "Physical: any except Acrobatics,
 Gymnastics and Wrestling", "Medical: none" — and a bare category name offered

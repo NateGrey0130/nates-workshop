@@ -676,6 +676,16 @@ export function parseClassMarkdown(text) {
         } else if (hasFrom && !hasCats && s.choose > s.from.length) {
           errors.push(`occ_skills choice-group asks for ${s.choose} of only ${s.from.length} options`);
         }
+        // `base` fixes the percentage; `bonus` adds to whatever each pick's own
+        // base is. Both at once has no single reading, and a group spanning a
+        // category almost always wants the second: the members start at
+        // different percentages, so one number cannot express "+30%".
+        if (s.base !== undefined && s.bonus !== undefined) {
+          errors.push('occ_skills choice-group sets both base and bonus; use one');
+        }
+        if (s.bonus !== undefined && (typeof s.bonus !== 'number' || !Number.isFinite(s.bonus))) {
+          errors.push('occ_skills choice-group bonus must be a number');
+        }
       } else if (!s.name) {
         errors.push('skills.occ_skills entries need a name (or choose/from for a choice-group)');
       } else if (typeof s.base !== 'number') {
@@ -696,6 +706,14 @@ export function parseClassMarkdown(text) {
     }
     const secondary = data.skills.secondary_skills;
     if (secondary && typeof secondary.count !== 'number') errors.push('skills.secondary_skills.count must be a number');
+    // Secondary skills can arrive on a schedule too — the Long Bowman gets one
+    // more at levels 4, 7, 10 and 13. Same shape as the related schedule,
+    // because it is the same idea.
+    for (const e of secondary?.schedule || []) {
+      if (!Number.isFinite(e?.level) || !Number.isFinite(e?.count)) {
+        errors.push('secondary_skills.schedule entries need numeric level and count');
+      }
+    }
   }
   for (const eq of data.equipment_starting || []) {
     if (!eq || typeof eq !== 'object') { errors.push('equipment_starting entries must be objects'); continue; }

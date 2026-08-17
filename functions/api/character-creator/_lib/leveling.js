@@ -54,20 +54,29 @@ const SKILL_PCT_CAP = 98; // Palladium convention: 98% is the practical ceiling
 // level that earned them rather than merged into one pool.
 export function skillGrantsFor(cls, fromLevel, toLevel) {
   const related = cls?.skills?.occ_related_skills;
-  const schedule = Array.isArray(related?.schedule) ? related.schedule : [];
-  const categories = Array.isArray(related?.categories) && related.categories.length
+  const secondary = cls?.skills?.secondary_skills;
+
+  // Related picks are bounded by the class's categories; secondary picks are
+  // not — the books draw them "from the previous list" without restriction, and
+  // the validator has always treated them as unbounded.
+  const relatedCats = Array.isArray(related?.categories) && related.categories.length
     ? related.categories
     : null;
 
-  return schedule
-    .filter((e) => Number.isFinite(e?.level) && e.level > fromLevel && e.level <= toLevel)
-    .map((e) => ({
-      level: e.level,
-      count: Number.isFinite(e.count) && e.count > 0 ? e.count : 1,
-      // Copied, not referenced: the class can be re-imported with different
-      // categories later, and what this level-up granted should not change.
-      categories,
-    }))
+  const from = (schedule, categories, kind) =>
+    (Array.isArray(schedule) ? schedule : [])
+      .filter((e) => Number.isFinite(e?.level) && e.level > fromLevel && e.level <= toLevel)
+      .map((e) => ({
+        level: e.level,
+        count: Number.isFinite(e.count) && e.count > 0 ? e.count : 1,
+        // Copied, not referenced: the class can be re-imported with different
+        // categories later, and what this level-up granted should not change.
+        categories,
+        kind,
+      }));
+
+  return [...from(related?.schedule, relatedCats, 'related'),
+          ...from(secondary?.schedule, null, 'secondary')]
     .sort((a, b) => a.level - b.level);
 }
 

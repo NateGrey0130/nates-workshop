@@ -246,8 +246,12 @@ Collected across the five, because these recur:
   (`attribute_bonuses`, migration 016), because a roll cannot be re-evaluated on
   every render. The Cyber-Knight's +1D4 to five attributes and the Juicer's
   +2D6 P.S. / +2D6 P.E. / +2D4x10 Spd / +2D4 P.P. are all applied.
-- **Percentage bonuses on a choice group.** "three languages at +30%" — a group
-  carries one base and its members have different ones.
+- ~~**Percentage bonuses on a choice group.**~~ **Resolved.** A group takes
+  `bonus` as well as `base`: `base` fixes the percentage, `bonus` adds to
+  whatever each pick's own base is. Setting both is an error. Applied to the
+  Chiang-Ku, Cyber-Knight, Juicer and Long Bowman language and piloting groups
+  — the Chiang-Ku's three languages were all a flat 80 and are now 80, 80 and 60,
+  which is what +30% on bases of 50, 50 and 30 actually means.
 - ~~**Per-category skill restrictions.**~~ **Resolved.** A category in
   `occ_related_skills.categories` may now be an object stating what the book
   allows inside it — `{ name: "Espionage", only: ["Escape Artist"] }` or
@@ -257,8 +261,19 @@ Collected across the five, because these recur:
   copies of "may this character take this skill" is the pair that drifts.
   Applied to the Long Bowman (8 of 12 categories), Cyber-Knight (2 of 14) and
   Juicer (4 of 14).
-- **A schedule on secondary skills**, which `occ_related_skills` has and
-  `secondary_skills` does not.
+- ~~**A schedule on secondary skills.**~~ **Resolved.** `secondary_skills`
+  takes a `schedule` like `occ_related_skills`, and a grant now records which
+  kind it is (`pending_skill_picks.kind`, migration 017). The Long Bowman's one
+  extra secondary at levels 4, 7, 10 and 13 was never granted before.
+
+  Keeping the two kinds apart matters: a secondary grant is unrestricted, and
+  the call sites merged every grant into one list, so one secondary grant would
+  have quietly unrestricted the related picks too. A pick inside the class's
+  categories now spends a related slot; one outside spends a secondary slot and
+  is stored as a secondary skill. `relatedAllowance()` counts only related
+  grants, and `secondaryAllowance()` was added — without it the class's starting
+  count stayed the ceiling and spending a pick the class had just granted failed
+  validation.
 - **Variant-specific skills.** A Chiang-Ku hatchling's advanced math should start
   at first level; variants override dice, pools and bonuses only.
 - ~~**Missing derive keys**: pull punch, save vs illusionary magic, save vs mind

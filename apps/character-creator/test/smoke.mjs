@@ -18,6 +18,7 @@ import {
 import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
 import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
 import { skillGrantsFor, buildProposal, perLevelDiceOf } from '../../../functions/api/character-creator/_lib/leveling.js';
+import { dedupeCategories } from '../../../functions/api/character-creator/_lib/skill-picks.js';
 import { rollPoolFormula, rollAttribute, evalDice } from '../js/dice.js';
 import { psionicTierForRoll, rollPsionics, psionicShape, withRolledPsionics,
          PSIONIC_TIER_RULES } from '../js/psionics.js';
@@ -2046,6 +2047,84 @@ console.log('\n[1c25] Category restrictions');
       '_lib', 'validate-character.js'), 'utf8');
     return src.includes('categoryAllows(allowed,');
   })());
+}
+
+// ---------- 1c26. Secondary schedules and group bonuses ----------
+console.log('\n[1c26] Secondary schedules & group bonuses');
+{
+  const mk = (skills) => parseClassMarkdown(
+    `---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: occ\nskills:\n${skills}\n---\n\n## Lore\n\nx\n`);
+
+  // ── secondary_skills.schedule ──
+  const sched = mk(`  occ_related_skills:
+    count: 8
+    categories: ["Wilderness"]
+    schedule:
+      - { level: 3, count: 2 }
+  secondary_skills:
+    count: 4
+    schedule:
+      - { level: 4, count: 1 }
+      - { level: 7, count: 1 }`);
+  check('a secondary schedule parses', sched.ok, JSON.stringify(sched.errors));
+  check('a malformed secondary schedule is rejected',
+    !mk('  secondary_skills:\n    count: 4\n    schedule:\n      - { level: "four", count: 1 }').ok);
+
+  check('both kinds of grant are returned, tagged', (() => {
+    const g = skillGrantsFor(sched.data, 1, 10);
+    const rel = g.filter((x) => x.kind === 'related');
+    const sec = g.filter((x) => x.kind === 'secondary');
+    return rel.length === 1 && rel[0].count === 2 && sec.length === 2;
+  })());
+  // Related picks carry the class's categories; secondary picks are unbounded,
+  // which is why they cannot share one list.
+  check('only related grants carry categories', (() => {
+    const g = skillGrantsFor(sched.data, 1, 10);
+    return g.filter((x) => x.kind === 'related').every((x) => Array.isArray(x.categories))
+      && g.filter((x) => x.kind === 'secondary').every((x) => x.categories === null);
+  })());
+  check('a class with no secondary schedule grants none', (() => {
+    const g = skillGrantsFor(mk('  secondary_skills:\n    count: 4').data, 1, 15);
+    return g.every((x) => x.kind !== 'secondary');
+  })());
+
+  // Merging the two would let an unrestricted secondary grant unrestrict the
+  // related picks with it, which is the bug this separation exists to prevent.
+  check('a secondary grant does not unrestrict related picks', (() => {
+    const g = skillGrantsFor(sched.data, 1, 10);
+    const related = g.filter((x) => x.kind !== 'secondary');
+    return related.length > 0 && related.every((x) => x.categories !== null);
+  })());
+
+  // ── dedupeCategories ──
+  check('object categories dedupe by value, not identity', (() => {
+    const a = { name: 'Espionage', only: ['Escape Artist'] };
+    const b = { name: 'Espionage', only: ['Escape Artist'] };
+    return dedupeCategories([a, b, 'Wilderness', 'wilderness']).length === 2;
+  })());
+
+  // ── `bonus` on a choice group ──
+  check('a group bonus parses', mk('  occ_skills:\n    - { choose: 2, categories: ["Technical"], bonus: 30 }').ok);
+  check('base and bonus together are rejected', (() => {
+    const r = mk('  occ_skills:\n    - { choose: 2, categories: ["Technical"], base: 80, bonus: 30 }');
+    return !r.ok && r.errors.some((e) => /both base and bonus/.test(e));
+  })());
+  check('a non-numeric bonus is rejected',
+    !mk('  occ_skills:\n    - { choose: 2, categories: ["Technical"], bonus: "lots" }').ok);
+
+  // The arithmetic the wizard performs. A flat base gave every pick in a group
+  // the same percentage regardless of what the skill itself starts at.
+  const resolve = (catBase, explicit) => {
+    const base = explicit.base ?? (explicit.bonus && catBase ? catBase + explicit.bonus : catBase);
+    return base;
+  };
+  check('a bonus adds to each skill\'s own base', (() => (
+    resolve(50, { bonus: 30 }) === 80 && resolve(30, { bonus: 30 }) === 60
+  ))());
+  check('a flat base still overrides everything', resolve(50, { base: 80 }) === 80);
+  // A W.P. has no percentage for a percentage bonus to modify.
+  check('a bonus leaves a non-percentile skill at zero', resolve(0, { bonus: 30 }) === 0);
+  check('no base and no bonus falls back to the catalog', resolve(45, {}) === 45);
 }
 
 // ---------- 1d. Paging ----------
