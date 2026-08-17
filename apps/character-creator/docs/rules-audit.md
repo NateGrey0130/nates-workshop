@@ -183,6 +183,39 @@ dropped, so merely opening such a character cannot erase what it had.
 - The XP award table on p.31 is per action: 25 for performing a skill, 100 for a
   clever useful idea, 150–300 for a great menace, and so on.
 
+## Class data accuracy
+
+The rules above are only as good as the class definitions they run on. Audited
+against their source books:
+
+| Class | Book | State |
+|---|---|---|
+| Long Bowman | PF main, p.83-85 | **corrected** — `db/fix-long-bowman.sql` |
+| Chiang-Ku Dragon | Dragons and Gods, p.23-24 | not audited |
+| Cyber-Knight | Rifts main | not audited |
+| Juicer | Rifts main | not audited |
+| Dragon Hatchling (Great Horned) | Rifts main | not audited |
+
+The Long Bowman was largely invented: six of eight fields disagreed with the
+book, including the attribute requirements, the entire O.C.C. skill list, the
+related-skill categories and schedule, and the S.D.C. formula. Only Wilderness
+Survival and W.P. Archery survived, and Wilderness Survival was missing its
++10%. Assume the others are no better until checked.
+
+**Correcting a class does not change characters already built from it** — skills
+are stored per character. The existing production Long Bowman keeps the skills
+it was created with, and still validates cleanly against the corrected class.
+
+Two limits met while doing it:
+
+- **Starting equipment could not be corrected.** The gear catalog holds four
+  Palladium rows against seventy-four Rifts ones, so most of the book's list has
+  nothing to reference. The Palladium equipment chapter has never been imported.
+- **`secondary_skills` takes only a count.** The book grants one more at levels
+  4, 7, 10 and 13, and there is no `schedule` on that block the way there is on
+  `occ_related_skills`. Nor can a category's per-skill restrictions be
+  expressed — "Espionage: Escape Artist only" becomes plain "Espionage".
+
 ## Setting decisions, not book rules
 
 **Skills and psionic powers are available in every system.** The two lines share
