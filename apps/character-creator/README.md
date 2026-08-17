@@ -1193,7 +1193,7 @@ It is the **Audit characters** button on the catalog page, above the catalog
 tabs rather than in the per-catalog toolbar — it reports characters against the
 classes they were built from, so nothing about it changes when you switch tabs.
 This is the feedback loop for the class corrections in
-`apps/character-creator/db/`: every `fix-*.sql` that rewrites a class against
+[Data scripts](#data-scripts): every `fix-*.sql` that rewrites a class against
 the book can retroactively put an existing character out of step with it, and
 this is the only thing that says which. It splits **would be refused on save**
 from **worth a look**, because only violations block — a character carrying
