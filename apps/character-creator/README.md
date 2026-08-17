@@ -673,7 +673,10 @@ wizard has them in memory. That part is genuinely different and stays at the cal
 site. What is identical everywhere is what to do once you have them.
 
 A smoke check fails the build if any source file calls `combineClasses(`
-directly, because that is what re-implementing the sequence looks like.
+directly, because that is what re-implementing the sequence looks like. It scans
+every page script, every module under `js/`, and every function, exempting only
+the two files the sequence is built from: `parser.js`, which declares
+`combineClasses`, and `compose.js`, which is the one legitimate caller.
 
 ## Classes that come in stages
 

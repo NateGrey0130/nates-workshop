@@ -2,6 +2,20 @@
 
 > **Delivered** in [#28](https://github.com/NateGrey0130/nates-workshop/pull/28). This file is the record of why, not a to-do.
 
+> **Since delivered.** Two things below are no longer true, and both changed on
+> purpose during the [rules audit](../rules-audit.md) against the source books:
+>
+> - **A tier no longer only comes from the class.** A character may *roll* one on
+>   the Random Psionics Table (p.20), stored as `psychic_tier` on the character
+>   and folded into the class-shaped object by
+>   [`js/compose.js`](../../js/compose.js). "What already works" below describes
+>   the state before that, so read it as history, not as the current shape.
+> - **Tier-differentiated I.S.P. growth per level was rejected here and has
+>   since been built** — minor gains `+1d6` a level, major `+1d6+1`. The
+>   rejection was scope control for this PR, not a standing decision, and the
+>   plan said so ("a reasonable follow-up on its own"). It is *not* an instance
+>   of quietly re-adding a rejected choice.
+
 Makes Minor, Major, and Master psychic tiers mechanically real: they gate which
 powers a character may choose, and they change what you roll to save against
 psionic attack.

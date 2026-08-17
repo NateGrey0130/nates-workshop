@@ -7,6 +7,14 @@ Each plan records decisions made deliberately in a planning interview — and, a
 importantly, the alternatives that were **rejected**. Where a plan says a choice
 was rejected, it was rejected on purpose. Do not quietly re-add it.
 
+**This roadmap ends at [#29](https://github.com/NateGrey0130/nates-workshop/pull/29); the work did not.** Everything
+after it — the rules audit against the source books, the class-data corrections
+and the schema work that came out of them — is recorded in
+[`docs/rules-audit.md`](../rules-audit.md) instead. Where the two disagree, the
+audit is newer: it was written against the books, and a plan describes the code
+as it stood the day the plan was written. [Plan 12](12-psionic-tier-rules.md) is
+the one most changed since, and carries a note saying so.
+
 Several plans also carry an **As built** note where reality diverged from the
 plan. Those divergences are the most useful thing here: they are the places
 where the plan turned out to be wrong once it met the code.
