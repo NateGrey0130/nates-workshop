@@ -43,6 +43,10 @@ Optional — include only what the page actually states:
 - attribute_requirements: map of attribute → minimum (e.g. \`ME: 12\`)
 - attribute_dice: map of attribute → roll string, for RCCs with racial stats
 - hit_points_base / sdc_base / mdc_base / ppe_base: formula strings or numbers
+- starting_money: what the class starts with in gold (Palladium) or credits
+    (Rifts), as the book writes it — a formula string like "2d6x10" or a flat
+    number. Record ONLY the coin. Saleable goods, gems and artifacts the entry
+    also lists belong in equipment_starting, not here.
 - variants: use this when the page gives MORE THAN ONE set of statistics for the
     same creature — most often age stages ("hatchling" and "adult"), sometimes
     forms or castes. Without it the second stat block has nowhere to go and gets
@@ -60,7 +64,8 @@ Optional — include only what the page actually states:
     Everything the stages SHARE — skills, natural_abilities, special_abilities,
     psionics, magic, equipment, lore — stays at the top level and is written
     once. A variant may override ONLY attribute_dice, attribute_requirements,
-    hit_points_base, sdc_base, mdc_base, ppe_base and bonuses; anything else in
+    hit_points_base, sdc_base, mdc_base, ppe_base, starting_money and bonuses;
+    anything else in
     a variant is ignored.
     attribute_dice and attribute_requirements merge per attribute, so a variant
     naming only P.S. keeps the others from the top level. The rest replace.

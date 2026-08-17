@@ -20,7 +20,11 @@ const BIO_FIELDS = [
   ['height', 'Height'], ['weight', 'Weight'],
   ['family_origin', 'Family Origin'], ['environment', 'Environment'],
   ['native_languages', 'Native Language(s)'], ['insanity', 'Insanity (if any)'],
+  ['money', null],   // label depends on the system — see bioLabel()
 ];
+// Gold in Palladium, credits in Rifts. Resolved at render because the system is
+// not known when this list is declared.
+const bioLabel = ([key, label]) => label ?? (key === 'money' ? rules.currencyLabel(S.system) : key);
 // Point-buy (house rule — Palladium has no native point-buy):
 // all 8 attributes start at 8; 40-point pool; +1 costs 1 point up to 15,
 // 2 points from 16-18 (cap 18, floor 3); lowering below 8 refunds 1/point.
@@ -101,6 +105,12 @@ function computePools() {
     ppe: rollPoolFormula(c.ppe_base, S.attrs),
     isp: c.psionics ? rollPoolFormula(c.psionics.isp_base, S.attrs) : null,
   };
+  // Step 5 is "Equipment AND Money" (p.22) — every class starts with a sum of
+  // coin as well as its kit. Rolled from the same formula parser as the pools,
+  // so the Reroll button on Review covers it, and stored in bio because it is a
+  // running number the player edits rather than anything the rules derive.
+  const money = rollPoolFormula(c.starting_money, S.attrs);
+  if (money == null) delete S.bio.money; else S.bio.money = String(money);
 }
 
 // ---------- guided quiz ----------
@@ -971,6 +981,10 @@ function renderPowers() {
 // Step 6 — bio details. Optional; the derived percentages come straight from
 // the attribute tables and are shown so the numbers are not a surprise later.
 function renderDetails() {
+  // Money is rolled with the pools, and this step is the first place it is
+  // shown — without this the field sits empty here and mysteriously fills in on
+  // Review. Lazy and idempotent, so arriving via Review does not re-roll.
+  if (!S.pools) computePools();
   const d = derive.bio(S.attrs, null, derive.classBonuses(S.cls, 1));
   $('app').innerHTML = `
   <div class="panel">
@@ -979,8 +993,8 @@ function renderDetails() {
       calls it the one mandatory part of this step, and there is deliberately no neutral. Everything
       else is optional and can be filled in later on the character sheet.</p>
     <div class="cols" style="margin-top:12px">
-      <div>${BIO_FIELDS.slice(0, 6).map(bioInput).join('')}</div>
-      <div>${BIO_FIELDS.slice(6).map(bioInput).join('')}</div>
+      <div>${BIO_FIELDS.slice(0, 7).map(bioInput).join('')}</div>
+      <div>${BIO_FIELDS.slice(7).map(bioInput).join('')}</div>
     </div>
     <h3>Derived from attributes</h3>
     <p class="small">Invoke Trust/Intimidate <b>${d.invoke_trust_pct}%</b> (M.A. ${S.attrs.MA ?? '—'})
@@ -1000,7 +1014,7 @@ function bioInput([key, label]) {
     ? `<select onchange="setBio('alignment', this.value)" style="flex:1">${rules.alignmentOptions(S.bio.alignment)}</select>`
     : `<input type="text" value="${esc(S.bio[key] ?? '')}" onchange="setBio('${key}', this.value)" style="flex:1">`;
   return `<div class="rowline">
-    <label class="small" style="min-width:132px">${label}${key === 'alignment' ? ' <span class="req">*</span>' : ''}</label>
+    <label class="small" style="min-width:132px">${esc(bioLabel([key, label]))}${key === 'alignment' ? ' <span class="req">*</span>' : ''}</label>
     ${control}
   </div>`;
 }
@@ -1139,6 +1153,7 @@ function renderReview() {
         <h4>Pools <button class="btn btn-sm btn-ghost" onclick="computePools(); render()">↻ reroll</button></h4>
         ${poolRow('H.P.', p.hp)}${poolRow('S.D.C.', p.sdc)}${poolRow('M.D.C.', p.mdc)}
         ${poolRow('P.P.E.', p.ppe)}${poolRow('I.S.P.', p.isp)}
+        ${S.bio.money ? poolRow(rules.currencyLabel(S.system), S.bio.money) : ''}
         <p class="muted small" style="margin-top:6px">Rolled from the class formulas. Reroll if your GM lets you.</p>
       </div>
     </div>

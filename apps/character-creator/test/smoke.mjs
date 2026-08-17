@@ -1677,6 +1677,70 @@ console.log('\n[1c20] Alignments');
   // Both pages must actually load the shared list.
   check('both pages load rules.js', ['index.html', 'sheet.html'].every((f) =>
     readFileSync(join(appDir, f), 'utf8').includes('js/rules.js')));
+
+  // ── starting money (p.22) ──
+  check('currency is named per system',
+    R.currencyLabel('palladium-fantasy') === 'Gold' && R.currencyLabel('rifts') === 'Credits');
+  // An unknown system must not be guessed into one of the two.
+  check('an unknown system gets the neutral word',
+    R.currencyLabel('mystic-china') === 'Money' && R.currencyLabel(null) === 'Money'
+    && R.currencyLabel(undefined) === 'Money');
+
+  check('starting money rolls from a formula like a pool', (() => {
+    const v = rollPoolFormula('2d6x10', {});
+    return typeof v === 'number' && v >= 20 && v <= 120;
+  })());
+  check('a flat starting sum is taken as written', rollPoolFormula(500, {}) === 500);
+  // A class that says nothing about money must not conjure a zero purse.
+  check('no starting money stays absent',
+    rollPoolFormula(null, {}) === null && rollPoolFormula(undefined, {}) === null);
+
+  // The importer only ever returns fields the prompt names — the reason a whole
+  // stat block went missing when `variants` shipped undocumented.
+  check('the class import prompt documents starting_money', (() => {
+    const src = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
+      '_lib', 'extraction-prompt.js'), 'utf8');
+    return src.includes('starting_money');
+  })());
+  check('the hand-authoring templates show starting_money', (() => {
+    const src = readFileSync(join(appDir, 'js', 'class-template.js'), 'utf8');
+    return (src.match(/starting_money/g) || []).length >= 2;   // O.C.C. and R.C.C.
+  })());
+}
+
+// ---------- 1c21. Starting money through the class layers ----------
+// It has to survive both composition steps, or a dual-class or staged character
+// silently starts penniless.
+console.log('\n[1c21] Starting money');
+{
+  const mk = (id, cat, extra) => parseClassMarkdown(
+    `---\nid: ${id}\nname: ${id}\nsystem: palladium-fantasy\nsource_book: B\ncategory: ${cat}\n${extra}\n---\n\n## Lore\n\nx\n`).data;
+
+  const dragon = mk('dragon', 'rcc', 'mdc_base: "1d4x100"');
+  const bowman = mk('bowman', 'occ', 'hit_points_base: "P.E. + 1d6 per level"\nstarting_money: "2d6x10"');
+  const richRace = mk('noble', 'rcc', 'starting_money: 900');
+
+  // A race that says nothing about money takes the occupation's, exactly as the
+  // pools do — otherwise every R.C.C. character starts with an empty purse.
+  check('a race with no money takes the occupation\'s',
+    combineClasses(dragon, bowman).starting_money === '2d6x10');
+  // Where the race DOES state a sum, it is the race's own creature and wins.
+  check('a race that states money keeps its own',
+    combineClasses(richRace, bowman).starting_money === 900);
+  check('an occupation with no money leaves the race\'s intact',
+    combineClasses(richRace, mk('monk', 'occ', 'sdc_base: 20')).starting_money === 900);
+  check('neither stating money leaves it absent',
+    combineClasses(dragon, mk('monk', 'occ', 'sdc_base: 20')).starting_money === undefined);
+
+  // A stage of a creature may be richer than another — a variant can restate it.
+  const staged = mk('wyrm', 'rcc', `starting_money: 100
+variants:
+  - { id: hatchling, name: "Wyrm Hatchling" }
+  - { id: adult, name: "Wyrm Adult", starting_money: 5000 }`);
+  check('a variant may override starting money',
+    applyVariant(staged, 'adult').starting_money === 5000);
+  check('a variant that is silent inherits it',
+    applyVariant(staged, 'hatchling').starting_money === 100);
 }
 
 // ---------- 1d. Paging ----------

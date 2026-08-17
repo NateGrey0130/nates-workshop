@@ -56,5 +56,18 @@
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
-  global.rules = { ALIGNMENT_GROUPS, ALIGNMENTS, alignmentGroup, isAlignment, alignmentOptions };
+  // What a character's money is called. Palladium Fantasy counts gold, Rifts
+  // counts credits — the same convention the gear catalog's `cost` field
+  // already documents. An unknown system gets the neutral word rather than
+  // being guessed into one of the two.
+  function currencyLabel(system) {
+    if (system === 'palladium-fantasy') return 'Gold';
+    if (system === 'rifts') return 'Credits';
+    return 'Money';
+  }
+
+  global.rules = {
+    ALIGNMENT_GROUPS, ALIGNMENTS, alignmentGroup, isAlignment, alignmentOptions,
+    currencyLabel,
+  };
 })(globalThis);
