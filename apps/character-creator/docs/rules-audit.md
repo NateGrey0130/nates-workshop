@@ -15,7 +15,7 @@ steps" and then lists six).
 |---|---|---|
 | 1. The Eight Attributes & bonuses | p.14–16 | yes |
 | 2. Hit Points and S.D.C. | p.18 | yes, via per-class formulas |
-| 3. How to Determine Psionics | p.20–21 | no — class-driven only |
+| 3. How to Determine Psionics | p.20–21 | the roll, I.S.P. and powers; penalties not yet |
 | 4. Selecting a Race and O.C.C. | p.21–22 | yes |
 | 5. Equipment and Money | p.22 | yes |
 | 6. Rounding Out One's Character | p.22–23, 32–33 | alignment done; background tables absent |
@@ -100,6 +100,21 @@ Carried per class as `hit_points_base` / `sdc_base` formulas, which is why
   bonuses and half its "other" skills; secondary skills are unaffected.
 - **Master:** only from a psychic O.C.C.
 - Some races — troll and orc are named — can have no psychic powers at all.
+
+Implemented in [`js/psionics.js`](../js/psionics.js), asserted in smoke `[1c22]`.
+A rolled tier is stored on the *character* (`psychic_tier`, `psychic_shape`) and
+folded into the class-shaped object by `withRolledPsionics()`, so the save
+targets, the power gating and the level-up I.S.P. growth all keep reading one
+place. Four call sites compose a class and every one of them has to remember
+that step.
+
+**Not built yet.** The major psionic's cost — *"all skill bonuses are reduced by
+half ... and the number of 'other' skills are also reduced by half"* — and the
+racial exclusions. Halving the related-skill count is straightforward; halving
+the **bonuses** is not expressible today, because a class skill stores a single
+`base` with the O.C.C. parenthetical bonus already folded in, leaving no
+separable bonus to halve. Splitting it out would mean changing the class schema,
+the importer prompt and every authored class. Recorded here rather than faked.
 
 ## Step 4 — skills (p.22)
 

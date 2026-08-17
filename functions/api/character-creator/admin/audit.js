@@ -10,6 +10,7 @@
 import { requireAdmin, json } from '../_lib/auth.js';
 import { loadPublished } from '../_lib/class-store.js';
 import { applyVariant, combineClasses } from '../../../../apps/character-creator/js/parser.js';
+import { withRolledPsionics } from '../../../../apps/character-creator/js/psionics.js';
 import { validateCharacter, loadSkillCategories } from '../_lib/validate-character.js';
 import { paging } from '../_lib/paging.js';
 import { decodeCharacter } from '../_lib/character-json.js';
@@ -40,9 +41,9 @@ export async function onRequestGet({ request, env }) {
     // Chiang-Ku Wizard against the dragon alone — reporting every skill its
     // O.C.C. legitimately grants as a violation.
     const rcc = applyVariant(byId.get(row.class_id) || null, row.class_variant);
-    const cls = row.occ_class_id
+    const cls = withRolledPsionics(row.occ_class_id
       ? combineClasses(rcc, applyVariant(byId.get(row.occ_class_id) || null, row.occ_class_variant))
-      : rcc;
+      : rcc, row);
     decodeCharacter(row);
 
     const { skipped, violations, warnings } = validateCharacter({

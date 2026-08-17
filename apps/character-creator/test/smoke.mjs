@@ -16,8 +16,10 @@ import {
 } from '../../../functions/api/character-creator/_lib/import-engine.js';
 import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
 import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
-import { skillGrantsFor, buildProposal } from '../../../functions/api/character-creator/_lib/leveling.js';
-import { rollPoolFormula, rollAttribute } from '../js/dice.js';
+import { skillGrantsFor, buildProposal, perLevelDiceOf } from '../../../functions/api/character-creator/_lib/leveling.js';
+import { rollPoolFormula, rollAttribute, evalDice } from '../js/dice.js';
+import { psionicTierForRoll, rollPsionics, psionicShape, withRolledPsionics,
+         PSIONIC_TIER_RULES } from '../js/psionics.js';
 import { similarity, normaliseName, classesMentioning, findDuplicates } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
 import {
   keysOf, redirectStatements, collapseStatement, resolveKeys,
@@ -1741,6 +1743,121 @@ variants:
     applyVariant(staged, 'adult').starting_money === 5000);
   check('a variant that is silent inherits it',
     applyVariant(staged, 'hatchling').starting_money === 100);
+}
+
+// ---------- 1c22. Random psionics ----------
+// Step 3, p.20-21. The table, the tiers it can reach, and how a rolled tier is
+// folded into the class-shaped object everything downstream reads.
+console.log('\n[1c22] Random psionics');
+{
+  check('the table is the book\'s ranges', (() => {
+    const t = (n) => psionicTierForRoll(n);
+    return t(1) === 'major' && t(9) === 'major'
+      && t(10) === 'minor' && t(25) === 'minor'
+      && t(26) === null && t(100) === null;
+  })());
+  // 26-00 is the bulk of the table; a roll landing there is the ordinary result.
+  check('most of the table is no psionics',
+    Array.from({ length: 100 }, (_, i) => psionicTierForRoll(i + 1)).filter((x) => x === null).length === 75);
+  check('a roll outside 1-100 yields nothing rather than guessing',
+    psionicTierForRoll(0) === null && psionicTierForRoll(101) === null
+    && psionicTierForRoll('x') === null && psionicTierForRoll(null) === null);
+  // "A master psionic ... is available only from one of the psychic character
+  // classes." Rolling must never reach it.
+  check('rolling can never produce a master psionic',
+    !Array.from({ length: 100 }, (_, i) => psionicTierForRoll(i + 1)).includes('master'));
+  check('rollPsionics stays inside the table', (() => {
+    for (let i = 0; i < 200; i++) {
+      const r = rollPsionics();
+      if (r.roll < 1 || r.roll > 100) return false;
+      if (r.tier !== psionicTierForRoll(r.roll)) return false;
+    }
+    return true;
+  })());
+
+  // The shapes the book offers each tier.
+  check('a minor psychic takes 2 powers from one category', (() => {
+    const s = psionicShape('minor', 'focused');
+    return s.count === 2 && s.categories === 1;
+  })());
+  check('a major psychic can take 8 from one or 6 from any', (() => {
+    const f = psionicShape('major', 'focused'), b = psionicShape('major', 'broad');
+    return f.count === 8 && f.categories === 1 && b.count === 6 && b.categories === 3;
+  })());
+  check('an unknown shape falls back to the tier\'s first',
+    psionicShape('major', 'nonsense').id === 'focused' && psionicShape('minor', null).id === 'focused');
+  check('a tier that cannot be rolled has no shapes', psionicShape('master', 'focused') === null);
+
+  // I.S.P. formulas, including the per-level clause the level-up flow parses.
+  check('minor I.S.P. is M.E. + 2d6, growing 1d6 a level', (() => {
+    const f = PSIONIC_TIER_RULES.minor.isp_base;
+    return /M\.E\./.test(f) && /2d6/.test(f) && perLevelDiceOf(f) === '1d6';
+  })());
+  // The +1 is the part that used to be dropped: matching only the dice cost a
+  // major psychic a point of I.S.P. at every level, for life.
+  check('major I.S.P. is M.E. + 4d6, growing 1d6+1 a level', (() => {
+    const f = PSIONIC_TIER_RULES.major.isp_base;
+    return /4d6/.test(f) && perLevelDiceOf(f) === '1d6+1';
+  })());
+  check('a per-level modifier survives into the roll', (() => {
+    const v = evalDice('1d6+1');
+    return v >= 2 && v <= 7;
+  })());
+
+  // Folding a rolled tier into the class object.
+  const plain = { id: 'bowman', name: 'Bowman' };
+  check('a character with no roll is untouched',
+    withRolledPsionics(plain, { psychic_tier: null }) === plain);
+  check('a rolled tier becomes a psionics block', (() => {
+    const c = withRolledPsionics(plain, { psychic_tier: 'major', psychic_shape: 'broad' });
+    return c.psionics.type === 'major' && c.psionics.powers_starting === 6
+      && c.psionics.from_roll === true;
+  })());
+  check('the focused shape grants its larger count', (() => {
+    const c = withRolledPsionics(plain, { psychic_tier: 'major', psychic_shape: 'focused' });
+    return c.psionics.powers_starting === 8;
+  })());
+  // Rolled psychics draw from three categories; Super is master-only.
+  check('a rolled psychic cannot reach Super powers', (() => {
+    const c = withRolledPsionics(plain, { psychic_tier: 'minor' });
+    return !c.psionics.categories_allowed.includes('Super')
+      && c.psionics.categories_allowed.length === 3;
+  })());
+  // A psychic O.C.C. has already answered the question and never rolls.
+  check('a class that grants psionics is not overwritten', (() => {
+    const mage = { id: 'mind-mage', psionics: { type: 'master', isp_base: '3d6' } };
+    const c = withRolledPsionics(mage, { psychic_tier: 'minor' });
+    return c === mage && c.psionics.type === 'master';
+  })());
+  check('an unrecognised tier is ignored',
+    withRolledPsionics(plain, { psychic_tier: 'master' }) === plain
+    && withRolledPsionics(plain, { psychic_tier: 'wizardly' }) === plain);
+
+  // The create endpoint gained two columns. A miscounted placeholder list is a
+  // runtime error on the first save and invisible until then.
+  check('the character INSERT binds exactly what it declares', (() => {
+    const src = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
+      'characters.js'), 'utf8');
+    const i = src.indexOf('INSERT INTO characters');
+    const end = src.indexOf('RETURNING id', i);
+    const seg = src.slice(i, end);
+    const cols = seg.slice(seg.indexOf('(') + 1, seg.indexOf(')')).split(',').map((s) => s.trim()).filter(Boolean);
+    let v = seg.slice(seg.indexOf('VALUES') + 6);
+    v = v.slice(v.indexOf('(') + 1, v.lastIndexOf(')'));
+    const slots = v.split(',').map((s) => s.trim()).filter(Boolean);
+    const placeholders = slots.filter((s) => s === '?').length;
+    // Bind arguments, split at depth zero so nested calls do not miscount.
+    const bt = src.slice(src.indexOf('.bind(', end) + 6, src.indexOf('.first()', end));
+    let depth = 0, cur = '', args = [];
+    for (const ch of bt) {
+      if ('([{'.includes(ch)) depth++;
+      if (')]}'.includes(ch)) depth--;
+      if (ch === ',' && depth === 0) { args.push(cur.trim()); cur = ''; } else cur += ch;
+    }
+    if (cur.trim()) args.push(cur.trim());
+    args = args.filter(Boolean);
+    return cols.length === slots.length && placeholders === args.length;
+  })());
 }
 
 // ---------- 1d. Paging ----------

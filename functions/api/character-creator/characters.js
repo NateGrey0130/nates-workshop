@@ -62,12 +62,24 @@ export async function onRequestPost({ request, env }) {
   const occVariant = typeof b.occ_class_variant === 'string' && b.occ_class_variant.trim()
     ? b.occ_class_variant.trim() : null;
 
+  // Psionics rolled on the table (p.21). Only 'minor' and 'major' are reachable
+  // by rolling — master comes from a psychic O.C.C., so anything else is
+  // discarded rather than trusted from the client. A class that grants its own
+  // psionics never rolls, so a tier arriving alongside one is ignored too.
+  const rolledTier = ['minor', 'major'].includes(b.psychic_tier) ? b.psychic_tier : null;
+  const psychicShape = rolledTier && typeof b.psychic_shape === 'string' && b.psychic_shape.trim()
+    ? b.psychic_shape.trim() : null;
+
   // The wizard enforces these too; this is the boundary. A class that cannot be
   // resolved skips the check rather than blocking the save.
   const cls = await loadCharacterClass(env, request.url, {
     class_id: b.class_id, class_variant: variant,
     occ_class_id: occId, occ_class_variant: occVariant,
+    psychic_tier: rolledTier, psychic_shape: psychicShape,
   });
+  // A class that grants psionics has already answered the question, so a rolled
+  // tier is not recorded alongside it — the two would contradict each other.
+  const tier = cls?.psionics?.from_roll ? rolledTier : null;
   const { violations } = validateCharacter({
     character: { level: 1 },
     cls,
@@ -82,15 +94,16 @@ export async function onRequestPost({ request, env }) {
   const p = b.pools || {};
   const row = await env.DB.prepare(
     `INSERT INTO characters (
-       campaign_id, player_email, name, class_id, class_variant, occ_class_id, occ_class_variant, level, xp,
+       campaign_id, player_email, name, class_id, class_variant, occ_class_id, occ_class_variant,
+       psychic_tier, psychic_shape, level, xp,
        attributes, skills, powers,
        hp_max, hp_current, sdc_max, sdc_current, mdc_max, mdc_current,
        ppe_max, ppe_current, isp_max, isp_current,
        bio, combat, saves, armor, notes
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      RETURNING id`
   ).bind(
-    b.campaign_id, email, b.name, b.class_id, variant, occId, occVariant,
+    b.campaign_id, email, b.name, b.class_id, variant, occId, occVariant, tier, tier ? psychicShape : null,
     JSON.stringify(b.attributes || {}), JSON.stringify(b.skills || []), JSON.stringify(b.powers || []),
     p.hp ?? null, p.hp ?? null, p.sdc ?? null, p.sdc ?? null, p.mdc ?? null, p.mdc ?? null,
     p.ppe ?? null, p.ppe ?? null, p.isp ?? null, p.isp ?? null,

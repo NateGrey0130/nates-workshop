@@ -7,6 +7,7 @@
 // inline onclick handlers need their entry points on window — see the
 // Object.assign at the bottom.
 import { evalDice, rollPoolFormula, rollAttribute } from './js/dice.js';
+import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSIONIC_TIER_RULES } from './js/psionics.js';
 import { isChoiceGroup, isGearChoice, applyVariant, combineClasses } from './js/parser.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
@@ -50,6 +51,10 @@ const S = {
   equipment: [], equipInit: false,
   charName: '', campaignId: null, newCampaign: '',
   spells: [], psi: [], bio: {},
+  // Step 3. psiRoll is {roll, tier} once rolled — null means not yet rolled,
+  // and a tier of null is a real result (26-00, no psionics) rather than an
+  // absence, so the two must stay distinguishable.
+  psiRoll: null, psiShape: null, psiCategory: null,
   pools: null, savedId: null, saving: false,
   skillCatalog: [], items: [], campaigns: [], existing: [],
   // Retired gear slugs → the slug they resolve to now. See findItem().
@@ -98,12 +103,15 @@ const method = (a) => S.attrMethods[a] || 'roll';
 // ---------- pools ----------
 function computePools() {
   const c = S.cls;
+  // I.S.P. may come from a tier the character rolled rather than from the
+  // class, so the pool is read off the composed object.
+  const pc = psiClass();
   S.pools = {
     hp: rollPoolFormula(c.hit_points_base, S.attrs),
     sdc: rollPoolFormula(c.sdc_base, S.attrs),
     mdc: rollPoolFormula(c.mdc_base, S.attrs),
     ppe: rollPoolFormula(c.ppe_base, S.attrs),
-    isp: c.psionics ? rollPoolFormula(c.psionics.isp_base, S.attrs) : null,
+    isp: pc.psionics ? rollPoolFormula(pc.psionics.isp_base, S.attrs) : null,
   };
   // Step 5 is "Equipment AND Money" (p.22) — every class starts with a sum of
   // coin as well as its kit. Rolled from the same formula parser as the pools,
@@ -155,6 +163,7 @@ const DRAFT_KEYS = [
   'related', 'secondary', 'groupPicks', 'gearPicks',
   'equipment', 'equipInit', 'charName', 'campaignId', 'newCampaign',
   'spells', 'psi', 'bio', 'pools',
+  'psiRoll', 'psiShape', 'psiCategory',
 ];
 
 let draftTimer = null;
@@ -331,6 +340,7 @@ function resetBuild() {
   S.variant = null;
   S.occ = null; S.occVariant = null;
   S.spells = []; S.psi = []; S.bio = {};
+  S.psiRoll = null; S.psiShape = null; S.psiCategory = null;
 }
 
 // Step 1 — class select (browse | guided)
@@ -913,13 +923,102 @@ function psiConfig(cls) {
       (p.type === 'master' ? ['Healing', 'Physical', 'Sensitive', 'Super'] : ['Healing', 'Physical', 'Sensitive']),
   };
 }
+
+// The class as this character actually plays it, once a rolled tier is folded
+// in. Everything on this step reads THIS rather than S.cls, so a rolled psychic
+// and a born one go down exactly the same path — the alternative was a second
+// parallel set of branches for "psionics, but from the table".
+function psiClass() {
+  return withRolledPsionics(S.cls, { psychic_tier: S.psiRoll?.tier, psychic_shape: S.psiShape });
+}
+
+// Only a class that grants no psionics of its own rolls. The book offers the
+// table and the psychic O.C.C.s as alternatives, not as things that stack.
+const rollsForPsionics = () => !S.cls?.psionics;
+
+function doPsiRoll() {
+  S.psiRoll = rollPsionics();
+  // A new roll invalidates whatever the previous one allowed.
+  S.psiShape = S.psiRoll.tier ? PSIONIC_TIER_RULES[S.psiRoll.tier].shapes[0].id : null;
+  S.psiCategory = null;
+  S.psi = [];
+  render();
+}
+// "A player may skip step three entirely if he or she does not want a character
+// with psionics." Recorded as a deliberate no rather than an unrolled blank.
+function skipPsiRoll() {
+  S.psiRoll = { roll: null, tier: null, skipped: true };
+  S.psiShape = null; S.psiCategory = null; S.psi = [];
+  render();
+}
+function setPsiShape(id) {
+  S.psiShape = id; S.psiCategory = null; S.psi = []; render();
+}
+function setPsiCategory(cat) {
+  S.psiCategory = cat || null;
+  // Powers already chosen from another category are no longer legal.
+  S.psi = S.psi.filter((n) => S.psiCatalog.find((p) => p.name === n)?.category === S.psiCategory);
+  render();
+}
+// Step 3 as the book runs it: one percentile roll, and most characters get
+// nothing. The odds are shown because a 74% chance of "no psionics" looks like
+// a broken button otherwise.
+function psiRollHtml() {
+  const r = S.psiRoll;
+  const odds = `<p class="muted small">01-09 major &nbsp;·&nbsp; 10-25 minor &nbsp;·&nbsp; 26-00 none.
+    Most characters get nothing, and that is the common result rather than a failure.</p>`;
+
+  if (!r) {
+    return `<h3>Psionics</h3>
+      <p class="muted">This class grants no psychic powers of its own, so the character rolls for them.</p>
+      ${odds}
+      <p><button class="btn btn-primary" onclick="doPsiRoll()">🎲 Roll for psionics</button>
+        <button class="btn btn-ghost" onclick="skipPsiRoll()">Skip — no psionics</button></p>`;
+  }
+
+  const outcome = r.skipped
+    ? `<b>Skipped</b> — this character has no psychic powers.`
+    : `Rolled <b>${r.roll}</b> — ${r.tier ? `<b>${esc(r.tier)} psionic</b>` : '<b>no psionics</b>'}.`;
+
+  // A tier the roll produced brings a choice of allowance with it, where the
+  // book gives one. A minor psychic has only the single shape, so no radio
+  // group is drawn for it.
+  const spec = r.tier ? PSIONIC_TIER_RULES[r.tier] : null;
+  const shapes = spec && spec.shapes.length > 1
+    ? `<p class="small" style="margin-top:8px">How the powers are taken:</p>` + spec.shapes.map((s) =>
+        `<label class="chkrow" style="cursor:pointer"><input type="radio" name="psi-shape"
+          ${S.psiShape === s.id ? 'checked' : ''} onchange="setPsiShape('${s.id}')">
+          <span>${esc(s.label)}</span></label>`).join('')
+    : '';
+
+  const shape = r.tier ? psionicShape(r.tier, S.psiShape) : null;
+  const cats = shape && shape.categories === 1
+    ? `<div class="rowline" style="margin-top:8px">
+        <label class="small" style="min-width:132px">Category</label>
+        <select onchange="setPsiCategory(this.value)" style="flex:1">
+          <option value=""${S.psiCategory ? '' : ' selected'}>— choose —</option>
+          ${PSIONIC_CATEGORIES.map((c) => `<option value="${c}"${c === S.psiCategory ? ' selected' : ''}>${c}</option>`).join('')}
+        </select></div>`
+    : '';
+
+  return `<h3>Psionics</h3>
+    <p>${outcome}</p>
+    ${r.tier ? `<p class="muted small">I.S.P. ${esc(spec.isp_base)} — rolled on Review.</p>` : odds}
+    ${shapes}${cats}
+    <p style="margin-top:8px"><button class="btn btn-sm btn-ghost" onclick="doPsiRoll()">↻ reroll</button>
+      ${r.tier ? `<button class="btn btn-sm btn-ghost" onclick="skipPsiRoll()">Take none</button>` : ''}</p>`;
+}
+
 function renderPowers() {
   const magic = S.cls.magic || null;
-  const psi = psiConfig(S.cls);
+  const cls = psiClass();
+  const psi = psiConfig(cls);
+  const rolling = rollsForPsionics();
   let inner = '';
-  if (!magic && !psi) {
+  if (!magic && !psi && !rolling) {
     inner = `<p class="muted">This class has no spellcasting or psionics — carry on.</p>`;
   }
+  if (rolling) inner += psiRollHtml();
   if (magic) {
     const count = magic.spells_starting || 0;
     const levels = Array.isArray(magic.spell_levels_allowed) ? magic.spell_levels_allowed : null;
@@ -942,8 +1041,14 @@ function renderPowers() {
       }).join('');
   }
   if (psi) {
-    const tier = S.cls.psionics.type;
-    const inCategory = S.psiCatalog.filter((p) => inSystem(p) && psi.cats.includes(p.category));
+    const tier = cls.psionics.type;
+    // A shape that allows a single category narrows the pool to the one chosen.
+    // Until it IS chosen the list stays empty rather than showing everything —
+    // offering powers the character cannot legally take reads as a bug.
+    const shape = cls.psionics.from_roll ? psionicShape(tier, S.psiShape) : null;
+    const single = shape && shape.categories === 1;
+    const allowed = single ? (S.psiCategory ? [S.psiCategory] : []) : psi.cats;
+    const inCategory = S.psiCatalog.filter((p) => inSystem(p) && allowed.includes(p.category));
     // Two gates, and they are not the same. The category gate has always been
     // here (Super is master-only). This is the per-power one: a book can state
     // that an individual power needs a higher tier than its category implies.
@@ -953,7 +1058,9 @@ function renderPowers() {
       .concat(pool.filter((p) => S.psi.includes(p.name) && !Picker.match(p, S.psiFilter)));
 
     inner += `<h3>Psionic powers — ${S.psi.length}/${psi.count}
-      <span class="muted small">(${esc(tier)} psychic · ${psi.cats.join(', ')})</span></h3>` +
+      <span class="muted small">(${esc(tier)} psychic · ${(single && S.psiCategory ? [S.psiCategory] : psi.cats).join(', ')})</span></h3>`
+      + (single && !S.psiCategory
+        ? `<p class="attr-note">Choose a category above — all ${psi.count} powers come from the same one.</p>` : '') +
       // Say that something is being withheld, so a short list reads as a rule
       // rather than as a gap in the catalog. Counted against the tier-gated
       // pool, not the filtered view — the filter is yours, the gate is not.
@@ -1196,6 +1303,8 @@ async function save() {
       class_variant: S.variant || undefined,
       occ_class_id: S.occ || undefined,
       occ_class_variant: S.occVariant || undefined,
+      psychic_tier: S.psiRoll?.tier || undefined,
+      psychic_shape: S.psiRoll?.tier ? (S.psiShape || undefined) : undefined,
       attributes: S.attrs, skills: skillsPayload(), powers: powersPayload(), pools: S.pools,
       bio: S.bio,
       items: equipmentPayload().map((e) => ({ item_id: e.item_id, custom_name: e.custom_name, qty: e.qty, notes: e.notes })),
@@ -1330,6 +1439,7 @@ window.addEventListener('beforeunload', (ev) => {
 Object.assign(window, {
   S, render, computePools, goStep, pickSystem, classMode, quizPick, pickClass,
   confirmClass, setMethod, setAllMethod, doRoll, rollAll, manualSet, pbAdj,
+  doPsiRoll, skipPsiRoll, setPsiShape, setPsiCategory,
   toggleSkill, toggleGroupPick, rmEquip, addCatalog, addCustom, togglePower, setBio, save, startOver,
   resumeDraft, dismissDraft, pickVariant, pickOcc,
 });

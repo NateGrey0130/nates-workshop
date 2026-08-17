@@ -4,6 +4,7 @@
 // Used by the XP, level-up, picks, variant and create endpoints.
 
 import { parseClassMarkdown, applyVariant, combineClasses } from '../../../../apps/character-creator/js/parser.js';
+import { withRolledPsionics } from '../../../../apps/character-creator/js/psionics.js';
 import { getStored } from './class-store.js';
 
 // `variantId` is the character's class_variant. Resolution happens HERE, in the
@@ -29,7 +30,8 @@ export async function loadClass(env, requestUrl, classId, variantId = null) {
 // retired would be worse than showing the half that works.
 export async function loadCharacterClass(env, requestUrl, character) {
   const rcc = await loadClass(env, requestUrl, character.class_id, character.class_variant);
-  if (!character.occ_class_id) return rcc;
-  const occ = await loadClass(env, requestUrl, character.occ_class_id, character.occ_class_variant);
-  return combineClasses(rcc, occ);
+  const composed = character.occ_class_id
+    ? combineClasses(rcc, await loadClass(env, requestUrl, character.occ_class_id, character.occ_class_variant))
+    : rcc;
+  return withRolledPsionics(composed, character);
 }

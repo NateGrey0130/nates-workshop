@@ -55,6 +55,8 @@ CREATE TABLE IF NOT EXISTS characters (
   class_variant TEXT,                   -- which `variants` entry, e.g. 'hatchling'; NULL = the class as written
   occ_class_id TEXT,                    -- the O.C.C. taken alongside an R.C.C.; NULL = none
   occ_class_variant TEXT,
+  psychic_tier TEXT,                    -- rolled on the Random Psionics Table; NULL = none, or psychic by class
+  psychic_shape TEXT,                   -- which power allowance was taken ('focused' | 'broad')
   level INTEGER NOT NULL DEFAULT 1,
   xp INTEGER NOT NULL DEFAULT 0,
   attributes TEXT NOT NULL DEFAULT '{}',  -- JSON: {"IQ": 12, "ME": 14, ...}
@@ -379,6 +381,10 @@ WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'chara
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '014-character-occ.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'occ_class_id');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '015-character-psychic-tier.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'psychic_tier');
 
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '013-character-variant.sql'

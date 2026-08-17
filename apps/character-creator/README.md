@@ -351,7 +351,7 @@ overridable.
 | Point-buy curve | All attributes start at 8, 40-point pool, +1 costs 1 point to 15 then 2 points to 18, cap 18, floor 3, refunds below 8 | — |
 | Attribute rolls | Book rule, not a house rule — see below | `attribute_dice` |
 | XP table | Shared 15-level curve: 0, 2000, 4000, 8000, 16000, 25000, 35000, 50000, 70000, 95000, 125000, 160000, 200000, 250000, 300000 | `xp_table: [...]` |
-| Psionic starting powers | minor 2, major 6, master 8; Super is master-only | `psionics.powers_starting`, `psionics.categories_allowed` |
+| Psionic starting powers | Book rule for a rolled psychic (minor 2; major 8 from one category or 6 from three). A class states its own; master 8 and Super are class-only | `psionics.powers_starting`, `psionics.categories_allowed` |
 | Save vs psionic attack | 12+ for Major and Master psychics, 15+ for everyone else | override `saves.psionics_target` on the character |
 | Skills gained on level-up | Start at the catalog's base percentage — a skill learned at level 6 is still new | `skills.occ_related_skills.schedule` |
 | Skill percentage cap | 98% — book rule (p.22), applied at creation and on level-up | — |
@@ -367,6 +367,23 @@ The book gives a character its O.C.C. equipment list **and** a sum of coin, so
 nothing is deducted from the other — the gear step is unchanged and the purse is
 simply recorded. Only coin goes in `starting_money`; saleable goods and
 artifacts belong in `equipment_starting`.
+
+**Psionics can be rolled for** (p.20–21). A class granting no psychic powers
+sends the character to the Random Psionics Table — 01-09 major, 10-25 minor,
+26-00 none, so three quarters of characters get nothing and that is the ordinary
+result. Rolling can never reach **master**, which comes only from a psychic
+O.C.C.; a class that already declares psionics does not roll at all, because the
+book offers the two routes as alternatives rather than as things that stack.
+
+A minor psychic takes 2 powers from one category; a major takes 8 from one or 6
+from any of the three, and picks which. I.S.P. is M.E. + 2d6 (minor) or M.E. +
+4d6 (major), growing 1d6 or 1d6+1 an experience level.
+
+The tier belongs to the **character**, not the class — `psychic_tier` and
+`psychic_shape`, migration 015. `withRolledPsionics()` folds it into the
+class-shaped object, so the save target, the power gating and the level-up
+growth all keep reading `cls.psionics` exactly as they do for a Mind Mage. Four
+places compose a class; all four apply it.
 
 **Alignment is required** and closed (p.23). Seven values in three groups —
 Good (Principled, Scrupulous), Selfish (Unprincipled, Anarchist) and Evil

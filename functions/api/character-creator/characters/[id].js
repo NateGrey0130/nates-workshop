@@ -8,6 +8,7 @@ import { listPending } from '../_lib/skill-picks.js';
 import { decodeCharacter } from '../_lib/character-json.js';
 import { getStored } from '../_lib/class-store.js';
 import { parseClassMarkdown, applyVariant, combineClasses } from '../../../../apps/character-creator/js/parser.js';
+import { withRolledPsionics } from '../../../../apps/character-creator/js/psionics.js';
 
 export async function onRequestGet({ request, env, params }) {
   const email = getUserEmail(request);
@@ -59,6 +60,12 @@ export async function onRequestGet({ request, env, params }) {
       cls = { ...combineClasses(cls, applyVariant(occParsed.data, character.occ_class_variant)), _retired: retired };
     }
   }
+
+  // Psionics the character rolled for itself, folded in last. This endpoint
+  // composes by hand rather than through loadCharacterClass() so that a retired
+  // class still resolves — which means it has to remember this step too, or the
+  // sheet shows a rolled psychic with no powers and the wrong save target.
+  cls = withRolledPsionics(cls, character);
 
   return json({
     character, items, can_write, class: cls,
