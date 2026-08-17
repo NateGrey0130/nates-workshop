@@ -13,7 +13,7 @@
 // from one of the psychic character classes."
 //
 // Ranges are the book's, read as "roll <= max, first match wins".
-export const PSIONIC_TABLE = [
+const PSIONIC_TABLE = [
   { max: 9, tier: 'major' },     // 01-09
   { max: 25, tier: 'minor' },    // 10-25
   { max: 100, tier: null },      // 26-00 — no psionics, and much the likeliest

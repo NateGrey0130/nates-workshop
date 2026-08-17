@@ -32,6 +32,12 @@ const S = {
   // Forwarding addresses left by merges and hand renames. Listed because they
   // accumulate silently and a hasty merge is otherwise only undoable in SQL.
   redirects: null,
+  // Which existing characters break their class rules. Not catalog-scoped, so it
+  // sits above the tabs rather than in the per-catalog toolbar — it is about
+  // characters and the classes they were built from, and switching tabs must not
+  // look like it re-scoped the answer.
+  audit: null,
+  auditBusy: false,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -173,6 +179,89 @@ function tabs() {
     </button>`).join('')}</div>`;
 }
 
+// The audit bar, above the tabs because the audit is not catalog-scoped.
+function auditBar() {
+  return `<div class="audit-bar">
+    <button class="btn btn-sm btn-ghost" data-audit ${S.auditBusy ? 'disabled' : ''}>
+      ${S.audit ? 'Hide character audit' : 'Audit characters'}</button>
+    <span class="muted small">Which saved characters break the rules of the class they were built from.</span>
+  </div>
+  ${S.audit ? auditPanel() : ''}`;
+}
+
+// Violations block a save; warnings do not. They are kept apart here for the
+// same reason the endpoint keeps them apart — a character carrying only warnings
+// is legal, and listing the two together would read as a queue of things to fix.
+function auditPanel() {
+  const a = S.audit;
+  const byRule = Object.entries(a.by_rule || {}).sort((x, y) => y[1] - x[1]);
+
+  if (!a.offenders.length && !a.unvalidatable.length) {
+    return `<div class="dupe-panel"><p class="muted small">
+      All ${a.checked} character${a.checked === 1 ? '' : 's'} match their class rules.</p></div>`;
+  }
+
+  const issues = (o) => `
+    <ul class="err-list">
+      ${o.violations.map((v) => `<li>${escHtml(v.message || v.rule)}</li>`).join('')}
+      ${o.warnings.map((v) => `<li class="warn-item">${escHtml(v.message || v.rule)}</li>`).join('')}
+    </ul>`;
+
+  // The sheet is where a violation gets resolved, so every offender links to it
+  // rather than being reported as an id you then have to go and find.
+  const offender = (o) => `
+    <div class="audit-row${o.violations.length ? '' : ' warn-only'}">
+      <div class="audit-head">
+        <a class="dupe-name" href="sheet.html?id=${o.id}">${escHtml(o.name || '(unnamed)')}</a>
+        <span class="muted small">${escHtml(o.class_id || '—')} · L${o.level}</span>
+        <span class="tag${o.violations.length ? ' ro' : ''}">${
+          o.violations.length ? `${o.violations.length} blocking` : `${o.warnings.length} warning${o.warnings.length === 1 ? '' : 's'}`}</span>
+      </div>
+      ${issues(o)}
+    </div>`;
+
+  // A character whose class no longer resolves is not an offender — class
+  // soft-delete exists precisely so it keeps working, and the validator skips it.
+  const unvalidatable = a.unvalidatable.length ? `
+    <h4 class="dupe-head">Not checked <span class="muted small">— ${a.unvalidatable.length}</span></h4>
+    <p class="muted small" style="margin:0 0 6px">No class definition resolves for these, so no rule can be
+      applied. They load and save normally; this is what retiring a class is supposed to do.</p>
+    ${a.unvalidatable.map((u) => `<div class="audit-row">
+      <div class="audit-head">
+        <a class="dupe-name" href="sheet.html?id=${u.id}">${escHtml(u.name || '(unnamed)')}</a>
+        <span class="muted small">${escHtml(u.class_id || '—')}</span>
+      </div></div>`).join('')}` : '';
+
+  // Split on the same line the server draws. Everything with a violation OR a
+  // warning arrives in one `offenders` list, but only the violations refuse a
+  // save — filing a warning-only character under "breaks a rule" would send you
+  // to fix something that is already legal.
+  const blocked = a.offenders.filter((o) => o.violations.length);
+  const warned = a.offenders.filter((o) => !o.violations.length);
+
+  return `
+  <div class="dupe-panel">
+    <p class="muted small">Read-only. Nothing here is changed or proposed —
+      ${a.blocked} of ${a.checked} checked character${a.checked === 1 ? '' : 's'} would be refused on save today,
+      ${a.clean} match their class exactly${a.checked < a.total_characters
+        ? `, and ${a.total_characters - a.checked} were not reached by this page` : ''}.</p>
+    ${byRule.length ? `<p class="small" style="margin:0 0 8px">${byRule.map(([rule, n]) =>
+      `<span class="tag">${escHtml(rule)} ×${n}</span>`).join(' ')}</p>` : ''}
+    ${blocked.length ? `
+      <h4 class="dupe-head">Would be refused on save <span class="muted small">— ${blocked.length}</span></h4>
+      <p class="muted small" style="margin:0 0 6px">A rule the class states outright. These load and save
+        as they are today; the refusal happens on the next edit that touches skills.</p>
+      ${blocked.map(offender).join('')}` : ''}
+    ${warned.length ? `
+      <h4 class="dupe-head">Worth a look <span class="muted small">— ${warned.length}</span></h4>
+      <p class="muted small" style="margin:0 0 6px">Warnings only, so these are legal and save normally.
+        A character does not record which choice-group a skill was taken for, so counting by category
+        both over- and under-counts — that is why these warn rather than block.</p>
+      ${warned.map(offender).join('')}` : ''}
+    ${unvalidatable}
+  </div>`;
+}
+
 function rowForm(row) {
   const c = cat();
   const isNew = !row;
@@ -214,6 +303,7 @@ function render() {
       : `<p class="muted small">Nothing matches.</p>`;
 
   $('app').innerHTML = `
+  ${auditBar()}
   ${tabs()}
   <div class="panel">
     <div class="cat-toolbar">
@@ -413,6 +503,12 @@ function wire() {
     loadRedirects();
   });
 
+  const auditBtn = document.querySelector('[data-audit]');
+  if (auditBtn) auditBtn.addEventListener('click', () => {
+    if (S.audit) { S.audit = null; render(); return; }
+    loadAudit();
+  });
+
   for (const el of document.querySelectorAll('[data-merge]')) {
     el.addEventListener('click', () => mergePair(+el.dataset.keep, +el.dataset.remove));
   }
@@ -462,6 +558,25 @@ async function loadDuplicates() {
     S.msg = { text: err.message, error: true };
   }
   S.dupeBusy = false;
+  render();
+}
+
+// Validation applies to new writes; characters saved before a rule existed —
+// or before a class was corrected against the book — keep loading and saving
+// whatever state they are in. Every `fix-*.sql` that rewrites a class can
+// retroactively put an existing character out of step with it, and this is the
+// only thing that says which. Read-only: it proposes nothing and changes nothing.
+async function loadAudit() {
+  S.auditBusy = true;
+  S.msg = { text: 'Auditing characters…' };
+  render();
+  try {
+    S.audit = await api('admin/audit');
+    S.msg = null;
+  } catch (err) {
+    S.msg = { text: err.message, error: true };
+  }
+  S.auditBusy = false;
   render();
 }
 

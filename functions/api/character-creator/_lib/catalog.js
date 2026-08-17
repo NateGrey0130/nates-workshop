@@ -14,7 +14,7 @@ const norm = (s) => String(s ?? '').trim().toLowerCase();
 // Every skill name the class references: fixed occ_skills plus every option
 // inside an enumerated choice-group (any of them could be picked, so all must
 // exist). Category-based groups resolve against the catalog at pick time.
-export function referencedSkills(data) {
+function referencedSkills(data) {
   const names = [];
   for (const s of data.skills?.occ_skills || []) {
     if (isChoiceGroup(s)) {

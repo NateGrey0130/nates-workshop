@@ -1564,12 +1564,17 @@ window.addEventListener('beforeunload', (ev) => {
 
 // Inline onclick handlers live in the global scope; this module does not, so
 // every entry point the generated markup references is exposed explicitly.
+//
+// Anything reached through the delegated `change` listener above does NOT belong
+// here — it is called from inside this module and needs no global. The four
+// toggles used to be inline and three of them kept their entry after the move;
+// `toggleGearPick`, written after it, never had one, which is the shape to copy.
 Object.assign(window, {
   S, render, computePools, goStep, pickSystem, classMode, quizPick, pickClass,
   confirmClass, setMethod, setAllMethod, doRoll, rollAll, manualSet, pbAdj,
   doPsiRoll, skipPsiRoll, setPsiShape, setPsiCategory,
   rollBio, rollBioAll, setLongLived,
-  toggleSkill, toggleGroupPick, rmEquip, addCatalog, addCustom, togglePower, setBio, save, startOver,
+  rmEquip, addCatalog, addCustom, setBio, save, startOver,
   resumeDraft, dismissDraft, pickVariant, pickOcc,
 });
 

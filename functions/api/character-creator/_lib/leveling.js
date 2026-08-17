@@ -8,7 +8,7 @@
 
 import { evalDice } from '../../../../apps/character-creator/js/dice.js';
 
-export const DEFAULT_XP_TABLE = [
+const DEFAULT_XP_TABLE = [
   0, 2000, 4000, 8000, 16000, 25000, 35000, 50000,
   70000, 95000, 125000, 160000, 200000, 250000, 300000,
 ];

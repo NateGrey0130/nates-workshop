@@ -13,7 +13,7 @@
 
 <!-- ─── MERGE MODAL ─── -->
 <div class="modal-overlay" id="mergeModal">
-  <div class="modal" id="mergeModalInner">
+  <div class="modal">
     <h2>Welcome back! 👋</h2>
     <p style="font-size:13px;color:var(--text-secondary);margin-bottom:20px;" id="mergeDesc"></p>
     <div class="merge-option" onclick="handleMerge('merge')">
@@ -106,11 +106,11 @@
 <!-- ─── LIBRARY ─── -->
 <div class="library-grid active" id="libraryGrid"></div>
 <div class="library-list" id="libraryList">
-  <div class="list-header" id="listHeader">
+  <div class="list-header">
     <div></div>
-    <div onclick="setSortFromHeader('title')" id="lh-title">Title</div>
-    <div onclick="setSortFromHeader('author')" id="lh-author">Author/Dir</div>
-    <div onclick="setSortFromHeader('genre')" id="lh-genre">Genre</div>
+    <div onclick="setSortFromHeader('title')">Title</div>
+    <div onclick="setSortFromHeader('author')">Author/Dir</div>
+    <div onclick="setSortFromHeader('genre')">Genre</div>
     <div>Format</div>
     <div>Type</div>
     <div>Location</div>
@@ -208,10 +208,10 @@
       <div class="lookup-row">
         <input type="text" id="lookupInput" placeholder="Search..." onkeydown="if(event.key==='Enter')handleLookupEnter()">
         <input type="text" id="lookupYear" placeholder="Year" style="width:70px;flex:none;" maxlength="4" onkeydown="if(event.key==='Enter')handleLookupEnter()">
-        <button class="btn" onclick="lookupISBN()" id="btnLookupISBN">ISBN</button>
-        <button class="btn" onclick="lookupBook()" id="btnLookupBook">📚</button>
-        <button class="btn" onclick="lookupMovie()" id="btnLookupMovie">🎬</button>
-        <button class="btn" onclick="lookupSeries()" id="btnLookupSeries">📺</button>
+        <button class="btn" onclick="lookupISBN()">ISBN</button>
+        <button class="btn" onclick="lookupBook()">📚</button>
+        <button class="btn" onclick="lookupMovie()">🎬</button>
+        <button class="btn" onclick="lookupSeries()">📺</button>
       </div>
       <div class="lookup-row" style="margin-top:8px;">
         <select id="tmdbSearchBy" class="search-field-select" style="flex:none;border-radius:var(--radius-sm);border:1px solid var(--border);">
@@ -257,7 +257,7 @@
       <input type="text" id="itemAuthor" placeholder="e.g. Andy Weir">
     </div>
 
-    <div class="form-row" id="actorsRow">
+    <div class="form-row">
       <div class="form-group">
         <label>Actors <span style="color:var(--text-muted);font-weight:400">(comma separated)</span></label>
         <input type="text" id="itemActors" placeholder="e.g. Tom Hanks, Meryl Streep">
@@ -308,8 +308,8 @@
     <button class="modal-close" onclick="closeDetailModal()">✕</button>
     <div id="detailContent"></div>
     <div class="modal-actions">
-      <button class="btn btn-danger btn-sm" onclick="deleteFromDetail()" id="btnDeleteDetail">🗑 Delete</button>
-      <button class="btn" onclick="editFromDetail()" id="btnEditDetail">✏️ Edit</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteFromDetail()">🗑 Delete</button>
+      <button class="btn" onclick="editFromDetail()">✏️ Edit</button>
       <button class="btn" onclick="closeDetailModal()">Close</button>
     </div>
   </div>

@@ -540,6 +540,23 @@ input.class-boosted { border-bottom-width: 2px; }
 .pick-filter .pick-count { flex: 0 0 auto; white-space: nowrap; }
 @media print { .pick-filter { display: none; } }
 
+/* Character audit. Sits above the catalog tabs because it is not catalog-scoped:
+   it reports characters against the classes they were built from, and nothing on
+   it changes when you switch tabs. Shares .dupe-panel's shell below. */
+.audit-bar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.audit-row { padding: 8px 0; border-bottom: 1px solid var(--border); }
+.audit-row:last-child { border-bottom: 0; }
+.audit-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.audit-head .dupe-name { color: var(--text-primary); text-decoration: none; }
+.audit-head .dupe-name:hover { text-decoration: underline; }
+/* A character carrying only warnings is legal — it saves fine. Muting it keeps
+   the blocking ones the thing the eye lands on. */
+.audit-row.warn-only { opacity: 0.75; }
+.err-list li.warn-item { color: var(--text-secondary); }
+
 /* Retired catalog keys and where they now resolve. Shares .dupe-panel's shell. */
 .redirect-row {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
