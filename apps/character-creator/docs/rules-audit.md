@@ -192,9 +192,9 @@ against their source books:
 |---|---|---|
 | Long Bowman | PF main, p.83-85 | **corrected** — `db/fix-long-bowman.sql` |
 | Chiang-Ku Dragon | Dragons and Gods, p.22-23 | **corrected** — `db/fix-chiang-ku.sql` |
-| Cyber-Knight | Rifts main | not audited |
-| Juicer | Rifts main | not audited |
-| Dragon Hatchling (Great Horned) | Rifts main | not audited |
+| Cyber-Knight | Rifts, p.63-64 | **corrected** — `db/fix-cyber-knight.sql` |
+| Juicer | Rifts, p.69-71 | **corrected** — `db/fix-juicer.sql` |
+| Dragon Hatchling (Great Horned) | Rifts, p.98, p.100 | **corrected** — `db/fix-dragon-hatchling.sql` |
 
 The two audited failed in **completely different ways**, which is the useful
 finding.
@@ -215,6 +215,42 @@ seven.
 So a hand-written class fails on facts, and an imported one fails on the
 difference between recording a rule and encoding it. Reviewing an import for
 plausible prose will not catch the second kind.
+
+All five are now corrected, and the split held across the rest:
+
+**Hand-written (Long Bowman, Cyber-Knight, Dragon Hatchling)** — invented.
+The Cyber-Knight had six related skills where the book gives twelve, two
+secondary for six, P.P.E. of 1d6x10 for 6d6, and three O.C.C. skills that are
+not Cyber-Knight skills at all. The Dragon Hatchling was worst: **not one of its
+eight attribute dice matched**, and it granted four spells to a creature the
+book says knows none.
+
+**Model-imported (Chiang-Ku, Juicer)** — accurate prose, inert mechanics. The
+Juicer had **no pool formulas at all**, so a Juicer was created with no hit
+points and no S.D.C.; and its signature bonuses (+4 initiative, two extra
+attacks, +8 vs toxins) were description only. Every word about them was correct.
+
+The Juicer also carried **mojibake**: two dashes stored as raw UTF-8 bytes
+decoded as latin-1. Worth knowing that an import can corrupt text silently — and
+worth not over-reacting to, since the Chiang-Ku's em-dash *looked* identical in a
+terminal and was perfectly fine.
+
+### What the schema still cannot say
+
+Collected across the five, because these recur:
+
+- **Dice-valued attribute bonuses.** "+1D4 to five attributes" (Cyber-Knight),
+  "+2D6 P.S." (Juicer). `bonuses.attributes` takes flat numbers.
+- **Percentage bonuses on a choice group.** "three languages at +30%" — a group
+  carries one base and its members have different ones.
+- **Per-category skill restrictions.** "Espionage: Escape Artist only" flattens
+  to "Espionage".
+- **A schedule on secondary skills**, which `occ_related_skills` has and
+  `secondary_skills` does not.
+- **Variant-specific skills.** A Chiang-Ku hatchling's advanced math should start
+  at first level; variants override dice, pools and bonuses only.
+- **Missing derive keys**: pull punch, save vs illusionary magic, save vs mind
+  control. A bonus written for any of them would do nothing at all.
 
 **Correcting a class does not change characters already built from it** — skills
 are stored per character. The existing production Long Bowman keeps the skills
