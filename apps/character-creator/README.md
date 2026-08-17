@@ -164,11 +164,13 @@ bookkeeping shared by both; the rest are this app.
 | `level_history` | One row per confirmed level-up; `changes` is a JSON diff of what was actually applied. |
 | `pending_skill_picks` | Skill picks a level-up granted and nobody has spent yet. One row per **grant**, not per pick, so "2 picks from level 3" stays itemised. `categories` is copied from the class at level-up time — the class can change later, what you were granted cannot. |
 
-`characters` stores seven JSON columns rather than a very wide table:
+`characters` stores eight JSON columns rather than a very wide table — the list
+lives in `_lib/character-json.js` as `CHARACTER_JSON_COLUMNS`:
 
 | Column | Shape |
 |---|---|
 | `attributes` | `{ "IQ": 12, "ME": 14, … }` |
+| `attribute_bonuses` | `{ "PS": 3 }` — what a class's **dice** attribute bonuses rolled, kept because a roll cannot be re-run per render |
 | `skills` | `[{ name, category, pct, per_level, type: "occ"\|"related"\|"secondary" }]` |
 | `powers` | `[{ type: "spell"\|"psionic", name, level?, category?, cost }]` |
 | `bio` | race, alignment, age, height, sentiments, native languages … |
@@ -469,8 +471,10 @@ from any of the three, and picks which. I.S.P. is M.E. + 2d6 (minor) or M.E. +
 The tier belongs to the **character**, not the class — `psychic_tier` and
 `psychic_shape`, migration 015. `withRolledPsionics()` folds it into the
 class-shaped object, so the save target, the power gating and the level-up
-growth all keep reading `cls.psionics` exactly as they do for a Mind Mage. Four
-places compose a class; all four apply it.
+growth all keep reading `cls.psionics` exactly as they do for a Mind Mage.
+Exactly one place applies it, because exactly one place composes a class — see
+[One place composes a class](#one-place-composes-a-class). It did not start that
+way, and the missed call site is the bug that caused the refactor.
 
 **Alignment is required** and closed (p.23). Seven values in three groups —
 Good (Principled, Scrupulous), Selfish (Unprincipled, Anarchist) and Evil
@@ -532,8 +536,8 @@ bonuses added to a roll rather than percentages, so the cap does not reach them.
 Possession, horror factor and pain are not on the chart at all; each borrows the
 row for its own attribute.
 
-`iq_skill_bonus_pct` is exposed by `derive.bio()` but not yet applied to any
-skill list — that is the skill sheet's job, and it is not built.
+`iq_skill_bonus_pct` is exposed by `derive.bio()` and applied to every skill at
+creation — see **The I.Q. bonus** below for what that means and what it skips.
 
 Every derived value shows on the sheet as a placeholder on a dashed input;
 typing overrides it and the field stops being marked derived. **Blank means "use
@@ -643,8 +647,6 @@ Three rules earned by getting them wrong first:
 
 ---
 
----
-
 ## One place composes a class
 
 Turning a character's classes into the thing it is played as takes three steps,
@@ -699,11 +701,19 @@ variants:
       combat: { attacks: 3 }
 ```
 
-A variant may override **only** `attribute_dice`, `attribute_requirements`, the
-four pool bases, and `bonuses`. Skills, abilities, lore and equipment stay
-shared on purpose: a variant that could override anything is not a variant, it
-is a second class wearing the first one's name, and the inheritance would
-obscure rather than explain. Setting anything else warns and is ignored.
+A variant may override **only** the keys in `VARIANT_OVERRIDES`: `attribute_dice`,
+`attribute_requirements`, the four pool bases (`hit_points_base`, `sdc_base`,
+`mdc_base`, `ppe_base`), `starting_money`, `bonuses`, and `skill_overrides`.
+Skills, abilities, lore and equipment stay shared on purpose: a variant that
+could override anything is not a variant, it is a second class wearing the
+first one's name, and the inheritance would obscure rather than explain.
+Setting anything else warns and is ignored.
+
+Note what the last two are *not*. `starting_money` is there because a stage of a
+creature may be richer than another; `skill_overrides` restates the percentage
+of a skill the class **already grants** and cannot add or remove one — a much
+smaller power than overriding the skills block, which stays forbidden. See
+[A variant may restate a skill's percentage](#house-rules-and-derived-values).
 
 **`attribute_dice` and `attribute_requirements` merge per key; everything else
 replaces.** Those two are flat maps of independent per-attribute values, so a
@@ -781,8 +791,8 @@ bonuses:
 then whatever a human typed — which still wins, exactly as overrides always
 have. A GM ruling beats a computed number.
 
-**An attribute bonus is never stored on the character.** `attributes` keeps the
-numbers that were actually rolled, and the class's `+2` is added on the way
+**A flat attribute bonus is never stored on the character.** `attributes` keeps
+the numbers that were actually rolled, and the class's `+2` is added on the way
 past. That keeps every number's provenance visible, at the cost of one rule:
 **nothing may read a raw attribute for a derived value** — it goes through
 `derive.effective(attrs, bonuses)` instead. Miss that and a bonus becomes
@@ -793,9 +803,17 @@ The sheet shows one number and explains it on hover — *"+2 from attributes, +1
 from Juicer"* — with a dotted underline marking the values a class contributed
 to. `derive.parts()` produces that split.
 
+A bonus stated as **dice** is the one exception, and it has to be: a roll cannot
+be re-evaluated on every render without changing the number under the player.
+Those are rolled once when the class is confirmed and stored as
+`attribute_bonuses` — see [House rules and derived values](#house-rules-and-derived-values).
+`derive.classBonuses(cls, level, rolled)` takes them as its third argument and
+folds them in beside the flat ones, so everything downstream sees one bonus set
+and does not care which kind it was.
+
 `at_level` bonuses accumulate and apply the moment the level is reached, because
-`derive.classBonuses(cls, level)` is read at render time; nothing is written to
-the character. They appear in the level-up proposal so the change is announced
+`classBonuses` is read at render time; nothing further is written to the
+character. They appear in the level-up proposal so the change is announced
 rather than simply happening.
 
 Extraction fills this in from flat numeric statements, and is told explicitly to
@@ -1773,9 +1791,11 @@ and renders a picker from each, so a truncated response would silently hide
 valid choices rather than showing fewer rows. Those are bounded by book content;
 the others grow with play.
 
-**The three page scripts are long, and deliberately not split.** `app.js`
-(~1230 lines), `import.js` (~940) and `sheet.js` (~860) each drive one page and
-each does several jobs. Splitting was considered and rejected: there is no build step,
+**The three page scripts are long, and deliberately not split.** `app.js` is
+roughly 1,500 lines, `import.js` and `sheet.js` roughly 800 each — treat those
+as orders of magnitude, not figures, since they move with every change and the
+last written-down set had drifted by 20%. Each drives one page and each does
+several jobs. Splitting was considered and rejected: there is no build step,
 so there is no bundler — splitting means more `<script>` tags, hand-managed load
 order, and the classic-script/module distinction to keep straight. The cost is
 real and the benefit is aesthetic. `import.js` is the clearest seam if this is
