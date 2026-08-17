@@ -2202,6 +2202,103 @@ console.log('\n[1c27] Variant skills & psionic penalty');
     rollsForPsionics({ psionics: { type: 'major' } }) === false);
 }
 
+// ---------- 1c28. Character background tables ----------
+// p.32-33. Nine percentile tables, all optional, nothing derived from them.
+console.log('\n[1c28] Background tables');
+{
+  // rules.js is a classic script, loaded by evaluating it against a stand-in
+  // global — the same way [1c20] does, since that one is block-scoped.
+  const bgGlobal = {};
+  new Function('globalThis', readFileSync(join(appDir, 'js', 'rules.js'), 'utf8'))
+    .call(bgGlobal, bgGlobal);
+  const R = bgGlobal.rules;
+  const keys = Object.keys(R.BACKGROUND_TABLES);
+  check('all nine tables are present', keys.length === 9, keys.join(', '));
+
+  // A gap or an overlap means some roll silently returns nothing, or two
+  // entries claim the same number. Both are transcription errors.
+  check('every table covers 01-00 exactly', (() => {
+    const bad = [];
+    for (const k of keys) {
+      const rows = R.BACKGROUND_TABLES[k].rows;
+      if (rows[rows.length - 1][0] !== 100) bad.push(`${k} ends at ${rows[rows.length - 1][0]}`);
+      if (!rows.every((r, i) => i === 0 || r[0] > rows[i - 1][0])) bad.push(`${k} not ascending`);
+      for (let n = 1; n <= 100; n++) if (R.backgroundResult(k, n) == null) { bad.push(`${k} has no entry for ${n}`); break; }
+    }
+    return bad.length === 0;
+  })());
+
+  // Spot-checks against the printed ranges.
+  check('birth order reads as printed',
+    R.backgroundResult('birth_order', 1) === 'First Born'
+    && R.backgroundResult('birth_order', 25) === 'First Born'
+    && R.backgroundResult('birth_order', 26) === 'Second Born'
+    && R.backgroundResult('birth_order', 100) === 'Illegitimate');
+  check('weight reads as printed',
+    R.backgroundResult('weight', 31) === 'Average' && R.backgroundResult('weight', 90) === 'Obese; very overweight');
+  check('height reads as printed',
+    R.backgroundResult('height', 30) === 'Short' && R.backgroundResult('height', 71) === 'Tall');
+  check('land of origin reads as printed',
+    R.backgroundResult('land_of_origin', 43) === 'Old Kingdom (mountains or lowlands)'
+    && R.backgroundResult('land_of_origin', 100) === 'Other world, dimension or time');
+  // The book's own oddity: Fourth Born is followed by Sixth Born.
+  check('the birth order table keeps the book\'s missing fifth',
+    R.backgroundResult('birth_order', 60) === 'Sixth Born');
+
+  check('a roll outside 01-00 returns nothing', (() => (
+    R.backgroundResult('age', 0) === null && R.backgroundResult('age', 101) === null
+    && R.backgroundResult('age', 'x') === null
+  ))());
+  check('an unknown table returns nothing',
+    R.backgroundResult('favourite_colour', 50) === null && R.rollBackground('favourite_colour') === null);
+
+  // Age is the only numeric table, and the only one the ×2 note touches.
+  check('age carries its unit', /years old$/.test(R.rollBackground('age').text));
+  check('the long-lived multiplier doubles the years', (() => {
+    const real = Math.random;
+    Math.random = () => 0.495;            // -> roll 50 -> the 46-60 band -> 24
+    try {
+      return R.rollBackground('age').text === '24 years old'
+        && R.rollBackground('age', { double: true }).text === '48 years old';
+    } finally { Math.random = real; }
+  })());
+  // Doubling a text table would be meaningless, so it must not apply.
+  check('the multiplier does nothing to a text table', (() => {
+    const real = Math.random;
+    Math.random = () => 0.495;
+    try {
+      return R.rollBackground('disposition', { double: true }).text
+        === R.rollBackground('disposition').text;
+    } finally { Math.random = real; }
+  })());
+
+  check('a roll always lands inside its own table', (() => {
+    for (let i = 0; i < 200; i++) {
+      for (const k of keys) {
+        const r = R.rollBackground(k);
+        if (r.roll < 1 || r.roll > 100 || r.text == null) return false;
+      }
+    }
+    return true;
+  })());
+
+  // Both pages must offer the four fields the tables added, or a rolled
+  // disposition has nowhere to show.
+  check('the wizard and the sheet both carry the new fields', (() => {
+    const app = readFileSync(join(appDir, 'app.js'), 'utf8');
+    const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    return ['birth_order', 'land_of_origin', 'disposition', 'racial_bias']
+      .every((k) => app.includes(`'${k}'`) && sheet.includes(`'${k}'`));
+  })());
+  // The identity block is split into two columns; a fixed split point left one
+  // side longer every time the list grew.
+  check('the bio columns split evenly on both pages', (() => {
+    const app = readFileSync(join(appDir, 'app.js'), 'utf8');
+    const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    return /BIO_FIELDS\.length \/ 2/.test(app) && /BIO_FIELDS\.length \/ 2/.test(sheet);
+  })());
+}
+
 // ---------- 1d. Paging ----------
 // A stray query string must not turn a list endpoint into a 400, so anything
 // nonsensical falls back to the default rather than erroring.

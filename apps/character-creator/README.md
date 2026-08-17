@@ -418,6 +418,19 @@ can show it beside the roll it modifies, and re-rolled only by Review's Reroll
 button — walking to a later step used to re-roll it silently, which changed a
 number the player had already read.
 
+**The background tables are rollable** (p.32–33). Nine percentile tables —
+birth order, weight, height, age, disposition, land of origin, environment,
+family background and racial bias — every one of them optional, with nothing
+derived from the result.
+
+Each field the book has a table for gets a die beside it, and one button rolls
+everything still blank, so a name and age already decided survive. The Age
+table's "double it for an elf, dwarf or changeling" is a checkbox rather than
+something detected from the race field, which is free text.
+
+Four of the nine had no bio field and now do; all nine store in the same `bio`
+blob, so there is no migration.
+
 **A variant may restate a skill's percentage.** `skill_overrides` names skills
 the class already grants and changes only their `base` and `per_level` — a
 Chiang-Ku hatchling starts its advanced math and domestic skills at first-level

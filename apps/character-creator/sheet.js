@@ -219,10 +219,14 @@ function render() {
     ['height', 'Height'], ['weight', 'Weight'],
     ['family_origin', 'Family Origin'], ['environment', 'Environment'],
     ['native_languages', 'Native Language(s)'], ['insanity', 'Insanity (if any)'],
+    ['birth_order', 'Birth Order'], ['land_of_origin', 'Land of Origin'],
+    ['disposition', 'Disposition'], ['racial_bias', 'Racial Bias'],
     // Gold in Palladium, credits in Rifts. Labelled from the campaign's system
     // rather than fixed, so a Rifts sheet does not say "Gold".
     ['money', window.rules.currencyLabel(c.campaign_system)],
   ];
+  // Even split, so adding a field does not lopside the block.
+  const bioHalf = Math.ceil(BIO_FIELDS.length / 2);
   const COMBAT_FIELDS = [
     ['attacks', '# of Attacks'], ['initiative', 'Initiative'], ['strike', 'Strike'],
     ['parry', 'Parry'], ['dodge', 'Dodge'], ['roll', 'Roll w/ Punch'],
@@ -257,8 +261,8 @@ function render() {
       </div>
     </div>
     <div class="sheet-grid cols-2" style="margin-top:6px">
-      <div>${BIO_FIELDS.slice(0, 7).map(([k, l]) => bioField(k, l, bio, c.bio)).join('')}</div>
-      <div>${BIO_FIELDS.slice(7).map(([k, l]) => bioField(k, l, bio, c.bio)).join('')}</div>
+      <div>${BIO_FIELDS.slice(0, bioHalf).map(([k, l]) => bioField(k, l, bio, c.bio)).join('')}</div>
+      <div>${BIO_FIELDS.slice(bioHalf).map(([k, l]) => bioField(k, l, bio, c.bio)).join('')}</div>
     </div>
     <div class="sheet-grid cols-2">
       <div>${editField('bio', 'invoke_trust_pct', 'Invoke Trust/Intimidate', bio.invoke_trust_pct, c.bio, { suffix: '%' })}</div>
