@@ -142,6 +142,9 @@ Optional — include only what the page actually states:
     that is mdc_base. And do not put a pool bonus in at_level — pools are rolled
     once at creation, so per-level growth belongs in the formula itself
     ("P.E. x 5 plus 2D6 per level").
+    Any of these may be DICE rather than a flat number when the book prints one
+    that way - "+1D4 on initiative" is { combat: { initiative: "1d4" } }. It is
+    rolled once when the character is made and kept, never re-rolled.
     A book's flat "+2 to save vs magic" covers both spell_magic and ritual_magic
     — give both. A bonus the list cannot express (pull punch, save vs
     illusionary magic) belongs in prose, not under an invented key.

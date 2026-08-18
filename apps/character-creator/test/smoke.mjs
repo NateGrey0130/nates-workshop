@@ -1978,9 +1978,13 @@ console.log('\n[1c24] Dice attribute bonuses');
     const r = mk('bonuses:\n  attributes: { PS: "a lot" }');
     return !r.ok && r.errors.some((e) => /number or a dice expression/.test(e));
   })());
-  // Only attributes take dice. A combat or save bonus is always a flat number.
-  check('a dice bonus is refused outside attributes',
-    !mk('bonuses:\n  combat: { strike: "1d4" }').ok);
+  // Every group takes dice now. Combat and saves were flat-only on the
+  // assumption books always print them that way; the Godling's "+1D4 on
+  // initiative" is the counter-example, and it was a hard parse error.
+  check('a dice bonus is accepted in combat', mk('bonuses:\n  combat: { initiative: "1d4" }').ok);
+  check('and in saves', mk('bonuses:\n  saves: { spell_magic: "1d4" }').ok);
+  check('prose is still refused there',
+    !mk('bonuses:\n  combat: { strike: "a lot" }').ok);
 
   // An unrolled dice bonus must contribute nothing rather than guess an average.
   const cls = mk('bonuses:\n  attributes: { PS: "2d6", Spd: "2d4x10" }').data;
@@ -2025,8 +2029,76 @@ console.log('\n[1c24] Dice attribute bonuses');
   // +2D6 P.S. silently contributes nothing there.
   check('the sheet passes rolled bonuses to classBonuses', (() => {
     const src = readFileSync(join(appDir, 'sheet.js'), 'utf8');
-    return /classBonuses\(cls, c\.level, c\.attribute_bonuses\)/.test(src);
+    // Grouped now, so a class's DICE combat and save bonuses count on the sheet
+    // as well as its attribute ones.
+    return /classBonuses\(cls, c\.level, \{/.test(src)
+      && /attributes: c\.attribute_bonuses/.test(src)
+      && /combat: c\.rolled_bonuses/.test(src)
+      && /saves: c\.rolled_bonuses/.test(src);
   })());
+}
+
+// ---------- 1c24c. Dice combat and save bonuses ----------
+// "+1D4 on initiative" (Godling R.C.C., Rifts Pantheons p.16). Combat and save
+// bonuses were flat-only, so this was a hard parse error. They are rolled ONCE
+// and stored for the same reason attribute dice are: both are read at render
+// time, and a roll re-evaluated per render moves the number under the player.
+console.log('\n[1c24c] Dice combat and save bonuses');
+{
+  const mk = (b) => parseClassMarkdown(
+    ['---', 'id: t', 'name: T', 'system: rifts', 'source_book: b', 'category: rcc',
+     'bonuses:', b, '---', '', '## Lore', '', 'x', ''].join(String.fromCharCode(10)));
+
+  const ok = mk('  combat: { initiative: "1d4", attacks: 1 }');
+  check('a dice combat bonus parses beside a flat one',
+    ok.errors.length === 0, ok.errors.join('; '));
+  check('and keeps both as written',
+    ok.data.bonuses.combat.initiative === '1d4' && ok.data.bonuses.combat.attacks === 1);
+  check('a dice save bonus parses', mk('  saves: { spell_magic: "1d4" }').errors.length === 0);
+  check('prose is still refused',
+    mk('  combat: { strike: "a fair bit" }').errors.some((e) => e.includes('must be a number')));
+
+  // Collected per group, so the wizard knows what to roll and store.
+  const byGroup = derive.diceBonusesByGroup(ok.data);
+  check('the dice are collected under their group', byGroup.combat.initiative === '1d4');
+  check('and a FLAT bonus is not collected for rolling',
+    byGroup.combat.attacks === undefined);
+  check('attributes still come through the same call',
+    derive.diceBonusesByGroup(mk('  attributes: { PS: "2d6" }').data).attributes.PS === '2d6');
+
+  // classBonuses counts the ROLLED value, never the expression.
+  const rolled = { attributes: {}, combat: { initiative: 3 }, saves: {} };
+  check('a rolled dice combat bonus is counted',
+    derive.classBonuses(ok.data, 1, rolled).combat.initiative === 3);
+  check('and the flat one beside it still counts',
+    derive.classBonuses(ok.data, 1, rolled).combat.attacks === 1);
+  check('an unrolled dice bonus contributes nothing rather than guessing',
+    (derive.classBonuses(ok.data, 1, { attributes: {}, combat: {}, saves: {} }).combat.initiative ?? 0) === 0);
+
+  // The legacy flat shape is what every character saved before this holds.
+  const legacy = mk('  attributes: { PS: "2d6" }').data;
+  check('a flat attribute map is still understood',
+    derive.classBonuses(legacy, 1, { PS: 7 }).attributes.PS === 7);
+  check('and a grouped one is told apart from it',
+    derive.classBonuses(legacy, 1, { attributes: { PS: 7 }, combat: {}, saves: {} }).attributes.PS === 7);
+
+  // Two classes composing: the same collect-not-drop rule the other groups use.
+  const race = mk('  combat: { initiative: "1d4" }').data;
+  const occ = parseClassMarkdown(
+    ['---', 'id: o', 'name: O', 'system: rifts', 'source_book: b', 'category: occ',
+     'bonuses:', '  combat: { initiative: "1d6" }', '---', '', '## Lore', '', 'x', ''].join(String.fromCharCode(10))).data;
+  check('two dice combat bonuses collect rather than one being dropped',
+    JSON.stringify(combineClasses(race, occ).bonuses.combat.initiative) === '["1d4","1d6"]',
+    JSON.stringify(combineClasses(race, occ).bonuses.combat.initiative));
+  check('and both are offered for rolling',
+    JSON.stringify(derive.diceBonusesByGroup(combineClasses(race, occ)).combat.initiative) === '["1d4","1d6"]');
+
+  // The wizard stores what it rolled; the sheet reads it back. Pinned as source
+  // checks because both are page scripts the test cannot execute.
+  const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+  check('the wizard rolls the grouped dice bonuses', /diceBonusesByGroup/.test(appSrc));
+  check('stores what they came up', /rolled_bonuses: S.rolledBonuses/.test(appSrc));
+  check('and keeps them across a draft', /'rolledBonuses'/.test(appSrc));
 }
 
 // ---------- 1c25. Per-category skill restrictions ----------
@@ -2480,7 +2552,7 @@ console.log('\n[1c25e] Chosen ability fragments');
   // Shape errors that would otherwise be stored and ignored.
   const badGrant = parseClassMarkdown(lines(
     '---', 'id: b', 'name: b', 'system: rifts', 'source_book: b', 'category: rcc',
-    'special_abilities:', '  - name: "X"', '    bonuses: { combat: { nonsense_key: "1d4" } }',
+    'special_abilities:', '  - name: "X"', '    bonuses: { combat: { strike: "quite a bit" } }',
     '---', '', '## Lore', '', 'x', ''));
   check('a fragment bonus is validated like any other',
     badGrant.errors.some((e) => e.includes('must be a number')), badGrant.errors.join('; '));

@@ -177,6 +177,13 @@
     const out = { attributes: {}, combat: {}, saves: {}, attribute_minimums: {} };
     if (!src) return out;
 
+    // `rolled` is either the legacy flat attribute map — { PS: 3 }, which is
+    // what `attribute_bonuses` has always held — or a grouped one carrying
+    // combat and saves as well. Told apart by whether it names a group, which
+    // is safe because no attribute is called `attributes`, `combat` or `saves`.
+    const grouped = rolled && ('attributes' in rolled || 'combat' in rolled || 'saves' in rolled)
+      ? rolled : { attributes: rolled || {}, combat: {}, saves: {} };
+
     const fold = (from) => {
       for (const group of ['attributes', 'combat', 'saves']) {
         for (const [k, v] of Object.entries(from?.[group] || {})) {
@@ -184,7 +191,7 @@
           // two classes have been composed — counts what it actually rolled.
           const isDice = typeof v === 'string' || Array.isArray(v);
           const val = typeof v === 'number' ? v
-            : (group === 'attributes' && isDice ? n(rolled?.[k]) : NaN);
+            : (isDice ? n(grouped[group]?.[k]) : NaN);
           if (Number.isFinite(val)) out[group][k] = (out[group][k] || 0) + val;
         }
       }
@@ -212,6 +219,37 @@
   // Collects rather than overwrites. It used to assign, so a class granting
   // "+1d4 P.S." both at level 1 and again through at_level kept only the last
   // one seen.
+  // Dice-valued bonuses in every group, as { attributes: {...}, combat: {...},
+  // saves: {...} }. Rolled ONCE and stored, for the same reason attribute dice
+  // are: combat and save numbers are recomputed on every render, so a bonus
+  // re-evaluated each time would move under the player.
+  function diceBonusesByGroup(cls) {
+    const out = { attributes: {}, combat: {}, saves: {} };
+    const src = cls?.bonuses;
+    if (!src) return out;
+    const add = (g, k, v) => {
+      if (typeof v === 'number') { if (Number.isFinite(v)) push(g, k, v); return; }
+      const s = String(v).trim();
+      if (s) push(g, k, s);
+    };
+    const push = (g, k, v) => {
+      out[g][k] = out[g][k] === undefined ? v : [...[out[g][k]].flat(), v];
+    };
+    for (const block of [src, ...(src.at_level || [])]) {
+      for (const g of ['combat', 'saves']) {
+        for (const [k, v] of Object.entries(block?.[g] || {})) {
+          // Only dice need rolling and storing; a flat combat bonus is read
+          // straight off the class every render and must not be double-counted.
+          if (typeof v === 'string' || Array.isArray(v)) {
+            for (const one of [v].flat()) add(g, k, one);
+          }
+        }
+      }
+    }
+    out.attributes = diceBonuses(cls);
+    return out;
+  }
+
   function diceBonuses(cls) {
     const out = {};
     const src = cls?.bonuses;
@@ -288,6 +326,7 @@
 
     classBonuses,
     diceBonuses,
+    diceBonusesByGroup,
     effective,
 
     // What made a number what it is, for the sheet's hover text: how much came

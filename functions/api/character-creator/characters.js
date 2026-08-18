@@ -96,15 +96,16 @@ export async function onRequestPost({ request, env }) {
     `INSERT INTO characters (
        campaign_id, player_email, name, class_id, class_variant, occ_class_id, occ_class_variant,
        psychic_tier, psychic_shape, level, xp,
-       attributes, attribute_bonuses, skills, powers, abilities,
+       attributes, attribute_bonuses, rolled_bonuses, skills, powers, abilities,
        hp_max, hp_current, sdc_max, sdc_current, mdc_max, mdc_current,
        ppe_max, ppe_current, isp_max, isp_current,
        bio, combat, saves, armor, notes
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      RETURNING id`
   ).bind(
     b.campaign_id, email, b.name, b.class_id, variant, occId, occVariant, tier, tier ? psychicShape : null,
     JSON.stringify(b.attributes || {}), JSON.stringify(b.attribute_bonuses || {}),
+    JSON.stringify(b.rolled_bonuses || {}),
     JSON.stringify(b.skills || []), JSON.stringify(b.powers || []),
     JSON.stringify(b.abilities || []),
     p.hp ?? null, p.hp ?? null, p.sdc ?? null, p.sdc ?? null, p.mdc ?? null, p.mdc ?? null,

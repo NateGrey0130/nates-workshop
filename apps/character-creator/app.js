@@ -70,6 +70,9 @@ const S = {
   // A class may state an attribute bonus as dice ("add 2D6 to P.S."). Rolled
   // once here and stored, because it cannot be re-evaluated on every render.
   attrBonuses: {},
+  // What a class's DICE combat/save bonuses came up. Rolled once, like
+  // attrBonuses, because both are read at render time.
+  rolledBonuses: { combat: {}, saves: {} },
   // Abilities picked from a class's choice group. A LIST, not a set: some are
   // repeatable and the second take means something different.
   abilities: [],
@@ -124,11 +127,32 @@ const method = (a) => S.attrMethods[a] || 'roll';
 // Called both when the class is confirmed and from computePools(), so the value
 // is present on the Attributes step (where it is shown beside the roll) and is
 // re-rolled by Review's Reroll button along with the pools.
+// Everything a class's dice bonuses actually rolled, in the grouped shape
+// classBonuses reads. One helper so the call sites cannot disagree.
+const rolledAll = () => ({
+  attributes: S.attrBonuses || {},
+  combat: S.rolledBonuses?.combat || {},
+  saves: S.rolledBonuses?.saves || {},
+});
+
 function rollAttrBonuses(force = false) {
   // Idempotent unless forced. computePools() is called lazily whenever a later
   // step needs pools, and without this guard simply walking to Details silently
   // re-rolled a bonus the player had already read off the Attributes step.
   if (!force && S.attrBonuses && Object.keys(S.attrBonuses).length) return;
+
+  // Combat and save bonuses a class states as dice — "+1D4 on initiative".
+  // Rolled here with the attribute ones and stored, because both are read at
+  // render time and a roll re-evaluated per render moves under the player.
+  const byGroup = derive.diceBonusesByGroup(S.cls);
+  S.rolledBonuses = { combat: {}, saves: {} };
+  for (const g of ['combat', 'saves']) {
+    for (const [k, dice] of Object.entries(byGroup[g] || {})) {
+      const rolls = [dice].flat().map((d) => (typeof d === 'number' ? d : evalDice(d))).filter((v) => v != null);
+      if (rolls.length) S.rolledBonuses[g][k] = rolls.reduce((a, b) => a + b, 0);
+    }
+  }
+
   S.attrBonuses = {};
   for (const [attr, dice] of Object.entries(derive.diceBonuses(S.cls))) {
     // A list when a race and an occupation both grant one to the same
@@ -210,7 +234,7 @@ const DRAFT_KEYS = [
   'related', 'secondary', 'groupPicks', 'gearPicks',
   'equipment', 'equipInit', 'charName', 'campaignId', 'newCampaign',
   'spells', 'psi', 'bio', 'pools', 'longLived', 'bioRolls',
-  'psiRoll', 'psiShape', 'psiCategory', 'attrBonuses', 'abilities',
+  'psiRoll', 'psiShape', 'psiCategory', 'attrBonuses', 'rolledBonuses', 'abilities',
 ];
 
 let draftTimer = null;
@@ -393,6 +417,7 @@ function resetBuild() {
   S.abilities = [];
   S.spells = []; S.psi = []; S.bio = {}; S.longLived = false; S.bioRolls = {};
   S.psiRoll = null; S.psiShape = null; S.psiCategory = null; S.attrBonuses = {};
+  S.rolledBonuses = { combat: {}, saves: {} };
 }
 
 // Step 1 — class select (browse | guided)
@@ -627,7 +652,7 @@ function confirmClass() {
 
 // Step 2 — attributes
 function renderAttributes() {
-  const classBonus = derive.classBonuses(S.cls, 1, S.attrBonuses);
+  const classBonus = derive.classBonuses(S.cls, 1, rolledAll());
   const reqs = S.cls.attribute_requirements || {};
   const spent = pbSpent();
   const rows = ATTRS.map((a) => {
@@ -1260,7 +1285,7 @@ function renderDetails() {
   // shown — without this the field sits empty here and mysteriously fills in on
   // Review. Lazy and idempotent, so arriving via Review does not re-roll.
   if (!S.pools) computePools();
-  const d = derive.bio(S.attrs, null, derive.classBonuses(S.cls, 1, S.attrBonuses));
+  const d = derive.bio(S.attrs, null, derive.classBonuses(S.cls, 1, rolledAll()));
   $('app').innerHTML = `
   <div class="panel">
     <h2>Details <span class="muted small">— ${esc(S.cls.name)}</span></h2>
@@ -1376,7 +1401,7 @@ const SKILL_PCT_CAP = 98;   // p.22: "there is always a margin for error"
 function skillsPayload() {
   const find = (n) => skillByName().get(n) || {};
   const occ = S.cls.skills?.occ_skills || [];
-  const iq = derive.bio(S.attrs, null, derive.classBonuses(S.cls, 1, S.attrBonuses)).iq_skill_bonus_pct || 0;
+  const iq = derive.bio(S.attrs, null, derive.classBonuses(S.cls, 1, rolledAll())).iq_skill_bonus_pct || 0;
 
   // pct stays the true current percentage, because level-up increments it and
   // the sheet prints it. iq_bonus records how much of it came from I.Q. so the
@@ -1511,7 +1536,8 @@ async function save() {
       occ_class_variant: S.occVariant || undefined,
       psychic_tier: S.psiRoll?.tier || undefined,
       psychic_shape: S.psiRoll?.tier ? (S.psiShape || undefined) : undefined,
-      attributes: S.attrs, attribute_bonuses: S.attrBonuses, abilities: S.abilities,
+      attributes: S.attrs, attribute_bonuses: S.attrBonuses,
+      rolled_bonuses: S.rolledBonuses, abilities: S.abilities,
       skills: skillsPayload(), powers: powersPayload(), pools: S.pools,
       bio: S.bio,
       items: equipmentPayload().map((e) => ({ item_id: e.item_id, custom_name: e.custom_name, qty: e.qty, notes: e.notes })),
