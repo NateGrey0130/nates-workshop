@@ -11,7 +11,11 @@
 //   OAuth token expires after idle and wrangler refreshes it as a side effect
 //   of the first call — which used to make the first real apply fail with
 //   "Authentication error [code: 10000]" and succeed on retry. The warm-up
-//   absorbs that; a CLOUDFLARE_API_TOKEN makes it unnecessary but harmless.
+//   absorbs that. Under a CLOUDFLARE_API_TOKEN the warm-up is SKIPPED: an API
+//   token does not go stale, so there is nothing to refresh, and `wrangler
+//   whoami` EXITS NON-ZERO under a token scoped to D1 alone (it lists accounts,
+//   which that scope cannot read). Running it aborted the whole apply before a
+//   single file landed, blaming a missing token that was present and working.
 // - Every file is checked before anything runs: it must exist, be pure ASCII
 //   (em-dashes through `wrangler d1 execute` on Windows have produced mojibake
 //   in production), and carry no CR (a CRLF checkout once changed the bytes
@@ -63,11 +67,13 @@ function run(cliArgs) {
 }
 
 // ── warm-up: refresh a stale OAuth token before the first real call ──
-if (remote) {
+if (remote && !process.env.CLOUDFLARE_API_TOKEN) {
   process.stdout.write('warming wrangler auth… ');
   const r = run(['wrangler', 'whoami']);
   if (r.code !== 0) die('wrangler whoami failed — not logged in and no CLOUDFLARE_API_TOKEN?\n' + r.out);
   console.log('ok');
+} else if (remote) {
+  console.log('CLOUDFLARE_API_TOKEN set - skipping auth warm-up.');
 }
 
 const target = remote ? '--remote' : '--local';
