@@ -200,19 +200,42 @@ function render() {
       <div class="val">${curHtml} <span class="max">/ ${max ?? '—'}</span></div></div>`;
   }).join('');
 
-  const powerRows = powers.map((p, i) => {
+  // Display order: spells first, by level then name; psionics after, by
+  // category (Healing/Physical/Sensitive/Super — alphabetical IS the book
+  // order) then name. Unleveled spells and uncategorized psionics sink to the
+  // end of their half. Each entry keeps its original index because usePower()
+  // indexes C.data.powers, which stays in stored order — sorting the stored
+  // array would make the use button deduct the wrong power.
+  const powerView = powers.map((p, i) => ({ p, i })).sort((a, b) => {
+    const A = a.p, B = b.p;
+    if ((A.type === 'spell') !== (B.type === 'spell')) return A.type === 'spell' ? -1 : 1;
+    if (A.type === 'spell') {
+      const la = A.level ?? Infinity, lb = B.level ?? Infinity;
+      if (la !== lb) return la - lb;
+    } else if ((A.category || '') !== (B.category || '')) {
+      if (!A.category || !B.category) return A.category ? -1 : 1;
+      return A.category.localeCompare(B.category);
+    }
+    return (A.name || '').localeCompare(B.name || '');
+  });
+
+  let lastPowerGroup = null;
+  const powerRows = powerView.map(({ p, i }) => {
     const pool = p.type === 'spell' ? 'ppe' : 'isp';
     const cost = typeof p.cost === 'number' ? p.cost : null;
-    const kind = p.type === 'spell'
-      ? (p.level != null ? `spell · L${p.level}` : 'spell')
-      : (p.category ? `psionic · ${p.category}` : 'psionic');
+    // The group heading carries what the per-row "spell · L3" label used to.
+    const group = p.type === 'spell'
+      ? (p.level != null ? `Spells — Level ${p.level}` : 'Spells — Unleveled')
+      : (p.category ? `Psionics — ${p.category}` : 'Psionics');
+    const head = group !== lastPowerGroup ? `<div class="power-group">${escHtml(group)}</div>` : '';
+    lastPowerGroup = group;
     const useBtn = w && cost != null && c[pool + '_current'] != null
       ? `<button class="btn btn-sm btn-ghost noprint" onclick="usePower(${i})">⚡ use</button>` : '';
     // A cost_note marks a variable cost: `cost` is the minimum, the use button
     // deducts it, and the note says how the real spend grows — the G.M. adjusts
     // the pool by hand for bigger spends, as at a real table.
-    return `<div class="power-row">
-      <span>${escHtml(p.name)} <span class="muted small">${escHtml(kind)}</span>
+    return head + `<div class="power-row">
+      <span>${escHtml(p.name)}
         ${p.cost_note ? `<span class="muted small">— ${escHtml(p.cost_note)}</span>` : ''}</span>
       <span class="cost">${cost != null ? cost + (p.cost_note && cost > 0 ? '+' : '') + (pool === 'ppe' ? ' P.P.E.' : ' I.S.P.') : '—'}</span>
       ${useBtn}
