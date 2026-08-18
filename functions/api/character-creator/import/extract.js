@@ -108,7 +108,7 @@ export async function onRequestPost({ request, env }) {
 
   const markdown = repairFrontmatter(stripFences(text));
   const parsed = parseClassMarkdown(markdown);
-  const missing = parsed.data ? await crossReference(env, request.url, parsed.data) : { items: [], skills: [], spells: [], psionics: [], restrictions: [], ability_refs: [] };
+  const missing = parsed.data ? await crossReference(env, request.url, parsed.data) : { items: [], skills: [], spells: [], psionics: [], restrictions: [] };
 
   // Autosave immediately: an extraction costs a real API call, and losing it to
   // a closed tab is the difference between a saved draft and paying again.

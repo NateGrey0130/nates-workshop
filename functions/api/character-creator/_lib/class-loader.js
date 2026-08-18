@@ -3,7 +3,7 @@
 // Classes are stored in D1 rather than shipped as files, so this is a lookup.
 // Used by the XP, level-up, picks, variant and create endpoints.
 
-import { parseClassMarkdown, applyVariant, resolveAbilityRefs } from '../../../../apps/character-creator/js/parser.js';
+import { parseClassMarkdown, applyVariant } from '../../../../apps/character-creator/js/parser.js';
 import { composeClass } from '../../../../apps/character-creator/js/compose.js';
 import { getStored } from './class-store.js';
 
@@ -15,33 +15,9 @@ export async function loadClass(env, requestUrl, classId, variantId = null) {
   const row = await getStored(env, classId);
   if (row?.status !== 'published') return null;
   const parsed = parseClassMarkdown(row.markdown);
-  if (!parsed.ok) return null;
-
-  // A shared ability list lives in another class, so resolving it costs one
-  // more lookup — but only for a class that actually references one. `getStored`
-  // deliberately ignores deleted_at, so a list whose class was retired still
-  // resolves, exactly as a character's own retired class does.
-  const data = await withSharedAbilities(env, parsed.data);
-  return applyVariant(data, variantId);
+  return parsed.ok ? applyVariant(parsed.data, variantId) : null;
 }
 
-async function withSharedAbilities(env, data) {
-  const refs = [...new Set((data.special_abilities || [])
-    .map((e) => e?.from_class).filter(Boolean))];
-  if (!refs.length) return data;
-
-  const byId = new Map();
-  for (const id of refs) {
-    // One hop: the referenced class's own list is read as written, never
-    // resolved again. That is the rule, not an optimisation — it is what makes
-    // a cycle impossible rather than something to detect.
-    const row = await getStored(env, id);
-    if (!row) continue;
-    const p = parseClassMarkdown(row.markdown);
-    if (p.ok) byId.set(id, p.data);
-  }
-  return resolveAbilityRefs(data, byId);
-}
 
 // A character's class as it is actually played: the R.C.C. with its variant
 // applied, composed with the O.C.C. taken alongside it if there is one.
