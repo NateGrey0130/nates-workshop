@@ -499,6 +499,28 @@ function validateBonuses(bonuses, errors, warnings) {
   }
 }
 
+// Does this racial class need an occupation to be a playable character?
+//
+// The usual structure is a race and then an occupation: the R.C.C. sets the
+// body, the O.C.C. sets what was learned. Both halves are optional in the data
+// because the exceptions are real - a human takes an O.C.C. and has no race at
+// all, and a Godling grants its own skills and stands alone - but the pairing is
+// the normal case rather than a curiosity.
+//
+// Inferred from what the class grants rather than declared, because the skill
+// counts already say it and no stored class would have to be edited: an R.C.C.
+// offering no related and no secondary skills gives the player nothing to
+// CHOOSE. Fixed skills do not count - a Chiang-Ku has twenty-four of them and
+// still nothing chosen, which is exactly the case the O.C.C. is meant to fill.
+//
+// Inference is safe here only because the answer is a warning and never a
+// refusal. A wrong guess costs a dismissible note, not a blocked save.
+export function needsOccupation(cls) {
+  if (!cls || cls.category !== 'rcc') return false;
+  const s = cls.skills || {};
+  return !(s.occ_related_skills?.count) && !(s.secondary_skills?.count);
+}
+
 // ---------- shared ability lists ----------
 //
 // Books reuse one list of powers across a family of classes. The Demigod's entry

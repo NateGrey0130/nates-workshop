@@ -9,7 +9,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseClassMarkdown, isGearChoice, applyVariant, parseYaml, combineClasses,
          categoryAllows, categoryLabel, VARIANT_OVERRIDES, POOL_BONUS_KEYS,
-         resolveAbilityRefs, abilityOptions, applyAbilities, ABILITY_GRANTS } from '../js/parser.js';
+         resolveAbilityRefs, abilityOptions, applyAbilities, ABILITY_GRANTS,
+         needsOccupation } from '../js/parser.js';
 import { referencedGear, restrictionNames } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import {
@@ -2569,6 +2570,63 @@ console.log('\n[1c25e] Chosen ability fragments');
   check('an option nothing defines warns rather than failing the class',
     undefOption.errors.length === 0
     && undefOption.warnings.some((w) => w.includes('grants nothing')));
+}
+
+// ---------- 1c25f. A race and an occupation, as the normal structure ----------
+// A player picks a race and then an occupation. Both halves stay optional in the
+// data because the exceptions are real - a human takes an O.C.C. and has no race
+// at all, a Godling grants its own skills and stands alone - but the pairing is
+// the normal case, and a racial class with nothing to CHOOSE is not a playable
+// character by itself.
+console.log('\n[1c25f] Race and occupation');
+{
+  const mk = (cat, skills) => parseClassMarkdown(
+    ['---', 'id: t', 'name: T', 'system: rifts', 'source_book: b', 'category: ' + cat]
+      .concat(skills ? ['skills:'].concat(skills) : [])
+      .concat(['---', '', '## Lore', '', 'x', '']).join(String.fromCharCode(10))).data;
+
+  const bare = mk('rcc', null);
+  const bodyOnly = mk('rcc', ['  occ_skills:', '    - { name: "Swim", base: 50, per_level: 5 }']);
+  const withRelated = mk('rcc', ['  occ_related_skills:', '    count: 8', '    categories: ["Physical"]']);
+  const withSecondary = mk('rcc', ['  secondary_skills:', '    count: 5']);
+  const occ = mk('occ', ['  occ_related_skills:', '    count: 6', '    categories: ["Science"]']);
+
+  check('a race granting nothing needs an occupation', needsOccupation(bare) === true);
+  check('fixed skills alone do not make it self-sufficient',
+    needsOccupation(bodyOnly) === true);
+  check('related skills of its own do', needsOccupation(withRelated) === false);
+  check('so do secondary skills of its own', needsOccupation(withSecondary) === false);
+  check('an occupation never needs one', needsOccupation(occ) === false);
+  check('and nothing at all does not throw', needsOccupation(null) === false);
+
+  // The validator warns, and must never refuse: a race that stands alone is
+  // legitimate, and a character part-way through being built must still save.
+  const cat = new Map();
+  const alone = validateCharacter({ character: { level: 1 }, cls: bare, skills: [], attributes: {}, catalog: cat });
+  check('validating a bare race warns',
+    alone.warnings.some((w) => w.rule === 'no_occupation'), JSON.stringify(alone.warnings));
+  check('and never blocks the save', alone.violations.length === 0);
+  check('the warning carries a readable message',
+    alone.warnings.find((w) => w.rule === 'no_occupation').message.length > 20);
+
+  // Composed with an occupation, the reason to warn is gone - and the composed
+  // class advertises `occ_id`, which is how the check knows.
+  const composed = combineClasses(bare, occ);
+  check('the composed class records which occupation', composed.occ_id === 't');
+  const paired = validateCharacter({ character: { level: 1 }, cls: composed, skills: [], attributes: {}, catalog: cat });
+  check('a paired character does not warn',
+    !paired.warnings.some((w) => w.rule === 'no_occupation'));
+
+  // A self-sufficient race alone is fine and says nothing.
+  const standalone = validateCharacter({ character: { level: 1 }, cls: withRelated, skills: [], attributes: {}, catalog: cat });
+  check('a race that grants its own skills is not nagged',
+    !standalone.warnings.some((w) => w.rule === 'no_occupation'));
+
+  // The wizard says which of the two it is rather than claiming one for all.
+  const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+  check('the wizard asks the class rather than assuming', /needsOccupation\(S\.cls\)/.test(appSrc));
+  check('and no longer claims every race grants no related skills',
+    !/A racial class grants no related or secondary skills/.test(appSrc));
 }
 
 // ---------- 1c26. Secondary schedules and group bonuses ----------
