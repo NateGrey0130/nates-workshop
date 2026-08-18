@@ -70,18 +70,85 @@ const field = (label, value, dim) =>
 // offers. A repeated pick shows what the second one bought — the books give a
 // second take a different meaning rather than a doubled one.
 function abilitiesTaken(cls) {
+  return `<div id="powers-block">${powersHtml(cls)}</div>`;
+}
+
+// Rebuilt in place after a G.M. edit — the same targeted-refresh discipline
+// the inventory uses, because a full load() here would discard anything typed
+// into the section inputs and not yet saved.
+function powersHtml(cls) {
   const taken = cls?.abilities_taken || [];
-  if (!taken.length) return '';
+  const w = C.canWrite;
+  if (!taken.length && !w) return '';
   // Collapsed by name, so a power taken twice is one line saying so.
   const seen = new Map();
   for (const a of taken) if (!seen.has(a.name) || a.times > seen.get(a.name).times) seen.set(a.name, a);
   const rows = [...seen.values()].map((a) => `<li>
     <b>${escHtml(a.name)}</b>${a.times > 1 ? ` <span class="tag">taken ${a.times}&times;</span>` : ''}
+    ${a.gm ? ' <span class="tag gm">G.M.</span>' : ''}
     ${a.granted === false ? ' <span class="err small">no definition found</span>' : ''}
+    ${w && a.gm ? `<button class="btn btn-sm btn-ghost noprint" onclick="removeGmPower('${escHtml(a.name).replace(/'/g, '&#39;')}')">Remove</button>` : ''}
     ${a.description ? `<div class="muted small">${escHtml(a.description)}</div>` : ''}
     ${a.on_repeat ? `<div class="small"><b>Twice:</b> ${escHtml(a.on_repeat)}</div>` : ''}
   </li>`).join('');
-  return `<h3>Chosen powers</h3><ul style="margin-left:18px">${rows}</ul>`;
+  // The add control offers the class's own list first — the Demigod's extra is
+  // "similar to that of the godly father or mother", usually one of these — and
+  // free text for a power the list does not carry. Recorded, not re-rolled:
+  // pools and dice bonuses were rolled at creation, so a granted power shows its
+  // text and any flat bonuses, and the G.M. adjusts numbers by hand.
+  const options = [...new Set((cls?.special_abilities || [])
+    .filter((e) => e && e.choose && Array.isArray(e.from)).flatMap((e) => e.from))];
+  const add = w ? `<div class="rowline noprint">
+      <select id="gm-power-pick" class="mini-in wide">
+        <option value="">&mdash; G.M.: assign a power &mdash;</option>
+        ${options.map((n) => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('')}
+        <option value="*">(type one in)</option>
+      </select>
+      <input id="gm-power-name" class="mini-in wide" style="display:none" placeholder="Power name">
+      <button class="btn btn-sm noprint" onclick="addGmPower()">Add</button>
+    </div>` : '';
+  const heading = taken.length || w ? '<h3>Chosen powers</h3>' : '';
+  return `${heading}<ul style="margin-left:18px">${rows}</ul>${add}`;
+}
+
+// The gm-flagged subset, as the PATCH endpoint wants it.
+function gmPowerNames() {
+  return (C.data.abilities || [])
+    .filter((e) => e && typeof e === 'object' && e.gm === true)
+    .map((e) => e.name);
+}
+
+async function refreshPowers() {
+  const res = await api('characters/' + id);
+  C.data.abilities = res.character.abilities;
+  C.cls = res.class;
+  const block = $('powers-block');
+  if (block) block.innerHTML = powersHtml(C.cls);
+}
+
+document.addEventListener('change', (ev) => {
+  if (ev.target?.id === 'gm-power-pick') {
+    const custom = $('gm-power-name');
+    if (custom) custom.style.display = ev.target.value === '*' ? '' : 'none';
+  }
+});
+
+async function addGmPower() {
+  const pick = $('gm-power-pick');
+  const name = pick?.value === '*' ? $('gm-power-name')?.value.trim() : pick?.value;
+  if (!name) return;
+  try {
+    await api('characters/' + id, jsonReq('PATCH', { gm_abilities: [...gmPowerNames(), name] }));
+    await refreshPowers();
+  } catch (err) { alert(err.message); }
+}
+
+async function removeGmPower(name) {
+  if (!confirm(`Remove the G.M.-assigned power "${name}"?`)) return;
+  try {
+    await api('characters/' + id, jsonReq('PATCH', { gm_abilities: gmPowerNames().filter((n) => n !== name) }));
+    await refreshPowers();
+  } catch (err) { alert(err.message); }
 }
 
 const advisory = (label, value) => {
