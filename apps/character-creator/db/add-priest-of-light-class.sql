@@ -131,7 +131,7 @@ equipment_starting:
   - { item_id: "wooden-spike", qty: 4 }
   - { item_id: "small-mallet", qty: 1 }
   - { item_id: "rope", qty: 1 }
-  - { item_id: "vial-of-holy-water", qty: 3 }
+  - { item_id: "vial-of-holy-water", qty: "1d6" }
   - { item_id: "silver-chalice", qty: 1 }
   - { item_id: "small-mirror", qty: 1 }
   - { item_id: "tinder-box", qty: 1 }
@@ -176,9 +176,9 @@ extraction_notes: |
     this class chooses none; level_progression records when each arrives.
     Fixed skills fold the O.C.C. bonus into the catalog base (Dance 30+20=50);
     Lore: Religion becomes a stub skill row that still needs a real base.
-  - REVIEW: the book gives 1D6 vials of holy water; equipment quantities are
-    fixed numbers in this schema, so the entry stores 3 (the average) - roll
-    or adjust at the table. Dice-valued quantities are noted as a format gap.
+  - REVIEW: the book gives 1D6 vials of holy water, and the entry says so -
+    the wizard rolls a dice-valued quantity once at creation and stores the
+    number, the same discipline as pools and attribute bonuses.
   - REVIEW: the priest''s spells come from the deity at level three onward
     (Tongues plus one selection from wizard levels 1-3, one more per level).
     No magic block is declared: the class starts with no spells at level one,

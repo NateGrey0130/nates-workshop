@@ -266,7 +266,7 @@ skills:
     schedule: [{ level: 4, count: 1 }]   # secondary grants schedule too
 starting_money: "2d6x10"      # a formula or a flat number; coin only
 equipment_starting:
-  - { item_id: "ns-turbo-cyclone", qty: 1 }
+  - { item_id: "ns-turbo-cyclone", qty: 1 }          # qty may be a roll: "1d6"
   - { choose: 1, label: "energy pistol", qty: 1, from: ["ng-33-northern-gun-laser-pistol", "wilk-s-320-laser-pistol"] }
 psionics:
   type: "major"               # minor | major | master

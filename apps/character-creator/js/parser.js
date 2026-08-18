@@ -399,6 +399,12 @@ const BONUS_GROUPS = ['attributes', 'combat', 'saves'];
 const DICE_BONUS = /^\d+\s*d\s*\d+(?:\s*x\s*\d+)?(?:\s*[+-]\s*\d+)?$/i;
 const isDiceBonus = (v) => typeof v === 'string' && DICE_BONUS.test(v.trim());
 
+// An equipment quantity: a plain count, or a roll the book prints — the Priest
+// of Light's 1D6 vials of holy water. The wizard rolls the dice form once at
+// creation and stores the number.
+const isValidQuantity = (v) =>
+  (typeof v === 'number' && Number.isFinite(v) && v >= 1) || isDiceBonus(v);
+
 function validateBonusGroup(where, group, block, errors, warnings) {
   if (block === undefined || block === null) return;
   if (typeof block !== 'object' || Array.isArray(block)) {
@@ -989,8 +995,17 @@ export function parseClassMarkdown(text) {
       } else if (eq.choose > eq.from.length) {
         errors.push(`equipment_starting choice asks for ${eq.choose} of only ${eq.from.length} options`);
       }
+      // A choice's qty applies per pick and is re-derived every render, so a
+      // dice value here would re-roll each time the page painted. Fixed
+      // entries roll once behind the wizard's equipInit guard; choices stay
+      // plain numbers until someone builds them the same storage.
+      if (eq.qty !== undefined && (typeof eq.qty !== 'number' || !Number.isFinite(eq.qty) || eq.qty < 1)) {
+        errors.push('equipment_starting choice qty must be a plain number >= 1');
+      }
     } else if (!eq.item_id) {
       errors.push('equipment_starting entries need an item_id (or choose/from for a choice)');
+    } else if (eq.qty !== undefined && !isValidQuantity(eq.qty)) {
+      errors.push(`equipment_starting ${eq.item_id}: qty must be a number >= 1 or a dice expression like "1d6"`);
     }
   }
   for (const lp of data.level_progression || []) {

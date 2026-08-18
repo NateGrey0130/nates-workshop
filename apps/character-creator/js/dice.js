@@ -16,6 +16,21 @@ export function evalDice(expr) {
   return total;
 }
 
+// A book quantity is usually a number, occasionally a roll — the Priest of
+// Light starts with 1D6 vials of holy water. Rolled ONCE at character creation
+// and stored as the rolled number, the same discipline as pools and attribute
+// bonuses: re-rolling on every render would change the character's gear each
+// time the page painted. Anything unreadable is one item rather than zero,
+// because the class named the item on purpose.
+export function rollQuantity(qty) {
+  if (typeof qty === 'number' && Number.isFinite(qty)) return Math.max(1, Math.floor(qty));
+  if (typeof qty === 'string') {
+    const rolled = evalDice(qty);
+    if (rolled != null) return Math.max(1, rolled);
+  }
+  return 1;
+}
+
 // ─── exceptional attribute rolls ───
 //
 // Palladium Fantasy RPG 2nd Ed., p.14. An attribute rolled on 3D6 that comes up

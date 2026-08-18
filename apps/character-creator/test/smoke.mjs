@@ -22,7 +22,7 @@ import { paging } from '../../../functions/api/character-creator/_lib/paging.js'
 import { skillGrantsFor, buildProposal, perLevelDiceOf } from '../../../functions/api/character-creator/_lib/leveling.js';
 import { dedupeCategories } from '../../../functions/api/character-creator/_lib/skill-picks.js';
 import { CHARACTER_JSON_COLUMNS } from '../../../functions/api/character-creator/_lib/character-json.js';
-import { rollPoolFormula, rollAttribute, evalDice } from '../js/dice.js';
+import { rollPoolFormula, rollAttribute, evalDice, rollQuantity } from '../js/dice.js';
 import { composeClass } from '../js/compose.js';
 import { psionicTierForRoll, rollPsionics, psionicShape, withRolledPsionics,
          PSIONIC_TIER_RULES, rollsForPsionics } from '../js/psionics.js';
@@ -2624,6 +2624,48 @@ console.log('\n[1c25g] Ability validation');
     granted.abilities_taken[0].gm === true && granted.abilities_taken[0].granted === true);
   check('a plain pick carries no gm flag',
     applyAbilities(cls, ['Super-Tough']).abilities_taken[0].gm === undefined);
+}
+
+// ---------- 1c25i. Dice-valued equipment quantities ----------
+// The Priest of Light starts with 1D6 vials of holy water. qty used to flow to
+// the sheet untouched, so a dice string rendered as "x1d6" and broke the
+// sheet's number input; the class shipped with a fixed 3 as a workaround.
+// Now a fixed entry's qty may be a dice expression, rolled ONCE at creation
+// behind the wizard's equipInit guard. A choice's qty stays a plain number -
+// it is re-derived every render, so a die there would re-roll each paint.
+console.log(String.fromCharCode(10) + '[1c25i] Dice equipment quantities');
+{
+  check('a plain number passes through', rollQuantity(4) === 4);
+  check('a missing qty is one item, not zero', rollQuantity(undefined) === 1);
+  const rolls = new Set();
+  for (let i = 0; i < 200; i++) rolls.add(rollQuantity('1d6'));
+  check('a dice qty rolls in range', [...rolls].every((n) => n >= 1 && n <= 6));
+  check('and actually varies', rolls.size > 1);
+  check('an unreadable string is one item', rollQuantity('a few') === 1);
+  check('zero and negatives clamp to one', rollQuantity(0) === 1 && rollQuantity(-2) === 1);
+
+  const mkq = (lines) => parseClassMarkdown([
+    '---', 'id: t', 'name: T', 'system: rifts', 'source_book: b', 'category: occ',
+    'equipment_starting:'].concat(lines)
+    .concat(['---', '', '## Lore', '', 'x', '']).join(String.fromCharCode(10)));
+
+  check('a dice qty on a fixed entry parses clean',
+    mkq(['  - { item_id: "vial", qty: "1d6" }']).errors.length === 0);
+  check('garbage qty on a fixed entry is refused',
+    mkq(['  - { item_id: "vial", qty: "lots" }']).errors
+      .some((e) => e.includes('qty must be a number')));
+  check('a dice qty on a CHOICE is refused - it would re-roll every render',
+    mkq(['  - { choose: 1, qty: "1d6", from: ["a", "b"] }']).errors
+      .some((e) => e.includes('choice qty must be a plain number')));
+  check('a numeric choice qty is fine',
+    mkq(['  - { choose: 1, qty: 2, from: ["a", "b"] }']).errors.length === 0);
+
+  // The wizard rolls inside the equipInit-guarded block, so the number is
+  // stored (and draft-persisted) rather than re-rolled. Source pin, same
+  // idiom as 1c25h.
+  const appSrcQ = readFileSync(join(appDir, 'app.js'), 'utf8');
+  check('the wizard rolls the quantity once at init',
+    appSrcQ.includes('rollQuantity(eq.qty'));
 }
 
 // ---------- 1c25h. Natural abilities reach the player ----------
