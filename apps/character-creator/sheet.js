@@ -178,7 +178,23 @@ function render() {
   const c = C.data, w = C.canWrite;
   const skills = Array.isArray(c.skills) ? c.skills : [];
   const powers = Array.isArray(c.powers) ? c.powers : [];
-  const byType = (t) => skills.filter((s) => s.type === t);
+  // Within a box the language family reads as one block: every "Language: X"
+  // gathers at the position of the first one, alphabetized inside the run,
+  // while everything else keeps its stored order — class skills mirror the
+  // book's O.C.C. list, and re-sorting the whole box would lose that.
+  const clusterLanguages = (list) => {
+    const langs = list.filter((s) => langSkills.isLanguageName(s.name))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    if (langs.length < 2) return list;
+    let placed = false;
+    return list.flatMap((s) => {
+      if (!langSkills.isLanguageName(s.name)) return [s];
+      if (placed) return [];
+      placed = true;
+      return langs;
+    });
+  };
+  const byType = (t) => clusterLanguages(skills.filter((s) => s.type === t));
 
   // Skills carry +%/Lvl and % columns, as on the printed sheet.
   const skillBox = (title, list) => box(title, list.length ? `
