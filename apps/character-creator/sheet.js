@@ -208,9 +208,13 @@ function render() {
       : (p.category ? `psionic · ${p.category}` : 'psionic');
     const useBtn = w && cost != null && c[pool + '_current'] != null
       ? `<button class="btn btn-sm btn-ghost noprint" onclick="usePower(${i})">⚡ use</button>` : '';
+    // A cost_note marks a variable cost: `cost` is the minimum, the use button
+    // deducts it, and the note says how the real spend grows — the G.M. adjusts
+    // the pool by hand for bigger spends, as at a real table.
     return `<div class="power-row">
-      <span>${escHtml(p.name)} <span class="muted small">${escHtml(kind)}</span></span>
-      <span class="cost">${cost != null ? cost + (pool === 'ppe' ? ' P.P.E.' : ' I.S.P.') : '—'}</span>
+      <span>${escHtml(p.name)} <span class="muted small">${escHtml(kind)}</span>
+        ${p.cost_note ? `<span class="muted small">— ${escHtml(p.cost_note)}</span>` : ''}</span>
+      <span class="cost">${cost != null ? cost + (p.cost_note && cost > 0 ? '+' : '') + (pool === 'ppe' ? ' P.P.E.' : ' I.S.P.') : '—'}</span>
       ${useBtn}
     </div>`;
   }).join('');

@@ -2749,6 +2749,45 @@ console.log(String.fromCharCode(10) + '[1c25j] at_level curses');
   check('the sheet lists vs Curses', sheetSrcJ.includes("['curses', 'vs Curses']"));
 }
 
+// ---------- 1c25k. Variable psionic costs (isp_note) ----------
+// The isp column is live - the sheet's use button deducts it - so a power
+// whose cost is not one number (Mind Bolt costs more for more damage) could
+// only be stored wrong: a flat number spends the wrong amount, a zero reads
+// as free and matches the stub heuristic. Migration 020's isp_note carries
+// the schedule; isp keeps the minimum, which is what the use button deducts.
+console.log(String.fromCharCode(10) + '[1c25k] Variable psionic costs');
+{
+  const psiFields = CATALOGS.psionics.fields.map((f) => f.name);
+  check('the catalog editor offers the note field', psiFields.includes('isp_note'));
+  check('placed beside the cost it qualifies',
+    psiFields.indexOf('isp_note') === psiFields.indexOf('isp') + 1);
+
+  // The import engine is a server module but takes no env until called, so
+  // its spec is testable directly.
+  const spec = getImportSpec('psionics');
+  check('the importer extracts the note', spec.extractFields.includes('isp_note'));
+  check('a zero with no note is flagged for review',
+    spec.flag({ isp: 0 }).some((f) => f.includes('cost note')));
+  check('a zero WITH a note is not', !spec.flag({ isp: 0, isp_note: 'costs nothing' })
+    .some((f) => f.includes('cost note')));
+  check('a noted zero is not a stub',
+    spec.isStub({ source: 'import', isp: 0 }) === true
+      && spec.isStub({ source: 'import', isp: 0, isp_note: 'costs nothing' }) === false);
+
+  // The two render sites: the wizard's picker marks the minimum with a plus
+  // and shows the note; the sheet carries it through the character's stored
+  // power row (cost_note) beside the use button. Source pins, same idiom as
+  // 1c25h.
+  const appSrcK = readFileSync(join(appDir, 'app.js'), 'utf8');
+  check('the picker shows the note and marks the minimum',
+    appSrcK.includes("p.isp_note && p.isp > 0 ? '+' : ''") && appSrcK.includes('esc(p.isp_note)'));
+  check('the wizard stores cost_note on the character',
+    appSrcK.includes('cost_note: p.isp_note'));
+  const sheetSrcK = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  check('the sheet shows the note beside the use button',
+    sheetSrcK.includes('escHtml(p.cost_note)') && sheetSrcK.includes("p.cost_note && cost > 0 ? '+' : ''"));
+}
+
 // ---------- 1c26. Secondary schedules and group bonuses ----------
 console.log('\n[1c26] Secondary schedules & group bonuses');
 {
