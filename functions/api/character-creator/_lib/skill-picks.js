@@ -11,6 +11,7 @@
 import { json } from './auth.js';
 import { safeParse } from './character-json.js';
 import { categoryAllows } from '../../../../apps/character-creator/js/parser.js';
+import { LANGUAGE_OTHER, isLanguageName } from '../../../../apps/character-creator/js/language-skills.js';
 
 export async function listPending(env, characterId) {
   const { results } = await env.DB.prepare(
@@ -95,10 +96,13 @@ export async function resolvePicks(env, { picks, existingSkills, allowance, cate
 
   // One batched lookup — the catalog supplies the starting percentage, so a
   // caller cannot invent one.
+  // The Other row rides along in the lookup: a pick named "Language: X" that
+  // misses the catalog is a custom language and takes its numbers from Other,
+  // keeping the language in the stored name (see js/language-skills.js).
   const { results } = await env.DB.prepare(
     `SELECT name, category, base, per_level FROM skills
-     WHERE name COLLATE NOCASE IN (${names.map(() => '?').join(',')})`
-  ).bind(...names).all();
+     WHERE name COLLATE NOCASE IN (${[...names, LANGUAGE_OTHER].map(() => '?').join(',')})`
+  ).bind(...names, LANGUAGE_OTHER).all();
   const catalog = new Map(results.map((r) => [r.name.toLowerCase(), r]));
 
   const skills = [];
@@ -112,7 +116,11 @@ export async function resolvePicks(env, { picks, existingSkills, allowance, cate
 
   for (const p of picks) {
     const name = String(p.name).trim();
-    const row = catalog.get(name.toLowerCase());
+    let row = catalog.get(name.toLowerCase());
+    if (!row && isLanguageName(name)) {
+      const other = catalog.get(LANGUAGE_OTHER.toLowerCase());
+      if (other) row = { ...other, name };
+    }
     if (!row) { errors.push(`No skill called "${name}" in the catalog`); continue; }
 
     const outOfCategory = allowed && !categoryAllows(allowed, { name: row.name, category: row.category });
