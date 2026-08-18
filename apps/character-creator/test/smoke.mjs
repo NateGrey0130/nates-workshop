@@ -22,7 +22,7 @@ import { paging } from '../../../functions/api/character-creator/_lib/paging.js'
 import { skillGrantsFor, buildProposal, perLevelDiceOf } from '../../../functions/api/character-creator/_lib/leveling.js';
 import { dedupeCategories } from '../../../functions/api/character-creator/_lib/skill-picks.js';
 import { CHARACTER_JSON_COLUMNS } from '../../../functions/api/character-creator/_lib/character-json.js';
-import { rollPoolFormula, rollAttribute, evalDice } from '../js/dice.js';
+import { rollPoolFormula, rollAttribute, evalDice, rollQuantity } from '../js/dice.js';
 import { composeClass } from '../js/compose.js';
 import { psionicTierForRoll, rollPsionics, psionicShape, withRolledPsionics,
          PSIONIC_TIER_RULES, rollsForPsionics } from '../js/psionics.js';
@@ -2626,6 +2626,48 @@ console.log('\n[1c25g] Ability validation');
     applyAbilities(cls, ['Super-Tough']).abilities_taken[0].gm === undefined);
 }
 
+// ---------- 1c25i. Dice-valued equipment quantities ----------
+// The Priest of Light starts with 1D6 vials of holy water. qty used to flow to
+// the sheet untouched, so a dice string rendered as "x1d6" and broke the
+// sheet's number input; the class shipped with a fixed 3 as a workaround.
+// Now a fixed entry's qty may be a dice expression, rolled ONCE at creation
+// behind the wizard's equipInit guard. A choice's qty stays a plain number -
+// it is re-derived every render, so a die there would re-roll each paint.
+console.log(String.fromCharCode(10) + '[1c25i] Dice equipment quantities');
+{
+  check('a plain number passes through', rollQuantity(4) === 4);
+  check('a missing qty is one item, not zero', rollQuantity(undefined) === 1);
+  const rolls = new Set();
+  for (let i = 0; i < 200; i++) rolls.add(rollQuantity('1d6'));
+  check('a dice qty rolls in range', [...rolls].every((n) => n >= 1 && n <= 6));
+  check('and actually varies', rolls.size > 1);
+  check('an unreadable string is one item', rollQuantity('a few') === 1);
+  check('zero and negatives clamp to one', rollQuantity(0) === 1 && rollQuantity(-2) === 1);
+
+  const mkq = (lines) => parseClassMarkdown([
+    '---', 'id: t', 'name: T', 'system: rifts', 'source_book: b', 'category: occ',
+    'equipment_starting:'].concat(lines)
+    .concat(['---', '', '## Lore', '', 'x', '']).join(String.fromCharCode(10)));
+
+  check('a dice qty on a fixed entry parses clean',
+    mkq(['  - { item_id: "vial", qty: "1d6" }']).errors.length === 0);
+  check('garbage qty on a fixed entry is refused',
+    mkq(['  - { item_id: "vial", qty: "lots" }']).errors
+      .some((e) => e.includes('qty must be a number')));
+  check('a dice qty on a CHOICE is refused - it would re-roll every render',
+    mkq(['  - { choose: 1, qty: "1d6", from: ["a", "b"] }']).errors
+      .some((e) => e.includes('choice qty must be a plain number')));
+  check('a numeric choice qty is fine',
+    mkq(['  - { choose: 1, qty: 2, from: ["a", "b"] }']).errors.length === 0);
+
+  // The wizard rolls inside the equipInit-guarded block, so the number is
+  // stored (and draft-persisted) rather than re-rolled. Source pin, same
+  // idiom as 1c25h.
+  const appSrcQ = readFileSync(join(appDir, 'app.js'), 'utf8');
+  check('the wizard rolls the quantity once at init',
+    appSrcQ.includes('rollQuantity(eq.qty'));
+}
+
 // ---------- 1c25h. Natural abilities reach the player ----------
 // What a class simply HAS, as opposed to what is chosen. Four classes carry
 // these (Demigod, Ley Line Walker, Glitter Boy, Priest of Light) and until
@@ -2666,6 +2708,45 @@ console.log('\n[1c25h] Natural abilities rendering');
   check('both tolerate a bare-string entry',
     /typeof a === 'string' \? a : a\?\.name/.test(sheetSrc)
       && /typeof a === 'string' \? a : a\?\.name/.test(appSrc));
+}
+
+// ---------- 1c25j. Level-scheduled save bonuses, and the curses key ----------
+// bonuses.at_level had parser validation and derive support already; what the
+// Ley Line Walker's "+3 vs curses at levels 3, 9, 11 and 14" lacked was a
+// `curses` save key for the number to land on. It borrows the P.E. magic row,
+// because a curse is magic - the same reasoning that gave illusionary magic
+// its key.
+console.log(String.fromCharCode(10) + '[1c25j] at_level curses');
+{
+  const cursed = parseClassMarkdown([
+    '---', 'id: t', 'name: T', 'system: rifts', 'source_book: b', 'category: occ',
+    'bonuses:',
+    '  saves: { mind_control: 2 }',
+    '  at_level:',
+    '    - { level: 3, saves: { curses: 3 } }',
+    '    - { level: 9, saves: { curses: 3 } }',
+    '---', '', '## Lore', '', 'x', ''].join(String.fromCharCode(10)));
+  check('an at_level curses entry parses clean', cursed.errors.length === 0,
+    cursed.errors.join('; '));
+
+  const cb = (lvl) => D.classBonuses(cursed.data, lvl, null);
+  check('below the first step there is nothing', (cb(1).saves.curses || 0) === 0);
+  check('each reached step accumulates',
+    cb(3).saves.curses === 3 && cb(9).saves.curses === 6);
+  check('the flat mind_control half rides along at every level',
+    cb(1).saves.mind_control === 2 && cb(9).saves.mind_control === 2);
+
+  // The key exists all the way to the rendered save: derive's table carries a
+  // curses row (P.E. magic chart), and the class bonus folds onto it.
+  const merged = D.saves({ PE: 16, ME: 10 }, {}, null, cb(9));
+  check('the sheet-level save has a curses row and folds the bonus in',
+    merged.curses === 7);  // +1 from P.E. 16 on the magic chart, +6 from class
+  const plain = D.saves({ PE: 10, ME: 10 }, {}, null, { saves: {} });
+  check('a class granting nothing still shows the row, at the table value',
+    plain.curses === 0);
+
+  const sheetSrcJ = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  check('the sheet lists vs Curses', sheetSrcJ.includes("['curses', 'vs Curses']"));
 }
 
 // ---------- 1c26. Secondary schedules and group bonuses ----------

@@ -74,8 +74,8 @@ skills:
     - { name: "Language: Native Tongue", base: 95, per_level: 0 }
     - { choose: 2, categories: ["Technical"], bonus: 20, per_level: 5, note: "Language: Other, two of choice (+20%). The catalog has no individual language rows." }
     - { name: "Basic Electronics", base: 40, per_level: 5, note: "+10%" }
-    - { name: "Basic Mechanics", base: 0, per_level: 0, note: "+15% - stub row, the catalog has no Basic Mechanics base yet" }
-    - { name: "General Repair & Maintenance", base: 0, per_level: 0, note: "+10% - stub row, the catalog has no base for it yet" }
+    - { name: "Basic Mechanics", base: 45, per_level: 5, note: "+15%" }
+    - { name: "General Repair & Maintenance", base: 45, per_level: 5, note: "+10%" }
     - { name: "Land Navigation", base: 42, per_level: 4, note: "+6%" }
     - { name: "Pilot Robot Combat Elite: Glitter Boy", base: 0, per_level: 0 }
     - { name: "Pilot Robot Combat Basic (general)", base: 0, per_level: 0 }
@@ -150,7 +150,8 @@ extraction_notes: |
     natural_abilities - special_abilities is for powers a player chooses, and
     this class chooses none. Fixed skills fold the O.C.C. bonus into the
     catalog base (Radio: Basic 45+10=55); Basic Mechanics and General Repair &
-    Maintenance become stub skill rows that still need real bases. The open
+    Maintenance have catalog rows via backfill-import-skill-gaps.sql; their
+    bases here fold that catalog base plus the O.C.C. bonus. The open
     weapon choices enumerate the catalog''s rifles and pistols with the generic
     rows as the of-choice fallback, and the non-energy weapon is one, as the
     book says, not two.

@@ -115,6 +115,8 @@
   // chemical". Both exist because real classes grant bonuses to them — the
   // adult Chiang-Ku is +3 to save vs illusionary magic, the Juicer +6 vs mind
   // control — and until there was a key, writing either did nothing at all.
+  // Curses joined for the same reason: the Ley Line Walker earns +3 vs curses
+  // at four stated levels, and a curse is magic, so it borrows the magic row.
   //
   // `psychicTier` is the character's own tier, used only for the psionic save
   // TARGET — the bonus stays purely M.E.
@@ -133,6 +135,7 @@
       horror_factor: mePsionic,
       illusionary_magic: peMagic,
       mind_control: mePsionic,
+      curses: peMagic,
       coma_death_pct: chart('pe_coma_pct', attrs.PE),
       pain: peMagic,
     };

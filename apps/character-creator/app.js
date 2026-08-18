@@ -6,7 +6,7 @@
 // /shared/js/ui.js loads first as a classic script, so escHtml() is global;
 // inline onclick handlers need their entry points on window — see the
 // Object.assign at the bottom.
-import { evalDice, rollPoolFormula, rollAttribute } from './js/dice.js';
+import { evalDice, rollPoolFormula, rollAttribute, rollQuantity } from './js/dice.js';
 import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSIONIC_TIER_RULES,
          rollsForPsionics as classRollsForPsionics } from './js/psionics.js';
 import { isChoiceGroup, isGearChoice, applyVariant,
@@ -986,14 +986,17 @@ function initEquipment() {
   }]);
 
   // The inventory itself is guarded, because it is editable — re-deriving it
-  // would undo every hand-added or removed row.
+  // would undo every hand-added or removed row. The guard also makes a dice
+  // quantity (the Priest of Light's 1D6 vials of holy water) roll ONCE: the
+  // rolled number lands in S.equipment, which the draft persists.
   if (S.equipInit) return;
   S.equipment = starting.flatMap((eq) => {
     if (isGearChoice(eq)) return [];
     const item = findItem(eq.item_id);
+    const qty = rollQuantity(eq.qty ?? 1);
     return [item
-      ? { item_id: item.id, name: item.name, qty: eq.qty || 1, source: 'starting' }
-      : { custom_name: eq.item_id.replace(/-/g, ' '), qty: eq.qty || 1, source: 'starting', notes: 'starting gear (not in item catalog yet)' }];
+      ? { item_id: item.id, name: item.name, qty, source: 'starting' }
+      : { custom_name: eq.item_id.replace(/-/g, ' '), qty, source: 'starting', notes: 'starting gear (not in item catalog yet)' }];
   });
   S.equipInit = true;
 }
