@@ -1,0 +1,7 @@
+# Data scripts and migrations are applied to D1 with `wrangler d1 execute --file`.
+# A CRLF checkout changes the bytes that reach the database: the three classes
+# imported in #92 landed in production with 
+ inside their stored markdown
+# because git rewrote the scripts on the post-merge checkout. Pin LF so the
+# applied file is always byte-identical to the reviewed one.
+*.sql text eol=lf
