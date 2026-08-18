@@ -1867,6 +1867,26 @@ Schema files are pure ASCII, so this applies to data loads, not migrations.
 SQLite has no `ADD COLUMN IF NOT EXISTS`. Run each once per environment, in
 filename order.
 
+**Apply migrations and data scripts through `scripts/d1-apply.mjs`** rather
+than raw wrangler commands:
+
+```bash
+node scripts/d1-apply.mjs --remote db/migrations/021-spell-ppe-note.sql apps/character-creator/db/backfill-spell-ppe-notes.sql
+```
+
+It encodes what the raw commands kept re-learning: the target is explicit
+(no default database, because an accidental `--remote` is the costly
+direction); every file is pre-checked for CR and non-ASCII bytes before
+anything runs (both have changed production bytes before); files apply in
+the order given and the run stops at the first failure, so a migration
+always lands before the backfill that needs it; each file's trailing
+verification SELECTs are printed; and remote runs start with a throwaway
+`wrangler whoami`, which absorbs the expired-OAuth-token failure
+(`Authentication error [code: 10000]`) that an interactive login hits on
+its first call after idle. A `CLOUDFLARE_API_TOKEN` environment variable
+(scoped to Account -> D1 -> Edit) removes that failure mode entirely and is
+the recommended setup; the warm-up is then redundant but harmless.
+
 **Ask the database what it has had applied** rather than inferring it from
 columns:
 
