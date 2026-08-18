@@ -140,8 +140,9 @@ db/
                               schema_migrations; see Production configuration
 ```
 
-Three modules are imported by both the browser and the Workers runtime:
-`js/parser.js`, `js/dice.js` and `js/catalog-fields.js`. That is why `app.js` and
+Five modules are imported by both the browser and the Workers runtime:
+`js/parser.js`, `js/dice.js`, `js/catalog-fields.js`, `js/compose.js`, and
+`js/psionics.js` (the last only transitively, through compose). That is why `app.js` and
 `catalog.js` are loaded as `<script type="module">` while the other pages are
 classic scripts — and why inline handlers in the wizard need explicit `window`
 exposure (see the `Object.assign(window, …)` block at the bottom of `app.js`).
@@ -750,12 +751,13 @@ Three rules earned by getting them wrong first:
 
 ## One place composes a class
 
-Turning a character's classes into the thing it is played as takes three steps,
+Turning a character's classes into the thing it is played as takes four steps,
 and the order matters:
 
 1. **apply each class's variant** — a Dragon hatchling is not an adult
 2. **compose race with occupation** — into one class-shaped object
-3. **fold in rolled psionics** — a tier the character rolled, not one the class declared
+3. **fold in chosen abilities** — powers the player picked from a class's list
+4. **fold in rolled psionics** — a tier the character rolled, not one the class declared
 
 Six places did this by hand: the class loader, the sheet's endpoint, the
 stage-change endpoint, the admin audit, and the wizard twice. They agreed only
@@ -981,8 +983,10 @@ as a warning rather than letting the shape read as though it works.
 
 ## What a class grants mechanically
 
-`natural_abilities`, `special_abilities` and `level_progression.grants` are the
-book's own wording, and display-only. So a Dragon's *"+2 to P.S."* and *"+1
+`natural_abilities` and `level_progression.grants` are the book's own wording,
+and display-only. (`special_abilities` used to belong on that list too; since
+[Powers the player chooses](#powers-the-player-chooses), a named ability may
+carry `bonuses` of its own, validated through the same path a class's are.) So a Dragon's *"+2 to P.S."* and *"+1
 attack per melee at level 5"* were prose that nothing could act on — and no
 amount of typing them by hand would change that, because there was nowhere for
 a number to go.
@@ -1016,8 +1020,9 @@ to. `derive.parts()` produces that split.
 
 A bonus stated as **dice** is the one exception, and it has to be: a roll cannot
 be re-evaluated on every render without changing the number under the player.
-Those are rolled once when the class is confirmed and stored as
-`attribute_bonuses` — see [House rules and derived values](#house-rules-and-derived-values).
+Those are rolled once when the class is confirmed and stored — attribute dice
+in `attribute_bonuses`, combat and save dice in `rolled_bonuses` — see
+[House rules and derived values](#house-rules-and-derived-values).
 `derive.classBonuses(cls, level, rolled)` takes them as its third argument and
 folds them in beside the flat ones, so everything downstream sees one bonus set
 and does not care which kind it was.
@@ -1287,7 +1292,8 @@ for (`options_available_of_8`). Re-run it after that import and it completes.
 
 Minor, Major and Master differ in three ways, and only the third is new.
 
-**Where a tier comes from:** either the class (`psionics.type`) or the character
+**Where a tier comes from:** the class (`psionics.type`), an ability the player
+chose (folded into that same slot before any roll), or the character
 (`psychic_tier`, rolled on the Random Psionics Table — see
 [Psionics can be rolled for](#house-rules-and-derived-values)). `composeClass()`
 folds a rolled tier into the class-shaped object, so everything below applies
@@ -2115,7 +2121,7 @@ valid choices rather than showing fewer rows. Those are bounded by book content;
 the others grow with play.
 
 **The three page scripts are long, and deliberately not split.** `app.js` is
-roughly 1,600 lines, `import.js` and `sheet.js` roughly 900 each — treat those
+roughly 1,700 lines, `import.js` roughly 1,000 and `sheet.js` roughly 900 — treat those
 as orders of magnitude, not figures, since they move with every change and the
 last written-down set had drifted by 20%. Each drives one page and each does
 several jobs. Splitting was considered and rejected: there is no build step,
