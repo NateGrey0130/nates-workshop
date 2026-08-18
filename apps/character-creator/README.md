@@ -944,7 +944,8 @@ beat. What the character holds is on `abilities_taken`, as opposed to
 ## What a class grants mechanically
 
 `natural_abilities` and `level_progression.grants` are the book's own wording,
-and display-only. (`special_abilities` used to belong on that list too; since
+and display-only: the sheet lists natural abilities beside the chosen powers,
+and the wizard's class detail shows them to a player still deciding. (`special_abilities` used to belong on that list too; since
 [Powers the player chooses](#powers-the-player-chooses), a named ability may
 carry `bonuses` of its own, validated through the same path a class's are.) So a Dragon's *"+2 to P.S."* and *"+1
 attack per melee at level 5"* were prose that nothing could act on — and no

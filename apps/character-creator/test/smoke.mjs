@@ -2626,6 +2626,48 @@ console.log('\n[1c25g] Ability validation');
     applyAbilities(cls, ['Super-Tough']).abilities_taken[0].gm === undefined);
 }
 
+// ---------- 1c25h. Natural abilities reach the player ----------
+// What a class simply HAS, as opposed to what is chosen. Four classes carry
+// these (Demigod, Ley Line Walker, Glitter Boy, Priest of Light) and until
+// now they appeared nowhere - not on the sheet, not in the wizard's class
+// detail. Composition already concatenated both halves; only display was
+// missing.
+console.log('\n[1c25h] Natural abilities rendering');
+{
+  const mk = (extra) => parseClassMarkdown([
+    '---', 'id: t', 'name: T', 'system: rifts', 'source_book: b']
+    .concat(extra)
+    .concat(['---', '', '## Lore', '', 'x', '']).join('\n')).data;
+
+  const race = mk(['category: rcc', 'natural_abilities:',
+    '  - { name: "Regeneration", description: "Heals fast." }']);
+  const occ = mk(['category: occ', 'natural_abilities:',
+    '  - { name: "Sense Ley Line", description: "Feels the line." }']);
+
+  const both = combineClasses(race, occ);
+  check('composition concatenates natural abilities from both halves',
+    both.natural_abilities?.length === 2
+      && both.natural_abilities[0].name === 'Regeneration'
+      && both.natural_abilities[1].name === 'Sense Ley Line');
+  check('a half with none contributes none',
+    combineClasses(mk(['category: rcc']), occ).natural_abilities?.length === 1);
+
+  // The sheet lists them beside the chosen powers, and the wizard's class
+  // detail shows them to a player still deciding. Source pins, same idiom as
+  // 1c25f: the render path is browser-only, so the test reads the source.
+  const sheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  check('the sheet renders natural abilities',
+    /function naturalAbilities\(cls\)/.test(sheetSrc)
+      && /\$\{naturalAbilities\(cls\)\}/.test(sheetSrc));
+  const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+  check('the wizard class detail renders them too',
+    /function naturalAbilityList\(list\)/.test(appSrc)
+      && /naturalAbilityList\(c\.natural_abilities\)/.test(appSrc));
+  check('both tolerate a bare-string entry',
+    /typeof a === 'string' \? a : a\?\.name/.test(sheetSrc)
+      && /typeof a === 'string' \? a : a\?\.name/.test(appSrc));
+}
+
 // ---------- 1c26. Secondary schedules and group bonuses ----------
 console.log('\n[1c26] Secondary schedules & group bonuses');
 {
