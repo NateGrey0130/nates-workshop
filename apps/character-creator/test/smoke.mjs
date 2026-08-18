@@ -9,7 +9,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseClassMarkdown, isGearChoice, applyVariant, parseYaml, combineClasses,
          categoryAllows, categoryLabel, VARIANT_OVERRIDES, POOL_BONUS_KEYS,
-         resolveAbilityRefs, abilityOptions } from '../js/parser.js';
+         resolveAbilityRefs, abilityOptions, applyAbilities, ABILITY_GRANTS } from '../js/parser.js';
 import { referencedGear, restrictionNames } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import {
@@ -1107,6 +1107,9 @@ console.log('\n[1c11b] Class prompt covers the schema');
   // parses to NULL and the character gets no P.P.E. at all.
   check('the prompt documents the pools bonus group', /pools:\s+hp, sdc, mdc, ppe, isp/.test(prompt));
   check('the prompt documents a shared ability list', /from_class/.test(prompt));
+  check('the prompt documents a fragment carrying bonuses', /repeatable: true/.test(prompt));
+  check('and says a pool grant is a bonus, never a base',
+    /never a pool base/.test(prompt));
   check('and tells the model not to copy the options across',
     /do NOT copy the options across/.test(prompt));
   check('and warns against putting a pool bonus in at_level',
@@ -2344,8 +2347,8 @@ console.log('\n[1c25d] Shared ability lists');
   const ref = mk('demigod', '  - { choose: 1, from_class: godling }');
 
   check('a reference parses with no errors', ref.errors.length === 0, ref.errors.join('; '));
-  check('and warns that a choice is not offered to the player yet',
-    ref.warnings.some((w) => w.includes('not offered to the player yet')));
+  check('a choice group no longer warns that nothing offers it',
+    !ref.warnings.some((w) => w.includes('not offered to the player yet')));
   check('the owner advertises its options', abilityOptions(owner).length === 3);
   check('a class with no choice groups advertises none',
     abilityOptions(parseClassMarkdown(['---','id: x','name: x','system: rifts','source_book: b',
@@ -2390,6 +2393,110 @@ console.log('\n[1c25d] Shared ability lists');
   const badCount = mk('b', '  - { choose: 0, from_class: godling }');
   check('a choose of zero is refused',
     badCount.errors.some((e) => e.includes('choose must be a positive number')), badCount.errors.join('; '));
+}
+
+// ---------- 1c25e. Chosen ability fragments ----------
+// A power the player picks, carrying what it grants. Chosen on the CLASS step,
+// before attributes and pools are rolled, because the Godling's Super-Tough is
+// +1D6 P.E. AND +3D4x10 M.D.C. - choosing later would re-roll what was read.
+console.log('\n[1c25e] Chosen ability fragments');
+{
+  const lines = (...a) => a.join(String.fromCharCode(10));
+  const src = lines(
+    '---', 'id: godling', 'name: Godling', 'system: rifts', 'source_book: b', 'category: rcc',
+    'mdc_base: "P.E. x 10"',
+    'special_abilities:',
+    '  - name: "Super-Tough"',
+    '    description: "Add 1D6 to P.E. and 3D4x10 to M.D.C."',
+    '    bonuses: { attributes: { PE: "1d6" }, pools: { mdc: "3d4x10" } }',
+    '  - name: "Super-Psionic Powers"',
+    '    description: "Two lesser categories."',
+    '    psionics: { type: "master" }',
+    '  - name: "Shape Shifter"',
+    '    description: "One animal."',
+    '    repeatable: true',
+    '    on_repeat: "ANY normal animal."',
+    '  - name: "Fly"',
+    '    description: "Mystic flight."',
+    '  - { choose: 3, from: ["Super-Tough", "Super-Psionic Powers", "Shape Shifter", "Fly"] }',
+    '---', '', '## Lore', '', 'x', '');
+  const parsed = parseClassMarkdown(src);
+  check('a class with fragments parses cleanly', parsed.errors.length === 0, parsed.errors.join('; '));
+  const cls = parsed.data;
+
+  check('the grant keys are the three an ability may carry',
+    ABILITY_GRANTS.join(',') === 'bonuses,psionics,magic');
+
+  check('no picks leaves the class untouched', applyAbilities(cls, []) === cls);
+  check('and undefined picks are the same', applyAbilities(cls, undefined) === cls);
+
+  const one = applyAbilities(cls, ['Super-Tough']);
+  check('a fragment contributes its attribute bonus', one.bonuses?.attributes?.PE === '1d6');
+  check('and its pool bonus', one.bonuses?.pools?.mdc === '3d4x10');
+  check('the class keeps its own pool formula', one.mdc_base === 'P.E. x 10');
+  check('what was taken is recorded for the sheet',
+    one.abilities_taken?.length === 1 && one.abilities_taken[0].granted === true);
+
+  // Duplicates are the point: the books give a second take a different meaning.
+  const twice = applyAbilities(cls, ['Shape Shifter', 'Shape Shifter']);
+  check('a repeated pick is counted, not collapsed',
+    (twice.abilities_taken || []).map((a) => a.times).join(',') === '1,2');
+  check('on_repeat surfaces only on the second take',
+    twice.abilities_taken[0].on_repeat === undefined
+    && twice.abilities_taken[1].on_repeat === 'ANY normal animal.');
+
+  const doubled = applyAbilities(cls, ['Super-Tough', 'Super-Tough']);
+  check('a repeated fragment applies its bonuses again',
+    JSON.stringify(doubled.bonuses?.pools?.mdc) === '["3d4x10","3d4x10"]',
+    JSON.stringify(doubled.bonuses?.pools?.mdc));
+
+  // The stronger-tier rule composing a race with an occupation uses, so an
+  // ability can never make a psychic weaker.
+  check('an ability can raise the psychic tier',
+    applyAbilities(cls, ['Super-Psionic Powers']).psionics?.type === 'master');
+  const alreadyMaster = { ...cls, psionics: { type: 'master', isp_base: '4d6x10' } };
+  check('and does not overwrite a stronger one it already had',
+    applyAbilities(alreadyMaster, ['Super-Psionic Powers']).psionics?.isp_base === '4d6x10');
+
+  // Recorded even when nothing defines it, or the sheet would disagree with
+  // what the player actually chose.
+  const unknown = applyAbilities(cls, ['Something The Book Only Describes']);
+  check('an undefined pick is recorded but grants nothing',
+    unknown.abilities_taken?.[0]?.granted === false && unknown.bonuses === cls.bonuses);
+
+  // Options and definitions travel together across a shared-list reference.
+  const ref = parseClassMarkdown(lines(
+    '---', 'id: demigod', 'name: Demigod', 'system: rifts', 'source_book: b', 'category: rcc',
+    'special_abilities:', '  - { choose: 1, from_class: godling }',
+    '---', '', '## Lore', '', 'x', '')).data;
+  const resolved = resolveAbilityRefs(ref, new Map([['godling', cls]]));
+  check('a reference brings the DEFINITIONS across, not just the names',
+    resolved.special_abilities.some((e) => e.name === 'Super-Tough' && e.bonuses));
+  check('so a pick made on the referring class still grants',
+    applyAbilities(resolved, ['Super-Tough']).bonuses?.pools?.mdc === '3d4x10');
+  check('and the provenance of a pulled definition is kept',
+    resolved.special_abilities.find((e) => e.name === 'Super-Tough')?._from_class === 'godling');
+
+  // Shape errors that would otherwise be stored and ignored.
+  const badGrant = parseClassMarkdown(lines(
+    '---', 'id: b', 'name: b', 'system: rifts', 'source_book: b', 'category: rcc',
+    'special_abilities:', '  - name: "X"', '    bonuses: { combat: { nonsense_key: "1d4" } }',
+    '---', '', '## Lore', '', 'x', ''));
+  check('a fragment bonus is validated like any other',
+    badGrant.errors.some((e) => e.includes('must be a number')), badGrant.errors.join('; '));
+  const orphanRepeat = parseClassMarkdown(lines(
+    '---', 'id: b', 'name: b', 'system: rifts', 'source_book: b', 'category: rcc',
+    'special_abilities:', '  - name: "X"', '    on_repeat: "twice"',
+    '---', '', '## Lore', '', 'x', ''));
+  check('on_repeat without repeatable warns that it is unreachable',
+    orphanRepeat.warnings.some((w) => w.includes('can never be reached')));
+  const undefOption = parseClassMarkdown(lines(
+    '---', 'id: b', 'name: b', 'system: rifts', 'source_book: b', 'category: rcc',
+    'special_abilities:', '  - { choose: 1, from: ["Nothing Defines Me"] }',
+    '---', '', '## Lore', '', 'x', ''));
+  check('an option nothing defines warns rather than failing the class',
+    undefOption.errors.length === 0
+    && undefOption.warnings.some((w) => w.includes('grants nothing')));
 }
 
 // ---------- 1c26. Secondary schedules and group bonuses ----------

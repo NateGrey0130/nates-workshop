@@ -517,6 +517,25 @@ export function isAbilityChoice(entry) {
     && (entry.choose !== undefined || entry.from !== undefined || entry.from_class !== undefined);
 }
 
+// What a chosen ability may grant. Deliberately three keys, not the variant
+// override set: these are what the Godling's eleven powers actually need, and a
+// chosen ability that could restate attribute_dice or starting_money is not an
+// ability, it is a second class wearing one's name.
+//
+//   - name: "Super-Tough"
+//     description: "Add 1D6 to P.E. and 3D4x10 to M.D.C."
+//     bonuses: { attributes: { PE: "1d6" }, pools: { mdc: "3d4x10" } }
+//
+// M.D.C. arrives as a pool BONUS rather than an override, which is why pool
+// bonuses had to exist first — the ability adds to whatever the class already
+// rolls, it does not replace the formula.
+export const ABILITY_GRANTS = ['bonuses', 'psionics', 'magic'];
+
+// A named ability definition, as opposed to a choice group.
+export function isAbilityDefinition(entry) {
+  return !!entry && typeof entry === 'object' && typeof entry.name === 'string' && !isAbilityChoice(entry);
+}
+
 // Every option a class offers from its own ability choice groups, by name.
 export function abilityOptions(cls) {
   const out = [];
@@ -544,13 +563,75 @@ export function abilityOptions(cls) {
 export function resolveAbilityRefs(cls, byId) {
   const list = cls?.special_abilities;
   if (!Array.isArray(list) || !list.some((e) => e?.from_class)) return cls;
+  const pulled = [];
   const resolved = list.map((e) => {
     if (!e?.from_class) return e;
     const target = byId instanceof Map ? byId.get(e.from_class) : byId?.[e.from_class];
     const options = abilityOptions(target);
-    return options.length ? { ...e, from: options } : e;
+    if (!options.length) return e;
+    // The DEFINITIONS come across too, not only the names. A Demigod picking
+    // "Super-Tough" has to find what Super-Tough grants, and it is written down
+    // in the class that owns the list. A definition the referring class already
+    // states itself wins — it can say something different about a shared name.
+    const own = new Set(list.filter(isAbilityDefinition).map((d) => d.name.trim().toLowerCase()));
+    for (const d of target?.special_abilities || []) {
+      if (!isAbilityDefinition(d)) continue;
+      if (own.has(d.name.trim().toLowerCase())) continue;
+      if (!options.includes(d.name)) continue;
+      pulled.push({ ...d, _from_class: e.from_class });
+    }
+    return { ...e, from: options };
   });
-  return { ...cls, special_abilities: resolved };
+  return { ...cls, special_abilities: [...resolved, ...pulled] };
+}
+
+// Folds the abilities a character actually chose into its class.
+//
+// `chosen` is a list of names and DUPLICATES ARE MEANINGFUL: the Godling's Shape
+// Shifter and Magic Powers can each be taken twice, and the book gives the
+// second take a different meaning rather than a doubled one. A repeated pick
+// applies its bonuses again — which is arithmetically the only honest reading —
+// and surfaces `on_repeat` as the prose that says what the second one bought.
+//
+// Runs after race and occupation are composed, because an ability is chosen for
+// the character rather than contributed by either half, and BEFORE any rolled
+// psionic tier, so an ability that makes you a master psychic is what a rolled
+// tier would have to beat.
+export function applyAbilities(cls, chosen) {
+  const picks = (chosen || []).filter((n) => typeof n === 'string' && n.trim());
+  if (!cls || !picks.length) return cls;
+
+  const byName = new Map((cls.special_abilities || [])
+    .filter(isAbilityDefinition)
+    .map((d) => [d.name.trim().toLowerCase(), d]));
+
+  const out = { ...cls };
+  const taken = [];
+  const counts = new Map();
+  for (const name of picks) {
+    const key = name.trim().toLowerCase();
+    const def = byName.get(key);
+    const n = (counts.get(key) || 0) + 1;
+    counts.set(key, n);
+    // A pick nothing defines is still recorded — it is a real choice the player
+    // made, and dropping it would make the sheet disagree with what they picked.
+    if (!def) { taken.push({ name, times: n, granted: false }); continue; }
+
+    if (def.bonuses) out.bonuses = sumBonusGroups(out.bonuses, def.bonuses);
+    // The stronger tier wins, the same rule composing a race with an occupation
+    // uses, so an ability cannot make a Master psychic weaker.
+    if (def.psionics) {
+      out.psionics = tierRank(def.psionics.type) > tierRank(out.psionics?.type)
+        ? def.psionics : (out.psionics || def.psionics);
+    }
+    if (def.magic) out.magic = out.magic || def.magic;
+    taken.push({ name: def.name, times: n, granted: true,
+      description: def.description, on_repeat: n > 1 ? def.on_repeat : undefined });
+  }
+  // What the character actually holds, for the sheet — as opposed to
+  // special_abilities, which is what the class OFFERS.
+  out.abilities_taken = taken;
+  return out;
 }
 
 // The same idea for starting equipment, keyed on `item_id` rather than `name`.
@@ -939,10 +1020,44 @@ export function parseClassMarkdown(text) {
     if (e.choose !== undefined && (typeof e.choose !== 'number' || e.choose < 1)) {
       errors.push('special_abilities: choose must be a positive number');
     }
-    // Said plainly, because the shape parses and reads as though it works.
-    // Making a chosen ability mechanical is separate, still-unbuilt work.
-    warnings.push('special_abilities choice groups are not offered to the player yet '
-      + '— the options are recorded and shown, but nothing picks between them');
+  }
+
+  // A named ability may carry what it grants. Validated through exactly the same
+  // path a class's own bonuses take, so an ability cannot express a bonus a
+  // class could not — and a key derive.js does not read is caught here rather
+  // than stored and silently ignored.
+  const optionNames = new Set(abilityOptions(data).map((n) => n.trim().toLowerCase()));
+  const defined = new Set();
+  for (const e of data.special_abilities || []) {
+    if (!isAbilityDefinition(e)) continue;
+    defined.add(e.name.trim().toLowerCase());
+    if (e.bonuses !== undefined) validateBonuses(e.bonuses, errors, warnings);
+    if (e.repeatable !== undefined && typeof e.repeatable !== 'boolean') {
+      errors.push(`special_abilities: ${e.name}.repeatable must be true or false`);
+    }
+    if (e.on_repeat !== undefined && typeof e.on_repeat !== 'string') {
+      errors.push(`special_abilities: ${e.name}.on_repeat must be text`);
+    }
+    // Taking it twice is only meaningful if taking it twice is allowed.
+    if (e.on_repeat !== undefined && e.repeatable !== true) {
+      warnings.push(`special_abilities: ${e.name} states on_repeat but is not repeatable, `
+        + 'so the second-take text can never be reached');
+    }
+    for (const k of ABILITY_GRANTS) {
+      if (e[k] !== undefined && (typeof e[k] !== 'object' || Array.isArray(e[k]))) {
+        errors.push(`special_abilities: ${e.name}.${k} must be a map`);
+      }
+    }
+  }
+
+  // An option nothing defines can still be picked, and would grant nothing.
+  // A warning rather than an error: a book routinely names a power it describes
+  // only in prose, and refusing the class over it would be worse.
+  for (const n of optionNames) {
+    if (!defined.has(n)) {
+      warnings.push(`special_abilities: "${n}" is offered as a choice but nothing defines it, `
+        + 'so picking it grants nothing');
+    }
   }
   if (data.variants !== undefined) {
     // The names the class grants by name, so an override that names anything
