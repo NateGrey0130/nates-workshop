@@ -16,7 +16,7 @@ export async function onRequestPost({ request, env }) {
   const parsed = parseClassMarkdown(b.markdown);
   const missing = parsed.data
     ? await crossReference(env, request.url, parsed.data)
-    : { items: [], skills: [], spells: [], psionics: [], restrictions: [] };
+    : { items: [], skills: [], spells: [], psionics: [], restrictions: [], ability_refs: [] };
 
   return json({
     ok: parsed.ok,

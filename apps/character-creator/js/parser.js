@@ -498,6 +498,61 @@ function validateBonuses(bonuses, errors, warnings) {
   }
 }
 
+// ---------- shared ability lists ----------
+//
+// Books reuse one list of powers across a family of classes. The Demigod's entry
+// says it outright — "select any ONE power from those listed under godling"
+// (Rifts, Pantheons of the Megaverse p.17) — and a God would draw on the same
+// eleven again. Writing them out per class is the drift the class format exists
+// to avoid, so a choice group may name the class that holds the list instead:
+//
+//   special_abilities:
+//     - { choose: 1, from_class: godling }
+//
+// What it pulls is the referenced class's own choice OPTIONS, not its whole
+// special_abilities array: a class may also list fixed abilities as prose, and
+// those are its own, not part of the shared list.
+export function isAbilityChoice(entry) {
+  return !!entry && typeof entry === 'object'
+    && (entry.choose !== undefined || entry.from !== undefined || entry.from_class !== undefined);
+}
+
+// Every option a class offers from its own ability choice groups, by name.
+export function abilityOptions(cls) {
+  const out = [];
+  for (const e of cls?.special_abilities || []) {
+    if (!isAbilityChoice(e)) continue;
+    for (const opt of e.from || []) {
+      const name = typeof opt === 'string' ? opt : opt?.name;
+      if (name) out.push(name);
+    }
+  }
+  return out;
+}
+
+// Expands `from_class` against a map of id -> class.
+//
+// ONE HOP, deliberately: a referenced list may not itself be a reference. That
+// removes cycle handling rather than guarding against it, and one hop is what
+// the books actually do — every class in a family points at the same printed
+// list, never at each other in a chain.
+//
+// An unresolvable reference is left exactly as written rather than emptied. The
+// class still loads and the entry still says what it meant; crossReference
+// reports it, and a class whose reference was retired keeps working, which is
+// the whole point of soft-delete.
+export function resolveAbilityRefs(cls, byId) {
+  const list = cls?.special_abilities;
+  if (!Array.isArray(list) || !list.some((e) => e?.from_class)) return cls;
+  const resolved = list.map((e) => {
+    if (!e?.from_class) return e;
+    const target = byId instanceof Map ? byId.get(e.from_class) : byId?.[e.from_class];
+    const options = abilityOptions(target);
+    return options.length ? { ...e, from: options } : e;
+  });
+  return { ...cls, special_abilities: resolved };
+}
+
 // The same idea for starting equipment, keyed on `item_id` rather than `name`.
 //
 // Books routinely say "one energy pistol of choice" where the format only had
@@ -867,6 +922,28 @@ export function parseClassMarkdown(text) {
   // melee at level 5" were prose that nothing could act on; this is where a
   // number goes so the sheet can actually add it up.
   if (data.bonuses) validateBonuses(data.bonuses, errors, warnings);
+
+  // An ability choice group. Unvalidated until now, which is why a `choose`
+  // written into special_abilities parsed clean and then did nothing at all.
+  for (const e of data.special_abilities || []) {
+    if (!isAbilityChoice(e)) continue;
+    if (e.from !== undefined && e.from_class !== undefined) {
+      errors.push('special_abilities: an entry sets both from and from_class; use one');
+    }
+    if (e.from_class !== undefined && (typeof e.from_class !== 'string' || !e.from_class.trim())) {
+      errors.push('special_abilities: from_class must be a class id');
+    }
+    if (e.from !== undefined && !Array.isArray(e.from)) {
+      errors.push('special_abilities: from must be a list of ability names');
+    }
+    if (e.choose !== undefined && (typeof e.choose !== 'number' || e.choose < 1)) {
+      errors.push('special_abilities: choose must be a positive number');
+    }
+    // Said plainly, because the shape parses and reads as though it works.
+    // Making a chosen ability mechanical is separate, still-unbuilt work.
+    warnings.push('special_abilities choice groups are not offered to the player yet '
+      + '— the options are recorded and shown, but nothing picks between them');
+  }
   if (data.variants !== undefined) {
     // The names the class grants by name, so an override that names anything
     // else can be called out rather than silently doing nothing.

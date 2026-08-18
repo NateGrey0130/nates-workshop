@@ -23,6 +23,7 @@ Access gate. No build step, no framework, no dependencies.
 - [One place composes a class](#one-place-composes-a-class)
 - [Classes that come in stages](#classes-that-come-in-stages)
   - [Changing stage](#changing-stage)
+- [A power list several classes share](#a-power-list-several-classes-share)
 - [What a class grants mechanically](#what-a-class-grants-mechanically)
   - [The review step](#the-review-step)
 - [Which system a catalog row belongs to](#which-system-a-catalog-row-belongs-to)
@@ -832,6 +833,52 @@ happen is a roll you cannot trust.
 Owner or GM, like every other stat-changing control on the sheet.
 
 ---
+
+## A power list several classes share
+
+Books reuse one list across a family of classes and say so outright. The
+Demigod's entry reads *"select any ONE power from those listed under godling"*
+(Rifts, Pantheons of the Megaverse p.17), and a God draws on the same eleven
+again. Writing them out per class is the drift `variants` exists to avoid, so a
+choice group may name the class that holds the list instead:
+
+```yaml
+special_abilities:
+  - { choose: 1, from_class: godling }
+```
+
+The count comes from the **referring** class — the Godling picks three of its own
+eleven, the Demigod one — and what is pulled is the referenced class's choice
+**options**, not its whole `special_abilities` array. A class may also list fixed
+abilities as prose, and those are its own.
+
+**One hop, deliberately.** A referenced list may not itself be a reference. That
+is what makes a cycle impossible rather than something to detect, and it is what
+the books do: every class in a family points at the same printed list, never at
+each other in a chain.
+
+**An unresolvable reference is left exactly as written**, never emptied. The
+class still loads and the entry still says what it meant. `crossReference`
+reports it on the review step, beside the missing-reference lists, with the
+reason — no class with that id, that class does not parse, or that class lists
+no options to share.
+
+**A retired class is a valid target and is not reported.** Retiring hides a class
+from the pickers; it does not unwrite the list printed in it. `getStored`
+already ignores `deleted_at`, and `loadPublished` looks retired classes up
+separately so a reference resolves even when the class itself is excluded from
+what it returns.
+
+Resolution happens over the **whole set** in `loadPublished`, after the parse
+cache rather than inside it: caching a resolved class would mean editing the
+Godling's list left every class referencing it holding the old one, since only
+the Godling's own cache entry is invalidated. `loadClass` resolves a single
+class with one extra lookup, and only when it actually references something.
+
+**Nothing chooses between the options yet.** The list is recorded, resolved and
+shown; making a chosen ability mechanical — the fragments that would carry
+`bonuses` and pool overrides — is separate work. Parsing a choice group says so
+as a warning rather than letting the shape read as though it works.
 
 ## What a class grants mechanically
 

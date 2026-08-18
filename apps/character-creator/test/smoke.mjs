@@ -8,7 +8,8 @@ import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseClassMarkdown, isGearChoice, applyVariant, parseYaml, combineClasses,
-         categoryAllows, categoryLabel, VARIANT_OVERRIDES, POOL_BONUS_KEYS } from '../js/parser.js';
+         categoryAllows, categoryLabel, VARIANT_OVERRIDES, POOL_BONUS_KEYS,
+         resolveAbilityRefs, abilityOptions } from '../js/parser.js';
 import { referencedGear, restrictionNames } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import {
@@ -1105,6 +1106,9 @@ console.log('\n[1c11b] Class prompt covers the schema');
   // omission from the prompt would send a "plus 4D6" into ppe_base — where it
   // parses to NULL and the character gets no P.P.E. at all.
   check('the prompt documents the pools bonus group', /pools:\s+hp, sdc, mdc, ppe, isp/.test(prompt));
+  check('the prompt documents a shared ability list', /from_class/.test(prompt));
+  check('and tells the model not to copy the options across',
+    /do NOT copy the options across/.test(prompt));
   check('and warns against putting a pool bonus in at_level',
     /do not put a pool bonus in at_level/i.test(prompt));
   check('the prompt warns that an unknown bonus key does nothing',
@@ -2322,6 +2326,70 @@ x
   pools: { ppe: 3 }`).data,
                    mk(`bonuses:
   pools: { ppe: 4 }`).data).bonuses.pools.ppe === 7);
+}
+
+// ---------- 1c25d. Shared ability lists ----------
+// Books reuse one power list across a family of classes and say so outright:
+// the Demigod's entry reads "select any ONE power from those listed under
+// godling". Writing the eleven out per class is the drift the format exists to
+// avoid, so a choice group can name the class that holds the list.
+console.log('\n[1c25d] Shared ability lists');
+{
+  const mk = (id, abilities) => parseClassMarkdown(
+    ['---', 'id: ' + id, 'name: ' + id, 'system: rifts', 'source_book: b',
+     'category: rcc', 'special_abilities:', abilities, '---', '', '## Lore', '', 'x', '']
+      .join(String.fromCharCode(10)));
+
+  const owner = mk('godling', '  - { choose: 3, from: ["Fly", "Energy Blast", "Super-Tough"] }').data;
+  const ref = mk('demigod', '  - { choose: 1, from_class: godling }');
+
+  check('a reference parses with no errors', ref.errors.length === 0, ref.errors.join('; '));
+  check('and warns that a choice is not offered to the player yet',
+    ref.warnings.some((w) => w.includes('not offered to the player yet')));
+  check('the owner advertises its options', abilityOptions(owner).length === 3);
+  check('a class with no choice groups advertises none',
+    abilityOptions(parseClassMarkdown(['---','id: x','name: x','system: rifts','source_book: b',
+      'category: occ','---','','## Lore','','x',''].join(String.fromCharCode(10))).data).length === 0);
+
+  const byId = new Map([['godling', owner]]);
+  const resolved = resolveAbilityRefs(ref.data, byId);
+  check('the reference expands to the owner options',
+    JSON.stringify(resolved.special_abilities[0].from) === '["Fly","Energy Blast","Super-Tough"]');
+  check('the count comes from the REFERRING class, not the owner',
+    resolved.special_abilities[0].choose === 1);
+  check('from_class is kept, so the provenance is still readable',
+    resolved.special_abilities[0].from_class === 'godling');
+
+  // Unresolvable is left as written rather than emptied: the class still loads,
+  // and a retired owner must not quietly shorten another class's options.
+  const unresolved = resolveAbilityRefs(ref.data, new Map());
+  check('an unresolvable reference is left exactly as written',
+    unresolved.special_abilities[0].from === undefined
+    && unresolved.special_abilities[0].from_class === 'godling');
+
+  // ONE HOP. This is what makes a cycle impossible rather than something to
+  // detect: a referenced list is read as written, never resolved again.
+  const chain = mk('chain', '  - { choose: 1, from_class: demigod }').data;
+  const hopped = resolveAbilityRefs(chain, new Map([['demigod', ref.data]]));
+  check('a reference to a reference expands to nothing',
+    hopped.special_abilities[0].from === undefined);
+  check('and a self-reference terminates rather than recursing',
+    resolveAbilityRefs(owner, new Map([['godling', owner]])).special_abilities[0].from.length === 3);
+
+  // A class that references nothing is returned untouched, not rebuilt.
+  check('a class with no reference is passed through by identity',
+    resolveAbilityRefs(owner, byId) === owner);
+
+  // Shape errors that would otherwise parse clean and do nothing.
+  const both = mk('b', '  - { choose: 1, from: ["Fly"], from_class: godling }');
+  check('setting both from and from_class is refused',
+    both.errors.some((e) => e.includes('both from and from_class')), both.errors.join('; '));
+  const badRef = mk('b', '  - { choose: 1, from_class: 7 }');
+  check('a non-string from_class is refused',
+    badRef.errors.some((e) => e.includes('from_class must be a class id')), badRef.errors.join('; '));
+  const badCount = mk('b', '  - { choose: 0, from_class: godling }');
+  check('a choose of zero is refused',
+    badCount.errors.some((e) => e.includes('choose must be a positive number')), badCount.errors.join('; '));
 }
 
 // ---------- 1c26. Secondary schedules and group bonuses ----------
