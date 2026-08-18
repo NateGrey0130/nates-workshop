@@ -1236,6 +1236,48 @@ function psiRollHtml() {
       ${r.tier ? `<button class="btn btn-sm btn-ghost" onclick="skipPsiRoll()">Take none</button>` : ''}</p>`;
 }
 
+// Group headers for the two picker lists, same idiom as the sheet's
+// Psionics & Magic box (.power-group). The list arrives as filter matches
+// plus chosen-but-unmatched entries appended so a pick never vanishes —
+// sorting the combined list files those into their proper groups instead of
+// leaving them dangling at the end. With a header per group, the per-row
+// "L3 ·" / "Healing ·" prefix is redundant and gone.
+function spellGroupRows(list, count) {
+  const sorted = [...list].sort((a, b) =>
+    ((a.level ?? Infinity) - (b.level ?? Infinity)) || (a.name || '').localeCompare(b.name || ''));
+  let last = null;
+  return sorted.map((sp) => {
+    const group = sp.level != null ? `Level ${sp.level}` : 'Unleveled';
+    const head = group !== last ? `<div class="power-group">${esc(group)}</div>` : '';
+    last = group;
+    const on = S.spells.includes(sp.name);
+    const blocked = !on && S.spells.length >= count;
+    return head + `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
+      <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
+        data-act="power" data-kind="spell" data-name="${esc(sp.name)}">
+      <span>${esc(sp.name)}${sp.ppe_note ? ` <span class="muted small">&mdash; ${esc(sp.ppe_note)}</span>` : ''}</span>
+      <span class="pct">${sp.ppe}${sp.ppe_note && sp.ppe > 0 ? '+' : ''} P.P.E.</span></label>`;
+  }).join('');
+}
+
+function psiGroupRows(list, count) {
+  const sorted = [...list].sort((a, b) =>
+    (a.category || '￿').localeCompare(b.category || '￿') || (a.name || '').localeCompare(b.name || ''));
+  let last = null;
+  return sorted.map((p) => {
+    const group = p.category || 'Uncategorized';
+    const head = group !== last ? `<div class="power-group">${esc(group)}</div>` : '';
+    last = group;
+    const on = S.psi.includes(p.name);
+    const blocked = !on && S.psi.length >= count;
+    return head + `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
+      <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
+        data-act="power" data-kind="psi" data-name="${esc(p.name)}">
+      <span>${esc(p.name)}${p.isp_note ? ` <span class="muted small">&mdash; ${esc(p.isp_note)}</span>` : ''}</span>
+      <span class="pct">${p.isp}${p.isp_note && p.isp > 0 ? '+' : ''} I.S.P.</span></label>`;
+  }).join('');
+}
+
 function renderPowers() {
   const magic = S.cls.magic || null;
   const cls = psiClass();
@@ -1258,15 +1300,7 @@ function renderPowers() {
       <span class="muted small">(${esc(magic.type)} magic${levels ? ' · levels ' + levels.join(', ') : ''})</span></h3>` +
       Picker.inputHtml({ id: 'spell-filter', value: S.spellFilter, placeholder: 'Filter spells…',
         shown: Picker.filter(pool, S.spellFilter).length, total: pool.length }) +
-      list.map((sp) => {
-        const on = S.spells.includes(sp.name);
-        const blocked = !on && S.spells.length >= count;
-        return `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
-          <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
-            data-act="power" data-kind="spell" data-name="${esc(sp.name)}">
-          <span>${esc(sp.name)}${sp.ppe_note ? ` <span class="muted small">&mdash; ${esc(sp.ppe_note)}</span>` : ''}</span>
-          <span class="pct">L${sp.level} · ${sp.ppe}${sp.ppe_note && sp.ppe > 0 ? '+' : ''} P.P.E.</span></label>`;
-      }).join('');
+      spellGroupRows(list, count);
   }
   if (psi) {
     const tier = cls.psionics.type;
@@ -1295,15 +1329,7 @@ function renderPowers() {
       (gated ? `<p class="attr-note">${gated} more ${gated === 1 ? 'power needs' : 'powers need'} a higher psychic tier than ${esc(tier)}.</p>` : '') +
       Picker.inputHtml({ id: 'psi-filter', value: S.psiFilter, placeholder: 'Filter powers…',
         shown: Picker.filter(pool, S.psiFilter).length, total: pool.length }) +
-      list.map((p) => {
-        const on = S.psi.includes(p.name);
-        const blocked = !on && S.psi.length >= psi.count;
-        return `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
-          <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
-            data-act="power" data-kind="psi" data-name="${esc(p.name)}">
-          <span>${esc(p.name)}${p.isp_note ? ` <span class="muted small">&mdash; ${esc(p.isp_note)}</span>` : ''}</span>
-          <span class="pct">${p.category} · ${p.isp}${p.isp_note && p.isp > 0 ? '+' : ''} I.S.P.</span></label>`;
-      }).join('');
+      psiGroupRows(list, psi.count);
   }
   $('app').innerHTML = `
   <div class="panel">
