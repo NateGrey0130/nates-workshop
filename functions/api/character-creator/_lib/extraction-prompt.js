@@ -159,6 +159,13 @@ Optional — include only what the page actually states:
     If the page points at ANOTHER class for the list ("select any one power from
     those listed under godling"), write { choose: N, from_class: "godling" } and
     do NOT copy the options across — the reference is resolved for you.
+    An option the page gives NUMBERS for carries them, using the same bonus
+    shape a class uses: { name, description, bonuses: { attributes: {...},
+    pools: { mdc: "3d4x10" }, combat: {...}, saves: {...} } }. Use pools for
+    "adds N M.D.C./S.D.C./P.P.E./I.S.P.", never a pool base — the ability adds
+    to what the class already rolls. An option that says it may be taken twice
+    gets repeatable: true, and on_repeat: "<what the second take does>" when the
+    page says the second one differs. Leave a power with no numbers as prose.
 - level_progression: list of { level: N, grants: ["...", "..."] }
 - restrictions: list of free-text strings (things the class may not do)
 - side_effects: free-text string or list — substantial drawback/cost mechanics

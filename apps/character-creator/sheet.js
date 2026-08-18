@@ -66,6 +66,24 @@ const field = (label, value, dim) =>
   `<span class="val${dim ? ' dim' : ''}">${value}</span></div>`;
 
 // side_effects / restrictions come off the class as free text or a list.
+// The powers this character actually chose, as opposed to the list its class
+// offers. A repeated pick shows what the second one bought — the books give a
+// second take a different meaning rather than a doubled one.
+function abilitiesTaken(cls) {
+  const taken = cls?.abilities_taken || [];
+  if (!taken.length) return '';
+  // Collapsed by name, so a power taken twice is one line saying so.
+  const seen = new Map();
+  for (const a of taken) if (!seen.has(a.name) || a.times > seen.get(a.name).times) seen.set(a.name, a);
+  const rows = [...seen.values()].map((a) => `<li>
+    <b>${escHtml(a.name)}</b>${a.times > 1 ? ` <span class="tag">taken ${a.times}&times;</span>` : ''}
+    ${a.granted === false ? ' <span class="err small">no definition found</span>' : ''}
+    ${a.description ? `<div class="muted small">${escHtml(a.description)}</div>` : ''}
+    ${a.on_repeat ? `<div class="small"><b>Twice:</b> ${escHtml(a.on_repeat)}</div>` : ''}
+  </li>`).join('');
+  return `<h3>Chosen powers</h3><ul style="margin-left:18px">${rows}</ul>`;
+}
+
 const advisory = (label, value) => {
   if (!value || (Array.isArray(value) && !value.length)) return '';
   const text = Array.isArray(value) ? value.map((v) => `• ${v}`).join('\n') : String(value);
@@ -360,6 +378,7 @@ function render() {
       ${w ? `<textarea id="stat-notes" class="noprint">${escHtml(c.notes || '')}</textarea>
              <p class="print-only small" style="white-space:pre-wrap">${escHtml(c.notes || '—')}</p>`
           : `<p class="small" style="white-space:pre-wrap">${escHtml(c.notes || '—')}</p>`}
+      ${abilitiesTaken(cls)}
       ${advisory('Side effects', cls.side_effects)}
       ${advisory('Restrictions', cls.restrictions)}
       ${C.cls?._retired

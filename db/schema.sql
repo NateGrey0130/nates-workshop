@@ -57,7 +57,8 @@ CREATE TABLE IF NOT EXISTS characters (
   occ_class_variant TEXT,
   psychic_tier TEXT,                    -- rolled on the Random Psionics Table; NULL = none, or psychic by class
   psychic_shape TEXT,                   -- which power allowance was taken ('focused' | 'broad')
-  attribute_bonuses TEXT,               -- JSON: what the class's dice attribute bonuses rolled
+  attribute_bonuses TEXT,
+  abilities TEXT,                        -- JSON array of chosen ability names; duplicates are meaningful               -- JSON: what the class's dice attribute bonuses rolled
   level INTEGER NOT NULL DEFAULT 1,
   xp INTEGER NOT NULL DEFAULT 0,
   attributes TEXT NOT NULL DEFAULT '{}',  -- JSON: {"IQ": 12, "ME": 14, ...}
@@ -395,6 +396,10 @@ WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'attrib
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '017-pick-kind.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('pending_skill_picks') WHERE name = 'kind');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '018-character-abilities.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'abilities');
 
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '013-character-variant.sql'

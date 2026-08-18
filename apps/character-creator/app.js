@@ -70,6 +70,9 @@ const S = {
   // A class may state an attribute bonus as dice ("add 2D6 to P.S."). Rolled
   // once here and stored, because it cannot be re-evaluated on every render.
   attrBonuses: {},
+  // Abilities picked from a class's choice group. A LIST, not a set: some are
+  // repeatable and the second take means something different.
+  abilities: [],
   pools: null, savedId: null, saving: false,
   skillCatalog: [], items: [], campaigns: [], existing: [],
   // Retired gear slugs → the slug they resolve to now. See findItem().
@@ -207,7 +210,7 @@ const DRAFT_KEYS = [
   'related', 'secondary', 'groupPicks', 'gearPicks',
   'equipment', 'equipInit', 'charName', 'campaignId', 'newCampaign',
   'spells', 'psi', 'bio', 'pools', 'longLived', 'bioRolls',
-  'psiRoll', 'psiShape', 'psiCategory', 'attrBonuses',
+  'psiRoll', 'psiShape', 'psiCategory', 'attrBonuses', 'abilities',
 ];
 
 let draftTimer = null;
@@ -387,6 +390,7 @@ function resetBuild() {
   S.gearChoices = []; S.gearPicks = {};
   S.variant = null;
   S.occ = null; S.occVariant = null;
+  S.abilities = [];
   S.spells = []; S.psi = []; S.bio = {}; S.longLived = false; S.bioRolls = {};
   S.psiRoll = null; S.psiShape = null; S.psiCategory = null; S.attrBonuses = {};
 }
@@ -423,6 +427,7 @@ function renderClass() {
     ${S.cls ? classDetail(S.cls) : ''}
     ${variantPicker()}
     ${occPicker()}
+    ${abilityPicker()}
   </div>
   <div class="nav"><button class="btn btn-ghost" onclick="goStep(0)">&larr; Back</button>
   <button class="btn btn-primary" ${canUseClass() ? '' : 'disabled'} onclick="confirmClass()">Use this class &rarr;</button></div>`;
@@ -467,7 +472,14 @@ function pickClass(id) { const c = S.classes.find((x) => x.id === id); if (S.cls
 // some particular age, and defaulting to the first stage would pick for you.
 function canUseClass() {
   if (!S.cls) return false;
-  return !(S.cls.variants || []).length || !!S.variant;
+  if ((S.cls.variants || []).length && !S.variant) return false;
+  // Every power the class asks for must be chosen before the rolls that depend
+  // on them. Same reasoning as an unresolved gear choice: the book intends the
+  // character to have them, so leaving one blank is an oversight rather than a
+  // deliberate omission. Unspent SKILL picks are banked instead, because those
+  // are earned over time.
+  const owed = abilityGroups(S.cls).reduce((n, g) => n + (+g.choose || 0), 0);
+  return S.abilities.length >= owed;
 }
 
 // Which stage of the class. Shown only when the class has stages, so every
@@ -526,6 +538,66 @@ function occPicker() {
   </div>`;
 }
 
+// Abilities the class asks the player to choose. On the CLASS step and not a
+// step of its own, because an ability can add to attributes and pools — the
+// Godling's Super-Tough is +1D6 P.E. and +3D4x10 M.D.C. — and both are rolled on
+// the two steps after this one. Choosing later would mean re-rolling what the
+// player had already read.
+function abilityGroups(cls) {
+  return (cls?.special_abilities || []).filter((e) => e && e.choose);
+}
+
+function abilityPicker() {
+  const groups = abilityGroups(S.cls);
+  if (!groups.length) return '';
+  const defs = new Map((S.cls.special_abilities || [])
+    .filter((e) => e && typeof e.name === 'string' && !e.choose)
+    .map((d) => [d.name.trim().toLowerCase(), d]));
+
+  return groups.map((g, gi) => {
+    const limit = +g.choose || 1;
+    const picked = S.abilities.length;
+    const opts = (g.from || []).map((name) => {
+      const def = defs.get(String(name).trim().toLowerCase());
+      const times = S.abilities.filter((n) => n === name).length;
+      const repeatable = def?.repeatable === true;
+      const full = picked >= limit;
+      return `<div class="chkrow">
+        <button class="btn btn-sm btn-ghost" ${times === 0 ? 'disabled' : ''}
+          onclick="dropAbility('${esc(name).replace(/'/g, "&#39;")}')">&minus;</button>
+        <button class="btn btn-sm" ${full || (times > 0 && !repeatable) ? 'disabled' : ''}
+          onclick="takeAbility('${esc(name).replace(/'/g, "&#39;")}')">+</button>
+        <span><b>${esc(name)}</b>${times > 1 ? ` <span class="tag">taken ${times}&times;</span>`
+          : times === 1 ? ' <span class="tag">taken</span>' : ''}
+          ${repeatable ? '<span class="muted small">&nbsp;may be taken twice</span>' : ''}</span>
+        ${def?.description ? `<div class="muted small" style="flex-basis:100%">${esc(def.description)}</div>` : ''}
+        ${times > 1 && def?.on_repeat ? `<div class="small" style="flex-basis:100%"><b>Twice:</b> ${esc(def.on_repeat)}</div>` : ''}
+      </div>`;
+    }).join('');
+
+    return `<div class="panel-inset">
+      <h3>Powers <span class="muted small">&mdash; choose ${limit}</span></h3>
+      <p class="muted small">Chosen now rather than later: these can add to attributes and pools,
+        and both are rolled on the next two steps.</p>
+      <p class="small ${picked === limit ? 'ok' : 'warn'}">${picked} of ${limit} chosen</p>
+      ${opts}
+    </div>`;
+  }).join('');
+}
+
+function takeAbility(name) {
+  const limit = abilityGroups(S.cls).reduce((n, g) => n + (+g.choose || 0), 0);
+  if (S.abilities.length >= limit) return;
+  S.abilities.push(name);
+  render();
+}
+
+function dropAbility(name) {
+  const i = S.abilities.lastIndexOf(name);
+  if (i >= 0) S.abilities.splice(i, 1);
+  render();
+}
+
 function pickOcc(id) {
   S.occ = id || null;
   // A different occupation cannot keep the previous one's stage.
@@ -544,7 +616,7 @@ function confirmClass() {
   S.cls = composeClass({
     rcc: S.cls,
     occ: S.occ ? S.classes.find((c) => c.id === S.occ) || null : null,
-    character: { class_variant: S.variant, occ_class_variant: S.occVariant },
+    character: { class_variant: S.variant, occ_class_variant: S.occVariant, abilities: S.abilities },
   });
   // Rolled here so the Attributes step, which comes next, can show the bonus
   // beside the roll it modifies. computePools() re-rolls it later if asked.
@@ -1439,7 +1511,7 @@ async function save() {
       occ_class_variant: S.occVariant || undefined,
       psychic_tier: S.psiRoll?.tier || undefined,
       psychic_shape: S.psiRoll?.tier ? (S.psiShape || undefined) : undefined,
-      attributes: S.attrs, attribute_bonuses: S.attrBonuses,
+      attributes: S.attrs, attribute_bonuses: S.attrBonuses, abilities: S.abilities,
       skills: skillsPayload(), powers: powersPayload(), pools: S.pools,
       bio: S.bio,
       items: equipmentPayload().map((e) => ({ item_id: e.item_id, custom_name: e.custom_name, qty: e.qty, notes: e.notes })),
@@ -1582,7 +1654,7 @@ Object.assign(window, {
   doPsiRoll, skipPsiRoll, setPsiShape, setPsiCategory,
   rollBio, rollBioAll, setLongLived,
   rmEquip, addCatalog, addCustom, setBio, save, startOver,
-  resumeDraft, dismissDraft, pickVariant, pickOcc,
+  resumeDraft, dismissDraft, pickVariant, pickOcc, takeAbility, dropAbility,
 });
 
 boot();

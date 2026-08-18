@@ -23,6 +23,7 @@ Access gate. No build step, no framework, no dependencies.
 - [One place composes a class](#one-place-composes-a-class)
 - [Classes that come in stages](#classes-that-come-in-stages)
   - [Changing stage](#changing-stage)
+- [Powers the player chooses](#powers-the-player-chooses)
 - [A power list several classes share](#a-power-list-several-classes-share)
 - [What a class grants mechanically](#what-a-class-grants-mechanically)
   - [The review step](#the-review-step)
@@ -178,7 +179,7 @@ bookkeeping shared by both; the rest are this app.
 | `level_history` | One row per confirmed level-up; `changes` is a JSON diff of what was actually applied. |
 | `pending_skill_picks` | Skill picks a level-up granted and nobody has spent yet. One row per **grant**, not per pick, so "2 picks from level 3" stays itemised. `categories` is copied from the class at level-up time — the class can change later, what you were granted cannot. |
 
-`characters` stores eight JSON columns rather than a very wide table — the list
+`characters` stores nine JSON columns rather than a very wide table — the list
 lives in `_lib/character-json.js` as `CHARACTER_JSON_COLUMNS`:
 
 | Column | Shape |
@@ -187,6 +188,7 @@ lives in `_lib/character-json.js` as `CHARACTER_JSON_COLUMNS`:
 | `attribute_bonuses` | `{ "PS": 3 }` — what a class's **dice** attribute bonuses rolled, kept because a roll cannot be re-run per render |
 | `skills` | `[{ name, category, pct, per_level, type: "occ"\|"related"\|"secondary" }]` |
 | `powers` | `[{ type: "spell"\|"psionic", name, level?, category?, cost }]` |
+| `abilities` | `["Super-Tough", "Shape Shifter", "Shape Shifter"]` — powers chosen from a class's list. A list, not a set: **duplicates are meaningful** |
 | `bio` | race, alignment, age, height, sentiments, native languages … |
 | `combat` | attacks, initiative, strike, parry, dodge, punches — **overrides only** |
 | `saves` | save vs magic, psionics, poison, insanity … — **overrides only** |
@@ -278,6 +280,12 @@ magic:
   spells: ["Globe of Daylight"]   # only if the book names specific spells
 special_abilities:
   - { name: "Psi-Sword", description: "..." }
+  # An ability the player CHOOSES may carry what it grants, and may be
+  # repeatable with a different second-take meaning. See the section below.
+  - name: "Super-Tough"
+    description: "Add 1D6 to P.E. and 3D4x10 to M.D.C."
+    bonuses: { attributes: { PE: "1d6" }, pools: { mdc: "3d4x10" } }
+  - { choose: 3, from: ["Psi-Sword", "Super-Tough"] }   # or from_class: godling
 bonuses:                      # mechanical grants — see the section below
   pools: { ppe: "4d6" }              # ADDED to a pool's own formula; dice or flat
   attributes: { PS: 2, PE: "1d4" }   # a flat number OR dice
@@ -833,6 +841,65 @@ happen is a roll you cannot trust.
 Owner or GM, like every other stat-changing control on the sheet.
 
 ---
+
+## Powers the player chooses
+
+`special_abilities` was display-only: the Godling's *"Select THREE powers from
+the following"* parsed clean and was never offered. A named ability may now carry
+what it grants, and the class asks for the picks.
+
+```yaml
+special_abilities:
+  - name: "Super-Tough"
+    description: "Add 1D6 to P.E. and 3D4x10 to M.D.C."
+    bonuses: { attributes: { PE: "1d6" }, pools: { mdc: "3d4x10" } }
+  - name: "Shape Shifter"
+    description: "Change at will into one animal."
+    repeatable: true
+    on_repeat: "Can shape shift into ANY type of normal animal."
+  - { choose: 3, from: ["Super-Tough", "Shape Shifter", ...] }
+```
+
+**Three grant keys, not the variant override set:** `bonuses`, `psionics`,
+`magic`. That is what the Godling's eleven powers actually need, and an ability
+that could restate `attribute_dice` or `starting_money` is not an ability, it is
+a second class wearing one's name. A fragment's `bonuses` block is validated
+through exactly the same path a class's own bonuses take, so an ability cannot
+express a bonus a class could not.
+
+M.D.C. arrives as a pool **bonus** rather than an override, which is why pool
+bonuses had to exist first: Super-Tough adds to whatever the class already rolls
+rather than replacing the formula.
+
+**Chosen on the class step, not a step of its own.** An ability can add to
+attributes and pools, and both are rolled on the two steps after it — choosing
+later would re-roll numbers the player had already read. The step will not
+advance until every pick is made, the same rule unresolved gear choices follow
+and for the same reason: the book intends the character to have them. Unspent
+*skill* picks are still banked instead, because those are earned over time.
+
+**Duplicates are meaningful.** Shape Shifter and Magic Powers can each be taken
+twice, and the book gives the second take a different meaning rather than a
+doubled one — *"can shape shift into ANY type of normal animal"*, not twice the
+animals. So `abilities` is a JSON **array**, `repeatable` gates whether a second
+pick is offered, and `on_repeat` is the prose that says what the second one
+bought. The bonuses do apply again, which is the only honest arithmetic reading;
+the powers the books mark repeatable happen to carry no bonuses at all.
+
+**A pick nothing defines is still recorded**, marked as granting nothing. It was
+a real choice the player made, and dropping it would leave the sheet disagreeing
+with what they picked. An option no definition covers is a warning, not an error
+— books routinely name a power they describe only in prose.
+
+Psionics uses the **stronger tier wins** rule composition already uses, so an
+ability cannot make a Master psychic weaker.
+
+`applyAbilities` runs inside [`js/compose.js`](js/compose.js) as step 3 of 4 —
+after race and occupation are one, because an ability is chosen for the
+character rather than contributed by either half, and before any rolled psionic
+tier, so an ability that makes you a master psychic is what a rolled tier has to
+beat. What the character holds is on `abilities_taken`, as opposed to
+`special_abilities`, which is what the class *offers*.
 
 ## A power list several classes share
 
@@ -1816,6 +1883,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `015-character-psychic-tier.sql` | `psychic_tier` + `psychic_shape` on `characters` — a tier the character **rolled** |
 | `016-character-attribute-bonuses.sql` | `attribute_bonuses` on `characters` — what a class's **dice** bonuses came up |
 | `017-pick-kind.sql` | `kind` on `pending_skill_picks`, so a scheduled grant records whether it was related or secondary |
+| `018-character-abilities.sql` | `abilities` on `characters` — the powers a player chose from a class's choice group |
 
 ### The migration convention
 
