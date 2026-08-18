@@ -83,7 +83,7 @@ skills:
     - { name: "Literacy", base: 50, per_level: 5, note: "One language of choice (+20%)" }
     - { name: "Basic Math", base: 65, per_level: 5, note: "+20%" }
     - { name: "Lore: Demons & Monsters", base: 40, per_level: 5, note: "+15%" }
-    - { name: "Lore: Religion", base: 0, per_level: 0, note: "+20% - stub row, the catalog has no Lore: Religion base yet" }
+    - { name: "Lore: Religion", base: 50, per_level: 5, note: "+20%" }
     - { name: "Land Navigation", base: 46, per_level: 4, note: "+10%" }
     - { name: "Wilderness Survival", base: 40, per_level: 5, note: "+10%" }
     - { choose: 1, categories: ["Weapon Proficiencies"], note: "One of choice, may reflect pantheon" }
@@ -175,7 +175,8 @@ extraction_notes: |
     natural_abilities - special_abilities is for powers a player chooses, and
     this class chooses none; level_progression records when each arrives.
     Fixed skills fold the O.C.C. bonus into the catalog base (Dance 30+20=50);
-    Lore: Religion becomes a stub skill row that still needs a real base.
+    Lore: Religion has a catalog row via backfill-import-skill-gaps.sql; its
+    base here folds that catalog base plus the O.C.C. bonus.
   - REVIEW: the book gives 1D6 vials of holy water, and the entry says so -
     the wizard rolls a dice-valued quantity once at creation and stores the
     number, the same discipline as pools and attribute bonuses.
