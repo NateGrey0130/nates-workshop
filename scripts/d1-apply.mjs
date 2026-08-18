@@ -31,6 +31,7 @@
 
 import { readFileSync, existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
+import path from 'node:path';
 
 const args = process.argv.slice(2);
 const remote = args.includes('--remote');
@@ -61,8 +62,19 @@ for (const f of files) {
   }
 }
 
+// Call npm's own npx-cli.js with this Node, so the child spawns WITHOUT a shell.
+// `shell: true` was load-bearing, not incidental: Windows npx is a .cmd, and Node
+// refuses to spawn .bat/.cmd unshelled (EINVAL, the CVE-2024-27980 guard). But it
+// concatenates argv instead of escaping it (DEP0190), so a .sql path containing a
+// space would break the command. This form keeps a real argv array. If npx-cli.js
+// is not where we expect (a non-standard install), fall back to the old behaviour.
+const npxCli = path.join(path.dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npx-cli.js');
+const npxCliFound = existsSync(npxCli);
+
 function run(cliArgs) {
-  const r = spawnSync('npx', cliArgs, { encoding: 'utf8', shell: true });
+  const r = npxCliFound
+    ? spawnSync(process.execPath, [npxCli, ...cliArgs], { encoding: 'utf8' })
+    : spawnSync('npx', cliArgs, { encoding: 'utf8', shell: true });
   return { code: r.status ?? 1, out: (r.stdout || '') + (r.stderr || '') };
 }
 
