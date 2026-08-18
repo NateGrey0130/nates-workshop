@@ -13,7 +13,7 @@
 
 const ARRAY_COLUMNS = new Set(['skills', 'powers', 'armor', 'abilities']);
 
-export const CHARACTER_JSON_COLUMNS = ['attributes', 'attribute_bonuses', 'skills', 'powers', 'abilities', 'bio', 'combat', 'saves', 'armor'];
+export const CHARACTER_JSON_COLUMNS = ['attributes', 'attribute_bonuses', 'rolled_bonuses', 'skills', 'powers', 'abilities', 'bio', 'combat', 'saves', 'armor'];
 
 // Parse, or fall back. Never throws — a malformed column should degrade to
 // empty, not take down the request.

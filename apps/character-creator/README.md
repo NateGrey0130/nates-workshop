@@ -179,13 +179,14 @@ bookkeeping shared by both; the rest are this app.
 | `level_history` | One row per confirmed level-up; `changes` is a JSON diff of what was actually applied. |
 | `pending_skill_picks` | Skill picks a level-up granted and nobody has spent yet. One row per **grant**, not per pick, so "2 picks from level 3" stays itemised. `categories` is copied from the class at level-up time — the class can change later, what you were granted cannot. |
 
-`characters` stores nine JSON columns rather than a very wide table — the list
+`characters` stores ten JSON columns rather than a very wide table — the list
 lives in `_lib/character-json.js` as `CHARACTER_JSON_COLUMNS`:
 
 | Column | Shape |
 |---|---|
 | `attributes` | `{ "IQ": 12, "ME": 14, … }` |
 | `attribute_bonuses` | `{ "PS": 3 }` — what a class's **dice** attribute bonuses rolled, kept because a roll cannot be re-run per render |
+| `rolled_bonuses` | `{ "combat": { "initiative": 3 } }` — the same, for a class's **dice** combat and save bonuses |
 | `skills` | `[{ name, category, pct, per_level, type: "occ"\|"related"\|"secondary" }]` |
 | `powers` | `[{ type: "spell"\|"psionic", name, level?, category?, cost }]` |
 | `abilities` | `["Super-Tough", "Shape Shifter", "Shape Shifter"]` — powers chosen from a class's list. A list, not a set: **duplicates are meaningful** |
@@ -473,7 +474,7 @@ missing references. A merged-away name still resolves as a *reference*, but
 `categoryAllows` does a literal comparison, so a redirect does not save a
 restriction and reporting it as fine would misdescribe what the picker does.
 
-**An attribute bonus may be dice.** Some books state one as a roll rather than a
+**A bonus may be dice, in any group.** Some books state one as a roll rather than a
 number — the Cyber-Knight adds +1D4 to five attributes, the Juicer +2D6 to P.S.
 and +2D4x10 to Spd. `bonuses.attributes` accepts either, and
 `bonuses.attribute_minimums` expresses a guaranteed floor ("minimum P.S. is 22;
@@ -482,7 +483,15 @@ if lower, adjust up"), applied *after* the bonus lands. That is deliberately not
 
 The dice belong to the class and the result belongs to the character
 (`attribute_bonuses`, migration 016), because a roll cannot be re-evaluated on
-every render. It is rolled when the class is confirmed, so the Attributes step
+every render.
+
+**Combat and save bonuses take dice too**, and for the same reason land in a
+stored column (`rolled_bonuses`, migration 019). They were flat-only on the
+assumption that books always print them that way — the Godling's *"+1D4 on
+initiative"* is the counter-example, and it was a hard parse error rather than
+something the format could hold. Attributes keep their own column: 016 predates
+this, its flat shape is read directly in several places, and rewriting stored
+rows for tidiness would be a poor trade. It is rolled when the class is confirmed, so the Attributes step
 can show it beside the roll it modifies, and re-rolled only by Review's Reroll
 button — walking to a later step used to re-roll it silently, which changed a
 number the player had already read.
@@ -1884,6 +1893,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `016-character-attribute-bonuses.sql` | `attribute_bonuses` on `characters` — what a class's **dice** bonuses came up |
 | `017-pick-kind.sql` | `kind` on `pending_skill_picks`, so a scheduled grant records whether it was related or secondary |
 | `018-character-abilities.sql` | `abilities` on `characters` — the powers a player chose from a class's choice group |
+| `019-character-rolled-bonuses.sql` | `rolled_bonuses` on `characters` — what a class's **dice** combat and save bonuses came up |
 
 ### The migration convention
 

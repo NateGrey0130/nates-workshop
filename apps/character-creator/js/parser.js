@@ -390,9 +390,12 @@ export const POOL_BONUS_KEYS = ['hp', 'sdc', 'mdc', 'ppe', 'isp'];
 // rejected outright.
 const BONUS_GROUPS = ['attributes', 'combat', 'saves'];
 
-// A dice expression, for an attribute bonus a book states as a roll rather than
-// a fixed number — "add 2D6 to P.S.", "add 2D4x10 to Spd". Only `attributes`
-// accepts one: a combat or save bonus is always printed as a flat number.
+// A dice expression, for a bonus a book states as a roll rather than a fixed
+// number — "add 2D6 to P.S.", "add 2D4x10 to Spd", "+1D4 on initiative".
+//
+// Every group accepts one. Combat and save bonuses were flat-only on the
+// assumption that books always print them that way; the Godling's "+1D4 on
+// initiative" is the counter-example, and it was a hard parse error.
 const DICE_BONUS = /^\d+\s*d\s*\d+(?:\s*x\s*\d+)?(?:\s*[+-]\s*\d+)?$/i;
 const isDiceBonus = (v) => typeof v === 'string' && DICE_BONUS.test(v.trim());
 
@@ -403,11 +406,9 @@ function validateBonusGroup(where, group, block, errors, warnings) {
     return;
   }
   for (const [k, v] of Object.entries(block)) {
-    const dice = group === 'attributes' && isDiceBonus(v);
+    const dice = isDiceBonus(v);
     if (!dice && (typeof v !== 'number' || !Number.isFinite(v))) {
-      errors.push(group === 'attributes'
-        ? `${where}.attributes.${k} must be a number or a dice expression like "2d6"`
-        : `${where}.${group}.${k} must be a number`);
+      errors.push(`${where}.${group}.${k} must be a number or a dice expression like "2d6"`);
     } else if (group === 'attributes' && !BONUS_ATTRS.includes(k)) {
       errors.push(`${where}.attributes.${k} is not an attribute (${BONUS_ATTRS.join(', ')})`);
     } else if (v === 0) {

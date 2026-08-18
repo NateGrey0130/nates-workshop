@@ -161,7 +161,14 @@ function render() {
   // stays the numbers that were actually rolled.
   // attribute_bonuses are what the class's dice bonuses came up at creation.
   // Without them a Juicer's +2D6 P.S. would silently contribute nothing here.
-  const bonuses = derive.classBonuses(cls, c.level, c.attribute_bonuses);
+  // Grouped, so a class's DICE combat and save bonuses count too. The legacy
+  // flat shape still works — classBonuses tells them apart — but a character
+  // saved since rolled_bonuses existed carries both halves.
+  const bonuses = derive.classBonuses(cls, c.level, {
+    attributes: c.attribute_bonuses || {},
+    combat: c.rolled_bonuses?.combat || {},
+    saves: c.rolled_bonuses?.saves || {},
+  });
   const effAttrs = derive.effective(attrs, bonuses);
   const combatParts = derive.parts('combat', attrs, bonuses);
   const savesParts = derive.parts('saves', attrs, bonuses, cls.psionics?.type);
