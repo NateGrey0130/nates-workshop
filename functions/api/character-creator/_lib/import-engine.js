@@ -63,10 +63,12 @@ const IMPORT_SPECS = {
   psionics: {
     catalog: 'psionics',
     table: 'psionic_powers',
-    extractFields: ['name', 'category', 'isp', 'range', 'duration', 'saving_throw',
+    extractFields: ['name', 'category', 'isp', 'isp_note', 'range', 'duration', 'saving_throw',
                     'description', 'min_tier'],
     compareFields: ['isp'],
-    isStub: (row) => row.source === 'import' && row.isp === 0,
+    // A note-carrying zero is deliberate (Meditation genuinely costs nothing),
+    // not a row waiting for stats.
+    isStub: (row) => row.source === 'import' && row.isp === 0 && !row.isp_note,
     // Not a gate. An unrecognised category is surfaced in review so it can be
     // accepted or corrected — a later supplement may add one the core four do
     // not cover, and rejecting it outright would make that book unimportable.
@@ -78,6 +80,11 @@ const IMPORT_SPECS = {
       }
       if (row.min_tier && !['minor', 'major', 'master'].includes(String(row.min_tier).toLowerCase())) {
         flags.push(`Unrecognised psychic tier "${row.min_tier}"`);
+      }
+      // A zero with no schedule is either a genuinely free power (rare) or a
+      // variable cost the extraction gave up on — either way worth eyes on it.
+      if (row.isp === 0 && !row.isp_note) {
+        flags.push('I.S.P. 0 with no cost note — free power, or a missed variable cost?');
       }
       return flags;
     },

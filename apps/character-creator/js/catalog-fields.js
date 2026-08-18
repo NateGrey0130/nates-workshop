@@ -84,7 +84,13 @@ export const CATALOGS = {
       // and a stored value must never be silently rewritten to fit the list.
       { name: 'category', label: 'Category', type: 'select', allowOther: true,
         options: ['Healing', 'Physical', 'Sensitive', 'Super'] },
-      { name: 'isp', label: 'I.S.P.', type: 'int', blankAs: 0 },
+      { name: 'isp', label: 'I.S.P.', type: 'int', blankAs: 0,
+        help: 'The minimum cost when the power has a schedule — see the note field.' },
+      // A power whose cost is not one number: Mind Bolt costs more for more
+      // damage. `isp` keeps the minimum (the use button deducts it) and this
+      // says the schedule in a few words.
+      { name: 'isp_note', label: 'I.S.P. varies', type: 'text',
+        help: 'Blank for a flat cost. Otherwise the schedule in a few words, e.g. "more for more damage".' },
       { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'both'],
         help: 'Blank means unrestricted — offered to characters in either system.' },
       // Same field names as spells, so the sheet renders both the same way.

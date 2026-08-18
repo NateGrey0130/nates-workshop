@@ -18,7 +18,7 @@ Output ONLY a JSON array. No prose, no code fences, no commentary.
 Rules:
 - One object per psionic power. A power is normally a bold name followed by Range, Duration, Saving Throw and I.S.P. lines, then a description.
 - Copy stat block values as the book writes them. "40 feet per level of experience" and "2 minutes per level" are correct answers — do not reduce them to a number.
-- I.S.P. is the only numeric field. If a power's cost varies, put the base number in isp and the full wording in description.
+- I.S.P. is the only numeric field. If a power's cost varies, put the MINIMUM in isp and the schedule in isp_note in a few words (the full wording still belongs in description). isp_note stays absent for a flat cost.
 - Categories are normally Healing, Physical, Sensitive or Super. Use the heading the power actually appears under, whatever it says — do not force it into that list.
 - Only set min_tier when the entry itself states a required psychic tier. Most powers do not: tier access is usually stated once per category, not per power. Omitting min_tier is the correct and expected answer.
 - Do not emit category headings, chapter headings, or introductory prose as powers.
@@ -35,7 +35,8 @@ Each element must be:
 {
   "name": "Telekinesis",              // exact power name, no trailing colon
   "category": "Physical",             // the heading it appears under
-  "isp": 6,                            // I.S.P. cost as an integer; 0 if not stated
+  "isp": 6,                            // I.S.P. cost as an integer; the MINIMUM when it varies; 0 if not stated
+  "isp_note": "more for more damage",  // ONLY when the cost varies: the schedule in a few words
   "range": "40 feet per level",       // omit if not stated
   "duration": "2 minutes per level",  // omit if not stated
   "saving_throw": "Standard",         // omit if not stated

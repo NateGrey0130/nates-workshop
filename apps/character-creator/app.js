@@ -1300,7 +1300,8 @@ function renderPowers() {
         return `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
           <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
             data-act="power" data-kind="psi" data-name="${esc(p.name)}">
-          <span>${esc(p.name)}</span><span class="pct">${p.category} · ${p.isp} I.S.P.</span></label>`;
+          <span>${esc(p.name)}${p.isp_note ? ` <span class="muted small">&mdash; ${esc(p.isp_note)}</span>` : ''}</span>
+          <span class="pct">${p.category} · ${p.isp}${p.isp_note && p.isp > 0 ? '+' : ''} I.S.P.</span></label>`;
       }).join('');
   }
   $('app').innerHTML = `
@@ -1408,7 +1409,10 @@ function powersPayload() {
     }),
     ...S.psi.map((n) => {
       const p = S.psiCatalog.find((x) => x.name === n);
-      return { type: 'psionic', name: n, category: p?.category, cost: p?.isp };
+      // cost_note marks a variable cost: `cost` is the minimum, and the sheet's
+      // use button deducts it while the note says how the real spend grows.
+      return { type: 'psionic', name: n, category: p?.category, cost: p?.isp,
+               ...(p?.isp_note ? { cost_note: p.isp_note } : {}) };
     }),
   ];
 }
