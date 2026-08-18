@@ -152,6 +152,13 @@ Optional — include only what the page actually states:
     special_abilities, because the app would apply them unconditionally.
     Describing the ability in prose as well is correct and expected; this block
     is in addition to that, not instead of it.
+- special_abilities: list of { name, description }. If the page says the
+    character PICKS some of them ("select THREE powers from the following"),
+    add one entry { choose: N, from: ["Name", "Name", ...] } listing the option
+    names, alongside the { name, description } entries that describe them.
+    If the page points at ANOTHER class for the list ("select any one power from
+    those listed under godling"), write { choose: N, from_class: "godling" } and
+    do NOT copy the options across — the reference is resolved for you.
 - level_progression: list of { level: N, grants: ["...", "..."] }
 - restrictions: list of free-text strings (things the class may not do)
 - side_effects: free-text string or list — substantial drawback/cost mechanics

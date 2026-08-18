@@ -11,7 +11,7 @@
 // why getStored() — the path the sheet and the level-up endpoints resolve
 // through — deliberately does not filter on it.
 
-import { parseClassMarkdown } from '../../../../apps/character-creator/js/parser.js';
+import { parseClassMarkdown, resolveAbilityRefs } from '../../../../apps/character-creator/js/parser.js';
 
 // Saved as soon as extraction succeeds. Re-importing the same class overwrites
 // its draft rather than piling up rows; an already-published class stays
@@ -160,5 +160,35 @@ export async function loadPublished(env, { includeRetired = false } = {}) {
     if (parsed.ok) classes.push({ ...parsed.data, _source: 'imported', _retired: !!row.deleted_at });
     else failures.push({ file: `${row.class_id} (imported)`, errors: parsed.errors });
   }
-  return { classes, failures };
+
+  // Shared ability lists are expanded across the whole set, AFTER the parse
+  // cache. Resolving inside the cached parse would mean editing the Godling's
+  // power list left every class referencing it holding the old one, because
+  // only the Godling's own cache entry would have been invalidated.
+  //
+  // Retired classes are valid targets even when they are excluded from the
+  // returned list: a retired class is still the place a list is written down,
+  // and dropping the reference would quietly shorten another class's options.
+  const byId = new Map(classes.map((c) => [c.id, c]));
+  if (!includeRetired) {
+    for (const c of await loadRetiredForRefs(env)) if (!byId.has(c.id)) byId.set(c.id, c);
+  }
+  return { classes: classes.map((c) => resolveAbilityRefs(c, byId)), failures };
+}
+
+// Retired classes, parsed, for reference resolution only — never returned to a
+// caller that did not ask for them.
+async function loadRetiredForRefs(env) {
+  try {
+    const { results } = await env.DB.prepare(
+      `SELECT class_id, markdown FROM imported_classes
+       WHERE status = 'published' AND deleted_at IS NOT NULL`
+    ).all();
+    return results
+      .map((r) => parseClassMarkdown(r.markdown))
+      .filter((p) => p.ok)
+      .map((p) => p.data);
+  } catch {
+    return [];
+  }
 }
