@@ -3049,6 +3049,38 @@ console.log('\n[1c30] Documented counts');
     ));
   }
 
+  // The set of modules both runtimes load grew twice without the sentence
+  // noticing ("three" survived compose.js and psionics.js joining). Recompute it
+  // from the actual imports - direct from functions/**, plus one transitive hop
+  // through those modules' own relative imports - and require each to be named.
+  const fnFiles = walkFns(fnRoot).concat(walkFns(join(fnRoot, '..', '_lib')));
+  const directShared = new Set();
+  for (const f of fnFiles) {
+    for (const m of readFileSync(f, 'utf8').matchAll(/apps\/character-creator\/js\/([a-z-]+\.js)/g)) {
+      directShared.add(m[1]);
+    }
+  }
+  for (const mod of [...directShared]) {
+    const src = readFileSync(join(appDir, 'js', mod), 'utf8');
+    for (const m of src.matchAll(/from '\.\/([a-z-]+\.js)'/g)) directShared.add(m[1]);
+  }
+  const bothSentence = readme.slice(readme.indexOf('modules are imported by both'), readme.indexOf('modules are imported by both') + 400);
+  const unnamed = [...directShared].filter((m) => !bothSentence.includes('`js/' + m + '`'));
+  check('every module both runtimes load is named in the README',
+    unnamed.length === 0, 'not in the sentence: ' + unnamed.join(', '));
+
+  // The composition sequence is written down twice - the README's numbered list
+  // and compose.js's header comment - and the README's copy sat at three steps
+  // after the code grew a fourth. They must agree.
+  const compSection = readme.slice(readme.indexOf('## One place composes a class'));
+  const readmeSteps = [...compSection.slice(0, compSection.indexOf('Six places'))
+    .matchAll(/^\d+\. \*\*/gm)].length;
+  const composeSrc = readFileSync(join(appDir, 'js', 'compose.js'), 'utf8');
+  const codeSteps = [...composeSrc.matchAll(/^\/\/ {3}\d+\. /gm)].length;
+  check('the README and compose.js agree on the number of composition steps',
+    readmeSteps === codeSteps && readmeSteps >= 4,
+    `README lists ${readmeSteps}, compose.js lists ${codeSteps}`);
+
   const schema = readFileSync(join(appDir, '..', '..', 'db', 'schema.sql'), 'utf8');
   const tables = (schema.match(/CREATE TABLE IF NOT EXISTS/g) || []).length;
   const stated = readme.match(/(\w+) tables in one shared D1 database/);
