@@ -7,6 +7,7 @@
 // inline onclick handlers need their entry points on window — see the
 // Object.assign at the bottom.
 import { evalDice, rollPoolFormula, rollAttribute, rollQuantity } from './js/dice.js';
+import { LANGUAGE_OTHER, isLanguageName, languageSkillName } from './js/language-skills.js';
 import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSIONIC_TIER_RULES,
          rollsForPsionics as classRollsForPsionics } from './js/psionics.js';
 import { isChoiceGroup, isGearChoice, applyVariant,
@@ -890,16 +891,25 @@ function renderSkills() {
   // and a checkbox list you have to scroll to search is not a search.
   // A ticked skill always stays visible, or filtering would appear to un-pick it.
   const pickList = (catalog, chosen, kind, limit, query) => {
+    // Custom languages exist on the character but not in the catalog, so the
+    // concat below would never surface them — synthesize their rows from the
+    // Other entry's numbers or a pick could not be seen or un-picked.
+    const custom = chosen
+      .filter((n) => isLanguageName(n) && !catalog.some((s) => s.name === n))
+      .map((n) => ({ ...(skillByName().get(LANGUAGE_OTHER) || {}), name: n }));
     const shown = Picker.filter(catalog, query)
-      .concat(catalog.filter((s) => chosen.includes(s.name) && !Picker.match(s, query)));
+      .concat(catalog.filter((s) => chosen.includes(s.name) && !Picker.match(s, query)))
+      .concat(custom);
     if (!shown.length) return '<p class="muted small">Nothing matches that filter.</p>';
     return shown.map((s) => {
       const on = chosen.includes(s.name);
       const blocked = !on && (taken.has(s.name.toLowerCase()) || chosen.length >= limit);
+      const hint = s.name === LANGUAGE_OTHER
+        ? ' <span class="muted small">— once per language; you will be asked which</span>' : '';
       return `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
         <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
           data-act="skill" data-kind="${kind}" data-name="${esc(s.name)}">
-        <span>${esc(s.name)}</span>
+        <span>${esc(s.name)}${hint}</span>
         <span class="pct">${s.category} · ${s.base ? s.base + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—'}</span>
       </label>`;
     }).join('');
@@ -947,6 +957,21 @@ function toggleGroupPick(groupIndex, name, limit) {
 
 function toggleSkill(kind, name) {
   const list = kind === 'related' ? S.related : S.secondary;
+  // Language: Other is taken once per language, each a separate skill named
+  // for it — so the row prompts instead of toggling, and never reads as
+  // "already picked". Un-picking happens on the named row it created.
+  if (name === LANGUAGE_OTHER) {
+    // No limit check here: the row's checkbox is disabled at the limit by the
+    // same blocked logic every other row gets.
+    const typed = window.prompt('Which language? (saved as "Language: <name>")');
+    if (typed === null) return;
+    const full = languageSkillName(typed);
+    if (!full) return;
+    if (takenNames().has(full.toLowerCase())) { alert(full + ' is already on this character.'); return; }
+    list.push(full);
+    render();
+    return;
+  }
   const i = list.indexOf(name);
   if (i >= 0) list.splice(i, 1); else list.push(name);
   render();
@@ -1465,7 +1490,8 @@ function powersPayload() {
 const SKILL_PCT_CAP = 98;   // p.22: "there is always a margin for error"
 
 function skillsPayload() {
-  const find = (n) => skillByName().get(n) || {};
+  const find = (n) => skillByName().get(n)
+    || (isLanguageName(n) ? { ...(skillByName().get(LANGUAGE_OTHER) || {}), name: n } : {});
   const occ = S.cls.skills?.occ_skills || [];
   const iq = derive.bio(S.attrs, null, derive.classBonuses(S.cls, 1, rolledAll())).iq_skill_bonus_pct || 0;
 

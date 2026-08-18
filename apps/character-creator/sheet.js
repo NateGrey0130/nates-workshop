@@ -12,7 +12,7 @@ const C = { data: null, items: [], journal: [], catalog: [], cls: null, canWrite
             proposal: null, nextThreshold: null,
             // Picker filter text, and the skill picks chosen so far. Both are
             // state rather than DOM so a re-render cannot discard them.
-            invFilter: '', pickFilter: '', pickValues: {},
+            invFilter: '', pickFilter: '', pickValues: {}, pickLangs: {},
             // A proposed change of stage, awaiting confirmation.
             variantProposal: null };
 const $ = (i) => document.getElementById(i);
@@ -575,7 +575,7 @@ function pendingPicksPanel() {
     ${pickerBlock(C.pendingPicks.map((g) => ({ level: g.granted_at_level, count: g.count, categories: g.categories })), n, 'claim')}
     <div class="rowline" style="margin-top:10px">
       <button class="btn btn-primary" onclick="claimPicks()">Add to sheet</button>
-      <button class="btn btn-sm btn-ghost" onclick="C.claiming = false; C.pickShowAll = false; C.pickFilter = ''; C.pickValues = {}; render()">Later</button>
+      <button class="btn btn-sm btn-ghost" onclick="C.claiming = false; C.pickShowAll = false; C.pickFilter = ''; C.pickValues = {}; C.pickLangs = {}; render()">Later</button>
     </div>
   </div>`;
 }
@@ -619,10 +619,18 @@ function pickerBlock(grants, total, prefix) {
     const extra = chosen && !shown.some((s) => s.name === chosen)
       ? `<option value="${escHtml(chosen)}" selected>${escHtml(chosen)}</option>` : '';
     const opts = options.replace(`value="${escHtml(chosen)}"`, `value="${escHtml(chosen)}" selected`);
+    // Language: Other is one catalog row standing for every unlisted language;
+    // choosing it asks WHICH, and the composed "Language: X" is what gets
+    // submitted (see js/language-skills.js). Same state-not-DOM rule as the
+    // select: a re-render must not eat a half-typed language.
+    const isOther = chosen === langSkills.LANGUAGE_OTHER;
+    const lang = C.pickLangs[`${prefix}-${i}`] || '';
     return `
     <div class="rowline">
-      <select id="${prefix}-pick-${i}" onchange="C.pickValues['${prefix}-${i}'] = this.value">
+      <select id="${prefix}-pick-${i}" onchange="C.pickValues['${prefix}-${i}'] = this.value; render()">
         <option value="">— skip —</option>${extra}${chosen ? opts : options}</select>
+      ${isOther ? `<input class="mini-in wide" id="${prefix}-lang-${i}" placeholder="Which language?"
+        value="${escHtml(lang)}" oninput="C.pickLangs['${prefix}-${i}'] = this.value">` : ''}
     </div>`;
   }).join('');
 
@@ -647,7 +655,12 @@ function collectPicks(prefix, total) {
     // State first, DOM as the fallback — they agree, but state is the one that
     // survives a re-render.
     const v = C.pickValues[`${prefix}-${i}`] ?? $(`${prefix}-pick-${i}`)?.value;
-    if (v) picks.push({ name: v, override: !!C.pickShowAll });
+    if (v === langSkills.LANGUAGE_OTHER) {
+      // Composed or skipped: an Other pick with no language typed waits, the
+      // same way a blank row does.
+      const full = langSkills.languageSkillName(C.pickLangs[`${prefix}-${i}`]);
+      if (full) picks.push({ name: full, override: !!C.pickShowAll });
+    } else if (v) picks.push({ name: v, override: !!C.pickShowAll });
   }
   return picks;
 }
@@ -682,7 +695,7 @@ async function confirmLevelUp() {
     }));
     C.proposal = null;
     C.pickShowAll = false;
-    C.pickFilter = ''; C.pickValues = {};
+    C.pickFilter = ''; C.pickValues = {}; C.pickLangs = {};
     await load();
   } catch (err) {
     const details = errorDetails(err);
@@ -698,7 +711,7 @@ async function claimPicks() {
   try {
     const res = await api(`characters/${id}/picks`, jsonReq('POST', { picks }));
     C.pickShowAll = false;
-    C.pickFilter = ''; C.pickValues = {};
+    C.pickFilter = ''; C.pickValues = {}; C.pickLangs = {};
     C.claiming = false;
     await load();
     flash(`Added ${res.applied.map((a) => a.name).join(', ')}.`);

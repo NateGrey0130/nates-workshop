@@ -27,6 +27,7 @@ import { composeClass } from '../js/compose.js';
 import { psionicTierForRoll, rollPsionics, psionicShape, withRolledPsionics,
          PSIONIC_TIER_RULES, rollsForPsionics } from '../js/psionics.js';
 import { similarity, normaliseName, classesMentioning, findDuplicates } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
+import { LANGUAGE_OTHER, isLanguageName, languageSkillName } from '../js/language-skills.js';
 import {
   keysOf, redirectStatements, collapseStatement, resolveKeys,
 } from '../../../functions/api/character-creator/_lib/catalog-redirects.js';
@@ -51,6 +52,13 @@ function parseFile(name) {
 
 // ---------- 1. Parser ----------
 console.log('\n[1/3] Parser');
+
+// Custom languages: three consumers (wizard, sheet, server validator) share
+// these, so the rule is asserted here once rather than trusted three times.
+check('languageSkillName composes', languageSkillName('Spanish') === 'Language: Spanish');
+check('languageSkillName tolerates typed prefix', languageSkillName('language:  Orc') === 'Language: Orc');
+check('languageSkillName rejects blank', languageSkillName('   ') === null && languageSkillName('Language:') === null);
+check('isLanguageName family', isLanguageName('Language: Elvish') && isLanguageName(LANGUAGE_OTHER) && !isLanguageName('Sign Language'));
 
 const ck = parseFile('cyber-knight.md');
 check('cyber-knight parses', ck.ok, JSON.stringify(ck.errors));
