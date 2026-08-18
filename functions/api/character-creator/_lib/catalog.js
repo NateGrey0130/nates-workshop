@@ -6,7 +6,7 @@
 // a name and whatever category can be inferred — and are flagged so they are
 // easy to find and fill in later.
 
-import { isChoiceGroup, isGearChoice, abilityOptions, parseClassMarkdown } from '../../../../apps/character-creator/js/parser.js';
+import { isChoiceGroup, isGearChoice } from '../../../../apps/character-creator/js/parser.js';
 import { resolveKeys } from './catalog-redirects.js';
 
 const norm = (s) => String(s ?? '').trim().toLowerCase();
@@ -118,42 +118,17 @@ async function unresolvedRestrictions(env, data) {
   return wanted.filter((w) => !known.has(norm(w.name)));
 }
 
-// A `from_class` naming a class that does not exist, or one that holds no
-// ability options to share. Either way the choice group offers nothing and the
-// class silently grants fewer powers than the book gives it.
-//
-// A RETIRED class is a valid target and is not reported: retiring hides a class
-// from the pickers, it does not unwrite the list printed in it.
-async function danglingAbilityRefs(env, data) {
-  const refs = [...new Set((data.special_abilities || [])
-    .map((e) => e?.from_class).filter(Boolean))];
-  if (!refs.length) return [];
 
-  const out = [];
-  for (const id of refs) {
-    const row = await env.DB
-      .prepare('SELECT markdown FROM imported_classes WHERE class_id = ? COLLATE NOCASE')
-      .bind(id).first();
-    if (!row) { out.push({ from_class: id, reason: 'no class with that id' }); continue; }
-    const parsed = parseClassMarkdown(row.markdown);
-    if (!parsed.ok) { out.push({ from_class: id, reason: 'that class does not parse' }); continue; }
-    if (!abilityOptions(parsed.data).length) {
-      out.push({ from_class: id, reason: 'that class lists no ability options to share' });
-    }
-  }
-  return out;
-}
 
 export async function crossReference(env, requestUrl, data) {
-  const [items, skills, spells, psionics, restrictions, ability_refs] = await Promise.all([
+  const [items, skills, spells, psionics, restrictions] = await Promise.all([
     missingFrom(env, 'gear', 'gear', 'slug', referencedGear(data)),
     missingFrom(env, 'skills', 'skills', 'name', referencedSkills(data)),
     missingFrom(env, 'spells', 'spells', 'name', nameList(data.magic?.spells)),
     missingFrom(env, 'psionics', 'psionic_powers', 'name', nameList(data.psionics?.powers)),
     unresolvedRestrictions(env, data),
-    danglingAbilityRefs(env, data),
   ]);
-  return { items, skills, spells, psionics, restrictions, ability_refs };
+  return { items, skills, spells, psionics, restrictions };
 }
 
 // ─── stub inference ───

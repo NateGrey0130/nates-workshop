@@ -480,26 +480,12 @@ function restrictionBlock() {
     </div>`).join('')}`;
 }
 
-// A shared ability list that does not resolve. Reported apart from the missing
-// lists because there is no stub to create — the fix is a class id, not a row.
-function abilityRefBlock() {
-  const rows = I.result.missing.ability_refs || [];
-  if (!rows.length) return '';
-  return `
-    <h3>Shared ability lists that do not resolve — ${rows.length}
-      <span class="badge-file">check the class id</span></h3>
-    <p class="muted small">A choice group points at another class for its options and found none there,
-      so it offers nothing. A retired class is still a valid target and is not listed here.</p>
-    ${rows.map((r) => `<div class="miss-row">
-      <span class="slug">from_class: ${escHtml(r.from_class)}</span>
-      <span class="err small">${escHtml(r.reason)}</span>
-    </div>`).join('')}`;
-}
+
 
 function missingBlock() {
   const m = I.result.missing;
   const total = m.items.length + m.skills.length + m.spells.length + m.psionics.length;
-  const restrictions = restrictionBlock() + abilityRefBlock();
+  const restrictions = restrictionBlock();
   if (!total) {
     return (restrictions
       || '<p class="muted small">Everything this class references already exists in the catalogs.</p>');

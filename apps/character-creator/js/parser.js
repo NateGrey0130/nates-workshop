@@ -523,21 +523,16 @@ export function needsOccupation(cls) {
 
 // ---------- shared ability lists ----------
 //
-// Books reuse one list of powers across a family of classes. The Demigod's entry
-// says it outright — "select any ONE power from those listed under godling"
-// (Rifts, Pantheons of the Megaverse p.17) — and a God would draw on the same
-// eleven again. Writing them out per class is the drift the class format exists
-// to avoid, so a choice group may name the class that holds the list instead:
-//
-//   special_abilities:
-//     - { choose: 1, from_class: godling }
-//
-// What it pulls is the referenced class's own choice OPTIONS, not its whole
-// special_abilities array: a class may also list fixed abilities as prose, and
-// those are its own, not part of the shared list.
+// A class states its own power list, even when the book prints one list and
+// points several classes at it ("select any ONE power from those listed under
+// godling"). That is a printing convenience, not a relationship between the
+// classes: a mechanism that resolved one class's list out of another existed
+// briefly (`from_class`, PR #80) and was removed when its only intended user —
+// the Demigod — turned out to want independence. Recoverable from git if a
+// genuinely shared list ever appears.
 export function isAbilityChoice(entry) {
   return !!entry && typeof entry === 'object'
-    && (entry.choose !== undefined || entry.from !== undefined || entry.from_class !== undefined);
+    && (entry.choose !== undefined || entry.from !== undefined);
 }
 
 // What a chosen ability may grant. Deliberately three keys, not the variant
@@ -570,42 +565,6 @@ export function abilityOptions(cls) {
     }
   }
   return out;
-}
-
-// Expands `from_class` against a map of id -> class.
-//
-// ONE HOP, deliberately: a referenced list may not itself be a reference. That
-// removes cycle handling rather than guarding against it, and one hop is what
-// the books actually do — every class in a family points at the same printed
-// list, never at each other in a chain.
-//
-// An unresolvable reference is left exactly as written rather than emptied. The
-// class still loads and the entry still says what it meant; crossReference
-// reports it, and a class whose reference was retired keeps working, which is
-// the whole point of soft-delete.
-export function resolveAbilityRefs(cls, byId) {
-  const list = cls?.special_abilities;
-  if (!Array.isArray(list) || !list.some((e) => e?.from_class)) return cls;
-  const pulled = [];
-  const resolved = list.map((e) => {
-    if (!e?.from_class) return e;
-    const target = byId instanceof Map ? byId.get(e.from_class) : byId?.[e.from_class];
-    const options = abilityOptions(target);
-    if (!options.length) return e;
-    // The DEFINITIONS come across too, not only the names. A Demigod picking
-    // "Super-Tough" has to find what Super-Tough grants, and it is written down
-    // in the class that owns the list. A definition the referring class already
-    // states itself wins — it can say something different about a shared name.
-    const own = new Set(list.filter(isAbilityDefinition).map((d) => d.name.trim().toLowerCase()));
-    for (const d of target?.special_abilities || []) {
-      if (!isAbilityDefinition(d)) continue;
-      if (own.has(d.name.trim().toLowerCase())) continue;
-      if (!options.includes(d.name)) continue;
-      pulled.push({ ...d, _from_class: e.from_class });
-    }
-    return { ...e, from: options };
-  });
-  return { ...cls, special_abilities: [...resolved, ...pulled] };
 }
 
 // Folds the abilities a character actually chose into its class.
@@ -1031,12 +990,6 @@ export function parseClassMarkdown(text) {
   // written into special_abilities parsed clean and then did nothing at all.
   for (const e of data.special_abilities || []) {
     if (!isAbilityChoice(e)) continue;
-    if (e.from !== undefined && e.from_class !== undefined) {
-      errors.push('special_abilities: an entry sets both from and from_class; use one');
-    }
-    if (e.from_class !== undefined && (typeof e.from_class !== 'string' || !e.from_class.trim())) {
-      errors.push('special_abilities: from_class must be a class id');
-    }
     if (e.from !== undefined && !Array.isArray(e.from)) {
       errors.push('special_abilities: from must be a list of ability names');
     }

@@ -7,7 +7,7 @@ import { getUserEmail, unauthorized, json, forbidden, characterAccess, readJson 
 import { listPending } from '../_lib/skill-picks.js';
 import { decodeCharacter } from '../_lib/character-json.js';
 import { getStored } from '../_lib/class-store.js';
-import { parseClassMarkdown, resolveAbilityRefs } from '../../../../apps/character-creator/js/parser.js';
+import { parseClassMarkdown } from '../../../../apps/character-creator/js/parser.js';
 import { composeClass } from '../../../../apps/character-creator/js/compose.js';
 
 export async function onRequestGet({ request, env, params }) {
@@ -54,25 +54,11 @@ export async function onRequestGet({ request, env, params }) {
   const occRow = character.occ_class_id ? await getStored(env, character.occ_class_id) : null;
   const occParsed = occRow ? parseClassMarkdown(occRow.markdown) : null;
 
-  // A shared ability list lives in another class, and the ability the character
-  // CHOSE is defined there. Without this the sheet finds no definition for a
-  // Demigod's power and reports it ungranted, while the wizard that created it
-  // applied the bonus perfectly well.
-  const withRefs = async (data) => {
-    const refs = [...new Set((data?.special_abilities || []).map((e) => e?.from_class).filter(Boolean))];
-    if (!refs.length) return data;
-    const byId = new Map();
-    for (const id of refs) {
-      const row = await getStored(env, id);          // ignores deleted_at, like the class itself
-      const p = row ? parseClassMarkdown(row.markdown) : null;
-      if (p?.ok) byId.set(id, p.data);
-    }
-    return resolveAbilityRefs(data, byId);
-  };
+
 
   let cls = composeClass({
-    rcc: parsed?.ok ? await withRefs(parsed.data) : null,
-    occ: occParsed?.ok ? await withRefs(occParsed.data) : null,
+    rcc: parsed?.ok ? parsed.data : null,
+    occ: occParsed?.ok ? occParsed.data : null,
     character,
   });
   if (cls) cls = { ...cls, _retired: !!stored?.deleted_at || !!occRow?.deleted_at };

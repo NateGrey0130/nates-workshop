@@ -159,9 +159,9 @@ Optional — include only what the page actually states:
     character PICKS some of them ("select THREE powers from the following"),
     add one entry { choose: N, from: ["Name", "Name", ...] } listing the option
     names, alongside the { name, description } entries that describe them.
-    If the page points at ANOTHER class for the list ("select any one power from
-    those listed under godling"), write { choose: N, from_class: "godling" } and
-    do NOT copy the options across — the reference is resolved for you.
+    If the page points at ANOTHER class for its list ("select any one power from
+    those listed under godling"), copy the options INTO this class - each class
+    states its own list, even when the book prints one list and points at it.
     An option the page gives NUMBERS for carries them, using the same bonus
     shape a class uses: { name, description, bonuses: { attributes: {...},
     pools: { mdc: "3d4x10" }, combat: {...}, saves: {...} } }. Use pools for
