@@ -38,6 +38,10 @@ const S = {
   // look like it re-scoped the answer.
   audit: null,
   auditBusy: false,
+  // Offender counts, fetched once on load so a broken character surfaces
+  // without anyone thinking to press the button — the duplicate badge's
+  // reasoning, applied to characters.
+  auditCounts: null,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -183,7 +187,7 @@ function tabs() {
 function auditBar() {
   return `<div class="audit-bar">
     <button class="btn btn-sm btn-ghost" data-audit ${S.auditBusy ? 'disabled' : ''}>
-      ${S.audit ? 'Hide character audit' : 'Audit characters'}</button>
+      ${S.audit ? 'Hide character audit' : 'Audit characters'}${auditBadge()}</button>
     <span class="muted small">Which saved characters break the rules of the class they were built from.</span>
   </div>
   ${S.audit ? auditPanel() : ''}`;
@@ -566,6 +570,24 @@ async function loadDuplicates() {
 // whatever state they are in. Every `fix-*.sql` that rewrites a class can
 // retroactively put an existing character out of step with it, and this is the
 // only thing that says which. Read-only: it proposes nothing and changes nothing.
+// Counts only, once, silently. Failure is a missing hint, not an error worth
+// interrupting catalog editing over.
+async function loadAuditCounts() {
+  try {
+    S.auditCounts = await api('admin/audit?counts_only=1');
+    render();
+  } catch { /* no badge, no complaint */ }
+}
+
+function auditBadge() {
+  const c = S.auditCounts;
+  if (!c) return '';
+  const n = c.blocked + c.warned;
+  if (!n) return '';
+  return ` <span class="dupe-badge" title="${c.blocked} would be refused on save, ${c.warned} worth a look`
+    + `${c.unvalidatable ? `, ${c.unvalidatable} unvalidatable` : ''}">${n}</span>`;
+}
+
 async function loadAudit() {
   S.auditBusy = true;
   S.msg = { text: 'Auditing characters…' };
@@ -668,4 +690,5 @@ async function saveRow(which) {
   } catch { S.isAdmin = false; }
   if (!S.isAdmin) { render(); return; }
   await loadRows();
+  loadAuditCounts();
 })();

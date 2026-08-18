@@ -44,7 +44,7 @@ function render() {
   const rosterRows = D.roster.map((c) => `
     <tr>
       <td><a href="sheet.html?id=${c.id}">${escHtml(c.name)}</a></td>
-      <td>${escHtml(D.classNames[c.class_id] || c.class_id)}</td>
+      <td>${escHtml(D.classNames[c.class_id] || c.class_id)}${c.occ_class_id ? ' ' + escHtml(D.classNames[c.occ_class_id] || c.occ_class_id) : ''}</td>
       <td>${c.level} <span class="muted small">(${c.xp} XP)</span></td>
       <td class="muted small">${escHtml(c.player_email)}</td>
       <td class="pools-cell">${poolsCell(c)}</td>
