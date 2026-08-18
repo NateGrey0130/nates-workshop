@@ -446,6 +446,23 @@ Naming a skill the catalog does not hold yet is harmless: an `except` for a
 missing skill excludes nothing, and an `only` narrows the category to what does
 exist, so the restriction is already right for the day it is imported.
 
+**But the two fail in opposite directions, and the importer now says so.**
+`categoryAllows` compares literal names, so an unmatched `except` fails **open**
+— the class goes on offering a skill the book forbids — while an unmatched
+`only` fails closed. A not-yet-imported skill and a name the catalog simply
+spells differently are indistinguishable, and the second is the common case: the
+Godling R.C.C. bars robots, power armor and cybernetics, which this catalog
+calls `Robots and Power Armor`, `Robot Combat: Basic` and `M.D. in Cybernetics`,
+so all three exclusions quietly did nothing. The cross-reference now reports
+every restriction name that matches no catalog row, on the review step beside
+the missing-reference lists. It is a warning, not a refusal — the
+forward-compatible case above is still legitimate.
+
+Redirects are deliberately **not** consulted for this check, though they are for
+missing references. A merged-away name still resolves as a *reference*, but
+`categoryAllows` does a literal comparison, so a redirect does not save a
+restriction and reporting it as fine would misdescribe what the picker does.
+
 **An attribute bonus may be dice.** Some books state one as a roll rather than a
 number — the Cyber-Knight adds +1D4 to five attributes, the Juicer +2D6 to P.S.
 and +2D4x10 to Spd. `bonuses.attributes` accepts either, and
@@ -1872,6 +1889,20 @@ expression when the formula is a qualified sentence
 (`3D4x100+1000 when in serpent form, only 3D4x100 in humanoid form`), leaving
 the qualification to the prose that carries it. A formula with no numbers in it
 still returns null rather than guessing.
+
+It also reads an attribute the book **multiplies** — `P.E. x 10`, `P.E. x 12`,
+`P.E. x 3 plus 2D6 per level`. Supernatural and mega-damage races state their
+pools that way as a matter of course, and both failure modes were live: a
+formula that was only a multiplied attribute returned NULL, and one that also
+had dice **silently dropped the multiplier**, so a Godling written
+`P.E. x 3 plus 2D6 per level` rolled `P.E. + 2D6` — a third of the right number
+and entirely plausible-looking. The silent-wrong half was the urgent one; a NULL
+pool at least shows up as an empty field.
+
+The multiplier is read only where it sits directly against the attribute, so an
+`x N` belonging to the dice stays with the dice: in `M.E. number plus 1D6x10`
+the ×10 multiplies the die, and mistaking it for the attribute's would put the
+pool an order of magnitude out.
 
 Do not bulk-accept a new book's first run. Read the prose, not just the figures —
 a spliced column produces a description that reads fluently and is wrong.
