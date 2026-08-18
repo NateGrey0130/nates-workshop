@@ -1359,6 +1359,17 @@ Four things that are not obvious and were each learned the hard way:
 A skill marked `override: true` by the level-up picker is legal by definition —
 that flag means a human decided it.
 
+**Chosen abilities get the same boundary.** The pick count (`ability_count`) and
+repeatability (`ability_repeat`) are violations — a five-power Godling or a
+doubled non-repeatable power has no legitimate path — while a power the class
+no longer offers only warns (`ability_unknown`), because a class edit is not the
+player's fault. A `{ name, gm: true }` entry is the abilities' `override: true`:
+a power the G.M. assigned by hand (the Demigod's *"most have ONE extra power,
+similar to that of the godly father or mother"*), exempt from the count and the
+offered list, counted only for repeats — holding a power twice is holding it
+twice, whoever granted the second. It still grants its bonuses through
+`applyAbilities`, which tags it `gm` for the sheet.
+
 **Existing characters are not retro-validated.** They keep loading and saving
 whatever state they are in; `admin/audit` reports which ones break a rule so you
 can decide case by case. It is read-only and modifies nothing.

@@ -2552,6 +2552,80 @@ console.log('\n[1c25f] Race and occupation');
     !/A racial class grants no related or secondary skills/.test(appSrc));
 }
 
+// ---------- 1c25g. Server-side ability validation ----------
+// The wizard enforces the pick count, the offered list and repeatability; until
+// now NOTHING re-checked them, so a direct API call could save a Godling with
+// five powers. Same posture as skills: chosen things get a boundary, and what a
+// class edit could have caused warns instead of blocking.
+console.log('\n[1c25g] Ability validation');
+{
+  const cls = parseClassMarkdown([
+    '---', 'id: g', 'name: G', 'system: rifts', 'source_book: b', 'category: rcc',
+    'special_abilities:',
+    '  - name: "Fly"', '    description: "x"',
+    '  - name: "Shape Shifter"', '    description: "x"', '    repeatable: true',
+    '  - name: "Super-Tough"', '    description: "x"',
+    '    bonuses: { pools: { mdc: "3d4x10" } }',
+    '  - { choose: 2, from: ["Fly", "Shape Shifter", "Super-Tough"] }',
+    '---', '', '## Lore', '', 'x', ''].join(String.fromCharCode(10))).data;
+  const v = (abilities) => validateCharacter({
+    character: { level: 1 }, cls, skills: [], attributes: {}, abilities, catalog: new Map() });
+  // The fixture race grants nothing, so 1c25f's no_occupation warning fires on
+  // every call - by design. Scope these assertions to the ability rules, and
+  // pin that the only other emission really is that one.
+  const rules = (r) => r.violations.map((x) => x.rule).concat(r.warnings.map((x) => '~' + x.rule))
+    .filter((x) => x.includes('ability'));
+  check('the only non-ability emission is the expected no_occupation warning', (() => {
+    const r = validateCharacter({ character: { level: 1 }, cls, skills: [], attributes: {}, abilities: [], catalog: new Map() });
+    const rest = r.violations.map((x) => x.rule).concat(r.warnings.map((x) => x.rule))
+      .filter((x) => !x.includes('ability'));
+    return rest.join(',') === 'no_occupation';
+  })());
+
+  check('the allowed count is enforced',
+    rules(v(['Fly', 'Super-Tough', 'Shape Shifter'])).includes('ability_count'));
+  check('and the message says both numbers',
+    /3 chosen powers, but this class allows 2/.test(
+      v(['Fly', 'Super-Tough', 'Shape Shifter']).violations[0].message));
+  check('an exact pick is clean', rules(v(['Fly', 'Super-Tough'])).length === 0);
+  check('no abilities at all is clean (every pre-#81 character)',
+    rules(v(undefined)).length === 0 && rules(v([])).length === 0);
+
+  check('a non-repeatable power taken twice is refused',
+    rules(v(['Fly', 'Fly'])).includes('ability_repeat'));
+  check('a repeatable one taken twice is fine',
+    rules(v(['Shape Shifter', 'Shape Shifter'])).length === 0);
+  check('a repeatable one taken a third time warns rather than blocks', (() => {
+    const r = v(['Shape Shifter', 'Shape Shifter', 'Shape Shifter']);
+    return r.violations.some((x) => x.rule === 'ability_count')   // 3 > 2, separately
+      && !r.violations.some((x) => x.rule === 'ability_repeat')
+      && r.warnings.some((x) => x.rule === 'ability_repeat');
+  })());
+
+  check('a power the class does not offer warns, never blocks', (() => {
+    const r = v(['Fly', 'Parental Gift']);
+    return r.violations.length === 0 && r.warnings.some((x) => x.rule === 'ability_unknown');
+  })());
+
+  // A { name, gm: true } entry is a ruling, not a pick - the Demigod's "most
+  // have ONE extra power, similar to the godly parent's" is assigned by hand.
+  check('a G.M.-assigned power does not spend the allowance',
+    rules(v(['Fly', 'Super-Tough', { name: 'Shape Shifter', gm: true }])).length === 0);
+  check('nor is it checked against the offered list',
+    rules(v([{ name: 'Wrath of the Father', gm: true }])).length === 0);
+  check('but holding a non-repeatable power twice is twice, whoever granted it',
+    rules(v(['Fly', { name: 'Fly', gm: true }])).includes('ability_repeat'));
+
+  // And the composer honours the ruling: a G.M.-assigned power still grants.
+  const granted = applyAbilities(cls, [{ name: 'Super-Tough', gm: true }]);
+  check('a G.M.-assigned power still grants its bonuses',
+    granted.bonuses?.pools?.mdc === '3d4x10');
+  check('and the sheet can see whose it was',
+    granted.abilities_taken[0].gm === true && granted.abilities_taken[0].granted === true);
+  check('a plain pick carries no gm flag',
+    applyAbilities(cls, ['Super-Tough']).abilities_taken[0].gm === undefined);
+}
+
 // ---------- 1c26. Secondary schedules and group bonuses ----------
 console.log('\n[1c26] Secondary schedules & group bonuses');
 {

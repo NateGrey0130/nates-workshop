@@ -567,6 +567,23 @@ export function abilityOptions(cls) {
   return out;
 }
 
+// A stored ability entry is a string (a player pick) or an object marked
+// `{ name, gm: true }` (a power the G.M. assigned by hand - the Demigod's
+// entry says most have ONE extra, "similar to that of the godly father or
+// mother", and that grant is a ruling rather than a pick). One normalizer,
+// shared by the composer and the validator, so the two cannot disagree about
+// what counts as whose.
+export function normalizeAbilities(list) {
+  const out = [];
+  for (const e of list || []) {
+    if (typeof e === 'string' && e.trim()) out.push({ name: e.trim(), gm: false });
+    else if (e && typeof e === 'object' && typeof e.name === 'string' && e.name.trim()) {
+      out.push({ name: e.name.trim(), gm: e.gm === true });
+    }
+  }
+  return out;
+}
+
 // Folds the abilities a character actually chose into its class.
 //
 // `chosen` is a list of names and DUPLICATES ARE MEANINGFUL: the Godling's Shape
@@ -580,7 +597,7 @@ export function abilityOptions(cls) {
 // psionic tier, so an ability that makes you a master psychic is what a rolled
 // tier would have to beat.
 export function applyAbilities(cls, chosen) {
-  const picks = (chosen || []).filter((n) => typeof n === 'string' && n.trim());
+  const picks = normalizeAbilities(chosen);
   if (!cls || !picks.length) return cls;
 
   const byName = new Map((cls.special_abilities || [])
@@ -590,14 +607,16 @@ export function applyAbilities(cls, chosen) {
   const out = { ...cls };
   const taken = [];
   const counts = new Map();
-  for (const name of picks) {
-    const key = name.trim().toLowerCase();
+  for (const { name, gm } of picks) {
+    const key = name.toLowerCase();
     const def = byName.get(key);
     const n = (counts.get(key) || 0) + 1;
     counts.set(key, n);
     // A pick nothing defines is still recorded — it is a real choice the player
     // made, and dropping it would make the sheet disagree with what they picked.
-    if (!def) { taken.push({ name, times: n, granted: false }); continue; }
+    // A G.M.-assigned power is likelier still to be off-list, and grants all the
+    // same when a definition exists.
+    if (!def) { taken.push({ name, times: n, granted: false, ...(gm ? { gm: true } : {}) }); continue; }
 
     if (def.bonuses) out.bonuses = sumBonusGroups(out.bonuses, def.bonuses);
     // The stronger tier wins, the same rule composing a race with an occupation
@@ -607,7 +626,7 @@ export function applyAbilities(cls, chosen) {
         ? def.psionics : (out.psionics || def.psionics);
     }
     if (def.magic) out.magic = out.magic || def.magic;
-    taken.push({ name: def.name, times: n, granted: true,
+    taken.push({ name: def.name, times: n, granted: true, ...(gm ? { gm: true } : {}),
       description: def.description, on_repeat: n > 1 ? def.on_repeat : undefined });
   }
   // What the character actually holds, for the sheet — as opposed to
