@@ -18,6 +18,7 @@ Access gate. No build step, no framework, no dependencies.
 - [API surface](#api-surface)
 - [Permissions](#permissions)
 - [House rules and derived values](#house-rules-and-derived-values)
+- [Language: Other, once per language](#language-other-once-per-language)
 - [Level-up skill picks](#level-up-skill-picks)
 - [A race and an occupation together](#a-race-and-an-occupation-together)
 - [One place composes a class](#one-place-composes-a-class)
@@ -91,6 +92,9 @@ apps/character-creator/
 ├── js/class-blocks.js        Rewrites ONE frontmatter block in place, so the
 │                             structured editors cannot disturb the rest of the
 │                             file (classic script)
+├── js/language-skills.js  The "Language: Other, once per language" rule (ES
+│                             module — the server validator imports it, and the
+│                             sheet reads its globalThis mirror via a module tag)
 ├── db/*.sql                  One-shot SQL. NOT migrations — these change rows,
 │                             not schema. See Data scripts below
 ├── docs/rules-audit.md       Where each implemented rule comes from, by page
@@ -139,9 +143,9 @@ db/
                               schema_migrations; see Production configuration
 ```
 
-Five modules are imported by both the browser and the Workers runtime:
+Six modules are imported by both the browser and the Workers runtime:
 `js/parser.js`, `js/dice.js`, `js/catalog-fields.js`, `js/compose.js`, and
-`js/psionics.js` (the last only transitively, through compose). That is why `app.js` and
+`js/psionics.js` (transitively, through compose), and `js/language-skills.js`. That is why `app.js` and
 `catalog.js` are loaded as `<script type="module">` while the other pages are
 classic scripts — and why inline handlers in the wizard need explicit `window`
 exposure (see the `Object.assign(window, …)` block at the bottom of `app.js`).
@@ -187,9 +191,9 @@ lives in `_lib/character-json.js` as `CHARACTER_JSON_COLUMNS`:
 | `attributes` | `{ "IQ": 12, "ME": 14, … }` |
 | `attribute_bonuses` | `{ "PS": 3 }` — what a class's **dice** attribute bonuses rolled, kept because a roll cannot be re-run per render |
 | `rolled_bonuses` | `{ "combat": { "initiative": 3 } }` — the same, for a class's **dice** combat and save bonuses |
-| `skills` | `[{ name, category, pct, per_level, type: "occ"\|"related"\|"secondary" }]` |
-| `powers` | `[{ type: "spell"\|"psionic", name, level?, category?, cost }]` |
-| `abilities` | `["Super-Tough", "Shape Shifter", "Shape Shifter"]` — powers chosen from a class's list. A list, not a set: **duplicates are meaningful** |
+| `skills` | `[{ name, category, pct, per_level, type: "occ"\|"related"\|"secondary" }]` — plus `iq_bonus`, and `gained_at_level` / `override` on level-up picks |
+| `powers` | `[{ type: "spell"\|"psionic", name, level?, category?, cost, cost_note? }]` — `cost_note` carries a variable-cost schedule; `cost` is the minimum the use button deducts |
+| `abilities` | `["Super-Tough", "Shape Shifter", "Shape Shifter"]` — powers chosen from a class's list. A list, not a set: **duplicates are meaningful**. A G.M.-assigned power is an object entry, `{ name, gm: true }` |
 | `bio` | race, alignment, age, height, sentiments, native languages … |
 | `combat` | attacks, initiative, strike, parry, dodge, punches — **overrides only** |
 | `saves` | save vs magic, psionics, poison, insanity … — **overrides only** |
@@ -632,6 +636,39 @@ came from I.Q., so 39% is distinguishable from a skill whose base genuinely is
 wrong about everything else — the book says plainly that *all* skills increase
 with experience. A level 10 character's hobby skills sat at their level 1
 values. They now carry the catalog's real per-level step.
+
+---
+
+## Language: Other, once per language
+
+"Language: Other" is the skill list's escape hatch: one catalog row standing
+in for every language the books never print. A character takes it **once per
+language** — Language: English, Language: Spanish, Language: Orc — each a
+separate skill named for what it is, all advancing on the Other row's numbers
+(50% +5/lvl). No catalog row per language exists or is wanted: the character's
+denormalized skill rows carry the name and the percentages, which is exactly
+what they were built for.
+
+The rule lives in [`js/language-skills.js`](js/language-skills.js) and has
+three consumers that must agree — the wizard, the sheet's claim/level-up
+picker, and the server's pick validator:
+
+- **In the wizard**, the Language: Other row prompts for the language instead
+  of toggling, and never reads as already-taken, so it can be taken again.
+  Each named language renders as its own checked row and un-picks
+  individually. Duplicates are refused by name; class category gates apply
+  unchanged (the row is Technical).
+- **At level-up and claim time**, choosing Language: Other in a pick dropdown
+  sprouts a "Which language?" input; the composed name is what submits. A
+  blank language waits unspent, like any blank row.
+- **Server-side**, a pick named "Language: X" that misses the catalog resolves
+  to the Other row — the numbers still come from the catalog, so a caller
+  cannot invent a percentage — with the language kept in the stored name.
+
+The resolution rule everywhere: exact catalog hit first, and only a **miss**
+in the `Language:` family falls back to the Other row. So Language: Dragonese,
+which has its own catalog row, resolves to its own numbers. The smoke test
+pins the name-composition rules.
 
 ---
 
@@ -1950,7 +1987,7 @@ by hand once per environment as needed.
 | Dev seed | `seed-dev.sql` | Optional local character/campaign rows. Never applied to production |
 | Data cleanup | `backfill-gear-system.sql`, `backfill-import-skill-gaps.sql`, `backfill-psionic-isp-notes.sql`, `backfill-skill-provenance.sql`, `backfill-spell-ppe-notes.sql`, `retire-gear-placeholders.sql`, `untag-cross-system.sql` | One-off corrections to rows an earlier import or data script got wrong or left NULL |
 | Class corrections | `fix-*.sql`, `apply-*.sql`, `long-bowman-money.sql` | The rules audit's output: stored class definitions rewritten against the books, and class data written for a schema feature the day it landed |
-| Additions | `add-*.sql` | Something the book gives that the database never had — a catalog row, or a whole class. A missing skill named in an `only` restriction narrows its category to nothing, which is usually how one gets noticed. A class goes in this way only when the import tool cannot be reached: production sits behind Cloudflare Access, so a hand-transcribed class is applied by script instead |
+| Additions | `add-*.sql` | Something the book gives that the database never had — a catalog row, a whole-table batch extracted from page scans (`add-pf-weapons-batch`, `add-pf-equipment-batch`, the RUE spell and psionics batches), or a whole class. A missing skill named in an `only` restriction narrows its category to nothing, which is usually how one gets noticed. A class goes in this way only when the import tool cannot be reached: production sits behind Cloudflare Access, so a hand-transcribed class is applied by script instead |
 
 Two conventions hold across all of them, and both matter more here than in a
 migration, because nothing records that one has run:
@@ -2029,7 +2066,7 @@ particular classes, and some classes are open only to one race. A character the
 books forbid saves cleanly here. Left unenforced deliberately for now — the
 restrictions live in prose rather than in any field the importer extracts, so
 enforcing them means first deciding where that data lives. Worth revisiting once
-there are enough O.C.C.s for the rule to bite; with one Palladium O.C.C. in the
+there are enough O.C.C.s for the rule to bite; with two Palladium O.C.C.s in the
 catalog there is currently very little to restrict.
 
 **The catalog editor has no general delete.** Rows are created and corrected by
