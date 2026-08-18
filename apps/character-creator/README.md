@@ -1927,7 +1927,7 @@ by hand once per environment as needed.
 | Dev seed | `seed-dev.sql` | Optional local character/campaign rows. Never applied to production |
 | Data cleanup | `backfill-gear-system.sql`, `backfill-skill-provenance.sql`, `retire-gear-placeholders.sql`, `untag-cross-system.sql` | One-off corrections to rows an earlier import or data script got wrong or left NULL |
 | Class corrections | `fix-*.sql`, `apply-*.sql`, `long-bowman-money.sql` | The rules audit's output: stored class definitions rewritten against the books, and class data written for a schema feature the day it landed |
-| Catalog additions | `add-*.sql` | A row the book grants that the catalog never had. Usually found because a class cites it — a missing skill named in an `only` restriction narrows its category to nothing |
+| Additions | `add-*.sql` | Something the book gives that the database never had — a catalog row, or a whole class. A missing skill named in an `only` restriction narrows its category to nothing, which is usually how one gets noticed. A class goes in this way only when the import tool cannot be reached: production sits behind Cloudflare Access, so a hand-transcribed class is applied by script instead |
 
 Two conventions hold across all of them, and both matter more here than in a
 migration, because nothing records that one has run:
