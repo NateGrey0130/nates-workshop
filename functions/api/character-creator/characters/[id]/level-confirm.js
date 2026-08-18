@@ -100,6 +100,7 @@ export async function onRequestPost({ request, env, params }) {
   // reached, so validate against toLevel rather than the level being left.
   const { violations } = validateCharacter({
     character: { level: toLevel }, cls, skills, attributes: character.attributes,
+    abilities: character.abilities,
     catalog: cls ? await loadSkillCategories(env) : null,
   });
   if (violations.length) {

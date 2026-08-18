@@ -94,6 +94,31 @@ export async function onRequestPatch({ request, env, params }) {
   ).bind(params.id).first();
 
   const sets = [], binds = [];
+  // G.M.-assigned powers, replacing only the gm-flagged subset of `abilities`.
+  // The book calls for this outright — "most demigods will have ONE extra
+  // power, similar to that of the godly father or mother" — and a ruling needs
+  // somewhere to live. Player picks are never writable here: the create
+  // endpoint validates them and the sheet has no business rewriting them, so
+  // the stored non-gm entries are carried through untouched.
+  //
+  // Recorded, not re-rolled: pools were rolled at creation and stay put, and a
+  // dice bonus on a G.M.-added power has no rolled value so it contributes
+  // nothing — the G.M. adjusts numbers by hand, which is who is driving anyway.
+  if ('gm_abilities' in body) {
+    if (!Array.isArray(body.gm_abilities)
+        || body.gm_abilities.some((n) => typeof n !== 'string' || !n.trim())) {
+      return json({ error: 'gm_abilities must be a list of power names' }, 400);
+    }
+    const row = await env.DB.prepare('SELECT abilities FROM characters WHERE id = ?')
+      .bind(params.id).first();
+    let stored = [];
+    try { stored = JSON.parse(row?.abilities || '[]') || []; } catch { stored = []; }
+    const player = stored.filter((e) => typeof e === 'string' || e?.gm !== true);
+    const next = [...player, ...body.gm_abilities.map((n) => ({ name: n.trim(), gm: true }))];
+    sets.push('abilities = ?');
+    binds.push(JSON.stringify(next));
+  }
+
   for (const field of PATCHABLE) {
     if (!(field in body)) continue;
     let v = body[field];
