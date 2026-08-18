@@ -57,6 +57,11 @@ export async function onRequestPost({ request, env }) {
   const claudeRequest = {
     model,
     max_tokens: 12000,
+    // Sonnet 5 thinks by default when `thinking` is omitted, and max_tokens
+    // caps thinking + text TOGETHER — one extraction burned all 12,000 tokens
+    // on a thinking block and produced zero text. Transcription needs the
+    // budget for output, not reasoning.
+    thinking: { type: 'disabled' },
     system: SYSTEM_PROMPT,
     messages: [{
       role: 'user',

@@ -265,6 +265,9 @@ export async function extractRows(env, spec, { pdfBase64, model, systemPrompt, u
   const claudeRequest = {
     model,
     max_tokens: 16000,
+    // Same posture as import/extract.js: Sonnet 5 thinks by default and the
+    // thinking spend comes out of max_tokens, which can starve the actual rows.
+    thinking: { type: 'disabled' },
     system: systemPrompt,
     messages: [{
       role: 'user',
