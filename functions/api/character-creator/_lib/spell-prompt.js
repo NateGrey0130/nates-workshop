@@ -15,7 +15,7 @@ Rules:
 - One object per spell. A spell is normally a bold name, sometimes followed by its level, then a short stat block (Range, Duration, Damage, Saving Throw, P.P.E.) and a description.
 - Copy stat block values as the book writes them. "100 feet per level of experience" and "2D6 melee rounds" are correct answers — do not reduce them to a number.
 - Never invent a value. Omit a field the entry does not state rather than guessing.
-- P.P.E. and spell level are the two numeric fields. If a spell's P.P.E. varies, put the base number in ppe and the full wording in description.
+- P.P.E. and spell level are the two numeric fields. If a spell's P.P.E. varies, put the MINIMUM in ppe and the schedule in ppe_note in a few words (the full wording still belongs in description). ppe_note stays absent for a flat cost.
 - Do not emit level headings ("Level Three Spells"), chapter headings, or introductory prose as spells.
 - Skip a spell you cannot read confidently rather than guessing at its numbers.`;
 
@@ -30,7 +30,8 @@ Each element must be:
 {
   "name": "Fire Bolt",                  // exact spell name, no trailing colon or level
   "level": 4,                            // spell level as an integer; 0 if not stated
-  "ppe": 7,                              // P.P.E. cost as an integer; 0 if not stated
+  "ppe": 7,                              // P.P.E. cost as an integer; the MINIMUM when it varies; 0 if not stated
+  "ppe_note": "2 per 10 lbs",            // ONLY when the cost varies: the schedule in a few words
   "range": "100 feet per level",         // omit if not stated
   "duration": "Instant",                 // omit if not stated
   "damage": "5D6",                       // omit if not stated

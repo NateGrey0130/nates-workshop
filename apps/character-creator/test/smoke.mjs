@@ -2788,6 +2788,38 @@ console.log(String.fromCharCode(10) + '[1c25k] Variable psionic costs');
     sheetSrcK.includes('escHtml(p.cost_note)') && sheetSrcK.includes("p.cost_note && cost > 0 ? '+' : ''"));
 }
 
+// ---------- 1c25l. Variable spell costs (ppe_note) ----------
+// Migration 021 mirrors 020 for spells: ppe is live (the use button deducts
+// it), so Manipulate Objects - priced by a schedule, imported as 0 - could
+// only read as free while matching the stub heuristic. Same convention, same
+// surfaces: ppe keeps the minimum, ppe_note says the schedule.
+console.log(String.fromCharCode(10) + '[1c25l] Variable spell costs');
+{
+  const spFields = CATALOGS.spells.fields.map((f) => f.name);
+  check('the catalog editor offers the note field', spFields.includes('ppe_note'));
+  check('placed beside the cost it qualifies',
+    spFields.indexOf('ppe_note') === spFields.indexOf('ppe') + 1);
+
+  const spec = getImportSpec('spells');
+  check('the importer extracts the note', spec.extractFields.includes('ppe_note'));
+  check('a zero with no note is flagged for review',
+    spec.flag({ ppe: 0 }).some((f) => f.includes('cost note')));
+  check('a zero WITH a note is not',
+    !spec.flag({ ppe: 0, ppe_note: 'costs nothing' }).some((f) => f.includes('cost note')));
+  check('a noted zero is not a stub',
+    spec.isStub({ source: 'import', ppe: 0 }) === true
+      && spec.isStub({ source: 'import', ppe: 0, ppe_note: 'x' }) === false);
+
+  // The spell picker and payload, pinned like the psionic ones in 1c25k. The
+  // sheet needs no pin of its own: powerRows reads cost_note for spells and
+  // psionics through the same path.
+  const appSrcL = readFileSync(join(appDir, 'app.js'), 'utf8');
+  check('the picker shows the note and marks the minimum',
+    appSrcL.includes("sp.ppe_note && sp.ppe > 0 ? '+' : ''") && appSrcL.includes('esc(sp.ppe_note)'));
+  check('the wizard stores cost_note on the character',
+    appSrcL.includes('cost_note: sp.ppe_note'));
+}
+
 // ---------- 1c26. Secondary schedules and group bonuses ----------
 console.log('\n[1c26] Secondary schedules & group bonuses');
 {

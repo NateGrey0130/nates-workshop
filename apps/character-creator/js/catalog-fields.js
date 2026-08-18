@@ -56,7 +56,13 @@ export const CATALOGS = {
     fields: [
       { name: 'name', label: 'Name', type: 'text', required: true },
       { name: 'level', label: 'Spell level', type: 'int', blankAs: 0 },
-      { name: 'ppe', label: 'P.P.E.', type: 'int', blankAs: 0 },
+      { name: 'ppe', label: 'P.P.E.', type: 'int', blankAs: 0,
+        help: 'The minimum cost when the spell has a schedule - see the note field.' },
+      // A spell whose cost is not one number - Manipulate Objects prices by a
+      // schedule. `ppe` keeps the minimum (the use button deducts it) and this
+      // says the schedule in a few words. Mirrors psionics' isp_note.
+      { name: 'ppe_note', label: 'P.P.E. varies', type: 'text',
+        help: 'Blank for a flat cost. Otherwise the schedule in a few words.' },
       { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'both'],
         help: 'Blank means unrestricted — offered to characters in either system.' },
       // Stat block. Text, not numbers — books write "100 feet per level of
