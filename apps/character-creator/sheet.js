@@ -73,6 +73,23 @@ function abilitiesTaken(cls) {
   return `<div id="powers-block">${powersHtml(cls)}</div>`;
 }
 
+// What the class simply HAS, as opposed to what was chosen — the Ley Line
+// Walker's sixteen ley line powers, a Demigod's regeneration. Composed classes
+// concatenate both halves', so a paired character lists race and occupation
+// powers alike. Entries are { name, description }; a bare string is tolerated
+// because the parser normalizes the list, not its members.
+function naturalAbilities(cls) {
+  const list = cls?.natural_abilities || [];
+  if (!list.length) return '';
+  const rows = list.map((a) => {
+    const name = typeof a === 'string' ? a : a?.name;
+    const desc = a && typeof a === 'object' && a.description ? a.description : '';
+    return `<li><b>${escHtml(name || '')}</b>
+      ${desc ? `<div class="muted small">${escHtml(desc)}</div>` : ''}</li>`;
+  }).join('');
+  return `<h3>Natural abilities</h3><ul style="margin-left:18px">${rows}</ul>`;
+}
+
 // Rebuilt in place after a G.M. edit — the same targeted-refresh discipline
 // the inventory uses, because a full load() here would discard anything typed
 // into the section inputs and not yet saved.
@@ -452,6 +469,7 @@ function render() {
       ${w ? `<textarea id="stat-notes" class="noprint">${escHtml(c.notes || '')}</textarea>
              <p class="print-only small" style="white-space:pre-wrap">${escHtml(c.notes || '—')}</p>`
           : `<p class="small" style="white-space:pre-wrap">${escHtml(c.notes || '—')}</p>`}
+      ${naturalAbilities(cls)}
       ${abilitiesTaken(cls)}
       ${advisory('Side effects', cls.side_effects)}
       ${advisory('Restrictions', cls.restrictions)}

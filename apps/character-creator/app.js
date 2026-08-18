@@ -483,10 +483,24 @@ function classDetail(c) {
       &nbsp;·&nbsp; Related picks: ${sk.occ_related_skills?.count ?? 0} &nbsp;·&nbsp; Secondary picks: ${sk.secondary_skills?.count ?? 0}
       ${c.psionics ? ' · Psionics: ' + esc(c.psionics.type) : ''}${c.magic ? ' · Magic: ' + esc(c.magic.type) : ''}</p>
     <p class="small" style="margin-top:8px; line-height:1.55">${esc(c.lore || '')}</p>
+    ${naturalAbilityList(c.natural_abilities)}
     ${listOrText('Side effects', c.side_effects)}
     ${listOrText('Restrictions', c.restrictions)}
     ${c.gm_notes ? `<p class="muted small" style="margin-top:8px"><b>GM notes:</b> ${esc(c.gm_notes)}</p>` : ''}
   </div>`;
+}
+// Powers the class simply grants — as opposed to the choose-groups the ability
+// picker covers. Without this the Ley Line Walker's sixteen ley line powers
+// appeared nowhere a player deciding on the class could read them.
+function naturalAbilityList(list) {
+  if (!Array.isArray(list) || !list.length) return '';
+  const items = list.map((a) => {
+    const name = typeof a === 'string' ? a : a?.name;
+    const desc = a && typeof a === 'object' && a.description ? a.description : '';
+    return `<li class="small"><b>${esc(name || '')}</b>${desc ? ` <span class="muted">&mdash; ${esc(desc)}</span>` : ''}</li>`;
+  }).join('');
+  return `<p class="small" style="margin-top:8px"><b>Natural abilities:</b></p>
+    <ul style="margin:4px 0 0 18px">${items}</ul>`;
 }
 // side_effects / restrictions are free text — a string or a list, advisory only.
 function listOrText(label, value) {
