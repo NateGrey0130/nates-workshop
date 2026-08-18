@@ -400,7 +400,7 @@ function renderSystem() {
     ).join(' &nbsp;·&nbsp; ')}</p>` : ''}
     ${S.existing.length ? `<h3>Existing characters</h3>
     <p class="small">${S.existing.map((c) =>
-      `<a href="sheet.html?id=${c.id}">${esc(c.name)}</a> <span class="muted">(${esc(c.class_id)} L${c.level} · ${esc(c.campaign_name)})</span>`
+      `<a href="sheet.html?id=${c.id}">${esc(c.name)}</a> <span class="muted">(${esc(className(c.class_id))}${c.occ_class_id ? ' ' + esc(className(c.occ_class_id)) : ''} L${c.level} · ${esc(c.campaign_name)})</span>`
     ).join(' &nbsp;·&nbsp; ')}</p>` : ''}
   </div>`;
 }
@@ -457,12 +457,19 @@ function renderClass() {
   <div class="nav"><button class="btn btn-ghost" onclick="goStep(0)">&larr; Back</button>
   <button class="btn btn-primary" ${canUseClass() ? '' : 'disabled'} onclick="confirmClass()">Use this class &rarr;</button></div>`;
 }
+// A class's display name when the catalog is loaded, its id when not — the
+// existing-characters list renders before /classes resolves on a cold start.
+function className(id) {
+  return S.classes.find((c) => c.id === id)?.name || id;
+}
+
 function classCard(c, score) {
   const sel = S.cls?.id === c.id ? ' sel' : '';
   const badge = score != null ? `<span class="tag score">match ${score}/6</span>` : '';
   return `<div class="pick${sel}" onclick="pickClass('${c.id}')">
     <h4>${esc(c.name)}</h4>
-    <span class="tag">${esc(c.category)}</span><span class="tag">${esc(c.source_book)}</span>${badge}
+    <span class="tag">${esc(c.category)}</span><span class="tag">${esc(c.source_book)}</span>${
+      needsOccupation(c) ? '<span class="tag">pairs with an O.C.C.</span>' : ''}${badge}
     <p class="muted small">${esc((c.lore || '').split('\n')[0].slice(0, 110))}…</p>
   </div>`;
 }

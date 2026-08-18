@@ -17,7 +17,7 @@ export async function onRequestGet({ request, env }) {
   const campaignId = new URL(request.url).searchParams.get('campaign_id');
   const { limit, offset } = paging(request);
 
-  const base = `SELECT characters.id, characters.name, characters.class_id, characters.level,
+  const base = `SELECT characters.id, characters.name, characters.class_id, characters.occ_class_id, characters.level,
                        characters.xp, characters.player_email, characters.campaign_id,
                        characters.hp_current, characters.hp_max, characters.sdc_current, characters.sdc_max,
                        characters.mdc_current, characters.mdc_max, characters.ppe_current, characters.ppe_max,

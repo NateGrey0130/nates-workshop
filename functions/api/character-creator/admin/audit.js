@@ -67,6 +67,17 @@ export async function onRequestGet({ request, env }) {
 
   const row = await env.DB.prepare('SELECT count(*) AS n FROM characters').first();
 
+  // Just the numbers, for the catalog page's badge — fetched on every load,
+  // so the full offender payload would be waste there.
+  if (new URL(request.url).searchParams.get('counts_only') === '1') {
+    return json({
+      checked: results.length,
+      blocked: offenders.filter((o) => o.violations.length).length,
+      warned: offenders.filter((o) => !o.violations.length).length,
+      unvalidatable: unvalidatable.length,
+    });
+  }
+
   return json({
     checked: results.length,
     total_characters: row?.n ?? 0,
