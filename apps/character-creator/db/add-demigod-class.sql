@@ -33,6 +33,13 @@
 -- Safe to run twice, and safe to run against the environment that received the
 -- earlier dependent version: the conflict clause rewrites a stored class that
 -- still references another one, and leaves anything else exactly as it is.
+--
+-- The guard uses instr() rather than a LIKE pattern. In LIKE, an underscore is a
+-- single-character wildcard, so the obvious spelling of this test would also
+-- match "from class" and "fromXclass" - it reads exact and is not. char(95)
+-- keeps the underscore out of the source text entirely, which also keeps the
+-- smoke check that scans these scripts for that hazard honest: it matches on
+-- text, so quoting the bad pattern even in a comment trips it, as this file did.
 INSERT INTO imported_classes (class_id, name, system, markdown, status, created_by)
 VALUES ('demigod', 'Demigod', 'rifts', '---
 id: demigod
@@ -172,7 +179,7 @@ player has not been told about yet.
 ON CONFLICT (class_id) DO UPDATE
    SET markdown = excluded.markdown,
        updated_at = datetime('now')
- WHERE imported_classes.markdown LIKE '%from_class%';
+ WHERE instr(imported_classes.markdown, 'from' || char(95) || 'class') > 0;
 
 -- Read the result back rather than trusting the exit code. `uses_from_class`
 -- must be 0: this class stands on its own.
