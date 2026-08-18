@@ -176,13 +176,36 @@ function validateVariants(variants, errors, warnings, granted = null) {
 const PSI_TIERS = ['minor', 'major', 'master'];
 const tierRank = (t) => PSI_TIERS.indexOf(String(t ?? '').toLowerCase());
 
+// Merging two classes' bonuses for one key.
+//
+// Numbers add. Anything else — a dice expression — CANNOT be added: a race
+// granting "+1d4 P.S." and an occupation granting "+2d6" means both are rolled,
+// and there is no single expression that says so. So mixed or repeated dice
+// collect into a list, and the roller evaluates each.
+//
+// This used to be `if (typeof v === 'number')`, which silently DROPPED any
+// dice-valued bonus arriving from the second class. An R.C.C. composed with the
+// Cyber-Knight lost all five of its +1D4s, and nothing anywhere said so.
+function mergeBonusValue(have, incoming) {
+  if (incoming === undefined || incoming === null) return have;
+  if (have === undefined) return incoming;
+  if (typeof have === 'number' && typeof incoming === 'number') return have + incoming;
+  return [...[have].flat(), ...[incoming].flat()];
+}
+
+function mergeBonusBlock(a, b) {
+  const merged = { ...(a || {}) };
+  for (const [k, v] of Object.entries(b || {})) merged[k] = mergeBonusValue(merged[k], v);
+  return merged;
+}
+
 function sumBonusGroups(a, b) {
   const out = {};
-  for (const group of ['attributes', 'combat', 'saves']) {
-    const merged = { ...(a?.[group] || {}) };
-    for (const [k, v] of Object.entries(b?.[group] || {})) {
-      if (typeof v === 'number') merged[k] = (merged[k] || 0) + v;
-    }
+  // `combat` and `saves` are validated as numbers, so the dice branch above is
+  // unreachable for them; they are merged through the same helper anyway rather
+  // than kept as a separate code path that could disagree with it.
+  for (const group of ['attributes', 'combat', 'saves', 'pools']) {
+    const merged = mergeBonusBlock(a?.[group], b?.[group]);
     if (Object.keys(merged).length) out[group] = merged;
   }
   // at_level entries are kept side by side rather than merged by level:
@@ -192,6 +215,7 @@ function sumBonusGroups(a, b) {
   if (at.length) out.at_level = at;
   return Object.keys(out).length ? out : undefined;
 }
+
 
 // `rcc` supplies physiology, `occ` supplies occupation. Returns `rcc` unchanged
 // when there is no second class, so every caller can apply it unconditionally.
@@ -350,6 +374,16 @@ function validateCategories(where, categories, errors) {
 // failure this whole block exists to prevent.
 export const BONUS_ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
 
+// The pools a class bonus may add to. Books state these as "plus 4D6" on top of
+// whatever the occupation gives — the Demigod's P.P.E. and I.S.P. are both
+// written that way (Rifts, Pantheons of the Megaverse p.17).
+//
+// Unlike combat and saves, a pool bonus is NOT re-read at render time. Pools are
+// rolled once and stored as `*_max`, so the bonus is rolled with the base and
+// folded into that number. A dice bonus re-evaluated every render would change
+// the character's maximum under them.
+export const POOL_BONUS_KEYS = ['hp', 'sdc', 'mdc', 'ppe', 'isp'];
+
 // The three groups a bonus can land in. `combat` and `saves` deliberately do
 // not enumerate their keys: both are open sets that derive.js grows, and a
 // bonus to a key it has not heard of is better surfaced as a warning than
@@ -382,6 +416,25 @@ function validateBonusGroup(where, group, block, errors, warnings) {
   }
 }
 
+// A flat number or a dice expression, keyed by pool. Dice are the common case —
+// books write "plus 4D6" far more often than a fixed figure.
+function validatePoolBonuses(where, block, errors, warnings) {
+  if (block === undefined || block === null) return;
+  if (typeof block !== 'object' || Array.isArray(block)) {
+    errors.push(`${where}.pools must be a map of pool to number or dice`);
+    return;
+  }
+  for (const [k, v] of Object.entries(block)) {
+    if (!POOL_BONUS_KEYS.includes(k)) {
+      errors.push(`${where}.pools.${k} is not a pool (${POOL_BONUS_KEYS.join(', ')})`);
+    } else if (!isDiceBonus(v) && (typeof v !== 'number' || !Number.isFinite(v))) {
+      errors.push(`${where}.pools.${k} must be a number or a dice expression like "4d6"`);
+    } else if (v === 0) {
+      warnings.push(`${where}.pools.${k} is 0 and will do nothing`);
+    }
+  }
+}
+
 // "Minimum P.S. is 22; if lower, adjust up to P.S. 22" (Juicer, Rifts p.69).
 // A floor applied AFTER the dice bonus lands — deliberately not
 // attribute_requirements, which gates whether the class may be taken at all.
@@ -409,7 +462,9 @@ function validateBonuses(bonuses, errors, warnings) {
 
   validateAttributeMinimums(bonuses.attribute_minimums, errors);
 
-  const known = new Set([...BONUS_GROUPS, 'at_level', 'attribute_minimums']);
+  validatePoolBonuses('bonuses', bonuses.pools, errors, warnings);
+
+  const known = new Set([...BONUS_GROUPS, 'at_level', 'attribute_minimums', 'pools']);
   for (const k of Object.keys(bonuses)) {
     if (!known.has(k)) warnings.push(`bonuses.${k} is not a recognised group and will be ignored`);
   }
@@ -429,6 +484,15 @@ function validateBonuses(bonuses, errors, warnings) {
       if (step.level < 2) warnings.push(`bonuses.at_level level ${step.level} — level 1 belongs in bonuses itself`);
       for (const g of BONUS_GROUPS) {
         validateBonusGroup(`bonuses.at_level[${step.level}]`, g, step[g], errors, warnings);
+      }
+      // Pools are rolled once at creation and stored, so there is nowhere for a
+      // level-gated pool bonus to land. Said out loud rather than ignored: a
+      // bonus filed under a key nothing reads is exactly the silent failure the
+      // rest of this block exists to prevent.
+      if (step.pools !== undefined) {
+        warnings.push(`bonuses.at_level[${step.level}].pools is not applied — `
+          + 'pools are rolled once at creation; state per-level growth in the pool formula '
+          + 'itself ("P.E. x 5 plus 2D6 per level")');
       }
     }
   }

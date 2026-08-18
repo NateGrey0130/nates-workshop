@@ -278,6 +278,7 @@ magic:
 special_abilities:
   - { name: "Psi-Sword", description: "..." }
 bonuses:                      # mechanical grants — see the section below
+  pools: { ppe: "4d6" }              # ADDED to a pool's own formula; dice or flat
   attributes: { PS: 2, PE: "1d4" }   # a flat number OR dice
   attribute_minimums: { PS: 22 }     # a floor applied AFTER the bonus lands.
                                      # NOT attribute_requirements, which gates
@@ -675,7 +676,7 @@ pool bases as before — none of them knows a character can have two classes.
 | attribute minimums | **both** — the stricter of each |
 | fixed skills | **both**, a shared skill held once at the higher base |
 | related & secondary allowances | the **occupation** |
-| bonuses | **both**, summed |
+| bonuses | **both** — flat numbers summed, dice collected (see below) |
 | psionics | the **stronger tier** |
 | magic | the **occupation** |
 | equipment, abilities, level progression | **both** |
@@ -692,6 +693,17 @@ Three rules earned by getting them wrong first:
 - **The audit and the stage-change endpoint compose too.** Judging a Chiang-Ku
   Wizard against the dragon alone reports every skill its occupation grants as a
   violation.
+- **A dice bonus cannot be summed, so it is collected.** A race granting
+  `+1d4 P.S.` and an occupation granting `+2d6` means both are rolled; there is
+  no single expression that says so, so the merged value is `["1d4", "2d6"]` and
+  each rolls. Flat numbers still add, and a mixed list keeps both halves.
+
+  This is the shape of a bug that was live: the merge copied the second class's
+  values **only when they were numbers**, so every dice bonus arriving from the
+  *occupation* was silently dropped. Any R.C.C. composed with the Cyber-Knight
+  lost all five of its `+1D4`s, and nothing reported it. The same collect rule
+  now applies within one class, where a level-1 dice bonus and an `at_level` one
+  for the same attribute used to overwrite each other.
 
 ---
 
@@ -863,6 +875,39 @@ Those are rolled once when the class is confirmed and stored as
 `derive.classBonuses(cls, level, rolled)` takes them as its third argument and
 folds them in beside the flat ones, so everything downstream sees one bonus set
 and does not care which kind it was.
+
+**A pool bonus is added to a pool's own formula.** Books write pools three ways,
+and only two had a shape. `mdc_base: "P.E. x 10"` states the pool outright, and
+omitting a pool lets it fall through to the occupation — but the Demigod says
+*"P.P.E.: As per the appropriate O.C.C., plus 4D6"*, which is fallthrough **and**
+a modifier. Written as a formula it parsed to NULL and the character had no
+P.P.E. at all; omitted, it lost the 4D6. Transcribing the page faithfully was
+strictly worse than saying nothing.
+
+```yaml
+bonuses:
+  pools: { ppe: "4d6", isp: "4d6" }   # and leave ppe_base absent
+```
+
+Four things follow from pools being rolled once rather than derived per render:
+
+- **It is the only bonus group that takes dice as well as a number.** Combat and
+  save bonuses are always printed flat; a pool bonus is usually a roll.
+- **It is rolled with the base and folded into the stored `*_max`.** Nothing is
+  re-evaluated later, because a dice bonus read at render time would move the
+  character's maximum under them — the same reason `attribute_bonuses` is stored.
+- **A bonus cannot conjure a pool the class does not have.** A null base stays
+  null. That is the rule that keeps an M.D.C. race from acquiring hit points,
+  applied to bonuses.
+- **`at_level` does not take one**, and says so rather than ignoring it. Per-level
+  growth belongs in the formula (`"P.E. x 5 plus 2D6 per level"`), which is where
+  `perLevelDiceOf` already reads it from.
+
+When two classes both grant one, the bonuses are **collected, not summed** — two
+dice expressions have no arithmetic sum, so `["4d6", "2d6"]` means both are
+rolled. Flat numbers still add. This is deliberately not the merge the other
+bonus groups use: theirs drops any non-numeric value, which silently loses a
+dice bonus coming from the **occupation** half of a composition.
 
 `at_level` bonuses accumulate and apply the moment the level is reached, because
 `classBonuses` is read at render time; nothing further is written to the

@@ -115,7 +115,29 @@ function attrIn(text, attrs) {
   return mult ? v * +mult[1] : v;
 }
 
-export function rollPoolFormula(expr, attrs = {}) {
+// `bonus` is what the CLASS adds on top — `bonuses.pools.ppe`, a number, a dice
+// expression, or a list of either once two classes have been composed. It is
+// rolled here rather than at render time because the result is stored as the
+// character's `*_max`; re-evaluating it every render would move their maximum.
+//
+// A null base stays null even with a bonus. "A pool the race does not mention
+// falls through to the occupation", and if neither states one the character
+// simply does not have that pool — a bonus must not conjure it into existence.
+// That is the same rule that keeps an M.D.C. race from acquiring hit points.
+function rollBonus(bonus) {
+  if (bonus == null) return 0;
+  if (Array.isArray(bonus)) return bonus.reduce((sum, b) => sum + rollBonus(b), 0);
+  if (typeof bonus === 'number') return Number.isFinite(bonus) ? bonus : 0;
+  const rolled = evalDice(bonus);
+  return rolled == null ? 0 : rolled;
+}
+
+export function rollPoolFormula(expr, attrs = {}, bonus = null) {
+  const base = rollPoolBase(expr, attrs);
+  return base == null ? null : base + rollBonus(bonus);
+}
+
+function rollPoolBase(expr, attrs) {
   if (expr == null) return null;
   if (typeof expr === 'number') return expr;
   const s = String(expr).trim();

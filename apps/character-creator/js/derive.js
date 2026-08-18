@@ -180,8 +180,11 @@
     const fold = (from) => {
       for (const group of ['attributes', 'combat', 'saves']) {
         for (const [k, v] of Object.entries(from?.[group] || {})) {
+          // A number counts itself; a dice expression — or a list of them, once
+          // two classes have been composed — counts what it actually rolled.
+          const isDice = typeof v === 'string' || Array.isArray(v);
           const val = typeof v === 'number' ? v
-            : (group === 'attributes' && typeof v === 'string' ? n(rolled?.[k]) : NaN);
+            : (group === 'attributes' && isDice ? n(rolled?.[k]) : NaN);
           if (Number.isFinite(val)) out[group][k] = (out[group][k] || 0) + val;
         }
       }
@@ -202,13 +205,31 @@
 
   // Which attributes a class rolls a bonus for, and the dice for each. The
   // wizard rolls these once at creation; nothing else needs them.
+  // Every dice-valued attribute bonus, keyed by attribute. A value may be a list
+  // once two classes have been composed — a race and an occupation can each
+  // grant one to the same attribute, and both roll.
+  //
+  // Collects rather than overwrites. It used to assign, so a class granting
+  // "+1d4 P.S." both at level 1 and again through at_level kept only the last
+  // one seen.
   function diceBonuses(cls) {
     const out = {};
     const src = cls?.bonuses;
     if (!src) return out;
+    const add = (k, v) => {
+      if (typeof v === 'number') { if (Number.isFinite(v)) out[k] = out[k] === undefined ? v : [...[out[k]].flat(), v]; return; }
+      const s = String(v).trim();
+      if (!s) return;
+      out[k] = out[k] === undefined ? s : [...[out[k]].flat(), s];
+    };
     for (const block of [src, ...(src.at_level || [])]) {
       for (const [k, v] of Object.entries(block?.attributes || {})) {
-        if (typeof v === 'string' && v.trim()) out[k] = v.trim();
+        if (typeof v === 'string') add(k, v);
+        // A composed list may mix the two — a race's flat +2 beside an
+        // occupation's +1d4. The FLAT parts come along, because classBonuses
+        // reads a list's total off `rolled` and would otherwise lose them.
+        // A bare number is not collected here: classBonuses counts that itself.
+        else if (Array.isArray(v)) for (const one of v) add(k, one);
       }
     }
     return out;

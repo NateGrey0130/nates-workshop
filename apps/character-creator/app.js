@@ -128,8 +128,11 @@ function rollAttrBonuses(force = false) {
   if (!force && S.attrBonuses && Object.keys(S.attrBonuses).length) return;
   S.attrBonuses = {};
   for (const [attr, dice] of Object.entries(derive.diceBonuses(S.cls))) {
-    const v = evalDice(dice);
-    if (v != null) S.attrBonuses[attr] = v;
+    // A list when a race and an occupation both grant one to the same
+    // attribute. Each rolls; the stored bonus is their total, so
+    // `attribute_bonuses` stays one number per attribute and needs no migration.
+    const rolls = [dice].flat().map((d) => (typeof d === 'number' ? d : evalDice(d))).filter((v) => v != null);
+    if (rolls.length) S.attrBonuses[attr] = rolls.reduce((a, b) => a + b, 0);
   }
 }
 
@@ -141,12 +144,16 @@ function computePools(force = false) {
   // I.S.P. may come from a tier the character rolled rather than from the
   // class, so the pool is read off the composed object.
   const pc = psiClass();
+  // What the class adds on top of each pool's own formula. Books state these as
+  // "plus 4D6" over whatever the occupation gives, so the bonus rides along with
+  // the roll and lands in the stored maximum.
+  const pb = c.bonuses?.pools || {};
   S.pools = {
-    hp: rollPoolFormula(c.hit_points_base, S.attrs),
-    sdc: rollPoolFormula(c.sdc_base, S.attrs),
-    mdc: rollPoolFormula(c.mdc_base, S.attrs),
-    ppe: rollPoolFormula(c.ppe_base, S.attrs),
-    isp: pc.psionics ? rollPoolFormula(pc.psionics.isp_base, S.attrs) : null,
+    hp: rollPoolFormula(c.hit_points_base, S.attrs, pb.hp),
+    sdc: rollPoolFormula(c.sdc_base, S.attrs, pb.sdc),
+    mdc: rollPoolFormula(c.mdc_base, S.attrs, pb.mdc),
+    ppe: rollPoolFormula(c.ppe_base, S.attrs, pb.ppe),
+    isp: pc.psionics ? rollPoolFormula(pc.psionics.isp_base, S.attrs, pb.isp) : null,
   };
   // Step 5 is "Equipment AND Money" (p.22) — every class starts with a sum of
   // coin as well as its kit. Rolled from the same formula parser as the pools,

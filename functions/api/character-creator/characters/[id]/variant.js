@@ -88,7 +88,9 @@ export async function onRequestPost({ request, env, params }) {
       if (character[`${pool}_max`] == null) continue;
       pools[pool] = {
         from_max: character[`${pool}_max`],
-        rolled_max: rollPoolFormula(next[formulaKey], attrs),
+        // The stage's own bonus rides with the roll, exactly as it does at
+        // creation — a variant that raises a pool must not lose it here.
+        rolled_max: rollPoolFormula(next[formulaKey], attrs, next.bonuses?.pools?.[pool]),
         formula: next[formulaKey],
       };
     }
