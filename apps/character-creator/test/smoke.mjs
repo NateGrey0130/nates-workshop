@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseClassMarkdown, isGearChoice, applyVariant, parseYaml, combineClasses,
-         categoryAllows, categoryLabel, VARIANT_OVERRIDES } from '../js/parser.js';
+         categoryAllows, categoryLabel, VARIANT_OVERRIDES, POOL_BONUS_KEYS } from '../js/parser.js';
 import { referencedGear, restrictionNames } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import {
@@ -1100,6 +1100,13 @@ console.log('\n[1c11b] Class prompt covers the schema');
   for (const key of ['attacks', 'strike', 'parry', 'dodge', 'roll', 'spell_magic', 'ritual_magic', 'horror_factor']) {
     check(`the prompt lists the real bonus key \`${key}\``, prompt.includes(key) && realKeys.includes(key));
   }
+
+  // The pool group, which is the only one taking dice, and the only one whose
+  // omission from the prompt would send a "plus 4D6" into ppe_base — where it
+  // parses to NULL and the character gets no P.P.E. at all.
+  check('the prompt documents the pools bonus group', /pools:\s+hp, sdc, mdc, ppe, isp/.test(prompt));
+  check('and warns against putting a pool bonus in at_level',
+    /do not put a pool bonus in at_level/i.test(prompt));
   check('the prompt warns that an unknown bonus key does nothing',
     /silently does nothing/.test(prompt));
 }
@@ -2138,6 +2145,105 @@ x
   check('a class with no restrictions collects nothing',
     restrictionNames({ skills: { occ_related_skills: { categories: ['Physical'] } } }).length === 0);
   check('and nothing at all does not throw', restrictionNames(undefined).length === 0);
+}
+
+// ---------- 1c25c. Pool bonuses ----------
+// "P.P.E.: As per the appropriate O.C.C., plus 4D6" (Demigod R.C.C., Rifts
+// Pantheons p.17). Fallthrough PLUS a modifier, which had no shape at all:
+// stating it as a formula gave NULL P.P.E., and omitting it lost the +4D6. The
+// faithful transcription was strictly worse than saying nothing.
+console.log('\n[1c25c] Pool bonuses');
+{
+  const mk = (extra) => parseClassMarkdown(`---
+id: t
+name: T
+system: rifts
+source_book: b
+category: rcc
+${extra}
+---
+
+## Lore
+
+x
+`);
+
+  const ok = mk(`bonuses:
+  pools: { ppe: "4d6", isp: 5 }`);
+  check('a dice pool bonus and a flat one both parse',
+    ok.errors.length === 0 && ok.warnings.length === 0, ok.errors.concat(ok.warnings).join('; '));
+  check('and survive parsing',
+    ok.data.bonuses.pools.ppe === '4d6' && ok.data.bonuses.pools.isp === 5);
+
+  const bad = mk(`bonuses:
+  pools: { ppe: "lots" }`);
+  check('prose is refused rather than ignored', bad.errors.length === 1, bad.errors.join('; '));
+  const wrongKey = mk(`bonuses:
+  pools: { stamina: 4 }`);
+  check('a pool that does not exist is refused',
+    wrongKey.errors.some((e) => e.includes('is not a pool')), wrongKey.errors.join('; '));
+  const zero = mk(`bonuses:
+  pools: { ppe: 0 }`);
+  check('a zero bonus warns rather than passing silently',
+    zero.warnings.some((w) => w.includes('will do nothing')));
+
+  // Nothing applies a level-gated pool bonus, so it must not pass quietly.
+  const atLevel = mk(`bonuses:
+  at_level:
+    - { level: 5, pools: { ppe: 10 } }`);
+  check('a pool bonus at_level warns that nothing applies it',
+    atLevel.warnings.some((w) => w.includes('is not applied')), atLevel.warnings.join('; '));
+
+  check('the documented pool keys are the five the character has',
+    POOL_BONUS_KEYS.join(',') === 'hp,sdc,mdc,ppe,isp');
+
+  // Rolling. Means rather than ranges: hitting both extremes at once is rare
+  // enough that a range check would pass on a bonus applied twice.
+  const mean = (f, bonus) => { let s = 0; const N = 40000;
+    for (let i = 0; i < N; i++) s += rollPoolFormula(f, { PE: 16 }, bonus); return s / N; };
+  const near = (v, want, tol = 0.4) => Math.abs(v - want) < tol;
+
+  check('a dice bonus is applied exactly once', near(mean('2d6', '4d6') - mean('2d6', null), 14));
+  check('a flat bonus is applied exactly once', near(mean('2d6', 5) - mean('2d6', null), 5));
+  check('a list of bonuses is summed', near(mean('2d6', ['4d6', '2d6']) - mean('2d6', null), 21));
+  check('no bonus changes nothing', near(mean('2d6', null) - mean('2d6', undefined), 0));
+
+  // The rule that keeps an M.D.C. race from acquiring hit points.
+  check('a bonus cannot conjure a pool the class does not have',
+    rollPoolFormula(null, { PE: 16 }, '4d6') === null
+    && rollPoolFormula(undefined, { PE: 16 }, 10) === null);
+
+  // Composition. The dice-dropping filter used by the other groups would lose
+  // the occupation's bonus entirely, which is a live bug for attributes.
+  const race = mk(`bonuses:
+  pools: { ppe: "4d6" }`).data;
+  const occ = parseClassMarkdown(`---
+id: o
+name: O
+system: rifts
+source_book: b
+category: occ
+ppe_base: "2d6"
+bonuses:
+  pools: { ppe: "2d6", mdc: 5 }
+---
+
+## Lore
+
+x
+`).data;
+  const both = combineClasses(race, occ);
+  check('two classes granting the same pool keep both bonuses',
+    JSON.stringify(both.bonuses.pools.ppe) === '["4d6","2d6"]',
+    JSON.stringify(both.bonuses.pools.ppe));
+  check('a bonus only one side states still survives', both.bonuses.pools.mdc === 5);
+  check('and a dice bonus from the OCCUPATION is not dropped',
+    JSON.stringify(both.bonuses.pools.ppe).includes('2d6'));
+  check('two flat bonuses for one pool are summed',
+    combineClasses(mk(`bonuses:
+  pools: { ppe: 3 }`).data,
+                   mk(`bonuses:
+  pools: { ppe: 4 }`).data).bonuses.pools.ppe === 7);
 }
 
 // ---------- 1c26. Secondary schedules and group bonuses ----------

@@ -132,6 +132,16 @@ Optional — include only what the page actually states:
                   ("roll" is roll with punch/fall/impact)
       saves:      spell_magic, ritual_magic, psionics, toxins_poisons,
                   harmful_drugs, insanity, possession, horror_factor, pain
+      pools:      hp, sdc, mdc, ppe, isp
+    A pool bonus is what the class adds ON TOP of a pool's own formula, and it
+    is the ONLY bonus group that takes dice as well as a flat number. Use it for
+    "P.P.E.: as per the appropriate O.C.C., plus 4D6" — { pools: { ppe: "4d6" } }
+    — leaving ppe_base absent so the occupation's own formula still applies.
+    Writing that sentence into ppe_base instead produces NO P.P.E. at all.
+    Do NOT use it for a pool the class states outright ("P.E. x 10 M.D.C.");
+    that is mdc_base. And do not put a pool bonus in at_level — pools are rolled
+    once at creation, so per-level growth belongs in the formula itself
+    ("P.E. x 5 plus 2D6 per level").
     A book's flat "+2 to save vs magic" covers both spell_magic and ritual_magic
     — give both. A bonus the list cannot express (pull punch, save vs
     illusionary magic) belongs in prose, not under an invented key.
