@@ -679,6 +679,29 @@ A character carries `class_id` (+ `class_variant`) for the race and
 every character created before this has `occ_class_id` NULL and behaves exactly
 as it did.
 
+**The pairing is the normal structure, not an extra.** A player picks a race and
+then an occupation, and the wizard says so: the picker is labelled *normally
+required* for a race that needs one and *optional for this race* otherwise,
+rather than a flat "optional" for all. Both exceptions are real and both still
+work - an O.C.C. alone is a human character and shows no race picker at all, and
+a race that grants its own skills stands on its own.
+
+**Which races need one is inferred, not declared.** `needsOccupation(cls)` is
+true for an R.C.C. granting no related and no secondary skills: it offers the
+player nothing to *choose*. Fixed skills deliberately do not count - a Chiang-Ku
+has twenty-four of them and still nothing chosen, which is exactly the gap an
+O.C.C. fills. Measured against the published classes, that marks the Demigod
+(nothing at all) and the Chiang-Ku (body skills only), and leaves the Godling
+(8 related, 5 secondary) and the Dragon Hatchling (6 related) alone.
+
+Inferred rather than declared because the skill counts already say it and no
+stored class needs editing - and it is only safe because **the answer is always
+a warning and never a refusal.** A wrong guess costs a dismissible note. The
+warning appears in the wizard beside the picker, and `validate-character.js`
+raises `no_occupation` so it also reaches the save path and the
+[character audit](#server-side-rule-enforcement), where it lands under *worth a
+look* rather than *would be refused on save*.
+
 `combineClasses(rcc, occ)` composes them into **one class-shaped object**, the
 same trick `applyVariant` uses a layer down. Callers do not reach for it
 directly: [`js/compose.js`](js/compose.js) is the single place that knows the

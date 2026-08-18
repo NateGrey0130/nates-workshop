@@ -10,7 +10,7 @@ import { evalDice, rollPoolFormula, rollAttribute } from './js/dice.js';
 import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSIONIC_TIER_RULES,
          rollsForPsionics as classRollsForPsionics } from './js/psionics.js';
 import { isChoiceGroup, isGearChoice, applyVariant,
-         categoryAllows, categoryLabel } from './js/parser.js';
+         categoryAllows, categoryLabel, needsOccupation } from './js/parser.js';
 import { composeClass } from './js/compose.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
@@ -543,13 +543,23 @@ function occPicker() {
   const options = S.classes.filter((c) => c.system === S.system && c.category === 'occ');
   if (!options.length) return '';
   const chosen = S.occ ? S.classes.find((c) => c.id === S.occ) : null;
+  // The usual structure is a race and then an occupation. Presented as the
+  // expected next step rather than an optional extra, because that is what it
+  // is — but never blocking, since some races genuinely stand alone.
+  const needs = needsOccupation(S.cls);
   return `<div class="panel-inset">
-    <h3>Occupation <span class="muted small">— optional</span></h3>
-    <p class="muted small">A racial class grants no related or secondary skills; those come from the
-      O.C.C. a character trains in. Leave this blank for a creature that has none.</p>
+    <h3>Occupation <span class="muted small">— ${needs ? 'normally required' : 'optional for this race'}</span></h3>
+    <p class="muted small">${needs
+      ? `<b>${esc(S.cls.name)}</b> grants no related or secondary skills of its own, so alone it
+         gives you nothing to choose. A character is normally a race <em>and</em> an occupation:
+         the race sets the body, the O.C.C. sets what was learned.`
+      : `<b>${esc(S.cls.name)}</b> grants its own skills, so it can stand alone — but most
+         characters are a race <em>and</em> an occupation, and taking one adds its skills to this.`}</p>
+    ${needs && !S.occ ? `<p class="warn">No occupation chosen. You can continue, and this character
+      will have no related or secondary skills at all.</p>` : ''}
     <div class="rowline">
       <select onchange="pickOcc(this.value)">
-        <option value="">— none —</option>
+        <option value="">— none (this race stands alone) —</option>
         ${options.map((c) => `<option value="${esc(c.id)}"${S.occ === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}
       </select>
     </div>

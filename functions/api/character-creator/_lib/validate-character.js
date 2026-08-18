@@ -33,7 +33,7 @@
 //    category both over- and under-counts. Choice groups are therefore reported
 //    as WARNINGS and never block a save.
 
-import { isChoiceGroup, categoryAllows, categoryName } from '../../../../apps/character-creator/js/parser.js';
+import { isChoiceGroup, categoryAllows, categoryName, needsOccupation } from '../../../../apps/character-creator/js/parser.js';
 
 import { skillGrantsFor } from './leveling.js';
 
@@ -79,6 +79,27 @@ export function validateCharacter({ character, cls, skills, attributes, catalog 
 
   const violations = [];
   const warnings = [];
+
+  // The usual structure is a race and then an occupation. A racial class that
+  // grants nothing to CHOOSE - no related, no secondary - is not a playable
+  // character on its own: a Demigod alone has no skills at all, and a Chiang-Ku
+  // has twenty-four body skills and nothing the player picked.
+  //
+  // A warning and never a violation. Some races legitimately stand alone, the
+  // pairing is a convention rather than a rule the books state as one, and a
+  // character part-way through being built must still save.
+  //
+  // `occ_id` is set by combineClasses, so its absence means no occupation was
+  // composed in - and when none was, `cls` IS the racial class, which is what
+  // makes the check readable here at all.
+  if (!cls.occ_id && needsOccupation(cls)) {
+    warnings.push({
+      rule: 'no_occupation',
+      class_id: cls.id ?? null,
+      message: `${cls.name || 'This racial class'} grants no related or secondary skills, `
+        + 'so it has nothing for the player to choose - it is normally paired with an O.C.C.',
+    });
+  }
   const list = Array.isArray(skills) ? skills : [];
   const level = Number.isFinite(character?.level) ? character.level : 1;
 
