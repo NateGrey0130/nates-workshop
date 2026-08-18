@@ -128,8 +128,11 @@ function rollAttrBonuses(force = false) {
   if (!force && S.attrBonuses && Object.keys(S.attrBonuses).length) return;
   S.attrBonuses = {};
   for (const [attr, dice] of Object.entries(derive.diceBonuses(S.cls))) {
-    const v = evalDice(dice);
-    if (v != null) S.attrBonuses[attr] = v;
+    // A list when a race and an occupation both grant one to the same
+    // attribute. Each rolls; the stored bonus is their total, so
+    // `attribute_bonuses` stays one number per attribute and needs no migration.
+    const rolls = [dice].flat().map((d) => (typeof d === 'number' ? d : evalDice(d))).filter((v) => v != null);
+    if (rolls.length) S.attrBonuses[attr] = rolls.reduce((a, b) => a + b, 0);
   }
 }
 

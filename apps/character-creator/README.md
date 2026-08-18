@@ -676,7 +676,7 @@ pool bases as before — none of them knows a character can have two classes.
 | attribute minimums | **both** — the stricter of each |
 | fixed skills | **both**, a shared skill held once at the higher base |
 | related & secondary allowances | the **occupation** |
-| bonuses | **both**, summed |
+| bonuses | **both** — flat numbers summed, dice collected (see below) |
 | psionics | the **stronger tier** |
 | magic | the **occupation** |
 | equipment, abilities, level progression | **both** |
@@ -693,6 +693,17 @@ Three rules earned by getting them wrong first:
 - **The audit and the stage-change endpoint compose too.** Judging a Chiang-Ku
   Wizard against the dragon alone reports every skill its occupation grants as a
   violation.
+- **A dice bonus cannot be summed, so it is collected.** A race granting
+  `+1d4 P.S.` and an occupation granting `+2d6` means both are rolled; there is
+  no single expression that says so, so the merged value is `["1d4", "2d6"]` and
+  each rolls. Flat numbers still add, and a mixed list keeps both halves.
+
+  This is the shape of a bug that was live: the merge copied the second class's
+  values **only when they were numbers**, so every dice bonus arriving from the
+  *occupation* was silently dropped. Any R.C.C. composed with the Cyber-Knight
+  lost all five of its `+1D4`s, and nothing reported it. The same collect rule
+  now applies within one class, where a level-1 dice bonus and an `at_level` one
+  for the same attribute used to overwrite each other.
 
 ---
 

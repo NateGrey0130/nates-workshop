@@ -176,34 +176,38 @@ function validateVariants(variants, errors, warnings, granted = null) {
 const PSI_TIERS = ['minor', 'major', 'master'];
 const tierRank = (t) => PSI_TIERS.indexOf(String(t ?? '').toLowerCase());
 
+// Merging two classes' bonuses for one key.
+//
+// Numbers add. Anything else — a dice expression — CANNOT be added: a race
+// granting "+1d4 P.S." and an occupation granting "+2d6" means both are rolled,
+// and there is no single expression that says so. So mixed or repeated dice
+// collect into a list, and the roller evaluates each.
+//
+// This used to be `if (typeof v === 'number')`, which silently DROPPED any
+// dice-valued bonus arriving from the second class. An R.C.C. composed with the
+// Cyber-Knight lost all five of its +1D4s, and nothing anywhere said so.
+function mergeBonusValue(have, incoming) {
+  if (incoming === undefined || incoming === null) return have;
+  if (have === undefined) return incoming;
+  if (typeof have === 'number' && typeof incoming === 'number') return have + incoming;
+  return [...[have].flat(), ...[incoming].flat()];
+}
+
+function mergeBonusBlock(a, b) {
+  const merged = { ...(a || {}) };
+  for (const [k, v] of Object.entries(b || {})) merged[k] = mergeBonusValue(merged[k], v);
+  return merged;
+}
+
 function sumBonusGroups(a, b) {
   const out = {};
-  for (const group of ['attributes', 'combat', 'saves']) {
-    const merged = { ...(a?.[group] || {}) };
-    for (const [k, v] of Object.entries(b?.[group] || {})) {
-      if (typeof v === 'number') merged[k] = (merged[k] || 0) + v;
-    }
+  // `combat` and `saves` are validated as numbers, so the dice branch above is
+  // unreachable for them; they are merged through the same helper anyway rather
+  // than kept as a separate code path that could disagree with it.
+  for (const group of ['attributes', 'combat', 'saves', 'pools']) {
+    const merged = mergeBonusBlock(a?.[group], b?.[group]);
     if (Object.keys(merged).length) out[group] = merged;
   }
-  // Pool bonuses collect rather than sum, because two dice expressions have no
-  // arithmetic sum: a race granting "+4d6 P.P.E." and an occupation granting
-  // "+2d6" means both are rolled, not that some combined die exists. The roller
-  // takes a number, a dice string, or a list of either.
-  //
-  // Deliberately NOT the `typeof v === 'number'` filter the groups above use.
-  // That filter silently drops a dice-valued bonus coming from the second class,
-  // so an R.C.C. composed with a Cyber-Knight loses all five of its +1D4s.
-  const pools = {};
-  for (const side of [a?.pools, b?.pools]) {
-    for (const [k, v] of Object.entries(side || {})) {
-      if (v === undefined || v === null) continue;
-      if (pools[k] === undefined) pools[k] = v;
-      else if (typeof pools[k] === 'number' && typeof v === 'number') pools[k] += v;
-      else pools[k] = [...[pools[k]].flat(), v];
-    }
-  }
-  if (Object.keys(pools).length) out.pools = pools;
-
   // at_level entries are kept side by side rather than merged by level:
   // classBonuses() folds every entry at or below the character's level anyway,
   // so two classes each granting +1 attack at level 5 correctly gives +2.
@@ -211,6 +215,7 @@ function sumBonusGroups(a, b) {
   if (at.length) out.at_level = at;
   return Object.keys(out).length ? out : undefined;
 }
+
 
 // `rcc` supplies physiology, `occ` supplies occupation. Returns `rcc` unchanged
 // when there is no second class, so every caller can apply it unconditionally.

@@ -2147,6 +2147,84 @@ x
   check('and nothing at all does not throw', restrictionNames(undefined).length === 0);
 }
 
+// ---------- 1c24b. Composing dice attribute bonuses ----------
+// `sumBonusGroups` copied the second class's values only when they were numbers,
+// so a dice-valued bonus arriving from the OCCUPATION was silently dropped: an
+// R.C.C. composed with the Cyber-Knight lost all five of its +1D4s and nothing
+// said so. Two dice cannot be summed into one expression, so they collect.
+console.log('\n[1c24b] Composing dice attribute bonuses');
+{
+  const mk = (cat, b) => parseClassMarkdown(
+    `---
+id: ${cat}
+name: ${cat}
+system: rifts
+source_book: b
+category: ${cat}
+bonuses:
+${b}
+---
+
+## Lore
+
+x
+`).data;
+  const merged = (a, b, attr) => combineClasses(mk('rcc', a), mk('occ', b)).bonuses.attributes[attr];
+
+  check('a dice bonus from the OCCUPATION survives',
+    merged('  combat: { attacks: 1 }', '  attributes: { PS: "1d4" }', 'PS') === '1d4');
+  check('a dice bonus from the RACE still survives',
+    merged('  attributes: { PS: "1d4" }', '  combat: { attacks: 1 }', 'PS') === '1d4');
+  check('two dice for one attribute collect rather than overwrite',
+    JSON.stringify(merged('  attributes: { PS: "1d4" }', '  attributes: { PS: "2d6" }', 'PS')) === '["1d4","2d6"]');
+  check('two flat bonuses still add',
+    merged('  attributes: { PS: 2 }', '  attributes: { PS: 3 }', 'PS') === 5);
+  check('a flat and a dice bonus keep both',
+    JSON.stringify(merged('  attributes: { PS: 2 }', '  attributes: { PS: "1d4" }', 'PS')) === '[2,"1d4"]');
+
+  // The real case, from published classes: five attributes, all dice, all from
+  // the occupation half.
+  const ck = mk('occ', '  attributes: { MA: "1d4", ME: "1d4", PS: "1d4", PE: "1d4", Spd: "1d4" }');
+  const withRace = combineClasses(mk('rcc', '  combat: { initiative: 2 }'), ck);
+  check('all five Cyber-Knight-shaped dice bonuses survive composition',
+    ['MA', 'ME', 'PS', 'PE', 'Spd'].every((k) => withRace.bonuses.attributes[k] === '1d4'),
+    JSON.stringify(withRace.bonuses.attributes));
+
+  // And through the rolling path, which is where a list has to be understood.
+  const roll = (cls, attr, N = 20000) => {
+    let total = 0;
+    for (let i = 0; i < N; i++) {
+      const rolled = {};
+      for (const [k, d] of Object.entries(derive.diceBonuses(cls))) {
+        const rolls = [d].flat().map((x) => (typeof x === 'number' ? x : evalDice(x))).filter((v) => v != null);
+        if (rolls.length) rolled[k] = rolls.reduce((a, b) => a + b, 0);
+      }
+      total += derive.classBonuses(cls, 1, rolled).attributes[attr] || 0;
+    }
+    return total / N;
+  };
+  const near = (v, w) => Math.abs(v - w) < 0.35;
+  const compose2 = (a, b) => combineClasses(mk('rcc', a), mk('occ', b));
+
+  check('two composed dice both roll',
+    near(roll(compose2('  attributes: { PS: "1d4" }', '  attributes: { PS: "2d6" }'), 'PS'), 9.5));
+  check('a mixed flat-and-dice list keeps the flat part',
+    near(roll(compose2('  attributes: { PS: 2 }', '  attributes: { PS: "1d4" }'), 'PS'), 4.5));
+  check('a lone flat bonus is not double counted',
+    near(roll(compose2('  attributes: { PS: 2 }', '  combat: { attacks: 1 }'), 'PS'), 2));
+  check('a lone dice bonus is not double counted',
+    near(roll(compose2('  attributes: { PS: "1d4" }', '  combat: { attacks: 1 }'), 'PS'), 2.5));
+
+  // The same collect-not-overwrite rule inside one class: a bonus at level 1 and
+  // another at_level for the same attribute both count once the level is reached.
+  const twice = mk('rcc', ['  attributes: { PS: "1d4" }',
+                          '  at_level:',
+                          '    - { level: 5, attributes: { PS: "1d6" } }'].join(String.fromCharCode(10)));
+  check('a level-1 and an at_level dice bonus for one attribute both survive',
+    JSON.stringify(derive.diceBonuses(twice).PS) === '["1d4","1d6"]',
+    JSON.stringify(derive.diceBonuses(twice).PS));
+}
+
 // ---------- 1c25c. Pool bonuses ----------
 // "P.P.E.: As per the appropriate O.C.C., plus 4D6" (Demigod R.C.C., Rifts
 // Pantheons p.17). Fallthrough PLUS a modifier, which had no shape at all:
