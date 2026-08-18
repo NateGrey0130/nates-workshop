@@ -1264,7 +1264,8 @@ function renderPowers() {
         return `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
           <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
             data-act="power" data-kind="spell" data-name="${esc(sp.name)}">
-          <span>${esc(sp.name)}</span><span class="pct">L${sp.level} · ${sp.ppe} P.P.E.</span></label>`;
+          <span>${esc(sp.name)}${sp.ppe_note ? ` <span class="muted small">&mdash; ${esc(sp.ppe_note)}</span>` : ''}</span>
+          <span class="pct">L${sp.level} · ${sp.ppe}${sp.ppe_note && sp.ppe > 0 ? '+' : ''} P.P.E.</span></label>`;
       }).join('');
   }
   if (psi) {
@@ -1405,7 +1406,8 @@ function powersPayload() {
   return [
     ...S.spells.map((n) => {
       const sp = S.spellCatalog.find((x) => x.name === n);
-      return { type: 'spell', name: n, level: sp?.level, cost: sp?.ppe };
+      return { type: 'spell', name: n, level: sp?.level, cost: sp?.ppe,
+               ...(sp?.ppe_note ? { cost_note: sp.ppe_note } : {}) };
     }),
     ...S.psi.map((n) => {
       const p = S.psiCatalog.find((x) => x.name === n);

@@ -50,14 +50,19 @@ const IMPORT_SPECS = {
   spells: {
     catalog: 'spells',
     table: 'spells',
-    extractFields: ['name', 'level', 'ppe', 'range', 'duration', 'damage',
+    extractFields: ['name', 'level', 'ppe', 'ppe_note', 'range', 'duration', 'damage',
                     'saving_throw', 'area_of_effect', 'casting_time', 'description'],
     // The two numbers. A book disagreeing about PPE or level is worth flagging;
     // differing prose in a description is not.
     compareFields: ['level', 'ppe'],
     // The class importer creates spell stubs as (level 0, ppe 0, source
     // 'import') — a name with nothing behind it, which is what this fills in.
-    isStub: (row) => row.source === 'import' && row.ppe === 0,
+    // A note-carrying zero is deliberate, not a row waiting for stats.
+    isStub: (row) => row.source === 'import' && row.ppe === 0 && !row.ppe_note,
+    // Same review nudge psionics has: a costless spell is either genuinely
+    // free (rare) or a variable cost the extraction gave up on.
+    flag: (row) => (row.ppe === 0 && !row.ppe_note
+      ? ['P.P.E. 0 with no cost note — free spell, or a missed variable cost?'] : []),
   },
 
   psionics: {
