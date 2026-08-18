@@ -59,7 +59,12 @@ attribute_requirements: { IQ: 10, PE: 12 }
 ppe_base: "3d6x10+20, +3d6 per additional level starting at level two"
 starting_money: "1d4x1000"
 bonuses:
-  saves: { horror_factor: 4, possession: 2, insanity: 2 }
+  saves: { horror_factor: 4, possession: 2, insanity: 2, mind_control: 2 }
+  at_level:
+    - { level: 3, saves: { curses: 3 } }
+    - { level: 9, saves: { curses: 3 } }
+    - { level: 11, saves: { curses: 3 } }
+    - { level: 14, saves: { curses: 3 } }
 skills:
   occ_skills:
     - { name: "Language: Native Tongue", base: 98, per_level: 0 }
@@ -178,8 +183,16 @@ extraction_notes: |
     skill bases fold the O.C.C. bonus into the catalog base (Climbing 40+5=45),
     and "Math: Basic" / "Lore: Demon & Monster" are stored under their catalog
     names, Basic Math and Lore: Demons & Monsters.
-  - Save bonuses "+2 to save vs possession and mind control" appear as a combined entry; recorded possession only since mind_control is not separately clarified beyond that phrase (treated as possession per schema''s saves key list; mind_control has no dedicated key, so only "possession" was recorded and the mind control portion is noted here).
-  - "+3 to save vs curses" at levels three, nine, eleven and fourteen, and "+1 to spell strength (the number others must save against when you cast a spell)" at levels 3,7,10, and 13, and "+1 on Perception Rolls at levels 2, 5, 7, 10, and 13; double when on a ley line" are all level-specific/escalating bonuses that don''t cleanly map to the flat "bonuses" block or a single at_level entry each without conflicting with the schema''s intended one-time nature; recorded here in extraction_notes rather than forced.
+  - The "+2 to save vs possession and mind control" bonus is recorded as both
+    possession and mind_control - the derive layer carries a mind_control key
+    (the Juicer''s +6 uses it), which an earlier revision of these notes
+    believed did not exist.
+  - The "+3 to save vs curses" at levels three, nine, eleven and fourteen is
+    carried as bonuses.at_level entries, which accumulate as the character
+    reaches each level. "+1 to spell strength" at levels 3, 7, 10 and 13 and
+    "+1 on Perception Rolls at levels 2, 5, 7, 10, and 13; double when on a
+    ley line" stay recorded here: neither spell strength nor perception is a
+    derived stat yet, so there is still no key for a number to land on.
   - P.P.E. Recovery: spent P.P.E. recovers at a rate of seven points per hour of sleep or rest. Meditation restores P.P.E. at 15 per hour of meditation and is equal to one hour of sleep for this character when it comes to recovery from fatigue and physical rest. Not a schema field.
   - Cybernetics: "Starts with none and will avoid getting any cybernetic or other forms of physical augmentation because it interferes with magic. However, Bio-System prosthetics will be considered if necessary." Not modeled as a field; noted here.
   - Racial Requirement: "None. At least 30% are D-Bees." Not modeled since no explicit numeric requirement field exists for a distribution note; noted here.

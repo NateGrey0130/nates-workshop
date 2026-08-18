@@ -351,6 +351,7 @@ function render() {
     ['possession', 'vs Possession'], ['horror_factor', 'vs Horror Factor'],
     ['coma_death_pct', 'vs Coma/Death'], ['pain', 'vs Pain'],
     ['illusionary_magic', 'vs Illusionary Magic'], ['mind_control', 'vs Mind Control'],
+    ['curses', 'vs Curses'],
   ];
 
   const armorRows = armorList.map((a, i) => armorSlotHtml(a, i, w)).join('');

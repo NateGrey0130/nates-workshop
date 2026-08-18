@@ -2710,6 +2710,45 @@ console.log('\n[1c25h] Natural abilities rendering');
       && /typeof a === 'string' \? a : a\?\.name/.test(appSrc));
 }
 
+// ---------- 1c25j. Level-scheduled save bonuses, and the curses key ----------
+// bonuses.at_level had parser validation and derive support already; what the
+// Ley Line Walker's "+3 vs curses at levels 3, 9, 11 and 14" lacked was a
+// `curses` save key for the number to land on. It borrows the P.E. magic row,
+// because a curse is magic - the same reasoning that gave illusionary magic
+// its key.
+console.log(String.fromCharCode(10) + '[1c25j] at_level curses');
+{
+  const cursed = parseClassMarkdown([
+    '---', 'id: t', 'name: T', 'system: rifts', 'source_book: b', 'category: occ',
+    'bonuses:',
+    '  saves: { mind_control: 2 }',
+    '  at_level:',
+    '    - { level: 3, saves: { curses: 3 } }',
+    '    - { level: 9, saves: { curses: 3 } }',
+    '---', '', '## Lore', '', 'x', ''].join(String.fromCharCode(10)));
+  check('an at_level curses entry parses clean', cursed.errors.length === 0,
+    cursed.errors.join('; '));
+
+  const cb = (lvl) => D.classBonuses(cursed.data, lvl, null);
+  check('below the first step there is nothing', (cb(1).saves.curses || 0) === 0);
+  check('each reached step accumulates',
+    cb(3).saves.curses === 3 && cb(9).saves.curses === 6);
+  check('the flat mind_control half rides along at every level',
+    cb(1).saves.mind_control === 2 && cb(9).saves.mind_control === 2);
+
+  // The key exists all the way to the rendered save: derive's table carries a
+  // curses row (P.E. magic chart), and the class bonus folds onto it.
+  const merged = D.saves({ PE: 16, ME: 10 }, {}, null, cb(9));
+  check('the sheet-level save has a curses row and folds the bonus in',
+    merged.curses === 7);  // +1 from P.E. 16 on the magic chart, +6 from class
+  const plain = D.saves({ PE: 10, ME: 10 }, {}, null, { saves: {} });
+  check('a class granting nothing still shows the row, at the table value',
+    plain.curses === 0);
+
+  const sheetSrcJ = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  check('the sheet lists vs Curses', sheetSrcJ.includes("['curses', 'vs Curses']"));
+}
+
 // ---------- 1c26. Secondary schedules and group bonuses ----------
 console.log('\n[1c26] Secondary schedules & group bonuses');
 {
