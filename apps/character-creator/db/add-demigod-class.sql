@@ -10,11 +10,13 @@
 -- same reason as the Godling: the book is not in the source collection. Check
 -- the numbers against a copy before the class is played.
 --
--- REQUIRES THE GODLING. The Demigod's one chosen power comes from the Godling's
--- list - "select any ONE power from those listed under godling" - through
--- `from_class: godling`. Apply add-godling-class.sql first, or the choice group
--- resolves to nothing and the class silently offers no powers. The review step
--- reports it as a dangling ability reference if you forget.
+-- INDEPENDENT OF THE GODLING. The book prints the eleven powers once and points
+-- at them - "select any ONE power from those listed under godling" - but that is
+-- a printing convenience, not a relationship between the classes. These are two
+-- separate R.C.C.s. An earlier version of this class used `from_class: godling`
+-- and was wrong to: it made a Demigod's powers depend on the Godling's
+-- lifecycle, so retiring or editing that class silently changed what this one
+-- offers. The powers are written out here instead.
 --
 -- Creates no gear stubs: the Demigod's equipment and money are "as per O.C.C.",
 -- so it references nothing of its own. Confirmed by a local dress rehearsal
@@ -22,16 +24,16 @@
 --
 -- It also names no skills, which is correct rather than incomplete. The Demigod
 -- takes any O.C.C. and every skill comes from there - the pure race-plus-
--- occupation case. See `extraction_notes` in the markdown for that and the five
+-- occupation case. See `extraction_notes` in the markdown for that and the six
 -- other modelling decisions behind what this class deliberately omits.
 --
 -- Pure ASCII on purpose: passing non-ASCII to `wrangler d1 execute` on Windows
 -- has mangled an em-dash into mojibake in production before.
 --
--- Idempotent through the UNIQUE class_id: re-running inserts nothing, and a
--- class already corrected by hand is left alone.
-
-INSERT OR IGNORE INTO imported_classes (class_id, name, system, markdown, status, created_by)
+-- Safe to run twice, and safe to run against the environment that received the
+-- earlier dependent version: the conflict clause rewrites a stored class that
+-- still references another one, and leaves anything else exactly as it is.
+INSERT INTO imported_classes (class_id, name, system, markdown, status, created_by)
 VALUES ('demigod', 'Demigod', 'rifts', '---
 id: demigod
 name: Demigod
@@ -58,7 +60,38 @@ natural_abilities:
   - { name: "Fire and cold resistant", description: "Does half damage." }
   - { name: "Regeneration", description: "Regenerates 1D6x5 M.D.C. every minute." }
 special_abilities:
-  - { choose: 1, from_class: godling }
+  - name: "Turn Invisible at Will"
+    description: "Turn invisible at will and see the invisible."
+  - name: "Energy Blast"
+    description: "A ranged attack doing 1D6 M.D. (or S.D.C.) plus 1D6 every two levels after the first. Range: 2D6x100 ft."
+  - name: "Energy Aura"
+    description: "A field of magical energy that protects with 20 M.D.C. (or S.D.C.) per level of experience, for one hour. Can be created up to three times per 24 hour period."
+  - name: "Super-Strong"
+    description: "Add 2D6+10 to P.S."
+    bonuses: { attributes: { PS: "2d6+10" } }
+  - name: "Super-Tough"
+    description: "Add 1D6 to P.E. and 3D4x10 to M.D.C."
+    bonuses: { attributes: { PE: "1d6" }, pools: { mdc: "3d4x10" } }
+  - name: "Shape Shifter"
+    description: "Change at will into one animal, one time a day per level. Gets all the advantages of the shape and retains M.D.C., ability to speak and all attributes. A normal animal, not a monster."
+    repeatable: true
+    on_repeat: "Can shape shift into ANY type of normal animal."
+  - name: "Impervious to One Type of Attack"
+    description: "Pick one: cold, fire, lightning, energy, poison and disease, mind control or possession."
+  - name: "Super-Swift"
+    description: "Add 1D4 to P.P. and 1D6x10 to Spd."
+    bonuses: { attributes: { PP: "1d4", Spd: "1d6x10" } }
+  - name: "Super-Psionic Powers"
+    description: "All the abilities from two of the three lesser power categories, or one lesser category and five super-psionic powers, or can be a Burster (pick one)."
+    psionics: { type: "master" }
+  - name: "Magic Powers"
+    description: "All the abilities of a practitioner of magic. Pick one: Ley Line Walker, Shifter, Mystic or Warlock (or Necromancer if evil). Knows all magic spells of the same level as the character''s experience level."
+    magic: { type: "innate" }
+    repeatable: true
+    on_repeat: "Two different types of magical powers."
+  - name: "Fly"
+    description: "Fly under one''s own mystic power and without exhaustion. Speed attribute 3D4x10, duration 2 hours per level of experience."
+  - { choose: 1, from: ["Turn Invisible at Will", "Energy Blast", "Energy Aura", "Super-Strong", "Super-Tough", "Shape Shifter", "Impervious to One Type of Attack", "Super-Swift", "Super-Psionic Powers", "Magic Powers", "Fly"] }
 restrictions:
   - "Horror Factor: 6+1D4 when he is recognized as a demigod."
   - "Attributes are considered supernatural."
@@ -97,10 +130,16 @@ extraction_notes: |
   6. S.D.C. and Hit Points apply only "for non-mega-damage worlds". Both are
      stored alongside M.D.C.; which set applies is a campaign decision.
 
-  The one chosen power comes from the Godling''s list, which is what the book
-  says: "select any ONE power from those listed under godling". The extra power
-  most demigods have is G.M.-assigned and is recorded as a restriction rather
-  than a second choice group.
+  7. The eleven powers are written out here rather than referenced from the
+     Godling. The book prints them once and points at them - "select any ONE
+     power from those listed under godling" - but that is a printing
+     convenience, not a relationship between the classes. These are two
+     independent R.C.C.s, and pointing one at the other would make a Demigod''s
+     powers depend on the Godling''s lifecycle: retire or edit that class and
+     this one silently offers something different.
+
+  The extra power most demigods have is G.M.-assigned and is recorded as a
+  restriction rather than a second choice group.
 ---
 
 ## Lore
@@ -129,9 +168,14 @@ extra power similar to that of the godly parent.
 A demigod''s parentage is a campaign hook as much as a stat block. A character who
 does not know what he is gives the G.M. rivals, enemies and a quest that the
 player has not been told about yet.
-', 'published', 'manual');
+', 'published', 'manual')
+ON CONFLICT (class_id) DO UPDATE
+   SET markdown = excluded.markdown,
+       updated_at = datetime('now')
+ WHERE imported_classes.markdown LIKE '%from_class%';
 
--- Read the result back rather than trusting the exit code, and confirm the
--- class this one depends on is actually there and live.
-SELECT class_id, name, system, status, created_by, length(markdown) AS markdown_bytes
-  FROM imported_classes WHERE class_id IN ('demigod', 'godling') ORDER BY class_id;
+-- Read the result back rather than trusting the exit code. `uses_from_class`
+-- must be 0: this class stands on its own.
+SELECT class_id, name, status, created_by, length(markdown) AS markdown_bytes,
+       instr(markdown, 'from_class') > 0 AS uses_from_class
+  FROM imported_classes WHERE class_id = 'demigod';
