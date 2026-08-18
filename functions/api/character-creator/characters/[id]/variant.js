@@ -131,6 +131,7 @@ export async function onRequestPost({ request, env, params }) {
     cls: target,
     skills: character.skills || [],
     attributes: newAttrs,
+    abilities: character.abilities,
     catalog: await loadSkillCategories(env),
   });
   if (violations.length) {

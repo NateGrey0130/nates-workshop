@@ -84,6 +84,7 @@ export async function onRequestPost({ request, env }) {
     character: { level: 1 },
     cls,
     skills: b.skills || [],
+    abilities: b.abilities || [],
     attributes: b.attributes || {},
     catalog: cls ? await loadSkillCategories(env) : null,
   });

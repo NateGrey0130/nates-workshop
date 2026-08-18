@@ -51,7 +51,11 @@ export async function onRequestPost({ request, env, params }) {
     ? null
     : dedupeCategories(related.flatMap((g) => g.categories || []));
 
-  const character = await loadCharacter(env, params.id, ['level', 'skills', 'attributes', 'class_id']);
+  // The whole row, not a column list: loadCharacterClass reads the variant,
+  // the occupation, the psychic tier and the chosen abilities off it, and the
+  // old four-column load composed a Demigod Long Bowman as a bare Demigod -
+  // zero related allowance - the moment banked picks were spent.
+  const character = await loadCharacter(env, params.id);
   const skills = character.skills;
 
   const picked = await resolvePicks(env, {
@@ -72,6 +76,7 @@ export async function onRequestPost({ request, env, params }) {
   const cls = await loadCharacterClass(env, request.url, character);
   const { violations } = validateCharacter({
     character: { level: character.level }, cls, skills: merged, attributes: character.attributes,
+    abilities: character.abilities,
     catalog: cls ? await loadSkillCategories(env) : null,
   });
   if (violations.length) {

@@ -33,7 +33,8 @@
 //    category both over- and under-counts. Choice groups are therefore reported
 //    as WARNINGS and never block a save.
 
-import { isChoiceGroup, categoryAllows, categoryName, needsOccupation } from '../../../../apps/character-creator/js/parser.js';
+import { isChoiceGroup, categoryAllows, categoryName, needsOccupation,
+         isAbilityChoice, isAbilityDefinition, abilityOptions, normalizeAbilities } from '../../../../apps/character-creator/js/parser.js';
 
 import { skillGrantsFor } from './leveling.js';
 
@@ -71,7 +72,7 @@ export function secondaryAllowance(cls, level) {
   return base + granted;
 }
 
-export function validateCharacter({ character, cls, skills, attributes, catalog }) {
+export function validateCharacter({ character, cls, skills, attributes, abilities, catalog }) {
   // No class definition means no rules to check against. A character whose
   // class was retired must still be saveable — PR 2 made that survivable on
   // purpose, and refusing here would undo it.
@@ -195,6 +196,56 @@ export function validateCharacter({ character, cls, skills, attributes, catalog 
       violations.push({ rule: 'duplicate_skill', skill: s.name, message: `${s.name} is listed twice` });
     }
     seen.add(key);
+  }
+
+  // ── chosen abilities ──────────────────────────────────────────────────────
+  // The wizard enforces the count, the offered list and repeatability at pick
+  // time; until now nothing re-checked them, so a direct API call could save a
+  // Godling with five powers. Same posture as the skill rules: what a player
+  // CHOSE gets a boundary, and anything a class edit could have caused warns
+  // instead of blocking.
+  //
+  // A `{ name, gm: true }` entry is a ruling, not a pick — the Demigod's "most
+  // have ONE extra power, similar to the godly parent's" is assigned by hand —
+  // so it is exempt from the count and never checked against the offered list,
+  // the same reasoning that makes an `override: true` skill legal by definition.
+  {
+    const groups = (cls.special_abilities || []).filter(isAbilityChoice);
+    const allowed = groups.reduce((n, g) => n + (+g.choose || 0), 0);
+    const offered = new Set(abilityOptions(cls).map(norm));
+    const defs = new Map((cls.special_abilities || [])
+      .filter(isAbilityDefinition).map((d) => [norm(d.name), d]));
+    const picks = normalizeAbilities(abilities);
+
+    const player = picks.filter((p) => !p.gm);
+    if (player.length > allowed) {
+      violations.push({ rule: 'ability_count', have: player.length, allowed,
+        message: `${player.length} chosen power${player.length === 1 ? '' : 's'}, `
+          + `but this class allows ${allowed}` });
+    }
+    for (const p of player) {
+      if (!offered.has(norm(p.name))) {
+        warnings.push({ rule: 'ability_unknown', name: p.name,
+          message: `${p.name} is not a power this class offers — the class may have `
+            + 'been edited since this character was built' });
+      }
+    }
+    // Repeats count player and G.M. copies together: holding a power twice is
+    // holding it twice, whoever granted the second.
+    const times = new Map();
+    for (const p of picks) times.set(norm(p.name), (times.get(norm(p.name)) || 0) + 1);
+    for (const [key, n] of times) {
+      if (n < 2) continue;
+      const def = defs.get(key);
+      const label = def?.name || picks.find((p) => norm(p.name) === key).name;
+      if (def && def.repeatable !== true) {
+        violations.push({ rule: 'ability_repeat', name: label, times: n,
+          message: `${label} is taken ${n} times, but cannot be taken more than once` });
+      } else if (n > 2) {
+        warnings.push({ rule: 'ability_repeat', name: label, times: n,
+          message: `${label} is taken ${n} times — the book says twice` });
+      }
+    }
   }
 
   return { skipped: false, violations, warnings };
