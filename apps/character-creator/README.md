@@ -221,10 +221,20 @@ ppe and isp.
 | `spells` | `system` NULL means unrestricted. name, level, ppe, plus a stat block (range, duration, damage, saving throw, area of effect, casting time, description). The stat block is TEXT — books write "100 feet per level" as often as a number. |
 | `psionic_powers` | name, category (Healing/Physical/Sensitive/Super), isp, plus range, duration, saving throw and description — the same field names spells use. `min_tier` is the psychic tier a book states is required; NULL means no restriction beyond the category. |
 
-All catalogs carry `source` (`seed` \| `import`) and `source_book`, so an entry's
-provenance is visible and the same skill from two books can coexist under
-distinguished names. Rows created as stubs by the class importer have zeroed
-numbers — the skill importer exists to fill them in.
+Every catalog carries `source_book`, so an entry's provenance is visible and
+the same skill from two books can coexist under distinguished names.
+
+`skills`, `spells` and `psionic_powers` also carry `source` (`seed` \| `import`),
+and a stub the class importer created is spotted by that plus zeroed numbers.
+**`gear` has no `source` column.** It never did, so its stub marker is the
+description instead: rows created by a class import open with `STUB —`, and a
+row edited by hand loses the prefix and correctly stops counting as one. The
+four `isStub` rules live together in `_lib/import-engine.js`; gear's is the
+odd one out and the comment there says why.
+
+Data scripts that create such a row must build that em-dash with
+`'STUB ' || char(8212) || ' ...'` rather than embedding it, or the marker
+arrives as mojibake and the row is a stub nothing can find.
 
 **Working state** — not content, and not a character
 
