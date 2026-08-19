@@ -16,6 +16,16 @@
 -- Each insert is guarded on the filename, so this cannot double-record a
 -- script that has genuinely run since tracking landed, and it is safe to
 -- re-run. A script added after this file was generated is simply absent.
+--
+-- ONE SCRIPT IS DELIBERATELY ABSENT: retire-gear-placeholders.sql. It is the
+-- run-early-and-finish-later case, and production is mid-way through it - two
+-- of the four placeholder rows are gone, and the Juicer still cites the other
+-- two because step 1 is waiting on the Rifts equipment chapter. Asserting a
+-- plain run would read as finished. Run the script itself instead: it is
+-- guarded, it does whatever is possible now, its closing SELECT reports what
+-- is still outstanding, and it records an OBSERVED run rather than an
+-- asserted one. That is strictly better evidence than anything this file
+-- could claim on its behalf.
 
 INSERT INTO data_script_runs (filename, note)
 SELECT 'add-burster-class.sql', 'pre-tracking backfill (asserted, not observed)'
@@ -224,10 +234,6 @@ WHERE NOT EXISTS (SELECT 1 FROM data_script_runs WHERE filename = 'long-bowman-m
 INSERT INTO data_script_runs (filename, note)
 SELECT 'merge-scuba-duplicate.sql', 'pre-tracking backfill (asserted, not observed)'
 WHERE NOT EXISTS (SELECT 1 FROM data_script_runs WHERE filename = 'merge-scuba-duplicate.sql');
-
-INSERT INTO data_script_runs (filename, note)
-SELECT 'retire-gear-placeholders.sql', 'pre-tracking backfill (asserted, not observed)'
-WHERE NOT EXISTS (SELECT 1 FROM data_script_runs WHERE filename = 'retire-gear-placeholders.sql');
 
 INSERT INTO data_script_runs (filename, note)
 SELECT 'seed-dev.sql', 'pre-tracking backfill (asserted, not observed)'
