@@ -6,6 +6,7 @@
 import { parseClassMarkdown, applyVariant } from '../../../../apps/character-creator/js/parser.js';
 import { composeClass } from '../../../../apps/character-creator/js/compose.js';
 import { getStored } from './class-store.js';
+import { loadSkillBonuses } from './skill-bonuses.js';
 
 // `variantId` is the character's class_variant. Resolution happens HERE, in the
 // one place a class is turned into the thing a character is played as, so no
@@ -36,5 +37,10 @@ export async function loadCharacterClass(env, requestUrl, character) {
   const occ = character.occ_class_id
     ? await loadClass(env, requestUrl, character.occ_class_id, character.occ_class_variant)
     : null;
-  return composeClass({ rcc, occ, character: { ...character, class_variant: null, occ_class_variant: null } });
+  // The character's skills grant bonuses too - Boxing is +1 attack and +2 P.S.
+  // Loaded here so the validator and the level-up diff see the same totals the
+  // sheet does; they disagreeing is the class of bug composeClass() exists for.
+  const skillRows = await loadSkillBonuses(env, character);
+  return composeClass({ rcc, occ, skillRows,
+    character: { ...character, class_variant: null, occ_class_variant: null } });
 }
