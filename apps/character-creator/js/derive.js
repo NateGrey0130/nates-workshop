@@ -333,9 +333,17 @@
     effective,
 
     // What made a number what it is, for the sheet's hover text: how much came
-    // from the attribute tables and how much from the class. Without this the
-    // only honest thing a tooltip could say is the total.
-    parts(kind, attrs, bonuses, psychicTier) {
+    // from the attribute tables, how much from the class, and how much from the
+    // skills the character has taken. Without this the only honest thing a
+    // tooltip could say is the total.
+    //
+    // `classOnly` is the same bonuses block with the skills left out. Pass it
+    // and the class and skill halves are reported separately; omit it and
+    // everything lands in `from_class`, which is what every caller did before
+    // skills could grant anything. Splitting matters because Boxing is +1
+    // attack per melee: attributing that to the class is simply wrong, and a
+    // number the player cannot trace is the thing these tooltips exist against.
+    parts(kind, attrs, bonuses, psychicTier, classOnly) {
       const eff = effective(attrs, bonuses);
       const table = kind === 'saves' ? deriveSaves(eff, psychicTier)
         : kind === 'bio' ? deriveBio(eff)
@@ -346,15 +354,30 @@
       const raw = kind === 'saves' ? deriveSaves(attrs, psychicTier)
         : kind === 'bio' ? deriveBio(attrs)
         : deriveCombat(attrs);
-      const direct = (kind === 'combat' ? bonuses?.combat : kind === 'saves' ? bonuses?.saves : null) || {};
+      const pick = (b) => (kind === 'combat' ? b?.combat : kind === 'saves' ? b?.saves : null) || {};
+      const direct = pick(bonuses);
+      // The class half read against the class-only block, by exactly the same
+      // route as the total — so the two are comparable and the remainder is
+      // what the skills added, with no second implementation to drift.
+      const classTable = classOnly
+        ? (kind === 'saves' ? deriveSaves(effective(attrs, classOnly), psychicTier)
+          : kind === 'bio' ? deriveBio(effective(attrs, classOnly))
+          : deriveCombat(effective(attrs, classOnly)))
+        : null;
+      const classDirect = classOnly ? pick(classOnly) : null;
+
       const out = {};
       for (const k of Object.keys(table)) {
         const fromAttrs = typeof raw[k] === 'number' ? raw[k] : 0;
         const viaAttrBonus = (typeof table[k] === 'number' ? table[k] : 0) - fromAttrs;
-        out[k] = {
-          attrs: fromAttrs,
-          from_class: viaAttrBonus + (typeof direct[k] === 'number' ? direct[k] : 0),
-        };
+        const total = viaAttrBonus + (typeof direct[k] === 'number' ? direct[k] : 0);
+        if (!classOnly) {
+          out[k] = { attrs: fromAttrs, from_class: total, from_skills: 0 };
+          continue;
+        }
+        const classVia = (typeof classTable[k] === 'number' ? classTable[k] : 0) - fromAttrs;
+        const fromClass = classVia + (typeof classDirect[k] === 'number' ? classDirect[k] : 0);
+        out[k] = { attrs: fromAttrs, from_class: fromClass, from_skills: total - fromClass };
       }
       return out;
     },

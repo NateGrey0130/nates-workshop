@@ -3621,6 +3621,52 @@ check('a name with no catalog row is left to the missing-row check',
     return r.granted.length === 0 && r.unreachable.length === 0 && r.noop.length === 0;
   })());
 
+// ---------- 1h. Bonus attribution ----------
+// Once skills fold into the same bonuses block, "+1 attack from the class" is
+// wrong whenever the attack is Boxing's. derive.parts splits the two so the
+// sheet can name the real source.
+console.log('\n[1h] Bonus attribution');
+
+const baStats = { IQ: 12, ME: 12, MA: 12, PS: 12, PP: 12, PE: 12, PB: 12, Spd: 12 };
+const baClass = { attributes: {}, combat: { attacks: 1 }, saves: {} };
+const baBoth  = { attributes: {}, combat: { attacks: 3 }, saves: {} };
+
+// Omitting the class-only block keeps the old behaviour exactly: every caller
+// before skills could grant anything passed four arguments.
+check('without a class-only block everything is from_class', (() => {
+  const p = D.parts('combat', baStats, baBoth);
+  return p.attacks.from_class === 3 && p.attacks.from_skills === 0;
+})());
+
+check('with one, the class and skill halves are separated', (() => {
+  const p = D.parts('combat', baStats, baBoth, undefined, baClass);
+  return p.attacks.from_class === 1 && p.attacks.from_skills === 2;
+})());
+
+check('a bonus entirely from skills reports no class half', (() => {
+  const p = D.parts('combat', baStats, baBoth, undefined,
+    { attributes: {}, combat: {}, saves: {} });
+  return p.attacks.from_class === 0 && p.attacks.from_skills === 3;
+})());
+
+// An attribute bonus reaches combat through the tables, not directly, so the
+// split has to survive that route too.
+check('an attribute-driven bonus is attributed correctly', (() => {
+  const cls = { attributes: { PP: 6 }, combat: {}, saves: {} };
+  const both = { attributes: { PP: 12 }, combat: {}, saves: {} };
+  const p = D.parts('combat', baStats, both, undefined, cls);
+  return p.parry.from_class > 0 && p.parry.from_skills > 0
+    && p.parry.from_class + p.parry.from_skills
+       === D.parts('combat', baStats, both).parry.from_class;
+})());
+
+check('saves split the same way', (() => {
+  const p = D.parts('saves', baStats,
+    { attributes: {}, combat: {}, saves: { spell_magic: 4 } }, null,
+    { attributes: {}, combat: {}, saves: { spell_magic: 1 } });
+  return p.spell_magic.from_class === 1 && p.spell_magic.from_skills === 3;
+})());
+
 // ---------- 2. D1 schema ----------
 // Runs against the shared workshop database (binding DB in the root
 // wrangler.jsonc), so this executes from the repo root, not the app dir.
