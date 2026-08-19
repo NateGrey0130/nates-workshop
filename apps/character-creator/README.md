@@ -33,6 +33,7 @@ Access gate. No build step, no framework, no dependencies.
 - [Starting gear the class leaves open](#starting-gear-the-class-leaves-open)
 - [Psychic tiers](#psychic-tiers)
 - [How the sheet updates](#how-the-sheet-updates)
+- [Play mode](#play-mode)
 - [Server-side rule enforcement](#server-side-rule-enforcement)
 - [The catalog field config](#the-catalog-field-config)
   - [What a list row shows](#what-a-list-row-shows)
@@ -1367,6 +1368,47 @@ it, or the saved array acquires a hole.
 
 ---
 
+## Play mode
+
+The sheet through an **action-first lens**, shaped for a phone or tablet at
+the table: `sheet.html?play=1`, toggled by the header button. Same page, same
+data, same endpoints — `render()` branches to `renderPlay()` and nothing else
+changes, which is the whole design: a separate play page would duplicate the
+sheet's load/compose/derive/permissions plumbing for a different layout.
+
+What it offers (phase 1 of four):
+
+- **Pool cards** with big current/max numbers and quick +/− at a selectable
+  amount, plus a **Damage** button applying the book's flow: M.D.C. beings
+  take it on M.D.C., everyone else runs S.D.C. down first with the remainder
+  reaching H.P. Nothing clamps — negative H.P. is a real state (coma), and a
+  G.M. may allow over-maximum. Armour is deliberately not in the cascade:
+  which armour absorbed a hit is a table decision.
+- **Every derived number is a tappable roll.** Skills roll d100 against the
+  percentage; saves and combat bonuses roll d20 + bonus, against a target
+  where one is derived (the psionic save) and bonus-only where the book
+  leaves the target to the G.M. Rolls are **advisory** — the app shows the
+  die, the table decides what it means — and play mode enforces no rule the
+  sheet lens leaves to a human.
+- **Powers** keep their ⚡ spend buttons; in play mode the deduction updates
+  in place rather than refetching the sheet.
+- The last result sits in a **fixed thumb-zone bar**; every roll is kept as a
+  structured object in `C.rollLog` (capped at 50), the exact shape a future
+  `play_events` row will take.
+
+Writes ride the existing PATCH optimistically, with revert-and-alert on
+failure. Read-only visitors can still roll — rolls write nothing.
+
+Planned and not yet built, in order: weapon attack cards with ammo tracking
+(the gear stat block has the damage dice now), a persisted `play_events` log
+with undo and an end-of-session journal recap (`level_history` is the shape
+to copy), and rest/recovery. Deliberately out of scope at any phase:
+party-wide initiative (the dashboard's altitude) and automated combat
+resolution (the hand-to-hand tables are not modelled, and the README already
+says so).
+
+---
+
 ## Server-side rule enforcement
 
 The wizard has always enforced skill counts, categories and attribute minimums.
@@ -1985,7 +2027,7 @@ by hand once per environment as needed.
 | Kind | Files | What they are |
 |---|---|---|
 | Dev seed | `seed-dev.sql` | Optional local character/campaign rows. Never applied to production |
-| Data cleanup | `backfill-gear-system.sql`, `backfill-import-skill-gaps.sql`, `backfill-psionic-isp-notes.sql`, `backfill-skill-provenance.sql`, `backfill-spell-ppe-notes.sql`, `retire-gear-placeholders.sql`, `untag-cross-system.sql` | One-off corrections to rows an earlier import or data script got wrong or left NULL |
+| Data cleanup | `backfill-gear-system.sql`, `backfill-import-skill-gaps.sql`, `backfill-psionic-isp-notes.sql`, `backfill-skill-provenance.sql`, `backfill-spell-ppe-notes.sql`, `merge-scuba-duplicate.sql`, `retire-gear-placeholders.sql`, `untag-cross-system.sql` | One-off corrections to rows an earlier import or data script got wrong or left NULL |
 | Class corrections | `fix-*.sql`, `apply-*.sql`, `long-bowman-money.sql` | The rules audit's output: stored class definitions rewritten against the books, and class data written for a schema feature the day it landed |
 | Additions | `add-*.sql` | Something the book gives that the database never had — a catalog row, a whole-table batch extracted from page scans (`add-pf-weapons-batch`, `add-pf-equipment-batch`, the RUE spell and psionics batches), or a whole class. A missing skill named in an `only` restriction narrows its category to nothing, which is usually how one gets noticed. A class goes in this way only when the import tool cannot be reached: production sits behind Cloudflare Access, so a hand-transcribed class is applied by script instead |
 

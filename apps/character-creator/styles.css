@@ -623,3 +623,88 @@ input.class-boosted { border-bottom-width: 2px; }
   tr, .pool, .entry, .rowline { break-inside: avoid; }
   .entry { border-left: 2px solid #999; margin: 6px 0; padding: 3px 10px; }
 }
+
+/* ─── PLAY MODE ───
+   The sheet through an action-first lens, shaped for a phone at the table:
+   44px tap targets, single column, roll results in a fixed thumb-zone bar.
+   Rendered by sheet.js renderPlay(); body.play-mode hides sheet-only chrome. */
+
+body.play-mode #print-btn { display: none; }
+
+.play-view { max-width: 720px; margin: 0 auto; padding-bottom: 72px; }
+
+.play-head {
+  display: flex; flex-wrap: wrap; justify-content: space-between;
+  align-items: baseline; gap: 8px; margin-bottom: 10px; font-size: 17px;
+}
+.play-xp { display: flex; align-items: center; gap: 8px; }
+.play-xp input { width: 72px; }
+
+.play-amt {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;
+}
+.play-amt button {
+  min-width: 44px; min-height: 40px; border-radius: 8px;
+  background: var(--bg-tertiary); border: 1px solid var(--border);
+  color: var(--text-secondary); font-size: 15px; cursor: pointer;
+}
+.play-amt button.on { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+.play-amt button.dmg {
+  margin-left: auto; padding: 0 14px;
+  border-color: var(--accent-secondary); color: var(--accent-secondary);
+}
+
+.play-pools {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px; margin-bottom: 12px;
+}
+.play-pool {
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 12px; text-align: center;
+}
+.play-pool .pp-label { font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+.play-pool .pp-val { font-size: 26px; font-weight: 700; margin: 2px 0 6px; }
+.play-pool .pp-max { font-size: 14px; color: var(--text-muted); font-weight: 400; margin-left: 4px; }
+.play-pool .pp-btns { display: flex; gap: 6px; }
+.play-pool .pp-btns button {
+  flex: 1; min-height: 44px; font-size: 20px; border-radius: 8px;
+  background: var(--bg-tertiary); border: 1px solid var(--border);
+  color: var(--text-primary); cursor: pointer;
+}
+.play-pool .pp-btns button:active { background: var(--accent-glow); }
+
+.play-sec { margin-bottom: 10px; }
+.play-sec summary {
+  cursor: pointer; font-weight: 600; padding: 8px 2px;
+  border-bottom: 1px solid var(--border); user-select: none;
+}
+.play-roll {
+  display: flex; justify-content: space-between; align-items: center;
+  width: 100%; min-height: 44px; padding: 8px 10px; text-align: left;
+  background: transparent; border: none; border-bottom: 1px dotted var(--border);
+  color: var(--text-primary); font-size: 15px; cursor: pointer;
+}
+.play-roll:active { background: var(--accent-glow); }
+.play-roll .pr-num { font-family: 'JetBrains Mono', monospace; color: var(--accent); }
+
+.play-power {
+  display: flex; justify-content: space-between; align-items: center;
+  min-height: 44px; padding: 6px 10px; border-bottom: 1px dotted var(--border);
+  font-size: 15px;
+}
+
+#play-roll-bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: var(--bg-secondary); border-top: 1px solid var(--accent);
+  font-size: 16px; text-align: center;
+}
+#play-roll-bar.empty { border-top-color: var(--border); }
+#play-roll-bar .ok { color: #5dd39e; }
+#play-roll-bar .ko { color: #e2606c; }
+
+@media (min-width: 700px) {
+  .play-view { max-width: 900px; }
+  .play-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+}
+@media print { .play-view, #play-roll-bar { display: none; } }

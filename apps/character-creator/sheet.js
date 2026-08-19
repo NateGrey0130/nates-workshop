@@ -13,6 +13,11 @@ const C = { data: null, items: [], journal: [], catalog: [], cls: null, canWrite
             // Picker filter text, and the skill picks chosen so far. Both are
             // state rather than DOM so a re-render cannot discard them.
             invFilter: '', pickFilter: '', pickValues: {}, pickLangs: {},
+            // Play mode: the same data through an action-first, phone-shaped
+            // lens. playAmt is the selected quick-action amount; rollLog is
+            // structured from day one so phase 3 can persist it unchanged.
+            playMode: new URLSearchParams(location.search).get('play') === '1',
+            playAmt: 1, lastRoll: null, rollLog: [],
             // A proposed change of stage, awaiting confirmation.
             variantProposal: null };
 const $ = (i) => document.getElementById(i);
@@ -174,7 +179,225 @@ const advisory = (label, value) => {
   return `<div class="advisory"><b>${label}:</b> ${escHtml(text)}</div>`;
 };
 
+// ─── Play mode ───────────────────────────────────────────────────────────
+// The same character through an action-first lens, shaped for a phone at the
+// table: big pool cards with quick damage/heal, and every derived number
+// turned into a tappable roll. Rolls are ADVISORY - the app shows the die,
+// the table decides what it means - and nothing here enforces a rule the
+// sheet lens leaves to a human. Writes ride the existing PATCH; there is no
+// play-specific endpoint.
+
+function togglePlay() {
+  C.playMode = !C.playMode;
+  const url = new URL(location.href);
+  if (C.playMode) url.searchParams.set('play', '1'); else url.searchParams.delete('play');
+  history.replaceState(null, '', url);
+  render();
+}
+
+function syncPlayChrome() {
+  document.body.classList.toggle('play-mode', C.playMode);
+  const t = $('play-toggle');
+  if (t) { t.style.display = ''; t.textContent = C.playMode ? '📄 Sheet' : '▶ Play'; }
+}
+
+// One structured result per roll, newest kept, capped - the exact shape a
+// phase-3 play_events row will take, so logging is a POST away, not a rewrite.
+function recordRoll(kind, name, entry) {
+  const r = { kind, name, ts: Date.now(), ...entry };
+  C.lastRoll = r;
+  C.rollLog.push(r);
+  if (C.rollLog.length > 50) C.rollLog.shift();
+  const bar = $('play-roll-bar');
+  if (bar) { bar.innerHTML = rollBarHtml(); bar.classList.remove('empty'); }
+}
+
+function rollBarHtml() {
+  const r = C.lastRoll;
+  if (!r) return '<span class="muted">Tap a skill, save or combat bonus to roll.</span>';
+  if (r.note) return `<b>${escHtml(r.name)}</b> — ${escHtml(r.note)}`;
+  const verdict = r.ok === null ? '' : r.ok ? ' <b class="ok">✓</b>' : ' <b class="ko">✗</b>';
+  if (r.die === 100) {
+    return `<b>${escHtml(r.name)}</b> — rolled <b>${r.roll}</b> vs ${r.target}%${verdict}`;
+  }
+  const vs = r.target ? ` vs ${r.target}+` : '';
+  const bonus = r.bonus ? (r.bonus > 0 ? ` + ${r.bonus}` : ` − ${-r.bonus}`) : '';
+  return `<b>${escHtml(r.name)}</b> — d20 ${r.roll}${bonus} = <b>${r.total}</b>${vs}${verdict}`;
+}
+
+// d100 roll-under against a percentage.
+function rollSkill(name, pct) {
+  const roll = 1 + Math.floor(Math.random() * 100);
+  recordRoll('skill', name, { die: 100, roll, target: pct, ok: roll <= pct });
+}
+
+// d20 + bonus, against a target where one is derived (the psionic save), and
+// bonus-only where the book leaves the target to the G.M.
+function rollD20(kind, name, bonus, target) {
+  const roll = 1 + Math.floor(Math.random() * 20);
+  const b = Number(bonus) || 0;
+  recordRoll(kind, name, { die: 20, roll, bonus: b, total: roll + b,
+    target: target || null, ok: target ? roll + b >= target : null });
+}
+
+// Quick pool arithmetic: optimistic, targeted DOM update, PATCH behind it.
+// No clamping - negative H.P. is a real Palladium state (coma), and a G.M.
+// may allow over-maximum; arithmetic is offered, never enforced.
+async function adjustPool(key, delta) {
+  const cur = C.data[key + '_current'];
+  if (cur == null) return;
+  const next = cur + delta;
+  const prev = cur;
+  C.data[key + '_current'] = next;
+  const el = $('play-cur-' + key);
+  if (el) el.textContent = next;
+  try {
+    await api('characters/' + id, jsonReq('PATCH', { [key + '_current']: next }));
+  } catch (err) {
+    C.data[key + '_current'] = prev;
+    if (el) el.textContent = prev;
+    alert('Failed: ' + err.message);
+  }
+}
+
+// The book's damage flow, offered as one button: M.D.C. beings take it on
+// M.D.C.; everyone else runs S.D.C. down first and the remainder reaches
+// H.P. Armour is deliberately not in the cascade - which armour absorbed a
+// hit is a table decision, and its M.D.C. is edited on its own card.
+async function quickDamage() {
+  const amt = C.playAmt;
+  const patch = {};
+  if (C.data.mdc_max != null) {
+    patch.mdc_current = (C.data.mdc_current ?? 0) - amt;
+  } else {
+    const sdc = C.data.sdc_current ?? 0;
+    const offSdc = Math.min(Math.max(sdc, 0), amt);
+    if (offSdc > 0) patch.sdc_current = sdc - offSdc;
+    const rest = amt - offSdc;
+    if (rest > 0) patch.hp_current = (C.data.hp_current ?? 0) - rest;
+  }
+  const prev = {};
+  for (const k of Object.keys(patch)) {
+    prev[k] = C.data[k];
+    C.data[k] = patch[k];
+    const el = $('play-cur-' + k.replace('_current', ''));
+    if (el) el.textContent = patch[k];
+  }
+  try {
+    await api('characters/' + id, jsonReq('PATCH', patch));
+  } catch (err) {
+    for (const k of Object.keys(prev)) {
+      C.data[k] = prev[k];
+      const el = $('play-cur-' + k.replace('_current', ''));
+      if (el) el.textContent = prev[k];
+    }
+    alert('Failed: ' + err.message);
+  }
+}
+
+function setPlayAmt(n) {
+  C.playAmt = n;
+  document.querySelectorAll('.play-amt button').forEach((b) => {
+    b.classList.toggle('on', Number(b.dataset.amt) === n);
+  });
+}
+
+function renderPlay() {
+  const c = C.data, w = C.canWrite;
+  const cls = C.cls || {};
+  const skills = Array.isArray(c.skills) ? c.skills : [];
+  const powers = Array.isArray(c.powers) ? c.powers : [];
+  const attrs = c.attributes || {};
+  const bonuses = derive.classBonuses(cls, c.level, {
+    attributes: c.attribute_bonuses || {},
+    combat: c.rolled_bonuses?.combat || {},
+    saves: c.rolled_bonuses?.saves || {},
+  });
+  const combat = derive.combat(attrs, c.combat, bonuses);
+  const saves = derive.saves(attrs, c.saves, cls.psionics?.type, bonuses);
+
+  const poolCards = POOLS.map(([key, label]) => {
+    const max = c[key + '_max'];
+    if (max == null && c[key + '_current'] == null) return '';
+    const cur = c[key + '_current'];
+    return `<div class="play-pool">
+      <div class="pp-label">${label}</div>
+      <div class="pp-val"><b id="play-cur-${key}">${cur ?? '—'}</b><span class="pp-max">/ ${max ?? '—'}</span></div>
+      ${w ? `<div class="pp-btns">
+        <button onclick="adjustPool('${key}', -C.playAmt)">−</button>
+        <button onclick="adjustPool('${key}', C.playAmt)">+</button>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+
+  const amts = [1, 5, 10, 20].map((n) =>
+    `<button data-amt="${n}" class="${n === C.playAmt ? 'on' : ''}" onclick="setPlayAmt(${n})">${n}</button>`).join('');
+
+  const combatRows = [
+    ['Initiative', combat.initiative], ['Strike', combat.strike],
+    ['Parry', combat.parry], ['Dodge', combat.dodge],
+  ].map(([label, v]) => `<button class="play-roll" onclick="rollD20('combat', '${label}', ${Number(v) || 0}, null)">
+      <span>${label}</span><span class="pr-num">${v > 0 ? '+' + v : v || '+0'}</span></button>`).join('');
+
+  const SAVE_LABELS = [
+    ['spell_magic', 'vs Spell Magic'], ['ritual_magic', 'vs Ritual Magic'],
+    ['psionics', 'vs Psionics'], ['toxins_poisons', 'vs Toxins/Poisons'],
+    ['harmful_drugs', 'vs Harmful Drugs'], ['insanity', 'vs Insanity'],
+    ['possession', 'vs Possession'], ['horror_factor', 'vs Horror Factor'],
+  ];
+  const saveRows = SAVE_LABELS.map(([key, label]) => {
+    const v = saves[key];
+    if (v == null) return '';
+    const target = key === 'psionics' ? (saves.psionics_target || null) : null;
+    return `<button class="play-roll" onclick="rollD20('save', '${label}', ${Number(v) || 0}, ${target})">
+      <span>${label}${target ? ` <span class="muted small">(${target}+)</span>` : ''}</span>
+      <span class="pr-num">${v > 0 ? '+' + v : v}</span></button>`;
+  }).join('');
+
+  const skillGroups = [['occ', 'Class Skills'], ['related', 'Related Skills'], ['secondary', 'Secondary Skills']]
+    .map(([type, label]) => {
+      const list = skills.filter((s) => s.type === type && s.pct);
+      if (!list.length) return '';
+      const rows = list.map((s) => `<button class="play-roll" onclick="rollSkill('${escHtml(s.name).replace(/'/g, '&#39;')}', ${s.pct})">
+          <span>${escHtml(s.name)}</span><span class="pr-num">${s.pct}%</span></button>`).join('');
+      return `<details class="play-sec" open><summary>${label} <span class="muted small">${list.length}</span></summary>${rows}</details>`;
+    }).join('');
+
+  const powerRows = powers.map((p, idx) => {
+    const pool = p.type === 'spell' ? 'ppe' : 'isp';
+    const cost = typeof p.cost === 'number' ? p.cost : null;
+    return `<div class="play-power">
+      <span>${escHtml(p.name)} <span class="muted small">${cost != null ? cost + (p.cost_note && cost > 0 ? '+' : '') + ' ' + (pool === 'ppe' ? 'P.P.E.' : 'I.S.P.') : ''}</span></span>
+      ${w && cost != null && c[pool + '_current'] != null ? `<button class="btn btn-sm" onclick="usePower(${idx})">⚡</button>` : ''}
+    </div>`;
+  }).join('');
+
+  const xpRow = w ? `<div class="play-xp">
+      <span class="muted small">XP ${c.xp ?? 0}${C.nextThreshold ? ` · next level at ${C.nextThreshold}` : ''}</span>
+      <span><input type="number" id="xp-delta" placeholder="+XP" class="mini-in"><button class="btn btn-sm" onclick="logXp()">Log</button></span>
+    </div>` : '';
+
+  return `
+  <div class="play-view">
+    <div class="play-head">
+      <div><b>${escHtml(c.name)}</b> <span class="muted small">${escHtml(cls.name || '')} · L${c.level}</span></div>
+      ${xpRow}
+    </div>
+    ${w ? `<div class="play-amt"><span class="muted small">Amount</span>${amts}
+      <button class="dmg" onclick="quickDamage()">💥 Damage</button></div>` : ''}
+    <div class="play-pools">${poolCards}</div>
+    <details class="play-sec" open><summary>Combat</summary>${combatRows}</details>
+    <details class="play-sec" open><summary>Saving Throws</summary>${saveRows}</details>
+    ${powers.length ? `<details class="play-sec" open><summary>Powers</summary>${powerRows}</details>` : ''}
+    ${skillGroups}
+    <div id="play-roll-bar" class="${C.lastRoll ? '' : 'empty'}">${rollBarHtml()}</div>
+  </div>`;
+}
+
+
 function render() {
+  syncPlayChrome();
+  if (C.playMode) { $('app').innerHTML = renderPlay(); return; }
   const c = C.data, w = C.canWrite;
   const skills = Array.isArray(c.skills) ? c.skills : [];
   const powers = Array.isArray(c.powers) ? c.powers : [];
@@ -745,7 +968,13 @@ async function usePower(index) {
   if (cur < p.cost) { alert(`Not enough ${pool === 'ppe' ? 'P.P.E.' : 'I.S.P.'} (${cur} left, ${p.name} costs ${p.cost}).`); return; }
   try {
     await api('characters/' + id, jsonReq('PATCH', { [pool + '_current']: cur - p.cost }));
-    await load();
+    C.data[pool + '_current'] = cur - p.cost;
+    if (C.playMode) {
+      const el = $('play-cur-' + pool);
+      if (el) el.textContent = cur - p.cost;
+      recordRoll('power', p.name, { die: 0, roll: 0, target: null, ok: null,
+        note: `-${p.cost} ${pool === 'ppe' ? 'P.P.E.' : 'I.S.P.'}` });
+    } else await load();
   } catch (err) { alert('Failed: ' + err.message); }
 }
 
