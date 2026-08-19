@@ -216,6 +216,7 @@ function rollBarHtml() {
   const r = C.lastRoll;
   if (!r) return '<span class="muted">Tap a skill, save or combat bonus to roll.</span>';
   if (r.note) return `<b>${escHtml(r.name)}</b> — ${escHtml(r.note)}`;
+  if (r.kind === 'damage') return `<b>${escHtml(r.name)}</b> — damage ${escHtml(r.expr)} = <b>${r.total}</b>`;
   const verdict = r.ok === null ? '' : r.ok ? ' <b class="ok">✓</b>' : ' <b class="ko">✗</b>';
   if (r.die === 100) {
     return `<b>${escHtml(r.name)}</b> — rolled <b>${r.roll}</b> vs ${r.target}%${verdict}`;
@@ -302,6 +303,105 @@ function setPlayAmt(n) {
   });
 }
 
+// ── Play mode phase 2: weapon cards ──
+// An equipped catalog weapon becomes an attack card: strike roll, damage
+// roll off the leading dice of the gear row's damage string, and an ammo
+// counter when the payload states a capacity. Ammo lives in the inventory
+// row's NOTES as "ammo 7/10" - visible on the sheet lens, editable by hand,
+// no schema change; formalising it is phase 3's event log's problem.
+
+// The first dice expression in a damage string. Books write "1D6 (small),
+// 2D6 (large)" and "2D6 M.D. single shot" - the leading dice roll, the full
+// string displayed, the table adjudicates the rest.
+function leadingDice(damage) {
+  const m = String(damage || '').match(/\d+\s*d\s*\d+(?:\s*x\s*\d+)?(?:\s*[+-]\s*\d+)?/i);
+  return m ? m[0].trim() : null;
+}
+
+// Capacity is the leading integer of the payload ("10 shot magazine" -> 10).
+function payloadCapacity(payload) {
+  const m = String(payload || '').match(/(\d+)/);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+// Current ammo: the "ammo N/M" marker in notes, else full.
+function currentAmmo(it, cap) {
+  const m = String(it.notes || '').match(/ammo\s+(\d+)\s*\/\s*\d+/i);
+  return m ? Math.min(parseInt(m[1], 10), 999) : cap;
+}
+
+function isWeapon(it) {
+  return it.item_id && (it.item_damage != null || it.item_category === 'weapon');
+}
+
+function rollWeaponDamage(name, expr) {
+  const total = globalThis.diceRoll ? diceRoll.evalDice(expr) : null;
+  if (total == null) return;
+  recordRoll('damage', name, { expr, total, roll: total, die: null, target: null, ok: null });
+}
+
+async function writeAmmo(invId, next, cap) {
+  const it = C.items.find((x) => x.id === invId);
+  if (!it) return;
+  const marker = `ammo ${next}/${cap}`;
+  const base = String(it.notes || '').replace(/ammo\s+\d+\s*\/\s*\d+/i, '').replace(/\s*;\s*$/, '').trim();
+  const notes = base ? `${base}; ${marker}` : marker;
+  const prev = it.notes;
+  it.notes = notes;
+  const el = $('play-ammo-' + invId);
+  if (el) el.textContent = `${next}/${cap}`;
+  try {
+    await api(`characters/${id}/items/${invId}`, jsonReq('PATCH', { notes }));
+  } catch (err) {
+    it.notes = prev;
+    if (el) el.textContent = `${currentAmmo(it, cap)}/${cap}`;
+    alert('Failed: ' + err.message);
+  }
+}
+
+function fireShot(invId, cap, name) {
+  const it = C.items.find((x) => x.id === invId);
+  if (!it) return;
+  const cur = currentAmmo(it, cap);
+  if (cur <= 0) { recordRoll('ammo', name, { note: 'empty - reload' }); return; }
+  writeAmmo(invId, cur - 1, cap);
+  recordRoll('ammo', name, { note: `shot fired - ${cur - 1}/${cap} left` });
+}
+
+function reloadAmmo(invId, cap, name) {
+  writeAmmo(invId, cap, cap);
+  recordRoll('ammo', name, { note: `reloaded - ${cap}/${cap}` });
+}
+
+function weaponCardsHtml(w, strikeBonus) {
+  const weapons = C.items.filter(isWeapon);
+  if (!weapons.length) return '';
+  const equipped = weapons.filter((it) => it.equipped);
+  const carried = weapons.filter((it) => !it.equipped);
+  const cards = equipped.map((it) => {
+    const name = it.item_name || it.custom_name || '?';
+    const safe = escHtml(name).replace(/'/g, '&#39;');
+    const dice = leadingDice(it.item_damage);
+    const cap = payloadCapacity(it.item_payload);
+    const ammo = cap != null ? currentAmmo(it, cap) : null;
+    return `<div class="play-weapon">
+      <div class="pw-head"><b>${escHtml(name)}</b>${it.qty > 1 ? ` <span class="muted small">×${it.qty}</span>` : ''}
+        ${it.item_damage ? `<span class="muted small">${escHtml(it.item_damage)}</span>` : ''}</div>
+      <div class="pw-btns">
+        <button onclick="rollD20('attack', '${safe} — strike', ${Number(strikeBonus) || 0}, null)">🎯 Strike</button>
+        ${dice ? `<button onclick="rollWeaponDamage('${safe}', '${escHtml(dice)}')">💥 ${escHtml(dice)}</button>` : ''}
+        ${cap != null && w ? `<button onclick="fireShot(${it.id}, ${cap}, '${safe}')">🔫 <span id="play-ammo-${it.id}">${ammo}/${cap}</span></button>
+        <button class="ghost" onclick="reloadAmmo(${it.id}, ${cap}, '${safe}')">↻</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  const carriedLine = carried.length
+    ? `<p class="muted small">Carried, not equipped: ${carried.map((it) => escHtml(it.item_name || it.custom_name)).join(' · ')} — equip on the sheet lens for cards.</p>`
+    : '';
+  return `<details class="play-sec" open><summary>Weapons</summary>${cards || '<p class="muted small">No equipped weapons.</p>'}${carriedLine}</details>`;
+}
+
+
 function renderPlay() {
   const c = C.data, w = C.canWrite;
   const cls = C.cls || {};
@@ -386,6 +486,7 @@ function renderPlay() {
     ${w ? `<div class="play-amt"><span class="muted small">Amount</span>${amts}
       <button class="dmg" onclick="quickDamage()">💥 Damage</button></div>` : ''}
     <div class="play-pools">${poolCards}</div>
+    ${weaponCardsHtml(w, combat.strike)}
     <details class="play-sec" open><summary>Combat</summary>${combatRows}</details>
     <details class="play-sec" open><summary>Saving Throws</summary>${saveRows}</details>
     ${powers.length ? `<details class="play-sec" open><summary>Powers</summary>${powerRows}</details>` : ''}

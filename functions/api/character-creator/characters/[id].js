@@ -23,7 +23,10 @@ export async function onRequestGet({ request, env, params }) {
   if (!character) return json({ error: 'Character not found' }, 404);
 
   const { results: items } = await env.DB.prepare(
-    `SELECT character_items.*, gear.name AS item_name, gear.slug AS item_slug
+    // category/damage/payload ride along for play mode's weapon cards -
+    // per held item, deliberately NOT added to the /items picker projection.
+    `SELECT character_items.*, gear.name AS item_name, gear.slug AS item_slug,
+            gear.category AS item_category, gear.damage AS item_damage, gear.payload AS item_payload
      FROM character_items LEFT JOIN gear ON gear.id = character_items.item_id
      WHERE character_items.character_id = ? AND character_items.removed_at IS NULL
      ORDER BY character_items.id`

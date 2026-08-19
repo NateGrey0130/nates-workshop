@@ -1392,6 +1392,16 @@ What it offers (phase 1 of four):
   sheet lens leaves to a human.
 - **Powers** keep their ⚡ spend buttons; in play mode the deduction updates
   in place rather than refetching the sheet.
+- **Weapon cards** (phase 2): an equipped catalog weapon becomes an attack
+  card — strike roll, damage roll off the **leading dice** of the gear row's
+  damage string (the full string is displayed; "1D6 (small), 2D6 (large)" rolls
+  the 1D6 and the table adjudicates the rest), and an ammo counter when the
+  payload states a capacity. Ammo lives in the inventory row's **notes** as
+  `ammo 7/10` — visible on the sheet lens, editable by hand, no schema
+  change. Unequipped weapons are listed, not carded; equipping is the sheet
+  lens's job. The dice evaluator reaches this classic-script page the same way
+  language-skills does: `js/dice.js` installs a `globalThis.diceRoll` mirror
+  via a module tag.
 - The last result sits in a **fixed thumb-zone bar**; every roll is kept as a
   structured object in `C.rollLog` (capped at 50), the exact shape a future
   `play_events` row will take.
@@ -1399,8 +1409,7 @@ What it offers (phase 1 of four):
 Writes ride the existing PATCH optimistically, with revert-and-alert on
 failure. Read-only visitors can still roll — rolls write nothing.
 
-Planned and not yet built, in order: weapon attack cards with ammo tracking
-(the gear stat block has the damage dice now), a persisted `play_events` log
+Planned and not yet built, in order: a persisted `play_events` log
 with undo and an end-of-session journal recap (`level_history` is the shape
 to copy), and rest/recovery. Deliberately out of scope at any phase:
 party-wide initiative (the dashboard's altitude) and automated combat

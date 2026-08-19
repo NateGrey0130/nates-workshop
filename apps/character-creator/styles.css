@@ -708,3 +708,18 @@ body.play-mode #print-btn { display: none; }
   .play-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
 }
 @media print { .play-view, #play-roll-bar { display: none; } }
+
+/* Play mode phase 2: weapon cards */
+.play-weapon {
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 12px; margin: 8px 0;
+}
+.play-weapon .pw-head { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; margin-bottom: 8px; }
+.play-weapon .pw-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.play-weapon .pw-btns button {
+  min-height: 44px; padding: 0 14px; border-radius: 8px; font-size: 15px;
+  background: var(--bg-tertiary); border: 1px solid var(--border);
+  color: var(--text-primary); cursor: pointer;
+}
+.play-weapon .pw-btns button:active { background: var(--accent-glow); }
+.play-weapon .pw-btns button.ghost { color: var(--text-secondary); min-width: 44px; }
