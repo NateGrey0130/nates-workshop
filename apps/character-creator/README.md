@@ -1351,6 +1351,18 @@ category gate does not.
 `derive.meetsTier(has, needs)` is the only place the ordering is written down.
 Compare through it rather than comparing tier strings.
 
+**Elemental spells are named with their sphere.** `Air: Cloud of Steam`,
+`Fire: Fire Bolt`, `Earth: Wall of Stone`. That prefix is load-bearing,
+not decoration: `spells.name` is UNIQUE and the four elemental lists collide
+both with the Invocation rows already in the catalog (Blinding Flash, Globe
+of Daylight, Fire Bolt and Darkness are all both) **and with each other** —
+Cloud of Steam is an Air 1st at 4 P.P.E., a Fire 4th at 10, and a Water 1st
+at 10. A dozen more repeat across spheres at different levels and costs. The
+prefix also gives the Warlock a workflow the schema cannot: the spell picker
+filters by name substring, so typing `Fire:` narrows it to that Warlock's
+own sphere. Water prints Calm Waters twice, so its 8th level version is
+stored as `Water: Calm Waters (greater)`.
+
 **A class may name the exact powers its picks come from.** `psionics.powers_from`
 is a list of power names, and the Burster is why: its entry prints seventeen
 named minor powers and says "select three". A named list is **more specific
