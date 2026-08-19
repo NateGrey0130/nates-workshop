@@ -3572,29 +3572,54 @@ check('the real category may itself be restricted', categoryAllows(
   { name: 'Writing', category: 'Technical' }));
 
 // --- the reporting half, which is what makes this visible in class-check
-const ccWanted = [
-  { category: 'Espionage', kind: 'only', name: 'Wilderness Survival' },
-  { category: 'Espionage', kind: 'only', name: 'Detect Ambush' },
-  { category: 'Communications', kind: 'except', name: 'Read Sensory Equipment' },
-  { category: 'Rogue', kind: 'except', name: 'Nothing At All' },
-];
+// It walks the class data itself so the bound is checked against the SAME
+// skill group the restriction came from.
 const ccMap = new Map([
   ['wilderness survival', 'Wilderness'],
   ['detect ambush', 'Espionage'],
   ['read sensory equipment', 'Pilot Related'],
+  ['writing', 'Technical'],
 ]);
-const cc = crossCategoryRestrictions(ccWanted, ccMap);
+const ccData = (categories) => ({ skills: { occ_related_skills: { categories } } });
 
-check('a cross-category only is reported as granted',
-  cc.granted.length === 1 && cc.granted[0].name === 'Wilderness Survival'
-  && cc.granted[0].actual === 'Wilderness');
-check('a cross-category except is reported as a no-op',
-  cc.noop.length === 1 && cc.noop[0].name === 'Read Sensory Equipment');
+// Granted: the class lists Wilderness too, so categoryAllows admits it.
+const ccGranted = crossCategoryRestrictions(ccData([
+  { name: 'Espionage', only: ['Wilderness Survival', 'Detect Ambush'] },
+  { name: 'Wilderness', only: ['Hunting'] },
+]), ccMap);
+check('a cross-category only whose real category is listed reports as granted',
+  ccGranted.granted.length === 1 && ccGranted.granted[0].name === 'Wilderness Survival'
+  && ccGranted.unreachable.length === 0);
 check('a name in its own category is not reported',
-  !cc.granted.some((g) => g.name === 'Detect Ambush'));
+  !ccGranted.granted.some((g) => g.name === 'Detect Ambush'));
+
+// The defect the checker used to call a success: the class grants a skill
+// nobody can take, because categoryAllows is bounded by the real category.
+const ccLost = crossCategoryRestrictions(ccData([
+  { name: 'Espionage', only: ['Wilderness Survival'] },
+]), ccMap);
+check('a cross-category only with no real category reports as unreachable',
+  ccLost.unreachable.length === 1 && ccLost.granted.length === 0);
+
+// The bound is per skill group: a category granted only to secondary skills
+// does not make an occ_related_skills restriction reachable.
+check('the bound is checked within the same skill group', crossCategoryRestrictions({
+  skills: {
+    occ_related_skills: { categories: [{ name: 'Espionage', only: ['Wilderness Survival'] }] },
+    secondary_skills: { categories: ['Wilderness'] },
+  },
+}, ccMap).unreachable.length === 1);
+
+check('a cross-category except is reported as a no-op', crossCategoryRestrictions(ccData([
+  { name: 'Communications', except: ['Read Sensory Equipment'] },
+]), ccMap).noop.length === 1);
+
 // A name with no row at all belongs to the missing-row check, not this one.
 check('a name with no catalog row is left to the missing-row check',
-  !cc.granted.concat(cc.noop).some((x) => x.name === 'Nothing At All'));
+  (() => {
+    const r = crossCategoryRestrictions(ccData([{ name: 'Rogue', except: ['Nothing At All'] }]), ccMap);
+    return r.granted.length === 0 && r.unreachable.length === 0 && r.noop.length === 0;
+  })());
 
 // ---------- 2. D1 schema ----------
 // Runs against the shared workshop database (binding DB in the root
