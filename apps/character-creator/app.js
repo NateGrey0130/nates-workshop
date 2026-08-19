@@ -1192,6 +1192,12 @@ function psiConfig(cls) {
     count: p.powers_starting ?? PSI_DEFAULT_COUNTS[p.type] ?? 2,
     cats: p.categories_allowed ??
       (p.type === 'master' ? ['Healing', 'Physical', 'Sensitive', 'Super'] : ['Healing', 'Physical', 'Sensitive']),
+    // A class may name the exact powers its picks come from - the Burster's
+    // "select three minor psionic powers from the following list". A named
+    // list is MORE specific than a category gate, so it replaces it rather
+    // than narrowing within it, exactly as a skill choice-group's `from`
+    // list does.
+    from: Array.isArray(p.powers_from) && p.powers_from.length ? p.powers_from.map(String) : null,
   };
 }
 
@@ -1377,7 +1383,17 @@ function renderPowers() {
     const shape = cls.psionics.from_roll ? psionicShape(tier, S.psiShape) : null;
     const single = shape && shape.categories === 1;
     const allowed = single ? (S.psiCategory ? [S.psiCategory] : []) : psi.cats;
-    const inCategory = S.psiCatalog.filter((p) => inSystem(p) && allowed.includes(p.category));
+    // A named list replaces the category gate; the book has already said
+    // exactly which powers this class may take.
+    const named = psi.from && new Set(psi.from.map((n) => n.toLowerCase()));
+    const inCategory = named
+      ? S.psiCatalog.filter((p) => inSystem(p) && named.has(String(p.name).toLowerCase()))
+      : S.psiCatalog.filter((p) => inSystem(p) && allowed.includes(p.category));
+    // A name the catalog does not carry would silently shrink the list, so
+    // say so - the same reasoning the skill cross-reference uses.
+    const unknownNamed = named
+      ? psi.from.filter((n) => !S.psiCatalog.some((x) => String(x.name).toLowerCase() === n.toLowerCase()))
+      : [];
     // Two gates, and they are not the same. The category gate has always been
     // here (Super is master-only). This is the per-power one: a book can state
     // that an individual power needs a higher tier than its category implies.
@@ -1387,13 +1403,14 @@ function renderPowers() {
       .concat(pool.filter((p) => S.psi.includes(p.name) && !Picker.match(p, S.psiFilter)));
 
     inner += `<h3>Psionic powers — ${S.psi.length}/${psi.count}
-      <span class="muted small">(${esc(tier)} psychic · ${(single && S.psiCategory ? [S.psiCategory] : psi.cats).join(', ')})</span></h3>`
+      <span class="muted small">(${esc(tier)} psychic · ${psi.from ? 'from the class list' : (single && S.psiCategory ? [S.psiCategory] : psi.cats).join(', ')})</span></h3>`
       + (single && !S.psiCategory
         ? `<p class="attr-note">Choose a category above — all ${psi.count} powers come from the same one.</p>` : '') +
       // Say that something is being withheld, so a short list reads as a rule
       // rather than as a gap in the catalog. Counted against the tier-gated
       // pool, not the filtered view — the filter is yours, the gate is not.
       (gated ? `<p class="attr-note">${gated} more ${gated === 1 ? 'power needs' : 'powers need'} a higher psychic tier than ${esc(tier)}.</p>` : '') +
+      (unknownNamed.length ? `<p class="attr-note">${unknownNamed.length} named ${unknownNamed.length === 1 ? 'power is' : 'powers are'} not in the catalog yet: ${esc(unknownNamed.join(', '))}.</p>` : '') +
       Picker.inputHtml({ id: 'psi-filter', value: S.psiFilter, placeholder: 'Filter powers…',
         shown: Picker.filter(pool, S.psiFilter).length, total: pool.length }) +
       psiGroupRows(list, psi.count);
@@ -1496,13 +1513,29 @@ function togglePower(kind, name) {
   render();
 }
 function powersPayload() {
+  // Powers and spells the CLASS grants outright, as opposed to the ones the
+  // player picked. They used to reach the character as nothing at all: the
+  // wizard saved only S.spells and S.psi, so a Mind Melter's four automatic
+  // powers and a Shifter's twenty known spells were listed by the class and
+  // held by nobody. Granted ones come first and a pick that duplicates one
+  // is dropped, so the list stays a set.
+  const cls = psiClass();
+  const auto = (list) => (list || []).filter((n) => typeof n === 'string' && n.trim()).map((n) => n.trim());
+  const autoSpells = auto(cls?.magic?.spells);
+  const autoPsi = auto(cls?.psionics?.powers);
+  const held = (a, b) => {
+    const seen = new Set(a.map((n) => n.toLowerCase()));
+    return [...a, ...b.filter((n) => !seen.has(String(n).toLowerCase()))];
+  };
+  const spellNames = held(autoSpells, S.spells);
+  const psiNames = held(autoPsi, S.psi);
   return [
-    ...S.spells.map((n) => {
+    ...spellNames.map((n) => {
       const sp = S.spellCatalog.find((x) => x.name === n);
       return { type: 'spell', name: n, level: sp?.level, cost: sp?.ppe,
                ...(sp?.ppe_note ? { cost_note: sp.ppe_note } : {}) };
     }),
-    ...S.psi.map((n) => {
+    ...psiNames.map((n) => {
       const p = S.psiCatalog.find((x) => x.name === n);
       // cost_note marks a variable cost: `cost` is the minimum, and the sheet's
       // use button deducts it while the note says how the real spend grows.
