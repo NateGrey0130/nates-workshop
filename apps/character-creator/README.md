@@ -278,6 +278,8 @@ psionics:
   type: "major"               # minor | major | master
   isp_base: "1d4x10+20"
   powers: ["Sixth Sense"]     # powers the class automatically knows
+  powers_starting: 3          # how many the player picks
+  powers_from: ["Mind Block", "See Aura", ...]   # the exact list to pick FROM
 # psionics_allowed: false     # a race with NO psychic potential (troll, orc);
                               # skips the Random Psionics Table entirely
 magic:
@@ -1348,6 +1350,23 @@ category gate does not.
 
 `derive.meetsTier(has, needs)` is the only place the ordering is written down.
 Compare through it rather than comparing tier strings.
+
+**A class may name the exact powers its picks come from.** `psionics.powers_from`
+is a list of power names, and the Burster is why: its entry prints seventeen
+named minor powers and says "select three". A named list is **more specific
+than a category gate, so it replaces it** — exactly as a skill choice-group's
+`from` list does, rather than narrowing within the categories. A name the
+catalog does not carry is **reported** under the picker rather than silently
+shrinking the list, the same reasoning the skill cross-reference uses. The tier
+gate still applies on top, so a book that names a power above the character's
+tier still says so.
+
+**Powers a class grants outright now reach the character.** `psionics.powers`
+and `magic.spells` name what the class simply knows — the Mind Melter's four
+automatic powers, the Shifter's twenty spells. The wizard used to save only
+what the player *picked*, so those were listed by the class and held by
+nobody. They are now written into the character ahead of the picks, and a pick
+that duplicates one is dropped so the list stays a set.
 
 **Save vs psionic attack** now has a target as well as a bonus: 12+ for Major and
 Master psychics, 15+ for everyone else — non-psychics included, since they get
