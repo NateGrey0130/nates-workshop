@@ -854,9 +854,18 @@ function render() {
     combat: c.rolled_bonuses?.combat || {},
     saves: c.rolled_bonuses?.saves || {},
   });
+  // The same block with the SKILLS left out. `cls` arrives from the API with
+  // skill bonuses already folded in, so without this there is no way to tell
+  // Boxing's +1 attack per melee from the class's own - and labelling a skill's
+  // bonus as the class's is simply wrong.
+  const classOnly = derive.classBonuses({ ...cls, bonuses: cls.class_bonuses ?? cls.bonuses }, c.level, {
+    attributes: c.attribute_bonuses || {},
+    combat: c.rolled_bonuses?.combat || {},
+    saves: c.rolled_bonuses?.saves || {},
+  });
   const effAttrs = derive.effective(attrs, bonuses);
-  const combatParts = derive.parts('combat', attrs, bonuses);
-  const savesParts = derive.parts('saves', attrs, bonuses, cls.psionics?.type);
+  const combatParts = derive.parts('combat', attrs, bonuses, undefined, classOnly);
+  const savesParts = derive.parts('saves', attrs, bonuses, cls.psionics?.type, classOnly);
 
   const bio = derive.bio(attrs, c.bio, bonuses);
   const combat = derive.combat(attrs, c.combat, bonuses);
@@ -878,6 +887,7 @@ function render() {
     const bits = [];
     if (p.attrs) bits.push(`${p.attrs > 0 ? '+' : ''}${p.attrs} from attributes`);
     if (p.from_class) bits.push(`${p.from_class > 0 ? '+' : ''}${p.from_class} from ${cls.name || 'the class'}`);
+    if (p.from_skills) bits.push(`${p.from_skills > 0 ? '+' : ''}${p.from_skills} from skills taken`);
     if (!bits.length) return 'Derived from attributes — type to override';
     return `${bits.join(', ')} — type to override`;
   };
@@ -887,7 +897,10 @@ function render() {
     const suffix = opts.suffix || '';
     const why = isDerived ? explain(opts.parts, key) : 'Set manually';
     // A class contribution is worth seeing without hovering, so it is marked.
-    const fromClass = isDerived && opts.parts?.[key]?.from_class ? ' class-boosted' : '';
+    // Marked whichever it came from - the styling says "this number was raised",
+    // and a skill raising it is no less worth seeing without hovering.
+    const pk = opts.parts?.[key];
+    const fromClass = isDerived && (pk?.from_class || pk?.from_skills) ? ' class-boosted' : '';
     if (!w) {
       return `<div class="field"><span class="lbl">${label}</span><span class="dots"></span>
         <span class="val${isDerived ? ' dim' : ''}${fromClass}" title="${escHtml(why)}">${escHtml(String(value ?? '—'))}${suffix}</span></div>`;
@@ -984,10 +997,14 @@ function render() {
     ${box('Attributes', `<div class="attr-stack">
       ${ATTRS.map((a) => {
         const add = bonuses.attributes[a];
+        const addClass = classOnly.attributes[a] || 0;
+        const addSkills = (add || 0) - addClass;
+        const src = !addSkills ? (cls.name || 'the class')
+          : (!addClass ? 'skills taken' : `${cls.name || 'the class'} + skills taken`);
         // The stored attribute is what was rolled; the class bonus rides
         // alongside it so both stay legible, and effAttrs is what the tables read.
         return field(a, attrs[a] == null ? '—'
-          : add ? `${attrs[a]} <span class="attr-bonus" title="${escHtml(`${add > 0 ? '+' : ''}${add} from ${cls.name || 'the class'}`)}">${add > 0 ? '+' : ''}${add}</span> = ${effAttrs[a]}`
+          : add ? `${attrs[a]} <span class="attr-bonus" title="${escHtml(`${add > 0 ? '+' : ''}${add} from ${src}`)}">${add > 0 ? '+' : ''}${add}</span> = ${effAttrs[a]}`
           : attrs[a]);
       }).join('')}
     </div>`)}

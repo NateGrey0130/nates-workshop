@@ -64,13 +64,26 @@ export async function onRequestGet({ request, env, params }) {
   // +1 attack per melee and +2 P.S.; before this they were shown nowhere.
   const skillRows = await loadSkillBonuses(env, character);
 
-  let cls = composeClass({
+  const composeArgs = {
     rcc: parsed?.ok ? parsed.data : null,
     occ: occParsed?.ok ? occParsed.data : null,
     character,
-    skillRows,
-  });
-  if (cls) cls = { ...cls, _retired: !!stored?.deleted_at || !!occRow?.deleted_at };
+  };
+  let cls = composeClass({ ...composeArgs, skillRows });
+
+  // The class half on its own, so the sheet can say where a bonus came from.
+  // `bonuses` above has the skills folded in and there is no way to recover the
+  // two halves from the total, so the split is made here rather than guessed
+  // there. Composing twice is cheap - both calls are pure and the classes are
+  // already parsed - and it beats a second implementation of the fold.
+  if (cls) {
+    cls = {
+      ...cls,
+      class_bonuses: composeClass(composeArgs)?.bonuses ?? null,
+      _retired: false,
+    };
+  }
+  if (cls) cls._retired = !!stored?.deleted_at || !!occRow?.deleted_at;
 
   return json({
     character, items, can_write, class: cls,

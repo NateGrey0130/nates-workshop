@@ -1757,6 +1757,28 @@ The Attributes step names the source, because once skills fold into the same
 block *"+2 from Glitter Boy"* is a lie whenever the +2 is Boxing's. It reads
 `from <class>`, `from skills taken`, or `from <class> + skills taken`.
 
+The **sheet** does the same, for attributes and for the combat and save
+tooltips. `derive.parts()` takes an optional class-only bonuses block and
+reports `from_class` and `from_skills` separately; omit it and everything lands
+in `from_class`, which is what every caller did before skills could grant
+anything. The endpoint sends `class_bonuses` alongside `bonuses` by composing
+twice, because the two halves cannot be recovered from the total.
+
+```
+# OF ATTACKS   +2 from attributes, +1 from Cyber-Knight, +1 from skills taken
+PARRY          +2 from skills taken
+```
+
+**One case blurs, and only the attribution.** Where a class grants an attribute
+as DICE and a skill grants the same attribute FLAT, the two merge into one list
+and are rolled together into `attribute_bonuses` — by design, so the flat half
+is not lost (see `diceBonuses`). The stored roll then carries both, and nothing
+downstream can say which part was the skill's, so the chip credits the class.
+The TOTAL is right; only the label is imprecise, and only there. Separating them
+would mean counting the flat half outside the roll, which would double-count it
+for every character whose stored roll already includes it. Combat and save
+bonuses are unaffected — those keys are flat on both sides.
+
 ---
 
 ## Merging duplicate catalog rows
