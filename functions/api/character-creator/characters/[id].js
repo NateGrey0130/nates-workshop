@@ -9,6 +9,7 @@ import { decodeCharacter } from '../_lib/character-json.js';
 import { getStored } from '../_lib/class-store.js';
 import { parseClassMarkdown } from '../../../../apps/character-creator/js/parser.js';
 import { composeClass } from '../../../../apps/character-creator/js/compose.js';
+import { loadSkillBonuses } from '../_lib/skill-bonuses.js';
 
 export async function onRequestGet({ request, env, params }) {
   const email = getUserEmail(request);
@@ -59,10 +60,15 @@ export async function onRequestGet({ request, env, params }) {
 
 
 
+  // The bonuses the character's SKILLS grant, not just its classes. Boxing is
+  // +1 attack per melee and +2 P.S.; before this they were shown nowhere.
+  const skillRows = await loadSkillBonuses(env, character);
+
   let cls = composeClass({
     rcc: parsed?.ok ? parsed.data : null,
     occ: occParsed?.ok ? occParsed.data : null,
     character,
+    skillRows,
   });
   if (cls) cls = { ...cls, _retired: !!stored?.deleted_at || !!occRow?.deleted_at };
 

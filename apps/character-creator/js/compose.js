@@ -21,7 +21,8 @@
 // That part is genuinely different per site and stays there. What is the same
 // everywhere is what to do once you have them, which is all this does.
 
-import { applyVariant, combineClasses, applyAbilities } from './parser.js';
+import { applyVariant, combineClasses, applyAbilities, bonusesFromSkills,
+         sumBonusGroups } from './parser.js';
 import { withRolledPsionics } from './psionics.js';
 
 // `rcc` and `occ` are raw parsed classes, before any variant is applied.
@@ -32,7 +33,7 @@ import { withRolledPsionics } from './psionics.js';
 // is not fatal: the race alone is still a usable character, and refusing to
 // resolve because one of two classes was retired would be worse than showing
 // the half that works.
-export function composeClass({ rcc, occ = null, character = {} } = {}) {
+export function composeClass({ rcc, occ = null, character = {}, skillRows = null } = {}) {
   if (!rcc && !occ) return null;
 
   const race = applyVariant(rcc, character.class_variant);
@@ -45,5 +46,21 @@ export function composeClass({ rcc, occ = null, character = {} } = {}) {
   // tier has to beat rather than the other way round.
   const withAbilities = applyAbilities(composed, character.abilities);
 
-  return withRolledPsionics(withAbilities, character);
+  const withPsionics = withRolledPsionics(withAbilities, character);
+
+  // Skills land LAST, and only when the caller supplied the catalog rows.
+  // A skill's bonus is neither class's, so it must not be visible to
+  // combineClasses (which resolves conflicts between the two halves) nor to
+  // applyAbilities (an ability may grant bonuses of its own and should not be
+  // able to read a skill's). Merged through sumBonusGroups, the same function
+  // that merges the two classes, so a class and a skill both granting +2 P.S.
+  // give +4 rather than one silently winning.
+  //
+  // `skillRows` null means "this caller does not know the character's skills",
+  // which is different from "the character has none" - the first must leave the
+  // composed class untouched.
+  if (!skillRows) return withPsionics;
+  const fromSkills = bonusesFromSkills(skillRows);
+  if (!fromSkills) return withPsionics;
+  return { ...withPsionics, bonuses: sumBonusGroups(withPsionics.bonuses, fromSkills) };
 }

@@ -33,6 +33,7 @@ import {
 } from '../../../functions/api/character-creator/_lib/catalog-redirects.js';
 import { validateCharacter, relatedAllowance } from '../../../functions/api/character-creator/_lib/validate-character.js';
 import { extractClassMarkdown, unmodelledKeys } from '../../../scripts/class-check-lib.mjs';
+import { bonusesFromSkills, validateBonuses } from '../js/parser.js';
 
 const appDir = join(dirname(fileURLToPath(import.meta.url)), '..');
 const repoRoot = join(appDir, '..', '..');
@@ -3412,6 +3413,100 @@ const unmodelledOffenders = (() => {
 })();
 check('no shipped class reports an unmodelled key', unmodelledOffenders.length === 0,
   unmodelledOffenders.join(' | ') + ' — KNOWN_KEYS in scripts/class-check-lib.mjs is out of date');
+
+// ---------- 1f. Skill bonuses ----------
+// A skill is not only a percentage: Boxing is +1 attack per melee and +2 P.S.
+// The column stores them in a class's `bonuses:` shape and shares its
+// validator, so a skill cannot express a bonus a class could not.
+console.log('\n[1f] Skill bonuses');
+
+const boxing = { name: 'Boxing', bonuses: { attributes: { PS: 2 }, combat: { attacks: 1, parry: 2, dodge: 2, roll: 1 } } };
+const bodyBuilding = { name: 'Body Building', bonuses: { attributes: { PS: 2 } } };
+
+check('a skill with no bonuses contributes nothing',
+  bonusesFromSkills([{ name: 'Prowl' }, { name: 'Climbing', bonuses: null }]) === undefined);
+
+check('bonuses arrive as stored JSON or as an object', (() => {
+  const a = bonusesFromSkills([boxing]);
+  const b = bonusesFromSkills([{ name: 'Boxing', bonuses: JSON.stringify(boxing.bonuses) }]);
+  return a.attributes.PS === 2 && b.attributes.PS === 2 && b.combat.attacks === 1;
+})());
+
+// Two skills granting the same attribute add up. They used to be unable to
+// grant anything at all, so "one silently wins" would be a new bug, not a
+// preserved one.
+check('two skills granting the same attribute add up',
+  bonusesFromSkills([boxing, bodyBuilding]).attributes.PS === 4);
+
+check('unparseable stored JSON is skipped, not thrown',
+  bonusesFromSkills([{ name: 'Boxing', bonuses: '{not json' }, bodyBuilding]).attributes.PS === 2);
+
+// `combat` is an open set by design, so `roll` needs no schema change.
+check('an open-set combat key survives the round trip',
+  bonusesFromSkills([boxing]).combat.roll === 1);
+
+// --- validation: a skill goes through the class validator, in flat-only mode
+const vErr = (b, opts) => { const e = []; validateBonuses(b, e, [], opts); return e; };
+
+check('a flat skill bonus validates',
+  vErr({ attributes: { PS: 2 }, combat: { attacks: 1 } }, { flatOnly: true }).length === 0);
+
+// A class may roll dice for a bonus because it rolls once at creation and
+// stores the result. A skill has no such moment, so accepting dice would store
+// Boxing's +3D6 S.D.C. and never apply it.
+check('a dice bonus is refused for a skill but allowed for a class',
+  vErr({ attributes: { PS: '2d6' } }, { flatOnly: true }).length === 1
+  && vErr({ attributes: { PS: '2d6' } }, {}).length === 0);
+
+check('pools are refused for a skill',
+  vErr({ pools: { sdc: 10 } }, { flatOnly: true }).length === 1);
+
+check('at_level is refused for a skill', vErr({ at_level: [{ level: 2 }] }, { flatOnly: true }).length === 1);
+
+check('a skill still cannot invent an attribute',
+  vErr({ attributes: { LUCK: 2 } }, { flatOnly: true }).some((e) => e.includes('is not an attribute')));
+
+// --- the catalog field coerces through that same validator
+const coerceBonus = (raw) => coerceField(
+  CATALOGS.skills.fields.find((f) => f.name === 'bonuses'), raw);
+
+check('the catalog field stores valid bonuses as JSON',
+  coerceBonus({ attributes: { PS: 2 } }).value === '{"attributes":{"PS":2}}');
+check('the catalog field rejects a dice bonus',
+  !!coerceBonus({ attributes: { PS: '2d6' } }).error);
+check('blank bonuses store NULL, not an empty object',
+  coerceBonus('').value === null && coerceBonus(null).value === null);
+check('malformed JSON is an error, not a silent null',
+  !!coerceBonus('{nope').error);
+
+// --- composeClass folds them in, and only when told about them
+const plainOcc = parseClassMarkdown(classTemplate('occ',
+  { id: 'boxer', name: 'Boxer', system: 'rifts', sourceBook: 'B' })).data;
+
+check('null skillRows leaves the composed class untouched', (() => {
+  const c = composeClass({ rcc: plainOcc });
+  return c.bonuses === undefined || c.bonuses?.attributes?.PS === undefined;
+})());
+
+check('skill bonuses reach the composed class', (() => {
+  const c = composeClass({ rcc: plainOcc, skillRows: [boxing] });
+  return c.bonuses.attributes.PS === 2 && c.bonuses.combat.attacks === 1;
+})());
+
+// The reason to merge with sumBonusGroups rather than assign: a class and a
+// skill both granting +2 P.S. is +4.
+check('a class bonus and a skill bonus add rather than replace', (() => {
+  const withPs = { ...plainOcc, bonuses: { attributes: { PS: 2 } } };
+  return composeClass({ rcc: withPs, skillRows: [boxing] }).bonuses.attributes.PS === 4;
+})());
+
+// derive.js needs no new cases: the folded block is an ordinary class bonuses
+// block, so classBonuses() reads it exactly as it reads a class's own.
+check('derive reads a skill bonus as an ordinary class bonus', (() => {
+  const c = composeClass({ rcc: plainOcc, skillRows: [boxing] });
+  const b = D.classBonuses(c, 1, null);
+  return b.attributes.PS === 2 && b.combat.attacks === 1 && b.combat.roll === 1;
+})());
 
 // ---------- 2. D1 schema ----------
 // Runs against the shared workshop database (binding DB in the root

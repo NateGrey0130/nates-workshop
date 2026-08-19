@@ -204,7 +204,8 @@ CREATE TABLE IF NOT EXISTS skills (
   systems TEXT,                           -- JSON array; NULL means both systems
   source TEXT NOT NULL DEFAULT 'seed',    -- seed | import
   source_book TEXT,
-  note TEXT                               -- "40%/30% climb/rappel", "counts as two skills"
+  note TEXT,                              -- "40%/30% climb/rappel", "counts as two skills"
+  bonuses TEXT                            -- JSON, the class `bonuses:` shape; see migration 023
 );
 
 CREATE TABLE IF NOT EXISTS spells (
@@ -376,6 +377,10 @@ CREATE INDEX IF NOT EXISTS idx_play_events_character ON play_events (character_i
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '022-play-events.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'play_events');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '023-skill-bonuses.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('skills') WHERE name = 'bonuses');
 
 -- ═══════════════════════════════════════════════════════════════════
 -- An in-progress character build. Its own table rather than a `draft` status

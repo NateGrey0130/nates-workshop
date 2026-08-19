@@ -199,7 +199,7 @@ function mergeBonusBlock(a, b) {
   return merged;
 }
 
-function sumBonusGroups(a, b) {
+export function sumBonusGroups(a, b) {
   const out = {};
   // `combat` and `saves` are validated as numbers, so the dice branch above is
   // unreachable for them; they are merged through the same helper anyway rather
@@ -216,6 +216,31 @@ function sumBonusGroups(a, b) {
   return Object.keys(out).length ? out : undefined;
 }
 
+
+/**
+ * One bonuses block from every skill a character holds.
+ *
+ * Physical skills are not only percentile - Boxing is "+1 attack per melee, +2
+ * parry & dodge, +1 roll, +2 P.S." Summed through the SAME merge two classes
+ * go through, so a skill and a class granting the same key add up rather than
+ * one quietly winning.
+ *
+ * Takes catalog rows rather than the character's own skill entries, so a
+ * correction to the catalog reaches characters who already hold the skill.
+ * Rows without bonuses cost nothing, so a caller can pass everything it has.
+ */
+export function bonusesFromSkills(rows) {
+  let out;
+  for (const row of rows || []) {
+    let b = row?.bonuses;
+    if (typeof b === 'string') {
+      try { b = JSON.parse(b); } catch { continue; }
+    }
+    if (!b || typeof b !== 'object' || Array.isArray(b)) continue;
+    out = sumBonusGroups(out, b);
+  }
+  return out;
+}
 
 // `rcc` supplies physiology, `occ` supplies occupation. Returns `rcc` unchanged
 // when there is no second class, so every caller can apply it unconditionally.
@@ -460,10 +485,33 @@ function validateAttributeMinimums(block, errors) {
   }
 }
 
-function validateBonuses(bonuses, errors, warnings) {
-  if (typeof bonuses !== 'object' || Array.isArray(bonuses)) {
+// `opts.flatOnly` is what a SKILL's bonuses are validated with. A class rolls
+// its dice bonuses once at creation and stores the result on the character; a
+// skill can be taken at any level, so there is no equivalent moment and a dice
+// bonus would either re-roll on every render or contribute nothing. Pools are
+// refused for the same reason - S.D.C. is rolled into `sdc_max` once. Refusing
+// beats storing Boxing's "+3D6 S.D.C." and then silently never applying it.
+export function validateBonuses(bonuses, errors, warnings, opts = {}) {
+  if (typeof bonuses !== 'object' || Array.isArray(bonuses) || bonuses === null) {
     errors.push('bonuses must be a map');
     return;
+  }
+  if (opts.flatOnly) {
+    for (const g of BONUS_GROUPS) {
+      for (const [k, v] of Object.entries(bonuses[g] || {})) {
+        if (typeof v === 'string') {
+          errors.push(`bonuses.${g}.${k} is a dice expression; a skill's bonuses must be `
+            + 'flat numbers. Keep the roll in `note` until skill dice are rolled at acquisition');
+        }
+      }
+    }
+    if (bonuses.pools !== undefined) {
+      errors.push('bonuses.pools is not applied for a skill - pools are rolled once into the '
+        + "character's maximum. Keep it in `note`");
+    }
+    if (bonuses.at_level !== undefined) {
+      errors.push('bonuses.at_level is not applied for a skill - a skill is not levelled');
+    }
   }
   for (const g of BONUS_GROUPS) validateBonusGroup('bonuses', g, bonuses[g], errors, warnings);
 

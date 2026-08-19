@@ -37,6 +37,8 @@ Access gate. No build step, no framework, no dependencies.
 - [Server-side rule enforcement](#server-side-rule-enforcement)
 - [The catalog field config](#the-catalog-field-config)
   - [What a list row shows](#what-a-list-row-shows)
+- [A skill can grant more than a percentage](#a-skill-can-grant-more-than-a-percentage)
+  - [Where they are applied](#where-they-are-applied)
 - [Merging duplicate catalog rows](#merging-duplicate-catalog-rows)
   - [Retired keys keep resolving](#retired-keys-keep-resolving)
 - [The PDF importers](#the-pdf-importers)
@@ -1637,6 +1639,56 @@ stop — and `min_tier` will appear on its own the first time a book states one.
 
 ---
 
+## A skill can grant more than a percentage
+
+Physical skills are not only percentile. Boxing is *"+1 attack per melee, +2
+parry & dodge, +1 roll, +2 P.S., +3D6 S.D.C."*; Wrestling, Body Building,
+Running, Athletics, Acrobatics and Gymnastics all print bonuses of the same
+kind. The catalog had nowhere to put them, so a character who took Boxing gained
+nothing from it — of 22 Physical rows exactly one recorded its bonuses, as free
+text in `note`, which nothing reads.
+
+`skills.bonuses` holds them, in **the same JSON shape a class's `bonuses:` block
+uses**, validated through the same `validateBonuses()`:
+
+```json
+{ "attributes": { "PS": 2 }, "combat": { "attacks": 1, "parry": 2, "dodge": 2, "roll": 1 } }
+```
+
+Sharing the validator is the point: a skill cannot express a bonus a class
+could not, so `derive.js` needs no new cases and `combat`/`saves` stay the open
+sets they already are — `roll` needed no schema change.
+
+**Dice values and `pools` are refused for a skill**, unlike for a class. A class
+rolls its dice bonuses once at creation and stores what they came up
+(`attribute_bonuses`, `rolled_bonuses`); a skill can be taken at any level, so
+there is no equivalent moment. Accepting them would store Boxing's *+3D6 S.D.C.*
+and silently never apply it, which is the failure this column exists to end.
+They stay in `note` until skill dice are rolled at acquisition.
+
+### Where they are applied
+
+`composeClass()` folds them in **last**, after the two classes are one and after
+chosen abilities — a skill's bonus is neither class's, and an ability granting
+bonuses of its own must not be able to read one. The merge is `sumBonusGroups`,
+the same function that merges an R.C.C. with an O.C.C., so a class and a skill
+both granting +2 P.S. give +4 rather than one quietly winning.
+
+`skillRows` is optional and **null means "this caller does not know the
+character's skills"**, which is deliberately different from an empty array
+meaning "it has none": the first leaves the composed class untouched. The rows
+come from `_lib/skill-bonuses.js`, which resolves through `catalog_redirects`
+for the same reason class markdown does — without it, merging two catalog rows
+would strip the survivor's bonuses from every character holding the old name.
+
+Wired at the two paths that produce a character's numbers: the sheet endpoint
+(`characters/[id].js`) and `loadCharacterClass()` in `_lib/class-loader.js`,
+which the XP, level-up, picks, variant and create endpoints all go through. The
+wizard (`app.js`) composes from classes in memory and does not yet pass them, so
+**bonuses appear once the character is saved, not mid-build**.
+
+---
+
 ## Merging duplicate catalog rows
 
 The importers dedupe on an **exact** name. That is the right default and it
@@ -2136,6 +2188,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `020-psionic-isp-note.sql` | `isp_note` on `psionic_powers` — the cost schedule when a power's I.S.P. is not one number; `isp` keeps the minimum the use button deducts |
 | `021-spell-ppe-note.sql` | `ppe_note` on `spells` — the same variable-cost shape as 020, for spells; `ppe` keeps the minimum the use button deducts |
 | `022-play-events.sql` | `play_events` — play mode's append-only action log: undo, the who-did-what trail, and the session recap boundary |
+| `023-skill-bonuses.sql` | `skills.bonuses` — what a skill grants beyond its percentage, in a class's `bonuses:` shape. Boxing is +1 attack per melee and +2 P.S. |
 
 ### The migration convention
 

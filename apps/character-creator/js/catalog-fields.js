@@ -27,6 +27,8 @@
 // are NOT NULL DEFAULT 0, so coercing an empty form field to NULL fails the
 // insert. Where the column cannot hold NULL, say what empty means instead.
 
+import { validateBonuses } from './parser.js';
+
 export const CATALOGS = {
   skills: {
     table: 'skills',
@@ -44,6 +46,13 @@ export const CATALOGS = {
       { name: 'systems', label: 'Systems', type: 'systems' },
       { name: 'source_book', label: 'Source book', type: 'text' },
       { name: 'note', label: 'Note', type: 'longtext', help: 'Oddities: "40%/30% climb/rappel", "counts as two skills"' },
+      // What the skill grants beyond its percentage - Boxing is +1 attack per
+      // melee and +2 P.S. Same shape as a class's `bonuses:` block, validated
+      // through the same validateBonuses, so a skill cannot express a bonus a
+      // class could not and derive.js needs no new cases.
+      { name: 'bonuses', label: 'Bonuses', type: 'bonuses',
+        help: 'JSON, flat numbers only: {"attributes":{"PS":2},"combat":{"attacks":1}}. '
+          + 'Dice and S.D.C. go in Note until skill dice are rolled at acquisition' },
     ],
   },
 
@@ -199,6 +208,24 @@ export function coerceField(field, raw) {
       if (typeof obj !== 'object' || Array.isArray(obj) || obj === null) {
         return { error: `${field.label} must be a set of key/value pairs` };
       }
+      return { value: JSON.stringify(obj) };
+    }
+    case 'bonuses': {
+      // NULL rather than '{}' when blank: most skills grant nothing, and an
+      // empty object stored on every row would make "has bonuses" untestable
+      // in SQL.
+      if (blank) return { value: null };
+      let obj = raw;
+      if (typeof raw === 'string') {
+        try { obj = JSON.parse(raw); } catch { return { error: `${field.label} is not valid JSON` }; }
+      }
+      if (obj === null) return { value: null };
+      const errors = [];
+      // Warnings are dropped deliberately - "PS: 0 will do nothing" is worth
+      // saying about a class file someone is writing by hand, and is noise in a
+      // catalog form where the field is optional anyway.
+      validateBonuses(obj, errors, [], { flatOnly: true });
+      if (errors.length) return { error: `${field.label}: ${errors[0]}` };
       return { value: JSON.stringify(obj) };
     }
     case 'select': {
