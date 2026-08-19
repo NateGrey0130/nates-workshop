@@ -241,7 +241,21 @@ if (noCatalog) {
     const rows = query('SELECT name, category FROM skills WHERE name IN ('
       + names.map((n) => quote(n)).join(',') + ')');
     const categoryOf = new Map(rows.map((r) => [String(r.name).trim().toLowerCase(), r.category]));
-    const { granted, noop } = crossCategoryRestrictions(wanted, categoryOf);
+    const { granted, unreachable, noop } = crossCategoryRestrictions(data, categoryOf);
+
+    // The defect. categoryAllows admits a cross-category `only` ONLY when the
+    // class also lists the skill's real category, so without it the class
+    // grants a skill nobody can take.
+    if (unreachable.length) {
+      console.log(`
+  ${'unreachable'.padEnd(14)} ${plural(unreachable.length, 'name')} granted but not takeable`);
+      for (const u of unreachable) {
+        console.log(`      ${u.category} only: "${u.name}" - the catalog files it under `
+          + `${u.actual ?? 'no category'}, which this class does not grant`);
+      }
+      console.log('      A cross-category `only` is admitted only when the class also');
+      console.log("      lists that skill's real category. Add it, or drop the name.");
+    }
 
     if (granted.length) {
       console.log(`
@@ -249,9 +263,10 @@ if (noCatalog) {
       for (const g of granted) {
         console.log(`      ${g.category} only: "${g.name}" - the catalog files it under ${g.actual ?? 'no category'}`);
       }
-      console.log('      These WORK: an `only` entry matches by name whatever the');
-      console.log('      catalog category is, which is what the book means.');
+      console.log('      These work: the class lists that category too, so the name');
+      console.log('      match is admitted - which is what the book means.');
     }
+
     if (noop.length) {
       console.log(`
   ${'no-op except'.padEnd(14)} ${plural(noop.length, 'name')} excluded from the wrong category`);

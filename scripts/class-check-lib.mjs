@@ -98,33 +98,52 @@ export function extractClassMarkdown(sql) {
  * Restriction names that resolve to a catalog row in a DIFFERENT category.
  *
  * `class-check` cannot see these through the missing-row check: the name
- * matches a skill, so it stays quiet. But `categoryAllows` filters within a
- * category, and the catalog files each skill under exactly one while the books
- * file a skill under whichever category a given class spends its pick from.
- * "Espionage: Wilderness Survival only" is an ordinary book line about a
- * Wilderness skill.
+ * matches a skill, so it stays quiet. But the catalog files each skill under
+ * exactly one category while the books file a skill under whichever category a
+ * given class spends its pick from. "Espionage: Wilderness Survival only" is an
+ * ordinary book line about a Wilderness skill.
  *
- * The two kinds are not equally serious, so they are reported separately:
+ * Three outcomes, and the difference is the whole point of checking:
  *
- *   only    the class GRANTS the skill by name, and since categoryAllows
- *           matches an `only` entry by name regardless of category, it works.
- *           Reported so a cross-category grant is visible rather than looking
- *           like a typo.
- *   except  excludes NOTHING, because the skill was never offered in that
- *           category to begin with. A no-op, and usually a sign the class
- *           names a category the catalog disagrees with.
+ *   granted      an `only` naming the skill, AND the class also lists the
+ *                skill's real category. categoryAllows admits it, so the
+ *                cross-category grant works. Worth showing so it reads as
+ *                deliberate rather than as a typo.
+ *   unreachable  an `only` naming the skill where the class does NOT list its
+ *                real category. categoryAllows is bounded by that, so the
+ *                class grants a skill nobody can take. A real defect.
+ *   noop         an `except` naming a skill from another category. Excludes
+ *                nothing, because nothing was offered there to exclude.
  *
- * `wanted` is the output of catalog.js's restrictionNames(); `categoryOf` maps
- * a normalised skill name to its catalog category.
+ * Walks the class data itself rather than taking restrictionNames() output,
+ * because the bound has to be checked against the SAME skill group the
+ * restriction came from - an occ_related_skills entry is not made reachable by
+ * a category that only secondary_skills grants.
+ *
+ * `categoryOf` maps a normalised skill name to its catalog category.
  */
-export function crossCategoryRestrictions(wanted, categoryOf) {
+export function crossCategoryRestrictions(data, categoryOf) {
   const norm = (s) => String(s ?? '').trim().toLowerCase();
-  const out = { granted: [], noop: [] };
-  for (const w of wanted || []) {
-    const actual = categoryOf.get(norm(w.name));
-    if (actual === undefined) continue;          // no row at all - already reported
-    if (norm(actual) === norm(w.category)) continue;
-    (w.kind === 'only' ? out.granted : out.noop).push({ ...w, actual });
+  const nameOf = (entry) => (typeof entry === 'string' ? entry : entry?.name ?? null);
+  const out = { granted: [], unreachable: [], noop: [] };
+
+  for (const group of ['occ_related_skills', 'secondary_skills']) {
+    const cats = data?.skills?.[group]?.categories || [];
+    const listed = new Set(cats.map((c) => norm(nameOf(c))).filter(Boolean));
+    for (const c of cats) {
+      if (!c || typeof c !== 'object') continue;
+      for (const kind of ['only', 'except']) {
+        for (const name of c[kind] || []) {
+          const actual = categoryOf.get(norm(name));
+          if (actual === undefined) continue;        // no row - the missing-row check owns it
+          if (norm(actual) === norm(c.name)) continue;
+          const hit = { group, category: c.name, kind, name, actual };
+          if (kind === 'except') out.noop.push(hit);
+          else if (listed.has(norm(actual))) out.granted.push(hit);
+          else out.unreachable.push(hit);
+        }
+      }
+    }
   }
   return out;
 }

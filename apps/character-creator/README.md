@@ -1682,10 +1682,21 @@ One change covers the wizard's picker, the server-side validator and the
 level-up pick check, because all three call `categoryAllows` — the pair that
 drifted once already.
 
-`class-check` reports both shapes, under `cross-category` and `no-op except`.
-Neither is an error: the first now works and is worth seeing rather than looking
-like a typo, and the second is harmless but usually means the class names a
-category the catalog disagrees with.
+`class-check` reports three shapes, and it VERIFIES the bound rather than
+assuming it:
+
+| Section | Meaning |
+|---|---|
+| `cross-category` | An `only` naming the skill, and the class lists its real category. Works. Shown so it reads as deliberate rather than as a typo. |
+| `unreachable` | An `only` naming the skill where the class does **not** list its real category. The class grants a skill nobody can take. A real defect. |
+| `no-op except` | An `except` naming a skill from another category. Excludes nothing. Harmless, but the category is probably wrong. |
+
+The bound is checked **within the same skill group**: a category granted only to
+`secondary_skills` does not make an `occ_related_skills` restriction reachable.
+
+None of the three sets the exit code, for the same reason the missing-row
+restrictions do not - they are findings about the books, not a file the parser
+rejects.
 
 ---
 
