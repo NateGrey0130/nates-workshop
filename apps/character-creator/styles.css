@@ -723,3 +723,28 @@ body.play-mode #print-btn { display: none; }
 }
 .play-weapon .pw-btns button:active { background: var(--accent-glow); }
 .play-weapon .pw-btns button.ghost { color: var(--text-secondary); min-width: 44px; }
+
+/* Play mode phase 4: melee counter + rest */
+.play-melee {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  flex-wrap: wrap; background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: 10px; padding: 8px 12px; margin-bottom: 12px;
+  font-family: 'JetBrains Mono', monospace; font-size: 13px;
+}
+.play-melee button {
+  min-height: 40px; padding: 0 12px; border-radius: 8px;
+  background: var(--bg-tertiary); border: 1px solid var(--border);
+  color: var(--text-primary); font-size: 14px; cursor: pointer;
+}
+.play-melee button.ghost { color: var(--text-secondary); min-width: 40px; }
+.play-melee button:active { background: var(--accent-glow); }
+
+.rest-row {
+  display: flex; justify-content: space-between; align-items: center;
+  min-height: 40px; padding: 4px 2px; font-size: 14px;
+}
+.rest-row input { width: 80px; }
+.rest-apply {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 8px; padding: 8px 2px;
+}
