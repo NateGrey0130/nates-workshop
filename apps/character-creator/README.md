@@ -968,6 +968,23 @@ with what they picked. An option no definition covers is a warning, not an error
 Psionics uses the **stronger tier wins** rule composition already uses, so an
 ability cannot make a Master psychic weaker.
 
+**An ability may demand an occupation.** The Godling's Magic Powers grants
+"all the abilities of a practitioner of magic - pick one: Ley Line Walker,
+Shifter, Mystic or Warlock (or Necromancer if evil)". `occ_options` on the
+ability definition names those practitioners as **class ids**; choosing the
+ability turns the class step's occupation picker into a required choice
+narrowed to that list, and the pick lands in `occ_class_id` - the existing
+race+occupation composition carries everything from there, which also means
+the occupation's related/secondary allowances replace the class's own (the
+composition table's normal rule, stated in the picker). Ids not yet in the
+catalog are listed disabled rather than hidden, so the day Shifter is
+imported nothing needs editing. Dropping the ability releases the slot.
+`abilityOccOptions()` in `parser.js` is the one shared reading; the
+validator warns (`ability_occ`, never a violation) when a character holds
+such an ability with no matching occupation. The second take of a repeatable
+ability cannot compose a second occupation - one slot exists - so it stays
+what `on_repeat` prose says it is, a G.M. matter.
+
 **Each class states its own list**, even when the book prints one list and
 points several classes at it. A mechanism that resolved one class's options out
 of another (`from_class`, PR #80) existed briefly and was removed: its only
