@@ -37,6 +37,7 @@ Access gate. No build step, no framework, no dependencies.
 - [Server-side rule enforcement](#server-side-rule-enforcement)
 - [The catalog field config](#the-catalog-field-config)
   - [What a list row shows](#what-a-list-row-shows)
+- [A category restriction may name a skill from elsewhere](#a-category-restriction-may-name-a-skill-from-elsewhere)
 - [A skill can grant more than a percentage](#a-skill-can-grant-more-than-a-percentage)
   - [Where they are applied](#where-they-are-applied)
 - [Merging duplicate catalog rows](#merging-duplicate-catalog-rows)
@@ -1636,6 +1637,42 @@ Three details that make it read well:
 The upshot is that a row says only what it knows. The seeded psionic powers have
 no range, duration or `min_tier` at all, so they show category and I.S.P. and
 stop — and `min_tier` will appear on its own the first time a book states one.
+
+---
+
+## A category restriction may name a skill from elsewhere
+
+The catalog files each skill under exactly one category. The books do not: they
+file a skill under whichever category a given class spends its pick from, so
+*"Espionage: Wilderness Survival only"* is an ordinary line about a skill the
+catalog calls Wilderness.
+
+`categoryAllows` used to find the entry matching the skill's catalog category
+first, so the name never matched and the restriction did nothing. Ten classes
+named a skill this way; for eight it was harmless, because the skill was
+reachable through another category the class also granted. **The two Elemental
+Fusionists lost Writing and Lore: Cattle & Animals outright** — the books grant
+them and the wizard would not offer them.
+
+An `only` entry now matches **by name, whatever category the catalog files the
+skill under**, which is what the book means: you may spend a pick from that
+category on this skill. Everything else is unchanged — an `only` list still
+refuses a name it does not carry, and a category the class never granted is
+still refused.
+
+**`except` deliberately does not work this way.** An `except` naming a skill
+from another category still excludes nothing, because the skill was never
+offered in that category to begin with. Making it grant would be the opposite of
+what an exclusion is for.
+
+One change covers the wizard's picker, the server-side validator and the
+level-up pick check, because all three call `categoryAllows` — the pair that
+drifted once already.
+
+`class-check` reports both shapes, under `cross-category` and `no-op except`.
+Neither is an error: the first now works and is worth seeing rather than looking
+like a typo, and the second is harmless but usually means the class names a
+category the catalog disagrees with.
 
 ---
 

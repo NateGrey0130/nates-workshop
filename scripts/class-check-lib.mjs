@@ -93,3 +93,38 @@ export function extractClassMarkdown(sql) {
   }
   return out;
 }
+
+/**
+ * Restriction names that resolve to a catalog row in a DIFFERENT category.
+ *
+ * `class-check` cannot see these through the missing-row check: the name
+ * matches a skill, so it stays quiet. But `categoryAllows` filters within a
+ * category, and the catalog files each skill under exactly one while the books
+ * file a skill under whichever category a given class spends its pick from.
+ * "Espionage: Wilderness Survival only" is an ordinary book line about a
+ * Wilderness skill.
+ *
+ * The two kinds are not equally serious, so they are reported separately:
+ *
+ *   only    the class GRANTS the skill by name, and since categoryAllows
+ *           matches an `only` entry by name regardless of category, it works.
+ *           Reported so a cross-category grant is visible rather than looking
+ *           like a typo.
+ *   except  excludes NOTHING, because the skill was never offered in that
+ *           category to begin with. A no-op, and usually a sign the class
+ *           names a category the catalog disagrees with.
+ *
+ * `wanted` is the output of catalog.js's restrictionNames(); `categoryOf` maps
+ * a normalised skill name to its catalog category.
+ */
+export function crossCategoryRestrictions(wanted, categoryOf) {
+  const norm = (s) => String(s ?? '').trim().toLowerCase();
+  const out = { granted: [], noop: [] };
+  for (const w of wanted || []) {
+    const actual = categoryOf.get(norm(w.name));
+    if (actual === undefined) continue;          // no row at all - already reported
+    if (norm(actual) === norm(w.category)) continue;
+    (w.kind === 'only' ? out.granted : out.noop).push({ ...w, actual });
+  }
+  return out;
+}
