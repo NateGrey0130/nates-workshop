@@ -1656,9 +1656,22 @@ them and the wizard would not offer them.
 
 An `only` entry now matches **by name, whatever category the catalog files the
 skill under**, which is what the book means: you may spend a pick from that
-category on this skill. Everything else is unchanged — an `only` list still
-refuses a name it does not carry, and a category the class never granted is
-still refused.
+category on this skill.
+
+It is **bounded by the class also listing the skill's real category**. Without
+that bound an `only` entry would reach a skill from a category the class never
+granted at all, which is wider than any book says. Every real case clears it:
+a class naming a skill under a neighbouring category grants that neighbour too,
+which is checked across all eleven.
+
+"Lists the category" is deliberately not "that category's own restriction admits
+the skill". Both Elemental Fusionists grant Technical with an `only` list that
+does not carry Writing and name it under Communications instead — requiring both
+would refuse the very skill this exists to reach. The more specific statement,
+the one naming the skill, wins.
+
+Everything else is unchanged — an `only` list still refuses a name it does not
+carry, and a category the class never granted is still refused.
 
 **`except` deliberately does not work this way.** An `except` naming a skill
 from another category still excludes nothing, because the skill was never

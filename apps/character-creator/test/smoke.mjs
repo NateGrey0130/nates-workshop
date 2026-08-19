@@ -3520,6 +3520,10 @@ const ccCats = [
   { name: 'Espionage', only: ['Detect Ambush', 'Wilderness Survival'] },
   { name: 'Physical', except: ['Acrobatics'] },
   { name: 'Communications', except: ['Read Sensory Equipment'] },
+  // Wilderness is granted but RESTRICTED, and its own list does not carry
+  // Wilderness Survival. So the cross-category rule is what admits the skill,
+  // not this entry - which is the Elemental Fusionist's exact shape.
+  { name: 'Wilderness', only: ['Hunting'] },
   'Technical',
 ];
 const allows = (name, category) => categoryAllows(ccCats, { name, category });
@@ -3551,6 +3555,21 @@ check('an except-list does NOT grant a skill from another category',
 // An empty or absent list restricts nothing, unchanged.
 check('no categories at all still allows anything',
   categoryAllows([], { name: 'X', category: 'Y' }) && categoryAllows(null, { name: 'X', category: 'Y' }));
+
+// The bound: the class must also LIST the skill's real category. Without it an
+// only-list would reach a skill from a category the class never granted, which
+// is wider than any book says.
+check('a cross-category grant needs the real category to be listed too',
+  !categoryAllows([{ name: 'Espionage', only: ['Wilderness Survival'] }],
+    { name: 'Wilderness Survival', category: 'Wilderness' }));
+
+// "Lists it" is NOT "that category's own restriction admits it". Both Elemental
+// Fusionists grant Technical with an only-list that does not carry Writing, and
+// name Writing under Communications instead; requiring both would refuse the
+// very skill this exists to reach.
+check('the real category may itself be restricted', categoryAllows(
+  [{ name: 'Communications', only: ['Writing'] }, { name: 'Technical', only: ['Art'] }],
+  { name: 'Writing', category: 'Technical' }));
 
 // --- the reporting half, which is what makes this visible in class-check
 const ccWanted = [
