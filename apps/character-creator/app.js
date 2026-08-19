@@ -11,7 +11,7 @@ import { LANGUAGE_OTHER, isLanguageName, languageSkillName } from './js/language
 import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSIONIC_TIER_RULES,
          rollsForPsionics as classRollsForPsionics } from './js/psionics.js';
 import { isChoiceGroup, isGearChoice, applyVariant,
-         categoryAllows, categoryLabel, needsOccupation } from './js/parser.js';
+         categoryAllows, categoryLabel, needsOccupation, abilityOccOptions } from './js/parser.js';
 import { composeClass } from './js/compose.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
@@ -526,7 +526,12 @@ function canUseClass() {
   // deliberate omission. Unspent SKILL picks are banked instead, because those
   // are earned over time.
   const owed = abilityGroups(S.cls).reduce((n, g) => n + (+g.choose || 0), 0);
-  return S.abilities.length >= owed;
+  if (S.abilities.length < owed) return false;
+  // An ability that names occupations (Magic Powers) is not resolved until
+  // one of them is chosen - same rule as the ability count above.
+  const occNeed = abilityOccOptions(S.cls, S.abilities);
+  if (occNeed && (!S.occ || !occNeed.options.includes(S.occ))) return false;
+  return true;
 }
 
 // Which stage of the class. Shown only when the class has stages, so every
@@ -561,6 +566,33 @@ function pickVariant(id) { S.variant = id; render(); }
 // is what you trained as, and the related and secondary skill allowances come
 // entirely from the latter.
 function occPicker() {
+  // A chosen ability that names occupations claims this picker: the choice
+  // stops being optional and the options narrow to what the ability lists.
+  const occNeed = abilityOccOptions(S.cls, S.abilities);
+  if (occNeed) {
+    const chosen = S.occ ? S.classes.find((c) => c.id === S.occ) : null;
+    return `<div class="panel-inset">
+    <h3>${esc(occNeed.name)} <span class="muted small">&mdash; pick the practitioner</span></h3>
+    <p class="muted small">Taking <b>${esc(occNeed.name)}</b> means having one of these
+      occupations composed into the character &mdash; its magic, its abilities and its
+      training program all arrive with it.</p>
+    ${!S.occ || !occNeed.options.includes(S.occ) ? `<p class="warn">Choose one to continue.</p>` : ''}
+    <div class="rowline">
+      <select onchange="pickOcc(this.value)">
+        <option value="">&mdash; choose &mdash;</option>
+        ${occNeed.options.map((oid) => {
+          const c = S.classes.find((x) => x.id === oid);
+          return c
+            ? `<option value="${esc(oid)}"${S.occ === oid ? ' selected' : ''}>${esc(c.name)}</option>`
+            : `<option value="" disabled>${esc(oid)} (not in the catalog yet)</option>`;
+        }).join('')}
+      </select>
+    </div>
+    ${chosen ? `<p class="small">Related skills: <b>${chosen.skills?.occ_related_skills?.count ?? 0}</b>
+      &middot; Secondary: <b>${chosen.skills?.secondary_skills?.count ?? 0}</b>
+      &middot; the occupation allowances replace those of this class.</p>` : ''}
+  </div>`;
+  }
   if (S.cls?.category !== 'rcc') return '';
   const options = S.classes.filter((c) => c.system === S.system && c.category === 'occ');
   if (!options.length) return '';
@@ -652,6 +684,16 @@ function takeAbility(name) {
 function dropAbility(name) {
   const i = S.abilities.lastIndexOf(name);
   if (i >= 0) S.abilities.splice(i, 1);
+  // If the dropped ability was the one claiming the occupation slot and no
+  // remaining pick still needs it, release the slot - keeping a practitioner
+  // chosen through an ability that is no longer taken would be surprising.
+  const still = abilityOccOptions(S.cls, S.abilities);
+  if (!still && S.occ) {
+    const def = (S.cls?.special_abilities || []).find((d) => d?.name === name);
+    if (Array.isArray(def?.occ_options) && def.occ_options.includes(S.occ)) {
+      S.occ = null; S.occVariant = null;
+    }
+  }
   render();
 }
 

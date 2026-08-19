@@ -560,6 +560,28 @@ export function isAbilityDefinition(entry) {
   return !!entry && typeof entry === 'object' && typeof entry.name === 'string' && !isAbilityChoice(entry);
 }
 
+// An ability may name the occupations whose powers it grants - the Godling's
+// Magic Powers says "pick one: Ley Line Walker, Shifter, Mystic or Warlock
+// (or Necromancer if evil)" - as `occ_options`, a list of class ids. Choosing
+// such an ability IS choosing to have one of those occupations composed in,
+// so the wizard turns the pick into a required occupation choice and the
+// validator warns when a character holds the ability with no matching
+// occupation. Returns { name, options } for the first chosen ability that
+// carries options, or null. One helper, shared by both, so they cannot
+// disagree about which pick demands what.
+export function abilityOccOptions(cls, chosenNames) {
+  const names = new Set((chosenNames || [])
+    .map((n) => (typeof n === 'string' ? n : n?.name))
+    .filter(Boolean).map((n) => n.trim().toLowerCase()));
+  for (const d of cls?.special_abilities || []) {
+    if (!isAbilityDefinition(d) || !Array.isArray(d.occ_options) || !d.occ_options.length) continue;
+    if (names.has(d.name.trim().toLowerCase())) {
+      return { name: d.name, options: d.occ_options.map(String) };
+    }
+  }
+  return null;
+}
+
 // Every option a class offers from its own ability choice groups, by name.
 export function abilityOptions(cls) {
   const out = [];

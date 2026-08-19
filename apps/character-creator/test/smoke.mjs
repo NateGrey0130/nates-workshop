@@ -9,7 +9,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseClassMarkdown, isGearChoice, applyVariant, parseYaml, combineClasses,
          categoryAllows, categoryLabel, VARIANT_OVERRIDES, POOL_BONUS_KEYS,
-         abilityOptions, applyAbilities, ABILITY_GRANTS,
+         abilityOptions, applyAbilities, ABILITY_GRANTS, abilityOccOptions,
          needsOccupation } from '../js/parser.js';
 import { referencedGear, restrictionNames } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
@@ -2442,6 +2442,19 @@ console.log('\n[1c25e] Chosen ability fragments');
 
   check('the grant keys are the three an ability may carry',
     ABILITY_GRANTS.join(',') === 'bonuses,psionics,magic');
+
+  // occ_options: an ability that names occupations (the Godling's Magic
+  // Powers) turns its pick into a required occupation choice.
+  const occCls = { special_abilities: [
+    { name: 'Magic Powers', occ_options: ['ley-line-walker', 'mystic'] },
+    { name: 'Fly' },
+    { choose: 1, from: ['Magic Powers', 'Fly'] },
+  ] };
+  check('a chosen ability with occ_options demands an occupation',
+    abilityOccOptions(occCls, ['Magic Powers'])?.options.join(',') === 'ley-line-walker,mystic');
+  check('an unchosen one demands nothing', abilityOccOptions(occCls, ['Fly']) === null);
+  check('and the check is case- and shape-tolerant',
+    abilityOccOptions(occCls, [{ name: 'magic powers', gm: true }]) !== null);
 
   check('no picks leaves the class untouched', applyAbilities(cls, []) === cls);
   check('and undefined picks are the same', applyAbilities(cls, undefined) === cls);

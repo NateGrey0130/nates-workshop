@@ -34,7 +34,7 @@
 //    as WARNINGS and never block a save.
 
 import { isChoiceGroup, categoryAllows, categoryName, needsOccupation,
-         isAbilityChoice, isAbilityDefinition, abilityOptions, normalizeAbilities } from '../../../../apps/character-creator/js/parser.js';
+         isAbilityChoice, isAbilityDefinition, abilityOptions, normalizeAbilities, abilityOccOptions } from '../../../../apps/character-creator/js/parser.js';
 
 import { skillGrantsFor } from './leveling.js';
 
@@ -245,6 +245,18 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
         warnings.push({ rule: 'ability_repeat', name: label, times: n,
           message: `${label} is taken ${n} times — the book says twice` });
       }
+    }
+
+    // An ability that names occupations (occ_options - the Godling's Magic
+    // Powers) is satisfied by one of them being the character's occupation.
+    // A warning and never a violation: a class edit is not the player's
+    // fault, and an old character must keep saving.
+    const occNeed = abilityOccOptions(cls, picks.map((p) => p.name));
+    if (occNeed && (!character?.occ_class_id || !occNeed.options.includes(character.occ_class_id))) {
+      warnings.push({ rule: 'ability_occ', name: occNeed.name,
+        message: `${occNeed.name} expects one of these occupations composed in: `
+          + occNeed.options.join(', ')
+          + (character?.occ_class_id ? ` - this character has ${character.occ_class_id}` : ' - this character has none') });
     }
   }
 
