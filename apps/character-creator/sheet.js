@@ -495,6 +495,136 @@ function weaponCardsHtml(w, strikeBonus) {
 }
 
 
+// ── Play mode phase 4: melee round counter + rest ──
+// The counter is table ephemera - client state, deliberately not persisted;
+// a round in progress is not character data. Attacks-per-melee comes from
+// the derived combat block (base 2 + class bonuses + whatever a human typed).
+//
+// Rest applies rate x hours to each pool in ONE undoable event. The RATES
+// ARE THE TABLE'S OWN, deliberately: the books' recovery pages are not yet
+// in the rules audit, and this app does not ship an uncited number for a
+// table to silently trust. Typed rates are remembered per character on the
+// device (localStorage - a convenience, not character data). The day the
+// recovery pages are audited, cited defaults land in js/rules.js and this
+// comment changes.
+
+function meleeState() {
+  if (!C.melee) C.melee = { round: 1, attack: 1 };
+  return C.melee;
+}
+
+function meleeLabel(attacksPer) {
+  const m = meleeState();
+  return `Round ${m.round} — attack ${m.attack} of ${attacksPer || '?'}`;
+}
+
+function nextAttack(attacksPer) {
+  const m = meleeState();
+  if (attacksPer && m.attack >= attacksPer) { m.attack = 1; m.round += 1; }
+  else m.attack += 1;
+  const el = $('play-melee-label');
+  if (el) el.textContent = meleeLabel(attacksPer);
+}
+
+function newRound(attacksPer) {
+  const m = meleeState();
+  m.round += 1; m.attack = 1;
+  const el = $('play-melee-label');
+  if (el) el.textContent = meleeLabel(attacksPer);
+}
+
+function resetMelee(attacksPer) {
+  C.melee = { round: 1, attack: 1 };
+  const el = $('play-melee-label');
+  if (el) el.textContent = meleeLabel(attacksPer);
+}
+
+// ── rest ──
+const REST_KEY = () => `cc-play-rest-${id}`;
+
+function restPrefs() {
+  try { return JSON.parse(localStorage.getItem(REST_KEY())) || {}; } catch { return {}; }
+}
+
+function saveRestPrefs(p) {
+  try { localStorage.setItem(REST_KEY(), JSON.stringify(p)); } catch {}
+}
+
+// Recovery = rate x hours per pool, clamped to the pool's max (recovering
+// past full is not recovery; the steppers still allow over-max by hand).
+function restPreview() {
+  const hours = Math.max(0, Number($('rest-hours')?.value) || 0);
+  const out = [];
+  for (const [key, label] of POOLS) {
+    if (C.data[key + '_max'] == null) continue;
+    const rate = Math.max(0, Number($(`rest-rate-${key}`)?.value) || 0);
+    const cur = C.data[key + '_current'] ?? 0;
+    const max = C.data[key + '_max'];
+    const gain = Math.min(Math.round(rate * hours), Math.max(max - cur, 0));
+    out.push({ key, label, rate, cur, gain });
+  }
+  return { hours, pools: out };
+}
+
+function updateRestPreview() {
+  const { hours, pools } = restPreview();
+  const el = $('rest-preview');
+  if (!el) return;
+  const parts = pools.filter((p) => p.gain > 0).map((p) => `${p.label} +${p.gain}`);
+  el.textContent = hours && parts.length ? parts.join(' · ') : 'nothing to recover';
+  saveRestPrefs({ hours, rates: Object.fromEntries(pools.map((p) => [p.key, p.rate])) });
+}
+
+async function applyRest() {
+  const { hours, pools } = restPreview();
+  const changes = { character: {} };
+  const applied = [];
+  for (const p of pools) {
+    if (p.gain <= 0) continue;
+    changes.character[p.key + '_current'] = { from: p.cur, to: p.cur + p.gain };
+    applied.push(`${p.label} +${p.gain}`);
+  }
+  if (!applied.length) { recordRoll('rest', 'Rest', { note: 'nothing to recover' }); return; }
+  const prev = {};
+  for (const [field, v] of Object.entries(changes.character)) {
+    prev[field] = C.data[field];
+    C.data[field] = v.to;
+    const el = $('play-cur-' + field.replace('_current', ''));
+    if (el) el.textContent = v.to;
+  }
+  try {
+    await postEvent('pool', `rested ${hours}h: ${applied.join(', ')}`, changes);
+    recordRoll('rest', `Rested ${hours}h`, { note: applied.join(', ') });
+  } catch (err) {
+    for (const [field, v] of Object.entries(prev)) {
+      C.data[field] = v;
+      const el = $('play-cur-' + field.replace('_current', ''));
+      if (el) el.textContent = v;
+    }
+    alert('Failed: ' + err.message);
+  }
+}
+
+function restPanelHtml() {
+  const prefs = restPrefs();
+  const rates = prefs.rates || {};
+  const rows = POOLS.filter(([key]) => C.data[key + '_max'] != null).map(([key, label]) =>
+    `<label class="rest-row"><span>${label} per hour</span>
+      <input type="number" min="0" id="rest-rate-${key}" value="${rates[key] ?? ''}" placeholder="0" oninput="updateRestPreview()"></label>`).join('');
+  return `<details class="play-sec"><summary>Rest &amp; recovery</summary>
+    <p class="muted small">Your table's rates — the books' recovery pages are not yet in the
+    rules audit, so nothing here ships a number for you. Set a per-hour rate per pool
+    (for a per-day rule, divide or set hours to the days). Applied as one undoable event,
+    clamped at each pool's max.</p>
+    <label class="rest-row"><span>Hours rested</span>
+      <input type="number" min="0" id="rest-hours" value="${prefs.hours ?? 8}" oninput="updateRestPreview()"></label>
+    ${rows}
+    <div class="rest-apply"><span id="rest-preview" class="muted small"></span>
+      <button class="btn btn-sm" onclick="applyRest()">🛏 Rest</button></div>
+  </details>`;
+}
+
+
 function renderPlay() {
   const c = C.data, w = C.canWrite;
   const cls = C.cls || {};
@@ -581,11 +711,20 @@ function renderPlay() {
       <button onclick="undoLast()">↶</button>
       <button onclick="endSession()">✎ End session</button></div>` : ''}
     <div class="play-pools">${poolCards}</div>
+    <div class="play-melee">
+      <span id="play-melee-label">${meleeLabel(combat.attacks)}</span>
+      <span>
+        <button onclick="nextAttack(${Number(combat.attacks) || 0})">Next attack</button>
+        <button onclick="newRound(${Number(combat.attacks) || 0})">New round</button>
+        <button class="ghost" onclick="resetMelee(${Number(combat.attacks) || 0})">⟲</button>
+      </span>
+    </div>
     ${weaponCardsHtml(w, combat.strike)}
     <details class="play-sec" open><summary>Combat</summary>${combatRows}</details>
     <details class="play-sec" open><summary>Saving Throws</summary>${saveRows}</details>
     ${powers.length ? `<details class="play-sec" open><summary>Powers</summary>${powerRows}</details>` : ''}
     ${skillGroups}
+    ${w ? restPanelHtml() : ''}
     <div id="play-roll-bar" class="${C.lastRoll ? '' : 'empty'}">${rollBarHtml()}</div>
   </div>`;
 }

@@ -1430,8 +1430,16 @@ how a log inherits every consistency bug forever. What the log buys:
 - A **who-did-what trail** (`actor_email`) for the sheet a G.M. and a
   player share mid-session.
 
-Planned and not yet built: rest/recovery and a melee round counter (phase
-4). Deliberately out of scope at any phase: party-wide initiative (the
+**The melee counter and rest (phase 4).** The round/attack counter reads the
+derived attacks-per-melee and is deliberately client-only ephemera — a round
+in progress is not character data. **Rest** applies rate × hours per pool as
+one undoable event, clamped at each pool's max. The rates are **the
+table's own**, typed in and remembered per character on the device: the
+books' recovery pages are not yet in the rules audit, and this app does not
+ship an uncited number for a table to silently trust. When those pages are
+audited, cited defaults belong in `js/rules.js`.
+
+Deliberately out of scope at any phase: party-wide initiative (the
 dashboard's altitude) and automated combat resolution (the hand-to-hand
 tables are not modelled, and the README already says so).
 
