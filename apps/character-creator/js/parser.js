@@ -362,16 +362,28 @@ export function categoryAllows(categories, skill) {
   // Wilderness Survival only" is an ordinary book line, and Wilderness Survival
   // is a Wilderness skill in the catalog.
   //
-  // Matching an `only` entry by name regardless of category is what the book
-  // means — you may spend a pick from that category on this skill. Filtering by
-  // the catalog's category first made the name match nothing, which cost the
-  // two Elemental Fusionists their Writing and Lore: Cattle & Animals outright,
-  // and left eight more classes naming skills that did nothing.
+  // Matching an `only` entry by name is what the book means - you may spend a
+  // pick from that category on this skill. Filtering by the catalog's category
+  // first made the name match nothing, which cost the two Elemental Fusionists
+  // their Writing and Lore: Cattle & Animals outright.
+  //
+  // BOUNDED by the class also listing the skill's real category. Without that
+  // bound, any `only` entry would reach a skill from a category the class never
+  // granted at all, which is wider than any book says. Every real case clears
+  // it: a class naming a skill under a neighbouring category grants that
+  // neighbour too.
+  //
+  // "Lists the category" is deliberately not "that category's own restriction
+  // admits the skill". The Elemental Fusionists grant Technical with an `only`
+  // list that does not carry Writing, and Communications names it instead -
+  // requiring both would refuse the very skill this exists to reach. The more
+  // specific statement, the one naming the skill, wins.
   //
   // Deliberately only `only`. An `except` naming a skill from another category
   // still excludes nothing, because nothing was offered there to exclude.
-  if (name && categories.some((c) => c && typeof c === 'object'
-      && Array.isArray(c.only) && c.only.some((n) => normName(n) === name))) {
+  if (name && categories.some((c) => normName(categoryName(c)) === normName(skill?.category))
+      && categories.some((c) => c && typeof c === 'object'
+        && Array.isArray(c.only) && c.only.some((n) => normName(n) === name))) {
     return true;
   }
 
