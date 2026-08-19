@@ -191,3 +191,9 @@ function rollPoolBase(expr, attrs) {
   const n = Number(s);
   return Number.isFinite(n) ? n : null;
 }
+
+
+// The sheet is a plain-script page and cannot import a module; its play-mode
+// weapon cards read this mirror, installed by the <script type="module"> tag
+// sheet.html loads - the language-skills.js precedent. Harmless server-side.
+globalThis.diceRoll = { d, evalDice };
