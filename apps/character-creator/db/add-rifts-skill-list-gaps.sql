@@ -144,19 +144,25 @@ UPDATE skills SET bonuses = '{"attributes":{"PS":2,"PE":2,"PP":1},"combat":{"rol
        note = COALESCE(note || ' ', '') || 'Also +1D6 S.D.C.'
  WHERE name = 'Gymnastics' AND bonuses IS NULL;
 
--- Athletics (general) is deliberately NOT populated. The sheet gives "+2 roll,
--- parry & dodge, +1 P.S., +1D6 P.P., +1D8 S.D.C."; the catalog's existing note
--- says "+1 parry/dodge, +1 roll with punch/fall, +1 P.S., +1D6 Spd, +1D8
--- S.D.C." They disagree on the size of the combat bonus AND on which attribute
--- rolls, and picking one silently would be changing existing information rather
--- than filling a gap. Left for a human with the book open.
+-- Athletics (general) takes the numbers the catalog already had, NOT the
+-- sheet's. The sheet gives "+2 roll, parry & dodge, +1 P.S., +1D6 P.P., +1D8
+-- S.D.C."; the catalog's note says "+1 parry/dodge, +1 roll with punch/fall,
+-- +1 P.S., +1D6 Spd, +1D8 S.D.C." They disagree on the size of the combat
+-- bonus and on which attribute rolls, and the catalog's is the correct one -
+-- confirmed against the book. So this fills the gap from the note that was
+-- already there rather than from the sheet.
+--
+-- The note is left exactly as it stands: it already records the dice parts this
+-- column cannot hold, so there is nothing to add and nothing to correct.
+UPDATE skills SET bonuses = '{"attributes":{"PS":1},"combat":{"parry":1,"dodge":1,"roll":1}}'
+ WHERE name = 'Athletics (general)' AND bonuses IS NULL;
 
 
 -- Read the result back rather than trusting the exit code.
 SELECT 'new skills added' AS check_name, count(*) AS n
   FROM skills WHERE source_book = 'Rifts Skill List';
 
-SELECT 'physical rows now granting bonuses (expect 7)' AS check_name, count(*) AS n
+SELECT 'physical rows now granting bonuses (expect 8)' AS check_name, count(*) AS n
   FROM skills WHERE category = 'Physical' AND bonuses IS NOT NULL;
 
 SELECT name, category, base, per_level, bonuses
