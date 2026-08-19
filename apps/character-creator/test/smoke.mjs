@@ -32,6 +32,7 @@ import {
   keysOf, redirectStatements, collapseStatement, resolveKeys,
 } from '../../../functions/api/character-creator/_lib/catalog-redirects.js';
 import { validateCharacter, relatedAllowance } from '../../../functions/api/character-creator/_lib/validate-character.js';
+import { extractClassMarkdown, unmodelledKeys } from '../../../scripts/class-check-lib.mjs';
 
 const appDir = join(dirname(fileURLToPath(import.meta.url)), '..');
 const repoRoot = join(appDir, '..', '..');
@@ -3347,6 +3348,70 @@ check('a negative or zero limit falls back to the default',
   pageOf('?limit=-1').limit === 200 && pageOf('?limit=0').limit === 200);
 check('a non-numeric limit falls back to the default', pageOf('?limit=abc').limit === 200);
 check('a negative offset floors at zero', pageOf('?offset=-5').offset === 0);
+
+// ---------- 1e. class-check ----------
+// The CLI validator reads a class back out of its data script. If that
+// extraction drifts from the shape the scripts actually use, the checker
+// silently checks nothing — which is worse than not having it, because a clean
+// run would then be read as a verified class.
+console.log('\n[1e] class-check');
+
+const sqlWrap = (md, insert = 'INSERT INTO imported_classes') =>
+  `${insert} (class_id, name, system, markdown, status, created_by)\n`
+  + `SELECT 'x', 'X', 'rifts', '${md.replace(/'/g, "''")}', 'published', 'data-script'\n`
+  + "WHERE NOT EXISTS (SELECT 1 FROM imported_classes WHERE class_id = 'x');";
+
+const tinyClass = '---\nid: x\nname: X\nsystem: rifts\nsource_book: B\ncategory: occ\n---\n\n## Lore\n\nA class.\n';
+
+check('reads the markdown back out of a data script',
+  extractClassMarkdown(sqlWrap(tinyClass)) === tinyClass);
+
+// Both spellings ship. Matching only the plain one skipped add-godling-class.sql
+// entirely, and the checker reported "no class found" rather than checking it.
+check('handles INSERT OR IGNORE as well as plain INSERT',
+  extractClassMarkdown(sqlWrap(tinyClass, 'INSERT OR IGNORE INTO imported_classes')) === tinyClass);
+
+check('unescapes a doubled quote back to one',
+  extractClassMarkdown(sqlWrap("---\nid: x\n---\nthe Mystic's power")).includes("the Mystic's power"));
+
+// A non-ASCII character reaches D1 spliced in with char(N), because the file
+// itself must stay ASCII. Reassembling it is what lets the parser see the real
+// text rather than a broken literal.
+check('reassembles a char(N) splice',
+  extractClassMarkdown(
+    "INSERT INTO imported_classes (class_id, name, system, markdown, status, created_by)\n"
+    + "SELECT 'x', 'X', 'rifts', '---' || char(10) || 'id: x' || char(8212) || 'y', 'published', 'd';")
+    === '---\nid: x—y');
+
+check('gear stubs alone are not mistaken for a class',
+  extractClassMarkdown("INSERT OR IGNORE INTO gear (slug) VALUES ('x');") === null);
+
+check('a malformed markdown expression throws rather than returning junk', (() => {
+  try {
+    extractClassMarkdown('INSERT INTO imported_classes (class_id) SELECT 1;');
+    return false;
+  } catch { return true; }
+})());
+
+// The signal that a class wants something the app cannot express yet.
+check('an unmodelled top-level key is reported',
+  unmodelledKeys({ id: 'x', name: 'X', elemental_affinity: {} }).join() === 'elemental_affinity');
+
+// Every shipped class must come back clean. If one does not, KNOWN_KEYS has
+// gone stale and every future run cries wolf.
+const unmodelledOffenders = (() => {
+  const dbDir = join(appDir, 'db');
+  const out = [];
+  for (const f of readdirSync(dbDir).filter((n) => /^add-.*-class[.]sql$/.test(n))) {
+    const md = extractClassMarkdown(readFileSync(join(dbDir, f), 'utf8'));
+    if (!md) { out.push(f + ' (no class found)'); continue; }
+    const keys = unmodelledKeys(parseClassMarkdown(md).data);
+    if (keys.length) out.push(`${f}: ${keys.join(', ')}`);
+  }
+  return out;
+})();
+check('no shipped class reports an unmodelled key', unmodelledOffenders.length === 0,
+  unmodelledOffenders.join(' | ') + ' — KNOWN_KEYS in scripts/class-check-lib.mjs is out of date');
 
 // ---------- 2. D1 schema ----------
 // Runs against the shared workshop database (binding DB in the root

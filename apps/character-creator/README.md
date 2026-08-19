@@ -45,6 +45,8 @@ Access gate. No build step, no framework, no dependencies.
   - [Spell importer](#spell-importer)
   - [Psionic importer](#psionic-importer)
   - [Gear importer](#gear-importer)
+- [Checking a class before it lands](#checking-a-class-before-it-lands)
+  - [Unmodelled keys](#unmodelled-keys)
 - [Local development](#local-development)
 - [Production configuration](#production-configuration)
   - [The migration convention](#the-migration-convention)
@@ -102,7 +104,8 @@ apps/character-creator/
 ├── docs/plans/               The twelve original PRs, with their rejected
 │                             alternatives
 └── test/
-    ├── smoke.mjs             Parser + schema + migration-state smoke test
+    ├── smoke.mjs             Parser + schema + migration-state smoke test,
+    │                         plus class-check's extraction (see below)
     └── fixtures/*.md         Three real class files, parser test input only
 
 functions/api/
@@ -2005,6 +2008,58 @@ Copy `.dev.vars.example` to `.dev.vars` and set `ANTHROPIC_API_KEY` and
 `ADMIN_EMAIL=dev@localhost` to exercise the importers locally. `.dev.vars` is
 gitignored. To test owner/GM rules, send an explicit
 `Cf-Access-Authenticated-User-Email` header.
+
+### Checking a class before it lands
+
+Most classes are not extracted through `import.html` at all — they are
+transcribed by hand from page scans into a `db/add-*-class.sql` data script,
+because the scans have no text layer and a class with several stages is quicker
+to write than to extract and correct.
+
+That path had no validator. The frontmatter contract lived in `js/parser.js` and
+the catalog cross-reference lived on the server, so writing a class by hand
+meant applying the script to find out whether it was right:
+
+```bash
+node scripts/class-check.mjs draft.md
+node scripts/class-check.mjs apps/character-creator/db/add-mystic-class.sql
+```
+
+It parses through `parseClassMarkdown` and cross-references through
+`crossReference` — the same two functions `import/recheck` and Confirm use, not
+reimplementations. A checker that agreed with the app *most* of the time would
+be worse than none: you would iterate against it, get a clean run, and still
+fail on Confirm.
+
+Given a `.sql` file it reads the markdown back out of the `imported_classes`
+INSERT, so the artifact that actually ships is the one checked, and it repeats
+d1-apply's ASCII/CRLF pre-flight early — at apply time those findings mean
+coming back to the file cold. It prints the stub SQL for missing catalog rows in
+the form the data script wants, with the `char(8212)` splice already in place.
+
+`--remote` checks against production, `--no-catalog` skips D1 entirely. Unlike
+`d1-apply.mjs` it defaults its target (`--local`), because that script refuses to
+guess only where an accidental `--remote` would *write*.
+
+**Errors and pre-flight failures set the exit code; warnings and unmodelled keys
+do not.** They are judgement calls, and a script that exited non-zero on them
+would train you to stop reading the output.
+
+#### Unmodelled keys
+
+A top-level frontmatter key the app does not read parses cleanly, stores
+cleanly, and then does nothing at all — which is how a class ships looking
+complete. The checker lists any key outside `KNOWN_KEYS` in
+`scripts/class-check-lib.mjs` under `UNMODELLED`.
+
+It is a decision, not a defect, and both answers are legitimate: move the
+mechanic into the body as prose so the class can ship now, or model it —
+`parser.js`, `validate-character.js`, `compose.js`, the wizard, the sheet, a
+smoke case, and `KNOWN_KEYS`. The Godling's occupation-demanding Magic Powers
+and the staged-R.C.C. `variants` block both started as exactly this shape.
+
+The smoke test asserts every shipped class comes back with no unmodelled key, so
+`KNOWN_KEYS` going stale fails loudly rather than turning the check into noise.
 
 ---
 
