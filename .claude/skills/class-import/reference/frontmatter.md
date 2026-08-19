@@ -64,7 +64,14 @@ skills:
   each pick's own base — use it when the group spans a category.
 - `note` is free text, shown to the player, never enforced.
 - `only` / `except` names must match catalog rows **exactly**. An unmatched
-  `except` excludes nothing, silently. `class-check` reports these.
+  name does nothing, silently. `class-check` reports these.
+- An `only` entry matches **by name whatever category the catalog files the
+  skill under**, provided the class also lists that real category — "Espionage:
+  Wilderness Survival only" is an ordinary book line about a Wilderness skill.
+  Without that second half it is `unreachable`: granted, but nobody can take it.
+- An `except` naming a skill from another category excludes **nothing**. There
+  was nothing offered in that category to exclude.
+- See `catalog.md` for the naming rules these names have to match.
 - **Related and secondary skills come from the O.C.C.** An R.C.C. with neither
   is correct.
 
@@ -163,6 +170,16 @@ variants:
 A variant may override only `attribute_dice`, `attribute_requirements`, the pool
 bases and `bonuses`. Skills, abilities and lore stay shared — an override naming
 anything else is reported and ignored.
+
+## What a skill itself grants
+
+Not frontmatter — it lives on the catalog row, in `skills.bonuses`, in this
+same `bonuses:` shape. Boxing is "+1 attack per melee, +2 parry & dodge, +1
+roll, +2 P.S." and the class file says nothing about it.
+
+So **do not fold a skill's bonus into the class's `bonuses:` block.** The app
+adds both, and writing it in the class as well double-counts it. See
+`catalog.md`.
 
 ## Body
 
