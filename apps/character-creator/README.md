@@ -169,7 +169,7 @@ the importer's takes `(body)` and always posts.
 
 ## Data model
 
-Seventeen tables in one shared D1 database (`nates-workshop-media`, bound as `DB`).
+Eighteen tables in one shared D1 database (`nates-workshop-media`, bound as `DB`).
 `media_items` belongs to MediaVault and `schema_migrations` is database
 bookkeeping shared by both; the rest are this app.
 
@@ -228,6 +228,7 @@ numbers — the skill importer exists to fill them in.
 | `catalog_redirects` | Where a retired key went. Written when a merge deletes a row or a key is renamed by hand, so class markdown citing the old slug or name keeps resolving. Polymorphic by design — `catalog` names which table `to_id` points into — so there is no foreign key. See [Retired keys keep resolving](#retired-keys-keep-resolving). |
 | `import_sessions` | One resumable catalog import. `catalog` is which of the four it feeds, `system` is stamped on every row the session confirms, `closed_at` NULL means still open. |
 | `import_staged` | Rows one page range extracted, held until confirmed. `payload` is the extracted row as JSON, `match_name` the catalog row it duplicates, `action` the `insert` / `update` / `ignore` decision, `confirmed_at` NULL means still pending. Cascades from its session. |
+| `play_events` | Play mode's action log, append-only. `payload` is JSON — a note, and `{from, to}` changes for undo. `undone_at` NULL means the event stands; undo marks, never deletes. Commentary, not a ledger: the character row stays the source of truth and nothing replays events |
 
 ---
 
@@ -361,6 +362,8 @@ writes are gated (see [Permissions](#permissions)).
 | `characters/[id]/variant` | POST | Owner/GM. `{to_variant}` proposes a change of stage; add `confirm: true` with the accepted attributes and pools to apply it |
 | `characters/[id]/level-confirm` | POST | Apply a confirmed diff, write `level_history`. `picks` spends granted skill picks; unspent ones are banked. Validated |
 | `characters/[id]/picks` | GET / POST | Owner/GM to spend. Unspent skill picks; POST applies some. Validated |
+| `characters/[id]/events` | GET / POST | Play events. GET lists recent (`?since=`, `?limit=`); POST applies a play action and records it in one batch — `{kind, note, changes}` with absolute from/to values. Rolls carry no changes and are pure records |
+| `characters/[id]/events/undo` | POST | Owner/GM. Reverses the **latest** not-undone event that carries changes and stamps `undone_at` — "take back the last thing", never a history editor |
 | `admin/audit` | GET | Admin, read-only. Which existing characters break their class rules |
 | `journal` | GET / POST | By campaign; `?character_id=`, `?include_campaign=1`, `?limit=`, `?offset=` |
 | `import/extract` | POST | Admin. PDF → class markdown; autosaves a draft |
@@ -1409,12 +1412,28 @@ What it offers (phase 1 of four):
 Writes ride the existing PATCH optimistically, with revert-and-alert on
 failure. Read-only visitors can still roll — rolls write nothing.
 
-Planned and not yet built, in order: a persisted `play_events` log
-with undo and an end-of-session journal recap (`level_history` is the shape
-to copy), and rest/recovery. Deliberately out of scope at any phase:
-party-wide initiative (the dashboard's altitude) and automated combat
-resolution (the hand-to-hand tables are not modelled, and the README already
-says so).
+**The event log (phase 3).** Every state-changing play action goes through
+`characters/[id]/events`, which applies the change and records it in one
+batch; rolls persist as pure records (read-only visitors' rolls stay local).
+Events are **commentary, not a ledger** — the character row stays the source
+of truth, and nothing replays events to derive state, because replaying is
+how a log inherits every consistency bug forever. What the log buys:
+
+- **↶ Undo** reverses the latest not-undone event that carries changes —
+  "take back the last thing", deliberately never a history editor, because
+  undoing an older event under newer ones is ambiguous arithmetic. The
+  undone row stays, marked, as part of what happened.
+- **✎ End session** summarises events since the last recap marker — damage
+  taken, powers by name, shots, rolls with pass/fail counts — and posts it
+  to the journal as a plain-text entry a human can edit, then drops the
+  next marker.
+- A **who-did-what trail** (`actor_email`) for the sheet a G.M. and a
+  player share mid-session.
+
+Planned and not yet built: rest/recovery and a melee round counter (phase
+4). Deliberately out of scope at any phase: party-wide initiative (the
+dashboard's altitude) and automated combat resolution (the hand-to-hand
+tables are not modelled, and the README already says so).
 
 ---
 
@@ -2005,6 +2024,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `019-character-rolled-bonuses.sql` | `rolled_bonuses` on `characters` — what a class's **dice** combat and save bonuses came up |
 | `020-psionic-isp-note.sql` | `isp_note` on `psionic_powers` — the cost schedule when a power's I.S.P. is not one number; `isp` keeps the minimum the use button deducts |
 | `021-spell-ppe-note.sql` | `ppe_note` on `spells` — the same variable-cost shape as 020, for spells; `ppe` keeps the minimum the use button deducts |
+| `022-play-events.sql` | `play_events` — play mode's append-only action log: undo, the who-did-what trail, and the session recap boundary |
 
 ### The migration convention
 
