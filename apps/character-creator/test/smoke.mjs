@@ -32,7 +32,8 @@ import {
   keysOf, redirectStatements, collapseStatement, resolveKeys,
 } from '../../../functions/api/character-creator/_lib/catalog-redirects.js';
 import { validateCharacter, relatedAllowance } from '../../../functions/api/character-creator/_lib/validate-character.js';
-import { extractClassMarkdown, unmodelledKeys } from '../../../scripts/class-check-lib.mjs';
+import { extractClassMarkdown, unmodelledKeys,
+         crossCategoryRestrictions } from '../../../scripts/class-check-lib.mjs';
 import { bonusesFromSkills, validateBonuses } from '../js/parser.js';
 
 const appDir = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -3507,6 +3508,74 @@ check('derive reads a skill bonus as an ordinary class bonus', (() => {
   const b = D.classBonuses(c, 1, null);
   return b.attributes.PS === 2 && b.combat.attacks === 1 && b.combat.roll === 1;
 })());
+
+// ---------- 1g. Cross-category restrictions ----------
+// The catalog files a skill under exactly one category; the books file it under
+// whichever category a class spends its pick from. "Espionage: Wilderness
+// Survival only" is an ordinary book line about a Wilderness skill, and
+// filtering by the catalog's category first made that name match nothing.
+console.log('\n[1g] Cross-category restrictions');
+
+const ccCats = [
+  { name: 'Espionage', only: ['Detect Ambush', 'Wilderness Survival'] },
+  { name: 'Physical', except: ['Acrobatics'] },
+  { name: 'Communications', except: ['Read Sensory Equipment'] },
+  'Technical',
+];
+const allows = (name, category) => categoryAllows(ccCats, { name, category });
+
+// The whole point: named in an `only` list, filed elsewhere by the catalog.
+check('an only-list grants a skill from another category',
+  allows('Wilderness Survival', 'Wilderness'));
+
+// Everything that worked before must still work exactly as it did.
+check('an only-list still grants a skill from its own category',
+  allows('Detect Ambush', 'Espionage'));
+check('an only-list still refuses a skill it does not name',
+  !allows('Tracking', 'Espionage'));
+check('an except-list still refuses what it excludes',
+  !allows('Acrobatics', 'Physical'));
+check('an except-list still admits what it does not exclude',
+  allows('Prowl', 'Physical'));
+check('a bare category string still admits everything in it',
+  allows('Art', 'Technical'));
+check('a category the class does not grant is still refused',
+  !allows('Brewing', 'Medical'));
+
+// An `except` naming a skill from another category stays a no-op. There is
+// nothing to exclude: the skill was never offered in that category. Making it
+// grant would be the opposite of what an except list is for.
+check('an except-list does NOT grant a skill from another category',
+  !allows('Read Sensory Equipment', 'Pilot Related'));
+
+// An empty or absent list restricts nothing, unchanged.
+check('no categories at all still allows anything',
+  categoryAllows([], { name: 'X', category: 'Y' }) && categoryAllows(null, { name: 'X', category: 'Y' }));
+
+// --- the reporting half, which is what makes this visible in class-check
+const ccWanted = [
+  { category: 'Espionage', kind: 'only', name: 'Wilderness Survival' },
+  { category: 'Espionage', kind: 'only', name: 'Detect Ambush' },
+  { category: 'Communications', kind: 'except', name: 'Read Sensory Equipment' },
+  { category: 'Rogue', kind: 'except', name: 'Nothing At All' },
+];
+const ccMap = new Map([
+  ['wilderness survival', 'Wilderness'],
+  ['detect ambush', 'Espionage'],
+  ['read sensory equipment', 'Pilot Related'],
+]);
+const cc = crossCategoryRestrictions(ccWanted, ccMap);
+
+check('a cross-category only is reported as granted',
+  cc.granted.length === 1 && cc.granted[0].name === 'Wilderness Survival'
+  && cc.granted[0].actual === 'Wilderness');
+check('a cross-category except is reported as a no-op',
+  cc.noop.length === 1 && cc.noop[0].name === 'Read Sensory Equipment');
+check('a name in its own category is not reported',
+  !cc.granted.some((g) => g.name === 'Detect Ambush'));
+// A name with no row at all belongs to the missing-row check, not this one.
+check('a name with no catalog row is left to the missing-row check',
+  !cc.granted.concat(cc.noop).some((x) => x.name === 'Nothing At All'));
 
 // ---------- 2. D1 schema ----------
 // Runs against the shared workshop database (binding DB in the root

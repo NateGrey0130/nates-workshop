@@ -354,11 +354,31 @@ export function categoryLabel(entry) {
 // An empty or absent list restricts nothing, which is what "any" means.
 export function categoryAllows(categories, skill) {
   if (!Array.isArray(categories) || !categories.length) return true;
+  const name = normName(skill?.name);
+
+  // An `only` list names the skill by name, under the category THE BOOK files
+  // it in. The catalog files each skill under exactly one category, and the two
+  // schemes disagree often enough to matter: the Glitter Boy's "Espionage:
+  // Wilderness Survival only" is an ordinary book line, and Wilderness Survival
+  // is a Wilderness skill in the catalog.
+  //
+  // Matching an `only` entry by name regardless of category is what the book
+  // means — you may spend a pick from that category on this skill. Filtering by
+  // the catalog's category first made the name match nothing, which cost the
+  // two Elemental Fusionists their Writing and Lore: Cattle & Animals outright,
+  // and left eight more classes naming skills that did nothing.
+  //
+  // Deliberately only `only`. An `except` naming a skill from another category
+  // still excludes nothing, because nothing was offered there to exclude.
+  if (name && categories.some((c) => c && typeof c === 'object'
+      && Array.isArray(c.only) && c.only.some((n) => normName(n) === name))) {
+    return true;
+  }
+
   const cat = normName(skill?.category);
   const entry = categories.find((c) => normName(categoryName(c)) === cat);
   if (entry === undefined) return false;
   if (typeof entry === 'string') return true;
-  const name = normName(skill?.name);
   if (Array.isArray(entry.only) && entry.only.length) {
     return entry.only.some((n) => normName(n) === name);
   }

@@ -39,8 +39,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { parseClassMarkdown } from '../apps/character-creator/js/parser.js';
-import { crossReference, buildStubStatements } from '../functions/api/character-creator/_lib/catalog.js';
-import { extractClassMarkdown, unmodelledKeys } from './class-check-lib.mjs';
+import { crossReference, buildStubStatements, restrictionNames } from '../functions/api/character-creator/_lib/catalog.js';
+import { extractClassMarkdown, unmodelledKeys, crossCategoryRestrictions } from './class-check-lib.mjs';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -230,6 +230,37 @@ if (noCatalog) {
     console.log('      NOTHING, so the class offers skills the book forbids.');
   } else {
     console.log(`  ${'restrictions'.padEnd(14)} ok`);
+  }
+
+  // Restriction names that DO resolve, but to a row in another category. The
+  // missing-row check above cannot see these - the name matches a skill, so it
+  // stays quiet - yet they are the same kind of silent failure.
+  const wanted = restrictionNames(data);
+  if (wanted.length) {
+    const names = [...new Set(wanted.map((w) => w.name))];
+    const rows = query('SELECT name, category FROM skills WHERE name IN ('
+      + names.map((n) => quote(n)).join(',') + ')');
+    const categoryOf = new Map(rows.map((r) => [String(r.name).trim().toLowerCase(), r.category]));
+    const { granted, noop } = crossCategoryRestrictions(wanted, categoryOf);
+
+    if (granted.length) {
+      console.log(`
+  ${'cross-category'.padEnd(14)} ${plural(granted.length, 'name')} granted from another category`);
+      for (const g of granted) {
+        console.log(`      ${g.category} only: "${g.name}" - the catalog files it under ${g.actual ?? 'no category'}`);
+      }
+      console.log('      These WORK: an `only` entry matches by name whatever the');
+      console.log('      catalog category is, which is what the book means.');
+    }
+    if (noop.length) {
+      console.log(`
+  ${'no-op except'.padEnd(14)} ${plural(noop.length, 'name')} excluded from the wrong category`);
+      for (const n of noop) {
+        console.log(`      ${n.category} except: "${n.name}" - the catalog files it under ${n.actual ?? 'no category'}`);
+      }
+      console.log('      These exclude NOTHING - the skill was never offered in that');
+      console.log('      category. Harmless, but the category is probably wrong.');
+    }
   }
 
   // The stub rows the class needs, as SQL to paste into the data script. The
