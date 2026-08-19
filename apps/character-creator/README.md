@@ -1744,9 +1744,18 @@ would strip the survivor's bonuses from every character holding the old name.
 
 Wired at the two paths that produce a character's numbers: the sheet endpoint
 (`characters/[id].js`) and `loadCharacterClass()` in `_lib/class-loader.js`,
-which the XP, level-up, picks, variant and create endpoints all go through. The
-wizard (`app.js`) composes from classes in memory and does not yet pass them, so
-**bonuses appear once the character is saved, not mid-build**.
+which the XP, level-up, picks, variant and create endpoints all go through.
+
+The wizard is a third path and works differently. `composeClass()` runs on the
+**Class** step, before a single skill is chosen, so there is nothing to fold in
+at that point. `skillBonusClass()` in `app.js` does it at read time instead,
+taking the held skills from `takenNames()` — the same source the pickers use, so
+a skill counted here is exactly one the wizard shows as taken. `/catalogs`
+returns the `bonuses` column for that reason.
+
+The Attributes step names the source, because once skills fold into the same
+block *"+2 from Glitter Boy"* is a lie whenever the +2 is Boxing's. It reads
+`from <class>`, `from skills taken`, or `from <class> + skills taken`.
 
 ---
 

@@ -12,7 +12,11 @@ export async function onRequestGet({ request, env }) {
   const [skills, spells, psionics] = await Promise.all([
     // source_book rides along in all three so the pickers can filter on it —
     // typing "rifts main" should narrow a list the same way a name does.
-    env.DB.prepare('SELECT name, category, base, per_level, systems, source_book FROM skills ORDER BY category, name').all(),
+    // `bonuses` travels with the row so the wizard can apply what a skill grants
+    // while the character is still being built. Without it the wizard shows
+    // nothing until the character is saved and the sheet recomputes, which is
+    // the same numbers arriving late and reads as a bug.
+    env.DB.prepare('SELECT name, category, base, per_level, systems, source_book, bonuses FROM skills ORDER BY category, name').all(),
     // `system` likewise: the wizard filters spells and powers by the campaign's
     // system client-side, the same way it already does skills.
     env.DB.prepare('SELECT name, level, ppe, ppe_note, system, source_book FROM spells ORDER BY level, name').all(),

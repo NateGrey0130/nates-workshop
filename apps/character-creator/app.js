@@ -11,7 +11,8 @@ import { LANGUAGE_OTHER, isLanguageName, languageSkillName } from './js/language
 import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSIONIC_TIER_RULES,
          rollsForPsionics as classRollsForPsionics } from './js/psionics.js';
 import { isChoiceGroup, isGearChoice, applyVariant,
-         categoryAllows, categoryLabel, needsOccupation, abilityOccOptions } from './js/parser.js';
+         categoryAllows, categoryLabel, needsOccupation, abilityOccOptions,
+         bonusesFromSkills, sumBonusGroups } from './js/parser.js';
 import { composeClass } from './js/compose.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
@@ -726,7 +727,12 @@ function confirmClass() {
 
 // Step 2 — attributes
 function renderAttributes() {
-  const classBonus = derive.classBonuses(S.cls, 1, rolledAll());
+  const classBonus = derive.classBonuses(skillBonusClass(), 1, rolledAll());
+  // Split out so the label can say where a bonus came from. Once skills fold
+  // into the same block, "+2 from Glitter Boy" is a lie whenever the +2 is
+  // Boxing's - and an attribute bonus the player cannot trace is worse than
+  // one shown a step later, which is what this change set out to fix.
+  const classOnlyBonus = derive.classBonuses(S.cls, 1, rolledAll());
   const reqs = S.cls.attribute_requirements || {};
   const spent = pbSpent();
   const rows = ATTRS.map((a) => {
@@ -758,8 +764,13 @@ function renderAttributes() {
     // A dice bonus reads the same as a flat one here; what differs is that the
     // number was rolled, which the class name beside it already implies.
     const raised = v != null && floor != null && (v + (add || 0)) < floor;
+    // Where it came from: the class, the skills taken so far, or both.
+    const fromClass = classOnlyBonus.attributes[a] || 0;
+    const fromSkills = (add || 0) - fromClass;
+    const source = !fromSkills ? esc(S.cls.name)
+      : (!fromClass ? 'skills taken' : `${esc(S.cls.name)} + skills taken`);
     const boost = add && v != null
-      ? ` <span class="attr-note ok">${add > 0 ? '+' : ''}${add} from ${esc(S.cls.name)} = ${v + add}</span>` : '';
+      ? ` <span class="attr-note ok">${add > 0 ? '+' : ''}${add} from ${source} = ${v + add}</span>` : '';
     const floorNote = raised
       ? ` <span class="attr-note ok">minimum ${floor} for ${esc(S.cls.name)}</span>` : '';
     return `<tr><td><b>${a}</b></td>
@@ -874,6 +885,31 @@ function takenNames() {
   const groups = Object.values(S.groupPicks).flat().map((n) => String(n).toLowerCase());
   return new Set([...occ, ...groups, ...S.related.map((n) => n.toLowerCase()), ...S.secondary.map((n) => n.toLowerCase())]);
 }
+// The class with the bonuses its SKILLS grant folded in.
+//
+// Boxing is "+1 attack per melee, +2 parry & dodge, +1 roll, +2 P.S." The sheet
+// has applied those since the bonuses column landed, but the wizard did not:
+// composeClass() runs on the Class step, before a single skill is chosen, so
+// there is nothing to fold in at that point. The numbers appeared only after
+// saving, which is the same values arriving late and reads as a bug.
+//
+// Deliberately a separate helper from psiClass() rather than an extension of
+// it. They answer different questions — psiClass() resolves what the class IS
+// once a rolled tier is known, this resolves what the character's own choices
+// have added — and they are needed on different steps.
+//
+// takenNames() is the single source for "which skills does this character
+// hold", already used by the pickers, so a skill counted here is exactly one
+// the wizard shows as taken.
+function skillBonusClass() {
+  if (!S.cls) return S.cls;
+  const held = takenNames();
+  const rows = (S.skillCatalog || []).filter((sk) => held.has(String(sk.name).toLowerCase()));
+  const extra = bonusesFromSkills(rows);
+  if (!extra) return S.cls;
+  return { ...S.cls, bonuses: sumBonusGroups(S.cls.bonuses, extra) };
+}
+
 function renderSkills() {
   // The COMPOSED class: a rolled major psionic has half the related-skill
   // allowance, and the Skills step has to show the number that actually applies.
@@ -1431,7 +1467,7 @@ function renderDetails() {
   // shown — without this the field sits empty here and mysteriously fills in on
   // Review. Lazy and idempotent, so arriving via Review does not re-roll.
   if (!S.pools) computePools();
-  const d = derive.bio(S.attrs, null, derive.classBonuses(S.cls, 1, rolledAll()));
+  const d = derive.bio(S.attrs, null, derive.classBonuses(skillBonusClass(), 1, rolledAll()));
   $('app').innerHTML = `
   <div class="panel">
     <h2>Details <span class="muted small">— ${esc(S.cls.name)}</span></h2>
@@ -1568,7 +1604,7 @@ function skillsPayload() {
   const find = (n) => skillByName().get(n)
     || (isLanguageName(n) ? { ...(skillByName().get(LANGUAGE_OTHER) || {}), name: n } : {});
   const occ = S.cls.skills?.occ_skills || [];
-  const iq = derive.bio(S.attrs, null, derive.classBonuses(S.cls, 1, rolledAll())).iq_skill_bonus_pct || 0;
+  const iq = derive.bio(S.attrs, null, derive.classBonuses(skillBonusClass(), 1, rolledAll())).iq_skill_bonus_pct || 0;
 
   // pct stays the true current percentage, because level-up increments it and
   // the sheet prints it. iq_bonus records how much of it came from I.Q. so the
