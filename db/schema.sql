@@ -358,6 +358,26 @@ SELECT '010-catalog-redirects.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'catalog_redirects');
 
 -- ═══════════════════════════════════════════════════════════════════
+-- Play mode's event log. Commentary, not a ledger: the character row stays
+-- the source of truth and nothing replays events to derive state. Buys undo
+-- (payload carries from/to), a who-did-what trail, and the session recap.
+-- ═══════════════════════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS play_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  character_id INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  actor_email TEXT NOT NULL,
+  kind TEXT NOT NULL,                   -- damage | pool | power | ammo | roll | recap
+  payload TEXT NOT NULL,                -- JSON: note, and changes {from, to} for undo
+  undone_at TEXT,                       -- NULL = stands
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_play_events_character ON play_events (character_id, id);
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '022-play-events.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'play_events');
+
+-- ═══════════════════════════════════════════════════════════════════
 -- An in-progress character build. Its own table rather than a `draft` status
 -- on `characters`: a half-built character has no name, no campaign and
 -- possibly no attributes, and putting one in `characters` would make every

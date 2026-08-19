@@ -207,6 +207,7 @@ function recordRoll(kind, name, entry) {
   const r = { kind, name, ts: Date.now(), ...entry };
   C.lastRoll = r;
   C.rollLog.push(r);
+  if (kind === 'skill' || kind === 'save' || kind === 'combat' || kind === 'attack' || kind === 'damage') persistRoll(rollNote(r));
   if (C.rollLog.length > 50) C.rollLog.shift();
   const bar = $('play-roll-bar');
   if (bar) { bar.innerHTML = rollBarHtml(); bar.classList.remove('empty'); }
@@ -253,7 +254,7 @@ async function adjustPool(key, delta) {
   const el = $('play-cur-' + key);
   if (el) el.textContent = next;
   try {
-    await api('characters/' + id, jsonReq('PATCH', { [key + '_current']: next }));
+    await postEvent('pool', `${key.toUpperCase()} ${delta > 0 ? '+' : ''}${delta}`, { character: { [key + '_current']: { from: prev, to: next } } });
   } catch (err) {
     C.data[key + '_current'] = prev;
     if (el) el.textContent = prev;
@@ -285,7 +286,7 @@ async function quickDamage() {
     if (el) el.textContent = patch[k];
   }
   try {
-    await api('characters/' + id, jsonReq('PATCH', patch));
+    await postEvent('damage', `took ${amt}`, { character: Object.fromEntries(Object.keys(patch).map((k) => [k, { from: prev[k], to: patch[k] }])) });
   } catch (err) {
     for (const k of Object.keys(prev)) {
       C.data[k] = prev[k];
@@ -302,6 +303,98 @@ function setPlayAmt(n) {
     b.classList.toggle('on', Number(b.dataset.amt) === n);
   });
 }
+
+// ── Play mode phase 3: the event log ──
+// Every state-changing play action goes through ONE endpoint that applies the
+// change and records it atomically; rolls persist as pure records. That buys
+// undo (server reverses the latest recorded from/to), a who-did-what trail,
+// and the end-of-session journal recap. Optimism is unchanged: the DOM
+// updates first and reverts if the POST fails.
+
+async function postEvent(kind, note, changes) {
+  return api(`characters/${id}/events`, jsonReq('POST', { kind, note, changes }));
+}
+
+// Rolls are pure records: fire-and-forget, never blocking the table on a
+// network hiccup, and skipped entirely for read-only visitors.
+function persistRoll(note) {
+  if (!C.canWrite) return;
+  postEvent('roll', note).catch((e) => console.warn('roll not logged:', e.message));
+}
+
+function rollNote(r) {
+  if (r.die === 100) return `${r.name}: ${r.roll} vs ${r.target}% — ${r.ok ? 'pass' : 'fail'}`;
+  if (r.kind === 'damage') return `${r.name}: damage ${r.expr} = ${r.total}`;
+  const vs = r.target ? ` vs ${r.target}+ — ${r.ok ? 'pass' : 'fail'}` : '';
+  return `${r.name}: d20 ${r.roll}${r.bonus ? (r.bonus > 0 ? '+' + r.bonus : r.bonus) : ''} = ${r.total}${vs}`;
+}
+
+async function undoLast() {
+  try {
+    const res = await api(`characters/${id}/events/undo`, jsonReq('POST', {}));
+    for (const [field, v] of Object.entries(res.restored.character || {})) {
+      C.data[field] = v;
+      const el = $('play-cur-' + field.replace('_current', ''));
+      if (el) el.textContent = v;
+    }
+    if (res.restored.item) {
+      const it = C.items.find((x) => x.id === res.restored.item.id);
+      if (it) {
+        it.notes = res.restored.item.notes;
+        const cap = payloadCapacity(it.item_payload);
+        const el = $('play-ammo-' + it.id);
+        if (el && cap != null) el.textContent = `${currentAmmo(it, cap)}/${cap}`;
+      }
+    }
+    recordRoll('undo', 'Undo', { note: `took back: ${res.undone.note || res.undone.kind}` });
+  } catch (err) {
+    recordRoll('undo', 'Undo', { note: err.message === 'Nothing to undo' ? 'nothing to undo' : 'failed: ' + err.message });
+  }
+}
+
+// The recap walks events since the last 'recap' marker, counts what happened,
+// posts a journal entry, and drops the next marker. The entry is plain text a
+// human can edit in the journal afterwards - the log summarises, it does not
+// narrate.
+async function endSession() {
+  let events;
+  try {
+    events = (await api(`characters/${id}/events?limit=300`)).events;
+  } catch (err) { alert('Could not load events: ' + err.message); return; }
+  const lastRecap = [...events].reverse().find((e) => e.kind === 'recap');
+  const session = events.filter((e) => (!lastRecap || e.id > lastRecap.id) && !e.undone_at && e.kind !== 'recap');
+  if (!session.length) { alert('No play events since the last recap.'); return; }
+
+  let damage = 0;
+  const powers = {};
+  let shots = 0, reloads = 0, rolls = 0, passes = 0, fails = 0, pools = 0;
+  for (const e of session) {
+    const note = e.payload?.note || '';
+    if (e.kind === 'damage') { const m = note.match(/took (\d+)/); if (m) damage += +m[1]; }
+    else if (e.kind === 'power') { const name = note.split(' −')[0] || note; powers[name] = (powers[name] || 0) + 1; }
+    else if (e.kind === 'ammo') { if (/shot fired/.test(note)) shots++; else if (/reload/.test(note)) reloads++; }
+    else if (e.kind === 'pool') pools++;
+    else if (e.kind === 'roll') { rolls++; if (/— pass/.test(note)) passes++; else if (/— fail/.test(note)) fails++; }
+  }
+  const lines = [`Play session: ${session.length} actions.`];
+  if (damage) lines.push(`Damage taken: ${damage}.`);
+  const powerNames = Object.entries(powers).map(([n, c]) => c > 1 ? `${n} ×${c}` : n);
+  if (powerNames.length) lines.push(`Powers used: ${powerNames.join(', ')}.`);
+  if (shots || reloads) lines.push(`Shots fired: ${shots}${reloads ? ` (${reloads} reload${reloads > 1 ? 's' : ''})` : ''}.`);
+  if (pools) lines.push(`Pool adjustments: ${pools}.`);
+  if (rolls) lines.push(`Rolls: ${rolls}${passes + fails ? ` (${passes} passed, ${fails} failed of those with a target)` : ''}.`);
+
+  if (!confirm(`Post this recap to the journal?\n\n${lines.join('\n')}`)) return;
+  try {
+    await api('journal', jsonReq('POST', {
+      character_id: Number(id), title: 'Session recap',
+      session_date: new Date().toISOString().slice(0, 10), body: lines.join('\n'),
+    }));
+    await postEvent('recap', 'session recap posted');
+    recordRoll('recap', 'Session recap', { note: 'posted to the journal' });
+  } catch (err) { alert('Recap failed: ' + err.message); }
+}
+
 
 // ── Play mode phase 2: weapon cards ──
 // An equipped catalog weapon becomes an attack card: strike roll, damage
@@ -340,7 +433,7 @@ function rollWeaponDamage(name, expr) {
   recordRoll('damage', name, { expr, total, roll: total, die: null, target: null, ok: null });
 }
 
-async function writeAmmo(invId, next, cap) {
+async function writeAmmo(invId, next, cap, ammoNote) {
   const it = C.items.find((x) => x.id === invId);
   if (!it) return;
   const marker = `ammo ${next}/${cap}`;
@@ -351,7 +444,7 @@ async function writeAmmo(invId, next, cap) {
   const el = $('play-ammo-' + invId);
   if (el) el.textContent = `${next}/${cap}`;
   try {
-    await api(`characters/${id}/items/${invId}`, jsonReq('PATCH', { notes }));
+    await postEvent('ammo', ammoNote, { item: { id: invId, notes: { from: prev || '', to: notes } } });
   } catch (err) {
     it.notes = prev;
     if (el) el.textContent = `${currentAmmo(it, cap)}/${cap}`;
@@ -364,12 +457,12 @@ function fireShot(invId, cap, name) {
   if (!it) return;
   const cur = currentAmmo(it, cap);
   if (cur <= 0) { recordRoll('ammo', name, { note: 'empty - reload' }); return; }
-  writeAmmo(invId, cur - 1, cap);
+  writeAmmo(invId, cur - 1, cap, `${name}: shot fired - ${cur - 1}/${cap} left`);
   recordRoll('ammo', name, { note: `shot fired - ${cur - 1}/${cap} left` });
 }
 
 function reloadAmmo(invId, cap, name) {
-  writeAmmo(invId, cap, cap);
+  writeAmmo(invId, cap, cap, `${name}: reloaded - ${cap}/${cap}`);
   recordRoll('ammo', name, { note: `reloaded - ${cap}/${cap}` });
 }
 
@@ -484,7 +577,9 @@ function renderPlay() {
       ${xpRow}
     </div>
     ${w ? `<div class="play-amt"><span class="muted small">Amount</span>${amts}
-      <button class="dmg" onclick="quickDamage()">💥 Damage</button></div>` : ''}
+      <button class="dmg" onclick="quickDamage()">💥 Damage</button>
+      <button onclick="undoLast()">↶</button>
+      <button onclick="endSession()">✎ End session</button></div>` : ''}
     <div class="play-pools">${poolCards}</div>
     ${weaponCardsHtml(w, combat.strike)}
     <details class="play-sec" open><summary>Combat</summary>${combatRows}</details>
@@ -1068,7 +1163,12 @@ async function usePower(index) {
   if (cur == null) return;
   if (cur < p.cost) { alert(`Not enough ${pool === 'ppe' ? 'P.P.E.' : 'I.S.P.'} (${cur} left, ${p.name} costs ${p.cost}).`); return; }
   try {
-    await api('characters/' + id, jsonReq('PATCH', { [pool + '_current']: cur - p.cost }));
+    if (C.playMode) {
+      await postEvent('power', `${p.name} −${p.cost} ${pool === 'ppe' ? 'P.P.E.' : 'I.S.P.'}`,
+        { character: { [pool + '_current']: { from: cur, to: cur - p.cost } } });
+    } else {
+      await api('characters/' + id, jsonReq('PATCH', { [pool + '_current']: cur - p.cost }));
+    }
     C.data[pool + '_current'] = cur - p.cost;
     if (C.playMode) {
       const el = $('play-cur-' + pool);
