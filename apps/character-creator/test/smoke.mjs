@@ -1,6 +1,11 @@
 // Smoke test: (1) the RCC/OCC markdown files parse correctly, (2) the D1 schema
-// migrates cleanly into a local D1 instance, (3) every migration on disk is
-// recorded as applied to that database.
+// migrates cleanly into a local D1 instance, (3) db/schema.sql alone is enough
+// to build a current database, and (4) every migration on disk is recorded as
+// applied to that database.
+//
+// (3) and (4) look alike and are not: (4) asks what the local database has had
+// done to it, (3) asks what a brand-new environment would get. Only (3) sees a
+// migration whose column never made it back into schema.sql.
 // Run from anywhere:  node apps/character-creator/test/smoke.mjs
 
 import { readFileSync, readdirSync, writeFileSync, rmSync } from 'node:fs';
@@ -54,7 +59,7 @@ function parseFile(name) {
 }
 
 // ---------- 1. Parser ----------
-console.log('\n[1/3] Parser');
+console.log('\n[1/4] Parser');
 
 // Custom languages: three consumers (wizard, sheet, server validator) share
 // these, so the rule is asserted here once rather than trusted three times.
@@ -3670,7 +3675,7 @@ check('saves split the same way', (() => {
 // ---------- 2. D1 schema ----------
 // Runs against the shared workshop database (binding DB in the root
 // wrangler.jsonc), so this executes from the repo root, not the app dir.
-console.log('\n[2/3] D1 schema (local, shared DB)');
+console.log('\n[2/4] D1 schema (local, shared DB)');
 
 function wrangler(args) {
   return spawnSync('npx', ['wrangler', ...args], { cwd: repoRoot, shell: true, encoding: 'utf8', timeout: 120000 });
@@ -3712,11 +3717,116 @@ check('character_items foreign key follows the rename',
 const reapply = wrangler(['d1', 'execute', 'DB', '--local', '--file', 'db/schema.sql']);
 check('schema is idempotent (re-apply is clean)', reapply.status === 0, (reapply.stderr || '').slice(-300));
 
-// ---------- 3. Migration state ----------
+// ---------- 3. schema.sql is self-sufficient ----------
+// A database built from db/schema.sql ALONE must already be current. Section 4
+// cannot show that: it queries the shared local database, which has had the
+// migrations applied to it by hand, so it reports "current" no matter what
+// schema.sql says. That gap shipped — 020 and 021 added `isp_note`/`ppe_note`
+// and neither the column nor its guarded seed line was ever mirrored here, so
+// a fresh environment built the documented way came up without them and the
+// wizard's very first call (`/catalogs`, which selects both) 500'd.
+//
+// Text checks, deliberately: they read the files the way a new environment
+// would, and they hold even where there is no local D1 to apply them to.
+console.log('\n[3/4] schema.sql self-sufficiency');
+
+const schemaSql = readFileSync(join(repoRoot, 'db', 'schema.sql'), 'utf8');
+const migrationFiles = readdirSync(join(repoRoot, 'db', 'migrations'))
+  .filter((f) => f.endsWith('.sql'))
+  .sort();
+
+// The CREATE body for one table, comments stripped, so a column named only in
+// prose does not count as declared.
+function createdColumns(table) {
+  const m = schemaSql.match(
+    new RegExp('CREATE TABLE IF NOT EXISTS ' + table + '\\s*\\(([\\s\\S]*?)\\n\\);')
+  );
+  if (!m) return null;
+  return new Set(
+    m[1].replace(/--[^\n]*/g, '')
+      .split('\n')
+      .flatMap((line) => [...line.matchAll(/(?:^|,)\s*(\w+)\s+(?:TEXT|INTEGER|REAL|BLOB|NUMERIC)/g)])
+      .map((mm) => mm[1])
+  );
+}
+
+const missingColumns = [];
+const missingSeeds = [];
+for (const file of migrationFiles) {
+  const sql = readFileSync(join(repoRoot, 'db', 'migrations', file), 'utf8').replace(/--[^\n]*/g, '');
+  for (const m of sql.matchAll(/ALTER TABLE (\w+) ADD COLUMN (\w+)/gi)) {
+    const cols = createdColumns(m[1]);
+    if (cols && !cols.has(m[2])) missingColumns.push(`${m[1]}.${m[2]} (${file})`);
+  }
+  if (!schemaSql.includes(`'${file}'`)) missingSeeds.push(file);
+}
+
+check('every migrated column is also in a schema.sql CREATE', missingColumns.length === 0,
+  'missing from schema.sql: ' + missingColumns.join(', ') +
+  ' — a database built from schema.sql alone would not have it');
+
+check('every migration has a guarded seed line in schema.sql', missingSeeds.length === 0,
+  'no seed line for: ' + missingSeeds.join(', ') +
+  ' — a fresh database would report itself un-migrated');
+
+// The guard has to test the schema feature, never insert unconditionally: on an
+// existing database every CREATE above it is skipped, so an unguarded row would
+// mark an un-migrated database as migrated. That is the lie the table exists to
+// prevent, and it is invisible until someone trusts the record.
+const unguarded = migrationFiles.filter((f) => {
+  const at = schemaSql.indexOf(`'${f}'`);
+  if (at < 0) return false;
+  return !/^[\s\S]{0,400}?WHERE EXISTS/.test(schemaSql.slice(at));
+});
+check('every seed line is guarded by a schema feature', unguarded.length === 0,
+  'unguarded seed line for: ' + unguarded.join(', '));
+
+console.log('\n[3a] Data script conventions');
+
+// Data scripts (apps/character-creator/db/*.sql) are not migrations - they
+// change rows, not schema - but they had the same hole migrations used to:
+// nothing recorded which had been run where. Migration 024 added the log and
+// every script now ends by writing itself into it. These checks keep that
+// true, because a footer copy-pasted with the previous file's name records a
+// run of the wrong script and looks completely fine.
+const dataScriptDir = join(appDir, 'db');
+const dataScripts = readdirSync(dataScriptDir).filter((f) => f.endsWith('.sql')).sort();
+check('data scripts found on disk', dataScripts.length > 0, 'apps/character-creator/db/ is empty');
+
+const unrecorded = [];
+const misnamed = [];
+const notAscii = [];
+const hasCr = [];
+for (const f of dataScripts) {
+  const raw = readFileSync(join(dataScriptDir, f));
+  // The same pre-flight scripts/d1-apply.mjs enforces. A file that fails it is
+  // a file the documented tool refuses to apply, which is worth knowing here
+  // rather than at the moment you are trying to ship a correction.
+  if (raw.includes(0x0d)) hasCr.push(f);
+  if (raw.some((b) => b > 0x7f)) notAscii.push(f);
+
+  const sql = raw.toString('utf8');
+  const recorded = [...sql.matchAll(/INSERT INTO data_script_runs \(filename\) VALUES \('([^']+)'\)/g)]
+    .map((m) => m[1]);
+  if (!recorded.length) unrecorded.push(f);
+  else if (!recorded.includes(f)) misnamed.push(`${f} records '${recorded.join(", ")}'`);
+}
+
+check('every data script records its own run', unrecorded.length === 0,
+  'no data_script_runs footer in: ' + unrecorded.join(', '));
+check('no data script records another script\'s name', misnamed.length === 0,
+  misnamed.join('; ') + ' — a copy-pasted footer logs the wrong script');
+check('every data script is pure ASCII', notAscii.length === 0,
+  'non-ASCII in: ' + notAscii.join(', ') + ' — scripts/d1-apply.mjs refuses these, and '
+  + 'wrangler on Windows has turned them into mojibake in production');
+check('no data script carries a CR', hasCr.length === 0,
+  'CRLF in: ' + hasCr.join(', ') + ' — the .gitattributes *.sql rule pins LF');
+
+// ---------- 4. Migration state ----------
 // Every file in db/migrations/ should have a schema_migrations row. A missing
 // one means this database never had that migration applied — the question that
 // used to be answered by guessing at pragma_table_info output.
-console.log('\n[3/3] Migration state');
+console.log('\n[4/4] Migration state');
 
 const onDisk = readdirSync(join(repoRoot, 'db', 'migrations'))
   .filter((f) => f.endsWith('.sql'))

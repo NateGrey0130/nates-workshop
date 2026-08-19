@@ -310,3 +310,9 @@ ON CONFLICT (name) DO UPDATE
 -- Read the result back rather than trusting the exit code.
 SELECT count(*) AS new_powers FROM psionic_powers WHERE name IN ('Advanced Trance State', 'Attack Disease', 'Catatonic Strike', 'Cause Insanity', 'Commune with Animals', 'Commune with Spirit', 'Cure Insanity', 'Dispel Spirits', 'Float', 'Induce Nightmare', 'Insert Memory', 'Invisible Haze', 'Lust for Life', 'Meditation', 'Mental Illusion', 'Sense Dimensional Anomaly', 'Spontaneous Combustion', 'Suppress Fear', 'Telekinetic Leap', 'Telekinetic Punch', 'Teleport Object', 'Transfer I.S.P.');
 SELECT category, count(*) AS n FROM psionic_powers GROUP BY category ORDER BY category;
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('add-rue-psionics-batch.sql');

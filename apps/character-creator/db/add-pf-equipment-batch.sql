@@ -297,3 +297,9 @@ SELECT slug, name, cost FROM gear WHERE slug IN ('boots', 'belt', 'water-skin', 
 SELECT slug, name, system FROM gear WHERE slug IN ('back-pack', 'large-sack', 'small-sack', 'sleeping-bag');
 SELECT slug, cost, description FROM gear WHERE slug IN ('socks', 'spices-per-2-ounces', 'champagne', 'candle-fast-burning-45-minutes');
 SELECT COUNT(*) AS remaining_pf_stubs FROM gear WHERE system = 'palladium-fantasy' AND description LIKE 'STUB%';
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('add-pf-equipment-batch.sql');

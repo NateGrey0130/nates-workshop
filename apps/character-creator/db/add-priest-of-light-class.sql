@@ -241,3 +241,9 @@ SELECT class_id, name, system, status, created_by, length(markdown) AS markdown_
 SELECT count(*) AS stub_gear_rows FROM gear
  WHERE slug IN ('traveling-robe-or-cloak-with-hood', 'ceremonial-robe', 'boots', 'belt', 'bedroll', 'purse-satchel', 'water-skin', 'holy-symbol', 'large-silver-cross', 'wooden-spike', 'small-mallet', 'rope', 'vial-of-holy-water', 'silver-chalice', 'small-mirror', 'tinder-box', 'staff', 'blunt-weapon', 'chain-weapon', 'spear', 'sword');
 SELECT name, category FROM skills WHERE name = 'Lore: Religion';
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('add-priest-of-light-class.sql');

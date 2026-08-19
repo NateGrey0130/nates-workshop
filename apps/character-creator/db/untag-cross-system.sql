@@ -2,14 +2,14 @@
 --
 -- Rifts and Palladium Fantasy share a multiverse: dimensional rifts open onto
 -- the Palladium world, and a campaign can legitimately hold both. A skill or a
--- psychic power is not bound to the book it was first printed in — a psychic is
+-- psychic power is not bound to the book it was first printed in - a psychic is
 -- a psychic whichever realm they walk into.
 --
 -- This is a DELIBERATE setting decision, not an oversight. NULL means "every
 -- system", which is already how the pickers read an absent tag. Do not "fix" it
 -- by tagging these rows from their source_book; that was considered and
 -- rejected, and it would strip Carpentry, Sniper, First Aid, Hunting and some
--- thirty others from Palladium characters — including skills the Long Bowman's
+-- thirty others from Palladium characters - including skills the Long Bowman's
 -- own O.C.C. list grants.
 --
 -- Gear is deliberately NOT included. A laser rifle arriving in a medieval realm
@@ -23,8 +23,14 @@ UPDATE skills
 
 -- The Rifts psionics chapter arrived tagged. Untagging it roughly doubles what
 -- a Palladium psychic can choose from, and is what makes a major psionic's
--- "eight powers from one category" possible there at all — the largest
+-- "eight powers from one category" possible there at all - the largest
 -- Palladium-visible category held six.
 UPDATE psionic_powers
    SET system = NULL
  WHERE system IS NOT NULL;
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('untag-cross-system.sql');

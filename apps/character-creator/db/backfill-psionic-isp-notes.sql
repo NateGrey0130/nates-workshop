@@ -40,3 +40,9 @@ UPDATE psionic_powers SET isp_note = 'costs nothing'
 
 -- Read the result back rather than trusting the exit code.
 SELECT name, isp, isp_note FROM psionic_powers WHERE isp_note IS NOT NULL ORDER BY name;
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('backfill-psionic-isp-notes.sql');

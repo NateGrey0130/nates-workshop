@@ -206,3 +206,9 @@ WHERE NOT EXISTS (SELECT 1 FROM imported_classes WHERE class_id = 'techno-wizard
 -- Read the result back rather than trusting the exit code.
 SELECT class_id, name, status, length(markdown) AS bytes, instr(markdown, char(13)) > 0 AS has_cr FROM imported_classes WHERE class_id = 'techno-wizard';
 SELECT count(*) AS stub_gear FROM gear WHERE slug IN ('hand-held-computer', 'large-flashlight', 'magnifying-glass', 'mini-tool-kit', 'multi-optics-band', 'pilot-jumpsuit', 'pocket-digital-disc-recorder', 'pocket-flashlight', 'pocket-laser-distancer', 'pocket-mirror', 'small-silver-cross', 'swiss-army-knife', 'tw-converted-energy-pistol', 'tw-converted-energy-rifle', 'tw-tree-trimmer', 'tw-wing-board', 'work-overalls');
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('add-techno-wizard-class.sql');

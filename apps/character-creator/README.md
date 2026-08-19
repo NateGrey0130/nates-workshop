@@ -175,7 +175,7 @@ the importer's takes `(body)` and always posts.
 
 ## Data model
 
-Eighteen tables in one shared D1 database (`nates-workshop-media`, bound as `DB`).
+Nineteen tables in one shared D1 database (`nates-workshop-media`, bound as `DB`).
 `media_items` belongs to MediaVault and `schema_migrations` is database
 bookkeeping shared by both; the rest are this app.
 
@@ -235,6 +235,7 @@ numbers — the skill importer exists to fill them in.
 | `import_sessions` | One resumable catalog import. `catalog` is which of the four it feeds, `system` is stamped on every row the session confirms, `closed_at` NULL means still open. |
 | `import_staged` | Rows one page range extracted, held until confirmed. `payload` is the extracted row as JSON, `match_name` the catalog row it duplicates, `action` the `insert` / `update` / `ignore` decision, `confirmed_at` NULL means still pending. Cascades from its session. |
 | `play_events` | Play mode's action log, append-only. `payload` is JSON — a note, and `{from, to}` changes for undo. `undone_at` NULL means the event stands; undo marks, never deletes. Commentary, not a ledger: the character row stays the source of truth and nothing replays events |
+| `data_script_runs` | Which `apps/character-creator/db/*.sql` data scripts have run here, and when. One row per **run**, not per file — those scripts guard every statement, so one is safe to re-run and safe to run early, and an applied-once flag would record a deliberate no-op as done. `note` non-NULL means the run was asserted rather than observed. See [Data scripts](#data-scripts). |
 
 ---
 
@@ -2281,6 +2282,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `021-spell-ppe-note.sql` | `ppe_note` on `spells` — the same variable-cost shape as 020, for spells; `ppe` keeps the minimum the use button deducts |
 | `022-play-events.sql` | `play_events` — play mode's append-only action log: undo, the who-did-what trail, and the session recap boundary |
 | `023-skill-bonuses.sql` | `skills.bonuses` — what a skill grants beyond its percentage, in a class's `bonuses:` shape. Boxing is +1 attack per melee and +2 P.S. |
+| `024-data-script-runs.sql` | `data_script_runs` — which data scripts have run against this database. The same question `schema_migrations` answers for migrations, for the 55 scripts that answer it nowhere |
 
 ### The migration convention
 
@@ -2296,8 +2298,20 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
   an unguarded insert would mark an old, un-migrated database as migrated, which
   is exactly the lie this table exists to prevent. Add a guarded line to that
   block whenever you add a migration.
+- **A migration that adds a column must add it to `schema.sql`'s `CREATE` too.**
+  The two are not alternatives: the migration brings an existing database
+  forward, the `CREATE` is what a brand-new one gets. Skipping the second half
+  is invisible until someone builds a fresh environment. It has happened —
+  `020` and `021` added `isp_note` / `ppe_note`, neither reached `schema.sql`,
+  and the documented local-dev recipe produced a database whose very first API
+  call (`/catalogs`, which selects both) failed.
 - The smoke test fails if a file in `db/migrations/` has no matching row, or if a
-  recorded row has no matching file.
+  recorded row has no matching file. It separately fails if a migrated column is
+  missing from `schema.sql`'s `CREATE`, if a migration has no seed line there, or
+  if a seed line is unguarded — those read the files rather than the database,
+  because the database check cannot see any of it. The local database has had the
+  migrations applied to it by hand, so it reports itself current however wrong
+  `schema.sql` is.
 
 Running `db/schema.sql` against an already-current database is therefore how you
 backfill the records — no separate backfill migration is needed.
@@ -2305,19 +2319,27 @@ backfill the records — no separate backfill migration is needed.
 ### Data scripts
 
 `apps/character-creator/db/*.sql` are a different thing from `db/migrations/`
-and are easy to mistake for them. A migration changes **schema** and is tracked
-in `schema_migrations`; these change **rows**, are tracked nowhere, and are run
-by hand once per environment as needed.
+and are easy to mistake for them. A migration changes **schema**; these change
+**rows**, and are run by hand per environment as needed.
+
+They used to be tracked nowhere, which left "has production had the Juicer
+correction?" answerable only by querying the rows it writes and inferring —
+the same guessing game `schema_migrations` was created to end. Migration 024
+added `data_script_runs` and every script now ends by writing itself into it.
 
 | Kind | Files | What they are |
 |---|---|---|
 | Dev seed | `seed-dev.sql` | Optional local character/campaign rows. Never applied to production |
+| Run tracking | `backfill-data-script-runs.sql` | One-time, optional, and an **assertion**: records every script that had already been applied before `data_script_runs` existed, stamped with a note saying the run was asserted rather than observed. Guarded per filename, so it cannot double-record a script that has genuinely run since |
 | Data cleanup | `backfill-gear-system.sql`, `backfill-import-skill-gaps.sql`, `backfill-psionic-isp-notes.sql`, `backfill-skill-provenance.sql`, `backfill-spell-ppe-notes.sql`, `merge-scuba-duplicate.sql`, `retire-gear-placeholders.sql`, `untag-cross-system.sql` | One-off corrections to rows an earlier import or data script got wrong or left NULL |
 | Class corrections | `fix-*.sql`, `apply-*.sql`, `long-bowman-money.sql` | The rules audit's output: stored class definitions rewritten against the books, and class data written for a schema feature the day it landed |
 | Additions | `add-*.sql` | Something the book gives that the database never had — a catalog row, a whole-table batch extracted from page scans (`add-pf-weapons-batch`, `add-pf-equipment-batch`, the RUE spell and psionics batches), or a whole class. A missing skill named in an `only` restriction narrows its category to nothing, which is usually how one gets noticed. A class goes in this way only when the import tool cannot be reached: production sits behind Cloudflare Access, so a hand-transcribed class is applied by script instead |
 
-Two conventions hold across all of them, and both matter more here than in a
-migration, because nothing records that one has run:
+Three conventions hold across all of them, with one stated exception: the
+dev seed is a different kind of file and follows only the third. Its inserts
+are unguarded and re-applying it fails on `gear.slug`, which is the right
+behaviour for a file whose whole job is to put known rows into an empty
+local database.
 
 - **Every statement guards itself**, so a script is safe to run twice and safe
   to run *early*. `retire-gear-placeholders.sql` is the clearest case — it does
@@ -2327,6 +2349,29 @@ migration, because nothing records that one has run:
 - **Each one opens with the book and page it is correcting against**, because a
   script that rewrites a class is a claim about a source, and six months later
   the citation is the only way to check it.
+- **Each one ends by recording its own run**:
+  `INSERT INTO data_script_runs (filename) VALUES ('<this-file>.sql');`
+  One row per **run**, not per file, and deliberately not keyed on the
+  filename — because of the guard convention above. A script that ran early
+  and correctly did nothing has still run, and an applied-once flag would
+  record that no-op as done and hide that the real work never happened.
+  `retire-gear-placeholders.sql` is exactly that case. The smoke test fails if
+  a script has no footer, or if a copy-pasted one names a different file —
+  which logs the wrong script and looks entirely fine.
+
+What an environment has had run, and when:
+
+```sh
+npx wrangler d1 execute DB --remote --command \
+  "SELECT filename, count(*) AS runs, max(run_at) AS last_run,
+          max(note) AS asserted FROM data_script_runs
+    GROUP BY filename ORDER BY last_run DESC;"
+```
+
+A script on disk with no row there has never been run against that database.
+The reverse — a row for a file that no longer exists — is fine and expected:
+unlike migrations, a data script may be deleted once its correction is folded
+into the class it rewrote, and the log keeps the record that it ran.
 
 The audit that produced most of them is [`docs/rules-audit.md`](docs/rules-audit.md).
 
@@ -2478,16 +2523,23 @@ and renders a picker from each, so a truncated response would silently hide
 valid choices rather than showing fewer rows. Those are bounded by book content;
 the others grow with play.
 
-**The three page scripts are long, and deliberately not split.** `app.js` is
-roughly 1,700 lines, `import.js` roughly 1,000 and `sheet.js` roughly 900 — treat those
-as orders of magnitude, not figures, since they move with every change and the
-last written-down set had drifted by 20%. Each drives one page and each does
-several jobs. Splitting was considered and rejected: there is no build step,
-so there is no bundler — splitting means more `<script>` tags, hand-managed load
-order, and the classic-script/module distinction to keep straight. The cost is
-real and the benefit is aesthetic. `import.js` is the clearest seam if this is
-ever revisited, since its class, skills and session-based flows share a page and
-almost no logic.
+**The page scripts are long, and deliberately not split.** Five pages, and the
+three largest are `app.js` at roughly 1,900 lines, `sheet.js` roughly 1,600 and
+`import.js` roughly 1,000; `catalog.js` is around 700 and `dashboard.js` barely
+100. `js/parser.js`, at roughly 1,200, is the second-largest file in the app and
+is not a page script at all. Treat all of those as orders of magnitude rather
+than figures — they move with every change, and the set written down before this
+one had drifted by 80% on `sheet.js` while claiming a 20% tolerance, which is
+the argument for reading them as sizes and not as measurements.
+
+Each page script drives one page and each does several jobs. Splitting was
+considered and rejected: there is no build step, so there is no bundler —
+splitting means more `<script>` tags, hand-managed load order, and the
+classic-script/module distinction to keep straight. The cost is real and the
+benefit is aesthetic. That case was argued when `sheet.js` was around 900 lines
+and it has since nearly doubled, so it is worth re-examining rather than
+inheriting. `import.js` remains the clearest seam, since its class, skills and
+session-based flows share a page and almost no logic.
 
 **Passing SQL files to `wrangler d1 execute` on Windows can mangle non-ASCII.**
 Importing 80 skills wrote `Chemistry — Analytical` into production as

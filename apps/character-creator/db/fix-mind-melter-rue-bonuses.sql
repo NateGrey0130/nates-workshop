@@ -56,3 +56,9 @@ SELECT class_id,
        instr(markdown, 'powers_starting: 12') > 0 AS picks_fixed,
        instr(markdown, char(13)) > 0 AS has_cr
 FROM imported_classes WHERE class_id = 'mind-melter';
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('fix-mind-melter-rue-bonuses.sql');

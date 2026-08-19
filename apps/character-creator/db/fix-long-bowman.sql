@@ -122,3 +122,9 @@ leather (A.R. 13, 38 S.D.C.); the leather armor listed is a stand-in.
        updated_at = datetime('now')
  WHERE class_id = 'long-bowman'
    AND markdown LIKE '%Track & Trap Animals%';
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('fix-long-bowman.sql');

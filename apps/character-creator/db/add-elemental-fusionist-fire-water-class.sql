@@ -191,3 +191,9 @@ WHERE NOT EXISTS (SELECT 1 FROM imported_classes WHERE class_id = 'elemental-fus
 -- Read the result back rather than trusting the exit code.
 SELECT class_id, name, status, length(markdown) AS bytes, instr(markdown, char(13)) > 0 AS has_cr FROM imported_classes WHERE class_id = 'elemental-fusionist-fire-water';
 SELECT count(*) AS stub_gear FROM gear WHERE slug IN ('backpack', 'buckskin-clothing', 'cold-weather-clothing', 'deerskin-gloves', 'hunting-knife', 'large-axe', 'wooden-cross', 'wooden-stake');
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('add-elemental-fusionist-fire-water-class.sql');

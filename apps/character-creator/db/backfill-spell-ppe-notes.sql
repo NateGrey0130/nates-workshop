@@ -19,3 +19,9 @@ UPDATE spells SET ppe = 2, ppe_note = '2 per 5 lbs'
 -- Read the result back rather than trusting the exit code.
 SELECT name, ppe, ppe_note FROM spells WHERE ppe_note IS NOT NULL ORDER BY name;
 SELECT count(*) AS costless_spells FROM spells WHERE ppe = 0 AND ppe_note IS NULL;
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('backfill-spell-ppe-notes.sql');

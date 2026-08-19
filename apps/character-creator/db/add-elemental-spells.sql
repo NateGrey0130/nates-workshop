@@ -270,3 +270,9 @@ SELECT COUNT(*) AS elemental_rows FROM spells WHERE source_book = 'Rifts Book of
 SELECT substr(name, 1, instr(name, ':') - 1) AS sphere, COUNT(*) AS n FROM spells
  WHERE source_book = 'Rifts Book of Magic p.71-72' GROUP BY sphere ORDER BY sphere;
 SELECT name, level, ppe, ppe_note FROM spells WHERE name IN ('Air: Cloud of Steam', 'Fire: Cloud of Steam', 'Water: Cloud of Steam', 'Earth: Create Wood', 'Earth: Ironwood', 'Water: Calm Waters (greater)') ORDER BY name;
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('add-elemental-spells.sql');
