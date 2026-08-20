@@ -823,5 +823,54 @@ check('damage and duration are set only where the source gives them',
   && (spellSql.match(/duration = /g) || []).length === 1,
   'Energy Bolt and Breathe Without Air are the only two');
 
+// ---------- 9. Structural gear rows ----------
+section('Structural gear rows');
+
+// Twelve of the gear stubs were not unfilled items but the wrong SHAPE: seven
+// choices ("Air Filter Or Gas Mask") and five bundles ("Wooden Stake And
+// Mallet"). The importer made one catalog row out of a book line naming two
+// things, so the character held a single object that does not exist instead of
+// two that do. No amount of book-reading fixes that.
+const gearFix = readFileSync(join(appDir, 'db', 'fix-structural-gear-rows.sql'), 'utf8');
+const structural = ['air-filter-and-gas-mask', 'air-filter-or-gas-mask', 'camouflage-fatigues-and-armor', 'flint-and-charcoal', 'military-fatigues-and-dress-uniform', 'note-or-sketch-pad', 'pen-or-pencil', 'robe-or-cape', 'sunglasses-or-tinted-goggles', 'tinted-goggles-or-sunglasses', 'traveling-robe-or-cloak-with-hood', 'wooden-stake-and-mallet'];
+const unhandled = structural.filter((slug) => !gearFix.includes(slug));
+check('every structural gear row is handled', unhandled.length === 0, unhandled.join(', '));
+
+// The one that nearly went wrong. The five classes granting stakes say
+// "qty: 6" - six stakes and ONE mallet - so an even split would have handed
+// out five mallets nobody has. The first draft hard-coded qty 1 on both sides,
+// matched nothing, and was caught only because the script reports what it left
+// behind.
+check('the stake and mallet bundle splits 6 and 1, not 6 and 6',
+  gearFix.includes('"wooden-stake", qty: 6')
+  && gearFix.includes('"small-mallet", qty: 1')
+  && !gearFix.includes('"small-mallet", qty: 6'),
+  'six mallets is not what the book grants');
+
+// A rewrite pointing at slugs that do not exist is strictly worse than the row
+// it replaced, so every one is conditional on its own options being present.
+const rewrites = gearFix.split('UPDATE imported_classes').slice(1);
+const blindRewrites = rewrites.filter((r) =>
+  !r.includes('FROM gear WHERE slug IN') && !r.includes('EXISTS (SELECT 1 FROM gear'));
+check('every class rewrite is guarded on its options existing',
+  rewrites.length > 0 && blindRewrites.length === 0,
+  blindRewrites.length + ' of ' + rewrites.length + ' rewrites would fire blind');
+
+// A row is only dropped once nothing points at it any more, so an environment
+// where the rewrites could not run keeps its references intact.
+check('the rows are dropped only once nothing cites them',
+  gearFix.includes('DELETE FROM gear')
+  && /DELETE FROM gear[\s\S]*NOT EXISTS \(SELECT 1 FROM imported_classes/.test(gearFix)
+  && /DELETE FROM gear[\s\S]*NOT EXISTS \(SELECT 1 FROM character_items/.test(gearFix),
+  'a drop that ignored live references would break the classes citing them');
+
+// The duplicate pair has to land on ONE choice, or the eleven classes citing
+// one name and the single class citing the other end up with different gear.
+const goggleChoices = [...gearFix.matchAll(/label: "(?:sunglasses or tinted goggles|tinted goggles or sunglasses)", qty: 1, from: \[([^\]]*)\]/g)]
+  .map((m) => m[1]);
+check('the two goggle rows retire into the same pair of options',
+  goggleChoices.length === 2 && goggleChoices[0] === goggleChoices[1],
+  goggleChoices.join(' vs '));
+
 
 }
