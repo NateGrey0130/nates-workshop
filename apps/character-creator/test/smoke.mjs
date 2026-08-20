@@ -8,7 +8,7 @@
 // migration whose column never made it back into schema.sql.
 // Run from anywhere:  node apps/character-creator/test/smoke.mjs
 
-import { readFileSync, readdirSync, writeFileSync, rmSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync, rmSync, existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -3909,6 +3909,186 @@ check('only SELECTs are ever replayed', (() => {
   }
   check('every data script replays as single-line, terminated SQL',
     offenders.length === 0, offenders.join(', '));
+}
+
+console.log('\n[3c] Documentation claims');
+
+// Three checks for three ways the docs went wrong in one session. All of them
+// read the repo rather than the database, so they cost nothing.
+
+// ---- 1. A column claimed for a table that does not have it ----------------
+// The README said "All catalogs carry `source`". `gear` never has - it uses a
+// STUB marker in its description instead, and _lib/import-engine.js says so.
+// A query written from that sentence was rejected by production.
+//
+// The rule that catches it: inside a data-model row for table X, a backticked
+// name that IS a column on some OTHER table but not on X is a misplaced claim.
+// Names that are columns nowhere are skipped - those are JSON keys inside JSON
+// columns (`iq_bonus`, `gained_at_level`), which the tables document on purpose.
+{
+  const schemaText = readFileSync(join(repoRoot, 'db', 'schema.sql'), 'utf8');
+  const columnsOf = {};
+  for (const m of schemaText.matchAll(/CREATE TABLE IF NOT EXISTS (\w+)\s*\(([\s\S]*?)\n\);/g)) {
+    const cols = new Set();
+    for (const line of m[2].replace(/--[^\n]*/g, '').split('\n')) {
+      const c = line.match(/^\s*(\w+)\s+(?:TEXT|INTEGER|REAL|BLOB|NUMERIC)/);
+      if (c) cols.add(c[1]);
+    }
+    columnsOf[m[1]] = cols;
+  }
+  const everyColumn = new Set(Object.values(columnsOf).flatMap((s2) => [...s2]));
+  const readmeText = readFileSync(join(appDir, 'README.md'), 'utf8');
+
+  const misplaced = [];
+  for (const row of readmeText.matchAll(/^\| `([a-z_]+)` \|(.*)\|$/gm)) {
+    const table = row[1];
+    if (!columnsOf[table]) continue;                    // not a table row
+    for (const cell of row[2].matchAll(/`([a-z_]{3,})`/g)) {
+      const name = cell[1];
+      if (columnsOf[table].has(name)) continue;         // correct
+      if (columnsOf[name]) continue;                    // naming another table
+      if (!everyColumn.has(name)) continue;             // a JSON key, not a column
+      misplaced.push(`${table} row claims \`${name}\``);
+    }
+  }
+  check('no data-model row claims a column its table lacks', misplaced.length === 0,
+    misplaced.join('; ') + ' — that name is a column on a different table');
+}
+
+// ---- 2. Every internal markdown link resolves ----------------------------
+// 23 files linking to each other by relative path and to their own headings.
+// A renamed section leaves a link that looks fine and goes nowhere.
+{
+  const slug = (h) => h.trim().toLowerCase().replace(/[`*_]/g, '')
+    .replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+  const docs = [];
+  const walkMd = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      if (['.git', '.wrangler', 'node_modules'].includes(e.name)) continue;
+      const full = join(dir, e.name);
+      if (e.isDirectory()) walkMd(full);
+      else if (e.name.endsWith('.md')) docs.push(full);
+    }
+  };
+  walkMd(repoRoot);
+  const anchorsOf = (text) =>
+    new Set([...text.matchAll(/^#{1,6}\s+(.*)$/gm)].map((m) => slug(m[1])));
+
+  const broken = [];
+  for (const doc of docs) {
+    const text = readFileSync(doc, 'utf8');
+    const own = anchorsOf(text);
+    const base = dirname(doc);
+    for (const m of text.matchAll(/\[[^\]]*\]\(([^)]+)\)/g)) {
+      const target = m[1].trim();
+      if (/^(https?:|mailto:)/.test(target)) continue;
+      const [path, frag] = target.split('#');
+      const rel = doc.slice(repoRoot.length + 1).replace(/\\/g, '/');
+      if (!path) {
+        if (frag && !own.has(frag)) broken.push(`${rel} -> #${frag}`);
+        continue;
+      }
+      const full = join(base, path);
+      if (!existsSync(full)) { broken.push(`${rel} -> ${target}`); continue; }
+      if (frag && full.endsWith('.md') && !anchorsOf(readFileSync(full, 'utf8')).has(frag)) {
+        broken.push(`${rel} -> ${target}`);
+      }
+    }
+  }
+  check(`all internal markdown links resolve (${docs.length} files)`,
+    broken.length === 0, broken.slice(0, 6).join('; '));
+}
+
+// ---- 3. SETUP.md's endpoint count ----------------------------------------
+// It said ~20 where there were 35. The same drift the README's table count
+// check exists for, one file over.
+{
+  const setup = readFileSync(join(repoRoot, 'SETUP.md'), 'utf8');
+  const countEndpoints = (dir) => readdirSync(dir, { withFileTypes: true })
+    .reduce((n, e) => e.isDirectory()
+      ? n + (e.name === '_lib' ? 0 : countEndpoints(join(dir, e.name)))
+      : n + (e.name.endsWith('.js') ? 1 : 0), 0);
+  const actual = countEndpoints(join(repoRoot, 'functions', 'api', 'character-creator'));
+  const stated = setup.match(/(~?\d+) endpoints \+ _lib/);
+  check('SETUP.md states the endpoint count', !!stated);
+  check('and it matches the routing tree',
+    !!stated && parseInt(stated[1].replace('~', ''), 10) === actual,
+    stated ? `SETUP says ${stated[1]}, there are ${actual}` : '');
+}
+
+console.log('\n[3d] Skills stay true');
+
+// Skills are instructions with no runtime, so they rot silently. Migration 024
+// added the data_script_runs footer and made the smoke test require it; the
+// class-import skill's template kept teaching the old shape for hours, and
+// anyone following it produced a script that failed the build immediately.
+//
+// These checks tie the skills to the things they describe.
+{
+  const skillsDir = join(repoRoot, '.claude', 'skills');
+  const skills = existsSync(skillsDir)
+    ? readdirSync(skillsDir, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name)
+    : [];
+  check('skills are present', skills.length > 0, 'no .claude/skills/*');
+
+  const badPaths = [];
+  const badChecks = [];
+  const noFrontmatter = [];
+  const smokeSelf = readFileSync(join(appDir, 'test', 'smoke.mjs'), 'utf8');
+
+  for (const name of skills) {
+    const dir = join(skillsDir, name);
+    const files = [];
+    const walkSkill = (d) => {
+      for (const e of readdirSync(d, { withFileTypes: true })) {
+        const full = join(d, e.name);
+        if (e.isDirectory()) walkSkill(full);
+        else files.push(full);
+      }
+    };
+    walkSkill(dir);
+
+    const main = join(dir, 'SKILL.md');
+    if (!existsSync(main)) { noFrontmatter.push(name + ' (no SKILL.md)'); continue; }
+    const md = readFileSync(main, 'utf8');
+    if (!/^---[\s\S]*?\nname:\s*\S+[\s\S]*?\ndescription:\s*\S+[\s\S]*?\n---/.test(md)) {
+      noFrontmatter.push(name);
+    }
+
+    for (const f of files) {
+      const text = readFileSync(f, 'utf8');
+      const rel = f.slice(repoRoot.length + 1).replace(/\\/g, '/');
+
+      // A repo path a skill tells you to open must exist.
+      for (const m of text.matchAll(/`((?:db|scripts|apps|functions|shared)\/[A-Za-z0-9_./-]+\.(?:js|mjs|sql|md|json|css|html))`/g)) {
+        // Skip placeholders and elisions: NNN-kebab.sql, <id>.sql, api/.../x.js
+        if (/\.\.\.|NNN|<|>|\*/.test(m[1])) continue;
+        if (!existsSync(join(repoRoot, m[1]))) badPaths.push(`${rel} -> ${m[1]}`);
+      }
+
+      // A smoke-check name a skill quotes must still be one.
+      for (const m of text.matchAll(/`(every [a-z][^`]{12,})`/g)) {
+        if (!smokeSelf.includes(m[1])) badChecks.push(`${rel} -> "${m[1]}"`);
+      }
+    }
+  }
+
+  check('every SKILL.md has name/description frontmatter', noFrontmatter.length === 0,
+    noFrontmatter.join(', '));
+  check('every repo path a skill names exists', badPaths.length === 0,
+    badPaths.slice(0, 6).join('; '));
+  check('every smoke check a skill quotes still exists', badChecks.length === 0,
+    badChecks.slice(0, 6).join('; ') + ' — a renamed check leaves the skill lying');
+
+  // The data-script template must satisfy the conventions the smoke test
+  // enforces on the scripts it produces, or it teaches a failing shape.
+  const tpl = join(skillsDir, 'class-import', 'reference', 'data-script.sql');
+  if (existsSync(tpl)) {
+    const t = readFileSync(tpl, 'utf8');
+    check('the data-script template records a run',
+      /INSERT INTO data_script_runs \(filename\) VALUES/.test(t),
+      'reference/data-script.sql would produce a script the smoke test rejects');
+  }
 }
 
 // ---------- 4. Migration state ----------

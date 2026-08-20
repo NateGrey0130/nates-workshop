@@ -27,7 +27,8 @@ modelling something new (see the last section).
    Parses through the real parser and cross-references the real catalogs. Free,
    no API call, no writes. Iterate here until it reads `ready`.
 4. **Wrap it in a data script** — copy `reference/data-script.sql`, paste the
-   stub SQL `class-check` printed, then check the finished script too:
+   stub SQL `class-check` printed, and set the filename in the closing
+   `data_script_runs` line. Then check the finished script too:
    ```bash
    node scripts/class-check.mjs apps/character-creator/db/add-<id>-class.sql
    ```

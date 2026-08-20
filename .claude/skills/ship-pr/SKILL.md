@@ -1,0 +1,119 @@
+---
+name: ship-pr
+description: Take a change in this repo from branch to deployed, the way this repo actually works. Use when opening, reviewing, merging or deploying a PR — "ship this", "open a PR", "merge it", "deploy this" — and whenever a change touches D1, because schema and data are applied BEFORE the merge rather than by it. Covers the branch/verify/PR/merge/prune loop, the ordering rule that makes it safe, and the shell traps that have corrupted commits and commands here before.
+---
+
+# Shipping a change
+
+**Merging to `main` IS the deploy.** Cloudflare Pages publishes the repo root on
+every merge. There is no build step, no CI, and nothing runs your tests for you.
+Whatever is on `main` is live within a minute or two.
+
+That single fact drives everything below: there is no stage where a mistake is
+caught for you, so the checks happen before the merge or they do not happen.
+
+## The loop
+
+1. **Branch.** Never commit to `main` — it deploys.
+   ```bash
+   git checkout -b short-kebab-description
+   ```
+2. **Make the change.**
+3. **Apply schema and data FIRST, if the change needs them.** See
+   [ordering](#the-ordering-rule) below. This is the step that is wrong by
+   default.
+4. **Verify.** `node apps/character-creator/test/smoke.mjs` must pass. If the
+   change is visible in the app, drive it in a browser too — the smoke test
+   checks that the machinery is correct, which is not the same as the feature
+   working. A class picker that rendered everything 1300px below the fold passed
+   every test in the suite and was reported as "nothing happens".
+5. **Commit.** See [commit messages](#commit-messages).
+6. **Push and open the PR.**
+   ```bash
+   git push -u origin short-kebab-description
+   gh pr create --base main --head short-kebab-description --title "..." --body-file pr-body.tmp
+   ```
+7. **Merge**, only when asked. It deploys.
+   ```bash
+   gh pr merge <n> --merge
+   ```
+8. **Sync and prune.**
+   ```bash
+   git checkout main && git pull origin main
+   git push origin --delete short-kebab-description
+   git branch -d short-kebab-description
+   git fetch --prune
+   ```
+9. **Verify production**, by querying it — not by reading the exit code.
+
+## The ordering rule
+
+**Schema and data changes are applied to production BEFORE the merge that needs
+them**, never after. Pages deploys the moment `main` moves, so code that expects
+a column merged first is code running against a database that does not have it.
+
+```bash
+node scripts/d1-apply.mjs --remote db/migrations/NNN-thing.sql
+```
+
+The PR body should then say plainly which files are **already applied**, because
+by the time anyone reviews it, merging those is a no-op and the branch is only
+catching the repo up to a database that already moved. A reviewer who does not
+know that will look for the deploy step and not find one.
+
+For anything about migrations themselves, use the `schema-change` skill.
+
+## Verify production by asking it
+
+`wrangler d1 execute` has reported a non-zero exit on runs that fully applied,
+and an `Authentication error [code: 10000]` on one that succeeded. Exit codes
+here are advisory. Query the thing back:
+
+```bash
+npx wrangler d1 execute DB --remote --command "SELECT count(*) FROM schema_migrations;"
+```
+
+Two traps when writing that query from PowerShell:
+
+- **`\"` does not escape anything.** The string ends early and the rest
+  word-splits into arguments wrangler rejects. Class markdown cites gear as
+  `item_id: "slug"`, so the queries most worth running are the ones that break.
+  Build the quote in SQL instead: `char(34)`. Same trick as `char(8212)` for an
+  em-dash.
+- **Read results from a file, not the terminal.** `--json | Out-File -Encoding
+  utf8 out.json`, then read `out.json`. Transcribing from terminal output put
+  `ng-15-northern-gun-laser-rifle` a keystroke away from being written into a
+  class definition; the real slug is `ng-l5-`.
+
+## Commit messages
+
+This repo's history reads as prose. A message says what was wrong and why, not
+what files moved — `git log` is the only place some of these decisions are
+recorded. Match the surrounding style before writing one.
+
+**Write it to a file and use `-F`.** Backticks in a `-m` string are evaluated by
+the shell: a commit message here once ran `wrangler d1 execute` and pasted its
+help output into the commit. Backticks are natural in this repo's prose, so this
+is not a hypothetical.
+
+```bash
+git commit -F commit-msg.tmp
+```
+
+**Do not `git add -A` immediately before `--amend`.** It sweeps the message file
+into the commit. If it happens: `git add -A && git commit --amend --no-edit`
+after deleting the file, then confirm with `git ls-tree -r HEAD --name-only`.
+
+## Line endings
+
+`.sql` is pinned to LF by `.gitattributes` — a CRLF checkout once changed the
+bytes that reached production. Everything else in the repo is CRLF. A script
+that rewrites a file must preserve what that file had; the smoke test fails a
+`.sql` carrying a CR.
+
+## What "done" means
+
+- smoke test passes on `main` after the merge
+- production queried and matching what the change intended
+- branch deleted on both sides, `git status` clean
+- if the change is user-visible, it has been exercised in a browser
