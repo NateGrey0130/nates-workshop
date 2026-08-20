@@ -161,6 +161,18 @@ th {
 .chkrow .pct { color: var(--text-muted); font-size: 11px; font-family: 'JetBrains Mono', monospace; }
 .attr-note { font-size: 11px; color: var(--text-muted); }
 .nav { display: flex; justify-content: space-between; margin-top: 16px; }
+/* Why the primary action is unavailable, between Back and the disabled button.
+   Muted rather than an error colour: nothing has gone wrong, there is simply a
+   choice still to make. align-self keeps it on the buttons' line. */
+.nav-why {
+  align-self: center; text-align: right;
+  color: var(--text-muted); font-size: 13px; line-height: 1.4;
+  padding: 0 12px; max-width: 46ch;
+}
+@media (max-width: 620px) {
+  .nav { flex-wrap: wrap; gap: 8px; }
+  .nav-why { order: 3; width: 100%; text-align: left; padding: 0; }
+}
 
 .levelup {
   border: 1px solid var(--accent); border-radius: var(--radius);
