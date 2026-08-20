@@ -171,6 +171,32 @@ const charId = made.body.id;
 
 const sheet = await api('GET', `/characters/${charId}`);
 check('its sheet loads', sheet.status === 200 && sheet.body.character?.id === charId, sheet.body);
+
+// A fighting style is a level schedule (RUE p.347), and the only proof that
+// matters is the number the sheet actually serves. Every piece has to line up -
+// the column exists, the data script ran, the loader selects it, compose passes
+// the level, derive treats attacks_base as a floor - and any one of them failing
+// looks like a character who simply fights slightly worse.
+const h2hChar = await api('POST', '/characters', {
+  campaign_id: campaignId, name: 'Trained Fighter', class_id: cls.id, level: 1,
+  attributes: attrs, skills: [{ name: 'Hand to Hand: Expert', pct: 0, per_level: 0, type: 'occ' }],
+  abilities: [],
+});
+if (h2hChar.status === 200 || h2hChar.status === 201) {
+  const id = h2hChar.body.id;
+  const s1 = await api('GET', `/characters/${id}`);
+  const notes1 = s1.body.skill_level_notes || [];
+  check('a first level Expert is served four attacks per melee',
+    s1.body.character?.combat?.attacks === 4 || s1.body.class?.bonuses?.combat?.attacks_base === 4,
+    JSON.stringify({ combat: s1.body.character?.combat, bonuses: s1.body.class?.bonuses?.combat }));
+  check('and the moves the level grants come back as text',
+    notes1.length > 0 && notes1.every((n) => n.level <= 1), JSON.stringify(notes1));
+
+  globalThis.__h2hId = id;
+  globalThis.__h2hNotes1 = notes1.length;
+} else {
+  check('a character can be created with a Hand to Hand skill', false, h2hChar.body);
+}
 check('and reports write permission for its owner', sheet.body.can_write === true, sheet.body.can_write);
 
 // the guard folded into requireCharacter, on a real request
@@ -223,6 +249,32 @@ if (xp.body.proposal) {
 
 const picks = await api('GET', `/characters/${charId}/picks`);
 check('pending skill picks are listed', picks.status === 200 && Array.isArray(picks.body.pending), picks.body);
+
+// The same fighting style, read at a level the character actually reached.
+// Creation is always level 1 (by design), so this drives the real xp and
+// level-confirm path - which is also the path that would break if compose
+// stopped passing the level through.
+if (globalThis.__h2hId) {
+  const id = globalThis.__h2hId;
+  const gain = await api('POST', `/characters/${id}/xp`, { total: 100000 });
+  const target = gain.body?.proposal?.to_level ?? null;
+  if (target && target >= 4) {
+    await api('POST', `/characters/${id}/level-confirm`, { to_level: target, picks: [] });
+    const after = await api('GET', `/characters/${id}`);
+    const b = after.body.class?.bonuses?.combat || {};
+    // The Expert gains its second attack at level 4 and +2 strike at 3, so any
+    // level past 4 must show more than the level 1 grant did.
+    check('a levelled Expert has accumulated more of the table',
+      after.body.character.level === target && (b.attacks ?? 0) >= 1 && (b.strike ?? 0) >= 2,
+      'level ' + after.body.character?.level + ' ' + JSON.stringify(b));
+    check('and has more moves to read than at level 1',
+      (after.body.skill_level_notes || []).length > globalThis.__h2hNotes1,
+      (after.body.skill_level_notes || []).length + ' vs ' + globalThis.__h2hNotes1);
+  } else {
+    check('the Hand to Hand character can be levelled', false, JSON.stringify(gain.body).slice(0, 200));
+  }
+}
+
 
 // ── play mode ───────────────────────────────────────────────────────────────
 const before = await api('GET', `/characters/${charId}`);

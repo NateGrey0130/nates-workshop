@@ -1040,7 +1040,10 @@ function skillBonusClass() {
   if (!S.cls) return S.cls;
   const held = takenNames();
   const rows = (S.skillCatalog || []).filter((sk) => held.has(String(sk.name).toLowerCase()));
-  const extra = bonusesFromSkills(rows);
+  // The wizard only ever builds a level 1 character, so that is what the
+  // Hand to Hand schedule is read at. Levelling up goes through the sheet,
+  // which composes with the character's real level.
+  const extra = bonusesFromSkills(rows, 1);
   if (!extra) return S.cls;
   return { ...S.cls, bonuses: sumBonusGroups(S.cls.bonuses, extra) };
 }

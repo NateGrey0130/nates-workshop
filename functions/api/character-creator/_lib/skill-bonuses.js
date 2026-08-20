@@ -15,7 +15,9 @@ import { resolveKeys } from './catalog-redirects.js';
 const LOOKUP_BATCH = 50;
 
 /**
- * Returns the rows with a non-null `bonuses`, ready for bonusesFromSkills().
+ * Returns the rows carrying a flat `bonuses` or a `level_bonuses` schedule,
+ * ready for bonusesFromSkills(). A Hand to Hand skill has only the schedule -
+ * fetching on `bonuses` alone left every fighting style behind.
  *
  * Returns [] — not null — when the character holds nothing that grants a bonus.
  * composeClass() treats null as "the caller does not know this character's
@@ -32,8 +34,9 @@ export async function loadSkillBonuses(env, character) {
   for (let i = 0; i < names.length; i += LOOKUP_BATCH) {
     const batch = names.slice(i, i + LOOKUP_BATCH);
     const { results } = await env.DB
-      .prepare(`SELECT name, bonuses FROM skills
-                 WHERE bonuses IS NOT NULL AND name IN (${batch.map(() => '?').join(',')})`)
+      .prepare(`SELECT name, bonuses, level_bonuses FROM skills
+                 WHERE (bonuses IS NOT NULL OR level_bonuses IS NOT NULL)
+                   AND name IN (${batch.map(() => '?').join(',')})`)
       .bind(...batch).all();
     rows.push(...results);
   }
@@ -49,8 +52,9 @@ export async function loadSkillBonuses(env, character) {
     const ids = [...new Set([...redirects.values()])].filter((v) => v != null);
     if (ids.length) {
       const { results } = await env.DB
-        .prepare(`SELECT name, bonuses FROM skills
-                   WHERE bonuses IS NOT NULL AND id IN (${ids.map(() => '?').join(',')})`)
+        .prepare(`SELECT name, bonuses, level_bonuses FROM skills
+                   WHERE (bonuses IS NOT NULL OR level_bonuses IS NOT NULL)
+                     AND id IN (${ids.map(() => '?').join(',')})`)
         .bind(...ids).all();
       rows.push(...results);
     }

@@ -12,6 +12,7 @@ import { dirname, join } from 'node:path';
 import { trailingSelects, collapseWhitespace, statements, stripComments } from '../../../../scripts/sql-statements.mjs';
 import { appDir, repoRoot, check, section } from '../harness.mjs';
 import { composeClass, CORE_SDC_BY_CLASS } from '../../js/compose.js';
+import { bonusesFromSkills, levelGrants, skillLevelNotes } from '../../js/parser.js';
 import { rollPoolFormula } from '../../js/dice.js';
 
 export function run() {
@@ -564,6 +565,98 @@ for (const dice of ['3D6', '1D6']) {
   const r = rollPoolFormula(dice, attrs);
   check('the core ' + dice + ' S.D.C. formula parses and rolls', r >= Number(dice[0]) && r <= max, r);
 }
+
+// ---------- 6. Hand to Hand level schedules ----------
+section('Hand to Hand level schedules (p.347-349)');
+
+// The five fighting styles are the reason `level_bonuses` exists. Their whole
+// mechanical payload is a level-by-level table, so a regression here does not
+// look like a broken number — it looks like a fighting style that does nothing,
+// which is exactly the state these rows were found in.
+const h2hSql = readFileSync(join(appDir, 'db', 'add-hand-to-hand-level-bonuses.sql'), 'utf8');
+const h2h = [...h2hSql.matchAll(/UPDATE skills SET level_bonuses = '(\[.*?\])'\s*\n\s*WHERE name = '([^']+)';/g)]
+  .map((m) => ({ name: m[2], level_bonuses: m[1].replace(/''/g, "'") }));
+check('all five Hand to Hand tables are in the data script', h2h.length === 5, h2h.length);
+
+// The book prints fifteen levels for each. A table that stops early is the
+// kind of thing that reads fine and quietly caps a character's progression.
+const parsed = h2h.map((r) => ({ name: r.name, entries: JSON.parse(r.level_bonuses) }));
+check('each covers levels 1 to 15',
+  parsed.every((t) => t.entries.length === 15
+    && t.entries.every((e, i) => e.level === i + 1)),
+  parsed.map((t) => t.name + '=' + t.entries.length).join(', '));
+check('every entry grants something',
+  parsed.every((t) => t.entries.every((e) => e.combat || e.saves || e.attributes || e.note)),
+  'an entry with no bonuses and no note is a level that does nothing');
+
+// p.347: the number of attacks a style starts with. The Assassin's three is
+// the one that differs, and is the reason this is data rather than a constant.
+const startsWith = Object.fromEntries(parsed.map((t) =>
+  [t.name.replace('Hand to Hand: ', ''), t.entries[0].combat?.attacks_base]));
+check('each states the attacks it starts with',
+  Object.values(startsWith).every((v) => typeof v === 'number'), JSON.stringify(startsWith));
+check('the Assassin starts with three and the rest with four',
+  startsWith.Assassin === 3 && ['Basic', 'Expert', 'Martial Arts', 'Commando']
+    .every((k) => startsWith[k] === 4), JSON.stringify(startsWith));
+check('attacks_base appears at level 1 only',
+  parsed.every((t) => t.entries.slice(1).every((e) => e.combat?.attacks_base === undefined)),
+  'a later attacks_base would silently reset the count');
+
+// "ALL bonuses are accumulative" (p.347).
+const expert = h2h.find((r) => r.name.endsWith('Expert'));
+check('a schedule accumulates rather than replacing',
+  levelGrants(expert.level_bonuses, 5).length === 5
+  && levelGrants(expert.level_bonuses, 15).length === 15,
+  levelGrants(expert.level_bonuses, 5).length);
+check('and grants nothing above the character level',
+  levelGrants(expert.level_bonuses, 3).every((e) => e.level <= 3));
+
+// A caller that cannot say the level must not be handed level 1 for free.
+check('an unknown level grants nothing at all',
+  levelGrants(expert.level_bonuses, null).length === 0
+  && bonusesFromSkills([expert]) === undefined,
+  JSON.stringify(bonusesFromSkills([expert])));
+
+// The Expert's totals, counted off the book by hand: four attacks at level 1
+// and one more at each of 4, 9 and 14; parry +3 at 2 and +2 at 12.
+const at = (row, lvl) => bonusesFromSkills([row], lvl).combat;
+check('an Expert fights at four attacks at level 1', at(expert, 1).attacks_base === 4
+  && (at(expert, 1).attacks ?? 0) === 0, JSON.stringify(at(expert, 1)));
+check('and at seven by level 15', (at(expert, 15).attacks ?? 0) + at(expert, 15).attacks_base === 7,
+  JSON.stringify(at(expert, 15)));
+check('and carries +5 parry by level 15', at(expert, 15).parry === 5, at(expert, 15).parry);
+check('and only +3 parry at level 11', at(expert, 11).parry === 3, at(expert, 11).parry);
+
+// Two styles must not stack into eight attacks.
+const two = bonusesFromSkills([expert, h2h.find((r) => r.name.endsWith('Assassin'))], 1);
+check('two fighting styles take the better start, not the sum',
+  two.combat.attacks_base === 4, two.combat.attacks_base);
+
+// The notes are the bulk of what the tables say.
+const notes = skillLevelNotes([expert], 7);
+check('the plain-text half is returned in level order',
+  notes.length > 0 && notes.every((n, i) => i === 0 || n.level >= notes[i - 1].level),
+  notes.length);
+check('and stops at the character level', notes.every((n) => n.level <= 7));
+check('and names the skill it came from', notes.every((n) => n.skill === expert.name));
+
+// A conditional bonus must never become an unconditional number — the Assassin's
+// gun and thrown-weapon bonuses are the ones that would go wrong.
+const assassin = parsed.find((t) => t.name.endsWith('Assassin'));
+const conditional = assassin.entries.filter((e) => /with guns|thrown weapon/i.test(e.note || ''));
+check('the Assassin\'s weapon-specific bonuses stay in the note',
+  conditional.length >= 3, conditional.length);
+
+// derive.js has to know the keys, or a bonus is computed and never shown.
+const sheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+const usedKeys = new Set();
+for (const t of parsed) {
+  for (const e of t.entries) for (const k of Object.keys(e.combat || {})) usedKeys.add(k);
+}
+usedKeys.delete('attacks_base');
+const unshown = [...usedKeys].filter((k) => !sheetSrc.includes("'" + k + "'"));
+check('every combat key a schedule grants has a field on the sheet',
+  unshown.length === 0, unshown.join(', ') + ' — computed but never displayed');
 
 
 }
