@@ -100,6 +100,34 @@ body {
 
 .btn:hover { border-color: var(--text-muted); background: var(--bg-input); }
 
+/* A control you cannot use has to LOOK like one. Nothing styled :disabled,
+   so a disabled button was pixel-identical to a live one — same fill, same
+   white text, and cursor: pointer inviting the click. The wizard gates its
+   primary action on several steps, so the most common way to meet this was
+   to press a button that looked ready and have nothing happen.
+
+   :hover is neutralised too. Without that, a dead button still lit up under
+   the pointer, which is the same false promise one layer down. */
+.btn:disabled,
+.btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn:disabled:hover,
+.btn[disabled]:hover {
+  border-color: var(--border);
+  background: var(--bg-tertiary);
+}
+
+/* The primary variant sets its own background and border, so its disabled
+   hover has to be pinned back to those rather than to the neutral button's. */
+.btn-primary:disabled:hover,
+.btn-primary[disabled]:hover {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
 .btn-primary {
   background: var(--accent);
   border-color: var(--accent);
