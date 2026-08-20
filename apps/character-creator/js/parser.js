@@ -278,6 +278,38 @@ export function skillLevelNotes(rows, level) {
     || String(a.skill).localeCompare(String(b.skill)));
 }
 
+// The conditional half of a level schedule, totalled per condition.
+//
+// A W.P.'s bonuses apply only while the character is holding that weapon, so
+// they must never reach the combat block — but they are still real, still
+// accumulate by level, and a player cannot use them if the sheet never says
+// what they are. Returned as one row per (skill, condition):
+//
+//   { skill: 'W.P. Sword', applies_when: 'with a sword',
+//     combat: { strike: 3, parry: 2 } }
+//
+// One skill can carry several conditions: a sword swung and a sword thrown are
+// different bonuses, and the book lists them separately.
+export function skillConditionalBonuses(rows, level) {
+  const byKey = new Map();
+  for (const row of rows || []) {
+    for (const e of levelGrants(row?.level_bonuses, level)) {
+      if (!e.applies_when) continue;
+      const key = (row.name ?? '') + '\u0000' + e.applies_when;
+      const seen = byKey.get(key)
+        ?? { skill: row.name ?? null, applies_when: String(e.applies_when), combat: {} };
+      for (const [k, v] of Object.entries(e.combat || {})) {
+        if (typeof v === 'number') seen.combat[k] = (seen.combat[k] || 0) + v;
+      }
+      byKey.set(key, seen);
+    }
+  }
+  return [...byKey.values()]
+    .filter((r) => Object.keys(r.combat).length)
+    .sort((a, b) => String(a.skill).localeCompare(String(b.skill))
+      || a.applies_when.localeCompare(b.applies_when));
+}
+
 // `level` is optional: omit it and only the flat `bonuses` column applies,
 // which is exactly what every caller did before Hand to Hand had a schedule.
 export function bonusesFromSkills(rows, level = null) {
@@ -301,8 +333,15 @@ export function bonusesFromSkills(rows, level = null) {
   for (const row of rows || []) {
     take(asBlock(row?.bonuses));
     for (const entry of levelGrants(row?.level_bonuses, level)) {
-      // `level` and `note` describe the entry; only the groups are bonuses.
-      const { level: _lvl, note: _note, ...groups } = entry;
+      // A W.P. grants its strike and parry only "whenever that particular type
+      // of weapon is used" (p.326). Summed here, a character with five W.P.s
+      // would swing their FISTS at +5. Conditional entries are held back for
+      // skillConditionalBonuses() instead — the same reason Fencing carries
+      // its bonuses as a note rather than as numbers.
+      if (entry.applies_when) continue;
+      // `level`, `note` and `applies_when` describe the entry; only the groups
+      // are bonuses.
+      const { level: _lvl, note: _note, applies_when: _when, ...groups } = entry;
       take(groups);
     }
   }

@@ -740,12 +740,8 @@ changed — only `derive.js`, which now knows what to call them.
 
 ### Still missing
 
-The **29 W.P.s** have the same problem and are still blank: their strike and
-parry progressions are printed elsewhere in the book, and nothing here invents
-them. The column is ready for them.
-
 The book's table for a character with **no** Hand to Hand training (one attack
-at level 1, a second at 3, a third at 9) is also not modelled — `derive.js`
+at level 1, a second at 3, a third at 9) is not modelled — `derive.js`
 starts everyone at 2 attacks and takes no level. Only a character with no
 fighting skill at all is affected.
 
@@ -2518,7 +2514,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `022-play-events.sql` | `play_events` — play mode's append-only action log: undo, the who-did-what trail, and the session recap boundary |
 | `023-skill-bonuses.sql` | `skills.bonuses` — what a skill grants beyond its percentage, in a class's `bonuses:` shape. Boxing is +1 attack per melee and +2 P.S. |
 | `024-data-script-runs.sql` | `data_script_runs` — which data scripts have run against this database. The same question `schema_migrations` answers for migrations, for the 55 scripts that answer it nowhere |
-| `025-skill-level-bonuses.sql` | `skills.level_bonuses` — what a skill grants **at each level**, summed up to the character's. The Hand to Hand tables are level-by-level and accumulative, which the flat `bonuses` column cannot express |
+| `025-skill-level-bonuses.sql` | `skills.level_bonuses` — what a skill grants **at each level**, summed up to the character's. The Hand to Hand tables are level-by-level and accumulative, which the flat `bonuses` column cannot express; entries may carry `applies_when` for a W.P. bonus that needs that weapon in hand |
 
 ### Standing up a new environment
 

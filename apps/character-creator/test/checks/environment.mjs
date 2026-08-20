@@ -12,7 +12,7 @@ import { dirname, join } from 'node:path';
 import { trailingSelects, collapseWhitespace, statements, stripComments } from '../../../../scripts/sql-statements.mjs';
 import { appDir, repoRoot, check, section } from '../harness.mjs';
 import { composeClass, CORE_SDC_BY_CLASS } from '../../js/compose.js';
-import { bonusesFromSkills, levelGrants, skillLevelNotes } from '../../js/parser.js';
+import { bonusesFromSkills, levelGrants, skillLevelNotes, skillConditionalBonuses } from '../../js/parser.js';
 import { rollPoolFormula } from '../../js/dice.js';
 
 export function run() {
@@ -657,6 +657,81 @@ usedKeys.delete('attacks_base');
 const unshown = [...usedKeys].filter((k) => !sheetSrc.includes("'" + k + "'"));
 check('every combat key a schedule grants has a field on the sheet',
   unshown.length === 0, unshown.join(', ') + ' — computed but never displayed');
+
+// ---------- 7. Weapon Proficiencies ----------
+section('Weapon Proficiencies (p.326-329)');
+
+// A W.P. grants its bonuses only "whenever that particular type of weapon is
+// used" (p.326). That single sentence is the whole reason `applies_when`
+// exists, and the failure it prevents is silent: a character with five W.P.s
+// swinging their bare fists at +5 to strike looks like a good roll, not a bug.
+const wpSql = readFileSync(join(appDir, 'db', 'add-wp-level-bonuses.sql'), 'utf8');
+const wp = [...wpSql.matchAll(/UPDATE skills SET level_bonuses = '(\[.*?\])'\s*\n\s*WHERE name = '([^']+)';/g)]
+  .map((m) => ({ name: m[2], level_bonuses: m[1].replace(/''/g, "'") }));
+check('the W.P. data script covers 22 proficiencies', wp.length === 22, wp.length);
+check('and every one of them is a W.P.', wp.every((r) => r.name.startsWith('W.P. ')),
+  wp.filter((r) => !r.name.startsWith('W.P. ')).map((r) => r.name).join(', '));
+
+// THE check. Every entry that carries numbers must also carry a condition.
+const leaks = [];
+for (const r of wp) {
+  for (const e of JSON.parse(r.level_bonuses)) {
+    const numeric = e.combat || e.saves || e.attributes;
+    if (numeric && !e.applies_when) leaks.push(r.name + ' L' + e.level);
+  }
+}
+check('no W.P. grants a bonus that applies with bare hands', leaks.length === 0,
+  leaks.join(', ') + ' — an entry with numbers and no applies_when');
+
+// The same statement from the other end: whatever the totals are, none of
+// them may reach the block derive.js adds to a character's combat numbers.
+check('all 22 together contribute nothing unconditional',
+  bonusesFromSkills(wp, 15) === undefined, JSON.stringify(bonusesFromSkills(wp, 15)));
+
+// ...and are not simply lost instead.
+const wpConditional = skillConditionalBonuses(wp, 15);
+check('but do come back as weapon bonuses', wpConditional.length >= 22, wpConditional.length);
+check('each naming the weapon it needs',
+  wpConditional.every((c) => c.applies_when && c.skill),
+  'a bonus with no condition cannot be shown honestly');
+
+// Counted off the page by hand: W.P. Sword is +1 to strike at levels 1, 3, 6,
+// 9, 12 and 15, and +1 to parry at 2, 4, 7, 10 and 13.
+const sword = wp.find((r) => r.name === 'W.P. Sword');
+const swordAt = (lvl) => skillConditionalBonuses([sword], lvl)
+  .find((c) => c.applies_when === 'with a sword')?.combat || {};
+check('a 15th level swordsman is +6 to strike and +5 to parry with a sword',
+  swordAt(15).strike === 6 && swordAt(15).parry === 5, JSON.stringify(swordAt(15)));
+check('and only +2 / +2 at level 5',
+  swordAt(5).strike === 2 && swordAt(5).parry === 2, JSON.stringify(swordAt(5)));
+
+// A sword swung and a sword thrown are different bonuses, and the book lists
+// them apart. Collapsing them would quietly add a throwing bonus to melee.
+const swordConds = skillConditionalBonuses([sword], 15).map((c) => c.applies_when);
+check('one skill can carry more than one condition',
+  new Set(swordConds).size === 2, swordConds.join(' / '));
+
+// The modern W.P.s are flat strike ladders; W.P. Handguns is +1 at 2, 4, 6,
+// 8, 10, 12 and 14, so a 14th level shooter is +7.
+const guns = wp.find((r) => r.name === 'W.P. Handguns');
+check('a 14th level shooter is +7 to strike with a handgun',
+  skillConditionalBonuses([guns], 14)[0]?.combat?.strike === 7,
+  JSON.stringify(skillConditionalBonuses([guns], 14)));
+
+// Every label the sheet needs, or a bonus is totalled and shown as a raw key.
+const wpKeys = new Set();
+for (const c of wpConditional) for (const k of Object.keys(c.combat)) wpKeys.add(k);
+const unlabelled = [...wpKeys].filter((k) => !sheetSrc.includes(k + ':'));
+check('every weapon bonus key has a short label on the sheet',
+  unlabelled.length === 0, unlabelled.join(', ') + ' — missing from WP_LABELS');
+
+// The two skills whose entry is prose only — Paired Weapons and Quick Draw,
+// whose bonus scales with P.P. rather than level — must still say something.
+for (const name of ['W.P. Paired Weapons', 'W.P. Quick Draw']) {
+  const row = wp.find((r) => r.name === name);
+  check(name + ' carries its rules as a note',
+    skillLevelNotes([row], 1).length === 1, JSON.stringify(row?.level_bonuses)?.slice(0, 80));
+}
 
 
 }
