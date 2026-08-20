@@ -11,6 +11,8 @@ import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'no
 import { dirname, join } from 'node:path';
 import { trailingSelects, collapseWhitespace, statements, stripComments } from '../../../../scripts/sql-statements.mjs';
 import { appDir, repoRoot, check, section } from '../harness.mjs';
+import { composeClass, CORE_SDC_BY_CLASS } from '../../js/compose.js';
+import { rollPoolFormula } from '../../js/dice.js';
 
 export function run() {
 // ---------- 2. D1 schema ----------
@@ -469,6 +471,98 @@ if (Array.isArray(recorded)) {
   const orphans = recorded.filter((f) => !onDisk.includes(f));
   check('no recorded migration is missing its file', orphans.length === 0,
     'recorded but not on disk: ' + orphans.join(', '));
+}
+
+// ---------- 5. core pools ----------
+section('Core pools (p.18)');
+
+// p.18 states hit points and S.D.C. once, for every character, rather than per
+// class, so most class pages print neither and compose.js supplies them.
+//
+// The S.D.C. half has to know whether the class is a man of arms, and nothing
+// in the class data records that, so the grouping lives in CORE_SDC_BY_CLASS.
+// A class that states no formula and is missing from that table gets no S.D.C.
+// at all — which is silent, looks exactly like the two Priests of Light that
+// reached production with hp_max NULL, and nothing else would catch it.
+const classFiles = readdirSync(join(appDir, 'db'))
+  .filter((f) => /^add-.*-class\.sql$/.test(f)).sort();
+check('class definition scripts found', classFiles.length > 0, 'no add-*-class.sql in db/');
+
+// Read off the embedded markdown rather than the parsed class: the point is
+// what the BOOK page states, and a key is stated only if the frontmatter has
+// it. Anchored so prose mentioning a key by name is not mistaken for one — the
+// Priest of Light's extraction note names both keys in a sentence.
+const states = (sql, key) => new RegExp('^\\s*' + key + ':', 'm').test(sql);
+const classes = classFiles.map((f) => {
+  const sql = readFileSync(join(appDir, 'db', f), 'utf8');
+  const id = sql.match(/^id: ([a-z0-9-]+)/m)?.[1] ?? null;
+  return { f, id, hp: states(sql, 'hit_points_base'), sdc: states(sql, 'sdc_base'), mdc: states(sql, 'mdc_base') };
+});
+check('every class script declares an id', classes.every((c) => c.id), 
+  classes.filter((c) => !c.id).map((c) => c.f).join(', '));
+
+// An M.D.C. being tracks M.D.C. instead, so its silence is a statement.
+const needsSdc = classes.filter((c) => c.id && !c.sdc && !c.mdc);
+const unclassified = needsSdc.filter((c) => !CORE_SDC_BY_CLASS[c.id]);
+check('every class without an S.D.C. formula is classified as men-of-arms or not',
+  unclassified.length === 0,
+  'missing from CORE_SDC_BY_CLASS: ' + unclassified.map((c) => c.id).join(', ')
+    + ' — these characters would be saved with sdc_max NULL');
+
+// The reverse: an entry for a class that states its own formula is dead, and
+// an entry for a class that does not exist is a typo that silently does nothing.
+const byId = new Map(classes.filter((c) => c.id).map((c) => [c.id, c]));
+const stale = Object.keys(CORE_SDC_BY_CLASS).filter((id) => byId.get(id)?.sdc);
+const unknown = Object.keys(CORE_SDC_BY_CLASS).filter((id) => !byId.has(id));
+check('no S.D.C. grouping overrides a class that states its own', stale.length === 0,
+  stale.join(', ') + ' — the class page prints a formula, so the entry never applies');
+check('every S.D.C. grouping names a class that exists', unknown.length === 0,
+  unknown.join(', ') + ' — no add-*-class.sql defines this id');
+
+// p.18 gives exactly two values. Anything else is a per-class formula wearing
+// the core rule's clothes and belongs in the class markdown instead.
+const badDice = Object.entries(CORE_SDC_BY_CLASS).filter(([, d]) => d !== '3D6' && d !== '1D6');
+check('every S.D.C. grouping rolls 3D6 or 1D6', badDice.length === 0,
+  badDice.map(([id, d]) => id + '=' + d).join(', '));
+
+// The defaults have to survive composition, not merely exist as constants.
+//
+// Only over the classes that state nothing. The synthetic class carries no
+// formulas, so a class whose own page prints one would look like a gap here
+// when it is exactly the case the default is meant to stay out of.
+const mk = (id, extra = {}) => ({ id, name: id, system: 'rifts', category: 'occ', ...extra });
+const composedFor = (list) => list.map((c) => composeClass({ rcc: mk(c.id) }));
+const noHp = composedFor(classes.filter((c) => c.id && !c.hp && !c.mdc));
+check('every class stating no hit points composes with the core formula',
+  noHp.length > 0 && noHp.every((c) => c.hit_points_base),
+  noHp.filter((c) => !c.hit_points_base).map((c) => c.id).join(', '));
+const noSdc = composedFor(needsSdc);
+check('every class stating no S.D.C. composes with a core formula',
+  noSdc.length > 0 && noSdc.every((c) => c.sdc_base),
+  noSdc.filter((c) => !c.sdc_base).map((c) => c.id).join(', '));
+
+// An M.D.C. being must not pick up hit points it does not have.
+const mdcComposed = composeClass({ rcc: mk('dragon-hatchling', { mdc_base: '1D6x10' }) });
+check('an M.D.C. class is left alone', !mdcComposed.hit_points_base && !mdcComposed.sdc_base,
+  'hp=' + mdcComposed.hit_points_base + ' sdc=' + mdcComposed.sdc_base);
+
+// A class that states its own keeps it — the default fills gaps, never overrides.
+const ownFormula = composeClass({ rcc: mk('burster', { hit_points_base: 'P.E. x 2 plus 2D6 per level of experience' }) });
+check('a stated hit point formula is never overridden',
+  ownFormula.hit_points_base === 'P.E. x 2 plus 2D6 per level of experience', ownFormula.hit_points_base);
+
+// What makes a character a man of arms is the job, not the race.
+const dragonMerc = composeClass({ rcc: mk('chiang-ku-dragon'), occ: mk('merc-soldier') });
+check('S.D.C. follows the occupation, not the race', dragonMerc.sdc_base === '3D6', dragonMerc.sdc_base);
+
+// The formulas are only worth having if the roller understands them.
+const attrs = { IQ: 10, ME: 10, MA: 10, PS: 10, PP: 10, PE: 14, PB: 10, Spd: 10 };
+const hpRoll = rollPoolFormula('P.E. + 1D6 per level', attrs);
+check('the core hit point formula parses and rolls', hpRoll >= 15 && hpRoll <= 20, hpRoll);
+for (const dice of ['3D6', '1D6']) {
+  const max = Number(dice[0]) * 6;
+  const r = rollPoolFormula(dice, attrs);
+  check('the core ' + dice + ' S.D.C. formula parses and rolls', r >= Number(dice[0]) && r <= max, r);
 }
 
 
