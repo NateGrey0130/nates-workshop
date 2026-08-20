@@ -5,17 +5,16 @@
 // The other half of the level-up picker: a grant skipped at level-up waits here
 // until the player comes back to it. Owner/GM only, same as any character write.
 
-import { getUserEmail, unauthorized, json, forbidden, characterAccess, readJson } from '../../_lib/auth.js';
+import { json, readJson, requireCharacter } from '../../_lib/auth.js';
 import { listPending, resolvePicks, claimStatements, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
 import { loadCharacterClass } from '../../_lib/class-loader.js';
 import { validateCharacter, loadSkillCategories } from '../../_lib/validate-character.js';
 import { loadCharacter } from '../../_lib/character-json.js';
 
 export async function onRequestGet({ request, env, params }) {
-  const email = getUserEmail(request);
-  if (!email) return unauthorized();
-  const access = await characterAccess(env, params.id, email);
-  if (!access.found) return json({ error: 'Character not found' }, 404);
+  const guard = await requireCharacter(request, env, params.id, { write: false });
+  if (guard.res) return guard.res;
+  const { access } = guard;
 
   const pending = await listPending(env, params.id);
   return json({
@@ -26,11 +25,8 @@ export async function onRequestGet({ request, env, params }) {
 }
 
 export async function onRequestPost({ request, env, params }) {
-  const email = getUserEmail(request);
-  if (!email) return unauthorized();
-  const access = await characterAccess(env, params.id, email);
-  if (!access.found) return json({ error: 'Character not found' }, 404);
-  if (!access.canWrite) return forbidden();
+  const guard = await requireCharacter(request, env, params.id);
+  if (guard.res) return guard.res;
 
   const b = await readJson(request);
   if (!b || !Array.isArray(b.picks) || !b.picks.length) {

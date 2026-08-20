@@ -54,3 +54,9 @@ VALUES ('Brewing', 'Medical', 25, 5, 'import', 'base transcribed from memory - v
 
 -- Read the result back rather than trusting the exit code.
 SELECT name, category, base, per_level FROM skills WHERE name IN ('Lore: Religion', 'Basic Mechanics', 'General Repair & Maintenance', 'Heraldry', 'Interrogation Techniques', 'Military Etiquette', 'Animal Husbandry', 'Brewing') ORDER BY name;
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('backfill-import-skill-gaps.sql');

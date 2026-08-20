@@ -191,3 +191,9 @@ UPDATE skills SET note = COALESCE(note || '; ', '') || 'RUE p.302 lists 30%+5%' 
 SELECT COUNT(*) AS rue_list_rows FROM skills WHERE source_book = 'Rifts Ultimate Edition p.302-303';
 SELECT COUNT(*) AS conflict_notes FROM skills WHERE note LIKE '%RUE p.302%';
 SELECT name, base, per_level, note FROM skills WHERE name IN ('Horsemanship: Cowboy', 'Language: Other', 'Seduction', 'W.P. Handguns');
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('add-rue-skills-batch.sql');

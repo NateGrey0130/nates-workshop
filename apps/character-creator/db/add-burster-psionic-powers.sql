@@ -28,3 +28,9 @@ WHERE NOT EXISTS (SELECT 1 FROM psionic_powers WHERE name = 'Radiate Horror Fact
 
 -- Read the result back rather than trusting the exit code.
 SELECT name, category, isp FROM psionic_powers WHERE source_book = 'Rifts Ultimate Edition p.141' ORDER BY name;
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('add-burster-psionic-powers.sql');

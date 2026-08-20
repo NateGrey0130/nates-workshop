@@ -5,7 +5,7 @@
 //      of that character; campaign-level entries (no character_id) need the GM.
 
 import { getUserEmail, unauthorized, json, forbidden, characterAccess, campaignAccess, readJson } from './_lib/auth.js';
-import { paging, pagedQuery } from './_lib/paging.js';
+import { paging, pagedQuery, pageBody } from './_lib/paging.js';
 
 export async function onRequestGet({ request, env }) {
   if (!getUserEmail(request)) return unauthorized();
@@ -42,7 +42,7 @@ export async function onRequestGet({ request, env }) {
     limit, offset,
   });
 
-  return json({ entries: page.results, total: page.total, limit: page.limit, offset: page.offset });
+  return json(pageBody('entries', page));
 }
 
 export async function onRequestPost({ request, env }) {

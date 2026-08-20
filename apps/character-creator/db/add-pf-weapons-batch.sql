@@ -122,3 +122,9 @@ SELECT COUNT(*) AS pf_weapon_rows FROM gear WHERE system = 'palladium-fantasy' A
 SELECT slug, name, cost, description FROM gear WHERE slug IN ('long-bow', 'short-sword', 'arrows-standard');
 SELECT slug, cost FROM gear WHERE description LIKE '%per dozen%' ORDER BY slug;
 SELECT COUNT(*) AS remaining_weapon_stubs FROM gear WHERE system = 'palladium-fantasy' AND description LIKE 'STUB%' AND category = 'weapon';
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('add-pf-weapons-batch.sql');

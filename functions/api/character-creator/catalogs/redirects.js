@@ -10,22 +10,14 @@
 // unpickable in SQL.
 
 import { requireAdmin, json } from '../_lib/auth.js';
-import { getCatalog } from '../../../../apps/character-creator/js/catalog-fields.js';
-import { MERGE_REFS } from '../_lib/catalog-merge.js';
+import { resolveCatalog } from '../_lib/catalog-merge.js';
 import { listRedirects, deleteRedirect } from '../_lib/catalog-redirects.js';
-
-function resolve(request) {
-  const params = new URL(request.url).searchParams;
-  const key = params.get('catalog');
-  if (!getCatalog(key) || !MERGE_REFS[key]) return { err: json({ error: 'Unknown catalog' }, 400) };
-  return { key, params };
-}
 
 export async function onRequestGet({ request, env }) {
   const guard = requireAdmin(request, env);
   if (guard.res) return guard.res;
 
-  const { key, err } = resolve(request);
+  const { key, err } = resolveCatalog(request);
   if (err) return err;
 
   const redirects = await listRedirects(env, key);
@@ -44,7 +36,7 @@ export async function onRequestDelete({ request, env }) {
   const guard = requireAdmin(request, env);
   if (guard.res) return guard.res;
 
-  const { key, params, err } = resolve(request);
+  const { key, params, err } = resolveCatalog(request);
   if (err) return err;
 
   const id = parseInt(params.get('id'), 10);

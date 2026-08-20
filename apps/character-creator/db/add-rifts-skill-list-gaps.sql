@@ -170,3 +170,9 @@ SELECT name, category, base, per_level, bonuses
 
 SELECT 'Falconry filed under Military' AS check_name, category AS n
   FROM skills WHERE name = 'Falconry';
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('add-rifts-skill-list-gaps.sql');

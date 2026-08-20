@@ -42,3 +42,9 @@ WHERE name = 'SCUBA'
 SELECT name FROM skills WHERE name IN ('SCUBA', 'S.C.U.B.A.');
 SELECT from_key, to_id, reason FROM catalog_redirects WHERE catalog = 'skills' AND from_key = 'SCUBA';
 SELECT COUNT(*) AS chars_holding_scuba FROM characters, json_each(skills) WHERE json_extract(value, '$.name') = 'SCUBA';
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('merge-scuba-duplicate.sql');

@@ -167,3 +167,9 @@ The percentile chance of a young Chiang-Ku''s chosen field of study (50% Wizardr
        updated_at = datetime('now')
  WHERE class_id = 'chiang-ku-dragon'
    AND instr(markdown, 'skill_overrides') = 0;
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('apply-hatchling-skill-overrides.sql');

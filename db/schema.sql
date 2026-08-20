@@ -32,8 +32,9 @@ CREATE INDEX IF NOT EXISTS idx_media_items_user ON media_items (user_email);
 
 -- ═══════════════════════════════════════════════════════════════════
 -- Character Creator — Palladium Fantasy / Rifts characters & campaigns.
--- RCC/OCC definitions live in markdown under apps/character-creator/data,
--- not here; characters reference them by class_id slug.
+-- R.C.C./O.C.C. definitions live in `imported_classes` below as markdown;
+-- characters reference them by class_id slug. (An earlier design kept them
+-- as committed files under apps/character-creator/data — that is gone.)
 -- ═══════════════════════════════════════════════════════════════════
 
 CREATE TABLE IF NOT EXISTS campaigns (
@@ -57,9 +58,9 @@ CREATE TABLE IF NOT EXISTS characters (
   occ_class_variant TEXT,
   psychic_tier TEXT,                    -- rolled on the Random Psionics Table; NULL = none, or psychic by class
   psychic_shape TEXT,                   -- which power allowance was taken ('focused' | 'broad')
-  attribute_bonuses TEXT,
+  attribute_bonuses TEXT,                -- JSON: what the class's dice attribute bonuses rolled
   abilities TEXT,                        -- JSON array of chosen ability names; duplicates are meaningful
-  rolled_bonuses TEXT,                   -- what a class's DICE combat/save bonuses came up               -- JSON: what the class's dice attribute bonuses rolled
+  rolled_bonuses TEXT,                   -- JSON: what a class's dice combat/save bonuses came up
   level INTEGER NOT NULL DEFAULT 1,
   xp INTEGER NOT NULL DEFAULT 0,
   attributes TEXT NOT NULL DEFAULT '{}',  -- JSON: {"IQ": 12, "ME": 14, ...}
@@ -117,8 +118,8 @@ CREATE TABLE IF NOT EXISTS pending_skill_picks (
   character_id INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
   granted_at_level INTEGER NOT NULL,
   count INTEGER NOT NULL,
-  categories TEXT,
-  kind TEXT,                             -- 'related' | 'secondary'; NULL means related                      -- JSON array; NULL = no category restriction
+  categories TEXT,                       -- JSON array; NULL = no category restriction
+  kind TEXT,                             -- 'related' | 'secondary'; NULL means related
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   claimed_at TEXT                       -- NULL = still unspent
 );
@@ -167,9 +168,10 @@ CREATE TABLE IF NOT EXISTS character_items (
 );
 CREATE INDEX IF NOT EXISTS idx_character_items_character ON character_items (character_id);
 
--- Classes created by the PDF import tool. Committed markdown under
--- apps/character-creator/data/classes still works and takes precedence; this
--- table lets an imported class go live immediately without a redeploy.
+-- Classes created by the PDF import tool, and the ONLY source of class
+-- definitions. A row goes live immediately, without a redeploy. (Committed
+-- markdown under apps/character-creator/data/classes used to win on an id
+-- collision; that design is gone — see _lib/class-store.js.)
 -- A row is saved as 'draft' the moment extraction succeeds (so a closed tab
 -- never loses the work) and flips to 'published' when the import is confirmed.
 CREATE TABLE IF NOT EXISTS imported_classes (
@@ -213,6 +215,9 @@ CREATE TABLE IF NOT EXISTS spells (
   name TEXT NOT NULL UNIQUE,
   level INTEGER NOT NULL DEFAULT 0,
   ppe INTEGER NOT NULL DEFAULT 0,
+  ppe_note TEXT,                          -- a variable cost's schedule in a few words.
+                                          -- `ppe` holds the MINIMUM, which is what the
+                                          -- sheet's use button spends; see migration 021.
   source TEXT NOT NULL DEFAULT 'seed',
   source_book TEXT,
   system TEXT,                            -- rifts | palladium-fantasy | both; NULL = unrestricted
@@ -232,6 +237,9 @@ CREATE TABLE IF NOT EXISTS psionic_powers (
   name TEXT NOT NULL UNIQUE,
   category TEXT,                          -- Healing | Physical | Sensitive | Super
   isp INTEGER NOT NULL DEFAULT 0,
+  isp_note TEXT,                          -- a variable cost's schedule in a few words.
+                                          -- `isp` holds the MINIMUM, which is what the
+                                          -- sheet's use button spends; see migration 020.
   source TEXT NOT NULL DEFAULT 'seed',
   source_book TEXT,
   system TEXT,                            -- rifts | palladium-fantasy | both; NULL = unrestricted
@@ -375,12 +383,39 @@ CREATE TABLE IF NOT EXISTS play_events (
 CREATE INDEX IF NOT EXISTS idx_play_events_character ON play_events (character_id, id);
 
 INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '020-psionic-isp-note.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('psionic_powers') WHERE name = 'isp_note');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '021-spell-ppe-note.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('spells') WHERE name = 'ppe_note');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '022-play-events.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'play_events');
 
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '023-skill-bonuses.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('skills') WHERE name = 'bonuses');
+
+-- ═══════════════════════════════════════════════════════════════════
+-- Bookkeeping for apps/character-creator/db/*.sql, which change ROWS
+-- rather than schema and are therefore NOT migrations. One row per RUN
+-- rather than per file: those scripts guard every statement, so one is
+-- safe to run twice and safe to run early, and an applied-once flag
+-- would record a deliberate no-op run as done. See migration 024.
+-- ═══════════════════════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS data_script_runs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  filename TEXT NOT NULL,               -- basename only, e.g. 'fix-juicer.sql'
+  note TEXT,                            -- NULL = an ordinary observed run
+  run_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_data_script_runs_file ON data_script_runs (filename, run_at);
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '024-data-script-runs.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'data_script_runs');
 
 -- ═══════════════════════════════════════════════════════════════════
 -- An in-progress character build. Its own table rather than a `draft` status

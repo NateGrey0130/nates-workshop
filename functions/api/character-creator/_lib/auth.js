@@ -74,6 +74,29 @@ export async function characterAccess(env, characterId, email) {
   };
 }
 
+// Guard for a character endpoint, in the shape requireAdmin() already uses:
+// { res } means stop and return it, otherwise { email, access }. Every handler
+// under characters/[id] opened with the same five lines - identity, then found,
+// then writable - and five lines repeated nine times is five lines that can be
+// four somewhere by mistake. The ordering matters and is easy to get subtly
+// wrong: 404 before 403, so a stranger probing ids cannot tell an existing
+// character from a missing one by which refusal comes back.
+//
+// `id` is explicit rather than read from params, because journal.js authorises a
+// character named in the request BODY, and a helper that could only reach
+// params.id would quietly not apply there.
+//
+// write: false is the read guard - reads stay open to any authenticated user, so
+// it stops after the existence check.
+export async function requireCharacter(request, env, id, { write = true } = {}) {
+  const email = getUserEmail(request);
+  if (!email) return { res: unauthorized() };
+  const access = await characterAccess(env, id, email);
+  if (!access.found) return { res: json({ error: 'Character not found' }, 404) };
+  if (write && !access.canWrite) return { res: forbidden() };
+  return { email, access };
+}
+
 export async function campaignAccess(env, campaignId, email) {
   const row = await env.DB.prepare('SELECT id, gm_email FROM campaigns WHERE id = ?').bind(campaignId).first();
   if (!row) return { found: false, canWrite: false };

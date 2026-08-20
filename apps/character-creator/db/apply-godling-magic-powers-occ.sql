@@ -25,3 +25,9 @@ WHERE class_id = 'godling'
 SELECT class_id,
        instr(markdown, 'occ_options: ["ley-line-walker"') > 0 AS has_options
 FROM imported_classes WHERE class_id = 'godling';
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('apply-godling-magic-powers-occ.sql');

@@ -231,3 +231,9 @@ SELECT class_id, name, status, created_by, length(markdown) AS markdown_bytes
   FROM imported_classes WHERE class_id = 'ley-line-walker';
 SELECT count(*) AS stub_gear_rows FROM gear
  WHERE slug IN ('robe-or-cape', 'clothing', 'wooden-stake-and-mallet', 'flashlight', 'lightweight-cord', 'grappling-hook', 'pen-or-pencil', 'note-or-sketch-pad', 'hand-axe', 'automatic-pistol', 'submachine-gun', 'energy-pistol', 'energy-rifle', 'ammunition-clips');
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('add-ley-line-walker-class.sql');

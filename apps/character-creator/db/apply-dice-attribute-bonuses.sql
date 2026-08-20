@@ -227,3 +227,9 @@ GMs running a Juicer PC should treat the five-year-and-4D6-months death clock as
        updated_at = datetime('now')
  WHERE class_id = 'juicer'
    AND instr(markdown, 'attribute_minimums') = 0;
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('apply-dice-attribute-bonuses.sql');

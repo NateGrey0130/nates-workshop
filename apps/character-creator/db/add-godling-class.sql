@@ -236,3 +236,9 @@ SELECT class_id, name, system, status, created_by, length(markdown) AS markdown_
 SELECT slug, name, system, substr(description, 1, 5) AS marker
   FROM gear WHERE slug IN ('archaic-mdc-armor-of-the-pantheon', 'lesser-rune-weapon', 'basic-provisions')
  ORDER BY slug;
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('add-godling-class.sql');

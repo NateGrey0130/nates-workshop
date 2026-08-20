@@ -43,3 +43,9 @@ SELECT class_id,
        instr(markdown, 'insanity: 2') > 0 AS still_has_insanity,
        instr(markdown, 'curses: 3 }') > 0 AS curses_flat
 FROM imported_classes WHERE class_id = 'ley-line-walker';
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('fix-ley-line-walker-rue-bonuses.sql');

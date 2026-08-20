@@ -229,3 +229,9 @@ SELECT class_id, name, status, created_by, length(markdown) AS markdown_bytes
 SELECT count(*) AS stub_gear_rows FROM gear
  WHERE slug IN ('glitter-boy-power-armor', 'urban-warrior-armor', 'huntsman-armor', 'rifle', 'hand-grenade', 'smoke-grenade', 'signal-flare', 'air-filter', 'gas-mask', 'walkie-talkie', 'fatigues', 'velcro-strapped-boots');
 SELECT name, category FROM skills WHERE name IN ('Basic Mechanics', 'General Repair & Maintenance', 'Pilot Robot Combat Elite: Glitter Boy', 'Pilot Robot Combat Basic (general)');
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('add-glitter-boy-class.sql');

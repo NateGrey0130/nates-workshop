@@ -14,7 +14,7 @@
 // keeping a hatchling's I.Q. through adulthood is a decision you can make per
 // attribute rather than a thing the endpoint decides for you.
 
-import { getUserEmail, unauthorized, json, forbidden, characterAccess, readJson } from '../../_lib/auth.js';
+import { json, readJson, requireCharacter } from '../../_lib/auth.js';
 import { getStored } from '../../_lib/class-store.js';
 import { parseClassMarkdown, applyVariant } from '../../../../../apps/character-creator/js/parser.js';
 import { composeClass } from '../../../../../apps/character-creator/js/compose.js';
@@ -40,12 +40,8 @@ async function loadBoth(env, character) {
 }
 
 export async function onRequestPost({ request, env, params }) {
-  const email = getUserEmail(request);
-  if (!email) return unauthorized();
-
-  const access = await characterAccess(env, params.id, email);
-  if (!access.found) return json({ error: 'Character not found' }, 404);
-  if (!access.canWrite) return forbidden();
+  const guard = await requireCharacter(request, env, params.id);
+  if (guard.res) return guard.res;
 
   const character = await loadCharacter(env, params.id);
   const base = await loadBoth(env, character);

@@ -7,20 +7,13 @@
 // real duplicates hide. Suggestions are never applied automatically.
 
 import { requireAdmin, json, readJson } from '../_lib/auth.js';
-import { getCatalog } from '../../../../apps/character-creator/js/catalog-fields.js';
-import { findDuplicates, mergeRows, MERGE_REFS } from '../_lib/catalog-merge.js';
-
-function resolve(request) {
-  const key = new URL(request.url).searchParams.get('catalog');
-  if (!getCatalog(key) || !MERGE_REFS[key]) return { err: json({ error: 'Unknown catalog' }, 400) };
-  return { key };
-}
+import { findDuplicates, mergeRows, resolveCatalog } from '../_lib/catalog-merge.js';
 
 export async function onRequestGet({ request, env }) {
   const guard = requireAdmin(request, env);
   if (guard.res) return guard.res;
 
-  const { key, err } = resolve(request);
+  const { key, err } = resolveCatalog(request);
   if (err) return err;
 
   const pairs = await findDuplicates(env, key);
@@ -56,7 +49,7 @@ export async function onRequestPost({ request, env }) {
   const guard = requireAdmin(request, env);
   if (guard.res) return guard.res;
 
-  const { key, err } = resolve(request);
+  const { key, err } = resolveCatalog(request);
   if (err) return err;
 
   const b = await readJson(request);

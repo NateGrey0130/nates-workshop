@@ -198,3 +198,9 @@ WHERE NOT EXISTS (SELECT 1 FROM imported_classes WHERE class_id = 'dog-boy');
 -- Read the result back rather than trusting the exit code.
 SELECT class_id, name, status, length(markdown) AS bytes, instr(markdown, char(13)) > 0 AS has_cr FROM imported_classes WHERE class_id = 'dog-boy';
 SELECT count(*) AS stub_gear FROM gear WHERE slug IN ('animal-snare', 'c-10-laser-rifle', 'c-12-laser-rifle', 'c-18-laser-pistol', 'dog-pack-dpm-riot-armor', 'dress-uniform', 'infrared-distancing-binoculars', 'portable-language-translator', 'small-hammer', 'spike');
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('add-dog-boy-class.sql');

@@ -19,7 +19,8 @@
 // Merging therefore rewrites JSON for the first three and repoints a foreign key
 // for the last.
 
-import { CATALOGS } from '../../../../apps/character-creator/js/catalog-fields.js';
+import { CATALOGS, getCatalog } from '../../../../apps/character-creator/js/catalog-fields.js';
+import { json } from './auth.js';
 import { safeParse } from './character-json.js';
 import { keysOf, redirectStatements, collapseStatement } from './catalog-redirects.js';
 
@@ -277,4 +278,20 @@ export async function mergeRows(env, catalogKey, keepId, removeId) {
       remove[cat.uniqueField],
     ]),
   };
+}
+
+// The `?catalog=` query parameter, validated once. Both admin endpoints that
+// take one wrote their own `resolve()` - near-identical, and differing only in
+// that one also returned the URLSearchParams it had already built. Returning
+// both makes one function serve both callers.
+//
+// The check is deliberately two-sided: a key must name a catalog the field
+// config knows AND one MERGE_REFS can rewrite references for. A catalog added
+// to the first without the second would otherwise reach a merge that cannot
+// repoint anything that cites it.
+export function resolveCatalog(request) {
+  const params = new URL(request.url).searchParams;
+  const key = params.get('catalog');
+  if (!getCatalog(key) || !MERGE_REFS[key]) return { err: json({ error: 'Unknown catalog' }, 400) };
+  return { key, params };
 }

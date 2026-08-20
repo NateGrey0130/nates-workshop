@@ -119,3 +119,9 @@ SELECT class_id,
   FROM imported_classes
  WHERE class_id IN ('burster', 'wild-psi-stalker', 'warlock', 'long-bowman', 'dog-boy', 'priest-of-light', 'mystic', 'shifter')
  ORDER BY class_id;
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('fix-dead-skill-restrictions.sql');

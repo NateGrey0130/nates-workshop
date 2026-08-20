@@ -30,7 +30,11 @@ nates-workshop/
 │   │                         Idempotent: every statement IF NOT EXISTS
 │   └── migrations/           One-shot ALTERs, tracked in schema_migrations
 ├── scripts/
-│   └── d1-apply.mjs          The migration/data-script apply routine
+│   ├── d1-apply.mjs          The migration/data-script apply routine
+│   ├── sql-statements.mjs    Splitting .sql into statements; d1-apply and the
+│   │                         smoke test share it
+│   ├── class-check.mjs       Checks a class definition before it lands
+│   └── class-check-lib.mjs   The checks themselves, so the smoke test can run them
 └── functions/
     └── api/
         ├── _lib/access.js    Cloudflare Access identity — the ONE place the
@@ -38,7 +42,7 @@ nates-workshop/
         ├── _lib/claude-client.js  The only code that calls the Anthropic API
         ├── claude.js         /api/claude — proxy (model allowlist + token cap)
         ├── media.js          /api/media — MediaVault CRUD, per-user via Access
-        └── character-creator/  ~20 endpoints + _lib; see the app README
+        └── character-creator/  35 endpoints + _lib; see the app README
 ```
 
 Cloudflare Pages deploys `functions/` as serverless Workers automatically —

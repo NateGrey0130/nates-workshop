@@ -52,6 +52,7 @@ Access gate. No build step, no framework, no dependencies.
   - [Unmodelled keys](#unmodelled-keys)
 - [Local development](#local-development)
 - [Production configuration](#production-configuration)
+  - [Standing up a new environment](#standing-up-a-new-environment)
   - [The migration convention](#the-migration-convention)
   - [Data scripts](#data-scripts)
 - [Known limitations and refactor candidates](#known-limitations-and-refactor-candidates)
@@ -90,6 +91,7 @@ apps/character-creator/
 │                             thing it is played as (ES module)
 ├── js/api.js                 The one HTTP helper for all five pages, and
 │                             errorDetails() (classic script)
+│   (also loaded by every page: /shared/js/ui.js, for escHtml — see below)
 ├── js/picker.js              Catalog picker filtering — matching, the filter
 │                             input, and caret restore (classic script, same
 │                             reason as derive.js)
@@ -171,11 +173,17 @@ away, so the same 422 explained itself on one page and said
 `jsonReq` is deliberately **not** shared: the sheet's takes `(method, body)` and
 the importer's takes `(body)` and always posts.
 
+**Every page also loads `/shared/js/ui.js` first**, and this app uses exactly one
+thing from it: `escHtml`, which is the escaper behind almost every template
+literal here. It is a workshop-wide file rather than this app's, so changing it
+touches MediaVault and FilamentForge too — they use its `openModal` /
+`closeModal` / `copyWithFeedback`, which this app does not.
+
 ---
 
 ## Data model
 
-Eighteen tables in one shared D1 database (`nates-workshop-media`, bound as `DB`).
+Nineteen tables in one shared D1 database (`nates-workshop-media`, bound as `DB`).
 `media_items` belongs to MediaVault and `schema_migrations` is database
 bookkeeping shared by both; the rest are this app.
 
@@ -221,10 +229,20 @@ ppe and isp.
 | `spells` | `system` NULL means unrestricted. name, level, ppe, plus a stat block (range, duration, damage, saving throw, area of effect, casting time, description). The stat block is TEXT — books write "100 feet per level" as often as a number. |
 | `psionic_powers` | name, category (Healing/Physical/Sensitive/Super), isp, plus range, duration, saving throw and description — the same field names spells use. `min_tier` is the psychic tier a book states is required; NULL means no restriction beyond the category. |
 
-All catalogs carry `source` (`seed` \| `import`) and `source_book`, so an entry's
-provenance is visible and the same skill from two books can coexist under
-distinguished names. Rows created as stubs by the class importer have zeroed
-numbers — the skill importer exists to fill them in.
+Every catalog carries `source_book`, so an entry's provenance is visible and
+the same skill from two books can coexist under distinguished names.
+
+`skills`, `spells` and `psionic_powers` also carry `source` (`seed` \| `import`),
+and a stub the class importer created is spotted by that plus zeroed numbers.
+**`gear` has no `source` column.** It never did, so its stub marker is the
+description instead: rows created by a class import open with `STUB —`, and a
+row edited by hand loses the prefix and correctly stops counting as one. The
+four `isStub` rules live together in `_lib/import-engine.js`; gear's is the
+odd one out and the comment there says why.
+
+Data scripts that create such a row must build that em-dash with
+`'STUB ' || char(8212) || ' ...'` rather than embedding it, or the marker
+arrives as mojibake and the row is a stub nothing can find.
 
 **Working state** — not content, and not a character
 
@@ -235,6 +253,7 @@ numbers — the skill importer exists to fill them in.
 | `import_sessions` | One resumable catalog import. `catalog` is which of the four it feeds, `system` is stamped on every row the session confirms, `closed_at` NULL means still open. |
 | `import_staged` | Rows one page range extracted, held until confirmed. `payload` is the extracted row as JSON, `match_name` the catalog row it duplicates, `action` the `insert` / `update` / `ignore` decision, `confirmed_at` NULL means still pending. Cascades from its session. |
 | `play_events` | Play mode's action log, append-only. `payload` is JSON — a note, and `{from, to}` changes for undo. `undone_at` NULL means the event stands; undo marks, never deletes. Commentary, not a ledger: the character row stays the source of truth and nothing replays events |
+| `data_script_runs` | Which `apps/character-creator/db/*.sql` data scripts have run here, and when. One row per **run**, not per file — those scripts guard every statement, so one is safe to re-run and safe to run early, and an applied-once flag would record a deliberate no-op as done. `note` non-NULL means the run was asserted rather than observed. See [Data scripts](#data-scripts). |
 
 ---
 
@@ -401,6 +420,14 @@ Three layers, all built on one identity read.
    its campaign's `gm_email`; `campaignAccess()` is GM-only. Reads stay open to
    any authenticated user; only writes are gated. `campaigns.gm_notes` is the
    single read exception and is stripped server-side.
+
+   Endpoints reach it through **`requireCharacter(request, env, id)`**, which
+   returns `{ res }` to return or `{ email, access }` to use — the same shape
+   `requireAdmin()` uses. Pass `{ write: false }` for a read. Every handler
+   under `characters/[id]` previously opened with the same five lines, and the
+   order within them is load-bearing: **404 before 403**, so probing ids cannot
+   distinguish a character that is not yours from one that does not exist.
+   That is precisely the kind of detail that goes wrong on the ninth copy.
 3. **Admin** — `isAdminEmail()` compares the identity against the `ADMIN_EMAIL`
    environment variable and **fails closed** when unset. Admin gates both
    importers, which touch global catalogs rather than one campaign.
@@ -2142,6 +2169,14 @@ Optional character/campaign test rows:
 npx wrangler d1 execute DB --local --file apps/character-creator/db/seed-dev.sql
 ```
 
+**Apply that one on its own, not through a glob.** It is the only data script
+that is not re-runnable — its inserts are unguarded and a second pass fails on
+`gear.slug` — and `d1-apply.mjs` stops at the first failure, so
+`--local apps/character-creator/db/*.sql` against an already-seeded database
+dies on `seed-dev.sql` and never reaches `untag-cross-system.sql`, the only file
+that sorts after it. Under `--remote` the question does not arise: the file's
+`-- local-only` marker makes the glob skip it.
+
 Smoke test (parser + schema):
 
 ```bash
@@ -2281,6 +2316,64 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `021-spell-ppe-note.sql` | `ppe_note` on `spells` — the same variable-cost shape as 020, for spells; `ppe` keeps the minimum the use button deducts |
 | `022-play-events.sql` | `play_events` — play mode's append-only action log: undo, the who-did-what trail, and the session recap boundary |
 | `023-skill-bonuses.sql` | `skills.bonuses` — what a skill grants beyond its percentage, in a class's `bonuses:` shape. Boxing is +1 attack per melee and +2 P.S. |
+| `024-data-script-runs.sql` | `data_script_runs` — which data scripts have run against this database. The same question `schema_migrations` answers for migrations, for the 55 scripts that answer it nowhere |
+
+### Standing up a new environment
+
+Verified end to end; the counts below are what a clean run produces.
+
+```bash
+node scripts/d1-apply.mjs --remote db/schema.sql
+node scripts/d1-apply.mjs --remote db/seed-catalogs.sql
+node scripts/d1-apply.mjs --remote apps/character-creator/db/*.sql
+```
+
+The glob is expanded by `d1-apply.mjs` itself, sorted — PowerShell does not
+expand globs for native commands, so the same line works in either shell. It
+prints `skipping ... marked local-only` for `seed-dev.sql`, which inserts a test
+campaign and character and must never reach production. That exclusion is the
+file's own `-- local-only` marker, not a list kept in the script, so a new
+local-only script is protected as soon as it says so.
+
+| After | Rows |
+|---|---|
+| classes (published, live) | 23 |
+| skills | 231 |
+| spells | 366 |
+| psionic powers | 52 |
+| gear (95 of them still name-only stubs) | 407 |
+
+**Do not run the migrations on a new database.** This is the part that looks
+wrong and is not: `db/schema.sql` already contains every column the migrations
+add, so on a fresh database **18 of the 24 would fail** — `duplicate column
+name: bio`, `no such table: items`, and so on. They exist to bring an EXISTING
+database forward, and `schema.sql` records all 24 as applied the moment it runs,
+guarded on the schema feature each one adds. A fresh database is current
+immediately and says so.
+
+So the two directions never mix:
+
+| | new database | existing database |
+|---|---|---|
+| `db/schema.sql` | **yes** — creates everything, records every migration | yes — harmless, and how you backfill the records |
+| `db/migrations/*.sql` | **no** — 18 of 24 error | yes — the ones it has not had, in order |
+| `db/seed-catalogs.sql` | yes | no — it seeds the ORIGINAL three classes |
+| `apps/character-creator/db/*.sql` | yes — the corrections on top | as needed; the log says which have run |
+
+`seed-catalogs.sql` seeds the three classes **as originally written, not as the
+rules audit corrected them**, which is why the data scripts follow it rather
+than being optional. Apply them in filename order; every one guards itself, so
+a script whose moment has not come does nothing and can be re-run later.
+
+Then confirm, rather than trusting the exit codes:
+
+```sh
+npx wrangler d1 execute DB --remote --command \
+  "SELECT (SELECT count(*) FROM schema_migrations) AS migrations,
+          (SELECT count(*) FROM imported_classes WHERE status='published') AS classes,
+          (SELECT count(*) FROM skills) AS skills,
+          (SELECT count(*) FROM data_script_runs) AS script_runs;"
+```
 
 ### The migration convention
 
@@ -2296,8 +2389,20 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
   an unguarded insert would mark an old, un-migrated database as migrated, which
   is exactly the lie this table exists to prevent. Add a guarded line to that
   block whenever you add a migration.
+- **A migration that adds a column must add it to `schema.sql`'s `CREATE` too.**
+  The two are not alternatives: the migration brings an existing database
+  forward, the `CREATE` is what a brand-new one gets. Skipping the second half
+  is invisible until someone builds a fresh environment. It has happened —
+  `020` and `021` added `isp_note` / `ppe_note`, neither reached `schema.sql`,
+  and the documented local-dev recipe produced a database whose very first API
+  call (`/catalogs`, which selects both) failed.
 - The smoke test fails if a file in `db/migrations/` has no matching row, or if a
-  recorded row has no matching file.
+  recorded row has no matching file. It separately fails if a migrated column is
+  missing from `schema.sql`'s `CREATE`, if a migration has no seed line there, or
+  if a seed line is unguarded — those read the files rather than the database,
+  because the database check cannot see any of it. The local database has had the
+  migrations applied to it by hand, so it reports itself current however wrong
+  `schema.sql` is.
 
 Running `db/schema.sql` against an already-current database is therefore how you
 backfill the records — no separate backfill migration is needed.
@@ -2305,19 +2410,27 @@ backfill the records — no separate backfill migration is needed.
 ### Data scripts
 
 `apps/character-creator/db/*.sql` are a different thing from `db/migrations/`
-and are easy to mistake for them. A migration changes **schema** and is tracked
-in `schema_migrations`; these change **rows**, are tracked nowhere, and are run
-by hand once per environment as needed.
+and are easy to mistake for them. A migration changes **schema**; these change
+**rows**, and are run by hand per environment as needed.
+
+They used to be tracked nowhere, which left "has production had the Juicer
+correction?" answerable only by querying the rows it writes and inferring —
+the same guessing game `schema_migrations` was created to end. Migration 024
+added `data_script_runs` and every script now ends by writing itself into it.
 
 | Kind | Files | What they are |
 |---|---|---|
 | Dev seed | `seed-dev.sql` | Optional local character/campaign rows. Never applied to production |
-| Data cleanup | `backfill-gear-system.sql`, `backfill-import-skill-gaps.sql`, `backfill-psionic-isp-notes.sql`, `backfill-skill-provenance.sql`, `backfill-spell-ppe-notes.sql`, `merge-scuba-duplicate.sql`, `retire-gear-placeholders.sql`, `untag-cross-system.sql` | One-off corrections to rows an earlier import or data script got wrong or left NULL |
+| Run tracking | `backfill-data-script-runs.sql` | One-time, optional, and an **assertion**: records every script that had already been applied before `data_script_runs` existed, stamped with a note saying the run was asserted rather than observed. Guarded per filename, so it cannot double-record a script that has genuinely run since |
+| Data cleanup | `backfill-gear-system.sql`, `backfill-import-skill-gaps.sql`, `backfill-psionic-isp-notes.sql`, `backfill-skill-provenance.sql`, `backfill-spell-ppe-notes.sql`, `merge-scuba-duplicate.sql`, `retire-gear-placeholders.sql`, `retire-orphan-gear-stubs.sql`, `untag-cross-system.sql` | One-off corrections to rows an earlier import or data script got wrong or left NULL |
 | Class corrections | `fix-*.sql`, `apply-*.sql`, `long-bowman-money.sql` | The rules audit's output: stored class definitions rewritten against the books, and class data written for a schema feature the day it landed |
 | Additions | `add-*.sql` | Something the book gives that the database never had — a catalog row, a whole-table batch extracted from page scans (`add-pf-weapons-batch`, `add-pf-equipment-batch`, the RUE spell and psionics batches), or a whole class. A missing skill named in an `only` restriction narrows its category to nothing, which is usually how one gets noticed. A class goes in this way only when the import tool cannot be reached: production sits behind Cloudflare Access, so a hand-transcribed class is applied by script instead |
 
-Two conventions hold across all of them, and both matter more here than in a
-migration, because nothing records that one has run:
+Three conventions hold across all of them, with one stated exception: the
+dev seed is a different kind of file and follows only the third. Its inserts
+are unguarded and re-applying it fails on `gear.slug`, which is the right
+behaviour for a file whose whole job is to put known rows into an empty
+local database.
 
 - **Every statement guards itself**, so a script is safe to run twice and safe
   to run *early*. `retire-gear-placeholders.sql` is the clearest case — it does
@@ -2327,6 +2440,29 @@ migration, because nothing records that one has run:
 - **Each one opens with the book and page it is correcting against**, because a
   script that rewrites a class is a claim about a source, and six months later
   the citation is the only way to check it.
+- **Each one ends by recording its own run**:
+  `INSERT INTO data_script_runs (filename) VALUES ('<this-file>.sql');`
+  One row per **run**, not per file, and deliberately not keyed on the
+  filename — because of the guard convention above. A script that ran early
+  and correctly did nothing has still run, and an applied-once flag would
+  record that no-op as done and hide that the real work never happened.
+  `retire-gear-placeholders.sql` is exactly that case. The smoke test fails if
+  a script has no footer, or if a copy-pasted one names a different file —
+  which logs the wrong script and looks entirely fine.
+
+What an environment has had run, and when:
+
+```sh
+npx wrangler d1 execute DB --remote --command \
+  "SELECT filename, count(*) AS runs, max(run_at) AS last_run,
+          max(note) AS asserted FROM data_script_runs
+    GROUP BY filename ORDER BY last_run DESC;"
+```
+
+A script on disk with no row there has never been run against that database.
+The reverse — a row for a file that no longer exists — is fine and expected:
+unlike migrations, a data script may be deleted once its correction is folded
+into the class it rewrote, and the log keeps the record that it ran.
 
 The audit that produced most of them is [`docs/rules-audit.md`](docs/rules-audit.md).
 
@@ -2350,6 +2486,29 @@ a fully successful run. Twice now, in different disguises:
   **Prefer `--command` for remote migrations.** It goes over the query API,
   takes multiple statements separated by `;`, and has not failed. Use `--file`
   locally, where none of this applies.
+
+  **`--command` fights PowerShell over double quotes.** PowerShell has no
+  backslash escaping, so `\"` inside a double-quoted `--command` does not
+  escape anything — the string ends early and the rest word-splits into
+  arguments wrangler rejects. That bites hardest on exactly the queries most
+  worth running remotely, because class markdown cites gear as
+  `item_id: "slug"` with real double quotes in it.
+
+  Build them in SQL instead, the same way `char(8212)` already handles the
+  em-dash: `instr(markdown, 'item_id: ' || char(34) || 'energy-rifle' ||
+  char(34))`. The command then carries no inner double quote at all.
+
+  **`scripts/d1-apply.mjs` is not affected** and needs none of this: it spawns
+  wrangler with a real argv array and no shell, so a statement passes through
+  untouched however it is quoted. The trap is only for a `--command` typed at
+  a PowerShell prompt.
+
+  **Reading a result set back is easier as a file than as terminal output.**
+  `--json | Out-File -Encoding utf8 out.json` gives you something to parse
+  rather than something to transcribe. Slugs are the reason: `ng-l5-northern-
+  gun-laser-rifle` reads as `ng-15-` in most terminal fonts, and a `from:`
+  list naming a slug that does not exist is worse than the placeholder it
+  replaces.
 
 The check that settles it, every time:
 
@@ -2399,6 +2558,27 @@ catalog there is currently very little to restrict.
 **The catalog editor has no general delete.** Rows are created and corrected by
 hand; the only deletion is the one a merge performs. Deliberate — see
 [`docs/plans/04-catalog-edit-ui.md`](docs/plans/04-catalog-edit-ui.md).
+
+**Most of the gear catalog is still name-only stubs.** A class import creates
+a stub row for every equipment id it cannot find, so the catalog holds a row
+per name any class has ever mentioned. Production carried 157 of them; 33 were
+orphaned by later class corrections and referenced by nothing at all, and
+`retire-orphan-gear-stubs.sql` drops those. The rest are real book items the
+gear importer has not reached yet - the equipment chapter import filled in the
+weapons but not the general kit, so `Canteen` and `Backpack` are still empty.
+They are cited by live classes and must stay.
+
+A handful are neither: categories the importer emitted as ids before choice
+groups existed. `energy-pistol` and `vibro-blade` were fixed by
+[`retire-gear-placeholders.sql`](db/retire-gear-placeholders.sql) and
+`energy-rifle` by [`fix-shifter-energy-rifle.sql`](db/fix-shifter-energy-rifle.sql).
+Still outstanding, each needing the book rather than a guess:
+`submachine-gun` (shifter), `mdc-body-armor` (merc-soldier, psi-stalker,
+wild-psi-stalker), `musical-instrument` (mystic), `robe-or-cape` and
+`pen-or-pencil` (ley-line-walker, ley-line-rifter), `lesser-rune-weapon` and
+`basic-provisions` (godling). Each is a character starting play holding
+something that does not exist, so they are worth clearing - but a `from:` list
+invented rather than read is the failure the import rules exist to prevent.
 
 **A gear choice must enumerate its options.** `{ choose, from }` takes an
 explicit list of slugs, because gear's `category` (weapon/armor/vehicle/gear) is
@@ -2478,16 +2658,23 @@ and renders a picker from each, so a truncated response would silently hide
 valid choices rather than showing fewer rows. Those are bounded by book content;
 the others grow with play.
 
-**The three page scripts are long, and deliberately not split.** `app.js` is
-roughly 1,700 lines, `import.js` roughly 1,000 and `sheet.js` roughly 900 — treat those
-as orders of magnitude, not figures, since they move with every change and the
-last written-down set had drifted by 20%. Each drives one page and each does
-several jobs. Splitting was considered and rejected: there is no build step,
-so there is no bundler — splitting means more `<script>` tags, hand-managed load
-order, and the classic-script/module distinction to keep straight. The cost is
-real and the benefit is aesthetic. `import.js` is the clearest seam if this is
-ever revisited, since its class, skills and session-based flows share a page and
-almost no logic.
+**The page scripts are long, and deliberately not split.** Five pages, and the
+three largest are `app.js` at roughly 1,900 lines, `sheet.js` roughly 1,600 and
+`import.js` roughly 1,000; `catalog.js` is around 700 and `dashboard.js` barely
+100. `js/parser.js`, at roughly 1,200, is the second-largest file in the app and
+is not a page script at all. Treat all of those as orders of magnitude rather
+than figures — they move with every change, and the set written down before this
+one had drifted by 80% on `sheet.js` while claiming a 20% tolerance, which is
+the argument for reading them as sizes and not as measurements.
+
+Each page script drives one page and each does several jobs. Splitting was
+considered and rejected: there is no build step, so there is no bundler —
+splitting means more `<script>` tags, hand-managed load order, and the
+classic-script/module distinction to keep straight. The cost is real and the
+benefit is aesthetic. That case was argued when `sheet.js` was around 900 lines
+and it has since nearly doubled, so it is worth re-examining rather than
+inheriting. `import.js` remains the clearest seam, since its class, skills and
+session-based flows share a page and almost no logic.
 
 **Passing SQL files to `wrangler d1 execute` on Windows can mangle non-ASCII.**
 Importing 80 skills wrote `Chemistry — Analytical` into production as

@@ -1,4 +1,4 @@
--- One-off data cleanup, run once per environment. NOT a migration — it changes
+-- One-off data cleanup, run once per environment. NOT a migration - it changes
 -- rows, not schema, and it is only correct for the specific placeholder gear
 -- the early class imports invented.
 --
@@ -12,7 +12,7 @@
 --
 -- BACKGROUND. Before equipment_starting supported choice groups, a class whose
 -- book said "one energy pistol of choice" had nowhere to put that, so the
--- importer emitted a fixed item_id naming the CATEGORY — `energy-pistol`,
+-- importer emitted a fixed item_id naming the CATEGORY - `energy-pistol`,
 -- `vibro-blade`, `energy-rifle`, `ancient-weapon`. The class importer then
 -- created a stub catalog row for each, because that is what it does for any
 -- referenced item it cannot find.
@@ -27,10 +27,10 @@
 -- them. So each rewrite requires its own options to be present, and a placeholder
 -- is only dropped once no live class still cites it.
 
--- ── 1. The Juicer's two placeholders become real choices ──
+-- -- 1. The Juicer's two placeholders become real choices --
 -- The options are the catalog's actual weapons of each kind. The book says
 -- "of choice" without enumerating, so this is the available set, not a claim
--- about what the page lists — widen it as more books are imported.
+-- about what the page lists - widen it as more books are imported.
 --
 -- Guarded on all four options existing: a rewrite that pointed at absent slugs
 -- would be strictly worse than the placeholder it replaced.
@@ -57,7 +57,7 @@ WHERE class_id = 'juicer'
 
 -- Point the JA-11 citation straight at the book's entry, once that entry exists.
 -- The redirect left by the merge already resolves the old slug, so this is
--- tidiness rather than a fix — and without the guard it would be the opposite,
+-- tidiness rather than a fix - and without the guard it would be the opposite,
 -- replacing a slug that resolves with one that does not.
 UPDATE imported_classes
 SET markdown = replace(markdown,
@@ -68,10 +68,10 @@ WHERE class_id = 'juicer'
   AND instr(markdown, 'item_id: "ja-11-energy-rifle"') > 0
   AND EXISTS (SELECT 1 FROM gear WHERE slug = 'ja-11-juicer-assassin-s-energy-rifle');
 
--- ── 2. Characters keep what they hold, as freeform lines ──
+-- -- 2. Characters keep what they hold, as freeform lines --
 -- Only for placeholders that are actually about to be retired. The placeholder
 -- was never a real item, so a freeform inventory line naming it is the truthful
--- representation — and it is the same shape the wizard already falls back to.
+-- representation - and it is the same shape the wizard already falls back to.
 -- The CHECK constraint allows a NULL item_id exactly when custom_name is set, so
 -- these two columns must move together.
 UPDATE character_items
@@ -84,7 +84,7 @@ WHERE item_id IN (
     AND NOT EXISTS (SELECT 1 FROM imported_classes c
                     WHERE c.deleted_at IS NULL AND instr(c.markdown, 'item_id: "' || g.slug || '"') > 0));
 
--- ── 3. Drop the placeholders no class still cites ──
+-- -- 3. Drop the placeholders no class still cites --
 -- In an environment where step 1 could not run, the Juicer still names two of
 -- them and they correctly survive.
 DELETE FROM gear
@@ -92,7 +92,7 @@ WHERE slug IN ('energy-pistol', 'energy-rifle', 'vibro-blade', 'ancient-weapon')
   AND NOT EXISTS (SELECT 1 FROM imported_classes c
                   WHERE c.deleted_at IS NULL AND instr(c.markdown, 'item_id: "' || gear.slug || '"') > 0);
 
--- ── 4. Report ──
+-- -- 4. Report --
 SELECT (SELECT count(*) FROM gear
         WHERE slug IN ('energy-pistol', 'energy-rifle', 'vibro-blade', 'ancient-weapon')) AS placeholders_left,
        (SELECT count(*) FROM imported_classes
@@ -106,3 +106,9 @@ SELECT (SELECT count(*) FROM gear
           'ng-33-northern-gun-laser-pistol', 'wilk-s-320-laser-pistol',
           'ng-57-northern-gun-heavy-duty-ion-blaster', 'ng-super-laser-pistol-and-grenade-launcher',
           'vibro-knife', 'vibro-saber', 'vibro-sword', 'vibro-claws')) AS options_available_of_8;
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('retire-gear-placeholders.sql');

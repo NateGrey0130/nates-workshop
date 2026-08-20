@@ -65,3 +65,9 @@ SELECT 'shifter spells still missing (expect 0)' AS check_name,
   FROM spells
  WHERE name IN ('Dimensional Portal', 'Re-Open Gateway', 'Summon and Control Canines',
                 'Summon and Control Rodents', 'Sustain', 'Time Slip');
+
+-- Records this run. One row per run rather than per file: every statement
+-- above guards itself, so this script is safe to re-run and safe to run
+-- early, and a run that correctly did nothing is still a run that happened.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('add-shifter-catalog-gaps.sql');
