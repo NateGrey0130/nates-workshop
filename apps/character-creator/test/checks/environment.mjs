@@ -742,6 +742,48 @@ check('with nothing at level 3, before the ladder starts',
   !skillConditionalBonuses([ep], 3).some((c) => c.applies_when === 'with an energy rifle'),
   JSON.stringify(skillConditionalBonuses([ep], 3)));
 
+// The four W.P.s that were nearly merged away as older-edition duplicates.
+// They are not duplicates: each carries its own bonuses, and the Revolver's
+// aimed shot is +4 where every other modern handgun proficiency gives +3.
+// Merging would have deleted that difference from every character holding it,
+// silently and with nothing left to recover it from — so it is pinned here.
+const restSql = readFileSync(join(appDir, 'db', 'backfill-blank-skills.sql'), 'utf8');
+const rest = [...restSql.matchAll(/UPDATE skills SET level_bonuses = '(\[.*?\])'(?:,\s*\n\s*source_book = '[^']*')?\s*\n\s*WHERE name = '([^']+)';/g)]
+  .map((m) => ({ name: m[2], level_bonuses: m[1].replace(/''/g, "'") }));
+check('the remaining four W.P.s are filled in', rest.length === 4, rest.map((r) => r.name).join(', '));
+
+const aimed = (name) => skillConditionalBonuses([rest.find((r) => r.name === name)], 1)
+  .find((c) => c.applies_when === 'taking an aimed shot')?.combat.strike;
+check('the Revolver keeps its +4 aimed shot', aimed('W.P. Revolver') === 4, aimed('W.P. Revolver'));
+check('and the other two stay at +3',
+  aimed('W.P. Automatic Pistol') === 3
+  && aimed('W.P. Automatic and Semi-automatic Rifles') === 3,
+  aimed('W.P. Automatic Pistol') + ' / ' + aimed('W.P. Automatic and Semi-automatic Rifles'));
+check('so the Revolver is NOT interchangeable with the others',
+  aimed('W.P. Revolver') !== aimed('W.P. Automatic Pistol'),
+  'if these ever match, the merge that was called off has happened by accident');
+
+check('these four leak nothing unconditional either',
+  bonusesFromSkills(rest, 15) === undefined, JSON.stringify(bonusesFromSkills(rest, 15)));
+
+// W.P. Rope's entangle and disarm are flat rather than a ladder, and it comes
+// from New West — the bulk RUE import had stamped its own page range on it.
+const rope = skillConditionalBonuses([rest.find((r) => r.name === 'W.P. Rope')], 15)[0];
+check('W.P. Rope is +5 strike by level 15, with flat entangle and disarm',
+  rope?.combat.strike === 5 && rope?.combat.entangle === 1 && rope?.combat.disarm === 1,
+  JSON.stringify(rope));
+check('and is credited to Rifts New West rather than the core book',
+  restSql.includes("source_book = 'Rifts New West'"),
+  'the RUE bulk import stamped a page range on a skill from another book');
+
+// The two language rows are percentile, not schedules, so they are checked as
+// text in the script rather than through the bonus path.
+check('Literacy: Dragonese/Elven is set to 30% +5%',
+  restSql.includes('SET base = 30, per_level = 5'));
+check('Language: All (magical) records that it is not a purchasable skill',
+  restSql.includes('base = 98') && restSql.includes('NOT a purchasable skill'),
+  'a 0/0 row reads as unfilled; this one is an ability line');
+
 // The two skills whose entry is prose only — Paired Weapons and Quick Draw,
 // whose bonus scales with P.P. rather than level — must still say something.
 for (const name of ['W.P. Paired Weapons', 'W.P. Quick Draw']) {
