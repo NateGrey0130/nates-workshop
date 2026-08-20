@@ -32,6 +32,7 @@ Access gate. No build step, no framework, no dependencies.
 - [Unfinished builds are saved](#unfinished-builds-are-saved)
 - [Starting gear the class leaves open](#starting-gear-the-class-leaves-open)
 - [Psychic tiers](#psychic-tiers)
+- [A blocked step says why](#a-blocked-step-says-why)
 - [How the sheet updates](#how-the-sheet-updates)
 - [Play mode](#play-mode)
 - [Server-side rule enforcement](#server-side-rule-enforcement)
@@ -1417,6 +1418,33 @@ that duplicates one is dropped so the list stays a set.
 Master psychics, 15+ for everyone else — non-psychics included, since they get
 attacked by psionics too. `deriveSaves()` previously returned only the M.E. bonus
 and no number to roll against. It is overridable like every other derived value.
+
+---
+
+## A blocked step says why
+
+Three wizard steps gate their primary button: **Class** (a variant, a power or
+an occupation still to choose), **Attributes** (a value missing, a class minimum
+unmet, or point-buy overspent) and **Equipment** (an unresolved gear choice).
+
+Each renders the reason as a `.nav-why` span **between Back and the primary
+button**, and the class step also scrolls the outstanding picker into view. The
+reason and the disabled state come from ONE function per step — `classBlock()`
+and its equivalents — so they cannot disagree. A greyed button with no reason,
+or a reason beside a live button, are each worse than either alone.
+
+This exists because a disabled button was the entire explanation. Picking a Ley
+Line Walker greyed the primary action with no visible cause, and the requirement
+(choose a power) rendered below the fold. Reported as "nothing happens".
+
+**Adding a fourth gated step means adding its reason too.** The pattern is one
+function returning the sentence, the button deriving `disabled` from it, and
+`.nav-why` in the nav row — which is also the only ordering that wraps onto its
+own line under 620px.
+
+Separately, `shared/styles.css` dims any `:disabled` button to 0.45 and sets
+`cursor: not-allowed`. Nothing styled that before, so a button you could not
+press was pixel-identical to one you could, in all three workshop apps.
 
 ---
 
