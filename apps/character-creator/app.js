@@ -443,6 +443,8 @@ function renderClass() {
       inner += `<p class="muted" style="margin-top:12px">Answer all three to see your shortlist.</p>`;
     }
   }
+  // Computed once: the sentence and the disabled state come from the same call.
+  const blocker = classBlocker();
   $('app').innerHTML = `
   <div class="panel">
     <h2>Pick your class <span class="muted small">(${esc(S.system)})</span></h2>
@@ -457,7 +459,8 @@ function renderClass() {
     ${abilityPicker()}
   </div>
   <div class="nav"><button class="btn btn-ghost" onclick="goStep(0)">&larr; Back</button>
-  <button class="btn btn-primary" ${canUseClass() ? '' : 'disabled'} onclick="confirmClass()">Use this class &rarr;</button></div>`;
+  ${S.cls && blocker ? `<span class="nav-why">${esc(blocker)}</span>` : ''}
+  <button class="btn btn-primary" ${blocker ? 'disabled' : ''} onclick="confirmClass()">Use this class &rarr;</button></div>`;
 }
 // A class's display name when the catalog is loaded, its id when not — the
 // existing-characters list renders before /classes resolves on a cold start.
@@ -541,35 +544,63 @@ function pickClass(id) {
 // scrolling is verifiable, and it is also the unambiguous answer to 'did that
 // do anything'.
 function revealClassDetail() {
-  const el = document.getElementById('class-detail');
+  // The outstanding choice if there is one, the detail otherwise. Scrolling to
+  // the detail alone put a Ley Line Walker's power picker back below the fold,
+  // which is the same failure one screen further down.
+  const { anchor } = classBlock();
+  const el = document.getElementById(anchor || '') || document.getElementById('class-detail');
   if (!el || typeof el.scrollIntoView !== 'function') return;
   el.scrollIntoView({ behavior: 'auto', block: 'start' });
 }
 // A class with variants is not usable until one is chosen — a Dragon is always
 // some particular age, and defaulting to the first stage would pick for you.
-function canUseClass() {
-  if (!S.cls) return false;
-  if ((S.cls.variants || []).length && !S.variant) return false;
+// What is still outstanding before this class can be used, as a sentence, or
+// '' when nothing is. The button's disabled state is derived from this rather
+// than computed alongside it, so the two cannot disagree — a greyed button
+// with no reason, or a reason next to a live button, are both worse than
+// either problem alone.
+//
+// This exists because a disabled button IS the whole explanation otherwise.
+// Picking a Ley Line Walker greys it out with no visible cause; the answer
+// (choose a power) is real, reasonable, and was never stated.
+function classBlocker() { return classBlock().why; }
+
+// The blocking requirement AND where on the page to resolve it. One function,
+// because the sentence, the disabled button and the scroll target all have to
+// describe the same requirement or they send the reader three ways.
+function classBlock() {
+  if (!S.cls) return { why: 'Pick a class to continue.', anchor: null };
+  if ((S.cls.variants || []).length && !S.variant) {
+    return { why: `Choose which ${S.cls.name} to continue.`, anchor: 'variant-picker' };
+  }
   // Every power the class asks for must be chosen before the rolls that depend
   // on them. Same reasoning as an unresolved gear choice: the book intends the
   // character to have them, so leaving one blank is an oversight rather than a
   // deliberate omission. Unspent SKILL picks are banked instead, because those
   // are earned over time.
   const owed = abilityGroups(S.cls).reduce((n, g) => n + (+g.choose || 0), 0);
-  if (S.abilities.length < owed) return false;
+  const short = owed - S.abilities.length;
+  if (short > 0) {
+    return { why: `Choose ${short} more ${short === 1 ? 'power' : 'powers'} to continue.`,
+             anchor: 'ability-picker' };
+  }
   // An ability that names occupations (Magic Powers) is not resolved until
   // one of them is chosen - same rule as the ability count above.
   const occNeed = abilityOccOptions(S.cls, S.abilities);
-  if (occNeed && (!S.occ || !occNeed.options.includes(S.occ))) return false;
-  return true;
+  if (occNeed && (!S.occ || !occNeed.options.includes(S.occ))) {
+    return { why: `Choose an occupation for ${occNeed.name} to continue.`, anchor: 'occ-picker' };
+  }
+  return { why: '', anchor: null };
 }
+
+function canUseClass() { return !classBlocker(); }
 
 // Which stage of the class. Shown only when the class has stages, so every
 // other class is unaffected.
 function variantPicker() {
   const variants = S.cls?.variants || [];
   if (!variants.length) return '';
-  return `<div class="panel-inset">
+  return `<div class="panel-inset" id="variant-picker">
     <h3>Which ${esc(S.cls.name)}?</h3>
     <p class="muted small">These share their skills, abilities and lore, and differ in their
       attribute dice, pools and what the class grants.</p>
@@ -601,7 +632,7 @@ function occPicker() {
   const occNeed = abilityOccOptions(S.cls, S.abilities);
   if (occNeed) {
     const chosen = S.occ ? S.classes.find((c) => c.id === S.occ) : null;
-    return `<div class="panel-inset">
+    return `<div class="panel-inset" id="occ-picker">
     <h3>${esc(occNeed.name)} <span class="muted small">&mdash; pick the practitioner</span></h3>
     <p class="muted small">Taking <b>${esc(occNeed.name)}</b> means having one of these
       occupations composed into the character &mdash; its magic, its abilities and its
@@ -694,7 +725,7 @@ function abilityPicker() {
       </div>`;
     }).join('');
 
-    return `<div class="panel-inset">
+    return `<div class="panel-inset"${gi === 0 ? ' id="ability-picker"' : ''}>
       <h3>Powers <span class="muted small">&mdash; choose ${limit}</span></h3>
       <p class="muted small">Chosen now rather than later: these can add to attributes and pools,
         and both are rolled on the next two steps.</p>
