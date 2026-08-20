@@ -6,6 +6,25 @@ what to touch when adding to it. Guidance for working *in* the repo (D1 auth,
 the apply routine) is in `CLAUDE.md`; the character creator documents itself
 in `apps/character-creator/README.md`.
 
+## Where it lives
+
+<https://nates-workshop.pages.dev> — the Pages default, derived from
+`"name": "nates-workshop"` in `wrangler.jsonc`. The character creator is at
+`/apps/character-creator/`, because `pages_build_output_dir` is the repo root and
+nothing rewrites paths.
+
+**Cloudflare Access fronts every route, `/api/*` included**, so this URL is not
+reachable from anything without a session:
+
+| From | What you get |
+|---|---|
+| a browser you are logged into | the app |
+| `curl`, a script, an automated browser | **302 to the Access login wall** |
+
+That 302 is easy to misread as the site being down or a path being wrong. It is
+neither — it is the login wall doing its job. To check production from a tool,
+query D1 directly (see `CLAUDE.md`) rather than fetching the site.
+
 ## Project Structure
 
 ```
@@ -75,7 +94,7 @@ Settings → Environment variables, both encrypted:
 ## Access (the login wall)
 
 Cloudflare Zero Trust → Access fronts the whole site — application domain set
-to the Pages URL with the path blank, so every route including `/api/*` is
+to the Pages URL above with the path blank, so every route including `/api/*` is
 covered. The allow policy is a plain email list; add a friend by adding their
 email. Sessions are one-time email codes. There is **no Access policy-as-code
 in the repo** — it is dashboard-only.
