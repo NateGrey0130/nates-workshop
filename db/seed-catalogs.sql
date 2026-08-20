@@ -11,6 +11,17 @@
 
 -- 48 skills
 INSERT OR IGNORE INTO skills (name, category, base, per_level, systems, source) VALUES ('Climbing', 'Physical', 40, 5, NULL, 'seed');
+
+-- The five fighting styles. Seeded because the classes in this same file GRANT
+-- them: without a catalog row the grant resolves to nothing, and the level
+-- schedules in apps/character-creator/db/add-hand-to-hand-level-bonuses.sql
+-- update a row that is not there. base 0 is correct - they have no percentage.
+INSERT OR IGNORE INTO skills (name, category, base, per_level, systems, source) VALUES ('Hand to Hand: Basic', 'Physical', 0, 0, NULL, 'seed');
+INSERT OR IGNORE INTO skills (name, category, base, per_level, systems, source) VALUES ('Hand to Hand: Expert', 'Physical', 0, 0, NULL, 'seed');
+INSERT OR IGNORE INTO skills (name, category, base, per_level, systems, source) VALUES ('Hand to Hand: Martial Arts', 'Physical', 0, 0, NULL, 'seed');
+INSERT OR IGNORE INTO skills (name, category, base, per_level, systems, source) VALUES ('Hand to Hand: Assassin', 'Physical', 0, 0, NULL, 'seed');
+INSERT OR IGNORE INTO skills (name, category, base, per_level, systems, source) VALUES ('Hand to Hand: Commando', 'Physical', 0, 0, NULL, 'seed');
+
 INSERT OR IGNORE INTO skills (name, category, base, per_level, systems, source) VALUES ('Swimming', 'Physical', 50, 5, NULL, 'seed');
 INSERT OR IGNORE INTO skills (name, category, base, per_level, systems, source) VALUES ('Prowl', 'Physical', 25, 5, NULL, 'seed');
 INSERT OR IGNORE INTO skills (name, category, base, per_level, systems, source) VALUES ('Gymnastics', 'Physical', 30, 5, NULL, 'seed');

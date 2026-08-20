@@ -319,8 +319,17 @@
   global.derive = {
     // `bonuses` is optional throughout — a call that omits it behaves exactly
     // as it did before class bonuses existed.
-    combat: (attrs, stored, bonuses) =>
-      merge(addBonus(deriveCombat(effective(attrs, bonuses)), bonuses?.combat), stored),
+    combat: (attrs, stored, bonuses) => {
+      const base = deriveCombat(effective(attrs, bonuses));
+      // A Hand to Hand skill STATES how many attacks the character starts with
+      // (p.347) rather than adding to the base, so `attacks_base` replaces the
+      // number and is kept out of the summing path - added instead, a first
+      // level Expert would fight at six attacks rather than four.
+      const combat = bonuses?.combat || {};
+      const { attacks_base: attacksBase, ...adds } = combat;
+      if (typeof attacksBase === 'number') base.attacks = attacksBase;
+      return merge(addBonus(base, adds), stored);
+    },
     // psychicTier is optional — callers that do not know it get the 15+ target,
     // which is correct for a non-psychic.
     saves: (attrs, stored, psychicTier, bonuses) =>

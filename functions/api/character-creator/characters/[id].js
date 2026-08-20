@@ -10,6 +10,7 @@ import { getStored } from '../_lib/class-store.js';
 import { parseClassMarkdown } from '../../../../apps/character-creator/js/parser.js';
 import { composeClass } from '../../../../apps/character-creator/js/compose.js';
 import { loadSkillBonuses } from '../_lib/skill-bonuses.js';
+import { skillLevelNotes, skillConditionalBonuses } from '../../../../apps/character-creator/js/parser.js';
 
 export async function onRequestGet({ request, env, params }) {
   const email = getUserEmail(request);
@@ -85,8 +86,20 @@ export async function onRequestGet({ request, env, params }) {
   }
   if (cls) cls._retired = !!stored?.deleted_at || !!occRow?.deleted_at;
 
+  // What a fighting style grants that is not a number — "Karate Kick (2D6
+  // damage)", "Death blow on a Natural 20". The bonuses fold into the combat
+  // block above and need no help; these do not add up to anything, so without
+  // this the sheet could show a 7th level Expert's numbers while saying nothing
+  // about the four moves the character earned along the way.
+  const skill_level_notes = skillLevelNotes(skillRows, character.level);
+  // A W.P.'s bonuses apply only while that weapon is in hand, so they are
+  // deliberately kept OUT of the combat block above. They are still real and
+  // still accumulate by level, so they come back separately — a player who
+  // cannot see them cannot use them.
+  const weapon_bonuses = skillConditionalBonuses(skillRows, character.level);
+
   return json({
-    character, items, can_write, class: cls,
+    character, items, can_write, class: cls, skill_level_notes, weapon_bonuses,
     is_gm: email === character.campaign_gm,
     pending_picks,
     pending_picks_total: pending_picks.reduce((n, g) => n + g.count, 0),

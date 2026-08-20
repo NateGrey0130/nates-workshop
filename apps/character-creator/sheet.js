@@ -9,6 +9,8 @@ const POOL_LABELS = { hp_max: 'H.P. max', sdc_max: 'S.D.C. max', mdc_max: 'M.D.C
 const id = new URLSearchParams(location.search).get('id');
 
 const C = { data: null, items: [], journal: [], catalog: [], cls: null, canWrite: false, isGm: false,
+  // What the character's Hand to Hand training grants in words, by level.
+            skillLevelNotes: [], weaponBonuses: [],
             proposal: null, nextThreshold: null,
             // Picker filter text, and the skill picks chosen so far. Both are
             // state rather than DOM so a re-render cannot discard them.
@@ -31,6 +33,8 @@ async function load() {
     C.data = res.character; C.items = res.items; C.canWrite = res.can_write; C.isGm = res.is_gm;
     // Skill picks a level-up granted and nobody has spent yet.
     C.pendingPicks = res.pending_picks || [];
+    C.skillLevelNotes = res.skill_level_notes || [];
+    C.weaponBonuses = res.weapon_bonuses || [];
     C.pendingPicksTotal = res.pending_picks_total || 0;
     // The class comes with the character now, already resolved to this
     // character's variant and still returned when it has been retired. It used
@@ -956,8 +960,16 @@ function render() {
     ['damage_bonus', 'Damage'], ['punch', 'Punch'], ['power_punch', 'Power Punch'],
     ['kick', 'Kick'], ['knockout', 'Knock Out'], ['critical', 'Critical'],
     ['pull_punch', 'Pull Punch'],
+    // Hand to Hand grants these; they stay at 0 for a character whose training
+    // never mentions them, which is the honest reading of a blank line.
+    ['disarm', 'Disarm'], ['entangle', 'Entangle'],
+    ['body_flip', 'Body Flip/Throw'], ['automatic_dodge', 'Auto Dodge'],
     ['run_yards_per_melee', 'Run (yds/melee)'],
   ];
+  // Short forms for the weapon-proficiency list, which has no room for
+  // '# of Attacks'-length labels beside a condition.
+  const WP_LABELS = { strike: 'strike', parry: 'parry', dodge: 'dodge', disarm: 'disarm',
+    entangle: 'entangle', damage_bonus: 'damage', initiative: 'initiative' };
   const SAVE_FIELDS = [
     ['spell_magic', 'vs Spell Magic'], ['ritual_magic', 'vs Ritual Magic'],
     ['psionics', 'vs Psionics'], ['toxins_poisons', 'vs Toxins/Poisons'],
@@ -1045,7 +1057,33 @@ function render() {
       '<span class="muted" style="font-size:9px">DERIVED · OVERRIDABLE</span>')}
 
     ${box('Combat', COMBAT_FIELDS.map(([k, l]) =>
-      editField('combat', k, l, combat[k], c.combat, { parts: combatParts })).join(''))}
+      editField('combat', k, l, combat[k], c.combat, { parts: combatParts })).join('')
+      // What the character's training grants that is not a number. Read-only:
+      // these are capabilities the book confers at a level, not values anyone
+      // edits, and every one of them is already earned by the level shown.
+      + (!(C.skillLevelNotes || []).length ? '' : `
+        <div class="train" style="margin-top:10px">
+          <p class="muted small" style="margin:0 0 4px">Combat training</p>
+          ${C.skillLevelNotes.map((n) =>
+            `<p class="small" style="margin:0 0 3px">
+               <span class="muted">L${Number(n.level)}</span> ${escHtml(n.note)}</p>`).join('')}
+        </div>`)
+      // A W.P.'s bonuses apply only while that weapon is in hand (p.326), so
+      // they are shown apart from the combat numbers rather than added to them.
+      // Listing them beside the block they do NOT belong to is the point: a
+      // player needs both, and needs to know which is which.
+      + (!(C.weaponBonuses || []).length ? '' : `
+        <div class="wp-bonuses" style="margin-top:10px">
+          <p class="muted small" style="margin:0 0 4px">
+            Weapon proficiencies <span class="muted">&mdash; these apply only with that weapon</span></p>
+          ${C.weaponBonuses.map((w) => {
+            const parts = Object.entries(w.combat)
+              .map(([k, v]) => `${v > 0 ? '+' : ''}${v} ${WP_LABELS[k] || k}`).join(', ');
+            return `<p class="small" style="margin:0 0 3px">
+              ${escHtml(String(w.skill).replace(/^W\.P\. /, ''))}
+              <span class="muted">${escHtml(w.applies_when)}</span> ${escHtml(parts)}</p>`;
+          }).join('')}
+        </div>`))}
 
     ${box('Armor', `<div id="armor-list">${armorRows}</div>` +
       (armorRows ? '' : '<p class="muted small" id="armor-empty">No armor recorded.</p>') +

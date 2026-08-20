@@ -18,6 +18,7 @@ Access gate. No build step, no framework, no dependencies.
 - [API surface](#api-surface)
 - [Permissions](#permissions)
 - [House rules and derived values](#house-rules-and-derived-values)
+- [A fighting style is a level schedule](#a-fighting-style-is-a-level-schedule)
 - [Language: Other, once per language](#language-other-once-per-language)
 - [Level-up skill picks](#level-up-skill-picks)
 - [A race and an occupation together](#a-race-and-an-occupation-together)
@@ -233,7 +234,7 @@ ppe and isp.
 |---|---|
 | `imported_classes` | Class definitions as markdown. `status` is `draft` or `published`; only published classes appear in the app. `deleted_at` NULL means live — retiring a published class hides it from the pickers without destroying it, and drafts are still deleted outright. |
 | `gear` | Gear catalog. `slug` is what `equipment_starting[].item_id` references. Carries a stat block — damage, is_mega_damage, range, payload, rate_of_fire, ar, mdc — null wherever it does not apply, so one table covers weapons, armour and general kit. Named `gear`, not `items`, to stay clear of MediaVault's `media_items`. |
-| `skills` | `base` 0 means non-percentile (W.P.s, hand to hand). `systems` is a JSON array; NULL means both. `note` carries oddities like `40%/30% climb/rappel`. |
+| `skills` | `base` 0 means non-percentile (W.P.s, hand to hand). `systems` is a JSON array; NULL means both. `note` carries oddities like `40%/30% climb/rappel`. `bonuses` applies always; `level_bonuses` is a per-level schedule — see [A fighting style is a level schedule](#a-fighting-style-is-a-level-schedule). |
 | `spells` | `system` NULL means unrestricted. name, level, ppe, plus a stat block (range, duration, damage, saving throw, area of effect, casting time, description). The stat block is TEXT — books write "100 feet per level" as often as a number. |
 | `psionic_powers` | name, category (Healing/Physical/Sensitive/Super), isp, plus range, duration, saving throw and description — the same field names spells use. `min_tier` is the psychic tier a book states is required; NULL means no restriction beyond the category. |
 
@@ -683,6 +684,100 @@ came from I.Q., so 39% is distinguishable from a skill whose base genuinely is
 wrong about everything else — the book says plainly that *all* skills increase
 with experience. A level 10 character's hobby skills sat at their level 1
 values. They now carry the catalog's real per-level step.
+
+---
+
+## A fighting style is a level schedule
+
+`bonuses` (migration 023) applies **whole, at every level**. That is right for
+Boxing — +1 attack per melee, +2 parry and dodge, +2 P.S. — and wrong for every
+Hand to Hand skill in the book, which Rifts Ultimate Edition p.347 prints as a
+level-by-level table and states plainly are **accumulative**: a 5th level
+Expert has levels 1 through 5, not level 5 alone.
+
+So the entire mechanical payload of the five Hand to Hand skills had nowhere
+to live, and was simply absent — `base` 0, `per_level` 0, no bonuses, no note.
+Picking a fighting style changed nothing about how the character fought.
+
+`level_bonuses` is a JSON array, one entry per level that grants something:
+
+```json
+[{"level": 1, "combat": {"attacks_base": 4, "pull_punch": 2, "roll": 2}},
+ {"level": 2, "combat": {"parry": 2, "dodge": 2}},
+ {"level": 3, "note": "Kick attack does 1D8 points of damage."}]
+```
+
+`combat`, `saves` and `attributes` are the same groups `bonuses` uses, and
+everything at or below the character's level is summed.
+
+### Three rules this shape had to earn
+
+- **`attacks_base` sets; everything else adds.** The books state a starting
+  number outright — "starts with four attacks per melee round" — so adding it to
+  the derived base of 2 would give a first level Expert six. It is also the
+  one key taken as a **maximum** rather than a sum, so a character holding two
+  fighting styles fights at the better one instead of adding them together.
+- **What is not a number goes in `note`.** "Karate Kick (2D6 damage)", "Death
+  blow on a Natural 20", and the Assassin's bonuses that apply only to guns or
+  thrown weapons. A conditional bonus in `combat` would apply unconditionally,
+  which is the same reason Fencing carries its bonuses as a note.
+- **A level of `null` grants nothing.** That is deliberately different from
+  level 1: a caller that cannot say how experienced the character is should not
+  silently hand out first level bonuses.
+
+### Where it reaches the character
+
+`bonusesFromSkills(rows, level)` folds the schedule into the same bonuses block
+everything downstream already reads, so the sheet's combat numbers pick it up
+with no further help. The notes cannot be summed, so the sheet endpoint returns
+them separately as `skill_level_notes` and the Combat box lists them — without
+that, a 7th level Expert's numbers would be right while the four moves earned
+along the way went unmentioned.
+
+`disarm`, `entangle`, `body_flip` and `automatic_dodge` joined the combat block
+for this. `combat` and `saves` are open sets on purpose, so no validator
+changed — only `derive.js`, which now knows what to call them.
+
+### A W.P. bonus applies only with that weapon
+
+Every numeric Weapon Proficiency bonus is **conditional**. p.326:
+
+> ...hand to hand combat bonuses to strike and parry **whenever that particular
+> type of weapon is used**.
+
+Written into `combat` the way a Hand to Hand schedule is, a character with five
+W.P.s would swing their **bare fists** at +5 to strike — and it would read as a
+lucky roll rather than a bug. So an entry may carry `applies_when`:
+
+```json
+{"level": 1, "applies_when": "with a sword", "combat": {"strike": 1}}
+```
+
+`bonusesFromSkills` **skips** those entries entirely. `skillConditionalBonuses`
+totals them instead, one row per skill and condition, and the sheet lists them
+beside the combat block rather than inside it — a player needs both numbers,
+and needs to know which is which.
+
+One skill can carry several conditions: a sword swung and a sword thrown are
+different bonuses and the book lists them apart, so collapsing them would
+quietly add a throwing bonus to melee. An energy weapon's aimed-shot (+3) and
+burst (+1) bonuses are level-independent and stack on top of its level ladder,
+so those are separate conditions too.
+
+**Four W.P.s are deliberately still empty.** `Rope` defers to the Cowboy
+O.C.C., and `Automatic Pistol`, `Revolver` and `Automatic and Semi-automatic
+Rifles` are older-edition names for what RUE folds into `W.P. Handguns` and
+`W.P. Rifles`. Merging those is a catalog decision rather than a transcription
+— `catalog_redirects` exists for exactly that — so nothing here guesses.
+
+---
+
+### Still missing
+
+The book's table for a character with **no** Hand to Hand training (one attack
+at level 1, a second at 3, a third at 9) is not modelled — `derive.js`
+starts everyone at 2 attacks and takes no level. Only a character with no
+fighting skill at all is affected.
 
 ---
 
@@ -2453,6 +2548,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `022-play-events.sql` | `play_events` — play mode's append-only action log: undo, the who-did-what trail, and the session recap boundary |
 | `023-skill-bonuses.sql` | `skills.bonuses` — what a skill grants beyond its percentage, in a class's `bonuses:` shape. Boxing is +1 attack per melee and +2 P.S. |
 | `024-data-script-runs.sql` | `data_script_runs` — which data scripts have run against this database. The same question `schema_migrations` answers for migrations, for the 55 scripts that answer it nowhere |
+| `025-skill-level-bonuses.sql` | `skills.level_bonuses` — what a skill grants **at each level**, summed up to the character's. The Hand to Hand tables are level-by-level and accumulative, which the flat `bonuses` column cannot express; entries may carry `applies_when` for a W.P. bonus that needs that weapon in hand |
 
 ### Standing up a new environment
 

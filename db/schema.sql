@@ -207,7 +207,10 @@ CREATE TABLE IF NOT EXISTS skills (
   source TEXT NOT NULL DEFAULT 'seed',    -- seed | import
   source_book TEXT,
   note TEXT,                              -- "40%/30% climb/rappel", "counts as two skills"
-  bonuses TEXT                            -- JSON, the class `bonuses:` shape; see migration 023
+  bonuses TEXT,                           -- JSON, the class `bonuses:` shape; see migration 023
+  -- JSON array of per-level grants, summed up to the character's level.
+  -- Hand to Hand tables are level-by-level and accumulative; see migration 025.
+  level_bonuses TEXT
 );
 
 CREATE TABLE IF NOT EXISTS spells (
@@ -474,3 +477,7 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '012-catalog-system.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('spells') WHERE name = 'system')
   AND EXISTS (SELECT 1 FROM pragma_table_info('import_sessions') WHERE name = 'system');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '025-skill-level-bonuses.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('skills') WHERE name = 'level_bonuses');

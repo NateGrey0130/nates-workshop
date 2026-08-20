@@ -229,15 +229,126 @@ export function sumBonusGroups(a, b) {
  * correction to the catalog reaches characters who already hold the skill.
  * Rows without bonuses cost nothing, so a caller can pass everything it has.
  */
-export function bonusesFromSkills(rows) {
-  let out;
+const asJsonArray = (v) => {
+  if (Array.isArray(v)) return v;
+  if (typeof v !== 'string') return null;
+  try {
+    const parsed = JSON.parse(v);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch { return null; }
+};
+
+const asBlock = (v) => {
+  let b = v;
+  if (typeof b === 'string') {
+    try { b = JSON.parse(b); } catch { return null; }
+  }
+  return b && typeof b === 'object' && !Array.isArray(b) ? b : null;
+};
+
+// The entries of a `level_bonuses` schedule that a character of this level has
+// reached. Rifts Ultimate Edition p.347: "ALL bonuses are accumulative" - a 5th
+// level Expert has levels 1 through 5, not level 5 alone.
+//
+// A level of null means "the caller does not know", and nothing is applied. That
+// is deliberately different from level 1: a caller that cannot say how
+// experienced the character is should not silently hand out first level bonuses.
+export function levelGrants(levelBonuses, level) {
+  if (!Number.isFinite(level)) return [];
+  const arr = asJsonArray(levelBonuses);
+  if (!arr) return [];
+  return arr.filter((e) => e && typeof e === 'object'
+    && Number.isFinite(e.level) && e.level <= level);
+}
+
+// The plain-text half of a level schedule: what the character gained that is
+// not a number. "Karate Kick (2D6 damage)", "Death blow on a Natural 20".
+//
+// Kept out of the bonuses block on purpose - these are capabilities a player
+// reads, not values anything adds up - and returned in level order so the sheet
+// can show a fighting style as the progression the book prints.
+export function skillLevelNotes(rows, level) {
+  const out = [];
   for (const row of rows || []) {
-    let b = row?.bonuses;
-    if (typeof b === 'string') {
-      try { b = JSON.parse(b); } catch { continue; }
+    for (const e of levelGrants(row?.level_bonuses, level)) {
+      if (e.note) out.push({ skill: row.name ?? null, level: e.level, note: String(e.note) });
     }
-    if (!b || typeof b !== 'object' || Array.isArray(b)) continue;
-    out = sumBonusGroups(out, b);
+  }
+  return out.sort((a, b) => a.level - b.level
+    || String(a.skill).localeCompare(String(b.skill)));
+}
+
+// The conditional half of a level schedule, totalled per condition.
+//
+// A W.P.'s bonuses apply only while the character is holding that weapon, so
+// they must never reach the combat block — but they are still real, still
+// accumulate by level, and a player cannot use them if the sheet never says
+// what they are. Returned as one row per (skill, condition):
+//
+//   { skill: 'W.P. Sword', applies_when: 'with a sword',
+//     combat: { strike: 3, parry: 2 } }
+//
+// One skill can carry several conditions: a sword swung and a sword thrown are
+// different bonuses, and the book lists them separately.
+export function skillConditionalBonuses(rows, level) {
+  const byKey = new Map();
+  for (const row of rows || []) {
+    for (const e of levelGrants(row?.level_bonuses, level)) {
+      if (!e.applies_when) continue;
+      const key = (row.name ?? '') + '\u0000' + e.applies_when;
+      const seen = byKey.get(key)
+        ?? { skill: row.name ?? null, applies_when: String(e.applies_when), combat: {} };
+      for (const [k, v] of Object.entries(e.combat || {})) {
+        if (typeof v === 'number') seen.combat[k] = (seen.combat[k] || 0) + v;
+      }
+      byKey.set(key, seen);
+    }
+  }
+  return [...byKey.values()]
+    .filter((r) => Object.keys(r.combat).length)
+    .sort((a, b) => String(a.skill).localeCompare(String(b.skill))
+      || a.applies_when.localeCompare(b.applies_when));
+}
+
+// `level` is optional: omit it and only the flat `bonuses` column applies,
+// which is exactly what every caller did before Hand to Hand had a schedule.
+export function bonusesFromSkills(rows, level = null) {
+  let out;
+  // `attacks_base` STATES a starting number rather than adding to one, so it
+  // cannot go through the summing path - two fighting styles would give eight
+  // attacks. The strongest training wins, which is also what a character with
+  // two Hand to Hand skills would actually fight at.
+  let attacksBase = null;
+  const take = (block) => {
+    if (!block) return;
+    const combat = block.combat;
+    if (combat && typeof combat.attacks_base === 'number') {
+      attacksBase = Math.max(attacksBase ?? 0, combat.attacks_base);
+      const { attacks_base: _drop, ...rest } = combat;
+      block = { ...block, combat: rest };
+    }
+    out = sumBonusGroups(out, block);
+  };
+
+  for (const row of rows || []) {
+    take(asBlock(row?.bonuses));
+    for (const entry of levelGrants(row?.level_bonuses, level)) {
+      // A W.P. grants its strike and parry only "whenever that particular type
+      // of weapon is used" (p.326). Summed here, a character with five W.P.s
+      // would swing their FISTS at +5. Conditional entries are held back for
+      // skillConditionalBonuses() instead — the same reason Fencing carries
+      // its bonuses as a note rather than as numbers.
+      if (entry.applies_when) continue;
+      // `level`, `note` and `applies_when` describe the entry; only the groups
+      // are bonuses.
+      const { level: _lvl, note: _note, applies_when: _when, ...groups } = entry;
+      take(groups);
+    }
+  }
+
+  if (attacksBase != null) {
+    out = out || {};
+    out = { ...out, combat: { ...(out.combat || {}), attacks_base: attacksBase } };
   }
   return out;
 }
