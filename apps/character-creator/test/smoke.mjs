@@ -156,6 +156,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { appDir, repoRoot, check, section, summary } from './harness.mjs';
 import { run as environmentChecks } from './checks/environment.mjs';
+import { run as catalogDataChecks } from './checks/catalog-data.mjs';
 
 check('skills import spec exists', !!skillSpec);
 
@@ -3656,5 +3657,6 @@ check('saves split the same way', (() => {
 // The environment half lives in its own file; it runs last because it is the
 // slow one - it shells out to wrangler.
 environmentChecks();
+catalogDataChecks();
 
 process.exit(summary() === 0 ? 0 : 1);

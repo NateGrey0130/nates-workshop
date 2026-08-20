@@ -117,8 +117,10 @@ apps/character-creator/
     ├── smoke.mjs             The runner, and the rules half of the checks
     ├── harness.mjs           check(), section(), the counters and the summary
     ├── checks/
-    │   └── environment.mjs   D1 schema, schema.sql self-sufficiency, data-script
-    │                         conventions, documentation claims, migration state
+    │   ├── environment.mjs   D1 schema, schema.sql self-sufficiency, data-script
+    │   │                     conventions, documentation claims, migration state
+    │   └── catalog-data.mjs  Core pools, the Hand to Hand and W.P. level
+    │                         schedules, spell text, gear shape, provenance
     ├── regression.mjs        End-to-end: builds a throwaway D1, boots the
     │                         worker, drives the real endpoints over HTTP
     └── fixtures/*.md         Three real class files, parser test input only
