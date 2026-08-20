@@ -2849,14 +2849,37 @@ catalog there is currently very little to restrict.
 hand; the only deletion is the one a merge performs. Deliberate — see
 [`docs/plans/04-catalog-edit-ui.md`](docs/plans/04-catalog-edit-ui.md).
 
-**Most of the gear catalog is still name-only stubs.** A class import creates
+**Part of the gear catalog is still name-only stubs.** A class import creates
 a stub row for every equipment id it cannot find, so the catalog holds a row
 per name any class has ever mentioned. Production carried 157 of them; 33 were
 orphaned by later class corrections and referenced by nothing at all, and
-`retire-orphan-gear-stubs.sql` drops those. The rest are real book items the
-gear importer has not reached yet - the equipment chapter import filled in the
-weapons but not the general kit, so `Canteen` and `Backpack` are still empty.
-They are cited by live classes and must stay.
+`retire-orphan-gear-stubs.sql` drops those.
+
+The count went 123 — 78 by fixing the ones that were the wrong SHAPE and
+pricing the ones a web reference could settle. **What is left is left for a
+reason**, and the reasons differ:
+
+- **About a dozen pieces of named hardware** — the Juicer's bio-comp, drug
+  harness and flex plate armor, the Techno-Wizard converted weapons, the
+  archaic M.D.C. armor of the pantheon, the optic helmet. Their stats appear
+  to exist only in books. What the open web returns for them is forum
+  argument with contradictory numbers and no citable page.
+- **Four rows that name a CATEGORY, not an item** — `submachine-gun`,
+  `musical-instrument`, `basic-provisions`, `lesser-rune-weapon`. These are the
+  same defect [Starting gear the class leaves open](#starting-gear-the-class-leaves-open)
+  describes, and they cannot be fixed the same way yet: a choice is only an
+  improvement if its options exist, and the catalog holds no sub-machine gun,
+  no rune weapon and no instrument to offer. Import the equipment chapter
+  first, then convert them.
+- **A long tail of ordinary objects** — clothing, traveling clothes, food
+  rations, mirrors, gloves, sleeping bags. No reachable source prices them,
+  and for food there is a reason: pricing for food and drink is absent from
+  most of the books outright. A class grants "a week's food rations" as a line
+  of text and no page says what a week costs.
+
+None of it blocks play. A stub is a real row with a real name that a
+character can hold; it simply has no weight or price yet. Inventing either
+would be inventing a rule — see [A row can say where it came from](#a-row-can-say-where-it-came-from).
 
 A handful are neither: categories the importer emitted as ids before choice
 groups existed. `energy-pistol` and `vibro-blade` were fixed by
