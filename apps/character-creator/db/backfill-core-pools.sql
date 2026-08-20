@@ -69,21 +69,73 @@ UPDATE characters SET hp_current  = hp_max  WHERE hp_current  IS NULL AND hp_max
 UPDATE characters SET sdc_current = sdc_max WHERE sdc_current IS NULL AND sdc_max IS NOT NULL;
 
 -- Reports the result back, so it is read rather than assumed.
---   still_missing_hp   0 = every non-M.D.C. character now has hit points
---   still_missing_sdc  0 = ditto S.D.C.
---   hp_out_of_range    0 = every rolled pool is inside what the formula allows
---   current_mismatch   0 = no character is carrying damage it never took
+--
+-- Every count is scoped to the characters this script is RESPONSIBLE for -
+-- those whose class page prints no formula. A first draft counted every
+-- character and cried wolf twice on the dev database: a Cyber-Knight with 24
+-- hit points on a P.E. of 11 looked "out of range" because the core formula was
+-- applied to a class that states its own, and four Juicers, Godlings and
+-- Demigods looked "still missing" S.D.C. for the same reason. A verification
+-- that reports failures the script was never meant to fix teaches you to ignore
+-- it.
+--
+--   still_missing_hp         0 = every character owed hit points now has them
+--   still_missing_sdc        0 = ditto S.D.C.
+--   hp_out_of_range          0 = every rolled pool is inside P.E.+1 .. P.E.+6
+--   current_mismatch         0 = nobody is carrying damage they never took
+--
+-- The two skip counts are DELIBERATE exclusions, shown rather than hidden. Both
+-- should normally be 0; anything else is a character a human needs to look at,
+-- not a failure of this script.
+--
+--   skipped_above_level_1    "+1D6 per level" needs one die per level
+--   skipped_unclassified     a class in neither S.D.C. group
+--   skipped_no_pe            no P.E. recorded, so P.E. + 1D6 has no value to
+--                            add to. Inventing an attribute to roll hit points
+--                            off would be worse than leaving the gap visible.
 SELECT (SELECT count(*) FROM characters
-          WHERE hp_max IS NULL AND mdc_max IS NULL) AS still_missing_hp,
+          WHERE hp_max IS NULL AND mdc_max IS NULL AND level = 1
+            AND json_extract(attributes, '$.PE') IS NOT NULL
+            AND COALESCE(occ_class_id, class_id) IN (
+        'elemental-fusionist-earth-air', 'elemental-fusionist-fire-water',
+        'glitter-boy', 'headhunter-techno-warrior', 'ley-line-rifter',
+        'ley-line-walker', 'merc-soldier', 'mind-melter', 'mystic',
+        'priest-of-light', 'psi-stalker', 'robot-pilot', 'shifter',
+        'techno-wizard', 'warlock', 'wild-psi-stalker')) AS still_missing_hp,
        (SELECT count(*) FROM characters
-          WHERE sdc_max IS NULL AND mdc_max IS NULL) AS still_missing_sdc,
+          WHERE sdc_max IS NULL AND mdc_max IS NULL
+            AND COALESCE(occ_class_id, class_id) IN (
+        'burster', 'elemental-fusionist-earth-air', 'elemental-fusionist-fire-water',
+        'glitter-boy', 'headhunter-techno-warrior', 'ley-line-rifter',
+        'ley-line-walker', 'merc-soldier', 'mind-melter', 'mystic',
+        'priest-of-light', 'psi-stalker', 'robot-pilot', 'shifter',
+        'techno-wizard', 'warlock', 'wild-psi-stalker')) AS still_missing_sdc,
        (SELECT count(*) FROM characters
           WHERE mdc_max IS NULL AND hp_max IS NOT NULL AND level = 1
             AND json_extract(attributes, '$.PE') IS NOT NULL
+            AND COALESCE(occ_class_id, class_id) IN (
+        'elemental-fusionist-earth-air', 'elemental-fusionist-fire-water',
+        'glitter-boy', 'headhunter-techno-warrior', 'ley-line-rifter',
+        'ley-line-walker', 'merc-soldier', 'mind-melter', 'mystic',
+        'priest-of-light', 'psi-stalker', 'robot-pilot', 'shifter',
+        'techno-wizard', 'warlock', 'wild-psi-stalker')
             AND (hp_max < json_extract(attributes, '$.PE') + 1
               OR hp_max > json_extract(attributes, '$.PE') + 6)) AS hp_out_of_range,
        (SELECT count(*) FROM characters
-          WHERE (hp_current > hp_max) OR (sdc_current > sdc_max)) AS current_mismatch;
+          WHERE (hp_current > hp_max) OR (sdc_current > sdc_max)) AS current_mismatch,
+       (SELECT count(*) FROM characters
+          WHERE hp_max IS NULL AND mdc_max IS NULL AND level > 1) AS skipped_above_level_1,
+       (SELECT count(*) FROM characters
+          WHERE sdc_max IS NULL AND mdc_max IS NULL
+            AND COALESCE(occ_class_id, class_id) NOT IN (
+        'burster', 'elemental-fusionist-earth-air', 'elemental-fusionist-fire-water',
+        'glitter-boy', 'headhunter-techno-warrior', 'ley-line-rifter',
+        'ley-line-walker', 'merc-soldier', 'mind-melter', 'mystic',
+        'priest-of-light', 'psi-stalker', 'robot-pilot', 'shifter',
+        'techno-wizard', 'warlock', 'wild-psi-stalker')) AS skipped_unclassified,
+       (SELECT count(*) FROM characters
+          WHERE hp_max IS NULL AND mdc_max IS NULL
+            AND json_extract(attributes, '$.PE') IS NULL) AS skipped_no_pe;
 
 -- Records this run. One row per run rather than per file: every statement
 -- above guards itself, so this script is safe to re-run and safe to run
