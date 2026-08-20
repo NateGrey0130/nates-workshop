@@ -440,8 +440,17 @@ function summaryValue(f, v) {
   // Books write damage as a sentence — the JA-11's runs to 140 characters and
   // would swallow the row it is meant to summarise. The whole value is in the
   // edit form, one click away.
-  const text = String(v);
-  return text.length > 48 ? text.slice(0, 47).trimEnd() + '…' : text;
+  // Cut at a word boundary, for the same reason the class cards are: a slice
+  // mid-word reads as a rendering fault rather than as a summary. Local rather
+  // than shared with app.js's copy - this is a table cell at 48 characters and
+  // that is a lore paragraph at 110, and the only thing they have in common is
+  // three lines of arithmetic.
+  const text = String(v).trim();
+  if (text.length <= 48) return text;
+  const cut = text.slice(0, 48);
+  const space = cut.lastIndexOf(' ');
+  const kept = space > 28 ? cut.slice(0, space) : text.slice(0, 47);
+  return kept.trimEnd().replace(/[,;:—-]+$/, '') + '…';
 }
 
 // The four columns worth seeing at a glance — chosen per ROW, not per catalog.

@@ -468,6 +468,39 @@ function className(id) {
   return S.classes.find((c) => c.id === id)?.name || id;
 }
 
+// A blurb cut to fit, at a word boundary, saying so only when it was cut.
+//
+// Three bugs in one line of card markup, and the first hid the other two.
+//
+// 1. Lore is hard-wrapped prose, so split('\n')[0] took the first WRAPPED
+//    LINE, not the first sentence. The Cyber-Knight's 435 characters became
+//    77 ending "an order of noble". Take the paragraph and unwrap it.
+// 2. slice(0, 110) cut mid-word: "turn to chemical enhancemen".
+// 3. The ellipsis was appended unconditionally, so lore that fit got one too
+//    — the Headhunter's card ended "best of both worlds."… with nothing
+//    withheld.
+//
+// Fixing 3 alone would have been worse than leaving it: a wrapped line under
+// the limit would then read as a complete thought while still stopping
+// mid-sentence. The unwrap is what makes the honest ellipsis honest.
+//
+// Falls back to a hard cut when the last space is too far back to be a word
+// boundary worth honouring, which is what a single very long token gives you.
+function blurb(text, max) {
+  // The first PARAGRAPH, unwrapped: single newlines are typesetting, a blank
+  // line is a real break.
+  const line = String(text || '').split(/\n\s*\n/)[0].replace(/\s+/g, ' ').trim();
+  if (line.length <= max) return line;
+  const cut = line.slice(0, max + 1);
+  const space = cut.lastIndexOf(' ');
+  const kept = space > max * 0.6 ? cut.slice(0, space) : line.slice(0, max);
+  // Trailing punctuation before an ellipsis reads as a typo rather than a trim.
+  // A full stop is deliberately NOT stripped: it would turn an abbreviation into
+  // nonsense - '4D6 M.D.' becomes 'M.D' - and a sentence followed by an ellipsis
+  // is only slightly ugly, never wrong.
+  return kept.trimEnd().replace(/[,;:—-]+$/, '') + '…';
+}
+
 function classCard(c, score) {
   const sel = S.cls?.id === c.id ? ' sel' : '';
   const badge = score != null ? `<span class="tag score">match ${score}/6</span>` : '';
@@ -475,7 +508,7 @@ function classCard(c, score) {
     <h4>${esc(c.name)}</h4>
     <span class="tag">${esc(c.category)}</span><span class="tag">${esc(c.source_book)}</span>${
       needsOccupation(c) ? '<span class="tag">pairs with an O.C.C.</span>' : ''}${badge}
-    <p class="muted small">${esc((c.lore || '').split('\n')[0].slice(0, 110))}…</p>
+    <p class="muted small">${esc(blurb(c.lore, 110))}</p>
   </div>`;
 }
 function classDetail(c) {
