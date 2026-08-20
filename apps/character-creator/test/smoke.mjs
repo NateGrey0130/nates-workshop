@@ -33,6 +33,7 @@ import { psionicTierForRoll, rollPsionics, psionicShape, withRolledPsionics,
          PSIONIC_TIER_RULES, rollsForPsionics } from '../js/psionics.js';
 import { similarity, normaliseName, classesMentioning, findDuplicates } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
 import { LANGUAGE_OTHER, isLanguageName, languageSkillName } from '../js/language-skills.js';
+import { trailingSelects, collapseWhitespace, statements } from '../../../scripts/sql-statements.mjs';
 import {
   keysOf, redirectStatements, collapseStatement, resolveKeys,
 } from '../../../functions/api/character-creator/_lib/catalog-redirects.js';
@@ -3821,6 +3822,66 @@ check('every data script is pure ASCII', notAscii.length === 0,
   + 'wrangler on Windows has turned them into mojibake in production');
 check('no data script carries a CR', hasCr.length === 0,
   'CRLF in: ' + hasCr.join(', ') + ' — the .gitattributes *.sql rule pins LF');
+
+console.log('\n[3b] SQL statement splitting');
+
+// scripts/d1-apply.mjs replays a data script's own verification SELECTs after a
+// remote apply, because --remote --file goes to D1's import endpoint and returns
+// aggregate counts with no result sets. Getting the split wrong is invisible in
+// the apply - the rows land either way - and only shows up as a read-back that
+// silently never happened.
+//
+// The first version of this shipped broken: it returned the SELECTs across the
+// several lines they are written on, and `--command` TRUNCATES AT THE FIRST
+// NEWLINE and reports the remainder as `incomplete input: SQLITE_ERROR`. That
+// reads like malformed SQL in the script rather than a mangled argument, so the
+// single-line property is the one worth pinning hardest.
+check('a replayed SELECT is single-line', (() => {
+  const sql = "SELECT a,\n       b\n  FROM t;";
+  return trailingSelects(sql).every((x) => !x.includes('\n'));
+})());
+
+// Collapsing blindly would rewrite the data a query matches on. Class markdown
+// cites gear as `item_id: "slug"`, and these read-backs match on that string.
+check('collapsing does not touch string literals',
+  collapseWhitespace("SELECT  instr(m, 'item_id:  \"x\"')  FROM t")
+    === "SELECT instr(m, 'item_id:  \"x\"') FROM t");
+
+check('a semicolon inside a literal does not split a statement',
+  statements("UPDATE t SET x = 'a;b'; SELECT 1;").length === 2);
+
+// SQL escapes a quote by doubling it; a state machine that misses that ends the
+// literal early and starts splitting on punctuation inside it.
+check('a doubled quote does not end a literal',
+  statements("SELECT 'it''s; fine' AS x; SELECT 2;").length === 2);
+
+check('a -- inside a literal is not a comment',
+  statements("SELECT 'a--b' AS x;")[0].includes('a--b'));
+
+// A SELECT inside an UPDATE's guard belongs to that UPDATE. Replaying it alone
+// would be meaningless, and replaying anything that is not a SELECT would make
+// a read-back into a second write.
+check('a SELECT inside an UPDATE guard is not replayed',
+  trailingSelects('UPDATE g SET a = 1 WHERE (SELECT count(*) FROM h) = 4; SELECT 9 AS r;').length === 1);
+
+check('only SELECTs are ever replayed', (() => {
+  const sql = readFileSync(join(appDir, 'db', 'retire-orphan-gear-stubs.sql'), 'utf8');
+  return trailingSelects(sql).every((t) => /^select\b/i.test(t));
+})());
+
+// Every data script's own read-back must survive the round trip. This is the
+// check that would have caught the shipped bug.
+{
+  const dir = join(appDir, 'db');
+  const offenders = [];
+  for (const f of readdirSync(dir).filter((x) => x.endsWith('.sql'))) {
+    for (const st of trailingSelects(readFileSync(join(dir, f), 'utf8'))) {
+      if (st.includes('\n') || !/;$/.test(st)) offenders.push(f);
+    }
+  }
+  check('every data script replays as single-line, terminated SQL',
+    offenders.length === 0, offenders.join(', '));
+}
 
 // ---------- 4. Migration state ----------
 // Every file in db/migrations/ should have a schema_migrations row. A missing

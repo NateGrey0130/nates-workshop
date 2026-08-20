@@ -37,42 +37,12 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
+import { trailingSelects } from './sql-statements.mjs';
 
 const args = process.argv.slice(2);
 const remote = args.includes('--remote');
 const local = args.includes('--local');
 const files = args.filter((a) => !a.startsWith('--'));
-
-// Top-level SELECT statements, in order. Splitting SQL properly needs a
-// parser; splitting it well enough to find trailing read-backs needs only
-// that string literals and comments do not hide a semicolon. SQL escapes a
-// quote by doubling it, which falls out of the state machine for free.
-//
-// Only statements that BEGIN with SELECT are replayed - a SELECT inside an
-// UPDATE's guard is part of that UPDATE, and re-running it alone would be
-// meaningless at best.
-function trailingSelects(sql) {
-  const stripped = sql.replace(/--[^\n]*/g, '');
-  const out = [];
-  let cur = '';
-  let inStr = false;
-  for (let i = 0; i < stripped.length; i++) {
-    const c = stripped[i];
-    if (inStr) {
-      cur += c;
-      if (c === "'") inStr = stripped[i + 1] === "'" ? (cur += stripped[++i], true) : false;
-      continue;
-    }
-    if (c === "'") { inStr = true; cur += c; continue; }
-    if (c === ';') { out.push(cur); cur = ''; continue; }
-    cur += c;
-  }
-  out.push(cur);
-  return out
-    .map((t) => t.trim())
-    .filter((t) => /^select\b/i.test(t))
-    .map((t) => t + ';');
-}
 
 function die(msg) {
   console.error('\nd1-apply: ' + msg);
@@ -145,7 +115,10 @@ for (const f of files) {
     if (checks.length) {
       console.log(`\n-- ${f}: verification --`);
       // One --command carrying every SELECT, so this is one extra round trip
-      // per file rather than one per statement.
+      // per file rather than one per statement. trailingSelects() returns them
+      // single-line: --command truncates at the first newline and calls the
+      // remainder `incomplete input`, which reads like bad SQL rather than a
+      // mangled argument. Every verification SELECT here spans several lines.
       const v = run(['wrangler', 'd1', 'execute', 'DB', '--remote', '--command', checks.join(' ')]);
       console.log(v.out.trim());
       // A failed verification is not a failed apply. The rows landed; only the
