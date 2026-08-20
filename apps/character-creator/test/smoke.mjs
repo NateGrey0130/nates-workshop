@@ -33,7 +33,7 @@ import { psionicTierForRoll, rollPsionics, psionicShape, withRolledPsionics,
          PSIONIC_TIER_RULES, rollsForPsionics } from '../js/psionics.js';
 import { similarity, normaliseName, classesMentioning, findDuplicates } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
 import { LANGUAGE_OTHER, isLanguageName, languageSkillName } from '../js/language-skills.js';
-import { trailingSelects, collapseWhitespace, statements } from '../../../scripts/sql-statements.mjs';
+import { trailingSelects, collapseWhitespace, statements, stripComments } from '../../../scripts/sql-statements.mjs';
 import {
   keysOf, redirectStatements, collapseStatement, resolveKeys,
 } from '../../../functions/api/character-creator/_lib/catalog-redirects.js';
@@ -3822,6 +3822,34 @@ check('every data script is pure ASCII', notAscii.length === 0,
   + 'wrangler on Windows has turned them into mojibake in production');
 check('no data script carries a CR', hasCr.length === 0,
   'CRLF in: ' + hasCr.join(', ') + ' — the .gitattributes *.sql rule pins LF');
+
+// The same two rules across EVERY .sql in the repo, not just the data scripts.
+// db/seed-catalogs.sql carried six em-dashes inside class markdown and is the
+// FIRST file a new environment applies, so a mangled character there would be
+// baked into every class it seeds. Nothing was checking it.
+//
+// Comments are exempt on purpose. Checking whole files made d1-apply refuse 11
+// of this repo's own migrations over em-dashes in prose, and a guard that
+// rejects the files it is documented to apply does not survive contact.
+{
+  const roots = [join(repoRoot, 'db'), join(repoRoot, 'db', 'migrations'), join(appDir, 'db')];
+  const badAscii = [];
+  const badCr = [];
+  let seen = 0;
+  for (const dir of roots) {
+    for (const f of readdirSync(dir).filter((x) => x.endsWith('.sql'))) {
+      seen++;
+      const buf = readFileSync(join(dir, f));
+      if (buf.includes(0x0d)) badCr.push(f);
+      const code = stripComments(buf.toString('utf8'));
+      if ([...code].some((ch) => ch.codePointAt(0) > 0x7f)) badAscii.push(f);
+    }
+  }
+  check('every .sql file was inspected', seen > 80, 'only ' + seen + ' seen');
+  check('no .sql has non-ASCII in executable SQL', badAscii.length === 0,
+    badAscii.join(', ') + ' — splice it: \'a \' || char(8212) || \' b\'');
+  check('no .sql carries a CR', badCr.length === 0, badCr.join(', '));
+}
 
 console.log('\n[3b] SQL statement splitting');
 

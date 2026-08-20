@@ -52,6 +52,7 @@ Access gate. No build step, no framework, no dependencies.
   - [Unmodelled keys](#unmodelled-keys)
 - [Local development](#local-development)
 - [Production configuration](#production-configuration)
+  - [Standing up a new environment](#standing-up-a-new-environment)
   - [The migration convention](#the-migration-convention)
   - [Data scripts](#data-scripts)
 - [Known limitations and refactor candidates](#known-limitations-and-refactor-candidates)
@@ -90,6 +91,7 @@ apps/character-creator/
 │                             thing it is played as (ES module)
 ├── js/api.js                 The one HTTP helper for all five pages, and
 │                             errorDetails() (classic script)
+│   (also loaded by every page: /shared/js/ui.js, for escHtml — see below)
 ├── js/picker.js              Catalog picker filtering — matching, the filter
 │                             input, and caret restore (classic script, same
 │                             reason as derive.js)
@@ -170,6 +172,12 @@ away, so the same 422 explained itself on one page and said
 
 `jsonReq` is deliberately **not** shared: the sheet's takes `(method, body)` and
 the importer's takes `(body)` and always posts.
+
+**Every page also loads `/shared/js/ui.js` first**, and this app uses exactly one
+thing from it: `escHtml`, which is the escaper behind almost every template
+literal here. It is a workshop-wide file rather than this app's, so changing it
+touches MediaVault and FilamentForge too — they use its `openModal` /
+`closeModal` / `copyWithFeedback`, which this app does not.
 
 ---
 
@@ -2161,6 +2169,14 @@ Optional character/campaign test rows:
 npx wrangler d1 execute DB --local --file apps/character-creator/db/seed-dev.sql
 ```
 
+**Apply that one on its own, not through a glob.** It is the only data script
+that is not re-runnable — its inserts are unguarded and a second pass fails on
+`gear.slug` — and `d1-apply.mjs` stops at the first failure, so
+`--local apps/character-creator/db/*.sql` against an already-seeded database
+dies on `seed-dev.sql` and never reaches `untag-cross-system.sql`, the only file
+that sorts after it. Under `--remote` the question does not arise: the file's
+`-- local-only` marker makes the glob skip it.
+
 Smoke test (parser + schema):
 
 ```bash
@@ -2301,6 +2317,63 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `022-play-events.sql` | `play_events` — play mode's append-only action log: undo, the who-did-what trail, and the session recap boundary |
 | `023-skill-bonuses.sql` | `skills.bonuses` — what a skill grants beyond its percentage, in a class's `bonuses:` shape. Boxing is +1 attack per melee and +2 P.S. |
 | `024-data-script-runs.sql` | `data_script_runs` — which data scripts have run against this database. The same question `schema_migrations` answers for migrations, for the 55 scripts that answer it nowhere |
+
+### Standing up a new environment
+
+Verified end to end; the counts below are what a clean run produces.
+
+```bash
+node scripts/d1-apply.mjs --remote db/schema.sql
+node scripts/d1-apply.mjs --remote db/seed-catalogs.sql
+node scripts/d1-apply.mjs --remote apps/character-creator/db/*.sql
+```
+
+The glob is expanded by `d1-apply.mjs` itself, sorted — PowerShell does not
+expand globs for native commands, so the same line works in either shell. It
+prints `skipping ... marked local-only` for `seed-dev.sql`, which inserts a test
+campaign and character and must never reach production. That exclusion is the
+file's own `-- local-only` marker, not a list kept in the script, so a new
+local-only script is protected as soon as it says so.
+
+| After | Rows |
+|---|---|
+| classes (published, live) | 23 |
+| skills | 231 |
+| spells | 366 |
+| psionic powers | 52 |
+| gear (95 of them still name-only stubs) | 407 |
+
+**Do not run the migrations on a new database.** This is the part that looks
+wrong and is not: `db/schema.sql` already contains every column the migrations
+add, so on a fresh database **18 of the 24 would fail** — `duplicate column
+name: bio`, `no such table: items`, and so on. They exist to bring an EXISTING
+database forward, and `schema.sql` records all 24 as applied the moment it runs,
+guarded on the schema feature each one adds. A fresh database is current
+immediately and says so.
+
+So the two directions never mix:
+
+| | new database | existing database |
+|---|---|---|
+| `db/schema.sql` | **yes** — creates everything, records every migration | yes — harmless, and how you backfill the records |
+| `db/migrations/*.sql` | **no** — 18 of 24 error | yes — the ones it has not had, in order |
+| `db/seed-catalogs.sql` | yes | no — it seeds the ORIGINAL three classes |
+| `apps/character-creator/db/*.sql` | yes — the corrections on top | as needed; the log says which have run |
+
+`seed-catalogs.sql` seeds the three classes **as originally written, not as the
+rules audit corrected them**, which is why the data scripts follow it rather
+than being optional. Apply them in filename order; every one guards itself, so
+a script whose moment has not come does nothing and can be re-run later.
+
+Then confirm, rather than trusting the exit codes:
+
+```sh
+npx wrangler d1 execute DB --remote --command \
+  "SELECT (SELECT count(*) FROM schema_migrations) AS migrations,
+          (SELECT count(*) FROM imported_classes WHERE status='published') AS classes,
+          (SELECT count(*) FROM skills) AS skills,
+          (SELECT count(*) FROM data_script_runs) AS script_runs;"
+```
 
 ### The migration convention
 

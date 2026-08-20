@@ -4,6 +4,12 @@
 //
 //   node scripts/d1-apply.mjs --remote db/migrations/021-x.sql apps/character-creator/db/backfill-y.sql
 //   node scripts/d1-apply.mjs --local  apps/character-creator/db/add-z.sql
+//   node scripts/d1-apply.mjs --remote apps/character-creator/db/*.sql
+//
+// - Globs are expanded by this script, sorted, because PowerShell does not
+//   expand them for native commands and the same command should work in both
+//   shells. A file whose first-column comment says `-- local-only` is REFUSED
+//   under --remote, so a glob cannot sweep seed-dev.sql into production.
 //
 // - The target is EXPLICIT. No default: an accidental --remote is the costly
 //   direction, so the script refuses to guess.
@@ -16,10 +22,12 @@
 //   whoami` EXITS NON-ZERO under a token scoped to D1 alone (it lists accounts,
 //   which that scope cannot read). Running it aborted the whole apply before a
 //   single file landed, blaming a missing token that was present and working.
-// - Every file is checked before anything runs: it must exist, be pure ASCII
-//   (em-dashes through `wrangler d1 execute` on Windows have produced mojibake
-//   in production), and carry no CR (a CRLF checkout once changed the bytes
-//   that reached production — see .gitattributes and PR #93).
+// - Every file is checked before anything runs: it must exist, carry no CR (a
+//   CRLF checkout once changed the bytes that reached production — see
+//   .gitattributes and PR #93), and hold no non-ASCII IN EXECUTABLE SQL
+//   (em-dashes through wrangler on Windows have produced mojibake in
+//   production). Comments are exempt from the second rule: a mangled comment
+//   harms nothing, and checking them refused 11 of this repo's own migrations.
 // - Files apply IN THE ORDER GIVEN and the run stops at the first failure,
 //   so a migration always lands before the backfill that needs it and a
 //   failure can't half-apply the tail.
@@ -34,15 +42,31 @@
 // - One automatic retry per file on the 10000 auth error, in case the token
 //   expires mid-sequence.
 
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
-import { trailingSelects } from './sql-statements.mjs';
+import { trailingSelects, stripComments } from './sql-statements.mjs';
 
 const args = process.argv.slice(2);
 const remote = args.includes('--remote');
 const local = args.includes('--local');
-const files = args.filter((a) => !a.startsWith('--'));
+// Globs are expanded HERE, not by the shell. PowerShell does not expand them
+// for native commands at all, so `db/*.sql` reaches this script as a literal
+// and dies as 'no such file'. Doing it here means one documented command
+// works from PowerShell and from bash alike.
+function expand(arg) {
+  if (!arg.includes('*')) return [arg];
+  const slash = arg.lastIndexOf('/');
+  const dir = slash === -1 ? '.' : arg.slice(0, slash);
+  const pattern = arg.slice(slash + 1);
+  if (!existsSync(dir)) return [];
+  const rx = new RegExp('^' + pattern.split('*').map((x) =>
+    x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*') + '$');
+  // Sorted, so an apply order is reproducible rather than filesystem order.
+  return readdirSync(dir).filter((f) => rx.test(f)).sort().map((f) => `${dir}/${f}`);
+}
+
+let files = args.filter((a) => !a.startsWith('--')).flatMap(expand);
 
 function die(msg) {
   console.error('\nd1-apply: ' + msg);
@@ -50,7 +74,28 @@ function die(msg) {
 }
 
 if (remote === local) die('say which database: --remote or --local (exactly one)');
-if (!files.length) die('no .sql files given');
+if (!files.length) die('no .sql files given (a glob that matched nothing?)');
+
+// A file marked local-only never goes to production. seed-dev.sql inserts a
+// test campaign and a test character; sweeping it up in a `db/*.sql` glob
+// against --remote would put them in front of real players. The marker is a
+// comment in the file rather than a filename list here, so a new local-only
+// script is protected the moment it says so.
+//
+// SKIPPED, not fatal, and the difference matters: the documented way to seed a
+// new environment is a glob over the whole directory, and dying on the one
+// file that must not go would make the documented command fail every time.
+// A command that always errors gets replaced by a hand-typed list, which is
+// where a file gets included by mistake. The skip is printed, so it is never
+// silent.
+let skipped = [];
+if (remote) {
+  skipped = files.filter((f) =>
+    existsSync(f) && /^--\s*local-only\b/m.test(readFileSync(f, 'utf8')));
+  files = files.filter((f) => !skipped.includes(f));
+  for (const f of skipped) console.log(`skipping ${f} — marked local-only, not for --remote.`);
+  if (!files.length) die('nothing left to apply: every file given is local-only');
+}
 
 // ── pre-flight: every file checked before anything runs ──
 for (const f of files) {
@@ -60,11 +105,23 @@ for (const f of files) {
     die(`${f}: contains CR — a CRLF checkout changes the bytes that reach the `
       + 'database. Re-checkout (the .gitattributes *.sql rule pins LF) or normalise the file.');
   }
-  for (const b of buf) {
-    if (b > 0x7f) {
-      die(`${f}: contains non-ASCII bytes — wrangler on Windows has mangled these `
-        + 'into mojibake in production before. Normalise (char(8212) for a stored em-dash).');
-    }
+  // Non-ASCII is checked in EXECUTABLE SQL only, not in comments.
+  //
+  // The hazard is real but specific: wrangler on Windows has turned literal
+  // non-ASCII into mojibake in production, and a mangled VALUE is corruption
+  // that outlives the run. A mangled COMMENT is a cosmetic blemish in a file
+  // nobody reads from the database.
+  //
+  // Checking the whole file made this script refuse 11 of the repo's own
+  // migrations, every one of them for an em-dash in prose. A guard that
+  // rejects the files you are documented to apply with it does not get
+  // tightened, it gets bypassed - and then it is guarding nothing.
+  const offending = [...stripComments(buf.toString('utf8'))]
+    .filter((ch) => ch.codePointAt(0) > 0x7f);
+  if (offending.length) {
+    die(`${f}: contains non-ASCII in executable SQL (${JSON.stringify(offending.join(''))}) `
+      + '— wrangler on Windows has mangled these into mojibake in production before. '
+      + 'Splice it instead: \'a \' || char(8212) || \' b\'. Comments are exempt.');
   }
 }
 
@@ -129,4 +186,5 @@ for (const f of files) {
   }
 }
 
-console.log(`\nd1-apply: ${files.length} file(s) applied to ${remote ? 'REMOTE' : 'local'} in order.`);
+console.log(`\nd1-apply: ${files.length} file(s) applied to ${remote ? 'REMOTE' : 'local'} in order`
+  + (skipped.length ? `, ${skipped.length} skipped as local-only.` : '.'));

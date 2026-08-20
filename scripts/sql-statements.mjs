@@ -43,6 +43,33 @@ export function collapseWhitespace(sql) {
   return out;
 }
 
+// Line comments removed, outside string literals only. Used by d1-apply's
+// pre-flight, which cares about non-ASCII that will REACH THE DATABASE - an
+// em-dash in a comment is mangled harmlessly, one in a value is corruption.
+export function stripComments(sql) {
+  let out = '';
+  let inStr = false;
+  for (let i = 0; i < sql.length; i++) {
+    const c = sql[i];
+    if (inStr) {
+      out += c;
+      if (c === "'") {
+        if (sql[i + 1] === "'") out += sql[++i];
+        else inStr = false;
+      }
+      continue;
+    }
+    if (c === '-' && sql[i + 1] === '-') {
+      while (i < sql.length && sql[i] !== '\n') i++;
+      out += '\n';
+      continue;
+    }
+    if (c === "'") inStr = true;
+    out += c;
+  }
+  return out;
+}
+
 // Top-level statements, split on semicolons that are not inside a string
 // literal. SQL escapes a quote by doubling it, which falls out of the state
 // machine for free. Line comments are stripped first, outside literals only.

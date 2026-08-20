@@ -1,3 +1,4 @@
+-- local-only: inserts a test campaign and character. Never production.
 -- Optional local-dev seed data. Not part of db/schema.sql and never applied to
 -- production. Apply from the repo root after the schema:
 --   npx wrangler d1 execute DB --local --file apps/character-creator/db/seed-dev.sql
