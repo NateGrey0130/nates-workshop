@@ -428,6 +428,39 @@ section('Skills stay true');
     noFrontmatter.join(', '));
   check('every repo path a skill names exists', badPaths.length === 0,
     badPaths.slice(0, 6).join('; '));
+  // Pruning stale branches is configuration, not a step anyone performs:
+  // `remote.origin.prune` makes every fetch do it, and `gh pr merge
+  // --delete-branch` removes both copies of the branch. The four-command
+  // version was in this skill for months and was re-run by hand every few
+  // PRs, which is the tell that it should have been config all along.
+  //
+  // Only RUNNABLE lines are examined. The skill discusses the old commands in
+  // prose to explain why they are gone, and that prose must stay legal.
+  // `skills` holds directory names, not paths.
+  const shipPr = skills.includes('ship-pr')
+    ? join(skillsDir, 'ship-pr', 'SKILL.md') : null;
+  if (shipPr && existsSync(shipPr)) {
+    const text = readFileSync(shipPr, 'utf8');
+    // \r? because this file is CRLF. Without it the match found nothing,
+    // `fenced` came back empty, and the NEGATIVE check below passed on an
+    // empty string — a green tick proving nothing at all. The length
+    // guard is here so that cannot happen quietly again.
+    const fenced = [...text.matchAll(/```bash\r?\n([\s\S]*?)```/g)]
+      .map((m) => m[1]).join('\n');
+    check('the ship-pr skill has runnable commands to examine',
+      fenced.length > 0,
+      'no bash fences matched, so every check below would pass vacuously');
+    check('ship-pr no longer tells anyone to prune by hand',
+      !/git fetch --prune/.test(fenced) && !/git push origin --delete/.test(fenced),
+      'a runnable line still teaches the manual dance');
+    check('and merges with --delete-branch instead',
+      /gh pr merge[^\n]*--delete-branch/.test(fenced),
+      'without it the branch survives on GitHub and locally');
+    check('and records the one-time config a fresh clone needs',
+      fenced.includes('git config remote.origin.prune true'),
+      'the setting lives per clone, so a checkout without it silently accumulates refs');
+  }
+
   check('every smoke check a skill quotes still exists', badChecks.length === 0,
     badChecks.slice(0, 6).join('; ') + ' — a renamed check leaves the skill lying');
 
