@@ -39,18 +39,42 @@ caught for you, so the checks happen before the merge or they do not happen.
    git push -u origin short-kebab-description
    gh pr create --base main --head short-kebab-description --title "..." --body-file pr-body.tmp
    ```
-7. **Merge**, only when asked. It deploys.
+7. **Merge**, only when asked. It deploys. `--delete-branch` removes the
+   branch from GitHub *and* locally, so there is nothing left to tidy.
    ```bash
-   gh pr merge <n> --merge
+   gh pr merge <n> --merge --delete-branch
    ```
-8. **Sync and prune.**
+8. **Sync.** Pruning is automatic — see [Pruning is not a
+   step](#pruning-is-not-a-step).
    ```bash
    git checkout main && git pull origin main
-   git push origin --delete short-kebab-description
-   git branch -d short-kebab-description
-   git fetch --prune
    ```
 9. **Verify production**, by querying it — not by reading the exit code.
+
+## Pruning is not a step
+
+This clone sets:
+
+```bash
+git config remote.origin.prune true
+```
+
+so every `git fetch` — and therefore every `git pull` — drops
+remote-tracking refs whose branch is gone from GitHub. Nothing needs pruning
+by hand.
+
+It is set **per clone**, not in the repo, because git has no way to ship
+config with a checkout. A fresh clone needs the one line above; until then it
+accumulates stale `origin/*` refs that are cosmetic but keep showing up in
+`git branch -r`.
+
+What used to be here was a four-command dance — delete the remote branch,
+delete the local branch, fetch with `--prune`. Three of those four are
+unnecessary: `gh pr merge --delete-branch` does both deletions, and the config
+does the pruning. The dance was being repeated by hand every few PRs, which is
+the tell that it should have been configuration rather than instructions.
+
+---
 
 ## The ordering rule
 
