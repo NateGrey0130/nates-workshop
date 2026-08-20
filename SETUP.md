@@ -48,6 +48,12 @@ nates-workshop/
 │   ├── schema.sql            Shared D1 schema — MediaVault + character creator.
 │   │                         Idempotent: every statement IF NOT EXISTS
 │   └── migrations/           One-shot ALTERs, tracked in schema_migrations
+├── .claude/
+│   ├── launch.json           Dev-server config for the editor's preview
+│   └── skills/               Repo-specific instructions, loaded by name
+│       ├── class-import/     Transcribing a class from a sourcebook
+│       ├── schema-change/    Adding a migration without breaking a fresh DB
+│       └── ship-pr/          Branch, verify, PR, merge, prune, verify again
 ├── scripts/
 │   ├── d1-apply.mjs          The migration/data-script apply routine
 │   ├── sql-statements.mjs    Splitting .sql into statements; d1-apply and the

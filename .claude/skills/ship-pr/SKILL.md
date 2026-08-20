@@ -22,11 +22,17 @@ caught for you, so the checks happen before the merge or they do not happen.
 3. **Apply schema and data FIRST, if the change needs them.** See
    [ordering](#the-ordering-rule) below. This is the step that is wrong by
    default.
-4. **Verify.** `node apps/character-creator/test/smoke.mjs` must pass. If the
-   change is visible in the app, drive it in a browser too — the smoke test
-   checks that the machinery is correct, which is not the same as the feature
-   working. A class picker that rendered everything 1300px below the fold passed
-   every test in the suite and was reported as "nothing happens".
+4. **Verify**, at the layer the change lives in:
+   - always: `node apps/character-creator/test/smoke.mjs`
+   - touched an endpoint, the schema or a data script:
+     `node apps/character-creator/test/regression.mjs` — it builds a database
+     from nothing and drives the real routes, which is the only thing that
+     catches a fresh environment being broken
+   - changed anything visible: drive it in a browser
+
+   The three catch different classes of bug and none substitutes for another.
+   A class picker that rendered everything 1300px below the fold passed all 768
+   smoke checks and was reported as "nothing happens".
 5. **Commit.** See [commit messages](#commit-messages).
 6. **Push and open the PR.**
    ```bash

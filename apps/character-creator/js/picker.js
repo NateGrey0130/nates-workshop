@@ -5,9 +5,11 @@
 // this. It exposes one global, `Picker`.
 //
 // WHY THIS EXISTS. Every picker in the app rendered its whole catalog: 74 gear
-// rows in two places, 128 skills in a native <select>. Spells and psionics look
-// fine only because those chapters have not been imported yet — a spell chapter
-// is hundreds of entries, and the pickers are pre-filtered by level and tier,
+// rows in two places, 128 skills in a native <select>. Those were the counts
+// when this was written and they have since roughly tripled — the catalogs are
+// past 400 gear rows and 200 skills, and the spell and psionic chapters that
+// had not been imported then have been since. The argument only got stronger,
+// and the pickers are pre-filtered by level and tier,
 // which hides the problem right up until it doesn't.
 //
 // The control underneath varies by task and should: "add one item" wants a list
