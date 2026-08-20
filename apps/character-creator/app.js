@@ -479,7 +479,7 @@ function classDetail(c) {
   const reqs = c.attribute_requirements
     ? Object.entries(c.attribute_requirements).map(([k, v]) => `${k} ${v}+`).join(', ') : 'none';
   const sk = c.skills || {};
-  return `<div style="margin-top:16px; border-top:1px solid var(--border); padding-top:14px">
+  return `<div id="class-detail" style="margin-top:16px; border-top:1px solid var(--border); padding-top:14px">
     <h3>${esc(c.name)}</h3>
     <p class="muted small">Requirements: ${esc(reqs)} &nbsp;·&nbsp; Class skills: ${(sk.occ_skills || []).length}
       &nbsp;·&nbsp; Related picks: ${sk.occ_related_skills?.count ?? 0} &nbsp;·&nbsp; Secondary picks: ${sk.secondary_skills?.count ?? 0}
@@ -515,7 +515,36 @@ function listOrText(label, value) {
 
 function classMode(m) { S.classMode = m; render(); }
 function quizPick(i, val) { S.quiz[i] = val; render(); }
-function pickClass(id) { const c = S.classes.find((x) => x.id === id); if (S.cls?.id !== id) resetBuild(); S.cls = c; render(); }
+// Picking a class renders the detail, the variant/O.C.C./ability pickers and an
+// enabled 'Use this class' button — ALL OF IT BELOW A GRID OF 20+ CARDS. On a
+// laptop viewport that put every one of them about 1300px under the fold, and
+// the page did not move, so the only on-screen change was a card tinting
+// slightly. It read as a dead click, and got reported as one.
+//
+// So scroll the detail into view. The class list stays right above it, still
+// one scroll away, and what to do next is now the thing you are looking at.
+function pickClass(id) {
+  const c = S.classes.find((x) => x.id === id);
+  if (S.cls?.id !== id) resetBuild();
+  S.cls = c;
+  render();
+  revealClassDetail();
+}
+
+// render() replaces innerHTML, so the node is looked up after it, not before.
+//
+// Instant, not smooth. Smooth reads better in principle and is wrong here for
+// two reasons: the complaint being fixed is that the click looked dead, and a
+// half-second animation is half a second of it still looking dead — and
+// `behavior: 'smooth'` needs a compositor running, so it silently does nothing
+// in an automated browser, which means the fix could not be tested. Instant
+// scrolling is verifiable, and it is also the unambiguous answer to 'did that
+// do anything'.
+function revealClassDetail() {
+  const el = document.getElementById('class-detail');
+  if (!el || typeof el.scrollIntoView !== 'function') return;
+  el.scrollIntoView({ behavior: 'auto', block: 'start' });
+}
 // A class with variants is not usable until one is chosen — a Dragon is always
 // some particular age, and defaulting to the first stage would pick for you.
 function canUseClass() {
