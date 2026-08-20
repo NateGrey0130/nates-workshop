@@ -847,6 +847,15 @@ function renderAttributes() {
   const usesPB = ATTRS.some((a) => method(a) === 'point');
   const over = spent > PB_POOL;
   const canNext = missing.length === 0 && unmet.length === 0 && !over;
+  // The panel already warns about missing values and unmet minimums, and this
+  // repeats them beside the button on purpose: the button is where you look
+  // when you are stuck, and a warning further up the page is not an answer to
+  // "why can't I continue". Overspending point-buy had NO warning at all —
+  // only a number turning red — so that case is new information.
+  const attrWhy = missing.length ? `Still to roll or enter: ${missing.join(', ')}.`
+    : unmet.length ? `Class minimum not met: ${unmet.map(([k, v]) => `${k} ${v}+`).join(', ')}.`
+    : over ? 'Point-buy pool overspent — free up points to continue.'
+    : '';
 
   $('app').innerHTML = `
   <div class="panel">
@@ -866,6 +875,7 @@ function renderAttributes() {
     ${S.cls.attribute_dice && usesPB ? `<p class="muted small">Note: point-buy/manual ignore racial attribute dice — the class minimums are still enforced.</p>` : ''}
   </div>
   <div class="nav"><button class="btn btn-ghost" onclick="goStep(1)">&larr; Back</button>
+  ${attrWhy ? `<span class="nav-why">${esc(attrWhy)}</span>` : ''}
   <button class="btn btn-primary" ${canNext ? '' : 'disabled'} onclick="goStep(3)">Skills &rarr;</button></div>`;
 }
 // A roll's breakdown is cleared whenever the value stops being that roll —
@@ -1233,7 +1243,17 @@ function renderEquipment() {
       <span class="pct">${picked.length}/${c.choose} chosen</span></div>${opts}`;
   }).join('');
 
-  const outstanding = gearChoicesOutstanding().length;
+  // Names what is outstanding rather than counting it. `Still to choose:
+  // energy pistol, vibro-blade` tells you where to look; `2 gear choices`
+  // makes you go and find them. Falls back to a count only when a class left
+  // a choice group unlabelled.
+  const outstandingGroups = gearChoicesOutstanding();
+  const outstanding = outstandingGroups.length;
+  const gearLabels = outstandingGroups.map((c) => c.label).filter(Boolean);
+  const gearWhy = !outstanding ? ''
+    : gearLabels.length === outstanding
+      ? `Still to choose: ${gearLabels.join(', ')}.`
+      : `${outstanding} gear choice${outstanding === 1 ? '' : 's'} still to make.`;
 
   $('app').innerHTML = `
   <div class="panel">
@@ -1260,8 +1280,8 @@ function renderEquipment() {
     </div>
   </div>
   <div class="nav"><button class="btn btn-ghost" onclick="goStep(3)">&larr; Back</button>
-  <button class="btn btn-primary" ${outstanding ? 'disabled' : ''} onclick="goStep(5)">Powers &rarr;</button>
-  ${outstanding ? `<span class="muted small">${outstanding} gear choice${outstanding === 1 ? '' : 's'} still to make.</span>` : ''}</div>`;
+  ${gearWhy ? `<span class="nav-why">${esc(gearWhy)}</span>` : ''}
+  <button class="btn btn-primary" ${outstanding ? 'disabled' : ''} onclick="goStep(5)">Powers &rarr;</button></div>`;
 }
 function rmEquip(i) { S.equipment.splice(i, 1); render(); }
 function addCatalog() {
