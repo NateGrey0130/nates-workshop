@@ -2406,6 +2406,29 @@ a fully successful run. Twice now, in different disguises:
   takes multiple statements separated by `;`, and has not failed. Use `--file`
   locally, where none of this applies.
 
+  **`--command` fights PowerShell over double quotes.** PowerShell has no
+  backslash escaping, so `\"` inside a double-quoted `--command` does not
+  escape anything — the string ends early and the rest word-splits into
+  arguments wrangler rejects. That bites hardest on exactly the queries most
+  worth running remotely, because class markdown cites gear as
+  `item_id: "slug"` with real double quotes in it.
+
+  Build them in SQL instead, the same way `char(8212)` already handles the
+  em-dash: `instr(markdown, 'item_id: ' || char(34) || 'energy-rifle' ||
+  char(34))`. The command then carries no inner double quote at all.
+
+  **`scripts/d1-apply.mjs` is not affected** and needs none of this: it spawns
+  wrangler with a real argv array and no shell, so a statement passes through
+  untouched however it is quoted. The trap is only for a `--command` typed at
+  a PowerShell prompt.
+
+  **Reading a result set back is easier as a file than as terminal output.**
+  `--json | Out-File -Encoding utf8 out.json` gives you something to parse
+  rather than something to transcribe. Slugs are the reason: `ng-l5-northern-
+  gun-laser-rifle` reads as `ng-15-` in most terminal fonts, and a `from:`
+  list naming a slug that does not exist is worse than the placeholder it
+  replaces.
+
 The check that settles it, every time:
 
 ```sh

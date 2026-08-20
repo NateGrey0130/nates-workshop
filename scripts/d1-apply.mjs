@@ -25,7 +25,12 @@
 //   failure can't half-apply the tail.
 // - Each file's own trailing verification SELECTs are printed — the scripts
 //   read their results back rather than trusting exit codes, and this is
-//   where those results surface.
+//   where those results surface. On --remote that needs a second pass:
+//   `--remote --file` does not run the SQL over the query API, it uploads the
+//   file to D1's IMPORT endpoint, which returns aggregate counts and nothing
+//   else. So the trailing SELECTs are re-run afterwards over --command. They
+//   are read-only by definition, and without this the promise above was
+//   simply false on the target it matters most for.
 // - One automatic retry per file on the 10000 auth error, in case the token
 //   expires mid-sequence.
 
@@ -37,6 +42,37 @@ const args = process.argv.slice(2);
 const remote = args.includes('--remote');
 const local = args.includes('--local');
 const files = args.filter((a) => !a.startsWith('--'));
+
+// Top-level SELECT statements, in order. Splitting SQL properly needs a
+// parser; splitting it well enough to find trailing read-backs needs only
+// that string literals and comments do not hide a semicolon. SQL escapes a
+// quote by doubling it, which falls out of the state machine for free.
+//
+// Only statements that BEGIN with SELECT are replayed - a SELECT inside an
+// UPDATE's guard is part of that UPDATE, and re-running it alone would be
+// meaningless at best.
+function trailingSelects(sql) {
+  const stripped = sql.replace(/--[^\n]*/g, '');
+  const out = [];
+  let cur = '';
+  let inStr = false;
+  for (let i = 0; i < stripped.length; i++) {
+    const c = stripped[i];
+    if (inStr) {
+      cur += c;
+      if (c === "'") inStr = stripped[i + 1] === "'" ? (cur += stripped[++i], true) : false;
+      continue;
+    }
+    if (c === "'") { inStr = true; cur += c; continue; }
+    if (c === ';') { out.push(cur); cur = ''; continue; }
+    cur += c;
+  }
+  out.push(cur);
+  return out
+    .map((t) => t.trim())
+    .filter((t) => /^select\b/i.test(t))
+    .map((t) => t + ';');
+}
 
 function die(msg) {
   console.error('\nd1-apply: ' + msg);
@@ -100,6 +136,24 @@ for (const f of files) {
   // verification SELECTs, on failure the reason.
   console.log(r.out.trim());
   if (r.code !== 0) die(`${f} failed — nothing after it was applied.`);
+
+  // Remote applies go through the import endpoint, which reports counts and
+  // swallows result sets. Replay the file's own trailing SELECTs over the
+  // query API so the numbers the script was written to show actually appear.
+  if (remote) {
+    const checks = trailingSelects(readFileSync(f, 'utf8'));
+    if (checks.length) {
+      console.log(`\n-- ${f}: verification --`);
+      // One --command carrying every SELECT, so this is one extra round trip
+      // per file rather than one per statement.
+      const v = run(['wrangler', 'd1', 'execute', 'DB', '--remote', '--command', checks.join(' ')]);
+      console.log(v.out.trim());
+      // A failed verification is not a failed apply. The rows landed; only the
+      // read-back did not, and saying otherwise would send you rolling back a
+      // migration that is fine.
+      if (v.code !== 0) console.log(`(verification query failed - the apply itself succeeded)`);
+    }
+  }
 }
 
 console.log(`\nd1-apply: ${files.length} file(s) applied to ${remote ? 'REMOTE' : 'local'} in order.`);
