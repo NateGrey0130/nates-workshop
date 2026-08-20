@@ -44,6 +44,7 @@ Access gate. No build step, no framework, no dependencies.
 - [A category restriction may name a skill from elsewhere](#a-category-restriction-may-name-a-skill-from-elsewhere)
 - [A skill can grant more than a percentage](#a-skill-can-grant-more-than-a-percentage)
   - [Where they are applied](#where-they-are-applied)
+- [A row can say where it came from](#a-row-can-say-where-it-came-from)
 - [Merging duplicate catalog rows](#merging-duplicate-catalog-rows)
   - [Retired keys keep resolving](#retired-keys-keep-resolving)
 - [The PDF importers](#the-pdf-importers)
@@ -233,7 +234,7 @@ ppe and isp.
 | Table | Notes |
 |---|---|
 | `imported_classes` | Class definitions as markdown. `status` is `draft` or `published`; only published classes appear in the app. `deleted_at` NULL means live — retiring a published class hides it from the pickers without destroying it, and drafts are still deleted outright. |
-| `gear` | Gear catalog. `slug` is what `equipment_starting[].item_id` references. Carries a stat block — damage, is_mega_damage, range, payload, rate_of_fire, ar, mdc — null wherever it does not apply, so one table covers weapons, armour and general kit. Named `gear`, not `items`, to stay clear of MediaVault's `media_items`. |
+| `gear` | Gear catalog. `slug` is what `equipment_starting[].item_id` references. Carries a stat block — damage, is_mega_damage, range, payload, rate_of_fire, ar, mdc — null wherever it does not apply, so one table covers weapons, armour and general kit. `source_book` may say [not book-verified](#a-row-can-say-where-it-came-from). Named `gear`, not `items`, to stay clear of MediaVault's `media_items`. |
 | `skills` | `base` 0 means non-percentile (W.P.s, hand to hand). `systems` is a JSON array; NULL means both. `note` carries oddities like `40%/30% climb/rappel`. `bonuses` applies always; `level_bonuses` is a per-level schedule — see [A fighting style is a level schedule](#a-fighting-style-is-a-level-schedule). |
 | `spells` | `system` NULL means unrestricted. name, level, ppe, plus a stat block (range, duration, damage, saving throw, area of effect, casting time, description). The stat block is TEXT — books write "100 feet per level" as often as a number. |
 | `psionic_powers` | name, category (Healing/Physical/Sensitive/Super), isp, plus range, duration, saving throw and description — the same field names spells use. `min_tier` is the psychic tier a book states is required; NULL means no restriction beyond the category. |
@@ -391,7 +392,7 @@ writes are gated (see [Permissions](#permissions)).
 | `campaigns/[id]` | GET / PATCH | Details (`gm_notes` stripped for non-GM); edit `gm_notes` |
 | `draft` | GET / PUT / DELETE | The caller's own unfinished wizard build. No id in the route — a draft belongs to a person, not a collection. One each. **PUT states the version it is replacing** in `expect_updated_at` and is refused 409 otherwise; see [Two tabs cannot overwrite each other](#two-tabs-cannot-overwrite-each-other) |
 | `characters` | GET / POST | List (`?campaign_id=`, `?limit=`, `?offset=`); create at level 1 — **validated against the class rules** |
-| `characters/[id]` | GET / PATCH | Sheet + inventory, with `can_write` / `is_gm`; edit pools, notes, and the bio/combat/saves/armor sections |
+| `characters/[id]` | GET / PATCH | Sheet + inventory, with `can_write` / `is_gm`; edit pools, notes, and the bio/combat/saves/armor sections. Also returns `skill_level_notes` and `weapon_bonuses` — what a skill grants that is not a summable number; see [A fighting style is a level schedule](#a-fighting-style-is-a-level-schedule) |
 | `characters/[id]/items` | POST | Add inventory row (catalog slug or freeform) |
 | `characters/[id]/items/[itemId]` | PATCH / DELETE | qty/equipped/notes; soft remove |
 | `characters/[id]/xp` | POST | `{delta}` or `{total}`; returns a proposed level-up diff |
@@ -2032,6 +2033,45 @@ The TOTAL is right; only the label is imprecise, and only there. Separating them
 would mean counting the flat half outside the roll, which would double-count it
 for every character whose stored roll already includes it. Combat and save
 bonuses are unaffected — those keys are flat on both sides.
+
+---
+
+## A row can say where it came from
+
+`source_book` normally names a book and a page. Forty gear rows instead say:
+
+```
+Web reference (not book-verified)
+```
+
+That is not a placeholder waiting to be tidied. It is the honest value, and
+it exists because the alternative was worse: naming a page nobody checked.
+
+The reason is a near miss. The first stat block found for the Glitter Boy gave
+820 M.D.C. and a 40 million credit price, and was only obviously wrong because
+that page declared itself homebrew. The official figure is 770. Nothing about
+the numbers themselves said which was which.
+
+So the rule for anything transcribed from the open web:
+
+- **`source_book` says the source was the web**, in those words, so a reader
+  can tell a checked row from an unchecked one at a glance and a book
+  correction knows what it is overwriting.
+- **Uncertainty goes in `description`**, where a player reads it, not into a
+  number that then looks like fact. The Dog Pack riot armor says its M.D.C. is
+  for one pattern and that others differ; the air filter says two sources
+  disagree on its price; the small mallet says its figures are a claw
+  hammer's, because no mallet is priced anywhere findable.
+- **A range stays a range.** Where a source gives one, the column holds the low
+  end and the description gives the span. A backpack is "100 to 200 credits",
+  and writing 100 alone would read as precision the source does not have.
+- **What cannot be confirmed is left a stub.** Clothing, traveling clothes and
+  food rations are still unpriced because no Rifts pricing for them exists on
+  the open web — food and drink pricing is absent from most of the books
+  outright. Inventing a number there would be inventing a rule.
+
+Every data script that writes web-sourced values says so in its header too, so
+the provenance survives in `db/` as well as in the row.
 
 ---
 

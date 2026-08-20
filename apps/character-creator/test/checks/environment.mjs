@@ -872,5 +872,43 @@ check('the two goggle rows retire into the same pair of options',
   goggleChoices.length === 2 && goggleChoices[0] === goggleChoices[1],
   goggleChoices.join(' vs '));
 
+// ---------- 10. Provenance ----------
+section('Provenance of web-sourced rows');
+
+// Forty gear rows say their source was the web rather than naming a book and
+// page. That value is load-bearing: it is how a reader tells a checked row
+// from an unchecked one, and how a later book correction knows what it is
+// overwriting. The near miss that produced the rule was a Glitter Boy stat
+// block giving 820 M.D.C. and a 40 million credit price, which was only
+// obviously wrong because that page declared itself homebrew.
+const MARKER = 'Web reference (not book-verified)';
+const dataDir = join(appDir, 'db');
+const scriptsUsingMarker = readdirSync(dataDir)
+  .filter((f) => f.endsWith('.sql'))
+  .filter((f) => readFileSync(join(dataDir, f), 'utf8').includes(MARKER));
+check('some data script writes the web-source marker',
+  scriptsUsingMarker.length > 0,
+  'if this stops being true the README section is describing nothing');
+
+// The marker in the row is only half of it — the script that wrote it has to
+// say so too, or the provenance lives in the database and nowhere in the repo.
+const silent = scriptsUsingMarker.filter((f) => {
+  const head = readFileSync(join(dataDir, f), 'utf8').split('UPDATE')[0]
+    .split('INSERT')[0].toUpperCase();
+  return !head.includes('WEB, NOT THE BOOK') && !head.includes('FROM WEB REFERENCES')
+    && !head.includes('WEB SEARCH');
+});
+check('every script writing it says so in its header', silent.length === 0,
+  silent.join(', ') + ' — provenance would live only in the database');
+
+// The README quotes the exact string. If one drifts from the other the
+// documentation is describing a value that no longer exists.
+const readmeText = readFileSync(join(appDir, 'README.md'), 'utf8');
+check('the README quotes the marker exactly', readmeText.includes(MARKER),
+  'README and scripts disagree on the marker string');
+check('and documents what it means',
+  readmeText.includes('A row can say where it came from'),
+  'the section explaining the convention is missing');
+
 
 }
