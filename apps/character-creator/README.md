@@ -764,11 +764,27 @@ quietly add a throwing bonus to melee. An energy weapon's aimed-shot (+3) and
 burst (+1) bonuses are level-independent and stack on top of its level ladder,
 so those are separate conditions too.
 
-**Four W.P.s are deliberately still empty.** `Rope` defers to the Cowboy
-O.C.C., and `Automatic Pistol`, `Revolver` and `Automatic and Semi-automatic
-Rifles` are older-edition names for what RUE folds into `W.P. Handguns` and
-`W.P. Rifles`. Merging those is a catalog decision rather than a transcription
-— `catalog_redirects` exists for exactly that — so nothing here guesses.
+### The merge that was called off
+
+`W.P. Automatic Pistol`, `W.P. Revolver` and `W.P. Automatic and
+Semi-automatic Rifles` look like older-edition names for what RUE folds into
+`W.P. Handguns` and `W.P. Rifles`, and were one step away from being merged
+into them with `catalog_redirects`.
+
+**They are not the same skills.** Each carries its own bonuses, and the
+Revolver's aimed shot is **+4** where every other modern handgun proficiency
+gives +3. Merging would have deleted that difference from every character who
+had taken the skill, with nothing left to recover it from. The smoke test now
+asserts the two numbers stay apart, so the merge cannot happen by accident.
+
+The lesson generalises: a name that looks like an old spelling of another is
+not evidence that the rows say the same thing. Read both entries first.
+
+**Two W.P.s still have no bonuses**, both with a note but no schedule:
+`W.P. Bolt Action Rifle` ("Hunting and sniping rifles") and `W.P. Heavy`
+("Machineguns, bazookas, LAWS, and mortars"). RUE has entries whose scope
+matches each closely, but after the Revolver, assuming equivalence from a
+matching description is exactly the mistake to avoid twice.
 
 ---
 
