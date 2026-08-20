@@ -1049,16 +1049,32 @@ function renderSkills() {
       .concat(catalog.filter((s) => chosen.includes(s.name) && !Picker.match(s, query)))
       .concat(custom);
     if (!shown.length) return '<p class="muted small">Nothing matches that filter.</p>';
-    return shown.map((s) => {
+    // Grouped by category. "Any category" on the secondary list is the whole
+    // catalog, and a flat run of 200+ checkboxes gives no sense of where you are
+    // in it. Sorted by category then name so the headings come out in a stable
+    // order rather than the catalog's.
+    const ordered = [...shown].sort((a, b) =>
+      (a.category || '\uffff').localeCompare(b.category || '\uffff')
+      || (a.name || '').localeCompare(b.name || ''));
+    const sizes = ordered.reduce((m, x) => { const g = x.category || 'Uncategorized';
+      return m.set(g, (m.get(g) || 0) + 1); }, new Map());
+    let lastCat = null;
+    return ordered.map((s) => {
+      const cat = s.category || 'Uncategorized';
+      const head = cat !== lastCat
+        ? `<div class="pick-group">${esc(cat)}<span class="pick-group-n">${sizes.get(cat)}</span></div>`
+        : '';
+      lastCat = cat;
       const on = chosen.includes(s.name);
       const blocked = !on && (taken.has(s.name.toLowerCase()) || chosen.length >= limit);
       const hint = s.name === LANGUAGE_OTHER
         ? ' <span class="muted small">— once per language; you will be asked which</span>' : '';
-      return `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
+      // The category is the heading now, so the row carries only its numbers.
+      return head + `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
         <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
           data-act="skill" data-kind="${kind}" data-name="${esc(s.name)}">
         <span>${esc(s.name)}${hint}</span>
-        <span class="pct">${s.category} · ${s.base ? s.base + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—'}</span>
+        <span class="pct">${s.base ? s.base + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—'}</span>
       </label>`;
     }).join('');
   };
@@ -1434,10 +1450,14 @@ function psiRollHtml() {
 function spellGroupRows(list, count) {
   const sorted = [...list].sort((a, b) =>
     ((a.level ?? Infinity) - (b.level ?? Infinity)) || (a.name || '').localeCompare(b.name || ''));
+  const sizes = sorted.reduce((m, x) => { const g = x.level != null ? `Level ${x.level}` : 'Unleveled';
+    return m.set(g, (m.get(g) || 0) + 1); }, new Map());
   let last = null;
   return sorted.map((sp) => {
     const group = sp.level != null ? `Level ${sp.level}` : 'Unleveled';
-    const head = group !== last ? `<div class="power-group">${esc(group)}</div>` : '';
+    const head = group !== last
+      ? `<div class="pick-group">${esc(group)}<span class="pick-group-n">${sizes.get(group)}</span></div>`
+      : '';
     last = group;
     const on = S.spells.includes(sp.name);
     const blocked = !on && S.spells.length >= count;
@@ -1452,10 +1472,14 @@ function spellGroupRows(list, count) {
 function psiGroupRows(list, count) {
   const sorted = [...list].sort((a, b) =>
     (a.category || '￿').localeCompare(b.category || '￿') || (a.name || '').localeCompare(b.name || ''));
+  const sizes = sorted.reduce((m, x) => { const g = x.category || 'Uncategorized';
+    return m.set(g, (m.get(g) || 0) + 1); }, new Map());
   let last = null;
   return sorted.map((p) => {
     const group = p.category || 'Uncategorized';
-    const head = group !== last ? `<div class="power-group">${esc(group)}</div>` : '';
+    const head = group !== last
+      ? `<div class="pick-group">${esc(group)}<span class="pick-group-n">${sizes.get(group)}</span></div>`
+      : '';
     last = group;
     const on = S.psi.includes(p.name);
     const blocked = !on && S.psi.length >= count;
