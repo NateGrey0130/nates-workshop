@@ -2341,7 +2341,7 @@ added `data_script_runs` and every script now ends by writing itself into it.
 |---|---|---|
 | Dev seed | `seed-dev.sql` | Optional local character/campaign rows. Never applied to production |
 | Run tracking | `backfill-data-script-runs.sql` | One-time, optional, and an **assertion**: records every script that had already been applied before `data_script_runs` existed, stamped with a note saying the run was asserted rather than observed. Guarded per filename, so it cannot double-record a script that has genuinely run since |
-| Data cleanup | `backfill-gear-system.sql`, `backfill-import-skill-gaps.sql`, `backfill-psionic-isp-notes.sql`, `backfill-skill-provenance.sql`, `backfill-spell-ppe-notes.sql`, `merge-scuba-duplicate.sql`, `retire-gear-placeholders.sql`, `untag-cross-system.sql` | One-off corrections to rows an earlier import or data script got wrong or left NULL |
+| Data cleanup | `backfill-gear-system.sql`, `backfill-import-skill-gaps.sql`, `backfill-psionic-isp-notes.sql`, `backfill-skill-provenance.sql`, `backfill-spell-ppe-notes.sql`, `merge-scuba-duplicate.sql`, `retire-gear-placeholders.sql`, `retire-orphan-gear-stubs.sql`, `untag-cross-system.sql` | One-off corrections to rows an earlier import or data script got wrong or left NULL |
 | Class corrections | `fix-*.sql`, `apply-*.sql`, `long-bowman-money.sql` | The rules audit's output: stored class definitions rewritten against the books, and class data written for a schema feature the day it landed |
 | Additions | `add-*.sql` | Something the book gives that the database never had — a catalog row, a whole-table batch extracted from page scans (`add-pf-weapons-batch`, `add-pf-equipment-batch`, the RUE spell and psionics batches), or a whole class. A missing skill named in an `only` restriction narrows its category to nothing, which is usually how one gets noticed. A class goes in this way only when the import tool cannot be reached: production sits behind Cloudflare Access, so a hand-transcribed class is applied by script instead |
 
@@ -2454,6 +2454,27 @@ catalog there is currently very little to restrict.
 **The catalog editor has no general delete.** Rows are created and corrected by
 hand; the only deletion is the one a merge performs. Deliberate — see
 [`docs/plans/04-catalog-edit-ui.md`](docs/plans/04-catalog-edit-ui.md).
+
+**Most of the gear catalog is still name-only stubs.** A class import creates
+a stub row for every equipment id it cannot find, so the catalog holds a row
+per name any class has ever mentioned. Production carried 157 of them; 33 were
+orphaned by later class corrections and referenced by nothing at all, and
+`retire-orphan-gear-stubs.sql` drops those. The rest are real book items the
+gear importer has not reached yet - the equipment chapter import filled in the
+weapons but not the general kit, so `Canteen` and `Backpack` are still empty.
+They are cited by live classes and must stay.
+
+A handful are neither: categories the importer emitted as ids before choice
+groups existed. `energy-pistol` and `vibro-blade` were fixed by
+[`retire-gear-placeholders.sql`](db/retire-gear-placeholders.sql) and
+`energy-rifle` by [`fix-shifter-energy-rifle.sql`](db/fix-shifter-energy-rifle.sql).
+Still outstanding, each needing the book rather than a guess:
+`submachine-gun` (shifter), `mdc-body-armor` (merc-soldier, psi-stalker,
+wild-psi-stalker), `musical-instrument` (mystic), `robe-or-cape` and
+`pen-or-pencil` (ley-line-walker, ley-line-rifter), `lesser-rune-weapon` and
+`basic-provisions` (godling). Each is a character starting play holding
+something that does not exist, so they are worth clearing - but a `from:` list
+invented rather than read is the failure the import rules exist to prevent.
 
 **A gear choice must enumerate its options.** `{ choose, from }` takes an
 explicit list of slugs, because gear's `category` (weapon/armor/vehicle/gear) is
