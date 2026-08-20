@@ -742,7 +742,6 @@ body.play-mode #print-btn { display: none; }
 
 @media (min-width: 700px) {
   .play-view { max-width: 900px; }
-  .play-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
 }
 @media print { .play-view, #play-roll-bar { display: none; } }
 

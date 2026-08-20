@@ -25,7 +25,7 @@ steps" and then lists six).
 ## Step 1 — the Attribute Bonus Chart (p.16)
 
 Implemented in [`js/derive.js`](../js/derive.js), one row per line, asserted
-against the printed values in smoke section `[1c17]`.
+against the printed values in smoke section `Attribute bonus chart`.
 
 The rows do **not** share a formula, which is the entire reason this file exists
 in its current shape. Values for attributes 16–30:
@@ -74,7 +74,7 @@ attribute tables", which is why it went unexamined for so long.
 - A racial bonus may be written into the dice, e.g. `3D6+6`.
 
 All of the above is implemented in [`js/dice.js`](../js/dice.js) and asserted in
-smoke `[1c18]`, including the chain stopping at two dice and the threshold
+smoke `Exceptional attribute rolls`, including the chain stopping at two dice and the threshold
 reading the dice rather than the total.
 
 ## Step 2 — hit points and S.D.C. (p.18)
@@ -101,7 +101,7 @@ Carried per class as `hit_points_base` / `sdc_base` formulas, which is why
 - **Master:** only from a psychic O.C.C.
 - Some races — troll and orc are named — can have no psychic powers at all.
 
-Implemented in [`js/psionics.js`](../js/psionics.js), asserted in smoke `[1c22]`.
+Implemented in [`js/psionics.js`](../js/psionics.js), asserted in smoke `Random psionics`.
 A rolled tier is stored on the *character* (`psychic_tier`, `psychic_shape`) and
 folded into the class-shaped object by `withRolledPsionics()`, so the save
 targets, the power gating and the level-up I.S.P. growth all keep reading one
@@ -185,7 +185,7 @@ no neutral.
 - Evil: Miscreant, Aberrant, Diabolic
 
 The list lives in [`js/rules.js`](../js/rules.js), closed, asserted in smoke
-`[1c20]` — including a check that nothing named "neutral" has crept into it.
+`Alignments` — including a check that nothing named "neutral" has crept into it.
 
 Required in the wizard, which will not save without one. **Not** enforced
 server-side: a character created before the field existed has no alignment, and
@@ -210,7 +210,7 @@ Birth Order · Weight · Height · Age · Disposition · Land of Origin ·
 Type of Environment · Social or Family Background · Racial Hostilities
 
 Transcribed in [`js/rules.js`](../js/rules.js) as `[maxRoll, text]` pairs, the
-same shape as the psionics table, and asserted in smoke `[1c28]` — which checks
+same shape as the psionics table, and asserted in smoke `Background tables` — which checks
 each table covers 01-00 with no gap or overlap, since a transcription slip there
 would silently return nothing for some rolls.
 

@@ -24,7 +24,9 @@ import { json } from './auth.js';
 import { safeParse } from './character-json.js';
 import { keysOf, redirectStatements, collapseStatement } from './catalog-redirects.js';
 
-export const MERGE_REFS = {
+// Internal since resolveCatalog() moved into this file - the two endpoints that
+// used to import it now call that instead.
+const MERGE_REFS = {
   skills: { kind: 'json', column: 'skills' },
   spells: { kind: 'json', column: 'powers', type: 'spell' },
   psionics: { kind: 'json', column: 'powers', type: 'psionic' },

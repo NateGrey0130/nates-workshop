@@ -110,8 +110,11 @@ apps/character-creator/
 ├── docs/plans/               The twelve original PRs, with their rejected
 │                             alternatives
 └── test/
-    ├── smoke.mjs             Parser + schema + migration-state smoke test,
-    │                         plus class-check's extraction (see below)
+    ├── smoke.mjs             The runner, and the rules half of the checks
+    ├── harness.mjs           check(), section(), the counters and the summary
+    ├── checks/
+    │   └── environment.mjs   D1 schema, schema.sql self-sufficiency, data-script
+    │                         conventions, documentation claims, migration state
     ├── regression.mjs        End-to-end: builds a throwaway D1, boots the
     │                         worker, drives the real endpoints over HTTP
     └── fixtures/*.md         Three real class files, parser test input only
@@ -621,7 +624,7 @@ exceptional +6, +4`) because an unexplained 28 off a 3d6 reads as a bug.
 **Attribute-derived values** (`js/derive.js`) come from the Attribute Bonus
 Chart on p.16, transcribed row by row — see
 [`docs/rules-audit.md`](docs/rules-audit.md) for the full table and
-[`test/smoke.mjs`](test/smoke.mjs) `[1c17]`, which asserts the printed values.
+[`test/smoke.mjs`](test/smoke.mjs) `Attribute bonus chart`, which asserts the printed values.
 
 The rows deliberately disagree with one another, and that is the point:
 
