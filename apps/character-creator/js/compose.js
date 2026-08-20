@@ -25,6 +25,70 @@ import { applyVariant, combineClasses, applyAbilities, bonusesFromSkills,
          sumBonusGroups } from './parser.js';
 import { withRolledPsionics } from './psionics.js';
 
+// Hit points and S.D.C. are CORE rules (p.18), stated once for every
+// character rather than per class, so most O.C.C. pages print neither. A class
+// that omits them is not saying the character has none — it is saying the
+// universal rule applies, and taking the silence literally is what let two
+// Priests of Light reach production with hp_max and sdc_max NULL.
+//
+// This is the same reading parser.js already applies when a racial class omits
+// a pool. A class that STATES a formula always wins; these only fill a gap.
+//
+// Base hit points are the P.E. attribute plus 1D6, and another 1D6 per level.
+const CORE_HIT_POINTS = 'P.E. + 1D6 per level';
+
+// S.D.C. splits on the book's own O.C.C. grouping: men of arms roll 3D6,
+// practitioners of magic, scholars and everyone else roll 1D6. Nothing in the
+// class data records that grouping — `category` only separates O.C.C. from
+// R.C.C. — so it is listed here, read off the section headings in the book.
+//
+// A class belongs here ONLY if its own page prints no S.D.C. formula; one that
+// prints its own needs no entry. A class that prints none and is missing from
+// this table fails the smoke test rather than defaulting, because defaulting to
+// 1D6 would quietly under-roll every new man of arms.
+export const CORE_SDC_BY_CLASS = {
+  // Men of arms — 3D6.
+  'glitter-boy': '3D6',
+  'headhunter-techno-warrior': '3D6',
+  'merc-soldier': '3D6',
+  'robot-pilot': '3D6',
+  // Psychics by the book's grouping, but hunters by trade and armed as such.
+  'psi-stalker': '3D6',
+  'wild-psi-stalker': '3D6',
+
+  // Practitioners of magic, psychics and scholars — 1D6.
+  'burster': '1D6',
+  'elemental-fusionist-earth-air': '1D6',
+  'elemental-fusionist-fire-water': '1D6',
+  'ley-line-rifter': '1D6',
+  'ley-line-walker': '1D6',
+  'mind-melter': '1D6',
+  'mystic': '1D6',
+  'priest-of-light': '1D6',
+  'shifter': '1D6',
+  'techno-wizard': '1D6',
+  'warlock': '1D6',
+};
+
+// An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence
+// there is a statement and nothing is filled in.
+//
+// `occId` is the occupation's id when there is one: what makes a character a
+// man of arms is the job, not the race, so a dragon that took a Merc Soldier
+// rolls the soldier's 3D6.
+function withCorePools(cls, occId) {
+  if (!cls || cls.mdc_base != null) return cls;
+  const out = { ...cls };
+  if (out.hit_points_base == null) out.hit_points_base = CORE_HIT_POINTS;
+  if (out.sdc_base == null) {
+    // Falls back to the race's own id so an R.C.C. played without an
+    // occupation is still classified.
+    const sdc = CORE_SDC_BY_CLASS[occId] ?? CORE_SDC_BY_CLASS[cls.id];
+    if (sdc) out.sdc_base = sdc;
+  }
+  return out;
+}
+
 // `rcc` and `occ` are raw parsed classes, before any variant is applied.
 // `character` supplies class_variant, occ_class_variant, and the rolled psychic
 // tier; a plain object works, which is what the wizard passes mid-build.
@@ -38,7 +102,10 @@ export function composeClass({ rcc, occ = null, character = {}, skillRows = null
 
   const race = applyVariant(rcc, character.class_variant);
   const job = occ ? applyVariant(occ, character.occ_class_variant) : null;
-  const composed = job ? combineClasses(race, job) : race;
+  // Core p.18 pools land here, on the two classes already resolved into one,
+  // so combineClasses still sees exactly what each class actually stated and
+  // its own race-omits-a-pool fallback is not pre-empted by a default.
+  const composed = withCorePools(job ? combineClasses(race, job) : race, job?.id ?? race?.id);
 
   // Abilities are chosen FOR the character rather than contributed by either
   // half, so they land after the two classes are one — and before any rolled

@@ -88,6 +88,11 @@ reading the dice rather than the total.
 Carried per class as `hit_points_base` / `sdc_base` formulas, which is why
 `"P.E. + 1d6 per level"` parses.
 
+Most class pages state neither, because these are core rules rather than
+class ones. A class that omits them is saying the standard applies, not that
+the character has none, so `js/compose.js` supplies both — see [Hit points and
+S.D.C. come from the core rules](../README.md#hit-points-and-sdc-come-from-the-core-rules).
+
 ## Step 3 — psionics (p.20–21)
 
 - **Random Psionics Table:** 01–09 major, 10–25 minor, 26–00 none. Available to

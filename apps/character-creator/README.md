@@ -22,6 +22,7 @@ Access gate. No build step, no framework, no dependencies.
 - [Level-up skill picks](#level-up-skill-picks)
 - [A race and an occupation together](#a-race-and-an-occupation-together)
 - [One place composes a class](#one-place-composes-a-class)
+- [Hit points and S.D.C. come from the core rules](#hit-points-and-sdc-come-from-the-core-rules)
 - [Classes that come in stages](#classes-that-come-in-stages)
   - [Changing stage](#changing-stage)
 - [Powers the player chooses](#powers-the-player-chooses)
@@ -864,6 +865,51 @@ directly, because that is what re-implementing the sequence looks like. It scans
 every page script, every module under `js/`, and every function, exempting only
 the two files the sequence is built from: `parser.js`, which declares
 `combineClasses`, and `compose.js`, which is the one legitimate caller.
+
+## Hit points and S.D.C. come from the core rules
+
+Most class pages print neither. That is not an omission — p.18 states both
+once, for every character, and a class page only speaks up when its O.C.C.
+differs from the standard:
+
+| | base |
+|---|---|
+| hit points | the **P.E. attribute** plus 1D6, and another 1D6 per level |
+| S.D.C. | **3D6** for men of arms, **1D6** for practitioners of magic, scholars and everyone else |
+
+The app used to read that silence as "this character has none" and store
+`hp_max` NULL. Sixteen of twenty-five published classes state no hit point
+formula, so this was the common path, not an edge case — two Priests of Light
+reached production with no hit points and no S.D.C., and nothing on the sheet
+suggested anything was missing.
+
+So [`js/compose.js`](js/compose.js) fills both in when a class states neither.
+A class that states its own formula always wins; the default only fills a gap,
+and an M.D.C. being is left alone because it tracks M.D.C. **instead** — there,
+silence really is the statement.
+
+### Which classes are men of arms
+
+Nothing in the class data records the book's O.C.C. grouping — `category` only
+separates O.C.C. from R.C.C. — so it lives in `CORE_SDC_BY_CLASS` in the same
+file, read off the section headings in the book.
+
+The **occupation** decides it, not the race: what makes a character a man of
+arms is the job, so a dragon that took a Merc Soldier rolls the soldier's 3D6.
+
+A class that states no S.D.C. and is missing from that table gets **no S.D.C.
+at all** rather than a guessed 1D6, which would quietly under-roll every new
+man of arms. The smoke test fails on any such class, so adding one forces the
+decision instead of hiding it. Adding a class that prints its own formula
+needs no entry.
+
+Characters already saved without pools were repaired by
+[`db/backfill-core-pools.sql`](db/backfill-core-pools.sql), which rolls them
+the way the wizard would have at creation. It skips M.D.C. beings, anyone
+above level 1 ("+1D6 per level" needs one die per level, which a single
+UPDATE cannot express), and any class it cannot classify.
+
+---
 
 ## Classes that come in stages
 
