@@ -52,3 +52,10 @@ WHERE NOT EXISTS (SELECT 1 FROM imported_classes WHERE class_id = '<id>');
 SELECT class_id, name, status, length(markdown) AS bytes, instr(markdown, char(13)) > 0 AS has_cr
   FROM imported_classes WHERE class_id = '<id>';
 SELECT count(*) AS stub_gear FROM gear WHERE slug IN ('<slug>');
+
+-- Records this run. REQUIRED: the smoke test fails a data script that has no
+-- footer, or whose footer names a different file. One row per run rather than
+-- per file, because every statement above guards itself and a script that ran
+-- early and correctly did nothing has still run.
+-- See db/migrations/024-data-script-runs.sql.
+INSERT INTO data_script_runs (filename) VALUES ('<this-file>.sql');
