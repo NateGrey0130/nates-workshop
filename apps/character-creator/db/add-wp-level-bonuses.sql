@@ -37,6 +37,12 @@ UPDATE skills SET level_bonuses = '[{"level":1,"applies_when":"with a blunt weap
 UPDATE skills SET level_bonuses = '[{"level":1,"applies_when":"with a chain weapon","combat":{"strike":1}},{"level":1,"note":"Parrying is only possible while the weapon is wielded in two hands. This weapon cannot be used to entangle and cannot be thrown with any accuracy: -3 to strike when thrown."},{"level":3,"applies_when":"with a chain weapon","combat":{"strike":1}},{"level":4,"applies_when":"with a chain weapon","combat":{"parry":1}},{"level":7,"applies_when":"with a chain weapon","combat":{"strike":1}},{"level":8,"applies_when":"with a chain weapon","combat":{"parry":1}},{"level":10,"applies_when":"with a chain weapon","combat":{"strike":1}},{"level":12,"applies_when":"with a chain weapon","combat":{"parry":1}},{"level":13,"applies_when":"with a chain weapon","combat":{"strike":1}}]'
   WHERE name = 'W.P. Chain';
 
+UPDATE skills SET level_bonuses = '[{"level":1,"applies_when":"firing a burst","combat":{"strike":1}},{"level":1,"applies_when":"taking an aimed shot","combat":{"strike":3}},{"level":1,"note":"Lasers, ion blasters and all types of energy firing small arms; Mega-Damage varies. P.P. attribute bonuses and Hand to Hand combat bonuses do NOT apply to modern weapons."},{"level":4,"applies_when":"with an energy pistol","combat":{"strike":1}},{"level":7,"applies_when":"with an energy pistol","combat":{"strike":1}},{"level":10,"applies_when":"with an energy pistol","combat":{"strike":1}},{"level":13,"applies_when":"with an energy pistol","combat":{"strike":1}}]'
+  WHERE name = 'W.P. Energy Pistol';
+
+UPDATE skills SET level_bonuses = '[{"level":1,"applies_when":"firing a burst","combat":{"strike":1}},{"level":1,"applies_when":"taking an aimed shot","combat":{"strike":3}},{"level":1,"note":"All long-range energy firing rifles; Mega-Damage varies. P.P. attribute bonuses and Hand to Hand combat bonuses do NOT apply to modern weapons."},{"level":4,"applies_when":"with an energy rifle","combat":{"strike":1}},{"level":7,"applies_when":"with an energy rifle","combat":{"strike":1}},{"level":10,"applies_when":"with an energy rifle","combat":{"strike":1}},{"level":13,"applies_when":"with an energy rifle","combat":{"strike":1}}]'
+  WHERE name = 'W.P. Energy Rifle';
+
 UPDATE skills SET level_bonuses = '[{"level":1,"applies_when":"with a forked weapon","combat":{"strike":1,"entangle":1,"parry":1}},{"level":1,"note":"Sai, tiger fork, pitchfork, military fork and trident. Wielded two-handed, or one in each hand with W.P. Paired Weapons, it is possible to catch enemy swords with a successful entangle. Not really designed for throwing."},{"level":3,"applies_when":"with a forked weapon","combat":{"strike":1,"entangle":1,"parry":1}},{"level":4,"applies_when":"throwing a forked weapon","combat":{"strike":1}},{"level":5,"applies_when":"with a forked weapon","combat":{"strike":1,"entangle":1}},{"level":6,"applies_when":"with a forked weapon","combat":{"parry":1}},{"level":8,"applies_when":"with a forked weapon","combat":{"strike":1,"entangle":1}},{"level":10,"applies_when":"throwing a forked weapon","combat":{"strike":1}},{"level":10,"applies_when":"with a forked weapon","combat":{"parry":1}},{"level":11,"applies_when":"with a forked weapon","combat":{"strike":1,"entangle":1}},{"level":13,"applies_when":"with a forked weapon","combat":{"strike":1,"entangle":1,"parry":1}},{"level":15,"applies_when":"throwing a forked weapon","combat":{"strike":1}}]'
   WHERE name = 'W.P. Forked';
 
@@ -48,6 +54,9 @@ UPDATE skills SET level_bonuses = '[{"level":1,"note":"Revolvers and automatic p
 
 UPDATE skills SET level_bonuses = '[{"level":1,"note":"Plain pointed end 2D6 S.D.C., or an explosive head 4D6 M.D. P.P. attribute bonuses and Hand to Hand combat bonuses do NOT apply to modern weapons."},{"level":2,"applies_when":"with a harpoon or spear gun","combat":{"strike":1}},{"level":4,"applies_when":"with a harpoon or spear gun","combat":{"strike":1}},{"level":7,"applies_when":"with a harpoon or spear gun","combat":{"strike":1}},{"level":10,"applies_when":"with a harpoon or spear gun","combat":{"strike":1}},{"level":15,"applies_when":"with a harpoon or spear gun","combat":{"strike":1}}]'
   WHERE name = 'W.P. Harpoon & Spear Gun';
+
+UPDATE skills SET level_bonuses = '[{"level":1,"applies_when":"firing a burst","combat":{"strike":1}},{"level":1,"applies_when":"taking an aimed shot","combat":{"strike":3}},{"level":1,"note":"Plasma ejectors, rail guns and similar Mega-Damage weapons, including those built into giant robots, tanks and combat vehicles; a common skill of designated gunners. P.P. attribute bonuses and Hand to Hand combat bonuses do NOT apply to modern weapons."},{"level":4,"applies_when":"with a heavy energy weapon","combat":{"strike":1}},{"level":7,"applies_when":"with a heavy energy weapon","combat":{"strike":1}},{"level":10,"applies_when":"with a heavy energy weapon","combat":{"strike":1}},{"level":13,"applies_when":"with a heavy energy weapon","combat":{"strike":1}}]'
+  WHERE name = 'W.P. Heavy Energy Weapons';
 
 UPDATE skills SET level_bonuses = '[{"level":1,"applies_when":"throwing a knife","combat":{"strike":1}},{"level":1,"applies_when":"with a knife","combat":{"parry":1}},{"level":1,"note":"All types of daggers and knives. Very small 1D4 damage, typical 1D6."},{"level":2,"applies_when":"with a knife","combat":{"strike":1}},{"level":3,"applies_when":"throwing a knife","combat":{"strike":1}},{"level":3,"applies_when":"with a knife","combat":{"parry":1}},{"level":4,"applies_when":"with a knife","combat":{"strike":1}},{"level":6,"applies_when":"throwing a knife","combat":{"strike":1}},{"level":6,"applies_when":"with a knife","combat":{"parry":1}},{"level":7,"applies_when":"with a knife","combat":{"strike":1}},{"level":8,"applies_when":"throwing a knife","combat":{"strike":1}},{"level":9,"applies_when":"with a knife","combat":{"parry":1}},{"level":10,"applies_when":"throwing a knife","combat":{"strike":1}},{"level":10,"applies_when":"with a knife","combat":{"strike":1}},{"level":12,"applies_when":"with a knife","combat":{"parry":1}},{"level":13,"applies_when":"throwing a knife","combat":{"strike":1}},{"level":13,"applies_when":"with a knife","combat":{"strike":1}}]'
   WHERE name = 'W.P. Knife';
@@ -92,7 +101,7 @@ UPDATE skills SET level_bonuses = '[{"level":1,"note":"Light whip 1D6; heavy whi
   WHERE name = 'W.P. Whip';
 
 -- Reports the result back, so it is read rather than assumed.
---   filled              22 = every W.P. this script covers landed
+--   filled              25 = every W.P. this script covers landed
 --   unconditional_bonus  0 = no W.P. grants a bonus that applies with bare hands.
 --                            This is the one that matters: a single entry
 --                            missing its `applies_when` silently hands the
@@ -111,9 +120,6 @@ SELECT (SELECT count(*) FROM skills
 
 -- Deliberately NOT filled, because p.326-329 does not state bonuses for them:
 --
---   W.P. Energy Pistol, W.P. Energy Rifle, W.P. Heavy Energy Weapons
---       The book lists these under Modern Weapons with a description and
---       "Mega-Damage varies", and prints no W.P. Bonuses line at all.
 --   W.P. Rope
 --       "Usually exclusive to the Cowboy O.C.C.; see Cowboy skills."
 --   W.P. Automatic Pistol, W.P. Revolver, W.P. Bolt Action Rifle,

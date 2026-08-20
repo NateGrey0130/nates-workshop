@@ -738,6 +738,40 @@ along the way went unmentioned.
 for this. `combat` and `saves` are open sets on purpose, so no validator
 changed — only `derive.js`, which now knows what to call them.
 
+### A W.P. bonus applies only with that weapon
+
+Every numeric Weapon Proficiency bonus is **conditional**. p.326:
+
+> ...hand to hand combat bonuses to strike and parry **whenever that particular
+> type of weapon is used**.
+
+Written into `combat` the way a Hand to Hand schedule is, a character with five
+W.P.s would swing their **bare fists** at +5 to strike — and it would read as a
+lucky roll rather than a bug. So an entry may carry `applies_when`:
+
+```json
+{"level": 1, "applies_when": "with a sword", "combat": {"strike": 1}}
+```
+
+`bonusesFromSkills` **skips** those entries entirely. `skillConditionalBonuses`
+totals them instead, one row per skill and condition, and the sheet lists them
+beside the combat block rather than inside it — a player needs both numbers,
+and needs to know which is which.
+
+One skill can carry several conditions: a sword swung and a sword thrown are
+different bonuses and the book lists them apart, so collapsing them would
+quietly add a throwing bonus to melee. An energy weapon's aimed-shot (+3) and
+burst (+1) bonuses are level-independent and stack on top of its level ladder,
+so those are separate conditions too.
+
+**Four W.P.s are deliberately still empty.** `Rope` defers to the Cowboy
+O.C.C., and `Automatic Pistol`, `Revolver` and `Automatic and Semi-automatic
+Rifles` are older-edition names for what RUE folds into `W.P. Handguns` and
+`W.P. Rifles`. Merging those is a catalog decision rather than a transcription
+— `catalog_redirects` exists for exactly that — so nothing here guesses.
+
+---
+
 ### Still missing
 
 The book's table for a character with **no** Hand to Hand training (one attack

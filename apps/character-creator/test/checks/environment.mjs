@@ -668,7 +668,7 @@ section('Weapon Proficiencies (p.326-329)');
 const wpSql = readFileSync(join(appDir, 'db', 'add-wp-level-bonuses.sql'), 'utf8');
 const wp = [...wpSql.matchAll(/UPDATE skills SET level_bonuses = '(\[.*?\])'\s*\n\s*WHERE name = '([^']+)';/g)]
   .map((m) => ({ name: m[2], level_bonuses: m[1].replace(/''/g, "'") }));
-check('the W.P. data script covers 22 proficiencies', wp.length === 22, wp.length);
+check('the W.P. data script covers 25 proficiencies', wp.length === 25, wp.length);
 check('and every one of them is a W.P.', wp.every((r) => r.name.startsWith('W.P. ')),
   wp.filter((r) => !r.name.startsWith('W.P. ')).map((r) => r.name).join(', '));
 
@@ -685,12 +685,12 @@ check('no W.P. grants a bonus that applies with bare hands', leaks.length === 0,
 
 // The same statement from the other end: whatever the totals are, none of
 // them may reach the block derive.js adds to a character's combat numbers.
-check('all 22 together contribute nothing unconditional',
+check('all 25 together contribute nothing unconditional',
   bonusesFromSkills(wp, 15) === undefined, JSON.stringify(bonusesFromSkills(wp, 15)));
 
 // ...and are not simply lost instead.
 const wpConditional = skillConditionalBonuses(wp, 15);
-check('but do come back as weapon bonuses', wpConditional.length >= 22, wpConditional.length);
+check('but do come back as weapon bonuses', wpConditional.length >= 25, wpConditional.length);
 check('each naming the weapon it needs',
   wpConditional.every((c) => c.applies_when && c.skill),
   'a bonus with no condition cannot be shown honestly');
@@ -724,6 +724,23 @@ for (const c of wpConditional) for (const k of Object.keys(c.combat)) wpKeys.add
 const unlabelled = [...wpKeys].filter((k) => !sheetSrc.includes(k + ':'));
 check('every weapon bonus key has a short label on the sheet',
   unlabelled.length === 0, unlabelled.join(', ') + ' — missing from WP_LABELS');
+
+// An energy weapon's aimed and burst bonuses are level-INDEPENDENT and stack
+// with its level ladder, so they are separate conditions. Folded into one, an
+// aimed shot would lose the +3 or a burst would gain it.
+const ep = wp.find((r) => r.name === 'W.P. Energy Rifle');
+const epConds = skillConditionalBonuses([ep], 13);
+check('an energy weapon separates aimed, burst and plain fire',
+  epConds.length === 3, epConds.map((c) => c.applies_when).join(' / '));
+check('an aimed shot is +3 from level 1',
+  epConds.find((c) => c.applies_when === 'taking an aimed shot')?.combat.strike === 3,
+  JSON.stringify(epConds));
+check('and the level ladder reaches +4 by level 13',
+  epConds.find((c) => c.applies_when === 'with an energy rifle')?.combat.strike === 4,
+  JSON.stringify(epConds));
+check('with nothing at level 3, before the ladder starts',
+  !skillConditionalBonuses([ep], 3).some((c) => c.applies_when === 'with an energy rifle'),
+  JSON.stringify(skillConditionalBonuses([ep], 3)));
 
 // The two skills whose entry is prose only — Paired Weapons and Quick Draw,
 // whose bonus scales with P.P. rather than level — must still say something.
