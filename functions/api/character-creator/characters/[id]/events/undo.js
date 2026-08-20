@@ -8,14 +8,11 @@
 // The undo is itself visible history — the row stays, marked, and the
 // response says what was restored so the client can update in place.
 
-import { getUserEmail, unauthorized, json, forbidden, characterAccess } from '../../../_lib/auth.js';
+import { json, requireCharacter } from '../../../_lib/auth.js';
 
 export async function onRequestPost({ request, env, params }) {
-  const email = getUserEmail(request);
-  if (!email) return unauthorized();
-  const access = await characterAccess(env, params.id, email);
-  if (!access.found) return json({ error: 'Character not found' }, 404);
-  if (!access.canWrite) return forbidden();
+  const guard = await requireCharacter(request, env, params.id);
+  if (guard.res) return guard.res;
 
   const { results } = await env.DB.prepare(
     `SELECT id, kind, payload FROM play_events

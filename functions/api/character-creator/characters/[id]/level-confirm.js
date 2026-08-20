@@ -9,7 +9,7 @@
 // pending_skill_picks. `picks` spends some or all of them now; anything left
 // unspent waits on the sheet. Levelling up is never blocked on choosing.
 
-import { getUserEmail, unauthorized, json, forbidden, characterAccess } from '../../_lib/auth.js';
+import { json, requireCharacter } from '../../_lib/auth.js';
 import { loadCharacterClass } from '../../_lib/class-loader.js';
 import { xpTableFor, thresholdFor, skillGrantsFor } from '../../_lib/leveling.js';
 import { insertGrantStatements, resolvePicks, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
@@ -19,11 +19,8 @@ import { loadCharacter } from '../../_lib/character-json.js';
 const POOL_FIELDS = ['hp_max', 'sdc_max', 'mdc_max', 'ppe_max', 'isp_max'];
 
 export async function onRequestPost({ request, env, params }) {
-  const email = getUserEmail(request);
-  if (!email) return unauthorized();
-  const access = await characterAccess(env, params.id, email);
-  if (!access.found) return json({ error: 'Character not found' }, 404);
-  if (!access.canWrite) return forbidden();
+  const guard = await requireCharacter(request, env, params.id);
+  if (guard.res) return guard.res;
 
   const b = await request.json();
   const character = await loadCharacter(env, params.id);

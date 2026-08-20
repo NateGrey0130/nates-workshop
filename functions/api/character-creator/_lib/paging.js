@@ -38,3 +38,11 @@ export async function pagedQuery(env, { countSql, countBinds = [], rowsSql, rows
     offset,
   };
 }
+
+// The response shape every paged list returns: the rows under their own key,
+// then the metadata alongside. Written out by hand in each endpoint until the
+// two drifted apart in review - the rows key is the only part that differs, so
+// it is the only part worth writing.
+export function pageBody(key, page) {
+  return { [key]: page.results, total: page.total, limit: page.limit, offset: page.offset };
+}

@@ -2,14 +2,12 @@
 // (owner/GM). Catalog-linked via item slug, or freeform via custom_name.
 // Optional journal_entry_id ties the addition to a session log entry.
 
-import { getUserEmail, unauthorized, json, forbidden, characterAccess } from '../../_lib/auth.js';
+import { json, requireCharacter } from '../../_lib/auth.js';
 
 export async function onRequestPost({ request, env, params }) {
-  const email = getUserEmail(request);
-  if (!email) return unauthorized();
-  const access = await characterAccess(env, params.id, email);
-  if (!access.found) return json({ error: 'Character not found' }, 404);
-  if (!access.canWrite) return forbidden();
+  const guard = await requireCharacter(request, env, params.id);
+  if (guard.res) return guard.res;
+  const { access } = guard;
 
   const b = await request.json();
   let itemId = null;

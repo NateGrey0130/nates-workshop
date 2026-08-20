@@ -3,7 +3,7 @@
 //       the client whether to show edit controls (server enforces regardless).
 // PATCH /api/character-creator/characters/:id — owner/GM only; current stats + notes.
 
-import { getUserEmail, unauthorized, json, forbidden, characterAccess, readJson } from '../_lib/auth.js';
+import { getUserEmail, unauthorized, json, readJson, requireCharacter } from '../_lib/auth.js';
 import { listPending } from '../_lib/skill-picks.js';
 import { decodeCharacter } from '../_lib/character-json.js';
 import { getStored } from '../_lib/class-store.js';
@@ -99,11 +99,8 @@ const PATCHABLE = ['hp_current', 'sdc_current', 'mdc_current', 'ppe_current', 'i
 const JSON_SECTIONS = { bio: 'object', combat: 'object', saves: 'object', armor: 'array' };
 
 export async function onRequestPatch({ request, env, params }) {
-  const email = getUserEmail(request);
-  if (!email) return unauthorized();
-  const access = await characterAccess(env, params.id, email);
-  if (!access.found) return json({ error: 'Character not found' }, 404);
-  if (!access.canWrite) return forbidden();
+  const guard = await requireCharacter(request, env, params.id);
+  if (guard.res) return guard.res;
 
   const body = await readJson(request);
   if (!body) return json({ error: 'Invalid JSON body' }, 400);

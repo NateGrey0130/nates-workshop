@@ -6,7 +6,7 @@
 // round trip, this is the boundary.
 
 import { getUserEmail, unauthorized, json, readJson } from './_lib/auth.js';
-import { paging, pagedQuery } from './_lib/paging.js';
+import { paging, pagedQuery, pageBody } from './_lib/paging.js';
 import { loadCharacterClass } from './_lib/class-loader.js';
 import { validateCharacter, loadSkillCategories } from './_lib/validate-character.js';
 
@@ -35,7 +35,7 @@ export async function onRequestGet({ request, env }) {
     limit, offset,
   });
 
-  return json({ characters: page.results, total: page.total, limit: page.limit, offset: page.offset });
+  return json(pageBody('characters', page));
 }
 
 export async function onRequestPost({ request, env }) {

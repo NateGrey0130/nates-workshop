@@ -412,6 +412,14 @@ Three layers, all built on one identity read.
    its campaign's `gm_email`; `campaignAccess()` is GM-only. Reads stay open to
    any authenticated user; only writes are gated. `campaigns.gm_notes` is the
    single read exception and is stripped server-side.
+
+   Endpoints reach it through **`requireCharacter(request, env, id)`**, which
+   returns `{ res }` to return or `{ email, access }` to use — the same shape
+   `requireAdmin()` uses. Pass `{ write: false }` for a read. Every handler
+   under `characters/[id]` previously opened with the same five lines, and the
+   order within them is load-bearing: **404 before 403**, so probing ids cannot
+   distinguish a character that is not yours from one that does not exist.
+   That is precisely the kind of detail that goes wrong on the ninth copy.
 3. **Admin** — `isAdminEmail()` compares the identity against the `ADMIN_EMAIL`
    environment variable and **fails closed** when unset. Admin gates both
    importers, which touch global catalogs rather than one campaign.

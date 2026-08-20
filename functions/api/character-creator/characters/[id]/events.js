@@ -13,7 +13,7 @@
 // Events are commentary, not a ledger: the character row stays the source of
 // truth, and nothing replays these to derive state.
 
-import { getUserEmail, unauthorized, json, forbidden, characterAccess, readJson } from '../../_lib/auth.js';
+import { json, readJson, requireCharacter } from '../../_lib/auth.js';
 
 // The character columns a play event may touch. Anything else is the sheet
 // lens's business and goes through PATCH, where the field list lives.
@@ -21,10 +21,8 @@ const POOL_FIELDS = new Set(['hp_current', 'sdc_current', 'mdc_current', 'ppe_cu
 const KINDS = new Set(['damage', 'pool', 'power', 'ammo', 'roll', 'recap']);
 
 export async function onRequestGet({ request, env, params }) {
-  const email = getUserEmail(request);
-  if (!email) return unauthorized();
-  const access = await characterAccess(env, params.id, email);
-  if (!access.found) return json({ error: 'Character not found' }, 404);
+  const guard = await requireCharacter(request, env, params.id, { write: false });
+  if (guard.res) return guard.res;
 
   const url = new URL(request.url);
   const since = parseInt(url.searchParams.get('since') || '0', 10) || 0;
@@ -39,11 +37,9 @@ export async function onRequestGet({ request, env, params }) {
 }
 
 export async function onRequestPost({ request, env, params }) {
-  const email = getUserEmail(request);
-  if (!email) return unauthorized();
-  const access = await characterAccess(env, params.id, email);
-  if (!access.found) return json({ error: 'Character not found' }, 404);
-  if (!access.canWrite) return forbidden();
+  const guard = await requireCharacter(request, env, params.id);
+  if (guard.res) return guard.res;
+  const { email } = guard;
 
   const b = await readJson(request);
   if (!b || !KINDS.has(b.kind)) return json({ error: 'kind must be one of damage/pool/power/ammo/roll/recap' }, 400);
