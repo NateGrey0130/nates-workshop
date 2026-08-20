@@ -255,13 +255,47 @@ check('and read back', journal.status === 200 && journal.body.entries.length > 0
 check('journal paging reports its shape',
   typeof journal.body.total === 'number' && typeof journal.body.limit === 'number', journal.body);
 
-const draftPut = await api('PUT', '/draft', { system: 'rifts', class_id: cls.id, step: 2, state: { x: 1 } });
-check('a wizard draft is saved', draftPut.status === 200 || draftPut.status === 201, draftPut.body);
+// A draft is one row per person, so every PUT is a replace. The guard is what
+// stops a second tab - or a script driving the wizard - silently discarding a
+// build in progress.
+const draftPut = await api('PUT', '/draft', {
+  system: 'rifts', class_id: cls.id, step: 2, state: { x: 1 }, expect_updated_at: null });
+check('a wizard draft is created when none exists', draftPut.status === 200 || draftPut.status === 201, draftPut.body);
+check('and the save reports the new version', !!draftPut.body.updated_at, draftPut.body);
 const draftGet = await api('GET', '/draft');
-check('and read back', draftGet.status === 200 && !!draftGet.body.draft, draftGet.body);
+check('and it reads back', draftGet.status === 200 && !!draftGet.body.draft, draftGet.body);
+
+// The case that cost a real draft: a caller that does not say which version
+// it is replacing must not be allowed to replace anything.
+const blind = await api('PUT', '/draft', { system: 'rifts', class_id: cls.id, step: 9, state: { clobbered: true } });
+check('a PUT claiming no version is REFUSED when a draft exists', blind.status === 409, blind.status);
+check('and the refusal says what is there now',
+  blind.status === 409 && !!blind.body.conflict && !!blind.body.current, blind.body);
+
+const stale = await api('PUT', '/draft', {
+  system: 'rifts', class_id: cls.id, step: 9, state: { clobbered: true },
+  expect_updated_at: '1999-01-01 00:00:00' });
+check('a PUT claiming a STALE version is refused', stale.status === 409, stale.status);
+
+const survived = await api('GET', '/draft');
+check('and neither refusal changed the stored draft',
+  survived.body.draft?.step === 2 && survived.body.draft?.state?.x === 1,
+  survived.body.draft);
+
+const correct = await api('PUT', '/draft', {
+  system: 'rifts', class_id: cls.id, step: 4, state: { x: 2 },
+  expect_updated_at: survived.body.draft.updated_at });
+check('a PUT claiming the CURRENT version succeeds', correct.status === 200, correct.body);
+const moved = await api('GET', '/draft');
+check('and it actually replaced the draft', moved.body.draft?.step === 4, moved.body.draft);
+
 const draftDel = await api('DELETE', '/draft');
-check('and deleted', draftDel.status === 200, draftDel.body);
+check('a draft can be deleted', draftDel.status === 200, draftDel.body);
 check('leaving none', (await api('GET', '/draft')).body.draft === null);
+const afterDelete = await api('PUT', '/draft', {
+  system: 'rifts', class_id: cls.id, step: 1, state: { fresh: true }, expect_updated_at: null });
+check('and a fresh build can then create one again', afterDelete.status === 200, afterDelete.body);
+await api('DELETE', '/draft');
 
 const list = await api('GET', `/characters?campaign_id=${campaignId}`);
 check('the character list is paged', list.status === 200 && typeof list.body.total === 'number', list.body);

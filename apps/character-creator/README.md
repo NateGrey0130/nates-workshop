@@ -29,6 +29,7 @@ Access gate. No build step, no framework, no dependencies.
   - [The review step](#the-review-step)
 - [Which system a catalog row belongs to](#which-system-a-catalog-row-belongs-to)
 - [Filtering the catalog pickers](#filtering-the-catalog-pickers)
+- [Two tabs cannot overwrite each other](#two-tabs-cannot-overwrite-each-other)
 - [Unfinished builds are saved](#unfinished-builds-are-saved)
 - [Starting gear the class leaves open](#starting-gear-the-class-leaves-open)
 - [Psychic tiers](#psychic-tiers)
@@ -386,7 +387,7 @@ writes are gated (see [Permissions](#permissions)).
 | `items` | GET | Gear catalog (table is `gear`), plus retired slugs as `redirects`. `?system=` — a NULL system is unrestricted, matching how `skills.systems` reads |
 | `campaigns` | GET / POST | List (`?system=`, `?limit=`, `?offset=`); create (caller becomes GM) |
 | `campaigns/[id]` | GET / PATCH | Details (`gm_notes` stripped for non-GM); edit `gm_notes` |
-| `draft` | GET / PUT / DELETE | The caller's own unfinished wizard build. No id in the route — a draft belongs to a person, not a collection. One each; PUT upserts |
+| `draft` | GET / PUT / DELETE | The caller's own unfinished wizard build. No id in the route — a draft belongs to a person, not a collection. One each. **PUT states the version it is replacing** in `expect_updated_at` and is refused 409 otherwise; see [Two tabs cannot overwrite each other](#two-tabs-cannot-overwrite-each-other) |
 | `characters` | GET / POST | List (`?campaign_id=`, `?limit=`, `?offset=`); create at level 1 — **validated against the class rules** |
 | `characters/[id]` | GET / PATCH | Sheet + inventory, with `can_write` / `is_gm`; edit pools, notes, and the bio/combat/saves/armor sections |
 | `characters/[id]/items` | POST | Add inventory row (catalog slug or freeform) |
@@ -1253,6 +1254,42 @@ They were collected from the `<select>`s only when you pressed the button, so
 any re-render in between discarded them — the "show all skills" checkbox already
 did that. A filter that re-renders on every keystroke would have done it
 constantly.
+
+---
+
+## Two tabs cannot overwrite each other
+
+There is one draft per person, so every `PUT /draft` is a replace. That is fine
+until something else is building at the same time — a second tab, or a script
+driving the wizard — at which point the last write silently won and the other
+build was gone with no error anywhere.
+
+So a PUT says which version it believes it is replacing:
+
+```json
+{ "expect_updated_at": "2026-08-20 09:55:43", "step": 3, "state": {} }
+```
+
+| The caller claims | The row is | Result |
+|---|---|---|
+| `null` ("I expect no draft") | absent | created |
+| `null` | present | **409** |
+| a timestamp | that timestamp | replaced |
+| a timestamp | anything else | **409** |
+
+Each branch is a **single guarded statement** — `INSERT … ON CONFLICT DO NOTHING`
+or `UPDATE … WHERE updated_at = ?`. Reading the row and then writing it would
+leave exactly the gap this exists to close.
+
+The 409 body carries `current`, so a client can say what took the draft over
+rather than only that something failed. The wizard tracks the version it holds,
+carries it forward from each save's response, and on a conflict **stops
+autosaving** and says so in the stepper. Stopping matters: retrying would either
+fail forever or, once it re-read, clobber the other build after all. Work already
+on screen is untouched — you can finish and save it, or reload to take theirs.
+
+Deleting a draft clears the tracked version, so the next build creates rather
+than claiming a row that no longer exists.
 
 ---
 

@@ -46,6 +46,11 @@ const S = {
   step: 0, system: null, classMode: 'browse', quiz: [null, null, null],
   // An unfinished build found on the server, awaiting resume-or-discard.
   draftOffer: null,
+  // The updated_at of the draft this tab believes it owns, sent with every
+  // save so the server can refuse to overwrite someone else's newer one.
+  // null means "there is no draft and I expect to create it".
+  draftVersion: null,
+  draftConflict: null,
   classes: [], cls: null,
   attrMethods: {}, attrs: {}, attrRolls: {},
   related: [], secondary: [], groupPicks: {},
@@ -271,27 +276,45 @@ function queueDraftSave() {
 }
 
 async function saveDraft() {
-  if (!draftWorthSaving()) return;
+  if (!draftWorthSaving() || S.draftConflict) return;
   try {
-    await api('draft', {
+    const res = await api('draft', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(draftPayload()),
+      body: JSON.stringify({ ...draftPayload(), expect_updated_at: S.draftVersion }),
     });
-  } catch {
-    // A draft is a convenience. Failing to store one must never interrupt or
-    // even interject in the build it is trying to protect.
+    // Carry the new version forward, or the next save claims a stale one and
+    // is refused on a build nobody else touched.
+    if (res && res.updated_at) S.draftVersion = res.updated_at;
+  } catch (err) {
+    // A draft is a convenience, and a failed save must never interrupt the
+    // build it is trying to protect — with ONE exception. A 409 means another
+    // tab, or something driving the wizard, now owns the draft. Retrying would
+    // either fail forever or clobber them, so this stops and says so once.
+    // err.detail is the response body; errorDetails() flattens it to strings
+    // and would drop the flag this needs.
+    if (err && err.status === 409 && err.detail && err.detail.conflict) {
+      S.draftConflict = err.detail.current || true;
+      render();
+    }
   }
 }
 
 async function discardDraft() {
   clearTimeout(draftTimer);
+  // The row is gone, so the next save must claim no version at all - sending
+  // the old one would be refused against a draft that no longer exists.
+  S.draftVersion = null;
+  S.draftConflict = null;
   try { await api('draft', { method: 'DELETE' }); } catch { /* see above */ }
 }
 
 function resumeDraft() {
   const d = S.draftOffer;
   S.draftOffer = null;
+  // Adopt the version this build was loaded at, so the first save replaces
+  // exactly the row it came from and nothing newer.
+  S.draftVersion = d.updated_at ?? null;
   Object.assign(S, d.state);
   // The draft stores the class id and the stage separately, so the class is
   // resolved from scratch here — an edited class definition takes effect, and
@@ -334,11 +357,20 @@ function renderDraftOffer() {
 
 // ---------- rendering ----------
 function renderStepper() {
-  $('stepper').innerHTML = STEPS.map((name, i) => {
+  const steps = STEPS.map((name, i) => {
     const cls = i === S.step ? 'st cur' : i < S.step ? 'st done' : 'st';
     const go = i < S.step ? ` onclick="goStep(${i})"` : '';
-    return `<span class="${cls}"${go}>${i + 1}. ${name}</span>`;
+    return `<span class="${cls}"${go}>${i + 1} — ${name}</span>`.replace(' — ', '. ');
   }).join('');
+  // Rendered here because it is the one element every step draws, and a
+  // warning that autosave has stopped must not depend on which step you are on.
+  const c = S.draftConflict;
+  const notice = !c ? '' : `<p class="warn err" style="margin:10px 0 0">
+    Autosave stopped: this draft was taken over somewhere else${
+      c !== true && c.class_name ? ` (now ${esc(c.class_name)}, step ${c.step + 1})` : ''}.
+    Your work here is safe on screen — finish and save, or reload to take theirs.
+  </p>`;
+  $('stepper').innerHTML = steps + notice;
 }
 
 function render() {
