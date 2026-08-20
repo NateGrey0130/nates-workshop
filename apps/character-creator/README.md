@@ -112,6 +112,8 @@ apps/character-creator/
 └── test/
     ├── smoke.mjs             Parser + schema + migration-state smoke test,
     │                         plus class-check's extraction (see below)
+    ├── regression.mjs        End-to-end: builds a throwaway D1, boots the
+    │                         worker, drives the real endpoints over HTTP
     └── fixtures/*.md         Three real class files, parser test input only
 
 functions/api/
@@ -2210,6 +2212,26 @@ Smoke test (parser + schema):
 ```bash
 node apps/character-creator/test/smoke.mjs
 ```
+
+End-to-end regression — slower, and the one that exercises **requests**:
+
+```bash
+node apps/character-creator/test/regression.mjs
+```
+
+It builds its own D1 in a scratch `--persist-to` directory from `schema.sql`,
+`seed-catalogs.sql` and every data script, boots `wrangler pages dev` on port
+**8799** so your own dev server can stay up, then drives the real endpoints:
+the wizard's boot calls, a campaign, a validated character, inventory (added,
+updated, soft-removed, and the refusals), XP crossing a threshold, a confirmed
+level-up, play events with an undo, journal, drafts, paging and the admin audit.
+It deletes the scratch database afterwards and never touches yours.
+
+**This is the layer `smoke.mjs` does not cover.** That suite proves the parser,
+the dice and the composition rules are right, which is not the same as proving a
+request works. The fresh-database bug — two columns missing from `schema.sql`,
+so `/catalogs` 500'd — passed every one of its 768 checks and would have failed
+here on the first run.
 
 Copy `.dev.vars.example` to `.dev.vars` and set `ANTHROPIC_API_KEY` and
 `ADMIN_EMAIL=dev@localhost` to exercise the importers locally. `.dev.vars` is
