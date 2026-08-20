@@ -792,5 +792,36 @@ for (const name of ['W.P. Paired Weapons', 'W.P. Quick Draw']) {
     skillLevelNotes([row], 1).length === 1, JSON.stringify(row?.level_bonuses)?.slice(0, 80));
 }
 
+// ---------- 8. Spell descriptions ----------
+section('Spell descriptions');
+
+// 23 spells carried a name, a level and a P.P.E. cost but no text, because
+// they came in with the seed rather than through the PDF importers. They are
+// not obscure — seventeen are levels 1-3, and Armor of Ithan and Energy Bolt
+// are cast constantly.
+const spellSql = readFileSync(join(appDir, 'db', 'backfill-spell-descriptions.sql'), 'utf8');
+const spellUpdates = spellSql.match(/UPDATE spells SET /g) || [];
+check('the spell backfill covers 23 spells', spellUpdates.length === 23, spellUpdates.length);
+
+// The costs were verified against the stored ones BEFORE this was written and
+// all 23 matched, so the script has no business touching them. A backfill that
+// quietly rewrote a P.P.E. cost would be far worse than the missing text it
+// set out to fix, and would look like nothing at all.
+check('and changes no P.P.E. cost', !/\bppe\s*=/.test(spellSql),
+  'this script may only write description, damage and duration');
+
+// Guarded on the description still being empty, so a re-run cannot overwrite
+// anything edited by hand afterwards.
+const guards = spellSql.split('UPDATE spells SET ').slice(1)
+  .filter((chunk) => chunk.includes("description IS NULL OR description = ''"));
+check('every spell update refuses to overwrite existing text',
+  guards.length === 23, guards.length + ' of 23 are guarded');
+
+// Only the two the source states outright.
+check('damage and duration are set only where the source gives them',
+  (spellSql.match(/damage = /g) || []).length === 1
+  && (spellSql.match(/duration = /g) || []).length === 1,
+  'Energy Bolt and Breathe Without Air are the only two');
+
 
 }
