@@ -124,14 +124,34 @@ function perLevelGrants(block, flatKey, scheduleKey, fromLevel, toLevel) {
     // Every threshold strictly above fromLevel and up to toLevel, the same rule
     // skillGrantsFor applies — a jump from 2 to 7 collects both a level-3 and a
     // level-6 grant rather than only the highest.
+    //
+    // SEVERAL ENTRIES MAY SHARE A LEVEL. The Shifter gains three spells at each
+    // level and each comes from a different place: one from its named list, one
+    // Protection or Summoning spell from that list, and one of any kind capped
+    // at its own level. Those are three grants, not one of three, because a
+    // grant carries its own restriction — so `slot` distinguishes them and is
+    // what everything downstream keys on alongside the level.
+    const slots = new Map();
     for (const e of schedule) {
       if (!Number.isFinite(e?.level) || e.level <= fromLevel || e.level > toLevel) continue;
-      grants.push({ level: e.level, count: Number.isFinite(e.count) && e.count > 0 ? e.count : 1 });
+      const slot = slots.get(e.level) ?? 0;
+      slots.set(e.level, slot + 1);
+      grants.push({
+        level: e.level,
+        slot,
+        count: Number.isFinite(e.count) && e.count > 0 ? e.count : 1,
+        // Carried through rather than looked up later: a banked grant keeps the
+        // restriction it was granted with, and the class can be re-imported.
+        ...(Array.isArray(e.from) && e.from.length ? { from: e.from.map(String) } : {}),
+        ...(typeof e.note === 'string' && e.note.trim() ? { note: e.note.trim() } : {}),
+      });
     }
   } else {
-    for (let level = fromLevel + 1; level <= toLevel; level++) grants.push({ level, count: flat });
+    for (let level = fromLevel + 1; level <= toLevel; level++) {
+      grants.push({ level, slot: 0, count: flat });
+    }
   }
-  grants.sort((a, b) => a.level - b.level);
+  grants.sort((a, b) => a.level - b.level || a.slot - b.slot);
   return { applicable: true, unknown: false, grants, total: grants.reduce((n, g) => n + g.count, 0) };
 }
 
@@ -158,13 +178,21 @@ function perLevelGrants(block, flatKey, scheduleKey, fromLevel, toLevel) {
 // rest are the character's level, which no single rule expresses — so the entry
 // that states the count states the cap with it, and the class-wide rule is what
 // entries without one fall back to.
-export function spellLevelsForGrant(cls, level) {
+export function spellLevelsForGrant(cls, level, slot = 0) {
   const magic = cls?.magic;
   if (!magic) return null;
 
-  const entry = (Array.isArray(magic.spells_schedule) ? magic.spells_schedule : [])
-    .find((e) => e?.level === level && Array.isArray(e.spell_levels) && e.spell_levels.length);
-  if (entry) return entry.spell_levels;
+  // Matched by level AND slot, because several entries can share a level and
+  // each carries its own cap — the Shifter's third slot is capped at its own
+  // level while the first two are not capped at all.
+  const entry = entryAt(magic.spells_schedule, level, slot);
+  if (entry && Array.isArray(entry.spell_levels) && entry.spell_levels.length) {
+    return entry.spell_levels;
+  }
+  // A slot bounded by a NAMED LIST is not also bounded by a spell level: the
+  // Shifter's list slots are bounded by the list, and only its third slot is
+  // capped at the character's own level.
+  if (entry && ((Array.isArray(entry.from) && entry.from.length) || entry.from_list)) return null;
 
   const rule = magic.spells_per_level_levels;
   if (rule === 'up_to_character_level') {
@@ -174,6 +202,50 @@ export function spellLevelsForGrant(cls, level) {
   return Array.isArray(magic.spell_levels_allowed) && magic.spell_levels_allowed.length
     ? magic.spell_levels_allowed
     : null;
+}
+
+// The nth entry at a given level. Schedule order is the slot order, which is
+// how the book reads: the Shifter's first slot is its named list, its second is
+// the Protection-or-Summoning one, its third is the level-capped free choice.
+function entryAt(schedule, level, slot) {
+  if (!Array.isArray(schedule)) return null;
+  const atLevel = schedule.filter((e) => e?.level === level);
+  return atLevel[slot] ?? null;
+}
+
+// The names a grant may be drawn from, when a book gives a list rather than a
+// rule. null means "not restricted to a list" — which is different from an
+// empty list, and is why this returns null rather than [].
+export function spellNamesForGrant(cls, level, slot = 0) {
+  const magic = cls?.magic;
+  const entry = entryAt(magic?.spells_schedule, level, slot);
+  if (!entry) return null;
+  if (Array.isArray(entry.from) && entry.from.length) return entry.from.map(String);
+  // `from_list: true` points at the class's own list, declared ONCE as
+  // `spells_per_level_from`. The Shifter draws two of its three spells a level
+  // from a list of thirty-four; repeating it on every entry would put it in the
+  // class definition fourteen times and make a correction fourteen edits.
+  if (entry.from_list && Array.isArray(magic?.spells_per_level_from) && magic.spells_per_level_from.length) {
+    return magic.spells_per_level_from.map(String);
+  }
+  return null;
+}
+
+// A restriction the CATALOG CANNOT ENFORCE, shown to the player instead.
+//
+// Spells carry no category or tag — only a name, a level and a cost — so
+// "non-dimension related or control based" and "any Summoning spell" have
+// nothing to filter on. Inventing a classification for three hundred spells by
+// reading their names would be exactly the guessing the import rules forbid, so
+// the rule is stated where the choice is made and the player honours it.
+//
+// This is the skill-category posture, not the psychic-tier one: a restriction
+// the app cannot check is one it should be honest about rather than silently
+// drop or silently enforce wrongly.
+export function grantNote(cls, kind, level, slot = 0) {
+  const schedule = kind === 'psionic' ? cls?.psionics?.powers_schedule : cls?.magic?.spells_schedule;
+  const entry = entryAt(schedule, level, slot);
+  return entry && typeof entry.note === 'string' && entry.note.trim() ? entry.note.trim() : null;
 }
 
 export function spellGrantsFor(cls, fromLevel, toLevel) {
@@ -199,13 +271,12 @@ export function psionicGrantsFor(cls, fromLevel, toLevel) {
 // throw the exception away and leave an empty picker.
 //
 // null means unrestricted, which is what a class stating neither means.
-export function psionicCategoriesForGrant(cls, level) {
+export function psionicCategoriesForGrant(cls, level, slot = 0) {
   const psi = cls?.psionics;
   if (!psi) return null;
 
-  const entry = (Array.isArray(psi.powers_schedule) ? psi.powers_schedule : [])
-    .find((e) => e?.level === level && Array.isArray(e.categories) && e.categories.length);
-  if (entry) return entry.categories;
+  const entry = entryAt(psi.powers_schedule, level, slot);
+  if (entry && Array.isArray(entry.categories) && entry.categories.length) return entry.categories;
 
   return Array.isArray(psi.categories_allowed) && psi.categories_allowed.length
     ? psi.categories_allowed

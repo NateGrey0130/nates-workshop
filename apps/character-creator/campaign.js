@@ -172,8 +172,8 @@ function resultsBlock() {
 // used into <mark> tags. Doing it the other way round - marking first, escaping
 // after - escapes the tags and shows them as text; skipping the escape puts a
 // note's contents into the page as HTML.
-const HIGHLIGHT_START = '\u0001';
-const HIGHLIGHT_END = '\u0002';
+const HIGHLIGHT_START = '';
+const HIGHLIGHT_END = '';
 function highlight(snippet) {
   return esc(String(snippet || ''))
     .split(HIGHLIGHT_START).join('<mark>')

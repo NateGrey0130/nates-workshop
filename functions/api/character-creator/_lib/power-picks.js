@@ -13,7 +13,7 @@
 
 import { json } from './auth.js';
 import { safeParse } from './character-json.js';
-import { spellLevelsForGrant, psionicCategoriesForGrant,
+import { spellLevelsForGrant, psionicCategoriesForGrant, spellNamesForGrant, grantNote,
          spellGrantsFor, psionicGrantsFor } from './leveling.js';
 
 export async function listPendingPowers(env, characterId) {
@@ -23,28 +23,35 @@ export async function listPendingPowers(env, characterId) {
   // powers and nothing said why. A missing migration is a prerequisite, and it
   // should fail loudly like every other one.
   const { results } = await env.DB.prepare(
-    `SELECT id, granted_at_level, count, kind, spell_levels, categories, created_at
+    `SELECT id, granted_at_level, slot, count, kind, spell_levels, categories,
+            from_names, note, created_at
      FROM pending_power_picks
      WHERE character_id = ? AND claimed_at IS NULL
-     ORDER BY granted_at_level, id`
+     ORDER BY granted_at_level, slot, id`
   ).bind(characterId).all();
   return (results || []).map((r) => ({
     id: r.id,
     granted_at_level: r.granted_at_level,
     count: r.count,
     kind: r.kind,
+    slot: r.slot ?? 0,
     spell_levels: r.spell_levels ? safeParse(r.spell_levels) : null,
     categories: r.categories ? safeParse(r.categories) : null,
+    from: r.from_names ? safeParse(r.from_names) : null,
+    note: r.note ?? null,
   }));
 }
 
 export function insertPowerGrantStatements(env, characterId, grants) {
   return grants.map((g) => env.DB.prepare(
-    `INSERT INTO pending_power_picks (character_id, granted_at_level, count, kind, spell_levels, categories)
-     VALUES (?, ?, ?, ?, ?, ?)`
-  ).bind(characterId, g.level, g.count, g.kind,
+    `INSERT INTO pending_power_picks
+       (character_id, granted_at_level, slot, count, kind, spell_levels, categories, from_names, note)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).bind(characterId, g.level, g.slot ?? 0, g.count, g.kind,
     g.spell_levels ? JSON.stringify(g.spell_levels) : null,
-    g.categories ? JSON.stringify(g.categories) : null));
+    g.categories ? JSON.stringify(g.categories) : null,
+    g.from ? JSON.stringify(g.from) : null,
+    g.note ?? null));
 }
 
 // What a span of levels earns, in the shape this file banks and spends.
@@ -57,15 +64,20 @@ export function powerGrantsFor(cls, fromLevel, toLevel) {
   const spells = spellGrantsFor(cls, fromLevel, toLevel);
   if (spells.applicable && !spells.unknown) {
     for (const g of spells.grants) {
-      out.push({ ...g, kind: 'spell', spell_levels: spellLevelsForGrant(cls, g.level),
-                 categories: null });
+      out.push({ ...g, kind: 'spell',
+                 spell_levels: spellLevelsForGrant(cls, g.level, g.slot),
+                 categories: null,
+                 from: spellNamesForGrant(cls, g.level, g.slot),
+                 note: grantNote(cls, 'spell', g.level, g.slot) });
     }
   }
   const psionics = psionicGrantsFor(cls, fromLevel, toLevel);
   if (psionics.applicable && !psionics.unknown) {
     for (const g of psionics.grants) {
       out.push({ ...g, kind: 'psionic', spell_levels: null,
-                 categories: psionicCategoriesForGrant(cls, g.level) });
+                 categories: psionicCategoriesForGrant(cls, g.level, g.slot),
+                 from: null,
+                 note: grantNote(cls, 'psionic', g.level, g.slot) });
     }
   }
   return out;
@@ -86,14 +98,19 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
   const held = new Set((existingPowers || [])
     .map((p) => String(p?.name || '').toLowerCase()).filter(Boolean));
 
-  // Remaining room per grant, keyed by the level and kind that identify it.
+  // Remaining room per grant, keyed by kind, level AND SLOT. Several grants can
+  // share a level with different restrictions — a Shifter's three spells at
+  // level 2 come from three different places — so the level alone no longer
+  // identifies one.
+  const key = (kind, level, slot) => `${kind}:${level}:${slot ?? 0}`;
   const room = new Map();
   for (const g of grants) {
-    const key = `${g.kind}:${g.level}`;
-    room.set(key, (room.get(key) || 0) + g.count);
+    const k = key(g.kind, g.level, g.slot);
+    room.set(k, (room.get(k) || 0) + g.count);
   }
-  const capFor = new Map(grants.map((g) => [`${g.kind}:${g.level}`, g.spell_levels]));
-  const catFor = new Map(grants.map((g) => [`${g.kind}:${g.level}`, g.categories]));
+  const capFor = new Map(grants.map((g) => [key(g.kind, g.level, g.slot), g.spell_levels]));
+  const catFor = new Map(grants.map((g) => [key(g.kind, g.level, g.slot), g.categories]));
+  const fromFor = new Map(grants.map((g) => [key(g.kind, g.level, g.slot), g.from]));
 
   const names = [...new Set(picks.map((p) => String(p?.name || '').trim()).filter(Boolean))];
   const catalog = await loadPowerCatalog(env, names, system);
@@ -102,14 +119,15 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
     const name = String(pick?.name || '').trim();
     const kind = pick?.kind === 'psionic' ? 'psionic' : 'spell';
     const level = Number(pick?.granted_at_level);
+    const slot = Number.isFinite(Number(pick?.slot)) ? Number(pick.slot) : 0;
     if (!name) { errors.push('A pick has no name'); continue; }
 
-    const key = `${kind}:${level}`;
-    if (!room.has(key)) {
+    const k = key(kind, level, slot);
+    if (!room.has(k)) {
       errors.push(`${name}: this character has no ${kind} grant from level ${level}`);
       continue;
     }
-    if (room.get(key) <= 0) {
+    if (room.get(k) <= 0) {
       errors.push(`${name}: the level ${level} ${kind} grant is already full`);
       continue;
     }
@@ -122,8 +140,15 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
       errors.push(`${name} is not in the ${kind} catalog`);
       continue;
     }
+    // A named list is the tightest restriction there is, so it is checked
+    // first: a grant that names its spells is not also asking about levels.
+    const list = fromFor.get(k);
+    if (list && !list.some((n) => n.toLowerCase() === name.toLowerCase())) {
+      errors.push(`${name} is not on the list the level ${level} grant draws from`);
+      continue;
+    }
     if (kind === 'spell') {
-      const cap = capFor.get(key);
+      const cap = capFor.get(k);
       if (cap && !cap.includes(row.level)) {
         errors.push(
           `${name} is a level ${row.level} spell; the level ${level} grant allows ${cap.join(', ')}`);
@@ -133,7 +158,7 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
       // A psionic grant may name its own categories, and when it does they
       // REPLACE the class's rather than narrowing them - a Mystic's level-4
       // power comes from Super, which its starting powers could not.
-      const cats = catFor.get(key);
+      const cats = catFor.get(k);
       if (cats && !cats.includes(row.category)) {
         errors.push(
           `${name} is a ${row.category || 'uncategorised'} power; the level ${level} grant allows ${cats.join(', ')}`);
@@ -141,13 +166,13 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
       }
     }
 
-    room.set(key, room.get(key) - 1);
+    room.set(k, room.get(k) - 1);
     held.add(name.toLowerCase());
     chosen.push(kind === 'spell'
       ? { type: 'spell', name: row.name, level: row.level, cost: row.ppe,
-          ...(row.ppe_note ? { cost_note: row.ppe_note } : {}), gained_at_level: level }
+          ...(row.ppe_note ? { cost_note: row.ppe_note } : {}), gained_at_level: level, slot }
       : { type: 'psionic', name: row.name, category: row.category, cost: row.isp,
-          ...(row.isp_note ? { cost_note: row.isp_note } : {}), gained_at_level: level });
+          ...(row.isp_note ? { cost_note: row.isp_note } : {}), gained_at_level: level, slot });
   }
 
   return { powers: chosen, errors };
@@ -182,7 +207,7 @@ export function remainingPowerGrants(grants, spentByKey) {
   const remaining = [];
   const left = new Map(spentByKey);
   for (const g of grants) {
-    const key = `${g.kind}:${g.level}`;
+    const key = `${g.kind}:${g.level}:${g.slot ?? 0}`;
     const spent = Math.min(g.count, left.get(key) || 0);
     left.set(key, (left.get(key) || 0) - spent);
     const rest = g.count - spent;

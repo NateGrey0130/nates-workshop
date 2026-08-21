@@ -1039,6 +1039,63 @@ class-wide rule. And because a schedule is a finite list, **"and each additional
 level of experience" has to be written out** — to 15, the default XP table's
 cap. A class with a shorter `xp_table` simply never reaches the tail.
 
+### Several grants can share a level, and a rule can be unenforceable
+
+The Shifter needed both. It gains **three** spells at every level from level two,
+and they do not come from the same place:
+
+> Starting at level two, the Shifter can choose one spell from the following
+> list plus one Protection or Summoning spell also in this list: *[34 named
+> spells]* … and any Summoning spell that may be desired, excluding weather
+> summoning. In addition, the Shifter can select one non-dimension related or
+> control based spell, but they are limited to spells equal to or less than the
+> Shifter's current level of experience.
+
+So the **level alone stopped identifying a grant**. Entries sharing a level are
+told apart by `slot`, and everything that keys a grant — the room accounting, the
+banking, the pick payload — keys on level *and* slot.
+
+```yaml
+magic:
+  spells_per_level_from: ["Banishment", "Charm", …]   # declared ONCE
+  spells_per_level_levels: up_to_character_level
+  spells_schedule:
+    - { level: 2, count: 2, from_list: true, note: "One of these two must be a Protection or Summoning spell" }
+    - { level: 2, count: 1, note: "Not dimension-related or control-based" }
+```
+
+`from_list: true` points at `spells_per_level_from`. Repeating a thirty-four
+name list on every entry would put it in the class definition fourteen times and
+make one correction fourteen edits. **A slot bounded by a named list is not also
+bounded by a spell level** — the list is the restriction.
+
+**Modelled as two grants, not three**, because the difference between the book's
+first two is a restriction nothing can check.
+
+#### A restriction the catalog cannot enforce is stated, not dropped
+
+A spell row carries a name, a level, a cost and a stat block — **no category and
+no tag**. So *"non-dimension related or control based"*, *"Protection or
+Summoning"* and *"any Summoning spell"* have nothing to filter on. Classifying
+three hundred spells by reading their names would be exactly the guessing
+[the import rules forbid](#known-limitations-and-refactor-candidates).
+
+`note` carries the rule to where the choice is made, and the picker says plainly
+that it cannot check it. That is the **skill-category posture, not the
+psychic-tier one**: a rule the app cannot verify is one it should be honest
+about rather than silently drop or silently enforce wrongly.
+
+**The named list is enforced**, server-side as well as in the picker — and
+**15 of the Shifter's 34 spells are not in the catalog**. They are the
+dimensional ones the class is built around (`Close Rift`, `D-Step`, `Rift to
+Limbo`, `Time Hole`…), from a chapter that has not been imported. They stay in
+the list on purpose: the picker names what it cannot find rather than silently
+shrinking, and they light up the day those spells arrive.
+
+Three of the 34 use the catalog's spelling rather than the book's, checked before
+the list was written: `Control **&** Enslave Entity`, `De**si**ccate the
+Supernatural` (the page misspells it), and `**Air:** Phantom Mount`.
+
 ### A psionic grant can name its categories, and they replace the class's
 
 Same shape, different subject, and the Mystic needed both halves — which is why
@@ -3250,6 +3307,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `022-play-events.sql` | `play_events` — play mode's append-only action log: undo, the who-did-what trail, and the session recap boundary |
 | `023-skill-bonuses.sql` | `skills.bonuses` — what a skill grants beyond its percentage, in a class's `bonuses:` shape. Boxing is +1 attack per melee and +2 P.S. |
 | `024-data-script-runs.sql` | `data_script_runs` — which data scripts have run against this database. The same question `schema_migrations` answers for migrations, for the 55 scripts that answer it nowhere |
+| `030-power-pick-slots.sql` | `pending_power_picks.slot`, `.from_names` and `.note` — several grants can share a level with different restrictions. The Shifter gains two spells from a named list and one of any kind at every level; `slot` tells them apart, and `note` carries a restriction the catalog cannot check |
 | `029-power-pick-categories.sql` | `pending_power_picks.categories` — a banked PSIONIC grant's own category list. The Mystic gains a **Super** power at levels 4 and 8, a category a major psychic cannot otherwise take, so the restriction belongs to the grant rather than to the class |
 | `028-pending-power-picks.sql` | `pending_power_picks` — the spells and psionic powers a level-up granted and nobody chose. `pending_skill_picks` with a different subject; `spell_levels` carries the cap the granting level came with, because that cap belongs to the grant rather than to the character |
 | `027-npc-dossiers.sql` | `npcs`, `npc_mentions`, `npc_sweeps` and `npc_proposals_dismissed`. **The first migration whose feature also needs a bucket** — R2 `MEDIA` must exist before the deploy that binds it |
@@ -3361,7 +3419,7 @@ added `data_script_runs` and every script now ends by writing itself into it.
 | Dev seed | `seed-dev.sql` | Optional local character/campaign rows. Never applied to production |
 | Run tracking | `backfill-data-script-runs.sql` | One-time, optional, and an **assertion**: records every script that had already been applied before `data_script_runs` existed, stamped with a note saying the run was asserted rather than observed. Guarded per filename, so it cannot double-record a script that has genuinely run since |
 | Data cleanup | `estimate-*.sql`, `backfill-*.sql`, `rename-*.sql`, `merge-*.sql`, `retire-gear-placeholders.sql`, `retire-orphan-gear-stubs.sql`, `untag-cross-system.sql` | One-off corrections to rows an earlier import or data script got wrong or left NULL. A `rename-*` also leaves a `catalog_redirects` row, so class markdown citing the old key keeps resolving | One-off corrections to rows an earlier import or data script got wrong or left NULL |
-| Class corrections | `fix-*.sql`, `apply-*.sql`, `long-bowman-money.sql`, `ley-line-walker-spells-per-level.sql`, `mystic-spells-per-level.sql` | The rules audit's output: stored class definitions rewritten against the books, and class data written for a schema feature the day it landed. The Ley Line Walker one is the first to fill `spells_per_level` — the format gained the key before any class carried it, so every caster read as "not recorded" until a book was opened |
+| Class corrections | `fix-*.sql`, `apply-*.sql`, `long-bowman-money.sql`, `ley-line-walker-spells-per-level.sql`, `mystic-spells-per-level.sql`, `shifter-spells-per-level.sql` | The rules audit's output: stored class definitions rewritten against the books, and class data written for a schema feature the day it landed. The Ley Line Walker one is the first to fill `spells_per_level` — the format gained the key before any class carried it, so every caster read as "not recorded" until a book was opened |
 | Additions | `add-*.sql` | Something the book gives that the database never had — a catalog row, a whole-table batch extracted from page scans (`add-pf-weapons-batch`, `add-pf-equipment-batch`, the RUE spell and psionics batches), or a whole class. A missing skill named in an `only` restriction narrows its category to nothing, which is usually how one gets noticed. A class goes in this way only when the import tool cannot be reached: production sits behind Cloudflare Access, so a hand-transcribed class is applied by script instead |
 
 Three conventions hold across all of them, with one stated exception: the

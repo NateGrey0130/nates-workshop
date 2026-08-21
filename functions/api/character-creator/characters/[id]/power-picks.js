@@ -47,8 +47,9 @@ export async function onRequestPost({ request, env, params }) {
   // The banked rows ARE the grants, so what was stored is what is spent
   // against — including the cap each one carried.
   const grants = pending.map((g) => ({
-    level: g.granted_at_level, count: g.count, kind: g.kind,
+    level: g.granted_at_level, slot: g.slot, count: g.count, kind: g.kind,
     spell_levels: g.spell_levels, categories: g.categories,
+    from: g.from, note: g.note,
   }));
 
   const resolved = await resolvePowerPicks(env, {
@@ -67,11 +68,11 @@ export async function onRequestPost({ request, env, params }) {
   const statements = [];
   const spent = new Map();
   for (const p of resolved.powers) {
-    const key = `${p.type === 'psionic' ? 'psionic' : 'spell'}:${p.gained_at_level}`;
+    const key = `${p.type === 'psionic' ? 'psionic' : 'spell'}:${p.gained_at_level}:${p.slot ?? 0}`;
     spent.set(key, (spent.get(key) || 0) + 1);
   }
   for (const g of pending) {
-    const key = `${g.kind}:${g.granted_at_level}`;
+    const key = `${g.kind}:${g.granted_at_level}:${g.slot ?? 0}`;
     const take = Math.min(g.count, spent.get(key) || 0);
     if (!take) continue;
     spent.set(key, (spent.get(key) || 0) - take);

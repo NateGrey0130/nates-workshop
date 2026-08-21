@@ -169,7 +169,7 @@ export async function onRequestPost({ request, env, params }) {
   // eventually spent.
   const spentByKey = new Map();
   for (const p of pickedPowers) {
-    const key = `${p.type === 'psionic' ? 'psionic' : 'spell'}:${p.gained_at_level}`;
+    const key = `${p.type === 'psionic' ? 'psionic' : 'spell'}:${p.gained_at_level}:${p.slot ?? 0}`;
     spentByKey.set(key, (spentByKey.get(key) || 0) + 1);
   }
   const powerRemaining = remainingPowerGrants(powerGrants, spentByKey);
