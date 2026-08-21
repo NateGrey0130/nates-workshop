@@ -1584,6 +1584,25 @@ M.D.C. arrives as a pool **bonus** rather than an override, which is why pool
 bonuses had to exist first: Super-Tough adds to whatever the class already rolls
 rather than replacing the formula.
 
+#### A bonus here only reaches a character who took the ability
+
+`applyAbilities` folds in the bonuses of abilities that were **chosen** — it
+returns the class untouched when nothing was. So a `bonuses` block on an ability
+no choice group offers is never granted automatically; it applies only if a
+player picks it or a G.M. types the name in.
+
+That makes it the wrong home for something *every* character of the class has.
+The Stone Master's Marks of Heritage were written that way — +12 P.P.E. and +20
+S.D.C. on a plain ability — and no Stone Master ever received either. It parsed
+clean, it read as mechanical, and it did nothing. Bonuses every character gets
+belong on the class's own `bonuses`, or on the **variant** when only some
+characters qualify: the Marks are True Atlantean only, so that is where they
+went.
+
+The parser now warns on it, and no other shipped class trips the warning. It is
+a warning rather than an error because a G.M. really can assign such an ability
+by name, so the block is reachable — just never on its own.
+
 **Chosen on the class step, not a step of its own.** An ability can add to
 attributes and pools, and both are rolled on the two steps after it — choosing
 later would re-roll numbers the player had already read. The step will not
@@ -3693,6 +3712,25 @@ The multiplier is read only where it sits directly against the attribute, so an
 `x N` belonging to the dice stays with the dice: in `M.E. number plus 1D6x10`
 the ×10 multiplies the die, and mistaking it for the attribute's would put the
 pool an order of magnitude out.
+
+**A flat constant on top of dice AND an attribute is not expressible.** The
+grammar is *dice plus an attribute* — there is no third term, and a constant
+written into the formula string is silently dropped rather than rejected. The
+Stone Master prints two P.P.E. formulas, and the non-Atlantean one is
+*"the P.E. attribute times two plus 30 points"*: written as
+`P.E. x2 + 30 + 2d6 per level` it rolled `36 + 2d6` at P.E. 18, thirty points
+short and perfectly plausible.
+
+Flat terms are **pool bonuses**, which are added to whatever the formula rolls:
+
+```yaml
+ppe_base: "P.E. x2 + 2d6 per level"
+bonuses: { pools: { ppe: 30 } }
+```
+
+`bonuses` is variant-overridable, so a class whose flat term differs per variant
+puts it on the variant — which is exactly how the Stone Master's two formulas
+and its Atlantean-only tattoo bonus are modelled.
 
 Do not bulk-accept a new book's first run. Read the prose, not just the figures —
 a spliced column produces a description that reads fluently and is wrong.

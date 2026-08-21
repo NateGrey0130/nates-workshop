@@ -66,6 +66,7 @@ export const CORE_SDC_BY_CLASS = {
   'mystic': '1D6',
   'priest-of-light': '1D6',
   'shifter': '1D6',
+  'stone-master': '1D6',
   'techno-wizard': '1D6',
   'warlock': '1D6',
 };

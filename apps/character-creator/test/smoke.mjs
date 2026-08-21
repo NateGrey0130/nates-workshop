@@ -2876,6 +2876,41 @@ section('Race and occupation');
 // now NOTHING re-checked them, so a direct API call could save a Godling with
 // five powers. Same posture as skills: chosen things get a boundary, and what a
 // class edit could have caused warns instead of blocking.
+// ---------- An ability's bonuses only reach a character who took it ----------
+// The Stone Master's Marks of Heritage were written as a plain ability carrying
+// +12 P.P.E. and +20 S.D.C. Every Stone Master has them, none of them ever got
+// them: applyAbilities folds in bonuses for abilities that were CHOSEN, and
+// nothing chooses an ability no choice group offers. It parsed clean, read as
+// mechanical, and granted nothing.
+section('Bonuses on an ability nobody picks');
+{
+  const parse = (lines) => parseClassMarkdown(['---', 'id: g', 'name: G', 'system: rifts',
+    'source_book: b', 'category: occ', 'special_abilities:'].concat(lines)
+    .concat(['---', '', '## Lore', '', 'x', '']).join(String.fromCharCode(10)));
+
+  const inert = parse([
+    '  - name: "Marks of Heritage"', '    description: "x"',
+    '    bonuses: { pools: { ppe: 12 } }']);
+  const warned = (r) => r.warnings.filter((w) => /not offered/.test(w));
+
+  check('a bonus on an ability no choice group offers warns', warned(inert).length === 1);
+  check('the warning names the ability', /Marks of Heritage/.test(warned(inert)[0]));
+  check('and says where the bonus belongs instead', /class \(or its variant\)/.test(warned(inert)[0]));
+  check('it is a warning, not an error - a G.M. can still assign it by name',
+    inert.errors.length === 0);
+
+  // The same block on an ability a choice group offers is exactly how the
+  // Godling's powers work, and must stay silent.
+  check('an ability the class offers as a choice does not warn', warned(parse([
+    '  - name: "Marks of Heritage"', '    description: "x"',
+    '    bonuses: { pools: { ppe: 12 } }',
+    '  - { choose: 1, from: ["Marks of Heritage"] }'])).length === 0);
+
+  // And an ability with no bonuses at all is prose, which is the common case.
+  check('a description-only ability does not warn', warned(parse([
+    '  - name: "Marks of Heritage"', '    description: "x"'])).length === 0);
+}
+
 section('Ability validation');
 {
   const cls = parseClassMarkdown([

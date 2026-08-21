@@ -1273,6 +1273,25 @@ export function parseClassMarkdown(text) {
     }
   }
 
+  // The mirror of the warning below, and the one that actually cost something.
+  // `applyAbilities` folds in bonuses for the abilities a character CHOSE - it
+  // returns the class untouched when nothing was chosen - so a definition that
+  // no choice group offers contributes its bonuses only if a player picks it or
+  // a G.M. types the name in. Never automatically.
+  //
+  // That makes a `bonuses` block on an ability every character of the class
+  // simply HAS a statement that reads as mechanical and is not. The Stone
+  // Master's Marks of Heritage were written that way: +12 P.P.E. and +20 S.D.C.
+  // that no Stone Master ever received. They belong on the class, or - when
+  // only some characters have them - on the variant that does.
+  for (const e of data.special_abilities || []) {
+    if (!isAbilityDefinition(e) || e.bonuses === undefined) continue;
+    if (optionNames.has(e.name.trim().toLowerCase())) continue;
+    warnings.push(`special_abilities: ${e.name} carries bonuses but is not offered `
+      + 'as a choice, so nothing grants it automatically - put them on the class '
+      + '(or its variant) if every character has them');
+  }
+
   // An option nothing defines can still be picked, and would grant nothing.
   // A warning rather than an error: a book routinely names a power it describes
   // only in prose, and refusing the class over it would be worse.
