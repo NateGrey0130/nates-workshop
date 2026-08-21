@@ -70,6 +70,12 @@
       // entries, but on no attribute row — it is trained, not innate. Zero
       // until a class or a human says otherwise.
       pull_punch: 0,
+      // Perception is a roll in its own right in RUE (p.367): D20 plus whatever
+      // the O.C.C./R.C.C. grants, against 4 / 8 / 14 / 17 by difficulty. No
+      // attribute feeds it — the book gives the bonus to the class, not to a
+      // score — so this is 0 until a class says otherwise, and it exists here
+      // so that a class bonus has a base to be added to.
+      perception: 0,
       damage_bonus: chart('ps_damage', attrs.PS),
       // Spd × 5 yards per melee round is the standard movement rule.
       run_yards_per_melee: n(attrs.Spd) * 5,

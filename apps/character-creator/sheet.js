@@ -963,6 +963,7 @@ function render() {
   const COMBAT_FIELDS = [
     ['attacks', '# of Attacks'], ['initiative', 'Initiative'], ['strike', 'Strike'],
     ['parry', 'Parry'], ['dodge', 'Dodge'], ['roll', 'Roll w/ Punch'],
+    ['perception', 'Perception'],
     ['damage_bonus', 'Damage'], ['punch', 'Punch'], ['power_punch', 'Power Punch'],
     ['kick', 'Kick'], ['knockout', 'Knock Out'], ['critical', 'Critical'],
     ['pull_punch', 'Pull Punch'],
