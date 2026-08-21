@@ -12,7 +12,7 @@
 
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { appDir, check, section } from '../harness.mjs';
+import { appDir, repoRoot, check, section } from '../harness.mjs';
 import { composeClass, CORE_SDC_BY_CLASS } from '../../js/compose.js';
 import { bonusesFromSkills, levelGrants, skillLevelNotes, skillConditionalBonuses } from '../../js/parser.js';
 import { rollPoolFormula } from '../../js/dice.js';
@@ -455,6 +455,23 @@ check('every script writing it says so in its header', silent.length === 0,
 const readmeText = readFileSync(join(appDir, 'README.md'), 'utf8');
 check('the README quotes the marker exactly', readmeText.includes(MARKER),
   'README and scripts disagree on the marker string');
+// The wizard computes combat bonuses CLIENT-SIDE from the rows /catalogs
+// sends, so any column bonusesFromSkills() reads has to be in that
+// projection. `level_bonuses` was not, and nothing failed: the sheet was
+// right because its own endpoint selects the column, and only the wizard
+// quietly showed a Hand to Hand skill granting nothing at all.
+//
+// Checked against the source rather than a running server, so it holds in a
+// checkout with no database.
+const catalogsSrc = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator',
+  'catalogs.js'), 'utf8');
+const skillsSelect = catalogsSrc.split('FROM skills')[0].split('SELECT').pop();
+for (const col of ['bonuses', 'level_bonuses']) {
+  check('/catalogs sends skills.' + col + ' to the wizard',
+    new RegExp('\\b' + col + '\\b').test(skillsSelect),
+    'the wizard reads it in skillBonusClass() and would see nothing');
+}
+
 // The third provenance tier: values nothing published stands behind. The
 // decision that made them acceptable was that they cannot change a roll, so
 // THAT is what has to hold. A guessed price is a shopping inconvenience; a

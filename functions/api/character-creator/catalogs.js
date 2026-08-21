@@ -16,7 +16,13 @@ export async function onRequestGet({ request, env }) {
     // while the character is still being built. Without it the wizard shows
     // nothing until the character is saved and the sheet recomputes, which is
     // the same numbers arriving late and reads as a bug.
-    env.DB.prepare('SELECT name, category, base, per_level, systems, source_book, bonuses FROM skills ORDER BY category, name').all(),
+    // `level_bonuses` rides along with `bonuses` because the WIZARD computes
+    // combat bonuses client-side from these very rows — see skillBonusClass()
+    // in app.js. Leaving it out of the projection did not fail loudly: the
+    // sheet was right, because its endpoint selects the column itself, and
+    // only the wizard silently showed a fighting style granting nothing.
+    // Roughly 28KB across the 36 rows that have one.
+    env.DB.prepare('SELECT name, category, base, per_level, systems, source_book, bonuses, level_bonuses FROM skills ORDER BY category, name').all(),
     // `system` likewise: the wizard filters spells and powers by the campaign's
     // system client-side, the same way it already does skills.
     env.DB.prepare('SELECT name, level, ppe, ppe_note, system, source_book FROM spells ORDER BY level, name').all(),
