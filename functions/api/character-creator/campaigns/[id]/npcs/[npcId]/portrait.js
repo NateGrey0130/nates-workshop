@@ -27,8 +27,13 @@ export async function onRequestGet({ request, env, params }) {
   }
   if (!env.MEDIA) return json({ error: 'Image storage is not configured on this environment' }, 501);
 
+  // Two different 404s. The optional chain collapsed them into one, so asking
+  // for a portrait of an NPC that does not exist answered "No portrait" - true
+  // in the way a sentence can be true and still send the reader the wrong way,
+  // since it describes a dossier rather than the absence of one.
   const npc = await found(env, params);
-  if (!npc?.portrait_key) return json({ error: 'No portrait' }, 404);
+  if (!npc) return json({ error: 'NPC not found' }, 404);
+  if (!npc.portrait_key) return json({ error: 'No portrait' }, 404);
 
   const object = await env.MEDIA.get(npc.portrait_key);
   // The row says there is an image and the store disagrees. Reported rather
