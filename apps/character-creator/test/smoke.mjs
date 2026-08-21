@@ -3554,6 +3554,14 @@ section('Portraits are never public');
   // The whole site is behind Access. An unauthenticated image endpoint would be
   // the one hole in it, so every read goes through the membership check.
   check('the portrait GET checks membership', /isMember/.test(src));
+
+  // A missing NPC and an NPC with no portrait are different answers. `!npc?.x`
+  // is the tidier-looking form and collapses them, which is why this is pinned
+  // rather than left to whoever next reads the file.
+  check('a missing NPC is distinguished from a missing portrait',
+    /if \(!npc\) return json\(\{ error: 'NPC not found' \}, 404\);/.test(src));
+  check('and the two are not collapsed into one check',
+    !/!npc\?\.portrait_key/.test(src));
   check('an allowlist decides the type, not a blocklist', /const TYPES = \{/.test(src));
   check('and an unknown type is refused', /415/.test(src));
   check('uploads are size-bounded', /MAX_BYTES/.test(src) && /413/.test(src));
