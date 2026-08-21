@@ -1105,6 +1105,44 @@ the class page prints in parentheses. Where the Shifter's class page disagreed �
 description and the index agreed with each other, so the class page is the
 outlier and the stat block won.
 
+#### The whole Invocation list, and what supplying the level did not fix
+
+`add-book-of-magic-invocations.sql` adds **108 spells** — every Invocation in
+the book the catalog did not already hold, levels 2 through 15 plus the Spells
+of Legend. A Ley Line Walker's picker went from 203 of the book's 311 listed
+invocations to all of them.
+
+Knowing the level does not come from the description, this import supplied it:
+one request per **level section**, each carrying its own level, so no batch could
+straddle a boundary. That was necessary and **not sufficient**. The book's
+`Level N` headings sit *partway down a page*, so the first page of every batch
+still carries the tail of the previous level — and those spells were stamped
+with the new batch's level. **Thirteen rows came back exactly one level too
+high**, `Sonic Blast`, `Wards` and `Wall of the Weird` among them, every one of
+them looking completely ordinary.
+
+So the rule is sharper than "supply the level": **the index is the authority and
+the page position is not**. Every row was corrected against the master by-level
+index, which states each spell's level in one place regardless of where its
+description falls.
+
+`Rift Teleportation` shows the mechanism at its clearest. Its stat block starts
+on p143 and its `P.P.E.: Two Hundred` line falls on p144, so the Level Twelve
+batch saw only the tail and produced a *second* row — conflated name, wrong
+level, no cost at all — for a spell the catalog already had.
+
+**Parsing that index took three passes, and the first two were quietly wrong.**
+Worth recording, because each failure produced a plausible-looking answer:
+
+| pass | what it did | how it showed |
+|---|---|---|
+| linear text | read the page as a text stream | levels one and two came back **empty**; `Blinding Flash` and `Globe of Daylight` filed under level three. It is set in three columns and the stream does not follow them — so read it geometrically, bucketing by x and sorting by y |
+| strict names | allowed only letters in a name | silently dropped every `Summon & Control ...` entry and every name carrying its own parenthetical, like `Doppleganger (Superior) (1,000)` |
+| strict costs | required a cost to be numeric | rejected `(l)` — an OCR'd 1 — along with `(400 to 1000+)` and `(1,600 or Special)` |
+
+The finished index holds **311** entries and every staged row matched one. Costs
+agreed on **108 of 108** between each spell's own stat block and the index.
+
 #### A restriction the catalog cannot enforce is stated, not dropped
 
 A spell row carries a name, a level, a cost and a stat block — **no category and
