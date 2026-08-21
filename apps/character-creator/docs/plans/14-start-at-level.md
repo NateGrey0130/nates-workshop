@@ -1,6 +1,7 @@
 # PR 14 — Starting above level 1
 
-> **Planned**, not built. Decisions taken in an interview on 2026-08-20.
+> **Built.** Decisions taken in an interview on 2026-08-20; the **As built**
+> notes below record where the plan turned out to be wrong.
 
 ## Problem
 
@@ -23,6 +24,31 @@ the existing 1→6 proposal before the character is ever saved*. Everything belo
 follows from refusing to write a parallel implementation of levelling.
 
 ## Decisions
+
+**As built: the level selector is on the RACE step, not the Occupation step.**
+The plan put it on Occupation, reasoning that it is the first point where both
+class halves are known. That step does not exist for a character whose primary
+class is an O.C.C. — which is most Rifts characters, and exactly the ones a
+player joining an established party would build. The Race step always renders
+and comes before everything that scales, so the control lives there and the
+preview of what the level adds lives on the Advancement step, which is that
+step's whole job anyway.
+
+**As built: the engine had to move into the app.** The plan said "reuse
+`buildProposal`" without noticing that it lives under `functions/`, which a
+browser cannot import. `js/leveling.js` is now the implementation and
+`_lib/leveling.js` re-exports it, leaving every server import unchanged — the
+same arrangement `js/dice.js` already had, which `_lib/leveling.js` was already
+reaching across for.
+
+**As built: one proposal per level, not one for the span.** The plan implied a
+single 1→N call. That gives one lump sum and no way to itemise or re-roll a
+single level, so the step runs the engine once per level gained.
+
+**As built: the audit had to learn about `xp`.** The `xp_below_level` warning
+was written, shipped and could never fire, because `admin/audit.js` passed only
+`{ level }` to the validator. Caught by checking rather than by assuming — it is
+the same dead-key failure the README already documents for bonuses.
 
 **A new Advancement step, present only when the starting level is above 1**, and
 placed **after Powers, before Details**:
@@ -47,9 +73,9 @@ sequence level by level (six screens for a level-6 character), and a level-N
 stat block with no retroactive picks (it silently skips every grant the O.C.C.
 schedule earns, which is the main thing being asked for).
 
-**The starting level is chosen freely, 1–15**, on the Occupation step — the
-first point at which both halves are known, so the panel can immediately say
-what that level will add. No campaign cap, no GM approval. Rejected: a campaign
+**The starting level is chosen freely**, 1 to whatever the class's own XP table
+caps at — on the **Race step**, not the Occupation step this plan originally
+named (see the As built note above). No campaign cap, no GM approval. Rejected: a campaign
 starting-level setting and a GM approval gate; both add an administrative path
 before there is any evidence one is wanted.
 

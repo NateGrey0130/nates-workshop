@@ -41,6 +41,27 @@ export function insertGrantStatements(env, characterId, grants) {
     g.kind === 'secondary' ? 'secondary' : null));
 }
 
+// What is left of a set of grants after `spent` picks have been taken.
+//
+// Consumes ACROSS grants from the earliest first, rather than taking whole
+// grants. Taking whole grants keeps the right total and attributes it to the
+// wrong level: spending 1 of a level-3 pair would bank "level 3 x 2" and lose
+// the level-6 grant entirely.
+//
+// Two callers now - a live level-up, and a character created above level 1 -
+// which is why the rule and its reason live here rather than in either.
+export function remainingGrants(grants, spent) {
+  let toSpend = Math.max(0, spent);
+  const remaining = [];
+  for (const g of grants) {
+    const consumed = Math.min(g.count, toSpend);
+    toSpend -= consumed;
+    const left = g.count - consumed;
+    if (left > 0) remaining.push({ ...g, count: left });
+  }
+  return remaining;
+}
+
 // Merge category lists from several grants without duplicating.
 //
 // A plain `new Set(...)` dedupes strings but not objects: two grants naming the

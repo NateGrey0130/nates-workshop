@@ -28,7 +28,7 @@ export async function onRequestGet({ request, env }) {
 
   const { results } = await env.DB.prepare(
     `SELECT id, name, class_id, class_variant, occ_class_id, occ_class_variant,
-            level, attributes, skills, abilities, player_email, campaign_id
+            level, xp, attributes, skills, abilities, player_email, campaign_id
      FROM characters ORDER BY id LIMIT ? OFFSET ?`
   ).bind(limit, offset).all();
 
@@ -47,7 +47,9 @@ export async function onRequestGet({ request, env }) {
     decodeCharacter(row);
 
     const { skipped, violations, warnings } = validateCharacter({
-      character: { level: row.level }, cls, skills: row.skills, attributes: row.attributes,
+      // xp as well as level: a character whose XP is behind its level warns,
+      // and a validator that is never handed the number can never say so.
+      character: { level: row.level, xp: row.xp }, cls, skills: row.skills, attributes: row.attributes,
       abilities: row.abilities, catalog,
     });
 

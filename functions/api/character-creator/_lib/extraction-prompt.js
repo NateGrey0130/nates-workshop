@@ -112,11 +112,23 @@ Optional — include only what the page actually states:
     describing them in prose — the app cross-references these names against its
     power catalog, and a power named only inside a special_abilities description
     is invisible to it.
+    If the book states how many NEW powers are learned at each level, record it:
+    \`powers_per_level: 1\` for a flat rule, or
+    \`powers_schedule: [{ level: 3, count: 2 }]\` when the number varies by level.
+    Use one or the other, never both — a schedule is the complete statement.
 - magic: { type: "...", spells_starting: N, spell_levels_allowed: [1, 2] }
     Likewise, if the class automatically knows specific named spells, list their
     names in \`spells: ["Globe of Daylight", "Sense Magic"]\`. Only list spells the
     book actually names; if the class simply chooses N spells of a given level,
     give spells_starting/spell_levels_allowed and no \`spells\` list.
+    \`spells_starting\` is the LEVEL 1 count. If the book also states how many
+    new spells are learned at each level after that — most practitioners of
+    magic learn some — record it as \`spells_per_level: 2\`, or as
+    \`spells_schedule: [{ level: 2, count: 2 }, { level: 3, count: 3 }]\` when the
+    number varies. Use one or the other, never both.
+    Omit them if the book does not say. A class that states no per-level rule
+    is reported as "not recorded" rather than as learning nothing, so silence
+    here is honest and a guess is not.
 - special_abilities / natural_abilities: list of { name, description }
 - bonuses: the class's MECHANICAL grants, as numbers the app can add up.
     { attributes: { PS: 2 }, combat: { attacks: 1, strike: 2 }, saves: { magic: 2 },
