@@ -136,6 +136,11 @@ th {
 }
 .stepper .st.done { color: var(--accent); border-color: var(--accent); cursor: pointer; }
 .stepper .st.cur { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
+/* A step that does not apply to THIS character — the Occupation step for a
+   character whose primary class is already an O.C.C. Shown rather than removed,
+   so the numbering stays the same between two characters sitting side by side
+   and "there is no occupation step for this one" reads as information. */
+.stepper .st.na { opacity: 0.4; border-style: dashed; cursor: default; }
 
 /* Class cards. The gap and the padding both went up: at 12px and 16px the
    cards read as one dense block rather than as separate things to choose

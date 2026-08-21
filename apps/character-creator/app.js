@@ -1,5 +1,10 @@
-// Character creation wizard: system → class → attributes → skills →
-// equipment → powers → review/save.
+// Character creation wizard: system → race → attributes → occupation →
+// skills → equipment → powers → details → review/save.
+//
+// The race comes first and the roll comes before the occupation, because that
+// is the order a Palladium character is actually made: you are a dragon, you
+// roll to find out what kind, and then you decide what the dragon studied.
+// See docs/plans/13-rcc-first-wizard.md.
 //
 // ES module so it can share js/dice.js with the server-side leveling code
 // (functions/api/character-creator/_lib/leveling.js imports the same file).
@@ -16,7 +21,11 @@ import { isChoiceGroup, isGearChoice, applyVariant,
 import { composeClass } from './js/compose.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
-const STEPS = ['System', 'Class', 'Attributes', 'Skills', 'Equipment', 'Powers', 'Details', 'Review'];
+const STEPS = ['System', 'Race', 'Attributes', 'Occupation', 'Skills', 'Equipment', 'Powers', 'Details', 'Review'];
+// Steps by name. Every transition used to be a bare index — goStep(3) — and
+// splitting Class into two meant finding all fourteen of them by eye. Named
+// once, so the next step inserted anywhere costs nothing but this list.
+const ST = Object.fromEntries(STEPS.map((n, i) => [n.toUpperCase(), i]));
 
 // The printed sheet's identity block. Everything here is optional flavour —
 // nothing in the app's rules depends on it.
@@ -51,7 +60,20 @@ const S = {
   // null means "there is no draft and I expect to create it".
   draftVersion: null,
   draftConflict: null,
-  classes: [], cls: null,
+  // Two class fields, and the difference matters. `rcc` is what the player
+  // PICKED on the Race step — raw, unresolved, still carrying its variants and
+  // its choose-groups, which is what that step's pickers read. `cls` is what
+  // the character IS: variant applied, occupation composed in, abilities folded
+  // in. Nothing after the Occupation step knows there were ever two.
+  //
+  // It used to be one field that `confirmClass` overwrote in place, which was
+  // fine while both halves were chosen on the same step and is not any more:
+  // adding an occupation two steps later has to re-compose from the original.
+  classes: [], rcc: null, cls: null,
+  // The race half alone, composed. Kept because its dice bonuses are rolled and
+  // read on the Attributes step, and choosing an occupation afterwards must not
+  // re-roll a number the player has already seen.
+  raceCls: null,
   attrMethods: {}, attrs: {}, attrRolls: {},
   related: [], secondary: [], groupPicks: {},
   // Starting-gear choices the class leaves open, and the slugs picked for each,
@@ -80,6 +102,14 @@ const S = {
   // What a class's DICE combat/save bonuses came up. Rolled once, like
   // attrBonuses, because both are read at render time.
   rolledBonuses: { combat: {}, saves: {} },
+  // The occupation's own dice bonuses, rolled when it is chosen and kept apart
+  // from the race's — so switching occupation re-rolls its half and leaves the
+  // race's alone. rolledAll() is the only thing that sees them summed.
+  occAttrBonuses: {}, occRolledBonuses: { combat: {}, saves: {} },
+  // Attributes re-rolled because a chosen O.C.C. raised a minimum the original
+  // roll missed. Kept so the assist is visible as one rather than presented as
+  // what the dice said first — posted as play events once the character exists.
+  minRerolls: [],
   // Abilities picked from a class's choice group. A LIST, not a set: some are
   // repeatable and the second take means something different.
   abilities: [],
@@ -136,11 +166,46 @@ const method = (a) => S.attrMethods[a] || 'roll';
 // re-rolled by Review's Reroll button along with the pools.
 // Everything a class's dice bonuses actually rolled, in the grouped shape
 // classBonuses reads. One helper so the call sites cannot disagree.
+// Two halves summed: the race's rolls and the occupation's, kept apart in state
+// so that changing occupation re-rolls only its own. Every read goes through
+// here, so no caller has to know there are two.
+const sumRolled = (a, b) => {
+  const out = { ...(a || {}) };
+  for (const [k, v] of Object.entries(b || {})) out[k] = (out[k] || 0) + v;
+  return out;
+};
 const rolledAll = () => ({
-  attributes: S.attrBonuses || {},
-  combat: S.rolledBonuses?.combat || {},
-  saves: S.rolledBonuses?.saves || {},
+  attributes: sumRolled(S.attrBonuses, S.occAttrBonuses),
+  combat: sumRolled(S.rolledBonuses?.combat, S.occRolledBonuses?.combat),
+  saves: sumRolled(S.rolledBonuses?.saves, S.occRolledBonuses?.saves),
 });
+
+// Everything one class states as dice, rolled once. A list arrives when a class
+// grants the same attribute twice — a level-1 bonus and an `at_level` one — and
+// each rolls, because there is no single expression that means both.
+//
+// Combat and save bonuses roll here alongside the attribute ones, because both
+// are read at render time and a roll re-evaluated per render moves under the
+// player.
+function rollDiceBonusesOf(cls) {
+  const roll = (dice) => {
+    const rolls = [dice].flat().map((d) => (typeof d === 'number' ? d : evalDice(d))).filter((v) => v != null);
+    return rolls.length ? rolls.reduce((a, b) => a + b, 0) : null;
+  };
+  const out = { attributes: {}, combat: {}, saves: {} };
+  const byGroup = derive.diceBonusesByGroup(cls);
+  for (const g of ['combat', 'saves']) {
+    for (const [k, dice] of Object.entries(byGroup[g] || {})) {
+      const v = roll(dice);
+      if (v != null) out[g][k] = v;
+    }
+  }
+  for (const [attr, dice] of Object.entries(derive.diceBonuses(cls))) {
+    const v = roll(dice);
+    if (v != null) out.attributes[attr] = v;
+  }
+  return out;
+}
 
 function rollAttrBonuses(force = false) {
   // Idempotent unless forced. computePools() is called lazily whenever a later
@@ -148,26 +213,30 @@ function rollAttrBonuses(force = false) {
   // re-rolled a bonus the player had already read off the Attributes step.
   if (!force && S.attrBonuses && Object.keys(S.attrBonuses).length) return;
 
-  // Combat and save bonuses a class states as dice — "+1D4 on initiative".
-  // Rolled here with the attribute ones and stored, because both are read at
-  // render time and a roll re-evaluated per render moves under the player.
-  const byGroup = derive.diceBonusesByGroup(S.cls);
-  S.rolledBonuses = { combat: {}, saves: {} };
-  for (const g of ['combat', 'saves']) {
-    for (const [k, dice] of Object.entries(byGroup[g] || {})) {
-      const rolls = [dice].flat().map((d) => (typeof d === 'number' ? d : evalDice(d))).filter((v) => v != null);
-      if (rolls.length) S.rolledBonuses[g][k] = rolls.reduce((a, b) => a + b, 0);
-    }
-  }
+  // The RACE half only. S.cls carries the occupation's dice as well once one is
+  // chosen, and rolling from it here would count those twice — once into
+  // S.attrBonuses and again into S.occAttrBonuses.
+  const r = rollDiceBonusesOf(S.raceCls || S.cls);
+  S.attrBonuses = r.attributes;
+  S.rolledBonuses = { combat: r.combat, saves: r.saves };
+  // Review's Reroll button re-rolls the whole character, occupation included.
+  if (force) rollOccBonuses();
+}
 
-  S.attrBonuses = {};
-  for (const [attr, dice] of Object.entries(derive.diceBonuses(S.cls))) {
-    // A list when a race and an occupation both grant one to the same
-    // attribute. Each rolls; the stored bonus is their total, so
-    // `attribute_bonuses` stays one number per attribute and needs no migration.
-    const rolls = [dice].flat().map((d) => (typeof d === 'number' ? d : evalDice(d))).filter((v) => v != null);
-    if (rolls.length) S.attrBonuses[attr] = rolls.reduce((a, b) => a + b, 0);
+// The occupation's dice bonuses, rolled from the occupation ALONE rather than
+// from the composed class. A race granting +1D4 P.S. and an occupation granting
+// +2D6 means both are rolled; rolling them separately is what lets the race's
+// result stay put when the player changes their mind about the occupation.
+function rollOccBonuses() {
+  const occ = S.occ ? S.classes.find((c) => c.id === S.occ) : null;
+  if (!occ) {
+    S.occAttrBonuses = {};
+    S.occRolledBonuses = { combat: {}, saves: {} };
+    return;
   }
+  const r = rollDiceBonusesOf(applyVariant(occ, S.occVariant));
+  S.occAttrBonuses = r.attributes;
+  S.occRolledBonuses = { combat: r.combat, saves: r.saves };
 }
 
 // ---------- pools ----------
@@ -242,14 +311,39 @@ const DRAFT_KEYS = [
   'equipment', 'equipInit', 'charName', 'campaignId', 'newCampaign',
   'spells', 'psi', 'bio', 'pools', 'longLived', 'bioRolls',
   'psiRoll', 'psiShape', 'psiCategory', 'attrBonuses', 'rolledBonuses', 'abilities',
+  'occAttrBonuses', 'occRolledBonuses', 'minRerolls',
 ];
+
+// Bumped whenever STEPS changes shape, because a draft stores `step` as an
+// INDEX into it. Version 1 is the eight-step list that had one combined Class
+// step; version 2 split it into Race and Occupation with Attributes between,
+// which moved every index from 2 upward.
+const STEPS_VERSION = 2;
+
+// An old draft's step index, mapped onto the current list. A draft stopped on
+// the old Class step resumes on Race, which is right: it had not committed to
+// an occupation in any way the new step could trust.
+//
+// Only the steps AFTER the inserted Occupation step move. System (0), Class→
+// Race (1) and Attributes (2) all keep their index; Skills was 3 and is 4, and
+// everything after it shifts by the same one.
+//
+// Drafts are unfinished builds a player expects to come back to, so this is a
+// mapping rather than a discard — and the resume OFFER reads the migrated index
+// too, or it would name the wrong step in the sentence asking you to resume.
+function migrateDraft(d) {
+  if (!d || (d.state && d.state.steps_version >= 2)) return d;
+  const map = (i) => (i <= 2 ? i : i + 1);
+  const step = map(d.step || 0);
+  return { ...d, step, state: { ...(d.state || {}), step, steps_version: STEPS_VERSION } };
+}
 
 let draftTimer = null;
 
 // Nothing is worth saving until a class is picked — before that a "draft" is a
 // radio button, and offering to resume one would be noise.
 function draftWorthSaving() {
-  return !!S.cls && !S.savedId && !S.draftOffer;
+  return !!S.rcc && !S.savedId && !S.draftOffer;
 }
 
 // The class is stored as an ID and re-resolved on restore, so a draft never
@@ -257,12 +351,16 @@ function draftWorthSaving() {
 function draftPayload() {
   const state = {};
   for (const k of DRAFT_KEYS) state[k] = S[k];
+  state.steps_version = STEPS_VERSION;
   return {
     state,
     step: S.step,
     system: S.system,
-    class_id: S.cls?.id ?? null,
-    class_name: S.cls?.name ?? null,
+    // The class the player PICKED, not the composed one. Composition renames a
+    // paired character ("Chiang-Ku Dragon Ley Line Walker") and the resume path
+    // has to look the race up by id, so the raw half is what is stored.
+    class_id: S.rcc?.id ?? null,
+    class_name: S.rcc?.name ?? null,
     char_name: S.charName || null,
   };
 }
@@ -319,13 +417,8 @@ function resumeDraft() {
   // The draft stores the class id and the stage separately, so the class is
   // resolved from scratch here — an edited class definition takes effect, and
   // the variant is re-applied on top of it.
-  S.cls = composeClass({
-    rcc: S.classes.find((c) => c.id === d.class_id) || null,
-    occ: S.occ ? S.classes.find((c) => c.id === S.occ) || null : null,
-    // No psychic tier here: the roll happens on the Powers step, and psiClass()
-    // folds it in from there while a build is in progress.
-    character: { class_variant: S.variant, occ_class_variant: S.occVariant },
-  });
+  S.rcc = S.classes.find((c) => c.id === d.class_id) || null;
+  recompose();
   S.savedId = null;
   render();
 }
@@ -358,6 +451,10 @@ function renderDraftOffer() {
 // ---------- rendering ----------
 function renderStepper() {
   const steps = STEPS.map((name, i) => {
+    // A step that does not apply is shown greyed rather than removed: the
+    // numbering stays stable between characters, and "there is no occupation
+    // step for this one" is information.
+    if (!stepApplies(i)) return `<span class="st na" title="Does not apply to this character">${i + 1}. ${name}</span>`;
     const cls = i === S.step ? 'st cur' : i < S.step ? 'st done' : 'st';
     const go = i < S.step ? ` onclick="goStep(${i})"` : '';
     return `<span class="${cls}"${go}>${i + 1} — ${name}</span>`.replace(' — ', '. ');
@@ -376,9 +473,12 @@ function renderStepper() {
 function render() {
   if (S.draftOffer) { renderStepper(); return renderDraftOffer(); }
   if (S.savedId) { renderStepper(); return renderSaved(); }
+  // Reached by any path that does not go through goStep — a resumed draft, or
+  // an ability dropped on a step that made the next one moot.
+  if (!stepApplies(S.step)) S.step = seekStep(S.step, 1);
   renderStepper();
-  [renderSystem, renderClass, renderAttributes, renderSkills, renderEquipment,
-   renderPowers, renderDetails, renderReview][S.step]();
+  [renderSystem, renderRace, renderAttributes, renderOccupation, renderSkills,
+   renderEquipment, renderPowers, renderDetails, renderReview][S.step]();
   wirePickers();
   queueDraftSave();
 }
@@ -405,7 +505,32 @@ function wirePickers() {
   }
 }
 
-function goStep(i) { S.step = i; render(); }
+function goStep(i) { if (stepApplies(i)) { S.step = i; render(); } }
+
+// Not every step applies to every character. The Occupation step is the first
+// one that does not: an O.C.C. taken as the primary class IS the occupation,
+// and offering to pair it with a second one is a question with no answer.
+//
+// A predicate rather than a hard-coded skip, because the next conditional step
+// (starting above level 1) plugs in here and the navigation stops caring.
+function stepApplies(i) {
+  if (i !== ST.OCCUPATION) return true;
+  if (!S.rcc) return true;
+  // An ability that names practitioners claims the step whatever the category.
+  if (abilityOccOptions(S.rcc, S.abilities)) return true;
+  return S.rcc.category === 'rcc'
+    && S.classes.some((c) => c.system === S.system && c.category === 'occ');
+}
+
+// The next or previous step that applies, so a skipped one is never landed on
+// from either direction.
+function seekStep(from, dir) {
+  let i = from + dir;
+  while (i > 0 && i < STEPS.length && !stepApplies(i)) i += dir;
+  return Math.min(Math.max(i, 0), STEPS.length - 1);
+}
+function nextStep() { goStep(seekStep(S.step, 1)); }
+function prevStep() { goStep(seekStep(S.step, -1)); }
 
 // Step 0 — system
 function gmCampaigns() {
@@ -439,8 +564,8 @@ function renderSystem() {
   </div>`;
 }
 function pickSystem(sys) {
-  if (S.system !== sys) { S.cls = null; S.quiz = [null, null, null]; resetBuild(); }
-  S.system = sys; S.step = 1; render();
+  if (S.system !== sys) { S.rcc = null; S.quiz = [null, null, null]; resetBuild(); }
+  S.system = sys; S.step = ST.RACE; render();
 }
 function resetBuild() {
   S.attrMethods = {}; S.attrs = {}; S.attrRolls = {}; S.related = []; S.secondary = []; S.groupPicks = {};
@@ -452,10 +577,18 @@ function resetBuild() {
   S.spells = []; S.psi = []; S.bio = {}; S.longLived = false; S.bioRolls = {};
   S.psiRoll = null; S.psiShape = null; S.psiCategory = null; S.attrBonuses = {};
   S.rolledBonuses = { combat: {}, saves: {} };
+  S.raceCls = null; S.cls = null;
+  S.occAttrBonuses = {}; S.occRolledBonuses = { combat: {}, saves: {} };
+  S.minRerolls = [];
 }
 
-// Step 1 — class select (browse | guided)
-function renderClass() {
+// Step 1 — the race (browse | guided)
+//
+// The R.C.C. comes first and gets the step to itself. The list still holds
+// every class for the system, because an O.C.C. taken alone is a human
+// character and always was; what changed is that a racial class is now read
+// before it is chosen rather than a step after.
+function renderRace() {
   const list = S.classes.filter((c) => c.system === S.system);
   const mode = S.classMode;
   let inner;
@@ -485,14 +618,68 @@ function renderClass() {
       <button class="${mode === 'guided' ? 'on' : ''}" onclick="classMode('guided')">Help me choose</button>
     </div>
     ${inner}
-    ${S.cls ? classDetail(S.cls) : ''}
+    ${S.rcc ? classDetail(S.rcc) : ''}
     ${variantPicker()}
-    ${occPicker()}
+    ${raceBriefing()}
     ${abilityPicker()}
   </div>
-  <div class="nav"><button class="btn btn-ghost" onclick="goStep(0)">&larr; Back</button>
-  ${S.cls && blocker ? `<span class="nav-why">${esc(blocker)}</span>` : ''}
-  <button class="btn btn-primary" ${blocker ? 'disabled' : ''} onclick="confirmClass()">Use this class &rarr;</button></div>`;
+  <div class="nav"><button class="btn btn-ghost" onclick="goStep(ST.SYSTEM)">&larr; Back</button>
+  ${S.rcc && blocker ? `<span class="nav-why">${esc(blocker)}</span>` : ''}
+  <button class="btn btn-primary" ${blocker ? 'disabled' : ''} onclick="confirmRace()">Confirm and roll &rarr;</button></div>`;
+}
+
+// What the race actually grants, in mechanical terms, BEFORE committing to it.
+//
+// The picker used to hand a player a Chiang-Ku Dragon off a card and a lore
+// paragraph: the attribute dice, the pools, the psionics and the fixed skills
+// were all first seen a step later, after the choice had been made and the
+// dice were already rolling. This is the briefing that was missing.
+//
+// Reads the variant-resolved class, because a hatchling and an adult are
+// different sets of dice and showing the base would be showing neither.
+function raceBriefing() {
+  if (!S.rcc) return '';
+  const c = applyVariant(S.rcc, S.variant);
+  const tag = (label, v) => `<span class="tag">${label} ${esc(String(v))}</span>`;
+
+  const dice = ATTRS.filter((a) => c.attribute_dice?.[a]).map((a) => tag(a, c.attribute_dice[a])).join(' ');
+  const pools = [['H.P.', c.hit_points_base], ['S.D.C.', c.sdc_base], ['M.D.C.', c.mdc_base],
+                 ['P.P.E.', c.ppe_base], ['I.S.P.', c.psionics?.isp_base]]
+    .filter(([, v]) => v != null).map(([k, v]) => tag(k, v)).join(' ');
+
+  const b = c.bonuses || {};
+  const bonusBits = [
+    ...Object.entries(b.attributes || {}).map(([k, v]) => tag(k, (typeof v === 'number' && v > 0 ? '+' : '') + [v].flat().join(' & +'))),
+    ...Object.entries(b.combat || {}).map(([k, v]) => tag(k.replace(/_/g, ' '), (typeof v === 'number' && v > 0 ? '+' : '') + [v].flat().join(' & +'))),
+    ...Object.entries(b.saves || {}).map(([k, v]) => tag('save vs ' + k.replace(/_/g, ' '), (typeof v === 'number' && v > 0 ? '+' : '') + [v].flat().join(' & +'))),
+  ].join(' ');
+
+  // Named skills only. A choice-group has no name to print here, and it is
+  // resolved on the Skills step where it can actually be chosen.
+  const fixed = (c.skills?.occ_skills || []).filter((e) => e?.name);
+  const groups = (c.skills?.occ_skills || []).length - fixed.length;
+
+  // psionics_allowed: false is a statement (a troll has no psychic potential),
+  // and is worth printing precisely because it looks like an absence.
+  const psi = c.psionics_allowed === false ? 'none — this race has no psychic potential'
+    : c.psionics?.type ? `${c.psionics.type}${c.psionics.powers_starting ? ` · ${c.psionics.powers_starting} to choose` : ''}`
+    : 'none stated';
+
+  return `<div class="panel-inset" id="race-briefing">
+    <h3>What ${esc(c.name)} grants</h3>
+    ${dice ? `<p class="small"><b>Attribute dice</b> ${dice}</p>`
+      : `<p class="small muted">No racial attribute dice — every attribute rolls 3d6.</p>`}
+    ${pools ? `<p class="small"><b>Pools</b> ${pools}</p>` : ''}
+    ${bonusBits ? `<p class="small"><b>Bonuses</b> ${bonusBits}</p>` : ''}
+    <p class="small"><b>Psionics</b> <span class="muted">${esc(psi)}</span>
+      ${c.magic?.type ? ` &middot; <b>Magic</b> <span class="muted">${esc(c.magic.type)}</span>` : ''}</p>
+    ${fixed.length ? `<p class="small"><b>Skills it already knows</b>
+      <span class="muted">${fixed.map((e) => esc(e.name) + (e.base != null ? ` ${e.base}%` : '')).join(' &middot; ')}</span>
+      ${groups > 0 ? `<span class="muted"> &middot; and ${groups} to choose on the Skills step</span>` : ''}</p>` : ''}
+    ${c.category === 'rcc' ? `<p class="small muted">${needsOccupation(c)
+      ? 'This race grants nothing to choose on its own — an occupation is normally taken alongside it, on the step after the dice.'
+      : 'An occupation may be taken alongside this race on the step after the dice.'}</p>` : ''}
+  </div>`;
 }
 // A class's display name when the catalog is loaded, its id when not — the
 // existing-characters list renders before /classes resolves on a cold start.
@@ -534,7 +721,7 @@ function blurb(text, max) {
 }
 
 function classCard(c, score) {
-  const sel = S.cls?.id === c.id ? ' sel' : '';
+  const sel = S.rcc?.id === c.id ? ' sel' : '';
   const badge = score != null ? `<span class="tag score">match ${score}/6</span>` : '';
   return `<div class="pick${sel}" onclick="pickClass('${c.id}')">
     <h4>${esc(c.name)}</h4>
@@ -593,8 +780,8 @@ function quizPick(i, val) { S.quiz[i] = val; render(); }
 // one scroll away, and what to do next is now the thing you are looking at.
 function pickClass(id) {
   const c = S.classes.find((x) => x.id === id);
-  if (S.cls?.id !== id) resetBuild();
-  S.cls = c;
+  if (S.rcc?.id !== id) resetBuild();
+  S.rcc = c;
   render();
   revealClassDetail();
 }
@@ -634,27 +821,24 @@ function classBlocker() { return classBlock().why; }
 // because the sentence, the disabled button and the scroll target all have to
 // describe the same requirement or they send the reader three ways.
 function classBlock() {
-  if (!S.cls) return { why: 'Pick a class to continue.', anchor: null };
-  if ((S.cls.variants || []).length && !S.variant) {
-    return { why: `Choose which ${S.cls.name} to continue.`, anchor: 'variant-picker' };
+  if (!S.rcc) return { why: 'Pick a class to continue.', anchor: null };
+  if ((S.rcc.variants || []).length && !S.variant) {
+    return { why: `Choose which ${S.rcc.name} to continue.`, anchor: 'variant-picker' };
   }
   // Every power the class asks for must be chosen before the rolls that depend
   // on them. Same reasoning as an unresolved gear choice: the book intends the
   // character to have them, so leaving one blank is an oversight rather than a
   // deliberate omission. Unspent SKILL picks are banked instead, because those
   // are earned over time.
-  const owed = abilityGroups(S.cls).reduce((n, g) => n + (+g.choose || 0), 0);
+  const owed = abilityGroups(S.rcc).reduce((n, g) => n + (+g.choose || 0), 0);
   const short = owed - S.abilities.length;
   if (short > 0) {
     return { why: `Choose ${short} more ${short === 1 ? 'power' : 'powers'} to continue.`,
              anchor: 'ability-picker' };
   }
-  // An ability that names occupations (Magic Powers) is not resolved until
-  // one of them is chosen - same rule as the ability count above.
-  const occNeed = abilityOccOptions(S.cls, S.abilities);
-  if (occNeed && (!S.occ || !occNeed.options.includes(S.occ))) {
-    return { why: `Choose an occupation for ${occNeed.name} to continue.`, anchor: 'occ-picker' };
-  }
+  // An ability that names occupations (Magic Powers) used to block here too.
+  // It is enforced on the Occupation step now, which is where the picker lives
+  // — blocking the Race step on a choice two steps away had no way to offer it.
   return { why: '', anchor: null };
 }
 
@@ -663,10 +847,10 @@ function canUseClass() { return !classBlocker(); }
 // Which stage of the class. Shown only when the class has stages, so every
 // other class is unaffected.
 function variantPicker() {
-  const variants = S.cls?.variants || [];
+  const variants = S.rcc?.variants || [];
   if (!variants.length) return '';
   return `<div class="panel-inset" id="variant-picker">
-    <h3>Which ${esc(S.cls.name)}?</h3>
+    <h3>Which ${esc(S.rcc.name)}?</h3>
     <p class="muted small">These share their skills, abilities and lore, and differ in their
       attribute dice, pools and what the class grants.</p>
     ${variants.map((v) => {
@@ -694,7 +878,7 @@ function pickVariant(id) { S.variant = id; render(); }
 function occPicker() {
   // A chosen ability that names occupations claims this picker: the choice
   // stops being optional and the options narrow to what the ability lists.
-  const occNeed = abilityOccOptions(S.cls, S.abilities);
+  const occNeed = abilityOccOptions(S.rcc, S.abilities);
   if (occNeed) {
     const chosen = S.occ ? S.classes.find((c) => c.id === S.occ) : null;
     return `<div class="panel-inset" id="occ-picker">
@@ -719,21 +903,21 @@ function occPicker() {
       &middot; the occupation allowances replace those of this class.</p>` : ''}
   </div>`;
   }
-  if (S.cls?.category !== 'rcc') return '';
+  if (S.rcc?.category !== 'rcc') return '';
   const options = S.classes.filter((c) => c.system === S.system && c.category === 'occ');
   if (!options.length) return '';
   const chosen = S.occ ? S.classes.find((c) => c.id === S.occ) : null;
   // The usual structure is a race and then an occupation. Presented as the
   // expected next step rather than an optional extra, because that is what it
   // is — but never blocking, since some races genuinely stand alone.
-  const needs = needsOccupation(S.cls);
+  const needs = needsOccupation(S.rcc);
   return `<div class="panel-inset">
     <h3>Occupation <span class="muted small">— ${needs ? 'normally required' : 'optional for this race'}</span></h3>
     <p class="muted small">${needs
-      ? `<b>${esc(S.cls.name)}</b> grants no related or secondary skills of its own, so alone it
+      ? `<b>${esc(S.rcc.name)}</b> grants no related or secondary skills of its own, so alone it
          gives you nothing to choose. A character is normally a race <em>and</em> an occupation:
          the race sets the body, the O.C.C. sets what was learned.`
-      : `<b>${esc(S.cls.name)}</b> grants its own skills, so it can stand alone — but most
+      : `<b>${esc(S.rcc.name)}</b> grants its own skills, so it can stand alone — but most
          characters are a race <em>and</em> an occupation, and taking one adds its skills to this.`}</p>
     ${needs && !S.occ ? `<p class="warn">No occupation chosen. You can continue, and this character
       will have no related or secondary skills at all.</p>` : ''}
@@ -763,9 +947,9 @@ function abilityGroups(cls) {
 }
 
 function abilityPicker() {
-  const groups = abilityGroups(S.cls);
+  const groups = abilityGroups(S.rcc);
   if (!groups.length) return '';
-  const defs = new Map((S.cls.special_abilities || [])
+  const defs = new Map((S.rcc.special_abilities || [])
     .filter((e) => e && typeof e.name === 'string' && !e.choose)
     .map((d) => [d.name.trim().toLowerCase(), d]));
 
@@ -801,7 +985,7 @@ function abilityPicker() {
 }
 
 function takeAbility(name) {
-  const limit = abilityGroups(S.cls).reduce((n, g) => n + (+g.choose || 0), 0);
+  const limit = abilityGroups(S.rcc).reduce((n, g) => n + (+g.choose || 0), 0);
   if (S.abilities.length >= limit) return;
   S.abilities.push(name);
   render();
@@ -813,9 +997,9 @@ function dropAbility(name) {
   // If the dropped ability was the one claiming the occupation slot and no
   // remaining pick still needs it, release the slot - keeping a practitioner
   // chosen through an ability that is no longer taken would be surprising.
-  const still = abilityOccOptions(S.cls, S.abilities);
+  const still = abilityOccOptions(S.rcc, S.abilities);
   if (!still && S.occ) {
-    const def = (S.cls?.special_abilities || []).find((d) => d?.name === name);
+    const def = (S.rcc?.special_abilities || []).find((d) => d?.name === name);
     if (Array.isArray(def?.occ_options) && def.occ_options.includes(S.occ)) {
       S.occ = null; S.occVariant = null;
     }
@@ -829,24 +1013,125 @@ function pickOcc(id) {
   S.occVariant = null;
   const chosen = S.occ ? S.classes.find((c) => c.id === S.occ) : null;
   if (chosen?.variants?.length) S.occVariant = chosen.variants[0].id;
+  recompose();
+  // Its dice bonuses are its own, and a different occupation is a different
+  // bonus — so they re-roll here while the race's stay exactly as rolled.
+  rollOccBonuses();
   render();
 }
 
-function confirmClass() {
-  // The class the rest of the wizard sees is the resolved one — its attribute
-  // dice, pools and bonuses are the variant's. Picking a different class puts
-  // the base back, so this never compounds.
-  // What the rest of the wizard sees is ONE class: the variant resolved, and
-  // the occupation composed in. Nothing downstream has to know there were two.
+// The two class-shaped objects the rest of the wizard reads, rebuilt from the
+// raw halves. Called wherever a half changes: the race is confirmed, an
+// occupation is picked or dropped, or a draft is resumed.
+//
+// Both go through js/compose.js and neither reaches for combineClasses — a
+// smoke check fails the build for that, because re-implementing the order is
+// exactly the bug compose.js exists to prevent.
+function recompose() {
+  const character = { class_variant: S.variant, occ_class_variant: S.occVariant, abilities: S.abilities };
+  // The race half alone, kept because its dice bonuses were rolled off it and
+  // must not be re-rolled when an occupation arrives.
+  S.raceCls = composeClass({ rcc: S.rcc, occ: null, character });
   S.cls = composeClass({
-    rcc: S.cls,
+    rcc: S.rcc,
     occ: S.occ ? S.classes.find((c) => c.id === S.occ) || null : null,
-    character: { class_variant: S.variant, occ_class_variant: S.occVariant, abilities: S.abilities },
+    // No psychic tier here: the roll happens on the Powers step, and psiClass()
+    // folds it in from there while a build is in progress.
+    character,
   });
+}
+
+function confirmRace() {
+  recompose();
   // Rolled here so the Attributes step, which comes next, can show the bonus
   // beside the roll it modifies. computePools() re-rolls it later if asked.
   rollAttrBonuses(true);
-  S.step = 2;
+  goStep(ST.ATTRIBUTES);
+}
+
+// Step 3 — the occupation, chosen after the dice.
+//
+// Rolling before the occupation is known admits a state the old order could not
+// reach: a stat block that fails the occupation's minimums. Both classes'
+// minimums apply and the stricter of each wins, so a shortfall is only knowable
+// here — and it is answered with a re-roll of the failing attribute, never with
+// a refusal. See docs/plans/13-rcc-first-wizard.md.
+function renderOccupation() {
+  const blocker = occBlocker();
+  const short = minimumShortfalls();
+  $('app').innerHTML = `
+  <div class="panel">
+    <h2>Occupation <span class="muted small">— what ${esc(S.rcc?.name || 'this character')} trained as</span></h2>
+    ${occPicker()}
+    ${shortfallPanel(short)}
+    ${rerollLog()}
+  </div>
+  <div class="nav"><button class="btn btn-ghost" onclick="goStep(ST.ATTRIBUTES)">&larr; Back</button>
+  ${blocker ? `<span class="nav-why">${esc(blocker)}</span>` : ''}
+  <button class="btn btn-primary" ${blocker ? 'disabled' : ''} onclick="nextStep()">Skills &rarr;</button></div>`;
+}
+
+// The ONLY thing that blocks this step. A missed minimum deliberately does not:
+// the app's standing rule for occupations is that a mismatch warns and never
+// refuses, and this is the same class of problem.
+function occBlocker() {
+  const need = abilityOccOptions(S.rcc, S.abilities);
+  if (need && (!S.occ || !need.options.includes(S.occ))) {
+    return `Choose an occupation for ${need.name} to continue.`;
+  }
+  return '';
+}
+
+// Attributes the composed minimums now ask more of than the dice gave. Compared
+// against the ROLLED value rather than the bonused one, which is how the
+// Attributes step already reads a class minimum — the two must not disagree.
+function minimumShortfalls() {
+  const reqs = S.cls?.attribute_requirements || {};
+  return ATTRS
+    .filter((a) => reqs[a] != null && S.attrs[a] != null && S.attrs[a] < reqs[a])
+    .map((a) => ({ attr: a, have: S.attrs[a], need: reqs[a] }));
+}
+
+function shortfallPanel(short) {
+  if (!S.occ || !short.length) return '';
+  const occName = S.classes.find((c) => c.id === S.occ)?.name || 'this occupation';
+  return `<div class="panel-inset" id="minimum-shortfall">
+    <h3>Below ${esc(occName)}'s minimum</h3>
+    <p class="muted small">Your race and your occupation both set minimums and the stricter of
+      each applies, so this is the first step that could know. Re-roll the attribute that fell
+      short, or continue as you are — nothing here stops the build.</p>
+    ${short.map(({ attr, have, need }) => `<div class="chkrow">
+      <button class="btn btn-sm" onclick="rerollForMinimum('${attr}')">
+        🎲 Re-roll ${attr} <span class="muted">(${esc(S.cls?.attribute_dice?.[attr] || '3d6')})</span></button>
+      <span><b>${attr} ${have}</b> <span class="muted">— needs ${need}+, short by ${need - have}</span></span>
+    </div>`).join('')}
+    <p class="warn">Continuing with a minimum unmet is allowed and is flagged on the character.</p>
+  </div>`;
+}
+
+// Every assisted roll, shown as one. A number that came from a second attempt
+// should not sit on the sheet looking like what the dice said first.
+function rerollLog() {
+  if (!S.minRerolls?.length) return '';
+  return `<p class="small muted" style="margin-top:10px"><b>Re-rolled for a minimum:</b>
+    ${S.minRerolls.map((r) => `${r.attr} ${r.from} → ${r.to}`).join(' &middot; ')}
+    <br>Recorded on the character once it is saved.</p>`;
+}
+
+// Re-rolls ONE attribute, with the race's dice for it, and the result stands.
+// Rejected on purpose: re-rolling the whole block (throws away good rolls to
+// fix one bad one) and quietly raising the attribute to the minimum (several
+// books instruct exactly that, and it would leave a number on the sheet that no
+// dice produced).
+function rerollForMinimum(attr) {
+  const from = S.attrs[attr];
+  S.attrMethods[attr] = 'roll';
+  setRoll(attr);
+  S.minRerolls.push({
+    attr, from, to: S.attrs[attr],
+    need: (S.cls?.attribute_requirements || {})[attr] ?? null,
+    occ: S.classes.find((c) => c.id === S.occ)?.name || null,
+  });
   render();
 }
 
@@ -939,9 +1224,10 @@ function renderAttributes() {
     ${unmet.length ? `<p class="warn err">Class minimum not met: ${unmet.map(([k, v]) => `${k} ${v}+`).join(', ')}</p>` : ''}
     ${S.cls.attribute_dice && usesPB ? `<p class="muted small">Note: point-buy/manual ignore racial attribute dice — the class minimums are still enforced.</p>` : ''}
   </div>
-  <div class="nav"><button class="btn btn-ghost" onclick="goStep(1)">&larr; Back</button>
+  <div class="nav"><button class="btn btn-ghost" onclick="goStep(ST.RACE)">&larr; Back</button>
   ${attrWhy ? `<span class="nav-why">${esc(attrWhy)}</span>` : ''}
-  <button class="btn btn-primary" ${canNext ? '' : 'disabled'} onclick="goStep(3)">Skills &rarr;</button></div>`;
+  <button class="btn btn-primary" ${canNext ? '' : 'disabled'} onclick="nextStep()">${
+    stepApplies(ST.OCCUPATION) ? 'Occupation' : 'Skills'} &rarr;</button></div>`;
 }
 // A roll's breakdown is cleared whenever the value stops being that roll —
 // otherwise "exceptional +4" hangs beside a number the player typed by hand.
@@ -1176,8 +1462,8 @@ function renderSkills() {
       </div>
     </div>
   </div>
-  <div class="nav"><button class="btn btn-ghost" onclick="goStep(2)">&larr; Back</button>
-  <button class="btn btn-primary" onclick="goStep(4)">Equipment &rarr;</button></div>`;
+  <div class="nav"><button class="btn btn-ghost" onclick="prevStep()">&larr; Back</button>
+  <button class="btn btn-primary" onclick="goStep(ST.EQUIPMENT)">Equipment &rarr;</button></div>`;
 }
 function toggleGroupPick(groupIndex, name, limit) {
   const list = S.groupPicks[groupIndex] || (S.groupPicks[groupIndex] = []);
@@ -1363,9 +1649,9 @@ function renderEquipment() {
       <button class="btn btn-sm" onclick="addCustom()">Add</button>
     </div>
   </div>
-  <div class="nav"><button class="btn btn-ghost" onclick="goStep(3)">&larr; Back</button>
+  <div class="nav"><button class="btn btn-ghost" onclick="goStep(ST.SKILLS)">&larr; Back</button>
   ${gearWhy ? `<span class="nav-why">${esc(gearWhy)}</span>` : ''}
-  <button class="btn btn-primary" ${outstanding ? 'disabled' : ''} onclick="goStep(5)">Powers &rarr;</button></div>`;
+  <button class="btn btn-primary" ${outstanding ? 'disabled' : ''} onclick="goStep(ST.POWERS)">Powers &rarr;</button></div>`;
 }
 function rmEquip(i) { S.equipment.splice(i, 1); render(); }
 function addCatalog() {
@@ -1628,8 +1914,8 @@ function renderPowers() {
     <h2>Magic &amp; Psionics <span class="muted small">— ${esc(S.cls.name)}</span></h2>
     ${inner}
   </div>
-  <div class="nav"><button class="btn btn-ghost" onclick="goStep(4)">&larr; Back</button>
-  <button class="btn btn-primary" onclick="goStep(6)">Details &rarr;</button></div>`;
+  <div class="nav"><button class="btn btn-ghost" onclick="goStep(ST.EQUIPMENT)">&larr; Back</button>
+  <button class="btn btn-primary" onclick="goStep(ST.DETAILS)">Details &rarr;</button></div>`;
 }
 
 // Step 6 — bio details. Optional; the derived percentages come straight from
@@ -1659,8 +1945,8 @@ function renderDetails() {
     <p class="muted small">Combat bonuses and saving throws are derived the same way and appear on the
       sheet, where any of them can be overridden.</p>
   </div>
-  <div class="nav"><button class="btn btn-ghost" onclick="goStep(5)">&larr; Back</button>
-  <button class="btn btn-primary" onclick="goStep(7)">Review &rarr;</button></div>`;
+  <div class="nav"><button class="btn btn-ghost" onclick="goStep(ST.POWERS)">&larr; Back</button>
+  <button class="btn btn-primary" onclick="goStep(ST.REVIEW)">Review &rarr;</button></div>`;
 }
 
 function bioInput([key, label]) {
@@ -1881,7 +2167,7 @@ function renderReview() {
       .map((x) => esc(x.name) + ` <span class="muted">${esc(x.category)} · ${x.cost} I.S.P.</span>`))}
     <p class="warn" id="save-msg"></p>
   </div>
-  <div class="nav"><button class="btn btn-ghost" onclick="goStep(6)">&larr; Back</button>
+  <div class="nav"><button class="btn btn-ghost" onclick="goStep(ST.DETAILS)">&larr; Back</button>
   <button class="btn btn-primary" ${S.saving ? 'disabled' : ''} onclick="save()">💾 Save character</button></div>`;
 }
 async function save() {
@@ -1904,21 +2190,29 @@ async function save() {
       const created = await api('campaigns', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: S.newCampaign, system: S.system }) });
       campaignId = created.campaign.id;
     }
+    const rolled = rolledAll();
     const body = {
-      campaign_id: campaignId, name: S.charName, class_id: S.cls.id,
+      // The RACE's id, not the composed object's. They agree today — compose
+      // spreads the race — but the payload means "the class the player picked"
+      // and reading it off the merged object is a coincidence, not a statement.
+      campaign_id: campaignId, name: S.charName, class_id: S.rcc.id,
       class_variant: S.variant || undefined,
       occ_class_id: S.occ || undefined,
       occ_class_variant: S.occVariant || undefined,
       psychic_tier: S.psiRoll?.tier || undefined,
       psychic_shape: S.psiRoll?.tier ? (S.psiShape || undefined) : undefined,
-      attributes: S.attrs, attribute_bonuses: S.attrBonuses,
-      rolled_bonuses: S.rolledBonuses, abilities: S.abilities,
+      // Both halves summed. Sending S.attrBonuses alone would drop every dice
+      // bonus the occupation granted — the same loss the composition rules
+      // already had to be taught once.
+      attributes: S.attrs, attribute_bonuses: rolled.attributes,
+      rolled_bonuses: { combat: rolled.combat, saves: rolled.saves }, abilities: S.abilities,
       skills: skillsPayload(), powers: powersPayload(), pools: S.pools,
       bio: S.bio,
       items: equipmentPayload().map((e) => ({ item_id: e.item_id, custom_name: e.custom_name, qty: e.qty, notes: e.notes })),
     };
     const res = await api('characters', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     S.savedId = res.id;
+    await recordMinRerolls(res.id);
     // The build is a real character now; the draft has nothing left to protect.
     await discardDraft();
     render();
@@ -1968,8 +2262,31 @@ async function renderSaved() {
     $('app').innerHTML = `<div class="panel"><p class="err">Failed to load: ${esc(err.message)}</p></div>`;
   }
 }
+// A minimum re-roll happens before the character exists, so it cannot be an
+// event at the time it is made. It becomes one here, as a `roll` — the kind the
+// events API already defines as a pure record with no state change.
+//
+// Best-effort, deliberately: a character that saved correctly must not report
+// failure because its history note did not land.
+async function recordMinRerolls(id) {
+  for (const r of S.minRerolls || []) {
+    try {
+      await api(`characters/${id}/events`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          kind: 'roll',
+          note: `${r.attr} re-rolled ${r.from} → ${r.to}${
+            r.need != null ? ` to meet the ${r.need} minimum` : ''}${r.occ ? ` for ${r.occ}` : ''}`,
+        }),
+      });
+    } catch { /* see above */ }
+  }
+  S.minRerolls = [];
+}
+
 function startOver() {
-  S.savedId = null; S.step = 0; S.cls = null; S.charName = ''; S.campaignId = null; S.newCampaign = '';
+  S.savedId = null; S.step = ST.SYSTEM; S.rcc = null; S.charName = ''; S.campaignId = null; S.newCampaign = '';
   S.draftOffer = null;
   resetBuild(); boot(false); render();
 }
@@ -2008,7 +2325,7 @@ async function boot(first = true) {
       // A draft naming a class that no longer resolves — retired, renamed,
       // re-imported under a different id — cannot be restored into anything
       // coherent, so it is dropped rather than half-applied.
-      if (draft && S.classes.some((c) => c.id === draft.class_id)) S.draftOffer = draft;
+      if (draft && S.classes.some((c) => c.id === draft.class_id)) S.draftOffer = migrateDraft(draft);
       else if (draft) await discardDraft();
     }
     if (first) render();
@@ -2036,7 +2353,7 @@ $('app').addEventListener('change', (ev) => {
 // first thing that cannot be reproduced, and before that the "loss" is picking
 // a system and a class again.
 window.addEventListener('beforeunload', (ev) => {
-  if (S.savedId || !S.cls || S.draftOffer) return;
+  if (S.savedId || !S.rcc || S.draftOffer) return;
   if (!Object.keys(S.attrs || {}).length) return;
   ev.preventDefault();
   ev.returnValue = '';
@@ -2050,8 +2367,11 @@ window.addEventListener('beforeunload', (ev) => {
 // toggles used to be inline and three of them kept their entry after the move;
 // `toggleGearPick`, written after it, never had one, which is the shape to copy.
 Object.assign(window, {
-  S, render, computePools, goStep, pickSystem, classMode, quizPick, pickClass,
-  confirmClass, setMethod, setAllMethod, doRoll, rollAll, manualSet, pbAdj,
+  // ST as well as the functions: the nav buttons are inline onclick handlers,
+  // so `goStep(ST.SKILLS)` is evaluated in the global scope and a module-scoped
+  // ST would be a ReferenceError on every Back button.
+  S, ST, render, computePools, goStep, nextStep, prevStep, pickSystem, classMode, quizPick, pickClass,
+  confirmRace, rerollForMinimum, setMethod, setAllMethod, doRoll, rollAll, manualSet, pbAdj,
   doPsiRoll, skipPsiRoll, setPsiShape, setPsiCategory,
   rollBio, rollBioAll, setLongLived,
   rmEquip, addCatalog, addCustom, setBio, save, startOver,
