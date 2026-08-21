@@ -433,7 +433,7 @@ console.log('\n' + '[7/8] An import too big for one statement');
 // -- the README's countable claims, against the database ---------------------
 // Prose does not get recounted when a class is added or a chapter is imported.
 // Both of these had already drifted before anyone noticed.
-console.log('\n' + '[8/8] Documented counts that only a database can check');
+console.log('\n' + '[8/8] Checks that only a database can make');
 {
   const readme = readFileSync(join(appDir, 'README.md'), 'utf8');
   const WORDS = {
@@ -492,6 +492,58 @@ console.log('\n' + '[8/8] Documented counts that only a database can check');
   }
   check('every named spell list resolves against the catalog',
     unresolved.length === 0, unresolved.slice(0, 6).join('; '));
+
+  // -- every only/except name must match a real skill row --------------------
+  //
+  // js/parser.js matches a restriction against the skill name as a raw
+  // normalised string, and it runs in the BROWSER, where catalog_redirects is
+  // not available - catalogs.js never sends it. So a restriction naming a row
+  // that does not exist fails silently, in whichever direction is worse:
+  //
+  //   except: ["X"]  ->  excludes nothing, the class grants MORE than the book
+  //   only:   ["X"]  ->  narrows to nothing, the class grants nothing
+  //
+  // The Shifter shipped that way: it excluded "Military: Jet Fighters" while
+  // the catalog row was "Jet Fighters", so the exclusion excluded nothing and
+  // the Shifter could take a skill the book denies it. Nothing reported it.
+  const skillNames = new Set((catalogs.body.skills || []).map((r) => norm(r.name)));
+  const dead = [];
+  for (const c of classes) {
+    const groups = [
+      ...(c.skills?.occ_skills || []),
+      c.skills?.occ_related_skills,
+      c.skills?.secondary_skills,
+    ].filter(Boolean);
+    // Restrictions ride on the CATEGORY entries as well as the group: a
+    // category is either a plain string or an object carrying only/except.
+    const entries = [];
+    for (const g of groups) {
+      entries.push(g);
+      for (const cat of (Array.isArray(g.categories) ? g.categories : [])) {
+        if (cat && typeof cat === 'object') entries.push(cat);
+      }
+    }
+    for (const e of entries) {
+      for (const key of ['only', 'except']) {
+        for (const n of (Array.isArray(e[key]) ? e[key] : [])) {
+          if (!skillNames.has(norm(n))) dead.push(`${c.id} ${key}: "${n}"`);
+        }
+      }
+    }
+  }
+
+  // Three are deliberate and documented: the Priest of Light names W.P. Siege,
+  // W.P. Large Axes and W.P. Lance ahead of those rows existing, and says so in
+  // its own note. They activate by themselves when the rows arrive. The audit
+  // floor is three, not zero - so this pins the NAMES, not just the count, and
+  // a fourth dead restriction fails the run.
+  const ALLOWED = new Set(['W.P. Siege', 'W.P. Large Axes', 'W.P. Lance']);
+  const unexpected = dead.filter((d) => ![...ALLOWED].some((a) => d.includes(`"${a}"`)));
+  check('every skill restriction names a skill that exists',
+    unexpected.length === 0, unexpected.slice(0, 8).join('; '));
+  check('and the three documented placeholders are still the only exceptions',
+    dead.length === unexpected.length + 3,
+    `${dead.length} dead, ${unexpected.length} unexpected`);
 }
 
 console.log('\n' + (failures === 0
