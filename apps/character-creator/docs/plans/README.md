@@ -43,6 +43,25 @@ Duplicate merging was not in the roadmap. PR 4 deliberately left it out as
 out of scope, and the first real book import immediately created the demand for
 it — ten duplicate pairs that exact-name matching could not see.
 
+## What is planned
+
+Four plans written in an interview on 2026-08-20 and **not yet built**. Unlike
+everything above, these are specifications rather than records — but the
+rejected alternatives in them were rejected on purpose too.
+
+| # | Plan | Depends on |
+|---|---|---|
+| 13 | [R.C.C.-first wizard](13-rcc-first-wizard.md) — Class splits into Race and Occupation with Attributes between them | — · **built** |
+| 14 | [Starting above level 1](14-start-at-level.md) — an Advancement step running the existing level-up engine 1→N | 13 |
+| 15 | [Campaign notes, search and the party stash](15-campaign-notes.md) — implied membership, FTS5 search, an Ask endpoint, a shared stash | — · **built** |
+| 16 | [NPC dossiers and portraits](16-npc-dossiers.md) — `@mention` linking, a Claude sweep, and the site's first R2 bucket | 15 |
+
+Two things in them are larger than they look. **PR 14 adds class-format keys**
+(`magic.spells_per_level`, `psionics.powers_per_level`) because per-level spell
+and psionic gains are not in the extracted data at all, and the importer prompt
+has to name them or they never arrive. **PR 16 adds the site's first R2
+binding**, as shared infrastructure rather than a character-creator private.
+
 ## Where the plans were wrong
 
 Worth reading before trusting any plan as a specification:

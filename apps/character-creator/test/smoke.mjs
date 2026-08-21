@@ -828,6 +828,66 @@ const DRAFT_KEYS = readFileSync(join(appDir, 'app.js'), 'utf8')
   ?.match(/'([^']+)'/g)?.map((s) => s.slice(1, -1)) || [];
 
 check('the persisted key list is found in app.js', DRAFT_KEYS.length > 0);
+
+// ---------- The wizard's step list ----------
+// A draft stores `step` as an INDEX into STEPS, so changing the list silently
+// re-points every draft in flight. The list, its version, and the mapping that
+// carries an old index forward are pinned together here because they are only
+// correct with respect to each other.
+section('Wizard steps');
+{
+  const src = readFileSync(join(appDir, 'app.js'), 'utf8');
+  const steps = src.match(/const STEPS = \[([^\]]*)\]/)?.[1]
+    ?.match(/'([^']+)'/g)?.map((x) => x.slice(1, -1)) || [];
+
+  check('STEPS is found in app.js', steps.length > 0);
+  check('nine steps', steps.length === 9, String(steps.length));
+  // The whole point of PR 13: the race is chosen, then the dice are rolled,
+  // then the occupation is chosen against a stat block that already exists.
+  check('Race comes before Attributes',
+    steps.indexOf('Race') >= 0 && steps.indexOf('Race') < steps.indexOf('Attributes'));
+  check('Occupation comes after Attributes',
+    steps.indexOf('Occupation') > steps.indexOf('Attributes'));
+  check('Occupation comes before Skills',
+    steps.indexOf('Occupation') < steps.indexOf('Skills'));
+  check('the combined Class step is gone', !steps.includes('Class'));
+
+  // Steps are addressed by name now. A bare goStep(4) in a nav button is how
+  // inserting a step used to break three others silently.
+  check('no step transition is a bare index',
+    !/goStep\(\s*\d+\s*\)/.test(src.replace(/^\s*\/\/.*$/gm, '')));
+
+  check('the step list carries a version', /const STEPS_VERSION = 2;/.test(src));
+
+  // Attributes was index 2 before the split and is index 2 still - only the
+  // steps AFTER the inserted Occupation step move. Getting this off by one
+  // resumes every in-flight draft onto the wrong screen.
+  const map = eval(src.match(/const map = (\(i\) => \([^;]*\));/)?.[1] || 'null');
+  check('the draft step map is found', typeof map === 'function');
+  check('System stays put', map(0) === 0);
+  check('the old Class step resumes on Race', map(1) === steps.indexOf('Race'));
+  check('Attributes does not move', map(2) === steps.indexOf('Attributes'));
+  check('the old Skills step shifts by one', map(3) === steps.indexOf('Skills'));
+  check('and so does everything after it', map(7) === steps.indexOf('Review'));
+  check('no old index lands on Occupation',
+    ![0, 1, 2, 3, 4, 5, 6, 7].some((i) => map(i) === steps.indexOf('Occupation')));
+
+  // A missed minimum warns and offers a re-roll; it never refuses. Same rule
+  // the occupation warning already follows, and the reason the Attributes step
+  // can no longer be the only gate.
+  const occBlocker = src.match(/function occBlocker\(\)[\s\S]*?\n}/)?.[0] || '';
+  check('occBlocker is found', occBlocker.length > 0);
+  check('only an ability blocks the Occupation step', /abilityOccOptions/.test(occBlocker));
+  check('a missed minimum does not', !/minimumShortfall|attribute_requirements/.test(occBlocker));
+
+  // One attribute, with its own dice. Not the whole block, and never raised to
+  // the minimum without dice - see docs/plans/13-rcc-first-wizard.md.
+  const reroll = src.match(/function rerollForMinimum\(attr\)[\s\S]*?\n}/)?.[0] || '';
+  check('rerollForMinimum is found', reroll.length > 0);
+  check('it re-rolls the one attribute', /setRoll\(attr\)/.test(reroll));
+  check('it records the assist', /S\.minRerolls\.push/.test(reroll));
+  check('and it never assigns the minimum instead', !/S\.attrs\[attr\]\s*=/.test(reroll));
+}
 for (const k of ['step', 'attrs', 'attrMethods', 'groupPicks', 'gearPicks', 'equipment', 'bio', 'pools']) {
   check(`draft persists \`${k}\``, DRAFT_KEYS.includes(k));
 }
@@ -2096,8 +2156,18 @@ section('Dice combat and save bonuses');
   // checks because both are page scripts the test cannot execute.
   const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
   check('the wizard rolls the grouped dice bonuses', /diceBonusesByGroup/.test(appSrc));
-  check('stores what they came up', /rolled_bonuses: S.rolledBonuses/.test(appSrc));
-  check('and keeps them across a draft', /'rolledBonuses'/.test(appSrc));
+  // The race's rolls and the occupation's are held apart in state, so what the
+  // save sends is the SUM of the two. Sending S.rolledBonuses alone would drop
+  // every dice bonus the occupation granted - the same loss combineClasses had
+  // to be taught once already.
+  check('stores what they came up, both halves',
+    /rolled_bonuses: \{ combat: rolled\.combat, saves: rolled\.saves \}/.test(appSrc));
+  check('and the attribute bonuses are the summed ones too',
+    /attribute_bonuses: rolled\.attributes/.test(appSrc));
+  check('rolledAll sums the race and the occupation',
+    /attributes: sumRolled\(S\.attrBonuses, S\.occAttrBonuses\)/.test(appSrc));
+  check('and keeps them across a draft',
+    /'rolledBonuses'/.test(appSrc) && /'occRolledBonuses'/.test(appSrc));
 }
 
 // ---------- 1c25. Per-category skill restrictions ----------
@@ -2559,7 +2629,9 @@ section('Race and occupation');
 
   // The wizard says which of the two it is rather than claiming one for all.
   const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
-  check('the wizard asks the class rather than assuming', /needsOccupation\(S\.cls\)/.test(appSrc));
+  // S.rcc, not S.cls: the picker reads the class the player PICKED, while
+  // S.cls is the composed result and would answer for both halves at once.
+  check('the wizard asks the class rather than assuming', /needsOccupation\(S\.rcc\)/.test(appSrc));
   check('and no longer claims every race grants no related skills',
     !/A racial class grants no related or secondary skills/.test(appSrc));
 }
