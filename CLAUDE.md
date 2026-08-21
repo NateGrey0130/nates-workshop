@@ -50,6 +50,33 @@ read the registry rather than the process:
 [Environment]::GetEnvironmentVariable('CLOUDFLARE_API_TOKEN','User').Length
 ```
 
+## R2 is NOT reachable with the D1 token
+
+The site binds one R2 bucket, `nates-workshop-media`, as `MEDIA` (NPC
+portraits). **The `CLOUDFLARE_API_TOKEN` above cannot touch it.** Scoped to
+Account -> D1 -> Edit, it has no R2 scope at all - `r2 bucket create` and
+`r2 bucket list` both fail identically:
+
+```
+A request to the Cloudflare API (/accounts/<id>/r2/buckets) failed.
+  Authentication error [code: 10000]
+```
+
+Unlike the `whoami` failure above, this one is real: the operation did not
+happen. The follow-on line about failing to retrieve account IDs is wrangler's
+fallback attempt after the first failure, not a second problem, and the same
+D1-scope explanation covers it.
+
+Creating or listing a bucket needs **Workers R2 Storage -> Edit** added to the
+token, or the Cloudflare dashboard. Widening the token is the bigger decision of
+the two, since the same variable is what every `d1 execute --remote` in this
+repo runs under.
+
+**Do not enable public access on the bucket.** The whole site sits behind
+Access, and every portrait read goes through a Pages Function that checks
+campaign membership first; a public bucket URL would be the one unauthenticated
+hole in the site.
+
 ## Applying migrations
 
 Use the script, not a hand-typed `wrangler d1 execute`:
