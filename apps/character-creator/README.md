@@ -994,6 +994,38 @@ A schedule is the **complete** statement when present and a flat `*_per_level`
 is ignored alongside it. Two keys that combine is a rule nobody remembers
 correctly six months later.
 
+**How many is not the same question as which.** The Ley Line Walker learns *"2
+additional spells per level of experience, equal to or lower than their current
+level of experience, starting at level 2"* — a cap that tracks the character
+rather than a list, and one that **disagrees with the starting selection on
+purpose**: a fresh walker picks twelve spells from `spell_levels_allowed:
+[1,2,3,4]`, and the two it gains at level 2 may only be spell levels 1–2.
+
+```yaml
+magic:
+  spells_starting: 12
+  spell_levels_allowed: [1, 2, 3, 4]              # the starting twelve
+  spells_per_level: 2
+  spells_per_level_levels: up_to_character_level  # the per-level pair
+```
+
+`spells_per_level_levels` takes `up_to_character_level` or an explicit list, and
+falls back to `spell_levels_allowed` when absent — so it costs nothing for a
+class whose per-level picks are not capped this way.
+
+**Which is why the spell picker is per grant, not one batched set.** Each level's
+spells are chosen from the levels *that* level allows, the way skill picks are
+already chosen from the categories their grant allows. Batching them would
+quietly let the level-2 pair be filled with level-4 spells. Psionic powers stay
+batched: no book states which level a given power had to be learned at.
+
+The cap is **enforced, not advised** — an out-of-cap spell is not in the list at
+all. A spell's level is a mechanical rule like a psychic tier, not a table
+judgement like a skill category, and the app already draws that line.
+
+"starting at level 2" needs no key: a per-level grant is earned for every level
+above the first, which is levels 2 upward by definition.
+
 `extraction-prompt.js` names all four keys, because
 [a field the prompt does not mention is a field that never arrives](#known-limitations-and-refactor-candidates) —
 `variants` shipped as schema the prompt was never told about and the first class
@@ -3250,7 +3282,7 @@ added `data_script_runs` and every script now ends by writing itself into it.
 | Dev seed | `seed-dev.sql` | Optional local character/campaign rows. Never applied to production |
 | Run tracking | `backfill-data-script-runs.sql` | One-time, optional, and an **assertion**: records every script that had already been applied before `data_script_runs` existed, stamped with a note saying the run was asserted rather than observed. Guarded per filename, so it cannot double-record a script that has genuinely run since |
 | Data cleanup | `estimate-*.sql`, `backfill-*.sql`, `rename-*.sql`, `merge-*.sql`, `retire-gear-placeholders.sql`, `retire-orphan-gear-stubs.sql`, `untag-cross-system.sql` | One-off corrections to rows an earlier import or data script got wrong or left NULL. A `rename-*` also leaves a `catalog_redirects` row, so class markdown citing the old key keeps resolving | One-off corrections to rows an earlier import or data script got wrong or left NULL |
-| Class corrections | `fix-*.sql`, `apply-*.sql`, `long-bowman-money.sql` | The rules audit's output: stored class definitions rewritten against the books, and class data written for a schema feature the day it landed |
+| Class corrections | `fix-*.sql`, `apply-*.sql`, `long-bowman-money.sql`, `ley-line-walker-spells-per-level.sql` | The rules audit's output: stored class definitions rewritten against the books, and class data written for a schema feature the day it landed. The Ley Line Walker one is the first to fill `spells_per_level` — the format gained the key before any class carried it, so every caster read as "not recorded" until a book was opened |
 | Additions | `add-*.sql` | Something the book gives that the database never had — a catalog row, a whole-table batch extracted from page scans (`add-pf-weapons-batch`, `add-pf-equipment-batch`, the RUE spell and psionics batches), or a whole class. A missing skill named in an `only` restriction narrows its category to nothing, which is usually how one gets noticed. A class goes in this way only when the import tool cannot be reached: production sits behind Cloudflare Access, so a hand-transcribed class is applied by script instead |
 
 Three conventions hold across all of them, with one stated exception: the

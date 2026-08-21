@@ -19,7 +19,7 @@ import { isChoiceGroup, isGearChoice, applyVariant,
          categoryAllows, categoryLabel, needsOccupation, abilityOccOptions,
          bonusesFromSkills, sumBonusGroups } from './js/parser.js';
 import { composeClass } from './js/compose.js';
-import { buildProposal, xpTableFor, thresholdFor,
+import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant,
          skillGrantsFor, spellGrantsFor, psionicGrantsFor } from './js/leveling.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
@@ -116,7 +116,11 @@ const S = {
   // build rather than folded into it, because the two are answerable to
   // different rules: a skill picked at level 5 starts at its catalog base and
   // is NOT back-dated, while a skill held since level 1 advances per level.
-  levelPools: {}, levelSpells: [], levelPsi: [], levelPicks: {},
+  // levelSpells is keyed by grant index, not a flat list: a spell's allowed
+  // LEVEL can depend on which level earned it, so the two gained at level 2 are
+  // a different choice from the two gained at level 5 and cannot share a pool.
+  // levelPsi stays flat - no book states a per-level cap on psionic powers.
+  levelPools: {}, levelSpells: {}, levelPsi: [], levelPicks: {},
   // Attributes re-rolled because a chosen O.C.C. raised a minimum the original
   // roll missed. Kept so the assist is visible as one rather than presented as
   // what the dice said first — posted as play events once the character exists.
@@ -636,7 +640,7 @@ function resetBuild() {
   S.raceCls = null; S.cls = null;
   S.occAttrBonuses = {}; S.occRolledBonuses = { combat: {}, saves: {} };
   S.minRerolls = [];
-  S.level = 1; S.levelPools = {}; S.levelSpells = []; S.levelPsi = []; S.levelPicks = {};
+  S.level = 1; S.levelPools = {}; S.levelSpells = {}; S.levelPsi = []; S.levelPicks = {};
 }
 
 // Step 1 — the race (browse | guided)
@@ -814,7 +818,7 @@ function setStartingLevel(v) {
   S.level = Math.max(1, n);
   // A different span is a different set of dice and a different set of grants,
   // so nothing rolled or chosen for the old one survives.
-  S.levelPools = {}; S.levelSpells = []; S.levelPsi = []; S.levelPicks = {};
+  S.levelPools = {}; S.levelSpells = {}; S.levelPsi = []; S.levelPicks = {};
   render();
 }
 
@@ -1285,34 +1289,64 @@ function advPowerBlock(kind, grant) {
   }
   if (!grant.total) return '';
 
-  const chosen = isSpell ? S.levelSpells : S.levelPsi;
-  const pool = isSpell ? advSpellPool() : advPsiPool();
-  const filterKey = isSpell ? 'spellFilter' : 'psiFilter';
-  const list = Picker.filter(pool, S[filterKey])
-    .concat(pool.filter((x) => chosen.includes(x.name) && !Picker.match(x, S[filterKey])));
+  return isSpell ? spellGrantBlock(grant) : psiGrantBlock(grant);
+}
 
-  const byLevel = grant.grants.map((g) => `level ${g.level}: ${g.count}`).join(' · ');
+// Spells, one picker PER GRANT.
+//
+// Not one batched set, because the spell levels a grant may draw from can
+// depend on the level that earned it - a Ley Line Walker's two spells at level
+// 2 are capped at spell level 2 even though its starting twelve came from
+// levels 1-4. Batching them would quietly let the level-2 pair be filled with
+// level-4 spells, which is over-permissive in a way nobody would notice.
+//
+// The cap is ENFORCED rather than advised: a spell's level is a mechanical rule
+// like a psychic tier, not a table judgement like a skill category. Out-of-cap
+// spells are not in the list at all.
+function spellGrantBlock(grant) {
+  const taken = Object.values(S.levelSpells).flat().filter(Boolean);
+  const blocks = grant.grants.map((g, gi) => {
+    const chosen = S.levelSpells[gi] || [];
+    const levels = spellLevelsForGrant(S.cls, g.level);
+    // Everything already held: the class's own, the level-1 picks, and every
+    // other grant's. A spell is learned once.
+    const heldElsewhere = new Set([...S.spells, ...taken.filter((n) => !chosen.includes(n))]
+      .map((n) => n.toLowerCase()));
+    const pool = S.spellCatalog.filter((sp) => inSystem(sp)
+      && (!levels || levels.includes(sp.level))
+      && !heldElsewhere.has(String(sp.name).toLowerCase()));
+    const cap = levels ? `spell levels ${levels.join(', ')}` : 'any spell level';
+    return `<p class="small" style="margin-top:12px"><b>Level ${g.level}</b> — ${g.count}
+      ${g.count === 1 ? 'spell' : 'spells'} <span class="muted">from ${esc(cap)}</span></p>
+      ${spellGroupRows(pool, g.count, 'spell-adv', gi)}`;
+  }).join('');
+
   return `<div class="panel-inset">
-    <h3>${label} — ${chosen.length}/${grant.total} <span class="muted small">(${esc(byLevel)})</span></h3>
-    <p class="muted small">Chosen as one set rather than level by level: the books put no
-      restriction on which level a given spell was learned at.</p>
-    ${Picker.inputHtml({ id: isSpell ? 'spell-filter' : 'psi-filter', value: S[filterKey],
-      placeholder: `Filter ${isSpell ? 'spells' : 'powers'}…`,
-      shown: Picker.filter(pool, S[filterKey]).length, total: pool.length })}
-    ${isSpell ? spellGroupRows(list, grant.total, 'spell-adv') : psiGroupRows(list, grant.total, 'psi-adv')}
+    <h3>Spells — ${taken.length}/${grant.total}</h3>
+    <p class="muted small">Each level's spells are chosen from the levels that level allows.
+      A spell already known is not offered again.</p>
+    ${blocks}
   </div>`;
 }
 
-// The same pools the Powers step offers, minus what the character already
-// holds — a spell cannot be learned twice.
-function advSpellPool() {
-  const magic = S.cls.magic || null;
-  const levels = Array.isArray(magic?.spell_levels_allowed) ? magic.spell_levels_allowed : null;
-  return S.spellCatalog.filter((sp) => inSystem(sp)
-    && (!levels || levels.includes(sp.level))
-    && !S.spells.includes(sp.name));
+function psiGrantBlock(grant) {
+  const pool = advPsiPool();
+  const list = Picker.filter(pool, S.psiFilter)
+    .concat(pool.filter((x) => S.levelPsi.includes(x.name) && !Picker.match(x, S.psiFilter)));
+  const byLevel = grant.grants.map((g) => `level ${g.level}: ${g.count}`).join(' · ');
+  return `<div class="panel-inset">
+    <h3>Psionic powers — ${S.levelPsi.length}/${grant.total}
+      <span class="muted small">(${esc(byLevel)})</span></h3>
+    <p class="muted small">Chosen as one set: no book states which level a given psionic power
+      had to be learned at, unlike spells.</p>
+    ${Picker.inputHtml({ id: 'psi-filter', value: S.psiFilter, placeholder: 'Filter powers…',
+      shown: Picker.filter(pool, S.psiFilter).length, total: pool.length })}
+    ${psiGroupRows(list, grant.total, 'psi-adv')}
+  </div>`;
 }
 
+// The psionic pool the Powers step offers, minus what the character already
+// holds — a power cannot be learned twice.
 function advPsiPool() {
   const cls = psiClass();
   const psi = psiConfig(cls);
@@ -2147,7 +2181,7 @@ function psiRollHtml() {
 // sorting the combined list files those into their proper groups instead of
 // leaving them dangling at the end. With a header per group, the per-row
 // "L3 ·" / "Healing ·" prefix is redundant and gone.
-function spellGroupRows(list, count, kind = 'spell') {
+function spellGroupRows(list, count, kind = 'spell', gi = null) {
   const sorted = [...list].sort((a, b) =>
     ((a.level ?? Infinity) - (b.level ?? Infinity)) || (a.name || '').localeCompare(b.name || ''));
   const sizes = sorted.reduce((m, x) => { const g = x.level != null ? `Level ${x.level}` : 'Unleveled';
@@ -2159,12 +2193,13 @@ function spellGroupRows(list, count, kind = 'spell') {
       ? `<div class="pick-group">${esc(group)}<span class="pick-group-n">${sizes.get(group)}</span></div>`
       : '';
     last = group;
-    const sel = powerList(kind);
+    const sel = powerList(kind, gi);
     const on = sel.includes(sp.name);
     const blocked = !on && sel.length >= count;
     return head + `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
       <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
-        data-act="power" data-kind="${kind}" data-name="${esc(sp.name)}">
+        data-act="power" data-kind="${kind}" data-name="${esc(sp.name)}"${
+        gi == null ? '' : ` data-gi="${gi}"`}>
       <span>${esc(sp.name)}${sp.ppe_note ? ` <span class="muted small">&mdash; ${esc(sp.ppe_note)}</span>` : ''}</span>
       <span class="pct">${sp.ppe}${sp.ppe_note && sp.ppe > 0 ? '+' : ''} P.P.E.</span></label>`;
   }).join('');
@@ -2353,17 +2388,18 @@ function setBio(key, value) {
 // above it earned. Kept apart so each picker counts against its own budget —
 // folding the level-6 spells into S.spells would put the Powers step over its
 // starting allowance and read as a bug.
-function powerList(kind) {
+function powerList(kind, gi = null) {
   switch (kind) {
     case 'spell': return S.spells;
     case 'psi': return S.psi;
-    case 'spell-adv': return S.levelSpells;
+    // Per grant, because each level's spells are capped by that level.
+    case 'spell-adv': return S.levelSpells[gi] || (S.levelSpells[gi] = []);
     default: return S.levelPsi;
   }
 }
 
-function togglePower(kind, name) {
-  const list = powerList(kind);
+function togglePower(kind, name, gi = null) {
+  const list = powerList(kind, gi);
   const i = list.indexOf(name);
   if (i >= 0) list.splice(i, 1); else list.push(name);
   render();
@@ -2387,7 +2423,7 @@ function powersPayload() {
   // class, chosen at level 1, then learned on the way up. `held` keeps the list
   // a set, so a spell learned later that the class already granted is dropped
   // rather than listed twice.
-  const spellNames = held(held(autoSpells, S.spells), S.levelSpells);
+  const spellNames = held(held(autoSpells, S.spells), Object.values(S.levelSpells).flat().filter(Boolean));
   const psiNames = held(held(autoPsi, S.psi), S.levelPsi);
   return [
     ...spellNames.map((n) => {
@@ -2770,7 +2806,8 @@ $('app').addEventListener('change', (ev) => {
     case 'skill': return toggleSkill(el.dataset.kind, el.dataset.name);
     case 'group': return toggleGroupPick(+el.dataset.group, el.dataset.name, +el.dataset.limit);
     case 'gear': return toggleGearPick(+el.dataset.group, el.dataset.slug, +el.dataset.limit);
-    case 'power': return togglePower(el.dataset.kind, el.dataset.name);
+    case 'power': return togglePower(el.dataset.kind, el.dataset.name,
+      el.dataset.gi == null ? null : +el.dataset.gi);
   }
 });
 
