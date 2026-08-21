@@ -19,7 +19,7 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync, rmSync, mkdtempSync, readdirSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { tmpdir } from 'node:os';
 
 const testDir = dirname(fileURLToPath(import.meta.url));
@@ -61,7 +61,7 @@ function wrangler(args) {
   });
 }
 
-console.log('[1/7] Building a database from nothing');
+console.log('[1/8] Building a database from nothing');
 
 // One concatenated file rather than 60 wrangler invocations: each costs seconds,
 // and the point is to prove the SQL composes, not to time the CLI.
@@ -84,7 +84,7 @@ check('schema + catalogs + data scripts apply to an empty database',
 if (applied.status !== 0) { console.log('\nREGRESSION FAILED (cannot build a database)'); process.exit(1); }
 
 // ── boot the worker ─────────────────────────────────────────────────────────
-console.log('\n[2/7] Booting the app');
+console.log('\n[2/8] Booting the app');
 server = spawn('npx', ['wrangler', 'pages', 'dev', '--port', String(PORT),
   '--persist-to', state, '--show-interactive-dev-session', 'false',
   '--binding', 'ADMIN_EMAIL=dev@localhost'],
@@ -119,7 +119,7 @@ async function api(method, path, body) {
 }
 
 // ── the boot calls ──────────────────────────────────────────────────────────
-console.log('\n[3/7] What the wizard loads on start');
+console.log('\n[3/8] What the wizard loads on start');
 const me = await api('GET', '/me');
 check('/me identifies the caller', me.status === 200 && !!me.body.email, me.body);
 
@@ -142,7 +142,7 @@ const items = await api('GET', '/items');
 check('/items returns the gear catalog', items.status === 200 && items.body.items.length > 0, items.body);
 
 // ── a character, end to end ─────────────────────────────────────────────────
-console.log('\n[4/7] Creating a campaign and a character');
+console.log('\n[4/8] Creating a campaign and a character');
 const camp = await api('POST', '/campaigns', { name: 'Regression Run', system: 'rifts' });
 check('a campaign is created', camp.status === 201 || camp.status === 200, camp.body);
 const campaignId = camp.body.id ?? camp.body.campaign?.id;
@@ -204,7 +204,7 @@ const missing = await api('GET', '/characters/99999999');
 check('a character that does not exist is a 404, not a 403', missing.status === 404, missing.status);
 
 // ── inventory ───────────────────────────────────────────────────────────────
-console.log('\n[5/7] Inventory, XP, level-up, picks, play');
+console.log('\n[5/8] Inventory, XP, level-up, picks, play');
 // By SLUG, not id — the catalog exposes ids but this endpoint keys on the slug,
 // because class markdown cites gear that way and one spelling is enough.
 const gearRow = items.body.items.find((i) => i.slug) || items.body.items[0];
@@ -299,7 +299,7 @@ check('the event log still holds the undone event',
   events.status === 200 && events.body.events.some((e) => e.undone_at), events.body.events?.length);
 
 // ── journal, draft, lists, admin ────────────────────────────────────────────
-console.log('\n[6/7] Journal, drafts, lists, admin');
+console.log('\n[6/8] Journal, drafts, lists, admin');
 const entry = await api('POST', '/journal', { character_id: charId, title: 'Session 1', body: 'It happened.' });
 check('a journal entry is written', entry.status === 201 || entry.status === 200, entry.body);
 const journal = await api('GET', `/journal?campaign_id=${campaignId}`);
@@ -371,7 +371,7 @@ check('and finds no rule-breaking characters in a fresh database',
 //
 // 150 rows, driven through the real endpoint against a real D1. Under the old
 // code the first check here fails.
-console.log('\n' + '[7/7] An import too big for one statement');
+console.log('\n' + '[7/8] An import too big for one statement');
 {
   const N = 150;
   const stagedRows = Array.from({ length: N }, (_, i) => {
@@ -428,6 +428,70 @@ console.log('\n' + '[7/7] An import too big for one statement');
     check('a second confirm has nothing left to do', again.status === 400,
       JSON.stringify(again.body).slice(0, 200));
   }
+}
+
+// -- the README's countable claims, against the database ---------------------
+// Prose does not get recounted when a class is added or a chapter is imported.
+// Both of these had already drifted before anyone noticed.
+console.log('\n' + '[8/8] Documented counts that only a database can check');
+{
+  const readme = readFileSync(join(appDir, 'README.md'), 'utf8');
+  const WORDS = {
+    fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19,
+    twenty: 20, 'twenty-one': 21, 'twenty-two': 22, 'twenty-three': 23,
+    'twenty-four': 24, 'twenty-five': 25, 'twenty-six': 26, 'twenty-seven': 27,
+    'twenty-eight': 28, 'twenty-nine': 29, thirty: 30,
+  };
+  const word = (w) => WORDS[String(w).toLowerCase()];
+
+  const { parseClassMarkdown } = await import(
+    pathToFileURL(join(appDir, 'js', 'parser.js')).href);
+
+  const listed = await api('GET', '/classes');
+  const classes = (listed.body.classes || []);
+  check('the class list is readable for counting', classes.length > 0, listed.body);
+
+  // An M.D.C. being tracks M.D.C. INSTEAD of hit points, so its silence is a
+  // statement and the core-rules default deliberately skips it.
+  let silent = 0;
+  for (const c of classes) {
+    if (c.mdc_base != null) continue;
+    if (c.hit_points_base == null) silent++;
+  }
+
+  const claim = readme.match(/([A-Za-z-]+) of ([A-Za-z-]+) published classes state no hit point/);
+  check('the README still states the hit-point-silence count', !!claim,
+    'the sentence changed shape');
+  if (claim) {
+    check('and the number of published classes matches the database',
+      word(claim[2]) === classes.length,
+      'README says ' + claim[2] + ' (' + word(claim[2]) + '), database has ' + classes.length);
+    check('and the count of classes stating no hit point formula matches',
+      word(claim[1]) === silent,
+      'README says ' + claim[1] + ' (' + word(claim[1]) + '), database has ' + silent);
+  }
+
+  // Every named spell list must still resolve, or the README's "all 34 resolve
+  // now" becomes the next stale claim.
+  const catalogs = await api('GET', '/catalogs');
+  const norm = (x) => String(x).toLowerCase().replace(/&/g, 'and')
+    .replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+  const haveSpell = new Set((catalogs.body.spells || []).map((r) => norm(r.name)));
+
+  let unresolved = [];
+  for (const id of ['shifter', 'ley-line-rifter']) {
+    const one = await api('GET', '/classes?class_id=' + id);
+    const md = (one.body.classes || []).find((c) => c.id === id);
+    const cls = md || classes.find((c) => c.id === id);
+    if (!cls || !cls.magic) continue;
+    const lists = { ...(cls.magic.spell_lists || {}) };
+    if (cls.magic.spells_per_level_from) lists.single = cls.magic.spells_per_level_from;
+    for (const [listName, list] of Object.entries(lists)) {
+      for (const n of list) if (!haveSpell.has(norm(n))) unresolved.push(id + '/' + listName + ': ' + n);
+    }
+  }
+  check('every named spell list resolves against the catalog',
+    unresolved.length === 0, unresolved.slice(0, 6).join('; '));
 }
 
 console.log('\n' + (failures === 0

@@ -1156,12 +1156,16 @@ that it cannot check it. That is the **skill-category posture, not the
 psychic-tier one**: a rule the app cannot verify is one it should be honest
 about rather than silently drop or silently enforce wrongly.
 
-**The named list is enforced**, server-side as well as in the picker — and
-**15 of the Shifter's 34 spells are not in the catalog**. They are the
+**The named list is enforced**, server-side as well as in the picker. It used
+to be **15 of the Shifter's 34 spells that were not in the catalog** — the
 dimensional ones the class is built around (`Close Rift`, `D-Step`, `Rift to
-Limbo`, `Time Hole`…), from a chapter that has not been imported. They stay in
-the list on purpose: the picker names what it cannot find rather than silently
-shrinking, and they light up the day those spells arrive.
+Limbo`, `Time Hole`…), from a chapter nobody had imported. They stayed in the
+list on purpose, because a picker should name what it cannot find rather than
+silently shrink, and they lit up the day `add-book-of-magic-rift-spells.sql`
+arrived. **All 34 resolve now**, as do the Ley Line Rifter's 17 and 21.
+
+That behaviour is still the point, even with nothing currently missing: a list
+naming a spell the catalog lacks is a visible gap, not a shorter list.
 
 Three of the 34 use the catalog's spelling rather than the book's, checked before
 the list was written: `Control **&** Enslave Entity`, `De**si**ccate the
@@ -1467,7 +1471,7 @@ differs from the standard:
 | S.D.C. | **3D6** for men of arms, **1D6** for practitioners of magic, scholars and everyone else |
 
 The app used to read that silence as "this character has none" and store
-`hp_max` NULL. Sixteen of twenty-five published classes state no hit point
+`hp_max` NULL. Eighteen of twenty-six published classes state no hit point
 formula, so this was the common path, not an edge case — two Priests of Light
 reached production with no hit points and no S.D.C., and nothing on the sheet
 suggested anything was missing.
@@ -3443,6 +3447,57 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `027-npc-dossiers.sql` | `npcs`, `npc_mentions`, `npc_sweeps` and `npc_proposals_dismissed`. **The first migration whose feature also needs a bucket** — R2 `MEDIA` must exist before the deploy that binds it |
 | `026-campaign-notes.sql` | `journal_fts` and its three triggers, plus `campaign_items` and `campaign_currency`. The FTS table is external-content, so the triggers are not optional — without them the index silently stops matching anything written after the migration ran |
 | `025-skill-level-bonuses.sql` | `skills.level_bonuses` — what a skill grants **at each level**, summed up to the character's. The Hand to Hand tables are level-by-level and accumulative, which the flat `bonuses` column cannot express; entries may carry `applies_when` for a W.P. bonus that needs that weapon in hand |
+
+### Checking the live database against the repo
+
+```bash
+node scripts/drift-check.mjs --remote
+```
+
+Read-only, so it is safe to point at production. It compares five things:
+
+| | |
+|---|---|
+| migration files | vs `schema_migrations` |
+| data scripts | vs `data_script_runs` |
+| tables in `schema.sql` | vs `sqlite_master` |
+| columns in `schema.sql` | vs the live `CREATE` text |
+| published classes | vs a class a data script can recreate |
+
+**The smoke test and the regression test cannot see production.** Smoke proves
+the repo is internally consistent; regression proves a database built *from* the
+repo works. The gap between them is where the expensive mistakes live, and the
+first run of this check found two that had been sitting there for weeks:
+
+**Two classes existed only in production.** `chiang-ku-dragon` and `juicer`
+predate the data-script convention — they were imported through the UI, and
+every correction since is a `fix-*.sql` that *patches a row nothing in the repo
+creates*. `schema.sql` plus the data scripts rebuilt **24 of 26** published
+classes. Had production been lost, those two definitions were not in git at all.
+`add-chiang-ku-dragon-class.sql` and `add-juicer-class.sql` close it, exported
+from the live rows; a fresh build now reaches 26 and both come out byte-identical
+to production.
+
+**A run record that asserted something untrue.**
+`backfill-data-script-runs.sql` swept `seed-dev.sql` in with everything else, so
+production recorded a local-only script as having run there. Nothing was
+actually seeded — checked before fixing — but the row is the exact lie
+`data_script_runs` exists to prevent. `fix-seed-dev-run-record.sql` removes the
+asserted row and leaves any genuinely observed one alone.
+
+Two facts about `wrangler` are baked into the script because both cost an hour:
+`--file` over `--remote` returns a **summary** row rather than query results, so
+every count comes back as 1; and `execFileSync` with `shell: true` does not
+quote the arguments it joins, while without a shell Node refuses to spawn
+`npx.cmd` on Windows at all.
+
+**Prose counts drift silently.** The README claimed *"Sixteen of twenty-five
+published classes state no hit point formula"* when the answer was eighteen of
+twenty-six — stale before the Stone Master, not because of it — and still
+described 15 of the Shifter's 34 spells as missing from the catalog seventy
+lines after the section saying all three lists resolve in full. Both are now
+pinned by the regression test, which is the only place that can count them,
+because the class definitions live in D1 rather than in the repo.
 
 ### Standing up a new environment
 
