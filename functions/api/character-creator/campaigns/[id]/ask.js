@@ -14,12 +14,13 @@
 import { json, readJson, requireCampaign } from '../../_lib/auth.js';
 import { validateClaudeRequest, callAnthropic } from '../../../_lib/claude-client.js';
 import { toMatchQuery } from './search.js';
+import { parseAliases } from './npcs.js';
 
 const MODEL = 'claude-sonnet-5';
 const MAX_ENTRIES = 25;         // context bound, not a relevance judgement
 const MAX_BODY_CHARS = 4000;    // one rambling session recap must not crowd out nine others
 
-const SYSTEM = `You answer questions about a tabletop RPG campaign using ONLY the notes, party inventory and currency ledger provided.
+const SYSTEM = `You answer questions about a tabletop RPG campaign using ONLY the notes, NPC dossiers, party inventory and currency ledger provided.
 
 Rules:
 - Answer from the material given. If it does not say, reply that the notes do not record it — do not fill the gap from general knowledge of the game, and do not guess.
@@ -57,12 +58,13 @@ export async function onRequestPost({ request, env, params }) {
          ORDER BY created_at DESC, id DESC LIMIT ?`
       ).bind(params.id, MAX_ENTRIES).all()).results;
 
-  // The stash and the ledger travel with the notes, because "do we still have
-  // the rune sword" and "how much have we spent" are the same kind of question
-  // and live in different tables. Character sheets deliberately do NOT: sheet
-  // questions are answered by looking at the sheet, and five full characters
-  // would dominate the prompt.
-  const [items, balances] = await env.DB.batch([
+  // The stash, the ledger and the NPC dossiers travel with the notes, because
+  // "do we still have the rune sword", "how much have we spent" and "who is
+  // Kevik and do we trust him" are the same kind of question living in
+  // different tables. Character sheets deliberately do NOT: sheet questions are
+  // answered by looking at the sheet, and five full characters would dominate
+  // the prompt.
+  const [items, balances, npcs] = await env.DB.batch([
     env.DB.prepare(
       `SELECT COALESCE(g.name, ci.custom_name) AS name, ci.qty, ci.notes,
               ci.removed_at IS NOT NULL AS gone
@@ -72,6 +74,13 @@ export async function onRequestPost({ request, env, params }) {
     env.DB.prepare(
       `SELECT currency, SUM(delta) AS balance FROM campaign_currency
        WHERE campaign_id = ? GROUP BY currency`
+    ).bind(params.id),
+    // Dossiers are the CURATED answer where the notes are the raw one, so they
+    // are sent whole rather than retrieved: a roster is tens of rows, and the
+    // fields exist precisely so this question does not need re-reading prose.
+    env.DB.prepare(
+      `SELECT name, aliases, faction, disposition, status, description FROM npcs
+       WHERE campaign_id = ? ORDER BY name LIMIT 200`
     ).bind(params.id),
   ]);
 
@@ -87,7 +96,8 @@ export async function onRequestPost({ request, env, params }) {
     // can starve the answer itself.
     thinking: { type: 'disabled' },
     system: SYSTEM,
-    messages: [{ role: 'user', content: [{ type: 'text', text: buildPrompt(question, entries, items.results, balances.results) }] }],
+    messages: [{ role: 'user', content: [{ type: 'text',
+      text: buildPrompt(question, entries, items.results, balances.results, npcs.results) }] }],
   };
   const invalid = validateClaudeRequest(claudeRequest);
   if (invalid) return json({ error: 'Built an invalid request: ' + invalid }, 400);
@@ -114,7 +124,7 @@ export async function onRequestPost({ request, env, params }) {
   return json({ answer, cited, entries_considered: entries.length });
 }
 
-function buildPrompt(question, entries, items, balances) {
+function buildPrompt(question, entries, items, balances, npcs) {
   const notes = entries.map((e) => {
     const head = [`[#${e.id}]`, e.title || '(untitled)', e.session_date ? `— ${e.session_date}` : '',
                   `— ${e.author_email}`, `— ${e.created_at}`].filter(Boolean).join(' ');
@@ -127,9 +137,20 @@ function buildPrompt(question, entries, items, balances) {
   const gone = (items || []).filter((i) => i.gone)
     .map((i) => `- ${i.name}${i.qty > 1 ? ` x${i.qty}` : ''}`).join('\n');
   const money = (balances || []).map((b) => `- ${b.currency}: ${b.balance}`).join('\n');
+  const people = (npcs || []).map((n) => {
+    const aliases = parseAliases(n.aliases);
+    return ['-', n.name,
+      aliases.length ? `(also: ${aliases.join(', ')})` : '',
+      n.faction ? `— ${n.faction}` : '',
+      n.status && n.status !== 'unknown' ? `— ${n.status}` : '',
+      n.disposition ? `— ${n.disposition}` : '',
+      n.description ? `— ${n.description}` : '',
+    ].filter(Boolean).join(' ');
+  }).join('\n');
 
   return [
     '<campaign_notes>', notes || '(none)', '</campaign_notes>',
+    '', '<npc_dossiers>', people || '(none)', '</npc_dossiers>',
     '', '<party_stash>', held || '(nothing held)', '</party_stash>',
     ...(gone ? ['', '<no_longer_held>', gone, '</no_longer_held>'] : []),
     '', '<party_currency>', money || '(none tracked)', '</party_currency>',

@@ -67,7 +67,18 @@ nates-workshop/
         ├── _lib/claude-client.js  The only code that calls the Anthropic API
         ├── claude.js         /api/claude — proxy (model allowlist + token cap)
         ├── media.js          /api/media — MediaVault CRUD, per-user via Access
-        └── character-creator/  41 endpoints + _lib; see the app README
+        └── character-creator/  45 endpoints + _lib; see the app README
+
+**R2**: the site binds one bucket, `nates-workshop-media`, as `MEDIA`. It holds
+NPC portraits today and is named for the site rather than for that app because
+the other two will want it. **It must exist before the deploy that binds it** —
+same discipline as a migration:
+
+    npx wrangler r2 bucket create nates-workshop-media
+    npx wrangler r2 bucket list          # verify, rather than trusting the exit code
+
+Nothing is served from a public bucket URL; every read goes through a Function
+that checks who is asking. Do not enable public access on it.
 ```
 
 Cloudflare Pages deploys `functions/` as serverless Workers automatically —

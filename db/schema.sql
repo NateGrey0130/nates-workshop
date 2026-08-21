@@ -157,6 +157,53 @@ CREATE TABLE IF NOT EXISTS campaign_currency (
 CREATE INDEX IF NOT EXISTS idx_campaign_currency_campaign
   ON campaign_currency (campaign_id, currency);
 
+-- NPC dossiers, campaign-scoped. An NPC belongs to one table's game; a shared
+-- dossier would leak what one group knows into another's.
+CREATE TABLE IF NOT EXISTS npcs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  aliases TEXT,                          -- JSON array; matched by the sweep too
+  faction TEXT,
+  disposition TEXT,                      -- free text: 'hostile', 'owes us a favour'
+  status TEXT NOT NULL DEFAULT 'unknown'
+    CHECK (status IN ('alive', 'dead', 'unknown', 'never-met')),
+  description TEXT,
+  portrait_key TEXT,                     -- R2 object key; NULL = no portrait
+  created_by TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_npcs_campaign ON npcs (campaign_id);
+-- One dossier per name per campaign: what makes @Kevik resolve to a person
+-- rather than to three near-identical rows nobody merges.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_npcs_campaign_name
+  ON npcs (campaign_id, name COLLATE NOCASE);
+
+-- Which entries mention whom, and who said so: `source` distinguishes a link a
+-- person typed from one the sweep inferred.
+CREATE TABLE IF NOT EXISTS npc_mentions (
+  npc_id INTEGER NOT NULL REFERENCES npcs(id) ON DELETE CASCADE,
+  journal_entry_id INTEGER NOT NULL REFERENCES journal_entries(id) ON DELETE CASCADE,
+  source TEXT NOT NULL CHECK (source IN ('mention', 'ai')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (npc_id, journal_entry_id)
+);
+CREATE INDEX IF NOT EXISTS idx_npc_mentions_entry ON npc_mentions (journal_entry_id);
+
+-- What the sweep has already read, and the names a human said are not people.
+CREATE TABLE IF NOT EXISTS npc_sweeps (
+  journal_entry_id INTEGER PRIMARY KEY REFERENCES journal_entries(id) ON DELETE CASCADE,
+  swept_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS npc_proposals_dismissed (
+  campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  dismissed_by TEXT NOT NULL,
+  dismissed_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (campaign_id, name COLLATE NOCASE)
+);
+
 CREATE TABLE IF NOT EXISTS level_history (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   character_id INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
@@ -547,3 +594,7 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '026-campaign-notes.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'campaign_items')
   AND EXISTS (SELECT 1 FROM sqlite_master WHERE name = 'journal_fts');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '027-npc-dossiers.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'npcs');

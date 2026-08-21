@@ -15,6 +15,7 @@
 
 import { getUserEmail, unauthorized, json, forbidden, characterAccess, campaignAccess, readJson } from './_lib/auth.js';
 import { paging, pagedQuery, pageBody } from './_lib/paging.js';
+import { parseMentions, resolveMentions } from './_lib/mentions.js';
 
 export async function onRequestGet({ request, env }) {
   const email = getUserEmail(request);
@@ -91,5 +92,23 @@ export async function onRequestPost({ request, env }) {
     `INSERT INTO journal_entries (campaign_id, character_id, author_email, title, body, session_date)
      VALUES (?, ?, ?, ?, ?, ?) RETURNING *`
   ).bind(campaignId, b.character_id ?? null, email, b.title ?? null, b.body, b.session_date ?? null).first();
-  return json({ entry: row }, 201);
+
+  // `@Kevik` in the body links the entry to Kevik's dossier, creating one if
+  // this campaign has not met them. Deliberately not fatal: a note is the thing
+  // being saved, and losing it because a dossier could not be written would be
+  // the wrong trade. The sweep catches anything this missed.
+  let mentioned = [];
+  try {
+    const names = parseMentions(b.body);
+    if (names.length) {
+      const byName = await resolveMentions(env, { campaignId, names, email });
+      mentioned = [...byName.values()];
+      await env.DB.batch(mentioned.map((npcId) => env.DB.prepare(
+        `INSERT OR IGNORE INTO npc_mentions (npc_id, journal_entry_id, source)
+         VALUES (?, ?, 'mention')`
+      ).bind(npcId, row.id)));
+    }
+  } catch { /* see above */ }
+
+  return json({ entry: row, mentioned }, 201);
 }

@@ -41,6 +41,9 @@ Access gate. No build step, no framework, no dependencies.
   - [Membership is not a table](#membership-is-not-a-table)
   - [Search is free, asking costs a call](#search-is-free-asking-costs-a-call)
   - [The stash is an inventory the party owns](#the-stash-is-an-inventory-the-party-owns)
+- [Who the campaign has met](#who-the-campaign-has-met)
+  - [Two ways in, and only one of them guesses](#two-ways-in-and-only-one-of-them-guesses)
+  - [Portraits, and the site's first bucket](#portraits-and-the-sites-first-bucket)
 - [Play mode](#play-mode)
 - [Server-side rule enforcement](#server-side-rule-enforcement)
 - [The catalog field config](#the-catalog-field-config)
@@ -199,7 +202,8 @@ touches MediaVault and FilamentForge too — they use its `openModal` /
 
 ## Data model
 
-Twenty-one tables in one shared D1 database (`nates-workshop-media`, bound as `DB`).
+Twenty-five tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
+and one R2 bucket (`MEDIA`, same name) for the only binary this app stores.
 `media_items` belongs to MediaVault and `schema_migrations` is database
 bookkeeping shared by both; the rest are this app.
 
@@ -216,6 +220,10 @@ bookkeeping shared by both; the rest are this app.
 | `campaign_items` | The party stash: `character_items`' shape, owned by a campaign. `removed_at` NULL means still held; `claimed_by_character_id` says it left for a sheet rather than being spent or lost. |
 | `campaign_currency` | Party money as an append-only **ledger**. The balance is `SUM(delta)`, so no stored total can disagree with its own history. `currency` is free text — the two systems use different coin. |
 | `journal_fts` | FTS5 index over `journal_entries`. External-content: it holds no copy of the text, and three triggers keep it current. |
+| `npcs` | One dossier per person per campaign — `UNIQUE (campaign_id, name COLLATE NOCASE)` is what makes `@Kevik` resolve to a person rather than three rows. `portrait_key` is an R2 object key. |
+| `npc_mentions` | Which entries mention whom. `source` is `'mention'` (a person typed `@`) or `'ai'` (the sweep inferred it) — a decision made by software should be visible as one. |
+| `npc_sweeps` | Which entries the sweep has already read. Written only after a successful call, so a failed one is retried rather than skipped. |
+| `npc_proposals_dismissed` | Names a human has said are not people. Without it the sweep proposes `the guard` again every time and the button becomes noise. |
 
 `characters` stores ten JSON columns rather than a very wide table — the list
 lives in `_lib/character-json.js` as `CHARACTER_JSON_COLUMNS`:
@@ -404,7 +412,11 @@ writes are gated (see [Permissions](#permissions)).
 | `campaigns/[id]/items` | GET / POST | The party stash (`?include_removed=1` for history); add a catalog or freeform item |
 | `campaigns/[id]/items/[itemId]` | PATCH / DELETE / POST | qty/notes; soft remove; **POST claims it onto a character's sheet in one batch** |
 | `campaigns/[id]/currency` | GET / POST | Balances and the ledger behind them; append a signed entry |
-| `journal/[entryId]` | PATCH / DELETE | Edit or delete one entry — the author, or the GM |
+| `journal/[entryId]` | PATCH / DELETE | Edit or delete one entry — the author, or the GM. A body edit **reconciles its `@mentions`** |
+| `campaigns/[id]/npcs` | GET / POST | The dossier roster (`?status=`, `?faction=`, `?q=`), with a mention count; create one by hand |
+| `campaigns/[id]/npcs/[npcId]` | GET / PATCH / DELETE | The dossier **and every entry that mentions them, oldest first**; edit; delete (the notes are untouched) |
+| `campaigns/[id]/npcs/[npcId]/portrait` | GET / POST / DELETE | Stream, upload (raw `image/*` body, 5MB) and remove. **Never a public bucket URL** — every read goes through the membership check |
+| `campaigns/[id]/npcs/sweep` | POST | Propose the people nobody tagged. `?accept=1` creates the dossier a proposal named; `?dismiss=1` stops offering that name |
 | `draft` | GET / PUT / DELETE | The caller's own unfinished wizard build. No id in the route — a draft belongs to a person, not a collection. One each. **PUT states the version it is replacing** in `expect_updated_at` and is refused 409 otherwise; see [Two tabs cannot overwrite each other](#two-tabs-cannot-overwrite-each-other) |
 | `characters` | GET / POST | List (`?campaign_id=`, `?limit=`, `?offset=`); create at level 1 — **validated against the class rules** |
 | `characters/[id]` | GET / PATCH | Sheet + inventory, with `can_write` / `is_gm`; edit pools, notes, and the bio/combat/saves/armor sections. Also returns `skill_level_notes` and `weapon_bonuses` — what a skill grants that is not a summable number; see [A fighting style is a level schedule](#a-fighting-style-is-a-level-schedule) |
@@ -1846,6 +1858,116 @@ explanation that no longer exists.
 
 ---
 
+## Who the campaign has met
+
+The people a campaign meets lived in prose scattered across entries. Three
+sessions later nobody could say who the merchant in Kingsdale was, whether he
+was still alive, or what the party promised him.
+
+A dossier is **campaign-scoped** and structured: name, aliases, faction,
+disposition toward the party, status, a description, a portrait, and an
+auto-maintained list of every entry that mentions them. Structured because the
+fields are what make the roster filterable and what let the
+[ask endpoint](#search-is-free-asking-costs-a-call) answer *"who is Kevik and
+can we trust him?"* without re-reading prose.
+
+Rejected: **global NPCs shared across campaigns** — right only if the campaigns
+share a world, and it leaks what one table knows into another's dossier; and a
+**single free-form prose block**, which is less to build and leaves nothing to
+sort or filter by.
+
+### Two ways in, and only one of them guesses
+
+**`@Name` in a note is the primary path** — deterministic, free, instant, and
+under the writer's control. It creates a dossier on first mention rather than
+offering to: the writer already committed by typing the `@`, and a confirmation
+step there means the note posts with a dangling reference while somebody
+decides. A dossier made this way holds only a name, which is exactly what is
+known about it.
+
+What the pattern does and does not match is the whole contract:
+
+| | |
+|---|---|
+| `@Kevik` | one person |
+| `@Lord Coake` | one person — stopping at the space would link to a Lord nobody has met |
+| `@Lord Coake And Then` | still `Lord Coake`; three words starts swallowing sentences |
+| `@Kevik,` `@Kevik.` | the same person as `@Kevik` |
+| `@Kevik` `@kevik` `@KEVIK` | one person, one dossier |
+| `@guard` | nothing — a description is not a name |
+| `email me @ the place` | nothing |
+
+`UNIQUE (campaign_id, name COLLATE NOCASE)` is what makes that resolve to a
+person rather than three near-identical rows nobody merges. Mentions are stored
+as **plain `@Name` text in the body, not as ids**, so the note stays readable
+text that survives a rename and reads correctly in a plain-text export;
+resolution happens against the name index at write time.
+
+**Editing a note reconciles its mentions.** A body edited to remove a name stops
+listing that entry under that NPC — a mention list that only ever grows is one
+that lies about the current text. Only the mentions a *person* typed are
+reconciled; a link the sweep made is the model's reading of an entry that never
+contained an `@`, and rewriting the body must not silently delete it.
+
+**The sweep is the safety net, not the mechanism.** A button reads the entries
+nobody has swept and proposes the named people nobody tagged. **A proposal is
+not a dossier**: accepting one is a second, explicit click. Rejected: an
+automatic scan on every save, which costs a model call per note and will
+confidently turn *"the guard"* into a person until somebody stops it; and
+mention-only, which captures nothing when the table forgets, which is every
+table.
+
+Four rules the sweep earns its keep by:
+
+- **A dismissed name stays dismissed.** Without `npc_proposals_dismissed` the
+  next sweep proposes *the guard* again, and the one after that, and the button
+  becomes noise. Verified: a name dismissed once was not re-proposed even when a
+  brand-new note named it again.
+- **Entries are marked swept only after a successful response.** One marked by a
+  call that never returned is one nobody will ever look at again.
+- **Ids come back through a model and then a client**, so they are filtered
+  against what was actually sent and re-checked against the campaign on accept.
+  A mention pointing at another table's note would leak that note into a dossier.
+- **A link the model made is marked `source: 'ai'`**, and the dossier says so.
+  Same instinct as `override: true` on an out-of-category skill pick: a decision
+  made by software should be visible as one.
+
+### Portraits, and the site's first bucket
+
+`wrangler.jsonc` binds R2 as **`MEDIA`**, named for the site rather than for the
+app that needed it first — MediaVault stores cover art as text today and
+filament-forge already reads file bytes, so the second and third users exist.
+
+Rejected: **base64 data URIs in D1** (rows cap near 1MB, the database is shared
+with every other app on the site, and "thumbnails only" is a rule nobody
+remembers in six months); and **external URLs** (nothing behind the Access wall,
+and the image breaks when the host does).
+
+**Nothing is ever served from a public bucket URL.** The whole site sits behind
+Access and an unauthenticated image endpoint would be the one hole in it, so
+every read goes through a Function that checks membership first — a campaign's
+portraits are as private as its notes.
+
+Four things that are not obvious:
+
+- **The type is an allowlist**, because it decides what is stored *and* what the
+  GET hands a browser later. Anything not on the list is something the response
+  would be serving without knowing what it is.
+- **The row is written before the old object is deleted.** The other order can
+  leave a dossier pointing at an object that no longer exists; this one can at
+  worst orphan an object nobody points at, which costs storage rather than a
+  broken portrait.
+- **The key carries a uuid**, so every upload is a new key and the response can
+  be cached hard — `private, max-age=31536000, immutable`. Private because this
+  is behind Access and must not sit in a shared cache.
+- **But the URL is stable**, so an immutable cache would show the first portrait
+  forever. The page busts it with the **object key**. `updated_at` was the
+  obvious choice and is wrong twice: it contains a space, which does not belong
+  in a URL unencoded, and it changes when somebody edits the faction field —
+  re-fetching an image that did not change.
+
+---
+
 ## Play mode
 
 The sheet through an **action-first lens**, shaped for a phone or tablet at
@@ -2801,6 +2923,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `022-play-events.sql` | `play_events` — play mode's append-only action log: undo, the who-did-what trail, and the session recap boundary |
 | `023-skill-bonuses.sql` | `skills.bonuses` — what a skill grants beyond its percentage, in a class's `bonuses:` shape. Boxing is +1 attack per melee and +2 P.S. |
 | `024-data-script-runs.sql` | `data_script_runs` — which data scripts have run against this database. The same question `schema_migrations` answers for migrations, for the 55 scripts that answer it nowhere |
+| `027-npc-dossiers.sql` | `npcs`, `npc_mentions`, `npc_sweeps` and `npc_proposals_dismissed`. **The first migration whose feature also needs a bucket** — R2 `MEDIA` must exist before the deploy that binds it |
 | `026-campaign-notes.sql` | `journal_fts` and its three triggers, plus `campaign_items` and `campaign_currency`. The FTS table is external-content, so the triggers are not optional — without them the index silently stops matching anything written after the migration ran |
 | `025-skill-level-bonuses.sql` | `skills.level_bonuses` — what a skill grants **at each level**, summed up to the character's. The Hand to Hand tables are level-by-level and accumulative, which the flat `bonuses` column cannot express; entries may carry `applies_when` for a W.P. bonus that needs that weapon in hand |
 

@@ -14,6 +14,10 @@ const D = {
   entries: [], entriesTotal: 0,
   items: [], balances: [], ledger: [],
   roster: [], gear: [],
+  // The NPC roster, the dossier currently open, and the sweep's proposals.
+  // Proposals live in state rather than being written down: a proposal is not
+  // a dossier until somebody says so, and a page reload correctly loses them.
+  npcs: [], npc: null, proposals: null, sweeping: false, sweepMsg: '',
   // Search is a separate view over the same feed rather than a filter of it:
   // results are ranked and snippetted, and pretending that is the same list
   // would mean the feed sometimes silently reorders itself.
@@ -40,16 +44,18 @@ async function load() {
     // requests that would each come back 403.
     if (!D.isMember) return render();
 
-    const [entries, items, currency, roster] = await Promise.all([
+    const [entries, items, currency, roster, npcs] = await Promise.all([
       api(`journal?campaign_id=${campaignId}`),
       api(`campaigns/${campaignId}/items`),
       api(`campaigns/${campaignId}/currency`),
       api(`characters?campaign_id=${campaignId}`),
+      api(`campaigns/${campaignId}/npcs`),
     ]);
     D.entries = entries.entries; D.entriesTotal = entries.total ?? entries.entries.length;
     D.items = items.items;
     D.balances = currency.balances; D.ledger = currency.ledger;
     D.roster = roster.characters;
+    D.npcs = npcs.npcs;
     render();
   } catch (err) {
     $('app').innerHTML = `<div class="panel"><p class="err">Failed to load: ${esc(err.message)}</p></div>`;
@@ -67,7 +73,8 @@ function render() {
     return;
   }
   const tabs = [['notes', `Notes (${D.entriesTotal})`],
-                ['stash', `Party stash (${D.items.length})`],
+                ['people', `People (${D.npcs.length})`],
+                ['stash', `Party stash (${D.items.filter((i) => !i.removed_at).length})`],
                 ['money', 'Currency']];
   $('app').innerHTML = `
     <div class="panel">
@@ -75,11 +82,13 @@ function render() {
       <div class="toggle">${tabs.map(([k, label]) =>
         `<button class="${D.tab === k ? 'on' : ''}" onclick="setTab('${k}')">${esc(label)}</button>`).join('')}</div>
     </div>
-    ${D.tab === 'notes' ? notesView() : D.tab === 'stash' ? stashView() : moneyView()}`;
+    ${D.tab === 'notes' ? notesView()
+      : D.tab === 'people' ? peopleView()
+      : D.tab === 'stash' ? stashView() : moneyView()}`;
   wireSearch();
 }
 
-function setTab(t) { D.tab = t; render(); }
+function setTab(t) { D.tab = t; D.npc = null; render(); }
 
 // ---------- notes ----------
 function notesView() {
@@ -134,7 +143,8 @@ function composerBlock() {
     <textarea id="note-body" rows="5" placeholder="What happened? Who did you talk to? What did they want?"
       style="width:100%; margin-top:8px" onchange="D.composer.body = this.value">${esc(c.body)}</textarea>
     <div class="nav" style="margin-top:8px">
-      <span class="muted small">Everyone in the campaign can read and add notes.</span>
+      <span class="muted small">Everyone in the campaign can read and add notes.
+        Type <b>@Name</b> to link someone to their dossier — a new name gets one.</span>
       <button class="btn btn-primary" onclick="postNote()">Post note</button>
     </div>
     <p id="note-msg" class="small"></p>
@@ -259,6 +269,255 @@ async function removeEntry(id) {
   try {
     await api('journal/' + id, { method: 'DELETE' });
     await load();
+  } catch (err) { alert('Failed: ' + err.message); }
+}
+
+// ---------- people ----------
+//
+// Two ways in, and the roster shows both. `@Kevik` in a note creates and links
+// a dossier for free; the sweep proposes the people nobody tagged. A proposal
+// is NOT a dossier — accepting one is a second, explicit click.
+function peopleView() {
+  if (D.npc) return dossierView();
+  const byStatus = { alive: [], unknown: [], dead: [], 'never-met': [] };
+  for (const n of D.npcs) (byStatus[n.status] || byStatus.unknown).push(n);
+
+  return `
+  <div class="panel">
+    <h3>People <span class="muted small">— everyone the campaign has met</span></h3>
+    ${D.npcs.length ? Object.entries(byStatus).filter(([, list]) => list.length).map(([status, list]) =>
+      `<p class="small" style="margin-top:12px"><b>${esc(statusLabel(status))}</b>
+        <span class="muted">${list.length}</span></p>` +
+      list.map(npcRow).join('')).join('')
+      : `<p class="muted">Nobody yet. Type <b>@Name</b> in a note, or sweep the notes below.</p>`}
+    <h4 style="margin-top:16px">Add someone by hand</h4>
+    <div class="rowline">
+      <input type="text" id="npc-name" class="picker-input" placeholder="Name">
+      <button class="btn btn-sm" onclick="addNpc()">Add</button>
+    </div>
+    <p id="npc-msg" class="small"></p>
+  </div>
+  ${sweepPanel()}`;
+}
+
+const statusLabel = (s) => ({ alive: 'Alive', dead: 'Dead', unknown: 'Status unknown',
+                              'never-met': 'Not met yet' })[s] || s;
+
+// The portrait URL is STABLE (…/npcs/12/portrait) while the object behind it is
+// not, and the response carries an immutable cache header — so without a
+// changing query the browser would keep showing the portrait it first fetched
+// forever, including after a replacement.
+//
+// The buster is the object KEY, which is a uuid and changes on every upload.
+// `updated_at` was the obvious choice and is wrong twice: it contains a space,
+// which does not belong in a URL unencoded, and it also changes when somebody
+// edits the faction field, which re-fetches an image that did not change.
+function portraitSrc(n) {
+  return `/api/character-creator/campaigns/${campaignId}/npcs/${n.id}/portrait`
+    + `?v=${encodeURIComponent(n.portrait_key || '')}`;
+}
+
+function npcRow(n) {
+  return `<div class="chkrow" style="cursor:pointer" onclick="openNpc(${n.id})">
+    ${n.portrait_key ? `<img src="${portraitSrc(n)}"
+      alt="" style="width:34px;height:34px;border-radius:50%;object-fit:cover">` : ''}
+    <span><b>${esc(n.name)}</b>
+      ${n.faction ? `<span class="tag">${esc(n.faction)}</span>` : ''}
+      ${n.disposition ? `<span class="muted small"> — ${esc(n.disposition)}</span>` : ''}</span>
+    <span class="pct">${n.mention_count} ${n.mention_count === 1 ? 'mention' : 'mentions'}</span>
+  </div>`;
+}
+
+function sweepPanel() {
+  return `<div class="panel">
+    <h3>Find people nobody tagged</h3>
+    <p class="muted small">Reads the notes that have not been swept and proposes the named people in
+      them. A proposal is not a dossier — accept the ones that are real, dismiss the ones that are
+      not, and a dismissed name is not offered again.</p>
+    <div class="rowline">
+      <button class="btn btn-sm" onclick="sweep()" ${D.sweeping ? 'disabled' : ''}>
+        ${D.sweeping ? 'Reading…' : '✨ Sweep the notes'}</button>
+      <span class="muted small">${esc(D.sweepMsg)}</span>
+    </div>
+    ${D.proposals ? (D.proposals.length
+      ? D.proposals.map((p) => `<div class="chkrow">
+          <span><b>${esc(p.name)}</b>
+            ${p.description ? `<span class="muted small"> — ${esc(p.description)}</span>` : ''}
+            <span class="muted small"> (${p.entry_ids.length}
+              ${p.entry_ids.length === 1 ? 'note' : 'notes'})</span></span>
+          <span class="rowline">
+            <button class="btn btn-sm" onclick="acceptProposal('${escAttr(p.name)}')">accept</button>
+            <button class="btn btn-sm btn-ghost" onclick="dismissProposal('${escAttr(p.name)}')">not a person</button>
+          </span>
+        </div>`).join('')
+      : '<p class="muted small">Nobody new in those notes.</p>') : ''}
+  </div>`;
+}
+
+// A name goes into an inline onclick, so a quote in it would end the attribute.
+const escAttr = (v) => esc(String(v)).replace(/'/g, '&#39;');
+
+function dossierView() {
+  const n = D.npc.npc;
+  const mentions = D.npc.mentions;
+  return `
+  <div class="panel">
+    <div class="rowline"><button class="btn btn-sm btn-ghost" onclick="closeNpc()">← everyone</button></div>
+    <div class="rowline" style="align-items:flex-start; gap:14px; margin-top:10px">
+      ${n.portrait_key
+        ? `<img src="${portraitSrc(n)}"
+             alt="${esc(n.name)}" style="width:120px;height:120px;border-radius:8px;object-fit:cover">`
+        : `<div style="width:120px;height:120px;border-radius:8px;background:var(--bg-secondary);
+             display:flex;align-items:center;justify-content:center" class="muted small">no portrait</div>`}
+      <div style="flex:1;min-width:220px">
+        <h2 style="margin:0">${esc(n.name)}</h2>
+        ${n.aliases?.length ? `<p class="muted small">also known as ${esc(n.aliases.join(', '))}</p>` : ''}
+        <div class="rowline" style="margin-top:8px">
+          <input type="file" id="npc-portrait" accept="image/png,image/jpeg,image/webp,image/gif">
+          <button class="btn btn-sm btn-ghost" onclick="uploadPortrait(${n.id})">upload portrait</button>
+          ${n.portrait_key ? `<button class="btn btn-sm btn-ghost" onclick="removePortrait(${n.id})">remove</button>` : ''}
+        </div>
+        <p id="portrait-msg" class="small"></p>
+      </div>
+    </div>
+
+    <div class="rowline" style="margin-top:14px">
+      <select onchange="editNpc(${n.id}, 'status', this.value)">
+        ${['alive', 'dead', 'unknown', 'never-met'].map((s) =>
+          `<option value="${s}"${n.status === s ? ' selected' : ''}>${esc(statusLabel(s))}</option>`).join('')}
+      </select>
+      <input type="text" class="picker-input" placeholder="Faction" value="${esc(n.faction || '')}"
+        onchange="editNpc(${n.id}, 'faction', this.value)">
+      <input type="text" class="picker-input" placeholder="Disposition to the party"
+        value="${esc(n.disposition || '')}" onchange="editNpc(${n.id}, 'disposition', this.value)">
+    </div>
+    <input type="text" class="picker-input" style="width:100%;margin-top:8px" placeholder="Also known as (comma separated)"
+      value="${esc((n.aliases || []).join(', '))}" onchange="editNpc(${n.id}, 'aliases', this.value)">
+    <textarea rows="3" style="width:100%;margin-top:8px" placeholder="What do we know?"
+      onchange="editNpc(${n.id}, 'description', this.value)">${esc(n.description || '')}</textarea>
+    <div class="rowline" style="margin-top:8px">
+      <button class="btn btn-sm btn-ghost" onclick="deleteNpc(${n.id})">delete dossier</button>
+      <span class="muted small">Deleting the dossier leaves the notes alone — the @ in the text is just text.</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Every mention <span class="muted small">— oldest first, which is the story</span></h3>
+    ${mentions.length ? mentions.map((m) => `<div class="panel-inset" style="margin-top:8px">
+      <div class="rowline" style="justify-content:space-between">
+        <b>${esc(m.title || '(untitled)')}</b>
+        <span class="muted small">${esc(m.author_email)} · ${esc(when(m))}${
+          m.source === 'ai' ? ' · <span class="tag">found by sweep</span>' : ''}</span>
+      </div>
+      <p class="small" style="white-space:pre-wrap; margin-top:6px">${esc(m.body)}</p>
+    </div>`).join('') : '<p class="muted">No notes mention them yet.</p>'}
+  </div>`;
+}
+
+async function openNpc(id) {
+  try {
+    D.npc = await api(`campaigns/${campaignId}/npcs/${id}`);
+    render();
+  } catch (err) { alert('Failed: ' + err.message); }
+}
+function closeNpc() { D.npc = null; render(); }
+
+async function addNpc() {
+  const name = ($('npc-name')?.value || '').trim();
+  if (!name) { $('npc-msg').textContent = 'Give them a name.'; return; }
+  try {
+    await api(`campaigns/${campaignId}/npcs`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    await load();
+  } catch (err) { $('npc-msg').textContent = 'Failed: ' + err.message; }
+}
+
+async function editNpc(id, field, value) {
+  try {
+    await api(`campaigns/${campaignId}/npcs/${id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [field]: value }),
+    });
+    D.npc = await api(`campaigns/${campaignId}/npcs/${id}`);
+    const list = await api(`campaigns/${campaignId}/npcs`);
+    D.npcs = list.npcs;
+    render();
+  } catch (err) { alert('Failed: ' + err.message); }
+}
+
+async function deleteNpc(id) {
+  if (!confirm('Delete this dossier? The notes that mention them are not touched.')) return;
+  try {
+    await api(`campaigns/${campaignId}/npcs/${id}`, { method: 'DELETE' });
+    D.npc = null;
+    await load();
+  } catch (err) { alert('Failed: ' + err.message); }
+}
+
+// The raw file as the body, with its own Content-Type. Not multipart: there is
+// exactly one file and no fields beside it, so a FormData boundary would be
+// packaging for nothing.
+async function uploadPortrait(id) {
+  const file = $('npc-portrait')?.files?.[0];
+  if (!file) { $('portrait-msg').textContent = 'Choose an image first.'; return; }
+  $('portrait-msg').textContent = 'Uploading…';
+  try {
+    await api(`campaigns/${campaignId}/npcs/${id}/portrait`, {
+      method: 'POST', headers: { 'Content-Type': file.type }, body: file,
+    });
+    D.npc = await api(`campaigns/${campaignId}/npcs/${id}`);
+    const list = await api(`campaigns/${campaignId}/npcs`);
+    D.npcs = list.npcs;
+    render();
+  } catch (err) { $('portrait-msg').textContent = 'Failed: ' + err.message; }
+}
+
+async function removePortrait(id) {
+  try {
+    await api(`campaigns/${campaignId}/npcs/${id}/portrait`, { method: 'DELETE' });
+    D.npc = await api(`campaigns/${campaignId}/npcs/${id}`);
+    await load();
+  } catch (err) { alert('Failed: ' + err.message); }
+}
+
+async function sweep() {
+  if (D.sweeping) return;
+  D.sweeping = true; D.sweepMsg = ''; render();
+  try {
+    const res = await api(`campaigns/${campaignId}/npcs/sweep`, { method: 'POST' });
+    D.proposals = res.proposals;
+    D.sweepMsg = res.message || `Read ${res.swept} ${res.swept === 1 ? 'note' : 'notes'}${
+      res.remaining ? `, ${res.remaining} still to read` : ''}.`;
+  } catch (err) {
+    D.sweepMsg = 'Failed: ' + err.message;
+  } finally {
+    D.sweeping = false; render();
+  }
+}
+
+async function acceptProposal(name) {
+  const p = D.proposals?.find((x) => x.name === name);
+  if (!p) return;
+  try {
+    await api(`campaigns/${campaignId}/npcs/sweep?accept=1`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(p),
+    });
+    D.proposals = D.proposals.filter((x) => x.name !== name);
+    await load();
+  } catch (err) { alert('Failed: ' + err.message); }
+}
+
+async function dismissProposal(name) {
+  try {
+    await api(`campaigns/${campaignId}/npcs/sweep?dismiss=1`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    D.proposals = D.proposals.filter((x) => x.name !== name);
+    render();
   } catch (err) { alert('Failed: ' + err.message); }
 }
 

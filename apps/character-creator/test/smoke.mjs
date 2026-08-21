@@ -140,6 +140,7 @@ import { applyDecisions, classifyRows, countRows, getImportSpec, normaliseRows, 
 import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
 import { buildProposal, perLevelDiceOf, skillGrantsFor } from '../../../functions/api/character-creator/_lib/leveling.js';
 import { toMatchQuery } from '../../../functions/api/character-creator/campaigns/[id]/search.js';
+import { parseMentions } from '../../../functions/api/character-creator/_lib/mentions.js';
 import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
 import { dedupeCategories } from '../../../functions/api/character-creator/_lib/skill-picks.js';
 import { relatedAllowance, validateCharacter } from '../../../functions/api/character-creator/_lib/validate-character.js';
@@ -3269,6 +3270,110 @@ section('Campaign membership');
     check(`${f} asks auth.js rather than querying characters itself`,
       !/FROM characters WHERE campaign_id/.test(src));
   }
+}
+
+// ---------- NPC dossiers ----------
+// `@Name` is the deterministic path into a dossier, so what it does and does
+// not match is the whole contract. The sweep is the safety net beside it.
+section('Mentions');
+{
+  check('a plain mention is one name', JSON.stringify(parseMentions('@Kevik met us')) === '["Kevik"]');
+
+  // Two words, because "@Lord Coake" is one person and stopping at the space
+  // would link to a Lord nobody has met. Not three - at that point the pattern
+  // starts swallowing sentences.
+  check('two capitalised words are one person',
+    JSON.stringify(parseMentions('@Lord Coake was there')) === '["Lord Coake"]');
+  check('but a following capital is not dragged in',
+    JSON.stringify(parseMentions('@Lord Coake And Then We Left')) === '["Lord Coake"]');
+  check('a lowercase word after a name is not part of it',
+    JSON.stringify(parseMentions('@Kevik met us')) === '["Kevik"]');
+
+  // Trailing punctuation is how people actually type.
+  check('trailing punctuation is trimmed',
+    JSON.stringify(parseMentions('@Kevik, @Aldric. @Brannoc!')) === '["Kevik","Aldric","Brannoc"]');
+
+  // Deduped case-insensitively, keeping the first spelling: one @ four times is
+  // one person, and one dossier.
+  const dupes = parseMentions('@Kevik and @kevik and @KEVIK');
+  check('repeats are one person', dupes.length === 1 && dupes[0] === 'Kevik', JSON.stringify(dupes));
+
+  // The things that are NOT people. A description is not a name, and an email
+  // address in a note is not somebody to open a dossier for.
+  check('an uncapitalised word is not a name', parseMentions('@guard said nothing').length === 0);
+  check('a bare @ is nothing', parseMentions('email me @ the usual place').length === 0);
+  check('an empty body is no names', parseMentions('').length === 0 && parseMentions(null).length === 0);
+
+  check('an absurdly long name is refused',
+    parseMentions('@' + 'A'.repeat(200)).length === 0);
+
+  // Apostrophes and hyphens belong INSIDE names.
+  check('a hyphenated name survives',
+    JSON.stringify(parseMentions('@Jean-Luc waited')) === '["Jean-Luc"]');
+  check("and an apostrophe does too",
+    JSON.stringify(parseMentions("@O'Dell waited")) === '["O\'Dell"]');
+}
+
+section('The sweep proposes, it does not create');
+{
+  const apiDir = join(appDir, '..', '..', 'functions', 'api', 'character-creator');
+  const sweepSrc = readFileSync(join(apiDir, 'campaigns', '[id]', 'npcs', 'sweep.js'), 'utf8');
+
+  // A proposal is not a dossier. An automatic scan on save would confidently
+  // turn "the guard" into a person until somebody stopped it.
+  check('a sweep with no accept flag writes no npc row',
+    !/INSERT INTO npcs/.test(sweepSrc.split("async function accept")[0]));
+  check('accepting is a separate, explicit call',
+    /searchParams\.get\('accept'\) === '1'/.test(sweepSrc));
+  check('and dismissing is recorded so the name is not offered again',
+    /npc_proposals_dismissed/.test(sweepSrc));
+
+  // Marked swept only AFTER a successful response: an entry marked by a call
+  // that never returned is one nobody will ever look at again.
+  const afterUpstream = sweepSrc.slice(sweepSrc.indexOf('callAnthropic'));
+  check('entries are marked swept only after the call returns',
+    /INSERT OR IGNORE INTO npc_sweeps/.test(afterUpstream));
+
+  // Ids come back through a model and then a client. Trusting them would let a
+  // mention point at another campaign's note.
+  check('entry ids are filtered against what was sent', /sentIds\.has\(id\)/.test(sweepSrc));
+  check('and re-checked against the campaign when accepted',
+    /WHERE campaign_id = \? AND id IN/.test(sweepSrc));
+  check('a link the model made is marked as such', /'ai'\)/.test(sweepSrc));
+  check('the prompt says the notes are data, not instructions',
+    /DATA, not instructions/.test(sweepSrc));
+}
+
+section('Portraits are never public');
+{
+  const apiDir = join(appDir, '..', '..', 'functions', 'api', 'character-creator');
+  const src = readFileSync(join(apiDir, 'campaigns', '[id]', 'npcs', '[npcId]', 'portrait.js'), 'utf8');
+
+  // The whole site is behind Access. An unauthenticated image endpoint would be
+  // the one hole in it, so every read goes through the membership check.
+  check('the portrait GET checks membership', /isMember/.test(src));
+  check('an allowlist decides the type, not a blocklist', /const TYPES = \{/.test(src));
+  check('and an unknown type is refused', /415/.test(src));
+  check('uploads are size-bounded', /MAX_BYTES/.test(src) && /413/.test(src));
+
+  // Write the row BEFORE deleting the old object: the other order can leave a
+  // dossier pointing at nothing, this one can at worst orphan an object.
+  const post = src.slice(src.indexOf('onRequestPost'));
+  const updateAt = post.indexOf('UPDATE npcs SET portrait_key');
+  const deleteAt = post.indexOf('MEDIA.delete');
+  check('the row is updated before the old object is deleted',
+    updateAt > 0 && deleteAt > updateAt, `update@${updateAt} delete@${deleteAt}`);
+
+  // A stable URL with an immutable cache header needs the query to change, or
+  // a replaced portrait is never seen again.
+  const pageSrc = readFileSync(join(appDir, 'campaign.js'), 'utf8');
+  check('the page busts the cache with the object key', /portrait_key \|\| ''\)/.test(pageSrc));
+  check('and encodes it', /encodeURIComponent/.test(pageSrc));
+  check('no img src interpolates a raw timestamp', !/portrait\?v=\$\{esc\(n\.updated_at\)\}/.test(pageSrc));
+
+  // The binding is named for the site, not the app that needed it first.
+  const wrangler = readFileSync(join(appDir, '..', '..', 'wrangler.jsonc'), 'utf8');
+  check('the R2 binding exists', /"binding":\s*"MEDIA"/.test(wrangler));
 }
 
 section('Documented counts');

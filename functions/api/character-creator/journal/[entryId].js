@@ -11,6 +11,7 @@
 // pointing at an explanation that no longer exists.
 
 import { getUserEmail, unauthorized, json, readJson, campaignAccess } from '../_lib/auth.js';
+import { parseMentions, resolveMentions, reconcileStatements, existingMentions } from '../_lib/mentions.js';
 
 export async function onRequestPatch({ request, env, params }) {
   const guard = await entryGuard(request, env, params.entryId);
@@ -32,6 +33,27 @@ export async function onRequestPatch({ request, env, params }) {
   const row = await env.DB.prepare(
     `UPDATE journal_entries SET ${sets.join(', ')} WHERE id = ? RETURNING *`
   ).bind(...binds, params.entryId).first();
+
+  // An edit that removes a name must stop listing the entry under that NPC. A
+  // mention list that only ever grows is one that lies about the current text.
+  //
+  // Only the mentions a PERSON typed are reconciled — a link the sweep made is
+  // the model's reading of an entry that never contained an @, and rewriting the
+  // body must not silently delete it.
+  if ('body' in b) {
+    try {
+      const names = parseMentions(row.body);
+      const byName = await resolveMentions(env, {
+        campaignId: guard.entry.campaign_id, names, email: guard.email,
+      });
+      const statements = reconcileStatements(env, {
+        entryId: row.id,
+        npcIdsByName: byName,
+        existingMentionNpcIds: await existingMentions(env, row.id),
+      });
+      if (statements.length) await env.DB.batch(statements);
+    } catch { /* a note is the thing being saved; see journal.js */ }
+  }
   return json({ entry: row });
 }
 
