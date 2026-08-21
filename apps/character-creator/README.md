@@ -21,6 +21,9 @@ Access gate. No build step, no framework, no dependencies.
 - [A fighting style is a level schedule](#a-fighting-style-is-a-level-schedule)
 - [Language: Other, once per language](#language-other-once-per-language)
 - [Level-up skill picks](#level-up-skill-picks)
+- [Starting above level 1](#starting-above-level-1)
+  - [What the levels are allowed to change](#what-the-levels-are-allowed-to-change)
+  - [Per-level spells are not in the data](#per-level-spells-are-not-in-the-data)
 - [The race is chosen first](#the-race-is-chosen-first)
   - [A roll can now miss a minimum](#a-roll-can-now-miss-a-minimum)
   - [Two class fields, not one](#two-class-fields-not-one)
@@ -79,7 +82,7 @@ Everything the app reads at runtime is in D1. There are no static content files
 
 ```
 apps/character-creator/
-├── index.html / app.js       Creation wizard (9 steps). app.js is an ES module.
+├── index.html / app.js       Creation wizard (10 steps). app.js is an ES module.
 ├── sheet.html / sheet.js     Character sheet, laid out after the printed Rifts sheet
 ├── dashboard.html / dashboard.js  GM dashboard: roster, GM notes, campaign journal
 ├── import.html / import.js   Admin-only PDF import — Class, Skills, Spells,
@@ -89,6 +92,9 @@ apps/character-creator/
 ├── styles.css                All five pages, layered on /shared/styles.css
 ├── js/parser.js              RCC/OCC markdown parser (ES module — also used by the API)
 ├── js/dice.js                Dice evaluator (ES module — also used by the API)
+├── js/leveling.js            XP curve and the level-up diff (ES module — the API
+│                             re-exports it; the wizard builds characters that
+│                             start above level 1 from the same engine)
 ├── js/catalog-fields.js      What every catalog row looks like (ES module — the
 │                             editor, the write endpoints and the importers all
 │                             build themselves from it)
@@ -881,6 +887,113 @@ pending with its count reduced — so two picks earned at level 3 can be taken o
 at a time. Both paths write the skills and the claim in a single batch, because
 a pick that consumed its grant without landing on the sheet would be lost.
 
+## Starting above level 1
+
+A player joining an established party used to have to be built at 1 and levelled
+up five times through the XP endpoint, one confirmation at a time, inventing the
+XP the character never earned to get there.
+
+The wizard now asks for a **starting level** on the Race step, 1 to whatever the
+class's own XP table caps at. Above 1, an **Advancement** step appears after
+Powers.
+
+**It is not a second system.** `buildProposal(character, cls, toLevel)` already
+computed the whole diff for a span of levels, and by the end of the Powers step
+the level-1 character is complete — which is exactly the input that function
+takes. So starting at level 6 is *build at 1, then run the engine the live
+level-up already uses*. That is why `js/leveling.js` moved into the app: the
+browser cannot import anything under `functions/`, and
+`_lib/leveling.js` now re-exports it so every server import is unchanged. Same
+arrangement as `js/dice.js`, and for the same reason.
+
+**One proposal per level, not one for the span.** The step runs the engine once
+for each level gained, which is what makes a single level re-rollable — open
+level 4, re-roll its dice, and every other level stays exactly as it stands.
+Each level's growth is independent of the running total (the proposal reports
+`from`/`to` and only the difference is kept), so every call starts from the
+level-1 character.
+
+The step opens on the summary — total pool growth, all skill picks, all spell
+and psionic picks — with a collapsed section per level underneath. A player who
+wants six levels resolved in one click gets that; one who wants to roll each
+level's hit points separately gets that too.
+
+### What the levels are allowed to change
+
+| | |
+|---|---|
+| pool maxima | **rolled**, per level, from the class's `per level` formula |
+| skills held since level 1 | advanced by `per_level × levels gained`, capped at 98% |
+| skills picked with a grant | **not** advanced — a skill learned at level 5 is new, and starts at its catalog base |
+| skill picks left blank | banked in `pending_skill_picks`, shown unspent on the sheet |
+| XP | set to the level's own threshold, server-side |
+| starting gear and money | **unchanged** |
+
+**Gear and money do not scale, deliberately.** The books do not rule on what a
+veteran owns, so any multiplier would be an invented rule and what a level-6
+character has is a table conversation. Do not quietly add a per-level allowance.
+
+**XP is not sent by the client.** The server reads `xpTableFor(cls)` and sets XP
+to `thresholdFor(table, level)`, so the level and the XP beside it cannot
+disagree. A level-6 character left at 0 XP reads as under-levelled to the XP
+endpoint, and the very next award proposes a level-up it has already had.
+
+**The server does not trust the pick count.** The wizard sends `picks_spent`;
+the create endpoint recomputes the allowance with `skillGrantsFor(cls, 1, level)`
+and banks the remainder, consuming from the earliest grant first — the same rule
+a live level-up follows, now shared as `remainingGrants()` so the two cannot
+drift. The character is also validated at **the level being created**, not at 1,
+because the related and secondary allowances grow with level and judging a
+level-6 character against a level-1 allowance refuses skills its class granted.
+
+`validate-character.js` warns `xp_below_level` when a character above level 1
+has less XP than its level needs. Hand-edited data and a G.M. levelling someone
+by hand both produce it legitimately, so it is a warning and never a violation —
+and the admin audit had to start selecting `xp` and passing it, because a
+warning nothing hands the number to is a warning that never fires.
+
+### Per-level spells are not in the data
+
+`magic.spells_starting` and `psionics.powers_starting` are **level-1 counts**.
+Until this change nothing in a class definition said what is learned per level —
+only skills had a `schedule`. The books do state it, so the honest answer for a
+class that has not been re-imported is *not recorded*, which is a different
+answer from *none*:
+
+```yaml
+magic:
+  spells_starting: 6
+  spells_per_level: 2                                  # a flat rule
+  # or, when the book varies it:
+  spells_schedule: [{ level: 2, count: 2 }, { level: 3, count: 3 }]
+psionics:
+  powers_per_level: 1
+  powers_schedule: [{ level: 4, count: 2 }]
+```
+
+`spellGrantsFor` and `psionicGrantsFor` return three distinguishable states:
+`applicable: false` (the class has no magic at all), `unknown: true` (it has
+magic and states no per-level rule), and a list of grants itemised by the level
+that earned each. The Advancement step prints the difference — a class stating
+nothing says so and offers nothing, rather than showing an empty list that reads
+as *this class learns nothing at level 4*.
+
+A schedule is the **complete** statement when present and a flat `*_per_level`
+is ignored alongside it. Two keys that combine is a rule nobody remembers
+correctly six months later.
+
+`extraction-prompt.js` names all four keys, because
+[a field the prompt does not mention is a field that never arrives](#known-limitations-and-refactor-candidates) —
+`variants` shipped as schema the prompt was never told about and the first class
+with age stages came back with both stat blocks dropped.
+
+**Applying per-level spells during a LIVE level-up is not in this change.**
+`buildProposal` reports them, and the sheet's level-up renders named fields and
+ignores them, so nothing there promises what it cannot deliver. Only the
+wizard's Advancement step acts on them.
+
+---
+
 ## The race is chosen first
 
 The wizard's order follows how a character is actually made: you are a dragon,
@@ -1568,7 +1681,7 @@ than claiming a row that no longer exists.
 
 ## Unfinished builds are saved
 
-The wizard is nine steps and step 3 **rolls**. A refresh, a stray back-gesture
+The wizard is ten steps and step 3 **rolls**. A refresh, a stray back-gesture
 or a closed tab used to lose all of it — and a roll is the one thing you cannot
 honestly redo: you either accept different numbers or re-roll until you like
 them.

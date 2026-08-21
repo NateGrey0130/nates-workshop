@@ -12,7 +12,7 @@
 import { json, requireCharacter } from '../../_lib/auth.js';
 import { loadCharacterClass } from '../../_lib/class-loader.js';
 import { xpTableFor, thresholdFor, skillGrantsFor } from '../../_lib/leveling.js';
-import { insertGrantStatements, resolvePicks, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
+import { insertGrantStatements, remainingGrants, resolvePicks, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
 import { validateCharacter, loadSkillCategories } from '../../_lib/validate-character.js';
 import { loadCharacter } from '../../_lib/character-json.js';
 
@@ -117,21 +117,13 @@ export async function onRequestPost({ request, env, params }) {
     ).bind(params.id, character.level, toLevel, character.xp, JSON.stringify(changes)),
   ];
 
-  // Bank only what was not spent in this same request, consuming ACROSS grants
-  // from the earliest first. Taking whole grants instead would keep the right
-  // total but attribute it to the wrong level — spending 1 of a level-3 pair
-  // would bank "level 3 x 2" and lose the level-6 grant entirely.
+  // Bank only what was not spent in this same request. The consume-from-the-
+  // earliest rule is shared with the create path, which banks the same way for
+  // a character that starts above level 1.
   const unspent = allowance - picked.skills.length;
   if (unspent > 0) {
-    let toSpend = picked.skills.length;
-    const remaining = [];
-    for (const g of grants) {
-      const consumed = Math.min(g.count, toSpend);
-      toSpend -= consumed;
-      const left = g.count - consumed;
-      if (left > 0) remaining.push({ ...g, count: left });
-    }
-    statements.push(...insertGrantStatements(env, params.id, remaining));
+    statements.push(...insertGrantStatements(env, params.id,
+      remainingGrants(grants, picked.skills.length)));
   }
 
   await env.DB.batch(statements);

@@ -19,9 +19,12 @@ import { isChoiceGroup, isGearChoice, applyVariant,
          categoryAllows, categoryLabel, needsOccupation, abilityOccOptions,
          bonusesFromSkills, sumBonusGroups } from './js/parser.js';
 import { composeClass } from './js/compose.js';
+import { buildProposal, xpTableFor, thresholdFor,
+         skillGrantsFor, spellGrantsFor, psionicGrantsFor } from './js/leveling.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
-const STEPS = ['System', 'Race', 'Attributes', 'Occupation', 'Skills', 'Equipment', 'Powers', 'Details', 'Review'];
+const STEPS = ['System', 'Race', 'Attributes', 'Occupation', 'Skills', 'Equipment', 'Powers',
+               'Advancement', 'Details', 'Review'];
 // Steps by name. Every transition used to be a bare index — goStep(3) — and
 // splitting Class into two meant finding all fourteen of them by eye. Named
 // once, so the next step inserted anywhere costs nothing but this list.
@@ -106,6 +109,14 @@ const S = {
   // from the race's — so switching occupation re-rolls its half and leaves the
   // race's alone. rolledAll() is the only thing that sees them summed.
   occAttrBonuses: {}, occRolledBonuses: { combat: {}, saves: {} },
+  // A character may start above level 1. Everything the levels earn is resolved
+  // on the Advancement step, which exists only while this is above 1.
+  level: 1,
+  // What the levels above 1 rolled and chose. Held apart from the level-1
+  // build rather than folded into it, because the two are answerable to
+  // different rules: a skill picked at level 5 starts at its catalog base and
+  // is NOT back-dated, while a skill held since level 1 advances per level.
+  levelPools: {}, levelSpells: [], levelPsi: [], levelPicks: {},
   // Attributes re-rolled because a chosen O.C.C. raised a minimum the original
   // roll missed. Kept so the assist is visible as one rather than presented as
   // what the dice said first — posted as play events once the character exists.
@@ -239,6 +250,30 @@ function rollOccBonuses() {
   S.occRolledBonuses = { combat: r.combat, saves: r.saves };
 }
 
+// The pools as saved: the level-1 roll plus every level's growth. Kept apart in
+// state — S.pools is what the class rolled, S.levelPools is what the levels
+// added — so Review's reroll button can re-roll one, the other, or both without
+// either having to be reconstructed by subtraction.
+// What the character starts with, from the class's own XP table — the same
+// call the server makes, so the number on Review is the number that is stored.
+function startingXp() {
+  return thresholdFor(xpTableFor(S.cls), S.level) ?? 0;
+}
+
+function poolsPayload() {
+  const base = S.pools || {};
+  const add = {};
+  for (const per of Object.values(S.levelPools || {})) {
+    for (const [f, v] of Object.entries(per)) add[f] = (add[f] || 0) + v;
+  }
+  const out = {};
+  for (const [key, field] of [['hp', 'hp_max'], ['sdc', 'sdc_max'], ['mdc', 'mdc_max'],
+                              ['ppe', 'ppe_max'], ['isp', 'isp_max']]) {
+    out[key] = base[key] == null ? base[key] : base[key] + (add[field] || 0);
+  }
+  return out;
+}
+
 // ---------- pools ----------
 // `force` distinguishes the lazy first computation from the Reroll button.
 // Only the button re-rolls what has already been rolled.
@@ -263,6 +298,9 @@ function computePools(force = false) {
   // so the Reroll button on Review covers it, and stored in bio because it is a
   // running number the player edits rather than anything the rules derive.
   rollAttrBonuses(force);
+  // Review's Reroll button re-rolls the whole character, and a character that
+  // starts above level 1 includes the levels it climbed to get there.
+  if (force) rollAdvancement(true);
 
   const money = rollPoolFormula(c.starting_money, S.attrs);
   if (money == null) delete S.bio.money; else S.bio.money = String(money);
@@ -312,29 +350,44 @@ const DRAFT_KEYS = [
   'spells', 'psi', 'bio', 'pools', 'longLived', 'bioRolls',
   'psiRoll', 'psiShape', 'psiCategory', 'attrBonuses', 'rolledBonuses', 'abilities',
   'occAttrBonuses', 'occRolledBonuses', 'minRerolls',
+  'level', 'levelPools', 'levelSpells', 'levelPsi', 'levelPicks',
 ];
 
 // Bumped whenever STEPS changes shape, because a draft stores `step` as an
-// INDEX into it. Version 1 is the eight-step list that had one combined Class
-// step; version 2 split it into Race and Occupation with Attributes between,
-// which moved every index from 2 upward.
-const STEPS_VERSION = 2;
+// INDEX into it.
+//
+//   1  the original eight steps, with one combined Class step
+//   2  Class split into Race and Occupation, Attributes between them
+//   3  Advancement inserted after Powers, for characters starting above level 1
+const STEPS_VERSION = 3;
 
 // An old draft's step index, mapped onto the current list. A draft stopped on
 // the old Class step resumes on Race, which is right: it had not committed to
 // an occupation in any way the new step could trust.
 //
-// Only the steps AFTER the inserted Occupation step move. System (0), Class→
-// Race (1) and Attributes (2) all keep their index; Skills was 3 and is 4, and
-// everything after it shifts by the same one.
+// Only the steps AFTER an inserted one move, and each version is one insertion,
+// so the migrations CHAIN: a version-1 draft runs through both.
+//
+//   1→2  Occupation inserted at 3; System, Race and Attributes keep 0, 1, 2
+//        and Skills onward shift by one.
+//   2→3  Advancement inserted at 7; everything up to Powers keeps its index
+//        and Details and Review shift by one.
 //
 // Drafts are unfinished builds a player expects to come back to, so this is a
 // mapping rather than a discard — and the resume OFFER reads the migrated index
 // too, or it would name the wrong step in the sentence asking you to resume.
+const STEP_MIGRATIONS = [
+  (i) => (i <= 2 ? i : i + 1),   // from version 1
+  (i) => (i <= 6 ? i : i + 1),   // from version 2
+];
+
 function migrateDraft(d) {
-  if (!d || (d.state && d.state.steps_version >= 2)) return d;
-  const map = (i) => (i <= 2 ? i : i + 1);
-  const step = map(d.step || 0);
+  if (!d) return d;
+  const from = Number(d.state?.steps_version) || 1;
+  if (from >= STEPS_VERSION) return d;
+  let step = d.step || 0;
+  // Index i of the list migrates version i+1 to i+2, so start where the draft is.
+  for (let v = from; v < STEPS_VERSION; v++) step = STEP_MIGRATIONS[v - 1](step);
   return { ...d, step, state: { ...(d.state || {}), step, steps_version: STEPS_VERSION } };
 }
 
@@ -478,7 +531,7 @@ function render() {
   if (!stepApplies(S.step)) S.step = seekStep(S.step, 1);
   renderStepper();
   [renderSystem, renderRace, renderAttributes, renderOccupation, renderSkills,
-   renderEquipment, renderPowers, renderDetails, renderReview][S.step]();
+   renderEquipment, renderPowers, renderAdvancement, renderDetails, renderReview][S.step]();
   wirePickers();
   queueDraftSave();
 }
@@ -514,6 +567,9 @@ function goStep(i) { if (stepApplies(i)) { S.step = i; render(); } }
 // A predicate rather than a hard-coded skip, because the next conditional step
 // (starting above level 1) plugs in here and the navigation stops caring.
 function stepApplies(i) {
+  // Nothing to advance through for a character that starts where everyone
+  // starts, which is the overwhelmingly common case.
+  if (i === ST.ADVANCEMENT) return S.level > 1;
   if (i !== ST.OCCUPATION) return true;
   if (!S.rcc) return true;
   // An ability that names practitioners claims the step whatever the category.
@@ -580,6 +636,7 @@ function resetBuild() {
   S.raceCls = null; S.cls = null;
   S.occAttrBonuses = {}; S.occRolledBonuses = { combat: {}, saves: {} };
   S.minRerolls = [];
+  S.level = 1; S.levelPools = {}; S.levelSpells = []; S.levelPsi = []; S.levelPicks = {};
 }
 
 // Step 1 — the race (browse | guided)
@@ -676,6 +733,7 @@ function raceBriefing() {
     ${fixed.length ? `<p class="small"><b>Skills it already knows</b>
       <span class="muted">${fixed.map((e) => esc(e.name) + (e.base != null ? ` ${e.base}%` : '')).join(' &middot; ')}</span>
       ${groups > 0 ? `<span class="muted"> &middot; and ${groups} to choose on the Skills step</span>` : ''}</p>` : ''}
+    ${startingLevelPicker()}
     ${c.category === 'rcc' ? `<p class="small muted">${needsOccupation(c)
       ? 'This race grants nothing to choose on its own — an occupation is normally taken alongside it, on the step after the dice.'
       : 'An occupation may be taken alongside this race on the step after the dice.'}</p>` : ''}
@@ -718,6 +776,46 @@ function blurb(text, max) {
   // nonsense - '4D6 M.D.' becomes 'M.D' - and a sentence followed by an ellipsis
   // is only slightly ugly, never wrong.
   return kept.trimEnd().replace(/[,;:—-]+$/, '') + '…';
+}
+
+// Where the character starts. On the RACE step rather than the Occupation step
+// the plan named, because the Occupation step does not exist for a character
+// whose primary class is an O.C.C. — which is most Rifts characters, and
+// exactly the ones a player joining an established party would build.
+//
+// Bounded by the class's own XP table, so a class whose curve stops short
+// cannot be asked for a level it has no threshold for. The server clamps to the
+// same table; this is the same rule stated where the player can see it.
+function startingLevelPicker() {
+  const cap = xpTableFor(applyVariant(S.rcc, S.variant)).length;
+  const level = Math.min(S.level, cap);
+  const opts = Array.from({ length: cap }, (_, i) => i + 1)
+    .map((n) => `<option value="${n}"${n === level ? ' selected' : ''}>Level ${n}</option>`).join('');
+  return `<div class="panel-inset" id="starting-level">
+    <h3>Starting level</h3>
+    <p class="muted small">Most characters start at 1. Starting higher is for joining a party
+      already under way — every level in between is worked through on its own step, so the
+      hit points are rolled and the skills, spells and powers each level earns are chosen
+      rather than assumed.</p>
+    <div class="rowline">
+      <select onchange="setStartingLevel(this.value)">${opts}</select>
+      ${level > 1 ? `<span class="muted small">starts with
+        ${thresholdFor(xpTableFor(applyVariant(S.rcc, S.variant)), level)?.toLocaleString() ?? '—'} XP,
+        the threshold for level ${level}</span>` : ''}
+    </div>
+    ${level > 1 ? `<p class="muted small">Starting equipment and money are <b>not</b> scaled up —
+      the books do not rule on what a veteran owns, so that stays a table conversation.</p>` : ''}
+  </div>`;
+}
+
+function setStartingLevel(v) {
+  const n = parseInt(v, 10);
+  if (!Number.isFinite(n) || n === S.level) return;
+  S.level = Math.max(1, n);
+  // A different span is a different set of dice and a different set of grants,
+  // so nothing rolled or chosen for the old one survives.
+  S.levelPools = {}; S.levelSpells = []; S.levelPsi = []; S.levelPicks = {};
+  render();
 }
 
 function classCard(c, score) {
@@ -1047,6 +1145,254 @@ function confirmRace() {
   // beside the roll it modifies. computePools() re-rolls it later if asked.
   rollAttrBonuses(true);
   goStep(ST.ATTRIBUTES);
+}
+
+// Step 7 — everything the levels above 1 earn.
+//
+// Placed AFTER Powers rather than woven through the earlier steps, because by
+// this point the level-1 character is complete — which is exactly the input
+// buildProposal takes. "Start at level 6" is therefore not a second system: it
+// is build at 1, then run the engine the live level-up already uses.
+//
+// Batched by default with a section per level, so a player who wants six levels
+// resolved in one click gets that and one who wants to roll each level's hit
+// points separately gets that too.
+function renderAdvancement() {
+  rollAdvancement();
+  const cls = S.cls;
+  const gained = S.level - 1;
+  const skillGrants = skillGrantsFor(cls, 1, S.level);
+  const spells = spellGrantsFor(cls, 1, S.level);
+  const psionics = psionicGrantsFor(cls, 1, S.level);
+
+  // Totals first: this is the summary the step opens on.
+  const poolTotals = {};
+  for (const per of Object.values(S.levelPools)) {
+    for (const [f, v] of Object.entries(per)) poolTotals[f] = (poolTotals[f] || 0) + v;
+  }
+  const poolLabel = { hp_max: 'H.P.', sdc_max: 'S.D.C.', mdc_max: 'M.D.C.', ppe_max: 'P.P.E.', isp_max: 'I.S.P.' };
+  const poolSummary = Object.entries(poolTotals)
+    .map(([f, v]) => `<span class="tag">${poolLabel[f] || f} +${v}</span>`).join(' ');
+
+  // Skills held since level 1 advance; this says by how much without listing
+  // forty rows, because the per-skill arithmetic is on the sheet afterwards.
+  const advancing = skillsAtLevelOne().filter((sk) => sk.pct && sk.per_level).length;
+
+  $('app').innerHTML = `
+  <div class="panel">
+    <h2>Advancement <span class="muted small">— levels 2 to ${S.level}</span></h2>
+    <p class="muted small">${gained} ${gained === 1 ? 'level' : 'levels'} of growth, itemised by the
+      level that earned each part. Open a level to roll its dice on their own.</p>
+
+    <div class="panel-inset">
+      <h3>What ${esc(cls.name)} gains</h3>
+      <p class="small">${poolSummary || '<span class="muted">No pool grows per level for this class.</span>'}</p>
+      <p class="small muted">${advancing} ${advancing === 1 ? 'skill advances' : 'skills advance'}
+        by their per-level step. A skill picked at a later level starts at its catalog base
+        instead — it is new, not back-dated.</p>
+      <button class="btn btn-sm btn-ghost" onclick="rerollAdvancement()">🎲 Re-roll every level</button>
+    </div>
+
+    ${levelSections(skillGrants, spells, psionics)}
+    ${skillPickBlock(skillGrants)}
+    ${advPowerBlock('spell', spells)}
+    ${advPowerBlock('psi', psionics)}
+  </div>
+  <div class="nav"><button class="btn btn-ghost" onclick="goStep(ST.POWERS)">&larr; Back</button>
+  <button class="btn btn-primary" onclick="goStep(ST.DETAILS)">Details &rarr;</button></div>`;
+}
+
+// The skill picks the levels granted, one row of slots per grant.
+//
+// A select per slot rather than the Skills step's filtered checkbox list: a
+// grant is typically one or two picks, and a full picker for two choices is
+// more machinery than the choice deserves. The filtering rule is identical —
+// categoryAllows, the same helper the Skills step and the server validator
+// share — so what is offered here is what is legal there.
+//
+// Leaving a slot blank is allowed. It banks as a pending pick and the sheet
+// shows it unspent, exactly as an unspent level-up grant does: creating a
+// character is never blocked on choosing a skill.
+function skillPickBlock(grants) {
+  if (!grants.length) return '';
+  const taken = takenNames();
+  const spent = picksSpent();
+  const total = grants.reduce((n, g) => n + g.count, 0);
+
+  const body = grants.map((g, gi) => {
+    const chosen = S.levelPicks[gi] || [];
+    const slots = Array.from({ length: g.count }, (_, slot) => {
+      const mine = new Set(chosen.filter((_, i) => i !== slot).map((n) => String(n).toLowerCase()));
+      const options = S.skillCatalog
+        .filter((sk) => inSystem(sk))
+        .filter((sk) => !g.categories || categoryAllows(g.categories, sk))
+        .filter((sk) => {
+          const key = String(sk.name).toLowerCase();
+          return (!taken.has(key) && !mine.has(key)) || sk.name === chosen[slot];
+        })
+        .sort((a, b) => (a.category || '').localeCompare(b.category || '') || a.name.localeCompare(b.name));
+      return `<div class="rowline">
+        <select onchange="setLevelPick(${gi}, ${slot}, this.value)">
+          <option value="">— leave for later —</option>
+          ${options.map((sk) => `<option value="${esc(sk.name)}"${
+            chosen[slot] === sk.name ? ' selected' : ''}>${esc(sk.name)}${
+            sk.category ? ` (${esc(sk.category)})` : ''}</option>`).join('')}
+        </select>
+      </div>`;
+    }).join('');
+
+    const where = g.categories
+      ? g.categories.map((c) => categoryLabel(c)).join(', ')
+      : 'any skill';
+    return `<p class="small" style="margin-top:10px"><b>Level ${g.level}</b> —
+      ${g.count} ${g.kind === 'secondary' ? 'secondary' : 'related'} ${g.count === 1 ? 'pick' : 'picks'}
+      <span class="muted">from ${esc(where)}</span></p>${slots}`;
+  }).join('');
+
+  return `<div class="panel-inset" id="level-skill-picks">
+    <h3>Skill picks <span class="muted small">— ${spent} of ${total} chosen</span></h3>
+    <p class="muted small">Anything left blank is banked and waits on the character sheet.</p>
+    ${body}
+  </div>`;
+}
+
+function setLevelPick(gi, slot, name) {
+  const list = S.levelPicks[gi] || (S.levelPicks[gi] = []);
+  list[slot] = name || null;
+  render();
+}
+
+// New spells and psionic powers the levels earn.
+//
+// `unknown` is not the same answer as none, and this is the one place a player
+// finds out which they have. A class whose definition states no per-level rule
+// says so plainly rather than showing an empty list that reads as "this class
+// learns nothing" — see js/leveling.js.
+function advPowerBlock(kind, grant) {
+  if (!grant.applicable) return '';
+  const isSpell = kind === 'spell';
+  const label = isSpell ? 'Spells' : 'Psionic powers';
+
+  if (grant.unknown) {
+    return `<div class="panel-inset">
+      <h3>${label} per level</h3>
+      <p class="warn">This class's definition does not record how many ${
+        isSpell ? 'spells' : 'powers'} it learns at each level, so none are offered here.
+        The books do state it for most classes — re-import the class with
+        <code>${isSpell ? 'spells_per_level' : 'powers_per_level'}</code>, or add them by hand
+        on the sheet afterwards. Nothing is guessed.</p>
+    </div>`;
+  }
+  if (!grant.total) return '';
+
+  const chosen = isSpell ? S.levelSpells : S.levelPsi;
+  const pool = isSpell ? advSpellPool() : advPsiPool();
+  const filterKey = isSpell ? 'spellFilter' : 'psiFilter';
+  const list = Picker.filter(pool, S[filterKey])
+    .concat(pool.filter((x) => chosen.includes(x.name) && !Picker.match(x, S[filterKey])));
+
+  const byLevel = grant.grants.map((g) => `level ${g.level}: ${g.count}`).join(' · ');
+  return `<div class="panel-inset">
+    <h3>${label} — ${chosen.length}/${grant.total} <span class="muted small">(${esc(byLevel)})</span></h3>
+    <p class="muted small">Chosen as one set rather than level by level: the books put no
+      restriction on which level a given spell was learned at.</p>
+    ${Picker.inputHtml({ id: isSpell ? 'spell-filter' : 'psi-filter', value: S[filterKey],
+      placeholder: `Filter ${isSpell ? 'spells' : 'powers'}…`,
+      shown: Picker.filter(pool, S[filterKey]).length, total: pool.length })}
+    ${isSpell ? spellGroupRows(list, grant.total, 'spell-adv') : psiGroupRows(list, grant.total, 'psi-adv')}
+  </div>`;
+}
+
+// The same pools the Powers step offers, minus what the character already
+// holds — a spell cannot be learned twice.
+function advSpellPool() {
+  const magic = S.cls.magic || null;
+  const levels = Array.isArray(magic?.spell_levels_allowed) ? magic.spell_levels_allowed : null;
+  return S.spellCatalog.filter((sp) => inSystem(sp)
+    && (!levels || levels.includes(sp.level))
+    && !S.spells.includes(sp.name));
+}
+
+function advPsiPool() {
+  const cls = psiClass();
+  const psi = psiConfig(cls);
+  if (!psi) return [];
+  const tier = cls.psionics.type;
+  const named = psi.from && new Set(psi.from.map((n) => n.toLowerCase()));
+  const inCategory = named
+    ? S.psiCatalog.filter((x) => inSystem(x) && named.has(String(x.name).toLowerCase()))
+    : S.psiCatalog.filter((x) => inSystem(x) && psi.cats.includes(x.category));
+  // The per-power tier gate applies here exactly as it does at level 1. Out-of
+  // tier powers stay unselectable rather than becoming an override, which is
+  // the deliberate asymmetry with skill categories: those get bent at the
+  // table, psychic tiers do not.
+  return inCategory.filter((x) => derive.meetsTier(tier, x.min_tier) && !S.psi.includes(x.name));
+}
+
+// One collapsed section per level, saying what that level alone contributed.
+function levelSections(skillGrants, spells, psionics) {
+  const poolLabel = { hp_max: 'H.P.', sdc_max: 'S.D.C.', mdc_max: 'M.D.C.', ppe_max: 'P.P.E.', isp_max: 'I.S.P.' };
+  let out = '';
+  for (let lvl = 2; lvl <= S.level; lvl++) {
+    const pools = S.levelPools[lvl] || {};
+    const rolled = Object.entries(pools).map(([f, v]) => `${poolLabel[f] || f} +${v}`).join(' · ');
+    const earned = [
+      ...skillGrants.filter((g) => g.level === lvl)
+        .map((g) => `${g.count} ${g.kind === 'secondary' ? 'secondary' : 'related'} skill ${g.count === 1 ? 'pick' : 'picks'}`),
+      ...spells.grants.filter((g) => g.level === lvl).map((g) => `${g.count} new ${g.count === 1 ? 'spell' : 'spells'}`),
+      ...psionics.grants.filter((g) => g.level === lvl).map((g) => `${g.count} new psionic ${g.count === 1 ? 'power' : 'powers'}`),
+    ];
+    out += `<details class="lvl-row">
+      <summary><b>Level ${lvl}</b> <span class="muted small">${esc(rolled || 'no pool growth')}${
+        earned.length ? ' · ' + esc(earned.join(', ')) : ''}</span></summary>
+      <div class="rowline" style="margin-top:8px">
+        <button class="btn btn-sm btn-ghost" onclick="rerollAdvancement(${lvl})">🎲 Re-roll level ${lvl} only</button>
+        <span class="muted small">Rolling one level leaves every other level exactly as it stands.</span>
+      </div>
+    </details>`;
+  }
+  return out;
+}
+
+// The dice half, rolled ONCE and kept — everything else this step shows is
+// deterministic and is recomputed on every render.
+//
+// One proposal per level rather than one for the whole span, which is what
+// makes a single level re-rollable. Each level's growth is independent of the
+// pool's running total (the proposal reports from/to and only the difference is
+// kept), so every call starts from the level-1 character.
+function rollAdvancement(force = false, onlyLevel = null) {
+  if (!S.cls || S.level <= 1) return;
+  if (!force && !onlyLevel && Object.keys(S.levelPools).length) return;
+  // Pools are computed lazily, and Review used to be the first step that needed
+  // them. This one comes earlier: without it every pool is null here, the
+  // proposal skips them all, and the step reports that six levels grew nothing.
+  if (!S.pools) computePools();
+  const base = characterAtLevelOne();
+  for (let lvl = 2; lvl <= S.level; lvl++) {
+    if (onlyLevel && onlyLevel !== lvl) continue;
+    const p = buildProposal({ ...base, level: lvl - 1 }, S.cls, lvl);
+    S.levelPools[lvl] = Object.fromEntries(
+      Object.entries(p.pools).map(([f, v]) => [f, v.to - v.from]));
+  }
+}
+
+function rerollAdvancement(level) {
+  rollAdvancement(!level, level || null);
+  render();
+}
+
+// The level-1 character, in the shape buildProposal reads. Its pools must be
+// non-null or the proposal skips them — a class whose H.P. the wizard never
+// rolled has nothing to grow.
+function characterAtLevelOne() {
+  const pools = S.pools || {};
+  return {
+    level: 1,
+    hp_max: pools.hp ?? null, sdc_max: pools.sdc ?? null, mdc_max: pools.mdc ?? null,
+    ppe_max: pools.ppe ?? null, isp_max: pools.isp ?? null,
+    skills: skillsAtLevelOne(),
+  };
 }
 
 // Step 3 — the occupation, chosen after the dice.
@@ -1801,7 +2147,7 @@ function psiRollHtml() {
 // sorting the combined list files those into their proper groups instead of
 // leaving them dangling at the end. With a header per group, the per-row
 // "L3 ·" / "Healing ·" prefix is redundant and gone.
-function spellGroupRows(list, count) {
+function spellGroupRows(list, count, kind = 'spell') {
   const sorted = [...list].sort((a, b) =>
     ((a.level ?? Infinity) - (b.level ?? Infinity)) || (a.name || '').localeCompare(b.name || ''));
   const sizes = sorted.reduce((m, x) => { const g = x.level != null ? `Level ${x.level}` : 'Unleveled';
@@ -1813,17 +2159,18 @@ function spellGroupRows(list, count) {
       ? `<div class="pick-group">${esc(group)}<span class="pick-group-n">${sizes.get(group)}</span></div>`
       : '';
     last = group;
-    const on = S.spells.includes(sp.name);
-    const blocked = !on && S.spells.length >= count;
+    const sel = powerList(kind);
+    const on = sel.includes(sp.name);
+    const blocked = !on && sel.length >= count;
     return head + `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
       <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
-        data-act="power" data-kind="spell" data-name="${esc(sp.name)}">
+        data-act="power" data-kind="${kind}" data-name="${esc(sp.name)}">
       <span>${esc(sp.name)}${sp.ppe_note ? ` <span class="muted small">&mdash; ${esc(sp.ppe_note)}</span>` : ''}</span>
       <span class="pct">${sp.ppe}${sp.ppe_note && sp.ppe > 0 ? '+' : ''} P.P.E.</span></label>`;
   }).join('');
 }
 
-function psiGroupRows(list, count) {
+function psiGroupRows(list, count, kind = 'psi') {
   const sorted = [...list].sort((a, b) =>
     (a.category || '￿').localeCompare(b.category || '￿') || (a.name || '').localeCompare(b.name || ''));
   const sizes = sorted.reduce((m, x) => { const g = x.category || 'Uncategorized';
@@ -1835,11 +2182,12 @@ function psiGroupRows(list, count) {
       ? `<div class="pick-group">${esc(group)}<span class="pick-group-n">${sizes.get(group)}</span></div>`
       : '';
     last = group;
-    const on = S.psi.includes(p.name);
-    const blocked = !on && S.psi.length >= count;
+    const sel = powerList(kind);
+    const on = sel.includes(p.name);
+    const blocked = !on && sel.length >= count;
     return head + `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
       <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
-        data-act="power" data-kind="psi" data-name="${esc(p.name)}">
+        data-act="power" data-kind="${kind}" data-name="${esc(p.name)}">
       <span>${esc(p.name)}${p.isp_note ? ` <span class="muted small">&mdash; ${esc(p.isp_note)}</span>` : ''}</span>
       <span class="pct">${p.isp}${p.isp_note && p.isp > 0 ? '+' : ''} I.S.P.</span></label>`;
   }).join('');
@@ -1915,7 +2263,8 @@ function renderPowers() {
     ${inner}
   </div>
   <div class="nav"><button class="btn btn-ghost" onclick="goStep(ST.EQUIPMENT)">&larr; Back</button>
-  <button class="btn btn-primary" onclick="goStep(ST.DETAILS)">Details &rarr;</button></div>`;
+  <button class="btn btn-primary" onclick="nextStep()">${
+    stepApplies(ST.ADVANCEMENT) ? 'Advancement' : 'Details'} &rarr;</button></div>`;
 }
 
 // Step 6 — bio details. Optional; the derived percentages come straight from
@@ -1945,7 +2294,7 @@ function renderDetails() {
     <p class="muted small">Combat bonuses and saving throws are derived the same way and appear on the
       sheet, where any of them can be overridden.</p>
   </div>
-  <div class="nav"><button class="btn btn-ghost" onclick="goStep(ST.POWERS)">&larr; Back</button>
+  <div class="nav"><button class="btn btn-ghost" onclick="prevStep()">&larr; Back</button>
   <button class="btn btn-primary" onclick="goStep(ST.REVIEW)">Review &rarr;</button></div>`;
 }
 
@@ -2000,8 +2349,21 @@ function setBio(key, value) {
   const v = String(value).trim();
   if (v) S.bio[key] = v; else delete S.bio[key];
 }
+// Four lists, not two: what the class grants at level 1, and what the levels
+// above it earned. Kept apart so each picker counts against its own budget —
+// folding the level-6 spells into S.spells would put the Powers step over its
+// starting allowance and read as a bug.
+function powerList(kind) {
+  switch (kind) {
+    case 'spell': return S.spells;
+    case 'psi': return S.psi;
+    case 'spell-adv': return S.levelSpells;
+    default: return S.levelPsi;
+  }
+}
+
 function togglePower(kind, name) {
-  const list = kind === 'spell' ? S.spells : S.psi;
+  const list = powerList(kind);
   const i = list.indexOf(name);
   if (i >= 0) list.splice(i, 1); else list.push(name);
   render();
@@ -2021,8 +2383,12 @@ function powersPayload() {
     const seen = new Set(a.map((n) => n.toLowerCase()));
     return [...a, ...b.filter((n) => !seen.has(String(n).toLowerCase()))];
   };
-  const spellNames = held(autoSpells, S.spells);
-  const psiNames = held(autoPsi, S.psi);
+  // Four sources, in order of how the character came by them: granted by the
+  // class, chosen at level 1, then learned on the way up. `held` keeps the list
+  // a set, so a spell learned later that the class already granted is dropped
+  // rather than listed twice.
+  const spellNames = held(held(autoSpells, S.spells), S.levelSpells);
+  const psiNames = held(held(autoPsi, S.psi), S.levelPsi);
   return [
     ...spellNames.map((n) => {
       const sp = S.spellCatalog.find((x) => x.name === n);
@@ -2058,7 +2424,11 @@ function powersPayload() {
 // modify, and giving it a number would invent a roll that does not exist.
 const SKILL_PCT_CAP = 98;   // p.22: "there is always a margin for error"
 
-function skillsPayload() {
+// The character's skills as they stand at level 1 — the class's own, the
+// choice-group picks, and the related and secondary skills chosen on the
+// Skills step. Split out from skillsPayload because the Advancement step needs
+// exactly this: the input a level-up proposal is computed against.
+function skillsAtLevelOne() {
   const find = (n) => skillByName().get(n)
     || (isLanguageName(n) ? { ...(skillByName().get(LANGUAGE_OTHER) || {}), name: n } : {});
   const occ = S.cls.skills?.occ_skills || [];
@@ -2093,6 +2463,49 @@ function skillsPayload() {
     ...S.secondary.map((n) => ({ name: n, category: find(n).category, pct: find(n).base || 0, per_level: find(n).per_level || 0, type: 'secondary' })),
   ].map(withIq);
 }
+
+// What actually gets saved: the level-1 skills advanced to the starting level,
+// plus anything picked with the grants those levels earned.
+//
+// The two halves follow OPPOSITE rules and that is the whole reason they are
+// computed separately. A skill held since level 1 advances by its per-level
+// step for every level gained. A skill picked at level 5 is NEW and starts at
+// its catalog base — it does not arrive back-dated with five levels of bonus.
+function skillsPayload() {
+  const rows = skillsAtLevelOne();
+  if (S.level <= 1) return rows;
+  const gained = S.level - 1;
+  const advanced = rows.map((sk) => (sk.pct && sk.per_level
+    ? { ...sk, pct: Math.min(SKILL_PCT_CAP, sk.pct + sk.per_level * gained) }
+    : sk));
+  return [...advanced, ...levelPickRows()];
+}
+
+// Skills chosen with the picks the levels granted. `gained_at_level` records
+// which level earned each, the same provenance a live level-up writes.
+function levelPickRows() {
+  const find = (n) => skillByName().get(n)
+    || (isLanguageName(n) ? { ...(skillByName().get(LANGUAGE_OTHER) || {}), name: n } : {});
+  const out = [];
+  skillGrantsFor(S.cls, 1, S.level).forEach((g, gi) => {
+    for (const name of (S.levelPicks[gi] || []).filter(Boolean)) {
+      const r = find(name);
+      out.push({
+        name, category: r.category, pct: r.base || 0, per_level: r.per_level || 0,
+        type: g.kind === 'secondary' ? 'secondary' : 'related',
+        gained_at_level: g.level,
+      });
+    }
+  });
+  return out;
+}
+
+// How many of the granted picks were actually spent. The server recomputes the
+// allowance from the class and banks whatever this leaves over, so a wrong
+// number here cannot grant a character more picks than its class allows.
+function picksSpent() {
+  return Object.values(S.levelPicks).flat().filter(Boolean).length;
+}
 // ---------- review layout ----------
 // The review used to run everything together as one dot-separated paragraph.
 // A Chiang-Ku Hatchling arrives with 31 skills, which as prose is unreadable
@@ -2121,7 +2534,8 @@ function listSection(title, entries) {
 
 function renderReview() {
   if (!S.pools) computePools();
-  const p = S.pools;
+  if (S.level > 1) rollAdvancement();
+  const p = poolsPayload();
   const campaigns = S.campaigns.filter((c) => c.system === S.system);
   const stat = (label, v) => v != null ? `<span class="statline">${label}: <b>${v}</b></span>` : '';
   $('app').innerHTML = `
@@ -2138,7 +2552,12 @@ function renderReview() {
       <input type="text" id="new-campaign" value="${esc(S.newCampaign)}" placeholder="New campaign name" onchange="S.newCampaign=this.value.trim()">
     </div>
 
-    <h3>${esc(S.cls.name)} <span class="muted small">(${esc(S.system)} · ${esc(S.cls.category)})</span> — Level 1, 0 XP</h3>
+    <h3>${esc(S.cls.name)} <span class="muted small">(${esc(S.system)} · ${esc(S.cls.category)})</span>
+      — Level ${S.level}, ${(startingXp()).toLocaleString()} XP</h3>
+    ${S.level > 1 ? `<p class="small muted">Starting above level 1: the pools below include
+      every level's growth, and ${picksSpent()} of
+      ${skillGrantsFor(S.cls, 1, S.level).reduce((n, g) => n + g.count, 0)} granted skill picks
+      are chosen — the rest are banked and wait on the sheet.</p>` : ''}
     <p class="small">Alignment: ${S.bio.alignment
       ? `<b>${esc(S.bio.alignment)}</b>${rules.alignmentGroup(S.bio.alignment) ? ` <span class="muted">(${rules.alignmentGroup(S.bio.alignment)})</span>` : ''}`
       : '<span class="warn">not chosen — required, see Details</span>'}</p>
@@ -2153,7 +2572,8 @@ function renderReview() {
         ${poolRow('H.P.', p.hp)}${poolRow('S.D.C.', p.sdc)}${poolRow('M.D.C.', p.mdc)}
         ${poolRow('P.P.E.', p.ppe)}${poolRow('I.S.P.', p.isp)}
         ${S.bio.money ? poolRow(rules.currencyLabel(S.system), S.bio.money) : ''}
-        <p class="muted small" style="margin-top:6px">Rolled from the class formulas. Reroll if your GM lets you.</p>
+        <p class="muted small" style="margin-top:6px">Rolled from the class formulas${
+          S.level > 1 ? ', levels included' : ''}. Reroll if your GM lets you.</p>
       </div>
     </div>
 
@@ -2204,9 +2624,15 @@ async function save() {
       // Both halves summed. Sending S.attrBonuses alone would drop every dice
       // bonus the occupation granted — the same loss the composition rules
       // already had to be taught once.
+      // The level the character STARTS at. XP is not sent: the server sets it
+      // to the level's own threshold, so the two cannot disagree.
+      level: S.level,
+      // How many granted picks were spent. The server recomputes the allowance
+      // and banks the remainder, so this cannot over-grant.
+      picks_spent: picksSpent(),
       attributes: S.attrs, attribute_bonuses: rolled.attributes,
       rolled_bonuses: { combat: rolled.combat, saves: rolled.saves }, abilities: S.abilities,
-      skills: skillsPayload(), powers: powersPayload(), pools: S.pools,
+      skills: skillsPayload(), powers: powersPayload(), pools: poolsPayload(),
       bio: S.bio,
       items: equipmentPayload().map((e) => ({ item_id: e.item_id, custom_name: e.custom_name, qty: e.qty, notes: e.notes })),
     };
@@ -2372,6 +2798,7 @@ Object.assign(window, {
   // ST would be a ReferenceError on every Back button.
   S, ST, render, computePools, goStep, nextStep, prevStep, pickSystem, classMode, quizPick, pickClass,
   confirmRace, rerollForMinimum, setMethod, setAllMethod, doRoll, rollAll, manualSet, pbAdj,
+  setStartingLevel, rerollAdvancement, setLevelPick,
   doPsiRoll, skipPsiRoll, setPsiShape, setPsiCategory,
   rollBio, rollBioAll, setLongLived,
   rmEquip, addCatalog, addCustom, setBio, save, startOver,

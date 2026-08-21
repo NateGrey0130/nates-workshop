@@ -142,6 +142,18 @@ th {
    and "there is no occupation step for this one" reads as information. */
 .stepper .st.na { opacity: 0.4; border-style: dashed; cursor: default; }
 
+/* Advancement: one collapsible row per level gained. Collapsed by default —
+   the step opens on the summary, and a level is opened only when someone wants
+   to roll it on its own. */
+.lvl-row {
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 12px; margin-top: 8px; background: var(--bg-secondary);
+}
+.lvl-row > summary { cursor: pointer; list-style: none; }
+.lvl-row > summary::-webkit-details-marker { display: none; }
+.lvl-row > summary::before { content: 'B8 '; color: var(--text-muted); }
+.lvl-row[open] > summary::before { content: 'BE '; }
+
 /* Class cards. The gap and the padding both went up: at 12px and 16px the
    cards read as one dense block rather than as separate things to choose
    between, which is the whole job of this step. The minimum column width

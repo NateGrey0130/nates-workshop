@@ -138,7 +138,8 @@ import { referencedGear, restrictionNames } from '../../../functions/api/charact
 import { CHARACTER_JSON_COLUMNS } from '../../../functions/api/character-creator/_lib/character-json.js';
 import { applyDecisions, classifyRows, countRows, getImportSpec, normaliseRows, slugify, stripFences, systemColumnFor } from '../../../functions/api/character-creator/_lib/import-engine.js';
 import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
-import { buildProposal, perLevelDiceOf, skillGrantsFor } from '../../../functions/api/character-creator/_lib/leveling.js';
+import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicGrantsFor,
+         xpTableFor, thresholdFor } from '../../../functions/api/character-creator/_lib/leveling.js';
 import { toMatchQuery } from '../../../functions/api/character-creator/campaigns/[id]/search.js';
 import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
 import { dedupeCategories } from '../../../functions/api/character-creator/_lib/skill-picks.js';
@@ -828,6 +829,96 @@ const DRAFT_KEYS = readFileSync(join(appDir, 'app.js'), 'utf8')
 
 check('the persisted key list is found in app.js', DRAFT_KEYS.length > 0);
 
+// ---------- Starting above level 1 ----------
+// The engine is the live level-up's, run before the character exists. What is
+// new is the per-level spell and psionic rules - and the honest answer for a
+// class whose definition does not state them.
+section('Per-level spells and psionics');
+{
+  const none = spellGrantsFor({}, 1, 6);
+  check('a class with no magic is not applicable', none.applicable === false && none.unknown === false);
+  check('and grants nothing', none.total === 0);
+
+  // The distinction the whole feature turns on. A caster whose class never
+  // recorded a per-level rule must not be shown an empty list, which reads as
+  // "this class learns no spells" - it is "nobody wrote it down".
+  const silent = spellGrantsFor({ magic: { type: 'innate', spells_starting: 6 } }, 1, 6);
+  check('a caster stating no per-level rule is UNKNOWN, not empty',
+    silent.applicable === true && silent.unknown === true);
+  check('and offers nothing rather than guessing', silent.total === 0);
+
+  const flat = spellGrantsFor({ magic: { spells_starting: 6, spells_per_level: 2 } }, 1, 4);
+  check('a flat rule grants once per level gained', flat.grants.length === 3, JSON.stringify(flat.grants));
+  check('itemised by the level that earned each',
+    JSON.stringify(flat.grants.map((g) => g.level)) === '[2,3,4]');
+  check('and totals correctly', flat.total === 6);
+  check('level 1 to 1 gains nothing', spellGrantsFor({ magic: { spells_per_level: 2 } }, 1, 1).total === 0);
+
+  const sched = spellGrantsFor({ magic: { spells_schedule: [
+    { level: 2, count: 2 }, { level: 3, count: 3 }, { level: 9, count: 4 }] } }, 1, 5);
+  check('a schedule counts every threshold crossed and no more',
+    JSON.stringify(sched.grants) === '[{"level":2,"count":2},{"level":3,"count":3}]');
+  check('a jump starting above 1 skips what it did not cross',
+    spellGrantsFor({ magic: { spells_schedule: [{ level: 2, count: 2 }, { level: 5, count: 1 }] } }, 3, 6)
+      .total === 1);
+
+  // Two keys that combine is a rule nobody remembers correctly later.
+  const both = spellGrantsFor({ magic: { spells_per_level: 9, spells_schedule: [{ level: 2, count: 1 }] } }, 1, 4);
+  check('a schedule is the complete statement and the flat rule is ignored', both.total === 1);
+
+  // Psionics reads the same shape from its own keys.
+  const psi = psionicGrantsFor({ psionics: { type: 'major', powers_per_level: 1 } }, 1, 5);
+  check('psionic powers use their own keys', psi.total === 4 && psi.unknown === false);
+  check('a psychic class stating no rule is unknown too',
+    psionicGrantsFor({ psionics: { type: 'major', powers_starting: 3 } }, 1, 5).unknown === true);
+  check('a class with no psionics is not applicable',
+    psionicGrantsFor({}, 1, 5).applicable === false);
+
+  // The proposal carries both, so one engine answers for the wizard and the
+  // API. The sheet's live level-up renders named fields and ignores these.
+  const cls = { hit_points_base: 'P.E. + 1d6 per level', magic: { spells_per_level: 2 } };
+  const prop = buildProposal({ level: 1, hp_max: 20, skills: [] }, cls, 3);
+  check('buildProposal reports the spell picks', prop.spell_picks?.total === 4);
+  check('and the psionic ones', prop.psionic_picks?.applicable === false);
+}
+
+// ---------- Starting XP ----------
+// A level-6 character with 0 XP reads as under-levelled to the XP endpoint, and
+// the very next award proposes a level-up it has already had.
+section('Starting XP');
+{
+  const table = xpTableFor({});
+  check('the threshold is the level’s own entry', thresholdFor(table, 1) === 0);
+  check('and rises with the level', thresholdFor(table, 6) === table[5]);
+  check('past the cap is null, not zero', thresholdFor(table, table.length + 1) === null);
+
+  // A class may state its own curve, and the create path must read the same
+  // table the level-up path does or the two disagree about what level 6 costs.
+  const own = xpTableFor({ xp_table: [0, 100, 200, 300] });
+  check('a class curve wins', thresholdFor(own, 3) === 200);
+  check('and its length caps the level', thresholdFor(own, 5) === null);
+
+  const src = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
+    'characters.js'), 'utf8');
+  check('the create path clamps the level to the class table', /Math\.min\(/.test(src) && /xpTable\.length/.test(src));
+  check('and sets XP from the threshold rather than the client',
+    /thresholdFor\(xpTable, level\)/.test(src) && !/b\.xp/.test(src));
+  check('and validates at the level being created, not at 1',
+    /character: \{ level \},/.test(src));
+  check('unspent picks are banked on create', /insertGrantStatements\(env, row\.id, remaining\)/.test(src));
+  check('and the allowance is recomputed server-side rather than trusted',
+    /skillGrantsFor\(cls, 1, level\)/.test(src));
+
+  // A warning nothing hands the number to is a warning that never fires. The
+  // audit is the one caller positioned to notice, so it has to SELECT xp and
+  // pass it - which is the shape of failure this repo has been bitten by
+  // before, under 'a field the prompt does not mention'.
+  const auditSrc = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
+    'admin', 'audit.js'), 'utf8');
+  check('the audit selects xp', /level, xp, attributes/.test(auditSrc));
+  check('and passes it to the validator', /level: row\.level, xp: row\.xp/.test(auditSrc));
+}
+
 // ---------- The wizard's step list ----------
 // A draft stores `step` as an INDEX into STEPS, so changing the list silently
 // re-points every draft in flight. The list, its version, and the mapping that
@@ -840,7 +931,7 @@ section('Wizard steps');
     ?.match(/'([^']+)'/g)?.map((x) => x.slice(1, -1)) || [];
 
   check('STEPS is found in app.js', steps.length > 0);
-  check('nine steps', steps.length === 9, String(steps.length));
+  check('ten steps', steps.length === 10, String(steps.length));
   // The whole point of PR 13: the race is chosen, then the dice are rolled,
   // then the occupation is chosen against a stat block that already exists.
   check('Race comes before Attributes',
@@ -851,25 +942,64 @@ section('Wizard steps');
     steps.indexOf('Occupation') < steps.indexOf('Skills'));
   check('the combined Class step is gone', !steps.includes('Class'));
 
+  // Advancement sits after the level-1 character is COMPLETE, because that is
+  // the input buildProposal takes. Before Powers it would run against a
+  // character whose psionic tier an ability could still change.
+  check('Advancement comes after Powers',
+    steps.indexOf('Advancement') > steps.indexOf('Powers'));
+  check('and before Details',
+    steps.indexOf('Advancement') < steps.indexOf('Details'));
+
   // Steps are addressed by name now. A bare goStep(4) in a nav button is how
   // inserting a step used to break three others silently.
   check('no step transition is a bare index',
     !/goStep\(\s*\d+\s*\)/.test(src.replace(/^\s*\/\/.*$/gm, '')));
 
-  check('the step list carries a version', /const STEPS_VERSION = 2;/.test(src));
+  const version = Number(src.match(/const STEPS_VERSION = (\d+);/)?.[1]);
+  check('the step list carries a version', version === 3, String(version));
 
-  // Attributes was index 2 before the split and is index 2 still - only the
-  // steps AFTER the inserted Occupation step move. Getting this off by one
-  // resumes every in-flight draft onto the wrong screen.
-  const map = eval(src.match(/const map = (\(i\) => \([^;]*\));/)?.[1] || 'null');
-  check('the draft step map is found', typeof map === 'function');
-  check('System stays put', map(0) === 0);
-  check('the old Class step resumes on Race', map(1) === steps.indexOf('Race'));
-  check('Attributes does not move', map(2) === steps.indexOf('Attributes'));
-  check('the old Skills step shifts by one', map(3) === steps.indexOf('Skills'));
-  check('and so does everything after it', map(7) === steps.indexOf('Review'));
-  check('no old index lands on Occupation',
-    ![0, 1, 2, 3, 4, 5, 6, 7].some((i) => map(i) === steps.indexOf('Occupation')));
+  // Each version is ONE insertion and the migrations chain, so a version-1
+  // draft runs through both. Off by one here resumes every in-flight draft
+  // onto the wrong screen, which is the whole reason this is pinned.
+  const migrations = eval(src.match(/const STEP_MIGRATIONS = (\[[\s\S]*?\n\];)/)?.[1]
+    ?.replace(/\/\/[^\n]*/g, '').replace(/;$/, '') || 'null');
+  check('the migration chain is found',
+    Array.isArray(migrations) && migrations.length === version - 1);
+
+  // Same walk migrateDraft does: start at the draft's version, apply each
+  // migration from there.
+  const migrate = (i, from) => {
+    let step = i;
+    for (let v = from; v < version; v++) step = migrations[v - 1](step);
+    return step;
+  };
+
+  // From version 1 - the original eight-step list.
+  check('System stays put', migrate(0, 1) === 0);
+  check('the old Class step resumes on Race', migrate(1, 1) === steps.indexOf('Race'));
+  check('Attributes does not move', migrate(2, 1) === steps.indexOf('Attributes'));
+  check('the old Skills step shifts by one', migrate(3, 1) === steps.indexOf('Skills'));
+  check('and the old Review lands on Review', migrate(7, 1) === steps.indexOf('Review'));
+
+  // From version 2 - the nine-step list, before Advancement existed.
+  check('a v2 Powers step does not move', migrate(6, 2) === steps.indexOf('Powers'));
+  check('a v2 Details step shifts by one', migrate(7, 2) === steps.indexOf('Details'));
+  check('a v2 Review step shifts too', migrate(8, 2) === steps.indexOf('Review'));
+
+  // A migrated draft must not land on a step that did not exist when it was
+  // saved: there is nothing on it the draft could have filled in, and
+  // stepApplies would walk straight off it for most characters.
+  //
+  // A version-2 draft stopped ON the Occupation step is the exception and stays
+  // there, because that step already existed for it. Only Advancement is new.
+  const occupation = steps.indexOf('Occupation');
+  const advancement = steps.indexOf('Advancement');
+  check('no version-1 index lands on a step version 1 never had',
+    ![0, 1, 2, 3, 4, 5, 6, 7].some((i) => [occupation, advancement].includes(migrate(i, 1))));
+  check('no version-2 index lands on Advancement',
+    ![0, 1, 2, 3, 4, 5, 6, 7, 8].some((i) => migrate(i, 2) === advancement));
+  check('but a version-2 Occupation step stays where it is',
+    migrate(occupation, 2) === occupation);
 
   // A missed minimum warns and offers a re-roll; it never refuses. Same rule
   // the occupation warning already follows, and the reason the Attributes step

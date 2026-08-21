@@ -36,7 +36,7 @@
 import { isChoiceGroup, categoryAllows, categoryName, needsOccupation,
          isAbilityChoice, isAbilityDefinition, abilityOptions, normalizeAbilities, abilityOccOptions } from '../../../../apps/character-creator/js/parser.js';
 
-import { skillGrantsFor } from './leveling.js';
+import { skillGrantsFor, xpTableFor, thresholdFor } from './leveling.js';
 
 const norm = (s) => String(s ?? '').trim().toLowerCase();
 
@@ -80,6 +80,21 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
 
   const violations = [];
   const warnings = [];
+
+  // A character above level 1 whose XP is behind that level's threshold. Two
+  // legitimate sources - a character CREATED at a starting level, and one a
+  // G.M. levelled by hand - so this is a warning and never a violation. It
+  // exists so the number is visible rather than silently inconsistent with the
+  // level beside it.
+  if (character?.level > 1 && Number.isFinite(character?.xp)) {
+    const needed = thresholdFor(xpTableFor(cls), character.level);
+    if (needed != null && character.xp < needed) {
+      warnings.push({
+        rule: 'xp_below_level', level: character.level, xp: character.xp, needed,
+        message: `Level ${character.level} normally needs ${needed} XP; this character has ${character.xp}`,
+      });
+    }
+  }
 
   // The usual structure is a race and then an occupation. A racial class that
   // grants nothing to CHOOSE - no related, no secondary - is not a playable

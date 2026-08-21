@@ -9,6 +9,8 @@ import { getUserEmail, unauthorized, json, readJson } from './_lib/auth.js';
 import { paging, pagedQuery, pageBody } from './_lib/paging.js';
 import { loadCharacterClass } from './_lib/class-loader.js';
 import { validateCharacter, loadSkillCategories } from './_lib/validate-character.js';
+import { xpTableFor, thresholdFor, skillGrantsFor } from './_lib/leveling.js';
+import { insertGrantStatements, remainingGrants } from './_lib/skill-picks.js';
 
 // GET /api/character-creator/characters — list for linking to sheets.
 // ?campaign_id= filters; ?limit= and ?offset= page (default 200, max 500).
@@ -80,8 +82,25 @@ export async function onRequestPost({ request, env }) {
   // A class that grants psionics has already answered the question, so a rolled
   // tier is not recorded alongside it — the two would contradict each other.
   const tier = cls?.psionics?.from_roll ? rolledTier : null;
+  // A character may START above level 1 - a player joining an established
+  // party, or one built to match the table. Bounded by the class's own XP
+  // table, so a class whose curve stops at 10 cannot be asked for 12, and
+  // floored at 1 because there is no level 0.
+  const xpTable = xpTableFor(cls);
+  const level = Math.max(1, Math.min(
+    Number.isFinite(Number(b.level)) ? Math.trunc(Number(b.level)) : 1,
+    xpTable.length));
+
+  // XP is the level's own threshold rather than zero. A level-6 character with
+  // 0 XP reads as under-levelled to the XP endpoint, and the very next award
+  // proposes a level-up the character has already had.
+  const xp = thresholdFor(xpTable, level) ?? 0;
+
+  // Validated at the level being CREATED, not at 1: the related and secondary
+  // allowances grow with level, and judging a level-6 character against a
+  // level-1 allowance refuses skills the class legitimately granted.
   const { violations } = validateCharacter({
-    character: { level: 1 },
+    character: { level },
     cls,
     skills: b.skills || [],
     abilities: b.abilities || [],
@@ -101,10 +120,11 @@ export async function onRequestPost({ request, env }) {
        hp_max, hp_current, sdc_max, sdc_current, mdc_max, mdc_current,
        ppe_max, ppe_current, isp_max, isp_current,
        bio, combat, saves, armor, notes
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      RETURNING id`
   ).bind(
     b.campaign_id, email, b.name, b.class_id, variant, occId, occVariant, tier, tier ? psychicShape : null,
+    level, xp,
     JSON.stringify(b.attributes || {}), JSON.stringify(b.attribute_bonuses || {}),
     JSON.stringify(b.rolled_bonuses || {}),
     JSON.stringify(b.skills || []), JSON.stringify(b.powers || []),
@@ -116,12 +136,29 @@ export async function onRequestPost({ request, env }) {
   ).first();
 
   const items = (b.items || []).filter((it) => it.item_id || it.custom_name);
-  if (items.length) {
-    await env.DB.batch(items.map((it) =>
-      env.DB.prepare(
-        'INSERT INTO character_items (character_id, item_id, custom_name, qty, equipped, notes) VALUES (?, ?, ?, ?, ?, ?)'
-      ).bind(row.id, it.item_id ?? null, it.custom_name ?? null, it.qty || 1, it.equipped ? 1 : 0, it.notes ?? null)
-    ));
+  const statements = items.map((it) =>
+    env.DB.prepare(
+      'INSERT INTO character_items (character_id, item_id, custom_name, qty, equipped, notes) VALUES (?, ?, ?, ?, ?, ?)'
+    ).bind(row.id, it.item_id ?? null, it.custom_name ?? null, it.qty || 1, it.equipped ? 1 : 0, it.notes ?? null));
+
+  // Skill picks the levels above 1 earned and the player did not spend. The
+  // wizard says how many it spent; what it cannot do is grant itself more than
+  // the class allows, so the allowance is recomputed here and the claim is
+  // clamped to it.
+  //
+  // Banked rather than required, the same rule a live level-up follows:
+  // creating a character is never blocked on choosing a skill.
+  let pending = 0;
+  if (level > 1 && cls) {
+    const grants = skillGrantsFor(cls, 1, level);
+    const allowance = grants.reduce((n, g) => n + g.count, 0);
+    const spent = Math.max(0, Math.min(allowance,
+      Number.isFinite(Number(b.picks_spent)) ? Math.trunc(Number(b.picks_spent)) : 0));
+    const remaining = remainingGrants(grants, spent);
+    pending = remaining.reduce((n, g) => n + g.count, 0);
+    statements.push(...insertGrantStatements(env, row.id, remaining));
   }
-  return json({ id: row.id }, 201);
+
+  if (statements.length) await env.DB.batch(statements);
+  return json({ id: row.id, level, xp, picks_pending: pending }, 201);
 }
