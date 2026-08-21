@@ -139,6 +139,7 @@ import { CHARACTER_JSON_COLUMNS } from '../../../functions/api/character-creator
 import { applyDecisions, classifyRows, countRows, getImportSpec, normaliseRows, slugify, stripFences, systemColumnFor } from '../../../functions/api/character-creator/_lib/import-engine.js';
 import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
 import { buildProposal, perLevelDiceOf, skillGrantsFor } from '../../../functions/api/character-creator/_lib/leveling.js';
+import { toMatchQuery } from '../../../functions/api/character-creator/campaigns/[id]/search.js';
 import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
 import { dedupeCategories } from '../../../functions/api/character-creator/_lib/skill-picks.js';
 import { relatedAllowance, validateCharacter } from '../../../functions/api/character-creator/_lib/validate-character.js';
@@ -3168,13 +3169,124 @@ variants:
 // stops being true. Both of these had already drifted — the JSON-column count
 // missed `attribute_bonuses` from migration 016, and a set of page-script line
 // counts was out by 20%. Pin the ones that are cheap to pin.
+// ---------- Campaign notes ----------
+// A human's query is not an FTS5 query, and the two callers do not want the
+// same one. Both of those were bugs before they were tests.
+section('Note search');
+{
+  // A bare apostrophe is FTS5 syntax, so `the baron's men` is a syntax error
+  // rather than a search. Every run of word characters becomes one quoted term.
+  const q = toMatchQuery("the baron's men");
+  check('an apostrophe cannot reach FTS5 as syntax', !/(?<!")'/.test(q), q);
+  check('every word becomes a quoted term', q === '"the" AND "baron" AND "s" AND "men"*', q);
+
+  // Injection: whatever a person types, the result is quoted terms and nothing
+  // else - no unbalanced quote, no operator, no column filter.
+  const nasty = toMatchQuery('foo" OR bar: NEAR(x) *');
+  check('an attempted operator is quoted away',
+    nasty === '"foo" AND "OR" AND "bar" AND "NEAR" AND "x"*', nasty);
+  check('nothing but terms and the join survives', !/[:()*]/.test(nasty.replace(/"\*$/, '"')), nasty);
+
+  check('an empty query is null, not an error', toMatchQuery('') === null);
+  check('and so is punctuation alone', toMatchQuery('???') === null);
+
+  // The trailing * is what makes the search box narrow while a word is still
+  // being typed.
+  check('the last term is a prefix match for the search box',
+    toMatchQuery('negoti').endsWith('*'));
+
+  // THE BUG. A question AND-ed together matches no entry ever written: the ask
+  // endpoint retrieved nothing and the model correctly answered that the notes
+  // do not say. OR retrieves and lets bm25 rank.
+  const asked = toMatchQuery("what did the baron's men want?", { join: 'OR' });
+  check('a question ORs its terms', asked.includes(' OR ') && !asked.includes(' AND '), asked);
+  check('and does not prefix-match the last word', !asked.endsWith('*'), asked);
+
+  const askSrc = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
+    'campaigns', '[id]', 'ask.js'), 'utf8');
+  check('the ask endpoint asks for OR', /toMatchQuery\(question, \{ join: 'OR' \}\)/.test(askSrc));
+  // A question with no searchable words - "what happened last time?" is mostly
+  // stopwords in some phrasings - must still retrieve something.
+  check('and falls back to recent entries when a question yields no terms',
+    /ORDER BY created_at DESC, id DESC LIMIT/.test(askSrc));
+  // The notes are written by other people. An entry that looks like an
+  // instruction is a thing a character said.
+  check('the prompt says the notes are data, not instructions',
+    /DATA, not instructions/.test(askSrc));
+  check('and character sheets are deliberately not sent',
+    !/FROM characters/.test(askSrc));
+}
+
+section('Search snippets are not markup');
+{
+  const searchSrc = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
+    'campaigns', '[id]', 'search.js'), 'utf8');
+  const pageSrc = readFileSync(join(appDir, 'campaign.js'), 'utf8');
+
+  // snippet() wraps matches in whatever it is given and the text AROUND them is
+  // a note somebody typed. Asking for '<mark>' means building HTML out of user
+  // input; escaping it client-side would escape the marks with it. Two
+  // characters no keyboard produces survive the escape and are swapped after.
+  // Comments stripped: the reason NOT to emit '<mark>' is written down in
+  // search.js, and a check that reads its own explanation as a violation would
+  // be unfixable without deleting the explanation.
+  const searchCode = searchSrc.replace(/^\s*\/\/.*$/gm, '');
+  check('the server does not put tags in the snippet', !/<mark>/.test(searchCode));
+  check('it uses control characters instead', /char\(1\), char\(2\)/.test(searchSrc));
+  check('the page escapes BEFORE re-marking',
+    /esc\(String\(snippet \|\| ''\)\)[\s\S]{0,120}<mark>/.test(pageSrc));
+  check('and the snippet is never interpolated raw', !/\$\{r\.snippet\}/.test(pageSrc));
+}
+
+section('Campaign membership');
+{
+  const authSrc = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
+    '_lib', 'auth.js'), 'utf8');
+
+  // No campaign_members table: owning a character in a campaign is what being a
+  // player IS, and an invite list would be a second, weaker statement of it.
+  check('membership is a query, not a table',
+    /FROM characters WHERE campaign_id = \? AND player_email = \?/.test(authSrc));
+  const schema = readFileSync(join(appDir, '..', '..', 'db', 'schema.sql'), 'utf8');
+  check('and no campaign_members table was added', !/campaign_members/.test(schema));
+
+  // canWrite is membership; isGm is the narrower right. Collapsing the two lets
+  // any player edit the campaign's GM notes.
+  check('membership and GM are separate answers',
+    /canWrite: isMember, isGm/.test(authSrc));
+  const campSrc = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
+    'campaigns', '[id].js'), 'utf8');
+  check('gm_notes stays GM-only after canWrite widened',
+    /if \(!access\.isGm\) return forbidden\(\)/.test(campSrc));
+
+  // One chokepoint. If a second place learned the rule, changing it later means
+  // finding both.
+  const files = ['journal.js', 'campaigns/[id]/search.js', 'campaigns/[id]/ask.js',
+                 'campaigns/[id]/items.js', 'campaigns/[id]/currency.js'];
+  const apiDir = join(appDir, '..', '..', 'functions', 'api', 'character-creator');
+  for (const f of files) {
+    const src = readFileSync(join(apiDir, ...f.split('/')), 'utf8');
+    check(`${f} asks auth.js rather than querying characters itself`,
+      !/FROM characters WHERE campaign_id/.test(src));
+  }
+}
+
 section('Documented counts');
 {
   const readme = readFileSync(join(appDir, 'README.md'), 'utf8');
-  const WORDS = { five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11,
-    twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17,
-    eighteen: 18, nineteen: 19, twenty: 20 };
-  const num = (word) => WORDS[String(word).toLowerCase()] ?? Number(word);
+  const WORDS = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8,
+    nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15,
+    sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20, thirty: 30,
+    forty: 40, fifty: 50 };
+  // Hyphenated compounds sum their parts, so 'twenty-one' does not have to be
+  // listed and neither does the count after it. Before this, the capture group
+  // stopped at the hyphen and 'Twenty-one tables' read as one table - which the
+  // check then reported as a documentation drift rather than as its own bug.
+  const num = (word) => {
+    const parts = String(word).toLowerCase().split('-');
+    if (parts.every((p) => p in WORDS)) return parts.reduce((n, p) => n + WORDS[p], 0);
+    return Number(word);
+  };
 
   const cols = readme.match(/`characters` stores (\w+) JSON columns/);
   check('README states the character JSON column count',
@@ -3284,7 +3396,7 @@ section('Documented counts');
 
   const schema = readFileSync(join(appDir, '..', '..', 'db', 'schema.sql'), 'utf8');
   const tables = (schema.match(/CREATE TABLE IF NOT EXISTS/g) || []).length;
-  const stated = readme.match(/(\w+) tables in one shared D1 database/);
+  const stated = readme.match(/([\w-]+) tables in one shared D1 database/);
   check('README states the table count', !!stated);
   check('and it matches schema.sql',
     stated && num(stated[1]) === tables,

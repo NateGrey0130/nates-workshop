@@ -37,6 +37,10 @@ Access gate. No build step, no framework, no dependencies.
 - [Psychic tiers](#psychic-tiers)
 - [A blocked step says why](#a-blocked-step-says-why)
 - [How the sheet updates](#how-the-sheet-updates)
+- [Anyone at the table can write the log](#anyone-at-the-table-can-write-the-log)
+  - [Membership is not a table](#membership-is-not-a-table)
+  - [Search is free, asking costs a call](#search-is-free-asking-costs-a-call)
+  - [The stash is an inventory the party owns](#the-stash-is-an-inventory-the-party-owns)
 - [Play mode](#play-mode)
 - [Server-side rule enforcement](#server-side-rule-enforcement)
 - [The catalog field config](#the-catalog-field-config)
@@ -195,7 +199,7 @@ touches MediaVault and FilamentForge too — they use its `openModal` /
 
 ## Data model
 
-Nineteen tables in one shared D1 database (`nates-workshop-media`, bound as `DB`).
+Twenty-one tables in one shared D1 database (`nates-workshop-media`, bound as `DB`).
 `media_items` belongs to MediaVault and `schema_migrations` is database
 bookkeeping shared by both; the rest are this app.
 
@@ -209,6 +213,9 @@ bookkeeping shared by both; the rest are this app.
 | `journal_entries` | `character_id` NULL means a campaign-level entry. |
 | `level_history` | One row per confirmed level-up; `changes` is a JSON diff of what was actually applied. |
 | `pending_skill_picks` | Skill picks a level-up granted and nobody has spent yet. One row per **grant**, not per pick, so "2 picks from level 3" stays itemised. `categories` is copied from the class at level-up time — the class can change later, what you were granted cannot. |
+| `campaign_items` | The party stash: `character_items`' shape, owned by a campaign. `removed_at` NULL means still held; `claimed_by_character_id` says it left for a sheet rather than being spent or lost. |
+| `campaign_currency` | Party money as an append-only **ledger**. The balance is `SUM(delta)`, so no stored total can disagree with its own history. `currency` is free text — the two systems use different coin. |
+| `journal_fts` | FTS5 index over `journal_entries`. External-content: it holds no copy of the text, and three triggers keep it current. |
 
 `characters` stores ten JSON columns rather than a very wide table — the list
 lives in `_lib/character-json.js` as `CHARACTER_JSON_COLUMNS`:
@@ -391,7 +398,13 @@ writes are gated (see [Permissions](#permissions)).
 | `catalogs/redirects` | GET / DELETE | Admin. Retired keys and where they resolve (`?catalog=`); DELETE stops forwarding one (`&id=`). No POST — redirects are written by merges and renames |
 | `items` | GET | Gear catalog (table is `gear`), plus retired slugs as `redirects`. `?system=` — a NULL system is unrestricted, matching how `skills.systems` reads |
 | `campaigns` | GET / POST | List (`?system=`, `?limit=`, `?offset=`); create (caller becomes GM) |
-| `campaigns/[id]` | GET / PATCH | Details (`gm_notes` stripped for non-GM); edit `gm_notes` |
+| `campaigns/[id]` | GET / PATCH | Details (`gm_notes` stripped for non-GM, and `is_member`); edit `gm_notes`, **GM only** |
+| `campaigns/[id]/search` | GET | FTS5 search over the campaign's notes (`?q=`, `?author=`, `?since=`). Free and instant — this is what runs as you type |
+| `campaigns/[id]/ask` | POST | `{question}` → a written answer over the notes, stash and ledger, citing the entries it used. One model call per press; see [Search is free, asking costs a call](#search-is-free-asking-costs-a-call) |
+| `campaigns/[id]/items` | GET / POST | The party stash (`?include_removed=1` for history); add a catalog or freeform item |
+| `campaigns/[id]/items/[itemId]` | PATCH / DELETE / POST | qty/notes; soft remove; **POST claims it onto a character's sheet in one batch** |
+| `campaigns/[id]/currency` | GET / POST | Balances and the ledger behind them; append a signed entry |
+| `journal/[entryId]` | PATCH / DELETE | Edit or delete one entry — the author, or the GM |
 | `draft` | GET / PUT / DELETE | The caller's own unfinished wizard build. No id in the route — a draft belongs to a person, not a collection. One each. **PUT states the version it is replacing** in `expect_updated_at` and is refused 409 otherwise; see [Two tabs cannot overwrite each other](#two-tabs-cannot-overwrite-each-other) |
 | `characters` | GET / POST | List (`?campaign_id=`, `?limit=`, `?offset=`); create at level 1 — **validated against the class rules** |
 | `characters/[id]` | GET / PATCH | Sheet + inventory, with `can_write` / `is_gm`; edit pools, notes, and the bio/combat/saves/armor sections. Also returns `skill_level_notes` and `weapon_bonuses` — what a skill grants that is not a summable number; see [A fighting style is a level schedule](#a-fighting-style-is-a-level-schedule) |
@@ -1682,6 +1695,157 @@ it, or the saved array acquires a hole.
 
 ---
 
+## Anyone at the table can write the log
+
+`journal_entries` existed and was reachable only from a character sheet, and
+only the G.M. could write a campaign-level entry. There was no campaign-level
+place to read the log, no search over it, and nothing tracking what the party
+held together.
+
+[`campaign.html`](campaign.html) is the campaign's own page: the note feed with
+a composer, the search box with an **Ask** button beside it, the party stash and
+the currency ledger.
+
+### Membership is not a table
+
+A person may read and write a campaign's notes if they are its **G.M.** or they
+**own a character assigned to it**. That is a query, not a schema:
+
+```sql
+SELECT 1 FROM characters WHERE campaign_id = ? AND player_email = ? LIMIT 1
+```
+
+There is no `campaign_members` table, deliberately. Owning a character in a
+campaign is what being a player *is*, so an invite list would be a second and
+weaker statement of the same fact, kept in sync by hand. Rejected alongside it:
+a join code, which lets anyone with site access into any campaign they have the
+code for.
+
+The cost is real and accepted: **a spectator, or a player between characters,
+cannot post.** When that bites, an invite list can be added inside
+`campaignAccess()` and nothing else has to learn about it — that function is the
+only thing that knows the rule, which is what makes the decision reversible.
+
+Three permissions, not one:
+
+| | who |
+|---|---|
+| read and write notes, stash, ledger | any **member** (`canWrite`) |
+| edit or delete one entry | its **author**, or the G.M. |
+| `gm_notes` on the campaign | the **G.M.** alone (`isGm`) |
+
+Everyone in a campaign writing notes is one thing; any of them rewriting each
+other's account of a session is another, so the G.M. keeps the moderator's key
+because somebody has to have it.
+
+**Widening `canWrite` widened something else.** `campaigns/[id]`'s PATCH checked
+`canWrite` back when that meant "the G.M.", so the moment membership widened it,
+every player could edit the campaign's `gm_notes` — the one pre-existing secret
+in an app that had just decided it has none. That endpoint checks `isGm` now.
+Anything else that reaches for `canWrite` should be read the same way: it is a
+different question than it used to be.
+
+**Reads are member-gated here, which is narrower than the rest of the app**,
+where any authenticated friend may read a character sheet. A sheet being
+readable and a table's session notes being readable are different things.
+
+**There are no G.M.-only notes and no hidden fields**, decided explicitly rather
+than by omission: a G.M. keeping secrets keeps them outside the app. That is
+load-bearing — it means the search index and the ask endpoint need no visibility
+filtering at all beyond "is this person in this campaign". Adding secrets later
+means auditing every one of those paths, so it is worth re-opening deliberately
+rather than drifting into.
+
+### Search is free, asking costs a call
+
+Two mechanisms, one box. Typing searches; a button asks.
+
+- **Search** is SQLite **FTS5** over titles and bodies — instant, free, runs
+  debounced as you type, and returns a highlighted snippet so a result says
+  *why* it matched.
+- **Ask** sends the best-ranked entries to Claude and returns a written answer
+  **citing the entries it used**, resolved from `[#id]` back to rows the page
+  links to. One deliberate press, one model call.
+
+Rejected: keyword-only, which cannot answer *"what did the baron want from
+us?"* — the actual question people ask; and routing every query through the
+model, which is slow and paid for what `LIKE` would have answered.
+
+Three things this got wrong first:
+
+- **A human's query is not an FTS5 query.** `the baron's men` is a syntax error,
+  not a search: FTS5 reads the apostrophe as syntax. Every run of word
+  characters becomes one quoted term instead, which is both what a person means
+  and injection-proof. The last term gets a trailing `*`, so results narrow
+  while the word is still being typed.
+- **`snippet()` returns markup, and the text around a match is a note somebody
+  typed.** Asking for `<mark>` means building HTML out of user input; escaping
+  it client-side escapes the marks with it. So the delimiters are U+0001 and
+  U+0002 — two characters no keyboard produces — and the client escapes first
+  and swaps them for tags after.
+- **A question is not a search, and AND-ing it retrieves nothing.** The search
+  box wants every word to appear, because that is how a list narrows as you
+  type. An ask does not: *"what did the baron's men want, and do we still have
+  the rune sword?"* with every term required matches no entry ever written. The
+  endpoint retrieved nothing, handed the model an empty context, and got back a
+  perfectly correct *"the notes do not record it"* — **a failure that looks
+  exactly like the feature working.** `toMatchQuery` takes `{ join: 'OR' }` for
+  the ask path and lets `bm25` do the ranking.
+- **A question with no searchable words retrieves nothing either.** *"What
+  happened last time?"* matches on no keyword and is exactly what people ask, so
+  a question that yields no terms falls back to the most recent entries.
+
+**What Ask may read:** the campaign's notes, the party stash and the currency
+ledger — *"do we still have the rune sword"* and *"how much have we spent"* are
+the same kind of question living in different tables. **Not** the party's
+character sheets, decided explicitly: sheet questions are answered by looking at
+the sheet, and five full characters would dominate the prompt.
+
+Retrieval is the same FTS5 index the search box uses. A campaign's notes are a
+small corpus and ranked keyword matching is adequate context for it; embeddings
+would add a store, a backfill and a re-embed-on-edit path for a retrieval
+problem that is not yet hard.
+
+The system prompt states that the notes are **data, not instructions** — they
+are written by other people, and an entry recording that *"the merchant told us
+to ignore our previous orders"* is a thing a character said.
+
+### The stash is an inventory the party owns
+
+`campaign_items` is `character_items`' shape with a `campaign_id`: real gear
+catalog rows, freeform items allowed, tied to the journal entry that explains
+the acquisition, and **soft-deleted** — *what did we used to have* is a question
+a party asks and a `DELETE` cannot answer.
+
+**Claiming an item onto a sheet is one batch.** The two halves are the same fact
+stated twice: an item that left the stash without arriving on a sheet is
+destroyed, and one that arrived without leaving has been duplicated. Neither is
+visible in the result, which is what makes it worth a batch rather than two
+awaits. Only the character's owner or the G.M. may claim for it — otherwise a
+member could push party loot onto someone else's sheet, which is a table
+argument the app should not be able to start.
+
+Rejected: a stash with no transfers (two places to edit for one object, and they
+drift within a session), and a free-form shared text block (no history when
+someone deletes a line, which is exactly when history matters).
+
+**Currency is a ledger, not a number.** The balance is `SUM(delta)`, so no
+stored total can disagree with its own history. Entries are appended and never
+updated; a mistake is corrected by an opposing entry that says so. A zero delta
+is refused — an entry that changes nothing is either a mistake or a note, and
+there is a notes feature for the second one. Currency names are lower-cased on
+the way in, because `Credits` and `credits ` are the same pile of money and two
+balances for one currency is the failure a ledger exists to prevent.
+
+**Deleting a note is a hard delete**, unlike the stash's soft one. A note is
+somebody's writing and *unsend* should mean it; keeping a tombstone of what a
+player asked to remove is the opposite of what they asked for. The FTS index
+follows via its trigger, and `campaign_items.journal_entry_id` is
+`ON DELETE SET NULL`, so an item keeps its place and simply stops pointing at an
+explanation that no longer exists.
+
+---
+
 ## Play mode
 
 The sheet through an **action-first lens**, shaped for a phone or tablet at
@@ -2637,6 +2801,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `022-play-events.sql` | `play_events` — play mode's append-only action log: undo, the who-did-what trail, and the session recap boundary |
 | `023-skill-bonuses.sql` | `skills.bonuses` — what a skill grants beyond its percentage, in a class's `bonuses:` shape. Boxing is +1 attack per melee and +2 P.S. |
 | `024-data-script-runs.sql` | `data_script_runs` — which data scripts have run against this database. The same question `schema_migrations` answers for migrations, for the 55 scripts that answer it nowhere |
+| `026-campaign-notes.sql` | `journal_fts` and its three triggers, plus `campaign_items` and `campaign_currency`. The FTS table is external-content, so the triggers are not optional — without them the index silently stops matching anything written after the migration ran |
 | `025-skill-level-bonuses.sql` | `skills.level_bonuses` — what a skill grants **at each level**, summed up to the character's. The Hand to Hand tables are level-by-level and accumulative, which the flat `bonuses` column cannot express; entries may carry `applies_when` for a W.P. bonus that needs that weapon in hand |
 
 ### Standing up a new environment

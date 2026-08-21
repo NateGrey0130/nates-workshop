@@ -1,18 +1,34 @@
 // GET  /api/character-creator/journal?campaign_id=&character_id= — newest first.
 //      character_id omitted = all entries for the campaign (NULL character_id
-//      rows are campaign-level).
+//      rows are campaign-level). MEMBERS ONLY.
 // POST /api/character-creator/journal — character-level entries need owner/GM
-//      of that character; campaign-level entries (no character_id) need the GM.
+//      of that character; campaign-level entries (no character_id) need only
+//      MEMBERSHIP of the campaign, which is what "anyone at the table can write
+//      up the session" requires.
+//
+// Reads are member-gated here, which is narrower than the rest of the app,
+// where any authenticated friend may read. A character sheet being readable and
+// a campaign's session notes being readable are different things: the notes are
+// one table's private record of its own game.
+//
+// PATCH and DELETE for a single entry live in journal/[entryId].js.
 
 import { getUserEmail, unauthorized, json, forbidden, characterAccess, campaignAccess, readJson } from './_lib/auth.js';
 import { paging, pagedQuery, pageBody } from './_lib/paging.js';
 
 export async function onRequestGet({ request, env }) {
-  if (!getUserEmail(request)) return unauthorized();
+  const email = getUserEmail(request);
+  if (!email) return unauthorized();
   const url = new URL(request.url);
   const campaignId = url.searchParams.get('campaign_id');
   const characterId = url.searchParams.get('character_id');
   if (!campaignId) return json({ error: 'campaign_id is required' }, 400);
+
+  const access = await campaignAccess(env, campaignId, email);
+  if (!access.found) return json({ error: 'Campaign not found' }, 404);
+  if (!access.isMember) {
+    return json({ error: 'Only the GM or a player with a character in this campaign can read its notes' }, 403);
+  }
 
   // A character sheet wants that character's entries plus campaign-level ones,
   // which is a filter only the server can express — it used to fetch the whole
@@ -62,7 +78,12 @@ export async function onRequestPost({ request, env }) {
     if (!b.campaign_id) return json({ error: 'campaign_id or character_id is required' }, 400);
     const access = await campaignAccess(env, b.campaign_id, email);
     if (!access.found) return json({ error: 'Campaign not found' }, 404);
-    if (!access.canWrite) return forbidden();
+    // canWrite is MEMBERSHIP now, not the G.M. alone. This one line is the
+    // whole of "anyone in the campaign can add notes" — everything else about
+    // the rule lives in campaignAccess, which is the only thing that knows it.
+    if (!access.canWrite) {
+      return json({ error: 'Only the GM or a player with a character in this campaign can post notes' }, 403);
+    }
     campaignId = b.campaign_id;
   }
 

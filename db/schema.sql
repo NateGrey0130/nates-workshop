@@ -98,6 +98,65 @@ CREATE TABLE IF NOT EXISTS journal_entries (
 CREATE INDEX IF NOT EXISTS idx_journal_campaign ON journal_entries (campaign_id);
 CREATE INDEX IF NOT EXISTS idx_journal_character ON journal_entries (character_id);
 
+-- Full-text search over the journal. External-content FTS5, so the index holds
+-- no copy of the text and journal_entries stays the single source; the triggers
+-- are what keep it current, because an external-content table does not notice
+-- writes on its own.
+CREATE VIRTUAL TABLE IF NOT EXISTS journal_fts USING fts5(
+  title, body,
+  content='journal_entries', content_rowid='id',
+  tokenize='porter unicode61'
+);
+
+CREATE TRIGGER IF NOT EXISTS journal_fts_ai AFTER INSERT ON journal_entries BEGIN
+  INSERT INTO journal_fts(rowid, title, body) VALUES (new.id, new.title, new.body);
+END;
+-- 'delete' carries the OLD values because the index has no copy to look up.
+CREATE TRIGGER IF NOT EXISTS journal_fts_ad AFTER DELETE ON journal_entries BEGIN
+  INSERT INTO journal_fts(journal_fts, rowid, title, body)
+  VALUES ('delete', old.id, old.title, old.body);
+END;
+CREATE TRIGGER IF NOT EXISTS journal_fts_au AFTER UPDATE ON journal_entries BEGIN
+  INSERT INTO journal_fts(journal_fts, rowid, title, body)
+  VALUES ('delete', old.id, old.title, old.body);
+  INSERT INTO journal_fts(rowid, title, body) VALUES (new.id, new.title, new.body);
+END;
+
+-- The party stash: character_items' shape, owned by a campaign. Soft-deleted
+-- via removed_at, and tied to the journal entry explaining how it was acquired.
+CREATE TABLE IF NOT EXISTS campaign_items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  item_id INTEGER REFERENCES gear(id),              -- NULL = freeform custom item
+  custom_name TEXT,                                 -- required for freeform items
+  qty INTEGER NOT NULL DEFAULT 1,
+  notes TEXT,
+  journal_entry_id INTEGER REFERENCES journal_entries(id) ON DELETE SET NULL,
+  added_by TEXT NOT NULL,
+  added_at TEXT NOT NULL DEFAULT (datetime('now')),
+  removed_at TEXT,                                  -- NULL = still in the stash
+  removed_by TEXT,
+  claimed_by_character_id INTEGER REFERENCES characters(id) ON DELETE SET NULL,
+  CHECK (item_id IS NOT NULL OR custom_name IS NOT NULL)
+);
+CREATE INDEX IF NOT EXISTS idx_campaign_items_campaign ON campaign_items (campaign_id);
+
+-- Party currency as a ledger, not a number: the balance is SUM(delta), so no
+-- stored total can disagree with its own history. Rows are appended, never
+-- updated. `currency` is free text because the two systems use different coin.
+CREATE TABLE IF NOT EXISTS campaign_currency (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  currency TEXT NOT NULL,
+  delta INTEGER NOT NULL,                           -- signed; positive is income
+  reason TEXT,
+  journal_entry_id INTEGER REFERENCES journal_entries(id) ON DELETE SET NULL,
+  created_by TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_campaign_currency_campaign
+  ON campaign_currency (campaign_id, currency);
+
 CREATE TABLE IF NOT EXISTS level_history (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   character_id INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
@@ -481,3 +540,10 @@ WHERE EXISTS (SELECT 1 FROM pragma_table_info('spells') WHERE name = 'system')
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '025-skill-level-bonuses.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('skills') WHERE name = 'level_bonuses');
+
+-- Both halves: 026 adds the search index AND the two campaign-owned tables, so
+-- a database with the tables but no index has not finished the migration.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '026-campaign-notes.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'campaign_items')
+  AND EXISTS (SELECT 1 FROM sqlite_master WHERE name = 'journal_fts');
