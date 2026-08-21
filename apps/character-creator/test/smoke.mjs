@@ -3724,6 +3724,28 @@ section('Several grants at one level');
     JSON.stringify(spellNamesForGrant(shifter, 2, 0)) === '["Banishment","Charm","Teleport: Lesser"]');
   check('a slot without it draws on no list', spellNamesForGrant(shifter, 2, 1) === null);
 
+  // A class can have SEVERAL lists. The Ley Line Rifter learns one spell from
+  // List A and one from List B at every level, so `from_list` names which.
+  const rifter = { magic: { spell_lists: {
+      A: ['Dimensional Portal', 'Ley Line Transmission'],
+      B: ['Calling', 'Time Slip', 'Locate'] },
+    spells_schedule: [
+      { level: 2, count: 1, from_list: 'A' },
+      { level: 2, count: 1, from_list: 'B' },
+    ] } };
+  check('a named list is resolved by name',
+    JSON.stringify(spellNamesForGrant(rifter, 2, 0)) === '["Dimensional Portal","Ley Line Transmission"]');
+  check('and its sibling draws on the other one',
+    JSON.stringify(spellNamesForGrant(rifter, 2, 1)) === '["Calling","Time Slip","Locate"]');
+  check('a name matching no list restricts nothing rather than everything',
+    spellNamesForGrant({ magic: { spell_lists: { A: ['x'] },
+      spells_schedule: [{ level: 2, count: 1, from_list: 'Z' }] } }, 2, 0) === null);
+  // Both forms coexist: `true` for a class with one list, a name for several.
+  check('the single-list form still works',
+    JSON.stringify(spellNamesForGrant(shifter, 3, 0)) === '["Banishment","Charm","Teleport: Lesser"]');
+  check('a list-bounded slot is not also level-capped',
+    spellLevelsForGrant(rifter, 2, 0) === null);
+
   // A slot bounded by a NAMED LIST is not also bounded by a spell level - the
   // list is the restriction. Only the free slot is capped.
   check('a list slot has no level cap', spellLevelsForGrant(shifter, 2, 0) === null);
