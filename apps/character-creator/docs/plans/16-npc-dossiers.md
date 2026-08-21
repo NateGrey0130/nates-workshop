@@ -1,6 +1,7 @@
 # PR 16 — NPC dossiers and portraits
 
-> **Planned**, not built. Decisions taken in an interview on 2026-08-20.
+> **Built.** Decisions taken in an interview on 2026-08-20; the **As built**
+> notes below record what the plan did not survive contact with.
 
 ## Problem
 
@@ -9,6 +10,46 @@ Three sessions later nobody can say who the merchant in Kingsdale was, whether
 he is still alive, or what the party promised him.
 
 ## Decisions
+
+**As built: the plan never said what `@Name` actually matches**, which turned
+out to be the whole contract. Two capitalised words are one person, because
+`@Lord Coake` is somebody and stopping at the space links to a Lord nobody has
+met; three are not, because at that point the pattern swallows sentences.
+Trailing punctuation is trimmed (`@Kevik,` is Kevik), repeats in any case are
+one dossier, `@guard` is nothing because a description is not a name, and a bare
+`@` in "email me @ the usual place" is nothing at all. All of it is pinned in
+the smoke test, because every one of those is a decision somebody could
+reasonably make differently later.
+
+**As built: creating a dossier on first mention, not offering to.** The plan
+said typing an unknown name "offers to create one". Built the other way: the
+writer already committed by typing the `@`, and a confirmation step there means
+the note posts with a dangling reference while somebody decides. A dossier made
+this way holds only a name, which is exactly what is known about it.
+
+**As built: only the mentions a PERSON typed are reconciled on edit.** The plan
+said an edit reconciles `npc_mentions` for the entry, full stop. That would
+delete the sweep's links every time anybody fixed a typo — a link the model made
+is its reading of an entry that never contained an `@`, so there is nothing in
+the body for a reconcile to find. The DELETE is scoped to `source = 'mention'`.
+
+**As built: the portrait cache-buster cannot be `updated_at`.** Not in the plan
+at all, and a live bug once built. The portrait URL is stable
+(`…/npcs/12/portrait`) while the object behind it is not, and the response is
+cached `immutable`, so without a changing query the browser shows the first
+portrait forever. `updated_at` was the obvious buster and is wrong twice: it
+contains a space, which does not belong in a URL unencoded — the image did not
+load at all — and it changes when somebody edits the faction field, re-fetching
+an image that did not change. The buster is the object KEY. The roster
+thumbnails had no buster whatsoever.
+
+**As built: the D1 token cannot create the bucket.** `r2 bucket create` and
+`r2 bucket list` both fail with `Authentication error [code: 10000]` under the
+`CLOUDFLARE_API_TOKEN`, which is scoped to Account -> D1 -> Edit and has no R2
+scope. Recorded in the repo's `CLAUDE.md` next to the `whoami` note, because the
+two look alike and mean opposite things: `whoami` failing under this token is
+correct behaviour, and this is a real failure where the operation did not
+happen. The bucket was created through the dashboard instead.
 
 ### An NPC belongs to one campaign
 

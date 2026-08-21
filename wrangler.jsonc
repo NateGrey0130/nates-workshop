@@ -12,5 +12,20 @@
       "database_name": "nates-workshop-media",
       "database_id": "6de15679-1b2e-4f87-8dc2-ac64b24e33d2"
     }
+  ],
+  // The site's first R2 bucket. Named for the SITE rather than for the app that
+  // needed it first: MediaVault stores cover art as text today and
+  // filament-forge already reads file bytes, so the second and third users
+  // exist. Nothing is ever served from a public bucket URL - every read goes
+  // through a Function that checks who is asking, because the whole site sits
+  // behind Access and an open image endpoint would be the one hole in it.
+  //
+  // The bucket must EXIST before the deploy that binds it, same discipline as a
+  // migration: create it, then verify by listing it back. See SETUP.md.
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "nates-workshop-media"
+    }
   ]
 }
