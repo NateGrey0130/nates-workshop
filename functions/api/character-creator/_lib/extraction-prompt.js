@@ -126,6 +126,14 @@ Optional — include only what the page actually states:
     magic learn some — record it as \`spells_per_level: 2\`, or as
     \`spells_schedule: [{ level: 2, count: 2 }, { level: 3, count: 3 }]\` when the
     number varies. Use one or the other, never both.
+    If the book LIMITS which spell levels those per-level spells may come from,
+    record it as \`spells_per_level_levels\`. Two forms: the string
+    \`up_to_character_level\` when the limit tracks the character ("spells of a
+    level equal to or lower than their current level of experience"), or an
+    explicit list like \`[1, 2]\`. This is a DIFFERENT limit from
+    \`spell_levels_allowed\`, which governs only the starting selection, and the
+    two often disagree - a class can start with level 1-4 spells and still be
+    limited to its own level for the ones it learns afterwards.
     Omit them if the book does not say. A class that states no per-level rule
     is reported as "not recorded" rather than as learning nothing, so silence
     here is honest and a guess is not.

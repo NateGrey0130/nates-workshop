@@ -139,7 +139,7 @@ import { CHARACTER_JSON_COLUMNS } from '../../../functions/api/character-creator
 import { applyDecisions, classifyRows, countRows, getImportSpec, normaliseRows, slugify, stripFences, systemColumnFor } from '../../../functions/api/character-creator/_lib/import-engine.js';
 import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
 import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicGrantsFor,
-         xpTableFor, thresholdFor } from '../../../functions/api/character-creator/_lib/leveling.js';
+         xpTableFor, thresholdFor, spellLevelsForGrant } from '../../../functions/api/character-creator/_lib/leveling.js';
 import { toMatchQuery } from '../../../functions/api/character-creator/campaigns/[id]/search.js';
 import { parseMentions } from '../../../functions/api/character-creator/_lib/mentions.js';
 import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
@@ -868,6 +868,44 @@ section('Per-level spells and psionics');
   check('a schedule is the complete statement and the flat rule is ignored', both.total === 1);
 
   // Psionics reads the same shape from its own keys.
+  // WHICH spell levels a per-level grant may draw from - a different question
+  // from how many, and one the Ley Line Walker answers with a cap that tracks
+  // the character rather than a fixed list.
+  const llw = { magic: { spells_starting: 12, spell_levels_allowed: [1, 2, 3, 4],
+                         spells_per_level: 2, spells_per_level_levels: 'up_to_character_level' } };
+  check('the cap tracks the level that earned the grant',
+    JSON.stringify(spellLevelsForGrant(llw, 2)) === '[1,2]');
+  check('and widens as the character advances',
+    JSON.stringify(spellLevelsForGrant(llw, 6)) === '[1,2,3,4,5,6]');
+
+  // THE POINT. The per-level cap is STRICTER than the starting list at low
+  // levels and they disagree on purpose: a fresh walker picks twelve spells
+  // from levels 1-4, and the two it gains at level 2 may only be levels 1-2.
+  // Falling back to spell_levels_allowed here would let a level-2 walker take a
+  // level-4 spell, which is over-permissive in a way nobody would notice.
+  check('the per-level cap is not the starting list',
+    JSON.stringify(spellLevelsForGrant(llw, 2)) !== JSON.stringify(llw.magic.spell_levels_allowed));
+
+  // An explicit list is honoured, and a class stating neither falls back.
+  check('an explicit list wins',
+    JSON.stringify(spellLevelsForGrant({ magic: { spells_per_level_levels: [1, 2] } }, 9)) === '[1,2]');
+  check('with no per-level rule it falls back to the starting list',
+    JSON.stringify(spellLevelsForGrant({ magic: { spell_levels_allowed: [1, 2, 3] } }, 9)) === '[1,2,3]');
+  check('and a class restricting nothing is unrestricted',
+    spellLevelsForGrant({ magic: { spells_per_level: 2 } }, 4) === null);
+  check('no magic block is no answer', spellLevelsForGrant({}, 4) === null);
+
+  // The picker holds each grant separately, because the caps differ per grant.
+  const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+  check('level spells are held per grant, not as one list',
+    /levelSpells\[gi\]/.test(appSrc));
+  check('and each grant asks for its own allowed levels',
+    /spellLevelsForGrant\(S\.cls, g\.level\)/.test(appSrc));
+  // Enforced, not advised: a spell level is a mechanical rule like a psychic
+  // tier, not a table judgement like a skill category.
+  check('an out-of-cap spell is not in the list at all',
+    /\(!levels \|\| levels\.includes\(sp\.level\)\)/.test(appSrc));
+
   const psi = psionicGrantsFor({ psionics: { type: 'major', powers_per_level: 1 } }, 1, 5);
   check('psionic powers use their own keys', psi.total === 4 && psi.unknown === false);
   check('a psychic class stating no rule is unknown too',

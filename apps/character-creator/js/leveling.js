@@ -135,6 +135,34 @@ function perLevelGrants(block, flatKey, scheduleKey, fromLevel, toLevel) {
   return { applicable: true, unknown: false, grants, total: grants.reduce((n, g) => n + g.count, 0) };
 }
 
+// Which SPELL levels the spells gained AT `level` may be drawn from.
+//
+// A separate question from `spell_levels_allowed`, which governs the starting
+// selection and is a fixed list. The Ley Line Walker learns "2 additional
+// spells per level of experience, equal to or lower than their current level of
+// experience" - a cap that tracks the character rather than a list, and one
+// that is STRICTER than the starting list at low levels: a fresh walker picks
+// 12 spells from levels 1-4, and the two gained at level 2 may only be levels
+// 1-2.
+//
+//   'up_to_character_level'  spell level <= the level that earned the grant
+//   [1, 2]                   an explicit list, when a book states one
+//   absent                   falls back to spell_levels_allowed
+//
+// null means unrestricted, which is what a class stating neither means.
+export function spellLevelsForGrant(cls, level) {
+  const magic = cls?.magic;
+  if (!magic) return null;
+  const rule = magic.spells_per_level_levels;
+  if (rule === 'up_to_character_level') {
+    return Array.from({ length: Math.max(0, level) }, (_, i) => i + 1);
+  }
+  if (Array.isArray(rule) && rule.length) return rule;
+  return Array.isArray(magic.spell_levels_allowed) && magic.spell_levels_allowed.length
+    ? magic.spell_levels_allowed
+    : null;
+}
+
 export function spellGrantsFor(cls, fromLevel, toLevel) {
   return perLevelGrants(cls?.magic, 'spells_per_level', 'spells_schedule', fromLevel, toLevel);
 }
