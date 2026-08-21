@@ -67,7 +67,7 @@ nates-workshop/
         ├── _lib/claude-client.js  The only code that calls the Anthropic API
         ├── claude.js         /api/claude — proxy (model allowlist + token cap)
         ├── media.js          /api/media — MediaVault CRUD, per-user via Access
-        └── character-creator/  35 endpoints + _lib; see the app README
+        └── character-creator/  41 endpoints + _lib; see the app README
 ```
 
 Cloudflare Pages deploys `functions/` as serverless Workers automatically —

@@ -53,7 +53,7 @@ rejected alternatives in them were rejected on purpose too.
 |---|---|---|
 | 13 | [R.C.C.-first wizard](13-rcc-first-wizard.md) — Class splits into Race and Occupation with Attributes between them | — · **built** |
 | 14 | [Starting above level 1](14-start-at-level.md) — an Advancement step running the existing level-up engine 1→N | 13 · **built** |
-| 15 | [Campaign notes, search and the party stash](15-campaign-notes.md) — implied membership, FTS5 search, an Ask endpoint, a shared stash | — |
+| 15 | [Campaign notes, search and the party stash](15-campaign-notes.md) — implied membership, FTS5 search, an Ask endpoint, a shared stash | — · **built** |
 | 16 | [NPC dossiers and portraits](16-npc-dossiers.md) — `@mention` linking, a Claude sweep, and the site's first R2 bucket | 15 |
 
 Two things in them are larger than they look. **PR 14 adds class-format keys**

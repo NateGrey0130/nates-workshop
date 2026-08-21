@@ -88,6 +88,8 @@ function render() {
     <h3 style="margin-top:0">Campaign journal <span class="muted small">(newest first)</span></h3>
     ${journalHtml}
     ${journalMore}
+    <p class="small"><a href="campaign.html?campaign_id=${campaignId}">🗒 Open campaign notes</a>
+      <span class="muted">— search the log, ask a question of it, and track what the party holds</span></p>
   </div>`;
 }
 

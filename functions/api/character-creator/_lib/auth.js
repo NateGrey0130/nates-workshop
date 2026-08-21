@@ -97,8 +97,50 @@ export async function requireCharacter(request, env, id, { write = true } = {}) 
   return { email, access };
 }
 
+// Who is IN a campaign, and what that lets them do.
+//
+// There is no campaign_members table, deliberately. A person is a member if
+// they are the G.M. or they own a character assigned to the campaign - which
+// the characters row already says, because owning a character in a campaign is
+// what being a player IS. An invite list would be a second, weaker statement of
+// the same fact, kept in sync by hand.
+//
+// The cost is real and accepted: a spectator, or a player between characters,
+// cannot post. When that bites, an invite list can be added HERE and nothing
+// else has to learn about it - this function is the only thing that knows.
+//
+// `canWrite` is membership. `isGm` is the narrower right, and the two are
+// returned separately because a few actions stay G.M.-only: editing the
+// campaign's gm_notes, and deleting an entry somebody else wrote.
 export async function campaignAccess(env, campaignId, email) {
   const row = await env.DB.prepare('SELECT id, gm_email FROM campaigns WHERE id = ?').bind(campaignId).first();
-  if (!row) return { found: false, canWrite: false };
-  return { found: true, canWrite: email === row.gm_email, campaign: row };
+  if (!row) return { found: false, canWrite: false, isGm: false, isMember: false };
+  const isGm = email === row.gm_email;
+  let isMember = isGm;
+  if (!isMember) {
+    const own = await env.DB.prepare(
+      'SELECT 1 AS n FROM characters WHERE campaign_id = ? AND player_email = ? LIMIT 1'
+    ).bind(campaignId, email).first();
+    isMember = !!own;
+  }
+  return { found: true, canWrite: isMember, isGm, isMember, campaign: row };
+}
+
+// Guard for a campaign endpoint, in the shape requireCharacter() already uses:
+// { res } means stop and return it, otherwise { email, access }.
+//
+// 404 before 403, so someone probing ids cannot tell an existing campaign from
+// a missing one by which refusal comes back.
+export async function requireCampaign(request, env, id, { write = true, gm = false } = {}) {
+  const email = getUserEmail(request);
+  if (!email) return { res: unauthorized() };
+  const access = await campaignAccess(env, id, email);
+  if (!access.found) return { res: json({ error: 'Campaign not found' }, 404) };
+  if (gm && !access.isGm) {
+    return { res: json({ error: 'Only the campaign GM can do that' }, 403) };
+  }
+  if (write && !access.canWrite) {
+    return { res: json({ error: 'Only the GM or a player with a character in this campaign can do that' }, 403) };
+  }
+  return { email, access };
 }

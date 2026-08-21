@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campaign Notes — Nate's Workshop</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shared/styles.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div>
+      <div class="logo">Campaign Notes</div>
+      <div class="logo-sub">what happened, and what the party is carrying</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <a id="dash-link" href="/apps/character-creator/dashboard.html" class="home-link">← dashboard</a>
+    <a href="/apps/character-creator/" class="home-link">← character creator</a>
+    <a href="/" class="home-link">← workshop</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="app"><p class="muted">Loading campaign…</p></div>
+</main>
+
+<script src="/shared/js/ui.js"></script>
+<script src="js/api.js"></script>
+<script src="campaign.js"></script>
+</body>
+</html>

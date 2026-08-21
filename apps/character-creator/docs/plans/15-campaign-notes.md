@@ -1,6 +1,7 @@
 # PR 15 — Campaign notes, search, and the party stash
 
-> **Planned**, not built. Decisions taken in an interview on 2026-08-20.
+> **Built.** Decisions taken in an interview on 2026-08-20; the **As built**
+> notes below record what the plan did not survive contact with.
 
 ## Problem
 
@@ -11,6 +12,38 @@ There is no campaign-level place to read the log, no search over it, and nothing
 tracks what the party holds collectively.
 
 ## Decisions
+
+**As built: the membership query had a column that does not exist.** The plan
+wrote `AND deleted_at IS NULL`. `characters` has no `deleted_at` — character
+deletion is not a feature — so the query would have failed on every call, which
+is to say nobody would have been a member of anything.
+
+**As built: `campaigns.gm_notes` already existed and had to be defended.**
+Widening `canWrite` from "the G.M." to "any member" silently widened the
+campaign PATCH endpoint with it, because that endpoint checked `canWrite`. Any
+player could then have edited the G.M.'s private notes — the one pre-existing
+secret in an app the interview had just decided has no secrets. `campaignAccess`
+now returns `isGm` separately and the PATCH checks that instead.
+
+**As built: a question is not a search.** `toMatchQuery` AND-ed every term,
+which is right for a search box that should narrow as you type and wrong for
+the ask endpoint: *"what did the baron's men want, and do we still have the rune
+sword?"* AND-ed together matches no entry ever written. The endpoint retrieved
+nothing, handed the model an empty context, and got back a perfectly correct
+"the notes do not record it" — a failure that looks exactly like a working
+feature. It takes `{ join: 'OR' }` now and lets bm25 rank.
+
+**As built: `snippet()` returns markup built from user input.** Asking FTS5 to
+wrap matches in `<mark>` means the note text around them arrives as HTML, and a
+client that escaped the result would escape the marks with it. The delimiters
+are U+0001 and U+0002 — two characters no keyboard produces — and the page
+escapes first, then swaps them for tags. Verified with a note containing a
+literal `<script>` tag: it renders as text, and the page holds no script element.
+
+**As built: the smoke test could not read "twenty-one".** Its number-word parser
+had no hyphenated entries and the capture group stopped at the hyphen, so
+`Twenty-one tables` read as one table and reported a documentation drift that
+was really the test's own bug. Hyphenated compounds now sum their parts.
 
 ### Membership is implied by having a character
 
