@@ -212,7 +212,7 @@ touches MediaVault and FilamentForge too — they use its `openModal` /
 
 ## Data model
 
-Twenty-five tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
+Twenty-six tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
 and one R2 bucket (`MEDIA`, same name) for the only binary this app stores.
 `media_items` belongs to MediaVault and `schema_migrations` is database
 bookkeeping shared by both; the rest are this app.
@@ -227,6 +227,7 @@ bookkeeping shared by both; the rest are this app.
 | `journal_entries` | `character_id` NULL means a campaign-level entry. |
 | `level_history` | One row per confirmed level-up; `changes` is a JSON diff of what was actually applied. |
 | `pending_skill_picks` | Skill picks a level-up granted and nobody has spent yet. One row per **grant**, not per pick, so "2 picks from level 3" stays itemised. `categories` is copied from the class at level-up time — the class can change later, what you were granted cannot. |
+| `pending_power_picks` | The same for spells and psionic powers. `spell_levels` is the cap the granting level carried, copied for the same reason — a Ley Line Walker's level-4 pair stays capped at spell level 4 however the class is later re-imported. |
 | `campaign_items` | The party stash: `character_items`' shape, owned by a campaign. `removed_at` NULL means still held; `claimed_by_character_id` says it left for a sheet rather than being spent or lost. |
 | `campaign_currency` | Party money as an append-only **ledger**. The balance is `SUM(delta)`, so no stored total can disagree with its own history. `currency` is free text — the two systems use different coin. |
 | `journal_fts` | FTS5 index over `journal_entries`. External-content: it holds no copy of the text, and three triggers keep it current. |
@@ -433,6 +434,7 @@ writes are gated (see [Permissions](#permissions)).
 | `characters/[id]/items` | POST | Add inventory row (catalog slug or freeform) |
 | `characters/[id]/items/[itemId]` | PATCH / DELETE | qty/equipped/notes; soft remove |
 | `characters/[id]/xp` | POST | `{delta}` or `{total}`; returns a proposed level-up diff |
+| `characters/[id]/power-picks` | GET / POST | Spell and psionic grants banked at a level-up, and spending them. Each carries the spell-level cap the granting level came with, so a re-import between banking and spending cannot change what was granted |
 | `characters/[id]/variant` | POST | Owner/GM. `{to_variant}` proposes a change of stage; add `confirm: true` with the accepted attributes and pools to apply it |
 | `characters/[id]/level-confirm` | POST | Apply a confirmed diff, write `level_history`. `picks` spends granted skill picks; unspent ones are banked. Validated |
 | `characters/[id]/picks` | GET / POST | Owner/GM to spend. Unspent skill picks; POST applies some. Validated |
@@ -1031,10 +1033,27 @@ above the first, which is levels 2 upward by definition.
 `variants` shipped as schema the prompt was never told about and the first class
 with age stages came back with both stat blocks dropped.
 
-**Applying per-level spells during a LIVE level-up is not in this change.**
-`buildProposal` reports them, and the sheet's level-up renders named fields and
-ignores them, so nothing there promises what it cannot deliver. Only the
-wizard's Advancement step acts on them.
+### The live level-up grants them too
+
+The sheet's level-up panel offers the spells and powers the crossed levels earn,
+one select per slot, grouped by the level that granted it — because for spells
+the levels a slot may draw from belong to *that* grant. Crossing two levels at
+once caps each pair separately.
+
+Unspent slots **bank into `pending_power_picks`**, the same as skill picks, for
+the same reason: levelling up is never blocked on choosing, so a grant nobody
+spent has to go somewhere or the spells that level earned vanish silently.
+
+The cap is enforced **server-side**, not only in the picker. `resolvePowerPicks`
+checks every pick against the grant it claims — that such a grant exists, that
+it has room, that the power is not already known, that it is in the catalog, and
+that a spell's level is inside that grant's cap. A rejected pick fails the whole
+level-up with a sentence saying which and why, rather than being dropped.
+
+One trap worth recording: `loadCharacter` does not join `campaigns`, so the
+system filter on the catalog lookup read `character.campaign_system` and got
+`undefined` — a silent no-op that would have let a Rifts caster learn a
+Palladium-only spell. The system is fetched explicitly now.
 
 ---
 
@@ -3173,6 +3192,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `022-play-events.sql` | `play_events` — play mode's append-only action log: undo, the who-did-what trail, and the session recap boundary |
 | `023-skill-bonuses.sql` | `skills.bonuses` — what a skill grants beyond its percentage, in a class's `bonuses:` shape. Boxing is +1 attack per melee and +2 P.S. |
 | `024-data-script-runs.sql` | `data_script_runs` — which data scripts have run against this database. The same question `schema_migrations` answers for migrations, for the 55 scripts that answer it nowhere |
+| `028-pending-power-picks.sql` | `pending_power_picks` — the spells and psionic powers a level-up granted and nobody chose. `pending_skill_picks` with a different subject; `spell_levels` carries the cap the granting level came with, because that cap belongs to the grant rather than to the character |
 | `027-npc-dossiers.sql` | `npcs`, `npc_mentions`, `npc_sweeps` and `npc_proposals_dismissed`. **The first migration whose feature also needs a bucket** — R2 `MEDIA` must exist before the deploy that binds it |
 | `026-campaign-notes.sql` | `journal_fts` and its three triggers, plus `campaign_items` and `campaign_currency`. The FTS table is external-content, so the triggers are not optional — without them the index silently stops matching anything written after the migration ran |
 | `025-skill-level-bonuses.sql` | `skills.level_bonuses` — what a skill grants **at each level**, summed up to the character's. The Hand to Hand tables are level-by-level and accumulative, which the flat `bonuses` column cannot express; entries may carry `applies_when` for a W.P. bonus that needs that weapon in hand |

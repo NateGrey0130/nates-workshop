@@ -67,7 +67,7 @@ nates-workshop/
         ├── _lib/claude-client.js  The only code that calls the Anthropic API
         ├── claude.js         /api/claude — proxy (model allowlist + token cap)
         ├── media.js          /api/media — MediaVault CRUD, per-user via Access
-        └── character-creator/  45 endpoints + _lib; see the app README
+        └── character-creator/  46 endpoints + _lib; see the app README
 
 **R2**: the site binds one bucket, `nates-workshop-media`, as `MEDIA`. It holds
 NPC portraits today and is named for the site rather than for that app because
