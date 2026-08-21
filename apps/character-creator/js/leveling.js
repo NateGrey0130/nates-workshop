@@ -150,9 +150,22 @@ function perLevelGrants(block, flatKey, scheduleKey, fromLevel, toLevel) {
 //   absent                   falls back to spell_levels_allowed
 //
 // null means unrestricted, which is what a class stating neither means.
+//
+// A SCHEDULE ENTRY MAY OVERRIDE ALL OF IT. Some books vary the cap per level
+// rather than by one rule: the Mystic gains four spells at level 2 from spell
+// levels 1-3 and three at level 3 from levels 1-4, then two per level from its
+// own level downward. The first two are the character's level PLUS ONE and the
+// rest are the character's level, which no single rule expresses — so the entry
+// that states the count states the cap with it, and the class-wide rule is what
+// entries without one fall back to.
 export function spellLevelsForGrant(cls, level) {
   const magic = cls?.magic;
   if (!magic) return null;
+
+  const entry = (Array.isArray(magic.spells_schedule) ? magic.spells_schedule : [])
+    .find((e) => e?.level === level && Array.isArray(e.spell_levels) && e.spell_levels.length);
+  if (entry) return entry.spell_levels;
+
   const rule = magic.spells_per_level_levels;
   if (rule === 'up_to_character_level') {
     return Array.from({ length: Math.max(0, level) }, (_, i) => i + 1);
@@ -169,6 +182,34 @@ export function spellGrantsFor(cls, fromLevel, toLevel) {
 
 export function psionicGrantsFor(cls, fromLevel, toLevel) {
   return perLevelGrants(cls?.psionics, 'powers_per_level', 'powers_schedule', fromLevel, toLevel);
+}
+
+// Which psionic CATEGORIES the powers gained AT `level` may come from.
+//
+// The same shape as spellLevelsForGrant, and it exists for the same reason: the
+// restriction on what a level EARNS is not always the restriction on what the
+// class started with. The Mystic starts with Sensitive and Healing powers and
+// gains a SUPER one at levels 4 and 8 - a category a major psychic could not
+// otherwise take at all.
+//
+// That last part is why this overrides rather than narrows. Tier is enforced by
+// category here (every catalogued power has a NULL min_tier, so the per-power
+// gate never fires), which means a grant naming Super IS the book granting an
+// exception to the tier. Intersecting it with the class's own categories would
+// throw the exception away and leave an empty picker.
+//
+// null means unrestricted, which is what a class stating neither means.
+export function psionicCategoriesForGrant(cls, level) {
+  const psi = cls?.psionics;
+  if (!psi) return null;
+
+  const entry = (Array.isArray(psi.powers_schedule) ? psi.powers_schedule : [])
+    .find((e) => e?.level === level && Array.isArray(e.categories) && e.categories.length);
+  if (entry) return entry.categories;
+
+  return Array.isArray(psi.categories_allowed) && psi.categories_allowed.length
+    ? psi.categories_allowed
+    : null;
 }
 
 // Proposed (not yet applied) diff for character reaching toLevel.

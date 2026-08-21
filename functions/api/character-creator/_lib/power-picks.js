@@ -13,7 +13,8 @@
 
 import { json } from './auth.js';
 import { safeParse } from './character-json.js';
-import { spellLevelsForGrant, spellGrantsFor, psionicGrantsFor } from './leveling.js';
+import { spellLevelsForGrant, psionicCategoriesForGrant,
+         spellGrantsFor, psionicGrantsFor } from './leveling.js';
 
 export async function listPendingPowers(env, characterId) {
   // No catch here. An earlier version swallowed failures into an empty list to
@@ -22,7 +23,7 @@ export async function listPendingPowers(env, characterId) {
   // powers and nothing said why. A missing migration is a prerequisite, and it
   // should fail loudly like every other one.
   const { results } = await env.DB.prepare(
-    `SELECT id, granted_at_level, count, kind, spell_levels, created_at
+    `SELECT id, granted_at_level, count, kind, spell_levels, categories, created_at
      FROM pending_power_picks
      WHERE character_id = ? AND claimed_at IS NULL
      ORDER BY granted_at_level, id`
@@ -33,15 +34,17 @@ export async function listPendingPowers(env, characterId) {
     count: r.count,
     kind: r.kind,
     spell_levels: r.spell_levels ? safeParse(r.spell_levels) : null,
+    categories: r.categories ? safeParse(r.categories) : null,
   }));
 }
 
 export function insertPowerGrantStatements(env, characterId, grants) {
   return grants.map((g) => env.DB.prepare(
-    `INSERT INTO pending_power_picks (character_id, granted_at_level, count, kind, spell_levels)
-     VALUES (?, ?, ?, ?, ?)`
+    `INSERT INTO pending_power_picks (character_id, granted_at_level, count, kind, spell_levels, categories)
+     VALUES (?, ?, ?, ?, ?, ?)`
   ).bind(characterId, g.level, g.count, g.kind,
-    g.spell_levels ? JSON.stringify(g.spell_levels) : null));
+    g.spell_levels ? JSON.stringify(g.spell_levels) : null,
+    g.categories ? JSON.stringify(g.categories) : null));
 }
 
 // What a span of levels earns, in the shape this file banks and spends.
@@ -54,12 +57,16 @@ export function powerGrantsFor(cls, fromLevel, toLevel) {
   const spells = spellGrantsFor(cls, fromLevel, toLevel);
   if (spells.applicable && !spells.unknown) {
     for (const g of spells.grants) {
-      out.push({ ...g, kind: 'spell', spell_levels: spellLevelsForGrant(cls, g.level) });
+      out.push({ ...g, kind: 'spell', spell_levels: spellLevelsForGrant(cls, g.level),
+                 categories: null });
     }
   }
   const psionics = psionicGrantsFor(cls, fromLevel, toLevel);
   if (psionics.applicable && !psionics.unknown) {
-    for (const g of psionics.grants) out.push({ ...g, kind: 'psionic', spell_levels: null });
+    for (const g of psionics.grants) {
+      out.push({ ...g, kind: 'psionic', spell_levels: null,
+                 categories: psionicCategoriesForGrant(cls, g.level) });
+    }
   }
   return out;
 }
@@ -86,6 +93,7 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
     room.set(key, (room.get(key) || 0) + g.count);
   }
   const capFor = new Map(grants.map((g) => [`${g.kind}:${g.level}`, g.spell_levels]));
+  const catFor = new Map(grants.map((g) => [`${g.kind}:${g.level}`, g.categories]));
 
   const names = [...new Set(picks.map((p) => String(p?.name || '').trim()).filter(Boolean))];
   const catalog = await loadPowerCatalog(env, names, system);
@@ -119,6 +127,16 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
       if (cap && !cap.includes(row.level)) {
         errors.push(
           `${name} is a level ${row.level} spell; the level ${level} grant allows ${cap.join(', ')}`);
+        continue;
+      }
+    } else {
+      // A psionic grant may name its own categories, and when it does they
+      // REPLACE the class's rather than narrowing them - a Mystic's level-4
+      // power comes from Super, which its starting powers could not.
+      const cats = catFor.get(key);
+      if (cats && !cats.includes(row.category)) {
+        errors.push(
+          `${name} is a ${row.category || 'uncategorised'} power; the level ${level} grant allows ${cats.join(', ')}`);
         continue;
       }
     }

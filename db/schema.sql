@@ -246,6 +246,11 @@ CREATE TABLE IF NOT EXISTS pending_power_picks (
   -- and always NULL for a psionic grant. Copied from the class at grant time,
   -- as pending_skill_picks copies its categories.
   spell_levels TEXT,
+  -- JSON array of psionic CATEGORIES this grant may draw from; NULL is
+  -- unrestricted, and always NULL for a spell grant. A grant's categories
+  -- REPLACE the class's: the Mystic's level-4 power comes from Super, which a
+  -- major psychic could not otherwise take.
+  categories TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   claimed_at TEXT
 );
@@ -621,3 +626,7 @@ WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'npcs'
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '028-pending-power-picks.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'pending_power_picks');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '029-power-pick-categories.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('pending_power_picks') WHERE name = 'categories');

@@ -19,7 +19,7 @@ import { isChoiceGroup, isGearChoice, applyVariant,
          categoryAllows, categoryLabel, needsOccupation, abilityOccOptions,
          bonusesFromSkills, sumBonusGroups } from './js/parser.js';
 import { composeClass } from './js/compose.js';
-import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant,
+import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant,
          skillGrantsFor, spellGrantsFor, psionicGrantsFor } from './js/leveling.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
@@ -120,7 +120,10 @@ const S = {
   // LEVEL can depend on which level earned it, so the two gained at level 2 are
   // a different choice from the two gained at level 5 and cannot share a pool.
   // levelPsi stays flat - no book states a per-level cap on psionic powers.
-  levelPools: {}, levelSpells: {}, levelPsi: [], levelPicks: {},
+  // levelPsi is keyed by grant index for the same reason levelSpells is: a
+  // psionic grant can name its own CATEGORIES, and the Mystic's level-4 power
+  // comes from Super while its starting ones came from Sensitive and Healing.
+  levelPools: {}, levelSpells: {}, levelPsi: {}, levelPicks: {},
   // Attributes re-rolled because a chosen O.C.C. raised a minimum the original
   // roll missed. Kept so the assist is visible as one rather than presented as
   // what the dice said first — posted as play events once the character exists.
@@ -640,7 +643,7 @@ function resetBuild() {
   S.raceCls = null; S.cls = null;
   S.occAttrBonuses = {}; S.occRolledBonuses = { combat: {}, saves: {} };
   S.minRerolls = [];
-  S.level = 1; S.levelPools = {}; S.levelSpells = {}; S.levelPsi = []; S.levelPicks = {};
+  S.level = 1; S.levelPools = {}; S.levelSpells = {}; S.levelPsi = {}; S.levelPicks = {};
 }
 
 // Step 1 — the race (browse | guided)
@@ -818,7 +821,7 @@ function setStartingLevel(v) {
   S.level = Math.max(1, n);
   // A different span is a different set of dice and a different set of grants,
   // so nothing rolled or chosen for the old one survives.
-  S.levelPools = {}; S.levelSpells = {}; S.levelPsi = []; S.levelPicks = {};
+  S.levelPools = {}; S.levelSpells = {}; S.levelPsi = {}; S.levelPicks = {};
   render();
 }
 
@@ -1329,33 +1332,55 @@ function spellGrantBlock(grant) {
   </div>`;
 }
 
+// Psionic powers, one picker PER GRANT — for the same reason spells are.
+//
+// This was one batched set, with a comment saying no book states which level a
+// given power had to be learned at. The Mystic says otherwise: its starting
+// powers come from Sensitive and Healing, and the ones at levels 4 and 8 come
+// from SUPER. Batching them would offer Super powers against every slot.
+//
+// A grant's categories REPLACE the class's rather than narrowing them. Tier is
+// enforced by category here, so a grant naming Super is the book granting a
+// major psychic an exception to it - intersecting would throw that away.
 function psiGrantBlock(grant) {
-  const pool = advPsiPool();
-  const list = Picker.filter(pool, S.psiFilter)
-    .concat(pool.filter((x) => S.levelPsi.includes(x.name) && !Picker.match(x, S.psiFilter)));
-  const byLevel = grant.grants.map((g) => `level ${g.level}: ${g.count}`).join(' · ');
+  const taken = Object.values(S.levelPsi).flat().filter(Boolean);
+  const blocks = grant.grants.map((g, gi) => {
+    const chosen = S.levelPsi[gi] || [];
+    const cats = psionicCategoriesForGrant(S.cls, g.level);
+    const heldElsewhere = new Set([...S.psi, ...taken.filter((n) => !chosen.includes(n))]
+      .map((n) => n.toLowerCase()));
+    const pool = advPsiPool(cats).filter((x) => !heldElsewhere.has(String(x.name).toLowerCase()));
+    return `<p class="small" style="margin-top:12px"><b>Level ${g.level}</b> — ${g.count}
+      ${g.count === 1 ? 'power' : 'powers'}
+      <span class="muted">from ${esc(cats ? cats.join(', ') : 'any category')}</span></p>
+      ${psiGroupRows(pool, g.count, 'psi-adv', gi)}`;
+  }).join('');
+
   return `<div class="panel-inset">
-    <h3>Psionic powers — ${S.levelPsi.length}/${grant.total}
-      <span class="muted small">(${esc(byLevel)})</span></h3>
-    <p class="muted small">Chosen as one set: no book states which level a given psionic power
-      had to be learned at, unlike spells.</p>
-    ${Picker.inputHtml({ id: 'psi-filter', value: S.psiFilter, placeholder: 'Filter powers…',
-      shown: Picker.filter(pool, S.psiFilter).length, total: pool.length })}
-    ${psiGroupRows(list, grant.total, 'psi-adv')}
+    <h3>Psionic powers — ${taken.length}/${grant.total}</h3>
+    <p class="muted small">Each level's powers come from the categories that level allows.
+      A power already known is not offered again.</p>
+    ${blocks}
   </div>`;
 }
 
-// The psionic pool the Powers step offers, minus what the character already
+// The psionic pool a grant may draw from, minus what the character already
 // holds — a power cannot be learned twice.
-function advPsiPool() {
+//
+// `cats` overrides the class's own when a grant names its own categories.
+function advPsiPool(cats = null) {
   const cls = psiClass();
   const psi = psiConfig(cls);
   if (!psi) return [];
   const tier = cls.psionics.type;
-  const named = psi.from && new Set(psi.from.map((n) => n.toLowerCase()));
+  const allowed = cats || psi.cats;
+  // A named list is the class saying exactly which powers its STARTING picks
+  // come from; a grant naming its own categories is a later, different rule and
+  // is not narrowed by that list.
+  const named = !cats && psi.from && new Set(psi.from.map((n) => n.toLowerCase()));
   const inCategory = named
     ? S.psiCatalog.filter((x) => inSystem(x) && named.has(String(x.name).toLowerCase()))
-    : S.psiCatalog.filter((x) => inSystem(x) && psi.cats.includes(x.category));
+    : S.psiCatalog.filter((x) => inSystem(x) && allowed.includes(x.category));
   // The per-power tier gate applies here exactly as it does at level 1. Out-of
   // tier powers stay unselectable rather than becoming an override, which is
   // the deliberate asymmetry with skill categories: those get bent at the
@@ -2205,7 +2230,7 @@ function spellGroupRows(list, count, kind = 'spell', gi = null) {
   }).join('');
 }
 
-function psiGroupRows(list, count, kind = 'psi') {
+function psiGroupRows(list, count, kind = 'psi', gi = null) {
   const sorted = [...list].sort((a, b) =>
     (a.category || '￿').localeCompare(b.category || '￿') || (a.name || '').localeCompare(b.name || ''));
   const sizes = sorted.reduce((m, x) => { const g = x.category || 'Uncategorized';
@@ -2217,12 +2242,13 @@ function psiGroupRows(list, count, kind = 'psi') {
       ? `<div class="pick-group">${esc(group)}<span class="pick-group-n">${sizes.get(group)}</span></div>`
       : '';
     last = group;
-    const sel = powerList(kind);
+    const sel = powerList(kind, gi);
     const on = sel.includes(p.name);
     const blocked = !on && sel.length >= count;
     return head + `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
       <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
-        data-act="power" data-kind="${kind}" data-name="${esc(p.name)}">
+        data-act="power" data-kind="${kind}" data-name="${esc(p.name)}"${
+        gi == null ? '' : ` data-gi="${gi}"`}>
       <span>${esc(p.name)}${p.isp_note ? ` <span class="muted small">&mdash; ${esc(p.isp_note)}</span>` : ''}</span>
       <span class="pct">${p.isp}${p.isp_note && p.isp > 0 ? '+' : ''} I.S.P.</span></label>`;
   }).join('');
@@ -2394,7 +2420,7 @@ function powerList(kind, gi = null) {
     case 'psi': return S.psi;
     // Per grant, because each level's spells are capped by that level.
     case 'spell-adv': return S.levelSpells[gi] || (S.levelSpells[gi] = []);
-    default: return S.levelPsi;
+    default: return S.levelPsi[gi] || (S.levelPsi[gi] = []);
   }
 }
 
@@ -2424,7 +2450,7 @@ function powersPayload() {
   // a set, so a spell learned later that the class already granted is dropped
   // rather than listed twice.
   const spellNames = held(held(autoSpells, S.spells), Object.values(S.levelSpells).flat().filter(Boolean));
-  const psiNames = held(held(autoPsi, S.psi), S.levelPsi);
+  const psiNames = held(held(autoPsi, S.psi), Object.values(S.levelPsi).flat().filter(Boolean));
   return [
     ...spellNames.map((n) => {
       const sp = S.spellCatalog.find((x) => x.name === n);
