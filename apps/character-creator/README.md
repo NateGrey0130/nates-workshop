@@ -2075,6 +2075,37 @@ So the rule for anything transcribed from the open web:
 Every data script that writes web-sourced values says so in its header too, so
 the provenance survives in `db/` as well as in the row.
 
+### A third tier, for what nothing publishes
+
+Some things have no published price anywhere. The equipment chapter prices
+no clothing — its alphabetical list runs straight from Cigarettes to Compass
+to Cross/Crucifix — and no food at all. The open web has none either, and what
+it offers for Palladium Fantasy is a generic fantasy list in gold that only
+"references Palladium as a baseline", or pages that declare themselves
+fan-made.
+
+Those rows carry:
+
+```
+Estimate - no published price found
+```
+
+Grep for it to find every value in the catalog that **no source stands
+behind**. A stub with no price cannot be bought at a table; a marked
+estimate can, and is replaced the moment a real page turns up.
+
+**Only things that cannot change a roll are estimated.** No estimated row
+carries M.D.C., damage or an armour rating, and the smoke test enforces it.
+A guessed price is a shopping inconvenience; a guessed damage die decides
+fights and is indistinguishable from a real one once it is in the table. So
+the weapons, the armour, the Juicer's drug harness and the Techno-Wizard
+weapons stay stubs until a book says otherwise.
+
+Weight is left NULL on estimated rows for the same reason. Cost at least has
+the book's own scale to anchor against — a bedroll is 30 credits, a heavy
+blanket 20 — but a weight would be invention with nothing behind it, and
+encumbrance is what it would quietly affect.
+
 ---
 
 ## Merging duplicate catalog rows
@@ -2712,7 +2743,7 @@ added `data_script_runs` and every script now ends by writing itself into it.
 |---|---|---|
 | Dev seed | `seed-dev.sql` | Optional local character/campaign rows. Never applied to production |
 | Run tracking | `backfill-data-script-runs.sql` | One-time, optional, and an **assertion**: records every script that had already been applied before `data_script_runs` existed, stamped with a note saying the run was asserted rather than observed. Guarded per filename, so it cannot double-record a script that has genuinely run since |
-| Data cleanup | `backfill-*.sql`, `rename-*.sql`, `merge-*.sql`, `retire-gear-placeholders.sql`, `retire-orphan-gear-stubs.sql`, `untag-cross-system.sql` | One-off corrections to rows an earlier import or data script got wrong or left NULL. A `rename-*` also leaves a `catalog_redirects` row, so class markdown citing the old key keeps resolving | One-off corrections to rows an earlier import or data script got wrong or left NULL |
+| Data cleanup | `estimate-*.sql`, `backfill-*.sql`, `rename-*.sql`, `merge-*.sql`, `retire-gear-placeholders.sql`, `retire-orphan-gear-stubs.sql`, `untag-cross-system.sql` | One-off corrections to rows an earlier import or data script got wrong or left NULL. A `rename-*` also leaves a `catalog_redirects` row, so class markdown citing the old key keeps resolving | One-off corrections to rows an earlier import or data script got wrong or left NULL |
 | Class corrections | `fix-*.sql`, `apply-*.sql`, `long-bowman-money.sql` | The rules audit's output: stored class definitions rewritten against the books, and class data written for a schema feature the day it landed |
 | Additions | `add-*.sql` | Something the book gives that the database never had — a catalog row, a whole-table batch extracted from page scans (`add-pf-weapons-batch`, `add-pf-equipment-batch`, the RUE spell and psionics batches), or a whole class. A missing skill named in an `only` restriction narrows its category to nothing, which is usually how one gets noticed. A class goes in this way only when the import tool cannot be reached: production sits behind Cloudflare Access, so a hand-transcribed class is applied by script instead |
 
