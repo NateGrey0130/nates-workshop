@@ -55,6 +55,11 @@ export const CORE_SDC_BY_CLASS = {
   // Psychics by the book's grouping, but hunters by trade and armed as such.
   'psi-stalker': '3D6',
   'wild-psi-stalker': '3D6',
+  // Rifts Ultimate Edition, printed 45-85 - the men of arms section.
+  'crazy': '3D6',
+  // Coalition Military O.C.C.s, printed 231-237. Soldiers by definition.
+  'coalition-grunt': '3D6',
+  'coalition-samas-pilot': '3D6',
 
   // Practitioners of magic, psychics and scholars — 1D6.
   'burster': '1D6',
@@ -69,6 +74,16 @@ export const CORE_SDC_BY_CLASS = {
   'stone-master': '1D6',
   'techno-wizard': '1D6',
   'warlock': '1D6',
+  // Rifts Ultimate Edition, printed 86-99 - the Adventurers & Scholars
+  // section, which is where the book itself files these. The Operator is
+  // absent until its class ships - the book files it here too.
+  'body-fixer': '1D6',
+  'city-rat': '1D6',
+  'cyber-doc': '1D6',
+  'rogue-scholar': '1D6',
+  'rogue-scientist': '1D6',
+  'vagabond': '1D6',
+  'wilderness-scout': '1D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence

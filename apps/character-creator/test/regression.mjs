@@ -437,12 +437,21 @@ console.log('\n' + '[8/8] Checks that only a database can make');
 {
   const readme = readFileSync(join(appDir, 'README.md'), 'utf8');
   const WORDS = {
+    one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8,
+    nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14,
     fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19,
-    twenty: 20, 'twenty-one': 21, 'twenty-two': 22, 'twenty-three': 23,
-    'twenty-four': 24, 'twenty-five': 25, 'twenty-six': 26, 'twenty-seven': 27,
-    'twenty-eight': 28, 'twenty-nine': 29, thirty: 30,
+    twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70,
+    eighty: 80, ninety: 90,
   };
-  const word = (w) => WORDS[String(w).toLowerCase()];
+  // Hyphenated compounds sum their parts, so "thirty-seven" does not have to be
+  // listed and neither does the next count. Listing each compound means the
+  // list goes stale exactly when the number changes - which is the moment this
+  // check is supposed to fire.
+  const word = (w) => {
+    const parts = String(w).toLowerCase().split('-');
+    if (!parts.every((p) => p in WORDS)) return undefined;
+    return parts.reduce((n, p) => n + WORDS[p], 0);
+  };
 
   const { parseClassMarkdown } = await import(
     pathToFileURL(join(appDir, 'js', 'parser.js')).href);
