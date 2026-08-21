@@ -44,7 +44,15 @@ const IMPORT_SPECS = {
     // A stub is a name the class importer created with no numbers — exactly
     // what this importer exists to fill in, so it defaults to update. A row
     // edited by hand has source 'manual' and is therefore never a stub.
-    isStub: (row) => row.source === 'import' && row.base === 0 && row.per_level === 0,
+    //
+    // EXCEPT a Weapon Proficiency, which HAS no percentages. Every W.P. is 0/0
+    // by nature rather than because anything is unfilled, so the plain test
+    // called all 31 of them stubs and 22 defaulted to `update` - meaning a
+    // re-imported W.P. chapter would silently overwrite curated rows instead of
+    // leaving them alone. What a W.P. carries is level_bonuses, which the
+    // importer does not write at all.
+    isStub: (row) => row.source === 'import' && row.base === 0 && row.per_level === 0
+      && !/^W\.P\./i.test(row.name || ''),
   },
 
   spells: {
