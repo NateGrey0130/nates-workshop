@@ -11,6 +11,7 @@
 // must stay usable from the wizard, which has no database at all.
 
 import { resolveKeys } from './catalog-redirects.js';
+import { selectInChunks } from './sql-chunk.js';
 
 const LOOKUP_BATCH = 50;
 
@@ -51,11 +52,11 @@ export async function loadSkillBonuses(env, character) {
     const redirects = await resolveKeys(env, 'skills', missing);
     const ids = [...new Set([...redirects.values()])].filter((v) => v != null);
     if (ids.length) {
-      const { results } = await env.DB
+      const results = await selectInChunks(ids, (batch) => env.DB
         .prepare(`SELECT name, bonuses, level_bonuses FROM skills
                    WHERE (bonuses IS NOT NULL OR level_bonuses IS NOT NULL)
-                     AND id IN (${ids.map(() => '?').join(',')})`)
-        .bind(...ids).all();
+                     AND id IN (${batch.map(() => '?').join(',')})`)
+        .bind(...batch));
       rows.push(...results);
     }
   }

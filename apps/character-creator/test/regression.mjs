@@ -61,7 +61,7 @@ function wrangler(args) {
   });
 }
 
-console.log('[1/6] Building a database from nothing');
+console.log('[1/7] Building a database from nothing');
 
 // One concatenated file rather than 60 wrangler invocations: each costs seconds,
 // and the point is to prove the SQL composes, not to time the CLI.
@@ -84,7 +84,7 @@ check('schema + catalogs + data scripts apply to an empty database',
 if (applied.status !== 0) { console.log('\nREGRESSION FAILED (cannot build a database)'); process.exit(1); }
 
 // ── boot the worker ─────────────────────────────────────────────────────────
-console.log('\n[2/6] Booting the app');
+console.log('\n[2/7] Booting the app');
 server = spawn('npx', ['wrangler', 'pages', 'dev', '--port', String(PORT),
   '--persist-to', state, '--show-interactive-dev-session', 'false',
   '--binding', 'ADMIN_EMAIL=dev@localhost'],
@@ -119,7 +119,7 @@ async function api(method, path, body) {
 }
 
 // ── the boot calls ──────────────────────────────────────────────────────────
-console.log('\n[3/6] What the wizard loads on start');
+console.log('\n[3/7] What the wizard loads on start');
 const me = await api('GET', '/me');
 check('/me identifies the caller', me.status === 200 && !!me.body.email, me.body);
 
@@ -142,7 +142,7 @@ const items = await api('GET', '/items');
 check('/items returns the gear catalog', items.status === 200 && items.body.items.length > 0, items.body);
 
 // ── a character, end to end ─────────────────────────────────────────────────
-console.log('\n[4/6] Creating a campaign and a character');
+console.log('\n[4/7] Creating a campaign and a character');
 const camp = await api('POST', '/campaigns', { name: 'Regression Run', system: 'rifts' });
 check('a campaign is created', camp.status === 201 || camp.status === 200, camp.body);
 const campaignId = camp.body.id ?? camp.body.campaign?.id;
@@ -204,7 +204,7 @@ const missing = await api('GET', '/characters/99999999');
 check('a character that does not exist is a 404, not a 403', missing.status === 404, missing.status);
 
 // ── inventory ───────────────────────────────────────────────────────────────
-console.log('\n[5/6] Inventory, XP, level-up, picks, play');
+console.log('\n[5/7] Inventory, XP, level-up, picks, play');
 // By SLUG, not id — the catalog exposes ids but this endpoint keys on the slug,
 // because class markdown cites gear that way and one spelling is enough.
 const gearRow = items.body.items.find((i) => i.slug) || items.body.items[0];
@@ -299,7 +299,7 @@ check('the event log still holds the undone event',
   events.status === 200 && events.body.events.some((e) => e.undone_at), events.body.events?.length);
 
 // ── journal, draft, lists, admin ────────────────────────────────────────────
-console.log('\n[6/6] Journal, drafts, lists, admin');
+console.log('\n[6/7] Journal, drafts, lists, admin');
 const entry = await api('POST', '/journal', { character_id: charId, title: 'Session 1', body: 'It happened.' });
 check('a journal entry is written', entry.status === 201 || entry.status === 200, entry.body);
 const journal = await api('GET', `/journal?campaign_id=${campaignId}`);
@@ -360,6 +360,75 @@ check('the admin audit runs', audit.status === 200, audit.body);
 check('and finds no rule-breaking characters in a fresh database',
   audit.status === 200 && (audit.body.characters || []).length === 0,
   JSON.stringify(audit.body).slice(0, 200));
+
+// -- confirming an import bigger than one statement can bind ----------------
+// D1 takes at most 100 bound parameters per statement. `markConfirmed` built
+// `WHERE id IN (?,?,...)` from EVERY pending row, so a session with more than a
+// hundred blew the limit - and it runs AFTER the catalog write has landed. The
+// live failure inserted 108 spells, marked none of them, and returned a 500
+// that read as total failure. The rows stayed pending, so a retry would have
+// tried to insert all 108 a second time.
+//
+// 150 rows, driven through the real endpoint against a real D1. Under the old
+// code the first check here fails.
+console.log('\n' + '[7/7] An import too big for one statement');
+{
+  const N = 150;
+  const stagedRows = Array.from({ length: N }, (_, i) => {
+    const payload = JSON.stringify({
+      name: 'Regression Spell ' + i, level: (i % 15) + 1, ppe: i + 1,
+      ppe_note: null, range: 'Self', duration: 'Instant', damage: null,
+      saving_throw: 'None', area_of_effect: null, casting_time: null, description: null,
+    }).replace(/'/g, "''");
+    return 'INSERT INTO import_staged (session_id, page_range, payload, action) VALUES '
+      + "((SELECT id FROM import_sessions WHERE name = 'regression-bulk'), 'pp.1-2', '"
+      + payload + "', 'insert');";
+  });
+  const seedFile = join(state, 'bulk-import.sql');
+  writeFileSync(seedFile, [
+    "INSERT INTO import_sessions (catalog, name, source_book, system, created_by) VALUES "
+      + "('spells', 'regression-bulk', 'Regression Book', 'rifts', 'dev@localhost');",
+    ...stagedRows,
+  ].join('\n'), 'utf8');
+  const seeded = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--file', seedFile]);
+  check(N + ' staged rows seeded', seeded.status === 0,
+    (seeded.stderr || seeded.stdout || '').slice(-300));
+
+  const sess = await api('GET', '/import/sessions?catalog=spells');
+  const session = (sess.body.sessions || []).find((x) => x.name === 'regression-bulk');
+  check('the bulk session is listed', !!session, JSON.stringify(sess.body).slice(0, 200));
+
+  if (session) {
+    const before = await api('GET', '/catalogs');
+    const countBefore = (before.body.spells || []).length;
+
+    const confirmed = await api('POST', '/import/spells/confirm', { session_id: session.id });
+    check('confirming 150 rows succeeds', confirmed.status === 200,
+      JSON.stringify(confirmed.body).slice(0, 300));
+    check('and reports all 150 inserted',
+      confirmed.body && confirmed.body.counts && confirmed.body.counts.inserted === N,
+      JSON.stringify(confirmed.body && confirmed.body.counts));
+    // The half that used to be skipped silently: the write landed, the
+    // bookkeeping did not.
+    check('and marks all 150 confirmed, not just the first hundred',
+      confirmed.body && confirmed.body.confirmed === N,
+      String(confirmed.body && confirmed.body.confirmed));
+    check('leaving nothing pending',
+      confirmed.body && confirmed.body.still_pending === 0,
+      String(confirmed.body && confirmed.body.still_pending));
+
+    const after = await api('GET', '/catalogs');
+    check('the catalog really grew by 150',
+      (after.body.spells || []).length === countBefore + N,
+      countBefore + ' -> ' + (after.body.spells || []).length);
+
+    // A second confirm must find nothing rather than a pile of UNIQUE
+    // conflicts, which is only true if the first one recorded what it did.
+    const again = await api('POST', '/import/spells/confirm', { session_id: session.id });
+    check('a second confirm has nothing left to do', again.status === 400,
+      JSON.stringify(again.body).slice(0, 200));
+  }
+}
 
 console.log('\n' + (failures === 0
   ? `REGRESSION PASSED (${checks} checks)`

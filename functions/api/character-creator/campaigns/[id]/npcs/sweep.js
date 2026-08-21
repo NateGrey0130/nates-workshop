@@ -17,6 +17,7 @@
 import { json, readJson, requireCampaign } from '../../../_lib/auth.js';
 import { validateClaudeRequest, callAnthropic } from '../../../../_lib/claude-client.js';
 import { parseAliases, trim } from '../npcs.js';
+import { selectInChunks } from '../../../_lib/sql-chunk.js';
 
 const MODEL = 'claude-sonnet-5';
 const MAX_ENTRIES = 20;
@@ -155,10 +156,11 @@ async function accept(request, env, params, guard) {
     // Re-checked against the campaign rather than trusted: the entry ids came
     // back through a client, and a mention pointing at another table's note
     // would leak that note into this dossier.
-    const placeholders = ids.map(() => '?').join(', ');
-    const { results } = await env.DB.prepare(
-      `SELECT id FROM journal_entries WHERE campaign_id = ? AND id IN (${placeholders})`
-    ).bind(params.id, ...ids).all();
+    // Chunked: D1 binds at most 100 parameters per statement, and this list
+    // arrives from a client, so its length is not ours to assume.
+    const results = await selectInChunks(ids, (batch) => env.DB.prepare(
+      `SELECT id FROM journal_entries WHERE campaign_id = ? AND id IN (${batch.map(() => '?').join(', ')})`
+    ).bind(params.id, ...batch));
     if (results.length) {
       await env.DB.batch(results.map((r) => env.DB.prepare(
         `INSERT OR IGNORE INTO npc_mentions (npc_id, journal_entry_id, source) VALUES (?, ?, 'ai')`

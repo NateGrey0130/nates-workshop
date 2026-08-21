@@ -3147,6 +3147,46 @@ Keep page ranges small. Spell entries carry a stat block plus prose, so they are
 much longer than skill entries, and a reply that overruns the output ceiling is
 rejected rather than half-saved.
 
+#### D1 binds 100 parameters per statement
+
+Measured against the real binding rather than assumed:
+
+```
+binds  100  ok
+binds  101  FAIL: D1_ERROR: too many SQL variables at offset 221
+```
+
+Any query building `IN (?,?,...)` from a list that grows with user data has a
+hard ceiling. Four files already carried a private `LOOKUP_BATCH = 50` for this
+reason; the ones that did not are where it broke.
+[`_lib/sql-chunk.js`](../../functions/api/character-creator/_lib/sql-chunk.js)
+now holds the constant and the helper in one place, and the smoke test fails any
+of those six files that stops using it.
+
+**The worst instance ran after the write, not before it.** `markConfirmed`
+builds `WHERE id IN (?,?,...)` from every pending row in a session, and it runs
+*after* `applyDecisions` has already committed the catalog inserts. Confirming
+108 spells therefore:
+
+1. inserted all 108 — the write itself was fine, each `INSERT` binds about 14
+2. threw on the bookkeeping statement, 313 ids in one `IN`
+3. returned a **500 that read as total failure**
+4. left every row still pending, so the next confirm tried to insert all 108
+   again and reported them as `A row with that name already exists`
+
+The write and the bookkeeping disagreed, and the bookkeeping is what the next
+run reads. `applyDecisions` says *"All-or-nothing: nothing was written"* in its
+error path — true of the batch it guards, and not true of the endpoint the
+caller is actually talking to.
+
+It was found only because the half-written rows carried a `NULL system` that the
+data script being generated alongside them never produces. Had both paths agreed
+on that column, the partial write would have been invisible.
+
+The regression test seeds 150 staged rows and confirms them through the real
+endpoint. Under the unchunked code, the telling check is the one that **passes**
+— `the catalog really grew by 150` — beside four that fail.
+
 ### Psionic importer
 
 The same session flow as spells — `_lib/session-import.js` is shared, and the

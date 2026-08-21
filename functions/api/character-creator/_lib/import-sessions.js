@@ -12,6 +12,7 @@
 // Catalog-agnostic: psionics and gear reuse this untouched.
 
 import { CATALOGS } from '../../../../apps/character-creator/js/catalog-fields.js';
+import { chunks } from './sql-chunk.js';
 import { safeParse } from './character-json.js';
 
 // A page range that produces more rows than this is almost certainly a range
@@ -130,11 +131,23 @@ export async function getStaged(env, sessionId, { pendingOnly = true } = {}) {
   });
 }
 
+// Chunked because D1 binds at most 100 parameters per statement and a session
+// confirms every pending row at once - 313 of them, the run that found this.
+//
+// This runs AFTER the catalog write has landed, which is what made the
+// unchunked version so bad: the spells were inserted, the statement marking
+// them confirmed threw, and the endpoint returned a 500 that read as total
+// failure. The rows stayed pending, so the next confirm would try to insert
+// them all over again.
 export async function markConfirmed(env, ids) {
   if (!ids.length) return 0;
-  const res = await env.DB.prepare(
-    `UPDATE import_staged SET confirmed_at = datetime('now')
-     WHERE id IN (${ids.map(() => '?').join(',')})`
-  ).bind(...ids).run();
-  return res.meta?.changes ?? 0;
+  let changed = 0;
+  for (const batch of chunks(ids)) {
+    const res = await env.DB.prepare(
+      `UPDATE import_staged SET confirmed_at = datetime('now')
+       WHERE id IN (${batch.map(() => '?').join(',')})`
+    ).bind(...batch).run();
+    changed += res.meta?.changes ?? 0;
+  }
+  return changed;
 }
