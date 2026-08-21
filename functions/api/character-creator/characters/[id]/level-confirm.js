@@ -8,11 +8,18 @@
 // Skill picks the class grants for crossing a level are banked in
 // pending_skill_picks. `picks` spends some or all of them now; anything left
 // unspent waits on the sheet. Levelling up is never blocked on choosing.
+//
+// `power_picks` does the same for the spells and psionic powers a level earns,
+// banked in pending_power_picks. A spell pick names the level that granted it,
+// because the spell LEVELS it may draw from belong to that grant rather than to
+// the character.
 
 import { json, requireCharacter } from '../../_lib/auth.js';
 import { loadCharacterClass } from '../../_lib/class-loader.js';
 import { xpTableFor, thresholdFor, skillGrantsFor } from '../../_lib/leveling.js';
 import { insertGrantStatements, remainingGrants, resolvePicks, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
+import { powerGrantsFor, resolvePowerPicks, remainingPowerGrants, insertPowerGrantStatements,
+         powerPickErrors } from '../../_lib/power-picks.js';
 import { validateCharacter, loadSkillCategories } from '../../_lib/validate-character.js';
 import { loadCharacter } from '../../_lib/character-json.js';
 
@@ -93,6 +100,36 @@ export async function onRequestPost({ request, env, params }) {
   }
   if (skillsChanged) { sets.push('skills = ?'); binds.push(JSON.stringify(skills)); }
 
+  // Spells and psionic powers the crossed levels earn. Same shape as the skill
+  // grants above and banked the same way, but validated against the cap the
+  // granting level carries rather than against a category list.
+  const powerGrants = powerGrantsFor(cls, character.level, toLevel);
+  // loadCharacter does not join campaigns, so the system has to be fetched.
+  // Without it the catalog filter is a silent no-op and a Rifts caster can
+  // learn a Palladium-only spell - the kind of permissiveness that looks
+  // exactly like a working feature.
+  const campaign = powerGrants.length
+    ? await env.DB.prepare('SELECT system FROM campaigns WHERE id = ?')
+        .bind(character.campaign_id).first()
+    : null;
+  let pickedPowers = [];
+  let powers = character.powers;
+  if (powerGrants.length && Array.isArray(b.power_picks) && b.power_picks.length) {
+    const resolved = await resolvePowerPicks(env, {
+      picks: b.power_picks,
+      grants: powerGrants,
+      existingPowers: powers,
+      system: campaign?.system ?? null,
+    });
+    if (resolved.errors?.length) return powerPickErrors(resolved.errors);
+    pickedPowers = resolved.powers;
+  }
+  if (pickedPowers.length) {
+    powers = powers.concat(pickedPowers);
+    sets.push('powers = ?'); binds.push(JSON.stringify(powers));
+    changes.powers = pickedPowers.map((p) => ({ type: p.type, name: p.name, level: p.gained_at_level }));
+  }
+
   // Check the result, not the request: the allowance grows with the level being
   // reached, so validate against toLevel rather than the level being left.
   const { violations } = validateCharacter({
@@ -126,6 +163,20 @@ export async function onRequestPost({ request, env, params }) {
       remainingGrants(grants, picked.skills.length)));
   }
 
+  // The same for powers, counted PER GRANT rather than as one total: a spell
+  // grant is identified by the level that earned it, and banking two level-4
+  // spells against a level-2 grant would hand them the wrong cap when they are
+  // eventually spent.
+  const spentByKey = new Map();
+  for (const p of pickedPowers) {
+    const key = `${p.type === 'psionic' ? 'psionic' : 'spell'}:${p.gained_at_level}`;
+    spentByKey.set(key, (spentByKey.get(key) || 0) + 1);
+  }
+  const powerRemaining = remainingPowerGrants(powerGrants, spentByKey);
+  if (powerRemaining.length) {
+    statements.push(...insertPowerGrantStatements(env, params.id, powerRemaining));
+  }
+
   await env.DB.batch(statements);
 
   return json({
@@ -135,5 +186,8 @@ export async function onRequestPost({ request, env, params }) {
     picks_granted: allowance,
     picks_spent: picked.skills.length,
     picks_pending: unspent,
+    powers_granted: powerGrants.reduce((n, g) => n + g.count, 0),
+    powers_spent: pickedPowers.length,
+    powers_pending: powerRemaining.reduce((n, g) => n + g.count, 0),
   });
 }

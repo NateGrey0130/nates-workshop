@@ -232,6 +232,25 @@ CREATE TABLE IF NOT EXISTS pending_skill_picks (
 CREATE INDEX IF NOT EXISTS idx_pending_picks_character
   ON pending_skill_picks (character_id, claimed_at);
 
+-- Spells and psionic powers a level-up granted and nobody has chosen yet.
+-- pending_skill_picks with a different subject, and for the same reason:
+-- levelling up is never blocked on choosing, so an unspent grant has to go
+-- somewhere or the spells that level earned are silently lost.
+CREATE TABLE IF NOT EXISTS pending_power_picks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  character_id INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  granted_at_level INTEGER NOT NULL,
+  count INTEGER NOT NULL,
+  kind TEXT NOT NULL CHECK (kind IN ('spell', 'psionic')),
+  -- JSON array of SPELL levels this grant may draw from; NULL is unrestricted,
+  -- and always NULL for a psionic grant. Copied from the class at grant time,
+  -- as pending_skill_picks copies its categories.
+  spell_levels TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  claimed_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_pending_power_picks_character
+  ON pending_power_picks (character_id, claimed_at);
 -- Shared gear catalog for character sheets. Named `gear` rather than `items`
 -- because this database is shared with MediaVault's `media_items`, and a table
 -- called `items` sitting next to it was the most likely future collision.
@@ -598,3 +617,7 @@ WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'campa
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '027-npc-dossiers.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'npcs');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '028-pending-power-picks.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'pending_power_picks');

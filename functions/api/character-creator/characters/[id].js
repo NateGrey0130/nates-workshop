@@ -5,6 +5,7 @@
 
 import { getUserEmail, unauthorized, json, readJson, requireCharacter } from '../_lib/auth.js';
 import { listPending } from '../_lib/skill-picks.js';
+import { listPendingPowers } from '../_lib/power-picks.js';
 import { decodeCharacter } from '../_lib/character-json.js';
 import { getStored } from '../_lib/class-store.js';
 import { parseClassMarkdown } from '../../../../apps/character-creator/js/parser.js';
@@ -38,6 +39,7 @@ export async function onRequestGet({ request, env, params }) {
   const can_write = email === character.player_email || email === character.campaign_gm;
   // So the sheet can badge unspent skill picks without a second request.
   const pending_picks = await listPending(env, params.id);
+  const pending_powers = await listPendingPowers(env, params.id);
 
   // The class as this character plays it, variant already applied.
   //
@@ -103,6 +105,8 @@ export async function onRequestGet({ request, env, params }) {
     is_gm: email === character.campaign_gm,
     pending_picks,
     pending_picks_total: pending_picks.reduce((n, g) => n + g.count, 0),
+    pending_powers,
+    pending_powers_total: pending_powers.reduce((n, g) => n + g.count, 0),
   });
 }
 

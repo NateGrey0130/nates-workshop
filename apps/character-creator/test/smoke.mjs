@@ -141,6 +141,7 @@ import { stageRows } from '../../../functions/api/character-creator/_lib/import-
 import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicGrantsFor,
          xpTableFor, thresholdFor, spellLevelsForGrant } from '../../../functions/api/character-creator/_lib/leveling.js';
 import { toMatchQuery } from '../../../functions/api/character-creator/campaigns/[id]/search.js';
+import { powerGrantsFor, remainingPowerGrants } from '../../../functions/api/character-creator/_lib/power-picks.js';
 import { parseMentions } from '../../../functions/api/character-creator/_lib/mentions.js';
 import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
 import { dedupeCategories } from '../../../functions/api/character-creator/_lib/skill-picks.js';
@@ -3622,6 +3623,98 @@ section('Portraits are never public');
   // The binding is named for the site, not the app that needed it first.
   const wrangler = readFileSync(join(appDir, '..', '..', 'wrangler.jsonc'), 'utf8');
   check('the R2 binding exists', /"binding":\s*"MEDIA"/.test(wrangler));
+}
+
+// ---------- The live level-up grants powers ----------
+// buildProposal reported spell and psionic grants and only the wizard acted on
+// them. The sheet applies them now, which means banking, a cap that belongs to
+// the granting level, and server-side enforcement of both.
+section('Power grants');
+{
+  const llw = { magic: { spells_starting: 12, spell_levels_allowed: [1, 2, 3, 4],
+                         spells_per_level: 2, spells_per_level_levels: 'up_to_character_level' } };
+
+  // THE POINT of carrying the cap on the grant. Crossing two levels at once
+  // caps each pair by ITS level, not by where the character ended up.
+  const twoLevels = powerGrantsFor(llw, 3, 5);
+  check('a multi-level jump yields one grant per level', twoLevels.length === 2);
+  check('and each carries the cap of the level that earned it',
+    JSON.stringify(twoLevels.map((g) => g.spell_levels)) === '[[1,2,3,4],[1,2,3,4,5]]',
+    JSON.stringify(twoLevels.map((g) => g.spell_levels)));
+  check('every grant says which kind it is', twoLevels.every((g) => g.kind === 'spell'));
+
+  // A class that records no per-level rule grants nothing rather than an
+  // unrestricted everything.
+  check('an unknown per-level rule grants nothing',
+    powerGrantsFor({ magic: { spells_starting: 6 } }, 1, 5).length === 0);
+  check('and no magic at all likewise', powerGrantsFor({}, 1, 5).length === 0);
+
+  const psi = powerGrantsFor({ psionics: { type: 'major', powers_per_level: 1 } }, 1, 3);
+  check('psionic grants carry no spell cap',
+    psi.length === 2 && psi.every((g) => g.kind === 'psionic' && g.spell_levels === null));
+
+  // Banking consumes per grant, not from one pool. Spending both level-4 spells
+  // must not leave the level-5 grant looking half spent.
+  const grants = [
+    { level: 4, count: 2, kind: 'spell', spell_levels: [1, 2, 3, 4] },
+    { level: 5, count: 2, kind: 'spell', spell_levels: [1, 2, 3, 4, 5] },
+  ];
+  const left = remainingPowerGrants(grants, new Map([['spell:4', 2]]));
+  check('a fully spent grant is gone and the other is untouched',
+    left.length === 1 && left[0].level === 5 && left[0].count === 2, JSON.stringify(left));
+  const partly = remainingPowerGrants(grants, new Map([['spell:4', 1], ['spell:5', 2]]));
+  check('a partly spent grant keeps its remainder',
+    partly.length === 1 && partly[0].level === 4 && partly[0].count === 1, JSON.stringify(partly));
+  check('and the remainder keeps its cap',
+    JSON.stringify(partly[0].spell_levels) === '[1,2,3,4]');
+  check('spending nothing banks everything',
+    remainingPowerGrants(grants, new Map()).length === 2);
+}
+
+section('Power picks are enforced server-side');
+{
+  const apiDir = join(appDir, '..', '..', 'functions', 'api', 'character-creator');
+  const lib = readFileSync(join(apiDir, '_lib', 'power-picks.js'), 'utf8');
+
+  // The picker filters, but a request does not have to come from the picker.
+  // Every one of these is a rejection a client could otherwise walk past.
+  for (const [what, pattern] of [
+    ['a grant that does not exist', /has no \$\{kind\} grant from level/],
+    ['a grant with no room', /is already full/],
+    ['a power already known', /already known/],
+    ['a name not in the catalog', /is not in the \$\{kind\} catalog/],
+    ['a spell above the grant cap', /is a level \$\{row\.level\} spell/],
+  ]) {
+    check(`the server refuses ${what}`, pattern.test(lib), what);
+  }
+
+  // The cap comes from the GRANT, not from recomputing against the class: a
+  // re-import between banking and spending must not change what a character was
+  // granted at level 4.
+  const claim = readFileSync(join(apiDir, 'characters', '[id]', 'power-picks.js'), 'utf8');
+  check('the claim path spends against the banked grants',
+    /spell_levels: g\.spell_levels/.test(claim));
+  check('and does not recompute them from the class',
+    !/spellLevelsForGrant/.test(claim));
+  check('the power write and the grant consume are one batch',
+    /DB\.batch\(statements\)/.test(claim));
+
+  // loadCharacter does not join campaigns. Reading character.campaign_system
+  // yields undefined, the system filter becomes a no-op, and a Rifts caster can
+  // learn a Palladium-only spell.
+  const confirm = readFileSync(join(apiDir, 'characters', '[id]', 'level-confirm.js'), 'utf8');
+  check('the level-up fetches the campaign system rather than assuming the character carries it',
+    /SELECT system FROM campaigns WHERE id = \?/.test(confirm));
+  check('and no path reads a campaign_system that loadCharacter never selected',
+    !/character\.campaign_system/.test(confirm));
+
+  // An empty list is what a swallowed error looks like.
+  check('listPendingPowers does not swallow query failures',
+    !/\.all\(\)\.catch\(/.test(lib));
+
+  const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  check('the sheet sends the power picks with the level-up', /power_picks,/.test(sheet));
+  check('and offers the banked ones afterwards', /claimPowers/.test(sheet));
 }
 
 section('Documented counts');

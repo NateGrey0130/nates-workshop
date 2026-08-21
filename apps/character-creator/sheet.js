@@ -52,6 +52,12 @@ async function load() {
     ]);
     C.journal = journal.entries; C.catalog = catalog.items;
     C.skillCatalog = catalogs.skills || [];
+    // Already in the response — the sheet kept only the skills until a level-up
+    // had to offer the spells and powers a level grants.
+    C.spellCatalog = catalogs.spells || [];
+    C.pendingPowers = res.pending_powers || [];
+    C.pendingPowersTotal = res.pending_powers_total || 0;
+    C.psiCatalog = catalogs.psionics || [];
     // Kept so the sheet can say when it is showing fewer entries than exist,
     // rather than quietly ending the log at the page boundary.
     C.journalTotal = journal.total ?? journal.entries.length;
@@ -1040,6 +1046,7 @@ function render() {
   ${w && C.proposal ? levelUpPanel() : ''}
   ${w && C.variantProposal ? variantProposalPanel() : ''}
   ${w && !C.proposal && C.pendingPicksTotal ? pendingPicksPanel() : ''}
+  ${w && !C.proposal && C.pendingPowersTotal ? pendingPowersPanel() : ''}
 
   <div class="sheet-grid rail" style="margin-top:12px">
     ${box('Saving Throws',
@@ -1179,12 +1186,152 @@ function levelUpPanel() {
     <table>${poolRows}${skillRows}</table>
     ${grants ? `<h3>New abilities</h3><ul style="margin-left:18px">${grants}</ul>` : ''}
     ${p.skill_picks_total ? pickerBlock(p.skill_picks, p.skill_picks_total, 'lu') : ''}
+    ${powerPickerBlock(p)}
     <div class="rowline" style="margin-top:10px">
       <button class="btn btn-primary" onclick="confirmLevelUp()">✅ Confirm level-up</button>
       <button class="btn btn-sm btn-ghost" onclick="C.proposal=null; render()">Not now</button>
       <span class="muted small">Nothing is applied until you confirm.</span>
     </div>
   </div>`;
+}
+
+// The spells and psionic powers the crossed levels earn.
+//
+// One select per slot, grouped by the level that granted it — because for
+// spells the LEVELS a slot may draw from belong to that grant. A Ley Line
+// Walker crossing into level 5 gets two spells capped at spell level 5, and if
+// it crossed two levels at once the level-4 pair is capped at 4.
+//
+// A class whose definition records no per-level rule says so rather than
+// showing an empty picker, exactly as the wizard's Advancement step does:
+// "not recorded" and "none" are different answers.
+function powerPickerBlock(p) {
+  const blocks = [powerKindBlock(p.spell_picks, 'spell'), powerKindBlock(p.psionic_picks, 'psionic')]
+    .filter(Boolean).join('');
+  return blocks;
+}
+
+function powerKindBlock(grant, kind) {
+  if (!grant || !grant.applicable) return '';
+  const isSpell = kind === 'spell';
+  const label = isSpell ? 'Spells' : 'Psionic powers';
+  if (grant.unknown) {
+    return `<h3>${label}</h3><p class="warn small">This class's definition does not record how
+      many ${isSpell ? 'spells' : 'powers'} it learns per level, so none are offered. Nothing is
+      guessed — add them by hand, or re-import the class with
+      <code>${isSpell ? 'spells_per_level' : 'powers_per_level'}</code>.</p>`;
+  }
+  if (!grant.total) return '';
+
+  const held = new Set((C.data.powers || []).map((x) => String(x.name).toLowerCase()));
+  const rows = grant.grants.map((g) => {
+    const levels = isSpell ? spellLevelCap(g.level) : null;
+    const pool = (isSpell ? C.spellCatalog : C.psiCatalog)
+      .filter((x) => !held.has(String(x.name).toLowerCase()))
+      .filter((x) => !x.system || x.system === C.data.campaign_system)
+      .filter((x) => !isSpell || !levels || levels.includes(x.level));
+    const cap = isSpell
+      ? (levels ? `spell levels ${levels.join(', ')}` : 'any spell level')
+      : 'the class list';
+    return Array.from({ length: g.count }, (_, i) => `
+      <div class="rowline">
+        <span class="muted small">Level ${g.level}</span>
+        <select id="lu-power-${kind}-${g.level}-${i}" data-level="${g.level}" data-kind="${kind}">
+          <option value="">— leave for later —</option>
+          ${pool.map((x) => `<option value="${escHtml(x.name)}">${escHtml(x.name)}${
+            isSpell && x.level != null ? ` (level ${x.level})` : ''}</option>`).join('')}
+        </select>
+        <span class="muted small">from ${escHtml(cap)}</span>
+      </div>`).join('');
+  }).join('');
+
+  return `<h3>${label} <span class="muted small">— ${grant.total} earned</span></h3>
+    <p class="muted small">Anything left blank is banked and waits on the sheet.</p>${rows}`;
+}
+
+// The spell levels a grant earned AT `level` may draw from. Mirrors
+// spellLevelsForGrant in js/leveling.js, which the sheet cannot import: it is a
+// classic script, not a module.
+function spellLevelCap(level) {
+  const magic = C.cls?.magic;
+  if (!magic) return null;
+  const rule = magic.spells_per_level_levels;
+  if (rule === 'up_to_character_level') {
+    return Array.from({ length: Math.max(0, level) }, (_, i) => i + 1);
+  }
+  if (Array.isArray(rule) && rule.length) return rule;
+  return Array.isArray(magic.spell_levels_allowed) && magic.spell_levels_allowed.length
+    ? magic.spell_levels_allowed : null;
+}
+
+// Every power slot the level-up panel is showing, as the API's shape.
+function collectPowerPicks() {
+  return [...document.querySelectorAll('[id^="lu-power-"]')]
+    .filter((el) => el.value)
+    .map((el) => ({ kind: el.dataset.kind, name: el.value, granted_at_level: +el.dataset.level }));
+}
+
+// Spell and psionic grants banked at a level-up. Shown until spent, for the
+// same reason the skill picks are: banking without a way to come back to it is
+// the same loss as not banking, just later.
+//
+// Each banked grant keeps the cap it was granted with, so this offers exactly
+// what that level allowed - not what the character's CURRENT level would.
+function pendingPowersPanel() {
+  const n = C.pendingPowersTotal;
+  if (!C.claimingPowers) {
+    return `
+    <div class="levelup noprint">
+      <h3 style="margin-top:0">\u2728 ${n} unspent ${n > 1 ? 'powers' : 'power'}
+        <span class="muted small">\u2014 earned at ${
+          C.pendingPowers.map((g) => 'level ' + g.granted_at_level).join(', ')}</span></h3>
+      <button class="btn" onclick="C.claimingPowers = true; render()">Choose now</button>
+    </div>`;
+  }
+  const held = new Set((C.data.powers || []).map((x) => String(x.name).toLowerCase()));
+  const rows = C.pendingPowers.map((g) => {
+    const isSpell = g.kind === 'spell';
+    const pool = (isSpell ? C.spellCatalog : C.psiCatalog)
+      .filter((x) => !held.has(String(x.name).toLowerCase()))
+      .filter((x) => !x.system || x.system === C.data.campaign_system)
+      .filter((x) => !isSpell || !g.spell_levels || g.spell_levels.includes(x.level));
+    const cap = isSpell && g.spell_levels ? `spell levels ${g.spell_levels.join(', ')}` : 'any';
+    return Array.from({ length: g.count }, (_, i) => `
+      <div class="rowline">
+        <span class="muted small">Level ${g.granted_at_level}</span>
+        <select id="claim-power-${g.kind}-${g.granted_at_level}-${i}"
+          data-level="${g.granted_at_level}" data-kind="${g.kind}">
+          <option value="">\u2014 not yet \u2014</option>
+          ${pool.map((x) => `<option value="${escHtml(x.name)}">${escHtml(x.name)}${
+            isSpell && x.level != null ? ` (level ${x.level})` : ''}</option>`).join('')}
+        </select>
+        <span class="muted small">from ${escHtml(cap)}</span>
+      </div>`).join('');
+  }).join('');
+  return `
+  <div class="levelup noprint">
+    <h3 style="margin-top:0">\u2728 Choose ${n} ${n > 1 ? 'powers' : 'power'}</h3>
+    ${rows}
+    <div class="rowline" style="margin-top:10px">
+      <button class="btn btn-primary" onclick="claimPowers()">Learn these</button>
+      <button class="btn btn-sm btn-ghost" onclick="C.claimingPowers = false; render()">Later</button>
+    </div>
+  </div>`;
+}
+
+async function claimPowers() {
+  const picks = [...document.querySelectorAll('[id^="claim-power-"]')]
+    .filter((el) => el.value)
+    .map((el) => ({ kind: el.dataset.kind, name: el.value, granted_at_level: +el.dataset.level }));
+  if (!picks.length) { flash('Choose at least one, or leave it for later.', true); return; }
+  try {
+    await api(`characters/${id}/power-picks`, jsonReq('POST', { picks }));
+    C.claimingPowers = false;
+    await load();
+  } catch (err) {
+    const details = errorDetails(err);
+    alert(['Could not learn those: ' + err.message, ...details.map((d) => '- ' + d)].join('\n'));
+  }
 }
 
 // Picks earned at a level-up and skipped. Shown until they are spent, so a
@@ -1318,9 +1465,10 @@ async function confirmLevelUp() {
     return { name: s.name, pct: Number.isFinite(v) ? v : s.to };
   });
   const picks = p.skill_picks_total ? collectPicks('lu', p.skill_picks_total) : [];
+  const power_picks = collectPowerPicks();
   try {
     await api(`characters/${id}/level-confirm`, jsonReq('POST', {
-      to_level: p.to_level, pools, skills, grants: p.grants, picks,
+      to_level: p.to_level, pools, skills, grants: p.grants, picks, power_picks,
     }));
     C.proposal = null;
     C.pickShowAll = false;
