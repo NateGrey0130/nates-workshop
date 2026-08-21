@@ -1226,13 +1226,15 @@ function powerKindBlock(grant, kind) {
   const held = new Set((C.data.powers || []).map((x) => String(x.name).toLowerCase()));
   const rows = grant.grants.map((g) => {
     const levels = isSpell ? spellLevelCap(g.level) : null;
+    const cats = isSpell ? null : psiCategoryCap(g.level);
     const pool = (isSpell ? C.spellCatalog : C.psiCatalog)
       .filter((x) => !held.has(String(x.name).toLowerCase()))
       .filter((x) => !x.system || x.system === C.data.campaign_system)
-      .filter((x) => !isSpell || !levels || levels.includes(x.level));
+      .filter((x) => !isSpell || !levels || levels.includes(x.level))
+      .filter((x) => isSpell || !cats || cats.includes(x.category));
     const cap = isSpell
       ? (levels ? `spell levels ${levels.join(', ')}` : 'any spell level')
-      : 'the class list';
+      : (cats ? cats.join(', ') : 'any category');
     return Array.from({ length: g.count }, (_, i) => `
       <div class="rowline">
         <span class="muted small">Level ${g.level}</span>
@@ -1247,6 +1249,22 @@ function powerKindBlock(grant, kind) {
 
   return `<h3>${label} <span class="muted small">— ${grant.total} earned</span></h3>
     <p class="muted small">Anything left blank is banked and waits on the sheet.</p>${rows}`;
+}
+
+// The psionic categories a grant earned AT `level` may draw from. Mirrors
+// psionicCategoriesForGrant in js/leveling.js - the sheet cannot import it,
+// being a classic script rather than a module.
+//
+// A grant's categories REPLACE the class's: the Mystic's level-4 power comes
+// from Super, which its starting Sensitive/Healing powers could not.
+function psiCategoryCap(level) {
+  const psi = C.cls?.psionics;
+  if (!psi) return null;
+  const entry = (Array.isArray(psi.powers_schedule) ? psi.powers_schedule : [])
+    .find((e) => e?.level === level && Array.isArray(e.categories) && e.categories.length);
+  if (entry) return entry.categories;
+  return Array.isArray(psi.categories_allowed) && psi.categories_allowed.length
+    ? psi.categories_allowed : null;
 }
 
 // The spell levels a grant earned AT `level` may draw from. Mirrors
@@ -1294,8 +1312,12 @@ function pendingPowersPanel() {
     const pool = (isSpell ? C.spellCatalog : C.psiCatalog)
       .filter((x) => !held.has(String(x.name).toLowerCase()))
       .filter((x) => !x.system || x.system === C.data.campaign_system)
-      .filter((x) => !isSpell || !g.spell_levels || g.spell_levels.includes(x.level));
-    const cap = isSpell && g.spell_levels ? `spell levels ${g.spell_levels.join(', ')}` : 'any';
+      .filter((x) => !isSpell || !g.spell_levels || g.spell_levels.includes(x.level))
+      .filter((x) => isSpell || !g.categories || g.categories.includes(x.category));
+    // The banked row's own restriction, not the class's as it stands today.
+    const cap = isSpell
+      ? (g.spell_levels ? `spell levels ${g.spell_levels.join(', ')}` : 'any')
+      : (g.categories ? g.categories.join(', ') : 'any');
     return Array.from({ length: g.count }, (_, i) => `
       <div class="rowline">
         <span class="muted small">Level ${g.granted_at_level}</span>

@@ -184,6 +184,34 @@ export function psionicGrantsFor(cls, fromLevel, toLevel) {
   return perLevelGrants(cls?.psionics, 'powers_per_level', 'powers_schedule', fromLevel, toLevel);
 }
 
+// Which psionic CATEGORIES the powers gained AT `level` may come from.
+//
+// The same shape as spellLevelsForGrant, and it exists for the same reason: the
+// restriction on what a level EARNS is not always the restriction on what the
+// class started with. The Mystic starts with Sensitive and Healing powers and
+// gains a SUPER one at levels 4 and 8 - a category a major psychic could not
+// otherwise take at all.
+//
+// That last part is why this overrides rather than narrows. Tier is enforced by
+// category here (every catalogued power has a NULL min_tier, so the per-power
+// gate never fires), which means a grant naming Super IS the book granting an
+// exception to the tier. Intersecting it with the class's own categories would
+// throw the exception away and leave an empty picker.
+//
+// null means unrestricted, which is what a class stating neither means.
+export function psionicCategoriesForGrant(cls, level) {
+  const psi = cls?.psionics;
+  if (!psi) return null;
+
+  const entry = (Array.isArray(psi.powers_schedule) ? psi.powers_schedule : [])
+    .find((e) => e?.level === level && Array.isArray(e.categories) && e.categories.length);
+  if (entry) return entry.categories;
+
+  return Array.isArray(psi.categories_allowed) && psi.categories_allowed.length
+    ? psi.categories_allowed
+    : null;
+}
+
 // Proposed (not yet applied) diff for character reaching toLevel.
 // `character` must carry parsed skills and the pool max columns.
 export function buildProposal(character, cls, toLevel) {

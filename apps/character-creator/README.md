@@ -1039,6 +1039,40 @@ class-wide rule. And because a schedule is a finite list, **"and each additional
 level of experience" has to be written out** — to 15, the default XP table's
 cap. A class with a shorter `xp_table` simply never reaches the tail.
 
+### A psionic grant can name its categories, and they replace the class's
+
+Same shape, different subject, and the Mystic needed both halves — which is why
+it is the class worth designing against. Bullet 4 of the same page:
+
+> Select three additional psychic abilities from the **Sensitive** category and
+> another two from the **Healer** category. At levels four and eight the Mystic
+> can select one additional ability from the **Super** category.
+
+```yaml
+psionics:
+  type: major
+  powers_starting: 5
+  categories_allowed: ["Sensitive", "Healing"]
+  powers_schedule:
+    - { level: 4, count: 1, categories: ["Super"] }
+    - { level: 8, count: 1, categories: ["Super"] }
+```
+
+**A grant's categories REPLACE the class's rather than narrowing them**, and
+that is the whole point rather than a convenience. Every catalogued power has a
+NULL `min_tier`, so the per-power tier gate never fires and **tier is enforced
+by category**: Super is master-only because non-masters are not offered it. A
+grant naming Super *is* the book granting a major psychic an exception, so
+intersecting it with the class's own categories would throw the exception away
+and leave an empty picker.
+
+Which also means **the psionic picker is per grant**, as the spell picker
+already was. It used to be one batched set, on the reasoning that no book states
+which level a given power had to be learned at. The Mystic states exactly that.
+
+`pending_power_picks.categories` carries it for a banked grant, copied at grant
+time for the same reason `spell_levels` is.
+
 **Which is why the spell picker is per grant, not one batched set.** Each level's
 spells are chosen from the levels *that* level allows, the way skill picks are
 already chosen from the categories their grant allows. Batching them would
@@ -3216,6 +3250,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `022-play-events.sql` | `play_events` — play mode's append-only action log: undo, the who-did-what trail, and the session recap boundary |
 | `023-skill-bonuses.sql` | `skills.bonuses` — what a skill grants beyond its percentage, in a class's `bonuses:` shape. Boxing is +1 attack per melee and +2 P.S. |
 | `024-data-script-runs.sql` | `data_script_runs` — which data scripts have run against this database. The same question `schema_migrations` answers for migrations, for the 55 scripts that answer it nowhere |
+| `029-power-pick-categories.sql` | `pending_power_picks.categories` — a banked PSIONIC grant's own category list. The Mystic gains a **Super** power at levels 4 and 8, a category a major psychic cannot otherwise take, so the restriction belongs to the grant rather than to the class |
 | `028-pending-power-picks.sql` | `pending_power_picks` — the spells and psionic powers a level-up granted and nobody chose. `pending_skill_picks` with a different subject; `spell_levels` carries the cap the granting level came with, because that cap belongs to the grant rather than to the character |
 | `027-npc-dossiers.sql` | `npcs`, `npc_mentions`, `npc_sweeps` and `npc_proposals_dismissed`. **The first migration whose feature also needs a bucket** — R2 `MEDIA` must exist before the deploy that binds it |
 | `026-campaign-notes.sql` | `journal_fts` and its three triggers, plus `campaign_items` and `campaign_currency`. The FTS table is external-content, so the triggers are not optional — without them the index silently stops matching anything written after the migration ran |

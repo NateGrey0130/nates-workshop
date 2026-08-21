@@ -139,7 +139,8 @@ import { CHARACTER_JSON_COLUMNS } from '../../../functions/api/character-creator
 import { applyDecisions, classifyRows, countRows, getImportSpec, normaliseRows, slugify, stripFences, systemColumnFor } from '../../../functions/api/character-creator/_lib/import-engine.js';
 import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
 import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicGrantsFor,
-         xpTableFor, thresholdFor, spellLevelsForGrant } from '../../../functions/api/character-creator/_lib/leveling.js';
+         xpTableFor, thresholdFor, spellLevelsForGrant,
+         psionicCategoriesForGrant } from '../../../functions/api/character-creator/_lib/leveling.js';
 import { toMatchQuery } from '../../../functions/api/character-creator/campaigns/[id]/search.js';
 import { powerGrantsFor, remainingPowerGrants } from '../../../functions/api/character-creator/_lib/power-picks.js';
 import { parseMentions } from '../../../functions/api/character-creator/_lib/mentions.js';
@@ -928,12 +929,45 @@ section('Per-level spells and psionics');
   const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
   check('level spells are held per grant, not as one list',
     /levelSpells\[gi\]/.test(appSrc));
+  // Psionics too, once a book stated a per-level category. The old comment
+  // claimed no book says which level a power was learned at; the Mystic does.
+  check('and so are level psionic powers',
+    /levelPsi\[gi\]/.test(appSrc));
+  check('each psionic grant asks for its own categories',
+    /psionicCategoriesForGrant\(S\.cls, g\.level\)/.test(appSrc));
+  check('the batched-psionics claim is gone',
+    !/no book states which level a given psionic power/.test(appSrc));
   check('and each grant asks for its own allowed levels',
     /spellLevelsForGrant\(S\.cls, g\.level\)/.test(appSrc));
   // Enforced, not advised: a spell level is a mechanical rule like a psychic
   // tier, not a table judgement like a skill category.
   check('an out-of-cap spell is not in the list at all',
     /\(!levels \|\| levels\.includes\(sp\.level\)\)/.test(appSrc));
+
+  // A PSIONIC grant may name its own categories, and they REPLACE the class's
+  // rather than narrowing them. The Mystic (RUE p.119) is the case: it starts
+  // with Sensitive and Healing powers and gains a SUPER one at levels 4 and 8 -
+  // a category a major psychic cannot otherwise take, because tier is enforced
+  // by category here. Intersecting would throw the book's exception away and
+  // leave an empty picker.
+  const mysticPsi = { psionics: { type: 'major', powers_starting: 5,
+                                  categories_allowed: ['Sensitive', 'Healing'],
+                                  powers_schedule: [
+                                    { level: 4, count: 1, categories: ['Super'] },
+                                    { level: 8, count: 1, categories: ['Super'] }] } };
+  check('a grant names its own categories',
+    JSON.stringify(psionicCategoriesForGrant(mysticPsi, 4)) === '["Super"]');
+  check('and they replace the class list rather than intersecting it',
+    !psionicCategoriesForGrant(mysticPsi, 4).includes('Sensitive'));
+  check('a level with no grant falls back to the class list',
+    JSON.stringify(psionicCategoriesForGrant(mysticPsi, 5)) === '["Sensitive","Healing"]');
+  check('a class with no psionics has no answer', psionicCategoriesForGrant({}, 4) === null);
+  check('and one restricting nothing is unrestricted',
+    psionicCategoriesForGrant({ psionics: { type: 'major' } }, 4) === null);
+  const mysticPsiGrants = psionicGrantsFor(mysticPsi, 1, 8);
+  check('the schedule grants only at the levels it names',
+    JSON.stringify(mysticPsiGrants.grants.map((g) => g.level)) === '[4,8]');
+  check('two powers across eight levels', mysticPsiGrants.total === 2);
 
   const psi = psionicGrantsFor({ psionics: { type: 'major', powers_per_level: 1 } }, 1, 5);
   check('psionic powers use their own keys', psi.total === 4 && psi.unknown === false);
@@ -3712,6 +3746,7 @@ section('Power picks are enforced server-side');
     ['a power already known', /already known/],
     ['a name not in the catalog', /is not in the \$\{kind\} catalog/],
     ['a spell above the grant cap', /is a level \$\{row\.level\} spell/],
+    ['a power outside the grant categories', /power; the level \$\{level\} grant allows/],
   ]) {
     check(`the server refuses ${what}`, pattern.test(lib), what);
   }
@@ -3722,6 +3757,8 @@ section('Power picks are enforced server-side');
   const claim = readFileSync(join(apiDir, 'characters', '[id]', 'power-picks.js'), 'utf8');
   check('the claim path spends against the banked grants',
     /spell_levels: g\.spell_levels/.test(claim));
+  check('including the banked categories',
+    /categories: g\.categories/.test(claim));
   check('and does not recompute them from the class',
     !/spellLevelsForGrant/.test(claim));
   check('the power write and the grant consume are one batch',

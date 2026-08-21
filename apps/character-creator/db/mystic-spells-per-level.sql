@@ -1,4 +1,4 @@
--- Mystic: the spells it learns as it advances. Rifts Ultimate Edition p.119,
+-- Mystic: the spells and psionic powers it gains as it advances. Rifts
 -- "Mystic O.C.C. Magic Powers", bullet 2 "Learning New Spells".
 --
 -- The book states three different things, and the count is not the only one
@@ -66,6 +66,40 @@ SELECT class_id,
        instr(markdown, 'level: 2, count: 4, spell_levels: [1, 2, 3]') > 0 AS has_level2,
        instr(markdown, 'level: 15, count: 2') > 0 AS has_tail,
        instr(markdown, 'spells_per_level_levels: up_to_character_level') > 0 AS has_fallback
+FROM imported_classes
+WHERE class_id = 'mystic';
+
+-- ---------------------------------------------------------------------------
+-- Bullet 4 on the same page, "Additional Psychic Abilities Include":
+--
+--   "Select three additional psychic abilities from the Sensitive category and
+--    another two from the Healer category. At levels four and eight the Mystic
+--    can select one additional ability from the Super category."
+--
+-- The starting five are already right (powers_starting: 5, categories_allowed
+-- Sensitive + Healing). What is new is that the level 4 and 8 powers come from
+-- SUPER - a category a MAJOR psychic cannot otherwise take, since tier is
+-- enforced by category here. The grant naming it is the book granting the
+-- exception, which is why a grant's categories REPLACE the class's rather than
+-- narrowing them.
+
+UPDATE imported_classes
+SET markdown = replace(
+      markdown,
+      '  categories_allowed: ["Sensitive", "Healing"]',
+      '  categories_allowed: ["Sensitive", "Healing"]' || char(10) ||
+      '  powers_schedule:' || char(10) ||
+      '    - { level: 4, count: 1, categories: ["Super"] }' || char(10) ||
+      '    - { level: 8, count: 1, categories: ["Super"] }'
+    )
+WHERE class_id = 'mystic'
+  AND instr(markdown, '  categories_allowed: ["Sensitive", "Healing"]') > 0
+  AND instr(markdown, 'powers_schedule') = 0;
+
+SELECT class_id,
+       instr(markdown, 'powers_schedule') > 0 AS has_psi_schedule,
+       instr(markdown, 'level: 4, count: 1, categories: ["Super"]') > 0 AS has_level4,
+       instr(markdown, 'level: 8, count: 1, categories: ["Super"]') > 0 AS has_level8
 FROM imported_classes
 WHERE class_id = 'mystic';
 

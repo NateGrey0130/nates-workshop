@@ -47,7 +47,8 @@ export async function onRequestPost({ request, env, params }) {
   // The banked rows ARE the grants, so what was stored is what is spent
   // against — including the cap each one carried.
   const grants = pending.map((g) => ({
-    level: g.granted_at_level, count: g.count, kind: g.kind, spell_levels: g.spell_levels,
+    level: g.granted_at_level, count: g.count, kind: g.kind,
+    spell_levels: g.spell_levels, categories: g.categories,
   }));
 
   const resolved = await resolvePowerPicks(env, {
