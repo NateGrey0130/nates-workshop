@@ -20,6 +20,7 @@ import { isChoiceGroup, isGearChoice, applyVariant,
          bonusesFromSkills, sumBonusGroups } from './js/parser.js';
 import { composeClass } from './js/compose.js';
 import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant,
+         spellNamesForGrant, grantNote,
          skillGrantsFor, spellGrantsFor, psionicGrantsFor } from './js/leveling.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
@@ -1310,17 +1311,33 @@ function spellGrantBlock(grant) {
   const taken = Object.values(S.levelSpells).flat().filter(Boolean);
   const blocks = grant.grants.map((g, gi) => {
     const chosen = S.levelSpells[gi] || [];
-    const levels = spellLevelsForGrant(S.cls, g.level);
+    const levels = spellLevelsForGrant(S.cls, g.level, g.slot);
+    const names = spellNamesForGrant(S.cls, g.level, g.slot);
+    const note = grantNote(S.cls, 'spell', g.level, g.slot);
     // Everything already held: the class's own, the level-1 picks, and every
     // other grant's. A spell is learned once.
     const heldElsewhere = new Set([...S.spells, ...taken.filter((n) => !chosen.includes(n))]
       .map((n) => n.toLowerCase()));
+    // A named list is the tightest restriction and replaces the level cap: a
+    // grant that names its spells is not also asking about levels.
+    const named = names && new Set(names.map((n) => n.toLowerCase()));
     const pool = S.spellCatalog.filter((sp) => inSystem(sp)
-      && (!levels || levels.includes(sp.level))
+      && (named ? named.has(String(sp.name).toLowerCase()) : (!levels || levels.includes(sp.level)))
       && !heldElsewhere.has(String(sp.name).toLowerCase()));
-    const cap = levels ? `spell levels ${levels.join(', ')}` : 'any spell level';
+    // A name the catalog does not carry would silently shrink the list, so say
+    // so — the same reasoning the psionic named list already uses.
+    const unknownNamed = names
+      ? names.filter((n) => !S.spellCatalog.some((x) => String(x.name).toLowerCase() === n.toLowerCase()))
+      : [];
+    const cap = named ? `a list of ${names.length}`
+      : levels ? `spell levels ${levels.join(', ')}` : 'any spell level';
     return `<p class="small" style="margin-top:12px"><b>Level ${g.level}</b> — ${g.count}
       ${g.count === 1 ? 'spell' : 'spells'} <span class="muted">from ${esc(cap)}</span></p>
+      ${note ? `<p class="attr-note">${esc(note)} — the catalog cannot check this one, so it is
+        yours to honour.</p>` : ''}
+      ${unknownNamed.length ? `<p class="attr-note">${unknownNamed.length} named
+        ${unknownNamed.length === 1 ? 'spell is' : 'spells are'} not in the catalog yet:
+        ${esc(unknownNamed.join(', '))}.</p>` : ''}
       ${spellGroupRows(pool, g.count, 'spell-adv', gi)}`;
   }).join('');
 
@@ -1346,13 +1363,15 @@ function psiGrantBlock(grant) {
   const taken = Object.values(S.levelPsi).flat().filter(Boolean);
   const blocks = grant.grants.map((g, gi) => {
     const chosen = S.levelPsi[gi] || [];
-    const cats = psionicCategoriesForGrant(S.cls, g.level);
+    const cats = psionicCategoriesForGrant(S.cls, g.level, g.slot);
+    const note = grantNote(S.cls, 'psionic', g.level, g.slot);
     const heldElsewhere = new Set([...S.psi, ...taken.filter((n) => !chosen.includes(n))]
       .map((n) => n.toLowerCase()));
     const pool = advPsiPool(cats).filter((x) => !heldElsewhere.has(String(x.name).toLowerCase()));
     return `<p class="small" style="margin-top:12px"><b>Level ${g.level}</b> — ${g.count}
       ${g.count === 1 ? 'power' : 'powers'}
       <span class="muted">from ${esc(cats ? cats.join(', ') : 'any category')}</span></p>
+      ${note ? `<p class="attr-note">${esc(note)} — the catalog cannot check this one.</p>` : ''}
       ${psiGroupRows(pool, g.count, 'psi-adv', gi)}`;
   }).join('');
 
@@ -1813,7 +1832,7 @@ function renderSkills() {
     // in it. Sorted by category then name so the headings come out in a stable
     // order rather than the catalog's.
     const ordered = [...shown].sort((a, b) =>
-      (a.category || '\uffff').localeCompare(b.category || '\uffff')
+      (a.category || '￿').localeCompare(b.category || '￿')
       || (a.name || '').localeCompare(b.name || ''));
     const sizes = ordered.reduce((m, x) => { const g = x.category || 'Uncategorized';
       return m.set(g, (m.get(g) || 0) + 1); }, new Map());
@@ -2545,6 +2564,21 @@ function skillsPayload() {
 
 // Skills chosen with the picks the levels granted. `gained_at_level` records
 // which level earned each, the same provenance a live level-up writes.
+// Which slot each level-gained power filled, so the server can check it
+// against the right grant. The wizard's grant index IS the order
+// spellGrantsFor returned, so the slot rides along from there.
+function levelPowerPicks(kind) {
+  const grants = (kind === 'spell' ? spellGrantsFor : psionicGrantsFor)(S.cls, 1, S.level);
+  const chosenBy = kind === 'spell' ? S.levelSpells : S.levelPsi;
+  const out = [];
+  (grants.grants || []).forEach((g, gi) => {
+    for (const name of (chosenBy[gi] || []).filter(Boolean)) {
+      out.push({ kind, name, granted_at_level: g.level, slot: g.slot ?? 0 });
+    }
+  });
+  return out;
+}
+
 function levelPickRows() {
   const find = (n) => skillByName().get(n)
     || (isLanguageName(n) ? { ...(skillByName().get(LANGUAGE_OTHER) || {}), name: n } : {});

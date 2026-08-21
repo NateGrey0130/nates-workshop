@@ -1224,21 +1224,33 @@ function powerKindBlock(grant, kind) {
   if (!grant.total) return '';
 
   const held = new Set((C.data.powers || []).map((x) => String(x.name).toLowerCase()));
+  // `slot`, `from` and `note` ride along on the grant itself, so only the level
+  // cap still has to be mirrored from js/leveling.js here.
   const rows = grant.grants.map((g) => {
-    const levels = isSpell ? spellLevelCap(g.level) : null;
-    const cats = isSpell ? null : psiCategoryCap(g.level);
+    const slot = g.slot ?? 0;
+    const levels = isSpell ? spellLevelCap(g.level, slot) : null;
+    const cats = isSpell ? null : psiCategoryCap(g.level, slot);
+    // A named list is the tightest restriction and replaces the level cap.
+    const named = isSpell && Array.isArray(g.from) && g.from.length
+      ? new Set(g.from.map((n) => String(n).toLowerCase())) : null;
     const pool = (isSpell ? C.spellCatalog : C.psiCatalog)
       .filter((x) => !held.has(String(x.name).toLowerCase()))
       .filter((x) => !x.system || x.system === C.data.campaign_system)
-      .filter((x) => !isSpell || !levels || levels.includes(x.level))
+      .filter((x) => !isSpell || (named ? named.has(String(x.name).toLowerCase())
+                                        : (!levels || levels.includes(x.level))))
       .filter((x) => isSpell || !cats || cats.includes(x.category));
-    const cap = isSpell
-      ? (levels ? `spell levels ${levels.join(', ')}` : 'any spell level')
-      : (cats ? cats.join(', ') : 'any category');
-    return Array.from({ length: g.count }, (_, i) => `
+    const cap = named ? `a list of ${g.from.length}`
+      : isSpell
+        ? (levels ? `spell levels ${levels.join(', ')}` : 'any spell level')
+        : (cats ? cats.join(', ') : 'any category');
+    const note = g.note
+      ? `<p class="small warn" style="margin:2px 0">${escHtml(g.note)} — the catalog cannot check
+         this one, so it is yours to honour.</p>` : '';
+    return note + Array.from({ length: g.count }, (_, i) => `
       <div class="rowline">
         <span class="muted small">Level ${g.level}</span>
-        <select id="lu-power-${kind}-${g.level}-${i}" data-level="${g.level}" data-kind="${kind}">
+        <select id="lu-power-${kind}-${g.level}-${slot}-${i}"
+          data-level="${g.level}" data-slot="${slot}" data-kind="${kind}">
           <option value="">— leave for later —</option>
           ${pool.map((x) => `<option value="${escHtml(x.name)}">${escHtml(x.name)}${
             isSpell && x.level != null ? ` (level ${x.level})` : ''}</option>`).join('')}
@@ -1257,22 +1269,35 @@ function powerKindBlock(grant, kind) {
 //
 // A grant's categories REPLACE the class's: the Mystic's level-4 power comes
 // from Super, which its starting Sensitive/Healing powers could not.
-function psiCategoryCap(level) {
+function psiCategoryCap(level, slot = 0) {
   const psi = C.cls?.psionics;
   if (!psi) return null;
-  const entry = (Array.isArray(psi.powers_schedule) ? psi.powers_schedule : [])
-    .find((e) => e?.level === level && Array.isArray(e.categories) && e.categories.length);
-  if (entry) return entry.categories;
+  const entry = scheduleEntryAt(psi.powers_schedule, level, slot);
+  if (entry && Array.isArray(entry.categories) && entry.categories.length) return entry.categories;
   return Array.isArray(psi.categories_allowed) && psi.categories_allowed.length
     ? psi.categories_allowed : null;
+}
+
+// The nth entry at a level. Several grants can share a level with different
+// restrictions - a Shifter's three spells at level 2 come from three places -
+// so the slot is what tells them apart. Mirrors entryAt in js/leveling.js.
+function scheduleEntryAt(schedule, level, slot) {
+  if (!Array.isArray(schedule)) return null;
+  return schedule.filter((e) => e?.level === level)[slot] ?? null;
 }
 
 // The spell levels a grant earned AT `level` may draw from. Mirrors
 // spellLevelsForGrant in js/leveling.js, which the sheet cannot import: it is a
 // classic script, not a module.
-function spellLevelCap(level) {
+function spellLevelCap(level, slot = 0) {
   const magic = C.cls?.magic;
   if (!magic) return null;
+  const entry = scheduleEntryAt(magic.spells_schedule, level, slot);
+  if (entry && Array.isArray(entry.spell_levels) && entry.spell_levels.length) {
+    return entry.spell_levels;
+  }
+  // A slot bounded by a named list is not also bounded by a spell level.
+  if (entry && Array.isArray(entry.from) && entry.from.length) return null;
   const rule = magic.spells_per_level_levels;
   if (rule === 'up_to_character_level') {
     return Array.from({ length: Math.max(0, level) }, (_, i) => i + 1);
@@ -1286,7 +1311,8 @@ function spellLevelCap(level) {
 function collectPowerPicks() {
   return [...document.querySelectorAll('[id^="lu-power-"]')]
     .filter((el) => el.value)
-    .map((el) => ({ kind: el.dataset.kind, name: el.value, granted_at_level: +el.dataset.level }));
+    .map((el) => ({ kind: el.dataset.kind, name: el.value,
+                    granted_at_level: +el.dataset.level, slot: +(el.dataset.slot || 0) }));
 }
 
 // Spell and psionic grants banked at a level-up. Shown until spent, for the
@@ -1300,8 +1326,8 @@ function pendingPowersPanel() {
   if (!C.claimingPowers) {
     return `
     <div class="levelup noprint">
-      <h3 style="margin-top:0">\u2728 ${n} unspent ${n > 1 ? 'powers' : 'power'}
-        <span class="muted small">\u2014 earned at ${
+      <h3 style="margin-top:0">✨ ${n} unspent ${n > 1 ? 'powers' : 'power'}
+        <span class="muted small">— earned at ${
           C.pendingPowers.map((g) => 'level ' + g.granted_at_level).join(', ')}</span></h3>
       <button class="btn" onclick="C.claimingPowers = true; render()">Choose now</button>
     </div>`;
@@ -1309,21 +1335,27 @@ function pendingPowersPanel() {
   const held = new Set((C.data.powers || []).map((x) => String(x.name).toLowerCase()));
   const rows = C.pendingPowers.map((g) => {
     const isSpell = g.kind === 'spell';
+    const named = isSpell && Array.isArray(g.from) && g.from.length
+      ? new Set(g.from.map((n) => String(n).toLowerCase())) : null;
     const pool = (isSpell ? C.spellCatalog : C.psiCatalog)
       .filter((x) => !held.has(String(x.name).toLowerCase()))
       .filter((x) => !x.system || x.system === C.data.campaign_system)
-      .filter((x) => !isSpell || !g.spell_levels || g.spell_levels.includes(x.level))
+      .filter((x) => !isSpell || (named ? named.has(String(x.name).toLowerCase())
+                                        : (!g.spell_levels || g.spell_levels.includes(x.level))))
       .filter((x) => isSpell || !g.categories || g.categories.includes(x.category));
     // The banked row's own restriction, not the class's as it stands today.
-    const cap = isSpell
-      ? (g.spell_levels ? `spell levels ${g.spell_levels.join(', ')}` : 'any')
-      : (g.categories ? g.categories.join(', ') : 'any');
-    return Array.from({ length: g.count }, (_, i) => `
+    const cap = named ? `a list of ${g.from.length}`
+      : isSpell
+        ? (g.spell_levels ? `spell levels ${g.spell_levels.join(', ')}` : 'any')
+        : (g.categories ? g.categories.join(', ') : 'any');
+    const note = g.note
+      ? `<p class="small warn" style="margin:2px 0">${escHtml(g.note)} — not checked here.</p>` : '';
+    return note + Array.from({ length: g.count }, (_, i) => `
       <div class="rowline">
         <span class="muted small">Level ${g.granted_at_level}</span>
-        <select id="claim-power-${g.kind}-${g.granted_at_level}-${i}"
-          data-level="${g.granted_at_level}" data-kind="${g.kind}">
-          <option value="">\u2014 not yet \u2014</option>
+        <select id="claim-power-${g.kind}-${g.granted_at_level}-${g.slot ?? 0}-${i}"
+          data-level="${g.granted_at_level}" data-slot="${g.slot ?? 0}" data-kind="${g.kind}">
+          <option value="">— not yet —</option>
           ${pool.map((x) => `<option value="${escHtml(x.name)}">${escHtml(x.name)}${
             isSpell && x.level != null ? ` (level ${x.level})` : ''}</option>`).join('')}
         </select>
@@ -1332,7 +1364,7 @@ function pendingPowersPanel() {
   }).join('');
   return `
   <div class="levelup noprint">
-    <h3 style="margin-top:0">\u2728 Choose ${n} ${n > 1 ? 'powers' : 'power'}</h3>
+    <h3 style="margin-top:0">✨ Choose ${n} ${n > 1 ? 'powers' : 'power'}</h3>
     ${rows}
     <div class="rowline" style="margin-top:10px">
       <button class="btn btn-primary" onclick="claimPowers()">Learn these</button>
@@ -1344,7 +1376,8 @@ function pendingPowersPanel() {
 async function claimPowers() {
   const picks = [...document.querySelectorAll('[id^="claim-power-"]')]
     .filter((el) => el.value)
-    .map((el) => ({ kind: el.dataset.kind, name: el.value, granted_at_level: +el.dataset.level }));
+    .map((el) => ({ kind: el.dataset.kind, name: el.value,
+                    granted_at_level: +el.dataset.level, slot: +(el.dataset.slot || 0) }));
   if (!picks.length) { flash('Choose at least one, or leave it for later.', true); return; }
   try {
     await api(`characters/${id}/power-picks`, jsonReq('POST', { picks }));

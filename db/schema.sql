@@ -251,6 +251,16 @@ CREATE TABLE IF NOT EXISTS pending_power_picks (
   -- REPLACE the class's: the Mystic's level-4 power comes from Super, which a
   -- major psychic could not otherwise take.
   categories TEXT,
+  -- Several grants can share a level with different restrictions: the Shifter
+  -- gains two spells from its named list and one of any kind each level. `slot`
+  -- is what tells them apart, and everything that keys a grant keys on level
+  -- AND slot.
+  slot INTEGER NOT NULL DEFAULT 0,
+  from_names TEXT,                        -- JSON array; a grant drawn from a named list
+  -- A restriction the catalog CANNOT enforce, shown to the player instead.
+  -- Spells carry no tag, so "non-dimension related or control based" has
+  -- nothing to filter on; stating it beats dropping it or guessing at it.
+  note TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   claimed_at TEXT
 );
@@ -630,3 +640,7 @@ WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'pendi
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '029-power-pick-categories.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('pending_power_picks') WHERE name = 'categories');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '030-power-pick-slots.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('pending_power_picks') WHERE name = 'slot');

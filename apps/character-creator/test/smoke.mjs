@@ -140,7 +140,8 @@ import { applyDecisions, classifyRows, countRows, getImportSpec, normaliseRows, 
 import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
 import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicGrantsFor,
          xpTableFor, thresholdFor, spellLevelsForGrant,
-         psionicCategoriesForGrant } from '../../../functions/api/character-creator/_lib/leveling.js';
+         psionicCategoriesForGrant, spellNamesForGrant,
+         grantNote } from '../../../functions/api/character-creator/_lib/leveling.js';
 import { toMatchQuery } from '../../../functions/api/character-creator/campaigns/[id]/search.js';
 import { powerGrantsFor, remainingPowerGrants } from '../../../functions/api/character-creator/_lib/power-picks.js';
 import { parseMentions } from '../../../functions/api/character-creator/_lib/mentions.js';
@@ -860,7 +861,10 @@ section('Per-level spells and psionics');
   const sched = spellGrantsFor({ magic: { spells_schedule: [
     { level: 2, count: 2 }, { level: 3, count: 3 }, { level: 9, count: 4 }] } }, 1, 5);
   check('a schedule counts every threshold crossed and no more',
-    JSON.stringify(sched.grants) === '[{"level":2,"count":2},{"level":3,"count":3}]');
+    JSON.stringify(sched.grants.map((g) => [g.level, g.count])) === '[[2,2],[3,3]]',
+    JSON.stringify(sched.grants));
+  // Every grant carries a slot, because several can share a level.
+  check('and each carries a slot', sched.grants.every((g) => Number.isFinite(g.slot)));
   check('a jump starting above 1 skips what it did not cross',
     spellGrantsFor({ magic: { spells_schedule: [{ level: 2, count: 2 }, { level: 5, count: 1 }] } }, 3, 6)
       .total === 1);
@@ -934,11 +938,11 @@ section('Per-level spells and psionics');
   check('and so are level psionic powers',
     /levelPsi\[gi\]/.test(appSrc));
   check('each psionic grant asks for its own categories',
-    /psionicCategoriesForGrant\(S\.cls, g\.level\)/.test(appSrc));
+    /psionicCategoriesForGrant\(S\.cls, g\.level, g\.slot\)/.test(appSrc));
   check('the batched-psionics claim is gone',
     !/no book states which level a given psionic power/.test(appSrc));
   check('and each grant asks for its own allowed levels',
-    /spellLevelsForGrant\(S\.cls, g\.level\)/.test(appSrc));
+    /spellLevelsForGrant\(S\.cls, g\.level, g\.slot\)/.test(appSrc));
   // Enforced, not advised: a spell level is a mechanical rule like a psychic
   // tier, not a table judgement like a skill category.
   check('an out-of-cap spell is not in the list at all',
@@ -3691,6 +3695,61 @@ section('Portraits are never public');
 // buildProposal reported spell and psionic grants and only the wizard acted on
 // them. The sheet applies them now, which means banking, a cap that belongs to
 // the granting level, and server-side enforcement of both.
+section('Several grants at one level');
+{
+  // The Shifter gains THREE spells a level from two different places, so the
+  // level alone stops identifying a grant. Modelled as two entries: two from
+  // its named list, one of any kind capped at its own level.
+  const shifter = { magic: {
+    spells_per_level_from: ['Banishment', 'Charm', 'Teleport: Lesser'],
+    spells_per_level_levels: 'up_to_character_level',
+    spells_schedule: [
+      { level: 2, count: 2, from_list: true, note: 'One must be Protection or Summoning' },
+      { level: 2, count: 1, note: 'Not dimension-related or control-based' },
+      { level: 3, count: 2, from_list: true },
+      { level: 3, count: 1 },
+    ] } };
+
+  const g = spellGrantsFor(shifter, 1, 3);
+  check('entries sharing a level become separate grants', g.grants.length === 4);
+  check('and are told apart by slot',
+    JSON.stringify(g.grants.map((x) => [x.level, x.slot])) === '[[2,0],[2,1],[3,0],[3,1]]',
+    JSON.stringify(g.grants.map((x) => [x.level, x.slot])));
+  check('three spells a level', g.total === 6);
+
+  // `from_list` points at the class list, declared once. Repeating a
+  // thirty-four name list on every entry would make one correction fourteen
+  // edits.
+  check('a from_list slot draws on the class list',
+    JSON.stringify(spellNamesForGrant(shifter, 2, 0)) === '["Banishment","Charm","Teleport: Lesser"]');
+  check('a slot without it draws on no list', spellNamesForGrant(shifter, 2, 1) === null);
+
+  // A slot bounded by a NAMED LIST is not also bounded by a spell level - the
+  // list is the restriction. Only the free slot is capped.
+  check('a list slot has no level cap', spellLevelsForGrant(shifter, 2, 0) === null);
+  check('the free slot is capped at the character level',
+    JSON.stringify(spellLevelsForGrant(shifter, 2, 1)) === '[1,2]');
+  check('and the cap widens with the level',
+    JSON.stringify(spellLevelsForGrant(shifter, 3, 1)) === '[1,2,3]');
+
+  // A restriction nothing can check is STATED rather than dropped or guessed
+  // at. Spells carry no tag, so "Protection or Summoning" has nothing to
+  // filter on.
+  check('a note rides with the slot that needs it',
+    grantNote(shifter, 'spell', 2, 0) === 'One must be Protection or Summoning');
+  check('and the other slot has its own',
+    grantNote(shifter, 'spell', 2, 1) === 'Not dimension-related or control-based');
+  check('a slot with nothing to say says nothing', grantNote(shifter, 'spell', 3, 0) === null);
+
+  // The named list is enforced server-side; the note is not, and cannot be.
+  const lib = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
+    '_lib', 'power-picks.js'), 'utf8');
+  check('the server refuses a spell off the list',
+    /is not on the list the level \$\{level\} grant draws from/.test(lib));
+  check('and keys every grant by slot as well as level',
+    /\$\{kind\}:\$\{level\}:\$\{slot \?\? 0\}/.test(lib));
+}
+
 section('Power grants');
 {
   const llw = { magic: { spells_starting: 12, spell_levels_allowed: [1, 2, 3, 4],
@@ -3718,13 +3777,14 @@ section('Power grants');
   // Banking consumes per grant, not from one pool. Spending both level-4 spells
   // must not leave the level-5 grant looking half spent.
   const grants = [
-    { level: 4, count: 2, kind: 'spell', spell_levels: [1, 2, 3, 4] },
-    { level: 5, count: 2, kind: 'spell', spell_levels: [1, 2, 3, 4, 5] },
+    { level: 4, slot: 0, count: 2, kind: 'spell', spell_levels: [1, 2, 3, 4] },
+    { level: 5, slot: 0, count: 2, kind: 'spell', spell_levels: [1, 2, 3, 4, 5] },
   ];
-  const left = remainingPowerGrants(grants, new Map([['spell:4', 2]]));
+  // Keyed by kind, level AND slot — several grants can share a level.
+  const left = remainingPowerGrants(grants, new Map([['spell:4:0', 2]]));
   check('a fully spent grant is gone and the other is untouched',
     left.length === 1 && left[0].level === 5 && left[0].count === 2, JSON.stringify(left));
-  const partly = remainingPowerGrants(grants, new Map([['spell:4', 1], ['spell:5', 2]]));
+  const partly = remainingPowerGrants(grants, new Map([['spell:4:0', 1], ['spell:5:0', 2]]));
   check('a partly spent grant keeps its remainder',
     partly.length === 1 && partly[0].level === 4 && partly[0].count === 1, JSON.stringify(partly));
   check('and the remainder keeps its cap',
