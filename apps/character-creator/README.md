@@ -1064,13 +1064,46 @@ magic:
     - { level: 2, count: 1, note: "Not dimension-related or control-based" }
 ```
 
-`from_list: true` points at `spells_per_level_from`. Repeating a thirty-four
-name list on every entry would put it in the class definition fourteen times and
-make one correction fourteen edits. **A slot bounded by a named list is not also
-bounded by a spell level** — the list is the restriction.
+`from_list` points at a list declared once rather than repeated on every entry.
+It takes two forms, because a class can have one list or several:
+
+| | |
+|---|---|
+| `from_list: true` | the class's single list, `spells_per_level_from` — the Shifter |
+| `from_list: "A"` | one of several, from a `spell_lists` map — the Ley Line Rifter, which learns *"one spell (pick one) from each list"* every level |
+
+Repeating a thirty-four name list on every entry would put it in the class
+definition fourteen times and make one correction fourteen edits. **A slot
+bounded by a named list is not also bounded by a spell level** — the list is the
+restriction. A `from_list` naming a list that does not exist restricts nothing
+rather than everything, which is the safer direction to fail.
 
 **Modelled as two grants, not three**, because the difference between the book's
 first two is a restriction nothing can check.
+
+#### The lists outran the catalog, until the book was read
+
+Both classes named spells the catalog never had: the Rifter's List A resolved
+**3 of 17** and its List B 13 of 21, the Shifter's list 19 of 34. One chapter —
+Rift & Ley Line Magic — accounted for nearly all of it.
+`add-book-of-magic-rift-spells.sql` added the 72 spells behind that gap, read
+out of the Book of Magic with the app's own importer, and all three lists now
+resolve in full.
+
+**A spell description does not print its level.** The book states that only in
+the section heading a spell is listed under, so importing description pages
+returned level 0 for **69 of 84** spells — and a level-0 spell matches no
+`spell_levels` filter, so confirming those would have added rows the pickers
+could never offer. That is what an import that looks like it worked looks like.
+The level comes from the book's own master by-level index (pp. 89-92) instead,
+and a spell that index could not place was left out rather than guessed at.
+
+**Three independent readings had to agree** before anything landed: each spell's
+own stat block, the cost the master index prints beside the name, and the cost
+the class page prints in parentheses. Where the Shifter's class page disagreed —
+`Influence the Beast` at 20 against 12, `Tame Beast` at 30 against 60 — the
+description and the index agreed with each other, so the class page is the
+outlier and the stat block won.
 
 #### A restriction the catalog cannot enforce is stated, not dropped
 
