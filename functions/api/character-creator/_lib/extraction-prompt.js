@@ -134,6 +134,14 @@ Optional — include only what the page actually states:
     \`spell_levels_allowed\`, which governs only the starting selection, and the
     two often disagree - a class can start with level 1-4 spells and still be
     limited to its own level for the ones it learns afterwards.
+    If the limit VARIES BY LEVEL rather than following one rule, put it on the
+    schedule entry instead: \`spells_schedule: [{ level: 2, count: 4,
+    spell_levels: [1, 2, 3] }, { level: 3, count: 3, spell_levels: [1, 2, 3, 4] }]\`.
+    An entry's own \`spell_levels\` wins over the class-wide rule, which is what
+    entries lacking one fall back to. Books do this: a class can gain more
+    spells at levels 2 and 3 than it does afterwards, from a wider range.
+    A schedule must list EVERY level that grants something, up to the class's
+    level cap - "and each level after that" means writing those levels out.
     Omit them if the book does not say. A class that states no per-level rule
     is reported as "not recorded" rather than as learning nothing, so silence
     here is honest and a guess is not.

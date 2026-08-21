@@ -150,9 +150,22 @@ function perLevelGrants(block, flatKey, scheduleKey, fromLevel, toLevel) {
 //   absent                   falls back to spell_levels_allowed
 //
 // null means unrestricted, which is what a class stating neither means.
+//
+// A SCHEDULE ENTRY MAY OVERRIDE ALL OF IT. Some books vary the cap per level
+// rather than by one rule: the Mystic gains four spells at level 2 from spell
+// levels 1-3 and three at level 3 from levels 1-4, then two per level from its
+// own level downward. The first two are the character's level PLUS ONE and the
+// rest are the character's level, which no single rule expresses — so the entry
+// that states the count states the cap with it, and the class-wide rule is what
+// entries without one fall back to.
 export function spellLevelsForGrant(cls, level) {
   const magic = cls?.magic;
   if (!magic) return null;
+
+  const entry = (Array.isArray(magic.spells_schedule) ? magic.spells_schedule : [])
+    .find((e) => e?.level === level && Array.isArray(e.spell_levels) && e.spell_levels.length);
+  if (entry) return entry.spell_levels;
+
   const rule = magic.spells_per_level_levels;
   if (rule === 'up_to_character_level') {
     return Array.from({ length: Math.max(0, level) }, (_, i) => i + 1);

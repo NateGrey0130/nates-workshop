@@ -887,6 +887,34 @@ section('Per-level spells and psionics');
   check('the per-level cap is not the starting list',
     JSON.stringify(spellLevelsForGrant(llw, 2)) !== JSON.stringify(llw.magic.spell_levels_allowed));
 
+  // A SCHEDULE ENTRY OVERRIDES THE CLASS-WIDE RULE, because some books vary the
+  // cap per level rather than by one rule. The Mystic gains four spells at
+  // level 2 from spell levels 1-3 and three at level 3 from 1-4 - the
+  // character's level PLUS ONE - then two per level from its own level down.
+  const mystic = { magic: { spells_starting: 8, spell_levels_allowed: [1, 2],
+                            spells_per_level_levels: 'up_to_character_level',
+                            spells_schedule: [
+                              { level: 2, count: 4, spell_levels: [1, 2, 3] },
+                              { level: 3, count: 3, spell_levels: [1, 2, 3, 4] },
+                              { level: 4, count: 2 }, { level: 5, count: 2 },
+                              { level: 6, count: 2 }] } };
+  check("an entry's own cap wins over the class rule",
+    JSON.stringify(spellLevelsForGrant(mystic, 2)) === '[1,2,3]',
+    JSON.stringify(spellLevelsForGrant(mystic, 2)));
+  check('and it is wider than the character level, which no single rule gives',
+    spellLevelsForGrant(mystic, 2).length === 3);
+  check('an entry without one falls back to the class rule',
+    JSON.stringify(spellLevelsForGrant(mystic, 5)) === '[1,2,3,4,5]');
+  // The book's own worked examples: "a sixth level Mystic can select two new
+  // spells from any of the levels 1-6".
+  check("the book's sixth-level example holds",
+    JSON.stringify(spellLevelsForGrant(mystic, 6)) === '[1,2,3,4,5,6]');
+  const mysticGrants = spellGrantsFor(mystic, 1, 6);
+  check('and the counts are the varying ones, not a flat rule',
+    JSON.stringify(mysticGrants.grants.map((g) => g.count)) === '[4,3,2,2,2]',
+    JSON.stringify(mysticGrants.grants.map((g) => g.count)));
+  check('totalling what the book adds up to', mysticGrants.total === 13);
+
   // An explicit list is honoured, and a class stating neither falls back.
   check('an explicit list wins',
     JSON.stringify(spellLevelsForGrant({ magic: { spells_per_level_levels: [1, 2] } }, 9)) === '[1,2]');
