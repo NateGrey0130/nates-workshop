@@ -428,9 +428,13 @@ section('Provenance of web-sourced rows');
 // obviously wrong because that page declared itself homebrew.
 const MARKER = 'Web reference (not book-verified)';
 const dataDir = join(appDir, 'db');
+// Scripts that ASSIGN the marker, not merely mention it. The estimate script
+// names the web tier in a comment explaining where its own tier sits below
+// it, and was failing the header check for describing a neighbour.
+const assigns = (text, marker) => text.includes("source_book = '" + marker + "'");
 const scriptsUsingMarker = readdirSync(dataDir)
   .filter((f) => f.endsWith('.sql'))
-  .filter((f) => readFileSync(join(dataDir, f), 'utf8').includes(MARKER));
+  .filter((f) => assigns(readFileSync(join(dataDir, f), 'utf8'), MARKER));
 check('some data script writes the web-source marker',
   scriptsUsingMarker.length > 0,
   'if this stops being true the README section is describing nothing');
@@ -451,7 +455,48 @@ check('every script writing it says so in its header', silent.length === 0,
 const readmeText = readFileSync(join(appDir, 'README.md'), 'utf8');
 check('the README quotes the marker exactly', readmeText.includes(MARKER),
   'README and scripts disagree on the marker string');
-check('and documents what it means',
+// The third provenance tier: values nothing published stands behind. The
+// decision that made them acceptable was that they cannot change a roll, so
+// THAT is what has to hold. A guessed price is a shopping inconvenience; a
+// guessed damage die decides fights and looks identical to a real one.
+const ESTIMATE = 'Estimate - no published price found';
+const estimateScripts = readdirSync(join(appDir, 'db'))
+  .filter((f) => f.endsWith('.sql'))
+  .filter((f) => assigns(readFileSync(join(appDir, 'db', f), 'utf8'), ESTIMATE));
+check('the estimate marker is written by some data script',
+  estimateScripts.length > 0,
+  'if this stops being true the README section describes nothing');
+
+// Read off the scripts rather than the database, so this holds in a checkout
+// where nothing has been applied yet.
+const estimateSql = estimateScripts
+  .map((f) => readFileSync(join(appDir, 'db', f), 'utf8')).join('\n');
+const estimateStatements = estimateSql.split('UPDATE gear SET').slice(1)
+  .filter((chunk) => chunk.slice(0, chunk.indexOf(';')).includes(ESTIMATE));
+check('every estimate statement is an estimate of something',
+  estimateStatements.length > 0, 'no UPDATE carries the marker');
+
+const combatKeys = ['mdc =', 'damage =', 'ar =', 'is_mega_damage = 1'];
+const armed = estimateStatements.filter((chunk) => {
+  const stmt = chunk.slice(0, chunk.indexOf(';'));
+  return combatKeys.some((k) => stmt.includes(k));
+});
+check('NO estimated row carries a combat number', armed.length === 0,
+  armed.length + ' estimate statement(s) set M.D.C., damage or A.R. '
+  + '\u2014 the one thing estimating was allowed on condition of not doing');
+
+// Weight is invention with nothing to anchor it, unlike cost.
+const weighed = estimateStatements.filter((chunk) =>
+  chunk.slice(0, chunk.indexOf(';')).includes('weight_lbs'));
+check('and none invents a weight', weighed.length === 0,
+  weighed.length + ' estimate statement(s) set weight_lbs');
+
+check('the README documents the estimate tier',
+  readmeText.includes(ESTIMATE)
+  && readmeText.includes('A third tier, for what nothing publishes'),
+  'the section explaining the third tier is missing or its marker drifted');
+
+  check('and documents what it means',
   readmeText.includes('A row can say where it came from'),
   'the section explaining the convention is missing');
 
