@@ -15,3 +15,7 @@ node_modules
 desktop.ini
 .DS_Store
 Thumbs.db
+
+# Python bytecode from running reference scripts
+__pycache__/
+*.pyc
