@@ -44,12 +44,20 @@ caught for you, so the checks happen before the merge or they do not happen.
    ```bash
    gh pr merge <n> --merge --delete-branch
    ```
-8. **Sync.** Pruning is automatic — see [Pruning is not a
-   step](#pruning-is-not-a-step).
+8. **Sync**, then confirm the merge from GitHub rather than from the pull.
    ```bash
    git checkout main && git pull origin main
    ```
-9. **Verify production**, by querying it — not by reading the exit code.
+   ```bash
+   gh pr view <n> --json state,mergeCommit --jq '.state + "  " + .mergeCommit.oid'
+   ```
+   **`Already up to date` means nothing on its own.** `gh pr merge` fast-forwards
+   local `main` itself, so a successful merge and a merge that never happened
+   print the same line. PR #165 printed it because the PR was still open; #176
+   and #177 printed it because the work was already local. Only `state` and the
+   merge commit distinguish them, and `git log --oneline -2 origin/main` should
+   show the merge commit on top.
+9. **Verify production**, by asking it — not by reading the exit code.
 
 ## Pruning is not a step
 
@@ -95,9 +103,31 @@ For anything about migrations themselves, use the `schema-change` skill.
 
 ## Verify production by asking it
 
+Start with the whole picture, which is one command and read-only:
+
+```bash
+node scripts/drift-check.mjs --remote
+```
+
+It compares every migration against `schema_migrations`, every data script
+against `data_script_runs`, every table and column against `sqlite_master`, and
+every published class against one a data script can recreate. **Run it before
+merging as well as after**: an unapplied data script on the branch shows up as
+`DATA SCRIPT NOT RUN`, which is the ordering rule checked rather than
+remembered. A clean run prints `NO DRIFT`.
+
+It is also what catches the failure nobody looks for — a row that exists only in
+production. Two classes were in that state for weeks, recreatable from nothing
+in the repo, and no test could see it.
+
+Then query the specific thing the change intended.
+
 `wrangler d1 execute` has reported a non-zero exit on runs that fully applied,
 and an `Authentication error [code: 10000]` on one that succeeded. Exit codes
-here are advisory. Query the thing back:
+here are advisory, and so is a parse of its output — a `--remote` apply that
+worked was reported as failed this week because the *reader* choked on
+wrangler's multi-block JSON, not because anything went wrong. Query the thing
+back:
 
 ```bash
 npx wrangler d1 execute DB --remote --command "SELECT count(*) FROM schema_migrations;"
@@ -110,6 +140,10 @@ Two traps when writing that query from PowerShell:
   `item_id: "slug"`, so the queries most worth running are the ones that break.
   Build the quote in SQL instead: `char(34)`. Same trick as `char(8212)` for an
   em-dash.
+- **`--file` returns a summary over `--remote`, not results.** A `SELECT` sent
+  with `--file` comes back as `Total queries executed / Rows read`, so every
+  count reads as 1 and a drift check built on it reports everything as missing.
+  Use `--command` for anything whose rows you need.
 - **Read results from a file, not the terminal.** `--json | Out-File -Encoding
   utf8 out.json`, then read `out.json`. Transcribing from terminal output put
   `ng-15-northern-gun-laser-rifle` a keystroke away from being written into a
@@ -141,9 +175,28 @@ bytes that reached production. Everything else in the repo is CRLF. A script
 that rewrites a file must preserve what that file had; the smoke test fails a
 `.sql` carrying a CR.
 
+## A changed secret needs the dev server restarted
+
+`wrangler pages dev` reads `.dev.vars` **at boot**. Rotate a key, and the running
+server keeps sending the old one — so the importer reported
+`credit balance is too low` against an account that had just been topped up,
+while the same key tested `200 OK` when called directly.
+
+The tell is the shape of the failure, not its text: real API calls take seconds,
+and every one of these came back in **0s**. A fast failure is a local one.
+
+```bash
+# after editing .dev.vars, or rotating a key
+# stop and restart the preview server, then retry one small request
+```
+
+Production reads its own copy as a Pages secret, so a rotation is **two** places.
+
 ## What "done" means
 
 - smoke test passes on `main` after the merge
+- `node scripts/drift-check.mjs --remote` prints `NO DRIFT`
 - production queried and matching what the change intended
+- the PR shows `MERGED` and its merge commit is on top of `origin/main`
 - branch deleted on both sides, `git status` clean
 - if the change is user-visible, it has been exercised in a browser
