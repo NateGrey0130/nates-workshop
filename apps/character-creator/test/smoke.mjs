@@ -2967,6 +2967,53 @@ section('No query binds an unbounded list');
   }
 }
 
+// ---------- Perception is a roll RUE grants and the sheet had nowhere to put ----------
+// RUE gives Perception its own section (printed p367): D20 plus whatever the
+// O.C.C./R.C.C. grants, against 4 / 8 / 14 / 17 by difficulty. The book hands
+// out fifty such bonuses, and twelve catalog classes already mentioned one - as
+// prose, because no key existed. The Dog Boy's own file said it outright:
+// "+5 Perception, +2 disarm and +2 vs disease have no bonus key".
+section('Perception');
+{
+  const win = {};
+  new Function('globalThis', readFileSync(join(appDir, 'js', 'derive.js'), 'utf8')).call(win, win);
+
+  const plain = win.derive.combat({ PP: 16, PS: 16, Spd: 12 });
+  check('a character with no class bonus has Perception 0', plain.perception === 0);
+  check('and Perception is present rather than undefined, so a bonus has a base',
+    'perception' in plain);
+
+  const boosted = win.derive.combat({ PP: 16, PS: 16, Spd: 12 }, undefined,
+    { combat: { perception: 5 } });
+  check('a class bonus lands on it', boosted.perception === 5);
+  check('and does not disturb the attribute-derived rows',
+    boosted.strike === plain.strike && boosted.parry === plain.parry);
+
+  // No attribute feeds Perception - RUE gives the bonus to the class, not to a
+  // score - so P.P. must not leak into it the way it does for strike/parry.
+  const highPP = win.derive.combat({ PP: 24, PS: 16, Spd: 12 });
+  check('no attribute feeds Perception', highPP.perception === 0);
+  check('even though the same call derives a higher strike from P.P.',
+    highPP.strike > plain.strike);
+}
+
+// Every row derive.combat() produces needs somewhere to appear, or a class can
+// grant a bonus that lands in the data and never reaches the player. That is
+// exactly how Perception went missing.
+section('The sheet shows every derived combat row');
+{
+  const win = {};
+  new Function('globalThis', readFileSync(join(appDir, 'js', 'derive.js'), 'utf8')).call(win, win);
+  const derived = Object.keys(win.derive.combat({ PP: 12, PS: 12, Spd: 12 }));
+  const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  const block2 = sheet.slice(sheet.indexOf('const COMBAT_FIELDS'),
+    sheet.indexOf('];', sheet.indexOf('const COMBAT_FIELDS')));
+  const shown = [...block2.matchAll(/\['([a-z_]+)',/g)].map((m) => m[1]);
+  const missing = derived.filter((k) => !shown.includes(k));
+  check('every derived combat row has a labelled field on the sheet',
+    missing.length === 0, missing.join(', '));
+}
+
 section('Ability validation');
 {
   const cls = parseClassMarkdown([
