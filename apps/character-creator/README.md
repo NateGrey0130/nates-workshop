@@ -21,6 +21,10 @@ Access gate. No build step, no framework, no dependencies.
 - [A fighting style is a level schedule](#a-fighting-style-is-a-level-schedule)
 - [Language: Other, once per language](#language-other-once-per-language)
 - [Level-up skill picks](#level-up-skill-picks)
+- [The race is chosen first](#the-race-is-chosen-first)
+  - [A roll can now miss a minimum](#a-roll-can-now-miss-a-minimum)
+  - [Two class fields, not one](#two-class-fields-not-one)
+  - [A draft stores its step as an index](#a-draft-stores-its-step-as-an-index)
 - [A race and an occupation together](#a-race-and-an-occupation-together)
 - [One place composes a class](#one-place-composes-a-class)
 - [Hit points and S.D.C. come from the core rules](#hit-points-and-sdc-come-from-the-core-rules)
@@ -71,7 +75,7 @@ Everything the app reads at runtime is in D1. There are no static content files
 
 ```
 apps/character-creator/
-├── index.html / app.js       Creation wizard (8 steps). app.js is an ES module.
+├── index.html / app.js       Creation wizard (9 steps). app.js is an ES module.
 ├── sheet.html / sheet.js     Character sheet, laid out after the printed Rifts sheet
 ├── dashboard.html / dashboard.js  GM dashboard: roster, GM notes, campaign journal
 ├── import.html / import.js   Admin-only PDF import — Class, Skills, Spells,
@@ -864,6 +868,102 @@ pending with its count reduced — so two picks earned at level 3 can be taken o
 at a time. Both paths write the skills and the claim in a single batch, because
 a pick that consumed its grant without landing on the sheet would be lost.
 
+## The race is chosen first
+
+The wizard's order follows how a character is actually made: you are a dragon,
+you roll to find out what kind of dragon, and then you decide what the dragon
+studied.
+
+```
+System → Race → Attributes → Occupation → Skills → Equipment → Powers → Details → Review
+```
+
+The **Race** step is a briefing rather than a row in a list. Before committing,
+the player reads what the R.C.C. grants: the attribute dice it will roll per
+attribute, the pool formulas as formulas, the bonuses, the psionic tier (or
+`psionics_allowed: false`, which is a statement and looks like an absence), the
+skills it already knows, and whether an occupation is normally taken alongside
+it. All of that used to be first visible a step later, after the choice had been
+made and the dice were already rolling.
+
+**The list still holds every class for the system.** An O.C.C. taken as the
+primary class is a human character and always was. When that happens the
+Occupation step does not apply and is greyed in the stepper rather than removed,
+so the numbering stays the same between two characters side by side.
+
+`stepApplies(i)` decides, and `seekStep` walks past a step that does not apply
+from either direction. A predicate rather than a hard-coded skip, because
+`render()` also consults it — a resumed draft, or an ability dropped after the
+fact, can otherwise land on a step that stopped making sense.
+
+### A roll can now miss a minimum
+
+Attribute minimums come from **both** classes, the stricter of each. Rolling
+before the occupation is chosen therefore admits a state the old order could not
+reach: a stat block that fails the O.C.C. the player then wants.
+
+The Occupation step names the attribute and the number missed by, and offers to
+**re-roll that attribute alone**, with the race's dice for it. Whatever it comes
+up as, it stands — including a second failure, which may be re-rolled again only
+if the player chooses to.
+
+Three alternatives were rejected on purpose:
+
+- **Re-rolling the whole stat block** throws away good rolls to fix one bad one.
+- **Auto-raising to the minimum**, which several books instruct, would leave a
+  number on the sheet that no dice produced. The app's posture is that every
+  number came from somewhere.
+- **Offering a choice between re-rolling and raising** is two mechanisms where
+  one will do.
+
+**It is never a refusal.** A player may decline and continue with the minimum
+unmet; `validate-character.js` warns on save and the admin audit lists it under
+*worth a look*, which is the existing doctrine for occupations rather than a
+stricter rule invented for the same class of problem.
+
+Each re-roll is recorded and posted as a `roll` play event once the character
+exists — the events API already defines that kind as a pure record with no state
+change. A number that came from a second attempt should not sit on the sheet
+looking like what the dice said first.
+
+### Two class fields, not one
+
+`S.rcc` is what the player **picked**: raw, unresolved, still carrying its
+variants and choose-groups, which is what the Race step's pickers read. `S.cls`
+is what the character **is**: variant applied, occupation composed in, abilities
+folded in.
+
+It used to be one field that `confirmClass` overwrote in place. That was fine
+while both halves were chosen on the same step and is not any more — adding an
+occupation two steps later has to re-compose from the original, and a composed
+class has already lost the halves.
+
+`S.raceCls` is the third: the race alone, composed. It exists because **its dice
+bonuses were rolled and read on the Attributes step**, and choosing an occupation
+afterwards must not re-roll a number the player has already seen. So the two
+sets of rolls are held apart — `S.attrBonuses` for the race, `S.occAttrBonuses`
+for the occupation — and `rolledAll()` is the only thing that sees them summed.
+Changing occupation re-rolls its half and leaves the race's alone.
+
+### A draft stores its step as an index
+
+Which means changing `STEPS` silently re-points every draft in flight. Drafts
+carry `steps_version`; version 1 is the eight-step list with one combined Class
+step, version 2 is the nine above.
+
+`migrateDraft()` maps an old index forward. Only the steps **after** the
+inserted Occupation step move: System (0), Class→Race (1) and Attributes (2)
+keep their index, and Skills onward shift by one. A draft stopped on the old
+Class step resumes on Race, which is right — it had not committed to an
+occupation in any way the new step could trust. The resume *offer* reads the
+migrated index too, or it would name the wrong step in the sentence asking you
+to resume.
+
+The smoke test pins the list, the version and the mapping together, because each
+is only correct with respect to the others.
+
+---
+
 ## A race and an occupation together
 
 Palladium characters routinely have both. A Chiang-Ku Dragon who studies wizardry
@@ -1455,7 +1555,7 @@ than claiming a row that no longer exists.
 
 ## Unfinished builds are saved
 
-The wizard is eight steps and step 3 **rolls**. A refresh, a stray back-gesture
+The wizard is nine steps and step 3 **rolls**. A refresh, a stray back-gesture
 or a closed tab used to lose all of it — and a roll is the one thing you cannot
 honestly redo: you either accept different numbers or re-roll until you like
 them.
@@ -1625,14 +1725,19 @@ and no number to roll against. It is overridable like every other derived value.
 
 ## A blocked step says why
 
-Three wizard steps gate their primary button: **Class** (a variant, a power or
-an occupation still to choose), **Attributes** (a value missing, a class minimum
-unmet, or point-buy overspent) and **Equipment** (an unresolved gear choice).
+Four wizard steps gate their primary button: **Race** (a variant or a power
+still to choose), **Attributes** (a value missing, a class minimum unmet, or
+point-buy overspent), **Occupation** (an ability that names practitioners with
+none chosen) and **Equipment** (an unresolved gear choice).
 
 Each renders the reason as a `.nav-why` span **between Back and the primary
-button**, and the class step also scrolls the outstanding picker into view. The
+button**, and the race step also scrolls the outstanding picker into view. The
 reason and the disabled state come from ONE function per step — `classBlock()`
-and its equivalents — so they cannot disagree. A greyed button with no reason,
+and its equivalents — so they cannot disagree.
+
+**A missed attribute minimum is deliberately NOT one of them.** It warns and
+offers a re-roll on the Occupation step; see
+[The race is chosen first](#the-race-is-chosen-first). A greyed button with no reason,
 or a reason beside a live button, are each worse than either alone.
 
 This exists because a disabled button was the entire explanation. Picking a Ley
