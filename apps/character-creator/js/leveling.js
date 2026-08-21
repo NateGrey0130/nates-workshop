@@ -221,11 +221,20 @@ export function spellNamesForGrant(cls, level, slot = 0) {
   const entry = entryAt(magic?.spells_schedule, level, slot);
   if (!entry) return null;
   if (Array.isArray(entry.from) && entry.from.length) return entry.from.map(String);
-  // `from_list: true` points at the class's own list, declared ONCE as
-  // `spells_per_level_from`. The Shifter draws two of its three spells a level
-  // from a list of thirty-four; repeating it on every entry would put it in the
-  // class definition fourteen times and make a correction fourteen edits.
-  if (entry.from_list && Array.isArray(magic?.spells_per_level_from) && magic.spells_per_level_from.length) {
+  // `from_list` points at a list declared ONCE rather than repeated on every
+  // entry - a thirty-four name list written out fourteen times would make one
+  // correction fourteen edits.
+  //
+  // Two forms, because a class can have one list or several. The Shifter draws
+  // from a single list, so `from_list: true` reads `spells_per_level_from`. The
+  // Ley Line Rifter learns one spell from List A AND one from List B at every
+  // level, so `from_list: "A"` names an entry in `spell_lists`.
+  if (typeof entry.from_list === 'string') {
+    const named = magic?.spell_lists?.[entry.from_list];
+    return Array.isArray(named) && named.length ? named.map(String) : null;
+  }
+  if (entry.from_list === true && Array.isArray(magic?.spells_per_level_from)
+      && magic.spells_per_level_from.length) {
     return magic.spells_per_level_from.map(String);
   }
   return null;
