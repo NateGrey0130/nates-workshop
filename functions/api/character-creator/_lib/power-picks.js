@@ -12,6 +12,7 @@
 // `spellLevelsForGrant` in js/leveling.js.
 
 import { json } from './auth.js';
+import { chunks } from './sql-chunk.js';
 import { safeParse } from './character-json.js';
 import { spellLevelsForGrant, psionicCategoriesForGrant, spellNamesForGrant, grantNote,
          spellGrantsFor, psionicGrantsFor } from './leveling.js';
@@ -183,19 +184,28 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
 async function loadPowerCatalog(env, names, system) {
   const empty = { spell: new Map(), psionic: new Map() };
   if (!names.length) return empty;
-  const placeholders = names.map(() => '?').join(', ');
-  const [spells, psionics] = await env.DB.batch([
-    env.DB.prepare(
-      `SELECT name, level, ppe, ppe_note, system FROM spells WHERE name COLLATE NOCASE IN (${placeholders})`
-    ).bind(...names),
-    env.DB.prepare(
-      `SELECT name, category, isp, isp_note, system FROM psionic_powers WHERE name COLLATE NOCASE IN (${placeholders})`
-    ).bind(...names),
-  ]);
+  // Chunked: D1 binds at most 100 parameters per statement, and a high-level
+  // caster holds more than a hundred spells - which is exactly the character
+  // this function exists to load.
+  const spells = [];
+  const psionics = [];
+  for (const batch of chunks(names)) {
+    const placeholders = batch.map(() => '?').join(', ');
+    const [s, p] = await env.DB.batch([
+      env.DB.prepare(
+        `SELECT name, level, ppe, ppe_note, system FROM spells WHERE name COLLATE NOCASE IN (${placeholders})`
+      ).bind(...batch),
+      env.DB.prepare(
+        `SELECT name, category, isp, isp_note, system FROM psionic_powers WHERE name COLLATE NOCASE IN (${placeholders})`
+      ).bind(...batch),
+    ]);
+    if (s.results?.length) spells.push(...s.results);
+    if (p.results?.length) psionics.push(...p.results);
+  }
   // A NULL system is unrestricted, which is how every picker already reads it.
   const keep = (r) => !system || !r.system || r.system === system;
-  for (const r of spells.results.filter(keep)) empty.spell.set(r.name.toLowerCase(), r);
-  for (const r of psionics.results.filter(keep)) empty.psionic.set(r.name.toLowerCase(), r);
+  for (const r of spells.filter(keep)) empty.spell.set(r.name.toLowerCase(), r);
+  for (const r of psionics.filter(keep)) empty.psionic.set(r.name.toLowerCase(), r);
   return empty;
 }
 

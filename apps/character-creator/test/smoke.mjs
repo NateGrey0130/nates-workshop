@@ -153,6 +153,7 @@ import { collapseWhitespace, statements, stripComments, trailingSelects } from '
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import { composeClass } from '../js/compose.js';
 import { evalDice, rollAttribute, rollPoolFormula, rollQuantity } from '../js/dice.js';
+import { chunks, D1_MAX_BINDS, BIND_CHUNK } from '../../../functions/api/character-creator/_lib/sql-chunk.js';
 import { LANGUAGE_OTHER, isLanguageName, languageSkillName } from '../js/language-skills.js';
 import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityOccOptions, abilityOptions, applyAbilities, applyVariant, bonusesFromSkills, categoryAllows, categoryLabel, combineClasses, isGearChoice, needsOccupation, parseClassMarkdown, parseYaml, validateBonuses } from '../js/parser.js';
 import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rollsForPsionics, withRolledPsionics } from '../js/psionics.js';
@@ -2909,6 +2910,61 @@ section('Bonuses on an ability nobody picks');
   // And an ability with no bonuses at all is prose, which is the common case.
   check('a description-only ability does not warn', warned(parse([
     '  - name: "Marks of Heritage"', '    description: "x"'])).length === 0);
+}
+
+// ---------- D1 binds 100 parameters per statement, and no more ----------
+// Measured against the real binding, not assumed:
+//   binds 100 -> ok, binds 101 -> D1_ERROR: too many SQL variables
+//
+// So any query building `IN (?,?,...)` from a list that grows with user data
+// has to chunk. Four files already did, privately; the ones that did not are
+// where it broke - `markConfirmed` runs AFTER the catalog write, so exceeding
+// the limit there left 108 spells inserted, none marked confirmed, and a 500
+// that read as though nothing had happened.
+section('SQL bind chunking');
+{
+  const big = Array.from({ length: 313 }, (_, i) => i);
+
+  check('the ceiling is recorded as the measured 100', D1_MAX_BINDS === 100);
+  check('and the chunk size leaves room for a query\'s own binds',
+    BIND_CHUNK < D1_MAX_BINDS);
+
+  const parts = chunks(big);
+  check('a long list is split', parts.length === Math.ceil(313 / BIND_CHUNK));
+  check('no chunk can exceed the ceiling',
+    parts.every((p) => p.length <= D1_MAX_BINDS));
+  check('nothing is lost or duplicated',
+    parts.flat().length === 313 && new Set(parts.flat()).size === 313);
+  check('and order is preserved', parts.flat().every((v, i) => v === i));
+
+  check('an empty list yields no chunks at all', chunks([]).length === 0);
+  check('a short list yields exactly one', chunks([1, 2, 3]).length === 1);
+  // A caller passing something silly must not produce a chunk over the ceiling.
+  check('an oversized chunk size is clamped to the ceiling',
+    chunks(big, 5000).every((p) => p.length <= D1_MAX_BINDS));
+  check('a zero chunk size still makes progress rather than looping forever',
+    chunks([1, 2, 3], 0).flat().length === 3);
+}
+
+// Every place that builds placeholders from a list must chunk. A new one added
+// without chunking is the same bug again, and it only shows up once someone's
+// data gets big - a level-fifteen caster, a long session note, a full import.
+section('No query binds an unbounded list');
+{
+  const files = [
+    '_lib/import-sessions.js', '_lib/power-picks.js', '_lib/skill-picks.js',
+    '_lib/mentions.js', '_lib/skill-bonuses.js', 'campaigns/[id]/npcs/sweep.js',
+  ];
+  for (const f of files) {
+    const src = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', f), 'utf8');
+    const usesHelper = /sql-chunk\.js/.test(src);
+    check(f + ' imports the chunking helper', usesHelper);
+    // The giveaway shape: placeholders built straight from the caller's list
+    // rather than from a chunk of it.
+    const unbounded = /(?:names|ids)\.map\(\(\) => '\?'\)/.test(src);
+    check(f + ' builds no placeholder list from an unchunked array', !unbounded,
+      unbounded ? 'found names.map / ids.map building placeholders' : '');
+  }
 }
 
 section('Ability validation');

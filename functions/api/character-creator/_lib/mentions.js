@@ -5,6 +5,8 @@
 // writer's control. The Claude sweep beside it is a safety net for the people
 // nobody tagged, not the mechanism.
 
+import { selectInChunks } from './sql-chunk.js';
+
 // Mentions are stored as plain `@Name` text in the body, NOT as ids.
 //
 // The body stays readable text that survives a rename and reads correctly in a
@@ -75,10 +77,11 @@ export async function resolveMentions(env, { campaignId, names, email }) {
 
   // COLLATE NOCASE matches the unique index, so lookup and insert agree about
   // what a duplicate is.
-  const placeholders = names.map(() => '?').join(', ');
-  const { results } = await env.DB.prepare(
-    `SELECT id, name FROM npcs WHERE campaign_id = ? AND name COLLATE NOCASE IN (${placeholders})`
-  ).bind(campaignId, ...names).all();
+  // Chunked: D1 binds at most 100 parameters per statement, and a long session
+  // note can name more than a hundred people.
+  const results = await selectInChunks(names, (batch) => env.DB.prepare(
+    `SELECT id, name FROM npcs WHERE campaign_id = ? AND name COLLATE NOCASE IN (${batch.map(() => '?').join(', ')})`
+  ).bind(campaignId, ...batch));
   for (const row of results) byName.set(row.name.toLowerCase(), row.id);
 
   for (const name of names) {
