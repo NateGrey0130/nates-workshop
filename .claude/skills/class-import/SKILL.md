@@ -83,8 +83,13 @@ by themselves when the rows arrive. The audit floor is three names, not zero.
 - **Every gear item needs a catalog row.** Missing ones get a stub carrying the
   exact marker `STUB — created by class import, needs stats`, which is how the
   gear importer later recognises it as unfilled. `class-check` generates these.
-- **Pure ASCII, LF endings.** An em-dash is spliced as `' || char(8212) || '`.
-  Both rules exist because both failure modes reached production (#93, #101).
+- **Pure ASCII, LF endings** — in the WHOLE file, comments included, not just
+  the executable SQL. An em-dash in a value is spliced as `' || char(8212) || '`;
+  one in a comment has to go too, because wrangler on Windows has turned a
+  commented non-ASCII character into mojibake in production. The smoke test
+  checks both separately: `every data script is pure ASCII` covers the file,
+  `no .sql has non-ASCII in executable SQL` covers the values. Both rules exist
+  because both failure modes reached production (#93, #101).
 - **Conditional bonuses are prose.** `bonuses:` is applied unconditionally, so
   "+2 to strike when flying" belongs in `special_abilities` or `side_effects`.
 - **D1 caps compound SELECT terms below six.** A readback that `UNION`s six
