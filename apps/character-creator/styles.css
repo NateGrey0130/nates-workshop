@@ -801,3 +801,47 @@ body.play-mode #print-btn { display: none; }
   display: flex; justify-content: space-between; align-items: center;
   gap: 8px; padding: 8px 2px;
 }
+
+/* ---- Tabs -----------------------------------------------------------------
+   The sheet runs ~4100px, roughly six screens on a tablet, and a player at the
+   table wants one section at a time rather than a scroll hunt.
+
+   Tabs are strictly a SCREEN affordance. There is no such thing as a hidden tab
+   on paper, so the print block below dissolves the panels with
+   `display: contents`: the section wrappers leave the layout entirely and the
+   grids inside them lay out exactly as they did before tabs existed. */
+.tabbar {
+  display: flex; gap: 6px; margin-top: 12px;
+  position: sticky; top: 0; z-index: 20;
+  background: var(--bg-primary);
+  padding: 8px 0; overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+}
+.tabbar .tab {
+  flex: 1 0 auto;
+  min-height: 44px;              /* sized for a finger, not a mouse pointer */
+  padding: 8px 18px; white-space: nowrap;
+  background: transparent; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text-secondary);
+  font-family: 'Outfit', sans-serif; font-size: 14px; cursor: pointer;
+  transition: color var(--transition), border-color var(--transition);
+}
+.tabbar .tab:hover { color: var(--text-primary); border-color: var(--accent); }
+.tabbar .tab.on {
+  color: var(--text-primary); border-color: var(--accent);
+  background: var(--accent-glow);
+}
+.tab-n {
+  display: inline-block; margin-left: 4px; padding: 0 6px;
+  border-radius: 999px; background: var(--bg-tertiary);
+  font-size: 11px; color: var(--text-secondary);
+}
+.tabbar .tab.on .tab-n { background: var(--accent); color: var(--bg-primary); }
+
+.tabpanel { display: none; }
+.tabpanel.on { display: block; }
+
+@media print {
+  .tabbar { display: none !important; }
+  .tabpanel { display: contents !important; }
+}

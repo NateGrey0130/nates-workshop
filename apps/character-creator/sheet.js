@@ -740,10 +740,52 @@ function renderPlay() {
 }
 
 
+const TAB_IDS = ['vitals', 'skills', 'powers', 'gear', 'bio', 'notes'];
+
+// The hash wins over the stored tab, so a link ending #gear opens on gear.
+function readTab() {
+  const h = location.hash.slice(1);
+  if (TAB_IDS.includes(h)) return h;
+  try {
+    const saved = localStorage.getItem('sheet-tab-' + id);
+    if (TAB_IDS.includes(saved)) return saved;
+  } catch { /* storage can be blocked; the default is fine */ }
+  return 'vitals';
+}
+
+// Switching tabs toggles classes rather than re-rendering. A re-render rebuilds
+// every input on the sheet, and the one thing a tab press must never cost a
+// player is a half-typed note.
+function pickTab(tab) {
+  if (!TAB_IDS.includes(tab)) return;
+  C.tab = tab;
+  try { localStorage.setItem('sheet-tab-' + id, tab); } catch { /* see readTab */ }
+  history.replaceState(null, '', '#' + tab);
+  for (const el of document.querySelectorAll('.tabpanel')) {
+    el.classList.toggle('on', el.dataset.tab === tab);
+  }
+  for (const el of document.querySelectorAll('.tabbar .tab')) {
+    const on = el.dataset.tab === tab;
+    el.classList.toggle('on', on);
+    el.setAttribute('aria-selected', String(on));
+  }
+  window.scrollTo({ top: 0 });
+}
+
+// Changing only the hash is a same-document navigation - no reload, so without
+// this a pasted or hand-edited '#gear' would leave the sheet on whatever tab it
+// was already showing. pickTab uses replaceState rather than pushState, so Back
+// still leaves the sheet for the character list instead of walking tab history.
+window.addEventListener('hashchange', () => {
+  const tab = location.hash.slice(1);
+  if (TAB_IDS.includes(tab) && tab !== C.tab) pickTab(tab);
+});
+
 function render() {
   syncPlayChrome();
   if (C.playMode) { $('app').innerHTML = renderPlay(); return; }
   const c = C.data, w = C.canWrite;
+  if (!C.tab) C.tab = readTab();
   const skills = Array.isArray(c.skills) ? c.skills : [];
   const powers = Array.isArray(c.powers) ? c.powers : [];
   // Within a box the language family reads as one block: every "Language: X"
@@ -1008,15 +1050,23 @@ function render() {
         ${field('Player', escHtml(c.player_email), true)}
       </div>
     </div>
-    <div class="sheet-grid cols-2" style="margin-top:6px">
-      <div>${BIO_FIELDS.slice(0, bioHalf).map(([k, l]) => bioField(k, l, bio, c.bio)).join('')}</div>
-      <div>${BIO_FIELDS.slice(bioHalf).map(([k, l]) => bioField(k, l, bio, c.bio)).join('')}</div>
-    </div>
-    <div class="sheet-grid cols-2">
-      <div>${editField('bio', 'invoke_trust_pct', 'Invoke Trust/Intimidate', bio.invoke_trust_pct, c.bio, { suffix: '%' })}</div>
-      <div>${editField('bio', 'charm_impress_pct', 'Charm/Impress', bio.charm_impress_pct, c.bio, { suffix: '%' })}</div>
-    </div>`)}
+    `)}
 
+  ${w && C.proposal ? levelUpPanel() : ''}
+  ${w && C.variantProposal ? variantProposalPanel() : ''}
+  ${w && !C.proposal && C.pendingPicksTotal ? pendingPicksPanel() : ''}
+  ${w && !C.proposal && C.pendingPowersTotal ? pendingPowersPanel() : ''}
+
+  <nav class="tabbar noprint" role="tablist">
+    ${[['vitals', 'Vitals', 0], ['skills', 'Skills', skills.length],
+       ['powers', 'Powers', powers.length], ['gear', 'Gear', C.items.length],
+       ['bio', 'Bio', 0], ['notes', 'Notes', C.journal.length]].map(([tid, label, n]) =>
+      `<button class="tab${C.tab === tid ? ' on' : ''}" data-tab="${tid}" role="tab"
+         aria-selected="${C.tab === tid}" onclick="pickTab('${tid}')">${label}${
+         n ? ` <span class="tab-n">${n}</span>` : ''}</button>`).join('')}
+  </nav>
+
+  <section class="tabpanel${C.tab === 'vitals' ? ' on' : ''}" data-tab="vitals">
   <div class="sheet-grid rail" style="margin-top:12px">
     ${box('Attributes', `<div class="attr-stack">
       ${ATTRS.map((a) => {
@@ -1048,11 +1098,6 @@ function render() {
 
     ${w && !C.variantProposal ? variantPanel() : ''}
   </div>
-
-  ${w && C.proposal ? levelUpPanel() : ''}
-  ${w && C.variantProposal ? variantProposalPanel() : ''}
-  ${w && !C.proposal && C.pendingPicksTotal ? pendingPicksPanel() : ''}
-  ${w && !C.proposal && C.pendingPowersTotal ? pendingPowersPanel() : ''}
 
   <div class="sheet-grid rail" style="margin-top:12px">
     ${box('Saving Throws',
@@ -1104,17 +1149,25 @@ function render() {
         <button class="btn btn-sm" onclick="addArmor()">+ Add armor</button></div>` : ''))}
   </div>
 
+  </section>
+
+  <section class="tabpanel${C.tab === 'skills' ? ' on' : ''}" data-tab="skills">
   <div class="sheet-grid cols-3" style="margin-top:12px">
     ${skillBox('Class Skills', byType('occ'))}
     ${skillBox('Related Skills', byType('related'))}
     ${skillBox('Secondary Skills', byType('secondary'))}
   </div>
 
-  <div class="sheet-grid cols-2" style="margin-top:12px">
+  </section>
+
+  <section class="tabpanel${C.tab === 'powers' ? ' on' : ''}" data-tab="powers">
     ${box('Psionics &amp; Magic', powers.length
       ? powerRows
       : '<p class="muted small">None.</p>')}
 
+  </section>
+
+  <section class="tabpanel${C.tab === 'gear' ? ' on' : ''}" data-tab="gear">
     ${box('Equipment', `
       <table><thead><tr><th>Item</th><th>Qty</th><th>Eq</th><th>Notes</th><th></th></tr></thead>
         <tbody id="inv-rows">${invRows || '<tr><td class="muted" colspan="5">Empty.</td></tr>'}</tbody></table>
@@ -1132,8 +1185,20 @@ function render() {
           <label class="small"><input type="checkbox" id="add-log"> log it</label>
           <button class="btn btn-sm" onclick="addItem()">Add</button>
         </div></div>` : ''}`)}
-  </div>
+  </section>
 
+  <section class="tabpanel${C.tab === 'bio' ? ' on' : ''}" data-tab="bio">
+  <div class="sheet-grid cols-2" style="margin-top:12px">
+    ${box('Background', `
+      ${BIO_FIELDS.slice(0, bioHalf).map(([k, l]) => bioField(k, l, bio, c.bio)).join('')}`)}
+    ${box('Bearing', `
+      ${BIO_FIELDS.slice(bioHalf).map(([k, l]) => bioField(k, l, bio, c.bio)).join('')}
+      ${editField('bio', 'invoke_trust_pct', 'Invoke Trust/Intimidate', bio.invoke_trust_pct, c.bio, { suffix: '%' })}
+      ${editField('bio', 'charm_impress_pct', 'Charm/Impress', bio.charm_impress_pct, c.bio, { suffix: '%' })}`)}
+  </div>
+  </section>
+
+  <section class="tabpanel${C.tab === 'notes' ? ' on' : ''}" data-tab="notes">
   <div class="sheet-grid cols-2" style="margin-top:12px">
     ${box('Notes', `
       ${w ? `<textarea id="stat-notes" class="noprint">${escHtml(c.notes || '')}</textarea>
@@ -1160,7 +1225,8 @@ function render() {
       <div id="journal-list">${journalHtml}</div>
       ${journalMore}`,
       '<span class="muted" style="font-size:9px">NEWEST FIRST</span>')}
-  </div>`;
+  </div>
+  </section>`;
 
   wirePickers();
 }
