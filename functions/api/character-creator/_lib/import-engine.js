@@ -106,7 +106,7 @@ const IMPORT_SPECS = {
   gear: {
     catalog: 'gear',
     table: 'gear',
-    extractFields: ['name', 'slug', 'category', 'weight_lbs', 'cost', 'damage',
+    extractFields: ['name', 'slug', 'category', 'weight_lbs', 'cost', 'cost_note', 'damage',
                     'is_mega_damage', 'range', 'payload', 'rate_of_fire', 'ar', 'mdc',
                     'description'],
     // Cost is the number worth arguing about; damage and the rest are prose.

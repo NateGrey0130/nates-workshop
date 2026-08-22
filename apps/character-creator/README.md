@@ -1504,6 +1504,35 @@ UPDATE cannot express), and any class it cannot classify.
 
 ---
 
+## A gear price is often a range, not a number
+
+RUE prices much of its common gear as a range, and the loss is not cosmetic:
+
+```
+Belt, Utility (military style):   3-5 cr.
+Knife, Large (does 1D6 S.D.C.): 20-100 cr.
+Knife, Small (does 1D4 S.D.C.): 15-75 cr.
+```
+
+`cost` held one integer and the rest was dropped at import. **The equipment
+import then stored the HIGH end of every range it met** — 8 times out of 8 —
+while every pre-existing catalog row sat at the LOW end. Because nothing
+recorded that a choice had been made, the inconsistency was invisible: `Knife,
+Small` came out dearer than `Knife, Large`, and three rows were nearly
+"corrected" to prices RUE already agreed with at the other end of the range.
+
+So `cost` holds the **low end** — the number the sheet does arithmetic with,
+exactly as `spells.ppe` holds a variable cost's minimum and `ppe_note` carries
+the schedule — and `cost_note` carries the range or qualifier verbatim.
+
+The extraction prompt asks for both halves. It used to say *"if a cost is a
+range or varies, omit cost and put the wording in description"*, and the model
+did neither reliably; there was nowhere for a range to go, so it guessed a
+number instead.
+
+**A stored 75 that came from 15-75 is indistinguishable from a flat 75.** That
+is the whole reason the column exists.
+
 ## A Military Occupational Specialty adds a skill package
 
 RUE gives several classes an MOS: *"Select one of the following areas of
@@ -3516,6 +3545,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `024-data-script-runs.sql` | `data_script_runs` — which data scripts have run against this database. The same question `schema_migrations` answers for migrations, for the 55 scripts that answer it nowhere |
 | `030-power-pick-slots.sql` | `pending_power_picks.slot`, `.from_names` and `.note` — several grants can share a level with different restrictions. The Shifter gains two spells from a named list and one of any kind at every level; `slot` tells them apart, and `note` carries a restriction the catalog cannot check |
 | `031-character-mos.sql` | `characters.mos` — which Military Occupational Specialty a character took. RUE gives several classes an MOS ("select one area of specialty, gain all skills under that MOS"); the skills land in `skills` like any other, but which specialty was chosen has to be remembered rather than inferred back out of the skill list |
+| `032-gear-cost-note.sql` | `gear.cost_note` — what a price will not fit in one integer. RUE prices much of its common gear as a **range** (`Belt, Utility: 3-5 cr.`) and sometimes qualifies it instead (`double for gold`). `cost` holds the range’s LOW end, the way `spells.ppe` holds a variable cost’s minimum, and `cost_note` carries the wording verbatim |
 | `029-power-pick-categories.sql` | `pending_power_picks.categories` — a banked PSIONIC grant's own category list. The Mystic gains a **Super** power at levels 4 and 8, a category a major psychic cannot otherwise take, so the restriction belongs to the grant rather than to the class |
 | `028-pending-power-picks.sql` | `pending_power_picks` — the spells and psionic powers a level-up granted and nobody chose. `pending_skill_picks` with a different subject; `spell_levels` carries the cap the granting level came with, because that cap belongs to the grant rather than to the character |
 | `027-npc-dossiers.sql` | `npcs`, `npc_mentions`, `npc_sweeps` and `npc_proposals_dismissed`. **The first migration whose feature also needs a bucket** — R2 `MEDIA` must exist before the deploy that binds it |

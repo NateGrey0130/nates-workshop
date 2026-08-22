@@ -19,7 +19,9 @@ Rules:
 - Copy values as the book writes them. "2000 feet", "2D6 M.D. single shot, 6D6 M.D. burst" and "20 rounds per clip" are correct answers — do not reduce them to a number.
 - is_mega_damage is true when the item's damage is expressed in M.D. or M.D.C., false when it is S.D.C. or plain damage. If an entry states no damage at all, omit it.
 - A.R. and M.D.C. are body armour's numbers. Give ar and mdc as integers, and only when the entry states them.
-- cost is a plain integer number of credits or gold, with no separators or currency word. If a cost is a range or "varies", omit cost and put the wording in description.
+- cost is a plain integer number of credits or gold, with no separators or currency word.
+- A RANGE is common: "Belt, Utility (military style): 3-5 cr." Put the LOW end in cost and the range verbatim in cost_note ("3-5 cr."). The low end is the convention every existing row follows, and cost is what the sheet does arithmetic with. Do not pick an end silently: a stored 75 that came from 15-75 is indistinguishable from a flat 75.
+- A qualifier goes in cost_note too - "double for gold", "varies by region". If a cost is only "varies" with no number at all, omit cost and say so in cost_note.
 - weight_lbs is in POUNDS and may be fractional. A weight given in ounces converts: "two ounces" is 0.125, "eight ounces" is 0.5. Never round a real weight down to 0 — an item that weighs something must not read as weightless. Omit the field entirely if the book states no weight.
 - Do not emit table headers, section headings, or introductory prose as items.
 - Skip an entry you cannot read confidently rather than guessing at its numbers.`;
@@ -36,7 +38,8 @@ Each element must be:
   "name": "JA-11 Energy Rifle",     // exact item name, no trailing colon
   "category": "weapon",              // weapon | armor | vehicle | cybernetics | gear
   "weight_lbs": 14,                  // pounds, may be fractional (0.125 = two ounces); omit if not stated
-  "cost": 32000,                     // integer, no separators; omit if a range or "varies"
+  "cost": 32000,                     // integer, no separators; the LOW end of a range
+  "cost_note": "20-100 cr.",         // the range or qualifier verbatim; omit if a flat price
   "damage": "3D6 M.D. per blast",   // as written; omit if not stated
   "is_mega_damage": true,            // true for M.D./M.D.C., false for S.D.C.; omit if no damage
   "range": "4000 feet",             // omit if not stated
