@@ -151,6 +151,7 @@ const BOOK_SLUGS = { 'Rifts Ultimate Edition': 'rue' };
 
 let citationChecked = 0;
 let citationSkipped = false;
+const citationSuspects = [];
 for (const [book, slug] of Object.entries(BOOK_SLUGS)) {
   const txtDir = join(cacheDir, slug, 'txt');
   if (!existsSync(txtDir)) continue;
@@ -174,26 +175,52 @@ for (const [book, slug] of Object.entries(BOOK_SLUGS)) {
   // Whole name, parenthetical dropped, singular/plural tolerant. Anything
   // looser condemns rows that are really there, and anything stricter
   // condemns "Commune with Spirit" because the book prints the plural.
-  const key = (n) => String(n).replace(/\([^)]*\)/g, ' ')
-    .toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, ' ').trim();
+  // The book text was flattened by deleting every non-alphanumeric, so "&"
+  // VANISHES there. Expanding it to "and" on this side only made 18 skills
+  // look absent - "Motorcycles & Snowmobiles" became "motorcycles and
+  // snowmobiles" while the book held "motorcycles snowmobiles". Try both
+  // readings, and both numbers.
+  const flat = (n) => String(n).replace(/\([^)]*\)/g, ' ')
+    .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
   const found = (n) => {
-    const k = key(n);
-    if (!k) return true;
-    const alt = k.endsWith('s') ? k.slice(0, -1) : k + 's';
-    return text.includes(` ${k} `) || text.includes(` ${alt} `);
+    const base = flat(n);
+    if (!base) return true;
+    const forms = new Set([base, String(n).toLowerCase().replace(/&/g, ' and ')
+      .replace(/\([^)]*\)/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim()]);
+    for (const f of [...forms]) {
+      forms.add(f.endsWith('s') ? f.slice(0, -1) : f + 's');
+    }
+    return [...forms].some((f) => f && text.includes(` ${f} `));
   };
 
-  for (const table of ['spells', 'psionic_powers', 'skills', 'gear']) {
+  // NOT gear. A gear name in this catalog is reworded prose, not a heading the
+  // book prints: the catalog says `"Dead Boy" Body Armor CA-2 (Light)` where
+  // RUE says "CA-2 Light Body Armor", and `Light Mdc Body Armor` where the
+  // book says "light M.D.C. body armor". 35 of 40 findings were that, and a
+  // check that cries wolf 35 times is worse than no check.
+  //
+  // The other three tables have canonical name lists in the book - a checklist,
+  // an index, a skill list - so a name absent from the text means something.
+  for (const table of ['spells', 'psionic_powers', 'skills']) {
     const rows = d1(`SELECT name FROM ${table} WHERE source_book LIKE '${book}%'`);
     citationChecked += rows.length;
-    const bad = rows.filter((r) => !found(r.name));
-    for (const r of bad) {
-      note('CITATION NOT IN BOOK', `${table}.${r.name} claims "${book}" — name absent from its text`);
+    for (const r of rows.filter((x) => !found(x.name))) {
+      citationSuspects.push(`${table}.${r.name} claims "${book}" — name absent from its text`);
     }
   }
 }
 if (citationChecked) {
-  console.log(`citations:    ${citationChecked} row(s) checked against cached book text`);
+  console.log(`citations:    ${citationChecked} row(s) checked, `
+    + `${citationSuspects.length} worth a look`);
+  // ADVISORY, deliberately not drift. Whether a citation is right is a
+  // different question from whether the repo can rebuild the database, and
+  // wiring it into the exit code would fail every run over a name the book
+  // spells differently - which is how a useful check gets ignored.
+  for (const c of citationSuspects) console.log(`              ? ${c}`);
+  if (citationSuspects.length) {
+    console.log('              (advisory: a name the book writes differently reads the');
+    console.log('               same as one it never had. Check before acting.)');
+  }
 } else if (!citationSkipped) {
   console.log('citations:    no OCR cache — skipped (see scripts/ocr-book.py)');
 }

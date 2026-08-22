@@ -1278,9 +1278,31 @@ python scripts/ocr-book.py "path/to/Book.pdf" --slug rue --tables 167,200-202 --
 **A citation guard in `drift-check`.** Every psionic power claimed
 `source_book = 'Rifts Ultimate Edition'` and twelve appeared nowhere in that
 book. drift-check asks whether the repo can rebuild the database; this asks
-whether the database is telling the truth about where it came from. It runs only
-when the book's OCR cache is present, so a machine without one skips it rather
-than failing.
+whether the database is telling the truth about where it came from.
+
+**Advisory, and it does not touch the exit code.** Run against a complete cache
+for the first time it reported 40 problems, and the shape of its mistakes is the
+useful part:
+
+- 18 skills were flagged because the guard expanded `&` to "and" while the
+  book text had the `&` deleted — `Motorcycles & Snowmobiles` became
+  `motorcycles and snowmobiles` against a book holding `motorcycles snowmobiles`.
+- **35 of the rest were gear, and gear is now excluded.** A gear name here is
+  reworded prose, not a heading the book prints: the catalog says `"Dead Boy"
+  Body Armor CA-2 (Light)` where RUE says *"CA-2 Light Body Armor"*, and `Light
+  Mdc Body Armor` where the book says *"light M.D.C. body armor"*. Both are in
+  the book. A check that cries wolf 35 times is worse than no check.
+
+Left over: 422 rows checked, **4 worth a look** — four `W.P.` skills whose
+component words appear in RUE but never as a skill heading. That is the right
+kind of output for an advisory: a question, not a verdict. Whether a citation is
+right is a different question from whether the repo can rebuild the database,
+and wiring it into the exit code would fail every run over a name the book
+spells differently, which is how a useful check gets ignored.
+
+It runs only when the book's OCR cache is **complete** — a partial cache once
+accused four gear rows whose pages simply had not been OCR'd yet, so it reads
+the expected page count from the manifest and skips otherwise.
 
 **`.claude/agents/book-reconcile.md`** is a second reader for the reconcile
 pass, and deliberately has no write tools. It exists because the failures worth
