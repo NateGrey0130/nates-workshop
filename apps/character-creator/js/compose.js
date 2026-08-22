@@ -76,10 +76,10 @@ export const CORE_SDC_BY_CLASS = {
   'techno-wizard': '1D6',
   'warlock': '1D6',
   // Rifts Ultimate Edition, printed 86-99 - the Adventurers & Scholars
-  // section, which is where the book itself files these. The Operator is
-  // absent until its class ships - the book files it here too.
+  // section, which is where the book itself files all eight of these.
   'body-fixer': '1D6',
   'city-rat': '1D6',
+  'operator': '1D6',
   'cyber-doc': '1D6',
   'rogue-scholar': '1D6',
   'rogue-scientist': '1D6',
