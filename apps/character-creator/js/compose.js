@@ -61,10 +61,16 @@ export const CORE_SDC_BY_CLASS = {
   'coalition-grunt': '3D6',
   'coalition-samas-pilot': '3D6',
   'coalition-technical-officer': '3D6',
-  // Palladium Fantasy main book. The Knight's own page prints no S.D.C.
-  // formula, so the core rule applies: a man of arms, trained in combat from
-  // childhood and fielded as an officer.
+  // Palladium Fantasy main book, the Men of Arms section, printed 80-104. Not
+  // one of these pages prints an S.D.C. formula, so the core rule applies to
+  // every one of them — and the book's own section heading is the whole of
+  // what this table records, which is why they are listed together rather than
+  // argued for one at a time.
   'knight': '3D6',
+  'soldier': '3D6',
+  'squire': '3D6',
+  'palladin': '3D6',
+  'ranger': '3D6',
 
   // Practitioners of magic, psychics and scholars — 1D6.
   'burster': '1D6',

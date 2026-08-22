@@ -1730,7 +1730,7 @@ differs from the standard:
 | S.D.C. | **3D6** for men of arms, **1D6** for practitioners of magic, scholars and everyone else |
 
 The app used to read that silence as "this character has none" and store
-`hp_max` NULL. Thirty of thirty-nine published classes state no hit point
+`hp_max` NULL. Thirty-five of forty-four published classes state no hit point
 formula, so this was the common path, not an edge case — two Priests of Light
 reached production with no hit points and no S.D.C., and nothing on the sheet
 suggested anything was missing.
@@ -2418,6 +2418,20 @@ medieval realm is an event in play, not something every character picks off the
 starting-equipment list.
 Every catalog row can now say which game system it is for, and an import session
 says it once for the whole book rather than per page.
+
+**A mundane row that both worlds have is `both`, and the classes are what find
+them.** Clothing, gloves, a uniform, field rations, a riding horse, a hatchet
+and a skinning knife were all in the catalog tagged `rifts`, because a Rifts
+book was imported first — and the sheet loads its catalog as
+`items?system=<campaign>`, which returns NULL, that system, or `both`. So the
+Knight, who is granted clothing, gloves and a riding horse, held three items
+whose names its own sheet could not resolve.
+[`db/fix-pf-armor-and-cross-system-gear.sql`](db/fix-pf-armor-and-cross-system-gear.sql)
+moves those seven to `both`. This is not a licence to reclassify on sight: the
+trigger is a class in the *other* system granting the row outright, which is a
+concrete claim that both worlds have the thing. The cost is that `cost` is
+credits in Rifts and gold in Palladium Fantasy, and a `both` row has one column
+for it — recorded in that script rather than papered over.
 
 **Nothing used to set it.** `gear.system` and `skills.systems` existed, but only
 the *class* importer's stub creation wrote them, from the class being imported.
@@ -4106,11 +4120,11 @@ local-only script is protected as soon as it says so.
 
 | After | Rows |
 |---|---|
-| classes (published, live) | 39 |
-| skills | 319 |
+| classes (published, live) | 44 |
+| skills | 322 |
 | spells | 542 |
 | psionic powers | 101 |
-| gear | 652 |
+| gear | 656 |
 
 **These are pinned by `test/regression.mjs`**, which is the only thing that can
 honestly check them: it builds a database from nothing under a scratch directory
