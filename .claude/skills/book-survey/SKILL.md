@@ -65,6 +65,27 @@ and two **empty**.
 See `reference/read-columns.py`. Bucket lines by x, sort by y, walk column by
 column.
 
+**That script assumes the PDF has a text layer. A scan has none** —
+`page.get_text()` returns `''` for every page of Rifts Ultimate Edition, so the
+geometry has to come from Tesseract, and *how you ask it* matters more than the
+bucketing:
+
+| approach | what it produced |
+|---|---|
+| OCR text, read linearly | headings emitted `One, Three, Two, Four` — columns interleave |
+| `--psm 6` + word boxes | one uniform block: `Level Two  Magic Shield (6)  Distant Voice (10)` welded into a single line |
+| word boxes into N equal columns | assumes even spacing; that page has 2-column prose above a 3-column index, and no single division fits both |
+| **`--psm 3`, group by `block_num`** | **each heading and its entries land in their own block — emitted order stops mattering** |
+
+Let Tesseract do the layout analysis and group by its blocks. Reconstructing
+columns from raw x coordinates is the thing that looks rigorous and keeps being
+wrong.
+
+```
+tesseract page.png out --psm 3 tsv     # then group rows by block_num
+```
+
+
 **Then check the parse against something you already know.** Probe three or four
 spells whose level you can verify independently. A column reader that is subtly
 wrong looks exactly like one that works.
@@ -122,6 +143,11 @@ So: **the index is the authority and the page position is not.** Override.
 
 Three more checks worth running every time:
 
+- **A failed probe is a question, not a verdict.** Four RUE spells parsed to a
+  level that contradicted what I expected. Every one of them was checked against
+  its description section, and the book agreed with itself both times - the
+  expectations came from a different edition. Probe to find disagreement, then
+  go and find out who is wrong.
 - **Two independent readings of every number.** The stat block's own cost and the
   cost the index prints. 108 of 108 agreed here; where a class page disagreed on
   an earlier import, the other two agreed with each other and the class page was
