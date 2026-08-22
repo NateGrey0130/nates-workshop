@@ -1171,6 +1171,79 @@ Three of the 34 use the catalog's spelling rather than the book's, checked befor
 the list was written: `Control **&** Enslave Entity`, `De**si**ccate the
 Supernatural` (the page misspells it), and `**Air:** Phantom Mount`.
 
+#### The RUE psionics gap, and a diff that lied twice
+
+`add-rue-psionics-gap.sql` adds the **16 psionic powers** Rifts Ultimate
+Edition defines that the catalog did not carry, and corrects two I.S.P. costs.
+
+The authority is the **Psionic checklist on printed p164**, which states every
+power's name, category and I.S.P. cost in one place — the psionics equivalent
+of the Book of Magic's master index. Every row was then read a second time from
+its own stat block on printed pp.165-184. All sixteen agree.
+
+The first diff of that checklist against the catalog reported **21 missing and
+23 wrong categories**. Both numbers were mostly noise, and applying either
+would have done damage.
+
+**The catalog's category vocabulary is `Healing` / `Physical` / `Sensitive` /
+`Super`. RUE's section heading reads "Super-Psionics".** That one word
+accounted for **22 of the 23** category "errors". Rewriting them would have
+moved 22 rows to a category value nothing else in the app uses, breaking every
+picker that filters on it. Alias the heading; do not import it.
+
+**A parenthetical qualifier is part of a power's identity.** RUE prints
+`Bio-Regenerate (self)` *and* `Bio-Regeneration (Super)`; `Telekinesis` *and*
+`Telekinesis (Super)`. Matching on names with the parenthetical stripped
+collapsed each pair onto a single catalog row and produced three I.S.P.
+"corrections" and two category "corrections" **to rows that were already
+right**. The same stripping is what made three more look missing when they were
+present under a different spelling:
+
+| RUE prints | catalog holds |
+|---|---|
+| Bio-Regenerate (self) | Bio-Regeneration |
+| Impervious to Poison | Impervious to Poison/Toxin |
+| Commune with Spirits | Commune with Spirit |
+
+So the match is **exact first**, and a stripped match is accepted only when it
+is unambiguous *on both sides*. Anything left over is reported with its nearest
+candidate and judged by eye — `Telekinetic Push` and `Telekinetic Punch` are two
+characters apart and are different powers.
+
+Two costs RUE genuinely overrides, each confirmed by both readings:
+
+| power | catalog | RUE checklist | RUE stat block |
+|---|---|---|---|
+| Commune with Spirit | 8 | 6 | 6 |
+| Sense Dimensional Anomaly | 6 | 4 | 4 |
+
+Descriptions come from the book's own OCR'd text rather than a re-extraction —
+it costs nothing and cannot invent anything. What it *can* do is carry OCR
+damage, so the cleanup is an explicit table. Two defects it introduced before
+being caught: an unbounded `fect`->`feet` rule turned "effectively" into
+"effeetively", and the last power's block, having no following heading, ran off
+the end of the chapter and swallowed the opening of the Magic section — 9,706
+characters of description for a power that needs 2,677.
+
+**OCR reads `I.S.P.` as `LS.P.` on most of these pages.** A strict pattern found
+10 stat blocks in a chapter that has 86. Any pattern matching a psionic cost
+line has to accept `I`, `L`, `l` and `1` as the first character.
+
+#### 19 rows claim RUE provenance the book does not support
+
+Separately, 19 catalog rows carry `source_book = 'Rifts Ultimate Edition'` and
+do not appear on the checklist. **Twelve of them do not appear anywhere in the
+book's text** — `Attack Disease`, `Teleport Object`, `Cure Insanity`,
+`Catatonic Strike` and others. They came from `add-rue-psionics-batch.sql`, an
+earlier LLM extraction. The psionics chapter OCR'd completely (pp.165-184 all
+carry 3.7-7.5 KB of text), so this is not a gap in the reading.
+
+They are plausible Palladium powers and several are real ones from
+**World Book 12: Psyscape**, which RUE's own checklist page points at. Their
+`source_book` is therefore wrong, but the right value is not knowable from this
+book. Left alone deliberately — retagging them would be a guess, and deleting
+them would lose content.
+
 ### A psionic grant can name its categories, and they replace the class's
 
 Same shape, different subject, and the Mystic needed both halves — which is why
