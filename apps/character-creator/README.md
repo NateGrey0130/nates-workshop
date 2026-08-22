@@ -1471,7 +1471,7 @@ differs from the standard:
 | S.D.C. | **3D6** for men of arms, **1D6** for practitioners of magic, scholars and everyone else |
 
 The app used to read that silence as "this character has none" and store
-`hp_max` NULL. Twenty-eight of thirty-seven published classes state no hit point
+`hp_max` NULL. Twenty-nine of thirty-eight published classes state no hit point
 formula, so this was the common path, not an edge case — two Priests of Light
 reached production with no hit points and no S.D.C., and nothing on the sheet
 suggested anything was missing.
@@ -1503,6 +1503,79 @@ above level 1 ("+1D6 per level" needs one die per level, which a single
 UPDATE cannot express), and any class it cannot classify.
 
 ---
+
+## A Military Occupational Specialty adds a skill package
+
+RUE gives several classes an MOS: *"Select one of the following areas of
+specialty. Gains all skills under that MOS."* The Coalition Technical Officer
+offers seven, the Robot Pilot two.
+
+```yaml
+skills:
+  mos:
+    choose: 1
+    note: "Every skill under it is granted in addition to the O.C.C. skills."
+    options:
+      - id: "robotics"
+        name: "Robotics MOS"
+        skills:
+          - { name: "Robot Electronics", base: 50, per_level: 5 }
+          - { choose: 2, categories: ["Mechanical", "Electrical"], bonus: 10 }
+```
+
+**It is not a variant, and that distinction is the whole reason it exists.** A
+variant **replaces** what the class says, and `VARIANT_OVERRIDES` excludes the
+skills block on purpose — `skill_overrides` restating a percentage on a skill
+the class already grants is a much smaller power than swapping a skill list. An
+MOS **adds**: the Technical Officer's own page says the character gets its O.C.C.
+skills *"plus the MOS skills chosen previously"*.
+
+So `applyMos()` appends the chosen option's entries to `occ_skills` rather than
+replacing them, and it runs on the **composed** class rather than on the
+occupation slot — a character with no racial class carries their O.C.C. in the
+`rcc` slot, so attaching it to `occ` worked for a D-Bee Technical Officer and
+not for a human one. `combineClasses` carries `skills.mos` across the merge for
+the same reason: it rebuilds `skills` wholesale, and without that a Technical
+Officer taken alongside a racial class silently lost every specialty.
+
+**An option's entries are the same shape as `occ_skills`** — fixed skills and
+choice groups — so both go through `validateSkillEntries()`. Two validators for
+one shape is the pair that drifts.
+
+`characters.mos` stores which one, by id, parallel to `class_variant`. The
+granted skills are already in `skills`, but which package produced them is not
+recoverable from that, so the sheet could not show it and a re-derive could not
+reproduce it.
+
+**Unchosen is a warning, not a violation.** A class offering an MOS with none
+picked is missing a whole skill package and nothing else would mention it; an id
+no option carries means the class was edited under a saved character. Both are
+reported where a human sees them, and neither blocks a save — the same reasoning
+`no_occupation` uses.
+
+### Two things that cost time here
+
+**The parser wants list items indented deeper than their key.** Standard YAML
+accepts either, and the minimal `parseYaml` in this repo returns `null` for the
+same-indent form:
+
+```yaml
+skills:          # this parses to null
+- { name: "X" }
+
+skills:          # this parses
+  - { name: "X" }
+```
+
+Every MOS option reported "grants no skills", which was true of what the parser
+had produced.
+
+**The Technical Officer's page had to be re-read in column order.** Tesseract's
+own page segmentation spliced the two columns together and produced
+`Medic MOS: computer, tool kit if applicable` — the left column's heading
+running straight into the right column's equipment list. Read that way the class
+has five specialties; read in column order it has **seven**. See
+`.claude/skills/book-survey/reference/read-columns.py`.
 
 ## Classes that come in stages
 
@@ -3442,6 +3515,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `023-skill-bonuses.sql` | `skills.bonuses` — what a skill grants beyond its percentage, in a class's `bonuses:` shape. Boxing is +1 attack per melee and +2 P.S. |
 | `024-data-script-runs.sql` | `data_script_runs` — which data scripts have run against this database. The same question `schema_migrations` answers for migrations, for the 55 scripts that answer it nowhere |
 | `030-power-pick-slots.sql` | `pending_power_picks.slot`, `.from_names` and `.note` — several grants can share a level with different restrictions. The Shifter gains two spells from a named list and one of any kind at every level; `slot` tells them apart, and `note` carries a restriction the catalog cannot check |
+| `031-character-mos.sql` | `characters.mos` — which Military Occupational Specialty a character took. RUE gives several classes an MOS ("select one area of specialty, gain all skills under that MOS"); the skills land in `skills` like any other, but which specialty was chosen has to be remembered rather than inferred back out of the skill list |
 | `029-power-pick-categories.sql` | `pending_power_picks.categories` — a banked PSIONIC grant's own category list. The Mystic gains a **Super** power at levels 4 and 8, a category a major psychic cannot otherwise take, so the restriction belongs to the grant rather than to the class |
 | `028-pending-power-picks.sql` | `pending_power_picks` — the spells and psionic powers a level-up granted and nobody chose. `pending_skill_picks` with a different subject; `spell_levels` carries the cap the granting level came with, because that cap belongs to the grant rather than to the character |
 | `027-npc-dossiers.sql` | `npcs`, `npc_mentions`, `npc_sweeps` and `npc_proposals_dismissed`. **The first migration whose feature also needs a bucket** — R2 `MEDIA` must exist before the deploy that binds it |

@@ -79,7 +79,7 @@ const S = {
   // re-roll a number the player has already seen.
   raceCls: null,
   attrMethods: {}, attrs: {}, attrRolls: {},
-  related: [], secondary: [], groupPicks: {},
+  related: [], secondary: [], groupPicks: {}, mos: null,
   // Starting-gear choices the class leaves open, and the slugs picked for each,
   // keyed by the entry's index in equipment_starting.
   gearChoices: [], gearPicks: {},
@@ -353,7 +353,7 @@ function quizScore(c) {
 // they are written down. Everything here is the build itself.
 const DRAFT_KEYS = [
   'step', 'system', 'classMode', 'quiz', 'variant', 'occ', 'occVariant', 'attrMethods', 'attrs',
-  'related', 'secondary', 'groupPicks', 'gearPicks',
+  'related', 'secondary', 'groupPicks', 'gearPicks', 'mos',
   'equipment', 'equipInit', 'charName', 'campaignId', 'newCampaign',
   'spells', 'psi', 'bio', 'pools', 'longLived', 'bioRolls',
   'psiRoll', 'psiShape', 'psiCategory', 'attrBonuses', 'rolledBonuses', 'abilities',
@@ -632,7 +632,7 @@ function pickSystem(sys) {
   S.system = sys; S.step = ST.RACE; render();
 }
 function resetBuild() {
-  S.attrMethods = {}; S.attrs = {}; S.attrRolls = {}; S.related = []; S.secondary = []; S.groupPicks = {};
+  S.attrMethods = {}; S.attrs = {}; S.attrRolls = {}; S.related = []; S.secondary = []; S.groupPicks = {}; S.mos = null;
   S.equipment = []; S.equipInit = false; S.pools = null;
   S.gearChoices = []; S.gearPicks = {};
   S.variant = null;
@@ -1134,7 +1134,8 @@ function pickOcc(id) {
 // smoke check fails the build for that, because re-implementing the order is
 // exactly the bug compose.js exists to prevent.
 function recompose() {
-  const character = { class_variant: S.variant, occ_class_variant: S.occVariant, abilities: S.abilities };
+  const character = { class_variant: S.variant, occ_class_variant: S.occVariant,
+    abilities: S.abilities, mos: S.mos };
   // The race half alone, kept because its dice bonuses were rolled off it and
   // must not be re-rolled when an occupation arrives.
   S.raceCls = composeClass({ rcc: S.rcc, occ: null, character });
@@ -1145,6 +1146,17 @@ function recompose() {
     // folds it in from there while a build is in progress.
     character,
   });
+}
+
+// Choosing again replaces rather than adds: an MOS is one specialty, and the
+// skills the previous one granted have to leave with it. recompose() rebuilds
+// occ_skills from the class, so nothing has to be unpicked by hand - but a
+// group pick made against the OLD specialty would dangle, so they clear too.
+function pickMos(id) {
+  S.mos = String(S.mos || '').toLowerCase() === String(id).toLowerCase() ? null : id;
+  S.groupPicks = {};
+  recompose();
+  render();
 }
 
 function confirmRace() {
@@ -1762,6 +1774,27 @@ function renderSkills() {
   // The COMPOSED class: a rolled major psionic has half the related-skill
   // allowance, and the Skills step has to show the number that actually applies.
   const sk = psiClass().skills || {};
+
+  // A Military Occupational Specialty decides which skills the rest of this
+  // step lists, so it is asked first. Unchosen, the class's own O.C.C. skills
+  // are all there is - which is the honest state, not a broken one.
+  const mosCfg = sk.mos;
+  const mosHtml = !mosCfg ? '' : `
+    <div class="block">
+      <h3>Military Occupational Specialty</h3>
+      <div class="attr-note">${esc(mosCfg.note || 'Select one area of specialty. '
+        + 'Every skill under it is granted on top of the O.C.C. skills.')}</div>
+      <div class="pickgrid">
+        ${(mosCfg.options || []).map((o) => {
+          const id = o.id || o.name;
+          const on = String(S.mos || '').toLowerCase() === String(id).toLowerCase();
+          const grants = (o.skills || []).map((x) => x.name
+            || `${x.choose} from ${(x.categories || x.from || []).join(', ')}`).join(', ');
+          return `<button class="pick${on ? ' on' : ''}" onclick="pickMos('${esc(String(id))}')">
+            <b>${esc(o.name)}</b><span class="attr-note">${esc(grants)}</span></button>`;
+        }).join('')}
+      </div>
+    </div>`;
   const relatedCfg = sk.occ_related_skills || { count: 0, categories: [] };
   const secondaryCfg = sk.secondary_skills || { count: 0 };
   const taken = takenNames();
@@ -1863,6 +1896,7 @@ function renderSkills() {
   $('app').innerHTML = `
   <div class="panel">
     <h2>Skills <span class="muted small">— ${esc(S.cls.name)}</span></h2>
+    ${mosHtml}
     <h3>Class skills <span class="muted small">(automatic)</span></h3>
     ${occRows || '<p class="muted small">None listed.</p>'}
     <div class="cols" style="margin-top:14px">
@@ -2715,6 +2749,7 @@ async function save() {
       class_variant: S.variant || undefined,
       occ_class_id: S.occ || undefined,
       occ_class_variant: S.occVariant || undefined,
+      mos: S.mos || undefined,
       psychic_tier: S.psiRoll?.tier || undefined,
       psychic_shape: S.psiRoll?.tier ? (S.psiShape || undefined) : undefined,
       // Both halves summed. Sending S.attrBonuses alone would drop every dice
@@ -2895,7 +2930,7 @@ Object.assign(window, {
   // ST would be a ReferenceError on every Back button.
   S, ST, render, computePools, goStep, nextStep, prevStep, pickSystem, classMode, quizPick, pickClass,
   confirmRace, rerollForMinimum, setMethod, setAllMethod, doRoll, rollAll, manualSet, pbAdj,
-  setStartingLevel, rerollAdvancement, setLevelPick,
+  setStartingLevel, rerollAdvancement, setLevelPick, pickMos,
   doPsiRoll, skipPsiRoll, setPsiShape, setPsiCategory,
   rollBio, rollBioAll, setLongLived,
   rmEquip, addCatalog, addCustom, setBio, save, startOver,

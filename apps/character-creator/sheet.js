@@ -994,6 +994,11 @@ function render() {
     <div class="sheet-grid cols-2">
       <div>
         ${field('O.C.C.', escHtml(cls.name || c.class_id))}
+        ${/* A Military Occupational Specialty is part of what the character IS,
+              not a skill-list detail: two Technical Officers with different
+              specialties share no MOS skills at all. Shown beside the O.C.C.
+              for that reason, and only when the class offers one. */''}
+        ${cls.mos_chosen ? field('M.O.S.', escHtml(cls.mos_chosen.name)) : ''}
         ${field('Level', c.level)}
         ${field('Experience', `${c.xp} XP`)}
       </div>

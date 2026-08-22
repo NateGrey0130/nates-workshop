@@ -116,6 +116,35 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
         + 'so it has nothing for the player to choose - it is normally paired with an O.C.C.',
     });
   }
+  // A Military Occupational Specialty. The class offering one says "select one
+  // area of specialty, gain all skills under that MOS", so a character with
+  // none chosen is missing a package nothing else will mention.
+  const mosCfg = cls.skills?.mos;
+  if (mosCfg && Array.isArray(mosCfg.options) && mosCfg.options.length) {
+    const chosen = character?.mos;
+    const match = chosen && mosCfg.options.find(
+      (o) => String(o.id || o.name).toLowerCase() === String(chosen).toLowerCase());
+    if (!chosen) {
+      warnings.push({
+        rule: 'mos_unchosen',
+        class_id: cls.id ?? null,
+        options: mosCfg.options.map((o) => o.name),
+        message: `${cls.name || 'This class'} offers a Military Occupational Specialty `
+          + 'and none is chosen, so its skill package is missing.',
+      });
+    } else if (!match) {
+      // The class was edited under a saved character. Say which one is gone.
+      warnings.push({
+        rule: 'mos_unknown',
+        class_id: cls.id ?? null,
+        mos: String(chosen),
+        options: mosCfg.options.map((o) => o.id || o.name),
+        message: `"${chosen}" is not a specialty ${cls.name || 'this class'} offers, `
+          + 'so none of its skills are being granted.',
+      });
+    }
+  }
+
   const list = Array.isArray(skills) ? skills : [];
   const level = Number.isFinite(character?.level) ? character.level : 1;
 

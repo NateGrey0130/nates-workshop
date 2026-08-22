@@ -60,6 +60,7 @@ export const CORE_SDC_BY_CLASS = {
   // Coalition Military O.C.C.s, printed 231-237. Soldiers by definition.
   'coalition-grunt': '3D6',
   'coalition-samas-pilot': '3D6',
+  'coalition-technical-officer': '3D6',
 
   // Practitioners of magic, psychics and scholars — 1D6.
   'burster': '1D6',
@@ -105,6 +106,38 @@ function withCorePools(cls, occId) {
   return out;
 }
 
+// A Military Occupational Specialty, folded into the class that offers it.
+//
+// An MOS is NOT a variant, and the difference is the whole reason this exists.
+// A variant REPLACES what the class says - and VARIANT_OVERRIDES deliberately
+// excludes the skills block, because `skill_overrides` restating a number is a
+// much smaller power than swapping a skill list. An MOS ADDS: the book says
+// "select one area of specialty, gain all skills under that MOS", on top of the
+// O.C.C. skills every member of the class already has.
+//
+// So the option's entries are appended to occ_skills rather than replacing
+// them, and they are the same shape - fixed skills and choice groups - which is
+// why the parser validates both through validateSkillEntries.
+//
+// An unknown id returns the class untouched rather than throwing: a character
+// who picked an MOS that a later edit removed is still a character, and the
+// validator reports the dangling choice as a violation where a human sees it.
+export function applyMos(cls, mosId) {
+  const options = cls?.skills?.mos?.options;
+  if (!cls || !mosId || !Array.isArray(options)) return cls;
+  const pick = options.find((o) => String(o.id || o.name).toLowerCase() === String(mosId).toLowerCase());
+  if (!pick || !Array.isArray(pick.skills)) return cls;
+  return {
+    ...cls,
+    skills: {
+      ...cls.skills,
+      occ_skills: [...(cls.skills.occ_skills || []), ...pick.skills],
+    },
+    // What was chosen, for the sheet and for anything asking after the fact.
+    mos_chosen: { id: pick.id || pick.name, name: pick.name },
+  };
+}
+
 // `rcc` and `occ` are raw parsed classes, before any variant is applied.
 // `character` supplies class_variant, occ_class_variant, and the rolled psychic
 // tier; a plain object works, which is what the wizard passes mid-build.
@@ -121,7 +154,12 @@ export function composeClass({ rcc, occ = null, character = {}, skillRows = null
   // Core p.18 pools land here, on the two classes already resolved into one,
   // so combineClasses still sees exactly what each class actually stated and
   // its own race-omits-a-pool fallback is not pre-empted by a default.
-  const composed = withCorePools(job ? combineClasses(race, job) : race, job?.id ?? race?.id);
+  // MOS lands on the COMPOSED class, not on the occupation slot. A character
+  // with no racial class carries their O.C.C. in the `rcc` slot, so attaching
+  // it to `occ` fired for a D-Bee Technical Officer and not for a human one.
+  const composed = applyMos(
+    withCorePools(job ? combineClasses(race, job) : race, job?.id ?? race?.id),
+    character.mos);
 
   // Abilities are chosen FOR the character rather than contributed by either
   // half, so they land after the two classes are one — and before any rolled

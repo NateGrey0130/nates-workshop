@@ -108,6 +108,92 @@ export function applyVariant(cls, variantId) {
 // An override restates a number on a skill the class already grants. Naming
 // anything else is an error rather than a silent no-op: it is either a typo or
 // an attempt to add a skill, and both should be said out loud.
+// One skill-entry shape, validated in one place. An entry is either a fixed
+// skill ({name, base, per_level}) or a choice group ({choose, from|categories}).
+// occ_skills uses it and so does every MOS option, because a book that says
+// "gain all skills under that MOS" is describing the same list in a smaller box.
+export function validateSkillEntries(where, entries, errors, warnings) {
+  for (const s of entries || []) {
+    if (!s || typeof s !== 'object') { errors.push(`${where} entries must be objects`); continue; }
+    if (isChoiceGroup(s)) {
+      // Two flavours: an enumerated `from` list, or `categories` when the book
+      // says "any N skills from <category>" (e.g. "two piloting skills of choice").
+      if (typeof s.choose !== 'number' || s.choose < 1) errors.push(`${where} choice-group needs a numeric choose >= 1`);
+      const hasFrom = Array.isArray(s.from) && s.from.length > 0;
+      const hasCats = Array.isArray(s.categories) && s.categories.length > 0;
+      if (!hasFrom && !hasCats) {
+        errors.push(`${where} choice-group needs a non-empty from list or categories list`);
+      } else if (hasFrom && !hasCats && s.choose > s.from.length) {
+        errors.push(`${where} choice-group asks for ${s.choose} of only ${s.from.length} options`);
+      }
+      // `base` fixes the percentage; `bonus` adds to whatever each pick's own
+      // base is. Both at once has no single reading, and a group spanning a
+      // category almost always wants the second: the members start at
+      // different percentages, so one number cannot express "+30%".
+      if (s.base !== undefined && s.bonus !== undefined) {
+        errors.push(`${where} choice-group sets both base and bonus; use one`);
+      }
+      if (s.bonus !== undefined && (typeof s.bonus !== 'number' || !Number.isFinite(s.bonus))) {
+        errors.push(`${where} choice-group bonus must be a number`);
+      }
+    } else if (!s.name) {
+      errors.push(`${where} entries need a name (or choose/from for a choice-group)`);
+    } else if (typeof s.base !== 'number') {
+      warnings.push(`${where} "${s.name}" has no numeric base %`);
+    }
+  }
+}
+
+// skills.mos - a Military Occupational Specialty.
+//
+//   mos:
+//     choose: 1
+//     note: "Gains all skills under that MOS."
+//     options:
+//       - { id: "communications", name: "Communications MOS", skills: [ ... ] }
+//
+// The Coalition Technical Officer offers five; the Robot Pilot two. The skills
+// are granted IN ADDITION to the class's own occ_skills, which is what makes
+// this a different thing from `variants` - a variant REPLACES, and
+// VARIANT_OVERRIDES excludes the skills block on purpose.
+export function validateMos(mos, errors, warnings) {
+  if (mos === undefined || mos === null) return;
+  if (typeof mos !== 'object' || Array.isArray(mos)) {
+    errors.push('skills.mos must be a map');
+    return;
+  }
+  if (mos.choose !== undefined && (typeof mos.choose !== 'number' || mos.choose < 1)) {
+    errors.push('skills.mos.choose must be a number >= 1');
+  }
+  if (!Array.isArray(mos.options) || !mos.options.length) {
+    errors.push('skills.mos needs a non-empty options list');
+    return;
+  }
+  // Picking more specialties than exist is the same error an over-asking
+  // choice group makes, and fails the same way: silently short.
+  const want = mos.choose ?? 1;
+  if (want > mos.options.length) {
+    errors.push(`skills.mos asks for ${want} of only ${mos.options.length} options`);
+  }
+  const ids = new Set();
+  for (const o of mos.options) {
+    if (!o || typeof o !== 'object') { errors.push('skills.mos options must be objects'); continue; }
+    if (!o.name) errors.push('skills.mos options need a name');
+    // The id is what a character stores. Without one, a renamed option would
+    // orphan every character that picked it.
+    const id = o.id || o.name;
+    if (id && ids.has(String(id).toLowerCase())) {
+      errors.push(`skills.mos has two options called "${id}"`);
+    }
+    if (id) ids.add(String(id).toLowerCase());
+    if (!Array.isArray(o.skills) || !o.skills.length) {
+      errors.push(`skills.mos option "${o.name || id}" grants no skills`);
+      continue;
+    }
+    validateSkillEntries(`skills.mos["${o.name || id}"]`, o.skills, errors, warnings);
+  }
+}
+
 function validateSkillOverrides(v, granted, errors) {
   if (v.skill_overrides === undefined) return;
   if (!Array.isArray(v.skill_overrides)) {
@@ -414,6 +500,13 @@ export function combineClasses(rcc, occ) {
   };
   if (occ.skills?.occ_related_skills) out.skills.occ_related_skills = occ.skills.occ_related_skills;
   if (occ.skills?.secondary_skills) out.skills.secondary_skills = occ.skills.secondary_skills;
+  // An MOS belongs to the OCCUPATION - it is a military specialty, and the
+  // Coalition classes that have one are all O.C.C.s. Carried across the merge
+  // because this rebuilds `skills` wholesale, and without it a Technical
+  // Officer taken alongside a racial class silently lost its specialties.
+  // The race's own is the fallback, for a racial class that ever gains one.
+  const mos = occ.skills?.mos ?? rcc.skills?.mos;
+  if (mos) out.skills.mos = mos;
 
   out.bonuses = sumBonusGroups(rcc.bonuses, occ.bonuses);
 
@@ -1143,35 +1236,13 @@ export function parseClassMarkdown(text) {
     // choice-group ({choose, from: [...]}) — some classes bundle "pick N of
     // these" into the required list itself. Both may carry a free-text `note`
     // for conditional substitutions (advisory only, never enforced).
-    for (const s of data.skills.occ_skills || []) {
-      if (!s || typeof s !== 'object') { errors.push('skills.occ_skills entries must be objects'); continue; }
-      if (isChoiceGroup(s)) {
-        // Two flavours: an enumerated `from` list, or `categories` when the book
-        // says "any N skills from <category>" (e.g. "two piloting skills of choice").
-        if (typeof s.choose !== 'number' || s.choose < 1) errors.push('occ_skills choice-group needs a numeric choose >= 1');
-        const hasFrom = Array.isArray(s.from) && s.from.length > 0;
-        const hasCats = Array.isArray(s.categories) && s.categories.length > 0;
-        if (!hasFrom && !hasCats) {
-          errors.push('occ_skills choice-group needs a non-empty from list or categories list');
-        } else if (hasFrom && !hasCats && s.choose > s.from.length) {
-          errors.push(`occ_skills choice-group asks for ${s.choose} of only ${s.from.length} options`);
-        }
-        // `base` fixes the percentage; `bonus` adds to whatever each pick's own
-        // base is. Both at once has no single reading, and a group spanning a
-        // category almost always wants the second: the members start at
-        // different percentages, so one number cannot express "+30%".
-        if (s.base !== undefined && s.bonus !== undefined) {
-          errors.push('occ_skills choice-group sets both base and bonus; use one');
-        }
-        if (s.bonus !== undefined && (typeof s.bonus !== 'number' || !Number.isFinite(s.bonus))) {
-          errors.push('occ_skills choice-group bonus must be a number');
-        }
-      } else if (!s.name) {
-        errors.push('skills.occ_skills entries need a name (or choose/from for a choice-group)');
-      } else if (typeof s.base !== 'number') {
-        warnings.push(`occ_skill "${s.name}" has no numeric base %`);
-      }
-    }
+    validateSkillEntries('skills.occ_skills', data.skills.occ_skills, errors, warnings);
+
+    // A Military Occupational Specialty: "select one area of specialty, gain
+    // all skills under that MOS". Its options hold entries of exactly the same
+    // shape as occ_skills - named skills and choice groups - so they go through
+    // the same validator. Two validators for one shape is the pair that drifts.
+    validateMos(data.skills.mos, errors, warnings);
     const related = data.skills.occ_related_skills;
     if (related) {
       if (typeof related.count !== 'number') errors.push('skills.occ_related_skills.count must be a number');
