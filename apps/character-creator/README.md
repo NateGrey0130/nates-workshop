@@ -1866,6 +1866,82 @@ and the policies built on it are opposites. Unifying them would mean one of the
 two silently changing behaviour, and the merge UI's behaviour is pinned by the
 smoke test while the import's is pinned by 21 cases drawn from real failures.
 
+## Twenty gear prices, and why the first fix missed them
+
+`fix-rue-gear-prices.sql` corrects **sixteen costs**, records **three** ranges
+that were right but undocumented, and prices one item that had none.
+
+**Thirteen rows held the HIGH end of a printed range** - the same bug migration
+032 exists for. They survived the first fix because
+`backfill-gear-cost-notes.sql` was deliberately guarded on the stored cost
+*already being the low end*: every row that had the high end was skipped **by
+design**, and so stayed wrong. A guard that narrow protects the rows it
+understands and quietly abandons the ones it does not.
+
+| | catalog | book |
+|---|---|---|
+| `Sunglasses (fancy or light adjusting)` | 300 | **100**-300 |
+| `Cross/Crucifix (silver; 8-12 inches)` | 400 | **200**-400 |
+| `Gas Mask (larger than human)` | 120 | **80**-120 |
+| `Machete with canvas sheath` | 100 | **40**-100 |
+| … nine more | | |
+
+**Two were simply wrong.** `Blanket (Heavy)` at 6 against the book's 20, and
+`Blanket (Light)` at 4 against 10. No range, no note - transposed somewhere.
+
+**One is a page-break error, and the worst kind.** `NG-101 Rail Gun` carried
+**70,000**, which is the **NG-202's** price on the following line: the NG-101's
+block starts on printed p270 and its `Black Market Cost` falls on p271. A row
+straddling a page break usually loses a value; this one gained the neighbour's.
+
+**Four price lines were invisible to the parser** because OCR read `cr.` as
+`er.` - `Knapsack`, `Knife, Large`, `Machete`, `Mallet (small)`,
+`Mechanical Pencil` and `Sunglasses or Goggles (cheap)`. Three of those were
+wrong and three merely undocumented. Any pattern reading prices out of this
+book has to accept `er` for `cr`.
+
+### Three rows deliberately left alone
+
+- `Hammer (tool)` carries 7 against the book's *"Hammer (average, metal):
+  10-20 cr."* The catalog also holds `Small Hammer` at 10 and `Small Mallet` at
+  2, and a price alone cannot say which row the book's entry is.
+- `Canteen` carries 20, which looked wrong until the page showed **three**
+  canteens priced separately - Aluminum 30, Plastic 20, 2 M.D.C. 2200. The
+  catalog holds the plastic one and is right.
+- `Spike` carries 3 against *"Spikes (6, iron): 6 cr."* - a pack of six, not one
+  spike. Different granularity, not a different price.
+
+## RUE cannot fill the gear stubs, and that is the answer
+
+79 gear rows are class-import stubs. The obvious next step is to fill them from
+the equipment chapter, and it does not work - not because the matching is hard,
+but because **the names describe different things**.
+
+RUE's general-equipment price list holds **48** real entries. Matched against
+the 79 stubs with the catalog matcher, **zero** pair up. The near misses show
+why:
+
+| stub | nearest priced entry |
+|---|---|
+| `Air Filter And Gas Mask` | `Air Filter (12, disposable)` **and** `Gas Mask (human-size)` - two entries |
+| `Fishing Line And Hooks` | `Fishing Line, per 50 feet (15 m)` - hooks are not priced |
+| `Medical Kit` | the book has a *Medical Equipment* section, not a kit |
+| `Sack`, `Tweezers`, `Cord` | not priced anywhere in the book |
+
+The stub names were invented by the class importer out of an O.C.C.'s equipment
+prose - "a sack", "tweezers", "an air filter and gas mask". They are
+descriptions of things a character carries, not entries in the book's
+catalogue, and the book never prices most of them.
+
+**So filling them is a judgement call per item, not an import.** Deciding that
+`Air Filter And Gas Mask` costs 55 because two separate entries cost 5 and 50 is
+a reasonable house rule and it is *not* what the book says. That distinction is
+the whole reason `source_book` exists.
+
+A search of the whole book for each stub name is in the session notes: 22 appear
+somewhere in the equipment chapter, 42 appear only in O.C.C. equipment lists
+elsewhere - **a mention, not a definition** - and the rest not at all.
+
 ## A gear price is often a range, not a number
 
 RUE prices much of its common gear as a range, and the loss is not cosmetic:
