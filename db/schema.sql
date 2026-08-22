@@ -367,6 +367,12 @@ CREATE TABLE IF NOT EXISTS spells (
   ppe_note TEXT,                          -- a variable cost's schedule in a few words.
                                           -- `ppe` holds the MINIMUM, which is what the
                                           -- sheet's use button spends; see migration 021.
+  variant_note TEXT,                      -- what an OLDER book prints instead. The later
+                                          -- book wins (RUE > Book of Magic > Palladium
+                                          -- Fantasy); the losing number is kept, not
+                                          -- discarded. NOT ppe_note: the wizard treats
+                                          -- that column's presence as "this cost varies".
+                                          -- See migration 033.
   source TEXT NOT NULL DEFAULT 'seed',
   source_book TEXT,
   system TEXT,                            -- rifts | palladium-fantasy | both; NULL = unrestricted
@@ -389,6 +395,11 @@ CREATE TABLE IF NOT EXISTS psionic_powers (
   isp_note TEXT,                          -- a variable cost's schedule in a few words.
                                           -- `isp` holds the MINIMUM, which is what the
                                           -- sheet's use button spends; see migration 020.
+  variant_note TEXT,                      -- what an OLDER book prints instead. The later
+                                          -- book wins; the losing number is kept, not
+                                          -- discarded. NOT isp_note: the wizard treats
+                                          -- that column's presence as "this cost varies".
+                                          -- See migration 033.
   source TEXT NOT NULL DEFAULT 'seed',
   source_book TEXT,
   system TEXT,                            -- rifts | palladium-fantasy | both; NULL = unrestricted
@@ -658,3 +669,7 @@ WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'mos');
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '032-gear-cost-note.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('gear') WHERE name = 'cost_note');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '033-variant-note.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('spells') WHERE name = 'variant_note');
