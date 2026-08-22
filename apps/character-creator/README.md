@@ -1213,6 +1213,40 @@ against its description section showed RUE agreeing with itself both times. The
 expectations came from another edition. A probe that fails is a question, not a
 verdict.
 
+#### Four spells the catalog held twice
+
+`fix-duplicate-spell-rows.sql` removes four duplicate rows. **They were not
+found by looking.** The new matcher refused to match RUE's `Summon & Control
+Canine` because two catalog rows claimed the alias, and that refusal to guess
+exposed a duplicate nobody had noticed. Scanning every catalog the same way —
+group by name with parentheticals and connectives dropped, then require the
+identifying fields to agree — found three more. All four are in `spells`;
+skills, gear and psionic_powers are clean.
+
+Every pair was settled against a book, not against which name looked nicer:
+
+| kept | removed | why |
+|---|---|---|
+| `Fear` | `Fear (Horror Factor: 16)` | RUE's index prints the name plainly as **Fear**, level 2, 5 P.P.E. The stat detail was baked into the name by the importer |
+| `Summon and Control Canines` | `Summon & Control Canines` | same spell imported once from each book; the Book of Magic copy carries **no description** |
+| `Circle of Travel` | `Circle of Travel (Ritual)` | the Book of Magic master index lists it **once**, and the word "Ritual" appears nowhere on those index pages |
+| `Transformation` | `Transformation (Ritual)` | same |
+
+The `(Ritual)` rows had the same level, the same P.P.E., no description, and a
+P.P.E. note saying the same thing in different words. They are an import
+artifact, not a second spell.
+
+Two safety checks ran first. **No class cites any of the eight names** — and the
+first attempt at that check looked for YAML list items and returned zero for
+everything, which would have read as "safe" for entirely the wrong reason.
+Classes cite spells as an inline `Name (cost), Name (cost)` run; the corrected
+check was probed against a name known to be cited before its zeros were
+believed. **No character holds any of them** in its powers JSON.
+
+The script matches **by name, never by id**: row ids differ between the local
+and remote databases — `Fear (Horror Factor: 16)` is #37 locally and #29 in
+production — so an id here would delete the wrong spell in one of them.
+
 #### The import tooling, and the mistakes that paid for it
 
 Four pieces, each built because the same class of error kept producing
