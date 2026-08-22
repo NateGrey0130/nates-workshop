@@ -32,7 +32,7 @@
 // is not over --remote - it has returned stale replica data mid-migration - so
 // columns are read out of sqlite_master's stored CREATE text.
 import { execSync } from 'node:child_process';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -131,6 +131,71 @@ for (const path of sources) {
 console.log(`classes:      ${published.length} published live, ${creators.size} creatable from the repo`);
 for (const c of published) {
   if (!creators.has(c)) note('CLASS NOT REPRODUCIBLE', `${c} — no data script creates it`);
+}
+
+// ── 6. citations ────────────────────────────────────────────────────────────
+// Does a row's stated source actually contain it?
+//
+// Every psionic power in the catalog claimed `source_book = 'Rifts Ultimate
+// Edition'`. Twelve of them appear nowhere in that book - they came from an
+// extraction that invented them, and nothing noticed for months, because
+// nothing had ever asked. drift-check asks whether the repo can rebuild the
+// database; this asks whether the database is telling the truth about where it
+// came from.
+//
+// Runs only for books whose OCR cache is present (see scripts/ocr-book.py).
+// The cache is gitignored, so on a machine without it this silently does
+// nothing rather than failing - a missing cache is not drift.
+const cacheDir = join(repoRoot, '.cache', 'books');
+const BOOK_SLUGS = { 'Rifts Ultimate Edition': 'rue' };
+
+let citationChecked = 0;
+let citationSkipped = false;
+for (const [book, slug] of Object.entries(BOOK_SLUGS)) {
+  const txtDir = join(cacheDir, slug, 'txt');
+  if (!existsSync(txtDir)) continue;
+  const files = readdirSync(txtDir).filter((f) => f.endsWith('.txt') && !f.endsWith('.raw.txt'));
+  // A PARTIAL cache must not be consulted. "At least N pages" is not the same
+  // as complete: run against 81 of 382 pages this accused four gear rows whose
+  // page simply had not been OCR'd yet. The manifest states the page count, so
+  // compare against that and skip otherwise.
+  const manifestPath = join(cacheDir, slug, 'manifest.json');
+  if (!existsSync(manifestPath)) continue;
+  const expected = JSON.parse(readFileSync(manifestPath, 'utf8')).pages;
+  if (!expected || files.length < expected) {
+    console.log(`citations:    ${slug} cache incomplete `
+      + `(${files.length}/${expected ?? '?'} pages) — skipped`);
+    citationSkipped = true;
+    continue;
+  }
+  const text = ' ' + files.map((f) => readFileSync(join(txtDir, f), 'utf8')).join('\n')
+    .toLowerCase().replace(/[^a-z0-9]+/g, ' ') + ' ';
+
+  // Whole name, parenthetical dropped, singular/plural tolerant. Anything
+  // looser condemns rows that are really there, and anything stricter
+  // condemns "Commune with Spirit" because the book prints the plural.
+  const key = (n) => String(n).replace(/\([^)]*\)/g, ' ')
+    .toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, ' ').trim();
+  const found = (n) => {
+    const k = key(n);
+    if (!k) return true;
+    const alt = k.endsWith('s') ? k.slice(0, -1) : k + 's';
+    return text.includes(` ${k} `) || text.includes(` ${alt} `);
+  };
+
+  for (const table of ['spells', 'psionic_powers', 'skills', 'gear']) {
+    const rows = d1(`SELECT name FROM ${table} WHERE source_book LIKE '${book}%'`);
+    citationChecked += rows.length;
+    const bad = rows.filter((r) => !found(r.name));
+    for (const r of bad) {
+      note('CITATION NOT IN BOOK', `${table}.${r.name} claims "${book}" — name absent from its text`);
+    }
+  }
+}
+if (citationChecked) {
+  console.log(`citations:    ${citationChecked} row(s) checked against cached book text`);
+} else if (!citationSkipped) {
+  console.log('citations:    no OCR cache — skipped (see scripts/ocr-book.py)');
 }
 
 // ── verdict ─────────────────────────────────────────────────────────────────

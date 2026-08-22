@@ -144,6 +144,8 @@ import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicG
          grantNote } from '../../../functions/api/character-creator/_lib/leveling.js';
 import { toMatchQuery } from '../../../functions/api/character-creator/campaigns/[id]/search.js';
 import { powerGrantsFor, remainingPowerGrants } from '../../../functions/api/character-creator/_lib/power-picks.js';
+import { aliasCounts, buildIndex, diffCatalog, loose, match, nearest, normalise,
+         stem, variants, vocabularyWarnings } from '../../../scripts/catalog-match-lib.mjs';
 import { parseMentions } from '../../../functions/api/character-creator/_lib/mentions.js';
 import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
 import { dedupeCategories } from '../../../functions/api/character-creator/_lib/skill-picks.js';
@@ -4597,6 +4599,141 @@ check('saves split the same way', (() => {
     { attributes: {}, combat: {}, saves: { spell_magic: 4 } }, null,
     { attributes: {}, combat: {}, saves: { spell_magic: 1 } });
   return p.spell_magic.from_class === 1 && p.spell_magic.from_skills === 3;
+})());
+
+
+// ---------- Catalog name matching ----------
+section('Catalog matching');
+
+// Every case below is a mistake that shipped or nearly shipped during the RUE
+// import. The matcher exists because the same class of error kept producing
+// confident, wrong answers, so these are pinned rather than remembered.
+
+check('normalise folds & to and', normalise('Control & Enslave Entity') === 'control and enslave entity');
+check('stem drops a parenthetical', stem('Object Read (Psychometry)') === 'object read');
+check('loose drops connectives', loose('Animate and Control Dead') === 'animate control dead');
+
+// A catalog shaped like the real one: the pairs that broke things are here.
+const MATCH_ROWS = [
+  { name: 'Bio-Regeneration' },              // RUE prints "Bio-Regenerate (self)"
+  { name: 'Bio-Regeneration (Super)' },
+  { name: 'Telekinesis' },
+  { name: 'Telekinesis (Super)' },
+  { name: 'Telekinetic Punch' },
+  { name: 'Telekinetic Leap' },
+  { name: 'Commune with Spirit' },           // RUE prints the plural
+  { name: 'Impervious to Poison/Toxin' },    // RUE prints "Impervious to Poison"
+  { name: 'Object Read (Psychometry)' },     // RUE prints "Object Read"
+  { name: 'Control & Enslave Entity' },      // RUE prints "Control/Enslave Entity"
+  { name: 'Animate and Control Dead' },      // RUE prints "Animate/Control Dead"
+  { name: 'Power Weapon' },                  // RUE prints the plural
+  { name: 'Swim as a Fish (lesser)' },       // three candidates - unresolvable
+  { name: 'Swim as a Fish (Superior)' },
+  { name: 'Water: Swim as a Fish: Superior' },
+];
+const MATCH_IDX = buildIndex(MATCH_ROWS);
+const hit = (n, book = []) =>
+  match(n, MATCH_IDX, aliasCounts(book.map((x) => ({ name: x }))))?.row?.name ?? null;
+
+// --- must match: the same thing spelled differently ---
+check('plural on the last word', hit('Commune with Spirits') === 'Commune with Spirit');
+check('plural, other direction', hit('Power Weapons') === 'Power Weapon');
+check('slash half meets the whole', hit('Impervious to Poison') === 'Impervious to Poison/Toxin');
+check('book omits a parenthetical', hit('Object Read') === 'Object Read (Psychometry)');
+check('slash vs ampersand', hit('Control/Enslave Entity') === 'Control & Enslave Entity');
+check('slash vs the word and', hit('Animate/Control Dead') === 'Animate and Control Dead');
+
+// --- must NOT match: different things that look alike ---
+// These are the expensive direction. Collapsing either pair produced confident
+// "corrections" to rows that were already right.
+const BIO_BOOK = ['Bio-Regenerate (self)', 'Bio-Regeneration (Super)'];
+check('Bio-Regeneration pair stays split',
+  hit('Bio-Regeneration (Super)', BIO_BOOK) === 'Bio-Regeneration (Super)');
+const TK_BOOK = ['Telekinesis', 'Telekinesis (Super)'];
+check('Telekinesis exact still wins over its Super sibling',
+  hit('Telekinesis', TK_BOOK) === 'Telekinesis');
+check('Telekinesis (Super) does not collapse onto Telekinesis',
+  hit('Telekinesis (Super)', TK_BOOK) === 'Telekinesis (Super)');
+check('Push is not Punch', hit('Telekinetic Push') === null);
+check('Lift is not Leap', hit('Telekinetic Lift') === null);
+
+// Ambiguity on the CATALOG side must refuse too: "Swim as a Fish" has three
+// candidates and picking one is a coin flip.
+check('ambiguous catalog stem refuses to match', hit('Swim as a Fish') === null);
+
+// nearest() is reporting only, and this is exactly why: the closer pair is the
+// one that must not be merged.
+check('nearest is advisory, not a verdict', (() => {
+  const push = nearest('Telekinetic Push', MATCH_IDX);
+  const animate = nearest('Animate/Control Dead', MATCH_IDX);
+  // Push/Punch is nearer than Animate/Control Dead vs Animate and Control Dead,
+  // yet Push must not merge and Animate must.
+  return push.distance < animate.distance
+      && hit('Telekinetic Push') === null
+      && hit('Animate/Control Dead') === 'Animate and Control Dead';
+})());
+
+check('variants stay small', variants('Commune with Spirits').length <= 4);
+
+// --- the diff, end to end ---
+check('diffCatalog separates corrections from gaps', (() => {
+  const entries = [
+    { name: 'Commune with Spirits', isp: 6 },   // present, cost disagrees
+    { name: 'Telekinetic Punch', isp: 6 },      // present, agrees
+    { name: 'Telekinetic Push', isp: 4 },       // genuinely missing
+  ];
+  const rows = [
+    { name: 'Commune with Spirit', isp: 8 },
+    { name: 'Telekinetic Punch', isp: 6 },
+  ];
+  const d = diffCatalog({
+    entries, rows,
+    fields: { isp: { book: (e) => e.isp, row: (r) => r.isp } },
+  });
+  return d.disagree.length === 1 && d.disagree[0].diffs[0].catalog === 8
+      && d.matched.length === 1
+      && d.missing.length === 1 && d.missing[0].entry.name === 'Telekinetic Push'
+      && d.missing[0].nearest.row.name === 'Telekinetic Punch';
+})());
+
+// A field where nearly every disagreement is the SAME substitution is one
+// vocabulary difference, not N corrections. 22 of 23 reported category errors
+// were the book writing "Super-Psionics" where the catalog says "Super";
+// applying them would have broken every picker that filters on category.
+check('vocabulary difference is flagged, not applied', (() => {
+  const rows = [], entries = [];
+  for (let i = 0; i < 12; i++) {
+    rows.push({ name: `Power ${i}`, category: 'Super' });
+    entries.push({ name: `Power ${i}`, category: 'Super-Psionics' });
+  }
+  const d = diffCatalog({ entries, rows,
+    fields: { category: { book: (e) => e.category, row: (r) => r.category } } });
+  const w = vocabularyWarnings(d);
+  return d.disagree.length === 12 && w.length === 1
+      && w[0].from === 'Super-Psionics' && w[0].to === 'Super';
+})());
+
+// And it must stay quiet for real corrections, which spread across values.
+// The six RUE spell levels were 7->6 three times and 9->8 three times: no
+// single substitution dominates, and every one of them was a genuine fix.
+check('genuine corrections raise no vocabulary warning', (() => {
+  const entries = [
+    { name: 'Teleport: Lesser', level: 6 }, { name: 'Tongues', level: 6 },
+    { name: 'Words of Truth', level: 6 }, { name: 'Sickness', level: 8 },
+    { name: 'Spoil', level: 8 }, { name: 'Wisps of Confusion', level: 8 },
+  ];
+  const rows = entries.map((e) => ({ name: e.name, level: e.level + 1 }));
+  const d = diffCatalog({ entries, rows,
+    fields: { level: { book: (e) => e.level, row: (r) => r.level } } });
+  return d.disagree.length === 6 && vocabularyWarnings(d).length === 0;
+})());
+
+check('diffCatalog reports catalog rows the book never mentions', (() => {
+  const d = diffCatalog({
+    entries: [{ name: 'Telekinetic Punch' }],
+    rows: [{ name: 'Telekinetic Punch' }, { name: 'Attack Disease' }],
+  });
+  return d.extra.length === 1 && d.extra[0].name === 'Attack Disease';
 })());
 
 
