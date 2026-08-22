@@ -1,0 +1,102 @@
+I.S.P.
+P.P.E.
+M.D.C.
+S.D.C.
+O.C.C.
+R.C.C.
+P.P.
+P.S.
+P.E.
+P.B.
+I.Q.
+M.A.
+M.E.
+Spd
+Mega-Damage
+Mega-Damage Capacity
+Structural Damage Capacity
+Inner Strength Points
+Potential Psychic Energy
+Attribute
+Alignment
+Horror Factor
+Saving Throw
+melee
+melees
+Invocation
+Invocations
+Incantation
+Ley Line
+Ley Line Walker
+Techno-Wizard
+Techno-Wizardry
+Shifter
+Mind Melter
+Burster
+Psi-Stalker
+Dog Boy
+D-Bee
+Coalition
+Xiticix
+Splugorth
+Kydian
+Juicer
+Crazy
+Cyber-Knight
+Glitter Boy
+Headhunter
+Operator
+Rogue Scholar
+Rogue Scientist
+City Rat
+Body Fixer
+Vagabond
+Wilderness Scout
+Borg
+Cyborg
+Bionics
+Bio-Systems
+Telekinesis
+Telekinetic
+Telemechanics
+Telemechanic
+Telepathy
+Clairvoyance
+Empathy
+Psionic
+Psionics
+Psychic
+Psi-Sword
+Psi-Shield
+Pyrokinesis
+Hydrokinesis
+Electrokinesis
+Bio-Regeneration
+Bio-Manipulation
+Ectoplasm
+Ectoplasmic
+Astral Projection
+Exorcism
+Nightvision
+Levitation
+Meditation
+Sensitive
+Super-Psionics
+Healing
+Physical
+Rifts
+Palladium
+Megaverse
+Dimensional
+Nexus
+Rune Weapon
+Millennium Tree
+Elemental
+Warlock
+Diabolist
+Summoner
+Necromancer
+Battle Magus
+Temporal Wizard
+Stone Master
+Chiang-Ku

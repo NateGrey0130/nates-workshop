@@ -19,3 +19,6 @@ Thumbs.db
 # Python bytecode from running reference scripts
 __pycache__/
 *.pyc
+
+# OCR caches of commercial sourcebooks - local only, never committed.
+.cache/

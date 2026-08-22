@@ -1213,6 +1213,103 @@ against its description section showed RUE agreeing with itself both times. The
 expectations came from another edition. A probe that fails is a question, not a
 verdict.
 
+#### The import tooling, and the mistakes that paid for it
+
+Four pieces, each built because the same class of error kept producing
+confident wrong answers.
+
+**`scripts/catalog-match-lib.mjs` — matching a book's names to the catalog's.**
+Nearly every wrong import answer came from here:
+
+| import | first answer | truth |
+|---|---|---|
+| psionics missing | 21 | 16 |
+| psionics wrong category | 23 | 0 |
+| spells missing | 5 | 0 |
+| gear | "136 additive" | 27 collided |
+
+Two failure modes, opposite directions. **Too strict invents gaps** — `Commune
+with Spirits` and `Commune with Spirit` are one power, and importing the "gap"
+duplicates it. **Too loose invents corrections** — RUE prints `Bio-Regenerate
+(self)` *and* `Bio-Regeneration (Super)`, so stripping the parenthetical
+collapses them onto one row and generates confident fixes to rows that were
+already right.
+
+The rule that survives both: **exact match first, and a relaxed match only when
+it is unambiguous on BOTH sides**. Everything else is reported with its nearest
+candidate and decided by a person. `nearest()` is advisory and must stay that
+way — `Telekinetic Push`/`Punch` are distance 2 and are different powers, while
+`Animate/Control Dead`/`Animate and Control Dead` are distance 4 and are the
+same spell.
+
+**`vocabularyWarnings()` catches the 22-of-23 case.** When one substitution
+accounts for nearly all of a field's disagreements, that is a naming convention,
+not N corrections. It fires on `Super-Psionics -> Super` (29 of 30) and stays
+silent on the six genuine RUE spell-level corrections, which spread across two
+different substitutions. Both behaviours are pinned in the smoke test.
+
+**`scripts/catalog-diff.mjs`** puts that behind a CLI and prints four buckets —
+disagree / missing / matched / extra — plus the vocabulary warning at the top.
+
+```bash
+node scripts/catalog-diff.mjs --table psionic_powers \
+     --entries .cache/books/rue/psionics.json --compare category,isp
+```
+
+**`scripts/ocr-book.py` — OCR a scanned book once, properly.** Every setting in
+it was learned by getting it wrong:
+
+| setting | why |
+|---|---|
+| `--psm 3`, not `6` | at psm 6 Tesseract welds columns: `Level Two  Magic Shield (6)  Distant Voice (10)` arrives as one line |
+| TSV always, beside the text | reading an index in reading order needs word geometry; the first pass saved text only and two pages had to be re-OCR'd mid-task |
+| `--user-words` | Tesseract reads `I.S.P.` as `LS.P.`; a strict pattern found **10** stat blocks in a chapter that has **86** |
+| 500 dpi for index pages | the authority tables are set in the smallest type in the book |
+| normalise once, at ingest | `$.D.C.`/`[.S.P.`/`fect` are properties of the scan, not of today's import — fixing them per-import is how an unbounded `fect`->`feet` turned "effectively" into "effeetively" |
+
+`.txt` is normalised, `.raw.txt` is what Tesseract actually said, `tsv/` carries
+the geometry. **The cache is gitignored on purpose**: it is the full text of a
+book Palladium still sells. Regenerate it, do not commit it.
+
+```bash
+python scripts/ocr-book.py "path/to/Book.pdf" --slug rue --tables 167,200-202 --dpi-tables 500
+```
+
+**A citation guard in `drift-check`.** Every psionic power claimed
+`source_book = 'Rifts Ultimate Edition'` and twelve appeared nowhere in that
+book. drift-check asks whether the repo can rebuild the database; this asks
+whether the database is telling the truth about where it came from.
+
+**Advisory, and it does not touch the exit code.** Run against a complete cache
+for the first time it reported 40 problems, and the shape of its mistakes is the
+useful part:
+
+- 18 skills were flagged because the guard expanded `&` to "and" while the
+  book text had the `&` deleted — `Motorcycles & Snowmobiles` became
+  `motorcycles and snowmobiles` against a book holding `motorcycles snowmobiles`.
+- **35 of the rest were gear, and gear is now excluded.** A gear name here is
+  reworded prose, not a heading the book prints: the catalog says `"Dead Boy"
+  Body Armor CA-2 (Light)` where RUE says *"CA-2 Light Body Armor"*, and `Light
+  Mdc Body Armor` where the book says *"light M.D.C. body armor"*. Both are in
+  the book. A check that cries wolf 35 times is worse than no check.
+
+Left over: 422 rows checked, **4 worth a look** — four `W.P.` skills whose
+component words appear in RUE but never as a skill heading. That is the right
+kind of output for an advisory: a question, not a verdict. Whether a citation is
+right is a different question from whether the repo can rebuild the database,
+and wiring it into the exit code would fail every run over a name the book
+spells differently, which is how a useful check gets ignored.
+
+It runs only when the book's OCR cache is **complete** — a partial cache once
+accused four gear rows whose pages simply had not been OCR'd yet, so it reads
+the expected page count from the manifest and skips otherwise.
+
+**`.claude/agents/book-reconcile.md`** is a second reader for the reconcile
+pass, and deliberately has no write tools. It exists because the failures worth
+catching all look ordinary from inside the parse — most sharply when four spell
+probes "failed" and the book was right both times while my expectations came
+from a different edition. **A failed probe is a question, not a verdict.**
+
 #### The RUE psionics gap, and a diff that lied twice
 
 `add-rue-psionics-gap.sql` adds the **16 psionic powers** Rifts Ultimate

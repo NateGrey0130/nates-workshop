@@ -27,6 +27,18 @@ money, and it is the step to spend the least on.
 Phases 1-3 routinely cut phase 4 by more than half. The Book of Magic has ~1038
 stat blocks; the invocation import needed 108 of them.
 
+## 0. OCR it once, properly
+
+```bash
+python scripts/ocr-book.py "path/to/Book.pdf" --slug rue --tables 167,200-202 --dpi-tables 500
+```
+
+Emits normalised `txt/`, raw `txt/*.raw.txt`, and `tsv/` word geometry, using
+`--psm 3` and a Palladium wordlist. **Do this before anything else** -- the
+alternative is discovering mid-task that you need geometry you did not save, or
+that `I.S.P.` reads as `LS.P.` on most pages. The cache is gitignored; it is a
+commercial book.
+
 ## 1. Inventory: what is in here?
 
 Count structure, not prose. A spell has a stat block, a class has attribute
@@ -103,6 +115,35 @@ whatever precedes the **last** parenthetical on the line.
 
 ## 3. Diff before you extract
 
+**Use `scripts/catalog-diff.mjs`. Do not write another matcher.** Every import
+that hand-rolled one produced a confidently wrong answer:
+
+| import | hand-rolled answer | truth |
+|---|---|---|
+| psionics missing | 21 | 16 |
+| psionics wrong category | 23 | 0 |
+| spells missing | 5 | 0 |
+
+```bash
+node scripts/catalog-diff.mjs --table psionic_powers \
+     --entries book-entries.json --compare category,isp
+```
+
+It prints four buckets and a vocabulary warning. The rules it encodes -- exact
+first, relaxed only when unambiguous on both sides, nearest-candidate advisory
+only -- are in `scripts/catalog-match-lib.mjs` and pinned in the smoke test.
+
+Two things it will tell you that are easy to get backwards:
+
+- **A dominant single substitution is a vocabulary difference, not N
+  corrections.** 29 of 30 category "errors" were the book writing
+  "Super-Psionics" where the catalog says "Super". Applying them would have
+  broken every picker that filters on category.
+- **A small edit distance is not permission to merge.** `Telekinetic Push` and
+  `Telekinetic Punch` are 2 apart and different; `Animate/Control Dead` and
+  `Animate and Control Dead` are 4 apart and the same.
+
+
 Get the catalog and subtract it. Extracting 300 spells to add 108 wastes money
 and puts 200 needless rows through review.
 
@@ -132,6 +173,10 @@ Keep batches small. Spell entries are long, and a reply that overruns the output
 ceiling is rejected rather than half-saved.
 
 ## 5. Reconcile — the step that is easiest to skip
+
+**Hand this to the `book-reconcile` subagent.** It has no write tools and did
+not write the parse, which is the point: the failures worth catching all look
+ordinary from inside it.
 
 **Check every extracted row against the authority, not a sample.** Supplying the
 level per batch still produced 13 rows exactly one level too high, because

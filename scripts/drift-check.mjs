@@ -32,7 +32,7 @@
 // is not over --remote - it has returned stale replica data mid-migration - so
 // columns are read out of sqlite_master's stored CREATE text.
 import { execSync } from 'node:child_process';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -131,6 +131,98 @@ for (const path of sources) {
 console.log(`classes:      ${published.length} published live, ${creators.size} creatable from the repo`);
 for (const c of published) {
   if (!creators.has(c)) note('CLASS NOT REPRODUCIBLE', `${c} — no data script creates it`);
+}
+
+// ── 6. citations ────────────────────────────────────────────────────────────
+// Does a row's stated source actually contain it?
+//
+// Every psionic power in the catalog claimed `source_book = 'Rifts Ultimate
+// Edition'`. Twelve of them appear nowhere in that book - they came from an
+// extraction that invented them, and nothing noticed for months, because
+// nothing had ever asked. drift-check asks whether the repo can rebuild the
+// database; this asks whether the database is telling the truth about where it
+// came from.
+//
+// Runs only for books whose OCR cache is present (see scripts/ocr-book.py).
+// The cache is gitignored, so on a machine without it this silently does
+// nothing rather than failing - a missing cache is not drift.
+const cacheDir = join(repoRoot, '.cache', 'books');
+const BOOK_SLUGS = { 'Rifts Ultimate Edition': 'rue' };
+
+let citationChecked = 0;
+let citationSkipped = false;
+const citationSuspects = [];
+for (const [book, slug] of Object.entries(BOOK_SLUGS)) {
+  const txtDir = join(cacheDir, slug, 'txt');
+  if (!existsSync(txtDir)) continue;
+  const files = readdirSync(txtDir).filter((f) => f.endsWith('.txt') && !f.endsWith('.raw.txt'));
+  // A PARTIAL cache must not be consulted. "At least N pages" is not the same
+  // as complete: run against 81 of 382 pages this accused four gear rows whose
+  // page simply had not been OCR'd yet. The manifest states the page count, so
+  // compare against that and skip otherwise.
+  const manifestPath = join(cacheDir, slug, 'manifest.json');
+  if (!existsSync(manifestPath)) continue;
+  const expected = JSON.parse(readFileSync(manifestPath, 'utf8')).pages;
+  if (!expected || files.length < expected) {
+    console.log(`citations:    ${slug} cache incomplete `
+      + `(${files.length}/${expected ?? '?'} pages) — skipped`);
+    citationSkipped = true;
+    continue;
+  }
+  const text = ' ' + files.map((f) => readFileSync(join(txtDir, f), 'utf8')).join('\n')
+    .toLowerCase().replace(/[^a-z0-9]+/g, ' ') + ' ';
+
+  // Whole name, parenthetical dropped, singular/plural tolerant. Anything
+  // looser condemns rows that are really there, and anything stricter
+  // condemns "Commune with Spirit" because the book prints the plural.
+  // The book text was flattened by deleting every non-alphanumeric, so "&"
+  // VANISHES there. Expanding it to "and" on this side only made 18 skills
+  // look absent - "Motorcycles & Snowmobiles" became "motorcycles and
+  // snowmobiles" while the book held "motorcycles snowmobiles". Try both
+  // readings, and both numbers.
+  const flat = (n) => String(n).replace(/\([^)]*\)/g, ' ')
+    .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  const found = (n) => {
+    const base = flat(n);
+    if (!base) return true;
+    const forms = new Set([base, String(n).toLowerCase().replace(/&/g, ' and ')
+      .replace(/\([^)]*\)/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim()]);
+    for (const f of [...forms]) {
+      forms.add(f.endsWith('s') ? f.slice(0, -1) : f + 's');
+    }
+    return [...forms].some((f) => f && text.includes(` ${f} `));
+  };
+
+  // NOT gear. A gear name in this catalog is reworded prose, not a heading the
+  // book prints: the catalog says `"Dead Boy" Body Armor CA-2 (Light)` where
+  // RUE says "CA-2 Light Body Armor", and `Light Mdc Body Armor` where the
+  // book says "light M.D.C. body armor". 35 of 40 findings were that, and a
+  // check that cries wolf 35 times is worse than no check.
+  //
+  // The other three tables have canonical name lists in the book - a checklist,
+  // an index, a skill list - so a name absent from the text means something.
+  for (const table of ['spells', 'psionic_powers', 'skills']) {
+    const rows = d1(`SELECT name FROM ${table} WHERE source_book LIKE '${book}%'`);
+    citationChecked += rows.length;
+    for (const r of rows.filter((x) => !found(x.name))) {
+      citationSuspects.push(`${table}.${r.name} claims "${book}" — name absent from its text`);
+    }
+  }
+}
+if (citationChecked) {
+  console.log(`citations:    ${citationChecked} row(s) checked, `
+    + `${citationSuspects.length} worth a look`);
+  // ADVISORY, deliberately not drift. Whether a citation is right is a
+  // different question from whether the repo can rebuild the database, and
+  // wiring it into the exit code would fail every run over a name the book
+  // spells differently - which is how a useful check gets ignored.
+  for (const c of citationSuspects) console.log(`              ? ${c}`);
+  if (citationSuspects.length) {
+    console.log('              (advisory: a name the book writes differently reads the');
+    console.log('               same as one it never had. Check before acting.)');
+  }
+} else if (!citationSkipped) {
+  console.log('citations:    no OCR cache — skipped (see scripts/ocr-book.py)');
 }
 
 // ── verdict ─────────────────────────────────────────────────────────────────
