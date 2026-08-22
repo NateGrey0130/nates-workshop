@@ -1911,6 +1911,51 @@ book has to accept `er` for `cr`.
 - `Spike` carries 3 against *"Spikes (6, iron): 6 cr."* - a pack of six, not one
   spike. Different granularity, not a different price.
 
+## The OCR is confidently wrong, which is why tuning it does not help
+
+The obvious response to bad OCR is a better scan. Measured over four pages whose
+errors are known, it barely moves:
+
+| setting | price-unit misreads | l/I confusions |
+|---|---|---|
+| 300 dpi (current) | 7 | 15 |
+| 500 dpi | 6 | 12 |
+| 600 dpi | 5 | 14 |
+| `--oem 1` (LSTM only) | **no change at all** | |
+| greyscale + unsharp mask | 7 | 12 |
+
+The reason is in the confidence column. Tesseract reads **`Ibs` at 91-94** and
+**`18.000` at 93-97**. It is not hesitating, and it has no reason to: `Ibs` and
+`18.000` are perfectly plausible strings. Nothing tells an OCR engine that
+Palladium does not price things in thousandths of a credit.
+
+Only **1.3%** of words in the book score under 70, and **none of the known
+misreads are among them** - so filtering on confidence finds nothing either.
+
+**So the leverage is not in the scan. It is in knowing what a field is allowed
+to be.** Two places now do:
+
+`scripts/ocr-book.py` repairs the systematic confusions **once, at ingest**, and
+only where context makes them unambiguous:
+
+- `20-100 er.` is a price. All 14 occurrences follow a digit and no real word
+  does - a bare `er`->`cr` would wreck "her" and "player".
+- `18.000` is eighteen thousand. Guarded to **exactly three digits**, because
+  this book writes measurements as `1.8 m` and `0.9 m` and never to three
+  places - and prints `130.101 - 180,200` as one range using both separators.
+
+Re-running it took **zero** occurrences of both, and left all 30 instances of
+`0.9 m` intact.
+
+`--renormalise` re-applies the table to the cached `.raw.txt` **without running
+Tesseract again**: seconds instead of 25 minutes, so improving a rule is cheap.
+
+`scripts/ocr-fields-lib.mjs` holds the typed readers - `money`, `weightLbs`,
+`dice`, `isMegaDamage` - for what context cannot settle in bulk. They **refuse
+rather than guess**: `dice('Varies with missile type')` is `null`, not zero,
+because a damage field that cannot be read is a note. Twenty-two cases are
+pinned in the smoke test, every string taken verbatim off a page.
+
 ## RUE cannot fill the gear stubs, and that is the answer
 
 79 gear rows are class-import stubs. The obvious next step is to fill them from

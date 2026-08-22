@@ -31,6 +31,22 @@ come back:
   per-import is how an unbounded 'fect'->'feet' rule turned "effectively" into
   "effeetively". `.txt` is normalised; `.raw.txt` keeps what Tesseract said.
 
+AND THE THING THAT DOES NOT WORK: raising the DPI. Measured over four pages
+whose errors are known, going 300 -> 600 dpi took the price-unit misreads from
+7 to 5 and the l/I confusions from 15 to 14. `--oem 1` changed nothing at all.
+Greyscale and unsharp-masking changed nothing worth having.
+
+The reason is in the confidence column: Tesseract reads "Ibs" at 91-94 percent
+and "18.000" at 93-97 percent. It is not hesitating. `Ibs` and `18.000` are
+perfectly plausible strings, and nothing tells an OCR engine that Palladium
+does not price things in thousandths of a credit. Only 1.3% of words score
+under 70, and NONE of the known misreads are among them - filtering on
+confidence would find nothing.
+
+So the leverage is not in the scan. It is in knowing what a field is allowed to
+look like, which is why the repairs below are CONTEXTUAL and why the typed
+readers live in scripts/ocr-fields-lib.mjs.
+
 The cache lives OUTSIDE git on purpose - see README. It is the full text of a
 book Palladium still sells.
 """
@@ -78,12 +94,30 @@ def parse_pages(spec):
     return out
 
 
+# Repairs that need CONTEXT, not a lookup. Each was verified across the whole
+# cached book before being turned on, because a blanket version of any of them
+# would corrupt ordinary prose.
+CONTEXTUAL = [
+    # "20-100 er." is "20-100 cr." Every one of the 14 occurrences in this book
+    # follows a digit, and no legitimate word does. A bare er->cr would of
+    # course wreck "her", "over", "player".
+    (re.compile(r'(?<=\d)(\s*)er\b\.?'), r'\1cr.'),
+    # 18.000 credits is eighteen thousand. Guarded to EXACTLY three digits and a
+    # word boundary: this book writes measurements as "1.8 m" and "0.9 m", never
+    # to three places, and it mixes the two separators itself - "130.101 -
+    # 180,200" is one range on one line. All 44 occurrences are thousands.
+    (re.compile(r'(\d)\.(\d{3})\b'), r'\1\2'),
+]
+
+
 def normalise(text):
     for a, b, bounded in SUBS:
         if bounded:
             text = re.sub(r'(?<![A-Za-z])' + re.escape(a) + r'(?![A-Za-z])', b, text)
         else:
             text = text.replace(a, b)
+    for rx, rep in CONTEXTUAL:
+        text = rx.sub(rep, text)
     # OCR'd bullet glyphs and stray replacement characters.
     text = text.replace(' @ ', ' ').replace('\ufffd', "'")
     return text
@@ -100,6 +134,8 @@ def main():
     ap.add_argument('--page', type=int, help='just this one page')
     ap.add_argument('--psm', default='3')
     ap.add_argument('--force', action='store_true')
+    ap.add_argument('--renormalise', action='store_true',
+                    help='re-apply the substitution table to the cached raw\n                          text and exit; no Tesseract, seconds not minutes')
     ap.add_argument('--keep-png', action='store_true',
                     help='keep page images (large); off by default')
     a = ap.parse_args()
@@ -111,6 +147,20 @@ def main():
     out = os.path.join(a.cache, slug)
     for sub in ('txt', 'tsv', 'png'):
         os.makedirs(os.path.join(out, sub), exist_ok=True)
+
+    if a.renormalise:
+        # The expensive half of OCR is Tesseract, and its output is already on
+        # disk in .raw.txt. Improving a substitution rule should not cost 25
+        # minutes of re-scanning a book that has not changed.
+        import glob
+        n = 0
+        for raw in sorted(glob.glob(os.path.join(out, 'txt', 'p*.raw.txt'))):
+            txt = raw.replace('.raw.txt', '.txt')
+            io.open(txt, 'w', encoding='utf-8', newline='').write(
+                normalise(io.open(raw, encoding='utf-8', errors='replace').read()))
+            n += 1
+        print('%s: renormalised %d page(s) from cached raw text' % (slug, n))
+        return
 
     tables = parse_pages(a.tables)
     doc = pymupdf.open(a.pdf)
