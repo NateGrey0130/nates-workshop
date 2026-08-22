@@ -278,7 +278,11 @@ CREATE TABLE IF NOT EXISTS gear (
   system TEXT CHECK (system IN ('rifts', 'palladium-fantasy', 'both')),
   category TEXT,                        -- weapon | armor | vehicle | cybernetics | gear
   weight_lbs REAL,
-  cost INTEGER,                         -- credits (rifts) or gold (palladium-fantasy)
+  cost INTEGER,                         -- credits (rifts) or gold (palladium-fantasy).
+                                        -- A range's LOW end, the way spells.ppe holds a
+                                        -- variable cost's minimum; see cost_note.
+  cost_note TEXT,                       -- a range or qualifier the integer cannot hold:
+                                        -- "20-100 cr.", "double for gold". Migration 032.
   -- Stat block. TEXT where books write prose as often as figures
   -- ("2D6 M.D. single shot, 6D6 M.D. burst"); ar and mdc are numbers because
   -- the sheet's armour block uses them as such. is_mega_damage is structured
@@ -650,3 +654,7 @@ WHERE EXISTS (SELECT 1 FROM pragma_table_info('pending_power_picks') WHERE name 
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '031-character-mos.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'mos');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '032-gear-cost-note.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('gear') WHERE name = 'cost_note');

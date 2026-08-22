@@ -137,7 +137,11 @@ export const CATALOGS = {
       { name: 'category', label: 'Category', type: 'select', allowOther: true,
         options: ['weapon', 'armor', 'vehicle', 'cybernetics', 'gear'] },
       { name: 'weight_lbs', label: 'Weight (lbs)', type: 'real' },
-      { name: 'cost', label: 'Cost', type: 'int', help: 'Credits (Rifts) or gold (Palladium Fantasy)' },
+      { name: 'cost', label: 'Cost', type: 'int',
+        help: 'Credits (Rifts) or gold (Palladium Fantasy). A range goes in at its LOW end, '
+            + 'the way a spell stores the minimum of a variable P.P.E. cost.' },
+      { name: 'cost_note', label: 'Cost note', type: 'text',
+        help: 'What the integer cannot hold: "20-100 cr.", "double for gold".' },
       // Stat block. Null wherever it does not apply — one table covers weapons,
       // armour and general equipment rather than branching on a type column.
       { name: 'damage', label: 'Damage', type: 'text', help: 'As written: "2D6 M.D. single shot, 6D6 M.D. burst"' },
