@@ -34,7 +34,18 @@ python scripts/ocr-book.py "path/to/Book.pdf" --slug rue --tables 167,200-202 --
 ```
 
 Emits normalised `txt/`, raw `txt/*.raw.txt`, and `tsv/` word geometry, using
-`--psm 3` and a Palladium wordlist. **Do this before anything else** -- the
+`--psm 3` and a Palladium wordlist.
+
+**Do not reach for a higher DPI when the text is wrong.** Measured: 300 -> 600
+dpi took one error class from 7 to 5, `--oem 1` changed nothing, preprocessing
+changed nothing worth having. The OCR is CONFIDENT about its mistakes - `Ibs`
+scores 91-94 and `18.000` scores 93-97, and only 1.3% of words score under 70
+with none of the known misreads among them. A confidence filter finds nothing.
+
+Fix it where the meaning is, not where the pixels are: contextual repairs at
+ingest, and the typed readers in `scripts/ocr-fields-lib.mjs` for the rest.
+`--renormalise` re-applies the substitution table to cached raw text without
+running Tesseract, so improving a rule costs seconds rather than a re-scan. **Do this before anything else** -- the
 alternative is discovering mid-task that you need geometry you did not save, or
 that `I.S.P.` reads as `LS.P.` on most pages. The cache is gitignored; it is a
 commercial book.

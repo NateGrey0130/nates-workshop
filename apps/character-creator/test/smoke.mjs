@@ -146,6 +146,8 @@ import { toMatchQuery } from '../../../functions/api/character-creator/campaigns
 import { powerGrantsFor, remainingPowerGrants } from '../../../functions/api/character-creator/_lib/power-picks.js';
 import { aliasCounts, buildIndex, diffCatalog, loose, match, nearest, normalise,
          stem, variants, vocabularyWarnings } from '../../../scripts/catalog-match-lib.mjs';
+import { dice, isMegaDamage, isVariableCost, money, weightLbs }
+  from '../../../scripts/ocr-fields-lib.mjs';
 import { parseMentions } from '../../../functions/api/character-creator/_lib/mentions.js';
 import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
 import { dedupeCategories } from '../../../functions/api/character-creator/_lib/skill-picks.js';
@@ -4601,6 +4603,42 @@ check('saves split the same way', (() => {
   return p.spell_magic.from_class === 1 && p.spell_magic.from_skills === 3;
 })());
 
+
+// ---------- Reading numbers out of OCR ----------
+section('OCR field readers');
+
+// Every string here was taken verbatim off a page of the cached RUE text. The
+// OCR is CONFIDENT about these misreads - "Ibs" scores 91-94, "18.000" scores
+// 93-97 - so no confidence filter and no amount of DPI would catch them, and a
+// reader that does not know what a price is allowed to look like will believe
+// a rifle costs eighteen credits.
+
+check('a thousands separator OCRs as a period', money('18.000 credits.') === 18000);
+check('and so does a bigger one', money('1.500.000 credits') === 1500000);
+check('a real comma still works', money('55,000 credits. Good availability.') === 55000);
+check('cr misread as er, after a digit', money('20-100 er.') === 20);
+check('a range yields its LOW end', money('100-200 cr.') === 100);
+check('the low end is the convention gear.cost holds', money('12-25 cr.') === 12);
+check('a metric decimal is not a separator', money('0.9 m') === 0);
+check('unreadable price is null, not zero', money('Varies with availability') === null);
+
+check('a range is flagged as variable', isVariableCost('100-300 cr.'));
+check('so is a qualifier', isVariableCost('6 credits per 16 ounce can'));
+check('a flat price is not', !isVariableCost('20 cr.'));
+
+check('Ibs is lbs', weightLbs('5 Ibs (2.25 kg)') === 5);
+check('a lone pipe is a 1', weightLbs('| Ib (0.45 kg)') === 1);
+check('pounds beat the metric conversion', weightLbs('128 lbs (57.6 kg)') === 128);
+check('kg alone converts', Math.abs(weightLbs('20 kg') - 44.09) < 0.05);
+
+check('bracket misread as a 1', dice('[D4 S.D.C. damage') === '1D4');
+check('a multiplier keeps its x', dice('2D6x10 M.D.') === '2D6x10');
+check('spacing in a multiplier', dice('1D6x 10') === '1D6x10');
+check('prose damage reads as null, not zero', dice('Varies with missile type') === null);
+
+check('M.D. means mega-damage', isMegaDamage('3D6 M.D.'));
+check('and so does the word', isMegaDamage('2D4 Mega-Damage'));
+check('S.D.C. does not', !isMegaDamage('1D6 S.D.C. damage'));
 
 // ---------- Catalog name matching ----------
 section('Catalog matching');
