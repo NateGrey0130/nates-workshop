@@ -577,17 +577,23 @@ console.log('\n' + '[8/8] Checks that only a database can make');
     }
   }
 
-  // Three are deliberate and documented: the Priest of Light names W.P. Siege,
-  // W.P. Large Axes and W.P. Lance ahead of those rows existing, and says so in
-  // its own note. They activate by themselves when the rows arrive. The audit
-  // floor is three, not zero - so this pins the NAMES, not just the count, and
-  // a fourth dead restriction fails the run.
-  const ALLOWED = new Set(['W.P. Siege', 'W.P. Large Axes', 'W.P. Lance']);
+  // Two are deliberate and documented: the Priest of Light names W.P. Siege and
+  // W.P. Large Axes ahead of those rows existing, and says so in its own note.
+  // They activate by themselves when the rows arrive. The audit floor is two,
+  // not zero - so this pins the NAMES, not just the count, and a third dead
+  // restriction fails the run.
+  //
+  // It was three. W.P. Lance was the third, and add-knight-class.sql created
+  // that row - so the placeholder did exactly what the note said it would and
+  // stopped being dead. The floor comes down with it: leaving it at three would
+  // mean the suite went red for a placeholder resolving, which is the outcome
+  // the design was aiming at.
+  const ALLOWED = new Set(['W.P. Siege', 'W.P. Large Axes']);
   const unexpected = dead.filter((d) => ![...ALLOWED].some((a) => d.includes(`"${a}"`)));
   check('every skill restriction names a skill that exists',
     unexpected.length === 0, unexpected.slice(0, 8).join('; '));
-  check('and the three documented placeholders are still the only exceptions',
-    dead.length === unexpected.length + 3,
+  check('and the two documented placeholders are still the only exceptions',
+    dead.length === unexpected.length + 2,
     `${dead.length} dead, ${unexpected.length} unexpected`);
 }
 
