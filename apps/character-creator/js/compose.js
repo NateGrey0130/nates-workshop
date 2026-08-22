@@ -71,6 +71,13 @@ export const CORE_SDC_BY_CLASS = {
   'squire': '3D6',
   'palladin': '3D6',
   'ranger': '3D6',
+  'mercenary-fighter': '3D6',
+  // The Thief and the Assassin are here on the book's own say-so, not on a
+  // reading of what they do: "Thieves (and assassins) are the rogues and
+  // cutthroats of the men of arms O.C.C.s" (printed 91). Worth the sentence,
+  // because neither looks like a man of arms from its skill list.
+  'thief': '3D6',
+  'assassin': '3D6',
 
   // Practitioners of magic, psychics and scholars — 1D6.
   'burster': '1D6',
