@@ -1829,6 +1829,8 @@ scripts/
 │                           catalog-merge.js
 ├── catalog-diff.mjs        That, behind a CLI: disagree / missing / matched /
 │                           extra, plus the vocabulary warning
+├── repo-vs-live.mjs        Can the repo rebuild the live catalog, row for row?
+│                           Builds from scratch and diffs NAMES, not counts
 ├── ocr-book.py             OCR a scanned sourcebook into .cache/books/<slug>/
 │                           at --psm 3, with geometry and a Palladium wordlist
 ├── palladium-words.txt     That wordlist. Committed; the OCR output is not
@@ -3985,8 +3987,8 @@ local-only script is protected as soon as it says so.
 | classes (published, live) | 39 |
 | skills | 319 |
 | spells | 542 |
-| psionic powers | 107 |
-| gear | 651 |
+| psionic powers | 101 |
+| gear | 652 |
 
 **These are pinned by `test/regression.mjs`**, which is the only thing that can
 honestly check them: it builds a database from nothing under a scratch directory
@@ -3994,18 +3996,17 @@ and asks the running worker what it serves. The previous version of this table
 claimed 23/231/366/52/407 and was verified by nothing - three paragraphs after
 the note above about prose counts drifting silently.
 
-**Two of those numbers do not match production, and that is a real problem, not
-a rounding error.** Pinning them found it within a minute of existing:
+### The rebuild did not match production, and nothing was watching
 
-| | clean run | production |
-|---|---|---|
-| psionic powers | 107 | 101 |
-| gear | 651 | 652 |
+Pinning those counts immediately found that two of them disagreed with
+production, in opposite directions. Both are fixed; the story is kept because
+the cause will recur.
 
-*The clean run makes six psionic powers production does not have* - and they are
-not new content, they are the OLD HALF OF SIX RENAMES:
+**Six psionic powers.** A clean run produced 107 against production's 101, and
+the extra six were not new content - they were the OLD HALF of six merges
+somebody performed through the catalog editor, which writes straight to D1:
 
-| the repo still creates | production holds |
+| the repo still created | production kept |
 |---|---|
 | `Bio-Manipulation` | `Bio-Manipulation (the evil eye)` |
 | `Bio-Regenerate (self)` | `Bio-Regeneration` |
@@ -4014,21 +4015,53 @@ not new content, they are the OLD HALF OF SIX RENAMES:
 | `Object Read` | `Object Read (Psychometry)` |
 | `Telekinesis (minor)` | `Telekinesis` |
 
-Somebody merged each pair through the catalog editor, which writes straight to
-D1. Production is correct and the repo never learned about it, so **a rebuilt
-database comes up with six duplicate psionic powers.**
+**One of those six was already supposed to be fixed.**
+`merge-bio-regenerate-duplicate.sql` has been in the repo for weeks doing
+nothing, and the reason is **filename order**: it sorts under `m`, while every
+surviving row is created by `restore-psionics-missing-from-repo.sql` under `r`.
+Running first, its guards correctly found no survivor to merge into and it did
+nothing - silently, because doing nothing is exactly what a guarded script does
+when its precondition is absent. `zz-merge-psionic-duplicates.sql` supersedes
+it and sorts last, the same fix `zz-canonicalise-class-skill-names.sql` needed.
 
-*Four gear rows exist in production and nothing in the repo creates them* -
-`Huntsman Armor`, `Air Filter And Gas Mask`, `Hovercycle`, `Light Mdc Body
-Armor`. Same cause, opposite direction: rows added through the app. This is
-exactly what the `restore-*.sql` scripts were written for last time, and it has
-happened again because nothing watches for it.
+Three of the retired names are cited by class definitions - `Bio-Manipulation`
+by the Combat Cyborg, `Object Read` by the Cyber-Knight and Techno-Wizard - and
+are deliberately **not** rewritten. That is what `catalog_redirects` are for,
+and rewriting a class's markdown to match a catalog rename loses the book's own
+wording.
 
-**`drift-check` cannot see either of these.** It compares migration and data
-script bookkeeping, and every script here has run in both places; it also checks
-that every published CLASS is creatable from the repo, but nothing made the same
-demand of catalog rows. The count pin is currently the only thing that would
-notice, and only because the numbers happen to differ.
+**Seven gear rows**, hidden inside a difference of one. Four existed only in
+production (`Huntsman Armor`, `Air Filter And Gas Mask`, `Hovercycle`,
+`Light Mdc Body Armor`) - class-import stubs the importer wrote straight to D1.
+Three existed only in the repo, generic stubs production had superseded with
+specific rows (`Sunglasses Or Tinted Goggles` against production's `Sunglasses`
+*and* `Tinted Goggles`). **Counts alone would have called that a one-row
+problem.**
+
+### `scripts/repo-vs-live.mjs`
+
+The guard that should have existed. `drift-check` compares *bookkeeping* -
+which migrations and data scripts have run - and every script here was recorded
+in both places while the rows differed. It demands that every published **class**
+be creatable from the repo, and nothing made the same demand of catalog rows.
+
+```bash
+node scripts/repo-vs-live.mjs              # all four catalogs
+node scripts/repo-vs-live.mjs --table gear
+```
+
+It builds from the repo into a scratch database and diffs the **names** against
+live, because counts are not enough. Exits non-zero on any difference and
+prints which direction each is:
+
+- **ONLY LIVE** - added through the app and never written back. Export it into a
+  data script, the way `restore-*.sql` did.
+- **ONLY REPO** - merged or renamed away in the app while the repo still creates
+  the old row. `zz-merge-psionic-duplicates.sql` is the shape: move redirects,
+  add a forwarding one, then delete.
+
+This is the third time rows added through the UI have diverged from the repo.
+The first two were found by hand.
 
 **Do not run the migrations on a new database.** This is the part that looks
 wrong and is not: `db/schema.sql` already contains every column the migrations
