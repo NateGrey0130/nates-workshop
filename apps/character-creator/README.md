@@ -1763,6 +1763,107 @@ UPDATE cannot express), and any class it cannot classify.
 
 ---
 
+## The sheet is tabbed on screen and whole on paper
+
+The sheet ran 4105px on desktop and 6316px on a tablet - about six screens -
+with 104 inputs in one column of scroll. It is now six tabs: **Vitals, Skills,
+Powers, Gear, Bio, Notes**, each 1.1-2.2 tablet screens.
+
+**Tabs are a screen affordance only.** There is no such thing as a hidden tab on
+paper, so the print block dissolves the panels rather than revealing them
+one at a time:
+
+```css
+@media print {
+  .tabbar   { display: none !important; }
+  .tabpanel { display: contents !important; }
+}
+```
+
+`display: contents` removes the section wrappers from layout entirely, so every
+grid inside them lays out exactly as it did before tabs existed. Revealing the
+panels with `display: block` would have worked too and would have changed every
+row's layout; this way the printed sheet is the one that was already tuned.
+
+Two things fell out of measuring rather than guessing:
+
+**The header was the real problem, not the length.** 467px of mostly-blank
+background fields - race, true name, occupation, sex, family origin, insanity,
+birth order, disposition - was the entire first tablet screen. Tabs alone did
+not fix it: the sheet still opened showing no game data, and the tab bar sat
+*below the fold*, so the tabs did not even announce themselves. The background
+fields moved to their own tab; identity you check constantly stays pinned above
+the bar. **This was invisible in the DOM metrics and obvious in the first
+screenshot.**
+
+**Powers and Equipment shared a two-column grid** and were the two largest
+blocks, 1166px together. They are separate tabs now, so on paper they stack full
+width - the one intentional change to printed layout, and it gives the
+five-column equipment table room it never had at half width.
+
+Switching tabs toggles classes rather than re-rendering: a re-render rebuilds
+every input on the sheet, and the one thing a tab press must never cost a player
+is a half-typed note. The active tab persists per character and reads from the
+URL hash, so a link ending `#gear` opens on gear; a `hashchange` listener covers
+the same-document case, where nothing reloads. `replaceState`, not `pushState` -
+Back should leave the sheet for the character list, not walk tab history.
+
+## The scripts at the repo root
+
+The README's file map covers `apps/character-creator/`. These live one level up
+because they are not app code - they talk to D1, to books, or to the repo
+itself.
+
+```
+scripts/
+├── d1-apply.mjs            Apply .sql to --local or --remote, in sorted order.
+│                           Refuses non-ASCII and honours `-- local-only`
+├── d1-query-lib.mjs        One statement, one line, rows back. The banner-skip
+│                           and buffer size that every caller needs
+├── drift-check.mjs         Repo vs live database: migrations, data scripts,
+│                           tables, columns, classes, and an advisory citation
+│                           check against a cached book
+├── catalog-match-lib.mjs   Matching a book's names to the catalog's. Exact
+│                           first; a relaxed match only when unambiguous on
+│                           BOTH sides. See below - do NOT merge this with
+│                           catalog-merge.js
+├── catalog-diff.mjs        That, behind a CLI: disagree / missing / matched /
+│                           extra, plus the vocabulary warning
+├── ocr-book.py             OCR a scanned sourcebook into .cache/books/<slug>/
+│                           at --psm 3, with geometry and a Palladium wordlist
+├── palladium-words.txt     That wordlist. Committed; the OCR output is not
+├── class-check.mjs         One class file, against the parser the app uses
+├── class-check-lib.mjs     Its pure half, so the smoke test can call it
+└── sql-statements.mjs      Splitting SQL for wrangler, which truncates a
+                            --command at the first newline
+```
+
+## Two name matchers, on purpose
+
+`scripts/catalog-match-lib.mjs` and
+`functions/api/character-creator/_lib/catalog-merge.js` both normalise catalog
+names and both decide whether two names are the same thing. **They must not be
+unified**, and the reason is not historical accident:
+
+| | `catalog-merge.js` | `catalog-match-lib.mjs` |
+|---|---|---|
+| used by | the merge UI, to **suggest** | the import tooling, to **act** |
+| tuned | generous | strict |
+| a false positive costs | a glance | a corrupted catalog |
+| ambiguity | scored and ranked | refused |
+
+`catalog-merge.js` says so itself: *"Deliberately generous - a false suggestion
+costs a glance, a missed duplicate costs a wrong catalog."* That is exactly
+right for a human-reviewed list and exactly wrong for an unattended import,
+where the generous reading is what collapsed `Bio-Regenerate (self)` onto
+`Bio-Regeneration (Super)` and produced confident corrections to rows that were
+already right.
+
+The shared primitive is small - lowercase, drop parentheticals, fold `&` -
+and the policies built on it are opposites. Unifying them would mean one of the
+two silently changing behaviour, and the merge UI's behaviour is pinned by the
+smoke test while the import's is pinned by 21 cases drawn from real failures.
+
 ## A gear price is often a range, not a number
 
 RUE prices much of its common gear as a range, and the loss is not cosmetic:
@@ -3881,11 +3982,53 @@ local-only script is protected as soon as it says so.
 
 | After | Rows |
 |---|---|
-| classes (published, live) | 23 |
-| skills | 231 |
-| spells | 366 |
-| psionic powers | 52 |
-| gear (95 of them still name-only stubs) | 407 |
+| classes (published, live) | 39 |
+| skills | 319 |
+| spells | 542 |
+| psionic powers | 107 |
+| gear | 651 |
+
+**These are pinned by `test/regression.mjs`**, which is the only thing that can
+honestly check them: it builds a database from nothing under a scratch directory
+and asks the running worker what it serves. The previous version of this table
+claimed 23/231/366/52/407 and was verified by nothing - three paragraphs after
+the note above about prose counts drifting silently.
+
+**Two of those numbers do not match production, and that is a real problem, not
+a rounding error.** Pinning them found it within a minute of existing:
+
+| | clean run | production |
+|---|---|---|
+| psionic powers | 107 | 101 |
+| gear | 651 | 652 |
+
+*The clean run makes six psionic powers production does not have* - and they are
+not new content, they are the OLD HALF OF SIX RENAMES:
+
+| the repo still creates | production holds |
+|---|---|
+| `Bio-Manipulation` | `Bio-Manipulation (the evil eye)` |
+| `Bio-Regenerate (self)` | `Bio-Regeneration` |
+| `Levitation (psionic)` | `Levitation` |
+| `Nightvision (psionic)` | `Nightvision` |
+| `Object Read` | `Object Read (Psychometry)` |
+| `Telekinesis (minor)` | `Telekinesis` |
+
+Somebody merged each pair through the catalog editor, which writes straight to
+D1. Production is correct and the repo never learned about it, so **a rebuilt
+database comes up with six duplicate psionic powers.**
+
+*Four gear rows exist in production and nothing in the repo creates them* -
+`Huntsman Armor`, `Air Filter And Gas Mask`, `Hovercycle`, `Light Mdc Body
+Armor`. Same cause, opposite direction: rows added through the app. This is
+exactly what the `restore-*.sql` scripts were written for last time, and it has
+happened again because nothing watches for it.
+
+**`drift-check` cannot see either of these.** It compares migration and data
+script bookkeeping, and every script here has run in both places; it also checks
+that every published CLASS is creatable from the repo, but nothing made the same
+demand of catalog rows. The count pin is currently the only thing that would
+notice, and only because the numbers happen to differ.
 
 **Do not run the migrations on a new database.** This is the part that looks
 wrong and is not: `db/schema.sql` already contains every column the migrations

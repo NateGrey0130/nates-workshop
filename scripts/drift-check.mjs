@@ -31,21 +31,15 @@
 // sqlite_master and the two tracking tables are authoritative. pragma_table_info
 // is not over --remote - it has returned stale replica data mid-migration - so
 // columns are read out of sqlite_master's stored CREATE text.
-import { execSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { DB, d1Query, repoRoot, targetFromArgv } from './d1-query-lib.mjs';
+import { join } from 'node:path';
 
-const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
-const target = process.argv.includes('--local') ? '--local' : '--remote';
-const DB = 'nates-workshop-media';
 
-function d1(sql) {
-  const out = execSync(
-    `npx wrangler d1 execute ${DB} ${target} --json --command "${sql}"`,
-    { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1e9, stdio: ['ignore', 'pipe', 'ignore'] });
-  return JSON.parse(out.slice(out.indexOf('['))).flatMap((b) => b.results || []);
-}
+const target = targetFromArgv();
+
+
+const d1 = (sql) => d1Query(sql, { target, db: DB });
 
 const problems = [];
 const note = (kind, msg) => problems.push(`${kind}: ${msg}`);

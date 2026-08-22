@@ -141,6 +141,42 @@ check('and carries skills, spells and psionics',
 const items = await api('GET', '/items');
 check('/items returns the gear catalog', items.status === 200 && items.body.items.length > 0, items.body);
 
+// ── the README's clean-run counts ───────────────────────────────────────────
+// The README prints a table of what "a clean run produces", and until now
+// nothing checked it: every number in it was stale - 23 classes against 39,
+// 366 spells against 542 - three paragraphs below its own warning that prose
+// counts drift silently.
+//
+// This is the only place that can honestly check it. smoke.mjs never builds a
+// full database and drift-check talks to an environment somebody has been
+// using; here the database was built from schema + seed + every data script,
+// minutes ago, from nothing.
+const README = readFileSync(join(appDir, 'README.md'), 'utf8');
+// Anchor to the clean-run table, not to the whole README: matching
+// "spells" anywhere found "| spells missing | 5 | 0 |" in the
+// import-tooling section and asserted the catalog held five. Labels are
+// escaped because one of them contains parentheses.
+const TABLE = (README.split('| After | Rows |')[1] || '').split('\n\n')[0];
+const documented = (label) => {
+  const lit = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const m = new RegExp('^\\|\\s*' + lit + '[^|]*\\|\\s*(\\d+)\\s*\\|', 'm').exec(TABLE);
+  return m ? Number(m[1]) : null;
+};
+const actual = {
+  'classes (published, live)': classes.body.classes.length,
+  skills: catalogs.body.skills.length,
+  spells: catalogs.body.spells.length,
+  'psionic powers': catalogs.body.psionics.length,
+  gear: items.body.items.length,
+};
+for (const [label, got] of Object.entries(actual)) {
+  const want = documented(label);
+  check(`README clean-run count for ${label}`, want === got,
+    want === null ? `no row for "${label}" in the README table`
+                  : `README says ${want}, a clean run produced ${got}`);
+}
+
+
 // ── a character, end to end ─────────────────────────────────────────────────
 console.log('\n[4/8] Creating a campaign and a character');
 const camp = await api('POST', '/campaigns', { name: 'Regression Run', system: 'rifts' });

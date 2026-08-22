@@ -18,9 +18,9 @@
 // that judgement was skipped during the RUE import, the confident answer was
 // wrong: 21 "missing" psionic powers were 16, 23 "wrong categories" were 0,
 // and 5 "missing" spells were 0.
-import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { diffCatalog, vocabularyWarnings } from './catalog-match-lib.mjs';
+import { d1Query, targetFromArgv } from './d1-query-lib.mjs';
 
 const argv = process.argv.slice(2);
 const arg = (name, dflt) => {
@@ -30,6 +30,8 @@ const arg = (name, dflt) => {
 const table = arg('table');
 const entriesPath = arg('entries');
 const compare = (arg('compare', '') || '').split(',').filter(Boolean);
+// This one defaults to --local: a diff is exploratory and should not need
+// the network, where drift-check is asking about production by nature.
 const target = argv.includes('--remote') ? '--remote' : '--local';
 const nameKey = arg('name-key', 'name');
 
@@ -39,12 +41,7 @@ if (!table || !entriesPath) {
   process.exit(2);
 }
 
-const d1 = (sql) => {
-  const out = execSync(
-    `npx wrangler d1 execute nates-workshop-media ${target} --json --command "${sql}"`,
-    { encoding: 'utf8', maxBuffer: 1e9, stdio: ['ignore', 'pipe', 'ignore'] });
-  return JSON.parse(out.slice(out.indexOf('['))).flatMap((b) => b.results || []);
-};
+const d1 = (sql) => d1Query(sql, { target });
 
 const entries = JSON.parse(readFileSync(entriesPath, 'utf8'));
 // The whole table. Filtering in SQL by a system/book column once hid 129 rows
