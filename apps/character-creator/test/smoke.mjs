@@ -153,6 +153,7 @@ import { collapseWhitespace, statements, stripComments, trailingSelects } from '
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import { composeClass } from '../js/compose.js';
 import { evalDice, rollAttribute, rollPoolFormula, rollQuantity } from '../js/dice.js';
+import { validateMos } from '../js/parser.js';
 import { chunks, D1_MAX_BINDS, BIND_CHUNK } from '../../../functions/api/character-creator/_lib/sql-chunk.js';
 import { LANGUAGE_OTHER, isLanguageName, languageSkillName } from '../js/language-skills.js';
 import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityOccOptions, abilityOptions, applyAbilities, applyVariant, bonusesFromSkills, categoryAllows, categoryLabel, combineClasses, isGearChoice, needsOccupation, parseClassMarkdown, parseYaml, validateBonuses } from '../js/parser.js';
@@ -3012,6 +3013,108 @@ section('The sheet shows every derived combat row');
   const missing = derived.filter((k) => !shown.includes(k));
   check('every derived combat row has a labelled field on the sheet',
     missing.length === 0, missing.join(', '));
+}
+
+// ---------- Military Occupational Specialty ----------
+// RUE gives several classes an MOS: "select one area of specialty, gain all
+// skills under that MOS" (Coalition Technical Officer p236, Robot Pilot p84).
+//
+// It is NOT a variant, and that is the whole reason it needed modelling. A
+// variant REPLACES what the class says, and VARIANT_OVERRIDES excludes the
+// skills block on purpose - `skill_overrides` restating a number is a much
+// smaller power than swapping a skill list. An MOS ADDS a package on top of the
+// O.C.C. skills every member of the class already has: the book says "plus the
+// MOS skills chosen previously".
+section('MOS');
+{
+  const mk = (extra = '') => parseClassMarkdown([
+    '---', 'id: t', 'name: T', 'system: rifts', 'source_book: b', 'category: occ',
+    'skills:',
+    '  occ_skills:',
+    '    - { name: "Basic Math", base: 60, per_level: 5 }',
+    '  mos:',
+    '    choose: 1',
+    '    options:',
+    '      - id: "comms"',
+    '        name: "Communications MOS"',
+    '        skills:',
+    '          - { name: "Radio: Basic", base: 70, per_level: 5 }',
+    '      - id: "medic"',
+    '        name: "Medic MOS"',
+    '        skills:',
+    '          - { name: "Paramedic", base: 55, per_level: 5 }',
+    extra,
+    '---', '', '## Lore', '', 'x', ''].filter((l) => l !== '').join(String.fromCharCode(10)));
+
+  const parsed = mk();
+  check('a class can declare an MOS', parsed.errors.length === 0, parsed.errors.join('; '));
+  check('and its options parse', parsed.data.skills.mos.options.length === 2);
+
+  const names = (c) => (c.skills.occ_skills || []).map((x) => x.name).filter(Boolean);
+  const cls = parsed.data;
+
+  check('with none chosen the class grants only its own skills',
+    names(composeClass({ rcc: cls, character: {} })).join() === 'Basic Math');
+
+  const comms = composeClass({ rcc: cls, character: { mos: 'comms' } });
+  check('choosing one ADDS its skills rather than replacing',
+    names(comms).join() === 'Basic Math,Radio: Basic', names(comms).join());
+  check('and the choice is recorded for the sheet',
+    comms.mos_chosen && comms.mos_chosen.name === 'Communications MOS');
+
+  const medic = composeClass({ rcc: cls, character: { mos: 'medic' } });
+  check('a different specialty grants different skills',
+    names(medic).join() === 'Basic Math,Paramedic');
+
+  // A character who picked an option a later edit removed is still a character.
+  const gone = composeClass({ rcc: cls, character: { mos: 'no-such-mos' } });
+  check('an unknown id leaves the class untouched rather than throwing',
+    names(gone).join() === 'Basic Math' && !gone.mos_chosen);
+
+  // The class may sit in EITHER slot: a character with no racial class carries
+  // their O.C.C. in the rcc slot, which is where the first version only worked.
+  const asOcc = composeClass({
+    rcc: { id: 'r', name: 'R', system: 'rifts', category: 'rcc' },
+    occ: cls, character: { mos: 'comms' } });
+  check('an MOS survives being merged with a racial class',
+    names(asOcc).includes('Radio: Basic'), names(asOcc).join());
+
+  // Shape errors, each of which would otherwise fail silently.
+  const noOpts = parseClassMarkdown(['---', 'id: t', 'name: T', 'system: rifts',
+    'source_book: b', 'category: occ', 'skills:', '  mos:', '    choose: 1',
+    '---', '', '## Lore', '', 'x', ''].join(String.fromCharCode(10)));
+  check('an MOS with no options is rejected',
+    noOpts.errors.some((e) => /needs a non-empty options list/.test(e)));
+
+  const over = mk().data;
+  over.skills.mos.choose = 5;
+  const errs = [];
+  validateMos(over.skills.mos, errs, []);
+  check('asking for more specialties than exist is rejected',
+    errs.some((e) => /asks for 5 of only 2/.test(e)), errs.join('; '));
+
+  const dupe = { choose: 1, options: [
+    { id: 'a', name: 'A', skills: [{ name: 'X', base: 1 }] },
+    { id: 'a', name: 'A again', skills: [{ name: 'Y', base: 1 }] }] };
+  const dErrs = [];
+  validateMos(dupe, dErrs, []);
+  check('two options with the same id are rejected',
+    dErrs.some((e) => /two options called/.test(e)), dErrs.join('; '));
+
+  const empty = { choose: 1, options: [{ id: 'a', name: 'A', skills: [] }] };
+  const eErrs = [];
+  validateMos(empty, eErrs, []);
+  check('an option granting no skills is rejected',
+    eErrs.some((e) => /grants no skills/.test(e)), eErrs.join('; '));
+
+  // The shared validator is the point: an MOS option's entries are the same
+  // shape as occ_skills, so a bad choice group has to fail the same way.
+  const badGroup = { choose: 1, options: [{ id: 'a', name: 'A',
+    skills: [{ choose: 3, from: ['One', 'Two'] }] }] };
+  const gErrs = [];
+  validateMos(badGroup, gErrs, []);
+  check('an over-asking choice group inside an MOS fails like one in occ_skills',
+    gErrs.some((e) => /asks for 3 of only 2/.test(e)), gErrs.join('; '));
 }
 
 section('Ability validation');

@@ -63,6 +63,10 @@ export async function onRequestPost({ request, env }) {
   const occId = typeof b.occ_class_id === 'string' && b.occ_class_id.trim() ? b.occ_class_id.trim() : null;
   const occVariant = typeof b.occ_class_variant === 'string' && b.occ_class_variant.trim()
     ? b.occ_class_variant.trim() : null;
+  // Which Military Occupational Specialty was taken. Stored as the id the class
+  // declares, exactly like a variant - the granted skills are already in
+  // `skills`, but which package produced them is not recoverable from that.
+  const mos = typeof b.mos === 'string' && b.mos.trim() ? b.mos.trim() : null;
 
   // Psionics rolled on the table (p.21). Only 'minor' and 'major' are reachable
   // by rolling — master comes from a psychic O.C.C., so anything else is
@@ -115,15 +119,15 @@ export async function onRequestPost({ request, env }) {
   const row = await env.DB.prepare(
     `INSERT INTO characters (
        campaign_id, player_email, name, class_id, class_variant, occ_class_id, occ_class_variant,
-       psychic_tier, psychic_shape, level, xp,
+       mos, psychic_tier, psychic_shape, level, xp,
        attributes, attribute_bonuses, rolled_bonuses, skills, powers, abilities,
        hp_max, hp_current, sdc_max, sdc_current, mdc_max, mdc_current,
        ppe_max, ppe_current, isp_max, isp_current,
        bio, combat, saves, armor, notes
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      RETURNING id`
   ).bind(
-    b.campaign_id, email, b.name, b.class_id, variant, occId, occVariant, tier, tier ? psychicShape : null,
+    b.campaign_id, email, b.name, b.class_id, variant, occId, occVariant, mos, tier, tier ? psychicShape : null,
     level, xp,
     JSON.stringify(b.attributes || {}), JSON.stringify(b.attribute_bonuses || {}),
     JSON.stringify(b.rolled_bonuses || {}),

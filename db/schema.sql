@@ -56,6 +56,8 @@ CREATE TABLE IF NOT EXISTS characters (
   class_variant TEXT,                   -- which `variants` entry, e.g. 'hatchling'; NULL = the class as written
   occ_class_id TEXT,                    -- the O.C.C. taken alongside an R.C.C.; NULL = none
   occ_class_variant TEXT,
+  mos TEXT,                             -- which `skills.mos` option was taken; NULL = the class offers none
+
   psychic_tier TEXT,                    -- rolled on the Random Psionics Table; NULL = none, or psychic by class
   psychic_shape TEXT,                   -- which power allowance was taken ('focused' | 'broad')
   attribute_bonuses TEXT,                -- JSON: what the class's dice attribute bonuses rolled
@@ -644,3 +646,7 @@ WHERE EXISTS (SELECT 1 FROM pragma_table_info('pending_power_picks') WHERE name 
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '030-power-pick-slots.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('pending_power_picks') WHERE name = 'slot');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '031-character-mos.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'mos');
