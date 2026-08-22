@@ -1171,6 +1171,48 @@ Three of the 34 use the catalog's spelling rather than the book's, checked befor
 the list was written: `Control **&** Enslave Entity`, `De**si**ccate the
 Supernatural` (the page misspells it), and `**Air:** Phantom Mount`.
 
+#### Six spell levels RUE overrides, and an index that took three tries to read
+
+`fix-rue-spell-levels.sql` corrects **six levels and one P.P.E. floor** against
+RUE, which came out after the Book of Magic and overrides it.
+
+All six level rows already carried `source_book = 'Rifts Ultimate Edition'`, and
+all six were **exactly one level too high** — the same signature as the thirteen
+rows the Book of Magic import got wrong, and the same cause: level headings sit
+*partway down a page*, so the first page of an extraction batch carries the tail
+of the previous level and those rows get stamped with the new batch's number.
+
+| spell | catalog | RUE index | RUE description section |
+|---|---|---|---|
+| Teleport: Lesser | 7 | **6** | 6 |
+| Tongues | 7 | **6** | 6 |
+| Words of Truth | 7 | **6** | 6 |
+| Sickness | 9 | **8** | 8 |
+| Spoil | 9 | **8** | 8 |
+| Wisps of Confusion | 9 | **8** | 8 |
+
+`Manipulate Objects` stored `ppe = 0` with the note `2 per 5 lbs`. The book
+prints *"P.P.E.: Varies; two P.P.E. per five pounds"* and the index prints
+`2+`. **A stored 0 reads as free at the table** and also matches the stub
+heuristic; `ppe` holds the minimum and `ppe_note` carries the schedule.
+
+**Nothing was added.** The index listed five spells the catalog appeared to
+lack and all five were the same spell under a different spelling — the diff
+manufactured them by comparing raw names: `Animate/Control Dead` =
+`Animate and Control Dead`, `Power Weapons` = `Power Weapon`,
+`Summon & Control Canine` = `Summon and Control Canines`, `Control/Enslave
+Entity` = `Control & Enslave Entity`, `Swim as a Fish` = `Swim as a Fish
+(lesser)`. They keep the catalog's spelling: renaming would break every class
+definition citing the current name, and citations are matched **in the browser**,
+where `catalog_redirects` are not sent.
+
+**The probes were wrong before the parser was.** Four spells came out at a level
+that contradicted what I expected — `Carpet of Adhesion` 4 not 5, `Magic Net` 4
+not 7, `Circle of Flame` 5 not 6, `Constrain Being` 7 not 10. Checking each
+against its description section showed RUE agreeing with itself both times. The
+expectations came from another edition. A probe that fails is a question, not a
+verdict.
+
 #### The RUE psionics gap, and a diff that lied twice
 
 `add-rue-psionics-gap.sql` adds the **16 psionic powers** Rifts Ultimate
