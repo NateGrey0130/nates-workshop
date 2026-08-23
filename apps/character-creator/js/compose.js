@@ -217,7 +217,12 @@ function withCorePools(cls, occId) {
 // An unknown id returns the class untouched rather than throwing: a character
 // who picked an MOS that a later edit removed is still a character, and the
 // validator reports the dangling choice as a violation where a human sees it.
-export function applyMos(cls, mosId) {
+// NOT exported, deliberately. `composeClass` is the ONE place that knows the
+// order these steps run in, and a smoke check already fails any file calling
+// `combineClasses(` directly for that reason. Exporting this one invited the
+// same mistake by a different door: nothing outside this file ever imported it,
+// and now nothing can.
+function applyMos(cls, mosId) {
   const options = cls?.skills?.mos?.options;
   if (!cls || !mosId || !Array.isArray(options)) return cls;
   const pick = options.find((o) => String(o.id || o.name).toLowerCase() === String(mosId).toLowerCase());

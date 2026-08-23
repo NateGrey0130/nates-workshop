@@ -4644,9 +4644,28 @@ npx wrangler d1 execute DB --remote --command \
 ```
 
 A script on disk with no row there has never been run against that database.
-The reverse — a row for a file that no longer exists — is fine and expected:
-unlike migrations, a data script may be deleted once its correction is folded
-into the class it rewrote, and the log keeps the record that it ran.
+
+**The reverse is not fine, and this paragraph used to say it was.** It read
+*"a data script may be deleted once its correction is folded into the class it
+rewrote, and the log keeps the record that it ran"* — and
+[`scripts/drift-check.mjs`](../../scripts/drift-check.mjs) reports a recorded
+filename with no file as `RUN BUT NO FILE`, which is a **problem**, not an
+advisory: the run prints `DRIFT FOUND` and exits 1. Two documents, one saying
+delete freely and the other failing the build for it.
+
+The tool is right and the sentence was wrong, for a reason deeper than the exit
+code. **A correction is never "folded into the class it rewrote"**, because a
+`fix-*.sql` does a guarded `replace()` against markdown living in D1 — its
+effect is in the database and nowhere else. The repo can only rebuild that
+database by running the script again, which is exactly what
+[`repo-vs-live.mjs`](../../scripts/repo-vs-live.mjs) checks. Delete the file and
+a rebuilt environment silently comes up with the pre-fix class.
+
+So: **a data script is as permanent as a migration once applied.** The only
+difference is that it changes rows rather than schema. If one truly becomes
+redundant — because a later script overwrites the same text unconditionally —
+the honest move is a header comment saying so, not a deletion. Nothing in 171
+scripts has met that bar.
 
 The audit that produced most of them is [`docs/rules-audit.md`](docs/rules-audit.md).
 
@@ -4751,6 +4770,22 @@ What it needs first is a decision about where the data lives. `restrictions` is
 free text by design and always has been, so enforcing it means either a
 structured field naming class ids, or a rule that reads the prose, and the
 second is the kind of guess this repo does not make. Worth its own pass.
+
+**There is no dead code left to find, and a check keeps it that way.** An audit
+scanned every export in `apps/`, `functions/`, `scripts/` and `shared/` for a
+name nothing else mentions — counting HTML as a consumer, because the wizard
+binds inline handlers — and every Pages Function route for a leaf the client
+never names. It found **four** exports and **no** unreachable endpoint:
+
+| | why it was there |
+|---|---|
+| `compose.js` `applyMos` | only ever called inside its own file. Now un-exported, which enforces what the README already said — `composeClass` is the one entry point — more firmly than the smoke check that guards `combineClasses` |
+| `catalog-match-lib.mjs` `looseCounts`, `stemCounts` | written beside `aliasCounts` for the both-sides check and never called by anything, from the PR that added them onward. `aliasCounts` is what the check uses |
+| `ocr-fields-lib.mjs` `READERS` | a label-to-reader index whose own comment claimed *"used by an extractor"*. Never was. The readers it indexed are all used individually and stay |
+
+`no export is named nowhere else` now fails the smoke run, so the next one is
+caught rather than accumulating. Each removal leaves a comment saying what stood
+there and how many lines reviving it costs.
 
 **The catalog editor has no general delete.** Rows are created and corrected by
 hand; the only deletion is the one a merge performs. Deliberate — see

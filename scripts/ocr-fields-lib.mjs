@@ -92,16 +92,12 @@ export function isMegaDamage(raw) {
   return /\bM\.?\s?D\.?(?:C\.?)?\b|mega-?damage/i.test(String(raw ?? ''));
 }
 
-/**
- * Every field reader, by the label the book prints.
- *
- * Used by an extractor so one stat block yields typed values with one call, and
- * so a new import cannot quietly invent a different rule for "Weight:".
- */
-export const READERS = {
-  cost: money,
-  'black market cost': money,
-  weight: weightLbs,
-  damage: dice,
-  'mega-damage': dice,
-};
+// A `READERS` map stood here - label to reader, so one stat block could be
+// typed with one call - and its own comment claimed "used by an extractor".
+// Nothing has used it since the PR that added it. The readers it indexed are
+// all used individually and stay; the index was a convenience for an importer
+// that was never written that way.
+//
+// If a future gear import wants it back it is five lines:
+//   { cost: money, 'black market cost': money, weight: weightLbs,
+//     damage: dice, 'mega-damage': dice }

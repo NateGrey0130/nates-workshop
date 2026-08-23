@@ -150,25 +150,11 @@ export function aliasCounts(entries, nameOf = (e) => e.name) {
   return m;
 }
 
-/** Count of book-side entries per loose key, for the both-sides check. */
-export function looseCounts(entries, nameOf = (e) => e.name) {
-  const m = new Map();
-  for (const e of entries) {
-    const l = loose(nameOf(e));
-    m.set(l, (m.get(l) ?? 0) + 1);
-  }
-  return m;
-}
-
-/** Count of book-side entries per stem, for the both-sides ambiguity check. */
-export function stemCounts(entries, nameOf = (e) => e.name) {
-  const m = new Map();
-  for (const e of entries) {
-    const s = stem(nameOf(e));
-    m.set(s, (m.get(s) ?? 0) + 1);
-  }
-  return m;
-}
+// `looseCounts` and `stemCounts` stood here, written alongside `aliasCounts`
+// for the both-sides ambiguity check and never called by anything - not by
+// `diffCatalog`, not by the smoke test, not by any import, from the PR that
+// introduced this file to the audit that removed them. `aliasCounts` is what
+// the check actually uses. Reviving either is six lines.
 
 // ── near misses, for human eyes only ────────────────────────────────────────
 
