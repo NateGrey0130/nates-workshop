@@ -28,6 +28,22 @@ already been migrated by hand.
 Steps 1 and 2 are not alternatives. **The migration brings an existing database
 forward; the `CREATE` is what a brand-new one gets.** Both, every time.
 
+## A whole TABLE needs four more places
+
+The five above are what a COLUMN costs. A new table is read and written by
+things a column is not, and none of these fails at the moment it is skipped
+either:
+
+| # | Where | What |
+|---|---|---|
+| 6 | `js/catalog-fields.js` | its fields, **if it is a catalog.** This one is worth the trouble: the editor UI, the write endpoints and the importers all build themselves from that config, so a catalog declared there arrives with all three |
+| 7 | `functions/api/character-creator/catalogs.js` | one more `SELECT`, if the wizard needs it at boot |
+| 8 | `_lib/character-json.js` | the right EMPTY value, if it adds a JSON column to `characters` — `[]` and `{}` are not interchangeable and `null` is neither |
+| 9 | the README data-model **table count** | *"Twenty-six tables in one shared D1 database"* is parsed and compared against `schema.sql`. A new table moves it, and the smoke test fails until it does |
+
+Step 9 is the one that catches the others: `and it matches schema.sql` fires the
+moment the count is stale, which is usually the moment the table lands.
+
 ## Writing the migration
 
 ```sql
