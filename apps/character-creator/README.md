@@ -20,6 +20,7 @@ Access gate. No build step, no framework, no dependencies.
 - [House rules and derived values](#house-rules-and-derived-values)
 - [A fighting style is a level schedule](#a-fighting-style-is-a-level-schedule)
 - [Language: Other, once per language](#language-other-once-per-language)
+  - [Languages of choice come from languages](#languages-of-choice-come-from-languages)
 - [Level-up skill picks](#level-up-skill-picks)
 - [Starting above level 1](#starting-above-level-1)
   - [What the levels are allowed to change](#what-the-levels-are-allowed-to-change)
@@ -863,14 +864,21 @@ denormalized skill rows carry the name and the percentages, which is exactly
 what they were built for.
 
 The rule lives in [`js/language-skills.js`](js/language-skills.js) and has
-three consumers that must agree — the wizard, the sheet's claim/level-up
-picker, and the server's pick validator:
+**four** consumers that must agree — the wizard's related/secondary picker, the
+wizard's **choice-group** control, the sheet's claim/level-up picker, and the
+server's pick validator:
 
 - **In the wizard**, the Language: Other row prompts for the language instead
   of toggling, and never reads as already-taken, so it can be taken again.
   Each named language renders as its own checked row and un-picks
   individually. Duplicates are refused by name; class category gates apply
   unchanged (the row is Technical).
+- **In an `occ_skills` choice group** it does the same — and for a long time it
+  did not, because a group is a different control with its own toggle. There
+  the same row was a plain checkbox, so *"two languages of choice"* produced a
+  character holding one skill named, literally, `Language: Other`. Two Priests
+  of Light in production are carrying exactly that. See
+  [Languages of choice come from languages](#languages-of-choice-come-from-languages).
 - **At level-up and claim time**, choosing Language: Other in a pick dropdown
   sprouts a "Which language?" input; the composed name is what submits. A
   blank language waits unspent, like any blank row.
@@ -882,6 +890,92 @@ The resolution rule everywhere: exact catalog hit first, and only a **miss**
 in the `Language:` family falls back to the Other row. So Language: Dragonese,
 which has its own catalog row, resolves to its own numbers. The smoke test
 pins the name-composition rules.
+
+---
+
+### Languages of choice come from languages
+
+Thirty-three classes said *"two languages of choice"* — one, three, whatever
+their book gives — and offered a whole skill **category** instead. Every one has
+been narrowed to the repeatable `Language: Other` row.
+
+| | classes | what the pick offered |
+|---|---|---|
+| via `Technical` | 7 | ~60 skills, languages among them |
+| via `Communications` | 25 | 17 skills, **no ordinary language at all** |
+| split in two | 1 | the Diabolist, below |
+
+**The Communications twenty-five are the ones that mattered.**
+`Language: Other` is filed under **Technical**. The only language row in
+Communications is `Language: All (magical)`, which is a magical ability rather
+than a language anybody learns. So a Ley Line Rifter's two languages could only
+be spent on Radio: Basic, Cryptography or Surveillance — the class could not
+grant a single language through its language pick.
+
+The Technical seven were merely too wide, and nobody spent a pick on Gemology.
+What they *did* do is instructive: two Priests of Light in production hold
+`Language: Mongolian`, a Rifts-world language on a Palladium class, offered only
+because it happens to sit in Technical.
+
+#### The defect underneath was in the wizard, not the data
+
+`Language: Other` is taken **once per language** and stored under the language's
+own name. The related/secondary picker has always known that. **An `occ_skills`
+choice group is a separate control and did not** — there the row was a plain
+checkbox, so ticking it gave the character a placeholder instead of a name. Both
+Priests of Light are carrying a skill called, literally, `Language: Other`.
+
+Three things had to change together, and the third is the one that would have
+been silent:
+
+1. **`js/parser.js`** — a group may ask for more picks than its `from` list is
+   long when the list carries a repeatable row. Without that, *"three languages
+   of choice"* cannot be written down at all. The exemption is narrow: an
+   ordinary over-asking list still errors.
+2. **`app.js` `toggleGroupPick`** — prompts for the language, the way
+   `toggleSkill` already did. The named picks render as their own rows so they
+   can be un-picked.
+3. **`app.js` `resolveSkill`** — falls back to the Other row's numbers for a
+   name in the `Language:` family, the same resolution rule `skillsAtLevelOne`
+   applies to related and secondary picks. A named language has no catalog row
+   **by design**, so without this a group-picked `Language: Elven` saved at
+   **0% +0/lvl**: a language the class granted, on the sheet, worth nothing and
+   never advancing.
+
+`_lib/validate-character.js` counts a named language toward a group offering the
+Other row. It is advisory either way, but a Knight who took the two languages his
+book grants was reading as having taken none.
+
+#### Two numbers were wrong on the same lines
+
+Rewriting a line while leaving a known-wrong number on it would be worse, so
+these were corrected in the same script and named in its header. Both are the
+printed percentage read wrong, and in both the class's own note records the
+book's figure:
+
+- **Cyber-Doc** — `base: 20, per_level: 0`. The printed *"+20%"* is a bonus on
+  the Other row's 50%, not a flat 20% frozen for fifteen levels. Now `bonus: 20`,
+  so the language resolves at 70% +5/lvl.
+- **Vagabond** — no bonus at all, where the note said *"(+15%)"*. Now `bonus: 15`.
+
+Every sibling class writes this as `bonus`; these two were the outliers.
+
+#### The Diabolist was split by the limit this removed
+
+Its book line is three languages of choice. A choice group could not ask for
+more options than it listed, so it was written as `choose: 2` plus `choose: 1`,
+with a note saying exactly why. That note described a limitation that no longer
+exists — so the split and its explanation are both gone and the three languages
+are one group again.
+
+**One thing the shape still cannot hold**, stated in its own note rather than
+dropped: the Headhunter Techno-Warrior's line is *"three languages of choice,
+**or** one other language and two Lore skills"*. A choice group picks from one
+pool, so it offers the three languages and the note carries the alternative.
+
+**No character lost anything.** This narrows what may be *chosen*, not what has
+been; the four production characters built on these classes keep every skill
+they hold.
 
 ---
 

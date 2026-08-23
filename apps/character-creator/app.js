@@ -1734,7 +1734,15 @@ function skillByName() {
 // A non-percentile skill (a W.P., hand to hand) stays at zero: a percentage
 // bonus has nothing to modify, exactly as the I.Q. bonus already works.
 function resolveSkill(name, explicit = {}) {
-  const cat = skillByName().get(name) || {};
+  // Exact catalog hit first, and only a MISS in the `Language:` family falls
+  // back to the Other row's numbers — the same resolution rule the related and
+  // secondary picker applies through `find()` in skillsAtLevelOne(). It is here
+  // too because a choice group can now produce `Language: Elven`, which is a
+  // real skill on the character and has no catalog row of its own by design. It
+  // resolved to `{}` and saved at 0% +0/lvl: a language the class granted, on
+  // the sheet, worth nothing and never advancing.
+  const cat = skillByName().get(name)
+    || (isLanguageName(name) ? (skillByName().get(LANGUAGE_OTHER) || {}) : {});
   const catBase = cat.base ?? 0;
   const base = explicit.base ?? (explicit.bonus && catBase ? catBase + explicit.bonus : catBase);
   return {
@@ -1822,9 +1830,14 @@ function renderSkills() {
     const picked = S.groupPicks[gi] || [];
     // Either an enumerated `from` list, or `categories` — "two piloting skills
     // of choice" resolves against the catalog.
-    const optionNames = (s.from || []).length
+    const listed = (s.from || []).length
       ? (s.from || []).map((raw) => (typeof raw === 'string' ? raw : raw?.name))
       : catalogFor(s.categories).map((sk) => sk.name);
+    // A language picked through the Other row is stored under its own name, so
+    // it is not in `listed` and would render nowhere — leaving the player no
+    // way to un-pick it. Same synthesis the related/secondary picker does.
+    const optionNames = listed.concat(
+      picked.filter((n) => isLanguageName(n) && n !== LANGUAGE_OTHER && !listed.includes(n)));
 
     // A category group offers the whole category, which includes skills this
     // very class already grants outright — the Chiang-Ku grants Advanced Math
@@ -1841,12 +1854,20 @@ function renderSkills() {
     const mine = new Set((S.groupPicks[gi] || []).map((n) => String(n).toLowerCase()));
     const alreadyHeld = new Set([...takenNames()].filter((n) => !mine.has(n)));
     const opts = optionNames.filter((name) => name && !alreadyHeld.has(String(name).toLowerCase())).map((name) => {
-      const on = picked.includes(name);
+      // The Other row is taken once PER LANGUAGE and never reads as already
+      // picked, exactly as it does on the related/secondary picker. Without
+      // this it is a plain checkbox, and "two languages of choice" produces a
+      // character holding one skill literally called "Language: Other" — which
+      // is what two Priests of Light in production are carrying.
+      const repeatable = name === LANGUAGE_OTHER;
+      const on = !repeatable && picked.includes(name);
       const blocked = !on && picked.length >= s.choose;
+      const hint = repeatable
+        ? ' <span class="muted small">— once per language; you will be asked which</span>' : '';
       return `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}; margin-left:18px">
         <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
           data-act="group" data-group="${gi}" data-limit="${s.choose}" data-name="${esc(name)}">
-        <span>${esc(name)}</span>
+        <span>${esc(name)}${hint}</span>
         <span class="pct">${s.base ? s.base + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—'}</span></label>`;
     }).join('');
     return `<div class="chkrow"><b>Pick ${s.choose}</b>
@@ -1935,6 +1956,23 @@ function renderSkills() {
 }
 function toggleGroupPick(groupIndex, name, limit) {
   const list = S.groupPicks[groupIndex] || (S.groupPicks[groupIndex] = []);
+  // Language: Other prompts instead of toggling, and the pick is stored under
+  // the language's own name — the same rule toggleSkill() applies on the
+  // related and secondary lists. It lives in both places because the two
+  // pickers are genuinely different controls; what must not differ is what the
+  // row MEANS, and for a long time it did: the same row was a repeatable
+  // prompt on one step and a plain checkbox on another.
+  if (name === LANGUAGE_OTHER) {
+    if (list.length >= limit) return;
+    const typed = window.prompt('Which language? (saved as "Language: <name>")');
+    if (typed === null) return;
+    const full = languageSkillName(typed);
+    if (!full) return;
+    if (takenNames().has(full.toLowerCase())) { alert(full + ' is already on this character.'); return; }
+    list.push(full);
+    render();
+    return;
+  }
   const i = list.indexOf(name);
   if (i >= 0) list.splice(i, 1);
   else if (list.length < limit) list.push(name);

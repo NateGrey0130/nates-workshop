@@ -37,6 +37,7 @@ import { isChoiceGroup, categoryAllows, categoryName, needsOccupation,
          isAbilityChoice, isAbilityDefinition, abilityOptions, normalizeAbilities, abilityOccOptions } from '../../../../apps/character-creator/js/parser.js';
 
 import { skillGrantsFor, xpTableFor, thresholdFor } from './leveling.js';
+import { LANGUAGE_OTHER, isLanguageName } from '../../../../apps/character-creator/js/language-skills.js';
 
 const norm = (s) => String(s ?? '').trim().toLowerCase();
 
@@ -312,7 +313,14 @@ function matchesGroup(skill, entry, categoryOf) {
     return entry.from.some((n) => {
       // "Piloting: any" in a from-list means any skill sharing that prefix.
       const m = String(n).match(/^(.*?):\s*any$/i);
-      return m ? norm(skill.name).startsWith(norm(m[1]) + ':') : norm(n) === norm(skill.name);
+      if (m) return norm(skill.name).startsWith(norm(m[1]) + ':');
+      // A group offering Language: Other is satisfied by any language, because
+      // the pick is STORED under the language's own name - Language: Elven,
+      // not Language: Other. Without this a Knight who took the two languages
+      // his book grants reads as having taken none, and the save carries a
+      // "looks short of 2" warning for doing exactly the right thing.
+      if (norm(n) === norm(LANGUAGE_OTHER)) return isLanguageName(skill.name);
+      return norm(n) === norm(skill.name);
     });
   }
   if (Array.isArray(entry.categories)) {

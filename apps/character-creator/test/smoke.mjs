@@ -22,6 +22,50 @@ check('languageSkillName tolerates typed prefix', languageSkillName('language:  
 check('languageSkillName rejects blank', languageSkillName('   ') === null && languageSkillName('Language:') === null);
 check('isLanguageName family', isLanguageName('Language: Elvish') && isLanguageName(LANGUAGE_OTHER) && !isLanguageName('Sign Language'));
 
+// A FOURTH consumer: an occ_skills choice group. Seven classes say "two
+// languages of choice" and were written as the whole Technical category,
+// because the repeatable-row rule only ever reached the related/secondary
+// picker. In a group the same row was a plain checkbox, so ticking it gave the
+// character a skill named, literally, "Language: Other" - which two Priests of
+// Light in production are carrying.
+{
+  const group = (line) => parseClassMarkdown([
+    '---', 'id: t', 'name: T', 'system: rifts', 'source_book: b', 'category: occ',
+    'skills:', '  occ_skills:', '    ' + line,
+    '---', '', '## Lore', '', 'x', ''].join(String.fromCharCode(10)));
+
+  // The count check has to KNOW the row is repeatable, or "three languages of
+  // choice" cannot be written at all.
+  check('a group may ask for more languages than the from list is long',
+    group('- { choose: 3, from: ["Language: Other"], bonus: 30 }').errors.length === 0);
+  check('and the same exemption does not loosen an ordinary from list',
+    group('- { choose: 3, from: ["Boxing", "Prowl"] }').errors.length === 1);
+  check('a mixed list carrying the repeatable row is exempt too',
+    group('- { choose: 3, from: ["Language: Other", "Language: Dragonese"] }').errors.length === 0);
+
+  // Both wizard controls have to apply the rule, and they are separate
+  // functions: toggleSkill for related/secondary, toggleGroupPick for a group.
+  const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+  const fn = (name) => {
+    const at = appSrc.indexOf(`function ${name}(`);
+    return at < 0 ? '' : appSrc.slice(at, appSrc.indexOf('\n}\n', at));
+  };
+  check('toggleSkill prompts for the language', fn('toggleSkill').includes('LANGUAGE_OTHER'));
+  check('and toggleGroupPick does too', fn('toggleGroupPick').includes('LANGUAGE_OTHER'));
+  // The pick is stored under the language's OWN name, which has no catalog row
+  // by design - so the resolver has to fall back, or it saves at 0% +0/lvl.
+  check('resolveSkill falls back to the Other row for a named language',
+    fn('resolveSkill').includes('isLanguageName') && fn('resolveSkill').includes('LANGUAGE_OTHER'));
+
+  // And no class may go back to offering a whole category for languages.
+  const dbDir = join(appDir, 'db');
+  const offending = readdirSync(dbDir).filter((f) => f.endsWith('.sql'))
+    .filter((f) => readFileSync(join(dbDir, f), 'utf8').includes('no individual language rows'))
+    .filter((f) => f > 'fix-language-picks.sql');
+  check('no data script after the fix reintroduces the category offer',
+    offending.length === 0, offending.join(', '));
+}
+
 const ck = parseFile('cyber-knight.md');
 check('cyber-knight parses', ck.ok, JSON.stringify(ck.errors));
 check('cyber-knight core fields', ck.data.id === 'cyber-knight' && ck.data.system === 'rifts' && ck.data.category === 'occ');
