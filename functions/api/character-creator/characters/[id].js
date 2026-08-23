@@ -6,7 +6,7 @@
 import { getUserEmail, unauthorized, json, readJson, requireCharacter } from '../_lib/auth.js';
 import { listPending } from '../_lib/skill-picks.js';
 import { listPendingPowers } from '../_lib/power-picks.js';
-import { decodeCharacter } from '../_lib/character-json.js';
+import { decodeCharacter, decodeItemEnchantments } from '../_lib/character-json.js';
 import { getStored } from '../_lib/class-store.js';
 import { parseClassMarkdown } from '../../../../apps/character-creator/js/parser.js';
 import { composeClass } from '../../../../apps/character-creator/js/compose.js';
@@ -36,6 +36,7 @@ export async function onRequestGet({ request, env, params }) {
   ).bind(params.id).all();
 
   decodeCharacter(character);
+  decodeItemEnchantments(items);
   const can_write = email === character.player_email || email === character.campaign_gm;
   // So the sheet can badge unspent skill picks without a second request.
   const pending_picks = await listPending(env, params.id);

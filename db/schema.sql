@@ -305,6 +305,25 @@ CREATE TABLE IF NOT EXISTS gear (
   source_book TEXT
 );
 
+-- What an alchemist puts INTO a sword, as opposed to a sword. Printed 249-250
+-- sells three finished suits and then 32 PROPERTIES that go into ordinary gear,
+-- cumulatively, up to four per suit and three per weapon. "+1 A.R., 4,000 gold"
+-- is a modifier on any of the armour rows the catalog already has, not a row.
+CREATE TABLE IF NOT EXISTS enchantments (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug         TEXT UNIQUE,
+  name         TEXT NOT NULL,
+  applies_to   TEXT NOT NULL CHECK (applies_to IN ('weapon', 'armor')),
+  cost         INTEGER,                -- gold, the LOW end; see cost_note
+  cost_note    TEXT,                   -- a range, a per-unit rate, or a cap
+  max_per_item INTEGER,                -- 4 for armour, 3 for weapons
+  limits       TEXT,                   -- "blunt weapons only, excluding ball & chain"
+  bonuses      TEXT,                   -- the same JSON shape skills.bonuses uses
+  description  TEXT,
+  system       TEXT,
+  source_book  TEXT
+);
+
 CREATE TABLE IF NOT EXISTS character_items (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   character_id INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
@@ -313,6 +332,10 @@ CREATE TABLE IF NOT EXISTS character_items (
   qty INTEGER NOT NULL DEFAULT 1,
   equipped INTEGER NOT NULL DEFAULT 0,
   notes TEXT,
+  enchantments TEXT,                                  -- JSON array of enchantment slugs. On the
+                                                      -- INSTANCE: one long sword in a party of four
+                                                      -- can be the Demon Slayer, the rest ordinary.
+                                                      -- Migration 035.
   journal_entry_id INTEGER REFERENCES journal_entries(id) ON DELETE SET NULL,  -- ties acquisition/loss to a session
   added_at TEXT NOT NULL DEFAULT (datetime('now')),
   removed_at TEXT,                                    -- NULL = currently in inventory
@@ -683,3 +706,7 @@ WHERE EXISTS (SELECT 1 FROM pragma_table_info('spells') WHERE name = 'variant_no
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '034-gear-sdc.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('gear') WHERE name = 'sdc');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '035-enchantments.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('character_items') WHERE name = 'enchantments');
