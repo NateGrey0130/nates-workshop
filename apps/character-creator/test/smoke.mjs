@@ -1077,6 +1077,74 @@ section('Per-level spells and psionics');
   check('and the psionic ones', prop.psionic_picks?.applicable === false);
 }
 
+// ---------- The Attribute Bonus Chart ----------
+// Palladium Fantasy printed 16, transcribed column by column. Nothing else in
+// the app checks derive.js against the book, and the last time this file was
+// wrong it was wrong EVERYWHERE: it applied `v - 15` to every row and called
+// that "the standard Palladium tables", which left every parry, dodge, strike
+// and save at roughly double the printed value and let M.A. and P.B. climb past
+// 100%. A table that is wrong is not a bug anybody reports; it is a character
+// sheet that is quietly generous.
+//
+// The chart runs 16 to 30. Below 16 the book gives nothing, and above 30 the
+// app extends each row by its own step, which is a house rule and is checked
+// separately below.
+section('Attribute Bonus Chart');
+{
+  //                        16  17  18  19  20  21  22  23  24  25  26  27  28  29  30
+  const PRINTED = {
+    iq_skills:   [ 2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16],
+    me_psionic:  [ 1,  1,  2,  2,  3,  3,  4,  4,  5,  5,  6,  6,  7,  7,  8],
+    me_insanity: [ 1,  1,  2,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13],
+    ma_trust:    [40, 45, 50, 55, 60, 65, 70, 75, 80, 84, 88, 92, 94, 96, 97],
+    ps_damage:   [ 1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15],
+    pp_combat:   [ 1,  1,  2,  2,  3,  3,  4,  4,  5,  5,  6,  6,  7,  7,  8],
+    pe_coma_pct: [ 4,  5,  6,  8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+    pe_magic:    [ 1,  1,  2,  2,  3,  3,  4,  4,  5,  5,  6,  6,  7,  7,  8],
+    pb_charm:    [30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 83, 86, 90, 92],
+  };
+
+  // Read off the source rather than through a public helper: `chart()` is
+  // internal, and what needs pinning is the DATA, one column at a time, so a
+  // failure names the attribute value that moved.
+  const src = readFileSync(join(appDir, 'js', 'derive.js'), 'utf8');
+  for (const [name, want] of Object.entries(PRINTED)) {
+    const m = new RegExp(`${name}:\\s*row\\(\\[([^\\]]*)\\]`).exec(src);
+    const got = m ? m[1].split(',').map((n) => Number(n.trim())) : null;
+    check(`${name} has all fifteen columns`, got && got.length === 15,
+      got ? `${got.length}` : 'row not found in derive.js');
+    if (!got || got.length !== 15) continue;
+    const bad = want.map((v, i) => (got[i] === v ? null : `${16 + i}: ${got[i]} not ${v}`))
+      .filter(Boolean);
+    check(`and every one matches printed 16`, bad.length === 0, `${name} - ${bad.join(', ')}`);
+  }
+
+  // The P.P. row drives strike as well as parry and dodge, which the book gives
+  // as two rows of identical numbers. One row in the app, and it must stay
+  // equal to the printed pair rather than drifting into a second copy.
+  check('strike shares the parry and dodge row, as the book prints it',
+    JSON.stringify(PRINTED.pp_combat) === JSON.stringify(PRINTED.pe_magic));
+
+  // Below the chart the book gives nothing, and the app must not invent it.
+  check('an attribute of 15 earns nothing', D.bio({ IQ: 15 }).iq_skill_bonus_pct === 0);
+  check('and 16 earns the first step', D.bio({ IQ: 16 }).iq_skill_bonus_pct === 2);
+
+  // A column read end to end through the real function, not just off the source.
+  check('M.A. 24 invokes trust at the printed 80%', D.bio({ MA: 24 }).invoke_trust_pct === 80);
+  check('and P.B. 24 charms at 70%', D.bio({ PB: 24 }).charm_impress_pct === 70);
+
+  // Above 30 is a HOUSE RULE and is labelled as one - the book stops, dragons
+  // do not. Each row continues by the step it ends on.
+  check('above 30 the row continues by its own step',
+    D.bio({ IQ: 32 }).iq_skill_bonus_pct === 18, `${D.bio({ IQ: 32 }).iq_skill_bonus_pct}`);
+
+  // The two percentile rows are capped at the same 98% the skills use, or a
+  // high-M.A. dragon would talk its way past certainty.
+  const big = D.bio({ MA: 60, PB: 60 });
+  check('and the percentile rows stop at 98%',
+    big.invoke_trust_pct <= 98 && big.charm_impress_pct <= 98, JSON.stringify(big));
+}
+
 // ---------- Starting XP ----------
 // A level-6 character with 0 XP reads as under-levelled to the XP endpoint, and
 // the very next award proposes a level-up it has already had.

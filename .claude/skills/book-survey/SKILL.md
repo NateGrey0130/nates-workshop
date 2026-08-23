@@ -84,6 +84,74 @@ alternative is discovering mid-task that you need geometry you did not save, or
 that `I.S.P.` reads as `LS.P.` on most pages. The cache is gitignored; it is a
 commercial book.
 
+## 0c. A text layer does not give you TABLES. Render the page and look
+
+This is the trap that costs the most time, because step 0 says "text layer" and
+you believe it. A text layer extracts *prose* faithfully and **loses the
+geometry of a chart**: the columns arrive as disconnected runs, the header row
+lands somewhere else, and nothing tells you it happened.
+
+Every authority table in this repo that mattered had to be read as an image:
+
+| table | what the text layer gave |
+|---|---|
+| Attribute Bonus Chart (PF 16) | nothing findable — greps for the row values returned no page at all |
+| Types of Armor (PF 270) | column fragments on the page *after* it, headers detached from values |
+| Coalition SAMAS Pilot's skills (RUE 233) | merged with the Coalition Grunt's column beside it, six wrong numbers |
+
+**Render it and read it:**
+
+```python
+import pymupdf
+doc = pymupdf.open(pdf)
+doc[printed_page_to_pdf_index].get_pixmap(dpi=200).save('page.png')
+```
+
+then read `page.png`. 200 dpi is enough for a stat block and cheap; the images
+above were all legible at it.
+
+**Use the rows you already have as a check on the reading.** When the catalog
+holds five of a table's sixteen rows, those five are five independent
+confirmations that the transcription is right — and a generator that refuses to
+run when one has drifted turns that into a guarantee rather than a spot-check.
+
+## 0d. The printed-to-PDF offset is not constant
+
+You will derive it once — "printed 270 is PDF 272, so subtract two" — and it
+will be wrong at the other end of the book. A scan can **duplicate a page**:
+Palladium Fantasy renders printed 17 at BOTH PDF 18 and PDF 19, so the offset is
++1 before that point and +2 after it. Hunting the Attribute Bonus Chart at
+printed 16 with the late-book offset lands on the wrong page and finds nothing,
+which reads exactly like "the chart is not in this book".
+
+**Verify the offset next to the page you actually want**, by rendering a
+candidate and reading the folio printed on it — not once for the whole book.
+
+## 0e. Extracting priced entries out of prose
+
+Item lists are paragraphs with a price somewhere inside, not tables. An
+extractor finds the boundaries; it does not find the answers. Three failures
+recur, and all three put a plausible wrong number in a numeric column:
+
+- **A price wrapped across a line.** `20,000-\n30,000` becomes the single number
+  **2,000,030,000** if the de-hyphenation that rejoins a broken *word* is let
+  near it. A hyphen BETWEEN DIGITS is a range and must survive.
+- **A long entry labels its own parts** — `Duration:`, `A.R.:`, `Cost:` — each
+  of which looks exactly like the start of a new item. The Cape of Dimensions'
+  700,000 gold was filed under an item called *"Use Limits"*.
+- **The first price in an entry is not its price.** That same Cape mentions
+  25,000 gold to repair a tear long before its own cost line.
+
+Two more worth knowing: a book may print four items under one name
+(`Contact poison: Numbstrike:`), and a section may price by **band** rather than
+per row — the faerie foods say so in their own preamble and give no individual
+figures at all.
+
+**Check the extraction against itself.** The experience tables were checked by
+asserting each level's low equals the previous level's high plus one: the two
+numbers are printed separately, so they only agree if both were read correctly.
+All 225 passed, and that check is worth more than re-reading the page.
+
 ## 1. Inventory: what is in here?
 
 Count structure, not prose. A spell has a stat block, a class has attribute

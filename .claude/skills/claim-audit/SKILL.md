@@ -67,6 +67,30 @@ Every one of these was live, and every one had been true when written:
 | *"the catalog has no individual language rows"* | 7 classes | it holds nine |
 | `reference/read-columns.py` | a skill | a **fork** of `scripts/read-columns.py`, diverged completely |
 
+A second pass, after ten more PRs, found the same two shapes and nothing else:
+
+| claim | where | reality |
+|---|---|---|
+| *"All four catalogs (items, skills, spells, psionic powers)"* | `_lib/catalog.js` | **five**, and `items` was renamed to `gear` in migration 004 |
+| *"the four catalogs together \| 1,653"* | README | five, 1,901 |
+| *"rows, everything \| 4,143"* | README | 4,420 |
+| *"all four catalogs"* | README, on `repo-vs-live.mjs` | the tool compares five |
+| *"Proposals, not delivered"* | plans README | both had shipped |
+
+The `catalog.js` one is the shape to fear: a count that was wrong AND a name
+that had been renamed **twenty-two migrations earlier**, sitting in the same
+sentence, in a file nobody had reason to open.
+
+**Two claims that looked stale and were not**, checked rather than assumed:
+
+- The Ranger's *"the catalog has no poison row"* — twelve poisons had just been
+  imported, and they are `gear`. The claim is about a **skill** row, and there
+  is still no poison skill.
+- The Diabolist's and Summoner's *"the catalog has no Large Axes row"* — still
+  true; the catalog has `W.P. Axe` and nothing else.
+
+Both would have been "corrected" into falsehoods by a careless pass.
+
 Two shapes repeat, and they are worth recognising on sight:
 
 1. **A count in prose.** *"offers five"*, *"two Palladium O.C.C.s"*, *"the
@@ -102,6 +126,12 @@ A corrected sentence goes stale again. Where the claim is checkable, pin it:
 - a **count** the database can answer → `test/regression.mjs`, which builds a
   database from nothing and asks the running worker. That is where the README's
   clean-run table and the MOS package counts live.
+- a **number read out of a book** → `test/smoke.mjs` as well, transcribed beside
+  the code it checks. The nine rows of the Attribute Bonus Chart are pinned
+  column by column against printed 16, because nothing else compared `derive.js`
+  to the book — and the last time that file was wrong it was wrong in every row
+  at once, applying `v - 15` to all nine and calling it "the standard Palladium
+  tables".
 - a **count a file can answer** → `test/smoke.mjs`. The scripts file map, the
   data-scripts table and the migration table are all pinned this way, and each
   fails on a file the docs do not name *and* on a name with no file.
