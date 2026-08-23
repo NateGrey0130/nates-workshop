@@ -806,7 +806,14 @@ function blurb(text, max) {
 // cannot be asked for a level it has no threshold for. The server clamps to the
 // same table; this is the same rule stated where the player can see it.
 function startingLevelPicker() {
-  const cap = xpTableFor(applyVariant(S.rcc, S.variant)).length;
+  // The COMPOSED class, not the race. `S.rcc` is the primary class, which for a
+  // Rifts character is the O.C.C. and carries its own table — but for a
+  // Palladium one it is the race, which has no experience table and never will.
+  // Reading the race there showed every Palladium character the house-rule
+  // default. `S.cls` is null only on the first pass through this step, before
+  // an occupation exists to compose, and the race is the right answer then.
+  const forXp = S.cls || applyVariant(S.rcc, S.variant);
+  const cap = xpTableFor(forXp).length;
   const level = Math.min(S.level, cap);
   const opts = Array.from({ length: cap }, (_, i) => i + 1)
     .map((n) => `<option value="${n}"${n === level ? ' selected' : ''}>Level ${n}</option>`).join('');
@@ -819,7 +826,7 @@ function startingLevelPicker() {
     <div class="rowline">
       <select onchange="setStartingLevel(this.value)">${opts}</select>
       ${level > 1 ? `<span class="muted small">starts with
-        ${thresholdFor(xpTableFor(applyVariant(S.rcc, S.variant)), level)?.toLocaleString() ?? '—'} XP,
+        ${thresholdFor(xpTableFor(forXp), level)?.toLocaleString() ?? '—'} XP,
         the threshold for level ${level}</span>` : ''}
     </div>
     ${level > 1 ? `<p class="muted small">Starting equipment and money are <b>not</b> scaled up —

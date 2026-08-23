@@ -27,6 +27,14 @@ export const KNOWN_KEYS = new Set([
   // missing one, because the instruction attached to it is to delete the key or
   // change the app, and both would break a working field.
   'psionics_allowed',
+  // A class's own experience chart, overriding the house-rule default.
+  // `xpTableFor()` has honoured it since leveling.js was written, across six
+  // call sites, and the smoke test pins the override - it was missing here only
+  // because no published class had used one yet. Same false alarm
+  // `psionics_allowed` gave, and worse than a missing entry for the same
+  // reason: the instruction attached to UNMODELLED is to delete the key or
+  // change the app, and both would break a working field.
+  'xp_table',
   // Produced by the parser from the body, never written by hand.
   'lore', 'gm_notes', 'sections',
 ]);

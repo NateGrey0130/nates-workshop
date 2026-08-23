@@ -1112,6 +1112,50 @@ section('Starting XP');
     'admin', 'audit.js'), 'utf8');
   check('the audit selects xp', /level, xp, attributes/.test(auditSrc));
   check('and passes it to the validator', /level: row\.level, xp: row\.xp/.test(auditSrc));
+
+  // -- an OCCUPATION's curve has to survive composition ----------------------
+  //
+  // Palladium names its experience charts by O.C.C. - "Knight & Noble", "Thief
+  // & Merchant" - and a RACE has none, because experience comes from what you
+  // do. `combineClasses` carries a named list of keys forward from the
+  // occupation, and `xp_table` was not on it, so since #210 (race primary,
+  // occupation second) a Knight's curve was dropped on EVERY Palladium
+  // character and the race's absent table won. Measured here rather than read
+  // off the source, because the failure was silent: no error, no warning, just
+  // the house-rule default quietly standing in.
+  const race = { id: 'r', name: 'R', category: 'rcc', system: 'palladium-fantasy' };
+  const occ = { id: 'o', name: 'O', category: 'occ', system: 'palladium-fantasy',
+    xp_table: [0, 2100, 4200, 8400] };
+  const composed = composeClass({ rcc: race, occ, character: {} });
+  check('an occupation’s xp_table survives composition',
+    JSON.stringify(composed.xp_table) === JSON.stringify(occ.xp_table),
+    JSON.stringify(composed.xp_table));
+  check('and it is the table the level thresholds come from',
+    thresholdFor(xpTableFor(composed), 2) === 2100);
+
+  // The race still wins where it HAS an opinion - a dragon's curve is the
+  // dragon's - and silence on both sides still falls back to the house rule.
+  const dragon = composeClass({ rcc: { ...race, xp_table: [0, 1, 2] }, occ, character: {} });
+  check('a race that states its own curve still wins',
+    JSON.stringify(dragon.xp_table) === '[0,1,2]');
+  const neither = composeClass({ rcc: race, occ: { ...occ, xp_table: undefined }, character: {} });
+  check('and neither stating one falls back to the default',
+    thresholdFor(xpTableFor(neither), 2) === thresholdFor(xpTableFor({}), 2));
+
+  // The wizard's starting-level picker read the RACE, so it sized itself and
+  // priced the level off a table Palladium characters never have.
+  const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+  const picker = appSrc.slice(appSrc.indexOf('function startingLevelPicker()'),
+    appSrc.indexOf('function setStartingLevel'));
+  check('the starting-level picker prefers the composed class',
+    /S\.cls \|\| applyVariant\(S\.rcc/.test(picker));
+  check('and no longer reads the race directly for a threshold',
+    !/xpTableFor\(applyVariant\(S\.rcc/.test(picker), 'still calls xpTableFor on the race');
+
+  // `xp_table` is a modelled key. Reported UNMODELLED, the instruction attached
+  // is to delete it or change the app, and both would break a working field.
+  check('xp_table is a known class key',
+    !unmodelledKeys({ id: 'x', name: 'X', xp_table: [0, 1] }).includes('xp_table'));
 }
 
 // ---------- The wizard's step list ----------
