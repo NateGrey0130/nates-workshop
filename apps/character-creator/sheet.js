@@ -78,6 +78,9 @@ async function load() {
     C.pendingPowers = res.pending_powers || [];
     C.pendingPowersTotal = res.pending_powers_total || 0;
     C.psiCatalog = catalogs.psionics || [];
+    // An inventory row stores enchantment SLUGS; without the definitions a
+    // slug renders as a slug.
+    C.enchantCatalog = catalogs.enchantments || [];
     // Kept so the sheet can say when it is showing fewer entries than exist,
     // rather than quietly ending the log at the page boundary.
     C.journalTotal = journal.total ?? journal.entries.length;
@@ -1675,6 +1678,56 @@ function armorSlotHtml(a, i, w) {
     </div>`;
 }
 
+// An enchantment slug resolved against the catalog. Returns null rather than a
+// placeholder for a slug nothing defines: a row that says "demon-slayer" is
+// worse than a row that says nothing, because it looks like a name.
+function enchantBySlug(slug) {
+  return (C.enchantCatalog || []).find((e) => e.slug === slug) || null;
+}
+
+// What an enchantment adds, in the sheet's own words. `bonuses` is the same
+// block a class or a skill uses, so this reads combat and saves the same way
+// everything else does - flat numbers and dice both, since the Thunder Hammer's
+// extra damage is 2D6 and not a 2.
+function enchantEffect(e) {
+  const bits = [];
+  for (const group of ['combat', 'saves', 'attributes']) {
+    for (const [k, v] of Object.entries(e.bonuses?.[group] || {})) {
+      const n = typeof v === 'number' ? (v >= 0 ? `+${v}` : String(v)) : `+${v}`;
+      bits.push(`${n} ${k.replace(/_/g, ' ')}`);
+    }
+  }
+  return bits.join(', ');
+}
+
+// The enchantments an inventory row carries, under its name.
+//
+// Read-only for a player and editable by whoever can write the sheet, which is
+// the owner or the GM - the same rule qty and equipped already follow. Nothing
+// here invents a number: an enchantment with no `bonuses` shows its name alone,
+// because most of them are abilities rather than modifiers and a number would
+// be a lie about what the book grants.
+function enchantHtml(it) {
+  const slugs = Array.isArray(it.enchantments) ? it.enchantments : [];
+  const rows = slugs.map((slug) => {
+    const e = enchantBySlug(slug);
+    if (!e) return '';
+    const effect = enchantEffect(e);
+    const drop = C.canWrite
+      ? ` <button class="btn btn-sm btn-ghost" title="Remove this enchantment"
+           onclick="removeEnchantment(${it.id}, '${escHtml(slug)}')">✕</button>`
+      : '';
+    return `<div class="attr-note" style="margin-left:12px">↳ ${escHtml(e.name)}${
+      effect ? ` <span class="muted">(${escHtml(effect)})</span>` : ''}${drop}</div>`;
+  }).filter(Boolean).join('');
+
+  const add = C.canWrite && (C.enchantCatalog || []).length
+    ? `<div style="margin-left:12px"><button class="btn btn-sm btn-ghost"
+         onclick="addEnchantment(${it.id})">+ enchantment</button></div>`
+    : '';
+  return rows + add;
+}
+
 // The inventory table's rows. Hoisted for the same reason: an item change
 // re-renders this and nothing else.
 function inventoryRowsHtml() {
@@ -1689,7 +1742,7 @@ function inventoryRowsHtml() {
       ? `<input type="checkbox" ${it.equipped ? 'checked' : ''} onchange="patchItem(${it.id}, {equipped: this.checked})"><span class="print-only">${it.equipped ? '✔' : '—'}</span>`
       : (it.equipped ? '✔' : '');
     const rm = w ? `<td><button class="btn btn-sm btn-ghost" onclick="removeItem(${it.id})">✕</button></td>` : '<td></td>';
-    return `<tr><td>${name} ${kind}</td><td>${qty}</td><td>${eq}</td>
+    return `<tr><td>${name} ${kind}${enchantHtml(it)}</td><td>${qty}</td><td>${eq}</td>
       <td class="muted small">${escHtml(it.notes || '')}</td>${rm}</tr>`;
   }).join('');
 }
@@ -1788,6 +1841,34 @@ async function saveStats() {
 async function patchItem(rowId, fields) {
   try { await api(`characters/${id}/items/${rowId}`, jsonReq('PATCH', fields)); await refreshInventory(); }
   catch (err) { alert('Update failed: ' + err.message); }
+}
+
+// Add or drop one enchantment on one inventory row.
+//
+// The whole array is sent, because that is what the column holds and what the
+// server validates - family, the book's cap, and whether an armour feature is
+// being put in a sword. Sending a delta would mean the server had to guess at
+// the intended end state.
+async function addEnchantment(rowId) {
+  const it = C.items.find((x) => x.id === rowId);
+  if (!it) return;
+  const held = Array.isArray(it.enchantments) ? it.enchantments : [];
+  const offered = (C.enchantCatalog || []).filter((e) => !held.includes(e.slug));
+  if (!offered.length) return alert('Nothing left to add.');
+  const menu = offered
+    .map((e, i) => `${i + 1}. ${e.name} (${e.applies_to}${e.cost ? `, ${e.cost.toLocaleString()} gold` : ''})`)
+    .join('\n');
+  const pick = window.prompt(`Which enchantment?\n\n${menu}\n\nNumber:`);
+  const n = parseInt(pick, 10);
+  if (!Number.isFinite(n) || n < 1 || n > offered.length) return;
+  await patchItem(rowId, { enchantments: [...held, offered[n - 1].slug] });
+}
+
+async function removeEnchantment(rowId, slug) {
+  const it = C.items.find((x) => x.id === rowId);
+  if (!it) return;
+  const held = Array.isArray(it.enchantments) ? it.enchantments : [];
+  await patchItem(rowId, { enchantments: held.filter((sl) => sl !== slug) });
 }
 
 async function removeItem(rowId) {
