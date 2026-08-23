@@ -4471,6 +4471,35 @@ section('Documented counts');
   }
   check('no export is named nowhere else', orphanExports.length === 0,
     orphanExports.join(', ') + ' - import it, un-export it, or delete it');
+
+  // The README's file-size table. Two successive sets of these figures went
+  // stale the same way - one drifted 80% on sheet.js while claiming a 20%
+  // tolerance, the next said app.js was "roughly 1,900" at 2,950 and called
+  // parser.js the second-largest file when sheet.js sits between them. Prose
+  // saying "treat these as orders of magnitude" is not a tolerance; this is.
+  {
+    const TOLERANCE = 0.25;
+    const rows = [...readme.replace(/\r/g, '')
+      .matchAll(/^\| `((?:js\/)?[a-z-]+\.js)` \| ~([\d,]+) \|/gm)];
+    check('the README file-size table is readable', rows.length >= 5, `${rows.length} rows`);
+    const off = [];
+    for (const [, file, claimed] of rows) {
+      const want = Number(claimed.replace(/,/g, ''));
+      const actual = readFileSync(join(appDir, file), 'utf8').split('\n').length;
+      if (Math.abs(actual - want) / actual > TOLERANCE) {
+        off.push(`${file}: README ~${want}, actually ${actual}`);
+      }
+    }
+    check(`and every figure in it is within ${TOLERANCE * 100}%`, off.length === 0,
+      off.join('; '));
+
+    // The ordering claim is the one that was flatly wrong, and it is cheap to
+    // hold: the table is printed largest first.
+    const sizes = rows.map(([, f]) => readFileSync(join(appDir, f), 'utf8').split('\n').length);
+    check('and the table is still in descending order of size',
+      sizes.every((n, i) => i === 0 || sizes[i - 1] >= n),
+      rows.map(([, f], i) => `${f}=${sizes[i]}`).join(' '));
+  }
 }
 
 // ---------- 1d. Paging ----------
