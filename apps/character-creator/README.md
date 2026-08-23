@@ -216,7 +216,7 @@ touches MediaVault and FilamentForge too — they use its `openModal` /
 
 ## Data model
 
-Twenty-six tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
+Twenty-seven tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
 and one R2 bucket (`MEDIA`, same name) for the only binary this app stores.
 `media_items` belongs to MediaVault and `schema_migrations` is database
 bookkeeping shared by both; the rest are this app.
@@ -227,7 +227,8 @@ bookkeeping shared by both; the rest are this app.
 |---|---|
 | `campaigns` | Top-level container. `gm_email` owns it. `gm_notes` is GM-only and stripped from non-GM API responses. |
 | `characters` | See below — several JSON columns. `class_variant` names which `variants` entry the character is; NULL means the class as written. `occ_class_id` is the O.C.C. taken alongside an R.C.C.; NULL means none. |
-| `character_items` | Inventory join. `item_id` NULL means a freeform item (`custom_name` required). `removed_at` NULL means currently held — removals are soft, so history survives. |
+| `enchantments` | What an alchemist can put into a weapon or a suit of armour, one row per property the book names. `cost` is the low end and `cost_note` the formula — *"2,000 gold per 20 S.D.C., 200 max on heavy armour"* is an arithmetic rule, not a number. `bonuses` is the **same JSON block** `skills.bonuses` uses, validated through the same `validateBonuses`, so `derive.js` needs no new cases. `limits` is what a picker has to act on: the Thunder Hammer is blunt weapons only. |
+| `character_items` | Inventory join. `item_id` NULL means a freeform item (`custom_name` required). `removed_at` NULL means currently held — removals are soft, so history survives. `enchantments` is a JSON array of `enchantments.slug`, on the **instance** rather than the catalog row. |
 | `journal_entries` | `character_id` NULL means a campaign-level entry. |
 | `level_history` | One row per confirmed level-up; `changes` is a JSON diff of what was actually applied. |
 | `pending_skill_picks` | Skill picks a level-up granted and nobody has spent yet. One row per **grant**, not per pick, so "2 picks from level 3" stays itemised. `categories` is copied from the class at level-up time — the class can change later, what you were granted cannot. |
@@ -4579,6 +4580,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `031-character-mos.sql` | `characters.mos` — which Military Occupational Specialty a character took. RUE gives several classes an MOS ("select one area of specialty, gain all skills under that MOS"); the skills land in `skills` like any other, but which specialty was chosen has to be remembered rather than inferred back out of the skill list |
 | `032-gear-cost-note.sql` | `gear.cost_note` — what a price will not fit in one integer. RUE prices much of its common gear as a **range** (`Belt, Utility: 3-5 cr.`) and sometimes qualifies it instead (`double for gold`). `cost` holds the range’s LOW end, the way `spells.ppe` holds a variable cost’s minimum, and `cost_note` carries the wording verbatim |
 | `033-variant-note.sql` | `spells.variant_note` and `psionic_powers.variant_note` — what an OLDER book prints instead. Not `ppe_note`: the wizard treats the mere presence of that column as "this cost varies" and renders `7+ P.P.E.`, so a cross-book note there would make fourteen fixed-cost spells look variable |
+| `035-enchantments.sql` | `enchantments`, and `character_items.enchantments` — what an alchemist puts INTO a sword, as opposed to a sword. Printed 249-250 sells three finished suits and then **32 properties** that go into ordinary gear, four to a suit and three to a weapon, cumulatively. The JSON array is on the **instance**: one long sword in a party of four can be the Demon Slayer while the other three stay ordinary |
 | `034-gear-sdc.sql` | `gear.sdc` — Structural Damage Capacity, which the book calls one of the **two** attributes of armour alongside A.R. (printed 270). The rules spend it: damage subtracts from it, at half S.D.C. the A.R. drops two points, at zero the armour is gone. All six Palladium suits kept it in free-text `description`, where no sheet and no arithmetic can reach it. Never the `1D6 S.D.C.` a knife *deals*, which is `damage` |
 | `029-power-pick-categories.sql` | `pending_power_picks.categories` — a banked PSIONIC grant's own category list. The Mystic gains a **Super** power at levels 4 and 8, a category a major psychic cannot otherwise take, so the restriction belongs to the grant rather than to the class |
 | `028-pending-power-picks.sql` | `pending_power_picks` — the spells and psionic powers a level-up granted and nobody chose. `pending_skill_picks` with a different subject; `spell_levels` carries the cap the granting level came with, because that cap belongs to the grant rather than to the character |

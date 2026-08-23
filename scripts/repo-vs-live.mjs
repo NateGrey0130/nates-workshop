@@ -42,6 +42,7 @@ const TABLES = [
   ['spells', 'name'],
   ['psionic_powers', 'name'],
   ['gear', 'name'],
+  ['enchantments', 'name'],
 ];
 
 const appDir = join(repoRoot, 'apps', 'character-creator');

@@ -21,6 +21,7 @@ import { readFileSync, writeFileSync, rmSync, mkdtempSync, readdirSync, existsSy
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { tmpdir } from 'node:os';
+import { validateBonuses } from '../js/parser.js';
 
 const testDir = dirname(fileURLToPath(import.meta.url));
 const appDir = join(testDir, '..');
@@ -942,6 +943,77 @@ console.log('\n' + '[8/8] Checks that only a database can make');
     /'ar', 'sdc', 'mdc'/.test(readFileSync(join(repoRoot, 'functions', 'api', 'character-creator',
       '_lib', 'import-engine.js'), 'utf8')),
     'gear.extractFields omits sdc, so every future import drops it back into prose');
+}
+
+// ---------- enchantments ----------
+// What an alchemist puts INTO a sword, as opposed to a sword. Printed 249-250
+// sells three finished suits and then 32 PROPERTIES that go into ordinary gear,
+// four to a suit and three to a weapon, cumulatively.
+{
+  const ench = catalogs.body.enchantments || [];
+  check('/catalogs serves the enchantments catalog', ench.length === 32, `${ench.length} rows`);
+
+  const armour = ench.filter((e) => e.applies_to === 'armor');
+  const weapon = ench.filter((e) => e.applies_to === 'weapon');
+  check('eleven armour features and twenty-one weapon properties',
+    armour.length === 11 && weapon.length === 21, `${armour.length} / ${weapon.length}`);
+
+  // The book's caps, carried on the row so a picker enforces them from data.
+  const wrongCap = ench.filter((e) => e.max_per_item !== (e.applies_to === 'armor' ? 4 : 3));
+  check('and each carries its half of the book cap', wrongCap.length === 0,
+    wrongCap.map((e) => `${e.slug}=${e.max_per_item}`).join(', '));
+
+  // Color and Continual Glow are printed on BOTH sides at different prices, so
+  // they are separate rows. A single row would have to pick one price and lie
+  // about the other.
+  for (const [a, b] of [['armor-color', 'weapon-color'],
+    ['armor-continual-glow', 'weapon-continual-glow']]) {
+    const x = ench.find((e) => e.slug === a);
+    const y = ench.find((e) => e.slug === b);
+    check(`${a} and ${b} are separate rows`, x && y && x.applies_to !== y.applies_to);
+  }
+  const colours = ench.filter((e) => e.name === 'Color');
+  check('and the two Color rows keep their own prices',
+    colours.length === 2 && new Set(colours.map((c) => c.cost)).size === 2,
+    colours.map((c) => `${c.slug}=${c.cost}`).join(', '));
+
+  // The whole affordability argument: bonuses reuse the block classes and
+  // skills already use, so derive.js needs no new cases. If these stopped
+  // validating, that claim would be false and nothing else would say so.
+  const withBonuses = ench.filter((e) => e.bonuses);
+  check('four enchantments carry mechanical bonuses', withBonuses.length === 4,
+    withBonuses.map((e) => e.slug).join(', '));
+  const badBonus = [];
+  for (const e of withBonuses) {
+    const errors = [], warnings = [];
+    validateBonuses(e.bonuses, errors, warnings);
+    if (errors.length) badBonus.push(`${e.slug}: ${errors.join('; ')}`);
+  }
+  check('and every one validates as a class or skill bonus block',
+    badBonus.length === 0, badBonus.join(' | '));
+
+  // Dice where the book prints dice. The Thunder Hammer's extra 2D6 is not a 2.
+  const hammer = ench.find((e) => e.slug === 'thunder-hammer');
+  check('the Thunder Hammer keeps its 2D6 as dice, not as a number',
+    hammer?.bonuses?.combat?.damage === '2d6', JSON.stringify(hammer?.bonuses));
+  const sharp = ench.find((e) => e.slug === 'eternally-sharp-blade');
+  check('and the Eternally Sharp Blade keeps its flat +3',
+    sharp?.bonuses?.combat?.damage === 3, JSON.stringify(sharp?.bonuses));
+
+  // A price that is really a formula keeps the formula. Magic S.D.C. is the
+  // most-used armour feature and the one gear.sdc exists to make possible.
+  const magicSdc = ench.find((e) => e.slug === 'magic-sdc');
+  check('Magic S.D.C. keeps its per-unit rate and its caps',
+    magicSdc && magicSdc.cost === 2000 && /20 S\.D\.C\..*200.*100/.test(magicSdc.cost_note || ''),
+    JSON.stringify(magicSdc?.cost_note));
+
+  // The instance column, decoded. An item nobody has enchanted must read as an
+  // empty array, not as null - a sheet mapping over it would throw.
+  const held = await api('GET', `/characters/${charId}`);
+  const anyItem = (held.body.items || [])[0];
+  check('an unenchanted inventory row decodes to an empty array',
+    anyItem && Array.isArray(anyItem.enchantments) && anyItem.enchantments.length === 0,
+    JSON.stringify(anyItem?.enchantments));
 }
 
 console.log('\n' + (failures === 0

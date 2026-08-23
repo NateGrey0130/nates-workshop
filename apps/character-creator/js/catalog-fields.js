@@ -122,6 +122,39 @@ export const CATALOGS = {
     ],
   },
 
+  // What an alchemist puts INTO a sword, as opposed to a sword. A catalog
+  // declared here arrives with the editor, the write endpoints and the importer
+  // already built from this config, which is the whole reason modelling
+  // enchantments as their own table is affordable rather than a project.
+  enchantments: {
+    table: 'enchantments',
+    label: 'Enchantments',
+    displayField: 'name',
+    uniqueField: 'slug',
+    hasSource: false,
+    fields: [
+      { name: 'name', label: 'Name', type: 'text', required: true },
+      { name: 'slug', label: 'Slug', type: 'text', required: true,
+        help: 'What character_items.enchantments references. One per property the book names.' },
+      { name: 'applies_to', label: 'Applies to', type: 'select', options: ['weapon', 'armor'],
+        required: true },
+      { name: 'cost', label: 'Cost', type: 'int',
+        help: 'Gold, and the LOW end of a range - the same convention gear.cost follows.' },
+      { name: 'cost_note', label: 'Cost note', type: 'text',
+        help: 'The part a single integer cannot hold: "2,000 per 20 S.D.C., 200 max on heavy armour".' },
+      { name: 'max_per_item', label: 'Max per item', type: 'int',
+        help: 'The book caps armour at four features and weapons at three.' },
+      { name: 'limits', label: 'Limits', type: 'text',
+        help: 'What it can go on, when the book restricts it: "blunt weapons only, excluding ball & chain".' },
+      { name: 'bonuses', label: 'Bonuses', type: 'bonuses',
+        help: 'JSON, the same shape a class or skill uses: {"combat":{"initiative":3,"strike":2}}. '
+          + 'A dice expression is allowed here - the Thunder Hammer is {"combat":{"damage":"2d6"}}' },
+      { name: 'description', label: 'Description', type: 'longtext' },
+      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'both'] },
+      { name: 'source_book', label: 'Source book', type: 'text' },
+    ],
+  },
+
   gear: {
     table: 'gear',
     label: 'Gear',

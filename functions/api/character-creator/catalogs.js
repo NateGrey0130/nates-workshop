@@ -9,7 +9,7 @@ import { getUserEmail, unauthorized, json } from './_lib/auth.js';
 export async function onRequestGet({ request, env }) {
   if (!getUserEmail(request)) return unauthorized();
 
-  const [skills, spells, psionics] = await Promise.all([
+  const [skills, spells, psionics, enchantments] = await Promise.all([
     // source_book rides along in all three so the pickers can filter on it —
     // typing "rifts main" should narrow a list the same way a name does.
     // `bonuses` travels with the row so the wizard can apply what a skill grants
@@ -29,6 +29,11 @@ export async function onRequestGet({ request, env }) {
     // min_tier is in the boot projection because the powers picker filters on
     // it client-side; without it there is nothing to gate against.
     env.DB.prepare('SELECT name, category, isp, isp_note, min_tier, system, source_book FROM psionic_powers ORDER BY category, name').all(),
+    // Enchantments are small - 32 rows - and the SHEET is what needs them: an
+    // item carries slugs, and a slug without its definition renders as a slug.
+    // `bonuses` rides along for the same reason skills' does, so whatever shows
+    // an enchanted weapon can say what it adds without a second request.
+    env.DB.prepare('SELECT slug, name, applies_to, cost, cost_note, max_per_item, limits, bonuses, description, system, source_book FROM enchantments ORDER BY applies_to, name').all(),
   ]);
 
   return json({
@@ -39,5 +44,11 @@ export async function onRequestGet({ request, env }) {
     })),
     spells: spells.results,
     psionics: psionics.results,
+    // `bonuses` is stored as a JSON string, decoded here so every caller does
+    // not have to remember to - the same courtesy `systems` gets above.
+    enchantments: enchantments.results.map((e) => ({
+      ...e,
+      bonuses: e.bonuses ? JSON.parse(e.bonuses) : undefined,
+    })),
   });
 }

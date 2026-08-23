@@ -13,6 +13,25 @@
 
 const ARRAY_COLUMNS = new Set(['skills', 'powers', 'armor', 'abilities']);
 
+// An inventory row's enchantments are a JSON ARRAY of slugs, and an item that
+// has never been enchanted has NULL in the column. Decoding to `[]` rather
+// than leaving null is the difference between `items.map(i => i.enchantments
+// .length)` working and throwing - `[]` and `{}` are not interchangeable and
+// null is neither.
+export function decodeItemEnchantments(rows) {
+  for (const row of rows || []) {
+    if (!row || !('enchantments' in row)) continue;
+    try {
+      const v = row.enchantments ? JSON.parse(row.enchantments) : [];
+      row.enchantments = Array.isArray(v) ? v : [];
+    } catch {
+      // A malformed value is a broken row, not a broken response.
+      row.enchantments = [];
+    }
+  }
+  return rows;
+}
+
 export const CHARACTER_JSON_COLUMNS = ['attributes', 'attribute_bonuses', 'rolled_bonuses', 'skills', 'powers', 'abilities', 'bio', 'combat', 'saves', 'armor'];
 
 // Parse, or fall back. Never throws — a malformed column should degrade to
