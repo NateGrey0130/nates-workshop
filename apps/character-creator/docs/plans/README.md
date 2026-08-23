@@ -119,3 +119,15 @@ Non-negotiable, and every plan inherits them:
 - **Schema changes are applied by hand before the deploy that needs them**, and
   verified by querying them back rather than trusting an exit code.
 - No build step, no framework, no dependencies.
+
+## Proposals, not delivered
+
+Two written proposals live here and **nothing in either is built**. They were
+asked for as writing rather than as code, and they are kept apart from the
+roadmap above for that reason: everything above shipped, and neither of these
+has.
+
+| # | Proposal | Verdict |
+|---|---|---|
+| 17 | [Enchanted items](17-magic-items.md) | recommended, in a reduced form; do the `gear.sdc` column first and on its own |
+| 18 | [Experience tables by O.C.C.](18-experience-tables.md) | recommended; **no schema at all** — the override already exists and two one-line bugs are in its way |
