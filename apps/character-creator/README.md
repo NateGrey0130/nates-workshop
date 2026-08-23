@@ -1227,6 +1227,91 @@ against its description section showed RUE agreeing with itself both times. The
 expectations came from another edition. A probe that fails is a question, not a
 verdict.
 
+#### The Palladium invocation list, and the 57 nobody could reach
+
+Two scripts, and the second is the one that mattered more.
+
+`add-pf-invocations.sql` adds the **27** spells the Palladium Fantasy main book
+prints and the catalog did not hold. `retag-pf-spells-both.sql` moves **57**
+that were already there from `system = 'rifts'` to `both`.
+
+**A Palladium Wizard could reach 98 of the 182 spells its own book lists.**
+`inSystem()` offers a catalog row when its system is NULL, `both`, or the
+build's own, and every spell imported from a Rifts book carries `rifts` — so a
+spell in *both* books was invisible to the Palladium half of the app. This is
+the same defect
+[`fix-pf-armor-and-cross-system-gear.sql`](db/fix-pf-armor-and-cross-system-gear.sql)
+fixed for gear, where the Knight held clothing, gloves and a riding horse its
+own sheet could not resolve. The trigger there was *"a class in the other system
+grants the row outright"*; here it is stronger — the other system's core book
+prints the spell by name, with a level and a cost the catalog already agrees
+with.
+
+The damage was worst exactly where a caster earns it. **Every spell from level
+ten up was on that list bar one**, so a Palladium Wizard reaching tenth level
+was offered almost nothing new: Mystic Portal, Summon Shadow Beast, Anti-Magic
+Cloud, Create Golem, Resurrection, Dimensional Portal and all four Spells of
+Legend were filed as Rifts-only. Nothing is taken away by the fix — `both` is a
+superset of `rifts`, so every Rifts character still sees every one of them.
+
+**No OCR and no model call.** The PDF carries a real text layer, so both tables
+and all 27 descriptions were read geometrically with
+[`scripts/read-columns.py`](../../scripts/read-columns.py). The whole import cost
+nothing but reading.
+
+**The book ships two authority tables and they check each other.** An
+alphabetical list by level (printed 187), which is the only place a level is
+stated at all, and an alphabetical list by page (printed 188), which repeats
+every cost. Parsed side by side they disagree on exactly **two costs out of
+182** — See the Invisible (4 or 6) and Curse: Phobia (40 or 50) — and neither is
+in this batch. Every imported row also has a **third** reading: the P.P.E. line
+in its own stat block, usually spelled out in words there, *Twenty-Five* against
+the index's 25. 27 of 27 agree.
+
+**Two false gaps, both naming.** `catalog-diff.mjs` reported 29 missing and two
+were not: *Swim as a Fish* is the catalog's `Swim as a Fish (lesser)`, and
+*Invulnerability: Limited* is the catalog's `Invulnerability` — same level and
+same cost in both cases, and the description page heads the second
+*"Invulnerability (limited)"* where the index adds a colon. Three more looked
+like near matches and are genuinely different spells: `Animate Object` against
+the Warlock's `Earth: Animate Object`, `Circle of Concealment` against
+`Concealment`, and `Time Capsule` (Touch, 30 P.P.E., preserves objects) against
+the Rifts `Ley Line Time Capsule` (15).
+
+**Nothing to record from the disagreements**, which is the result worth stating
+plainly. `catalog-diff` reported 21 rows whose stored value differs from the
+book. Fourteen already carry the Palladium figure in `variant_note` from
+[`add-palladium-variants.sql`](db/add-palladium-variants.sql); four are costs
+the book qualifies and the catalog already explains in `ppe_note`; and four are
+Spells of Legend, which the catalog stores at level 15 with a note saying so.
+The later book still wins and **no stored number changed.**
+
+**One page argues with the index, and the index won.** Exactly six description
+blocks state a level of their own, and five of them are the book's own Spells of
+Legend. The sixth is *The Finger of Lictalon*, headed *"Level: Spell of Legend"*
+on printed 211 while the by-level index files it under Level Eleven. Three
+things point the other way from its own page: the index puts it at eleven, the
+Spells of Legend list does not name it, and its 150 P.P.E. sits with the level
+elevens rather than the 1000-5000 of the legends. It is stored at eleven and its
+`variant_note` records the losing reading rather than discarding it.
+
+**The Druid is why this was worth doing now.** Its `level_progression` names
+sixteen abilities as prose, and six of the wizard spells among them had no
+catalog row of any spelling before this import — Faerie Speak, Control the
+Beasts, Summon and Control Canines, Witch Bottle, Faeries' Dance and Monster
+Insect. Three more were there under a different spelling, which is worse than
+absent: the class page tells a player they gain *Faerie's Dance* at ninth level,
+and typing that into the picker finds nothing.
+[`fix-druid-spell-names.sql`](db/fix-druid-spell-names.sql) aligns those three.
+All thirteen wizard spells the Druid names now resolve.
+
+**Eight of its sixteen do not, and should not.** Healing Touch, Kindle Flame,
+Prophecy, Divination, Phoenix Healing, Protection Charm, Weather Control and
+Communication are **Druidic magic powers** with their own descriptions on the
+Druid's own pages, not wizard spells. Kindle Flame is the one that reads like an
+oversight and is not: printed 76 gives it a full description, and the level four
+line does not say *"as the wizard spells"* the way levels 2, 5 and 7 do.
+
 #### Four spells the catalog held twice
 
 `fix-duplicate-spell-rows.sql` removes four duplicate rows. **They were not
@@ -1973,12 +2058,32 @@ scripts/
 │                           Builds from scratch and diffs NAMES, not counts
 ├── ocr-book.py             OCR a scanned sourcebook into .cache/books/<slug>/
 │                           at --psm 3, with geometry and a Palladium wordlist
+├── ocr-fields-lib.mjs      Typed readers for the numbers OCR gets confidently
+│                           wrong - `Ibs`, `18.000`, `LS.P.` See below
 ├── palladium-words.txt     That wordlist. Committed; the OCR output is not
+├── read-columns.py         The text-layer twin of `ocr-book.py --psm 3`: read a
+│                           multi-column page in READING order, from a PDF that
+│                           HAS a text layer. Columns found by gap, not by an
+│                           assumed count
+├── parse-pf-spell-index.mjs        The Palladium Fantasy book's two spell
+│                           authority tables, reconciled against each other
+├── parse-pf-spell-descriptions.mjs Stat block and prose for named spells out of
+│                           the same book's description pages
 ├── class-check.mjs         One class file, against the parser the app uses
 ├── class-check-lib.mjs     Its pure half, so the smoke test can call it
+├── q.mjs                   One ad-hoc question to D1, from a shell. The
+│                           alternative kept being a throwaway `node -e` that
+│                           got the Windows quoting wrong a new way each time
 └── sql-statements.mjs      Splitting SQL for wrangler, which truncates a
                             --command at the first newline
 ```
+
+**The table is pinned by the smoke test.** `read-columns.py` and
+`ocr-fields-lib.mjs` both lived here undocumented for several PRs - the first
+arrived with the Knight import and is now the whole basis of every Palladium
+Fantasy extraction. A file map that quietly stops being a map is worse than
+none, so a check fails on a script this list does not name and on a name that
+no longer exists.
 
 ## Two name matchers, on purpose
 
@@ -4270,7 +4375,7 @@ local-only script is protected as soon as it says so.
 |---|---|
 | classes (published, live) | 76 |
 | skills | 324 |
-| spells | 543 |
+| spells | 570 |
 | psionic powers | 101 |
 | gear | 658 |
 
@@ -4426,7 +4531,7 @@ added `data_script_runs` and every script now ends by writing itself into it.
 |---|---|---|
 | Dev seed | `seed-dev.sql` | Optional local character/campaign rows. Never applied to production |
 | Run tracking | `backfill-data-script-runs.sql` | One-time, optional, and an **assertion**: records every script that had already been applied before `data_script_runs` existed, stamped with a note saying the run was asserted rather than observed. Guarded per filename, so it cannot double-record a script that has genuinely run since |
-| Data cleanup | `estimate-*.sql`, `backfill-*.sql`, `rename-*.sql`, `merge-*.sql`, `retire-gear-placeholders.sql`, `retire-leather-armor-placeholder.sql`, `retire-orphan-gear-stubs.sql`, `untag-cross-system.sql` | One-off corrections to rows an earlier import or data script got wrong or left NULL. A `rename-*` also leaves a `catalog_redirects` row, so class markdown citing the old key keeps resolving | One-off corrections to rows an earlier import or data script got wrong or left NULL |
+| Data cleanup | `estimate-*.sql`, `backfill-*.sql`, `rename-*.sql`, `merge-*.sql`, `retag-*.sql`, `retire-gear-placeholders.sql`, `retire-leather-armor-placeholder.sql`, `retire-orphan-gear-stubs.sql`, `untag-cross-system.sql` | One-off corrections to rows an earlier import or data script got wrong or left NULL. A `rename-*` also leaves a `catalog_redirects` row, so class markdown citing the old key keeps resolving. A `retag-*` changes which system a row belongs to, never what it is — `retag-pf-spells-both.sql` moves 57 spells the Palladium Fantasy book prints from `rifts` to `both` |
 | Class corrections | `fix-*.sql`, `apply-*.sql`, `long-bowman-money.sql`, `ley-line-walker-spells-per-level.sql`, `mystic-spells-per-level.sql`, `shifter-spells-per-level.sql`, `ley-line-rifter-spells-per-level.sql`, `record-warlock-palladium-deltas.sql` | The rules audit's output: stored class definitions rewritten against the books, and class data written for a schema feature the day it landed. The Ley Line Walker one is the first to fill `spells_per_level` — the format gained the key before any class carried it, so every caster read as "not recorded" until a book was opened |
 | Additions | `add-*.sql` | Something the book gives that the database never had — a catalog row, a whole-table batch extracted from page scans (`add-pf-weapons-batch`, `add-pf-equipment-batch`, the RUE spell and psionics batches), or a whole class. A missing skill named in an `only` restriction narrows its category to nothing, which is usually how one gets noticed. A class goes in this way only when the import tool cannot be reached: production sits behind Cloudflare Access, so a hand-transcribed class is applied by script instead |
 | Repo rescue | `restore-*.sql` | Rows that existed **only in production**. The catalog editor and the importer's confirm step both write straight to D1, so nothing in git created what they added: a database built from the repo came up 75 skills, 36 psionic powers and 58 gear rows short, and every class citing one had a dead reference. Exported from the live rows and guarded on the key, so on production they find everything present and do nothing — it is a fresh environment that needs them. Named `restore-` rather than `add-` **for ordering**: an `add-` file sorts before `rename-skills-to-rue.sql`, which would insert the post-rename name, leave the rename's guard to find its target taken, and end up holding both |

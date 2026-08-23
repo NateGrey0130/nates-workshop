@@ -4330,6 +4330,25 @@ section('Documented counts');
   const uncovered = dataScripts.filter((f) => !patterns.some((p) => p.test(f)));
   check('every data script is covered by the Data scripts table',
     uncovered.length === 0, uncovered.join(', '));
+
+  // The same failure, one directory up. `read-columns.py` and
+  // `ocr-fields-lib.mjs` both sat in scripts/ undocumented for several PRs -
+  // and the first is now the whole basis of every Palladium Fantasy
+  // extraction. A file map that quietly stops being a map is worse than none,
+  // because the count of entries reassures you the list is whole.
+  const scriptsDir = join(repoRoot, 'scripts');
+  const onDisk = readdirSync(scriptsDir)
+    .filter((f) => /\.(mjs|py|txt)$/.test(f));
+  const sc = readme.slice(readme.indexOf('## The scripts at the repo root'));
+  const scSection = sc.slice(0, sc.indexOf('\n## ', 10));
+  const listed = new Set([...scSection.matchAll(/^\S*\s*([\w.-]+\.(?:mjs|py|txt))\s/gm)]
+    .map((m) => m[1]));
+  const unmapped = onDisk.filter((f) => !listed.has(f));
+  check('every script in scripts/ is named in the file map',
+    unmapped.length === 0, unmapped.join(', ') + ' - add it or delete it');
+  const ghosts = [...listed].filter((f) => !onDisk.includes(f));
+  check('and every name in the map is a script that exists',
+    ghosts.length === 0, ghosts.join(', '));
 }
 
 // ---------- 1d. Paging ----------
