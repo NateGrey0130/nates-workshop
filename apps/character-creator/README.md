@@ -2265,7 +2265,16 @@ is the whole reason the column exists.
 
 RUE gives several classes an MOS: *"Select one of the following areas of
 specialty. Gains all skills under that MOS."* The Coalition Technical Officer
-offers seven, the Robot Pilot two.
+offers seven, the Merc Soldier seven and the Robot Pilot two.
+
+The last two were prose for a long time. Both shipped carrying a note saying an
+MOS was *"a package choice the schema cannot express"* and that the skills
+should be added *"by hand on the sheet"* — true when they were written, and
+untrue from the moment `skills.mos` landed for the Technical Officer. The cost
+of leaving it was not documentation: a Merc Soldier was **seven** skills short
+of what the book gives every one of them and a Robot Pilot **eight**, including
+Robot Combat: Basic and Robot Combat Elite, which are the entire point of that
+class.
 
 ```yaml
 skills:

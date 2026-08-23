@@ -595,6 +595,40 @@ console.log('\n' + '[8/8] Checks that only a database can make');
   check('and the two documented placeholders are still the only exceptions',
     dead.length === unexpected.length + 2,
     `${dead.length} dead, ${unexpected.length} unexpected`);
+
+  // -- who has an MOS, and how many packages ---------------------------------
+  //
+  // A count in a comment goes stale silently, and both written records of this
+  // one were wrong at once: parser.js said the Technical Officer offered five
+  // where it offers seven, and the README said the Robot Pilot offered two
+  // where it had NONE - it carried its packages as GM prose plus a note saying
+  // the schema could not hold them, which it could.
+  //
+  // This lives here rather than in smoke.mjs because the answer is a property
+  // of the COMPOSED class, and the Merc Soldier's and Robot Pilot's arrive by
+  // correction rather than at import: no single file has the answer.
+  const MOS_PACKAGES = {
+    'coalition-technical-officer': 7,
+    'merc-soldier': 7,
+    'robot-pilot': 2,
+  };
+  for (const [id, want] of Object.entries(MOS_PACKAGES)) {
+    const cls = classes.find((c) => c.id === id);
+    check(`${id} still exists`, !!cls);
+    const opts = cls?.skills?.mos?.options;
+    check(`and offers ${want} MOS packages`, Array.isArray(opts) && opts.length === want,
+      `found ${opts ? opts.length : 'no mos block'}`);
+    // Every package has to grant something, or choosing it is a no-op the
+    // player cannot tell apart from choosing nothing.
+    check('and every one of them grants at least one skill',
+      (opts || []).every((o) => Array.isArray(o.skills) && o.skills.length > 0),
+      (opts || []).filter((o) => !o.skills?.length).map((o) => o.id).join(', '));
+  }
+  // Nothing else may claim an MOS the list does not know about.
+  const withMos = classes.filter((c) => c.skills?.mos).map((c) => c.id).sort();
+  check('and no other class has one',
+    withMos.join() === Object.keys(MOS_PACKAGES).sort().join(),
+    'classes with an MOS: ' + withMos.join(', '));
 }
 
 console.log('\n' + (failures === 0
