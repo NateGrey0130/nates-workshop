@@ -17,10 +17,31 @@ section('Parser');
 
 // Custom languages: three consumers (wizard, sheet, server validator) share
 // these, so the rule is asserted here once rather than trusted three times.
-check('languageSkillName composes', languageSkillName('Spanish') === 'Language: Spanish');
-check('languageSkillName tolerates typed prefix', languageSkillName('language:  Orc') === 'Language: Orc');
-check('languageSkillName rejects blank', languageSkillName('   ') === null && languageSkillName('Language:') === null);
-check('isLanguageName family', isLanguageName('Language: Elvish') && isLanguageName(LANGUAGE_OTHER) && !isLanguageName('Sign Language'));
+check('familySkillName composes', familySkillName(LANGUAGE_OTHER, 'Spanish') === 'Language: Spanish');
+check('familySkillName tolerates typed prefix',
+  familySkillName(LANGUAGE_OTHER, 'language:  Orc') === 'Language: Orc');
+check('familySkillName rejects blank', familySkillName(LANGUAGE_OTHER, '   ') === null
+  && familySkillName(LANGUAGE_OTHER, 'Language:') === null);
+check('isFamilyName covers the Language family',
+  isFamilyName('Language: Elvish') && isFamilyName(LANGUAGE_OTHER) && !isFamilyName('Sign Language'));
+
+// LITERACY is the second family, and it had no rule at all until now: the same
+// row, for reading rather than speaking, treated as one ordinary skill.
+check('and the Literacy family', isFamilyName('Literacy: Elven') && isFamilyName(LITERACY_OTHER));
+check('but not the bare Literacy row', !isFamilyName('Literacy'));
+check('familySkillName composes a written language',
+  familySkillName(LITERACY_OTHER, 'Gobblely') === 'Literacy: Gobblely');
+check('and tolerates the typed prefix there too',
+  familySkillName(LITERACY_OTHER, 'literacy: Elven') === 'Literacy: Elven');
+check('the Other rows are repeatable and their members are not',
+  isRepeatableRow(LANGUAGE_OTHER) && isRepeatableRow(LITERACY_OTHER)
+  && !isRepeatableRow('Language: Elven') && !isRepeatableRow('Literacy: Elven'));
+// A member takes its numbers from ITS OWN family's row. Crossing them would
+// price a written language off the spoken row, which is a different percentage.
+check('each family resolves to its own Other row',
+  otherRowFor('Language: Elven') === LANGUAGE_OTHER
+  && otherRowFor('Literacy: Elven') === LITERACY_OTHER
+  && otherRowFor('Boxing') === null);
 
 // A FOURTH consumer: an occ_skills choice group. Seven classes say "two
 // languages of choice" and were written as the whole Technical category,
@@ -50,12 +71,18 @@ check('isLanguageName family', isLanguageName('Language: Elvish') && isLanguageN
     const at = appSrc.indexOf(`function ${name}(`);
     return at < 0 ? '' : appSrc.slice(at, appSrc.indexOf('\n}\n', at));
   };
-  check('toggleSkill prompts for the language', fn('toggleSkill').includes('LANGUAGE_OTHER'));
-  check('and toggleGroupPick does too', fn('toggleGroupPick').includes('LANGUAGE_OTHER'));
+  check('toggleSkill prompts for the language', fn('toggleSkill').includes('isRepeatableRow'));
+  check('and toggleGroupPick does too', fn('toggleGroupPick').includes('isRepeatableRow'));
   // The pick is stored under the language's OWN name, which has no catalog row
   // by design - so the resolver has to fall back, or it saves at 0% +0/lvl.
   check('resolveSkill falls back to the Other row for a named language',
-    fn('resolveSkill').includes('isLanguageName') && fn('resolveSkill').includes('LANGUAGE_OTHER'));
+    fn('resolveSkill').includes('isFamilyName') && fn('resolveSkill').includes('otherRowFor'));
+  // Neither control may hardcode ONE family's row: the same rule covers spoken
+  // languages and written ones, and hardcoding is how literacy was left out.
+  for (const name of ['toggleSkill', 'toggleGroupPick', 'resolveSkill']) {
+    check(`${name} names no single family's row`, !fn(name).includes('LANGUAGE_OTHER'),
+      'use isRepeatableRow / otherRowFor');
+  }
 
   // And no class may go back to offering a whole category for languages.
   const dbDir = join(appDir, 'db');
@@ -203,7 +230,8 @@ import { composeClass } from '../js/compose.js';
 import { evalDice, rollAttribute, rollPoolFormula, rollQuantity } from '../js/dice.js';
 import { validateMos } from '../js/parser.js';
 import { chunks, D1_MAX_BINDS, BIND_CHUNK } from '../../../functions/api/character-creator/_lib/sql-chunk.js';
-import { LANGUAGE_OTHER, isLanguageName, languageSkillName } from '../js/language-skills.js';
+import { LANGUAGE_OTHER, LITERACY_OTHER, isFamilyName, isRepeatableRow,
+         otherRowFor, familySkillName } from '../js/language-skills.js';
 import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityOccOptions, abilityOptions, applyAbilities, applyVariant, bonusesFromSkills, categoryAllows, categoryLabel, combineClasses, isGearChoice, needsOccupation, parseClassMarkdown, parseYaml, validateBonuses } from '../js/parser.js';
 import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rollsForPsionics, withRolledPsionics } from '../js/psionics.js';
 import { spawnSync } from 'node:child_process';

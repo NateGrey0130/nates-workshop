@@ -20,18 +20,19 @@ const BLOCK_SCALAR = /^[|>][-+]?\d*$/;
 // A choice-group has no name of its own — it is "pick N from these". A named
 // entry that also carries `choose` is a fixed skill taken N times (e.g.
 // "Play Musical Instrument, select two instruments"), not a group.
-// One catalog row can satisfy a choice group more than once. "Language: Other"
-// is the only one, and it is the whole reason the row exists: a character takes
-// it ONCE PER LANGUAGE, each pick a separate skill named for what it is. So
+// A catalog row can satisfy a choice group more than once when it stands in for
+// a whole FAMILY: "Language: Other" for every language the books never print,
+// "Literacy: Other" for every written one. A character takes either ONCE PER
+// LANGUAGE, each pick a separate skill named for what it is. So
 // `{ choose: 3, from: ["Language: Other"] }` is three languages, not an
-// over-asking group, and the count check has to know that or the seven classes
-// whose books say "three languages of choice" cannot say it.
+// over-asking group, and the count check has to know that or the classes whose
+// books say "three languages of choice" cannot say it.
 //
 // The name is duplicated rather than imported from js/language-skills.js on
 // purpose: parser.js is loaded by the Workers runtime through several paths and
 // is deliberately dependency-free apart from dice.js. One string, pinned by the
 // smoke test against the module that owns it.
-const REPEATABLE_SKILLS = ['language: other'];
+const REPEATABLE_SKILLS = ['language: other', 'literacy: other'];
 const hasRepeatable = (from) =>
   (from || []).some((n) => REPEATABLE_SKILLS.includes(String(n?.name ?? n).trim().toLowerCase()));
 

@@ -61,6 +61,16 @@ function wrangler(args) {
   });
 }
 
+// wrangler paints its errors with ANSI colour and wraps them in a box; a check
+// detail wants the sentence, not the artwork.
+function cleanErr(text) {
+  const raw = String(text || '');
+  const lines = raw.replace(/\u001b\[[0-9;]*m/g, '').split('\n')
+    .map((l) => l.replace(/[^\x20-\x7e]/g, '').trim())
+    .filter((l) => /error/i.test(l) && l.length > 8);
+  return (lines.join(' | ') || raw.trim()).slice(0, 300) || 'no output';
+}
+
 console.log('[1/8] Building a database from nothing');
 
 // One concatenated file rather than 60 wrangler invocations: each costs seconds,
@@ -687,6 +697,98 @@ console.log('\n' + '[8/8] Checks that only a database can make');
     const g = languageGroups.find((x) => x.id === id)?.e;
     check(`${id} asks for ${want} language(s)`, g?.choose === want, `asks for ${g?.choose}`);
   }
+
+  // -- and the same for LITERACY ---------------------------------------------
+  //
+  // The second family, and the one that had no rule at all: `Literacy: Other`
+  // is the same escape hatch for reading rather than speaking, and was treated
+  // as one ordinary skill. So a Wizard "literate in two languages of choice"
+  // picked twice from four generic rows and ended up literate in "Other".
+  const literacyGroups = [];
+  const literacyFixed = [];
+  for (const c of classes) {
+    for (const e of (c.skills?.occ_skills || [])) {
+      if (!e) continue;
+      if (e.name === 'Literacy: Other') literacyFixed.push(c.id);
+      if (e.name) continue;
+      const about = /^Literate/i.test(e.note || '') || /^Literacy: Other,/.test(e.note || '')
+        || (Array.isArray(e.from) && e.from.some((n) => /^Literacy/.test(n)));
+      if (about) literacyGroups.push({ id: c.id, e });
+    }
+  }
+  check('the literacy picks are still there to check', literacyGroups.length >= 6,
+    `found ${literacyGroups.length}`);
+
+  const litViaCategory = literacyGroups.filter(({ e }) => Array.isArray(e.categories));
+  check('no class offers a CATEGORY for a literacy pick', litViaCategory.length === 0,
+    litViaCategory.map((x) => x.id).join(', '));
+
+  const litNotFromRow = literacyGroups.filter(({ e }) =>
+    !Array.isArray(e.from) || !e.from.includes('Literacy: Other'));
+  check('and every literacy pick offers the repeatable row',
+    litNotFromRow.length === 0, litNotFromRow.map((x) => x.id).join(', '));
+
+  // A grant of the placeholder is a pick that was never offered: the character
+  // ends up holding a skill named, literally, "Literacy: Other".
+  check('no class GRANTS the placeholder row as a fixed skill',
+    literacyFixed.length === 0, literacyFixed.join(', '));
+
+  // -- every fixed skill a class names must exist -----------------------------
+  //
+  // The Stone Master cited "Literacy: Dragonese/Elf" - no such row, no redirect
+  // - so the skill resolved to nothing, and "Language: American" sat at base 0
+  // per_level 0, frozen at 0% for fifteen levels. A name in one of the two
+  // families is exempt: those resolve off their family's Other row BY DESIGN
+  // and are the whole reason the families exist.
+  const catalogNames = new Set((catalogs.body.skills || []).map((r) => r.name));
+  // A RENAME deliberately leaves class markdown alone and records a redirect
+  // instead, so a name with no row is not automatically dead - the Glitter Boy
+  // still cites both pre-rename Robot Combat spellings on purpose. /catalogs
+  // never sends redirects, so this asks the scratch database, which the test
+  // owns.
+  // `wrangler()` spawns with shell: true, so an argument with spaces has to
+  // carry its own quotes - every other caller here passes --file, which has
+  // none, and an unquoted SQL string arrives as a dozen unknown arguments.
+  const redirectRows = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--json',
+    '--command', `"SELECT from_key FROM catalog_redirects WHERE catalog = 'skills'"`]);
+  let redirected = new Set();
+  let redirectErr = '';
+  try {
+    const out = redirectRows.stdout || '';
+    // wrangler prefixes its own log line - "[string] [d1, execute, ...]" - so the
+    // first "[" in the output is NOT the JSON. Take the first one that parses.
+    let parsed = null;
+    for (let at = out.indexOf('['); at >= 0 && !parsed; at = out.indexOf('[', at + 1)) {
+      try {
+        const v = JSON.parse(out.slice(at));
+        if (Array.isArray(v)) parsed = v;
+      } catch { /* not the array; keep looking */ }
+    }
+    if (!parsed) throw new Error(cleanErr(redirectRows.stderr || out));
+    redirected = new Set(parsed.flatMap((b) => b.results || []).map((r) => r.from_key));
+  } catch (e) { redirectErr = e.message; }
+  check('the redirect table is readable', redirected.size > 0,
+    redirectErr || 'query ran but returned no skill redirects');
+
+  const isFamily = (n) => /^(Language|Literacy):\s*\S/.test(n);
+  const deadFixed = [];
+  const frozenAtZero = [];
+  for (const c of classes) {
+    for (const e of (c.skills?.occ_skills || [])) {
+      if (!e?.name) continue;
+      if (!catalogNames.has(e.name) && !isFamily(e.name) && !redirected.has(e.name)) {
+        // A class-specific skill the catalog never got still resolves IF the
+        // class states its own numbers; what cannot resolve is a name with
+        // neither a row, a redirect, nor a base.
+        if (typeof e.base !== 'number') deadFixed.push(`${c.id}: ${e.name}`);
+      }
+      if (isFamily(e.name) && e.base === 0) frozenAtZero.push(`${c.id}: ${e.name}`);
+    }
+  }
+  check('every fixed skill resolves to real numbers',
+    deadFixed.length === 0, deadFixed.join(', '));
+  check('and no language or literacy skill is pinned to 0%',
+    frozenAtZero.length === 0, frozenAtZero.join(', '));
 }
 
 console.log('\n' + (failures === 0

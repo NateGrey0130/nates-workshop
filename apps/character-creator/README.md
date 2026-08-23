@@ -19,7 +19,7 @@ Access gate. No build step, no framework, no dependencies.
 - [Permissions](#permissions)
 - [House rules and derived values](#house-rules-and-derived-values)
 - [A fighting style is a level schedule](#a-fighting-style-is-a-level-schedule)
-- [Language: Other, once per language](#language-other-once-per-language)
+- [Language and Literacy: Other, once per language](#language-and-literacy-other-once-per-language)
   - [Languages of choice come from languages](#languages-of-choice-come-from-languages)
 - [Level-up skill picks](#level-up-skill-picks)
 - [Starting above level 1](#starting-above-level-1)
@@ -125,7 +125,7 @@ apps/character-creator/
 ├── js/class-blocks.js        Rewrites ONE frontmatter block in place, so the
 │                             structured editors cannot disturb the rest of the
 │                             file (classic script)
-├── js/language-skills.js  The "Language: Other, once per language" rule (ES
+├── js/language-skills.js  The "once per language" rule for BOTH families (ES
 │                             module — the server validator imports it, and the
 │                             sheet reads its globalThis mirror via a module tag)
 ├── db/*.sql                  One-shot SQL. NOT migrations — these change rows,
@@ -853,7 +853,7 @@ fighting skill at all is affected.
 
 ---
 
-## Language: Other, once per language
+## Language and Literacy: Other, once per language
 
 "Language: Other" is the skill list's escape hatch: one catalog row standing
 in for every language the books never print. A character takes it **once per
@@ -863,10 +863,15 @@ separate skill named for what it is, all advancing on the Other row's numbers
 denormalized skill rows carry the name and the percentages, which is exactly
 what they were built for.
 
+**"Literacy: Other" is the same row for reading rather than speaking** (30%
++5/lvl, filed under Communications), and the rule is now stated **per family**
+rather than per row, so both behave identically everywhere. See
+[Literacy is the second family](#literacy-is-the-second-family).
+
 The rule lives in [`js/language-skills.js`](js/language-skills.js) and has
-**four** consumers that must agree — the wizard's related/secondary picker, the
-wizard's **choice-group** control, the sheet's claim/level-up picker, and the
-server's pick validator:
+**five** consumers that must agree — the wizard's related/secondary picker, the
+wizard's **choice-group** control, the sheet's claim/level-up picker, the
+server's pick validator, and the server's level-up pick resolver:
 
 - **In the wizard**, the Language: Other row prompts for the language instead
   of toggling, and never reads as already-taken, so it can be taken again.
@@ -887,9 +892,10 @@ server's pick validator:
   cannot invent a percentage — with the language kept in the stored name.
 
 The resolution rule everywhere: exact catalog hit first, and only a **miss**
-in the `Language:` family falls back to the Other row. So Language: Dragonese,
-which has its own catalog row, resolves to its own numbers. The smoke test
-pins the name-composition rules.
+in the `Language:` or `Literacy:` family falls back to **its own** family's
+Other row. So Language: Dragonese, which has its own catalog row, resolves to
+its own numbers, and a Literacy pick is never satisfied by a spoken language.
+The smoke test pins the name-composition rules.
 
 ---
 
@@ -976,6 +982,69 @@ pool, so it offers the three languages and the note carries the alternative.
 **No character lost anything.** This narrows what may be *chosen*, not what has
 been; the four production characters built on these classes keep every skill
 they hold.
+
+---
+
+### Literacy is the second family
+
+The same check, run on literacy. `Literacy: Other` was the only member of its
+family with **no rule at all** — it was treated as one ordinary skill — so a
+Wizard *"literate in two languages of choice"* spent both picks and ended up
+literate in "Other". Six classes, and the shapes differ:
+
+| class | was | now |
+|---|---|---|
+| Rogue Scholar | the whole `Communications` **category**, 17 skills | pick 3, +30% |
+| Diabolist | a from-list of 4 **generic** Literacy rows | pick 2, +20% |
+| Summoner | same | pick 2, +20% |
+| Wizard | same | pick 2, +15% |
+| Shifter | `Literacy: Other` granted as a **fixed** skill, base 50 | pick 1, +20% |
+| Warlock | same, base 40 | pick 1, +10% |
+
+The Rogue Scholar is the language defect exactly. The middle three were better
+and still wrong: the four rows on offer — `Literacy`, `Literacy: Native
+Language`, `Literacy: Dragonese/Elven`, `Literacy: Other` — are all generic, so
+two picks bought nothing named. The last two **granted the placeholder**, which
+is a pick that was never offered; both of their own notes say *"of choice"* in
+so many words.
+
+**No number changed in the six.** Every group keeps its own `choose` and
+`bonus`, and the two fixed grants became a pick at the bonus their base already
+encoded — the Shifter's 50 is the catalog's 30 plus its printed 20, the
+Warlock's 40 is 30 plus 10. Only the **name** changes, from `Literacy: Other`
+to the language the player picks.
+
+#### Generalising the rule was most of the work
+
+[`js/language-skills.js`](js/language-skills.js) went from a Language-only API
+to a per-**family** one: `isFamilyName`, `isRepeatableRow`, `otherRowFor`,
+`familySkillName`, `promptFor`. `isLanguageName` and `languageSkillName` are
+gone — generalising left them with no callers, which is what the smoke test's
+dead-export check exists to catch. Eleven call sites across `app.js`,
+`sheet.js`, `parser.js`, `_lib/validate-character.js` and `_lib/skill-picks.js`
+now name a family rather than a row, and the prompt asks *"Which written
+language?"* when it should.
+
+#### The Stone Master was granting nothing at all
+
+Found by the same sweep, a different defect, fixed in the same script:
+
+- **`Literacy: Dragonese/Elf`** — no such catalog row and **no redirect**, so
+  the skill resolved to nothing. The row is spelled `Dragonese/Elven`.
+- **`Language: American`** — `base: 0, per_level: 0`, so it sat on the sheet at
+  0% and stayed there for fifteen levels. It has no catalog row of its own,
+  which is precisely what the Language family's Other row is for: 50% +5/lvl.
+
+Both are pinned by regression now: **every fixed skill must resolve to real
+numbers** (a catalog row, a redirect, or its own stated base), and **no
+Language or Literacy skill may sit at 0%**.
+
+> **Still outstanding, and much larger.** 63 fixed skills across 16 classes sit
+> *below* their catalog base, because the printed O.C.C. **bonus** was stored as
+> the base — the Cyber-Doc's Computer Operation is 5% where the catalog row is
+> 40% and the class note says *"(+5%)"*. 43 of the 63 carry a note, and some are
+> deliberate (the Noble's Horsemanship, the Warrior Monk's Begging), so telling
+> them apart needs the books open, one class at a time. That is its own pass.
 
 ---
 

@@ -11,7 +11,7 @@
 import { json } from './auth.js';
 import { safeParse } from './character-json.js';
 import { categoryAllows } from '../../../../apps/character-creator/js/parser.js';
-import { LANGUAGE_OTHER, isLanguageName } from '../../../../apps/character-creator/js/language-skills.js';
+import { REPEATABLE_ROWS, isFamilyName, otherRowFor } from '../../../../apps/character-creator/js/language-skills.js';
 import { selectInChunks } from './sql-chunk.js';
 
 export async function listPending(env, characterId) {
@@ -118,16 +118,17 @@ export async function resolvePicks(env, { picks, existingSkills, allowance, cate
 
   // One batched lookup — the catalog supplies the starting percentage, so a
   // caller cannot invent one.
-  // The Other row rides along in the lookup: a pick named "Language: X" that
-  // misses the catalog is a custom language and takes its numbers from Other,
-  // keeping the language in the stored name (see js/language-skills.js).
-  // Chunked: D1 binds at most 100 parameters per statement. The Other row rides
+  // EVERY Other row rides along in the lookup: a pick named "Language: X" or
+  // "Literacy: X" that misses the catalog is a custom one and takes its numbers
+  // from its family's Other row, keeping the name it was given (see
+  // js/language-skills.js).
+  // Chunked: D1 binds at most 100 parameters per statement. The Other rows ride
   // along in EVERY chunk, not just the first - a custom language landing in the
-  // second chunk needs it as much as one in the first.
+  // second chunk needs them as much as one in the first.
   const results = await selectInChunks(names, (batch) => env.DB.prepare(
     `SELECT name, category, base, per_level FROM skills
-     WHERE name COLLATE NOCASE IN (${[...batch, LANGUAGE_OTHER].map(() => '?').join(',')})`
-  ).bind(...batch, LANGUAGE_OTHER));
+     WHERE name COLLATE NOCASE IN (${[...batch, ...REPEATABLE_ROWS].map(() => '?').join(',')})`
+  ).bind(...batch, ...REPEATABLE_ROWS));
   const catalog = new Map(results.map((r) => [r.name.toLowerCase(), r]));
 
   const skills = [];
@@ -142,8 +143,8 @@ export async function resolvePicks(env, { picks, existingSkills, allowance, cate
   for (const p of picks) {
     const name = String(p.name).trim();
     let row = catalog.get(name.toLowerCase());
-    if (!row && isLanguageName(name)) {
-      const other = catalog.get(LANGUAGE_OTHER.toLowerCase());
+    if (!row && isFamilyName(name)) {
+      const other = catalog.get(String(otherRowFor(name)).toLowerCase());
       if (other) row = { ...other, name };
     }
     if (!row) { errors.push(`No skill called "${name}" in the catalog`); continue; }
