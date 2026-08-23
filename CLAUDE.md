@@ -5,8 +5,37 @@ and no `node_modules`; `npx wrangler` resolves from the npx cache. Merging to
 `main` IS the deploy — there is no CI.
 
 App conventions, the data model, and the migration list live in
-`apps/character-creator/README.md`. This file covers only what is easy to get
-wrong about Cloudflare auth.
+`apps/character-creator/README.md`. This file covers the five skills and what is
+easy to get wrong about Cloudflare auth.
+
+## Five skills, and they only load from the repo root
+
+`.claude/skills/` holds them. They are **directory-scoped**: a session started
+anywhere else — in `Downloads`, say, with the PDF — will not see them, and one
+session ran an entire class import by hand for exactly that reason.
+
+| skill | when |
+|---|---|
+| `book-survey` | handed a sourcebook PDF, before extracting anything from it |
+| `class-import` | adding or correcting an O.C.C./R.C.C., or importing skills, spells, psionics or gear |
+| `schema-change` | any new D1 table or column — a column lands in **five** places, a table in nine |
+| `ship-pr` | branch to deployed, and **whenever a change touches D1**, because data is applied BEFORE the merge |
+| `claim-audit` | checking what the docs, comments and class prose say against what the code does |
+
+**Read the skill before the code.** Each one is written from failures that
+reached production, and several name the exact wrong turn that is about to look
+reasonable.
+
+Three things they will not let you get wrong, listed here because they are the
+ones that fail LATE:
+
+- **Filename order is execution order.** A rebuild applies
+  `apps/character-creator/db/*.sql` as one sorted glob, so a `fix-` that sorts
+  before the file it corrects is silently undone.
+- **The README's counts are pinned by the test suite** — classes, skills,
+  spells, psionic powers, gear, and a sentence parsed as words. Adding a class
+  moves two of them.
+- **`--local` is not a mirror of production.** It accumulates. Ask production.
 
 ## Health check
 

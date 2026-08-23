@@ -4391,6 +4391,39 @@ section('Documented counts');
   const ghosts = [...listed].filter((f) => !onDisk.includes(f));
   check('and every name in the map is a script that exists',
     ghosts.length === 0, ghosts.join(', '));
+
+  // The skills are DIRECTORY-SCOPED: a session started outside the repo root
+  // does not see them, and one ran an entire class import by hand for exactly
+  // that reason. CLAUDE.md is loaded either way, so it carries the list - and a
+  // list is only useful while it is complete.
+  const skillsDir = join(repoRoot, '.claude', 'skills');
+  const skills = readdirSync(skillsDir, { withFileTypes: true })
+    .filter((e) => e.isDirectory()).map((e) => e.name).sort();
+  const claudeMd = readFileSync(join(repoRoot, 'CLAUDE.md'), 'utf8');
+  const skillsUnnamed = skills.filter((s) => !claudeMd.includes('`' + s + '`'));
+  check('every skill is named in CLAUDE.md', skillsUnnamed.length === 0,
+    skillsUnnamed.join(', ') + ' - a session outside the repo root sees only CLAUDE.md');
+  const claimed = [...claudeMd.matchAll(/^\| `([a-z-]+)` \| /gm)].map((m) => m[1]).sort();
+  check('and CLAUDE.md names no skill that does not exist',
+    claimed.every((c) => skills.includes(c)),
+    claimed.filter((c) => !skills.includes(c)).join(', '));
+  check('and says how many there are', new RegExp(`\\b${
+    ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'][skills.length - 1]
+  } skills\\b`, 'i').test(claudeMd), `there are ${skills.length}`);
+
+  // A skill's reference/ must not FORK repo code. book-survey shipped its own
+  // copy of read-columns.py and the two diverged completely - the copy was an
+  // older implementation the repo does not have, while every extraction ran the
+  // one in scripts/. A reference that is a fork reads as authoritative and is not.
+  const forks = [];
+  for (const s of skills) {
+    const ref = join(skillsDir, s, 'reference');
+    let entries = [];
+    try { entries = readdirSync(ref); } catch { continue; }
+    for (const f of entries) if (onDisk.includes(f)) forks.push(`${s}/reference/${f}`);
+  }
+  check('no skill reference forks a file in scripts/', forks.length === 0,
+    forks.join(', ') + ' - point at the real one instead');
 }
 
 // ---------- 1d. Paging ----------

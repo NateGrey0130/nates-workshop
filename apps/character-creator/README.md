@@ -72,6 +72,7 @@ Access gate. No build step, no framework, no dependencies.
   - [Unmodelled keys](#unmodelled-keys)
 - [Local development](#local-development)
 - [Production configuration](#production-configuration)
+  - [One database, and the case for keeping it that way](#one-database-and-the-case-for-keeping-it-that-way)
   - [Standing up a new environment](#standing-up-a-new-environment)
   - [The migration convention](#the-migration-convention)
   - [Data scripts](#data-scripts)
@@ -4311,6 +4312,69 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `027-npc-dossiers.sql` | `npcs`, `npc_mentions`, `npc_sweeps` and `npc_proposals_dismissed`. **The first migration whose feature also needs a bucket** — R2 `MEDIA` must exist before the deploy that binds it |
 | `026-campaign-notes.sql` | `journal_fts` and its three triggers, plus `campaign_items` and `campaign_currency`. The FTS table is external-content, so the triggers are not optional — without them the index silently stops matching anything written after the migration ran |
 | `025-skill-level-bonuses.sql` | `skills.level_bonuses` — what a skill grants **at each level**, summed up to the character's. The Hand to Hand tables are level-by-level and accumulative, which the flat `bonuses` column cannot express; entries may carry `applies_when` for a W.P. bonus that needs that weapon in hand |
+
+### One database, and the case for keeping it that way
+
+Every app in the monorepo shares one D1, `nates-workshop-media`, bound as `DB`.
+That reads like a thing to fix, so here are the numbers it should be judged
+against — read off production, not estimated.
+
+| | |
+|---|---|
+| database size | **2.65 MB** of D1's 10 GB — 0.03% |
+| tables | 31 |
+| rows, everything | **4,143** |
+| of which `media_items` (MediaVault) | 2,082 |
+| the four catalogs together | 1,653 |
+| characters, live | **8** |
+| the largest table this app owns | `gear`, 658 rows |
+
+**The two halves already have zero overlap.** `functions/api/media.js` is the only
+D1 consumer outside `functions/api/character-creator/`, it touches exactly one
+table, and nothing under `character-creator/` reads it. There is no join to
+break. Of 33 migrations, **one** mentions `media_items` — `004-items-to-gear.sql`,
+and only because renaming `items` to `gear` had to stay clear of it.
+
+**So a split is possible and is not worth it.** The single risk it removes is one
+app's migration disturbing another, which has never happened and has one file of
+surface area. What it costs is concrete and recurring: a second binding, a second
+entry in `wrangler.jsonc`, and a second target for every one of `d1-apply.mjs`,
+`drift-check.mjs`, `repo-vs-live.mjs`, `q.mjs` and the regression harness — five
+tools that each take one database name today. `schema_migrations` and
+`data_script_runs` would have to be split or duplicated, and the smoke test's
+migration-state checks with them.
+
+**What would change the answer**, so this is a decision rather than a habit:
+
+- a second app growing real tables — `media_items` is one table with one index
+  and no migrations of its own;
+- either half approaching a size where the 10 GB limit or a row-scan matters,
+  which at 2.65 MB is three orders of magnitude away;
+- any need to give one app a different retention, backup or access posture from
+  the other.
+
+**Nothing is unindexed that matters, and adding indexes would be cargo cult.**
+The four catalogs are read *whole* by `/catalogs` and `/items` — that is
+deliberate, see [Catalog lists are deliberately
+unbounded](#known-limitations-and-refactor-candidates) — so a full scan is the
+query plan, and 658 rows is the largest scan in the app. Every hot filter that
+is not a full read is already covered: `characters` by campaign and by player,
+`character_items` by character, `journal_entries` by campaign and by character,
+`play_events` and both pending-pick tables by character, `npcs` by campaign,
+`imported_classes` by status and by `deleted_at`, and `catalog_redirects` by
+`(catalog, from_key)` through its own `UNIQUE`.
+
+**Referential integrity is clean.** Fifteen orphan checks — every foreign key in
+the app, plus `characters.class_id` and `occ_class_id`, which are slugs rather
+than real references and so could rot silently — return **zero**. No character
+drafts abandoned, no soft-deleted classes, no unpublished ones, no open import
+sessions.
+
+The two counts that are not zero are both known and deliberate: **78 gear rows
+still marked `STUB`**, which is the figure
+[Known limitations](#known-limitations-and-refactor-candidates) explains and
+defends, and **52 skills with no `source_book`**, which are seed rows that
+predate the column.
 
 ### Checking the live database against the repo
 

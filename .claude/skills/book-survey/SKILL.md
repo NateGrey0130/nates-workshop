@@ -27,7 +27,41 @@ money, and it is the step to spend the least on.
 Phases 1-3 routinely cut phase 4 by more than half. The Book of Magic has ~1038
 stat blocks; the invocation import needed 108 of them.
 
-## 0. OCR it once, properly
+## 0. Does it have a text layer? Ask before you OCR
+
+**One line, before anything else:**
+
+```python
+python -c "import pymupdf; d=pymupdf.open('Book.pdf'); print([len(d[i].get_text()) for i in range(20,30)])"
+```
+
+Zeros mean a scan. Thousands mean a text layer, and a text layer changes
+everything downstream: **no OCR, no model call, no confidence problem, and no
+cost.** The Palladium Fantasy main book has one — median ~5,900 characters a
+page — and every extraction from it, twenty-five classes and fifty-seven spells
+and two authority tables, was read with `scripts/read-columns.py` and nothing
+else. Rifts Ultimate Edition has none, and needs everything below.
+
+This step is first because the version of this skill that did not have it led
+with "OCR it once, properly", and OCRing a book that did not need it would have
+spent hours reproducing text that was already there, worse.
+
+A text layer is not perfect, and its damage is different from OCR's — it is
+typesetting, not misreading. What the Palladium book's actually did:
+
+| what arrived | what it is |
+|---|---|
+| `EyesofThoth(S)` | spaces missing entirely, and a mis-set `8` as `S` |
+| `Vagabond/Peasant/Farmel` | a mis-set final `r` |
+| `14272,881-324,880` | a missing space between the level and the number |
+| `per addi- tional magician` | a hyphen kept from the end of a column line |
+| `...one foot of metal. Level Eight` | a section heading welded onto the previous description |
+
+None of those is fixed by a better reader. They are fixed by knowing what the
+value should look like: a one-character parenthetical where a cost belongs is a
+mis-set digit, and the OTHER authority table has the real one.
+
+## 0b. If it IS a scan: OCR it once, properly
 
 ```bash
 python scripts/ocr-book.py "path/to/Book.pdf" --slug rue --tables 167,200-202 --dpi-tables 500
@@ -85,8 +119,20 @@ correctly.
 `Blinding Flash` — a level one spell — under level three, and returns levels one
 and two **empty**.
 
-See `reference/read-columns.py`. Bucket lines by x, sort by y, walk column by
-column.
+Use **`scripts/read-columns.py`**, in the repo. It buckets blocks by their left
+edge, splits columns on the GAP rather than an assumed count, emits full-width
+blocks first as page headings, and takes a page range:
+
+```bash
+python scripts/read-columns.py "book.pdf" 189 191
+```
+
+This skill used to ship its own copy of that file under `reference/`, and the
+two had forked completely — the copy was an older line-based implementation with
+a `probe()` helper that the repo does not have, while every Palladium Fantasy
+extraction actually ran the block-based one in `scripts/`. A reference that is a
+FORK of working code is worse than a pointer to it: it reads as authoritative
+and is not. The copy is gone.
 
 **That script assumes the PDF has a text layer. A scan has none** —
 `page.get_text()` returns `''` for every page of Rifts Ultimate Edition, so the
@@ -182,6 +228,57 @@ Necessary. **Not sufficient — see phase 5.**
 
 Keep batches small. Spell entries are long, and a reply that overruns the output
 ceiling is rejected rather than half-saved.
+
+## 4b. A book may ship TWO authorities, and they check each other
+
+The Palladium Fantasy main book prints its spells twice: an alphabetical list
+**by level** (printed 187), which is the only place a level is stated at all,
+and an alphabetical list **by page** (printed 188), which repeats every cost.
+Parse both and reconcile them and you get three independent readings of every
+cost — the two indexes and the `P.P.E.` line in the spell's own stat block,
+usually spelled out in words there, *Twenty-Five* against the index's 25.
+
+That is not belt and braces. It is what turned two typesetting accidents into
+data:
+
+- `EyesofThoth(S)` in the by-level table has no number at all. The by-page table
+  says `Eyes of Thoth (8)`. Without the second table, a strict cost pattern
+  drops the spell entirely and a lax one stores `S`.
+- The two disagree on exactly **two costs out of 182**. Both were already known
+  and neither was in the batch — but the point is that *finding out* cost
+  nothing, where trusting one table silently would have been free too.
+
+Reconcile them by NAME with the same normalisation the catalog diff uses, and
+keep a tiny explicit alias list for the names the book spells differently
+BETWEEN ITS OWN TABLES — `Thunderclap` against `Thunder Clap`, `Faeries' Dance`
+against `Faerie's Dance`. That is the book disagreeing with the book, not a
+match to guess at, so list them rather than lowering the edit-distance bar.
+
+## 4c. When a description page argues with the index
+
+**The index wins, and the page is recorded.** But go and find out which is
+wrong before deciding, because the answer is not always the index.
+
+The Palladium Fantasy spell pages state a level only six times in 180 entries.
+Five are the book's own Spells of Legend, which sit outside the numbered ladder.
+The sixth is *The Finger of Lictalon*, headed `Level: Spell of Legend` while the
+by-level index files it under Level Eleven.
+
+Three things decided it, and none of them is "the index is the authority":
+
+1. the by-level index says eleven;
+2. the Spells of Legend list does not name it;
+3. its **150 P.P.E. sits with the level elevens**, where the legends cost 1000
+   to 5000.
+
+Two independent readings against one, and a magnitude argument. It is stored at
+eleven with the losing reading in `variant_note` — which is the same doctrine as
+"the later book wins, and the losing number is recorded", applied to a book
+disagreeing with itself.
+
+**A page that states a fact only six times in 180 entries is telling you
+something by the exception.** Count how often the field appears before deciding
+what its presence means.
 
 ## 5. Reconcile — the step that is easiest to skip
 

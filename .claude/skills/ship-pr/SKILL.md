@@ -24,6 +24,13 @@ caught for you, so the checks happen before the merge or they do not happen.
    default.
 4. **Verify**, at the layer the change lives in:
    - always: `node apps/character-creator/test/smoke.mjs`
+   - added a class or catalog rows: **update the README's pinned counts in the
+     same commit.** `test/regression.mjs` reads them out of the prose and
+     compares against a database built from nothing, so they fail the run rather
+     than drifting — the clean-run table (`| classes (published, live) | 76 |`,
+     skills, spells, psionic powers, gear) and the sentence *"Fifty-three of
+     seventy-six published classes state no hit point formula"*, which is parsed
+     as WORDS. Adding a class moves at least two of those.
    - touched an endpoint, the schema or a data script:
      `node apps/character-creator/test/regression.mjs` — it builds a database
      from nothing and drives the real routes, which is the only thing that
@@ -100,6 +107,24 @@ catching the repo up to a database that already moved. A reviewer who does not
 know that will look for the deploy step and not find one.
 
 For anything about migrations themselves, use the `schema-change` skill.
+
+## `--local` is not a mirror of production
+
+**Do not audit against the local database.** It accumulates: rows from a failed
+confirm, a draft class from an experiment, whatever a review left behind. Mine
+carried **327 skills where the repo and production both have 324**, and an
+audit run against it reported two catalog duplicates that production merged away
+weeks ago — a finding that would have been fixed twice and was never real.
+
+Local is for *applying and testing a script*. Production is for *asking what is
+true*, and `repo-vs-live.mjs` is what proves the two agree:
+
+```bash
+node scripts/repo-vs-live.mjs
+```
+
+It builds a database from the repo in a scratch directory and diffs **names**
+against live, not counts.
 
 ## Verify production by asking it
 

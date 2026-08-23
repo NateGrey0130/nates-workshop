@@ -11,9 +11,14 @@ below follows from that.
   `Lore: Astral`, `Navigation: Stellar`, `Language: Mongolian`,
   `Streetwise: Drugs`. This matches the catalog's existing `Lore: Magic`,
   `Language: Other`, `Horsemanship: General`.
-- **Pilot skills store without a `Pilot:` or `Military:` prefix** — `Jet
-  Fighters`, `Motorcycle`, `Truck`. `Military: Warships & Patrol Boats` is the
-  exception the catalog already holds; do not add more.
+- **Pilot skills store without a `Pilot:` prefix** — `Robots and Power Armor`,
+  `Automobile`, `Truck`, `Hover Craft (ground)`. The `Military:` prefix is a
+  different matter and this reference used to get it wrong: it said
+  `Military: Warships & Patrol Boats` was "the exception the catalog already
+  holds", and the catalog holds **five** — Warships & Patrol Boats, Combat
+  Helicopter, Jet Fighters, Submersibles and Tanks & APCs, all from RUE
+  pp.302-303, which is how the book itself sets them. **Query before assuming
+  either way**; the rule is the catalog's spelling, not a pattern.
 - **Lore skills are filed under `Technical`**, not a Lore category of their own
   (the Cowboy lore skills are the exception, filed under `Cowboy`).
 - Use the book's printed name otherwise. Fix only obvious typos, and say so in

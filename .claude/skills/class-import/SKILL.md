@@ -15,9 +15,13 @@ modelling something new (see the last section).
 
 ## The loop
 
-1. **Read the pages.** Scans have no text layer, so pages arrive as image
-   renders. Transcribe rather than guess: a wrong percentage is worse than a
-   missing one, because nothing will ever flag it.
+1. **Read the pages.** Check for a text layer FIRST — see the `book-survey`
+   skill. A scan arrives as image renders and needs OCR; a book with a text
+   layer is read straight with `python scripts/read-columns.py <pdf> <first>
+   [last]`, geometrically, for nothing. The Palladium Fantasy main book has one
+   and every class taken from it was read that way. Transcribe rather than
+   guess either way: a wrong percentage is worse than a missing one, because
+   nothing will ever flag it.
 2. **Write the markdown to a scratch `.md` file first**, not straight into SQL.
    Iterating on bare markdown avoids re-escaping quotes every pass.
 3. **Check it:**
@@ -94,6 +98,25 @@ by themselves when the rows arrive. The audit floor is three names, not zero.
   "+2 to strike when flying" belongs in `special_abilities` or `side_effects`.
 - **D1 caps compound SELECT terms below six.** A readback that `UNION`s six
   names fails and rolls the whole file back. Count with `IN` instead.
+- **SQLite caps an expression tree at depth 100**, and a `||` chain is one node
+  per term. Splicing a 60-line YAML block into `markdown` with
+  `replace(markdown, anchor, '<line>' || char(10) || '<line>' || ...)` is
+  rejected outright: `Expression tree is too large (maximum depth 100)`. Do it
+  in CHUNKS of about 24 lines — plant a marker, append to it, then remove it.
+  The sequence stays idempotent because the first statement cannot fire once the
+  block is present and the rest cannot fire once the marker is gone.
+- **A racial S.D.C. is a POOL BONUS, never `sdc_base`.** A race page saying
+  *"20 plus those gained from O.C.C.s and physical skills"* means
+  `bonuses: { pools: { sdc: 20 } }`. Written as `sdc_base` it is SILENTLY wrong:
+  `combineClasses` gives the race's pool precedence over the occupation's, so a
+  Troll Knight carries 40 instead of 40 + 3D6 and nothing on the sheet looks
+  unusual. Palladium Fantasy printed 18 states the rule outright — *"All S.D.C.
+  points/bonuses are cumulative."*
+- **A class stating no `sdc_base` and no `mdc_base` needs a `CORE_SDC_BY_CLASS`
+  entry** in `js/compose.js`, or the smoke test fails it. The value is `3D6` for
+  a man of arms and `1D6` for everyone else, read off the book's own section
+  heading — and for a RACE it is always `1D6`, because a race is never a man of
+  arms and the entry only fires for a race played with no occupation at all.
 
 ## Correcting a class that already shipped
 
@@ -101,6 +124,26 @@ by themselves when the rows arrive. The audit floor is three names, not zero.
 already applied. Add a new `fix-*.sql` alongside, guarded on the text it
 replaces so re-running is a no-op, with readback `SELECT`s that assert the
 result. Fifteen `fix-*.sql` / `apply-*.sql` scripts follow this shape.
+
+**CHECK WHERE THE NEW NAME SORTS BEFORE YOU CHOOSE IT.** A clean rebuild applies
+`apps/character-creator/db/*.sql` as one sorted glob, so filename order IS
+execution order, and a correction that sorts BEFORE the file it corrects is
+silently undone:
+
+```bash
+(ls apps/character-creator/db/*.sql | sed 's|.*/||'; echo "my-new-name.sql")   | sort | grep -n -B1 -A1 my-new-name
+```
+
+`fix-long-bowman-armor.sql` sorted before `fix-long-bowman.sql` — `-` is 0x2D
+and `.` is 0x2E — and was overwritten by it on every rebuild. Only
+`repo-vs-live.mjs` caught it, because production had them in the order they were
+run by hand. `zz-` exists as a prefix for exactly this: a file that must sort
+after everything.
+
+**One class per `add-<id>-class.sql`.** The smoke test maps each file to exactly
+one id and checks `CORE_SDC_BY_CLASS` against that map; four classes in one file
+left all four unaccounted for. A `fix-` script may touch several — the MOS fix
+covers two — because nothing maps those to ids.
 
 The class markdown lives in D1, so a fix script edits it with `replace()`:
 
@@ -122,6 +165,22 @@ skills granting attribute bonuses all started this way.
 `class-check` reports it as `UNMODELLED`: a top-level key that parses fine and
 that nothing then reads. **Never leave one unresolved.** Silent storage is how
 a class ships looking complete and doing nothing.
+
+**CHECK THE REPORT BEFORE ACTING ON IT — it is a hand-maintained list and it has
+been wrong twice.** `KNOWN_KEYS` in `scripts/class-check-lib.mjs` is written out
+by hand, deliberately, because the question is not "does the parser touch it"
+but "does anything downstream act on it". The cost of that is a FALSE alarm when
+a key is modelled and nobody added it to the list:
+
+| key | reported as unmodelled | actually |
+|---|---|---|
+| `psionics_allowed` | by the first six races to use it | modelled all along — `rollsForPsionics()`, the wizard's Race briefing, and a smoke check |
+| `xp_table` | by anything that ever uses it | supported since `leveling.js` was written, read by six call sites, pinned by the smoke test |
+
+A false alarm here is worse than a missing one, because the instruction attached
+to the report is *delete the key or change the app*, and both break a working
+field. **Grep for the key across `js/` and `functions/` before believing it.**
+One hit in a `??`/`?.` chain is enough to mean it is read.
 
 Two legitimate answers, and it is the user's call which:
 
