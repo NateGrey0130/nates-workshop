@@ -124,6 +124,10 @@ export const CORE_SDC_BY_CLASS = {
   'priest-of-darkness': '1D6',
   'warrior-monk': '1D6',
   'druid': '1D6',
+  // The Witch is filed with the practitioners of magic and prints no S.D.C.
+  // formula. Its Gift of Power and Gift of Union both add large amounts on top
+  // - 200 and 3D4x10 - but those are gifts, not the class's own roll.
+  'witch': '1D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence
