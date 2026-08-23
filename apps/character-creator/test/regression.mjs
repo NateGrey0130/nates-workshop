@@ -951,16 +951,23 @@ console.log('\n' + '[8/8] Checks that only a database can make');
 // four to a suit and three to a weapon, cumulatively.
 {
   const ench = catalogs.body.enchantments || [];
-  check('/catalogs serves the enchantments catalog', ench.length === 32, `${ench.length} rows`);
+  check('/catalogs serves the enchantments catalog', ench.length === 62, `${ench.length} rows`);
 
+  // Three families, and the book draws every one the same way: a property with
+  // a price and a cap, instilled into ordinary gear.
   const armour = ench.filter((e) => e.applies_to === 'armor');
   const weapon = ench.filter((e) => e.applies_to === 'weapon');
-  check('eleven armour features and twenty-one weapon properties',
-    armour.length === 11 && weapon.length === 21, `${armour.length} / ${weapon.length}`);
+  const charm = ench.filter((e) => e.applies_to === 'charm');
+  check('eleven armour features, twenty-one weapon properties, thirty charm powers',
+    armour.length === 11 && weapon.length === 21 && charm.length === 30,
+    `${armour.length} / ${weapon.length} / ${charm.length}`);
+  check('and nothing sits outside the three families',
+    armour.length + weapon.length + charm.length === ench.length);
 
   // The book's caps, carried on the row so a picker enforces them from data.
+  // Four to a suit; three to a weapon, and three to a ring.
   const wrongCap = ench.filter((e) => e.max_per_item !== (e.applies_to === 'armor' ? 4 : 3));
-  check('and each carries its half of the book cap', wrongCap.length === 0,
+  check('and each carries the cap its family is given', wrongCap.length === 0,
     wrongCap.map((e) => `${e.slug}=${e.max_per_item}`).join(', '));
 
   // Color and Continual Glow are printed on BOTH sides at different prices, so
@@ -981,8 +988,22 @@ console.log('\n' + '[8/8] Checks that only a database can make');
   // skills already use, so derive.js needs no new cases. If these stopped
   // validating, that claim would be false and nothing else would say so.
   const withBonuses = ench.filter((e) => e.bonuses);
-  check('four enchantments carry mechanical bonuses', withBonuses.length === 4,
+  check('seven enchantments carry mechanical bonuses', withBonuses.length === 7,
     withBonuses.map((e) => e.slug).join(', '));
+
+  // A bonus on a save the sheet does not render is stored, ignored, and
+  // indistinguishable from one that works. Protection from Circles and from
+  // Witches are real book bonuses with no save to land on, and are prose for
+  // exactly that reason - so nothing here may name a key the sheet lacks.
+  const SHEET_SAVES = new Set(['horror_factor', 'psionics', 'ritual_magic', 'spell_magic', 'wards']);
+  const unrendered = withBonuses.flatMap((e) => Object.keys(e.bonuses.saves || {})
+    .filter((k) => !SHEET_SAVES.has(k)).map((k) => `${e.slug}.${k}`));
+  check('and no save bonus names a category the sheet cannot show',
+    unrendered.length === 0, unrendered.join(', '));
+  for (const slug of ['charm-protection-from-circles', 'charm-protection-from-witches']) {
+    const row = ench.find((e) => e.slug === slug);
+    check(`${slug} stays prose, having no save to land on`, row && !row.bonuses);
+  }
   const badBonus = [];
   for (const e of withBonuses) {
     const errors = [], warnings = [];
