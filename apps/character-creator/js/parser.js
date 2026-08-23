@@ -494,8 +494,15 @@ export function combineClasses(rcc, occ) {
   // simply omits them is not, and taking "the R.C.C. alone" literally there
   // would leave the character with no hit points at all. So a pool the race
   // does not mention falls through to the occupation.
+  //
+  // `xp_table` is on this list for a different reason from the pools, and a
+  // stronger one. Palladium names its experience charts by O.C.C. - "Knight &
+  // Noble", "Thief & Merchant" - and a RACE has none, because experience comes
+  // from what you do. Left off, an occupation's table was dropped on every
+  // Palladium character (race primary, occupation second since #210) and the
+  // race's absent table won, silently falling back to the house-rule default.
   for (const key of ['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',
-                     'starting_money']) {
+                     'starting_money', 'xp_table']) {
     if (rcc[key] == null && occ[key] != null) out[key] = occ[key];
   }
   // An M.D.C. race is the one case where silence IS the statement: it tracks
