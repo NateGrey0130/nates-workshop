@@ -21,6 +21,7 @@ Access gate. No build step, no framework, no dependencies.
 - [A fighting style is a level schedule](#a-fighting-style-is-a-level-schedule)
 - [Language and Literacy: Other, once per language](#language-and-literacy-other-once-per-language)
 - [A printed bonus is not a base](#a-printed-bonus-is-not-a-base)
+- [Enchantments](#enchantments)
   - [Languages of choice come from languages](#languages-of-choice-come-from-languages)
 - [Level-up skill picks](#level-up-skill-picks)
 - [Starting above level 1](#starting-above-level-1)
@@ -1152,6 +1153,88 @@ Three regression invariants hold the line: a `bonus` may never sit on a name the
 catalog does not have (it would resolve to **0**, not to the bonus), no fixed
 skill may sit under its catalog base without a note or a family to explain it,
 and that rule asserts it actually compared rows rather than passing vacuously.
+
+---
+
+## Enchantments
+
+**What an alchemist puts INTO an object, as opposed to the object.** Palladium
+Fantasy draws three families the same way — a property with a price and a cap,
+instilled into ordinary gear:
+
+| family | count | printed | cap |
+|---|---|---|---|
+| `armor` | 11 features | 249 | four to a suit |
+| `weapon` | 21 properties | 249-250 | three to a weapon |
+| `charm` | 30 powers | 253 | three to a ring, bracelet or medallion |
+
+*"Cloak of Armor, 20,000 gold"* is a **gear row**. *"+1 A.R., 4,000 gold"* is
+**not**: it is a modifier that can sit on any of the armour rows the catalog
+already has, and a row per combination of every feature with every suit is not
+a catalog, it is a combinatorial explosion.
+
+The charm family is the one worth reading the book for. It is easy to take those
+thirty as finished items — a Ring of Chameleon, a Medallion of Teleport — and
+the page says otherwise: *"The following magic effects can be **placed in**
+rings, bracelets, charms, and medallions,"* three powers to an item.
+
+### The array is on the instance
+
+`character_items.enchantments` is a JSON array of slugs on the **inventory
+row**, not a flag on `gear`. One long sword in a party of four can be the Demon
+Slayer while the other three stay ordinary, and no other shape can say that.
+
+### Bonuses reuse the block that already exists
+
+`enchantments.bonuses` is the **same JSON block** `skills.bonuses` and a class's
+`bonuses:` use, validated through the same `validateBonuses`. That is not a
+convenience — it is why this was affordable: *Invisible Weapon: +3 initiative,
++2 strike and parry* is `{"combat":{"initiative":3,"strike":2,"parry":2}}` and
+`derive.js` needed **no new cases**, exactly as it needed none when skills
+learned to grant bonuses.
+
+Seven of the 62 carry one. Dice are stored **as dice** — the Thunder Hammer's
+extra 2D6 is `"2d6"`, not a 2 — which the group has accepted since the
+Godling's *"+1D4 on initiative"* made it a hard parse error.
+
+**The rest stay prose, deliberately.** Three fireballs a day, double damage to
+demons, teleport three times daily: a number would be a lie about what the book
+grants. Two more are prose for a different reason — Protection from Circles and
+from Witches are real `+1`s with **no save to land on**, since the sheet's save
+block covers spell magic, ritual magic, wards, psionics and horror factor. A
+bonus on a key nothing renders is stored, ignored, and indistinguishable from
+one that works, so both the generator and regression **refuse** a save key the
+sheet cannot show.
+
+### The rules live on the server
+
+`PATCH /characters/:id/items/:itemId` takes the whole array and checks it, because
+the sheet is not the only caller and a stored slug that resolves to nothing
+renders as a slug forever:
+
+- an armour feature needs armour and a weapon property needs a weapon;
+- a charm power may go in anything **except** a weapon, which the book states
+  outright;
+- one item may not mix two families;
+- the cap comes from `max_per_item` **on the row**, not from a constant — four
+  features fit in a suit and a fifth is refused.
+
+A freeform item (`item_id` NULL) has no category to check against, so the family
+rule is skipped rather than guessed at: a GM who writes in "silver signet ring"
+should be able to enchant it. The cap still applies.
+
+### What is deliberately not modelled
+
+- **Rune and holy weapons** are *generated* from a tier and a table of powers
+  rather than listed. Importing them would invent about forty items the book
+  does not print.
+- **Curses** are effects applied to a person or an object, with no price and no
+  weight — closer to a spell than to a sword.
+- **Transformable weapons** are a kind of weapon rather than a property, and the
+  book says outright that one *"cannot have any other magic properties"*.
+- **Duration and frequency** stay in the description. *"20 melees, twice daily"*
+  is two numbers and a unit; three columns used by one family of one book, with
+  nowhere on the sheet to put them, would be worse than a sentence.
 
 ---
 

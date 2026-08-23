@@ -1035,6 +1035,76 @@ console.log('\n' + '[8/8] Checks that only a database can make');
   check('an unenchanted inventory row decodes to an empty array',
     anyItem && Array.isArray(anyItem.enchantments) && anyItem.enchantments.length === 0,
     JSON.stringify(anyItem?.enchantments));
+
+  // -- instilling one, and everything the server must refuse ----------------
+  //
+  // The rules are the book's, and the server is where they live: the sheet is
+  // not the only caller, and a stored slug that resolves to nothing renders as
+  // a slug forever.
+  // /items projects `category`, which is what says armour from weapon.
+  const gearRows = (items.body.items || []).filter((g) => ['armor', 'weapon'].includes(g.category));
+  const armourRow = gearRows.find((g) => g.category === 'armor');
+  const weaponRow = gearRows.find((g) => g.category === 'weapon');
+  check('the gear catalog has an armour and a weapon to enchant',
+    !!armourRow && !!weaponRow, `${armourRow?.slug} / ${weaponRow?.slug}`);
+
+  const addArm = await api('POST', `/characters/${charId}/items`, { slug: armourRow.slug, qty: 1 });
+  const addWep = await api('POST', `/characters/${charId}/items`, { slug: weaponRow.slug, qty: 1 });
+  check('both are added to the inventory',
+    [200, 201].includes(addArm.status) && [200, 201].includes(addWep.status),
+    `${addArm.status} / ${addWep.status}`);
+
+  const after = await api('GET', `/characters/${charId}`);
+  const armId = (after.body.items || []).find((i) => i.item_slug === armourRow.slug)?.id;
+  const wepId = (after.body.items || []).find((i) => i.item_slug === weaponRow.slug)?.id;
+
+  const ok1 = await api('PATCH', `/characters/${charId}/items/${armId}`,
+    { enchantments: ['noiseless-armor', 'magic-sdc'] });
+  check('two armour features go into a suit of armour', ok1.status === 200, ok1.body);
+
+  const readBack = await api('GET', `/characters/${charId}`);
+  const armAfter = (readBack.body.items || []).find((i) => i.id === armId);
+  check('and come back as an array of slugs, not a string',
+    Array.isArray(armAfter?.enchantments)
+      && armAfter.enchantments.join(',') === 'noiseless-armor,magic-sdc',
+    JSON.stringify(armAfter?.enchantments));
+
+  // The instance, not the catalog: the weapon beside it is untouched.
+  const wepAfter = (readBack.body.items || []).find((i) => i.id === wepId);
+  check('the other item is not enchanted by association',
+    Array.isArray(wepAfter?.enchantments) && wepAfter.enchantments.length === 0,
+    JSON.stringify(wepAfter?.enchantments));
+
+  const wrongFamily = await api('PATCH', `/characters/${charId}/items/${wepId}`,
+    { enchantments: ['noiseless-armor'] });
+  check('an armour feature is refused on a weapon', wrongFamily.status === 400, wrongFamily.body);
+
+  const inWeapon = await api('PATCH', `/characters/${charId}/items/${wepId}`,
+    { enchantments: ['charm-chameleon'] });
+  check('and a charm power is refused on a weapon, as the book says',
+    inWeapon.status === 400, inWeapon.body);
+
+  const mixed = await api('PATCH', `/characters/${charId}/items/${armId}`,
+    { enchantments: ['noiseless-armor', 'demon-slayer'] });
+  check('one item cannot mix two families', mixed.status === 400, mixed.body);
+
+  const overCap = await api('PATCH', `/characters/${charId}/items/${armId}`,
+    { enchantments: ['noiseless-armor', 'magic-sdc', 'buoyancy', 'lightweight-armor',
+      'weightless-armor'] });
+  check('and five features will not fit in a suit that takes four',
+    overCap.status === 400, overCap.body);
+
+  const unknown = await api('PATCH', `/characters/${charId}/items/${armId}`,
+    { enchantments: ['ring-of-not-a-thing'] });
+  check('a slug the catalog does not have is refused', unknown.status === 400, unknown.body);
+
+  // The cap is read off the row rather than hardcoded, so four must still fit.
+  const four = await api('PATCH', `/characters/${charId}/items/${armId}`,
+    { enchantments: ['noiseless-armor', 'magic-sdc', 'buoyancy', 'lightweight-armor'] });
+  check('four features do fit, which is the cap the book prints', four.status === 200, four.body);
+
+  const cleared = await api('PATCH', `/characters/${charId}/items/${armId}`, { enchantments: [] });
+  check('and the list can be emptied again', cleared.status === 200, cleared.body);
 }
 
 console.log('\n' + (failures === 0
