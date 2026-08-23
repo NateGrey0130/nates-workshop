@@ -945,6 +945,94 @@ console.log('\n' + '[8/8] Checks that only a database can make');
     'gear.extractFields omits sdc, so every future import drops it back into prose');
 }
 
+// ---------- the finished magic items ----------
+// The other half of printed 249-267. The enchantments are what an alchemist
+// puts INTO an object; these are the objects he sells finished.
+//
+// Written against the scratch database rather than /items, which projects only
+// the fields the pickers render - cost_note, ar and sdc are not among them.
+{
+  const q = (sql) => {
+    const r = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--json',
+      '--command', `"${sql}"`]);
+    const out = r.stdout || '';
+    for (let at = out.indexOf('['); at >= 0; at = out.indexOf('[', at + 1)) {
+      try { const v = JSON.parse(out.slice(at)); if (Array.isArray(v)) return v.flatMap((b) => b.results || []); }
+      catch { /* wrangler's own log line opens with a bracket too */ }
+    }
+    throw new Error(cleanErr(r.stderr || out));
+  };
+  const BOOK = 'Palladium Fantasy RPG p.249-267';
+  let rows = [];
+  let err = '';
+  try {
+    rows = q(`SELECT slug, name, category, cost, cost_note, ar, sdc, description FROM gear WHERE source_book = '${BOOK}'`);
+  } catch (e) { err = e.message; }
+
+  check('the magic items are in the gear catalog', rows.length === 175, err || `${rows.length} rows`);
+
+  // The three finished suits are ARMOUR and carry the numbers the page prints.
+  // Everything else is 'magic'.
+  const suits = rows.filter((r) => r.category === 'armor');
+  check('the three magic suits went in as armour', suits.length === 3,
+    suits.map((r) => r.slug).join(', '));
+  const SUIT = { 'cloak-of-armor': [14, 50], 'cloak-of-protection': [12, 50],
+    'leather-of-iron': [15, 60] };
+  const wrongSuit = Object.entries(SUIT).filter(([slug, [ar, sdc]]) => {
+    const r = rows.find((x) => x.slug === slug);
+    return !r || r.ar !== ar || r.sdc !== sdc;
+  });
+  check('and each with the A.R. and S.D.C. its page prints',
+    wrongSuit.length === 0, wrongSuit.map(([s]) => s).join(', '));
+
+  // A 'magic' row claiming armour numbers would be a row in the wrong category.
+  const pretender = rows.filter((r) => r.category === 'magic' && (r.ar != null || r.sdc != null));
+  check('and no magic row claims an armour rating', pretender.length === 0,
+    pretender.map((r) => r.slug).join(', '));
+
+  // Exactly one item in the book has no price: the Crystal Ball is "considered
+  // priceless and sells for millions", and a number there would be invented.
+  const unpriced = rows.filter((r) => r.cost == null);
+  check('one item is priceless, and only one', unpriced.length === 1,
+    unpriced.map((r) => r.slug).join(', '));
+  check('and it is the crystal ball', unpriced[0]?.slug === 'crystal-ball',
+    unpriced[0]?.slug);
+
+  // The wrapped-range bug: "20,000-\n30,000" rejoins as 2,000,030,000 if the
+  // de-hyphenation that fixes a broken WORD is let near a number. Both of the
+  // rows it hit are pinned at the figure the page actually prints.
+  const wrapped = { 'fright-wig': 20000, chasers: 2000 };
+  const wrongWrap = Object.entries(wrapped)
+    .filter(([slug, cost]) => rows.find((r) => r.slug === slug)?.cost !== cost);
+  check('a price wrapped across a line kept its range',
+    wrongWrap.length === 0, wrongWrap.map(([s]) => s).join(', '));
+  const absurd = rows.filter((r) => r.cost > 10000000);
+  check('and nothing costs more than ten million gold', absurd.length === 0,
+    absurd.map((r) => `${r.slug}=${r.cost}`).join(', '));
+
+  // A price the integer cannot hold keeps its wording. The book prices in
+  // ranges far more often than in figures.
+  const noted = rows.filter((r) => r.cost_note);
+  check('most of them carry the wording a single integer cannot hold',
+    noted.length > 60, `${noted.length} of ${rows.length}`);
+
+  // Faerie foods are priced by BAND, which their own preamble states, and are
+  // prefixed because the catalog already sells an ordinary goose.
+  // `faerie-wings` is a magic COMPONENT at 20,000 gold, not a food, and it is
+  // the reason this is not simply a prefix match.
+  const faerie = rows.filter((r) => r.slug.startsWith('faerie-') && r.slug !== 'faerie-wings');
+  check('the faerie foods are all prefixed', faerie.length === 28, `${faerie.length}`);
+  const bands = new Set(faerie.map((r) => r.cost));
+  check('and priced in the two bands the book gives, plus one override',
+    bands.size === 3 && bands.has(500) && bands.has(2000) && bands.has(5000),
+    [...bands].join(', '));
+
+  // Nothing here may collide with gear that was already in the catalog.
+  const all = q('SELECT slug, count(*) AS n FROM gear GROUP BY slug HAVING n > 1');
+  check('no gear slug is duplicated', all.length === 0,
+    all.map((r) => r.slug).join(', '));
+}
+
 // ---------- enchantments ----------
 // What an alchemist puts INTO a sword, as opposed to a sword. Printed 249-250
 // sells three finished suits and then 32 PROPERTIES that go into ordinary gear,

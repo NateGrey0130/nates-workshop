@@ -170,7 +170,7 @@ export const CATALOGS = {
         help: 'What equipment_starting[].item_id references. Changing it leaves the old slug redirecting here.' },
       { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'both'] },
       { name: 'category', label: 'Category', type: 'select', allowOther: true,
-        options: ['weapon', 'armor', 'vehicle', 'cybernetics', 'gear'] },
+        options: ['weapon', 'armor', 'vehicle', 'cybernetics', 'gear', 'magic'] },
       { name: 'weight_lbs', label: 'Weight (lbs)', type: 'real' },
       { name: 'cost', label: 'Cost', type: 'int',
         help: 'Credits (Rifts) or gold (Palladium Fantasy). A range goes in at its LOW end, '
