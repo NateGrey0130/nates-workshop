@@ -4424,6 +4424,53 @@ section('Documented counts');
   }
   check('no skill reference forks a file in scripts/', forks.length === 0,
     forks.join(', ') + ' - point at the real one instead');
+
+  // An export nothing imports. Four were found by an audit: applyMos, which
+  // invited callers past composeClass; looseCounts and stemCounts, written
+  // beside aliasCounts and never called by anything; and a READERS map whose
+  // own comment claimed a consumer it did not have. All four are gone, and this
+  // keeps the count at zero rather than letting the next one accumulate quietly.
+  const codeFiles = [];
+  const walkCode = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      if (e.name === 'node_modules' || e.name.startsWith('.')) continue;
+      const p = join(dir, e.name);
+      if (e.isDirectory()) walkCode(p);
+      else if (/\.(js|mjs)$/.test(e.name)) codeFiles.push(p);
+    }
+  };
+  for (const d of ['apps', 'functions', 'scripts', 'shared']) walkCode(join(repoRoot, d));
+  const bodies = new Map(codeFiles.map((f) => [f, readFileSync(f, 'utf8')]));
+  // A name in an HTML file counts as used: the wizard binds inline handlers.
+  const htmlFiles = [];
+  const walkHtml = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      if (e.name === 'node_modules' || e.name.startsWith('.')) continue;
+      const p = join(dir, e.name);
+      if (e.isDirectory()) walkHtml(p);
+      else if (e.name.endsWith('.html')) htmlFiles.push(readFileSync(p, 'utf8'));
+    }
+  };
+  walkHtml(repoRoot);
+  const markup = htmlFiles.join('\n');
+
+  const orphanExports = [];
+  for (const [f, text] of bodies) {
+    if (/[\\/]test[\\/]/.test(f)) continue;
+    const names = new Set();
+    for (const m of text.matchAll(/^export\s+(?:async\s+)?function\s+([A-Za-z_$][\w$]*)/gm)) names.add(m[1]);
+    for (const m of text.matchAll(/^export\s+(?:const|let|class)\s+([A-Za-z_$][\w$]*)/gm)) names.add(m[1]);
+    for (const n of names) {
+      // A Pages Function exports onRequest* as its HTTP contract.
+      if (/^onRequest/.test(n)) continue;
+      const elsewhere = [...bodies.entries()].some(([g, t]) => g !== f && new RegExp(`\\b${n}\\b`).test(t));
+      if (!elsewhere && !new RegExp(`\\b${n}\\b`).test(markup)) {
+        orphanExports.push(`${f.slice(repoRoot.length + 1).replace(/\\/g, '/')}: ${n}`);
+      }
+    }
+  }
+  check('no export is named nowhere else', orphanExports.length === 0,
+    orphanExports.join(', ') + ' - import it, un-export it, or delete it');
 }
 
 // ---------- 1d. Paging ----------
