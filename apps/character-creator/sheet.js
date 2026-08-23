@@ -6,6 +6,26 @@
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
 const POOLS = [['hp', 'H.P.'], ['sdc', 'S.D.C.'], ['mdc', 'M.D.C.'], ['ppe', 'P.P.E.'], ['isp', 'I.S.P.']];
 const POOL_LABELS = { hp_max: 'H.P. max', sdc_max: 'S.D.C. max', mdc_max: 'M.D.C. max', ppe_max: 'P.P.E. max', isp_max: 'I.S.P. max' };
+// Every save derive.js produces, in the order the sheet prints them. ONE list,
+// because there were two: the sheet's carried all thirteen and play mode's
+// carried the first eight, so a Juicer's +6 vs mind control, an adult
+// Chiang-Ku's +3 vs illusionary magic and a Ley Line Walker's +3 vs curses were
+// all on the sheet and none of them was rollable at the table. The second list
+// was not a shorter view chosen on purpose - it was the first list before three
+// keys were added to derive.js and only one copy was updated.
+const SAVE_FIELDS = [
+  ['spell_magic', 'vs Spell Magic'], ['ritual_magic', 'vs Ritual Magic'],
+  ['psionics', 'vs Psionics'], ['toxins_poisons', 'vs Toxins/Poisons'],
+  ['harmful_drugs', 'vs Harmful Drugs'], ['insanity', 'vs Insanity'],
+  ['possession', 'vs Possession'], ['horror_factor', 'vs Horror Factor'],
+  ['coma_death_pct', 'vs Coma/Death'], ['pain', 'vs Pain'],
+  ['illusionary_magic', 'vs Illusionary Magic'], ['mind_control', 'vs Mind Control'],
+  ['curses', 'vs Curses'], ['faerie_magic', 'vs Faerie Magic'],
+  ['disease', 'vs Disease'],
+];
+// Play mode rolls a d20, so the one percentile row is not one of its buttons.
+// Filtered rather than listed again, which is how the two drifted the first time.
+const SAVE_ROLLS = SAVE_FIELDS.filter(([key]) => !key.endsWith('_pct'));
 const id = new URLSearchParams(location.search).get('id');
 
 const C = { data: null, items: [], journal: [], catalog: [], cls: null, canWrite: false, isGm: false,
@@ -672,13 +692,7 @@ function renderPlay() {
   ].map(([label, v]) => `<button class="play-roll" onclick="rollD20('combat', '${label}', ${Number(v) || 0}, null)">
       <span>${label}</span><span class="pr-num">${v > 0 ? '+' + v : v || '+0'}</span></button>`).join('');
 
-  const SAVE_LABELS = [
-    ['spell_magic', 'vs Spell Magic'], ['ritual_magic', 'vs Ritual Magic'],
-    ['psionics', 'vs Psionics'], ['toxins_poisons', 'vs Toxins/Poisons'],
-    ['harmful_drugs', 'vs Harmful Drugs'], ['insanity', 'vs Insanity'],
-    ['possession', 'vs Possession'], ['horror_factor', 'vs Horror Factor'],
-  ];
-  const saveRows = SAVE_LABELS.map(([key, label]) => {
+  const saveRows = SAVE_ROLLS.map(([key, label]) => {
     const v = saves[key];
     if (v == null) return '';
     const target = key === 'psionics' ? (saves.psionics_target || null) : null;
@@ -1019,16 +1033,6 @@ function render() {
   // '# of Attacks'-length labels beside a condition.
   const WP_LABELS = { strike: 'strike', parry: 'parry', dodge: 'dodge', disarm: 'disarm',
     entangle: 'entangle', damage_bonus: 'damage', initiative: 'initiative' };
-  const SAVE_FIELDS = [
-    ['spell_magic', 'vs Spell Magic'], ['ritual_magic', 'vs Ritual Magic'],
-    ['psionics', 'vs Psionics'], ['toxins_poisons', 'vs Toxins/Poisons'],
-    ['harmful_drugs', 'vs Harmful Drugs'], ['insanity', 'vs Insanity'],
-    ['possession', 'vs Possession'], ['horror_factor', 'vs Horror Factor'],
-    ['coma_death_pct', 'vs Coma/Death'], ['pain', 'vs Pain'],
-    ['illusionary_magic', 'vs Illusionary Magic'], ['mind_control', 'vs Mind Control'],
-    ['curses', 'vs Curses'],
-  ];
-
   const armorRows = armorList.map((a, i) => armorSlotHtml(a, i, w)).join('');
 
   $('app').innerHTML = `
