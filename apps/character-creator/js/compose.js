@@ -61,17 +61,28 @@ export const CORE_SDC_BY_CLASS = {
   'coalition-grunt': '3D6',
   'coalition-samas-pilot': '3D6',
   'coalition-technical-officer': '3D6',
-  // Palladium Fantasy main book, the Men of Arms section, printed 80-104. Not
-  // one of these pages prints an S.D.C. formula, so the core rule applies to
-  // every one of them — and the book's own section heading is the whole of
-  // what this table records, which is why they are listed together rather than
-  // argued for one at a time.
+  // Palladium Fantasy main book, the Men of Arms section, printed 78-95 (the
+  // contents page puts the heading at 78 and Optional O.C.C.s at 96). Not one
+  // of these pages prints an S.D.C. formula, so the core rule applies to every
+  // one of them — and the book's own section heading is the whole of what this
+  // table records, which is why they are listed together rather than argued for
+  // one at a time.
   'knight': '3D6',
   'soldier': '3D6',
-  'squire': '3D6',
   'palladin': '3D6',
   'ranger': '3D6',
   'mercenary-fighter': '3D6',
+  // The SQUIRE is the exception to that sentence, and it is worth being honest
+  // about rather than leaving it sitting in a list it does not belong to. It is
+  // printed at 98, inside Optional O.C.C.s, not in the Men of Arms section —
+  // this entry used to claim the range ran to 104, which no part of the book
+  // supports. It stays at 3D6 anyway, because printed 18 keys the roll on "a
+  // background as men of arms" rather than on where the entry was typeset, and
+  // the squire's background is knightly military training: it is "familiar with
+  // the rudimentaries of combat, horsemanship and weapons", its page carries
+  // the same Squires & Armor rules the knight's does, and the book calls them
+  // "lesser knights".
+  'squire': '3D6',
   // The Thief and the Assassin are here on the book's own say-so, not on a
   // reading of what they do: "Thieves (and assassins) are the rogues and
   // cutthroats of the men of arms O.C.C.s" (printed 91). Worth the sentence,
@@ -110,6 +121,10 @@ export const CORE_SDC_BY_CLASS = {
   'merchant': '1D6',
   'noble': '1D6',
   'scholar': '1D6',
+  // The fifth Optional O.C.C., printed 99, and the last one in that section.
+  // It asks for no attributes, grants no bonuses and prints no S.D.C., so the
+  // core rule reaches it the same way.
+  'vagabond-peasant': '1D6',
   // Palladium Fantasy main book, the practitioners of magic, printed 104-137.
   // The book's other half of the same core rule, and the plainest reading of
   // it: these three are what "practitioners of magic" names.
