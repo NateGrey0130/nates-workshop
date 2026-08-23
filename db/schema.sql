@@ -294,6 +294,12 @@ CREATE TABLE IF NOT EXISTS gear (
   payload TEXT,
   rate_of_fire TEXT,
   ar INTEGER,
+  sdc INTEGER,                          -- Structural Damage Capacity: how much the OBJECT
+                                        -- takes before it breaks. The other half of what
+                                        -- Palladium armour is, and spent by the rules that
+                                        -- follow the table - at half S.D.C. the A.R. drops
+                                        -- two points. Never the "1D6 S.D.C." a knife DEALS,
+                                        -- which is damage. Migration 034.
   mdc INTEGER,
   description TEXT,
   source_book TEXT
@@ -673,3 +679,7 @@ WHERE EXISTS (SELECT 1 FROM pragma_table_info('gear') WHERE name = 'cost_note');
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '033-variant-note.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('spells') WHERE name = 'variant_note');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '034-gear-sdc.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('gear') WHERE name = 'sdc');

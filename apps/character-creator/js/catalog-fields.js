@@ -150,6 +150,9 @@ export const CATALOGS = {
       { name: 'payload', label: 'Payload', type: 'text' },
       { name: 'rate_of_fire', label: 'Rate of fire', type: 'text' },
       { name: 'ar', label: 'A.R.', type: 'int' },
+      { name: 'sdc', label: 'S.D.C.', type: 'int',
+        help: 'What the OBJECT takes before it breaks - the other half of what Palladium armour is. '
+            + 'Not the "1D6 S.D.C." a knife deals, which is Damage.' },
       { name: 'mdc', label: 'M.D.C.', type: 'int' },
       { name: 'description', label: 'Description', type: 'longtext' },
       { name: 'source_book', label: 'Source book', type: 'text' },

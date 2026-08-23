@@ -107,7 +107,7 @@ const IMPORT_SPECS = {
     catalog: 'gear',
     table: 'gear',
     extractFields: ['name', 'slug', 'category', 'weight_lbs', 'cost', 'cost_note', 'damage',
-                    'is_mega_damage', 'range', 'payload', 'rate_of_fire', 'ar', 'mdc',
+                    'is_mega_damage', 'range', 'payload', 'rate_of_fire', 'ar', 'sdc', 'mdc',
                     'description'],
     // Cost is the number worth arguing about; damage and the rest are prose.
     compareFields: ['cost'],
@@ -142,7 +142,7 @@ export function stripFences(text) {
 //
 // `blankAs` mirrors a NOT NULL DEFAULT in the schema: skills.base and friends
 // must fall back to 0 because the column cannot hold NULL. Columns that CAN
-// hold NULL — gear's ar, mdc, cost, weight_lbs — must stay null instead, since
+// hold NULL — gear's ar, sdc, mdc, cost, weight_lbs — must stay null instead, since
 // "this item has no A.R." and "this item has A.R. 0" are different claims and
 // the sheet renders the second one.
 function num(field, v) {

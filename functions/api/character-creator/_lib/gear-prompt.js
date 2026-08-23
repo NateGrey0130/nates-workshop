@@ -18,7 +18,8 @@ Rules:
 - Most fields apply to only some kinds. Omit every field an entry does not state. An absent key is correct; an invented value is not.
 - Copy values as the book writes them. "2000 feet", "2D6 M.D. single shot, 6D6 M.D. burst" and "20 rounds per clip" are correct answers — do not reduce them to a number.
 - is_mega_damage is true when the item's damage is expressed in M.D. or M.D.C., false when it is S.D.C. or plain damage. If an entry states no damage at all, omit it.
-- A.R. and M.D.C. are body armour's numbers. Give ar and mdc as integers, and only when the entry states them.
+- A.R., S.D.C. and M.D.C. are body armour's numbers. Give ar, sdc and mdc as integers, and only when the entry states them.
+- sdc is what the OBJECT can take before it breaks, and it is not only armour: a shield, a walkie-talkie or a pair of goggles has one. It is NEVER the damage a weapon deals. "Does 1D6 S.D.C." on a knife is damage and belongs in damage; "30 S.D.C." for a shield is the shield's own and belongs in sdc. If the S.D.C. named is something the item cuts through or destroys, it belongs to that thing and you must omit it.
 - cost is a plain integer number of credits or gold, with no separators or currency word.
 - A RANGE is common: "Belt, Utility (military style): 3-5 cr." Put the LOW end in cost and the range verbatim in cost_note ("3-5 cr."). The low end is the convention every existing row follows, and cost is what the sheet does arithmetic with. Do not pick an end silently: a stored 75 that came from 15-75 is indistinguishable from a flat 75.
 - A qualifier goes in cost_note too - "double for gold", "varies by region". If a cost is only "varies" with no number at all, omit cost and say so in cost_note.
