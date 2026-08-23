@@ -102,6 +102,14 @@ export const CORE_SDC_BY_CLASS = {
   'rogue-scientist': '1D6',
   'vagabond': '1D6',
   'wilderness-scout': '1D6',
+  // Palladium Fantasy main book, the Optional O.C.C.s, printed 96-98. The
+  // first Palladium classes on this side of the table: the previous nine are
+  // all men of arms, and these three are the book's own answer to a player who
+  // does not want to be one. None of their pages prints an S.D.C. formula
+  // either, so the same core rule reaches the other way.
+  'merchant': '1D6',
+  'noble': '1D6',
+  'scholar': '1D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence
