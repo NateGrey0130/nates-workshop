@@ -1243,6 +1243,95 @@ function parseBodySections(body) {
  *   data.lore, data.gm_notes  — from ## Lore / ## GM Notes body sections
  *   data.sections             — all body sections keyed by lowercased heading
  */
+// The book's own five groupings of Palladium O.C.C.s, taken from the contents
+// page and the section each class is printed in: Clergy, Men of Arms, Optional
+// O.C.C.s (96), the Ways of Magic (100) and Psychic Character Classes (156).
+//
+// They exist because the RACES reference them. "A dwarf may take any O.C.C.
+// except magic" is a rule about a GROUP, and writing it as a list of the four
+// magic classes we happen to hold today would silently stop covering the fifth.
+export const OCC_GROUPS = ['clergy', 'men-of-arms', 'optional', 'magic', 'psychic'];
+
+const GROUP_TOKEN = /^group:(.+)$/;
+
+/**
+ * Which occupations a race may take.
+ *
+ * `only` is a closed list and `except` an open one; a race states one or the
+ * other, never both. Entries are class ids, or `group:<name>` for one of the
+ * five above.
+ *
+ *   occ_restrictions:
+ *     except: ["group:magic"]                 # the dwarf
+ *     only: ["group:magic", "thief", ...]     # the gnome
+ *
+ * Returns { allowed, reason }. `reason` is filled only when it is false, and is
+ * written for a player rather than a log.
+ */
+export function occAllowedForRace(race, occ) {
+  const r = race?.occ_restrictions;
+  if (!r || !occ?.id) return { allowed: true };
+  const names = Array.isArray(r.only) ? r.only : Array.isArray(r.except) ? r.except : null;
+  if (!names || !names.length) return { allowed: true };
+
+  const matches = names.some((n) => {
+    const g = GROUP_TOKEN.exec(String(n));
+    return g ? occ.occ_group === g[1] : String(n) === occ.id;
+  });
+
+  const allowed = Array.isArray(r.only) ? matches : !matches;
+  if (allowed) return { allowed: true };
+  const what = race.name || race.id;
+  return {
+    allowed: false,
+    reason: Array.isArray(r.only)
+      ? `${what} is limited to certain occupations, and ${occ.name || occ.id} is not one of them.`
+      : `${what} may not take ${occ.name || occ.id}.`,
+  };
+}
+
+// Every entry a restriction names must resolve to something. A class id with no
+// class - or a group outside the five - silently allows whatever it meant to
+// forbid, which is the same failure an `only` naming a skill with no catalog row
+// causes and is why that one is a hard error too.
+function validateOccRestrictions(block, errors, warnings) {
+  if (block === undefined || block === null) return;
+  if (typeof block !== 'object' || Array.isArray(block)) {
+    errors.push('occ_restrictions must be a map with `only` or `except`');
+    return;
+  }
+  const hasOnly = Array.isArray(block.only);
+  const hasExcept = Array.isArray(block.except);
+  if (hasOnly && hasExcept) {
+    errors.push('occ_restrictions sets both only and except; a race states one or the other');
+  }
+  if (!hasOnly && !hasExcept) {
+    errors.push('occ_restrictions needs an `only` or an `except` list');
+    return;
+  }
+  const list = hasOnly ? block.only : block.except;
+  if (!list.length) {
+    errors.push(`occ_restrictions.${hasOnly ? 'only' : 'except'} is empty and would ` +
+      `${hasOnly ? 'forbid everything' : 'forbid nothing'}`);
+  }
+  for (const n of list) {
+    if (typeof n !== 'string' || !n.trim()) {
+      errors.push('occ_restrictions entries must be class ids or group:<name>');
+      continue;
+    }
+    const g = GROUP_TOKEN.exec(n);
+    if (g && !OCC_GROUPS.includes(g[1])) {
+      errors.push(`occ_restrictions names group:${g[1]}, which is not one of ` +
+        OCC_GROUPS.join(' | '));
+    } else if (!g && !/^[a-z0-9][a-z0-9-]*$/.test(n)) {
+      errors.push(`occ_restrictions names "${n}", which is not a class id or a group`);
+    }
+  }
+  if (block.note !== undefined && typeof block.note !== 'string') {
+    errors.push('occ_restrictions.note must be a string');
+  }
+}
+
 export function parseClassMarkdown(text) {
   const errors = [];
   const warnings = [];
@@ -1272,6 +1361,17 @@ export function parseClassMarkdown(text) {
   if (data.category != null && !VALID_CATEGORIES.includes(data.category)) {
     errors.push(`category must be one of ${VALID_CATEGORIES.join(' | ')}, got: ${data.category}`);
   }
+
+  if (data.occ_group !== undefined && !OCC_GROUPS.includes(data.occ_group)) {
+    errors.push(`occ_group must be one of ${OCC_GROUPS.join(' | ')}, got: ${data.occ_group}`);
+  }
+  if (data.occ_group !== undefined && data.category !== 'occ') {
+    warnings.push('occ_group is set on something that is not an O.C.C. and will do nothing');
+  }
+  if (data.occ_restrictions !== undefined && data.category !== 'rcc') {
+    warnings.push('occ_restrictions is set on something that is not a race and will do nothing');
+  }
+  validateOccRestrictions(data.occ_restrictions, errors, warnings);
 
   // Shape checks on optional structures
   if (data.skills) {

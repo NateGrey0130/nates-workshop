@@ -18,6 +18,7 @@ import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSI
          rollsForPsionics as classRollsForPsionics } from './js/psionics.js';
 import { isChoiceGroup, isGearChoice, applyVariant,
          categoryAllows, categoryLabel, needsOccupation, abilityOccOptions,
+         occAllowedForRace,
          bonusesFromSkills, sumBonusGroups } from './js/parser.js';
 import { composeClass } from './js/compose.js';
 import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant,
@@ -1028,8 +1029,14 @@ function occPicker() {
   </div>`;
   }
   if (S.rcc?.category !== 'rcc') return '';
-  const options = S.classes.filter((c) => c.system === S.system && c.category === 'occ');
-  if (!options.length) return '';
+  const all = S.classes.filter((c) => c.system === S.system && c.category === 'occ');
+  if (!all.length) return '';
+  // A race may bar occupations outright - a dwarf takes no magic O.C.C., a
+  // kobold no knight. The barred ones are SHOWN and disabled rather than
+  // dropped: a player looking for the Knight should find out that the race
+  // forbids it, not that the app has no Knight.
+  const options = all.filter((c) => occAllowedForRace(S.rcc, c).allowed);
+  const barred = all.filter((c) => !occAllowedForRace(S.rcc, c).allowed);
   const chosen = S.occ ? S.classes.find((c) => c.id === S.occ) : null;
   // The usual structure is a race and then an occupation. Presented as the
   // expected next step rather than an optional extra, because that is what it
@@ -1049,8 +1056,14 @@ function occPicker() {
       <select onchange="pickOcc(this.value)">
         <option value="">— none (this race stands alone) —</option>
         ${options.map((c) => `<option value="${esc(c.id)}"${S.occ === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}
+        ${barred.length ? `<optgroup label="Not open to a ${esc(S.rcc.name)}">
+          ${barred.map((c) => `<option value="${esc(c.id)}" disabled>${esc(c.name)}</option>`).join('')}
+        </optgroup>` : ''}
       </select>
     </div>
+    ${barred.length ? `<p class="muted small">${barred.length} occupation${barred.length === 1 ? ' is' : 's are'}
+      closed to a <b>${esc(S.rcc.name)}</b>${S.rcc.occ_restrictions?.note
+    ? ` — ${esc(S.rcc.occ_restrictions.note)}` : '.'}</p>` : ''}
     ${chosen?.variants?.length ? `<div class="rowline">
       <span class="muted small">Which ${esc(chosen.name)}?</span>
       <select onchange="S.occVariant = this.value || null; render()">
@@ -1132,6 +1145,12 @@ function dropAbility(name) {
 }
 
 function pickOcc(id) {
+  // The <option> is disabled, which stops a click and nothing else. A draft
+  // restored from before the restriction landed, or a select driven by hand,
+  // arrives here just the same.
+  const want = id ? S.classes.find((c) => c.id === id) : null;
+  const verdict = occAllowedForRace(S.rcc, want);
+  if (want && !verdict.allowed) { alert(verdict.reason); return; }
   S.occ = id || null;
   // A different occupation cannot keep the previous one's stage.
   S.occVariant = null;

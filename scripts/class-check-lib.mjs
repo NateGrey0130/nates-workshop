@@ -35,6 +35,11 @@ export const KNOWN_KEYS = new Set([
   // reason: the instruction attached to UNMODELLED is to delete the key or
   // change the app, and both would break a working field.
   'xp_table',
+  // Which of the book's five groupings an O.C.C. belongs to, and which
+  // occupations a race may take. Both are modelled and validated in
+  // parser.js; a race's restrictions were free text and display-only until
+  // the structured field landed beside them.
+  'occ_group', 'occ_restrictions',
   // Produced by the parser from the body, never written by hand.
   'lore', 'gm_notes', 'sections',
 ]);
