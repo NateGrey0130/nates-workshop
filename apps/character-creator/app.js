@@ -12,7 +12,8 @@
 // inline onclick handlers need their entry points on window — see the
 // Object.assign at the bottom.
 import { evalDice, rollPoolFormula, rollAttribute, rollQuantity } from './js/dice.js';
-import { LANGUAGE_OTHER, isLanguageName, languageSkillName } from './js/language-skills.js';
+import { isFamilyName, isRepeatableRow, otherRowFor, familySkillName,
+         promptFor } from './js/language-skills.js';
 import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSIONIC_TIER_RULES,
          rollsForPsionics as classRollsForPsionics } from './js/psionics.js';
 import { isChoiceGroup, isGearChoice, applyVariant,
@@ -1742,7 +1743,7 @@ function resolveSkill(name, explicit = {}) {
   // resolved to `{}` and saved at 0% +0/lvl: a language the class granted, on
   // the sheet, worth nothing and never advancing.
   const cat = skillByName().get(name)
-    || (isLanguageName(name) ? (skillByName().get(LANGUAGE_OTHER) || {}) : {});
+    || (isFamilyName(name) ? (skillByName().get(otherRowFor(name)) || {}) : {});
   const catBase = cat.base ?? 0;
   const base = explicit.base ?? (explicit.bonus && catBase ? catBase + explicit.bonus : catBase);
   return {
@@ -1837,7 +1838,7 @@ function renderSkills() {
     // it is not in `listed` and would render nowhere — leaving the player no
     // way to un-pick it. Same synthesis the related/secondary picker does.
     const optionNames = listed.concat(
-      picked.filter((n) => isLanguageName(n) && n !== LANGUAGE_OTHER && !listed.includes(n)));
+      picked.filter((n) => isFamilyName(n) && !isRepeatableRow(n) && !listed.includes(n)));
 
     // A category group offers the whole category, which includes skills this
     // very class already grants outright — the Chiang-Ku grants Advanced Math
@@ -1859,7 +1860,7 @@ function renderSkills() {
       // this it is a plain checkbox, and "two languages of choice" produces a
       // character holding one skill literally called "Language: Other" — which
       // is what two Priests of Light in production are carrying.
-      const repeatable = name === LANGUAGE_OTHER;
+      const repeatable = isRepeatableRow(name);
       const on = !repeatable && picked.includes(name);
       const blocked = !on && picked.length >= s.choose;
       const hint = repeatable
@@ -1885,8 +1886,8 @@ function renderSkills() {
     // concat below would never surface them — synthesize their rows from the
     // Other entry's numbers or a pick could not be seen or un-picked.
     const custom = chosen
-      .filter((n) => isLanguageName(n) && !catalog.some((s) => s.name === n))
-      .map((n) => ({ ...(skillByName().get(LANGUAGE_OTHER) || {}), name: n }));
+      .filter((n) => isFamilyName(n) && !catalog.some((s) => s.name === n))
+      .map((n) => ({ ...(skillByName().get(otherRowFor(n)) || {}), name: n }));
     const shown = Picker.filter(catalog, query)
       .concat(catalog.filter((s) => chosen.includes(s.name) && !Picker.match(s, query)))
       .concat(custom);
@@ -1909,7 +1910,7 @@ function renderSkills() {
       lastCat = cat;
       const on = chosen.includes(s.name);
       const blocked = !on && (taken.has(s.name.toLowerCase()) || chosen.length >= limit);
-      const hint = s.name === LANGUAGE_OTHER
+      const hint = isRepeatableRow(s.name)
         ? ' <span class="muted small">— once per language; you will be asked which</span>' : '';
       // The category is the heading now, so the row carries only its numbers.
       return head + `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
@@ -1962,11 +1963,11 @@ function toggleGroupPick(groupIndex, name, limit) {
   // pickers are genuinely different controls; what must not differ is what the
   // row MEANS, and for a long time it did: the same row was a repeatable
   // prompt on one step and a plain checkbox on another.
-  if (name === LANGUAGE_OTHER) {
+  if (isRepeatableRow(name)) {
     if (list.length >= limit) return;
-    const typed = window.prompt('Which language? (saved as "Language: <name>")');
+    const typed = window.prompt(promptFor(name));
     if (typed === null) return;
-    const full = languageSkillName(typed);
+    const full = familySkillName(name, typed);
     if (!full) return;
     if (takenNames().has(full.toLowerCase())) { alert(full + ' is already on this character.'); return; }
     list.push(full);
@@ -1984,12 +1985,12 @@ function toggleSkill(kind, name) {
   // Language: Other is taken once per language, each a separate skill named
   // for it — so the row prompts instead of toggling, and never reads as
   // "already picked". Un-picking happens on the named row it created.
-  if (name === LANGUAGE_OTHER) {
+  if (isRepeatableRow(name)) {
     // No limit check here: the row's checkbox is disabled at the limit by the
     // same blocked logic every other row gets.
-    const typed = window.prompt('Which language? (saved as "Language: <name>")');
+    const typed = window.prompt(promptFor(name));
     if (typed === null) return;
-    const full = languageSkillName(typed);
+    const full = familySkillName(name, typed);
     if (!full) return;
     if (takenNames().has(full.toLowerCase())) { alert(full + ' is already on this character.'); return; }
     list.push(full);
@@ -2593,7 +2594,7 @@ const SKILL_PCT_CAP = 98;   // p.22: "there is always a margin for error"
 // exactly this: the input a level-up proposal is computed against.
 function skillsAtLevelOne() {
   const find = (n) => skillByName().get(n)
-    || (isLanguageName(n) ? { ...(skillByName().get(LANGUAGE_OTHER) || {}), name: n } : {});
+    || (isFamilyName(n) ? { ...(skillByName().get(otherRowFor(n)) || {}), name: n } : {});
   const occ = S.cls.skills?.occ_skills || [];
   const iq = derive.bio(S.attrs, null, derive.classBonuses(skillBonusClass(), 1, rolledAll())).iq_skill_bonus_pct || 0;
 
@@ -2663,7 +2664,7 @@ function levelPowerPicks(kind) {
 
 function levelPickRows() {
   const find = (n) => skillByName().get(n)
-    || (isLanguageName(n) ? { ...(skillByName().get(LANGUAGE_OTHER) || {}), name: n } : {});
+    || (isFamilyName(n) ? { ...(skillByName().get(otherRowFor(n)) || {}), name: n } : {});
   const out = [];
   skillGrantsFor(S.cls, 1, S.level).forEach((g, gi) => {
     for (const name of (S.levelPicks[gi] || []).filter(Boolean)) {

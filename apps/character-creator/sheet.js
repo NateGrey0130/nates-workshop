@@ -802,17 +802,18 @@ function render() {
   if (!C.tab) C.tab = readTab();
   const skills = Array.isArray(c.skills) ? c.skills : [];
   const powers = Array.isArray(c.powers) ? c.powers : [];
-  // Within a box the language family reads as one block: every "Language: X"
-  // gathers at the position of the first one, alphabetized inside the run,
-  // while everything else keeps its stored order — class skills mirror the
-  // book's O.C.C. list, and re-sorting the whole box would lose that.
+  // Within a box the language families read as one block: every "Language: X"
+  // and "Literacy: X" gathers at the position of the first one, alphabetized
+  // inside the run — which puts the spoken ones before the written ones — while
+  // everything else keeps its stored order, because class skills mirror the
+  // book's O.C.C. list and re-sorting the whole box would lose that.
   const clusterLanguages = (list) => {
-    const langs = list.filter((s) => langSkills.isLanguageName(s.name))
+    const langs = list.filter((s) => langSkills.isFamilyName(s.name))
       .sort((a, b) => a.name.localeCompare(b.name));
     if (langs.length < 2) return list;
     let placed = false;
     return list.flatMap((s) => {
-      if (!langSkills.isLanguageName(s.name)) return [s];
+      if (!langSkills.isFamilyName(s.name)) return [s];
       if (placed) return [];
       placed = true;
       return langs;
@@ -1526,17 +1527,19 @@ function pickerBlock(grants, total, prefix) {
     const extra = chosen && !shown.some((s) => s.name === chosen)
       ? `<option value="${escHtml(chosen)}" selected>${escHtml(chosen)}</option>` : '';
     const opts = options.replace(`value="${escHtml(chosen)}"`, `value="${escHtml(chosen)}" selected`);
-    // Language: Other is one catalog row standing for every unlisted language;
-    // choosing it asks WHICH, and the composed "Language: X" is what gets
-    // submitted (see js/language-skills.js). Same state-not-DOM rule as the
-    // select: a re-render must not eat a half-typed language.
-    const isOther = chosen === langSkills.LANGUAGE_OTHER;
+    // Language: Other and Literacy: Other are each one catalog row standing for
+    // every unlisted member of their family; choosing one asks WHICH, and the
+    // composed name is what gets submitted (see js/language-skills.js). Same
+    // state-not-DOM rule as the select: a re-render must not eat a half-typed
+    // language.
+    const isOther = langSkills.isRepeatableRow(chosen);
     const lang = C.pickLangs[`${prefix}-${i}`] || '';
     return `
     <div class="rowline">
       <select id="${prefix}-pick-${i}" onchange="C.pickValues['${prefix}-${i}'] = this.value; render()">
         <option value="">— skip —</option>${extra}${chosen ? opts : options}</select>
-      ${isOther ? `<input class="mini-in wide" id="${prefix}-lang-${i}" placeholder="Which language?"
+      ${isOther ? `<input class="mini-in wide" id="${prefix}-lang-${i}"
+        placeholder="${chosen === langSkills.LITERACY_OTHER ? 'Which written language?' : 'Which language?'}"
         value="${escHtml(lang)}" oninput="C.pickLangs['${prefix}-${i}'] = this.value">` : ''}
     </div>`;
   }).join('');
@@ -1562,10 +1565,10 @@ function collectPicks(prefix, total) {
     // State first, DOM as the fallback — they agree, but state is the one that
     // survives a re-render.
     const v = C.pickValues[`${prefix}-${i}`] ?? $(`${prefix}-pick-${i}`)?.value;
-    if (v === langSkills.LANGUAGE_OTHER) {
+    if (langSkills.isRepeatableRow(v)) {
       // Composed or skipped: an Other pick with no language typed waits, the
       // same way a blank row does.
-      const full = langSkills.languageSkillName(C.pickLangs[`${prefix}-${i}`]);
+      const full = langSkills.familySkillName(v, C.pickLangs[`${prefix}-${i}`]);
       if (full) picks.push({ name: full, override: !!C.pickShowAll });
     } else if (v) picks.push({ name: v, override: !!C.pickShowAll });
   }
