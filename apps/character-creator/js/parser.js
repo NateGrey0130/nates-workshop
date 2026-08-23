@@ -1273,6 +1273,9 @@ export const OCC_GROUPS = ['clergy', 'men-of-arms', 'optional', 'magic', 'psychi
 
 const GROUP_TOKEN = /^group:(.+)$/;
 
+// "No R.C.C. at all", which in Rifts is what being human looks like.
+export const RACE_NONE = 'none';
+
 /**
  * Which occupations a race may take.
  *
@@ -1306,6 +1309,41 @@ export function occAllowedForRace(race, occ) {
     reason: Array.isArray(r.only)
       ? `${what} is limited to certain occupations, and ${occ.name || occ.id} is not one of them.`
       : `${what} may not take ${occ.name || occ.id}.`,
+  };
+}
+
+/**
+ * Which races may take an occupation - the mirror of occAllowedForRace.
+ *
+ *   race_restrictions:
+ *     only: ["none"]        # the Juicer: 95% human
+ *
+ * `none` is a RESERVED entry meaning "no R.C.C. at all", and it is the human
+ * case. Rifts prints no Human R.C.C. because human is the default and unstated:
+ * Rifts Ultimate Edition's contents list exactly one Racial Character Class,
+ * the Dragon Hatchling. So "human only" is not a race to name, it is the
+ * ABSENCE of one, and `only: ["none"]` says exactly that.
+ *
+ * Returns { allowed, reason }, filled only when false.
+ */
+export function raceAllowedForOcc(occ, race) {
+  const r = occ?.race_restrictions;
+  if (!r) return { allowed: true };
+  const names = Array.isArray(r.only) ? r.only : Array.isArray(r.except) ? r.except : null;
+  if (!names || !names.length) return { allowed: true };
+
+  const matches = names.some((n) => (String(n) === RACE_NONE ? !race?.id : String(n) === race?.id));
+  const allowed = Array.isArray(r.only) ? matches : !matches;
+  if (allowed) return { allowed: true };
+
+  const what = occ.name || occ.id;
+  // The common case by far is an O.C.C. that may not be paired at all, and
+  // "X is not open to a Dragon Hatchling" reads better there than a list.
+  return {
+    allowed: false,
+    reason: race?.id
+      ? `${what} is not open to a ${race.name || race.id}.`
+      : `${what} requires a race this character does not have.`,
   };
 }
 
@@ -1351,6 +1389,40 @@ function validateOccRestrictions(block, errors, warnings) {
   }
 }
 
+// The mirror check. A race id with no race is the same failure as a class id
+// with no class: it silently allows exactly what it meant to forbid.
+function validateRaceRestrictions(block, errors) {
+  if (block === undefined || block === null) return;
+  if (typeof block !== 'object' || Array.isArray(block)) {
+    errors.push('race_restrictions must be a map with `only` or `except`');
+    return;
+  }
+  const hasOnly = Array.isArray(block.only);
+  const hasExcept = Array.isArray(block.except);
+  if (hasOnly && hasExcept) {
+    errors.push('race_restrictions sets both only and except; state one or the other');
+  }
+  if (!hasOnly && !hasExcept) {
+    errors.push('race_restrictions needs an `only` or an `except` list');
+    return;
+  }
+  const list = hasOnly ? block.only : block.except;
+  if (!list.length) {
+    errors.push(`race_restrictions.${hasOnly ? 'only' : 'except'} is empty and would ` +
+      `${hasOnly ? 'forbid everything' : 'forbid nothing'}`);
+  }
+  for (const n of list) {
+    if (typeof n !== 'string' || !n.trim()) {
+      errors.push('race_restrictions entries must be race ids or "none"');
+    } else if (n !== RACE_NONE && !/^[a-z0-9][a-z0-9-]*$/.test(n)) {
+      errors.push(`race_restrictions names "${n}", which is not a race id or "none"`);
+    }
+  }
+  if (block.note !== undefined && typeof block.note !== 'string') {
+    errors.push('race_restrictions.note must be a string');
+  }
+}
+
 export function parseClassMarkdown(text) {
   const errors = [];
   const warnings = [];
@@ -1391,6 +1463,10 @@ export function parseClassMarkdown(text) {
     warnings.push('occ_restrictions is set on something that is not a race and will do nothing');
   }
   validateOccRestrictions(data.occ_restrictions, errors, warnings);
+  if (data.race_restrictions !== undefined && data.category !== 'occ') {
+    warnings.push('race_restrictions is set on something that is not an O.C.C. and will do nothing');
+  }
+  validateRaceRestrictions(data.race_restrictions, errors);
 
   // Shape checks on optional structures
   if (data.skills) {
