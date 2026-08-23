@@ -335,6 +335,25 @@ export function sumBonusGroups(a, b) {
   // so two classes each granting +1 attack at level 5 correctly gives +2.
   const at = [...(a?.at_level || []), ...(b?.at_level || [])];
   if (at.length) out.at_level = at;
+
+  // A MINIMUM IS NOT A BONUS, and merging it as one would be wrong twice over.
+  //
+  // It was not merged at all until now, so an occupation's requirement vanished
+  // the moment a race was composed with it: the Juicer's P.S. 22 and the Crazy's
+  // P.S. 19 / P.P. 17 - the only two that state any - were both silently lost,
+  // and the Attributes step stopped saying a character did not qualify.
+  //
+  // The stricter wins rather than the sum. Two classes wanting P.S. 22 and P.S.
+  // 19 want a character with P.S. 22, not one with 41.
+  const mins = {};
+  for (const src of [a?.attribute_minimums, b?.attribute_minimums]) {
+    for (const [k, v] of Object.entries(src || {})) {
+      if (typeof v !== 'number' || !Number.isFinite(v)) continue;
+      mins[k] = Math.max(mins[k] ?? -Infinity, v);
+    }
+  }
+  if (Object.keys(mins).length) out.attribute_minimums = mins;
+
   return Object.keys(out).length ? out : undefined;
 }
 

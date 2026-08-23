@@ -1181,6 +1181,41 @@ section('Starting XP');
   check('the audit selects xp', /level, xp, attributes/.test(auditSrc));
   check('and passes it to the validator', /level: row\.level, xp: row\.xp/.test(auditSrc));
 
+  // -- an occupation's ATTRIBUTE MINIMUMS have to survive it too -------------
+  //
+  // Same shape as the xp_table bug and found the same way: `sumBonusGroups`
+  // merged attributes, combat, saves, pools and at_level, and dropped
+  // attribute_minimums on the floor. An occupation's requirement vanished the
+  // moment a race was composed with it, and the Attributes step stopped saying
+  // a character did not qualify. Only two classes state any - the Juicer's
+  // P.S. 22 and the Crazy's P.S. 19 / P.P. 17 - and both lost them.
+  {
+    const race = { id: 'r', name: 'R', category: 'rcc', system: 'rifts' };
+    const occ = { id: 'o', name: 'O', category: 'occ', system: 'rifts',
+      bonuses: { attribute_minimums: { PS: 22 } } };
+    const composed = composeClass({ rcc: race, occ, character: {} });
+    check('an occupation\u2019s attribute minimums survive composition',
+      composed?.bonuses?.attribute_minimums?.PS === 22,
+      JSON.stringify(composed?.bonuses?.attribute_minimums));
+
+    // A minimum is not a bonus: two of them do not add up. A class wanting
+    // P.S. 22 beside one wanting P.S. 19 wants a character with P.S. 22.
+    const strictRace = { ...race, bonuses: { attribute_minimums: { PS: 19, PP: 17 } } };
+    const both = composeClass({ rcc: strictRace, occ, character: {} });
+    check('and the stricter of two wins rather than the sum',
+      both?.bonuses?.attribute_minimums?.PS === 22,
+      JSON.stringify(both?.bonuses?.attribute_minimums));
+    check('while an attribute only one of them names is kept',
+      both?.bonuses?.attribute_minimums?.PP === 17,
+      JSON.stringify(both?.bonuses?.attribute_minimums));
+
+    // And a pairing that states none must not invent an empty block.
+    const none = composeClass({ rcc: race, occ: { ...occ, bonuses: undefined }, character: {} });
+    check('and neither stating one leaves nothing behind',
+      none?.bonuses?.attribute_minimums === undefined,
+      JSON.stringify(none?.bonuses));
+  }
+
   // -- an OCCUPATION's curve has to survive composition ----------------------
   //
   // Palladium names its experience charts by O.C.C. - "Knight & Noble", "Thief
