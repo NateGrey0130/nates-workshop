@@ -110,6 +110,12 @@ export const CORE_SDC_BY_CLASS = {
   'merchant': '1D6',
   'noble': '1D6',
   'scholar': '1D6',
+  // Palladium Fantasy main book, the practitioners of magic, printed 104-137.
+  // The book's other half of the same core rule, and the plainest reading of
+  // it: these three are what "practitioners of magic" names.
+  'wizard': '1D6',
+  'summoner': '1D6',
+  'diabolist': '1D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence

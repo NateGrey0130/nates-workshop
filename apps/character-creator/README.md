@@ -1730,7 +1730,7 @@ differs from the standard:
 | S.D.C. | **3D6** for men of arms, **1D6** for practitioners of magic, scholars and everyone else |
 
 The app used to read that silence as "this character has none" and store
-`hp_max` NULL. Forty-one of fifty published classes state no hit point
+`hp_max` NULL. Forty-four of fifty-three published classes state no hit point
 formula, so this was the common path, not an edge case — two Priests of Light
 reached production with no hit points and no S.D.C., and nothing on the sheet
 suggested anything was missing.
@@ -4120,9 +4120,9 @@ local-only script is protected as soon as it says so.
 
 | After | Rows |
 |---|---|
-| classes (published, live) | 50 |
-| skills | 322 |
-| spells | 542 |
+| classes (published, live) | 53 |
+| skills | 324 |
+| spells | 543 |
 | psionic powers | 101 |
 | gear | 658 |
 
@@ -4279,7 +4279,7 @@ added `data_script_runs` and every script now ends by writing itself into it.
 | Dev seed | `seed-dev.sql` | Optional local character/campaign rows. Never applied to production |
 | Run tracking | `backfill-data-script-runs.sql` | One-time, optional, and an **assertion**: records every script that had already been applied before `data_script_runs` existed, stamped with a note saying the run was asserted rather than observed. Guarded per filename, so it cannot double-record a script that has genuinely run since |
 | Data cleanup | `estimate-*.sql`, `backfill-*.sql`, `rename-*.sql`, `merge-*.sql`, `retire-gear-placeholders.sql`, `retire-leather-armor-placeholder.sql`, `retire-orphan-gear-stubs.sql`, `untag-cross-system.sql` | One-off corrections to rows an earlier import or data script got wrong or left NULL. A `rename-*` also leaves a `catalog_redirects` row, so class markdown citing the old key keeps resolving | One-off corrections to rows an earlier import or data script got wrong or left NULL |
-| Class corrections | `fix-*.sql`, `apply-*.sql`, `long-bowman-money.sql`, `ley-line-walker-spells-per-level.sql`, `mystic-spells-per-level.sql`, `shifter-spells-per-level.sql`, `ley-line-rifter-spells-per-level.sql` | The rules audit's output: stored class definitions rewritten against the books, and class data written for a schema feature the day it landed. The Ley Line Walker one is the first to fill `spells_per_level` — the format gained the key before any class carried it, so every caster read as "not recorded" until a book was opened |
+| Class corrections | `fix-*.sql`, `apply-*.sql`, `long-bowman-money.sql`, `ley-line-walker-spells-per-level.sql`, `mystic-spells-per-level.sql`, `shifter-spells-per-level.sql`, `ley-line-rifter-spells-per-level.sql`, `record-warlock-palladium-deltas.sql` | The rules audit's output: stored class definitions rewritten against the books, and class data written for a schema feature the day it landed. The Ley Line Walker one is the first to fill `spells_per_level` — the format gained the key before any class carried it, so every caster read as "not recorded" until a book was opened |
 | Additions | `add-*.sql` | Something the book gives that the database never had — a catalog row, a whole-table batch extracted from page scans (`add-pf-weapons-batch`, `add-pf-equipment-batch`, the RUE spell and psionics batches), or a whole class. A missing skill named in an `only` restriction narrows its category to nothing, which is usually how one gets noticed. A class goes in this way only when the import tool cannot be reached: production sits behind Cloudflare Access, so a hand-transcribed class is applied by script instead |
 | Repo rescue | `restore-*.sql` | Rows that existed **only in production**. The catalog editor and the importer's confirm step both write straight to D1, so nothing in git created what they added: a database built from the repo came up 75 skills, 36 psionic powers and 58 gear rows short, and every class citing one had a dead reference. Exported from the live rows and guarded on the key, so on production they find everything present and do nothing — it is a fresh environment that needs them. Named `restore-` rather than `add-` **for ordering**: an `add-` file sorts before `rename-skills-to-rue.sql`, which would insert the post-rename name, leave the rename's guard to find its target taken, and end up holding both |
 | Ordering-sensitive | `zz-*.sql` | Applied in filename order like everything else, which is exactly the problem: **filename order is not the order things were actually run**. `fix-class-skill-names-to-rue.sql` was applied to production by hand, last, so it won; in a repo build it sorts under `f` and three scripts after it (`fix-dead-skill-restrictions`, `fix-dragon-hatchling`, `fix-juicer-rue-edition`) wrote the pre-RUE skill names back. Production was right and a fresh build was wrong, and only the regression restriction audit caught it. Editing those three would break the rule that an applied script is never edited, so the alternative is to sort after all of them — and `zz-` is the only prefix that guarantees it |
