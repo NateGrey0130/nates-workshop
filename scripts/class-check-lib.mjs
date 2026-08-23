@@ -18,6 +18,15 @@ export const KNOWN_KEYS = new Set([
   'starting_money', 'skills', 'equipment_starting', 'level_progression',
   'psionics', 'magic', 'bonuses', 'special_abilities', 'natural_abilities',
   'restrictions', 'side_effects', 'variants', 'extraction_notes',
+  // A race with NO psychic potential. Fully modelled and always has been -
+  // `rollsForPsionics()` in js/psionics.js skips the Random Psionics Table on
+  // it, the wizard's Race briefing prints "no psychic potential", and the smoke
+  // test pins both. It was missing from this list only because no published
+  // class had used it: the first six that do are Palladium Fantasy races, and
+  // they arrived reported as UNMODELLED. A false alarm here is worse than a
+  // missing one, because the instruction attached to it is to delete the key or
+  // change the app, and both would break a working field.
+  'psionics_allowed',
   // Produced by the parser from the body, never written by hand.
   'lore', 'gm_notes', 'sections',
 ]);

@@ -135,6 +135,36 @@ export const CORE_SDC_BY_CLASS = {
   'psi-healer': '1D6',
   'psi-mystic': '1D6',
   'mind-mage': '1D6',
+
+  // The fourteen Palladium Fantasy player races, printed 288-312.
+  //
+  // A RACE IS NEVER A MAN OF ARMS. What makes a character one is the job, and
+  // withCorePools looks the OCCUPATION up first, so every one of these entries
+  // fires only for a race played with no occupation at all - which the books do
+  // not do and the app allows. There, printed 18's own third bucket applies:
+  // "practitioners of magic, scholars and all others roll 1D6". A race with no
+  // occupation is "all others".
+  //
+  // Ten of the fourteen also state a racial S.D.C. of their own, and NONE of
+  // them states it here. Those are pool BONUSES on the class - "10 plus those
+  // gained from O.C.C.s and physical skills" - because printed 18 says all
+  // S.D.C. bonuses are cumulative. Written as sdc_base they would replace the
+  // occupation's roll rather than add to it, so a Troll Knight would have 40
+  // S.D.C. instead of 40 + 3D6.
+  'human': '1D6',
+  'elf': '1D6',
+  'dwarf': '1D6',
+  'gnome': '1D6',
+  'troglodyte': '1D6',
+  'kobold': '1D6',
+  'goblin': '1D6',
+  'hob-goblin': '1D6',
+  'orc': '1D6',
+  'ogre': '1D6',
+  'troll': '1D6',
+  'changeling': '1D6',
+  'wolfen': '1D6',
+  'coyle': '1D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence

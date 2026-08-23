@@ -101,6 +101,59 @@ check('a stated hit point formula is never overridden',
 const dragonMerc = composeClass({ rcc: mk('chiang-ku-dragon'), occ: mk('merc-soldier') });
 check('S.D.C. follows the occupation, not the race', dragonMerc.sdc_base === '3D6', dragonMerc.sdc_base);
 
+// ---------- 1b. A racial S.D.C. is a BONUS, never sdc_base ----------
+//
+// Printed 18: "Some non-human races and O.C.C.s also get special S.D.C.
+// bonuses. All S.D.C. points/bonuses are cumulative." Ten of the fourteen
+// Palladium Fantasy player races state a number, and every page states it the
+// same way - "40 plus those gained from O.C.C.s and physical skills".
+//
+// Written as sdc_base it is SILENTLY WRONG, because combineClasses gives the
+// race's pool precedence: a Troll Knight would carry 40 instead of 40 + 3D6,
+// and nothing on the sheet would look unusual. This check exists so that
+// "fixing" a race to state its S.D.C. the obvious way fails loudly.
+const PF_RACES = ['human', 'elf', 'dwarf', 'gnome', 'troglodyte', 'kobold', 'goblin',
+  'hob-goblin', 'orc', 'ogre', 'troll', 'changeling', 'wolfen', 'coyle'];
+{
+  const present = PF_RACES.filter((id) => byId.has(id));
+  check('the fourteen Palladium player races are all defined by a data script',
+    present.length === PF_RACES.length,
+    'missing: ' + PF_RACES.filter((id) => !byId.has(id)).join(', '));
+
+  const statesSdc = present.filter((id) => byId.get(id).sdc);
+  check('no Palladium race states sdc_base', statesSdc.length === 0,
+    statesSdc.join(', ') + ' - a racial S.D.C. is a pool BONUS; sdc_base would '
+      + 'replace the occupation roll instead of adding to it');
+
+  // The racial numbers as printed. Read off the pages, not off the files.
+  const RACIAL_SDC = { human: undefined, elf: 10, dwarf: 15, gnome: undefined,
+    troglodyte: 10, kobold: 5, goblin: 5, 'hob-goblin': undefined, orc: 10,
+    ogre: 20, troll: 40, changeling: undefined, wolfen: 20, coyle: 10 };
+  const sqlFor = (id) => readFileSync(join(appDir, 'db', `add-${id}-class.sql`), 'utf8');
+  const wrong = present.filter((id) => {
+    const want = RACIAL_SDC[id];
+    const got = /pools: \{ sdc: (\d+) \}/.exec(sqlFor(id));
+    return want === undefined ? got !== null : Number(got?.[1]) !== want;
+  });
+  check('each race carries the S.D.C. bonus its page prints', wrong.length === 0,
+    wrong.join(', '));
+
+  // And it survives composition with a man of arms, which is the whole point.
+  const troll = composeClass({
+    rcc: mk('troll', { bonuses: { pools: { sdc: 40 } } }),
+    occ: mk('knight'),
+  });
+  check('a Troll Knight rolls the Knight 3D6 and keeps the troll +40',
+    troll.sdc_base === '3D6' && troll.bonuses?.pools?.sdc === 40,
+    'sdc_base=' + troll.sdc_base + ' bonus=' + troll.bonuses?.pools?.sdc);
+
+  // Played alone - which the books do not do and the app allows - the race
+  // still gets a core roll rather than a NULL pool.
+  const alone = composeClass({ rcc: mk('troll', { bonuses: { pools: { sdc: 40 } } }) });
+  check('and a troll with no occupation still gets a core S.D.C. roll',
+    alone.sdc_base === '1D6', alone.sdc_base);
+}
+
 // The formulas are only worth having if the roller understands them.
 const attrs = { IQ: 10, ME: 10, MA: 10, PS: 10, PP: 10, PE: 14, PB: 10, Spd: 10 };
 const hpRoll = rollPoolFormula('P.E. + 1D6 per level', attrs);

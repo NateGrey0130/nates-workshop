@@ -29,6 +29,7 @@ Access gate. No build step, no framework, no dependencies.
   - [Two class fields, not one](#two-class-fields-not-one)
   - [A draft stores its step as an index](#a-draft-stores-its-step-as-an-index)
 - [A race and an occupation together](#a-race-and-an-occupation-together)
+  - [The fourteen Palladium player races](#the-fourteen-palladium-player-races)
 - [One place composes a class](#one-place-composes-a-class)
 - [Hit points and S.D.C. come from the core rules](#hit-points-and-sdc-come-from-the-core-rules)
 - [Classes that come in stages](#classes-that-come-in-stages)
@@ -1697,6 +1698,122 @@ Three rules earned by getting them wrong first:
 
 ---
 
+### The fourteen Palladium player races
+
+Until this import the catalog held **one** Palladium R.C.C. — the Chiang-Ku
+Dragon — and four R.C.C.s in total. Every Palladium occupation that had been
+imported was therefore an occupation with nothing underneath it: the wizard
+picks a race first, and the only race a Palladium character could be was a
+dragon. The fourteen races on printed 288-312 are what the rest of that book
+assumes.
+
+| race | printed | racial S.D.C. | psionics | O.C.C.s the page allows |
+|---|---|---|---|---|
+| Human | 288 | — | standard | any |
+| Elf | 290 | +10 | standard | any |
+| Dwarf | 292 | +15 | standard | any **except magic** |
+| Gnome | 294 | — | **none** | magic, clergy or optional, plus ranger, mercenary, soldier, thief, assassin |
+| Troglodyte | 295 | +10 | **none** | mercenary, soldier, thief, assassin, monk, vagabond |
+| Kobold | 297 | +5 | standard | any except long bowman, knight, palladin |
+| Goblin | 299 | +5 | standard | assassin, thief, mercenary, soldier, black priest, witch, vagabond, occasional psychic |
+| Hob-Goblin | 300 | — | **none** | assassin, thief, mercenary, soldier, black priest, witch, vagabond |
+| Orc | 302 | +10 | **none** | mercenary, soldier, assassin, thief, black priest, witch, vagabond |
+| Ogre | 304 | +20 | **none** | any |
+| Troll | 306 | +40 | **none** | any except psychic P.C.C.s and illusionist |
+| Changeling | 308 | — | standard | any |
+| Wolfen | 310 | +20 | standard | any |
+| Coyle | 312 | +10 | standard | any |
+
+**A race's S.D.C. is a pool BONUS, not `sdc_base`.** This is the one decision
+the whole batch turns on. Ten of the fourteen pages state a number, and every
+one of them states it the same way — *"10 plus those gained from O.C.C.s and
+physical skills"* — and printed 18 says so outright: *"Some non-human races and
+O.C.C.s also get special S.D.C. bonuses. All S.D.C. points/bonuses are
+cumulative."*
+
+Written as `sdc_base` it would have been silently wrong, because
+`combineClasses` gives the **race's** pool precedence over the occupation's: a
+Troll Knight would carry 40 S.D.C. instead of 40 + 3D6. Written as
+`bonuses.pools.sdc` it is summed across both halves by `sumBonusGroups`, exactly
+as the Stone Master's flat P.P.E. term is. The same reading covers the four
+races whose page says *"only those gained from O.C.C.s and physical skills"* —
+they state no bonus at all, and the occupation's roll stands alone.
+
+Because no race states `sdc_base`, all fourteen need an entry in
+`CORE_SDC_BY_CLASS`, and all fourteen are `1D6`. **A race is never a man of
+arms** — the job decides that, and `withCorePools` looks the occupation up
+first — so those entries fire only for a race played with no occupation at all,
+where printed 18's third bucket, *"practitioners of magic, scholars and all
+others"*, is the one that applies.
+
+**Every one of the fourteen needs an occupation, and `needsOccupation()` says so
+without being told.** It is true for an R.C.C. granting no related and no
+secondary skills, and a Palladium race grants neither — those come from the
+O.C.C. That was already the rule; the races are the first classes where it is
+the normal case rather than the exception.
+
+**Hit points are transcribed rather than defaulted.** Every race page prints
+*"P.E. +1D6 per level of experience"*, which is identical to the core rule
+`compose.js` would have supplied. It is written into the class anyway, because
+the page states it and the class file records what the page says.
+
+**Six races state `psionics_allowed: false`** — gnome, troglodyte, hob-goblin,
+orc, ogre and troll — which is the first use of that key by any published class.
+It skips the Random Psionics Table entirely. The hob-goblin is the case worth
+reading twice: it can never *have* psychic powers **and** is +1 to save against
+them, which is not a contradiction and is the clearest demonstration that the
+two are different fields.
+
+#### What a race states that the app cannot yet hold
+
+Three things, all recorded as prose and all listed in the affected classes'
+`extraction_notes`:
+
+- **A race-level per-skill percentage bonus.** *"Add a bonus of +5% to the
+  following skills (this is in addition to O.C.C. bonuses): general repair,
+  masonry, carpentry, …"* modifies skills the **occupation** grants. `occ_skills`
+  *grants* a skill; `skill_overrides` only restates one the class already grants;
+  `skills.bonuses` is a catalog-row property shared by every class. None of the
+  three expresses "+5% to it if you have it". Four races are affected — dwarf
+  (eleven skills plus any Military skill), gnome (nine), kobold (three) and
+  changeling (Disguise). **The ogre's is different and IS modelled**: its page
+  *grants* Recognize Weapon Quality, Falconry and Animal Husbandry outright, so
+  those are `occ_skills` at the catalog base plus the printed bonus.
+- **A horror factor the creature projects.** Six races have one — ogre 10,
+  changeling 10, Coyle 11, troll 12, Wolfen 12, troglodyte 13 when enraged.
+  `saves.horror_factor` is the bonus for *resisting* one; there is no field for
+  *having* one. Recorded in `natural_abilities`.
+- **Racial percentile abilities.** Underground Tunneling, Underground
+  Architecture, Underground Sense of Direction, Track Blood Scent and Recognize
+  Scent of Others all behave exactly like skills — a base percentage rising per
+  level — but they belong to no catalog category and are granted rather than
+  chosen, so filing them as catalog skills would make them pickable by anyone as
+  a secondary skill. They are `natural_abilities` with their numbers stated,
+  which is the Chiang-Ku's precedent.
+
+Two saves the races needed did **not** stay prose. `faerie_magic` and `disease`
+became real keys, because a bonus written for a key `derive.js` does not expose
+reaches nothing at all — see
+[House rules and derived values](#house-rules-and-derived-values).
+
+#### Deliberately not imported
+
+**The Goblin Cobbler** (printed 302), an "Optional R.C.C." — a goblin is one on
+a percentile roll of 1-15. It has metamorphosis at will, six faerie spells cast
+twice per 24 hours at third-level strength, +1 to save vs all magic, +1 vs
+possession, +3 vs horror factor, and +10% to three crafts. It is **not** a
+`variants` entry: `VARIANT_OVERRIDES` admits `attribute_dice`,
+`attribute_requirements`, the pool bases, `bonuses` and `skill_overrides`, and
+the Cobbler's whole substance is a `magic` block and an abilities block. It
+needs either a widened variant or a second class, and that is a decision rather
+than a transcription. Recorded in the goblin's `extraction_notes` and GM notes.
+
+**Demons, deevils and the other creatures of magic** (printed 313 onward) are
+out of scope for this pass — they are monsters the GM runs, not races a player
+picks, and they are a much larger body of stat blocks.
+
+---
+
 ## One place composes a class
 
 Turning a character's classes into the thing it is played as takes four steps,
@@ -1743,7 +1860,7 @@ differs from the standard:
 | S.D.C. | **3D6** for men of arms, **1D6** for practitioners of magic, scholars and everyone else |
 
 The app used to read that silence as "this character has none" and store
-`hp_max` NULL. Fifty-two of sixty-one published classes state no hit point
+`hp_max` NULL. Fifty-two of seventy-five published classes state no hit point
 formula, so this was the common path, not an edge case — two Priests of Light
 reached production with no hit points and no S.D.C., and nothing on the sheet
 suggested anything was missing.
@@ -4141,7 +4258,7 @@ local-only script is protected as soon as it says so.
 
 | After | Rows |
 |---|---|
-| classes (published, live) | 61 |
+| classes (published, live) | 75 |
 | skills | 324 |
 | spells | 543 |
 | psionic powers | 101 |
@@ -4428,11 +4545,24 @@ the O.C.C. half is now carried.
 **Nothing restricts which O.C.C. a race may take.** The picker offers every
 occupation in the system, and the books do not: plenty of races are barred from
 particular classes, and some classes are open only to one race. A character the
-books forbid saves cleanly here. Left unenforced deliberately for now — the
-restrictions live in prose rather than in any field the importer extracts, so
-enforcing them means first deciding where that data lives. Worth revisiting once
-there are enough O.C.C.s for the rule to bite; with two Palladium O.C.C.s in the
-catalog there is currently very little to restrict.
+books forbid saves cleanly here.
+
+**This is now the largest unenforced rule in the app, and the data for it
+exists.** Every one of the fourteen Palladium Fantasy player races prints an
+"O.C.C.s Available to X" line, and eight of them are real restrictions rather
+than "any": a dwarf may take no magic O.C.C. at all, a kobold no long bowman,
+knight or palladin, a troll no psychic P.C.C. and no illusionist, and the
+troglodyte is held to six occupations by name. Each is transcribed into that
+race's `restrictions:` block, which is display-only - the player is told and
+nothing stops them. With twenty-five Palladium classes and fourteen races the
+combinations are no longer hypothetical, and the earlier note here - that with
+two Palladium O.C.C.s "there is currently very little to restrict" - has stopped
+being true.
+
+What it needs first is a decision about where the data lives. `restrictions` is
+free text by design and always has been, so enforcing it means either a
+structured field naming class ids, or a rule that reads the prose, and the
+second is the kind of guess this repo does not make. Worth its own pass.
 
 **The catalog editor has no general delete.** Rows are created and corrected by
 hand; the only deletion is the one a merge performs. Deliberate — see
