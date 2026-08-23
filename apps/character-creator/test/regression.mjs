@@ -1033,6 +1033,99 @@ console.log('\n' + '[8/8] Checks that only a database can make');
     all.map((r) => r.slug).join(', '));
 }
 
+// ---------- the armour table, and the duplicates ----------
+{
+  const q = (sql) => {
+    const r = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--json',
+      '--command', `"${sql}"`]);
+    const out = r.stdout || '';
+    for (let at = out.indexOf('['); at >= 0; at = out.indexOf('[', at + 1)) {
+      try { const v = JSON.parse(out.slice(at)); if (Array.isArray(v)) return v.flatMap((b) => b.results || []); }
+      catch { /* wrangler's own log line opens with a bracket too */ }
+    }
+    throw new Error(cleanErr(r.stderr || out));
+  };
+
+  // Printed 270 has SIXTEEN rows and the catalog held five, so a Palladium
+  // character could buy leather, chain or scale and nothing else - no cloth,
+  // no plate, and not one half suit.
+  const pf = q("SELECT slug, name, ar, sdc, cost, weight_lbs FROM gear "
+    + "WHERE system = 'palladium-fantasy' AND category = 'armor'");
+  check('the Palladium armour catalog covers the whole table', pf.length >= 27,
+    `${pf.length} rows`);
+
+  // The five that were already there come from the same table as the fourteen
+  // that arrived, so they are a check on the reading rather than just data.
+  const TABLE = {
+    'cloth-armor': [5, 6, 20], 'padded-armor': [8, 15, 50],
+    'soft-leather': [10, 20, 75], 'hard-leather': [11, 30, 150],
+    'studded-leather': [13, 38, 200], 'chain-mail': [14, 44, 280],
+    'chain-mail-half': [9, 20, 170], 'double-mail': [15, 55, 340],
+    'double-mail-half': [10, 28, 200], 'scale-mail': [15, 75, 650],
+    'scale-mail-half': [11, 35, 300], 'splint-armor': [16, 82, 700],
+    'splint-armor-half': [12, 40, 400], 'plate-and-chain': [15, 100, 800],
+    'plate-armor': [17, 160, 1000], 'plate-armor-half': [14, 60, 450],
+  };
+  const wrong = Object.entries(TABLE).filter(([slug, [ar, sdc, cost]]) => {
+    const r = pf.find((x) => x.slug === slug);
+    return !r || r.ar !== ar || r.sdc !== sdc || r.cost !== cost;
+  });
+  check('and every row matches the A.R., S.D.C. and price the table prints',
+    wrong.length === 0, wrong.map(([s2]) => s2).join(', '));
+
+  // The three leather half suits are given in prose with no price, and a
+  // number there would be invented.
+  const halves = ['soft-leather-half', 'hard-leather-half', 'studded-leather-half']
+    .map((sl) => pf.find((x) => x.slug === sl));
+  check('the three leather half suits exist', halves.every(Boolean));
+  check('and none of them invents a price the book withholds',
+    halves.every((h) => h && h.cost == null),
+    halves.map((h) => `${h?.slug}=${h?.cost}`).join(', '));
+
+  const shields = q("SELECT slug, sdc, cost FROM gear WHERE slug LIKE '%shield%'");
+  check('all five shields are in the catalog', shields.length === 5,
+    shields.map((r) => r.slug).join(', '));
+
+  // -- the duplicates ------------------------------------------------------
+  const RETIRED = ['crusader-body-armor', 'gladiator-body-armor',
+    'plastic-man-body-armor', 'urban-warrior-body-armor',
+    'dead-boy-armor-ca-1-heavy', 'dead-boy-armor-ca-2-light',
+    'dead-boy-armor-black-market'];
+  const left = q(`SELECT slug FROM gear WHERE slug IN (${RETIRED.map((r) => `'${r}'`).join(', ')})`);
+  check('the duplicated armour rows are gone', left.length === 0,
+    left.map((r) => r.slug).join(', '));
+
+  // Retired keys keep resolving. That is the whole contract of the table.
+  const redir = q(`SELECT from_key FROM catalog_redirects WHERE catalog = 'gear' `
+    + `AND from_key IN (${RETIRED.map((r) => `'${r}'`).join(', ')})`);
+  check('and every one of them still resolves through a redirect',
+    redir.length === RETIRED.length, `${redir.length} of ${RETIRED.length}`);
+
+  // 'dead-boy-body-armor' pointed at a row that was retired here. A redirect
+  // to a row that no longer exists is the one failure this table exists to
+  // prevent, so it is checked over the WHOLE catalog and not just these seven.
+  const dangling = q("SELECT r.from_key FROM catalog_redirects r WHERE r.catalog = 'gear' "
+    + 'AND NOT EXISTS (SELECT 1 FROM gear g WHERE g.id = r.to_id)');
+  check('no gear redirect points at a row that no longer exists',
+    dangling.length === 0, dangling.map((r) => r.from_key).join(', '));
+
+  // The black market price was a ROW; printed 261 puts it under "Features
+  // Common to All Dead Boy Armor", so it belongs to both suits.
+  const deadBoy = q("SELECT slug, cost_note FROM gear WHERE slug IN "
+    + "('ca-1-heavy-dead-boy-armor', 'ca-2-light-dead-boy-armor')");
+  check('both Dead Boy suits carry the black market price as a note',
+    deadBoy.length === 2 && deadBoy.every((r) => /Black market/.test(r.cost_note || '')),
+    JSON.stringify(deadBoy.map((r) => r.cost_note)));
+
+  // Checked and found distinct - a rating in common is not a duplicate.
+  const kept = q("SELECT slug FROM gear WHERE slug IN ('bushman-trooper', "
+    + "'bushman-full-composite-environmental-body-armor', 'cyber-armor', "
+    + "'huntsman-plate-padded-armor-non-environmental', "
+    + "'juicer-assassin-plate-armor-non-environmental')");
+  check('and the five that only look like duplicates are still there',
+    kept.length === 5, kept.map((r) => r.slug).join(', '));
+}
+
 // ---------- enchantments ----------
 // What an alchemist puts INTO a sword, as opposed to a sword. Printed 249-250
 // sells three finished suits and then 32 PROPERTIES that go into ordinary gear,

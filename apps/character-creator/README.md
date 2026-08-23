@@ -1223,6 +1223,57 @@ A freeform item (`item_id` NULL) has no category to check against, so the family
 rule is skipped rather than guessed at: a GM who writes in "silver signet ring"
 should be able to enchant it. The cap still applies.
 
+### The armour table, all sixteen rows of it
+
+Printed 270 prints **sixteen** types of armour and the catalog held **five**, so
+a Palladium character could buy soft leather, hard leather, studded leather,
+chain mail or scale mail and nothing else — no cloth, no padding, no splint, no
+plate, and not one of the half suits, which is most of what a poor character or
+a heavily armoured one would actually wear. All sixteen are there now, plus the
+three leather half suits the prose beneath the table gives.
+
+The five that were already there are a **check on the reading** rather than just
+data: they come from the same table, and the generator refuses to run if any of
+them has drifted from the printed figures. All five matched.
+
+**Three half suits keep no price.** The table prices the metal ones; the leather
+half suits appear only in the prose — *"half suit of Soft Leather has 10 S.D.C.
+& A.R. 6"* — with no figure, and a number there would be invented. The same
+prose says a half suit of padded, quilt or cloth *"isn't worthwhile"*, so none
+is imported.
+
+**Shields are on printed 60**, under W.P. Shield, not in the armour table. The
+catalog had the small wood-and-leather one and mentioned the metal-plated
+version inside its own description; all five are now rows.
+
+### Seven Rifts armour rows were the same suit twice
+
+Each pair was one row imported from Rifts Ultimate Edition p.261-270 and one
+older row whose `source_book` read *"Web reference (not book-verified)"*. On the
+four full-suit pairs the M.D.C. and the weight agree exactly — 95/24, 70/21,
+35/13, 50/11 — which is what makes them duplicates rather than four suits that
+happen to share a shape. The book-verified row is the keeper every time.
+
+**The Crusader pair disagreed on price**, 55,000 against 40,000. That one is not
+a tidy-up: one of those numbers was wrong and the catalog offered both.
+
+**The three Dead Boy rows are a different shape.** Two were one-line stubs with
+no M.D.C. and no cost, standing beside full rows that had both. The third was
+not a suit at all — *"Dead Boy" Body Armor (Black Market)* had no M.D.C. and its
+description said outright that it was a price. Printed 261 puts that price under
+*"Features Common to All Dead Boy Armor"*, so it belongs to **both** suits and is
+now a `cost_note` on each rather than an item somebody could wear.
+
+**One redirect already pointed at a row being retired.** `dead-boy-body-armor`
+resolved to the CA-2 *stub*, so it is re-pointed first — a retired key resolving
+to a row that no longer exists is the one failure `catalog_redirects` exists to
+prevent, and regression now checks it over the whole catalog.
+
+**Checked and found distinct**, so left alone: the Bushman Trooper (90 M.D.C.
+against the composite's 60 — a separate model, not another printing), the
+Huntsman and Juicer Assassin plate (both 45 M.D.C. and everything else different),
+and `cyber-armor`, which two characters are wearing.
+
 ### The items themselves are gear
 
 The other half of printed 249-267. The enchantments are what an alchemist puts
@@ -4734,7 +4785,7 @@ against — read off production, not estimated.
 | of which `media_items` (MediaVault) | 2,082 |
 | the four catalogs together | 1,653 |
 | characters, live | **8** |
-| the largest table this app owns | `gear`, 833 rows |
+| the largest table this app owns | `gear`, 844 rows |
 
 **The two halves already have zero overlap.** `functions/api/media.js` is the only
 D1 consumer outside `functions/api/character-creator/`, it touches exactly one
@@ -4764,7 +4815,7 @@ migration-state checks with them.
 The four catalogs are read *whole* by `/catalogs` and `/items` — that is
 deliberate, see [Catalog lists are deliberately
 unbounded](#known-limitations-and-refactor-candidates) — so a full scan is the
-query plan, and 833 rows is the largest scan in the app. Every hot filter that
+query plan, and 844 rows is the largest scan in the app. Every hot filter that
 is not a full read is already covered: `characters` by campaign and by player,
 `character_items` by character, `journal_entries` by campaign and by character,
 `play_events` and both pending-pick tables by character, `npcs` by campaign,
@@ -4857,7 +4908,7 @@ local-only script is protected as soon as it says so.
 | skills | 324 |
 | spells | 570 |
 | psionic powers | 101 |
-| gear | 833 |
+| gear | 844 |
 
 **These are pinned by `test/regression.mjs`**, which is the only thing that can
 honestly check them: it builds a database from nothing under a scratch directory
