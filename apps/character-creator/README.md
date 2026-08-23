@@ -1223,6 +1223,54 @@ A freeform item (`item_id` NULL) has no category to check against, so the family
 rule is skipped rather than guessed at: a GM who writes in "silver signet ring"
 should be able to enchant it. The cap still applies.
 
+### The items themselves are gear
+
+The other half of printed 249-267. The enchantments are what an alchemist puts
+INTO an object; **175 finished items** are the objects he sells over the
+counter, and those are ordinary `gear` rows.
+
+| section | rows | section | rows |
+|---|---|---|---|
+| Magic potions | 28 | Faerie foods | 28 |
+| Miscellaneous components | 28 | Herblore drugs | 17 |
+| Poisons and toxins | 12 | Magic fabrics | 11 |
+| Other articles | 11 | Bandages and make-up | 10 |
+| Crystals and stones | 9 | Magic powders | 8 |
+| Magic fumes | 7 | Guardian stones | 3 |
+| Magic armour, finished suits | 3 | | |
+
+**The three magic suits go in as armour**, not as an undifferentiated `magic`
+row: the page prints an A.R. and an S.D.C. for each, and those columns exist —
+Cloak of Armor at A.R. 14 / S.D.C. 50, Cloak of Protection at 12 / 50, Leather
+of Iron at 15 / 60. Everything else is `category = 'magic'`.
+
+`cost` holds the low end and `cost_note` the rest, which most of these need: the
+book prices in ranges far more often than in figures, and four different ways —
+a range (*"20,000-40,000 gold"*), an open end (*"700,000+"*), a per-unit rate
+(*"80 gold per foot"*), and a band. **Faerie foods are priced by band**, which
+their own preamble states: 500-1,500 for the recreational ones, 2,000-10,000 for
+the debilitating. They are prefixed *Faerie* because the catalog already sells an
+ordinary goose.
+
+**One item has no price and keeps none.** The Crystal Ball is *"considered
+priceless and sells for millions"*, and a number there would be invented.
+
+#### Reading prose, not a table
+
+These entries are paragraphs with a price somewhere inside. An extractor found
+the boundaries; three classes of error had to be corrected by reading the page,
+and all three are pinned:
+
+- **A price wrapped across a line.** `20,000-
+30,000` rejoins as the single
+  number **2,000,030,000** if the de-hyphenation that fixes a broken *word* is
+  let near a number. The Fright Wig and the Chaser crystal both read that way.
+- **A longer entry labels its own parts** — `Duration:`, `A.R.:`, `Cost:` — and
+  each looks exactly like the start of a new item. The Cape of Dimensions' 700,000
+  gold was attributed to an item called *"Use Limits"*.
+- **The first price in an entry is not its price.** The Cape mentions 25,000 gold
+  to repair a tear long before its own cost line.
+
 ### What is deliberately not modelled
 
 - **Rune and holy weapons** are *generated* from a tier and a table of powers
@@ -4686,7 +4734,7 @@ against — read off production, not estimated.
 | of which `media_items` (MediaVault) | 2,082 |
 | the four catalogs together | 1,653 |
 | characters, live | **8** |
-| the largest table this app owns | `gear`, 658 rows |
+| the largest table this app owns | `gear`, 833 rows |
 
 **The two halves already have zero overlap.** `functions/api/media.js` is the only
 D1 consumer outside `functions/api/character-creator/`, it touches exactly one
@@ -4716,7 +4764,7 @@ migration-state checks with them.
 The four catalogs are read *whole* by `/catalogs` and `/items` — that is
 deliberate, see [Catalog lists are deliberately
 unbounded](#known-limitations-and-refactor-candidates) — so a full scan is the
-query plan, and 658 rows is the largest scan in the app. Every hot filter that
+query plan, and 833 rows is the largest scan in the app. Every hot filter that
 is not a full read is already covered: `characters` by campaign and by player,
 `character_items` by character, `journal_entries` by campaign and by character,
 `play_events` and both pending-pick tables by character, `npcs` by campaign,
@@ -4809,7 +4857,7 @@ local-only script is protected as soon as it says so.
 | skills | 324 |
 | spells | 570 |
 | psionic powers | 101 |
-| gear | 658 |
+| gear | 833 |
 
 **These are pinned by `test/regression.mjs`**, which is the only thing that can
 honestly check them: it builds a database from nothing under a scratch directory
