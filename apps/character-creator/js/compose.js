@@ -128,6 +128,13 @@ export const CORE_SDC_BY_CLASS = {
   // formula. Its Gift of Power and Gift of Union both add large amounts on top
   // - 200 and 3D4x10 - but those are gifts, not the class's own roll.
   'witch': '1D6',
+  // Palladium Fantasy main book, the psychic P.C.C.s, printed 156-162. None
+  // prints an S.D.C. formula and none is a man of arms, so the core rule reads
+  // 1D6 for all four - which is the whole of what this table decides.
+  'psychic-sensitive': '1D6',
+  'psi-healer': '1D6',
+  'psi-mystic': '1D6',
+  'mind-mage': '1D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence
