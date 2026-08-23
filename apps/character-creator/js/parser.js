@@ -154,8 +154,27 @@ export function validateSkillEntries(where, entries, errors, warnings) {
       }
     } else if (!s.name) {
       errors.push(`${where} entries need a name (or choose/from for a choice-group)`);
-    } else if (typeof s.base !== 'number') {
-      warnings.push(`${where} "${s.name}" has no numeric base %`);
+    } else {
+      // A FIXED skill takes its numbers one of two ways, and the distinction is
+      // the one the books draw. "Language: Native Tongue at 96%" is a `base`:
+      // the printed figure replaces the catalog row. "Chemistry (+10%)" is a
+      // `bonus`: the O.C.C. adds ten points to whatever Chemistry starts at.
+      //
+      // Storing the second as the first is how the Cyber-Doc ended up with
+      // Computer Operation at 5% where the catalog row is 40% - 48 skills
+      // across 6 classes read that way. `resolveSkill` has always summed
+      // `bonus` onto the catalog base; only this validator disagreed, warning
+      // that a bonus-carrying entry "has no numeric base %".
+      if (s.base !== undefined && s.bonus !== undefined) {
+        errors.push(`${where} "${s.name}" sets both base and bonus; use one`);
+      } else if (s.bonus !== undefined
+                 && (typeof s.bonus !== 'number' || !Number.isFinite(s.bonus))) {
+        errors.push(`${where} "${s.name}" bonus must be a number`);
+      } else if (s.base === undefined && s.bonus === undefined) {
+        warnings.push(`${where} "${s.name}" has no numeric base % or bonus`);
+      } else if (s.base !== undefined && typeof s.base !== 'number') {
+        warnings.push(`${where} "${s.name}" has no numeric base %`);
+      }
     }
   }
 }
