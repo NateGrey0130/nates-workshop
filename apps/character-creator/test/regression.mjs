@@ -1291,6 +1291,31 @@ console.log('\n' + '[8/8] Checks that only a database can make');
   });
   check('while a Dragon Hatchling Ley Line Walker is allowed',
     [200, 201].includes(ok.status), ok.body);
+
+  // -- every gear id a class cites must resolve -----------------------------
+  //
+  // A class grants equipment by slug. A slug with no row and no redirect is a
+  // character starting play holding something that does not exist, and nothing
+  // else in the app notices - the wizard renders the name it was given.
+  //
+  // Three ids were retired from the README's outstanding list by correcting
+  // the classes that cited them rather than by leaving a redirect behind, so
+  // the thing worth asserting is not a list of names in prose but that the
+  // citations still land.
+  // /items returns redirects as an OBJECT keyed by the lowercased retired slug,
+  // not an array, so both sides are compared lowercased.
+  const gearSlugs = new Set((items.body.items || []).map((i) => String(i.slug).toLowerCase()));
+  for (const k of Object.keys(items.body.redirects || {})) gearSlugs.add(k.toLowerCase());
+  const cited = new Map();
+  for (const c of classes) {
+    for (const m of JSON.stringify(c).matchAll(/"item_id":"([^"]+)"/g)) {
+      if (!cited.has(m[1])) cited.set(m[1], c.id);
+    }
+  }
+  const unresolved = [...cited].filter(([slug]) => !gearSlugs.has(slug.toLowerCase()));
+  check('every gear id a class cites resolves to a row or a redirect',
+    unresolved.length === 0, unresolved.map(([s2, c]) => `${s2} (${c})`).join(', '));
+  check('and the check actually looked at some', cited.size > 50, `${cited.size} cited ids`);
 }
 
 // ---------- enchantments ----------

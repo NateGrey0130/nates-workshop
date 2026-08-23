@@ -5215,24 +5215,16 @@ extraction. Listed here only so it is not "fixed" — see
 [A race and an occupation together](#a-race-and-an-occupation-together) for how
 the O.C.C. half is now carried.
 
-**Nothing restricts which O.C.C. a race may take.** The picker offers every
-occupation in the system, and the books do not: plenty of races are barred from
-particular classes, and some classes are open only to one race. A character the
-books forbid saves cleanly here.
-
-**This is now the largest unenforced rule in the app, and the data for it
-exists.** Every one of the fourteen Palladium Fantasy player races prints an
-"O.C.C.s Available to X" line, and eight of them are real restrictions rather
+**Which O.C.C. a race may take was the largest unenforced rule in the app, and
+it is enforced now.** Every one of the fourteen Palladium Fantasy player races
+prints an "O.C.C.s Available to X" line and eight are real restrictions rather
 than "any": a dwarf may take no magic O.C.C. at all, a kobold no long bowman,
-knight or palladin, a troll no psychic P.C.C. and no illusionist, and the
-troglodyte is held to six occupations by name. Each is transcribed into that
-race's `restrictions:` block, which is display-only - the player is told and
-nothing stops them. With twenty-five Palladium classes and fourteen races the
-combinations are no longer hypothetical, and the earlier note here - that with
-two Palladium O.C.C.s "there is currently very little to restrict" - has stopped
-being true.
+knight or palladin, a troll no psychic P.C.C., and the troglodyte is held to six
+occupations by name. All of it was transcribed into each race's `restrictions:`
+block, which is **display-only** - the player was told and nothing stopped them.
 
-**It is enforced now, from a structured field beside the prose.** Two keys, both
+This entry stays in the list because the reasoning is worth keeping, not because
+anything is outstanding. Two keys carry it now, both
 in class markdown like `xp_table`, neither needing a migration:
 
 | key | on | what |
@@ -5364,13 +5356,18 @@ A handful are neither: categories the importer emitted as ids before choice
 groups existed. `energy-pistol` and `vibro-blade` were fixed by
 [`retire-gear-placeholders.sql`](db/retire-gear-placeholders.sql) and
 `energy-rifle` by [`fix-shifter-energy-rifle.sql`](db/fix-shifter-energy-rifle.sql).
-Still outstanding, each needing the book rather than a guess:
-`submachine-gun` (shifter), `mdc-body-armor` (merc-soldier, psi-stalker,
-wild-psi-stalker), `musical-instrument` (mystic), `robe-or-cape` and
-`pen-or-pencil` (ley-line-walker, ley-line-rifter), `lesser-rune-weapon` and
+Still outstanding, each needing the book rather than a guess: `submachine-gun`
+(shifter), `musical-instrument` (mystic), `lesser-rune-weapon` and
 `basic-provisions` (godling). Each is a character starting play holding
 something that does not exist, so they are worth clearing - but a `from:` list
 invented rather than read is the failure the import rules exist to prevent.
+
+This list named **seven** until the three that could be settled were:
+`mdc-body-armor`, `robe-or-cape` and `pen-or-pencil` are gone, and their classes
+were corrected in the same pass rather than left pointing at a redirect. That
+every cited id still resolves is now a regression invariant rather than a
+sentence, because a list of names in prose is exactly the shape that goes
+stale.
 
 **A gear choice must enumerate its options.** `{ choose, from }` takes an
 explicit list of slugs, because gear's `category` (weapon/armor/vehicle/gear) is
