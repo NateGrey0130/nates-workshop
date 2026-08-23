@@ -18,7 +18,7 @@ import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSI
          rollsForPsionics as classRollsForPsionics } from './js/psionics.js';
 import { isChoiceGroup, isGearChoice, applyVariant,
          categoryAllows, categoryLabel, needsOccupation, abilityOccOptions,
-         occAllowedForRace,
+         occAllowedForRace, raceAllowedForOcc,
          bonusesFromSkills, sumBonusGroups } from './js/parser.js';
 import { composeClass } from './js/compose.js';
 import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant,
@@ -1035,8 +1035,15 @@ function occPicker() {
   // kobold no knight. The barred ones are SHOWN and disabled rather than
   // dropped: a player looking for the Knight should find out that the race
   // forbids it, not that the app has no Knight.
-  const options = all.filter((c) => occAllowedForRace(S.rcc, c).allowed);
-  const barred = all.filter((c) => !occAllowedForRace(S.rcc, c).allowed);
+  // Two rules, and they point in opposite directions. A race may bar an
+     // occupation (a dwarf takes no magic O.C.C.); an occupation may bar a race
+     // (a Juicer is 95% human, so no R.C.C. at all). Both have to pass.
+  const pairs = (c) => {
+    const a = occAllowedForRace(S.rcc, c);
+    return a.allowed ? raceAllowedForOcc(c, S.rcc) : a;
+  };
+  const options = all.filter((c) => pairs(c).allowed);
+  const barred = all.filter((c) => !pairs(c).allowed);
   const chosen = S.occ ? S.classes.find((c) => c.id === S.occ) : null;
   // The usual structure is a race and then an occupation. Presented as the
   // expected next step rather than an optional extra, because that is what it
@@ -1149,7 +1156,8 @@ function pickOcc(id) {
   // restored from before the restriction landed, or a select driven by hand,
   // arrives here just the same.
   const want = id ? S.classes.find((c) => c.id === id) : null;
-  const verdict = occAllowedForRace(S.rcc, want);
+  const byRace = occAllowedForRace(S.rcc, want);
+  const verdict = byRace.allowed ? raceAllowedForOcc(want, S.rcc) : byRace;
   if (want && !verdict.allowed) { alert(verdict.reason); return; }
   S.occ = id || null;
   // A different occupation cannot keep the previous one's stage.

@@ -11,7 +11,7 @@ import { loadCharacterClass } from './_lib/class-loader.js';
 import { validateCharacter, loadSkillCategories } from './_lib/validate-character.js';
 import { xpTableFor, thresholdFor, skillGrantsFor } from './_lib/leveling.js';
 import { insertGrantStatements, remainingGrants } from './_lib/skill-picks.js';
-import { parseClassMarkdown, occAllowedForRace } from '../../../apps/character-creator/js/parser.js';
+import { parseClassMarkdown, occAllowedForRace, raceAllowedForOcc } from '../../../apps/character-creator/js/parser.js';
 
 // GET /api/character-creator/characters — list for linking to sheets.
 // ?campaign_id= filters; ?limit= and ?offset= page (default 200, max 500).
@@ -54,8 +54,11 @@ async function occRestrictionFor(env, raceId, occId) {
   if (!md[raceId] || !md[occId]) return null;
   const race = parseClassMarkdown(md[raceId])?.data;
   const occ = parseClassMarkdown(md[occId])?.data;
-  if (!race?.occ_restrictions || !occ) return null;
-  return occAllowedForRace(race, occ);
+  if (!race || !occ) return null;
+  // Both directions, and either may refuse: the race bars the occupation, or
+  // the occupation bars the race.
+  const byRace = occAllowedForRace(race, occ);
+  return byRace.allowed ? raceAllowedForOcc(occ, race) : byRace;
 }
 
 export async function onRequestPost({ request, env }) {

@@ -40,6 +40,9 @@ export const KNOWN_KEYS = new Set([
   // parser.js; a race's restrictions were free text and display-only until
   // the structured field landed beside them.
   'occ_group', 'occ_restrictions',
+  // The mirror: which races may take an O.C.C. "none" is the human case,
+  // because Rifts prints no Human R.C.C.
+  'race_restrictions',
   // Produced by the parser from the body, never written by hand.
   'lore', 'gm_notes', 'sections',
 ]);

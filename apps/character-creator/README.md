@@ -5272,6 +5272,42 @@ way.
 
 No live character was affected: all nine are on races that carry no restriction.
 
+### And the mirror: which races may take an occupation
+
+`race_restrictions` is the same shape on an **O.C.C.**, and it is the half the
+Juicer needed. Its abilities add to an existing person, and the book is specific
+about which person: *"Racial Requirement: 95% human"* (RUE p.81).
+
+**`none` is the human case**, and it is why this key needs a reserved word
+rather than a race id. **Rifts prints no Human R.C.C.** — RUE's contents list
+exactly one Racial Character Class, the Dragon Hatchling on printed 156 —
+because human is the default and the unstated, which is why a Rifts O.C.C.
+stands alone in the first place. So *"human only"* is not a race to name; it is
+the **absence** of one, and `only: ["none"]` says that.
+
+Seven O.C.C.s carry a hard bar, all of them human-only:
+
+| class | the book's line |
+|---|---|
+| Juicer | 95% human (p.81) |
+| Psi-Stalker, Wild Psi-Stalker | *"Psi-Stalkers are mutant humans only"* (p.152, 155) |
+| Coalition Grunt | *"Humans and Psi-Stalkers only"* (p.230) |
+| Coalition SAMAS Pilot, Technical Officer | *"Racial Restrictions: Human."* (p.233, 237) |
+| Dog Boy | a CS-made mutant canine — the Dog Boy **is** the race (p.142) |
+
+Six of the seven already recorded the rule in prose. **The Coalition Grunt did
+not** — its markdown says a great deal about Coalition doctrine toward
+non-humans and never states the restriction the book prints. That one was found
+by reading the book rather than the class.
+
+**What gets nothing, deliberately:** the eight O.C.C.s whose racial line is a
+*statistic* rather than a bar — *"None, although only about 20% are D-Bees"*,
+*"None; half are D-Bees"*. A percentage of who happens to play one is not a
+rule, and turning it into a restriction would forbid characters the book allows.
+
+Both directions are checked in the same two places, and either may refuse: the
+picker filters on both, and the server runs both on create.
+
 **There is no dead code left to find, and a check keeps it that way.** An audit
 scanned every export in `apps/`, `functions/`, `scripts/` and `shared/` for a
 name nothing else mentions — counting HTML as a consumer, because the wizard

@@ -21,7 +21,8 @@ import { readFileSync, writeFileSync, rmSync, mkdtempSync, readdirSync, existsSy
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { tmpdir } from 'node:os';
-import { validateBonuses, occAllowedForRace, OCC_GROUPS } from '../js/parser.js';
+import { validateBonuses, occAllowedForRace, raceAllowedForOcc, OCC_GROUPS, RACE_NONE }
+  from '../js/parser.js';
 
 const testDir = dirname(fileURLToPath(import.meta.url));
 const appDir = join(testDir, '..');
@@ -1221,6 +1222,75 @@ console.log('\n' + '[8/8] Checks that only a database can make');
   });
   check('a race that restricts nothing is unaffected',
     [200, 201].includes(human.status), human.body);
+}
+
+// ---------- the mirror: which races may take an occupation ----------
+// A Juicer's abilities add to an existing person, and the book is specific
+// about which person: "Racial Requirement: 95% human" (RUE p.81). Rifts prints
+// no Human R.C.C. - its contents list exactly one Racial Character Class, the
+// Dragon Hatchling - because human is the default and the unstated. So the
+// human case is the ABSENCE of a race, which is what the reserved `none` says.
+{
+  const classes = (await api('GET', '/classes?limit=200')).body.classes || [];
+  const byId = Object.fromEntries(classes.map((c) => [c.id, c]));
+
+  const restricted = classes.filter((c) => c.race_restrictions);
+  check('seven O.C.C.s bar a race outright', restricted.length === 7,
+    restricted.map((c) => c.id).join(', '));
+  const onOcc = restricted.every((c) => c.category === 'occ');
+  check('and every one of them is an O.C.C.', onOcc);
+
+  // Every entry must resolve, the same hazard the other direction carries.
+  const dangling = [];
+  for (const c of restricted) {
+    for (const n of (c.race_restrictions.only || c.race_restrictions.except || [])) {
+      if (n === RACE_NONE) continue;
+      if (!byId[n] || byId[n].category !== 'rcc') dangling.push(`${c.id} -> ${n}`);
+    }
+  }
+  check('and names only real races, or the reserved "none"',
+    dangling.length === 0, dangling.join(', '));
+
+  // The reserved word is the whole mechanism: without it "human only" has no
+  // race to name, because Rifts prints none.
+  const humanOnly = restricted.filter((c) => (c.race_restrictions.only || []).includes(RACE_NONE));
+  check(`all seven use the reserved "${RACE_NONE}" for the human case`,
+    humanOnly.length === 7, `${humanOnly.length}`);
+
+  // The rule itself. A Juicer with no race is a human Juicer and is fine; a
+  // Juicer paired with any of the three Rifts races is not.
+  const juicer = byId.juicer;
+  check('a Juicer with no race is the human case, and allowed',
+    raceAllowedForOcc(juicer, null).allowed);
+  const rifts = classes.filter((c) => c.category === 'rcc' && c.system === 'rifts');
+  check('the Rifts races are still there to be refused', rifts.length === 3,
+    rifts.map((c) => c.id).join(', '));
+  const wronglyAllowed = rifts.filter((r) => raceAllowedForOcc(juicer, r).allowed);
+  check('and every one of them is closed to a Juicer',
+    wronglyAllowed.length === 0, wronglyAllowed.map((r) => r.id).join(', '));
+
+  // An O.C.C. with no race_restrictions must be unaffected in both directions.
+  check('an occupation that bars nothing takes any race',
+    raceAllowedForOcc(byId['ley-line-walker'], byId['dragon-hatchling']).allowed);
+
+  // -- and the server refuses the pairing -----------------------------------
+  const refused = await api('POST', '/characters', {
+    campaign_id: campaignId, name: 'Dragon Juicer', class_id: 'dragon-hatchling',
+    occ_class_id: 'juicer', attributes: attrs, abilities: [],
+  });
+  check('the server refuses a Dragon Hatchling Juicer', refused.status === 400, refused.body);
+  check('and names the occupation and the race',
+    /juicer/i.test(JSON.stringify(refused.body)) && /dragon/i.test(JSON.stringify(refused.body)),
+    JSON.stringify(refused.body));
+
+  // The same race with an occupation that does not bar it still works, so the
+  // refusal is the rule and not the pairing.
+  const ok = await api('POST', '/characters', {
+    campaign_id: campaignId, name: 'Dragon Walker', class_id: 'dragon-hatchling',
+    occ_class_id: 'ley-line-walker', attributes: attrs, abilities: [],
+  });
+  check('while a Dragon Hatchling Ley Line Walker is allowed',
+    [200, 201].includes(ok.status), ok.body);
 }
 
 // ---------- enchantments ----------
