@@ -20,6 +20,21 @@ const BLOCK_SCALAR = /^[|>][-+]?\d*$/;
 // A choice-group has no name of its own — it is "pick N from these". A named
 // entry that also carries `choose` is a fixed skill taken N times (e.g.
 // "Play Musical Instrument, select two instruments"), not a group.
+// One catalog row can satisfy a choice group more than once. "Language: Other"
+// is the only one, and it is the whole reason the row exists: a character takes
+// it ONCE PER LANGUAGE, each pick a separate skill named for what it is. So
+// `{ choose: 3, from: ["Language: Other"] }` is three languages, not an
+// over-asking group, and the count check has to know that or the seven classes
+// whose books say "three languages of choice" cannot say it.
+//
+// The name is duplicated rather than imported from js/language-skills.js on
+// purpose: parser.js is loaded by the Workers runtime through several paths and
+// is deliberately dependency-free apart from dice.js. One string, pinned by the
+// smoke test against the module that owns it.
+const REPEATABLE_SKILLS = ['language: other'];
+const hasRepeatable = (from) =>
+  (from || []).some((n) => REPEATABLE_SKILLS.includes(String(n?.name ?? n).trim().toLowerCase()));
+
 export function isChoiceGroup(entry) {
   return !!entry && typeof entry === 'object' && !entry.name &&
     (entry.choose !== undefined || entry.from !== undefined || entry.categories !== undefined);
@@ -123,7 +138,7 @@ export function validateSkillEntries(where, entries, errors, warnings) {
       const hasCats = Array.isArray(s.categories) && s.categories.length > 0;
       if (!hasFrom && !hasCats) {
         errors.push(`${where} choice-group needs a non-empty from list or categories list`);
-      } else if (hasFrom && !hasCats && s.choose > s.from.length) {
+      } else if (hasFrom && !hasCats && s.choose > s.from.length && !hasRepeatable(s.from)) {
         errors.push(`${where} choice-group asks for ${s.choose} of only ${s.from.length} options`);
       }
       // `base` fixes the percentage; `bonus` adds to whatever each pick's own

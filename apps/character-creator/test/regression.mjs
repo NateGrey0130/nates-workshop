@@ -629,6 +629,64 @@ console.log('\n' + '[8/8] Checks that only a database can make');
   check('and no other class has one',
     withMos.join() === Object.keys(MOS_PACKAGES).sort().join(),
     'classes with an MOS: ' + withMos.join(', '));
+
+  // -- languages of choice come from languages ------------------------------
+  //
+  // Seven classes said "two languages of choice" and offered the whole
+  // Technical category - about sixty skills - because the repeatable
+  // Language: Other row only behaved repeatably on the related/secondary
+  // picker. They now offer that row and nothing else.
+  // Stated as an INVARIANT over every class rather than a list of ids, because
+  // the list was the thing that was wrong: the defect was reported as seven
+  // classes and was thirty-two. Seven offered the whole Technical category,
+  // which is merely too wide. Twenty-five offered Communications, which does
+  // not contain `Language: Other` at all - it is filed under Technical - so
+  // those classes could not grant a single ordinary language.
+  const ABOUT_LANGUAGES = /^Language: Other,|languages? of choice|additional [Ll]anguages/;
+  // A LITERACY pick reads the same way in prose - "literate in two languages of
+  // choice" - and is a different thing: Literacy, Literacy: Other and the rest
+  // are real catalog rows, so those groups are enumerated correctly already.
+  const isLiteracy = (e) => /^Literate/i.test(e.note || '')
+    || (Array.isArray(e.from) && e.from.every((n) => /^Literacy/.test(n)));
+  const languageGroups = [];
+  for (const c of classes) {
+    for (const e of (c.skills?.occ_skills || [])) {
+      if (!e || e.name || !ABOUT_LANGUAGES.test(e.note || '') || isLiteracy(e)) continue;
+      languageGroups.push({ id: c.id, e });
+    }
+  }
+  check('the language picks are still there to check', languageGroups.length >= 30,
+    `found ${languageGroups.length}`);
+
+  const viaCategory = languageGroups.filter(({ e }) => Array.isArray(e.categories));
+  check('no class offers a CATEGORY for a language pick', viaCategory.length === 0,
+    viaCategory.map((x) => x.id).join(', '));
+
+  const notFromTheRow = languageGroups.filter(({ e }) =>
+    !Array.isArray(e.from) || !e.from.includes('Language: Other'));
+  check('and every one of them offers the repeatable language row',
+    notFromTheRow.length === 0, notFromTheRow.map((x) => x.id).join(', '));
+
+  // The bonus is what makes the pick worth taking, and losing one in the
+  // rewrite would be silent because the row still resolves. Two classes had
+  // none to begin with and gained the figure their own note recorded.
+  const noBonus = languageGroups.filter(({ e }) => !(typeof e.bonus === 'number' && e.bonus > 0));
+  check('and every one keeps a positive bonus', noBonus.length === 0,
+    noBonus.map((x) => x.id).join(', '));
+
+  // A language must never be FIXED at a flat percentage: it resolves off the
+  // Other row's 50% +5/lvl, and `base` would freeze it. The Cyber-Doc read the
+  // printed "+20%" as `base: 20, per_level: 0` - a language stuck at 20% for
+  // fifteen levels.
+  const frozen = languageGroups.filter(({ e }) => e.base !== undefined || e.per_level === 0);
+  check('and none is frozen at a flat percentage', frozen.length === 0,
+    frozen.map((x) => `${x.id} base=${x.e.base} per_level=${x.e.per_level}`).join(', '));
+
+  // Spot-check the three shapes end to end.
+  for (const [id, want] of Object.entries({ knight: 2, 'chiang-ku-dragon': 3, 'cyber-doc': 1 })) {
+    const g = languageGroups.find((x) => x.id === id)?.e;
+    check(`${id} asks for ${want} language(s)`, g?.choose === want, `asks for ${g?.choose}`);
+  }
 }
 
 console.log('\n' + (failures === 0
