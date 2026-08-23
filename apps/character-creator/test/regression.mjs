@@ -884,6 +884,66 @@ console.log('\n' + '[8/8] Checks that only a database can make');
     JSON.stringify(warlock?.xp_table));
 }
 
+// ---------- gear.sdc ----------
+// The book calls A.R. and S.D.C. the TWO attributes of armour (printed 270),
+// and the rules spend the second: damage subtracts from it, at half S.D.C. the
+// A.R. drops two points. It lived in free-text `description` until migration
+// 034, where no arithmetic could reach it.
+//
+// `/items` projects only the fields the pickers render, so this asks the
+// scratch database - the same way the redirect check does.
+{
+  const q = (sql) => {
+    const r = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--json',
+      '--command', `"${sql}"`]);
+    const out = r.stdout || '';
+    for (let at = out.indexOf('['); at >= 0; at = out.indexOf('[', at + 1)) {
+      try { const v = JSON.parse(out.slice(at)); if (Array.isArray(v)) return v.flatMap((b) => b.results || []); }
+      catch { /* wrangler's own log line opens with a bracket too */ }
+    }
+    throw new Error(cleanErr(r.stderr || out));
+  };
+
+  let rows = [];
+  let err = '';
+  try { rows = q('SELECT slug, category, system, ar, sdc, mdc, damage FROM gear'); }
+  catch (e) { err = e.message; }
+  check('gear is readable and has an sdc column', rows.length > 0, err || 'no rows');
+
+  // The Types of Armor table, printed 270, plus the shield from printed 60.
+  const BOOK = { 'soft-leather': 20, 'hard-leather': 30, 'studded-leather': 38,
+    'chain-mail': 44, 'scale-mail': 75, 'small-shield': 30 };
+  const wrong = Object.entries(BOOK)
+    .map(([slug, want]) => [slug, want, rows.find((r) => r.slug === slug)?.sdc])
+    .filter(([, want, got]) => got !== want);
+  check('every Palladium armour row carries the S.D.C. its book prints',
+    wrong.length === 0, wrong.map(([s, w, g]) => `${s} want ${w} got ${g}`).join(', '));
+
+  const pfArmourEmpty = rows.filter((r) => r.category === 'armor'
+    && r.system === 'palladium-fantasy' && r.sdc == null);
+  check('and none of them is still empty', pfArmourEmpty.length === 0,
+    pfArmourEmpty.map((r) => r.slug).join(', '));
+
+  // A suit has one scale or the other. (A row that CONFLATES two products can
+  // legitimately carry both - polarized goggles are 15 S.D.C. ordinary and
+  // 1 M.D.C. high-impact - which is why this is scoped to armour.)
+  const bothScales = rows.filter((r) => r.category === 'armor' && r.sdc != null && r.mdc != null);
+  check('no armour row carries both an S.D.C. and an M.D.C.',
+    bothScales.length === 0, bothScales.map((r) => r.slug).join(', '));
+
+  // The trap this column invites. "Does 1D6 S.D.C." on a knife is DAMAGE, and a
+  // regex over descriptions would file it as durability - a knife that can
+  // absorb six points of punishment because it deals six.
+  const damageAsSdc = rows.filter((r) => r.sdc != null && /\dD\d/.test(r.damage || ''));
+  check('and no weapon was given its own damage as durability',
+    damageAsSdc.length === 0, damageAsSdc.map((r) => `${r.slug} sdc=${r.sdc} damage=${r.damage}`).join(', '));
+
+  check('the importer can write the column',
+    /'ar', 'sdc', 'mdc'/.test(readFileSync(join(repoRoot, 'functions', 'api', 'character-creator',
+      '_lib', 'import-engine.js'), 'utf8')),
+    'gear.extractFields omits sdc, so every future import drops it back into prose');
+}
+
 console.log('\n' + (failures === 0
   ? `REGRESSION PASSED (${checks} checks)`
   : `REGRESSION FAILED (${failures} of ${checks} checks)`));
