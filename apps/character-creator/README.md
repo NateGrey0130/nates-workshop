@@ -675,7 +675,7 @@ The rows deliberately disagree with one another, and that is the point:
 |---|---|---|
 | P.P. | strike, parry, dodge | +1 per **two** points from 16 |
 | P.S. | damage bonus | +1 per point from 16 |
-| P.E. | vs poison, drugs, spell/ritual magic, pain, illusionary magic | +1 per **two** points |
+| P.E. | vs poison, drugs, disease, spell/ritual magic, curses, faerie magic, pain, illusionary magic | +1 per **two** points |
 | P.E. | coma/death | +4% at 16, +5% at 17, then +2% a point |
 | M.E. | vs psionics, possession, horror factor, mind control | +1 per **two** points |
 | M.E. | vs insanity | +1 per two to 19, then +1 a point |
@@ -692,8 +692,21 @@ Two house rules where the book stops: rows **continue past 30** on the step they
 end on, since the chart ends there and dragons do not, and the two percentile
 rows are **capped at 98%**, matching the skill ceiling. The flat rows are
 bonuses added to a roll rather than percentages, so the cap does not reach them.
-Possession, horror factor and pain are not on the chart at all; each borrows the
-row for its own attribute.
+Possession, horror factor, pain, illusionary magic, mind control, curses, faerie
+magic and disease are not on the chart at all; each borrows the row for its own
+attribute. Every one of them exists because a real class or race grants a bonus
+to it, and **until there is a key the bonus reaches nothing** - it parses, it
+stores, and it renders nowhere. The last two arrived with the Palladium Fantasy
+player races: goblins and hob-goblins are +1 to save vs faerie magic, gnomes +1
+and troglodytes +2 to save vs poison and disease.
+
+`sheet.js` declares the labels for all of them **once**, in `SAVE_FIELDS`, and
+play mode's roll buttons are `SAVE_FIELDS` minus the one percentile row rather
+than a second list. There were two lists, and they had drifted: the sheet printed
+thirteen saves and play mode offered eight buttons, so a Juicer's +6 vs mind
+control was on the sheet and unrollable at the table. A smoke check now fails if
+`derive.saves()` produces a key nothing prints, if a label names a key derive
+does not produce, or if the list is declared twice.
 
 `iq_skill_bonus_pct` is exposed by `derive.bio()` and applied to every skill at
 creation — see **The I.Q. bonus** below for what that means and what it skips.
@@ -2713,10 +2726,18 @@ what the player *picked*, so those were listed by the class and held by
 nobody. They are now written into the character ahead of the picks, and a pick
 that duplicates one is dropped so the list stays a set.
 
-**Save vs psionic attack** now has a target as well as a bonus: 12+ for Major and
-Master psychics, 15+ for everyone else — non-psychics included, since they get
-attacked by psionics too. `deriveSaves()` previously returned only the M.E. bonus
-and no number to roll against. It is overridable like every other derived value.
+**Save vs psionic attack** has a target as well as a bonus, and the books give
+**three** of them, not two: a non-psychic needs 15+, a minor **or** major psychic
+12+, and a Master Psionic only 10+ (Palladium Fantasy printed 48; Rifts Ultimate
+Edition p.65, p.142 and p.185 agree). Non-psychics are on the list because they
+get attacked by psionics too and still need a number to roll against.
+`deriveSaves()` originally returned only the M.E. bonus and no target at all, and
+the first target it grew read `meetsTier(tier, 'major') ? 12 : 15` — one of the
+three right, a minor psychic handed the non-psychic's number and a master handed
+the major's. `PSIONIC_SAVE_BY_TIER` is keyed by tier rather than compared through
+a threshold, because minor and major share a number and master breaks away from
+both, which no single threshold expresses. It is overridable like every other
+derived value.
 
 ---
 

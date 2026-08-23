@@ -3324,6 +3324,59 @@ console.log(String.fromCharCode(10) + '[1c25j] at_level curses');
   check('the sheet lists vs Curses', sheetSrcJ.includes("['curses', 'vs Curses']"));
 }
 
+// ---------- 1c25j2. One list of saves, and the two the races needed ----------
+// The sheet and play mode each held their own copy of the save label list, and
+// they had drifted: the sheet printed thirteen rows and play mode offered eight
+// buttons, so the Juicer's +6 vs mind control and the Ley Line Walker's +3 vs
+// curses were visible on the sheet and unrollable at the table. There is now one
+// list and play mode filters the percentile row out of it.
+//
+// Faerie magic and disease are the newest keys, added because four Palladium
+// Fantasy player races grant bonuses to them.
+console.log(String.fromCharCode(10) + '[1c25j2] the save list');
+{
+  const src = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  const saves = D.saves({ PE: 10, ME: 10 }, null);
+
+  // Every save derive produces has a label, or it is computed and never shown.
+  const listed = [...src.matchAll(/\['([a-z_]+)', 'vs [^']+'\]/g)].map((m) => m[1]);
+  const missing = Object.keys(saves)
+    .filter((k) => k !== 'psionics_target' && !listed.includes(k));
+  check('every save derive produces is listed on the sheet', missing.length === 0,
+    'not printed anywhere: ' + missing.join(', '));
+
+  // And the reverse: a label for a key derive does not produce prints nothing.
+  const dead = listed.filter((k) => !(k in saves));
+  check('and every listed save is one derive produces', dead.length === 0,
+    dead.join(', '));
+
+  // One declaration. A second array literal of save labels is the drift.
+  check('the save labels are declared exactly once',
+    (src.match(/'vs Spell Magic'/g) || []).length === 1,
+    'sheet.js declares the save list more than once');
+  check('play mode rolls the list rather than restating it',
+    /SAVE_ROLLS\s*=\s*SAVE_FIELDS\.filter/.test(src));
+  check('and drops the percentile row, which is not a d20 save',
+    !src.includes("SAVE_ROLLS") || /_pct/.test(src.match(/SAVE_ROLLS[^;]*/)[0]));
+
+  // The two new keys borrow the P.E. rows, like the magic and poison saves.
+  check('faerie magic follows the P.E. magic row', (() => {
+    const s = (pe) => D.saves({ PE: pe }, null);
+    return s(15).faerie_magic === 0 && s(18).faerie_magic === s(18).spell_magic
+      && s(30).faerie_magic === 8;
+  })());
+  check('disease follows the P.E. magic row', (() => {
+    const s = (pe) => D.saves({ PE: pe }, null);
+    return s(15).disease === 0 && s(18).disease === s(18).toxins_poisons
+      && s(30).disease === 8;
+  })());
+  check('a race can grant both', (() => {
+    const b = { attributes: {}, combat: {}, saves: { faerie_magic: 1, disease: 2 } };
+    const s = D.saves({ PE: 10, ME: 10 }, null, null, b);
+    return s.faerie_magic === 1 && s.disease === 2;
+  })());
+}
+
 // ---------- 1c25k. Variable psionic costs (isp_note) ----------
 // The isp column is live - the sheet's use button deducts it - so a power
 // whose cost is not one number (Mind Bolt costs more for more damage) could
