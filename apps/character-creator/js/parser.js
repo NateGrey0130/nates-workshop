@@ -152,7 +152,8 @@ export function validateSkillEntries(where, entries, errors, warnings) {
 //     options:
 //       - { id: "communications", name: "Communications MOS", skills: [ ... ] }
 //
-// The Coalition Technical Officer offers five; the Robot Pilot two. The skills
+// The Coalition Technical Officer offers seven, the Merc Soldier seven and the
+// Robot Pilot two. The skills
 // are granted IN ADDITION to the class's own occ_skills, which is what makes
 // this a different thing from `variants` - a variant REPLACES, and
 // VARIANT_OVERRIDES excludes the skills block on purpose.

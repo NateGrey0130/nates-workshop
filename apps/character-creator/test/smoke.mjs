@@ -3065,6 +3065,48 @@ section('MOS');
   check('a class can declare an MOS', parsed.errors.length === 0, parsed.errors.join('; '));
   check('and its options parse', parsed.data.skills.mos.options.length === 2);
 
+  // Which classes have one, and how many packages each offers. Pinned because
+  // BOTH written records of it were wrong at once: parser.js said the Technical
+  // Officer offered five where it offers seven, and the README said the Robot
+  // Pilot offered two where it had none at all - it carried its packages as GM
+  // prose and a note claiming the schema could not hold them, which it could.
+  // A count in a comment is exactly the kind of claim that goes stale silently.
+  {
+    const dbDir = join(appDir, 'db');
+    const files = readdirSync(dbDir).filter((f) => f.endsWith('.sql')).sort();
+    const read = (f) => readFileSync(join(dbDir, f), 'utf8');
+
+    // Three classes have an MOS, and the two newest got theirs by correction
+    // rather than at import. That some script gives each one an MOS is all a
+    // FILE can honestly answer; how many packages each ends up with is a
+    // question about the composed class, and lives in regression.mjs, which
+    // has a database to ask.
+    for (const id of ['coalition-technical-officer', 'merc-soldier', 'robot-pilot']) {
+      const owning = files.filter((f) => read(f).includes(`'${id}'`) && / {2}mos:/.test(read(f)));
+      check(`${id} gets its MOS from a data script`, owning.length > 0, id);
+    }
+
+    // The stale notes are STILL in add-merc-soldier-class.sql and
+    // add-robot-pilot-class.sql, and must be: an applied one-shot script is
+    // never edited. What has to be true is that a LATER-sorting script removes
+    // them, which is the same shape every other correction here takes.
+    for (const stale of ['schema cannot express (see', 'not modeled; add them by hand']) {
+      const carriers = files.filter((f) => read(f).includes(stale) && !read(f).includes(`replace(markdown,`));
+      const fixers = files.filter((f) => read(f).includes(stale) && read(f).includes('replace(markdown,'));
+      check(`the note "${stale.slice(0, 24)}..." is undone by a later script`,
+        fixers.length > 0 && carriers.every((c) => fixers.some((f) => f > c)),
+        `carried by ${carriers.join(', ')}; fixed by ${fixers.join(', ') || 'NOTHING'}`);
+    }
+
+    const srcParser = readFileSync(join(appDir, 'js', 'parser.js'), 'utf8');
+    const readme = readFileSync(join(appDir, 'README.md'), 'utf8');
+    check('the README states who has an MOS and how many packages',
+      /Technical Officer\s+offers seven, the Merc Soldier seven and the\s+Robot Pilot two/
+        .test(readme.replace(/\r/g, '')));
+    check('and parser.js agrees with it',
+      /Technical Officer offers seven, the Merc Soldier seven and the/.test(srcParser.replace(/\r/g, '')));
+  }
+
   const names = (c) => (c.skills.occ_skills || []).map((x) => x.name).filter(Boolean);
   const cls = parsed.data;
 
