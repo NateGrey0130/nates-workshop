@@ -2204,12 +2204,15 @@ pinned in the smoke test, every string taken verbatim off a page.
 
 ## RUE cannot fill the gear stubs, and that is the answer
 
-79 gear rows are class-import stubs. The obvious next step is to fill them from
+78 gear rows are class-import stubs. The obvious next step is to fill them from
 the equipment chapter, and it does not work - not because the matching is hard,
 but because **the names describe different things**.
 
 RUE's general-equipment price list holds **48** real entries. Matched against
-the 79 stubs with the catalog matcher, **zero** pair up. The near misses show
+the stubs with the catalog matcher, **zero** pair up. (That measurement was taken
+over 79; one has been retired since, and
+[Known limitations](#known-limitations-and-refactor-candidates) has said 78 for
+a while — this paragraph was the half that did not get updated.) The near misses show
 why:
 
 | stub | nearest priced entry |
@@ -4932,21 +4935,31 @@ and renders a picker from each, so a truncated response would silently hide
 valid choices rather than showing fewer rows. Those are bounded by book content;
 the others grow with play.
 
-**The page scripts are long, and deliberately not split.** Five pages, and the
-three largest are `app.js` at roughly 1,900 lines, `sheet.js` roughly 1,600 and
-`import.js` roughly 1,000; `catalog.js` is around 700 and `dashboard.js` barely
-100. `js/parser.js`, at roughly 1,200, is the second-largest file in the app and
-is not a page script at all. Treat all of those as orders of magnitude rather
-than figures — they move with every change, and the set written down before this
-one had drifted by 80% on `sheet.js` while claiming a 20% tolerance, which is
-the argument for reading them as sizes and not as measurements.
+**The page scripts are long, and deliberately not split.**
+
+| file | lines | |
+|---|---|---|
+| `app.js` | ~2,950 | the wizard; the largest file in the app |
+| `sheet.js` | ~1,950 | |
+| `js/parser.js` | ~1,400 | **third** largest, and not a page script at all |
+| `import.js` | ~950 | |
+| `catalog.js` | ~700 | |
+| `dashboard.js` | ~110 | |
+
+**A smoke check now holds these to 25%**, because the previous two sets of
+figures both went stale in the same way. The set before this one said `app.js`
+was "roughly 1,900" when it was 2,950 — 55% out — and called `parser.js` the
+*second* largest file when `sheet.js` sits between them. The set before THAT had
+drifted 80% on `sheet.js` while claiming a 20% tolerance. Twice is a pattern, and
+prose that says "treat these as orders of magnitude" is not a tolerance, it is an
+apology for not having one.
 
 Each page script drives one page and each does several jobs. Splitting was
 considered and rejected: there is no build step, so there is no bundler —
 splitting means more `<script>` tags, hand-managed load order, and the
 classic-script/module distinction to keep straight. The cost is real and the
 benefit is aesthetic. That case was argued when `sheet.js` was around 900 lines
-and it has since nearly doubled, so it is worth re-examining rather than
+and it has since more than doubled, so it is worth re-examining rather than
 inheriting. `import.js` remains the clearest seam, since its class, skills and
 session-based flows share a page and almost no logic.
 
