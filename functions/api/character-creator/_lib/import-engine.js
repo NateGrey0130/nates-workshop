@@ -450,9 +450,15 @@ function isScalar(type) {
 
 // Where a catalog records which game system a row belongs to, and how.
 //
-// Three shapes across four catalogs, all read off the field config rather than
-// hardcoded: skills keep a JSON ARRAY (`systems`), the rest a single string
-// (`system`), and a catalog without either gets nothing stamped.
+// Three shapes across the four IMPORTABLE catalogs, all read off the field
+// config rather than hardcoded: skills keep a JSON ARRAY (`systems`), the rest
+// a single string (`system`), and a catalog without either gets nothing
+// stamped.
+//
+// Four, not five: `enchantments` is declared in catalog-fields.js and so gets
+// the editor and the write endpoints, but it has no config HERE and so cannot
+// be imported from a page. That is deliberate rather than missing - 62 rows off
+// two pages of prose, and nothing else prints them.
 //
 // NULL means unrestricted everywhere, so a session that does not name a system
 // — or names "both" — writes nothing rather than inventing a restriction.

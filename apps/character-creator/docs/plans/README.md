@@ -37,6 +37,10 @@ where the plan turned out to be wrong once it met the code.
 | 10 | Server-side rule enforcement | [10](10-server-rule-enforcement.md) | [#26](https://github.com/NateGrey0130/nates-workshop/pull/26) |
 | 11 | Sheet targeted re-render | [11](11-sheet-targeted-render.md) | [#27](https://github.com/NateGrey0130/nates-workshop/pull/27) |
 | 12 | Psychic tier rules | [12](12-psionic-tier-rules.md) | [#28](https://github.com/NateGrey0130/nates-workshop/pull/28) |
+| 17a | `gear.sdc` | [17](17-magic-items.md) | [#224](https://github.com/NateGrey0130/nates-workshop/pull/224) |
+| 17b | Enchantments, and a third family | [17](17-magic-items.md) | [#225](https://github.com/NateGrey0130/nates-workshop/pull/225), [#226](https://github.com/NateGrey0130/nates-workshop/pull/226) |
+| 17c | Enchant an item, sheet and API | [17](17-magic-items.md) | [#227](https://github.com/NateGrey0130/nates-workshop/pull/227) |
+| 17d | 175 finished magic items | [17](17-magic-items.md) | [#228](https://github.com/NateGrey0130/nates-workshop/pull/228) |
 | 18a | `xp_table` survives composition | [18](18-experience-tables.md) | [#222](https://github.com/NateGrey0130/nates-workshop/pull/222) |
 | 18b | Experience tables by O.C.C. | [18](18-experience-tables.md) | [#223](https://github.com/NateGrey0130/nates-workshop/pull/223) |
 | — | Duplicate merging | — | [#29](https://github.com/NateGrey0130/nates-workshop/pull/29) |
@@ -122,17 +126,26 @@ Non-negotiable, and every plan inherits them:
   verified by querying them back rather than trusting an exit code.
 - No build step, no framework, no dependencies.
 
-## Proposals, not delivered
+## Proposals, written before they were built
 
 Two written proposals live here. They were asked for as writing rather than as
-code, and they are kept apart from the roadmap above for that reason.
+code, and they are kept apart from the roadmap above because that is how they
+were commissioned — a recommendation with real numbers, and a decision to make
+before any of it was built. Both were later green-lit, and both shipped.
 
 | # | Proposal | Verdict | Built? |
 |---|---|---|---|
-| 17 | [Enchanted items](17-magic-items.md) | recommended, in a reduced form; do the `gear.sdc` column first and on its own | **no** |
+| 17 | [Enchanted items](17-magic-items.md) | recommended, in a reduced form; do the `gear.sdc` column first and on its own | **yes**, #224 then #225-#228 |
 | 18 | [Experience tables by O.C.C.](18-experience-tables.md) | recommended; **no schema at all** — the override already existed and two one-line bugs were in its way | **yes**, #222 then #223 |
 
-18 shipped in the two halves it recommended: the blockers on their own, then the
+Both shipped in the order they recommended. **17** did the `gear.sdc` column
+first and on its own, then option B in three parts. The one thing it got wrong
+is worth reading against the outcome: it counted printed 253 as *"29 finished
+items with a price"*, and the page says those are **powers placed in** a ring,
+three to an item — which made them a third enchantment family rather than
+thirty rows of gear.
+
+**18** shipped in the two halves it recommended: the blockers on their own, then the
 225 numbers as a single data script with no schema at all. The proposal is left
 as written rather than rewritten in the past tense — what it predicted and what
 happened are both worth being able to read.

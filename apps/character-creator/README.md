@@ -4781,9 +4781,9 @@ against — read off production, not estimated.
 |---|---|
 | database size | **2.65 MB** of D1's 10 GB — 0.03% |
 | tables | 31 |
-| rows, everything | **4,143** |
+| rows, everything | **4,420** |
 | of which `media_items` (MediaVault) | 2,082 |
-| the four catalogs together | 1,653 |
+| the five catalogs together | 1,901 |
 | characters, live | **8** |
 | the largest table this app owns | `gear`, 844 rows |
 
@@ -4812,7 +4812,7 @@ migration-state checks with them.
   the other.
 
 **Nothing is unindexed that matters, and adding indexes would be cargo cult.**
-The four catalogs are read *whole* by `/catalogs` and `/items` — that is
+The five catalogs are read *whole* by `/catalogs` and `/items` — that is
 deliberate, see [Catalog lists are deliberately
 unbounded](#known-limitations-and-refactor-candidates) — so a full scan is the
 query plan, and 844 rows is the largest scan in the app. Every hot filter that
@@ -4966,7 +4966,7 @@ in both places while the rows differed. It demands that every published **class*
 be creatable from the repo, and nothing made the same demand of catalog rows.
 
 ```bash
-node scripts/repo-vs-live.mjs              # all four catalogs
+node scripts/repo-vs-live.mjs              # all five catalogs
 node scripts/repo-vs-live.mjs --table gear
 ```
 

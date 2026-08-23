@@ -1,7 +1,8 @@
 // Cross-references an extracted class against the live catalogs, and creates
 // stub rows for anything it references that does not exist yet.
 //
-// All four catalogs (items, skills, spells, psionic powers) live in D1, so a
+// All five catalogs (skills, spells, psionic powers, gear, enchantments) live
+// in D1, so a
 // stub goes live immediately with no redeploy. Stubs carry the bare minimum —
 // a name and whatever category can be inferred — and are flagged so they are
 // easy to find and fill in later.
