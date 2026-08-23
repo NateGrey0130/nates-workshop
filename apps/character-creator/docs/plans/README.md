@@ -37,6 +37,8 @@ where the plan turned out to be wrong once it met the code.
 | 10 | Server-side rule enforcement | [10](10-server-rule-enforcement.md) | [#26](https://github.com/NateGrey0130/nates-workshop/pull/26) |
 | 11 | Sheet targeted re-render | [11](11-sheet-targeted-render.md) | [#27](https://github.com/NateGrey0130/nates-workshop/pull/27) |
 | 12 | Psychic tier rules | [12](12-psionic-tier-rules.md) | [#28](https://github.com/NateGrey0130/nates-workshop/pull/28) |
+| 18a | `xp_table` survives composition | [18](18-experience-tables.md) | [#222](https://github.com/NateGrey0130/nates-workshop/pull/222) |
+| 18b | Experience tables by O.C.C. | [18](18-experience-tables.md) | [#223](https://github.com/NateGrey0130/nates-workshop/pull/223) |
 | — | Duplicate merging | — | [#29](https://github.com/NateGrey0130/nates-workshop/pull/29) |
 
 Duplicate merging was not in the roadmap. PR 4 deliberately left it out as
@@ -122,12 +124,15 @@ Non-negotiable, and every plan inherits them:
 
 ## Proposals, not delivered
 
-Two written proposals live here and **nothing in either is built**. They were
-asked for as writing rather than as code, and they are kept apart from the
-roadmap above for that reason: everything above shipped, and neither of these
-has.
+Two written proposals live here. They were asked for as writing rather than as
+code, and they are kept apart from the roadmap above for that reason.
 
-| # | Proposal | Verdict |
-|---|---|---|
-| 17 | [Enchanted items](17-magic-items.md) | recommended, in a reduced form; do the `gear.sdc` column first and on its own |
-| 18 | [Experience tables by O.C.C.](18-experience-tables.md) | recommended; **no schema at all** — the override already exists and two one-line bugs are in its way |
+| # | Proposal | Verdict | Built? |
+|---|---|---|---|
+| 17 | [Enchanted items](17-magic-items.md) | recommended, in a reduced form; do the `gear.sdc` column first and on its own | **no** |
+| 18 | [Experience tables by O.C.C.](18-experience-tables.md) | recommended; **no schema at all** — the override already existed and two one-line bugs were in its way | **yes**, #222 then #223 |
+
+18 shipped in the two halves it recommended: the blockers on their own, then the
+225 numbers as a single data script with no schema at all. The proposal is left
+as written rather than rewritten in the past tense — what it predicted and what
+happened are both worth being able to read.

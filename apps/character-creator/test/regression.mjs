@@ -835,6 +835,53 @@ console.log('\n' + '[8/8] Checks that only a database can make');
     deadFixed.length === 0, deadFixed.join(', '));
   check('and no language or literacy skill is pinned to 0%',
     frozenAtZero.length === 0, frozenAtZero.join(', '));
+
+  // -- every Palladium O.C.C. levels on its own chart -------------------------
+  //
+  // Palladium Fantasy printed 336: 15 tables, 15 levels each. `xp_table` stores
+  // the LOWER bound of each band, which is what `levelForXp` compares against.
+  //
+  // The shape is checked over the whole catalog rather than a list of 25 ids,
+  // so a new Palladium O.C.C. arriving without a chart is a failure here rather
+  // than a character quietly levelling on the house-rule default.
+  const pfOcc = classes.filter((c) => c.system === 'palladium-fantasy' && c.category === 'occ');
+  const rccs = classes.filter((c) => c.category === 'rcc');
+  check('the Palladium O.C.C.s are still there to check', pfOcc.length >= 25, `${pfOcc.length}`);
+
+  const noTable = pfOcc.filter((c) => !Array.isArray(c.xp_table));
+  check('every Palladium O.C.C. has its own experience table',
+    noTable.length === 0, noTable.map((c) => c.id).join(', '));
+
+  const misshapen = pfOcc.filter((c) => {
+    const t = c.xp_table;
+    return !Array.isArray(t) || t.length !== 15 || t[0] !== 0
+      || t.some((n, i) => !Number.isInteger(n) || (i > 0 && n <= t[i - 1]));
+  });
+  check('and each is 15 levels, starting at 0, strictly rising',
+    misshapen.length === 0, misshapen.map((c) => c.id).join(', '));
+
+  // A race has no experience table, because experience comes from what you do.
+  // This is the invariant the composition fix in #222 depends on being true.
+  const rccWithTable = rccs.filter((c) => c.xp_table !== undefined);
+  check('and no R.C.C. carries one', rccWithTable.length === 0,
+    rccWithTable.map((c) => c.id).join(', '));
+
+  // The pairs the book prints together must stay together - "Knight & Noble" is
+  // one chart, and two classes drifting apart means a transcription went wrong.
+  for (const [a, b] of [['knight', 'noble'], ['thief', 'merchant'],
+    ['mind-mage', 'wizard'], ['priest-of-light', 'priest-of-darkness']]) {
+    const ta = classes.find((c) => c.id === a)?.xp_table;
+    const tb = classes.find((c) => c.id === b)?.xp_table;
+    check(`${a} and ${b} share the chart the book prints for both`,
+      JSON.stringify(ta) === JSON.stringify(tb) && Array.isArray(ta));
+  }
+
+  // The Warlock's row is the Rifts printing, so its Palladium figures belong in
+  // its delta section and NOT in its frontmatter.
+  const warlock = classes.find((c) => c.id === 'warlock');
+  check('the Warlock takes its Palladium experience as a delta, not a table',
+    warlock && warlock.xp_table === undefined,
+    JSON.stringify(warlock?.xp_table));
 }
 
 console.log('\n' + (failures === 0

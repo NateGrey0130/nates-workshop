@@ -499,11 +499,47 @@ overridable.
 |---|---|---|
 | Point-buy curve | All attributes start at 8, 40-point pool, +1 costs 1 point to 15 then 2 points to 18, cap 18, floor 3, refunds below 8 | — |
 | Attribute rolls | Book rule, not a house rule — see below | `attribute_dice` |
-| XP table | Shared 15-level curve: 0, 2000, 4000, 8000, 16000, 25000, 35000, 50000, 70000, 95000, 125000, 160000, 200000, 250000, 300000 | `xp_table: [...]` |
+| XP table | Shared 15-level curve: 0, 2000, 4000, 8000, 16000, 25000, 35000, 50000, 70000, 95000, 125000, 160000, 200000, 250000, 300000. **Every Palladium O.C.C. now overrides it** — see below | `xp_table: [...]` |
 | Psionic starting powers | Book rule for a rolled psychic (minor 2; major 8 from one category or 6 from three). A class states its own; master 8 and Super are class-only | `psionics.powers_starting`, `psionics.categories_allowed` |
 | Save vs psionic attack | 10+ for a Master Psionic, 12+ for minor and major psychics, 15+ for everyone else | override `saves.psionics_target` on the character |
 | Skills gained on level-up | Start at the catalog's base percentage — a skill learned at level 6 is still new | `skills.occ_related_skills.schedule` |
 | Skill percentage cap | 98% — book rule (p.22), applied at creation and on level-up | — |
+
+### Experience is the occupation's, not the race's
+
+Palladium Fantasy printed 336 prints **15 experience charts, 15 levels each**,
+and names them by O.C.C. — *Knight & Noble*, *Thief & Merchant*. All 25
+Palladium O.C.C.s in the catalog now carry their own, with nothing left over:
+the two names on that page without a row here are the Monk, which is
+`warrior-monk`, and the Goblin Cobbler, which is not imported.
+
+`xp_table` stores the **lower bound** of each level's band, which is what
+`levelForXp` compares against — the printed *"2,181-4,360"* for level 2 becomes
+`2181`.
+
+**The fourteen R.C.C.s get nothing, and that is correct rather than missing.** A
+race has no experience table, because experience comes from what you do. That is
+precisely why an occupation's table has to survive composition: `combineClasses`
+carries a named list of keys forward from the occupation, and `xp_table` was not
+on it, so since #210 a Knight's chart was dropped on **every Palladium
+character** while the race's absence won. A race that *does* state a curve still
+wins — a dragon's is the dragon's.
+
+**This is fidelity, not a bug fix.** The house-rule default sits inside the
+book's range at every level: at 15 the book spans 290,001 (Vagabond) to 370,201
+(Witch) and the default is 300,000. Nobody was levelling at the wrong speed —
+they were levelling at the average speed instead of their own class's. The
+spread is a 28% difference between the two classes that most deserve to differ.
+
+**The Warlock is the exception.** The catalog's `warlock` is the *Rifts* Book of
+Magic printing and carries `system: rifts`, so a Palladium chart in its
+frontmatter would apply a Palladium number to a Rifts row. It takes the figures
+as a **delta**, in the same `## Palladium Fantasy` section that already records
+its money and its armour.
+
+Regression pins the shape over the whole catalog rather than a list of ids, so a
+new Palladium O.C.C. arriving without a chart fails there rather than quietly
+levelling on the house rule.
 
 **Starting money** (p.22) is `starting_money` on the class — a formula string
 like `"2d6x10"` or a flat number — rolled through the same `rollPoolFormula` the
