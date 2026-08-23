@@ -11,6 +11,7 @@ import { loadCharacterClass } from './_lib/class-loader.js';
 import { validateCharacter, loadSkillCategories } from './_lib/validate-character.js';
 import { xpTableFor, thresholdFor, skillGrantsFor } from './_lib/leveling.js';
 import { insertGrantStatements, remainingGrants } from './_lib/skill-picks.js';
+import { parseClassMarkdown, occAllowedForRace } from '../../../apps/character-creator/js/parser.js';
 
 // GET /api/character-creator/characters — list for linking to sheets.
 // ?campaign_id= filters; ?limit= and ?offset= page (default 200, max 500).
@@ -38,6 +39,23 @@ export async function onRequestGet({ request, env }) {
   });
 
   return json(pageBody('characters', page));
+}
+
+// Whether a race may take an occupation, read off the two class rows.
+//
+// Returns null when either side cannot be resolved or the race states no
+// restriction - the same "cannot check, do not block" rule the class resolution
+// above follows. A missing class must not become a refusal.
+async function occRestrictionFor(env, raceId, occId) {
+  const { results } = await env.DB.prepare(
+    "SELECT class_id, markdown FROM imported_classes WHERE class_id IN (?, ?) AND status = 'published'"
+  ).bind(raceId, occId).all();
+  const md = Object.fromEntries((results || []).map((r) => [r.class_id, r.markdown]));
+  if (!md[raceId] || !md[occId]) return null;
+  const race = parseClassMarkdown(md[raceId])?.data;
+  const occ = parseClassMarkdown(md[occId])?.data;
+  if (!race?.occ_restrictions || !occ) return null;
+  return occAllowedForRace(race, occ);
 }
 
 export async function onRequestPost({ request, env }) {
@@ -83,6 +101,19 @@ export async function onRequestPost({ request, env }) {
     occ_class_id: occId, occ_class_variant: occVariant,
     psychic_tier: rolledTier, psychic_shape: psychicShape,
   });
+  // A race may bar an occupation outright: a dwarf takes no magic O.C.C., a
+  // kobold no knight or palladin. The wizard disables those options, and a
+  // disabled <option> is a hint rather than a rule - this is the boundary.
+  //
+  // Refused rather than warned, because unlike most of what the validator says
+  // this one is not a judgement call: the race's own page prints the list. The
+  // two classes are fetched raw, since the COMPOSED class has already merged
+  // them and no longer knows which half was which.
+  if (occId && b.class_id && occId !== b.class_id) {
+    const verdict = await occRestrictionFor(env, b.class_id, occId);
+    if (verdict && !verdict.allowed) return json({ error: verdict.reason }, 400);
+  }
+
   // A class that grants psionics has already answered the question, so a rolled
   // tier is not recorded alongside it — the two would contradict each other.
   const tier = cls?.psionics?.from_roll ? rolledTier : null;

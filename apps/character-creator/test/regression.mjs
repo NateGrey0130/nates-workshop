@@ -21,7 +21,7 @@ import { readFileSync, writeFileSync, rmSync, mkdtempSync, readdirSync, existsSy
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { tmpdir } from 'node:os';
-import { validateBonuses } from '../js/parser.js';
+import { validateBonuses, occAllowedForRace, OCC_GROUPS } from '../js/parser.js';
 
 const testDir = dirname(fileURLToPath(import.meta.url));
 const appDir = join(testDir, '..');
@@ -1132,6 +1132,95 @@ console.log('\n' + '[8/8] Checks that only a database can make');
     + "'juicer-assassin-plate-armor-non-environmental')");
   check('and the five that only look like duplicates are still there',
     kept.length === 5, kept.map((r) => r.slug).join(', '));
+}
+
+// ---------- race and O.C.C. restrictions ----------
+// Printed 21: not all O.C.C.s are open to every race. Eight of the fourteen
+// Palladium races print a real limit, and until `occ_restrictions` landed the
+// prose was display-only - the player was told and nothing stopped them.
+{
+  const classes = (await api('GET', '/classes?limit=200')).body.classes || [];
+  const byId = Object.fromEntries(classes.map((c) => [c.id, c]));
+
+  const grouped = classes.filter((c) => c.occ_group);
+  check('every Palladium O.C.C. carries the group its book section gives it',
+    grouped.length === 25, `${grouped.length}`);
+  const badGroup = grouped.filter((c) => !OCC_GROUPS.includes(c.occ_group));
+  check('and every group is one of the five the book prints',
+    badGroup.length === 0, badGroup.map((c) => `${c.id}=${c.occ_group}`).join(', '));
+  const wrongSide = classes.filter((c) => (c.occ_group && c.category !== 'occ')
+    || (c.occ_restrictions && c.category !== 'rcc'));
+  check('a group is on an O.C.C. and a restriction on a race, never the other way',
+    wrongSide.length === 0, wrongSide.map((c) => c.id).join(', '));
+
+  const restricted = classes.filter((c) => c.occ_restrictions);
+  check('eight races carry a restriction', restricted.length === 8,
+    restricted.map((c) => c.id).join(', '));
+
+  // THE HAZARD. A name with no class silently ALLOWS what it meant to forbid,
+  // and nothing else in the app would ever say so.
+  const dangling = [];
+  for (const r of restricted) {
+    for (const n of (r.occ_restrictions.only || r.occ_restrictions.except || [])) {
+      if (String(n).startsWith('group:')) continue;
+      if (!byId[n] || byId[n].category !== 'occ') dangling.push(`${r.id} -> ${n}`);
+    }
+  }
+  check('and every occupation they name is a real O.C.C.',
+    dangling.length === 0, dangling.join(', '));
+
+  // A closed list or an open one, never both, and never empty.
+  const shape = restricted.filter((r) => {
+    const o = Array.isArray(r.occ_restrictions.only);
+    const e = Array.isArray(r.occ_restrictions.except);
+    return (o && e) || (!o && !e)
+      || (o && !r.occ_restrictions.only.length) || (e && !r.occ_restrictions.except.length);
+  });
+  check('each states only or except, never both and never empty',
+    shape.length === 0, shape.map((r) => r.id).join(', '));
+
+  // The rules themselves, through the resolver a player hits.
+  const CASES = [
+    ['dwarf', 'wizard', false], ['dwarf', 'knight', true], ['dwarf', 'psi-healer', true],
+    ['kobold', 'knight', false], ['kobold', 'thief', true],
+    ['troll', 'mind-mage', false], ['troll', 'witch', true],
+    ['troglodyte', 'warrior-monk', true], ['troglodyte', 'wizard', false],
+    ['gnome', 'wizard', true], ['gnome', 'knight', false],
+    ['orc', 'priest-of-darkness', true], ['orc', 'priest-of-light', false],
+    // The goblin may take the occasional psychic and the hob-goblin may not,
+    // which is the pair that proves this is reading the data and not a habit.
+    ['goblin', 'psi-healer', true], ['hob-goblin', 'psi-healer', false],
+    ['human', 'wizard', true],
+  ];
+  const wrongCase = CASES.filter(([race, occ, want]) =>
+    occAllowedForRace(byId[race], byId[occ]).allowed !== want);
+  check('every race and occupation pair resolves the way the book reads',
+    wrongCase.length === 0, wrongCase.map(([r, o]) => `${r}+${o}`).join(', '));
+
+  // -- and the server refuses one ------------------------------------------
+  // The wizard disables the option; a disabled <option> is a hint, not a rule.
+  const refused = await api('POST', '/characters', {
+    campaign_id: campaignId, name: 'Dwarf Wizard', class_id: 'dwarf', occ_class_id: 'wizard',
+    attributes: attrs, abilities: [],
+  });
+  check('the server refuses a dwarf wizard', refused.status === 400, refused.body);
+  check('and says why, in words a player can read',
+    /dwarf/i.test(JSON.stringify(refused.body)) && /wizard/i.test(JSON.stringify(refused.body)),
+    JSON.stringify(refused.body));
+
+  const allowed = await api('POST', '/characters', {
+    campaign_id: campaignId, name: 'Dwarf Knight', class_id: 'dwarf', occ_class_id: 'knight',
+    attributes: attrs, abilities: [],
+  });
+  check('and allows a dwarf knight', [200, 201].includes(allowed.status), allowed.body);
+
+  // A race with no restriction must not be caught by the check at all.
+  const human = await api('POST', '/characters', {
+    campaign_id: campaignId, name: 'Human Wizard', class_id: 'human', occ_class_id: 'wizard',
+    attributes: attrs, abilities: [],
+  });
+  check('a race that restricts nothing is unaffected',
+    [200, 201].includes(human.status), human.body);
 }
 
 // ---------- enchantments ----------

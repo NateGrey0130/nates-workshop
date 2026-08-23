@@ -5232,10 +5232,45 @@ combinations are no longer hypothetical, and the earlier note here - that with
 two Palladium O.C.C.s "there is currently very little to restrict" - has stopped
 being true.
 
-What it needs first is a decision about where the data lives. `restrictions` is
-free text by design and always has been, so enforcing it means either a
-structured field naming class ids, or a rule that reads the prose, and the
-second is the kind of guess this repo does not make. Worth its own pass.
+**It is enforced now, from a structured field beside the prose.** Two keys, both
+in class markdown like `xp_table`, neither needing a migration:
+
+| key | on | what |
+|---|---|---|
+| `occ_group` | the 25 Palladium O.C.C.s | one of `clergy`, `men-of-arms`, `optional`, `magic`, `psychic` |
+| `occ_restrictions` | the 8 restricted races | `only: [...]` **or** `except: [...]`, never both |
+
+Entries are class ids or `group:<name>`. **Groups are the point.** *"A dwarf may
+take any O.C.C. except magic"* is a rule about a group; written as a list of the
+four magic classes the catalog holds today it would silently stop covering the
+fifth — and a restriction that quietly stops restricting is worse than none,
+because nothing says it happened.
+
+The groups are the **book's own**, taken from the section each class is printed
+in: Clergy, Men of Arms (78-95), Optional O.C.C.s (96), the Ways of Magic (100)
+and Psychic Character Classes (156).
+
+**Every name must resolve.** A class id with no class silently *allows* exactly
+what it meant to forbid, so the parser rejects one and regression checks it over
+the live catalog — the same hazard an `only` naming a skill with no catalog row
+carries. Three of the book's names needed mapping, and each race's note records
+which: *black priest* is the Priest of Darkness (printed 68 says so in as many
+words), *monk* is the Warrior Monk, *vagabond* is the Vagabond/Peasant/Farmer.
+
+**One bar is deliberately unenforced.** The troll may take no psychic P.C.C. and
+no *illusionist* — and there is no illusionist row, because the main book names
+it among the practitioners of magic on printed 100 and never prints one. Naming
+it would be naming nothing, so it lives in the note and the psychic half is
+enforced.
+
+The wizard shows barred occupations **disabled rather than hidden**, under a
+*"Not open to a Dwarf"* group with the reason beneath — a player looking for the
+Knight should learn that the race forbids it, not that the app has no Knight.
+The server refuses one on create, because a disabled `<option>` is a hint and
+not a rule, and a draft restored from before the field landed arrives the same
+way.
+
+No live character was affected: all nine are on races that carry no restriction.
 
 **There is no dead code left to find, and a check keeps it that way.** An audit
 scanned every export in `apps/`, `functions/`, `scripts/` and `shared/` for a
