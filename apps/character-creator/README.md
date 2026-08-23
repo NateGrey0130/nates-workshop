@@ -497,7 +497,7 @@ overridable.
 | Attribute rolls | Book rule, not a house rule — see below | `attribute_dice` |
 | XP table | Shared 15-level curve: 0, 2000, 4000, 8000, 16000, 25000, 35000, 50000, 70000, 95000, 125000, 160000, 200000, 250000, 300000 | `xp_table: [...]` |
 | Psionic starting powers | Book rule for a rolled psychic (minor 2; major 8 from one category or 6 from three). A class states its own; master 8 and Super are class-only | `psionics.powers_starting`, `psionics.categories_allowed` |
-| Save vs psionic attack | 12+ for Major and Master psychics, 15+ for everyone else | override `saves.psionics_target` on the character |
+| Save vs psionic attack | 10+ for a Master Psionic, 12+ for minor and major psychics, 15+ for everyone else | override `saves.psionics_target` on the character |
 | Skills gained on level-up | Start at the catalog's base percentage — a skill learned at level 6 is still new | `skills.occ_related_skills.schedule` |
 | Skill percentage cap | 98% — book rule (p.22), applied at creation and on level-up | — |
 

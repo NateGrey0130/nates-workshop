@@ -597,11 +597,22 @@ check('a non-psychic meets no stated requirement',
 check('tier comparison ignores case', D.meetsTier('Master', 'MAJOR'));
 check('an unrecognised requirement gates nothing', D.meetsTier('minor', 'grandmaster'));
 
-check('major and master save vs psionics at 12, everyone else at 15', (() => {
+// Three targets, not two, and both books agree: 15 / 12 / 10. This check used
+// to assert `major and master at 12, everyone else at 15`, which pinned two
+// wrong answers - a minor psychic at the non-psychic 15, and a master at the
+// major's 12. See the table in derive.js.
+check('a master psionic saves vs psionics at 10, minor and major at 12, everyone else at 15', (() => {
   const t = (tier) => D.saves({ ME: 10 }, null, tier).psionics_target;
-  return t('major') === 12 && t('master') === 12
-      && t('minor') === 15 && t(null) === 15 && t(undefined) === 15;
+  return t('master') === 10
+      && t('major') === 12 && t('minor') === 12
+      && t(null) === 15 && t(undefined) === 15;
 })());
+check('the tier is matched case-insensitively, as meetsTier already was', (() => {
+  const t = (tier) => D.saves({ ME: 10 }, null, tier).psionics_target;
+  return t('Master') === 10 && t('MINOR') === 12;
+})());
+check('an unrecognised tier still falls to the non-psychic target',
+  D.saves({ ME: 10 }, null, 'grandmaster').psionics_target === 15);
 check('the psionic save BONUS is still purely M.E.', (() => {
   const strong = D.saves({ ME: 18 }, null, 'master');
   const weak = D.saves({ ME: 18 }, null, null);
