@@ -771,20 +771,66 @@ console.log('\n' + '[8/8] Checks that only a database can make');
     redirectErr || 'query ran but returned no skill redirects');
 
   const isFamily = (n) => /^(Language|Literacy):\s*\S/.test(n);
+  const resolves = (n) => catalogNames.has(n) || isFamily(n) || redirected.has(n);
   const deadFixed = [];
   const frozenAtZero = [];
+  const bonusOnNothing = [];
   for (const c of classes) {
     for (const e of (c.skills?.occ_skills || [])) {
       if (!e?.name) continue;
-      if (!catalogNames.has(e.name) && !isFamily(e.name) && !redirected.has(e.name)) {
+      if (!resolves(e.name)) {
         // A class-specific skill the catalog never got still resolves IF the
         // class states its own numbers; what cannot resolve is a name with
         // neither a row, a redirect, nor a base.
         if (typeof e.base !== 'number') deadFixed.push(`${c.id}: ${e.name}`);
       }
       if (isFamily(e.name) && e.base === 0) frozenAtZero.push(`${c.id}: ${e.name}`);
+      // A `bonus` is meaningless without a row to add it to. `resolveSkill`
+      // sums it onto the catalog base, so a bonus on a name the catalog does
+      // not have does not fall back to the bonus - it falls to ZERO, which is
+      // worse than the wrong number it replaced.
+      if (e.bonus !== undefined && !resolves(e.name)) {
+        bonusOnNothing.push(`${c.id}: ${e.name}`);
+      }
     }
   }
+  check('no fixed skill puts a bonus on a name the catalog does not have',
+    bonusOnNothing.length === 0, bonusOnNothing.join(', '));
+
+  // -- a printed BONUS is never stored as the BASE ----------------------------
+  //
+  // "Chemistry (+10%)" means ten points on top of Chemistry's own 30%, not a
+  // Chemistry of 10%. Storing the second for the first put 48 skills across six
+  // classes BELOW the catalog row they are supposed to excel at - the Cyber-Doc
+  // diagnosing at Computer Operation 5% where any passer-by has 40%.
+  //
+  // Written over every class rather than the six, so a new import inherits it.
+  // A below-base fixed skill is legitimate when the book prints a flat figure -
+  // "Language: Native Tongue at 88%", the Warrior Monk's "Base Skill: 20%" - so
+  // the rule is not "never below base"; it is that such a row must SAY SO, in a
+  // note or by being one of the two language families. What must never happen
+  // again is a bare number sitting under the catalog with nothing to explain it.
+  const catalogByName = new Map((catalogs.body.skills || []).map((r) => [r.name, r]));
+  const unexplainedBelowBase = [];
+  let compared = 0;
+  for (const c of classes) {
+    for (const e of (c.skills?.occ_skills || [])) {
+      if (!e?.name || typeof e.base !== 'number') continue;
+      const row = catalogByName.get(e.name);
+      if (!row) continue;
+      compared += 1;
+      if (e.base >= row.base) continue;
+      if (isFamily(e.name) || (e.note && e.note.trim())) continue;
+      unexplainedBelowBase.push(`${c.id}: ${e.name} ${e.base} < ${row.base}`);
+    }
+  }
+  // A rule that silently compares nothing passes forever. This one has hundreds
+  // of rows to look at; if a rename or a shape change ever leaves it with none,
+  // the failure should be the missing comparison, not the empty result.
+  check('the below-base rule actually compared fixed skills against the catalog',
+    compared > 200, `compared ${compared}`);
+  check('no fixed skill sits under its catalog base without saying why',
+    unexplainedBelowBase.length === 0, unexplainedBelowBase.join(', '));
   check('every fixed skill resolves to real numbers',
     deadFixed.length === 0, deadFixed.join(', '));
   check('and no language or literacy skill is pinned to 0%',

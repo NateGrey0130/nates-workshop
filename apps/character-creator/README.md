@@ -20,6 +20,7 @@ Access gate. No build step, no framework, no dependencies.
 - [House rules and derived values](#house-rules-and-derived-values)
 - [A fighting style is a level schedule](#a-fighting-style-is-a-level-schedule)
 - [Language and Literacy: Other, once per language](#language-and-literacy-other-once-per-language)
+- [A printed bonus is not a base](#a-printed-bonus-is-not-a-base)
   - [Languages of choice come from languages](#languages-of-choice-come-from-languages)
 - [Level-up skill picks](#level-up-skill-picks)
 - [Starting above level 1](#starting-above-level-1)
@@ -1039,12 +1040,81 @@ Both are pinned by regression now: **every fixed skill must resolve to real
 numbers** (a catalog row, a redirect, or its own stated base), and **no
 Language or Literacy skill may sit at 0%**.
 
-> **Still outstanding, and much larger.** 63 fixed skills across 16 classes sit
-> *below* their catalog base, because the printed O.C.C. **bonus** was stored as
-> the base — the Cyber-Doc's Computer Operation is 5% where the catalog row is
-> 40% and the class note says *"(+5%)"*. 43 of the 63 carry a note, and some are
-> deliberate (the Noble's Horsemanship, the Warrior Monk's Begging), so telling
-> them apart needs the books open, one class at a time. That is its own pass.
+This sweep also turned up **68 fixed skills sitting below their catalog base**,
+which needed the books open one class at a time. See
+[A printed bonus is not a base](#a-printed-bonus-is-not-a-base).
+
+---
+
+### A printed bonus is not a base
+
+An O.C.C. skill list writes a fixed percentage two ways, and they mean opposite
+things:
+
+| printed | means |
+|---|---|
+| `Language: Native Tongue at 96%.` | the figure **is** the percentage |
+| `Chemistry (+10%)` | ten points **on top of** Chemistry's own 30% |
+
+Both were stored the same way, as `base`. So the Cyber-Doc — a surgeon —
+diagnosed at **Computer Operation 5%** where any passer-by has 40%, and the
+SAMAS Pilot drove at **Automobile 15%** against a catalog row of 60%. Not a
+small bonus: a crippling floor, on exactly the skills the class exists to be
+good at.
+
+**48 skills across six classes** now carry `bonus` instead, which
+`resolveSkill` has always summed onto the catalog row — the app supported this
+the whole time; only the data and the validator disagreed.
+
+| class | skills | source |
+|---|---|---|
+| Cyber-Doc | 10 | RUE p.90 |
+| Rogue Scholar | 10 | RUE p.94 |
+| Wilderness Scout | 9 | RUE p.99 |
+| Coalition SAMAS Pilot | 8 | RUE p.233 |
+| Stone Master | 6 | Book of Magic p.224 |
+| Vagabond | 5 | RUE p.97 |
+
+Dropping `per_level` alongside `base` matters too: the SAMAS Pilot's Automobile
+carried `+5`/level where the catalog row is `+2`.
+
+#### Read as images, not as OCR
+
+Rifts Ultimate Edition has no text layer. The OCR cache is good for *locating* a
+section and not for transcribing one — it had merged the SAMAS Pilot's skill
+list with the Coalition Grunt's column beside it, which would have written six
+wrong numbers. Every page here was rendered and read as an image instead, and
+the generator refuses to rewrite a line whose stored number does not already
+equal the printed bonus.
+
+#### What was checked and deliberately left alone
+
+15 rows still sit below their catalog base, and every one is what its book
+prints:
+
+- **Twelve `Language: Native Tongue` rows at 88–97%.** The Vagabond really does
+  speak at 88% and the Mystic at 97%; the catalog's generic 98% is not what
+  those classes get.
+- **The Noble's Horsemanship: General at 35%/+5.** The O.C.C. block prints it
+  with no bonus at all — the 35 is the *Palladium Fantasy* skill's own number,
+  a cross-system difference its note already records.
+- **The Warrior Monk's Begging at 20%/+3.** Palladium Fantasy prints, in so many
+  words, *"Base Skill: 20%+3% per level of experience."*
+- **The Vagabond's Begging at 10%.** Printed `Begging (10%)` — no plus, where
+  every sibling line has one. Kept as a base, but its `per_level: 0` was dropped
+  so it advances at the catalog's +3 instead of freezing for fifteen levels.
+
+The Chiang-Ku hatchling was a different defect found by the same sweep: the
+adult knows all domestic skills at 80%, which is right, but the hatchling
+variant lowered five of them to a flat 25, which is nobody's number. Dragons &
+Gods p.22 says hatchling skills *"start at first level proficiency"*, and the
+override's Advanced Math already read that way at the catalog's own 45. The five
+domestic rows now do too.
+
+Three regression invariants hold the line: a `bonus` may never sit on a name the
+catalog does not have (it would resolve to **0**, not to the bonus), no fixed
+skill may sit under its catalog base without a note or a family to explain it,
+and that rule asserts it actually compared rows rather than passing vacuously.
 
 ---
 
