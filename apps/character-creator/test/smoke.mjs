@@ -4668,6 +4668,33 @@ check('saves split the same way', (() => {
 })());
 
 
+// ---------- The Race briefing names every bonus group ----------
+// The briefing exists so a player sees what a class grants BEFORE committing to
+// it, and it listed attributes, combat and saves but not POOLS. A pool bonus
+// does not show in the briefing's `Pools` line either, because that line prints
+// the FORMULA and a class that adds to another's roll states no formula - so
+// the Troll's +40 S.D.C., its single most distinctive number, appeared nowhere.
+// Fifteen classes published before the races grant one, so it was never only a
+// race problem.
+section('Race briefing');
+{
+  const src = readFileSync(join(appDir, 'app.js'), 'utf8');
+  const fn = src.slice(src.indexOf('function raceBriefing()'));
+  const body = fn.slice(0, fn.indexOf('\n}\n'));
+  for (const group of ['attributes', 'pools', 'combat', 'saves']) {
+    check(`the briefing reads bonuses.${group}`,
+      new RegExp(`b\\.${group} \\|\\| \\{\\}`).test(body),
+      `bonuses.${group} is granted by real classes and the briefing never prints it`);
+  }
+  // Every group derive.js can act on, so adding one to the parser without
+  // adding it here fails rather than showing the player nothing.
+  check('and that is every group a class bonus can name',
+    /BONUS_GROUPS/.test(readFileSync(join(appDir, 'js', 'parser.js'), 'utf8')));
+  check('pool keys are labelled, not printed raw',
+    /POOL_LABELS_SHORT/.test(body), 'a bonus would read "sdc +40" rather than "S.D.C. +40"');
+}
+
+
 // ---------- Reading numbers out of OCR ----------
 section('OCR field readers');
 

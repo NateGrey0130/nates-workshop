@@ -713,10 +713,20 @@ function raceBriefing() {
     .filter(([, v]) => v != null).map(([k, v]) => tag(k, v)).join(' ');
 
   const b = c.bonuses || {};
+  const plus = (v) => (typeof v === 'number' && v > 0 ? '+' : '') + [v].flat().join(' & +');
+  // POOLS BELONG HERE TOO, and were the one group missing. A pool bonus is
+  // added to whatever the pool's own formula rolls, so it does not appear in
+  // the `pools` line above - that line prints the FORMULA, and a race that adds
+  // to the occupation's roll rather than replacing it states no formula at all.
+  // The Troll's +40 S.D.C. is its single most distinctive number and the
+  // briefing showed nothing at all for it. Fifteen of the classes published
+  // before the races grant one, so this was never only a race problem.
+  const POOL_LABELS_SHORT = { hp: 'H.P.', sdc: 'S.D.C.', mdc: 'M.D.C.', ppe: 'P.P.E.', isp: 'I.S.P.' };
   const bonusBits = [
-    ...Object.entries(b.attributes || {}).map(([k, v]) => tag(k, (typeof v === 'number' && v > 0 ? '+' : '') + [v].flat().join(' & +'))),
-    ...Object.entries(b.combat || {}).map(([k, v]) => tag(k.replace(/_/g, ' '), (typeof v === 'number' && v > 0 ? '+' : '') + [v].flat().join(' & +'))),
-    ...Object.entries(b.saves || {}).map(([k, v]) => tag('save vs ' + k.replace(/_/g, ' '), (typeof v === 'number' && v > 0 ? '+' : '') + [v].flat().join(' & +'))),
+    ...Object.entries(b.attributes || {}).map(([k, v]) => tag(k, plus(v))),
+    ...Object.entries(b.pools || {}).map(([k, v]) => tag(POOL_LABELS_SHORT[k] || k, plus(v))),
+    ...Object.entries(b.combat || {}).map(([k, v]) => tag(k.replace(/_/g, ' '), plus(v))),
+    ...Object.entries(b.saves || {}).map(([k, v]) => tag('save vs ' + k.replace(/_/g, ' '), plus(v))),
   ].join(' ');
 
   // Named skills only. A choice-group has no name to print here, and it is

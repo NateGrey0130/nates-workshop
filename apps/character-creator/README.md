@@ -1538,6 +1538,16 @@ skills it already knows, and whether an occupation is normally taken alongside
 it. All of that used to be first visible a step later, after the choice had been
 made and the dice were already rolling.
 
+**The bonuses line names all four groups**, `pools` included. It listed
+attributes, combat and saves only, and a **pool bonus does not appear in the
+`Pools` line either** — that line prints the pool's own FORMULA, and a class
+that adds to another's roll rather than replacing it states no formula at all.
+So the Troll's +40 S.D.C., the single most distinctive number on its page, was
+shown nowhere on the step that exists to show it. Fifteen of the sixty-one
+classes published before the races grant a pool bonus, so this was never only a
+race problem. A smoke check now fails if the briefing stops reading one of the
+four groups.
+
 **The list still holds every class for the system.** An O.C.C. taken as the
 primary class is a human character and always was. When that happens the
 Occupation step does not apply and is greyed in the stepper rather than removed,
