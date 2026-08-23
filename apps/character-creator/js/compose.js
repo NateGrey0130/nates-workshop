@@ -116,6 +116,14 @@ export const CORE_SDC_BY_CLASS = {
   'wizard': '1D6',
   'summoner': '1D6',
   'diabolist': '1D6',
+  // Palladium Fantasy main book, the clergy, printed 63-78. The Warrior Monk
+  // is the awkward one and still belongs here: it fights better than most men
+  // of arms, but the book files it with the priests and prints no S.D.C.
+  // formula, so the core rule reads 1D6. Its own +20 S.D.C. bonus is a pool
+  // bonus in the class and lands on top of this.
+  'priest-of-darkness': '1D6',
+  'warrior-monk': '1D6',
+  'druid': '1D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence
