@@ -305,15 +305,22 @@ CREATE TABLE IF NOT EXISTS gear (
   source_book TEXT
 );
 
--- What an alchemist puts INTO a sword, as opposed to a sword. Printed 249-250
--- sells three finished suits and then 32 PROPERTIES that go into ordinary gear,
--- cumulatively, up to four per suit and three per weapon. "+1 A.R., 4,000 gold"
--- is a modifier on any of the armour rows the catalog already has, not a row.
+-- What an alchemist puts INTO an object, as opposed to the object. THREE
+-- families, and the book draws every one of them the same way - a property
+-- with a price and a cap, instilled into ordinary gear:
+--
+--   armor   11 features, printed 249, four to a suit
+--   weapon  21 properties, printed 249-250, three to a weapon
+--   charm   30 powers, printed 253, three to a ring, bracelet or medallion
+--
+-- "+1 A.R., 4,000 gold" is a modifier on any of the armour rows the catalog
+-- already has, not a row of its own. Nor is "Chameleon, 40,000 gold" a ring:
+-- the book says the effect is PLACED IN one, three powers to an item.
 CREATE TABLE IF NOT EXISTS enchantments (
   id           INTEGER PRIMARY KEY AUTOINCREMENT,
   slug         TEXT UNIQUE,
   name         TEXT NOT NULL,
-  applies_to   TEXT NOT NULL CHECK (applies_to IN ('weapon', 'armor')),
+  applies_to   TEXT NOT NULL CHECK (applies_to IN ('weapon', 'armor', 'charm')),
   cost         INTEGER,                -- gold, the LOW end; see cost_note
   cost_note    TEXT,                   -- a range, a per-unit rate, or a cap
   max_per_item INTEGER,                -- 4 for armour, 3 for weapons
@@ -710,3 +717,8 @@ WHERE EXISTS (SELECT 1 FROM pragma_table_info('gear') WHERE name = 'sdc');
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '035-enchantments.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('character_items') WHERE name = 'enchantments');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '036-enchantments-charm.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master
+               WHERE type = 'table' AND name = 'enchantments' AND sql LIKE '%charm%');

@@ -136,8 +136,10 @@ export const CATALOGS = {
       { name: 'name', label: 'Name', type: 'text', required: true },
       { name: 'slug', label: 'Slug', type: 'text', required: true,
         help: 'What character_items.enchantments references. One per property the book names.' },
-      { name: 'applies_to', label: 'Applies to', type: 'select', options: ['weapon', 'armor'],
-        required: true },
+      { name: 'applies_to', label: 'Applies to', type: 'select',
+        options: ['weapon', 'armor', 'charm'], required: true,
+        help: 'charm covers rings, bracelets, charms and medallions - the book instils '
+            + 'the effect IN one of those, three powers to an item.' },
       { name: 'cost', label: 'Cost', type: 'int',
         help: 'Gold, and the LOW end of a range - the same convention gear.cost follows.' },
       { name: 'cost_note', label: 'Cost note', type: 'text',
