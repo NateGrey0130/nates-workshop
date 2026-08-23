@@ -98,13 +98,30 @@
     return tierRank(has) >= need;
   }
 
-  // Save vs psionic attack. Major and Master psychics are harder to affect —
-  // 12 or better, against 15 for everyone else, non-psychics included: they get
+  // Save vs psionic attack. The books give THREE targets, not two, and the two
+  // books agree: a non-psychic needs 15, a minor OR major psychic 12, and a
+  // Master Psionic only 10. Non-psychics are on the list because they get
   // attacked by psionics too and still need a number to roll against.
-  const PSIONIC_SAVE_STRONG = 12;
+  //
+  //   Palladium Fantasy main book p.48    Rifts Ultimate Edition
+  //   non-psychic         15 or higher    robots and the like   15 (p.185)
+  //   minor and major     12 or higher    minor/major psychic   12 (p.65)
+  //   Master Psionic      10 or higher    Mind Melter           10 (p.142)
+  //
+  // This used to read `meetsTier(tier, 'major') ? 12 : 15`, which got exactly
+  // one of the three right. A MINOR psychic was handed 15 — the non-psychic
+  // number — and a MASTER was handed 12, so the tier that exists to be hardest
+  // to touch saved no better than a Mystic. Twelve published classes were
+  // affected: three minor and nine master.
+  //
+  // Keyed by tier rather than compared through meetsTier() because the targets
+  // do not step monotonically in a way one threshold can express — minor and
+  // major share a number and master breaks away from both. An unrecognised
+  // tier still falls to 15, exactly as the threshold version did.
+  const PSIONIC_SAVE_BY_TIER = { minor: 12, major: 12, master: 10 };
   const PSIONIC_SAVE_BASE = 15;
   function psionicSaveTarget(tier) {
-    return meetsTier(tier, 'major') ? PSIONIC_SAVE_STRONG : PSIONIC_SAVE_BASE;
+    return PSIONIC_SAVE_BY_TIER[String(tier ?? '').toLowerCase()] ?? PSIONIC_SAVE_BASE;
   }
 
   // P.E. covers the body (poison, drugs, coma/death), M.E. the mind
