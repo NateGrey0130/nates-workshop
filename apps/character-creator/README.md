@@ -1132,7 +1132,9 @@ prints:
 
 - **Twelve `Language: Native Tongue` rows at 88–97%.** The Vagabond really does
   speak at 88% and the Mystic at 97%; the catalog's generic 98% is not what
-  those classes get.
+  those classes get. Each now carries the page it came from, because eight of
+  them carried nothing and every audit re-derived the same answer from the same
+  scans — which is the work a note exists to prevent.
 - **The Noble's Horsemanship: General at 35%/+5.** The O.C.C. block prints it
   with no bonus at all — the 35 is the *Palladium Fantasy* skill's own number,
   a cross-system difference its note already records.
@@ -1150,9 +1152,15 @@ override's Advanced Math already read that way at the catalog's own 45. The five
 domestic rows now do too.
 
 Three regression invariants hold the line: a `bonus` may never sit on a name the
-catalog does not have (it would resolve to **0**, not to the bonus), no fixed
-skill may sit under its catalog base without a note or a family to explain it,
-and that rule asserts it actually compared rows rather than passing vacuously.
+catalog does not have (it would resolve to **0**, not to the bonus), **no fixed
+skill may sit under its catalog base without a note explaining why**, and that
+rule asserts it actually compared rows rather than passing vacuously.
+
+The middle one used to exempt the `Language:` and `Literacy:` families outright.
+That exemption did nothing useful — the check already skips names the catalog
+does not hold, and a native tongue *does* have a catalog row — so all it achieved
+was hiding twelve rows that really are below the line. It is gone, and the rule
+is now simply: **below the line, say why.**
 
 ---
 

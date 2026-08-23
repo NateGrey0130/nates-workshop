@@ -821,7 +821,15 @@ console.log('\n' + '[8/8] Checks that only a database can make');
       if (!row) continue;
       compared += 1;
       if (e.base >= row.base) continue;
-      if (isFamily(e.name) || (e.note && e.note.trim())) continue;
+      // The family exemption is GONE. It was there because a `Language: X` with
+      // no catalog row of its own resolves off the Other row, where comparing
+      // to a base is meaningless - but this branch already skipped names the
+      // catalog does not have, so all the exemption ever did was hide the
+      // twelve `Language: Native Tongue` rows, which DO have a catalog row and
+      // really are below it. Eight of them carried no explanation, and every
+      // audit re-derived the same answer from the same scans. Now the rule is
+      // simply: below the line, say why.
+      if (e.note && e.note.trim()) continue;
       unexplainedBelowBase.push(`${c.id}: ${e.name} ${e.base} < ${row.base}`);
     }
   }
