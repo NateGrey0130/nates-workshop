@@ -45,5 +45,41 @@
       "binding": "MEDIA",
       "bucket_name": "nates-workshop-media"
     }
+  ],
+  // Pick 3 Cut 5's room server. BOTH of these point at the same standalone
+  // Worker, `pick3cut5-room`, whose source lives in workers/pick3cut5-room/.
+  //
+  // WHY A SECOND WORKER EXISTS AT ALL: a Pages project cannot define a Durable
+  // Object class - it can only bind to one exported from a standalone Worker,
+  // and unlike Workers, Pages requires `script_name` on the binding. That is a
+  // current documented limitation, not a legacy one. The alternative was
+  // migrating the whole site off Pages; docs/pages-to-workers-migration.md is
+  // that option, written up and not taken.
+  //
+  // THE DEPLOY ORDER MATTERS AND IT IS NOT ENFORCED. Merging to main deploys
+  // Pages and does NOT deploy this Worker. The Worker must be deployed FIRST -
+  // same discipline as the R2 bucket above - or these bindings resolve to
+  // nothing and party mode answers 503 while the rest of the site looks fine.
+  // SETUP.md carries the order.
+  //
+  // Two bindings rather than one because they do different jobs: the Durable
+  // Object binding carries the WebSocket straight to the room's stub, and the
+  // service binding carries plain HTTP (room creation, solo generation) to the
+  // Worker's fetch handler, where the rate limit binding that Pages cannot use
+  // is waiting.
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "P3C5_ROOM",
+        "class_name": "Room",
+        "script_name": "pick3cut5-room"
+      }
+    ]
+  },
+  "services": [
+    {
+      "binding": "PICK3CUT5",
+      "service": "pick3cut5-room"
+    }
   ]
 }

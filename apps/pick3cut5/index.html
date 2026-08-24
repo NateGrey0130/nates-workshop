@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Pick 3 Cut 5 — Nate's Workshop</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shared/styles.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div>
+      <div class="logo">Pick 3 Cut 5</div>
+      <div class="logo-sub">three keeps. five cuts. no take-backs.</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span id="roomBadge" class="room-badge" hidden></span>
+    <a href="/" class="home-link">← workshop</a>
+  </div>
+</header>
+
+<!-- Announcements for screen readers. The game's whole rhythm is visual, so
+     phase changes get spoken here instead of being inferred from motion. -->
+<div id="live" class="sr-only" role="status" aria-live="polite"></div>
+<div id="banner" class="banner" hidden></div>
+
+<main>
+
+  <!-- ─── HOME ─────────────────────────────────────────────────────────── -->
+  <section id="screen-home" class="screen">
+    <div class="pitch">
+      <h1>Eight items, one at a time.</h1>
+      <p>You get three keeps and five cuts. You commit before you see what's next.
+         Spend a keep too early and you'll watch something better show up at item six.
+         There's no score. The argument is the point.</p>
+    </div>
+
+    <div class="menu">
+      <button class="tile" id="btnHost">
+        <span class="tile-icon">🎉</span>
+        <span class="tile-title">Start a party</span>
+        <span class="tile-sub">Get a room code, everyone joins on their phone</span>
+      </button>
+
+      <button class="tile" id="btnJoinToggle">
+        <span class="tile-icon">🔑</span>
+        <span class="tile-title">Join a room</span>
+        <span class="tile-sub">Someone already has a code for you</span>
+      </button>
+
+      <button class="tile" id="btnSoloToggle">
+        <span class="tile-icon">🎧</span>
+        <span class="tile-title">Play solo</span>
+        <span class="tile-sub">Same eight items, no room, nobody to argue with</span>
+      </button>
+    </div>
+
+    <form class="panel" id="formJoin" hidden>
+      <label for="joinCode">Room code</label>
+      <input id="joinCode" class="code-input" maxlength="4" autocomplete="off"
+             autocapitalize="characters" spellcheck="false" placeholder="ABCD" inputmode="text">
+      <label for="joinName">Your name</label>
+      <input id="joinName" maxlength="16" autocomplete="off" placeholder="Nate">
+      <button class="btn btn-primary btn-big" type="submit">Join the room</button>
+    </form>
+
+    <form class="panel" id="formHost" hidden>
+      <label for="hostName">Your name</label>
+      <input id="hostName" maxlength="16" autocomplete="off" placeholder="Nate">
+      <button class="btn btn-primary btn-big" type="submit">Make a room</button>
+    </form>
+
+    <form class="panel" id="formSolo" hidden>
+      <label for="soloCategory">Category</label>
+      <input id="soloCategory" maxlength="60" autocomplete="off"
+             placeholder="best Zelda games">
+      <p class="hint">Anything with eight recognisable entries. Facts get checked against the web,
+         opinions don't.</p>
+      <button class="btn btn-primary btn-big" type="submit">Build the list</button>
+    </form>
+  </section>
+
+  <!-- ─── LOBBY ────────────────────────────────────────────────────────── -->
+  <section id="screen-lobby" class="screen" hidden>
+    <div class="code-display">
+      <div class="code-label">room code</div>
+      <div class="code-value" id="lobbyCode">----</div>
+      <button class="btn btn-ghost" id="btnCopyCode">copy join link</button>
+    </div>
+
+    <div class="players" id="lobbyPlayers"></div>
+
+    <form class="panel host-only" id="formCategory" hidden>
+      <label for="category">Category</label>
+      <input id="category" maxlength="60" autocomplete="off" placeholder="best Zelda games">
+      <p class="hint" id="categoryHint">Facts get checked against the web before anyone sees them.</p>
+
+      <details class="timer-settings">
+        <summary>Timers</summary>
+        <div class="timer-row">
+          <label for="pickSecs">Pick</label>
+          <input id="pickSecs" type="number" min="10" max="180" step="5" value="60">
+          <span>s</span>
+        </div>
+        <div class="timer-row">
+          <label for="acceptSecs">Accept</label>
+          <input id="acceptSecs" type="number" min="5" max="120" step="5" value="30">
+          <span>s</span>
+        </div>
+      </details>
+
+      <button class="btn btn-primary btn-big" type="submit" id="btnStart">Start the round</button>
+    </form>
+
+    <p class="waiting guest-only" id="lobbyWaiting">Waiting for the host to pick a category.</p>
+  </section>
+
+  <!-- ─── GENERATING ───────────────────────────────────────────────────── -->
+  <section id="screen-generating" class="screen" hidden>
+    <div class="loading">
+      <div class="spinner" aria-hidden="true"></div>
+      <p class="loading-line" id="loadingLine">Waking up</p>
+      <p class="loading-sub">Opinions are quick. Anything with facts in it gets checked
+         against the web first, and that can take a minute.</p>
+    </div>
+  </section>
+
+  <!-- ─── PLAY ─────────────────────────────────────────────────────────── -->
+  <section id="screen-play" class="screen" hidden>
+
+    <div class="budget" id="budget">
+      <div class="budget-half">
+        <span class="budget-label">keeps</span>
+        <span class="pips" id="pipsKeep"></span>
+      </div>
+      <div class="progress-count" id="itemCount">1 / 8</div>
+      <div class="budget-half budget-cut">
+        <span class="budget-label">cuts</span>
+        <span class="pips" id="pipsCut"></span>
+      </div>
+    </div>
+
+    <div class="timer-bar" id="timerBar" hidden><span id="timerFill"></span></div>
+
+    <div class="stage">
+      <div class="item-card" id="itemCard">
+        <div class="item-index" id="itemIndexLabel">item 1</div>
+        <div class="item-text" id="itemText">…</div>
+      </div>
+
+      <p class="pick-progress" id="pickProgress" hidden></p>
+      <p class="forced-note" id="forcedNote" hidden></p>
+    </div>
+
+    <div class="actions" id="actions" hidden>
+      <button class="choice choice-cut" id="btnCut">
+        <span class="choice-verb">Cut it</span>
+        <span class="choice-left" id="cutLeft"></span>
+      </button>
+      <button class="choice choice-keep" id="btnKeep">
+        <span class="choice-verb">Keep it</span>
+        <span class="choice-left" id="keepLeft"></span>
+      </button>
+    </div>
+
+    <div class="flips" id="flips" hidden></div>
+
+    <div class="summary" id="summary" hidden>
+      <div class="summary-board" id="summaryBoard"></div>
+      <button class="btn btn-primary btn-big" id="btnAccept">Next item</button>
+      <p class="waiting" id="acceptWaiting" hidden></p>
+    </div>
+
+    <div class="host-controls host-only" id="hostControls" hidden>
+      <button class="btn btn-ghost" id="btnForce">Force advance</button>
+    </div>
+  </section>
+
+  <!-- ─── FINAL ────────────────────────────────────────────────────────── -->
+  <section id="screen-final" class="screen" hidden>
+    <h2 class="final-title">Final threes</h2>
+    <p class="final-cat" id="finalCategory"></p>
+    <div class="final-boards" id="finalBoards"></div>
+
+    <form class="panel host-only" id="formAgain" hidden>
+      <label for="againCategory">Another category</label>
+      <input id="againCategory" maxlength="60" autocomplete="off" placeholder="something else">
+      <button class="btn btn-primary btn-big" type="submit">Go again</button>
+      <p class="hint" id="againHint"></p>
+    </form>
+
+    <button class="btn btn-ghost" id="btnSoloAgain" hidden>Play another category</button>
+    <p class="waiting guest-only" id="finalWaiting">Waiting on the host for the next category.</p>
+  </section>
+
+</main>
+
+<script src="/shared/js/ui.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

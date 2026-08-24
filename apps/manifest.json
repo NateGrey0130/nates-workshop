@@ -22,10 +22,17 @@
       "status": "live"
     },
     {
+      "slug": "pick3cut5",
+      "name": "Pick 3 Cut 5",
+      "icon": "✂️",
+      "description": "Party game. Eight items revealed one at a time, three keeps and five cuts, no take-backs. Play in a room together or on your own.",
+      "status": "live"
+    },
+    {
       "slug": null,
       "name": "More Coming Soon",
       "icon": "🔧",
-      "description": "Keep 3 Cut 5, Model Router, and more — stay tuned.",
+      "description": "Model Router and more — stay tuned.",
       "status": "soon"
     }
   ]
