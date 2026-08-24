@@ -6,14 +6,33 @@ export const d = (sides) => 1 + Math.floor(Math.random() * sides);
 
 const DICE_EXPR = /^(\d+)\s*d\s*(\d+)(?:\s*x\s*(\d+))?(?:\s*([+-])\s*(\d+))?$/i;
 
-export function evalDice(expr) {
+// One parse path for a roll and for its bounds. `die(sides)` supplies each
+// die's value, so the same walk that rolls also answers "what is the least or
+// most this expression can come up" — two implementations of the grammar would
+// drift, and a bounds check that disagrees with the roll it bounds is worse
+// than none.
+function evalDiceWith(expr, die) {
   const m = String(expr).trim().match(DICE_EXPR);
   if (!m) return null;
   let total = 0;
-  for (let i = 0; i < +m[1]; i++) total += d(+m[2]);
+  for (let i = 0; i < +m[1]; i++) total += die(+m[2]);
   if (m[3]) total *= +m[3];
   if (m[4]) total += (m[4] === '-' ? -1 : 1) * +m[5];
   return total;
+}
+
+const MIN_DIE = () => 1;
+const MAX_DIE = (sides) => sides;
+
+export function evalDice(expr) {
+  return evalDiceWith(expr, d);
+}
+
+// The least and most a dice expression can produce, or null when it is not
+// one. Exact, not sampled: every die shows 1, or every die shows its sides.
+export function diceBounds(expr) {
+  const min = evalDiceWith(expr, MIN_DIE);
+  return min == null ? null : { min, max: evalDiceWith(expr, MAX_DIE) };
 }
 
 // A book quantity is usually a number, occasionally a roll — the Priest of
@@ -139,26 +158,40 @@ function attrIn(text, attrs) {
 // falls through to the occupation", and if neither states one the character
 // simply does not have that pool — a bonus must not conjure it into existence.
 // That is the same rule that keeps an M.D.C. race from acquiring hit points.
-function rollBonus(bonus) {
+function bonusWith(bonus, die) {
   if (bonus == null) return 0;
-  if (Array.isArray(bonus)) return bonus.reduce((sum, b) => sum + rollBonus(b), 0);
+  if (Array.isArray(bonus)) return bonus.reduce((sum, b) => sum + bonusWith(b, die), 0);
   if (typeof bonus === 'number') return Number.isFinite(bonus) ? bonus : 0;
-  const rolled = evalDice(bonus);
+  const rolled = evalDiceWith(bonus, die);
   return rolled == null ? 0 : rolled;
 }
 
 export function rollPoolFormula(expr, attrs = {}, bonus = null) {
-  const base = rollPoolBase(expr, attrs);
-  return base == null ? null : base + rollBonus(bonus);
+  const base = poolBaseWith(expr, attrs, d);
+  return base == null ? null : base + bonusWith(bonus, d);
 }
 
-function rollPoolBase(expr, attrs) {
+// The range a pool formula can legitimately produce — { min, max }, or null
+// when the formula cannot be read (an unreadable formula is a note, not a
+// bound). The same walk rollPoolFormula takes, with every die pinned to its
+// floor or its ceiling, so the bounds and the roll cannot disagree about what
+// the formula means.
+export function poolFormulaBounds(expr, attrs = {}, bonus = null) {
+  const min = poolBaseWith(expr, attrs, MIN_DIE);
+  if (min == null) return null;
+  return {
+    min: min + bonusWith(bonus, MIN_DIE),
+    max: poolBaseWith(expr, attrs, MAX_DIE) + bonusWith(bonus, MAX_DIE),
+  };
+}
+
+function poolBaseWith(expr, attrs, die) {
   if (expr == null) return null;
   if (typeof expr === 'number') return expr;
   const s = String(expr).trim();
 
   // A clean expression on its own.
-  const whole = evalDice(s);
+  const whole = evalDiceWith(s, die);
   if (whole != null) return whole;
 
   // Dice plus an attribute, in either order — "P.E. + 1d6 per level" and
@@ -177,7 +210,7 @@ function rollPoolBase(expr, attrs) {
   }
 
   {
-    const rolled = evalDice(dice[0]);
+    const rolled = evalDiceWith(dice[0], die);
     if (rolled != null) {
       if (bonus != null) return rolled + bonus;
       // Dice buried in prose: books qualify these heavily ("3D4x100+1000 when in
@@ -190,6 +223,24 @@ function rollPoolBase(expr, attrs) {
 
   const n = Number(s);
   return Number.isFinite(n) ? n : null;
+}
+
+// The most an attribute roll can legitimately come up, exceptional dice
+// included — the ceiling the audit warns above, never a value anything blocks
+// on. Null when the dice cannot be read, because a ceiling that was guessed
+// would flag numbers a table approved.
+//
+// Mirrors rollAttribute's own rules: only a plain 2d6 or 3d6 earns the
+// exceptional chain, and the chain is at most two extra six-sided dice.
+export function attributeCeiling(expr) {
+  const s = String(expr ?? '').trim() || '3d6';
+  const m = s.match(DICE_EXPR);
+  if (!m) return null;
+  const count = +m[1], sides = +m[2];
+  const multiplier = m[3] ? +m[3] : 1;
+  const modifier = m[4] ? (m[4] === '-' ? -1 : 1) * +m[5] : 0;
+  const exceptional = sides === 6 && multiplier === 1 && EXCEPTIONAL_AT[count] !== undefined ? 12 : 0;
+  return count * sides * multiplier + modifier + exceptional;
 }
 
 

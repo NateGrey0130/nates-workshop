@@ -11,6 +11,14 @@
 //   - whether those skills are in the categories the class allows
 //   - whether their attributes meet the class's minimums
 //   - whether choice-groups in occ_skills look satisfied (advisory only)
+//   - when the caller supplies `powers`: the spells and psionic powers the
+//     character was CREATED holding, against the class's starting counts,
+//     level caps, categories and named lists (the class's auto-granted ones
+//     are exempt — they are granted, not chosen)
+//   - when the caller supplies `pools`: whether each stored maximum is inside
+//     the range its class formula can actually roll (advisory only)
+//   - whether an attribute exceeds the highest its dice can come up
+//     (advisory only — Manual entry exists for numbers a table decided)
 //
 // It does NOT check the class's fixed occ_skills list. That is not a choice, so
 // a mismatch means the class was edited or re-imported since the character was
@@ -36,8 +44,11 @@
 import { isChoiceGroup, categoryAllows, categoryName, needsOccupation,
          isAbilityChoice, isAbilityDefinition, abilityOptions, normalizeAbilities, abilityOccOptions } from '../../../../apps/character-creator/js/parser.js';
 
-import { skillGrantsFor, xpTableFor, thresholdFor } from './leveling.js';
+import { skillGrantsFor, xpTableFor, thresholdFor, perLevelDiceOf } from './leveling.js';
 import { isRepeatableRow, otherRowFor } from '../../../../apps/character-creator/js/language-skills.js';
+import { poolFormulaBounds, diceBounds, attributeCeiling } from '../../../../apps/character-creator/js/dice.js';
+import { psionicShape } from '../../../../apps/character-creator/js/psionics.js';
+import { powerGrantsFor } from './power-picks.js';
 
 const norm = (s) => String(s ?? '').trim().toLowerCase();
 
@@ -73,7 +84,8 @@ export function secondaryAllowance(cls, level) {
   return base + granted;
 }
 
-export function validateCharacter({ character, cls, skills, attributes, abilities, catalog }) {
+export function validateCharacter({ character, cls, skills, attributes, abilities, catalog,
+                                    powers, pools, system, powerCatalog }) {
   // No class definition means no rules to check against. A character whose
   // class was retired must still be saveable — PR 2 made that survivable on
   // purpose, and refusing here would undo it.
@@ -302,6 +314,206 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
         message: `${occNeed.name} expects one of these occupations composed in: `
           + occNeed.options.join(', ')
           + (character?.occ_class_id ? ` - this character has ${character.occ_class_id}` : ' - this character has none') });
+    }
+  }
+
+  // ── creation-time powers ──────────────────────────────────────────────────
+  // The spells and psionic powers a character is CREATED holding. Level-up and
+  // banked-pick spends have always gone through resolvePowerPicks; creation was
+  // the door left open — a crafted request could know every spell in the book
+  // at level 1. Checked only when the caller supplies `powers`, which is the
+  // create endpoint and the audit; the level-up paths keep their own machinery.
+  //
+  // The powers a class grants OUTRIGHT (magic.spells, psionics.powers) are
+  // exempt: they are granted, not chosen, and the class may legitimately name
+  // ones the catalog does not hold yet — a visible gap by design.
+  //
+  // A creation pick does not record which grant it spent (gained_at_level lands
+  // only on level-up picks), so per-grant attribution is impossible — the same
+  // reason skill choice-groups warn. Counts are checked against the TOTAL
+  // allowance, and a pick passes the cap checks if ANY applicable pool admits
+  // it. That under-enforces at the seams and can never refuse a legal build.
+  if (Array.isArray(powers)) {
+    const label = (kind) => (kind === 'spell' ? 'spell' : 'psionic power');
+    const auto = {
+      spell: new Set((cls.magic?.spells || []).map(norm).filter(Boolean)),
+      psionic: new Set((cls.psionics?.powers || []).map(norm).filter(Boolean)),
+    };
+    const entries = powers
+      .filter((p) => p && (p.type === 'spell' || p.type === 'psionic') && norm(p.name))
+      .map((p) => ({ kind: p.type, name: String(p.name).trim() }));
+
+    const seenPowers = new Set();
+    for (const e of entries) {
+      const k = e.kind + ':' + norm(e.name);
+      if (seenPowers.has(k)) {
+        violations.push({ rule: 'duplicate_power', name: e.name,
+          message: `${e.name} is listed twice — a power is learned once` });
+      }
+      seenPowers.add(k);
+    }
+
+    const chosen = { spell: [], psionic: [] };
+    for (const e of entries) if (!auto[e.kind].has(norm(e.name))) chosen[e.kind].push(e);
+
+    // Everything the character may draw from: the starting selection, plus the
+    // grants of every level climbed to a starting level above 1 — the same
+    // grants powerGrantsFor banks for a live level-up.
+    const grants = powerGrantsFor(cls, 1, level);
+    const startSpells = cls.magic && Number(cls.magic.spells_starting) > 0
+      ? { count: Number(cls.magic.spells_starting),
+          spell_levels: Array.isArray(cls.magic.spell_levels_allowed) && cls.magic.spell_levels_allowed.length
+            ? cls.magic.spell_levels_allowed : null,
+          from: null }
+      : null;
+    // A named list REPLACES the category gate — the Burster's seventeen named
+    // minor powers are the restriction, not their categories.
+    const psiFrom = Array.isArray(cls.psionics?.powers_from) && cls.psionics.powers_from.length
+      ? cls.psionics.powers_from : null;
+    const startPsi = cls.psionics && Number(cls.psionics.powers_starting) > 0
+      ? { count: Number(cls.psionics.powers_starting),
+          categories: psiFrom ? null
+            : (Array.isArray(cls.psionics.categories_allowed) && cls.psionics.categories_allowed.length
+              ? cls.psionics.categories_allowed : null),
+          from: psiFrom }
+      : null;
+    const pool = {
+      spell: [...(startSpells ? [startSpells] : []), ...grants.filter((g) => g.kind === 'spell')],
+      psionic: [...(startPsi ? [startPsi] : []), ...grants.filter((g) => g.kind === 'psionic')],
+    };
+
+    for (const kind of ['spell', 'psionic']) {
+      const allowance = pool[kind].reduce((n, g) => n + g.count, 0);
+      if (chosen[kind].length > allowance) {
+        violations.push({ rule: 'power_count', kind, have: chosen[kind].length, allowed: allowance,
+          message: allowance === 0
+            ? `${chosen[kind].length} chosen ${label(kind)}${chosen[kind].length === 1 ? '' : 's'}, `
+              + `but this class grants none to choose`
+            : `${chosen[kind].length} chosen ${label(kind)}s, but this class allows ${allowance} at level ${level}` });
+      }
+    }
+
+    if (powerCatalog) {
+      // NULL and 'both' are unrestricted, the same reading every picker applies.
+      const inSystem = (row) => !system || !row.system || row.system === system || row.system === 'both';
+      const listNames = { spell: new Set(), psionic: new Set() };
+      for (const kind of ['spell', 'psionic']) {
+        for (const g of pool[kind]) for (const n of g.from || []) listNames[kind].add(norm(n));
+      }
+      // The cap pools are the ones NOT bounded by a named list — a list slot is
+      // bounded by the list, not by a spell level or a category.
+      const capPools = pool.spell.filter((g) => !(g.from && g.from.length));
+      const spellLevelsOpen = capPools.some((g) => !g.spell_levels);
+      const allowedLevels = new Set(capPools.flatMap((g) => g.spell_levels || []));
+      const catPools = pool.psionic.filter((g) => !(g.from && g.from.length));
+      const categoriesOpen = catPools.some((g) => !g.categories);
+      const allowedCats = new Set(catPools.flatMap((g) => (g.categories || []).map(norm)));
+
+      for (const kind of ['spell', 'psionic']) {
+        // With no pool at all, the count violation above already says it all.
+        if (!pool[kind].length) continue;
+        for (const e of chosen[kind]) {
+          const row = powerCatalog[kind]?.get(norm(e.name));
+          if (!row) {
+            violations.push({ rule: 'power_unknown', kind, name: e.name,
+              message: `${e.name} is not in the ${label(kind)} catalog` });
+            continue;
+          }
+          if (!inSystem(row)) {
+            violations.push({ rule: 'power_system', kind, name: e.name,
+              message: `${e.name} belongs to ${row.system}, not this campaign's system` });
+            continue;
+          }
+          if (listNames[kind].has(norm(e.name))) continue;
+          if (kind === 'spell') {
+            if (!capPools.length) {
+              violations.push({ rule: 'power_not_on_list', kind, name: e.name,
+                message: `${e.name} is not on any list this class's spell picks draw from` });
+            } else if (!spellLevelsOpen && Number.isFinite(row.level) && !allowedLevels.has(row.level)) {
+              violations.push({ rule: 'power_level_cap', name: e.name, level: row.level,
+                message: `${e.name} is a level ${row.level} spell; this class's picks allow `
+                  + `spell level${allowedLevels.size === 1 ? '' : 's'} `
+                  + [...allowedLevels].sort((a, b) => a - b).join(', ') });
+            }
+          } else if (!catPools.length) {
+            violations.push({ rule: 'power_not_on_list', kind, name: e.name,
+              message: `${e.name} is not on the list this class's psionic picks draw from` });
+          } else if (!categoriesOpen && row.category && !allowedCats.has(norm(row.category))) {
+            violations.push({ rule: 'power_category', name: e.name, category: row.category,
+              message: `${e.name} is a ${row.category} power; this class's picks allow `
+                + [...allowedCats].join(', ') });
+          }
+        }
+      }
+
+      // A rolled psychic on the focused shape takes every power from ONE
+      // category — "8 powers, all from one category" is the book's own wording,
+      // and a rolled tier has no auto-granted powers to muddy the count.
+      if (cls.psionics?.from_roll && chosen.psionic.length > 1) {
+        const shape = psionicShape(cls.psionics.type, character?.psychic_shape);
+        if (shape?.categories === 1) {
+          const cats = new Set(chosen.psionic
+            .map((e) => powerCatalog.psionic?.get(norm(e.name))?.category)
+            .filter(Boolean).map(norm));
+          if (cats.size > 1) {
+            violations.push({ rule: 'psionic_single_category', categories: [...cats],
+              message: `A rolled ${cls.psionics.type} psychic takes every power from one category; `
+                + `these span ${cats.size}` });
+          }
+        }
+      }
+    }
+  }
+
+  // ── pool maxima (advisory) ────────────────────────────────────────────────
+  // The dice are rolled client-side by design — the rolls are the point — so
+  // the server cannot know what they CAME UP, only what they COULD. A stored
+  // maximum outside the formula's possible range has no legitimate roll behind
+  // it; a warning rather than a violation because a class re-imported with a
+  // different formula would falsify an honest roll, and the level-up flow
+  // sanctions tweaking numbers "if your GM says so". The audit is where these
+  // surface.
+  if (pools && typeof pools === 'object') {
+    const formulas = {
+      hp_max: ['hp', cls.hit_points_base],
+      sdc_max: ['sdc', cls.sdc_base],
+      mdc_max: ['mdc', cls.mdc_base],
+      ppe_max: ['ppe', cls.ppe_base],
+      isp_max: ['isp', cls.psionics?.isp_base],
+    };
+    for (const [field, [key, formula]] of Object.entries(formulas)) {
+      const v = Number(pools[field]);
+      if (!Number.isFinite(v) || formula == null) continue;
+      const bounds = poolFormulaBounds(formula, attributes || {}, cls.bonuses?.pools?.[key] ?? null);
+      if (!bounds) continue;
+      const per = perLevelDiceOf(formula);
+      const perB = per ? diceBounds(per) : null;
+      const min = bounds.min + (perB ? perB.min * (level - 1) : 0);
+      const max = bounds.max + (perB ? perB.max * (level - 1) : 0);
+      if (v < min || v > max) {
+        warnings.push({ rule: 'pool_out_of_range', field, value: v, min, max,
+          message: `${field} is ${v}; the class formulas allow ${min}-${max} at level ${level}` });
+      }
+    }
+  }
+
+  // ── attribute ceilings (advisory) ─────────────────────────────────────────
+  // The highest a roll can legitimately come up, exceptional dice included.
+  // A warning and never a violation: the wizard's Manual entry mode exists
+  // precisely for numbers a table decided, and refusing them would make the
+  // app the GM. The stored attributes are the ROLLED values — class bonuses
+  // live in their own columns — so the ceiling is the dice's alone.
+  if (attributes && typeof attributes === 'object') {
+    for (const [attr, raw] of Object.entries(attributes)) {
+      const v = Number(raw);
+      if (!Number.isFinite(v)) continue;
+      const dice = typeof cls.attribute_dice?.[attr] === 'string' ? cls.attribute_dice[attr] : '3d6';
+      const ceiling = attributeCeiling(dice);
+      if (ceiling != null && v > ceiling) {
+        warnings.push({ rule: 'attribute_above_ceiling', attribute: attr, value: v, ceiling, dice,
+          message: `${attr} is ${v}, above the highest ${dice} can roll `
+            + `(${ceiling} with exceptional dice) - fine if the table set it by hand` });
+      }
     }
   }
 

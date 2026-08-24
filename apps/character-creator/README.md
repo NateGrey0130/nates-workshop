@@ -437,7 +437,7 @@ writes are gated (see [Permissions](#permissions)).
 | `campaigns/[id]/npcs/[npcId]/portrait` | GET / POST / DELETE | Stream, upload (raw `image/*` body, 5MB) and remove. **Never a public bucket URL** — every read goes through the membership check |
 | `campaigns/[id]/npcs/sweep` | POST | Propose the people nobody tagged. `?accept=1` creates the dossier a proposal named; `?dismiss=1` stops offering that name |
 | `draft` | GET / PUT / DELETE | The caller's own unfinished wizard build. No id in the route — a draft belongs to a person, not a collection. One each. **PUT states the version it is replacing** in `expect_updated_at` and is refused 409 otherwise; see [Two tabs cannot overwrite each other](#two-tabs-cannot-overwrite-each-other) |
-| `characters` | GET / POST | List (`?campaign_id=`, `?limit=`, `?offset=`); create at level 1 — **validated against the class rules**, and refused 403 in a closed campaign unless the caller is its GM or already a member |
+| `characters` | GET / POST | List (`?campaign_id=`, `?limit=`, `?offset=`); create at the starting level — **validated against the class rules, creation-time powers included**, and refused 403 in a closed campaign unless the caller is its GM or already a member |
 | `characters/[id]` | GET / PATCH | Sheet + inventory, with `can_write` / `is_gm`; edit pools, notes, and the bio/combat/saves/armor sections. Also returns `skill_level_notes` and `weapon_bonuses` — what a skill grants that is not a summable number; see [A fighting style is a level schedule](#a-fighting-style-is-a-level-schedule) |
 | `characters/[id]/items` | POST | Add inventory row (catalog slug or freeform) |
 | `characters/[id]/items/[itemId]` | PATCH / DELETE | qty/equipped/notes; soft remove |
@@ -3907,6 +3907,34 @@ similar to that of the godly father or mother"*), exempt from the count and the
 offered list, counted only for repeats — holding a power twice is holding it
 twice, whoever granted the second. It still grants its bonuses through
 `applyAbilities`, which tags it `gm` for the sheet.
+
+**Creation-time powers get the same boundary.** The spells and psionic powers
+a character is *created* holding used to be stored unvalidated — the one write
+path `resolvePowerPicks` did not cover, so a crafted request could know every
+spell in the book at level 1. The create endpoint now checks them: counts
+against the starting allowance plus every grant the climbed levels earn, spell
+levels against the caps, psionic categories and named lists, catalog existence
+and the campaign's system — all violations, because the wizard cannot produce
+any of them. Two carve-outs keep it honest: the powers a class grants
+**outright** (`magic.spells`, `psionics.powers`) are exempt, since they are
+granted rather than chosen and may legitimately name catalog gaps; and a pick
+does not record which grant it spent (only level-up picks carry
+`gained_at_level`), so a pick passes the cap checks if **any** applicable pool
+admits it — the same no-guessing rule that keeps skill choice-groups advisory,
+under-enforcing at the seams rather than ever refusing a legal build.
+
+**What a roll *could* come up is checked; what it *did* come up is not.** The
+dice are rolled client-side by design, so the server bounds each stored pool
+maximum against the range its class formula can actually produce
+(`poolFormulaBounds` — the same parse walk `rollPoolFormula` takes, with every
+die pinned to its floor or ceiling), per-level growth included. Outside the
+range is a **warning**, never a violation: a class re-imported with a different
+formula would falsify an honest roll, and the level-up flow already sanctions
+tweaking numbers "if your GM says so". Attributes get the same treatment
+against the highest their dice can roll, exceptional chain included
+(`attributeCeiling`) — advisory because Manual entry exists precisely for
+numbers a table decided. Both surface in the admin audit, which now receives
+pools, powers and each campaign's system.
 
 **Existing characters are not retro-validated.** They keep loading and saving
 whatever state they are in; `admin/audit` reports which ones break a rule so you

@@ -500,11 +500,72 @@ const nonsense = await api('GET', '/characters?limit=banana');
 check('a nonsense limit falls back rather than 400ing',
   nonsense.status === 200 && nonsense.body.limit === 200, nonsense.body.limit);
 
+// ── creation-time validation (the audit's F2) ───────────────────────────────
+// The powers a character is created holding get the boundary level-up picks
+// always had; pool maxima and attributes get advisory range checks that
+// surface in the admin audit rather than blocking anything.
+{
+  const llw = classes.body.classes.find((c) => c.id === 'ley-line-walker');
+  check('the Ley Line Walker is available to craft against', !!llw, 'no ley-line-walker');
+  const allowedLevels = new Set(llw?.magic?.spell_levels_allowed || []);
+  const auto = new Set((llw?.magic?.spells || []).map((n) => String(n).toLowerCase()));
+  const usable = (s) => (!s.system || s.system === 'rifts' || s.system === 'both')
+    && !auto.has(String(s.name).toLowerCase());
+  const inCap = catalogs.body.spells.filter((s) => usable(s) && allowedLevels.has(s.level));
+  const overCap = catalogs.body.spells.find((s) => usable(s) && s.level > Math.max(...allowedLevels));
+  const spell = (s) => ({ type: 'spell', name: s.name, level: s.level, cost: s.ppe });
+  const base = (extra) => ({
+    campaign_id: campaignId, class_id: 'ley-line-walker',
+    attributes: attrs, skills: [], abilities: [], bio: { alignment: 'Principled' }, ...extra,
+  });
+
+  const starting = Number(llw?.magic?.spells_starting) || 0;
+  const over = await api('POST', '/characters',
+    base({ name: 'Greedy Caster', powers: inCap.slice(0, starting + 1).map(spell) }));
+  check('one spell over the starting allowance is refused',
+    over.status === 422 && over.body.violations?.some((v) => v.rule === 'power_count'),
+    JSON.stringify(over.body).slice(0, 250));
+
+  const high = await api('POST', '/characters',
+    base({ name: 'Overreaching Caster', powers: [spell(overCap)] }));
+  check('a spell above the allowed levels is refused',
+    high.status === 422 && high.body.violations?.some((v) => v.rule === 'power_level_cap'),
+    JSON.stringify(high.body).slice(0, 250));
+
+  const fake = await api('POST', '/characters',
+    base({ name: 'Inventive Caster', powers: [{ type: 'spell', name: 'Spell Of My Own Devising' }] }));
+  check('a spell the catalog does not hold is refused',
+    fake.status === 422 && fake.body.violations?.some((v) => v.rule === 'power_unknown'),
+    JSON.stringify(fake.body).slice(0, 250));
+
+  const legit = await api('POST', '/characters',
+    base({ name: 'Honest Caster', powers: inCap.slice(0, Math.min(2, starting)).map(spell),
+           pools: { hp: 9999, ppe: 20 } }));
+  check('a legal pick within the allowance still creates',
+    legit.status === 201, JSON.stringify(legit.body).slice(0, 250));
+
+  // Out-of-range pools and over-ceiling attributes create fine — they are
+  // warnings, because a class re-import or a table ruling could explain them —
+  // and the audit below is where they surface.
+  const strong = await api('POST', '/characters',
+    base({ name: 'Implausibly Strong', attributes: { ...attrs, PS: 45 } }));
+  check('an attribute above its dice ceiling still creates',
+    strong.status === 201, JSON.stringify(strong.body).slice(0, 250));
+}
+
 const audit = await api('GET', '/admin/audit');
 check('the admin audit runs', audit.status === 200, audit.body);
-check('and finds no rule-breaking characters in a fresh database',
-  audit.status === 200 && (audit.body.characters || []).length === 0,
-  JSON.stringify(audit.body).slice(0, 200));
+// This used to read `audit.body.characters`, a field the response has never
+// had, and so asserted nothing at all. The response's own vocabulary:
+// `blocked` counts characters with violations, and warnings surface offenders
+// without blocking anyone.
+check('and no character in a fresh database would be refused on save',
+  audit.status === 200 && audit.body.blocked === 0,
+  JSON.stringify(audit.body.offenders || []).slice(0, 300));
+check('the audit surfaces the out-of-range pool as a warning',
+  (audit.body.by_rule?.pool_out_of_range || 0) >= 1, JSON.stringify(audit.body.by_rule));
+check('and the over-ceiling attribute',
+  (audit.body.by_rule?.attribute_above_ceiling || 0) >= 1, JSON.stringify(audit.body.by_rule));
 
 // -- confirming an import bigger than one statement can bind ----------------
 // D1 takes at most 100 bound parameters per statement. `markConfirmed` built
