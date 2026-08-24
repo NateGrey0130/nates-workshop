@@ -5351,7 +5351,7 @@ in class markdown like `xp_table`, neither needing a migration:
 
 | key | on | what |
 |---|---|---|
-| `occ_group` | the 25 Palladium O.C.C.s | one of `clergy`, `men-of-arms`, `optional`, `magic`, `psychic` |
+| `occ_group` | all 59 O.C.C.s — 25 Palladium, 34 Rifts | one of `clergy`, `men-of-arms`, `optional`, `magic`, `psychic` |
 | `occ_restrictions` | the 8 restricted races | `only: [...]` **or** `except: [...]`, never both |
 
 Entries are class ids or `group:<name>`. **Groups are the point.** *"A dwarf may
@@ -5363,6 +5363,40 @@ because nothing says it happened.
 The groups are the **book's own**, taken from the section each class is printed
 in: Clergy, Men of Arms (78-95), Optional O.C.C.s (96), the Ways of Magic (100)
 and Psychic Character Classes (156).
+
+**The Rifts side went without this key for months, and that was two silent
+failures waiting.** `occ_group` was set on the 25 Palladium O.C.C.s and on none
+of the 34 Rifts ones, so a `group:` token matched *nothing* on the Rifts side —
+and which way that fails depends on which list it is in:
+
+| written | resolves to | effect |
+|---|---|---|
+| `only: ["group:men-of-arms"]` | nothing matches | fails **closed** — the race can take nothing |
+| `except: ["group:magic"]` | nothing matches | fails **open** — the race can take everything |
+
+The second is the dangerous one, and it is the same shape as the Godling's dead
+`except` that reached production and went unnoticed for months. Nothing was
+broken in practice only because every existing user of a group token — dwarf,
+gnome, goblin, troll — is a Palladium race restricting Palladium occupations,
+where both sides had the key. `zz-rifts-occ-groups.sql` closes it, using RUE's
+own section headings: Men of Arms (45-85) plus Coalition Military (231-237),
+practitioners of magic (100-135), psychics (139-156), and Adventurers & Scholars
+(86-99). Those are the same headings `CORE_SDC_BY_CLASS` cites for its 3D6/1D6
+split, so the two tables agree by construction rather than by coincidence.
+
+Two calls in that script are worth knowing. **Adventurers & Scholars are filed
+as `optional`** — the five group names are fixed in `OCC_GROUPS` and none of
+them is "adventurer", and `optional` carries the closest meaning, being
+Palladium's own heading for the O.C.C.s that are neither men of arms nor spell
+casters. And the **two Psi-Stalkers are `psychic`** even though
+`CORE_SDC_BY_CLASS` gives them a man-of-arms 3D6: that table's comment says why
+— *psychics by the book's grouping, but hunters by trade* — so the S.D.C.
+follows the trade and the group follows the book.
+
+**A group cannot carve out an exception.** "Any men of arms *other than* CS or
+NGR military" is not expressible as `only: ["group:men-of-arms"]` minus three,
+so a race stating one has to enumerate ids and say so in its notes. The Norse
+Giant is the first to hit this.
 
 **Every name must resolve.** A class id with no class silently *allows* exactly
 what it meant to forbid, so the parser rejects one and regression checks it over
