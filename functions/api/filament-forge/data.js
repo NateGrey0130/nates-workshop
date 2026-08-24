@@ -12,7 +12,10 @@
 
 import { getUserEmail, json } from './_lib/common.js';
 
-const MAX_HISTORY = 50;      // the client has always capped history at 50
+// The sanitizers and the cap are exported for the app's smoke test, the way
+// the character creator's endpoints export their pure parts.
+
+export const MAX_HISTORY = 50;      // the client has always capped history at 50
 const MAX_PRESETS = 200;
 const MAX_CUSTOM = 200;
 const MAX_FIELD = 300;       // names, brands, intents — short strings
@@ -20,7 +23,7 @@ const MAX_BLOB = 20000;      // settings JSON / raw model output
 
 const str = (v, max = MAX_FIELD) => (typeof v === 'string' ? v.slice(0, max) : '');
 
-function sanitizeEntry(raw) {
+export function sanitizeEntry(raw) {
   if (!raw || typeof raw !== 'object') return null;
   if (typeof raw.id !== 'string' || !raw.id || raw.id.length > 100) return null;
   const f = raw.filament || {};
@@ -38,7 +41,7 @@ function sanitizeEntry(raw) {
   };
 }
 
-function sanitizePreset(raw) {
+export function sanitizePreset(raw) {
   const entry = sanitizeEntry(raw);
   if (!entry) return null;
   if (typeof raw.presetName !== 'string' || !raw.presetName.trim()) return null;
@@ -47,7 +50,7 @@ function sanitizePreset(raw) {
   return entry;
 }
 
-function sanitizeCustom(raw) {
+export function sanitizeCustom(raw) {
   if (!raw || typeof raw !== 'object') return null;
   if (typeof raw.id !== 'string' || !raw.id || raw.id.length > 100) return null;
   if (typeof raw.brand !== 'string' || !raw.brand.trim()) return null;
@@ -64,7 +67,7 @@ function sanitizeCustom(raw) {
   };
 }
 
-function entryOut(row) {
+export function entryOut(row) {
   let settings = {};
   try { settings = JSON.parse(row.settings); } catch {}
   return {
