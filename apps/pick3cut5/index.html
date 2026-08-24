@@ -204,7 +204,13 @@
       <p class="hint" id="againHint"></p>
     </form>
 
-    <button class="btn btn-ghost" id="btnSoloAgain" hidden>Play another category</button>
+    <form class="panel" id="formSoloAgain" hidden>
+      <label for="soloAgainCategory">Another category</label>
+      <input id="soloAgainCategory" maxlength="60" autocomplete="off" placeholder="something else">
+      <button class="btn btn-primary btn-big" type="submit">Go again</button>
+      <p class="prefetch-status" id="soloPrefetchStatus" hidden></p>
+    </form>
+
     <p class="waiting guest-only" id="finalWaiting">Waiting on the host for the next category.</p>
   </section>
 

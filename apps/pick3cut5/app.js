@@ -285,33 +285,43 @@ function renderFinal(s) {
       </div>`;
   }).join('');
 
-  // Prefetch status. Only meaningful to the host, who is the one typing.
-  const pf = s.prefetch;
-  const typed = $('againCategory').value.trim().toLowerCase();
-  const matches = pf && pf.category && pf.category.toLowerCase() === typed;
-  const el = $('prefetchStatus');
-  el.className = 'prefetch-status';
-  if (mode === 'party' && s.isHost && pf && matches && pf.status !== 'idle') {
-    el.hidden = false;
-    if (pf.status === 'running') {
-      el.classList.add('working');
-      el.innerHTML = '<span class="dot"></span>building this list now';
-    } else if (pf.status === 'ready') {
-      el.classList.add('ready');
-      el.innerHTML = '<span class="dot"></span>list ready — starts instantly';
-    } else {
-      el.innerHTML = '<span class="dot"></span>could not build it early; Go again will retry';
-    }
-  } else {
-    el.hidden = true;
-  }
+  renderPrefetchStatus(
+    mode === 'solo' ? $('soloPrefetchStatus') : $('prefetchStatus'),
+    s.prefetch,
+    (mode === 'solo' ? $('soloAgainCategory') : $('againCategory')).value,
+    mode === 'solo' || s.isHost
+  );
 
   $('againHint').textContent = s.roundsLeft > 0
     ? `${s.roundsLeft} round${s.roundsLeft === 1 ? '' : 's'} left in this room.`
     : 'This room is out of rounds. Start a new one.';
-  $('btnSoloAgain').hidden = mode !== 'solo';
+  $('formSoloAgain').hidden = mode !== 'solo';
   $('formAgain').hidden = mode !== 'party' || !s.isHost;
   $('finalWaiting').hidden = mode !== 'party' || s.isHost;
+}
+
+/**
+ * Shared by both final screens. Only shown when what the prefetch holds is
+ * what the player has actually typed — a status line about some category they
+ * have since replaced would be worse than no status line.
+ */
+function renderPrefetchStatus(el, pf, typedValue, allowed) {
+  const typed = typedValue.trim().toLowerCase();
+  const matches = pf && pf.category && pf.category.toLowerCase() === typed;
+  el.className = 'prefetch-status';
+
+  if (!allowed || !matches || pf.status === 'idle') { el.hidden = true; return; }
+  el.hidden = false;
+
+  if (pf.status === 'running') {
+    el.classList.add('working');
+    el.innerHTML = '<span class="dot"></span>building this list now';
+  } else if (pf.status === 'ready') {
+    el.classList.add('ready');
+    el.innerHTML = '<span class="dot"></span>list ready — starts instantly';
+  } else {
+    el.innerHTML = '<span class="dot"></span>could not build it early; Go again will retry';
+  }
 }
 
 function renderPips(elId, left, total, kind) {
@@ -369,11 +379,20 @@ function scheduleArm(s) {
 
 const MAX_SWAPS = 3;
 
+// Speculative generations per solo session. Lower than the party room's five
+// because solo goes through the PUBLIC endpoint, which is rate limited to 8
+// per minute per IP — and a household on one wifi shares that budget. Burning
+// it on lists nobody asked for would make the button the player did press
+// fail, which is a worse trade than a wait.
+const MAX_SOLO_PREFETCH = 3;
+
 const solo = {
   items: [], reserve: [], seen: [], category: '',
   index: -1, keepsLeft: KEEPS, cutsLeft: CUTS, picks: [],
   phase: 'lobby', armAt: 0,
   replacements: 0, flaggedThisItem: false, lastFlag: null,
+  prefetch: { key: '', category: '', status: 'idle', items: [], reserve: [] },
+  prefetchCount: 0,
 };
 
 function soloSnapshot() {
@@ -410,6 +429,10 @@ function soloSnapshot() {
     swapsLeft: MAX_SWAPS - solo.replacements,
     spareItems: solo.reserve.length,
     lastFlag: solo.lastFlag,
+    // Status and category only, matching the shape the server sends. The items
+    // genuinely are here in solo — there is nobody to hide them from — but the
+    // renderer is shared, so the shape has to be.
+    prefetch: { status: solo.prefetch.status, category: solo.prefetch.category },
   };
 }
 
@@ -428,7 +451,72 @@ function soloForced() {
   return null;
 }
 
+// One call, so the list is either fetched or prefetched — this is the half
+// that runs either way. The mirror of beginRound() on the server.
+function soloBeginRound(category, items, reserve) {
+  mode = 'solo';
+  solo.category = category;
+  solo.items = items;
+  solo.reserve = reserve ?? [];
+  // Only the eight in play count as seen. A spare that never gets swapped in
+  // was never shown, so excluding it from a replay would thin the category
+  // for nothing — soloFlag() adds one the moment it is dealt.
+  solo.seen = [...solo.seen, ...items];
+  solo.index = -1;
+  solo.keepsLeft = KEEPS;
+  solo.cutsLeft = CUTS;
+  solo.picks = [];
+  solo.replacements = 0;
+  solo.progress = '';
+  solo.prefetch = { key: '', category: '', status: 'idle', items: [], reserve: [] };
+  soloReveal();
+}
+
+/**
+ * Build the next solo list while the final board is still up.
+ *
+ * Same idea as the party prefetch and deliberately tighter, because this goes
+ * through the public endpoint rather than a room's Durable Object. Every path
+ * fails silently: a prefetch nobody uses should never surface an error, and
+ * pressing Go again always works, just at full speed.
+ */
+async function soloPrefetch(category) {
+  const key = category.toLowerCase();
+  if (solo.prefetch.status === 'running') return;              // one at a time
+  if (solo.prefetch.key === key && solo.prefetch.status !== 'idle') return;
+  if (solo.prefetchCount >= MAX_SOLO_PREFETCH) return;
+
+  solo.prefetchCount += 1;
+  solo.prefetch = { key, category, status: 'running', items: [], reserve: [] };
+  if (solo.phase === 'final') render(soloSnapshot());
+
+  try {
+    const res = await fetch(`${API}/solo`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category, exclude: solo.seen }),
+    });
+    const data = await res.json();
+    // The player may have retyped, or started a round, while this was in
+    // flight. Landing a stale list would be worse than landing nothing.
+    if (solo.prefetch.key !== key) return;
+    if (!res.ok) throw new Error(data.error || '');
+    solo.prefetch = { key, category, status: 'ready', items: data.items, reserve: data.reserve ?? [] };
+  } catch {
+    if (solo.prefetch.key !== key) return;
+    solo.prefetch = { key, category, status: 'failed', items: [], reserve: [] };
+  }
+  if (solo.phase === 'final') render(soloSnapshot());
+}
+
 async function soloStart(category) {
+  // Already built while the final board was up. Straight in, no second call.
+  const key = category.toLowerCase();
+  if (solo.prefetch.status === 'ready' && solo.prefetch.key === key) {
+    soloBeginRound(solo.prefetch.category, solo.prefetch.items, solo.prefetch.reserve);
+    return;
+  }
+
   mode = 'solo';
   solo.phase = 'generating';
   solo.progress = 'Sizing up the category';
@@ -460,18 +548,7 @@ async function soloStart(category) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Could not build a list.');
 
-    solo.items = data.items;
-    solo.reserve = data.reserve ?? [];
-    // Only the eight in play count as seen. A spare that never gets swapped in
-    // was never shown, so excluding it from a replay would thin the category
-    // for nothing — soloFlag() adds one the moment it is dealt.
-    solo.seen = [...solo.seen, ...data.items];
-    solo.index = -1;
-    solo.keepsLeft = KEEPS;
-    solo.cutsLeft = CUTS;
-    solo.picks = [];
-    solo.replacements = 0;
-    soloReveal();
+    soloBeginRound(category, data.items, data.reserve);
   } catch (err) {
     solo.phase = 'lobby';
     mode = null;
@@ -648,14 +725,24 @@ $('formAgain').addEventListener('submit', (e) => {
 // this delay is politeness, not the guardrail.
 let prefetchTimer = null;
 let lastPrefetched = '';
-$('againCategory').addEventListener('input', () => {
-  clearTimeout(prefetchTimer);
-  const category = $('againCategory').value.trim();
-  if (mode !== 'party' || category.length < 4 || category === lastPrefetched) return;
-  prefetchTimer = setTimeout(() => {
-    lastPrefetched = category;
-    send({ type: 'prefetch', category });
-  }, 1500);
+
+function armPrefetch(inputId, fire) {
+  $(inputId).addEventListener('input', () => {
+    clearTimeout(prefetchTimer);
+    const category = $(inputId).value.trim();
+    if (category.length < 4 || category === lastPrefetched) return;
+    prefetchTimer = setTimeout(() => {
+      lastPrefetched = category;
+      fire(category);
+    }, 1500);
+  });
+}
+
+armPrefetch('againCategory', (category) => {
+  if (mode === 'party') send({ type: 'prefetch', category });
+});
+armPrefetch('soloAgainCategory', (category) => {
+  if (mode === 'solo') soloPrefetch(category);
 });
 
 $('btnKeep').addEventListener('click', () => (mode === 'solo' ? soloPick('keep') : send({ type: 'submit_pick', choice: 'keep' })));
@@ -664,11 +751,11 @@ $('btnAccept').addEventListener('click', () => (mode === 'solo' ? soloAdvance() 
 $('btnForce').addEventListener('click', () => send({ type: 'force_advance' }));
 $('btnFlag').addEventListener('click', () => (mode === 'solo' ? soloFlag() : send({ type: 'flag_item' })));
 
-$('btnSoloAgain').addEventListener('click', () => {
-  mode = null;
-  show('home');
-  togglePanel($('formSolo'), $('btnSoloToggle'));
-  $('soloCategory').value = '';
+$('formSoloAgain').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const category = $('soloAgainCategory').value.trim();
+  if (!category) return banner('Type a category first.');
+  soloStart(category);
 });
 
 $('lobbyPlayers').addEventListener('click', (e) => {

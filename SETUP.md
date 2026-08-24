@@ -228,13 +228,30 @@ only exists where a currency constraint does, so a static category pays
 nothing. Where it does run it earns it: that NFL round rejected 2 of 12.
 
 The final screen is dead time — everyone is arguing about each other's boards —
-so the host typing the next category there **prefetches** its list in the
-background, debounced 1.5s. If they then press *Go again* on that same
-category the round starts in about **50ms** with no generating screen at all.
-Host only, final screen only, one in flight, five per room lifetime, and the
-round and replay caps still apply. A prefetch deliberately does **not** consume
-the 20-second generation cooldown: charging a speculative call to it meant a
-host who changed their mind was told to wait for a call they never asked for.
+so typing the next category there **prefetches** its list in the background,
+debounced 1.5s. Pressing *Go again* on that same category then starts the round
+with no generating screen at all: measured at **57ms** in party mode and
+**109ms** in solo.
+
+Both modes cap it, and solo's cap is tighter for a reason:
+
+| | party | solo |
+|---|---|---|
+| who | host only | the player |
+| in flight | 1 | 1 |
+| lifetime cap | 5 per room | 3 per session |
+| also gated by | round cap, replay cap, **not** the 20s cooldown | the public endpoint's 8/60s per-IP limit |
+
+Party prefetches deliberately do **not** consume the 20-second generation
+cooldown — charging a speculative call to it meant a host who changed their
+mind was told to wait for a call they never asked for. Solo's cap is lower
+because it goes through the public rate-limited endpoint, and a household
+sharing one wifi shares that budget; spending it on lists nobody asked for
+would make the button the player *did* press fail.
+
+Changing the category after a prefetch is safe in both modes: the status line
+hides and *Go again* falls through to a normal generation rather than serving
+the stale list.
 
 What is given up is the plausible invention in a static category, and the
 **in-round swap** is the backstop. Any player can press *That's wrong — swap
