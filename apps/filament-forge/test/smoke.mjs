@@ -231,6 +231,11 @@ check('the migration the README names exists',
   check('and it matches PRINTER_SPECS',
     printers && words[printers[1].toLowerCase()] === specCount,
     printers ? `README says ${printers[1]}, app.js has ${specCount}` : '');
+  // The chamber is a description, not a boolean — a flag once mislabelled the
+  // P2S as open and could not say the H2C's 65°C at all.
+  check('every printer describes its chamber in words, and the prompt sends it',
+    (appSrc.match(/chamber: '/g) || []).length === specCount
+    && appSrc.includes('Chamber: ${printerSpec.chamber}'));
 }
 
 check('the refresh procedure is documented with its real command',
