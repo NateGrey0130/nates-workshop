@@ -149,11 +149,14 @@ pins that as a grep rather than trusting this paragraph.
 
 ## Printers
 
-Six Bambu Lab models are hardcoded in `PRINTER_SPECS` in `app.js` — P2S, P1S,
-P1P, X1C, A1, A1 Mini — each carrying max speed, acceleration, volumetric
-flow, chamber and bed type, which go into the prompt so the model reasons from
-the machine's real limits. Adding a printer is one line there and one
-`<option>` in `index.html`.
+Seven Bambu Lab models are hardcoded in `PRINTER_SPECS` in `app.js` — P2S,
+P1S, P1P, X1C, A1, A1 Mini, H2C — each carrying max speed, acceleration,
+volumetric flow, chamber and bed type, which go into the prompt so the model
+reasons from the machine's real limits. Adding a printer is one line there
+and one `<option>` in `index.html`. The H2C's `hasChamber` means a heated
+chamber (65 °C), a stronger claim than the enclosed-but-unheated boxes the
+flag covers elsewhere; its dual-nozzle tool changer is not modelled — the
+specs feed the prompt as machine limits, nothing more.
 
 ## Tests
 
