@@ -127,6 +127,27 @@ which reads exactly like "the chart is not in this book".
 **Verify the offset next to the page you actually want**, by rendering a
 candidate and reading the folio printed on it — not once for the whole book.
 
+**And the two tools you verify it with disagree about what "page" means.**
+`scripts/read-columns.py` takes the number a PDF VIEWER shows — 1-based, it
+calls `doc[n - 1]` — while `pymupdf` in a probe script is 0-based. Derive the
+offset with one and read with the other and you land one page early: a whole
+page of the wrong class, which reads as the book not saying what you expected
+rather than as an off-by-one.
+
+**A zero offset is the worst case, not the easiest.** Pantheons of the
+Megaverse has one — printed N is `d[N]` — so there is no real offset to hunt,
+and this is then the ONLY discrepancy left to explain. It cost a wrong page read
+on the first attempt at the Godling.
+
+| you want | pymupdf probe | read-columns.py |
+|---|---|---|
+| printed p.16, zero-offset book | `d[16]` | `... 17 17` |
+| printed p.16, offset +2 | `d[18]` | `... 19 19` |
+
+The folio at the end of read-columns' output is the check, and it is free. Read
+it every time. Note that a SINGLE-page call prints no `===== pN =====` header at
+all — only a range does — so passing the page twice is the cheaper habit.
+
 ## 0e. Extracting priced entries out of prose
 
 Item lists are paragraphs with a price somewhere inside, not tables. An
