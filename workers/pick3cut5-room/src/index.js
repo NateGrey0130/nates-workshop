@@ -86,6 +86,15 @@ export default {
     // native binding is config-only and adds nothing to the client. It is also
     // the reason this endpoint lives HERE rather than in a Pages Function -
     // Pages Functions cannot use the rate limit binding at all.
+    // VERIFIED IN PRODUCTION 2026-08-24: 24 requests down one connection gave
+    // 9 allowed / 15 denied, matching the configured 8-per-minute.
+    //
+    // Two things that made it look broken first, worth knowing before anyone
+    // re-tests this: sequential HTTPS round-trips to production are slow enough
+    // that ~16 of them span more than the 60s window, and PARALLEL requests
+    // each open their own connection, spread across colos, where the limiter is
+    // eventually consistent and a burst leaks well past the nominal number.
+    // It caps a sustained rate; it does not hard-stop a burst.
     if (url.pathname === '/solo/generate' && request.method === 'POST') {
       const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
 
