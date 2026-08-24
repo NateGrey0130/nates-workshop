@@ -10,7 +10,7 @@
 
 import { json } from './auth.js';
 import { safeParse } from './character-json.js';
-import { categoryAllows } from '../../../../apps/character-creator/js/parser.js';
+import { categoryAllows, categoryBonus } from '../../../../apps/character-creator/js/parser.js';
 import { REPEATABLE_ROWS, isFamilyName, otherRowFor } from '../../../../apps/character-creator/js/language-skills.js';
 import { selectInChunks } from './sql-chunk.js';
 
@@ -161,11 +161,22 @@ export async function resolvePicks(env, { picks, existingSkills, allowance, cate
       continue;
     }
 
+    // The class's per-category bonus, on a related pick only. A pick that fell
+    // out of category and is being spent as a secondary one does NOT get it,
+    // which is the same rule the wizard applies at creation and the same rule
+    // the books state: the parenthetical percentage is for related selections.
+    //
+    // Guarded on the base for the same reason as at creation - a W.P. has no
+    // percentage for a percentage bonus to modify.
+    const catBonus = !asSecondary && allowed
+      ? categoryBonus(allowed, { name: row.name, category: row.category }) : 0;
+    const base = row.base ?? 0;
+
     skills.push({
       name: row.name,
       category: row.category,
       // Base percentage as written. A skill learned at level 6 is still new.
-      pct: row.base ?? 0,
+      pct: base ? base + catBonus : 0,
       per_level: row.per_level ?? 0,
       type: asSecondary ? 'secondary' : 'related',
       gained_at_level: level,

@@ -51,8 +51,9 @@ skills:
     count: 6
     categories:
       - "Physical"
-      - { name: "Medical", except: ["M.D. in Cybernetics"] }
+      - { name: "Medical", except: ["M.D. in Cybernetics"], bonus: 10 }
       - { name: "Espionage", only: ["Escape Artist"] }
+      - { name: "Technical", bonus: 10 }   # "Technical: Any (+10%)"
     schedule: [{ level: 3, count: 1 }]     # extra picks at later levels
   secondary_skills:
     count: 4                      # any category, base % only, no per-level gain
@@ -71,6 +72,13 @@ skills:
   Without that second half it is `unreachable`: granted, but nobody can take it.
 - An `except` naming a skill from another category excludes **nothing**. There
   was nothing offered in that category to exclude.
+- **A category `bonus` is the percentage printed beside it** — "Technical: Any
+  (+10%)". Transcribe it; do not fold it into anything else. It applies to
+  RELATED picks only, which is the books' rule and not a simplification, so the
+  same key on `secondary_skills.categories` is a parse error. It combines with
+  `only`/`except`, and a skill with no percentage of its own (a W.P., a hand to
+  hand) stays at zero. Books print these constantly and every class imported
+  before the key existed dropped them: the Godling lost five.
 - See `catalog.md` for the naming rules these names have to match.
 - **Related and secondary skills come from the O.C.C.** An R.C.C. with neither
   is correct.

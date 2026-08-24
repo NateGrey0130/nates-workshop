@@ -17,7 +17,7 @@ import { isFamilyName, isRepeatableRow, otherRowFor, familySkillName,
 import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSIONIC_TIER_RULES,
          rollsForPsionics as classRollsForPsionics } from './js/psionics.js';
 import { isChoiceGroup, isGearChoice, applyVariant,
-         categoryAllows, categoryLabel, needsOccupation, abilityOccOptions,
+         categoryAllows, categoryLabel, categoryBonus, needsOccupation, abilityOccOptions,
          occAllowedForRace, raceAllowedForOcc,
          bonusesFromSkills, sumBonusGroups } from './js/parser.js';
 import { composeClass } from './js/compose.js';
@@ -2640,6 +2640,13 @@ function skillsAtLevelOne() {
     return { ...row, pct: Math.min(SKILL_PCT_CAP, row.pct + iq), iq_bonus: iq };
   };
 
+  // Read off the COMPOSED class, the same source renderSkills() builds its
+  // picker from. A rolled major psionic halves the related allowance without
+  // touching the category list, so the two agree either way — but they are one
+  // question ("what may this character take, and at what percentage") and
+  // reading it from two places is how the picker and the saved sheet drift.
+  const relatedCats = () => psiClass().skills?.occ_related_skills?.categories || [];
+
   // Choice-group picks are stored exactly like fixed class skills, inheriting
   // the group's base/per_level.
   const groupPicks = occ.flatMap((s, gi) => !isGroup(s) ? [] :
@@ -2653,7 +2660,17 @@ function skillsAtLevelOne() {
       return { name: s.name, category: 'Class', pct: r.base, per_level: r.per_level, type: 'occ' };
     }),
     ...groupPicks,
-    ...S.related.map((n) => ({ name: n, category: find(n).category, pct: find(n).base || 0, per_level: find(n).per_level || 0, type: 'related' })),
+    // The class's own per-category bonus — "Technical: Any (+10%)" — added to
+    // the catalog base. Only to a skill that HAS a base: a W.P. or a hand to
+    // hand sits at 0 because it is not percentile, and adding ten to it would
+    // invent a roll that does not exist. Same guard resolveSkill() uses for a
+    // choice group's `bonus`, for the same reason.
+    ...S.related.map((n) => {
+      const row = find(n);
+      const base = row.base || 0;
+      return { name: n, category: row.category, pct: base ? base + categoryBonus(relatedCats(), row) : 0,
+               per_level: row.per_level || 0, type: 'related' };
+    }),
     // Secondary skills get no O.C.C. bonus, but they are not frozen: "all
     // skills increase as the character grows in experience". Storing 0 here
     // stopped them advancing forever, so a level 10 character's hobby skills
