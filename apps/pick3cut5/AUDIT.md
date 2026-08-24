@@ -93,10 +93,22 @@ by an actual assistive tech.
 
 ### F1. The app cannot be reviewed on a preview deployment
 
-> **Taken, option 1** — a second Access application scoped to
-> `*.nates-workshop.pages.dev`, because four more destinations would exceed the
-> five-per-application cap. Consequence accepted knowingly: every preview of the
-> whole site becomes public on those four paths.
+> **Not taken — option 2.** Previews stay gated.
+>
+> Reversed after costing it out. The fix is a second Access application scoped
+> to `*.nates-workshop.pages.dev` (a wildcard needs its own app, since four more
+> destinations would exceed the five-per-app cap), and it would make **every**
+> preview of the whole site public on those four paths — including a generation
+> endpoint per live preview, each reachable by anyone who guesses a deployment
+> hash. That is a permanent widening of the site's exposure to buy a
+> convenience on a game played by a handful of friends.
+>
+> The rule instead: **this app is verified on production immediately after
+> merge**, which is what has actually happened every time. It is weaker than a
+> preview and it is honest about being weaker — the `/shared` bug reached
+> production precisely because "the route answers" was mistaken for "the page
+> works", and `apps/pick3cut5/test/smoke.mjs --remote` is the check that closes
+> that gap regardless of where it runs.
 
 The Access bypass application targets `nates-workshop.pages.dev`. A preview
 deploys to `<hash>.nates-workshop.pages.dev`, which that application does not
