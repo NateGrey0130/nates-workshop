@@ -93,11 +93,13 @@ apps/character-creator/
 ├── index.html / app.js       Creation wizard (10 steps). app.js is an ES module.
 ├── sheet.html / sheet.js     Character sheet, laid out after the printed Rifts sheet
 ├── dashboard.html / dashboard.js  GM dashboard: roster, GM notes, campaign journal
+├── campaign.html / campaign.js  Campaign notes: the log with search and Ask,
+│                             the party stash and the currency ledger
 ├── import.html / import.js   Admin-only PDF import — Class, Skills, Spells,
 │                             Psionics, Gear tabs
 ├── catalog.html / catalog.js Admin-only catalog editor, generated from the
 │                             field config. catalog.js is an ES module.
-├── styles.css                All five pages, layered on /shared/styles.css
+├── styles.css                All six pages, layered on /shared/styles.css
 ├── js/parser.js              RCC/OCC markdown parser (ES module — also used by the API)
 ├── js/dice.js                Dice evaluator (ES module — also used by the API)
 ├── js/leveling.js            XP curve and the level-up diff (ES module — the API
@@ -116,7 +118,7 @@ apps/character-creator/
 │                             the Workers runtime needs it too)
 ├── js/compose.js             The ONE place a character's classes become the
 │                             thing it is played as (ES module)
-├── js/api.js                 The one HTTP helper for all five pages, and
+├── js/api.js                 The one HTTP helper for all six pages, and
 │                             errorDetails() (classic script)
 │   (also loaded by every page: /shared/js/ui.js, for escHtml — see below)
 ├── js/picker.js              Catalog picker filtering — matching, the filter
@@ -133,8 +135,8 @@ apps/character-creator/
 ├── db/*.sql                  One-shot SQL. NOT migrations — these change rows,
 │                             not schema. See Data scripts below
 ├── docs/rules-audit.md       Where each implemented rule comes from, by page
-├── docs/plans/               The twelve original PRs, with their rejected
-│                             alternatives
+├── docs/plans/               The planned PRs and shipped proposals, with
+│                             their rejected alternatives
 └── test/
     ├── smoke.mjs             The runner, and the rules half of the checks
     ├── harness.mjs           check(), section(), the counters and the summary
@@ -196,7 +198,7 @@ exposure (see the `Object.assign(window, …)` block at the bottom of `app.js`).
 
 `js/derive.js`, `js/picker.js` and `js/api.js` are deliberately *classic*
 scripts rather than modules, so the plain-script pages can use them without
-converting the whole file. `js/api.js` is loaded by all five pages and defines
+converting the whole file. `js/api.js` is loaded by all six pages and defines
 `api()` and `errorDetails()`; there used to be five copies of `api()` in three
 variants, which is a nuisance while they agree and a bug when they do not — the
 wizard and the sheet learned to carry a failed response's `violations` through
@@ -2073,8 +2075,12 @@ you roll to find out what kind of dragon, and then you decide what the dragon
 studied.
 
 ```
-System → Race → Attributes → Occupation → Skills → Equipment → Powers → Details → Review
+System → Race → Attributes → Occupation → Skills → Equipment → Powers → (Advancement) → Details → Review
 ```
+
+Advancement appears only when the starting level is above 1 — see
+[Starting above level 1](#starting-above-level-1); at level 1 the stepper
+walks past it.
 
 The **Race** step is a briefing rather than a row in a list. Before committing,
 the player reads what the R.C.C. grants: the attribute dice it will roll per
@@ -2157,15 +2163,18 @@ Changing occupation re-rolls its half and leaves the race's alone.
 
 Which means changing `STEPS` silently re-points every draft in flight. Drafts
 carry `steps_version`; version 1 is the eight-step list with one combined Class
-step, version 2 is the nine above.
+step, version 2 split Class into Race and Occupation (nine steps), and
+version 3 — the list above — inserted Advancement after Powers.
 
-`migrateDraft()` maps an old index forward. Only the steps **after** the
-inserted Occupation step move: System (0), Class→Race (1) and Attributes (2)
-keep their index, and Skills onward shift by one. A draft stopped on the old
-Class step resumes on Race, which is right — it had not committed to an
-occupation in any way the new step could trust. The resume *offer* reads the
-migrated index too, or it would name the wrong step in the sentence asking you
-to resume.
+`migrateDraft()` maps an old index forward, one insertion per version, so the
+migrations **chain**: a version-1 draft runs through both. Only the steps
+**after** an inserted step move — for 1→2, System (0), Class→Race (1) and
+Attributes (2) keep their index and Skills onward shift by one; for 2→3,
+everything up to Powers keeps its index and Details and Review shift by one.
+A draft stopped on the old Class step resumes on Race, which is right — it had
+not committed to an occupation in any way the new step could trust. The resume
+*offer* reads the migrated index too, or it would name the wrong step in the
+sentence asking you to resume.
 
 The smoke test pins the list, the version and the mapping together, because each
 is only correct with respect to the others.
@@ -4993,8 +5002,9 @@ The first two were found by hand.
 
 **Do not run the migrations on a new database.** This is the part that looks
 wrong and is not: `db/schema.sql` already contains every column the migrations
-add, so on a fresh database **18 of the 24 would fail** — `duplicate column
-name: bio`, `no such table: items`, and so on. They exist to bring an EXISTING
+add, so on a fresh database **the ALTER-based majority of them fail** —
+`duplicate column name: bio`, `no such table: items`, and so on; only the pure
+`CREATE TABLE IF NOT EXISTS` migrations run clean. They exist to bring an EXISTING
 database forward, and `schema.sql` records all 24 as applied the moment it runs,
 guarded on the schema feature each one adds. A fresh database is current
 immediately and says so.
@@ -5004,7 +5014,7 @@ So the two directions never mix:
 | | new database | existing database |
 |---|---|---|
 | `db/schema.sql` | **yes** — creates everything, records every migration | yes — harmless, and how you backfill the records |
-| `db/migrations/*.sql` | **no** — 18 of 24 error | yes — the ones it has not had, in order |
+| `db/migrations/*.sql` | **no** — the ALTERs error | yes — the ones it has not had, in order |
 | `db/seed-catalogs.sql` | yes | no — it seeds the ORIGINAL three classes |
 | `apps/character-creator/db/*.sql` | yes — the corrections on top | as needed; the log says which have run |
 
@@ -5198,10 +5208,10 @@ Migrations are safe to re-run regardless (`IF NOT EXISTS` plus
 
 Honest list, roughly by value.
 
-The original twelve PRs are recorded under
+The planned PRs and the two shipped proposals are recorded under
 [`docs/plans/`](docs/plans/README.md) with their design decisions and rejected
-alternatives. Everything since — the rules audit against the source books, the
-class-data corrections and the schema work that came out of them — is in
+alternatives. The rules audit against the source books — the class-data
+corrections and the schema work that came out of them — is in
 [`docs/rules-audit.md`](docs/rules-audit.md).
 
 The one refactor candidate that had earned itself is done: six places composed a
@@ -5470,11 +5480,12 @@ the others grow with play.
 
 | file | lines | |
 |---|---|---|
-| `app.js` | ~2,950 | the wizard; the largest file in the app |
-| `sheet.js` | ~1,950 | |
-| `js/parser.js` | ~1,400 | **third** largest, and not a page script at all |
+| `app.js` | ~3,000 | the wizard; the largest file in the app |
+| `sheet.js` | ~2,000 | |
+| `js/parser.js` | ~1,600 | **third** largest, and not a page script at all |
 | `import.js` | ~950 | |
 | `catalog.js` | ~700 | |
+| `campaign.js` | ~640 | |
 | `dashboard.js` | ~110 | |
 
 **A smoke check now holds these to 25%**, because the previous two sets of

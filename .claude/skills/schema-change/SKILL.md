@@ -78,8 +78,8 @@ A rename or a drop needs **both halves** checked. `004` renamed `items` to
 ## A new database does not run the migrations
 
 This looks like breakage and is not. `db/schema.sql` already contains every
-column the migrations add, so **18 of the 24 fail on a fresh database** —
-`duplicate column name: bio`, `no such table: items`. It records all of them as
+column the migrations add, so **most of them — every ALTER — fail on a fresh
+database**: `duplicate column name: bio`, `no such table: items`. It records all of them as
 applied instead, guarded, so a fresh database is current the moment it exists.
 
 | | new database | existing database |
