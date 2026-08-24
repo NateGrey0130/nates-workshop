@@ -162,6 +162,28 @@ fail-open, so a missing table or a D1 hiccup can never break a round.
 
 No game state touches D1 — rooms still live and die in Durable Object memory.
 
+### Previews are gated, deliberately
+
+Pick 3 Cut 5 **cannot be played on a PR preview**. The bypass application targets
+`nates-workshop.pages.dev`; a preview lands on `<hash>.nates-workshop.pages.dev`,
+which it does not match, and the preview-access application gates it.
+
+Opening previews would need a second Access application on
+`*.nates-workshop.pages.dev` — which would make every preview of the whole site
+public on those paths, including a generation endpoint per live preview.
+Declined 2026-08-24: too much permanent exposure for a convenience.
+
+So this app is **verified on production immediately after merge**. That is
+weaker than a preview, and the check that makes it good enough is:
+
+```bash
+node apps/pick3cut5/test/smoke.mjs --remote
+```
+
+It fetches the app and its assets with no Access session and confirms the rest
+of the site is still walled — which is the thing a browser tab you are logged
+into cannot tell you.
+
 ### It has to be let out of the login wall
 
 Two halves, and **both** are required — either one alone leaves the app broken:
