@@ -11,6 +11,7 @@
 //   { type: 'ready',         ready: boolean }
 //   { type: 'start_round',   category: string }            host only
 //   { type: 'submit_pick',   choice: 'keep' | 'cut' }
+//   { type: 'flag_item' }                            any player, before the flip
 //   { type: 'accept' }
 //   { type: 'force_advance' }                              host only
 //   { type: 'set_timers',    pick: number, accept: number } host only, lobby
@@ -20,6 +21,7 @@
 // Server → client:
 //   { type: 'state',         ...snapshot }   every change, always
 //   { type: 'item_revealed', index, item }   animation cue
+//   { type: 'item_replaced', by, rejected }  someone called an item out
 //   { type: 'pick_progress', chosen, total } how many, NEVER what
 //   { type: 'flip',          flips: [...] }  animation cue
 //   { type: 'summary' }                      animation cue
@@ -62,6 +64,11 @@ import {
 const MAX_PLAYERS = 12;
 const MAX_ROUNDS = 30;
 const MAX_REPLAYS_PER_CATEGORY = 3;
+
+// In-round replacements. Capped because the flag is a correction, not a
+// re-roll: without a ceiling a table that dislikes an item can simply keep
+// flagging until it gets one it likes, which is a different game.
+const MAX_REPLACEMENTS_PER_ROUND = 3;
 const GENERATION_COOLDOWN_MS = 20_000;
 
 // MEASURED, not guessed. A taste category ("worst pizza toppings") completes in
@@ -91,6 +98,13 @@ function freshGame(code) {
     players: {},
     timers: { pick: DEFAULT_PICK_SECONDS, accept: DEFAULT_ACCEPT_SECONDS },
     items: [],
+    // Spare verified items, held back for in-round replacement. Like `items`,
+    // this NEVER reaches a client - a reserve visible in devtools would leak
+    // the rest of the category just as surely as the main list would.
+    reserve: [],
+    replacements: 0,
+    flaggedBy: [],
+    lastFlag: null,
     itemIndex: -1,
     armAt: 0,
     currentPicks: {},
@@ -183,6 +197,7 @@ export class Room extends DurableObject {
         case 'ready':      await this.onReady(player, msg); break;
         case 'start_round':await this.onStartRound(player, msg); break;
         case 'submit_pick':await this.onSubmitPick(player, msg); break;
+        case 'flag_item':  await this.onFlagItem(player); break;
         case 'accept':     await this.onAccept(player); break;
         case 'force_advance': await this.onForceAdvance(player); break;
         case 'set_timers': await this.onSetTimers(player, msg); break;
@@ -349,7 +364,7 @@ export class Room extends DurableObject {
     const exclude = this.game.used[norm] ?? [];
 
     try {
-      const { items } = await runPipeline(this.env, category, {
+      const { items, reserve } = await runPipeline(this.env, category, {
         exclude,
         cache,
         onProgress: (line) => {
@@ -366,11 +381,18 @@ export class Room extends DurableObject {
       if (this.game?.phase !== 'generating') return; // host bailed while we worked
 
       this.game.verified[norm] = Object.fromEntries(cache);
+      // Only the eight in play are marked used. Reserve items that are never
+      // swapped in were never seen, so burning them here would thin out a
+      // replay for no reason; flagItem() adds one the moment it is dealt.
       this.game.used[norm] = [...exclude, ...items];
       this.game.replays[norm] = (this.game.replays[norm] ?? 0) + 1;
       this.game.roundsPlayed += 1;
 
       this.game.items = items;
+      this.game.reserve = reserve;
+      this.game.replacements = 0;
+      this.game.flaggedBy = [];
+      this.game.lastFlag = null;
       this.game.itemIndex = -1;
       this.game.progress = '';
 
@@ -436,6 +458,70 @@ export class Room extends DurableObject {
     } else if (this.game.phase === 'summary') {
       await this.advance();
     }
+  }
+
+  /**
+   * "That one's wrong" — swap the item on screen for a fresh one, mid-round.
+   *
+   * Verification now only runs for time-sensitive categories, so a plausible
+   * invention can reach the table in a way it previously could not. This is the
+   * backstop, and it is deliberately a human one: the people playing know their
+   * category better than a classifier does, and they are looking right at it.
+   *
+   * ANY player can flag, not just the host. The person who spots that a film
+   * was directed by someone else is whoever happens to know, and routing it
+   * through the host turns a two-second correction into a conversation. The
+   * caps below are what keep that from becoming a re-roll button.
+   *
+   * Everything about this item is rewound: picks already recorded for it -
+   * including the budget-forced ones taken at reveal - are refunded, because a
+   * player who was locked into keeping a wrong answer must not stay locked into
+   * it. Then the same index is revealed again with the replacement, so the
+   * round neither advances nor repeats an item.
+   */
+  async onFlagItem(player) {
+    if (!player) return;
+    if (this.game.phase !== 'revealing' && this.game.phase !== 'picking') {
+      throw new Error('You can only call an item out before the flip.');
+    }
+    if (this.game.flaggedBy.includes(player.id)) {
+      throw new Error('You already called this one out.');
+    }
+    if (this.game.replacements >= MAX_REPLACEMENTS_PER_ROUND) {
+      throw new Error(`That's ${MAX_REPLACEMENTS_PER_ROUND} swaps this round - the rest you argue about.`);
+    }
+    if (!this.game.reserve.length) {
+      throw new Error('No spare items left for this category. Playing on.');
+    }
+
+    const rejected = this.game.items[this.game.itemIndex];
+    const replacement = this.game.reserve.shift();
+
+    this.game.flaggedBy.push(player.id);
+    this.game.replacements += 1;
+    this.game.items[this.game.itemIndex] = replacement;
+
+    // A called-out item is wrong, not merely unlucky. Keeping it in the used
+    // set means a replay of this category will not serve it back up.
+    const norm = this.game.normCategory;
+    this.game.used[norm] = [...(this.game.used[norm] ?? []), replacement];
+    if (this.game.verified[norm]) {
+      this.game.verified[norm][normalize(rejected)] = { pass: false, reason: 'called out by a player' };
+    }
+
+    // Refund every pick already taken on the old item.
+    for (const p of Object.values(this.game.players)) {
+      const prior = p.picks[this.game.itemIndex];
+      if (!prior) continue;
+      if (prior.choice === 'keep') p.keepsLeft += 1; else p.cutsLeft += 1;
+      delete p.picks[this.game.itemIndex];
+    }
+
+    // Shown on the replacement so the table can see what happened and who
+    // called it. Half the point of the feature is the callout itself.
+    this.game.lastFlag = { by: player.name, rejected };
+
+    await this.revealCurrent();
   }
 
   async onSetTimers(player, msg) {
@@ -553,6 +639,15 @@ export class Room extends DurableObject {
 
   async revealNext() {
     this.game.itemIndex += 1;
+    this.game.flaggedBy = [];
+    this.game.lastFlag = null;
+    return this.revealCurrent();
+  }
+
+  // Puts the item at the current index on screen. Split out from revealNext so
+  // a replaced item can be re-revealed at the SAME index without advancing the
+  // round - see flagItem().
+  async revealCurrent() {
     this.game.currentPicks = {};
     this.game.accepts = [];
     this.game.flips = [];
@@ -567,6 +662,12 @@ export class Room extends DurableObject {
     for (const p of Object.values(this.game.players)) {
       const forced = this.forcedChoice(p);
       if (forced) this.recordPick(p, forced, 'forced');
+    }
+
+    // revealNext clears lastFlag, so a set value here means this reveal IS a
+    // replacement and the table should be told whose callout caused it.
+    if (this.game.lastFlag) {
+      this.broadcastCue({ type: 'item_replaced', ...this.game.lastFlag });
     }
 
     await this.settle({
@@ -713,6 +814,14 @@ export class Room extends DurableObject {
     }
   }
 
+  // A cue on its own, with no snapshot attached. Only for events that need to
+  // land before the state they describe - everything else rides with settle().
+  broadcastCue(cue) {
+    for (const ws of this.liveSockets()) {
+      try { ws.send(JSON.stringify(cue)); } catch { /* handled by webSocketClose */ }
+    }
+  }
+
   pickProgressCue() {
     // How many, never what. Knowing that four people have locked in is part of
     // the pressure; knowing what they locked in would be the whole game.
@@ -770,6 +879,18 @@ export class Room extends DurableObject {
       yourPick: me ? (g.currentPicks[me.id] ?? null) : null,
       yourForced: me && g.phase === 'picking' ? this.forcedChoice(me) : null,
       flips: showChoices ? g.flips : [],
+      // Flagging. `spareItems` is a COUNT, never the reserve itself - the
+      // client needs to know whether a swap is possible, not what it would be.
+      canFlag: Boolean(
+        me
+        && (g.phase === 'revealing' || g.phase === 'picking')
+        && !g.flaggedBy.includes(me.id)
+        && g.replacements < MAX_REPLACEMENTS_PER_ROUND
+        && g.reserve.length > 0
+      ),
+      swapsLeft: MAX_REPLACEMENTS_PER_ROUND - g.replacements,
+      spareItems: g.reserve.length,
+      lastFlag: g.lastFlag,
     };
   }
 

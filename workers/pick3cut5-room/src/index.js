@@ -115,13 +115,17 @@ export default {
         : [];
 
       try {
-        const { items } = await runPipeline(env, category, { exclude });
+        const { items, reserve } = await runPipeline(env, category, { exclude });
         // Solo hands the client all eight at once, unlike party mode. The
         // hidden-information rule exists so nobody can read the list over
         // another player's shoulder; in solo there is no other player, and the
         // spec asks for local state plus one call. The only person devtools
         // spoils it for is the person who opened them.
-        return json({ items, category });
+        //
+        // The reserve rides along for the same reason: solo needs to swap a
+        // called-out item without a second round trip, and there is nobody to
+        // hide it from.
+        return json({ items, reserve, category });
       } catch (err) {
         if (err instanceof GenerationError) {
           return json({ error: err.message, exhausted: Boolean(err.exhausted) }, 422);

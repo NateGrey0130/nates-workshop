@@ -257,8 +257,21 @@ export async function runPipeline(env, category, { exclude = [], cache = new Map
     fresh.push(item);
   }
 
+  // Verification is gated on time_sensitive, NOT on verifiable.
+  //
+  // It used to run for anything checkable, and it cost 38 of the 70 seconds a
+  // fact category took. The failure it was built for is the decaying one - a
+  // player listed as active who retired two years ago - and that failure only
+  // exists where a currency constraint does. "Tarantino films" was true when
+  // the model learned it and is still true now; paying half a minute to
+  // re-confirm it bought nothing.
+  //
+  // What is given up: the hallucinated-but-plausible entry in a static
+  // category. Generation still searches the web for anything `verifiable`, so
+  // that is grounded rather than unguarded - and the in-round flag is the
+  // backstop for whatever slips through. See flagItem() in room.js.
   let survivors = fresh;
-  if (klass.verifiable) {
+  if (klass.time_sensitive) {
     const unchecked = fresh.filter((item) => !cache.has(normalize(item)));
 
     if (unchecked.length) {
@@ -302,12 +315,25 @@ export async function runPipeline(env, category, { exclude = [], cache = new Map
     throw err;
   }
 
-  // Keep the first 8 that passed, THEN shuffle. Models put the most famous
-  // entry first almost every time, and an automatic keep on item 1 flattens
-  // the whole round - nobody argues about the obvious one.
-  const items = shuffle(survivors.slice(0, ITEMS_PER_ROUND));
+  // Shuffle ALL survivors, THEN split. Models put the most famous entry first
+  // almost every time, and an automatic keep on item 1 flattens the whole
+  // round - nobody argues about the obvious one.
+  //
+  // Shuffling before the split rather than after also matters now that the
+  // tail is the replacement reserve: slicing first would make every reserve
+  // item come from the bottom of whatever ordering the model produced despite
+  // being told not to rank, so a flagged item would reliably be swapped for
+  // something weaker.
+  const pool = shuffle(survivors);
 
-  return { items, classification: klass };
+  return {
+    items: pool.slice(0, ITEMS_PER_ROUND),
+    // Spares for in-round replacement, already through the same filtering and
+    // (where it ran) the same verification. Swapping from here is instant -
+    // no API call while eight people wait.
+    reserve: pool.slice(ITEMS_PER_ROUND),
+    classification: klass,
+  };
 }
 
 // Fisher-Yates on crypto randomness. sort(() => Math.random() - 0.5) is biased

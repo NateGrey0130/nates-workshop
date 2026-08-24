@@ -212,6 +212,30 @@ honestly: set the pick timer to its 10-second minimum in the lobby, then leave
 one tab alone. To reach a forced cascade fast, spend all three keeps on items
 one through three.
 
+### How long a round takes to build, and why
+
+Verification runs **only for time-sensitive categories**, and that is the whole
+latency story. Measured:
+
+| category | verifiable | time-sensitive | verify | total |
+|---|---|---|---|---|
+| `worst pizza toppings` | no | no | skipped | ~3s |
+| `Quentin Tarantino films` | yes | no | skipped | ~3s |
+| `current NFL starting quarterbacks` | yes | yes | ~68s | ~99s |
+
+The decaying-fact problem — someone listed as active who retired years ago —
+only exists where a currency constraint does, so a static category pays
+nothing. Where it does run it earns it: that NFL round rejected 2 of 12.
+
+What is given up is the plausible invention in a static category, and the
+**in-round swap** is the backstop. Any player can press *That's wrong — swap
+it* before the flip; the item is replaced from a reserve of already-filtered
+spares with no API call, every pick already recorded against it is refunded
+(including budget-forced ones), and the same item number is revealed again.
+Three swaps per round, one per player per item. Worth testing against
+`Quentin Tarantino films`, which reliably offers *Natural Born Killers* or
+*True Romance* — written by him, directed by someone else.
+
 Solo mode needs only the two servers above — no room, no socket.
 
 ## Environment configuration (Cloudflare Pages dashboard)
