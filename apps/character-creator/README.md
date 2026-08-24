@@ -2475,7 +2475,7 @@ differs from the standard:
 | S.D.C. | **3D6** for men of arms, **1D6** for practitioners of magic, scholars and everyone else |
 
 The app used to read that silence as "this character has none" and store
-`hp_max` NULL. Fifty-four of seventy-seven published classes state no hit point
+`hp_max` NULL. Fifty-six of eighty-three published classes state no hit point
 formula, so this was the common path, not an edge case — two Priests of Light
 reached production with no hit points and no S.D.C., and nothing on the sheet
 suggested anything was missing.
@@ -5033,11 +5033,11 @@ local-only script is protected as soon as it says so.
 
 | After | Rows |
 |---|---|
-| classes (published, live) | 77 |
-| skills | 324 |
+| classes (published, live) | 83 |
+| skills | 326 |
 | spells | 570 |
 | psionic powers | 101 |
-| gear | 845 |
+| gear | 848 |
 
 **These are pinned by `test/regression.mjs`**, which is the only thing that can
 honestly check them: it builds a database from nothing under a scratch directory
@@ -5352,7 +5352,7 @@ in class markdown like `xp_table`, neither needing a migration:
 | key | on | what |
 |---|---|---|
 | `occ_group` | all 59 O.C.C.s — 25 Palladium, 34 Rifts | one of `clergy`, `men-of-arms`, `optional`, `magic`, `psychic` |
-| `occ_restrictions` | the 8 restricted races | `only: [...]` **or** `except: [...]`, never both |
+| `occ_restrictions` | 10 races — the 8 Palladium ones, plus the Norse Giant and the Warriors of Valhalla | `only: [...]` **or** `except: [...]`, never both |
 
 Entries are class ids or `group:<name>`. **Groups are the point.** *"A dwarf may
 take any O.C.C. except magic"* is a rule about a group; written as a list of the

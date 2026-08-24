@@ -1333,9 +1333,17 @@ console.log('\n' + '[8/8] Checks that only a database can make');
   check('a group is on an O.C.C. and a restriction on a race, never the other way',
     wrongSide.length === 0, wrongSide.map((c) => c.id).join(', '));
 
+  // The eight Palladium races the rule was written for are NAMED rather than
+  // counted, so importing a race that carries a restriction of its own - the
+  // Norse Giant and the Warriors of Valhalla were the first - adds to this list
+  // instead of breaking it, while a Palladium race silently LOSING its
+  // restriction still fails. A bare count could not tell those two apart.
   const restricted = classes.filter((c) => c.occ_restrictions);
-  check('eight races carry a restriction', restricted.length === 8,
-    restricted.map((c) => c.id).join(', '));
+  const PALLADIUM_RESTRICTED = ['dwarf', 'gnome', 'goblin', 'hob-goblin', 'kobold',
+    'orc', 'troglodyte', 'troll'];
+  const lost = PALLADIUM_RESTRICTED.filter((id) => !restricted.some((r) => r.id === id));
+  check('the eight Palladium races still carry their restrictions',
+    lost.length === 0, 'missing: ' + lost.join(', '));
 
   // THE HAZARD. A name with no class silently ALLOWS what it meant to forbid,
   // and nothing else in the app would ever say so.
@@ -1441,9 +1449,18 @@ console.log('\n' + '[8/8] Checks that only a database can make');
   const juicer = byId.juicer;
   check('a Juicer with no race is the human case, and allowed',
     raceAllowedForOcc(juicer, null).allowed);
+  // Named rather than counted, for the same reason as the restricted races
+  // above: the Norse block added five more Rifts races and every one of them
+  // must be refused too, so a count of three would have had to grow with each
+  // import while proving less each time. What matters is that the three the
+  // rule was written against are still present AND that the check below sees
+  // every Rifts race there is.
   const rifts = classes.filter((c) => c.category === 'rcc' && c.system === 'rifts');
-  check('the Rifts races are still there to be refused', rifts.length === 3,
-    rifts.map((c) => c.id).join(', '));
+  const FOUNDING = ['dragon-hatchling', 'godling', 'demigod'];
+  const goneMissing = FOUNDING.filter((id) => !rifts.some((r) => r.id === id));
+  check('the Rifts races are still there to be refused',
+    goneMissing.length === 0 && rifts.length >= FOUNDING.length,
+    `${rifts.length} races, missing: ${goneMissing.join(', ')}`);
   const wronglyAllowed = rifts.filter((r) => raceAllowedForOcc(juicer, r).allowed);
   check('and every one of them is closed to a Juicer',
     wronglyAllowed.length === 0, wronglyAllowed.map((r) => r.id).join(', '));
