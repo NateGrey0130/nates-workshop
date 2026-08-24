@@ -136,23 +136,34 @@ connection, spread across colos, where the limiter is eventually consistent and
 a burst leaks well past the nominal number. It caps a sustained rate; it does
 not hard-stop a burst. Recorded in `index.js`.
 
-**T9. Real phones. — HALF DONE.** A solo round played on an iPhone, 2026-08-24,
-and it played well. That covers the rendering half: the mobile-first layout in
+**T9. Real phones. — DONE.** Both halves, on an iPhone, 2026-08-24.
+
+**The backgrounding case works.** A party round, phone locked mid-round,
+unlocked: the socket dropped (iOS does background it), the reconnect banner
+appeared and counted through its attempts, and the session came back. That is
+the failure this audit called the most likely real-world one, and the answer is
+that the client's four-attempt reconnect and the server holding the seat by name
+between them handle it.
+
+Two things that follow from it being *normal* rather than exceptional: the
+reconnect banner is user-facing copy that real players will actually read, and
+seat-holding is load-bearing rather than a nicety — without it every screen lock
+would cost a player their board.
+
+Not separately confirmed, and only observable if the lock outlasts the pick
+timer: whether `catchUpDeadline()` walked missed deadlines forward, or whether
+the round simply had not moved. Either way the room was not wedged.
+
+**The rendering half** was a solo round, and it played well. That covers the rendering half: the mobile-first layout in
 real Safari, thumb reach on actual hardware, the sticky budget bar under real
 browser chrome, and the reveal-pick-flip rhythm on a device rather than an
 emulated 375px viewport.
 
-**It does not cover the half that worried me**, because solo mode never opens a
-WebSocket — it is one fetch and then local state. Untouched:
+Note for anyone reading this later: solo mode never opens a WebSocket, so a
+solo round on a phone proves the layout and nothing about the socket. The two
+halves had to be tested separately, and were.
 
-- a phone sleeping mid-round in a PARTY game, and whether the socket survives
-- the reconnect and seat-holding path on real mobile Safari
-- `catchUpDeadline()`, which was written for exactly that shape and has still
-  only ever been triggered by a local hot-reload
-- the room code read across a room on a real screen
-
-The two-minute version: open a party room on a phone, start a round, lock the
-screen mid-item, unlock, and see whether it catches up or sits dead.
+Still not exercised on a phone: the room code read from across an actual room.
 
 Original note: The app is mobile-first and has only ever rendered in an
 emulated 375 px viewport. Thumb reach, the sticky budget bar under a real
