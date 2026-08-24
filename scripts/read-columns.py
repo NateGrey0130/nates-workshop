@@ -4,6 +4,22 @@
     python scripts/read-columns.py "book.pdf" 88          # one page
     python scripts/read-columns.py "book.pdf" 87 92       # a range
 
+PAGE NUMBERS HERE ARE 1-BASED - the number a PDF viewer shows - because main()
+reads `doc[n - 1]`. **`pymupdf`'s own index is 0-BASED.** So one page is
+`doc[87]` in a probe script and `88` on this command line, and a survey that
+derives the printed-to-PDF offset with one and then reads with the other lands
+one page early - a whole page of the wrong class, which reads as the book
+simply not saying what you expected rather than as an off-by-one.
+
+Pantheons of the Megaverse makes that trap worst, because its printed-to-PDF
+offset is ZERO: printed 16 is `d[16]` in pymupdf and `17` here, so the only
+discrepancy left is this one, and it is very easy to blame on the book.
+
+Passing a single page prints no `===== pN =====` header; a range prints one per
+page. So the cheapest confirmation you are on the right page is to read the
+folio printed at the end of the output, which is what `book-survey` 0d already
+tells you to do for the offset itself.
+
 `page.get_text()` returns text in the order the drawing operations appear,
 which on a two-column page is not the order a person reads. For prose that is
 untidy. For a stat block it is corrupting: the Knight's "O.C.C. Skills:" list
