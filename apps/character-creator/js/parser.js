@@ -593,15 +593,32 @@ export function combineClasses(rcc, occ) {
 // ─── related-skill categories ───
 //
 // A category is either a plain string ("Wilderness: Any") or an object saying
-// what the book allows inside it. Every entry the books print is one of two
-// shapes, so those are the two supported:
+// what the book allows inside it. Every entry the books print is one of three
+// shapes, so those are the three supported:
 //
 //   { name: "Espionage", only: ["Escape Artist"] }
 //   { name: "Physical", except: ["Acrobatics", "Gymnastics", "Wrestling"] }
+//   { name: "Technical", bonus: 10 }
 //
 // Strings keep working, so nothing already authored has to change. Shared by
 // the wizard's picker and the server-side validator, because two copies of
 // "may this character take this skill" is exactly the pair that drifts.
+//
+// `bonus` is the percentage a class page prints in parentheses beside the
+// category — "Technical: Any (+10%)". It exists because until it did, those
+// numbers had nowhere to go: `only` and `except` were the whole vocabulary, so
+// an import either dropped the bonus silently or wrote a `bonus` key that
+// parsed and then did nothing, which is the worse of the two. Pantheons of the
+// Megaverse prints twenty-one of them across four classes, and the Godling
+// shipped missing all five of its own.
+//
+// It combines with `only`/`except` rather than replacing them: the Godling's
+// Medical line is "Any (except cybernetics; +10%)", one category carrying both.
+//
+// It applies to RELATED picks only, never secondary ones. That is the book's
+// own rule and not a simplification — the secondary skills paragraph on every
+// class page says the bonus in parentheses "applies only to O.C.C. related
+// skill selections". The I.Q. bonus is separate and still reaches both.
 
 const normName = (s) => String(s ?? '').trim().toLowerCase();
 
@@ -611,9 +628,30 @@ export const categoryName = (entry) => (typeof entry === 'string' ? entry : entr
 export function categoryLabel(entry) {
   const name = categoryName(entry);
   if (typeof entry === 'string' || !entry) return name ?? '';
-  if (Array.isArray(entry.only) && entry.only.length) return `${name} (${entry.only.join(', ')} only)`;
-  if (Array.isArray(entry.except) && entry.except.length) return `${name} (except ${entry.except.join(', ')})`;
-  return name ?? '';
+  // The bonus rides along with whatever restriction the category also states,
+  // because the book prints them in one parenthetical and a picker that showed
+  // only half of it would be quietly lying about the other half.
+  const pct = Number.isFinite(entry.bonus) && entry.bonus !== 0
+    ? `${entry.bonus > 0 ? '+' : ''}${entry.bonus}%` : '';
+  const parts = [];
+  if (Array.isArray(entry.only) && entry.only.length) parts.push(`${entry.only.join(', ')} only`);
+  else if (Array.isArray(entry.except) && entry.except.length) parts.push(`except ${entry.except.join(', ')}`);
+  if (pct) parts.push(pct);
+  return parts.length ? `${name} (${parts.join('; ')})` : (name ?? '');
+}
+
+// The percentage this category list adds to a RELATED pick of `skill`, or 0.
+//
+// Deliberately keyed on the skill's REAL catalog category rather than on
+// whichever entry `categoryAllows` used to admit it. A cross-category `only`
+// entry says "you may spend a pick here on this skill"; it does not say the
+// skill joins that category for scoring, and reading it that way would hand the
+// Glitter Boy's Wilderness Survival an Espionage bonus it was never printed.
+export function categoryBonus(categories, skill) {
+  if (!Array.isArray(categories) || !categories.length) return 0;
+  const entry = categories.find((c) => normName(categoryName(c)) === normName(skill?.category));
+  if (!entry || typeof entry === 'string') return 0;
+  return Number.isFinite(entry.bonus) ? entry.bonus : 0;
 }
 
 // Does this category list admit `skill` — an object with `name` and `category`?
@@ -688,6 +726,13 @@ function validateCategories(where, categories, errors) {
     // than saying so.
     if (Array.isArray(c.only) && Array.isArray(c.except)) {
       errors.push(`${where}.${c.name} sets both only and except; use one`);
+    }
+    // A bonus has to be a real number. The books print these as "+10%", and a
+    // string "10%" or "+10" would pass `!== undefined`, fail Number.isFinite at
+    // read time and add nothing — the exact silent no-op this key was added to
+    // stop, reintroduced one layer down.
+    if (c.bonus !== undefined && (typeof c.bonus !== 'number' || !Number.isFinite(c.bonus))) {
+      errors.push(`${where}.${c.name}.bonus must be a number of percentage points, not "${c.bonus}"`);
     }
   }
 }
@@ -1495,6 +1540,17 @@ export function parseClassMarkdown(text) {
     }
     const secondary = data.skills.secondary_skills;
     if (secondary && typeof secondary.count !== 'number') errors.push('skills.secondary_skills.count must be a number');
+    // A category bonus on the SECONDARY list would be stored and never read:
+    // the books give the parenthetical percentage to related selections only,
+    // so nothing applies it here. Rejected rather than ignored, because an
+    // author writing it has misread the class page and would get no other
+    // signal — the character would simply come out low by ten points.
+    for (const c of secondary?.categories || []) {
+      if (c && typeof c === 'object' && c.bonus !== undefined) {
+        errors.push(`skills.secondary_skills.categories.${c.name} sets a bonus; `
+          + 'the parenthetical percentage applies to related selections only');
+      }
+    }
     // Secondary skills can arrive on a schedule too — the Long Bowman gets one
     // more at levels 4, 7, 10 and 13. Same shape as the related schedule,
     // because it is the same idea.

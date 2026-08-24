@@ -337,10 +337,13 @@ skills:
     count: 6
     # A category is a plain string (any skill in it) or an object narrowing it.
     # `only` and `except` are mutually exclusive — setting both is an error.
+    # `bonus` is the percentage the page prints beside the category and may
+    # accompany either of them.
     categories:
       - "Physical"
       - { name: "Espionage", only: ["Escape Artist"] }
       - { name: "Science", except: ["Anthropology"] }
+      - { name: "Technical", bonus: 10 }
     schedule: [{ level: 3, count: 1 }, { level: 6, count: 1 }]
   secondary_skills:
     count: 2
@@ -585,6 +588,7 @@ categories:
   - "Wilderness"
   - { name: "Espionage", only: ["Escape Artist"] }
   - { name: "Physical", except: ["Acrobatics", "Gymnastics"] }
+  - { name: "Medical", except: ["M.D. in Cybernetics"], bonus: 10 }
 ```
 
 Setting both `only` and `except` is an error rather than a guess. A forbidden
@@ -592,6 +596,38 @@ skill is **never offered**, rather than offered and rejected on save; the
 server-side validator enforces the same rule as a backstop, through the same
 `categoryAllows()` helper, so the picker and the validator cannot disagree about
 what is legal.
+
+**A category may also carry the percentage the page prints beside it.** Class
+pages state these constantly — "Technical: Any (+10%)", "Medical: Any (except
+cybernetics; +10%)" — and until `bonus` existed the number had nowhere to go. An
+import either dropped it or wrote a `bonus` key that parsed and did nothing,
+which is the worse of the two: the class reads complete and the character comes
+out ten points low with nothing to show why. The Godling R.C.C. shipped missing
+all five of its own, and Pantheons of the Megaverse prints twenty-one across
+four classes.
+
+It combines with a restriction rather than replacing it, because the book states
+both in one parenthetical, and `categoryLabel()` shows both for the same reason.
+
+Three rules, all of them the books' rather than ours:
+
+- **Related picks only, never secondary.** Every class page says the
+  parenthetical percentage "applies only to O.C.C. related skill selections", in
+  the same breath as the secondary skills allowance. A `bonus` on
+  `secondary_skills.categories` is a parse **error**, not an ignored key — an
+  author writing it has misread the page and would otherwise get no signal at
+  all. The I.Q. bonus is a separate rule and still reaches both.
+- **Keyed on the skill's real catalog category**, not on whichever entry
+  admitted it. A cross-category `only` says you may spend a pick here on this
+  skill; it does not move the skill into that category for scoring, and reading
+  it that way would hand the Glitter Boy's Wilderness Survival an Espionage
+  bonus that was never printed.
+- **Only to a skill that has a base.** A W.P. or a hand to hand sits at zero
+  because it is not percentile, the same guard a choice group's `bonus` uses.
+
+Applied in both places a related pick gets a percentage: `app.js` at creation,
+and `functions/api/character-creator/_lib/skill-picks.js` for one picked at
+level-up. An out-of-category pick spent as a secondary slot does not get it.
 
 Naming a skill the catalog does not hold yet is harmless: an `except` for a
 missing skill excludes nothing, and an `only` narrows the category to what does

@@ -233,7 +233,7 @@ import { validateMos } from '../js/parser.js';
 import { chunks, D1_MAX_BINDS, BIND_CHUNK } from '../../../functions/api/character-creator/_lib/sql-chunk.js';
 import { LANGUAGE_OTHER, LITERACY_OTHER, isFamilyName, isRepeatableRow,
          otherRowFor, familySkillName } from '../js/language-skills.js';
-import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityOccOptions, abilityOptions, applyAbilities, applyVariant, bonusesFromSkills, categoryAllows, categoryLabel, combineClasses, isGearChoice, needsOccupation, parseClassMarkdown, parseYaml, validateBonuses } from '../js/parser.js';
+import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityOccOptions, abilityOptions, applyAbilities, applyVariant, bonusesFromSkills, categoryAllows, categoryBonus, categoryLabel, combineClasses, isGearChoice, needsOccupation, parseClassMarkdown, parseYaml, validateBonuses } from '../js/parser.js';
 import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rollsForPsionics, withRolledPsionics } from '../js/psionics.js';
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -2844,6 +2844,77 @@ section('Category restrictions');
     const src = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
       '_lib', 'validate-character.js'), 'utf8');
     return src.includes('categoryAllows(allowed,');
+  })());
+}
+
+// ---------- 1c25a2. The percentage printed beside a category ----------
+// "Technical: Any (+10%)". Before `bonus` existed those numbers had nowhere to
+// go, so an import either dropped them silently or wrote a key that parsed and
+// then did nothing. The Godling shipped missing all five of its own, and
+// Pantheons of the Megaverse prints twenty-one across four classes.
+section('Category skill bonuses');
+{
+  const cats = ['Domestic',
+    { name: 'Technical', bonus: 10 },
+    { name: 'Medical', except: ['M.D. in Cybernetics'], bonus: 10 },
+    { name: 'Wilderness', bonus: 5 }];
+
+  check('a category with no bonus adds nothing',
+    categoryBonus(cats, { name: 'Cook', category: 'Domestic' }) === 0);
+  check('a bonus is found by the skill\'s real category',
+    categoryBonus(cats, { name: 'Computer Operation', category: 'Technical' }) === 10);
+  check('a bonus rides alongside an except-list',
+    categoryBonus(cats, { name: 'Paramedic', category: 'Medical' }) === 10);
+  check('a category the class never granted adds nothing',
+    categoryBonus(cats, { name: 'Basic Math', category: 'Science' }) === 0);
+  check('no list adds nothing',
+    categoryBonus([], { name: 'X', category: 'Technical' }) === 0
+    && categoryBonus(null, { name: 'X', category: 'Technical' }) === 0);
+
+  // The restriction and the percentage arrive in one parenthetical on the page,
+  // so a picker showing half of it would be lying about the other half.
+  check('the label shows the bonus, with or without a restriction', (() => {
+    const l = cats.map(categoryLabel);
+    return l[0] === 'Domestic' && l[1] === 'Technical (+10%)'
+      && l[2] === 'Medical (except M.D. in Cybernetics; +10%)' && l[3] === 'Wilderness (+5%)';
+  })());
+
+  const mk = (catsYaml, key = 'occ_related_skills') => parseClassMarkdown(
+    `---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: occ\nskills:\n  ${key}:\n    count: 2\n    categories:\n${catsYaml}\n---\n\n## Lore\n\nx\n`);
+
+  check('a numeric bonus parses', mk('      - { name: "Technical", bonus: 10 }').ok);
+  // The exact silent no-op this key exists to stop, reintroduced one layer
+  // down: "10%" passes `!== undefined`, fails Number.isFinite and adds nothing.
+  check('a non-numeric bonus is rejected', (() => {
+    const r = mk('      - { name: "Technical", bonus: "10%" }');
+    return !r.ok && r.errors.some((e) => /bonus must be a number/.test(e));
+  })());
+  // The books give the parenthetical percentage to related picks only, and say
+  // so in the same breath. A bonus filed under secondary would never be read.
+  check('a bonus on the secondary list is rejected', (() => {
+    const r = mk('      - { name: "Technical", bonus: 10 }', 'secondary_skills');
+    return !r.ok && r.errors.some((e) => /applies to related selections only/.test(e));
+  })());
+
+  // Both places a related pick gets a percentage — at creation in the wizard,
+  // and at level-up through the server. Two copies of one rule is the pair that
+  // drifts, so each is pinned to the call rather than to the arithmetic.
+  check('the wizard applies it at creation', (() => {
+    const src = readFileSync(join(appDir, 'app.js'), 'utf8');
+    return src.includes('categoryBonus(relatedCats(), row)');
+  })());
+  check('the server applies it to a level-up pick', (() => {
+    const src = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
+      '_lib', 'skill-picks.js'), 'utf8');
+    return src.includes('categoryBonus(allowed,') && src.includes('!asSecondary && allowed');
+  })());
+  // A W.P. and a hand to hand sit at 0 because they are not percentile skills.
+  // Adding ten to that would invent a roll that does not exist.
+  check('both places guard the bonus on a real base', (() => {
+    const wiz = readFileSync(join(appDir, 'app.js'), 'utf8');
+    const srv = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
+      '_lib', 'skill-picks.js'), 'utf8');
+    return wiz.includes('base ? base + categoryBonus') && srv.includes('base ? base + catBonus : 0');
   })());
 }
 
