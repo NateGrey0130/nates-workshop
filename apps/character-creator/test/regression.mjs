@@ -544,13 +544,23 @@ check('a nonsense limit falls back rather than 400ing',
   check('a legal pick within the allowance still creates',
     legit.status === 201, JSON.stringify(legit.body).slice(0, 250));
 
-  // Out-of-range pools and over-ceiling attributes create fine — they are
-  // warnings, because a class re-import or a table ruling could explain them —
-  // and the audit below is where they surface.
+  // Out-of-range pools and over-ceiling attributes create fine FOR THE GM —
+  // dev@localhost made this campaign, and a GM ruling beats a computed number
+  // — and the audit below is where the warnings surface. 'Honest Caster'
+  // above (hp 9999, created 201) is the GM half of the pool tolerance.
   const strong = await api('POST', '/characters',
     base({ name: 'Implausibly Strong', attributes: { ...attrs, PS: 45 } }));
   check('an attribute above its dice ceiling still creates',
     strong.status === 201, JSON.stringify(strong.body).slice(0, 250));
+
+  // The pool hard cap (F2 follow-up): the same impossible maximum that the GM
+  // may assert refuses anyone else. player2 is already a member (the join-gate
+  // section seated them), so the gate is not what refuses here.
+  const inflated = await apiAs('player2@example.com', 'POST', '/characters',
+    base({ name: 'Inflated Chair', pools: { hp: 9000 } }));
+  check('a non-GM creator with an impossible pool maximum is refused',
+    inflated.status === 422 && inflated.body.violations?.some((v) => v.rule === 'pool_out_of_range'),
+    JSON.stringify(inflated.body).slice(0, 250));
 }
 
 const audit = await api('GET', '/admin/audit');
