@@ -639,11 +639,21 @@ exist, so the restriction is already right for the day it is imported.
 `only` fails closed. A not-yet-imported skill and a name the catalog simply
 spells differently are indistinguishable, and the second is the common case: the
 Godling R.C.C. bars robots, power armor and cybernetics, which this catalog
-calls `Robots and Power Armor`, `Robot Combat: Basic` and `M.D. in Cybernetics`,
-so all three exclusions quietly did nothing. The cross-reference now reports
-every restriction name that matches no catalog row, on the review step beside
-the missing-reference lists. It is a warning, not a refusal — the
-forward-compatible case above is still legitimate.
+calls `Robots & Power Armor`, `Robot Combat: Basic` and `M.D. in Cybernetics`,
+and its `except` list named none of them that way, so all three exclusions
+quietly did nothing. The cross-reference now reports every restriction name that
+matches no catalog row, on the review step beside the missing-reference lists.
+It is a warning, not a refusal — the forward-compatible case above is still
+legitimate.
+
+**The Godling outlived two of those three fixes**, which is the part worth
+keeping. Its first import corrected the cybernetics and robot-combat spellings
+and left `Robots and Power Armor`; the catalog then renamed that row to
+`Robots & Power Armor` and filed the old spelling as a redirect, and the
+exclusion went on doing nothing for months while every catalog check passed.
+`fix-godling-demigod-accuracy.sql` is what finally closed it. A rename can break
+a restriction that was correct when it was written, and nothing but this
+cross-reference will say so.
 
 Redirects are deliberately **not** consulted for this check, though they are for
 missing references. A merged-away name still resolves as a *reference*, but
