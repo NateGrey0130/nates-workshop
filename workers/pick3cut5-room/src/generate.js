@@ -317,6 +317,20 @@ export async function runPipeline(env, category, { exclude = [], cache = new Map
     ms: { ...timings, total: Date.now() - t0 },
   }));
 
+  // TESTED 2026-08-24, AND THIS PATH IS HARDER TO REACH THAN IT LOOKS.
+  //
+  // "Beatles studio albums" is a finite set of thirteen. Two rounds in one room
+  // produced SIXTEEN items rather than running dry: the second round padded
+  // with Beatles '65, The Early Beatles and Hey Jude (US compilations), plus
+  // Long Tall Sally and Beatles for Sale No. 2 (EPs). None is a studio album.
+  //
+  // So a generator asked for eight fresh items will almost always return
+  // eight - inventing adjacent-but-wrong entries rather than admitting the
+  // category is exhausted - and `survivors.length < 8` fires only when
+  // VERIFICATION culls them, which is skipped for a category that is factual
+  // but not time-sensitive. On a finite factual category the honest advice is
+  // to tick "double-check this list"; the in-round swap and check are the
+  // backstop when nobody does.
   if (survivors.length < ITEMS_PER_ROUND) {
     const err = new GenerationError(
       excludeSet.size

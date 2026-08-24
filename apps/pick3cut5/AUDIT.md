@@ -37,43 +37,110 @@ Exercised live, in production, end to end:
 
 ## T — paths that have never run
 
-Not defects. Code that exists, was reasoned about, and has never executed. Each
-is a candidate for "go test this" rather than "go change this".
+**RUN 2026-08-24.** Outcomes recorded against each. Nine of the eleven were
+exercised for real; the two that were not are marked and say why.
 
-**T1. More than two players.** The cap is 12; every round played had 2. The
+The headline is T6: the "category is running out" path is far harder to reach
+than it looks, because a generator asked for eight fresh items pads rather than
+admits defeat. Everything else passed.
+
+**T1. More than two players. — PASSED.** A full twelve-player room played eight
+items. Twelve flips on every item; auto-picks landed last at full size exactly
+as at two (`mmmmmmmmmmAA`); a thirteenth join was refused with *"This room is
+full (12 players)"*. Every player finished 0k/0c with **exactly three keeps**,
+including two who never touched their phones and got there on timeouts alone.
+
+Original note: The cap is 12; every round played had 2. The
 reveal stagger, the flip ordering, the summary board layout and the
 accept-gating were all designed for a full room and have only ever rendered
 two rows. *Cheapest real fix: play one six-person round.*
 
-**T2. Host disconnect and promotion.** `promoteHost()` picks the
+**T2. Host disconnect and promotion. — PASSED.** Ana (host) dropped; her seat
+was held as `[away]`, **Bo** — the longest-connected remaining player — was
+promoted, and a third player was still refused host actions.
+
+Original note: `promoteHost()` picks the
 longest-connected remaining player. Never triggered. The seat-holding and
 rejoin path around it **is** proven — a reconnect under the same name resumed
 a wedged room correctly — but the host handover itself has not run.
 
-**T3. Kick.** `onKick` closes the target's socket, removes the seat, and can
+**T3. Kick. — PASSED.** The newly promoted host kicked Dev; the seat was
+removed and Dev's socket closed with policy code `4403`.
+
+Original note: `onKick` closes the target's socket, removes the seat, and can
 complete a phase by removing the last holdout. Never called.
 
-**T4. Room self-destruct.** The 5-minute alarm after the last socket closes,
+**T4. Room self-destruct. — PASSED.** A one-player room, socket closed, left
+strictly alone. At **6.0 minutes** a rejoin got close code `4404` and
+*"No room with that code. It may have expired."* with `fatal: true` — the alarm
+fired, `deleteAll()` ran, and the browser gets a clean message rather than a
+failed upgrade.
+
+Worth knowing: an earlier attempt failed because my own probe rejoined at the
+2-minute mark and **reset the clock**, which is the timer working correctly.
+Anyone re-testing this must leave the room untouched for the full five minutes.
+
+Original note: The 5-minute alarm after the last socket closes,
 and the `deleteAll()` behind it. Never waited out. Worth noting this is the
 only path that deletes anything.
 
-**T5. Replay of the same category.** The used-items set, the exclusion list,
+**T5. Replay of the same category. — PASSED.** Three generations of one
+category in one room. Two captured rounds produced **16 items, 16 unique, zero
+overlap** — the code-side exclusion filter holds.
+
+Original note: The used-items set, the exclusion list,
 the growing candidate ask, and the per-category verification cache are all
 implemented and none has run twice on one category in one room. This is a
 meaningful gap: the exclusion logic is the part most likely to be subtly wrong,
 because models ignore exclusion lists and the code-side hard filter is the only
 real guarantee.
 
-**T6. A category running dry.** The "only 5 new items left" path. Never seen.
+**T6. A category running dry. — DID NOT TRIGGER, AND THAT IS THE FINDING.**
 
-**T7. The caps, in production.** 30 rounds per room, 3 replays per category, 5
-prefetches per room, the 20-second cooldown. All verified by reading; only the
-per-player-per-item swap cap was exercised live.
+"Beatles studio albums" is a finite set of thirteen. Two rounds in one room
+served **sixteen** items. Round one was eight legitimate albums; round two
+padded with *Beatles '65*, *The Early Beatles* and *Hey Jude* (US compilations)
+plus *Long Tall Sally* and *Beatles for Sale No. 2* (EPs). Not one is a studio
+album.
 
-**T8. The solo rate limiter in production.** Proven locally (429 at request 9).
-The production binding has never been tripped.
+So the generator does not run dry — it invents adjacent-but-wrong entries, and
+`survivors.length < 8` only fires when VERIFICATION culls them. Verification is
+skipped for a category that is factual but not time-sensitive, which is exactly
+what this one is. On a finite factual category the honest advice is to tick
+*double-check this list*; the swap and the on-demand check are the backstop when
+nobody does. Recorded in `generate.js` next to the check itself.
 
-**T9. Real phones.** The app is mobile-first and has only ever rendered in an
+**T7. The caps. — REPLAY CAP PASSED; ROUND CAP STILL UNTESTED.**
+
+Three full rounds of one category in one room, then a fourth attempt:
+
+| attempt | result |
+|---|---|
+| 4th replay, same category | refused — *"You have replayed that category enough times - the list gets thin. Pick a new one."* |
+| different category, same room | allowed, generated normally |
+| another immediately after | *"A round is already running."* |
+
+The **20-second cooldown** is confirmed only indirectly: every driver in this
+session had to sleep 21s between generations or the next `start_round` failed.
+The **30-round cap** is still untested and would need thirty real generations to
+reach; it is three lines and the same shape as the replay cap above.
+
+**T8. The solo rate limiter in production. — PASSED, with a caveat worth
+keeping.** 24 requests down a single connection gave **9 allowed / 15 denied**,
+matching the configured 8-per-minute.
+
+It took three attempts to see it, and the two failures are the useful part:
+sequential HTTPS round-trips to production are slow enough that ~16 of them span
+more than the 60-second window, and **parallel** requests each open their own
+connection, spread across colos, where the limiter is eventually consistent and
+a burst leaks well past the nominal number. It caps a sustained rate; it does
+not hard-stop a burst. Recorded in `index.js`.
+
+**T9. Real phones. — NOT RUN. No physical device available to me.** Everything
+below still stands as untested, and the backgrounding question in particular is
+the one real gap left in this list.
+
+Original note: The app is mobile-first and has only ever rendered in an
 emulated 375 px viewport. Thumb reach, the sticky budget bar under a real
 browser chrome, and iOS Safari's WebSocket behaviour on backgrounding are all
 unknown. **The backgrounding question is the substantive one** — a phone that
@@ -81,11 +148,30 @@ sleeps mid-round is the single most likely real-world failure, and the
 catch-up-on-message fix was written for exactly that shape of problem without
 ever being tested against it.
 
-**T10. Screen reader and keyboard-only.** `aria-live` announcements, focus
+**T10. Screen reader and keyboard-only. — PARTIALLY RUN.**
+
+Verified: focus ring renders (amber, 2.7px) on a genuinely focused element;
+every input, checkbox and icon button is labelled; the live region carries
+`role="status"` + `aria-live="polite"`; the `prefers-reduced-motion` rule
+exists; no negative tabindex traps.
+
+**One real gap found and fixed:** the three disclosure tiles had no
+`aria-expanded` until first pressed, so a screen reader would announce three
+buttons with no indication they open anything. They now carry
+`aria-expanded="false"` and `aria-controls` at rest.
+
+NOT verified: actual Tab traversal and Enter/Space activation — the browser
+pane does not deliver those keys to the page (a `keydown` listener recorded
+nothing), so this is a tooling limit rather than an app result. And no screen
+reader was run.
+
+Original note: `aria-live` announcements, focus
 rings, and `prefers-reduced-motion` are all implemented; none has been driven
 by an actual assistive tech.
 
-**T11. Concurrent rooms.** One room at a time, always.
+**T11. Concurrent rooms. — PASSED.** Two rooms ran rounds simultaneously with
+different codes, different categories and independent timers (180s vs 25s), and
+neither saw the other's players.
 
 ---
 
