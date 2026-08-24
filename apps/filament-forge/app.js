@@ -8,15 +8,20 @@ let apiKey = ''; // handled by server-side proxy
 
 // ─── PRINTER SPECS DATABASE ───
 const PRINTER_SPECS = {
-  'bambu-p2s': { name: 'Bambu Lab P2S', maxSpeed: 500, maxAccel: 20000, maxVolFlow: 32, hasChamber: false, bedType: 'textured PEI' },
-  'bambu-p1s': { name: 'Bambu Lab P1S', maxSpeed: 500, maxAccel: 20000, maxVolFlow: 32, hasChamber: true, bedType: 'textured PEI' },
-  'bambu-p1p': { name: 'Bambu Lab P1P', maxSpeed: 500, maxAccel: 20000, maxVolFlow: 32, hasChamber: false, bedType: 'cool plate' },
-  'bambu-x1c': { name: 'Bambu Lab X1C', maxSpeed: 500, maxAccel: 20000, maxVolFlow: 32, hasChamber: true, bedType: 'textured PEI' },
-  'bambu-a1': { name: 'Bambu Lab A1', maxSpeed: 500, maxAccel: 10000, maxVolFlow: 28, hasChamber: false, bedType: 'textured PEI' },
-  'bambu-a1-mini': { name: 'Bambu Lab A1 Mini', maxSpeed: 500, maxAccel: 10000, maxVolFlow: 28, hasChamber: false, bedType: 'textured PEI' },
-  // Dual-nozzle Vortek tool changer; the numbers are the machine's limits,
-  // which is all the prompt consumes. hasChamber means HEATED here (65°C).
-  'bambu-h2c': { name: 'Bambu Lab H2C', maxSpeed: 1000, maxAccel: 20000, maxVolFlow: 40, hasChamber: true, bedType: 'textured PEI' },
+  // `chamber` is a description, not a boolean, because the distinction the
+  // prompt needs is three-way: open frame, passively enclosed (fine for ABS/
+  // ASA, no control), actively heated (a temperature Claude can reason from).
+  // The old hasChamber flag also mislabelled the P2S as open - it is enclosed
+  // with flap-regulated passive heat, per Bambu's own spec page.
+  'bambu-p2s': { name: 'Bambu Lab P2S', maxSpeed: 500, maxAccel: 20000, maxVolFlow: 32, chamber: 'enclosed, passively heated (no active heater; ~40-50°C in practice)', bedType: 'textured PEI' },
+  'bambu-p1s': { name: 'Bambu Lab P1S', maxSpeed: 500, maxAccel: 20000, maxVolFlow: 32, chamber: 'enclosed, unheated', bedType: 'textured PEI' },
+  'bambu-p1p': { name: 'Bambu Lab P1P', maxSpeed: 500, maxAccel: 20000, maxVolFlow: 32, chamber: 'none (open frame)', bedType: 'cool plate' },
+  'bambu-x1c': { name: 'Bambu Lab X1C', maxSpeed: 500, maxAccel: 20000, maxVolFlow: 32, chamber: 'enclosed, unheated', bedType: 'textured PEI' },
+  'bambu-a1': { name: 'Bambu Lab A1', maxSpeed: 500, maxAccel: 10000, maxVolFlow: 28, chamber: 'none (open frame)', bedType: 'textured PEI' },
+  'bambu-a1-mini': { name: 'Bambu Lab A1 Mini', maxSpeed: 500, maxAccel: 10000, maxVolFlow: 28, chamber: 'none (open frame)', bedType: 'textured PEI' },
+  // Dual-nozzle Vortek tool changer, not modelled; the specs feed the prompt
+  // as machine limits, nothing more.
+  'bambu-h2c': { name: 'Bambu Lab H2C', maxSpeed: 1000, maxAccel: 20000, maxVolFlow: 40, chamber: 'actively heated, up to 65°C', bedType: 'textured PEI' },
 };
 
 // ─── INIT ───
@@ -596,7 +601,7 @@ Printer: ${printerSpec.name}
 Nozzle: ${nozzle}mm
 AMS: ${ams}
 Max volumetric flow: ${printerSpec.maxVolFlow} mm³/s
-Has enclosed chamber: ${printerSpec.hasChamber}
+Chamber: ${printerSpec.chamber}
 Bed surface: ${printerSpec.bedType}
 
 Filament:
