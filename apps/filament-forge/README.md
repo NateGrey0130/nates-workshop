@@ -22,6 +22,8 @@ apps/filament-forge/
 │                         results / history main tabs, onboarding + export modals
 ├── styles.css            Loaded after /shared/styles.css
 ├── app.js                Everything the page does, one plain script
+├── vendor/
+│   └── jszip.min.js      JSZip v3.10.1, vendored — see "What still leaves the site"
 └── test/
     └── smoke.mjs         Pure logic + the claims this README makes
 
@@ -131,16 +133,19 @@ fails, the app says so once rather than silently dropping writes.
 
 ## What still leaves the site
 
-Two things, and only two:
+One thing: `/api/claude`, the site's proxy — the generation request itself.
 
-- `/api/claude` — the site's proxy; the generation request itself.
-- `cdnjs.cloudflare.com` — JSZip, loaded lazily the first time a `.3mf` file
-  is dropped (a 3MF is a zip; the STL path needs nothing). The one remaining
-  third-party fetch, and a candidate for vendoring the way OFD was
-  snapshotted.
+JSZip used to be the other one, fetched from cdnjs the first time a `.3mf`
+was dropped (a 3MF is a zip; the STL path needs nothing). It is now vendored
+at `vendor/jszip.min.js` — JSZip v3.10.1, dual-licensed MIT/GPLv3, committed
+byte-exact (`.gitattributes` exempts the vendor directory from line-ending
+normalization) so its SHA-512 still matches the SRI cdnjs publishes for that
+version. Still loaded lazily: most sessions never upload a 3MF, so the 95 KB
+stays off the boot path.
 
-`openfilamentdatabase.org` appears nowhere in the app — the smoke test pins
-that.
+No external origin appears anywhere in `app.js` — not
+`openfilamentdatabase.org`, not `cdnjs.cloudflare.com` — and the smoke test
+pins that as a grep rather than trusting this paragraph.
 
 ## Printers
 
@@ -162,8 +167,9 @@ the machine's real limits. Adding a printer is one line there and one
   entry survives the row round-trip)
 - this README's claims: the six table names against `db/schema.sql`, the
   migration file, the endpoint files, the history cap against the endpoint's
-  constant, the printer count against `app.js`, the localStorage keys, and
-  that `app.js` never mentions OFD's origin
+  constant, the printer count against `app.js`, the localStorage keys, the
+  vendored JSZip's version against its own header, and that `app.js` names no
+  external origin at all
 
 The last group exists so this file cannot quietly stop being true — the same
 bargain the character creator's README has with its own suite.
