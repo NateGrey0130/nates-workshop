@@ -103,9 +103,9 @@ database (`nates-workshop-media`) is bound as `DB` in `wrangler.jsonc`.
 
 ## How deploys work
 
-Merging to `main` **is** the deploy. Pages builds nothing (no build command)
-and publishes the repo root. Schema changes are applied by hand **before** the
-merge that needs them:
+Merging to `main` **is** the deploy — for the Pages site. Pages builds nothing
+(no build command) and publishes the repo root. Schema changes are applied by
+hand **before** the merge that needs them:
 
 ```bash
 node scripts/d1-apply.mjs --remote db/migrations/NNN-whatever.sql
@@ -114,6 +114,105 @@ node scripts/d1-apply.mjs --remote db/migrations/NNN-whatever.sql
 See `apps/character-creator/README.md` → *Production configuration* for the
 full migration convention, and `CLAUDE.md` for the `CLOUDFLARE_API_TOKEN`
 setup the routine expects.
+
+**One thing in this repo is not covered by that sentence.** `workers/pick3cut5-room/`
+is a standalone Worker and merging does not deploy it — see the next section.
+
+## Pick 3 Cut 5 and the second Worker
+
+Pick 3 Cut 5 needs a Durable Object per room, and **a Pages project cannot
+define a Durable Object class** — it can only bind to one exported from a
+standalone Worker, and unlike Workers, Pages requires `script_name` on the
+binding. That is current documented behaviour, not a legacy quirk. So the room
+server lives in `workers/pick3cut5-room/` and deploys on its own.
+`docs/pages-to-workers-migration.md` covers the alternative that was considered
+and not taken.
+
+### Deploy order, which is not enforced anywhere
+
+The Worker must exist **before** the Pages deploy that binds it — the same
+discipline as creating an R2 bucket before binding it. Get it backwards and
+party mode answers 503 while the rest of the site looks completely fine.
+
+```bash
+npx wrangler deploy --config workers/pick3cut5-room/wrangler.jsonc
+```
+
+Then merge. On any later change that touches only `apps/pick3cut5/`, merging is
+enough; on any change under `workers/pick3cut5-room/`, deploy the Worker again.
+
+### Its secret is separate
+
+The Worker holds its own copy of the Anthropic key. The Pages secret does not
+reach it:
+
+```bash
+npx wrangler secret put ANTHROPIC_API_KEY --config workers/pick3cut5-room/wrangler.jsonc
+```
+
+Rotating the key means rotating it in **both** places. Model IDs are plain vars
+in the Worker's own `wrangler.jsonc`, not secrets.
+
+Note this Worker does **not** write `claude_usage` rows — it has no D1 binding,
+per the app's no-database constraint. Its spend is therefore invisible to the
+query in *Who is spending the Anthropic key* below. The rate limits in
+`workers/pick3cut5-room/wrangler.jsonc` and the room's own 20-second cooldown
+and 30-round cap are the only cost controls on it.
+
+### It has to be let out of the login wall
+
+Two halves, and **both** are required — either one alone leaves the app broken:
+
+1. **Zero Trust → Access → Applications**, a **Bypass** policy covering
+   `/apps/pick3cut5/*` and `/api/pick3cut5/*`. Dashboard only; the
+   `CLOUDFLARE_API_TOKEN` in `CLAUDE.md` is scoped to D1 and cannot create it.
+2. **`PUBLIC_PREFIXES` in `functions/api/_middleware.js`**, which already lists
+   `/api/pick3cut5/`. A bypass policy lets the request through *without*
+   minting a JWT, so without this exemption every call takes a hard 403 from
+   our own middleware.
+
+Everything else in the Workshop stays gated. The room code is the only barrier
+on party mode, by design.
+
+### Local dev, including two clients against one room
+
+Two terminals, both from the repo root. The Worker first:
+
+```bash
+npx wrangler dev --config workers/pick3cut5-room/wrangler.jsonc
+```
+
+Then the Pages site, told where to find it:
+
+```bash
+npx wrangler pages dev . --do P3C5_ROOM=Room@pick3cut5-room --service PICK3CUT5=pick3cut5-room
+```
+
+Open `http://localhost:8788/apps/pick3cut5/`. The middleware exempts localhost,
+so no Access is involved either way.
+
+**Testing multiple players against one room** is the part worth writing down.
+Seats are held by *name*, not by socket, so two tabs entering the same name
+fight over one seat — the newer one wins and the older is closed on purpose.
+For a real multi-client test:
+
+- Open the host tab, start a party, note the four-character code.
+- Open each additional player in a **separate browser profile or a private
+  window**, not just another tab. Ordinary tabs share nothing that matters
+  here, so plain tabs work too as long as **every player uses a different
+  name** — that is the actual requirement.
+- The join link the lobby copies (`…/apps/pick3cut5/?room=CODE`) prefills the
+  code, which saves typing it eight times.
+- Phones on the same LAN can reach it via `--ip 0.0.0.0` on `pages dev` and
+  your machine's LAN address; that is the only way to test what the game
+  actually feels like.
+
+To watch the forced-pick and timeout paths without playing eight items
+honestly: set the pick timer to its 10-second minimum in the lobby, then leave
+one tab alone. To reach a forced cascade fast, spend all three keeps on items
+one through three.
+
+Solo mode needs only the two servers above — no room, no socket.
 
 ## Environment configuration (Cloudflare Pages dashboard)
 

@@ -1,0 +1,62 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "pick3cut5-room",
+  "main": "src/index.js",
+  "compatibility_date": "2026-04-19",
+
+  // Off on purpose. This Worker is reachable ONLY through the two bindings the
+  // Pages project holds (see the root wrangler.jsonc). Leaving workers.dev on
+  // would put the room API and the generation endpoint on a second public
+  // hostname that nothing in front of it - not Access, not the room code -
+  // would be guarding.
+  "workers_dev": false,
+
+  // Free on Workers and unavailable on Pages, which is most of the argument in
+  // docs/pages-to-workers-migration.md in one line. When a room misbehaves in
+  // production this is the only way to find out why.
+  "observability": { "enabled": true },
+
+  // Model strings are configuration, not code. The classifier runs on the
+  // small model deliberately: it is the cheap gate that decides whether the
+  // expensive search-enabled calls happen at all. It also CANNOT search even
+  // if asked - the current web search tool needs a 4.6-or-later model - which
+  // is a useful thing to have enforced by the model choice rather than by a
+  // flag someone can flip.
+  "vars": {
+    "P3C5_MODEL_CLASSIFY": "claude-haiku-4-5-20251001",
+    "P3C5_MODEL_GENERATE": "claude-sonnet-5",
+    "P3C5_MODEL_VERIFY": "claude-sonnet-5"
+  },
+
+  "durable_objects": {
+    "bindings": [
+      { "name": "ROOM", "class_name": "Room" }
+    ]
+  },
+
+  // The room code is the DO name, so this namespace is the whole lookup table.
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["Room"] }
+  ],
+
+  // Solo mode's guardrail. Pages Functions cannot use this binding at all,
+  // which is why /solo/generate lives in this Worker rather than next to the
+  // other API routes.
+  //
+  // `period` accepts only 10 or 60. Eight generations a minute is far more
+  // than a person playing solo will ever want and far less than a script
+  // wants. The global bucket underneath is the blast radius cap for when the
+  // per-IP one is defeated by simply having more IPs.
+  "ratelimits": [
+    {
+      "name": "SOLO_LIMIT",
+      "namespace_id": "3501",
+      "simple": { "limit": 8, "period": 60 }
+    },
+    {
+      "name": "SOLO_LIMIT_GLOBAL",
+      "namespace_id": "3502",
+      "simple": { "limit": 60, "period": 60 }
+    }
+  ]
+}

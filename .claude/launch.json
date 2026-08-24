@@ -6,6 +6,25 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["wrangler", "pages", "dev", "--port", "8788"],
       "port": 8788
+    },
+    {
+      "//": "Pick 3 Cut 5 needs the pick3cut5-room Worker running too — start",
+      "//2": "'pick3cut5-room' first, then this. Without it the two bindings",
+      "//3": "resolve to nothing and party mode answers 503. See SETUP.md.",
+      "name": "nates-apps+pick3cut5",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "wrangler", "pages", "dev", "--port", "8788",
+        "--do", "P3C5_ROOM=Room@pick3cut5-room",
+        "--service", "PICK3CUT5=pick3cut5-room"
+      ],
+      "port": 8788
+    },
+    {
+      "name": "pick3cut5-room",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["wrangler", "dev", "--config", "workers/pick3cut5-room/wrangler.jsonc", "--port", "8799"],
+      "port": 8799
     }
   ]
 }

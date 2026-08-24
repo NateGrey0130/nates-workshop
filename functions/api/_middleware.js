@@ -23,11 +23,31 @@ const refuse = (status, error) => new Response(JSON.stringify({ error }), {
   status, headers: { 'Content-Type': 'application/json' },
 });
 
+// Routes that sit outside the login wall ON PURPOSE, and the only ones.
+//
+// Pick 3 Cut 5 is a party game played by whoever is in the room. Requiring an
+// Access account to join would end the party, so its two routes are paired
+// with an Access BYPASS policy configured on the dashboard.
+//
+// The bypass policy alone is not enough, and that is the entire reason this
+// list exists: a bypass lets the request through WITHOUT minting a JWT, so
+// every such request would reach the check below and take a hard 403. The
+// dashboard policy and this array have to agree, or the app is broken in
+// exactly one direction and the error says nothing about why.
+//
+// Prefix-matched against the pathname, so '/api/pick3cut5/' covers the routes
+// beneath it and nothing else. Adding an entry here opens a hole in the site's
+// only wall — do it deliberately or not at all.
+const PUBLIC_PREFIXES = ['/api/pick3cut5/'];
+
 export async function onRequest(context) {
   const { request, env, next } = context;
   const domain = (env.ACCESS_TEAM_DOMAIN || '').trim();
   const aud = (env.ACCESS_AUD || '').trim();
   if (!domain || !aud) return next();
+
+  const { pathname } = new URL(request.url);
+  if (PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return next();
 
   // The arming variables live in wrangler.jsonc, so `wrangler pages dev`
   // reads them too — and local dev has no Access in front of it to mint a
