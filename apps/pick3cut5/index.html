@@ -197,7 +197,10 @@
     <form class="panel host-only" id="formAgain" hidden>
       <label for="againCategory">Another category</label>
       <input id="againCategory" maxlength="60" autocomplete="off" placeholder="something else">
-      <button class="btn btn-primary btn-big" type="submit">Go again</button>
+      <button class="btn btn-primary btn-big" type="submit" id="btnAgain">Go again</button>
+      <!-- The final screen is dead time — everyone is arguing about each
+           other's boards — so the next list is built while they do it. -->
+      <p class="prefetch-status" id="prefetchStatus" hidden></p>
       <p class="hint" id="againHint"></p>
     </form>
 

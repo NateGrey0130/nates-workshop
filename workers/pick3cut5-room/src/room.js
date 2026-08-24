@@ -10,6 +10,7 @@
 //   { type: 'join',          name: string }
 //   { type: 'ready',         ready: boolean }
 //   { type: 'start_round',   category: string }            host only
+//   { type: 'prefetch',      category: string }            host only, final screen
 //   { type: 'submit_pick',   choice: 'keep' | 'cut' }
 //   { type: 'flag_item' }                            any player, before the flip
 //   { type: 'accept' }
@@ -69,6 +70,11 @@ const MAX_REPLAYS_PER_CATEGORY = 3;
 // re-roll: without a ceiling a table that dislikes an item can simply keep
 // flagging until it gets one it likes, which is a different game.
 const MAX_REPLACEMENTS_PER_ROUND = 3;
+
+// Speculative generations per room lifetime. A prefetch that is never played
+// is money spent on nothing, and a host idly retyping on the final screen
+// should not be able to run the bill up.
+const MAX_PREFETCHES_PER_ROOM = 5;
 const GENERATION_COOLDOWN_MS = 20_000;
 
 // MEASURED, not guessed. A taste category ("worst pizza toppings") completes in
@@ -117,6 +123,12 @@ function freshGame(code) {
     replays: {},
     roundsPlayed: 0,
     lastGenerationAt: 0,
+    // Next round's list, built during the final screen. Like `items` and
+    // `reserve`, the contents NEVER reach a client - snapshots carry the
+    // status and the category only, because a prefetched list in devtools
+    // would spoil the round before it starts.
+    prefetch: { norm: '', category: '', status: 'idle', items: [], reserve: [], cache: {} },
+    prefetchCount: 0,
     progress: '',
     error: null,
     deadline: null,
@@ -191,6 +203,18 @@ export class Room extends DurableObject {
     const att = ws.deserializeAttachment() ?? {};
     const player = att.playerId ? this.game.players[att.playerId] : null;
 
+    // Self-heal a missed alarm before doing anything else.
+    //
+    // Every escape hatch in this game — the pick timer, the accept timer, the
+    // reveal beat — is one Durable Object alarm. If that alarm is ever lost,
+    // the room wedges in its current phase permanently and no timeout can
+    // rescue it, which is the exact failure the timers exist to prevent, made
+    // worse. A wedged room was produced during development by reloading the
+    // Worker mid-round; whether or not that can happen in production, the
+    // recovery is four lines and any player touching their screen triggers it.
+    await this.catchUpDeadline();
+    if (!this.game) return;
+
     try {
       switch (msg.type) {
         case 'join':       await this.onJoin(ws, msg); break;
@@ -198,6 +222,7 @@ export class Room extends DurableObject {
         case 'start_round':await this.onStartRound(player, msg); break;
         case 'submit_pick':await this.onSubmitPick(player, msg); break;
         case 'flag_item':  await this.onFlagItem(player); break;
+        case 'prefetch':   await this.onPrefetch(player, msg); break;
         case 'accept':     await this.onAccept(player); break;
         case 'force_advance': await this.onForceAdvance(player); break;
         case 'set_timers': await this.onSetTimers(player, msg); break;
@@ -326,15 +351,12 @@ export class Room extends DurableObject {
     if (error) throw new Error(error);
 
     const now = Date.now();
-    if (now - this.game.lastGenerationAt < GENERATION_COOLDOWN_MS) {
-      const wait = Math.ceil((GENERATION_COOLDOWN_MS - (now - this.game.lastGenerationAt)) / 1000);
-      throw new Error(`Hold on ${wait}s before generating again.`);
-    }
+    const norm = normalize(category);
+
     if (this.game.roundsPlayed >= MAX_ROUNDS) {
       throw new Error(`This room has played its ${MAX_ROUNDS} rounds. Start a new room.`);
     }
 
-    const norm = normalize(category);
     const replays = this.game.replays[norm] ?? 0;
     if (replays >= MAX_REPLAYS_PER_CATEGORY) {
       throw new Error('You have replayed that category enough times - the list gets thin. Pick a new one.');
@@ -342,6 +364,27 @@ export class Room extends DurableObject {
 
     const connected = Object.values(this.game.players).filter((p) => p.connected);
     if (!connected.length) throw new Error('Nobody is connected.');
+
+    // The list is already built. Straight into the round with no wait and no
+    // second API call.
+    //
+    // The cooldown is skipped ON PURPOSE here and only here: it exists to cap
+    // spend on the host's button, and this path makes no API call at all — the
+    // list was built and paid for while the final screen was up.
+    const pf = this.game.prefetch;
+    if (pf.status === 'ready' && pf.norm === norm) {
+      const items = pf.items;
+      const reserve = pf.reserve;
+      const cache = new Map(Object.entries(pf.cache ?? {}));
+      const exclude = this.game.used[norm] ?? [];
+      await this.beginRound({ category: pf.category, norm, items, reserve, cache, exclude });
+      return;
+    }
+
+    if (now - this.game.lastGenerationAt < GENERATION_COOLDOWN_MS) {
+      const wait = Math.ceil((GENERATION_COOLDOWN_MS - (now - this.game.lastGenerationAt)) / 1000);
+      throw new Error(`Hold on ${wait}s before generating again.`);
+    }
 
     this.game.lastGenerationAt = now;
     this.game.phase = 'generating';
@@ -380,30 +423,7 @@ export class Room extends DurableObject {
 
       if (this.game?.phase !== 'generating') return; // host bailed while we worked
 
-      this.game.verified[norm] = Object.fromEntries(cache);
-      // Only the eight in play are marked used. Reserve items that are never
-      // swapped in were never seen, so burning them here would thin out a
-      // replay for no reason; flagItem() adds one the moment it is dealt.
-      this.game.used[norm] = [...exclude, ...items];
-      this.game.replays[norm] = (this.game.replays[norm] ?? 0) + 1;
-      this.game.roundsPlayed += 1;
-
-      this.game.items = items;
-      this.game.reserve = reserve;
-      this.game.replacements = 0;
-      this.game.flaggedBy = [];
-      this.game.lastFlag = null;
-      this.game.itemIndex = -1;
-      this.game.progress = '';
-
-      for (const p of Object.values(this.game.players)) {
-        p.keepsLeft = KEEPS;
-        p.cutsLeft = CUTS;
-        p.picks = [];
-        p.ready = false;
-      }
-
-      await this.revealNext();
+      await this.beginRound({ category, norm, items, reserve, cache, exclude });
     } catch (err) {
       if (this.game?.phase !== 'generating') return;
       this.game.phase = 'lobby';
@@ -416,6 +436,126 @@ export class Room extends DurableObject {
       this.clearDeadline();
       await this.settle();
     }
+  }
+
+  /**
+   * Everything between "we have eight items" and "item one is on screen".
+   *
+   * Shared by the two ways a round can start: a generation the room waited
+   * through, and a prefetch that finished while the final screen was up. They
+   * must do identical bookkeeping - the used set, the replay counter, the
+   * verification cache and the round count are all room-lifetime state, and a
+   * prefetched round that skipped any of them would quietly break the caps.
+   */
+  async beginRound({ category, norm, items, reserve, cache, exclude }) {
+    this.game.category = category;
+    this.game.normCategory = norm;
+    this.game.verified[norm] = Object.fromEntries(cache);
+    // Only the eight in play are marked used. Reserve items that are never
+    // swapped in were never seen, so burning them here would thin out a
+    // replay for no reason; flagItem() adds one the moment it is dealt.
+    this.game.used[norm] = [...exclude, ...items];
+    this.game.replays[norm] = (this.game.replays[norm] ?? 0) + 1;
+    this.game.roundsPlayed += 1;
+
+    this.game.items = items;
+    this.game.reserve = reserve;
+    this.game.replacements = 0;
+    this.game.flaggedBy = [];
+    this.game.lastFlag = null;
+    this.game.itemIndex = -1;
+    this.game.progress = '';
+    this.game.error = null;
+    this.clearPrefetch();
+
+    for (const p of Object.values(this.game.players)) {
+      p.keepsLeft = KEEPS;
+      p.cutsLeft = CUTS;
+      p.picks = [];
+      p.ready = false;
+    }
+
+    await this.revealNext();
+  }
+
+  clearPrefetch() {
+    this.game.prefetch = { norm: '', category: '', status: 'idle', items: [], reserve: [], cache: {} };
+  }
+
+  /**
+   * Build the next round's list while the final screen is still up.
+   *
+   * The three-call pipeline takes between three seconds and a minute and a
+   * half depending on the category, and the final screen is dead time anyway -
+   * everyone is looking at each other's boards and arguing. Moving the wait
+   * there is worth more than any amount of shaving the pipeline down.
+   *
+   * SPECULATIVE SPEND IS THE RISK, so this is deliberately stingy:
+   *   - host only, final screen only
+   *   - one in flight at a time, and never twice for the same category
+   *   - subject to the room's generation cooldown, round cap and replay cap,
+   *     the same checks a real generation faces, because it costs the same
+   *   - capped separately at MAX_PREFETCHES_PER_ROOM on top of all that
+   *
+   * A prefetch that is never used is money spent on nothing, so it fails
+   * silently and never blocks anything: every path here can be abandoned and
+   * the host pressing "Go again" still works, just at full speed.
+   */
+  async onPrefetch(player, msg) {
+    if (!player || this.game.hostId !== player.id) return;
+    if (this.game.phase !== 'final') return;
+
+    const { category, error } = validateCategory(msg.category);
+    if (error) return;
+
+    const norm = normalize(category);
+    const pf = this.game.prefetch;
+
+    // Already done or in flight for this exact category.
+    if (pf.norm === norm && pf.status !== 'idle') return;
+    if (pf.status === 'running') return;                       // one at a time
+    if (this.game.prefetchCount >= MAX_PREFETCHES_PER_ROOM) return;
+    if (this.game.roundsPlayed >= MAX_ROUNDS) return;
+    if ((this.game.replays[norm] ?? 0) >= MAX_REPLAYS_PER_CATEGORY) return;
+    if (Date.now() - this.game.lastGenerationAt < GENERATION_COOLDOWN_MS) return;
+
+    // NOTE: this deliberately does NOT set lastGenerationAt.
+    //
+    // It used to, on the reasoning that a prefetch costs what a generation
+    // costs. But the cooldown is a burst guard on the host's own button, and
+    // charging a speculative call to it punished the ordinary case: type a
+    // category, change your mind, press Go, and get told to wait twenty
+    // seconds for a call you never asked for. That is worse than the friction
+    // the prefetch was added to remove.
+    //
+    // Spend stays bounded without it — MAX_PREFETCHES_PER_ROOM is a hard
+    // lifetime cap, only one may be in flight, the client debounces by 1.5s,
+    // and the round cap and replay cap are both checked above.
+    this.game.prefetchCount += 1;
+    this.game.prefetch = {
+      norm, category, status: 'running', items: [], reserve: [], cache: {},
+    };
+    await this.settle();
+
+    const cache = new Map(Object.entries(this.game.verified[norm] ?? {}));
+    const exclude = this.game.used[norm] ?? [];
+
+    try {
+      const { items, reserve } = await runPipeline(this.env, category, { exclude, cache });
+      // The host may have changed the category, or started a round, while this
+      // ran. Landing a stale result would show a list for a category nobody
+      // asked for, so it is dropped.
+      if (this.game?.prefetch?.norm !== norm || this.game.prefetch.status !== 'running') return;
+      this.game.prefetch = {
+        norm, category, status: 'ready', items, reserve, cache: Object.fromEntries(cache),
+      };
+    } catch {
+      if (this.game?.prefetch?.norm !== norm) return;
+      // Failure is silent by design. The host presses Go again and gets the
+      // normal path, including the normal error if it fails a second time.
+      this.game.prefetch = { norm, category, status: 'failed', items: [], reserve: [], cache: {} };
+    }
+    await this.settle();
   }
 
   async onSubmitPick(player, msg) {
@@ -767,29 +907,56 @@ export class Room extends DurableObject {
       this.game.destructAt = null; // somebody came back
     }
 
-    if (this.game.deadline && now >= this.game.deadline) {
-      const purpose = this.game.deadlinePurpose;
-      this.clearDeadline();
-
-      if (purpose === 'arm' && this.game.phase === 'revealing') {
-        await this.startPicking();
-      } else if (purpose === 'flip' && this.game.phase === 'flipping') {
-        await this.toSummary();
-      } else if (purpose === 'pick' && this.game.phase === 'picking') {
-        this.autoPickStragglers('timeout');
-        await this.flip();
-      } else if (purpose === 'accept' && this.game.phase === 'summary') {
-        await this.advance();
-      } else if (purpose === 'generation' && this.game.phase === 'generating') {
-        this.game.phase = 'lobby';
-        this.game.progress = '';
-        this.game.error = 'The list took too long to build. Try again.';
-        await this.settle();
-      }
-    }
+    await this.runDeadline();
 
     await this.save();
     await this.scheduleAlarm();
+  }
+
+  /**
+   * Acts on the current deadline if it has passed. Called by the alarm, and
+   * also by every incoming message as a safety net — see catchUpDeadline.
+   */
+  async runDeadline() {
+    if (!this.game?.deadline || Date.now() < this.game.deadline) return false;
+
+    const purpose = this.game.deadlinePurpose;
+    this.clearDeadline();
+
+    if (purpose === 'arm' && this.game.phase === 'revealing') {
+      await this.startPicking();
+    } else if (purpose === 'flip' && this.game.phase === 'flipping') {
+      await this.toSummary();
+    } else if (purpose === 'pick' && this.game.phase === 'picking') {
+      this.autoPickStragglers('timeout');
+      await this.flip();
+    } else if (purpose === 'accept' && this.game.phase === 'summary') {
+      await this.advance();
+    } else if (purpose === 'generation' && this.game.phase === 'generating') {
+      this.game.phase = 'lobby';
+      this.game.progress = '';
+      this.game.error = 'The list took too long to build. Try again.';
+      await this.settle();
+    }
+    return true;
+  }
+
+  /**
+   * The safety net for a lost alarm. Runs before every message is handled.
+   *
+   * Cheap: one timestamp comparison in the overwhelming majority of cases,
+   * because a live alarm fires before any player gets around to pressing
+   * anything. It only does work when the alarm did not.
+   *
+   * The loop matters — a room that missed several deadlines (a phone that was
+   * asleep through two items) needs to walk forward through all of them rather
+   * than advance one step per tap. Bounded so a bug here cannot spin.
+   */
+  async catchUpDeadline() {
+    for (let i = 0; i < 12; i++) {
+      if (!(await this.runDeadline())) return;
+      if (!this.game) return;
+    }
   }
 
   // ─── Snapshot + broadcast ───────────────────────────────────────────────
@@ -891,6 +1058,10 @@ export class Room extends DurableObject {
       swapsLeft: MAX_REPLACEMENTS_PER_ROUND - g.replacements,
       spareItems: g.reserve.length,
       lastFlag: g.lastFlag,
+      // Prefetch STATUS only — never g.prefetch.items. The whole game rests on
+      // unrevealed items not reaching the client, and a list built early is
+      // still an unrevealed list. `category` is safe: the host typed it.
+      prefetch: { status: g.prefetch.status, category: g.prefetch.category },
     };
   }
 
