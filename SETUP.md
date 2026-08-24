@@ -51,6 +51,8 @@ nates-workshop/
 ├── .claude/
 │   ├── launch.json           Dev-server config for the editor's preview
 │   └── skills/               Repo-specific instructions, loaded by name
+│       ├── book-survey/      Surveying a sourcebook PDF before extracting
+│       ├── claim-audit/      Checking what the repo says against what it does
 │       ├── class-import/     Transcribing a class from a sourcebook
 │       ├── schema-change/    Adding a migration without breaking a fresh DB
 │       └── ship-pr/          Branch, verify, PR, merge, prune, verify again
@@ -68,18 +70,20 @@ nates-workshop/
         ├── claude.js         /api/claude — proxy (model allowlist + token cap)
         ├── media.js          /api/media — MediaVault CRUD, per-user via Access
         └── character-creator/  46 endpoints + _lib; see the app README
+```
 
 **R2**: the site binds one bucket, `nates-workshop-media`, as `MEDIA`. It holds
 NPC portraits today and is named for the site rather than for that app because
 the other two will want it. **It must exist before the deploy that binds it** —
 same discipline as a migration:
 
-    npx wrangler r2 bucket create nates-workshop-media
-    npx wrangler r2 bucket list          # verify, rather than trusting the exit code
+```bash
+npx wrangler r2 bucket create nates-workshop-media
+npx wrangler r2 bucket list          # verify, rather than trusting the exit code
+```
 
 Nothing is served from a public bucket URL; every read goes through a Function
 that checks who is asking. Do not enable public access on it.
-```
 
 Cloudflare Pages deploys `functions/` as serverless Workers automatically —
 `claude.js` becomes `/api/claude`, and directories map to routes. The D1

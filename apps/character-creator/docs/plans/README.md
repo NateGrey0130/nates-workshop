@@ -49,11 +49,11 @@ Duplicate merging was not in the roadmap. PR 4 deliberately left it out as
 out of scope, and the first real book import immediately created the demand for
 it — ten duplicate pairs that exact-name matching could not see.
 
-## What is planned
+## What was planned next, and has since shipped
 
-Four plans written in an interview on 2026-08-20 and **not yet built**. Unlike
-everything above, these are specifications rather than records — but the
-rejected alternatives in them were rejected on purpose too.
+Four plans written in an interview on 2026-08-20 as specifications rather than
+records — **all four have since been built**, as each row says. The rejected
+alternatives in them were rejected on purpose too.
 
 | # | Plan | Depends on |
 |---|---|---|

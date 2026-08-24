@@ -3,7 +3,7 @@
 // DELETE /api/character-creator/characters/:id/items/:itemId — soft-remove: sets
 //        removed_at so inventory history survives (never hard-deletes).
 
-import { getUserEmail, unauthorized, json, forbidden, characterAccess } from '../../../_lib/auth.js';
+import { getUserEmail, unauthorized, json, readJson, forbidden, characterAccess } from '../../../_lib/auth.js';
 
 async function guard(env, params, email) {
   const access = await characterAccess(env, params.id, email);
@@ -79,7 +79,8 @@ export async function onRequestPatch({ request, env, params }) {
   const { err, row } = await guard(env, params, email);
   if (err) return err;
 
-  const b = await request.json();
+  const b = await readJson(request);
+  if (!b) return json({ error: 'Invalid JSON body' }, 400);
   const sets = [], binds = [];
   if ('qty' in b) {
     const qty = parseInt(b.qty, 10);
