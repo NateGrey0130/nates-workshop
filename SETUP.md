@@ -155,6 +155,12 @@ header in exactly one place: `functions/api/_lib/access.js`. On localhost,
 where Access is absent, the character creator's auth falls back to
 `dev@localhost`.
 
+**Preview deployments are restricted too** (Pages → Settings → Preview
+access), because they sit outside the main Access application while binding
+the production database. That wall is a second, auto-created Access policy —
+separate from the Friends Only one — so a friend who needs to see a preview
+must be added to it in Zero Trust.
+
 ## Adding a New App
 
 1. Copy the template:
