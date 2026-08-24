@@ -312,10 +312,14 @@ choice-groups can't be checked in principle.
   **preview deployments sit outside Access** with production bindings and a
   client-suppliable identity header — armed, their `/api/*` refuses
   everything, proven live against a preview URL before the merge. Preview
-  deployments built *before* this change still carry the old pass-through
-  code at public branch-alias URLs; deleting them (or restricting previews
-  with Access in the Pages settings) is the remaining cleanup, and it is
-  dashboard-only.
+  deployments built *before* this change still carried the old pass-through
+  code at public branch-alias URLs — closed later the same day by the
+  **Restrict previews** toggle in the Pages settings, which puts every
+  preview URL (old deployments included) behind a Cloudflare Access policy at
+  the edge; verified by probing three previously-public preview URLs, all now
+  302 to the Access login. That policy is auto-created and separate from the
+  site's Friends Only policy — a friend who ever needs to see a preview needs
+  adding there, in Zero Trust.
 
 ### F5 — low — `/classes` ships ~750KB of parsed class markdown on every boot
 
