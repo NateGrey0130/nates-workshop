@@ -3,7 +3,10 @@
 //       spoilers/secrets and is stripped unless the caller is the GM.
 //       Also reports `is_member`, which the campaign page uses to decide
 //       whether to offer a composer at all.
-// PATCH /api/character-creator/campaigns/:id — GM only; gm_notes only.
+// PATCH /api/character-creator/campaigns/:id — GM only; gm_notes and open.
+//       `open` is the join gate: joining a campaign IS creating a character in
+//       it, so whether creation is open to the site is the GM's call and
+//       nobody else's. See POST /characters for where it is enforced.
 
 import { getUserEmail, unauthorized, json, forbidden, campaignAccess, readJson } from '../_lib/auth.js';
 
@@ -29,8 +32,11 @@ export async function onRequestPatch({ request, env, params }) {
 
   const body = await readJson(request);
   if (!body) return json({ error: 'Invalid JSON body' }, 400);
-  if (!('gm_notes' in body)) return json({ error: 'gm_notes is the only editable field' }, 400);
-  await env.DB.prepare('UPDATE campaigns SET gm_notes = ? WHERE id = ?')
-    .bind(body.gm_notes ?? null, params.id).run();
+  const sets = [], binds = [];
+  if ('gm_notes' in body) { sets.push('gm_notes = ?'); binds.push(body.gm_notes ?? null); }
+  if ('open' in body) { sets.push('open = ?'); binds.push(body.open ? 1 : 0); }
+  if (!sets.length) return json({ error: 'gm_notes and open are the only editable fields' }, 400);
+  await env.DB.prepare(`UPDATE campaigns SET ${sets.join(', ')} WHERE id = ?`)
+    .bind(...binds, params.id).run();
   return json({ ok: true });
 }

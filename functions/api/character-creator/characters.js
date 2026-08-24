@@ -5,7 +5,7 @@
 // as well as in the wizard — the wizard's checks are a convenience that avoids a
 // round trip, this is the boundary.
 
-import { getUserEmail, unauthorized, json, readJson } from './_lib/auth.js';
+import { getUserEmail, unauthorized, json, readJson, campaignAccess } from './_lib/auth.js';
 import { paging, pagedQuery, pageBody } from './_lib/paging.js';
 import { loadCharacterClass } from './_lib/class-loader.js';
 import { validateCharacter, loadSkillCategories } from './_lib/validate-character.js';
@@ -70,8 +70,21 @@ export async function onRequestPost({ request, env }) {
   for (const field of ['campaign_id', 'name', 'class_id']) {
     if (!b[field]) return json({ error: `Missing required field: ${field}` }, 400);
   }
-  const campaign = await env.DB.prepare('SELECT id FROM campaigns WHERE id = ?').bind(b.campaign_id).first();
+  const campaign = await env.DB.prepare('SELECT id, open FROM campaigns WHERE id = ?').bind(b.campaign_id).first();
   if (!campaign) return json({ error: 'Campaign not found' }, 404);
+
+  // Creating a character in a campaign is how you JOIN it — membership is
+  // "owns a character here", so an ungated create was an ungated door onto the
+  // campaign's notes, stash and ledger. A closed campaign admits only its GM
+  // and the people already in it; who counts as "in" stays campaignAccess's
+  // question, the one place that knows. Open (the default) is the original
+  // open-table behaviour, unchanged.
+  if (!campaign.open) {
+    const access = await campaignAccess(env, b.campaign_id, email);
+    if (!access.isMember) {
+      return json({ error: 'This campaign is closed to new characters — ask its GM to open it' }, 403);
+    }
+  }
 
   // Which stage of the class this is — a Dragon hatchling rather than an adult.
   // Blank means the class as written, which is right for every class that has

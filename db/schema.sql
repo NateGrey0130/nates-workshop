@@ -44,6 +44,11 @@ CREATE TABLE IF NOT EXISTS campaigns (
   gm_email TEXT NOT NULL,
   description TEXT,
   gm_notes TEXT,                        -- GM-only; stripped from non-GM API responses
+  open INTEGER NOT NULL DEFAULT 1,      -- 1 = anyone on the site may join by creating a
+                                        -- character in it; 0 = GM and existing members
+                                        -- only. Joining IS creating a character, so this
+                                        -- is the door onto the campaign's notes, stash
+                                        -- and ledger. Migration 037.
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -722,3 +727,7 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '036-enchantments-charm.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master
                WHERE type = 'table' AND name = 'enchantments' AND sql LIKE '%charm%');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '037-campaign-open.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('campaigns') WHERE name = 'open');

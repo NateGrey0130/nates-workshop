@@ -2759,7 +2759,13 @@ function renderReview() {
     <div class="rowline"><label class="small">Campaign:</label>
       <select id="campaign-sel" onchange="S.campaignId=+this.value||null">
         <option value="">— pick —</option>
-        ${campaigns.map((c) => `<option value="${c.id}" ${S.campaignId === c.id ? 'selected' : ''}>${esc(c.name)} (GM: ${esc(c.gm_email)})</option>`).join('')}
+        ${campaigns.map((c) => {
+          // Disabled rather than hidden, the barred-occupation pattern: a
+          // player looking for their table should learn it is closed, not
+          // that it does not exist. The server refuses regardless.
+          const joinable = c.can_join !== false;
+          return `<option value="${c.id}" ${S.campaignId === c.id ? 'selected' : ''}${joinable ? '' : ' disabled'}>${esc(c.name)} (GM: ${esc(c.gm_email)})${joinable ? '' : ' — closed to new characters'}</option>`;
+        }).join('')}
       </select>
       <span class="muted small">or new:</span>
       <input type="text" id="new-campaign" value="${esc(S.newCampaign)}" placeholder="New campaign name" onchange="S.newCampaign=this.value.trim()">

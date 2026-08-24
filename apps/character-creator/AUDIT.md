@@ -187,6 +187,13 @@ is a defect in the code — it is recorded so the next audit starts from reality
   `POST /characters`, so `campaignAccess()` stays the single place that knows
   what membership is. Not done here because it changes who-can-do-what, which
   is not an auditor's call.
+- **Taken, 2026-08-24**: migration `037-campaign-open.sql` adds
+  `campaigns.open` (default 1 — every existing campaign stays an open table).
+  `POST /characters` refuses a closed campaign to anyone but the GM and
+  existing members, through `campaignAccess()`; the GM dashboard carries the
+  toggle, and the wizard's picker shows a closed campaign disabled with the
+  reason. Regression pins the refusal, both allow paths, and that the toggle
+  is GM-only.
 
 ### F2 — medium — what a crafted request can still write, quantified
 
