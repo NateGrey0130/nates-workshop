@@ -256,6 +256,29 @@ debounced 1.5s. Pressing *Go again* on that same category then starts the round
 with no generating screen at all: measured at **57ms** in party mode and
 **109ms** in solo.
 
+### Two ways to challenge an item, and what each costs
+
+Measured in production, per generation:
+
+| | cost | who | when |
+|---|---|---|---|
+| Swap — *"I know this is wrong"* | free | any player | before the flip |
+| Check — *"I think this might be"* | **~$0.075** | **host only**, 2 per round | before the flip |
+| Whole-list verify toggle | **~$0.19** | host, at generation | before the round |
+
+The surprise is that a single check is only about two and a half times cheaper
+than verifying all twelve candidates, not ten — web search RESULTS dominate the
+context, so looking one thing up still drags back 20,000+ tokens. Per item it is
+roughly five times *worse* than batching. The saving is that on most rounds
+nobody doubts anything and it costs nothing at all.
+
+That is also why checks are capped at two: a third would cost more than simply
+verifying the whole list, at which point the host should tick the box instead.
+
+A failed check swaps the item on the same terms as a call-out, refunds anyone
+already committed to it, and shows the reason — *"written by Tarantino but
+directed by Tony Scott"*.
+
 Every category input also carries a **double-check this list** toggle. The
 default gate for verification is time-sensitivity alone; ticking the box forces
 it for a static category the room wants right — `Quentin Tarantino films` served

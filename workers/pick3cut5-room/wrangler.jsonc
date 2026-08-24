@@ -65,6 +65,13 @@
   // than a person playing solo will ever want and far less than a script
   // wants. The global bucket underneath is the blast radius cap for when the
   // per-IP one is defeated by simply having more IPs.
+  //
+  // THE GLOBAL CAP IS SIZED IN MONEY, NOT REQUESTS. A verified generation was
+  // measured at ~57,000 input tokens and roughly $0.19 — about eighty times an
+  // unverified one — and the caller picks the category, so anyone can reach
+  // that path just by asking for something time-sensitive. At the original 60
+  // per minute the ceiling was near $860/hour; at 12 it is under $180, while
+  // still leaving six times the headroom a household of players needs.
   "ratelimits": [
     {
       "name": "SOLO_LIMIT",
@@ -74,7 +81,7 @@
     {
       "name": "SOLO_LIMIT_GLOBAL",
       "namespace_id": "3502",
-      "simple": { "limit": 60, "period": 60 }
+      "simple": { "limit": 12, "period": 60 }
     }
   ]
 }

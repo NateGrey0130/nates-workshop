@@ -13,6 +13,7 @@
 //   { type: 'prefetch',      category: string }            host only, final screen
 //   { type: 'submit_pick',   choice: 'keep' | 'cut' }
 //   { type: 'flag_item' }                            any player, before the flip
+//   { type: 'check_item' }                           HOST only, before the flip
 //   { type: 'accept' }
 //   { type: 'force_advance' }                              host only
 //   { type: 'set_timers',    pick: number, accept: number } host only, lobby
@@ -23,6 +24,7 @@
 //   { type: 'state',         ...snapshot }   every change, always
 //   { type: 'item_revealed', index, item }   animation cue
 //   { type: 'item_replaced', by, rejected }  someone called an item out
+//   { type: 'item_checked',  item, pass, reason } the host had one fact-checked
 //   { type: 'pick_progress', chosen, total } how many, NEVER what
 //   { type: 'flip',          flips: [...] }  animation cue
 //   { type: 'summary' }                      animation cue
@@ -58,7 +60,7 @@
 
 import { DurableObject } from 'cloudflare:workers';
 import {
-  runPipeline, validateCategory, normalize,
+  runPipeline, verifyOne, validateCategory, normalize,
   GenerationError, AnthropicError,
 } from './generate.js';
 import { KEEPS, CUTS, ITEMS_PER_ROUND, forcedChoice, itemsRemaining } from './rules.js';
@@ -76,6 +78,17 @@ const MAX_REPLACEMENTS_PER_ROUND = 3;
 // is money spent on nothing, and a host idly retyping on the final screen
 // should not be able to run the bill up.
 const MAX_PREFETCHES_PER_ROOM = 5;
+
+// On-demand single-item checks per round.
+//
+// TWO IS NOT ARBITRARY. Measured: one check is ~$0.075, and verifying the whole
+// twelve-candidate list up front is ~$0.19. So two checks ($0.15) still beat
+// the whole list, and a third ($0.23) would cost more than simply verifying
+// everything — at which point the host should have ticked the box instead.
+const MAX_CHECKS_PER_ROUND = 2;
+
+// How long a check is allowed to hold the round up before the timers resume.
+const CHECK_TIMEOUT_MS = 60_000;
 const GENERATION_COOLDOWN_MS = 20_000;
 
 // MEASURED, not guessed. A taste category ("worst pizza toppings") completes in
@@ -107,6 +120,9 @@ function freshGame(code) {
     // the rest of the category just as surely as the main list would.
     reserve: [],
     replacements: 0,
+    checksUsed: 0,
+    checking: null,
+    checkResult: null,
     flaggedBy: [],
     lastFlag: null,
     // Every swap this round, for the final screen. Rejected items were all
@@ -223,6 +239,7 @@ export class Room extends DurableObject {
         case 'start_round':await this.onStartRound(player, msg); break;
         case 'submit_pick':await this.onSubmitPick(player, msg); break;
         case 'flag_item':  await this.onFlagItem(player); break;
+        case 'check_item': await this.onCheckItem(player); break;
         case 'prefetch':   await this.onPrefetch(player, msg); break;
         case 'accept':     await this.onAccept(player); break;
         case 'force_advance': await this.onForceAdvance(player); break;
@@ -466,6 +483,9 @@ export class Room extends DurableObject {
     this.game.items = items;
     this.game.reserve = reserve;
     this.game.replacements = 0;
+    this.game.checksUsed = 0;
+    this.game.checking = null;
+    this.game.checkResult = null;
     this.game.flaggedBy = [];
     this.game.lastFlag = null;
     this.game.swapLog = [];
@@ -646,22 +666,38 @@ export class Room extends DurableObject {
       throw new Error('No spare items left for this category. Playing on.');
     }
 
+    this.game.flaggedBy.push(player.id);
+    this.replaceCurrentItem(player.name, 'called out by a player');
+    await this.revealCurrent();
+  }
+
+  /**
+   * Swap the item on screen for one from the reserve, and rewind everything
+   * that was spent on it.
+   *
+   * Shared by the two ways an item leaves the round early: a player calling it
+   * out, and a fact check finding it wrong. They must behave identically —
+   * every pick already recorded, INCLUDING the budget-forced ones taken at
+   * reveal, is refunded, because a player must never stay locked into keeping
+   * an answer that turned out to be wrong.
+   *
+   * Callers are responsible for the caps and for re-revealing.
+   */
+  replaceCurrentItem(by, why) {
     const rejected = this.game.items[this.game.itemIndex];
     const replacement = this.game.reserve.shift();
 
-    this.game.flaggedBy.push(player.id);
     this.game.replacements += 1;
     this.game.items[this.game.itemIndex] = replacement;
 
-    // A called-out item is wrong, not merely unlucky. Keeping it in the used
-    // set means a replay of this category will not serve it back up.
+    // A rejected item is wrong, not merely unlucky. Keeping it in the used set
+    // means a replay of this category will not serve it back up.
     const norm = this.game.normCategory;
     this.game.used[norm] = [...(this.game.used[norm] ?? []), replacement];
     if (this.game.verified[norm]) {
-      this.game.verified[norm][normalize(rejected)] = { pass: false, reason: 'called out by a player' };
+      this.game.verified[norm][normalize(rejected)] = { pass: false, reason: why };
     }
 
-    // Refund every pick already taken on the old item.
     for (const p of Object.values(this.game.players)) {
       const prior = p.picks[this.game.itemIndex];
       if (!prior) continue;
@@ -669,12 +705,97 @@ export class Room extends DurableObject {
       delete p.picks[this.game.itemIndex];
     }
 
-    // Shown on the replacement so the table can see what happened and who
-    // called it. Half the point of the feature is the callout itself.
-    this.game.lastFlag = { by: player.name, rejected };
-    this.game.swapLog.push({ by: player.name, rejected, item: this.game.itemIndex + 1 });
+    // Shown on the replacement so the table can see what happened and who did
+    // it. Half the point of the feature is the callout itself.
+    this.game.lastFlag = { by, rejected, why };
+    this.game.swapLog.push({ by, rejected, item: this.game.itemIndex + 1, why });
+    return rejected;
+  }
 
-    await this.revealCurrent();
+  /**
+   * "That looks off — check it." The host's on-demand fact check.
+   *
+   * The cheap counterpart to verifying a whole list up front. A full
+   * verification is about 57,000 input tokens and roughly $0.19 measured in
+   * production, almost all of it spent confirming eleven items nobody doubted.
+   * This spends it on the one item a person actually questioned, which is both
+   * cheaper and better aimed — human doubt is the signal the pipeline lacks.
+   *
+   * It pairs with the swap rather than replacing it:
+   *   swap  — "I KNOW this is wrong"      free, instant, any player
+   *   check — "I THINK this might be"     costs a call, host only
+   *
+   * Host-only precisely because it spends money. The swap is any-player on the
+   * argument that whoever knows is whoever knows; the same argument applies to
+   * whoever doubts, so if this ever feels too restrictive at a real table the
+   * change is one line — but the money makes it the host's call for now.
+   *
+   * The round HOLDS while it runs. Phase timers are cleared and the pick timer
+   * restarts fresh afterwards rather than resuming: everybody has spent the
+   * last fifteen seconds reading a verdict instead of deciding, so giving back
+   * the remainder of a clock they were not watching would be the wrong answer.
+   */
+  async onCheckItem(player) {
+    this.assertHost(player);
+    if (this.game.phase !== 'revealing' && this.game.phase !== 'picking') {
+      throw new Error('You can only check an item before the flip.');
+    }
+    if (this.game.checking) throw new Error('Already checking that one.');
+    if ((this.game.checksUsed ?? 0) >= MAX_CHECKS_PER_ROUND) {
+      throw new Error(`That's ${MAX_CHECKS_PER_ROUND} checks this round — the rest you argue about.`);
+    }
+
+    const item = this.game.items[this.game.itemIndex];
+    if (this.game.checkResult?.item === item) throw new Error('That one has been checked already.');
+
+    this.game.checksUsed = (this.game.checksUsed ?? 0) + 1;
+    this.game.checking = { item, by: player.name };
+    this.game.checkResult = null;
+    // Nothing may time out while the room is waiting on a lookup.
+    this.clearDeadline();
+    this.armDeadline('check', CHECK_TIMEOUT_MS);
+    await this.settle();
+
+    this.runCheck(item).catch(() => { /* runCheck reports its own failures */ });
+  }
+
+  async runCheck(item) {
+    let verdict = null;
+    try {
+      verdict = await verifyOne(this.env, this.game.category, item, 'pick3cut5-check');
+    } catch { /* treated as unreadable below */ }
+
+    // The round may have moved on — a force-advance, a swap, a timeout.
+    if (!this.game || this.game.checking?.item !== item) return;
+    const askedBy = this.game.checking.by;   // read BEFORE clearing
+    this.game.checking = null;
+
+    if (!verdict) {
+      // Could not check is NOT a fail. Swapping on an unreadable answer would
+      // let a flaky response quietly rewrite the round.
+      this.game.checkResult = { item, pass: true, unreadable: true, reason: '' };
+    } else if (verdict.pass) {
+      this.game.checkResult = { item, pass: true, reason: '' };
+    } else {
+      this.game.checkResult = { item, pass: false, reason: verdict.reason };
+      // A failed check is a proven-wrong item, so it is swapped on the same
+      // terms as a called-out one — including refunding anybody already
+      // committed to it. If there is no reserve left the verdict still stands
+      // and the room plays on knowing the item is bad.
+      if (this.game.reserve.length) {
+        this.replaceCurrentItem(askedBy, verdict.reason || 'failed a fact check');
+      }
+    }
+
+    this.broadcastCue({ type: 'item_checked', item, ...this.game.checkResult });
+
+    // Restart the round's clock rather than resuming it.
+    if (this.game.phase === 'picking' || this.game.phase === 'revealing') {
+      this.game.armAt = Date.now() + REVEAL_BEAT_MS;
+      this.game.phase = 'picking';
+      this.armDeadline('pick', this.game.timers.pick * 1000);
+    }
+    await this.settle();
   }
 
   async onSetTimers(player, msg) {
@@ -792,6 +913,7 @@ export class Room extends DurableObject {
     this.game.itemIndex += 1;
     this.game.flaggedBy = [];
     this.game.lastFlag = null;
+    this.game.checkResult = null;
     return this.revealCurrent();
   }
 
@@ -943,6 +1065,15 @@ export class Room extends DurableObject {
       await this.flip();
     } else if (purpose === 'accept' && this.game.phase === 'summary') {
       await this.advance();
+    } else if (purpose === 'check' && this.game.checking) {
+      // The lookup outlived its window. Release the room rather than let one
+      // slow fact check hold eight people indefinitely.
+      this.game.checking = null;
+      this.game.checkResult = { item: this.game.items[this.game.itemIndex], pass: true, unreadable: true, reason: '' };
+      this.game.phase = 'picking';
+      this.game.armAt = Date.now() + REVEAL_BEAT_MS;
+      this.armDeadline('pick', this.game.timers.pick * 1000);
+      await this.settle();
     } else if (purpose === 'generation' && this.game.phase === 'generating') {
       this.game.phase = 'lobby';
       this.game.progress = '';
@@ -1070,6 +1201,18 @@ export class Room extends DurableObject {
       spareItems: g.reserve.length,
       lastFlag: g.lastFlag,
       swapLog: g.swapLog ?? [],
+      // The on-demand fact check. `checking` is the item being looked up right
+      // now — everyone sees it, because the round is held up for all of them.
+      checking: g.checking ?? null,
+      checkResult: g.checkResult ?? null,
+      checksLeft: MAX_CHECKS_PER_ROUND - (g.checksUsed ?? 0),
+      canCheck: Boolean(
+        me && g.hostId === me.id
+        && (g.phase === 'revealing' || g.phase === 'picking')
+        && !g.checking
+        && (g.checksUsed ?? 0) < MAX_CHECKS_PER_ROUND
+        && g.checkResult?.item !== g.items[g.itemIndex]
+      ),
       // Prefetch STATUS only — never g.prefetch.items. The whole game rests on
       // unrevealed items not reaching the client, and a list built early is
       // still an unrevealed list. `category` is safe: the host typed it.
