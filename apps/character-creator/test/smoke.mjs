@@ -4912,6 +4912,18 @@ section('Access JWT verification');
     /if \(!domain \|\| !aud\) return next\(\)/.test(mw));
   check('and requires the token identity to match the header everything reads',
     /Cf-Access-Authenticated-User-Email/.test(mw));
+  // The arming vars live in wrangler.jsonc, so pages dev reads them too — and
+  // local dev has no Access to mint a token. Without the exemption, arming
+  // production bricks every local run, including this suite's sibling.
+  check('and exempts localhost, where no Access exists to mint a token',
+    /localhost/.test(mw) && /127\.0\.0\.1/.test(mw));
+  // Armed is a statement the repo makes, so pin it: both vars present in
+  // wrangler.jsonc, or the middleware silently returns to header-trust and
+  // nothing says so.
+  const wranglerCfg = readFileSync(join(appDir, '..', '..', 'wrangler.jsonc'), 'utf8');
+  check('wrangler.jsonc arms the middleware with both variables',
+    /"ACCESS_TEAM_DOMAIN":\s*"[^"]+\.cloudflareaccess\.com"/.test(wranglerCfg)
+    && /"ACCESS_AUD":\s*"[0-9a-f]{64}"/.test(wranglerCfg));
 
   const client = readFileSync(join(fnDir, '_lib', 'claude-client.js'), 'utf8');
   check('usage recording is fail-open, so metering cannot break the call',

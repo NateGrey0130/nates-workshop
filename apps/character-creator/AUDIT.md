@@ -303,6 +303,19 @@ choice-groups can't be checked in principle.
   stale-on-failure; configured-but-unverifiable is a 503 naming the fix, never
   a silent fall-back to header-trust. The verifier is a pure function and the
   smoke suite signs real tokens to prove every refusal path.
+- **Armed, 2026-08-24**: `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` live in
+  `wrangler.jsonc` `vars` — this project manages plain variables through its
+  wrangler config, and neither value is a secret (the AUD rides in every
+  login redirect URL). The middleware gained a `localhost` exemption, the
+  `dev@localhost` precedent, because local dev reads the same vars with no
+  Access to mint a token. Arming also closed a hole noticed on the way:
+  **preview deployments sit outside Access** with production bindings and a
+  client-suppliable identity header — armed, their `/api/*` refuses
+  everything, proven live against a preview URL before the merge. Preview
+  deployments built *before* this change still carry the old pass-through
+  code at public branch-alias URLs; deleting them (or restricting previews
+  with Access in the Pages settings) is the remaining cleanup, and it is
+  dashboard-only.
 
 ### F5 — low — `/classes` ships ~750KB of parsed class markdown on every boot
 

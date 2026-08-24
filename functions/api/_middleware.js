@@ -29,6 +29,14 @@ export async function onRequest(context) {
   const aud = (env.ACCESS_AUD || '').trim();
   if (!domain || !aud) return next();
 
+  // The arming variables live in wrangler.jsonc, so `wrangler pages dev`
+  // reads them too — and local dev has no Access in front of it to mint a
+  // token. The same reality auth.js's dev@localhost fallback answers, answered
+  // the same way; a production request can never arrive with this hostname,
+  // because Cloudflare routes by Host.
+  const host = new URL(request.url).hostname;
+  if (host === 'localhost' || host === '127.0.0.1') return next();
+
   const token = request.headers.get('Cf-Access-Jwt-Assertion');
   if (!token) return refuse(403, 'No Access token on the request');
 
