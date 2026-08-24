@@ -96,6 +96,9 @@ function handle(msg) {
       $('itemCard').classList.add('landing');
       announce(`Item ${msg.index + 1}: ${msg.item}`);
       break;
+    case 'item_replaced':
+      announce(`${msg.by} called out ${msg.rejected}. Swapping it.`);
+      break;
     case 'flip':
       announce('Choices revealed.');
       break;
@@ -181,6 +184,25 @@ function renderPlay(s) {
     btn.disabled = !armed || Boolean(s.yourPick) || Boolean(forced) || (left ?? 0) <= 0;
     btn.classList.toggle('chosen', s.yourPick?.choice === kind);
     $(kind === 'keep' ? 'keepLeft' : 'cutLeft').textContent = `${left ?? 0} left`;
+  }
+
+  // Flagging. Quiet by default — it only matters to someone who already knows
+  // the item is wrong, so it must never pull attention from Keep and Cut.
+  const flagVisible = s.phase === 'revealing' || s.phase === 'picking';
+  $('btnFlag').hidden = !flagVisible;
+  if (flagVisible) {
+    $('btnFlag').disabled = !s.canFlag;
+    $('btnFlag').textContent = s.spareItems === 0
+      ? 'no spare items left'
+      : s.canFlag
+        ? `🚩 That's wrong — swap it (${s.swapsLeft} left)`
+        : "🚩 you've called this one";
+  }
+
+  $('calloutNote').hidden = !(flagVisible && s.lastFlag);
+  if (s.lastFlag) {
+    $('calloutNote').innerHTML =
+      `${escHtml(s.lastFlag.by)} called out <span class="callout-item">${escHtml(s.lastFlag.rejected)}</span> — swapped`;
   }
 
   // How many have chosen, never what.
@@ -324,10 +346,13 @@ function scheduleArm(s) {
 // player's shoulder; in solo there is nobody else, and the only person a
 // devtools window spoils it for is the person who opened it.
 
+const MAX_SWAPS = 3;
+
 const solo = {
-  items: [], seen: [], category: '',
+  items: [], reserve: [], seen: [], category: '',
   index: -1, keepsLeft: KEEPS, cutsLeft: CUTS, picks: [],
   phase: 'lobby', armAt: 0,
+  replacements: 0, flaggedThisItem: false, lastFlag: null,
 };
 
 function soloSnapshot() {
@@ -359,6 +384,11 @@ function soloSnapshot() {
     yourForced: solo.phase === 'picking' ? soloForced() : null,
     flips: solo.phase === 'flipping' || solo.phase === 'summary'
       ? [{ playerId: 'you', name: 'You', ...pickOf(solo.picks[solo.index]) }] : [],
+    canFlag: (solo.phase === 'picking' || solo.phase === 'revealing')
+      && !solo.flaggedThisItem && solo.replacements < MAX_SWAPS && solo.reserve.length > 0,
+    swapsLeft: MAX_SWAPS - solo.replacements,
+    spareItems: solo.reserve.length,
+    lastFlag: solo.lastFlag,
   };
 }
 
@@ -410,11 +440,16 @@ async function soloStart(category) {
     if (!res.ok) throw new Error(data.error || 'Could not build a list.');
 
     solo.items = data.items;
+    solo.reserve = data.reserve ?? [];
+    // Only the eight in play count as seen. A spare that never gets swapped in
+    // was never shown, so excluding it from a replay would thin the category
+    // for nothing — soloFlag() adds one the moment it is dealt.
     solo.seen = [...solo.seen, ...data.items];
     solo.index = -1;
     solo.keepsLeft = KEEPS;
     solo.cutsLeft = CUTS;
     solo.picks = [];
+    solo.replacements = 0;
     soloReveal();
   } catch (err) {
     solo.phase = 'lobby';
@@ -428,6 +463,26 @@ async function soloStart(category) {
 
 function soloReveal() {
   solo.index += 1;
+  solo.flaggedThisItem = false;
+  solo.lastFlag = null;
+  soloShow();
+}
+
+/**
+ * Puts the current item on screen. Split from soloReveal so a swapped item can
+ * be shown again at the SAME index — the mirror of revealCurrent() on the
+ * server, and it has to stay a mirror.
+ */
+function soloShow() {
+  // Cancel any auto-flip left over from a previous showing of this index.
+  //
+  // A budget-forced item schedules its own flip on the beat. Swapping that item
+  // used to leave the old timer running, so the replacement was flipped about
+  // a tenth of a second after it appeared — correct budget, stolen reveal. The
+  // server never had this bug because its single alarm is re-armed rather than
+  // stacked, which is exactly the divergence this function exists to prevent.
+  clearTimeout(solo.flipTimer);
+
   solo.phase = 'picking';
   solo.armAt = Date.now() + SOLO_BEAT_MS;
 
@@ -443,12 +498,38 @@ function soloReveal() {
   $('itemCard').classList.add('landing');
   announce(`Item ${solo.index + 1}: ${solo.items[solo.index]}`);
 
-  if (forced) setTimeout(soloFlip, SOLO_BEAT_MS + 400);
+  if (forced) solo.flipTimer = setTimeout(soloFlip, SOLO_BEAT_MS + 400);
 }
 
 function soloRecord(choice, reason) {
   if (choice === 'keep') solo.keepsLeft -= 1; else solo.cutsLeft -= 1;
   solo.picks[solo.index] = { item: solo.items[solo.index], choice, reason };
+}
+
+/**
+ * Solo's "that one's wrong". Same rewind as the server: refund whatever was
+ * already recorded against this item — including a budget-forced pick taken at
+ * reveal — swap in a spare, and show the same index again.
+ */
+function soloFlag() {
+  if (solo.phase !== 'picking' && solo.phase !== 'revealing') return;
+  if (solo.flaggedThisItem) return;
+  if (solo.replacements >= MAX_SWAPS) return banner(`That's ${MAX_SWAPS} swaps — play the rest as dealt.`);
+  if (!solo.reserve.length) return banner('No spare items left for this category.');
+
+  const rejected = solo.items[solo.index];
+  const prior = solo.picks[solo.index];
+  if (prior) {
+    if (prior.choice === 'keep') solo.keepsLeft += 1; else solo.cutsLeft += 1;
+    delete solo.picks[solo.index];
+  }
+
+  solo.items[solo.index] = solo.reserve.shift();
+  solo.seen.push(solo.items[solo.index]);
+  solo.replacements += 1;
+  solo.flaggedThisItem = true;
+  solo.lastFlag = { by: 'You', rejected };
+  soloShow();
 }
 
 function soloPick(choice) {
@@ -542,6 +623,7 @@ $('btnKeep').addEventListener('click', () => (mode === 'solo' ? soloPick('keep')
 $('btnCut').addEventListener('click', () => (mode === 'solo' ? soloPick('cut') : send({ type: 'submit_pick', choice: 'cut' })));
 $('btnAccept').addEventListener('click', () => (mode === 'solo' ? soloAdvance() : send({ type: 'accept' })));
 $('btnForce').addEventListener('click', () => send({ type: 'force_advance' }));
+$('btnFlag').addEventListener('click', () => (mode === 'solo' ? soloFlag() : send({ type: 'flag_item' })));
 
 $('btnSoloAgain').addEventListener('click', () => {
   mode = null;

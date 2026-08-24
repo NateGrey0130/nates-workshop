@@ -152,8 +152,16 @@
         <div class="item-text" id="itemText">…</div>
       </div>
 
+      <p class="callout" id="calloutNote" hidden></p>
       <p class="pick-progress" id="pickProgress" hidden></p>
       <p class="forced-note" id="forcedNote" hidden></p>
+
+      <!-- Verification only runs for time-sensitive categories now, so this is
+           the backstop for a plausible invention reaching the table. Anyone can
+           press it, not just the host. -->
+      <button class="btn btn-ghost btn-flag" id="btnFlag" hidden>
+        🚩 That's wrong — swap it
+      </button>
     </div>
 
     <div class="actions" id="actions" hidden>
