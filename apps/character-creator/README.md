@@ -219,12 +219,14 @@ touches MediaVault and FilamentForge too — they use its `openModal` /
 
 ## Data model
 
-Twenty-eight tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
+Thirty-four tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
 and one R2 bucket (`MEDIA`, same name) for the only binary this app stores.
-`media_items` belongs to MediaVault, `claude_usage` is the site's Claude-spend
-log (written fail-open by the `/api/claude` proxy and the campaign Ask — see
-SETUP.md for the query), and `schema_migrations` is database bookkeeping shared
-by all; the rest are this app.
+`media_items` belongs to MediaVault, and the six tables prefixed `ff_` belong
+to FilamentForge — that prefix is the collision boundary, because this app's
+tables are unprefixed, so anything another app adds must not be. `claude_usage`
+is the site's Claude-spend log (written fail-open by the `/api/claude` proxy
+and the campaign Ask — see SETUP.md for the query), and `schema_migrations` is
+database bookkeeping shared by all; the rest are this app.
 
 **Character data**
 
@@ -2517,6 +2519,9 @@ scripts/
 │                           Refuses non-ASCII and honours `-- local-only`
 ├── d1-query-lib.mjs        One statement, one line, rows back. The banner-skip
 │                           and buffer size that every caller needs
+├── ofd-refresh.mjs         Snapshot the Open Filament Database into ff_brands
+│                           and ff_filaments — FilamentForge's catalog. The app
+│                           reads the snapshot; only this script talks to OFD
 ├── drift-check.mjs         Repo vs live database: migrations, data scripts,
 │                           tables, columns, classes, and an advisory citation
 │                           check against a cached book
@@ -4828,6 +4833,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `031-character-mos.sql` | `characters.mos` — which Military Occupational Specialty a character took. RUE gives several classes an MOS ("select one area of specialty, gain all skills under that MOS"); the skills land in `skills` like any other, but which specialty was chosen has to be remembered rather than inferred back out of the skill list |
 | `032-gear-cost-note.sql` | `gear.cost_note` — what a price will not fit in one integer. RUE prices much of its common gear as a **range** (`Belt, Utility: 3-5 cr.`) and sometimes qualifies it instead (`double for gold`). `cost` holds the range’s LOW end, the way `spells.ppe` holds a variable cost’s minimum, and `cost_note` carries the wording verbatim |
 | `033-variant-note.sql` | `spells.variant_note` and `psionic_powers.variant_note` — what an OLDER book prints instead. Not `ppe_note`: the wizard treats the mere presence of that column as "this cost varies" and renders `7+ P.P.E.`, so a cross-book note there would make fourteen fixed-cost spells look variable |
+| `039-filament-forge.sql` | The six `ff_` tables — FilamentForge's whole server side, not this app's. Its OFD catalog snapshot (`ff_brands`, `ff_filaments`, refreshed by `scripts/ofd-refresh.mjs`) and what its localStorage used to hold (`ff_config`, `ff_history`, `ff_presets`, `ff_custom_filaments`), keyed to the Access email the way `media_items` is |
 | `038-claude-usage.sql` | `claude_usage` — who is spending the Anthropic key, on what. A site-level table (the `/api/claude` proxy and the campaign Ask write it, fail-open, so metering can never break the call it measures): the log half of the audit's F3, spend visibility rather than a cap |
 | `037-campaign-open.sql` | `open` on `campaigns` — the join gate. Joining a campaign IS creating a character in it (membership is "owns a character here"), so an ungated create was an ungated door onto the campaign's notes, stash and ledger. 1, the default every existing campaign keeps, is the open table; 0 admits only the GM and existing members. Enforced by `POST /characters`, toggled on the GM dashboard |
 | `036-enchantments-charm.sql` | `enchantments.applies_to` gains **charm** — a third family, and the book draws it the same way as the other two: *"The following magic effects can be **placed in** rings, bracelets, charms, and medallions"*, three powers to an item. Thirty of them, printed 253. SQLite cannot alter a `CHECK`, so the table is rebuilt and the rows copied by named column |
@@ -4847,19 +4853,23 @@ against — read off production, not estimated.
 
 | | |
 |---|---|
-| database size | **2.65 MB** of D1's 10 GB — 0.03% |
-| tables | 32 |
-| rows, everything | **4,420** |
+| database size | **3.5 MB** of D1's 10 GB — 0.03% |
+| tables | 41 (incl. FTS internals) |
+| rows, everything | **6,651** |
 | of which `media_items` (MediaVault) | 2,082 |
+| the OFD snapshot (FilamentForge) | 2,208 |
 | the five catalogs together | 1,901 |
-| characters, live | **8** |
+| characters, live | **9** |
 | the largest table this app owns | `gear`, 844 rows |
 
-**The two halves already have zero overlap.** `functions/api/media.js` is the only
-D1 consumer outside `functions/api/character-creator/`, it touches exactly one
-table, and nothing under `character-creator/` reads it. There is no join to
-break. Of 33 migrations, **one** mentions `media_items` — `004-items-to-gear.sql`,
-and only because renaming `items` to `gear` had to stay clear of it.
+**The apps already have zero overlap.** `functions/api/media.js` and
+`functions/api/filament-forge/` are the only D1 consumers outside
+`functions/api/character-creator/`; each touches only its own tables —
+`media_items`, and the six `ff_` ones — and nothing under `character-creator/`
+reads any of them. There is no join to break. Of 39 migrations, **one** mentions
+`media_items` — `004-items-to-gear.sql`, and only because renaming `items` to
+`gear` had to stay clear of it — and one, `039-filament-forge.sql`, is
+FilamentForge's entirely and touches nothing of anyone else's.
 
 **So a split is possible and is not worth it.** The single risk it removes is one
 app's migration disturbing another, which has never happened and has one file of
@@ -4872,12 +4882,15 @@ migration-state checks with them.
 
 **What would change the answer**, so this is a decision rather than a habit:
 
-- a second app growing real tables — `media_items` is one table with one index
-  and no migrations of its own;
-- either half approaching a size where the 10 GB limit or a row-scan matters,
-  which at 2.65 MB is three orders of magnitude away;
+- a second app growing real tables — which FilamentForge now has: six `ff_`
+  tables, migration `039`. The answer held, because the prefix keeps the
+  namespace disjoint and the new rows are a catalog snapshot plus one user's
+  saved settings. A third app, or any table another app would need to join,
+  should run these numbers again;
+- any app approaching a size where the 10 GB limit or a row-scan matters,
+  which is still orders of magnitude away;
 - any need to give one app a different retention, backup or access posture from
-  the other.
+  the others.
 
 **Nothing is unindexed that matters, and adding indexes would be cargo cult.**
 The five catalogs are read *whole* by `/catalogs` and `/items` — that is
