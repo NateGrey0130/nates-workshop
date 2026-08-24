@@ -30,6 +30,23 @@ CREATE TABLE IF NOT EXISTS media_items (
 
 CREATE INDEX IF NOT EXISTS idx_media_items_user ON media_items (user_email);
 
+-- Who is spending the Anthropic key, on what. Site-level, like media_items:
+-- it belongs to the /api/claude proxy rather than to any one app. One row per
+-- call, written fail-open (a metering failure must never break the call it
+-- measures). The log half of the audit's F3 - spend visibility, not a cap.
+CREATE TABLE IF NOT EXISTS claude_usage (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT,                            -- Cloudflare Access identity; NULL on local dev
+  endpoint TEXT NOT NULL,                -- 'proxy' | 'campaign-ask' | ...
+  model TEXT,
+  input_tokens INTEGER,
+  output_tokens INTEGER,
+  status INTEGER,                        -- upstream HTTP status; a 4xx/5xx row is a
+                                         -- failed call that still cost an attempt
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_claude_usage_email ON claude_usage (email, created_at);
+
 -- ═══════════════════════════════════════════════════════════════════
 -- Character Creator — Palladium Fantasy / Rifts characters & campaigns.
 -- R.C.C./O.C.C. definitions live in `imported_classes` below as markdown;
@@ -731,3 +748,7 @@ WHERE EXISTS (SELECT 1 FROM sqlite_master
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '037-campaign-open.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('campaigns') WHERE name = 'open');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '038-claude-usage.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'claude_usage');

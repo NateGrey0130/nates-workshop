@@ -4700,8 +4700,10 @@ section('Documented counts');
   // seventeen and described fifteen — `import_sessions` and `import_staged` had
   // a migration row and an API section but no data-model row anywhere.
   const named = new Set([...readme.matchAll(/^\| `([a-z_]+)` \|/gm)].map((m) => m[1]));
-  // The two the section explicitly disclaims: not this app's tables.
-  const notOurs = ['media_items', 'schema_migrations'];
+  // The three the section explicitly disclaims: not this app's tables.
+  // claude_usage belongs to the /api/claude proxy (the audit's F3 spend log),
+  // the same site-level standing media_items has.
+  const notOurs = ['media_items', 'schema_migrations', 'claude_usage'];
   const undescribed = [...schema.matchAll(/CREATE TABLE IF NOT EXISTS ([a-z_]+)/g)]
     .map((m) => m[1])
     .filter((t) => !named.has(t) && !notOurs.includes(t));
@@ -4849,6 +4851,77 @@ section('Documented counts');
       sizes.every((n, i) => i === 0 || sizes[i - 1] >= n),
       rows.map(([, f], i) => `${f}=${sizes[i]}`).join(' '));
   }
+}
+
+// ---------- 1c5. Access JWT verification and Claude spend logging ----------
+// The audit's F4 and F3. The verifier is a pure function of (token, keys,
+// options), which is what lets this section sign real tokens with WebCrypto
+// and prove every refusal path — no network, no Access team. The wiring is
+// pinned as source, because the load-bearing properties (pass-through when
+// unconfigured; metering that cannot break the call it measures) are exactly
+// the kind that vanish silently in a refactor.
+section('Access JWT verification');
+{
+  const { verifyAccessJwt } = await import('../../../functions/api/_lib/access-jwt.js');
+  const b64u = (buf) => Buffer.from(buf).toString('base64url');
+  const enc = (obj) => b64u(JSON.stringify(obj));
+  const { publicKey, privateKey } = await crypto.subtle.generateKey(
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256', modulusLength: 2048,
+      publicExponent: new Uint8Array([1, 0, 1]) },
+    true, ['sign', 'verify']);
+  const jwk = { ...(await crypto.subtle.exportKey('jwk', publicKey)), kid: 'test-key', use: 'sig' };
+  const now = Math.floor(Date.now() / 1000);
+  const sign = async (payload, header = { alg: 'RS256', kid: 'test-key' }) => {
+    const input = enc(header) + '.' + enc(payload);
+    const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', privateKey,
+      new TextEncoder().encode(input));
+    return input + '.' + b64u(sig);
+  };
+  const claims = { aud: ['site-aud'], email: 'nate@example.com', exp: now + 300, iat: now };
+  const good = await sign(claims);
+
+  const ok = await verifyAccessJwt(good, [jwk], { aud: 'site-aud' });
+  check('a valid token verifies and yields its email',
+    ok.ok === true && ok.email === 'nate@example.com', JSON.stringify(ok));
+  check('an expired token is refused',
+    !(await verifyAccessJwt(await sign({ ...claims, exp: now - 3600 }), [jwk], { aud: 'site-aud' })).ok);
+  check('the wrong audience is refused',
+    !(await verifyAccessJwt(good, [jwk], { aud: 'some-other-app' })).ok);
+  check('a tampered payload fails the signature, not the parse', (await verifyAccessJwt(
+    good.replace(/\.[^.]+\./, '.' + enc({ ...claims, email: 'gm@example.com' }) + '.'),
+    [jwk], { aud: 'site-aud' })).reason === 'signature does not verify');
+  check('alg none dies before any key is consulted', (await verifyAccessJwt(
+    enc({ alg: 'none', kid: 'test-key' }) + '.' + enc(claims) + '.',
+    [jwk], { aud: 'site-aud' })).reason.startsWith('unsupported algorithm'));
+  check('a token signed by a rotated-away key is refused',
+    !(await verifyAccessJwt(await sign(claims, { alg: 'RS256', kid: 'rotated-away' }), [jwk], { aud: 'site-aud' })).ok);
+  check('a token with no email claim is refused',
+    (await verifyAccessJwt(await sign({ ...claims, email: undefined }), [jwk], { aud: 'site-aud' })).reason === 'no email claim');
+  check('every refusal carries a readable reason', await (async () => {
+    const bad = [
+      await verifyAccessJwt('not-a-jwt', [jwk], { aud: 'site-aud' }),
+      await verifyAccessJwt(good, [], { aud: 'site-aud' }),
+      await verifyAccessJwt(good, [jwk], { aud: 'other' }),
+    ];
+    return bad.every((r) => r.ok === false && typeof r.reason === 'string' && r.reason.trim());
+  })());
+
+  const fnDir = join(appDir, '..', '..', 'functions', 'api');
+  const mw = readFileSync(join(fnDir, '_middleware.js'), 'utf8');
+  check('the middleware passes through when unconfigured — the original posture',
+    /if \(!domain \|\| !aud\) return next\(\)/.test(mw));
+  check('and requires the token identity to match the header everything reads',
+    /Cf-Access-Authenticated-User-Email/.test(mw));
+
+  const client = readFileSync(join(fnDir, '_lib', 'claude-client.js'), 'utf8');
+  check('usage recording is fail-open, so metering cannot break the call',
+    /export async function recordUsage/.test(client)
+    && /never the caller's problem/.test(client));
+  const proxy = readFileSync(join(fnDir, 'claude.js'), 'utf8');
+  check('the proxy records who spent the key',
+    /recordUsage\(/.test(proxy) && /getAccessEmail\(request\)/.test(proxy));
+  const askSrc = readFileSync(join(fnDir, 'character-creator', 'campaigns', '[id]', 'ask.js'), 'utf8');
+  check('and so does the campaign Ask', /recordUsage\(/.test(askSrc));
 }
 
 // ---------- 1d. Paging ----------

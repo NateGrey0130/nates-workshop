@@ -64,9 +64,14 @@ nates-workshop/
 │   └── class-check-lib.mjs   The checks themselves, so the smoke test can run them
 └── functions/
     └── api/
+        ├── _middleware.js    Optional JWT verification on every /api/* route;
+        │                     pass-through until ACCESS_TEAM_DOMAIN + ACCESS_AUD
+        │                     are set (see Access below)
         ├── _lib/access.js    Cloudflare Access identity — the ONE place the
         │                     identity header is read
-        ├── _lib/claude-client.js  The only code that calls the Anthropic API
+        ├── _lib/access-jwt.js  Verifying the Access JWT against the team's keys
+        ├── _lib/claude-client.js  The only code that calls the Anthropic API,
+        │                     and the fail-open claude_usage spend log
         ├── claude.js         /api/claude — proxy (model allowlist + token cap)
         ├── media.js          /api/media — MediaVault CRUD, per-user via Access
         └── character-creator/  46 endpoints + _lib; see the app README
@@ -111,6 +116,28 @@ Settings → Environment variables, both encrypted:
   creator's PDF importers. A new value takes effect on the **next deployment**.
 - `ADMIN_EMAIL` — the single email allowed to use the importers and catalog
   editor. The check **fails closed** when unset.
+- `ACCESS_TEAM_DOMAIN` + `ACCESS_AUD` — **optional, and off until BOTH are
+  set**: turn on JWT verification of the Access identity on every `/api/*`
+  route (defence in depth — the identity header alone is only as good as the
+  Access application staying configured). `ACCESS_TEAM_DOMAIN` is the team's
+  domain (`<team>.cloudflareaccess.com`, Zero Trust → Settings → Custom Pages
+  shows it); `ACCESS_AUD` is the Access application's **Application Audience
+  (AUD) tag** (Zero Trust → Access → Applications → this app → Overview).
+  Unset, every request passes through exactly as before, which is what makes
+  this safe to deploy ahead of the configuration — set them only after the
+  deploy that ships the middleware.
+
+### Who is spending the Anthropic key
+
+Every `/api/claude` proxy call and every campaign **Ask** writes one row to
+`claude_usage` (email, endpoint, model, tokens, upstream status) — written
+fail-open, so metering can never break the call it measures. The admin
+importers are deliberately unlogged: they are already gated to `ADMIN_EMAIL`,
+which is the question this table answers. To read the spend:
+
+```bash
+node scripts/q.mjs --remote "SELECT email, date(created_at) AS day, count(*) AS calls, sum(input_tokens) AS input, sum(output_tokens) AS output FROM claude_usage GROUP BY email, day ORDER BY day DESC LIMIT 30"
+```
 
 ## Access (the login wall)
 
@@ -170,6 +197,11 @@ asks for, and update the Access application domain to match.
 **An app's Generate/API call does nothing**
 → Browser console (F12). If `/api/...` returns HTML, Access intercepted the
 request — usually a session that expired mid-use; reload and log back in.
+
+**Every API call returns 503 naming signing keys**
+→ `ACCESS_TEAM_DOMAIN` is set but wrong (or the certs endpoint is unreachable).
+Fix the variable, or unset the `ACCESS_TEAM_DOMAIN`/`ACCESS_AUD` pair to fall
+back to header-trust.
 
 **Cloudflare Access screen doesn't appear**
 → The application domain must exactly match the Pages URL (or custom domain).

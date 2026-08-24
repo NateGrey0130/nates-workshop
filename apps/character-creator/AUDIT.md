@@ -265,6 +265,13 @@ choice-groups can't be checked in principle.
 - **Proposal**: if you want a belt: log `usage` per email (one D1 table, one
   INSERT in the proxy), alert on it, and only then decide whether a hard cap
   is worth the shared-code churn.
+- **Taken, 2026-08-24**: the log half, as proposed — no cap. `claude_usage`
+  (migration 038) records email, endpoint, model, tokens and upstream status
+  for every proxy call and every campaign Ask; the admin importers stay
+  unlogged because they are already gated to one email. Written **fail-open**
+  inside `claude-client.js`, so metering can never break the call it measures
+  — which is the property that keeps FilamentForge and MediaVault
+  behaviourally untouched. The reading query lives in SETUP.md.
 
 ### F4 — low — identity is a trusted header, not a verified JWT (accepted posture, worth stating once)
 
@@ -284,6 +291,18 @@ choice-groups can't be checked in principle.
   posture); if you ever add a custom domain or loosen the Access app, JWT
   validation in `access.js` is a one-file change — it is the single place the
   header is read, which is the design paying off.
+- **Taken, 2026-08-24**, with one refinement on the proposal: verification
+  lives in Pages middleware (`functions/api/_middleware.js` +
+  `_lib/access-jwt.js`) rather than inside `getAccessEmail()`, because the
+  header read is synchronous in 46 endpoints and JWT verification is not —
+  the middleware verifies once per `/api/*` request and requires the token's
+  email claim to match the header everything downstream reads. **Opt-in**:
+  pass-through until `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` are both set
+  (SETUP.md says where to find them), so the deploy is a no-op until the
+  dashboard half is done. Signing keys are cached per isolate with
+  stale-on-failure; configured-but-unverifiable is a 503 naming the fix, never
+  a silent fall-back to header-trust. The verifier is a pure function and the
+  smoke suite signs real tokens to prove every refusal path.
 
 ### F5 — low — `/classes` ships ~750KB of parsed class markdown on every boot
 

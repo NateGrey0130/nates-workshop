@@ -219,10 +219,12 @@ touches MediaVault and FilamentForge too — they use its `openModal` /
 
 ## Data model
 
-Twenty-seven tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
+Twenty-eight tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
 and one R2 bucket (`MEDIA`, same name) for the only binary this app stores.
-`media_items` belongs to MediaVault and `schema_migrations` is database
-bookkeeping shared by both; the rest are this app.
+`media_items` belongs to MediaVault, `claude_usage` is the site's Claude-spend
+log (written fail-open by the `/api/claude` proxy and the campaign Ask — see
+SETUP.md for the query), and `schema_migrations` is database bookkeeping shared
+by all; the rest are this app.
 
 **Character data**
 
@@ -4820,6 +4822,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `031-character-mos.sql` | `characters.mos` — which Military Occupational Specialty a character took. RUE gives several classes an MOS ("select one area of specialty, gain all skills under that MOS"); the skills land in `skills` like any other, but which specialty was chosen has to be remembered rather than inferred back out of the skill list |
 | `032-gear-cost-note.sql` | `gear.cost_note` — what a price will not fit in one integer. RUE prices much of its common gear as a **range** (`Belt, Utility: 3-5 cr.`) and sometimes qualifies it instead (`double for gold`). `cost` holds the range’s LOW end, the way `spells.ppe` holds a variable cost’s minimum, and `cost_note` carries the wording verbatim |
 | `033-variant-note.sql` | `spells.variant_note` and `psionic_powers.variant_note` — what an OLDER book prints instead. Not `ppe_note`: the wizard treats the mere presence of that column as "this cost varies" and renders `7+ P.P.E.`, so a cross-book note there would make fourteen fixed-cost spells look variable |
+| `038-claude-usage.sql` | `claude_usage` — who is spending the Anthropic key, on what. A site-level table (the `/api/claude` proxy and the campaign Ask write it, fail-open, so metering can never break the call it measures): the log half of the audit's F3, spend visibility rather than a cap |
 | `037-campaign-open.sql` | `open` on `campaigns` — the join gate. Joining a campaign IS creating a character in it (membership is "owns a character here"), so an ungated create was an ungated door onto the campaign's notes, stash and ledger. 1, the default every existing campaign keeps, is the open table; 0 admits only the GM and existing members. Enforced by `POST /characters`, toggled on the GM dashboard |
 | `036-enchantments-charm.sql` | `enchantments.applies_to` gains **charm** — a third family, and the book draws it the same way as the other two: *"The following magic effects can be **placed in** rings, bracelets, charms, and medallions"*, three powers to an item. Thirty of them, printed 253. SQLite cannot alter a `CHECK`, so the table is rebuilt and the rows copied by named column |
 | `035-enchantments.sql` | `enchantments`, and `character_items.enchantments` — what an alchemist puts INTO a sword, as opposed to a sword. Printed 249-250 sells three finished suits and then **32 properties** that go into ordinary gear, four to a suit and three to a weapon, cumulatively. The JSON array is on the **instance**: one long sword in a party of four can be the Demon Slayer while the other three stay ordinary |
@@ -4839,7 +4842,7 @@ against — read off production, not estimated.
 | | |
 |---|---|
 | database size | **2.65 MB** of D1's 10 GB — 0.03% |
-| tables | 31 |
+| tables | 32 |
 | rows, everything | **4,420** |
 | of which `media_items` (MediaVault) | 2,082 |
 | the five catalogs together | 1,901 |

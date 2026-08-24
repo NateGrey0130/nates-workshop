@@ -86,3 +86,39 @@ export async function callAnthropic(body, env) {
   });
   return { status: res.status, text: await res.text() };
 }
+
+/**
+ * One row in `claude_usage` per model call — who spent the key, on what. The
+ * proxy is open to every authenticated friend by design, and until this table
+ * nothing recorded a single call (the audit's F3). Spend VISIBILITY, not a
+ * cap: nothing reads this on the request path, and query patterns live in
+ * SETUP.md.
+ *
+ * Fail-open on purpose, and it must stay that way: metering that can break
+ * the call it measures — a missing table on an unmigrated environment, a D1
+ * hiccup — would be a new failure mode for FilamentForge and MediaVault, whose
+ * behaviour this file must not change.
+ *
+ * `upstream` is callAnthropic's { status, text }; usage and model are read
+ * from the response body when it parses (an error body has neither, and the
+ * row still records the attempt).
+ */
+export async function recordUsage(env, { email, endpoint, model, upstream }) {
+  try {
+    if (!env?.DB) return;
+    let usage = null;
+    let servedModel = model ?? null;
+    try {
+      const payload = JSON.parse(upstream?.text ?? '');
+      usage = payload?.usage ?? null;
+      servedModel = payload?.model ?? servedModel;
+    } catch { /* an upstream error body is still a recorded attempt */ }
+    await env.DB.prepare(
+      `INSERT INTO claude_usage (email, endpoint, model, input_tokens, output_tokens, status)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    ).bind(email ?? null, endpoint, servedModel,
+      Number.isFinite(usage?.input_tokens) ? usage.input_tokens : null,
+      Number.isFinite(usage?.output_tokens) ? usage.output_tokens : null,
+      upstream?.status ?? null).run();
+  } catch { /* see above — never the caller's problem */ }
+}
