@@ -18,8 +18,8 @@ const PRINTER_SPECS = {
 
 // ─── INIT ───
 document.addEventListener('DOMContentLoaded', () => {
-  loadOFD();
-  loadSavedConfig();
+  loadCatalog();
+  loadUserData();
 
   // Drag and drop
   const uz = document.getElementById('uploadZone');
@@ -35,29 +35,32 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// ─── OFD LOADING ───
-async function loadOFD() {
+// ─── CATALOG LOADING ───
+// The brand/filament catalog is a D1 snapshot of the Open Filament Database,
+// served by /api/filament-forge/catalog. The browser used to fetch OFD's CSVs
+// directly, which made a third-party site a runtime dependency; now only
+// scripts/ofd-refresh.mjs talks to OFD. Rows keep the CSV's column names, so
+// everything downstream of here reads them the same as before.
+async function loadCatalog() {
   const dot = document.getElementById('ofdDot');
   const txt = document.getElementById('ofdText');
   try {
-    const [brandsRes, filamentsRes] = await Promise.all([
-      fetch('https://api.openfilamentdatabase.org/csv/brands.csv'),
-      fetch('https://api.openfilamentdatabase.org/csv/filaments.csv')
-    ]);
+    const res = await fetch('/api/filament-forge/catalog');
+    if (!res.ok) throw new Error(`Catalog fetch failed (${res.status})`);
+    const data = await res.json();
 
-    if (!brandsRes.ok || !filamentsRes.ok) throw new Error('Failed to fetch OFD data');
+    ofdBrands = data.brands;
+    ofdFilaments = data.filaments;
 
-    const brandsCSV = await brandsRes.text();
-    const filamentsCSV = await filamentsRes.text();
-
-    ofdBrands = parseCSV(brandsCSV);
-    ofdFilaments = parseCSV(filamentsCSV);
-
-    // Build brand lookup
-    const brandMap = {};
-    ofdBrands.forEach(b => { brandMap[b.id] = b.name; });
+    if (ofdFilaments.length === 0) {
+      dot.className = 'dot error';
+      txt.textContent = 'Catalog empty — refresh the OFD snapshot, or use manual entry';
+      return;
+    }
 
     // Enrich filaments with brand name
+    const brandMap = {};
+    ofdBrands.forEach(b => { brandMap[b.id] = b.name; });
     ofdFilaments.forEach(f => {
       f._brandName = brandMap[f.brand_id] || 'Unknown';
     });
@@ -66,49 +69,10 @@ async function loadOFD() {
     txt.textContent = `${ofdFilaments.length} filaments loaded`;
     populateBrandDropdown();
   } catch (err) {
-    console.error('OFD load error:', err);
+    console.error('Catalog load error:', err);
     dot.className = 'dot error';
-    txt.textContent = 'OFD unavailable — use manual entry';
+    txt.textContent = 'Catalog unavailable — use manual entry';
   }
-}
-
-function parseCSV(text) {
-  const lines = text.split('\n').filter(l => l.trim());
-  if (lines.length < 2) return [];
-  const headers = parseCSVLine(lines[0]);
-  const results = [];
-  for (let i = 1; i < lines.length; i++) {
-    const vals = parseCSVLine(lines[i]);
-    if (vals.length < headers.length - 2) continue; // skip garbage lines
-    const obj = {};
-    headers.forEach((h, idx) => { obj[h] = vals[idx] || ''; });
-    results.push(obj);
-  }
-  return results;
-}
-
-function parseCSVLine(line) {
-  const result = [];
-  let current = '';
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (c === '"') {
-      if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
-        current += '"';
-        i++;
-      } else {
-        inQuotes = !inQuotes;
-      }
-    } else if (c === ',' && !inQuotes) {
-      result.push(current);
-      current = '';
-    } else {
-      current += c;
-    }
-  }
-  result.push(current);
-  return result;
 }
 
 // ─── SEARCH ───
@@ -399,26 +363,119 @@ async function loadJSZip() {
   });
 }
 
-// ─── SAVE/LOAD CONFIG ───
-function loadSavedConfig() {
-  const saved = localStorage.getItem('ff_config');
-  if (saved) {
-    try {
-      const cfg = JSON.parse(saved);
-      if (cfg.printer) document.getElementById('printerModel').value = cfg.printer;
-      if (cfg.nozzle) document.getElementById('nozzleSize').value = cfg.nozzle;
-      if (cfg.ams) document.getElementById('hasAms').value = cfg.ams;
-    } catch(e) {}
+// ─── PERSISTENCE ───
+// Everything the user keeps — printer config, history, presets, custom
+// filaments — lives in D1 behind /api/filament-forge/data, keyed to the
+// Cloudflare Access email. The in-memory arrays are the source of truth and
+// every save PUTs the whole collection it changed (MediaVault's pattern).
+// localStorage keeps only ff_onboarding_done, which is per-device by nature;
+// the four ff_ keys it used to hold are imported once and removed.
+
+let saveErrorShown = false;
+
+async function saveData(partial) {
+  try {
+    const res = await fetch('/api/filament-forge/data', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(partial),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error || `HTTP ${res.status}`);
+    }
+  } catch (err) {
+    console.error('Save failed:', err);
+    if (!saveErrorShown) {
+      saveErrorShown = true;
+      alert(`Saving to the server failed (${err.message}). Changes made this session may not survive a reload.`);
+    }
   }
 }
 
+function readLegacyLocal() {
+  const parse = (k) => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } };
+  const legacy = {
+    config: parse('ff_config'),
+    history: parse('ff_history') || [],
+    presets: parse('ff_presets') || [],
+    customFilaments: parse('ff_custom_filaments') || [],
+  };
+  if (!legacy.config && !legacy.history.length && !legacy.presets.length && !legacy.customFilaments.length) return null;
+  return legacy;
+}
+
+async function loadUserData() {
+  let data = null;
+  try {
+    const res = await fetch('/api/filament-forge/data');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    data = await res.json();
+  } catch (err) {
+    console.error('Load error:', err);
+  }
+
+  const legacy = readLegacyLocal();
+  if (data) {
+    const serverEmpty = !data.config && !data.history.length && !data.presets.length && !data.customFilaments.length;
+    if (serverEmpty && legacy) {
+      // One-time import of what this browser held before the server side
+      // existed. The old keys are removed only after the PUT succeeds —
+      // until then localStorage is still the only copy.
+      let imported = false;
+      try {
+        const res = await fetch('/api/filament-forge/data', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            config: legacy.config || undefined,
+            history: legacy.history,
+            presets: legacy.presets,
+            customFilaments: legacy.customFilaments,
+          }),
+        });
+        imported = res.ok;
+      } catch {}
+      history = legacy.history;
+      presets = legacy.presets;
+      customFilaments = legacy.customFilaments;
+      if (legacy.config) applyConfig(legacy.config);
+      if (imported) {
+        ['ff_config', 'ff_history', 'ff_presets', 'ff_custom_filaments'].forEach(k => localStorage.removeItem(k));
+      }
+    } else {
+      history = data.history;
+      presets = data.presets;
+      customFilaments = data.customFilaments;
+      if (data.config) applyConfig(data.config);
+    }
+  } else if (legacy) {
+    // Server unreachable: run on the local copy so the session still works,
+    // and leave the keys in place for the import to retry next load.
+    history = legacy.history;
+    presets = legacy.presets;
+    customFilaments = legacy.customFilaments;
+    if (legacy.config) applyConfig(legacy.config);
+  }
+
+  renderHistory();
+  renderPresets();
+  renderCustomFilaments();
+  updateHistoryCount();
+}
+
+function applyConfig(cfg) {
+  if (cfg.printer) document.getElementById('printerModel').value = cfg.printer;
+  if (cfg.nozzle) document.getElementById('nozzleSize').value = cfg.nozzle;
+  if (cfg.ams) document.getElementById('hasAms').value = cfg.ams;
+}
+
 function saveConfig() {
-  const cfg = {
+  saveData({ config: {
     printer: document.getElementById('printerModel').value,
     nozzle: document.getElementById('nozzleSize').value,
     ams: document.getElementById('hasAms').value,
-  };
-  localStorage.setItem('ff_config', JSON.stringify(cfg));
+  }});
 }
 
 // Save config on change
@@ -664,9 +721,10 @@ function switchMainTab(tab) {
 }
 
 // ─── HISTORY SYSTEM ───
-let history = JSON.parse(localStorage.getItem('ff_history') || '[]');
-let presets = JSON.parse(localStorage.getItem('ff_presets') || '[]');
-let customFilaments = JSON.parse(localStorage.getItem('ff_custom_filaments') || '[]');
+// Filled by loadUserData() from the server; empty until it resolves.
+let history = [];
+let presets = [];
+let customFilaments = [];
 let lastGeneratedResult = null;
 
 function addToHistory(filament, printer, nozzle, intent, settings, rawJSON) {
@@ -682,7 +740,7 @@ function addToHistory(filament, printer, nozzle, intent, settings, rawJSON) {
   };
   history.unshift(entry);
   if (history.length > 50) history = history.slice(0, 50); // cap at 50
-  localStorage.setItem('ff_history', JSON.stringify(history));
+  saveData({ history });
   renderHistory();
   updateHistoryCount();
   return entry;
@@ -695,7 +753,7 @@ function savePreset() {
 
   const preset = { ...lastGeneratedResult, presetName: name, savedAt: new Date().toISOString() };
   presets.unshift(preset);
-  localStorage.setItem('ff_presets', JSON.stringify(presets));
+  saveData({ presets });
   renderPresets();
 
   const btn = document.getElementById('btnSavePreset');
@@ -786,21 +844,21 @@ function displaySavedResult(entry) {
 
 function deleteHistoryEntry(idx) {
   history.splice(idx, 1);
-  localStorage.setItem('ff_history', JSON.stringify(history));
+  saveData({ history });
   renderHistory();
   updateHistoryCount();
 }
 
 function deletePreset(idx) {
   presets.splice(idx, 1);
-  localStorage.setItem('ff_presets', JSON.stringify(presets));
+  saveData({ presets });
   renderPresets();
 }
 
 function clearAllHistory() {
   if (!confirm('Clear all history?')) return;
   history = [];
-  localStorage.setItem('ff_history', JSON.stringify(history));
+  saveData({ history });
   renderHistory();
   updateHistoryCount();
 }
@@ -808,7 +866,7 @@ function clearAllHistory() {
 function clearAllPresets() {
   if (!confirm('Clear all saved presets?')) return;
   presets = [];
-  localStorage.setItem('ff_presets', JSON.stringify(presets));
+  saveData({ presets });
   renderPresets();
 }
 
@@ -848,7 +906,7 @@ function saveCustomFilament() {
   }
 
   customFilaments.push(custom);
-  localStorage.setItem('ff_custom_filaments', JSON.stringify(customFilaments));
+  saveData({ customFilaments });
   renderCustomFilaments();
 
   // Clear the manual form
@@ -925,16 +983,13 @@ function useCustomFilament(idx) {
 
 function deleteCustomFilament(idx) {
   customFilaments.splice(idx, 1);
-  localStorage.setItem('ff_custom_filaments', JSON.stringify(customFilaments));
+  saveData({ customFilaments });
   renderCustomFilaments();
 }
 
-// ─── INIT HISTORY/PRESETS/CUSTOM ON LOAD ───
+// ─── ONBOARDING CHECK ON LOAD ───
+// History/presets/custom filaments render when loadUserData() resolves.
 document.addEventListener('DOMContentLoaded', () => {
-  renderHistory();
-  renderPresets();
-  renderCustomFilaments();
-  updateHistoryCount();
   checkOnboarding();
 });
 

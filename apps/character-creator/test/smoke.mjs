@@ -4724,13 +4724,17 @@ section('Documented counts');
   // claude_usage belongs to the /api/claude proxy (the audit's F3 spend log),
   // the same site-level standing media_items has.
   const notOurs = ['media_items', 'schema_migrations', 'claude_usage'];
+  // FilamentForge's tables are all prefixed ff_ — the prefix is the collision
+  // boundary in the shared database, and that app documents its own data
+  // model rather than borrowing a table here.
   const undescribed = [...schema.matchAll(/CREATE TABLE IF NOT EXISTS ([a-z_]+)/g)]
     .map((m) => m[1])
-    .filter((t) => !named.has(t) && !notOurs.includes(t));
+    .filter((t) => !named.has(t) && !notOurs.includes(t) && !t.startsWith('ff_'));
   check('every table has a row in a data-model table',
     undescribed.length === 0, undescribed.join(', '));
   check('and the two it disclaims are still disclaimed',
     notOurs.every((t) => readme.includes('`' + t + '`')));
+  check('and the ff_ prefix is disclaimed', readme.includes('`ff_`'));
 
   // The data scripts grow with the audit — five landed in two days — and nothing
   // else records that one exists. A script nobody knows to run is a correction

@@ -45,7 +45,8 @@ nates-workshop/
 │   └── character-creator/    Palladium/Rifts character builder — the big one;
 │                             see its README for everything about it
 ├── db/
-│   ├── schema.sql            Shared D1 schema — MediaVault + character creator.
+│   ├── schema.sql            Shared D1 schema — MediaVault, FilamentForge
+│   │                         (ff_-prefixed) and the character creator.
 │   │                         Idempotent: every statement IF NOT EXISTS
 │   └── migrations/           One-shot ALTERs, tracked in schema_migrations
 ├── .claude/
@@ -61,7 +62,9 @@ nates-workshop/
 │   ├── sql-statements.mjs    Splitting .sql into statements; d1-apply and the
 │   │                         smoke test share it
 │   ├── class-check.mjs       Checks a class definition before it lands
-│   └── class-check-lib.mjs   The checks themselves, so the smoke test can run them
+│   ├── class-check-lib.mjs   The checks themselves, so the smoke test can run them
+│   └── ofd-refresh.mjs       Snapshot the Open Filament Database into D1 for
+│                             FilamentForge's catalog
 └── functions/
     └── api/
         ├── _middleware.js    Optional JWT verification on every /api/* route;
@@ -74,6 +77,8 @@ nates-workshop/
         │                     and the fail-open claude_usage spend log
         ├── claude.js         /api/claude — proxy (model allowlist + token cap)
         ├── media.js          /api/media — MediaVault CRUD, per-user via Access
+        ├── filament-forge/   catalog (the OFD snapshot) + data (per-user
+        │                     config/history/presets/custom filaments)
         └── character-creator/  46 endpoints + _lib; see the app README
 ```
 
