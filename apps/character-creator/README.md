@@ -2522,6 +2522,8 @@ scripts/
 ├── ofd-refresh.mjs         Snapshot the Open Filament Database into ff_brands
 │                           and ff_filaments — FilamentForge's catalog. The app
 │                           reads the snapshot; only this script talks to OFD
+├── ofd-refresh-lib.mjs     Its deterministic half — CSV in, ASCII SQL out —
+│                           so FilamentForge's smoke test can run it
 ├── drift-check.mjs         Repo vs live database: migrations, data scripts,
 │                           tables, columns, classes, and an advisory citation
 │                           check against a cached book

@@ -40,7 +40,7 @@ nates-workshop/
 ├── apps/
 │   ├── manifest.json         One entry per app; the dashboard reads this
 │   ├── _template/            Skeleton to copy when starting a new app
-│   ├── filament-forge/       AI slicer-settings engine
+│   ├── filament-forge/       AI slicer-settings engine; see its README
 │   ├── media-vault/          Personal media library
 │   └── character-creator/    Palladium/Rifts character builder — the big one;
 │                             see its README for everything about it
@@ -63,8 +63,10 @@ nates-workshop/
 │   │                         smoke test share it
 │   ├── class-check.mjs       Checks a class definition before it lands
 │   ├── class-check-lib.mjs   The checks themselves, so the smoke test can run them
-│   └── ofd-refresh.mjs       Snapshot the Open Filament Database into D1 for
-│                             FilamentForge's catalog
+│   ├── ofd-refresh.mjs       Snapshot the Open Filament Database into D1 for
+│   │                         FilamentForge's catalog
+│   └── ofd-refresh-lib.mjs   Its pure half, so FilamentForge's smoke test can
+│                             run it
 └── functions/
     └── api/
         ├── _middleware.js    Optional JWT verification on every /api/* route;

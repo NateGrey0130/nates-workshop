@@ -23,7 +23,10 @@ caught for you, so the checks happen before the merge or they do not happen.
    [ordering](#the-ordering-rule) below. This is the step that is wrong by
    default.
 4. **Verify**, at the layer the change lives in:
-   - always: `node apps/character-creator/test/smoke.mjs`
+   - always: `node apps/character-creator/test/smoke.mjs` and
+     `node apps/filament-forge/test/smoke.mjs` — the second is fast (no
+     wrangler) and pins FilamentForge's README, the snapshot SQL generator and
+     the data endpoint's sanitizers
    - added a class or catalog rows: **update the README's pinned counts in the
      same commit.** `test/regression.mjs` reads them out of the prose and
      compares against a database built from nothing, so they fail the run rather
