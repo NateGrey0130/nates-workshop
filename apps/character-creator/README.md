@@ -228,7 +228,7 @@ bookkeeping shared by both; the rest are this app.
 
 | Table | Notes |
 |---|---|
-| `campaigns` | Top-level container. `gm_email` owns it. `gm_notes` is GM-only and stripped from non-GM API responses. |
+| `campaigns` | Top-level container. `gm_email` owns it. `gm_notes` is GM-only and stripped from non-GM API responses. `open` (default 1) is the join gate: 0 means only the GM and existing members may create a character in it — see [Membership is not a table](#membership-is-not-a-table). |
 | `characters` | See below — several JSON columns. `class_variant` names which `variants` entry the character is; NULL means the class as written. `occ_class_id` is the O.C.C. taken alongside an R.C.C.; NULL means none. |
 | `enchantments` | What an alchemist can put into a weapon or a suit of armour, one row per property the book names. `cost` is the low end and `cost_note` the formula — *"2,000 gold per 20 S.D.C., 200 max on heavy armour"* is an arithmetic rule, not a number. `bonuses` is the **same JSON block** `skills.bonuses` uses, validated through the same `validateBonuses`, so `derive.js` needs no new cases. `limits` is what a picker has to act on: the Thunder Hammer is blunt weapons only. |
 | `character_items` | Inventory join. `item_id` NULL means a freeform item (`custom_name` required). `removed_at` NULL means currently held — removals are soft, so history survives. `enchantments` is a JSON array of `enchantments.slug`, on the **instance** rather than the catalog row. |
@@ -424,8 +424,8 @@ writes are gated (see [Permissions](#permissions)).
 | `catalogs/duplicates` | GET / POST | Admin. Suggested duplicate pairs for a catalog; POST merges two rows. `?counts_only=1` returns just the per-tier counts, for the badge |
 | `catalogs/redirects` | GET / DELETE | Admin. Retired keys and where they resolve (`?catalog=`); DELETE stops forwarding one (`&id=`). No POST — redirects are written by merges and renames |
 | `items` | GET | Gear catalog (table is `gear`), plus retired slugs as `redirects`. `?system=` — a NULL system is unrestricted, matching how `skills.systems` reads |
-| `campaigns` | GET / POST | List (`?system=`, `?limit=`, `?offset=`); create (caller becomes GM) |
-| `campaigns/[id]` | GET / PATCH | Details (`gm_notes` stripped for non-GM, and `is_member`); edit `gm_notes`, **GM only** |
+| `campaigns` | GET / POST | List (`?system=`, `?limit=`, `?offset=`), each row carrying `can_join` for THIS caller; create (caller becomes GM) |
+| `campaigns/[id]` | GET / PATCH | Details (`gm_notes` stripped for non-GM, and `is_member`); edit `gm_notes` and the `open` join gate, **GM only** |
 | `campaigns/[id]/search` | GET | FTS5 search over the campaign's notes (`?q=`, `?author=`, `?since=`). Free and instant — this is what runs as you type |
 | `campaigns/[id]/ask` | POST | `{question}` → a written answer over the notes, stash and ledger, citing the entries it used. One model call per press; see [Search is free, asking costs a call](#search-is-free-asking-costs-a-call) |
 | `campaigns/[id]/items` | GET / POST | The party stash (`?include_removed=1` for history); add a catalog or freeform item |
@@ -437,7 +437,7 @@ writes are gated (see [Permissions](#permissions)).
 | `campaigns/[id]/npcs/[npcId]/portrait` | GET / POST / DELETE | Stream, upload (raw `image/*` body, 5MB) and remove. **Never a public bucket URL** — every read goes through the membership check |
 | `campaigns/[id]/npcs/sweep` | POST | Propose the people nobody tagged. `?accept=1` creates the dossier a proposal named; `?dismiss=1` stops offering that name |
 | `draft` | GET / PUT / DELETE | The caller's own unfinished wizard build. No id in the route — a draft belongs to a person, not a collection. One each. **PUT states the version it is replacing** in `expect_updated_at` and is refused 409 otherwise; see [Two tabs cannot overwrite each other](#two-tabs-cannot-overwrite-each-other) |
-| `characters` | GET / POST | List (`?campaign_id=`, `?limit=`, `?offset=`); create at level 1 — **validated against the class rules** |
+| `characters` | GET / POST | List (`?campaign_id=`, `?limit=`, `?offset=`); create at level 1 — **validated against the class rules**, and refused 403 in a closed campaign unless the caller is its GM or already a member |
 | `characters/[id]` | GET / PATCH | Sheet + inventory, with `can_write` / `is_gm`; edit pools, notes, and the bio/combat/saves/armor sections. Also returns `skill_level_notes` and `weapon_bonuses` — what a skill grants that is not a summable number; see [A fighting style is a level schedule](#a-fighting-style-is-a-level-schedule) |
 | `characters/[id]/items` | POST | Add inventory row (catalog slug or freeform) |
 | `characters/[id]/items/[itemId]` | PATCH / DELETE | qty/equipped/notes; soft remove |
@@ -3550,6 +3550,19 @@ cannot post.** When that bites, an invite list can be added inside
 `campaignAccess()` and nothing else has to learn about it — that function is the
 only thing that knows the rule, which is what makes the decision reversible.
 
+**Joining is creating a character, and the GM holds the door.** Because
+membership is "owns a character here", an ungated `POST /characters` was an
+ungated door onto the campaign's notes, stash and ledger — anyone on the site
+could pull up a chair (the audit's F1). `campaigns.open` (migration 037)
+defaults to that open table for every campaign that exists; a GM who unticks
+**Open to new characters** on the dashboard closes it, and the create endpoint
+then refuses anyone who is not the GM or already a member. Who counts as a
+member stays `campaignAccess()`'s question. The wizard's campaign picker shows
+a closed campaign **disabled with the reason**, the barred-occupation pattern —
+a player looking for their table should learn it is closed, not that it does
+not exist — and the server refuses regardless, because a disabled `<option>` is
+a hint and not a rule.
+
 Three permissions, not one:
 
 | | who |
@@ -4779,6 +4792,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `031-character-mos.sql` | `characters.mos` — which Military Occupational Specialty a character took. RUE gives several classes an MOS ("select one area of specialty, gain all skills under that MOS"); the skills land in `skills` like any other, but which specialty was chosen has to be remembered rather than inferred back out of the skill list |
 | `032-gear-cost-note.sql` | `gear.cost_note` — what a price will not fit in one integer. RUE prices much of its common gear as a **range** (`Belt, Utility: 3-5 cr.`) and sometimes qualifies it instead (`double for gold`). `cost` holds the range’s LOW end, the way `spells.ppe` holds a variable cost’s minimum, and `cost_note` carries the wording verbatim |
 | `033-variant-note.sql` | `spells.variant_note` and `psionic_powers.variant_note` — what an OLDER book prints instead. Not `ppe_note`: the wizard treats the mere presence of that column as "this cost varies" and renders `7+ P.P.E.`, so a cross-book note there would make fourteen fixed-cost spells look variable |
+| `037-campaign-open.sql` | `open` on `campaigns` — the join gate. Joining a campaign IS creating a character in it (membership is "owns a character here"), so an ungated create was an ungated door onto the campaign's notes, stash and ledger. 1, the default every existing campaign keeps, is the open table; 0 admits only the GM and existing members. Enforced by `POST /characters`, toggled on the GM dashboard |
 | `036-enchantments-charm.sql` | `enchantments.applies_to` gains **charm** — a third family, and the book draws it the same way as the other two: *"The following magic effects can be **placed in** rings, bracelets, charms, and medallions"*, three powers to an item. Thirty of them, printed 253. SQLite cannot alter a `CHECK`, so the table is rebuilt and the rows copied by named column |
 | `035-enchantments.sql` | `enchantments`, and `character_items.enchantments` — what an alchemist puts INTO a sword, as opposed to a sword. Printed 249-250 sells three finished suits and then **32 properties** that go into ordinary gear, four to a suit and three to a weapon, cumulatively. The JSON array is on the **instance**: one long sword in a party of four can be the Demon Slayer while the other three stay ordinary |
 | `034-gear-sdc.sql` | `gear.sdc` — Structural Damage Capacity, which the book calls one of the **two** attributes of armour alongside A.R. (printed 270). The rules spend it: damage subtracts from it, at half S.D.C. the A.R. drops two points, at zero the armour is gone. All six Palladium suits kept it in free-text `description`, where no sheet and no arithmetic can reach it. Never the `1D6 S.D.C.` a knife *deals*, which is `damage` |

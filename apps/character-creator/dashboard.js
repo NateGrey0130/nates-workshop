@@ -82,6 +82,10 @@ function render() {
     <h3 style="margin-top:0">GM notes <span class="muted small">(only you can see or edit these)</span></h3>
     <textarea id="gm-notes">${escHtml(camp.gm_notes || '')}</textarea>
     <div class="rowline"><button class="btn btn-primary" onclick="saveNotes()">💾 Save GM notes</button><span id="notes-msg" class="muted small"></span></div>
+    <label class="small"><input type="checkbox" id="camp-open" ${camp.open ? 'checked' : ''} onchange="saveOpen(this.checked)">
+      Open to new characters
+      <span class="muted">— anyone on the site can join this campaign by creating one here; unticked, only you and current players can</span>
+      <span id="open-msg" class="muted small"></span></label>
   </div>` : ''}
 
   <div class="panel">
@@ -91,6 +95,24 @@ function render() {
     <p class="small"><a href="campaign.html?campaign_id=${campaignId}">🗒 Open campaign notes</a>
       <span class="muted">— search the log, ask a question of it, and track what the party holds</span></p>
   </div>`;
+}
+
+// The join gate. Joining a campaign IS creating a character in it, so whether
+// creation is open to the site is the GM's call — enforced by POST /characters,
+// toggled here.
+async function saveOpen(open) {
+  try {
+    await api('campaigns/' + campaignId, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ open }),
+    });
+    D.campaign.open = open ? 1 : 0;
+    $('open-msg').textContent = open ? 'Open.' : 'Closed.';
+    $('open-msg').className = 'muted small';
+  } catch (err) {
+    $('open-msg').textContent = 'Save failed: ' + err.message;
+    $('open-msg').className = 'err small';
+  }
 }
 
 async function saveNotes() {

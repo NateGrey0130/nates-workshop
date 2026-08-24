@@ -6,7 +6,8 @@ import { getUserEmail, unauthorized, json, readJson } from './_lib/auth.js';
 import { paging, pagedQuery } from './_lib/paging.js';
 
 export async function onRequestGet({ request, env }) {
-  if (!getUserEmail(request)) return unauthorized();
+  const email = getUserEmail(request);
+  if (!email) return unauthorized();
   const system = new URL(request.url).searchParams.get('system');
   const { limit, offset } = paging(request);
   const where = system ? ' WHERE system = ?' : '';
@@ -15,10 +16,23 @@ export async function onRequestGet({ request, env }) {
   const page = await pagedQuery(env, {
     countSql: `SELECT count(*) AS n FROM campaigns${where}`,
     countBinds: binds,
-    rowsSql: `SELECT id, name, system, gm_email FROM campaigns${where} ORDER BY name`,
+    rowsSql: `SELECT id, name, system, gm_email, open FROM campaigns${where} ORDER BY name`,
     rowsBinds: binds,
     limit, offset,
   });
+
+  // Whether THIS caller may create a character in each row — open, their own
+  // campaign, or one they already have a character in. Computed here rather
+  // than in the wizard because the wizard would need the whole character list
+  // to answer it, and the server is the boundary anyway; the picker only uses
+  // this to disable an option instead of offering a refusal.
+  const { results: mine } = await env.DB.prepare(
+    'SELECT DISTINCT campaign_id FROM characters WHERE player_email = ?'
+  ).bind(email).all();
+  const memberOf = new Set((mine || []).map((r) => r.campaign_id));
+  for (const c of page.results) {
+    c.can_join = !!c.open || c.gm_email === email || memberOf.has(c.id);
+  }
 
   return json({ campaigns: page.results, total: page.total, limit: page.limit, offset: page.offset });
 }

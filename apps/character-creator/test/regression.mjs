@@ -130,6 +130,26 @@ async function api(method, path, body) {
   return { status: res.status, body: payload };
 }
 
+// The same request as somebody else. Local dev has no Access in front of it,
+// so the identity header is ours to state — the technique the README already
+// documents for testing owner/GM rules by hand. Without it every request is
+// dev@localhost, who is the GM of everything this file creates, and a
+// permission check exercised only as the GM proves nothing.
+async function apiAs(who, method, path, body) {
+  const res = await fetch(BASE + path, {
+    method,
+    headers: {
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      'Cf-Access-Authenticated-User-Email': who,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  let payload = null;
+  const text = await res.text();
+  try { payload = JSON.parse(text); } catch { payload = { raw: text.slice(0, 200) }; }
+  return { status: res.status, body: payload };
+}
+
 // ── the boot calls ──────────────────────────────────────────────────────────
 console.log('\n[3/8] What the wizard loads on start');
 const me = await api('GET', '/me');
@@ -250,6 +270,54 @@ check('and reports write permission for its owner', sheet.body.can_write === tru
 // the guard folded into requireCharacter, on a real request
 const missing = await api('GET', '/characters/99999999');
 check('a character that does not exist is a 404, not a 403', missing.status === 404, missing.status);
+
+// ── the join gate ───────────────────────────────────────────────────────────
+// Joining a campaign IS creating a character in it — membership is "owns a
+// character here" — so campaigns.open is the door onto its notes, stash and
+// ledger. Closed admits only the GM and the people already in, and who is
+// "in" stays campaignAccess's question. Migration 037.
+{
+  const joinable = (name) => ({
+    campaign_id: campaignId, name, class_id: cls.id,
+    attributes: attrs, skills: [], abilities: [], bio: { alignment: 'Principled' },
+  });
+
+  const listedOpen = await apiAs('stranger@example.com', 'GET', '/campaigns');
+  const rowOpen = (listedOpen.body.campaigns || []).find((c) => c.id === campaignId);
+  check('an open campaign lists as joinable to a stranger', rowOpen?.can_join === true,
+    JSON.stringify(rowOpen));
+
+  const closed = await api('PATCH', `/campaigns/${campaignId}`, { open: false });
+  check('the GM can close it to new characters', closed.status === 200, closed.body);
+  const barred = await apiAs('stranger@example.com', 'PATCH', `/campaigns/${campaignId}`, { open: true });
+  check('and nobody else can reopen it', barred.status === 403, barred.status);
+
+  const crasher = await apiAs('stranger@example.com', 'POST', '/characters', joinable('Gate Crasher'));
+  check('a stranger cannot create a character in a closed campaign',
+    crasher.status === 403, JSON.stringify(crasher.body).slice(0, 200));
+  const listedClosed = await apiAs('stranger@example.com', 'GET', '/campaigns');
+  const rowClosed = (listedClosed.body.campaigns || []).find((c) => c.id === campaignId);
+  check('and the list says so, per caller', rowClosed?.can_join === false,
+    JSON.stringify(rowClosed));
+
+  // dev@localhost is the GM and a member at once, so the member path gets its
+  // own person: joined while the door was open, then admitted through it
+  // closed. That is the distinction the gate exists to draw — joining is
+  // gated, being in is not.
+  await api('PATCH', `/campaigns/${campaignId}`, { open: true });
+  const joined = await apiAs('player2@example.com', 'POST', '/characters', joinable('Second Chair'));
+  check('anyone may join an OPEN campaign by creating a character',
+    joined.status === 201, JSON.stringify(joined.body).slice(0, 200));
+  await api('PATCH', `/campaigns/${campaignId}`, { open: false });
+  const second = await apiAs('player2@example.com', 'POST', '/characters', joinable('Second Chair Again'));
+  check('an existing member still may once it closes', second.status === 201,
+    JSON.stringify(second.body).slice(0, 200));
+  const gmNpc = await api('POST', '/characters', joinable('GM NPC'));
+  check('and so may the GM', gmNpc.status === 201, JSON.stringify(gmNpc.body).slice(0, 200));
+
+  // Back to open, so nothing downstream inherits the closed state.
+  await api('PATCH', `/campaigns/${campaignId}`, { open: true });
+}
 
 // ── inventory ───────────────────────────────────────────────────────────────
 console.log('\n[5/8] Inventory, XP, level-up, picks, play');
