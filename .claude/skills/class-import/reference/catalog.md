@@ -11,8 +11,13 @@ below follows from that.
   `Lore: Astral`, `Navigation: Stellar`, `Language: Mongolian`,
   `Streetwise: Drugs`. This matches the catalog's existing `Lore: Magic`,
   `Language: Other`, `Horsemanship: General`.
-- **Pilot skills store without a `Pilot:` prefix** — `Robots and Power Armor`,
-  `Automobile`, `Truck`, `Hover Craft (ground)`. The `Military:` prefix is a
+- **Pilot skills store without a `Pilot:` prefix** — `Robots & Power Armor`,
+  `Automobile`, `Truck`, `Hover Craft (ground)`. Note the ampersand: this
+  reference said `Robots and Power Armor` for months after the catalog renamed
+  the row, the Godling's `except` list was written from it, and an unmatched
+  `except` excludes NOTHING — so the class went on offering the one Pilot skill
+  its book forbids. **Query the catalog for the spelling; do not copy it from
+  here.** The `Military:` prefix is a
   different matter and this reference used to get it wrong: it said
   `Military: Warships & Patrol Boats` was "the exception the catalog already
   holds", and the catalog holds **five** — Warships & Patrol Boats, Combat

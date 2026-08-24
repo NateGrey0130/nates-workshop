@@ -2923,8 +2923,14 @@ section('Category skill bonuses');
 // literal names. So a name no catalog row has does not fail — an `except`
 // excludes NOTHING and the class silently offers a skill the book forbids.
 // Found importing the Godling R.C.C.: it bars robots, power armor and
-// cybernetics, and the catalog spells those "Robots and Power Armor",
+// cybernetics, and the catalog spells those "Robots & Power Armor",
 // "Robot Combat: Basic" and "M.D. in Cybernetics", so all three did nothing.
+// The Godling then outlived the fix. Its import corrected two of the three and
+// left "Robots and Power Armor"; the catalog LATER renamed that row to the
+// ampersand spelling and kept the old one as a redirect, which restrictions do
+// not consult, so the exclusion went on doing nothing for months while every
+// catalog check passed. A rename can break a restriction that was right when it
+// was written, and only this cross-reference will say so.
 section('Unresolved category restrictions');
 {
   const cls = parseClassMarkdown(`---
