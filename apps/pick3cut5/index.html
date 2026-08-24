@@ -81,7 +81,7 @@
       <p class="hint">Anything with eight recognisable entries.</p>
       <label class="verify-toggle">
         <input type="checkbox" id="verifySolo">
-        <span>Double-check this list against the web <em>(slower, for categories you want right)</em></span>
+        <span>Double-check the whole list against the web <em>(about a minute, and far pricier than checking one item mid-round)</em></span>
       </label>
 
       <button class="btn btn-primary btn-big" type="submit">Build the list</button>
@@ -105,7 +105,7 @@
 
       <label class="verify-toggle">
         <input type="checkbox" id="verifyLobby">
-        <span>Double-check this list against the web <em>(slower, for categories you want right)</em></span>
+        <span>Double-check the whole list against the web <em>(about a minute, and far pricier than checking one item mid-round)</em></span>
       </label>
 
       <details class="timer-settings">
@@ -168,9 +168,18 @@
       <!-- Verification only runs for time-sensitive categories now, so this is
            the backstop for a plausible invention reaching the table. Anyone can
            press it, not just the host. -->
-      <button class="btn btn-ghost btn-flag" id="btnFlag" hidden>
-        🚩 That's wrong — swap it
-      </button>
+      <div class="doubt-row">
+        <button class="btn btn-ghost btn-flag" id="btnFlag" hidden>
+          🚩 That's wrong — swap it
+        </button>
+        <!-- Host only. Costs a real search-enabled call, which is why it is
+             separate from the free swap next to it: swap is "I know", this is
+             "I think". -->
+        <button class="btn btn-ghost btn-check host-only" id="btnCheck" hidden>
+          🔍 Check this one
+        </button>
+      </div>
+      <p class="checking-note" id="checkingNote" hidden></p>
     </div>
 
     <div class="actions" id="actions" hidden>
@@ -212,7 +221,7 @@
       <input id="againCategory" maxlength="60" autocomplete="off" placeholder="something else">
       <label class="verify-toggle">
         <input type="checkbox" id="verifyAgain">
-        <span>Double-check this list against the web <em>(slower, for categories you want right)</em></span>
+        <span>Double-check the whole list against the web <em>(about a minute, and far pricier than checking one item mid-round)</em></span>
       </label>
       <button class="btn btn-primary btn-big" type="submit" id="btnAgain">Go again</button>
       <!-- The final screen is dead time — everyone is arguing about each
@@ -226,7 +235,7 @@
       <input id="soloAgainCategory" maxlength="60" autocomplete="off" placeholder="something else">
       <label class="verify-toggle">
         <input type="checkbox" id="verifySoloAgain">
-        <span>Double-check this list against the web <em>(slower, for categories you want right)</em></span>
+        <span>Double-check the whole list against the web <em>(about a minute, and far pricier than checking one item mid-round)</em></span>
       </label>
       <button class="btn btn-primary btn-big" type="submit">Go again</button>
       <p class="prefetch-status" id="soloPrefetchStatus" hidden></p>

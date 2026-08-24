@@ -96,6 +96,9 @@ function handle(msg) {
       $('itemCard').classList.add('landing');
       announce(`Item ${msg.index + 1}: ${msg.item}`);
       break;
+    case 'item_checked':
+      announce(msg.pass ? `${msg.item} checks out.` : `${msg.item} failed the check: ${msg.reason}`);
+      break;
     case 'item_replaced':
       announce(`${msg.by} called out ${msg.rejected}. Swapping it.`);
       break;
@@ -199,10 +202,48 @@ function renderPlay(s) {
         : "🚩 you've called this one";
   }
 
+  // The host's on-demand check.
+  const checkVisible = flagVisible && mode === 'party' && s.isHost;
+  $('btnCheck').hidden = !checkVisible;
+  if (checkVisible) {
+    $('btnCheck').disabled = !s.canCheck;
+    $('btnCheck').textContent = s.checksLeft <= 0
+      ? 'no checks left this round'
+      : `🔍 Check this one (${s.checksLeft} left)`;
+  }
+
+  // Shown to EVERYONE, not just the host — the round is held up for all of
+  // them, so a silent pause would read as the game having frozen.
+  const note = $('checkingNote');
+  note.className = 'checking-note';
+  if (s.checking) {
+    note.hidden = false;
+    note.textContent = `${s.checking.by} is checking "${s.checking.item}" against the web…`;
+  } else if (s.checkResult && s.checkResult.item === s.item) {
+    note.hidden = false;
+    note.classList.add('check-pass');
+    note.textContent = s.checkResult.unreadable
+      ? 'Could not check that one — playing on.'
+      : 'Checked — it holds up.';
+  } else {
+    note.hidden = true;
+  }
+
+  // While a check is running nobody may commit; the item might be about to
+  // change underneath them.
+  if (s.checking) {
+    $('btnKeep').disabled = true;
+    $('btnCut').disabled = true;
+    $('btnFlag').disabled = true;
+  }
+
   $('calloutNote').hidden = !(flagVisible && s.lastFlag);
   if (s.lastFlag) {
+    const why = s.lastFlag.why && s.lastFlag.why !== 'called out by a player'
+      ? ` — ${escHtml(s.lastFlag.why)}`
+      : '';
     $('calloutNote').innerHTML =
-      `${escHtml(s.lastFlag.by)} called out <span class="callout-item">${escHtml(s.lastFlag.rejected)}</span> — swapped`;
+      `${escHtml(s.lastFlag.by)} called out <span class="callout-item">${escHtml(s.lastFlag.rejected)}</span>${why || ' — swapped'}`;
   }
 
   // How many have chosen, never what.
@@ -442,6 +483,9 @@ function soloSnapshot() {
     // genuinely are here in solo — there is nobody to hide them from — but the
     // renderer is shared, so the shape has to be.
     prefetch: { status: solo.prefetch.status, category: solo.prefetch.category },
+    // Solo has no on-demand check: it would be a new public endpoint, and a
+    // solo player who doubts an item can already just swap it.
+    checking: null, checkResult: null, checksLeft: 0, canCheck: false,
   };
 }
 
@@ -779,6 +823,7 @@ $('btnCut').addEventListener('click', () => (mode === 'solo' ? soloPick('cut') :
 $('btnAccept').addEventListener('click', () => (mode === 'solo' ? soloAdvance() : send({ type: 'accept' })));
 $('btnForce').addEventListener('click', () => send({ type: 'force_advance' }));
 $('btnFlag').addEventListener('click', () => (mode === 'solo' ? soloFlag() : send({ type: 'flag_item' })));
+$('btnCheck').addEventListener('click', () => send({ type: 'check_item' }));
 
 $('formSoloAgain').addEventListener('submit', (e) => {
   e.preventDefault();

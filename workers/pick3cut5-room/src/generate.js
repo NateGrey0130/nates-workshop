@@ -362,3 +362,62 @@ export function shuffle(list) {
 }
 
 export { AnthropicError };
+
+/**
+ * Check ONE item, on demand, because somebody at the table doubts it.
+ *
+ * MEASURED, and not what I expected. A full twelve-candidate verification is
+ * ~57,000 input tokens / ~$0.19. A single-item check is ~20,000-27,000 input
+ * tokens / ~$0.075 — because the search RESULTS dominate the context, and
+ * searching for one thing still drags back twenty thousand tokens of pages.
+ *
+ * So per item this is roughly five times WORSE than batching, and the saving
+ * comes entirely from not doing it. Two checks cost $0.15 against $0.19 for
+ * verifying everything; a third would cost more than the whole list. That is
+ * why the cap is two, and it is the real argument for this feature: on most
+ * rounds nobody doubts anything and it costs nothing at all, where the
+ * whole-list toggle costs $0.19 every single time it is ticked.
+ *
+ * It is also the better-aimed spend. The pipeline cannot tell that Tony Scott
+ * directed True Romance; a room that knows films can, instantly and for free.
+ * All this does is settle the cases where they suspect rather than know.
+ */
+export async function verifyOne(env, category, item, endpoint) {
+  const system = 'You fact-check a single claim. Reply with one JSON object and nothing else. '
+    + 'No markdown fences, no preamble.';
+
+  const prompt = `Category: "${category}"
+Claimed member: "${item}"
+
+Does this genuinely belong in that category? Use web search to check rather than relying on memory.
+
+Be specifically suspicious of:
+- Status that decays: active, current, signed, in office, still running, reigning
+- Attribution to the wrong person, team, studio, label, director or year
+- Things that sound right and do not exist
+- Near misses: someone who WROTE a film but did not direct it, a band member who
+  joined later, an anthology one contributor is being credited for
+
+Return exactly:
+{"verdict": "pass" | "fail", "reason": "<one short line a player will read; required when the verdict is fail>"}`;
+
+  const raw = await callClaude(env, {
+    model: env.P3C5_MODEL_VERIFY,
+    endpoint,
+    system,
+    prompt,
+    maxTokens: 1500,
+    search: true,
+    effort: 'verify',
+  });
+
+  const parsed = parseJson(raw, 'object');
+  // An unreadable answer is NOT a failure of the item. Saying "could not check"
+  // and leaving the item alone is honest; swapping on a parse error would let a
+  // flaky response quietly rewrite the round.
+  if (!parsed) return null;
+  return {
+    pass: parsed.verdict === 'pass',
+    reason: typeof parsed.reason === 'string' ? parsed.reason.slice(0, 160) : '',
+  };
+}

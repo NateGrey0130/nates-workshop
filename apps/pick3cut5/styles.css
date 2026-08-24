@@ -362,6 +362,30 @@ main { padding: 20px 18px 48px; max-width: 620px; margin: 0 auto; }
 }
 .prefetch-status.working .dot { animation: pulse 1.4s ease-in-out infinite; }
 
+.doubt-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.btn-check {
+  font-size: 12px;
+  padding: 7px 13px;
+  color: var(--text-muted);
+  border-color: transparent;
+}
+.btn-check:hover:not(:disabled) { color: var(--accent); border-color: var(--border); }
+.btn-check:disabled { opacity: 0.35; }
+
+.checking-note {
+  font-size: 13px;
+  text-align: center;
+  color: var(--accent);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.checking-note::before {
+  content: ''; width: 13px; height: 13px; flex: none;
+  border: 2px solid var(--border); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin 0.9s linear infinite;
+}
+.check-pass { color: var(--keep); }
+.check-pass::before { display: none; }
+
 .callout {
   font-size: 13px;
   line-height: 1.5;
