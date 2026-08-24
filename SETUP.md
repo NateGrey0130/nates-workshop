@@ -116,16 +116,19 @@ Settings → Environment variables, both encrypted:
   creator's PDF importers. A new value takes effect on the **next deployment**.
 - `ADMIN_EMAIL` — the single email allowed to use the importers and catalog
   editor. The check **fails closed** when unset.
-- `ACCESS_TEAM_DOMAIN` + `ACCESS_AUD` — **optional, and off until BOTH are
-  set**: turn on JWT verification of the Access identity on every `/api/*`
-  route (defence in depth — the identity header alone is only as good as the
-  Access application staying configured). `ACCESS_TEAM_DOMAIN` is the team's
-  domain (`<team>.cloudflareaccess.com`, Zero Trust → Settings → Custom Pages
-  shows it); `ACCESS_AUD` is the Access application's **Application Audience
-  (AUD) tag** (Zero Trust → Access → Applications → this app → Overview).
-  Unset, every request passes through exactly as before, which is what makes
-  this safe to deploy ahead of the configuration — set them only after the
-  deploy that ships the middleware.
+- `ACCESS_TEAM_DOMAIN` + `ACCESS_AUD` — turn on JWT verification of the
+  Access identity on every `/api/*` route (defence in depth — the identity
+  header alone is only as good as the Access application staying configured).
+  **Both live in `wrangler.jsonc` `vars`, not the dashboard**: this project
+  manages plain variables through its wrangler config (the dashboard holds
+  only the two encrypted secrets above), and neither value is a secret — the
+  AUD tag rides in every login redirect URL. `ACCESS_TEAM_DOMAIN` is the
+  team's domain (`<team>.cloudflareaccess.com`); `ACCESS_AUD` is the Access
+  application's **Application Audience (AUD) tag** (Zero Trust → Access →
+  Applications → this app → Additional settings). The middleware passes
+  through when either is missing, and exempts `localhost` — local dev reads
+  the same vars and has no Access to mint a token. To stand down, remove both
+  from `wrangler.jsonc` and merge.
 
 ### Who is spending the Anthropic key
 
@@ -200,8 +203,9 @@ request — usually a session that expired mid-use; reload and log back in.
 
 **Every API call returns 503 naming signing keys**
 → `ACCESS_TEAM_DOMAIN` is set but wrong (or the certs endpoint is unreachable).
-Fix the variable, or unset the `ACCESS_TEAM_DOMAIN`/`ACCESS_AUD` pair to fall
-back to header-trust.
+Fix the value in `wrangler.jsonc`, or remove the
+`ACCESS_TEAM_DOMAIN`/`ACCESS_AUD` pair there to fall back to header-trust —
+either way, merging is the deploy that applies it.
 
 **Cloudflare Access screen doesn't appear**
 → The application domain must exactly match the Pages URL (or custom domain).

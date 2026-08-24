@@ -6,6 +6,24 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
+  // Arms the Access JWT verification in functions/api/_middleware.js: every
+  // /api/* request must carry a token signed by this team, for this
+  // application. NEITHER VALUE IS A SECRET - the AUD tag rides in every login
+  // redirect URL - and this project manages plain variables here rather than
+  // in the dashboard (the dashboard holds only the two encrypted secrets).
+  //
+  // These reach `wrangler pages dev` too, where no Access exists to mint a
+  // token; the middleware exempts localhost for exactly that reason, the same
+  // reality auth.js's dev@localhost fallback answers. Preview deployments
+  // built from this config are armed as well - they sit OUTSIDE Access, so
+  // arming them turns their /api/* into a wall rather than an open door.
+  //
+  // To stand down: remove both (the middleware passes through unless both are
+  // set) and merge.
+  "vars": {
+    "ACCESS_TEAM_DOMAIN": "fatmans.cloudflareaccess.com",
+    "ACCESS_AUD": "2496fc92a44613095fab0041f70ad421f2539ddf0fa5dbb7994cc0d514c4ebd3"
+  },
   "d1_databases": [
     {
       "binding": "DB",
