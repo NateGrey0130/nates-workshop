@@ -14,6 +14,9 @@ const PRINTER_SPECS = {
   'bambu-x1c': { name: 'Bambu Lab X1C', maxSpeed: 500, maxAccel: 20000, maxVolFlow: 32, hasChamber: true, bedType: 'textured PEI' },
   'bambu-a1': { name: 'Bambu Lab A1', maxSpeed: 500, maxAccel: 10000, maxVolFlow: 28, hasChamber: false, bedType: 'textured PEI' },
   'bambu-a1-mini': { name: 'Bambu Lab A1 Mini', maxSpeed: 500, maxAccel: 10000, maxVolFlow: 28, hasChamber: false, bedType: 'textured PEI' },
+  // Dual-nozzle Vortek tool changer; the numbers are the machine's limits,
+  // which is all the prompt consumes. hasChamber means HEATED here (65°C).
+  'bambu-h2c': { name: 'Bambu Lab H2C', maxSpeed: 1000, maxAccel: 20000, maxVolFlow: 40, hasChamber: true, bedType: 'textured PEI' },
 };
 
 // ─── INIT ───

@@ -218,7 +218,7 @@ check('the migration the README names exists',
 }
 
 {
-  const words = { fifty: 50, six: 6 };
+  const words = { fifty: 50, six: 6, seven: 7 };
   const cap = readme.match(/capped at (\w+) per user/);
   check('the README states the history cap', !!cap);
   check('and it matches the endpoint’s constant',
