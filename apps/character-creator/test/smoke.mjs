@@ -746,6 +746,26 @@ section('Creation validation');
   check('a pool with no formula is skipped, never guessed at',
     !pw({ mdc_max: 5000 }).warnings.some((w) => w.rule === 'pool_out_of_range'));
 
+  // The hard cap (F2 follow-up): the same finding becomes a violation when the
+  // caller enforces — the create endpoint does, for a creator who is not the
+  // campaign's GM — and stays the GM's warning otherwise. One finding, one
+  // range computation, two homes; it must never appear in both.
+  check('enforced, an out-of-range pool is a violation that names the range', (() => {
+    const r = validateCharacter({ ...legal, cls: poolCls, attributes: { ME: 14, PE: 10 },
+      pools: { hp_max: 900 }, enforcePools: true });
+    const v = r.violations.find((x) => x.rule === 'pool_out_of_range');
+    return !!v && /11-16/.test(v.message)
+      && !r.warnings.some((x) => x.rule === 'pool_out_of_range');
+  })());
+  check('enforced, a rollable pool still passes',
+    validateCharacter({ ...legal, cls: poolCls, attributes: { ME: 14, PE: 10 },
+      pools: { hp_max: 12 }, enforcePools: true }).violations.length === 0);
+  check('unenforced stays the warning — the GM tolerance and the audit', (() => {
+    const r = validateCharacter({ ...legal, cls: poolCls, attributes: { ME: 14, PE: 10 },
+      pools: { hp_max: 900 } });
+    return r.violations.length === 0 && r.warnings.some((w) => w.rule === 'pool_out_of_range');
+  })());
+
   // Attribute ceilings: advisory, because Manual entry exists for numbers a
   // table decided, and the app must not become the GM.
   check('an attribute above its dice ceiling warns and never blocks', (() => {

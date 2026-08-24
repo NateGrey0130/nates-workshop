@@ -439,7 +439,7 @@ writes are gated (see [Permissions](#permissions)).
 | `campaigns/[id]/npcs/[npcId]/portrait` | GET / POST / DELETE | Stream, upload (raw `image/*` body, 5MB) and remove. **Never a public bucket URL** — every read goes through the membership check |
 | `campaigns/[id]/npcs/sweep` | POST | Propose the people nobody tagged. `?accept=1` creates the dossier a proposal named; `?dismiss=1` stops offering that name |
 | `draft` | GET / PUT / DELETE | The caller's own unfinished wizard build. No id in the route — a draft belongs to a person, not a collection. One each. **PUT states the version it is replacing** in `expect_updated_at` and is refused 409 otherwise; see [Two tabs cannot overwrite each other](#two-tabs-cannot-overwrite-each-other) |
-| `characters` | GET / POST | List (`?campaign_id=`, `?limit=`, `?offset=`); create at the starting level — **validated against the class rules, creation-time powers included**, and refused 403 in a closed campaign unless the caller is its GM or already a member |
+| `characters` | GET / POST | List (`?campaign_id=`, `?limit=`, `?offset=`); create at the starting level — **validated against the class rules, creation-time powers included, pool maxima capped to the class formulas for non-GM creators** — and refused 403 in a closed campaign unless the caller is its GM or already a member |
 | `characters/[id]` | GET / PATCH | Sheet + inventory, with `can_write` / `is_gm`; edit pools, notes, and the bio/combat/saves/armor sections. Also returns `skill_level_notes` and `weapon_bonuses` — what a skill grants that is not a summable number; see [A fighting style is a level schedule](#a-fighting-style-is-a-level-schedule) |
 | `characters/[id]/items` | POST | Add inventory row (catalog slug or freeform) |
 | `characters/[id]/items/[itemId]` | PATCH / DELETE | qty/equipped/notes; soft remove |
@@ -3929,10 +3929,16 @@ under-enforcing at the seams rather than ever refusing a legal build.
 dice are rolled client-side by design, so the server bounds each stored pool
 maximum against the range its class formula can actually produce
 (`poolFormulaBounds` — the same parse walk `rollPoolFormula` takes, with every
-die pinned to its floor or ceiling), per-level growth included. Outside the
-range is a **warning**, never a violation: a class re-imported with a different
-formula would falsify an honest roll, and the level-up flow already sanctions
-tweaking numbers "if your GM says so". Attributes get the same treatment
+die pinned to its floor or ceiling), per-level growth included. At **creation**
+an out-of-range maximum is a **violation for anyone but the campaign's GM** —
+the wizard offers no way to type a pool, so a non-GM value outside the range is
+a crafted request with no honest roll behind it, and the class the wizard
+rolled from is the same current class the server checks seconds later. The
+**GM keeps a warning instead of a refusal**: a GM ruling beats a computed
+number everywhere else in the app, and transcribing a long-running character
+faithfully is exactly that case. The audit never enforces (existing characters
+are not retro-validated), and the level-up flow's sanctioned "tweak if your GM
+says so" is deliberately a different door. Attributes get the same treatment
 against the highest their dice can roll, exceptional chain included
 (`attributeCeiling`) — advisory because Manual entry exists precisely for
 numbers a table decided. Both surface in the admin audit, which now receives

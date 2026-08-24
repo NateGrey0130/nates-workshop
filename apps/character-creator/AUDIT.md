@@ -245,6 +245,15 @@ choice-groups can't be checked in principle.
   campaign's system. The audit's composition also now decodes the character
   first, so ability-granted pool bonuses fold in rather than reading as out of
   range. README → *Server-side rule enforcement* carries the full rules.
+- **Follow-up taken, 2026-08-24 — the pool hard cap**, with the proposal's own
+  "tolerance for GM overrides" as the design: at creation,
+  `pool_out_of_range` is a **violation for any creator who is not the
+  campaign's GM** (`enforcePools` in the validator; the create endpoint sets
+  it from the verified caller vs `gm_email`). The GM keeps the warning — a
+  ruling beats a computed number, and transcribing a long-running character
+  faithfully is that case. The audit stays advisory (no retro-validation) and
+  level-confirm's sanctioned tweaks are untouched. Attribute ceilings remain
+  warnings for everyone: Manual entry exists for numbers a table decided.
 
 ### F3 — low — `/api/claude` is an unmetered spend endpoint for every authenticated friend
 

@@ -71,7 +71,7 @@ export async function onRequestPost({ request, env }) {
   for (const field of ['campaign_id', 'name', 'class_id']) {
     if (!b[field]) return json({ error: `Missing required field: ${field}` }, 400);
   }
-  const campaign = await env.DB.prepare('SELECT id, open, system FROM campaigns WHERE id = ?').bind(b.campaign_id).first();
+  const campaign = await env.DB.prepare('SELECT id, open, system, gm_email FROM campaigns WHERE id = ?').bind(b.campaign_id).first();
   if (!campaign) return json({ error: 'Campaign not found' }, 404);
 
   // Creating a character in a campaign is how you JOIN it — membership is
@@ -175,6 +175,13 @@ export async function onRequestPost({ request, env }) {
     catalog: cls ? await loadSkillCategories(env) : null,
     powers: b.powers || [],
     pools: { hp_max: p.hp, sdc_max: p.sdc, mdc_max: p.mdc, ppe_max: p.ppe, isp_max: p.isp },
+    // The F2 hard cap, with the proposal's own tolerance: a pool maximum
+    // outside what the class formulas can roll REFUSES the create — unless
+    // the creator is the campaign's GM, whose ruling beats a computed number
+    // everywhere else in the app (transcribing a long-running character
+    // faithfully is exactly that case). The wizard cannot produce an
+    // out-of-range value; only a crafted request can.
+    enforcePools: email !== campaign.gm_email,
     system: campaign.system ?? null,
     // Loaded without a system filter; the validator applies the campaign's
     // system itself so a wrong-system pick is named as such rather than

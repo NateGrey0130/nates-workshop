@@ -16,7 +16,9 @@
 //     level caps, categories and named lists (the class's auto-granted ones
 //     are exempt — they are granted, not chosen)
 //   - when the caller supplies `pools`: whether each stored maximum is inside
-//     the range its class formula can actually roll (advisory only)
+//     the range its class formula can actually roll — a violation when the
+//     caller sets `enforcePools` (the create endpoint does, for a creator who
+//     is not the campaign's GM), a warning otherwise
 //   - whether an attribute exceeds the highest its dice can come up
 //     (advisory only — Manual entry exists for numbers a table decided)
 //
@@ -85,7 +87,8 @@ export function secondaryAllowance(cls, level) {
 }
 
 export function validateCharacter({ character, cls, skills, attributes, abilities, catalog,
-                                    powers, pools, system, powerCatalog }) {
+                                    powers, pools, system, powerCatalog,
+                                    enforcePools = false }) {
   // No class definition means no rules to check against. A character whose
   // class was retired must still be saveable — PR 2 made that survivable on
   // purpose, and refusing here would undo it.
@@ -465,14 +468,24 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
     }
   }
 
-  // ── pool maxima (advisory) ────────────────────────────────────────────────
+  // ── pool maxima ───────────────────────────────────────────────────────────
   // The dice are rolled client-side by design — the rolls are the point — so
   // the server cannot know what they CAME UP, only what they COULD. A stored
-  // maximum outside the formula's possible range has no legitimate roll behind
-  // it; a warning rather than a violation because a class re-imported with a
-  // different formula would falsify an honest roll, and the level-up flow
-  // sanctions tweaking numbers "if your GM says so". The audit is where these
-  // surface.
+  // maximum outside the formula's possible range has no legitimate roll
+  // behind it.
+  //
+  // Whether that BLOCKS is the caller's question, and the F2 proposal's own
+  // "tolerance for GM overrides" answers it. The create endpoint passes
+  // `enforcePools` when the creator is NOT the campaign's GM: the wizard
+  // offers no way to type a pool, so a non-GM creation outside the range is a
+  // crafted request, and there is no honest roll to falsify — the class the
+  // wizard rolled from and the class this validates against are the same
+  // current class, seconds apart. The GM keeps the warning instead of the
+  // refusal, because a GM ruling beats a computed number everywhere else in
+  // the app — transcribing a long-running character faithfully is exactly the
+  // case the tolerance exists for. The audit never enforces: existing
+  // characters are not retro-validated, and the level-up flow's sanctioned
+  // "tweak if your GM says so" is a different door on purpose.
   if (pools && typeof pools === 'object') {
     const formulas = {
       hp_max: ['hp', cls.hit_points_base],
@@ -491,8 +504,10 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
       const min = bounds.min + (perB ? perB.min * (level - 1) : 0);
       const max = bounds.max + (perB ? perB.max * (level - 1) : 0);
       if (v < min || v > max) {
-        warnings.push({ rule: 'pool_out_of_range', field, value: v, min, max,
-          message: `${field} is ${v}; the class formulas allow ${min}-${max} at level ${level}` });
+        const finding = { rule: 'pool_out_of_range', field, value: v, min, max,
+          message: `${field} is ${v}; the class formulas allow ${min}-${max} at level ${level}`
+            + (enforcePools ? ' - reroll it on the Review step' : '') };
+        (enforcePools ? violations : warnings).push(finding);
       }
     }
   }
