@@ -1311,9 +1311,20 @@ console.log('\n' + '[8/8] Checks that only a database can make');
   const classes = (await api('GET', '/classes?limit=200')).body.classes || [];
   const byId = Object.fromEntries(classes.map((c) => [c.id, c]));
 
+  // Asserted as an INVARIANT rather than a count. This used to read
+  // `grouped.length === 25` and passed happily for months while all 34 Rifts
+  // O.C.C.s carried no group at all - so a `group:` token matched nothing on
+  // the Rifts side, and a race written with one would have failed CLOSED as an
+  // `only` or, far worse, OPEN as an `except`. A hardcoded number cannot see
+  // that; "every occupation has a group" can, and it catches the next O.C.C.
+  // imported without one instead of waiting for a race to trip over it.
+  const occs = classes.filter((c) => c.category === 'occ');
+  const ungrouped = occs.filter((c) => !c.occ_group);
+  check('every O.C.C. carries the group its book section gives it',
+    occs.length > 0 && ungrouped.length === 0,
+    `${ungrouped.length} of ${occs.length} ungrouped: ${ungrouped.map((c) => c.id).join(', ')}`);
+
   const grouped = classes.filter((c) => c.occ_group);
-  check('every Palladium O.C.C. carries the group its book section gives it',
-    grouped.length === 25, `${grouped.length}`);
   const badGroup = grouped.filter((c) => !OCC_GROUPS.includes(c.occ_group));
   check('and every group is one of the five the book prints',
     badGroup.length === 0, badGroup.map((c) => `${c.id}=${c.occ_group}`).join(', '));
