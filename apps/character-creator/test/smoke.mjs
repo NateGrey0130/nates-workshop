@@ -227,7 +227,8 @@ import { crossCategoryRestrictions, extractClassMarkdown, unmodelledKeys, unclos
 import { collapseWhitespace, statements, stripComments, trailingSelects } from '../../../scripts/sql-statements.mjs';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import { composeClass } from '../js/compose.js';
-import { evalDice, rollAttribute, rollPoolFormula, rollQuantity } from '../js/dice.js';
+import { evalDice, rollAttribute, rollPoolFormula, rollQuantity,
+         poolFormulaBounds, diceBounds, attributeCeiling } from '../js/dice.js';
 import { validateMos } from '../js/parser.js';
 import { chunks, D1_MAX_BINDS, BIND_CHUNK } from '../../../functions/api/character-creator/_lib/sql-chunk.js';
 import { LANGUAGE_OTHER, LITERACY_OTHER, isFamilyName, isRepeatableRow,
@@ -642,6 +643,135 @@ check('relatedAllowance adds base and grants',
   const attrCase = validateCharacter(cases[1]).violations.find((v) => v.rule === 'attribute_minimum');
   check('an attribute violation names the attribute and the minimum',
     !!attrCase && /ME/.test(attrCase.message) && /12/.test(attrCase.message), attrCase?.message);
+}
+
+// ---------- 1c3b. Creation-time powers, pool bounds, attribute ceilings ----
+// The audit's F2. The powers a character is CREATED holding get the boundary
+// level-up picks always had; pool maxima and attributes get advisory range
+// checks. Violations only where no legitimate path exists — the class's
+// auto-granted powers are exempt, per-grant attribution is never guessed at
+// (a pick passes if ANY applicable pool admits it), and everything a class
+// edit or a table ruling could explain warns instead of blocking.
+section('Creation validation');
+{
+  const magicCls = { ...vCls, magic: { spells_starting: 2, spell_levels_allowed: [1, 2] } };
+  const pcat = {
+    spell: new Map([
+      ['zap', { name: 'Zap', level: 1, ppe: 2, system: null }],
+      ['big zap', { name: 'Big Zap', level: 5, ppe: 20, system: null }],
+      ['gold zap', { name: 'Gold Zap', level: 1, ppe: 2, system: 'palladium-fantasy' }],
+    ]),
+    psionic: new Map([
+      ['see', { name: 'See', category: 'Sensitive', isp: 2, system: null }],
+      ['mend', { name: 'Mend', category: 'Healing', isp: 4, system: null }],
+      ['crush', { name: 'Crush', category: 'Super', isp: 10, system: null }],
+    ]),
+  };
+  const val = (o) => validateCharacter({ ...legal, cls: magicCls, powerCatalog: pcat, ...o });
+  const rules = (o) => val(o).violations.map((v) => v.rule);
+  const sp = (n) => ({ type: 'spell', name: n });
+  const psi = (n) => ({ type: 'psionic', name: n });
+
+  check('powers within the starting allowance pass',
+    rules({ powers: [sp('Zap')] }).length === 0,
+    JSON.stringify(val({ powers: [sp('Zap')] }).violations));
+  check('a caller that supplies no powers has none checked', rules({}).length === 0);
+  check('over the starting count is a violation',
+    rules({ powers: [sp('Zap'), sp('Gold Zap'), sp('Big Zap')] }).includes('power_count'));
+  check('a spell above the allowed levels is a violation',
+    rules({ powers: [sp('Big Zap')] }).includes('power_level_cap'));
+  check('a power the catalog lacks is a violation',
+    rules({ powers: [sp('Nonsense')] }).includes('power_unknown'));
+  check('a wrong-system pick is named as such, not reported missing',
+    rules({ system: 'rifts', powers: [sp('Gold Zap')] }).includes('power_system'));
+  check('an auto-granted power is exempt from the count and the caps', (() => {
+    const cls2 = { ...vCls, magic: { spells_starting: 1, spell_levels_allowed: [1], spells: ['Big Zap'] } };
+    return validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat,
+      powers: [sp('Big Zap'), sp('Zap')] }).violations.length === 0;
+  })());
+  check('a duplicated power is a violation',
+    rules({ powers: [sp('Zap'), sp('Zap')] }).includes('duplicate_power'));
+  check('a psionic outside the allowed categories is a violation', (() => {
+    const cls2 = { ...vCls, psionics: { type: 'major', powers_starting: 2, categories_allowed: ['Sensitive', 'Healing'] } };
+    return validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat, powers: [psi('Crush')] })
+      .violations.some((v) => v.rule === 'power_category');
+  })());
+  check('a named list replaces the category gate, both ways', (() => {
+    const cls2 = { ...vCls, psionics: { type: 'major', powers_starting: 2, categories_allowed: ['Sensitive'], powers_from: ['Crush'] } };
+    const on = validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat, powers: [psi('Crush')] });
+    const off = validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat, powers: [psi('Mend')] });
+    return on.violations.length === 0 && off.violations.some((v) => v.rule === 'power_not_on_list');
+  })());
+  check('a rolled focused psychic must keep to one category', (() => {
+    const cls2 = { ...vCls, psionics: { type: 'major', powers_starting: 8,
+      categories_allowed: ['Healing', 'Physical', 'Sensitive'], from_roll: true } };
+    return validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat,
+      character: { level: 1, psychic_shape: 'focused' }, powers: [psi('See'), psi('Mend')] })
+      .violations.some((v) => v.rule === 'psionic_single_category');
+  })());
+  check('per-level grants raise the allowance for a veteran build', (() => {
+    const cls2 = { ...vCls, magic: { spells_starting: 1, spells_per_level: 1 } };
+    const three = [sp('Zap'), sp('Big Zap'), sp('Gold Zap')];
+    const atOne = validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat, powers: three });
+    const atThree = validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat, powers: three,
+      character: { level: 3 } });
+    return atOne.violations.some((v) => v.rule === 'power_count')
+        && !atThree.violations.some((v) => v.rule === 'power_count');
+  })());
+  check('every power violation carries a readable message', (() => {
+    const all = val({ system: 'rifts',
+      powers: [sp('Zap'), sp('Zap'), sp('Big Zap'), sp('Nonsense'), sp('Gold Zap')] }).violations;
+    return all.length >= 4 && all.every((v) => typeof v.message === 'string' && v.message.trim());
+  })());
+
+  // Pool maxima: the dice are rolled client-side by design, so the check is
+  // what the formula COULD roll, and a warning rather than a violation - a
+  // re-imported formula would falsify an honest roll.
+  const poolCls = { ...vCls, hit_points_base: 'P.E. + 1d6 per level', sdc_base: '3d6',
+    bonuses: { pools: { sdc: 12 } } };
+  const pw = (pools, character = { level: 1 }) => validateCharacter({
+    ...legal, cls: poolCls, attributes: { ME: 14, PE: 10 }, pools, character });
+  check('a pool inside its formula range raises nothing',
+    !pw({ hp_max: 12, sdc_max: 20 }).warnings.some((w) => w.rule === 'pool_out_of_range'));
+  check('a pool outside it warns rather than blocks', (() => {
+    const r = pw({ hp_max: 900 });
+    return r.warnings.some((w) => w.rule === 'pool_out_of_range') && r.violations.length === 0;
+  })());
+  check('a pool bonus widens the range it checks against',
+    !pw({ sdc_max: 30 }).warnings.some((w) => w.rule === 'pool_out_of_range')
+    && pw({ sdc_max: 31 }).warnings.some((w) => w.rule === 'pool_out_of_range'));
+  check('the range grows with the levels climbed',
+    pw({ hp_max: 40 }).warnings.some((w) => w.rule === 'pool_out_of_range')
+    && !pw({ hp_max: 40 }, { level: 6 }).warnings.some((w) => w.rule === 'pool_out_of_range'));
+  check('a pool with no formula is skipped, never guessed at',
+    !pw({ mdc_max: 5000 }).warnings.some((w) => w.rule === 'pool_out_of_range'));
+
+  // Attribute ceilings: advisory, because Manual entry exists for numbers a
+  // table decided, and the app must not become the GM.
+  check('an attribute above its dice ceiling warns and never blocks', (() => {
+    const r = validateCharacter({ ...legal, attributes: { ME: 14, PS: 45 } });
+    return r.warnings.some((w) => w.rule === 'attribute_above_ceiling' && w.attribute === 'PS')
+        && r.violations.length === 0;
+  })());
+  check('30 off a plain 3d6 is exceptional dice, not a flag',
+    !validateCharacter({ ...legal, attributes: { ME: 14, PS: 30 } })
+      .warnings.some((w) => w.rule === 'attribute_above_ceiling'));
+  check('racial dice raise the ceiling with them', (() => {
+    const cls2 = { ...vCls, attribute_dice: { PS: '4d6+12' } };
+    return !validateCharacter({ ...legal, cls: cls2, attributes: { ME: 14, PS: 34 } })
+      .warnings.some((w) => w.rule === 'attribute_above_ceiling');
+  })());
+
+  // The primitives, pinned directly: one parse path serves the roll and the
+  // bounds, so these numbers are the contract.
+  check('poolFormulaBounds brackets the Stone Master formula exactly',
+    JSON.stringify(poolFormulaBounds('P.E. x2 + 2d6 per level', { PE: 18 }, 30)) === '{"min":68,"max":78}');
+  check('diceBounds reads a modifier with the dice',
+    JSON.stringify(diceBounds('1d6+1')) === '{"min":2,"max":7}');
+  check('attributeCeiling knows the exceptional chain and its limits',
+    attributeCeiling('3d6') === 30 && attributeCeiling('2d6') === 24
+    && attributeCeiling('4d6') === 24 && attributeCeiling('3d6+6') === 36
+    && attributeCeiling('not dice') === null);
 }
 
 // ---------- 1c4. Psychic tiers ----------
@@ -1167,7 +1297,7 @@ section('Starting XP');
   check('and sets XP from the threshold rather than the client',
     /thresholdFor\(xpTable, level\)/.test(src) && !/b\.xp/.test(src));
   check('and validates at the level being created, not at 1',
-    /character: \{ level \},/.test(src));
+    /character: \{ level[,\s]/.test(src));
   check('unspent picks are banked on create', /insertGrantStatements\(env, row\.id, remaining\)/.test(src));
   check('and the allowance is recomputed server-side rather than trusted',
     /skillGrantsFor\(cls, 1, level\)/.test(src));
@@ -1178,7 +1308,7 @@ section('Starting XP');
   // before, under 'a field the prompt does not mention'.
   const auditSrc = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
     'admin', 'audit.js'), 'utf8');
-  check('the audit selects xp', /level, xp, attributes/.test(auditSrc));
+  check('the audit selects xp', /characters\.xp/.test(auditSrc));
   check('and passes it to the validator', /level: row\.level, xp: row\.xp/.test(auditSrc));
 
   // -- an occupation's ATTRIBUTE MINIMUMS have to survive it too -------------

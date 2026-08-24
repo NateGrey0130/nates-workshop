@@ -9,6 +9,7 @@ import { getUserEmail, unauthorized, json, readJson, campaignAccess } from './_l
 import { paging, pagedQuery, pageBody } from './_lib/paging.js';
 import { loadCharacterClass } from './_lib/class-loader.js';
 import { validateCharacter, loadSkillCategories } from './_lib/validate-character.js';
+import { loadPowerCatalog } from './_lib/power-picks.js';
 import { xpTableFor, thresholdFor, skillGrantsFor } from './_lib/leveling.js';
 import { insertGrantStatements, remainingGrants } from './_lib/skill-picks.js';
 import { parseClassMarkdown, occAllowedForRace, raceAllowedForOcc } from '../../../apps/character-creator/js/parser.js';
@@ -70,7 +71,7 @@ export async function onRequestPost({ request, env }) {
   for (const field of ['campaign_id', 'name', 'class_id']) {
     if (!b[field]) return json({ error: `Missing required field: ${field}` }, 400);
   }
-  const campaign = await env.DB.prepare('SELECT id, open FROM campaigns WHERE id = ?').bind(b.campaign_id).first();
+  const campaign = await env.DB.prepare('SELECT id, open, system FROM campaigns WHERE id = ?').bind(b.campaign_id).first();
   if (!campaign) return json({ error: 'Campaign not found' }, 404);
 
   // Creating a character in a campaign is how you JOIN it — membership is
@@ -116,6 +117,11 @@ export async function onRequestPost({ request, env }) {
     class_id: b.class_id, class_variant: variant,
     occ_class_id: occId, occ_class_variant: occVariant,
     psychic_tier: rolledTier, psychic_shape: psychicShape,
+    // Abilities and the MOS fold into the composed class — an ability can grant
+    // a magic or psionics block and pool bonuses, and without them here the
+    // powers a chosen ability legitimately grants would read as over-allowance
+    // and a Super-Tough M.D.C. roll as out of range.
+    abilities: b.abilities || [], mos,
   });
   // A race may bar an occupation outright: a dwarf takes no magic O.C.C., a
   // kobold no knight or palladin. The wizard disables those options, and a
@@ -147,22 +153,37 @@ export async function onRequestPost({ request, env }) {
   // proposes a level-up the character has already had.
   const xp = thresholdFor(xpTable, level) ?? 0;
 
+  const p = b.pools || {};
+
   // Validated at the level being CREATED, not at 1: the related and secondary
   // allowances grow with level, and judging a level-6 character against a
   // level-1 allowance refuses skills the class legitimately granted.
+  //
+  // Powers and pools go through the same validator. The powers a character is
+  // created holding used to be stored unvalidated — the one write path
+  // resolvePowerPicks did not cover — and the pool maxima are checked against
+  // what the class formulas can actually roll (advisory: the audit is where
+  // those surface).
+  const powerNames = [...new Set((b.powers || [])
+    .map((pw) => String(pw?.name || '').trim()).filter(Boolean))];
   const { violations } = validateCharacter({
-    character: { level },
+    character: { level, psychic_shape: psychicShape, mos, occ_class_id: occId },
     cls,
     skills: b.skills || [],
     abilities: b.abilities || [],
     attributes: b.attributes || {},
     catalog: cls ? await loadSkillCategories(env) : null,
+    powers: b.powers || [],
+    pools: { hp_max: p.hp, sdc_max: p.sdc, mdc_max: p.mdc, ppe_max: p.ppe, isp_max: p.isp },
+    system: campaign.system ?? null,
+    // Loaded without a system filter; the validator applies the campaign's
+    // system itself so a wrong-system pick is named as such rather than
+    // reported as missing.
+    powerCatalog: cls && powerNames.length ? await loadPowerCatalog(env, powerNames, null) : null,
   });
   if (violations.length) {
     return json({ error: 'This character breaks its class rules', violations }, 422);
   }
-
-  const p = b.pools || {};
   const row = await env.DB.prepare(
     `INSERT INTO characters (
        campaign_id, player_email, name, class_id, class_variant, occ_class_id, occ_class_variant,

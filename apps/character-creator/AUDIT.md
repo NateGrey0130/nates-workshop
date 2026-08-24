@@ -233,6 +233,18 @@ choice-groups can't be checked in principle.
   book's roll ceiling per attribute-dice. Each is a real project; none is a
   doc fix. The admin audit endpoint is the right home for a first read-only
   pass.
+- **Taken, 2026-08-24**: all three, in the proposed order and posture.
+  Creation-time powers are **violations** (counts against starting + climbed
+  grants, spell-level caps, psionic categories, named lists, catalog and
+  system membership; auto-granted powers exempt, ambiguous grant attribution
+  never guessed at). Pool maxima are bounded by `poolFormulaBounds` — the same
+  parse walk the roll takes with every die pinned to its extremes — and
+  attributes by `attributeCeiling`, exceptional chain included; both are
+  **warnings**, since a class re-import or a table ruling can explain them,
+  and both surface in `admin/audit`, which now receives powers, pools and each
+  campaign's system. The audit's composition also now decodes the character
+  first, so ability-granted pool bonuses fold in rather than reading as out of
+  range. README → *Server-side rule enforcement* carries the full rules.
 
 ### F3 — low — `/api/claude` is an unmetered spend endpoint for every authenticated friend
 

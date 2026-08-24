@@ -181,7 +181,11 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
 
 // Only the rows actually named, rather than both catalogs whole: a level-up
 // picks two or three, and the spell table is thousands of rows.
-async function loadPowerCatalog(env, names, system) {
+//
+// Exported for the creation-time validator, which loads with `system` null and
+// filters per character instead — the audit validates characters from several
+// campaigns against one load. Rows keep their `system` column either way.
+export async function loadPowerCatalog(env, names, system) {
   const empty = { spell: new Map(), psionic: new Map() };
   if (!names.length) return empty;
   // Chunked: D1 binds at most 100 parameters per statement, and a high-level
