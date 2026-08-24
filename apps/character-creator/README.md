@@ -418,7 +418,7 @@ writes are gated (see [Permissions](#permissions)).
 | Endpoint | Method | Purpose |
 |---|---|---|
 | `me` | GET | Caller's email and `is_admin` |
-| `classes` | GET | Published classes, parsed. `?system=` `?category=` `?include_retired=1` |
+| `classes` | GET | Published classes, parsed. `?system=` `?category=` `?include_retired=1`; `?names=1` is the id→name label projection (unfiltered, retired included). Sends an `ETag`, so a warm boot revalidates to an empty 304 instead of re-downloading ~750KB of markdown |
 | `catalogs` | GET | Skills, spells, psionic powers in one call — trimmed projection the wizard boots on |
 | `catalogs/rows` | GET / POST / PATCH | Admin. Whole rows for one catalog (`?catalog=`), create, and update (`&id=`). No delete |
 | `catalogs/duplicates` | GET / POST | Admin. Suggested duplicate pairs for a catalog; POST merges two rows. `?counts_only=1` returns just the per-tier counts, for the badge |
@@ -5489,6 +5489,14 @@ blast radius was not worth end-to-end naming purity. `character_items` and its
 and renders a picker from each, so a truncated response would silently hide
 valid choices rather than showing fewer rows. Those are bounded by book content;
 the others grow with play.
+
+Unbounded is not un-cached. `/classes` — the heaviest of the three, ~750KB of
+parsed markdown — sends an `ETag` built from one aggregate over
+`imported_classes` (publish, edit, retire and restore all stamp `updated_at`),
+so between imports a warm boot revalidates to an empty 304 and the browser
+serves its own copy. The GM dashboard does not even revalidate the full list
+any more: it only ever turns a `class_id` into a label, and `?names=1` serves
+exactly that, read off the table with no parsing.
 
 **The page scripts are long, and deliberately not split.**
 

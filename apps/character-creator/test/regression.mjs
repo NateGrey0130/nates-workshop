@@ -160,6 +160,35 @@ check('/classes returns published classes', classes.status === 200 && classes.bo
 check('and none of them failed to parse',
   !(classes.body.failures || []).length, JSON.stringify(classes.body.failures || []).slice(0, 200));
 
+// The heaviest response in the app, and between imports it never changes — so
+// it carries a validator, and a warm load is an empty 304 rather than ~750KB
+// of markdown again. Node's fetch has no HTTP cache, which is exactly what
+// makes the round-trip testable: the conditional request is ours to send.
+{
+  const first = await fetch(`${BASE}/classes`);
+  const tag = first.headers.get('ETag');
+  check('/classes sends a validator', !!tag, 'no ETag header');
+  check('and says to revalidate, never to serve stale',
+    /no-cache/.test(first.headers.get('Cache-Control') || ''), first.headers.get('Cache-Control'));
+  const again = await fetch(`${BASE}/classes`, { headers: { 'If-None-Match': tag || '' } });
+  check('a warm load revalidates to a 304', again.status === 304, again.status);
+  check('with no body to re-download', (await again.text()).length === 0);
+
+  // The label projection: id and name straight off the table, no parsing. Its
+  // one job is turning a class_id into a display name, so it must cover every
+  // class the full list serves.
+  const names = await api('GET', '/classes?names=1');
+  const fullIds = new Set(classes.body.classes.map((c) => c.id));
+  check('the names projection answers for every published class',
+    names.status === 200 && [...fullIds].every((id) => names.body.classes.some((c) => c.id === id))
+    && names.body.classes.every((c) => c.id && c.name),
+    JSON.stringify((names.body.classes || []).slice(0, 3)));
+  const namesSize = JSON.stringify(names.body).length;
+  const fullSize = JSON.stringify(classes.body).length;
+  check('and is a small fraction of the full response — its whole point',
+    namesSize * 10 < fullSize, `${namesSize} bytes vs ${fullSize}`);
+}
+
 // This is the call a fresh database used to 500 on: it selects ppe_note and
 // isp_note, the two columns that never made it into schema.sql.
 const catalogs = await api('GET', '/catalogs');
