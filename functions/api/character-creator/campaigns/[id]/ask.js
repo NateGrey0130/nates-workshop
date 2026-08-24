@@ -12,7 +12,7 @@
 // retrieval problem that is not yet hard.
 
 import { json, readJson, requireCampaign } from '../../_lib/auth.js';
-import { validateClaudeRequest, callAnthropic } from '../../../_lib/claude-client.js';
+import { validateClaudeRequest, callAnthropic, recordUsage } from '../../../_lib/claude-client.js';
 import { toMatchQuery } from './search.js';
 import { parseAliases } from './npcs.js';
 
@@ -103,6 +103,10 @@ export async function onRequestPost({ request, env, params }) {
   if (invalid) return json({ error: 'Built an invalid request: ' + invalid }, 400);
 
   const upstream = await callAnthropic(claudeRequest, env);
+  // The other unmetered spend path: any member can press Ask. Same fail-open
+  // row the proxy writes. The admin importers stay unlogged - they are gated
+  // to one email already, which is the question this table answers.
+  await recordUsage(env, { email: guard.email, endpoint: 'campaign-ask', model: MODEL, upstream });
   let payload;
   try { payload = JSON.parse(upstream.text); }
   catch { return json({ error: 'Anthropic returned a non-JSON response' }, 502); }

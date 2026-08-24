@@ -6,7 +6,8 @@
 // server-side callers can reuse them without going back out through this HTTP
 // route (which Cloudflare Access would intercept).
 
-import { validateClaudeRequest, callAnthropic } from './_lib/claude-client.js';
+import { validateClaudeRequest, callAnthropic, recordUsage } from './_lib/claude-client.js';
+import { getAccessEmail } from './_lib/access.js';
 
 const json = (body, status) => new Response(JSON.stringify(body), {
   status,
@@ -31,8 +32,13 @@ export async function onRequestPost(context) {
     const invalid = validateClaudeRequest(body);
     if (invalid) return json({ error: invalid }, 400);
 
-    const { status, text } = await callAnthropic(body, env);
-    return new Response(text, { status, headers: { 'Content-Type': 'application/json' } });
+    const upstream = await callAnthropic(body, env);
+    // Who spent the key, recorded fail-open — the response below is what the
+    // caller gets whether or not the row lands. See recordUsage.
+    await recordUsage(env, {
+      email: getAccessEmail(request), endpoint: 'proxy', model: body.model, upstream,
+    });
+    return new Response(upstream.text, { status: upstream.status, headers: { 'Content-Type': 'application/json' } });
   } catch (err) {
     return json({ error: 'Proxy error: ' + err.message }, 500);
   }
