@@ -120,6 +120,81 @@ export function extractClassMarkdown(sql) {
 }
 
 /**
+ * Frontmatter lines that open an inline `[...]` or `{...}` and never close it
+ * on the same line.
+ *
+ * The YAML subset in parser.js reads flow sequences and inline maps on ONE
+ * line only. A list wrapped across lines —
+ *
+ *   from: [
+ *     "a", "b"
+ *   ]
+ *
+ * — parses the `[` as a scalar string and the following lines as structure, so
+ * the failure surfaces later as a shape error ("equipment_starting entries
+ * must be objects") that points nowhere near the cause. That loop has cost
+ * real transcription sessions; this names the exact line instead.
+ *
+ * Comment stripping and quote handling mirror the parser's own rules, and
+ * block-scalar bodies (`key: |` / `key: >`) are skipped entirely — sourcebook
+ * prose may carry any bracket it likes. A warning, not an error: the accepted
+ * rewrites are one (arbitrarily long) line, or a block sequence under the key.
+ */
+export function unclosedFlowLines(markdown) {
+  const text = String(markdown ?? '');
+  const fm = text.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
+  if (!fm) return [];
+  const lines = fm[1].split(/\r?\n/);
+  const out = [];
+  let skipIndent = null; // inside a block-scalar body: skip deeper lines
+  for (let idx = 0; idx < lines.length; idx++) {
+    const raw = lines[idx];
+    if (!raw.trim()) continue;
+    const indent = raw.length - raw.trimStart().length;
+    if (skipIndent !== null) {
+      if (indent > skipIndent) continue;
+      skipIndent = null;
+    }
+    // Strip a comment, respecting quotes — the same rule stripComment applies.
+    let inQuote = null;
+    let line = raw;
+    for (let i = 0; i < raw.length; i++) {
+      const ch = raw[i];
+      if (inQuote) {
+        if (ch === inQuote) inQuote = null;
+      } else if (ch === '"' || ch === "'") {
+        inQuote = ch;
+      } else if (ch === '#' && (i === 0 || raw[i - 1] === ' ' || raw[i - 1] === '\t')) {
+        line = raw.slice(0, i);
+        break;
+      }
+    }
+    const t = line.trim();
+    if (!t) continue;
+    // A `key: |` / `key: >` value starts a block scalar; its body is prose.
+    if (/^(?:-\s+)?[^:]+:\s*[|>][-+]?\d*\s*$/.test(t)) { skipIndent = indent; continue; }
+    // Bracket balance outside quotes. Positive at end of line = left open.
+    let depth = 0;
+    inQuote = null;
+    for (const ch of t) {
+      if (inQuote) {
+        if (ch === inQuote) inQuote = null;
+      } else if (ch === '"' || ch === "'") {
+        inQuote = ch;
+      } else if (ch === '[' || ch === '{') {
+        depth++;
+      } else if (ch === ']' || ch === '}') {
+        depth--;
+      }
+    }
+    // idx is 0-based inside the frontmatter; +2 restores the file's own
+    // numbering (1-based, plus the opening `---` line).
+    if (depth > 0) out.push({ line: idx + 2, text: t.length > 80 ? t.slice(0, 77) + '...' : t });
+  }
+  return out;
+}
+
+/**
  * Restriction names that resolve to a catalog row in a DIFFERENT category.
  *
  * `class-check` cannot see these through the missing-row check: the name

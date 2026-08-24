@@ -223,7 +223,7 @@ import { parseMentions } from '../../../functions/api/character-creator/_lib/men
 import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
 import { dedupeCategories } from '../../../functions/api/character-creator/_lib/skill-picks.js';
 import { relatedAllowance, validateCharacter } from '../../../functions/api/character-creator/_lib/validate-character.js';
-import { crossCategoryRestrictions, extractClassMarkdown, unmodelledKeys } from '../../../scripts/class-check-lib.mjs';
+import { crossCategoryRestrictions, extractClassMarkdown, unmodelledKeys, unclosedFlowLines } from '../../../scripts/class-check-lib.mjs';
 import { collapseWhitespace, statements, stripComments, trailingSelects } from '../../../scripts/sql-statements.mjs';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import { composeClass } from '../js/compose.js';
@@ -4803,6 +4803,44 @@ const unmodelledOffenders = (() => {
 })();
 check('no shipped class reports an unmodelled key', unmodelledOffenders.length === 0,
   unmodelledOffenders.join(' | ') + ' — KNOWN_KEYS in scripts/class-check-lib.mjs is out of date');
+
+// The parser reads inline [...] / {...} on ONE line only. A flow list wrapped
+// across lines parses the opener as a scalar and fails later with a shape
+// error that points nowhere near the cause — class-check now names the exact
+// line, and these pin what it fires on and, as importantly, what it ignores.
+{
+  const md = (...lines) => '---\n' + lines.join('\n') + '\n---\n';
+  check('an unclosed flow value is named by line', (() => {
+    const hits = unclosedFlowLines(md('id: x', 'skills:', '  occ_skills:',
+      '    - { choose: 2, from: [', '      "a", "b"', '    ] }'));
+    return hits.length === 1 && hits[0].line === 5;
+  })());
+  check('a closed one-line flow value is clean',
+    unclosedFlowLines(md('id: x', 'from: ["a", "b"]', 'b: { c: 1 }')).length === 0);
+  check('a bracket inside a quoted value is not an opener',
+    unclosedFlowLines(md('note: "uses [sic] brackets"')).length === 0);
+  check('block-scalar prose may carry any bracket it likes',
+    unclosedFlowLines(md('extraction_notes: |', '  The book prints [ ranges', '  across lines.')).length === 0);
+  check('a bracket after a comment marker is not an opener',
+    unclosedFlowLines(md('id: x # todo [check')).length === 0);
+  check('a block sequence needs no brackets and is clean',
+    unclosedFlowLines(md('from:', '  - "a"', '  - "b"')).length === 0);
+}
+
+// And the corpus: no shipped class trips it.
+const unclosedOffenders = (() => {
+  const dbDir = join(appDir, 'db');
+  const out = [];
+  for (const f of readdirSync(dbDir).filter((n) => /^add-.*-class[.]sql$/.test(n))) {
+    const md = extractClassMarkdown(readFileSync(join(dbDir, f), 'utf8'));
+    if (!md) continue;
+    const hits = unclosedFlowLines(md);
+    if (hits.length) out.push(`${f}: line ${hits.map((h) => h.line).join(', ')}`);
+  }
+  return out;
+})();
+check('no shipped class leaves a flow value unclosed', unclosedOffenders.length === 0,
+  unclosedOffenders.join(' | '));
 
 // ---------- 1f. Skill bonuses ----------
 // A skill is not only a percentage: Boxing is +1 attack per melee and +2 P.S.

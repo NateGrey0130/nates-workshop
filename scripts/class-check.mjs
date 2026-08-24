@@ -40,7 +40,7 @@ import { fileURLToPath } from 'node:url';
 
 import { parseClassMarkdown } from '../apps/character-creator/js/parser.js';
 import { crossReference, buildStubStatements, restrictionNames } from '../functions/api/character-creator/_lib/catalog.js';
-import { extractClassMarkdown, unmodelledKeys, crossCategoryRestrictions } from './class-check-lib.mjs';
+import { extractClassMarkdown, unmodelledKeys, crossCategoryRestrictions, unclosedFlowLines } from './class-check-lib.mjs';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -108,6 +108,20 @@ if (data) {
 list('ERRORS', errors);
 list('WARNINGS', warnings);
 list('SQL PRE-FLIGHT', preflight);
+
+// The parser reads inline [...] / {...} on ONE line only. A flow list wrapped
+// across lines parses the opener as a scalar and fails later with a shape
+// error that points nowhere near the cause — so name the line here, where the
+// fix is one edit away.
+const unclosed = unclosedFlowLines(markdown);
+if (unclosed.length) {
+  console.log(`\nUNCLOSED FLOW (${unclosed.length})`);
+  for (const u of unclosed) console.log(`  - line ${u.line}: ${u.text}`);
+  console.log('  An inline [...] or {...} must close on the SAME line. Put the whole');
+  console.log('  value on one line, however long, or use a block sequence under the');
+  console.log('  key — wrapped across lines, the parser reads the opener as text and');
+  console.log('  the failure surfaces later as a misleading shape error.');
+}
 
 const unmodelled = unmodelledKeys(data);
 if (unmodelled.length) {
@@ -300,5 +314,6 @@ const blocking = errors.length + preflight.length;
 console.log(`\nclass-check: ${blocking ? 'NOT ready' : 'ready'} — `
   + `${plural(errors.length, 'error')}, ${plural(warnings.length, 'warning')}`
   + (preflight.length ? `, ${plural(preflight.length, 'pre-flight failure')}` : '')
-  + (unmodelled.length ? `, ${plural(unmodelled.length, 'unmodelled key')}` : ''));
+  + (unmodelled.length ? `, ${plural(unmodelled.length, 'unmodelled key')}` : '')
+  + (unclosed.length ? `, ${plural(unclosed.length, 'unclosed flow value')}` : ''));
 process.exit(blocking ? 1 : 0);
