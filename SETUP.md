@@ -227,6 +227,15 @@ The decaying-fact problem — someone listed as active who retired years ago —
 only exists where a currency constraint does, so a static category pays
 nothing. Where it does run it earns it: that NFL round rejected 2 of 12.
 
+The final screen is dead time — everyone is arguing about each other's boards —
+so the host typing the next category there **prefetches** its list in the
+background, debounced 1.5s. If they then press *Go again* on that same
+category the round starts in about **50ms** with no generating screen at all.
+Host only, final screen only, one in flight, five per room lifetime, and the
+round and replay caps still apply. A prefetch deliberately does **not** consume
+the 20-second generation cooldown: charging a speculative call to it meant a
+host who changed their mind was told to wait for a call they never asked for.
+
 What is given up is the plausible invention in a static category, and the
 **in-round swap** is the backstop. Any player can press *That's wrong — swap
 it* before the flip; the item is replaced from a reserve of already-filtered

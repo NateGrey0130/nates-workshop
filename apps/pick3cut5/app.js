@@ -285,6 +285,27 @@ function renderFinal(s) {
       </div>`;
   }).join('');
 
+  // Prefetch status. Only meaningful to the host, who is the one typing.
+  const pf = s.prefetch;
+  const typed = $('againCategory').value.trim().toLowerCase();
+  const matches = pf && pf.category && pf.category.toLowerCase() === typed;
+  const el = $('prefetchStatus');
+  el.className = 'prefetch-status';
+  if (mode === 'party' && s.isHost && pf && matches && pf.status !== 'idle') {
+    el.hidden = false;
+    if (pf.status === 'running') {
+      el.classList.add('working');
+      el.innerHTML = '<span class="dot"></span>building this list now';
+    } else if (pf.status === 'ready') {
+      el.classList.add('ready');
+      el.innerHTML = '<span class="dot"></span>list ready — starts instantly';
+    } else {
+      el.innerHTML = '<span class="dot"></span>could not build it early; Go again will retry';
+    }
+  } else {
+    el.hidden = true;
+  }
+
   $('againHint').textContent = s.roundsLeft > 0
     ? `${s.roundsLeft} round${s.roundsLeft === 1 ? '' : 's'} left in this room.`
     : 'This room is out of rounds. Start a new one.';
@@ -617,6 +638,24 @@ $('formCategory').addEventListener('submit', (e) => {
 $('formAgain').addEventListener('submit', (e) => {
   e.preventDefault();
   send({ type: 'start_round', category: $('againCategory').value.trim() });
+});
+
+// Ask the server to build the next list while the final screen is still up.
+//
+// Debounced on a long-ish pause rather than fired per keystroke: each of these
+// is a real three-call generation, and "current NBA point guards" typed at
+// speed would otherwise kick off several. The server caps this independently —
+// this delay is politeness, not the guardrail.
+let prefetchTimer = null;
+let lastPrefetched = '';
+$('againCategory').addEventListener('input', () => {
+  clearTimeout(prefetchTimer);
+  const category = $('againCategory').value.trim();
+  if (mode !== 'party' || category.length < 4 || category === lastPrefetched) return;
+  prefetchTimer = setTimeout(() => {
+    lastPrefetched = category;
+    send({ type: 'prefetch', category });
+  }, 1500);
 });
 
 $('btnKeep').addEventListener('click', () => (mode === 'solo' ? soloPick('keep') : send({ type: 'submit_pick', choice: 'keep' })));
