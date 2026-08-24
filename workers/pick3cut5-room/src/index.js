@@ -115,7 +115,9 @@ export default {
         : [];
 
       try {
-        const { items, reserve } = await runPipeline(env, category, { exclude });
+        const { items, reserve } = await runPipeline(env, category, {
+          exclude, endpoint: 'pick3cut5-solo', forceVerify: body?.verify === true,
+        });
         // Solo hands the client all eight at once, unlike party mode. The
         // hidden-information rule exists so nobody can read the list over
         // another player's shoulder; in solo there is no other player, and the

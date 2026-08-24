@@ -153,11 +153,14 @@ npx wrangler secret put ANTHROPIC_API_KEY --config workers/pick3cut5-room/wrangl
 Rotating the key means rotating it in **both** places. Model IDs are plain vars
 in the Worker's own `wrangler.jsonc`, not secrets.
 
-Note this Worker does **not** write `claude_usage` rows — it has no D1 binding,
-per the app's no-database constraint. Its spend is therefore invisible to the
-query in *Who is spending the Anthropic key* below. The rate limits in
-`workers/pick3cut5-room/wrangler.jsonc` and the room's own 20-second cooldown
-and 30-round cap are the only cost controls on it.
+This Worker **does** write `claude_usage` rows — it binds `DB` for metering and
+nothing else, so its spend shows up in the query under *Who is spending the
+Anthropic key* below. Rows carry a null email (there is no identity here by
+design) and an endpoint of `pick3cut5-party` or `pick3cut5-solo`; one generation
+writes two or three rows depending on whether verification ran. Writes are
+fail-open, so a missing table or a D1 hiccup can never break a round.
+
+No game state touches D1 — rooms still live and die in Durable Object memory.
 
 ### It has to be let out of the login wall
 
@@ -253,7 +256,14 @@ debounced 1.5s. Pressing *Go again* on that same category then starts the round
 with no generating screen at all: measured at **57ms** in party mode and
 **109ms** in solo.
 
-Both modes cap it, and solo's cap is tighter for a reason:
+Every category input also carries a **double-check this list** toggle. The
+default gate for verification is time-sensitivity alone; ticking the box forces
+it for a static category the room wants right — `Quentin Tarantino films` served
+*True Romance* and *Four Rooms* in testing, and a table that does not know Tony
+Scott directed the first has no way to catch it. A prefetch built without the
+check cannot satisfy a request that asked for it.
+
+Both modes cap prefetch, and solo's cap is tighter for a reason:
 
 | | party | solo |
 |---|---|---|

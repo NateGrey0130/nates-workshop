@@ -292,6 +292,14 @@ function renderFinal(s) {
     mode === 'solo' || s.isHost
   );
 
+  const swaps = s.swapLog ?? [];
+  $('swapLog').hidden = swaps.length === 0;
+  if (swaps.length) {
+    $('swapLog').innerHTML = swaps
+      .map((x) => `<b>${escHtml(x.by)}</b> called out <s>${escHtml(x.rejected)}</s> at item ${x.item}`)
+      .join('<br>');
+  }
+
   $('againHint').textContent = s.roundsLeft > 0
     ? `${s.roundsLeft} round${s.roundsLeft === 1 ? '' : 's'} left in this room.`
     : 'This room is out of rounds. Start a new one.';
@@ -390,7 +398,7 @@ const solo = {
   items: [], reserve: [], seen: [], category: '',
   index: -1, keepsLeft: KEEPS, cutsLeft: CUTS, picks: [],
   phase: 'lobby', armAt: 0,
-  replacements: 0, flaggedThisItem: false, lastFlag: null,
+  replacements: 0, flaggedThisItem: false, lastFlag: null, swapLog: [],
   prefetch: { key: '', category: '', status: 'idle', items: [], reserve: [] },
   prefetchCount: 0,
 };
@@ -429,6 +437,7 @@ function soloSnapshot() {
     swapsLeft: MAX_SWAPS - solo.replacements,
     spareItems: solo.reserve.length,
     lastFlag: solo.lastFlag,
+    swapLog: solo.swapLog,
     // Status and category only, matching the shape the server sends. The items
     // genuinely are here in solo — there is nobody to hide them from — but the
     // renderer is shared, so the shape has to be.
@@ -469,6 +478,7 @@ function soloBeginRound(category, items, reserve) {
   solo.replacements = 0;
   solo.progress = '';
   solo.prefetch = { key: '', category: '', status: 'idle', items: [], reserve: [] };
+  solo.swapLog = [];
   soloReveal();
 }
 
@@ -480,38 +490,40 @@ function soloBeginRound(category, items, reserve) {
  * fails silently: a prefetch nobody uses should never surface an error, and
  * pressing Go again always works, just at full speed.
  */
-async function soloPrefetch(category) {
-  const key = category.toLowerCase();
+async function soloPrefetch(category, verify) {
+  const key = category.toLowerCase() + (verify ? '|checked' : '');
   if (solo.prefetch.status === 'running') return;              // one at a time
   if (solo.prefetch.key === key && solo.prefetch.status !== 'idle') return;
   if (solo.prefetchCount >= MAX_SOLO_PREFETCH) return;
 
   solo.prefetchCount += 1;
-  solo.prefetch = { key, category, status: 'running', items: [], reserve: [] };
+  solo.prefetch = { key, category, status: 'running', items: [], reserve: [], verify };
   if (solo.phase === 'final') render(soloSnapshot());
 
   try {
     const res = await fetch(`${API}/solo`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ category, exclude: solo.seen }),
+      body: JSON.stringify({ category, exclude: solo.seen, verify }),
     });
     const data = await res.json();
     // The player may have retyped, or started a round, while this was in
     // flight. Landing a stale list would be worse than landing nothing.
     if (solo.prefetch.key !== key) return;
     if (!res.ok) throw new Error(data.error || '');
-    solo.prefetch = { key, category, status: 'ready', items: data.items, reserve: data.reserve ?? [] };
+    solo.prefetch = { key, category, status: 'ready', items: data.items, reserve: data.reserve ?? [], verify };
   } catch {
     if (solo.prefetch.key !== key) return;
-    solo.prefetch = { key, category, status: 'failed', items: [], reserve: [] };
+    solo.prefetch = { key, category, status: 'failed', items: [], reserve: [], verify };
   }
   if (solo.phase === 'final') render(soloSnapshot());
 }
 
-async function soloStart(category) {
+async function soloStart(category, verify = false) {
   // Already built while the final board was up. Straight in, no second call.
-  const key = category.toLowerCase();
+  // The key carries the toggle, so a list built WITHOUT the check can never
+  // satisfy a request that asked for it.
+  const key = category.toLowerCase() + (verify ? '|checked' : '');
   if (solo.prefetch.status === 'ready' && solo.prefetch.key === key) {
     soloBeginRound(solo.prefetch.category, solo.prefetch.items, solo.prefetch.reserve);
     return;
@@ -543,7 +555,7 @@ async function soloStart(category) {
     const res = await fetch(`${API}/solo`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ category, exclude: solo.seen }),
+      body: JSON.stringify({ category, exclude: solo.seen, verify }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Could not build a list.');
@@ -628,6 +640,7 @@ function soloFlag() {
   solo.replacements += 1;
   solo.flaggedThisItem = true;
   solo.lastFlag = { by: 'You', rejected };
+  solo.swapLog.push({ by: 'You', rejected, item: solo.index + 1 });
   soloShow();
 }
 
@@ -719,18 +732,18 @@ $('formSolo').addEventListener('submit', (e) => {
   e.preventDefault();
   const category = $('soloCategory').value.trim();
   if (!category) return banner('Type a category first.');
-  soloStart(category);
+  soloStart(category, $('verifySolo').checked);
 });
 
 $('formCategory').addEventListener('submit', (e) => {
   e.preventDefault();
   send({ type: 'set_timers', pick: Number($('pickSecs').value), accept: Number($('acceptSecs').value) });
-  send({ type: 'start_round', category: $('category').value.trim() });
+  send({ type: 'start_round', category: $('category').value.trim(), verify: $('verifyLobby').checked });
 });
 
 $('formAgain').addEventListener('submit', (e) => {
   e.preventDefault();
-  send({ type: 'start_round', category: $('againCategory').value.trim() });
+  send({ type: 'start_round', category: $('againCategory').value.trim(), verify: $('verifyAgain').checked });
 });
 
 // Ask the server to build the next list while the final screen is still up.
@@ -755,10 +768,10 @@ function armPrefetch(inputId, fire) {
 }
 
 armPrefetch('againCategory', (category) => {
-  if (mode === 'party') send({ type: 'prefetch', category });
+  if (mode === 'party') send({ type: 'prefetch', category, verify: $('verifyAgain').checked });
 });
 armPrefetch('soloAgainCategory', (category) => {
-  if (mode === 'solo') soloPrefetch(category);
+  if (mode === 'solo') soloPrefetch(category, $('verifySoloAgain').checked);
 });
 
 $('btnKeep').addEventListener('click', () => (mode === 'solo' ? soloPick('keep') : send({ type: 'submit_pick', choice: 'keep' })));
@@ -771,7 +784,7 @@ $('formSoloAgain').addEventListener('submit', (e) => {
   e.preventDefault();
   const category = $('soloAgainCategory').value.trim();
   if (!category) return banner('Type a category first.');
-  soloStart(category);
+  soloStart(category, $('verifySoloAgain').checked);
 });
 
 $('lobbyPlayers').addEventListener('click', (e) => {

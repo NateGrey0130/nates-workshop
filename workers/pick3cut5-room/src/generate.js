@@ -13,8 +13,11 @@
 // written it.
 
 import { callClaude, parseJson, AnthropicError } from './anthropic.js';
+import { ITEMS_PER_ROUND } from './rules.js';
 
-export const ITEMS_PER_ROUND = 8;
+// Re-exported rather than redeclared: two constants named the same thing that
+// could drift apart is the exact failure rules.js exists to prevent.
+export { ITEMS_PER_ROUND } from './rules.js';
 export class GenerationError extends Error {}
 
 // Fold "Scump", "scump", and "Scump (Seth Abner)" onto one key so a replay
@@ -50,7 +53,7 @@ export function validateCategory(raw) {
  * current web search tool needs a 4.6-or-later model, so the classifier
  * physically cannot search even if something asked it to.
  */
-export async function classify(env, category) {
+export async function classify(env, category, endpoint) {
   const system = 'You classify party-game categories. Reply with a single JSON object and nothing else. '
     + 'No markdown fences, no preamble.';
 
@@ -82,6 +85,7 @@ reason: one short sentence, shown to a player, ONLY when viable is false. Otherw
 
   const raw = await callClaude(env, {
     model: env.P3C5_MODEL_CLASSIFY,
+    endpoint,
     system,
     prompt,
     maxTokens: 300,
@@ -109,7 +113,7 @@ reason: one short sentence, shown to a player, ONLY when viable is false. Otherw
  * expensive thing: it is a second search-enabled call on the critical path
  * while eight people watch a spinner.
  */
-export async function generateCandidates(env, category, klass, { want, exclude }) {
+export async function generateCandidates(env, category, klass, { want, exclude, endpoint }) {
   const search = klass.verifiable || klass.time_sensitive;
 
   const system = 'You generate item lists for a party game. Return ONLY a JSON array of strings. '
@@ -139,6 +143,7 @@ Return only the JSON array.`;
 
   const raw = await callClaude(env, {
     model: env.P3C5_MODEL_GENERATE,
+    endpoint,
     system,
     prompt,
     maxTokens: 4000,
@@ -156,7 +161,7 @@ Return only the JSON array.`;
  * because taste has no false positives: nobody's favourite pizza topping is
  * factually wrong.
  */
-export async function verifyCandidates(env, category, candidates) {
+export async function verifyCandidates(env, category, candidates, endpoint) {
   const system = 'You fact-check candidate entries for a category. Return ONLY a JSON array of objects. '
     + 'No markdown fences, no preamble.';
 
@@ -179,6 +184,7 @@ Return only the JSON array.`;
 
   const raw = await callClaude(env, {
     model: env.P3C5_MODEL_VERIFY,
+    endpoint,
     system,
     prompt,
     maxTokens: 4000,
@@ -211,7 +217,7 @@ Return only the JSON array.`;
  * these are current" is worth waiting through in a way that a spinner is not,
  * and this pipeline takes long enough that the difference matters.
  */
-export async function runPipeline(env, category, { exclude = [], cache = new Map(), onProgress = () => {} } = {}) {
+export async function runPipeline(env, category, { exclude = [], cache = new Map(), onProgress = () => {}, endpoint = 'pick3cut5', forceVerify = false } = {}) {
   // Step timings go to the log because this pipeline's cost is measured in
   // seconds of eight people staring at a spinner, and "it feels slow" is not
   // something you can tune against. `observability` is on for this.
@@ -220,7 +226,7 @@ export async function runPipeline(env, category, { exclude = [], cache = new Map
   const lap = (step, from) => { timings[step] = Date.now() - from; return Date.now(); };
 
   onProgress('Sizing up the category');
-  const klass = await classify(env, category);
+  const klass = await classify(env, category, endpoint);
   let mark = lap('classify', t0);
 
   if (!klass.viable) {
@@ -233,13 +239,13 @@ export async function runPipeline(env, category, { exclude = [], cache = new Map
   // 16 items and twelve candidates will not clear eight survivors.
   const want = Math.min(30, 12 + excludeSet.size);
 
-  onProgress(klass.time_sensitive ? 'Looking up who actually qualifies' : 'Building the list');
+  onProgress(klass.time_sensitive || forceVerify ? 'Looking up who actually qualifies' : 'Building the list');
 
-  let candidates = await generateCandidates(env, category, klass, { want, exclude });
+  let candidates = await generateCandidates(env, category, klass, { want, exclude, endpoint });
   if (!candidates) {
     // One retry, then a clean error. Malformed JSON twice in a row is a real
     // problem, not a blip, and a third attempt just spends more money on it.
-    candidates = await generateCandidates(env, category, klass, { want, exclude });
+    candidates = await generateCandidates(env, category, klass, { want, exclude, endpoint });
     if (!candidates) throw new GenerationError('The list came back unreadable twice. Try a different category.');
   }
   mark = lap('generate', mark);
@@ -270,14 +276,20 @@ export async function runPipeline(env, category, { exclude = [], cache = new Map
   // category. Generation still searches the web for anything `verifiable`, so
   // that is grounded rather than unguarded - and the in-round flag is the
   // backstop for whatever slips through. See flagItem() in room.js.
+  // forceVerify is the host's "double-check this list" toggle. The default gate
+  // is time-sensitivity alone, because that is where the decaying-fact failure
+  // lives; this is the escape hatch for a room that cares about a STATIC
+  // category being right - "Tarantino films" served True Romance twice in
+  // testing, and a table that does not know Tony Scott directed it has no way
+  // to catch that. Opt-in, so the fast path stays the default.
   let survivors = fresh;
-  if (klass.time_sensitive) {
+  if (klass.time_sensitive || forceVerify) {
     const unchecked = fresh.filter((item) => !cache.has(normalize(item)));
 
     if (unchecked.length) {
       onProgress('Checking these are current');
-      let verdicts = await verifyCandidates(env, category, unchecked);
-      if (!verdicts) verdicts = await verifyCandidates(env, category, unchecked);
+      let verdicts = await verifyCandidates(env, category, unchecked, endpoint);
+      if (!verdicts) verdicts = await verifyCandidates(env, category, unchecked, endpoint);
       if (!verdicts) throw new GenerationError('The fact check came back unreadable. Try again.');
 
       for (const item of unchecked) {
@@ -297,6 +309,7 @@ export async function runPipeline(env, category, { exclude = [], cache = new Map
     category,
     verifiable: klass.verifiable,
     time_sensitive: klass.time_sensitive,
+    forceVerify,
     asked: want,
     returned: candidates.length,
     fresh: fresh.length,

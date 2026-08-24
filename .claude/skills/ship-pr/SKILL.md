@@ -29,7 +29,9 @@ caught for you, so the checks happen before the merge or they do not happen.
      the data endpoint's sanitizers, plus
      `node apps/pick3cut5/test/smoke.mjs`, which derives from `index.html` the
      paths that must be outside the Access wall and checks they are documented
-     and exempted
+     and exempted, and `node apps/pick3cut5/test/game.mjs`, which walks all 56
+     reachable rounds and proves the server's budget rules and the client's copy
+     of them still agree
    - **touched anything Pick 3 Cut 5 loads, or any Access policy:**
      `node apps/pick3cut5/test/smoke.mjs --remote`. It fetches the app and its
      assets from production with **no** Access session, and checks the rest of
