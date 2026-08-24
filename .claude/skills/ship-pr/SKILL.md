@@ -26,7 +26,19 @@ caught for you, so the checks happen before the merge or they do not happen.
    - always: `node apps/character-creator/test/smoke.mjs` and
      `node apps/filament-forge/test/smoke.mjs` — the second is fast (no
      wrangler) and pins FilamentForge's README, the snapshot SQL generator and
-     the data endpoint's sanitizers
+     the data endpoint's sanitizers, plus
+     `node apps/pick3cut5/test/smoke.mjs`, which derives from `index.html` the
+     paths that must be outside the Access wall and checks they are documented
+     and exempted
+   - **touched anything Pick 3 Cut 5 loads, or any Access policy:**
+     `node apps/pick3cut5/test/smoke.mjs --remote`. It fetches the app and its
+     assets from production with **no** Access session, and checks the rest of
+     the site is still gated. This is the only check that can catch the bug it
+     was written for: the app shipped bypassed on its own two paths but not on
+     `/shared/styles.css` or `/shared/js/ui.js`, so every friend with a room
+     code got an unstyled page and `escHtml is not defined` at the first flip —
+     while `curl /apps/pick3cut5/` returned 200 the whole time and local dev,
+     which has no Access at all, played perfectly.
    - added a class or catalog rows: **update the README's pinned counts in the
      same commit.** `test/regression.mjs` reads them out of the prose and
      compares against a database built from nothing, so they fail the run rather

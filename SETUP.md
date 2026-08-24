@@ -163,9 +163,29 @@ and 30-round cap are the only cost controls on it.
 
 Two halves, and **both** are required — either one alone leaves the app broken:
 
-1. **Zero Trust → Access → Applications**, a **Bypass** policy covering
-   `/apps/pick3cut5/*` and `/api/pick3cut5/*`. Dashboard only; the
-   `CLOUDFLARE_API_TOKEN` in `CLAUDE.md` is scoped to D1 and cannot create it.
+1. **Zero Trust → Access → Applications**, one self-hosted application named
+   *Pick 3 Cut 5 (public)* with a **Bypass** policy (include: Everyone) and
+   **four** destinations, all on `nates-workshop.pages.dev`:
+
+   | path | why |
+   |---|---|
+   | `apps/pick3cut5` | the app itself |
+   | `api/pick3cut5` | rooms, WebSocket, solo generation |
+   | `shared/styles.css` | the design system the page loads |
+   | `shared/js/ui.js` | `escHtml`, which the game calls on every flip |
+
+   Dashboard only; the `CLOUDFLARE_API_TOKEN` in `CLAUDE.md` is scoped to D1
+   and cannot create it.
+
+   **The last two are the ones that get forgotten.** The app shipped without
+   them and was broken for every unauthenticated player: the page rendered in
+   Times New Roman and `escHtml is not defined` froze the game at the first
+   flip, while `curl /apps/pick3cut5/` cheerfully returned 200. A route
+   answering is not the same as a page working.
+   `node apps/pick3cut5/test/smoke.mjs` derives this list from `index.html` and
+   fails if it and this table disagree; `--remote` checks the live policy.
+   Note Access allows five destinations per application, so one more dependency
+   fits and the one after that needs a second application.
 2. **`PUBLIC_PREFIXES` in `functions/api/_middleware.js`**, which already lists
    `/api/pick3cut5/`. A bypass policy lets the request through *without*
    minting a JWT, so without this exemption every call takes a hard 403 from
