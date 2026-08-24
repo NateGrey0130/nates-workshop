@@ -1,4 +1,4 @@
-// One HTTP helper for all five pages.
+// One HTTP helper for all six pages.
 //
 // A classic script, like derive.js and picker.js, so the module pages (the
 // wizard, the catalog editor) and the plain ones (sheet, dashboard, import) can

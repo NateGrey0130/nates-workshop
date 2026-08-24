@@ -15,9 +15,11 @@ async function load() {
       api('campaigns/' + campaignId),
       api('characters?campaign_id=' + campaignId),
       api('journal?campaign_id=' + campaignId),
-      // include_retired: the roster labels characters by class name, and a
-      // character on a retired class must not lose its label.
-      api('classes?include_retired=1'),
+      // The names projection: this page only ever turns a class_id into a
+      // label, and the full list is ~750KB of parsed markdown. Retired classes
+      // are included by the projection itself, so a character on one keeps
+      // its label.
+      api('classes?names=1'),
     ]);
     D.campaign = campRes.campaign; D.isGm = campRes.is_gm;
     D.roster = rosterRes.characters;

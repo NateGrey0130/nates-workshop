@@ -289,6 +289,14 @@ choice-groups can't be checked in principle.
   independently, a `?names=1` projection for the dashboard. Neither is done
   here — both change response semantics for shared endpoints, and the current
   cost doesn't force it.
+- **Taken, 2026-08-24**: both halves, as proposed. `/classes` sends a weak
+  `ETag` over `count + max(updated_at)` of published classes with
+  `Cache-Control: private, no-cache`, so a warm boot revalidates to an empty
+  304 — the browser's fetch handles If-None-Match transparently, so `api()`
+  needed no change. `?names=1` serves `{ id, name }` off the table with no
+  parsing (retired included, since its one job is labels), and the GM
+  dashboard now uses it. Regression pins the validator, the 304 round-trip,
+  and that the projection covers every published class.
 
 ### F6 — info — the YAML parser's no-deps trade is still the right one, with eyes open
 
