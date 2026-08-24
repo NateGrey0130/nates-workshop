@@ -136,9 +136,23 @@ connection, spread across colos, where the limiter is eventually consistent and
 a burst leaks well past the nominal number. It caps a sustained rate; it does
 not hard-stop a burst. Recorded in `index.js`.
 
-**T9. Real phones. — NOT RUN. No physical device available to me.** Everything
-below still stands as untested, and the backgrounding question in particular is
-the one real gap left in this list.
+**T9. Real phones. — HALF DONE.** A solo round played on an iPhone, 2026-08-24,
+and it played well. That covers the rendering half: the mobile-first layout in
+real Safari, thumb reach on actual hardware, the sticky budget bar under real
+browser chrome, and the reveal-pick-flip rhythm on a device rather than an
+emulated 375px viewport.
+
+**It does not cover the half that worried me**, because solo mode never opens a
+WebSocket — it is one fetch and then local state. Untouched:
+
+- a phone sleeping mid-round in a PARTY game, and whether the socket survives
+- the reconnect and seat-holding path on real mobile Safari
+- `catchUpDeadline()`, which was written for exactly that shape and has still
+  only ever been triggered by a local hot-reload
+- the room code read across a room on a real screen
+
+The two-minute version: open a party room on a phone, start a round, lock the
+screen mid-item, unlock, and see whether it catches up or sits dead.
 
 Original note: The app is mobile-first and has only ever rendered in an
 emulated 375 px viewport. Thumb reach, the sticky budget bar under a real
