@@ -99,6 +99,11 @@ export const CORE_SDC_BY_CLASS = {
   'mind-melter': '1D6',
   'mystic': '1D6',
   'priest-of-light': '1D6',
+  // Pantheons of the Megaverse, printed 12-15. Its four pages state no S.D.C.
+  // and no hit point formula at all, so the core rule reaches it - and 1D6
+  // rather than 3D6 because a priest is not a man of arms, which is the same
+  // reading the Priest of Light directly above already gets.
+  'rifts-priest': '1D6',
   'shifter': '1D6',
   'stone-master': '1D6',
   'techno-wizard': '1D6',
