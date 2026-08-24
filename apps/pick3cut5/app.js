@@ -572,6 +572,7 @@ function soloReveal() {
  * server, and it has to stay a mirror.
  */
 function soloShow() {
+  clearTimeout(solo.summaryTimer);
   // Cancel any auto-flip left over from a previous showing of this index.
   //
   // A budget-forced item schedules its own flip on the beat. Swapping that item
@@ -639,15 +640,30 @@ function soloPick(choice) {
 }
 
 function soloFlip() {
+  clearTimeout(solo.flipTimer);
+  clearTimeout(solo.summaryTimer);
   solo.phase = 'flipping';
   render(soloSnapshot());
-  setTimeout(() => {
+  solo.summaryTimer = setTimeout(() => {
+    if (solo.phase !== 'flipping') return;
     solo.phase = 'summary';
     render(soloSnapshot());
   }, 900);
 }
 
 function soloAdvance() {
+  // Only from the summary screen.
+  //
+  // Without this guard an advance from any other phase raced the pending flip
+  // timers: pressing Next during item eight's flip set the phase to 'final',
+  // and the still-scheduled timer then dragged it BACK to 'flipping', leaving
+  // the round stuck one screen short of the board it had just finished
+  // earning. Both timers are cleared here as well as guarded, because a
+  // correct phase with a live timer behind it is the same bug waiting.
+  if (solo.phase !== 'summary') return;
+  clearTimeout(solo.flipTimer);
+  clearTimeout(solo.summaryTimer);
+
   if (solo.index >= ITEMS - 1) {
     solo.phase = 'final';
     render(soloSnapshot());
