@@ -14,7 +14,7 @@
 // because the spell LEVELS it may draw from belong to that grant rather than to
 // the character.
 
-import { json, requireCharacter } from '../../_lib/auth.js';
+import { json, readJson, requireCharacter } from '../../_lib/auth.js';
 import { loadCharacterClass } from '../../_lib/class-loader.js';
 import { xpTableFor, thresholdFor, skillGrantsFor } from '../../_lib/leveling.js';
 import { insertGrantStatements, remainingGrants, resolvePicks, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
@@ -29,7 +29,8 @@ export async function onRequestPost({ request, env, params }) {
   const guard = await requireCharacter(request, env, params.id);
   if (guard.res) return guard.res;
 
-  const b = await request.json();
+  const b = await readJson(request);
+  if (!b) return json({ error: 'Invalid JSON body' }, 400);
   const character = await loadCharacter(env, params.id);
   const toLevel = parseInt(b.to_level, 10);
   if (!Number.isFinite(toLevel) || toLevel <= character.level) {

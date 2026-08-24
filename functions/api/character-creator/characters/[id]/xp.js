@@ -4,7 +4,7 @@
 // response carries a PROPOSED diff — nothing else is applied until the player
 // confirms (or tweaks) it via level-confirm.
 
-import { json, requireCharacter } from '../../_lib/auth.js';
+import { json, readJson, requireCharacter } from '../../_lib/auth.js';
 import { loadCharacterClass } from '../../_lib/class-loader.js';
 import { xpTableFor, levelForXp, thresholdFor, buildProposal } from '../../_lib/leveling.js';
 import { loadCharacter } from '../../_lib/character-json.js';
@@ -13,7 +13,8 @@ export async function onRequestPost({ request, env, params }) {
   const guard = await requireCharacter(request, env, params.id);
   if (guard.res) return guard.res;
 
-  const b = await request.json();
+  const b = await readJson(request);
+  if (!b) return json({ error: 'Invalid JSON body' }, 400);
   const character = await loadCharacter(env, params.id);
   let newXp;
   if ('total' in b) newXp = parseInt(b.total, 10);

@@ -2,14 +2,15 @@
 // (owner/GM). Catalog-linked via item slug, or freeform via custom_name.
 // Optional journal_entry_id ties the addition to a session log entry.
 
-import { json, requireCharacter } from '../../_lib/auth.js';
+import { json, readJson, requireCharacter } from '../../_lib/auth.js';
 
 export async function onRequestPost({ request, env, params }) {
   const guard = await requireCharacter(request, env, params.id);
   if (guard.res) return guard.res;
   const { access } = guard;
 
-  const b = await request.json();
+  const b = await readJson(request);
+  if (!b) return json({ error: 'Invalid JSON body' }, 400);
   let itemId = null;
   if (b.slug) {
     const item = await env.DB.prepare('SELECT id FROM gear WHERE slug = ?').bind(b.slug).first();
