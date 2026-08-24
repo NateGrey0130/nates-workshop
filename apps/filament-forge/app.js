@@ -351,12 +351,15 @@ async function parseSTL(file) {
   };
 }
 
+// JSZip is vendored (apps/filament-forge/vendor/, byte-exact against cdnjs's
+// published SRI for 3.10.1) and still loaded lazily — a 3MF is a zip, and
+// most sessions never upload one, so the 95 KB stays off the boot path.
 let jsZipLoaded = null;
 async function loadJSZip() {
   if (jsZipLoaded) return jsZipLoaded;
   return new Promise((resolve, reject) => {
     const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+    s.src = 'vendor/jszip.min.js';
     s.onload = () => { jsZipLoaded = window.JSZip; resolve(window.JSZip); };
     s.onerror = reject;
     document.head.appendChild(s);

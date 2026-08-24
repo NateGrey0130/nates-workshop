@@ -160,9 +160,25 @@ check('openfilamentdatabase.org appears nowhere in the app',
   !appSrc.includes('openfilamentdatabase'));
 {
   const external = [...new Set([...appSrc.matchAll(/https?:\/\/([^/'"`]+)/g)].map((m) => m[1]))];
-  check('the only external origin is the JSZip CDN',
-    external.length === 1 && external[0] === 'cdnjs.cloudflare.com');
-  check('which the README owns up to', readme.includes('cdnjs.cloudflare.com'));
+  check('no external origin appears in the app at all',
+    external.length === 0, external.join(', '));
+}
+{
+  // JSZip is vendored, not fetched: the file must exist, the app must load
+  // that path, and the version this README claims must be the version the
+  // file's own header announces.
+  const vendored = join(appDir, 'vendor', 'jszip.min.js');
+  check('the vendored JSZip exists and the app loads it',
+    existsSync(vendored) && appSrc.includes("'vendor/jszip.min.js'"));
+  const header = readFileSync(vendored, 'utf8').slice(0, 300);
+  const fileVersion = (header.match(/JSZip v(\d+\.\d+\.\d+)/) || [])[1];
+  const readmeVersion = (readme.match(/JSZip v(\d+\.\d+\.\d+)/) || [])[1];
+  check('the README and the file agree on the JSZip version',
+    fileVersion && fileVersion === readmeVersion,
+    `file: ${fileVersion} readme: ${readmeVersion}`);
+  check('the vendor directory is exempt from line-ending normalization',
+    readFileSync(join(repoRoot, '.gitattributes'), 'utf8')
+      .includes('apps/filament-forge/vendor/* -text'));
 }
 {
   const writes = [...new Set([...appSrc.matchAll(/localStorage\.setItem\(\s*'([^']+)'/g)].map((m) => m[1]))];

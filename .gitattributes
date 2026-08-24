@@ -5,3 +5,8 @@
 # because git rewrote the scripts on the post-merge checkout. Pin LF so the
 # applied file is always byte-identical to the reviewed one.
 *.sql text eol=lf
+
+# Vendored minified libraries are committed byte-exact so the SRI hash
+# published for the version stays verifiable against the checkout. No
+# line-ending normalization.
+apps/filament-forge/vendor/* -text
