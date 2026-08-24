@@ -58,9 +58,10 @@
 
 import { DurableObject } from 'cloudflare:workers';
 import {
-  ITEMS_PER_ROUND, runPipeline, validateCategory, normalize,
+  runPipeline, validateCategory, normalize,
   GenerationError, AnthropicError,
 } from './generate.js';
+import { KEEPS, CUTS, ITEMS_PER_ROUND, forcedChoice, itemsRemaining } from './rules.js';
 
 const MAX_PLAYERS = 12;
 const MAX_ROUNDS = 30;
@@ -93,9 +94,6 @@ const DESTRUCT_AFTER_MS = 5 * 60_000;
 const DEFAULT_PICK_SECONDS = 60;
 const DEFAULT_ACCEPT_SECONDS = 30;
 
-const KEEPS = 3;
-const CUTS = 5;
-
 function freshGame(code) {
   return {
     code,
@@ -111,6 +109,9 @@ function freshGame(code) {
     replacements: 0,
     flaggedBy: [],
     lastFlag: null,
+    // Every swap this round, for the final screen. Rejected items were all
+    // revealed before they were replaced, so this leaks nothing.
+    swapLog: [],
     itemIndex: -1,
     armAt: 0,
     currentPicks: {},
@@ -365,6 +366,8 @@ export class Room extends DurableObject {
     const connected = Object.values(this.game.players).filter((p) => p.connected);
     if (!connected.length) throw new Error('Nobody is connected.');
 
+    const forceVerify = msg.verify === true;
+
     // The list is already built. Straight into the round with no wait and no
     // second API call.
     //
@@ -372,7 +375,7 @@ export class Room extends DurableObject {
     // spend on the host's button, and this path makes no API call at all — the
     // list was built and paid for while the final screen was up.
     const pf = this.game.prefetch;
-    if (pf.status === 'ready' && pf.norm === norm) {
+    if (pf.status === 'ready' && pf.norm === norm && Boolean(pf.forceVerify) === forceVerify) {
       const items = pf.items;
       const reserve = pf.reserve;
       const cache = new Map(Object.entries(pf.cache ?? {}));
@@ -399,10 +402,10 @@ export class Room extends DurableObject {
     // taking messages while this runs. Ten to twenty seconds is a long time to
     // hold a lock over eight phones. The generation timeout alarm armed above
     // is what catches this if it never comes back.
-    this.generate(category, norm).catch(() => { /* generate() handles its own errors */ });
+    this.generate(category, norm, forceVerify).catch(() => { /* generate() handles its own errors */ });
   }
 
-  async generate(category, norm) {
+  async generate(category, norm, forceVerify = false) {
     const cache = new Map(Object.entries(this.game.verified[norm] ?? {}));
     const exclude = this.game.used[norm] ?? [];
 
@@ -410,6 +413,8 @@ export class Room extends DurableObject {
       const { items, reserve } = await runPipeline(this.env, category, {
         exclude,
         cache,
+        endpoint: 'pick3cut5-party',
+        forceVerify,
         onProgress: (line) => {
           // Fire-and-forget progress. If the room has moved on, this is a
           // no-op; if it has not, it is the difference between a spinner and
@@ -463,6 +468,7 @@ export class Room extends DurableObject {
     this.game.replacements = 0;
     this.game.flaggedBy = [];
     this.game.lastFlag = null;
+    this.game.swapLog = [];
     this.game.itemIndex = -1;
     this.game.progress = '';
     this.game.error = null;
@@ -531,9 +537,10 @@ export class Room extends DurableObject {
     // Spend stays bounded without it — MAX_PREFETCHES_PER_ROOM is a hard
     // lifetime cap, only one may be in flight, the client debounces by 1.5s,
     // and the round cap and replay cap are both checked above.
+    const forceVerify = msg.verify === true;
     this.game.prefetchCount += 1;
     this.game.prefetch = {
-      norm, category, status: 'running', items: [], reserve: [], cache: {},
+      norm, category, status: 'running', items: [], reserve: [], cache: {}, forceVerify,
     };
     await this.settle();
 
@@ -541,19 +548,24 @@ export class Room extends DurableObject {
     const exclude = this.game.used[norm] ?? [];
 
     try {
-      const { items, reserve } = await runPipeline(this.env, category, { exclude, cache });
+      // The toggle rides with the prefetch. Without this a host who ticked
+      // "double-check this" and let the list build early would silently get the
+      // unverified fast path — the opposite of what they asked for.
+      const { items, reserve } = await runPipeline(this.env, category, {
+        exclude, cache, endpoint: 'pick3cut5-party', forceVerify,
+      });
       // The host may have changed the category, or started a round, while this
       // ran. Landing a stale result would show a list for a category nobody
       // asked for, so it is dropped.
       if (this.game?.prefetch?.norm !== norm || this.game.prefetch.status !== 'running') return;
       this.game.prefetch = {
-        norm, category, status: 'ready', items, reserve, cache: Object.fromEntries(cache),
+        norm, category, status: 'ready', items, reserve, cache: Object.fromEntries(cache), forceVerify,
       };
     } catch {
       if (this.game?.prefetch?.norm !== norm) return;
       // Failure is silent by design. The host presses Go again and gets the
       // normal path, including the normal error if it fails a second time.
-      this.game.prefetch = { norm, category, status: 'failed', items: [], reserve: [], cache: {} };
+      this.game.prefetch = { norm, category, status: 'failed', items: [], reserve: [], cache: {}, forceVerify };
     }
     await this.settle();
   }
@@ -660,6 +672,7 @@ export class Room extends DurableObject {
     // Shown on the replacement so the table can see what happened and who
     // called it. Half the point of the feature is the callout itself.
     this.game.lastFlag = { by: player.name, rejected };
+    this.game.swapLog.push({ by: player.name, rejected, item: this.game.itemIndex + 1 });
 
     await this.revealCurrent();
   }
@@ -719,21 +732,19 @@ export class Room extends DurableObject {
   // ─── Budget math (server-side, always) ──────────────────────────────────
 
   itemsRemaining() {
-    return ITEMS_PER_ROUND - this.game.itemIndex; // includes the item on screen
+    return itemsRemaining(this.game.itemIndex); // includes the item on screen
   }
 
   /**
    * Returns 'keep' | 'cut' when the player's budget leaves them no choice at
    * all, otherwise null. Auto-picks still spend budget, which is what makes
    * the arithmetic land on exactly 3 and 5 every time.
+   *
+   * The rule itself lives in rules.js as arithmetic over three numbers, so the
+   * test can exercise every reachable state without standing up a room.
    */
   forcedChoice(player) {
-    const remaining = this.itemsRemaining();
-    if (player.keepsLeft === 0) return 'cut';
-    if (player.cutsLeft === 0) return 'keep';
-    if (player.keepsLeft === remaining) return 'keep';
-    if (player.cutsLeft === remaining) return 'cut';
-    return null;
+    return forcedChoice(player.keepsLeft, player.cutsLeft, this.itemsRemaining());
   }
 
   recordPick(player, choice, reason) {
@@ -1058,6 +1069,7 @@ export class Room extends DurableObject {
       swapsLeft: MAX_REPLACEMENTS_PER_ROUND - g.replacements,
       spareItems: g.reserve.length,
       lastFlag: g.lastFlag,
+      swapLog: g.swapLog ?? [],
       // Prefetch STATUS only — never g.prefetch.items. The whole game rests on
       // unrevealed items not reaching the client, and a list built early is
       // still an unrevealed list. `category` is safe: the host typed it.

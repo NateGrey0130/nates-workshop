@@ -38,6 +38,44 @@ const EFFORT_UNSUPPORTED = /does not support the effort parameter/i;
 export class AnthropicError extends Error {}
 
 /**
+ * One `claude_usage` row per model call — the same table and shape the Pages
+ * proxy writes, so the spend query in SETUP.md sees this app too.
+ *
+ * This is the only path in the Workshop a stranger can make spend money, which
+ * is exactly why it should not be the one path that reports nothing. `email` is
+ * null because there is no identity here by design; `endpoint` is what
+ * distinguishes these rows.
+ *
+ * DELIBERATELY DUPLICATED rather than imported from
+ * functions/api/_lib/claude-client.js. That file belongs to the Pages bundle
+ * and this Worker ships on its own schedule; a relative import across that
+ * boundary would couple two deploy units for six columns.
+ *
+ * Fail-open, and it must stay that way: metering that can break the call it
+ * measures — an unmigrated environment, a D1 hiccup — would turn a reporting
+ * gap into a broken game.
+ */
+export async function recordUsage(env, { endpoint, model, upstream }) {
+  try {
+    if (!env?.DB) return;
+    let usage = null;
+    let servedModel = model ?? null;
+    try {
+      const payload = JSON.parse(upstream?.text ?? '');
+      usage = payload?.usage ?? null;
+      servedModel = payload?.model ?? servedModel;
+    } catch { /* an upstream error body is still a recorded attempt */ }
+    await env.DB.prepare(
+      `INSERT INTO claude_usage (email, endpoint, model, input_tokens, output_tokens, status)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    ).bind(null, endpoint, servedModel,
+      Number.isFinite(usage?.input_tokens) ? usage.input_tokens : null,
+      Number.isFinite(usage?.output_tokens) ? usage.output_tokens : null,
+      upstream?.status ?? null).run();
+  } catch { /* see above — never the caller's problem */ }
+}
+
+/**
  * One Messages API call, with server-tool pause_turn handled.
  *
  * Web search runs as a server-side tool: results come back as content blocks in
@@ -46,7 +84,7 @@ export class AnthropicError extends Error {}
  * it means "ask me again with what you have so far". Not resuming it is the
  * classic way to get a half-finished list that parses fine and is simply short.
  */
-export async function callClaude(env, { model, system, prompt, maxTokens, search, effort }) {
+export async function callClaude(env, { model, system, prompt, maxTokens, search, effort, endpoint }) {
   if (!env.ANTHROPIC_API_KEY) throw new AnthropicError('ANTHROPIC_API_KEY is not set on this Worker');
 
   const messages = [{ role: 'user', content: prompt }];
@@ -76,6 +114,11 @@ export async function callClaude(env, { model, system, prompt, maxTokens, search
     });
 
     const text = await res.text();
+
+    // Recorded before any branch below, so a refusal, a 400 and a pause_turn
+    // are all billed to somebody in the table. Every one of them cost money.
+    await recordUsage(env, { endpoint: endpoint ?? 'pick3cut5', model, upstream: { status: res.status, text } });
+
     if (!res.ok) {
       let detail = text.slice(0, 300);
       try { detail = JSON.parse(text)?.error?.message ?? detail; } catch { /* raw body it is */ }

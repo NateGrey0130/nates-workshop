@@ -28,6 +28,24 @@
     "P3C5_MODEL_VERIFY": "claude-sonnet-5"
   },
 
+  // Spend visibility ONLY. No game state touches D1 — rooms still live and die
+  // in Durable Object memory, which is the app's no-database rule as intended.
+  //
+  // This exists because Pick 3 Cut 5 is the one path in the Workshop a stranger
+  // can make spend money, and it was also the one path reporting nothing: the
+  // `claude_usage` query in SETUP.md silently excluded it. Rows land with a null
+  // email (there is no identity here by design) and an endpoint of
+  // `pick3cut5-party` or `pick3cut5-solo`.
+  //
+  // Writes are fail-open. Metering must never break the call it measures.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "nates-workshop-media",
+      "database_id": "6de15679-1b2e-4f87-8dc2-ac64b24e33d2"
+    }
+  ],
+
   "durable_objects": {
     "bindings": [
       { "name": "ROOM", "class_name": "Room" }

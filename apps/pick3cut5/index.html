@@ -78,8 +78,12 @@
       <label for="soloCategory">Category</label>
       <input id="soloCategory" maxlength="60" autocomplete="off"
              placeholder="best Zelda games">
-      <p class="hint">Anything with eight recognisable entries. Facts get checked against the web,
-         opinions don't.</p>
+      <p class="hint">Anything with eight recognisable entries.</p>
+      <label class="verify-toggle">
+        <input type="checkbox" id="verifySolo">
+        <span>Double-check this list against the web <em>(slower, for categories you want right)</em></span>
+      </label>
+
       <button class="btn btn-primary btn-big" type="submit">Build the list</button>
     </form>
   </section>
@@ -98,6 +102,11 @@
       <label for="category">Category</label>
       <input id="category" maxlength="60" autocomplete="off" placeholder="best Zelda games">
       <p class="hint" id="categoryHint">Facts get checked against the web before anyone sees them.</p>
+
+      <label class="verify-toggle">
+        <input type="checkbox" id="verifyLobby">
+        <span>Double-check this list against the web <em>(slower, for categories you want right)</em></span>
+      </label>
 
       <details class="timer-settings">
         <summary>Timers</summary>
@@ -193,10 +202,18 @@
     <h2 class="final-title">Final threes</h2>
     <p class="final-cat" id="finalCategory"></p>
     <div class="final-boards" id="finalBoards"></div>
+    <!-- Not a stat and not commentary: a record of what the room corrected.
+         "Bo called out True Romance" is one of the better things that happens
+         in a round and it was otherwise gone by the time anyone saw the boards. -->
+    <p class="swap-log" id="swapLog" hidden></p>
 
     <form class="panel host-only" id="formAgain" hidden>
       <label for="againCategory">Another category</label>
       <input id="againCategory" maxlength="60" autocomplete="off" placeholder="something else">
+      <label class="verify-toggle">
+        <input type="checkbox" id="verifyAgain">
+        <span>Double-check this list against the web <em>(slower, for categories you want right)</em></span>
+      </label>
       <button class="btn btn-primary btn-big" type="submit" id="btnAgain">Go again</button>
       <!-- The final screen is dead time — everyone is arguing about each
            other's boards — so the next list is built while they do it. -->
@@ -207,6 +224,10 @@
     <form class="panel" id="formSoloAgain" hidden>
       <label for="soloAgainCategory">Another category</label>
       <input id="soloAgainCategory" maxlength="60" autocomplete="off" placeholder="something else">
+      <label class="verify-toggle">
+        <input type="checkbox" id="verifySoloAgain">
+        <span>Double-check this list against the web <em>(slower, for categories you want right)</em></span>
+      </label>
       <button class="btn btn-primary btn-big" type="submit">Go again</button>
       <p class="prefetch-status" id="soloPrefetchStatus" hidden></p>
     </form>

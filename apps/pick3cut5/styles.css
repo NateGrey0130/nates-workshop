@@ -325,6 +325,28 @@ main { padding: 20px 18px 48px; max-width: 620px; margin: 0 auto; }
 .btn-flag:hover:not(:disabled) { color: var(--accent-secondary); border-color: var(--border); }
 .btn-flag:disabled { opacity: 0.35; }
 
+.verify-toggle {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  cursor: pointer;
+  padding: 4px 0;
+}
+.verify-toggle input { width: 17px; height: 17px; flex: none; margin-top: 1px; accent-color: var(--accent); }
+.verify-toggle em { color: var(--text-muted); font-style: normal; }
+
+.swap-log {
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+.swap-log b { color: var(--accent-secondary); font-weight: 500; }
+.swap-log s { opacity: 0.75; }
+
 .prefetch-status {
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
