@@ -12,7 +12,7 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { trailingSelects, collapseWhitespace, statements, stripComments } from '../../../../scripts/sql-statements.mjs';
+import { batchStatements, trailingSelects, collapseWhitespace, statements, stripComments } from '../../../../scripts/sql-statements.mjs';
 import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 
 // The sections this file announces, declared once so a `--section` run can
@@ -239,6 +239,16 @@ check('a doubled quote does not end a literal',
 
 check('a -- inside a literal is not a comment',
   statements("SELECT 'a--b' AS x;")[0].includes('a--b'));
+
+// q.mjs --batch runs a whole file's statements as ONE --command, so every
+// statement — not just the SELECTs trailingSelects() keeps — must come out
+// single-line and terminated, or the join truncates at the first newline and
+// every statement after it silently never runs.
+check('a batch keeps every statement, single-line and terminated', (() => {
+  const b = batchStatements("SELECT a,\n       b\n  FROM t;\nUPDATE t SET x = 'a;b';");
+  return b.length === 2 && b.every((x) => !x.includes('\n') && /;$/.test(x))
+    && /^UPDATE/.test(b[1]) && b[1].includes("'a;b'");
+})());
 
 // A SELECT inside an UPDATE's guard belongs to that UPDATE. Replaying it alone
 // would be meaningless, and replaying anything that is not a SELECT would make

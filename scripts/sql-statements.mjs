@@ -100,6 +100,15 @@ export function statements(sql) {
   return out.map((t) => t.trim()).filter(Boolean);
 }
 
+// EVERY statement, single-line and semicolon-terminated: trailingSelects()
+// without the SELECT filter. `q.mjs --batch` hands these to ONE --command
+// invocation, so the single-line property is load-bearing here for the same
+// reason it is there — --command truncates at the first newline and calls the
+// remainder `incomplete input`.
+export function batchStatements(sql) {
+  return statements(sql).map((t) => collapseWhitespace(t) + ';');
+}
+
 // The statements that BEGIN with SELECT: a script's own verification read-backs.
 // A SELECT inside an UPDATE's guard is part of that UPDATE and is not one of
 // these — re-running it alone would be meaningless.
