@@ -5,6 +5,7 @@
 //   node scripts/class-check.mjs draft.md
 //   node scripts/class-check.mjs draft.md --remote
 //   node scripts/class-check.mjs draft.md --no-catalog
+//   node scripts/class-check.mjs draft.md --field-sources [--book <slug>] [--offset <n>]
 //
 // This is the CLI half of what `import/recheck` already does in the browser:
 // parse the markdown through the REAL parser, cross-reference it against the
@@ -33,26 +34,46 @@
 // to guess because an accidental --remote writes to production; every query
 // here is a read.
 
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { parseClassMarkdown } from '../apps/character-creator/js/parser.js';
 import { crossReference, buildStubStatements, restrictionNames } from '../functions/api/character-creator/_lib/catalog.js';
-import { extractClassMarkdown, unmodelledKeys, crossCategoryRestrictions, unclosedFlowLines } from './class-check-lib.mjs';
+import {
+  extractClassMarkdown, unmodelledKeys, crossCategoryRestrictions, unclosedFlowLines,
+  parseSourcePages, resolveBookSlug, detectPageOffset, freeTextFields, fieldTokens,
+  fieldSourceSpans, bestMatchingPages,
+} from './class-check-lib.mjs';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const args = process.argv.slice(2);
-const remote = args.includes('--remote');
-const noCatalog = args.includes('--no-catalog');
-const files = args.filter((a) => !a.startsWith('--'));
 
 function die(msg) {
   console.error('\nclass-check: ' + msg);
   process.exit(1);
 }
+
+// The two value-taking flags come out first, so their values are not read as
+// file arguments.
+function takeValue(flag) {
+  const i = args.indexOf(flag);
+  if (i < 0) return null;
+  const v = args[i + 1];
+  if (v === undefined || v.startsWith('--')) die(`${flag} needs a value`);
+  args.splice(i, 2);
+  return v;
+}
+
+const bookFlag = takeValue('--book');
+const offsetFlag = takeValue('--offset');
+if (offsetFlag !== null && !/^-?\d+$/.test(offsetFlag)) die('--offset takes an integer');
+const fieldSources = args.includes('--field-sources');
+const remote = args.includes('--remote');
+const noCatalog = args.includes('--no-catalog');
+const files = args.filter((a) => !a.startsWith('--'));
 
 if (files.length !== 1) die('give exactly one .md or .sql file');
 const file = files[0];
@@ -133,6 +154,128 @@ if (unmodelled.length) {
   console.log('  the sheet — or move it into the body as prose so the class can ship');
   console.log('  now. See "When a class needs the app to change" in the class-import');
   console.log('  skill.');
+}
+
+// ── field sources ──
+// The free-text fields no test pins, traced back to the OCR-cache lines they
+// were drawn from. The rule that earns the mode its place: whenever a source
+// span ends near the bottom of its page, the first lines of the NEXT page are
+// printed too — the two starting_money figures that shipped wrong (PR #280)
+// were both paragraphs that continued past a page break the reading stopped
+// at. Entirely offline: the cache is local text, so this mode skips D1.
+if (fieldSources && data) {
+  const booksDir = path.join(repoRoot, '.cache', 'books');
+  if (!existsSync(booksDir)) {
+    die('no OCR cache at .cache/books — --field-sources reads the cached page text '
+      + 'the class was transcribed from, and this machine has none');
+  }
+  const books = readdirSync(booksDir, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && existsSync(path.join(booksDir, d.name, 'txt')))
+    .map((d) => {
+      const mf = path.join(booksDir, d.name, 'manifest.json');
+      let sourcePdf = null;
+      if (existsSync(mf)) {
+        try { sourcePdf = JSON.parse(readFileSync(mf, 'utf8')).source_pdf ?? null; } catch { /* a broken manifest still leaves the slug route */ }
+      }
+      return { slug: d.name, sourcePdf };
+    });
+  if (!books.length) die('no cached books under .cache/books');
+
+  const slug = bookFlag ?? resolveBookSlug(data.source_book, books);
+  if (!slug || !books.some((b) => b.slug === slug)) {
+    die(`cannot match source_book "${data.source_book ?? ''}" to a cached book — `
+      + `pass --book <slug>. Cached: ${books.map((b) => b.slug).join(', ')}`);
+  }
+
+  const range = parseSourcePages(data.source_book);
+  if (!range) {
+    die(`source_book "${data.source_book ?? ''}" names no pages — the field-source `
+      + 'window comes from its p.N or p.N-M suffix');
+  }
+
+  const txtDir = path.join(booksDir, slug, 'txt');
+  const pages = readdirSync(txtDir)
+    .map((f) => f.match(/^p(\d+)\.txt$/))
+    .filter(Boolean)
+    .map((m) => ({
+      page: Number(m[1]),
+      lines: readFileSync(path.join(txtDir, m[0]), 'utf8').split(/\r?\n/),
+    }))
+    .sort((a, b) => a.page - b.page);
+  const byPage = new Map(pages.map((p) => [p.page, p.lines]));
+
+  let offset = 0;
+  let offsetHow = 'default 0';
+  if (offsetFlag !== null) {
+    offset = Number(offsetFlag);
+    offsetHow = 'from --offset';
+  } else {
+    const det = detectPageOffset(pages);
+    // A couple of stray bare numbers should not move the window; a real
+    // pagination shows up on most pages.
+    if (det && det.votes >= 3 && det.votes * 2 > det.sampled) {
+      offset = det.offset;
+      offsetHow = `detected from ${det.votes} printed page numbers`;
+    } else {
+      offsetHow = 'default 0 — no consistent printed page numbers in the cache';
+    }
+  }
+
+  const pdfFirst = range.first + offset;
+  const pdfLast = range.last + offset;
+  const windowPages = pages.filter((p) => p.page >= pdfFirst && p.page <= pdfLast);
+
+  console.log(`\nFIELD SOURCES (${slug} p.${range.first}`
+    + (range.last !== range.first ? `-${range.last}` : '')
+    + ` -> files p${pdfFirst}-p${pdfLast}; offset ${offset >= 0 ? '+' : ''}${offset}, ${offsetHow})`);
+
+  if (!windowPages.length) {
+    die(`pages p${pdfFirst}-p${pdfLast} are not in the ${slug} cache `
+      + `(it holds p${pages[0].page}-p${pages[pages.length - 1].page})`);
+  }
+
+  const fields = freeTextFields(data);
+  if (!fields.length) {
+    console.log('  no free-text fields to trace (no starting_money, no equipment_starting)');
+  }
+
+  const clip = (s) => {
+    const t = s.replace(/\s+$/, '');
+    return t.length > 96 ? t.slice(0, 93) + '...' : t;
+  };
+
+  for (const { field, value } of fields) {
+    const tokens = fieldTokens(field, value);
+    const spans = fieldSourceSpans(tokens, windowPages, { lookup: (n) => byPage.get(n) ?? null });
+    console.log(`\n  ${field}: ${clip(value)}`);
+    if (!spans.length) {
+      console.log(`      no matching lines in p${pdfFirst}-p${pdfLast}`);
+      const hints = bestMatchingPages(tokens, pages);
+      if (hints.length) {
+        console.log('      strongest matches elsewhere: '
+          + hints.map((h) => `p${h.page} (score ${h.score})`).join(', '));
+        console.log('      if those are the right pages, the printed-page offset is off — pass --offset <n>');
+      }
+      continue;
+    }
+    const shown = spans.slice(0, 4);
+    for (const s of shown) {
+      for (let i = 0; i < s.lines.length; i++) {
+        console.log(`      p${s.page}:${String(s.start + i).padStart(3)}  ${clip(s.lines[i])}`);
+      }
+      if (s.continuation) {
+        console.log(`      -- span ends near the bottom of the page -- first lines of p${s.continuation.page}:`);
+        if (s.continuation.lines === null) {
+          console.log(`      p${s.continuation.page} is not in the cache — the paragraph may continue on a page never read`);
+        } else {
+          for (const l of s.continuation.lines) console.log(`      p${s.continuation.page}:      ${clip(l)}`);
+        }
+      }
+    }
+    if (spans.length > shown.length) {
+      console.log(`      (${spans.length - shown.length} weaker span${spans.length - shown.length === 1 ? '' : 's'} not shown)`);
+    }
+  }
 }
 
 // ── catalog cross-reference ──
@@ -216,8 +359,8 @@ const env = {
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
-if (noCatalog) {
-  console.log('\nCATALOG          skipped (--no-catalog)');
+if (noCatalog || fieldSources) {
+  console.log(`\nCATALOG          skipped (${noCatalog ? '--no-catalog' : '--field-sources is offline'})`);
 } else if (!data) {
   console.log('\nCATALOG          skipped (nothing parsed)');
 } else {

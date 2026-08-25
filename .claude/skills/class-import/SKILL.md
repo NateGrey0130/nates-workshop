@@ -30,6 +30,18 @@ modelling something new (see the last section).
    ```
    Parses through the real parser and cross-references the real catalogs. Free,
    no API call, no writes. Iterate here until it reads `ready`.
+
+   Then check the fields nothing pins against the page they came from:
+   ```bash
+   node scripts/class-check.mjs draft.md --field-sources
+   ```
+   It prints the OCR-cache lines `starting_money` and the equipment prose were
+   drawn from — and, when a source span ends near the bottom of its page, the
+   first lines of the NEXT page. **Read that continuation block.** Both shipped
+   `starting_money` errors were paragraphs that continued past a page break the
+   reading stopped at (PR #280); this is the check that would have caught them.
+   It resolves the book, window and page offset from `source_book` and the
+   cache itself (`--book` / `--offset` override).
 4. **Wrap it in a data script** — copy `reference/data-script.sql`, paste the
    stub SQL `class-check` printed, and set the filename in the closing
    `data_script_runs` line. Then check the finished script too:

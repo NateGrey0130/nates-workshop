@@ -194,6 +194,244 @@ export function unclosedFlowLines(markdown) {
   return out;
 }
 
+// ── field sources ──
+// The free-text fields (`starting_money`, `equipment_starting`) are the fields
+// no test pins, and the two on-record transcription errors were both a value
+// read from a paragraph that continued past a page break (fixed in PR #280).
+// These functions locate a field's value in the page-addressed OCR cache under
+// .cache/books/<slug>/txt/ so class-check can print the lines a value was
+// drawn from — and, when the source span ends near the bottom of its page,
+// the first lines of the following page, which is where the missing half of a
+// broken paragraph lives. Pure text against text: the CLI does the file I/O.
+
+/**
+ * The printed page range out of a `source_book` line —
+ * "Rifts Ultimate Edition p.100-104" → { first: 100, last: 104 }.
+ * A single page reads as a one-page range; no `p.N` at all is null.
+ */
+export function parseSourcePages(sourceBook) {
+  const m = String(sourceBook ?? '').match(/\bp\.?\s*(\d+)(?:\s*-\s*(\d+))?/i);
+  if (!m) return null;
+  const a = Number(m[1]);
+  const b = m[2] ? Number(m[2]) : a;
+  return a <= b ? { first: a, last: b } : { first: b, last: a };
+}
+
+/**
+ * Which cached book a `source_book` title means.
+ *
+ * `books` is [{ slug, sourcePdf }] — the directories under .cache/books plus
+ * whatever their manifests name as the source PDF. Two deterministic routes:
+ * the slug as an initialism of consecutive title words ("rue" in "Rifts
+ * Ultimate Edition", "pf" in "Palladium Fantasy RPG Main Book"), and word
+ * overlap with the manifest's PDF name. Returns the unique best match, or
+ * null — a tie is refused rather than guessed, and the CLI asks for --book.
+ */
+export function resolveBookSlug(sourceBook, books) {
+  const title = String(sourceBook ?? '').replace(/\bp\.?\s*\d+(?:\s*-\s*\d+)?/i, '');
+  const wordsOf = (s) => (String(s ?? '').toLowerCase().match(/[a-z0-9]+/g) || []);
+  const titleWords = wordsOf(title);
+  const initials = titleWords.map((w) => w[0]).join('');
+
+  let best = null;
+  let tied = false;
+  for (const { slug, sourcePdf } of books) {
+    let score = 0;
+    if (slug && initials.includes(String(slug).toLowerCase())) score = 3 + slug.length;
+    const overlap = wordsOf(sourcePdf).filter((w) => titleWords.includes(w)).length;
+    if (overlap >= 2) score = Math.max(score, overlap);
+    if (!score) continue;
+    if (!best || score > best.score) { best = { slug, score }; tied = false; }
+    else if (score === best.score) tied = true;
+  }
+  return best && !tied ? best.slug : null;
+}
+
+/**
+ * The printed-page → PDF-page offset, read off the pages themselves.
+ *
+ * OCR'd pages usually carry their printed page number as a bare integer near
+ * the top or bottom — the pf cache prints "307" at the head of p309.txt, an
+ * offset of +2 that would otherwise send every p.N lookup two pages early.
+ * One vote per page (pdf page minus printed number, implausible gaps
+ * discarded), majority wins; ties go to the offset nearest zero. Returns
+ * { offset, votes, sampled } or null when no page shows a number — the caller
+ * decides how many votes it takes to act on.
+ */
+export function detectPageOffset(pages) {
+  const votes = new Map();
+  let sampled = 0;
+  for (const { page, lines } of pages) {
+    const nonblank = lines.map((l) => l.trim()).filter(Boolean);
+    for (const t of [...nonblank.slice(0, 5), ...nonblank.slice(-5)]) {
+      const m = t.match(/^(\d{1,4})$/);
+      if (!m) continue;
+      const off = page - Number(m[1]);
+      if (Math.abs(off) > 40) continue;
+      votes.set(off, (votes.get(off) ?? 0) + 1);
+      sampled++;
+      break;
+    }
+  }
+  let best = null;
+  for (const [offset, n] of votes) {
+    if (!best || n > best.votes
+      || (n === best.votes && Math.abs(offset) < Math.abs(best.offset))) {
+      best = { offset, votes: n };
+    }
+  }
+  return best ? { ...best, sampled } : null;
+}
+
+/**
+ * The free-text fields of a parsed class worth tracing to the page.
+ *
+ * Exactly the fields no test pins: `starting_money`, and the equipment list
+ * flattened to prose (slugs de-hyphenated, choice labels and options
+ * included) so its words can be looked for in the book's own equipment
+ * paragraph.
+ */
+export function freeTextFields(data) {
+  const out = [];
+  if (data?.starting_money != null && String(data.starting_money).trim() !== '') {
+    out.push({ field: 'starting_money', value: String(data.starting_money) });
+  }
+  const eq = data?.equipment_starting;
+  if (Array.isArray(eq) && eq.length) {
+    const parts = [];
+    for (const e of eq) {
+      if (typeof e === 'string') { parts.push(e); continue; }
+      if (!e || typeof e !== 'object') continue;
+      // qty stays out on purpose: the books word quantities ("a dozen pair"),
+      // and a bare "12" matched level-progression prose three paragraphs away.
+      if (e.item_id) parts.push(String(e.item_id).replace(/-/g, ' '));
+      if (e.label) parts.push(String(e.label));
+      for (const f of e.from || []) parts.push(String(f).replace(/-/g, ' '));
+    }
+    if (parts.length) out.push({ field: 'equipment_starting', value: parts.join(' ') });
+  }
+  return out;
+}
+
+const FIELD_ANCHORS = {
+  // The books head these paragraphs "Money:" / "Standard Equipment:", and the
+  // heading is worth finding even when OCR mangled the value beside it — the
+  // paragraph is the source whether or not the number in it survived.
+  starting_money: /^\W*(?:starting\s+)?money\b/i,
+  equipment_starting: /^\W*(?:standard\s+|starting\s+)?equipment\b/i,
+};
+
+const STOP_WORDS = new Set(['with', 'from', 'and', 'the', 'each', 'item', 'items', 'plus', 'worth']);
+
+const normalizeLine = (s) => String(s).toLowerCase()
+  .replace(/(\d),(?=\d)/g, '$1')   // "3,000" and "3000" are the same figure
+  .replace(/\s+/g, ' ');
+
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * What to look for on the page: numeric/dice tokens ("2d4x1000", "3000" —
+ * two-digit figures only when nothing longer exists, they match too much),
+ * words of four letters and up, and the field's paragraph-heading anchor.
+ */
+export function fieldTokens(field, value) {
+  const v = normalizeLine(value);
+  const rawNums = v.match(/\d[\dxd.+]*/g) || [];
+  const cleaned = rawNums.map((t) => t.replace(/[.+]+$/, ''));
+  let nums = cleaned.filter((t) => t.length >= 3 || /d/.test(t));
+  if (!nums.length) nums = cleaned.filter((t) => t.length === 2);
+  const words = (v.match(/[a-z][a-z']{3,}/g) || []).filter((w) => !STOP_WORDS.has(w));
+  return { nums: new Set(nums), words: new Set(words), anchor: FIELD_ANCHORS[field] ?? null };
+}
+
+// A token only counts against whole figures: "100" must not match the "1000"
+// in "2D4x1000". Anchors score like a number because the heading alone is a
+// source line; words are weak evidence and only add up.
+function lineScore(tokens, rawLine) {
+  const line = normalizeLine(rawLine);
+  let score = 0;
+  for (const n of tokens.nums) {
+    if (new RegExp(`(?<!\\d)${escapeRe(n)}(?!\\d)`).test(line)) score += 3;
+  }
+  for (const w of tokens.words) if (line.includes(w)) score += 1;
+  if (tokens.anchor && tokens.anchor.test(rawLine)) score += 3;
+  return score;
+}
+
+/**
+ * Where on the page a field's value came from.
+ *
+ * `pages` is the window to search, [{ page, lines }] in PDF numbering. Each
+ * matching line is grown to its paragraph (blank-line bounded, capped), and
+ * whenever a span ends within `near` lines of the bottom of its page the
+ * result carries the first `follow` lines of the following page — fetched via
+ * `lookup(pageNo)`, which returns that page's lines or null. A continuation
+ * with `lines: null` still names the page: the span reaches the boundary and
+ * the cache has nothing to show, which is itself worth seeing.
+ */
+export function fieldSourceSpans(tokens, pages, { near = 6, follow = 10, threshold = 3, lookup = null } = {}) {
+  const spans = [];
+  for (const { page, lines } of pages) {
+    const scores = lines.map((l) => lineScore(tokens, l));
+    const groups = [];
+    scores.forEach((s, i) => {
+      if (s < threshold) return;
+      const g = groups[groups.length - 1];
+      if (g && i - g.end <= 3) { g.end = i; g.score += s; }
+      else groups.push({ start: i, end: i, score: s });
+    });
+    // Grow each group to its paragraph, then merge the overlaps the growth made.
+    const grown = groups.map((g) => {
+      let start = g.start;
+      for (let k = 0; k < 4 && start > 0 && lines[start - 1].trim(); k++) start--;
+      let end = g.end;
+      for (let k = 0; k < 12 && end < lines.length - 1 && lines[end + 1].trim(); k++) end++;
+      return { start, end, score: g.score };
+    });
+    const merged = [];
+    for (const g of grown) {
+      const m = merged[merged.length - 1];
+      if (m && g.start <= m.end + 1) { m.end = Math.max(m.end, g.end); m.score += g.score; }
+      else merged.push({ ...g });
+    }
+    for (const g of merged) {
+      const span = {
+        page,
+        start: g.start + 1,
+        end: g.end + 1,
+        score: g.score,
+        lines: lines.slice(g.start, g.end + 1),
+      };
+      if (lines.length - (g.end + 1) <= near) {
+        const next = lookup ? lookup(page + 1) : null;
+        if (next) {
+          let i = 0;
+          while (i < next.length && !next[i].trim()) i++;
+          span.continuation = { page: page + 1, lines: next.slice(i, i + follow) };
+        } else {
+          span.continuation = { page: page + 1, lines: null };
+        }
+      }
+      spans.push(span);
+    }
+  }
+  spans.sort((a, b) => b.score - a.score || a.page - b.page || a.start - b.start);
+  return spans;
+}
+
+/**
+ * The strongest-scoring pages anywhere in the book — the hint printed when
+ * the stated range matches nothing, which is what a wrong page offset looks
+ * like from inside the window.
+ */
+export function bestMatchingPages(tokens, pages, top = 3) {
+  return pages
+    .map(({ page, lines }) => ({ page, score: lines.reduce((s, l) => s + lineScore(tokens, l), 0) }))
+    .filter((p) => p.score > 0)
+    .sort((a, b) => b.score - a.score || a.page - b.page)
+    .slice(0, top);
+}
+
 /**
  * Restriction names that resolve to a catalog row in a DIFFERENT category.
  *
