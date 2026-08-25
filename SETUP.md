@@ -59,8 +59,8 @@ nates-workshop/
 │       └── ship-pr/          Branch, verify, PR, merge, prune, verify again
 ├── scripts/
 │   ├── d1-apply.mjs          The migration/data-script apply routine
-│   ├── sql-statements.mjs    Splitting .sql into statements; d1-apply and the
-│   │                         smoke test share it
+│   ├── sql-statements.mjs    Splitting .sql into statements; d1-apply, q.mjs
+│   │                         --batch and the smoke test share it
 │   ├── class-check.mjs       Checks a class definition before it lands
 │   ├── class-check-lib.mjs   The checks themselves, so the smoke test can run them
 │   ├── ofd-refresh.mjs       Snapshot the Open Filament Database into D1 for

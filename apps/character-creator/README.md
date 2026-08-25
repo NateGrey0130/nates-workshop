@@ -2598,7 +2598,9 @@ scripts/
 ├── class-check-lib.mjs     Its pure half, so the smoke test can call it
 ├── q.mjs                   One ad-hoc question to D1, from a shell. The
 │                           alternative kept being a throwaway `node -e` that
-│                           got the Windows quoting wrong a new way each time
+│                           got the Windows quoting wrong a new way each time.
+│                           `--batch file.sql` runs many statements in ONE
+│                           wrangler invocation, numbered results back
 └── sql-statements.mjs      Splitting SQL for wrangler, which truncates a
                             --command at the first newline
 ```

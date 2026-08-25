@@ -188,6 +188,20 @@ Read-only stays convention, as today.
 Proposal: add `--batch <file>` to q.mjs, executing all statements in one
 wrangler `--file` invocation and printing numbered results.
 
+- **Taken, 2026-08-25**: as proposed, except the one invocation goes over
+  `--command`, not `--file` — over `--remote`, `--file` goes to D1's import
+  endpoint, which returns aggregate counts and swallows every result set
+  (d1-apply.mjs replays trailing SELECTs for exactly this reason), so a batch
+  of verify SELECTs would have come back empty on the target it exists for.
+  The footgun stays fixed a different way: `batchStatements()`
+  (sql-statements.mjs, smoke-pinned) splits the file and collapses each
+  statement to one line before the join, and `d1Batch()` (d1-query-lib.mjs)
+  spawns wrangler without a shell — the npx-cli.js form d1-apply uses — so the
+  `item_id: "slug"` queries an execSync command line breaks on are legal in a
+  batch. One block per statement comes back numbered, in order. Verified
+  against --local and --remote in one invocation each; read-only stays
+  convention.
+
 ### F4 — the README is used as working memory: ~460 reads, 37 of them full
 
 Cost today: `apps/character-creator/README.md` (5,702 lines, ~50K chars per
