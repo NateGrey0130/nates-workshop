@@ -7,6 +7,12 @@
 // done to it, (3) asks what a brand-new environment would get. Only (3) sees a
 // migration whose column never made it back into schema.sql.
 // Run from anywhere:  node apps/character-creator/test/smoke.mjs
+//
+// Between edits: `--section <name>` runs only the sections whose names contain
+// <name> (case-insensitive; repeatable, or comma-separated) and skips the
+// wrangler-backed environment half, which is nearly all of the wall clock.
+// The merge gate is the FLAGLESS run — a partial run says PARTIAL in its
+// summary line so its output cannot be quoted as the gate's.
 
 function parseFile(name) {
   return parseClassMarkdown(readFileSync(join(appDir, 'test', 'fixtures', name), 'utf8'));
@@ -3912,12 +3918,17 @@ console.log(String.fromCharCode(10) + '[1c25k] Variable psionic costs');
     sheetSrcK.includes('escHtml(p.cost_note)') && sheetSrcK.includes("p.cost_note && cost > 0 ? '+' : ''"));
 }
 
-// ---------- 1c25l. Variable spell costs (ppe_note) ----------
+// ---------- Variable spell costs (ppe_note) ----------
 // Migration 021 mirrors 020 for spells: ppe is live (the use button deducts
 // it), so Manipulate Objects - priced by a schedule, imported as 0 - could
 // only read as free while matching the stub heuristic. Same convention, same
 // surfaces: ppe keeps the minimum, ppe_note says the schedule.
-console.log(String.fromCharCode(10) + '[1c25l] Variable spell costs');
+//
+// This was the last bare hand-numbered console.log — the style the harness
+// replaced because the numbers stopped matching execution order. As a bare
+// log its checks counted against the PREVIOUS section, and it printed into
+// every --section run regardless of the filter.
+section('Variable spell costs');
 {
   const spFields = CATALOGS.spells.fields.map((f) => f.name);
   check('the catalog editor offers the note field', spFields.includes('ppe_note'));

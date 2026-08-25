@@ -150,6 +150,19 @@ gate.
 Proposal: add a `--section <name>` flag to smoke.mjs that skips the D1 build,
 and a line in ship-pr pinning "the merge gate is the flagless full run."
 
+- **Taken, 2026-08-25**: as proposed, but in the harness rather than
+  smoke.mjs — `--section` (case-insensitive substring; repeatable,
+  comma-separated) filters at `section()`/`check()`, and the two checks
+  modules each declare their section list once and skip their whole `run()`
+  when nothing matches, which is what skips wrangler. A partial run labels
+  its summary `PARTIAL SMOKE PASSED ... the merge gate is the flagless run`,
+  and a filter matching nothing exits 1 — a loud failure that also catches a
+  drifted section list. Measured: `--section parser` runs in 1s against 23s
+  (warm) flagless. One stowaway fixed en route: the last bare hand-numbered
+  `console.log` group became a real `section('Variable spell costs')`, so the
+  suite is 86 sections and those checks stop counting against their
+  neighbour. ship-pr step 4 pins the gate.
+
 ### F3 — 1,768 D1 round trips at ~11s each, one question per trip
 
 Cost today: `q.mjs` is deliberately one-statement-one-line, so every fact
