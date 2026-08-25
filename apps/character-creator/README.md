@@ -2475,7 +2475,7 @@ differs from the standard:
 | S.D.C. | **3D6** for men of arms, **1D6** for practitioners of magic, scholars and everyone else |
 
 The app used to read that silence as "this character has none" and store
-`hp_max` NULL. Fifty-six of ninety-four published classes state no hit point
+`hp_max` NULL. Fifty-six of ninety-nine published classes state no hit point
 formula, so this was the common path, not an edge case — two Priests of Light
 reached production with no hit points and no S.D.C., and nothing on the sheet
 suggested anything was missing.
@@ -5035,7 +5035,7 @@ local-only script is protected as soon as it says so.
 
 | After | Rows |
 |---|---|
-| classes (published, live) | 94 |
+| classes (published, live) | 99 |
 | skills | 332 |
 | spells | 570 |
 | psionic powers | 101 |
@@ -5435,7 +5435,10 @@ because human is the default and the unstated, which is why a Rifts O.C.C.
 stands alone in the first place. So *"human only"* is not a race to name; it is
 the **absence** of one, and `only: ["none"]` says that.
 
-Seven O.C.C.s carry a hard bar. Six are human-only; the Juicer no longer is:
+These O.C.C.s carry a hard bar. The count is deliberately not given here — it
+grew from seven to twelve in a single import and will grow again; `regression.mjs`
+names the seven the rule was written against and checks they still carry it,
+which is the part that cannot drift. The founding seven:
 
 | class | the book's line |
 |---|---|
