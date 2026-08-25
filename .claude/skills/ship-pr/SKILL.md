@@ -44,10 +44,15 @@ caught for you, so the checks happen before the merge or they do not happen.
    - added a class or catalog rows: **update the README's pinned counts in the
      same commit.** `test/regression.mjs` reads them out of the prose and
      compares against a database built from nothing, so they fail the run rather
-     than drifting — the clean-run table (`| classes (published, live) | 76 |`,
-     skills, spells, psionic powers, gear) and the sentence *"Fifty-three of
-     seventy-six published classes state no hit point formula"*, which is parsed
-     as WORDS. Adding a class moves at least two of those.
+     than drifting — the clean-run table (classes published-and-live, skills,
+     spells, psionic powers, gear) and the sentence *"N of M published classes
+     state no hit point formula"*, which is parsed as WORDS. Adding a class
+     moves at least two of those.
+
+     **The current values are deliberately not quoted here.** They used to be,
+     and went stale on the next import; a skill naming a moving number is wrong
+     more often than right. Run the test — it prints what it wanted against what
+     it found, which is the answer anyway.
    - touched an endpoint, the schema or a data script:
      `node apps/character-creator/test/regression.mjs` — it builds a database
      from nothing and drives the real routes, which is the only thing that

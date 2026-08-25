@@ -1,7 +1,9 @@
 # Roadmap — delivered
 
-**All twelve PRs are built and merged.** These files are kept as the record of
-*why* things are the way they are, not as a to-do list.
+**Every plan here is built and merged.** These files are kept as the record of
+*why* things are the way they are, not as a to-do list. (This line read "all
+twelve" long after the table had grown past eighteen plans and PR #228. A count
+in a heading is a maintenance burden nobody signed up for, so it is gone.)
 
 Each plan records decisions made deliberately in a planning interview — and, as
 importantly, the alternatives that were **rejected**. Where a plan says a choice

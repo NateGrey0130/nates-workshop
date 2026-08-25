@@ -18,10 +18,16 @@ reading a sentence and then asking the code.
 
 | where | how many | what goes stale |
 |---|---|---|
-| `apps/character-creator/README.md` | ~4,600 lines | counts, "N of M" sentences, "the app does X" |
+| `apps/character-creator/README.md` | the largest doc by far | counts, "N of M" sentences, "the app does X" |
 | code comments | everywhere | counts of things ("offers five"), and "cannot express" |
-| class markdown in D1 | ~190 sentences over 76 classes | `extraction_notes` saying the schema cannot hold something |
+| class markdown in D1 | a couple of sentences per published class | `extraction_notes` saying the schema cannot hold something |
 | `docs/rules-audit.md`, `docs/plans/` | | superseded by later work; the plans README says so |
+
+**Sizes and class counts are deliberately not given here.** This table used to
+say "~4,600 lines" and "~190 sentences over 76 classes"; the README passed 5,600
+lines and the catalog passed 88 classes, and a skill about stale claims that
+carries stale claims is the worst possible advertisement. Count them when you
+need the number.
 
 Class markdown is the one people forget, because it is **in the database**, not
 in the repo. It does not turn up in a grep of the working tree.
@@ -38,10 +44,12 @@ then match sentences containing `the app`, `the wizard`, `the sheet`, `the
 catalog`, `the validator`, `derive.js`, `parser.js`, `compose.js`, `the schema`,
 `not modelled`, `cannot express`, `does not model`, `no schema field`.
 
-That returns about 190 hits over 76 classes. **Most are fine** — they describe
-the book against the schema and both are stable. What you are looking for is the
-subset that describes a *limitation*, because those are the ones a later change
-can falsify.
+That returns a couple of hundred hits. **Most are fine** — they describe the book
+against the schema and both are stable. What you are looking for is the subset
+that describes a *limitation*, because those are the ones a later change can
+falsify — and this repo falsifies them regularly: the `bonus` key on a
+related-skill category turned "the format cannot hold a per-category percentage"
+from true into false across four classes in a single PR.
 
 **The README and comments:**
 
