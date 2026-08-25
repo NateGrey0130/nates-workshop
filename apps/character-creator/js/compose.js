@@ -89,6 +89,13 @@ export const CORE_SDC_BY_CLASS = {
   // because neither looks like a man of arms from its skill list.
   'thief': '3D6',
   'assassin': '3D6',
+  // Pantheons of the Megaverse, printed 168-169, on the book's first sentence:
+  // "The berserkers are FIGHTERS who have devoted themselves to Odin." It also
+  // carries P.S. and P.E. minimums, which is a man-of-arms signature. The
+  // counter-argument is real and worth recording rather than hiding - its
+  // skills are borrowed from the vagabond and the wilderness scout, both 1D6 -
+  // but a borrowed skill list is not what this table keys on.
+  'berserker': '3D6',
 
   // Practitioners of magic, psychics and scholars — 1D6.
   'burster': '1D6',
@@ -104,6 +111,12 @@ export const CORE_SDC_BY_CLASS = {
   // rather than 3D6 because a priest is not a man of arms, which is the same
   // reading the Priest of Light directly above already gets.
   'rifts-priest': '1D6',
+  // Pantheons of the Megaverse, printed 170. A RACE, and the entry states
+  // neither an S.D.C. nor a hit point formula of its own - it is a bonus
+  // package laid over whatever the character already was. 1D6 because a race
+  // always takes 1D6 here: the entry only fires for a race played with no
+  // occupation at all, and a race is never a man of arms.
+  'warrior-of-valhalla': '1D6',
   'shifter': '1D6',
   'stone-master': '1D6',
   'techno-wizard': '1D6',
