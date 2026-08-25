@@ -363,6 +363,22 @@ Verification given up: negative — this adds a check.
 Proposal: add a `--field-sources` mode to class-check.mjs that prints each
 free-text field beside its page-break-aware OCR source lines.
 
+- **Taken, 2026-08-25**: as proposed, with one addition the caches forced. The
+  mode resolves the book from `source_book` (slug as initialism, or the
+  manifest's PDF name), takes the window from the title's `p.N-M` suffix, and
+  prints each field's matched lines grown to their paragraph; a span ending
+  within N lines of the page bottom carries the first lines of the following
+  page — including "that page is not in the cache", which is itself the
+  finding. The addition: the printed-page → PDF-page offset is NOT zero here
+  (pf +2, rue +3, read off the bare page numbers OCR captured, majority vote),
+  so the mode detects it rather than trusting `p.N`, and a window that matches
+  nothing names the strongest-matching pages elsewhere — the wrong-offset
+  signature. All logic in class-check-lib.mjs, pinned by the smoke test;
+  the mode skips the catalog pass, so it is offline as specified. Run against
+  the shipped corpus it reproduces the PR #280 shape live: the Body Fixer's
+  equipment paragraph ends at the bottom of its page and the continuation
+  block prints the eleven items on the next one.
+
 ---
 
 ## Methodology

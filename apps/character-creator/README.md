@@ -4788,6 +4788,30 @@ the form the data script wants, with the `char(8212)` splice already in place.
 `d1-apply.mjs` it defaults its target (`--local`), because that script refuses to
 guess only where an accidental `--remote` would *write*.
 
+#### `--field-sources`
+
+The free-text fields — `starting_money` and the equipment prose — are the
+fields no test pins, and both on-record transcription errors were the same
+shape: a value read from a paragraph that continued past a page break the
+reading stopped at (fixed in PR #280). `--field-sources` traces those fields
+back to the page-addressed OCR cache under `.cache/books/<slug>/txt/` and
+prints the lines each value was drawn from — and whenever a source span ends
+near the bottom of its page, the first lines of the *following* page, which is
+where the missing half of a broken paragraph lives. Entirely offline and
+deterministic; it skips the D1 catalog pass.
+
+The cached book is matched from `source_book` (its slug as an initialism of the
+title, or the manifest's PDF name — `--book <slug>` overrides), the page window
+comes from the title's `p.N-M` suffix, and the printed-page → PDF-page offset
+is read off the pages themselves, by majority vote over the bare page numbers
+OCR captured (`--offset <n>` overrides; the caches in use when this shipped ran
++2 and +3, so a trusting `p.N` lookup would start pages early). When the window
+matches nothing, it names the strongest-matching pages elsewhere in the book,
+which is what a wrong offset looks like from inside the window. It reads best
+right after transcribing: seeing a neighbouring class's Money paragraph beside
+the one you used is exactly the check that the figure came from the right stat
+block.
+
 **Errors and pre-flight failures set the exit code; warnings and unmodelled keys
 do not.** They are judgement calls, and a script that exited non-zero on them
 would train you to stop reading the output.
