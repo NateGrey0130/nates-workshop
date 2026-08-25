@@ -125,6 +125,16 @@ export const CORE_SDC_BY_CLASS = {
   // can compute, so both live in prose and the core rule reaches the entry.
   // 1D6 because a race always takes 1D6 here.
   'murder-wraith': '1D6',
+  // Juicer Uprising, printed 58-61. The two classes in that book's
+  // Juicer-Related section that are NOT JUICERS - the book says so in as
+  // many words - so neither inherits the Juicer's 1D4x100 S.D.C., and
+  // neither entry prints an S.D.C. or hit point formula of its own. 1D6
+  // because neither is a man of arms: the book files them together as
+  // people who hang around Juicers rather than as fighters, which is the
+  // same reading their `optional` occ_group records. The Wannabe trains
+  // hard and boxes, and that is still not what this table keys on.
+  'gambler': '1D6',
+  'juicer-wannabe': '1D6',
   'shifter': '1D6',
   'stone-master': '1D6',
   'techno-wizard': '1D6',
