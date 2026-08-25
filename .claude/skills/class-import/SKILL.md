@@ -159,6 +159,10 @@ and `.` is 0x2E — and was overwritten by it on every rebuild. Only
 run by hand. `zz-` exists as a prefix for exactly this: a file that must sort
 after everything.
 
+The armor file has **since been folded away** — only `fix-long-bowman.sql` is in
+the tree now — so do not go looking for it. The hazard is what survives, not
+the file.
+
 **One class per `add-<id>-class.sql`.** The smoke test maps each file to exactly
 one id and checks `CORE_SDC_BY_CLASS` against that map; four classes in one file
 left all four unaccounted for. A `fix-` script may touch several — the MOS fix

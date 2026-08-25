@@ -72,6 +72,13 @@ it.
 history rather than as a pointer. The `(ls … | sort | grep)` recipe above it is
 the part that matters and is unaffected.
 
+- **Taken, 2026-08-25**: as proposed, in three lines rather than four words —
+  the anecdote ends on a paragraph break, so a mid-sentence aside would have
+  landed between the filename and the hex codes that explain the sort. The
+  recipe above it is untouched. `docs/plans/18-experience-tables.md` names the
+  same file and was **left alone**: it is a dated plan, and D1's new paragraph
+  in `docs/plans/README.md` now covers exactly that case.
+
 ### D3 — low — the README's class-format example uses a `source_book` no class carries
 
 `README.md` line ~320 shows `source_book: rifts-core   # required` in the
@@ -85,6 +92,20 @@ value in that block a reader might paste into a new class.
 **Proposal**: change the example to `source_book: rifts-ultimate-edition`. Note
 the smoke test pins that this example still *parses*, so the change is safe but
 must keep the block valid.
+
+- **Taken, 2026-08-25, with one refinement**: the proposed value would have had
+  the same defect. Asked production what the published classes actually carry,
+  and `source_book` is **not a slug** — 51 of 56 distinct values are free-text
+  citations with page numbers (`Rifts Ultimate Edition p.61-66`,
+  `Palladium Fantasy RPG Main Book p.288-289`). Only three slug-style values
+  survive anywhere. `rifts-ultimate-edition` would have been a second value no
+  class uses, modelling a convention the catalog abandoned.
+
+  The example is the **Cyber-Knight**, so it now carries the Cyber-Knight's
+  real value, `Rifts Ultimate Edition p.61-66`, with the comment widened to
+  `# required; the book as printed` so the shape is taught and not just shown.
+  `smoke.mjs` already asserted a parse yielding `Rifts Ultimate Edition`
+  elsewhere, which is the convention agreeing with itself.
 
 ### D4 — info — two test fixtures now diverge from the classes they are named for
 
