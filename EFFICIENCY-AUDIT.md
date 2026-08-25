@@ -315,6 +315,22 @@ write still prompts, and the human "merge it" gate is untouched.
 Proposal: generate and commit a read-only-command allowlist in
 `.claude/settings.json` via the fewer-permission-prompts scan.
 
+- **Taken, 2026-08-25**: as proposed. The scan covered the 50 most recent
+  transcripts (27 existed, ~14.9K tool calls deduplicated by message id) and
+  the committed allowlist is the five test suites, the five read-only
+  scripts (q.mjs, drift-check, class-check, repo-vs-live, readme-section),
+  read-columns.py, pdftotext, and `node --check`. Deliberately excluded:
+  `npx wrangler d1 execute` — at 1,132 hits the single biggest prompt
+  source, but the mutation lives in its *argument*, so no prefix pattern
+  admits only the SELECTs and q.mjs `--batch` (F3) is the sanctioned path —
+  d1-apply.mjs, the bare interpreters (`python -c`, `node -e`), `curl`, and
+  every git/gh mutation, which are the human gate this finding preserves.
+  q.mjs read-only stays convention, the trade F3 already accepted. One
+  wrinkle worth recording: the permission classifier refused to let the
+  session write `.claude/settings.json` itself — an agent granting itself
+  permissions is exactly what that gate is for — so the file landed via an
+  explicitly user-approved copy.
+
 ### F7 — the starting_money class of error still has no check; buy the guardrail, not just the savings
 
 Cost today: this is the finding that spends a little to keep the rest
