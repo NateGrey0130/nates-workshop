@@ -5207,6 +5207,20 @@ check('no shipped class leaves a flow value unclosed', unclosedOffenders.length 
     resolveBookSlug('Rifts Ultimate Edition p.1', [{ slug: 'ru', sourcePdf: null }, { slug: 'ue', sourcePdf: null }]) === null);
   check('a title matching nothing is null', resolveBookSlug('Some Other Book p.5', books) === null);
 
+  // The live near-miss: "Rifts" + "Book" routed fifteen Juicer Uprising
+  // classes to the Book of Magic cache, caught only because that cache
+  // happened to hold six pages. Words on most of this publisher's covers
+  // carry no identity; the overlap route needs one that names the book.
+  check('shared generic words do not resolve a book',
+    resolveBookSlug('Rifts World Book 10: Juicer Uprising p.41-45',
+      [{ slug: 'bom', sourcePdf: '526065744-Rifts-Book-of-Magic.pdf' }, ...books]) === null);
+  check('a distinctive shared word still resolves',
+    resolveBookSlug('Rifts World Book 10: Juicer Uprising p.41-45',
+      [{ slug: 'zz', sourcePdf: 'Rifts - World Book 10 - Juicer Uprising.pdf' }]) === 'zz');
+  check('a bare volume number is not a distinctive word',
+    resolveBookSlug('Rifts World Book 10: Juicer Uprising p.41',
+      [{ slug: 'q1', sourcePdf: 'Rifts World Book 10 New West.pdf' }]) === null);
+
   // The pf cache is the live case: printed "307" heads the file p309.txt.
   const off = detectPageOffset([
     { page: 309, lines: ['307', '', 'prose'] },
