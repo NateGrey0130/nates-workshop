@@ -21,6 +21,14 @@ Several plans also carry an **As built** note where reality diverged from the
 plan. Those divergences are the most useful thing here: they are the places
 where the plan turned out to be wrong once it met the code.
 
+**Paths inside a plan are as of the day it was written.** Files have moved
+since, and a plan naming a migration number or a script filename is naming
+what it *proposed*, which is not always what shipped. So a path here that does
+not resolve means the file moved or was renamed — it does not mean the plan is
+wrong. Search for the basename, or `git log --follow` it. Nothing in this
+directory is maintained against the current tree, deliberately: these are
+dated records, and a dated record pointing at where a file *was* is history.
+
 ## What shipped
 
 | # | PR | Plan | Merged |
