@@ -31,7 +31,13 @@ caught for you, so the checks happen before the merge or they do not happen.
      paths that must be outside the Access wall and checks they are documented
      and exempted, and `node apps/pick3cut5/test/game.mjs`, which walks all 56
      reachable rounds and proves the server's budget rules and the client's copy
-     of them still agree
+     of them still agree.
+
+     The character-creator smoke test takes `--section <name>` for iterating
+     between edits — it runs only the matching sections and skips the
+     wrangler-backed environment half. **The merge gate is the flagless run.**
+     A partial run labels its summary `PARTIAL SMOKE PASSED` precisely so its
+     output cannot be quoted as this step.
    - **touched anything Pick 3 Cut 5 loads, or any Access policy:**
      `node apps/pick3cut5/test/smoke.mjs --remote`. It fetches the app and its
      assets from production with **no** Access session, and checks the rest of

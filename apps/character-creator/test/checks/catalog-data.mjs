@@ -13,12 +13,19 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { statements } from '../../../../scripts/sql-statements.mjs';
-import { appDir, repoRoot, check, section } from '../harness.mjs';
+import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 import { composeClass, CORE_SDC_BY_CLASS } from '../../js/compose.js';
 import { bonusesFromSkills, levelGrants, skillLevelNotes, skillConditionalBonuses } from '../../js/parser.js';
 import { rollPoolFormula } from '../../js/dice.js';
 
+// Declared once for the same skip-the-module contract as environment.mjs —
+// see the note there for why drift in either direction fails loud.
+const SECTIONS = ['Core pools (p.18)', 'Hand to Hand level schedules (p.347-349)',
+  'Weapon Proficiencies (p.326-329)', 'Spell descriptions',
+  'Structural gear rows', 'Provenance of web-sourced rows'];
+
 export function run() {
+if (!SECTIONS.some(wantSection)) return;
 
 // ---------- 1. core pools ----------
 section('Core pools (p.18)');

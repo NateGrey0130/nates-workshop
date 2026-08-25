@@ -13,9 +13,20 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { trailingSelects, collapseWhitespace, statements, stripComments } from '../../../../scripts/sql-statements.mjs';
-import { appDir, repoRoot, check, section } from '../harness.mjs';
+import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
+
+// The sections this file announces, declared once so a `--section` run can
+// skip the whole module — this is the file that shells out to wrangler, which
+// is nearly all of the suite's wall clock. Drift in either direction fails
+// loud at use: a section added below but not here makes its filter match
+// nothing, and a name listed here but renamed below runs the module and still
+// matches nothing. Both end in "no section matched", which is a failure.
+const SECTIONS = ['D1 schema (local, shared DB)', 'schema.sql self-sufficiency',
+  'Data script conventions', 'SQL statement splitting', 'Documentation claims',
+  'Skills stay true', 'Migration state'];
 
 export function run() {
+if (!SECTIONS.some(wantSection)) return;
 // ---------- 2. D1 schema ----------
 // Runs against the shared workshop database (binding DB in the root
 // wrangler.jsonc), so this executes from the repo root, not the app dir.
