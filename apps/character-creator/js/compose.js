@@ -117,6 +117,14 @@ export const CORE_SDC_BY_CLASS = {
   // always takes 1D6 here: the entry only fires for a race played with no
   // occupation at all, and a race is never a man of arms.
   'warrior-of-valhalla': '1D6',
+  // Juicer Uprising, printed 50-53. Also a RACE, and the only class in that
+  // book with neither an sdc_base nor an mdc_base - because it has neither.
+  // A Murder-Wraith's hit points are the S.D.C. and hit points of the Juicer
+  // it used to be, added together and then frozen forever, and its M.D.C. is
+  // whatever armour it happens to be wearing. Neither is a formula this app
+  // can compute, so both live in prose and the core rule reaches the entry.
+  // 1D6 because a race always takes 1D6 here.
+  'murder-wraith': '1D6',
   'shifter': '1D6',
   'stone-master': '1D6',
   'techno-wizard': '1D6',
