@@ -658,15 +658,27 @@ console.log('\n' + '[8/8] Checks that only a database can make');
     fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19,
     twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70,
     eighty: 80, ninety: 90,
+    // The catalog crossed a hundred classes with the Juicer Uprising import,
+    // and this vocabulary stopped at ninety-nine. `hundred` is the only
+    // MULTIPLICATIVE word here - everything above sums - so it needs the
+    // handling below rather than an entry that would make one-hundred-four
+    // read as 105.
+    hundred: 100,
   };
   // Hyphenated compounds sum their parts, so "thirty-seven" does not have to be
   // listed and neither does the next count. Listing each compound means the
   // list goes stale exactly when the number changes - which is the moment this
   // check is supposed to fire.
   const word = (w) => {
-    const parts = String(w).toLowerCase().split('-');
+    // "and" is punctuation in a number word, not a value: one-hundred-and-four.
+    const parts = String(w).toLowerCase().split('-').filter((p) => p !== 'and');
     if (!parts.every((p) => p in WORDS)) return undefined;
-    return parts.reduce((n, p) => n + WORDS[p], 0);
+    let total = 0;
+    let run = 0;
+    for (const p of parts) {
+      if (p === 'hundred') { total += (run || 1) * 100; run = 0; } else { run += WORDS[p]; }
+    }
+    return total + run;
   };
 
   const { parseClassMarkdown } = await import(
