@@ -414,11 +414,31 @@ rows written by a failed confirm that the script then skipped with
 Then `node scripts/drift-check.mjs --remote` and drive one real user path in the
 browser — a picker that offers the new rows is the only proof they are reachable.
 
+## 7. Persist the survey — it is the next session's boot file
+
+Write the survey to **`.cache/books/<slug>/SURVEY.md`**, next to the OCR cache
+and gitignored with it — it quotes a commercial book, so it stays local. It
+holds what the session learned that the repo does not: the inventory table, the
+authority pages and the *verified* printed-to-PDF offset, the catalog diff with
+its hand-checked false gaps, the agreed extraction plan, and a progress ledger —
+one line per shipped PR, appended when it merges, saying what went in and what
+remains.
+
+Then let the session go. The 2026-08-25 efficiency audit measured the same
+import PR costing 2–7× more tokens late in a long session than early, because
+every call re-carries the whole conversation — and when a mid-book context
+reset dropped that carry from ~790K to ~235K tokens per call, the imports
+continued without losing a thing, because everything they needed was in the
+repo, the skills, the OCR cache, and this file. **Start a fresh session every
+2–4 PRs**, booted from `SURVEY.md` plus `git log --oneline -15`, not from the
+memory of a conversation.
+
 ## What "surveyed" means
 
 - an inventory table of the book, by chapter, with counts
 - the authority table parsed, and probed against facts known independently
 - a diff against the catalog, hand-checked for false gaps
 - a stated plan of what will be extracted and what will be left, with reasons
+- all of it in `.cache/books/<slug>/SURVEY.md`, not just said in chat
 
 Get agreement on that before spending anything.
