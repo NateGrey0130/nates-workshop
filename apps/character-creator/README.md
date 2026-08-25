@@ -5435,11 +5435,11 @@ because human is the default and the unstated, which is why a Rifts O.C.C.
 stands alone in the first place. So *"human only"* is not a race to name; it is
 the **absence** of one, and `only: ["none"]` says that.
 
-Seven O.C.C.s carry a hard bar, all of them human-only:
+Seven O.C.C.s carry a hard bar. Six are human-only; the Juicer no longer is:
 
 | class | the book's line |
 |---|---|
-| Juicer | 95% human (p.81) |
+| Juicer | 95% human (p.81), **widened** — see below |
 | Psi-Stalker, Wild Psi-Stalker | *"Psi-Stalkers are mutant humans only"* (p.152, 155) |
 | Coalition Grunt | *"Humans and Psi-Stalkers only"* (p.230) |
 | Coalition SAMAS Pilot, Technical Officer | *"Racial Restrictions: Human."* (p.233, 237) |
@@ -5454,6 +5454,29 @@ by reading the book rather than the class.
 *statistic* rather than a bar — *"None, although only about 20% are D-Bees"*,
 *"None; half are D-Bees"*. A percentage of who happens to play one is not a
 rule, and turning it into a restriction would forbid characters the book allows.
+
+**And one of the seven has since been widened.** Rifts World Book 10: Juicer
+Uprising, printed 16-17, has a *Non-Human Juicers* section that qualifies RUE's
+one-line racial requirement: Dwarves take the standard process unpenalised,
+Elves need tailored drugs, Ogres are close enough to human for any conversion,
+and True Atlanteans qualify and live longer for it. Trolls, Orcs, Goblins and
+Giants cannot at all, nor can dragons, shapeshifters or supernatural beings.
+The Juicer therefore reads `only: ["none", "dwarf", "elf", "ogre"]`, and the
+Hyperion and Phaeton variants drop `dwarf` again — their reflex enhancements
+burn out the Dwarven nervous system.
+
+**RUE does not overrule this even though it is later.** RUE p.84 ends the Juicer
+entry by naming all seven variants and pointing at that book: a cross-reference,
+not a restatement. Its *"95% human"* is the summary line of an entry that then
+tells you where the qualifications live.
+
+**The list stays an `only`, which fails closed**, so widening it cannot loosen
+anything that was already refused. Two things it cannot yet say: there is no
+True Atlantean R.C.C. row, so that allowance sits in the note until one exists
+(the Priest of Light mechanism — a restriction written ahead of its row); and
+`dwarf`, `elf` and `ogre` are Palladium Fantasy rows, which the book itself
+invites by calling these races Palladium-World D-Bees, but which the wizard's
+per-system filter keeps out of a Rifts game today regardless.
 
 Both directions are checked in the same two places, and either may refuse: the
 picker filters on both, and the server runs both on create.
