@@ -12,6 +12,7 @@
 
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { statements } from '../../../../scripts/sql-statements.mjs';
 import { appDir, repoRoot, check, section } from '../harness.mjs';
 import { composeClass, CORE_SDC_BY_CLASS } from '../../js/compose.js';
 import { bonusesFromSkills, levelGrants, skillLevelNotes, skillConditionalBonuses } from '../../js/parser.js';
@@ -541,23 +542,29 @@ check('the estimate marker is written by some data script',
 // where nothing has been applied yet.
 const estimateSql = estimateScripts
   .map((f) => readFileSync(join(appDir, 'db', f), 'utf8')).join('\n');
-const estimateStatements = estimateSql.split('UPDATE gear SET').slice(1)
-  .filter((chunk) => chunk.slice(0, chunk.indexOf(';')).includes(ESTIMATE));
+// Split on semicolons that are NOT inside a string literal. This used to slice
+// each chunk at the first `;` it saw, which is fine until a description
+// contains one \u2014 and then the statement is cut off before `source_book`, the
+// row stops looking like an estimate, and it skips both checks below. Twelve
+// rows sat in that blind spot the day it was noticed, three of them armour.
+// The rule is only worth having if a prose semicolon cannot step around it.
+const estimateStatements = statements(estimateSql)
+  .filter((s) => s.startsWith('UPDATE gear SET') && s.includes(ESTIMATE));
 check('every estimate statement is an estimate of something',
   estimateStatements.length > 0, 'no UPDATE carries the marker');
 
+// Only the SET clause. A WHERE that matches on a description is not the row
+// claiming a number, and the guards on these scripts do exactly that.
+const setClause = (s) => s.slice(0, s.search(/\bWHERE\b/) === -1 ? s.length : s.search(/\bWHERE\b/));
 const combatKeys = ['mdc =', 'damage =', 'ar =', 'is_mega_damage = 1'];
-const armed = estimateStatements.filter((chunk) => {
-  const stmt = chunk.slice(0, chunk.indexOf(';'));
-  return combatKeys.some((k) => stmt.includes(k));
-});
+const armed = estimateStatements.filter((s) =>
+  combatKeys.some((k) => setClause(s).includes(k)));
 check('NO estimated row carries a combat number', armed.length === 0,
   armed.length + ' estimate statement(s) set M.D.C., damage or A.R. '
   + '\u2014 the one thing estimating was allowed on condition of not doing');
 
 // Weight is invention with nothing to anchor it, unlike cost.
-const weighed = estimateStatements.filter((chunk) =>
-  chunk.slice(0, chunk.indexOf(';')).includes('weight_lbs'));
+const weighed = estimateStatements.filter((s) => setClause(s).includes('weight_lbs'));
 check('and none invents a weight', weighed.length === 0,
   weighed.length + ' estimate statement(s) set weight_lbs');
 

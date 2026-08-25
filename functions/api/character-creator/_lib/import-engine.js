@@ -28,6 +28,10 @@ import { CATALOGS } from '../../../../apps/character-creator/js/catalog-fields.j
 export const DEFAULT_MODEL = 'claude-sonnet-5';
 export const ALLOWED_MODELS = ['claude-sonnet-5', 'claude-opus-5'];
 const LOOKUP_BATCH = 50;
+// The exact string the gear catalog uses to mark a price nobody printed. It is
+// a literal rather than a pattern because it is a label the data scripts write,
+// not prose — see apps/character-creator/db/zzz-gear-tidy-2-stub-stats.sql.
+export const ESTIMATED_PRICE = 'Estimate - no published price found';
 const MAX_NAME_LENGTH = 120;
 export const MAX_DECISIONS = 500;
 
@@ -123,7 +127,15 @@ const IMPORT_SPECS = {
     // Gear has no `source` column, so the marker the class importer writes is
     // the signal. A row edited by hand no longer carries it and correctly stops
     // counting as a stub.
-    isStub: (row) => typeof row.description === 'string' && row.description.startsWith('STUB —'),
+    //
+    // An ESTIMATED price counts as a stub too, and for the same reason. Those
+    // rows carry a number nobody printed, and the entire point of labelling
+    // them is that a real page outranks them. Without this clause, filling a
+    // stub with an estimate CLEARS the marker, so the next import that brings
+    // the same item in from an actual book defaults to `ignore` — and the guess
+    // quietly beats the page it was standing in for.
+    isStub: (row) => (typeof row.description === 'string' && row.description.startsWith('STUB —'))
+      || row.source_book === ESTIMATED_PRICE,
   },
 };
 

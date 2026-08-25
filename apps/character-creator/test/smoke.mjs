@@ -207,7 +207,7 @@ import { classesMentioning, findDuplicates, normaliseName, similarity } from '..
 import { collapseStatement, keysOf, redirectStatements, resolveKeys } from '../../../functions/api/character-creator/_lib/catalog-redirects.js';
 import { referencedGear, restrictionNames } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { CHARACTER_JSON_COLUMNS } from '../../../functions/api/character-creator/_lib/character-json.js';
-import { applyDecisions, classifyRows, countRows, getImportSpec, normaliseRows, slugify, stripFences, systemColumnFor } from '../../../functions/api/character-creator/_lib/import-engine.js';
+import { applyDecisions, classifyRows, countRows, ESTIMATED_PRICE, getImportSpec, normaliseRows, slugify, stripFences, systemColumnFor } from '../../../functions/api/character-creator/_lib/import-engine.js';
 import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
 import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicGrantsFor,
          xpTableFor, thresholdFor, spellLevelsForGrant,
@@ -429,6 +429,14 @@ check('a gear stub is the class importer\'s marker, not an empty row',
   gearSpec.isStub({ description: 'STUB — created by class import, needs stats' }) === true
   && gearSpec.isStub({ description: 'A perfectly ordinary free item' }) === false
   && gearSpec.isStub({ description: null }) === false);
+// An estimated price is a guess standing in for a page, so it has to keep
+// counting as a stub however well the row now reads. Otherwise the first real
+// book to name the item defaults to `ignore` and the guess outlives the page.
+check('an estimated price counts as a stub however good the description reads',
+  gearSpec.isStub({ description: 'A two-person tent.', source_book: ESTIMATED_PRICE }) === true
+  && gearSpec.isStub({ description: 'A two-person tent.',
+                       source_book: 'Rifts Ultimate Edition p.261-263' }) === false
+  && gearSpec.isStub({ description: 'A two-person tent.', source_book: null }) === false);
 
 // classifyRows against a fake catalog holding one stub, keyed on slug.
 const gearDb = (rows) => ({
