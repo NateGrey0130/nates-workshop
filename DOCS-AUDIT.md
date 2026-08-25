@@ -57,6 +57,25 @@ a plan "describes the code as it stood the day the plan was written", and
 have moved — turning a reader's "this is wrong" into "this is old", which is
 the actual truth. Decline if you would rather the plans stay untouched.
 
+- **Taken, 2026-08-25**: as proposed. One paragraph added to
+  `docs/plans/README.md`, next to the existing **As built** note, and no plan
+  body touched. All six citations were re-checked first and all six still
+  read as described — but two of them are not renames at all. Plan 17's
+  `034-enchantments.sql` shipped as `035-` because `034-gear-sdc.sql` took
+  the number the plan itself had recommended doing first, and Plan 18's
+  `add-pf-xp-tables.sql` shipped as `zz-pf-experience-tables.sql` because
+  **that plan works out the reason on its own page** — a script that rewrites
+  class markdown must sort after every script that writes those rows, so it
+  wants an `apply-` or `zz-` prefix. The plan predicted its own filename
+  change. That is the strongest possible argument for leaving the bodies
+  alone, and the added paragraph says so: a plan naming a migration number or
+  a filename is naming what it *proposed*.
+
+  The paragraph deliberately names **no paths**. Enumerating the six would
+  have recreated the exact rot this audit is about — a doc quoting values
+  that move — so it describes the rule and points at `git log --follow`
+  instead.
+
 ### D2 — low — `class-import/SKILL.md` cites a file that no longer exists
 
 The sort-order warning tells the story of `fix-long-bowman-armor.sql` sorting
