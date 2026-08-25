@@ -2475,7 +2475,7 @@ differs from the standard:
 | S.D.C. | **3D6** for men of arms, **1D6** for practitioners of magic, scholars and everyone else |
 
 The app used to read that silence as "this character has none" and store
-`hp_max` NULL. Fifty-six of one-hundred-and-four published classes state no hit point
+`hp_max` NULL. Fifty-eight of one-hundred-and-nine published classes state no hit point
 formula, so this was the common path, not an edge case — two Priests of Light
 reached production with no hit points and no S.D.C., and nothing on the sheet
 suggested anything was missing.
@@ -5035,8 +5035,8 @@ local-only script is protected as soon as it says so.
 
 | After | Rows |
 |---|---|
-| classes (published, live) | 104 |
-| skills | 332 |
+| classes (published, live) | 109 |
+| skills | 333 |
 | spells | 570 |
 | psionic powers | 101 |
 | gear | 849 |
