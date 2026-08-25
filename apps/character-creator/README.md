@@ -2596,6 +2596,10 @@ scripts/
 │                           the same book's description pages
 ├── class-check.mjs         One class file, against the parser the app uses
 ├── class-check-lib.mjs     Its pure half, so the smoke test can call it
+├── readme-section.mjs      One section of this README by heading, bounded by
+│                           the next heading of ANY depth; no arguments prints
+│                           the heading index. The alternative kept being the
+│                           whole file, which is working memory nobody needs
 ├── q.mjs                   One ad-hoc question to D1, from a shell. The
 │                           alternative kept being a throwaway `node -e` that
 │                           got the Windows quoting wrong a new way each time.

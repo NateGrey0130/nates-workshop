@@ -234,6 +234,17 @@ Proposal: add `scripts/readme-section.mjs` (heading-bounded section printer)
 and encode "index first, one section at a time, never the whole file" in the
 skills that touch the README.
 
+- **Taken, 2026-08-25**: as proposed. `scripts/readme-section.mjs` prints the
+  heading index with no arguments and one section for a heading — matched
+  case-insensitively, exact before substring, ambiguity refused with the
+  candidates listed — bounded by the next heading of any depth, fence-aware so
+  a `# comment` in a bash block is not a boundary. The section goes to stdout
+  and its line range to stderr, for the bounded-edit case. class-import gains
+  "The README is not working memory" (index first, one section at a time, the
+  counts are test-pinned); claim-audit points its README grep at the section
+  printer for context reads. The file map names the script, which the smoke
+  test enforces.
+
 ### F5 — the skills are delivered by cat, 73 times, because Downloads sessions cannot see them
 
 Cost today: measured in the lead section — 4 proper Skill invocations vs 73
