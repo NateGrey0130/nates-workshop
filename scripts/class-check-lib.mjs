@@ -226,11 +226,24 @@ export function parseSourcePages(sourceBook) {
  * Ultimate Edition", "pf" in "Palladium Fantasy RPG Main Book"), and word
  * overlap with the manifest's PDF name. Returns the unique best match, or
  * null — a tie is refused rather than guessed, and the CLI asks for --book.
+ *
+ * The overlap route needs at least one word that actually names the book.
+ * Words this publisher stamps on most covers carry no identity — "Rifts" and
+ * "Book" together routed a Juicer Uprising class to the Book of Magic cache,
+ * caught only because that cache happened to hold six pages — and a bare
+ * volume number ("World Book 10") is no better, since every line of the
+ * series has one.
  */
+const GENERIC_TITLE_WORDS = new Set([
+  'rifts', 'palladium', 'book', 'books', 'world', 'rpg', 'main', 'edition',
+  'of', 'the', 'and',
+]);
+
 export function resolveBookSlug(sourceBook, books) {
   const title = String(sourceBook ?? '').replace(/\bp\.?\s*\d+(?:\s*-\s*\d+)?/i, '');
   const wordsOf = (s) => (String(s ?? '').toLowerCase().match(/[a-z0-9]+/g) || []);
   const titleWords = wordsOf(title);
+  const titleSet = new Set(titleWords);
   const initials = titleWords.map((w) => w[0]).join('');
 
   let best = null;
@@ -238,8 +251,9 @@ export function resolveBookSlug(sourceBook, books) {
   for (const { slug, sourcePdf } of books) {
     let score = 0;
     if (slug && initials.includes(String(slug).toLowerCase())) score = 3 + slug.length;
-    const overlap = wordsOf(sourcePdf).filter((w) => titleWords.includes(w)).length;
-    if (overlap >= 2) score = Math.max(score, overlap);
+    const shared = [...new Set(wordsOf(sourcePdf))].filter((w) => titleSet.has(w));
+    const distinctive = shared.filter((w) => !GENERIC_TITLE_WORDS.has(w) && !/^\d+$/.test(w));
+    if (shared.length >= 2 && distinctive.length >= 1) score = Math.max(score, shared.length);
     if (!score) continue;
     if (!best || score > best.score) { best = { slug, score }; tied = false; }
     else if (score === best.score) tied = true;
