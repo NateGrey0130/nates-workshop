@@ -317,7 +317,7 @@ display. Stored in `imported_classes.markdown`, parsed by `js/parser.js`.
 id: cyber-knight              # kebab-case slug, required
 name: Cyber-Knight            # required
 system: rifts                 # rifts | palladium-fantasy, required
-source_book: rifts-core       # required
+source_book: Rifts Ultimate Edition p.61-66   # required; the book as printed
 category: occ                 # rcc | occ, required
 attribute_requirements:       # minimums, OCC style
   ME: 12
