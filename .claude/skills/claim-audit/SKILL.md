@@ -58,6 +58,13 @@ grep -rn "currently\|does not\|cannot\|has no\|is not modelled\|not modeled" \
   apps/character-creator/README.md apps/character-creator/js/ | head -60
 ```
 
+When a hit needs its surrounding section, take the section, not the file:
+`node scripts/readme-section.mjs "<heading>"` prints exactly one, bounded by
+the next heading of any depth (no arguments prints the index). Auditing a
+sentence never requires the thousands of lines around it — the efficiency
+audit counted 37 full reads of this README in one season, and the audit
+session itself was responsible for seven of them.
+
 ## What actually turned up
 
 Every one of these was live, and every one had been true when written:

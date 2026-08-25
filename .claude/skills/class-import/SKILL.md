@@ -60,6 +60,28 @@ booted from that file plus `git log --oneline -15`. If the next class needs
 something a previous conversation knew and the file does not hold, that is a
 gap in the file — write it down there, not a reason to keep the session alive.
 
+## The README is not working memory
+
+**Never read `apps/character-creator/README.md` end to end.** The same audit
+measured it read ~460 times across the book sessions, 37 of them in full, and
+every full read re-carries for the rest of the session. The counts you would
+skim it for — classes, skills, spells, gear — are pinned by the test suite, so
+the test's own output is both cheaper and more current than the prose. For
+everything else, index first, one section at a time:
+
+```bash
+node scripts/readme-section.mjs
+```
+
+```bash
+node scripts/readme-section.mjs "Class definition format"
+```
+
+No arguments prints the heading index; a heading prints exactly one section,
+bounded by the **next heading of any depth**, with its line range on stderr for
+a bounded edit. The any-depth bound is the rule a 544-line section-eating edit
+taught: a subsection is its own read, asked for by name.
+
 ## What class-check tells you
 
 | Section | Meaning |
