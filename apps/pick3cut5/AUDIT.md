@@ -329,6 +329,9 @@ rather than merely detected.
 ### F6. Fold the Worker back in (the Pages → Workers migration)
 
 > **Not now**, as recommended. `docs/pages-to-workers-migration.md` stands.
+>
+> **Confirmed on hold, 2026-08-25.** The trigger is unchanged: the day a
+> second app wants a Durable Object, this stops being optional.
 
 `docs/pages-to-workers-migration.md` covers this. Doing it would dissolve F1
 (previews), F4 (two secrets), and the separate deploy step, and would let solo
