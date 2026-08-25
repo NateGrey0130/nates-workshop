@@ -84,6 +84,22 @@ nates-workshop/
         └── character-creator/  46 endpoints + _lib; see the app README
 ```
 
+**The skills need a junction, once per machine.** The book work runs from
+Downloads (the PDFs land there, and the session memory is keyed to it), and a
+session started outside the repo never registers `.claude/skills/` — so the
+skills were being pasted into context by hand instead of loading by name
+(efficiency audit, F5). Junction-link them into the global skills directory;
+junctions, so repo edits propagate, and no admin rights are needed:
+
+```powershell
+foreach ($s in 'book-survey','claim-audit','class-import','schema-change','ship-pr') {
+  New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\$s" -Target "C:\Users\natha\Projects\nates-apps\.claude\skills\$s"
+}
+```
+
+A skill added to the repo later needs its own link — there is nothing that
+notices the gap, so add the link in the same PR that adds the skill.
+
 **R2**: the site binds one bucket, `nates-workshop-media`, as `MEDIA`. It holds
 NPC portraits today and is named for the site rather than for that app because
 the other two will want it. **It must exist before the deploy that binds it** —
