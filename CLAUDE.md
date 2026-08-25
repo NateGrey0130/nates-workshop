@@ -43,23 +43,43 @@ ones that fail LATE:
 npx wrangler d1 info nates-workshop-media
 ```
 
-**Do not use `npx wrangler whoami` as a health check.** It exits non-zero here,
-and that is correct behaviour, not a broken credential: `whoami` lists accounts,
-and the `CLOUDFLARE_API_TOKEN` in use is scoped to Account → D1 → Edit, which
-cannot read the account list. Reporting that failure as an auth problem sends
-the reader chasing a credential that is working.
+`d1 info` is the health check because it exercises what you actually need — a
+real call against the real database. Prefer it on those grounds.
 
-Two ways to tell which credential a command used, if it matters: an API token
-returns zeros for `read_queries_24h` / `rows_read_24h` in `d1 info` (analytics
-need a scope the token lacks), where an interactive OAuth login returns real
-counts.
+**Two things this section used to say are no longer true.** Both were re-measured
+on 2026-08-25 rather than reasoned about:
+
+- It said `npx wrangler whoami` **exits non-zero here by design**, the token
+  being unable to read the account list. It now **exits 0** and prints the
+  account name and ID.
+- It said an API token returns **zeros** for `read_queries_24h` / `rows_read_24h`
+  in `d1 info`, so real counts meant an interactive OAuth login. `d1 info` now
+  returns real counts under the environment token, so that tell is gone. Use
+  `whoami` instead — it states outright where the credential came from
+  (*"The API Token is read from the CLOUDFLARE_API_TOKEN environment variable"*),
+  which beats inferring it from analytics.
+
+The token has been widened at some point beyond the Account → D1 → Edit it was
+originally cut with. **What it still cannot do was re-tested and holds:** both
+`r2 bucket list` and `pages project list` exit 1, so R2 and Pages remain
+dashboard-or-Chrome work and the R2 section below stands.
+
+The lesson that outlived the facts: **a failing wrangler command here is not
+automatically a broken credential, and a succeeding one is not proof the
+credential is the one you assume.** Ask for the specific thing you need, and let
+`whoami` tell you which credential answered.
 
 ## Auth setup
 
-`CLOUDFLARE_API_TOKEN` (scoped Account → D1 → Edit) and `CLOUDFLARE_ACCOUNT_ID`
-are set at **User** scope. The token removes the expired-OAuth failure mode
-(`Authentication error [code: 10000]`) that used to hit the first remote call
-after idle.
+`CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are set at **User** scope. The
+token removes the expired-OAuth failure mode (`Authentication error [code:
+10000]`) that used to hit the first remote call after idle.
+
+It was cut as Account → D1 → Edit and is **wider than that now** — it reads the
+account list, which the original could not. Nobody wrote down when or why, which
+is the argument for testing rather than quoting: as of 2026-08-25 it does D1 and
+reads the account, and it does **not** do R2 or Pages. Check what you need
+against the thing itself; this line will drift again.
 
 Set them with PowerShell, not the Windows Environment Variables dialog:
 
@@ -82,19 +102,25 @@ read the registry rather than the process:
 ## R2 is NOT reachable with the D1 token
 
 The site binds one R2 bucket, `nates-workshop-media`, as `MEDIA` (NPC
-portraits). **The `CLOUDFLARE_API_TOKEN` above cannot touch it.** Scoped to
-Account -> D1 -> Edit, it has no R2 scope at all - `r2 bucket create` and
-`r2 bucket list` both fail identically:
+portraits). **The `CLOUDFLARE_API_TOKEN` above cannot touch it** - re-tested
+2026-08-25, and still true after the token was widened enough to read the
+account list. It has no R2 scope at all; `r2 bucket create` and `r2 bucket list`
+both exit 1 and fail identically:
 
 ```
 A request to the Cloudflare API (/accounts/<id>/r2/buckets) failed.
   Authentication error [code: 10000]
 ```
 
-Unlike the `whoami` failure above, this one is real: the operation did not
-happen. The follow-on line about failing to retrieve account IDs is wrangler's
-fallback attempt after the first failure, not a second problem, and the same
-D1-scope explanation covers it.
+**This failure is real: the operation did not happen.** Worth stating because it
+is the one wrangler failure here that means what it says - and because the
+health-check section above no longer has a *harmless* failure to contrast it
+with, `whoami` having started succeeding. The follow-on line about failing to
+retrieve account IDs, and the `User->Memberships->Read` warning, are wrangler's
+fallback attempts after the first failure rather than separate problems.
+
+`pages project list` fails the same way and for the same reason, which is why
+every Pages and Access change is dashboard work through Nate's Chrome.
 
 Creating or listing a bucket needs **Workers R2 Storage -> Edit** added to the
 token, or the Cloudflare dashboard. Widening the token is the bigger decision of
