@@ -5039,7 +5039,7 @@ local-only script is protected as soon as it says so.
 | skills | 333 |
 | spells | 570 |
 | psionic powers | 101 |
-| gear | 849 |
+| gear | 867 |
 
 **These are pinned by `test/regression.mjs`**, which is the only thing that can
 honestly check them: it builds a database from nothing under a scratch directory
