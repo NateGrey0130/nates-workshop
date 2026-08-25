@@ -136,15 +136,31 @@ a claim about production, and freezing it is the point. Recorded only so the
 next person to grep `rifts-core` does not think they have found a bug. **No
 action proposed.**
 
-### D5 — info — `pick3cut5/AUDIT.md` has two genuinely open items
+### D5 — WITHDRAWN — `pick3cut5/AUDIT.md` has no open items
 
-F1–F5, F7, F8 and F9 all carry an outcome (`**Taken.**`, `**Not taken.**`).
-**F6** (fold the Worker back in — the Pages → Workers migration) and **F10**
-(the wedge fix is insurance of unknown necessity) do not.
+**This finding was wrong, and is left here rather than deleted** because how
+it went wrong is the whole subject of this audit.
 
-Both read as deliberately open rather than forgotten — F6 has a whole design
-doc at `docs/pages-to-workers-migration.md`. This is the repo's only live
-backlog and it is two items. **No action proposed**; noted so it is not lost.
+As filed, it said F1–F5, F7, F8 and F9 carry an outcome and that **F6**
+(fold the Worker back in) and **F10** (the wedge fix) do not. They do. F6
+carries `> **Not now**, as recommended.` and F10 carries `> **Not code** —
+nothing to implement.`, and `git log -S` puts both in commit `4eb5f8a` on
+**2026-08-24** — the day *before* this audit ran.
+
+The finding was a grep for two exact strings, `**Taken.**` and
+`**Not taken.**`, reported as a reading of the file. That is the third time in
+this one audit that a grep disagreed with the surrounding sentence, and the
+only one of the three that got past the check and into the document. The other
+two are in *What was checked and found healthy* below, caught before filing.
+
+All ten findings in `pick3cut5/AUDIT.md` carry an outcome. **The repo has no
+live backlog.** F6 is on hold by its own note and F10 was never work — it is a
+note asking the next reader to treat `catchUpDeadline()` as unproven insurance
+rather than as a fix for a known production bug.
+
+**Withdrawn 2026-08-25**, at Nathan's request to put F6 and F10 on hold — a
+request that turned out to be already satisfied. F6's note now carries a dated
+confirmation so the hold is explicit rather than inferred.
 
 ## What was checked and found healthy
 
