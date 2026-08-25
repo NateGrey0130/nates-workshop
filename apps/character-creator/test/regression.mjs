@@ -1422,8 +1422,16 @@ console.log('\n' + '[8/8] Checks that only a database can make');
   const byId = Object.fromEntries(classes.map((c) => [c.id, c]));
 
   const restricted = classes.filter((c) => c.race_restrictions);
-  check('seven O.C.C.s bar a race outright', restricted.length === 7,
-    restricted.map((c) => c.id).join(', '));
+  // NAMED, not counted. This read `restricted.length === 7` until the Juicer
+  // Uprising import took it to twelve in one go, and it would have had to be
+  // bumped again with every batch while proving less each time - the same
+  // lesson the FOUNDING list below already records. What matters is that the
+  // seven the rule was written against still carry their bar.
+  const RACE_BARRED = ['juicer', 'psi-stalker', 'wild-psi-stalker', 'coalition-grunt',
+    'coalition-samas-pilot', 'coalition-technical-officer', 'dog-boy'];
+  const lostBar = RACE_BARRED.filter((id) => !restricted.some((c) => c.id === id));
+  check('every O.C.C. the race bar was written against still carries it',
+    lostBar.length === 0, `no longer restricted: ${lostBar.join(', ')}`);
   const onOcc = restricted.every((c) => c.category === 'occ');
   check('and every one of them is an O.C.C.', onOcc);
 
@@ -1441,8 +1449,12 @@ console.log('\n' + '[8/8] Checks that only a database can make');
   // The reserved word is the whole mechanism: without it "human only" has no
   // race to name, because Rifts prints none.
   const humanOnly = restricted.filter((c) => (c.race_restrictions.only || []).includes(RACE_NONE));
-  check(`all seven use the reserved "${RACE_NONE}" for the human case`,
-    humanOnly.length === 7, `${humanOnly.length}`);
+  // Every bar in the catalog admits the human case, and a new one that forgets
+  // to is a real bug rather than a moving number - so this compares the two
+  // populations instead of counting either.
+  check(`and every restricted O.C.C. keeps the reserved "${RACE_NONE}" for the human case`,
+    humanOnly.length === restricted.length,
+    `${humanOnly.length} of ${restricted.length}`);
 
   // The rule itself. A Juicer with no race is a human Juicer and is fine; a
   // Juicer paired with any of the three Rifts races is not.
