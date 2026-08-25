@@ -269,6 +269,15 @@ Verification given up: none.
 Proposal: junction-link the five repo skills into `~/.claude/skills` and
 record the command in SETUP.md.
 
+- **Taken, 2026-08-25**: as proposed. The five junctions are live on this
+  machine (`New-Item -ItemType Junction`, the PowerShell spelling of
+  `mklink /J`; no admin rights involved) and the skills registered by name in
+  the linking session immediately — ship-pr fired for this very PR. SETUP.md
+  records the loop beside the structure tree that names the skills, plus the
+  one gap the mechanism leaves: a skill added later needs its link added in
+  the same PR, because nothing notices its absence. The links are per-machine
+  state; nothing in the repo changed behavior.
+
 As instruments, the skills themselves earn their cost: book-survey (~5.3K
 tokens) and class-import (~3.5K) encode precisely the two shipped-error
 classes the guardrail section protects, book-survey has already shed its one
