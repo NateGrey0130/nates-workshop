@@ -74,9 +74,9 @@ the mechanism keeping its promise. The floor moves; check it rather than
 trusting this sentence.
 
 **But "not always a bug" is not "usually not a bug", and the ratio runs the
-other way.** Sweeping every `only`/`except` name in all 83 published classes
-against the live catalog on 2026-08-25 found nine unmatched names. Two were the
-Priest of Light's. **Seven were dead exclusions** — six classes naming
+other way.** Sweeping every `only`/`except` name in every published class
+against the live catalog on 2026-08-25 found **nine** unmatched names. Two were
+the Priest of Light's. **Seven were dead exclusions** — six classes naming
 `Robots and Power Armor` after the catalog renamed that row to
 `Robots & Power Armor`, each silently offering the one Pilot skill its book
 forbids, because an unmatched `except` fails OPEN.

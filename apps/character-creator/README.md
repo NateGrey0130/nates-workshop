@@ -2869,7 +2869,9 @@ own page segmentation spliced the two columns together and produced
 `Medic MOS: computer, tool kit if applicable` — the left column's heading
 running straight into the right column's equipment list. Read that way the class
 has five specialties; read in column order it has **seven**. See
-`.claude/skills/book-survey/reference/read-columns.py`.
+`scripts/read-columns.py` — this line pointed at a copy of that script under
+`.claude/skills/book-survey/reference/` until the copy was deleted for being a
+diverged fork of the real one.
 
 ## Classes that come in stages
 
