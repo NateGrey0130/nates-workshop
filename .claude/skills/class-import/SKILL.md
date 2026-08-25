@@ -66,9 +66,28 @@ Only `ERRORS` and `SQL PRE-FLIGHT` set the exit code. The rest are findings
 about the books, not a file the parser rejects.
 
 **A restriction naming a row the catalog does not have is not always a bug.**
-The Priest of Light names `W.P. Siege`, `W.P. Large Axes` and `W.P. Lance`
-ahead of those rows existing, and says so in its note; the exclusions activate
-by themselves when the rows arrive. The audit floor is three names, not zero.
+The Priest of Light names `W.P. Siege` and `W.P. Large Axes` ahead of those rows
+existing, and says so in its note; the exclusions activate by themselves when
+the rows arrive. **The audit floor is TWO names, not zero** — it was three until
+`W.P. Lance` was imported and that exclusion started working by itself, which is
+the mechanism keeping its promise. The floor moves; check it rather than
+trusting this sentence.
+
+**But "not always a bug" is not "usually not a bug", and the ratio runs the
+other way.** Sweeping every `only`/`except` name in all 83 published classes
+against the live catalog on 2026-08-25 found nine unmatched names. Two were the
+Priest of Light's. **Seven were dead exclusions** — six classes naming
+`Robots and Power Armor` after the catalog renamed that row to
+`Robots & Power Armor`, each silently offering the one Pilot skill its book
+forbids, because an unmatched `except` fails OPEN.
+
+A catalog rename breaks restrictions that were correct when they were written,
+and nothing routine says so. **Re-run that sweep after any rename** — it is a
+parse of every class against `SELECT name FROM skills`, and it is the only thing
+that has ever caught this. Note the asymmetry it has to respect: a GRANTED skill
+naming an old name still resolves, because redirects are consulted for
+references; only restrictions skip them. The Robot Pilot cites the same old
+string and is fine.
 
 ## Rules that are easy to get wrong
 
