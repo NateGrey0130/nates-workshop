@@ -421,8 +421,13 @@ name with no row errors with `No skill called "X" in the catalog`:
 - **Fix sketch**: `fix-valkyrie-sdc-pool.sql` — delete `sdc_base`, add
   `bonuses: { pools: { sdc: 100 } }`.
 - **Taken, 2026-08-26**: `fix-valkyrie-sdc-pool.sql`, as sketched. The
-  Pantheons PDF is not in the OCR cache on this machine today, so the book
-  line stands on this audit's verified quote. The class's own extraction
+  Pantheons PDF was not in the OCR cache when this shipped, so the book
+  line stood on this audit's verified quote — **re-verified later the same
+  day** when the PDF returned and was re-cached (`potm`, reader page =
+  printed+1): printed 167 reads "100 S.D.C. plus that gained from physical
+  skills" verbatim, and the High Elf's contrasting "plus those gained by
+  O.C.C.'s and physical skills" wording sits on the same cache page,
+  exactly as the rewritten note describes. The class's own extraction
   note argued `sdc_base` deliberately (self-contained wording, no O.C.C.
   mention) — overturned by the settled pool rule and rewritten in the same
   script to record why (the claim-audit rule). No `CORE_SDC_BY_CLASS`
@@ -460,7 +465,10 @@ name with no row errors with `No skill called "X" in the catalog`:
   bonuses instead), so the occ_skill shape here is the ordinary one other
   classes use, not copied from a variant. Readbacks
   `fixed 1, old_left 0, cr_free 1`, idempotent; re-parses ready against
-  the remote catalog.
+  the remote catalog. **Decision (Nate, 2026-08-26): the original Rifts
+  core defaults to the RUE version** — when hatchling material needs book
+  verification and the core PDF is not at hand, RUE (cached) is the
+  authority to check against rather than chasing the original printing.
 
 ### F14 — medium — Juicer's "+2 to disarm" is missing, and three Juicer Uprising sub-classes copied the gap
 
@@ -601,10 +609,27 @@ one of them by hand; the pages are known:
   on its start page — and established that **the pf cache runs at
   printed+2**, not the offset-zero first assumed (knight's p.85 line at
   cache p087, druid's p.75 line at p077, psi-healer's p.158 at p160 all
-  agree). The Pantheons and Dragons & Gods PDFs are not in the OCR cache
-  today, so those 16 ranges stand on this audit's hand-located numbers.
-  Proven armed: `--field-sources` on the stamped knight resolves the pf
-  cache and prints real source lines. Readbacks
+  agree). The Pantheons and Dragons & Gods PDFs were not in the OCR cache
+  when this shipped, so those 16 ranges stood on this audit's hand-located
+  numbers — **the Pantheons PDF returned later the same day** and was
+  re-cached (`potm`, text layer, reader page = printed+1 per
+  read-columns.py's own note that the printed-to-pymupdf offset is zero):
+  all 14 start pages confirmed by heading sweep (the High Elf's heading is
+  the plural "Asgardian High Elves"), plus the valkyrie money at printed
+  168 and the berserker's "Money: None to start." at printed 170. **The
+  Dragons & Gods PDF returned the same evening** and was cached as `dag`
+  (240 pages, text layer, reader page = printed+1): the Chiang-Ku's
+  verified figures — hatchling P.P.E. "2D4x10+20", adult "2D4x100+200 plus
+  P.E. attribute number" — and the Basilisk's "2D4x10+40" trap line all
+  read verbatim, but on printed 22-23, ONE PAGE LOWER than the audit's
+  hand-located p.23-24 (folio-confirmed: 22 carries the heading and stat
+  block, 23 the Rifts stats, 24 opens the Cockatrice). The stamp is
+  corrected by `fix-stamp-chiang-ku-range.sql`, which sorts after this
+  finding's script — and NOT named `fix-source-book-pages-chiang-ku`,
+  because '-' sorts before '.' and that name would run before the file it
+  corrects. Proven armed: `--field-sources` on the stamped knight resolves
+  the pf cache, and on the corrected chiang-ku resolves `dag` (offset +1
+  from 204 folios) and maps p.22-23 to exactly its pages. Readbacks
   `pf_ok 24, pom_ok 14, rest_ok 2, bare_left 0, cr_free 40`, idempotent;
   spot-checked classes re-parse ready.
 
