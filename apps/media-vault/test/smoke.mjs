@@ -633,6 +633,40 @@ check('and it survives a missing value rather than throwing',
   check('and every entry to select mode goes through one setter',
     /function setSelectMode\(on\)/.test(appSrc)
     && (appSrc.match(/^\s+selectMode = /gm) || []).length === 1);
+
+  // ─── The Stats screen has no selection, deliberately ───
+  // A decision, pinned so it cannot be undone by someone being helpful. The
+  // ranked lists show AGGREGATES — "Brandon Sanderson · 47" — so a checkbox
+  // beside one would mean selecting 47 rows the user is not looking at: the
+  // off-screen-selection hazard by DESIGN rather than by accident. The lists
+  // also cap at 50 entries, so any selection built from them would silently
+  // miss the tail.
+  //
+  // The capability already exists in two clicks and does not need rebuilding:
+  // a ranked row calls jumpToSearch, which lands in a filtered library view,
+  // and Select All there already spans the whole filter.
+  const statsHtml = readFileSync(join(appDir, 'index.html'), 'utf8');
+  const statsBlock = (statsHtml.match(/<div[^>]*id="statsPage"[\s\S]*?\n<\/div>/) || [''])[0];
+  check('the Stats page markup has no checkboxes, and that is a decision not an omission',
+    !!statsBlock && !statsBlock.includes('type="checkbox"'));
+  {
+    const declOf = (name) => {
+      const at = appSrc.indexOf('function ' + name + '(');
+      if (at < 0) return '';
+      const m = /\r?\n\}/.exec(appSrc.slice(at));
+      return m ? appSrc.slice(at, at + m.index + m[0].length) : appSrc.slice(at);
+    };
+    const rendered = declOf('renderStats') + declOf('renderRankedList');
+    check('and neither stats renderer emits one, or reads the selection at all',
+      rendered.length > 0 && !/checkbox/i.test(rendered) && !rendered.includes('selectedIds'));
+    // The call, with its paren, and the function it names. A bare substring
+    // test passed happily when the call was renamed to `jumpToSearchDisabled`.
+    check('a ranked row still routes to the filtered library, which is where selection lives',
+      declOf('renderRankedList').includes('jumpToSearch(')
+      && /function jumpToSearch\(/.test(appSrc));
+  }
+  check('and the README records the reasoning, so the decision outlives whoever made it',
+    readme.includes('The Stats screen has no selection'));
 }
 {
   // A selection that survives a view change can be acted on while its items

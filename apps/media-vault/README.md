@@ -95,6 +95,17 @@ it is handed, inserting or updating, so that number can never disagree.
 Restoring an undo, committing a pasted ISBN list and importing a CSV all go
 through it, and all skip the comparison on purpose.
 
+**The Stats screen has no selection, and that is deliberate.** Its ranked lists
+show *aggregates* — *"Brandon Sanderson · 47"* — so a checkbox beside one would
+mean selecting 47 rows nobody is looking at. That is the off-screen-selection
+hazard by design rather than by accident, and the lists cap at 50 entries, so
+any selection built from them would silently miss the tail.
+
+Nothing is lost by leaving it out: a ranked row is already clickable and lands
+in a **filtered library view**, where Select All already spans the whole filter.
+Two clicks, and every safeguard on this page applies to them. The smoke test
+pins the absence, so the decision does not get undone by someone being helpful.
+
 ## Filling in the blanks
 
 **✨ Fill blanks** in the bulk bar goes back to where each selected item came
