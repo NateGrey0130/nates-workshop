@@ -26,8 +26,22 @@ const MAX_QUERY_LEN = 300;
 // A rejected TMDB key is reported by name rather than as a bare status: the
 // first time production rejected a key, all this said was
 // "Upstream error 401", which named neither TMDB nor the secret to fix.
-async function fetchJson(url) {
-  const res = await fetch(url);
+//
+// `timeoutMs` is optional and only the isbn branch passes one. A hung upstream
+// used to surface as whatever the runtime threw — an opaque 502 reading
+// `fetch failed`, or nothing at all until the platform gave up — which reads to
+// the user as "the book is not there". A bounded call can say which it was.
+async function fetchJson(url, timeoutMs) {
+  let res;
+  try {
+    res = await fetch(url, timeoutMs ? { signal: AbortSignal.timeout(timeoutMs) } : undefined);
+  } catch (err) {
+    if (timeoutMs && (err.name === 'TimeoutError' || err.name === 'AbortError')) {
+      const who = url.startsWith(OL_BASE) ? 'OpenLibrary' : 'The metadata service';
+      throw new Error(`${who} didn’t answer within ${Math.round(timeoutMs / 1000)} seconds. That is their end being slow, not the book being missing — try again in a moment.`);
+    }
+    throw err;
+  }
   if (!res.ok) {
     if (url.startsWith(TMDB_BASE) && (res.status === 401 || res.status === 403)) {
       throw new Error('TMDB rejected the API key — check the TMDB_API_KEY secret on the Pages project. It must be TMDB’s 32-character v3 API key, not a v4 read access token.');
@@ -75,6 +89,46 @@ async function olWorkCover(isbn) {
   }
 }
 
+// ─── The second opinion ───
+// `/api/books` answers 200 with an empty body while it is struggling, and an
+// empty body is byte-for-byte what it returns for an ISBN nobody has catalogued.
+// So the one thing this endpoint most needs to tell apart — "we don't have that
+// book" from "we couldn't answer just now" — it could not tell apart at all,
+// and the user got "No results found for that ISBN" either way. That sentence,
+// for a book that plainly exists, is the symptom this whole audit started from.
+//
+// Measured 2026-08-26 against `043935806X`, a book OpenLibrary certainly holds:
+// of 12 sequential direct requests, 2 hard-failed and one took 8.5s; through
+// the proxy, one of 14 came back 502 after 21 SECONDS. And during a paste-add
+// run the same ISBN returned a clean `found: false` — seconds after, and
+// seconds before, resolving perfectly.
+//
+// One retry, and not two. The budgets below are the reason: the primary call
+// gets ten seconds because a real answer was measured at 8.5, the retry gets
+// five because by the time it runs we already hold a usable answer and are only
+// hoping to improve it. Worst case is 10 + 0.4 + 5 ≈ 15.4s, which is under the
+// 21s this endpoint was already capable of taking before any of this. A second
+// retry would put it back over.
+//
+// Every failure here returns null, which lands on exactly the `found: false`
+// the code returned before. A retry may only turn a "no" into a "yes"; it must
+// never turn a good answer into an error.
+const ISBN_LOOKUP_MS = 10000;
+const ISBN_RETRY_DELAY_MS = 400;
+const ISBN_RETRY_MS = 5000;
+
+async function olSecondOpinion(url, bibkey) {
+  try {
+    await new Promise((resolve) => setTimeout(resolve, ISBN_RETRY_DELAY_MS));
+    const res = await fetch(url, { signal: AbortSignal.timeout(ISBN_RETRY_MS) });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data[bibkey] || null;
+  } catch {
+    return null;
+  }
+}
+
 function bookOut(doc) {
   return {
     title: doc.title || 'Unknown Title',
@@ -118,8 +172,12 @@ export async function onRequestGet(context) {
       case 'isbn': {
         const isbn = normalizeIsbn(params.get('isbn'));
         if (!isIsbnShape(isbn)) return json({ error: 'That isn’t a 10- or 13-digit ISBN' }, 400);
-        const data = await fetchJson(`${OL_BASE}/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
-        const book = data[`ISBN:${isbn}`];
+        const bibkey = `ISBN:${isbn}`;
+        const url = `${OL_BASE}/api/books?bibkeys=${bibkey}&format=json&jscmd=data`;
+        const data = await fetchJson(url, ISBN_LOOKUP_MS);
+        // An empty answer is asked once more before it is believed — see
+        // olSecondOpinion above for why, and for why only once.
+        const book = data[bibkey] || await olSecondOpinion(url, bibkey);
         if (!book) return json({ found: false });
         const editionCover = book.cover
           ? (book.cover.large || book.cover.medium || book.cover.small || '')

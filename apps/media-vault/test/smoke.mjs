@@ -362,6 +362,41 @@ check('and it survives a missing value rather than throwing',
   }
 }
 {
+  // OpenLibrary answers 200-with-an-empty-body while it is struggling, and that
+  // is byte-for-byte how it answers for a book it has never catalogued — so the
+  // one thing this endpoint most needs to tell apart, it could not tell apart
+  // at all. It now asks twice. These pins are what stops "twice" drifting back
+  // to once, or on to five, and what stops the retry ever making things worse.
+  const src = endpointSrc['lookup.js'];
+  const msOf = (name) => Number((src.match(new RegExp('const ' + name + ' = (\\d+);')) || [])[1]);
+  const primary = msOf('ISBN_LOOKUP_MS');
+  const delay = msOf('ISBN_RETRY_DELAY_MS');
+  const retry = msOf('ISBN_RETRY_MS');
+  const body = (src.match(/async function olSecondOpinion[\s\S]*?\r?\n\}/) || [''])[0];
+  const inner = body.split('\n').slice(1).join('\n');
+
+  check('the primary ISBN call is bounded, so a hung upstream is named rather than opaque',
+    /fetchJson\(url, ISBN_LOOKUP_MS\)/.test(src) && /AbortSignal\.timeout\(timeoutMs\)/.test(src));
+  check('an empty answer is asked again exactly once',
+    (src.match(/olSecondOpinion\(/g) || []).length === 2);
+  check('and the retry can neither loop nor call itself',
+    !!body && !/\b(for|while)\b/.test(body) && !inner.includes('olSecondOpinion('));
+  check('every failing path out of the retry returns null, so it can only turn a no into a yes',
+    /if \(!res\.ok\) return null;/.test(body) && /catch \{\r?\n\s+return null;/.test(body));
+  check('the retry is bounded too, on a tighter budget than the call it follows',
+    /AbortSignal\.timeout\(ISBN_RETRY_MS\)/.test(body) && retry > 0 && retry < primary);
+  // 21s is not arbitrary: it is the longest this endpoint was measured taking
+  // before any retry existed. A second retry would put it back over.
+  check('and the worst case stays under the 21s this endpoint was already measured taking',
+    primary > 0 && delay > 0 && primary + delay + retry < 21000,
+    `${primary} + ${delay} + ${retry} = ${primary + delay + retry}ms`);
+  check('the client no longer tells the user to do the retry the proxy now does',
+    !appSrc.includes('worth one retry') && appSrc.includes('returned nothing for it twice'));
+  check('and the README’s "asks twice" and ten seconds are the numbers in the code',
+    readme.includes('**asks twice**') && readme.includes('at **ten seconds**')
+    && primary === 10000, `README says ten seconds; ISBN_LOOKUP_MS is ${primary}`);
+}
+{
   // The bulk bar is fixed-position, so nothing stops it floating over a page
   // that has no checkboxes on it. Leaving the library has to end select mode —
   // not merely hide the bar, which would restore it, still armed, on the way
