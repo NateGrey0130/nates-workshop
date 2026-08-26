@@ -718,6 +718,12 @@ async function resolveIsbn(raw) {
 // while 2 requests in 12 failed outright and one took 8.5 seconds. Asserting
 // the catalogue is missing a book when the API merely had a bad second is a
 // more confident lie than the vague message it replaced.
+//
+// It now hedges LESS, and that is earned rather than a change of mind: the
+// proxy asks a second time before reporting nothing, so this sentence is no
+// longer describing a single unlucky request. The previous wording told the
+// reader to retry themselves; saying that when the code has already retried
+// would be its own small lie.
 function isbnFailureText(r) {
   if (r.why === 'shape') {
     return `That is ${r.isbn.length} character${r.isbn.length === 1 ? '' : 's'} — an ISBN is 10 or 13.`;
@@ -728,7 +734,7 @@ function isbnFailureText(r) {
   if (r.why === 'error') {
     return `Lookup failed: ${r.error || 'the request did not complete'}. OpenLibrary may be having a moment — try again.`;
   }
-  return `${r.isbn} is a well-formed ISBN, but OpenLibrary returned nothing for it. That usually means they do not have it — but their API also does this when it is struggling, so it is worth one retry before you trust it. The 📚 title search is the other way in.`;
+  return `${r.isbn} is a well-formed ISBN, and OpenLibrary returned nothing for it twice — the lookup asks a second time before saying this, because their API answers empty when it is struggling as well as when it holds no record. So this usually does mean they do not have the book. The 📚 title search is the other way in.`;
 }
 
 // A book result as a library item. One definition, so the ISBN box and the

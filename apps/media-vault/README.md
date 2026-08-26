@@ -211,6 +211,25 @@ reported as broken.
 module loader. **The smoke test pins every copy byte-for-byte** against
 `_lib/common.js` and unit-tests the originals there.
 
+**When OpenLibrary answers nothing.** `/api/books` returns `200` with an empty
+body while it is having a bad moment, and that is byte-for-byte how it answers
+for a book it has never catalogued. So the proxy **asks twice** before it
+believes an empty answer: one repeat, after a short pause, and if that comes
+back empty as well the lookup reports `found: false` exactly as it always did.
+Measured against `043935806X` — a book OpenLibrary certainly holds — 2 of 12
+direct requests hard-failed and one took 8.5 seconds, and a paste-add run got
+`found: false` for it seconds after it had resolved perfectly. *"No results
+found for that ISBN"* for a book that plainly exists is the symptom this app
+was reported broken for, and this produced it with no typo involved.
+
+Both calls are bounded, the first at **ten seconds** and the repeat more
+tightly, so a hung upstream returns a message saying OpenLibrary was slow
+rather than an opaque `502`. That budget is why there is **one** retry and not
+two: the worst case has to stay under the 21 seconds this endpoint was already
+measured taking, and the smoke test does that arithmetic rather than trusting
+this paragraph. The retry can only ever turn a *no* into a *yes* — every way it
+can fail returns the same `found: false` the code returned before it existed.
+
 **Adding a shelf at once.** The import modal's second tab takes one ISBN per
 line, up to **100** in a run, and looks each one up in turn. The loop runs in
 the **browser**, not in a Pages Function: that sidesteps the 30-second limit
