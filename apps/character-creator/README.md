@@ -19,7 +19,8 @@ under [`docs/`](docs/).
 |---|---|
 | [`docs/house-rules.md`](docs/house-rules.md) | Where a number the books do not settle comes from, and the class key that overrides it. |
 | [`docs/leveling.md`](docs/leveling.md) | What a class gains as it levels: fighting-style schedules, skill picks, staged classes, chosen powers, and the psychic tiers that gate them. |
-| [`docs/starting-above-level-1.md`](docs/starting-above-level-1.md) | Building a character that begins at level 5 by replaying the level-up engine — and the spell and psionic catalog work that took. |
+| [`docs/starting-above-level-1.md`](docs/starting-above-level-1.md) | Building a character that begins at level 5 by replaying the level-up engine. |
+| [`docs/spell-and-psionic-imports.md`](docs/spell-and-psionic-imports.md) | The catalog gaps per-level spell and psionic grants uncovered, and what closing them cost. |
 | [`docs/race-and-occupation.md`](docs/race-and-occupation.md) | The R.C.C.-first wizard, how a race and an occupation compose, and the MOS packages that sit on top of an O.C.C. |
 | [`docs/language-and-enchantments.md`](docs/language-and-enchantments.md) | Two rule families the catalog models as data rather than as code. |
 | [`docs/wizard-and-sheet.md`](docs/wizard-and-sheet.md) | How the ten-step wizard and the character sheet behave: tabs, pickers, drafts, blocked steps, and what the server refuses to take on trust. |
