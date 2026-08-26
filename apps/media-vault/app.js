@@ -279,7 +279,13 @@ function closeAddModal() {
 }
 
 function clearForm() {
-  ['itemType', 'itemFormat', 'itemTitle', 'itemAuthor', 'itemActors', 'itemProducers', 'itemGenre', 'itemSeries', 'itemLocation', 'itemCoverInput', 'itemNotes', 'lookupInput', 'coverUrl'].forEach(id => {
+  // `sourceId` belongs in this list for the same reason `coverUrl` does, and
+  // the reason is a bug that already happened: a second lookup in the same
+  // modal used to keep the first book's cover, so the wrong image was saved
+  // against the right book. A source id left behind would be worse — it is
+  // what a re-lookup trusts, so a stale one would fetch a different book's
+  // record and overwrite this row with it.
+  ['itemType', 'itemFormat', 'itemTitle', 'itemAuthor', 'itemActors', 'itemProducers', 'itemGenre', 'itemSeries', 'itemLocation', 'itemCoverInput', 'itemNotes', 'lookupInput', 'coverUrl', 'sourceId'].forEach(id => {
     const el = document.getElementById(id);
     if (el.tagName === 'SELECT') el.selectedIndex = 0;
     else el.value = '';
@@ -304,6 +310,10 @@ function editItem(id) {
   document.getElementById('itemLocation').value = item.location || '';
   document.getElementById('itemCoverInput').value = item.cover || '';
   document.getElementById('coverUrl').value = item.cover || '';
+  // Carried through the edit form rather than re-derived. Without this line,
+  // editing an item's notes would silently erase where it came from — the one
+  // way a row can LOSE its source id after having one.
+  document.getElementById('sourceId').value = item.source_id || '';
   document.getElementById('itemNotes').value = item.notes || '';
   document.getElementById('lookupStatus').textContent = '';
   document.getElementById('addModal').classList.add('active');
@@ -330,6 +340,7 @@ async function saveItem() {
     location: document.getElementById('itemLocation').value.trim(),
     cover: coverFromInput || coverFromLookup || '',
     notes: document.getElementById('itemNotes').value.trim(),
+    source_id: document.getElementById('sourceId').value.trim(),
     addedAt: editId ? (library.find(i => i.id === editId)?.addedAt || Date.now()) : Date.now(),
   };
 
@@ -845,7 +856,7 @@ function isbnFailureText(r) {
 
 // A book result as a library item. One definition, so the ISBN box and the
 // pasted list cannot drift into storing different things.
-function bookToItem(book) {
+function bookToItem(book, sourceId = '') {
   return {
     id: crypto.randomUUID(),
     type: 'audiobook',
@@ -859,6 +870,7 @@ function bookToItem(book) {
     location: '',
     cover: book.cover || '',
     notes: '',
+    source_id: sourceId,
     addedAt: Date.now(),
   };
 }
@@ -916,7 +928,10 @@ async function lookupISBN() {
       return null;
     }
 
-    fillBookFields(result.book);
+    // resolveIsbn hands back the NORMALISED number, not the raw typing, so the
+    // stored source id is the one a re-lookup would send rather than whatever
+    // dashes and labels were pasted in.
+    fillBookFields(result.book, result.isbn);
     status.textContent = '✓ Found — check the fields, then Add to Vault.';
     status.className = 'lookup-status success';
     return result;
@@ -946,7 +961,7 @@ async function lookupAndAddISBN() {
   const result = await lookupISBN();
   if (!result) return;
 
-  const item = bookToItem(result.book);
+  const item = bookToItem(result.book, result.isbn);
   const ok = await apiWrite(() => apiFetch('/api/media-vault/items', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -1053,7 +1068,14 @@ function selectBookResult(idx) {
 // actors and producers go the same way: a book result can never fill them, so
 // leaving them alone carried a film's cast onto a book. series, location and
 // notes are deliberately left alone — those are the user's, not the lookup's.
-function fillBookFields(book) {
+// `sourceId` is a SECOND argument rather than something read off the book,
+// because only one of the two callers has one. An ISBN lookup knows the exact
+// number it asked about; a title or author search returns editions with no ISBN
+// in the payload at all, and inventing one from the title is precisely the
+// guess this column exists to avoid. So the search path passes nothing, the row
+// keeps an empty source id, and the honest answer is that nobody knows which
+// edition it is.
+function fillBookFields(book, sourceId = '') {
   const cover = book.cover || '';
   document.getElementById('itemTitle').value = book.title || '';
   document.getElementById('itemAuthor').value = book.authors || '';
@@ -1063,6 +1085,7 @@ function fillBookFields(book) {
   document.getElementById('itemType').value = 'audiobook';
   document.getElementById('coverUrl').value = cover;
   document.getElementById('itemCoverInput').value = cover;
+  document.getElementById('sourceId').value = sourceId;
 }
 
 async function lookupMovie() {
@@ -1154,6 +1177,10 @@ async function selectTMDBResult(tmdbId, mediaType) {
     document.getElementById('itemProducers').value = data.producers;
     document.getElementById('itemGenre').value = data.genres;
     document.getElementById('itemType').value = mediaType === 'tv' ? 'series' : 'movie';
+    // The prefix says which lookup to run again; the rest is that lookup's key.
+    // `mediaType` has already been narrowed to 'movie' or 'tv' by the caller,
+    // and the id came from TMDB rather than from anyone typing.
+    document.getElementById('sourceId').value = `tmdb:${mediaType}:${tmdbId}`;
 
     if (data.poster) {
       document.getElementById('coverUrl').value = data.poster;
@@ -1179,7 +1206,11 @@ async function selectTMDBResult(tmdbId, mediaType) {
 // ─── CSV IMPORT/EXPORT ───
 function exportCSV() {
   if (library.length === 0) { alert('Nothing to export.'); return; }
-  const headers = ['type', 'title', 'author', 'actors', 'producers', 'genre', 'series', 'format', 'location', 'cover', 'notes'];
+  // source_id last, so an existing consumer reading by position is unaffected.
+  // It is here because a round trip through export and import would otherwise
+  // drop it silently from every row  the same quiet loss as editing an item
+  // used to cause.
+  const headers = ['type', 'title', 'author', 'actors', 'producers', 'genre', 'series', 'format', 'location', 'cover', 'notes', 'source_id'];
   const csvRows = [headers.join(',')];
   
   library.forEach(item => {
@@ -1308,6 +1339,9 @@ async function importCSV() {
       location: obj.location || '',
       cover: obj.cover || '',
       notes: obj.notes || '',
+      // Absent from every CSV written before this, and from anything exported by
+      // another tool, so it defaults empty rather than being required.
+      source_id: obj.source_id || obj['source id'] || '',
       addedAt: Date.now(),
     });
   });
@@ -1469,7 +1503,7 @@ async function commitIsbnPaste() {
   const chosen = isbnPasteRows.filter(r => r.include);
   if (chosen.length === 0) return;
   cancelUndo();
-  const newItems = chosen.map(r => bookToItem(r.book));
+  const newItems = chosen.map(r => bookToItem(r.book, r.isbn));
 
   // One write for the whole run: db.batch() is a transaction, so this either
   // all lands or none of it does. The cap error from items/bulk is surfaced

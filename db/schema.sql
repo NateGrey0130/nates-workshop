@@ -24,6 +24,10 @@ CREATE TABLE IF NOT EXISTS media_items (
   location   TEXT NOT NULL DEFAULT '',
   cover      TEXT NOT NULL DEFAULT '',
   notes      TEXT NOT NULL DEFAULT '',
+  -- Where this row came from, so its lookup can be run again exactly: the
+  -- normalised ISBN for a book, 'tmdb:movie:1234' / 'tmdb:tv:1234' for video.
+  -- Empty on every row saved before 040, which is honest rather than a gap.
+  source_id  TEXT NOT NULL DEFAULT '',
   added_at   INTEGER NOT NULL,
   PRIMARY KEY (user_email, item_id)
 );
@@ -850,3 +854,7 @@ WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'claud
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '039-filament-forge.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'ff_config');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '040-media-vault-source-id.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('media_items') WHERE name = 'source_id');

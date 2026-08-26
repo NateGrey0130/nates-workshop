@@ -95,7 +95,16 @@ export function isbnCheckDigitValid(isbn) {
   return false;
 }
 
-export const ITEM_FIELDS = ['type', 'format', 'title', 'author', 'actors', 'producers', 'genre', 'series', 'location', 'cover', 'notes'];
+// Every text column on media_items except the keys and added_at. Adding one
+// here is most of the work of adding a column: sanitizeItem, rowToItem,
+// UPSERT_SQL and bindUpsert all build themselves from this list, so they move
+// together or not at all.
+//
+// `source_id` is where the row came from — the normalised ISBN for a book,
+// `tmdb:movie:1234` / `tmdb:tv:1234` for video. It is a FACT about the row's
+// origin rather than a field anybody edits, which is why it is not in the add
+// form and not bulk-settable; it is here because it round-trips like the rest.
+export const ITEM_FIELDS = ['type', 'format', 'title', 'author', 'actors', 'producers', 'genre', 'series', 'location', 'cover', 'notes', 'source_id'];
 export const MAX_ITEMS = 5000;
 export const MAX_FIELD_LEN = 4000;
 
@@ -127,23 +136,27 @@ export function rowToItem(row) {
     location: row.location,
     cover: row.cover,
     notes: row.notes,
+    source_id: row.source_id,
     addedAt: row.added_at,
   };
 }
 
+// 15 bound parameters now rather than 14, still far under D1's 100.
 export const UPSERT_SQL =
-  `INSERT INTO media_items (user_email, item_id, type, format, title, author, actors, producers, genre, series, location, cover, notes, added_at)
-   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `INSERT INTO media_items (user_email, item_id, type, format, title, author, actors, producers, genre, series, location, cover, notes, source_id, added_at)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
    ON CONFLICT (user_email, item_id) DO UPDATE SET
      type = excluded.type, format = excluded.format, title = excluded.title,
      author = excluded.author, actors = excluded.actors, producers = excluded.producers,
      genre = excluded.genre, series = excluded.series, location = excluded.location,
-     cover = excluded.cover, notes = excluded.notes, added_at = excluded.added_at`;
+     cover = excluded.cover, notes = excluded.notes, source_id = excluded.source_id,
+     added_at = excluded.added_at`;
 
 export function bindUpsert(stmt, email, it) {
   return stmt.bind(
     email, it.id, it.type, it.format, it.title, it.author, it.actors,
-    it.producers, it.genre, it.series, it.location, it.cover, it.notes, it.addedAt
+    it.producers, it.genre, it.series, it.location, it.cover, it.notes,
+    it.source_id, it.addedAt
   );
 }
 

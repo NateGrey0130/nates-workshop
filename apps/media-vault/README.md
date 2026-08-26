@@ -129,13 +129,37 @@ One table in the site's shared D1 database.
 
 | Table | Notes |
 |---|---|
-| `media_items` | One row per item, keyed `(user_email, item_id)`. `user_email` is the Cloudflare Access identity, so a user only ever sees their own rows. Columns: the eleven item fields (`type`, `format`, `title`, `author`, `actors`, `producers`, `genre`, `series`, `location`, `cover`, `notes`) plus `added_at`. |
+| `media_items` | One row per item, keyed `(user_email, item_id)`. `user_email` is the Cloudflare Access identity, so a user only ever sees their own rows. Columns: the twelve item fields (`type`, `format`, `title`, `author`, `actors`, `producers`, `genre`, `series`, `location`, `cover`, `notes`, `source_id`) plus `added_at`. |
 
 It is **not** prefixed, unlike FilamentForge's `ff_` tables. It predates that
 convention and holds live data; renaming it would buy consistency at the price
 of a data-copy migration. `db/schema.sql` notes that the character creator's
 gear table is called `gear` rather than `items` specifically to stay clear of
 it.
+
+**`source_id` is where the row came from**, so its lookup can be run again
+exactly: the normalised ISBN for a book, `tmdb:movie:1234` / `tmdb:tv:1234` for
+video — the prefix names the lookup, the rest is that lookup's key. One generic
+column rather than two nullable ones, since both would be empty on the same
+rows anyway.
+
+Before it existed, the link back to the source record was thrown away the
+moment an item was saved: the ISBN lookup wrote four fields and discarded the
+number it had been handed. So anything wanting to re-run a lookup could only
+guess from title and author — and OpenLibrary's own search returned **24
+results for an ISBN that does not exist**, which is how a library quietly fills
+with the wrong covers.
+
+It is written by the two paths that actually know one: an **ISBN** lookup, and
+selecting a **TMDB** result. A title or author search leaves it **empty on
+purpose** — those results carry no ISBN, and inventing one from the title is
+the exact guess this column exists to avoid. Every row saved before migration
+`040` is empty too, which is honest rather than a gap.
+
+It is not in the add form, not bulk-settable, and not editable by hand: it is a
+fact about the lookup rather than a field. It *is* carried through the edit
+form, the CSV export and the CSV import, because each of those would otherwise
+erase it silently.
 
 Limits the API enforces: **5000 items per user**, and 4000 characters per
 field. Anything longer is truncated rather than rejected. Id lists in the bulk
