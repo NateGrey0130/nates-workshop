@@ -31,7 +31,10 @@ caught for you, so the checks happen before the merge or they do not happen.
      paths that must be outside the Access wall and checks they are documented
      and exempted, and `node apps/pick3cut5/test/game.mjs`, which walks all 56
      reachable rounds and proves the server's budget rules and the client's copy
-     of them still agree.
+     of them still agree. Finally `node apps/media-vault/test/smoke.mjs`, which
+     proves the merge planner that retires MediaVault's localStorage cache,
+     pins that app's README, and fails if any endpoint regains the power to
+     replace a whole library — the bug that app was rebuilt to end.
 
      The character-creator smoke test takes `--section <name>` for iterating
      between edits — it runs only the matching sections and skips the
