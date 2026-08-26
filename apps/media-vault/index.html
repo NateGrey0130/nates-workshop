@@ -196,9 +196,13 @@
         <input type="text" id="lookupYear" placeholder="Year" style="width:70px;flex:none;" maxlength="4" onkeydown="if(event.key==='Enter')handleLookupEnter()">
         <button class="btn" onclick="lookupISBN()">ISBN</button>
         <button class="btn" onclick="lookupAndAddISBN()" title="Look the ISBN up and add it straight away">＋ Add now</button>
-        <button class="btn" onclick="lookupBook()">📚</button>
-        <button class="btn" onclick="lookupMovie()">🎬</button>
-        <button class="btn" onclick="lookupSeries()">📺</button>
+        <!-- Kept in one wrapper so the three type buttons wrap onto a new
+             line together rather than being split up by the flex row. -->
+        <div class="lookup-type-btns">
+          <button class="btn" onclick="lookupBook()" title="Search books">📚</button>
+          <button class="btn" onclick="lookupMovie()" title="Search movies">🎬</button>
+          <button class="btn" onclick="lookupSeries()" title="Search series">📺</button>
+        </div>
       </div>
       <div class="lookup-row" style="margin-top:8px;">
         <select id="tmdbSearchBy" class="search-field-select" style="flex:none;border-radius:var(--radius-sm);border:1px solid var(--border);">
