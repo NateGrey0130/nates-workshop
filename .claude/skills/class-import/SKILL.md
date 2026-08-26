@@ -265,9 +265,9 @@ Two legitimate answers, and it is the user's call which:
   | `js/compose.js` | Fold it in, if an R.C.C.+O.C.C. pair has to combine it |
   | `js/derive.js` | Turn it into a number, if the sheet adds it up |
   | `app.js` / `sheet.js` | Show it in the wizard and on the sheet — **both**, they are separate paths |
-  | `db/migrations/NNN-*.sql` + `db/schema.sql` | A column, if it is catalog data. Record it in the README migration table or the smoke test fails |
+  | `db/migrations/NNN-*.sql` + `db/schema.sql` | A column, if it is catalog data. Record it in the `docs/operations.md` migration table or the smoke test fails |
   | `test/smoke.mjs` | A case for the new shape |
-  | `apps/character-creator/README.md` | What it means and why it exists |
+  | `apps/character-creator/README.md` or the right file under `docs/` | What it means and why it exists |
 
   Prefer extending an existing block over adding a top-level key — `bonuses`
   already covers attributes, combat, saves, pools and `at_level`, and `combat`

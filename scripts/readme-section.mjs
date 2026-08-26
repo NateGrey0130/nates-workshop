@@ -1,5 +1,5 @@
-// One section of the character-creator README, bounded by the NEXT HEADING OF
-// ANY DEPTH.
+// One section of the character-creator documentation, bounded by the NEXT
+// HEADING OF ANY DEPTH.
 //
 //   node scripts/readme-section.mjs                    the heading index
 //   node scripts/readme-section.mjs "Data model"       one section
@@ -16,31 +16,48 @@
 // that boundary ate all of them. A leaf-sized chunk is also the honest unit of
 // reading: if the subsections are wanted too, ask for them by name.
 //
+// It searches README.md AND every docs/*.md, because the README was split and
+// a tool that indexed only the spine would have made 4,890 lines invisible to
+// the one command written to stop people reading whole files. Every hit names
+// its file, so the range printed to stderr is still a bounded-edit coordinate.
+//
 // The section is printed to stdout, its line range to stderr, so piping the
 // text somewhere keeps working while the range stays visible for a bounded
 // edit.
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { repoRoot } from './d1-query-lib.mjs';
 
-const README = join(repoRoot, 'apps', 'character-creator', 'README.md');
-const lines = readFileSync(README, 'utf8').split(/\r?\n/);
+const APP = join(repoRoot, 'apps', 'character-creator');
+const rel = ['README.md', ...readdirSync(join(APP, 'docs'))
+  .filter((f) => f.endsWith('.md')).sort().map((f) => 'docs/' + f)];
 
-// Headings, fence-aware: the README's bash fences hold `# comment` lines, and
-// a boundary that stops at one of those cuts a section mid-code-block.
+// Headings, fence-aware: the docs' bash fences hold `# comment` lines and the
+// class-markdown example holds `## Lore` and `## GM Notes`, so a boundary that
+// stops at one of those cuts a section mid-code-block.
+const source = new Map();   // file -> lines
 const headings = [];
-let inFence = false;
-lines.forEach((line, i) => {
-  if (/^\s*```/.test(line)) { inFence = !inFence; return; }
-  if (inFence) return;
-  const m = line.match(/^(#{1,6})\s+(.*)$/);
-  if (m) headings.push({ line: i, depth: m[1].length, text: m[2].trim() });
-});
+for (const file of rel) {
+  const lines = readFileSync(join(APP, file), 'utf8').split(/\r?\n/);
+  source.set(file, lines);
+  let inFence = false;
+  lines.forEach((line, i) => {
+    if (/^\s*```/.test(line)) { inFence = !inFence; return; }
+    if (inFence) return;
+    const m = line.match(/^(#{1,6})\s+(.*)$/);
+    if (m) headings.push({ file, line: i, depth: m[1].length, text: m[2].trim() });
+  });
+}
 
 const query = process.argv.slice(2).join(' ').trim();
 
 if (!query) {
+  let current = null;
   for (const h of headings) {
+    if (h.file !== current) {
+      current = h.file;
+      console.log(`\napps/character-creator/${current}`);
+    }
     console.log(`${String(h.line + 1).padStart(5)}  ${'#'.repeat(h.depth)} ${h.text}`);
   }
   process.exit(0);
@@ -58,13 +75,16 @@ if (matches.length === 0) {
 if (matches.length > 1) {
   console.error(`readme-section: "${query}" matches ${matches.length} headings - say which:`);
   for (const h of matches) {
-    console.error(`  line ${h.line + 1}: ${'#'.repeat(h.depth)} ${h.text}`);
+    console.error(`  ${h.file} line ${h.line + 1}: ${'#'.repeat(h.depth)} ${h.text}`);
   }
   process.exit(1);
 }
 
 const [hit] = matches;
-const at = headings.indexOf(hit);
-const end = at + 1 < headings.length ? headings[at + 1].line : lines.length;
-console.error(`apps/character-creator/README.md lines ${hit.line + 1}-${end} (${end - hit.line} lines)`);
+const lines = source.get(hit.file);
+// The next heading IN THE SAME FILE. A file boundary ends a section as surely
+// as a heading does.
+const next = headings.find((h) => h.file === hit.file && h.line > hit.line);
+const end = next ? next.line : lines.length;
+console.error(`apps/character-creator/${hit.file} lines ${hit.line + 1}-${end} (${end - hit.line} lines)`);
 console.log(lines.slice(hit.line, end).join('\n'));
