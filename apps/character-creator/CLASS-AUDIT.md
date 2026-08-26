@@ -809,6 +809,45 @@ claim-audit rule):
   smoke-pinned). Its second note, "psionics gates by category rather than by
   name", is also false — `powers_from` exists (burster). Migration: model the
   d100 tiers and the named nine-power list; pairs with F5.
+  - **Partly taken, 2026-08-26** (`fix-rue-cyber-knight-psionics.sql`): the
+    second half of the finding is right and is now data; the first half is
+    wrong, and the wrong half is the one that mattered.
+    **It also found a live error F5 introduced.** F5 set `powers_starting: 9`,
+    reading the book's "three powers known to all Cyber-Knights" as three of
+    the picks plus the Major band's six. **That could never work.** The three
+    are Create Psi-Sword, Create Psi-Shield and Meditation, and the catalog
+    files the first two under **Super** — a category a major psychic cannot
+    reach. So the nine picks were nine Healing/Sensitive/Physical powers,
+    *three more than the book grants*, and the universal three were
+    unreachable. Now `powers: ["Psi-Sword", "Psi-Shield", "Meditation"]`
+    granted by name, `powers_starting: 6`, and
+    `categories_allowed: ["Healing", "Sensitive", "Physical"]` stated instead
+    of left open. Granted powers are exempt from the category and tier gates
+    server-side, by design, so the Super pair lands correctly.
+    **The d100 table stays unmodelled, and the finding's reason for thinking
+    it needn't is the error.** `psionics_allowed` rolled tiers are **one
+    global table**, hardcoded in `js/psionics.js` from Palladium Fantasy 2nd
+    Ed. p.20-21 (01-09 major, 10-25 minor, 26-00 none), and
+    `rollsForPsionics()` returns false for any class declaring a `psionics`
+    block at all. There is **no per-class rolled-table shape**. This one needs
+    four bands (01-40 minor / 41-60 major / 61-70 master / 71-00 non-psychic)
+    carrying four I.S.P. bases, four power counts, two save targets, and the
+    master band's Super-psionic schedule *and* Psi-Sword damage schedule. That
+    is an app change, and a larger one than S1's.
+    **`powers_from` does exist — and does not apply here.** The finding is
+    right that the "gates by category rather than by name" note was false. But
+    the named list is the **minor** band's, and this class is stored as Major,
+    which draws from the three categories. So the correction is recorded in
+    the note rather than spent on the wrong tier.
+    Two book errors came out with it, both re-read from the cache (rue p067 =
+    printed 64, the cache running printed+3): the book says about **seventy**
+    percent are psychic, not eighty — 71-00 is the non-psychic band — and the
+    minor band's list holds **twelve** names, not the nine the class carried;
+    the missing three (Alter Aura, Resist Fatigue, Total Recall) are the
+    original core book's omissions, and all twelve are in the catalog. The
+    whole table is now in the ability's prose, where it has to live until the
+    app can hold one. Simulated against live markdown: `class-check` ready,
+    0 errors, 0 warnings.
 - **S3 — "no bonus key" notes falsified by `perception`/`disarm`:** burster
   ("+1 Perception has no bonus key and sits in restrictions"), juicer ("+2
   Perception, +2 disarm … have no bonus key"), ley-line-walker ("neither
