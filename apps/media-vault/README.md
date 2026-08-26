@@ -153,10 +153,46 @@ to that email.
 | `/api/media-vault/items` | POST | Upsert one item |
 | `/api/media-vault/items` | DELETE | `?id=` — delete one item |
 | `/api/media-vault/items/bulk` | POST | Upsert many. CSV import's endpoint. Rows not named in the body are untouched |
-| `/api/media-vault/items/bulk-update` | POST | `{ ids, set }` — only `type` and `format` are settable, against a value whitelist. Both are reachable from the bulk bar; the client sends one field or the other, and the endpoint accepts both together |
+| `/api/media-vault/items/bulk-update` | POST | `{ ids, set }` — five settable fields, below. Every one is reachable from the bulk bar; the endpoint accepts several at once |
 | `/api/media-vault/items/bulk-delete` | POST | `{ ids }` — deletes exactly the named rows |
 | `/api/media-vault/migrate` | POST | The one-time localStorage merge, below |
 | `/api/media-vault/lookup` | GET | Metadata proxy, below |
+
+**What is bulk-settable, and what is deliberately not.** `bulk-update`'s
+whitelist gives each field a *kind*, not just a list of allowed values:
+
+| Field | Kind | Why |
+|---|---|---|
+| `type` | one of `audiobook` `movie` `series` | closed vocabulary |
+| `format` | one of `digital` `physical` | closed vocabulary |
+| `location` | free text | moving a shelf's worth of physical media is the case this whole feature exists for |
+| `series` | free text | filing a run of books under one name |
+| `genre` | free text | the coarsest correction, and the one most often missing |
+
+The whitelist began as `field: [allowed, values]`, which works for two closed
+vocabularies and **cannot express `location` at all** — there is no list of
+every shelf a person owns.
+
+**`title`, `author`, `cover` and `notes` are absent, and should stay absent.**
+Setting every selected row's title to one string is destructive by definition
+and has no use that is not a mistake. The smoke test asserts they are missing
+from both the server whitelist and the client's picker, so adding one is a
+deliberate act rather than an oversight.
+
+**Bulk-set text is trimmed; the single-item save is not.** That asymmetry is on
+purpose. Someone editing one row can see the box they typed into; a bulk set
+propagates one value to hundreds of rows, so a trailing space becomes hundreds
+of rows whose `location` looks identical to `Shelf B` and does not group,
+filter or search with it. A blank value is **allowed** — clearing a field
+across a selection is a real edit — and gets its own confirm sentence
+(*"Clear the location on 412 items?"*) rather than the generic one, because a
+blank box is easy to press Apply on by accident.
+
+**Five fields is not an arbitrary stopping point.** D1 allows 100 bound
+parameters per query, and the batch binds one per field, one for the caller's
+email, and one per id in the chunk: 5 + 1 + 90 = **96**. The headroom is four
+more fields, and the smoke test does that arithmetic — a sixth and a seventh
+fail the suite rather than failing in production against a query D1 refuses.
 
 ## The one-time migration
 

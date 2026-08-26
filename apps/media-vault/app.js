@@ -491,17 +491,6 @@ function updateBulkBar() {
     allSelected ? `Deselect all ${inFilter.length}` : `Select all ${inFilter.length}`;
 }
 
-// Retyping a selection and reformatting one are the same operation with a
-// different word in them, so they are one function. Generalising it is safe
-// because the SERVER decides what is settable: items/bulk-update validates both
-// the field name and the value against its SETTABLE whitelist, so a caller
-// cannot widen what is bulk-editable by handing this a different object. The
-// whitelist has allowed `format` since the endpoint was written — this is the
-// UI finally offering it.
-//
-// `ids` is captured before the write rather than read from selectedIds after
-// it: the in-memory update must touch exactly the rows the server was asked
-// about, even though nothing clears the selection in between today.
 // ─── TAKING THE SERVER'S WORD FOR IT ───
 // `bulk-update` and `bulk-delete` both report how many rows they ACTUALLY
 // touched, summed from D1's own `meta.changes`. The client used to throw that
@@ -537,10 +526,26 @@ async function agreesWithServer(res, expected) {
   return false;
 }
 
-async function bulkSet(set, label) {
+// Retyping a selection, reformatting one and relabelling one are the same
+// operation with a different word in them, so they are one function.
+// Generalising it is safe because the SERVER decides what is settable:
+// items/bulk-update validates the field name and the value against its own
+// whitelist, so a caller cannot widen what is bulk-editable by handing this a
+// different object.
+//
+// `question` is a FUNCTION of the count, not a finished string, because the
+// sentence differs by more than a noun. "Change 412 items to Movies?" and
+// "Clear the location on 412 items?" are not the same shape, and a generic
+// message on the clearing path is the one place this dialog would actually
+// mislead — a blank box is easy to press Apply on by accident.
+//
+// `ids` is captured before the write rather than read from selectedIds after
+// it: the in-memory update must touch exactly the rows the server was asked
+// about, even though nothing clears the selection in between today.
+async function bulkSet(set, question) {
   if (selectedIds.size === 0) return;
   cancelUndo();
-  if (!confirm(`Change ${selectedIds.size} item(s) to ${label}?`)) return;
+  if (!confirm(question(selectedIds.size))) return;
   const ids = [...selectedIds];
   const res = await apiWrite(() => apiFetch('/api/media-vault/items/bulk-update', {
     method: 'POST',
@@ -562,13 +567,58 @@ async function bulkSet(set, label) {
   renderLibrary();
 }
 
+const plural = (n) => `${n} item${n === 1 ? '' : 's'}`;
+
 async function bulkChangeType(newType) {
   const label = newType === 'audiobook' ? 'Audiobooks' : newType === 'series' ? 'Series' : 'Movies';
-  return bulkSet({ type: newType }, label);
+  return bulkSet({ type: newType }, (n) => `Change ${plural(n)} to ${label}?`);
 }
 
 async function bulkChangeFormat(newFormat) {
-  return bulkSet({ format: newFormat }, newFormat === 'physical' ? 'Physical' : 'Digital');
+  const label = newFormat === 'physical' ? 'Physical' : 'Digital';
+  return bulkSet({ format: newFormat }, (n) => `Change ${plural(n)} to ${label}?`);
+}
+
+// ─── BULK-SETTING A TEXT FIELD ───
+// The three fields where one shared value across a selection is the POINT
+// rather than an accident: a shelf, a series, a genre. This list is the
+// CLIENT's half of a decision the server enforces — items/bulk-update rejects
+// anything outside its own whitelist — so the two must agree, and the smoke
+// test compares them rather than trusting that they do.
+//
+// `title`, `author`, `cover` and `notes` are absent from both, permanently.
+// Setting every selected row's title to one string is destructive by
+// definition and there is no use for it that is not a mistake.
+const BULK_TEXT_FIELDS = {
+  location: 'location',
+  series: 'series',
+  genre: 'genre',
+};
+
+async function bulkSetField() {
+  const field = document.getElementById('bulkField').value;
+  const label = BULK_TEXT_FIELDS[field];
+  if (!label) return;   // the picker cannot produce this; a stale DOM could
+  const input = document.getElementById('bulkFieldValue');
+
+  // Trimmed here as well as on the server, so the value the confirm dialog
+  // quotes is the value that gets stored. Quoting the untrimmed string would
+  // make the dialog a slightly different promise from the write.
+  const value = input.value.trim();
+
+  // Clearing is a legitimate bulk edit and gets its own sentence. A blank box
+  // is easy to press Apply on without meaning to, and "Change 412 items to ?"
+  // would not tell anybody what was about to happen to them.
+  const question = value === ''
+    ? (n) => `Clear the ${label} on ${plural(n)}?`
+    : (n) => `Set the ${label} on ${plural(n)} to “${value}”?`;
+
+  await bulkSet({ [field]: value }, question);
+
+  // Emptied whether or not the write happened. A value left sitting in the box
+  // after the selection has gone is a loaded gun for the next selection, and
+  // the field it belongs to is no longer on screen next to it.
+  input.value = '';
 }
 
 // Above this many, OK on a confirm() is too cheap a gesture for something with

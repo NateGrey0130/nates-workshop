@@ -819,6 +819,43 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
   height: 24px;
   background: var(--border);
 }
+/* A label and the controls it introduces, kept together across a wrap. The bar
+   wraps at any width narrow enough, and without this it split mid-group —
+   "Set" ended a line with its own picker at the start of the next one, and at
+   768px the three "Change … to →" labels stacked away from their buttons. */
+.bulk-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+/* The field picker and its value box. An explicit height, because a <select>
+   and an <input> with identical padding and font still come out 36px and 34px
+   — browsers size the two differently — and a two-pixel step between controls
+   sitting side by side reads as a misalignment.
+   The input gets a FIXED width on purpose: the bar wraps, so a box that grew
+   as you typed could push Delete onto a second line and pull it back between
+   keystrokes. */
+.bulk-field-select,
+.bulk-field-input {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  height: 35px;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color var(--transition);
+}
+.bulk-field-input { width: 170px; }
+.bulk-field-select:focus,
+.bulk-field-input:focus { border-color: var(--accent); }
+.bulk-field-input::placeholder {
+  color: var(--text-muted);
+  font-size: 11px;
+}
 .bulk-type-btn {
   font-family: 'Outfit', sans-serif;
   font-size: 13px;

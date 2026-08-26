@@ -351,17 +351,42 @@
   <div class="bulk-bar-count" id="bulkCount">0 selected</div>
   <button class="bulk-select-all" id="bulkSelectAllBtn" onclick="bulkSelectAll()">Select All</button>
   <div class="bulk-bar-divider"></div>
-  <span class="bulk-bar-label">Change type to →</span>
-  <button class="bulk-type-btn audiobook" onclick="bulkChangeType('audiobook')">📚 Audiobook</button>
-  <button class="bulk-type-btn movie" onclick="bulkChangeType('movie')">🎬 Movie</button>
-  <button class="bulk-type-btn series" onclick="bulkChangeType('series')">📺 Series</button>
+  <!-- Each label and the controls it introduces are ONE flex child of the bar,
+       so a wrap can never leave "Change type to →" on one line with its buttons
+       on the next. The bar wraps at any width narrow enough, and it used to
+       split mid-group. -->
+  <div class="bulk-group">
+    <span class="bulk-bar-label">Change type to →</span>
+    <button class="bulk-type-btn audiobook" onclick="bulkChangeType('audiobook')">📚 Audiobook</button>
+    <button class="bulk-type-btn movie" onclick="bulkChangeType('movie')">🎬 Movie</button>
+    <button class="bulk-type-btn series" onclick="bulkChangeType('series')">📺 Series</button>
+  </div>
   <div class="bulk-bar-divider"></div>
-  <span class="bulk-bar-label">Change format to →</span>
-  <button class="bulk-type-btn digital" onclick="bulkChangeFormat('digital')">💾 Digital</button>
-  <button class="bulk-type-btn physical" onclick="bulkChangeFormat('physical')">📀 Physical</button>
+  <div class="bulk-group">
+    <span class="bulk-bar-label">Change format to →</span>
+    <button class="bulk-type-btn digital" onclick="bulkChangeFormat('digital')">💾 Digital</button>
+    <button class="bulk-type-btn physical" onclick="bulkChangeFormat('physical')">📀 Physical</button>
+  </div>
   <div class="bulk-bar-divider"></div>
-  <button class="btn btn-sm btn-danger" onclick="bulkDelete()">🗑 Delete</button>
-  <button class="btn btn-sm" onclick="toggleSelectMode()">Cancel</button>
+  <div class="bulk-group">
+    <span class="bulk-bar-label">Set</span>
+    <select class="bulk-field-select" id="bulkField" title="Which field to set on every selected item">
+      <option value="location">📍 Location</option>
+      <option value="series">📚 Series</option>
+      <option value="genre">🏷️ Genre</option>
+    </select>
+    <span class="bulk-bar-label">to</span>
+    <input type="text" class="bulk-field-input" id="bulkFieldValue" maxlength="200"
+           placeholder="leave blank to clear"
+           title="Leave this blank to clear the field on every selected item"
+           onkeydown="if(event.key==='Enter')bulkSetField()">
+    <button class="btn btn-sm" onclick="bulkSetField()">Apply</button>
+  </div>
+  <div class="bulk-bar-divider"></div>
+  <div class="bulk-group">
+    <button class="btn btn-sm btn-danger" onclick="bulkDelete()">🗑 Delete</button>
+    <button class="btn btn-sm" onclick="toggleSelectMode()">Cancel</button>
+  </div>
 </div>
 
 <!-- ─── UNDO TOAST ─── -->

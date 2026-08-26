@@ -179,14 +179,112 @@ check('and nothing still calls its path',
   check('and both bulk edits go through one function rather than two copies',
     /async function bulkSet\(/.test(appSrc)
     && /return bulkSet\(\{ type/.test(appSrc) && /return bulkSet\(\{ format/.test(appSrc));
+
+  // The client's list of text fields and the server's must agree. The server
+  // is the one that enforces it, so a client offering a fourth would produce a
+  // 400 the user cannot act on — and a server field the client never offers is
+  // the exact way `format` sat unreachable for months.
+  const clientText = [...appSrc.matchAll(/^  ([a-z]+): '([a-z]+)',$/gm)]
+    .filter((m) => m[1] === m[2]).map((m) => m[1]);
+  const serverText = [...endpointSrc['items/bulk-update.js']
+    .matchAll(/^  ([a-z]+): \{ text: true \}/gm)].map((m) => m[1]);
+  check('every free-text field the server accepts is offered by the picker, and none beyond',
+    serverText.length > 0
+    && JSON.stringify(clientText.slice().sort()) === JSON.stringify(serverText.slice().sort()),
+    `client ${clientText.join(',')} vs server ${serverText.join(',')}`);
+  // Scoped to the picker's own <select>. Read across the whole document this
+  // collected every option in the app — the search-field chooser, the sort
+  // order, the type and format selects in the add form — and compared 18
+  // values against 3.
+  const pickerBlock = (html.match(/<select[^>]*id="bulkField"[\s\S]*?<\/select>/) || [''])[0];
+  const picker = [...pickerBlock.matchAll(/<option value="([a-z]+)"/g)].map((m) => m[1]);
+  check('and the picker in the markup offers exactly those',
+    !!pickerBlock && JSON.stringify(picker.slice().sort()) === JSON.stringify(serverText.slice().sort()),
+    picker.join(',') || 'no #bulkField select found');
+  check('Apply is reachable by the Enter key as well as the button',
+    /onkeydown="if\(event\.key==='Enter'\)bulkSetField\(\)"/.test(html)
+    && html.includes('onclick="bulkSetField()"'));
+
+  // The bar wraps — it has to, or it runs off both edges — and a bare label is
+  // a flex child like any other, so it wraps away from the buttons it
+  // introduces. Measured at 768px before this: the three "Change … to →"
+  // labels sat on a line of their own. Every label and its controls are one
+  // child now, and each direct child of the bar must be a group, a divider, or
+  // one of the two standalone controls.
+  const bar = (html.match(/<div class="bulk-bar"[\s\S]*?\n<\/div>/) || [''])[0];
+  const barChildren = [...bar.matchAll(/^  <(\w+)[^>]*class="([^"]+)"/gm)].map((m) => m[2].split(' ')[0]);
+  check('every control on the bulk bar is inside a group, a divider, or standalone by design',
+    barChildren.length > 0
+    && barChildren.every((c) => ['bulk-group', 'bulk-bar-divider', 'bulk-bar-count', 'bulk-select-all'].includes(c)),
+    barChildren.join(' '));
+  check('and the four groups are the type buttons, the format buttons, the field form and the two actions',
+    (bar.match(/class="bulk-group"/g) || []).length === 4);
 }
 {
+  const declOf = (name) => {
+    const at = appSrc.indexOf('function ' + name + '(');
+    if (at < 0) return '';
+    const m = /\r?\n\}/.exec(appSrc.slice(at));
+    return m ? appSrc.slice(at, at + m.index + m[0].length) : appSrc.slice(at);
+  };
+  // A blank box is easy to press Apply on by accident, so clearing a field
+  // across a selection has to announce itself as clearing.
+  check('clearing a field asks a different question from setting one',
+    /Clear the \$\{label\} on \$\{plural\(n\)\}\?/.test(appSrc)
+    && /Set the \$\{label\} on \$\{plural\(n\)\} to/.test(appSrc));
+  check('and the question is built from the count at confirm time, not baked in early',
+    /confirm\(question\(selectedIds\.size\)\)/.test(appSrc)
+    && /bulkSet\(set, question\)/.test(appSrc));
+  check('the value is trimmed before it is quoted back, so the dialog matches the write',
+    declOf('bulkSetField').includes('input.value.trim()'));
+  check('and the box is emptied afterwards, whether or not the write happened',
+    /await bulkSet\(\{ \[field\]: value \}, question\);\r?\n[\s\S]{0,400}?input\.value = '';\r?\n\}/
+      .test(declOf('bulkSetField')));
+}
+{
+  // The whitelist used to be `field: [allowed, values]`, which cannot express a
+  // field like `location` — there is no list of every shelf a person owns. It
+  // carries a KIND now, and these checks moved with it rather than being
+  // deleted: the enumerated fields must still be enumerated, and the text
+  // fields must still be a closed set.
   const wl = endpointSrc['items/bulk-update.js'];
-  const fields = [...wl.matchAll(/^  ([a-z]+): \[/gm)].map((m) => m[1]);
-  check('bulk-update settable fields are exactly type and format',
-    JSON.stringify(fields) === '["type","format"]', fields.join(','));
-  check('and each is checked against a value whitelist',
-    wl.includes('SETTABLE[f].includes(set[f])'));
+  const enumerated = [...wl.matchAll(/^  ([a-z]+): \{ values: \[/gm)].map((m) => m[1]);
+  const text = [...wl.matchAll(/^  ([a-z]+): \{ text: true \}/gm)].map((m) => m[1]);
+  check('bulk-update still enumerates the values of exactly type and format',
+    JSON.stringify(enumerated) === '["type","format"]', enumerated.join(','));
+  check('and those two are still checked against that list, not merely typed',
+    wl.includes('rule.values.includes(set[f])'));
+  check('the free-text fields are exactly location, series and genre',
+    JSON.stringify(text) === '["location","series","genre"]', text.join(','));
+  // The whole reason the other eight columns are not here. Setting every
+  // selected row's title to one string has no use that is not a mistake.
+  check('and nothing destructive is bulk-settable — no title, author, cover or notes',
+    !['title', 'author', 'cover', 'notes'].some((f) => enumerated.includes(f) || text.includes(f)));
+  check('a text field is validated as a string rather than against a value list',
+    wl.includes("typeof set[f] !== 'string'"));
+  // Clearing a location across a selection is a legitimate bulk edit, so the
+  // validator must not reject the empty string — nothing here may test for it.
+  check('and a blank value is allowed through, because clearing is a real edit',
+    !/set\[f\]\s*===\s*''/.test(wl) && !/!set\[f\]\.trim\(\)/.test(wl));
+  check('bulk-set text is trimmed before it is stored',
+    /function cleanText\(v\) \{\r?\n\s+return v\.trim\(\)\.slice\(0, MAX_FIELD_LEN\);/.test(wl)
+    && wl.includes('cleanText(set[f])'));
+
+  // D1 binds one parameter per field, one for the email, and one per id in the
+  // chunk, against a documented ceiling of 100. This is the arithmetic that
+  // stops a sixth and a seventh field being added without anyone noticing the
+  // chunk size has to come down with them.
+  const chunk = Number((wl.match(/i \+= (\d+)/) || [])[1]);
+  const worst = enumerated.length + text.length + 1 + chunk;
+  check('setting every settable field at once still fits D1’s 100 bound parameters',
+    Number.isFinite(chunk) && worst <= 100,
+    `${enumerated.length + text.length} fields + 1 email + ${chunk} ids = ${worst}`);
+  check('and the README states that sum, and the same field list',
+    readme.includes(`${enumerated.length + text.length} + 1 + ${chunk}`)
+    && [...enumerated, ...text].every((f) => new RegExp('^\\| `' + f + '` \\|', 'm').test(readme)),
+    `README should say ${enumerated.length + text.length} + 1 + ${chunk}`);
+  check('and it names what is deliberately NOT settable',
+    /`title`, `author`, `cover` and `notes` are absent/.test(readme));
 }
 
 // ---------- 4. What the app talks to ----------
