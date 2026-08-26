@@ -50,6 +50,15 @@ R.C.C. was never flagged — those come from the paired O.C.C.
   `{ possession: 5, spell_magic: 3, ritual_magic: 3 }` plus the Telemechanics
   immunity as prose, `source_book` widened to p.45-48, and the stale excerpt
   note rewritten. Run `class-check --field-sources` on the result.
+- **Taken, 2026-08-25**: `fix-combat-cyborg-full-block.sql`, as sketched — one
+  guarded whole-markdown `SET` (the chiang-ku shape), guarded on the old saves
+  line with `instr()` rather than `LIKE` (D1 rejected the brace-heavy pattern
+  as "too complex", and `spell_magic`'s underscore is a LIKE wildcard anyway).
+  Skills at catalog base + printed bonus; the Pilot pick's robot exclusion and
+  the ancient/modern W.P. splits ride in notes; Starting Extras and the
+  4D4x100 in saleable items stay prose. `class-check --remote` clean,
+  `--field-sources` shows the Money paragraph ending mid-page (no page-break
+  splice). Verified byte-identical on local D1 before the PR.
 
 ### F2 — high — 20 gear rows were retired as "orphans" while nine live classes still cite them in choice groups
 
