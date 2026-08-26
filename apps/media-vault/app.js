@@ -348,14 +348,22 @@ function deleteFromDetail() {
 }
 
 // ─── BULK EDIT ───
-function toggleSelectMode() {
-  selectMode = !selectMode;
+// Every way into and out of select mode goes through here, so the state, the
+// body class, the toggle's own label and the bar can never disagree. They did:
+// leaving for the Stats page used to turn nothing off, and hiding the bar alone
+// would have left the toggle still reading "✕ Cancel" on the way back.
+function setSelectMode(on) {
+  selectMode = on;
   selectedIds.clear();
   document.body.classList.toggle('select-mode', selectMode);
   const btn = document.getElementById('btnSelectMode');
   btn.classList.toggle('active', selectMode);
   btn.textContent = selectMode ? '✕ Cancel' : '☑ Select';
   updateBulkBar();
+}
+
+function toggleSelectMode() {
+  setSelectMode(!selectMode);
   renderLibrary();
 }
 
@@ -1282,6 +1290,17 @@ let currentMainView = 'library';
 function switchView(view) {
   currentMainView = view;
   const isLibrary = view === 'library';
+
+  // Leaving the library ends select mode. The bulk bar is fixed-position, so it
+  // used to follow the user onto the Stats page — "6 selected", a live Delete,
+  // and not a checkbox in sight — while the ☑ Select toggle that would cancel
+  // it is hidden a few lines below. Only the bar's own Cancel and the Escape
+  // key got you out.
+  //
+  // Hiding the bar and keeping the selection would be the wrong fix: coming
+  // back to the library would restore a bar the user believed they had left
+  // behind, still aimed at rows chosen before they went to look at a chart.
+  if (!isLibrary && selectMode) setSelectMode(false);
 
   document.getElementById('navLibrary').classList.toggle('active', isLibrary);
   document.getElementById('navStats').classList.toggle('active', !isLibrary);

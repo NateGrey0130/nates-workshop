@@ -361,6 +361,17 @@ check('and it survives a missing value rather than throwing',
       !inProxy ? 'missing from common.js' : !inApp ? 'missing from app.js' : 'the two copies differ');
   }
 }
+{
+  // The bulk bar is fixed-position, so nothing stops it floating over a page
+  // that has no checkboxes on it. Leaving the library has to end select mode —
+  // not merely hide the bar, which would restore it, still armed, on the way
+  // back.
+  check('leaving the library ends select mode rather than hiding the bar',
+    /if \(!isLibrary && selectMode\) setSelectMode\(false\);/.test(appSrc));
+  check('and every entry to select mode goes through one setter',
+    /function setSelectMode\(on\)/.test(appSrc)
+    && (appSrc.match(/^\s+selectMode = /gm) || []).length === 1);
+}
 check('the proxy rejects a malformed ISBN by saying what it wanted',
   /10- or 13-digit ISBN/.test(endpointSrc['lookup.js'])
   && !endpointSrc['lookup.js'].includes("'Invalid ISBN'"));
