@@ -3,6 +3,10 @@
 The five importers, what the OCR does to a page, and the gear-price problems that
 no amount of tuning fixes.
 
+For what these importers were actually used *for* — the spell and psionic gaps
+the per-level grants uncovered, and the mistakes that paid for the tooling — see
+[Spell and psionic catalog imports](spell-and-psionic-imports.md).
+
 Part of the [character creator](../README.md) documentation.
 
 ---
