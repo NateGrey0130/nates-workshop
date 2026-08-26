@@ -9,6 +9,20 @@ a count was claimed (`--remote`, per the repo's own rule), and against a clean
 run of both test suites: **smoke 1,220 checks passed, regression 192 checks
 passed** on this machine before any change was made.
 
+**All fourteen items are closed**, re-verified against the tree on 2026-08-26.
+D1–D6 and C1–C2 were fixed in the PR that produced this audit and are recorded
+under *Fixed in this PR*, each with its own `**Fix**:` line; F1–F5 were taken on
+2026-08-24 and carry `**Taken**` notes below; F6 is an information item whose
+verdict is *keep it*, with no action ever proposed.
+
+> **Read that paragraph before grepping this file for open work.** Two separate
+> scans have now reported D1–D6 and C1–C2 as outstanding, because the outcome of
+> a finding fixed in its own PR is a `**Fix**:` line under a section heading
+> rather than a `**Taken**` bullet under the finding. The same trap in a
+> different shape sits in `apps/media-vault/ISBN-AUDIT.md`, where F7's *first*
+> outcome bullet says **Held** and its second, further down, says **Taken**. An
+> outcome here is prose, and prose has to be read.
+
 > **The character-creator README was split on 2026-08-26** (PR #309) into an
 > 827-line spine plus eleven topic files under `apps/character-creator/docs/`.
 > No section was renamed, so every section *name* below still resolves — but
