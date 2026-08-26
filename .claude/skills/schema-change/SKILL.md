@@ -22,7 +22,7 @@ already been migrated by hand.
 | 1 | `db/migrations/NNN-kebab.sql` | the `ALTER`, ending by recording itself |
 | 2 | `db/schema.sql` `CREATE` | the same column, inline |
 | 3 | `db/schema.sql` seeding block | a **guarded** row for the migration |
-| 4 | `README.md` migration table | one row describing what it adds |
+| 4 | `docs/operations.md` migration table | one row describing what it adds |
 | 5 | `README.md` data model | the column, or a whole row + the table count, for a new table |
 
 Steps 1 and 2 are not alternatives. **The migration brings an existing database
@@ -87,7 +87,8 @@ applied instead, guarded, so a fresh database is current the moment it exists.
 | `db/schema.sql` | yes | yes — harmless, and how you backfill the records |
 | `db/migrations/*.sql` | **no** | yes — the ones it has not had, in order |
 
-See *Standing up a new environment* in the character-creator README.
+See *Standing up a new environment* in
+`apps/character-creator/docs/operations.md`.
 
 ## Applying it
 
@@ -115,7 +116,7 @@ The smoke test names the step:
 | `every migrated column is also in a schema.sql CREATE` | step 2 |
 | `every migration has a guarded seed line in schema.sql` | step 3 |
 | `every seed line is guarded by a schema feature` | step 3, unguarded |
-| `every migration has a row in the README table` | step 4 |
+| `every migration has a row in the docs/operations.md table` | step 4 |
 | `every table has a row in a data-model table` | step 5 |
 | `and it matches schema.sql` (table count) | step 5, new table |
 

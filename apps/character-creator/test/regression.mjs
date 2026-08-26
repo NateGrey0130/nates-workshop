@@ -212,12 +212,14 @@ check('/items returns the gear catalog', items.status === 200 && items.body.item
 // full database and drift-check talks to an environment somebody has been
 // using; here the database was built from schema + seed + every data script,
 // minutes ago, from nothing.
-const README = readFileSync(join(appDir, 'README.md'), 'utf8');
-// Anchor to the clean-run table, not to the whole README: matching
+// The clean-run table moved to docs/operations.md with the README split; it is
+// part of `Production configuration`, which is where a rebuild is described.
+const OPERATIONS = readFileSync(join(appDir, 'docs', 'operations.md'), 'utf8');
+// Anchor to the clean-run table, not to the whole file: matching
 // "spells" anywhere found "| spells missing | 5 | 0 |" in the
 // import-tooling section and asserted the catalog held five. Labels are
 // escaped because one of them contains parentheses.
-const TABLE = (README.split('| After | Rows |')[1] || '').split('\n\n')[0];
+const TABLE = (OPERATIONS.split('| After | Rows |')[1] || '').split('\n\n')[0];
 const documented = (label) => {
   const lit = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const m = new RegExp('^\\|\\s*' + lit + '[^|]*\\|\\s*(\\d+)\\s*\\|', 'm').exec(TABLE);

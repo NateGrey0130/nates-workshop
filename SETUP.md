@@ -136,9 +136,9 @@ hand **before** the merge that needs them:
 node scripts/d1-apply.mjs --remote db/migrations/NNN-whatever.sql
 ```
 
-See `apps/character-creator/README.md` → *Production configuration* for the
-full migration convention, and `CLAUDE.md` for the `CLOUDFLARE_API_TOKEN`
-setup the routine expects.
+See `apps/character-creator/docs/operations.md` for the full migration
+convention, and `CLAUDE.md` for the `CLOUDFLARE_API_TOKEN` setup the routine
+expects.
 
 **One thing in this repo is not covered by that sentence.** `workers/pick3cut5-room/`
 is a standalone Worker and merging does not deploy it — see the next section.

@@ -3563,10 +3563,11 @@ section('MOS');
     }
 
     const srcParser = readFileSync(join(appDir, 'js', 'parser.js'), 'utf8');
-    const readme = readFileSync(join(appDir, 'README.md'), 'utf8');
-    check('the README states who has an MOS and how many packages',
+    // The MOS chapter moved to docs/race-and-occupation.md with the README split.
+    const mosDoc = readFileSync(join(appDir, 'docs', 'race-and-occupation.md'), 'utf8');
+    check('docs/race-and-occupation.md states who has an MOS and how many packages',
       /Technical Officer\s+offers seven, the Merc Soldier seven and the\s+Robot Pilot two/
-        .test(readme.replace(/\r/g, '')));
+        .test(mosDoc.replace(/\r/g, '')));
     check('and parser.js agrees with it',
       /Technical Officer offers seven, the Merc Soldier seven and the/.test(srcParser.replace(/\r/g, '')));
   }
@@ -4693,6 +4694,12 @@ section('Power picks are enforced server-side');
 section('Documented counts');
 {
   const readme = readFileSync(join(appDir, 'README.md'), 'utf8');
+  // Four chapters these checks read moved to docs/ when the README was split.
+  // Each names the FILE it moved to rather than reading README plus docs/ as
+  // one corpus: a corpus read keeps passing when the section it was written for
+  // disappears, because some other page still happens to contain the word.
+  // Naming the file is what keeps the check failing for the right reason.
+  const doc = (name) => readFileSync(join(appDir, 'docs', name), 'utf8');
   const WORDS = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8,
     nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15,
     sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20, thirty: 30,
@@ -4723,17 +4730,22 @@ section('Documented counts');
   // The variant override list is a closed set the README spells out. It had
   // already gained `starting_money` and `skill_overrides` without the prose
   // noticing, so the README claimed a variant could do less than it can.
-  const unlisted = VARIANT_OVERRIDES.filter((k) => !readme.includes('`' + k + '`'));
-  check('the README names every VARIANT_OVERRIDES key',
+  // All nine keys are enumerated in one passage under `Classes that come in
+  // stages`, so the file that chapter moved to is the exact place to ask —
+  // `hit_points_base` and `ppe_base` appear nowhere else in the docs.
+  const leveling = doc('leveling.md');
+  const unlisted = VARIANT_OVERRIDES.filter((k) => !leveling.includes('`' + k + '`'));
+  check('docs/leveling.md names every VARIANT_OVERRIDES key',
     unlisted.length === 0, unlisted.join(', '));
 
   // The migration table had listed 001-009 while 017 was on disk — and the same
   // page discussed 011 and 012 further down, so it was provably stale in place.
   const migDir = join(appDir, '..', '..', 'db', 'migrations');
+  const operations = doc('operations.md');
   const undocumented = readdirSync(migDir)
     .filter((f) => f.endsWith('.sql'))
-    .filter((f) => !readme.includes('`' + f + '`'));
-  check('every migration has a row in the README table',
+    .filter((f) => !operations.includes('`' + f + '`'));
+  check('every migration has a row in the docs/operations.md table',
     undocumented.length === 0, undocumented.join(', '));
 
   // Every endpoint must appear in the API surface table, or it is undiscoverable
@@ -4846,8 +4858,16 @@ section('Documented counts');
   // else records that one exists. A script nobody knows to run is a correction
   // that silently did not happen.
   const dataScripts = readdirSync(join(appDir, 'db')).filter((f) => f.endsWith('.sql'));
-  const ds = readme.slice(readme.indexOf('### Data scripts'));
-  const dsSection = ds.slice(0, ds.indexOf('\n## ', 10));
+  // Bounded by the next heading of ANY depth, which is the rule
+  // scripts/readme-section.mjs exists to enforce. This used to stop only at the
+  // next `## ` and got the right answer by luck twice over: Data scripts was
+  // the last subsection of its chapter, and after the split it is the last
+  // thing in operations.md, so `indexOf` returned -1 and `slice(0, -1)` quietly
+  // meant "to the end". Neither is a boundary; both look like one.
+  const dsStart = operations.indexOf('### Data scripts');
+  const dsRest = operations.slice(dsStart);
+  const dsEnd = dsRest.slice(1).search(/\r?\n#{1,6} /);
+  const dsSection = dsEnd === -1 ? dsRest : dsRest.slice(0, dsEnd + 1);
   const patterns = [...dsSection.matchAll(/`([a-z0-9*-]+\.sql)`/g)].map((m) =>
     new RegExp('^' + m[1].replace(/[.]/g, '\\.').replace(/\*/g, '.*') + '$'));
   const uncovered = dataScripts.filter((f) => !patterns.some((p) => p.test(f)));
@@ -4960,9 +4980,10 @@ section('Documented counts');
   // saying "treat these as orders of magnitude" is not a tolerance; this is.
   {
     const TOLERANCE = 0.25;
-    const rows = [...readme.replace(/\r/g, '')
+    const rows = [...doc('known-limitations.md').replace(/\r/g, '')
       .matchAll(/^\| `((?:js\/)?[a-z-]+\.js)` \| ~([\d,]+) \|/gm)];
-    check('the README file-size table is readable', rows.length >= 5, `${rows.length} rows`);
+    check('the docs/known-limitations.md file-size table is readable',
+      rows.length >= 5, `${rows.length} rows`);
     const off = [];
     for (const [, file, claimed] of rows) {
       const want = Number(claimed.replace(/,/g, ''));

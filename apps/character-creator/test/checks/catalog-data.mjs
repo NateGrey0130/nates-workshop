@@ -651,8 +651,13 @@ check('the README documents the estimate tier',
   && readmeText.includes('A third tier, for what nothing publishes'),
   'the section explaining the third tier is missing or its marker drifted');
 
-  check('and documents what it means',
-  readmeText.includes('A row can say where it came from'),
+// Anchored to a sentence in the section BODY, not to its title. The title also
+// appears in the table of contents and in a cross-reference from the known
+// limitations, so this check passed on a list entry and would have gone on
+// passing if the section itself were deleted — a pin that holds nothing reads
+// exactly like a pin that holds.
+check('and documents what it means',
+  readmeText.includes('`source_book` says the source was the web'),
   'the section explaining the convention is missing');
 
 }
