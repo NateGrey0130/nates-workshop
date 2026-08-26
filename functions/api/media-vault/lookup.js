@@ -23,9 +23,17 @@ const TMDB_IMG_LG = 'https://image.tmdb.org/t/p/w500';
 const OL_BASE = 'https://openlibrary.org';
 const MAX_QUERY_LEN = 300;
 
+// A rejected TMDB key is reported by name rather than as a bare status: the
+// first time production rejected a key, all this said was
+// "Upstream error 401", which named neither TMDB nor the secret to fix.
 async function fetchJson(url) {
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`Upstream error ${res.status}`);
+  if (!res.ok) {
+    if (url.startsWith(TMDB_BASE) && (res.status === 401 || res.status === 403)) {
+      throw new Error('TMDB rejected the API key — check the TMDB_API_KEY secret on the Pages project. It must be TMDB’s 32-character v3 API key, not a v4 read access token.');
+    }
+    throw new Error(`Upstream error ${res.status}`);
+  }
   return res.json();
 }
 
@@ -162,6 +170,8 @@ export async function onRequestGet(context) {
         return json({ error: 'Unknown mode' }, 400);
     }
   } catch (err) {
-    return json({ error: 'Lookup failed: ' + err.message }, 502);
+    // No 'Lookup failed:' prefix here — every caller adds its own, and both
+    // prefixes together read as "Lookup failed: Lookup failed: ...".
+    return json({ error: err.message }, 502);
   }
 }

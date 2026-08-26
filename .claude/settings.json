@@ -11,6 +11,8 @@
       "Bash(node apps/pick3cut5/test/smoke.mjs *)",
       "Bash(node apps/pick3cut5/test/game.mjs)",
       "Bash(node apps/pick3cut5/test/game.mjs *)",
+      "Bash(node apps/media-vault/test/smoke.mjs)",
+      "Bash(node apps/media-vault/test/smoke.mjs *)",
       "Bash(node scripts/q.mjs *)",
       "Bash(node scripts/drift-check.mjs)",
       "Bash(node scripts/drift-check.mjs *)",

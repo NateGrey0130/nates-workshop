@@ -21,9 +21,9 @@ export function json(body, status = 200) {
   });
 }
 
-const ITEM_FIELDS = ['type', 'format', 'title', 'author', 'actors', 'producers', 'genre', 'series', 'location', 'cover', 'notes'];
+export const ITEM_FIELDS = ['type', 'format', 'title', 'author', 'actors', 'producers', 'genre', 'series', 'location', 'cover', 'notes'];
 export const MAX_ITEMS = 5000;
-const MAX_FIELD_LEN = 4000;
+export const MAX_FIELD_LEN = 4000;
 
 export function sanitizeItem(item) {
   if (!item || typeof item !== 'object') return null;
