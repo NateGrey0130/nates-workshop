@@ -172,6 +172,8 @@ per-system filter keeps out of a Rifts game today regardless.
 Both directions are checked in the same two places, and either may refuse: the
 picker filters on both, and the server runs both on create.
 
+### Dead code, and the check that keeps it gone
+
 **There is no dead code left to find, and a check keeps it that way.** An audit
 scanned every export in `apps/`, `functions/`, `scripts/` and `shared/` for a
 name nothing else mentions — counting HTML as a consumer, because the wizard
@@ -187,6 +189,8 @@ never names. It found **four** exports and **no** unreachable endpoint:
 `no export is named nowhere else` now fails the smoke run, so the next one is
 caught rather than accumulating. Each removal leaves a comment saying what stood
 there and how many lines reviving it costs.
+
+### Deliberate stopping points
 
 **The catalog editor has no general delete.** Rows are created and corrected by
 hand; the only deletion is the one a merge performs. Deliberate — see
@@ -264,6 +268,8 @@ run where and the smoke test checks it, but applying a migration is still a
 manual `wrangler d1 execute` per environment. That is a deliberate stopping
 point, not an oversight — see [`docs/plans/01-migration-tracking.md`](plans/01-migration-tracking.md).
 
+### What the importers cannot read, and cannot express
+
 **Extraction reads well; naming is the real friction.** Importing the Rifts
 skill chapter (pp. 26–34, 9 pages, ~93s of model time) produced 80 new skills
 with **no column-splicing at all** — every note read coherently, and spot-checks
@@ -335,6 +341,8 @@ and its Atlantean-only tattoo bonus are modelled.
 Do not bulk-accept a new book's first run. Read the prose, not just the figures —
 a spliced column produces a description that reads fluently and is wrong.
 
+### Sizes and names that were argued and kept
+
 **The gear catalog's table is `gear`, its API route is `/items`.** The table was
 renamed away from `items` to stay clear of MediaVault's `media_items`; the route
 was deliberately left alone, since both the wizard and the sheet call it and the
@@ -384,6 +392,8 @@ benefit is aesthetic. That case was argued when `sheet.js` was around 900 lines
 and it has since more than doubled, so it is worth re-examining rather than
 inheriting. `import.js` remains the clearest seam, since its class, skills and
 session-based flows share a page and almost no logic.
+
+### Two traps outside the app itself
 
 **Passing SQL files to `wrangler d1 execute` on Windows can mangle non-ASCII.**
 Importing 80 skills wrote `Chemistry — Analytical` into production as
