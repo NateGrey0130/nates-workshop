@@ -95,6 +95,53 @@ it is handed, inserting or updating, so that number can never disagree.
 Restoring an undo, committing a pasted ISBN list and importing a CSV all go
 through it, and all skip the comparison on purpose.
 
+## Filling in the blanks
+
+**✨ Fill blanks** in the bulk bar goes back to where each selected item came
+from and fills in what is missing. As of 2026-08-26 the library had 1,579 rows
+with no cover, 889 with no author and 1,071 with no genre.
+
+**It never overwrites a non-empty field.** Only `cover`, `author` and `genre`
+are touched, and only where they are already empty. `title`, `series`,
+`location`, `notes`, `format` and `type` are never touched at all — a
+"re-lookup" that rewrites a hand-corrected title is a data-loss bug wearing a
+feature's clothes.
+
+The single exception is opt-in and **off by default**: covers can be replaced
+as well as filled. An existing cover is not necessarily a *correct* one — the
+cover carry-over bug wrote wrong images into this library for months — but one
+you already have may equally be one you chose, so it is your call rather than
+the code's.
+
+**Exact and guessed are different things, and the list says which is which.**
+
+| | How it is looked up | How it arrives |
+|---|---|---|
+| Has a `source_id` | by that id — same record, same book | 🔒 **ticked** |
+| No `source_id` | searched for by title and author | ≈ **unticked** |
+
+The tick is what makes a guess trustworthy, and nothing is written without it.
+OpenLibrary returned 24 results for an ISBN that does not exist; a title match
+is fuzzier still, so guesses **arrive unticked** with the candidate named.
+
+A confirmed guess for a **film or series** records the TMDB id it matched, so
+the next run is exact. `video-title` answers with an id and a poster but no
+directors or genres, so the first pass fills the cover and the second — now
+exact — fills the rest. Two cheap passes rather than two calls per item against
+TMDB limits nobody here has measured. A confirmed guess for a **book** cannot
+do the same: OpenLibrary's title search returns no ISBN to record.
+
+**The run is capped at up to **100** items** — about a minute against a healthy
+OpenLibrary — and says how many it left out rather than truncating silently.
+The loop runs in the **browser**, sequentially, which sidesteps the 30-second
+Worker ceiling, lets the run be stopped halfway, and lets progress be watched.
+
+**Partial failure is the normal case, not the exception**: every item is an
+independent upstream call. Nothing is written until Apply, and then everything
+lands in a single `items/bulk` call — one `db.batch()`, one transaction. A
+failed item is left completely untouched, so "resume" is just *select the
+failures and run again*; there is no checkpointing because none is needed.
+
 ## Undoing a bulk delete
 
 A bulk delete is irreversible on the server: there is no `deleted_at` column

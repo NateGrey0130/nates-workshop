@@ -856,6 +856,20 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
   color: var(--text-muted);
   font-size: 11px;
 }
+/* The replace-covers opt-in. A checkbox with a sentence beside it rather than
+   a two-word label, because the choice needs the reason: an existing cover may
+   be one the user picked, or may be one the carry-over bug put there. */
+.enrich-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 14px 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  cursor: pointer;
+}
+.enrich-option input { margin-top: 3px; flex: none; }
 .bulk-type-btn {
   font-family: 'Outfit', sans-serif;
   font-size: 13px;

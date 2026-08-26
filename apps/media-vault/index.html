@@ -388,8 +388,36 @@
   </div>
   <div class="bulk-bar-divider"></div>
   <div class="bulk-group">
+    <button class="btn btn-sm" onclick="openEnrichModal()" title="Fill in missing covers, authors and genres from where each item came from">✨ Fill blanks</button>
     <button class="btn btn-sm btn-danger" onclick="bulkDelete()">🗑 Delete</button>
     <button class="btn btn-sm" onclick="toggleSelectMode()">Cancel</button>
+  </div>
+</div>
+
+<!-- ─── ENRICH ───
+     Fills blanks on a selection from the source each item came from. Nothing
+     is written until Apply, and a guessed match starts UNTICKED: the tick is
+     what makes a guess trustworthy. -->
+<div class="modal-overlay" id="enrichModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeEnrichModal()">✕</button>
+    <h2>Fill in the blanks</h2>
+
+    <p class="import-hint" id="enrichSummary"></p>
+
+    <label class="enrich-option">
+      <input type="checkbox" id="enrichReplaceCovers">
+      <span>Replace covers that are already set, too — not just the missing ones.
+        Off by default: a cover you already have may be one you chose.</span>
+    </label>
+
+    <div class="isbn-paste-results" id="enrichResults" style="display:none"></div>
+
+    <div class="modal-actions">
+      <button class="btn" onclick="closeEnrichModal()">Cancel</button>
+      <button class="btn" onclick="runEnrich()" id="btnEnrichRun">Look up</button>
+      <button class="btn btn-primary" onclick="commitEnrich()" id="btnEnrichApply" disabled>Apply selected</button>
+    </div>
   </div>
 </div>
 
