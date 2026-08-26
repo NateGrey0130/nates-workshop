@@ -512,11 +512,38 @@ select.toolbar-select:focus { border-color: var(--accent); }
   color: var(--accent);
   font-family: 'JetBrains Mono', monospace;
 }
+/* Wraps: the row holds more buttons than fit across the modal, and without
+   this the last of them (📺 Series) was pushed outside the modal and clipped. */
 .lookup-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
-.lookup-row input { flex: 1; }
+/* min-width:0 beats the default min-width:auto, which stops a flex item
+   shrinking below its content and is what forced the overflow. */
+/* These two inputs sit outside .form-group, so they had no styling of their
+   own: browser-default white boxes that borrowed their height from the flex
+   row.  Padding matches .btn so the row still lines up at 35px. */
+.lookup-row input {
+  flex: 1 1 140px;
+  min-width: 0;
+  padding: 8px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+.lookup-row input:focus { border-color: var(--accent); }
+.lookup-row .btn { flex: 0 0 auto; }
+.lookup-type-btns {
+  display: flex;
+  gap: 8px;
+  flex: 0 0 auto;
+}
 .lookup-hint {
   font-size: 11px;
   color: var(--text-muted);
