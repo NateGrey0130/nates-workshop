@@ -6,6 +6,13 @@ session transcripts under `C:\Users\natha\.claude\projects\C--Users-natha-Downlo
 #236–#285, the five skills, the scripts, and the heavy files. Every number
 below was measured; where a number is an estimate it is labeled one.
 
+> **The character-creator README was split on 2026-08-26** (PR #309) into an
+> 827-line spine plus eleven topic files under `apps/character-creator/docs/`.
+> That is the second half of F4 below, which is annotated accordingly. The
+> README measurements in this document — the 5,702 lines, the ~50K chars per
+> full read — are as of the audit date above and describe the file that was
+> split.
+
 ## What contradicts the premises of the prompt
 
 **1. Fresh reading is not where the tokens go. Context re-carry is.**
@@ -244,6 +251,23 @@ skills that touch the README.
   counts are test-pinned); claim-audit points its README grep at the section
   printer for context reads. The file map names the script, which the smoke
   test enforces.
+
+- **Taken again, 2026-08-26** (PR #309): the section printer solved the reading
+  discipline but left the file itself at 5,754 lines and fifty top-level
+  sections, so *finding* the right section still meant scanning an index of a
+  hundred and twenty-eight headings, and any edit still opened a file where a
+  mis-bounded range could eat a chapter. The README is now an 827-line spine —
+  the intro, a map, and the reference tables — with the other 4,890 lines in
+  eleven topic files under `apps/character-creator/docs/`. Chapters moved whole
+  and verbatim; the losslessness was proved by multiset-diffing every non-blank
+  line against `main` rather than by reading a diffstat, which on a file this
+  size cannot show a missing chapter. `readme-section.mjs` now indexes
+  README.md and every `docs/*.md`, names the file in each hit, and treats a
+  file boundary as a section boundary — without that the split would have made
+  4,890 lines invisible to the tool this finding bought. Six test-pinned
+  strings moved with their chapters and each check now names the one file it
+  moved to, never a corpus read; a seventh pin turned out to have been dead
+  already, satisfied by a table-of-contents entry rather than by its section.
 
 ### F5 — the skills are delivered by cat, 73 times, because Downloads sessions cannot see them
 

@@ -9,6 +9,22 @@ D1 (`--remote`, per the repo's own rule), and a clean smoke run.
 unambiguous rot in *live instructions*. Everything below the fold is a finding
 with a proposal, for you to take or decline one at a time.
 
+> **The character-creator README was split on 2026-08-26** (PR #309) into an
+> 827-line spine plus eleven topic files under `apps/character-creator/docs/`.
+> No section was renamed, so every section *name* below still resolves — but
+> the `README.md` paths and `line ~NNN` references in this document are as of
+> the audit date above, and several sections cited here now live in `docs/`.
+> Find one by name rather than by number:
+>
+> ```bash
+> node scripts/readme-section.mjs "Class definition format"
+> ```
+>
+> It searches README.md and every `docs/*.md`, and prints the file and the line
+> range. The file and line counts in the paragraph above are also pre-split:
+> the same prose is spread over more, smaller files now. Count them when you
+> need the number — quoting it here is the mistake this audit is about.
+
 ## The pattern worth naming
 
 Almost every real finding is the same mistake: **a doc quoting a number that
