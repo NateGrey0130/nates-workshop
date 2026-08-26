@@ -75,6 +75,26 @@ back. A failed write is never silent either: the client reports it and
 re-fetches from the server rather than letting the screen drift away from the
 stored truth.
 
+**Nor is a write that landed on fewer rows than it named.** `bulk-update` and
+`bulk-delete` each report how many rows they actually changed, summed from
+D1's own `meta.changes`, and the client compares that against the number it
+selected. They disagree when a **second tab** has already deleted something
+this one still has on screen — the same two-tabs problem as above, arriving
+from the other direction. On a disagreement the library is re-read from the
+server and the screen redrawn from it, with no alert: the user is not being
+told off for something another tab did.
+
+A short **delete** count also **withdraws the Undo**, which is the point of
+comparing rather than tidiness. The undo buffer would name rows the server
+says it never deleted, so restoring it would put back exactly what somebody
+else deliberately threw away. No Undo button is the right answer there.
+
+This applies to those two endpoints and no others. `items/bulk` reports a
+count too, but it is an **echo of the request** — an upsert changes every row
+it is handed, inserting or updating, so that number can never disagree.
+Restoring an undo, committing a pasted ISBN list and importing a CSV all go
+through it, and all skip the comparison on purpose.
+
 ## Undoing a bulk delete
 
 A bulk delete is irreversible on the server: there is no `deleted_at` column

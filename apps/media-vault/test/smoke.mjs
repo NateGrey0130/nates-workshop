@@ -448,13 +448,26 @@ check('and it survives a missing value rather than throwing',
   // A bulk delete has no undo on the server and never will: there is no
   // deleted_at column and no trash table. The whole safety net is the copy the
   // client already holds, so these are the properties that make it a net.
+  // Bounded by the function's own closing brace rather than by a character
+  // count. The fixed 2000-char window this replaced had a hole that pointed
+  // the wrong way: a pattern falling outside it gives indexOf -1, and the
+  // ordering test below reads `-1 < n` as TRUE — so the check could go on
+  // passing while the property it guards was broken. It also failed for the
+  // honest reason the moment the function grew past the window.
   const declOf = (name) => {
     const at = appSrc.indexOf('function ' + name + '(');
-    return at < 0 ? '' : appSrc.slice(at, at + 2000);
+    if (at < 0) return '';
+    const m = /\r?\n\}/.exec(appSrc.slice(at));
+    return m ? appSrc.slice(at, at + m.index + m[0].length) : appSrc.slice(at);
   };
-  check('the deleted rows are captured before the array that held them is filtered',
-    declOf('bulkDelete').indexOf('library.filter((item) => selectedIds.has(item.id))')
-      < declOf('bulkDelete').indexOf('library = library.filter'));
+  {
+    const bd = declOf('bulkDelete');
+    const capture = bd.indexOf('library.filter((item) => selectedIds.has(item.id))');
+    const destroy = bd.indexOf('library = library.filter');
+    check('the deleted rows are captured before the array that held them is filtered',
+      capture >= 0 && destroy >= 0 && capture < destroy,
+      capture < 0 ? 'the capture is gone' : destroy < 0 ? 'the filter is gone' : 'the capture happens after it');
+  }
   check('and the restore goes through the upsert endpoint that round-trips ids',
     declOf('undoBulkDelete').includes("'/api/media-vault/items/bulk'"));
   check('the undo buffer never reaches localStorage',
@@ -472,6 +485,37 @@ check('and it survives a missing value rather than throwing',
     /\*\*10 seconds\*\*/.test(readme)
     && readme.includes('Closing this page will')
     && readme.includes('memory only'));
+
+  // The server counts the rows it really changed. Throwing that number away
+  // and rewriting the client's copy regardless is how a screen goes quietly
+  // wrong, which is the one failure this app was rebuilt to end.
+  check('apiWrite hands the response body back instead of a bare true',
+    /const body = await fn\(\);/.test(declOf('apiWrite'))
+    && /return body == null \? true : body;/.test(declOf('apiWrite')));
+  // The compatibility hinge. Without it an endpoint answering 200 with no body
+  // reads as a failure at all eight call sites, aborting a write that worked.
+  check('and a success can never come back falsy, whatever the endpoint answers',
+    !declOf('apiWrite').includes('return body;'));
+  check('the two endpoints that measure their own work are both compared against',
+    declOf('bulkSet').includes('agreesWithServer(res, ids.length)')
+    && declOf('bulkDelete').includes('agreesWithServer(res, ids.length)'));
+  check('a disagreement re-reads the library rather than alerting',
+    declOf('agreesWithServer').includes("apiFetch('/api/media-vault/items')")
+    && declOf('agreesWithServer').includes('library = data.items;')
+    && !declOf('agreesWithServer').includes('alert('));
+  // The one that matters: `removed` names rows the server says it did not
+  // delete, so restoring it would resurrect what another tab threw away.
+  check('and a short delete count withdraws the undo instead of offering it',
+    /if \(!await agreesWithServer\(res, ids\.length\)\) \{[\s\S]*?return;\r?\n  \}/.test(declOf('bulkDelete'))
+    && declOf('bulkDelete').indexOf('agreesWithServer')
+       < declOf('bulkDelete').indexOf('offerUndo(removed)'));
+  check('the paths whose count is only an echo of the request are left alone',
+    !declOf('undoBulkDelete').includes('agreesWithServer')
+    && /count` is an echo/.test(appSrc));
+  check('and the README says both that the counts are compared and that Undo is withdrawn',
+    readme.includes('fewer rows than it named')
+    && readme.includes('withdraws the Undo')
+    && readme.includes('echo of the request'));
 }
 check('the proxy rejects a malformed ISBN by saying what it wanted',
   /10- or 13-digit ISBN/.test(endpointSrc['lookup.js'])
