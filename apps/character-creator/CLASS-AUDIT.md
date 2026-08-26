@@ -114,6 +114,19 @@ R.C.C. was never flagged — those come from the paired O.C.C.
   `at_level: [{level:2…},{4},{6},{9},{12},{15}]` (headhunter is the shape to
   copy). This is the third page-break/bonus defect on this class — worth a
   smoke case pinning the whole block.
+- **Taken, 2026-08-25**: `fix-wilderness-scout-bonuses.sql`, as sketched — one
+  guarded three-line replace spliced with `char(10)`, headhunter's `at_level`
+  shape, the correct attributes line left alone. The name sorts before
+  `fix-wilderness-scout-page-break.sql` and that is safe: the two edits touch
+  different regions (page-break folded equipment and money, never bonuses)
+  and the guard matches the text `add-wilderness-scout-class.sql` creates, so
+  a rebuild reaches the same state in either order. The smoke case landed as
+  a `Wilderness Scout bonuses (p.99)` section: it pins the whole corrected
+  block in the book's numbers through the real parser, proves the original
+  `sdc:` shape still draws the ignored-group warning, and ties the fix
+  script's lines and guard to the add script. `class-check --remote` reads
+  ready with zero warnings on the fixed markdown; readbacks
+  `fixed 1, old_left 0, cr_free 1`, idempotent on re-run.
 
 ### F4 — high — the Crazy heals like a Vagabond: 1D6 Hit Points where the book gives 5D6, and the +1D6 P.E. is gone
 

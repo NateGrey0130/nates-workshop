@@ -15,14 +15,15 @@ import { join } from 'node:path';
 import { statements } from '../../../../scripts/sql-statements.mjs';
 import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 import { composeClass, CORE_SDC_BY_CLASS } from '../../js/compose.js';
-import { bonusesFromSkills, levelGrants, skillLevelNotes, skillConditionalBonuses } from '../../js/parser.js';
+import { bonusesFromSkills, levelGrants, parseClassMarkdown, skillLevelNotes, skillConditionalBonuses } from '../../js/parser.js';
 import { rollPoolFormula } from '../../js/dice.js';
 
 // Declared once for the same skip-the-module contract as environment.mjs —
 // see the note there for why drift in either direction fails loud.
 const SECTIONS = ['Core pools (p.18)', 'Hand to Hand level schedules (p.347-349)',
   'Weapon Proficiencies (p.326-329)', 'Spell descriptions',
-  'Structural gear rows', 'Provenance of web-sourced rows'];
+  'Structural gear rows', 'Wilderness Scout bonuses (p.99)',
+  'Provenance of web-sourced rows'];
 
 export function run() {
 if (!SECTIONS.some(wantSection)) return;
@@ -477,6 +478,76 @@ const goggleChoices = [...gearFix.matchAll(/label: "(?:sunglasses or tinted gogg
 check('the two goggle rows retire into the same pair of options',
   goggleChoices.length === 2 && goggleChoices[0] === goggleChoices[1],
   goggleChoices.join(' vs '));
+
+// ---------- 5b. Wilderness Scout bonuses ----------
+section('Wilderness Scout bonuses (p.99)');
+
+// RUE printed p.99, "4. O.C.C. Bonuses" - the third defect this one class has
+// shipped (after two page-break truncations), so the whole block is pinned
+// here, in the book's own numbers. The original import put the S.D.C. under
+// `sdc:`, which is not a bonus group: the parser WARNS AND IGNORES it, so the
+// 3D6+10 never reached a sheet and nothing looked wrong. It also gave
+// toxins_poisons the 10 that belongs to coma/death, dropped disease and
+// perception entirely, and flattened the six-level Horror Factor schedule
+// into +1.
+{
+  const wsBlock = [
+    'bonuses:',
+    '  attributes: { PS: "1d4", PE: "1d4" }',
+    '  pools: { sdc: "3d6+10" }',
+    '  combat: { initiative: 1, roll: 2, perception: 3 }',
+    '  saves: { toxins_poisons: 2, disease: 2, coma_death_pct: 10 }',
+    '  at_level:',
+    '    - { level: 2, saves: { horror_factor: 1 } }',
+    '    - { level: 4, saves: { horror_factor: 1 } }',
+    '    - { level: 6, saves: { horror_factor: 1 } }',
+    '    - { level: 9, saves: { horror_factor: 1 } }',
+    '    - { level: 12, saves: { horror_factor: 1 } }',
+    '    - { level: 15, saves: { horror_factor: 1 } }',
+  ];
+  const wrap = (lines) => parseClassMarkdown([
+    '---', 'id: t', 'name: T', 'system: rifts', 'source_book: b', 'category: occ',
+    ...lines, '---', '', '## Lore', '', 'x', ''].join(String.fromCharCode(10)));
+
+  const p = wrap(wsBlock);
+  check('the corrected block parses without a warning', p.ok && p.warnings.length === 0,
+    JSON.stringify(p.errors.concat(p.warnings)));
+  const b = p.data?.bonuses || {};
+  check('the S.D.C. is a pool bonus the sheet will roll', b.pools?.sdc === '3d6+10',
+    JSON.stringify(b.pools));
+  check('initiative 1, roll 2, perception 3',
+    b.combat?.initiative === 1 && b.combat?.roll === 2 && b.combat?.perception === 3,
+    JSON.stringify(b.combat));
+  check('poison 2, disease 2, coma/death 10, and no flat horror factor',
+    b.saves?.toxins_poisons === 2 && b.saves?.disease === 2
+    && b.saves?.coma_death_pct === 10 && b.saves?.horror_factor === undefined,
+    JSON.stringify(b.saves));
+  check('+1 vs Horror Factor at levels 2, 4, 6, 9, 12 and 15',
+    Array.isArray(b.at_level)
+    && b.at_level.map((s) => s.level).join(',') === '2,4,6,9,12,15'
+    && b.at_level.every((s) => s.saves?.horror_factor === 1),
+    JSON.stringify(b.at_level));
+
+  // The defect class this pins against: `sdc:` at the top level parses fine
+  // and does nothing. If this warning ever goes quiet, the pin above is the
+  // only thing still standing between that shape and a silent zero.
+  const old = wrap(['bonuses:', '  sdc: "3d6+10"']);
+  check('the original mistake still draws the ignored-group warning',
+    old.ok && old.warnings.some((w) => w.includes('bonuses.sdc is not a recognised group')),
+    JSON.stringify(old.warnings));
+
+  // And the fix script must carry exactly this block, guarded on the text the
+  // add script creates - so a clean rebuild reaches the same state and the
+  // pin above is pinning what actually ships.
+  const wsFix = readFileSync(join(appDir, 'db', 'fix-wilderness-scout-bonuses.sql'), 'utf8');
+  const missing = wsBlock.slice(2).filter((line) => !wsFix.includes(`'${line}'`));
+  check('the fix script writes every pinned line', missing.length === 0, missing.join(' | '));
+  const wsAdd = readFileSync(join(appDir, 'db', 'add-wilderness-scout-class.sql'), 'utf8');
+  check("the fix's guard matches the text the add script creates",
+    wsAdd.includes('  saves: { toxins_poisons: 10, coma_death_pct: 10, horror_factor: 1 }')
+    && wsFix.includes("instr(markdown, '  saves: { toxins_poisons: 10, coma_death_pct: 10, horror_factor: 1 }')"),
+    'a guard that matches nothing leaves a rebuild with the old block');
+}
 
 // ---------- 6. Provenance ----------
 section('Provenance of web-sourced rows');
