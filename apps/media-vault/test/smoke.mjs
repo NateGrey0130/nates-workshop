@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { section, check, summary } from '../../character-creator/test/harness.mjs';
 import {
   ITEM_FIELDS, MAX_ITEMS, MAX_FIELD_LEN, sanitizeItem, rowToItem,
-  normalizeIsbn, isIsbnShape,
+  normalizeIsbn, isIsbnShape, looksLikeIsbn, isbnCheckDigitValid,
 } from '../../../functions/api/media-vault/_lib/common.js';
 import { mergeKey, planMigration } from '../../../functions/api/media-vault/migrate.js';
 
@@ -292,19 +292,77 @@ check('the normaliser upper-cases, because OpenLibrary answers ISBN:…X and not
 check('and it survives a missing value rather than throwing',
   normalizeIsbn(null) === '' && normalizeIsbn(undefined) === '');
 {
-  // app.js has no module loader, so it carries its own copy of the normaliser.
-  // Two copies of one rule drift; this is where that has to fail.
-  const grab = (src) => (src.match(/function normalizeIsbn\(raw\) \{\r?\n([\s\S]*?)\r?\n\}/) || [])[1];
-  const inProxy = grab(commonSrc);
-  const inApp = grab(appSrc);
-  check('the proxy defines the ISBN normaliser', !!inProxy);
-  check('and app.js carries a byte-identical copy of it',
-    !!inApp && inApp === inProxy, `proxy: ${inProxy} | app: ${inApp}`);
-  check('the shape test is NOT duplicated into the client',
-    !appSrc.includes('function isIsbnShape'));
+  // Everything a publisher's page, a retailer listing or a spreadsheet puts
+  // between the digits. Each of these came back "Invalid ISBN" before.
+  const pasted = [
+    '978–0–06–112008–4',  // en dashes
+    '978‑0‑06‑112008‑4',  // non-breaking hyphens
+    'ISBN 978-0-06-112008-4',                 // a pasted label
+    'ISBN: 9780061120084',                    // and with a colon
+    '9780061120084.',                         // a sentence's full stop
+    '9780061120084​',                    // a zero-width space
+    '978 0 06 112008 4',  // non-breaking spaces
+  ];
+  check('every way a real page writes an ISBN normalises to the same thirteen digits',
+    pasted.every((p) => normalizeIsbn(p) === '9780061120084'),
+    pasted.filter((p) => normalizeIsbn(p) !== '9780061120084').map((p) => JSON.stringify(p)).join(' '));
+}
+{
+  check('a correct check digit is accepted, X and 13-digit alike',
+    ['043935806X', '052562483X', '054792822X', '0743273567', '9780743273565',
+      '9780061120084', '9798465662277', '9780262033848'].every(isbnCheckDigitValid));
+  check('a single mistyped digit is caught',
+    !isbnCheckDigitValid('9780743273566') && !isbnCheckDigitValid('0439358061'));
+  check('and something that is not an ISBN at all is not "valid"',
+    !isbnCheckDigitValid('978074327356') && !isbnCheckDigitValid('12345678901')
+    && !isbnCheckDigitValid(''));
+}
+{
+  // Routing, where the alternative is a film search. The Apollo case is the
+  // one that matters: its digits alone normalise to a ten-character string
+  // that isIsbnShape happily accepts.
+  check('an attempt at an ISBN routes to the ISBN path however it was written',
+    ['043935806X', '0-439-35806-x', '978–0–06–112008–4',
+      'ISBN 978-0-06-112008-4', '978074327356', '12345678901'].every(looksLikeIsbn));
+  check('and a film title does not, even one made mostly of digits',
+    !['Blade Runner', '1984', 'Apollo 13 1995 1080p', 'The Matrix', 'Malcolm X',
+      'Se7en', ''].some(looksLikeIsbn));
+}
+{
+  // app.js has no module loader, so it carries its own copy of every rule it
+  // needs. Copies of one rule drift; this is where that has to fail.
+  //
+  // NOTE: an earlier version of this section asserted the SHAPE test was not
+  // duplicated into the client. That was right while the proxy owned every
+  // ISBN message, and became wrong the moment the client had to tell "not an
+  // ISBN" apart from "check digit wrong" before making a request. Pin the
+  // copies against each other instead of forbidding them.
+  const grab = (name, src) =>
+    (src.match(new RegExp(`function ${name}\\((\\w+)\\) \\{\\r?\\n([\\s\\S]*?)\\r?\\n\\}`)) || [])[0];
+  for (const name of ['normalizeIsbn', 'isIsbnShape', 'looksLikeIsbn', 'isbnCheckDigitValid']) {
+    const inProxy = grab(name, commonSrc);
+    const inApp = grab(name, appSrc);
+    check(`${name} is defined once in the proxy and copied byte-for-byte into app.js`,
+      !!inProxy && !!inApp && inProxy === inApp,
+      !inProxy ? 'missing from common.js' : !inApp ? 'missing from app.js' : 'the two copies differ');
+  }
 }
 check('the proxy rejects a malformed ISBN by saying what it wanted',
   /10- or 13-digit ISBN/.test(endpointSrc['lookup.js'])
   && !endpointSrc['lookup.js'].includes("'Invalid ISBN'"));
+check('but the proxy does NOT check the digit — that answer belongs to the client',
+  !endpointSrc['lookup.js'].includes('isbnCheckDigitValid')
+  && appSrc.includes('isbnCheckDigitValid('));
+{
+  // The pasted-list feature reuses what exists. If it ever grows an endpoint
+  // of its own, the two checks in section 5 fail as well — this one names why.
+  check('paste-add calls the lookup mode and the bulk endpoint that already exist',
+    appSrc.includes("mode=isbn") && appSrc.includes("'/api/media-vault/items/bulk'"));
+  const cap = appSrc.match(/const ISBN_PASTE_MAX = (\d+);/);
+  check('a single paste-add run is capped, and the cap is a number the README states',
+    !!cap && readme.includes(`up to **${cap[1]}**`), cap ? `code ${cap[1]}` : 'no cap found');
+  check('and the run reports what it left out rather than truncating silently',
+    appSrc.includes('leaving ${over} out'));
+}
 
 process.exit(summary() === 0 ? 0 : 1);

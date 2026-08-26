@@ -7,6 +7,9 @@ let detailItemId = null;
 let csvData = null;
 let selectMode = false;
 let selectedIds = new Set();
+let isbnPasteRows = [];       // one row per pasted line, after it has been looked up
+let isbnPasteRunning = false; // doubles as the cancel flag: the loop checks it each pass
+let isbnPasteDuplicates = 0;  // repeats dropped from the paste, reported not swallowed
 let currentPage = 1;
 const ITEMS_PER_PAGE = 20;
 
@@ -440,14 +443,101 @@ async function bulkDelete() {
 }
 
 // ─── LOOKUPS ───
-// The client's copy of the proxy's ISBN normaliser, duplicated rather than
-// imported because app.js is a plain script with no module loader. The smoke
-// test pins the two copies against each other instead: change one and it fails
-// until you change the other. Only the normaliser is duplicated — the SHAPE
-// test stays in the proxy, so the message a malformed ISBN gets is written in
-// exactly one place.
+// The client's copies of the four ISBN rules in
+// functions/api/media-vault/_lib/common.js, duplicated rather than imported
+// because app.js is a plain script with no module loader. The smoke test pins
+// every one of them byte-for-byte against that file: change one and it fails
+// until you change the other.
+//
+// The check digit is checked HERE and nowhere else on purpose. A checksum in
+// the proxy would refuse numbers OpenLibrary may hold under a mis-keyed record,
+// and the reason to know is to tell somebody "you mistyped it" instead of "no
+// results found" — which means saying it before the request goes out at all.
 function normalizeIsbn(raw) {
-  return String(raw || '').replace(/[-\s]/g, '').toUpperCase();
+  return String(raw || '').replace(/[^0-9Xx]/g, '').toUpperCase();
+}
+
+function isIsbnShape(isbn) {
+  return /^(?:\d{9}[\dX]|\d{13})$/.test(isbn);
+}
+
+function looksLikeIsbn(raw) {
+  const body = String(raw || '').replace(/^\s*ISBN[\s:-]*/i, '');
+  if (/[A-Za-z]/.test(body.replace(/[Xx]\s*$/, ''))) return false;
+  return normalizeIsbn(raw).length >= 9;
+}
+
+function isbnCheckDigitValid(isbn) {
+  if (/^\d{9}[\dX]$/.test(isbn)) {
+    let sum = 0;
+    for (let i = 0; i < 9; i++) sum += (10 - i) * Number(isbn[i]);
+    sum += isbn[9] === 'X' ? 10 : Number(isbn[9]);
+    return sum % 11 === 0;
+  }
+  if (/^\d{13}$/.test(isbn)) {
+    let sum = 0;
+    for (let i = 0; i < 13; i++) sum += Number(isbn[i]) * (i % 2 ? 3 : 1);
+    return sum % 10 === 0;
+  }
+  return false;
+}
+
+// One ISBN in, one outcome out, with a reason when there isn't a book. Every
+// ISBN path goes through here — the ISBN button, Add now, and the pasted list —
+// so a mistyped number is described the same way whichever one you used.
+async function resolveIsbn(raw) {
+  const isbn = normalizeIsbn(raw);
+  if (!isbn) return { raw, isbn, ok: false, why: 'empty' };
+  if (!isIsbnShape(isbn)) return { raw, isbn, ok: false, why: 'shape' };
+  if (!isbnCheckDigitValid(isbn)) return { raw, isbn, ok: false, why: 'checkdigit' };
+  const data = await apiFetch(`/api/media-vault/lookup?mode=isbn&isbn=${encodeURIComponent(isbn)}`);
+  if (!data.found) return { raw, isbn, ok: false, why: 'notfound' };
+  return { raw, isbn, ok: true, book: data.book };
+}
+
+// The failures need different sentences, which is the whole point: before this,
+// a typo and a book OpenLibrary has never heard of both came back as "No
+// results found for that ISBN", and the user had no way to tell which problem
+// they had.
+//
+// The empty-handed case is worded carefully, and the hedge is not padding. It
+// was written as "OpenLibrary has no record of it" and that turned out to be a
+// claim this code cannot support: OpenLibrary was measured mid-wobble during
+// this change returning nothing for `043935806X`, a book it certainly holds,
+// while 2 requests in 12 failed outright and one took 8.5 seconds. Asserting
+// the catalogue is missing a book when the API merely had a bad second is a
+// more confident lie than the vague message it replaced.
+function isbnFailureText(r) {
+  if (r.why === 'shape') {
+    return `That is ${r.isbn.length} character${r.isbn.length === 1 ? '' : 's'} — an ISBN is 10 or 13.`;
+  }
+  if (r.why === 'checkdigit') {
+    return `The check digit in ${r.isbn} doesn’t match — that is almost always a typo. Compare it against the book.`;
+  }
+  if (r.why === 'error') {
+    return `Lookup failed: ${r.error || 'the request did not complete'}. OpenLibrary may be having a moment — try again.`;
+  }
+  return `${r.isbn} is a well-formed ISBN, but OpenLibrary returned nothing for it. That usually means they do not have it — but their API also does this when it is struggling, so it is worth one retry before you trust it. The 📚 title search is the other way in.`;
+}
+
+// A book result as a library item. One definition, so the ISBN box and the
+// pasted list cannot drift into storing different things.
+function bookToItem(book) {
+  return {
+    id: crypto.randomUUID(),
+    type: 'audiobook',
+    format: 'digital',
+    title: book.title || '',
+    author: book.authors || '',
+    actors: '',
+    producers: '',
+    genre: book.genre || '',
+    series: '',
+    location: '',
+    cover: book.cover || '',
+    notes: '',
+    addedAt: Date.now(),
+  };
 }
 
 function clearLookupResults() {
@@ -457,14 +547,13 @@ function clearLookupResults() {
   _lookupResultsCache = [];
 }
 
-// Routing deliberately asks "could this only be an ISBN?" rather than "is this
-// a valid ISBN?" — a bare run of digits is nobody's film title, so a truncated
-// or over-long one belongs on the ISBN path where it gets an ISBN-shaped error.
-// Gating this on isIsbnShape instead would send `978074327356` to TMDB and
-// answer a mistyped book with "No movies found for 978074327356".
+// Routing asks "was this an attempt at an ISBN?", not "is this a valid ISBN?" —
+// a truncated or mistyped number has to reach the path that can say so rather
+// than being searched for as a film. looksLikeIsbn is what keeps
+// `Apollo 13 1995 1080p` a film search even though its digits alone would
+// normalise to a perfectly good ISBN-10 shape.
 function handleLookupEnter() {
-  const val = normalizeIsbn(document.getElementById('lookupInput').value);
-  if (/^\d{9,}X?$/.test(val)) lookupISBN();
+  if (looksLikeIsbn(document.getElementById('lookupInput').value)) lookupISBN();
   else lookupMovie();
 }
 
@@ -485,30 +574,69 @@ function sortByExactMatch(results, query, titleKey) {
   });
 }
 
+// Returns the resolved book so lookupAndAddISBN can save it without looking it
+// up a second time; null when there is nothing to add.
 async function lookupISBN() {
-  const isbn = normalizeIsbn(document.getElementById('lookupInput').value);
-  if (!isbn) return;
+  const raw = document.getElementById('lookupInput').value;
+  if (!normalizeIsbn(raw)) return null;
   const status = document.getElementById('lookupStatus');
   clearLookupResults();
   status.innerHTML = '<span class="spinner"></span> Looking up ISBN...';
   status.className = 'lookup-status';
 
   try {
-    const data = await apiFetch(`/api/media-vault/lookup?mode=isbn&isbn=${encodeURIComponent(isbn)}`);
+    const result = await resolveIsbn(raw);
 
-    if (!data.found) {
-      status.textContent = 'No results found for that ISBN.';
+    if (!result.ok) {
+      status.textContent = isbnFailureText(result);
       status.className = 'lookup-status error';
-      return;
+      return null;
     }
 
-    fillBookFields(data.book);
-    status.textContent = '✓ Found! Fields auto-filled.';
+    fillBookFields(result.book);
+    status.textContent = '✓ Found — check the fields, then Add to Vault.';
     status.className = 'lookup-status success';
+    return result;
   } catch (err) {
     status.textContent = 'Lookup failed: ' + err.message;
     status.className = 'lookup-status error';
+    return null;
   }
+}
+
+// The one-at-a-time front end for the pasted list below: look the ISBN up and,
+// on a hit, save it without making the user cross the form to a button. The
+// modal stays open with the lookup box focused and empty, because somebody
+// cataloguing a shelf has another book in their hand.
+async function lookupAndAddISBN() {
+  const status = document.getElementById('lookupStatus');
+  // In edit mode there is a row already; minting a new id here would quietly
+  // duplicate it rather than change it.
+  if (document.getElementById('editId').value) {
+    await lookupISBN();
+    if (status.className.includes('success')) {
+      status.textContent = '✓ Found — you are editing an existing item, so press Save Changes.';
+    }
+    return;
+  }
+
+  const result = await lookupISBN();
+  if (!result) return;
+
+  const item = bookToItem(result.book);
+  const ok = await apiWrite(() => apiFetch('/api/media-vault/items', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(item),
+  }));
+  if (!ok) return;
+
+  library.push(item);
+  renderLibrary();
+  clearForm();
+  document.getElementById('lookupInput').focus();
+  status.textContent = `✓ Added “${item.title}”. Next ISBN?`;
+  status.className = 'lookup-status success';
 }
 
 async function lookupBook() {
@@ -592,15 +720,26 @@ function selectBookResult(idx) {
   document.getElementById('lookupStatus').className = 'lookup-status success';
 }
 
+// Every field this fills is set unconditionally, INCLUDING an absent cover.
+// Writing the cover only `if (book.cover)` meant a second lookup in the same
+// modal kept the first book's jacket: look up The Great Gatsby, then look up a
+// print-on-demand edition whose OpenLibrary record has no cover of its own, and
+// the form said "Pride and Prejudice" over Gatsby's artwork — reported as
+// "✓ Found! Fields auto-filled.", and saved that way.
+//
+// actors and producers go the same way: a book result can never fill them, so
+// leaving them alone carried a film's cast onto a book. series, location and
+// notes are deliberately left alone — those are the user's, not the lookup's.
 function fillBookFields(book) {
+  const cover = book.cover || '';
   document.getElementById('itemTitle').value = book.title || '';
   document.getElementById('itemAuthor').value = book.authors || '';
   document.getElementById('itemGenre').value = book.genre || '';
+  document.getElementById('itemActors').value = '';
+  document.getElementById('itemProducers').value = '';
   document.getElementById('itemType').value = 'audiobook';
-  if (book.cover) {
-    document.getElementById('coverUrl').value = book.cover;
-    document.getElementById('itemCoverInput').value = book.cover;
-  }
+  document.getElementById('coverUrl').value = cover;
+  document.getElementById('itemCoverInput').value = cover;
 }
 
 async function lookupMovie() {
@@ -745,10 +884,27 @@ function openImportModal() {
   document.getElementById('btnImport').disabled = true;
   document.getElementById('csvFileInput').value = '';
   csvData = null;
+  setImportMode('csv');
+  resetIsbnPaste();
 }
 
 function closeImportModal() {
+  // A run in flight is abandoned rather than left ticking behind a closed
+  // modal; nothing has been written yet at that point, so there is nothing to
+  // undo.
+  isbnPasteRunning = false;
   document.getElementById('importModal').classList.remove('active');
+}
+
+function setImportMode(mode) {
+  const isCsv = mode === 'csv';
+  document.getElementById('importTabCsv').classList.toggle('active', isCsv);
+  document.getElementById('importTabIsbn').classList.toggle('active', !isCsv);
+  document.getElementById('importCsvPane').style.display = isCsv ? '' : 'none';
+  document.getElementById('importIsbnPane').style.display = isCsv ? 'none' : '';
+  document.getElementById('btnImport').style.display = isCsv ? '' : 'none';
+  document.getElementById('btnIsbnLookup').style.display = isCsv ? 'none' : '';
+  document.getElementById('btnIsbnAdd').style.display = isCsv ? 'none' : '';
 }
 
 function previewCSV(input) {
@@ -843,6 +999,163 @@ async function importCSV() {
   closeImportModal();
   renderLibrary();
   alert(`Imported ${newItems.length} items.`);
+}
+
+// ─── PASTE-ADD A LIST OF ISBNs ───
+// Paste a shelf, get a library. The loop runs HERE, in the browser, one ISBN at
+// a time, rather than in a Pages Function — which sidesteps every Worker
+// execution limit, lets the run be cancelled halfway, and lets the user watch
+// it happen. It calls the lookup endpoint that already exists; there is no new
+// endpoint and no new lookup mode, and the smoke test would fail if there were.
+//
+// Nothing is written until the user presses Add. The looking-up pass is
+// entirely read-only, so cancelling it, closing the modal or losing the tab
+// costs nothing but the time already spent.
+const ISBN_PASTE_MAX = 100;    // ~1 minute of wall clock at OpenLibrary's measured ~540ms/lookup
+const ISBN_PASTE_DELAY_MS = 120;
+
+function parseIsbnPaste() {
+  return document.getElementById('isbnPasteInput').value
+    .split('\n').map(l => l.trim()).filter(Boolean);
+}
+
+function resetIsbnPaste() {
+  isbnPasteRows = [];
+  isbnPasteRunning = false;
+  isbnPasteDuplicates = 0;
+  document.getElementById('isbnPasteInput').value = '';
+  document.getElementById('isbnPastePreview').style.display = 'none';
+  document.getElementById('isbnPasteResults').style.display = 'none';
+  document.getElementById('isbnPasteResults').innerHTML = '';
+  document.getElementById('btnIsbnLookup').disabled = true;
+  document.getElementById('btnIsbnLookup').textContent = 'Look up';
+  document.getElementById('btnIsbnAdd').disabled = true;
+}
+
+function previewIsbnPaste() {
+  const lines = parseIsbnPaste();
+  const preview = document.getElementById('isbnPastePreview');
+  document.getElementById('btnIsbnLookup').disabled = lines.length === 0;
+  if (lines.length === 0) { preview.style.display = 'none'; return; }
+
+  // A silent cap reads as "it covered everything". Say what will be left out.
+  const over = lines.length - ISBN_PASTE_MAX;
+  const seconds = Math.max(1, Math.round(Math.min(lines.length, ISBN_PASTE_MAX) * 0.7));
+  preview.textContent = over > 0
+    ? `${lines.length} lines — only the first ${ISBN_PASTE_MAX} will be looked up, leaving ${over} out. Roughly ${seconds}s.`
+    : `${lines.length} ISBN${lines.length === 1 ? '' : 's'} — roughly ${seconds}s to look up.`;
+  preview.style.display = 'block';
+}
+
+async function runIsbnPaste() {
+  const lookupBtn = document.getElementById('btnIsbnLookup');
+  if (isbnPasteRunning) { isbnPasteRunning = false; return; }   // the button is Cancel while it runs
+
+  // The same ISBN written two ways — `978-0-06-112008-4` and
+  // `978–0–06–112008–4` — is one book, and normalizeIsbn is what proves it.
+  // Dropping the repeat saves an upstream call and, more to the point, stops
+  // the run offering to add the same book twice. The count is reported below
+  // rather than swallowed.
+  const seen = new Set();
+  const lines = [];
+  let duplicates = 0;
+  for (const line of parseIsbnPaste()) {
+    const key = normalizeIsbn(line);
+    if (key && seen.has(key)) { duplicates++; continue; }
+    if (key) seen.add(key);
+    lines.push(line);
+    if (lines.length === ISBN_PASTE_MAX) break;
+  }
+  if (lines.length === 0) return;
+
+  isbnPasteRunning = true;
+  isbnPasteDuplicates = duplicates;
+  isbnPasteRows = [];
+  lookupBtn.textContent = 'Cancel';
+  document.getElementById('btnIsbnAdd').disabled = true;
+  document.getElementById('isbnPasteResults').style.display = 'block';
+
+  for (let i = 0; i < lines.length; i++) {
+    if (!isbnPasteRunning) break;
+    let row;
+    try {
+      row = await resolveIsbn(lines[i]);
+    } catch (err) {
+      // One line failing upstream must not end the run — record it and go on.
+      row = { raw: lines[i], isbn: normalizeIsbn(lines[i]), ok: false, why: 'error', error: err.message };
+    }
+    row.include = row.ok;
+    isbnPasteRows.push(row);
+    renderIsbnPasteResults(i + 1, lines.length);
+    if (i < lines.length - 1 && isbnPasteRunning) {
+      await new Promise(r => setTimeout(r, ISBN_PASTE_DELAY_MS));
+    }
+  }
+
+  const cancelled = !isbnPasteRunning;
+  isbnPasteRunning = false;
+  lookupBtn.textContent = 'Look up';
+  renderIsbnPasteResults(isbnPasteRows.length, lines.length, cancelled);
+  document.getElementById('btnIsbnAdd').disabled = isbnPasteRows.every(r => !r.include);
+}
+
+// Unticking a row changes the count in the head line, so the head is rewritten
+// here rather than only on the next full render — otherwise it reads "5
+// selected to add" while the Add button is about to write four, which is the
+// one number in this panel the user is relying on.
+function toggleIsbnPasteRow(idx) {
+  const row = isbnPasteRows[idx];
+  if (!row || !row.ok) return;
+  row.include = !row.include;
+  document.getElementById('btnIsbnAdd').disabled = isbnPasteRows.every(r => !r.include);
+  const el = document.getElementById('isbnRow-' + idx);
+  if (el) el.classList.toggle('excluded', !row.include);
+  const head = document.querySelector('.isbn-paste-head');
+  if (head) head.innerHTML = isbnPasteHead(isbnPasteRows.length, isbnPasteRows.length, false);
+}
+
+function isbnPasteHead(done, total, cancelled) {
+  const found = isbnPasteRows.filter(r => r.ok).length;
+  const chosen = isbnPasteRows.filter(r => r.include).length;
+  if (done < total && !cancelled) return `<span class="spinner"></span> Looking up ${done} of ${total}…`;
+  return `${done} of ${total} looked up${cancelled ? ' (cancelled)' : ''} · ${found} found · ${chosen} selected to add`
+    + (isbnPasteDuplicates ? ` · ${isbnPasteDuplicates} duplicate line${isbnPasteDuplicates === 1 ? '' : 's'} skipped` : '');
+}
+
+function renderIsbnPasteResults(done, total, cancelled) {
+  document.getElementById('isbnPasteResults').innerHTML =
+    `<div class="isbn-paste-head">${isbnPasteHead(done, total, cancelled)}</div>` +
+    isbnPasteRows.map((r, i) => {
+      const label = r.ok
+        ? `${esc(r.book.title || '(untitled)')}${r.book.authors ? ' — ' + esc(r.book.authors) : ''}`
+        : esc(isbnFailureText(r));   // it knows every `why`, including 'error'
+      return `<div class="isbn-paste-row${r.ok ? '' : ' failed'}${r.ok && !r.include ? ' excluded' : ''}" id="isbnRow-${i}">
+        <input type="checkbox" ${r.ok ? '' : 'disabled'} ${r.include ? 'checked' : ''} onclick="toggleIsbnPasteRow(${i})">
+        <code>${esc(r.raw)}</code>
+        <span>${r.ok ? '✓ ' : '✕ '}${label}</span>
+      </div>`;
+    }).join('');
+}
+
+async function commitIsbnPaste() {
+  const chosen = isbnPasteRows.filter(r => r.include);
+  if (chosen.length === 0) return;
+  const newItems = chosen.map(r => bookToItem(r.book));
+
+  // One write for the whole run: db.batch() is a transaction, so this either
+  // all lands or none of it does. The cap error from items/bulk is surfaced
+  // verbatim by apiWrite rather than swallowed — it names the number.
+  const ok = await apiWrite(() => apiFetch('/api/media-vault/items/bulk', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items: newItems }),
+  }));
+  if (!ok) return;
+
+  library.push(...newItems);
+  closeImportModal();
+  renderLibrary();
+  alert(`Added ${newItems.length} item${newItems.length === 1 ? '' : 's'} from ${isbnPasteRows.length} ISBN${isbnPasteRows.length === 1 ? '' : 's'}.`);
 }
 
 // ─── PERSISTENCE (D1 via /api/media-vault, identity from Cloudflare Access) ───
