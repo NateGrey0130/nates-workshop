@@ -21,7 +21,7 @@ const SAVE_FIELDS = [
   ['coma_death_pct', 'vs Coma/Death'], ['pain', 'vs Pain'],
   ['illusionary_magic', 'vs Illusionary Magic'], ['mind_control', 'vs Mind Control'],
   ['curses', 'vs Curses'], ['faerie_magic', 'vs Faerie Magic'],
-  ['disease', 'vs Disease'],
+  ['disease', 'vs Disease'], ['fatigue', 'vs Fatigue'],
 ];
 // Play mode rolls a d20, so the one percentile row is not one of its buttons.
 // Filtered rather than listed again, which is how the two drifted the first time.

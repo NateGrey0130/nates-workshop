@@ -3837,8 +3837,9 @@ console.log(String.fromCharCode(10) + '[1c25j] at_level curses');
 // curses were visible on the sheet and unrollable at the table. There is now one
 // list and play mode filters the percentile row out of it.
 //
-// Faerie magic and disease are the newest keys, added because four Palladium
-// Fantasy player races grant bonuses to them.
+// Faerie magic and disease were added because four Palladium Fantasy player
+// races grant bonuses to them; fatigue is the newest, for the Operator's
+// "+2 to save vs fatigue and disease" (RUE printed 92).
 console.log(String.fromCharCode(10) + '[1c25j2] the save list');
 {
   const src = readFileSync(join(appDir, 'sheet.js'), 'utf8');
@@ -3875,6 +3876,11 @@ console.log(String.fromCharCode(10) + '[1c25j2] the save list');
     const s = (pe) => D.saves({ PE: pe }, null);
     return s(15).disease === 0 && s(18).disease === s(18).toxins_poisons
       && s(30).disease === 8;
+  })());
+  check('fatigue follows the P.E. magic row', (() => {
+    const s = (pe) => D.saves({ PE: pe }, null);
+    return s(15).fatigue === 0 && s(18).fatigue === s(18).toxins_poisons
+      && s(30).fatigue === 8;
   })());
   check('a race can grant both', (() => {
     const b = { attributes: {}, combat: {}, saves: { faerie_magic: 1, disease: 2 } };
