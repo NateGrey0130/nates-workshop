@@ -14,8 +14,41 @@ let currentPage = 1;
 const ITEMS_PER_PAGE = 20;
 
 // ─── RENDER ───
+// THE SELECTION IS ALWAYS A SUBSET OF WHAT THE VIEW SHOWS. Anything the filter
+// or the search stops showing drops out of it at that moment.
+//
+// Before this, nothing cleaned up after a view change: select all 3,544 items
+// under "All", switch to Movies, type a search, and ten items are on screen
+// while Delete is still aimed at all 3,544. The confirm names the number, which
+// is the only reason this was a hazard rather than an accident waiting to
+// happen — and reading "3544" while looking at ten rows invites the assumption
+// that it is a typo.
+//
+// Pruning rather than clearing outright is a deliberate softening of that fix.
+// Clearing would be safe too, but resetPageAndRender runs on every KEYSTROKE in
+// the search box, so it would throw away a careful selection the moment
+// somebody typed a letter. Pruning keeps whatever is still on screen and drops
+// only what left, which gets the same guarantee — nothing invisible can be
+// acted on — without the punishment.
+//
+// updateBulkBar has to run whether or not anything was dropped: it also
+// recomputes the Select All / Deselect All label, which otherwise goes stale.
+// A button reading "Deselect All" that ADDS thirty items to the selection is
+// the worst version of this bug, and it was reachable.
+function pruneSelectionToView() {
+  if (!selectMode) return;
+  if (selectedIds.size) {
+    const visible = new Set(getFilteredIds());
+    for (const id of selectedIds) {
+      if (!visible.has(id)) selectedIds.delete(id);
+    }
+  }
+  updateBulkBar();
+}
+
 function resetPageAndRender() {
   currentPage = 1;
+  pruneSelectionToView();
   renderLibrary();
 }
 
@@ -190,6 +223,7 @@ function setFilter(filter, btn) {
   currentPage = 1;
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  pruneSelectionToView();
   renderLibrary();
 }
 
