@@ -72,16 +72,17 @@ function getFilteredLibrary() {
   });
 }
 
-function renderLibrary() {
-  const query = document.getElementById('searchInput').value.toLowerCase().trim();
-  const sortVal = document.getElementById('sortSelect').value;
-  const searchField = document.getElementById('searchField').value;
-
-  let filtered = getFilteredLibrary();
-
-  // Sort
-  const [sortKey, sortDir] = sortVal.split('-');
-  filtered.sort((a, b) => {
+// The library as the page actually shows it: filtered, sorted, and cut to the
+// current page. renderLibrary and updateBulkBar both read it, so the bar's
+// count of what is off-screen can never disagree with what is on screen — the
+// two used to be able to, because only renderLibrary knew how to paginate.
+//
+// It clamps currentPage as a side effect, which renderLibrary relied on before
+// and both callers want: deleting the last page's contents has to leave you
+// somewhere real.
+function getPageView() {
+  const [sortKey, sortDir] = document.getElementById('sortSelect').value.split('-');
+  const filtered = getFilteredLibrary().sort((a, b) => {
     let va, vb;
     if (sortKey === 'added') {
       va = a.addedAt || 0;
@@ -94,6 +95,25 @@ function renderLibrary() {
     if (va > vb) return sortDir === 'asc' ? 1 : -1;
     return 0;
   });
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  if (totalPages > 0 && currentPage > totalPages) currentPage = totalPages;
+  const start = (currentPage - 1) * ITEMS_PER_PAGE;
+  return { filtered, totalPages, start, items: filtered.slice(start, start + ITEMS_PER_PAGE) };
+}
+
+function renderLibrary() {
+  const query = document.getElementById('searchInput').value.toLowerCase().trim();
+  const searchField = document.getElementById('searchField').value;
+
+  const { filtered, totalPages, start, items: paginated } = getPageView();
+
+  // Every render refreshes the bar, because the bar now reports something
+  // PAGE-dependent: how many of the selection are off-screen. Paging used to
+  // leave that number behind — select the twenty on page 1, click page 2, and
+  // it still read "20 selected" with all twenty now out of sight. Putting it
+  // here covers paging, sorting and the grid/list switch at once, rather than
+  // adding a call to each and waiting to miss the next one.
+  updateBulkBar();
 
   // Stats (always off full library) — single pass instead of 6 filters
   const stats = { total: library.length, audiobook: 0, movie: 0, series: 0, physical: 0, digital: 0 };
@@ -121,12 +141,6 @@ function renderLibrary() {
     document.getElementById('libraryList').style.display = 'none';
     return;
   }
-
-  // Pagination
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  if (currentPage > totalPages) currentPage = totalPages;
-  const start = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginated = filtered.slice(start, start + ITEMS_PER_PAGE);
 
   document.getElementById('libraryGrid').style.display = currentView === 'grid' ? 'grid' : 'none';
   document.getElementById('libraryList').style.display = currentView === 'list' ? 'flex' : 'none';
@@ -441,14 +455,29 @@ function getFilteredIds() {
   return getFilteredLibrary().map(i => i.id);
 }
 
+// Select All reaches across the WHOLE filter, not the twenty rows on screen —
+// which is what was asked for, and was invisible. One click could put 3,544
+// items in a selection while twenty were visible, and the only clue was a
+// number in a bar that gave no hint the two differed.
+//
+// So the bar now says both things: how many are selected, and how many of them
+// you cannot see. The button names its target as well, because "Select All"
+// next to a page of twenty reads like a page of twenty.
 function updateBulkBar() {
   const bar = document.getElementById('bulkBar');
   const count = selectedIds.size;
-  document.getElementById('bulkCount').textContent = `${count} selected`;
+  const inFilter = getFilteredIds();
+  const onPage = getPageView().items.filter((i) => selectedIds.has(i.id)).length;
+  const offPage = count - onPage;
+
+  document.getElementById('bulkCount').textContent = offPage > 0
+    ? `${count} selected · ${offPage} not on this page`
+    : `${count} selected`;
+
   bar.classList.toggle('visible', selectMode);
-  const allVisible = getFilteredIds();
-  const allSelected = allVisible.length > 0 && allVisible.every(id => selectedIds.has(id));
-  document.getElementById('bulkSelectAllBtn').textContent = allSelected ? 'Deselect All' : 'Select All';
+  const allSelected = inFilter.length > 0 && inFilter.every((id) => selectedIds.has(id));
+  document.getElementById('bulkSelectAllBtn').textContent =
+    allSelected ? `Deselect all ${inFilter.length}` : `Select all ${inFilter.length}`;
 }
 
 // Retyping a selection and reformatting one are the same operation with a
@@ -490,9 +519,25 @@ async function bulkChangeFormat(newFormat) {
   return bulkSet({ format: newFormat }, newFormat === 'physical' ? 'Physical' : 'Digital');
 }
 
+// Above this many, OK on a confirm() is too cheap a gesture for something with
+// no undo. Typing the number is the smallest possible speed bump that proves
+// the person read it.
+const TYPE_TO_DELETE_ABOVE = 100;
+
 async function bulkDelete() {
-  if (selectedIds.size === 0) return;
-  if (!confirm(`Permanently delete ${selectedIds.size} item(s)? This cannot be undone.`)) return;
+  const count = selectedIds.size;
+  if (count === 0) return;
+  if (count > TYPE_TO_DELETE_ABOVE) {
+    const typed = prompt(
+      `This permanently deletes ${count} items and cannot be undone.\n\nType ${count} to confirm.`);
+    if (typed === null) return;
+    if (typed.trim() !== String(count)) {
+      alert(`Nothing was deleted — "${typed}" is not ${count}.`);
+      return;
+    }
+  } else if (!confirm(`Permanently delete ${count} item(s)? This cannot be undone.`)) {
+    return;
+  }
   const ok = await apiWrite(() => apiFetch('/api/media-vault/items/bulk-delete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

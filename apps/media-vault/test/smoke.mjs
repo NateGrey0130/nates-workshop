@@ -387,6 +387,28 @@ check('and it survives a missing value rather than throwing',
   check('and pruning refreshes the bar, so the Select All label cannot go stale',
     declOf('pruneSelectionToView').includes('updateBulkBar();'));
 }
+{
+  // Select All spans the whole filter, not the visible page. That is the
+  // asked-for behaviour and it was invisible: one click could put thousands
+  // into a selection while twenty rows were on screen.
+  const declOf = (name) => {
+    const at = appSrc.indexOf('function ' + name + '(');
+    return at < 0 ? '' : appSrc.slice(at, at + 900);
+  };
+  check('the page slice has one definition that the bar and the render share',
+    /function getPageView\(/.test(appSrc)
+    && declOf('renderLibrary').includes('getPageView()')
+    && declOf('updateBulkBar').includes('getPageView()'));
+  check('the bulk bar says how many of the selection are off the page',
+    appSrc.includes('not on this page'));
+  check('and the Select All button names how many it would take',
+    /Select all \$\{inFilter\.length\}/.test(appSrc)
+    && /Deselect all \$\{inFilter\.length\}/.test(appSrc));
+  const threshold = appSrc.match(/const TYPE_TO_DELETE_ABOVE = (\d+);/);
+  check('a big delete asks for the number to be typed, not just an OK',
+    !!threshold && declOf('bulkDelete').includes('TYPE_TO_DELETE_ABOVE')
+    && declOf('bulkDelete').includes('prompt('), threshold ? threshold[1] : 'no threshold');
+}
 check('the proxy rejects a malformed ISBN by saying what it wanted',
   /10- or 13-digit ISBN/.test(endpointSrc['lookup.js'])
   && !endpointSrc['lookup.js'].includes("'Invalid ISBN'"));
