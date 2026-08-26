@@ -421,8 +421,13 @@ name with no row errors with `No skill called "X" in the catalog`:
 - **Fix sketch**: `fix-valkyrie-sdc-pool.sql` — delete `sdc_base`, add
   `bonuses: { pools: { sdc: 100 } }`.
 - **Taken, 2026-08-26**: `fix-valkyrie-sdc-pool.sql`, as sketched. The
-  Pantheons PDF is not in the OCR cache on this machine today, so the book
-  line stands on this audit's verified quote. The class's own extraction
+  Pantheons PDF was not in the OCR cache when this shipped, so the book
+  line stood on this audit's verified quote — **re-verified later the same
+  day** when the PDF returned and was re-cached (`potm`, reader page =
+  printed+1): printed 167 reads "100 S.D.C. plus that gained from physical
+  skills" verbatim, and the High Elf's contrasting "plus those gained by
+  O.C.C.'s and physical skills" wording sits on the same cache page,
+  exactly as the rewritten note describes. The class's own extraction
   note argued `sdc_base` deliberately (self-contained wording, no O.C.C.
   mention) — overturned by the settled pool rule and rewritten in the same
   script to record why (the claim-audit rule). No `CORE_SDC_BY_CLASS`
@@ -601,10 +606,17 @@ one of them by hand; the pages are known:
   on its start page — and established that **the pf cache runs at
   printed+2**, not the offset-zero first assumed (knight's p.85 line at
   cache p087, druid's p.75 line at p077, psi-healer's p.158 at p160 all
-  agree). The Pantheons and Dragons & Gods PDFs are not in the OCR cache
-  today, so those 16 ranges stand on this audit's hand-located numbers.
-  Proven armed: `--field-sources` on the stamped knight resolves the pf
-  cache and prints real source lines. Readbacks
+  agree). The Pantheons and Dragons & Gods PDFs were not in the OCR cache
+  when this shipped, so those 16 ranges stood on this audit's hand-located
+  numbers — **the Pantheons PDF returned later the same day** and was
+  re-cached (`potm`, text layer, reader page = printed+1 per
+  read-columns.py's own note that the printed-to-pymupdf offset is zero):
+  all 14 start pages confirmed by heading sweep (the High Elf's heading is
+  the plural "Asgardian High Elves"), plus the valkyrie money at printed
+  168 and the berserker's "Money: None to start." at printed 170. Only
+  chiang-ku-dragon's p.23-24 still stands on the audit's numbers (Dragons
+  & Gods remains uncached). Proven armed: `--field-sources` on the stamped
+  knight resolves the pf cache and prints real source lines. Readbacks
   `pf_ok 24, pom_ok 14, rest_ok 2, bare_left 0, cr_free 40`, idempotent;
   spot-checked classes re-parse ready.
 
