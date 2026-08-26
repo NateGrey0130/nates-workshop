@@ -751,8 +751,42 @@ variant P.P.E. formulas all match p.224-225.
   (`record-warlock-palladium-deltas.sql`) and the P.P.E. formulas were checked
   against the PF main book and the class's own prose (F6 covers the P.P.E.
   term). Supply the Federation of Magic O.C.C. pages to close it out.
+- **Closed out, 2026-08-26** — and both of this note's book claims were
+  wrong. Federation of Magic arrived (cached as `fom`, reader = printed+1;
+  the copy is truncated at printed 72 of 176, mid Battle Magus) and its own
+  printed p.7 defers: "As for Warlocks, Elemental Magic and Elementals, see
+  Rifts Conversion Book (One)." BOM agrees with itself once read rather
+  than remembered: its O.C.C. index (printed 24) reads "Warlock O.C.C.
+  (Rifts Conversion Book One Revised, p. 66)", and BOM printed 66-70 —
+  which this note called the warlock's spell lists — is actually **Earth
+  spell descriptions, levels 1-5**. Conversion Book One Revised was already
+  in Downloads; cached as `cb1` (200 pages, text layer, reader =
+  printed+1). "The Warlock O.C.C." prints on folio 66 and every figure this
+  note called unverifiable reads **verbatim** on printed 66-71: attribute
+  requirements (both variants), the bonus line ("+2 to save vs Horror
+  Factor (+6 against Elemental beings), +1 to save vs magic, and +1 to save
+  vs possession. +1 to spell strength at levels 3, 6, 10 and 14" — the
+  vs-magic +1 carried as the `spell_magic`/`ritual_magic` pair per repo
+  convention), P.P.E. 2D4x10+20/+40 "in addition to the P.E. attribute
+  number" +2D6/level, the full O.C.C. skill list with every bonus, the
+  related-skill program (8, two from Wilderness or Domestic, +2 @3 and +1
+  @6/9/12) with every category caveat, four secondary skills, and money
+  "2D6x1000 in credits and 3D4x1000 in Black Market items" (printed 71).
+  There is no I.S.P. to verify — the class has none, correctly. The one
+  defect was the stamp: the class was evidently imported FROM CB1 with the
+  pages right and the book name wrong. `zzz-warlock-home-book.sql` moves it
+  to `Rifts Conversion Book One p.66-71` (the money page included) and
+  rewrites the two in-class notes that repeated the wrong title (the `zzz-`
+  name sorts after `record-warlock-palladium-deltas.sql`,
+  `zz-pf-experience-tables.sql` and `zzz-resolve-choice-group-gear.sql`,
+  the later writers of this markdown). `--field-sources` now resolves
+  `cb1` and walks exactly the Warlock's pages. The only observed
+  adaptation, not changed: the book's sidearm is "automatic pistol or
+  Triax pump weapon"; the class offers the app's standard energy-pistol
+  choices plus the Triax stub.
 
-Everything else was verifiable — every other source book is on this machine.
+Everything else was verifiable — every source book classes cite is now on
+this machine and cached (rue, pf, bom, potm, dag, cb1, fom).
 
 ---
 
