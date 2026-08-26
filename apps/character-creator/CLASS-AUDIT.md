@@ -923,6 +923,37 @@ claim-audit rule):
   Half false — a variant carries its `ppe_base` (3D4x10+1D6/level) and save
   bonuses; its faerie-magic spell grants still don't fit (no `magic` on
   variants).
+  - **Taken, 2026-08-26** (`fix-goblin-cobbler-note.sql`): **as a note rewrite
+    only — the Cobbler stays unimported, and no mechanic is touched.** The
+    finding is right that the claim is half false, and the honest correction
+    is to say *which* half. `VARIANT_OVERRIDES` now admits `attribute_dice`,
+    `attribute_requirements`, `hit_points_base`, `sdc_base`, `mdc_base`,
+    `ppe_base`, `starting_money`, `bonuses` and `skill_overrides` — so the
+    Cobbler's 3D4x10+1D6/level P.P.E. and its three saves would fit. **Five of
+    its seven parts still would not**: metamorphosis at will
+    (`natural_abilities`), the six faerie spells (a `magic` block), the 1-15
+    percentile roll, the major/master psionic exclusion (`psionics_allowed` is
+    class-level), and the +10% to carpentry/boat building/whittling —
+    `skill_overrides` may only restate a skill the class already grants, and
+    this R.C.C. **grants none at all**, which is the same missing per-skill
+    modifier this file's own "still true" list records for the changeling, the
+    gnome and the kobold.
+    So building the expressible half buys a Cobbler with a mage's P.P.E., no
+    spells to spend it on and no metamorphosis — **S7's objection exactly**,
+    and the reason this is a rewrite rather than a variant. The note now also
+    records the trap that would catch whoever tries it: a variant's `bonuses`
+    **replace** the class's rather than merging (`VARIANT_MERGED` is only the
+    two attribute maps), so stating the Cobbler's three saves would silently
+    drop the goblin's own +1 vs faerie magic and its S.D.C. pool bonus.
+    **The route that would work is a second class**, `goblin-cobbler`, which
+    can carry the abilities and the magic block. That is an import decision,
+    not a transcription, and it is Nate's — the note says so instead of
+    implying the app is at fault.
+    Two smaller corrections rode along, both verified: the entry is printed
+    **300**, not 302 (pf cache p302, footer 300, the printed+2 offset F18
+    established), and the book's "his abilities do not increase as he gains
+    new levels" was missing from the summary. Simulated against live markdown:
+    `class-check` ready, 0 errors, 0 warnings.
 - **S9 — Delphi Juicer / Mind Mage: per-category starting-power splits
   ("3 Physical + 1 Super", "three from each of four").** `powers_schedule`
   entries carry `categories` (mystic's level-4/8 Super picks) — whether a
