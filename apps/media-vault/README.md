@@ -75,6 +75,34 @@ back. A failed write is never silent either: the client reports it and
 re-fetches from the server rather than letting the screen drift away from the
 stored truth.
 
+## Undoing a bulk delete
+
+A bulk delete is irreversible on the server: there is no `deleted_at` column
+and no trash table, and `items/bulk-delete` issues a real `DELETE`. The undo
+is therefore the copy the CLIENT already holds — the rows are captured out of
+the in-memory `library` array before the array is filtered, which works only
+because that array is the **whole** library rather than a page. If a paginated
+GET ever arrives, this design collapses; `bulkDelete` says so in a comment.
+
+The window is **10 seconds** and the toast counts it down. There are exactly
+two ways out — the Undo button and the clock — because a toast that vanishes
+when the mouse moves is not a safety net. Starting another bulk operation, or
+re-entering select mode, ends the window as well: the user has moved on, and
+two overlapping windows is a bug generator.
+
+**The buffer is memory only, and the toast says so** (*"Closing this page will
+finish the delete"*). Writing deleted rows to localStorage would recreate the
+second copy of the truth this app was rebuilt to eliminate, so a reload inside
+the window finishes the delete. That is the honest contract and it is the one
+thing about this design the user has to be told.
+
+Restoring goes through `items/bulk`, which round-trips a row faithfully —
+**`item_id` and `added_at` included** — so it is a restore rather than a
+re-add. If it fails, the server's own message is shown (that is what surfaces
+*"Import would exceed the library cap"* when the freed space has since been
+refilled), the buffer is kept for **one** retry, and after a second failure
+the app names the items that were lost rather than dropping them silently.
+
 ## Data model
 
 One table in the site's shared D1 database.

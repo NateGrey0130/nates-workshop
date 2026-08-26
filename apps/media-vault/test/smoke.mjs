@@ -409,6 +409,35 @@ check('and it survives a missing value rather than throwing',
     !!threshold && declOf('bulkDelete').includes('TYPE_TO_DELETE_ABOVE')
     && declOf('bulkDelete').includes('prompt('), threshold ? threshold[1] : 'no threshold');
 }
+{
+  // A bulk delete has no undo on the server and never will: there is no
+  // deleted_at column and no trash table. The whole safety net is the copy the
+  // client already holds, so these are the properties that make it a net.
+  const declOf = (name) => {
+    const at = appSrc.indexOf('function ' + name + '(');
+    return at < 0 ? '' : appSrc.slice(at, at + 2000);
+  };
+  check('the deleted rows are captured before the array that held them is filtered',
+    declOf('bulkDelete').indexOf('library.filter((item) => selectedIds.has(item.id))')
+      < declOf('bulkDelete').indexOf('library = library.filter'));
+  check('and the restore goes through the upsert endpoint that round-trips ids',
+    declOf('undoBulkDelete').includes("'/api/media-vault/items/bulk'"));
+  check('the undo buffer never reaches localStorage',
+    !/undo/i.test(appSrc.slice(appSrc.indexOf('migrateLocalIfNeeded')).slice(0, 1200))
+    && !/localStorage/.test(declOf('undoBulkDelete') + declOf('offerUndo') + declOf('cancelUndo')));
+  const window_ = appSrc.match(/const UNDO_WINDOW_SECONDS = (\d+);/);
+  check('the window is a stated number of seconds', !!window_,
+    window_ ? window_[1] : 'not found');
+  check('and the toast admits that leaving the page finishes the delete',
+    appSrc.includes('Closing this page will finish the delete'));
+  check('a failed restore keeps the buffer for one retry, then names what was lost',
+    declOf('undoBulkDelete').includes('undoFailures >= 2')
+    && declOf('undoBulkDelete').includes('items are gone'));
+  check('the README states the undo window and that a reload finishes the delete',
+    /\*\*10 seconds\*\*/.test(readme)
+    && readme.includes('Closing this page will')
+    && readme.includes('memory only'));
+}
 check('the proxy rejects a malformed ISBN by saying what it wanted',
   /10- or 13-digit ISBN/.test(endpointSrc['lookup.js'])
   && !endpointSrc['lookup.js'].includes("'Invalid ISBN'"));
