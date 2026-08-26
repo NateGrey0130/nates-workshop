@@ -21,19 +21,30 @@ export function json(body, status = 200) {
   });
 }
 
-// ISBN input, in two jobs kept separate on purpose. normalizeIsbn makes what a
-// person typed or pasted comparable; isIsbnShape says whether the result could
-// be an ISBN at all. Neither validates the check digit — that is a different
-// question with a different answer for the user ("you mistyped it", not "we
-// don't have it"), and it belongs in the client, where it can be said before a
-// request is made rather than after one comes back empty.
+// ─── ISBN input ───
+// Four questions about a typed or pasted string, kept apart because each one
+// needs the user told a different sentence: what is it really (normalizeIsbn),
+// could it be an ISBN at all (isIsbnShape), was the person even trying to type
+// one (looksLikeIsbn), and did they get it right (isbnCheckDigitValid).
+//
+// THE PROXY USES ONLY THE FIRST TWO. The other two are here anyway so that all
+// four have one definition the smoke test can exercise directly: app.js has no
+// module loader and has to copy them, and the copy of an untested function is
+// worse than the copy of a tested one. Every copy is pinned byte-for-byte.
+
+// Everything that is not an ISBN character is noise. Deleting all of it beats
+// listing the separators worth allowing, because the list is long and keeps
+// growing: the ASCII hyphen, the soft hyphen, the whole U+2010-U+2015 dash
+// block a publisher's page uses, non-breaking spaces, the zero-width characters
+// a copy-paste drags along, a sentence's trailing period, and the word ISBN
+// itself. One character class cannot be got wrong the way six can.
 //
 // The upper-case is load-bearing. OpenLibrary returns a full record for
 // `ISBN:043935806X` and nothing at all for `ISBN:043935806x`, so a lower-case
 // x reaching the query would turn a loud error into a silent "no results
 // found" — which is the failure this app is worst at explaining.
 export function normalizeIsbn(raw) {
-  return String(raw || '').replace(/[-\s]/g, '').toUpperCase();
+  return String(raw || '').replace(/[^0-9Xx]/g, '').toUpperCase();
 }
 
 // An ISBN-10 is nine digits and a check character that may be X; an ISBN-13 is
@@ -42,11 +53,46 @@ export function normalizeIsbn(raw) {
 // measured across 1,233 of them, about one book in eleven — so real books came
 // back "Invalid ISBN". And it accepted 11- and 12-digit strings that are not
 // ISBNs in any scheme, so a truncated paste was sent to OpenLibrary and
-// reported back as a book nobody has. The same regex was copied into app.js
-// where it decided ROUTING, so an ISBN ending in X, typed and entered, was
-// searched for as a film title.
+// reported back as a book nobody has.
 export function isIsbnShape(isbn) {
   return /^(?:\d{9}[\dX]|\d{13})$/.test(isbn);
+}
+
+// Client-side ROUTING only, where the alternative is a film-title search. The
+// question is "was this an attempt at an ISBN", not "is this a valid one" — a
+// truncated or mistyped number has to reach the path that can say so.
+//
+// The letter test is what makes it safe now that normalizeIsbn deletes
+// everything non-numeric: `Apollo 13 1995 1080p` reduces to ten digits, which
+// is a perfectly good ISBN-10 shape, and without this it would be looked up as
+// a book. An attempt at an ISBN carries no letters at all beyond the optional
+// `ISBN` label and a trailing X check digit. `The Matrix` and `Malcolm X` stay
+// film searches because stripping the trailing x still leaves letters behind.
+export function looksLikeIsbn(raw) {
+  const body = String(raw || '').replace(/^\s*ISBN[\s:-]*/i, '');
+  if (/[A-Za-z]/.test(body.replace(/[Xx]\s*$/, ''))) return false;
+  return normalizeIsbn(raw).length >= 9;
+}
+
+// ISBN-10 is mod 11 over descending weights with X standing for ten; ISBN-13 is
+// mod 10 over weights alternating 1 and 3. Deliberately NOT used by the proxy:
+// a checksum there would refuse numbers OpenLibrary may hold under a mis-keyed
+// record, and the whole point of knowing is to tell the user "you mistyped it"
+// rather than "no results found" — which only the client can do, before the
+// request goes out at all.
+export function isbnCheckDigitValid(isbn) {
+  if (/^\d{9}[\dX]$/.test(isbn)) {
+    let sum = 0;
+    for (let i = 0; i < 9; i++) sum += (10 - i) * Number(isbn[i]);
+    sum += isbn[9] === 'X' ? 10 : Number(isbn[9]);
+    return sum % 11 === 0;
+  }
+  if (/^\d{13}$/.test(isbn)) {
+    let sum = 0;
+    for (let i = 0; i < 13; i++) sum += Number(isbn[i]) * (i % 2 ? 3 : 1);
+    return sum % 10 === 0;
+  }
+  return false;
 }
 
 export const ITEM_FIELDS = ['type', 'format', 'title', 'author', 'actors', 'producers', 'genre', 'series', 'location', 'cover', 'notes'];

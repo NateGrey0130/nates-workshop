@@ -41,6 +41,40 @@ function olCover(coverId, size) {
   return coverId ? `https://covers.openlibrary.org/b/id/${coverId}-${size}.jpg` : '';
 }
 
+// OpenLibrary's `jscmd=data` view returns covers per EDITION, and print-on-
+// demand and reissue editions routinely carry none even when the WORK has
+// several — so a lookup that found the right book still saved it coverless.
+// This is the second-chance query, and it fires only on that path: the common
+// case stays one request.
+//
+// search.json is a poor way to FIND a book — it returned 24 results for an
+// invented ISBN — but that is not what it does here. The edition is already
+// resolved; this only asks OpenLibrary for a cover id belonging to it, and a
+// wrong answer costs a wrong thumbnail rather than a wrong book.
+//
+// THE TIMEOUT IS THE POINT, and it was not optional. Written without one, this
+// took OpenLibrary 21 SECONDS to answer for the first ISBN it was tried on and
+// took the whole lookup down with it — a request that used to return a book in
+// under a second returned a 502 instead. search.json is a query, not a key
+// lookup, and it is minutes-to-milliseconds unpredictable. So it gets two and a
+// half seconds and not a moment more: the book has already been found by the
+// time this runs, and no cover is worth losing it over. Every failure returns
+// an empty string rather than throwing, for the same reason.
+const COVER_FALLBACK_MS = 2500;
+
+async function olWorkCover(isbn) {
+  try {
+    const res = await fetch(`${OL_BASE}/search.json?isbn=${isbn}&limit=1&fields=cover_i`,
+      { signal: AbortSignal.timeout(COVER_FALLBACK_MS) });
+    if (!res.ok) return '';
+    const data = await res.json();
+    const id = data.docs && data.docs[0] && data.docs[0].cover_i;
+    return olCover(id, 'L');
+  } catch {
+    return '';
+  }
+}
+
 function bookOut(doc) {
   return {
     title: doc.title || 'Unknown Title',
@@ -87,13 +121,16 @@ export async function onRequestGet(context) {
         const data = await fetchJson(`${OL_BASE}/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
         const book = data[`ISBN:${isbn}`];
         if (!book) return json({ found: false });
+        const editionCover = book.cover
+          ? (book.cover.large || book.cover.medium || book.cover.small || '')
+          : '';
         return json({
           found: true,
           book: {
             title: book.title || '',
             authors: (book.authors || []).map((a) => a.name).join(', '),
             genre: (book.subjects || []).slice(0, 3).map((s) => s.name).join(', '),
-            cover: book.cover ? (book.cover.large || book.cover.medium || book.cover.small || '') : '',
+            cover: editionCover || await olWorkCover(isbn),
           },
         });
       }

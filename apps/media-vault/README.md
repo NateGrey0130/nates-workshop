@@ -1,11 +1,12 @@
 # MediaVault — a personal audiobook, movie and series library
 
 Catalogue what you own. Add an item by hand, or look it up by ISBN, title,
-author, actor or director and let the fields fill themselves in. Browse it as
-a grid or a table, filter and sort it, select many at once to retype or delete
-them, import and export CSV, and read the whole collection back as ranked
-stats — most-collected authors, directors, actors, producers and genres, each
-one clickable through to the items behind it.
+author, actor or director and let the fields fill themselves in — one at a
+time with **Add now**, or by pasting a whole shelf of ISBNs at once. Browse it
+as a grid or a table, filter and sort it, select many at once to retype or
+delete them, import and export CSV, and read the whole collection back as
+ranked stats — most-collected authors, directors, actors, producers and genres,
+each one clickable through to the items behind it.
 
 Part of Nate's Workshop: Cloudflare Pages + D1, behind the site-wide Access
 gate. No build step, no framework, no dependencies.
@@ -27,7 +28,7 @@ apps/media-vault/
 functions/api/media-vault/
 ├── _lib/common.js        Identity (Access email, dev@localhost fallback),
 │                         the JSON helper, the item sanitizer, the upsert,
-│                         the ISBN normaliser and shape test
+│                         the four ISBN rules
 ├── items.js              GET / POST / DELETE — the library, one item at a time
 ├── items/bulk.js         POST — upsert many (CSV import)
 ├── items/bulk-update.js  POST — retype a selection
@@ -143,21 +144,65 @@ talks to a third party. It takes a `mode`:
 Only the fields the client renders come back; raw upstream payloads are never
 relayed.
 
-**What counts as an ISBN.** Hyphens and spaces are stripped and the result
-upper-cased; it must then be nine digits and a check character that may be `X`,
-or thirteen digits. Anything else is a 400 that says what it wanted. Two parts
-of that are deliberate. The upper-case is not cosmetic — OpenLibrary returns a
-full record for `ISBN:043935806X` and **nothing** for `ISBN:043935806x`, so a
-lower-case x reaching the query would turn a loud error into a silent "no
-results found". And the check digit is **not** verified here: a mistyped ISBN
-and a book OpenLibrary does not hold are different problems needing different
-sentences, and that distinction belongs in the client, before the request. The
-rule this replaced was `/^\d{10,13}$/`, which was wrong both ways — it rejected
-every `X` check digit, 9.6% of ISBN-10s, so real books came back `Invalid
-ISBN`; and it accepted 11- and 12-digit strings that are not ISBNs in any
-scheme, so a truncated paste was looked up and reported as a book nobody has.
-`app.js` keeps its own copy of the normaliser, because it is a plain script
-with no module loader; the smoke test pins the two copies byte-for-byte.
+**What counts as an ISBN.** Four rules in `_lib/common.js`, deliberately
+separate because each one earns the user a different sentence.
+
+`normalizeIsbn` deletes every character that is not a digit or an `X` and
+upper-cases what is left. That is blunt on purpose: the list of things that
+turn up between an ISBN's digits when somebody pastes one is long and keeps
+growing — the ASCII hyphen, the soft hyphen, the whole `U+2010`–`U+2015` dash
+block a publisher's page uses, non-breaking spaces, zero-width characters, a
+sentence's trailing full stop, and the word `ISBN` itself. Deleting everything
+cannot be got wrong the way six separate allowances can. **The upper-case is
+not cosmetic**: OpenLibrary returns a full record for `ISBN:043935806X` and
+**nothing** for `ISBN:043935806x`.
+
+`isIsbnShape` requires nine digits and a check character that may be `X`, or
+thirteen digits. The proxy gates on it and answers anything else with a 400
+that says what it wanted. The rule this replaced was `/^\d{10,13}$/`, wrong
+both ways — it rejected every `X` check digit, **9.6% of ISBN-10s**, so real
+books came back `Invalid ISBN`; and it accepted 11- and 12-digit strings that
+are not ISBNs in any scheme, so a truncated paste was looked up and reported as
+a book nobody has.
+
+`looksLikeIsbn` decides **routing** in the client, where the alternative is a
+film-title search. It asks "was this an attempt at an ISBN", not "is this a
+valid one", because a mistyped number has to reach the path that can say so.
+It is what keeps `Apollo 13 1995 1080p` a film search: those digits alone
+normalise to a perfectly good ISBN-10 shape, so the rule is that an ISBN
+attempt carries no letters beyond the label and a trailing `X`.
+
+`isbnCheckDigitValid` runs **in the client only, before the request goes out**.
+A checksum in the proxy would refuse numbers OpenLibrary may hold under a
+mis-keyed record, and the reason to know is to say *"the check digit doesn't
+match — that is almost always a typo"* instead of *"no results found"*. Those
+were the same sentence until it existed, which is most of why ISBN lookup was
+reported as broken.
+
+`app.js` keeps its own copy of all four, because it is a plain script with no
+module loader. **The smoke test pins every copy byte-for-byte** against
+`_lib/common.js` and unit-tests the originals there.
+
+**Adding a shelf at once.** The import modal's second tab takes one ISBN per
+line, up to **100** in a run, and looks each one up in turn. The loop runs in
+the **browser**, not in a Pages Function: that sidesteps the 30-second limit
+that applies to a Worker's whole batch, lets the run be cancelled halfway, and
+lets the progress be watched. It calls the `isbn` lookup mode and the
+`items/bulk` endpoint that already exist — **no new endpoint and no new mode**,
+which is load-bearing, because the smoke test asserts the endpoint files are
+exactly the six documented and that the README documents every mode the proxy
+implements.
+
+Nothing is written until Add selected is pressed, so cancelling, closing the
+modal or losing the tab costs only the time already spent. Every line gets a
+row saying what happened to it — found, not an ISBN, check digit wrong, or not
+in OpenLibrary — and a found row can be unticked before committing; failures
+are never silently skipped. A paste longer than the cap says how many lines it
+is leaving out rather than quietly truncating. The commit is a single
+`items/bulk` call, which is one `db.batch()` and therefore one transaction: it
+all lands or none of it does. A run that would cross the 5000-item cap is
+refused by that endpoint with a message naming the number, and the message is
+shown as-is.
 
 **TMDB needs a secret.** The v3 API key was hardcoded in `app.js` until this
 moved server-side; it is now the **`TMDB_API_KEY`** environment variable —

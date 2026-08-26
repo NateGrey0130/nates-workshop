@@ -195,6 +195,7 @@
         <input type="text" id="lookupInput" placeholder="Search..." onkeydown="if(event.key==='Enter')handleLookupEnter()">
         <input type="text" id="lookupYear" placeholder="Year" style="width:70px;flex:none;" maxlength="4" onkeydown="if(event.key==='Enter')handleLookupEnter()">
         <button class="btn" onclick="lookupISBN()">ISBN</button>
+        <button class="btn" onclick="lookupAndAddISBN()" title="Look the ISBN up and add it straight away">＋ Add now</button>
         <button class="btn" onclick="lookupBook()">📚</button>
         <button class="btn" onclick="lookupMovie()">🎬</button>
         <button class="btn" onclick="lookupSeries()">📺</button>
@@ -305,17 +306,42 @@
 <div class="modal-overlay" id="importModal">
   <div class="modal">
     <button class="modal-close" onclick="closeImportModal()">✕</button>
-    <h2>Import CSV</h2>
-    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">
-      CSV should have headers: type, title, author, genre, series, format, location, cover, notes
-    </p>
-    <div class="form-group">
-      <input type="file" id="csvFileInput" accept=".csv" onchange="previewCSV(this)" style="font-size:13px;">
+    <h2>Import</h2>
+
+    <div class="import-tabs">
+      <button class="import-tab active" id="importTabCsv" onclick="setImportMode('csv')">📄 CSV file</button>
+      <button class="import-tab" id="importTabIsbn" onclick="setImportMode('isbn')">🔢 Paste ISBNs</button>
     </div>
-    <div class="csv-preview" id="csvPreview" style="display:none"></div>
+
+    <div id="importCsvPane">
+      <p class="import-hint">
+        CSV should have headers: type, title, author, genre, series, format, location, cover, notes
+      </p>
+      <div class="form-group">
+        <input type="file" id="csvFileInput" accept=".csv" onchange="previewCSV(this)" style="font-size:13px;">
+      </div>
+      <div class="csv-preview" id="csvPreview" style="display:none"></div>
+    </div>
+
+    <div id="importIsbnPane" style="display:none">
+      <p class="import-hint">
+        One ISBN per line, up to 100 at a time. Hyphens, spaces and a pasted
+        “ISBN” label are all fine. Each one is looked up on OpenLibrary and added
+        as an audiobook — nothing is saved until you press Add selected.
+      </p>
+      <div class="form-group">
+        <textarea id="isbnPasteInput" rows="6" oninput="previewIsbnPaste()"
+                  placeholder="9780743273565&#10;0-439-35806-X&#10;978-0-06-112008-4"></textarea>
+      </div>
+      <div class="csv-preview" id="isbnPastePreview" style="display:none"></div>
+      <div class="isbn-paste-results" id="isbnPasteResults" style="display:none"></div>
+    </div>
+
     <div class="modal-actions">
       <button class="btn" onclick="closeImportModal()">Cancel</button>
       <button class="btn btn-primary" onclick="importCSV()" id="btnImport" disabled>Import</button>
+      <button class="btn" onclick="runIsbnPaste()" id="btnIsbnLookup" style="display:none" disabled>Look up</button>
+      <button class="btn btn-primary" onclick="commitIsbnPaste()" id="btnIsbnAdd" style="display:none" disabled>Add selected</button>
     </div>
   </div>
 </div>
