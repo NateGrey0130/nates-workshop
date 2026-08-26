@@ -308,6 +308,69 @@ check('and nothing still calls its path',
     && readmeFlat.includes('carried through the edit form, the CSV export and the CSV import'));
 }
 {
+  // ─── Filling in the blanks ───
+  // This feature writes to rows the user has already curated, from a source
+  // that is sometimes a GUESS. Every check here guards one of the rules that
+  // makes that safe; without them it is a bulk overwrite with a friendly name.
+  const html = readFileSync(join(appDir, 'index.html'), 'utf8');
+  const declOf = (name) => {
+    const at = appSrc.indexOf('function ' + name + '(');
+    if (at < 0) return '';
+    const m = /\r?\n\}/.exec(appSrc.slice(at));
+    return m ? appSrc.slice(at, at + m.index + m[0].length) : appSrc.slice(at);
+  };
+  const fields = (appSrc.match(/const ENRICH_FIELDS = \[([^\]]*)\]/) || [])[1] || '';
+
+  // The rule everything else rests on. `title` here would rewrite a
+  // hand-corrected title from a fuzzy search — data loss wearing a feature's
+  // clothes — and `notes`, `location` and `series` are the user's alone.
+  check('only cover, author and genre can be filled — never title, notes, location or series',
+    /'cover', 'author', 'genre'/.test(fields)
+    && !/title|notes|location|series|format|type/.test(fields), fields.trim());
+  const fills = declOf('enrichFills');
+  check('a field that already has something is skipped',
+    /if \(row\[f\] && !\(f === 'cover' && replaceCovers\)\) continue;/.test(fills));
+  check('and the ONLY exception is covers, behind an opt-in that starts off',
+    /<input type="checkbox" id="enrichReplaceCovers">/.test(html)
+    && declOf('openEnrichModal').includes("getElementById('enrichReplaceCovers').checked = false"));
+  check('a source id is filled but never replaced, so a guess cannot overwrite an exact one',
+    /if \(found\.sourceId && !row\.source_id\)/.test(fills));
+
+  // Exact vs guessed. The tick is what makes a guess trustworthy.
+  check('an exact match arrives ticked and a guessed one does not',
+    /entry\.include = entry\.status === 'filled' && entry\.exact;/.test(declOf('runEnrich')));
+  check('and only a row with something to write can be ticked at all',
+    declOf('toggleEnrichRow').includes("r.status !== 'filled'")
+    && declOf('commitEnrich').includes('r.include && r.fills'));
+  check('exactness means a source id this app recognises, not merely a non-empty one',
+    declOf('openEnrichModal').includes('isIsbnShape(item.source_id) || isTmdbSource(item.source_id)'));
+
+  // The loop: capped, cancellable, one write at the end.
+  const cap = Number((appSrc.match(/const ENRICH_MAX = (\d+);/) || [])[1]);
+  check('a run is capped, and the cap is stated rather than silently truncating',
+    cap > 0 && declOf('openEnrichModal').includes('.slice(0, ENRICH_MAX)')
+    && declOf('openEnrichModal').includes('left out of this run'), String(cap));
+  check('the loop runs in the browser and can be stopped, like the ISBN paste',
+    declOf('runEnrich').includes('if (!enrichRunning) break;')
+    && declOf('runEnrich').includes("textContent = 'Stop'"));
+  check('one item failing upstream does not end the run',
+    /catch \(err\) \{[\s\S]*?entry\.status = 'failed';/.test(declOf('runEnrich')));
+  check('and every change lands in ONE transactional write, or none of it does',
+    (declOf('commitEnrich').match(/apiFetch\(/g) || []).length === 1
+    && declOf('commitEnrich').includes("'/api/media-vault/items/bulk'"));
+  // items/bulk upserts the WHOLE row, so a partial object would blank every
+  // column left out of it.
+  check('the written row is the current one overlaid, not a partial object',
+    /\{ \.\.\.row, \.\.\.r\.fills \}/.test(declOf('commitEnrich')));
+  check('failures are named afterwards, and re-running them is just re-selecting them',
+    declOf('commitEnrich').includes('nothing about them was changed'));
+
+  check('the README states the never-overwrite rule and the cap',
+    readme.includes('never overwrites a non-empty field')
+    && readme.includes(`up to **${cap}**`)
+    && readme.includes('arrive unticked'));
+}
+{
   // The whitelist used to be `field: [allowed, values]`, which cannot express a
   // field like `location` — there is no list of every shelf a person owns. It
   // carries a KIND now, and these checks moved with it rather than being

@@ -1521,6 +1521,256 @@ async function commitIsbnPaste() {
   alert(`Added ${newItems.length} item${newItems.length === 1 ? '' : 's'} from ${isbnPasteRows.length} ISBN${isbnPasteRows.length === 1 ? '' : 's'}.`);
 }
 
+// ─── FILLING IN THE BLANKS ───
+// 1,579 of 3,544 rows had no cover as of 2026-08-26, 889 no author, 1,071 no
+// genre. This goes back to where each item came from and fills those in.
+//
+// THE RULE THAT SHAPES EVERYTHING ELSE: it never overwrites a non-empty field.
+// A "re-lookup" that rewrites a hand-corrected title is a data-loss bug wearing
+// a feature's clothes. Only `cover`, `author` and `genre` are touched, only
+// where they are already empty; `title`, `series`, `location`, `notes`,
+// `format` and `type` are never touched at all — those are the user's.
+//
+// The single exception is opt-in and off by default: covers can be replaced as
+// well as filled, because an existing cover is not necessarily a CORRECT one —
+// the cover carry-over bug (ISBN audit F3) wrote wrong images into this library
+// for months. But a cover you already have may equally be one you chose, so
+// that call is the user's rather than this code's.
+//
+// EXACT AND GUESSED ARE DIFFERENT THINGS, AND THE UI SAYS SO. An item with a
+// source_id is looked up BY that id: same record, same book, nothing to
+// confirm, so it arrives ticked. An item without one can only be searched for
+// by title — and OpenLibrary returned 24 results for an ISBN that does not
+// exist, so a title match is fuzzier still. Those arrive UNTICKED, with the
+// candidate named. The tick is what makes a guess trustworthy, and nothing is
+// written without it.
+const ENRICH_MAX = 100;          // ~1 minute, the same ceiling as the ISBN paste
+const ENRICH_DELAY_MS = ISBN_PASTE_DELAY_MS;
+const ENRICH_FIELDS = ['cover', 'author', 'genre'];
+
+let enrichRunning = false;       // doubles as the cancel flag, like the paste loop
+let enrichRows = [];
+
+function isTmdbSource(sourceId) {
+  return /^tmdb:(movie|tv):\d+$/.test(sourceId || '');
+}
+
+function openEnrichModal() {
+  if (selectedIds.size === 0) return;
+  cancelUndo();
+  enrichRunning = false;
+  const chosen = library.filter((i) => selectedIds.has(i.id)).slice(0, ENRICH_MAX);
+  enrichRows = chosen.map((item) => ({
+    id: item.id,
+    title: item.title,
+    exact: !!(item.source_id && (isIsbnShape(item.source_id) || isTmdbSource(item.source_id))),
+    sourceId: item.source_id || '',
+    status: 'pending',
+    fills: null,
+    label: '',
+    include: false,
+  }));
+
+  const exact = enrichRows.filter((r) => r.exact).length;
+  const over = selectedIds.size - enrichRows.length;
+  const blanks = chosen.reduce((n, i) => n + ENRICH_FIELDS.filter((f) => !i[f]).length, 0);
+  document.getElementById('enrichSummary').textContent =
+    `${plural(enrichRows.length)}, ${blanks} empty field${blanks === 1 ? '' : 's'} between them. `
+    + `${exact} can be looked up exactly; ${enrichRows.length - exact} can only be searched for by title, `
+    + 'and those arrive unticked for you to confirm.'
+    + (over > 0 ? ` ${over} more were selected than the ${ENRICH_MAX}-item limit, and are left out of this run.` : '');
+
+  document.getElementById('enrichReplaceCovers').checked = false;
+  document.getElementById('enrichResults').style.display = 'none';
+  document.getElementById('enrichResults').innerHTML = '';
+  document.getElementById('btnEnrichRun').textContent = 'Look up';
+  document.getElementById('btnEnrichApply').disabled = true;
+  document.getElementById('enrichModal').classList.add('active');
+}
+
+function closeEnrichModal() {
+  enrichRunning = false;
+  document.getElementById('enrichModal').classList.remove('active');
+}
+
+// One upstream call per item, whichever kind it is. A guessed VIDEO match is
+// the interesting case: video-title answers with an id and a poster but no
+// directors or genres, so this fills the cover and records the TMDB id it
+// found. That turns the guess into an exact record, and a second run — now
+// exact — fills the rest properly. Two cheap passes rather than two calls per
+// item against limits nobody has measured.
+async function enrichLookup(entry) {
+  if (entry.exact && isIsbnShape(entry.sourceId)) {
+    const d = await apiFetch(`/api/media-vault/lookup?mode=isbn&isbn=${encodeURIComponent(entry.sourceId)}`);
+    if (!d.found) return null;
+    return { label: d.book.title, cover: d.book.cover, author: d.book.authors, genre: d.book.genre };
+  }
+  if (entry.exact) {
+    const parts = entry.sourceId.split(':');
+    const d = await apiFetch(`/api/media-vault/lookup?mode=video-detail&id=${encodeURIComponent(parts[2])}&kind=${parts[1]}`);
+    return { label: d.title, cover: d.poster, author: d.directors, genre: d.genres };
+  }
+
+  const row = library.find((i) => i.id === entry.id);
+  const q = [row.title, row.author].filter(Boolean).join(' ').trim();
+  if (!q) return null;
+
+  if (row.type === 'audiobook') {
+    const d = await apiFetch(`/api/media-vault/lookup?mode=book-title&q=${encodeURIComponent(q)}`);
+    const top = (d.results || [])[0];
+    if (!top) return null;
+    return { label: `${top.title}${top.authors ? ' — ' + top.authors : ''}`, cover: top.cover, author: top.authors, genre: top.genre };
+  }
+  const kind = row.type === 'series' ? 'tv' : 'movie';
+  const d = await apiFetch(`/api/media-vault/lookup?mode=video-title&q=${encodeURIComponent(q)}&kind=${kind}`);
+  const top = (d.results || [])[0];
+  if (!top) return null;
+  return {
+    label: `${top.title}${top.year ? ' (' + top.year + ')' : ''}`,
+    cover: top.poster, author: '', genre: '',
+    sourceId: `tmdb:${kind}:${top.id}`,
+  };
+}
+
+// What would actually change, given the never-overwrite rule. Returns null when
+// the answer is "nothing", which is a real outcome worth reporting rather than
+// a failure to hide.
+function enrichFills(row, found, replaceCovers) {
+  const fills = {};
+  for (const f of ENRICH_FIELDS) {
+    const value = (found[f] || '').trim();
+    if (!value) continue;
+    if (row[f] && !(f === 'cover' && replaceCovers)) continue;
+    if (row[f] === value) continue;
+    fills[f] = value;
+  }
+  // A source id is filled, never REPLACED: an exact id already earned its
+  // place, and a guess must not overwrite one.
+  if (found.sourceId && !row.source_id) fills.source_id = found.sourceId;
+  return Object.keys(fills).length ? fills : null;
+}
+
+async function runEnrich() {
+  if (enrichRunning) { enrichRunning = false; return; }   // the button doubles as Stop
+  if (enrichRows.length === 0) return;
+
+  enrichRunning = true;
+  const replaceCovers = document.getElementById('enrichReplaceCovers').checked;
+  document.getElementById('btnEnrichRun').textContent = 'Stop';
+  document.getElementById('btnEnrichApply').disabled = true;
+  document.getElementById('enrichResults').style.display = 'block';
+
+  for (let i = 0; i < enrichRows.length; i++) {
+    if (!enrichRunning) break;
+    const entry = enrichRows[i];
+    const row = library.find((x) => x.id === entry.id);
+    if (!row) { entry.status = 'failed'; entry.label = 'no longer in the library'; continue; }
+    try {
+      const found = await enrichLookup(entry);
+      if (!found) {
+        entry.status = 'nomatch';
+      } else {
+        entry.label = found.label || '';
+        entry.fills = enrichFills(row, found, replaceCovers);
+        entry.status = entry.fills ? 'filled' : 'nothing';
+        // Exact matches arrive ticked; guesses do not. See the block comment.
+        entry.include = entry.status === 'filled' && entry.exact;
+      }
+    } catch (err) {
+      // One item failing upstream must not end the run — partial failure is the
+      // normal case here, not the exception.
+      entry.status = 'failed';
+      entry.label = err.message;
+    }
+    renderEnrichResults(i + 1);
+    if (i < enrichRows.length - 1 && enrichRunning) {
+      await new Promise((r) => setTimeout(r, ENRICH_DELAY_MS));
+    }
+  }
+
+  const cancelled = !enrichRunning;
+  enrichRunning = false;
+  document.getElementById('btnEnrichRun').textContent = 'Look up again';
+  renderEnrichResults(enrichRows.filter((r) => r.status !== 'pending').length, cancelled);
+}
+
+const ENRICH_MARKS = { filled: '✓', nothing: '=', nomatch: '?', failed: '✕', pending: '·' };
+
+function enrichHead(done, cancelled) {
+  const ticked = enrichRows.filter((r) => r.include).length;
+  const guesses = enrichRows.filter((r) => r.status === 'filled' && !r.exact).length;
+  const parts = [`${done} of ${enrichRows.length} looked up`];
+  if (cancelled) parts.push('stopped');
+  parts.push(`${ticked} ticked to apply`);
+  if (guesses) parts.push(`${guesses} guessed — tick the ones you trust`);
+  return parts.join(' · ');
+}
+
+function renderEnrichResults(done, cancelled) {
+  const ticked = enrichRows.filter((r) => r.include && r.fills).length;
+  document.getElementById('btnEnrichApply').disabled = ticked === 0;
+  document.getElementById('enrichResults').innerHTML =
+    `<div class="isbn-paste-head">${enrichHead(done, cancelled)}</div>`
+    + enrichRows.map((r, i) => {
+      const fields = r.fills ? Object.keys(r.fills).filter((f) => f !== 'source_id') : [];
+      const what = r.status === 'filled'
+        ? `would fill ${fields.join(', ') || 'its source id'}${r.label ? ' — from ' + esc(r.label) : ''}`
+        : r.status === 'nothing' ? 'nothing missing that the source can fill'
+          : r.status === 'nomatch' ? 'no match found'
+            : r.status === 'failed' ? esc(r.label || 'lookup failed')
+              : 'waiting';
+      const canTick = r.status === 'filled';
+      const cls = (r.status === 'failed' || r.status === 'nomatch') ? ' failed' : (canTick && !r.include ? ' excluded' : '');
+      return `<div class="isbn-paste-row${cls}">
+        <input type="checkbox" ${canTick ? '' : 'disabled'} ${r.include ? 'checked' : ''} onclick="toggleEnrichRow(${i})">
+        <code>${r.exact ? '\u{1F512}' : '≈'} ${esc(r.title.slice(0, 40))}</code>
+        <span>${ENRICH_MARKS[r.status]} ${what}</span>
+      </div>`;
+    }).join('');
+}
+
+function toggleEnrichRow(i) {
+  const r = enrichRows[i];
+  if (!r || r.status !== 'filled') return;
+  r.include = !r.include;
+  renderEnrichResults(enrichRows.filter((x) => x.status !== 'pending').length);
+}
+
+async function commitEnrich() {
+  const chosen = enrichRows.filter((r) => r.include && r.fills);
+  if (chosen.length === 0) return;
+
+  // Built from the CURRENT library row and then overlaid, because items/bulk is
+  // an UPSERT of the whole row: sending a partial object would blank every
+  // column left out of it. The fills are the only difference.
+  const updated = [];
+  for (const r of chosen) {
+    const row = library.find((i) => i.id === r.id);
+    if (!row) { alert('Something in this run is no longer in your library. Reload and try again.'); return; }
+    updated.push({ ...row, ...r.fills });
+  }
+
+  // One write for the whole run: db.batch() is a transaction, so this either
+  // all lands or none of it does.
+  const ok = await apiWrite(() => apiFetch('/api/media-vault/items/bulk', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items: updated }),
+  }));
+  if (!ok) return;
+
+  const byId = new Map(updated.map((u) => [u.id, u]));
+  library = library.map((i) => byId.get(i.id) || i);
+  const failed = enrichRows.filter((r) => r.status === 'failed').length;
+  closeEnrichModal();
+  setSelectMode(false);
+  renderLibrary();
+  // "Resume" is just "select the failures and go again": nothing was written
+  // for them, so a re-run starts them from exactly where they were.
+  alert(`Filled in ${plural(updated.length)}.`
+    + (failed ? `\n\n${failed} failed to look up. Select those again and re-run — nothing about them was changed.` : ''));
+}
+
 // ─── PERSISTENCE (D1 via /api/media-vault, identity from Cloudflare Access) ───
 // D1 is the only store. localStorage is never read or written for library
 // data — the one exception is migrateLocalIfNeeded below, which retires the
