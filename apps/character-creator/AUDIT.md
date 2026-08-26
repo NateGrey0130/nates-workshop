@@ -9,6 +9,20 @@ a count was claimed (`--remote`, per the repo's own rule), and against a clean
 run of both test suites: **smoke 1,220 checks passed, regression 192 checks
 passed** on this machine before any change was made.
 
+> **The character-creator README was split on 2026-08-26** (PR #309) into an
+> 827-line spine plus eleven topic files under `apps/character-creator/docs/`.
+> No section was renamed, so every section *name* below still resolves — but
+> the `README.md:NNN` line numbers and file paths in this document are as of
+> the audit date above, and several sections cited here now live in `docs/`.
+> Find one by name rather than by number:
+>
+> ```bash
+> node scripts/readme-section.mjs "Server-side rule enforcement"
+> ```
+>
+> It searches README.md and every `docs/*.md`, and prints the file and the line
+> range.
+
 ## The audit brief itself was stale, and that is the first finding
 
 The request described the app as it stood several refactors ago. None of this
@@ -28,8 +42,8 @@ is a defect in the code — it is recorded so the next audit starts from reality
 - **The `items` rename already happened.** Migration `004-items-to-gear.sql`
   renamed the table to `gear` in the app's first roadmap (PR #17), precisely
   for the collision-with-`media_items` reason the brief raises. The API route
-  stayed `/items` deliberately; README → *Known limitations* records the
-  trade. Nothing to decide — closed years of PRs ago.
+  stayed `/items` deliberately; `docs/known-limitations.md` → *Known
+  limitations* records the trade. Nothing to decide — closed years of PRs ago.
 - **Server-side rule enforcement exists** (`_lib/validate-character.js`,
   `_lib/skill-picks.js`, `_lib/power-picks.js`, race/O.C.C. restrictions on
   create). The gap the brief describes has narrowed to a deliberate,
@@ -221,8 +235,9 @@ campaign's, if you are its GM), never someone else's:
 What this can *not* do: touch another player's character, another campaign's
 data, any catalog row, or produce a 500/injection — every write is
 parameterised, JSON-stringified, and shape-checked. The remaining trust is
-about game-fairness among friends, exactly as README → *Server-side rule
-enforcement* frames it ("deliberately narrow — it checks what a player
+about game-fairness among friends, exactly as `docs/wizard-and-sheet.md` →
+*Server-side rule enforcement* frames it ("deliberately narrow — it checks
+what a player
 chooses"). `docs/plans/10-server-rule-enforcement.md` already records why
 choice-groups can't be checked in principle.
 
@@ -244,7 +259,8 @@ choice-groups can't be checked in principle.
   and both surface in `admin/audit`, which now receives powers, pools and each
   campaign's system. The audit's composition also now decodes the character
   first, so ability-granted pool bonuses fold in rather than reading as out of
-  range. README → *Server-side rule enforcement* carries the full rules.
+  range. `docs/wizard-and-sheet.md` → *Server-side rule enforcement* carries
+  the full rules.
 - **Follow-up taken, 2026-08-24 — the pool hard cap**, with the proposal's own
   "tolerance for GM overrides" as the design: at creation,
   `pool_out_of_range` is a **violation for any creator who is not the
