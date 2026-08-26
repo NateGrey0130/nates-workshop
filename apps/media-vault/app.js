@@ -695,13 +695,18 @@ async function bulkDelete() {
 // enough that the user is still on the page and has not started something else.
 const UNDO_WINDOW_SECONDS = 10;
 
-function offerUndo(rows) {
+// `text` is optional because the duplicate merge restores more rows than it
+// deleted — the surviving row's pre-merge state rides in the same buffer — so
+// "Deleted 662 items" would name a number the user never agreed to. The default
+// is the plain bulk-delete sentence, and both spellings keep the admission that
+// leaving the page finishes the job.
+function offerUndo(rows, text) {
   if (rows.length === 0) return;
   undoBuffer = rows;
   undoFailures = 0;
   undoSecondsLeft = UNDO_WINDOW_SECONDS;
-  document.getElementById('undoToastText').textContent =
-    `Deleted ${rows.length} item${rows.length === 1 ? '' : 's'}. Closing this page will finish the delete.`;
+  document.getElementById('undoToastText').textContent = text
+    || `Deleted ${rows.length} item${rows.length === 1 ? '' : 's'}. Closing this page will finish the delete.`;
   paintUndoButton();   // before it slides in, or a stale 'Restoring…' shows for a frame
   document.getElementById('undoToast').classList.add('visible');
   undoTimer = setInterval(() => {
@@ -765,7 +770,18 @@ async function undoBulkDelete() {
     return;
   }
 
-  library.push(...rows);
+  // Replace-or-append by id rather than a blind push. Every row a bulk delete
+  // puts in the buffer is genuinely gone, but a duplicate merge also parks the
+  // SURVIVING row's pre-merge state in here — and that row is still in the
+  // array. Pushing it put the same id in `library` twice, which renders as a
+  // duplicate of the thing the user just finished de-duplicating. The server
+  // was always right: items/bulk upserts by id and reverted the survivor
+  // correctly, so this was the client's copy drifting from it — the exact
+  // failure mode this app was rebuilt to end.
+  const back = new Map(rows.map((r) => [r.id, r]));
+  library = library.map((i) => back.get(i.id) || i);
+  const present = new Set(library.map((i) => i.id));
+  library.push(...rows.filter((r) => !present.has(r.id)));
   cancelUndo();
   renderLibrary();
 }
@@ -1769,6 +1785,222 @@ async function commitEnrich() {
   // for them, so a re-run starts them from exactly where they were.
   alert(`Filled in ${plural(updated.length)}.`
     + (failed ? `\n\n${failed} failed to look up. Select those again and re-run — nothing about them was changed.` : ''));
+}
+
+// ─── FINDING THE REPEATS ───
+// The scan itself belongs to the server (functions/api/media-vault/duplicates.js,
+// deciding in _lib/dedupe.js); this half renders what it found and turns the
+// ticked groups into the writes that apply them. The rule lives in one file
+// rather than being copied here, which is why this is the one bulk flow that
+// makes a request in order to think.
+//
+// Unlike every other bulk flow in this app, nothing here loops upstream. One
+// request returns everything, so there is no cap, no delay between calls, no
+// Stop button and no half-finished state to explain. What is left is the part
+// that actually needs care: which groups a person has to look at, and not
+// deciding anything on their behalf.
+//
+// THE NUMBER THAT MUST BE RIGHT IS ROWS, NOT GROUPS. A group of three gives up
+// two rows, so "630 groups" and "662 items" are different sentences and only
+// the second one is what the user is about to lose.
+let dupGroups = [];
+let dupScanned = 0;
+let dupScanning = false;
+
+function openDuplicatesModal() {
+  cancelUndo();
+  setSelectMode(false);
+  dupGroups = [];
+  dupScanned = 0;
+  document.getElementById('dupSummary').textContent = 'Scanning your library…';
+  const results = document.getElementById('dupResults');
+  results.style.display = 'none';
+  results.innerHTML = '';
+  document.getElementById('btnDupApply').disabled = true;
+  document.getElementById('dupModal').classList.add('active');
+  runDuplicateScan();
+}
+
+function closeDuplicatesModal() {
+  document.getElementById('dupModal').classList.remove('active');
+}
+
+async function runDuplicateScan() {
+  if (dupScanning) return;
+  dupScanning = true;
+  let data;
+  try {
+    data = await apiFetch('/api/media-vault/duplicates');
+  } catch (err) {
+    document.getElementById('dupSummary').textContent = 'Could not scan: ' + err.message;
+    return;
+  } finally {
+    dupScanning = false;
+  }
+
+  dupScanned = data.scanned;
+  // The server answers about the rows IT holds. If another tab has edited or
+  // deleted something since this tab last read the library, a group can name a
+  // row this browser cannot find — and applying it would ask the server to
+  // upsert a merge built from a row that no longer exists. Drop those groups
+  // rather than render one that cannot be honoured.
+  dupGroups = (data.groups || []).filter((g) =>
+    library.some((i) => i.id === g.survivorId)
+    && g.loserIds.every((id) => library.some((i) => i.id === id)));
+  renderDuplicateResults();
+}
+
+function dupSummaryText() {
+  const conflicts = dupGroups.filter((g) => g.tier === 'conflict').length;
+  const safe = dupGroups.length - conflicts;
+  return `${dupGroups.length} group${dupGroups.length === 1 ? '' : 's'} share a title and a type. `
+    + `${safe} can be merged without losing anything, and arrive ticked. `
+    + `${conflicts} disagree${conflicts === 1 ? 's' : ''} about something that matters `
+    + '— a different author, format, shelf or cast — and arrive'
+    + `${conflicts === 1 ? 's' : ''} unticked, because two works can honestly share a title and a type. `
+    + 'Nothing is written until you press Merge.';
+}
+
+// Rewritten on every tick, not only after the scan: it once read "5 ticked"
+// while the button was about to write four, which is the same bug the ISBN
+// paste head had. The count a user is relying on cannot lag the checkbox they
+// just clicked.
+function dupHead() {
+  const ticked = dupGroups.filter((g) => g.include);
+  const rows = ticked.reduce((n, g) => n + g.loserIds.length, 0);
+  const conflicts = dupGroups.filter((g) => g.tier === 'conflict').length;
+  const parts = [`${dupGroups.length} group${dupGroups.length === 1 ? '' : 's'} in ${plural(dupScanned)}`];
+  parts.push(`${ticked.length} ticked · ${plural(rows)} would go`);
+  if (conflicts) parts.push(`${conflicts} for you to judge`);
+  return parts.join(' · ');
+}
+
+// What each group would do, in the words that matter for deciding. A conflict
+// names the field and quotes BOTH values, because "author differs" is not a
+// decision anybody can make and "Bernard Rose vs Nia DaCosta" is.
+function dupWhy(g) {
+  if (g.tier === 'conflict') {
+    return g.conflicts.map((c) =>
+      `${esc(c.field)} ${c.values.map((v) => '“' + esc(v.slice(0, 34)) + '”').join(' vs ')}`).join(' · ');
+  }
+  const fills = Object.keys(g.fills).filter((f) => f !== 'source_id');
+  const one = g.loserIds.length === 1;
+  if (!fills.length) return one ? 'the other adds nothing — an exact copy' : 'the others add nothing — exact copies';
+  return `keeps the earliest, fills ${fills.join(', ')} from ${one ? 'the other' : 'the others'}`;
+}
+
+const DUP_MARKS = { conflict: '⚠', mergeable: '+', identical: '=' };
+
+function renderDuplicateResults() {
+  const results = document.getElementById('dupResults');
+  const summary = document.getElementById('dupSummary');
+
+  if (dupGroups.length === 0) {
+    summary.textContent = `Scanned ${plural(dupScanned)} — nothing shares a title and a type. Nothing to clean up.`;
+    results.style.display = 'none';
+    results.innerHTML = '';
+    document.getElementById('btnDupApply').disabled = true;
+    return;
+  }
+
+  summary.textContent = dupSummaryText();
+  results.style.display = 'block';
+  document.getElementById('btnDupApply').disabled = !dupGroups.some((g) => g.include);
+  results.innerHTML =
+    `<div class="isbn-paste-head">${dupHead()}</div>`
+    + dupGroups.map((g, i) => {
+      const cls = (g.tier === 'conflict' ? ' conflict' : '') + (g.include ? '' : ' excluded');
+      return `<div class="isbn-paste-row dup-row${cls}">
+        <input type="checkbox" ${g.include ? 'checked' : ''} onclick="toggleDupGroup(${i})">
+        <code>${DUP_MARKS[g.tier]} ${esc(g.title.slice(0, 48))} · ${esc(g.type)} ×${g.loserIds.length + 1}</code>
+        <span>${dupWhy(g)}</span>
+      </div>`;
+    }).join('');
+}
+
+function toggleDupGroup(i) {
+  const g = dupGroups[i];
+  if (!g) return;
+  g.include = !g.include;
+  renderDuplicateResults();
+}
+
+// ACCEPTING A GROUP IS TWO WRITES AND THE ORDER IS LOAD-BEARING. The merged
+// survivors go first. Reversed, a failure between the two calls would have
+// deleted the losing rows while the fields they were carrying had not yet
+// landed on the row that was supposed to inherit them — which is precisely the
+// data loss this whole feature exists to prevent.
+async function commitDuplicates() {
+  const chosen = dupGroups.filter((g) => g.include);
+  if (chosen.length === 0) return;
+
+  const byId = new Map(library.map((i) => [i.id, i]));
+  const survivors = [];   // merged rows to upsert — only the ones a merge changes
+  const restore = [];     // what Undo puts back
+  const ids = [];         // the losing rows, to delete
+
+  for (const g of chosen) {
+    const survivor = byId.get(g.survivorId);
+    const losers = g.loserIds.map((id) => byId.get(id));
+    if (!survivor || losers.some((r) => !r)) {
+      alert('Something in this scan is no longer in your library. Close this and scan again.');
+      return;
+    }
+    if (Object.keys(g.fills).length) {
+      survivors.push({ ...survivor, ...g.fills });
+      // The PRE-merge row rides in the undo buffer alongside the deletions.
+      // Undo restores through items/bulk, which upserts by id, so the survivor's
+      // old values come back the same way the deleted rows do. Without this an
+      // undo would put the losing rows back and leave the survivor still
+      // wearing what it took from them.
+      restore.push({ ...survivor });
+    }
+    restore.push(...losers);
+    ids.push(...g.loserIds);
+  }
+
+  const gained = survivors.length;
+  if (!confirm(
+    `Remove ${plural(ids.length)} from ${chosen.length} group${chosen.length === 1 ? '' : 's'}?`
+    + (gained ? `\n\n${plural(gained)} that you keep will also gain fields that were only filled in on a copy.` : '')
+    + '\n\nYou can undo this for a few seconds afterwards.')) return;
+
+  cancelUndo();
+
+  if (survivors.length) {
+    const wrote = await apiWrite(() => apiFetch('/api/media-vault/items/bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: survivors }),
+    }));
+    if (!wrote) return;
+  }
+
+  const res = await apiWrite(() => apiFetch('/api/media-vault/items/bulk-delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids }),
+  }));
+  if (!res) return;
+
+  // Same reasoning as bulkDelete: a short count means another tab removed some
+  // of these first, so the buffer names rows the server did NOT delete and
+  // restoring it would resurrect what somebody else threw away. The merges that
+  // already landed stay — they lost nothing.
+  if (!await agreesWithServer(res, ids.length)) {
+    closeDuplicatesModal();
+    renderLibrary();
+    return;
+  }
+
+  const merged = new Map(survivors.map((s) => [s.id, s]));
+  const gone = new Set(ids);
+  library = library.filter((i) => !gone.has(i.id)).map((i) => merged.get(i.id) || i);
+  closeDuplicatesModal();
+  renderLibrary();
+  offerUndo(restore,
+    `Merged ${chosen.length} group${chosen.length === 1 ? '' : 's'}, removing ${plural(ids.length)}. `
+    + 'Closing this page will finish the delete.');
 }
 
 // ─── PERSISTENCE (D1 via /api/media-vault, identity from Cloudflare Access) ───

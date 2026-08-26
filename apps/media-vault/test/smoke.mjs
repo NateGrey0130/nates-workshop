@@ -17,6 +17,9 @@ import {
   normalizeIsbn, isIsbnShape, looksLikeIsbn, isbnCheckDigitValid,
 } from '../../../functions/api/media-vault/_lib/common.js';
 import { mergeKey, planMigration } from '../../../functions/api/media-vault/migrate.js';
+import {
+  planDedupe, dupSurvivor, DUP_MERGE_FIELDS, DUP_BLOCKING_FIELDS,
+} from '../../../functions/api/media-vault/_lib/dedupe.js';
 
 const appDir = join(dirname(fileURLToPath(import.meta.url)), '..');
 const repoRoot = join(appDir, '..', '..');
@@ -26,7 +29,7 @@ const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
 const schema = readFileSync(join(repoRoot, 'db', 'schema.sql'), 'utf8');
 const commonSrc = readFileSync(join(apiDir, '_lib', 'common.js'), 'utf8');
 
-const endpointFiles = ['items.js', 'migrate.js', 'lookup.js',
+const endpointFiles = ['items.js', 'migrate.js', 'lookup.js', 'duplicates.js',
   join('items', 'bulk.js'), join('items', 'bulk-update.js'), join('items', 'bulk-delete.js')];
 const endpointSrc = Object.fromEntries(
   endpointFiles.map((f) => [f.replace(/\\/g, '/'), readFileSync(join(apiDir, f), 'utf8')]));
@@ -458,8 +461,8 @@ section('The README’s claims');
   walk(apiDir, '');
   check('the file map lists every endpoint file that exists',
     onDisk.every((f) => readme.includes(f.split('/').pop())), onDisk.join(' '));
-  check('and the endpoint files are exactly the six documented',
-    onDisk.length === 6, onDisk.join(' '));
+  check('and the endpoint files are exactly the seven documented',
+    onDisk.length === 7, onDisk.join(' '));
 }
 {
   const documented = [...readme.matchAll(/^\| `([a-z-]+)` \| (?:OpenLibrary|TMDB) \|/gm)].map((m) => m[1]);
@@ -799,6 +802,208 @@ check('but the proxy does NOT check the digit — that answer belongs to the cli
   check('the in-flight stop control is not a second button called Cancel',
     appSrc.includes("lookupBtn.textContent = 'Stop'")
     && !/lookupBtn\.textContent = 'Cancel'/.test(appSrc));
+}
+
+// ---------- 7. The duplicate scanner ----------
+// The library it was written against holds 662 rows that share a title and a
+// type with another row. Three of eight sampled author-disagreeing groups were
+// separate works — Candyman (1992) and Candyman (2021), two unrelated novels
+// called Burned — so the property that matters most here is not how much it
+// finds. It is what it refuses to decide.
+section('The duplicate scanner');
+
+{
+  const p = planDedupe([
+    item({ id: 'a', title: 'Dune', type: 'movie' }),
+    item({ id: 'b', title: 'Dune', type: 'audiobook' }),
+    item({ id: 'c', title: 'Solaris', type: 'movie' }),
+  ]);
+  check('a library with nothing repeated produces no groups at all',
+    p.groups.length === 0 && p.removable === 0);
+  check('and the paperback and the audiobook of one title are not a repeat',
+    p.scanned === 3);
+}
+{
+  const rows = [
+    item({ id: 'a', title: 'Dune', type: 'movie', addedAt: 20 }),
+    item({ id: 'b', title: 'DUNE', type: 'movie', addedAt: 10 }),
+  ];
+  const g = planDedupe(rows).groups[0];
+  check('a title differing only in case is the same group',
+    !!g && g.loserIds.length === 1);
+  check('and it is keyed exactly as the migration keys it, so the two can never disagree',
+    g.key === mergeKey({ title: 'Dune', type: 'movie' }));
+  check('the earliest row survives, so addedAt still answers when this entered the library',
+    g.survivorId === 'b' && g.loserIds[0] === 'a');
+}
+{
+  // CSV import stamps one Date.now() across every row it creates, so a whole
+  // import shares a millisecond. Without the id tie-break the survivor would be
+  // whichever row the database happened to return first.
+  const tied = [
+    item({ id: 'zz', title: 'Dune', type: 'movie', addedAt: 5 }),
+    item({ id: 'aa', title: 'Dune', type: 'movie', addedAt: 5 }),
+  ];
+  check('rows added in the same millisecond still pick one survivor, deterministically',
+    dupSurvivor(tied).id === 'aa' && dupSurvivor(tied.slice().reverse()).id === 'aa');
+}
+{
+  const g = planDedupe([
+    item({ id: 'a', title: 'Dune', type: 'movie', author: 'Villeneuve', addedAt: 1 }),
+    item({ id: 'b', title: 'Dune', type: 'movie', author: 'Villeneuve', addedAt: 2 }),
+  ]).groups[0];
+  check('a byte-identical pair is marked identical and fills nothing',
+    g.tier === 'identical' && Object.keys(g.fills).length === 0 && g.include);
+}
+{
+  const g = planDedupe([
+    item({ id: 'a', title: 'Dune', type: 'movie', author: 'Villeneuve', addedAt: 1 }),
+    item({ id: 'b', title: 'Dune', type: 'movie', genre: 'Sci-Fi', cover: 'http://x/y.jpg', addedAt: 2 }),
+  ]).groups[0];
+  check('empty-versus-filled is not a disagreement, it is the merge doing its job',
+    g.tier === 'mergeable' && g.include && g.conflicts.length === 0);
+  check('and the blanks on the survivor are filled from the row that is about to go',
+    g.fills.genre === 'Sci-Fi' && g.fills.cover === 'http://x/y.jpg');
+  check('while a field the survivor already answered is never rewritten',
+    !('author' in g.fills));
+}
+{
+  // The one this feature exists to get right.
+  const g = planDedupe([
+    item({ id: 'a', title: 'Candyman', type: 'movie', author: 'Bernard Rose', addedAt: 1 }),
+    item({ id: 'b', title: 'Candyman', type: 'movie', author: 'Nia DaCosta', addedAt: 2 }),
+  ]).groups[0];
+  check('two works that share a title and a type are flagged, never merged',
+    g.tier === 'conflict' && g.include === false);
+  check('and the group names the field and quotes BOTH values, because that is the decision',
+    g.conflicts.length === 1 && g.conflicts[0].field === 'author'
+    && g.conflicts[0].values.join(' vs ') === 'Bernard Rose vs Nia DaCosta');
+}
+{
+  // Ticking a conflicting group is allowed — it is the user's call — and even
+  // then the surviving row cannot lose anything it already said.
+  const g = planDedupe([
+    item({ id: 'a', title: 'Candyman', type: 'movie', author: 'Bernard Rose', addedAt: 1 }),
+    item({ id: 'b', title: 'Candyman', type: 'movie', author: 'Nia DaCosta', genre: 'Horror', addedAt: 2 }),
+  ]).groups[0];
+  check('accepting a conflict can only discard the losing rows, never rewrite the surviving one',
+    !('author' in g.fills) && g.fills.genre === 'Horror');
+}
+{
+  const g = planDedupe([
+    item({ id: 'a', title: 'Dune', type: 'movie', author: 'Hamilton Wright Mabie', addedAt: 1 }),
+    item({ id: 'b', title: 'Dune', type: 'movie', author: 'hamilton wright mabie ', addedAt: 2 }),
+  ]).groups[0];
+  check('case and stray space are not a disagreement between two spellings of one name',
+    g.tier === 'mergeable' && g.conflicts.length === 0);
+}
+{
+  const noisy = planDedupe([
+    item({ id: 'a', title: 'Dune', type: 'movie', genre: 'Sci-Fi', cover: 'a.jpg', addedAt: 1 }),
+    item({ id: 'b', title: 'Dune', type: 'movie', genre: 'Adventure', cover: 'b.jpg', addedAt: 2 }),
+  ]).groups[0];
+  check('genre and cover disagreeing does NOT make a group need review',
+    noisy.tier === 'mergeable' && noisy.include && noisy.conflicts.length === 0);
+  check('and the survivor keeps its own genre and cover rather than taking the other',
+    Object.keys(noisy.fills).length === 0);
+
+  const sourced = planDedupe([
+    item({ id: 'a', title: 'Candyman', type: 'movie', source_id: 'tmdb:movie:9529', addedAt: 1 }),
+    item({ id: 'b', title: 'Candyman', type: 'movie', source_id: 'tmdb:movie:505262', addedAt: 2 }),
+  ]).groups[0];
+  check('but two different source ids are the strongest proof there is that these differ',
+    sourced.tier === 'conflict' && !sourced.include);
+}
+{
+  const p = planDedupe([
+    item({ id: 'a', title: 'Deadpool', type: 'movie', addedAt: 1 }),
+    item({ id: 'b', title: 'Deadpool', type: 'movie', addedAt: 2 }),
+    item({ id: 'c', title: 'Deadpool', type: 'movie', addedAt: 3 }),
+  ]);
+  check('a group of three gives up two rows',
+    p.groups.length === 1 && p.groups[0].loserIds.length === 2);
+  check('and the count reported is rows, not groups — the number the user is about to lose',
+    p.removable === 2);
+}
+{
+  const p = planDedupe([
+    item({ id: 'a', title: 'Zebra', type: 'movie', addedAt: 1 }),
+    item({ id: 'b', title: 'Zebra', type: 'movie', addedAt: 2 }),
+    item({ id: 'c', title: 'Apple', type: 'movie', author: 'One', addedAt: 1 }),
+    item({ id: 'd', title: 'Apple', type: 'movie', author: 'Two', addedAt: 2 }),
+  ]);
+  check('conflicts sort to the top, so the decisions are not below hundreds of safe rows',
+    p.groups[0].tier === 'conflict' && p.groups[0].title === 'Apple');
+}
+{
+  check('the two field lists agree about what a merge may carry',
+    DUP_BLOCKING_FIELDS.every((f) => DUP_MERGE_FIELDS.includes(f)),
+    DUP_BLOCKING_FIELDS.filter((f) => !DUP_MERGE_FIELDS.includes(f)).join(','));
+  check('and neither list contains the fields that ARE the key',
+    !DUP_MERGE_FIELDS.includes('title') && !DUP_MERGE_FIELDS.includes('type'));
+  check('genre and cover are the only fields a merge treats as noise',
+    DUP_MERGE_FIELDS.filter((f) => !DUP_BLOCKING_FIELDS.includes(f)).join(',') === 'genre,cover');
+  check('the rule is defined once rather than copied into the client',
+    !appSrc.includes('DUP_BLOCKING_FIELDS') && !/function planDedupe\(/.test(appSrc));
+}
+{
+  // The scanner finds and explains. Applying a group goes through the two
+  // endpoints that already exist, already batch as transactions and already
+  // feed the undo buffer — a second way to delete rows in bulk is exactly what
+  // this app was rebuilt to stop having.
+  const src = endpointSrc['duplicates.js'];
+  check('the scan endpoint only ever reads',
+    !/DELETE|INSERT|UPDATE/.test(src) && !src.includes('onRequestPost')
+    && !src.includes('onRequestDelete') && src.includes('onRequestGet'));
+  check('and it decides in the pure planner rather than in the handler',
+    src.includes('planDedupe') && src.includes('_lib/dedupe.js'));
+}
+{
+  const declOf = (name) => {
+    const at = appSrc.indexOf('function ' + name + '(');
+    if (at < 0) return '';
+    const m = /\r?\n\}/.exec(appSrc.slice(at));
+    return m ? appSrc.slice(at, at + m.index + m[0].length) : appSrc.slice(at);
+  };
+  const cd = declOf('commitDuplicates');
+  check('the client applies a group through the endpoints that already exist',
+    cd.includes("'/api/media-vault/items/bulk'")
+    && cd.includes("'/api/media-vault/items/bulk-delete'"));
+  // THE ORDERING BUG THIS EXISTS TO CATCH: delete first and a failure between
+  // the two calls destroys the only copy of every field the merge was carrying.
+  check('and it writes the merged survivors BEFORE deleting the rows they inherit from',
+    cd.indexOf("items/bulk'") >= 0
+    && cd.indexOf("items/bulk'") < cd.indexOf('items/bulk-delete'));
+  check('the undo buffer carries the survivor as it was before the merge, not just the deletions',
+    cd.includes('restore.push({ ...survivor })') && cd.includes('restore.push(...losers)'));
+  check('a short delete count withdraws the undo here too',
+    cd.includes('agreesWithServer(res, ids.length)')
+    && cd.indexOf('agreesWithServer') < cd.indexOf('offerUndo('));
+  check('and the toast says what really happened rather than borrowing the delete sentence',
+    cd.includes('offerUndo(restore,') && /Merged \$\{chosen\.length\}/.test(cd));
+  // Caught by driving it rather than by reading it: the buffer stopped being
+  // "rows that are gone" the moment a merge put an EDITED row in it, and a
+  // blind push then held the same id twice — a duplicate of the thing the user
+  // had just finished de-duplicating.
+  check('the restore replaces by id and appends only what is genuinely missing',
+    declOf('undoBulkDelete').includes('library.map((i) => back.get(i.id) || i)')
+    && !/library\.push\(\.\.\.rows\);/.test(appSrc));
+  check('the head count is rebuilt on every tick, so it cannot lag the checkbox',
+    declOf('toggleDupGroup').includes('renderDuplicateResults()'));
+  check('a group naming a row this tab no longer holds is dropped before it can be rendered',
+    declOf('runDuplicateScan').includes('library.some((i) => i.id === g.survivorId)'));
+  check('nothing is written by opening the scanner',
+    !declOf('runDuplicateScan').includes('apiWrite'));
+}
+{
+  check('the README documents the scanner and the key it groups by',
+    readme.includes('`/api/media-vault/duplicates`') && readme.includes('`planDedupe`'));
+  check('and says plainly that a shared title is not proof of a duplicate',
+    readme.includes('Candyman'));
+  check('the README names the two fields a merge treats as noise',
+    /`genre` and `cover`/.test(readme));
+  check('and states that the merge never overwrites a value that is already there',
+    readme.includes('never overwrites'));
 }
 
 process.exit(summary() === 0 ? 0 : 1);

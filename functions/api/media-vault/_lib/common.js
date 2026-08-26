@@ -141,6 +141,19 @@ export function rowToItem(row) {
   };
 }
 
+// What counts as "the same item" when no id is available to say so: the title,
+// case-folded, and the type. It lives here rather than in migrate.js — where it
+// was written — because the duplicate scanner needs the same answer, and two
+// definitions of "the same item" that disagreed would let the scanner flag a
+// pair the migration had already decided was distinct. migrate.js re-exports it
+// so its existing callers are unaffected.
+//
+// The type half is what keeps the paperback and the audiobook of one title
+// apart, which is the commonest honest repeat in this data.
+export function mergeKey(item) {
+  return String(item.title || '').toLowerCase() + '|' + item.type;
+}
+
 // 15 bound parameters now rather than 14, still far under D1's 100.
 export const UPSERT_SQL =
   `INSERT INTO media_items (user_email, item_id, type, format, title, author, actors, producers, genre, series, location, cover, notes, source_id, added_at)

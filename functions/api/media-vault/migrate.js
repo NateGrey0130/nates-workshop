@@ -13,11 +13,12 @@
 // what a migration would do without a database. It is the one piece of this
 // app where a bug silently loses or resurrects a user's rows.
 
-import { getUserEmail, json, sanitizeItem, UPSERT_SQL, bindUpsert, MAX_ITEMS } from './_lib/common.js';
+import { getUserEmail, json, sanitizeItem, UPSERT_SQL, bindUpsert, MAX_ITEMS, mergeKey } from './_lib/common.js';
 
-export function mergeKey(item) {
-  return String(item.title || '').toLowerCase() + '|' + item.type;
-}
+// Moved to _lib/common.js when the duplicate scanner started needing the same
+// answer; re-exported here because this is where it was first defined and
+// where the test that proves it still looks for it.
+export { mergeKey };
 
 // existingRows: the caller's cloud rows ({ item_id, title, type }).
 // newId: injectable so a test can be deterministic; production passes UUIDs.

@@ -18,22 +18,27 @@ gate. No build step, no framework, no dependencies.
 ```
 apps/media-vault/
 ├── index.html            The page: header, toolbar, grid/list, stats page,
-│                         add-edit / detail / import modals, bulk action bar
+│                         add-edit / detail / import / duplicates modals,
+│                         bulk action bar
 ├── styles.css            Loaded after /shared/styles.css
 ├── app.js                Everything the page does, one plain script
 └── test/
-    └── smoke.mjs         The merge planner, the sanitizer, the ISBN input
-                          rules, and the claims this README makes
+    └── smoke.mjs         The merge planner, the duplicate scanner, the
+                          sanitizer, the ISBN input rules, and the claims
+                          this README makes
 
 functions/api/media-vault/
 ├── _lib/common.js        Identity (Access email, dev@localhost fallback),
 │                         the JSON helper, the item sanitizer, the upsert,
-│                         the four ISBN rules
+│                         the four ISBN rules, the same-item key
+├── _lib/dedupe.js        planDedupe — which rows repeat, and which of those
+│                         a person still has to judge
 ├── items.js              GET / POST / DELETE — the library, one item at a time
 ├── items/bulk.js         POST — upsert many (CSV import)
 ├── items/bulk-update.js  POST — retype a selection
 ├── items/bulk-delete.js  POST — delete a selection
 ├── migrate.js            POST — the one-time localStorage retirement
+├── duplicates.js         GET  — the duplicate scan, read-only
 └── lookup.js             GET  — OpenLibrary + TMDB, proxied
 
 db/schema.sql             media_items — see "Data model"
@@ -153,6 +158,65 @@ lands in a single `items/bulk` call — one `db.batch()`, one transaction. A
 failed item is left completely untouched, so "resume" is just *select the
 failures and run again*; there is no checkpointing because none is needed.
 
+## Finding the repeats
+
+**⧉ Duplicates** in the header scans the whole library for rows that share a
+title and a type, explains each group, and merges the ones the user ticks.
+`GET /api/media-vault/duplicates` is **read-only** — it finds and explains and
+never writes. Accepting a group goes through `items/bulk` and
+`items/bulk-delete`, the endpoints that already exist, so there is exactly one
+way to delete rows in bulk rather than two.
+
+The decision half is `planDedupe` in `_lib/dedupe.js`, kept pure so the smoke
+test can prove what a scan would say without a database.
+
+**None of the import paths has ever checked whether an item was already there.**
+CSV import mints a fresh id per row and inserts unconditionally, so
+re-importing an export duplicates the whole library; the ISBN paste dedupes
+within one run and never looks at what is stored. `source_id` — the normalised
+ISBN, or `tmdb:movie:1234` — is the field that could settle it, and it is empty
+on all but a handful of rows because it was added long after they were.
+
+So the key is the migration's key: **lowercased title plus type**, the same
+`mergeKey`, defined once in `_lib/common.js` so the scanner and the migration
+can never disagree about what "the same item" means. The type half is what
+keeps the paperback and the audiobook of one title apart.
+
+**A shared title is not proof of a duplicate, and this code assumes it is
+not.** Two physical copies can sit on different shelves; *Candyman* (1992) and
+*Candyman* (2021) share a title, a type and nothing else. So every group falls
+into one of three piles:
+
+| | what it means | arrives |
+|---|---|---|
+| `=` identical | byte-identical on every field | ticked |
+| `+` mergeable | differences are only empty-versus-filled | ticked |
+| `⚠` conflict | some field that matters holds two different values | **unticked**, naming the field and quoting both values |
+
+**A field only disagrees when both sides have something to say.**
+Empty-versus-filled is the merge doing its job. A merge **never overwrites** a
+value that is already there — the same rule the enrich pass follows, and it is
+what makes ticking a conflicting group safe to offer at all: the worst it can
+do is discard the losing rows, never rewrite the surviving one.
+
+`genre` and `cover` are deliberately treated as noise rather than as conflicts,
+and they are the two fields that disagree most. Genre strings come from
+whichever lookup happened to run; covers were written wrong in bulk for months
+by the carry-over bug. Every other field disagreeing is a real signal —
+including `source_id`, which is the one piece of positive proof this data can
+offer that two rows are different works, and which will get stronger as it is
+filled in.
+
+The survivor is the **earliest** row, so `added_at` still answers *when did
+this enter the library*, with an id tie-break because a CSV import stamps one
+timestamp across every row it creates.
+
+Two other things this gets right because they were got wrong elsewhere first.
+The count reported is **rows, not groups** — a group of three gives up two, and
+those are different numbers. And **the merged survivors are written before the
+losing rows are deleted**: reversed, a failure between the two calls would
+destroy the only copy of every field the merge was carrying.
+
 ## Undoing a bulk delete
 
 A bulk delete is irreversible on the server: there is no `deleted_at` column
@@ -173,6 +237,14 @@ finish the delete"*). Writing deleted rows to localStorage would recreate the
 second copy of the truth this app was rebuilt to eliminate, so a reload inside
 the window finishes the delete. That is the honest contract and it is the one
 thing about this design the user has to be told.
+
+A duplicate merge uses the same window, and puts one extra thing in the
+buffer: the **surviving row as it was before the merge**. Undo restores through
+an upsert keyed by id, so the survivor's old values ride back exactly the way
+the deleted rows do — without that, an undo would put the losing rows back and
+leave the survivor still wearing what it took from them. That is also why the
+toast is worded per-operation: the merge restores more rows than it deleted, so
+*"Deleted 662 items"* would name a number the user never agreed to.
 
 Restoring goes through `items/bulk`, which round-trips a row faithfully —
 **`item_id` and `added_at` included** — so it is a restore rather than a
@@ -238,6 +310,7 @@ to that email.
 | `/api/media-vault/items/bulk-update` | POST | `{ ids, set }` — five settable fields, below. Every one is reachable from the bulk bar; the endpoint accepts several at once |
 | `/api/media-vault/items/bulk-delete` | POST | `{ ids }` — deletes exactly the named rows |
 | `/api/media-vault/migrate` | POST | The one-time localStorage merge, below |
+| `/api/media-vault/duplicates` | GET | Which rows repeat, and why — read-only, below |
 | `/api/media-vault/lookup` | GET | Metadata proxy, below |
 
 **What is bulk-settable, and what is deliberately not.** `bulk-update`'s
