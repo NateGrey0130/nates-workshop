@@ -815,6 +815,31 @@ claim-audit rule):
   spell strength nor perception is a [key]" — half false),
   ley-line-rifter/headhunter ("applied by hand"). Fixed by F8/F14 plus note
   rewrites.
+  - **Taken, 2026-08-26** (`fix-rue-ley-line-walker-perception.sql`): four of
+    the five were already done and the fifth was the whole item. Read from D1
+    rather than from the `add-*` scripts: burster, juicer and
+    headhunter-techno-warrior carry their perception (and the juicer its
+    disarm) with their notes rewritten, by F8 and F14; ley-line-rifter the
+    same. Only **ley-line-walker** was left, and F8 skipped it on purpose —
+    its bonus is a *schedule*, "+1 on Perception Rolls at levels 2, 5, 7, 10,
+    and 13; double when on a ley line" (re-read from the cache, rue p119), not
+    a flat number. It lands as five `at_level` `combat.perception` entries and
+    **no base `combat` block**: the schedule starts at level 2, so a base
+    `perception: 1` — the mystic's shape, which F8 *did* use — would hand every
+    walker a point the book never gives. The doubling stays prose, correctly:
+    `bonuses` is unconditional. The rewritten note also corrects a second false
+    sentence in the same paragraph, that the "+3 to save vs curses" is carried
+    `at_level`; it is flat, and has been since `fix-ley-line-walker-rue-bonuses`
+    established that the leveled save is the *magic* save.
+    **The filename is the finding worth keeping.** The obvious
+    `fix-ley-line-walker-perception.sql` sorts *before* both
+    `fix-ley-line-walker-rue-bonuses.sql` (which rewrites the `at_level` block
+    it appends to) and `fix-pre-rue-class-audit.sql` (which rewrites this
+    class's whole markdown), so on a clean rebuild it would find neither anchor
+    and silently do nothing — live D1 would be right and a rebuilt database
+    wrong. The `fix-rue-` infix puts it after both, the same trick F14 used.
+    Verified by simulating both `replace()` pairs against the live markdown:
+    `class-check` reads ready, 0 errors, 0 warnings.
 - **S4 — Godling: the extraction note says the category bonuses "(Domestic
   +10%, Medical +10%, Technical +10%, Wilderness +5%) have nowhere to go in
   the format and are not applied", and that Horsemanship is "offered as a
