@@ -821,17 +821,79 @@ claim-audit rule):
   category without the bonus".** Both false in the same file: the data above
   the note carries `bonus: 10/10/10/5` **and** `Horsemanship bonus: 15`. Pure
   note rot — rewrite only, no data change.
+  - **Taken, 2026-08-26** (`fix-godling-skill-category-bonuses-note.sql`): as
+    written — one statement, no data touched, and the readback asserts all five
+    bonuses are still present so that "no data change" is proved rather than
+    claimed. The bonuses arrived in `fix-godling-demigod-accuracy.sql`'s F3,
+    which rewrote no note, so the class carried the bonuses *and* a paragraph
+    swearing it could not: the data right and the only prose about it wrong,
+    which is worse than either alone.
+    **Two things this took to see, both worth the next reader's time.** The
+    original `add-godling-class.sql` still shows the pre-fix state, so reading
+    it says the bonuses are absent and the note is *true* — only the database
+    says otherwise, exactly as the class-import skill warns. And `instr` for the
+    note's own sentence returns 0, because the stored text wraps mid-phrase
+    (`have nowhere to` / newline / `go in the format`), which is why it survived
+    earlier sweeps. Match a stored note across the wrap or it reads as gone.
 - **S5 — Walker/Rifter attribute-of-choice "by hand"** — expressible via
   ability choice groups; taken as F19.
+  - **Closed, 2026-08-26** — no work of its own; verified rather than assumed.
+    F19 shipped `fix-walker-rifter-attribute-choice.sql` (the rifter half; the
+    walker already carried its choose-1 group). Live `--remote` confirms both
+    now hold a choice group, and the rifter's surviving "attribute of choice"
+    phrase is the *rewritten* note saying it IS one — it cites this audit's F19
+    by name. Spell Strength stays prose there, correctly: no such bonus key
+    exists, which this file's own "Checked and still true" list records.
 - **S6 — Witch: the Gift of Power's four-from-eleven "would need bonuses the
   shape cannot express together."** Partially false — an ability may now
   carry `bonuses` + `psionics` + `magic` together (ABILITY_GRANTS), which
   covers most of the eleven; flight and the impervious set stay prose. The
   Gift of Magic's spell allotment stays blocked (variants still cannot carry
   `magic` — verified). Modeling the eleven is a real project; user's call.
+  - **Taken, 2026-08-26** (`fix-witch-gift-of-power-abilities.sql`): eleven
+    ability definitions and a `{ choose: 4 }` over them, replacing the single
+    prose ability. **Seven carry real bonuses**; four stay prose for one reason
+    each — an immunity (not a save bonus), a constant sense, a flight Spd that
+    applies only while flying, and a healing rate. "A real project" turned out
+    to be one data script: the machinery was already there and validated.
+    **The Sixth Sense grant is deliberately left prose**, and that is the one
+    judgement call. An ability-level `psionics` block *replaces* the character's
+    block rather than merging into it, and this class has none, so granting it
+    would install a block with no `type` — inventing a psychic tier the book
+    never states, on a class whose I.S.P. can arrive from a different gift. The
+    saves that ability grants are modelled; only the power is not.
+    **It also closed a live hole.** The `gift-of-power` variant carried
+    `ppe_base: "2d4x10+20, but only if the P.P.E. ability is one of the four
+    selected; otherwise none"` — a *condition inside a field that holds a dice
+    formula*, which `leveling.js` feeds straight to `perLevelDiceOf`. It could
+    never be enforced. The P.P.E. now rides on the pick and the variant states
+    no base; with no top-level `ppe_base`, a witch who skips that gift correctly
+    has none. Verified: rebuilt markdown runs `class-check` at 0 errors,
+    0 warnings, and all seven bonus blocks read back.
 - **S7 — Dog Boy: breed bonuses "are player options that no schema field
   holds."** `variants` override `bonuses` now — twenty breeds as variants is
   expressible, if bulky. User's call.
+  - **Declined, 2026-08-26**, on Nate's word, and the finding above is wrong in
+    two ways worth correcting in place rather than deleting.
+    **It is five breeds, not twenty.** The stored table holds Irish Water
+    Spaniel, Wolfhound, Irish/English Setters, Coonhound and Golden Retriever —
+    and the book calls it *"a sample"*, covering percentile **01-25% only**
+    before pointing at Rifts World Book 13: Lone Star pp.22-55 for the rest. So
+    modelling it yields a percentile table that cannot be rolled on.
+    **And every one of the five carries something `variants` provably cannot
+    express** — the swim percentages (90%/55%/80%) and, worse, the Wolfhound's
+    **-40%** and the Coonhound's **+5% to track by smell**. Both blockers are on
+    this file's own *"Checked and still true"* list: `variants` cannot override
+    `skills`, and no race-level per-skill modifier exists. Tracking by smell is
+    the whole point of a Dog Boy, so a Coonhound modelled as "+3 Perception"
+    with its tracking bonus dropped is **worse than the current prose, because
+    it looks complete.** Two lesser objections: the table is explicitly
+    *optional*, so variants would force every Dog Boy to choose a breed
+    structurally; and `dog-boy` has no `variants` block today.
+    **The real blocker is the missing per-skill modifier**, which also blocks
+    changeling +5% Disguise, the gnome's list and kobold metalworking on the
+    same list. Build that and this item plus several others unblock together;
+    until then this buys a half-modelled table that hides its own gaps.
 - **S8 — Goblin: the Cobbler sub-race "the app cannot express one yet."**
   Half false — a variant carries its `ppe_base` (3D4x10+1D6/level) and save
   bonuses; its faerie-magic spell grants still don't fit (no `magic` on
@@ -841,6 +903,33 @@ claim-audit rule):
   entries carry `categories` (mystic's level-4/8 Super picks) — whether a
   level-1 schedule entry fires at creation needs a check before calling this
   expressible; flagged for a look rather than asserted.
+  - **Checked, 2026-08-26 — the answer is no, and it is worse than the finding
+    supposed.** A level-1 `powers_schedule` entry does **not** fire at creation.
+    `powers_schedule` is read only by `perLevelGrants` and
+    `psionicCategoriesForGrant`, both of which run over a *fromLevel to toLevel*
+    span — level-up only. Creation is built somewhere else entirely, and twice:
+    `psiConfig` in `app.js` and `validate-character.js` on the server both
+    assemble the starting pick from `powers_starting` (one count) plus
+    `categories_allowed` **or** `powers_from`. One count, one category list. A
+    per-category split at creation cannot be said.
+    **Both named classes are therefore wrong in production right now**, which
+    the finding did not claim: `delphi-juicer` carries `powers_starting: 4` with
+    `categories_allowed: ["Physical", "Super"]` where the book grants *3 Physical
+    + 1 Super*, so a player may legally take four Super; `mind-mage` carries
+    `powers_starting: 12` over four categories where the book grants *three from
+    each*, so a player may take twelve Super. The picker permits starting
+    loadouts the books forbid.
+    **The fix is smaller than it looks, and it is app code rather than data.**
+    The server already assembles `pool.psionic` as an ARRAY of pick-groups
+    (`[startPsi, ...grants]`), so everything downstream of the builders already
+    handles several groups with different category gates. What is missing is a
+    frontmatter shape letting `powers_starting` express more than one group, and
+    the two builders reading it — the client and the server, which are separate
+    paths and must move together. Until then the two classes should not be
+    "corrected" by narrowing `categories_allowed`: that would trade a loadout
+    that is too permissive for one that forbids a category the book grants.
+    **A decision, not a defect to sweep up** — it needs the schema change, so it
+    is Nate's call whether to build it.
 
 **Checked and still true** (do not "fix" these — each was verified against
 the current code): `variants` cannot override `skills`, `natural_abilities`,
