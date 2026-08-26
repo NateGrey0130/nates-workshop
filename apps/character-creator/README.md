@@ -4929,18 +4929,29 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 
 Every app in the monorepo shares one D1, `nates-workshop-media`, bound as `DB`.
 That reads like a thing to fix, so here are the numbers it should be judged
-against — read off production, not estimated.
+against — read off production on **26 August 2026**, not estimated.
+
+They are a dated snapshot, and no test pins them: a count read off production
+cannot be checked by a suite that builds its database from nothing, which is
+exactly why the previous set went stale — `media_items` had drifted by more
+than 1,400 rows before anyone noticed, and the figure sat in this table
+looking authoritative the whole time. Re-read them rather than trusting them,
+and date whatever you write down. The counts cover the 34 real tables; they
+exclude `sqlite_sequence` and `_cf_KV`, and the five `journal_fts*` tables,
+whose rows are `journal_entries` counted a second time. Read them in batches
+of five tables — D1 caps a compound SELECT at five terms and answers
+`SQLITE_ERROR 7500` above that.
 
 | | |
 |---|---|
-| database size | **3.5 MB** of D1's 10 GB — 0.03% |
+| database size | **4.3 MB** of D1's 10 GB — 0.04% |
 | tables | 41 (incl. FTS internals) |
-| rows, everything | **6,651** |
-| of which `media_items` (MediaVault) | 2,082 |
+| rows, everything | **8,322** |
+| of which `media_items` (MediaVault) | 3,544 |
 | the OFD snapshot (FilamentForge) | 2,208 |
-| the five catalogs together | 1,901 |
-| characters, live | **9** |
-| the largest table this app owns | `gear`, 844 rows |
+| the five catalogs together | 1,968 |
+| characters, live | **10** |
+| the largest table this app owns | `gear`, 902 rows |
 
 **The apps already have zero overlap.** `functions/api/media-vault/` and
 `functions/api/filament-forge/` are the only D1 consumers outside
@@ -4976,7 +4987,7 @@ migration-state checks with them.
 The five catalogs are read *whole* by `/catalogs` and `/items` — that is
 deliberate, see [Catalog lists are deliberately
 unbounded](#known-limitations-and-refactor-candidates) — so a full scan is the
-query plan, and 844 rows is the largest scan in the app. Every hot filter that
+query plan, and 902 rows is the largest scan in the app. Every hot filter that
 is not a full read is already covered: `characters` by campaign and by player,
 `character_items` by character, `journal_entries` by campaign and by character,
 `play_events` and both pending-pick tables by character, `npcs` by campaign,
