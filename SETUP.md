@@ -42,6 +42,8 @@ nates-workshop/
 │   ├── _template/            Skeleton to copy when starting a new app
 │   ├── filament-forge/       AI slicer-settings engine; see its README
 │   ├── media-vault/          Personal media library
+│   ├── pick3cut5/            Party game; see its README — its server is
+│   │                         the standalone Worker below, not this project
 │   └── character-creator/    Palladium/Rifts character builder — the big one;
 │                             see its README for everything about it
 ├── db/
@@ -67,6 +69,10 @@ nates-workshop/
 │   │                         FilamentForge's catalog
 │   └── ofd-refresh-lib.mjs   Its pure half, so FilamentForge's smoke test can
 │                             run it
+├── workers/
+│   └── pick3cut5-room/       The Durable Object server — rooms, the
+│                             generation pipeline, its own Anthropic key.
+│                             NOT deployed by a merge; see its section below
 └── functions/
     └── api/
         ├── _middleware.js    Optional JWT verification on every /api/* route;
@@ -80,6 +86,8 @@ nates-workshop/
         ├── claude.js         /api/claude — proxy (model allowlist + token cap)
         ├── media-vault/      /api/media-vault — per-item CRUD, lookup proxy
         │                     (TMDB key lives server-side), one-time migrate
+        ├── pick3cut5/        room + solo; both OUTSIDE the login wall,
+        │                     and both thin proxies to the Worker
         ├── filament-forge/   catalog (the OFD snapshot) + data (per-user
         │                     config/history/presets/custom filaments)
         └── character-creator/  46 endpoints + _lib; see the app README
