@@ -22,6 +22,10 @@ apps/media-vault/
 │                         bulk action bar
 ├── styles.css            Loaded after /shared/styles.css
 ├── app.js                Everything the page does, one plain script
+├── ISBN-AUDIT.md         Findings menu, taken one at a time — F1–F10, all
+│                         resolved; the lookup and paste-add work came from it
+├── BULK-AUDIT.md         Findings menu — B1–B9, all resolved; the bulk bar,
+│                         the undo window and "Fill blanks" came from it
 └── test/
     └── smoke.mjs         The merge planner, the duplicate scanner, the
                           sanitizer, the ISBN input rules, and the claims
