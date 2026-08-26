@@ -372,6 +372,21 @@ check('and it survives a missing value rather than throwing',
     /function setSelectMode\(on\)/.test(appSrc)
     && (appSrc.match(/^\s+selectMode = /gm) || []).length === 1);
 }
+{
+  // A selection that survives a view change can be acted on while its items
+  // are off screen: select everything, filter to Movies, and Delete still
+  // targeted the lot. Both paths that change what is shown have to prune it.
+  const declOf = (name) => {
+    const at = appSrc.indexOf('function ' + name + '(');
+    return at < 0 ? '' : appSrc.slice(at, at + 500);
+  };
+  check('changing the type filter prunes the selection to what is shown',
+    declOf('setFilter').includes('pruneSelectionToView();'));
+  check('and so does typing in the search box',
+    declOf('resetPageAndRender').includes('pruneSelectionToView();'));
+  check('and pruning refreshes the bar, so the Select All label cannot go stale',
+    declOf('pruneSelectionToView').includes('updateBulkBar();'));
+}
 check('the proxy rejects a malformed ISBN by saying what it wanted',
   /10- or 13-digit ISBN/.test(endpointSrc['lookup.js'])
   && !endpointSrc['lookup.js'].includes("'Invalid ISBN'"));
