@@ -1049,7 +1049,11 @@ function previewIsbnPaste() {
 
 async function runIsbnPaste() {
   const lookupBtn = document.getElementById('btnIsbnLookup');
-  if (isbnPasteRunning) { isbnPasteRunning = false; return; }   // the button is Cancel while it runs
+  // While a run is in flight this button stops it, and it is labelled 'Stop'
+  // rather than 'Cancel' because the modal's own Cancel sits right beside it:
+  // two adjacent buttons reading 'Cancel' that do different things — abandon
+  // the lookups, versus close the whole modal — is a coin toss for the user.
+  if (isbnPasteRunning) { isbnPasteRunning = false; return; }
 
   // The same ISBN written two ways — `978-0-06-112008-4` and
   // `978–0–06–112008–4` — is one book, and normalizeIsbn is what proves it.
@@ -1071,7 +1075,7 @@ async function runIsbnPaste() {
   isbnPasteRunning = true;
   isbnPasteDuplicates = duplicates;
   isbnPasteRows = [];
-  lookupBtn.textContent = 'Cancel';
+  lookupBtn.textContent = 'Stop';
   document.getElementById('btnIsbnAdd').disabled = true;
   document.getElementById('isbnPasteResults').style.display = 'block';
 
