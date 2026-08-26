@@ -10,6 +10,14 @@ let selectedIds = new Set();
 let isbnPasteRows = [];       // one row per pasted line, after it has been looked up
 let isbnPasteRunning = false; // doubles as the cancel flag: the loop checks it each pass
 let isbnPasteDuplicates = 0;  // repeats dropped from the paste, reported not swallowed
+// The rows a bulk delete just removed, held for UNDO_WINDOW_SECONDS. Memory
+// only, deliberately: writing them to localStorage would recreate the second
+// copy of the truth this app was rebuilt to eliminate. The price is that a
+// reload inside the window finishes the delete, and the toast says so.
+let undoBuffer = null;
+let undoTimer = null;
+let undoSecondsLeft = 0;
+let undoFailures = 0;         // one retry is allowed before the buffer is dropped
 let currentPage = 1;
 const ITEMS_PER_PAGE = 20;
 
@@ -401,6 +409,9 @@ function deleteFromDetail() {
 // leaving for the Stats page used to turn nothing off, and hiding the bar alone
 // would have left the toggle still reading "✕ Cancel" on the way back.
 function setSelectMode(on) {
+  // Re-entering select mode ends any pending undo: it is the user moving on,
+  // and the toast and the bulk bar occupy the same corner.
+  if (on) cancelUndo();
   selectMode = on;
   selectedIds.clear();
   document.body.classList.toggle('select-mode', selectMode);
@@ -493,6 +504,7 @@ function updateBulkBar() {
 // about, even though nothing clears the selection in between today.
 async function bulkSet(set, label) {
   if (selectedIds.size === 0) return;
+  cancelUndo();
   if (!confirm(`Change ${selectedIds.size} item(s) to ${label}?`)) return;
   const ids = [...selectedIds];
   const ok = await apiWrite(() => apiFetch('/api/media-vault/items/bulk-update', {
@@ -538,6 +550,17 @@ async function bulkDelete() {
   } else if (!confirm(`Permanently delete ${count} item(s)? This cannot be undone.`)) {
     return;
   }
+  cancelUndo();   // one window at a time; two is a bug generator
+
+  // CAPTURED BEFORE THE FILTER BELOW, which is what destroys the client's only
+  // remaining copy of these rows. This works because `library` is the WHOLE
+  // library — items.js selects every row for the caller with no LIMIT, and
+  // pagination happens only inside renderLibrary — so the buffer is always
+  // exactly the rows that were deleted, never a page or a filtered subset.
+  // If a paginated GET ever arrives, this design collapses and this comment is
+  // where to start.
+  const removed = library.filter((item) => selectedIds.has(item.id));
+
   const ok = await apiWrite(() => apiFetch('/api/media-vault/items/bulk-delete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -545,8 +568,88 @@ async function bulkDelete() {
   }));
   if (!ok) return;
   library = library.filter(item => !selectedIds.has(item.id));
-  selectedIds.clear();
-  updateBulkBar();
+  setSelectMode(false);
+  renderLibrary();
+  offerUndo(removed);
+}
+
+// ─── UNDO A BULK DELETE ───
+// The window is short on purpose: long enough for the "oh no" reflex, short
+// enough that the user is still on the page and has not started something else.
+const UNDO_WINDOW_SECONDS = 10;
+
+function offerUndo(rows) {
+  if (rows.length === 0) return;
+  undoBuffer = rows;
+  undoFailures = 0;
+  undoSecondsLeft = UNDO_WINDOW_SECONDS;
+  document.getElementById('undoToastText').textContent =
+    `Deleted ${rows.length} item${rows.length === 1 ? '' : 's'}. Closing this page will finish the delete.`;
+  paintUndoButton();   // before it slides in, or a stale 'Restoring…' shows for a frame
+  document.getElementById('undoToast').classList.add('visible');
+  undoTimer = setInterval(() => {
+    undoSecondsLeft -= 1;
+    if (undoSecondsLeft <= 0) cancelUndo();
+    else paintUndoButton();
+  }, 1000);
+}
+
+function paintUndoButton() {
+  const btn = document.getElementById('undoToastBtn');
+  btn.disabled = false;
+  btn.textContent = `Undo (${undoSecondsLeft})`;
+}
+
+// Ends the window WITHOUT restoring: the delete stands. Deliberately not wired
+// to a click-anywhere or to Escape — the only two ways out are Undo and the
+// clock, because a toast that vanishes when you move the mouse is not a safety
+// net.
+function cancelUndo() {
+  if (undoTimer) { clearInterval(undoTimer); undoTimer = null; }
+  undoBuffer = null;
+  undoSecondsLeft = 0;
+  undoFailures = 0;
+  document.getElementById('undoToast').classList.remove('visible');
+}
+
+async function undoBulkDelete() {
+  if (!undoBuffer || undoBuffer.length === 0) return;
+  const rows = undoBuffer;
+  if (undoTimer) { clearInterval(undoTimer); undoTimer = null; }   // stop the clock while it writes
+  const btn = document.getElementById('undoToastBtn');
+  btn.disabled = true;
+  btn.textContent = 'Restoring…';
+
+  // items/bulk round-trips a row faithfully — id and addedAt included — so this
+  // is a restore rather than a re-add. apiWrite does the reporting: on failure
+  // it alerts with the SERVER's message, which is what surfaces "Import would
+  // exceed the library cap" verbatim when the freed space has been refilled.
+  const ok = await apiWrite(() => apiFetch('/api/media-vault/items/bulk', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items: rows }),
+  }));
+
+  if (!ok) {
+    undoFailures += 1;
+    if (undoFailures >= 2) {
+      const names = rows.slice(0, 15).map((r) => '\u00b7 ' + r.title).join('\n');
+      alert(`Restore failed twice, so these ${rows.length} items are gone:\n\n${names}`
+        + (rows.length > 15 ? `\n\u2026and ${rows.length - 15} more.` : ''));
+      cancelUndo();
+      return;
+    }
+    // One retry, and no clock on it: the user is now reacting to an error
+    // rather than to their own click.
+    document.getElementById('undoToastText').textContent =
+      `Restore failed. Press Undo to try once more — after that these ${rows.length} items are gone.`;
+    btn.disabled = false;
+    btn.textContent = 'Undo';
+    return;
+  }
+
+  library.push(...rows);
+  cancelUndo();
   renderLibrary();
 }
 
@@ -1070,6 +1173,7 @@ function parseCSVRow(row) {
 
 async function importCSV() {
   if (!csvData) return;
+  cancelUndo();
   const { headers, rows } = csvData;
   const newItems = [];
 
@@ -1252,6 +1356,7 @@ function renderIsbnPasteResults(done, total, cancelled) {
 async function commitIsbnPaste() {
   const chosen = isbnPasteRows.filter(r => r.include);
   if (chosen.length === 0) return;
+  cancelUndo();
   const newItems = chosen.map(r => bookToItem(r.book));
 
   // One write for the whole run: db.batch() is a transaction, so this either

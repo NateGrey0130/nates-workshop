@@ -738,6 +738,35 @@ body.select-mode .list-row .row-checkbox { display: block; }
 body.select-mode .list-row { cursor: default; }
 body.select-mode .list-row.selected { background: var(--accent-glow); }
 
+/* Undo toast. Same corner and the same geometry as the bulk action bar,
+   because it never shares the screen with it: deleting leaves select mode,
+   and re-entering select mode ends the undo window. */
+.undo-toast {
+  position: fixed;
+  bottom: -80px;
+  left: 16px;
+  right: 16px;
+  margin: 0 auto;
+  width: fit-content;
+  max-width: calc(100vw - 32px);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 20px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  z-index: 320;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  transition: bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.undo-toast.visible { bottom: 28px; }
+
 /* Floating bulk action bar */
 .bulk-bar {
   position: fixed;
