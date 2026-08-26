@@ -215,6 +215,10 @@
 
     <input type="hidden" id="editId">
     <input type="hidden" id="coverUrl">
+    <!-- Where the row came from: the normalised ISBN, or tmdb:movie:1234.
+         Hidden rather than shown because it is a fact about the lookup, not a
+         field anybody should be editing by hand. -->
+    <input type="hidden" id="sourceId">
 
     <div class="form-row">
       <div class="form-group">

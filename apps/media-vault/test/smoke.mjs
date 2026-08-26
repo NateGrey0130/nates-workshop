@@ -13,7 +13,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { section, check, summary } from '../../character-creator/test/harness.mjs';
 import {
-  ITEM_FIELDS, MAX_ITEMS, MAX_FIELD_LEN, sanitizeItem, rowToItem,
+  ITEM_FIELDS, MAX_ITEMS, MAX_FIELD_LEN, sanitizeItem, rowToItem, UPSERT_SQL,
   normalizeIsbn, isIsbnShape, looksLikeIsbn, isbnCheckDigitValid,
 } from '../../../functions/api/media-vault/_lib/common.js';
 import { mergeKey, planMigration } from '../../../functions/api/media-vault/migrate.js';
@@ -240,6 +240,72 @@ check('and nothing still calls its path',
   check('and the box is emptied afterwards, whether or not the write happened',
     /await bulkSet\(\{ \[field\]: value \}, question\);\r?\n[\s\S]{0,400}?input\.value = '';\r?\n\}/
       .test(declOf('bulkSetField')));
+}
+{
+  // ─── source_id, and the five ways a column silently stops round-tripping ───
+  // It records where a row came from, so a re-lookup can be exact rather than a
+  // guess. Every check here guards a path that would drop it WITHOUT FAILING
+  // ANYTHING — which is the whole hazard: nothing breaks, the column just goes
+  // quietly empty and the re-lookup it exists for degrades back to guessing.
+  const html = readFileSync(join(appDir, 'index.html'), 'utf8');
+  const declOf = (name) => {
+    const at = appSrc.indexOf('function ' + name + '(');
+    if (at < 0) return '';
+    const m = /\r?\n\}/.exec(appSrc.slice(at));
+    return m ? appSrc.slice(at, at + m.index + m[0].length) : appSrc.slice(at);
+  };
+  check('source_id is an item field, so the sanitizer, row mapper and upsert all carry it',
+    ITEM_FIELDS.includes('source_id'));
+  // Named in three places, and all three matter: the INSERT column list, the
+  // ON CONFLICT assignment (without which an UPDATE would leave the old value
+  // — invisible until a re-lookup used a stale id), and the binding.
+  check('the upsert names it in the insert, the conflict update and the bindings',
+    /\(user_email, item_id,[^)]*\bsource_id\b/.test(UPSERT_SQL)
+    && UPSERT_SQL.includes('source_id = excluded.source_id')
+    && commonSrc.includes('it.source_id'));
+  check('and the bound parameter count still matches the columns it lists',
+    (UPSERT_SQL.match(/\?/g) || []).length
+      === UPSERT_SQL.slice(UPSERT_SQL.indexOf('(') + 1, UPSERT_SQL.indexOf(')')).split(',').length,
+    `${(UPSERT_SQL.match(/\?/g) || []).length} placeholders`);
+  check('rowToItem reads the column back out, or a GET would return it undefined',
+    /source_id: row\.source_id,/.test(commonSrc));
+
+  check('the form has a hidden input for it',
+    /<input type="hidden" id="sourceId">/.test(html));
+  // Two callers, one with a source id and one deliberately without: an ISBN
+  // lookup knows the number, a title search does not and must not invent one.
+  check('the ISBN lookup stores the NORMALISED number, not the raw typing',
+    appSrc.includes('fillBookFields(result.book, result.isbn)'));
+  check('and a title-or-author search stores nothing, because it has nothing exact',
+    /function fillBookFields\(book, sourceId = ''\)/.test(appSrc)
+    && declOf('selectBookResult').includes('fillBookFields(book)'));
+  check('selecting a TMDB result stores a prefixed id that says which lookup to re-run',
+    /sourceId'\)\.value = `tmdb:\$\{mediaType\}:\$\{tmdbId\}`/.test(appSrc));
+  check('the paste-add path carries each row’s own ISBN',
+    appSrc.includes('bookToItem(r.book, r.isbn)')
+    && appSrc.includes('bookToItem(result.book, result.isbn)'));
+
+  // The four quiet erasures. Each of these once had, or would have had, no
+  // symptom at all beyond the column going empty.
+  check('saving reads the hidden input rather than defaulting it away',
+    declOf('saveItem').includes("source_id: document.getElementById('sourceId').value.trim()"));
+  check('opening an item for edit carries it back INTO the form',
+    declOf('editItem').includes("document.getElementById('sourceId').value = item.source_id"));
+  check('a fresh lookup clears it, so one book cannot inherit another’s source',
+    /'coverUrl', 'sourceId'\]/.test(declOf('clearForm')));
+  check('and a CSV round trip keeps it, on both the way out and the way back',
+    /'notes', 'source_id'\]/.test(declOf('exportCSV'))
+    && declOf('importCSV').includes("source_id: obj.source_id"));
+
+  // Whitespace-flattened, because the phrase this looks for straddles a hard
+  // line wrap in the README and `includes` does not care that the prose is the
+  // same — it just quietly fails.
+  const readmeFlat = readme.replace(/\s+/g, ' ');
+  check('the README states the column, what writes it, and what deliberately does not',
+    readmeFlat.includes('`source_id` is where the row came from')
+    && readmeFlat.includes('twelve item fields')
+    && readmeFlat.includes('leaves it **empty on purpose**')
+    && readmeFlat.includes('carried through the edit form, the CSV export and the CSV import'));
 }
 {
   // The whitelist used to be `field: [allowed, values]`, which cannot express a
