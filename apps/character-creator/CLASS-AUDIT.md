@@ -157,6 +157,17 @@ R.C.C. was never flagged — those come from the paired O.C.C.
   roll and all five save lines verified correct.)
 - **Fix sketch**: `fix-crazy-super-endurance.sql` — `hp: "1d6"` → `"5d6"`,
   add `PE: "1d6"` to `bonuses.attributes`.
+- **Taken, 2026-08-25**: `fix-crazy-super-endurance.sql`, as sketched — two
+  guarded single-line replaces, each `instr()`-gated on the exact production
+  text (verified against a fresh `--remote` pull, which matches what
+  `add-crazy-class.sql` creates). The book line re-read from the OCR cache
+  (rue p058, printed 55) before writing. The name sorts after
+  `add-crazy-class.sql`, the only script writing this block; the later
+  crazy-touching scripts (`fix-language-picks.sql`, the `zz-` notes) edit
+  language lines and occ_group, never these two. Readbacks
+  `fixed 1, old_left 0, cr_free 1`, idempotent on re-run;
+  `class-check --remote` on the fixed markdown reads ready with zero
+  warnings. Everything else in the block left untouched per the audit.
 
 ### F5 — high — Cyber-Knight's combat block, attribute line and psionics all disagree with RUE
 
