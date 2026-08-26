@@ -502,21 +502,61 @@ function updateBulkBar() {
 // `ids` is captured before the write rather than read from selectedIds after
 // it: the in-memory update must touch exactly the rows the server was asked
 // about, even though nothing clears the selection in between today.
+// ─── TAKING THE SERVER'S WORD FOR IT ───
+// `bulk-update` and `bulk-delete` both report how many rows they ACTUALLY
+// touched, summed from D1's own `meta.changes`. The client used to throw that
+// number away and rewrite its copy of the library regardless, so if the two
+// ever disagreed the screen was wrong and nothing said so — the exact silent
+// divergence this app was rebuilt to end.
+//
+// Reachable the moment a second tab is open on the same library: that tab
+// deletes something, this one still has it selected, and the server changes
+// fewer rows than it was handed. Not a hypothetical — it is verified below in
+// the test that drove this, and it is why the count is compared rather than
+// assumed.
+//
+// A disagreement is not an error and is not announced. The server is simply
+// right, so the library is re-read and the screen redrawn from it. An alert
+// here would be scolding the user for something another tab did.
+//
+// Note which paths do NOT get this. `items/bulk`'s `count` is an echo of the
+// request — an upsert changes every row it is given, whether it inserts or
+// updates, so `count` can never differ from `items.length` and comparing them
+// would be theatre. The undo restore, the pasted-ISBN commit and the CSV
+// import all go through that endpoint, and all deliberately skip this.
+async function agreesWithServer(res, expected) {
+  if (res && res.count === expected) return true;
+  try {
+    const data = await apiFetch('/api/media-vault/items');
+    library = data.items;
+  } catch {
+    // The re-read failed too. Leave the dot where apiWrite put it and let the
+    // next action retry, exactly as apiWrite's own failure path does.
+    setSaveStatus('error');
+  }
+  return false;
+}
+
 async function bulkSet(set, label) {
   if (selectedIds.size === 0) return;
   cancelUndo();
   if (!confirm(`Change ${selectedIds.size} item(s) to ${label}?`)) return;
   const ids = [...selectedIds];
-  const ok = await apiWrite(() => apiFetch('/api/media-vault/items/bulk-update', {
+  const res = await apiWrite(() => apiFetch('/api/media-vault/items/bulk-update', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ids, set }),
   }));
-  if (!ok) return;
-  const written = new Set(ids);
-  library.forEach(item => {
-    if (written.has(item.id)) Object.assign(item, set);
-  });
+  if (!res) return;
+  // On disagreement the library has just been replaced with the server's own
+  // rows, which already carry the change — applying it again on top would be
+  // writing over fresher data with staler data.
+  if (await agreesWithServer(res, ids.length)) {
+    const written = new Set(ids);
+    library.forEach(item => {
+      if (written.has(item.id)) Object.assign(item, set);
+    });
+  }
   selectedIds.clear();
   updateBulkBar();
   renderLibrary();
@@ -561,12 +601,28 @@ async function bulkDelete() {
   // where to start.
   const removed = library.filter((item) => selectedIds.has(item.id));
 
-  const ok = await apiWrite(() => apiFetch('/api/media-vault/items/bulk-delete', {
+  const ids = [...selectedIds];
+  const res = await apiWrite(() => apiFetch('/api/media-vault/items/bulk-delete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ids: [...selectedIds] }),
+    body: JSON.stringify({ ids }),
   }));
-  if (!ok) return;
+  if (!res) return;
+
+  // THE UNDO IS WITHDRAWN WHEN THE COUNTS DISAGREE, and that is the whole
+  // reason this comparison is worth making here rather than being defensive
+  // tidiness. A short count means some of these rows were already gone —
+  // another tab deleted them — so `removed` names rows the server did NOT
+  // delete, and restoring it would resurrect exactly what somebody else
+  // deliberately threw away. A missing Undo button is the correct outcome:
+  // the screen has just been replaced with the truth, and there is nothing
+  // this tab is entitled to put back.
+  if (!await agreesWithServer(res, ids.length)) {
+    setSelectMode(false);
+    renderLibrary();
+    return;
+  }
+
   library = library.filter(item => !selectedIds.has(item.id));
   setSelectMode(false);
   renderLibrary();
@@ -1403,12 +1459,21 @@ async function apiFetch(url, opts) {
 // Wraps a write: drives the status dot, and on failure alerts loudly and
 // re-fetches the library so the UI never drifts from what the server holds —
 // silent divergence was the failure mode of the old localStorage sync design.
+//
+// The response body is passed THROUGH on success, so a caller can compare the
+// server's own row count against the number it asked about. It used to return
+// a bare `true` and the count was discarded at every call site.
+//
+// `body == null ? true` is the compatibility hinge and is not decoration:
+// every existing call site tests `if (!ok) return`, so an endpoint answering
+// 200 with an empty body would otherwise read as a failure and abort a write
+// that had in fact succeeded.
 async function apiWrite(fn) {
   setSaveStatus('syncing');
   try {
-    await fn();
+    const body = await fn();
     setSaveStatus('synced');
-    return true;
+    return body == null ? true : body;
   } catch (err) {
     setSaveStatus('error');
     alert('Save failed: ' + err.message + '\n\nYour change was not stored. The library will reload from the server.');
