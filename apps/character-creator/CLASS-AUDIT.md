@@ -365,6 +365,15 @@ nothing, and each of these classes also grants that other category bare:
   `fix-dead-skill-restrictions.sql`; the sweep that found these (parse every
   class against `SELECT name, category FROM skills`) is cheap to re-run after
   any rename.
+- **Taken, 2026-08-26**: `fix-misfiled-excepts.sql`, as sketched — Sensory
+  Equipment moves from mystic's and shifter's Communications excepts onto
+  their bare `- "Pilot Related"` grants (now entries with the except), and
+  Ventriloquism from long-bowman's Rogue except onto its bare Technical
+  grant. Book lines and catalog categories both re-verified. One readback
+  lesson: shifter legitimately grants its own bare `- "Technical"`, so the
+  old-text sweep had to be scoped per class or it read a working grant as
+  leftover damage. Readbacks `fixed 3, old_left 0, cr_free 3`, idempotent;
+  all three re-parse ready against the remote catalog.
 
 ### F11 — medium — four choice options resolve to no catalog row, so the pick fails
 
@@ -388,6 +397,14 @@ name with no row errors with `No skill called "X" in the catalog`:
 - **Fix sketch**: `fix-broken-pick-options.sql` renaming the three options to
   their catalog spellings (case fix included) and rewriting rogue-scholar's
   category entry.
+- **Taken, 2026-08-26**: `fix-broken-pick-options.sql`, as sketched — the
+  three renames plus the case fix, and rogue-scholar's category entry now
+  names the category. All four catalog spellings confirmed over `--remote`
+  first ("Automobile" is a real row and stays). Vagabond's "+10% / +5%"
+  note is left standing: it quotes the book accurately and says the entry
+  does not apply the split bonuses, which remains true. Readbacks
+  `fixed 3, old_left 0, cr_free 3`, idempotent; all three re-parse ready
+  against the remote catalog.
 
 ### F12 — medium — Valkyrie's racial S.D.C. is an `sdc_base`, so an occupation's S.D.C. is silently lost
 
@@ -401,6 +418,14 @@ name with no row errors with `No skill called "X" in the catalog`:
   correct `pools: { sdc: 60 }` — the convention was known.)
 - **Fix sketch**: `fix-valkyrie-sdc-pool.sql` — delete `sdc_base`, add
   `bonuses: { pools: { sdc: 100 } }`.
+- **Taken, 2026-08-26**: `fix-valkyrie-sdc-pool.sql`, as sketched. The
+  Pantheons PDF is not in the OCR cache on this machine today, so the book
+  line stands on this audit's verified quote. The class's own extraction
+  note argued `sdc_base` deliberately (self-contained wording, no O.C.C.
+  mention) — overturned by the settled pool rule and rewritten in the same
+  script to record why (the claim-audit rule). No `CORE_SDC_BY_CLASS`
+  entry needed: the class keeps its `mdc_base`. Readbacks
+  `fixed 1, old_left 0, cr_free 1`, idempotent; re-parses ready.
 
 ### F13 — medium — the Dragon Hatchling parent is missing its power schedule and its combat framework
 
@@ -419,6 +444,21 @@ name with no row errors with `No skill called "X" in the catalog`:
   dice, M.D.C. 1D4x100+50, P.P.E. 2D6x10, I.S.P. 3D4x10, natural abilities,
   the 6-skill/98% literacy program, +4 skills at 4 and 8) verified correct
   against the core book.
+- **Taken, 2026-08-26**: `fix-rifts-core-dragon-hatchling.sql` — the
+  sketch's name reordered twice over: `fix-dragon-hatchling-core` sorts
+  BEFORE `fix-pre-rue-class-audit.sql`, the last full-markdown writer of
+  this class, and collides with the existing `fix-dragon-hatchling.sql`
+  prefix. The core-book PDF is not in the OCR cache on this machine today,
+  so the lines stand on this audit's verified quotes. `powers_schedule`
+  in the RUE variants' shape with the core counts (4 at 5 and 10;
+  `categories_allowed` already carries the no-Super constraint), and
+  `Hand to Hand: Basic` joins occ_skills — one correction to this
+  finding's own text: the RUE variants model the SCHEDULE, but none
+  carries a Hand to Hand skill (their books print enumerated combat
+  bonuses instead), so the occ_skill shape here is the ordinary one other
+  classes use, not copied from a variant. Readbacks
+  `fixed 1, old_left 0, cr_free 1`, idempotent; re-parses ready against
+  the remote catalog.
 
 ### F14 — medium — Juicer's "+2 to disarm" is missing, and three Juicer Uprising sub-classes copied the gap
 
@@ -431,6 +471,15 @@ name with no row errors with `No skill called "X" in the catalog`:
 - **Fix sketch**: one script adding `disarm: 2` (and `perception: 2`) to all
   four. The juicer's own note claiming "+2 Perception, +2 disarm … have no
   bonus key" is false (S3) and comes out in the same change.
+- **Taken, 2026-08-26**: `fix-rue-juicer-disarm.sql` (the `rue-` infix so
+  it sorts after `fix-perception-bonuses.sql`, whose juicer output it
+  guards on, and after `fix-juicer-rue-edition.sql`, the block's earlier
+  writer). The juicer gains its disarm beside the perception F8 added; the
+  three sub-classes gain both keys in one pass, so their "standard
+  Juicer's numbers" notes stay true. The F8-era note ("+2 disarm is not
+  yet applied") rewritten now that it is. Readbacks
+  `fixed 4, note_ok 1, old_left 0, cr_free 4`, idempotent; all four
+  re-parse ready.
 
 ### F15 — medium — Knight (PF) has no bonus block
 
@@ -443,6 +492,12 @@ name with no row errors with `No skill called "X" in the catalog`:
 - **Fix sketch**: `fix-knight-bonuses.sql` — `combat: { initiative: 1,
   pull_punch: 2 }`, `saves: { horror_factor: 1 }`, at_level HF at
   3, 6, 8, 10, 12.
+- **Taken, 2026-08-26**: `fix-knight-bonuses.sql`, as sketched — one
+  guarded splice between `starting_money` and `skills:`, the book line
+  re-read from the PF cache (p087): the level-1 horror factor point in the
+  base saves, the rest on the at_level schedule, palladin's shape.
+  Readbacks `fixed 1, old_left 0, cr_free 1`, idempotent; re-parses
+  ready.
 
 ### F16 — low — five classes are missing printed money, all verified against the page
 
