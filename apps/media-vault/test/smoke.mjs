@@ -363,6 +363,11 @@ check('but the proxy does NOT check the digit — that answer belongs to the cli
     !!cap && readme.includes(`up to **${cap[1]}**`), cap ? `code ${cap[1]}` : 'no cap found');
   check('and the run reports what it left out rather than truncating silently',
     appSrc.includes('leaving ${over} out'));
+  // The modal's own Cancel sits beside this button. Two adjacent controls
+  // reading 'Cancel' and doing different things is a coin toss for the user.
+  check('the in-flight stop control is not a second button called Cancel',
+    appSrc.includes("lookupBtn.textContent = 'Stop'")
+    && !/lookupBtn\.textContent = 'Cancel'/.test(appSrc));
 }
 
 process.exit(summary() === 0 ? 0 : 1);
