@@ -409,22 +409,43 @@ function updateBulkBar() {
   document.getElementById('bulkSelectAllBtn').textContent = allSelected ? 'Deselect All' : 'Select All';
 }
 
-async function bulkChangeType(newType) {
+// Retyping a selection and reformatting one are the same operation with a
+// different word in them, so they are one function. Generalising it is safe
+// because the SERVER decides what is settable: items/bulk-update validates both
+// the field name and the value against its SETTABLE whitelist, so a caller
+// cannot widen what is bulk-editable by handing this a different object. The
+// whitelist has allowed `format` since the endpoint was written — this is the
+// UI finally offering it.
+//
+// `ids` is captured before the write rather than read from selectedIds after
+// it: the in-memory update must touch exactly the rows the server was asked
+// about, even though nothing clears the selection in between today.
+async function bulkSet(set, label) {
   if (selectedIds.size === 0) return;
-  const label = newType === 'audiobook' ? 'Audiobooks' : newType === 'series' ? 'Series' : 'Movies';
   if (!confirm(`Change ${selectedIds.size} item(s) to ${label}?`)) return;
+  const ids = [...selectedIds];
   const ok = await apiWrite(() => apiFetch('/api/media-vault/items/bulk-update', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ids: [...selectedIds], set: { type: newType } }),
+    body: JSON.stringify({ ids, set }),
   }));
   if (!ok) return;
+  const written = new Set(ids);
   library.forEach(item => {
-    if (selectedIds.has(item.id)) item.type = newType;
+    if (written.has(item.id)) Object.assign(item, set);
   });
   selectedIds.clear();
   updateBulkBar();
   renderLibrary();
+}
+
+async function bulkChangeType(newType) {
+  const label = newType === 'audiobook' ? 'Audiobooks' : newType === 'series' ? 'Series' : 'Movies';
+  return bulkSet({ type: newType }, label);
+}
+
+async function bulkChangeFormat(newFormat) {
+  return bulkSet({ format: newFormat }, newFormat === 'physical' ? 'Physical' : 'Digital');
 }
 
 async function bulkDelete() {

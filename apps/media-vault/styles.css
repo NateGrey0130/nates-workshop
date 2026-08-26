@@ -742,8 +742,13 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
 .bulk-bar {
   position: fixed;
   bottom: -80px;
-  left: 50%;
-  transform: translateX(-50%);
+  /* Inset from both edges and auto-margined rather than `left: 50%` plus a
+     translate. The translate gave the box no containing width to size against,
+     so `fit-content` had nothing to clamp to and the bar collapsed to 343px —
+     five rows of buttons — instead of filling the space it had. */
+  left: 16px;
+  right: 16px;
+  margin: 0 auto;
   background: var(--bg-secondary);
   border: 1px solid var(--accent);
   border-radius: var(--radius-lg);
@@ -751,6 +756,18 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
   display: flex;
   align-items: center;
   gap: 14px;
+  /* The bar is centred with a translate and has no width of its own, so it
+     grows in BOTH directions and runs off both edges once it outgrows the
+     viewport. Adding the format group took it from 864px to 1237px, which
+     overflows anything narrower than a maximised laptop: Delete and Cancel
+     ended up off-screen and the page scrolled sideways.
+     `width: fit-content` is not decoration — a wrapping flex container with no
+     width shrink-to-fits, collapsing toward its widest single child, and the
+     bar measured 343px across when it wanted 1237. fit-content asks for the
+     unwrapped width and settles for the space available. */
+  flex-wrap: wrap;
+  justify-content: center;
+  width: fit-content;
   z-index: 300;
   box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px var(--accent-glow);
   transition: bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -801,6 +818,21 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
   border: 1px solid #34d399;
 }
 .bulk-type-btn.series:hover { background: rgba(52,211,153,0.3); }
+/* The format buttons borrow the colours the meta-tags already use for the two
+   formats, so the bar and the cards agree on what digital and physical look
+   like. */
+.bulk-type-btn.digital {
+  background: rgba(251,191,36,0.15);
+  color: var(--tag-digital);
+  border: 1px solid var(--tag-digital);
+}
+.bulk-type-btn.digital:hover { background: rgba(251,191,36,0.3); }
+.bulk-type-btn.physical {
+  background: rgba(52,211,153,0.15);
+  color: var(--tag-physical);
+  border: 1px solid var(--tag-physical);
+}
+.bulk-type-btn.physical:hover { background: rgba(52,211,153,0.3); }
 .bulk-select-all {
   font-size: 12px;
   color: var(--text-muted);
