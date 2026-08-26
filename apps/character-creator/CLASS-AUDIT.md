@@ -336,8 +336,10 @@ it). Verified misses:
   poison, drugs and disease" line added, druid/psi-healer/elemental ×2
   disease joins, and dog-boy gets both halves of its physical-bonus
   paragraph: `disease: 2` and the `disarm: 2` the finding records. Every
-  cite re-read from the OCR cache (druid's line prints two pages into its
-  PF entry; the p.75 cite is the class's opening page). The dog-boy note
+  cite re-read from the OCR cache (druid's line prints at printed 75, two
+  pages into its entry — the class opens at 73 per F18; an earlier version
+  of this note called 75 the opening page, corrected when F18's sweep
+  established the pf cache's printed+2 offset). The dog-boy note
   rewrites live in `fix-perception-bonuses.sql` (F8), which sorts after
   this file and covers all three claims in one replace. One readback
   lesson: the original `disarm_ok` pattern ended at the closing brace and
@@ -513,6 +515,14 @@ name with no row errors with `No skill called "X" in the catalog`:
 - combat-cyborg's is part of F1.
 - **Fix sketch**: one `fix-missing-starting-money.sql`; black-market halves
   stay prose per the coin-only rule.
+- **Taken, 2026-08-26**: `fix-missing-starting-money.sql`, as sketched, with
+  F20 riding it per its own sketch. All four money lines re-read from the
+  cache; the salary pair uses samas-pilot's "N credits monthly salary"
+  convention. Each class gained an extraction-note bullet naming its page
+  and the prose half (black-market items, one-month's-pay), and city-rat's
+  "no starting money appears on this page" claim was trimmed to stay true.
+  Readbacks `money_ok 4, psi_ok 1, old_left 0, cr_free 4`, idempotent; all
+  four re-parse ready.
 
 ### F17 — low — missing attribute requirements in seven classes, and three page ranges end a page early
 
@@ -539,6 +549,24 @@ p.45-47 → 45-48 (F1).
 
 - **Fix sketch**: `fix-attr-reqs-and-ranges.sql` — one guarded replace per
   class.
+- **Taken, 2026-08-26**: `fix-rue-attr-reqs-and-ranges.sql` — smaller than
+  the finding, because **five of the seven absence claims were false**:
+  cyber-doc, glitter-boy, rogue-scholar, rogue-scientist and long-bowman
+  all carry their printed requirements in multi-line blocks their add
+  scripts have held since before this audit was written (git shows the
+  files untouched since 8-21; F5 read cyber-knight's block fine, so the
+  shape parses — the audit likely grepped the inline `{ }` form). What was
+  real: samas-pilot carried WRONG values (IQ 10/PP 10 where printed 235
+  says IQ 12, ME 12, PE 10 — corrected), and the elemental fusionists were
+  truly absent (their note read the whole printed line as a
+  recommendation; the trailing clause covers only the I.Q./P.S. 10, the
+  cyber-doc pattern — note rewritten). Ranges: the three listed plus TWO
+  the list missed, caught because F16's money cites sit on the missing
+  pages — city-rat 88-88→88-89 and vagabond 97-97→97-98. The sketch's
+  name sorted before `fix-pre-rue-class-audit.sql`, cyber-knight's last
+  full writer — hence the `rue-` prefix. Readbacks
+  `reqs_ok 3, ranges_ok 5, old_left 0, cr_free 8`, idempotent; all eight
+  re-parse ready.
 
 ### F18 — low — 39 classes have no page range in `source_book` at all, so the page-break defence cannot run on them
 
@@ -565,6 +593,20 @@ one of them by hand; the pages are known:
   p.98-101.
 - **Fix sketch**: one script appending ` p.N-M` to each `source_book`. Cheap,
   and it arms `--field-sources` for every future audit.
+- **Taken, 2026-08-26**: `fix-source-book-pages.sql` — all forty stamped
+  (24 PF + 14 Pantheons + chiang-ku-dragon + dragon-hatchling's pageless
+  title), N-N form for single-page entries, guards including the trailing
+  newline so a stamped line never re-matches. The re-confirmation this
+  entry asked for ran for all 24 PF start pages — each class name appears
+  on its start page — and established that **the pf cache runs at
+  printed+2**, not the offset-zero first assumed (knight's p.85 line at
+  cache p087, druid's p.75 line at p077, psi-healer's p.158 at p160 all
+  agree). The Pantheons and Dragons & Gods PDFs are not in the OCR cache
+  today, so those 16 ranges stand on this audit's hand-located numbers.
+  Proven armed: `--field-sources` on the stamped knight resolves the pf
+  cache and prints real source lines. Readbacks
+  `pf_ok 24, pom_ok 14, rest_ok 2, bare_left 0, cr_free 40`, idempotent;
+  spot-checked classes re-parse ready.
 
 ### F19 — low — Ley Line Walker and Rifter drop their attribute-of-choice bonus
 
@@ -579,11 +621,26 @@ one of them by hand; the pages are known:
 - **Fix sketch**: `fix-walker-rifter-attribute-choice.sql` adding the choice
   groups and trimming the by-hand sentences. Their Spell Strength schedules
   genuinely stay prose (no key — see the still-true list).
+- **Taken, 2026-08-26**: `fix-walker-rifter-attribute-choice.sql` — the
+  RIFTER half only, because a fresh `--remote` pull shows the walker
+  already carries its three-fragment choose-1 group with a correct note
+  (this finding's "neither has any attribute bonus" was half-stale by
+  execution time). The rifter gains five `special_abilities` fragments
+  (+2 each to P.S./P.P./P.E./P.B./Spd) behind a choose-1 group — the
+  walker's own shape — and its two notes claiming the choice inexpressible
+  or by-hand are rewritten. Spell Strength stays prose as stated.
+  Readbacks `fixed 1, walker_ok 1, old_left 0, cr_free 2`, idempotent;
+  re-parses ready.
 
 ### F20 — low — Vagabond's "+1 save vs possession **and psionic attacks**" lost the psionics half
 
 RUE p.97 prints both; production has `possession: 1` only. One-line fix,
 could ride F16's script.
+
+- **Taken, 2026-08-26**: rode `fix-missing-starting-money.sql` (F16) as
+  sketched — `psionics: 1` beside the possession point, and the extraction
+  note that called the half ambiguous now says it is filed. See F16's
+  Taken note for the readbacks.
 
 ---
 
