@@ -167,6 +167,20 @@ check('and nothing still calls its path',
       && new RegExp('slice\\(i, i \\+ ' + readmeChunk + '\\)').test(endpointSrc[f])));
 }
 {
+  // The whitelist allowed `format` from the day it was written and the bulk bar
+  // offered only `type`, so the capability sat unreachable. Both are wired now;
+  // this fails if one is dropped from the bar while the server still takes it.
+  const html = readFileSync(join(appDir, 'index.html'), 'utf8');
+  const wired = [...html.matchAll(/bulkChange(Type|Format)\('([a-z]+)'\)/g)]
+    .map((m) => m[1].toLowerCase() + ':' + m[2]);
+  check('every value the server will bulk-set has a button in the bulk bar',
+    ['type:audiobook', 'type:movie', 'type:series', 'format:digital', 'format:physical']
+      .every((v) => wired.includes(v)), wired.join(' '));
+  check('and both bulk edits go through one function rather than two copies',
+    /async function bulkSet\(/.test(appSrc)
+    && /return bulkSet\(\{ type/.test(appSrc) && /return bulkSet\(\{ format/.test(appSrc));
+}
+{
   const wl = endpointSrc['items/bulk-update.js'];
   const fields = [...wl.matchAll(/^  ([a-z]+): \[/gm)].map((m) => m[1]);
   check('bulk-update settable fields are exactly type and format',

@@ -3,10 +3,10 @@
 Catalogue what you own. Add an item by hand, or look it up by ISBN, title,
 author, actor or director and let the fields fill themselves in — one at a
 time with **Add now**, or by pasting a whole shelf of ISBNs at once. Browse it
-as a grid or a table, filter and sort it, select many at once to retype or
-delete them, import and export CSV, and read the whole collection back as
-ranked stats — most-collected authors, directors, actors, producers and genres,
-each one clickable through to the items behind it.
+as a grid or a table, filter and sort it, select many at once to retype,
+reformat or delete them, import and export CSV, and read the whole collection
+back as ranked stats — most-collected authors, directors, actors, producers
+and genres, each one clickable through to the items behind it.
 
 Part of Nate's Workshop: Cloudflare Pages + D1, behind the site-wide Access
 gate. No build step, no framework, no dependencies.
@@ -105,7 +105,7 @@ to that email.
 | `/api/media-vault/items` | POST | Upsert one item |
 | `/api/media-vault/items` | DELETE | `?id=` — delete one item |
 | `/api/media-vault/items/bulk` | POST | Upsert many. CSV import's endpoint. Rows not named in the body are untouched |
-| `/api/media-vault/items/bulk-update` | POST | `{ ids, set }` — only `type` and `format` are settable, against a value whitelist |
+| `/api/media-vault/items/bulk-update` | POST | `{ ids, set }` — only `type` and `format` are settable, against a value whitelist. Both are reachable from the bulk bar; the client sends one field or the other, and the endpoint accepts both together |
 | `/api/media-vault/items/bulk-delete` | POST | `{ ids }` — deletes exactly the named rows |
 | `/api/media-vault/migrate` | POST | The one-time localStorage merge, below |
 | `/api/media-vault/lookup` | GET | Metadata proxy, below |
