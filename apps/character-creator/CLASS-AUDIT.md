@@ -290,6 +290,25 @@ machines") correctly stay prose.
   each class's combat block. Note three classes' own notes claim "+N
   Perception has no bonus key" — those sentences come out in the same script
   (see S3).
+- **Taken, 2026-08-26**: `fix-perception-bonuses.sql`, as sketched — the
+  nine flat bonuses (body-fixer's +2 with its +4 medical half left as
+  conditional prose; city-rat and rogue-scientist filling their empty
+  combat blocks; rifter and mystic gaining combat blocks they never had)
+  plus mystic's at-level shape: base `perception: 1` and six `at_level`
+  entries at 3/6/8/10/12/14, appended after the existing save schedule
+  (classBonuses folds entries sharing a level, so order is cosmetic); the
+  ley-line doubling stays prose. The false notes came out in the same
+  script: burster's and dog-boy's "no bonus key" sentences removed,
+  body-fixer's "no Perception key exists" rewritten, headhunter's and
+  rifter's "applied by hand" reworded, juicer's note now points its
+  still-missing disarm at F14 (only the juicer's own perception lands
+  here — the sub-classes are F14's), and city-rat's note keeps its Spd
+  die-add as prose flagged as a decision to revisit, not a schema limit.
+  Dog-boy's combat guard expects the disarm `fix-disease-saves.sql` (F9,
+  sorts earlier) adds — one note rewrite from original to final text
+  rather than two chained half-rewrites. Readbacks
+  `fixed 10, sched_ok 1, notes_left 0, cr_free 10`, idempotent; all ten
+  re-parse ready with zero warnings.
 
 ### F9 — medium — disease saves dropped or misattributed in six classes
 
@@ -312,6 +331,20 @@ it). Verified misses:
 - **Fix sketch**: one `fix-disease-saves.sql`; body-fixer's block rewritten to
   `{ toxins_poisons: 2, harmful_drugs: 2, disease: 3, insanity: 3,
   horror_factor: 2 }`.
+- **Taken, 2026-08-26**: `fix-disease-saves.sql`, as sketched — body-fixer's
+  block rewritten to the book's numbers, cyber-doc's whole absent "+1 vs
+  poison, drugs and disease" line added, druid/psi-healer/elemental ×2
+  disease joins, and dog-boy gets both halves of its physical-bonus
+  paragraph: `disease: 2` and the `disarm: 2` the finding records. Every
+  cite re-read from the OCR cache (druid's line prints two pages into its
+  PF entry; the p.75 cite is the class's opening page). The dog-boy note
+  rewrites live in `fix-perception-bonuses.sql` (F8), which sorts after
+  this file and covers all three claims in one replace. One readback
+  lesson: the original `disarm_ok` pattern ended at the closing brace and
+  broke the moment F8 appended `perception: 5` to the same line — guard
+  readbacks on prefixes that survive later scripts. Readbacks
+  `fixed 7, disarm_ok 1, old_left 0, cr_free 7`, idempotent in either
+  order around F8; all seven re-parse ready.
 
 ### F10 — medium — three fail-open skill restrictions offer skills the book forbids
 
