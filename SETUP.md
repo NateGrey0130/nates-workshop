@@ -78,7 +78,8 @@ nates-workshop/
         ├── _lib/claude-client.js  The only code that calls the Anthropic API,
         │                     and the fail-open claude_usage spend log
         ├── claude.js         /api/claude — proxy (model allowlist + token cap)
-        ├── media.js          /api/media — MediaVault CRUD, per-user via Access
+        ├── media-vault/      /api/media-vault — per-item CRUD, lookup proxy
+        │                     (TMDB key lives server-side), one-time migrate
         ├── filament-forge/   catalog (the OFD snapshot) + data (per-user
         │                     config/history/presets/custom filaments)
         └── character-creator/  46 endpoints + _lib; see the app README
@@ -421,7 +422,7 @@ must be added to it in Zero Trust.
 3. Build in `apps/my-new-app/`: `index.html` imports `/shared/styles.css` and
    the shared JS; override `--accent` in the app's own `styles.css`; call
    Claude through `claudeRequest()`. Per-user storage follows the
-   `functions/api/media.js` pattern — identity via `_lib/access.js`
+   `functions/api/media-vault/` pattern — identity via `_lib/access.js`
    (`getAccessEmail`), a table added to `db/schema.sql` (keep it
    `IF NOT EXISTS`).
 4. Commit on a branch, PR, merge — the merge deploys it.

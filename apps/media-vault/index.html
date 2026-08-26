@@ -11,26 +11,6 @@
 <body>
 
 
-<!-- ─── MERGE MODAL ─── -->
-<div class="modal-overlay" id="mergeModal">
-  <div class="modal">
-    <h2>Welcome back! 👋</h2>
-    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:20px;" id="mergeDesc"></p>
-    <div class="merge-option" onclick="handleMerge('merge')">
-      <h4>🔀 Merge local + cloud</h4>
-      <p>Combine your local items with any items already saved to your account. Duplicates (same title) will be skipped.</p>
-    </div>
-    <div class="merge-option" onclick="handleMerge('local')">
-      <h4>📤 Keep local, replace cloud</h4>
-      <p>Upload your local library to the cloud, replacing any previously saved data on this account.</p>
-    </div>
-    <div class="merge-option" onclick="handleMerge('cloud')">
-      <h4>☁️ Use cloud, discard local</h4>
-      <p>Load your cloud library and discard the items currently saved in this browser.</p>
-    </div>
-  </div>
-</div>
-
 <!-- ─── HEADER ─── -->
 <header class="header">
   <div class="header-left">
@@ -123,6 +103,12 @@
   <div class="empty-title">Your vault is empty</div>
   <div class="empty-sub">Add your first audiobook or movie to start building your collection. Use ISBN or title lookup to auto-fill details.</div>
   <button class="btn btn-primary" onclick="openAddModal()">+ Add First Item</button>
+</div>
+<div class="empty-state" id="loadError" style="display:none">
+  <div class="empty-icon">⚠️</div>
+  <div class="empty-title">Couldn't load your library</div>
+  <div class="empty-sub" id="loadErrorMsg"></div>
+  <button class="btn btn-primary" onclick="initApp()">↻ Retry</button>
 </div>
 
 <!-- ─── PAGINATION ─── -->

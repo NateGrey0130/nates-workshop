@@ -468,7 +468,7 @@ writes are gated (see [Permissions](#permissions)).
 | `import/skills/confirm` | POST | Admin. Apply per-skill insert/update/ignore decisions |
 
 Also at the site level: `/api/claude` (Anthropic proxy, allowlisted models) and
-`/api/media` (MediaVault).
+`/api/media-vault/*` (MediaVault).
 
 ---
 
@@ -4942,7 +4942,7 @@ against — read off production, not estimated.
 | characters, live | **9** |
 | the largest table this app owns | `gear`, 844 rows |
 
-**The apps already have zero overlap.** `functions/api/media.js` and
+**The apps already have zero overlap.** `functions/api/media-vault/` and
 `functions/api/filament-forge/` are the only D1 consumers outside
 `functions/api/character-creator/`; each touches only its own tables —
 `media_items`, and the six `ff_` ones — and nothing under `character-creator/`

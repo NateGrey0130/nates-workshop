@@ -1,12 +1,5 @@
 // ─── STATE ───
-let library = (() => {
-  try {
-    return JSON.parse(localStorage.getItem('mv_library') || '[]');
-  } catch (err) {
-    console.error('Corrupted mv_library in localStorage, resetting:', err);
-    return [];
-  }
-})();
+let library = []; // loaded from D1 via /api/media-vault/items — the only store
 let currentFilter = 'all';
 let currentView = 'grid';
 let _lookupResultsCache = []; // stores book/TMDB results so onclick can reference by index safely
@@ -16,11 +9,6 @@ let selectMode = false;
 let selectedIds = new Set();
 let currentPage = 1;
 const ITEMS_PER_PAGE = 20;
-
-const TMDB_KEY = '99927f44afc159f2ebe2d1194cd777e7';
-const TMDB_BASE = 'https://api.themoviedb.org/3';
-const TMDB_IMG = 'https://image.tmdb.org/t/p/w92'; // thumbnail
-const TMDB_IMG_LG = 'https://image.tmdb.org/t/p/w500'; // full poster
 
 // ─── RENDER ───
 function resetPageAndRender() {
@@ -262,7 +250,7 @@ function editItem(id) {
   document.getElementById('addModal').classList.add('active');
 }
 
-function saveItem() {
+async function saveItem() {
   const title = document.getElementById('itemTitle').value.trim();
   if (!title) { alert('Title is required'); return; }
 
@@ -286,6 +274,13 @@ function saveItem() {
     addedAt: editId ? (library.find(i => i.id === editId)?.addedAt || Date.now()) : Date.now(),
   };
 
+  const ok = await apiWrite(() => apiFetch('/api/media-vault/items', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(item),
+  }));
+  if (!ok) return;
+
   if (editId) {
     const idx = library.findIndex(i => i.id === editId);
     if (idx >= 0) library[idx] = item;
@@ -293,16 +288,16 @@ function saveItem() {
     library.push(item);
   }
 
-  saveLibrary();
   closeAddModal();
   closeDetailModal();
   renderLibrary();
 }
 
-function deleteItem(id) {
+async function deleteItem(id) {
   if (!confirm('Delete this item?')) return;
+  const ok = await apiWrite(() => apiFetch(`/api/media-vault/items?id=${encodeURIComponent(id)}`, { method: 'DELETE' }));
+  if (!ok) return;
   library = library.filter(i => i.id !== id);
-  saveLibrary();
   renderLibrary();
 }
 
@@ -411,24 +406,34 @@ function updateBulkBar() {
   document.getElementById('bulkSelectAllBtn').textContent = allSelected ? 'Deselect All' : 'Select All';
 }
 
-function bulkChangeType(newType) {
+async function bulkChangeType(newType) {
   if (selectedIds.size === 0) return;
-  const label = newType === 'audiobook' ? 'Audiobooks' : 'Movies';
+  const label = newType === 'audiobook' ? 'Audiobooks' : newType === 'series' ? 'Series' : 'Movies';
   if (!confirm(`Change ${selectedIds.size} item(s) to ${label}?`)) return;
+  const ok = await apiWrite(() => apiFetch('/api/media-vault/items/bulk-update', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids: [...selectedIds], set: { type: newType } }),
+  }));
+  if (!ok) return;
   library.forEach(item => {
     if (selectedIds.has(item.id)) item.type = newType;
   });
-  saveLibrary();
   selectedIds.clear();
   updateBulkBar();
   renderLibrary();
 }
 
-function bulkDelete() {
+async function bulkDelete() {
   if (selectedIds.size === 0) return;
   if (!confirm(`Permanently delete ${selectedIds.size} item(s)? This cannot be undone.`)) return;
+  const ok = await apiWrite(() => apiFetch('/api/media-vault/items/bulk-delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids: [...selectedIds] }),
+  }));
+  if (!ok) return;
   library = library.filter(item => !selectedIds.has(item.id));
-  saveLibrary();
   selectedIds.clear();
   updateBulkBar();
   renderLibrary();
@@ -474,22 +479,15 @@ async function lookupISBN() {
   status.className = 'lookup-status';
 
   try {
-    const res = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
-    const data = await res.json();
-    const book = data[`ISBN:${isbn}`];
+    const data = await apiFetch(`/api/media-vault/lookup?mode=isbn&isbn=${encodeURIComponent(isbn)}`);
 
-    if (!book) {
+    if (!data.found) {
       status.textContent = 'No results found for that ISBN.';
       status.className = 'lookup-status error';
       return;
     }
 
-    fillBookFields({
-      title: book.title,
-      authors: (book.authors || []).map(a => a.name).join(', '),
-      genre: (book.subjects || []).slice(0, 3).map(s => s.name).join(', '),
-      cover: book.cover ? (book.cover.large || book.cover.medium || book.cover.small || '') : ''
-    });
+    fillBookFields(data.book);
     status.textContent = '✓ Found! Fields auto-filled.';
     status.className = 'lookup-status success';
   } catch (err) {
@@ -511,88 +509,57 @@ async function lookupBook() {
     let docs = [];
 
     if (searchBy === 'author') {
-      // Step 1: find the author
       status.innerHTML = '<span class="spinner"></span> Searching for author...';
       status.className = 'lookup-status';
 
-      const authorRes = await fetch(`https://openlibrary.org/search/authors.json?q=${encodeURIComponent(query)}&limit=1`);
-      const authorData = await authorRes.json();
+      const data = await apiFetch(`/api/media-vault/lookup?mode=book-author&q=${encodeURIComponent(query)}${year ? `&year=${year}` : ''}`);
 
-      if (!authorData.docs || authorData.docs.length === 0) {
+      if (!data.authorName) {
         status.textContent = `No author found named "${query}".`;
         status.className = 'lookup-status error';
         return;
       }
-
-      const author = authorData.docs[0];
-      const authorName = author.name || query;
-      status.innerHTML = `<span class="spinner"></span> Found ${esc(authorName)} — loading their books...`;
-
-      // Step 2: get their works
-      let worksUrl = `https://openlibrary.org/search.json?author=${encodeURIComponent(authorName)}&limit=20&sort=editions`;
-      if (year) worksUrl += `&first_publish_year=${year}`;
-
-      const worksRes = await fetch(worksUrl);
-      const worksData = await worksRes.json();
-
-      if (!worksData.docs || worksData.docs.length === 0) {
-        status.textContent = `No books found for ${authorName}.`;
+      if (data.results.length === 0) {
+        status.textContent = `No books found for ${data.authorName}.`;
         status.className = 'lookup-status error';
         return;
       }
 
-      docs = worksData.docs;
-      status.textContent = `${docs.length} book${docs.length !== 1 ? 's' : ''} by ${authorName}${year ? ` (${year})` : ''} — pick one:`;
+      docs = data.results;
+      status.textContent = `${docs.length} book${docs.length !== 1 ? 's' : ''} by ${data.authorName}${year ? ` (${year})` : ''} — pick one:`;
 
     } else {
       // Title search
       status.innerHTML = '<span class="spinner"></span> Searching Open Library...';
       status.className = 'lookup-status';
 
-      let url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=15`;
-      if (year) url += `&first_publish_year=${year}`;
+      const data = await apiFetch(`/api/media-vault/lookup?mode=book-title&q=${encodeURIComponent(query)}${year ? `&year=${year}` : ''}`);
 
-      const res = await fetch(url);
-      const data = await res.json();
-
-      if (!data.docs || data.docs.length === 0) {
+      if (data.results.length === 0) {
         status.textContent = year ? `No results for "${query}" around ${year}. Try without a year.` : 'No results found.';
         status.className = 'lookup-status error';
         return;
       }
 
-      docs = sortByExactMatch(data.docs, query, 'title');
+      docs = sortByExactMatch(data.results, query, 'title');
       status.textContent = `${docs.length} result${docs.length !== 1 ? 's' : ''}${year ? ` (${year})` : ''} — pick one:`;
     }
 
     status.className = 'lookup-status';
 
     // Cache results so onclick can safely reference by index
-    _lookupResultsCache = docs.map(book => {
-      const title = book.title || 'Unknown Title';
-      const author = (book.author_name || []).join(', ') || 'Unknown Author';
-      const coverId = book.cover_i;
-      const genre = (book.subject || []).slice(0, 3).join(', ');
-      const largeUrl = coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` : '';
-      return { title, authors: author, genre, cover: largeUrl };
-    });
+    _lookupResultsCache = docs;
 
     const container = document.getElementById('lookupResults');
-    container.innerHTML = _lookupResultsCache.map((book, idx) => {
-      const coverId = docs[idx]?.cover_i;
-      const thumbUrl = coverId ? `https://covers.openlibrary.org/b/id/${coverId}-S.jpg` : null;
-      const bookYear = docs[idx]?.first_publish_year || '';
-
-      return `<div class="lookup-result-item" onclick="selectBookResult(${idx})">
-        ${thumbUrl
-          ? `<img class="lookup-result-thumb" src="${thumbUrl}" onerror="this.outerHTML='<div class=\\'lookup-result-thumb-placeholder\\'>📚</div>'">`
+    container.innerHTML = docs.map((book, idx) => `<div class="lookup-result-item" onclick="selectBookResult(${idx})">
+        ${book.thumb
+          ? `<img class="lookup-result-thumb" src="${book.thumb}" onerror="this.outerHTML='<div class=\\'lookup-result-thumb-placeholder\\'>📚</div>'">`
           : `<div class="lookup-result-thumb-placeholder">📚</div>`}
         <div class="lookup-result-info">
           <div class="lookup-result-title">${esc(book.title)}</div>
-          <div class="lookup-result-meta">${esc(book.authors)}${bookYear ? ' · ' + bookYear : ''}</div>
+          <div class="lookup-result-meta">${esc(book.authors)}${book.year ? ' · ' + book.year : ''}</div>
         </div>
-      </div>`;
-    }).join('');
+      </div>`).join('');
     container.classList.add('visible');
 
   } catch (err) {
@@ -645,94 +612,46 @@ async function lookupTMDB(mediaType) {
     let results = [];
 
     if (searchBy === 'actor' || searchBy === 'director') {
-      // Step 1: find the person
-      const personRes = await fetch(`${TMDB_BASE}/search/person?query=${encodeURIComponent(query)}&api_key=${TMDB_KEY}`);
-      const personData = await personRes.json();
+      const data = await apiFetch(`/api/media-vault/lookup?mode=video-person&q=${encodeURIComponent(query)}&kind=${mediaType}&role=${searchBy}`);
 
-      if (!personData.results || personData.results.length === 0) {
+      if (!data.personName) {
         status.textContent = `No person found named "${query}".`;
         status.className = 'lookup-status error';
         return;
       }
-
-      // Pick best person match
-      const person = personData.results[0];
-      status.innerHTML = `<span class="spinner"></span> Found ${esc(person.name)} — loading their ${label}...`;
-
-      // Step 2: get their credits
-      const credType = mediaType === 'tv' ? 'tv' : 'movie';
-      const credRes = await fetch(`${TMDB_BASE}/person/${person.id}/${credType}_credits?api_key=${TMDB_KEY}`);
-      const credData = await credRes.json();
-
-      let credits = [];
-      if (searchBy === 'actor') {
-        credits = credData.cast || [];
-      } else {
-        credits = (credData.crew || []).filter(c => c.job === 'Director');
-      }
-
-      // Dedupe by id, sort by popularity
-      const seen = new Set();
-      results = credits
-        .filter(c => { if (seen.has(c.id)) return false; seen.add(c.id); return true; })
-        .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
-        .slice(0, 20)
-        .map(c => ({
-          id: c.id,
-          title: c.title || c.name || '',
-          year: (c.release_date || c.first_air_date || '').slice(0, 4),
-          poster: c.poster_path ? TMDB_IMG + c.poster_path : null,
-          posterLg: c.poster_path ? TMDB_IMG_LG + c.poster_path : null,
-          mediaType: credType,
-          overview: c.overview || '',
-        }));
-
-      if (results.length === 0) {
-        status.textContent = `No ${label} found for ${person.name} as ${searchBy}.`;
+      if (data.results.length === 0) {
+        status.textContent = `No ${label} found for ${data.personName} as ${searchBy}.`;
         status.className = 'lookup-status error';
         return;
       }
-      status.textContent = `${results.length} ${label} by ${person.name} as ${searchBy} — pick one:`;
+
+      results = data.results;
+      status.textContent = `${results.length} ${label} by ${data.personName} as ${searchBy} — pick one:`;
 
     } else {
       // Title search
-      const endpoint = mediaType === 'tv' ? 'search/tv' : 'search/movie';
-      let url = `${TMDB_BASE}/${endpoint}?query=${encodeURIComponent(query)}&api_key=${TMDB_KEY}`;
-      if (year) url += `&year=${year}`;
+      const data = await apiFetch(`/api/media-vault/lookup?mode=video-title&q=${encodeURIComponent(query)}&kind=${mediaType}${year ? `&year=${year}` : ''}`);
 
-      const res = await fetch(url);
-      const data = await res.json();
-
-      if (!data.results || data.results.length === 0) {
+      if (data.results.length === 0) {
         status.textContent = `No ${label} found for "${query}"${year ? ` in ${year}` : ''}. ${year ? 'Try without a year.' : ''}`;
         status.className = 'lookup-status error';
         return;
       }
 
-      const sorted = sortByExactMatch(data.results, query, mediaType === 'tv' ? 'name' : 'title');
-      results = sorted.slice(0, 15).map(c => ({
-        id: c.id,
-        title: c.title || c.name || '',
-        year: (c.release_date || c.first_air_date || '').slice(0, 4),
-        poster: c.poster_path ? TMDB_IMG + c.poster_path : null,
-        posterLg: c.poster_path ? TMDB_IMG_LG + c.poster_path : null,
-        mediaType,
-        overview: c.overview || '',
-      }));
-
+      results = sortByExactMatch(data.results, query, 'title').slice(0, 15);
       status.textContent = `${results.length} result${results.length !== 1 ? 's' : ''}${year ? ` (${year})` : ''} — pick one:`;
     }
 
     status.className = 'lookup-status';
     const container = document.getElementById('lookupResults');
     container.innerHTML = results.map(item => `
-      <div class="lookup-result-item" onclick="selectTMDBResult(${item.id}, '${item.mediaType}')">
+      <div class="lookup-result-item" onclick="selectTMDBResult(${item.id}, '${item.kind}')">
         ${item.poster
-          ? `<img class="lookup-result-thumb" src="${item.poster}" onerror="this.outerHTML='<div class=\\'lookup-result-thumb-placeholder\\'>${item.mediaType === 'tv' ? '📺' : '🎬'}</div>'">`
-          : `<div class="lookup-result-thumb-placeholder">${item.mediaType === 'tv' ? '📺' : '🎬'}</div>`}
+          ? `<img class="lookup-result-thumb" src="${item.poster}" onerror="this.outerHTML='<div class=\\'lookup-result-thumb-placeholder\\'>${item.kind === 'tv' ? '📺' : '🎬'}</div>'">`
+          : `<div class="lookup-result-thumb-placeholder">${item.kind === 'tv' ? '📺' : '🎬'}</div>`}
         <div class="lookup-result-info">
           <div class="lookup-result-title">${esc(item.title)}</div>
-          <div class="lookup-result-meta">${item.year ? item.year + ' · ' : ''}${item.mediaType === 'tv' ? 'Series' : 'Movie'}${item.overview ? ' · ' + item.overview.slice(0, 60) + '…' : ''}</div>
+          <div class="lookup-result-meta">${item.year ? item.year + ' · ' : ''}${item.kind === 'tv' ? 'Series' : 'Movie'}${item.overview ? ' · ' + esc(item.overview.slice(0, 60)) + '…' : ''}</div>
         </div>
       </div>`).join('');
     container.classList.add('visible');
@@ -750,52 +669,29 @@ async function selectTMDBResult(tmdbId, mediaType) {
   status.className = 'lookup-status';
 
   try {
-    const endpoint = mediaType === 'tv' ? 'tv' : 'movie';
-    const res = await fetch(`${TMDB_BASE}/${endpoint}/${tmdbId}?api_key=${TMDB_KEY}&append_to_response=credits`);
-    const data = await res.json();
+    const data = await apiFetch(`/api/media-vault/lookup?mode=video-detail&id=${tmdbId}&kind=${mediaType}`);
 
-    const title = data.title || data.name || '';
-    const year = (data.release_date || data.first_air_date || '').slice(0, 4);
-    const genres = (data.genres || []).map(g => g.name).join(', ');
-    const posterUrl = data.poster_path ? TMDB_IMG_LG + data.poster_path : '';
-
-    // Director(s)
-    const directors = (data.credits?.crew || [])
-      .filter(c => c.job === 'Director')
-      .map(c => c.name).join(', ');
-
-    // Top billed cast (first 5)
-    const actors = (data.credits?.cast || [])
-      .slice(0, 5)
-      .map(c => c.name).join(', ');
-
-    // Producers
-    const producers = (data.credits?.crew || [])
-      .filter(c => c.job === 'Producer' || c.job === 'Executive Producer')
-      .slice(0, 3)
-      .map(c => c.name).join(', ');
-
-    document.getElementById('itemTitle').value = title;
-    document.getElementById('itemAuthor').value = directors;
-    document.getElementById('itemActors').value = actors;
-    document.getElementById('itemProducers').value = producers;
-    document.getElementById('itemGenre').value = genres;
+    document.getElementById('itemTitle').value = data.title;
+    document.getElementById('itemAuthor').value = data.directors;
+    document.getElementById('itemActors').value = data.actors;
+    document.getElementById('itemProducers').value = data.producers;
+    document.getElementById('itemGenre').value = data.genres;
     document.getElementById('itemType').value = mediaType === 'tv' ? 'series' : 'movie';
 
-    if (posterUrl) {
-      document.getElementById('coverUrl').value = posterUrl;
-      document.getElementById('itemCoverInput').value = posterUrl;
+    if (data.poster) {
+      document.getElementById('coverUrl').value = data.poster;
+      document.getElementById('itemCoverInput').value = data.poster;
     }
 
     const extra = [];
-    if (year) extra.push(`Year: ${year}`);
+    if (data.year) extra.push(`Year: ${data.year}`);
     if (data.runtime) extra.push(`Runtime: ${data.runtime} min`);
-    if (data.number_of_seasons) extra.push(`Seasons: ${data.number_of_seasons}`);
-    if (data.vote_average) extra.push(`TMDB: ${data.vote_average.toFixed(1)}/10`);
+    if (data.seasons) extra.push(`Seasons: ${data.seasons}`);
+    if (data.rating) extra.push(`TMDB: ${data.rating.toFixed(1)}/10`);
     if (data.overview) extra.push(`\n${data.overview}`);
     document.getElementById('itemNotes').value = extra.join(' · ');
 
-    status.textContent = `✓ Selected: "${title}"${year ? ` (${year})` : ''}`;
+    status.textContent = `✓ Selected: "${data.title}"${data.year ? ` (${data.year})` : ''}`;
     status.className = 'lookup-status success';
   } catch (err) {
     status.textContent = 'Failed to fetch details: ' + err.message;
@@ -893,18 +789,18 @@ function parseCSVRow(row) {
   return result;
 }
 
-function importCSV() {
+async function importCSV() {
   if (!csvData) return;
   const { headers, rows } = csvData;
-  let count = 0;
+  const newItems = [];
 
   rows.forEach(cols => {
     const obj = {};
     headers.forEach((h, i) => { obj[h] = cols[i] || ''; });
-    
+
     if (!obj.title) return;
 
-    library.push({
+    newItems.push({
       id: crypto.randomUUID(),
       type: (obj.type || 'audiobook').toLowerCase(),
       format: (obj.format || 'digital').toLowerCase(),
@@ -919,140 +815,111 @@ function importCSV() {
       notes: obj.notes || '',
       addedAt: Date.now(),
     });
-    count++;
   });
 
-  saveLibrary();
+  const ok = await apiWrite(() => apiFetch('/api/media-vault/items/bulk', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items: newItems }),
+  }));
+  if (!ok) return;
+
+  library.push(...newItems);
   closeImportModal();
   renderLibrary();
-  alert(`Imported ${count} items.`);
+  alert(`Imported ${newItems.length} items.`);
 }
 
-// ─── PERSISTENCE ───
-function saveLibrary() {
-  localStorage.setItem('mv_library', JSON.stringify(library));
-  syncToCloud();
+// ─── PERSISTENCE (D1 via /api/media-vault, identity from Cloudflare Access) ───
+// D1 is the only store. localStorage is never read or written for library
+// data — the one exception is migrateLocalIfNeeded below, which retires the
+// old mv_library cache. Every write goes straight to the API; there is no
+// debounce, no whole-library replace, and no merge modal any more.
+let currentUser = null;
+
+function setSaveStatus(status) {
+  document.getElementById('syncDot').className = 'sync-dot ' + status;
 }
 
-// ─── SYNC (D1 via /api/media, identity from Cloudflare Access) ───
-let currentUser = null; // the Access-authenticated email, or null when offline
-let syncTimeout = null;
-
-function setSyncStatus(status) {
-  const dot = document.getElementById('syncDot');
-  dot.className = 'sync-dot ' + status;
+async function apiFetch(url, opts) {
+  const res = await fetch(url, opts);
+  let body = null;
+  try { body = await res.json(); } catch {}
+  if (!res.ok) throw new Error((body && body.error) || `API error ${res.status}`);
+  return body;
 }
 
-async function loadFromCloud() {
-  setSyncStatus('syncing');
+// Wraps a write: drives the status dot, and on failure alerts loudly and
+// re-fetches the library so the UI never drifts from what the server holds —
+// silent divergence was the failure mode of the old localStorage sync design.
+async function apiWrite(fn) {
+  setSaveStatus('syncing');
   try {
-    const res = await fetch('/api/media');
-    if (!res.ok) throw new Error(`API error ${res.status}`);
-    const data = await res.json();
-    currentUser = data.email;
-    setSyncStatus('synced');
-    return data.items;
+    await fn();
+    setSaveStatus('synced');
+    return true;
   } catch (err) {
-    console.error('Load error:', err);
-    setSyncStatus('error');
-    return null;
+    setSaveStatus('error');
+    alert('Save failed: ' + err.message + '\n\nYour change was not stored. The library will reload from the server.');
+    try {
+      const data = await apiFetch('/api/media-vault/items');
+      library = data.items;
+      renderLibrary();
+    } catch { /* the dot stays red; the next action retries */ }
+    return false;
   }
 }
 
-async function pushAllToCloud(items) {
-  if (!currentUser) return;
-  setSyncStatus('syncing');
+// ─── ONE-TIME MIGRATION of the old localStorage cache ───
+// The server merges: items whose title+type already exist in the caller's
+// cloud rows are skipped (cloud wins), the rest are inserted. Only a
+// confirmed 2xx deletes the local copy — on failure it stays put and the
+// migration retries on the next load.
+async function migrateLocalIfNeeded() {
+  let localItems = [];
   try {
-    const res = await fetch('/api/media', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items }),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || `API error ${res.status}`);
-    }
-    setSyncStatus('synced');
-  } catch (err) {
-    console.error('Sync error:', err);
-    setSyncStatus('error');
+    localItems = JSON.parse(localStorage.getItem('mv_library') || '[]');
+  } catch {
+    localItems = [];
   }
-}
-
-function syncToCloud() {
-  if (!currentUser) return;
-  // Debounce — wait 1.5s after last change before pushing
-  clearTimeout(syncTimeout);
-  setSyncStatus('syncing');
-  syncTimeout = setTimeout(() => pushAllToCloud(library), 1500);
-}
-
-// ─── MERGE MODAL ───
-let _mergeCloudItems = [];
-let _mergeLocalItems = [];
-
-function openMergeModal(localItems, cloudItems) {
-  _mergeLocalItems = localItems;
-  _mergeCloudItems = cloudItems;
-  const localCount = localItems.length;
-  const cloudCount = cloudItems.length;
-  document.getElementById('mergeDesc').textContent =
-    `You have ${localCount} item${localCount !== 1 ? 's' : ''} saved locally and ${cloudCount} item${cloudCount !== 1 ? 's' : ''} in the cloud. How would you like to proceed?`;
-  document.getElementById('mergeModal').classList.add('active');
-}
-
-async function handleMerge(choice) {
-  document.getElementById('mergeModal').classList.remove('active');
-
-  if (choice === 'merge') {
-    // Merge: add local items not already in cloud (match by title+type)
-    const cloudTitles = new Set(_mergeCloudItems.map(i => i.title.toLowerCase() + '|' + i.type));
-    const newItems = _mergeLocalItems.filter(i => !cloudTitles.has(i.title.toLowerCase() + '|' + i.type));
-    library = [..._mergeCloudItems, ...newItems];
-  } else if (choice === 'local') {
-    library = [..._mergeLocalItems];
-  } else {
-    library = [..._mergeCloudItems];
-  }
-
-  localStorage.setItem('mv_library', JSON.stringify(library));
-  await pushAllToCloud(library);
-  renderLibrary();
-}
-
-// ─── STARTUP SYNC ───
-// Cloudflare Access authenticates every visitor before they reach the app,
-// so there is no in-app login: just load the caller's library from D1.
-// localStorage stays as an offline cache/fallback.
-async function initSync() {
-  const localItems = JSON.parse(localStorage.getItem('mv_library') || '[]');
-  const cloudItems = await loadFromCloud();
-
-  if (cloudItems === null) {
-    // API unreachable (e.g. local file preview) — stay on the local cache
-    library = localItems;
-    renderLibrary();
+  if (!Array.isArray(localItems) || localItems.length === 0) {
+    localStorage.removeItem('mv_library');
     return;
   }
+  await apiFetch('/api/media-vault/migrate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items: localItems }),
+  });
+  localStorage.removeItem('mv_library');
+}
 
-  document.getElementById('userPill').style.display = 'flex';
-  document.getElementById('userEmail').textContent = currentUser;
-
-  if (localItems.length > 0 && cloudItems.length > 0) {
-    // Both have data — ask user
-    library = cloudItems; // show cloud while they decide
+// ─── STARTUP ───
+// Cloudflare Access authenticates every visitor before they reach the app,
+// so there is no in-app login: load the caller's library from D1, full stop.
+// If the API is unreachable the app shows an error with a retry — never an
+// empty library, and never stale local data.
+async function initApp() {
+  document.getElementById('loadError').style.display = 'none';
+  setSaveStatus('syncing');
+  try {
+    try {
+      await migrateLocalIfNeeded();
+    } catch (err) {
+      console.error('localStorage migration failed (will retry next load):', err);
+    }
+    const data = await apiFetch('/api/media-vault/items');
+    currentUser = data.email;
+    library = data.items;
+    document.getElementById('userPill').style.display = 'flex';
+    document.getElementById('userEmail').textContent = currentUser;
+    setSaveStatus('synced');
     renderLibrary();
-    openMergeModal(localItems, cloudItems);
-  } else if (localItems.length > 0 && cloudItems.length === 0) {
-    // Local only — push to cloud automatically
-    library = localItems;
-    await pushAllToCloud(library);
-    renderLibrary();
-  } else {
-    // Cloud only or both empty — use cloud
-    library = cloudItems;
-    localStorage.setItem('mv_library', JSON.stringify(library));
-    renderLibrary();
+  } catch (err) {
+    console.error('Load error:', err);
+    setSaveStatus('error');
+    document.getElementById('loadErrorMsg').textContent = err.message;
+    document.getElementById('loadError').style.display = 'flex';
   }
 }
 
@@ -1210,14 +1077,13 @@ document.addEventListener('keydown', e => {
 });
 
 // Close modals on overlay click
-['addModal', 'detailModal', 'importModal', 'mergeModal'].forEach(id => {
+['addModal', 'detailModal', 'importModal'].forEach(id => {
   document.getElementById(id).addEventListener('click', function(e) {
-    if (e.target === this && id !== 'mergeModal') {
+    if (e.target === this) {
       this.classList.remove('active');
     }
   });
 });
 
 // ─── INIT ───
-renderLibrary(); // render from the local cache immediately
-initSync();      // then reconcile with D1
+initApp();

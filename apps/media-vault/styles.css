@@ -759,20 +759,6 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
   animation: spin 0.6s linear infinite;
 }
 
-/* ─── MERGE MODAL ─── */
-#mergeModal .modal { max-width: 460px; }
-.merge-option {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  margin-bottom: 12px;
-  cursor: pointer;
-  transition: all var(--transition);
-}
-.merge-option:hover { border-color: var(--accent); background: var(--accent-glow); }
-.merge-option h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-.merge-option p { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
-
 /* ─── USER PILL in header ─── */
 .user-pill {
   display: flex;
