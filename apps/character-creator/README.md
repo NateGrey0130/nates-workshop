@@ -5069,7 +5069,7 @@ local-only script is protected as soon as it says so.
 | skills | 333 |
 | spells | 570 |
 | psionic powers | 101 |
-| gear | 897 |
+| gear | 902 |
 
 **These are pinned by `test/regression.mjs`**, which is the only thing that can
 honestly check them: it builds a database from nothing under a scratch directory
@@ -5540,6 +5540,16 @@ a stub row for every equipment id it cannot find, so the catalog holds a row
 per name any class has ever mentioned. Production carried 157 of them; 33 were
 orphaned by later class corrections and referenced by nothing at all, and
 `retire-orphan-gear-stubs.sql` drops those.
+
+That retirement partly failed open: its "referenced by nothing" guard matched
+only fixed `item_id:` citations, and 20 of the 33 were still cited inside
+choice-group `from:` lists by eight live classes (class audit F2, 2026-08-25).
+`zzz-resolve-choice-group-gear.sql` restores the four with book entries on
+this machine as real rows, restores the Warlock's Triax pump weapon as a stub
+(its stats are in Triax & The NGR), and rewrites the category citations to
+enumerate real slugs. The smoke test now parses every published class and
+resolves its referenced gear — choice lists included — against the gear table,
+so a retire or a rename can no longer fail open this way.
 
 The count went 123 — 78 by fixing the ones that were the wrong SHAPE and
 pricing the ones a web reference could settle. **What is left is left for a

@@ -94,6 +94,25 @@ R.C.C. was never flagged — those come from the paired O.C.C.
   short-sword/long-sword…). Also worth taking: a one-line smoke check that
   parses every published class's `referencedGear()` against the gear table, so
   a future retire/rename can never fail open this way again.
+- **Taken, 2026-08-25**: `zzz-resolve-choice-group-gear.sql` (zzz- so a clean
+  rebuild runs it after the retire script, which would otherwise delete the
+  restored stub again). (a) C-10 and C-12 re-imported from RUE printed
+  p.257-258, TW Wing Board and Tree Trimmer from printed p.136-137;
+  `triax-pump-weapon` returns as a STUB because its stats are in Triax & The
+  NGR, which is not on this machine (the citation is Conversion Book One's
+  Warlock equipment); `urban-warrior-armor` was NOT re-imported — the suit
+  already exists as `urban-warrior-padded-environmental-body-armor`, so the
+  glitter-boy's choice is repointed at it instead. (b) Five classes rewired:
+  priest-of-light's five families become ten PF rows (two per family), the
+  mind-melter's vehicle list becomes eight real vehicles (no robot horse
+  exists anywhere on this machine, so that option waits for an import), and
+  the three conventional-firearm choices shrink to `["submachine-gun"]`, the
+  only conventional firearm row — widen when such a book lands. The mystic
+  cites nothing broken in production today, so nine classes proved to be
+  eight. Smoke gained a `Gear citations resolve` section that parses every
+  published class from the shared local DB and resolves `referencedGear()` —
+  choice lists included — against gear + redirects (1310 checks / 87
+  sections); README clean-run gear count 897 -> 902.
 
 ### F3 — high — Wilderness Scout's bonus block is wrong four ways, and one of them is silently ignored
 
