@@ -141,13 +141,17 @@
   // Curses joined for the same reason: the Ley Line Walker is +3 vs curses
   // (flat, RUE p.116), and a curse is magic, so it borrows the magic row.
   //
-  // Faerie magic and disease joined last, and for exactly the same reason: the
+  // Faerie magic and disease joined for exactly the same reason: the
   // Palladium Fantasy player races grant bonuses to both — goblins and
   // hob-goblins are +1 to save vs faerie magic (printed 300 and 301), gnomes +1
   // and troglodytes +2 to save vs poison and DISEASE (printed 294 and 296). Both
   // borrow the P.E. row: faerie magic is magic, and p.17 says P.E. is what
   // "resistance to fatigue and disease" is determined by. Without a key, four
   // races would have shipped granting a number that reached nothing.
+  //
+  // Fatigue joined last, for the Operator (RUE printed 92: "+2 to save vs
+  // fatigue and disease"), and borrows the same P.E. row — the p.17 line
+  // above names fatigue outright.
   //
   // `psychicTier` is the character's own tier, used only for the psionic save
   // TARGET — the bonus stays purely M.E.
@@ -169,6 +173,7 @@
       curses: peMagic,
       faerie_magic: peMagic,
       disease: peMagic,
+      fatigue: peMagic,
       coma_death_pct: chart('pe_coma_pct', attrs.PE),
       pain: peMagic,
     };

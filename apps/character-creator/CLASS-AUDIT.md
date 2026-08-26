@@ -193,6 +193,19 @@ R.C.C. was never flagged — those come from the paired O.C.C.
   at-level schedule, and psionics as Major (`6d6 + M.E. attribute number,
   +1d6 per level`, `powers_starting: 9` or 3+6 via schedule). The rolled-tier
   modelling half is S2 below — either is an improvement over the current mix.
+- **Taken, 2026-08-26**: `fix-rue-cyber-knight-bonuses.sql` — the sketch's
+  name reordered, because `fix-cyber-knight-rue-bonuses` sorts BEFORE
+  `fix-cyber-knight.sql` ('-' < '.') and before `fix-pre-rue-class-audit.sql`,
+  the last full-markdown writer of this class, so a clean rebuild would have
+  undone it. Six guarded replaces: PE 11 joins the requirements, initiative
+  1→3 with pull punch/disarm/perception, the PP die rejoins the attribute
+  line, the HF at-level schedule (anchored on the corrected attribute line so
+  re-runs no-op), psionics as the Major tier (`6d6 plus M.E. attribute
+  number, +1d6 per level`, powers_starting 9), and the now-false
+  three-powers extraction note rewritten in the same script per the
+  claim-audit rule. S2's d100 tier table stays unmodelled. All guards match
+  fresh `--remote` pulls; readbacks `fixed 1, old_left 0, cr_free 1`,
+  idempotent; `class-check --remote` ready with zero warnings.
 
 ### F6 — high — eight mage classes' P.P.E. and six psychics' I.S.P. drop the book's attribute term
 
@@ -223,6 +236,19 @@ P.P.E./I.S.P. lost per character.
   term (and the two missing per-level clauses) to each `ppe_base`/`isp_base`
   string via guarded `replace()`. Regression: re-parse each and assert
   `poolFormulaBounds` moved by exactly the attribute range.
+- **Taken, 2026-08-26**: `fix-rue-pool-attribute-terms.sql` (the `rue-`
+  infix so it sorts after `fix-pre-rue-class-audit.sql`, which rewrites
+  ley-line-walker's whole markdown). Eleven guarded replaces cover all
+  twelve classes; every cite re-read from the OCR cache first, warlock's
+  term taken from its own prose per the Blocked note, and its
+  byte-identical base+variant strings rewritten in one `replace()` pass on
+  purpose. Mystic and techno-wizard I.S.P. also gained their missing
+  per-level clauses (`+1d6+1` / `+1d4+1`). The sketch's regression ran
+  green: `poolFormulaBounds` re-parsed on every old/new pair with the
+  attribute pinned to 13 shifted by exactly 13 min and max (cyber-knight's
+  by ME-10, its old base being the Master tier's `6d6+10` — F5's fix, by
+  design). Readbacks `pe_fixed 8, me_fixed 6, old_left 0, cr_free 12`,
+  idempotent; all twelve re-parse ready with zero warnings.
 
 ### F7 — medium — Operator has no bonus block at all
 
@@ -236,6 +262,16 @@ P.P.E./I.S.P. lost per character.
 - **Fix sketch**: `fix-operator-bonuses.sql` adding
   `attributes: { IQ: 1, PS: 2, PP: 1 }`, `combat: { perception: 2 }`,
   `saves: { fatigue: 2, disease: 2 }`, `pools: { sdc: "2d6+6" }`.
+- **Taken, 2026-08-26**: `fix-operator-bonuses.sql`, as sketched — one
+  guarded splice between `starting_money` and `skills:`. The sketch's
+  `fatigue: 2` named a save key that did not exist — derive.js's map and
+  sheet.js's SAVE_FIELDS are the pair that make a key real, and a bonus to
+  an absent key is a number that reaches nothing — so the same PR adds
+  `fatigue` to both (borrowing the P.E. row, the same way disease and
+  faerie_magic joined) plus a smoke case pinning it to that row; the
+  two-way save-list smoke checks hold both sides together. Readbacks
+  `fixed 1, old_left 0, cr_free 1`, idempotent; `class-check --remote`
+  ready with zero warnings.
 
 ### F8 — medium — dropped Perception bonuses across eleven classes (the key exists and live classes use it)
 
