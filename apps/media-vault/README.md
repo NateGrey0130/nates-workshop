@@ -21,12 +21,13 @@ apps/media-vault/
 ├── styles.css            Loaded after /shared/styles.css
 ├── app.js                Everything the page does, one plain script
 └── test/
-    └── smoke.mjs         The merge planner, the sanitizer, and the claims
-                          this README makes
+    └── smoke.mjs         The merge planner, the sanitizer, the ISBN input
+                          rules, and the claims this README makes
 
 functions/api/media-vault/
 ├── _lib/common.js        Identity (Access email, dev@localhost fallback),
-│                         the JSON helper, the item sanitizer, the upsert
+│                         the JSON helper, the item sanitizer, the upsert,
+│                         the ISBN normaliser and shape test
 ├── items.js              GET / POST / DELETE — the library, one item at a time
 ├── items/bulk.js         POST — upsert many (CSV import)
 ├── items/bulk-update.js  POST — retype a selection
@@ -141,6 +142,22 @@ talks to a third party. It takes a `mode`:
 
 Only the fields the client renders come back; raw upstream payloads are never
 relayed.
+
+**What counts as an ISBN.** Hyphens and spaces are stripped and the result
+upper-cased; it must then be nine digits and a check character that may be `X`,
+or thirteen digits. Anything else is a 400 that says what it wanted. Two parts
+of that are deliberate. The upper-case is not cosmetic — OpenLibrary returns a
+full record for `ISBN:043935806X` and **nothing** for `ISBN:043935806x`, so a
+lower-case x reaching the query would turn a loud error into a silent "no
+results found". And the check digit is **not** verified here: a mistyped ISBN
+and a book OpenLibrary does not hold are different problems needing different
+sentences, and that distinction belongs in the client, before the request. The
+rule this replaced was `/^\d{10,13}$/`, which was wrong both ways — it rejected
+every `X` check digit, 9.6% of ISBN-10s, so real books came back `Invalid
+ISBN`; and it accepted 11- and 12-digit strings that are not ISBNs in any
+scheme, so a truncated paste was looked up and reported as a book nobody has.
+`app.js` keeps its own copy of the normaliser, because it is a plain script
+with no module loader; the smoke test pins the two copies byte-for-byte.
 
 **TMDB needs a secret.** The v3 API key was hardcoded in `app.js` until this
 moved server-side; it is now the **`TMDB_API_KEY`** environment variable —

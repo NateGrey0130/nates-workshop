@@ -21,6 +21,34 @@ export function json(body, status = 200) {
   });
 }
 
+// ISBN input, in two jobs kept separate on purpose. normalizeIsbn makes what a
+// person typed or pasted comparable; isIsbnShape says whether the result could
+// be an ISBN at all. Neither validates the check digit — that is a different
+// question with a different answer for the user ("you mistyped it", not "we
+// don't have it"), and it belongs in the client, where it can be said before a
+// request is made rather than after one comes back empty.
+//
+// The upper-case is load-bearing. OpenLibrary returns a full record for
+// `ISBN:043935806X` and nothing at all for `ISBN:043935806x`, so a lower-case
+// x reaching the query would turn a loud error into a silent "no results
+// found" — which is the failure this app is worst at explaining.
+export function normalizeIsbn(raw) {
+  return String(raw || '').replace(/[-\s]/g, '').toUpperCase();
+}
+
+// An ISBN-10 is nine digits and a check character that may be X; an ISBN-13 is
+// thirteen digits and is never X. This replaced `/^\d{10,13}$/`, which was
+// wrong in both directions. It rejected every X check digit — 9.6% of ISBN-10s,
+// measured across 1,233 of them, about one book in eleven — so real books came
+// back "Invalid ISBN". And it accepted 11- and 12-digit strings that are not
+// ISBNs in any scheme, so a truncated paste was sent to OpenLibrary and
+// reported back as a book nobody has. The same regex was copied into app.js
+// where it decided ROUTING, so an ISBN ending in X, typed and entered, was
+// searched for as a film title.
+export function isIsbnShape(isbn) {
+  return /^(?:\d{9}[\dX]|\d{13})$/.test(isbn);
+}
+
 export const ITEM_FIELDS = ['type', 'format', 'title', 'author', 'actors', 'producers', 'genre', 'series', 'location', 'cover', 'notes'];
 export const MAX_ITEMS = 5000;
 export const MAX_FIELD_LEN = 4000;

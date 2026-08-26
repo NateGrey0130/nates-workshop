@@ -440,6 +440,16 @@ async function bulkDelete() {
 }
 
 // ─── LOOKUPS ───
+// The client's copy of the proxy's ISBN normaliser, duplicated rather than
+// imported because app.js is a plain script with no module loader. The smoke
+// test pins the two copies against each other instead: change one and it fails
+// until you change the other. Only the normaliser is duplicated — the SHAPE
+// test stays in the proxy, so the message a malformed ISBN gets is written in
+// exactly one place.
+function normalizeIsbn(raw) {
+  return String(raw || '').replace(/[-\s]/g, '').toUpperCase();
+}
+
 function clearLookupResults() {
   const r = document.getElementById('lookupResults');
   r.innerHTML = '';
@@ -447,9 +457,14 @@ function clearLookupResults() {
   _lookupResultsCache = [];
 }
 
+// Routing deliberately asks "could this only be an ISBN?" rather than "is this
+// a valid ISBN?" — a bare run of digits is nobody's film title, so a truncated
+// or over-long one belongs on the ISBN path where it gets an ISBN-shaped error.
+// Gating this on isIsbnShape instead would send `978074327356` to TMDB and
+// answer a mistyped book with "No movies found for 978074327356".
 function handleLookupEnter() {
-  const val = document.getElementById('lookupInput').value.trim();
-  if (/^\d{10,13}$/.test(val.replace(/[-\s]/g, ''))) lookupISBN();
+  const val = normalizeIsbn(document.getElementById('lookupInput').value);
+  if (/^\d{9,}X?$/.test(val)) lookupISBN();
   else lookupMovie();
 }
 
@@ -471,7 +486,7 @@ function sortByExactMatch(results, query, titleKey) {
 }
 
 async function lookupISBN() {
-  const isbn = document.getElementById('lookupInput').value.trim().replace(/[-\s]/g, '');
+  const isbn = normalizeIsbn(document.getElementById('lookupInput').value);
   if (!isbn) return;
   const status = document.getElementById('lookupStatus');
   clearLookupResults();

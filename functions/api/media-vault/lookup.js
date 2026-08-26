@@ -15,7 +15,7 @@
 // Responses carry only what the client renders — raw third-party payloads are
 // never relayed. TMDB modes fail with a clear 503 when the secret is missing.
 
-import { getUserEmail, json } from './_lib/common.js';
+import { getUserEmail, json, normalizeIsbn, isIsbnShape } from './_lib/common.js';
 
 const TMDB_BASE = 'https://api.themoviedb.org/3';
 const TMDB_IMG = 'https://image.tmdb.org/t/p/w92';
@@ -82,8 +82,8 @@ export async function onRequestGet(context) {
   try {
     switch (mode) {
       case 'isbn': {
-        const isbn = (params.get('isbn') || '').replace(/[-\s]/g, '');
-        if (!/^\d{10,13}$/.test(isbn)) return json({ error: 'Invalid ISBN' }, 400);
+        const isbn = normalizeIsbn(params.get('isbn'));
+        if (!isIsbnShape(isbn)) return json({ error: 'That isn’t a 10- or 13-digit ISBN' }, 400);
         const data = await fetchJson(`${OL_BASE}/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
         const book = data[`ISBN:${isbn}`];
         if (!book) return json({ found: false });

@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { section, check, summary } from '../../character-creator/test/harness.mjs';
 import {
   ITEM_FIELDS, MAX_ITEMS, MAX_FIELD_LEN, sanitizeItem, rowToItem,
+  normalizeIsbn, isIsbnShape,
 } from '../../../functions/api/media-vault/_lib/common.js';
 import { mergeKey, planMigration } from '../../../functions/api/media-vault/migrate.js';
 
@@ -23,6 +24,7 @@ const apiDir = join(repoRoot, 'functions', 'api', 'media-vault');
 const readme = readFileSync(join(appDir, 'README.md'), 'utf8');
 const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
 const schema = readFileSync(join(repoRoot, 'db', 'schema.sql'), 'utf8');
+const commonSrc = readFileSync(join(apiDir, '_lib', 'common.js'), 'utf8');
 
 const endpointFiles = ['items.js', 'migrate.js', 'lookup.js',
   join('items', 'bulk.js'), join('items', 'bulk-update.js'), join('items', 'bulk-delete.js')];
@@ -267,5 +269,42 @@ check('the README names the pure planner the migration turns on',
   readme.includes('`planMigration`'));
 check('the README says how to run this test',
   readme.includes('node apps/media-vault/test/smoke.mjs'));
+
+// ---------- 6. ISBN input ----------
+// The gate this replaced was `/^\d{10,13}$/`, which rejected every ISBN-10
+// ending in X — about one book in eleven — and accepted 11- and 12-digit
+// strings that are not ISBNs at all. It lived in two files and the client's
+// copy decided routing, so the same input could be searched for as a film.
+// These are the properties that made it wrong, pinned so it cannot come back.
+section('ISBN input');
+
+check('an ISBN-10 whose check digit is X is a valid shape',
+  isIsbnShape('043935806X') && isIsbnShape('052562483X'));
+check('an all-digit ISBN-10 and ISBN-13 still are',
+  isIsbnShape('0743273567') && isIsbnShape('9780743273565') && isIsbnShape('9798465662277'));
+check('a length that is not an ISBN in any scheme is refused',
+  !isIsbnShape('12345678901') && !isIsbnShape('978074327356') && !isIsbnShape('12345'));
+check('X is refused where only a digit belongs',
+  !isIsbnShape('978074327356X') && !isIsbnShape('04393X806X'));
+check('the normaliser upper-cases, because OpenLibrary answers ISBN:…X and not ISBN:…x',
+  normalizeIsbn('0-439-35806-x') === '043935806X'
+  && normalizeIsbn(' 978 0 06 112008 4 ') === '9780061120084');
+check('and it survives a missing value rather than throwing',
+  normalizeIsbn(null) === '' && normalizeIsbn(undefined) === '');
+{
+  // app.js has no module loader, so it carries its own copy of the normaliser.
+  // Two copies of one rule drift; this is where that has to fail.
+  const grab = (src) => (src.match(/function normalizeIsbn\(raw\) \{\r?\n([\s\S]*?)\r?\n\}/) || [])[1];
+  const inProxy = grab(commonSrc);
+  const inApp = grab(appSrc);
+  check('the proxy defines the ISBN normaliser', !!inProxy);
+  check('and app.js carries a byte-identical copy of it',
+    !!inApp && inApp === inProxy, `proxy: ${inProxy} | app: ${inApp}`);
+  check('the shape test is NOT duplicated into the client',
+    !appSrc.includes('function isIsbnShape'));
+}
+check('the proxy rejects a malformed ISBN by saying what it wanted',
+  /10- or 13-digit ISBN/.test(endpointSrc['lookup.js'])
+  && !endpointSrc['lookup.js'].includes("'Invalid ISBN'"));
 
 process.exit(summary() === 0 ? 0 : 1);
