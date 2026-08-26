@@ -31,6 +31,7 @@
     </div>
     <a href="/" class="home-link">← workshop</a>
     <button class="btn btn-sm" id="btnImportHeader" onclick="openImportModal()">📥 Import</button>
+    <button class="btn btn-sm" id="btnDupHeader" onclick="openDuplicatesModal()" title="Find items that share a title and a type, and merge the ones that are really the same">⧉ Duplicates</button>
     <button class="btn btn-sm" id="btnExportHeader" onclick="exportCSV()">📤 Export</button>
     <button class="btn btn-sm btn-select-mode" id="btnSelectMode" onclick="toggleSelectMode()">☑ Select</button>
     <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Item</button>
@@ -421,6 +422,28 @@
       <button class="btn" onclick="closeEnrichModal()">Cancel</button>
       <button class="btn" onclick="runEnrich()" id="btnEnrichRun">Look up</button>
       <button class="btn btn-primary" onclick="commitEnrich()" id="btnEnrichApply" disabled>Apply selected</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── DUPLICATES ───
+     Read-only until Merge. Groups that disagree about a field that matters
+     arrive UNTICKED and say which field and which two values, because two
+     works can honestly share a title and a type — Candyman (1992) and
+     Candyman (2021) do — and only a person can tell those apart. -->
+<div class="modal-overlay" id="dupModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeDuplicatesModal()">✕</button>
+    <h2>Duplicates</h2>
+
+    <p class="import-hint" id="dupSummary"></p>
+
+    <div class="isbn-paste-results dup-results" id="dupResults" style="display:none"></div>
+
+    <div class="modal-actions">
+      <button class="btn" onclick="closeDuplicatesModal()">Cancel</button>
+      <button class="btn" onclick="runDuplicateScan()" id="btnDupRescan">Scan again</button>
+      <button class="btn btn-primary" onclick="commitDuplicates()" id="btnDupApply" disabled>Merge ticked</button>
     </div>
   </div>
 </div>
