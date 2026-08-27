@@ -232,11 +232,12 @@ import { relatedAllowance, validateCharacter } from '../../../functions/api/char
 import {
   crossCategoryRestrictions, extractClassMarkdown, unmodelledKeys, unclosedFlowLines,
   parseSourcePages, resolveBookSlug, registryBookSlug, normalizeBookTitle, detectPageOffset,
-  detectPageOffsetRegions, offsetForPrintedPage,
+  detectPageOffsetRegions, offsetForPrintedPage, isNotABook,
   freeTextFields, fieldTokens,
   fieldSourceSpans, bestMatchingPages,
 } from '../../../scripts/class-check-lib.mjs';
-import { bookSpellings, bookTitles, cacheCoverage, loadBookRegistry } from '../../../scripts/books-lib.mjs';
+import { bookSpellings, bookTitles, cacheCoverage, loadBookRegistry, loadNotBooks } from '../../../scripts/books-lib.mjs';
+import { bucketFor, summarise } from '../../../scripts/source-coverage-lib.mjs';
 import { buildUserPrompt } from '../../../functions/api/character-creator/_lib/extraction-prompt.js';
 import { collapseWhitespace, statements, stripComments, trailingSelects } from '../../../scripts/sql-statements.mjs';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
@@ -5631,6 +5632,91 @@ section('Book registry');
   // Skips entirely on a machine with no caches - they are gitignored.
   check('every offset region the caches show is recorded in scripts/books.json',
     splitButUnrecorded.length === 0, splitButUnrecorded.join(' | '));
+
+  // ---- source coverage ----
+  // "Can what shipped still be traced back to a cached page?" was a question
+  // nobody had asked across the corpus, so nobody knew the answer - and it is
+  // exactly the kind of answer that stops being yes as books are cached
+  // partially, re-sliced, or cited under a new spelling.
+  //
+  // The BUCKETING is pinned here, against a fixture. The live numbers are not
+  // and must not be: the caches are gitignored, so a clean clone traces nothing
+  // and a test that asserted otherwise would fail for everyone.
+  {
+    const reg = {
+      rue: { title: 'Rifts Ultimate Edition', aliases: [], page_offset: 3, source_pdf: null },
+      pf: {
+        title: 'Palladium Fantasy RPG Main Book', aliases: ['palladium-fantasy-core'],
+        page_offset: 2, page_offset_exceptions: [{ printed_through: 16, offset: 1 }],
+        source_pdf: null,
+      },
+      bom: { title: 'Rifts Book of Magic', aliases: [], page_offset: 1, source_pdf: null },
+      'rifts-core': { title: 'Rifts RPG (original core book)', aliases: [], source_pdf: null },
+    };
+    const notBooks = ['Estimate - no published price found'];
+    // rue holds p100-p110, bom holds only p090-p095 — the shape of the real one.
+    const caches = {
+      rue: new Set(Array.from({ length: 11 }, (_, i) => 100 + i)),
+      bom: new Set([90, 91, 92, 93, 94, 95]),
+      pf: new Set(Array.from({ length: 20 }, (_, i) => 1 + i)),
+    };
+    const opts = { registry: reg, caches, notBooks };
+    const b = (s) => bucketFor(s, opts);
+
+    check('a window inside the cache is traceable',
+      b('Rifts Ultimate Edition p.100-104').bucket === 'traceable');
+    check('and the offset it used is the recorded one, not zero',
+      b('Rifts Ultimate Edition p.100-104').window[0] === 103);
+    check('a row citing nothing is its own bucket',
+      b(null).bucket === 'no-source-book' && b('   ').bucket === 'no-source-book');
+    check('a book with no page range cannot be located in it',
+      b('Rifts Ultimate Edition').bucket === 'no-page-range');
+
+    // The two that the audit lumped together, and why they must not be: one is
+    // fixed by caching a book, the other by finishing one.
+    check('a registered book with no cache here is not-cached',
+      b('Rifts RPG (original core book) p.98-101').bucket === 'not-cached'
+      && b('Rifts RPG (original core book) p.98-101').slug === 'rifts-core');
+    check('a cached book that does not hold those pages is outside-cache',
+      b('Rifts Book of Magic p.223-228').bucket === 'outside-cache'
+      && b('Rifts Book of Magic p.223-228').reason === 'no page of it cached');
+    check('and a half-covered window says how much of it is there',
+      b('Rifts Ultimate Edition p.105-115').bucket === 'outside-cache'
+      && b('Rifts Ultimate Edition p.105-115').reason === '3 of 11 pages cached');
+
+    check('a spelling the registry has never seen is unknown-book',
+      b('Rifts World Book 04: Africa p.12').bucket === 'unknown-book');
+
+    // `Estimate - no published price found` resolved to `pf` for 104 gear rows
+    // before `not_books` existed: the initialism route reads e-n-p-p-f and
+    // finds `pf` inside it. Reporting those as gaps would be 104 false alarms.
+    check('a provenance marker is not a book and not a gap',
+      b('Estimate - no published price found').bucket === 'not-a-book');
+    check('and it does not resolve to a cache through the initialism route',
+      resolveBookSlug('Estimate - no published price found',
+        [{ slug: 'pf', sourcePdf: null }], reg, notBooks) === null
+      && resolveBookSlug('Estimate - no published price found',
+        [{ slug: 'pf', sourcePdf: null }], reg) === 'pf');
+    check('the shipped registry names both markers',
+      loadNotBooks().length === 2
+      && isNotABook('Web reference (not book-verified)', loadNotBooks()));
+
+    // The offset exception has to reach this too, or every pf row in the head
+    // of the book is reported as untraceable.
+    check('a page inside a recorded offset exception traces at that offset',
+      b('Palladium Fantasy RPG Main Book p.14-16').window[0] === 15);
+
+    const rolled = summarise([
+      { label: 'a', sourceBook: 'Rifts Ultimate Edition p.100-104' },
+      { label: 'b', sourceBook: 'Rifts Book of Magic p.223-228' },
+      { label: 'c', sourceBook: null },
+    ], opts);
+    check('the roll-up counts every bucket and names only the offenders',
+      rolled.total === 3 && rolled.counts.traceable === 1
+      && rolled.offenders['outside-cache'][0].label === 'b'
+      && rolled.offenders.traceable.length === 0);
+  }
+
 
 }
 

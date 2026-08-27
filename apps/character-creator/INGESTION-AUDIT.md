@@ -679,6 +679,90 @@ Add a smoke check that pins the
 script to the README map. Once it exists, a book's `SURVEY.md` ledger (F10) can
 quote its coverage line as the answer to "what remains".
 
+**Taken, 2026-08-27** (PR: `source-coverage`). `scripts/source-coverage.mjs`,
+offline apart from one read-only D1 pass, `--remote` by default because the
+question is about what SHIPPED. It **always exits 0** and never gates a merge:
+the caches are gitignored, so a clean clone traces nothing and that is not a
+defect. `source-coverage-lib.mjs` is its pure half — one `source_book` string
+in, one bucket out — so the smoke test pins the bucketing against a fixture and
+never against live caches. Both are in the README script map and the allowlist.
+
+Measured 2026-08-27, `--remote`:
+
+```
+COVERAGE        traceable  not-a-book  no-source-book  no-page-range  unknown-book  not-cached  outside-cache
+  classes       107        0           0               0              0             1           1              of 109
+  gear          727        133         1               40             0             1           0              of 902
+  skills        127        0           52              105            0             49          0              of 333
+  spells          0        0           16              323            0             0           231            of 570
+  psionic_powers  7        0           12              82             0             0           0              of 101
+```
+
+**Not one of 570 spells can be traced to a page.** 323 carry no page range, 231
+cite the Book of Magic whose cache is six pages, 16 cite nothing. That is the
+single largest number in this report and it was not in the finding.
+
+**Seven buckets, not four.** Two splits and one addition, each because the
+action differs:
+
+- **`not-cached` split from `unknown-book`.** `dragon-hatchling` cites a book
+  the registry knows and this machine has not cached — the fix is one
+  `ocr-book.py` run, not an edit to any row. Lumped in with genuinely unknown
+  spellings, that is invisible. 51 rows are in it: 48 skills citing the Rifts
+  Skill List, plus `dragon-hatchling`, one Triax gear row and one New West
+  skill. Every one of those four PDFs' worth is a caching job, not a data job.
+- **`not-a-book` is new, and it found a live defect.** `Estimate - no published
+  price found` **resolved to `pf`** for 104 gear rows: the initialism route
+  reads e-n-p-p-f and finds `pf` inside it. F1's `_doc` says that marker and
+  `Web reference (not book-verified)` are deliberately not registry entries —
+  which left them to the heuristic, which had an answer. A `not_books` list in
+  `scripts/books.json` now names both, `resolveBookSlug` returns null for them
+  before either route, and `pf`'s attributed rows went **146 → 42**. Without
+  this the report would have opened with 133 false gaps.
+
+**The stub backlog signature had to change, and the finding's number is an
+over-count by 4x.** F5 records "21 imported skills at 0/0 that are not W.P.s (a
+class granting one of those gives a character 0%)". Of those 21: five are Hand
+to Hand rows, and eight are deliberately-modelled non-percentile skills carrying
+long `note` text that says exactly why nothing is stored — Fencing, Combat
+Driving, Robot Combat: Basic, Robot Combat Elite: Glitter Boy, Sniper, Hunting,
+Trick Riding, Robot Combat Elite. Those are finished rows, not stubs. A stub is
+a row an importer created and **nobody touched since**: no base %, no bonuses,
+no note. There are **5**.
+
+```
+BACKLOG       rows an importer created and nobody finished
+  gear stubs             5   description still says STUB — created by class import
+  gear with no price    27   no cost and no cost_note to explain it
+  skill stubs            5   created by an import and never given a base %, a bonus or a note
+  spell stubs            0   level 0 and 0 P.P.E.
+  psionic stubs          1   0 I.S.P.
+```
+
+Two other numbers in the finding moved: "32 gear rows with no price" is **27**
+once the five carrying a `cost_note` that explains the absence are excluded, and
+"1 stub spell" is **0 spells and 1 psionic power** (Meditation).
+
+**The rest of the finding's measurements hold.** 107 of 109 classes traceable,
+`stone-master` and `dragon-hatchling` the two that are not, zero classes missing
+a page suffix. The page-suffix percentages are unchanged within a row or two.
+
+Offenders are grouped **by book and cause** rather than listed: 232 of the
+untraceable rows are one book with one cause, and printing 231 near-identical
+`bom` lines would bury `stone-master`, which is the one that is different. Three
+examples per cause, `--offenders` for the whole list.
+
+One thing worth its own line for whoever takes F6 or F10: **231 spells cite
+`Rifts Book of Magic p.71-72`** — two pages. Whatever that range is, it is not
+where 231 spells are printed. It is not this PR's to fix, and nothing else would
+have surfaced it.
+
+Measured after: smoke **1,380 checks / 90 sections** (up 13), regression 215,
+filament-forge 58, pick3cut5 17 + game 23, media-vault 200, all green.
+`drift-check --remote` prints **NO DRIFT**, unchanged. `source-coverage` runs
+clean against both `--remote` and `--local`.
+
+
 ### F6 — the catalog importers already know the page range and throw it away
 
 **What is true today.** The session importers take `page_range` per extraction

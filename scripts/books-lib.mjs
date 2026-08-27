@@ -40,6 +40,22 @@ export function loadBookRegistry(file = path.join(here, 'books.json')) {
   return parsed.books;
 }
 
+/**
+ * The strings that are NOT books - `Estimate - no published price found` and
+ * `Web reference (not book-verified)`. They record where a value came from,
+ * not which book, and they have to be named somewhere: left to the
+ * heuristics, the first of them resolved to `pf` for 104 gear rows, because
+ * the initialism route reads e-n-p-p-f and finds `pf` inside it.
+ */
+export function loadNotBooks(file = path.join(here, 'books.json')) {
+  try {
+    const parsed = JSON.parse(readFileSync(file, 'utf8'));
+    return Array.isArray(parsed?.not_books) ? parsed.not_books : [];
+  } catch {
+    return [];
+  }
+}
+
 /** Every canonical title, in registry order. What the extraction prompt offers. */
 export function bookTitles(registry) {
   return Object.values(registry).map((b) => b.title);
