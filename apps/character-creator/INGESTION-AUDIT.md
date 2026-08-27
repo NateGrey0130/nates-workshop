@@ -61,10 +61,10 @@ one-line PR or folded into whichever finding lands first.
 
 ---
 
-## Status, 2026-08-27 — F1 through F5, and F9, taken
+## Status, 2026-08-27 — F1 through F6, and F9, taken
 
-Six PRs, one per finding, each with its `Taken` note under the finding itself.
-`main` is at `3948201` plus PR #343.
+Seven PRs, one per finding, each with its `Taken` note under the finding
+itself. `main` is at `ecfc8ad`, the merge of PR #344.
 
 | # | PR | what shipped |
 |---|---|---|
@@ -73,11 +73,13 @@ Six PRs, one per finding, each with its `Taken` note under the finding itself.
 | F3 | #339 | the completeness gate measures the BOOK (`printed_pages + page_offset`), not the source PDF's page count |
 | F4 | #340 | the offset is read, not re-derived — and answers **per printed page**, because `pf`'s is not constant |
 | F5 | #341 | `scripts/source-coverage.mjs` — can what shipped still be traced to a page, and what is stubbed |
+| F6 | #344 | a confirmed row's `source_book` is composed PER STAGED ROW — the session's book resolved through `books.json`, plus that row's page range normalised to `p.N-M` |
 | F9 | #343 | `CLAUDE.md` stops telling every session the skills do not load, and four smoke checks stop it saying so again |
 
-**This audit's own premises were wrong in six places, and taking the findings is
-what found it.** Each is written up under its finding; collected here because
-four of them change findings that have not been taken yet:
+**This audit's own premises were wrong in nine places, and taking the findings
+is what found it.** Every finding taken so far has turned up an error in its
+own text. Each is written up under its finding; collected here because five of
+them change findings that have not been taken yet:
 
 1. **`pf`'s offset is not constant** (F4). This file says the majority vote
    contradicts `book-survey` §0d and that "none of these books has the
@@ -107,6 +109,28 @@ four of them change findings that have not been taken yet:
    non-percentile skills whose whole content is a long `note` saying why nothing
    is stored. There are **5** real stubs. "32 gear rows with no price" is 27;
    "1 stub spell" is 0 spells and 1 psionic power.
+7. **`import_staged.page_range` is a free-text LABEL, not a range** (F6).
+   `import.js:740` prompts for it with the placeholder `pp. 180-181`, so F6's
+   literal `source_book + ' p.' + page_range` mints
+   `Rifts Ultimate Edition p.pp. 180-181` — which `parseSourcePages` refuses,
+   because its `\bp\.?\s*(\d+)` cannot cross the second `p`. Taken as written it
+   would have produced rows that LOOK attributed and still score
+   `no-page-range`, which is worse than a bare title. **Any finding that
+   composes or reads one of these labels has to parse it rather than append
+   it.**
+8. **Skills is not a session importer** (F6). `import/skills/extract.js` takes
+   no `session_id` and no `page_range` and stages nothing; it confirms through
+   `skills/confirm.js` with one batch-level `source_book`. F6 named it among
+   "the session importers, ..." and F6's fix does not reach it. **Its 105
+   page-less rows need their own finding.**
+9. **Production `import_sessions` and `import_staged` are EMPTY** (F6, and F7
+   says so independently). Every catalog row in production came from a data
+   script: `add-burster-psionic-powers.sql` wrote 4 of the 7 traceable psionic
+   rows, `add-rue-psionics-batch.sql` wrote the bare title 22 times. So F6's
+   "that is the whole explanation for F5's coverage numbers" is wrong — the
+   session UI has never written a psionic row to production and cannot be what
+   dropped their pages. **Taking F6 moved no number, and no finding should
+   reason from "rows the session UI imported" until one is actually run.**
 
 **One number nothing else would have surfaced: 231 spells cite `Rifts Book of
 Magic p.71-72`.** Two pages. Whatever that range is, it is not where 231 spells
@@ -117,6 +141,11 @@ are printed. Nobody has looked at it yet.
 powers 7/101, and **spells 0 of 570** — 323 with no page range, 231 pointing
 into `bom`'s six-page cache, 16 citing nothing. That last row is the largest
 number in this audit and was not in it.
+
+Unchanged by F6, and that is the point: it governs rows imported from here on,
+not the ones already shipped. **The ledger will read exactly this until a
+session import is run against production**, and nothing that has been taken so
+far moves it. F10-F17 are the findings that could.
 
 
 ## What book #9 costs today
