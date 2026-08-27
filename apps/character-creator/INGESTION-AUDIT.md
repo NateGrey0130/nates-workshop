@@ -155,12 +155,13 @@ taking F6 exposed rather than things the original pass missed:
   not reach it; it is not a session importer.
 - **F19** — `buildUpdate`'s `COALESCE` stops a NULL, and the value that erases
   a page range is a bare title, not a NULL.
-- **F20** — a stub created by a class import inherits **the class's** page
-  range, so four gear rows in production cite the City Rat's page for a poncho,
-  a medical bag, a vial and a blood pressure machine — and the coverage ledger
-  counts all four as traceable. Skill, spell and psionic stubs get no
-  `source_book` at all. **The only finding here where the ledger reports a
-  wrong answer as a right one.**
+- **F20** — skill, spell and psionic stubs got no `source_book` at all, while
+  gear stubs always did. **Its headline was false and taking it is what found
+  that**: the four gear rows it accused of citing the wrong page are correct,
+  hand-written by `fix-body-fixer-page-break.sql` against the OCR cache, and
+  the proposal's fix for them would have destroyed a verified citation. See
+  the `Taken` note under the finding. Nothing was repaired because nothing was
+  broken; the quiet half shipped.
 
 
 ## What book #9 costs today
@@ -1727,6 +1728,57 @@ half-fix this audit keeps finding elsewhere. Do **not** try to guess the right
 page for them — that is a book read, and `Poncho` is exactly the kind of row
 where a guess would look right. Pin in the smoke test that a stub's
 `source_book` never carries `p.`.
+
+**Taken, 2026-08-27 (PR #349) — and its headline was false.** This finding was
+written on 2026-08-27 from the coverage ledger, without opening the script that
+made the rows. Implementing it is what read the script.
+
+**The four gear rows are correct, and the fix this finding proposed for them
+would have destroyed a verified citation.** They were not created by
+`buildStubStatements` at all. `db/fix-body-fixer-page-break.sql:27-33` inserts
+them by hand, with the comment *"cited to p.88, the page they are actually
+printed on"* — and it is right: `.cache/books/rue/txt/p091.txt`, which is
+printed p.88, carries "hand-held blood pressure machine", "six unbreakable
+vials", "medical bag" and "poncho" in the Body Fixer's equipment paragraph. The
+class is the **Body Fixer** (`p.86-88`), not the City Rat. The City Rat came
+from a `LIKE 'Rifts Ultimate Edition p.88%'` query matching its `p.88-89`
+prefix — a bad query, reported as a mechanism. **No data script shipped. There
+was nothing to repair.**
+
+**And the gear half of the proposal was wrong on the merits too.** Dropping the
+page range from a gear stub's citation would remove the only true thing a stub
+can say. A stub has no stats, so there is no equipment-chapter page to cite
+instead; what it has is a name, and the name WAS printed on the class's pages.
+When the catalog importer later fills the row, `applyDecisions` overwrites
+`source_book` with the pages the stat block is actually printed on. The
+existing behaviour is right and is now commented as such.
+
+**What survived, and shipped:** the quiet half. Skill, spell and psionic stubs
+did not name `source_book` in their INSERT at all, so they carry no provenance
+whatsoever — not a wrong book, none. All four catalogs now write the class's
+citation, the same value gear always wrote. Four smoke checks, one per catalog,
+because the defect was three separate INSERTs each silently omitting one
+column.
+
+**One more number in this finding was wrong.** "12 skills, 16 spells and 12
+psionic powers ... That is the whole of the ledger's `no-source-book` count for
+spells and psionics." The 12 skills and 12 psionic powers are import stubs and
+are the rows this fixes. **The 16 spells are `source = 'seed'`**, and so are 40
+of the 52 source-less skills — rows the stub statement never touched, from the
+original seed rather than from any import. This PR does not change them and no
+finding on this menu covers them.
+
+**The lesson, for a menu whose whole method is measure-then-read.** A row that
+the ledger calls `traceable` and a row whose citation was CHECKED are not the
+same claim, and F5's report cannot tell them apart — that is fine and by
+design. What is not fine is reading the ledger and writing a finding without
+opening the script that wrote the rows. Six of this file's findings were
+falsified by taking them; this one was falsified by taking it too, and it was
+the only one written after that pattern was already known.
+
+**Smoke check not added, deliberately:** the proposed "a stub's `source_book`
+never carries `p.`" would have pinned the wrong behaviour. The four checks
+pin that every stub kind records the class's citation instead.
 
 
 ---
