@@ -369,8 +369,8 @@ export async function extractRows(env, spec, { pdfBase64, model, systemPrompt, u
 // `source_book` and it wins — the session importers compose one PER ROW from
 // the page range staging recorded, because one session covers many ranges and
 // a book with no pages on it is a row nothing can trace. `skills/confirm.js`
-// does not stage and has no page ranges, so it passes the batch default alone
-// and behaves exactly as it did.
+// composes one too, but only for the batch: it has no staging table to hang a
+// per-row value on, so the upload IS the range.
 export async function applyDecisions(env, spec, decisions, { sourceBook, system } = {}) {
   const cat = CATALOGS[spec.catalog];
   const key = cat.uniqueField;

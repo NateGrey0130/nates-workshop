@@ -25,6 +25,11 @@
 //              bare title, because the bare title at least reports itself as
 //              missing.
 //
+// Four callers now: the three session importers, per staged row, and the skill
+// importer, once per upload. That last one had no page range to lose — it
+// never collected one, which is why 105 of 333 skills carry a book and no
+// page. Same composer either way; only the granularity differs.
+//
 // Pure string work, no I/O: the smoke test pins it directly.
 
 import BOOKS from '../../../../scripts/books.json' with { type: 'json' };

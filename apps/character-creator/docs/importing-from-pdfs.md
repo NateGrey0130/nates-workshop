@@ -136,7 +136,7 @@ this skips.
 ### Skill importer
 
 1. **Upload** a page range from a skill chapter, with an optional source-book
-   label and category.
+   label, **page range** and category.
 2. **Extract** — returns many skills as JSON, each classified as new or a
    duplicate, with the catalog's current numbers shown alongside the book's.
 3. **Review** — duplicates offer **update** / **keep both** / **ignore**.
@@ -145,6 +145,16 @@ this skips.
    "Keep both" needs a distinguishing name, defaulting to `<name> (<book>)`.
 4. **Confirm** — applied as one batch. Names claimed twice in a single import
    are reported as conflicts rather than failing the whole run.
+
+**The page range is what makes the rows traceable, and it is per upload.** The
+session importers record one per staged range; this importer has no staging
+table, so the batch *is* the range — type the pages you actually uploaded and
+confirm them before moving on, rather than uploading three ranges and
+confirming once. The book is resolved through `scripts/books.json` and the
+range normalised, so `pp. 26-34` becomes `Rifts Ultimate Edition p.26-34`.
+Leave the range blank and the rows get the book alone, which is what **105 of
+333 skills** in the catalog carry today — every one of them written before this
+field existed.
 
 A reply that hits the output ceiling is **rejected, not staged**. Half a page
 saved as though it were the whole page is worse than a failure, because you
