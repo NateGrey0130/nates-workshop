@@ -34,7 +34,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { DB, d1Query, repoRoot, targetFromArgv } from './d1-query-lib.mjs';
 import { join } from 'node:path';
-import { loadBookRegistry } from './books-lib.mjs';
+import { cacheCoverage, loadBookRegistry } from './books-lib.mjs';
 import { registryBookSlug } from './class-check-lib.mjs';
 
 
@@ -181,21 +181,35 @@ for (const slug of Object.keys(bookRegistry)) {
   const files = readdirSync(txtDir).filter((f) => f.endsWith('.txt') && !f.endsWith('.raw.txt'));
   // A PARTIAL cache must not be consulted. "At least N pages" is not the same
   // as complete: run against 81 of 382 pages this accused four gear rows whose
-  // page simply had not been OCR'd yet. The manifest states the page count, so
-  // compare against that and skip otherwise.
+  // page simply had not been OCR'd yet.
+  //
+  // The gate used to compare the file count against `manifest.pages`, which is
+  // the SOURCE PDF's page count. `fom` was a 73-page cache of a 161-page book,
+  // built from a truncated PDF, and its manifest said `"pages": 73` — so it
+  // passed, and half a book read as all of it. cacheCoverage compares against
+  // the book's own last printed folio instead, taken from scripts/books.json in
+  // preference to the manifest for the reason spelled out there.
   const manifestPath = join(cacheDir, slug, 'manifest.json');
   if (!existsSync(manifestPath)) {
-    // `pf` is the live case, and it is the most-cited book in the database.
+    // `pf` was the live case, and it is the most-cited book in the database.
     // Say so: a silent `continue` here reads exactly like a book with nothing
     // to check.
     console.log(`citations:    ${slug} cache has no manifest.json — skipped`);
     citationSkipped = true;
     continue;
   }
-  const expected = JSON.parse(readFileSync(manifestPath, 'utf8')).pages;
-  if (!expected || files.length < expected) {
+  const cover = cacheCoverage({
+    cachedPages: files.length,
+    manifest: JSON.parse(readFileSync(manifestPath, 'utf8')),
+    registryEntry: bookRegistry[slug],
+  });
+  // SKIP, not fail. An incomplete cache silences the check exactly as before;
+  // all that changes is that the reason is printed, and that `fom` would now
+  // be caught. A missing cache is not drift, and neither is a short one.
+  if (!cover.complete) {
     console.log(`citations:    ${slug} cache incomplete `
-      + `(${files.length}/${expected ?? '?'} pages) — skipped`);
+      + `(${cover.cached} of ${cover.needed ?? '?'} pages, ${cover.basis}`
+      + `${cover.printedFrom ? `, from ${cover.printedFrom}` : ''}) — skipped`);
     citationSkipped = true;
     continue;
   }

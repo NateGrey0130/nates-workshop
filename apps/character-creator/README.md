@@ -611,8 +611,11 @@ scripts/
 │                           catalog cites, keyed by its .cache/books slug. The
 │                           canonical title, every OTHER spelling production
 │                           actually contains, the source PDF, the last printed
-│                           folio and the printed-to-cache page offset
-├── books-lib.mjs           Reading it. The matching itself is in
+│                           folio and the printed-to-cache page offset. The last
+│                           two gate the citation check: a cache shorter than
+│                           the BOOK is not consulted, whatever its PDF held
+├── books-lib.mjs           Reading it, and cacheCoverage - is this cache long
+│                           enough to be believed? The title matching is in
 │                           class-check-lib.mjs, which stays free of file I/O
 ├── readme-section.mjs      One section of this README by heading, bounded by
 │                           the next heading of ANY depth; no arguments prints

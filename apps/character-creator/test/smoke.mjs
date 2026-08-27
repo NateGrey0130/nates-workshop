@@ -235,7 +235,7 @@ import {
   freeTextFields, fieldTokens,
   fieldSourceSpans, bestMatchingPages,
 } from '../../../scripts/class-check-lib.mjs';
-import { bookSpellings, bookTitles, loadBookRegistry } from '../../../scripts/books-lib.mjs';
+import { bookSpellings, bookTitles, cacheCoverage, loadBookRegistry } from '../../../scripts/books-lib.mjs';
 import { buildUserPrompt } from '../../../functions/api/character-creator/_lib/extraction-prompt.js';
 import { collapseWhitespace, statements, stripComments, trailingSelects } from '../../../scripts/sql-statements.mjs';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
@@ -5499,6 +5499,60 @@ section('Book registry');
     missingTitles.length === 0, missingTitles.join(', '));
   check('and asks for the page range the field-source window needs',
     prompt.includes('<Title> p.N-M'));
+
+  // ---- cache completeness ----
+  // The gate that decides whether a citation check may believe a cache. It
+  // used to compare the file count against `manifest.pages`, which is the
+  // SOURCE PDF's page count -- a property of the file, not of the book.
+  //
+  // `fom` was the case that breaks: a 73-page cache of a 161-page book, built
+  // from a truncated PDF, whose manifest therefore said `"pages": 73`. It
+  // PASSED, and half a book read as all of it. These numbers are the real
+  // ones, kept as a fixture because the live cache has since been completed
+  // and can no longer demonstrate the bug.
+  const fomAsItWas = {
+    cachedPages: 73,
+    manifest: { pages: 73, cached_pages: 73, printed_pages: 72, page_offset: 1 },
+    registryEntry: { printed_pages: 159, page_offset: 1 },
+  };
+  check('the old rule passed a 73-page cache of a 161-page book',
+    fomAsItWas.cachedPages >= fomAsItWas.manifest.pages);
+  check('and the book\'s own last folio catches it',
+    cacheCoverage(fomAsItWas).complete === false
+    && cacheCoverage(fomAsItWas).needed === 160);
+
+  // Why the registry outranks the manifest, in one check: ocr-book.py derives
+  // printed_pages by reading the last folio it can SEE, so a truncated cache
+  // derives its own truncation and passes itself. A number that comes from the
+  // cache cannot judge the cache.
+  check('a manifest derived from a truncated cache does not get to judge it',
+    cacheCoverage({ ...fomAsItWas, registryEntry: undefined }).complete === true
+    && cacheCoverage(fomAsItWas).printedFrom === 'scripts/books.json');
+
+  // bom: six pages of a 352-page book, and no folio in those six survived OCR,
+  // so the registry is the only source of the length at all.
+  const bom = cacheCoverage({
+    cachedPages: 6,
+    manifest: { pages: 360, printed_pages: null, page_offset: null },
+    registryEntry: { printed_pages: 352, page_offset: 1 },
+  });
+  check('a cache too short to read its own folio still gets measured',
+    bom.complete === false && bom.cached === 6 && bom.needed === 353);
+
+  // Unnumbered back matter means a complete cache holds MORE files than the
+  // last printed page needs. rue: 382 files, last folio 374, offset +3.
+  check('unnumbered back matter does not make a complete cache look short',
+    cacheCoverage({ cachedPages: 382, manifest: { pages: 382 },
+      registryEntry: { printed_pages: 374, page_offset: 3 } }).complete === true);
+
+  // A book in no registry with no folio anywhere falls back to the old, weaker
+  // test rather than to nothing -- and says which test it used.
+  const fallback = cacheCoverage({ cachedPages: 100, manifest: { pages: 100 } });
+  check('with no folio anywhere it falls back to the PDF page count, and says so',
+    fallback.complete === true && fallback.basis.includes('PDF page count')
+    && fallback.printedFrom === null);
+  check('and unknown is not complete',
+    cacheCoverage({ cachedPages: 100, manifest: null }).complete === false);
 }
 
 
