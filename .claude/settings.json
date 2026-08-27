@@ -21,6 +21,7 @@
       "Bash(node scripts/repo-vs-live.mjs *)",
       "Bash(node scripts/readme-section.mjs)",
       "Bash(node scripts/readme-section.mjs *)",
+      "Bash(python scripts/ocr-book.py *)",
       "Bash(python scripts/read-columns.py *)",
       "Bash(pdftotext *)",
       "Bash(node --check *)"

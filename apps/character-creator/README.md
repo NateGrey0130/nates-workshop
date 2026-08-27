@@ -586,15 +586,21 @@ scripts/
 │                           extra, plus the vocabulary warning
 ├── repo-vs-live.mjs        Can the repo rebuild the live catalog, row for row?
 │                           Builds from scratch and diffs NAMES, not counts
-├── ocr-book.py             OCR a scanned sourcebook into .cache/books/<slug>/
-│                           at --psm 3, with geometry and a Palladium wordlist
+├── ocr-book.py             Cache a sourcebook into .cache/books/<slug>/ - the ONE
+│                           front door, either kind of book. A text layer is
+│                           detected and read through read-columns.py (no OCR,
+│                           no cost); a scan is rendered and OCR'd at --psm 3
+│                           with geometry and a Palladium wordlist. --probe
+│                           says which it is and writes nothing
 ├── ocr-fields-lib.mjs      Typed readers for the numbers OCR gets confidently
 │                           wrong - `Ibs`, `18.000`, `LS.P.` See below
 ├── palladium-words.txt     That wordlist. Committed; the OCR output is not
-├── read-columns.py         The text-layer twin of `ocr-book.py --psm 3`: read a
-│                           multi-column page in READING order, from a PDF that
-│                           HAS a text layer. Columns found by gap, not by an
-│                           assumed count
+├── read-columns.py         Read a multi-column page in READING order, from a
+│                           PDF that HAS a text layer. Columns found by gap,
+│                           not by an assumed count. A CLI for reading a page
+│                           range straight out of a PDF, and the reader
+│                           `ocr-book.py` imports for its text-layer path -
+│                           imported, never copied
 ├── parse-pf-spell-index.mjs        The Palladium Fantasy book's two spell
 │                           authority tables, reconciled against each other
 ├── parse-pf-spell-descriptions.mjs Stat block and prose for named spells out of
