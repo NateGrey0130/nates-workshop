@@ -31,6 +31,7 @@ export async function onRequestPost({ request, env }) {
     userPrompt: buildUserPrompt({
       category: b.category, sourceBook: b.source_book, systems: b.systems, hints: b.hints,
     }),
+    email: guard.email,
   });
   if (result.error) return json({ error: result.error, ...(result.extra || {}) }, result.status);
 

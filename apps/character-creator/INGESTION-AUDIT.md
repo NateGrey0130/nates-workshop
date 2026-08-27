@@ -1012,6 +1012,53 @@ reads the served model out of the response body, so labelling the call by
 endpoint gets this for free at the session level; recording it per row is a
 larger change and is **not** proposed here.
 
+**Taken, 2026-08-27 (PR #347).** All three call sites meter now, with the
+labels this proposal names: `cc-import-class` (`import/extract.js`),
+`cc-import-<catalog>` from `spec.catalog` (`import-engine.js`, covering
+skills / spells / psionics / gear) and `cc-npc-sweep`. `email` is threaded in
+from each endpoint's own guard, because `import-engine.js` has no request to
+read one from. SETUP.md gains the two query patterns asked for — by endpoint
+and by day — beside the one it had. Posture unchanged: fail-open, nothing on
+the request path reads the table, no budget, no refusal.
+
+Its measurements held, which is a first for this file. `claude-client.js:106`,
+`claude.js:38`, `ask.js:109`, `import/extract.js:77`, `import-engine.js:315`
+and `sweep.js:75` are all still exactly where this says. Production
+`claude_usage` is **23 rows, not 22** — one more `pick3cut5-solo` since the
+audit — across the same four endpoints, and still **zero import rows**.
+
+Three things worth recording:
+
+1. **Metered BEFORE the reply is parsed**, at all three sites. Every one of
+   these endpoints has error paths between `callAnthropic` and the row it
+   eventually returns — non-JSON body, non-200 status, `stop_reason:
+   max_tokens`, no text block — and each of them spends the input tokens for a
+   whole PDF page and then returns an error. A run that cost money and produced
+   nothing is the run most worth having a number for. `recordUsage` already
+   handles a body with no `usage` in it: the row records the attempt.
+2. **The smoke test counts rather than lists.** It walks `functions/` for
+   `await callAnthropic(` and fails if any file that has one lacks a
+   `recordUsage(`. Naming today's five files would pass forever while the next
+   endpoint that calls the model quietly went unmetered, which is the
+   regression this exists for.
+3. **Two live comments said the importers stay unlogged on purpose**, and both
+   are corrected: `ask.js:107` ("The admin importers stay unlogged — they are
+   gated to one email already, which is the question this table answers") and
+   SETUP.md's spend section, which said the same thing in the same words. Both
+   were answering the wrong question — the table records what was SPENT, not
+   who may spend it. `operations.md`'s migration-038 row named only the proxy
+   and the Ask, and now names all of them.
+
+One trap for the next finding that corrects a doc: **the smoke check cannot be
+"the stale phrase is absent."** The corrections above quote the old wording in
+order to explain what changed, so a grep for it fails on the fix. The two
+checks pin the CURRENT claim in SETUP.md instead.
+
+What this does not do, exactly as proposed: **nothing records which model
+produced which row.** `claude_usage` has a `model` column and now gets it
+filled per extraction call, so spend is answerable per session; per-row
+attribution is still a larger change and still not proposed.
+
 ### F8 — `book-reconcile` has no junction, so phase 5's second reader does not exist where the book work happens
 
 **What is true today.** `book-survey` §5, "the step that is easiest to skip",

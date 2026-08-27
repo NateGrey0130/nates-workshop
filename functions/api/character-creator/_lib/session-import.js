@@ -35,7 +35,9 @@ async function openSessionFor(request, env, catalogKey, { requirePdf }) {
   if (session.catalog !== catalogKey) {
     return { res: json({ error: `That session is not a ${catalogKey} import` }, 400) };
   }
-  return { b, session, sessionId };
+  // The guard's email travels with the session so the extraction can be
+  // metered against whoever spent the key. Both handlers below take it.
+  return { b, session, sessionId, email: guard.email };
 }
 
 // One page range into a session. Writes to the staging tables, never to the
@@ -43,7 +45,7 @@ async function openSessionFor(request, env, catalogKey, { requirePdf }) {
 export async function handleSessionExtract(request, env, catalogKey, prompt, promptArgs = () => ({})) {
   const ctx = await openSessionFor(request, env, catalogKey, { requirePdf: true });
   if (ctx.res) return ctx.res;
-  const { b, session, sessionId } = ctx;
+  const { b, session, sessionId, email } = ctx;
   if (session.closed_at) return json({ error: 'That session is closed' }, 409);
 
   const model = ALLOWED_MODELS.includes(b.model) ? b.model : DEFAULT_MODEL;
@@ -54,6 +56,7 @@ export async function handleSessionExtract(request, env, catalogKey, prompt, pro
     model,
     systemPrompt: prompt.SYSTEM_PROMPT,
     userPrompt: prompt.buildUserPrompt({ sourceBook: session.source_book, hints: b.hints, ...promptArgs(b) }),
+    email,
   });
   if (result.error) return json({ error: result.error, ...(result.extra || {}) }, result.status);
 

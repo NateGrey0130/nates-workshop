@@ -103,9 +103,13 @@ export async function onRequestPost({ request, env, params }) {
   if (invalid) return json({ error: 'Built an invalid request: ' + invalid }, 400);
 
   const upstream = await callAnthropic(claudeRequest, env);
-  // The other unmetered spend path: any member can press Ask. Same fail-open
-  // row the proxy writes. The admin importers stay unlogged - they are gated
-  // to one email already, which is the question this table answers.
+  // Any member can press Ask. Same fail-open row the proxy writes.
+  //
+  // This comment used to say the admin importers stay unlogged because they
+  // are gated to one email already. That was the wrong question: the table
+  // answers what was SPENT, not who is allowed to spend it, and extraction is
+  // by far the most expensive call in the repo. Every Claude call in
+  // functions/ is metered now — see cc-import-* and cc-npc-sweep.
   await recordUsage(env, { email: guard.email, endpoint: 'campaign-ask', model: MODEL, upstream });
   let payload;
   try { payload = JSON.parse(upstream.text); }

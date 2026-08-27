@@ -5322,6 +5322,64 @@ section('Access JWT verification');
     /recordUsage\(/.test(proxy) && /getAccessEmail\(request\)/.test(proxy));
   const askSrc = readFileSync(join(fnDir, 'character-creator', 'campaigns', '[id]', 'ask.js'), 'utf8');
   check('and so does the campaign Ask', /recordUsage\(/.test(askSrc));
+
+  // Every remaining Claude call. Extraction sends a whole PDF page and is the
+  // most expensive call in the repo; it was also the only one with no number
+  // attached, which made "what did this book cost" unanswerable while the
+  // table to answer it had existed since migration 038.
+  //
+  // Pinned by counting callAnthropic against recordUsage across functions/,
+  // rather than by naming today's files: a new endpoint that calls the model
+  // and forgets to meter it is exactly the regression this is for, and a list
+  // of filenames would not see it.
+  const claudeCalls = [];
+  const walkFns = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, e.name);
+      if (e.isDirectory()) { walkFns(full); continue; }
+      if (!e.name.endsWith('.js')) continue;
+      const src = readFileSync(full, 'utf8');
+      if (/\bawait callAnthropic\(/.test(src)) {
+        claudeCalls.push({ file: full.slice(fnDir.length + 1), metered: /\brecordUsage\(/.test(src) });
+      }
+    }
+  };
+  walkFns(fnDir);
+  check('every file in functions/ that calls the model also meters it',
+    claudeCalls.length >= 5 && claudeCalls.every((c) => c.metered),
+    claudeCalls.filter((c) => !c.metered).map((c) => c.file).join(', ') || `${claudeCalls.length} found`);
+
+  // The labels are the whole point of the table — an endpoint column full of
+  // `import` tells you nothing about which catalog the tokens went to.
+  const engineSrc = readFileSync(join(fnDir, 'character-creator', '_lib', 'import-engine.js'), 'utf8');
+  check('the catalog importers label their spend by catalog',
+    /endpoint: `cc-import-\$\{spec\.catalog\}`/.test(engineSrc));
+  const classExtract = readFileSync(join(fnDir, 'character-creator', 'import', 'extract.js'), 'utf8');
+  check('and the class importer labels its own',
+    /endpoint: 'cc-import-class'/.test(classExtract));
+
+  // Metered BEFORE the reply is parsed. A truncated or refused extraction has
+  // already spent the input tokens for a whole page, and a run that cost money
+  // and produced nothing is the run most worth having a number for.
+  const meterBeforeParse = (src) => {
+    const at = src.indexOf('recordUsage(');
+    const parseAt = src.indexOf('JSON.parse(upstream.text)');
+    return at !== -1 && parseAt !== -1 && at < parseAt;
+  };
+  check('a failed extraction is still recorded, because the tokens were still spent',
+    meterBeforeParse(engineSrc) && meterBeforeParse(classExtract));
+
+  // Both places used to say the admin importers were deliberately unlogged,
+  // and both now explain that they no longer are. So this pins the CURRENT
+  // claim rather than the absence of the old one — a check that greps for the
+  // stale phrase fails on the correction that quotes it, which is a trap this
+  // repo has walked into before.
+  const setupSrc = readFileSync(join(appDir, '..', '..', 'SETUP.md'), 'utf8');
+  check('SETUP.md states that every Claude call in functions/ is metered',
+    /Every Claude call in `functions\/` writes one row to\s*\r?\n?`claude_usage`/.test(setupSrc));
+  check('and names the import endpoints it can be read by',
+    /cc-import-class/.test(setupSrc) && /cc-npc-sweep/.test(setupSrc)
+    && /cc-import-<catalog>/.test(setupSrc));
 }
 
 // ---------- 1d. Paging ----------

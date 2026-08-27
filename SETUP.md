@@ -281,17 +281,43 @@ Settings → Environment variables, both encrypted:
   the same vars and has no Access to mint a token. To stand down, remove both
   from `wrangler.jsonc` and merge.
 
-### Who is spending the Anthropic key
+### Who is spending the Anthropic key, and on what
 
-Every `/api/claude` proxy call and every campaign **Ask** writes one row to
-`claude_usage` (email, endpoint, model, tokens, upstream status) — written
-fail-open, so metering can never break the call it measures. The admin
-importers are deliberately unlogged: they are already gated to `ADMIN_EMAIL`,
-which is the question this table answers. To read the spend:
+**Every Claude call in `functions/` writes one row to `claude_usage`** (email,
+endpoint, model, tokens, upstream status) — fail-open, so metering can never
+break the call it measures. The endpoints are `proxy`, `campaign-ask`,
+`cc-npc-sweep`, `cc-import-class` and `cc-import-<catalog>` (`skills`,
+`spells`, `psionics`, `gear`). The Pick 3 Cut 5 Worker writes its own
+`pick3cut5-solo` and `pick3cut5-party` rows into the same table.
+
+This used to say the admin importers were deliberately unlogged because they
+are gated to `ADMIN_EMAIL` already. That was answering the wrong question. The
+table records what was **spent**, not who is allowed to spend it, and a class
+extraction sends a whole PDF page — the most expensive call this repo makes,
+and the one that was invisible. A failed extraction is recorded too: the tokens
+go out whether or not the reply parses.
+
+What a book costs, by endpoint:
+
+```bash
+node scripts/q.mjs --remote "SELECT endpoint, count(*) AS calls, sum(input_tokens) AS input, sum(output_tokens) AS output, min(created_at) AS first, max(created_at) AS last FROM claude_usage GROUP BY endpoint ORDER BY input DESC"
+```
+
+The same spend by day, which is how an import session reads:
+
+```bash
+node scripts/q.mjs --remote "SELECT date(created_at) AS day, endpoint, count(*) AS calls, sum(input_tokens) AS input, sum(output_tokens) AS output FROM claude_usage GROUP BY day, endpoint ORDER BY day DESC LIMIT 30"
+```
+
+And who spent it:
 
 ```bash
 node scripts/q.mjs --remote "SELECT email, date(created_at) AS day, count(*) AS calls, sum(input_tokens) AS input, sum(output_tokens) AS output FROM claude_usage GROUP BY email, day ORDER BY day DESC LIMIT 30"
 ```
+
+**Spend visibility, not a cap.** Nothing on the request path reads this table,
+there is no budget and no refusal — the same posture `recordUsage`'s own
+comment states.
 
 ## Access (the login wall)
 
