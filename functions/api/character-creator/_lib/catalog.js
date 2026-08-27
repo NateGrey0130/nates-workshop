@@ -175,33 +175,44 @@ const titleize = (slug) => String(slug).split('-')
 export function buildStubStatements(env, missing, { system, sourceBook }) {
   const created = { items: [], skills: [], spells: [], psionics: [] };
   const statements = [];
+  // Every stub records the class's `source_book` — the pages the NAME was read
+  // on, which is the only claim a stub can honestly make. It has no stats yet,
+  // so there is no equipment-chapter or spell-chapter page to cite instead,
+  // and when the catalog importer later fills the row it overwrites this with
+  // the pages the stat block is actually printed on.
+  //
+  // Gear did this from the start. Skills, spells and psionic powers did not
+  // name the column at all, so 12 skills and 12 psionic powers in production
+  // carry no provenance whatsoever — not a wrong book, none. Same value, same
+  // reasoning, four catalogs.
+  const book = sourceBook ?? null;
 
   for (const slug of missing.items) {
     created.items.push({ slug, name: titleize(slug) });
     statements.push(env.DB.prepare(
       `INSERT OR IGNORE INTO gear (slug, name, system, description, source_book)
        VALUES (?, ?, ?, ?, ?)`
-    ).bind(slug, titleize(slug), system, 'STUB — created by class import, needs stats', sourceBook ?? null));
+    ).bind(slug, titleize(slug), system, 'STUB — created by class import, needs stats', book));
   }
   for (const name of missing.skills) {
     const category = matchCategory(SKILL_PATTERNS, name);
     created.skills.push({ name, category });
     statements.push(env.DB.prepare(
-      'INSERT OR IGNORE INTO skills (name, category, base, per_level, source) VALUES (?, ?, 0, 0, ?)'
-    ).bind(name, category, 'import'));
+      'INSERT OR IGNORE INTO skills (name, category, base, per_level, source, source_book) VALUES (?, ?, 0, 0, ?, ?)'
+    ).bind(name, category, 'import', book));
   }
   for (const name of missing.spells) {
     created.spells.push({ name });
     statements.push(env.DB.prepare(
-      'INSERT OR IGNORE INTO spells (name, level, ppe, source) VALUES (?, 0, 0, ?)'
-    ).bind(name, 'import'));
+      'INSERT OR IGNORE INTO spells (name, level, ppe, source, source_book) VALUES (?, 0, 0, ?, ?)'
+    ).bind(name, 'import', book));
   }
   for (const name of missing.psionics) {
     const category = matchCategory(PSIONIC_PATTERNS, name);
     created.psionics.push({ name, category });
     statements.push(env.DB.prepare(
-      'INSERT OR IGNORE INTO psionic_powers (name, category, isp, source) VALUES (?, ?, 0, ?)'
-    ).bind(name, category, 'import'));
+      'INSERT OR IGNORE INTO psionic_powers (name, category, isp, source, source_book) VALUES (?, ?, 0, ?, ?)'
+    ).bind(name, category, 'import', book));
   }
 
   return { created, statements };

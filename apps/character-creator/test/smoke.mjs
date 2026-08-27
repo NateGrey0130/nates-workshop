@@ -211,7 +211,7 @@ const skillSpec = getImportSpec('skills');
 
 import { classesMentioning, findDuplicates, normaliseName, similarity } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
 import { collapseStatement, keysOf, redirectStatements, resolveKeys } from '../../../functions/api/character-creator/_lib/catalog-redirects.js';
-import { referencedGear, restrictionNames } from '../../../functions/api/character-creator/_lib/catalog.js';
+import { buildStubStatements, referencedGear, restrictionNames } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { CHARACTER_JSON_COLUMNS } from '../../../functions/api/character-creator/_lib/character-json.js';
 import { applyDecisions, classifyRows, countRows, ESTIMATED_PRICE, getImportSpec, normaliseRows, slugify, stripFences, systemColumnFor } from '../../../functions/api/character-creator/_lib/import-engine.js';
 import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
@@ -2146,6 +2146,43 @@ check('each row is inserted with its own book and pages, not the session\'s one 
   && provenanceWrites[1] === 'Rifts Ultimate Edition p.181'
   && provenanceWrites[2] === 'Rifts Ultimate Edition',
   JSON.stringify(provenanceWrites));
+
+// A stub created by a class import carries the class's own citation — the
+// pages the NAME was read on, which is the only claim a row with no stats can
+// make. Gear did this from the start; skills, spells and psionic powers did
+// not name the column at all, so 12 skills and 12 psionic powers in production
+// carry no provenance whatsoever. Pinned per catalog, because the bug was
+// three INSERTs that each silently omitted one column.
+const stubBooks = (() => {
+  const bound = [];
+  const env = { DB: { prepare: (sql) => ({ bind: (...args) => { bound.push({ sql, args }); return {}; } }) } };
+  buildStubStatements(env, {
+    items: ['poncho'], skills: ['Basic Math'], spells: ['Blinding Flash'], psionics: ['Mind Block'],
+  }, { system: 'rifts', sourceBook: 'Rifts Ultimate Edition p.86-88' });
+  return bound.map((b) => {
+    const table = b.sql.match(/INTO\s+(\w+)/)[1];
+    const [, colList, valList] = b.sql.match(/\(([^)]*)\)\s*VALUES\s*\(([^)]*)\)/);
+    const cols = colList.split(',').map((c) => c.trim());
+    // These INSERTs write literals for the zeroed columns — `base, per_level`
+    // are `0, 0` in the VALUES rather than placeholders — so a column's
+    // position is NOT its bind position. Zip the two lists and count only the
+    // `?`s. Reading the column index straight off the list reported every
+    // catalog as null, including the one that was already correct.
+    const vals = valList.split(',').map((v) => v.trim());
+    let bindIndex = -1;
+    for (let i = 0; i < cols.length; i++) {
+      if (vals[i] !== '?') continue;
+      bindIndex++;
+      if (cols[i] === 'source_book') return [table, b.args[bindIndex]];
+    }
+    return [table, undefined];
+  });
+})();
+for (const table of ['gear', 'skills', 'spells', 'psionic_powers']) {
+  check(`a ${table} stub records the class it was read from`,
+    stubBooks.some(([t, book]) => t === table && book === 'Rifts Ultimate Edition p.86-88'),
+    JSON.stringify(stubBooks));
+}
 
 // ---------- 1c9. Picker filtering ----------
 // js/picker.js is a classic script, because the wizard is a module and the
