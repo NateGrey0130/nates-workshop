@@ -5,6 +5,23 @@
 // these two-column sourcebook pages, destroying the column boundary before the
 // model ever sees it.
 
+// `with { type: 'json' }` is not decoration: Node refuses a bare JSON import
+// outright (the smoke test renders this prompt), and esbuild -- which is what
+// actually bundles this for Pages -- accepts the attribute either way.
+import BOOKS from '../../../../scripts/books.json' with { type: 'json' };
+
+// The allowed `source_book` titles come from the one registry the CLI scripts
+// read (scripts/books.json). The field is free text in every table that holds
+// it, and the vocabulary that grew out of asking for a "kebab-case slug" here
+// is one book spelled five ways - 312 gear rows of which reach no cache at
+// all. Offering the canonical titles is the only point where that is cheap to
+// fix: at the moment the value is first written.
+//
+// The ` p.N-M` suffix is load-bearing. `class-check --field-sources` takes its
+// page window from it, and the prompt that fills the field had never mentioned
+// it - so it was hand-added afterwards, or not at all.
+const BOOK_TITLES = Object.values(BOOKS.books).map((b) => b.title);
+
 export const SYSTEM_PROMPT = `You extract Palladium/Rifts character class definitions from RPG sourcebook pages into a strict markdown format.
 
 You are reading a scanned or digital page from a tabletop RPG sourcebook. These pages are TWO-COLUMN layouts, and some pages mix column widths, sidebars, and full-width sections on the same page. Read the columns carefully and in the correct reading order: finish the full left column top-to-bottom before starting the right column, unless a section is visibly full-width. Never stitch a line from one column onto a line from the other — if a sentence seems to jump topic mid-line, you have crossed a column boundary; re-read it.
@@ -36,7 +53,14 @@ Required:
 - id: kebab-case slug (e.g. \`juicer\`)
 - name: display name (e.g. \`Juicer O.C.C.\` → use \`Juicer\`)
 - system: \`rifts\` or \`palladium-fantasy\`
-- source_book: kebab-case slug of the book (e.g. \`rifts-core\`)
+- source_book: the book's title, then the PRINTED page range this class occupies,
+    in the shape \`<Title> p.N-M\` — e.g. \`Rifts Ultimate Edition p.100-104\`, or
+    \`Rifts Ultimate Edition p.141\` for a single page. Take N and M from the page
+    numbers PRINTED on the pages themselves, not from their position in the
+    attached file. Use one of these exact titles:
+${BOOK_TITLES.map((t) => `      ${t}`).join('\n')}
+    If the pages are from a book that is not in that list, write its title as the
+    cover spells it, still followed by \` p.N-M\`.
 - category: \`occ\` or \`rcc\`
 
 Optional — include only what the page actually states:

@@ -231,9 +231,12 @@ import { dedupeCategories } from '../../../functions/api/character-creator/_lib/
 import { relatedAllowance, validateCharacter } from '../../../functions/api/character-creator/_lib/validate-character.js';
 import {
   crossCategoryRestrictions, extractClassMarkdown, unmodelledKeys, unclosedFlowLines,
-  parseSourcePages, resolveBookSlug, detectPageOffset, freeTextFields, fieldTokens,
+  parseSourcePages, resolveBookSlug, registryBookSlug, normalizeBookTitle, detectPageOffset,
+  freeTextFields, fieldTokens,
   fieldSourceSpans, bestMatchingPages,
 } from '../../../scripts/class-check-lib.mjs';
+import { bookSpellings, bookTitles, loadBookRegistry } from '../../../scripts/books-lib.mjs';
+import { buildUserPrompt } from '../../../functions/api/character-creator/_lib/extraction-prompt.js';
 import { collapseWhitespace, statements, stripComments, trailingSelects } from '../../../scripts/sql-statements.mjs';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import { composeClass } from '../js/compose.js';
@@ -4988,11 +4991,15 @@ section('Documented counts');
   // extraction. A file map that quietly stops being a map is worse than none,
   // because the count of entries reassures you the list is whole.
   const scriptsDir = join(repoRoot, 'scripts');
+  // .json is in the list because scripts/books.json is DATA that three
+  // mechanisms read as a contract, not a config file - the map covering
+  // every executable but not the registry they all consult would be the same
+  // map quietly stopping being one.
   const onDisk = readdirSync(scriptsDir)
-    .filter((f) => /\.(mjs|py|txt)$/.test(f));
+    .filter((f) => /\.(mjs|py|txt|json)$/.test(f));
   const sc = readme.slice(readme.indexOf('## The scripts at the repo root'));
   const scSection = sc.slice(0, sc.indexOf('\n## ', 10));
-  const listed = new Set([...scSection.matchAll(/^\S*\s*([\w.-]+\.(?:mjs|py|txt))\s/gm)]
+  const listed = new Set([...scSection.matchAll(/^\S*\s*([\w.-]+\.(?:mjs|py|txt|json))\s/gm)]
     .map((m) => m[1]));
   const unmapped = onDisk.filter((f) => !listed.has(f));
   check('every script in scripts/ is named in the file map',
@@ -5411,6 +5418,89 @@ check('no shipped class leaves a flow value unclosed', unclosedOffenders.length 
   check('the whole-book hint ranks pages for a wrong offset',
     bestMatchingPages(money, [midPage, boundaryPage, { page: 60, lines: ['nothing'] }]).map((h) => h.page).join() === '41,50');
 }
+
+// ---------- 1e-bis. The book registry ----------
+// `source_book` is free text, and three separate mechanisms parse it:
+// resolveBookSlug (a row -> its cached pages), drift-check's citation check,
+// and the extraction prompt that writes the field. They used to disagree.
+// The Palladium Fantasy main book was spelled FIVE ways in production, and the
+// 312 gear rows saying `Palladium RPG Main Book` resolved to nothing at all -
+// every word of that title is generic, so the word-overlap route is disabled by
+// design and the initialism route needs a `pf` the title never spells.
+//
+// Against a FIXTURE, deliberately. A test that read the live vocabulary would
+// pass on a machine whose database happens to be missing the rows it is about.
+section('Book registry');
+
+{
+  const fixture = {
+    pf: {
+      title: 'Palladium Fantasy RPG Main Book',
+      aliases: ['Palladium RPG Main Book', 'palladium-fantasy-core'],
+    },
+    rue: { title: 'Rifts Ultimate Edition', aliases: [] },
+    triax: { title: 'Rifts World Book 5: Triax and the NGR', aliases: [] },
+  };
+
+  check('a page range, case and punctuation all fall out of a title',
+    normalizeBookTitle('Palladium-Fantasy_Core p.96-97') === 'palladium fantasy core'
+    && normalizeBookTitle('  Rifts Ultimate Edition  ') === 'rifts ultimate edition');
+
+  check('the canonical title names its book',
+    registryBookSlug('Palladium Fantasy RPG Main Book p.288-289', fixture) === 'pf');
+  check('and so does every alias',
+    registryBookSlug('Palladium RPG Main Book p.273', fixture) === 'pf'
+    && registryBookSlug('palladium-fantasy-core p.96-97', fixture) === 'pf');
+  check('a book the registry has never heard of is null, not a guess',
+    registryBookSlug('Rifts World Book 04: Africa p.12', fixture) === null);
+
+  // The registry answers WHICH BOOK. Whether that book is readable here is a
+  // separate question, and conflating them is how a Triax citation would get
+  // traced against whichever cache looked closest.
+  const cached = [{ slug: 'pf', sourcePdf: null }, { slug: 'rue', sourcePdf: null }];
+  check('an alias reaches the cache no heuristic could reach',
+    resolveBookSlug('Palladium RPG Main Book p.273', cached, fixture) === 'pf'
+    && resolveBookSlug('Palladium RPG Main Book p.273', cached) === null);
+  check('a known book with no cache is null, not the nearest cache',
+    resolveBookSlug('Rifts World Book 5: Triax and the NGR p.20', cached, fixture) === null);
+  check('without a registry the two heuristic routes are unchanged',
+    resolveBookSlug('Rifts Ultimate Edition p.100-104', cached) === 'rue');
+
+  // The shipped file, not the fixture: two books claiming one spelling would
+  // make registryBookSlug refuse both, silently.
+  const registry = loadBookRegistry();
+  const seen = new Map();
+  const clashes = [];
+  for (const slug of Object.keys(registry)) {
+    for (const s of bookSpellings(registry, slug)) {
+      const k = normalizeBookTitle(s);
+      if (seen.has(k) && seen.get(k) !== slug) clashes.push(`${s} (${seen.get(k)} / ${slug})`);
+      seen.set(k, slug);
+    }
+  }
+  check('no two books in scripts/books.json claim the same spelling',
+    clashes.length === 0, clashes.join(', '));
+
+  const shapeBad = Object.entries(registry).filter(([slug, b]) =>
+    !/^[a-z0-9-]+$/.test(slug) || typeof b.title !== 'string' || !b.title
+    || !Array.isArray(b.aliases)
+    || !['number', 'object'].includes(typeof b.printed_pages)
+    || !['number', 'object'].includes(typeof b.page_offset)).map(([slug]) => slug);
+  check('every registry entry has the shape its readers assume',
+    shapeBad.length === 0, shapeBad.join(', '));
+
+  // The prompt is where the vocabulary is set: asking for a `kebab-case slug`
+  // is what produced five spellings of one book. It offers the registry's
+  // titles now, and the ` p.N-M` suffix that --field-sources takes its window
+  // from - which the prompt had never once mentioned.
+  const prompt = buildUserPrompt([{ name: 'X', text: 'md' }], null);
+  const missingTitles = bookTitles(registry).filter((t) => !prompt.includes(t));
+  check('the extraction prompt offers every registry title',
+    missingTitles.length === 0, missingTitles.join(', '));
+  check('and asks for the page range the field-source window needs',
+    prompt.includes('<Title> p.N-M'));
+}
+
 
 // ---------- 1f. Skill bonuses ----------
 // A skill is not only a percentage: Boxing is +1 attack per melee and +2 P.S.

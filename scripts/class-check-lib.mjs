@@ -218,14 +218,65 @@ export function parseSourcePages(sourceBook) {
 }
 
 /**
+ * A `source_book` string reduced to something comparable: page range gone,
+ * case gone, punctuation gone, runs of space collapsed. `palladium-fantasy-
+ * core`, `Palladium Fantasy Core` and `palladium fantasy core.` all land on
+ * the same string, which is the whole point — the vocabulary in production is
+ * one book spelled five ways, not five books.
+ */
+export function normalizeBookTitle(sourceBook) {
+  return String(sourceBook ?? '')
+    .replace(/\bp\.?\s*\d+(?:\s*-\s*\d+)?/i, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+/**
+ * The registry slug a `source_book` names, by exact title or alias — or null.
+ *
+ * `registry` is the `books` map out of scripts/books.json (loadBookRegistry in
+ * books-lib.mjs does the reading). Pure lookup, no heuristics: a book is
+ * either spelled a way the registry knows or it is not. Two books claiming the
+ * same spelling is a registry bug rather than an ambiguous title, so it
+ * refuses rather than picking — and the smoke test pins that they never do.
+ */
+export function registryBookSlug(sourceBook, registry) {
+  const want = normalizeBookTitle(sourceBook);
+  if (!want || !registry) return null;
+  let hit = null;
+  for (const [slug, book] of Object.entries(registry)) {
+    const spellings = [book?.title, ...(book?.aliases ?? [])];
+    if (!spellings.some((s) => normalizeBookTitle(s) === want)) continue;
+    if (hit && hit !== slug) return null;
+    hit = slug;
+  }
+  return hit;
+}
+
+/**
  * Which cached book a `source_book` title means.
  *
  * `books` is [{ slug, sourcePdf }] — the directories under .cache/books plus
- * whatever their manifests name as the source PDF. Two deterministic routes:
- * the slug as an initialism of consecutive title words ("rue" in "Rifts
- * Ultimate Edition", "pf" in "Palladium Fantasy RPG Main Book"), and word
- * overlap with the manifest's PDF name. Returns the unique best match, or
- * null — a tie is refused rather than guessed, and the CLI asks for --book.
+ * whatever their manifests name as the source PDF. `registry`, when given, is
+ * consulted FIRST: a spelling the registry knows names its book outright, and
+ * the answer is that book's cache or nothing. The 312 gear rows spelling the
+ * Palladium Fantasy main book `Palladium RPG Main Book` reach `pf` by no other
+ * route — every word of that title is generic, so the overlap route below is
+ * disabled by design and the initialism route needs a `pf` the title never
+ * spells.
+ *
+ * A registry hit whose cache is absent returns null rather than falling
+ * through to the heuristics. The heuristics answer "which of these caches
+ * looks like this title"; once the book is KNOWN and simply not cached, that
+ * question has a wrong answer available and no right one.
+ *
+ * Without a registry, or for a spelling it does not carry, the two original
+ * deterministic routes are unchanged: the slug as an initialism of consecutive
+ * title words ("rue" in "Rifts Ultimate Edition", "pf" in "Palladium Fantasy
+ * RPG Main Book"), and word overlap with the manifest's PDF name. Returns the
+ * unique best match, or null — a tie is refused rather than guessed, and the
+ * CLI asks for --book.
  *
  * The overlap route needs at least one word that actually names the book.
  * Words this publisher stamps on most covers carry no identity — "Rifts" and
@@ -239,7 +290,10 @@ const GENERIC_TITLE_WORDS = new Set([
   'of', 'the', 'and',
 ]);
 
-export function resolveBookSlug(sourceBook, books) {
+export function resolveBookSlug(sourceBook, books, registry = null) {
+  const known = registryBookSlug(sourceBook, registry);
+  if (known) return books.some((b) => b.slug === known) ? known : null;
+
   const title = String(sourceBook ?? '').replace(/\bp\.?\s*\d+(?:\s*-\s*\d+)?/i, '');
   const wordsOf = (s) => (String(s ?? '').toLowerCase().match(/[a-z0-9]+/g) || []);
   const titleWords = wordsOf(title);

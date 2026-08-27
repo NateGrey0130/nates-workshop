@@ -43,9 +43,10 @@ import { parseClassMarkdown } from '../apps/character-creator/js/parser.js';
 import { crossReference, buildStubStatements, restrictionNames } from '../functions/api/character-creator/_lib/catalog.js';
 import {
   extractClassMarkdown, unmodelledKeys, crossCategoryRestrictions, unclosedFlowLines,
-  parseSourcePages, resolveBookSlug, detectPageOffset, freeTextFields, fieldTokens,
-  fieldSourceSpans, bestMatchingPages,
+  parseSourcePages, resolveBookSlug, registryBookSlug, detectPageOffset, freeTextFields,
+  fieldTokens, fieldSourceSpans, bestMatchingPages,
 } from './class-check-lib.mjs';
+import { loadBookRegistry } from './books-lib.mjs';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -115,6 +116,19 @@ if (isSql) {
 
 const { ok, data, errors, warnings } = parseClassMarkdown(markdown);
 
+// `source_book` is free text, and the vocabulary in production is one book
+// spelled five different ways. WARN, do not block: a spelling the registry has
+// never seen is far more often a genuinely new book than a typo, and a checker
+// that refused the ninth book would be a wall across the only path to it. What
+// it buys is that the fifth spelling of a book already in there gets noticed
+// on the way in rather than after 312 rows cite it.
+const bookRegistry = loadBookRegistry();
+if (data?.source_book && !registryBookSlug(data.source_book, bookRegistry)) {
+  warnings.push(`source_book "${data.source_book}" matches no title or alias in `
+    + 'scripts/books.json. If this is a book already in there, use its canonical '
+    + 'spelling or add this one to its `aliases`; if it is a new book, add an entry.');
+}
+
 const list = (label, items) => {
   if (!items.length) return;
   console.log(`\n${label} (${items.length})`);
@@ -181,10 +195,15 @@ if (fieldSources && data) {
     });
   if (!books.length) die('no cached books under .cache/books');
 
-  const slug = bookFlag ?? resolveBookSlug(data.source_book, books);
+  const slug = bookFlag ?? resolveBookSlug(data.source_book, books, bookRegistry);
   if (!slug || !books.some((b) => b.slug === slug)) {
+    const known = registryBookSlug(data.source_book, bookRegistry);
     die(`cannot match source_book "${data.source_book ?? ''}" to a cached book — `
-      + `pass --book <slug>. Cached: ${books.map((b) => b.slug).join(', ')}`);
+      + (known
+        ? `scripts/books.json calls that "${slug ?? known}", and it has no cache here. `
+          + 'Cache it (scripts/ocr-book.py) or pass --book <slug>. '
+        : 'pass --book <slug>. ')
+      + `Cached: ${books.map((b) => b.slug).join(', ')}`);
   }
 
   const range = parseSourcePages(data.source_book);
