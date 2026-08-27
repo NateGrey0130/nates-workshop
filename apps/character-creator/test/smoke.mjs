@@ -720,6 +720,47 @@ section('Creation validation');
     const off = validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat, powers: [psi('Mend')] });
     return on.violations.length === 0 && off.violations.some((v) => v.rule === 'power_not_on_list');
   })());
+  // The starting pick used to be ONE count and ONE gate, so a spell pick could
+  // not be bounded by a name at all and a split pick had to be flattened into
+  // its widest gate - which is how the Delphi Juicer came to allow four Super
+  // where its book grants one. CLASS-AUDIT.md S1 and S9.
+  check('a named list bounds the STARTING spell pick, not just a level cap', (() => {
+    const cls2 = { ...vCls, magic: { spells_starting: 1, spell_levels_allowed: [1, 2], spells_from: ['Big Zap'] } };
+    // Big Zap is a level 5 spell, so the named list has to REPLACE the cap
+    // rather than intersect with it, or the book's own list would be illegal.
+    const on = validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat, powers: [sp('Big Zap')] });
+    const off = validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat, powers: [sp('Zap')] });
+    return on.violations.length === 0 && off.violations.some((v) => v.rule === 'power_not_on_list');
+  })());
+  check('a split starting pick holds each group to its own categories', (() => {
+    const cls2 = { ...vCls, psionics: { type: 'master', powers_starting: 2,
+      powers_starting_groups: [{ count: 1, categories: ['Healing'] }, { count: 1, categories: ['Super'] }] } };
+    const legalPick = validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat,
+      powers: [psi('Mend'), psi('Crush')] });
+    // Two Super is the loadout the flattened shape allowed and the book forbids.
+    const bothSuper = validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat,
+      powers: [psi('Crush'), psi('See')] });
+    return legalPick.violations.length === 0
+        && bothSuper.violations.some((v) => v.rule === 'power_category');
+  })());
+  check('a split pick still counts against the total, not per group', (() => {
+    const cls2 = { ...vCls, psionics: { type: 'master', powers_starting: 2,
+      powers_starting_groups: [{ count: 1, categories: ['Healing'] }, { count: 1, categories: ['Super'] }] } };
+    return validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat,
+      powers: [psi('Mend'), psi('Crush'), psi('See')] }).violations.some((v) => v.rule === 'power_count');
+  })());
+  check('a group inherits the block gate when it names none', (() => {
+    const cls2 = { ...vCls, psionics: { type: 'major', powers_starting: 2, categories_allowed: ['Healing'],
+      powers_starting_groups: [{ count: 1 }, { count: 1, categories: ['Sensitive'] }] } };
+    const ok = validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat, powers: [psi('Mend'), psi('See')] });
+    const no = validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat, powers: [psi('Crush')] });
+    return ok.violations.length === 0 && no.violations.some((v) => v.rule === 'power_category');
+  })());
+  check('stating only a count is unchanged by any of this', (() => {
+    const cls2 = { ...vCls, psionics: { type: 'major', powers_starting: 2, categories_allowed: ['Sensitive', 'Healing'] } };
+    return validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat, powers: [psi('See'), psi('Mend')] })
+      .violations.length === 0;
+  })());
   check('a rolled focused psychic must keep to one category', (() => {
     const cls2 = { ...vCls, psionics: { type: 'major', powers_starting: 8,
       categories_allowed: ['Healing', 'Physical', 'Sensitive'], from_roll: true } };

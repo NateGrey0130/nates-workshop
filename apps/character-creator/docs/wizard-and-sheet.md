@@ -345,6 +345,37 @@ does not record which grant it spent (only level-up picks carry
 admits it — the same no-guessing rule that keeps skill choice-groups advisory,
 under-enforcing at the seams rather than ever refusing a legal build.
 
+**The starting pick is a LIST of groups, not one.** For a long time creation
+could hold exactly one count and one gate, while a level-up grant could hold
+several — and the two are built in different places, so nothing said so out
+loud. Three books need more: the Elemental Fusionist picks its first spell from
+an eighteen-name list, the Delphi Juicer starts with *3 Physical + 1 Super*
+psionic powers, and the Mind Mage with *three from each of four categories*.
+The Juicer and the Mind Mage were stored as one open count over every category
+they touch, which let a player take four Super where the book grants one, and
+the Fusionist's list could not be named at all (CLASS-AUDIT.md S1 and S9).
+
+`startingGroups(cls, kind)` in `js/leveling.js` now returns the starting picks
+as an array shaped exactly like `powerGrantsFor`'s level-up grants, and both
+builders read it — the wizard's Powers step and the server's validator, which
+are separate paths and are the pair that drifts. Everything downstream already
+handled several groups with different gates, because that is what the level-up
+grants are; only the two builders had to move.
+
+- `spells_starting` / `powers_starting` still mean the **total**, so a class
+  stating only a number is untouched.
+- `*_starting_groups` splits that total. A group naming its own categories,
+  spell levels or `from` list **replaces** the block's rather than narrowing
+  them — the rule level-up grants already follow, because a book naming Super
+  for one slot is granting an exception, and intersecting would throw it away.
+- `magic.spells_from` is the twin of `psionics.powers_from`, which spells never
+  had: a named list bounds the starting spell pick and replaces the spell-level
+  cap outright.
+- The wizard keeps writing a single group into the flat `S.spells` / `S.psi` it
+  always used, so no saved draft changes shape; only a class that splits its
+  pick writes into the per-group `S.spellGroups` / `S.psiGroups`, keyed by group
+  index exactly as the Advancement step keys its per-grant pickers.
+
 **What a roll *could* come up is checked; what it *did* come up is not.** The
 dice are rolled client-side by design, so the server bounds each stored pool
 maximum against the range its class formula can actually produce
