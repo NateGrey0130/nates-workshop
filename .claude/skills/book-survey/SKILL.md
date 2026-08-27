@@ -29,18 +29,25 @@ stat blocks; the invocation import needed 108 of them.
 
 ## 0. Does it have a text layer? Ask before you OCR
 
-**One line, before anything else:**
+**One command, before anything else:**
 
-```python
-python -c "import pymupdf; d=pymupdf.open('Book.pdf'); print([len(d[i].get_text()) for i in range(20,30)])"
+```bash
+python scripts/ocr-book.py "path/to/Book.pdf" --probe
 ```
+
+It samples twenty pages spread through the book, prints the character count of
+each, and says TEXT LAYER or SCAN. It writes nothing. Use it rather than a bare
+`python -c` — that is deliberately outside the allowlist and prompts every
+single time, and this is the first command aimed at every new book.
 
 Zeros mean a scan. Thousands mean a text layer, and a text layer changes
 everything downstream: **no OCR, no model call, no confidence problem, and no
-cost.** The Palladium Fantasy main book has one — median ~5,900 characters a
+cost.** The Palladium Fantasy main book has one — median ~5,700 characters a
 page — and every extraction from it, twenty-five classes and fifty-seven spells
 and two authority tables, was read with `scripts/read-columns.py` and nothing
-else. Rifts Ultimate Edition has none, and needs everything below.
+else. Rifts Ultimate Edition has none, and needs everything below. The gap is
+not delicate: every text layer measured here medians 4,000–6,100 characters a
+page and every scan medians zero.
 
 This step is first because the version of this skill that did not have it led
 with "OCR it once, properly", and OCRing a book that did not need it would have
@@ -61,7 +68,29 @@ None of those is fixed by a better reader. They are fixed by knowing what the
 value should look like: a one-character parenthetical where a cost belongs is a
 mis-set digit, and the OTHER authority table has the real one.
 
-## 0b. If it IS a scan: OCR it once, properly
+## 0b. Cache it — the SAME command either way
+
+```bash
+python scripts/ocr-book.py "path/to/Book.pdf" --slug rue
+```
+
+**Do this whichever answer step 0 gave**, and do it before anything else. The
+page-addressed cache under `.cache/books/<slug>/txt/` is what `class-check
+--field-sources` and `drift-check`'s citation check both read; without it a row
+cannot be traced back to the page it came from at all.
+
+One command, no flags required, because the failure this prevents is a session
+writing its own caching loop. Seven of the first eight caches were built that
+way — six by throwaway code that is in no commit — and they do not agree with
+each other. `ju`'s is raw `page.get_text()`, columns welded across the gutter,
+which is exactly the corrupting read `read-columns.py` exists to prevent.
+
+**If it has a TEXT LAYER** the script takes the cheap path by itself:
+`read-columns.read` into the same `txt/pNNN.txt` layout, no images, no
+Tesseract, no cost, and a manifest recording `"text_layer": true`. Seconds for a
+whole book.
+
+**If it is a SCAN**, add the table pages you already know about:
 
 ```bash
 python scripts/ocr-book.py "path/to/Book.pdf" --slug rue --tables 167,200-202 --dpi-tables 500
@@ -69,6 +98,13 @@ python scripts/ocr-book.py "path/to/Book.pdf" --slug rue --tables 167,200-202 --
 
 Emits normalised `txt/`, raw `txt/*.raw.txt`, and `tsv/` word geometry, using
 `--psm 3` and a Palladium wordlist.
+
+**Re-running is safe and resumes.** A page is already done when its `txt`
+exists (text layer) or its `txt` and `tsv` both do (OCR) — keyed on both
+regardless, as it once was, a plain re-run against a text-layer cache resumed
+NOTHING and overwrote every page with Tesseract output. Switching a cache from
+one kind to the other now needs `--force` and says what it would destroy, which
+is why `bom` — a book that has a text layer and was OCR'd anyway — refuses.
 
 **Do not reach for a higher DPI when the text is wrong.** Measured: 300 -> 600
 dpi took one error class from 7 to 5, `--oem 1` changed nothing, preprocessing
@@ -79,9 +115,11 @@ with none of the known misreads among them. A confidence filter finds nothing.
 Fix it where the meaning is, not where the pixels are: contextual repairs at
 ingest, and the typed readers in `scripts/ocr-fields-lib.mjs` for the rest.
 `--renormalise` re-applies the substitution table to cached raw text without
-running Tesseract, so improving a rule costs seconds rather than a re-scan. **Do this before anything else** -- the
-alternative is discovering mid-task that you need geometry you did not save, or
-that `I.S.P.` reads as `LS.P.` on most pages. The cache is gitignored; it is a
+running Tesseract, so improving a rule costs seconds rather than a re-scan.
+
+Cache the WHOLE book, not the pages you think you need: the alternative is
+discovering mid-task that you need geometry you did not save, or that
+`I.S.P.` reads as `LS.P.` on most pages. The cache is gitignored; it is a
 commercial book.
 
 ## 0c. A text layer does not give you TABLES. Render the page and look

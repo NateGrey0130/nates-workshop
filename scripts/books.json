@@ -66,7 +66,7 @@
       "source_pdf": "526065744-Rifts-Book-of-Magic.pdf",
       "printed_pages": 352,
       "page_offset": 1,
-      "note": "printed_pages is the published page count: the cache holds six pages (p090-p095) and no folio in it survived OCR. page_offset was read off the source PDF's own sparse text layer, 14 pages agreeing, not off the cache."
+      "note": "printed_pages is the published page count: the cache holds six pages (p090-p095) and no folio in it survived OCR. page_offset was read off the source PDF's own sparse text layer, 14 pages agreeing, not off the cache. This book HAS a text layer and was OCR'd anyway; ocr-book.py now refuses to rebuild it as one without --force, because that would overwrite the OCR cache six pages of the Book of Magic were kept for."
     },
 
     "cb1": {
@@ -93,7 +93,7 @@
       "source_pdf": "Rifts- World Book 16 Federation of Magic.pdf",
       "printed_pages": 159,
       "page_offset": 1,
-      "note": "Nothing in production cites this book yet. The cache stops at file p073 - printed 72 - mid-word and mid-class, while the source PDF runs to folio 159, so the shortfall is visible rather than looking like a complete book."
+      "note": "Nothing in production cites this book yet. Its cache stopped at file p073 - printed 72, mid-word and mid-class - until the resume fix in F2 read the remaining 88 pages off the source PDF; it now holds all 161."
     },
 
     "ju": {
@@ -110,7 +110,7 @@
       "source_pdf": "Pantheons of the Megaverse.pdf",
       "printed_pages": 208,
       "page_offset": 1,
-      "note": "The cache holds 202 of the PDF's 210 pages: content ends at printed 203 and the index runs to 208, so the tail that is missing is index, not text."
+      "note": "Content ends at printed 203 and the index runs to 208. The cache held 202 of the PDF's 210 pages until the resume fix in F2 topped it up; it now holds all 210."
     },
 
     "rifts-core": {

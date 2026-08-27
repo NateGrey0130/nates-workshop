@@ -285,6 +285,88 @@ and for the most-cited book in the database. The resume test must key off what
 the manifest says the cache is: `txt` alone for a text-layer cache, `txt` and
 `tsv` for an OCR one.
 
+**Taken, 2026-08-27** (PR: `cache-any-book`). `ocr-book.py` is the one front
+door. `--probe` samples twenty pages spread through the book, prints each
+page's character count and says TEXT LAYER or SCAN, writing nothing; it is
+allowlisted (`Bash(python scripts/ocr-book.py *)`), so the first command aimed
+at every new book no longer prompts. A normal run auto-detects and takes the
+cheap path when there is one — `read-columns.read`, imported and not copied,
+into the same `txt/pNNN.txt` layout, no `png/`, no `tsv/`, no Tesseract — and
+`--force-ocr` overrides. The resume test keys off what the manifest says the
+cache IS: `txt` alone for a text layer, `txt` and `tsv` for OCR. `pf`'s manifest
+is backfilled. README script map, `book-survey` steps 0 and 0b, and the
+`read-columns.py` map entry all updated.
+
+**The reconstruction was verified against the six caches it replaces**, not
+just run. Rebuilt from their source PDFs and compared page for page:
+
+| cache | result |
+|---|---|
+| `potm` `cb1` `dag` `fom` | identical, every page |
+| `pf` | 271 of 339 identical; the other 68 hold the SAME lines in a different block order. Zero content differences. |
+| `ju` | **148 of 162 pages differ substantively** |
+
+`ju`'s cache is raw `page.get_text()` — columns welded across the gutter, a
+stat block's lines interleaved with its neighbour's. That is precisely the
+corrupting read `read-columns.py` exists to prevent, and Juicer Uprising is the
+import that shipped two wrong `starting_money` figures. **Not re-cached in this
+PR** — it is 148 pages of changed text under a completed import, and re-reading
+the fifteen Juicer classes against a corrected cache is its own decision. Worth
+taking as a follow-up.
+
+The old loops also wrote ASCII: every `(R)` and `(TM)` in those six caches is a
+replacement character. The new path writes UTF-8, which is why the four
+"identical" rows above are identical modulo that damage and a trailing blank
+line.
+
+**Four departures, and two repairs that fell out of the resume fix:**
+
+1. **The audit says six of eight caches have a text layer. It is seven.** `bom`
+   medians 5,411 characters a page and was OCR'd anyway. That makes it the
+   exact case the kind guard exists for: a plain re-run would now take the
+   text-layer path and destroy an OCR cache. Switching a cache's kind needs
+   `--force` and prints what would be lost. Run against `bom` today it refuses,
+   by name.
+2. **The manifest gained F3's and F4's fields**, as the proposal says —
+   `cached_pages`, `cached_range`, `printed_pages`, `page_offset`, alongside
+   `text_layer`. **Nothing reads them yet.** `drift-check`'s completeness gate
+   still compares against `pages`, which is F3's change to make. The offsets are
+   derived by `detect_folios`, a deliberate line-for-line twin of
+   `detectPageOffset` in `class-check-lib.mjs`, and every book it derived agrees
+   with the value `scripts/books.json` carries by hand from F1.
+3. **`--probe` prints twenty spread pages, not `range(20,30)`.** Front matter is
+   sparse in both kinds of book; a contiguous early sample can read a text layer
+   as a scan.
+4. **The text-layer path does not run the substitution table.** Those repairs
+   are OCR damage. A text layer makes typesetting damage instead, and the
+   `18.000`->`18000` rule near real decimals would be a cost with no gain.
+
+And two caches repaired themselves the moment resume worked, which is the
+clearest evidence the footgun was real:
+
+- **`fom` completed**: 73 cached of a 161-page PDF -> **161**. It read the 88
+  missing pages and left the 73 existing ones untouched.
+- **`potm` completed**: 202 -> **210**.
+
+Both notes in `scripts/books.json` were trued up to say so, and `bom`'s gained
+the text-layer fact. F3 should re-read its own numbers for those two before
+being scoped: `fom` is no longer truncated, and `potm` — which F3 does not list
+as partial — no longer is either.
+
+Backfilling `pf`'s manifest also **unblocked 36 rows** in drift-check's citation
+check, which had been skipping the most-cited book in the database silently:
+431 rows checked -> **467**, and the `pf` skip line is gone.
+
+Measured after: smoke 1,352 checks / 90 sections, regression 215,
+filament-forge 58, pick3cut5 17 + game 23, media-vault 200, all green.
+`drift-check --remote` prints **NO DRIFT** with nine advisories, up from eight —
+the new one is `Language: Native Tongue` claiming the Palladium Fantasy main
+book, the same `Language: ` prefix false positive as the other four, now visible
+only because pf is finally being checked at all. `class-check --field-sources`
+re-verified end to end against a `pf` class (offset +2, 287 votes) after the
+manifest landed.
+
+
 ### F3 — a truncated cache is indistinguishable from a complete one, and the guard that exists is fooled by the worse case
 
 **What is true today.** Two of the eight caches are partial, and they fail in
