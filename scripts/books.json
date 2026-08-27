@@ -1,0 +1,152 @@
+{
+  "_doc": [
+    "The book registry. One entry per sourcebook this catalog cites, keyed by",
+    "the .cache/books/<slug> directory name.",
+    "",
+    "`source_book` is free text in every table that holds it, and three separate",
+    "mechanisms parse it: resolveBookSlug (a row -> its cached pages),",
+    "drift-check's citation check, and the extraction prompt that fills the field",
+    "in the first place. Before this file each one guessed differently, and the",
+    "312 gear rows spelling the Palladium Fantasy main book `Palladium RPG Main",
+    "Book` resolved to nothing at all - every word of that title is generic, so",
+    "the word-overlap route is disabled by design and the initialism route needs",
+    "a `pf` the title never spells. An alias list is the only route they have.",
+    "",
+    "  title          the canonical spelling. The extraction prompt offers these",
+    "                 as the allowed values, so a NEW row should use one.",
+    "  aliases        every OTHER spelling production actually contains, seeded",
+    "                 from the live vocabulary on 2026-08-27. A row cites its",
+    "                 book with a ` p.N-M` suffix; that is stripped before the",
+    "                 match, and matching ignores case and punctuation.",
+    "  source_pdf     basename of the PDF the cache was built from, as the",
+    "                 manifests record it - or would be built from, for a book",
+    "                 with no cache yet. null when no copy is on hand.",
+    "  printed_pages  the book's own last printed FOLIO, not the PDF page count.",
+    "                 The two differ by the offset plus whatever unnumbered ads",
+    "                 the scan carries. null when it has never been measured.",
+    "  page_offset    cache file page = printed folio + page_offset. Measured",
+    "                 with detectPageOffset over the cache. null when unknown.",
+    "  note           why a value is what it is, when it is not simply measured.",
+    "",
+    "Adding a book means adding an entry: class-check warns about a source_book",
+    "that matches no title and no alias, and does not fail on it. Nothing here is",
+    "required for a cache to exist, and a slug with no cache resolves to null.",
+    "",
+    "Two gear provenance markers are NOT books and deliberately have no entry:",
+    "`Estimate - no published price found` (104 rows) and `Web reference (not",
+    "book-verified)` (29). They say where a price came from, not which book."
+  ],
+
+  "books": {
+    "rue": {
+      "title": "Rifts Ultimate Edition",
+      "aliases": [],
+      "source_pdf": "Rifts - Ultimate Edition.pdf",
+      "printed_pages": 374,
+      "page_offset": 3
+    },
+
+    "pf": {
+      "title": "Palladium Fantasy RPG Main Book",
+      "aliases": [
+        "Palladium RPG Main Book",
+        "Palladium Fantasy RPG",
+        "Palladium Fantasy RPG 2nd Ed.",
+        "palladium-fantasy-core"
+      ],
+      "source_pdf": "Palladium RPG - Main Book.pdf",
+      "printed_pages": 336,
+      "page_offset": 2,
+      "note": "The most-cited book in the database and the one with no manifest.json in its cache. Its four aliases carry 586 rows between them."
+    },
+
+    "bom": {
+      "title": "Rifts Book of Magic",
+      "aliases": [],
+      "source_pdf": "526065744-Rifts-Book-of-Magic.pdf",
+      "printed_pages": 352,
+      "page_offset": 1,
+      "note": "printed_pages is the published page count: the cache holds six pages (p090-p095) and no folio in it survived OCR. page_offset was read off the source PDF's own sparse text layer, 14 pages agreeing, not off the cache."
+    },
+
+    "cb1": {
+      "title": "Rifts Conversion Book One",
+      "aliases": [],
+      "source_pdf": "595586607-Rifts-Conversion-Book-1-Revised-and-Updated-PAL803P.pdf",
+      "printed_pages": 172,
+      "page_offset": 1,
+      "note": "The 200-page PDF ends in a Palladium catalogue and order form the book does not number; the last folio is 172."
+    },
+
+    "dag": {
+      "title": "Palladium Fantasy Dragons and Gods",
+      "aliases": ["dragons-and-gods"],
+      "source_pdf": "PFRPG - Dragons and Gods (1).pdf",
+      "printed_pages": 232,
+      "page_offset": 1,
+      "note": "Same appended catalogue as cb1: 240 PDF pages, 232 numbered."
+    },
+
+    "fom": {
+      "title": "Rifts World Book 16: Federation of Magic",
+      "aliases": [],
+      "source_pdf": "Rifts- World Book 16 Federation of Magic.pdf",
+      "printed_pages": 159,
+      "page_offset": 1,
+      "note": "Nothing in production cites this book yet. The cache stops at file p073 - printed 72 - mid-word and mid-class, while the source PDF runs to folio 159, so the shortfall is visible rather than looking like a complete book."
+    },
+
+    "ju": {
+      "title": "Rifts World Book 10: Juicer Uprising",
+      "aliases": [],
+      "source_pdf": "Rifts- World Book 10 Juicer Uprising.pdf",
+      "printed_pages": 159,
+      "page_offset": 1
+    },
+
+    "potm": {
+      "title": "Rifts Conversion Book Two: Pantheons of the Megaverse",
+      "aliases": ["pantheons-of-the-megaverse", "Pantheons of the Megaverse"],
+      "source_pdf": "Pantheons of the Megaverse.pdf",
+      "printed_pages": 208,
+      "page_offset": 1,
+      "note": "The cache holds 202 of the PDF's 210 pages: content ends at printed 203 and the index runs to 208, so the tail that is missing is index, not text."
+    },
+
+    "rifts-core": {
+      "title": "Rifts RPG (original core book)",
+      "aliases": ["Rifts RPG"],
+      "source_pdf": "Rifts Main.pdf",
+      "printed_pages": null,
+      "page_offset": null,
+      "note": "Cited by two published classes; never cached. The PDF is on hand (258 pages) - this is the next book to cache, not a missing one."
+    },
+
+    "rifts-skill-list": {
+      "title": "Rifts Skill List",
+      "aliases": [],
+      "source_pdf": "31810627-Rifts-Skills-List.pdf",
+      "printed_pages": null,
+      "page_offset": null,
+      "note": "Not a Palladium book - a compiled skill list PDF, cited by 48 skills. Registered so those rows read as known vocabulary rather than as an unknown book."
+    },
+
+    "triax": {
+      "title": "Rifts World Book 5: Triax and the NGR",
+      "aliases": ["Triax & The NGR"],
+      "source_pdf": null,
+      "printed_pages": null,
+      "page_offset": null,
+      "note": "One gear row. No copy on hand."
+    },
+
+    "new-west": {
+      "title": "Rifts World Book 14: New West",
+      "aliases": ["Rifts New West"],
+      "source_pdf": null,
+      "printed_pages": null,
+      "page_offset": null,
+      "note": "One skill row. No copy on hand."
+    }
+  }
+}

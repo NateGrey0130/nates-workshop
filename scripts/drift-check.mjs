@@ -34,6 +34,8 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { DB, d1Query, repoRoot, targetFromArgv } from './d1-query-lib.mjs';
 import { join } from 'node:path';
+import { loadBookRegistry } from './books-lib.mjs';
+import { registryBookSlug } from './class-check-lib.mjs';
 
 
 const target = targetFromArgv();
@@ -140,22 +142,56 @@ for (const c of published) {
 // Runs only for books whose OCR cache is present (see scripts/ocr-book.py).
 // The cache is gitignored, so on a machine without it this silently does
 // nothing rather than failing - a missing cache is not drift.
+//
+// WHICH books is scripts/books.json intersected with the caches actually on
+// this machine. It used to be one hard-coded pair, `Rifts Ultimate Edition` ->
+// `rue`, which could not grow with the shelf: seven other books were cached and
+// none of them was ever asked the question.
+//
+// The rows are read WHOLE and bucketed here rather than selected per book. Two
+// reasons, and the second is not optional: a `source_book = ... OR ... LIKE` list
+// over a five-spelling vocabulary is exactly the query D1 rejects outright with
+// "LIKE or GLOB pattern too complex"; and bucketing with registryBookSlug means
+// the citation check and `class-check --field-sources` decide which book a row
+// belongs to by running the same function, rather than by two spellings of the
+// same intention that drift apart.
 const cacheDir = join(repoRoot, '.cache', 'books');
-const BOOK_SLUGS = { 'Rifts Ultimate Edition': 'rue' };
+const bookRegistry = loadBookRegistry();
+
+// Three queries, not three per book. ~1,000 rows.
+const CITATION_TABLES = ['spells', 'psionic_powers', 'skills'];
+const citationRows = new Map();   // slug -> [{ table, name }]
+for (const table of CITATION_TABLES) {
+  for (const r of d1(`SELECT name, source_book FROM ${table} WHERE source_book IS NOT NULL`)) {
+    const slug = registryBookSlug(r.source_book, bookRegistry);
+    if (!slug) continue;
+    if (!citationRows.has(slug)) citationRows.set(slug, []);
+    citationRows.get(slug).push({ table, name: r.name });
+  }
+}
 
 let citationChecked = 0;
 let citationSkipped = false;
 const citationSuspects = [];
-for (const [book, slug] of Object.entries(BOOK_SLUGS)) {
+for (const slug of Object.keys(bookRegistry)) {
   const txtDir = join(cacheDir, slug, 'txt');
   if (!existsSync(txtDir)) continue;
+  const book = bookRegistry[slug].title;
+  const rows = citationRows.get(slug) ?? [];
   const files = readdirSync(txtDir).filter((f) => f.endsWith('.txt') && !f.endsWith('.raw.txt'));
   // A PARTIAL cache must not be consulted. "At least N pages" is not the same
   // as complete: run against 81 of 382 pages this accused four gear rows whose
   // page simply had not been OCR'd yet. The manifest states the page count, so
   // compare against that and skip otherwise.
   const manifestPath = join(cacheDir, slug, 'manifest.json');
-  if (!existsSync(manifestPath)) continue;
+  if (!existsSync(manifestPath)) {
+    // `pf` is the live case, and it is the most-cited book in the database.
+    // Say so: a silent `continue` here reads exactly like a book with nothing
+    // to check.
+    console.log(`citations:    ${slug} cache has no manifest.json — skipped`);
+    citationSkipped = true;
+    continue;
+  }
   const expected = JSON.parse(readFileSync(manifestPath, 'utf8')).pages;
   if (!expected || files.length < expected) {
     console.log(`citations:    ${slug} cache incomplete `
@@ -195,12 +231,9 @@ for (const [book, slug] of Object.entries(BOOK_SLUGS)) {
   //
   // The other three tables have canonical name lists in the book - a checklist,
   // an index, a skill list - so a name absent from the text means something.
-  for (const table of ['spells', 'psionic_powers', 'skills']) {
-    const rows = d1(`SELECT name FROM ${table} WHERE source_book LIKE '${book}%'`);
-    citationChecked += rows.length;
-    for (const r of rows.filter((x) => !found(x.name))) {
-      citationSuspects.push(`${table}.${r.name} claims "${book}" — name absent from its text`);
-    }
+  citationChecked += rows.length;
+  for (const r of rows.filter((x) => !found(x.name))) {
+    citationSuspects.push(`${r.table}.${r.name} claims "${book}" — name absent from its text`);
   }
 }
 if (citationChecked) {

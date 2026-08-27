@@ -577,7 +577,7 @@ scripts/
 │                           so FilamentForge's smoke test can run it
 ├── drift-check.mjs         Repo vs live database: migrations, data scripts,
 │                           tables, columns, classes, and an advisory citation
-│                           check against a cached book
+│                           check against every cached book books.json knows
 ├── catalog-match-lib.mjs   Matching a book's names to the catalog's. Exact
 │                           first; a relaxed match only when unambiguous on
 │                           BOTH sides. See below - do NOT merge this with
@@ -601,6 +601,13 @@ scripts/
 │                           the same book's description pages
 ├── class-check.mjs         One class file, against the parser the app uses
 ├── class-check-lib.mjs     Its pure half, so the smoke test can call it
+├── books.json              The book registry: one entry per sourcebook the
+│                           catalog cites, keyed by its .cache/books slug. The
+│                           canonical title, every OTHER spelling production
+│                           actually contains, the source PDF, the last printed
+│                           folio and the printed-to-cache page offset
+├── books-lib.mjs           Reading it. The matching itself is in
+│                           class-check-lib.mjs, which stays free of file I/O
 ├── readme-section.mjs      One section of this README by heading, bounded by
 │                           the next heading of ANY depth; no arguments prints
 │                           the heading index. The alternative kept being the
@@ -806,8 +813,12 @@ near the bottom of its page, the first lines of the *following* page, which is
 where the missing half of a broken paragraph lives. Entirely offline and
 deterministic; it skips the D1 catalog pass.
 
-The cached book is matched from `source_book` (its slug as an initialism of the
-title, or the manifest's PDF name — `--book <slug>` overrides), the page window
+The cached book is matched from `source_book` — first against
+`scripts/books.json`, which lists each book's canonical title and every other
+spelling production actually contains, then by the two older heuristics (the
+slug as an initialism of the title, or the manifest's PDF name). `--book
+<slug>` overrides. A registered book with no cache here resolves to *nothing*
+rather than to the nearest-looking cache. The page window
 comes from the title's `p.N-M` suffix, and the printed-page → PDF-page offset
 is read off the pages themselves, by majority vote over the bare page numbers
 OCR captured (`--offset <n>` overrides; the caches in use when this shipped ran
