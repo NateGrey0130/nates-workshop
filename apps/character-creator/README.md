@@ -320,14 +320,28 @@ psionics:
   type: "major"               # minor | major | master
   isp_base: "1d4x10+20"
   powers: ["Sixth Sense"]     # powers the class automatically knows
-  powers_starting: 3          # how many the player picks
+  powers_starting: 3          # how many the player picks, IN TOTAL
   powers_from: ["Mind Block", "See Aura", ...]   # the exact list to pick FROM
+  # A book may SPLIT the starting pick across restrictions rather than give one
+  # open count - the Delphi Juicer's "3 Physical + 1 Super". The counts must sum
+  # to powers_starting, which stays the total. A group naming no categories (or
+  # no `from`) inherits the block's; one that names its own REPLACES them, the
+  # same rule a level-up grant follows.
+  powers_starting_groups:
+    - { count: 3, categories: ["Physical"] }
+    - { count: 1, categories: ["Super"] }
 # psionics_allowed: false     # a race with NO psychic potential (troll, orc);
                               # skips the Random Psionics Table entirely
 magic:
   type: "innate"
   spells_starting: 6
   spell_levels_allowed: [1, 2]
+  spells_from: ["Air: Stop Wind", ...]  # the exact list the starting pick draws
+                                        # from; REPLACES spell_levels_allowed,
+                                        # exactly as powers_from replaces the
+                                        # category gate
+  spells_starting_groups:               # the same split, for spells
+    - { count: 1, from: ["Air: Stop Wind", ...] }
   spells: ["Globe of Daylight"]   # only if the book names specific spells
 special_abilities:
   - { name: "Psi-Sword", description: "..." }

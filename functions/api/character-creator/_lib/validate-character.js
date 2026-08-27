@@ -46,7 +46,8 @@
 import { isChoiceGroup, categoryAllows, categoryName, needsOccupation,
          isAbilityChoice, isAbilityDefinition, abilityOptions, normalizeAbilities, abilityOccOptions } from '../../../../apps/character-creator/js/parser.js';
 
-import { skillGrantsFor, xpTableFor, thresholdFor, perLevelDiceOf } from './leveling.js';
+import { skillGrantsFor, xpTableFor, thresholdFor, perLevelDiceOf,
+         startingGroups } from './leveling.js';
 import { isRepeatableRow, otherRowFor } from '../../../../apps/character-creator/js/language-skills.js';
 import { poolFormulaBounds, diceBounds, attributeCeiling } from '../../../../apps/character-creator/js/dice.js';
 import { psionicShape } from '../../../../apps/character-creator/js/psionics.js';
@@ -363,26 +364,18 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
     // grants of every level climbed to a starting level above 1 — the same
     // grants powerGrantsFor banks for a live level-up.
     const grants = powerGrantsFor(cls, 1, level);
-    const startSpells = cls.magic && Number(cls.magic.spells_starting) > 0
-      ? { count: Number(cls.magic.spells_starting),
-          spell_levels: Array.isArray(cls.magic.spell_levels_allowed) && cls.magic.spell_levels_allowed.length
-            ? cls.magic.spell_levels_allowed : null,
-          from: null }
-      : null;
-    // A named list REPLACES the category gate — the Burster's seventeen named
-    // minor powers are the restriction, not their categories.
-    const psiFrom = Array.isArray(cls.psionics?.powers_from) && cls.psionics.powers_from.length
-      ? cls.psionics.powers_from : null;
-    const startPsi = cls.psionics && Number(cls.psionics.powers_starting) > 0
-      ? { count: Number(cls.psionics.powers_starting),
-          categories: psiFrom ? null
-            : (Array.isArray(cls.psionics.categories_allowed) && cls.psionics.categories_allowed.length
-              ? cls.psionics.categories_allowed : null),
-          from: psiFrom }
-      : null;
+    // The starting selection is a LIST of groups, not one group — a book may
+    // split it across restrictions ("3 Physical + 1 Super"), and a spell pick
+    // may be bounded by a named list the way a psionic one always could. Both
+    // shapes come out of `startingGroups`, which the wizard reads too; two
+    // readers of one shape is one drift less than two builders of it.
+    //
+    // Assembled the same way it was when the starting pick was a single group,
+    // because everything below already handles several groups with different
+    // gates — that is what the level-up grants are.
     const pool = {
-      spell: [...(startSpells ? [startSpells] : []), ...grants.filter((g) => g.kind === 'spell')],
-      psionic: [...(startPsi ? [startPsi] : []), ...grants.filter((g) => g.kind === 'psionic')],
+      spell: [...startingGroups(cls, 'spell'), ...grants.filter((g) => g.kind === 'spell')],
+      psionic: [...startingGroups(cls, 'psionic'), ...grants.filter((g) => g.kind === 'psionic')],
     };
 
     for (const kind of ['spell', 'psionic']) {

@@ -257,6 +257,79 @@ export function grantNote(cls, kind, level, slot = 0) {
   return entry && typeof entry.note === 'string' && entry.note.trim() ? entry.note.trim() : null;
 }
 
+// What a character may pick AT CREATION, as a list of pick-groups.
+//
+// Creation is not a level-up and never has been: `perLevelGrants` skips every
+// schedule entry at or below `fromLevel`, and creation asks from level 1, so a
+// level-1 schedule entry does not fire. That makes this the only place a
+// STARTING pick's restriction can be stated, and until now it could hold only
+// one count and one gate. Three books say otherwise:
+//
+//   - the Elemental Fusionist picks its first spell from an 18-name list,
+//   - the Delphi Juicer starts with 3 Physical + 1 Super psionic powers, and
+//   - the Mind Mage with three from each of four categories.
+//
+// The first had no way to name its list at all; the other two were stored as
+// one open count over every category they touch, which let a player take four
+// Super where the book grants one (CLASS-AUDIT.md S1 and S9).
+//
+// So this returns an ARRAY, the same shape `powerGrantsFor` already returns for
+// level-up grants — and everything downstream of the two builders already
+// handles several groups carrying different gates.
+//
+// `spells_starting` / `powers_starting` keep their meaning as the TOTAL, so a
+// class stating only a number is unaffected and everything reading the total
+// still reads one number. `*_starting_groups` splits that total across
+// restrictions.
+//
+// A group's own restriction REPLACES the block's rather than narrowing it —
+// the rule `spellNamesForGrant` and `psionicCategoriesForGrant` already apply
+// to level-up grants, and for the same reason: a book naming Super for one slot
+// is granting an exception to the class's categories, and intersecting would
+// throw that away. A group naming nothing inherits the block's.
+//
+// A named `from` list is the tightest restriction there is and replaces the
+// spell-level cap or the category gate outright, exactly as it does on a grant.
+const STARTING_SPEC = {
+  spell: { block: 'magic', count: 'spells_starting', groups: 'spells_starting_groups',
+           from: 'spells_from', gate: 'spell_levels_allowed', gateKey: 'spell_levels' },
+  psionic: { block: 'psionics', count: 'powers_starting', groups: 'powers_starting_groups',
+             from: 'powers_from', gate: 'categories_allowed', gateKey: 'categories' },
+};
+
+const nonEmpty = (v) => (Array.isArray(v) && v.length ? v : null);
+
+export function startingGroups(cls, kind) {
+  const spec = STARTING_SPEC[kind];
+  const block = spec && cls?.[spec.block];
+  if (!block) return [];
+
+  const blockFrom = nonEmpty(block[spec.from])?.map(String) ?? null;
+  const blockGate = blockFrom ? null : nonEmpty(block[spec.gate]);
+  const shape = (count, from, gate, note) => ({
+    count,
+    spell_levels: kind === 'spell' ? (from ? null : gate) : null,
+    categories: kind === 'psionic' ? (from ? null : gate) : null,
+    from,
+    ...(note ? { note } : {}),
+  });
+
+  const groups = nonEmpty(block[spec.groups]);
+  if (groups) {
+    return groups
+      .filter((g) => Number(g?.count) > 0)
+      .map((g) => {
+        const from = nonEmpty(g.from)?.map(String) ?? blockFrom;
+        return shape(Number(g.count), from, nonEmpty(g[spec.gateKey]) ?? blockGate,
+                     typeof g.note === 'string' && g.note.trim() ? g.note.trim() : null);
+      });
+  }
+
+  const count = Number(block[spec.count]);
+  if (!(count > 0)) return [];
+  return [shape(count, blockFrom, blockGate, null)];
+}
+
 export function spellGrantsFor(cls, fromLevel, toLevel) {
   return perLevelGrants(cls?.magic, 'spells_per_level', 'spells_schedule', fromLevel, toLevel);
 }

@@ -23,7 +23,7 @@ import { isChoiceGroup, isGearChoice, applyVariant,
 import { composeClass } from './js/compose.js';
 import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant,
          spellNamesForGrant, grantNote,
-         skillGrantsFor, spellGrantsFor, psionicGrantsFor } from './js/leveling.js';
+         skillGrantsFor, spellGrantsFor, psionicGrantsFor, startingGroups } from './js/leveling.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
 const STEPS = ['System', 'Race', 'Attributes', 'Occupation', 'Skills', 'Equipment', 'Powers',
@@ -126,7 +126,13 @@ const S = {
   // levelPsi is keyed by grant index for the same reason levelSpells is: a
   // psionic grant can name its own CATEGORIES, and the Mystic's level-4 power
   // comes from Super while its starting ones came from Sensitive and Healing.
-  levelPools: {}, levelSpells: {}, levelPsi: {}, levelPicks: {},
+  levelPools: {}, levelSpells: {}, levelPicks: {}, levelPsi: {},
+  // The level-1 picks when the class SPLITS them across restrictions - the
+  // Delphi Juicer's "3 Physical + 1 Super". Keyed by group index for the same
+  // reason levelSpells is, and separate from the flat `spells`/`psi` on
+  // purpose: a class with one starting group keeps writing into those, so no
+  // draft saved before this existed changes shape.
+  spellGroups: {}, psiGroups: {},
   // Attributes re-rolled because a chosen O.C.C. raised a minimum the original
   // roll missed. Kept so the assist is visible as one rather than presented as
   // what the dice said first — posted as play events once the character exists.
@@ -361,6 +367,7 @@ const DRAFT_KEYS = [
   'psiRoll', 'psiShape', 'psiCategory', 'attrBonuses', 'rolledBonuses', 'abilities',
   'occAttrBonuses', 'occRolledBonuses', 'minRerolls',
   'level', 'levelPools', 'levelSpells', 'levelPsi', 'levelPicks',
+  'spellGroups', 'psiGroups',
 ];
 
 // Bumped whenever STEPS changes shape, because a draft stores `step` as an
@@ -647,6 +654,7 @@ function resetBuild() {
   S.occAttrBonuses = {}; S.occRolledBonuses = { combat: {}, saves: {} };
   S.minRerolls = [];
   S.level = 1; S.levelPools = {}; S.levelSpells = {}; S.levelPsi = {}; S.levelPicks = {};
+  S.spellGroups = {}; S.psiGroups = {};
 }
 
 // Step 1 — the race (browse | guided)
@@ -2390,6 +2398,120 @@ function psiGroupRows(list, count, kind = 'psi', gi = null) {
   }).join('');
 }
 
+// The level-1 spell picks, one block per starting group.
+//
+// One group is the overwhelming case and keeps writing into the flat `S.spells`
+// it always has, so nothing about a saved draft changes. A class that SPLITS
+// its starting pick - or bounds it with a named list, which is the Elemental
+// Fusionist's eighteen - gets a block per group, keyed exactly as the
+// Advancement step keys its per-grant pickers. They are the same problem.
+function startingSpellHtml(magic) {
+  const groups = startingGroups(S.cls, 'spell');
+  // A magic block with no starting count still renders its header, so the step
+  // says "0" rather than looking like the class has no magic at all.
+  if (!groups.length) {
+    groups.push({ count: 0, spell_levels: null, categories: null, from: null });
+  }
+  const many = groups.length > 1;
+  const kind = many ? 'spell-start' : 'spell';
+  const total = groups.reduce((n, g) => n + g.count, 0);
+  const takenAll = () => groups.flatMap((g, i) => powerList(kind, many ? i : null));
+
+  const blocks = groups.map((g, gi) => {
+    const idx = many ? gi : null;
+    const chosen = powerList(kind, idx);
+    // A named list is the tightest restriction and REPLACES the level cap - a
+    // group that names its spells is not also asking about levels. The same
+    // rule spellGrantBlock applies to a level-up grant.
+    const named = g.from && new Set(g.from.map((n) => n.toLowerCase()));
+    // A spell is learned once, so the other groups' picks are out of this one.
+    const elsewhere = new Set(takenAll().filter((n) => !chosen.includes(n))
+      .map((n) => String(n).toLowerCase()));
+    const pool = S.spellCatalog.filter((sp) => inSystem(sp)
+      && (named ? named.has(String(sp.name).toLowerCase())
+                : (!g.spell_levels || g.spell_levels.includes(sp.level)))
+      && !elsewhere.has(String(sp.name).toLowerCase()));
+    // A chosen spell stays visible whatever the filter says, or narrowing the
+    // list would look like it had un-picked something.
+    const list = Picker.filter(pool, S.spellFilter)
+      .concat(pool.filter((sp) => chosen.includes(sp.name) && !Picker.match(sp, S.spellFilter)));
+    // A name the catalog does not carry would silently shrink the list, so say
+    // so - the same reasoning the psionic named list already uses.
+    const unknownNamed = g.from
+      ? g.from.filter((n) => !S.spellCatalog.some((x) => String(x.name).toLowerCase() === n.toLowerCase()))
+      : [];
+    const gate = named ? `a list of ${g.from.length}`
+      : g.spell_levels ? `levels ${g.spell_levels.join(', ')}` : 'any spell level';
+    return (many ? `<p class="small" style="margin-top:12px"><b>${g.count}
+        ${g.count === 1 ? 'spell' : 'spells'}</b> <span class="muted">from ${esc(gate)}</span>
+        <span class="muted">— ${chosen.length}/${g.count}</span></p>` : '')
+      + (g.note ? `<p class="attr-note">${esc(g.note)} — the catalog cannot check this one, so it
+        is yours to honour.</p>` : '')
+      + (unknownNamed.length ? `<p class="attr-note">${unknownNamed.length} named
+        ${unknownNamed.length === 1 ? 'spell is' : 'spells are'} not in the catalog yet:
+        ${esc(unknownNamed.join(', '))}.</p>` : '')
+      + Picker.inputHtml({ id: many ? `spell-filter-${gi}` : 'spell-filter', value: S.spellFilter,
+          placeholder: 'Filter spells…',
+          shown: Picker.filter(pool, S.spellFilter).length, total: pool.length })
+      + spellGroupRows(list, g.count, kind, idx);
+  }).join('');
+
+  const one = groups[0];
+  const caption = many ? 'in groups the book keeps apart'
+    : one.from ? `from the class list of ${one.from.length}`
+    : one.spell_levels ? `levels ${one.spell_levels.join(', ')}` : null;
+  return `<h3>Spells — ${takenAll().length}/${total}
+    <span class="muted small">(${esc(magic.type)} magic${caption ? ' · ' + esc(caption) : ''})</span></h3>`
+    + blocks;
+}
+
+// The level-1 psionic picks when the book SPLITS them across categories - the
+// Delphi Juicer's "3 Physical + 1 Super", the Mind Mage's three from each of
+// four. Stored as one open count over every category they touch, both let a
+// player take every power from the widest one (CLASS-AUDIT.md S9).
+//
+// No rolled tier reaches here: rolling happens only for a class that declares
+// no psionics block at all, and a split is declared on one. So this needs
+// neither the from_roll shape nor the single-category prompt.
+function startingPsiHtml(cls, groups) {
+  const tier = cls.psionics.type;
+  const total = groups.reduce((n, g) => n + g.count, 0);
+  const takenAll = () => groups.flatMap((g, i) => powerList('psi-start', i));
+
+  const blocks = groups.map((g, gi) => {
+    const chosen = powerList('psi-start', gi);
+    const named = g.from && new Set(g.from.map((n) => n.toLowerCase()));
+    const elsewhere = new Set(takenAll().filter((n) => !chosen.includes(n))
+      .map((n) => String(n).toLowerCase()));
+    const inCategory = S.psiCatalog.filter((p) => inSystem(p)
+      && (named ? named.has(String(p.name).toLowerCase())
+                : (!g.categories || g.categories.includes(p.category)))
+      && !elsewhere.has(String(p.name).toLowerCase()));
+    // The per-power tier gate, exactly as the single-group picker applies it:
+    // a book can say an individual power needs a higher tier than its category.
+    const pool = inCategory.filter((p) => derive.meetsTier(tier, p.min_tier));
+    const gated = inCategory.length - pool.length;
+    const list = Picker.filter(pool, S.psiFilter)
+      .concat(pool.filter((p) => chosen.includes(p.name) && !Picker.match(p, S.psiFilter)));
+    const gate = named ? `a list of ${g.from.length}`
+      : g.categories ? g.categories.join(', ') : 'any category';
+    return `<p class="small" style="margin-top:12px"><b>${g.count}
+      ${g.count === 1 ? 'power' : 'powers'}</b> <span class="muted">from ${esc(gate)}</span>
+      <span class="muted">— ${chosen.length}/${g.count}</span></p>`
+      + (g.note ? `<p class="attr-note">${esc(g.note)} — the catalog cannot check this one.</p>` : '')
+      + (gated ? `<p class="attr-note">${gated} more ${gated === 1 ? 'power needs' : 'powers need'}
+        a higher psychic tier than ${esc(tier)}.</p>` : '')
+      + Picker.inputHtml({ id: `psi-filter-${gi}`, value: S.psiFilter, placeholder: 'Filter powers…',
+          shown: Picker.filter(pool, S.psiFilter).length, total: pool.length })
+      + psiGroupRows(list, g.count, 'psi-start', gi);
+  }).join('');
+
+  return `<h3>Psionic powers — ${takenAll().length}/${total}
+    <span class="muted small">(${esc(tier)} psychic · in groups the book keeps apart)</span></h3>
+    <p class="muted small">Each group has its own categories and its own budget. A power already
+      chosen is not offered again.</p>` + blocks;
+}
+
 function renderPowers() {
   const magic = S.cls.magic || null;
   const cls = psiClass();
@@ -2400,21 +2522,11 @@ function renderPowers() {
     inner = `<p class="muted">This class has no spellcasting or psionics — carry on.</p>`;
   }
   if (rolling) inner += psiRollHtml();
-  if (magic) {
-    const count = magic.spells_starting || 0;
-    const levels = Array.isArray(magic.spell_levels_allowed) ? magic.spell_levels_allowed : null;
-    const pool = S.spellCatalog.filter((sp) => inSystem(sp) && (!levels || levels.includes(sp.level)));
-    // A chosen spell stays visible whatever the filter says, or narrowing the
-    // list would look like it had un-picked something.
-    const list = Picker.filter(pool, S.spellFilter)
-      .concat(pool.filter((sp) => S.spells.includes(sp.name) && !Picker.match(sp, S.spellFilter)));
-    inner += `<h3>Spells — ${S.spells.length}/${count}
-      <span class="muted small">(${esc(magic.type)} magic${levels ? ' · levels ' + levels.join(', ') : ''})</span></h3>` +
-      Picker.inputHtml({ id: 'spell-filter', value: S.spellFilter, placeholder: 'Filter spells…',
-        shown: Picker.filter(pool, S.spellFilter).length, total: pool.length }) +
-      spellGroupRows(list, count);
-  }
-  if (psi) {
+  if (magic) inner += startingSpellHtml(magic);
+  const psiSplit = psi ? startingGroups(cls, 'psionic') : [];
+  if (psi && psiSplit.length > 1) {
+    inner += startingPsiHtml(cls, psiSplit);
+  } else if (psi) {
     const tier = cls.psionics.type;
     // A shape that allows a single category narrows the pool to the one chosen.
     // Until it IS chosen the list stays empty rather than showing everything —
@@ -2556,6 +2668,11 @@ function powerList(kind, gi = null) {
     case 'psi': return S.psi;
     // Per grant, because each level's spells are capped by that level.
     case 'spell-adv': return S.levelSpells[gi] || (S.levelSpells[gi] = []);
+    // The -start pair is to the flat `spells`/`psi` what -adv is to them: the
+    // same level, a different rule, so each group keeps its own budget. Only a
+    // class that SPLITS its level-1 pick uses them.
+    case 'spell-start': return S.spellGroups[gi] || (S.spellGroups[gi] = []);
+    case 'psi-start': return S.psiGroups[gi] || (S.psiGroups[gi] = []);
     default: return S.levelPsi[gi] || (S.levelPsi[gi] = []);
   }
 }
@@ -2585,8 +2702,16 @@ function powersPayload() {
   // class, chosen at level 1, then learned on the way up. `held` keeps the list
   // a set, so a spell learned later that the class already granted is dropped
   // rather than listed twice.
-  const spellNames = held(held(autoSpells, S.spells), Object.values(S.levelSpells).flat().filter(Boolean));
-  const psiNames = held(held(autoPsi, S.psi), Object.values(S.levelPsi).flat().filter(Boolean));
+  //
+  // The level-1 picks arrive from two places, and exactly one of them is ever
+  // non-empty: the flat list when the class has a single starting group, the
+  // per-group lists when it splits them. Concatenating both means neither the
+  // reader nor the writer has to know which shape this class used.
+  const flat = (byGroup) => Object.values(byGroup).flat().filter(Boolean);
+  const startSpells = [...S.spells, ...flat(S.spellGroups)];
+  const startPsi = [...S.psi, ...flat(S.psiGroups)];
+  const spellNames = held(held(autoSpells, startSpells), flat(S.levelSpells));
+  const psiNames = held(held(autoPsi, startPsi), flat(S.levelPsi));
   return [
     ...spellNames.map((n) => {
       const sp = S.spellCatalog.find((x) => x.name === n);

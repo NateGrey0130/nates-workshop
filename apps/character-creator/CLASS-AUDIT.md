@@ -803,44 +803,297 @@ claim-audit rule):
   Migration: real `magic` blocks (`spells_starting: 1` +
   `spells_per_level_from:` the orientation lists — the shifter's shape), notes
   rewritten. The biggest single mechanic currently held in prose.
+  - **Taken, 2026-08-26** (`fix-rue-elemental-fusionist-spells.sql`, plus the
+    app change below): both orientations carry real `magic` blocks now —
+    `spells_starting: 1` bounded by `spells_from`, and a `spells_schedule`
+    entry at every level from 2 to 15 drawing `from_list`, the shifter's shape
+    with the starting pick bounded too. Verified in the running wizard: a
+    level-one Earth/Air Fusionist is offered **exactly its eighteen**, and a
+    level-4 Fire/Water one is offered "1 spell from a list of 19" at each of
+    levels 2, 3 and 4.
+    **The sketch could not have been done as data.** `spells_starting: 1` alone
+    would have let a first-level Fusionist pick any of the catalog's ~570
+    spells, eighth-level warlock magic included — strictly worse than the prose
+    it replaced. The creation builder took **one count and one gate**, and
+    `validate-character.js` hardcoded `from: null` on the starting spell pool:
+    psionics has had `powers_from` since the burster, spells never got the
+    twin. So `magic.spells_from` is new, and it arrived with the S9 shape in
+    one change (`startingGroups` in `js/leveling.js`, read by the wizard *and*
+    the server — the two builders are the pair that drifts).
+    **Every name was checked on its printed P.P.E., not just on its name.** All
+    36 book names resolve and all 36 costs match their catalog row. Two the
+    name alone would have missed: the book's "Thunder Clap" is stored as
+    `Air: Thunderclap`, and the book prints one undivided list per orientation
+    while the catalog files each spell under its own element (Chameleon is
+    Earth, Create Light is Air).
+    **One name is ambiguous and is deliberately left so.** The Fire/Water list
+    prints "Cloud of Steam (10)" untagged, and the catalog holds two rows of
+    that name **both at 10 P.P.E.** — `Fire: Cloud of Steam` (level 4) and
+    `Water: Cloud of Steam` (level 1). Nothing in the entry separates them and
+    the element counts do not either, so **both** are on the list: a pick costs
+    one slot whichever is taken, so offering both forbids nothing the book
+    grants and invents no spell it does not name, where guessing would have
+    buried a coin flip where nothing would ever flag it. That is why the
+    Fire/Water list is 19 names for 18 printed ones.
 - **S2 — Cyber-Knight: "The 80% chance of having psionics at all is a
   per-character roll the class schema cannot state."** False —
   `psionics_allowed` rolled tiers exist (`rollsForPsionics`, wizard briefing,
   smoke-pinned). Its second note, "psionics gates by category rather than by
   name", is also false — `powers_from` exists (burster). Migration: model the
   d100 tiers and the named nine-power list; pairs with F5.
+  - **Partly taken, 2026-08-26** (`fix-rue-cyber-knight-psionics.sql`): the
+    second half of the finding is right and is now data; the first half is
+    wrong, and the wrong half is the one that mattered.
+    **It also found a live error F5 introduced.** F5 set `powers_starting: 9`,
+    reading the book's "three powers known to all Cyber-Knights" as three of
+    the picks plus the Major band's six. **That could never work.** The three
+    are Create Psi-Sword, Create Psi-Shield and Meditation, and the catalog
+    files the first two under **Super** — a category a major psychic cannot
+    reach. So the nine picks were nine Healing/Sensitive/Physical powers,
+    *three more than the book grants*, and the universal three were
+    unreachable. Now `powers: ["Psi-Sword", "Psi-Shield", "Meditation"]`
+    granted by name, `powers_starting: 6`, and
+    `categories_allowed: ["Healing", "Sensitive", "Physical"]` stated instead
+    of left open. Granted powers are exempt from the category and tier gates
+    server-side, by design, so the Super pair lands correctly.
+    **The d100 table stays unmodelled, and the finding's reason for thinking
+    it needn't is the error.** `psionics_allowed` rolled tiers are **one
+    global table**, hardcoded in `js/psionics.js` from Palladium Fantasy 2nd
+    Ed. p.20-21 (01-09 major, 10-25 minor, 26-00 none), and
+    `rollsForPsionics()` returns false for any class declaring a `psionics`
+    block at all. There is **no per-class rolled-table shape**. This one needs
+    four bands (01-40 minor / 41-60 major / 61-70 master / 71-00 non-psychic)
+    carrying four I.S.P. bases, four power counts, two save targets, and the
+    master band's Super-psionic schedule *and* Psi-Sword damage schedule. That
+    is an app change, and a larger one than S1's.
+    **`powers_from` does exist — and does not apply here.** The finding is
+    right that the "gates by category rather than by name" note was false. But
+    the named list is the **minor** band's, and this class is stored as Major,
+    which draws from the three categories. So the correction is recorded in
+    the note rather than spent on the wrong tier.
+    Two book errors came out with it, both re-read from the cache (rue p067 =
+    printed 64, the cache running printed+3): the book says about **seventy**
+    percent are psychic, not eighty — 71-00 is the non-psychic band — and the
+    minor band's list holds **twelve** names, not the nine the class carried;
+    the missing three (Alter Aura, Resist Fatigue, Total Recall) are the
+    original core book's omissions, and all twelve are in the catalog. The
+    whole table is now in the ability's prose, where it has to live until the
+    app can hold one. Simulated against live markdown: `class-check` ready,
+    0 errors, 0 warnings.
 - **S3 — "no bonus key" notes falsified by `perception`/`disarm`:** burster
   ("+1 Perception has no bonus key and sits in restrictions"), juicer ("+2
   Perception, +2 disarm … have no bonus key"), ley-line-walker ("neither
   spell strength nor perception is a [key]" — half false),
   ley-line-rifter/headhunter ("applied by hand"). Fixed by F8/F14 plus note
   rewrites.
+  - **Taken, 2026-08-26** (`fix-rue-ley-line-walker-perception.sql`): four of
+    the five were already done and the fifth was the whole item. Read from D1
+    rather than from the `add-*` scripts: burster, juicer and
+    headhunter-techno-warrior carry their perception (and the juicer its
+    disarm) with their notes rewritten, by F8 and F14; ley-line-rifter the
+    same. Only **ley-line-walker** was left, and F8 skipped it on purpose —
+    its bonus is a *schedule*, "+1 on Perception Rolls at levels 2, 5, 7, 10,
+    and 13; double when on a ley line" (re-read from the cache, rue p119), not
+    a flat number. It lands as five `at_level` `combat.perception` entries and
+    **no base `combat` block**: the schedule starts at level 2, so a base
+    `perception: 1` — the mystic's shape, which F8 *did* use — would hand every
+    walker a point the book never gives. The doubling stays prose, correctly:
+    `bonuses` is unconditional. The rewritten note also corrects a second false
+    sentence in the same paragraph, that the "+3 to save vs curses" is carried
+    `at_level`; it is flat, and has been since `fix-ley-line-walker-rue-bonuses`
+    established that the leveled save is the *magic* save.
+    **The filename is the finding worth keeping.** The obvious
+    `fix-ley-line-walker-perception.sql` sorts *before* both
+    `fix-ley-line-walker-rue-bonuses.sql` (which rewrites the `at_level` block
+    it appends to) and `fix-pre-rue-class-audit.sql` (which rewrites this
+    class's whole markdown), so on a clean rebuild it would find neither anchor
+    and silently do nothing — live D1 would be right and a rebuilt database
+    wrong. The `fix-rue-` infix puts it after both, the same trick F14 used.
+    Verified by simulating both `replace()` pairs against the live markdown:
+    `class-check` reads ready, 0 errors, 0 warnings.
 - **S4 — Godling: the extraction note says the category bonuses "(Domestic
   +10%, Medical +10%, Technical +10%, Wilderness +5%) have nowhere to go in
   the format and are not applied", and that Horsemanship is "offered as a
   category without the bonus".** Both false in the same file: the data above
   the note carries `bonus: 10/10/10/5` **and** `Horsemanship bonus: 15`. Pure
   note rot — rewrite only, no data change.
+  - **Taken, 2026-08-26** (`fix-godling-skill-category-bonuses-note.sql`): as
+    written — one statement, no data touched, and the readback asserts all five
+    bonuses are still present so that "no data change" is proved rather than
+    claimed. The bonuses arrived in `fix-godling-demigod-accuracy.sql`'s F3,
+    which rewrote no note, so the class carried the bonuses *and* a paragraph
+    swearing it could not: the data right and the only prose about it wrong,
+    which is worse than either alone.
+    **Two things this took to see, both worth the next reader's time.** The
+    original `add-godling-class.sql` still shows the pre-fix state, so reading
+    it says the bonuses are absent and the note is *true* — only the database
+    says otherwise, exactly as the class-import skill warns. And `instr` for the
+    note's own sentence returns 0, because the stored text wraps mid-phrase
+    (`have nowhere to` / newline / `go in the format`), which is why it survived
+    earlier sweeps. Match a stored note across the wrap or it reads as gone.
 - **S5 — Walker/Rifter attribute-of-choice "by hand"** — expressible via
   ability choice groups; taken as F19.
+  - **Closed, 2026-08-26** — no work of its own; verified rather than assumed.
+    F19 shipped `fix-walker-rifter-attribute-choice.sql` (the rifter half; the
+    walker already carried its choose-1 group). Live `--remote` confirms both
+    now hold a choice group, and the rifter's surviving "attribute of choice"
+    phrase is the *rewritten* note saying it IS one — it cites this audit's F19
+    by name. Spell Strength stays prose there, correctly: no such bonus key
+    exists, which this file's own "Checked and still true" list records.
 - **S6 — Witch: the Gift of Power's four-from-eleven "would need bonuses the
   shape cannot express together."** Partially false — an ability may now
   carry `bonuses` + `psionics` + `magic` together (ABILITY_GRANTS), which
   covers most of the eleven; flight and the impervious set stay prose. The
   Gift of Magic's spell allotment stays blocked (variants still cannot carry
   `magic` — verified). Modeling the eleven is a real project; user's call.
+  - **Taken, 2026-08-26** (`fix-witch-gift-of-power-abilities.sql`): eleven
+    ability definitions and a `{ choose: 4 }` over them, replacing the single
+    prose ability. **Seven carry real bonuses**; four stay prose for one reason
+    each — an immunity (not a save bonus), a constant sense, a flight Spd that
+    applies only while flying, and a healing rate. "A real project" turned out
+    to be one data script: the machinery was already there and validated.
+    **The Sixth Sense grant is deliberately left prose**, and that is the one
+    judgement call. An ability-level `psionics` block *replaces* the character's
+    block rather than merging into it, and this class has none, so granting it
+    would install a block with no `type` — inventing a psychic tier the book
+    never states, on a class whose I.S.P. can arrive from a different gift. The
+    saves that ability grants are modelled; only the power is not.
+    **It also closed a live hole.** The `gift-of-power` variant carried
+    `ppe_base: "2d4x10+20, but only if the P.P.E. ability is one of the four
+    selected; otherwise none"` — a *condition inside a field that holds a dice
+    formula*, which `leveling.js` feeds straight to `perLevelDiceOf`. It could
+    never be enforced. The P.P.E. now rides on the pick and the variant states
+    no base; with no top-level `ppe_base`, a witch who skips that gift correctly
+    has none. Verified: rebuilt markdown runs `class-check` at 0 errors,
+    0 warnings, and all seven bonus blocks read back.
 - **S7 — Dog Boy: breed bonuses "are player options that no schema field
   holds."** `variants` override `bonuses` now — twenty breeds as variants is
   expressible, if bulky. User's call.
+  - **Declined, 2026-08-26**, on Nate's word, and the finding above is wrong in
+    two ways worth correcting in place rather than deleting.
+    **It is five breeds, not twenty.** The stored table holds Irish Water
+    Spaniel, Wolfhound, Irish/English Setters, Coonhound and Golden Retriever —
+    and the book calls it *"a sample"*, covering percentile **01-25% only**
+    before pointing at Rifts World Book 13: Lone Star pp.22-55 for the rest. So
+    modelling it yields a percentile table that cannot be rolled on.
+    **And every one of the five carries something `variants` provably cannot
+    express** — the swim percentages (90%/55%/80%) and, worse, the Wolfhound's
+    **-40%** and the Coonhound's **+5% to track by smell**. Both blockers are on
+    this file's own *"Checked and still true"* list: `variants` cannot override
+    `skills`, and no race-level per-skill modifier exists. Tracking by smell is
+    the whole point of a Dog Boy, so a Coonhound modelled as "+3 Perception"
+    with its tracking bonus dropped is **worse than the current prose, because
+    it looks complete.** Two lesser objections: the table is explicitly
+    *optional*, so variants would force every Dog Boy to choose a breed
+    structurally; and `dog-boy` has no `variants` block today.
+    **The real blocker is the missing per-skill modifier**, which also blocks
+    changeling +5% Disguise, the gnome's list and kobold metalworking on the
+    same list. Build that and this item plus several others unblock together;
+    until then this buys a half-modelled table that hides its own gaps.
 - **S8 — Goblin: the Cobbler sub-race "the app cannot express one yet."**
   Half false — a variant carries its `ppe_base` (3D4x10+1D6/level) and save
   bonuses; its faerie-magic spell grants still don't fit (no `magic` on
   variants).
+  - **Taken, 2026-08-26** (`fix-goblin-cobbler-note.sql`): **as a note rewrite
+    only — the Cobbler stays unimported, and no mechanic is touched.** The
+    finding is right that the claim is half false, and the honest correction
+    is to say *which* half. `VARIANT_OVERRIDES` now admits `attribute_dice`,
+    `attribute_requirements`, `hit_points_base`, `sdc_base`, `mdc_base`,
+    `ppe_base`, `starting_money`, `bonuses` and `skill_overrides` — so the
+    Cobbler's 3D4x10+1D6/level P.P.E. and its three saves would fit. **Five of
+    its seven parts still would not**: metamorphosis at will
+    (`natural_abilities`), the six faerie spells (a `magic` block), the 1-15
+    percentile roll, the major/master psionic exclusion (`psionics_allowed` is
+    class-level), and the +10% to carpentry/boat building/whittling —
+    `skill_overrides` may only restate a skill the class already grants, and
+    this R.C.C. **grants none at all**, which is the same missing per-skill
+    modifier this file's own "still true" list records for the changeling, the
+    gnome and the kobold.
+    So building the expressible half buys a Cobbler with a mage's P.P.E., no
+    spells to spend it on and no metamorphosis — **S7's objection exactly**,
+    and the reason this is a rewrite rather than a variant. The note now also
+    records the trap that would catch whoever tries it: a variant's `bonuses`
+    **replace** the class's rather than merging (`VARIANT_MERGED` is only the
+    two attribute maps), so stating the Cobbler's three saves would silently
+    drop the goblin's own +1 vs faerie magic and its S.D.C. pool bonus.
+    **The route that would work is a second class**, `goblin-cobbler`, which
+    can carry the abilities and the magic block. That is an import decision,
+    not a transcription, and it is Nate's — the note says so instead of
+    implying the app is at fault.
+    Two smaller corrections rode along, both verified: the entry is printed
+    **300**, not 302 (pf cache p302, footer 300, the printed+2 offset F18
+    established), and the book's "his abilities do not increase as he gains
+    new levels" was missing from the summary. Simulated against live markdown:
+    `class-check` ready, 0 errors, 0 warnings.
 - **S9 — Delphi Juicer / Mind Mage: per-category starting-power splits
   ("3 Physical + 1 Super", "three from each of four").** `powers_schedule`
   entries carry `categories` (mystic's level-4/8 Super picks) — whether a
   level-1 schedule entry fires at creation needs a check before calling this
   expressible; flagged for a look rather than asserted.
+  - **Checked, 2026-08-26 — the answer is no, and it is worse than the finding
+    supposed.** A level-1 `powers_schedule` entry does **not** fire at creation.
+    `powers_schedule` is read only by `perLevelGrants` and
+    `psionicCategoriesForGrant`, both of which run over a *fromLevel to toLevel*
+    span — level-up only. Creation is built somewhere else entirely, and twice:
+    `psiConfig` in `app.js` and `validate-character.js` on the server both
+    assemble the starting pick from `powers_starting` (one count) plus
+    `categories_allowed` **or** `powers_from`. One count, one category list. A
+    per-category split at creation cannot be said.
+    **Both named classes are therefore wrong in production right now**, which
+    the finding did not claim: `delphi-juicer` carries `powers_starting: 4` with
+    `categories_allowed: ["Physical", "Super"]` where the book grants *3 Physical
+    + 1 Super*, so a player may legally take four Super; `mind-mage` carries
+    `powers_starting: 12` over four categories where the book grants *three from
+    each*, so a player may take twelve Super. The picker permits starting
+    loadouts the books forbid.
+    **The fix is smaller than it looks, and it is app code rather than data.**
+    The server already assembles `pool.psionic` as an ARRAY of pick-groups
+    (`[startPsi, ...grants]`), so everything downstream of the builders already
+    handles several groups with different category gates. What is missing is a
+    frontmatter shape letting `powers_starting` express more than one group, and
+    the two builders reading it — the client and the server, which are separate
+    paths and must move together. Until then the two classes should not be
+    "corrected" by narrowing `categories_allowed`: that would trade a loadout
+    that is too permissive for one that forbids a category the book grants.
+    **A decision, not a defect to sweep up** — it needs the schema change, so it
+    is Nate's call whether to build it.
+  - **Built, 2026-08-26** (`zz-starting-power-splits.sql`, plus the app change
+    it shares with S1) — on Nate's word, and it turned out to be the same
+    change S1 needed rather than a second one. `startingGroups(cls, kind)` in
+    `js/leveling.js` returns the starting picks as an **array** shaped exactly
+    like `powerGrantsFor`'s level-up grants, and **both** builders read it: the
+    wizard's Powers step and `validate-character.js`. Everything downstream
+    already handled several groups with different gates — that is what the
+    level-up grants are — so only the two builders had to move, which is the
+    "smaller than it looks" the check above predicted.
+    `powers_starting` keeps its meaning as the **total**, so every class
+    stating only a number is untouched; `powers_starting_groups` splits it. A
+    group naming its own categories replaces the block's, a group naming none
+    inherits — the rule level-up grants already follow, because a book naming
+    Super for one slot is granting an exception and intersecting would throw it
+    away. `magic.spells_from` and `spells_starting_groups` are the same shape
+    on the spell side; S1 needed the first of those.
+    Both classes now say what their books say: `delphi-juicer` 3 Physical +
+    1 Super, `mind-mage` three from each of four. **Verified in the running
+    wizard**: picking one Super power on the Delphi disables the other 32 Super
+    rows while all 22 Physical stay open, and the header counts 4/4 across the
+    two groups. The loadout the flat count allowed — four Super, twelve Super —
+    is now unreachable rather than merely undocumented.
+    **The Mind Mage's page was re-read** (pf cache p163, footer 161): "three
+    powers from each of the four psionic power categories: healing, sensitive,
+    physical and Super (12 psi-powers total)". **The Delphi Juicer's could
+    not** — Rifts World Book 10 has no OCR cache on this machine, and the book
+    caches are local-only by design; its 3/1 split rests on two independent
+    in-class records written from the page at import, which agree with each
+    other and with this audit. Worth a page check if that book is cached again.
+    **Two per-level progressions are still prose, and neither is blocked.** The
+    Delphi's one-a-level from Physical/Sensitive/Super and the Mind Mage's
+    five-a-level (two lesser + three Super) both fit `powers_schedule`, which
+    carries per-entry categories and admits several entries at one level. Both
+    classes' notes said they were prose *because the app could not hold them*;
+    that reason was false even before this change and is corrected in the same
+    script. They are simply not written — the Mind Mage's is now the larger
+    remaining gap in that class.
 
 **Checked and still true** (do not "fix" these — each was verified against
 the current code): `variants` cannot override `skills`, `natural_abilities`,
