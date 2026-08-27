@@ -1655,7 +1655,7 @@ question — they are 105 rows across four books whose chapters are known, so
 they are answerable, but answering them is a data script and a different PR.
 Pin the composition in the smoke test the way F6's is pinned.
 
-**Taken, 2026-08-27 (PR #TBD).** Implemented as written, and its measurements
+**Taken, 2026-08-27 (PR #351).** Implemented as written, and its measurements
 held — the first finding on this menu to survive being taken unchanged.
 Production still reads 105 page-less skills split 93 / 5 / 4 / 3 across the
 four books it names, and `import/skills/extract.js` still takes no
