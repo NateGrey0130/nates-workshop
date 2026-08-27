@@ -1321,6 +1321,32 @@ that defaults to `--remote` and prints its target on the first line — the
 shape this proposal asks `catalog-diff` to adopt. The precedent is set; the
 proposal is unchanged.
 
+**Taken, 2026-08-27 (PR #TBD).** A `--local` diff now prints production's row
+count beside its own and says outright when the two disagree; being offline
+costs the second opinion and never the diff. The default is unchanged and the
+exit code is untouched, exactly as proposed. `book-survey` §3 shows the
+`--remote` form. Five smoke checks, including one that pins the `--local`
+default so a later session does not "fix" it.
+
+**Two of this finding's statements were wrong, and they cut opposite ways.**
+
+1. **It already printed its target.** "`catalog-diff.mjs` prints the target it
+   used on the first line of its output — it currently does not" is false, and
+   was false when the audit was written: `catalog-diff.mjs:72` has printed
+   `<table> (--local): N rows | book: M entries` since PR #192, and the line is
+   present in `ad6b818`, this audit's own stated baseline. Half of what this
+   finding asked for had already shipped. It is pinned now so it stays.
+2. **"This is not a live bug" has expired.** The audit measured local and
+   production agreeing on all five counts and said so. On the day this was
+   taken, **local held 336 skills against production's 333** — three rows a
+   diff would have reported as present in a catalog that does not have them.
+   The earlier session's 327-against-324 was not an anomaly; it is what this
+   database does between imports. The finding's premise was true for about a
+   day, which is the argument for the guard rather than against it.
+
+**And the guard found it on its first run**, which is the only reason the
+number above is in this note.
+
 ### F14 — the sixth skill should be the audit-menu protocol, and it is the only one that qualifies
 
 **What is true today.** Five skills exist. The protocol this very file is written

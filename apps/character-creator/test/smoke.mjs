@@ -5932,7 +5932,30 @@ section('Book registry');
       && rolled.offenders.traceable.length === 0);
   }
 
+  // catalog-diff answers the question that decides what gets extracted, and
+  // phase 4 is the only step in the pipeline that costs money. It defaults to
+  // --local ON PURPOSE — an offline diff is legitimate — so the guard is that
+  // a --local answer never travels without production's number beside it.
+  //
+  // This is not hypothetical: local held 336 skills against production's 333
+  // the day it was written, and 327 against 324 in an earlier session.
+  const diffSrc = readFileSync(join(repoRoot, 'scripts', 'catalog-diff.mjs'), 'utf8');
+  check('catalog-diff still defaults to --local, deliberately',
+    /argv\.includes\('--remote'\) \? '--remote' : '--local'/.test(diffSrc));
+  check('and prints its target on the first line of output',
+    /console\.log\(`\$\{table\} \(\$\{target\}\)/.test(diffSrc));
+  check('a --local diff asks production for a second opinion',
+    /if \(target === '--local'\)/.test(diffSrc)
+    && /target: '--remote'/.test(diffSrc));
+  check('and being offline costs the second opinion, never the diff',
+    /catch \{ \/\* offline/.test(diffSrc)
+    && /could not reach production/.test(diffSrc));
 
+  // The skill is where the command is copied from, so the form it shows is the
+  // form that gets run.
+  const survey = readFileSync(join(repoRoot, '.claude', 'skills', 'book-survey', 'SKILL.md'), 'utf8');
+  check('and book-survey phase 3 shows the --remote form',
+    /node scripts\/catalog-diff\.mjs --remote --table/.test(survey));
 }
 
 

@@ -346,11 +346,22 @@ that hand-rolled one produced a confidently wrong answer:
 | spells missing | 5 | 0 |
 
 ```bash
-node scripts/catalog-diff.mjs --table psionic_powers \
+node scripts/catalog-diff.mjs --remote --table psionic_powers \
      --entries book-entries.json --compare category,isp
 ```
 
-It prints four buckets and a vocabulary warning. The rules it encodes -- exact
+**`--remote` when the answer is going to be spent against.** The script defaults
+to `--local` so an offline diff still works, and a local answer is fine while
+you are still poking at the book. It is not fine as the input to phase 4, which
+is the only step that costs money: `--local` accumulates rows from failed
+confirms and abandoned experiments, and CLAUDE.md's own list of things that fail
+late ends with "`--local` is not a mirror of production." One session's local
+held 327 skills where production had 324; another held 336 against 333. A
+`--local` run now prints production's row count beside its own and says outright
+when the two disagree, but it cannot make the decision for you.
+
+It prints its target on the first line, then four buckets and a vocabulary
+warning. The rules it encodes -- exact
 first, relaxed only when unambiguous on both sides, nearest-candidate advisory
 only -- are in `scripts/catalog-match-lib.mjs` and pinned in the smoke test.
 
