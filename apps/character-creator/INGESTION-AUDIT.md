@@ -871,7 +871,7 @@ and the extraction prompt already offers those titles, so a session whose
 `title`; fall back to the session's own string when it resolves to nothing,
 and never compose a page range onto a `not_books` marker.
 
-**Taken, 2026-08-27 (PR #TBD).** `_lib/source-book.js` composes the value;
+**Taken, 2026-08-27 (PR #344).** `_lib/source-book.js` composes the value;
 `session-import.js` calls it per staged row; `applyDecisions` takes the book
 per decision and keeps the batch value as the fallback `skills/confirm.js`
 still passes. `buildUpdate`'s `COALESCE` is untouched. Pinned by a new
