@@ -193,7 +193,16 @@ this is not hypothetical.
 that writes its own manifest, and F1/F4 made step 4 a recorded value read from
 `scripts/books.json` rather than a derivation. Step 7 is unchanged (F13), and
 steps 5, 8, 9, 11, 13 and 15 are still by hand. **Five unscripted steps, not
-nine.** The table below is left as audited.
+nine.** The table above is left as audited.
+
+**And step 10 is no longer unmetered** (F7, PR #347). Every extraction writes a
+`claude_usage` row now — `cc-import-class` or `cc-import-<catalog>` — including
+the ones that fail after spending the tokens. The row's other half stands: no
+prompt caching (F12), one class per upload. **The cost of book #9 is now a
+query rather than an estimate**, and the queries are in SETUP.md §Who is
+spending the Anthropic key. What it is not yet is a NUMBER: the table still
+holds zero import rows, because no import has been run since the metering
+landed.
 
 Nine unscripted steps stand between a new PDF and the first extraction, and
 steps 9–13 and 15 repeat **per class** — 37 times for Rifts Ultimate Edition, 24
