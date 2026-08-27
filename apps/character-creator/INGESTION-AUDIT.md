@@ -147,6 +147,21 @@ not the ones already shipped. **The ledger will read exactly this until a
 session import is run against production**, and nothing that has been taken so
 far moves it. F10-F17 are the findings that could.
 
+**Three findings were added to the menu on 2026-08-27**, all of them things
+taking F6 exposed rather than things the original pass missed:
+
+- **F18** — the skill importer never collected a page range in the first place,
+  which is where 105 of the ledger's page-less skill rows come from. F6 does
+  not reach it; it is not a session importer.
+- **F19** — `buildUpdate`'s `COALESCE` stops a NULL, and the value that erases
+  a page range is a bare title, not a NULL.
+- **F20** — a stub created by a class import inherits **the class's** page
+  range, so four gear rows in production cite the City Rat's page for a poncho,
+  a medical bag, a vial and a blood pressure machine — and the coverage ledger
+  counts all four as traceable. Skill, spell and psionic stubs get no
+  `source_book` at all. **The only finding here where the ledger reports a
+  wrong answer as a right one.**
+
 
 ## What book #9 costs today
 
@@ -201,6 +216,13 @@ class out of the same book costs the same input tokens as the first.
 Ranked by value, with one exception of numbering: **F16 belongs with the F1–F5
 cluster** and is numbered last only because it was found in a second pass. Take
 it early.
+
+**F18–F20 were added on 2026-08-27**, after the audit was written, and are at
+the end of this section rather than in the ranking. They are gaps the ranking
+could not have covered because taking F1–F6 is what exposed them — see the
+Status section above. F20 is the one to read first: it is the only finding in
+this file where a row traces to the *wrong* page rather than to none, which is
+the failure the coverage ledger cannot report.
 
 ### F1 — `source_book` is an uncontrolled vocabulary, and three separate mechanisms parse it
 
@@ -1508,6 +1530,148 @@ The always-printed status line is half shipped: `source-coverage.mjs` prints
 `caches: 8 on this machine` with each one's page count on its first line.
 `drift-check` still does not, and the registry now makes "8 of 12 registered"
 a one-line computation.
+
+### F18 — the skill importer is the one confirm path with no page range in it at all
+
+**What is true today.** F6 composed a page range onto every row the *session*
+importers confirm. The skill importer is not one of them.
+`import/skills/extract.js` takes `{ pdf_base64, category?, source_book?,
+systems?, hints? }` — no `session_id`, no `page_range` — stages nothing, and
+returns its rows to the browser. `import/skills/confirm.js:27` then reads one
+`source_book` off the request body and hands it to `applyDecisions` for the
+whole batch. `import.js:151` fills that from a single `source-book` text input
+filled in once per upload. There is nowhere in the flow for a page to be
+recorded, so nothing is dropped — it is never collected.
+
+Production, today: **105 of 333 skills carry a book with no page range.** 93 of
+them say `Rifts Ultimate Edition`, 5 `palladium-fantasy-core`, 4
+`pantheons-of-the-megaverse`, 3 `Palladium Fantasy RPG 2nd Ed.`. Another 123
+skills *do* carry `p.N-M`, so the catalog is not uniformly untraceable — it is
+traceable exactly where a data script wrote the citation by hand, and page-less
+everywhere the importer wrote it.
+
+**Why it matters.** This is the second-largest untraceable block in the ledger
+after spells, and unlike spells it has a known single cause with a one-field
+fix. It is also the only one that will keep growing: the skill importer is the
+front door for every future skill chapter, and every row it confirms from here
+on is another page-less row. F6 fixed the three catalogs that had the value and
+threw it away; this is the fourth catalog, which never had it.
+
+**Proposal:** give the skill importer the same page-range field the session
+importers have. `import.js` grows a second text input beside `source-book`
+labelled the same way (`Page range, e.g. pp. 26-34`), `skills/extract.js`
+passes it back in its response the way it already echoes `source_book`, and
+`skills/confirm.js` takes `page_range` off the body and composes the batch's
+`source_book` through `composeSourceBook` before calling `applyDecisions`.
+Batch-level, not per row — this importer has no staging table to hang a
+per-range value on, and a skill chapter is uploaded a few pages at a time
+anyway, so the batch *is* the range. Reuse `_lib/source-book.js` exactly as it
+stands; it already resolves the book through the registry and normalises the
+label. Posture: **new rows only.** The 105 existing rows are a backfill
+question — they are 105 rows across four books whose chapters are known, so
+they are answerable, but answering them is a data script and a different PR.
+Pin the composition in the smoke test the way F6's is pinned.
+
+### F19 — `COALESCE` protects a NULL, and the value that erases a page range is not NULL
+
+**What is true today.** `buildUpdate` (`import-engine.js:527`) writes
+`source_book = COALESCE(?, source_book)`, and F6 left it exactly as it was, on
+the finding's own instruction: *"a re-import that has no page range must not
+blank one an earlier row already carries."*
+
+`COALESCE` delivers half of that. An import out of a session with **no book
+label** composes to `null` and the existing value survives, which is the case
+the sentence describes. But a session labelled with a book whose row has **no
+page range** composes to the bare canonical title — a non-NULL string — and
+that overwrites. A row that said `Rifts Ultimate Edition p.141` ends up saying
+`Rifts Ultimate Edition`, and the ledger moves it from `traceable` to
+`no-page-range` without anything reporting a change.
+
+Nothing regressed in F6: before it, every update wrote the session's bare book
+name over whatever was there, so this was the behaviour for *all* rows rather
+than some. F6 made it rarer without making it impossible.
+
+**Why it matters.** Every other guard in this pipeline is built so that the
+absence of information cannot destroy information — that is what the `COALESCE`
+on the descriptive fields is for, and what F6's `null` return is for. This is
+the one path where a *less specific* answer silently beats a more specific one,
+and it fires precisely when someone re-imports a chapter to correct a number,
+which is the moment the row's provenance is least expendable.
+
+**Proposal:** make the downgrade impossible rather than unlikely. In
+`buildUpdate`, when the composed `source_book` carries no `p.` and the row may
+already have one, write
+`source_book = CASE WHEN ? LIKE '% p.%' OR source_book IS NULL THEN ? ELSE COALESCE(source_book, ?) END`
+— or, if that reads badly in the one place it appears, an equivalent
+`COALESCE(NULLIF(...))` form. The rule to encode is one sentence: **a value
+with pages always wins; a value without pages only fills an empty column.**
+Posture: **no read-before-write and no new query** — this is expressible in the
+statement that already runs, and adding a lookup would put a second round trip
+on every confirmed row to defend against a case that has not happened yet.
+Three smoke checks: paged over paged replaces, paged over bare replaces, bare
+over paged leaves the paged value alone.
+
+### F20 — a stub gets the page of the class that mentioned it, and four rows in production point at the wrong page as a result
+
+**Not in the original menu.** Found while taking F6, from the coverage ledger's
+`traceable` column rather than its gaps.
+
+**What is true today.** `buildStubStatements` (`_lib/catalog.js:175`) creates
+catalog rows for everything a published class references and does not exist
+yet. It writes `source_book` on exactly one of the four:
+
+- **gear** gets `sourceBook`, which `import/confirm.js:31` sets to
+  `parsed.data.source_book` — **the class's** `source_book`, page range and
+  all.
+- **skills** (`catalog.js:190`), **spells** (`:196`) and **psionic powers**
+  (`:203`) have no `source_book` in the INSERT at all. The column is simply not
+  named.
+
+Both halves are wrong, and the first is worse. A class's `source_book` is where
+the *class* is printed. A poncho mentioned in the City Rat's equipment list is
+not printed on the City Rat's page. Production has four gear stubs — **Poncho**,
+**Medical Bag**, **Unbreakable Vial** and **Hand Held Blood Pressure Machine**
+— all claiming `Rifts Ultimate Edition p.88`, which is the City Rat O.C.C.
+`source-coverage.mjs` counts all four as **traceable**, and `class-check
+--field-sources` aimed at any of them would read the City Rat's stat block
+looking for a poncho and report the nearest-looking lines it found.
+
+The second half is quieter and larger: 12 skills, 16 spells and 12 psionic
+powers carry **no `source_book` at all** because the statement that created
+them never had the column. That is the whole of the ledger's
+`no-source-book` count for spells and psionics.
+
+**Why it matters.** F5 built the coverage ledger to answer "can what shipped
+still be traced to a page". A row that traces to the *wrong* page answers yes.
+Four rows is small; the mechanism is not, because it fires on every class
+import that references an item the catalog does not have, which is most of
+them. A missing citation is a gap the ledger reports. A confidently wrong one
+is a gap the ledger hides, and this audit's own method — measure, then read the
+page — is what it defeats.
+
+**Proposal:** stop attributing a stub to a page nobody claimed. Two changes,
+both in `buildStubStatements`:
+
+1. **Drop the page range from the gear stub's `source_book`**, keeping the
+   book: write the class's book resolved through `scripts/books.json` with no
+   `p.` on it. The book is a real claim — the class that named the item was
+   read out of it — and the page is not. `parseSourcePages` and
+   `registryBookSlug` are already imported into `functions/` by
+   `_lib/source-book.js`; this is that module gaining one small export rather
+   than new machinery.
+2. **Write the same value on the skill, spell and psionic stubs.** They have a
+   `source_book` column and nothing has ever filled it. Three lines.
+
+Posture: **new rows only, plus a named repair for the four.** The four City Rat
+rows are a one-statement data script (`UPDATE gear SET source_book = 'Rifts
+Ultimate Edition' WHERE description LIKE 'STUB —%' AND source_book = 'Rifts
+Ultimate Edition p.88'`) and should ship in the same PR, because leaving four
+known-false citations in place while fixing the mechanism that made them is the
+half-fix this audit keeps finding elsewhere. Do **not** try to guess the right
+page for them — that is a book read, and `Poncho` is exactly the kind of row
+where a guess would look right. Pin in the smoke test that a stub's
+`source_book` never carries `p.`.
+
 
 ---
 
