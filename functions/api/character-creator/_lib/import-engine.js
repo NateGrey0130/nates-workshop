@@ -22,7 +22,7 @@
 // /api/claude URL — in production Access intercepts the subrequest and returns
 // the login page as HTML.
 
-import { validateClaudeRequest, callAnthropic } from '../../_lib/claude-client.js';
+import { validateClaudeRequest, callAnthropic, recordUsage } from '../../_lib/claude-client.js';
 import { CATALOGS } from '../../../../apps/character-creator/js/catalog-fields.js';
 
 export const DEFAULT_MODEL = 'claude-sonnet-5';
@@ -291,7 +291,10 @@ export function countRows(classified) {
 
 // Send the PDF and give back the model's rows, or an error shaped for the API.
 // Returns { rows } or { error, status, extra }.
-export async function extractRows(env, spec, { pdfBase64, model, systemPrompt, userPrompt }) {
+//
+// `email` is who spent the key. It is threaded in from each endpoint's own
+// admin guard rather than read here, because this file has no request.
+export async function extractRows(env, spec, { pdfBase64, model, systemPrompt, userPrompt, email }) {
   if (!env.ANTHROPIC_API_KEY) return { error: 'API key not configured on server', status: 500 };
 
   const claudeRequest = {
@@ -313,6 +316,12 @@ export async function extractRows(env, spec, { pdfBase64, model, systemPrompt, u
   if (invalid) return { error: 'Built an invalid extraction request: ' + invalid, status: 400 };
 
   const upstream = await callAnthropic(claudeRequest, env);
+  // One row per catalog extraction, labelled by which catalog. Metered BEFORE
+  // the parse, the status check and the max_tokens check below — every one of
+  // those returns an error to the operator while the tokens for a whole PDF
+  // page have already been spent, and a run that cost money and produced
+  // nothing is exactly the run worth having a number for.
+  await recordUsage(env, { email, endpoint: `cc-import-${spec.catalog}`, model, upstream });
   let payload;
   try { payload = JSON.parse(upstream.text); }
   catch {

@@ -8,7 +8,7 @@
 import { requireAdmin, json } from '../_lib/auth.js';
 import { crossReference } from '../_lib/catalog.js';
 import { SYSTEM_PROMPT, buildUserPrompt } from '../_lib/extraction-prompt.js';
-import { validateClaudeRequest, callAnthropic } from '../../_lib/claude-client.js';
+import { validateClaudeRequest, callAnthropic, recordUsage } from '../../_lib/claude-client.js';
 import { saveDraft, getExamples } from '../_lib/class-store.js';
 import { parseClassMarkdown } from '../../../../apps/character-creator/js/parser.js';
 
@@ -75,6 +75,11 @@ export async function onRequestPost({ request, env }) {
   if (invalid) return json({ error: 'Built an invalid extraction request: ' + invalid }, 400);
 
   const upstream = await callAnthropic(claudeRequest, env);
+  // Metered here, BEFORE the parse and the status check below, because a
+  // failed extraction still spent the input tokens for a whole PDF page — the
+  // most expensive single call this repo makes. `recordUsage` records the
+  // attempt when the body has no usage in it, and is fail-open either way.
+  await recordUsage(env, { email: guard.email, endpoint: 'cc-import-class', model, upstream });
   let payload;
   try {
     payload = JSON.parse(upstream.text);
