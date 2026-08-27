@@ -31,7 +31,11 @@ const table = arg('table');
 const entriesPath = arg('entries');
 const compare = (arg('compare', '') || '').split(',').filter(Boolean);
 // This one defaults to --local: a diff is exploratory and should not need
-// the network, where drift-check is asking about production by nature.
+// the network, where drift-check is asking about production by nature. The
+// default is deliberately NOT flipped — an offline diff should work — but a
+// --local answer now carries production's row count beside it (see below),
+// because the failure this guards against is not a wrong default. It is a
+// number quoted without its provenance, into a decision that costs money.
 const target = argv.includes('--remote') ? '--remote' : '--local';
 const nameKey = arg('name-key', 'name');
 
@@ -66,6 +70,37 @@ const d = diffCatalog({
 
 const pad = (s, n) => String(s ?? '').padEnd(n);
 console.log(`${table} (${target}): ${rows.length} rows | book: ${entries.length} entries`);
+
+// A --local answer gets a second opinion, because the number this script
+// produces is the number that decides what gets extracted, and phase 4 is the
+// only step in the pipeline that costs money.
+//
+// CLAUDE.md's own three-things-that-fail-late list ends with "--local is not a
+// mirror of production. It accumulates." It does: a previous session's local
+// held 327 skills where production had 324, and this worktree's held 336
+// against production's 333 on the day this was written — three rows a diff
+// would have reported as present when they are not.
+//
+// Advisory in both directions. It never changes the exit code and never blocks:
+// an offline diff is a legitimate thing to run, and a network failure here must
+// not cost you the diff you already computed.
+if (target === '--local') {
+  let live = null;
+  try {
+    live = d1Query(`SELECT count(*) AS n FROM ${table}`, { target: '--remote' })[0]?.n ?? null;
+  } catch { /* offline, unauthenticated, or D1 unreachable — say so, do not fail */ }
+  if (live === null) {
+    console.log('  ?? could not reach production — this row count has no second opinion');
+  } else if (Number(live) === rows.length) {
+    console.log(`  local agrees with production (${live} rows)`);
+  } else {
+    const delta = rows.length - Number(live);
+    console.log(`  !! production has ${live} — local is ${Math.abs(delta)} row(s) `
+      + `${delta > 0 ? 'AHEAD' : 'BEHIND'}, so this diff is not answering about production`);
+    console.log('     re-run with --remote before spending the answer on an extraction');
+  }
+}
+
 console.log(`matched ${d.matched.length}  disagree ${d.disagree.length}  `
   + `missing ${d.missing.length}  extra ${d.extra.length}`);
 
