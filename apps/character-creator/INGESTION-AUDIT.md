@@ -61,10 +61,10 @@ one-line PR or folded into whichever finding lands first.
 
 ---
 
-## Status, 2026-08-27 — F1 through F5 taken
+## Status, 2026-08-27 — F1 through F5, and F9, taken
 
-Five PRs, one per finding, each with its `Taken` note under the finding itself.
-`main` is at `c083747` plus PR #341.
+Six PRs, one per finding, each with its `Taken` note under the finding itself.
+`main` is at `3948201` plus PR #343.
 
 | # | PR | what shipped |
 |---|---|---|
@@ -73,6 +73,7 @@ Five PRs, one per finding, each with its `Taken` note under the finding itself.
 | F3 | #339 | the completeness gate measures the BOOK (`printed_pages + page_offset`), not the source PDF's page count |
 | F4 | #340 | the offset is read, not re-derived — and answers **per printed page**, because `pf`'s is not constant |
 | F5 | #341 | `scripts/source-coverage.mjs` — can what shipped still be traced to a page, and what is stubbed |
+| F9 | #343 | `CLAUDE.md` stops telling every session the skills do not load, and four smoke checks stop it saying so again |
 
 **This audit's own premises were wrong in six places, and taking the findings is
 what found it.** Each is written up under its finding; collected here because
@@ -980,6 +981,39 @@ that ran an import by hand as the *reason the junctions exist*, past tense.
 Posture: **doc-only, no behaviour**, and it qualifies as the audit convention's
 in-PR rot fix if you would rather it rode along with whichever finding lands
 first than take a PR of its own.
+
+**Taken, 2026-08-27** (PR: `claude-md-skills-load`). `CLAUDE.md`'s heading and
+opening paragraph now say the skills **do** load from anywhere on this machine,
+keep the session-that-imported-by-hand sentence as the reason the junctions
+exist, and point at `SETUP.md`'s junction block plus its "a new skill needs its
+own link in the same PR" rule. Doc-only, no behaviour, taken as its own PR
+rather than folded into another.
+
+**One departure, and it is the half the proposal got backwards.** The proposal
+says to extend the same-PR rule "to agents by F8". Extending it would state
+something untrue: `~/.claude/agents/` is **empty**, verified today. The five
+skills are junction-linked (`book-survey`, `claim-audit`, `class-import`,
+`schema-change`, `ship-pr`, all dated 2026-08-25); `.claude/agents/`
+is not covered by that loop at all, so `book-reconcile` cannot be spawned from
+`Downloads`. `CLAUDE.md` and `SETUP.md` now say so and point at F8 — which turns
+the rot this finding is about into a live pointer at the finding that fixes it,
+rather than replacing one false sentence with another.
+
+**Pinned, so it cannot rot the same way twice.** Four checks in the smoke test's
+*Documented counts* section: `CLAUDE.md` must say the skills load from anywhere
+and must NOT contain "only load from the repo root"; it must point at the
+junction block; `SETUP.md` must still carry that block; and **the junction loop
+must name every skill in `.claude/skills/`** — the same completeness problem the
+`CLAUDE.md` table already had, and the gap a sixth skill (F14) would fall
+straight into. The junctions themselves are per-machine and cannot be tested
+from a repo, but every sentence about them can.
+
+The comment above that smoke block said the same false thing and was trued up in
+the same pass.
+
+Measured after: smoke **1,384 checks / 90 sections** (up 4), regression 215,
+filament-forge 58, pick3cut5 17 + game 23, media-vault 200, all green.
+
 
 ### F10 — `SURVEY.md` exists for none of the eight cached books
 

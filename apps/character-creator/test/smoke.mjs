@@ -5010,10 +5010,12 @@ section('Documented counts');
   check('and every name in the map is a script that exists',
     ghosts.length === 0, ghosts.join(', '));
 
-  // The skills are DIRECTORY-SCOPED: a session started outside the repo root
-  // does not see them, and one ran an entire class import by hand for exactly
-  // that reason. CLAUDE.md is loaded either way, so it carries the list - and a
-  // list is only useful while it is complete.
+  // The skills are DIRECTORY-SCOPED by nature: a session started outside the
+  // repo root would not see them, and one ran an entire class import by hand
+  // for exactly that reason. They are junction-linked into ~/.claude/skills so
+  // they DO load from anywhere on this machine (SETUP.md), but the junctions are
+  // per-machine and a new skill needs its own. CLAUDE.md is loaded either way,
+  // so it carries the list - and a list is only useful while it is complete.
   const skillsDir = join(repoRoot, '.claude', 'skills');
   const skills = readdirSync(skillsDir, { withFileTypes: true })
     .filter((e) => e.isDirectory()).map((e) => e.name).sort();
@@ -5028,6 +5030,29 @@ section('Documented counts');
   check('and says how many there are', new RegExp(`\\b${
     ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'][skills.length - 1]
   } skills\\b`, 'i').test(claudeMd), `there are ${skills.length}`);
+
+  // And CLAUDE.md must not go back to saying they DO NOT load. It said so for
+  // two days after the junctions landed, on the one file that is loaded into
+  // every session regardless of working directory - a live instruction
+  // describing a solved problem as unsolved, inviting the exact cost the
+  // junctions were bought to remove. The junctions themselves are per-machine
+  // and cannot be tested from here; the sentence about them can.
+  check('CLAUDE.md says the skills load from anywhere, not only from the repo root',
+    /skills[^\n]*load from anywhere/i.test(claudeMd)
+    && !/only load from the repo root/i.test(claudeMd));
+  check('and points at the junction block that makes that true',
+    /junction/i.test(claudeMd) && claudeMd.includes('SETUP.md'));
+  const setup = readFileSync(join(repoRoot, 'SETUP.md'), 'utf8');
+  check('which SETUP.md still carries',
+    /New-Item -ItemType Junction/.test(setup));
+  // The loop in SETUP.md is the thing a fresh machine runs, so it has to name
+  // every skill - the same completeness problem as the CLAUDE.md table.
+  const linked = [...setup.matchAll(/'([a-z-]+)'/g)].map((m) => m[1]);
+  const unlinked = skills.filter((s) => !linked.includes(s));
+  check('and its junction loop names every skill',
+    unlinked.length === 0,
+    unlinked.join(', ') + ' - a skill with no link does not exist outside the repo');
+
 
   // A skill's reference/ must not FORK repo code. book-survey shipped its own
   // copy of read-columns.py and the two diverged completely - the copy was an

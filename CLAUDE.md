@@ -8,11 +8,22 @@ App conventions, the data model, and the migration list live in
 `apps/character-creator/README.md`. This file covers the five skills and what is
 easy to get wrong about Cloudflare auth.
 
-## Five skills, and they only load from the repo root
+## Five skills, and they load from anywhere on this machine
 
-`.claude/skills/` holds them. They are **directory-scoped**: a session started
-anywhere else — in `Downloads`, say, with the PDF — will not see them, and one
-session ran an entire class import by hand for exactly that reason.
+`.claude/skills/` holds them. They are **directory-scoped** by nature: a session
+started anywhere else — in `Downloads`, say, with the PDF — would not see them,
+and one session ran an entire class import by hand for exactly that reason.
+That is why each skill is **junction-linked into `~/.claude/skills`** — see the
+junction block in `SETUP.md`. They load by name from any working directory now.
+
+**A new skill needs its own link in the same PR that adds it.** Nothing notices
+the gap: the skill simply does not exist for a session started outside the repo,
+which is the working directory the book work uses.
+
+**The subagent is NOT linked.** `.claude/agents/book-reconcile.md` has no
+junction, so `book-survey` phase 5 cannot spawn its second reader from
+`Downloads` — the one place the book work runs. Verified 2026-08-27:
+`~/.claude/agents/` is empty. See `INGESTION-AUDIT.md` F8.
 
 | skill | when |
 |---|---|

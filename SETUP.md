@@ -109,6 +109,14 @@ foreach ($s in 'book-survey','claim-audit','class-import','schema-change','ship-
 A skill added to the repo later needs its own link — there is nothing that
 notices the gap, so add the link in the same PR that adds the skill.
 
+**Once these exist, `CLAUDE.md` says the skills load from anywhere, and that
+sentence is only true on a machine that has run the block above.** A fresh
+machine has to run it before the book work will find them by name.
+
+`.claude/agents/` is NOT covered by the loop above and has no junction, so
+`book-survey` phase 5 cannot spawn `book-reconcile` from Downloads. See
+`apps/character-creator/INGESTION-AUDIT.md` F8.
+
 **R2**: the site binds one bucket, `nates-workshop-media`, as `MEDIA`. It holds
 NPC portraits today and is named for the site rather than for that app because
 the other two will want it. **It must exist before the deploy that binds it** —
