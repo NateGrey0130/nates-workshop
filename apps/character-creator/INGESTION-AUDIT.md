@@ -875,7 +875,7 @@ and never compose a page range onto a `not_books` marker.
 `session-import.js` calls it per staged row; `applyDecisions` takes the book
 per decision and keeps the batch value as the fallback `skills/confirm.js`
 still passes. `buildUpdate`'s `COALESCE` is untouched. Pinned by a new
-*Import provenance* smoke section (10 checks). Three of this finding's own
+*Import provenance* smoke section (9 checks). Three of this finding's own
 statements moved on contact:
 
 1. **The page range is a free-text LABEL, and `' p.' + page_range` would have
