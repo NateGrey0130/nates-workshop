@@ -311,6 +311,13 @@ choice-groups can't be checked in principle.
   inside `claude-client.js`, so metering can never break the call it measures
   — which is the property that keeps FilamentForge and MediaVault
   behaviourally untouched. The reading query lives in SETUP.md.
+- **Superseded in part, 2026-08-27** (INGESTION-AUDIT F7, PR #347): the
+  importers are no longer unlogged. Gating them to one email answered who may
+  spend the key; it never answered what was spent, and a class extraction
+  sends a whole PDF page — the most expensive call in the repo, and the only
+  one with no number on it. Every Claude call in `functions/` meters now
+  (`cc-import-class`, `cc-import-<catalog>`, `cc-npc-sweep`), still fail-open
+  and still with no cap. The rest of this note stands.
 
 ### F4 — low — identity is a trusted header, not a verified JWT (accepted posture, worth stating once)
 
