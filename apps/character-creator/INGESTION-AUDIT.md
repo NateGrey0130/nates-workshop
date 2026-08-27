@@ -1655,6 +1655,39 @@ question — they are 105 rows across four books whose chapters are known, so
 they are answerable, but answering them is a data script and a different PR.
 Pin the composition in the smoke test the way F6's is pinned.
 
+**Taken, 2026-08-27 (PR #351).** Implemented as written, and its measurements
+held — the first finding on this menu to survive being taken unchanged.
+Production still reads 105 page-less skills split 93 / 5 / 4 / 3 across the
+four books it names, and `import/skills/extract.js` still takes no
+`session_id`.
+
+`import.js` grows a `skill-pages` input beside `source-book`;
+`skills/extract.js` echoes `page_range` back the way it already echoed
+`source_book`; `skills/confirm.js` composes the batch's `source_book` through
+`composeSourceBook` before `applyDecisions`. Batch-level, as proposed. Five
+smoke checks walk the value across all three files, because it crosses a round
+trip through the browser and a check on any one file would pass while the
+chain was broken. Driven in a browser at 1280 and at 375: the three inputs
+share a row on desktop, stack on mobile, and the page does not scroll
+sideways.
+
+**One thing the proposal did not say, and the docs now do.** Because the batch
+is the range, uploading three page ranges and confirming once attributes all
+three to whichever range was typed last. The session importers cannot make
+that mistake — they stage per range. `docs/importing-from-pdfs.md` now says to
+confirm each upload before starting the next, which is the operating
+difference between the two importers rather than a difference in the code.
+
+**Two live comments went stale the moment this landed** and are corrected in
+the same PR: `import-engine.js`'s note that `skills/confirm.js` "does not
+stage and has no page ranges, so it passes the batch default alone and behaves
+exactly as it did", and `_lib/source-book.js`'s header, which described its
+callers as the session importers. Both were written by F6, three findings ago.
+
+**The 105 rows are untouched, as proposed.** The backlog is now the only
+page-less skill rows there are, and it can only shrink: every skill confirmed
+from here on carries its pages.
+
 ### F19 — `COALESCE` protects a NULL, and the value that erases a page range is not NULL
 
 **What is true today.** `buildUpdate` (`import-engine.js:527`) writes

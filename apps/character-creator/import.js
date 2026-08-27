@@ -121,6 +121,7 @@ function renderSkillsUpload() {
     <div class="rowline" style="margin-top:14px"><input type="file" id="pdf" accept="application/pdf"></div>
     <div class="rowline">
       <input type="text" id="source-book" placeholder="Source book (e.g. rifts-core)" style="width:210px">
+      <input type="text" id="skill-pages" placeholder="Page range, e.g. pp. 26-34" style="width:200px">
       <input type="text" id="category" placeholder="Category, if the pages are all one (e.g. Physical)" style="width:290px">
     </div>
     <h3>Hints <span class="muted small">(optional)</span></h3>
@@ -149,6 +150,10 @@ async function runSkillExtract() {
     const res = await api('import/skills/extract', jsonReq({
       pdf_base64: b64,
       source_book: $('source-book').value.trim() || undefined,
+      // Collected at extract time so it is typed beside the pages it describes.
+      // The confirm step composes it onto the book; this endpoint only echoes
+      // it back, the way it already echoes source_book.
+      page_range: $('skill-pages').value.trim() || undefined,
       category: $('category').value.trim() || undefined,
       hints: $('hints').value.trim() || undefined,
       model: $('model').value,
@@ -235,6 +240,7 @@ async function confirmSkills() {
   try {
     const res = await api('import/skills/confirm', jsonReq({
       source_book: I.skills.source_book,
+      page_range: I.skills.page_range,
       decisions: I.skills.rows.map((r) => ({
         action: r.action, name: r.name, category: r.category,
         base: r.base, per_level: r.per_level, note: r.note,

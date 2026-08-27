@@ -1,5 +1,5 @@
 // POST /api/character-creator/import/skills/confirm — admin only.
-// Body: { source_book?, decisions: [{ action, name, category, base, per_level, note, as_name? }] }
+// Body: { source_book?, page_range?, decisions: [{ action, name, category, base, per_level, note, as_name? }] }
 //
 // action is one of:
 //   insert  — add as a new catalog row (also used for "keep both", where the
@@ -12,6 +12,7 @@
 
 import { requireAdmin, json, readJson } from '../../_lib/auth.js';
 import { getImportSpec, applyDecisions, MAX_DECISIONS } from '../../_lib/import-engine.js';
+import { composeSourceBook } from '../../_lib/source-book.js';
 
 export async function onRequestPost({ request, env }) {
   const guard = requireAdmin(request, env);
@@ -24,7 +25,19 @@ export async function onRequestPost({ request, env }) {
     return json({ error: `Too many decisions in one import (max ${MAX_DECISIONS})` }, 400);
   }
 
-  const sourceBook = typeof b.source_book === 'string' && b.source_book.trim() ? b.source_book.trim() : null;
+  // Composed once for the whole batch, not per row. Unlike the session
+  // importers this one has no staging table to hang a per-range value on, and
+  // a skill chapter is uploaded a few pages at a time anyway — so the batch IS
+  // the range.
+  //
+  // Same composer the session importers use: the book resolves through
+  // scripts/books.json and the page label is normalised, so a chapter typed as
+  // `pp. 26-34` lands as `Rifts Ultimate Edition p.26-34` rather than as
+  // something `parseSourcePages` cannot read.
+  //
+  // This importer never collected a page range at all until now, which is the
+  // whole reason 105 of 333 skills carry a book and no page.
+  const sourceBook = composeSourceBook(b.source_book, b.page_range ?? null);
 
   const result = await applyDecisions(env, getImportSpec('skills'), b.decisions, { sourceBook });
   if (result.error) return json({ error: result.error }, result.status);

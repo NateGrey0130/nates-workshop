@@ -2184,6 +2184,35 @@ for (const table of ['gear', 'skills', 'spells', 'psionic_powers']) {
     JSON.stringify(stubBooks));
 }
 
+// The skill importer is the odd one out: no session, no staging table, one
+// batch-level book. It never collected a page range at all, which is where 105
+// of production's 333 skills got a book and no page. Pinned end to end,
+// because the value crosses three files and a round trip through the browser
+// — the form field, the extract endpoint that only echoes it, and the confirm
+// endpoint that actually composes it.
+{
+  const ccFns = join(appDir, '..', '..', 'functions', 'api', 'character-creator');
+  const importJs = readFileSync(join(appDir, 'import.js'), 'utf8');
+  check('the skill import form asks for a page range',
+    /id="skill-pages"/.test(importJs) && /Page range, e\.g\. pp\. 26-34/.test(importJs));
+  check('and sends it to extract, then back on confirm',
+    /page_range: \$\('skill-pages'\)\.value\.trim\(\)/.test(importJs)
+    && /page_range: I\.skills\.page_range/.test(importJs));
+
+  const skillExtract = readFileSync(join(ccFns, 'import', 'skills', 'extract.js'), 'utf8');
+  check('the extract endpoint echoes it rather than using it',
+    /page_range: b\.page_range \?\? null/.test(skillExtract));
+
+  const skillConfirm = readFileSync(join(ccFns, 'import', 'skills', 'confirm.js'), 'utf8');
+  check('and confirm composes it through the same composer the sessions use',
+    /composeSourceBook\(b\.source_book, b\.page_range \?\? null\)/.test(skillConfirm)
+    && /from '\.\.\/\.\.\/_lib\/source-book\.js'/.test(skillConfirm));
+  // The batch value is what applyDecisions falls back to, and no skill
+  // decision carries its own — so composing it here IS the whole fix.
+  check('the composed batch value is what reaches applyDecisions',
+    /applyDecisions\(env, getImportSpec\('skills'\), b\.decisions, \{ sourceBook \}\)/.test(skillConfirm));
+}
+
 // ---------- 1c9. Picker filtering ----------
 // js/picker.js is a classic script, because the wizard is a module and the
 // sheet is a plain script and both need it. So it is loaded the way a browser

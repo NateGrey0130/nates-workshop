@@ -1,5 +1,5 @@
 // POST /api/character-creator/import/skills/extract — admin only.
-// Body: { pdf_base64, category?, source_book?, systems?, hints?, model? }
+// Body: { pdf_base64, category?, source_book?, page_range?, systems?, hints?, model? }
 //
 // Extracts many skills from a book's skill chapter and classifies each against
 // the existing catalog, so the review step can ask what to do about duplicates.
@@ -44,6 +44,10 @@ export async function onRequestPost({ request, env }) {
     rows: classified,
     counts: countRows(classified),
     source_book: b.source_book ?? null,
+    // Echoed, not used. This endpoint writes nothing; the confirm step composes
+    // the page range onto the book. Round-tripping it through the response is
+    // what lets the browser hold one value for the whole upload.
+    page_range: b.page_range ?? null,
     usage: result.usage,
     model,
   });
