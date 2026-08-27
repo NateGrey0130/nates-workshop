@@ -244,7 +244,12 @@ ppe and isp.
 | `psionic_powers` | name, category (Healing/Physical/Sensitive/Super), isp, plus range, duration, saving throw and description — the same field names spells use. `min_tier` is the psychic tier a book states is required; NULL means no restriction beyond the category. `variant_note` carries what an older book states instead — the later book is authoritative (RUE over the Book of Magic, either over Palladium Fantasy) and the losing number is kept rather than discarded. |
 
 Every catalog carries `source_book`, so an entry's provenance is visible and
-the same skill from two books can coexist under distinguished names.
+the same skill from two books can coexist under distinguished names. The
+session importers compose it **per row** — the session's book label resolved
+through `scripts/books.json`, plus that row's own page range normalised to
+`p.N-M` — because one session covers many ranges, and a book with no pages on
+it is a row neither `class-check --field-sources` nor
+`scripts/source-coverage.mjs` can trace back to a printed page.
 
 `skills`, `spells` and `psionic_powers` also carry `source` (`seed` \| `import`),
 and a stub the class importer created is spotted by that plus zeroed numbers.

@@ -215,6 +215,7 @@ import { referencedGear, restrictionNames } from '../../../functions/api/charact
 import { CHARACTER_JSON_COLUMNS } from '../../../functions/api/character-creator/_lib/character-json.js';
 import { applyDecisions, classifyRows, countRows, ESTIMATED_PRICE, getImportSpec, normaliseRows, slugify, stripFences, systemColumnFor } from '../../../functions/api/character-creator/_lib/import-engine.js';
 import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
+import { composeSourceBook } from '../../../functions/api/character-creator/_lib/source-book.js';
 import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicGrantsFor,
          xpTableFor, thresholdFor, spellLevelsForGrant,
          psionicCategoriesForGrant, spellNamesForGrant,
@@ -2051,6 +2052,100 @@ check('an unset system stamps nothing',
 for (const key of ['skills', 'spells', 'psionics', 'gear']) {
   check(`${key} has somewhere to record a system`, systemColumnFor(CATALOGS[key], 'rifts') !== null);
 }
+
+// ---------- 1c10b. Import provenance ----------
+// The page range the session importers have collected all along, finally
+// landing in the column that makes a row traceable back to a printed page.
+// Two things are pinned here: the SHAPE of the composed value, and that it
+// reaches the SQL per row rather than being replaced by the session's one
+// book — which is where it used to be lost.
+section('Import provenance');
+
+check('a page-range label becomes the canonical p.N-M shape',
+  composeSourceBook('Rifts Ultimate Edition', 'pp. 180-181') === 'Rifts Ultimate Edition p.180-181'
+  && composeSourceBook('Rifts Ultimate Edition', '180-181') === 'Rifts Ultimate Edition p.180-181'
+  && composeSourceBook('Rifts Ultimate Edition', 'p. 71') === 'Rifts Ultimate Edition p.71'
+  && composeSourceBook('Rifts Ultimate Edition', '141') === 'Rifts Ultimate Edition p.141'
+  // A range anywhere in the label beats a lone number earlier in it, so a
+  // chapter number in front of the pages does not become the page.
+  && composeSourceBook('Rifts Ultimate Edition', 'Ch. 3, pages 180-181') === 'Rifts Ultimate Edition p.180-181');
+
+// The whole reason the label is normalised rather than appended. import.js
+// prompts for the range with the placeholder `pp. 180-181`, and
+// `Rifts Ultimate Edition p.pp. 180-181` is a value parseSourcePages cannot
+// read — a row that looks attributed and traces nowhere, which is worse than
+// one that reports itself as missing.
+check('and what it composes is readable by everything downstream', (() => {
+  const v = composeSourceBook('Rifts Ultimate Edition', 'pp. 180-181');
+  const pages = parseSourcePages(v);
+  return pages?.first === 180 && pages.last === 181
+    && registryBookSlug(v, loadBookRegistry()) === 'rue';
+})());
+
+check('a session spelled a way the registry knows lands on the registry title',
+  composeSourceBook('palladium-fantasy-core', 'pp. 96-97') === 'Palladium Fantasy RPG Main Book p.96-97'
+  && composeSourceBook('Palladium RPG Main Book', '288-289') === 'Palladium Fantasy RPG Main Book p.288-289');
+
+// A book scripts/books.json does not carry keeps the operator's own spelling.
+// Dropping the label would be worse than an unregistered one.
+check('a book outside the registry keeps the session\'s own words',
+  composeSourceBook('Rifts World Book 04: Africa', 'pp. 12-13') === 'Rifts World Book 04: Africa p.12-13');
+
+check('a label with no numbers in it composes to the book alone',
+  composeSourceBook('Rifts Ultimate Edition', 'spell chapter') === 'Rifts Ultimate Edition'
+  && composeSourceBook('Rifts Ultimate Edition', null) === 'Rifts Ultimate Edition');
+
+// A session labelled with its own range is not thrown away by a row that has
+// none, and a row that has one does not append a second.
+check('the row\'s range beats the session\'s, and neither doubles up',
+  composeSourceBook('Rifts Ultimate Edition p.180-190', null) === 'Rifts Ultimate Edition p.180-190'
+  && composeSourceBook('Rifts Ultimate Edition p.180-190', 'pp. 184') === 'Rifts Ultimate Edition p.184');
+
+// `Estimate - no published price found` says where a value came from instead
+// of naming a book. Pages onto it would claim a printing that does not exist —
+// and it is exactly the string whose initials read e-n-p-p-f, which is how 104
+// gear rows were attributed to the Palladium Fantasy main book.
+check('a not_books marker is never given pages',
+  composeSourceBook(ESTIMATED_PRICE, 'pp. 12') === ESTIMATED_PRICE);
+
+// null, not the empty string: buildUpdate COALESCEs on it, so an import out of
+// a session nobody labelled leaves whatever provenance a row already carries.
+check('an unlabelled session composes to null',
+  composeSourceBook(null, 'pp. 12') === null && composeSourceBook('   ', 'pp. 12') === null);
+
+// And it has to survive applyDecisions, which took one book for the entire
+// batch — one function call short of the column, which is the whole finding.
+// A decision with none of its own still falls back to the batch value, which
+// is what skills/confirm.js passes and all it has.
+const provenanceWrites = await (async () => {
+  const bound = [];
+  const db = {
+    prepare: (sql) => ({
+      bind: (...args) => {
+        bound.push({ sql, args });
+        return { all: async () => ({ results: [] }), run: async () => ({ meta: { changes: 1 } }) };
+      },
+    }),
+    batch: async () => {},
+  };
+  await applyDecisions({ DB: db }, skillSpec, [
+    { action: 'insert', name: 'Zz Provenance One', source_book: 'Rifts Ultimate Edition p.180' },
+    { action: 'insert', name: 'Zz Provenance Two', source_book: 'Rifts Ultimate Edition p.181' },
+    { action: 'insert', name: 'Zz Provenance Three' },
+  ], { sourceBook: 'Rifts Ultimate Edition' });
+  // Read the value back out by column name: buildInsert appends `source` and a
+  // system column after it, so its position is not the end of the list.
+  return bound.filter((b) => b.sql.startsWith('INSERT')).map((b) => {
+    const cols = b.sql.slice(b.sql.indexOf('(') + 1, b.sql.indexOf(')')).split(',').map((c) => c.trim());
+    return b.args[cols.indexOf('source_book')];
+  });
+})();
+check('each row is inserted with its own book and pages, not the session\'s one book',
+  provenanceWrites.length === 3
+  && provenanceWrites[0] === 'Rifts Ultimate Edition p.180'
+  && provenanceWrites[1] === 'Rifts Ultimate Edition p.181'
+  && provenanceWrites[2] === 'Rifts Ultimate Edition',
+  JSON.stringify(provenanceWrites));
 
 // ---------- 1c9. Picker filtering ----------
 // js/picker.js is a classic script, because the wizard is a module and the
