@@ -262,10 +262,12 @@ def write_manifest(out, base, txt_dir):
     a 161-page book whose manifest says `"pages": 73` reads as a complete book.
     `printed_pages` and `page_offset` are read off the cached pages themselves.
 
-    Nothing consumes the last three yet; scripts/books.json carries the same
-    two numbers by hand, and drift-check's completeness gate still compares
-    against `pages`. Recording them here is what lets that change later without
-    a re-scan of every book.
+    drift-check's completeness gate reads them (via cacheCoverage in
+    books-lib.mjs), preferring scripts/books.json's hand-checked numbers to
+    these -- a printed_pages DERIVED from a truncated cache is the truncation's
+    own last folio, and would pass itself. These are the fallback for a book
+    the registry does not carry, and the check that the registry is right for
+    one it does.
     """
     nums = cached_pages(txt_dir)
     base['cached_pages'] = len(nums)

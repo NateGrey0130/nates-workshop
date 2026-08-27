@@ -409,6 +409,74 @@ immediately, and note both in the F1 registry. Depends on F1 only for
 `printed_pages` of a book too truncated to read its own last folio; otherwise
 independent.
 
+**Taken, 2026-08-27** (PR: `cache-completeness`). The gate now compares against
+the book's own length instead of the source PDF's. `cacheCoverage` in
+`scripts/books-lib.mjs` is the pure decision — cached pages vs
+`printed_pages + page_offset` — and `drift-check`'s citation check calls it.
+Posture unchanged: **skip, not fail**, and a missing or short cache is still not
+drift. What changed is that the skip line names both numbers and where they came
+from:
+
+```
+citations:    bom cache incomplete (6 of 353 pages, printed 352 + offset 1,
+              from scripts/books.json) — skipped
+```
+
+**Read this finding's premises before scoping anything on top of it — two of
+them moved under F2.** F2 fixed the resume test, and two of the caches this
+finding calls partial repaired themselves on the next run:
+
+| this finding says | true on 2026-08-27 |
+|---|---|
+| `fom` holds p001-p073, manifest `"pages": 73` | **complete, 161 of 161.** The 88 missing pages were read off the source PDF |
+| `bom` holds p090-p095 of 360 | still 6 pages; still skipped, now with a reason |
+| the source PDF is "a truncated copy of a 176-page book" | the PDF on hand is **161 pages**, and the book's last folio is 159 |
+| two of the eight caches are partial | **one** is. `potm` was also short (202 of 210), which this finding does not list, and is now complete too |
+| `cached_pages` / `printed_pages` need adding to the manifest | F2 added them, along with `cached_range` and `page_offset` |
+
+So the work left here was the consumer, and it is done.
+
+**One departure, and it is the load-bearing one. The registry OUTRANKS the
+manifest**, where the proposal reads as though the manifest is primary and the
+registry a fallback "when the cache is too short to see" its own folio. It has
+to be the other way round, because `ocr-book.py` derives `printed_pages` by
+reading the last folio it can SEE — so a truncated cache derives the
+truncation's last folio and passes itself. `fom` as it actually stood is the
+proof: 73 files, and a manifest derived from it would say printed 72, offset +1,
+needs 73. **73 >= 73 passes**, and the exact bug this finding is about survives
+into the new field. A number that comes from the cache cannot judge the cache.
+`scripts/books.json` is a human statement about the BOOK, so it wins whenever it
+has one; the manifest is the fallback for a book the registry does not carry,
+and a cross-check for one it does. Every cached book agrees with its registry
+entry today.
+
+Two smaller notes. The comparison is a file COUNT against a page NUMBER, which
+is exact for a gapless cache starting at p001 and conservative for a gappy one
+(`bom` holds p090-p095: six files, last number 95) — it can only under-claim
+completeness, which is the safe direction for a gate whose failure mode is
+believing half a book. And `bom`'s manifest was backfilled **by hand**, in the
+shape `write_manifest` produces, because F2's kind guard now refuses to re-run
+that cache: `bom` has a text layer and was OCR'd anyway, so rebuilding it would
+destroy the six pages it was kept for.
+
+Pinned, because the live caches can no longer demonstrate the bug: six checks in
+the smoke test's `Book registry` section drive `cacheCoverage` against `fom`'s
+real historical numbers — one asserts the OLD rule passed it, the next that this
+one does not — plus the self-judging-manifest case, `bom`, rue's unnumbered back
+matter, and the fallback when no folio is known anywhere.
+
+Trued up, since both sentences became false: `write_manifest`'s docstring in
+`ocr-book.py` said "nothing consumes the last three yet ... drift-check's
+completeness gate still compares against `pages`", and `books.json`'s own `_doc`
+did not say these two fields were load-bearing.
+
+Measured after: smoke **1,359 checks / 90 sections** (up 7), regression 215,
+filament-forge 58, pick3cut5 17 + game 23, media-vault 200, all green.
+`drift-check --remote` prints **NO DRIFT**, 467 rows checked and nine advisories
+— identical to before, which is the point: the gate got correct without changing
+what it consults.
+
+
 ### F4 — the printed→PDF offset is recorded nowhere and re-derived at every use
 
 **What is true today.** `book-survey` §0d is 30 lines on how badly this goes
