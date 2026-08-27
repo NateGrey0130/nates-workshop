@@ -376,6 +376,38 @@ grants are; only the two builders had to move.
   pick writes into the per-group `S.spellGroups` / `S.psiGroups`, keyed by group
   index exactly as the Advancement step keys its per-grant pickers.
 
+**An empty starting pick has four different meanings, and the step used to
+render one thing for all of them:** the heading *Spells — 0/0*, a filter box,
+and 543 checkbox rows, every one disabled because the allowance was zero. That
+is the same conflation the per-level side already avoids — *not recorded* is a
+different answer from *none*, see
+[starting-above-level-1.md](starting-above-level-1.md), "Per-level spells are
+not in the data" — so `startingPicksFor(cls, kind)` draws the distinction here
+too and the Powers step says which nothing it is:
+
+| The class's magic block | The step says |
+| --- | --- |
+| absent, or `type: "none"` — the Godling, whose magic comes from the O.C.C. picked beside it | nothing at all; the step falls through to "no spellcasting or psionics" |
+| states no starting count — the Druid | *does not record how many spells it starts with*, in the words the Advancement step already uses one level up |
+| `spells_starting: 0` — five dragon hatchlings, whose books say a hatchling *"knows NO spells at first level"* | *none at level 1*, an answer rather than a gap |
+| names its spells outright in `magic.spells` — the Shifter's twenty, the Techno-Wizard's twenty-five | *N known*, listed with level and P.P.E. |
+
+That last row is a second bug the same size. Granted spells have reached the
+character since `powersPayload` started folding them in — before that they were
+listed by the class and held by nobody — and the step where a player looks for
+their spells showed none of them.
+
+**A starting pick stated as a level-1 schedule entry fires nowhere**, and is
+reported rather than honoured. Creation asks `perLevelGrants` from level 1 and
+it skips every entry at or below `fromLevel` **by design**; creation's own
+reader is `startingGroups`, which reads the `*_starting` keys. So the Wizard's
+six spells — two from spell level one, two from two, one each from three and
+four, all written as `spells_schedule` entries at `level: 1` — are stated where
+nothing reads them. The step counts them and says so. Honouring them would make
+a schedule a second way to state a starting pick, and one way is the whole
+reason the `*_starting` keys exist; the fix is to re-import the class with
+`spells_starting_groups`.
+
 **What a roll *could* come up is checked; what it *did* come up is not.** The
 dice are rolled client-side by design, so the server bounds each stored pool
 maximum against the range its class formula can actually produce

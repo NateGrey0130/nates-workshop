@@ -292,9 +292,11 @@ export function grantNote(cls, kind, level, slot = 0) {
 // spell-level cap or the category gate outright, exactly as it does on a grant.
 const STARTING_SPEC = {
   spell: { block: 'magic', count: 'spells_starting', groups: 'spells_starting_groups',
-           from: 'spells_from', gate: 'spell_levels_allowed', gateKey: 'spell_levels' },
+           from: 'spells_from', gate: 'spell_levels_allowed', gateKey: 'spell_levels',
+           granted: 'spells', schedule: 'spells_schedule' },
   psionic: { block: 'psionics', count: 'powers_starting', groups: 'powers_starting_groups',
-             from: 'powers_from', gate: 'categories_allowed', gateKey: 'categories' },
+             from: 'powers_from', gate: 'categories_allowed', gateKey: 'categories',
+             granted: 'powers', schedule: 'powers_schedule' },
 };
 
 const nonEmpty = (v) => (Array.isArray(v) && v.length ? v : null);
@@ -328,6 +330,67 @@ export function startingGroups(cls, kind) {
   const count = Number(block[spec.count]);
   if (!(count > 0)) return [];
   return [shape(count, blockFrom, blockGate, null)];
+}
+
+// WHAT AN EMPTY STARTING PICK MEANS — the three states `perLevelGrants` draws
+// one level up, drawn here too.
+//
+// `startingGroups` returns [] for four different situations and the Powers step
+// rendered all four the same way: the heading "Spells — 0/0", a filter box, and
+// 543 checkbox rows, every one disabled because the allowance was zero. That is
+// precisely the conflation the per-level side exists to avoid — "not recorded"
+// is a different answer from "none", and a picker that cannot be used is
+// neither.
+//
+//   applicable: false  no magic / no psionics at all, `type: "none"` included
+//   unknown:    true   it has them and states no starting count
+//   groups:     [...]  a real pick, one entry per group
+//
+// A STATED ZERO IS AN ANSWER. Five dragon hatchlings carry `spells_starting: 0`
+// because their books say a hatchling "knows NO spells at first level" and
+// learns them by the usual means from second level. Those read applicable,
+// known, and empty — there is nothing missing from them.
+//
+// `granted` is what a class knows OUTRIGHT rather than picks: the Shifter's
+// twenty spells, the Techno-Wizard's twenty-five. Those already reach the
+// character — `powersPayload` folds them in, because before it did they were
+// listed by the class and held by nobody — but the step that ought to show them
+// never did, and a class whose spells are all granted has nothing to pick and
+// is not missing a count either.
+//
+// `misfiled` counts picks written as a LEVEL-1 SCHEDULE ENTRY, which fires
+// nowhere: creation asks `perLevelGrants` from level 1 and it skips every entry
+// at or below `fromLevel` by design, and creation's own reader is this one,
+// which reads the `*_starting` keys. The Wizard states six spells that way — two
+// from spell level one, two from two, one each from three and four — and they
+// are stated where nothing reads them. Counted and reported rather than
+// honoured: honouring them would make a schedule a second way to say a starting
+// pick, and one way is the whole reason the `*_starting` keys exist.
+export function startingPicksFor(cls, kind) {
+  const spec = STARTING_SPEC[kind];
+  const block = spec && cls?.[spec.block];
+  // `type: "none"` is a block that says the class is not a caster — the
+  // Godling's, whose magic comes from the O.C.C. it picks alongside.
+  if (!block || block.type === 'none') {
+    return { applicable: false, unknown: false, groups: [], total: 0, granted: [], misfiled: 0 };
+  }
+
+  const granted = (Array.isArray(block[spec.granted]) ? block[spec.granted] : [])
+    .filter((n) => typeof n === 'string' && n.trim()).map((n) => n.trim());
+  const misfiled = (Array.isArray(block[spec.schedule]) ? block[spec.schedule] : [])
+    .filter((e) => e?.level === 1)
+    .reduce((n, e) => n + (Number.isFinite(e.count) && e.count > 0 ? e.count : 1), 0);
+
+  const groups = startingGroups(cls, kind);
+  const stated = block[spec.count] != null || Array.isArray(block[spec.groups]);
+  return {
+    applicable: true,
+    unknown: !groups.length && !stated && !granted.length,
+    groups,
+    total: groups.reduce((n, g) => n + g.count, 0),
+    granted,
+    misfiled,
+  };
 }
 
 export function spellGrantsFor(cls, fromLevel, toLevel) {
