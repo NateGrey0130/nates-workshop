@@ -586,6 +586,16 @@ scripts/
 │                           extra, plus the vocabulary warning
 ├── repo-vs-live.mjs        Can the repo rebuild the live catalog, row for row?
 │                           Builds from scratch and diffs NAMES, not counts
+├── source-coverage.mjs     Can what SHIPPED still be traced back to a cached
+│                           page? Every class and catalog row bucketed
+│                           traceable / not-a-book / no-source-book /
+│                           no-page-range / unknown-book / not-cached /
+│                           outside-cache, plus the importer stub backlog.
+│                           Advisory, always exits 0 - the caches are
+│                           gitignored and a clean clone traces nothing
+├── source-coverage-lib.mjs Its pure half: one source_book string in, one
+│                           bucket out, so the smoke test pins the bucketing
+│                           against a fixture and never against live caches
 ├── ocr-book.py             Cache a sourcebook into .cache/books/<slug>/ - the ONE
 │                           front door, either kind of book. A text layer is
 │                           detected and read through read-columns.py (no OCR,

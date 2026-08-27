@@ -290,7 +290,23 @@ const GENERIC_TITLE_WORDS = new Set([
   'of', 'the', 'and',
 ]);
 
-export function resolveBookSlug(sourceBook, books, registry = null) {
+/**
+ * Is this `source_book` a provenance marker rather than a book?
+ *
+ * `Estimate - no published price found` and `Web reference (not
+ * book-verified)` say where a value came from. Left to the heuristics below,
+ * the first of them resolves to `pf` -- its initials read e-n-p-p-f and `pf`
+ * is a substring of that -- and 104 gear rows were attributed to the
+ * Palladium Fantasy main book. `not_books` in scripts/books.json names them.
+ */
+export function isNotABook(sourceBook, notBooks) {
+  const want = normalizeBookTitle(sourceBook);
+  if (!want || !notBooks?.length) return false;
+  return notBooks.some((n) => normalizeBookTitle(n) === want);
+}
+
+export function resolveBookSlug(sourceBook, books, registry = null, notBooks = null) {
+  if (isNotABook(sourceBook, notBooks)) return null;
   const known = registryBookSlug(sourceBook, registry);
   if (known) return books.some((b) => b.slug === known) ? known : null;
 

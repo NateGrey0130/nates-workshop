@@ -45,9 +45,16 @@
     "that matches no title and no alias, and does not fail on it. Nothing here is",
     "required for a cache to exist, and a slug with no cache resolves to null.",
     "",
-    "Two gear provenance markers are NOT books and deliberately have no entry:",
-    "`Estimate - no published price found` (104 rows) and `Web reference (not",
-    "book-verified)` (29). They say where a price came from, not which book."
+    "Two gear provenance markers are NOT books. They say where a price came",
+    "from, not which book, and they are listed under `not_books` rather than",
+    "left out: left out, `Estimate - no published price found` resolved to `pf`",
+    "for 104 rows, because the initialism route reads e-n-p-p-f and finds `pf`",
+    "inside it. Anything in `not_books` resolves to nothing, by both routes."
+  ],
+
+  "not_books": [
+    "Estimate - no published price found",
+    "Web reference (not book-verified)"
   ],
 
   "books": {
