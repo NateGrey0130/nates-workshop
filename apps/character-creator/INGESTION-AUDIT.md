@@ -871,6 +871,50 @@ and the extraction prompt already offers those titles, so a session whose
 `title`; fall back to the session's own string when it resolves to nothing,
 and never compose a page range onto a `not_books` marker.
 
+**Taken, 2026-08-27 (PR #TBD).** `_lib/source-book.js` composes the value;
+`session-import.js` calls it per staged row; `applyDecisions` takes the book
+per decision and keeps the batch value as the fallback `skills/confirm.js`
+still passes. `buildUpdate`'s `COALESCE` is untouched. Pinned by a new
+*Import provenance* smoke section (10 checks). Three of this finding's own
+statements moved on contact:
+
+1. **The page range is a free-text LABEL, and `' p.' + page_range` would have
+   produced a value nothing can read.** `import.js:740` prompts for it with the
+   placeholder `pp. 180-181`, so the literal composition mints
+   `Rifts Ultimate Edition p.pp. 180-181` — and `parseSourcePages` refuses that
+   string, because its `\bp\.?\s*(\d+)` cannot cross the second `p`. The rows
+   would have looked attributed and still scored `no-page-range` in
+   `source-coverage`, which is strictly worse than the bare title: a row that
+   reports itself as missing gets fixed. The label is parsed and re-emitted in
+   the canonical shape instead, and the smoke test pins the round trip through
+   `parseSourcePages` and `registryBookSlug` rather than pinning the string.
+2. **Skills is not a session importer**, so the finding's "…" does not reach
+   it. `import/skills/extract.js` takes no `session_id` and no `page_range`,
+   stages nothing, and confirms through `skills/confirm.js` with one
+   batch-level `source_book`. Its 105 page-less rows are a different finding.
+   Nothing about its behaviour changed here.
+3. **"That is the whole explanation for F5's coverage numbers" is wrong, and
+   this PR moves no number at all.** Production `import_sessions` and
+   `import_staged` are both empty — F7 says so twelve findings later and F6
+   reasons as though they were full. Every psionic row in production came from
+   a data script: `add-burster-psionic-powers.sql` writes
+   `Rifts Ultimate Edition p.141` (which is 4 of the 7 traceable rows) and
+   `add-rue-psionics-batch.sql` writes the bare title 22 times. The session UI
+   has never written a psionic row to production, so it cannot be what dropped
+   their pages. **F6 is purely forward-looking**: the ledger reads identically
+   before and after, and will keep reading identically until a session import
+   is actually run against production.
+
+One thing the proposal asks for that `COALESCE` cannot give, left alone as
+instructed and recorded here instead: "a re-import that has no page range must
+not blank one an earlier row already carries" holds for a session with **no
+book label** (composes to `null`, `COALESCE` keeps the old value), and does not
+hold for a session labelled with a book but a row with no range — that writes
+the bare title over an existing `p.141`. It behaved that way before this PR
+too, for every row rather than some, so nothing regressed; fixing it needs a
+read-before-write on `source_book` that is a behaviour change on updates and
+was not asked for.
+
 ### F7 — the extraction calls are the only Claude calls in the repo that are not metered
 
 **What is true today.** `functions/api/_lib/claude-client.js:106` exports

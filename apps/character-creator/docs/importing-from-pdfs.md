@@ -167,8 +167,19 @@ sitting, so spell imports run inside a **session**:
    *ignore*.
 4. **Import the batch.** The session stays open for the next range.
 
-Four behaviours worth knowing:
+Five behaviours worth knowing:
 
+- **The page range you type ends up on the row.** Each confirmed row is written
+  with `<book> p.N-M` composed from the session's book label and *that row's*
+  page range — per row, because one session covers many ranges. The book is
+  resolved through `scripts/books.json` first, so a session labelled with a
+  spelling the registry already knows lands on the canonical title rather than
+  minting a new one; a book the registry does not carry keeps your wording. The
+  range label is normalised, so `pp. 180-181` and `180-181` both become
+  `p.180-181` — the shape `class-check --field-sources` and
+  `scripts/source-coverage.mjs` can read. Label the session with the book and
+  every range with its pages, and the rows stay traceable; skip either and they
+  do not.
 - **A row that collides stays pending.** If an insert clashes with a name
   already in the catalog, it is reported and left in the list so you can give it
   a distinguishing name and retry, rather than being silently dropped.

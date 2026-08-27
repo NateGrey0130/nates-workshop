@@ -355,10 +355,22 @@ export async function extractRows(env, spec, { pdfBase64, model, systemPrompt, u
 //           a distinguished as_name because the key column is UNIQUE.
 //   update  overwrite the existing row from the book
 //   ignore  do nothing
+//
+// `sourceBook` is the batch default. A decision may carry its own
+// `source_book` and it wins — the session importers compose one PER ROW from
+// the page range staging recorded, because one session covers many ranges and
+// a book with no pages on it is a row nothing can trace. `skills/confirm.js`
+// does not stage and has no page ranges, so it passes the batch default alone
+// and behaves exactly as it did.
 export async function applyDecisions(env, spec, decisions, { sourceBook, system } = {}) {
   const cat = CATALOGS[spec.catalog];
   const key = cat.uniqueField;
   const writable = spec.extractFields.filter((f) => f !== key);
+  // No catalog lists `source_book` in extractFields, so it is never one of the
+  // extracted values and reading it off the decision cannot shadow one.
+  const bookFor = (d) => (typeof d?.source_book === 'string' && d.source_book.trim()
+    ? d.source_book.trim()
+    : sourceBook ?? null);
 
   const statements = [];
   const applied = { inserted: [], updated: [], ignored: [] };
@@ -411,7 +423,7 @@ export async function applyDecisions(env, spec, decisions, { sourceBook, system 
       continue;
     }
     applied.updated.push(name);
-    statements.push(buildUpdate(env, spec, cat, writable, d, name, sourceBook));
+    statements.push(buildUpdate(env, spec, cat, writable, d, name, bookFor(d)));
   }
 
   // Names claimed twice inside THIS batch. Checking only the database would miss
@@ -423,7 +435,7 @@ export async function applyDecisions(env, spec, decisions, { sourceBook, system 
     if (queued.has(lower)) { conflicts.push({ name: target, reason: 'Named twice in this same import' }); continue; }
     if (taken.has(lower)) { conflicts.push({ name: target, reason: `A row with that ${key} already exists` }); continue; }
     queued.add(lower);
-    statements.push(buildInsert(env, spec, cat, writable, d, target, sourceBook, system));
+    statements.push(buildInsert(env, spec, cat, writable, d, target, bookFor(d), system));
     applied.inserted.push(target);
   }
 
@@ -512,6 +524,9 @@ function buildUpdate(env, spec, cat, writable, d, name, sourceBook) {
     else sets.push(`${f} = COALESCE(?, ${f})`);
     vals.push(valueFor(spec, f, d));
   }
+  // Unchanged, and deliberately: an import out of a session with no book label
+  // composes to null, and must leave whatever provenance the row already
+  // carries rather than erasing it.
   sets.push('source_book = COALESCE(?, source_book)');
   vals.push(sourceBook);
   return env.DB.prepare(

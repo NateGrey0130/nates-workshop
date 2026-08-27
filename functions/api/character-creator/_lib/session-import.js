@@ -13,6 +13,7 @@ import {
 } from './import-engine.js';
 import { CATALOGS } from '../../../../apps/character-creator/js/catalog-fields.js';
 import { getSession, stageRows, getStaged, markConfirmed } from './import-sessions.js';
+import { composeSourceBook } from './source-book.js';
 
 const ACTIONS = ['insert', 'update', 'ignore'];
 
@@ -112,13 +113,23 @@ export async function handleSessionConfirm(request, env, catalogKey) {
     // on name when the slug derived from the book's wording differs from the
     // stub's, and in that case the payload's own key would point at nothing.
     const target = action === 'update' && match_name ? { [key]: match_name } : {};
+    // The page range staging has recorded all along, finally attached to the
+    // row it describes. PER ROW, not per session: one session covers many
+    // ranges, and the range is the only thing that makes a row traceable back
+    // to a printed page. No catalog has `source_book` among its extractFields,
+    // so this cannot collide with anything the extraction produced.
+    const source_book = composeSourceBook(session.source_book, page_range);
     // "Keep both" is an insert under a distinguishing name; the key column is
     // UNIQUE, so without one it would simply collide.
-    return { ...payload, ...target, action, ...(action === 'insert' && asName ? { as_name: asName } : {}) };
+    return { ...payload, ...target, action, source_book,
+             ...(action === 'insert' && asName ? { as_name: asName } : {}) };
   });
 
   const result = await applyDecisions(env, getImportSpec(catalogKey), decisions, {
-    sourceBook: session.source_book,
+    // The batch default is the same book with no pages — what a row whose
+    // range nobody typed should still carry. Every decision above overrides
+    // it with its own.
+    sourceBook: composeSourceBook(session.source_book, null),
     // Which game system this book is for, chosen once when the session was
     // opened. Every row confirmed out of it inherits that; NULL stays
     // unrestricted rather than being guessed at.
