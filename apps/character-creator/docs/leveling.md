@@ -329,6 +329,19 @@ such an ability with no matching occupation. The second take of a repeatable
 ability cannot compose a second occupation - one slot exists - so it stays
 what `on_repeat` prose says it is, a G.M. matter.
 
+**Only when the occupation slot is free to spend.** The Demigod's Magic
+Powers is the Godling's ability word for word and deliberately carries no
+`occ_options`. A godling has R.C.C. skills of its own and no other use for an
+occupation, so the slot is there to be spent on the practitioner. A demigod
+has no skills block at all: its O.C.C. supplies every skill it will have, and
+the book lets it pick "any O.C.C. that fits his human/D-bee background" with
+four exclusions. Narrowing that step to five practitioners would forbid the
+man-at-arms demigod the same entry grants, which is why the asymmetry between
+the two classes is the rule and not an omission - `occ_options` belongs on an
+ability whose class does not otherwise need an occupation. The reason is
+recorded in the Demigod's own extraction notes as well, because that is where
+the next sweep comparing the two abilities will be looking.
+
 **Each class states its own list**, even when the book prints one list and
 points several classes at it. A mechanism that resolved one class's options out
 of another (`from_class`, PR #80) existed briefly and was removed: its only
