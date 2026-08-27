@@ -31,6 +31,14 @@
     "                 the scan carries. null when it has never been measured.",
     "  page_offset    cache file page = printed folio + page_offset. Measured",
     "                 with detectPageOffset over the cache. null when unknown.",
+    "  page_offset_exceptions",
+    "                 ordered [{ printed_through, offset }] for a book that does",
+    "                 NOT paginate constantly. First match wins, everything past",
+    "                 the last falls through to page_offset. Only `pf` has one,",
+    "                 and a majority vote over the whole book cannot see it: the",
+    "                 minority region is 11 pages against 287. class-check",
+    "                 --field-sources reports every region it detects, so the",
+    "                 next book with a split announces itself.",
     "  note           why a value is what it is, when it is not simply measured.",
     "",
     "Adding a book means adding an entry: class-check warns about a source_book",
@@ -62,7 +70,10 @@
       "source_pdf": "Palladium RPG - Main Book.pdf",
       "printed_pages": 336,
       "page_offset": 2,
-      "note": "The most-cited book in the database and the one with no manifest.json in its cache. Its four aliases carry 586 rows between them."
+      "page_offset_exceptions": [
+        { "printed_through": 16, "offset": 1 }
+      ],
+      "note": "The most-cited book in the database, and the ONE book whose offset is not constant. An extra page sits at cache p018/p019 - p019 holds p018's text plus a Throwing Objects table - so printed 1-16 are at +1 and printed 18-336 at +2, 11 votes against 287. Printed 17 is left to the +2 rule on purpose: that lands on p019, the fuller of the two. This is the case book-survey 0d is thirty lines about, and its worked example - the Attribute Bonus Chart at printed 16 - is inside the exception."
     },
 
     "bom": {

@@ -403,6 +403,14 @@ free-text field beside its page-break-aware OCR source lines.
   equipment paragraph ends at the bottom of its page and the continuation
   block prints the eleven items on the next one.
 
+  **Superseded 2026-08-27 by INGESTION-AUDIT F4, in two sentences.** The mode
+  no longer DETECTS the offset as its first move — it reads the recorded one
+  from `scripts/books.json`, then the cache manifest, and detects only when
+  neither has it. And "pf +2" is true of most of that book and not all of it:
+  an extra page at cache p018/p019 makes the offset **+1 for printed 1-16**
+  and +2 for 18-336, which the majority vote quoted above cannot see (287
+  votes to 11). `page_offset_exceptions` in the registry carries the head.
+
 ---
 
 ## Methodology

@@ -232,6 +232,7 @@ import { relatedAllowance, validateCharacter } from '../../../functions/api/char
 import {
   crossCategoryRestrictions, extractClassMarkdown, unmodelledKeys, unclosedFlowLines,
   parseSourcePages, resolveBookSlug, registryBookSlug, normalizeBookTitle, detectPageOffset,
+  detectPageOffsetRegions, offsetForPrintedPage,
   freeTextFields, fieldTokens,
   fieldSourceSpans, bestMatchingPages,
 } from '../../../scripts/class-check-lib.mjs';
@@ -5553,6 +5554,84 @@ section('Book registry');
     && fallback.printedFrom === null);
   check('and unknown is not complete',
     cacheCoverage({ cachedPages: 100, manifest: null }).complete === false);
+
+  // ---- the offset is recorded, not re-guessed ----
+  // A per-book constant that was computed by a human at survey time, thrown
+  // away, and re-derived by majority vote at every check. Recording it would be
+  // dull if not for `pf`, whose offset is NOT constant: +1 for printed 1-15 and
+  // +2 for printed 18-336, because an extra page sits at cache p018/p019. The
+  // majority is +2 by 287 votes to 11, so a single recorded number sends every
+  // lookup in the first sixteen pages one page early - which is the failure
+  // book-survey 0d is thirty lines about, and its worked example is the
+  // Attribute Bonus Chart at printed 16.
+  // Shaped like the real thing: a SHORT head region and a long tail, so the
+  // majority is the tail's offset and the head is the part that gets lost.
+  const pfPages = [
+    ...[2, 3, 4].map((p) => ({ page: p, lines: ['prose', String(p - 1)] })),
+    ...[20, 21, 22, 23, 24, 25, 26, 27].map((p) => ({ page: p, lines: ['prose', String(p - 2)] })),
+  ];
+  const pfRegions = detectPageOffsetRegions(pfPages);
+  check('a book that paginates two ways reports two regions',
+    pfRegions.length === 2
+    && pfRegions[0].offset === 1 && pfRegions[0].fromPrinted === 1 && pfRegions[0].toPrinted === 3
+    && pfRegions[1].offset === 2 && pfRegions[1].fromPrinted === 18);
+  check('and a majority vote flattens it to the wrong one for the minority region',
+    detectPageOffset(pfPages).offset === 2);
+
+  // `fom` has one page voting -3 and `rue` two voting +33 and +38, all single
+  // votes in front matter. A stray bare number is not a pagination, and the
+  // runs it splits must be re-joined or every book looks split.
+  const strayed = [
+    { page: 1, lines: ['x', '0'] }, { page: 2, lines: ['x', '1'] },
+    { page: 3, lines: ['x', '2'] },
+    { page: 9, lines: ['1994', '12'] },
+    { page: 11, lines: ['x', '10'] }, { page: 12, lines: ['x', '11'] },
+    { page: 13, lines: ['x', '12'] },
+  ];
+  check('a stray bare number is not a region, and does not split the one it is in',
+    detectPageOffsetRegions(strayed).length === 1
+    && detectPageOffsetRegions(strayed)[0].offset === 1);
+
+  // The registry is the only one of the three sources that can express a split:
+  // the manifest and live detection both hold one number.
+  const pfEntry = { page_offset: 2, page_offset_exceptions: [{ printed_through: 16, offset: 1 }] };
+  check('a recorded exception answers per printed page',
+    offsetForPrintedPage(16, pfEntry).offset === 1
+    && offsetForPrintedPage(17, pfEntry).offset === 2
+    && offsetForPrintedPage(308, pfEntry).offset === 2);
+  check('and says which rule it applied',
+    offsetForPrintedPage(16, pfEntry).from === 'printed <= 16'
+    && offsetForPrintedPage(17, pfEntry).from === 'page_offset');
+  check('a book with no exceptions is a one-line lookup',
+    offsetForPrintedPage(1, { page_offset: 3 }).offset === 3
+    && offsetForPrintedPage(999, { page_offset: 3 }).offset === 3);
+  check('and an entry with no offset at all resolves to nothing, not to zero',
+    offsetForPrintedPage(1, { page_offset: null }) === null
+    && offsetForPrintedPage(1, undefined) === null);
+
+  // The shipped registry against the shipped caches: every book that detection
+  // says paginates two ways must SAY so, or --field-sources reads the minority
+  // region one page out and nothing notices.
+  const splitButUnrecorded = [];
+  for (const [slug, book] of Object.entries(registry)) {
+    const txtDir = join(repoRoot, '.cache', 'books', slug, 'txt');
+    if (!existsSync(txtDir)) continue;
+    const cachePages = readdirSync(txtDir)
+      .map((f) => f.match(/^p(\d+)\.txt$/)).filter(Boolean)
+      .map((m) => ({ page: Number(m[1]),
+        lines: readFileSync(join(txtDir, m[0]), 'utf8').split(/\r?\n/) }));
+    for (const r of detectPageOffsetRegions(cachePages)) {
+      if (offsetForPrintedPage(r.fromPrinted, book)?.offset !== r.offset
+        || offsetForPrintedPage(r.toPrinted, book)?.offset !== r.offset) {
+        splitButUnrecorded.push(`${slug} ${r.offset >= 0 ? '+' : ''}${r.offset} `
+          + `over printed ${r.fromPrinted}-${r.toPrinted}`);
+      }
+    }
+  }
+  // Skips entirely on a machine with no caches - they are gitignored.
+  check('every offset region the caches show is recorded in scripts/books.json',
+    splitButUnrecorded.length === 0, splitButUnrecorded.join(' | '));
+
 }
 
 

@@ -531,6 +531,109 @@ the cache newly partial. Rewrite `book-survey` §0d around "read it from the
 manifest; verify only when the manifest has none", keeping the two-tools-disagree
 table (`read-columns.py` is 1-based, `pymupdf` is 0-based), which stays true.
 
+**Taken, 2026-08-27** (PR: `recorded-page-offset`). `class-check --field-sources`
+reads the offset instead of re-deriving it, in this order — and prints which it
+used, on the FIELD SOURCES line:
+
+```
+--offset            the human overrides everything
+scripts/books.json  the durable, hand-checked copy, PER PRINTED PAGE
+the manifest        what ocr-book.py measured when it built this cache
+live detection      majority vote, for a book the registry does not carry
+0                   and it SAYS so, rather than quietly using it
+```
+
+The registry outranks the manifest for the reason F3 gives, and because it is
+the only one of the three that can express `pf`. Disagreement is **advisory**
+and never touches the exit code. `bom` — 408 rows behind it, no folio anywhere
+in its six pages — now uses the registry's `+1` and says nothing in the cache
+can confirm it, instead of silently using 0.
+
+**Half of this was already done.** F2 writes `page_offset` into the manifest at
+cache time and F1 records it in the registry, so the proposal's first sentence
+was satisfied before this PR opened. What was left was the consumer, the
+advisory, and §0d.
+
+---
+
+**THIS FINDING'S OWN CORRECTION IS WRONG, AND IT MATTERS.** The note above says
+`book-survey` §0d's worked example — Palladium Fantasy at "+1 before that point
+and +2 after it" — is contradicted by a 287-to-11 vote for +2, and concludes
+that **"none of these books has the non-constant offset §0d warns about."**
+
+§0d is right. Those 11 votes are not scatter:
+
+| offset | votes | printed pages |
+|---|---|---|
+| **+1** | 11 | **1-15**, contiguous |
+| **+2** | 287 | **18-336**, contiguous |
+
+An extra page sits at cache `p018`/`p019` (`p019` holds `p018`'s 107 lines plus
+a *Throwing Objects* table, 153 in all). Cache `p016` prints folio 15, cache
+`p020` prints folio 18. So the offset genuinely is +1 for the head of the book
+and +2 for the rest, exactly as §0d says, and a majority vote **cannot see it**
+because the minority region is 11 pages against 287.
+
+That is not a footnote — it breaks the proposal as written. "Record
+`page_offset` … prefer the recorded value … warn when live detection disagrees
+by more than zero" would record +2 for `pf`, prefer +2, and find live detection
+in perfect agreement at +2 — so **no warning fires**, and every lookup in the
+first sixteen pages of the most-cited book in the database lands one page early,
+silently. §0d's own example, the Attribute Bonus Chart at printed 16, is inside
+that region.
+
+**So the registry answers per printed page.** One optional key:
+
+```json
+"page_offset": 2,
+"page_offset_exceptions": [ { "printed_through": 16, "offset": 1 } ]
+```
+
+First match wins; everything past the last exception falls through to
+`page_offset`. `pf` is the only book that has one. Printed 17 is deliberately
+left to the +2 rule, because that lands on `p019`, the fuller of the two pages.
+
+**And the split is found mechanically now, not by a human noticing.**
+`detectPageOffsetRegions` reports the contiguous runs a cache shows; a run needs
+three agreeing pages to count, which drops `fom`'s single page voting -3 and
+`rue`'s two voting +33 and +38 — strays in front matter, not paginations — and
+re-joins the runs those strays split. `--field-sources` reports multiple regions
+only when `scripts/books.json` does not already resolve each of them, so `pf`
+prints nothing on a normal run rather than crying wolf on every class. A smoke
+check walks every cache on the machine and fails if any region the pages show is
+one the registry cannot resolve.
+
+Run over all eight caches after F2's repairs, which moved two rows of this
+finding's table (`fom` 51/52 over 73 pages became 113/114 over 161; `potm`
+174/174 over 202 became 181/181 over 210):
+
+| slug | regions | recorded |
+|---|---|---|
+| cb1 dag fom ju potm rue | one, constant | matches |
+| **pf** | **two: +1 printed 1-15, +2 printed 18-336** | exception recorded |
+| bom | none — no folio survives its six pages | registry `+1`, unconfirmable, and it says so |
+
+---
+
+Trued up, since this change falsifies both: the README's `--field-sources`
+paragraph said the offset "is read off the pages themselves, by majority vote",
+and `EFFICIENCY-AUDIT.md` F7's *Taken* note said the mode "detects it rather
+than trusting `p.N`" and quoted "pf +2" flat. F7's note carries a **Superseded**
+paragraph rather than a rewrite — it is a record of what shipped in August, and
+editing it would lose that.
+
+§0d is rebuilt around "read it from the registry; derive only if there is none",
+keeping the two-tools-disagree table (`read-columns.py` 1-based, `pymupdf`
+0-based) and the zero-offset warning, both of which stay true.
+
+Measured after: smoke **1,367 checks / 90 sections** (up 8), regression 215,
+filament-forge 58, pick3cut5 17 + game 23, media-vault 200, all green.
+`drift-check --remote` prints **NO DRIFT**, 467 rows, nine advisories —
+unchanged, as it should be; this PR does not touch that check. No live row cites
+`pf` printed ≤ 17 today, so nothing that has shipped was read through the wrong
+offset — the exception is a trap closed before it was sprung, not a repair.
+
+
 ### F5 — nothing checks that what shipped can still be traced back to a cached page
 
 **What is true today.** `--field-sources` can trace a class **if** you run it,

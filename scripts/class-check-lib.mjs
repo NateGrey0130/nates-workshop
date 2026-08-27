@@ -352,6 +352,97 @@ export function detectPageOffset(pages) {
 }
 
 /**
+ * The offset regions a cache actually shows, in printed-page order.
+ *
+ * `detectPageOffset` answers "what is this book's offset" with one number.
+ * That question has a wrong answer for `pf`: its offset is **+1 for printed
+ * 1-15 and +2 for printed 18-336**, because an extra page sits at cache p018
+ * / p019. Eleven votes against 287, so the majority is +2 and every lookup in
+ * the first sixteen pages lands one page early -- which is precisely the
+ * failure `book-survey` 0d is thirty lines about, and its worked example is
+ * the Attribute Bonus Chart at printed 16.
+ *
+ * A run needs `minVotes` pages agreeing to count as a region. Below that it is
+ * a stray bare number, not a pagination: `fom` has one page voting -3 and
+ * `rue` two voting +33 and +38, all of them single votes in front matter, and
+ * none of them is a region. Three is the same bar `class-check` already uses
+ * before it will act on a detected offset at all.
+ *
+ * Returns [{ offset, fromPrinted, toPrinted, votes }]. One entry is a constant
+ * offset; more than one is a book that needs `page_offset_exceptions` in
+ * scripts/books.json.
+ */
+export function detectPageOffsetRegions(pages, { minVotes = 3 } = {}) {
+  const votes = [];
+  for (const { page, lines } of pages) {
+    const nonblank = lines.map((l) => l.trim()).filter(Boolean);
+    for (const t of [...nonblank.slice(0, 5), ...nonblank.slice(-5)]) {
+      const m = t.match(/^(\d{1,4})$/);
+      if (!m) continue;
+      const printed = Number(m[1]);
+      const offset = page - printed;
+      if (Math.abs(offset) > 40) continue;
+      votes.push({ printed, offset });
+      break;
+    }
+  }
+  votes.sort((a, b) => a.printed - b.printed);
+
+  const runs = [];
+  for (const v of votes) {
+    const last = runs[runs.length - 1];
+    if (last && last.offset === v.offset) {
+      last.toPrinted = v.printed;
+      last.votes++;
+    } else {
+      runs.push({ offset: v.offset, fromPrinted: v.printed, toPrinted: v.printed, votes: 1 });
+    }
+  }
+  // Drop the strays FIRST, then re-join what they had split. A single stray
+  // vote inside a constant run (`fom` has one page reading -3) leaves two
+  // adjacent runs of the SAME offset behind it, and two runs is the signal
+  // that a book paginates in two ways.
+  const kept = runs.filter((r) => r.votes >= minVotes);
+  const out = [];
+  for (const r of kept) {
+    const last = out[out.length - 1];
+    if (last && last.offset === r.offset) {
+      last.toPrinted = r.toPrinted;
+      last.votes += r.votes;
+    } else {
+      out.push({ ...r });
+    }
+  }
+  return out;
+}
+
+/**
+ * The offset to use for one printed page, out of a registry entry.
+ *
+ * `page_offset` is the book's dominant offset and `page_offset_exceptions` is
+ * an ordered list of `{ printed_through, offset }` for the head of a book that
+ * paginates differently — the FIRST entry whose `printed_through` covers the
+ * page wins, and everything past the last one falls through to `page_offset`.
+ * A book with a constant offset carries no exceptions and this is a one-line
+ * lookup.
+ *
+ * Returns { offset, from } where `from` is 'page_offset' or the exception's
+ * range, so the caller can say which rule it applied — an offset that cannot
+ * be explained is one nobody checks.
+ */
+export function offsetForPrintedPage(printedPage, entry) {
+  if (!entry || !Number.isInteger(entry.page_offset)) return null;
+  for (const ex of entry.page_offset_exceptions ?? []) {
+    if (Number.isInteger(ex?.printed_through) && Number.isInteger(ex?.offset)
+        && printedPage <= ex.printed_through) {
+      return { offset: ex.offset, from: `printed <= ${ex.printed_through}` };
+    }
+  }
+  return { offset: entry.page_offset, from: 'page_offset' };
+}
+
+
+/**
  * The free-text fields of a parsed class worth tracing to the page.
  *
  * Exactly the fields no test pins: `starting_money`, and the equipment list
