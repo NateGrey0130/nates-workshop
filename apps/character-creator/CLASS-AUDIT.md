@@ -1057,6 +1057,43 @@ claim-audit rule):
     that is too permissive for one that forbids a category the book grants.
     **A decision, not a defect to sweep up** — it needs the schema change, so it
     is Nate's call whether to build it.
+  - **Built, 2026-08-26** (`zz-starting-power-splits.sql`, plus the app change
+    it shares with S1) — on Nate's word, and it turned out to be the same
+    change S1 needed rather than a second one. `startingGroups(cls, kind)` in
+    `js/leveling.js` returns the starting picks as an **array** shaped exactly
+    like `powerGrantsFor`'s level-up grants, and **both** builders read it: the
+    wizard's Powers step and `validate-character.js`. Everything downstream
+    already handled several groups with different gates — that is what the
+    level-up grants are — so only the two builders had to move, which is the
+    "smaller than it looks" the check above predicted.
+    `powers_starting` keeps its meaning as the **total**, so every class
+    stating only a number is untouched; `powers_starting_groups` splits it. A
+    group naming its own categories replaces the block's, a group naming none
+    inherits — the rule level-up grants already follow, because a book naming
+    Super for one slot is granting an exception and intersecting would throw it
+    away. `magic.spells_from` and `spells_starting_groups` are the same shape
+    on the spell side; S1 needed the first of those.
+    Both classes now say what their books say: `delphi-juicer` 3 Physical +
+    1 Super, `mind-mage` three from each of four. **Verified in the running
+    wizard**: picking one Super power on the Delphi disables the other 32 Super
+    rows while all 22 Physical stay open, and the header counts 4/4 across the
+    two groups. The loadout the flat count allowed — four Super, twelve Super —
+    is now unreachable rather than merely undocumented.
+    **The Mind Mage's page was re-read** (pf cache p163, footer 161): "three
+    powers from each of the four psionic power categories: healing, sensitive,
+    physical and Super (12 psi-powers total)". **The Delphi Juicer's could
+    not** — Rifts World Book 10 has no OCR cache on this machine, and the book
+    caches are local-only by design; its 3/1 split rests on two independent
+    in-class records written from the page at import, which agree with each
+    other and with this audit. Worth a page check if that book is cached again.
+    **Two per-level progressions are still prose, and neither is blocked.** The
+    Delphi's one-a-level from Physical/Sensitive/Super and the Mind Mage's
+    five-a-level (two lesser + three Super) both fit `powers_schedule`, which
+    carries per-entry categories and admits several entries at one level. Both
+    classes' notes said they were prose *because the app could not hold them*;
+    that reason was false even before this change and is corrected in the same
+    script. They are simply not written — the Mind Mage's is now the larger
+    remaining gap in that class.
 
 **Checked and still true** (do not "fix" these — each was verified against
 the current code): `variants` cannot override `skills`, `natural_abilities`,
