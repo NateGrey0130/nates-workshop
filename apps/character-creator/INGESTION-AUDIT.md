@@ -61,6 +61,63 @@ one-line PR or folded into whichever finding lands first.
 
 ---
 
+## Status, 2026-08-27 — F1 through F5 taken
+
+Five PRs, one per finding, each with its `Taken` note under the finding itself.
+`main` is at `c083747` plus PR #341.
+
+| # | PR | what shipped |
+|---|---|---|
+| F1 | #337 | `scripts/books.json` — 12 books, canonical title + every live spelling + source PDF + last folio + offset. `resolveBookSlug`, `drift-check` and the extraction prompt all read it |
+| F2 | #338 | `ocr-book.py` is the one front door: `--probe`, text-layer auto-detection, resume by cache KIND |
+| F3 | #339 | the completeness gate measures the BOOK (`printed_pages + page_offset`), not the source PDF's page count |
+| F4 | #340 | the offset is read, not re-derived — and answers **per printed page**, because `pf`'s is not constant |
+| F5 | #341 | `scripts/source-coverage.mjs` — can what shipped still be traced to a page, and what is stubbed |
+
+**This audit's own premises were wrong in six places, and taking the findings is
+what found it.** Each is written up under its finding; collected here because
+four of them change findings that have not been taken yet:
+
+1. **`pf`'s offset is not constant** (F4). This file says the majority vote
+   contradicts `book-survey` §0d and that "none of these books has the
+   non-constant offset §0d warns about". §0d is right: +1 for printed 1-16, +2
+   for 18-336, 11 contiguous votes against 287. Taking F4 as written would have
+   recorded +2, preferred +2, found live detection in perfect agreement, and
+   sent every lookup in the first sixteen pages of the most-cited book one page
+   early — silently. **F11 depends on this.**
+2. **Seven of eight caches have a text layer, not six** (F2). `bom` medians
+   5,411 characters a page and was OCR'd anyway.
+3. **`fom` and `potm` are no longer partial** (F2, F3). Fixing F2's resume bug
+   completed them on the next run: `fom` 73 → 161 pages, `potm` 202 → 210.
+   `potm` was short and this file does not say so. `bom` is the one partial
+   cache left. **F3's table is stale in three of its five rows.**
+4. **`ju`'s cache is built wrong** (F2). 148 of its 162 pages are raw
+   `page.get_text()` with the columns welded across the gutter — the corrupting
+   read `read-columns.py` exists to prevent. Juicer Uprising is the import that
+   shipped two wrong `starting_money` figures. **Not re-cached**; it is 148
+   pages of changed text under a completed import.
+5. **`Estimate - no published price found` resolved to `pf`** for 104 gear rows
+   (F5). The initialism route reads e-n-p-p-f and finds `pf` inside it. F1's
+   `_doc` had deliberately left the provenance markers out of the registry,
+   which left them to the heuristic, which had an answer. `not_books` names them
+   now.
+6. **The stub backlog is 4x over-counted** (F5). "21 imported skills at 0/0 that
+   are not W.P.s" counts five Hand to Hand rows and eight deliberately
+   non-percentile skills whose whole content is a long `note` saying why nothing
+   is stored. There are **5** real stubs. "32 gear rows with no price" is 27;
+   "1 stub spell" is 0 spells and 1 psionic power.
+
+**One number nothing else would have surfaced: 231 spells cite `Rifts Book of
+Magic p.71-72`.** Two pages. Whatever that range is, it is not where 231 spells
+are printed. Nobody has looked at it yet.
+
+**And the coverage picture as it now stands** (`source-coverage.mjs --remote`,
+2026-08-27): classes 107/109 traceable, gear 727/902, skills 127/333, psionic
+powers 7/101, and **spells 0 of 570** — 323 with no page range, 231 pointing
+into `bom`'s six-page cache, 16 citing nothing. That last row is the largest
+number in this audit and was not in it.
+
+
 ## What book #9 costs today
 
 Walked as the actual steps for a book that is not yet cached — there are five
@@ -85,6 +142,13 @@ this is not hypothetical.
 | 13 | paste into `data-script.sql`, double apostrophes, ASCII-ise | **manual** |
 | 14 | `d1-apply --local`, then `--remote`; smoke; drift-check; PR | scripted (`ship-pr`) |
 | 15 | append the `SURVEY.md` ledger line | **manual, never done** (F10) |
+
+**Steps 1-4 are no longer manual, as of 2026-08-27.** F2 made step 1
+`ocr-book.py --probe` (allowlisted), steps 2 and 3 one auto-detecting command
+that writes its own manifest, and F1/F4 made step 4 a recorded value read from
+`scripts/books.json` rather than a derivation. Step 7 is unchanged (F13), and
+steps 5, 8, 9, 11, 13 and 15 are still by hand. **Five unscripted steps, not
+nine.** The table below is left as audited.
 
 Nine unscripted steps stand between a new PDF and the first extraction, and
 steps 9–13 and 15 repeat **per class** — 37 times for Rifts Ultimate Edition, 24
@@ -794,6 +858,18 @@ backfill the existing 94 page-less psionic rows in this PR; that is a data
 question about which extraction produced which row, and F5's report is the right
 place to size it first. Pin the composition in the smoke test.
 
+**Adjusted 2026-08-27, after F1 and F5.** Two things moved. The sizing tool
+this proposal defers to now exists: `node scripts/source-coverage.mjs --remote`
+reports the page-less rows per catalog and per book, so "how big is the
+backfill" is one command rather than an open question. And the composed value
+should be **the registry's canonical title** plus the page range, not
+`session.source_book` verbatim — F1 made `scripts/books.json` the vocabulary
+and the extraction prompt already offers those titles, so a session whose
+`source_book` is a fifth spelling would otherwise mint rows in it. Resolve
+`session.source_book` through `registryBookSlug` and write the entry's
+`title`; fall back to the session's own string when it resolves to nothing,
+and never compose a page range onto a `not_books` marker.
+
 ### F7 — the extraction calls are the only Claude calls in the repo that are not metered
 
 **What is true today.** `functions/api/_lib/claude-client.js:106` exports
@@ -940,6 +1016,16 @@ next import. Posture: **template plus one-time backfill**; do not add a check
 that a survey exists — the caches are gitignored and a clean clone has none, so
 such a check could only fail on the machines that matter.
 
+**Adjusted 2026-08-27, after F5.** The coverage line this proposal wants to
+quote exists: `source-coverage.mjs` reports per book, so a `SURVEY.md`'s
+"what remains" section is a paste rather than a count. The backfill also has
+more to draw on than this text assumes — the manifests now carry
+`text_layer`, `cached_pages`, `cached_range`, `printed_pages` and
+`page_offset` (F2/F3), so the template's offset section should say **read it
+from `scripts/books.json`** rather than leaving a blank to re-derive. Two of
+the eight books to backfill changed under F2: `fom` is 161 pages, not 73, and
+`potm` is 210, not 202.
+
 ### F11 — slicing a page range out of a PDF is manual, external, and leaves the slices in `Downloads`
 
 **What is true today.** `import.html` asks for "a focused page range covering
@@ -968,6 +1054,16 @@ from is. Posture: **prints the folio it actually found, every time** — the
 confirmation is the point of the script, not the slicing. Add it to the README
 map and to `.claude/settings.json` (it writes only into `.cache/`). Depends on
 F4 for the offset; usable with an explicit `--offset` before F4 lands.
+
+**Adjusted 2026-08-27, after F4 — and this one is load-bearing.** The offset is
+no longer a scalar. `pf`'s is +1 for printed 1-16 and +2 for 18-336, carried
+in `page_offset_exceptions`. A slicer that applies `page_offset` flat would
+cut the wrong page for every request in the head of the most-cited book —
+including the Attribute Bonus Chart at printed 16, which is the worked example
+`book-survey` §0d is built around. Use `offsetForPrintedPage(first, entry)`
+from `class-check-lib.mjs`, per call, and print the rule it applied beside the
+folio it found. The `--offset` escape hatch this proposal mentions is still
+worth having, but it is now the third choice, not the first.
 
 ### F12 — every extraction re-uploads its PDF and its examples with no cache breakpoint
 
@@ -1034,6 +1130,11 @@ wrong default" but "a number quoted without its provenance". Update
 `book-survey` §3 to show the `--remote` form as the one to use when the answer
 is going to be spent against.
 
+**Adjusted 2026-08-27, after F5.** `source-coverage.mjs` is a second script
+that defaults to `--remote` and prints its target on the first line — the
+shape this proposal asks `catalog-diff` to adopt. The precedent is set; the
+proposal is unchanged.
+
 ### F14 — the sixth skill should be the audit-menu protocol, and it is the only one that qualifies
 
 **What is true today.** Five skills exist. The protocol this very file is written
@@ -1076,6 +1177,15 @@ every number carry its date and its source. It gets its `~/.claude/skills`
 junction in the same PR (and, per F8, `SETUP.md`'s list is updated). Posture:
 **one skill, no script** — nothing here is mechanisable, which is exactly why it
 qualifies and the others do not.
+
+**Adjusted 2026-08-27, after F1-F5.** The protocol now has **nine** precedent
+files rather than four, and five of them are in this document. Worth adding to
+whatever gets written: taking a finding is also **auditing the finding**. Five
+of the five turned up an error in their own premises (see *Status* above), and
+one of those errors would have shipped a silent bug if the proposal had been
+implemented as written. "Verify the premises against current code before
+scoping, and lead the report with the corrections" is the single highest-value
+rule the protocol has, and it is currently unwritten.
 
 ### F15 — what should move between skills and scripts, and what should not become a skill
 
@@ -1151,6 +1261,21 @@ not apply anything**; it is the escaping that is worth automating, not the
 decision to ship, and `class-check` on the resulting `.sql` remains a separate
 step so the ASCII/CRLF pre-flight still runs against the real artifact. (3) The
 UI skill: revisit after Track G, with `UI-AUDIT.md` in hand.
+
+**Adjusted 2026-08-27, after F2 and F4 — part (1) is half done, and its
+premise inverted.** `book-survey` §0, §0b and §0d have already been rewritten
+around the commands they became. What is left of part (1) is **§1 only**
+(the inventory regexes), plus the three parsing rules into §2 and the
+PF-shaped header lines on `parse-pf-spell-*.mjs`.
+
+But the length claim is now false in the other direction: `book-survey` is
+**519 lines, not 444**. Replacing prose with commands did not shorten it,
+because each rewrite carried its failure history in with it — the resume
+footgun, the `bom` refusal, the `pf` split. That is the right trade for a file
+whose whole job is stopping a session from re-deriving a mistake, but "F2/F4/
+F11 take about 90 lines out of it" should not be quoted as a reason to expect
+the file to shrink. If it needs to be shorter, that is now its own decision
+about which failure histories have earned their place.
 
 ### F16 — every class extraction is taught the format by the two oldest and most-corrected classes in the repo, forever
 
@@ -1257,9 +1382,34 @@ not a gate. Separately, and outside the repo: the nine PDFs are the only
 irreplaceable artifact in this pipeline and are worth a copy somewhere that is
 not `Downloads`. That is a decision for you, not a change this audit proposes.
 
+**Adjusted 2026-08-27, after F1-F5 — one premise is now false and one risk
+dropped.** `pf` **has a manifest** (F2 backfilled it), so its source PDF
+filename is written down in two places, not none. And `scripts/books.json`
+already carries `source_pdf` for every book including the four that are cited
+and uncached, so the recovery record this proposes is one field
+(`source_pdf_dir`) away, not a new file.
+
+The rebuild is now genuinely one command per book and free for the seven with
+a text layer, exactly as this predicted — but with a caveat this could not
+have known: a rebuild is **not** byte-identical for two of them. `pf` reorders
+blocks on 68 pages (no content change) and `ju` changes 148 of 162 pages,
+because its current cache is the wrong read. Rebuilding is safe; rebuilding
+silently is not, which is why F2 made switching a cache's kind require
+`--force`.
+
+The always-printed status line is half shipped: `source-coverage.mjs` prints
+`caches: 8 on this machine` with each one's page count on its first line.
+`drift-check` still does not, and the registry now makes "8 of 12 registered"
+a one-line computation.
+
 ---
 
-## Adding book N — the runbook, as it looks with F1–F5, F10 and F11 taken
+## Adding book N — the runbook
+
+**F1–F5 are taken as of 2026-08-27, so steps 0, 1, 2 and 8 are real today.**
+What is still a forecast: step 6 needs F10 (`SURVEY.md`), step 7 needs F11
+(`slice-pages.py`) and step 9 needs F15 part 2 (`--emit-script`). Step 5 is
+real but its `--remote` form is F13. Step 11 needs F8.
 
 One page. Steps marked **(once)** are per book; the rest repeat per class.
 
