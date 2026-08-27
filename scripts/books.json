@@ -136,6 +136,15 @@
       "note": "Content ends at printed 203 and the index runs to 208. The cache held 202 of the PDF's 210 pages until the resume fix in F2 topped it up; it now holds all 210."
     },
 
+    "ww": {
+      "title": "Rifts Dimension Book 1: Wormwood",
+      "aliases": ["Wormwood", "Rifts Dimension Book One: Wormwood"],
+      "source_pdf": "Rifts- Dimension Book 1 Wormwood.pdf",
+      "printed_pages": 159,
+      "page_offset": 0,
+      "note": "The second book here with a ZERO offset, and the only one whose folios line up with the PDF end to end: printed N is cache pNNN and read-columns.py N. Verified on printed 3, 4, 5, 6, 83 and 157 by reading the folio off the render, and measured independently by ocr-book.py. A scan with no text layer, but a clean one - no page needed a re-read and no table pages needed a higher dpi."
+    },
+
     "rifts-core": {
       "title": "Rifts RPG (original core book)",
       "aliases": ["Rifts RPG"],
