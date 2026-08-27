@@ -803,6 +803,38 @@ claim-audit rule):
   Migration: real `magic` blocks (`spells_starting: 1` +
   `spells_per_level_from:` the orientation lists — the shifter's shape), notes
   rewritten. The biggest single mechanic currently held in prose.
+  - **Taken, 2026-08-26** (`fix-rue-elemental-fusionist-spells.sql`, plus the
+    app change below): both orientations carry real `magic` blocks now —
+    `spells_starting: 1` bounded by `spells_from`, and a `spells_schedule`
+    entry at every level from 2 to 15 drawing `from_list`, the shifter's shape
+    with the starting pick bounded too. Verified in the running wizard: a
+    level-one Earth/Air Fusionist is offered **exactly its eighteen**, and a
+    level-4 Fire/Water one is offered "1 spell from a list of 19" at each of
+    levels 2, 3 and 4.
+    **The sketch could not have been done as data.** `spells_starting: 1` alone
+    would have let a first-level Fusionist pick any of the catalog's ~570
+    spells, eighth-level warlock magic included — strictly worse than the prose
+    it replaced. The creation builder took **one count and one gate**, and
+    `validate-character.js` hardcoded `from: null` on the starting spell pool:
+    psionics has had `powers_from` since the burster, spells never got the
+    twin. So `magic.spells_from` is new, and it arrived with the S9 shape in
+    one change (`startingGroups` in `js/leveling.js`, read by the wizard *and*
+    the server — the two builders are the pair that drifts).
+    **Every name was checked on its printed P.P.E., not just on its name.** All
+    36 book names resolve and all 36 costs match their catalog row. Two the
+    name alone would have missed: the book's "Thunder Clap" is stored as
+    `Air: Thunderclap`, and the book prints one undivided list per orientation
+    while the catalog files each spell under its own element (Chameleon is
+    Earth, Create Light is Air).
+    **One name is ambiguous and is deliberately left so.** The Fire/Water list
+    prints "Cloud of Steam (10)" untagged, and the catalog holds two rows of
+    that name **both at 10 P.P.E.** — `Fire: Cloud of Steam` (level 4) and
+    `Water: Cloud of Steam` (level 1). Nothing in the entry separates them and
+    the element counts do not either, so **both** are on the list: a pick costs
+    one slot whichever is taken, so offering both forbids nothing the book
+    grants and invents no spell it does not name, where guessing would have
+    buried a coin flip where nothing would ever flag it. That is why the
+    Fire/Water list is 19 names for 18 printed ones.
 - **S2 — Cyber-Knight: "The 80% chance of having psionics at all is a
   per-character roll the class schema cannot state."** False —
   `psionics_allowed` rolled tiers exist (`rollsForPsionics`, wizard briefing,

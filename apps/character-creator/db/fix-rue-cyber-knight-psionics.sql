@@ -106,7 +106,12 @@ UPDATE imported_classes
          '  - Stored as the Major Psychic result of the RUE p.64 roll: six additional powers from Healing, Sensitive and Physical (powers_starting: 6), with Create Psi-Sword, Create Psi-Shield and Meditation granted by name because the book gives those three to every cyber-knight whatever the roll. An earlier version stored powers_starting: 9, counting the universal three as three of the picks - which could never work, since the catalog files Psi-Sword and Psi-Shield under Super and a major psychic''s picks cannot reach Super. That earlier note also said `psionics` gates by category rather than by name; that is false, `powers_from` exists and the burster uses it. It does not apply here: the twelve-name list belongs to the MINOR band, and this class is the Major one, which draws from the three categories.'),
        updated_at = datetime('now')
  WHERE class_id = 'cyber-knight'
-   AND instr(markdown, 'gates by category rather than by name') > 0;
+   -- Guarded on a phrase the REPLACEMENT does not contain. The obvious guard,
+   -- 'gates by category rather than by name', appears in the new text too - it
+   -- quotes the claim it is correcting - so it would stay true forever and this
+   -- statement would fire on every re-run, replacing nothing and touching
+   -- updated_at. Caught by the local readback, which could never reach zero.
+   AND instr(markdown, 'The universal three come from a named list') > 0;
 
 -- Readback. Expected: granted 1, picks_six 1, cats 1, old_nine_gone 1,
 -- notes_left 0, has_cr 0.
@@ -116,7 +121,7 @@ SELECT (instr(markdown, 'powers: ["Psi-Sword", "Psi-Shield", "Meditation"]') > 0
        (instr(markdown, char(10) || '  powers_starting: 9') = 0)                  AS old_nine_gone,
        (instr(markdown, 'Eighty percent of cyber-knights') > 0)
      + (instr(markdown, 'The 80% chance of having psionics') > 0)
-     + (instr(markdown, 'gates by category rather than by name') > 0)             AS notes_left,
+     + (instr(markdown, 'The universal three come from a named list') > 0)       AS notes_left,
        (instr(markdown, char(13)) > 0)                                           AS has_cr
   FROM imported_classes WHERE class_id = 'cyber-knight';
 
