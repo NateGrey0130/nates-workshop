@@ -5735,6 +5735,26 @@ section('Book registry');
   check('every registry entry has the shape its readers assume',
     shapeBad.length === 0, shapeBad.join(', '));
 
+  // THE RECOVERY RECORD. .cache/books/ is gitignored on purpose and holds the
+  // full text of books Palladium still sells, so every cache is a working file
+  // that can be rebuilt - but only from a PDF somebody still has. One
+  // ocr-book.py run rebuilds a cache from source_pdf + source_pdf_dir; nothing
+  // rebuilds a PDF that was never kept. A book that names its PDF and not the
+  // directory it was read from is half a record, which is why this is pinned
+  // rather than left to whoever adds the next book.
+  const noDir = Object.entries(registry)
+    .filter(([, b]) => b.source_pdf && typeof b.source_pdf_dir !== 'string')
+    .map(([slug]) => slug);
+  check('every book that names a source PDF also names the directory it was in',
+    noDir.length === 0, noDir.join(', '));
+
+  // And the other half: a directory for a PDF that is not named points nowhere.
+  const dirNoPdf = Object.entries(registry)
+    .filter(([, b]) => !b.source_pdf && b.source_pdf_dir)
+    .map(([slug]) => slug);
+  check('no book records a directory without the PDF that was in it',
+    dirNoPdf.length === 0, dirNoPdf.join(', '));
+
   // The prompt is where the vocabulary is set: asking for a `kebab-case slug`
   // is what produced five spellings of one book. It offers the registry's
   // titles now, and the ` p.N-M` suffix that --field-sources takes its window

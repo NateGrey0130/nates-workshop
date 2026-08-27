@@ -1614,6 +1614,47 @@ The always-printed status line is half shipped: `source-coverage.mjs` prints
 `drift-check` still does not, and the registry now makes "8 of 12 registered"
 a one-line computation.
 
+**Taken, 2026-08-27 (PR: `f17-cache-recovery-record`).** Implemented as
+proposed, and nothing more: `source_pdf_dir` is one new field on all thirteen
+registry entries — `C:\Users\natha\Downloads` for the eleven books whose PDF
+is on hand, null for the two that have none — and the status line is printed by
+both scripts on every run. **Print, do not fail** was honoured literally: no
+exit code moved. `drift-check` says `NO DRIFT` with four registered books
+uncached exactly as it did before, and `source-coverage` still exits 0 on a
+machine that has no cache at all — it just says so on its first line now.
+
+Two smoke checks pin the record rather than the numbers: a book that names a
+`source_pdf` must name the directory it was read from, and a directory without
+a PDF is refused as the other half of the same mistake. Neither counts
+anything, so neither goes stale — which is the lesson from this file's own
+stale tables.
+
+**The eleven paths were verified, not assumed.** The proposal wrote the
+directory in as a known value; every basename in the registry was actually
+stat-ed in `Downloads` before it was recorded, and all eleven are there —
+283 MB, from `Rifts - Ultimate Edition.pdf` at 59 MB down to the 40 KB skill
+list. A recovery record nobody checked is a recovery record that fails on the
+day it is used.
+
+**And this finding's numbers had already drifted, in the direction it warned
+about.** The text says 33 MB across eight books; the cache is **41 MB across
+nine** — Wormwood was cached the same day, 8 MB and 161 pages, and the
+sentence was stale within hours of being written. The adjusted note says the
+registry makes `8 of 12 registered` a one-line computation; the answer today
+is **9 of 13**. Both numbers moved for the same reason, and that is the
+argument for computing the line rather than writing it down: this note gives
+the count no fixed home, and a tenth cache changes what the scripts print
+without changing a word anywhere.
+
+`source-coverage`'s half of the line was already shipped and is now
+**re-based**: it counted `8 on this machine`, a fact about a directory, and it
+counts against the registry now, which is the fact about what is *missing*.
+The two scripts print the same sentence because they compute it the same way.
+
+Left undone deliberately: the PDFs still live only in `Downloads`. The finding
+said a copy elsewhere is your decision and not a change it proposes, and that
+is still true — what shipped makes the loss **visible and the caches
+rebuildable**, not the books safe.
 ### F18 — the skill importer is the one confirm path with no page range in it at all
 
 **What is true today.** F6 composed a page range onto every row the *session*

@@ -55,14 +55,25 @@ if (existsSync(cacheDir)) {
     }
   }
 }
+// Counted against the REGISTRY, not against the disk. "8 on this machine" is
+// a fact about a directory; "8 of 13 registered books present" is a fact about
+// what is missing, and it is the same sentence drift-check prints. Printed
+// before the no-cache exit as well, because that exit is the case it is for.
+const registeredSlugs = Object.keys(registry);
+const presentSlugs = registeredSlugs.filter((s) => caches[s]);
+const strays = Object.keys(caches).filter((s) => !registeredSlugs.includes(s));
+const cacheStatus = `${presentSlugs.length} of ${registeredSlugs.length} registered books present`
+  + (strays.length ? `; ${strays.length} not in the registry: ${strays.join(', ')}` : '');
+
 if (!Object.keys(caches).length) {
+  console.log(`caches:       ${cacheStatus}`);
   console.log('no OCR caches under .cache/books — nothing to trace against.');
   console.log('Cache a book with scripts/ocr-book.py; the caches are gitignored.');
   process.exit(0);
 }
 
 const opts = { registry, caches, manifests, notBooks: loadNotBooks() };
-console.log(`caches:       ${Object.keys(caches).length} on this machine — `
+console.log(`caches:       ${cacheStatus} — `
   + Object.entries(caches).map(([s, p]) => `${s} (${p.size})`).join(', '));
 console.log(`target:       ${target}\n`);
 
