@@ -1729,7 +1729,7 @@ page for them — that is a book read, and `Poncho` is exactly the kind of row
 where a guess would look right. Pin in the smoke test that a stub's
 `source_book` never carries `p.`.
 
-**Taken, 2026-08-27 (PR #TBD) — and its headline was false.** This finding was
+**Taken, 2026-08-27 (PR #349) — and its headline was false.** This finding was
 written on 2026-08-27 from the coverage ledger, without opening the script that
 made the rows. Implementing it is what read the script.
 
