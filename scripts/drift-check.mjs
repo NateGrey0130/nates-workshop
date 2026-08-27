@@ -158,6 +158,24 @@ for (const c of published) {
 const cacheDir = join(repoRoot, '.cache', 'books');
 const bookRegistry = loadBookRegistry();
 
+// The cache status, printed ALWAYS - including when there is no cache at all.
+// Every guard downstream of here treats a missing cache as a non-event, which
+// is right for a clean clone and means total LOSS of the cache reads exactly
+// the same: two of the three checks go quiet and keep exiting 0. This is the
+// one line that tells the two apart. It is a status line, NOT a gate - the
+// exit code must not move, because a clean clone is legitimate. Recovering a
+// cache is one ocr-book.py run from source_pdf + source_pdf_dir in the
+// registry; recovering a PDF that was never kept is not possible at all.
+const cachedSlugs = existsSync(cacheDir)
+  ? readdirSync(cacheDir).filter((s) => existsSync(join(cacheDir, s, 'txt')))
+  : [];
+const registeredSlugs = Object.keys(bookRegistry);
+const presentSlugs = registeredSlugs.filter((s) => cachedSlugs.includes(s));
+const strays = cachedSlugs.filter((s) => !registeredSlugs.includes(s));
+console.log(`caches:       ${presentSlugs.length} of ${registeredSlugs.length} registered books present`
+  + (presentSlugs.length ? ` — ${presentSlugs.join(', ')}` : '')
+  + (strays.length ? `; ${strays.length} not in the registry: ${strays.join(', ')}` : ''));
+
 // Three queries, not three per book. ~1,000 rows.
 const CITATION_TABLES = ['spells', 'psionic_powers', 'skills'];
 const citationRows = new Map();   // slug -> [{ table, name }]
