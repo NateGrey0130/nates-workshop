@@ -368,6 +368,14 @@ grants are; only the two builders had to move.
   spell levels or `from` list **replaces** the block's rather than narrowing
   them — the rule level-up grants already follow, because a book naming Super
   for one slot is granting an exception, and intersecting would throw it away.
+- A group's `note` is for a restriction the catalog **cannot** enforce - the
+  Mind Mage's *"Mind Wipe, Psi-Sword and Mentally Possess Others cannot be
+  selected until third level"*. It renders as *"<note> — the catalog cannot
+  check this one, so it is yours to honour"*, so a note that merely restates
+  the group's own gate tells the player the opposite of the truth about the
+  picker beneath it, which already captions itself *"2 spells from levels 1"*.
+  The Wizard shipped four of those and they came off in
+  `zzz-wizard-the-seventh-spell-pick.sql`.
 - `magic.spells_from` is the twin of `psionics.powers_from`, which spells never
   had: a named list bounds the starting spell pick and replaces the spell-level
   cap outright.
@@ -400,13 +408,21 @@ their spells showed none of them.
 **A starting pick stated as a level-1 schedule entry fires nowhere**, and is
 reported rather than honoured. Creation asks `perLevelGrants` from level 1 and
 it skips every entry at or below `fromLevel` **by design**; creation's own
-reader is `startingGroups`, which reads the `*_starting` keys. So the Wizard's
-six spells — two from spell level one, two from two, one each from three and
-four, all written as `spells_schedule` entries at `level: 1` — are stated where
-nothing reads them. The step counts them and says so. Honouring them would make
-a schedule a second way to state a starting pick, and one way is the whole
-reason the `*_starting` keys exist; the fix is to re-import the class with
+reader is `startingGroups`, which reads the `*_starting` keys. The step counts
+such picks and says so rather than honouring them: honouring them would make a
+schedule a second way to state a starting pick, and one way is the whole reason
+the `*_starting` keys exist. The fix is always to re-state the class with
 `spells_starting_groups`.
+
+The Wizard was the class this was found on — six picks, two from spell level
+one, two from two, one each from three and four, every one of them written as a
+`spells_schedule` entry at `level: 1`, reaching no character.
+`zzz-wizard-starting-spells.sql` re-stated them as groups and
+`zzz-wizard-the-seventh-spell-pick.sql` added the seventh, so it now starts
+with **seven** picks and no schedule at all. The seventh is the level-one
+instance of *"one new spell at each new level of experience, starting at level
+one"* — `perLevelGrants` begins at level two, so creation has to state that one
+itself.
 
 **What a roll *could* come up is checked; what it *did* come up is not.** The
 dice are rolled client-side by design, so the server bounds each stored pool
