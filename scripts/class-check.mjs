@@ -43,7 +43,8 @@ import { parseClassMarkdown } from '../apps/character-creator/js/parser.js';
 import { crossReference, buildStubStatements, restrictionNames } from '../functions/api/character-creator/_lib/catalog.js';
 import {
   extractClassMarkdown, unmodelledKeys, crossCategoryRestrictions, unclosedFlowLines,
-  parseSourcePages, resolveBookSlug, registryBookSlug, detectPageOffset, freeTextFields,
+  parseSourcePages, resolveBookSlug, registryBookSlug, detectPageOffset,
+  detectPageOffsetRegions, offsetForPrintedPage, freeTextFields,
   fieldTokens, fieldSourceSpans, bestMatchingPages,
 } from './class-check-lib.mjs';
 import { loadBookRegistry } from './books-lib.mjs';
@@ -187,11 +188,11 @@ if (fieldSources && data) {
     .filter((d) => d.isDirectory() && existsSync(path.join(booksDir, d.name, 'txt')))
     .map((d) => {
       const mf = path.join(booksDir, d.name, 'manifest.json');
-      let sourcePdf = null;
+      let manifest = null;
       if (existsSync(mf)) {
-        try { sourcePdf = JSON.parse(readFileSync(mf, 'utf8')).source_pdf ?? null; } catch { /* a broken manifest still leaves the slug route */ }
+        try { manifest = JSON.parse(readFileSync(mf, 'utf8')); } catch { /* a broken manifest still leaves the slug route */ }
       }
-      return { slug: d.name, sourcePdf };
+      return { slug: d.name, sourcePdf: manifest?.source_pdf ?? null, manifest };
     });
   if (!books.length) die('no cached books under .cache/books');
 
@@ -223,20 +224,45 @@ if (fieldSources && data) {
     .sort((a, b) => a.page - b.page);
   const byPage = new Map(pages.map((p) => [p.page, p.lines]));
 
+  // WHERE THE OFFSET COMES FROM, in order. It used to be live majority vote
+  // and nothing else: computed by a human at survey time, discarded, and
+  // re-derived here every run. It is a per-book constant that is free to
+  // record once and costs a wrong page read every time it is guessed.
+  //
+  //   --offset            the human overrides everything
+  //   scripts/books.json  the durable, hand-checked copy, PER PRINTED PAGE
+  //   the manifest        what ocr-book.py measured when it built this cache
+  //   live detection      the old route, still here for an unregistered book
+  //   0                   and it SAYS so, rather than quietly using it
+  //
+  // The registry outranks the manifest for the same reason F3 gives: a number
+  // read out of the cache cannot judge the cache. The registry is also the
+  // only one of the three that can express `pf`, whose offset is +1 for
+  // printed 1-16 and +2 after -- a majority vote cannot see that at all,
+  // because the minority region is 11 pages against 287.
+  const registryEntry = bookRegistry[slug];
+  const det = detectPageOffset(pages);
+  const trustedLive = det && det.votes >= 3 && det.votes * 2 > det.sampled ? det : null;
+  const regions = detectPageOffsetRegions(pages);
+
   let offset = 0;
-  let offsetHow = 'default 0';
+  let offsetHow = 'default 0 — nothing records one and the cache shows none';
   if (offsetFlag !== null) {
     offset = Number(offsetFlag);
     offsetHow = 'from --offset';
   } else {
-    const det = detectPageOffset(pages);
-    // A couple of stray bare numbers should not move the window; a real
-    // pagination shows up on most pages.
-    if (det && det.votes >= 3 && det.votes * 2 > det.sampled) {
-      offset = det.offset;
-      offsetHow = `detected from ${det.votes} printed page numbers`;
-    } else {
-      offsetHow = 'default 0 — no consistent printed page numbers in the cache';
+    const fromRegistry = offsetForPrintedPage(range.first, registryEntry);
+    const manifestOffset = books.find((b) => b.slug === slug)?.manifest?.page_offset;
+    if (fromRegistry) {
+      offset = fromRegistry.offset;
+      offsetHow = `scripts/books.json, ${fromRegistry.from}`;
+    } else if (Number.isInteger(manifestOffset)) {
+      offset = manifestOffset;
+      offsetHow = `the ${slug} manifest`;
+    } else if (trustedLive) {
+      offset = trustedLive.offset;
+      offsetHow = `detected from ${trustedLive.votes} printed page numbers`
+        + ' — not recorded anywhere; add it to scripts/books.json';
     }
   }
 
@@ -247,6 +273,53 @@ if (fieldSources && data) {
   console.log(`\nFIELD SOURCES (${slug} p.${range.first}`
     + (range.last !== range.first ? `-${range.last}` : '')
     + ` -> files p${pdfFirst}-p${pdfLast}; offset ${offset >= 0 ? '+' : ''}${offset}, ${offsetHow})`);
+
+  // ADVISORY, never the exit code. A disagreement between what is recorded and
+  // what the pages say is the signature of a re-cached book, a duplicated
+  // page, or a non-constant offset — and the recorded value can be the right
+  // one while the cache is newly partial, so this prints and moves on.
+  const offsetNotes = [];
+  if (offsetFlag === null && trustedLive && trustedLive.offset !== offset) {
+    const vote = `${trustedLive.offset >= 0 ? '+' : ''}${trustedLive.offset} `
+      + `(${trustedLive.votes}/${trustedLive.sampled})`;
+    const used = `${offset >= 0 ? '+' : ''}${offset}`;
+    // An EXPECTED disagreement when the page is inside a recorded exception:
+    // the whole-book vote is by definition the majority region's, and this
+    // page is deliberately not in it. Say which, or the note reads as a fault.
+    offsetNotes.push(offsetHow.startsWith('scripts/books.json, printed')
+      ? `the whole-book vote is ${vote}; this page is inside the recorded ${used} `
+        + 'region, which is why they differ'
+      : `the pages themselves vote ${vote}, not ${used}`);
+  }
+  // A split book is only worth reporting when the registry does NOT already
+  // describe it. `pf` splits on every single run, and a note that fires every
+  // time is one nobody reads — the check is whether what is recorded RESOLVES
+  // each detected region to the offset that region actually shows.
+  const unrecorded = regions.filter((r) => 
+    offsetForPrintedPage(r.fromPrinted, registryEntry)?.offset !== r.offset
+    || offsetForPrintedPage(r.toPrinted, registryEntry)?.offset !== r.offset);
+  if (regions.length > 1 && unrecorded.length) {
+    offsetNotes.push('this cache paginates in '
+      + `${regions.length} ways and scripts/books.json does not say so: `
+      + regions.map((r) => `${r.offset >= 0 ? '+' : ''}${r.offset} over printed `
+        + `${r.fromPrinted}-${r.toPrinted} (${r.votes})`).join(', '));
+    offsetNotes.push(`add \`page_offset_exceptions\` to ${slug} — a majority vote `
+      + 'cannot see a minority region, and every lookup inside one lands on the '
+      + 'wrong page');
+  }
+  if (!trustedLive && offsetFlag === null) {
+    offsetNotes.push(offsetHow.startsWith('default 0')
+      ? 'no printed page number survives anywhere in this cache, and '
+        + `scripts/books.json has no page_offset for ${slug} — the window below is a guess`
+      : `nothing in the ${slug} cache confirms this offset — no page in it shows a `
+        + 'printed folio, so the recorded value is the only evidence there is');
+  }
+  if (offsetNotes.length) {
+    console.log(`  OFFSET (${offsetNotes.length})`);
+    for (const n of offsetNotes) console.log(`  ? ${n}`);
+    console.log('  Advisory: it does not change the exit code. Check the folio printed');
+    console.log('  on the page the window landed on before trusting what follows.');
+  }
 
   if (!windowPages.length) {
     die(`pages p${pdfFirst}-p${pdfLast} are not in the ${slug} cache `

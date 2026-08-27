@@ -829,9 +829,12 @@ slug as an initialism of the title, or the manifest's PDF name). `--book
 <slug>` overrides. A registered book with no cache here resolves to *nothing*
 rather than to the nearest-looking cache. The page window
 comes from the title's `p.N-M` suffix, and the printed-page → PDF-page offset
-is read off the pages themselves, by majority vote over the bare page numbers
-OCR captured (`--offset <n>` overrides; the caches in use when this shipped ran
-+2 and +3, so a trusting `p.N` lookup would start pages early). When the window
+is READ, not re-derived: `--offset <n>`, then `scripts/books.json` (which
+answers per printed page, because `pf`'s offset is +1 for printed 1-16 and +2
+after), then the cache manifest, then a majority vote over the bare page numbers
+the pages show, then 0 — and it prints which. A disagreement between what is
+recorded and what the pages vote is advisory: it is the signature of a re-cached
+book or a page duplicated in the scan, and it never changes the exit code. When the window
 matches nothing, it names the strongest-matching pages elsewhere in the book,
 which is what a wrong offset looks like from inside the window. It reads best
 right after transcribing: seeing a neighbouring class's Money paragraph beside

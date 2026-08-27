@@ -153,17 +153,54 @@ holds five of a table's sixteen rows, those five are five independent
 confirmations that the transcription is right — and a generator that refuses to
 run when one has drifted turns that into a guarantee rather than a spot-check.
 
-## 0d. The printed-to-PDF offset is not constant
+## 0d. Read the offset from the registry. Derive it only if there is none
 
-You will derive it once — "printed 270 is PDF 272, so subtract two" — and it
-will be wrong at the other end of the book. A scan can **duplicate a page**:
-Palladium Fantasy renders printed 17 at BOTH PDF 18 and PDF 19, so the offset is
-+1 before that point and +2 after it. Hunting the Attribute Bonus Chart at
-printed 16 with the late-book offset lands on the wrong page and finds nothing,
-which reads exactly like "the chart is not in this book".
+`scripts/books.json` records `page_offset` per book, and `ocr-book.py` writes
+the same number into the cache manifest at build time. **Look there first** —
+it is a per-book constant that is free to record once and costs a wrong page
+read every time it is guessed. `class-check --field-sources` already prefers it,
+in this order:
 
-**Verify the offset next to the page you actually want**, by rendering a
-candidate and reading the folio printed on it — not once for the whole book.
+```
+--offset            you override everything
+scripts/books.json  the durable, hand-checked copy, PER PRINTED PAGE
+the manifest        what ocr-book.py measured when it built this cache
+live detection      majority vote over the folios, for an unregistered book
+0                   and it SAYS so, rather than quietly using it
+```
+
+It prints which of those it used, on the FIELD SOURCES line. It also prints an
+advisory when the pages disagree with what is recorded — that is the signature
+of a re-cached book, a duplicated page, or the split below. Advisory only: it
+never changes the exit code, because the recorded value can be right while the
+cache is newly partial.
+
+**The offset is not always constant, and a majority vote cannot see that.**
+`pf` is the live case and the reason this section exists. An extra page sits at
+cache `p018`/`p019` — `p019` holds `p018`'s text plus a *Throwing Objects*
+table — so the offset is **+1 for printed 1-16 and +2 for printed 18-336**.
+Measured over the whole cache the vote is **287 to 11** for +2, so a single
+number sends every lookup in the first sixteen pages one page early. Hunting the
+Attribute Bonus Chart at printed 16 with the late-book offset lands on the wrong
+page and finds nothing, which reads exactly like "the chart is not in this book".
+
+That is what `page_offset_exceptions` is for:
+
+```json
+"page_offset": 2,
+"page_offset_exceptions": [ { "printed_through": 16, "offset": 1 } ]
+```
+
+First match wins; everything past the last exception falls through to
+`page_offset`. `pf` is the only book that has one. If you cache a new book,
+`class-check --field-sources` will tell you when it needs one — it reports every
+offset region it detects and says so when the registry does not describe them,
+and the smoke test fails if any cache on this machine shows a region
+`scripts/books.json` cannot resolve.
+
+**When there IS no recorded offset**, derive it next to the page you actually
+want — render a candidate and read the folio printed on it — not once for the
+whole book. Then record it, so the next session does not repeat this.
 
 **And the two tools you verify it with disagree about what "page" means.**
 `scripts/read-columns.py` takes the number a PDF VIEWER shows — 1-based, it
