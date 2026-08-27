@@ -1012,7 +1012,7 @@ reads the served model out of the response body, so labelling the call by
 endpoint gets this for free at the session level; recording it per row is a
 larger change and is **not** proposed here.
 
-**Taken, 2026-08-27 (PR #TBD).** All three call sites meter now, with the
+**Taken, 2026-08-27 (PR #347).** All three call sites meter now, with the
 labels this proposal names: `cc-import-class` (`import/extract.js`),
 `cc-import-<catalog>` from `spec.catalog` (`import-engine.js`, covering
 skills / spells / psionics / gear) and `cc-npc-sweep`. `email` is threaded in
