@@ -23,7 +23,8 @@ import { isChoiceGroup, isGearChoice, applyVariant,
 import { composeClass } from './js/compose.js';
 import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant,
          spellNamesForGrant, grantNote,
-         skillGrantsFor, spellGrantsFor, psionicGrantsFor, startingGroups } from './js/leveling.js';
+         skillGrantsFor, spellGrantsFor, psionicGrantsFor, startingGroups,
+         startingPicksFor } from './js/leveling.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
 const STEPS = ['System', 'Race', 'Attributes', 'Occupation', 'Skills', 'Equipment', 'Powers',
@@ -2398,6 +2399,38 @@ function psiGroupRows(list, count, kind = 'psi', gi = null) {
   }).join('');
 }
 
+// Spells a class knows OUTRIGHT, listed rather than picked.
+//
+// The Shifter's twenty and the Techno-Wizard's twenty-five have reached the
+// character since powersPayload started folding them in, and the step where a
+// player looks for their spells showed none of them. Read-only rows rather than
+// ticked checkboxes: a disabled checkbox beside a spell the character HAS reads
+// as one it may not take.
+function grantedSpellHtml(names) {
+  if (!names.length) return '';
+  const entries = names.map((n) => {
+    const sp = S.spellCatalog.find((x) => x.name === n);
+    // A granted name the catalog does not carry still reaches the character,
+    // with no level and no cost - the same silence the two pickers already call
+    // out on a `from` list, said here for the same reason.
+    return `<li>${esc(n)} <span class="muted small">&mdash; ${sp
+      ? `level ${sp.level}, ${sp.ppe}${sp.ppe_note && sp.ppe > 0 ? '+' : ''} P.P.E.`
+      : 'not in the catalog yet'}</span></li>`;
+  });
+  const columns = [];
+  for (let i = 0; i < entries.length; i += REVIEW_COLUMN) columns.push(entries.slice(i, i + REVIEW_COLUMN));
+  return `<div class="review-cols">${columns
+    .map((col) => `<ul class="review-col">${col.join('')}</ul>`).join('')}</div>`;
+}
+
+// Picks a class states as a LEVEL-1 SCHEDULE ENTRY, where nothing reads them.
+// Said out loud rather than honoured — see startingPicksFor.
+function misfiledSpellNote(n) {
+  return n ? `<p class="attr-note">${n} more ${n === 1 ? 'spell is' : 'spells are'} stated in this
+    class's per-level schedule at level 1, which creation does not read — a starting pick belongs in
+    <code>spells_starting</code>. They are not offered here and nothing is guessed.</p>` : '';
+}
+
 // The level-1 spell picks, one block per starting group.
 //
 // One group is the overwhelming case and keeps writing into the flat `S.spells`
@@ -2405,16 +2438,47 @@ function psiGroupRows(list, count, kind = 'psi', gi = null) {
 // its starting pick - or bounds it with a named list, which is the Elemental
 // Fusionist's eighteen - gets a block per group, keyed exactly as the
 // Advancement step keys its per-grant pickers. They are the same problem.
-function startingSpellHtml(magic) {
-  const groups = startingGroups(S.cls, 'spell');
-  // A magic block with no starting count still renders its header, so the step
-  // says "0" rather than looking like the class has no magic at all.
+//
+// A class with NO starting pick gets a sentence saying which of the several
+// nothings it is, and no picker at all. It used to get "Spells — 0/0" over a
+// filter box and 543 disabled rows, which said only that something had gone
+// wrong. `startingPicksFor` draws the distinctions; this states them.
+function startingSpellHtml() {
+  const magic = S.cls.magic;
+  const start = startingPicksFor(S.cls, 'spell');
+  if (!start.applicable) return '';
+  const groups = start.groups;
+  const granted = grantedSpellHtml(start.granted);
+  const misfiled = misfiledSpellNote(start.misfiled);
+
   if (!groups.length) {
-    groups.push({ count: 0, spell_levels: null, categories: null, from: null });
+    const head = (tail) => `<h3>Spells${tail}
+      <span class="muted small">(${esc(magic.type)} magic)</span></h3>`;
+    if (start.granted.length) {
+      return `<h3>Spells &mdash; ${start.granted.length} known
+        <span class="muted small">(${esc(magic.type)} magic &middot; granted by the class)</span></h3>
+        <p class="muted small">The book names this class's spells outright, so there is nothing to
+          choose here. All ${start.granted.length} are already on the character.</p>`
+        + granted + misfiled;
+    }
+    if (start.unknown) {
+      // Word for word the posture advPowerBlock takes one level up, because it
+      // is the same posture: a class that never recorded a number gets said so
+      // rather than shown an empty list, which reads as "this class starts with
+      // no spells".
+      return head('') + `<p class="warn">This class's definition does not record how many spells it
+        starts with, so none are offered here. That is not the same as none — the books do state it
+        for most casters. Re-import the class with <code>spells_starting</code>, or add them by hand
+        on the sheet afterwards. Nothing is guessed.</p>` + misfiled;
+    }
+    return head(' &mdash; none at level 1') + `<p class="muted small">Its definition states a
+      starting count of zero, which is an answer and not a gap — a dragon hatchling knows no spells
+      until second level. Anything learned later is on the Advancement step.</p>` + misfiled;
   }
+
   const many = groups.length > 1;
   const kind = many ? 'spell-start' : 'spell';
-  const total = groups.reduce((n, g) => n + g.count, 0);
+  const total = start.total;
   const takenAll = () => groups.flatMap((g, i) => powerList(kind, many ? i : null));
 
   const blocks = groups.map((g, gi) => {
@@ -2460,9 +2524,13 @@ function startingSpellHtml(magic) {
   const caption = many ? 'in groups the book keeps apart'
     : one.from ? `from the class list of ${one.from.length}`
     : one.spell_levels ? `levels ${one.spell_levels.join(', ')}` : null;
-  return `<h3>Spells — ${takenAll().length}/${total}
+  // Granted spells first: they are what the character already has, and the
+  // picker below is what it still owes a decision on.
+  return (start.granted.length ? `<h3>Spells &mdash; ${start.granted.length} granted by the class
+      <span class="muted small">(already on the character)</span></h3>` + granted : '')
+    + `<h3>Spells — ${takenAll().length}/${total}
     <span class="muted small">(${esc(magic.type)} magic${caption ? ' · ' + esc(caption) : ''})</span></h3>`
-    + blocks;
+    + blocks + misfiled;
 }
 
 // The level-1 psionic picks when the book SPLITS them across categories - the
@@ -2513,16 +2581,20 @@ function startingPsiHtml(cls, groups) {
 }
 
 function renderPowers() {
-  const magic = S.cls.magic || null;
   const cls = psiClass();
   const psi = psiConfig(cls);
   const rolling = canRollPsionics();
+  // Asked of the builder rather than of `S.cls.magic` being truthy: the Godling
+  // carries `magic: { type: "none" }`, which is a block saying the class is NOT
+  // a caster, and testing the block put a Spells heading over a class the step
+  // should have called empty.
+  const spells = startingSpellHtml();
   let inner = '';
-  if (!magic && !psi && !rolling) {
+  if (!spells && !psi && !rolling) {
     inner = `<p class="muted">This class has no spellcasting or psionics — carry on.</p>`;
   }
   if (rolling) inner += psiRollHtml();
-  if (magic) inner += startingSpellHtml(magic);
+  inner += spells;
   const psiSplit = psi ? startingGroups(cls, 'psionic') : [];
   if (psi && psiSplit.length > 1) {
     inner += startingPsiHtml(cls, psiSplit);

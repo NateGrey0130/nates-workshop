@@ -218,7 +218,7 @@ import { stageRows } from '../../../functions/api/character-creator/_lib/import-
 import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicGrantsFor,
          xpTableFor, thresholdFor, spellLevelsForGrant,
          psionicCategoriesForGrant, spellNamesForGrant,
-         grantNote } from '../../../functions/api/character-creator/_lib/leveling.js';
+         grantNote, startingPicksFor } from '../../../functions/api/character-creator/_lib/leveling.js';
 import { toMatchQuery } from '../../../functions/api/character-creator/campaigns/[id]/search.js';
 import { powerGrantsFor, remainingPowerGrants } from '../../../functions/api/character-creator/_lib/power-picks.js';
 import { aliasCounts, buildIndex, diffCatalog, loose, match, nearest, normalise,
@@ -1284,6 +1284,73 @@ section('Per-level spells and psionics');
   const prop = buildProposal({ level: 1, hp_max: 20, skills: [] }, cls, 3);
   check('buildProposal reports the spell picks', prop.spell_picks?.total === 4);
   check('and the psionic ones', prop.psionic_picks?.applicable === false);
+}
+
+// ---------- What an empty STARTING pick means ----------
+// The same distinction one level down, and it was missing. `startingGroups`
+// returns [] for four different answers, so the Powers step rendered one thing
+// for all four: the heading "Spells - 0/0", a filter box, and 543 checkbox rows,
+// every one disabled because the allowance was zero. A picker that cannot be
+// used says only that something went wrong.
+section('Starting picks');
+{
+  const start = (magic) => startingPicksFor({ magic }, 'spell');
+
+  check('a class with no magic is not applicable', startingPicksFor({}, 'spell').applicable === false);
+  // `type: "none"` is not silence - it is a block saying the class is NOT a
+  // caster. The Godling's, whose magic comes from the O.C.C. picked beside it.
+  check('and neither is a block that says type none', start({ type: 'none' }).applicable === false);
+
+  const silent = start({ type: 'druid' });
+  check('a caster stating no starting count is UNKNOWN, not empty',
+    silent.applicable === true && silent.unknown === true);
+  check('and offers nothing rather than guessing', silent.groups.length === 0 && silent.total === 0);
+
+  // A STATED ZERO IS AN ANSWER, not a gap: five dragon hatchlings carry
+  // `spells_starting: 0` because their books say a hatchling "knows NO spells at
+  // first level" and learns them by the usual means from second.
+  const zero = start({ type: 'spell', spells_starting: 0 });
+  check('a stated zero is known, not unknown', zero.applicable === true && zero.unknown === false);
+  check('and still offers nothing', zero.total === 0 && zero.groups.length === 0);
+
+  // Nor is a class whose spells are all GRANTED missing a count. The Shifter's
+  // twenty and the Techno-Wizard's twenty-five are the whole answer.
+  const granted = start({ type: 'spell', spells: ['Zap', '  ', ' Big Zap'] });
+  check('an outright list answers the question too', granted.unknown === false);
+  check('and is carried, trimmed, blanks dropped',
+    JSON.stringify(granted.granted) === '["Zap","Big Zap"]');
+
+  const real = start({ type: 'spell', spells_starting: 12, spell_levels_allowed: [1, 2] });
+  check('a real pick comes through as groups', real.groups.length === 1 && real.total === 12);
+  check('and is neither unknown nor granted', real.unknown === false && real.granted.length === 0);
+  check('a split pick totals across its groups',
+    start({ type: 'spell', spells_starting: 3,
+            spells_starting_groups: [{ count: 1 }, { count: 2 }] }).total === 3);
+
+  // PICKS STATED WHERE NOTHING READS THEM. Creation asks perLevelGrants from
+  // level 1 and it skips every entry at or below fromLevel by design, and this
+  // is creation's own reader - so a level-1 schedule entry fires nowhere at all.
+  // The Wizard states six spells that way. Counted and reported rather than
+  // honoured: honouring them would make a schedule a second way to say a
+  // starting pick, and one way is why the *_starting keys exist.
+  const misfiledMagic = { type: 'spell', spells: ['Zap'], spells_schedule: [
+    { level: 1, count: 2, spell_levels: [1] }, { level: 1, count: 1, spell_levels: [3] },
+    { level: 2, count: 1 }] };
+  const misfiled = start(misfiledMagic);
+  check('level-1 schedule entries are counted as misfiled', misfiled.misfiled === 3);
+  check('and are NOT honoured as a starting pick', misfiled.total === 0);
+  check('while the per-level side still reads the later ones',
+    spellGrantsFor({ magic: misfiledMagic }, 1, 2).total === 1);
+  check('a schedule starting at level 2 misfiles nothing',
+    start({ type: 'spell', spells_starting: 1,
+            spells_schedule: [{ level: 2, count: 2 }] }).misfiled === 0);
+
+  // Psionics reads the same shape from its own keys, as it does one level up.
+  check('psionics answers from powers_starting',
+    startingPicksFor({ psionics: { type: 'major', powers_starting: 2 } }, 'psionic').total === 2);
+  check('and from its own outright list',
+    startingPicksFor({ psionics: { type: 'master', powers: ['Mend'] } }, 'psionic')
+      .granted.length === 1);
 }
 
 // ---------- The Attribute Bonus Chart ----------

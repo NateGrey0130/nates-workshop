@@ -98,6 +98,12 @@ that earned each. The Advancement step prints the difference — a class stating
 nothing says so and offers nothing, rather than showing an empty list that reads
 as *this class learns nothing at level 4*.
 
+`startingPicksFor` draws the same three states for the **level-1** pick, which
+went the other way for longer: a class with magic and no `spells_starting` got
+a full picker over every spell in the catalog with every row disabled. See
+[wizard-and-sheet.md](wizard-and-sheet.md), "An empty starting pick has four
+different meanings".
+
 A schedule is the **complete** statement when present and a flat `*_per_level`
 is ignored alongside it. Two keys that combine is a rule nobody remembers
 correctly six months later.
