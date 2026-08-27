@@ -1321,7 +1321,7 @@ that defaults to `--remote` and prints its target on the first line — the
 shape this proposal asks `catalog-diff` to adopt. The precedent is set; the
 proposal is unchanged.
 
-**Taken, 2026-08-27 (PR #TBD).** A `--local` diff now prints production's row
+**Taken, 2026-08-27 (PR #350).** A `--local` diff now prints production's row
 count beside its own and says outright when the two disagree; being offline
 costs the second opinion and never the diff. The default is unchanged and the
 exit code is untouched, exactly as proposed. `book-survey` §3 shows the
