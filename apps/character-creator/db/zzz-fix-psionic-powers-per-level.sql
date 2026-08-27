@@ -118,22 +118,27 @@ FROM imported_classes
 WHERE class_id = 'mind-mage';
 
 -- ---------------------------------------------------------------------------
--- DELPHI JUICER. Rifts World Book 10: Juicer Uprising, printed pages 39-41.
+-- DELPHI JUICER. Rifts World Book 10: Juicer Uprising, printed page 40 (the
+-- O.C.C. runs 39-41), ability 5, "Psionic Powers":
 --
--- JUICER UPRISING HAS NO OCR CACHE ON THIS MACHINE, so this rule could not be
--- re-read off the page. It is taken from the class's own two records of it,
--- which agree word for word on the count, the categories and the starting
--- level:
+--   "The conversion process turns the Delphi into a master psionic with the
+--    following abilities: Clairvoyance, presence sense, see aura, see the
+--    invisible and three powers from the physical category and one power from
+--    the super category (with the same restrictions as a Mind Melter). Each
+--    level after the first, the Delphi can select one power from the physical,
+--    sensitive or super categories."
 --
---   special_abilities, "Master Psionic": "From level two onward he selects one
---   power per level from the Physical, Sensitive or Super categories."
+-- CHECKED AGAINST THE PAGE, after the fact. This schedule was written before
+-- the book was readable on this machine, from the class's own two records of
+-- the rule - the "Master Psionic" special ability and the extraction notes -
+-- and the header said so, as the one thing here resting on the repo rather
+-- than on the book. The book has since been cached and the last sentence above
+-- read off it: it agrees with both records on the count, the categories and
+-- the starting level, so nothing in the schedule changes.
 --
---   extraction_notes: "one from Physical, Sensitive or Super each level after
---   the first"
---
--- Both were written from the page at import time. If that book is ever cached,
--- this schedule is worth checking against it - it is the one thing here that
--- rests on the repo rather than on the book.
+-- The same sentence is also the authority for the STARTING pick that
+-- zz-starting-power-splits.sql wrote - three Physical and one Super, beside
+-- the four powers it names outright.
 --
 -- SENSITIVE IS THE POINT. The class's `categories_allowed` is Physical and
 -- Super, which is what the STARTING four are drawn from; the per-level pick
