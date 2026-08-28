@@ -6,6 +6,7 @@
 //   node scripts/class-check.mjs draft.md --remote
 //   node scripts/class-check.mjs draft.md --no-catalog
 //   node scripts/class-check.mjs draft.md --field-sources [--book <slug>] [--offset <n>]
+//   node scripts/class-check.mjs draft.md --emit-script <id> > apps/character-creator/db/add-<id>-class.sql
 //
 // This is the CLI half of what `import/recheck` already does in the browser:
 // parse the markdown through the REAL parser, cross-reference it against the
@@ -72,10 +73,28 @@ function takeValue(flag) {
 const bookFlag = takeValue('--book');
 const offsetFlag = takeValue('--offset');
 if (offsetFlag !== null && !/^-?\d+$/.test(offsetFlag)) die('--offset takes an integer');
+const emitScript = takeValue('--emit-script');
 const fieldSources = args.includes('--field-sources');
 const remote = args.includes('--remote');
 const noCatalog = args.includes('--no-catalog');
 const files = args.filter((a) => !a.startsWith('--'));
+
+// --emit-script writes a data script to STDOUT and nothing else, because the
+// documented use is `... --emit-script <id> > add-<id>-class.sql`. The human
+// report still has to be visible, so it goes to stderr for this run only. It
+// writes no file and applies nothing: turning a validated draft into SQL is
+// worth automating, deciding to ship it is not.
+if (emitScript !== null) {
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(emitScript)) {
+    die('--emit-script takes a kebab-case class id');
+  }
+  // Without the catalog pass there are no stub rows, and a data script missing
+  // the stubs its class references applies cleanly and leaves the class
+  // pointing at nothing. Refuse rather than emit a script that is quietly short.
+  if (noCatalog) die('--emit-script needs the catalog pass; drop --no-catalog');
+  if (fieldSources) die('--field-sources is offline, so it cannot produce stub rows; run it separately');
+  console.log = (...a) => console.error(...a);
+}
 
 if (files.length !== 1) die('give exactly one .md or .sql file');
 const file = files[0];
@@ -451,6 +470,11 @@ const env = {
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
+// Collected during the catalog pass so --emit-script can reuse exactly the
+// statements the report printed, rather than recomputing them differently.
+const stubSql = [];
+const stubSlugs = [];
+
 if (noCatalog || fieldSources) {
   console.log(`\nCATALOG          skipped (${noCatalog ? '--no-catalog' : '--field-sources is offline'})`);
 } else if (!data) {
@@ -536,12 +560,14 @@ if (noCatalog || fieldSources) {
       system: data.system,
       sourceBook: data.source_book ?? null,
     });
-    console.log('\nSTUB SQL — paste above the imported_classes INSERT');
-    console.log('(em-dash spliced with char(8212), per the ASCII-only rule)\n');
     for (const s of statements) {
-      console.log('  ' + s.toSql().replace(/\s+/g, ' ').trim()
+      stubSql.push(s.toSql().replace(/\s+/g, ' ').trim()
         .replace(/'STUB — /, "'STUB ' || char(8212) || ' ") + ';');
     }
+    console.log('\nSTUB SQL — paste above the imported_classes INSERT');
+    console.log('(em-dash spliced with char(8212), per the ASCII-only rule)\n');
+    for (const s of stubSql) console.log('  ' + s);
+    stubSlugs.push(...missing.items);
   }
 }
 
@@ -551,4 +577,100 @@ console.log(`\nclass-check: ${blocking ? 'NOT ready' : 'ready'} — `
   + (preflight.length ? `, ${plural(preflight.length, 'pre-flight failure')}` : '')
   + (unmodelled.length ? `, ${plural(unmodelled.length, 'unmodelled key')}` : '')
   + (unclosed.length ? `, ${plural(unclosed.length, 'unclosed flow value')}` : ''));
+
+// ── --emit-script: the validated draft, as the data script that ships ──
+//
+// INGESTION-AUDIT F15 part 2. What is worth automating here is the ESCAPING,
+// not the decision to ship: copying markdown into the template by hand is
+// where the doubled apostrophe and the char() splice get forgotten, once per
+// class. So this writes to stdout, writes no file, and applies nothing, and
+// running class-check on the resulting .sql stays a separate step - the
+// ASCII/CRLF pre-flight has to fire against the real artifact, not against
+// this function's intentions.
+if (emitScript !== null) {
+  if (blocking) {
+    die(`refusing to emit a script from a draft with ${plural(blocking, 'blocking finding')}`);
+  }
+  if (data.id !== emitScript) {
+    die(`--emit-script says "${emitScript}" and the frontmatter says "${data.id}"`);
+  }
+
+  // Every apostrophe doubled, every non-ASCII codepoint spliced out with
+  // char(). The whole emitted file has to be pure ASCII: the smoke suite reads
+  // the RAW BYTES of every data script - comments included, not just the
+  // executable SQL - and d1-apply refuses a file with a high byte in it,
+  // because wrangler on Windows has turned those into mojibake in production.
+  const literal = (s) => {
+    const parts = [];
+    let lit = '';
+    const flush = () => {
+      if (lit !== '') { parts.push("'" + lit.replace(/'/g, "''") + "'"); lit = ''; }
+    };
+    for (const ch of s) {
+      if (ch.codePointAt(0) > 0x7f) { flush(); parts.push(`char(${ch.codePointAt(0)})`); }
+      else lit += ch;
+    }
+    flush();
+    return parts.length ? parts.join(' || ') : "''";
+  };
+
+  // A CR reaching the stored markdown is the bug the readback SELECT at the
+  // bottom of every one of these scripts exists to catch. The draft is often
+  // CRLF on this machine, so strip it here rather than emitting a file that
+  // fails its own readback.
+  const md = markdown.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const filename = `add-${emitScript}-class.sql`;
+  const kind = data.category === 'rcc' ? 'R.C.C.' : 'O.C.C.';
+  const out = [];
+
+  out.push(`-- The ${data.name} ${kind}, ${data.source_book ?? 'source book not stated'}.`);
+  out.push('--');
+  out.push('-- One-off data script, run once per environment. NOT a migration - it adds');
+  out.push('-- rows, not schema.');
+  out.push('--');
+  out.push(`--   node scripts/d1-apply.mjs --local apps/character-creator/db/${filename}`);
+  out.push('--');
+  out.push('-- Generated by scripts/class-check.mjs --emit-script from a validated draft.');
+  out.push('-- Apostrophes are doubled and non-ASCII is spliced with char(); CR is stripped.');
+  out.push('-- Run class-check on THIS file before applying - the ASCII/CRLF pre-flight only');
+  out.push('-- fires against the real artifact.');
+  out.push('');
+
+  if (stubSql.length) {
+    out.push('');
+    out.push('-- Stub rows for anything the class references that the catalog lacks.');
+    out.push('-- The "STUB" marker is load-bearing: it is how the gear importer later');
+    out.push('-- recognises a row as still needing stats.');
+    for (const s of stubSql) out.push(s);
+    out.push('');
+  }
+
+  out.push('');
+  out.push('-- The class itself. INSERT ... WHERE NOT EXISTS rather than INSERT OR IGNORE,');
+  out.push('-- so re-running the script is a no-op instead of a silent partial write.');
+  out.push('INSERT INTO imported_classes (class_id, name, system, markdown, status, created_by)');
+  out.push(`SELECT ${literal(data.id)}, ${literal(data.name)}, ${literal(data.system)}, ${literal(md)}, 'published', 'data-script'`);
+  out.push(`WHERE NOT EXISTS (SELECT 1 FROM imported_classes WHERE class_id = ${literal(data.id)});`);
+  out.push('');
+  out.push('');
+  out.push('-- Read the result back rather than trusting the exit code. d1-apply prints');
+  out.push('-- these, and a CR in the stored markdown means the checkout mangled the file.');
+  out.push('SELECT class_id, name, status, length(markdown) AS bytes, instr(markdown, char(13)) > 0 AS has_cr');
+  out.push(`  FROM imported_classes WHERE class_id = ${literal(data.id)};`);
+  if (stubSlugs.length) {
+    out.push(`SELECT count(*) AS stub_gear FROM gear WHERE slug IN (${stubSlugs.map(literal).join(', ')});`);
+  }
+  out.push('');
+  out.push('-- Records this run. REQUIRED: the smoke test fails a data script that has no');
+  out.push('-- footer, or whose footer names a different file.');
+  out.push(`INSERT INTO data_script_runs (filename) VALUES ('${filename}');`);
+  out.push('');
+
+  // \n, never the platform newline: .gitattributes pins *.sql to LF and a CR
+  // in here would fail the pre-flight this script itself runs.
+  process.stdout.write(out.join('\n'));
+  console.log(`\nclass-check: emitted ${filename} to stdout `
+    + `(${plural(stubSql.length, 'stub statement')}, nothing written, nothing applied)`);
+}
+
 process.exit(blocking ? 1 : 0);

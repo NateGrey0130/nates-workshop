@@ -42,14 +42,29 @@ modelling something new (see the last section).
    reading stopped at (PR #280); this is the check that would have caught them.
    It resolves the book, window and page offset from `source_book` and the
    cache itself (`--book` / `--offset` override).
-4. **Wrap it in a data script** — copy `reference/data-script.sql`, paste the
-   stub SQL `class-check` printed, and set the filename in the closing
-   `data_script_runs` line. Then check the finished script too:
+4. **Wrap it in a data script.** `class-check` writes the whole thing from a
+   validated draft — header, the stub rows it already found, the
+   `imported_classes` INSERT with apostrophes doubled and non-ASCII spliced
+   through `char()`, the readback `SELECT`s and the `data_script_runs` footer
+   naming its own file:
+   ```bash
+   node scripts/class-check.mjs draft.md --emit-script <id> > apps/character-creator/db/add-<id>-class.sql
+   ```
+   It writes to **stdout only** — the report goes to stderr, it creates no file
+   and applies nothing — and it refuses to emit from a draft that is not
+   `ready`, or when the id disagrees with the frontmatter. The escaping is what
+   is automated here; deciding to ship is still yours.
+
+   `reference/data-script.sql` remains the annotated skeleton, for reading and
+   for the rare script this does not fit.
+
+   **Then check the finished script too**, as a separate step:
    ```bash
    node scripts/class-check.mjs apps/character-creator/db/add-<id>-class.sql
    ```
    Checking the `.sql` also runs the ASCII/CRLF pre-flight, which the `.md`
-   form cannot.
+   form cannot — and that pre-flight has to fire against the real artifact, not
+   against the generator's intentions.
 5. **Apply it:**
    ```bash
    node scripts/d1-apply.mjs --local apps/character-creator/db/add-<id>-class.sql
@@ -285,4 +300,6 @@ Two legitimate answers, and it is the user's call which:
 - `reference/frontmatter.md` — every block, its shape, and what reads it
 - `reference/catalog.md` — catalog conventions: naming, renames, disagreements,
   skill bonuses, and extracting a skill list from a PDF
-- `reference/data-script.sql` — the data-script skeleton to copy
+- `reference/data-script.sql` — the annotated data-script skeleton.
+  `class-check --emit-script` writes one for you; read this to know what it
+  emitted and why
