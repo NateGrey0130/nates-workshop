@@ -762,13 +762,19 @@ Optional character/campaign test rows:
 npx wrangler d1 execute DB --local --file apps/character-creator/db/seed-dev.sql
 ```
 
-**Apply that one on its own, not through a glob.** It is the only data script
-that is not re-runnable — its inserts are unguarded and a second pass fails on
-`gear.slug` — and `d1-apply.mjs` stops at the first failure, so
-`--local apps/character-creator/db/*.sql` against an already-seeded database
-dies on `seed-dev.sql` and never reaches `untag-cross-system.sql`, the only file
-that sorts after it. Under `--remote` the question does not arise: the file's
-`-- local-only` marker makes the glob skip it.
+**Apply that one with plain `wrangler`, as above — not through `d1-apply.mjs`.**
+That script skips any file carrying the `-- local-only` marker on **both**
+targets, printing the skip, whether the file arrived through a glob or was
+named outright.
+
+The `--remote` half has always been true and protects production. The `--local`
+half is newer and protects the RUN: `seed-dev.sql`'s inserts are unguarded, it
+sorts 264th of 295, and the gear row it inserts has already been created by an
+earlier script by the time a glob reaches it — so it fails on the FIRST pass
+from an empty database, not on a second. `d1-apply.mjs` stops at the first
+failure, so that one file used to strand the **31** that sort after it:
+`untag-cross-system.sql` and every `zz-`, `zzz-` and `zzzz-` correction in the
+repo. See [REBUILD-AUDIT.md](REBUILD-AUDIT.md) F1.
 
 Smoke test (parser + schema):
 

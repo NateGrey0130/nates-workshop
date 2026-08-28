@@ -8,8 +8,9 @@
 //
 // - Globs are expanded by this script, sorted, because PowerShell does not
 //   expand them for native commands and the same command should work in both
-//   shells. A file whose first-column comment says `-- local-only` is REFUSED
-//   under --remote, so a glob cannot sweep seed-dev.sql into production.
+//   shells. A file whose first-column comment says `-- local-only` is SKIPPED
+//   on BOTH targets: a glob cannot sweep seed-dev.sql into production, and it
+//   cannot strand the 31 files that sort after it in a --local rebuild either.
 //
 // - The target is EXPLICIT. No default: an accidental --remote is the costly
 //   direction, so the script refuses to guess.
@@ -76,11 +77,24 @@ function die(msg) {
 if (remote === local) die('say which database: --remote or --local (exactly one)');
 if (!files.length) die('no .sql files given (a glob that matched nothing?)');
 
-// A file marked local-only never goes to production. seed-dev.sql inserts a
-// test campaign and a test character; sweeping it up in a `db/*.sql` glob
-// against --remote would put them in front of real players. The marker is a
-// comment in the file rather than a filename list here, so a new local-only
-// script is protected the moment it says so.
+// A file marked local-only is skipped on BOTH targets, and the reasons differ.
+//
+// Under --remote it must never go: seed-dev.sql inserts a test campaign and a
+// test character, and sweeping it up in a `db/*.sql` glob would put them in
+// front of real players. The marker is a comment in the file rather than a
+// filename list here, so a new local-only script is protected the moment it
+// says so.
+//
+// Under --local the point is the opposite - not protecting the database from
+// the file, but protecting the RUN from it. seed-dev.sql sorts 264th of 295 and
+// its inserts are unguarded, so a `--local db/*.sql` glob reaches it, fails on
+// `gear.slug`, and because this script stops at the first failure the 31 files
+// that sort AFTER it never run: untag-cross-system, every zz-, every zzz- and
+// every zzzz-. The last three tiers of corrections - the ones that exist
+// BECAUSE filename order is execution order - were unreachable by the one
+// command a person is most likely to type. It fails on the FIRST pass from an
+// empty database, not on a second: by the time it runs, the gear row it inserts
+// has already been created by an earlier script. See REBUILD-AUDIT.md F1.
 //
 // SKIPPED, not fatal, and the difference matters: the documented way to seed a
 // new environment is a glob over the whole directory, and dying on the one
@@ -88,14 +102,16 @@ if (!files.length) die('no .sql files given (a glob that matched nothing?)');
 // A command that always errors gets replaced by a hand-typed list, which is
 // where a file gets included by mistake. The skip is printed, so it is never
 // silent.
-let skipped = [];
-if (remote) {
-  skipped = files.filter((f) =>
-    existsSync(f) && /^--\s*local-only\b/m.test(readFileSync(f, 'utf8')));
-  files = files.filter((f) => !skipped.includes(f));
-  for (const f of skipped) console.log(`skipping ${f} — marked local-only, not for --remote.`);
-  if (!files.length) die('nothing left to apply: every file given is local-only');
-}
+//
+// Naming a local-only file EXPLICITLY now skips it too, and that is intended
+// rather than incidental: seed-dev.sql's own header and the README both say to
+// apply it with plain `wrangler d1 execute --local --file`, never through this
+// script.
+const skipped = files.filter((f) =>
+  existsSync(f) && /^--\s*local-only\b/m.test(readFileSync(f, 'utf8')));
+files = files.filter((f) => !skipped.includes(f));
+for (const f of skipped) console.log(`skipping ${f} — marked local-only; apply it on its own.`);
+if (!files.length) die('nothing left to apply: every file given is local-only');
 
 // ── pre-flight: every file checked before anything runs ──
 for (const f of files) {
