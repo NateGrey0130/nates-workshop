@@ -1,3 +1,11 @@
+// PF-SHAPED WORKED EXAMPLE, not a general index parser. Every offset, heading
+// and table shape below is the Palladium Fantasy main book's; the next book
+// will not run this file. What generalises is stated as a rule in the
+// book-survey skill, §2 - "a name is whatever precedes the LAST parenthetical"
+// and "a cost is anything carrying a digit or Special/Varies". Copy the rules.
+// Generalising this script on two books' evidence would be a parameterised
+// guess (INGESTION-AUDIT F15).
+//
 // Parse the Palladium Fantasy main book's TWO spell authority tables and write
 // them out as JSON for scripts/catalog-diff.mjs.
 //
