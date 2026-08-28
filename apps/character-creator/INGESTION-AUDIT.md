@@ -267,6 +267,87 @@ decision rather than folded into a deletion PR. Migration 006 stays either way:
 it has run, and `drift-check` compares migration FILES against
 `schema_migrations`.
 
+**Correction, 2026-08-28: they went too, in that same PR.** The paragraph above
+is the plan #360 opened with and is left as written.
+`db/migrations/041-drop-import-staging.sql` is applied to production — 41
+migrations, 37 live tables, `NO DRIFT` — and both tables were re-checked empty
+immediately before the drop. What the paragraph calls "its own decision" was
+taken on the same day. Migration `006` is still not deleted, for exactly the
+reason given, and the interesting part was the other end: a database built from
+`schema.sql` seeds `schema_migrations` with guards on the schema each migration
+produced, and `006`'s guard was `import_staged` **existing** — the only thing it
+ever created. Left alone, every new environment would have reported itself
+un-migrated on two files that have run everywhere, and nothing would have failed
+at the moment of the mistake.
+
+## Status, 2026-08-28 — the ledger moved, and the menu is four findings long
+
+`main` is at the merge of PR #360. Since the status above: Wormwood shipped
+(#352–#357), **F17** was taken (#358), the backend extractor landed (#359) and
+the in-app importer was retired (#360).
+
+**The coverage ledger moved, and nothing on this menu moved it.**
+`node scripts/source-coverage.mjs --remote`, 2026-08-28:
+
+| catalog | 2026-08-27 | 2026-08-28 |
+|---|---|---|
+| classes | 107 / 109 | **124 / 126** |
+| gear | 727 / 902 | **800 / 975** |
+| skills | 127 / 333 | 130 / 336 |
+| spells | **0 / 570** | **37 / 607** |
+| psionic powers | 7 / 101 | 7 / 101 |
+
+Wormwood reads **`130 traceable / 0 other`** — the first fully traceable book in
+this repo. The 2026-08-27 status says the ledger "will read exactly this until a
+session import is run against production". It moved without one, and the
+importer it was waiting on no longer exists. Seventeen hand-written data
+scripts moved it, each citing its book with a page range: the rule F6 encoded,
+which `class-check` reads and which outlived the code F6 shipped in. **Nothing
+about tracing a row to a page ever depended on the importer.** The premise that
+it did is the tenth error this audit has found in its own text.
+
+Spells went from 0 to 37 for the same reason and the remaining 570 have not
+moved: 323 carry no page range, 231 point into `bom`'s six-page cache and 16
+cite nothing. That is **F24**, added below, and it is now the largest single
+number left in this document.
+
+**Taken since the last status**
+
+| # | PR | what shipped |
+|---|---|---|
+| F17 | #358 | `source_pdf_dir` on all thirteen registry entries, verified by stat-ing every basename, and a caches-present line both scripts print every run. Print, do not fail — no exit code moved |
+
+**Closed without being taken**
+
+| # | why |
+|---|---|
+| F11 | **Moot.** It proposed a PDF slicer for an uploader that no longer exists; `extract-class.mjs` reads cached text. Nothing in the pipeline slices a PDF. Full note under the finding — its `Adjusted` warning about `pf`'s non-constant offset does **not** die with it |
+| F12, F16, F19 | Moot with the importer; recorded in the retirement section above |
+| F6, F18 | Shipped, then deleted with the code they fixed |
+
+**Still open: F8, F10, F14, F15.** Four, not nine. F8 (the `book-reconcile`
+junction) is unchanged and re-verified this session: `~/.claude/agents` does not
+exist, while all five skills are junctioned. F10 has moved without being taken —
+**one survey now exists**, `.cache/books/ww/SURVEY.md`, 251 lines, written
+during the Wormwood import; the template it asks for still does not, and eight
+books still have nothing. F14 and F15 are unchanged, except that F15's part (2)
+(`class-check --emit-script`) is now the *only* automation left between a
+validated draft and a data script, because the review UI that used to sit there
+is gone.
+
+**Four findings added, 2026-08-28.** All four came out of the last three PRs
+rather than out of a fresh pass: **F21** (`SURVEY.md` cannot be committed, which
+three Wormwood PRs each reported as an unavoidable deviation), **F22**
+(`occ_group` and `xp_table` are documented nowhere and each cost a regression
+failure), **F23** (the first metered extraction is on record, which reopens the
+question F12 closed), **F24** (`bom`).
+
+**What the retirement did not change, and it is worth saying plainly.** The
+pipeline is shorter and every step in it is a command, but the *paid* half is
+unchanged in shape: one class per call, examples re-sent every time. What
+changed is the price of the input — cached text instead of a page image — and
+that is why F12 is moot rather than solved.
+
 ---
 ## Findings
 
@@ -1298,6 +1379,31 @@ from `class-check-lib.mjs`, per call, and print the rule it applied beside the
 folio it found. The `--offset` escape hatch this proposal mentions is still
 worth having, but it is now the third choice, not the first.
 
+**Closed as moot, 2026-08-28 — the premise died with the importer.** This
+finding exists because `import.html` asked for "a focused page range covering
+exactly one O.C.C./R.C.C." and nothing produced one. `scripts/extract-class.mjs`
+takes `--book <slug> --pages <printed>` and reads the **cached text** for those
+printed pages. There is no upload, no slice, and no step that converts a printed
+range into a PDF page by hand. The nine hand-made slices this finding inventoried
+are still sitting in `Downloads`; they are now debris rather than a workflow.
+
+The justification the route gave for sending an image — "layout-preserving text
+extraction splices neighbouring columns together mid-line" — was true of
+`pdftotext` and was never true of this cache, because `ocr-book.py` and
+`read-columns.py` resolve columns geometrically before a byte is written. The
+expensive path was defending against a hazard the cache had already removed.
+
+**Two things in this finding do not die with it, and both are load-bearing.**
+The `Adjusted` note above is the only place that states why a printed→cache
+mapping must call `offsetForPrintedPage` per page rather than adding a scalar —
+`pf` is +1 for printed 1-16 and +2 for 18-336 — and that rule now governs
+`extract-class.mjs`'s page selection instead of a slicer's. And the confirmation
+this finding said was "the point of the script, not the slicing" survives in a
+different shape: the extractor prints the byte count of every page it read and
+**refuses** any page under 400 bytes as a full-page illustration, naming it.
+Wormwood's printed 56 and 58 are 14 and 8 bytes and sit inside the Apok's own
+cited range; sending them silently is how a class loses a third of itself.
+
 ### F12 — every extraction re-uploads its PDF and its examples with no cache breakpoint
 
 **What is true today.** `cache_control` appears nowhere in `functions/` or
@@ -1928,14 +2034,146 @@ never carries `p.`" would have pinned the wrong behaviour. The four checks
 pin that every stub kind records the class's citation instead.
 
 
+### F21 — `SURVEY.md` cannot be committed, so the ledger the skills call durable state lives on one machine
+
+**What is true today.** `EFFICIENCY-AUDIT` F1 (**Taken, 2026-08-25**) put the
+survey at `.cache/books/<slug>/SURVEY.md`, "local beside the OCR cache it
+quotes, so no commercial text enters the repo". `.gitignore:24` ignores
+`.cache/`. So the file is untracked by design, and three separate Wormwood PRs
+(#352–#357) each reported the same deviation in their own words: the task asked
+for the ledger row *in the same commit*, it was appended, and it could not be in
+any commit.
+
+The instructions asking for it are live and specific: `book-survey` §7 writes it,
+`SKILL.md:519` boots a fresh session from it every 2–4 PRs, `SKILL.md:528` makes
+it the definition of "surveyed" — "all of it in `.cache/books/<slug>/SURVEY.md`,
+not just said in chat" — and `class-import:69` appends a ledger line on merge.
+
+**Why it matters.** This is **F17's** exposure aimed at the survey rather than at
+the OCR text, and F17 shipped without touching it. The caches are rebuildable
+from the PDFs in one command; a survey is not rebuildable from anything. It
+holds the hand-checked false gaps, the verified offset and the per-PR ledger —
+the parts that cost judgement rather than compute. Nine caches exist and **one**
+survey does. Losing the machine loses it.
+
+It is also the load-bearing half of a discipline F1 measured at **2–7× token
+saving per book**, which makes the current state worse than not having the rule:
+"start a fresh session every 2–4 PRs" is actively unsafe to follow when eight of
+nine books have nothing to boot from.
+
+**Proposal:** move it to a tracked path — `apps/character-creator/docs/surveys/<slug>.md`,
+beside `importing-from-pdfs.md`. One home, not two; no `.gitignore` negation
+(a re-included file under an excluded *directory* is a git footgun, and the
+pattern stack needed is six lines of precedence nobody will read).
+
+**Answer F1's reason rather than routing around it.** The tracked survey states
+facts about a book and quotes no prose from it. Page numbers, offsets, counts,
+class names, table locations and diffs are facts. Of `ww`'s 251 lines, **three**
+are quoted book prose — the p.157 rule about which classes are playable, which
+survives paraphrase with the fact intact. Put the rule in the template header
+and in `book-survey` §7, and pin it with a smoke check for a markdown blockquote
+in `docs/surveys/*.md`: crude, but it is the only mechanical grip on the rule,
+and verbatim excerpts are written as blockquotes by convention here.
+
+Fold **F10** in — the template and the location are one PR's work and neither is
+useful alone. Backfill all nine offline from `scripts/books.json`, the cache
+manifests and `source-coverage --remote`; `ww` is a relocation and a redaction,
+not a rewrite. Posture: **relocation plus a one-time backfill, no gate moves,
+and no check that a survey exists** — F10's reason still holds, a clean clone
+has no caches and such a check could only fail on the machines that matter.
+
+### F22 — `occ_group` and `xp_table` are enforced by the test suite and documented nowhere
+
+**What is true today.** `grep -n "occ_group\|xp_table"
+.claude/skills/class-import/reference/frontmatter.md` returns nothing across its
+205 lines. Both keys cost a regression failure during the Wormwood import —
+`occ_group` on #355, `xp_table` on a race on #356 — and the second cost a
+rebuild.
+
+**Why it matters.** `reference/frontmatter.md` is the file `class-import` sends a
+session to for the frontmatter contract, and the contract it describes is
+incomplete in exactly the way that is most expensive: the key exists, the smoke
+suite enforces it, and the only way to learn it is to fail the suite. That is a
+per-class tax on every future import, and Wormwood paid it twice in three PRs.
+
+**Proposal:** document both keys in `reference/frontmatter.md` in the shape the
+file already uses — what the key is for, which classes must carry it, which must
+**not** (the R.C.C. rule that `xp_table` on a race violates), and the smoke check
+that enforces it by name. Read the checks rather than the failures: the message a
+test prints is not the rule. Posture: **documentation only, no code, no check.**
+Smallest item on this menu and the one with the shortest payback.
+
+### F23 — the first metered extraction is on record, and it reopens the question F12 closed
+
+**What is true today.** `claude_usage` held zero import rows when F12 was written
+and F12 was blocked on that. It holds one now: `cc-extract-class`, **21,581
+input / 4,940 output**, the Apok from printed 55, 57 and 59. The cost of a class
+is a number rather than an estimate for the first time in this repo's history.
+
+The number is small, and the reason matters: the extractor sends cached **text**
+rather than a page image, which is the change that made F12 moot. What it does
+**not** do is what F12's first half was about — `--like` re-sends two complete
+published class markdown files as format examples on every call, a stable prefix
+re-billed per class. On a seventeen-class book that prefix is paid seventeen
+times.
+
+**Why it matters, and why this is a finding rather than a fix.** One sample is
+not a measurement. What share of those 21,581 tokens is the example block is
+knowable — it is two files on disk — and until somebody counts it, "add a cache
+breakpoint" is a guess about which half of a number nobody has split.
+
+**Proposal:** two steps, and stop after the first if it says stop. (1) Split the
+one row: count the tokens the example block contributes against the cached page
+text, from the files themselves, and write the split into this finding. (2) Only
+if the examples dominate, put a `cache_control: { type: 'ephemeral' }` breakpoint
+at the end of the system prompt and example block in `extract-class.mjs` — the
+stable prefix, which already precedes the varying page text. Posture: **measure
+first; a cache miss is exactly today's behaviour, so there is nothing to gate
+either way.** Do not reason from the old F12 text: its second half described a
+retry path that no longer exists.
+
+### F24 — `bom` is 232 of the untraceable rows, its cache is six pages, and nobody has opened it
+
+**What is true today.** `source-coverage --remote`, 2026-08-28: **550 rows carry
+no page range**, and the largest coherent block inside it is `bom` — **231 spells
+citing `Rifts Book of Magic p.71-72`**, two pages, plus a class, against a cache
+of **six pages** for a book credited with 409 catalog rows. The ledger scores
+232 rows `outside-cache`: attributed to a book, to a page nothing has cached.
+
+`bom` is the one partial cache left (F2/F3) and one of four registered books
+with no usable cache at all. The 231-spell figure was surfaced by F1 and has
+been carried in this document's Status section since 2026-08-27 with the note
+"nobody has looked at it yet". Nobody has.
+
+**Why it matters.** Every other number on this menu is now small. Spells are
+37 traceable of 607, and this single citation is 231 of the difference. Whatever
+`p.71-72` is — an index, a table, a copy-paste from one import that every later
+one inherited — it is not where 231 spells are printed, and no amount of work on
+the ingestion *pipeline* will move it, because the rows are already shipped.
+
+**Proposal:** this is a `book-survey` job, not an audit one, and it needs the
+Book of Magic PDF cached first — one `ocr-book.py` run if the PDF is on hand
+(`scripts/books.json` records `source_pdf` and `source_pdf_dir` for it; F17
+verified eleven of thirteen basenames actually exist in `Downloads`). Then: read
+printed 71-72 and find out what it is; find where those spells are actually
+printed; decide whether the repair is a data script per page range or a single
+correction that removes a citation which is worse than none. **Do not write the
+repair before reading the page** — F20 is this document's own case for that rule,
+and it nearly shipped a data script that would have destroyed a verified
+citation. Posture: **survey first, and the finding's proposal gets rewritten from
+what the page says.** Scope it as its own book batch, not as an audit item.
+
+
 ---
 
 ## Adding book N — the runbook
 
-**F1–F5 are taken as of 2026-08-27, so steps 0, 1, 2 and 8 are real today.**
-What is still a forecast: step 6 needs F10 (`SURVEY.md`), step 7 needs F11
-(`slice-pages.py`) and step 9 needs F15 part 2 (`--emit-script`). Step 5 is
-real but its `--remote` form is F13. Step 11 needs F8.
+**Rewritten 2026-08-28 for the pipeline that exists.** Steps 0-5, 7 and 8 are
+real today: F1-F5 and F13 are taken, and step 7 is `extract-class.mjs` rather
+than an upload, which is why F11 is closed. What is still a forecast: step 6
+needs F10 and F21 (`SURVEY.md` — the template, and a home it can be committed
+from), step 9 needs F15 part 2 (`--emit-script`), and step 11 needs F8. Step 12
+cannot be done as written until F21 lands.
 
 One page. Steps marked **(once)** are per book; the rest repeat per class.
 
@@ -1966,12 +2204,19 @@ python scripts/ocr-book.py "C:/Users/natha/Downloads/<Book>.pdf" --slug <slug>
    the offset the manifest recorded, the diff with its hand-checked gaps, the
    extraction plan, and an empty ledger. **Get agreement on this before spending
    anything.**
-7. Per class — `python scripts/slice-pages.py <slug> <printed-first>
-   <printed-last>`, which applies the recorded offset and prints the folios it
-   found. Upload the slice on `import.html`, extract, review.
-8. Copy the markdown to a scratch `.md`. `node scripts/class-check.mjs draft.md`
-   until it reads `ready`, then `--field-sources` and **read the continuation
-   block** — it uses the recorded offset and warns if live detection disagrees.
+7. Per class — `node scripts/extract-class.mjs --book <slug> --pages
+   <printed list or range> --like <id,id> --out draft.md`. Printed pages, not
+   PDF pages; it reads the cache, refuses any page under 400 bytes as a
+   full-page illustration and names it, and meters the call to `claude_usage`
+   before parsing. Nothing is uploaded and nothing is sliced.
+8. `node scripts/class-check.mjs draft.md --remote` until it reads `ready`, then
+   `--field-sources` and **read the continuation block** — it uses the recorded
+   offset and warns if live detection disagrees. **`--remote` is required, not
+   optional.** The first real extraction was given the shipped Apok as an
+   example, with the correct catalog names in it and notes saying the book
+   spells them differently, and it used the book's spelling every time. Examples
+   teach shape; they do not teach naming, and this step is where the renames are
+   caught.
 9. `node scripts/class-check.mjs draft.md --emit-script <id> >
    apps/character-creator/db/add-<id>-class.sql`, then run `class-check` on the
    `.sql` so the ASCII/CRLF pre-flight fires against the real artifact.
@@ -1983,7 +2228,9 @@ python scripts/ocr-book.py "C:/Users/natha/Downloads/<Book>.pdf" --slug <slug>
     session every 2–4 PRs**, booted from `SURVEY.md` plus
     `git log --oneline -15`.
 
-Steps 0–6 are free and are done once. Step 7 is the only step that costs money.
+Steps 0–6 are free and are done once. Step 7 is the only step that costs money,
+and as of 2026-08-28 it costs a known one: 21,581 input / 4,940 output for the
+first class extracted this way (F23).
 `node scripts/source-coverage.mjs` answers "what remains" at any point without
 reading the book, and `claude_usage` answers "what did it cost" (F7).
 
