@@ -321,7 +321,7 @@ number left in this document.
 | F22 | #365 | `occ_group` and `xp_table` documented in `class-import/reference/frontmatter.md`. Documentation only. The enforcing checks are in `regression.mjs`, not smoke; a bad *value* is caught at parse time and a missing key is not |
 | F8 | #366 | `~/.claude/agents` junctioned to the repo's directory, so `book-reconcile` resolves from `Downloads`. The per-file alternative needs administrator rights, so the directory shape was forced rather than preferred — and `~/.claude/agents` can now hold nothing that is not in this repo |
 | F15 | #367, #368 | Part 1: the heading-anchor rule into `book-survey` §2, and both `parse-pf-spell-*.mjs` marked PF-shaped worked examples. Part 2: `class-check --emit-script <id>`, stdout only, escaping proved lossless. Part 3 deferred - `UI-AUDIT.md` does not exist |
-| F23 step 1 | #369 | The metered row is split: the format examples are **47.6%** of the input and the whole stable prefix **74.1%**, reconstructed to the exact 21,581 tokens. Step 2 left open - its trigger is met, but a cache miss costs 1.25x rather than being free |
+| F23 | #369, #370 | The metered row is split: the format examples are **47.6%** of the input and the whole stable prefix **74.1%**, reconstructed to the exact 21,581 tokens. Step 2: one ephemeral breakpoint after the prefix, prompt byte-identical. The metering had to be fixed with it - cached tokens leave usage.input_tokens, which would have undercounted the row by 74% |
 
 **Closed without being taken**
 
@@ -348,7 +348,7 @@ current list. The survey it describes is now at
 nothing.
 
 **Corrected again (PR #363): the open list is F8, F14, F15, F22, F23, F24 —
-six.** *(F14 in #364, F22 in #365, F8 in #366, F15 in #367/#368, F23 step 1 in #369; two now — F23 step 2, F24.)* #362 said three, which counted only the findings the paragraph above
+six.** *(F14 in #364, F22 in #365, F8 in #366, F15 in #367/#368, F23 in #369/#370; ONE now — F24.)* #362 said three, which counted only the findings the paragraph above
 names and silently dropped the three #361 had added minutes earlier in this
 same section. The paragraph it was correcting predates F22-F24 and was never
 wrong about them; the correction read as a statement of the whole list and was.
@@ -2507,6 +2507,47 @@ page corpus currently arrives through `buildUserPrompt`'s **`hints` parameter**,
 appended last under a `## Operator hints` heading — which is why the stable part
 does precede it, but is also a misnomer worth fixing in the same pass.
 
+**Step (2) taken, 2026-08-28 (PR #370), on Nate's word after step (1) reported
+the corrected economics.** One `cache_control: { type: 'ephemeral' }` breakpoint
+at the end of the stable prefix. The cached span runs from the start of the
+request through that block, so it covers the system prompt, the schema and the
+format examples; the page text follows in its own uncached block.
+
+**The prompt did not change by a byte.** `buildUserPromptParts` returns
+`{ stable, varying }` and `buildUserPrompt` is now those two joined, so the
+split is a cut rather than a rewrite; `extract-class` **asserts the identity
+before it sends anything** and dies if a future edit moves the boundary instead
+of moving the cut. Verified with `count_tokens`: the two-block request is
+accepted, costs the same **21,581** input tokens as the single block it
+replaces, and the cacheable prefix is **15,986** — comfortably over the
+1,024-token minimum.
+
+**The metering had to be fixed in the same PR, and this is the part with teeth.**
+With caching on, `usage.input_tokens` counts **only the uncached remainder** —
+the cached span comes back as `cache_creation_input_tokens` or
+`cache_read_input_tokens` instead. Nothing in this repo read either field.
+Recording `input_tokens` alone would have dropped this row from 21,581 to
+**~5,600 the moment the breakpoint landed**: a silent **74% undercount**, in the
+very ledger step (1) used to justify the breakpoint, and it would have looked
+like a spectacular saving. The insert now records the sum, so the column keeps
+meaning what it always meant — input tokens this call processed.
+
+**What is NOT recorded, and it needs a decision.** `claude_usage` has no column
+for the write/read split, so the table still cannot express **cost**: a cached
+read bills at 0.1x and a write at 1.25x, and a row reading 21,581 is now three
+different prices depending on which it was. The run prints the breakdown and
+says HIT or MISS; the table cannot hold it. Two columns
+(`cache_write_tokens`, `cache_read_tokens`) would fix it — a schema change,
+five places per the `schema-change` skill, and deliberately **not** smuggled
+into a finding whose posture is a prompt breakpoint. **Worth its own number if
+you want the ledger to answer cost rather than volume.**
+
+**What remains unproven.** That the cache actually engages in production. Every
+check above is free — `count_tokens` and a byte-identity assertion — and proving
+a hit costs two real extractions back to back. The next real extraction proves
+it either way and now prints which it was, so the evidence arrives with the next
+class rather than needing a call spent on it here.
+
 ### F24 — `bom` is 232 of the untraceable rows, its cache is six pages, and nobody has opened it
 
 **What is true today.** `source-coverage --remote`, 2026-08-28: **550 rows carry
@@ -2611,7 +2652,11 @@ python scripts/ocr-book.py "C:/Users/natha/Downloads/<Book>.pdf" --slug <slug>
 
 Steps 0–6 are free and are done once. Step 7 is the only step that costs money,
 and as of 2026-08-28 it costs a known one: 21,581 input / 4,940 output for the
-first class extracted this way (F23).
+first class extracted this way (F23). **74% of that input is a stable prefix**
+and it is cached since F23 step 2 — on a **5-minute** tier, so **extract a
+book's classes back to back**. Inside the window the prefix bills at 0.1x;
+further apart than that, each call pays 1.25x to refill it and costs *more* than
+no caching at all. The run prints HIT or MISS.
 `node scripts/source-coverage.mjs` answers "what remains" at any point without
 reading the book, and `claude_usage` answers "what did it cost" (F7).
 
