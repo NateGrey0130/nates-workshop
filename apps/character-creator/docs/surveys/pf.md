@@ -78,7 +78,7 @@ None. This book has no open import.
 | 2026-08-27 | [#337](https://github.com/NateGrey0130/nates-workshop/pull/337) | `pf` registered in `books.json` with four aliases — 312 gear rows start resolving |
 | 2026-08-27 | [#340](https://github.com/NateGrey0130/nates-workshop/pull/340) | the `printed_through: 16` exception recorded, per printed page |
 | 2026-08-28 | — | this file, backfilled offline |
-| 2026-08-28 | [#N](https://github.com/NateGrey0130/nates-workshop/pull/N) | `fix-pf-citations.sql` — **39 of 42** rows cited by page: 28 spells, 6 skills, 5 armor. Three spellings of the book's name normalised to the canonical title. 3 held back. Applied `--remote` before the PR. **`pf` is 583 / 3.** |
+| 2026-08-28 | [#376](https://github.com/NateGrey0130/nates-workshop/pull/376) | `fix-pf-citations.sql` — **39 of 42** rows cited by page: 28 spells, 6 skills, 5 armor. Three spellings of the book's name normalised to the canonical title. 3 held back. Applied `--remote` before the PR. **`pf` is 583 / 3.** |
 
 ### What remains
 
