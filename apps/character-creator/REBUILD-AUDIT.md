@@ -309,6 +309,56 @@ exactly the reason the `zzzz-` tier exists.
 **Posture: a new data script, applied to local only** — production already
 holds these values and needs no change. This is repo-side repair.
 
+**Taken, 2026-08-28 (PR #379).** The premises held — 193 field values across 53
+rows, all twelve dropped columns, 24 weapons rebuilding as S.D.C. — and were
+re-measured against a build from current `main` rather than quoted from above.
+Two things had to change anyway.
+
+**The posture as written is impossible.** It says *"applied to local only —
+production already holds these values and needs no change."* The first half of
+that reasoning is right and the instruction that follows from it is wrong:
+[`drift-check.mjs:65`](../../scripts/drift-check.mjs) reports any
+non-local-only data script with no `data_script_runs` row as
+`DATA SCRIPT NOT RUN` and exits 1, so a script that never runs remotely leaves
+`main` permanently drifting. Marking it `-- local-only` would be worse still —
+it is a correction a fresh production would need, not a dev seed. **Applied to
+`--remote` before the merge**, and because this script's `WHERE slug = ...`
+matches rather than guarding itself out, the apply rewrote 53 rows with the
+values they already held: `changes: 55`, where F11's script reported 0.
+Production was dumped before and after — 975 rows, **zero field differences,
+byte-for-byte unchanged**. That diff, not the change count, is the check.
+
+**"All 18 columns" was narrowed to the columns that differ.** 53 `UPDATE`s each
+rewriting an unchanged multi-kilobyte `description` would make the file
+unreviewable in order to change nothing; the effect is identical. Stated here
+rather than done quietly.
+
+**One row on the restore script's list is in neither database.**
+`leather-armor` — `retire-leather-armor-placeholder.sql` removes it in both, so
+it is absent here rather than silently skipped. It briefly looked like a
+row-level divergence and is not.
+
+**Measured, on a database built from nothing:**
+
+| | before | after |
+|---|---|---|
+| `gear` field differences vs production | 257 | **64** |
+| all catalogs | 428 | **230** |
+| `mega_damage_rows` in a rebuild | 52 | **76**, production's own figure |
+| gear rows with no cost, in a rebuild | 155 | 115 |
+
+`mega_damage_rows` reaches parity exactly — every one of the twenty-four
+missing flags was on a row this script corrects. **The cost figure does not**:
+production holds 105 and a rebuild now holds 115. Those ten are gear rows no
+`restore-*` script created, priced through the catalog editor, and they belong
+to F6 rather than here. Recorded as a gap rather than rounded into a win.
+
+**What this does not close.** 230 field differences remain across the five
+catalogs plus `imported_classes`: 114 in `psionic_powers` and 37 in `skills`
+(F6), 64 still in gear (F6's ten priced rows and the citation drift F4
+describes), 10 class-markdown and `created_by` differences (F7, F12), and the
+22 `catalog_redirects` rows (F8).
+
 ### F6 — the app writes rows the repo has no mechanism to capture, and 38 psionic powers are bare because of it
 
 Traced one row through all 292 files
