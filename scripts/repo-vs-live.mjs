@@ -79,6 +79,11 @@ const TABLES = [
   // through that gap - a rebuild citing ten gear slugs no database holds, and
   // duplicated skill restrictions in mystic and burster.
   ['imported_classes', 'class_id', 'class_id'],
+  // Written by _lib/catalog-redirects.js when a merge or rename happens in
+  // the app, so it drifts the same way the catalogs do and nothing was
+  // checking it. `from_key` is unique across the table, which is why it can
+  // serve as both the set column and the identity column.
+  ['catalog_redirects', 'from_key', 'from_key'],
 ];
 
 // Columns that cannot be compared between two independently built databases.
@@ -91,7 +96,12 @@ const TABLES = [
 // them. A rebuild saying 'data-script' is telling the truth about itself, and
 // reporting it as a difference would be reporting the mechanism as a defect.
 // The same argument is open for `skills.source` under F14.
-const uncomparable = (c) => c === 'id' || c === 'created_by' || c.endsWith('_at');
+// `to_id` joins the same way `id` does - it is the ROWID of the gear or skill
+// a redirect points at, so two correct databases built in a different order
+// disagree about it by construction. Comparing it would report all 23 shared
+// redirects as broken while every one of them resolves.
+const uncomparable = (c) => c === 'id' || c === 'to_id' || c === 'created_by'
+  || c.endsWith('_at');
 
 // `deleted_at` is the exception to the rule above, and is compared as PRESENCE
 // rather than as a timestamp: a class soft-deleted in one database and live in

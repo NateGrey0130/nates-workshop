@@ -648,6 +648,40 @@ gap is at least reported, and export the 22 as a `restore-catalog-redirects.sql`
 if and only if F9's answer is that rebuilds are supposed to be restorable.
 **Posture: reporting first; the export is contingent on F9.**
 
+**Taken, 2026-08-28 (PR #387) — the reporting half only.** The export is still
+contingent on F9, which is taken next.
+
+The premise held: **22 redirects exist only in production**, verified today, and
+the list is unchanged from the audit. `repo-vs-live.mjs` now covers the table.
+
+**`from_key` is unique across all 45 rows**, so it serves as both the set column
+and the identity column. Checked rather than assumed — the same assumption
+broke F3 for `enchantments` and gear.
+
+**`to_id` had to be excluded, and that is not cosmetic.** It is the ROWID of the
+gear or skill a redirect points at, so two correct databases built in a
+different order disagree about it by construction. Left in, it would have
+reported **all 23 shared redirects as broken** while every one of them resolves
+— a table that is fine reading as totally corrupt.
+
+**This turns `repo-vs-live.mjs` RED. Exit 1, and it will stay there.** Row-level
+differences drive the exit code by design — F3 was careful to keep it meaning
+exactly "a missing or extra row", and these 22 are missing rows. It is the same
+state the tool showed for the original 2 classes and 169 catalog rows until
+`restore-*.sql` was written, so this is the tool working rather than breaking:
+nothing automated depends on it, the merge gate is the smoke suites, and
+`drift-check --remote` still prints `NO DRIFT`.
+
+But it is a standing red, and F3's own note warns that a check which fails on
+the day it lands gets switched off rather than fixed. **Whether to clear it by
+exporting the 22, or to make redirect rows advisory the way value differences
+are, is a live decision** — and it turns on F9's answer about what a rebuild is
+FOR. Raised rather than settled here.
+
+Full run after this change: `128 field(s) across 85 row(s)` and `22 row(s)
+differ`, exit 1. `imported_classes` is down to 6 differing rows, F7 having
+closed two.
+
 ### F9 — "rebuild from the repo" has never meant "restore production", and nothing says so
 
 Production holds **6,006 rows no data script creates**:
