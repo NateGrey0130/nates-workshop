@@ -1,5 +1,13 @@
 # Roadmap — delivered
 
+**Plans 05, 06 and 07 describe a thing that no longer exists.** The in-app
+importer they specify was retired in full — page, routes, engine and staging
+tables — after it turned out never to have run once against production. The
+plans are LEFT AS WRITTEN, because this directory is a record of decisions and
+not a description of the current code; deleting them would remove the reasoning
+and leave only the outcome. What replaced them is `scripts/extract-class.mjs`
+and a hand-written data script. See `docs/importing-from-pdfs.md`.
+
 **Every plan here is built and merged.** These files are kept as the record of
 *why* things are the way they are, not as a to-do list. (This line read "all
 twelve" long after the table had grown past eighteen plans and PR #228. A count

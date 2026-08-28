@@ -221,6 +221,53 @@ class out of the same book costs the same input tokens as the first.
 
 ---
 
+## The in-app importer was retired, 2026-08-28 — and it takes five findings with it
+
+Six of the findings below are about code that no longer exists. Read this
+before taking any of them.
+
+**It had never run against production.** Not once. `import_sessions` and
+`import_staged` held zero rows, and of the 23 rows in `claude_usage` not one
+was an import — 21 were Pick 3 Cut 5, one the proxy, one campaign-ask. Every
+catalog row in this database was written by a data script, including all
+seventeen classes from Wormwood. The audit said as much in its own Status
+section — *"no finding should reason from rows the session UI imported until
+one is actually run"* — and one never was.
+
+What went: `import.html`, `import.js`, thirteen routes, `import-engine.js`,
+`import-sessions.js`, `session-import.js`, four catalog prompt modules,
+`class-blocks.js`, the write half of `class-store.js`, 103 smoke checks and a
+regression phase. What replaced it: `scripts/extract-class.mjs` for classes,
+and a hand-written data script for everything else.
+
+| finding | what it is now |
+|---|---|
+| **F6** (#344) | Shipped, then deleted. It composed `source_book` per staged row; there are no staged rows. The rule it encoded — a row cites its book WITH a page range — survives in `class-check`, which reads that suffix to find its window |
+| **F7** (#347) | **Followed the code rather than dying with it.** The extractor meters to `claude_usage` as `cc-extract-class`, before the parse, and the smoke checks that pinned the old endpoints now pin the new one. The cost of a book is still a query |
+| **F12** | **Moot.** Prompt caching was blocked pending a real extraction; the path it would have cached no longer exists. The cost problem it addressed was solved differently: the extractor sends CACHED TEXT rather than a PDF page, which is a fraction of the tokens and needed no cache breakpoint |
+| **F16** | **Moot as written, and its real lesson is sharper than it was.** `getExamples` fed the model the two oldest published classes forever; the extractor takes `--like` and defaults to the two most recent. But the first real run showed that examples do not teach NAMING at all — given a shipped class as an example, with the correct catalog names in it and notes saying the book spells them differently, it used the book's spelling every time. The renames are `class-check --remote`'s job, not the prompt's |
+| **F18** (#351) | Shipped, then deleted with the skill importer it fixed. The 105 page-less skill rows it was about are still in the catalog and still page-less; nothing new joins them, because nothing writes a skill row through an extraction any more |
+| **F19** | **Untaken and now unreachable.** `buildUpdate`'s `COALESCE` lived in `import-engine.js` |
+
+**Two things did NOT go, deliberately.** `docs/plans/05`, `06` and `07` specify
+the importers and are left exactly as written — that directory is a record of
+decisions, not a description of current code, and deleting the plans would
+leave the outcome without the reasoning. And `js/class-template.js`, the
+annotated skeleton for writing a class BY HAND, was the one asset the importer
+carried that the replacement workflow actually needs; it got a front door
+(`scripts/new-class.mjs`) rather than a deletion.
+
+**What has no automated path at all now:** skills, spells, psionic powers and
+gear. The extractor covers classes only. In practice that changes nothing —
+those catalogs were only ever filled by data script.
+
+**The two tables are still there.** `import_sessions` and `import_staged` are
+empty and unused, and dropping them is irreversible, so it is left as its own
+decision rather than folded into a deletion PR. Migration 006 stays either way:
+it has run, and `drift-check` compares migration FILES against
+`schema_migrations`.
+
+---
 ## Findings
 
 Ranked by value, with one exception of numbering: **F16 belongs with the F1–F5

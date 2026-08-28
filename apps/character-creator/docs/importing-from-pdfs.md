@@ -1,303 +1,95 @@
 # Importing from PDFs
 
-The five importers, what the OCR does to a page, and the gear-price problems that
-no amount of tuning fixes.
-
-For what these importers were actually used *for* — the spell and psionic gaps
-the per-level grants uncovered, and the mistakes that paid for the tooling — see
-[Spell and psionic catalog imports](spell-and-psionic-imports.md).
+How a sourcebook becomes catalog rows, and the things about these books that
+no amount of tooling fixes.
 
 Part of the [character creator](../README.md) documentation.
 
 ---
 
-## The PDF importers
+## The route a book takes now
 
-They all live on `import.html`, admin only, behind five tabs: **Classes**,
-**Skills**, **Spells**, **Psionics** and **Gear**. The last three are built from
-`SESSION_CATALOGS` in `import.js`, so adding a sixth is a config entry rather
-than a new tab.
+**There is no in-app importer.** `import.html` and its thirteen routes were
+retired: they had never run once against production. `import_sessions` and
+`import_staged` were empty, and of the rows in `claude_usage` not one was an
+import. Every catalog row this app holds was written by a data script.
 
-The **catalog** importers — skills, spells, psionics and gear — share
-one pipeline in `_lib/import-engine.js` — extract, normalise, classify against
-the catalog, batch-confirm — with the per-catalog differences in `IMPORT_SPECS`
-and the columns coming from the field config. A fix there is a fix for all of
-them rather than the same fix four times. The **class** importer is a different
-shape (one class, markdown out) and stays on its own path.
+What replaced it is five steps, four of which cost nothing:
 
-Both send the PDF to Claude as a **document attachment**, never as extracted text:
-layout-preserving text extraction splices neighbouring columns together mid-line
-on two-column sourcebook pages, destroying the column boundary before extraction
-starts. Do not add a text pre-pass.
+1. **Cache the book.** `python scripts/ocr-book.py <pdf>` - one front door for
+   either kind of book. A text layer is read geometrically through
+   `read-columns.py` for free; a scan is rendered and OCR'd. `--probe` says
+   which it is and writes nothing.
+2. **Survey it before importing any of it.** The `book-survey` skill: find the
+   book's own authority tables, inventory by structure rather than by reading,
+   and diff against the catalog first. Wormwood's survey is the worked example,
+   and it is what caught that 37 prayers were new and zero psionics were.
+3. **Get a draft.** Either
+   `node scripts/extract-class.mjs --book <slug> --pages <N-M>`, which sends the
+   CACHED TEXT for a printed page range and writes a draft markdown file, or
+   `node scripts/new-class.mjs occ` and transcribe by hand. All seventeen
+   Wormwood classes were done the second way.
+4. **Check it.** `node scripts/class-check.mjs draft.md --remote`, then again
+   with `--field-sources`. This is not optional and the reason is in the next
+   section.
+5. **Write the data script.** One `add-<id>-class.sql` per class, applied
+   `--remote` BEFORE the PR that carries it. See the `class-import` and
+   `ship-pr` skills.
 
-Server-side callers use `_lib/claude-client.js` **directly**. Never reach the
-proxy by fetching the site's own `/api/claude` URL: in production Access
-intercepts the subrequest and returns the login page as HTML, which surfaces as
-a confusing empty-response error.
+### The extractor sends text, not the page
 
-### Class importer
+The retired importer sent the PDF page as a document attachment, on the grounds
+that layout-preserving text extraction splices neighbouring columns together
+mid-line and destroys the column boundary before the model sees it.
 
-1. **Upload** a page range covering exactly one class.
-2. **Extract** — returns the whole class as markdown.
-3. **Autosave** — stored as a `draft` the instant it parses, so a closed tab
-   never loses an extraction.
-4. **Review** — the markdown in one editable block, `extraction_notes` in a
-   banner, missing catalog references listed. `recheck` re-validates edits with
-   no further API spend.
-5. **Confirm** — publishes the class (live immediately) and creates stub rows
-   for anything it references.
+**That was true of `pdftotext` and it is not true of the cache.** `ocr-book.py`
+and `read-columns.py` find the columns by GAP and resolve them geometrically
+before a byte is written, so the cached text is already in reading order. The
+prompt therefore tells the model the opposite of what the old one did: do not
+re-order this, and do not read a mid-paragraph topic change as a column
+boundary to repair.
 
-#### Retiring a class
+The consequences are all in the same direction - no PDF slicing by hand, no
+image tokens, and the model reads the same bytes a human reviewer reads.
 
-Deleting a **published** class retires it: `deleted_at` is stamped, and it
-vanishes from the creation wizard, the extraction prompt's examples, and the
-saved-imports list. It does **not** vanish from anything that resolves a class a
-character already has — `getStored()` and therefore the sheet, the GM dashboard's
-roster labels, and the XP and level-up endpoints all deliberately ignore
-`deleted_at`. The sheet shows a "Retired class" advisory so the state is visible
-rather than mysterious.
+### It refuses pages that are pictures
 
-Retired classes live behind a **Retired (n)** toggle in the saved-imports panel,
-where a Restore button undoes it. There is no permanent delete for a retired
-class, by design.
+A cached page of a few bytes is a full-page illustration, not a failed OCR run,
+and the difference matters more than it sounds. Wormwood's Apok is cited
+**pp.55-58**. Printed 56 and 58 are art - 14 and 8 bytes of noise - and the rest
+of that class is on printed **59**: half its skill categories, its whole
+equipment line, and Money, Armor, Transportation, Cybernetics and Symbiotes.
 
-Deleting a **draft** is still a real delete — a draft is an in-progress
-extraction, usually one being cleared on purpose, and keeping every discarded
-attempt would turn the retired list into noise.
+Run the extractor on the cited range and it stops and names them. That is the
+guard: a class that quietly loses a third of itself still parses, still reads as
+complete, and nothing downstream ever asks.
 
-#### Writing a class by hand
+### `class-check --remote` is a required step, not a review
 
-Not every class is best got out of a PDF. An RCC with several age stages is
-quicker to write than to extract and correct, and until recently there was no
-way into the markdown editor without running an extraction first.
+The first real extraction came back structurally sound - right id, right name,
+right page citation, spells and psionics clean - and named **four skills by the
+book's spelling rather than the catalog's**: `Lore: Monsters & Demons`,
+`Language: American`, `Literacy: American`, `Math: Basic`. Every one is a known
+rename. It also invented five gear slugs by issuing the Weapons line as
+equipment.
 
-**+ Write one by hand** in the saved-imports panel asks for a name, whether it
-is an O.C.C. or an R.C.C., a system and a source book, then opens the editor on
-an annotated skeleton. The **Re-check** button re-parses and re-runs the catalog
-cross-reference for free, so you can iterate against the validator without
-spending an API call; **Confirm** publishes exactly as it does for an extraction.
+**The format examples did not prevent that and cannot.** That run was given a
+shipped class as an example, so the correct catalog names were in the prompt -
+and so were notes saying in words that the book prints the other spelling. It
+used the book's name anyway, every time.
 
-Two things make the template worth having over an empty file:
+Examples teach shape. They do not teach naming, and feeding the whole catalog
+into the prompt is not the answer either. Checking against the live catalog
+afterwards is.
 
-- **It parses on arrival**, with no errors and no warnings. A template that
-  failed validation the moment it was created would teach you nothing about
-  which of your own edits broke it — which is why all five fields the parser
-  requires are asked for up front rather than left blank.
-- **The awkward blocks are shown commented**: `variants`, `bonuses`, skill
-  choice-groups and gear choices. Those are the shapes nobody remembers, and
-  they are the reason writing a class by hand is worth supporting at all.
+### What has no automated path at all
 
-#### Structured editors for the two awkward blocks
-
-`bonuses` and `variants` get real UI above the markdown; nothing else does. They
-are the shapes nobody remembers, and everything else in the frontmatter is
-either obvious or prose.
-
-The markdown stays visible and stays the source of truth. Editing a block
-rewrites **only that block**, in place, so you can watch exactly what changed:
-
-- **Bonuses are a flat table** of *(level, group, key, value)*. A bonuses block
-  really is a list of those tuples — `at_level` is the same thing with a level
-  attached — so one small table covers both, instead of a nested editor per
-  group and another inside every `at_level` entry. Leave the level blank for a
-  bonus the class has from the start.
-- **Variants show id and name.** Their overrides (`attribute_dice`, the pool
-  bases, per-variant `bonuses`) are edited in the markdown, and **survive a
-  save**, because each block is rebuilt from its *parsed* value rather than from
-  what the form displays.
-- **A commented-out example is replaced, not duplicated.** The template ships
-  `# variants:` as a worked example; appending a real block beside it would make
-  the file appear to define the same key twice.
-
-Comments *inside* an edited block do not survive — it is rebuilt from structure.
-That is the right way round: the blocks worth a form are structure, and the
-blocks worth comments are the ones this never touches. Regenerating the whole
-frontmatter instead would have been simpler and would have destroyed every
-comment in the file, which is most of what makes a hand-written class
-approachable.
-
-`import/recheck` returns the parsed frontmatter as `data`, so the editors can
-read `bonuses` and `variants` without a YAML parser of their own — `import.js`
-is a classic script and `parser.js` is a module it cannot import.
-
-There are two templates rather than one, because an R.C.C. and an O.C.C. are
-genuinely different shapes — a race rolls its attributes from racial dice and
-usually has M.D.C., a character class has attribute *minimums* and hit points.
-One template covering both would be half wrong whichever you were writing.
-
-It is saved as a draft immediately, like an extraction, so a closed tab cannot
-lose it. `PUT import/stored` is deliberately more permissive than confirm: a
-draft only has to **parse**, not validate, because half-written is a draft's
-normal state and refusing to save one until it is correct would lose exactly the
-work most worth keeping. It will not overwrite a **published** class — that is
-what Confirm is for, and Confirm runs the cross-reference and full validation
-this skips.
-
-### Skill importer
-
-1. **Upload** a page range from a skill chapter, with an optional source-book
-   label, **page range** and category.
-2. **Extract** — returns many skills as JSON, each classified as new or a
-   duplicate, with the catalog's current numbers shown alongside the book's.
-3. **Review** — duplicates offer **update** / **keep both** / **ignore**.
-   A duplicate that is an empty stub defaults to *update*; any other duplicate
-   defaults to *ignore*, so curated numbers are never silently overwritten.
-   "Keep both" needs a distinguishing name, defaulting to `<name> (<book>)`.
-4. **Confirm** — applied as one batch. Names claimed twice in a single import
-   are reported as conflicts rather than failing the whole run.
-
-**The page range is what makes the rows traceable, and it is per upload.** The
-session importers record one per staged range; this importer has no staging
-table, so the batch *is* the range — type the pages you actually uploaded and
-confirm them before moving on, rather than uploading three ranges and
-confirming once. The book is resolved through `scripts/books.json` and the
-range normalised, so `pp. 26-34` becomes `Rifts Ultimate Edition p.26-34`.
-Leave the range blank and the rows get the book alone, which is what **105 of
-333 skills** in the catalog carry today — every one of them written before this
-field existed.
-
-A reply that hits the output ceiling is **rejected, not staged**. Half a page
-saved as though it were the whole page is worse than a failure, because you
-would confirm it without knowing the tail was missing. Narrow the page range.
-
-In the Rifts core book the skill chapter is roughly **pp. 26–34**, about one or
-two categories a page. Two pages yielded 33 skills in ~28 seconds.
-
-### Spell importer
-
-A spell chapter is hundreds of entries across many pages and does not fit one
-sitting, so spell imports run inside a **session**:
-
-1. **Start an import**, naming it and optionally labelling the source book.
-2. **Feed it a page range at a time.** Each extraction is staged in the database
-   the moment it parses, so a closed tab costs nothing — the model call is the
-   expensive part and it is what gets saved.
-3. **Review the pending list**, which accumulates across ranges. Duplicates
-   default the same way skills do: a bare stub to *update*, anything curated to
-   *ignore*.
-4. **Import the batch.** The session stays open for the next range.
-
-Five behaviours worth knowing:
-
-- **The page range you type ends up on the row.** Each confirmed row is written
-  with `<book> p.N-M` composed from the session's book label and *that row's*
-  page range — per row, because one session covers many ranges. The book is
-  resolved through `scripts/books.json` first, so a session labelled with a
-  spelling the registry already knows lands on the canonical title rather than
-  minting a new one; a book the registry does not carry keeps your wording. The
-  range label is normalised, so `pp. 180-181` and `180-181` both become
-  `p.180-181` — the shape `class-check --field-sources` and
-  `scripts/source-coverage.mjs` can read. Label the session with the book and
-  every range with its pages, and the rows stay traceable; skip either and they
-  do not.
-- **A row that collides stays pending.** If an insert clashes with a name
-  already in the catalog, it is reported and left in the list so you can give it
-  a distinguishing name and retry, rather than being silently dropped.
-- **An update whose target has vanished is reported, not swallowed.** A
-  duplicate is staged with the catalog row it matched; if that row is renamed
-  before you confirm, the `UPDATE` would match nothing and succeed silently. The
-  engine checks first and reports it as a conflict, so the row stays pending and
-  can be retried as an insert instead of disappearing with a success message.
-- **Staging a page range is one batch**, so it is all-or-nothing like confirming
-  one. A range yielding more than 300 rows is refused as too wide to have been
-  read reliably.
-- **Re-submitting a range you already did is harmless.** Names already staged in
-  that session are skipped rather than duplicated.
-
-Keep page ranges small. Spell entries carry a stat block plus prose, so they are
-much longer than skill entries, and a reply that overruns the output ceiling is
-rejected rather than half-saved.
-
-#### D1 binds 100 parameters per statement
-
-Measured against the real binding rather than assumed:
-
-```
-binds  100  ok
-binds  101  FAIL: D1_ERROR: too many SQL variables at offset 221
-```
-
-Any query building `IN (?,?,...)` from a list that grows with user data has a
-hard ceiling. Four files already carried a private `LOOKUP_BATCH = 50` for this
-reason; the ones that did not are where it broke.
-[`_lib/sql-chunk.js`](../../../functions/api/character-creator/_lib/sql-chunk.js)
-now holds the constant and the helper in one place, and the smoke test fails any
-of those six files that stops using it.
-
-**The worst instance ran after the write, not before it.** `markConfirmed`
-builds `WHERE id IN (?,?,...)` from every pending row in a session, and it runs
-*after* `applyDecisions` has already committed the catalog inserts. Confirming
-108 spells therefore:
-
-1. inserted all 108 — the write itself was fine, each `INSERT` binds about 14
-2. threw on the bookkeeping statement, 313 ids in one `IN`
-3. returned a **500 that read as total failure**
-4. left every row still pending, so the next confirm tried to insert all 108
-   again and reported them as `A row with that name already exists`
-
-The write and the bookkeeping disagreed, and the bookkeeping is what the next
-run reads. `applyDecisions` says *"All-or-nothing: nothing was written"* in its
-error path — true of the batch it guards, and not true of the endpoint the
-caller is actually talking to.
-
-It was found only because the half-written rows carried a `NULL system` that the
-data script being generated alongside them never produces. Had both paths agreed
-on that column, the partial write would have been invisible.
-
-The regression test seeds 150 staged rows and confirms them through the real
-endpoint. Under the unchunked code, the telling check is the one that **passes**
-— `the catalog really grew by 150` — beside four that fail.
-
-### Psionic importer
-
-The same session flow as spells — `_lib/session-import.js` is shared, and the
-two endpoint files are three lines each. Psionic powers take the **same field
-names as spells** (`range`, `duration`, `saving_throw`, `description`) so the
-sheet can render both through one code path.
-
-Two things are specific to psionics:
-
-- **`min_tier`** records the psychic tier a book says a power requires. It is
-  filled in **only when the entry itself states one**. Books state tier access
-  at the *category* level far more often than per power ("Super Psionics are
-  Master only"), so most rows legitimately have none, and the prompt is written
-  to make saying nothing the easy answer. **NULL means no restriction beyond the
-  power's category.** The column *is* enforced: the picker filters through
-  `derive.meetsTier()` and will not offer a power above the character's tier —
-  see [Psychic tiers](leveling.md#psychic-tiers).
-- **Unknown categories and tiers are flagged, never rejected.** A supplement
-  that adds a category the core four do not cover must still be importable, so
-  an unrecognised value imports with a ⚠ against it rather than failing. The
-  same applies to a tier outside minor/major/master.
-
-### Gear importer
-
-Same session flow again. Two things are specific to gear.
-
-**It is the only catalog matched on two fields.** Gear is unique on `slug`, and
-every existing row is a stub created by a class import, keyed on the `item_id`
-that class markdown referenced. The importer derives a slug from the book's item
-name and matches on that first, then falls back to the display name — because a
-stub stored as `ns-turbo-cyclone` will not match the slug that "NG-Turbo
-Cyclone" produces, and **a missed match means a second row while characters keep
-pointing at the empty one**. A fallback match is flagged in review so it is
-visible rather than assumed.
-
-**Gear has no `source` column**, so a stub is recognised by the marker the class
-importer writes — `STUB — created by class import, needs stats`. A row edited by
-hand no longer carries it and correctly stops counting as a stub.
-
-Filling in a stub is an `UPDATE` in place, so `gear.id` never changes and
-inventory rows keep resolving.
-
-An equipment chapter is the hardest extraction of the four: weapon tables,
-armour tables and prose gear descriptions share a page with entirely different
-shapes. Most fields apply to only some kinds, and the prompt leans on omitting
-rather than guessing — a backpack legitimately has nothing but weight, cost and
-a description.
+Skills, spells, psionic powers and gear. The retired importer had a tab for each
+and `extract-class.mjs` covers only classes. In practice this changes nothing:
+Wormwood's 3 skills, 37 prayers and 71 gear rows were all hand-written data
+scripts, because that is how every other catalog row got here too.
 
 ---
-
 ## Twenty gear prices, and why the first fix missed them
 
 `fix-rue-gear-prices.sql` corrects **sixteen costs**, records **three** ranges

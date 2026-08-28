@@ -623,8 +623,6 @@ function renderSystem() {
       </div>
     </div>
     ${S.isAdmin ? `<h3>Admin</h3>
-    <p class="small"><a href="import.html">📄 Import from a PDF</a>
-      <span class="muted">— pull an O.C.C./R.C.C. or a skill chapter out of a sourcebook</span></p>
     <p class="small"><a href="catalog.html">✏️ Edit catalogs</a>
       <span class="muted">— fix skills, spells, psionics and gear by hand</span></p>` : ''}
     ${gmCampaigns().length ? `<h3>Your campaigns (GM)</h3>

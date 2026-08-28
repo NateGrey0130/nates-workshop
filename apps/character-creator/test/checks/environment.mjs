@@ -286,7 +286,7 @@ section('Documentation claims');
 
 // ---- 1. A column claimed for a table that does not have it ----------------
 // The README said "All catalogs carry `source`". `gear` never has - it uses a
-// STUB marker in its description instead, and _lib/import-engine.js says so.
+// STUB marker in its description instead; class-check generates the SQL.
 // A query written from that sentence was rejected by production.
 //
 // The rule that catches it: inside a data-model row for table X, a backticked

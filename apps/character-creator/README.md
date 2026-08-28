@@ -26,7 +26,7 @@ under [`docs/`](docs/).
 | [`docs/wizard-and-sheet.md`](docs/wizard-and-sheet.md) | How the ten-step wizard and the character sheet behave: tabs, pickers, drafts, blocked steps, and what the server refuses to take on trust. |
 | [`docs/campaign-and-play.md`](docs/campaign-and-play.md) | Everything that happens at the table rather than during creation. |
 | [`docs/catalog.md`](docs/catalog.md) | How catalog rows are shaped, filtered, matched and merged. |
-| [`docs/importing-from-pdfs.md`](docs/importing-from-pdfs.md) | The five importers, what the OCR does to a page, and the gear-price problems that no amount of tuning fixes. |
+| [`docs/importing-from-pdfs.md`](docs/importing-from-pdfs.md) | How a book becomes catalog rows now: cache, survey, extract or transcribe, check, data script. The in-app importer it used to describe was retired unused. |
 | [`docs/operations.md`](docs/operations.md) | Bindings, the one-database decision, migrations, data scripts, and how to check that the live database still matches the repo. |
 | [`docs/known-limitations.md`](docs/known-limitations.md) | The honest list, roughly by value. |
 | [`docs/rules-audit.md`](docs/rules-audit.md) | Where each implemented rule comes from, by printed page. |
@@ -59,8 +59,6 @@ apps/character-creator/
 ├── dashboard.html / dashboard.js  GM dashboard: roster, GM notes, campaign journal
 ├── campaign.html / campaign.js  Campaign notes: the log with search and Ask,
 │                             the party stash and the currency ledger
-├── import.html / import.js   Admin-only PDF import — Class, Skills, Spells,
-│                             Psionics, Gear tabs
 ├── catalog.html / catalog.js Admin-only catalog editor, generated from the
 │                             field config. catalog.js is an ES module.
 ├── styles.css                All six pages, layered on /shared/styles.css
@@ -89,10 +87,9 @@ apps/character-creator/
 │                             input, and caret restore (classic script, same
 │                             reason as derive.js)
 ├── js/class-template.js      Annotated OCC/RCC skeletons for writing a class by
-│                             hand (classic script — import.js is one)
-├── js/class-blocks.js        Rewrites ONE frontmatter block in place, so the
-│                             structured editors cannot disturb the rest of the
-│                             file (classic script)
+│                             hand. Printed by scripts/new-class.mjs; a classic
+│                             script because the page that used to load it was
+│                             one
 ├── js/language-skills.js  The "once per language" rule for BOTH families (ES
 │                             module — the server validator imports it, and the
 │                             sheet reads its globalThis mirror via a module tag)
@@ -121,20 +118,12 @@ functions/api/
     ├── _lib/auth.js          Owner/GM/admin authorization, readJson
     ├── _lib/character-json.js  Decoding the character JSON columns, with the
     │                         right empty value per column
-    ├── _lib/catalog.js       Cross-reference an import; create catalog stubs
+    ├── _lib/catalog.js       Cross-reference a class draft; create catalog stubs
     ├── _lib/catalog-redirects.js  Retired catalog keys keep resolving to their
     │                         replacement, so an old class file still loads
     ├── _lib/class-loader.js  Resolve a class_id to parsed frontmatter
-    ├── _lib/class-store.js   Read/write stored classes; per-isolate parse cache
-    ├── _lib/import-engine.js  Shared catalog-import pipeline: extract,
-    │                         normalise, classify duplicates, batch-confirm
-    ├── _lib/import-sessions.js  Resumable imports: sessions + staged rows
-    ├── _lib/session-import.js  The session-based import endpoints, minus
-    │                         the catalog — spells, psionics and gear share them
-    ├── _lib/skill-prompt.js  Skill chapter import prompt
-    ├── _lib/spell-prompt.js  Spell chapter import prompt
-    ├── _lib/psionic-prompt.js  Psionics chapter import prompt
-    ├── _lib/gear-prompt.js   Equipment chapter import prompt
+    ├── _lib/class-store.js   Read stored classes; per-isolate parse cache. The
+    │                         write half went with the in-app importer
     ├── _lib/paging.js        limit/offset + total, for the lists that grow
     ├── _lib/skill-picks.js   Spending granted skill picks, shared by the
     │                         level-up flow and the sheet
@@ -253,10 +242,11 @@ it is a row neither `class-check --field-sources` nor
 `skills`, `spells` and `psionic_powers` also carry `source` (`seed` \| `import`),
 and a stub the class importer created is spotted by that plus zeroed numbers.
 **`gear` has no `source` column.** It never did, so its stub marker is the
-description instead: rows created by a class import open with `STUB —`, and a
-row edited by hand loses the prefix and correctly stops counting as one. The
-four `isStub` rules live together in `_lib/import-engine.js`; gear's is the
-odd one out and the comment there says why.
+description instead: rows created by a class import open with `STUB —` (today
+that means a data script, and `class-check` generates the SQL), and a
+row edited by hand loses the prefix and correctly stops counting as one. The four `isStub` rules lived together in
+`_lib/import-engine.js`, which went with the in-app importer; the marker is
+what survives it, and `scripts/source-coverage.mjs` is what still counts them.
 
 Data scripts that create such a row must build that em-dash with
 `'STUB ' || char(8212) || ' ...'` rather than embedding it, or the marker
@@ -621,6 +611,11 @@ scripts/
 │                           the same book's description pages
 ├── class-check.mjs         One class file, against the parser the app uses
 ├── class-check-lib.mjs     Its pure half, so the smoke test can call it
+├── new-class.mjs           A commented starting point for writing a class BY
+│                           HAND, occ or rcc. The template it prints is the one
+│                           the retired importer carried; this is its front
+│                           door. Everything it prints parses as-is, so
+│                           class-check is clean before you write a word
 ├── extract-class.mjs       One class out of a cached book, into a DRAFT .md.
 │                           The backend half of what import.html used to do:
 │                           printed page range in, cached OCR text (not a PDF
