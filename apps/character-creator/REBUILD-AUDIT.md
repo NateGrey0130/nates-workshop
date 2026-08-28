@@ -401,6 +401,41 @@ edited in the app diverges from the repo silently and forever. Then decide
 separately whether to close it (F5 is the gear-sized instalment).
 **Posture: documentation now; the repair is a separate finding per catalog.**
 
+**Taken, 2026-08-28 (PR #380).** Posture held: **documentation only.** No data
+script, no code, no D1 change — the repair stays a separate finding per catalog,
+now numbered F13 (psionics) and F14 (skills) so taking either is its own
+decision.
+
+**One word of this finding is now wrong, and it is the load-bearing one.** The
+proposal says a catalog row edited in the app *"diverges from the repo silently
+and forever"*. Since PR #377 it is **not silent**: `repo-vs-live.mjs` compares
+every column of every row whose name matches and prints the count. The
+divergence is now a number anyone can read in one command, which is the whole
+reason F3 was taken first. The paragraph written into `operations.md` says that
+and points at the command, rather than repeating the claim that it cannot be
+seen. *"Forever"* still stands — nothing in the repo reconstructs such a row.
+
+**Re-measured rather than quoted**, on a build from `main` after F5 landed: 21
+psionic powers with no `description` against production's one, 32 with no
+`source_book` against production's twelve, and the `Healing Touch` trace re-run
+through all 292 files to confirm `seed-catalogs.sql` is still the only file that
+touches it. The heading count in the finding — "38 psionic powers" — is rows
+differing in *at least one* column; 21 is the number that are genuinely bare.
+Both figures appear in F13 so neither can be quoted as the other.
+
+**Where it went, and one thing avoided.** `docs/operations.md` §Data scripts,
+after the three conventions and before the run-log query. It is a **bold lead-in
+paragraph, not a `####` heading**, and that is not a style preference: the smoke
+test bounds §Data scripts with `search(/\r?\n#{1,6} /)` — the next heading of
+**any** depth — and parses every `` `*.sql` `` pattern inside it to prove each
+data script is covered. A new sub-heading there would have silently truncated
+the section the check reads. The file had 0 `####` headings before this and has
+0 after.
+
+**Not closed, and not claimed to be:** 230 field differences across the
+catalogs stand exactly where they did. This finding was always about naming the
+limitation, and naming it does not move a row.
+
 ### F7 — `fix-class-skill-names-to-rue.sql` still defeats a later `fix-` script, and the `zz-` remedy creates a duplicate
 
 The bug the `zz-` tier was invented for is not fully fixed. Traced:
@@ -619,6 +654,63 @@ comparing `markdown` and `status` and skipping `created_by`, `created_at` and
 truncated 40 KB blobs, which is why this is a separate finding and not part of
 F3.
 **Posture: report, do not fail — same as F3.**
+
+### F13 — export the 38 divergent psionic powers, the way F5 did for gear
+
+Opened by F6, which says the repair is a separate finding per catalog. This is
+the largest single cluster left: **114 field values across 38 of the 101 psionic
+powers**, measured 2026-08-28 on a build from `main` after F5.
+
+| column | rows | column | rows |
+|---|---|---|---|
+| `source_book` | 20 | `saving_throw` | 7 |
+| `range` | 20 | `isp` | 4 |
+| `duration` | 20 | `isp_note` | 4 |
+| `description` | 20 | `variant_note` | 2 |
+| `system` | 16 | `category` | 1 |
+
+**21 powers rebuild with no `description` at all** against production's one, and
+32 with no `source_book` against production's twelve. Healing Touch, Telepathy,
+Telekinetic Lift, Mind Bolt, Sixth Sense are among them: `db/seed-catalogs.sql`
+creates the row bare and nothing in the remaining 292 files touches it again.
+The text is in production and nowhere else.
+
+**Proposal:** export the 38 rows' divergent columns from `--remote` into
+`zzzz-restore-psionic-powers-full.sql`, exactly the shape of
+[`zzzz-restore-gear-full-columns.sql`](db/zzzz-restore-gear-full-columns.sql):
+values taken from production rather than composed, only the columns that
+differ, guarded per name, sorting in the `zzzz-` tier. Expected effect —
+catalog field differences **230 → ~116**.
+**Posture: a new data script. Applied to `--remote` before its merge** — not
+because production needs it, but because `drift-check` reports any data script
+with no `data_script_runs` row as `DATA SCRIPT NOT RUN` and exits 1. F5's
+outcome note has the worked version of this.
+
+### F14 — export the 25 divergent skills, and read them before assuming enrichment
+
+The other catalog F6 leaves open: **37 field values across 25 of the 336
+skills** — `note` 16, `source_book` 10, `source` 8, `base` 1, `per_level` 1,
+`level_bonuses` 1.
+
+**Do not treat this as F13 with different nouns.** Sampling it, the differences
+are at least three kinds, and one of them is not enrichment at all:
+
+- **Enrichment**, like F13 — `Cook` and `Fishing` hold
+  `Palladium Fantasy: 30% +5% per level` in production and NULL in a rebuild.
+- **Provenance** — eight rows differ only in `source`, production saying
+  `manual` or `import` where the repo says `seed`. That records *how the row got
+  there*, and a rebuild saying `seed` is arguably telling the truth about
+  itself.
+- **A rules disagreement** — `Horsemanship: General` is `base 40, per_level 4`
+  in production and `base 35, per_level 5` in the repo, with production also
+  citing `Rifts Ultimate Edition p.311` where the repo cites nothing. One of
+  those two is wrong about the book, and this audit did not open it.
+
+**Proposal:** read all 37 against the books before exporting any of them, then
+export the ones that are genuinely production-is-right. The `source` column may
+belong in neither direction — decide explicitly rather than sweeping it.
+**Posture: investigate first, then a data script for whatever survives. This one
+is not mechanical and should not be taken as if it were.**
 
 ---
 

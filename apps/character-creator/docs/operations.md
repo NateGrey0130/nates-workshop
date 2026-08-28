@@ -444,6 +444,60 @@ local database.
   a script has no footer, or if a copy-pasted one names a different file —
   which logs the wrong script and looks entirely fine.
 
+**What a data script cannot recover: a row that was ENRICHED.** `restore-*.sql`
+closes one gap and is regularly mistaken for closing another. It restores that a
+row **exists**. It does not restore what a row **became**.
+
+The catalog editor and the importer's confirm step write straight to D1.
+Nothing in git creates what they add, which is the gap the `restore-*` scripts
+were written for — but they are `INSERT OR IGNORE` on the key, so they only
+ever recover a row that was **absent**. A row that already existed and was then
+**edited in the app** is invisible to them, and to every other script here.
+Nothing in this repo can reconstruct it.
+
+`Healing Touch` is the clearest case. `db/seed-catalogs.sql` creates it with a
+name, a category and an I.S.P. cost; every other value is NULL. **No other file
+in a rebuild touches it again** — traced through all 292, 2026-08-28. Production
+holds the full RUE text cited to p.165, typed into the catalog editor, and that
+text exists in production and nowhere else. Rebuilt from this repo, 21 psionic
+powers have no description at all against production's one, and 32 have no
+`source_book` against production's twelve. `add-rue-psionics-batch.sql` cannot
+help: it is `INSERT OR IGNORE` on name, and the seed row is already there.
+
+**This is not a bug in any script.** Each one does what it says. It is a
+property of a system where the app is a writer and the repo is not the only
+source of truth, and closing it would mean writing every catalog edit back into
+a data script by hand, forever — a discipline this repo has already tried and
+lost twice.
+
+**It is no longer silent, which it was until 2026-08-28.** Since PR #377,
+[`scripts/repo-vs-live.mjs`](../../../scripts/repo-vs-live.mjs) compares every
+column of every row whose name matches and prints the count. That is the number
+to watch:
+
+```sh
+node scripts/repo-vs-live.mjs
+```
+
+It exits 0 on a value difference, deliberately — the comparison began life with
+413 findings and a gate that fails on the day it lands gets switched off rather
+than fixed. `drift-check --remote` will keep saying `NO DRIFT` throughout, and
+is right to: bookkeeping and row contents are different questions.
+
+Closing it is done **per catalog**, by exporting the divergent rows from
+`--remote` into a `zzzz-`-tier script.
+[`zzzz-restore-gear-full-columns.sql`](../db/zzzz-restore-gear-full-columns.sql)
+is the worked example: `restore-gear-missing-from-repo.sql` carries six of
+gear's eighteen columns, so 53 rebuilt rows had a name and prose and no price,
+weight, damage or mega-damage flag — **twenty-four weapons that are
+mega-damage in production rebuilt as S.D.C.** That one script took the catalog
+totals from 428 field differences to 230. The skills and psionics `restore-*`
+twins carry ten and eleven columns and do not have that particular defect; what
+they have is this one.
+
+The full account, and what is left, is
+[`REBUILD-AUDIT.md`](../REBUILD-AUDIT.md).
+
 What an environment has had run, and when:
 
 ```sh
