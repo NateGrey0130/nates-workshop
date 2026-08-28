@@ -320,6 +320,7 @@ number left in this document.
 | F14 | #364 | `.claude/skills/audit-menu/SKILL.md` — the sixth skill, junctioned in the same PR. One skill, no script, **no check**. Four corrections to the finding, including that a grep for `Taken` reports F14 itself as taken |
 | F22 | #365 | `occ_group` and `xp_table` documented in `class-import/reference/frontmatter.md`. Documentation only. The enforcing checks are in `regression.mjs`, not smoke; a bad *value* is caught at parse time and a missing key is not |
 | F8 | #366 | `~/.claude/agents` junctioned to the repo's directory, so `book-reconcile` resolves from `Downloads`. The per-file alternative needs administrator rights, so the directory shape was forced rather than preferred — and `~/.claude/agents` can now hold nothing that is not in this repo |
+| F15 | #367, #368 | Part 1: the heading-anchor rule into `book-survey` §2, and both `parse-pf-spell-*.mjs` marked PF-shaped worked examples. Part 2: `class-check --emit-script <id>`, stdout only, escaping proved lossless. Part 3 deferred - `UI-AUDIT.md` does not exist |
 
 **Closed without being taken**
 
@@ -346,7 +347,7 @@ current list. The survey it describes is now at
 nothing.
 
 **Corrected again (PR #363): the open list is F8, F14, F15, F22, F23, F24 —
-six.** *(F14 in #364, F22 in #365, F8 in #366; three now — F15, F23, F24.)* #362 said three, which counted only the findings the paragraph above
+six.** *(F14 in #364, F22 in #365, F8 in #366, F15 in #367/#368; two now — F23, F24.)* #362 said three, which counted only the findings the paragraph above
 names and silently dropped the three #361 had added minutes earlier in this
 same section. The paragraph it was correcting predates F22-F24 and was never
 wrong about them; the correction read as a statement of the whole list and was.
@@ -1812,6 +1813,48 @@ checked, not assumed — so Track G has not run and the gate this proposal sets
 is unmet. Part (2) follows in its own PR, per "three separate PRs, in this
 order".
 
+**Part (2) taken, 2026-08-28 (PR #368).** `class-check --emit-script <id>`
+writes the whole `add-<id>-class.sql` from a validated draft: header, the stub
+rows the catalog pass already found, the `imported_classes` INSERT with
+apostrophes doubled and non-ASCII spliced through `char()`, the readback
+`SELECT`s, and the `data_script_runs` footer naming its own file.
+
+**Posture held: stdout, never a file, applies nothing.** The report moves to
+stderr for that run so `> add-<id>-class.sql` captures pure SQL, and running
+`class-check` on the resulting `.sql` is still a separate step — the ASCII/CRLF
+pre-flight has to fire against the real artifact rather than against the
+generator's intentions. `class-import` step 4 and the runbook now say so.
+
+**It refuses rather than emitting something subtly wrong**, in four cases, each
+tested: a draft that is not `ready`; an id that disagrees with the frontmatter;
+an id that is not kebab-case; and `--no-catalog` or `--field-sources`, because
+without the catalog pass there are no stub rows and a script missing them
+applies cleanly and leaves the class pointing at nothing.
+
+**The escaping was proved lossless rather than eyeballed.** A draft carrying a
+straight apostrophe, a curly one, an em-dash, an ellipsis and an e-acute emits a
+file that is **pure ASCII with no CR**, splices each non-ASCII codepoint as
+`char(8212)` / `char(8217)` / `char(8230)` / `char(233)`, doubles the straight
+apostrophe rather than splicing it, and reads **byte-identical** back out
+through `extractClassMarkdown` — the same function `class-check` uses on a
+`.sql`. The emitted script then passes every convention the smoke suite enforces
+on data scripts, checked directly: pure ASCII over the **raw bytes including
+comments**, no CR, and a footer naming its own filename.
+
+**One thing found on the way, worth knowing and not fixed here.** The parser
+requires **LF frontmatter delimiters**: a CRLF draft fails with "No YAML
+frontmatter block found" before `--emit-script` is ever reached. That is a
+reasonable place to fail and the message is clear, but it is a property of
+`parseClassMarkdown` that nothing documents, and on this machine a hand-made
+draft is CRLF by default. The emitter strips CR from the markdown anyway, so the
+stored value can never carry one — that is the bug the readback `SELECT` at the
+bottom of every data script exists to catch.
+
+**Part (1)'s "no inventory command exists" still holds** and part (3) is still
+gated on `UI-AUDIT.md`, which still does not exist. **F15 is now taken to the
+extent it can be**: parts (1) and (2) shipped, part (3) deferred by its own
+terms rather than left undone.
+
 ### F16 — every class extraction is taught the format by the two oldest and most-corrected classes in the repo, forever
 
 **What is true today.** `_lib/class-store.js` `getExamples(env, limit = 2)`
@@ -2449,9 +2492,10 @@ at `.claude/skills/book-survey/reference/SURVEY.md` and the survey is tracked at
 `apps/character-creator/docs/surveys/<slug>.md`, so the ledger line goes in the
 same PR as the work rather than waiting on a merge it could never be part of.
 Steps 0-5, 7 and 8 were already real: F1-F5 and F13 are taken, and step 7 is
-`extract-class.mjs` rather than an upload, which is why F11 is closed. What is
-still a forecast: step 9 needs F15 part 2 (`--emit-script`), and step 11 needs
-F8.
+`extract-class.mjs` rather than an upload, which is why F11 is closed.
+**Nothing in this runbook is a forecast any longer**: step 9's `--emit-script`
+shipped with F15 part 2 (#368), and step 11's `book-reconcile` resolves from
+`Downloads` since F8 junctioned the agents directory (#366).
 
 One page. Steps marked **(once)** are per book; the rest repeat per class.
 
