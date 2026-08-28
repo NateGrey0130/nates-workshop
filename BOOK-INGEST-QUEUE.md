@@ -14,7 +14,7 @@ the human view of the same thing plus the import status.
 | slug | book | PDF pages | layer | printed | offset | status |
 |---|---|---|---|---|---|---|
 | `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 222 | **+0** | cached |
-| `underseas` | Rifts WB 7: Underseas | 216 | SCAN (OCR) | TBD | TBD | caching |
+| `underseas` | Rifts WB 7: Underseas | 216 | SCAN (OCR) | 214 | **+0 / -1 split** | cached |
 | `new-west` | Rifts WB 14: New West | 226 | text layer | 224 | +1 | cached |
 | `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | cached |
 | `mystic-russia` | Rifts WB 18: Mystic Russia | 178 | text layer | 176 | +1 | cached |
@@ -28,6 +28,14 @@ the kickoff session caches and registers only, by design.
 one gear row cites Triax, one skill row cites New West. Their entries were
 filled in, not created, and their existing `aliases` were kept: those aliases
 are the live vocabulary those two rows resolve through.
+
+**Those two rows still cannot be traced, and caching did not fix it.** Both cite
+their book with no page number at all — `gear.Triax Pump Weapon` says
+`Triax & The NGR`, `skills.W.P. Rope` says `Rifts New West`. Caching moved them
+out of `not-cached` and straight into `no-page-range`, which is the same
+untraceable in a different bucket. **Give each a page range in its own book's
+session**, now that there is a book to find it in; it is the cheapest task
+either session has and it closes the only two rows those books own today.
 
 ## What the kickoff session established
 
