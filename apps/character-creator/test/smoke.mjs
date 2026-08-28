@@ -239,7 +239,7 @@ import {
 } from '../../../scripts/class-check-lib.mjs';
 import { bookSpellings, bookTitles, cacheCoverage, loadBookRegistry, loadNotBooks } from '../../../scripts/books-lib.mjs';
 import { bucketFor, summarise } from '../../../scripts/source-coverage-lib.mjs';
-import { buildUserPrompt } from '../../../functions/api/character-creator/_lib/extraction-prompt.js';
+import { buildUserPrompt, SYSTEM_PROMPT_CACHE } from '../../../scripts/extraction-prompt.mjs';
 import { collapseWhitespace, statements, stripComments, trailingSelects } from '../../../scripts/sql-statements.mjs';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import { composeClass } from '../js/compose.js';
@@ -1893,7 +1893,7 @@ check('awkward strings survive quoting', (() => {
 section('Class prompt covers the schema');
 {
   const prompt = readFileSync(
-    join(repoRoot, 'functions', 'api', 'character-creator', '_lib', 'extraction-prompt.js'), 'utf8');
+    join(repoRoot, 'scripts', 'extraction-prompt.mjs'), 'utf8');
   for (const key of ['variants', 'bonuses', 'attribute_dice', 'equipment_starting',
                      'level_progression', 'psionics', 'magic', 'special_abilities']) {
     check(`the prompt documents \`${key}\``, prompt.includes(key));
@@ -2710,8 +2710,7 @@ section('Alignments');
   // The importer only ever returns fields the prompt names — the reason a whole
   // stat block went missing when `variants` shipped undocumented.
   check('the class import prompt documents starting_money', (() => {
-    const src = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
-      '_lib', 'extraction-prompt.js'), 'utf8');
+    const src = readFileSync(join(appDir, '..', '..', 'scripts', 'extraction-prompt.mjs'), 'utf8');
     return src.includes('starting_money');
   })());
   check('the hand-authoring templates show starting_money', (() => {
@@ -6007,6 +6006,70 @@ section('Book registry');
     /node scripts\/catalog-diff\.mjs --remote --table/.test(survey));
 }
 
+
+// ---------- 1e-ter. The backend class extractor ----------
+//
+// scripts/extract-class.mjs replaces the in-app importer's extraction half.
+// These pin the things about it that are load-bearing and would break
+// silently: the art-page threshold, the cached-text prompt, the metering, and
+// the fact that it drafts rather than publishes.
+section('Backend class extractor');
+{
+  const src = readFileSync(join(repoRoot, 'scripts', 'extract-class.mjs'), 'utf8');
+
+  // THE THRESHOLD IS THE WHOLE POINT OF THE GUARD. Wormwood p056 is 14 bytes
+  // trimmed and p058 is 8; the smallest page in that book that is REAL text is
+  // p074 at 744, the Hospitaller's code of chivalry set in one sparse column. A
+  // threshold at or above 744 refuses a real page; one at or below 14 waves the
+  // art through, which is how the Apok loses a third of itself.
+  const m = src.match(/const ART_PAGE_BYTES = (\d+);/);
+  check('the extractor states an art-page threshold', !!m);
+  const artBytes = m ? Number(m[1]) : null;
+  check('and it sits between the largest art page and the smallest real one',
+    artBytes !== null && artBytes > 14 && artBytes < 744, String(artBytes));
+
+  // The guard has to REFUSE by default. A version that warned and carried on
+  // would read the same in a diff and catch nothing.
+  check('a short page stops the run rather than warning',
+    src.includes('REFUSING') && src.includes('process.exit(1)'));
+  check('and there is an explicit escape hatch for the rare real case',
+    src.includes('--allow-short'));
+
+  // execFileSync with shell:true does not quote the arguments it joins - the
+  // SQL loses its spaces and wrangler reports twenty unknown arguments. This
+  // script hit that on its first run; d1Query is the one that gets it right.
+  // Checked on the IMPORT rather than the word, because the header explains
+  // the trap by name and a substring test would match the explanation.
+  check('the extractor queries D1 through the repo helper, not its own spawn',
+    src.includes('d1Query') && !/from 'node:child_process'/.test(src));
+
+  // A truncated reply that parses is worse than an error, because it gets
+  // reviewed as though it were a whole class.
+  check('a max_tokens stop is treated as a failure, not a result',
+    src.includes('max_tokens') && src.includes('only partly read'));
+
+  // F7 shipped metering so the cost of a book is a query rather than an
+  // estimate. Moving extraction off the metered route would quietly undo it.
+  check('the extractor meters its call to claude_usage',
+    src.includes('claude_usage') && src.includes('cc-extract-class'));
+
+  // It drafts. It must not be able to publish.
+  check('the extractor writes no catalog row and no class row',
+    !/INSERT\s+(OR\s+\w+\s+)?INTO\s+(imported_classes|gear|skills|spells|psionic_powers)/i.test(src));
+
+  // The cached-text prompt must not tell the model to un-splice columns that
+  // read-columns.py already resolved, and must not claim a PDF is attached.
+  const cachePrompt = buildUserPrompt([{ name: 'X', text: 'md' }], null, { source: 'cache' });
+  check('the cached-text prompt does not claim an attached PDF',
+    !cachePrompt.includes('attached PDF'));
+  check('and the PDF prompt still does, for the path that still sends one',
+    buildUserPrompt([{ name: 'X', text: 'md' }], null).includes('attached PDF'));
+  check('the cached-text system prompt says the columns are already resolved',
+    SYSTEM_PROMPT_CACHE.includes('already extracted')
+    && SYSTEM_PROMPT_CACHE.includes('DO NOT try to re-order'));
+  check('and warns that a stat block continues across a page break',
+    SYSTEM_PROMPT_CACHE.includes('CONTINUES at the top of the next'));
+}
 
 // ---------- 1f. Skill bonuses ----------
 // A skill is not only a percentage: Boxing is +1 attack per melee and +2 P.S.

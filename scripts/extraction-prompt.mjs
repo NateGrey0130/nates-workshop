@@ -1,14 +1,27 @@
-// Builds the OCC/RCC extraction prompt (import spec section 3).
+// Builds the OCC/RCC extraction prompt. Two sources, two prompts.
 //
-// Deliberately sends the PDF page itself rather than extracted text: layout-
-// preserving text extraction splices neighbouring columns together mid-line on
-// these two-column sourcebook pages, destroying the column boundary before the
-// model ever sees it.
+// PDF (SYSTEM_PROMPT): sends the page image itself. The original reason still
+// stands for that path - layout-preserving text extraction splices
+// neighbouring columns together mid-line on these two-column sourcebook pages,
+// destroying the column boundary before the model ever sees it.
+//
+// CACHE (SYSTEM_PROMPT_CACHE): sends the OCR cache text for a printed page
+// range. THAT PREMISE NO LONGER HOLDS FOR THIS PATH, and the difference
+// matters. `.cache/books/<slug>/txt/pNNN.txt` is written by ocr-book.py and
+// read-columns.py, which resolve the columns GEOMETRICALLY before anything is
+// written - so the text is already in reading order, and telling the model to
+// un-splice columns would have it repair damage that is not there.
+//
+// The cache path is also what makes a page range free to send: no PDF slice,
+// no image tokens, and the same bytes a human reviewer reads.
+//
+// Moved here from functions/api/character-creator/_lib/ so that it outlives
+// the in-app importer, which is being retired.
 
 // `with { type: 'json' }` is not decoration: Node refuses a bare JSON import
 // outright (the smoke test renders this prompt), and esbuild -- which is what
 // actually bundles this for Pages -- accepts the attribute either way.
-import BOOKS from '../../../../scripts/books.json' with { type: 'json' };
+import BOOKS from './books.json' with { type: 'json' };
 
 // The allowed `source_book` titles come from the one registry the CLI scripts
 // read (scripts/books.json). The field is free text in every table that holds
@@ -34,12 +47,34 @@ Rules:
 - Put readable prose (background, description, roleplaying colour) under "## Lore" and any table-specific or GM-facing advice under "## GM Notes". Do not put prose in the frontmatter.
 - If you encounter a mechanic that does not cleanly fit the schema, DO NOT force it into a field and DO NOT silently drop it. Record it in \`extraction_notes\` describing what you saw and where it appeared. This is expected and useful — a class with honest extraction_notes is far more valuable than one with invented structure.`;
 
-export function buildUserPrompt(examples, hints) {
+// The cached-OCR counterpart. Same job, three deliberate differences: the
+// columns are ALREADY resolved so it must not try again, OCR noise is a real
+// failure mode that a page image does not have, and the page markers let the
+// model say which printed page a value came from.
+export const SYSTEM_PROMPT_CACHE = `You extract Palladium/Rifts character class definitions from RPG sourcebook pages into a strict markdown format.
+
+You are reading TEXT that was already extracted from a two-column sourcebook page and put into correct reading order by a geometric column reader. DO NOT try to re-order it, and do not assume a topic change mid-paragraph is a column boundary you need to repair - it is not. Read it as continuous prose.
+
+Each printed page is introduced by a marker line of the form \`=== printed page N ===\`. A stat block that runs past the end of one page CONTINUES at the top of the next one, and you must read it across the boundary. Sections are frequently split this way; the equipment list, the money line and the second half of a skill list are the usual casualties.
+
+The text is OCR output and carries OCR noise: stray single characters, a bare page number on its own line, a scanned signature, mangled punctuation. Ignore noise. NEVER treat a garbled fragment as a value - if a number or a name is not legible, omit the field and say so in \`extraction_notes\`.
+
+Extract exactly ONE character class. Output ONLY the finished markdown file, with no commentary before or after it and no code fences.
+
+Rules:
+- Use ONLY the fields in the target schema. Omit any field that does not apply - never invent or guess a value to fill a slot.
+- Keep dice/formula strings verbatim as written in the book (e.g. "P.E. + 1d6 per level", "2d4x10+20", "1d4x100").
+- Put readable prose (background, description, roleplaying colour) under "## Lore" and any table-specific or GM-facing advice under "## GM Notes". Do not put prose in the frontmatter.
+- If you encounter a mechanic that does not cleanly fit the schema, DO NOT force it into a field and DO NOT silently drop it. Record it in \`extraction_notes\` describing what you saw and where it appeared. This is expected and useful - a class with honest extraction_notes is far more valuable than one with invented structure.`;
+export function buildUserPrompt(examples, hints, { source = 'pdf' } = {}) {
   const exampleBlock = examples
     .map((ex, i) => `### Example ${i + 1} — ${ex.name}\n\n${ex.text}`)
     .join('\n\n---\n\n');
+  const from = source === 'cache'
+    ? 'from the sourcebook pages quoted below'
+    : 'from the attached PDF page(s)';
 
-  return `Extract the character class from the attached PDF page(s) into the exact markdown format below.
+  return `Extract the character class ${from} into the exact markdown format below.
 
 ## Target schema (YAML frontmatter)
 
