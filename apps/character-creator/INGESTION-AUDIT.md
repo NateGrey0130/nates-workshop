@@ -322,6 +322,7 @@ number left in this document.
 | F8 | #366 | `~/.claude/agents` junctioned to the repo's directory, so `book-reconcile` resolves from `Downloads`. The per-file alternative needs administrator rights, so the directory shape was forced rather than preferred — and `~/.claude/agents` can now hold nothing that is not in this repo |
 | F15 | #367, #368 | Part 1: the heading-anchor rule into `book-survey` §2, and both `parse-pf-spell-*.mjs` marked PF-shaped worked examples. Part 2: `class-check --emit-script <id>`, stdout only, escaping proved lossless. Part 3 deferred - `UI-AUDIT.md` does not exist |
 | F23 | #369, #370 | The metered row is split: the format examples are **47.6%** of the input and the whole stable prefix **74.1%**, reconstructed to the exact 21,581 tokens. Step 2: one ephemeral breakpoint after the prefix, prompt byte-identical. The metering had to be fixed with it - cached tokens leave usage.input_tokens, which would have undercounted the row by 74% |
+| F24 | #371 | Surveyed. `p.71-72` is Earth Warlock levels 6-7; the 231 rows are all four elemental lists. Book cached from its text layer (360 pp), authority table found at printed 348-352, 209 of 231 resolved to an exact page. **No data changed** - the repair is its own batch |
 
 **Closed without being taken**
 
@@ -348,7 +349,7 @@ current list. The survey it describes is now at
 nothing.
 
 **Corrected again (PR #363): the open list is F8, F14, F15, F22, F23, F24 —
-six.** *(F14 in #364, F22 in #365, F8 in #366, F15 in #367/#368, F23 in #369/#370; ONE now — F24.)* #362 said three, which counted only the findings the paragraph above
+six.** *(F14 in #364, F22 in #365, F8 in #366, F15 in #367/#368, F23 in #369/#370, F24 in #371; NONE now — the menu is clear, and the bom citation repair is scoped as its own book batch.)* #362 said three, which counted only the findings the paragraph above
 names and silently dropped the three #361 had added minutes earlier in this
 same section. The paragraph it was correcting predates F22-F24 and was never
 wrong about them; the correction read as a statement of the whole list and was.
@@ -2578,6 +2579,64 @@ repair before reading the page** — F20 is this document's own case for that ru
 and it nearly shipped a data script that would have destroyed a verified
 citation. Posture: **survey first, and the finding's proposal gets rewritten from
 what the page says.** Scope it as its own book batch, not as an audit item.
+
+**Taken, 2026-08-28 (PR #371) — surveyed, and the proposal is rewritten below
+from what the pages say.** The book is cached in full and
+`apps/character-creator/docs/surveys/bom.md` is a real survey rather than a
+stub. **No data changed**, per the posture: the repair is its own batch.
+
+**`p.71-72` is Earth Warlock spell descriptions, Level Six and Level Seven** —
+about eight spells over two pages. Not an index, not a table. The 231 rows
+carrying it are **the four elemental lists entire**: Air 65, Earth 62, Water 52,
+Fire 52. A range covering part of one element's two levels was stamped on all
+four. It reaches **spells only** — gear, skills and psionics carry none of it.
+
+**The book had a text layer the whole time.** `--probe` medians **5,411
+chars/page**; the registry called it *sparse* and it is not. All 360 pages
+cached in seconds with no OCR and no cost. The six-page OCR cache was not a
+deliberate keep — the note describing it as one has been corrected.
+
+**The book ships an authority table nobody had found: the *Index of Rifts
+Magic*, printed 348-352**, giving every spell a name, a cost **and a page**.
+**799 entries** parse out of it. The six-page cache did not include it, which is
+why five separate passes over this problem had nothing to work from.
+
+**Where the 231 actually are**, reconciled from two independent readings — the
+index's page, and the element block bounds taken from the Level One..Eight
+headings:
+
+| outcome | rows |
+|---|---|
+| resolved to exactly one printed page | **209** |
+| index page fell outside the element block | 6 |
+| still ambiguous inside the block | 1 |
+| absent from the index | 15 |
+
+All 231 sit inside the block the book prints that element in. Neither reading
+settles it alone: **71 names carry two or more index pages**, because the book
+prints the same spell in a Warlock list and again in the general invocations.
+
+**The rewritten proposal.** Not "a data script per page range" and not "remove
+the citation": **209 rows get an exact printed page, 22 get their element's
+range** (Air 57-66, Earth 67-74, Fire 74-81, Water 82-88), and **six anomalies
+get read on the page first** — `Air: Snow Storm` indexes into the *Water* block,
+three Earth spells index to p.74 where Earth and Fire share a page, and
+`Air: Calm Storms` and `Earth: Create Wood` index into the general invocations,
+so the catalog may hold the wrong one of a duplicated name. One data script,
+guarded per row, applied `--remote` before its PR.
+
+**The finding's own framing needs one correction, and it is the important
+one.** F24 says the ledger scores these rows `outside-cache` — *"attributed to a
+book, to a page nothing has cached."* **Caching the book fixed that number
+without fixing anything real.** `bom` moved **0 / 409 → 232 / 177** and
+`outside-cache` fell from 232 to **0** across the whole catalog, purely because
+printed 71-72 is now a page the cache holds. The citations are exactly as wrong
+as they were.
+
+**A coverage ledger measures whether a citation can be checked, not whether it
+is right** — and that distinction was invisible while the book was uncached. It
+is worth saying plainly in `source-coverage`'s own output, which currently
+invites the reading that traceable means correct.
 
 
 ---

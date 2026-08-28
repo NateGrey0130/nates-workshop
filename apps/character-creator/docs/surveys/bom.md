@@ -1,101 +1,177 @@
 # Rifts Book of Magic — survey
 
-Slug `bom`. Cached 2026-08-26 from `526065744-Rifts-Book-of-Magic.pdf`,
-360 PDF pages, **scan (no text layer)**, OCR at 300 dpi, psm 3, table pages
-re-rendered at 500 dpi.
+Slug `bom`. Cached 2026-08-28 from `526065744-Rifts-Book-of-Magic.pdf`,
+360 PDF pages, **text layer**, no OCR.
 
 *Facts about this book, not prose from it — see `book-survey` §7.*
 
-**This is a stub. Six of 360 pages are cached and 409 catalog rows point into
-this book.** It is the largest untraceable block in the catalog and nobody has
-opened it — see `INGESTION-AUDIT` **F24**. Everything below came out of the
-repo, offline; nothing here was read off a page.
+**Surveyed 2026-08-28 for `INGESTION-AUDIT` F24.** Before that this file was a
+backfilled stub and the cache was six pages.
 
 ## Page offset
 
-`page_offset: 1` from `scripts/books.json` — cache file page = printed folio + 1.
-`printed_pages: 352`.
+`page_offset: 1` from `scripts/books.json` — cache file page = printed folio + 1,
+so printed folio F is `p<F+1>.txt`. `printed_pages: 352`.
 
-**The registry's values are the authority and the manifest's are NULL here on
-purpose.** `manifest.json` records `printed_pages: null` and `page_offset: null`
-because no folio in the six cached pages survived OCR; the offset in the registry
-was read off the source PDF's own sparse text layer instead, 14 pages agreeing.
-A manifest derived from a truncated cache reports the truncation, which is why
-`books.json` outranks it — see that file's `_doc`.
+**The registry was right and the manifest is the one to distrust here.**
+`ocr-book.py` measured the last detectable folio as **347** and wrote that into
+the manifest; the registry says **352**, and 352 is correct — printed 348-352 is
+the *Index of Rifts Magic*, whose folios the text layer does not surface the same
+way. This is `books.json`'s own `_doc` rule holding up in the direction it was
+written for: the registry outranks the manifest's copies.
 
-This book **has** a text layer and was OCR'd anyway. `ocr-book.py` now refuses to
-rebuild it as a text-layer book without `--force`, because that would overwrite
-the OCR cache the six kept pages live in.
+## The book had a TEXT LAYER all along, and was OCR'd anyway
 
-## The book's authority tables
+`ocr-book.py --probe` reports a median of **5,411 characters a page** over
+twenty samples — a healthy text layer, comparable to `pf`'s ~5,700 and nowhere
+near the 400-character threshold.
 
-**Not found — nothing has been surveyed.** A spell compendium of this size
-almost certainly prints a master list; finding it is step 4 of the runbook and
-has not been done.
+The registry note called it a *sparse* text layer. It is not sparse. The whole
+book now caches from it in seconds, with no OCR, no Tesseract and no cost.
+
+Re-caching needed `--force`, and the refusal fired exactly as designed: *"bom is
+cached as OCR and this run would rebuild it as a text layer, overwriting 6
+page(s)."* The six OCR pages (`p090-p095`, printed 89-94) were kept aside before
+forcing. They are the tail of an index page plus the start of the general
+invocation descriptions.
+
+## The book's authority table
+
+| printed | table | states |
+|---|---|---|
+| **348-352** | *Index of Rifts Magic* | every spell's NAME, P.P.E. COST **and PAGE** |
+
+**799 entries parse out of it.** This is the single most valuable thing in the
+book and the six-page cache did not include it.
+
+Entry shape is `Name (cost) p. NNN`, and the text layer splits digits — `p. 1 10`
+is 110, `( 1 0)` is 10 — so numbers need their spaces stripped before use. The
+`book-survey` §2 rules apply unchanged: a name is whatever precedes the **last**
+parenthetical, and a cost is anything carrying a digit or Special/Varies.
+
+**The index alone does not settle where an elemental spell is printed**, because
+the book prints many spells twice — once in a Warlock elemental list and again in
+the general invocations. **71 of the 231 elemental spells carry two or more index
+pages.**
 
 ## Inventory
 
+Counted by structure over all 360 cached pages.
+
 | section | printed pages | what is there |
 |---|---|---|
-| **cached** | **89-94** | six pages, `p090-p095`, kept for one extraction |
-| everything else | 1-88, 95-352 | **not cached** |
+| **Air Warlock magic** | **57-66** | 8 level headings, Level One through Eight |
+| **Earth Warlock magic** | **67-74** | 8 level headings |
+| **Fire Warlock magic** | **74-81** | 8 level headings |
+| **Water Warlock magic** | **82-88** | 8 level headings |
+| General invocations | 89-153 | the main spell body, by level |
+| classes, gear, lore | 1-56, 154-347 | one class defined, per F1's earlier count |
+| **Index of Rifts Magic** | **348-352** | the authority table |
+| Palladium catalogue | 353-360 | not numbered by the book |
 
-The cache was never built for a survey. It was built to answer one question, and
-`cached_range` is `p090-p095` — 6 of the PDF's 360 pages. It is the one partial
-cache of the nine.
+**Earth and Fire share printed 74.** Fire's *Level One* heading sits partway down
+it, so the last Earth spells and the first Fire spells are on the same page —
+the case `book-survey` §5 describes, met here in the page ranges rather than in
+an extraction.
+
+### A mention is not a definition, one level down
+
+The first pass at locating spells searched the whole book and found *Water: Calm
+Waters* "defined" on pages 51 through 203. Elemental spell names **recur across
+the book's other lists as full stat blocks**, not as cross-references — so the
+usual test (does a `Range:` line follow within a few lines?) passes on all of
+them. Only the element's own page block separates them.
+
+A second false positive worth recording: grepping for `Level Four: Air` matched
+**`Level Four: Air Doubler`**, a spell name, not a section heading.
 
 ## Classes
 
-One class cites this book: `stone-master`. Its citation resolves to a page the
-cache does not hold, so it reads `outside-cache` in `source-coverage`.
+One class cites this book, `stone-master`. F1's earlier count found the book
+defines exactly one class in 360 pages, at printed 223.
 
 ## Catalog diff
 
-**Not run.** It cannot be: a diff needs the book's own list, and 346 of its 352
-pages are not here.
+**Not run, and deliberately not.** Nothing here is an import: every row this
+book is credited with is already shipped. The question F24 asks is where the
+shipped rows *came from*, which is a provenance audit rather than a diff.
 
-What production holds today, by citation:
+### What `p.71-72` actually is
 
-| citation | rows |
+**Earth Warlock spell descriptions, Level Six and Level Seven.** Roughly eight
+spells across two pages. It is not an index, not a table, and not where 231
+spells are printed.
+
+The 231 spells stamped with it are **the four elemental lists in full** — Air 65,
+Earth 62, Water 52, Fire 52. So a page range covering part of *one* element's
+*two* levels was applied to all four elements. The stamp reaches **spells only**:
+gear, skills and psionic powers carry none of it.
+
+### Where they are actually printed
+
+Reconciled from two independent readings — the index's stated page, and the
+element block bounds taken from the level headings:
+
+| outcome | rows |
 |---|---|
-| `Rifts Book of Magic p.71-72` | **231 spells** |
-| `Rifts Book of Magic` (no page range) | 177 spells |
-| `Rifts Book of Magic` | 1 class (`stone-master`) |
+| resolved to exactly one page | **209** |
+| index page(s) fell outside the element block | 6 |
+| still ambiguous inside the block | 1 |
+| absent from the index entirely | 15 |
+| **total** | **231** |
 
-**The 231 are the finding.** Two printed pages cannot hold 231 spell
-definitions, so that citation is a bulk stamp rather than a reading — the rows
-were given a page range they do not individually come from. It is the single
-largest provenance question left in the catalog, and it is `INGESTION-AUDIT`
-**F24**.
+Every one of the 231 is inside the block the book prints that element in.
+
+Six worth eyes before any repair ships. `Air: Snow Storm` indexes to **p.86**,
+which is inside the **Water** block. `Earth: Magnetism`, `Earth: Suspended
+Animation` and `Earth: Transference of Essence` all index to **p.74**, the page
+Earth and Fire share. `Air: Calm Storms` indexes to p.143 and `Earth: Create
+Wood` to p.96, both in the general invocations — so those names exist twice and
+the catalog may hold the wrong one.
 
 ## Extraction plan
 
-None agreed. What a real survey of this book would have to do first:
+**Nothing is extracted from this book. Phase 4 costs nothing here.** The work is
+a provenance repair over rows that already shipped:
 
-1. Cache it properly — `ocr-book.py bom --force`, all 352 printed pages.
-2. Find the master spell list and parse it.
-3. Establish where each of the 231 `p.71-72` spells actually is, and correct the
-   citation per row. This is a re-provenance pass over existing rows, not an
-   import.
-4. Only then diff for what is genuinely missing.
+1. **209 rows** get an exact printed page.
+2. **22 rows** get their element's page range, which is true but less precise —
+   the 15 the index omits, the 6 whose index page lands outside the block, and
+   `Water: Calm Waters`, which the index lists at both 84 and 88.
+3. The six anomalies above get read on the page before anything is written.
+
+Deliberately left: the general invocations, the classes, the gear and the lore.
+This book is a compilation and re-importing it would duplicate the catalog.
+
+**The repair is its own book batch, not part of this survey** — F24 says so, and
+F20 is this repo's case for not writing a repair before reading the page.
 
 ## Ledger
 
 | date | PR | what went in |
 |---|---|---|
-| 2026-08-26 | — | six pages cached (`p090-p095`) for one extraction; no survey written |
-| 2026-08-27 | [#337](https://github.com/NateGrey0130/nates-workshop/pull/337) | `bom` registered in `books.json` with the offset read off the source PDF |
-| 2026-08-28 | — | this file, backfilled offline from the registry, the manifest and `source-coverage --remote` |
+| 2026-08-26 | — | six pages cached (`p090-p095`) for one extraction; no survey |
+| 2026-08-27 | [#337](https://github.com/NateGrey0130/nates-workshop/pull/337) | `bom` registered in `books.json` |
+| 2026-08-28 | [#362](https://github.com/NateGrey0130/nates-workshop/pull/362) | this file, backfilled offline as a stub |
+| 2026-08-28 | [#371](https://github.com/NateGrey0130/nates-workshop/pull/371) | **all 360 pages cached from the text layer**; the authority table found at printed 348-352; `p.71-72` identified; all 231 rows located. No data changed |
 
 ### What remains
 
-From `node scripts/source-coverage.mjs --remote`, 2026-08-28:
+From `node scripts/source-coverage.mjs --remote`, 2026-08-28, **after** the
+cache was built:
 
 ```
-  bom                  0 / 409
+  bom                232 / 177
 ```
 
-**Zero traceable of 409.** All 409 are `outside-cache` or carry a citation the
-six cached pages cannot confirm: 231 spells stamped `p.71-72`, 177 spells with
-no page range at all, and one class. Nothing here is traceable until the book is
-cached in full.
+**It read `0 / 409` before, and the cache alone moved it — which is the warning,
+not the win.** The 231 spells now score `traceable` because printed 71-72 is
+finally a page the cache holds. Nothing about the citation got more correct;
+`outside-cache` fell from 232 to 0 across the whole catalog and the rows still
+point at the wrong pages.
+
+**A coverage ledger measures whether a citation can be checked, not whether it is
+right.** That distinction was invisible while the book was uncached.
+
+The remaining 177 are spells citing `Rifts Book of Magic` with **no page range at
+all**. They are a separate, larger question this survey does not answer.
