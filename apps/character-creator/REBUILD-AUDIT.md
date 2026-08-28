@@ -478,6 +478,52 @@ this bug, and the first found by looking rather than by accident.
 **Posture: a new data script plus a documentation row. Local only; production
 is already correct.**
 
+**Taken, 2026-08-28 (PR #383).** Both halves — the data script and the
+documentation. The premises held exactly: three lines, two classes, and the
+causal chain traced file by file through a rebuild reproduces as written.
+
+**`mystic` and `burster` now match production byte for byte**, taking the
+class-markdown divergence from 8 to **6**. The six that remain all run the other
+way — the rebuild carries the resolved value and production carries the
+placeholder — and belong with F15 rather than here.
+
+**Not guarded on `class_id`.** The proposal said "de-duplicates the three
+lists"; the statements guard on the doubled string instead, so any class that
+acquires the same shape later is fixed by the same file. A repeated entry in an
+`except:` list is never intentional.
+
+**The documentation is a paragraph, not a table row.** The proposal said "add a
+row to `operations.md` §Data scripts", and a row is the wrong shape: the table's
+`zzzz-*.sql` entry already covers this file, so a new row would only restate it,
+and the thing worth recording is a lesson rather than a file family. It sits
+directly under the tier table as a bold lead-in — **not** a `####` heading, for
+the reason F6's note gives.
+
+**Two things learned in the applying, both now in `operations.md`:**
+
+1. **A guarded `replace()` whose guard names a string another script renames is
+   not idempotent, it is inert** — and it fails silently, because a `replace()`
+   that matches nothing is indistinguishable from one that had nothing to do.
+   That is the general form of this bug and it is what the paragraph leads with.
+
+2. **`--file` over `--remote` reports `changes` and `rows_written` that are
+   import-endpoint aggregates, not row counts.** This script reported
+   `changes: 2` against production while changing *nothing*: `imported_classes`
+   was dumped before and after — 126 rows, zero field differences, `updated_at`
+   unmoved on every one. `operations.md` already warned that `--file` returns a
+   summary rather than results and that its exit code is advisory; the counts
+   inside that summary are advisory too, and this is the first time that has
+   been written down. Without the dump this would have read as an unexplained
+   production write.
+
+**Applied to `--remote` before the merge**, against the finding's stated "local
+only" posture, for the reason F5's note gives: `drift-check` reports a data
+script with no `data_script_runs` row as `DATA SCRIPT NOT RUN` and exits 1.
+
+**Read-backs on a fresh build:** `wp_lists_still_doubled` 0,
+`pilot_lists_still_doubled` 0, `mystic_warships_mentions` 1. Same three on
+production.
+
 ### F8 — 22 `catalog_redirects` rows exist only in production
 
 `catalog_redirects` is written by `_lib/catalog-redirects.js` when a merge or
