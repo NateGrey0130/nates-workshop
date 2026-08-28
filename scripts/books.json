@@ -197,9 +197,12 @@
       "aliases": [],
       "source_pdf": "Rifts- World Book 7 Underseas.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Downloads",
-      "printed_pages": null,
-      "page_offset": null,
-      "note": "Cached 2026-08-28 from a SCAN - --probe medians 0 chars/page. Nothing in production cites this book yet. printed_pages and page_offset pending the end of the OCR run."
+      "printed_pages": 214,
+      "page_offset": -1,
+      "page_offset_exceptions": [
+        { "printed_through": 130, "offset": 0 }
+      ],
+      "note": "Cached 2026-08-28 from a SCAN - --probe medians 0 chars/page, OCR medians 5,668. THE SECOND BOOK HERE WITH A SPLIT OFFSET, after pf, and the first with a NEGATIVE one: printed 1-130 sit at +0 and printed 132-216 at -1, 101 pages against 74. A single number cannot describe it and a majority vote picks +0, which sends every lookup past 130 one page early. ocr-book.py measured -1 for the whole book, which is the same error from the other side. THE CAUSE IS A MISSING PAGE: printed 131 is absent from the PDF. File p130 carries folio 130 and ends mid weapons stat block; p131 carries folio 132 and opens mid-sentence. Printed 131 falls through to the -1 rule and lands on p130, which is printed 130 - wrong, but it is the nearest page that exists and nothing can cite a page the scan does not hold. printed_pages is 214, the last page of book content (the Experience Tables); printed 215-216 are numbered Palladium house ads. Nothing in production cites this book yet."
     },
 
     "new-west": {
