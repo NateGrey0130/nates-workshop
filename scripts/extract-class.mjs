@@ -206,8 +206,7 @@ if (!examples.length) die(`no format examples found${likeArg ? ` for --like ${li
 
 const userPrompt = buildUserPrompt(
   examples.map((e) => ({ name: e.name, text: e.markdown })),
-  `${entry.title}, printed pages ${printedPages.join(', ')}.\n\n${corpus}`,
-  { source: 'cache' });
+  `${entry.title}, printed pages ${printedPages.join(', ')}.\n\n${corpus}`);
 
 // ── report before spending anything ─────────────────────────────────────────
 console.log(`book:      ${entry.title} (${slug})`);

@@ -1,5 +1,12 @@
 # Spell and psionic catalog imports
 
+> **The importer this describes no longer exists.** The in-app spell, psionic
+> and gear importers were retired after it emerged they had never run once
+> against production. This file is kept as the record of what the imports found
+> and what they cost - the gaps, the mistakes and the reasoning are all still
+> true - but the UI walkthroughs in it describe deleted code. For how a book
+> becomes catalog rows now, see [Importing from PDFs](importing-from-pdfs.md).
+
 The catalog gaps that per-level spell and psionic grants uncovered, and what
 closing them cost: two Invocation lists, the six spell levels RUE overrides,
 four rows the catalog held twice, the RUE psionics gap, and the import tooling

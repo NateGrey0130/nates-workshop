@@ -11,8 +11,10 @@ Part of the [character creator](../README.md) documentation.
 
 Set in the Cloudflare Pages dashboard, not in the repo:
 
-- `ANTHROPIC_API_KEY` — encrypted secret, used by the proxy and both importers.
-- `ADMIN_EMAIL` — the single email allowed to import. Fails closed.
+- `ANTHROPIC_API_KEY` — encrypted secret, used by the proxy, the campaign Ask
+  and the NPC sweep. `scripts/extract-class.mjs` reads its own copy from the
+  environment or `.dev.vars`; it runs on a workstation, not in a Worker.
+- `ADMIN_EMAIL` — the single email allowed to reach the admin routes. Fails closed.
 
 **Schema changes are applied by hand, before the deploy that needs them.**
 `db/schema.sql` is safe to re-run — every statement is `IF NOT EXISTS`:
@@ -63,13 +65,13 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `003-class-soft-delete.sql` | `deleted_at` on `imported_classes` |
 | `004-items-to-gear.sql` | renames `items` to `gear`. **Not additive** — apply immediately before the matching deploy, not ahead of it |
 | `005-spell-detail.sql` | range, duration, damage, saving_throw, area_of_effect, casting_time, description on `spells` |
-| `006-import-sessions.sql` | `import_sessions` + `import_staged` |
+| `006-import-sessions.sql` | `import_sessions` + `import_staged` — **both dropped again by 041**. The file stays because it has run everywhere, and drift-check compares migration FILES against `schema_migrations` |
 | `007-psionic-detail.sql` | range, duration, saving_throw, description, min_tier on `psionic_powers` |
 | `008-gear-detail.sql` | gear stat block; **drops the `stats` JSON blob**, which was empty in every row |
 | `009-pending-skill-picks.sql` | `pending_skill_picks` |
 | `010-catalog-redirects.sql` | `catalog_redirects` — where a retired key forwards to |
 | `011-character-drafts.sql` | `character_drafts` — one unfinished wizard build per person |
-| `012-catalog-system.sql` | `system` on `spells` and `psionic_powers`; `system` on `import_sessions` |
+| `012-catalog-system.sql` | `system` on `spells` and `psionic_powers` (it added one to `import_sessions` too, which 041 dropped) |
 | `013-character-variant.sql` | `class_variant` on `characters` |
 | `014-character-occ.sql` | `occ_class_id` + `occ_class_variant` on `characters` |
 | `015-character-psychic-tier.sql` | `psychic_tier` + `psychic_shape` on `characters` — a tier the character **rolled** |
@@ -87,8 +89,9 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `032-gear-cost-note.sql` | `gear.cost_note` — what a price will not fit in one integer. RUE prices much of its common gear as a **range** (`Belt, Utility: 3-5 cr.`) and sometimes qualifies it instead (`double for gold`). `cost` holds the range’s LOW end, the way `spells.ppe` holds a variable cost’s minimum, and `cost_note` carries the wording verbatim |
 | `033-variant-note.sql` | `spells.variant_note` and `psionic_powers.variant_note` — what an OLDER book prints instead. Not `ppe_note`: the wizard treats the mere presence of that column as "this cost varies" and renders `7+ P.P.E.`, so a cross-book note there would make fourteen fixed-cost spells look variable |
 | `040-media-vault-source-id.sql` | `media_items.source_id` — where a MediaVault row came from, so its lookup can be re-run exactly. Not this app's table either. One generic column rather than two nullable ones: the normalised ISBN for a book, `tmdb:movie:1234` / `tmdb:tv:1234` for video, so the prefix names the lookup and the rest is its key. Empty on every pre-existing row, which is why the backfill it enables matters more than the column |
+| `041-drop-import-staging.sql` | drops `import_sessions` + `import_staged`. The in-app importer that wrote them was retired without ever having written a row - both held ZERO in production on the day they went, and `claude_usage` held no import call that could have produced one. 006 is not deleted: a recorded migration with no file is drift in the other direction |
 | `039-filament-forge.sql` | The six `ff_` tables — FilamentForge's whole server side, not this app's. Its OFD catalog snapshot (`ff_brands`, `ff_filaments`, refreshed by `scripts/ofd-refresh.mjs`) and what its localStorage used to hold (`ff_config`, `ff_history`, `ff_presets`, `ff_custom_filaments`), keyed to the Access email the way `media_items` is |
-| `038-claude-usage.sql` | `claude_usage` — who is spending the Anthropic key, on what. A site-level table written fail-open, so metering can never break the call it measures: the log half of the audit's F3, spend visibility rather than a cap. **Every Claude call in `functions/` writes it** — the proxy, the campaign Ask, the NPC sweep and all five importers (`cc-import-class`, `cc-import-<catalog>`) — plus the Pick 3 Cut 5 Worker's own rows. Read it with the queries in SETUP.md §Who is spending the Anthropic key |
+| `038-claude-usage.sql` | `claude_usage` — who is spending the Anthropic key, on what. A site-level table written fail-open, so metering can never break the call it measures: the log half of the audit's F3, spend visibility rather than a cap. **Every Claude call in `functions/` writes it** — the proxy, the campaign Ask and the NPC sweep — plus the Pick 3 Cut 5 Worker's own rows and `scripts/extract-class.mjs` (`cc-extract-class`), which meters itself from the command line so that retiring the in-app importer did not take the spend ledger with it. Read it with the queries in SETUP.md §Who is spending the Anthropic key |
 | `037-campaign-open.sql` | `open` on `campaigns` — the join gate. Joining a campaign IS creating a character in it (membership is "owns a character here"), so an ungated create was an ungated door onto the campaign's notes, stash and ledger. 1, the default every existing campaign keeps, is the open table; 0 admits only the GM and existing members. Enforced by `POST /characters`, toggled on the GM dashboard |
 | `036-enchantments-charm.sql` | `enchantments.applies_to` gains **charm** — a third family, and the book draws it the same way as the other two: *"The following magic effects can be **placed in** rings, bracelets, charms, and medallions"*, three powers to an item. Thirty of them, printed 253. SQLite cannot alter a `CHECK`, so the table is rebuilt and the rows copied by named column |
 | `035-enchantments.sql` | `enchantments`, and `character_items.enchantments` — what an alchemist puts INTO a sword, as opposed to a sword. Printed 249-250 sells three finished suits and then **32 properties** that go into ordinary gear, four to a suit and three to a weapon, cumulatively. The JSON array is on the **instance**: one long sword in a party of four can be the Demon Slayer while the other three stay ordinary |

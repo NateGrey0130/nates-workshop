@@ -73,7 +73,7 @@ function cleanErr(text) {
   return (lines.join(' | ') || raw.trim()).slice(0, 300) || 'no output';
 }
 
-console.log('[1/8] Building a database from nothing');
+console.log('[1/7] Building a database from nothing');
 
 // One concatenated file rather than 60 wrangler invocations: each costs seconds,
 // and the point is to prove the SQL composes, not to time the CLI.
@@ -96,7 +96,7 @@ check('schema + catalogs + data scripts apply to an empty database',
 if (applied.status !== 0) { console.log('\nREGRESSION FAILED (cannot build a database)'); process.exit(1); }
 
 // ── boot the worker ─────────────────────────────────────────────────────────
-console.log('\n[2/8] Booting the app');
+console.log('\n[2/7] Booting the app');
 server = spawn('npx', ['wrangler', 'pages', 'dev', '--port', String(PORT),
   '--persist-to', state, '--show-interactive-dev-session', 'false',
   '--binding', 'ADMIN_EMAIL=dev@localhost'],
@@ -151,7 +151,7 @@ async function apiAs(who, method, path, body) {
 }
 
 // ── the boot calls ──────────────────────────────────────────────────────────
-console.log('\n[3/8] What the wizard loads on start');
+console.log('\n[3/7] What the wizard loads on start');
 const me = await api('GET', '/me');
 check('/me identifies the caller', me.status === 200 && !!me.body.email, me.body);
 
@@ -241,7 +241,7 @@ for (const [label, got] of Object.entries(actual)) {
 
 
 // ── a character, end to end ─────────────────────────────────────────────────
-console.log('\n[4/8] Creating a campaign and a character');
+console.log('\n[4/7] Creating a campaign and a character');
 const camp = await api('POST', '/campaigns', { name: 'Regression Run', system: 'rifts' });
 check('a campaign is created', camp.status === 201 || camp.status === 200, camp.body);
 const campaignId = camp.body.id ?? camp.body.campaign?.id;
@@ -351,7 +351,7 @@ check('a character that does not exist is a 404, not a 403', missing.status === 
 }
 
 // ── inventory ───────────────────────────────────────────────────────────────
-console.log('\n[5/8] Inventory, XP, level-up, picks, play');
+console.log('\n[5/7] Inventory, XP, level-up, picks, play');
 // By SLUG, not id — the catalog exposes ids but this endpoint keys on the slug,
 // because class markdown cites gear that way and one spelling is enough.
 const gearRow = items.body.items.find((i) => i.slug) || items.body.items[0];
@@ -446,7 +446,7 @@ check('the event log still holds the undone event',
   events.status === 200 && events.body.events.some((e) => e.undone_at), events.body.events?.length);
 
 // ── journal, draft, lists, admin ────────────────────────────────────────────
-console.log('\n[6/8] Journal, drafts, lists, admin');
+console.log('\n[6/7] Journal, drafts, lists, admin');
 const entry = await api('POST', '/journal', { character_id: charId, title: 'Session 1', body: 'It happened.' });
 check('a journal entry is written', entry.status === 201 || entry.status === 200, entry.body);
 const journal = await api('GET', `/journal?campaign_id=${campaignId}`);
@@ -579,79 +579,7 @@ check('the audit surfaces the out-of-range pool as a warning',
 check('and the over-ceiling attribute',
   (audit.body.by_rule?.attribute_above_ceiling || 0) >= 1, JSON.stringify(audit.body.by_rule));
 
-// -- confirming an import bigger than one statement can bind ----------------
-// D1 takes at most 100 bound parameters per statement. `markConfirmed` built
-// `WHERE id IN (?,?,...)` from EVERY pending row, so a session with more than a
-// hundred blew the limit - and it runs AFTER the catalog write has landed. The
-// live failure inserted 108 spells, marked none of them, and returned a 500
-// that read as total failure. The rows stayed pending, so a retry would have
-// tried to insert all 108 a second time.
-//
-// 150 rows, driven through the real endpoint against a real D1. Under the old
-// code the first check here fails.
-console.log('\n' + '[7/8] An import too big for one statement');
-{
-  const N = 150;
-  const stagedRows = Array.from({ length: N }, (_, i) => {
-    const payload = JSON.stringify({
-      name: 'Regression Spell ' + i, level: (i % 15) + 1, ppe: i + 1,
-      ppe_note: null, range: 'Self', duration: 'Instant', damage: null,
-      saving_throw: 'None', area_of_effect: null, casting_time: null, description: null,
-    }).replace(/'/g, "''");
-    return 'INSERT INTO import_staged (session_id, page_range, payload, action) VALUES '
-      + "((SELECT id FROM import_sessions WHERE name = 'regression-bulk'), 'pp.1-2', '"
-      + payload + "', 'insert');";
-  });
-  const seedFile = join(state, 'bulk-import.sql');
-  writeFileSync(seedFile, [
-    "INSERT INTO import_sessions (catalog, name, source_book, system, created_by) VALUES "
-      + "('spells', 'regression-bulk', 'Regression Book', 'rifts', 'dev@localhost');",
-    ...stagedRows,
-  ].join('\n'), 'utf8');
-  const seeded = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--file', seedFile]);
-  check(N + ' staged rows seeded', seeded.status === 0,
-    (seeded.stderr || seeded.stdout || '').slice(-300));
-
-  const sess = await api('GET', '/import/sessions?catalog=spells');
-  const session = (sess.body.sessions || []).find((x) => x.name === 'regression-bulk');
-  check('the bulk session is listed', !!session, JSON.stringify(sess.body).slice(0, 200));
-
-  if (session) {
-    const before = await api('GET', '/catalogs');
-    const countBefore = (before.body.spells || []).length;
-
-    const confirmed = await api('POST', '/import/spells/confirm', { session_id: session.id });
-    check('confirming 150 rows succeeds', confirmed.status === 200,
-      JSON.stringify(confirmed.body).slice(0, 300));
-    check('and reports all 150 inserted',
-      confirmed.body && confirmed.body.counts && confirmed.body.counts.inserted === N,
-      JSON.stringify(confirmed.body && confirmed.body.counts));
-    // The half that used to be skipped silently: the write landed, the
-    // bookkeeping did not.
-    check('and marks all 150 confirmed, not just the first hundred',
-      confirmed.body && confirmed.body.confirmed === N,
-      String(confirmed.body && confirmed.body.confirmed));
-    check('leaving nothing pending',
-      confirmed.body && confirmed.body.still_pending === 0,
-      String(confirmed.body && confirmed.body.still_pending));
-
-    const after = await api('GET', '/catalogs');
-    check('the catalog really grew by 150',
-      (after.body.spells || []).length === countBefore + N,
-      countBefore + ' -> ' + (after.body.spells || []).length);
-
-    // A second confirm must find nothing rather than a pile of UNIQUE
-    // conflicts, which is only true if the first one recorded what it did.
-    const again = await api('POST', '/import/spells/confirm', { session_id: session.id });
-    check('a second confirm has nothing left to do', again.status === 400,
-      JSON.stringify(again.body).slice(0, 200));
-  }
-}
-
-// -- the README's countable claims, against the database ---------------------
-// Prose does not get recounted when a class is added or a chapter is imported.
-// Both of these had already drifted before anyone noticed.
-console.log('\n' + '[8/8] Checks that only a database can make');
+console.log('\n' + '[7/7] Checks that only a database can make');
 {
   const readme = readFileSync(join(appDir, 'README.md'), 'utf8');
   const WORDS = {
@@ -1130,10 +1058,10 @@ console.log('\n' + '[8/8] Checks that only a database can make');
   check('and no weapon was given its own damage as durability',
     damageAsSdc.length === 0, damageAsSdc.map((r) => `${r.slug} sdc=${r.sdc} damage=${r.damage}`).join(', '));
 
-  check('the importer can write the column',
-    /'ar', 'sdc', 'mdc'/.test(readFileSync(join(repoRoot, 'functions', 'api', 'character-creator',
-      '_lib', 'import-engine.js'), 'utf8')),
-    'gear.extractFields omits sdc, so every future import drops it back into prose');
+  // The check that used to sit here asked whether the gear IMPORTER could write
+  // this column. That importer is gone - gear rows are written by data script -
+  // so the question it protected against is now answered by the rows themselves,
+  // which the three checks above already read straight out of the database.
 }
 
 // ---------- the finished magic items ----------

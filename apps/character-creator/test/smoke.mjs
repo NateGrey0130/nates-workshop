@@ -202,19 +202,10 @@ check('systems: empty and all-selected both store NULL',
 check('systems: one system stores a JSON array',
   coerceField(sysField, ['rifts']).value === '["rifts"]');
 
-// ---------- 1c. Import engine ----------
-// Pins the skill importer's behaviour so the shared engine cannot quietly
-// change it. Every expectation here matches what the pre-refactor inline
-// implementation produced.
-section('Import engine');
-const skillSpec = getImportSpec('skills');
-
 import { classesMentioning, findDuplicates, normaliseName, similarity } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
 import { collapseStatement, keysOf, redirectStatements, resolveKeys } from '../../../functions/api/character-creator/_lib/catalog-redirects.js';
 import { buildStubStatements, referencedGear, restrictionNames } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { CHARACTER_JSON_COLUMNS } from '../../../functions/api/character-creator/_lib/character-json.js';
-import { applyDecisions, classifyRows, countRows, ESTIMATED_PRICE, getImportSpec, normaliseRows, slugify, stripFences, systemColumnFor } from '../../../functions/api/character-creator/_lib/import-engine.js';
-import { stageRows } from '../../../functions/api/character-creator/_lib/import-sessions.js';
 import { composeSourceBook } from '../../../functions/api/character-creator/_lib/source-book.js';
 import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicGrantsFor,
          xpTableFor, thresholdFor, spellLevelsForGrant,
@@ -258,252 +249,6 @@ import { fileURLToPath } from 'node:url';
 import { appDir, repoRoot, check, section, summary } from './harness.mjs';
 import { run as environmentChecks } from './checks/environment.mjs';
 import { run as catalogDataChecks } from './checks/catalog-data.mjs';
-
-check('skills import spec exists', !!skillSpec);
-
-check('stripFences unwraps a json fence',
-  stripFences('```json\n[{"name":"A"}]\n```') === '[{"name":"A"}]');
-check('stripFences unwraps a bare fence',
-  stripFences('```\n[1]\n```') === '[1]');
-check('stripFences leaves unfenced text alone',
-  stripFences('  [{"name":"A"}]  ') === '[{"name":"A"}]');
-
-const normalised = normaliseRows(skillSpec, [
-  { name: 'Climbing:', category: 'Physical', base: '40', per_level: '5', note: ' rope work ' },
-  { name: '  Prowl  ', category: ' Espionage ', base: 35, per_level: 5 },
-  { name: '', category: 'Physical' },                    // no name — dropped
-  { name: 'x'.repeat(121) },                             // absurd name — dropped
-  { name: 'Boxing', base: -10, per_level: 'abc' },       // bad numbers clamp to 0
-  'not an object',
-]);
-check('normalise strips a trailing colon from the name', normalised[0]?.name === 'Climbing');
-check('normalise trims names and categories',
-  normalised[1]?.name === 'Prowl' && normalised[1]?.category === 'Espionage');
-check('normalise coerces numeric strings', normalised[0]?.base === 40 && normalised[0]?.per_level === 5);
-check('normalise trims a note', normalised[0]?.note === 'rope work');
-check('normalise nulls an absent note', normalised[1]?.note === null);
-check('normalise clamps negative and non-numeric to 0',
-  normalised[2]?.base === 0 && normalised[2]?.per_level === 0);
-check('normalise drops nameless, over-long and non-object rows', normalised.length === 3,
-  'got ' + normalised.length + ': ' + normalised.map((r) => r.name).join(', '));
-
-// Classification defaults, which decide what review pre-selects. A curated row
-// must never default to being overwritten by a second book.
-const stubRow = { source: 'import', base: 0, per_level: 0 };
-const seedRow = { source: 'seed', base: 30, per_level: 5 };
-const manualRow = { source: 'manual', base: 0, per_level: 0 };
-check('a zeroed imported row is a stub', skillSpec.isStub(stubRow) === true);
-check('a seeded row is not a stub', skillSpec.isStub(seedRow) === false);
-check('a hand-edited row is never a stub', skillSpec.isStub(manualRow) === false);
-
-// Spells: same engine, different spec. The stat block is text on purpose —
-// books write "100 feet per level of experience" as often as a number.
-const spellSpec = getImportSpec('spells');
-check('spells import spec exists', !!spellSpec);
-const spellRows = normaliseRows(spellSpec, [
-  { name: 'Fire Bolt:', level: '4', ppe: '7', range: '100 feet per level',
-    duration: 'Instant', damage: '5D6', description: '  A bolt of flame.  ' },
-  { name: 'Sparse Spell' },
-]);
-check('spell numbers coerce, prose stays prose',
-  spellRows[0]?.level === 4 && spellRows[0]?.ppe === 7 && spellRows[0]?.range === '100 feet per level');
-check('spell name loses its trailing colon and description is trimmed',
-  spellRows[0]?.name === 'Fire Bolt' && spellRows[0]?.description === 'A bolt of flame.');
-check('an unstated spell field is null, not invented',
-  spellRows[1]?.range === null && spellRows[1]?.damage === null && spellRows[1]?.ppe === 0);
-check('a zeroed imported spell is a stub',
-  spellSpec.isStub({ source: 'import', ppe: 0 }) === true
-  && spellSpec.isStub({ source: 'seed', ppe: 10 }) === false
-  && spellSpec.isStub({ source: 'manual', ppe: 0 }) === false);
-
-// Psionics: same engine again. The interesting part is `flag`, which is
-// advisory — an unknown category must be surfaced, never rejected, or a
-// supplement that adds one becomes unimportable.
-const psiSpec = getImportSpec('psionics');
-check('psionics import spec exists', !!psiSpec);
-check('a known category and tier raise no flag',
-  psiSpec.flag({ category: 'Super', min_tier: 'master' }).length === 0);
-check('category matching ignores case', psiSpec.flag({ category: 'healing' }).length === 0);
-check('an unknown category is flagged, not rejected',
-  psiSpec.flag({ category: 'Temporal' }).some((f) => f.includes('Temporal')));
-check('an unknown psychic tier is flagged',
-  psiSpec.flag({ min_tier: 'grandmaster' }).some((f) => f.includes('grandmaster')));
-check('an absent category or tier raises nothing', psiSpec.flag({}).length === 0);
-check('min_tier is left absent rather than inferred', (() => {
-  const [r] = normaliseRows(psiSpec, [{ name: 'Mind Block', category: 'Sensitive', isp: 4 }]);
-  return r.min_tier === null;
-})());
-check('a zeroed imported power is a stub',
-  psiSpec.isStub({ source: 'import', isp: 0 }) === true
-  && psiSpec.isStub({ source: 'seed', isp: 4 }) === false);
-
-// applyDecisions against a fake DB. An UPDATE that matches nothing succeeds
-// silently in SQL, so the engine has to check first — otherwise a row is
-// reported as updated, and marked confirmed, while its values are discarded.
-const fakeDb = (existingNames) => {
-  const batched = [];
-  return {
-    batched,
-    // Every prepare(...).bind(...) returns the same shape: .all() answers the
-    // existence lookup, .run() is never reached because writes go through batch.
-    prepare: () => ({
-      bind: (...args) => ({
-        all: async () => ({
-          results: args
-            .filter((a) => existingNames.some((n) => n.toLowerCase() === String(a).toLowerCase()))
-            .map((a) => ({ name: a })),
-        }),
-        run: async () => ({ meta: { changes: 1 } }),
-      }),
-    }),
-    batch: async (statements) => { batched.push(statements.length); },
-  };
-};
-
-const upd = await (async () => {
-  const db = fakeDb(['Climbing']);
-  return applyDecisions({ DB: db }, skillSpec,
-    [{ action: 'update', name: 'Nope Not Here', base: 99 }], { sourceBook: null });
-})();
-check('an update that matches nothing is a conflict, not a success',
-  upd.counts.updated === 0 && upd.conflicts.length === 1
-  && /to update/i.test(upd.conflicts[0].reason),
-  JSON.stringify(upd));
-
-const updOk = await (async () => {
-  const db = fakeDb(['Climbing']);
-  return applyDecisions({ DB: db }, skillSpec,
-    [{ action: 'update', name: 'Climbing', base: 44 }], { sourceBook: null });
-})();
-check('an update that matches a real row still applies',
-  updOk.counts.updated === 1 && updOk.conflicts.length === 0, JSON.stringify(updOk));
-
-// A NOT NULL 0/1 column must never be handed a null. Getting this wrong made
-// every gear insert fail the batch on gear.is_mega_damage.
-const gearIns = await (async () => {
-  const db = fakeDb([]);
-  const res = await applyDecisions({ DB: db }, getImportSpec('gear'),
-    [{ action: 'insert', slug: 'zz-probe', name: 'Zz Probe' }], { sourceBook: null });
-  return { res, batched: db.batched };
-})();
-check('a gear insert with no mega-damage stated still builds a statement',
-  gearIns.res.counts.inserted === 1 && gearIns.batched[0] === 1, JSON.stringify(gearIns.res));
-
-const insDup = await (async () => {
-  const db = fakeDb(['Climbing']);
-  return applyDecisions({ DB: db }, skillSpec,
-    [{ action: 'insert', name: 'Climbing' }], { sourceBook: null });
-})();
-check('an insert onto an existing name is still a conflict',
-  insDup.counts.inserted === 0 && insDup.conflicts.length === 1, JSON.stringify(insDup));
-
-// Gear: the only catalog that matches on two fields. Its stubs are keyed on a
-// slug taken from class markdown, and a missed match means a second row while
-// characters keep pointing at the empty one — the worst outcome available here.
-const gearSpec = getImportSpec('gear');
-check('gear import spec exists', !!gearSpec);
-check('gear matches slug first, then name',
-  gearSpec.matchFields[0] === 'slug' && gearSpec.matchFields[1] === 'name');
-check('slugify mirrors the class importer\'s stub slugs',
-  slugify('Air Filter and Gas Mask') === 'air-filter-and-gas-mask'
-  && slugify('JA-11 Energy Rifle') === 'ja-11-energy-rifle'
-  && slugify('  Spaced  Out  ') === 'spaced-out');
-check('gear derives a slug when the book does not print one', (() => {
-  const [r] = normaliseRows(gearSpec, [{ name: 'NG-57 Heavy Duty Ion Blaster' }]);
-  return r.slug === 'ng-57-heavy-duty-ion-blaster';
-})());
-check('a book-supplied slug is respected over the derived one', (() => {
-  const [r] = normaliseRows(gearSpec, [{ name: 'Odd Name', slug: 'canonical-slug' }]);
-  return r.slug === 'canonical-slug';
-})());
-// A nullable number the book does not state must stay null. "No A.R." and
-// "A.R. 0" are different claims, and the sheet renders the second one.
-// `real` columns must not be parsed with parseInt. gear.weight_lbs is the only
-// one, and a two-ounce item imported as 0 lb — weightless rather than light.
-check('a real field keeps its fraction', (() => {
-  const [g] = normaliseRows(gearSpec, [{ name: 'Zz Wand', weight_lbs: 0.125 }]);
-  return g.weight_lbs === 0.125;
-})());
-check('an int field still truncates to a whole number', (() => {
-  const [g] = normaliseRows(gearSpec, [{ name: 'Zz Gun', cost: '8000', ar: '14' }]);
-  return g.cost === 8000 && g.ar === 14;
-})());
-
-check('an unstated nullable number stays null, a NOT NULL one falls back', (() => {
-  const [g] = normaliseRows(gearSpec, [{ name: 'Back Pack' }]);
-  const [s] = normaliseRows(skillSpec, [{ name: 'Boxing' }]);
-  return g.ar === null && g.mdc === null && g.cost === null && g.weight_lbs === null
-      && s.base === 0 && s.per_level === 0;
-})());
-check('gear reads mega-damage as a boolean', (() => {
-  const rows = normaliseRows(gearSpec, [
-    { name: 'A', is_mega_damage: true }, { name: 'B', is_mega_damage: false }, { name: 'C' },
-  ]);
-  return rows[0].is_mega_damage === 1 && rows[1].is_mega_damage === 0 && rows[2].is_mega_damage === 0;
-})());
-check('a gear stub is the class importer\'s marker, not an empty row',
-  gearSpec.isStub({ description: 'STUB — created by class import, needs stats' }) === true
-  && gearSpec.isStub({ description: 'A perfectly ordinary free item' }) === false
-  && gearSpec.isStub({ description: null }) === false);
-// An estimated price is a guess standing in for a page, so it has to keep
-// counting as a stub however well the row now reads. Otherwise the first real
-// book to name the item defaults to `ignore` and the guess outlives the page.
-check('an estimated price counts as a stub however good the description reads',
-  gearSpec.isStub({ description: 'A two-person tent.', source_book: ESTIMATED_PRICE }) === true
-  && gearSpec.isStub({ description: 'A two-person tent.',
-                       source_book: 'Rifts Ultimate Edition p.261-263' }) === false
-  && gearSpec.isStub({ description: 'A two-person tent.', source_book: null }) === false);
-
-// classifyRows against a fake catalog holding one stub, keyed on slug.
-const gearDb = (rows) => ({
-  prepare: (sql) => ({
-    bind: (...args) => ({
-      all: async () => {
-        const field = /WHERE (\w+) COLLATE/.exec(sql)?.[1];
-        return { results: rows.filter((r) => args.some((a) =>
-          String(a).toLowerCase() === String(r[field] ?? '').toLowerCase())) };
-      },
-    }),
-  }),
-});
-const stubRowInDb = { id: 7, slug: 'air-filter-and-gas-mask', name: 'Air Filter And Gas Mask',
-                      description: 'STUB — created by class import, needs stats', cost: null };
-
-const bySlug = await classifyRows({ DB: gearDb([stubRowInDb]) }, gearSpec,
-  normaliseRows(gearSpec, [{ name: 'Air Filter and Gas Mask', cost: 500 }]));
-check('an extracted item matches its stub on slug and defaults to update',
-  bySlug[0].status === 'duplicate' && bySlug[0].is_stub === true
-  && bySlug[0].suggested === 'update' && bySlug[0].existing.id === 7, JSON.stringify(bySlug[0]));
-
-// A stub whose slug came from class markdown in a form the book's wording does
-// not reproduce — this is the case the name fallback exists for.
-const oddStub = { id: 9, slug: 'ns-turbo-cyclone', name: 'NG Turbo Cyclone',
-                  description: 'STUB — created by class import, needs stats', cost: null };
-const byName = await classifyRows({ DB: gearDb([oddStub]) }, gearSpec,
-  normaliseRows(gearSpec, [{ name: 'NG Turbo Cyclone', cost: 1 }]));
-check('a stub whose slug differs is still found by name',
-  byName[0].status === 'duplicate' && byName[0].existing.id === 9, JSON.stringify(byName[0]));
-check('a fallback match is flagged rather than silently accepted',
-  byName[0].flags.some((f) => /matched .* on name/i.test(f)), JSON.stringify(byName[0].flags));
-
-const noMatch = await classifyRows({ DB: gearDb([stubRowInDb]) }, gearSpec,
-  normaliseRows(gearSpec, [{ name: 'Something Entirely New' }]));
-check('an unrelated item is new, not a false match', noMatch[0].status === 'new');
-
-// Staging is one batch, so it is all-or-nothing. The cap keeps that batch a
-// sane size and refuses a range too wide to have been read reliably.
-const overCap = await stageRows(null, 1, 'pp. 1', new Array(301).fill({ name: 'x' }), 'spells');
-check('a range over the row cap is refused before touching the database',
-  !!overCap.error && /narrow the page range/i.test(overCap.error), JSON.stringify(overCap));
-
-check('countRows tallies new, duplicates and stubs', (() => {
-  const c = countRows([
-    { status: 'new' }, { status: 'new' },
-    { status: 'duplicate', is_stub: true }, { status: 'duplicate', is_stub: false },
-  ]);
-  return c.total === 4 && c.new === 2 && c.duplicates === 2 && c.stubs === 1;
-})());
-
 // ---------- 1c2. Level-up skill grants ----------
 // occ_related_skills.schedule recorded these for a long time and nothing read
 // them. The itemisation matters: a grant knows which level earned it.
@@ -1794,97 +1539,6 @@ for (const [what, re] of [['variants', /# variants:/], ['bonuses', /^bonuses:/m]
 check('an unknown kind falls back to the OCC shape',
   parseClassMarkdown(classTemplate('nonsense', { id: 'a', name: 'A', system: 'rifts', sourceBook: 'B' })).data.category === 'occ');
 
-// ---------- 1c14. Frontmatter block editing ----------
-// The structured editors rewrite ONE top-level block and leave every byte
-// outside it alone. Regenerating the whole frontmatter would have been simpler
-// and would have destroyed the template's comments, which are most of what
-// makes a hand-written class approachable.
-section('Frontmatter block editing');
-
-const blkWindow = {};
-new Function('globalThis', readFileSync(join(appDir, 'js', 'class-blocks.js'), 'utf8')).call(blkWindow, blkWindow);
-const B = blkWindow.classBlocks;
-
-check('bonuses flatten to (level, group, key, value) rows', (() => {
-  const rows = B.bonusesToRows({ attributes: { PS: 4 }, at_level: [{ level: 5, combat: { attacks: 1 } }] });
-  return rows.length === 2
-    && rows[0].level === null && rows[0].group === 'attributes' && rows[0].key === 'PS' && rows[0].value === 4
-    && rows[1].level === 5 && rows[1].group === 'combat';
-})());
-check('rows fold back into a bonuses block', (() => {
-  const b = B.rowsToBonuses([
-    { level: null, group: 'attributes', key: 'PS', value: 4 },
-    { level: 5, group: 'combat', key: 'attacks', value: 1 },
-    { level: 5, group: 'saves', key: 'psionics', value: 2 },
-  ]);
-  return b.attributes.PS === 4 && b.at_level.length === 1
-    && b.at_level[0].combat.attacks === 1 && b.at_level[0].saves.psionics === 2;
-})());
-check('an incomplete row is dropped rather than written as junk',
-  Object.keys(B.rowsToBonuses([{ level: null, group: 'combat', key: '', value: 1 },
-                               { level: null, group: 'combat', key: 'attacks', value: NaN }])).length === 0);
-check('rows survive a round trip', (() => {
-  const original = { attributes: { PS: 4 }, combat: { attacks: 2 }, at_level: [{ level: 5, combat: { attacks: 1 } }] };
-  const back = B.rowsToBonuses(B.bonusesToRows(original));
-  return JSON.stringify(back) === JSON.stringify(original);
-})());
-
-const tpl = classTemplate('rcc', { id: 'w', name: 'Wyrm', system: 'rifts', sourceBook: 'RUE' });
-
-check('writing a block leaves the file parseable', (() => {
-  const md = B.write(tpl, 'bonuses', { attributes: { PS: 4 }, at_level: [{ level: 5, combat: { attacks: 1 } }] });
-  const p = parseClassMarkdown(md);
-  return p.ok && p.data.bonuses.attributes.PS === 4 && p.data.bonuses.at_level[0].level === 5;
-})());
-
-// The whole point: everything outside the edited block is untouched.
-check('comments and sibling keys outside the block survive', (() => {
-  const md = B.write(tpl, 'bonuses', { combat: { attacks: 1 } });
-  const p = parseClassMarkdown(md);
-  return /# A choice-group instead of a name/.test(md)
-      && /# When the book says/.test(md)
-      && /## Lore/.test(md)
-      && p.data.mdc_base === '1d4x100'
-      && p.data.skills.secondary_skills.count === 2;
-})());
-
-// Fields the form does not show must survive, or editing a variant's name would
-// silently drop its attribute dice.
-check('unedited keys inside a rebuilt block survive', (() => {
-  const withVariants = B.write(tpl, 'variants', [
-    { id: 'adult', name: 'Adult Wyrm', attribute_dice: { PS: '4d6+30' }, bonuses: { attributes: { PS: 4 } } },
-  ]);
-  const parsed = parseClassMarkdown(withVariants).data.variants;
-  const renamed = B.write(withVariants, 'variants', parsed.map((v) => ({ ...v, name: 'Renamed' })));
-  const after = parseClassMarkdown(renamed).data.variants[0];
-  return after.name === 'Renamed' && after.attribute_dice.PS === '4d6+30' && after.bonuses.attributes.PS === 4;
-})());
-
-// The template ships these commented as worked examples; appending a real block
-// would leave the file appearing to define the same key twice.
-check('a commented-out example is replaced, not duplicated', (() => {
-  const md = B.write(tpl, 'variants', [{ id: 'a', name: 'A' }]);
-  return !/# variants:/.test(md) && /^variants:/m.test(md)
-      && /# Stages of the same creature/.test(md);   // the explanation above it stays
-})());
-
-check('an empty value removes the block', (() => {
-  const md = B.write(B.write(tpl, 'bonuses', { combat: { attacks: 1 } }), 'bonuses', {});
-  return !/^bonuses:/m.test(md) && parseClassMarkdown(md).ok;
-})());
-check('reading a block back returns its text',
-  /attacks: 1/.test(B.read(B.write(tpl, 'bonuses', { combat: { attacks: 1 } }), 'bonuses') || ''));
-check('reading an absent block returns null', B.read(tpl, 'nonexistent') === null);
-check('markdown with no frontmatter is returned unchanged',
-  B.write('just prose', 'bonuses', { combat: { attacks: 1 } }) === 'just prose');
-
-// A value that would change meaning unquoted has to come back as it went in.
-check('awkward strings survive quoting', (() => {
-  const md = B.write(tpl, 'variants', [{ id: 'a', name: 'Adult: the "big" one', mdc_base: '1d6x1000' }]);
-  const v = parseClassMarkdown(md).data.variants[0];
-  return v.name === 'Adult: the "big" one' && v.mdc_base === '1d6x1000';
-})());
-
 // ---------- 1c11b. The class prompt covers the schema ----------
 // A field the schema supports and the prompt never mentions is a field that
 // never gets extracted. `variants` shipped without being added here, so the
@@ -2023,195 +1677,6 @@ check('a variant overriding something it may not warns', (() => {
   const p = variantErr('variants:\n  - { id: a, name: A, skills: { secondary_skills: { count: 9 } } }');
   return p.ok && p.warnings.some((w) => /cannot override/.test(w));
 })());
-
-// ---------- 1c10. Import session system ----------
-// Which game system a book is for is chosen once per import session and stamped
-// on every row it inserts. Three shapes across four catalogs: skills keep a JSON
-// array, the rest a single string, and NULL means unrestricted everywhere.
-section('Import session system');
-
-check('skills get a JSON array', (() => {
-  const s = systemColumnFor(CATALOGS.skills, 'rifts');
-  return s.col === 'systems' && s.value === '["rifts"]';
-})());
-for (const key of ['spells', 'psionics', 'gear']) {
-  check(`${key} gets a single string`, (() => {
-    const s = systemColumnFor(CATALOGS[key], 'rifts');
-    return s.col === 'system' && s.value === 'rifts';
-  })());
-}
-
-// NULL means unrestricted, so neither of these should write anything — a book
-// covering both systems restricts nothing, and nor does not knowing.
-check('"both" stamps nothing', systemColumnFor(CATALOGS.gear, 'both') === null);
-check('an unset system stamps nothing',
-  systemColumnFor(CATALOGS.gear, null) === null && systemColumnFor(CATALOGS.gear, '') === null);
-
-// Every catalog can now record a system; before this only gear and skills could,
-// so a Palladium Fantasy spell chapter had nowhere to say so.
-for (const key of ['skills', 'spells', 'psionics', 'gear']) {
-  check(`${key} has somewhere to record a system`, systemColumnFor(CATALOGS[key], 'rifts') !== null);
-}
-
-// ---------- 1c10b. Import provenance ----------
-// The page range the session importers have collected all along, finally
-// landing in the column that makes a row traceable back to a printed page.
-// Two things are pinned here: the SHAPE of the composed value, and that it
-// reaches the SQL per row rather than being replaced by the session's one
-// book — which is where it used to be lost.
-section('Import provenance');
-
-check('a page-range label becomes the canonical p.N-M shape',
-  composeSourceBook('Rifts Ultimate Edition', 'pp. 180-181') === 'Rifts Ultimate Edition p.180-181'
-  && composeSourceBook('Rifts Ultimate Edition', '180-181') === 'Rifts Ultimate Edition p.180-181'
-  && composeSourceBook('Rifts Ultimate Edition', 'p. 71') === 'Rifts Ultimate Edition p.71'
-  && composeSourceBook('Rifts Ultimate Edition', '141') === 'Rifts Ultimate Edition p.141'
-  // A range anywhere in the label beats a lone number earlier in it, so a
-  // chapter number in front of the pages does not become the page.
-  && composeSourceBook('Rifts Ultimate Edition', 'Ch. 3, pages 180-181') === 'Rifts Ultimate Edition p.180-181');
-
-// The whole reason the label is normalised rather than appended. import.js
-// prompts for the range with the placeholder `pp. 180-181`, and
-// `Rifts Ultimate Edition p.pp. 180-181` is a value parseSourcePages cannot
-// read — a row that looks attributed and traces nowhere, which is worse than
-// one that reports itself as missing.
-check('and what it composes is readable by everything downstream', (() => {
-  const v = composeSourceBook('Rifts Ultimate Edition', 'pp. 180-181');
-  const pages = parseSourcePages(v);
-  return pages?.first === 180 && pages.last === 181
-    && registryBookSlug(v, loadBookRegistry()) === 'rue';
-})());
-
-check('a session spelled a way the registry knows lands on the registry title',
-  composeSourceBook('palladium-fantasy-core', 'pp. 96-97') === 'Palladium Fantasy RPG Main Book p.96-97'
-  && composeSourceBook('Palladium RPG Main Book', '288-289') === 'Palladium Fantasy RPG Main Book p.288-289');
-
-// A book scripts/books.json does not carry keeps the operator's own spelling.
-// Dropping the label would be worse than an unregistered one.
-check('a book outside the registry keeps the session\'s own words',
-  composeSourceBook('Rifts World Book 04: Africa', 'pp. 12-13') === 'Rifts World Book 04: Africa p.12-13');
-
-check('a label with no numbers in it composes to the book alone',
-  composeSourceBook('Rifts Ultimate Edition', 'spell chapter') === 'Rifts Ultimate Edition'
-  && composeSourceBook('Rifts Ultimate Edition', null) === 'Rifts Ultimate Edition');
-
-// A session labelled with its own range is not thrown away by a row that has
-// none, and a row that has one does not append a second.
-check('the row\'s range beats the session\'s, and neither doubles up',
-  composeSourceBook('Rifts Ultimate Edition p.180-190', null) === 'Rifts Ultimate Edition p.180-190'
-  && composeSourceBook('Rifts Ultimate Edition p.180-190', 'pp. 184') === 'Rifts Ultimate Edition p.184');
-
-// `Estimate - no published price found` says where a value came from instead
-// of naming a book. Pages onto it would claim a printing that does not exist —
-// and it is exactly the string whose initials read e-n-p-p-f, which is how 104
-// gear rows were attributed to the Palladium Fantasy main book.
-check('a not_books marker is never given pages',
-  composeSourceBook(ESTIMATED_PRICE, 'pp. 12') === ESTIMATED_PRICE);
-
-// null, not the empty string: buildUpdate COALESCEs on it, so an import out of
-// a session nobody labelled leaves whatever provenance a row already carries.
-check('an unlabelled session composes to null',
-  composeSourceBook(null, 'pp. 12') === null && composeSourceBook('   ', 'pp. 12') === null);
-
-// And it has to survive applyDecisions, which took one book for the entire
-// batch — one function call short of the column, which is the whole finding.
-// A decision with none of its own still falls back to the batch value, which
-// is what skills/confirm.js passes and all it has.
-const provenanceWrites = await (async () => {
-  const bound = [];
-  const db = {
-    prepare: (sql) => ({
-      bind: (...args) => {
-        bound.push({ sql, args });
-        return { all: async () => ({ results: [] }), run: async () => ({ meta: { changes: 1 } }) };
-      },
-    }),
-    batch: async () => {},
-  };
-  await applyDecisions({ DB: db }, skillSpec, [
-    { action: 'insert', name: 'Zz Provenance One', source_book: 'Rifts Ultimate Edition p.180' },
-    { action: 'insert', name: 'Zz Provenance Two', source_book: 'Rifts Ultimate Edition p.181' },
-    { action: 'insert', name: 'Zz Provenance Three' },
-  ], { sourceBook: 'Rifts Ultimate Edition' });
-  // Read the value back out by column name: buildInsert appends `source` and a
-  // system column after it, so its position is not the end of the list.
-  return bound.filter((b) => b.sql.startsWith('INSERT')).map((b) => {
-    const cols = b.sql.slice(b.sql.indexOf('(') + 1, b.sql.indexOf(')')).split(',').map((c) => c.trim());
-    return b.args[cols.indexOf('source_book')];
-  });
-})();
-check('each row is inserted with its own book and pages, not the session\'s one book',
-  provenanceWrites.length === 3
-  && provenanceWrites[0] === 'Rifts Ultimate Edition p.180'
-  && provenanceWrites[1] === 'Rifts Ultimate Edition p.181'
-  && provenanceWrites[2] === 'Rifts Ultimate Edition',
-  JSON.stringify(provenanceWrites));
-
-// A stub created by a class import carries the class's own citation — the
-// pages the NAME was read on, which is the only claim a row with no stats can
-// make. Gear did this from the start; skills, spells and psionic powers did
-// not name the column at all, so 12 skills and 12 psionic powers in production
-// carry no provenance whatsoever. Pinned per catalog, because the bug was
-// three INSERTs that each silently omitted one column.
-const stubBooks = (() => {
-  const bound = [];
-  const env = { DB: { prepare: (sql) => ({ bind: (...args) => { bound.push({ sql, args }); return {}; } }) } };
-  buildStubStatements(env, {
-    items: ['poncho'], skills: ['Basic Math'], spells: ['Blinding Flash'], psionics: ['Mind Block'],
-  }, { system: 'rifts', sourceBook: 'Rifts Ultimate Edition p.86-88' });
-  return bound.map((b) => {
-    const table = b.sql.match(/INTO\s+(\w+)/)[1];
-    const [, colList, valList] = b.sql.match(/\(([^)]*)\)\s*VALUES\s*\(([^)]*)\)/);
-    const cols = colList.split(',').map((c) => c.trim());
-    // These INSERTs write literals for the zeroed columns — `base, per_level`
-    // are `0, 0` in the VALUES rather than placeholders — so a column's
-    // position is NOT its bind position. Zip the two lists and count only the
-    // `?`s. Reading the column index straight off the list reported every
-    // catalog as null, including the one that was already correct.
-    const vals = valList.split(',').map((v) => v.trim());
-    let bindIndex = -1;
-    for (let i = 0; i < cols.length; i++) {
-      if (vals[i] !== '?') continue;
-      bindIndex++;
-      if (cols[i] === 'source_book') return [table, b.args[bindIndex]];
-    }
-    return [table, undefined];
-  });
-})();
-for (const table of ['gear', 'skills', 'spells', 'psionic_powers']) {
-  check(`a ${table} stub records the class it was read from`,
-    stubBooks.some(([t, book]) => t === table && book === 'Rifts Ultimate Edition p.86-88'),
-    JSON.stringify(stubBooks));
-}
-
-// The skill importer is the odd one out: no session, no staging table, one
-// batch-level book. It never collected a page range at all, which is where 105
-// of production's 333 skills got a book and no page. Pinned end to end,
-// because the value crosses three files and a round trip through the browser
-// — the form field, the extract endpoint that only echoes it, and the confirm
-// endpoint that actually composes it.
-{
-  const ccFns = join(appDir, '..', '..', 'functions', 'api', 'character-creator');
-  const importJs = readFileSync(join(appDir, 'import.js'), 'utf8');
-  check('the skill import form asks for a page range',
-    /id="skill-pages"/.test(importJs) && /Page range, e\.g\. pp\. 26-34/.test(importJs));
-  check('and sends it to extract, then back on confirm',
-    /page_range: \$\('skill-pages'\)\.value\.trim\(\)/.test(importJs)
-    && /page_range: I\.skills\.page_range/.test(importJs));
-
-  const skillExtract = readFileSync(join(ccFns, 'import', 'skills', 'extract.js'), 'utf8');
-  check('the extract endpoint echoes it rather than using it',
-    /page_range: b\.page_range \?\? null/.test(skillExtract));
-
-  const skillConfirm = readFileSync(join(ccFns, 'import', 'skills', 'confirm.js'), 'utf8');
-  check('and confirm composes it through the same composer the sessions use',
-    /composeSourceBook\(b\.source_book, b\.page_range \?\? null\)/.test(skillConfirm)
-    && /from '\.\.\/\.\.\/_lib\/source-book\.js'/.test(skillConfirm));
-  // The batch value is what applyDecisions falls back to, and no skill
-  // decision carries its own — so composing it here IS the whole fix.
-  check('the composed batch value is what reaches applyDecisions',
-    /applyDecisions\(env, getImportSpec\('skills'\), b\.decisions, \{ sourceBook \}\)/.test(skillConfirm));
-}
 
 // ---------- 1c9. Picker filtering ----------
 // js/picker.js is a classic script, because the wizard is a module and the
@@ -3705,7 +3170,7 @@ section('SQL bind chunking');
 section('No query binds an unbounded list');
 {
   const files = [
-    '_lib/import-sessions.js', '_lib/power-picks.js', '_lib/skill-picks.js',
+    '_lib/power-picks.js', '_lib/skill-picks.js',
     '_lib/mentions.js', '_lib/skill-bonuses.js', 'campaigns/[id]/npcs/sweep.js',
   ];
   for (const f of files) {
@@ -4176,17 +3641,10 @@ console.log(String.fromCharCode(10) + '[1c25k] Variable psionic costs');
   check('placed beside the cost it qualifies',
     psiFields.indexOf('isp_note') === psiFields.indexOf('isp') + 1);
 
-  // The import engine is a server module but takes no env until called, so
-  // its spec is testable directly.
-  const spec = getImportSpec('psionics');
-  check('the importer extracts the note', spec.extractFields.includes('isp_note'));
-  check('a zero with no note is flagged for review',
-    spec.flag({ isp: 0 }).some((f) => f.includes('cost note')));
-  check('a zero WITH a note is not', !spec.flag({ isp: 0, isp_note: 'costs nothing' })
-    .some((f) => f.includes('cost note')));
-  check('a noted zero is not a stub',
-    spec.isStub({ source: 'import', isp: 0 }) === true
-      && spec.isStub({ source: 'import', isp: 0, isp_note: 'costs nothing' }) === false);
+  // The import spec that used to be pinned here went with the in-app
+  // importer. The FIELD is what matters to the app and it is still pinned
+  // above and rendered below; nothing writes a psionic power through an
+  // extraction any more.
 
   // The two render sites: the wizard's picker marks the minimum with a plus
   // and shows the note; the sheet carries it through the character's stored
@@ -4219,15 +3677,8 @@ section('Variable spell costs');
   check('placed beside the cost it qualifies',
     spFields.indexOf('ppe_note') === spFields.indexOf('ppe') + 1);
 
-  const spec = getImportSpec('spells');
-  check('the importer extracts the note', spec.extractFields.includes('ppe_note'));
-  check('a zero with no note is flagged for review',
-    spec.flag({ ppe: 0 }).some((f) => f.includes('cost note')));
-  check('a zero WITH a note is not',
-    !spec.flag({ ppe: 0, ppe_note: 'costs nothing' }).some((f) => f.includes('cost note')));
-  check('a noted zero is not a stub',
-    spec.isStub({ source: 'import', ppe: 0 }) === true
-      && spec.isStub({ source: 'import', ppe: 0, ppe_note: 'x' }) === false);
+  // Same as 1c25k: the import spec pinned here left with the importer, and
+  // the field it qualified did not.
 
   // The spell picker and payload, pinned like the psionic ones in 1c25k. The
   // sheet needs no pin of its own: powerRows reads cost_note for spells and
@@ -5410,18 +4861,25 @@ section('Access JWT verification');
     }
   };
   walkFns(fnDir);
+  // The floor was five while the importer contributed its own routes. Those
+  // are gone and extraction runs from scripts/ now, so functions/ holds three
+  // callers: the proxy, campaign-ask and the NPC sweep. The floor is a guard
+  // against the sweep silently matching NOTHING, not a target - if it ever
+  // reads zero the check has stopped checking.
   check('every file in functions/ that calls the model also meters it',
-    claudeCalls.length >= 5 && claudeCalls.every((c) => c.metered),
+    claudeCalls.length >= 3 && claudeCalls.every((c) => c.metered),
     claudeCalls.filter((c) => !c.metered).map((c) => c.file).join(', ') || `${claudeCalls.length} found`);
 
-  // The labels are the whole point of the table — an endpoint column full of
-  // `import` tells you nothing about which catalog the tokens went to.
-  const engineSrc = readFileSync(join(fnDir, 'character-creator', '_lib', 'import-engine.js'), 'utf8');
-  check('the catalog importers label their spend by catalog',
-    /endpoint: `cc-import-\$\{spec\.catalog\}`/.test(engineSrc));
-  const classExtract = readFileSync(join(fnDir, 'character-creator', 'import', 'extract.js'), 'utf8');
-  check('and the class importer labels its own',
-    /endpoint: 'cc-import-class'/.test(classExtract));
+  // The labels are the whole point of the table - an endpoint column full of
+  // `import` tells you nothing about what the tokens went to.
+  //
+  // EXTRACTION LEFT functions/ WITH THE IN-APP IMPORTER. It runs from
+  // scripts/extract-class.mjs now, so these checks FOLLOW it rather than
+  // being deleted with the routes: what F7 shipped is that extraction is
+  // metered and says what it extracted, and that is still worth pinning.
+  const extractor = readFileSync(join(repoRoot, 'scripts', 'extract-class.mjs'), 'utf8');
+  check('the class extractor labels its spend',
+    /'cc-extract-class'/.test(extractor));
 
   // Metered BEFORE the reply is parsed. A truncated or refused extraction has
   // already spent the input tokens for a whole page, and a run that cost money
@@ -5432,7 +4890,7 @@ section('Access JWT verification');
     return at !== -1 && parseAt !== -1 && at < parseAt;
   };
   check('a failed extraction is still recorded, because the tokens were still spent',
-    meterBeforeParse(engineSrc) && meterBeforeParse(classExtract));
+    extractor.indexOf('claude_usage') < extractor.indexOf('if (!payload) die('));
 
   // Both places used to say the admin importers were deliberately unlogged,
   // and both now explain that they no longer are. So this pins the CURRENT
@@ -5442,9 +4900,8 @@ section('Access JWT verification');
   const setupSrc = readFileSync(join(appDir, '..', '..', 'SETUP.md'), 'utf8');
   check('SETUP.md states that every Claude call in functions/ is metered',
     /Every Claude call in `functions\/` writes one row to\s*\r?\n?`claude_usage`/.test(setupSrc));
-  check('and names the import endpoints it can be read by',
-    /cc-import-class/.test(setupSrc) && /cc-npc-sweep/.test(setupSrc)
-    && /cc-import-<catalog>/.test(setupSrc));
+  check('and names the endpoints it can be read by',
+    /cc-extract-class/.test(setupSrc) && /cc-npc-sweep/.test(setupSrc));
 }
 
 // ---------- 1d. Paging ----------
@@ -6059,11 +5516,11 @@ section('Backend class extractor');
 
   // The cached-text prompt must not tell the model to un-splice columns that
   // read-columns.py already resolved, and must not claim a PDF is attached.
-  const cachePrompt = buildUserPrompt([{ name: 'X', text: 'md' }], null, { source: 'cache' });
-  check('the cached-text prompt does not claim an attached PDF',
+  // There is ONE prompt now. The PDF one went with the routes that sent PDFs,
+  // and the "no export is named nowhere else" check is what noticed.
+  const cachePrompt = buildUserPrompt([{ name: 'X', text: 'md' }], null);
+  check('the prompt does not claim an attached PDF',
     !cachePrompt.includes('attached PDF'));
-  check('and the PDF prompt still does, for the path that still sends one',
-    buildUserPrompt([{ name: 'X', text: 'md' }], null).includes('attached PDF'));
   check('the cached-text system prompt says the columns are already resolved',
     SYSTEM_PROMPT_CACHE.includes('already extracted')
     && SYSTEM_PROMPT_CACHE.includes('DO NOT try to re-order'));

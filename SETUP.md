@@ -90,7 +90,7 @@ nates-workshop/
         │                     and both thin proxies to the Worker
         ├── filament-forge/   catalog (the OFD snapshot) + data (per-user
         │                     config/history/presets/custom filaments)
-        └── character-creator/  46 endpoints + _lib; see the app README
+        └── character-creator/  33 endpoints + _lib; see the app README
 ```
 
 **The skills need a junction, once per machine.** The book work runs from
@@ -286,7 +286,8 @@ Settings → Environment variables, both encrypted:
 **Every Claude call in `functions/` writes one row to `claude_usage`** (email,
 endpoint, model, tokens, upstream status) — fail-open, so metering can never
 break the call it measures. The endpoints are `proxy`, `campaign-ask`,
-`cc-npc-sweep`, `cc-import-class` and `cc-import-<catalog>` (`skills`,
+`cc-npc-sweep`, and `cc-extract-class` — which is written by
+`scripts/extract-class.mjs` from a workstation rather than by a Worker (`skills`,
 `spells`, `psionics`, `gear`). The Pick 3 Cut 5 Worker writes its own
 `pick3cut5-solo` and `pick3cut5-party` rows into the same table.
 

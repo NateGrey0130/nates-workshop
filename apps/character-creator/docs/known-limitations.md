@@ -371,7 +371,6 @@ exactly that, read off the table with no parsing.
 | `app.js` | ~3,000 | the wizard; the largest file in the app |
 | `sheet.js` | ~2,000 | |
 | `js/parser.js` | ~1,600 | **third** largest, and not a page script at all |
-| `import.js` | ~950 | |
 | `catalog.js` | ~700 | |
 | `campaign.js` | ~640 | |
 | `dashboard.js` | ~110 | |

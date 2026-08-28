@@ -740,7 +740,10 @@ function validateCategories(where, categories, errors) {
 // The attributes a class bonus may name. Anything else is a typo — a bonus
 // filed under a key nothing reads would silently do nothing, which is the
 // failure this whole block exists to prevent.
-export const BONUS_ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
+// Not exported: js/class-blocks.js was the only thing outside this file that
+// read it, and that went with the in-app importer. Still used three times
+// below, so it stays a const rather than being inlined.
+const BONUS_ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
 
 // The pools a class bonus may add to. Books state these as "plus 4D6" on top of
 // whatever the occupation gives — the Demigod's P.P.E. and I.S.P. are both
