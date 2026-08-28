@@ -502,6 +502,56 @@ on the machine.
 **Posture: two changes, and they are separable — take the data script alone if
 the test change is unwanted.** Production needs neither; it is already correct.
 
+**Taken, 2026-08-28 (PR #378).** Both halves — the data script and the test
+move — since the separable clause was not invoked.
+
+**This finding's stated cause was wrong.** It says *"the script that resolved
+them on production left nothing in git"*. `zzz-resolve-choice-group-gear.sql`
+**is** in git and **does** rewire choice lists; it just does not touch these
+six. The real mechanism, read out of the script rather than inferred:
+
+`retire-gear-placeholders.sql` deletes the four category placeholder rows
+guarded on `NOT EXISTS (... instr(markdown, 'item_id: "' || slug || '"'))`.
+That guard matches only **fixed** equipment entries, never a choice group's
+`from:` list, so the rows are deleted while five classes still cite them there.
+**It is the same guard shape, and the same blind spot, that class audit F2
+found in `retire-orphan-gear-stubs.sql`** — fixed there by
+`zzz-resolve-choice-group-gear.sql`, and never checked for in the other
+`retire-*` script. The half of the premise that survives is that production's
+correct lists came from the catalog editor and left nothing in git; what was
+wrong was calling that the cause rather than the reason nobody noticed.
+
+**What landed.** `zzzz-resolve-energy-placeholder-choices.sql` rewires the six
+lists to production's slugs, exported row for row rather than composed — a
+rebuild agreeing with production is the whole point, so a better list would
+defeat it. Applied to `--remote` before the merge: **0 rows changed**, run
+recorded. The sweep moved from `smoke.mjs` to `regression.mjs`.
+
+**Two implementation errors, both found by running it:**
+
+1. The read-back counted classes *citing* `ng-57-…` rather than classes this
+   script *rewired*, and returned **7** where its own comment claimed 5 —
+   other classes already cite that slug. Rewritten to scope the count to the
+   five targets. Caught before the file reached `main` or production, which is
+   the only window in which an applied script may be edited.
+2. The sweep needed `environment.mjs`'s `maxBuffer: 1e9` and it was left
+   behind. 126 class markdowns overrun `spawnSync`'s 1 MB default; the JSON
+   truncates mid-parse and the failure names neither size nor buffers. Moved
+   with the check.
+
+**Verified:** fresh build 10 unresolved → **0** (production 0 throughout); the
+five classes' markdown now matches production byte for byte, dropping the
+class-markdown divergence from 13 to **8**; `smoke.mjs` 1331/89 → 1327/88
+PASSED, `regression.mjs` 206 → **210 PASSED**.
+
+**Left standing on purpose:** `CLASS-AUDIT.md:112` records that smoke *gained*
+a `Gear citations resolve` section. True on 2026-08-26; the section has since
+moved here. Records are not rewritten, and amending another menu inside this
+PR would be the scope widening the protocol warns about.
+
+**The remaining 8 class-markdown differences are F7's and others' — not
+touched.** F12 is still what would make them visible.
+
 ### F12 — `repo-vs-live.mjs` does not cover `imported_classes` at all
 
 Its `TABLES` list is the five catalogs. The class definitions — the largest and

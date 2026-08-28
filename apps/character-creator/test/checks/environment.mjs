@@ -14,8 +14,6 @@ import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'no
 import { dirname, join } from 'node:path';
 import { batchStatements, trailingSelects, collapseWhitespace, statements, stripComments } from '../../../../scripts/sql-statements.mjs';
 import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
-import { parseClassMarkdown } from '../../js/parser.js';
-import { referencedGear } from '../../../../functions/api/character-creator/_lib/catalog.js';
 
 // The sections this file announces, declared once so a `--section` run can
 // skip the whole module — this is the file that shells out to wrangler, which
@@ -25,7 +23,7 @@ import { referencedGear } from '../../../../functions/api/character-creator/_lib
 // matches nothing. Both end in "no section matched", which is a failure.
 const SECTIONS = ['D1 schema (local, shared DB)', 'schema.sql self-sufficiency',
   'Data script conventions', 'SQL statement splitting', 'Documentation claims',
-  'Skills stay true', 'Book surveys', 'Gear citations resolve', 'Migration state'];
+  'Skills stay true', 'Book surveys', 'Migration state'];
 
 export function run() {
 if (!SECTIONS.some(wantSection)) return;
@@ -35,8 +33,9 @@ if (!SECTIONS.some(wantSection)) return;
 section('D1 schema (local, shared DB)');
 
 function wrangler(args) {
-  // maxBuffer: the gear-citation sweep pulls every published class's whole
-  // markdown as JSON, which overruns spawnSync's 1 MB default.
+  // maxBuffer: a result set here can be large - the schema and citation
+  // queries pull whole markdown columns back as JSON, which overruns
+  // spawnSync's 1 MB default and truncates the output mid-parse.
   return spawnSync('npx', ['wrangler', ...args], { cwd: repoRoot, shell: true, encoding: 'utf8', timeout: 120000, maxBuffer: 1e9 });
 }
 
@@ -570,58 +569,6 @@ section('Book surveys');
     check('the README file map names docs/surveys/',
       readme.includes('docs/surveys/'),
       'a directory no map mentions is a directory nobody opens');
-  }
-}
-
-// ---------- 3b. Gear citations resolve ----------
-// Class audit F2: retire-orphan-gear-stubs.sql deleted 20 gear rows that nine
-// live classes were still citing inside choice-group `from:` lists. Its guard
-// matched only fixed `item_id:` entries, and the one automated check
-// (regression.mjs) had the same blind spot - it greps the class JSON for
-// "item_id" - so the retirement failed open and a wizard pick of any of those
-// options resolved to nothing.
-//
-// This asks the question with the real parser: every slug referencedGear()
-// returns for a published class - fixed entries AND choice lists - must
-// resolve to a gear row or a gear redirect, so a retire or a rename can never
-// fail open this way again. It runs against the shared local database, the
-// same one section 1 queries.
-section('Gear citations resolve');
-{
-  const sweepSql = join(appDir, 'test', '.smoke-gear-citations.sql');
-  writeFileSync(sweepSql,
-    "SELECT class_id, markdown FROM imported_classes WHERE status = 'published' AND deleted_at IS NULL;\n"
-    + 'SELECT slug FROM gear;\n'
-    + "SELECT from_key FROM catalog_redirects WHERE catalog = 'gear';\n");
-  const sweep = wrangler(['d1', 'execute', 'DB', '--local', '--json', '--file', sweepSql]);
-  rmSync(sweepSql, { force: true });
-
-  let blocks = null;
-  try { blocks = JSON.parse(sweep.stdout.slice(sweep.stdout.indexOf('['))); } catch { /* checked below */ }
-  check('the citation sweep is queryable', Array.isArray(blocks) && blocks.length === 3,
-    (sweep.stderr || sweep.stdout || '').slice(-300));
-
-  if (Array.isArray(blocks) && blocks.length === 3) {
-    const classes = blocks[0].results || [];
-    const known = new Set((blocks[1].results || []).map((r) => String(r.slug).toLowerCase()));
-    for (const r of blocks[2].results || []) known.add(String(r.from_key).toLowerCase());
-
-    const unparsed = [];
-    const unresolved = [];
-    let cited = 0;
-    for (const c of classes) {
-      const p = parseClassMarkdown(c.markdown);
-      if (!p.ok) { unparsed.push(c.class_id); continue; }
-      for (const slug of referencedGear(p.data)) {
-        cited++;
-        if (!known.has(String(slug).toLowerCase())) unresolved.push(`${c.class_id} -> ${slug}`);
-      }
-    }
-    check('every published class in the database parses', unparsed.length === 0, unparsed.join(', '));
-    check('every gear slug a published class references resolves, choice lists included',
-      unresolved.length === 0, unresolved.slice(0, 10).join('; '));
-    check('and the sweep actually looked at some', classes.length > 100 && cited > 500,
-      `${classes.length} classes, ${cited} citations`);
   }
 }
 

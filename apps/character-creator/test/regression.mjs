@@ -21,8 +21,9 @@ import { readFileSync, writeFileSync, rmSync, mkdtempSync, readdirSync, existsSy
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { tmpdir } from 'node:os';
-import { validateBonuses, occAllowedForRace, raceAllowedForOcc, OCC_GROUPS, RACE_NONE }
-  from '../js/parser.js';
+import { validateBonuses, occAllowedForRace, raceAllowedForOcc, OCC_GROUPS, RACE_NONE,
+  parseClassMarkdown } from '../js/parser.js';
+import { referencedGear } from '../../../functions/api/character-creator/_lib/catalog.js';
 
 const testDir = dirname(fileURLToPath(import.meta.url));
 const appDir = join(testDir, '..');
@@ -58,8 +59,12 @@ process.on('exit', cleanup);
 process.on('SIGINT', () => { cleanup(); process.exit(130); });
 
 function wrangler(args) {
+  // maxBuffer: the gear-citation sweep at the end pulls every published class's
+  // whole markdown back as JSON, which overruns spawnSync's 1 MB default - the
+  // output is then truncated mid-JSON and the parse fails with no hint that
+  // SIZE was the problem. This setting moved here with that sweep.
   return spawnSync('npx', ['wrangler', ...args], {
-    cwd: repoRoot, shell: true, encoding: 'utf8', timeout: 180000,
+    cwd: repoRoot, shell: true, encoding: 'utf8', timeout: 180000, maxBuffer: 1e9,
   });
 }
 
@@ -1628,6 +1633,67 @@ console.log('\n' + '[7/7] Checks that only a database can make');
 
   const cleared = await api('PATCH', `/characters/${charId}/items/${armId}`, { enchantments: [] });
   check('and the list can be emptied again', cleared.status === 200, cleared.body);
+}
+
+// ---- the gear-citation sweep, against THIS database ----------------------
+// Moved here from smoke.mjs (REBUILD-AUDIT.md F11). It used to run against the
+// SHARED local database, so its answer depended on what that machine's
+// .wrangler/state happened to hold - and that is not a property a merge gate
+// should have. On a machine synced from production it passed while a database
+// built from the repo cited ten gear slugs that exist in neither database,
+// across five classes, because retire-gear-placeholders.sql deletes the
+// placeholder rows with a guard that only sees fixed `item_id:` entries and
+// never a choice group's `from:` list. Same blind spot class audit F2 found in
+// retire-orphan-gear-stubs.sql.
+//
+// Here the database was built from nothing, minutes ago, so the question it
+// answers is the one worth asking: can a REBUILD serve these classes?
+{
+  const sweepSql = join(state, 'gear-citations.sql');
+  writeFileSync(sweepSql,
+    "SELECT class_id, markdown FROM imported_classes WHERE status = 'published' AND deleted_at IS NULL;\n"
+    + 'SELECT slug FROM gear;\n'
+    + "SELECT from_key FROM catalog_redirects WHERE catalog = 'gear';\n");
+  const sweep = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state,
+    '--json', '--file', sweepSql]);
+
+  // wrangler prefixes its own log line - "[string] [d1, execute, ...]" - so the
+  // first "[" in the output is NOT the JSON. Take the first one that parses.
+  let blocks = null;
+  const sweepOut = sweep.stdout || '';
+  for (let at = sweepOut.indexOf('['); at >= 0 && !blocks; at = sweepOut.indexOf('[', at + 1)) {
+    try {
+      const v = JSON.parse(sweepOut.slice(at));
+      if (Array.isArray(v)) blocks = v;
+    } catch { /* not the JSON yet */ }
+  }
+  check('the gear-citation sweep is queryable', Array.isArray(blocks) && blocks.length === 3,
+    cleanErr(sweep.stderr || sweep.stdout));
+
+  if (Array.isArray(blocks) && blocks.length === 3) {
+    const sweepClasses = blocks[0].results || [];
+    const known = new Set((blocks[1].results || []).map((r) => String(r.slug).toLowerCase()));
+    for (const r of blocks[2].results || []) known.add(String(r.from_key).toLowerCase());
+
+    const unparsed = [];
+    const unresolved = [];
+    let cited = 0;
+    for (const c of sweepClasses) {
+      const p = parseClassMarkdown(c.markdown);
+      if (!p.ok) { unparsed.push(c.class_id); continue; }
+      for (const slug of referencedGear(p.data)) {
+        cited++;
+        if (!known.has(String(slug).toLowerCase())) unresolved.push(`${c.class_id} -> ${slug}`);
+      }
+    }
+    check('every published class in a rebuilt database parses',
+      unparsed.length === 0, unparsed.join(', '));
+    check('every gear slug a rebuilt class references resolves, choice lists included',
+      unresolved.length === 0, unresolved.slice(0, 10).join('; '));
+    check('and the sweep actually looked at some',
+      sweepClasses.length > 100 && cited > 500,
+      `${sweepClasses.length} classes, ${cited} citations`);
+  }
 }
 
 console.log('\n' + (failures === 0
