@@ -1349,6 +1349,53 @@ citation, not to a rule, but say so when taking it.**
 
 Takes `not-cached` from 51 to 50 and `rifts-core` to zero rows citing it.
 
+**Taken, 2026-08-28 (PR #393).** Both halves — the data script and the registry
+note. **This changed production**, as the posture said it would: one class, one
+column.
+
+**The three readings, done rather than approximated.** This finding warned
+against the "approximate 157-159" it carried, and it was right to — the answer
+is **156-159**:
+
+1. **Table of contents.** Four separate entries, on printed 5, 6 and 7, all
+   giving the same page: *"Dragon Hatchling … 156"*, *"Dragon Hatchlings: …
+   156"*, *"The Dragon Hatchling has psionics & magic: … 156"*, *"Dragon
+   Hatchling R.C.C. … 156"*.
+2. **The body heading agrees.** Printed 156 opens with the heading *Dragon
+   Hatchling*.
+3. **The entry's extent.** The R.C.C. material runs through 157 and 158 —
+   *Alignments*, *R.C.C. (Racial Character Class)*, *Magic Knowledge* — and its
+   tail, *Hatchling's Size*, sits at the top of printed **159**, where
+   *Cat's-Eye Dragon Hatchling* then begins. The generic section therefore
+   **shares 159 with the first variant**, which is exactly why that variant
+   cites 159-160.
+
+Four pages, as the `p.98-101` it replaces was. The seven now form one
+contiguous run, 156 through 163.
+
+**Verified against production before and after:** 126 classes before, 126 after,
+**one field value changed** — `dragon-hatchling.markdown` — and `updated_at`
+moved on that row alone.
+
+**The registry note was wrong twice and is corrected.** It claimed *"Cited by
+two published classes"* (one did — `rifts-priest` matched a grep on prose, its
+`source_book` is Pantheons) and *"this is the next book to cache, not a missing
+one"* (it should not be cached at all). The replacement states what
+`rifts-core` actually is — the original edition RUE revises — and that nothing
+cites it. The entry is **kept** rather than deleted so the spelling stays known
+vocabulary if it reappears. `books.json` was re-parsed before writing; a
+registry three mechanisms read is not a file to leave syntactically doubtful.
+
+**Ledger effect, `source-coverage.mjs --remote`:** classes go to **126
+traceable, 0 not-cached** — every published class is now traceable — and the
+`not-cached` bucket drops **51 → 50**, with `rifts-core` gone from it entirely.
+The remaining 50 are the 48 F16 is about plus `triax` and `new-west`.
+
+**One check read 6 where the comment says 7, and it was the local database
+again**, not the script: this machine's dev D1 has no `dragon-hatchling` row at
+all. On a fresh build and on production it reads 7. The same drift that made
+F13's `telepathy_has_text` read 0.
+
 ---
 
 ## The question the brief asked
