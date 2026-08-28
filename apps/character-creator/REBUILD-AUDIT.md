@@ -1521,6 +1521,49 @@ Leave `wizard`.
 **Posture: this CHANGES PRODUCTION, like F15, and for the same kind of reason —
 a script that ran too early. It needs a deliberate yes, not a queue position.**
 
+**Taken, 2026-08-28 (PR #397).** Posture held: this changed production, on a
+deliberate yes. Scope held too — five class rows plus F18's four gear rows, and
+`wizard` left alone exactly as the finding asked.
+
+**Both mechanisms this finding names are wrong, and the second one matters.**
+The proposal was to re-run `retire-gear-placeholders.sql`. That script never
+mentions `light-mdc-body-armor` — it handles four other placeholders and only
+for the juicer. Running it would have changed nothing and looked like success.
+
+The script that does resolve these four classes is `fix-category-gear-rows.sql`,
+and **it can never work again**. Its guard requires `plastic-man-body-armor` and
+`urban-warrior-body-armor` to exist; `merge-rifts-armor-duplicates.sql` later
+folded both into the environmental-armour rows `add-rue-equipment.sql` had
+created. The guard counts two of four and cannot pass in any environment. So
+this finding's story — *"it ran before the options existed, nobody re-ran it,
+production is behind by exactly one no-op"* — has the right symptom and the
+wrong cause: the window did not stay open waiting for someone to re-run it, it
+closed permanently on 2026-08-23. This is the offender `scripts/trace-row.mjs`
+exists to catch, now on its fourth appearance.
+
+**The SAMAS pilot was not a toss-up.** RUE printed 233 and printed 235 both read
+*"air filter and gas mask"* inside a comma-separated list, beside *"energy rifle
+and energy sidearm of choice"*. RUE also writes it *"air filter & gas mask"* and
+*"gas mask and air filter"*; the order varies, which happens for two things and
+not for one product. The repo's split is right and production was carrying the
+importer's merge of a two-item phrase — the same mistake as
+`light-mdc-body-armor`, in a second place. The merged catalog row is left in
+place: it is uncited now, but retiring it is a separate decision.
+
+**The replacement keeps the pre-merge slugs on purpose.** Convergence is the
+goal, so the new text is copied byte for byte out of a rebuild; the post-merge
+names would make production differ from the repo again in a fresh way. The
+merge left `catalog_redirects` rows for both, present in production and in a
+rebuild, so all four options resolve — checked, not assumed.
+
+**Proven to be a no-op in a rebuild** rather than argued to be: the repo was
+built before and after adding the file, and `imported_classes` (126),
+`gear` (975) and `skills` (336) came out with **zero** differing rows.
+
+`repo-vs-live` **21 field differences across 20 rows → 12 across 11**, and
+**`gear` reaches zero** — the fifth table to get there. What remains is F14's
+eleven deliberately excluded skills and one word of `wizard` prose.
+
 ### F20 — five spells missing their Palladium Fantasy P.P.E. variant
 
 The smallest thing left and the most mechanical. Five `variant_note` values,
