@@ -126,7 +126,6 @@ functions/api/
     │                         replacement, so an old class file still loads
     ├── _lib/class-loader.js  Resolve a class_id to parsed frontmatter
     ├── _lib/class-store.js   Read/write stored classes; per-isolate parse cache
-    ├── _lib/extraction-prompt.js  Class import prompt
     ├── _lib/import-engine.js  Shared catalog-import pipeline: extract,
     │                         normalise, classify duplicates, batch-confirm
     ├── _lib/import-sessions.js  Resumable imports: sessions + staged rows
@@ -622,6 +621,18 @@ scripts/
 │                           the same book's description pages
 ├── class-check.mjs         One class file, against the parser the app uses
 ├── class-check-lib.mjs     Its pure half, so the smoke test can call it
+├── extract-class.mjs       One class out of a cached book, into a DRAFT .md.
+│                           The backend half of what import.html used to do:
+│                           printed page range in, cached OCR text (not a PDF
+│                           slice) to the model, markdown out, metered to
+│                           claude_usage. REFUSES a page whose cached text is
+│                           a few bytes - that is a full-page illustration,
+│                           and sending it is how a class loses a third of
+│                           itself. Drafts only; class-check is the next step
+├── extraction-prompt.mjs   The class extraction prompt, and the schema it
+│                           documents. Two system prompts: one for a PDF page
+│                           image, one for cached text whose columns are
+│                           ALREADY resolved and must not be re-ordered
 ├── books.json              The book registry: one entry per sourcebook the
 │                           catalog cites, keyed by its .cache/books slug. The
 │                           canonical title, every OTHER spelling production

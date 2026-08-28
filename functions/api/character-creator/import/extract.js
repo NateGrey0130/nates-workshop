@@ -7,7 +7,7 @@
 
 import { requireAdmin, json } from '../_lib/auth.js';
 import { crossReference } from '../_lib/catalog.js';
-import { SYSTEM_PROMPT, buildUserPrompt } from '../_lib/extraction-prompt.js';
+import { SYSTEM_PROMPT, buildUserPrompt } from '../../../../scripts/extraction-prompt.mjs';
 import { validateClaudeRequest, callAnthropic, recordUsage } from '../../_lib/claude-client.js';
 import { saveDraft, getExamples } from '../_lib/class-store.js';
 import { parseClassMarkdown } from '../../../../apps/character-creator/js/parser.js';
