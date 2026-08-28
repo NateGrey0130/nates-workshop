@@ -30,6 +30,7 @@ under [`docs/`](docs/).
 | [`docs/operations.md`](docs/operations.md) | Bindings, the one-database decision, migrations, data scripts, and how to check that the live database still matches the repo. |
 | [`docs/known-limitations.md`](docs/known-limitations.md) | The honest list, roughly by value. |
 | [`docs/rules-audit.md`](docs/rules-audit.md) | Where each implemented rule comes from, by printed page. |
+| [`docs/surveys/`](docs/surveys/) | One file per cached sourcebook: its offset, inventory, authority pages, catalog diff and per-PR ledger. Facts about each book; no prose from it. |
 | [`docs/plans/`](docs/plans/README.md) | Design decisions and rejected alternatives, per planned PR. |
 
 In this file:
@@ -96,6 +97,9 @@ apps/character-creator/
 ├── db/*.sql                  One-shot SQL. NOT migrations — these change rows,
 │                             not schema. See Data scripts below
 ├── docs/rules-audit.md       Where each implemented rule comes from, by page
+├── docs/surveys/<slug>.md    One per cached book — the survey the book-survey
+│                             skill writes and a fresh session boots from.
+│                             Tracked on purpose; the OCR caches are not
 ├── docs/plans/               The planned PRs and shipped proposals, with
 │                             their rejected alternatives
 └── test/

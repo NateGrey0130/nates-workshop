@@ -66,11 +66,14 @@ An import run is many PRs, and one conversation carrying all of them is the
 most expensive way to hold what it knows: the 2026-08-25 efficiency audit
 measured the same PR-shaped import costing 2–7× more late in a marathon
 session than early, purely from re-carried context. The durable state lives in
-`.cache/books/<slug>/SURVEY.md` (see the `book-survey` skill): append a ledger
-line there when a PR merges, and **start a fresh session every 2–4 PRs**,
-booted from that file plus `git log --oneline -15`. If the next class needs
-something a previous conversation knew and the file does not hold, that is a
-gap in the file — write it down there, not a reason to keep the session alive.
+`apps/character-creator/docs/surveys/<slug>.md` (see the `book-survey` skill).
+It is tracked, so **the ledger line goes in the same PR as the work it
+describes** — append it before you open the PR rather than after it merges, and
+say what went in, the catalog total it moved, and that the data was applied
+`--remote` first. Then **start a fresh session every 2–4 PRs**, booted from that
+file plus `git log --oneline -15`. If the next class needs something a previous
+conversation knew and the file does not hold, that is a gap in the file — write
+it down there, not a reason to keep the session alive.
 
 ## The README is not working memory
 

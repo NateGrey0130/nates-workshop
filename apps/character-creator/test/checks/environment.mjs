@@ -25,7 +25,7 @@ import { referencedGear } from '../../../../functions/api/character-creator/_lib
 // matches nothing. Both end in "no section matched", which is a failure.
 const SECTIONS = ['D1 schema (local, shared DB)', 'schema.sql self-sufficiency',
   'Data script conventions', 'SQL statement splitting', 'Documentation claims',
-  'Skills stay true', 'Gear citations resolve', 'Migration state'];
+  'Skills stay true', 'Book surveys', 'Gear citations resolve', 'Migration state'];
 
 export function run() {
 if (!SECTIONS.some(wantSection)) return;
@@ -503,6 +503,73 @@ section('Skills stay true');
     check('the data-script template records a run',
       /INSERT INTO data_script_runs \(filename\) VALUES/.test(t),
       'reference/data-script.sql would produce a script the smoke test rejects');
+  }
+}
+
+// ---------- 3a. Book surveys ----------
+// INGESTION-AUDIT F21: the survey moved out of the gitignored .cache/ and into
+// apps/character-creator/docs/surveys/, so the ledger the skills call durable
+// state can survive this machine. Three checks, and the shapes they are NOT.
+//
+// NOT CHECKED, deliberately: that a cached book HAS a survey. The caches are
+// gitignored and a clean clone has none, so such a check could only fail on the
+// machines that matter - F10 says this outright, and F21 keeps it. This is a
+// relocation, not a new gate.
+section('Book surveys');
+{
+  const surveyDir = join(appDir, 'docs', 'surveys');
+  const surveys = existsSync(surveyDir)
+    ? readdirSync(surveyDir).filter((f) => f.endsWith('.md')) : [];
+
+  check('surveys are present', surveys.length > 0, 'no docs/surveys/*.md');
+
+  // ---- 1. Every survey names a registered slug -------------------------
+  // The filename IS the slug, and scripts/books.json is the registry three
+  // other mechanisms resolve against. A survey for a slug that registry does
+  // not hold is a file nothing can find its book from.
+  {
+    const registry = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'books.json'), 'utf8'));
+    const slugs = new Set(Object.keys(registry.books));
+    const unknown = surveys.map((f) => f.replace(/\.md$/, ''))
+      .filter((slug) => !slugs.has(slug));
+    check(`every survey names a slug scripts/books.json registers (${surveys.length} files)`,
+      unknown.length === 0,
+      unknown.join(', ') + ' — no book registry entry, so the file has no book');
+  }
+
+  // ---- 2. No survey quotes the book ------------------------------------
+  // The rule that lets these files be tracked at all: a survey states FACTS
+  // about a book - pages, offsets, counts, names - and quotes no prose from it.
+  // EFFICIENCY-AUDIT F1 put the survey in .cache/ to keep commercial text out
+  // of the repo, and that reason was real; the file moved because it turned out
+  // not to need the quotes.
+  //
+  // This is a CRUDE PROXY and is documented as one in book-survey §7. Verbatim
+  // excerpts are written as blockquotes by convention here, so a blockquote is
+  // the mechanical grip. It cannot see an inline quotation in italics, and
+  // Wormwood's survey carried two of those as well as the blockquote it was
+  // written for. The check is a floor, not the rule.
+  {
+    const quoting = [];
+    for (const f of surveys) {
+      const lines = readFileSync(join(surveyDir, f), 'utf8').split('\n');
+      const n = lines.findIndex((l) => /^\s{0,3}>/.test(l));
+      if (n >= 0) quoting.push(`${f}:${n + 1}`);
+    }
+    check('no survey contains a markdown blockquote', quoting.length === 0,
+      quoting.join(', ') + ' — paraphrase it and cite the page instead');
+  }
+
+  // ---- 3. The README file map names the directory ----------------------
+  // Pinning the CURRENT claim, not the absence of the old one. A check asserting
+  // that the README no longer names the old gitignored location would pass the
+  // day someone deleted the row entirely - and spelling that old path here would
+  // defeat a grep for it, which is the shape F7 caught.
+  {
+    const readme = readFileSync(join(appDir, 'README.md'), 'utf8');
+    check('the README file map names docs/surveys/',
+      readme.includes('docs/surveys/'),
+      'a directory no map mentions is a directory nobody opens');
   }
 }
 

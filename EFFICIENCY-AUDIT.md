@@ -129,6 +129,17 @@ class-import.
   class-import states the batch convention in its own voice: ledger line on
   merge, fresh session every 2–4 PRs, booted from the file plus
   `git log --oneline -15`. No gate changed.
+- **Adjusted 2026-08-28, by `INGESTION-AUDIT` F21.** The survey moved to
+  `apps/character-creator/docs/surveys/<slug>.md`, **tracked**. The reason it
+  was put in `.cache/` — no commercial text in the repo — was real and is
+  answered rather than routed around: a survey now states facts about a book
+  and quotes no prose from it, which is enforced by a smoke check for a
+  markdown blockquote. Of Wormwood's 251 lines, three were quoted prose and all
+  three paraphrased with the fact intact. What this note does not change: the
+  2–7× measurement, the fresh-session cadence, or the fact that no gate moved.
+  What it fixes: the ledger this finding calls durable state was gitignored, so
+  it could not be committed and lived on one machine — three Wormwood PRs each
+  reported that as a deviation they could not avoid.
 
 ### F2 — smoke.mjs rebuilds the world on every run: ~45s × ~200 runs per book ≈ 2.4 hours
 

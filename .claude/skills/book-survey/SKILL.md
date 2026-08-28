@@ -502,13 +502,42 @@ browser — a picker that offers the new rows is the only proof they are reachab
 
 ## 7. Persist the survey — it is the next session's boot file
 
-Write the survey to **`.cache/books/<slug>/SURVEY.md`**, next to the OCR cache
-and gitignored with it — it quotes a commercial book, so it stays local. It
-holds what the session learned that the repo does not: the inventory table, the
-authority pages and the *verified* printed-to-PDF offset, the catalog diff with
-its hand-checked false gaps, the agreed extraction plan, and a progress ledger —
-one line per shipped PR, appended when it merges, saying what went in and what
-remains.
+Write the survey to **`apps/character-creator/docs/surveys/<slug>.md`**, from
+the template at `.claude/skills/book-survey/reference/SURVEY.md`. It is
+**tracked** — it ships in the same commit as the work it describes, and it
+survives the machine it was written on. It holds what the session learned that
+the repo does not: the inventory table, the authority pages and the printed-to-PDF
+offset, the catalog diff with its hand-checked false gaps, the agreed extraction
+plan, and a progress ledger — one line per shipped PR, appended when it merges,
+saying what went in and what remains.
+
+**Read the offset from `scripts/books.json`; do not re-derive it.** That registry
+is the authority for `page_offset`, `printed_pages` and any
+`page_offset_exceptions`, and the extractor and `class-check` both read it. The
+"what remains" section is a **paste from `node scripts/source-coverage.mjs
+--remote`**, which reports per book — not a count you do yourself.
+
+### It states facts about the book. It quotes no prose from it
+
+This is the rule that lets the file be tracked at all, and it is not a
+formality. The 2026-08-25 efficiency audit put the survey in `.cache/` beside
+the OCR text deliberately — *local beside the OCR cache it quotes, so no
+commercial text enters the repo* — and that reason was real. The file moved
+because it turned out not to need the quotes.
+
+Page numbers, offsets, counts, class names, section ranges, table locations and
+catalog diffs are **facts about** a book, and they are the whole of what the next
+session needs. The book's sentences are not. Where a rule matters, paraphrase it
+and cite the page: *p.157 lists eleven creature types as not available as player
+characters* carries everything an import needs, and the book's wording carries
+nothing extra. Wormwood's survey was 251 lines and **three** of them were quoted
+prose; all three paraphrased with the fact intact.
+
+The smoke test enforces the crude half — **no markdown blockquote** in
+`docs/surveys/*.md`, because verbatim excerpts are written as blockquotes by
+convention here. It cannot see an inline quotation in italics, and Wormwood's
+survey carried two of those as well as the blockquote. **The check is a floor,
+not the rule.**
 
 Then let the session go. The 2026-08-25 efficiency audit measured the same
 import PR costing 2–7× more tokens late in a long session than early, because
@@ -516,8 +545,11 @@ every call re-carries the whole conversation — and when a mid-book context
 reset dropped that carry from ~790K to ~235K tokens per call, the imports
 continued without losing a thing, because everything they needed was in the
 repo, the skills, the OCR cache, and this file. **Start a fresh session every
-2–4 PRs**, booted from `SURVEY.md` plus `git log --oneline -15`, not from the
-memory of a conversation.
+2–4 PRs**, booted from `apps/character-creator/docs/surveys/<slug>.md` plus
+`git log --oneline -15`, not from the memory of a conversation.
+
+Because the survey is tracked, a fresh session on a fresh clone boots from it
+too. The OCR caches do not travel; the judgement in this file does.
 
 ## What "surveyed" means
 
@@ -525,6 +557,7 @@ memory of a conversation.
 - the authority table parsed, and probed against facts known independently
 - a diff against the catalog, hand-checked for false gaps
 - a stated plan of what will be extracted and what will be left, with reasons
-- all of it in `.cache/books/<slug>/SURVEY.md`, not just said in chat
+- all of it in `apps/character-creator/docs/surveys/<slug>.md`, committed, not
+  just said in chat
 
 Get agreement on that before spending anything.
