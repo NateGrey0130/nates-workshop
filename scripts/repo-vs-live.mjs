@@ -72,15 +72,32 @@ const TABLES = [
   ['psionic_powers', 'name', 'name'],
   ['gear', 'name', 'slug'],
   ['enchantments', 'name', 'slug'],
+  // The class definitions: the largest and most consequential thing the repo
+  // rebuilds, and until now outside every content comparison. drift-check
+  // demands only that a published class be CREATABLE from the repo; nothing
+  // asked whether the class it creates is the same class. Two findings shipped
+  // through that gap - a rebuild citing ten gear slugs no database holds, and
+  // duplicated skill restrictions in mystic and burster.
+  ['imported_classes', 'class_id', 'class_id'],
 ];
 
 // Columns that cannot be compared between two independently built databases.
 // `id` is an insertion-order artefact - two CORRECT databases built in a
 // different order disagree about it by construction. `*_at` is the build clock;
-// no catalog table here has one today, but imported_classes and
-// catalog_redirects do, and a comparison that reports 126 timestamp differences
-// teaches nobody anything.
-const uncomparable = (c) => c === 'id' || c.endsWith('_at');
+// a comparison that reports 126 timestamp differences teaches nobody anything.
+//
+// `created_by` records HOW a row got there - 'import' for the two classes that
+// predate the data-script convention, 'data-script' for the file that recreates
+// them. A rebuild saying 'data-script' is telling the truth about itself, and
+// reporting it as a difference would be reporting the mechanism as a defect.
+// The same argument is open for `skills.source` under F14.
+const uncomparable = (c) => c === 'id' || c === 'created_by' || c.endsWith('_at');
+
+// `deleted_at` is the exception to the rule above, and is compared as PRESENCE
+// rather than as a timestamp: a class soft-deleted in one database and live in
+// the other is exactly the divergence this script exists to find, while the
+// minute it happened is not. Zero rows carry one today, in either database.
+const comparable = (row, c) => (c === 'deleted_at' ? row[c] != null : row[c]);
 
 // Compared as text on purpose. D1 hands back a column stored as TEXT '40' and
 // one stored as INTEGER 40 differently, and the app renders both as 40 - so a
@@ -88,6 +105,31 @@ const uncomparable = (c) => c === 'id' || c.endsWith('_at');
 const norm = (v) => (v === null || v === undefined ? null : String(v));
 const show = (v) => (v === null || v === undefined ? 'NULL'
   : JSON.stringify(String(v)).slice(0, 110));
+
+// A markdown column is tens of kilobytes. Printing two truncated blobs and
+// leaving the reader to spot the difference is not a report, so anything
+// multi-line is diffed by line. Set-based rather than positional: a class whose
+// yaml gained one entry should read as one line, not as every line after it.
+function printValue(indent, col, live, repo) {
+  const a = String(live ?? ''), b = String(repo ?? '');
+  if (!a.includes('\n') && !b.includes('\n')) {
+    console.log(`${indent}live ${show(live)}`);
+    console.log(`${indent}repo ${show(repo)}`);
+    return;
+  }
+  const A = a.split('\n'), B = b.split('\n');
+  const inA = new Set(A), inB = new Set(B);
+  const onlyLive = A.filter((l) => !inB.has(l) && l.trim());
+  const onlyRepo = B.filter((l) => !inA.has(l) && l.trim());
+  const cap = showAll ? Infinity : 3;
+  for (const l of onlyLive.slice(0, cap)) console.log(`${indent}live | ${l.trim().slice(0, 150)}`);
+  if (onlyLive.length > cap) console.log(`${indent}live | ... ${onlyLive.length - cap} more line(s)`);
+  for (const l of onlyRepo.slice(0, cap)) console.log(`${indent}repo | ${l.trim().slice(0, 150)}`);
+  if (onlyRepo.length > cap) console.log(`${indent}repo | ... ${onlyRepo.length - cap} more line(s)`);
+  if (!onlyLive.length && !onlyRepo.length) {
+    console.log(`${indent}(same lines in a different order)`);
+  }
+}
 
 const appDir = join(repoRoot, 'apps', 'character-creator');
 const state = mkdtempSync(join(tmpdir(), 'repo-vs-live-'));
@@ -173,7 +215,7 @@ try {
         const r = repoBy.get(l[key]);
         if (!r) continue;
         for (const c of cols) {
-          if (norm(l[c]) === norm(r[c])) continue;
+          if (norm(comparable(l, c)) === norm(comparable(r, c))) continue;
           if (!differing.has(l[key])) differing.set(l[key], []);
           differing.get(l[key]).push({ column: c, live: l[c], repo: r[c] });
         }
@@ -196,8 +238,7 @@ try {
       for (const [key, ds] of shown) {
         for (const d of ds) {
           console.log(`     ${key} [${d.column}]`);
-          console.log(`        live ${show(d.live)}`);
-          console.log(`        repo ${show(d.repo)}`);
+          printValue('        ', d.column, d.live, d.repo);
         }
       }
       if (!showAll && differing.size > ROWS_SHOWN) {
