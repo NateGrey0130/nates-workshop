@@ -2700,7 +2700,7 @@ bound was a page short — moved the result from 209 exact to 222. `Air: Snow
 Storm` is printed twice, Air at 64 and Water at 86, and the index gave the
 Water twin.
 
-**Taken, 2026-08-28 (PR #N) — this finding's closing recommendation.**
+**Taken, 2026-08-28 (PR #373) — this finding's closing recommendation.**
 `source-coverage` now says in its own output that `traceable` means checkable
 and not correct, with `bom` as the worked case, and the script header explains
 what the bucket can and cannot see. Two smoke checks pin the current claim
