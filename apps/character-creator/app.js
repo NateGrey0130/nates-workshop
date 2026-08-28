@@ -667,7 +667,9 @@ function renderRace() {
   const mode = S.classMode;
   let inner;
   if (mode === 'browse') {
-    inner = `<div class="grid">` + list.map((c) => classCard(c)).join('') + `</div>`;
+    inner = classGroups(list).map(([label, note, rows]) =>
+      `<div class="pick-group over-grid">${esc(label)} <span class="muted small">&mdash; ${esc(note)}</span><span class="pick-group-n">${rows.length}</span></div>
+       <div class="grid">` + rows.map((c) => classCard(c)).join('') + `</div>`).join('');
   } else {
     const answered = S.quiz.every((a) => a);
     inner = QUIZ.map((q, i) => `
@@ -852,6 +854,33 @@ function setStartingLevel(v) {
   render();
 }
 
+// The browse list, split into its two kinds and alphabetised inside each.
+//
+// The catalog has no ORDER BY, so the grid came out in whatever order D1
+// happened to return rows — races and occupations interleaved, and neither
+// run in any order at all. With the catalog past a hundred classes the only
+// way to find one was to read every card, and the only way to tell which kind
+// a card was, was the small tag under its name.
+//
+// R.C.C.s first, because that is the order of the step: the race is what you
+// are, and an O.C.C. taken alone is the human character. A category the parser
+// does not know about still gets a group rather than vanishing.
+const CLASS_GROUPS = [['rcc', 'R.C.C.', 'races'], ['occ', 'O.C.C.', 'occupations']];
+function classGroups(list) {
+  const seen = new Map(CLASS_GROUPS.map(([k]) => [k, []]));
+  for (const c of list) {
+    const k = c.category || 'other';
+    if (!seen.has(k)) seen.set(k, []);
+    seen.get(k).push(c);
+  }
+  return [...seen]
+    .filter(([, rows]) => rows.length)
+    .map(([k, rows]) => {
+      const known = CLASS_GROUPS.find(([id]) => id === k);
+      rows.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+      return [known ? known[1] : k, known ? known[2] : 'other classes', rows];
+    });
+}
 function classCard(c, score) {
   const sel = S.rcc?.id === c.id ? ' sel' : '';
   const badge = score != null ? `<span class="tag score">match ${score}/6</span>` : '';
