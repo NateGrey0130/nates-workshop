@@ -193,6 +193,53 @@ is then applied on its own, exactly as `README.md:765` already instructs.
 **Posture: change the skip, add no gate, move no exit code.** A `--local` run
 that skips it still exits 0; nothing new fails.
 
+**Taken, 2026-08-28 (PR #385).** The premise held: the skip did live inside
+`if (remote)`, and `--local` did strand everything after `seed-dev.sql`.
+
+**The count was stale — 27 is now 31, of 295 data scripts**, because four
+`zzzz-` scripts have landed since this was written (F5, F7, F11, F13). The
+stranded set is the same in kind: `untag-cross-system.sql`, every `zz-`, every
+`zzz-` and every `zzzz-`.
+
+**The posture said "nothing new fails", and that is true of the case it means
+and not of one other.** A `--local` glob now skips the file and exits 0, which
+is the whole point. But **naming a local-only file explicitly now fails where it
+used to apply** — `d1-apply.mjs --local .../seed-dev.sql` prints the skip and
+then dies "nothing left to apply", exit 1. That is the pre-existing `--remote`
+behaviour extended rather than a new mechanism, and the proposal anticipated it
+("`seed-dev.sql` is then applied on its own, exactly as the README instructs" —
+which instructs plain `wrangler`). Recorded because "nothing new fails" is not
+quite the whole truth.
+
+**This finding could not be code-only, and that is the part worth reading.**
+Changing the behaviour falsified the README paragraph that described the old
+one — *"dies on `seed-dev.sql` and never reaches `untag-cross-system.sql`"* — so
+the paragraph was rewritten in the same PR. Shipping a behaviour change and
+leaving the sentence that documents the old behaviour is the exact defect
+`claim-audit` exists to catch.
+
+**That rewrite makes F2 moot, and F2 is closed below rather than left looking
+open.** F2's whole scope was two claims inside that paragraph: the "only file
+that sorts after it" count, and the "a second pass fails" explanation. Neither
+sentence exists now — the replacement states 31 files and says the failure is on
+the FIRST pass from empty. Nothing is left for F2 to correct.
+
+**Verified by running both targets, not by reading the diff:**
+
+```
+--local  seed-dev.sql + untag-cross-system.sql
+  skipping .../seed-dev.sql — marked local-only; apply it on its own.
+  ── applying .../untag-cross-system.sql (--local) ──
+  d1-apply: 1 file(s) applied to local in order, 1 skipped as local-only.   exit 0
+
+--remote seed-dev.sql
+  skipping .../seed-dev.sql — marked local-only; apply it on its own.
+  d1-apply: nothing left to apply: every file given is local-only          exit 1
+```
+
+The `--remote` protection is unchanged: `seed-dev.sql` still cannot reach
+production. Nothing was applied to D1 by this finding.
+
 ### F2 — `README.md:769` names one file where 27 now sort after `seed-dev.sql`
 
 *"`untag-cross-system.sql`, the only file that sorts after it."* True when
@@ -205,6 +252,19 @@ adjacent *"a second pass fails"* explanation — the failure is on the **first**
 pass from empty, because `seed-dev.sql` sorts 264th and `survival-knife` already
 exists by then. State the current fact; do not quote the phrase being replaced.
 **Posture: documentation only.**
+
+**Closed as moot, 2026-08-28 (PR #385) — not taken.** F1 changed the behaviour
+this finding's target sentence described, so the sentence was rewritten in F1's
+own PR rather than left false. Both claims F2 existed to correct are gone with
+it: the *"only file that sorts after it"* count (the replacement says 31, of
+295) and the *"a second pass fails on `gear.slug`"* explanation (the replacement
+says it fails on the FIRST pass from an empty database, because the gear row it
+inserts has already been created by an earlier script by the time a glob reaches
+it).
+
+Nothing is left here to take. Recorded as closed rather than left open, because
+an open finding whose target text no longer exists is the kind of thing that
+gets "fixed" a second time.
 
 ### F3 — nothing pins the rebuild's row *contents*, so this class of regression is invisible
 
