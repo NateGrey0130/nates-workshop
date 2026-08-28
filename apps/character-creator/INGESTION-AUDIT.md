@@ -381,6 +381,58 @@ unchanged in shape: one class per call, examples re-sent every time. What
 changed is the price of the input — cached text instead of a page image — and
 that is why F12 is moot rather than solved.
 
+## Closed, 2026-08-28 — the menu is clear
+
+**F1 through F24 are all taken, moot, or deferred by their own terms.** The one
+deferral is F15 part 3, gated on a `UI-AUDIT.md` that does not exist. Counted by
+reading the lines under each heading; the sections above are the record of what
+was true when each was written and are left standing.
+
+Twelve PRs closed it out on 2026-08-28: **#362** (F21 with F10), **#363**,
+**#364** (F14), **#365** (F22), **#366** (F8), **#367**/**#368** (F15),
+**#369**/**#370** (F23), **#371**/**#372** (F24).
+
+**The final ledger** — `node scripts/source-coverage.mjs --remote`, 2026-08-28,
+after #372:
+
+| catalog | traceable | of |
+|---|---|---|
+| classes | 125 | 126 |
+| gear | 800 | 975 |
+| skills | 130 | 336 |
+| spells | **268** | 607 |
+| psionic powers | 7 | 101 |
+
+`outside-cache` is **0** across the whole catalog; it was 232 that morning.
+Spells were 0 of 570 two days earlier.
+
+**What is left is content, not pipeline, and it is not on this menu.** Rows
+citing a book with **no page range at all**, queried directly against production
+on 2026-08-28 — this cross-cuts the report's buckets, which score an uncached
+book as `not-cached` rather than `no-page-range`, so the totals differ by
+design:
+
+| book | rows | cache | what could resolve them |
+|---|---|---|---|
+| `bom` spells | **177** | 360 pp | the *Index of Rifts Magic*, already parsed |
+| `rue` spells / skills / psionics | 118 / 93 / 82 | 382 pp | no authority table found yet; `rue.md` is a backfill stub |
+| `rifts-skill-list` skills | 48 | none | a 40 KB PDF F17 verified is on hand — and it is a compilation, not a Palladium book, so re-citing those rows to `rue` may be the better repair |
+| `pf` spells | 27 | 339 pp | `parse-pf-spell-index.mjs`, which already exists |
+| slug-shaped `source_book` | 13 | — | `palladium-fantasy-core`, `pantheons-of-the-megaverse` — slugs in a title column |
+
+**These are book batches under `book-survey` and `class-import`, deliberately
+not findings.** This audit was about the machinery, and the machinery is done:
+every step of the runbook is a command, every extraction is metered and cached,
+every survey is tracked, and the protocol that governs this file is the sixth
+skill. Numbering data repairs as F25+ would reopen a closed record to hold a
+backlog that belongs to the books.
+
+**The lesson this file ends on** is F24's, and it is about reading the ledger
+above rather than about the pipeline: **a coverage ledger measures whether a
+citation can be checked, not whether it is right.** `bom` read `232 / 177`
+before the repair and `232 / 177` after it. Both numbers were correct, and
+neither was evidence.
+
 ---
 ## Findings
 
@@ -2637,6 +2689,28 @@ as they were.
 is right** — and that distinction was invisible while the book was uncached. It
 is worth saying plainly in `source-coverage`'s own output, which currently
 invites the reading that traceable means correct.
+
+**Taken, 2026-08-28 (PR #372) — the repair.** All 231 rows re-cited: 222 to an
+exact printed page, 9 to their element's range. Every `UPDATE` guards on the
+wrong value, so it is a no-op on an already-corrected row. Applied `--remote`
+before the PR; production readback `still_wrong 0, now_cited 231`.
+
+Extending the Earth block to printed 74 — the index was right and the block
+bound was a page short — moved the result from 209 exact to 222. `Air: Snow
+Storm` is printed twice, Air at 64 and Water at 86, and the index gave the
+Water twin.
+
+**Taken, 2026-08-28 (PR #373) — this finding's closing recommendation.**
+`source-coverage` now says in its own output that `traceable` means checkable
+and not correct, with `bom` as the worked case, and the script header explains
+what the bucket can and cannot see. Two smoke checks pin the current claim
+rather than the absence of the old wording. **Output only — no bucket changed,
+no exit code moved.**
+
+**Still open on `bom`, and deliberately not a finding:** 177 spells cite the
+book with no page range at all — larger than what was repaired here. The
+*Index of Rifts Magic* that resolved these 231 covers them too. Scoped as its
+own book batch, not as an item on this menu.
 
 
 ---
