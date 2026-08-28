@@ -330,6 +330,49 @@ rebuild's 118, and 33 fewer traceable rows, were never in view.
 side, not a single bucket. Add the two-dataset comparison as a documented
 invocation of the existing library. **Posture: measurement only, no data change.**
 
+**Taken, 2026-08-28 (PR #386).** Posture held: measurement only, no data change,
+and `source-coverage.mjs` still never moves its exit code.
+
+`node scripts/source-coverage.mjs --remote --vs-build` builds a database from
+the repo into a scratch `--persist-to` directory, runs `summarise()` from
+`source-coverage-lib.mjs` over both datasets, and prints the whole bucket table
+side by side with deltas. The existing invocations are untouched.
+
+**Every number this finding quotes is stale, and in the good direction —
+because F5 and F13 landed in between.** Re-measured today:
+
+| bucket | production | build | delta | this finding said |
+|---|---|---|---|---|
+| traceable | 1,850 | 1,837 | **−13** | −33 |
+| not-a-book | 133 | 129 | −4 | — |
+| **no-source-book** | 81 | **98** | **+17** | build 118 |
+| **no-page-range** | 30 | **29** | **−1** | — |
+| not-cached | 51 | 52 | +1 | — |
+| unknown-book / outside-cache | 0 | 0 | — | — |
+| rows | 2,145 | 2,145 | — | — |
+
+**The pathology is still live and the table now shows it in one command.** A
+rebuild is *better* than production on `no-page-range` — 29 against 30 — while
+being **17 rows worse** on `no-source-book`. Quote the bare-title bucket alone
+and today's rebuild still reads as an improvement over production. That is the
+exact shape of the original error, unchanged in kind and merely smaller: 148
+became 17.
+
+Two smaller deltas worth naming rather than smoothing over: `not-a-book` is 4
+lower in the build, and `not-cached` is **1 higher** — a row in the build cites
+a book this machine does not hold where production's copy does not. Neither is
+chased here; both are visible now, which is the point of the finding.
+
+**One thing beyond the proposal.** The build's `fromBuild()` takes the first
+slice of wrangler's output that *parses*, rather than the first `[`. wrangler
+prefixes a log line that also opens with `[`, so the obvious `indexOf('[')`
+returns a position inside the banner — the same trap `repo-vs-live.mjs`
+documents. Copied deliberately rather than rediscovered.
+
+**Not closed by this:** the 17 rows. This finding was only ever about making a
+single-bucket quote impossible to mistake for coverage. The rows themselves are
+F6's, and F14's for the skills half.
+
 ### F5 — `restore-gear-missing-from-repo.sql` exports 6 of gear's 18 columns
 
 The root cause of the largest single cluster. The script's `INSERT OR IGNORE`
