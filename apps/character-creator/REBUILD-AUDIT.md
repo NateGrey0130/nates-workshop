@@ -912,6 +912,105 @@ rather than a line in F13.
 all. Fixing sixteen rows leaves the next import to re-create the problem, and
 the durable fix may be in the importer rather than in a data script.
 
+### F16 — the `not-cached` bucket is a provenance problem, not a caching problem
+
+**BLOCKED: waiting on sourcebooks.** Recorded now so the measurement is not
+re-done. Opened 2026-08-28 after the assumption behind it turned out to be
+wrong twice in one session.
+
+`source-coverage.mjs --remote` reports **51 rows** as `not-cached` — a book the
+registry knows and this machine does not hold. Two of the four books had PDFs
+sitting in `Downloads`, both text-layer, so the obvious read was "two free OCR
+runs close 49 rows". **Neither should be cached.**
+
+| book | rows | what it actually is |
+|---|---|---|
+| `rifts-skill-list` | 48 | **not a book.** A one-page fan-compiled cross-book index whose entries carry source tags — `(US)`, `(PW)`, `(WOR)`, `(CWC)`, `(JU)`, `(NW)`. |
+| `rifts-core` | 1 | **not a missing book.** The ORIGINAL Rifts core book; RUE is its errata'd revision. Same book, earlier edition. See F17. |
+| `triax` | 1 | genuinely absent — Triax & The NGR |
+| `new-west` | 1 | genuinely absent — Rifts New West |
+
+**Caching `rifts-skill-list` would make the ledger lie.** All 48 skills citing
+it were searched against all nine cached books: **zero have a genuine skill
+entry.** A `Base Skill:` proximity search reported five and every one
+spot-checked was a false positive — `Trap Construction` and `Toxicology` appear
+inside *other* skills' entries as bonus lines, `Recognize enchantment` is a
+Wizard **O.C.C. ability** in PF printed 107, `Law` was the ordinary word in
+prose. Against RUE alone, 42 of 48 appear nowhere at all. Caching the
+compilation would flip all 48 from `not-cached` to `traceable` while their
+provenance stayed unestablished — exactly what `source-coverage`'s own warning
+means by *traceable is CHECKABLE, not correct*.
+
+**Which books they need**, from the tags in the compilation. 38 of 48 map
+cleanly; the abbreviations are the compiler's and only the obvious ones are
+expanded here:
+
+| tag | n | skills |
+|---|---|---|
+| `US` (Underseas) | 5 | Boat: Submersibles, Navigation: Underwater, Submersible Vehicle Mechanics, Undersea & Sea Survival, Undersea Farming |
+| `MH` | 5 | Doctor of Veterinary Medicine, Geology, Physics, Space: Antigrav Suit, Space: Radio: Deep Space |
+| `PW` (Phase World) | 5 | Navigation: Stellar, Space: Small Spacecraft, Space: Space Fighter, Space: Spacecraft Mechanics, Space: Starship |
+| `MIO` (Mutants in Orbit) | 3 | Cyberjacking, Space: Defense Systems, Space: Satellite Systems |
+| `WOR` (Warlords of Russia) | 3 | Falconry, Language: Mongolian, Wingrider Flying Wing |
+| `CWC` (Coalition War Campaign) | 3 | Radar/Sonar Operations, Streetwise: Drugs, Trap Construction |
+| `JU` (Juicer Uprising) | 2 | Air Assault Armor, Juicer Technology |
+| `NB` (Nightbane) | 2 | Strategy/Tactics, Toxicology |
+| `MERC`, `MC`, `NW`, `PF` | 1 each | Combat Pod; Language Dialects; Law; Locate Secret Compartments |
+| untagged | 6 | Navigation: Terrestrial, Ocean Geographic Surveying, Recognize Enchantment, Recognize Wards Runes & Circles, Space: Extra-Vehicular Activity, Space: Oxygen Conservation |
+| unmapped | 10 | Antiquarian, Ice Skating, Language: Trade Five/Reptile, Language: Trade Six, Lore: Astral, Lore: Galactic/Alien, Lore: Nightbane, Lore: Nightlands, Lore: Vampires, Snow Skiing |
+
+**The tags are a lead, not a citation.** `Air Assault Armor` and
+`Juicer Technology` are tagged `(JU)` and Juicer Uprising **is** cached, yet
+neither has an entry there — so either the book prints them under another name
+or the tag is wrong. Each row still needs the three-readings treatment when its
+book arrives.
+
+**Proposal:** hold. When books land, cache each under the slug the registry
+already uses, then re-cite the affected rows by page. Do **not** register the
+compilation as a book; if anything, retire the `rifts-skill-list` registry entry
+once its rows have real citations, since its only job was to keep 48 rows out of
+the `unknown-book` bucket.
+**Posture: blocked, no action. This finding exists so the negative result is not
+re-derived — two plausible OCR runs were about to be spent on it.**
+
+### F17 — `dragon-hatchling` still cites the pre-RUE edition, alone among its seven
+
+Actionable now; **not** blocked on F16.
+
+`rifts-core` is the original Rifts core book and **RUE is its errata'd
+revision**. Exactly one row cites it:
+
+```
+dragon-hatchling                 Rifts RPG (original core book) p.98-101
+dragon-hatchling-cats-eye        Rifts Ultimate Edition p.159-160
+dragon-hatchling-flame-wind      Rifts Ultimate Edition p.160-161
+dragon-hatchling-forest-runner   Rifts Ultimate Edition p.161-162
+dragon-hatchling-royal-frilled   Rifts Ultimate Edition p.161-162
+dragon-hatchling-snow-lizard     Rifts Ultimate Edition p.162-163
+dragon-hatchling-whip-tailed     Rifts Ultimate Edition p.163
+```
+
+All six variants were re-done from RUE and the parent was left behind — the
+same pre-RUE residue `fix-pre-rue-class-audit.sql` and
+`fix-class-skill-names-to-rue.sql` exist to clear. RUE carries the material:
+printed 157-159 holds the generic Dragon Hatchling R.C.C. text — lifespan,
+alignment, hatchling size, magic knowledge — and `Cat's-Eye Dragon Hatchling`
+begins on printed 159, which is exactly where its variant's citation starts.
+Read from the cache, not recalled.
+
+**Proposal:** re-cite `dragon-hatchling` to RUE, pinning the range by the
+three-readings method rather than by the approximate 157-159 above. A one-
+statement data script in the `zzzz-` tier, guarded on the old string.
+Separately, correct the `rifts-core` note in `scripts/books.json`, which is
+wrong twice: it says *"Cited by two published classes"* (one does —
+`rifts-priest` matches on prose, its `source_book` is Pantheons) and *"this is
+the next book to cache, not a missing one"* (it should not be cached at all).
+**Posture: a data script plus a registry-note correction. Production carries the
+same stale citation, so this one DOES change production — it is a repair to a
+citation, not to a rule, but say so when taking it.**
+
+Takes `not-cached` from 51 to 50 and `rifts-core` to zero rows citing it.
+
 ---
 
 ## The question the brief asked
