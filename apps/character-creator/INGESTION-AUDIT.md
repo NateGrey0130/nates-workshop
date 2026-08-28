@@ -318,6 +318,7 @@ number left in this document.
 | F17 | #358 | `source_pdf_dir` on all thirteen registry entries, verified by stat-ing every basename, and a caches-present line both scripts print every run. Print, do not fail — no exit code moved |
 | F21, and F10 with it | #362 | The survey moved to `apps/character-creator/docs/surveys/<slug>.md`, **tracked**, and all nine books were backfilled offline. Template, three smoke checks, every instruction repointed. No gate moved, and **no check that a survey exists** |
 | F14 | #364 | `.claude/skills/audit-menu/SKILL.md` — the sixth skill, junctioned in the same PR. One skill, no script, **no check**. Four corrections to the finding, including that a grep for `Taken` reports F14 itself as taken |
+| F22 | #365 | `occ_group` and `xp_table` documented in `class-import/reference/frontmatter.md`. Documentation only. The enforcing checks are in `regression.mjs`, not smoke; a bad *value* is caught at parse time and a missing key is not |
 
 **Closed without being taken**
 
@@ -344,7 +345,7 @@ current list. The survey it describes is now at
 nothing.
 
 **Corrected again (PR #363): the open list is F8, F14, F15, F22, F23, F24 —
-six.** *(F14 taken in #364; five now — F8, F15, F22, F23, F24.)* #362 said three, which counted only the findings the paragraph above
+six.** *(F14 taken in #364 and F22 in #365; four now — F8, F15, F23, F24.)* #362 said three, which counted only the findings the paragraph above
 names and silently dropped the three #361 had added minutes earlier in this
 same section. The paragraph it was correcting predates F22-F24 and was never
 wrong about them; the correction read as a statement of the whole list and was.
@@ -2239,6 +2240,60 @@ file already uses — what the key is for, which classes must carry it, which mu
 that enforces it by name. Read the checks rather than the failures: the message a
 test prints is not the rule. Posture: **documentation only, no code, no check.**
 Smallest item on this menu and the one with the shortest payback.
+
+**Taken, 2026-08-28 (PR #365).** As proposed. Posture held exactly:
+**documentation only — no code, no check, no test file touched.**
+`reference/frontmatter.md` gains one section before `## Skills` covering both
+keys: what each is for, which classes must carry it, which must **not**, the
+allowed values, the shape, and the standing exceptions.
+
+Both premises verified before scoping and both hold: the grep returns nothing,
+and the file was 205 lines.
+
+**"Read the checks rather than the failures" paid, three times.**
+
+1. **This is `regression.mjs`, not the smoke suite.** The finding's body says
+   "the smoke suite enforces it"; every enforcing check is in `regression.mjs`.
+   The smoke suite touches these keys only over synthetic objects — composition,
+   and `xp_table` being a modelled key — and enforces neither rule over the
+   catalog. The distinction is the whole practical point: a session that runs
+   smoke and stops sees nothing, and `ship-pr` asks for regression only when a
+   change touches an endpoint, the schema or a data script.
+
+2. **The finding conflates three cases, and only two of them are silent.**
+   Probed by running the tools rather than reasoning about them:
+
+   | written | `class-check` | `regression.mjs` |
+   |---|---|---|
+   | `occ_group: warriors` | **ERROR**, naming all five legal values | — |
+   | an O.C.C. with no `occ_group` | `PARSE ok` — silent | fails |
+   | an R.C.C. carrying `xp_table` | `PARSE ok` — silent | fails |
+
+   So the *value* is validated at parse time and the *presence* is not. "The
+   only way to learn it is to fail the suite" is true of the two cases that cost
+   Wormwood time and false of the third. The table is in the doc.
+
+3. **The rules are narrower and wider than the finding implies.** `occ_group` is
+   required on **every** O.C.C., not just Palladium ones — the check was a
+   hardcoded 25 for months while all 34 Rifts O.C.C.s carried none. `xp_table`
+   is required only on **Palladium Fantasy** O.C.C.s; a Rifts O.C.C. needs none.
+   The R.C.C. rule has a mechanism worth stating: composition is race-primary
+   since #210 and falls an absent key through to the occupation, so a race
+   carrying its own table **wins and silently drops the occupation's**, levelling
+   on the house-rule default. That is what cost the rebuild.
+
+**A candidate finding this turned up, deliberately NOT taken here** (the
+protocol says not to add a finding and take it in the same PR):
+`every smoke check a skill quotes still exists` **cannot see either check named
+above.** Two independent blind spots. Its `checkFiles` list is `smoke.mjs` plus
+`test/checks/*.mjs` — `regression.mjs` is excluded, so none of its **9**
+`every …` check names can ever be pinned, while the comment above that list
+reads "EVERY check file, not just smoke.mjs". And its pattern requires a
+lowercase letter after `every `, so **5 of the 51** `every …` names in the files
+it *does* scan are invisible too — including `every SKILL.md has
+name/description frontmatter`. Verified by renaming a quoted name in this PR's
+doc and watching the check pass. The two names quoted in `frontmatter.md` are
+correct but unpinned, and that is stated rather than papered over.
 
 ### F23 — the first metered extraction is on record, and it reopens the question F12 closed
 

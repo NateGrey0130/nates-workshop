@@ -39,6 +39,71 @@ ppe_base: "1d6x10+20, +2d6 per additional level starting at level two"
 starting_money: "2d4x1000"                 # coin only, never gear
 ```
 
+## Grouping and levelling — the two keys nothing warns you about
+
+Both are optional to the parser and **required by `regression.mjs`**. A class
+missing either one parses clean, passes `class-check`, passes the smoke suite,
+and fails the regression run — so read this section rather than discovering it.
+
+```yaml
+occ_group: men-of-arms            # occ ONLY — one of five, listed below
+xp_table: [0, 2100, 4200, ... ]   # palladium-fantasy occ ONLY — 15 entries
+```
+
+### `occ_group` — every O.C.C., not just the Palladium ones
+
+It is the token a race's `occ_restrictions` matches with `group:<name>`, which
+is what makes it load-bearing rather than decorative. The check is
+`every O.C.C. carries the group its book section gives it`, asserted as an
+invariant rather than a count, deliberately: it used to compare against a
+hardcoded 25 and passed happily for months while all 34 Rifts O.C.C.s carried
+no group at all — so a `group:` token matched nothing on the Rifts side, and a race written with one
+would have failed CLOSED as an `only` or, far worse, OPEN as an `except`.
+
+Two more rules the same block enforces: the value must be one of the five above,
+and **a group belongs on an O.C.C. and a restriction on a race, never the other
+way round.**
+
+### `xp_table` — every Palladium Fantasy O.C.C., and NO race ever
+
+The check is `every Palladium O.C.C. has its own experience table`, and it
+applies when `system: palladium-fantasy` and `category: occ`. Fifteen integers,
+the **lower bound** of each band, starting at 0 and strictly rising — that is
+what `levelForXp` compares against. A Rifts O.C.C. does not need one.
+
+**A race must never carry one.** Experience comes from what you do, and
+Palladium names its charts by occupation — "Knight & Noble", "Thief &
+Merchant". Composition is race-primary since #210 and falls an absent key
+through to the occupation, so a race that carries its own table **wins over the
+occupation's and silently drops it**, levelling the character on the house-rule
+default. That is the invariant `and no R.C.C. carries one` exists to hold, and
+it is what cost a rebuild during the Wormwood import.
+
+Where a book prints an experience ladder for a *race*, record it in
+`extraction_notes` — not in `xp_table`.
+
+Two more the same block enforces: the pairs a book prints together must stay
+together (`knight`/`noble`, `thief`/`merchant`, `mind-mage`/`wizard`,
+`priest-of-light`/`priest-of-darkness` — two classes drifting apart means a
+transcription went wrong), and the **Warlock is the standing exception**: its
+row is the Rifts printing, so its Palladium figures go in its delta section and
+its `xp_table` stays undefined.
+
+### What each tool actually catches
+
+Verified by running them, because the failure message is not the rule:
+
+| you write | `class-check` | `regression.mjs` |
+|---|---|---|
+| `occ_group: warriors` | **ERROR**, and names all five legal values | — |
+| an O.C.C. with no `occ_group` | `PARSE ok` — **silent** | fails |
+| an R.C.C. carrying `xp_table` | `PARSE ok` — **silent** | fails |
+
+So the *value* is checked at parse time and the *presence* is not. The two that
+cost time during Wormwood are both in the silent row, and neither the smoke
+suite nor `class-check` will tell you. **Run `regression.mjs` on any PR that
+adds a class.**
+
 ## Skills
 
 ```yaml
