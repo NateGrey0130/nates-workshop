@@ -169,7 +169,7 @@ F20 is this repo's case for not writing a repair before reading the page.
 | 2026-08-28 | [#362](https://github.com/NateGrey0130/nates-workshop/pull/362) | this file, backfilled offline as a stub |
 | 2026-08-28 | [#371](https://github.com/NateGrey0130/nates-workshop/pull/371) | **all 360 pages cached from the text layer**; the authority table found at printed 348-352; `p.71-72` identified; all 231 rows located. No data changed |
 | 2026-08-28 | [#372](https://github.com/NateGrey0130/nates-workshop/pull/372) | `fix-bom-elemental-citations.sql` — all **231** elemental spells re-cited: **222 to an exact printed page**, 9 to their element's range. Applied `--remote` before the PR. **THE REPAIR IS COMPLETE.** |
-| 2026-08-28 | [#N](https://github.com/NateGrey0130/nates-workshop/pull/N) | `fix-bom-invocation-citations.sql` — the other 177, the general invocations, **all to an exact printed page**. Applied `--remote` before the PR. **`bom` is 409 / 0.** |
+| 2026-08-28 | [#374](https://github.com/NateGrey0130/nates-workshop/pull/374) | `fix-bom-invocation-citations.sql` — the other 177, the general invocations, **all to an exact printed page**. Applied `--remote` before the PR. **`bom` is 409 / 0.** |
 
 ### What remains
 
