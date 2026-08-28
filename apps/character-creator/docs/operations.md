@@ -420,6 +420,40 @@ added `data_script_runs` and every script now ends by writing itself into it.
 | Sorts after the `zz-` files | `zzz-*.sql` | The same escalation a second time. A `zz-` file that CORRECTS another `zz-` file has to sort after it, and `zz-gear-tidy-…` would land before `zz-wire-juicer-uprising-equipment.sql`, which creates three of the rows it corrects — so the tidy would run first and find nothing. The numbers inside the name (`zzz-gear-tidy-1-names`, `-2-stub-stats`, `-3-categories`) order the three against each other for the same reason: `-2-` fills the stubs and `-3-` categorises whatever is still uncategorised, which is only the right set once `-2-` has run |
 | Sorts after the `zzz-` files | `zzzz-*.sql` | The same escalation a THIRD time, and the one with a measurement behind it. The three citation files — `zzzz-cite-bom-invocations.sql`, `zzzz-cite-pf-rows.sql`, `zzzz-cite-rue-rows.sql` — give catalog rows the page they are printed on, and every row they touch has to exist and be named correctly first. Written as `fix-*.sql` they sorted in the MIDDLE: **`restore-skills-missing-from-repo.sql` and its gear and psionics twins CREATE rows the citation scripts then failed to find**, `rename-skills-to-rue.sql` renames rows they match by name, and `zzz-gear-tidy-2-stub-stats.sql` rewrites the very column they set. Applied to production by hand they ran last and were right; **a database rebuilt from `schema.sql` plus every data script in filename order lost 148 citations** — 26 rows carrying a bare book title in production against 172 in the rebuild. Measured before the rename, not reasoned. Their `data_script_runs` rows were moved with them: each script deletes the record written under its old name, which never existed in `main`, on the `fix-seed-dev-run-record.sql` precedent that only a record asserting something untrue is removed |
 
+**The `zz-` escalation fixed the NAMES and left DUPLICATES behind.** The row
+above records that `fix-class-skill-names-to-rue.sql` beats three later `fix-`
+scripts in a rebuild, and that `zz-canonicalise-class-skill-names.sql` re-applies
+the rename after all of them. That is true and it is not the whole story. A
+fourth consequence of the same pair went unnoticed until a rebuild was compared
+to production column by column on 2026-08-28 — **the first of these four found
+by looking rather than by accident:**
+
+`fix-dead-skill-restrictions.sql` exists to collapse the Burster's and Mystic's
+four-name heavy W.P. list to two. It sorts `fix-de`, *after* `fix-cl`, so by the
+time it runs the rename has already turned `"W.P. Heavy"` and
+`"W.P. Heavy Energy Weapons"` into the two names the list already held. Its
+guard matches the pre-rename string, finds nothing, and **the list keeps each
+name twice**. The Mystic's `Pilot` list is the same shape one step longer, and
+there the corrective script is the culprit: `"Warships"` survives the same
+missed guard, and `zz-canonicalise-class-skill-names.sql` renames it to
+`"Military: Warships & Patrol Boats"` — which is already in the list.
+
+`zzzz-dedupe-skill-restrictions.sql` closes it. The general lesson is the one
+worth keeping: **a guarded `replace()` whose guard names a string another script
+renames is not idempotent, it is inert** — and it fails silently, because a
+`replace()` that matches nothing is indistinguishable from one that had nothing
+to do. When a `fix-` script guards on a skill or gear name, check what sorts
+between it and the rename.
+
+**One more thing about `--file` over `--remote`,** learned applying that script:
+its `changes` and `rows_written` are **import-endpoint aggregates, not row
+counts**. This one reported `changes: 2` against production while changing
+nothing at all — verified by dumping `imported_classes` before and after, 126
+rows, zero field differences, `updated_at` unmoved. The section below already
+says `--file` returns a summary rather than results and that exit codes here are
+advisory; the counts inside that summary are advisory too. Dump the table and
+diff it.
+
 Three conventions hold across all of them, with one stated exception: the
 dev seed is a different kind of file and follows only the third. Its inserts
 are unguarded and re-applying it fails on `gear.slug`, which is the right
