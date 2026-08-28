@@ -1065,6 +1065,52 @@ belong in neither direction — decide explicitly rather than sweeping it.
 **Posture: investigate first, then a data script for whatever survives. This one
 is not mechanical and should not be taken as if it were.**
 
+**Taken, 2026-08-28 (PR #390).** Posture held exactly: **investigated first, and
+only what survived was exported.** All 37 differences were read; **26 are losses
+and 11 are not.** Applied to `--remote` before the merge for the reason F5's note
+gives; production dumped before and after, 336 rows, **zero field differences.**
+
+**Three could only be settled by opening a book, and two of them reversed the
+obvious reading.**
+
+- **`Horsemanship: General`** — this finding called it "a rules disagreement…
+  one of those two is wrong about the book", and the book answers plainly. RUE
+  printed 311: *"Base Skill: 40%/20% +4% per level of experience."* Production's
+  40 and 4 are the book's; a rebuild's 35 and 5 are wrong. **The only rules
+  correction in the file.**
+- **`SCUBA`** — a rebuild cites RUE p.302-303, production p.317. Printed 302 is
+  the Physical skill **list** (*"Swimming (50%+5%) / SCUBA (50%+5%) /
+  Wrestling"*); the entry is on 317. Production right.
+- **`W.P. Targeting`** — production cites PF Main Book p.84, a rebuild cites
+  RUE. PF printed 84 lists the skill inside an **O.C.C.'s skill list** rather
+  than defining it, and the skill appears in RUE too. Both defensible, neither
+  is the entry. **Left alone** — picking one without reading both books properly
+  is how a wrong citation becomes a permanent one.
+
+**The eight `source` differences are not exported, and that is the finding's
+main result.** `manual`/`import` live against `seed`/`palladium-fantasy-core` in
+a rebuild. The column records **how a row got there**, not what it is, and a
+rebuild saying `seed` is telling the truth about itself — the same argument that
+excluded `created_by` under F12. Exporting would write "a hand typed this in"
+onto a row no hand touched.
+
+`Gymnastics` and `Acrobatics` are also left: production reads *"RUE p.302 lists
+varies Also +1D6 S.D.C."* and a rebuild *"Also +1D6 S.D.C.; RUE p.302 lists
+varies"* — the same two facts reordered, and **the rebuild's is the one with
+punctuation between them.** Closing that diff would make the repo worse.
+
+**One incidental win:** `Botany` cited *"Rifts Skill List"*, the fan compilation
+F16 is about. It now cites RUE p.322 — one row off that 48.
+
+**A read-back comment was wrong and was corrected before it shipped:** it
+claimed `skills_with_pf_note` would read 26. Twenty-six is the number of VALUES
+this file writes, across 22 skills and four columns; the count of skills
+carrying a PF note is **15**, which is production's own figure. Caught by
+running it.
+
+**Measured on a fresh build: skills differences 37 → 11**, and all eleven are
+the deliberately excluded set. Every read-back matches production.
+
 ### F15 — production has 16 psionic powers tagged rifts-only against a decision that says they must not be
 
 **The first finding in this audit where PRODUCTION is the wrong one.** Found
