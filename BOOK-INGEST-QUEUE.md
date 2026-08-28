@@ -19,7 +19,7 @@ the human view of the same thing plus the import status.
 | `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | cached |
 | `mystic-russia` | Rifts WB 18: Mystic Russia | 178 | text layer | 176 | +1 | cached |
 | `free-quebec` | Rifts WB 22: Free Quebec | 194 | text layer | 192 | +1 | cached |
-| `phase-world` | Rifts DB 2: Phase World | 209 | SCAN (OCR) | TBD | TBD | queued |
+| `phase-world` | Rifts DB 2: Phase World | 209 | SCAN (OCR) | 208 | **+0** | cached |
 
 Status is `cached` -> `surveyed` -> `imported`. Nothing here is surveyed yet:
 the kickoff session caches and registers only, by design.
@@ -34,8 +34,28 @@ their book with no page number at all — `gear.Triax Pump Weapon` says
 `Triax & The NGR`, `skills.W.P. Rope` says `Rifts New West`. Caching moved them
 out of `not-cached` and straight into `no-page-range`, which is the same
 untraceable in a different bucket. **Give each a page range in its own book's
-session**, now that there is a book to find it in; it is the cheapest task
-either session has and it closes the only two rows those books own today.
+session**, now that there is a book to find it in.
+
+**And for one of them the page will not be found, because the skill is not in
+the book.** With `new-west` cached, `drift-check`'s citation check can now say
+that the name `W.P. Rope` appears nowhere in its 226 pages. What New West
+actually prints, on printed 71, is:
+
+- a skill called **Roping** — a regular skill, not a Weapon Proficiency, and the
+  catalog already holds it separately as `Roping` (Cowboy, 20%+5%, cited to RUE
+  p.302-303).
+- a new-W.P. list of exactly three: **W.P. Bola**, **W.P. Snapshooting
+  Specialty**, **W.P. Whip**. Of those the catalog holds only `W.P. Whip`, cited
+  to RUE. **Bola and Snapshooting Specialty are missing.**
+
+So `W.P. Rope` (Weapon Proficiencies, base 0, cited to this book) looks like a
+row nothing in the book supports, sitting beside two the book defines and the
+catalog lacks. **This is the New West session's first task, and it is a
+judgement call, not a cleanup**: characters reference skills by name, so
+retiring or merging one belongs to the catalog editor's duplicate tools, which
+write redirects and rewrite characters. SQL cannot do it safely — the same
+reasoning `add-juicer-uprising-skills.sql` records for Interrogation Techniques.
+Establish what the row should be before touching it.
 
 ## What the kickoff session established
 
@@ -48,10 +68,35 @@ same disagreement `ju` showed in the other direction (listing 120, pymupdf 162).
 against 10-13MB), and the correlation held exactly. The four text-layer books
 cached in seconds; the scans needed ~650 pages of Tesseract.
 
-**`triax` has a ZERO offset** — printed N is cache `pNNN`, `read-columns.py N+1`.
-The third book here with one, after `potm` and `ww`. Verified by folio rather
-than assumed: 177 pages agree at +0, 1 at +1. The skill's warning applies — a
-zero offset leaves no discrepancy to explain when a page reads wrong.
+**`triax` and `phase-world` both have a ZERO offset** — printed N is cache
+`pNNN`, `read-columns.py N+1`. That makes **four** zero-offset books in the
+catalog, after `potm` and `ww`. Both verified by folio rather than assumed:
+triax 177 pages agree at +0 against 1, phase-world 166 against 3 in a single
+unbroken region. The skill's warning applies to both — a zero offset leaves no
+discrepancy to explain when a page reads wrong, which is why it cost a wrong
+page read on the first Godling attempt in `potm`.
+
+**Zero offset is no longer the oddity the skill describes.** Four of fifteen
+cached books have one and only `pf` and `underseas` split. Assuming +1 because
+most books have it is now a coin-flip, not a default: read the registry.
+
+**`underseas` is the second split-offset book in the catalog, after `pf`, and
+the first with a NEGATIVE offset.** Printed 1-130 sit at +0; printed 132-216 sit
+at **-1**. The vote is 101 to 74, which is close enough that a single number
+looks defensible and is wrong either way: `ocr-book.py` measured -1 for the
+whole book and the mid-run smoke check measured +0, and each is right about half
+of it. Recorded as `page_offset: -1` with an exception for `printed_through:
+130`.
+
+**The cause is a missing page: printed 131 is not in the PDF.** File `p130`
+carries folio 130 and ends mid weapons stat block; `p131` carries folio 132 and
+opens mid-sentence. This is a defect in the source scan, not in the cache — no
+re-run fixes it, and the page is simply not available to cite. **Anything the
+Underseas session finds that straddles printed 130-132 has a hole in the middle
+of it**, so check that boundary before trusting a stat block read near it.
+Printed 131 resolves to `p130` under the fall-through rule, which is the wrong
+page; that is deliberate, on the `pf` precedent of sending an ambiguous boundary
+page to the fuller of the two candidates.
 
 **The other four measured +1 and were verified the same way** — 198/3,
 190/2, 157/0 and 165/4 pages agreeing. The handful of disagreements are all

@@ -250,9 +250,9 @@
       "aliases": [],
       "source_pdf": "Rifts- Dimension Book 2 Phase World.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Downloads",
-      "printed_pages": null,
-      "page_offset": null,
-      "note": "Cached 2026-08-28 from a SCAN - --probe medians 0 chars/page. Nothing in production cites this book yet. printed_pages and page_offset pending the end of the OCR run."
+      "printed_pages": 208,
+      "page_offset": 0,
+      "note": "Cached 2026-08-28 from a SCAN - --probe medians 0 chars/page, OCR medians 4,119. The FOURTH zero-offset book here, after potm, ww and triax: printed N is cache pNNN, and read-columns.py N+1. Verified by folio and decisive - 166 pages agree at +0 against 3, one region from p010 to p208 with no split. printed_pages is 208, the last page of content; p209 is a Palladium house ad the book does not number. Printed 203-208 are blank character record sheets, one per O.C.C., which name several of the book's classes without defining them - a mention is not a definition, so survey from the stat blocks rather than from those sheets. Nothing in production cites this book yet."
     }
   }
 }
