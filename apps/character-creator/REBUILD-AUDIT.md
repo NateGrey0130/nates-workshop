@@ -761,6 +761,44 @@ caveat stated and `repo-vs-live.mjs` named as the authority.
 **Posture: new tooling, opt-in, no test-suite dependency, no CI.** Nothing
 should start depending on it.
 
+**Taken, 2026-08-28 (PR #389).** Posture held: new tooling, opt-in, **no test
+imports either script and neither gates anything**. Both exit 0 by design, the
+way `source-coverage.mjs` does.
+
+`scripts/rebuild-local.mjs` and `scripts/trace-row.mjs`, both with the two
+caveats stated in their headers: Node's SQLite is not workerd's, and
+`sql-statements.mjs` splits inside a `CREATE TRIGGER` body so triggers are
+re-joined. `repo-vs-live.mjs` is named in both as the authority.
+
+**The README file map was not optional.** `smoke.mjs` pins that every
+`.mjs`/`.py`/`.txt`/`.json` in `scripts/` is named in *The scripts at the repo
+root*, and that every name there is a script that exists — so a new script
+without a map entry fails the merge gate. Caught by running smoke, which is
+what that check is for.
+
+**While editing that map, a stale line was corrected: `repo-vs-live.mjs` was
+still described as "diffs NAMES, not counts".** It has diffed names *and* every
+column since PR #377, and classes since #382. F3 and F12 both missed the file
+map. Corrected here because leaving a known-false line in the block being edited
+is exactly what `claim-audit` exists to catch — but recorded as a correction
+belonging to F3, not as part of F10.
+
+**Verified by running both against the cases they were built on**, not by
+reading them:
+
+- `trace-row.mjs imported_classes class_id burster --grep "Weapon Proficiencies"`
+  reports **4** files touching that line and shows the list ending collapsed —
+  the state F7 produced. Before F7 the same command showed it doubled.
+- `trace-row.mjs psionic_powers name "Healing Touch"` reports **2** files:
+  `seed-catalogs.sql` creating it bare, and
+  `zzzz-restore-psionic-powers-full.sql` filling it. Before F13 it reported
+  **1**, which was the finding.
+
+Both are now regression evidence as much as tools: the traces show the fixes
+holding.
+
+`rebuild-local.mjs` builds 296 files, 3,897 statements, 0 failures.
+
 ### F11 — a fresh build cites 10 gear slugs that do not exist; production cites 0
 
 Found while taking F3, by the smoke test rather than by the comparison F3 adds —
