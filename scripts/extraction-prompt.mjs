@@ -50,12 +50,20 @@ Rules:
 - Keep dice/formula strings verbatim as written in the book (e.g. "P.E. + 1d6 per level", "2d4x10+20", "1d4x100").
 - Put readable prose (background, description, roleplaying colour) under "## Lore" and any table-specific or GM-facing advice under "## GM Notes". Do not put prose in the frontmatter.
 - If you encounter a mechanic that does not cleanly fit the schema, DO NOT force it into a field and DO NOT silently drop it. Record it in \`extraction_notes\` describing what you saw and where it appeared. This is expected and useful - a class with honest extraction_notes is far more valuable than one with invented structure.`;
-export function buildUserPrompt(examples, hints) {
+// Split at the cache boundary. INGESTION-AUDIT F23 measured the prefix below
+// at 15,986 input tokens - 74.1% of a class extraction, and 47.6% of it is the
+// format examples alone - re-sent unchanged on every call of a book.
+//
+// `stable` is everything that does not vary between classes; `varying` is the
+// page text. `stable + varying` is BYTE-IDENTICAL to what buildUserPrompt has
+// always returned, deliberately: this changes where the call is cut into
+// content blocks and nothing about what the model reads.
+export function buildUserPromptParts(examples, hints) {
   const exampleBlock = examples
     .map((ex, i) => `### Example ${i + 1} — ${ex.name}\n\n${ex.text}`)
     .join('\n\n---\n\n');
 
-  return `Extract the character class from the sourcebook pages quoted below into the exact markdown format below.
+  const stable = `Extract the character class from the sourcebook pages quoted below into the exact markdown format below.
 
 ## Target schema (YAML frontmatter)
 
@@ -259,5 +267,15 @@ Return the complete markdown file only, in this exact order:
 5. \`## GM Notes\` if the page supports one
 
 Long free-text values (side_effects, extraction_notes, notes) may use YAML block
-scalars (\`key: |\`) or quoted strings — both parse. Keep list values as YAML lists.${hints ? `\n\n## Operator hints\n\n${hints}` : ''}`;
+scalars (\`key: |\`) or quoted strings — both parse. Keep list values as YAML lists.`;
+
+  return { stable, varying: hints ? `\n\n## Operator hints\n\n${hints}` : '' };
+}
+
+// The whole prompt as one string. Kept because the split above must never
+// change what the model reads: this is the definition the two parts join back
+// into, and extract-class asserts that identity before it sends anything.
+export function buildUserPrompt(examples, hints) {
+  const { stable, varying } = buildUserPromptParts(examples, hints);
+  return stable + varying;
 }

@@ -70,7 +70,7 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadBookRegistry } from './books-lib.mjs';
 import { offsetForPrintedPage } from './class-check-lib.mjs';
-import { SYSTEM_PROMPT_CACHE, buildUserPrompt } from './extraction-prompt.mjs';
+import { SYSTEM_PROMPT_CACHE, buildUserPrompt, buildUserPromptParts } from './extraction-prompt.mjs';
 import { DB, d1Query, repoRoot } from './d1-query-lib.mjs';
 
 const DEFAULT_MODEL = 'claude-sonnet-5';
@@ -204,9 +204,16 @@ try {
 }
 if (!examples.length) die(`no format examples found${likeArg ? ` for --like ${likeArg}` : ''}`);
 
-const userPrompt = buildUserPrompt(
-  examples.map((e) => ({ name: e.name, text: e.markdown })),
-  `${entry.title}, printed pages ${printedPages.join(', ')}.\n\n${corpus}`);
+const exampleObjs = examples.map((e) => ({ name: e.name, text: e.markdown }));
+const hints = `${entry.title}, printed pages ${printedPages.join(', ')}.\n\n${corpus}`;
+const { stable, varying } = buildUserPromptParts(exampleObjs, hints);
+const userPrompt = stable + varying;
+
+// The split must not change a byte of what the model reads. If this ever
+// fails, the cache boundary has moved the prompt rather than only cutting it.
+if (userPrompt !== buildUserPrompt(exampleObjs, hints)) {
+  die('the cached/varying split does not reassemble into the original prompt');
+}
 
 // ── report before spending anything ─────────────────────────────────────────
 console.log(`book:      ${entry.title} (${slug})`);
@@ -216,11 +223,14 @@ console.log(`text:      ${corpus.length.toLocaleString()} chars`);
 console.log(`examples:  ${examples.map((e) => e.class_id).join(', ')}`
   + (likeArg ? ' (--like)' : ` (two most recently published, from ${target})`));
 console.log(`model:     ${model}, max_tokens ${MAX_TOKENS}, thinking disabled`);
+console.log(`cached:    ${stable.length.toLocaleString()} chars of stable prefix, `
+  + `${varying.length.toLocaleString()} chars of page text sent fresh`);
 if (artPages.length) console.log(`WARNING:   ${artPages.length} short page(s) sent anyway (--allow-short)`);
 
 if (dryRun) {
   console.log(`\n--dry-run: nothing sent, nothing metered, nothing written.`);
   console.log(`system prompt ${SYSTEM_PROMPT_CACHE.length} chars, user prompt ${userPrompt.length} chars.`);
+  console.log(`cache breakpoint after ${stable.length} of those ${userPrompt.length}.`);
   process.exit(0);
 }
 
@@ -240,7 +250,23 @@ const body = {
   max_tokens: MAX_TOKENS,
   thinking: { type: 'disabled' },
   system: SYSTEM_PROMPT_CACHE,
-  messages: [{ role: 'user', content: [{ type: 'text', text: userPrompt }] }],
+  // ONE cache breakpoint, at the end of the stable prefix (F23 step 2). The
+  // cached span runs from the start of the request through this block, so it
+  // covers the system prompt, the schema and the format examples; the page
+  // text follows in its own uncached block.
+  //
+  // Ephemeral is the 5-MINUTE tier, and that is the whole bet: a hit costs
+  // 0.1x a normal input token and a WRITE costs 1.25x, so extracting a book's
+  // classes back to back is ~83% cheaper on the prefix while extractions more
+  // than five minutes apart cost ~25% MORE than sending it uncached. F23's
+  // posture said a miss was free; it is not. Batch the extractions.
+  messages: [{
+    role: 'user',
+    content: [
+      { type: 'text', text: stable, cache_control: { type: 'ephemeral' } },
+      ...(varying ? [{ type: 'text', text: varying }] : []),
+    ],
+  }],
 };
 
 console.log('\ncalling the API...');
@@ -259,11 +285,38 @@ try { payload = JSON.parse(raw); } catch { /* reported below */ }
 try {
   const u = payload?.usage ?? {};
   const esc = (v) => (v == null ? 'NULL' : `'${String(v).replace(/'/g, "''")}'`);
+
+  // WITH CACHING, `usage.input_tokens` COUNTS ONLY THE UNCACHED PART. The
+  // cached span comes back as cache_creation_input_tokens (a write) or
+  // cache_read_input_tokens (a hit) instead. Recording input_tokens alone
+  // would have dropped this row from 21,581 to ~5,600 the moment the
+  // breakpoint was added - a silent 74% undercount in the ledger F23 used to
+  // justify the breakpoint in the first place.
+  //
+  // So the column keeps meaning what it has always meant: input tokens this
+  // call processed. It is NOT a cost - a cached read is billed at 0.1x and a
+  // write at 1.25x - and claude_usage has no column for that split. The run
+  // prints it; the table cannot hold it yet.
+  const nz = (v) => (Number.isInteger(v) ? v : 0);
+  const cacheWrite = nz(u.cache_creation_input_tokens);
+  const cacheRead = nz(u.cache_read_input_tokens);
+  const inputTotal = Number.isInteger(u.input_tokens)
+    ? u.input_tokens + cacheWrite + cacheRead
+    : null;
+
   d1(`INSERT INTO claude_usage (email, endpoint, model, input_tokens, output_tokens, status) `
     + `VALUES (NULL, 'cc-extract-class', ${esc(model)}, `
-    + `${Number.isInteger(u.input_tokens) ? u.input_tokens : 'NULL'}, `
+    + `${inputTotal === null ? 'NULL' : inputTotal}, `
     + `${Number.isInteger(u.output_tokens) ? u.output_tokens : 'NULL'}, ${res.status})`);
   console.log(`metered:   cc-extract-class -> claude_usage (${target})`);
+  console.log(`tokens:    ${inputTotal ?? '?'} in / ${u.output_tokens ?? '?'} out`
+    + `  [fresh ${nz(u.input_tokens)}, cache write ${cacheWrite}, cache read ${cacheRead}]`);
+  if (cacheWrite && !cacheRead) {
+    console.log(`           cache MISS - this call paid 1.25x on ${cacheWrite} tokens to fill it.`);
+    console.log(`           The next extraction within 5 minutes reads them at 0.1x.`);
+  } else if (cacheRead) {
+    console.log(`           cache HIT on ${cacheRead} tokens, billed at 0.1x.`);
+  }
 } catch (e) {
   console.error(`WARNING: could not write the claude_usage row: ${e.message}`);
 }
