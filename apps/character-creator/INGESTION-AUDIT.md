@@ -180,14 +180,14 @@ this is not hypothetical.
 | 5 | inventory by structure markers | **manual** — the regexes are pasted out of `SKILL.md` each time |
 | 6 | parse the authority table | half scripted — `read-columns.py`, then a per-book parser; the only two that exist are hard-coded to Palladium Fantasy (F15) |
 | 7 | diff against the catalog | scripted — `catalog-diff.mjs`, but defaulting to `--local` (F13) |
-| 8 | write `SURVEY.md` | **manual, and has never once been done** (F10) |
+| 8 | write `docs/surveys/<slug>.md` | manual, and there is a template for it now (F10/F21) |
 | 9 | slice a page range out of the PDF | **manual, in an external tool** (F11) |
 | 10 | upload, extract, review | in-app, one class per upload; no prompt caching (F12); unmetered (F7) |
 | 11 | copy the markdown out to a scratch `.md` | **manual** |
 | 12 | `class-check` / `class-check --field-sources` | scripted; the second is opt-in and nothing requires it |
 | 13 | paste into `data-script.sql`, double apostrophes, ASCII-ise | **manual** |
 | 14 | `d1-apply --local`, then `--remote`; smoke; drift-check; PR | scripted (`ship-pr`) |
-| 15 | append the `SURVEY.md` ledger line | **manual, never done** (F10) |
+| 15 | append the survey's ledger line | manual, and committable now (F21) |
 
 **Steps 1-4 are no longer manual, as of 2026-08-27.** F2 made step 1
 `ocr-book.py --probe` (allowlisted), steps 2 and 3 one auto-detecting command
@@ -316,6 +316,7 @@ number left in this document.
 | # | PR | what shipped |
 |---|---|---|
 | F17 | #358 | `source_pdf_dir` on all thirteen registry entries, verified by stat-ing every basename, and a caches-present line both scripts print every run. Print, do not fail — no exit code moved |
+| F21, and F10 with it | #362 | The survey moved to `apps/character-creator/docs/surveys/<slug>.md`, **tracked**, and all nine books were backfilled offline. Template, three smoke checks, every instruction repointed. No gate moved, and **no check that a survey exists** |
 
 **Closed without being taken**
 
@@ -334,6 +335,12 @@ books still have nothing. F14 and F15 are unchanged, except that F15's part (2)
 (`class-check --emit-script`) is now the *only* automation left between a
 validated draft and a data script, because the review UI that used to sit there
 is gone.
+
+**Corrected the same day (PR #362): the open list is F8, F14, F15 — three.**
+F21 was taken and took F10 with it, so the paragraph above is a record of what
+was true when it was written, not the current list. The survey it describes is
+now at `apps/character-creator/docs/surveys/ww.md`, and eight books no longer
+have nothing.
 
 **Four findings added, 2026-08-28.** All four came out of the last three PRs
 rather than out of a fresh pass: **F21** (`SURVEY.md` cannot be committed, which
@@ -1340,6 +1347,21 @@ from `scripts/books.json`** rather than leaving a blank to re-derive. Two of
 the eight books to backfill changed under F2: `fom` is 161 pages, not 73, and
 `potm` is 210, not 202.
 
+**Taken, 2026-08-28 (PR #362), inside F21.** Both halves shipped as proposed —
+the template at `.claude/skills/book-survey/reference/SURVEY.md` and all nine
+books backfilled offline. The location changed: F21 moved the survey out of
+`.cache/` to a tracked path, so the backfill went to
+`apps/character-creator/docs/surveys/` rather than beside each cache. Both
+`Adjusted` instructions were followed literally — the template's offset section
+says read it from `scripts/books.json`, its "what remains" section is a paste
+from `source-coverage.mjs`, and the stale 73/202 figures were not copied. The
+posture held: **no check that a survey exists.**
+
+One correction to this finding's own heading. It says surveys exist for **none**
+of the cached books, which was true when written and was already false by the
+time F21 restated it — `ww` had one. The count that mattered on the day of the
+backfill was **one of nine**, not zero of eight.
+
 ### F11 — slicing a page range out of a PDF is manual, external, and leaves the slices in `Downloads`
 
 **What is true today.** `import.html` asks for "a focused page range covering
@@ -2082,6 +2104,57 @@ not a rewrite. Posture: **relocation plus a one-time backfill, no gate moves,
 and no check that a survey exists** — F10's reason still holds, a clean clone
 has no caches and such a check could only fail on the machines that matter.
 
+**Taken, 2026-08-28 (PR #362).** As proposed, with F10 folded in.
+
+The nine surveys are at `apps/character-creator/docs/surveys/<slug>.md`,
+**tracked** — `git status` shows them as additions, which was the whole test.
+`ww` kept its 251 lines; the other eight are thin and true. The template is at
+`.claude/skills/book-survey/reference/SURVEY.md`. `book-survey` §7,
+its fresh-session paragraph and its "what surveyed means" list, `class-import`,
+runbook steps 6, 8, 12 and 15, the runbook prologue, the README's Contents
+table and its file tree, and `EFFICIENCY-AUDIT` F1 all repoint. F1 gained a
+dated `Adjusted` note rather than a rewrite; audit files are records.
+
+Three smoke checks, in a new **Book surveys** section: every survey names a slug
+`scripts/books.json` registers, no survey contains a markdown blockquote, and
+the README file map names the directory. All three were negative-tested — a
+planted `notaslug.md` carrying a blockquote failed the first two, and renaming
+the README row failed the third. **No check that a survey exists**, per the
+posture.
+
+**Three things in this brief were wrong, and one of them matters.**
+
+1. **"Of `ww`'s 251 lines, three are quoted book prose" undercounts it.** Three
+   are *blockquoted* — the p.157 rule. Two more are verbatim book sentences set
+   as **inline italics**: the Temporal Raider's cross-reference to World Book 3
+   (line 114) and the Priest of Light's `Money:` line (line 196). All five were
+   paraphrased. This matters because the smoke check proposed here — and
+   shipped — greps for blockquotes, and **would not have caught either of
+   them.** The check is a floor, not the rule, and `book-survey` §7 and the
+   check's own comment now say so in those words. A survey that quotes the book
+   in italics passes the suite.
+
+2. **The grep count was 21 hits before this change; it was 26.** #361 added five
+   by writing F21 itself. Not load-bearing, but the number in the brief was
+   taken from before that PR.
+
+3. **`potm`'s partial survey was not nothing.** The brief says one survey
+   exists. One survey *file* exists; the Pantheons work also produced a survey
+   that never reached a file in this repo, and the "no new skills, spells or
+   psionics" finding in `potm.md` comes from it. A finding that survives only in
+   a memory file is the same exposure this finding is about, one layer further
+   out.
+
+**What the backfill turned up.** `fom` is cached in full and cited by nothing —
+zero rows, so `source-coverage` gives it no line at all, and a reader could
+mistake that for a missing measurement. It is the cleanest next book. `rue`'s
+327 untraceable rows are a **different problem from `bom`'s**: nothing there is
+`outside-cache`, so all 327 are rows with no page range over a complete cache
+and could be traced without reading anything new. `bom`'s 409 cannot — 346 of
+its 352 pages are not here, and its 231 spells stamped `p.71-72` are a bulk
+stamp, not a reading, since two printed pages cannot hold 231 definitions
+(**F24**).
+
 ### F22 — `occ_group` and `xp_table` are enforced by the test suite and documented nowhere
 
 **What is true today.** `grep -n "occ_group\|xp_table"
@@ -2168,12 +2241,15 @@ what the page says.** Scope it as its own book batch, not as an audit item.
 
 ## Adding book N — the runbook
 
-**Rewritten 2026-08-28 for the pipeline that exists.** Steps 0-5, 7 and 8 are
-real today: F1-F5 and F13 are taken, and step 7 is `extract-class.mjs` rather
-than an upload, which is why F11 is closed. What is still a forecast: step 6
-needs F10 and F21 (`SURVEY.md` — the template, and a home it can be committed
-from), step 9 needs F15 part 2 (`--emit-script`), and step 11 needs F8. Step 12
-cannot be done as written until F21 lands.
+**Rewritten 2026-08-28 for the pipeline that exists**, and **steps 6 and 12
+became real later the same day** when F21 took F10 with it: the template exists
+at `.claude/skills/book-survey/reference/SURVEY.md` and the survey is tracked at
+`apps/character-creator/docs/surveys/<slug>.md`, so the ledger line goes in the
+same PR as the work rather than waiting on a merge it could never be part of.
+Steps 0-5, 7 and 8 were already real: F1-F5 and F13 are taken, and step 7 is
+`extract-class.mjs` rather than an upload, which is why F11 is closed. What is
+still a forecast: step 9 needs F15 part 2 (`--emit-script`), and step 11 needs
+F8.
 
 One page. Steps marked **(once)** are per book; the rest repeat per class.
 
@@ -2199,11 +2275,12 @@ python scripts/ocr-book.py "C:/Users/natha/Downloads/<Book>.pdf" --slug <slug>
 5. **(once)** `node scripts/catalog-diff.mjs --table <t> --entries <parsed>.json
    --compare <fields> --remote`. Hand-check the MISSING bucket for false gaps —
    roughly one in twenty is one.
-6. **(once)** Write `.cache/books/<slug>/SURVEY.md` from
+6. **(once)** Write `apps/character-creator/docs/surveys/<slug>.md` from
    `.claude/skills/book-survey/reference/SURVEY.md`: inventory, authority pages,
-   the offset the manifest recorded, the diff with its hand-checked gaps, the
-   extraction plan, and an empty ledger. **Get agreement on this before spending
-   anything.**
+   the offset **read from `scripts/books.json`**, the diff with its hand-checked
+   gaps, the extraction plan, and an empty ledger. It is tracked, so it goes in
+   a commit like anything else — and it states facts about the book and quotes
+   no prose from it. **Get agreement on this before spending anything.**
 7. Per class — `node scripts/extract-class.mjs --book <slug> --pages
    <printed list or range> --like <id,id> --out draft.md`. Printed pages, not
    PDF pages; it reads the cache, refuses any page under 400 bytes as a
@@ -2224,8 +2301,9 @@ python scripts/ocr-book.py "C:/Users/natha/Downloads/<Book>.pdf" --slug <slug>
     `drift-check --remote`, PR per `ship-pr`.
 11. Hand the extracted rows to the `book-reconcile` subagent before the data
     script, not after. Every number read twice, from two places.
-12. Append one ledger line to `SURVEY.md` when the PR merges. **Start a fresh
-    session every 2–4 PRs**, booted from `SURVEY.md` plus
+12. Append one ledger line to `docs/surveys/<slug>.md` **in the same PR as the
+    work** — the file is tracked, so it no longer has to wait for the merge.
+    **Start a fresh session every 2–4 PRs**, booted from that file plus
     `git log --oneline -15`.
 
 Steps 0–6 are free and are done once. Step 7 is the only step that costs money,
