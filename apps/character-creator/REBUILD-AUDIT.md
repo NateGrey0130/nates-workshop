@@ -1396,6 +1396,99 @@ again**, not the script: this machine's dev D1 has no `dragon-hatchling` row at
 all. On a fresh build and on production it reads 7. The same drift that made
 F13's `telepathy_has_text` read 0.
 
+### F18 — the 64 gear values a rebuild still loses, and the four it would wrongly overwrite
+
+The largest remaining cluster, and a **different population from F5's**:
+measured 2026-08-28 on a build from `main`, **64 values across 33 rows**, and
+**none of them is on a row `restore-gear-missing-from-repo.sql` creates.** F5
+closed those 193 completely. These are ordinary catalog rows enriched through
+the editor — F6's gap, gear's share of it.
+
+| column | n | column | n |
+|---|---|---|---|
+| `cost` | 18 | `source_book` | 12 |
+| `cost_note` | 15 | `category` | 4 |
+| `description` | 12 | `system` | 2 |
+| | | `weight_lbs` | 1 |
+
+**Mostly mechanical.** The `cost`, `cost_note`, `description` and most
+`source_book` differences are production holding a value where a rebuild holds
+`NULL` — `pen` costs 1 credit, `sleeping-bag` carries `110-160 cr.`,
+`note-pad` cites RUE p.261-265, and a rebuild knows none of it.
+
+**Two small groups are not, and one would do damage:**
+
+- **`category` (4) runs the OTHER WAY.** `hand-held-blood-pressure-machine`,
+  `unbreakable-vial`, `medical-bag` and `poncho` are `NULL` in production and
+  `'gear'` in a rebuild. Exporting production here would **delete a category a
+  rebuild correctly has.** F13 hit the same shape with `system` and the answer
+  was to exclude the column; this needs the same read before anything is
+  written.
+- **`system` (2) and two `source_book` rows are both-non-null disagreements.**
+  `first-aid-kit` and `bandages-6-foot-1-8-m-roll` are `both` live and `rifts`
+  in a rebuild — production is broader and probably right, but that is the
+  `untag-cross-system` question again and deserves the same care. `ca-1-` and
+  `ca-2-heavy/light-dead-boy-armor` cite RUE p.261-265 live against
+  `Web reference (not book-verified)` in a rebuild, where production is plainly
+  the better citation.
+
+**Proposal:** the F14 treatment, not the F5 treatment. Read the 8 non-`NULL`
+cases first and decide each; export the rest — production's values, only the
+columns that differ, guarded per slug, `zzzz-` tier. Expected effect: catalog
+field differences **86 → about 30**.
+**Posture: investigate the eight, then a data script for whatever survives.
+Applied to `--remote` before its merge, per F5's note. NOT mechanical, despite
+how it looks.**
+
+### F19 — the six classes where the REBUILD is ahead of production
+
+The mirror of every other finding here, and the second one that would change
+production. Six classes' markdown differs; in **four** of them the rebuild holds
+the corrected value and production holds the placeholder.
+
+- **`body-fixer`, `rogue-scientist`, `wilderness-scout`, `rifts-priest`** —
+  production still carries `- { item_id: "light-mdc-body-armor", qty: 1 }`; a
+  rebuild carries the resolved `choose:` block enumerating real armour slugs.
+  `retire-gear-placeholders.sql` is the guard-and-wait script that does this,
+  and it **ran on production before the options existed**, found nothing, and
+  correctly did nothing. Nobody re-ran it. In a rebuild the options are there by
+  the time it runs. **Production is behind by exactly one no-op.**
+- **`coalition-samas-pilot`** — production has one merged
+  `air-filter-and-gas-mask`; a rebuild has `air-filter` and `gas-mask`
+  separately. All three slugs exist in both databases, so this is a content
+  choice rather than a missing row, and it is **not** obvious which is right.
+- **`wizard`** — one word of prose in `extraction_notes`: *"stated as **the**
+  fifth starting group"* live against *"stated as **a** fifth starting group"*.
+  Cosmetic, and worth naming only so nobody spends an afternoon on it.
+
+**Proposal:** re-run `retire-gear-placeholders.sql` against production, which is
+what its own guard was written to allow — it is idempotent and does nothing
+where the swap has already happened. Decide `coalition-samas-pilot` on the book.
+Leave `wizard`.
+**Posture: this CHANGES PRODUCTION, like F15, and for the same kind of reason —
+a script that ran too early. It needs a deliberate yes, not a queue position.**
+
+### F20 — five spells missing their Palladium Fantasy P.P.E. variant
+
+The smallest thing left and the most mechanical. Five `variant_note` values,
+`NULL` in a rebuild and present in production, all the same shape:
+
+```
+Impervious to Fire    Palladium Fantasy: 6 P.P.E.
+Resist Fire           Palladium Fantasy: 3 P.P.E.
+Blind                 Palladium Fantasy: 8 P.P.E.
+Fire Bolt             Palladium Fantasy: 10 P.P.E.
+Energy Disruption     Palladium Fantasy: 15 P.P.E.
+```
+
+Pure F6 enrichment — typed into the catalog editor, never written back. No
+column runs the other way, no citation is in dispute, nothing needs a book.
+
+**Proposal:** export the five, exactly the shape
+`zzzz-restore-psionic-powers-full.sql` used. One statement per spell.
+**Posture: a data script, mechanical, applied to `--remote` before its merge.
+Takes `spells` to zero.**
+
 ---
 
 ## The question the brief asked
