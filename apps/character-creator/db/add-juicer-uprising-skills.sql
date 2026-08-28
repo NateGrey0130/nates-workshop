@@ -80,6 +80,15 @@ ON CONFLICT(name) DO NOTHING;
 -- The one number this book and RUE disagree on. RUE wins because it is later;
 -- the book's figure is recorded so the disagreement is visible rather than
 -- lost. Guarded so a re-run does not append it twice.
+--
+-- WRONG SKILL, AND THE WRONG NUMBER FOR THIS ONE. Corrected by
+-- zzzzz-fix-ju-gambling-notes.sql. This statement is left standing rather than
+-- edited because it ran: a rebuild has to reproduce what production held before
+-- the fix corrects it. Juicer Uprising p.66 gives Gambling (Standard) 30%+5%,
+-- identical to RUE - no disagreement to record at all. The 30%+4% is Gambling
+-- (Dirty Tricks), which RUE gives as 20%+4%. The ju cache had that line welded
+-- across the column gutter when this was written, two thirds of a page above
+-- its own entry.
 UPDATE skills SET note = COALESCE(note || '; ', '') || 'Juicer Uprising p.66 lists 30%+4%'
  WHERE name = 'Gambling (Standard)' AND (note IS NULL OR note NOT LIKE '%Juicer Uprising%');
 
