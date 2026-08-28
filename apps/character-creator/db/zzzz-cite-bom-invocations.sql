@@ -3,7 +3,25 @@
 -- One-off data script, run once per environment. NOT a migration - it changes
 -- rows, not schema.
 --
---   node scripts/d1-apply.mjs --local apps/character-creator/db/fix-bom-invocation-citations.sql
+--   node scripts/d1-apply.mjs --local apps/character-creator/db/zzzz-cite-bom-invocations.sql
+--
+-- THE `zzzz-` PREFIX IS LOAD-BEARING. This was written as `fix-bom-invocation-citations.sql`,
+-- which sorts under `f` - in the MIDDLE of the data scripts. Applied to
+-- production by hand it ran last and was right; applied in filename order it
+-- runs before scripts that rewrite the very column it sets. A database rebuilt
+-- from schema.sql plus every data script in order lost 148 citations across
+-- the three citation files this is one of. Measured, not reasoned: production
+-- 26 rows still carrying a bare book title, fresh build 172.
+--
+-- The clearest mechanism is in the sibling files rather than this one:
+-- `restore-skills-missing-from-repo.sql` and its gear and psionics twins
+-- CREATE rows that the citation scripts then fail to find, because `restore-`
+-- sorts after `fix-`. All three move together so all three move here.
+--
+-- This is the third time this repo has escalated a prefix for the same
+-- reason. `zz-` sorts after `fix-*`, `zzz-` after `zz-`, and these citation
+-- files have to sort after `zzz-gear-tidy-*` too, which rewrites the
+-- `source_book` of gear rows. See operations.md, Data scripts.
 --
 -- The other half of INGESTION-AUDIT F24, and the larger one. #372 re-cited the
 -- 231 elemental spells that claimed 'p.71-72'. These 177 never claimed a page
@@ -395,4 +413,11 @@ SELECT count(*) AS still_bare FROM spells WHERE source_book = 'Rifts Book of Mag
 SELECT count(*) AS now_cited FROM spells WHERE source_book LIKE 'Rifts Book of Magic p.%';
 
 -- Records this run. REQUIRED: the smoke test fails a data script with no footer.
-INSERT INTO data_script_runs (filename) VALUES ('fix-bom-invocation-citations.sql');
+-- The run record follows the file. This script was applied to production
+-- under its OLD name before the rename, and that name never existed in
+-- `main` - so the row asserts a file the repo does not have and would read
+-- as drift forever. Removing it is the `fix-seed-dev-run-record.sql`
+-- precedent: only a record that says something untrue is deleted, and this
+-- one names a file nobody can read.
+DELETE FROM data_script_runs WHERE filename = 'fix-bom-invocation-citations.sql';
+INSERT INTO data_script_runs (filename) VALUES ('zzzz-cite-bom-invocations.sql');
