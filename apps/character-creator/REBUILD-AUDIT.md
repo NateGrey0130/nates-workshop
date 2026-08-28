@@ -223,6 +223,41 @@ rows" and should keep meaning that.
 **Posture: report, do not fail. Advisory, exits 0 on content differences.**
 A gate here would fail on day one with 428 findings and be switched off.
 
+**Taken, 2026-08-28 (PR #377).** Posture held: report, do not fail. A missing or
+extra row still exits 1; a differing value is printed and exits 0.
+
+**Two premise corrections, both found by running it rather than by reading it.**
+
+1. **This finding was wrong about its own scope.** It says "428 field differences
+   and 22 missing rows sit in the blind spot". Inside the five tables
+   `repo-vs-live.mjs` actually covers, the figure is **413 fields across 154
+   rows** — reproduced exactly by the new code, independently of the harness that
+   first measured it. The other 15 field differences are `imported_classes`,
+   which this script does not cover at all, and the 22 rows are
+   `catalog_redirects`, which is F8's scope. Implemented over the five tables as
+   written rather than quietly widened; the `imported_classes` gap is now F12.
+
+2. **The name column is not the row-identity column, and this finding assumed it
+   was.** `TABLES` carried one column per table, used for the name-set
+   comparison. Reusing it to join rows for the value comparison paired an armor
+   enchantment with a weapon one: `enchantments` prints Color, Continual Glow and
+   Impervious to Fire once per `applies_to`, and gear holds two Sleeping Bags.
+   The first run reported **437 across 157** — 24 of them manufactured by the
+   collision. `TABLES` now carries `[table, name column, identity column]`, gear
+   and enchantments join on `slug`, and a key that is not unique **refuses to
+   compare** rather than printing a number built on a collision.
+
+Beyond the proposal, and worth saying because it was a choice: the per-row list
+is capped at eight rows per table with `--offenders` to see all, matching
+`source-coverage.mjs`'s flag of the same name. Uncapped, this prints 154 rows.
+
+**Not fixed here, and not claimed to be:** every one of the 413 differences
+still stands. This finding was only ever about making them visible. F5 is the
+first instalment of closing them.
+
+Taking it also turned up **F11** and **F12**, added to this menu in the same PR
+and not taken.
+
 ### F4 — the citation comparison counted one bucket, so a total loss read as an improvement
 
 The 148 measurement counted rows with a **bare book title**. A row that ends the
