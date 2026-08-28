@@ -100,7 +100,7 @@
       "source_pdf_dir": "C:\\Users\\natha\\Downloads",
       "printed_pages": 352,
       "page_offset": 1,
-      "note": "printed_pages is the published page count: the cache holds six pages (p090-p095) and no folio in it survived OCR. page_offset was read off the source PDF's own sparse text layer, 14 pages agreeing, not off the cache. This book HAS a text layer and was OCR'd anyway; ocr-book.py now refuses to rebuild it as one without --force, because that would overwrite the OCR cache six pages of the Book of Magic were kept for."
+      "note": "Re-cached 2026-08-28 from its TEXT LAYER, all 360 pages (INGESTION-AUDIT F24). The layer is not sparse - --probe medians 5,411 chars/page, comparable to pf - and the earlier six-page OCR cache (p090-p095) was the mistake this note used to describe as a decision. printed_pages stays 352 and NOT the 347 ocr-book.py measured: printed 348-352 is the Index of Rifts Magic, the authority table giving every spell a name, cost and page, and its folios do not surface the same way. This is the case the _doc's 'the registry outranks the manifest' rule was written for."
     },
 
     "cb1": {
