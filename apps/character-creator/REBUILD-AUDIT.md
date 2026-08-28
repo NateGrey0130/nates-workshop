@@ -686,6 +686,56 @@ because production needs it, but because `drift-check` reports any data script
 with no `data_script_runs` row as `DATA SCRIPT NOT RUN` and exits 1. F5's
 outcome note has the worked version of this.
 
+**Taken, 2026-08-28 (PR #381).** Posture held: a new data script, `zzzz-` tier,
+applied to `--remote` before the merge. Production dumped before and after —
+101 rows, **zero field differences, byte-for-byte unchanged**.
+
+**The proposal said "export the 38 rows' divergent columns". Sixteen of those
+rows must not be exported, and this is the important part of taking it.**
+
+Those sixteen differ from production in `system` *alone*: production says
+`'rifts'`, a rebuild says `NULL`. **The rebuild is right.**
+`untag-cross-system.sql` nulls `system` on every psionic power and states that
+it is "a DELIBERATE setting decision, not an oversight", adding *"Do not 'fix'
+it by tagging these rows from their source_book; that was considered and
+rejected"* — because a tag strips the power from Palladium characters. Exporting
+production's value would have re-tagged sixteen powers rifts-only and silently
+undone it. Found by reading the scripts that write the column before exporting
+it, which is the only reason it was found at all.
+
+So `system` is excluded, 22 rows and **98 values** were written rather than 114,
+and the divergence that remains is now numbered **F15** — the first finding here
+where production is the wrong one. The script's read-back asserts
+`powers_tagged_to_one_system = 0` so a rebuild can never acquire the problem.
+
+**One row was a rules call and was read rather than assumed.** `Resist Fatigue`
+is `Healing` in production and `Physical` in a rebuild. RUE prints it in **both**
+category lists on printed 164 (cache p167) and prints its description in the
+**Healing** section on printed 166 (cache p169), which is the page production
+cites. Healing taken on that basis, and said in the script's header, because the
+catalog holds one category per row and this is a choice rather than a
+correction.
+
+**Two mechanical things worth recording.** One value carried an em-dash, which
+`d1-apply.mjs` refuses in executable SQL, so the generator now splices any
+non-ASCII codepoint as `char(N)` rather than only handling the em-dash case.
+And the read-back's `telepathy_has_text` read **0** on this machine's local
+database — not a failure: that database holds **81** of the 101 powers and has
+no row named `Telepathy` at all. On a fresh build and on production it reads 1.
+The comment in the script now says so, because a future reader will hit it.
+
+**Measured, on a database built from nothing:**
+
+| | before | after |
+|---|---|---|
+| `psionic_powers` field differences | 114 across 38 rows | **16 across 16 rows** |
+| all catalogs | 230 | **132** |
+| powers with no `description` | 21 | **1** — production's own figure |
+| powers with no `source_book` | 32 | **12** — production's own figure |
+
+The sixteen that remain are entirely the `system` column, and closing them means
+correcting production, not the repo. That is F15 and it is not taken.
+
 ### F14 — export the 25 divergent skills, and read them before assuming enrichment
 
 The other catalog F6 leaves open: **37 field values across 25 of the 336
@@ -711,6 +761,58 @@ export the ones that are genuinely production-is-right. The `source` column may
 belong in neither direction — decide explicitly rather than sweeping it.
 **Posture: investigate first, then a data script for whatever survives. This one
 is not mechanical and should not be taken as if it were.**
+
+### F15 — production has 16 psionic powers tagged rifts-only against a decision that says they must not be
+
+**The first finding in this audit where PRODUCTION is the wrong one.** Found
+while taking F13, by checking a column before exporting it rather than after.
+
+`untag-cross-system.sql` sets `psionic_powers.system = NULL` on every row and
+says why, at length:
+
+> This is a DELIBERATE setting decision, not an oversight. NULL means "every
+> system" … Do not "fix" it by tagging these rows from their source_book; that
+> was considered and rejected
+
+Untagging the Rifts psionics chapter is what makes a major psychic's *"eight
+powers from one category"* possible in a Palladium Fantasy campaign at all — the
+largest Palladium-visible category held six.
+
+**Sixteen rows in production still carry `system = 'rifts'`.** They reached
+production through the importer *after* `untag-cross-system.sql` had run there,
+so they were never untagged. A database built from the repo has all 101 correct,
+because the script runs at `u` and everything that creates these rows sorts
+before it.
+
+```
+Restore P.P.E.            Telekinetic Lift          Psionic Invisibility
+Stop Bleeding             Telekinetic Push          Psychic Omni-Sight
+Ectoplasmic Disguise      Intuitive Combat          Psychosomatic Disease
+Mask I.S.P. & Psionics    Read Dimensional Portal   Telekinetic Acceleration Attack
+Mask P.P.E.               Remote Viewing            Telemechanic Possession
+Group Trance
+```
+
+**The effect is live.** A Palladium Fantasy psychic cannot currently pick any of
+these sixteen, including Telekinetic Lift, Telekinetic Push and Psionic
+Invisibility. `zzzz-restore-psionic-powers-full.sql` deliberately does **not**
+export this column, and its read-back asserts `powers_tagged_to_one_system = 0`
+so a rebuild can never acquire the problem.
+
+**Proposal:** a data script re-running the untag against the rows that escaped
+it — `UPDATE psionic_powers SET system = NULL WHERE system IS NOT NULL` — in the
+`zzzz-` tier, applied to `--remote`. It is one statement and it is already
+written, in `untag-cross-system.sql`; what it needs is to run again where new
+rows have landed since.
+**Posture: this one CHANGES PRODUCTION, which nothing else in this audit does.**
+The brief's rule was "do not repair production" on the grounds that production is
+correct. Here it is not, and that rule was written before this was known — so
+this needs a decision rather than an assumption, and it is why this is a finding
+rather than a line in F13.
+
+**Worth checking before taking it:** whether the importer should be tagging at
+all. Fixing sixteen rows leaves the next import to re-create the problem, and
+the durable fix may be in the importer rather than in a data script.
 
 ---
 
