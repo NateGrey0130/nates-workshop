@@ -78,6 +78,7 @@ None. This book has no open import.
 | 2026-08-27 | [#337](https://github.com/NateGrey0130/nates-workshop/pull/337) | `pf` registered in `books.json` with four aliases — 312 gear rows start resolving |
 | 2026-08-27 | [#340](https://github.com/NateGrey0130/nates-workshop/pull/340) | the `printed_through: 16` exception recorded, per printed page |
 | 2026-08-28 | — | this file, backfilled offline |
+| 2026-08-28 | [#376](https://github.com/NateGrey0130/nates-workshop/pull/376) | `zzzz-cite-pf-rows.sql` — **39 of 42** rows cited by page: 28 spells, 6 skills, 5 armor. Three spellings of the book's name normalised to the canonical title. 3 held back. Applied `--remote` before the PR. **`pf` is 583 / 3.** |
 
 ### What remains
 
@@ -90,3 +91,63 @@ From `node scripts/source-coverage.mjs --remote`, 2026-08-28:
 **544 traceable, 42 not** — the best ratio of any large book here. The 42 are
 rows with no page range, not rows pointing outside the cache: the whole book is
 cached, so anything with a folio resolves.
+
+### After the repair, 2026-08-28
+
+```
+  pf                 583 / 3
+```
+
+**Catalog-wide, `spells` with no page range went to ZERO** in the same run:
+every spell in this database that names a book now names a page.
+
+## The 42, and how each kind was located
+
+**The book's name was written three ways**, and all three were in these rows:
+`Palladium Fantasy RPG Main Book`, `palladium-fantasy-core` and
+`Palladium Fantasy RPG 2nd Ed.` All three are registered aliases so all three
+resolved, but two of them are **a slug and an edition name sitting in a title
+column**. Every row the repair touched was rewritten to the canonical title, so
+it normalised the vocabulary as well as adding the page.
+
+### Spells — the book's own two tables, already parsed
+
+`scripts/parse-pf-spell-index.mjs` existed for this and needed no changes. It
+reads both tables — the alphabetical list **by level** at printed 187 and the
+one **by page** at printed 188 — and reconciles them: 182 entries, and it
+reports on its own that the two tables **disagree on exactly two costs**
+(`See the Invisible`, `Curse: Phobia`) and that `Swords to Snakes` is in the
+level table only.
+
+All 28 catalog rows matched a by-page entry whose **level agreed with the
+catalog's own level column**, and all 28 were then read on the page named.
+`The Finger of Lictalon` is the only name the book spells differently — it
+keeps the article the catalog drops.
+
+**The offset exception did not bite, and it was still used.** Every page here
+was resolved through `offsetForPrintedPage`, not by adding `page_offset`.
+Nothing in this repair is below printed 50, so +2 applied throughout — but a
+verifier that hard-codes +2 is wrong for this book and would have said so
+nowhere.
+
+### Skills and gear
+
+Skills are **paragraph entries** here — `History: This is a basic historical
+knowledge…` — so they are matched by the line's prefix, never by a heading.
+Six were read on their pages: History 58, Horsemanship: Knight and Palladin 53,
+Sign Language 50, Recognize Magic 107 (the book prints `Recognize magic`),
+W.P. Targeting 84.
+
+Gear is the **`Types of Armor` table at printed 270**, which prints its rows as
+`Soft Leather (full)`, `Chain Mail (full)`, `Scale (full)`. Five of the six
+armor rows are there; the catalog's `Scale Mail` is the book's `Scale`.
+
+## What this book does not print
+
+Three rows, held back rather than guessed:
+
+- **`W.P. Lance`** — appears only as a mention at printed 85, *"the equivalent
+  of W.P. Lance"*, never as an entry of its own.
+- **`Language: Native Tongue`** — nowhere in the book.
+- **`Small Shield`** — not in the armor table. pf has the **skill**
+  `W.P. Shield`, not the item.
