@@ -655,6 +655,58 @@ truncated 40 KB blobs, which is why this is a separate finding and not part of
 F3.
 **Posture: report, do not fail — same as F3.**
 
+**Taken, 2026-08-28 (PR #382).** Posture held: report, do not fail. Exit code
+unmoved, and it still means what it meant — a missing or extra row.
+
+The premises held. `imported_classes` was outside every content comparison, and
+adding it surfaces **8 markdown differences across 8 classes** that no tool in
+the repo could previously see, including F7's duplicated `except:` entries in
+`mystic` and `burster`.
+
+**`created_by` is excluded, as the proposal said, and it was right to.** Its two
+differences — `juicer` and `chiang-ku-dragon`, `import` live against
+`data-script` in a rebuild — record *how the row got there*, not what it is. A
+rebuild saying `data-script` is telling the truth about itself, and reporting it
+would be reporting the mechanism as a defect. Total field differences therefore
+read **130**, not the 132 a naive all-columns comparison gives. The same
+argument is open for `skills.source` under F14 and is not settled here.
+
+**`deleted_at` is compared as presence rather than as a timestamp.** The
+proposal named `created_at` and `updated_at` as skips and did not name this one,
+so it is compared — but comparing the minute a class was soft-deleted would be
+noise, while a class deleted in one database and live in the other is exactly
+what this script is for. Zero rows carry one today, in either database.
+
+**Long values are diffed by line**, as the proposal required. Set-based rather
+than positional, so a class whose yaml gained one entry reads as one line rather
+than as every line after it. Capped at three per side, `--offenders` for all.
+
+**One mistake, and it reached the file before it was caught.** The patch script
+that applied this split its replacement blocks on `===` alone, which puts each
+block NAME in its own chunk and left every block `undefined`; `String.replace`
+then wrote the literal text `undefined` into `repo-vs-live.mjs` four times. It
+was caught by running the result — `ReferenceError: TABLES is not defined` — and
+the file was restored from `main` rather than hand-repaired. The tooling now
+asserts every block parsed and refuses to write a file containing a bare
+`undefined`. Recorded because the failure mode is silent in the general case:
+had the corruption landed inside a comment rather than a declaration, the script
+would have run and quietly compared nothing.
+
+**Measured, 2026-08-28, `node scripts/repo-vs-live.mjs`:**
+
+```
+imported_classes repo  126  live  126   names match
+   SAME NAME, DIFFERENT VALUE: 8 field(s) across 8 row(s)
+     markdown 8
+     burster [markdown]
+        live | - { name: "Weapon Proficiencies", except: ["W.P. Heavy Military Weapons", "W.P. Heavy M.D. Weapons"] }
+        repo | - { name: "Weapon Proficiencies", except: ["W.P. Heavy Military Weapons", "W.P. Heavy M.D. Weapons", "W.P. Heavy Military Weapons", ...
+```
+
+130 field(s) across 87 row(s), exit 0. **Nothing was repaired**: this finding
+was only ever about making the class definitions visible to the comparison. The
+8 belong to F7 and to the `retire-gear-placeholders.sql` guard-and-wait cases.
+
 ### F13 — export the 38 divergent psionic powers, the way F5 did for gear
 
 Opened by F6, which says the repair is a separate finding per catalog. This is
