@@ -46,7 +46,7 @@ check('schema applies cleanly', apply.status === 0, (apply.stderr || apply.stdou
 // SQL goes through a temp file — a quoted --command string doesn't survive the Windows shell.
 const checkSql = join(appDir, 'test', '.smoke-check.sql');
 writeFileSync(checkSql,
-  "SELECT (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('campaigns','characters','journal_entries','level_history','gear','character_items')) AS cc_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'media_items') AS media_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('imported_classes','skills','spells','psionic_powers')) AS catalog_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='catalog_redirects') AS redirect_table, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='character_drafts') AS draft_table, (SELECT count(*) FROM pragma_table_info('spells') WHERE name='system') AS spells_system, (SELECT count(*) FROM pragma_table_info('import_sessions') WHERE name='system') AS session_system, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='items') AS stale_items_table, (SELECT sql FROM sqlite_master WHERE name='character_items') AS ci_ddl;\n");
+  "SELECT (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('campaigns','characters','journal_entries','level_history','gear','character_items')) AS cc_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'media_items') AS media_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('imported_classes','skills','spells','psionic_powers')) AS catalog_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='catalog_redirects') AS redirect_table, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='character_drafts') AS draft_table, (SELECT count(*) FROM pragma_table_info('spells') WHERE name='system') AS spells_system, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('import_sessions','import_staged')) AS stale_import_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='items') AS stale_items_table, (SELECT sql FROM sqlite_master WHERE name='character_items') AS ci_ddl;\n");
 const query = wrangler(['d1', 'execute', 'DB', '--local', '--json', '--file', checkSql]);
 rmSync(checkSql, { force: true });
 let row = null;
@@ -56,8 +56,14 @@ check('media_items still intact alongside them', row?.media_tables === 1);
 check('class + catalog tables exist', row?.catalog_tables === 4, query.stdout?.slice(-300));
 check('catalog_redirects exists', row?.redirect_table === 1, query.stdout?.slice(-300));
 check('character_drafts exists', row?.draft_table === 1, query.stdout?.slice(-300));
-check('spells and import_sessions carry a system column',
-  row?.spells_system === 1 && row?.session_system === 1, query.stdout?.slice(-300));
+check('spells carries a system column',
+  row?.spells_system === 1, query.stdout?.slice(-300));
+
+// 041 dropped the in-app importer's two staging tables. Checked the same way
+// the `items` rename is checked below: a drop is only done when the old thing
+// is GONE, and a schema.sql that still created them would show up right here.
+check('the retired importer\'s staging tables are gone',
+  row?.stale_import_tables === 0, query.stdout?.slice(-300));
 
 // The rename must leave nothing behind. A surviving `items` alongside `gear`
 // means schema.sql created an empty gear table on an un-migrated database.

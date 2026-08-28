@@ -603,33 +603,6 @@ WHERE EXISTS (SELECT 1 FROM pragma_table_info('imported_classes') WHERE name = '
 -- many pages, so extracted rows are staged here rather than living in a
 -- browser tab. Catalog-agnostic on purpose — psionics and gear reuse them.
 -- ═══════════════════════════════════════════════════════════════════
-CREATE TABLE IF NOT EXISTS import_sessions (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  catalog TEXT NOT NULL,                -- spells | psionics | gear | skills
-  name TEXT NOT NULL,
-  source_book TEXT,
-  system TEXT,                          -- the book's game system; stamped on every row it imports
-  created_by TEXT NOT NULL,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  closed_at TEXT                        -- NULL = still open
-);
-CREATE INDEX IF NOT EXISTS idx_import_sessions_open ON import_sessions (catalog, closed_at);
-
-CREATE TABLE IF NOT EXISTS import_staged (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  session_id INTEGER NOT NULL REFERENCES import_sessions(id) ON DELETE CASCADE,
-  page_range TEXT,
-  payload TEXT NOT NULL,                -- JSON: the extracted row
-  match_name TEXT,                      -- catalog row this duplicates, if any
-  is_stub INTEGER NOT NULL DEFAULT 0,
-  differs INTEGER NOT NULL DEFAULT 0,
-  action TEXT NOT NULL DEFAULT 'insert',-- insert | update | ignore
-  resolved_name TEXT,                   -- distinguishing name for "keep both"
-  confirmed_at TEXT,                    -- NULL = not yet applied
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-CREATE INDEX IF NOT EXISTS idx_import_staged_session ON import_staged (session_id, confirmed_at);
-
 -- A rename needs both halves checked. The CREATE above makes an empty `gear`
 -- on a database that still has a populated `items`, so "gear exists" alone
 -- would record this migration on a database that has not actually had it.
@@ -643,8 +616,14 @@ SELECT '005-spell-detail.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('spells') WHERE name = 'saving_throw');
 
 INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '041-drop-import-staging.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'imported_classes')
+  AND NOT EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'import_staged');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '006-import-sessions.sql'
-WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'import_staged');
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'imported_classes')
+  AND NOT EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'import_staged');
 
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '007-psionic-detail.sql'
@@ -789,7 +768,7 @@ WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'class_
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '012-catalog-system.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('spells') WHERE name = 'system')
-  AND EXISTS (SELECT 1 FROM pragma_table_info('import_sessions') WHERE name = 'system');
+  AND EXISTS (SELECT 1 FROM pragma_table_info('psionic_powers') WHERE name = 'system');
 
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '025-skill-level-bonuses.sql'
