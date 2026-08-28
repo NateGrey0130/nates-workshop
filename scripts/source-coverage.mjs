@@ -16,6 +16,15 @@
 //             Small numbers today, which is the point of counting them now
 //             rather than after a shelf of books.
 //
+// WHAT `traceable` MEANS, AND WHAT IT DOES NOT. It means the page a row
+// cites is a page this machine holds, so a reader can go and check it. It
+// says NOTHING about whether the row is printed there. The Book of Magic is
+// the worked case: caching it moved 231 spells from `outside-cache` to
+// `traceable` in one command while every one of them still pointed at two
+// pages of Earth Warlock spell descriptions, and the data script that put
+// them right afterwards moved this ledger by zero. Both numbers were correct.
+// A row can only be wrong in a way this notices once it is cheap to notice.
+//
 // ADVISORY, AND IT ALWAYS EXITS 0. The cache is gitignored, so a clean clone
 // has none and a merge gate built on this would fail for everyone but the one
 // machine that cached the books. On a machine with no `.cache/books` it says so
@@ -187,4 +196,8 @@ for (const [label, sql, why] of backlog) {
 
 console.log('\nAdvisory: this never gates a merge. The caches are gitignored, so a');
 console.log('clean clone traces nothing and that is not a defect.');
+console.log('\nAnd traceable means CHECKABLE, not correct: the cited page is one this');
+console.log('machine holds, never that the row is printed on it. Caching the Book of');
+console.log('Magic moved 231 spells here while every one still cited the wrong page,');
+console.log('and the repair that fixed them moved this ledger by zero.');
 process.exit(0);
