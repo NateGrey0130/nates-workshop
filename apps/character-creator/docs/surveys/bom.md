@@ -169,6 +169,7 @@ F20 is this repo's case for not writing a repair before reading the page.
 | 2026-08-28 | [#362](https://github.com/NateGrey0130/nates-workshop/pull/362) | this file, backfilled offline as a stub |
 | 2026-08-28 | [#371](https://github.com/NateGrey0130/nates-workshop/pull/371) | **all 360 pages cached from the text layer**; the authority table found at printed 348-352; `p.71-72` identified; all 231 rows located. No data changed |
 | 2026-08-28 | [#372](https://github.com/NateGrey0130/nates-workshop/pull/372) | `fix-bom-elemental-citations.sql` — all **231** elemental spells re-cited: **222 to an exact printed page**, 9 to their element's range. Applied `--remote` before the PR. **THE REPAIR IS COMPLETE.** |
+| 2026-08-28 | [#374](https://github.com/NateGrey0130/nates-workshop/pull/374) | `zzzz-cite-bom-invocations.sql` — the other 177, the general invocations, **all to an exact printed page**. Applied `--remote` before the PR. **`bom` is 409 / 0.** |
 
 ### What remains
 
@@ -193,3 +194,57 @@ right.** That distinction was invisible while the book was uncached.
 
 The remaining 177 are spells citing `Rifts Book of Magic` with **no page range at
 all**. They are a separate, larger question this survey does not answer.
+
+## The 177, answered — and the ledger moved this time
+
+The general invocations, printed 91-159. `source-coverage --remote` reads
+**`bom  409 / 0`** after the repair, up from `232 / 177`, and catalog-wide spells
+went **268 → 445**.
+
+**This is the mirror image of #372 and worth holding beside it.** That repair
+changed 231 citations from wrong to right and moved the ledger by zero. This one
+moved it by 177, because these rows had no page at all. The two together are the
+whole distinction: **the ledger sees an absent citation and cannot see a wrong
+one.**
+
+### The method, and the reading that did the work
+
+Three readings, and no row rests on fewer than three:
+
+| # | reading | what it settles |
+|---|---|---|
+| 1 | the *Index of Rifts Magic*'s stated page | which page |
+| 2 | the index SECTION the name is listed under, whose level must match the row's own `level` column | **which of two spells with the same name** |
+| 3 | the body text carries the spell's HEADING there — the name alone on a line, followed by `Range:`/`P.P.E.` | that the page is real |
+
+Reading 2 is the one that matters, and reading 1 alone would have been wrong six
+times. The book prints **Wave of Frost at 60 (*Air* Level Three) and again at 99
+(*Invocations* Level Three)**, and `Throwing Stones`, `Shatter`, `Create Wood`,
+`Orb of Cold` and `Light Target` are printed twice the same way. The catalog
+names the Warlock version with an `Air: `/`Earth: ` prefix and the invocation
+without one; the index does not, so the section is the only thing that
+distinguishes them.
+
+Reading 3 has to be a HEADING and not a substring. `Ice`, `Seal` and `Horror`
+occur in ordinary prose on many pages.
+
+### The book disagrees with itself once
+
+**`Warrior Horde` is `p. 158` in the index's sectioned list and `p. 159` in the
+same index's Alphabetical List.** The body puts the heading on printed 159, and
+159 is what shipped. This is `book-survey` §4b — two authorities checking each
+other — met *inside* the authority table rather than between the table and an
+extraction, which is not a case that section anticipates.
+
+### Two traps in the checking, both mine
+
+Neither was in the data, and both produced confident false failures:
+
+- The first verifier built its cache filename without zero-padding, so **every
+  printed page below 99 read as empty** and seven correct rows were reported as
+  not found. The cluster of failures in one page range is what gave it away.
+- The body prints ritual spells as `Create Golem (Ritual)` where the catalog
+  name drops the qualifier — eight more false failures.
+
+**A verification pass that fails is a claim about the verifier first.** All 177
+were confirmed once both were fixed.

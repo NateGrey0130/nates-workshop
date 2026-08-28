@@ -5421,6 +5421,21 @@ section('Book registry');
       loadNotBooks().length === 2
       && isNotABook('Web reference (not book-verified)', loadNotBooks()));
 
+    // The reading this report invites and must refuse. `bom` read 232/177
+    // both before and after the citation repair: caching the book flipped 231
+    // rows to `traceable` while every one still pointed at two pages of Earth
+    // Warlock descriptions, and fixing them moved nothing. Pin the CURRENT
+    // claim, in the output a reader actually sees - not the absence of the
+    // old wording, which any deletion would satisfy.
+    const coverageSrc = readFileSync(
+      join(repoRoot, 'scripts', 'source-coverage.mjs'), 'utf8');
+    const printed = [...coverageSrc.matchAll(/console\.log\('([^']*)'\)/g)]
+      .map((m) => m[1]).join(' ');
+    check('the report says traceable is not the same as correct',
+      /traceable means CHECKABLE, not correct/.test(printed));
+    check('and names the case that proves it',
+      /Book of\s+Magic/.test(printed) && printed.includes('231'));
+
     // The offset exception has to reach this too, or every pf row in the head
     // of the book is reported as untraceable.
     check('a page inside a recorded offset exception traces at that offset',
