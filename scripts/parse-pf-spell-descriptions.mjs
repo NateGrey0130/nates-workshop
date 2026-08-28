@@ -1,3 +1,11 @@
+// PF-SHAPED WORKED EXAMPLE, not a general description parser. The field list,
+// the printed page range and the heading shape below are the Palladium Fantasy
+// main book's; the next book will not run this file. What generalises is stated
+// as a rule in the book-survey skill, §2 - "find a heading by looking BACKWARDS
+// from the field that is always there", and the trap that every other field
+// name must be in the list or the walk stops on one and calls it the title.
+// Copy the rules (INGESTION-AUDIT F15).
+//
 // Pull the stat block and description for named spells out of the Palladium
 // Fantasy main book's Wizard Spell Descriptions, printed 189-218.
 //

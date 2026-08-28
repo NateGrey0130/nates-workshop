@@ -1764,6 +1764,54 @@ F11 take about 90 lines out of it" should not be quoted as a reason to expect
 the file to shrink. If it needs to be shorter, that is now its own decision
 about which failure histories have earned their place.
 
+**Part (1) taken, 2026-08-28 (PR #367).** Documentation only, no code — the two
+`.mjs` files gain header comments and nothing executable changed
+(`node --check` on both). §2 gains the heading-anchor rule with its failure
+history, and each `parse-pf-spell-*.mjs` now opens by saying it is a PF-shaped
+worked example and naming which rules to copy out of it.
+
+**Part (1) was roughly half the size this proposal states, for two separate
+reasons.**
+
+1. **§2 already carried two of the three rules in FULL, not "in weaker form".**
+   The text *"A cost is anything carrying a digit, or the words Special/Varies.
+   A name is whatever precedes the last parenthetical on the line"* was already
+   there, with the two-row table of what each strictness silently dropped. Only
+   the third — **find a heading by looking backwards from the field that is
+   always there** — was missing, and it is the one with the sharpest history: a
+   title is just a short line, so is the last line of the previous paragraph,
+   and every *other* field name has to be in the anchor list or the walk stops
+   on one and calls it the title. `Level:` being left out is what broke the only
+   two blocks that failed to match, The Finger of Lictalon and Metamorphosis:
+   Dragon. Added, with that trap named.
+
+2. **§1 was NOT rewritten, because there is no command for it to become.** The
+   proposal groups §1 with §0/§0b/§0d as prose to be replaced by the commands
+   F2/F4/F11 produced. F2 and F4 gave commands for the other three; **nothing in
+   `scripts/` counts structure markers per page range**, and F11 — the slicer,
+   the closest candidate — is closed as moot. So §1's inventory regexes remain
+   the instruction, correctly. Building an inventory script was not in this
+   proposal's scope and is not smuggled into it here.
+
+**A fourth rule was added that the proposal does not list**, because the scripts
+carry it and it is the same argument: **names come from the INDEX, not from the
+headings.** The book prints *Invulnerability (limited)* where its own index says
+*Invulnerability: Limited*. §4c already says this from the reader's side; §2 now
+says it from the parser's.
+
+**The length figure is stale again, and this PR is part of why.** The
+`Adjusted` note above says `book-survey` is 519 lines rather than 444. It was
+563 before this PR — **F21 (#362) added §7's tracked-survey rules** — and is 585
+after it. The note's *point* stands and is worth keeping: replacing prose with
+commands has not shortened this file and should not be expected to. Its
+*number* has now been wrong twice, which is the argument for not quoting a
+moving number in prose at all.
+
+**Part (3) is still correctly deferred.** `UI-AUDIT.md` does not exist —
+checked, not assumed — so Track G has not run and the gate this proposal sets
+is unmet. Part (2) follows in its own PR, per "three separate PRs, in this
+order".
+
 ### F16 — every class extraction is taught the format by the two oldest and most-corrected classes in the repo, forever
 
 **What is true today.** `_lib/class-store.js` `getExamples(env, limit = 2)`

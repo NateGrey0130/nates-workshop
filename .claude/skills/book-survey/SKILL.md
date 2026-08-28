@@ -334,6 +334,28 @@ here for the opposite reason — too strict:
 A cost is anything carrying a digit, or the words Special/Varies. A name is
 whatever precedes the **last** parenthetical on the line.
 
+**Find a heading by looking BACKWARDS from the field that is always there.** Not
+by trying to recognise a title — that cannot be done reliably, because a title
+is just a short line and so is the last line of the previous paragraph. Every
+description block has some field that is always present and always spelled the
+same way; anchor on it and walk back.
+
+For Palladium Fantasy's spell descriptions that anchor is `Range:`, and the walk
+back has one trap worth stating: **every other field name has to be in the list
+too, or the walk stops on one and calls it the title.** `Level:` appears on only
+the handful of entries that sit outside the numbered ladder, and leaving it out
+is what broke the only two blocks that failed to match — The Finger of Lictalon
+and Metamorphosis: Dragon.
+
+The same argument decides where NAMES come from: the index, not the headings. A
+heading is set differently often enough to matter — the book prints
+*Invulnerability (limited)* where its own index says *Invulnerability: Limited*.
+This is §4c stated from the parser's side.
+
+`scripts/parse-pf-spell-index.mjs` and `scripts/parse-pf-spell-descriptions.mjs`
+are the worked examples of all three rules. They are **PF-shaped and hard-coded
+to that book's two tables** — copy the rules, not the scripts.
+
 ## 3. Diff before you extract
 
 **Use `scripts/catalog-diff.mjs`. Do not write another matcher.** Every import
