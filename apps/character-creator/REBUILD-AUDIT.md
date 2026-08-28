@@ -1163,6 +1163,52 @@ rather than a line in F13.
 all. Fixing sixteen rows leaves the next import to re-create the problem, and
 the durable fix may be in the importer rather than in a data script.
 
+**Taken, 2026-08-28 (PR #391). THE ONLY FINDING IN THIS AUDIT THAT CHANGED
+PRODUCTION.** Sixteen live rows moved, deliberately, because production was the
+side that was wrong. Every other correction has been repo-side and applied to
+`--remote` as a no-op.
+
+**The finding asked whether the importer should be tagging at all. It should
+not, and it does not.** The catalog INSERT in
+`functions/api/character-creator/_lib/catalog.js` writes
+`(name, category, isp, source, source_book)` and never `system`; the column has
+no `DEFAULT`, so an imported row is NULL and therefore unrestricted; and no
+endpoint `UPDATE`s the column anywhere. **No importer change is needed** — the
+durable fix the finding worried about does not exist because the problem is not
+there.
+
+**The cause is the ordering bug again, pointing the other way, and
+`data_script_runs` names it exactly.** `add-rue-psionics-gap.sql` inserts
+sixteen rows with `system = 'rifts'` — sixteen `'rifts'` literals, matching the
+sixteen tagged rows one for one. Production's run log:
+
+```
+untag-cross-system.sql       first run 2026-08-19 22:37:07
+add-rue-psionics-gap.sql     first run 2026-08-22 04:38:12
+```
+
+Three days apart, in the wrong order. In a rebuild `add-` sorts under `a` and
+`untag-` under `u`, so the untag runs afterwards and catches them — which is why
+a fresh build has always had zero. This is the same hand-application hazard the
+`zz-` tier was invented for, and the first time it has left **production**
+holding the defect.
+
+**Verified against production before and after, not by exit code:** 101 rows
+before, 101 after, **16 field values changed and every one of them
+`system: 'rifts' → NULL`**. Nothing else in the table moved.
+
+The sixteen: Restore P.P.E., Stop Bleeding, Ectoplasmic Disguise, Telekinetic
+Lift, Telekinetic Push, Intuitive Combat, Mask I.S.P. & Psionics, Mask P.P.E.,
+Read Dimensional Portal, Remote Viewing, Group Trance, Psionic Invisibility,
+Psychic Omni-Sight, Psychosomatic Disease, Telekinetic Acceleration Attack,
+Telemechanic Possession — now pickable by a Palladium Fantasy psychic, which is
+what `untag-cross-system.sql` decided in the first place.
+
+**With this, `psionic_powers` matches production exactly: 0 differences, down
+from 114 when the audit opened.** The script is unconditional and idempotent,
+written the way `untag-cross-system.sql` wrote it, so it is a no-op on any
+database where the ordering came out right — every rebuild included.
+
 ### F16 — the `not-cached` bucket is a provenance problem, not a caching problem
 
 **BLOCKED: waiting on sourcebooks.** Recorded now so the measurement is not
