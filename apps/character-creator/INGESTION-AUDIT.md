@@ -321,6 +321,7 @@ number left in this document.
 | F22 | #365 | `occ_group` and `xp_table` documented in `class-import/reference/frontmatter.md`. Documentation only. The enforcing checks are in `regression.mjs`, not smoke; a bad *value* is caught at parse time and a missing key is not |
 | F8 | #366 | `~/.claude/agents` junctioned to the repo's directory, so `book-reconcile` resolves from `Downloads`. The per-file alternative needs administrator rights, so the directory shape was forced rather than preferred — and `~/.claude/agents` can now hold nothing that is not in this repo |
 | F15 | #367, #368 | Part 1: the heading-anchor rule into `book-survey` §2, and both `parse-pf-spell-*.mjs` marked PF-shaped worked examples. Part 2: `class-check --emit-script <id>`, stdout only, escaping proved lossless. Part 3 deferred - `UI-AUDIT.md` does not exist |
+| F23 step 1 | #369 | The metered row is split: the format examples are **47.6%** of the input and the whole stable prefix **74.1%**, reconstructed to the exact 21,581 tokens. Step 2 left open - its trigger is met, but a cache miss costs 1.25x rather than being free |
 
 **Closed without being taken**
 
@@ -347,7 +348,7 @@ current list. The survey it describes is now at
 nothing.
 
 **Corrected again (PR #363): the open list is F8, F14, F15, F22, F23, F24 —
-six.** *(F14 in #364, F22 in #365, F8 in #366, F15 in #367/#368; two now — F23, F24.)* #362 said three, which counted only the findings the paragraph above
+six.** *(F14 in #364, F22 in #365, F8 in #366, F15 in #367/#368, F23 step 1 in #369; two now — F23 step 2, F24.)* #362 said three, which counted only the findings the paragraph above
 names and silently dropped the three #361 had added minutes earlier in this
 same section. The paragraph it was correcting predates F22-F24 and was never
 wrong about them; the correction read as a statement of the whole list and was.
@@ -2449,6 +2450,62 @@ stable prefix, which already precedes the varying page text. Posture: **measure
 first; a cache miss is exactly today's behaviour, so there is nothing to gate
 either way.** Do not reason from the old F12 text: its second half described a
 retry path that no longer exists.
+
+**Step (1) taken, 2026-08-28 (PR #369). The row is split.** Measured with
+`/v1/messages/count_tokens` — free, not metered, nothing spent — over the prompt
+`extract-class.mjs` actually builds.
+
+| component | input tokens | share |
+|---|---|---|
+| system prompt + call overhead | 662 | 3.1% |
+| schema + output scaffold | 5,056 | 23.4% |
+| **format examples** (`apok`, `monk`) | **10,268** | **47.6%** |
+| **stable prefix, total** | **15,986** | **74.1%** |
+| varying: page text + title | 5,595 | 25.9% |
+| **total** | **21,581** | 100% |
+
+**The reconstruction reproduces the metered row EXACTLY — 21,581, difference
+zero.** So this is not a same-shaped estimate; it is the call `claude_usage`
+recorded, and the `--like` set nobody wrote down is recoverable by
+reconstruction: it was `--like apok,monk` over printed 55, 57 and 59.
+
+**The examples dominate, which is the condition step (2) sets.** They are 47.6%
+of the input — nearly double the page text they exist to help read. On a
+seventeen-class book the stable prefix is re-billed seventeen times:
+**271,762 of ~366,877 input tokens, 74%, is the same bytes over and over.**
+
+Characters would have got the direction right and the number wrong: they say
+45.4% examples / 27.3% page text where tokens say 47.6% / 25.9%. OCR noise
+tokenizes worse than clean markdown, so the page text is a *smaller* share of
+tokens than of characters — the opposite of what the caution about proxies would
+lead you to expect, and the reason this was counted rather than estimated.
+
+**One premise of this finding is wrong, and it is the one step (2) rests on.**
+The posture says *"a cache miss is exactly today's behaviour, so there is
+nothing to gate either way."* It is not. Under Anthropic's published cache
+pricing a cache **write** costs **1.25x** a normal input token and a **read**
+costs **0.1x**, with a **5-minute** default TTL. So:
+
+| pattern | effective prefix tokens per book |
+|---|---|
+| today, no caching | 271,762 |
+| 17 extractions inside the TTL — 1 write, 16 reads | ~45,600 (**83% cheaper**) |
+| every extraction >5 min apart — 17 writes | ~339,700 (**25% DEARER**) |
+
+A miss is today's behaviour **plus 25%**, not today's behaviour. The change is
+therefore a bet on extractions being *batched*, and the Wormwood ledger says
+they were — but it is a bet, and this finding says there is nothing to decide.
+There is.
+
+**Step (2) is NOT taken here.** Its stated trigger is met and its stated
+risk-free-ness is false, so it is a decision rather than a mechanical follow-on,
+and the audit protocol says not to substitute a different scope quietly. Two
+things a step (2) PR would also have to handle that this finding does not
+mention: the user prompt is **one text block**, so a breakpoint means splitting
+it into a cached block and a varying block rather than adding a field; and the
+page corpus currently arrives through `buildUserPrompt`'s **`hints` parameter**,
+appended last under a `## Operator hints` heading — which is why the stable part
+does precede it, but is also a misnomer worth fixing in the same pass.
 
 ### F24 — `bom` is 232 of the untraceable rows, its cache is six pages, and nobody has opened it
 
