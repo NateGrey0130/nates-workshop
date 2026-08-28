@@ -336,11 +336,31 @@ books still have nothing. F14 and F15 are unchanged, except that F15's part (2)
 validated draft and a data script, because the review UI that used to sit there
 is gone.
 
-**Corrected the same day (PR #362): the open list is F8, F14, F15 — three.**
-F21 was taken and took F10 with it, so the paragraph above is a record of what
-was true when it was written, not the current list. The survey it describes is
-now at `apps/character-creator/docs/surveys/ww.md`, and eight books no longer
-have nothing.
+**Corrected the same day (PR #362).** F21 was taken and took F10 with it, so the
+paragraph above is a record of what was true when it was written, not the
+current list. The survey it describes is now at
+`apps/character-creator/docs/surveys/ww.md`, and eight books no longer have
+nothing.
+
+**Corrected again (PR #363): the open list is F8, F14, F15, F22, F23, F24 —
+six.** #362 said three, which counted only the findings the paragraph above
+names and silently dropped the three #361 had added minutes earlier in this
+same section. The paragraph it was correcting predates F22-F24 and was never
+wrong about them; the correction read as a statement of the whole list and was.
+**A correction inherits the scope of the sentence it corrects, and saying so is
+cheaper than recounting.** This is the audit's eleventh error in its own text
+and the first one written by the PR that was fixing the tenth.
+
+Counted by **reading the lines under each heading**, not by grepping for
+`Taken`. That grep says F14 is taken; F14's match is the string `**Taken,
+2026-08-25**: as proposed` inside backticks, because F14 is the finding that
+*describes the outcome-note format*. It is the fourth time that grep has
+produced a false finding here. F12, F16 and F19 are closed as moot in the
+retirement section rather than under their own headings, which is the same trap
+pointing the other way — a scan of the findings alone reports three open that
+are not. **No smoke check is added for this**: the outcome notes are prose and
+vary in wording by design, so a mechanical reader is exactly the thing that got
+it wrong twice on this page.
 
 **Four findings added, 2026-08-28.** All four came out of the last three PRs
 rather than out of a fresh pass: **F21** (`SURVEY.md` cannot be committed, which
