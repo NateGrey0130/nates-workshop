@@ -319,6 +319,7 @@ number left in this document.
 | F21, and F10 with it | #362 | The survey moved to `apps/character-creator/docs/surveys/<slug>.md`, **tracked**, and all nine books were backfilled offline. Template, three smoke checks, every instruction repointed. No gate moved, and **no check that a survey exists** |
 | F14 | #364 | `.claude/skills/audit-menu/SKILL.md` — the sixth skill, junctioned in the same PR. One skill, no script, **no check**. Four corrections to the finding, including that a grep for `Taken` reports F14 itself as taken |
 | F22 | #365 | `occ_group` and `xp_table` documented in `class-import/reference/frontmatter.md`. Documentation only. The enforcing checks are in `regression.mjs`, not smoke; a bad *value* is caught at parse time and a missing key is not |
+| F8 | #366 | `~/.claude/agents` junctioned to the repo's directory, so `book-reconcile` resolves from `Downloads`. The per-file alternative needs administrator rights, so the directory shape was forced rather than preferred — and `~/.claude/agents` can now hold nothing that is not in this repo |
 
 **Closed without being taken**
 
@@ -345,7 +346,7 @@ current list. The survey it describes is now at
 nothing.
 
 **Corrected again (PR #363): the open list is F8, F14, F15, F22, F23, F24 —
-six.** *(F14 taken in #364 and F22 in #365; four now — F8, F15, F23, F24.)* #362 said three, which counted only the findings the paragraph above
+six.** *(F14 in #364, F22 in #365, F8 in #366; three now — F15, F23, F24.)* #362 said three, which counted only the findings the paragraph above
 names and silently dropped the three #361 had added minutes earlier in this
 same section. The paragraph it was correcting predates F22-F24 and was never
 wrong about them; the correction read as a statement of the whole list and was.
@@ -1261,6 +1262,40 @@ link — there is nothing that notices the gap" — to name agents too. Posture:
 **machine setup plus a doc change**, no code. If the directory junction is taken,
 `book-survey` §5 needs no edit; if it is not, §5 must stop naming a subagent that
 is not there.
+
+**Taken, 2026-08-28 (PR #366).** The directory junction, as the proposal
+prefers. `~/.claude/agents` → `.claude/agents`, created and verified: the agent
+resolves by name from `Downloads`, and `book-reconcile.md` reads back through
+the link. `book-survey` §5 needed no edit, exactly as the proposal predicted.
+`SETUP.md`'s block now covers both kinds and `CLAUDE.md`'s "the subagent is NOT
+linked" paragraph is replaced. Posture held: **machine setup plus a doc change,
+no code.**
+
+**The directory-versus-per-file choice is not a preference.** The proposal
+offers both and prefers the directory for convenience; it is in fact the only
+option. An agent is a *file*, a Windows junction works only on a directory, and
+the per-file alternative `-ItemType SymbolicLink` **fails with "Administrator
+privilege required"** here — Developer Mode is off, re-tested 2026-08-28. Since
+the whole junction block exists on the stated premise that *no admin rights are
+needed*, the per-file shape would have broken it. Recorded in `SETUP.md` so the
+next person does not re-litigate it.
+
+**A consequence the proposal does not mention, and it is the real cost.**
+`~/.claude/skills` is **shared**: plugin-installed skills sit there as real
+directories beside the repo's six junctions. `~/.claude/agents` now cannot be —
+it *is* the repo's directory, so nothing that is not in this repo can live
+there. "Covered for free" buys that, and if a non-repo agent is ever wanted the
+link has to become per-file and will need elevation.
+
+**Two smaller corrections.** The finding says "all **five** skills are
+junctioned" — six since F14 shipped `audit-menu` in #364. And `CLAUDE.md` said
+`~/.claude/agents/` **is empty** where this finding says it **does not exist**;
+the finding was right, and the two files had been describing the same fact
+differently. Both now say the same thing.
+
+**This does not travel.** It is machine setup: a fresh clone still has to run
+`SETUP.md`'s block, and nothing in the repo notices if it has not. That is
+unchanged by this PR and is why the fix is a doc change as much as a junction.
 
 ### F9 — `CLAUDE.md` still tells sessions the skills do not load, which stopped being true on 2026-08-25
 

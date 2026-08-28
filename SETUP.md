@@ -93,29 +93,48 @@ nates-workshop/
         └── character-creator/  33 endpoints + _lib; see the app README
 ```
 
-**The skills need a junction, once per machine.** The book work runs from
-Downloads (the PDFs land there, and the session memory is keyed to it), and a
-session started outside the repo never registers `.claude/skills/` — so the
-skills were being pasted into context by hand instead of loading by name
-(efficiency audit, F5). Junction-link them into the global skills directory;
+**The skills and the agents need a junction, once per machine.** The book work
+runs from Downloads (the PDFs land there, and the session memory is keyed to
+it), and a session started outside the repo registers neither `.claude/skills/`
+nor `.claude/agents/` — so the skills were being pasted into context by hand
+instead of loading by name (efficiency audit, F5), and the `book-reconcile`
+subagent `book-survey` §5 calls for simply did not exist there
+(`INGESTION-AUDIT` F8). Junction-link them into the global directories;
 junctions, so repo edits propagate, and no admin rights are needed:
 
 ```powershell
 foreach ($s in 'audit-menu','book-survey','claim-audit','class-import','schema-change','ship-pr') {
   New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\$s" -Target "C:\Users\natha\Projects\nates-apps\.claude\skills\$s"
 }
+New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\agents" -Target "C:\Users\natha\Projects\nates-apps\.claude\agents"
 ```
 
+**The agents line links the whole DIRECTORY, and the skills are linked one by
+one. That difference is forced, not stylistic.** An agent is a *file*
+(`.claude/agents/book-reconcile.md`), a Windows junction only works on a
+directory, and the per-file alternative — `-ItemType SymbolicLink` — **fails
+with "Administrator privilege required"** on this machine, which has Developer
+Mode off (re-tested 2026-08-28). Linking the directory is the only shape that
+keeps the "no admin rights" property this whole block depends on.
+
+It has one consequence worth knowing: `~/.claude/agents` **is** the repo's
+directory, so nothing else can live there. `~/.claude/skills` is shared —
+plugin-installed skills sit beside the six repo junctions as real directories —
+and the agents directory cannot be. If a non-repo agent is ever wanted, this
+link has to become per-file, and that will need elevation.
+
 A skill added to the repo later needs its own link — there is nothing that
-notices the gap, so add the link in the same PR that adds the skill.
+notices the gap, so add the link in the same PR that adds the skill. **A new
+agent needs nothing**: the directory junction covers it the moment the file
+lands.
 
 **Once these exist, `CLAUDE.md` says the skills load from anywhere, and that
 sentence is only true on a machine that has run the block above.** A fresh
 machine has to run it before the book work will find them by name.
 
-`.claude/agents/` is NOT covered by the loop above and has no junction, so
-`book-survey` phase 5 cannot spawn `book-reconcile` from Downloads. See
-`apps/character-creator/INGESTION-AUDIT.md` F8.
+`.claude/agents/` is covered as of 2026-08-28 (`INGESTION-AUDIT` F8), so
+`book-survey` §5 can spawn `book-reconcile` from Downloads. Confirm it the way
+you would confirm a skill — by asking for it by name, not by trusting this line.
 
 **R2**: the site binds one bucket, `nates-workshop-media`, as `MEDIA`. It holds
 NPC portraits today and is named for the site rather than for that app because
