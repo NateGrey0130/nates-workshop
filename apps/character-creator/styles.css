@@ -331,6 +331,10 @@ th {
 .pick-group:first-child { margin-top: 4px; }
 /* The count sits with its group rather than at the top of the whole list. */
 .pick-group .pick-group-n { float: right; font-weight: 400; color: var(--text-muted); }
+/* Over a grid of cards rather than a list of checkboxes. The 13px above is
+   sized against 13px checkbox rows; a card title is 15px, so the same label
+   over the class grid came out SMALLER than the classes it was grouping. */
+.pick-group.over-grid { font-size: 15px; margin-bottom: 10px; }
 
 .power-row {
   display: grid;
