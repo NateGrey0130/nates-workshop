@@ -4,6 +4,8 @@
 //   node scripts/source-coverage.mjs            (--remote)
 //   node scripts/source-coverage.mjs --local
 //   node scripts/source-coverage.mjs --offenders   list every row, not the first few
+//   node scripts/source-coverage.mjs --vs-build    the same table for a database
+//                                                  built from the repo, side by side
 //
 // Two questions in one pass, because both are ledger lines nobody had:
 //
@@ -32,7 +34,10 @@
 //
 // Read-only. Safe to point at production, and pointed there by default,
 // because the question is about what SHIPPED.
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync, mkdtempSync, rmSync }
+  from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DB, d1Query, repoRoot, targetFromArgv } from './d1-query-lib.mjs';
 import { loadBookRegistry, loadNotBooks } from './books-lib.mjs';
@@ -192,6 +197,106 @@ console.log('\nBACKLOG       rows an importer created and nobody finished');
 for (const [label, sql, why] of backlog) {
   const n = d1(sql)[0]?.n ?? 0;
   console.log(`  ${pad(label, 20)}${String(n).padStart(4)}   ${why}`);
+}
+
+// ── the same ledger, for a database built from the repo ─────────────────────
+// `--vs-build` exists because the 148-citation regression was measured as ONE
+// bucket - "rows carrying a bare book title" - and a row that lost its
+// source_book ENTIRELY leaves that bucket. So losing a citation outright made
+// the number go DOWN, and 37 rows that ended a rebuild citing nothing at all
+// were never in view. One bucket cannot show that. The whole table, for both
+// datasets, can. See REBUILD-AUDIT.md F4.
+//
+// Slow - it builds a database, the same way repo-vs-live.mjs and
+// test/regression.mjs do, into a scratch --persist-to directory that is deleted
+// afterwards. Read-only against production, and advisory like the rest of this
+// script: it never moves the exit code.
+if (process.argv.includes('--vs-build')) {
+  const state = mkdtempSync(join(tmpdir(), 'coverage-build-'));
+  try {
+    const parts = [
+      readFileSync(join(repoRoot, 'db', 'schema.sql'), 'utf8'),
+      readFileSync(join(repoRoot, 'db', 'seed-catalogs.sql'), 'utf8'),
+    ];
+    const dataDir = join(repoRoot, 'apps', 'character-creator', 'db');
+    for (const f of readdirSync(dataDir).filter((x) => x.endsWith('.sql')).sort()) {
+      const sql = readFileSync(join(dataDir, f), 'utf8');
+      if (/^--\s*local-only\b/m.test(sql)) continue;
+      parts.push(sql);
+    }
+    writeFileSync(join(state, 'bootstrap.sql'), parts.join('\n;\n'), 'utf8');
+
+    process.stdout.write('\nbuilding a database from the repo... ');
+    const wr = (args) => spawnSync('npx', ['wrangler', ...args],
+      { cwd: repoRoot, shell: true, encoding: 'utf8', timeout: 900000, maxBuffer: 1e9 });
+    const applied = wr(['d1', 'execute', 'DB', '--local', '--persist-to', state,
+      '--file', join(state, 'bootstrap.sql')]);
+    if (applied.status !== 0) {
+      console.log('FAILED');
+      console.error((applied.stderr || applied.stdout || '').slice(-800));
+    } else {
+      console.log('ok');
+
+      const fromBuild = (sql) => {
+        const r = wr(['d1', 'execute', 'DB', '--local', '--persist-to', state,
+          '--json', '--command', `"${sql}"`]);
+        const out = r.stdout || '';
+        // wrangler prefixes a log line that ALSO starts with '[', so the first
+        // '[' is not the JSON. Take the first slice that parses - the same
+        // trick repo-vs-live.mjs uses, and for the same reason.
+        for (let at = out.indexOf('['); at >= 0; at = out.indexOf('[', at + 1)) {
+          try {
+            const v = JSON.parse(out.slice(at));
+            if (Array.isArray(v)) return v.flatMap((b) => b.results || []);
+          } catch { /* not the JSON yet */ }
+        }
+        return [];
+      };
+
+      const buildGroups = [
+        {
+          label: 'classes',
+          rows: fromBuild(`SELECT class_id AS label, ${FRONTMATTER} AS sb FROM imported_classes `
+            + "WHERE deleted_at IS NULL AND status = 'published'"),
+        },
+        ...['gear', 'skills', 'spells', 'psionic_powers'].map((t) => ({
+          label: t,
+          rows: fromBuild(`SELECT name AS label, source_book AS sb FROM ${t}`),
+        })),
+      ];
+
+      const totals = (gs) => {
+        const c = Object.fromEntries(BUCKETS.map((b) => [b, 0]));
+        let n = 0;
+        for (const g of gs) {
+          const s = summarise(g.rows.map((r) => ({ label: r.label, sourceBook: r.sb })), opts);
+          for (const b of BUCKETS) c[b] += s.counts[b];
+          n += s.total;
+        }
+        return { c, n };
+      };
+      const live = totals(groups);
+      const built = totals(buildGroups);
+
+      console.log(`\nCITATION COVERAGE  ${target.replace('--', '')} vs a build from the repo`);
+      console.log(`  ${pad('bucket', 18)}${pad(target.replace('--', ''), 10)}${pad('build', 10)}delta`);
+      for (const b of BUCKETS) {
+        const d = built.c[b] - live.c[b];
+        console.log(`  ${pad(b, 18)}${pad(live.c[b], 10)}${pad(built.c[b], 10)}`
+          + (d === 0 ? '-' : (d > 0 ? '+' : '') + d));
+      }
+      console.log(`  ${pad('rows', 18)}${pad(live.n, 10)}${pad(built.n, 10)}`
+        + (built.n === live.n ? '-' : built.n - live.n));
+
+      console.log('\nRead the WHOLE table, never one row of it. `no-page-range` and');
+      console.log('`no-source-book` move against each other: a row that loses its citation');
+      console.log('ENTIRELY leaves the first bucket and lands in the second, so a rebuild');
+      console.log('that got worse can report a smaller bare-title count than production.');
+      console.log('That is exactly how 148 lost citations were once read as an improvement.');
+    }
+  } finally {
+    rmSync(state, { recursive: true, force: true });
+  }
 }
 
 console.log('\nAdvisory: this never gates a merge. The caches are gitignored, so a');
