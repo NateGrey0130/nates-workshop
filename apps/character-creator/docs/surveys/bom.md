@@ -140,6 +140,20 @@ a provenance repair over rows that already shipped:
    `Water: Calm Waters`, which the index lists at both 84 and 88.
 3. The six anomalies above get read on the page before anything is written.
 
+**Done, 2026-08-28.** All six were read, and every one resolved:
+
+| row | reading |
+|---|---|
+| `Earth: Magnetism`, `Suspended Animation`, `Transference of Essence` | all three sit on printed **74**, above the *Level One: Fire* heading partway down that page. The block bound was a page short, not the index |
+| `Air: Snow Storm` | printed **twice** — Air at 64 and Water at 86. The index gave the Water twin; the Air row takes 64 |
+| `Air: Calm Storms` | printed at 60 in the Air block; the index's 143 is a third occurrence in the invocations |
+| `Earth: Create Wood` | printed at 67 in the Earth block; the index's 96 is the invocation of the same name |
+| `Water: Calm Waters` / `(greater)` | **two different Water spells**, at 84 and 88 — not an ambiguity |
+
+Re-running the resolver with Earth extended to printed 74 moved the result from
+209 exact to **222 exact of 231**. The nine that still take a range are names the
+book spells differently from the catalog.
+
 Deliberately left: the general invocations, the classes, the gear and the lore.
 This book is a compilation and re-importing it would duplicate the catalog.
 
@@ -154,6 +168,7 @@ F20 is this repo's case for not writing a repair before reading the page.
 | 2026-08-27 | [#337](https://github.com/NateGrey0130/nates-workshop/pull/337) | `bom` registered in `books.json` |
 | 2026-08-28 | [#362](https://github.com/NateGrey0130/nates-workshop/pull/362) | this file, backfilled offline as a stub |
 | 2026-08-28 | [#371](https://github.com/NateGrey0130/nates-workshop/pull/371) | **all 360 pages cached from the text layer**; the authority table found at printed 348-352; `p.71-72` identified; all 231 rows located. No data changed |
+| 2026-08-28 | [#372](https://github.com/NateGrey0130/nates-workshop/pull/372) | `fix-bom-elemental-citations.sql` — all **231** elemental spells re-cited: **222 to an exact printed page**, 9 to their element's range. Applied `--remote` before the PR. **THE REPAIR IS COMPLETE.** |
 
 ### What remains
 
@@ -164,11 +179,14 @@ cache was built:
   bom                232 / 177
 ```
 
-**It read `0 / 409` before, and the cache alone moved it — which is the warning,
-not the win.** The 231 spells now score `traceable` because printed 71-72 is
-finally a page the cache holds. Nothing about the citation got more correct;
-`outside-cache` fell from 232 to 0 across the whole catalog and the rows still
-point at the wrong pages.
+**It read `0 / 409` before, and the CACHE alone moved it — which was the warning,
+not the win.** The 231 spells scored `traceable` the moment printed 71-72 became
+a page the cache holds, while still pointing at the wrong pages.
+
+**The repair (#372) changed the citations and did not move this number at all.**
+It reads 232 / 177 before and after. That is the whole lesson of this survey in
+one line: the ledger was already green, and being green never depended on the
+rows being right.
 
 **A coverage ledger measures whether a citation can be checked, not whether it is
 right.** That distinction was invisible while the book was uncached.
