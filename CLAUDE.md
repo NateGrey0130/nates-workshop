@@ -20,10 +20,15 @@ junction block in `SETUP.md`. They load by name from any working directory now.
 the gap: the skill simply does not exist for a session started outside the repo,
 which is the working directory the book work uses.
 
-**The subagent is NOT linked.** `.claude/agents/book-reconcile.md` has no
-junction, so `book-survey` phase 5 cannot spawn its second reader from
-`Downloads` — the one place the book work runs. Verified 2026-08-27:
-`~/.claude/agents/` is empty. See `INGESTION-AUDIT.md` F8.
+**The subagent is linked too, since 2026-08-28** (`INGESTION-AUDIT` F8).
+`book-survey` §5 can spawn `book-reconcile` from `Downloads`, the one place the
+book work runs. Until then it could not: `~/.claude/agents` did not exist at all.
+
+The agents link is the **whole directory**, not one entry per file, because an
+agent is a file and a junction only works on a directory — the per-file symlink
+needs administrator rights on this machine. So a new agent is covered the moment
+its file lands, and `~/.claude/agents` cannot hold anything that is not in this
+repo. See the junction block in `SETUP.md`.
 
 | skill | when |
 |---|---|
