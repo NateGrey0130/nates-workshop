@@ -710,6 +710,36 @@ and are protected by Cloudflare's backups, not by git. Name the number and its
 date. **Posture: documentation only. No new tooling, no backup mechanism
 proposed here** — that is a separate decision, and F10 argues it is not needed.
 
+**Taken, 2026-08-28 (PR #388).** Posture held: documentation only. No tooling,
+no backup mechanism, nothing applied to D1. **6,006 re-measured today and
+unchanged.**
+
+**One cross-reference in this finding is wrong.** It says the backup question is
+*"a separate decision, and F10 argues it is not needed"*. F10 is about keeping
+the fast rebuild harness and says nothing about backups. The argument it means
+lives in this file's closing verdict — production is backed by Cloudflare and no
+rebuild has ever been needed. Corrected here rather than in the finding, which
+is a record.
+
+The paragraph went into `operations.md` §Standing up a new environment, directly
+after the pinned clean-run counts, because that table is exactly the thing being
+scoped: it is the catalog and the class definitions, and it is the whole of what
+a rebuild produces.
+
+**It does not resolve F8's contingency, and F8 assumed it would.** F8 said the
+export of its 22 redirects was *"contingent on F9's answer that rebuilds are
+supposed to be restorable"*. F9's answer is about **user data** — characters,
+campaigns, media, filaments — which is not what `catalog_redirects` holds. Those
+22 rows are app-written **catalog metadata**, the same family as F6's enrichment
+gap, not the same family as a character sheet. So F8's question stands on its
+own and `repo-vs-live.mjs` stays red until it is decided. Said plainly because
+the contingency was written expecting to be discharged here and is not.
+
+Beyond the proposal, the paragraph names two consequences: neither
+`test/regression.mjs` nor `repo-vs-live.mjs` is a restore drill, and
+`repo-vs-live.mjs`'s own opening question is scoped correctly where the prose
+around it sometimes is not.
+
 ### F10 — the fast rebuild harness is worth keeping
 
 An hour per rebuild is why the `zzzz-` rename shipped unverified, and why three

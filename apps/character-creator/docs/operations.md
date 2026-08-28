@@ -265,6 +265,36 @@ and asks the running worker what it serves. The previous version of this table
 claimed 23/231/366/52/407 and was verified by nothing - three paragraphs after
 the note above about prose counts drifting silently.
 
+**What a rebuild produces, and what it does not.** The table above is the
+CATALOG and the class definitions. That is the whole of what this repo can
+rebuild, and it is worth stating because the sentence "rebuild from the repo"
+is read as "restore production" often enough that an audit brief opened on the
+assumption.
+
+**It cannot restore production, by design.** Production held **6,006 rows on
+2026-08-28 that no data script creates** and none of them belong in git:
+
+| | | | |
+|---|---|---|---|
+| `media_items` | 3,639 | `characters` | 11 |
+| `ff_filaments` | 2,051 | `play_events` | 6 |
+| `ff_brands` | 157 | `campaigns` | 3 |
+| `character_items` | 111 | `character_drafts` | 2 |
+| `claude_usage` | 26 | | |
+
+Campaigns, characters, journals, NPCs, MediaVault libraries and FilamentForge
+spools exist in D1 and nowhere else. **They are protected by Cloudflare's
+backups, not by this repository**, and no mechanism here is a substitute for
+that. A repo build is for standing up a NEW environment - a fresh preview, a
+scratch database for a test - never for recovering this one.
+
+Two consequences worth carrying. `test/regression.mjs` and
+[`repo-vs-live.mjs`](../../../scripts/repo-vs-live.mjs) build into scratch
+directories and compare catalogs, so neither is a restore drill and neither
+proves one would work. And `scripts/repo-vs-live.mjs`'s own opening question -
+*"Can the repo rebuild the live catalog, row for row?"* - is scoped correctly
+where the prose around it sometimes is not: the CATALOG, never the database.
+
 ### The rebuild did not match production, and nothing was watching
 
 Pinning those counts immediately found that two of them disagreed with
