@@ -581,7 +581,18 @@ scripts/
 ├── catalog-diff.mjs        That, behind a CLI: disagree / missing / matched /
 │                           extra, plus the vocabulary warning
 ├── repo-vs-live.mjs        Can the repo rebuild the live catalog, row for row?
-│                           Builds from scratch and diffs NAMES, not counts
+│                           Builds from scratch and diffs the NAMES, then every
+│                           COLUMN of the rows whose names match. A missing or
+│                           extra row exits 1; a wrong VALUE is reported and
+│                           exits 0, because the value comparison began life
+│                           with 413 findings
+├── rebuild-local.mjs       The same build in ~20 seconds instead of an hour,
+│                           one file at a time so a failure names its file.
+│                           node:sqlite, not workerd - a DEVELOPMENT tool;
+│                           repo-vs-live.mjs stays the authority
+├── trace-row.mjs           Replay a rebuild and print every file that changes
+│                           ONE row. Finds the guard that matched nothing
+│                           because an earlier script renamed its string
 ├── source-coverage.mjs     Can what SHIPPED still be traced back to a cached
 │                           page? Every class and catalog row bucketed
 │                           traceable / not-a-book / no-source-book /
