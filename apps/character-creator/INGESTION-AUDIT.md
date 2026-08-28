@@ -317,6 +317,7 @@ number left in this document.
 |---|---|---|
 | F17 | #358 | `source_pdf_dir` on all thirteen registry entries, verified by stat-ing every basename, and a caches-present line both scripts print every run. Print, do not fail — no exit code moved |
 | F21, and F10 with it | #362 | The survey moved to `apps/character-creator/docs/surveys/<slug>.md`, **tracked**, and all nine books were backfilled offline. Template, three smoke checks, every instruction repointed. No gate moved, and **no check that a survey exists** |
+| F14 | #364 | `.claude/skills/audit-menu/SKILL.md` — the sixth skill, junctioned in the same PR. One skill, no script, **no check**. Four corrections to the finding, including that a grep for `Taken` reports F14 itself as taken |
 
 **Closed without being taken**
 
@@ -343,7 +344,7 @@ current list. The survey it describes is now at
 nothing.
 
 **Corrected again (PR #363): the open list is F8, F14, F15, F22, F23, F24 —
-six.** #362 said three, which counted only the findings the paragraph above
+six.** *(F14 taken in #364; five now — F8, F15, F22, F23, F24.)* #362 said three, which counted only the findings the paragraph above
 names and silently dropped the three #361 had added minutes earlier in this
 same section. The paragraph it was correcting predates F22-F24 and was never
 wrong about them; the correction read as a statement of the whole list and was.
@@ -1593,6 +1594,49 @@ one of those errors would have shipped a silent bug if the proposal had been
 implemented as written. "Verify the premises against current code before
 scoping, and lead the report with the corrections" is the single highest-value
 rule the protocol has, and it is currently unwritten.
+
+**Taken, 2026-08-28 (PR #364).** As proposed, posture held: **one skill, no
+script, no check.** `.claude/skills/audit-menu/SKILL.md` carries every rule this
+proposal lists — the loop, "take F6 means as written, scope and posture both",
+posture stated explicitly, never grep for the outcome note, audit files are
+records, absence claims need a fresh read, every number carries its date and
+source, and the `Adjusted` note's rule that taking a finding is also auditing
+it, given its own section as the highest-value one. Junction created in this PR
+and verified to load by name; `SETUP.md`'s loop and `CLAUDE.md`'s table and
+heading now say six skills.
+
+**Four corrections to this finding, one of which is about this finding.**
+
+1. **"Nine precedent files" is eight.** Counted by opening each:
+   `DOCS-AUDIT`, `EFFICIENCY-AUDIT`, `AUDIT`, `CLASS-AUDIT`,
+   `INGESTION-AUDIT`, `BULK-AUDIT`, `ISBN-AUDIT`, `pick3cut5/AUDIT`.
+2. **It is not `F<n>` numbering.** Five prefixes are in use — `D`, `F`, `B`,
+   `S`, `T` — at **two heading levels**, with an optional severity word
+   (`### F17 — low — …`) and, in one file, a trailing period (`### F1. …`).
+   The skill carries the table. This matters more than a tidiness point: it is
+   the mechanical reason no regex can read these files, which is the same reason
+   the outcome notes cannot be grepped.
+3. **"Three false findings" is four, and the fourth is F14.** This finding
+   carries the outcome note's own shape inside backticks as an example, so every
+   grep for `Taken` reports **F14 itself as taken**. It is open — it was
+   verified open by reading, and the finding that describes the format is the
+   one that format's grep gets wrong. Recorded in the skill as the worst case.
+   The trap also runs backwards: F12, F16 and F19 are closed as moot in the
+   retirement section rather than under their headings, so scanning the findings
+   alone reports three open that are not.
+4. **The 120-line target was missed: the skill is 128 lines.** The overage is
+   the eight-row heading table in correction 2, which this proposal did not
+   anticipate. Kept, on the grounds that it is the one thing in the file a
+   session cannot reconstruct in thirty seconds.
+
+**One premise checked and CONFIRMED**, since this finding accuses a brief of
+getting it wrong: `EFFICIENCY-AUDIT` F7 does read
+`**Taken, 2026-08-25**: as proposed, with one addition the caches forced`, and
+`scripts/class-check.mjs` ships `--field-sources`. F14 was right about that.
+
+**No check added**, per the "when not to" rule the skill now states in its own
+voice: the outcome notes vary in wording by design, and a mechanical reader is
+exactly what has misread them four times.
 
 ### F15 — what should move between skills and scripts, and what should not become a skill
 

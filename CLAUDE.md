@@ -5,10 +5,10 @@ and no `node_modules`; `npx wrangler` resolves from the npx cache. Merging to
 `main` IS the deploy — there is no CI.
 
 App conventions, the data model, and the migration list live in
-`apps/character-creator/README.md`. This file covers the five skills and what is
+`apps/character-creator/README.md`. This file covers the six skills and what is
 easy to get wrong about Cloudflare auth.
 
-## Five skills, and they load from anywhere on this machine
+## Six skills, and they load from anywhere on this machine
 
 `.claude/skills/` holds them. They are **directory-scoped** by nature: a session
 started anywhere else — in `Downloads`, say, with the PDF — would not see them,
@@ -27,6 +27,7 @@ junction, so `book-survey` phase 5 cannot spawn its second reader from
 
 | skill | when |
 |---|---|
+| `audit-menu` | reading or writing an audit file, and whenever a numbered finding is taken |
 | `book-survey` | handed a sourcebook PDF, before extracting anything from it |
 | `class-import` | adding or correcting an O.C.C./R.C.C., or importing skills, spells, psionics or gear |
 | `schema-change` | any new D1 table or column — a column lands in **five** places, a table in nine |

@@ -101,7 +101,7 @@ skills were being pasted into context by hand instead of loading by name
 junctions, so repo edits propagate, and no admin rights are needed:
 
 ```powershell
-foreach ($s in 'book-survey','claim-audit','class-import','schema-change','ship-pr') {
+foreach ($s in 'audit-menu','book-survey','claim-audit','class-import','schema-change','ship-pr') {
   New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\$s" -Target "C:\Users\natha\Projects\nates-apps\.claude\skills\$s"
 }
 ```
