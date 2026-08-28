@@ -2,6 +2,7 @@
 //
 //   node scripts/repo-vs-live.mjs                 # all catalogs
 //   node scripts/repo-vs-live.mjs --table gear    # just one
+//   node scripts/repo-vs-live.mjs --offenders     # every differing row, not the first few
 //
 // drift-check asks whether the repo and the live database agree about
 // BOOKKEEPING - which migrations and data scripts have run - and every script
@@ -9,7 +10,7 @@
 // every published CLASS be creatable from the repo, and nothing made the same
 // demand of catalog rows.
 //
-// That gap has now cost twice:
+// That gap has now cost three times:
 //
 //   * 2 classes and 169 catalog rows once existed only in production, because
 //     the catalog editor and the importer's confirm step write straight to D1.
@@ -20,9 +21,26 @@
 //     and four gear rows missing. Found only because a README count was pinned
 //     and happened to disagree.
 //
-// This asks the question directly: build from the repo into a scratch database,
-// then diff the NAMES against live. Counts are not enough - gear was off by one
-// row and that one row hid seven disagreements going both ways.
+//   * Names matched and the VALUES did not. On 2026-08-28 this script printed
+//     "The repo rebuilds the live catalog exactly" while 413 field values
+//     across these five tables disagreed with production: 24 weapons that are
+//     mega-damage live came out S.D.C., 21 psionic powers came out with no
+//     description at all, 37 rows came out with no `source_book`. Every name
+//     matched, every count matched, and `drift-check --remote` printed NO DRIFT
+//     the same day - correctly, because it was answering a different question.
+//
+// So this asks the question in two halves: build from the repo into a scratch
+// database, then diff against live - the NAMES, and then every COLUMN of the
+// rows whose names already match. Counts were not enough (gear was off by one
+// row and that one row hid seven disagreements going both ways), and names were
+// not enough either. Each level of this check was added after the previous one
+// missed something.
+//
+// THE EXIT CODE STILL MEANS THE FIRST HALF. A missing or extra row fails this
+// script. A wrong VALUE is reported and exits 0. That is deliberate: the
+// content comparison starts life with 413 findings, and a gate that fails on
+// the day it lands gets switched off rather than fixed. Read the number, and
+// watch it go down. See apps/character-creator/REBUILD-AUDIT.md, F3.
 //
 // Slow (it builds a database), read-only, and it never touches production
 // beyond SELECTs.
@@ -36,14 +54,40 @@ const only = (() => {
   const i = process.argv.indexOf('--table');
   return i === -1 ? null : process.argv[i + 1];
 })();
+// Same flag name and same job as source-coverage.mjs's: the capped list is for
+// reading, the full list is for working through.
+const showAll = process.argv.includes('--offenders');
+const ROWS_SHOWN = 8;
 
+// [table, the column whose SET is compared, the column that IDENTIFIES a row].
+// The two are not always the same, and assuming they were cost a re-run: this
+// script's first version joined the value comparison on `name` too, which pairs
+// an armor enchantment with a weapon one. `enchantments` prints Color, Continual
+// Glow and Impervious to Fire once per `applies_to`, and gear has two Sleeping
+// Bags - 24 differences reported that were not differences at all. Found by
+// running it against production, not by reading it.
 const TABLES = [
-  ['skills', 'name'],
-  ['spells', 'name'],
-  ['psionic_powers', 'name'],
-  ['gear', 'name'],
-  ['enchantments', 'name'],
+  ['skills', 'name', 'name'],
+  ['spells', 'name', 'name'],
+  ['psionic_powers', 'name', 'name'],
+  ['gear', 'name', 'slug'],
+  ['enchantments', 'name', 'slug'],
 ];
+
+// Columns that cannot be compared between two independently built databases.
+// `id` is an insertion-order artefact - two CORRECT databases built in a
+// different order disagree about it by construction. `*_at` is the build clock;
+// no catalog table here has one today, but imported_classes and
+// catalog_redirects do, and a comparison that reports 126 timestamp differences
+// teaches nobody anything.
+const uncomparable = (c) => c === 'id' || c.endsWith('_at');
+
+// Compared as text on purpose. D1 hands back a column stored as TEXT '40' and
+// one stored as INTEGER 40 differently, and the app renders both as 40 - so a
+// difference in storage class is not a difference in the catalog.
+const norm = (v) => (v === null || v === undefined ? null : String(v));
+const show = (v) => (v === null || v === undefined ? 'NULL'
+  : JSON.stringify(String(v)).slice(0, 110));
 
 const appDir = join(repoRoot, 'apps', 'character-creator');
 const state = mkdtempSync(join(tmpdir(), 'repo-vs-live-'));
@@ -83,16 +127,23 @@ try {
     return JSON.parse(out.slice(out.indexOf('['))).flatMap((b) => b.results || []);
   };
 
-  let problems = 0;
-  for (const [table, col] of TABLES.filter(([t]) => !only || t === only)) {
-    const repo = fromBuild(`SELECT ${col} FROM ${table}`).map((r) => r[col]);
-    const live = d1Query(`SELECT ${col} FROM ${table}`).map((r) => r[col]);
+  let problems = 0;          // rows missing or extra. THIS is what the exit code means.
+  let contentFields = 0;     // columns holding a different value. Reported, never fatal.
+  let contentRows = 0;
+
+  for (const [table, col, key] of TABLES.filter(([t]) => !only || t === only)) {
+    // SELECT * rather than one column: the second half needs every value, and
+    // asking twice would build nothing and cost a second round trip per table.
+    const repoRows = fromBuild(`SELECT * FROM ${table}`);
+    const liveRows = d1Query(`SELECT * FROM ${table}`);
+    const repo = repoRows.map((r) => r[col]);
+    const live = liveRows.map((r) => r[col]);
     const liveSet = new Set(live), repoSet = new Set(repo);
     const onlyRepo = [...new Set(repo.filter((n) => !liveSet.has(n)))];
     const onlyLive = [...new Set(live.filter((n) => !repoSet.has(n)))];
     problems += onlyRepo.length + onlyLive.length;
 
-    const verdict = onlyRepo.length + onlyLive.length ? 'DIFFERS' : 'matches';
+    const verdict = onlyRepo.length + onlyLive.length ? 'names DIFFER' : 'names match';
     console.log(`${table.padEnd(16)} repo ${String(repo.length).padStart(4)}  `
       + `live ${String(live.length).padStart(4)}   ${verdict}`);
     for (const n of onlyLive) {
@@ -101,12 +152,63 @@ try {
     for (const n of onlyRepo) {
       console.log(`   ONLY REPO  ${n}`);
     }
+
+    // ── the same row, column by column ──
+    // Only over rows present on both sides: a row missing from one of them is
+    // a name problem, already counted above, and listing every column of it
+    // again would report one absence as twenty differences.
+    const cols = [...new Set([
+      ...Object.keys(liveRows[0] || {}), ...Object.keys(repoRows[0] || {}),
+    ])].filter((c) => !uncomparable(c));
+    const repoBy = new Map(repoRows.map((r) => [r[key], r]));
+    const differing = new Map();
+    // A key that is not unique pairs the wrong rows and INVENTS differences,
+    // which is what `name` did here before the key was split out. Refuse rather
+    // than report a number built on a collision.
+    if (repoBy.size !== repoRows.length) {
+      console.log(`   CANNOT COMPARE VALUES: ${key} is not unique in ${table} `
+        + `(${repoRows.length} rows, ${repoBy.size} distinct). Fix the key in TABLES.`);
+    } else {
+      for (const l of liveRows) {
+        const r = repoBy.get(l[key]);
+        if (!r) continue;
+        for (const c of cols) {
+          if (norm(l[c]) === norm(r[c])) continue;
+          if (!differing.has(l[key])) differing.set(l[key], []);
+          differing.get(l[key]).push({ column: c, live: l[c], repo: r[c] });
+        }
+      }
+    }
+
+    if (differing.size) {
+      const fields = [...differing.values()].reduce((a, v) => a + v.length, 0);
+      contentFields += fields;
+      contentRows += differing.size;
+      const byCol = {};
+      for (const v of differing.values()) {
+        for (const d of v) byCol[d.column] = (byCol[d.column] || 0) + 1;
+      }
+      console.log(`   SAME NAME, DIFFERENT VALUE: ${fields} field(s) `
+        + `across ${differing.size} row(s)`);
+      console.log('     ' + Object.entries(byCol).sort((a, b) => b[1] - a[1])
+        .map(([c, n]) => `${c} ${n}`).join(', '));
+      const shown = showAll ? [...differing] : [...differing].slice(0, ROWS_SHOWN);
+      for (const [key, ds] of shown) {
+        for (const d of ds) {
+          console.log(`     ${key} [${d.column}]`);
+          console.log(`        live ${show(d.live)}`);
+          console.log(`        repo ${show(d.repo)}`);
+        }
+      }
+      if (!showAll && differing.size > ROWS_SHOWN) {
+        console.log(`     ... and ${differing.size - ROWS_SHOWN} more row(s) `
+          + `- run with --offenders for all`);
+      }
+    }
   }
 
   console.log('');
-  if (!problems) {
-    console.log('The repo rebuilds the live catalog exactly.');
-  } else {
+  if (problems) {
     console.log(`${problems} row(s) differ.`);
     console.log('  ONLY LIVE  = added through the app and never written back.');
     console.log('               Export it into a data script, as restore-*.sql did.');
@@ -114,7 +216,26 @@ try {
     console.log('               still creates the old row. See');
     console.log('               zz-merge-psionic-duplicates.sql for the shape:');
     console.log('               move redirects, add a forwarding one, then delete.');
+  } else if (!contentFields) {
+    console.log('The repo rebuilds the live catalog exactly.');
+  } else {
+    console.log('The repo creates the right ROWS. Some of them hold the wrong VALUES.');
   }
+
+  if (contentFields) {
+    console.log(`\n${contentFields} field(s) across ${contentRows} row(s) differ in value.`);
+    console.log('  A row the repo creates but cannot reproduce. Two known causes:');
+    console.log('    - the export that created it carried only SOME of its columns.');
+    console.log("      restore-gear-missing-from-repo.sql carries 6 of gear's 18,");
+    console.log('      which is why 24 weapons rebuild as S.D.C. rather than M.D.');
+    console.log('    - the value was written through the catalog editor or the');
+    console.log('      importer, both of which write straight to D1 and leave');
+    console.log('      nothing in git. restore-*.sql recovers a row that was');
+    console.log('      ABSENT, never one that was present and got ENRICHED.');
+    console.log('  Reported, not enforced: this does not move the exit code.');
+    console.log('  See apps/character-creator/REBUILD-AUDIT.md, F3 and F5.');
+  }
+
   process.exit(problems ? 1 : 0);
 } finally {
   rmSync(state, { recursive: true, force: true });
