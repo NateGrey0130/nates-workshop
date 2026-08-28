@@ -1489,6 +1489,33 @@ column runs the other way, no citation is in dispute, nothing needs a book.
 **Posture: a data script, mechanical, applied to `--remote` before its merge.
 Takes `spells` to zero.**
 
+**Taken, 2026-08-28 (PR #395). `spells` is at zero** — the third table to reach
+it, after `psionic_powers` and `catalog_redirects`. Applied to `--remote` before
+the merge; production dumped before and after, 607 rows, **zero field
+differences**.
+
+The finding was right that this one is mechanical: five values, all the same
+shape, nothing running the other way, no citation in dispute, no book opened.
+
+**Two figures in the script's own comments were invented and both were replaced
+with measured ones before it shipped.** The header claimed
+`backfill-spell-ppe-notes.sql` was "where the other 57 came from" — that script
+contains a single `UPDATE` and is not where they came from — and the read-back
+comment predicted `spells_with_a_pf_variant` would read **62**. The real figures:
+**production 14, a rebuild 9, and these five are the whole of the difference.**
+Caught by querying production before trusting the sentence, which is the only
+reason it did not ship as a confident wrong number in a file nobody re-reads.
+
+That is the third time in this audit a read-back comment has been wrong while
+the SQL beneath it was right — F11's `classes_rewired`, F14's
+`skills_with_pf_note`, and now this. **The statements get checked because they
+run; the comments only get checked if someone runs them and compares.** Worth
+saying plainly: a data script's prose is the least-verified thing in it.
+
+**Measured:** spells differences **5 → 0** on a fresh build, and the catalogs
+overall **86 → 81 across 49 rows**. What remains is F18's 64 in gear, F19's 6 in
+classes, and F14's 11 deliberately-excluded skills.
+
 ---
 
 ## The question the brief asked
