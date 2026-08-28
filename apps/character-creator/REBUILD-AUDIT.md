@@ -1440,6 +1440,59 @@ field differences **86 → about 30**.
 Applied to `--remote` before its merge, per F5's note. NOT mechanical, despite
 how it looks.**
 
+**Taken, 2026-08-28 (PR #396).** Posture held: investigated first, and the
+non-mechanical cases decided one at a time. **Gear differences 64 → 4**, and the
+four that remain are the four this finding predicted must not be touched.
+Catalogs overall **81 → 21 across 20 rows.** Applied to `--remote`; production
+dumped before and after, 975 rows, **zero field differences.**
+
+**This finding said "read the eight non-NULL cases first". There are
+TWENTY-FOUR.** It counted `category`, `system`, `source_book` and `weight_lbs`
+and missed that `description` (11) and `cost` (8) disagree too. All 24 were
+read. Twenty exported, four not.
+
+**The four not exported, and the reason is the whole point of the finding.**
+`hand-held-blood-pressure-machine`, `unbreakable-vial`, `medical-bag` and
+`poncho` have `category` NULL live and `'gear'` in a rebuild — **the rebuild is
+right.** `fix-body-fixer-page-break.sql` inserts them with no category, and
+`zzz-gear-tidy-3-categories.sql` ends with an unconditional
+`UPDATE gear SET category = 'gear' WHERE category IS NULL`. In a rebuild the
+insert sorts under `f` and the tidy under `zzz`. On production the two were
+applied **three hours apart in the other order**:
+
+```
+zzz-gear-tidy-3-categories.sql   16:12:11
+fix-body-fixer-page-break.sql    19:12:19    (both 2026-08-25)
+```
+
+Exporting production's NULL would have deleted a category a rebuild correctly
+has. **A third table with the same hand-application hazard as F15 and F19** —
+and correcting production for it belongs with F19, not here.
+
+**The eight `cost` disagreements turned out to be a convention, and the book
+settled it.** Production stores the LOW END of a published range in `cost` and
+the range in `cost_note`; a rebuild carries only the top, with no note. In all
+eight the repo's figure is exactly production's upper bound. RUE printed 261
+prints *"Black Market Price: 35,000 to 45,000 with a custom paint job"* under
+**Features Common to All "Dead Boy" Armor** — a shared floor for both suits,
+which is why production holds 35,000 for each against a rebuild's 40,000 and
+70,000 taken from a web reference.
+
+The 11 `description` disagreements are a rebuild's
+`STUB - split out of a choice or bundle row` against real prose. The 2 `system`
+rows are the class importer's stub tag against a considered per-item call.
+
+**A smoke check caught something the audit had not, and it took two attempts to
+satisfy.** `zzzz-restore-gear-values.sql` **assigns**
+`source_book = 'Web reference (not book-verified)'` to `tinted-goggles`, and the
+suite requires any script writing that marker to declare it in its header —
+because otherwise the provenance lives in the database and nowhere in the repo.
+The first fix added the declaration and still failed: the check reads
+`text.split('UPDATE')[0].split('INSERT')[0]`, and this header **quotes an
+`UPDATE` statement** while explaining the category case, so everything after
+that quote is invisible to it. The declaration had to move above the quote.
+**A header that explains SQL truncates its own machine-readable half.**
+
 ### F19 — the six classes where the REBUILD is ahead of production
 
 The mirror of every other finding here, and the second one that would change
