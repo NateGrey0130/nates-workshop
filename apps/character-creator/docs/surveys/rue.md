@@ -157,7 +157,7 @@ Physical.
 | — | `5c66a60` | RUE's six dragon hatchling species |
 | 2026-08-27 | [#337](https://github.com/NateGrey0130/nates-workshop/pull/337) | `rue` registered in `books.json` |
 | 2026-08-28 | — | this file, backfilled offline |
-| 2026-08-28 | [#375](https://github.com/NateGrey0130/nates-workshop/pull/375) | `fix-rue-citations.sql` — **304 of 327** rows cited by page: 118 spells (3 of them re-attributed to the Book of Magic), 79 psionic powers, 84 skills, 23 gear. 23 held back, listed above. Applied `--remote` before the PR. **`rue` is 647 / 23.** |
+| 2026-08-28 | [#375](https://github.com/NateGrey0130/nates-workshop/pull/375) | `zzzz-cite-rue-rows.sql` — **304 of 327** rows cited by page: 118 spells (3 of them re-attributed to the Book of Magic), 79 psionic powers, 84 skills, 23 gear. 23 held back, listed above. Applied `--remote` before the PR. **`rue` is 647 / 23.** |
 
 ### What remains
 

@@ -3,7 +3,21 @@
 -- One-off data script, run once per environment. NOT a migration - it changes
 -- rows, not schema.
 --
---   node scripts/d1-apply.mjs --local apps/character-creator/db/fix-rue-citations.sql
+--   node scripts/d1-apply.mjs --local apps/character-creator/db/zzzz-cite-rue-rows.sql
+--
+-- THE `zzzz-` PREFIX IS LOAD-BEARING. This was written as `fix-rue-citations.sql`,
+-- which sorts under `f` - in the MIDDLE of the data scripts. Applied to
+-- production by hand it ran last and was right; applied in filename order it
+-- ran before `restore-skills-missing-from-repo.sql`, which CREATES many of
+-- the rows it cites, and its guarded UPDATEs matched nothing. A database
+-- rebuilt from schema.sql plus every data script in order lost 148 citations
+-- across the three files this was one of. Measured, not reasoned:
+-- production 26 rows still bare, fresh build 172.
+--
+-- This is the third time this repo has escalated a prefix for the same
+-- reason. `zz-` sorts after `fix-*`, `zzz-` after `zz-`, and these citation
+-- files have to sort after `zzz-gear-tidy-*` too, which rewrites the
+-- `source_book` of gear rows. See operations.md, Data scripts.
 --
 -- 327 rows carried the bare title 'Rifts Ultimate Edition' and no page range.
 -- Nothing here was ever `outside-cache`: all 382 pages are cached, so every
@@ -697,4 +711,11 @@ UNION ALL SELECT 'gear', count(*) FROM gear WHERE source_book = 'Rifts Ultimate 
 -- counts above must read 0 / 9 / 3 / 11 and nothing else.
 
 -- Records this run. REQUIRED: the smoke test fails a data script with no footer.
-INSERT INTO data_script_runs (filename) VALUES ('fix-rue-citations.sql');
+-- The run record follows the file. This script was applied to production
+-- under its OLD name before the rename, and that name never existed in
+-- `main` - so the row asserts a file the repo does not have and would read
+-- as drift forever. Removing it is the `fix-seed-dev-run-record.sql`
+-- precedent: only a record that says something untrue is deleted, and this
+-- one names a file nobody can read.
+DELETE FROM data_script_runs WHERE filename = 'fix-rue-citations.sql';
+INSERT INTO data_script_runs (filename) VALUES ('zzzz-cite-rue-rows.sql');
