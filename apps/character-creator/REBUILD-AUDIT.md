@@ -682,6 +682,47 @@ Full run after this change: `128 field(s) across 85 row(s)` and `22 row(s)
 differ`, exit 1. `imported_classes` is down to 6 differing rows, F7 having
 closed two.
 
+**Second half taken, 2026-08-28 (PR #392). The red is cleared:
+`repo-vs-live.mjs` exits 0 again**, with `catalog_redirects 45 / 45  names
+match`.
+
+**The contingency discharged, though not the way F8 framed it.** F8 made the
+export conditional on *"F9's answer that rebuilds are supposed to be
+restorable"*, and F9's answer is that a rebuild produces the **catalog and the
+class definitions**, never the user data. A redirect is catalog metadata — it is
+what makes a saved key resolve after a merge — so it sits **inside** that scope.
+F9's own note said this finding was not discharged by it; on re-reading, F9
+answers it in the affirmative rather than leaving it open. Recorded because the
+two notes disagree and this one is later.
+
+**`to_id` could not be exported and the statements resolve it at apply time.**
+It is a ROWID, which is why F8's first half excluded it from comparison; the
+same fact means it cannot be written down. Each statement selects the target by
+its natural key, the shape `zz-merge-psionic-duplicates.sql` already uses. If a
+target is absent the INSERT selects nothing and no redirect is created — the
+right failure, since a redirect pointing at a missing row is worse than none.
+All 22 resolved against production; none pointed at a missing row.
+
+18 skills and 4 gear.
+
+**The smoke test is STRICTER THAN `d1-apply.mjs`, and finding that out cost a
+red build.** `d1-apply` exempts comments from its non-ASCII check — its own
+header explains why, having once refused 11 of the repo's migrations for
+em-dashes in prose. The smoke test does not exempt them: *"every data script is
+pure ASCII"* covers the whole file. One comment line here read
+`-- Lore — Faerie -> ...`, describing a `from_key` that genuinely contains an
+em-dash, and it failed smoke while `d1-apply` had accepted it happily on both
+targets. The comment now spells the key with `char(8212)` like the executable
+line beneath it. **Two guards, two rules, and the stricter one is not the one
+that runs first.**
+
+**Verified:** a fresh build reaches **45 redirects, 0 dangling targets** —
+production's own figures. Production dumped before and after: 45 rows before,
+45 after, **0 added and 0 changed**, since all 22 already existed there.
+
+Field differences are unchanged at **86 across 54 rows** — this finding adds
+rows, it does not touch values.
+
 ### F9 — "rebuild from the repo" has never meant "restore production", and nothing says so
 
 Production holds **6,006 rows no data script creates**:
