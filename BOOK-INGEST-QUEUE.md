@@ -71,12 +71,27 @@ against 10-13MB), and the correlation held exactly. The four text-layer books
 cached in seconds; the scans needed ~650 pages of Tesseract.
 
 **`triax` and `phase-world` both have a ZERO offset** — printed N is cache
-`pNNN`, `read-columns.py N+1`. That makes **four** zero-offset books in the
-catalog, after `potm` and `ww`. Both verified by folio rather than assumed:
+`pNNN`, and `read-columns.py` **N**. That makes **four** zero-offset books in
+the catalog, after `potm` and `ww`. Both verified by folio rather than assumed:
 triax 177 pages agree at +0 against 1, phase-world 166 against 3 in a single
 unbroken region. The skill's warning applies to both — a zero offset leaves no
 discrepancy to explain when a page reads wrong, which is why it cost a wrong
 page read on the first Godling attempt in `potm`.
+
+**This line said `read-columns.py N+1` until 2026-08-30, and it was wrong.** The
+two numbers come from the same place, so there is nothing to convert between:
+`ocr-book.py` writes cache `pNNN` from `doc[pno - 1]` and `read-columns.py`
+reads `doc[n - 1]`, so **cache `pN` IS `read-columns.py N`, in every book**. The
+`page_offset` then relates that shared number to the printed folio and nothing
+else. `ww` — the other zero-offset book, registered by an earlier session — had
+this right all along, and the wrong version contradicted it in the same file.
+
+The mistake was reading it off `book-survey` 0d's table, where "zero-offset
+book" means printed N is *pymupdf index* N (`potm`, whose `page_offset` is 1),
+not `page_offset: 0`. Two different senses of "zero offset", one page apart —
+which is the trap that section is thirty lines about, arrived at from the other
+side. **Derive the number from the two scripts, not from prose about a third
+book.**
 
 **Zero offset is no longer the oddity the skill describes.** Four of fifteen
 cached books have one and only `pf` and `underseas` split. Assuming +1 because
