@@ -206,7 +206,7 @@ import { classesMentioning, findDuplicates, normaliseName, similarity } from '..
 import { collapseStatement, keysOf, redirectStatements, resolveKeys } from '../../../functions/api/character-creator/_lib/catalog-redirects.js';
 import { buildStubStatements, referencedGear, restrictionNames } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { CHARACTER_JSON_COLUMNS } from '../../../functions/api/character-creator/_lib/character-json.js';
-import { composeSourceBook } from '../../../functions/api/character-creator/_lib/source-book.js';
+import { composeSourceBook } from '../../../scripts/source-book-lib.mjs';
 import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicGrantsFor,
          xpTableFor, thresholdFor, spellLevelsForGrant,
          psionicCategoriesForGrant, spellNamesForGrant,

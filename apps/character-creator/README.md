@@ -603,6 +603,15 @@ scripts/
 ├── source-coverage-lib.mjs Its pure half: one source_book string in, one
 │                           bucket out, so the smoke test pins the bucketing
 │                           against a fixture and never against live caches
+├── source-book-lib.mjs     Composing the `source_book` a row is written
+│                           with: the book resolved through books.json
+│                           rather than taken verbatim, the pages
+│                           normalised to `p.N-M`. Lived under
+│                           `functions/_lib/` until its JSON import broke
+│                           every production deploy for two days - Pages
+│                           compiles every file under functions/, and its
+│                           esbuild cannot read an import attribute. It
+│                           had no route calling it by then; see its header
 ├── ocr-book.py             Cache a sourcebook into .cache/books/<slug>/ - the ONE
 │                           front door, either kind of book. A text layer is
 │                           detected and read through read-columns.py (no OCR,
