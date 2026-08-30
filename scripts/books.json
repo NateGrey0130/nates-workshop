@@ -185,21 +185,74 @@
     "triax": {
       "title": "Rifts World Book 5: Triax and the NGR",
       "aliases": ["Triax & The NGR"],
-      "source_pdf": null,
-      "source_pdf_dir": null,
-      "printed_pages": null,
-      "page_offset": null,
-      "note": "One gear row. No copy on hand."
+      "source_pdf": "Rifts- World Book 5 Triax and the NGR.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "printed_pages": 222,
+      "page_offset": 0,
+      "note": "Cached 2026-08-28 from a SCAN - no text layer, --probe medians 0 chars/page across all twenty samples. The THIRD zero-offset book here after potm and ww: printed N is cache pNNN, and read-columns.py N+1. Verified by folio rather than assumed - 177 pages agree at +0 against 1 at +1 - which matters because a zero offset leaves no discrepancy to explain when a page reads wrong. The five disagreements are OCR misreading the folio itself (p134 reads 693), not an offset region. Was a stub carrying one gear row and no copy on hand until the PDF arrived in the seven-book batch; the alias is live vocabulary that row resolves through and is kept."
+    },
+
+    "underseas": {
+      "title": "Rifts World Book 7: Underseas",
+      "aliases": [],
+      "source_pdf": "Rifts- World Book 7 Underseas.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "printed_pages": 214,
+      "page_offset": -1,
+      "page_offset_exceptions": [
+        { "printed_through": 130, "offset": 0 }
+      ],
+      "note": "Cached 2026-08-28 from a SCAN - --probe medians 0 chars/page, OCR medians 5,668. THE SECOND BOOK HERE WITH A SPLIT OFFSET, after pf, and the first with a NEGATIVE one: printed 1-130 sit at +0 and printed 132-216 at -1, 101 pages against 74. A single number cannot describe it and a majority vote picks +0, which sends every lookup past 130 one page early. ocr-book.py measured -1 for the whole book, which is the same error from the other side. THE CAUSE IS A MISSING PAGE: printed 131 is absent from the PDF. File p130 carries folio 130 and ends mid weapons stat block; p131 carries folio 132 and opens mid-sentence. Printed 131 falls through to the -1 rule and lands on p130, which is printed 130 - wrong, but it is the nearest page that exists and nothing can cite a page the scan does not hold. printed_pages is 214, the last page of book content (the Experience Tables); printed 215-216 are numbered Palladium house ads. Nothing in production cites this book yet."
     },
 
     "new-west": {
       "title": "Rifts World Book 14: New West",
       "aliases": ["Rifts New West"],
-      "source_pdf": null,
-      "source_pdf_dir": null,
-      "printed_pages": null,
-      "page_offset": null,
-      "note": "One skill row. No copy on hand."
+      "source_pdf": "Rifts- World Book 14 New West.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "printed_pages": 224,
+      "page_offset": 1,
+      "note": "Cached 2026-08-28 from its TEXT LAYER, median 3,784 chars/page. printed_pages is 224 and NOT the 222 ocr-book.py measured: printed 223-224 are the experience tables, which print no folio, and the registry outranks the manifest for exactly this reason (see bom). Offset verified by folio, 198 pages agreeing against 3 - and those 3 are contents pages listing many numbers, not a second offset region. Was a stub carrying one skill row (W.P. Rope) and no copy on hand; the alias is kept as live vocabulary."
+    },
+
+    "spirit-west": {
+      "title": "Rifts World Book 15: Spirit West",
+      "aliases": [],
+      "source_pdf": "Rifts- World Book 15 Spirit West.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "printed_pages": 208,
+      "page_offset": 1,
+      "note": "Cached 2026-08-28 from its TEXT LAYER, median 5,468 chars/page. Offset verified by folio: 190 pages agree, the 2 that do not are contents pages. Nothing in production cites this book yet."
+    },
+
+    "mystic-russia": {
+      "title": "Rifts World Book 18: Mystic Russia",
+      "aliases": [],
+      "source_pdf": "Rifts- World Book 18 Mystic Russia.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "printed_pages": 176,
+      "page_offset": 1,
+      "note": "Cached 2026-08-28 from its TEXT LAYER, median 5,102 chars/page. The cleanest offset measurement in the batch - 157 pages agree at +1 and NONE disagree. The last three cache pages are Palladium house ads for The Rifter, which the book does not number. Nothing in production cites this book yet."
+    },
+
+    "free-quebec": {
+      "title": "Rifts World Book 22: Free Quebec",
+      "aliases": [],
+      "source_pdf": "Rifts- World Book 22 Free Quebec.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "printed_pages": 192,
+      "page_offset": 1,
+      "note": "Cached 2026-08-28 from its TEXT LAYER, median 4,801 chars/page. Offset verified by folio, 165 pages agreeing against 4; two of those are contents pages and two (p86, p181) are stray numbers in prose on pages whose folio did not survive as a bare line. Nothing in production cites this book yet."
+    },
+
+    "phase-world": {
+      "title": "Rifts Dimension Book 2: Phase World",
+      "aliases": [],
+      "source_pdf": "Rifts- Dimension Book 2 Phase World.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "printed_pages": 208,
+      "page_offset": 0,
+      "note": "Cached 2026-08-28 from a SCAN - --probe medians 0 chars/page, OCR medians 4,119. The FOURTH zero-offset book here, after potm, ww and triax: printed N is cache pNNN, and read-columns.py N+1. Verified by folio and decisive - 166 pages agree at +0 against 3, one region from p010 to p208 with no split. printed_pages is 208, the last page of content; p209 is a Palladium house ad the book does not number. Printed 203-208 are blank character record sheets, one per O.C.C., which name several of the book's classes without defining them - a mention is not a definition, so survey from the stat blocks rather than from those sheets. Nothing in production cites this book yet."
     }
   }
 }
