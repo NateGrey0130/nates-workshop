@@ -59,3 +59,84 @@ the check would be nearly all noise. The gear columns are the ones with the
 signal.
 
 **Open.**
+
+### F2 — `skills.base` cannot hold a percentage derived from an attribute
+
+`phase-world` printed 150 defines **Zero Gravity Movement & Combat** with a base
+of *P.P. number x5%*, plus 4% per level. The per-level half fits; the base does
+not. `skills.base` is `INTEGER NOT NULL DEFAULT 0` and every consumer treats it
+as a fixed starting percentage, so there is nowhere to put a formula and no
+runtime that would evaluate one.
+
+This is the FIRST skill in the catalog whose base is attribute-derived, so
+nothing here is a regression — the shape has simply never come up. Worth stating
+because a `0` in that column already means something else: the schema comment
+says *0 = non-percentile (W.P.s, hand to hand)*, and 336 rows rely on that
+reading. Storing this skill at 0 makes it indistinguishable from a W.P.
+
+**What the import did instead:** the row is imported with `base` 0 and the
+formula written into `note`, and the class entries that grant it carry the same
+sentence in `extraction_notes`. That is visible on the skill's own detail and
+invisible everywhere a number is expected — the character sheet will show a
+starting 0% for a skill the book starts at 40-50% for a typical P.P.
+
+**Proposal, and it is deliberately the smaller of the two available.** Add a
+`base_formula TEXT` column beside `base`, holding an attribute token and a
+multiplier (`PP*5`), read by whatever derives a skill percentage. `base` keeps
+its meaning for every existing row and stays the fallback when `base_formula`
+is NULL. The alternative — making `base` a TEXT expression — touches every
+consumer of a column 336 rows use and is not worth it for one row.
+
+Two things to settle when this is taken, not before:
+
+- **Where the evaluation lives.** `derive.js` turns class bonuses into numbers
+  and already has the character's attributes; a skill's base is currently
+  resolved in the catalog layer, which does not. Those are different places and
+  the cheaper one may be the wrong one.
+- **Whether one row justifies a column.** It is one row today. Palladium prints
+  attribute-derived skills elsewhere (`Mutants in Orbit` is named on printed 151
+  as the source of more space skills), so the honest answer is *probably more
+  later*, not *definitely*. A second occurrence is a better trigger than this
+  finding is.
+
+**Open.**
+
+### F3 — `gear` has no shape for a vessel, and this batch has 25 of them
+
+`phase-world` prints 6 power armor and robots (130-142), 5 tanks and IFVs
+(143-149) and 14 starships and shuttles (157-173). The `gear` table holds
+`damage`, `is_mega_damage`, `range`, `payload`, `rate_of_fire`, `ar`, `sdc`,
+`mdc`, `weight_lbs` and `cost` — enough for a rifle, and not enough for any of
+these.
+
+What a vessel stat block here carries that has nowhere to go:
+
+| the book prints | gear column |
+|---|---|
+| M.D.C. **by location** — main body, engines, turrets, sensors, a dozen entries with their own destruction rules | one `mdc` integer |
+| crew complement, and passenger capacity separately | none |
+| speed in three regimes: ground, atmospheric Mach, and FTL in light years per hour | none |
+| a numbered list of 5-8 weapon systems, each with its own damage, rate of fire, range and payload | one of each |
+| variable force fields with a per-facing allocation (156) | none |
+
+Storing one of these as a `gear` row means picking one weapon system out of
+eight and dropping the rest, which is worse than not storing it: the row would
+read as complete.
+
+**This is not new with this book** and that is the argument for numbering it
+here rather than treating it as a Phase World problem. The catalog already holds
+power armor and robot vehicles as `gear` rows with `category = 'vehicle'`, and
+they carry the same loss silently — `mdc` on a Glitter Boy is the main body and
+its arms and legs are gone. Phase World is the first book where the dropped half
+is most of the entry.
+
+**Proposal:** nothing, yet. The options are a `vehicles` table (nine places, per
+`schema-change`), a JSON `systems` column on `gear`, or continuing to drop it and
+saying so. All three are defensible and the decision is about what the app wants
+to *do* with a starship, which nothing has asked for. **What this finding is for
+is the record**: when a vessel row looks thin, this is why, and it was a choice.
+
+Until then the batch imports **no** vessels from this book, and the survey says
+so in its extraction plan.
+
+**Open.**
