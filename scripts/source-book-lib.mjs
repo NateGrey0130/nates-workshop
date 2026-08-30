@@ -1,3 +1,21 @@
+// WHY THIS IS IN scripts/ AND NOT UNDER functions/.
+//
+// It used to be `functions/api/character-creator/_lib/source-book.js`, and
+// living there broke every production deploy for two days. Pages compiles
+// EVERY file under functions/, reachable from a route or not, with the
+// wrangler its build image ships - 3.114.17, whose esbuild cannot parse the
+// `with { type: 'json' }` import attribute that Node REQUIRES for a JSON
+// import. No syntax satisfies both, so the module could not sit in the
+// bundle and read the registry at the same time.
+//
+// Moving it rather than working around it, because by then it had no caller
+// under functions/ at all: the four it was written for were the session and
+// skill importers, and retiring the importer took all four. Its only reader
+// is the smoke test. That also makes it the last file that crossed from
+// functions/ into scripts/, which is the boundary that let a Node-only
+// import reach the Worker in the first place.
+//
+// Keep it out. A route that needs this again should import it from here.
 // Composing the `source_book` value a confirmed import writes.
 //
 // The session importers have always known which pages a row came from — the
@@ -32,12 +50,12 @@
 //
 // Pure string work, no I/O: the smoke test pins it directly.
 
-import BOOKS from '../../../../scripts/books.json' with { type: 'json' };
+import BOOKS from './books.json' with { type: 'json' };
 // The same resolver `class-check`, `drift-check` and `source-coverage` use.
 // Re-implementing the normalisation here is how one vocabulary becomes two:
 // these are pure functions over strings with no Node dependency, so esbuild
 // bundles them into the Worker the same as anything else.
-import { isNotABook, registryBookSlug } from '../../../../scripts/class-check-lib.mjs';
+import { isNotABook, registryBookSlug } from './class-check-lib.mjs';
 
 // The printed pages out of a free-text page-range LABEL.
 //

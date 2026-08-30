@@ -23,7 +23,8 @@ import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 // matches nothing. Both end in "no section matched", which is a failure.
 const SECTIONS = ['D1 schema (local, shared DB)', 'schema.sql self-sufficiency',
   'Data script conventions', 'SQL statement splitting', 'Documentation claims',
-  'Skills stay true', 'Book surveys', 'Migration state'];
+  'Skills stay true', 'Book surveys', 'Migration state',
+  'What Pages will compile'];
 
 export function run() {
 if (!SECTIONS.some(wantSection)) return;
@@ -604,4 +605,74 @@ if (Array.isArray(recorded)) {
     'recorded but not on disk: ' + orphans.join(', '));
 }
 
+
+// ---------- 9. What Pages will compile ----------
+// Cloudflare Pages compiles every file under functions/ - reachable from a
+// route or not - AND everything they import, with the wrangler its build image
+// ships rather than the one this repo runs. That gap cost two days of
+// production: a JSON import written the way Node REQUIRES it
+// (`with { type: 'json' }`) parses under a current wrangler and does NOT parse
+// under the build image's 3.114.17, so every deploy from 2026-08-27 failed
+// while every local check stayed green. Fifty-seven merges landed on main and
+// not one of them reached production.
+//
+// THIS IS DELIBERATELY NOT "run the build and see". Shelling out to `npx
+// wrangler pages functions build` uses whatever version resolves here, which
+// is newer than the build image and compiles the very syntax that broke
+// production - a check that would have passed through the whole outage. That
+// was measured, not assumed. So the rule is checked as text, where it cannot
+// drift with a version.
+//
+// The closure is the point. Half of what Pages bundles is NOT under functions/
+// at all: the routes share `apps/character-creator/js/` with the browser, on
+// purpose, and that is fine because browser modules cannot contain Node-only
+// syntax either. Checking the directory would have missed a bad import one
+// file deeper.
+section('What Pages will compile');
+{
+  const fnDir = join(repoRoot, 'functions');
+  const seeds = [];
+  const walkFn = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, e.name);
+      if (e.isDirectory()) walkFn(full);
+      else if (/\.(js|mjs|ts)$/.test(e.name)) seeds.push(full);
+    }
+  };
+  walkFn(fnDir);
+
+  // Follow relative imports out from every route. Bare specifiers are runtime
+  // builtins and never files here.
+  const bundled = new Set();
+  const queue = [...seeds];
+  const IMPORTS = /^\s*(?:import|export)[^'"]*?from\s*['"](\.[^'"]+)['"]/gm;
+  while (queue.length) {
+    const f = queue.pop();
+    if (bundled.has(f) || !existsSync(f)) continue;
+    bundled.add(f);
+    const text = readFileSync(f, 'utf8');
+    for (const m of text.matchAll(IMPORTS)) queue.push(join(dirname(f), m[1]));
+  }
+  const relB = (f) => f.slice(repoRoot.length + 1).replace(/\\/g, '/');
+  check('the bundle closure resolves past functions/ itself',
+    bundled.size > seeds.length, bundled.size + ' files from ' + seeds.length + ' routes');
+
+  // Import attributes, in either spelling. `assert` is the older one and is
+  // gone from Node 24, so neither form satisfies both runtimes: a module that
+  // needs one cannot be in this bundle at all.
+  const attrs = [...bundled].filter((f) =>
+    /\b(?:with|assert)\s*\{\s*type\s*:/.test(readFileSync(f, 'utf8')));
+  check('nothing Pages bundles uses an import attribute',
+    attrs.length === 0,
+    attrs.map(relB).join(', ') + " - the build image's esbuild cannot parse one; "
+      + 'the module belongs in scripts/, not in the bundle');
+
+  // scripts/ is Node CLIs and their pure halves - fs, process, node: imports.
+  // Sharing `apps/character-creator/js/` with the browser is the intended
+  // pattern; reaching into scripts/ is how a Node-only import got in.
+  const fromScripts = [...bundled].filter((f) => f.startsWith(join(repoRoot, 'scripts')));
+  check('and none of it reaches into scripts/', fromScripts.length === 0,
+    fromScripts.map(relB).join(', ') + ' - scripts/ is Node-only; move what the '
+      + 'routes need into functions/ or apps/character-creator/js/');
+}
 }
