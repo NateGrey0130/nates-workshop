@@ -19,10 +19,12 @@ the human view of the same thing plus the import status.
 | `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | cached |
 | `mystic-russia` | Rifts WB 18: Mystic Russia | 178 | text layer | 176 | +1 | cached |
 | `free-quebec` | Rifts WB 22: Free Quebec | 194 | text layer | 192 | +1 | cached |
-| `phase-world` | Rifts DB 2: Phase World | 209 | SCAN (OCR) | 208 | **+0** | cached |
+| `phase-world` | Rifts DB 2: Phase World | 209 | SCAN (OCR) | 208 | **+0** | **surveyed** |
 
-Status is `cached` -> `surveyed` -> `imported`. Nothing here is surveyed yet:
-the kickoff session caches and registers only, by design.
+Status is `cached` -> `surveyed` -> `imported`. `phase-world` was surveyed on
+2026-08-30 - see `apps/character-creator/docs/surveys/phase-world.md`, which is
+the boot file for any session continuing it. The other six are cache-only: the
+kickoff session caches and registers, by design.
 
 **`triax` and `new-west` were already registry stubs** with `source_pdf: null` —
 one gear row cites Triax, one skill row cites New West. Their entries were
