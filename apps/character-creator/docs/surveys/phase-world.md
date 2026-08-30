@@ -250,6 +250,18 @@ exactly, which is the evidence:
 | `Language: Trade Five/Reptile` Technical 40/5 | Trade Five | 52 | agree |
 | `Language: Trade Six` Technical 45/5 | Trade Six | 52-53 | agree |
 
+**Expect 12 new `drift-check` citation advisories, and do not "fix" them by
+renaming.** That check asks whether the row's NAME appears in the text of the
+page it cites. For 12 of the 15 rows this book now sources it does not, because
+the catalog name and the book's own spelling differ on purpose - `Space: Space
+Fighter` against *Pilot: Space Fighter*, `Space: Extra-Vehicular Activity`
+against *EVA*, `Language: Trade Five/Reptile` against *Trade Five*. The
+citations are correct and the advisory is the tool doing its job: it cannot
+tell a wrong page from a right page under a different name, and it says so.
+Three resolve cleanly - `Lore: Galactic/Alien`, `Language: Trade Three` and
+`Law: CCW` - because those are the three the book spells the way the catalog
+does.
+
 **The action is re-citation, never a rename.** Characters reference skills by
 name; renaming `Space: Space Fighter` to the book's `Pilot: Space Fighter` is
 duplicate-tool work that rewrites characters, the same reasoning
@@ -320,8 +332,10 @@ Phase 4 costs money; everything above was free.
    express: the CAF/CCW and Transgalactic O.C.C.s first (ordinary skill-and-gear
    classes), then the alien R.C.C.s, then the Prometheans and Cosmo-Knight last
    because those carry the most that the schema cannot hold.
-3. **Gear, printed 114-129**, after the classes, so class equipment lists have
-   real rows to point at rather than stubs.
+3. **Gear, printed 114-129**, BEFORE the classes, so class equipment lists have
+   real rows to point at rather than stubs. This was written the other way round
+   in the first draft and is corrected here: a class import creates a stub for
+   every slug it cannot resolve, and the CAF Trooper alone names eight.
 
 What is deliberately left, with the reason for each:
 
@@ -347,7 +361,8 @@ What is deliberately left, with the reason for each:
 | date | PR | what went in |
 |---|---|---|
 | 2026-08-28 | [#400](https://github.com/NateGrey0130/nates-workshop/pull/400) | cache built (209 pp), registered in `books.json`, offset 0 verified |
-| 2026-08-30 | — | survey written; inventory, both authority tables, and the full catalog diff |
+| 2026-08-30 | [#401](https://github.com/NateGrey0130/nates-workshop/pull/401) | survey written; inventory, both authority tables, the full catalog diff, findings F2 and F3, two corrections to the book's `books.json` note. No data. MERGED. |
+| 2026-08-30 | [#402](https://github.com/NateGrey0130/nates-workshop/pull/402) | **skills**: 7 new rows (4 Trade Tongues, Law: CCW, Space: Contragravity Pak, Space: Zero Gravity Movement & Combat) and 8 re-cited off `Rifts Skill List` onto printed 52-53 and 150-151. Catalog 336 -> 343 skills; `rifts-skill-list` 48 -> 40 untraceable. Applied `--remote` before the PR. |
 
 ### What remains
 
