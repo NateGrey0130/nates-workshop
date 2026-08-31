@@ -1502,9 +1502,12 @@ function advPsiPool(cats = null) {
   // come from; a grant naming its own categories is a later, different rule and
   // is not narrowed by that list.
   const named = !cats && psi.from && new Set(psi.from.map((n) => n.toLowerCase()));
+  // categoryAllows rather than a plain includes: a category entry may narrow
+  // itself with `only` / `except` since F16, and that is the same grammar and
+  // the same function the skill pickers use.
   const inCategory = named
     ? S.psiCatalog.filter((x) => inSystem(x) && named.has(String(x.name).toLowerCase()))
-    : S.psiCatalog.filter((x) => inSystem(x) && allowed.includes(x.category));
+    : S.psiCatalog.filter((x) => inSystem(x) && categoryAllows(allowed, x));
   // The per-power tier gate applies here exactly as it does at level 1. Out-of
   // tier powers stay unselectable rather than becoming an override, which is
   // the deliberate asymmetry with skill categories: those get bent at the
@@ -2717,7 +2720,7 @@ function renderPowers() {
     const named = psi.from && new Set(psi.from.map((n) => n.toLowerCase()));
     const inCategory = named
       ? S.psiCatalog.filter((p) => inSystem(p) && named.has(String(p.name).toLowerCase()))
-      : S.psiCatalog.filter((p) => inSystem(p) && allowed.includes(p.category));
+      : S.psiCatalog.filter((p) => inSystem(p) && categoryAllows(allowed, p));
     // A name the catalog does not carry would silently shrink the list, so
     // say so - the same reasoning the skill cross-reference uses.
     const unknownNamed = named
@@ -2732,7 +2735,8 @@ function renderPowers() {
       .concat(pool.filter((p) => S.psi.includes(p.name) && !Picker.match(p, S.psiFilter)));
 
     inner += `<h3>Psionic powers — ${S.psi.length}/${psi.count}
-      <span class="muted small">(${esc(tier)} psychic · ${psi.from ? 'from the class list' : (single && S.psiCategory ? [S.psiCategory] : psi.cats).join(', ')})</span></h3>`
+      <span class="muted small">(${esc(tier)} psychic · ${psi.from ? 'from the class list'
+        : (single && S.psiCategory ? [S.psiCategory] : psi.cats).map(categoryLabel).join(', ')})</span></h3>`
       + (single && !S.psiCategory
         ? `<p class="attr-note">Choose a category above — all ${psi.count} powers come from the same one.</p>` : '') +
       // Say that something is being withheld, so a short list reads as a rule

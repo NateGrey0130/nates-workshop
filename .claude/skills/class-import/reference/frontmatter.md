@@ -193,6 +193,26 @@ magic:
   spells: ["Globe of Daylight"]   # granted by name
 ```
 
+`psionics.categories_allowed` takes the **same grammar as a skill category**
+(BOOK-INGEST-AUDIT.md F16): a plain string, or an object narrowing itself with
+`only` / `except`.
+
+```yaml
+psionics:
+  categories_allowed:
+    - { name: "Sensitive", except: ["Object Read (Psychometry)"] }
+    - "Physical"
+```
+
+Use it when a book allows a category *"excluding..."*. `powers_from` is the
+other tool and it is not the same one: a named list REPLACES the category gate
+rather than narrowing it, so it means enumerating everything that remains and
+re-enumerating whenever the catalog grows.
+
+**The names inside `only` / `except` must match catalog rows exactly**, and an
+unmatched one narrows NOTHING, silently. The Crazy's book says *Object Read*;
+the row is `Object Read (Psychometry)`. A regression invariant checks every one.
+
 Named powers and spells need catalog rows; `class-check` lists the missing ones.
 
 **`supersedes_race: true` says the character stops being what it was**

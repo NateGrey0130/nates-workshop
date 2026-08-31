@@ -14,6 +14,7 @@
 import { json } from './auth.js';
 import { chunks } from './sql-chunk.js';
 import { safeParse } from './character-json.js';
+import { categoryAllows, categoryLabel } from '../../../../apps/character-creator/js/parser.js';
 import { spellLevelsForGrant, psionicCategoriesForGrant, spellNamesForGrant, grantNote,
          spellGrantsFor, psionicGrantsFor } from './leveling.js';
 
@@ -160,9 +161,14 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
       // REPLACE the class's rather than narrowing them - a Mystic's level-4
       // power comes from Super, which its starting powers could not.
       const cats = catFor.get(k);
-      if (cats && !cats.includes(row.category)) {
+      // categoryAllows rather than a plain includes: since F16 an entry may
+      // narrow itself with `only` / `except`, and the server has to refuse what
+      // the picker would not offer. One function, three call sites - the wizard
+      // twice and here - so they cannot disagree about what is legal.
+      if (cats && cats.length && !categoryAllows(cats, row)) {
         errors.push(
-          `${name} is a ${row.category || 'uncategorised'} power; the level ${level} grant allows ${cats.join(', ')}`);
+          `${name} is a ${row.category || 'uncategorised'} power; the level ${level} grant allows `
+          + cats.map(categoryLabel).join(', '));
         continue;
       }
     }

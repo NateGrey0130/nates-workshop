@@ -1704,7 +1704,46 @@ punishes not saying it.
 skill-side equivalent has never had more than a handful of users either, and the
 argument for it was the same.
 
-**Open.**
+**Taken, 2026-08-31 (PR #436), the PRIMARY proposal, posture as written - no new
+gate.** `psionics.categories_allowed` entries now take the same grammar as
+`occ_related_skills.categories`: a plain string, or an object with `only` /
+`except`. `categoryAllows()` does the work at all three call sites, so the
+parse, the two wizard pickers and the server's grant check cannot disagree about
+what a category entry means.
+
+**ONE PREMISE WAS WRONG: THERE IS NO PSIONICS VALIDATOR TO TOUCH.** The finding
+lists it as one of three places. `parser.js` never validated the psionics block
+at all - not the tier, not the counts, not the categories. So this validates the
+one key whose grammar just widened, reusing `validateCategories()`, rather than
+inventing a validator for the whole block on the way past. A `bonus` on a
+psionic category is rejected: a power has an I.S.P. cost and no percentage to
+raise, which is the same reasoning that makes `bonus` an error on
+`secondary_skills.categories`.
+
+**"OBJECT READ" IS NOT WHAT THE CATALOG CALLS IT**, and this is the trap the
+finding sets up without naming. The row is **`Object Read (Psychometry)`**, and
+an `except` naming a row that does not exist excludes NOTHING, silently - the
+exact failure `class-import` records for six classes that named
+`Robots and Power Armor` after that row was renamed. All four names were checked
+against `psionic_powers` before the data script ran; the other three match.
+
+So the regression invariant added with F15 is extended rather than repeated:
+every `categories_allowed` entry must name a real category **and** every name
+inside an `only` / `except` must be a real power. The second half is the one
+that would have caught this.
+
+**The Crazy is the one user and it ships in the same PR**, because a mechanism
+nothing uses is the silent storage `class-import` warns about. Its pool goes
+from 51 powers to 47 - Astral Projection and Object Read (Psychometry) off
+Sensitive, Ectoplasm and Telekinesis off Physical, split by the category the
+catalog files each under, since `except` is scoped to its own entry.
+
+**The cheaper alternative was not taken and should not be.** Enumerating the
+forty-seven in `powers_from` is expressible today and one data script, but it
+trades a rule the book states for a snapshot of a catalog that grows - and the
+catalog grew twice during this batch.
+
+Smoke 1448 -> 1460. Regression 235 -> 236.
 
 ### F17 - the Crazy's I.S.P. formula is short of both its book and its own note
 

@@ -1402,15 +1402,32 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   const cats = new Set(((await api('GET', '/catalogs')).body.psionics || [])
     .map((p) => String(p.category ?? '').trim().toLowerCase()).filter(Boolean));
 
+  const powerNames = new Set(((await api('GET', '/catalogs')).body.psionics || [])
+    .map((p) => String(p.name ?? '').trim().toLowerCase()).filter(Boolean));
   const orphans = [];
+  const deadNames = [];
   let entries = 0;
   for (const c of classes) {
     const blocks = [c.psionics, ...((c.special_abilities || [])
       .filter((d) => d && typeof d === 'object' && d.psionics).map((d) => d.psionics))];
     for (const p of blocks) {
-      for (const name of (p?.categories_allowed || [])) {
+      for (const entry of (p?.categories_allowed || [])) {
         entries++;
+        // An entry is a plain string or an object narrowing itself with
+        // only/except since F16, so the NAME is what has to resolve.
+        const name = typeof entry === 'string' ? entry : entry?.name;
         if (!cats.has(String(name).trim().toLowerCase())) orphans.push(`${c.id}: ${name}`);
+        // And a narrowing that names a power the catalog does not carry
+        // excludes nothing, silently - the Robots and Power Armor failure,
+        // on the psionic side. "Object Read" is that trap here: the row is
+        // "Object Read (Psychometry)".
+        for (const key of ['only', 'except']) {
+          for (const n of (entry && typeof entry === 'object' && entry[key]) || []) {
+            if (!powerNames.has(String(n).trim().toLowerCase())) {
+              deadNames.push(`${c.id}: ${key} "${n}"`);
+            }
+          }
+        }
       }
     }
   }
@@ -1418,6 +1435,9 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   check('every categories_allowed entry names a category the catalog has',
     entries > 0 && orphans.length === 0,
     `${orphans.length} of ${entries} resolve to nothing: ${orphans.slice(0, 6).join('; ')}`);
+  check('and every only/except inside one names a power it has',
+    deadNames.length === 0,
+    `${deadNames.length} exclude or admit nothing: ${deadNames.slice(0, 6).join('; ')}`);
 }
 
 // ---------- magic composition ----------

@@ -434,6 +434,19 @@ function mergePsionics(born, trained) {
   return out;
 }
 
+// Every psionics block a class carries: its own, and any a special ability
+// grants. Both reach `categoryAllows` at pick time, so both are validated.
+function psionicBlocks(data) {
+  const out = [];
+  if (data?.psionics) out.push(['psionics', data.psionics]);
+  for (const d of data?.special_abilities || []) {
+    if (d && typeof d === 'object' && d.psionics) {
+      out.push([`special_abilities.${d.name}.psionics`, d.psionics]);
+    }
+  }
+  return out;
+}
+
 // The same fold for magic. BOOK-INGEST-AUDIT.md F14.
 //
 // F10 excluded this saying "no race/O.C.C. pair in the catalog states both".
@@ -2005,6 +2018,31 @@ export function parseClassMarkdown(text) {
     warnings.push('occ_restrictions is set on something that is not a race and will do nothing');
   }
   validateOccRestrictions(data.occ_restrictions, errors, warnings);
+
+  // `psionics.categories_allowed` is a category list, and since F16 it takes
+  // the SAME grammar as a skill category: a plain string, or an object with
+  // `only` / `except`. The Crazy's book allows two categories "excluding Astral
+  // Projection, Ectoplasm, Object Read and Telekinesis", and there was no way
+  // to say that - `powers_from` is a positive list that REPLACES the category
+  // gate rather than narrowing it.
+  //
+  // NOTE THAT THERE IS NO OTHER PSIONICS VALIDATION, which F16 assumed there
+  // was. Nothing in this file checked that block before, so this validates the
+  // one key whose grammar just widened rather than inventing a validator for
+  // the whole thing.
+  for (const [where, block] of psionicBlocks(data)) {
+    validateCategories(`${where}.categories_allowed`, block.categories_allowed, errors);
+    for (const c of block.categories_allowed || []) {
+      // A percentage is a SKILL idea. A psionic power has an I.S.P. cost and no
+      // percentage to raise, so a bonus here would be stored and never read -
+      // the same silent no-op that made `bonus` a parse error on
+      // secondary_skills.categories.
+      if (c && typeof c === 'object' && c.bonus !== undefined) {
+        errors.push(`${where}.categories_allowed.${c.name} sets a bonus; `
+          + 'a psionic power has a cost, not a percentage');
+      }
+    }
+  }
   if (data.race_restrictions !== undefined && data.category !== 'occ') {
     warnings.push('race_restrictions is set on something that is not an O.C.C. and will do nothing');
   }
