@@ -1,6 +1,6 @@
 -- Undo a double-escape in ten classes' stored markdown.
 --
--- BOOK-INGEST-AUDIT.md F13, taken in PR #NNN. The stored text reads
+-- BOOK-INGEST-AUDIT.md F13, taken in PR #433. The stored text reads
 -- "the Spacer''s decompression save" - two apostrophes in the markdown AS
 -- STORED, not as escaped for SQL. It renders to the reader exactly as stored,
 -- so a class detail page shows a doubled apostrophe where the author wrote one.

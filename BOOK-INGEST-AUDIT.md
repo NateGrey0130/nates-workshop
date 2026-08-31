@@ -1420,7 +1420,7 @@ a defect in one code path rather than a class of authoring error.
 **Nine remain.** The Colonist's was repaired as a side effect of F7 and the
 other nine are untouched.
 
-**Taken, 2026-08-31 (PR #NNN), posture as written - diagnosed first, then a
+**Taken, 2026-08-31 (PR #433), posture as written - diagnosed first, then a
 one-off data script, and no new gate.**
 
 **THE CAUSE, WHICH THE FINDING ASKS FOR BEFORE THE SWEEP. It is not the
