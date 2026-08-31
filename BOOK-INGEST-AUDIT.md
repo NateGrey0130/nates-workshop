@@ -140,3 +140,49 @@ Until then the batch imports **no** vessels from this book, and the survey says
 so in its extraction plan.
 
 **Open.**
+
+### F4 — The language-pick invariant matches on prose, and missed one of three
+
+`regression.mjs` holds a good rule: an "any language" pick must offer the
+repeatable `Language: Other` row, never a whole category. It exists because the
+defect it guards was reported as seven classes and was **thirty-two** - seven
+offered the too-wide Technical category and twenty-five offered Communications,
+which does not contain `Language: Other` at all, so those classes could not
+grant a single ordinary language.
+
+**It finds the class by reading the note.**
+
+```js
+const ABOUT_LANGUAGES = /^Language: Other,|languages? of choice|additional [Ll]anguages/;
+```
+
+The `phase-world` CCW batch wrote three of these groups and the check caught
+**two**. The CAF Fleet Officer and the CAF Scientist transcribe the book as
+*two languages of choice* and *four languages of choice*, which match. The CAF
+Trooper transcribes printed 57 as written - **Language: any two** - which
+matches nothing, and its identical defect passed 210 checks.
+
+It was found by reading the failure message for the other two and going back to
+look, not by the check. That is the same shape as the original bug: **the
+invariant is stated over every class and then narrowed by a regex over free
+text.**
+
+**Proposal:** decide the group by SHAPE rather than by prose. A group with
+`categories` naming Technical or Communications and no `from` is either a
+language pick or a rare deliberate category pick, and there are few enough of
+the latter to name. Alternatively keep the prose match and add a second,
+independent check: **any `occ_skills` choice group whose `categories` include
+Technical and whose note mentions a language at all** - which is a weaker
+pattern but fails in the safe direction, because the answer is "go and look" and
+not "rewrite the class".
+
+Worth settling when taken: whether the same hole exists in the LITERACY family
+below it, which uses a different regex over the same free text and has the same
+structural weakness. It was not tested against this book - none of these four
+classes writes a literacy pick as a choice group.
+
+Not urgent, and stated plainly: **the rule is right and its aim is off.** No
+class ships wrong because of this one; the trooper was corrected by hand in the
+same PR that found it.
+
+**Open.**

@@ -216,6 +216,24 @@ export const CORE_SDC_BY_CLASS = {
   'changeling': '1D6',
   'wolfen': '1D6',
   'coyle': '1D6',
+  // Rifts Dimension Book 2: Phase World, the CCW Characters & O.C.C.s
+  // section, printed 56-61. NONE of the four prints an S.D.C. or a hit point
+  // formula - the book states attributes, skills, equipment and money and
+  // nothing else - so the core rule reaches every one of them.
+  //
+  // Phase World has no Men of Arms heading to read this off, which every
+  // entry above this one had. The split is by trade instead, and it is the
+  // same split the classes' own occ_group records: the trooper and the fleet
+  // officer are soldiers, and the inspector and the scientist are not. The
+  // scientist is the one worth arguing about - the book calls them scientist
+  // soldiers and Warrant Officers with basic military training - and it goes
+  // to 1D6 on the same reading the catalog's rogue-scientist already gets:
+  // the trade is science, the class grants no combat bonus block, and its
+  // Military related skills carry the same +5% as its Medical ones.
+  'caf-trooper': '3D6',
+  'caf-fleet-officer': '3D6',
+  'tvia-inspector': '1D6',
+  'caf-scientist': '1D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence
