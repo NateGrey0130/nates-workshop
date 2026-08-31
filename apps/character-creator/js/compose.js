@@ -250,6 +250,17 @@ export const CORE_SDC_BY_CLASS = {
   'noro': '1D6',
   'noro-psychic': '1D6',
   'noro-mystic-warrior': '3D6',
+  // Rifts Dimension Book 2: Phase World, the Space Wolfen R.C.C., printed
+  // 65-66. The ONLY one of the CCW's four remaining entries that needs a line
+  // here: the Wolfen Quatoria, the Catyr and the Seljuk are all mega-damage
+  // and carry their own mdc_base.
+  //
+  // Its 30 S.D.C. is a POOL BONUS - "30 S.D.C. plus those gained from O.C.C.s
+  // and physical skills" - so the race still states no S.D.C. FORMULA and the
+  // core rule reaches it, with the 30 landing on top. 1D6 because a race
+  // always takes 1D6 here, which is what the catalog's Palladium `wolfen`
+  // already gets for the same reason and the same shape.
+  'space-wolfen': '1D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence
