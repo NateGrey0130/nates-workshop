@@ -243,7 +243,7 @@ import { skillBase, isBaseFormula } from '../js/skill-base.js';
 import { chunks, D1_MAX_BINDS, BIND_CHUNK } from '../../../functions/api/character-creator/_lib/sql-chunk.js';
 import { LANGUAGE_OTHER, LITERACY_OTHER, isFamilyName, isRepeatableRow,
          otherRowFor, familySkillName } from '../js/language-skills.js';
-import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityOccOptions, abilityOptions, applyAbilities, applyVariant, bonusesFromSkills, categoryAllows, categoryBonus, categoryLabel, combineClasses, isGearChoice, needsOccupation, parseClassMarkdown, parseYaml, sumBonusGroups, validateBonuses } from '../js/parser.js';
+import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityOccOptions, abilityOptions, applyAbilities, applyVariant, bonusesFromSkills, categoryAllows, categoryBonus, categoryLabel, combineClasses, isGearChoice, needsOccupation, parseClassMarkdown, parseYaml, relatedFloorStatus, relatedMinimums, sumBonusGroups, validateBonuses } from '../js/parser.js';
 import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rollsForPsionics, withRolledPsionics } from '../js/psionics.js';
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -346,6 +346,37 @@ check('an explicit override makes an out-of-category pick legal',
     .includes('related_category'));
 check('secondary skills are not category-restricted',
   !vio({}).includes('related_category'));
+
+// A per-category FLOOR, refused server-side (F6). Unlike the count and category
+// rules above it cannot fire on a half-built character: a floor not yet met may
+// still be met by picks not yet spent, so only an UNREACHABLE one is a
+// violation. Without that gate every partial save would be refused.
+{
+  const floorCls = { ...vCls, name: 'Floor Test', skills: { ...vCls.skills,
+    occ_related_skills: { count: 2, categories: ['Physical', 'Rogue'],
+                          schedule: [{ level: 3, count: 1 }],
+                          minimums: [{ count: 1, category: 'Rogue' }] } } };
+  const withFloor = (relSkills) => validateCharacter({ ...legal, cls: floorCls,
+    skills: legal.skills.filter((x) => x.type !== 'related').concat(relSkills) })
+    .violations.map((v) => v.rule);
+
+  check('a floor met is no violation',
+    !withFloor([rel('Climbing', 'Physical'), rel('Prowl', 'Rogue')]).includes('related_minimum'));
+  check('a floor spent out and unmet is a violation',
+    withFloor([rel('Climbing', 'Physical'), rel('Swimming', 'Physical')]).includes('related_minimum'));
+  check('a floor with a pick still to spend is NOT a violation',
+    !withFloor([rel('Climbing', 'Physical')]).includes('related_minimum'));
+  check('a class with no floors is never refused for one',
+    !vio({}).includes('related_minimum'));
+  // The allowance grows on a schedule, and a floor rides along with it rather
+  // than fighting it: level 3 grants one more pick, which is a pick the floor
+  // can still be met with.
+  check('a scheduled grant reopens a floor that was spent out',
+    !validateCharacter({ ...legal, cls: floorCls, character: { level: 3 },
+      skills: legal.skills.filter((x) => x.type !== 'related')
+        .concat([rel('Climbing', 'Physical'), rel('Swimming', 'Physical')]) })
+      .violations.map((v) => v.rule).includes('related_minimum'));
+}
 check('too many secondary skills is a violation',
   vio({ skills: legal.skills.concat([{ name: 'Astronomy', category: 'Science', type: 'secondary' }]) })
     .includes('secondary_count'));
@@ -3867,6 +3898,94 @@ section('Variable spell costs');
 }
 
 // ---------- 1c26. Secondary schedules and group bonuses ----------
+section('Related-skill floors');
+{
+  // BOOK-INGEST-AUDIT.md F6. `occ_related_skills` says how many picks and which
+  // categories are legal, and narrows a category with only/except. All three
+  // are ceilings. `minimums` is the floor: "select 8 other skills, but at least
+  // two must be selected from espionage and two from rogue skills".
+  const mk = (rel) => parseClassMarkdown(
+    `---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: occ\nskills:\n  occ_related_skills:\n${rel}\n---\n\n## Lore\n\nx\n`);
+
+  const two = mk(`    count: 8
+    categories: ["Espionage", "Rogue", "Physical"]
+    minimums:
+      - { count: 2, category: "Espionage" }
+      - { count: 2, category: "Rogue" }`);
+  check('a per-category floor parses', two.ok, JSON.stringify(two.errors));
+  check('and normalises to a list of categories',
+    JSON.stringify(relatedMinimums(two.data))
+      === JSON.stringify([{ count: 2, categories: ['Espionage'] },
+                          { count: 2, categories: ['Rogue'] }]));
+
+  // The City Rat's floor is a UNION - "at least three must be selected from
+  // Physical or Rogue skills" - satisfied by three of either or any mix.
+  const union = mk(`    count: 10
+    categories: ["Physical", "Rogue"]
+    minimums:
+      - { count: 3, categories: ["Physical", "Rogue"] }`);
+  check('a union floor parses', union.ok, JSON.stringify(union.errors));
+  check('and keeps both categories in one floor',
+    relatedMinimums(union.data).length === 1
+      && relatedMinimums(union.data)[0].categories.length === 2);
+  check('a class with no floors reports none', relatedMinimums(mk('    count: 4').data).length === 0);
+
+  // Every one of these is an ERROR rather than a warning: a floor is enforced
+  // server-side the moment it parses, so a floor that is wrong refuses every
+  // character of its class, and one silently dropped puts the class back where
+  // F6 found it.
+  check('a floor outside the granted categories is rejected',
+    !mk('    count: 8\n    categories: ["Physical"]\n    minimums:\n      - { count: 2, category: "Espionage" }').ok);
+  check('a floor bigger than the whole allowance is rejected',
+    !mk('    count: 3\n    categories: ["Physical"]\n    minimums:\n      - { count: 4, category: "Physical" }').ok);
+  check('floors summing past the allowance are rejected',
+    !mk('    count: 3\n    categories: ["Physical", "Rogue"]\n    minimums:\n      - { count: 2, category: "Physical" }\n      - { count: 2, category: "Rogue" }').ok);
+  check('a floor with no category is rejected',
+    !mk('    count: 8\n    categories: ["Physical"]\n    minimums:\n      - { count: 2 }').ok);
+  check('a floor of zero is rejected',
+    !mk('    count: 8\n    categories: ["Physical"]\n    minimums:\n      - { count: 0, category: "Physical" }').ok);
+  check('a floor setting both spellings is rejected',
+    !mk('    count: 8\n    categories: ["Physical"]\n    minimums:\n      - { count: 2, category: "Physical", categories: ["Physical"] }').ok);
+  check('minimums that is not a list is rejected',
+    !mk('    count: 8\n    categories: ["Physical"]\n    minimums: 2').ok);
+
+  // A FLOOR IS NOT A CEILING. The count and category rules are broken the
+  // instant they are broken; a floor merely unmet may still be met by picks not
+  // yet spent, so only an UNREACHABLE one is a violation. Without this every
+  // half-built character would be refused a save.
+  const cls = two.data;
+  const st = (cats, allow = 8) => relatedFloorStatus(cls, cats, allow);
+  check('no picks yet is not a violation', st([]).unreachable === false);
+  check('floors met is not a violation',
+    st(['Espionage', 'Espionage', 'Rogue', 'Rogue']).unreachable === false);
+  check('spent out with no floor met is a violation',
+    st(['Physical', 'Physical', 'Physical', 'Physical',
+        'Physical', 'Physical', 'Physical', 'Physical']).unreachable === true);
+
+  // The shortfalls are summed rather than tested one at a time. Six of eight
+  // spent holding one espionage and no rogue leaves each floor individually
+  // reachable and the two together needing three picks where two remain.
+  check('shortfalls are summed against what is left',
+    st(['Espionage', 'Physical', 'Physical', 'Physical', 'Physical', 'Physical']).unreachable === true);
+  check('and are not tested one at a time',
+    st(['Espionage', 'Rogue', 'Physical', 'Physical', 'Physical']).unreachable === false);
+
+  // A union floor counts a pick from EITHER category and does not demand both.
+  const uSt = (cats) => relatedFloorStatus(union.data, cats, 10);
+  check('a union floor takes either category',
+    uSt(['Physical', 'Physical', 'Physical']).floors[0].met === true);
+  check('and a mix across the two',
+    uSt(['Rogue', 'Physical', 'Rogue']).floors[0].met === true);
+
+  // The allowance grows on a schedule, and the floor rides along with it: the
+  // book says "at least two of the EIGHT", but a stored skill row records no
+  // level, so the first eight cannot be told from the two granted at level
+  // three. Counting over every related pick is the weaker reading, and the
+  // weaker reading never refuses a character the book allows.
+  check('a bigger allowance leaves more room, never less',
+    st(['Physical', 'Physical', 'Physical', 'Physical', 'Physical', 'Physical'], 12).unreachable === false);
+}
+
 section('Secondary schedules & group bonuses');
 {
   const mk = (skills) => parseClassMarkdown(

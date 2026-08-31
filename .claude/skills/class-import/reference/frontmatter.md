@@ -120,6 +120,9 @@ skills:
       - { name: "Espionage", only: ["Escape Artist"] }
       - { name: "Technical", bonus: 10 }   # "Technical: Any (+10%)"
     schedule: [{ level: 3, count: 1 }]     # extra picks at later levels
+    minimums:                              # a FLOOR per category, out of `count`
+      - { count: 2, category: "Espionage" }
+      - { count: 3, categories: ["Physical", "Rogue"] }   # a union: three across the two
   secondary_skills:
     count: 4                      # any category, base % only, no per-level gain
     schedule: [{ level: 4, count: 1 }]
@@ -144,6 +147,17 @@ skills:
   `only`/`except`, and a skill with no percentage of its own (a W.P., a hand to
   hand) stays at zero. Books print these constantly and every class imported
   before the key existed dropped them: the Godling lost five.
+- **`minimums` is the only FLOOR in this block; everything else is a ceiling.**
+  "Select 8 other skills, but at least two must be selected from espionage and
+  two from rogue skills" is a floor, and eight classes across four books print
+  one. The picks come out of the same `count` - two floors of two over eight
+  leave four free - so the sum of the floors may not exceed it, and every
+  category named must be one the class grants. An entry holds a LIST because the
+  City Rat's floor is a union, "at least three from Physical or Rogue", which as
+  two separate floors would demand six picks the book never asks for; `category:`
+  is the one-element spelling. The picker shows a running total per floor and the
+  server refuses a build that can no longer reach one - but only when it can NO
+  LONGER reach it, since a floor merely unmet is a player with picks left.
 - See `catalog.md` for the naming rules these names have to match.
 - **Related and secondary skills come from the O.C.C.** An R.C.C. with neither
   is correct.

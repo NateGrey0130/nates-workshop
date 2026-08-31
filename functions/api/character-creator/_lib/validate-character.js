@@ -43,7 +43,7 @@
 //    category both over- and under-counts. Choice groups are therefore reported
 //    as WARNINGS and never block a save.
 
-import { isChoiceGroup, categoryAllows, categoryName, needsOccupation,
+import { isChoiceGroup, categoryAllows, categoryName, needsOccupation, relatedFloorStatus,
          isAbilityChoice, isAbilityDefinition, abilityOptions, normalizeAbilities, abilityOccOptions } from '../../../../apps/character-creator/js/parser.js';
 
 import { skillGrantsFor, xpTableFor, thresholdFor, perLevelDiceOf,
@@ -226,6 +226,37 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
             : `${s.name} is ${cat || 'uncategorised'}, which this class does not allow as a related skill` });
       }
     }
+  }
+
+  // ─── per-category floors ───
+  // "Select 8 other skills, but at least two must be selected from espionage
+  // and two from rogue skills" (Phase World printed 83). BOOK-INGEST-AUDIT.md
+  // F6. Eight classes across four books state a floor like this, and until the
+  // `minimums` block existed every one of them offered all its picks freely.
+  //
+  // A floor that is merely unmet may still be met by the picks not yet spent, so
+  // only an UNREACHABLE one is a violation - relatedFloorStatus() owns that
+  // arithmetic and the wizard's display comes through the same function, which
+  // is what stops the two disagreeing about whether a character is legal.
+  //
+  // THE FLOOR IS COUNTED OVER EVERY RELATED SKILL, WHICH IS DELIBERATELY WEAKER
+  // THAN THE BOOK. Each of these classes says "at least two of the EIGHT", and
+  // then grants more picks on a schedule; a stored skill row records no level,
+  // so the first eight cannot be told from the two granted at level three. The
+  // weaker reading never refuses a character the book allows, which is the side
+  // to err on when the alternative is refusing a save.
+  const status = relatedFloorStatus(cls, related.map((s) => categoryOf(s)), relatedMax);
+  if (status.unreachable) {
+    const describe = (f) => `${f.count} from ${f.categories.join(' or ')} (has ${f.have})`;
+    violations.push({
+      rule: 'related_minimum',
+      needed: status.short.map((f) => ({ count: f.count, categories: f.categories, have: f.have })),
+      remaining: status.remaining,
+      message: `${cls.name || 'This class'} requires at least `
+        + `${status.short.map(describe).join(' and ')} among its related skills, `
+        + `and ${status.remaining === 0 ? 'every pick is spent'
+            : `only ${status.remaining} pick${status.remaining === 1 ? ' is' : 's are'} left`}`,
+    });
   }
 
   // ─── choice groups (advisory) ───

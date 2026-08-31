@@ -495,7 +495,89 @@ where a GM will see it. Filed because it is the second time a book has stated a
 per-category quota and the second column that could not hold one, and because
 the psionic answer is already in the tree to copy.
 
-**Open.**
+**Taken, 2026-08-31 (PR #NNN).** Implemented as proposed - `occ_related_skills.
+minimums`, a list beside `count`, validated in the parser, refused by the server
+validator, shown by the wizard's skills step - and applied `--remote` before the
+merge. Posture as written: the picks still come out of the same `count`, the
+floors are not new picks, and nothing was moved into `occ_skills`.
+
+**THE SCOPE WAS WRONG, AND WRONG IN THE DIRECTION THAT MADE THE FINDING LOOK
+SMALLER THAN IT IS.** F6 says two classes in this book and calls it the second
+occurrence. It is the **eleventh**, across three books:
+
+| class | book, printed | picks | floor |
+|---|---|---|---|
+| Cyber-Knight | Rifts Ultimate 67 | 12 | 2 Physical + 3 W.P.s |
+| City Rat | Rifts Ultimate 88 | 10 | 3 Physical **or** Rogue |
+| Cyber-Doc | Rifts Ultimate 90 | 9 | 2 Technical |
+| Operator | Rifts Ultimate 92 | 8 | 2 Mechanical |
+| Rogue Scholar | Rifts Ultimate 94 | 11 | 4 Technical |
+| Gambler | Juicer Uprising 59 | 10 | 2 Rogue |
+| Juicer Wannabe | Juicer Uprising 61 | 8 | 2 Rogue + 2 Physical |
+| Galactic Tracer | Phase World 40 | 7 | 2 Espionage |
+| CAF Scientist | Phase World 60 | 12 | 4 Science |
+| Imperial Security Agent | Phase World 83 | 8 | 2 Espionage + 2 Rogue |
+| Freedom Fighter | Phase World 84 | 8 | 2 Espionage + 2 Rogue |
+
+Three of those are in the very book this finding was written from, not two. All
+eleven were read off their own printed page in the block belonging to that
+class, rather than grepped: four of these pages carry two class blocks, and a
+page-wide search returns the neighbour - the first match on Phase World printed
+82 is the Imperial Legionnaire, which has no floor at all.
+
+**One class had lost the rule entirely.** Ten recorded it in prose for a human
+to honour. The **Cyber-Knight** did not - no related-skills note, no GM note, no
+extraction note - so its floor existed nowhere in this repo, and no search for
+the rule could have found it. It turned up only in the last sweep, which went
+through every cached book page for the printed sentence and intersected that
+with the catalog. Its note is written here for the first time. The lesson
+generalises past this finding: **a corpus sweep for a missing rule has to run
+over the SOURCE, not over the records, because a record that dropped the rule is
+indistinguishable from one that never had it.**
+
+**The proposal's entry shape could not express one of the eleven.** F6 proposes
+`{ count: 2, category: "Espionage" }`. The City Rat's floor is a UNION - "at
+least three must be selected from Physical or Rogue skills" - satisfied by three
+Physical, three Rogue, or any mix of three. As two separate floors it would
+demand six picks the book never asks for. An entry therefore holds a LIST,
+`categories`, and `category:` is kept as the one-element spelling so the
+proposal's own syntax works verbatim. Additive, not a substitution.
+
+**A FLOOR IS NOT A CEILING, AND THE DIFFERENCE DECIDES WHEN IT CAN FIRE.** F6
+says the validator "refuses a set that does not meet each floor". Implemented
+literally that refuses every HALF-BUILT character: the existing count rule fires
+on `>` the allowance, so a player with picks still to spend is legal, and a
+floor not yet met is that same player. What is refused is a set that can NO
+LONGER reach a floor. The shortfalls are summed against what remains rather than
+tested one at a time - six of eight spent on an Imperial Security Agent holding
+one espionage and no rogue leaves each floor individually reachable, and the two
+together needing three picks where two remain.
+
+**The floor is counted over every related pick, which is weaker than the book
+and deliberately so.** Each of these classes says "at least two of the EIGHT"
+and then grants more picks on a schedule. A stored skill row records no level -
+the same reason choice groups are advisory here - so the first eight cannot be
+told from the two granted at level three. The weaker reading never refuses a
+character the book allows, which is the side to err on when the alternative is
+refusing a save.
+
+**Six notes claimed the app could not hold the rule, and three said it again in
+their GM Notes and extraction_notes.** All nine are rewritten to state what is
+true now without quoting what they replace - the F12 pattern, in the same PR
+that made them false.
+
+**A regression invariant, not a count.** `every class whose note states a
+per-category floor also holds one` reads the floor phrase off the live corpus
+and asserts nothing states one it does not hold. A count of eleven would pass
+forever while the next book imported the twelfth as prose, which is exactly how
+these sat. Two more check that no floor names a category its class does not
+grant - which would refuse every character of that class - and that no class
+floors more picks than it grants.
+
+**Four more books print a floor for a class this catalog does not hold**:
+Underseas printed 98, Spirit West printed 39, Free Quebec printed 40, and Triax
+printed 160 - the last being the next book in the queue. Nothing to fix;
+recorded so the next import knows the key exists.
 
 ### F7 - the save list is sixteen fixed fields, and a book bonus outside them vanishes
 

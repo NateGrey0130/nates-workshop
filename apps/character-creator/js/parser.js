@@ -780,6 +780,151 @@ function validateCategories(where, categories, errors) {
   }
 }
 
+// A per-category FLOOR on the related-skill picks: "Select 8 other skills, but
+// at least two must be selected from espionage and two from rogue skills"
+// (Phase World printed 83). BOOK-INGEST-AUDIT.md F6.
+//
+// `occ_related_skills` already says HOW MANY picks and WHICH categories are
+// legal, and narrows a category with `only` / `except`. All three are ceilings.
+// A floor is the opposite shape and could not be written at all, so eight
+// classes across four books carried the rule as prose in a `note` and offered
+// every pick freely - including the one thing each of their books forbids.
+//
+// TWO SPELLINGS, and the second is not decoration. The Freedom Fighter's floor
+// names one category:
+//
+//   minimums:
+//     - { count: 2, category: "Espionage" }
+//     - { count: 2, category: "Rogue" }
+//
+// The City Rat's names a UNION - "at least three must be selected from Physical
+// or Rogue skills" (Rifts Ultimate Edition printed 88). Three Physical, three
+// Rogue, or any mix of three across the two; written as two separate floors it
+// would demand six picks the book never asks for:
+//
+//   minimums:
+//     - { count: 3, categories: ["Physical", "Rogue"] }
+//
+// So an entry carries a LIST of categories and is satisfied by picks from any
+// of them. `category:` is the one-element sugar, because most floors are one
+// category and a list of one reads badly beside a book that says "Technical".
+const minimumCategories = (m) => (Array.isArray(m?.categories)
+  ? m.categories
+  : (m?.category === undefined ? [] : [m.category]));
+
+/**
+ * The related-skill floors of a class, normalised to `{ count, categories }`
+ * with the sugar expanded. Empty when the class has none, which is all but
+ * eight of them.
+ *
+ * The wizard, the server validator and this file's own checks all read the
+ * floors through here, so the two spellings are resolved in exactly one place.
+ */
+export function relatedMinimums(cls) {
+  const mins = cls?.skills?.occ_related_skills?.minimums;
+  if (!Array.isArray(mins)) return [];
+  return mins
+    .filter((m) => m && typeof m === 'object' && Number.isFinite(m.count))
+    .map((m) => ({ count: m.count, categories: minimumCategories(m).map(String) }));
+}
+
+/**
+ * How the floors stand against the picks made, and whether they can still be
+ * met. `categories` is the catalog category of each related pick the character
+ * holds; `allowance` is how many related picks it may hold in total.
+ *
+ * A FLOOR IS NOT A CEILING, AND THE DIFFERENCE DECIDES WHEN IT CAN FIRE. The
+ * count and category rules are broken the instant they are broken; a floor that
+ * is merely unmet may still be met by the picks not yet spent. `unreachable` is
+ * therefore the only honest trigger for refusing a save, and for telling a
+ * player their build is illegal - "0/2 Espionage" on a half-built character is
+ * a running total, not a fault.
+ *
+ * The shortfalls are summed against what remains rather than tested one at a
+ * time. Six of eight spent on an Imperial Security Agent holding one espionage
+ * and no rogue leaves each floor individually reachable - one more espionage,
+ * or two more rogue - and the two together needing three picks where two
+ * remain.
+ *
+ * THE SERVER VALIDATOR AND THE WIZARD BOTH COME THROUGH HERE. They arrive with
+ * different things in hand - stored skill rows on one side, picked names and a
+ * catalog index on the other - and they must not disagree about whether a
+ * character is legal. Only the mapping to categories is theirs; the arithmetic
+ * is this function's.
+ */
+export function relatedFloorStatus(cls, categories, allowance) {
+  const floors = relatedMinimums(cls);
+  const held = (Array.isArray(categories) ? categories : []).map(normName);
+  const remaining = Math.max(0, (Number.isFinite(allowance) ? allowance : held.length) - held.length);
+  const status = floors.map((f) => {
+    const wanted = new Set(f.categories.map(normName));
+    const have = held.filter((c) => wanted.has(c)).length;
+    return { ...f, have, met: have >= f.count, missing: Math.max(0, f.count - have) };
+  });
+  const short = status.filter((f) => !f.met);
+  const owed = short.reduce((n, f) => n + f.missing, 0);
+  return { floors: status, short, remaining, owed, unreachable: owed > remaining };
+}
+
+/**
+ * Shape checks on `occ_related_skills.minimums`.
+ *
+ * Every one of these is an ERROR rather than a warning, because a floor is
+ * enforced server-side the moment it parses: a floor naming a category the
+ * class does not grant would refuse every character of that class, and a floor
+ * that is silently dropped puts the class back where F6 found it. Both failure
+ * modes are worse than refusing to load the file.
+ */
+function validateRelatedMinimums(related, errors) {
+  const mins = related?.minimums;
+  if (mins === undefined) return;
+  if (!Array.isArray(mins)) {
+    errors.push('skills.occ_related_skills.minimums must be a list of { count, category } entries');
+    return;
+  }
+  // The categories the class actually offers, by their normalised names. A
+  // floor outside this set is unsatisfiable by construction.
+  const granted = new Set((related.categories || [])
+    .map((c) => normName(categoryName(c))).filter(Boolean));
+  let floorTotal = 0;
+  for (const m of mins) {
+    if (!m || typeof m !== 'object' || Array.isArray(m)) {
+      errors.push('skills.occ_related_skills.minimums entries must be objects');
+      continue;
+    }
+    if (m.category !== undefined && m.categories !== undefined) {
+      errors.push('skills.occ_related_skills.minimums entries set category or categories, not both');
+    }
+    if (!Number.isFinite(m.count) || m.count <= 0 || !Number.isInteger(m.count)) {
+      errors.push(`skills.occ_related_skills.minimums.count must be a whole number above zero, not "${m.count}"`);
+    } else {
+      floorTotal += m.count;
+    }
+    const cats = minimumCategories(m);
+    if (!cats.length) {
+      errors.push('skills.occ_related_skills.minimums entries need a category or a categories list');
+      continue;
+    }
+    for (const c of cats) {
+      if (typeof c !== 'string' || !c.trim()) {
+        errors.push('skills.occ_related_skills.minimums categories must be category names');
+        continue;
+      }
+      if (granted.size && !granted.has(normName(c))) {
+        errors.push(`skills.occ_related_skills.minimums names ${c}, `
+          + 'which is not one of the categories this class allows as a related skill');
+      }
+    }
+  }
+  // The floors are spent OUT OF the same count, not on top of it. Two floors of
+  // two over eight picks leave four free; two floors of five would leave less
+  // than nothing, and the class could not be built at all.
+  if (Number.isFinite(related.count) && floorTotal > related.count) {
+    errors.push(`skills.occ_related_skills.minimums require ${floorTotal} picks `
+      + `but the class grants only ${related.count}`);
+  }
+}
+
 // The attributes a class bonus may name. Anything else is a typo — a bonus
 // filed under a key nothing reads would silently do nothing, which is the
 // failure this whole block exists to prevent.
@@ -1633,6 +1778,9 @@ export function parseClassMarkdown(text) {
           errors.push('occ_related_skills.schedule entries need numeric level and count');
         }
       }
+      // A per-category floor on those picks (F6). Validated after the
+      // categories, because every check it makes is against them.
+      validateRelatedMinimums(related, errors);
     }
     const secondary = data.skills.secondary_skills;
     if (secondary && typeof secondary.count !== 'number') errors.push('skills.secondary_skills.count must be a number');

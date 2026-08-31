@@ -20,7 +20,7 @@ import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSI
          rollsForPsionics as classRollsForPsionics } from './js/psionics.js';
 import { isChoiceGroup, isGearChoice, applyVariant,
          categoryAllows, categoryLabel, categoryBonus, needsOccupation, abilityOccOptions,
-         occAllowedForRace, raceAllowedForOcc,
+         occAllowedForRace, raceAllowedForOcc, relatedFloorStatus,
          bonusesFromSkills, sumBonusGroups } from './js/parser.js';
 import { composeClass } from './js/compose.js';
 import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant,
@@ -1820,6 +1820,38 @@ function skillByName() {
   return _skillIndex;
 }
 
+// How each of a class's related-skill FLOORS is doing, given the picks made so
+// far. BOOK-INGEST-AUDIT.md F6: eight classes say "select N other skills, but
+// at least two must be selected from espionage", and until `minimums` existed
+// the picker offered every pick freely and left the rule in a note.
+//
+// The server refuses a set that can no longer reach a floor; this is the
+// DISPLAY, so the player learns it at the moment of the pick rather than at the
+// moment of the save. It counts and reports and blocks nothing - one rule, one
+// enforcement point, which is the pair this file has been burnt by splitting
+// before.
+//
+// Categories come from the CATALOG row, not from the class's own list: the
+// class names a category it allows, and whether a given skill belongs to it is
+// the catalog's answer. The same rule the server validator follows.
+function relatedFloors(cls) {
+  const index = skillByName();
+  return relatedFloorStatus(cls, S.related.map((n) => index.get(n)?.category),
+    cls?.skills?.occ_related_skills?.count);
+}
+
+// "at least 2 Espionage (1) and 2 Rogue (0)" - the running total per floor,
+// beside the running total for the whole list.
+function floorsHtml(cls) {
+  const { floors } = relatedFloors(cls);
+  if (!floors.length) return '';
+  const one = (f) => `<span class="${f.met ? 'muted' : 'warn'}">${f.have}/${f.count} `
+    + `${esc(f.categories.join(' or '))}</span>`;
+  return `<p class="attr-note">The book sets a floor per category: ${floors.map(one).join(', ')}.
+    These come OUT OF the picks above, not on top of them, and a character that
+    cannot still reach them is refused on save.</p>`;
+}
+
 // Class files may omit base/per_level for a required skill — sourcebook class
 // pages usually state only the bonus, with the base living in the skill table.
 // Fall back to the catalog so imported classes still show real percentages.
@@ -1891,7 +1923,10 @@ function skillBonusClass() {
 function renderSkills() {
   // The COMPOSED class: a rolled major psionic has half the related-skill
   // allowance, and the Skills step has to show the number that actually applies.
-  const sk = psiClass().skills || {};
+  // Held rather than re-derived, because the per-category floors below have to
+  // read the same object the count came from.
+  const effective = psiClass();
+  const sk = effective.skills || {};
 
   // A Military Occupational Specialty decides which skills the rest of this
   // step lists, so it is asked first. Unchosen, the class's own O.C.C. skills
@@ -2041,6 +2076,7 @@ function renderSkills() {
       <div>
         <h3>Related skills — ${S.related.length}/${relatedCfg.count}</h3>
         <p class="muted small">Allowed: ${esc((relatedCfg.categories || []).map(categoryLabel).join(', ') || '—')}</p>
+        ${floorsHtml(effective)}
         ${schedule.length ? `<p class="attr-note">Also grants ${schedule.map((s) => `+${s.count} at level ${s.level}`).join(', ')}
           — recorded on the class, not yet prompted at level-up.</p>` : ''}
         ${Picker.inputHtml({ id: 'related-filter', value: S.relatedFilter,
@@ -3058,6 +3094,19 @@ function renderReview() {
     <p class="small">Alignment: ${S.bio.alignment
       ? `<b>${esc(S.bio.alignment)}</b>${rules.alignmentGroup(S.bio.alignment) ? ` <span class="muted">(${rules.alignmentGroup(S.bio.alignment)})</span>` : ''}`
       : '<span class="warn">not chosen — required, see Details</span>'}</p>
+    ${(() => {
+      // A per-category floor the picks no longer reach (F6). The server refuses
+      // this set, so saying so here turns an opaque failure at the last button
+      // into a sentence naming the step to go back to.
+      // Only an UNREACHABLE floor, which is exactly what the server refuses. A
+      // floor merely unmet is a player who has picks left to spend, and telling
+      // them the save will fail would be false.
+      const { short, unreachable } = relatedFloors(psiClass());
+      return unreachable ? `<p class="small warn">This class requires at least
+        ${short.map((f) => `${f.count} ${esc(f.categories.join(' or '))}`).join(' and ')}
+        among its related skills, and the picks left cannot reach it — go back to
+        Skills, or the save will be refused.</p>` : '';
+    })()}
 
     <div class="review-stats">
       <div class="stat-col">
