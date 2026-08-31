@@ -172,7 +172,7 @@ pool bases as before — none of them knows a character can have two classes.
 | fixed skills | **both**, a shared skill held once at the higher base |
 | related & secondary allowances | the **occupation** |
 | bonuses | **both** — flat numbers summed, dice collected (see below) |
-| psionics | the **stronger tier** |
+| psionics | **both** - merged, the stronger tier winning the tier (see below) |
 | magic | the **occupation** |
 | equipment, abilities, level progression | **both** |
 
@@ -188,6 +188,38 @@ Three rules earned by getting them wrong first:
 - **The audit and the stage-change endpoint compose too.** Judging a Chiang-Ku
   Wizard against the dragon alone reports every skill its occupation grants as a
   violation.
+
+### Psionics is merged, not chosen
+
+A race says what a member of that race is **born with**; an occupation says what
+**training adds**. They are two sentences, not rival answers to one question -
+so the two blocks fold together (BOOK-INGEST-AUDIT.md F10):
+
+| | |
+|---|---|
+| `type` | the stronger of the two |
+| `isp_base` | travels with the tier; a TIE goes to the occupation |
+| `powers`, `categories_allowed` | **unioned**, deduplicated by name |
+| `powers_starting`, `powers_per_level` | the **higher** of the two |
+| `powers_schedule`, `powers_starting_groups` | the occupation's, falling back to the race's |
+| anything else | the occupation's where it states it, the race's otherwise |
+
+This used to CHOOSE, and the comparison was strictly greater, so a **tie handed
+the whole thing to the race**. Two shipped classes had never composed correctly
+in the only pairing their own books sanction: `noro` + `noro-psychic` and
+`noro` + `noro-mystic-warrior` are both `major`, so the occupation's granted
+powers, its picks, its fifteen schedule entries and its I.S.P. formula were all
+thrown away.
+
+**A count takes the higher rather than the occupation's.** Preferring the
+occupation's figure was the obvious reading and it is LOWER in the majority of
+live pairs - a psychic dragon hatchling would have dropped from eight starting
+powers to one for studying as a Dog Boy, which is the loss this rule exists to
+prevent. A ladder cannot be maxed and is not concatenated either, because
+running both would fire both sets of grants at every threshold.
+
+**`magic` is still chosen** - `out.magic = occ.magic || rcc.magic`, the
+occupation outright. That is a separate question with its own finding.
 - **A dice bonus cannot be summed, so it is collected.** A race granting
   `+1d4 P.S.` and an occupation granting `+2d6` means both are rolled; there is
   no single expression that says so, so the merged value is `["1d4", "2d6"]` and

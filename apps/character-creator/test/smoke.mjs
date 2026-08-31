@@ -3898,6 +3898,114 @@ section('Variable spell costs');
 }
 
 // ---------- 1c26. Secondary schedules and group bonuses ----------
+section('Psionics composition');
+{
+  // BOOK-INGEST-AUDIT.md F10. `combineClasses` used to CHOOSE between a race's
+  // psionics block and an occupation's, and the comparison was strictly
+  // greater, so a TIE handed the whole thing to the race and the occupation's
+  // powers, picks, schedule, categories and I.S.P. formula were all discarded.
+  //
+  // A race says what a member of that race is born with; an occupation says
+  // what training adds. They are two sentences, not rival answers to one
+  // question.
+  const mk = (cat, psi) => parseClassMarkdown(
+    `---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: ${cat}\npsionics:\n${psi}\n---\n\n## Lore\n\nx\n`).data;
+
+  const race = mk('rcc', `  type: major
+  isp_base: "1d4x10"
+  powers: ["Sixth Sense", "Mind Block"]
+  powers_starting: 8
+  categories_allowed: ["Healing", "Physical", "Sensitive"]
+  powers_schedule:
+    - { level: 3, count: 1 }`);
+  const occ = mk('occ', `  type: major
+  isp_base: "3d6x10"
+  powers: ["Mind Block", "Telekinesis"]
+  powers_starting: 2
+  categories_allowed: ["Sensitive", "Super"]
+  powers_schedule:
+    - { level: 2, count: 1 }
+    - { level: 4, count: 2 }`);
+  const both = combineClasses(race, occ).psionics;
+
+  // THE TIE IS THE WHOLE BUG. Before F10 this returned the race's block entire.
+  check('a tie no longer discards the occupation', both.powers_schedule.length === 2);
+
+  // Inventories add up.
+  check('granted powers are unioned', both.powers.length === 3
+    && ['Sixth Sense', 'Mind Block', 'Telekinesis'].every((n) => both.powers.includes(n)));
+  check('and a power both sides grant is held once',
+    both.powers.filter((n) => n === 'Mind Block').length === 1);
+  check('allowed categories are unioned', both.categories_allowed.length === 4
+    && both.categories_allowed.includes('Super') && both.categories_allowed.includes('Healing'));
+
+  // Counts take the HIGHER, which is not what F10 asked for: preferring the
+  // occupation's figure is LOWER in 89 of the 165 live pairs that state both,
+  // so a psychic dragon hatchling would have dropped from eight starting
+  // powers to one for studying as a Dog Boy - the exact loss F10 exists to stop.
+  check('a count takes the higher of the two', both.powers_starting === 8);
+
+  // A ladder is not a count and cannot be maxed. Running both would fire both
+  // sets of grants at every threshold.
+  check('a schedule takes the occupation\'s', both.powers_schedule[0].level === 2);
+  check('and falls back to the race\'s when the occupation states none', (() => {
+    const plain = mk('occ', '  type: major\n  isp_base: "2d6"');
+    return combineClasses(race, plain).psionics.powers_schedule[0].level === 3;
+  })());
+
+  // The tier is the one thing the old code was right about, and the I.S.P.
+  // formula travels with it. A tie goes to the occupation.
+  check('the tier is the stronger of the two', (() => {
+    const minor = mk('occ', '  type: minor\n  isp_base: "2d6"');
+    return combineClasses(race, minor).psionics.type === 'major';
+  })());
+  check('and a stronger occupation raises it', (() => {
+    const master = mk('occ', '  type: master\n  isp_base: "2d6"');
+    return combineClasses(race, master).psionics.type === 'master';
+  })());
+  check('the I.S.P. formula follows the tier', (() => {
+    const minor = mk('occ', '  type: minor\n  isp_base: "2d6"');
+    return combineClasses(race, minor).psionics.isp_base === '1d4x10';
+  })());
+  check('and a tie gives it to the occupation', both.isp_base === '3d6x10');
+  check('a winner stating no formula falls back rather than blanking it', (() => {
+    const master = mk('occ', '  type: master');
+    return combineClasses(race, master).psionics.isp_base === '1d4x10';
+  })());
+
+  // One side only is unchanged behaviour, and must stay that way.
+  check('a race alone keeps its block', (() => {
+    const plain = mk('occ', '  type: minor').psionics;
+    void plain;
+    const noPsi = parseClassMarkdown('---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: occ\n---\n\n## Lore\n\nx\n').data;
+    return combineClasses(race, noPsi).psionics.powers_starting === 8;
+  })());
+  check('an occupation alone keeps its block', (() => {
+    const noPsi = parseClassMarkdown('---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: rcc\n---\n\n## Lore\n\nx\n').data;
+    return combineClasses(noPsi, occ).psionics.powers_starting === 2;
+  })());
+
+  // A key neither F10 nor this function knows about must survive rather than be
+  // silently dropped. `powers_from` is in the corpus exactly once, which is the
+  // argument for spreading rather than enumerating.
+  check('an unenumerated key survives the merge', (() => {
+    const withFrom = mk('occ', '  type: major\n  isp_base: "2d6"\n  powers_from: ["Bio-Manipulation"]');
+    return combineClasses(race, withFrom).psionics.powers_from[0] === 'Bio-Manipulation';
+  })());
+
+  // The SECOND site, which F10 does not mention. `applyAbilities` folded an
+  // ability's psionics block with the same strict-greater rule, and its comment
+  // claims it is the same rule composition uses - which F10 would have made
+  // false. The Godling is the live case: a minor psychic whose "Super-Psionic
+  // Powers" ability grants `{ type: master }` and nothing else, so choosing the
+  // ability's block outright replaced its I.S.P. formula with none at all.
+  check('an ability raises the tier without erasing the class block', (() => {
+    const cls = parseClassMarkdown(`---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: occ\npsionics:\n  type: minor\n  isp_base: "M.E. number plus 1D6x10"\nspecial_abilities:\n  - name: "Super-Psionic Powers"\n    description: "d"\n    psionics: { type: master }\n---\n\n## Lore\n\nx\n`).data;
+    const after = applyAbilities(cls, [{ name: 'Super-Psionic Powers' }]).psionics;
+    return after.type === 'master' && after.isp_base === 'M.E. number plus 1D6x10';
+  })());
+}
+
 section('Related-skill floors');
 {
   // BOOK-INGEST-AUDIT.md F6. `occ_related_skills` says how many picks and which

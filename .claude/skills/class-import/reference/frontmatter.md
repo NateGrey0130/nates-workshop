@@ -195,6 +195,21 @@ magic:
 
 Named powers and spells need catalog rows; `class-check` lists the missing ones.
 
+**A race and an occupation that BOTH state psionics are MERGED, not chosen
+between** (BOOK-INGEST-AUDIT.md F10). A race says what a member of that race is
+born with and an occupation says what training adds, so `powers` and
+`categories_allowed` are unioned, `powers_starting` and `powers_per_level` take
+the higher of the two, and `powers_schedule` / `powers_starting_groups` take the
+occupation's when it states one - running both ladders would fire both sets of
+grants at every threshold. The tier is the stronger of the two and `isp_base`
+travels with it, a tie going to the occupation.
+
+This matters when transcribing a RACE that its own book pairs with an O.C.C.:
+write what the race page grants and nothing more, because the occupation's page
+is imported separately and the two now add up. `magic` is still CHOSEN - the
+occupation wins outright when both state it - which is a different question and
+is filed separately.
+
 ## Bonuses — the numbers the sheet adds up
 
 Applied **unconditionally**. A conditional bonus belongs in prose.
