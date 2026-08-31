@@ -248,3 +248,61 @@ shape as F2 - a column that holds one kind of value being asked to hold the
 statement *there is no value*.
 
 **Open.**
+
+### F6 - `occ_related_skills` cannot express a per-category MINIMUM
+
+Two classes in this book - the Imperial Security Agent (printed 83) and the
+Freedom Fighter (printed 84) - print the same rule:
+
+> O.C.C. Related Skills: Select 8 other skills, **but at least two must be
+> selected from espionage and two from rogue skills.**
+
+`occ_related_skills` carries one open `count` over every category it lists. It
+can say *how many* picks and *which categories are legal*, and it can narrow a
+category with `only` / `except`. It cannot say **at least N of them must come
+from this category.** Both classes therefore offer all eight picks freely, and a
+player can build an Imperial Security Agent with no espionage and no rogue
+skills at all - which is the one thing its own book forbids.
+
+**This is the mirror of the starting-powers problem** already solved on the
+psionic side. `powers_starting_groups` exists exactly because
+`powers_starting: 8` over four categories let a player take eight Super powers
+where the book granted two (CLASS-AUDIT.md S1 and S9). This is the same defect
+in the skill column, and it is a floor rather than a ceiling - which is the
+harder half, because a ceiling can be modelled by splitting the count and a
+floor cannot.
+
+**Why the obvious workaround is wrong.** Four of the eight picks could be moved
+into `occ_skills` as `{ choose: 2, categories: ["Espionage"] }` and
+`{ choose: 2, categories: ["Rogue"] }`. That enforces the floor and then
+silently takes four picks out of the eight the book calls free - the character
+ends with four related picks plus four constrained ones, which is a different
+class. Both classes state the rule in a note instead and the player honours it.
+
+**Proposal:** `occ_related_skills.minimums`, a list beside `count`:
+
+```yaml
+occ_related_skills:
+  count: 8
+  minimums:
+    - { count: 2, category: "Espionage" }
+    - { count: 2, category: "Rogue" }
+```
+
+The picks still come out of the same eight; the validator refuses a set that
+does not meet each floor, and the wizard shows *"Espionage 0/2 minimum"* beside
+the running total the way it already shows the count. Touches the parser, the
+server-side validator and the skills step of the wizard - the three places a
+pick is counted - and nothing else, because it constrains an existing list
+rather than adding one.
+
+Cheaper alternative: leave it advisory and have the wizard *warn* rather than
+refuse. That is worth less than it looks, since the note already warns and
+nobody reads a note at the moment of the pick.
+
+**Not urgent.** Two classes in this book, and both ship with the rule written
+where a GM will see it. Filed because it is the second time a book has stated a
+per-category quota and the second column that could not hold one, and because
+the psionic answer is already in the tree to copy.
+
+**Open.**

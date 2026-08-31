@@ -392,6 +392,22 @@ Phase 4 costs money; everything above was free.
      p.183 agrees with the heading by giving it no ladder. Where a class is
      absent from p.183, read its own heading before inheriting a ladder for it.
 
+   - **TWO CLASSES CAN SHARE A PAGE AND TWO CATEGORY LISTS CAN SHARE A COLUMN.**
+     Printed 83 carries the Imperial Security Agent's related-skill list in its
+     right column and the Freedom Fighter's heading below it; the Freedom
+     Fighter's own list is at the head of 84. The two lists differ in four
+     places - Espionage and Rogue at +10% against +5%, Domestic at nothing
+     against +5%, Pilot Related at +5% against +10% - and nothing in the OCR
+     says which is which. `--field-sources` made the same point about money: it
+     printed BOTH `Money: 2D6x100` (p84) and `Money: 4D6x1000` (p83) inside one
+     class's window. Render the page.
+
+   - **A per-category MINIMUM is not expressible.** Both Empire O.C.C.s require
+     "at least two [of the eight related picks] from espionage and two from
+     rogue". `occ_related_skills` has one open count; moving four picks into
+     `occ_skills` as choice groups would enforce the floor and quietly shrink
+     the free eight to four. Stated in the note and filed as F6.
+
    - **A conditional bonus can be almost the whole bonus line.** The Silhouette
      prints "+2 on initiative, +2 to strike, parry and dodge, +4 to roll with
      impact, but only when in the shadows. +4 to save vs horror factor." Four of
@@ -466,28 +482,30 @@ What is deliberately left, with the reason for each:
 | 2026-08-30 | [#409](https://github.com/NateGrey0130/nates-workshop/pull/409) | **classes, batch 2 - the noro**: Noro R.C.C., Noro Psychic, Noro Mystic Warrior (printed 61-65). Catalog 130 -> 133 classes. The book's first R.C.C. and its first two psionics blocks here. Second occurrence added to F3. Applied `--remote` before the PR. |
 | 2026-08-30 | [#410](https://github.com/NateGrey0130/nates-workshop/pull/410) | **classes, batch 3 - the rest of the CCW**: Space Wolfen, Wolfen Quatoria, Catyr, Seljuk (printed 65-70). Catalog 133 -> 137 classes. Also `fix-noro-mind-control-saves.sql`, correcting a save both noro O.C.C.s shipped without in #409. The CCW chapter is complete. Applied `--remote` before the PR. |
 | 2026-08-30 | [#411](https://github.com/NateGrey0130/nates-workshop/pull/411) | **classes, batch 4 - the Transgalactic Empire races**: Kreeghor, Machine People, Silhouette (printed 73-81). Catalog 137 -> 140 classes. Also `fix-noro-psionic-schedules.sql`, correcting a psionic power schedule both noro O.C.C.s shipped wrong in #409, and the survey correction that moves the Royal Kreeghor out of the playable list. Finding F5 filed. Applied `--remote` before the PR. |
+| 2026-08-30 | [#412](https://github.com/NateGrey0130/nates-workshop/pull/412) | **classes, batch 5 - the Transgalactic Empire O.C.C.s**: Imperial Legionnaire, Imperial Security Agent, Freedom Fighter (printed 82-84). Catalog 140 -> 143 classes. The Empire chapter is complete. Finding F6 filed. Applied `--remote` before the PR. |
 
 ### What remains
 
-`node scripts/source-coverage.mjs --remote`, after batch 4:
+`node scripts/source-coverage.mjs --remote`, after batch 5:
 
 ```
   rue                648 / 23
   pf                 583 / 3
   bom                412 / 0
   ww                 130 / 0
-  phase-world         76 / 0
+  phase-world         79 / 0
   ju                  62 / 0
   rifts-skill-list     0 / 40
 ```
 
-**`phase-world` is 76 traceable and 0 other.** Every row citing this book names a
-page range this machine holds - 9 skills, 8 re-citations, 43 gear and 14 class
+**`phase-world` is 79 traceable and 0 other.** Every row citing this book names a
+page range this machine holds - 9 skills, 8 re-citations, 43 gear and 17 class
 citations - which is what `traceable` means and all it means. It does not say the
 numbers are right; the gear script's own defence for that is the fourteen 200 dpi
 renders it was read from, and each class batch has its own.
 
-It was 66 after the first four PRs and 73 after batch 3. Each class adds one.
+It was 66 after the first four PRs, 73 after batch 3 and 76 after batch 4. Each
+class adds one.
 
 **`rifts-skill-list` is down from 48 to 40** and will not go lower from this
 book. The remaining 40 are `not-cached` and permanently so: the citation names a
