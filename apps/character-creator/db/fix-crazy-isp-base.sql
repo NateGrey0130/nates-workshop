@@ -1,6 +1,6 @@
 -- Give the Crazy the I.S.P. formula its book prints.
 --
--- BOOK-INGEST-AUDIT.md F17, taken in PR #NNN. The field held "6d6"; Rifts
+-- BOOK-INGEST-AUDIT.md F17, taken in PR #437. The field held "6d6"; Rifts
 -- Ultimate Edition printed 55 says "I.S.P. Base: 6D6 plus the M.E. attribute
 -- number, +1D6 I.S.P. per level of experience, starting with level two."
 --

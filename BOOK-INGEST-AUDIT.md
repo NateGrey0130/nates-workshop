@@ -1779,7 +1779,7 @@ its page. That is fourteen `--field-sources` reads against the OCR cache, which
 is free, and it is the only way to know whether this is one class or a habit.
 Found while taking F15, on the page F15 sent me to.
 
-**Taken, 2026-08-31 (PR #NNN), as a sweep first and then a one-class fix.**
+**Taken, 2026-08-31 (PR #437), as a sweep first and then a one-class fix.**
 `isp_base` is now the printed formula, read off a 200 dpi render of Rifts
 Ultimate Edition printed 55 - the folio confirms the book's +3 offset - and the
 M.E. term resolves: a Crazy with M.E. 14 now rolls 20-50 I.S.P. where it rolled
