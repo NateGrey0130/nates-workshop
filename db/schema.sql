@@ -504,6 +504,10 @@ CREATE TABLE IF NOT EXISTS skills (
   name TEXT NOT NULL UNIQUE,
   category TEXT,
   base INTEGER NOT NULL DEFAULT 0,        -- 0 = non-percentile (W.P.s, hand to hand)
+  -- An attribute-derived starting percentage: "PP*5" for a skill a book states
+  -- as the P.P. attribute number times five. Consulted only when set, so `base`
+  -- above keeps its meaning and stays the fallback; see migration 042.
+  base_formula TEXT,
   per_level INTEGER NOT NULL DEFAULT 0,
   systems TEXT,                           -- JSON array; NULL means both systems
   source TEXT NOT NULL DEFAULT 'seed',    -- seed | import
@@ -619,6 +623,10 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '041-drop-import-staging.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'imported_classes')
   AND NOT EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'import_staged');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '042-skill-base-formula.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('skills') WHERE name = 'base_formula');
 
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '006-import-sessions.sql'

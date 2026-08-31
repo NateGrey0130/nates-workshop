@@ -13,6 +13,7 @@
 // Object.assign at the bottom.
 import { evalDice, rollPoolFormula, rollAttribute, rollQuantity,
          isAbsentAttribute } from './js/dice.js';
+import { skillBase } from './js/skill-base.js';
 import { isFamilyName, isRepeatableRow, otherRowFor, familySkillName,
          promptFor } from './js/language-skills.js';
 import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSIONIC_TIER_RULES,
@@ -1839,7 +1840,10 @@ function resolveSkill(name, explicit = {}) {
   // the sheet, worth nothing and never advancing.
   const cat = skillByName().get(name)
     || (isFamilyName(name) ? (skillByName().get(otherRowFor(name)) || {}) : {});
-  const catBase = cat.base ?? 0;
+  // A base a book states as an attribute times a multiplier — "P.P. number x5%"
+  // (BOOK-INGEST-AUDIT.md F2). skillBase() falls back to the stored `base`
+  // whenever there is no formula, so every row without one is unaffected.
+  const catBase = skillBase(cat, S.attrs);
   const base = explicit.base ?? (explicit.bonus && catBase ? catBase + explicit.bonus : catBase);
   return {
     base,
@@ -2012,7 +2016,14 @@ function renderSkills() {
         <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
           data-act="skill" data-kind="${kind}" data-name="${esc(s.name)}">
         <span>${esc(s.name)}${hint}</span>
-        <span class="pct">${s.base ? s.base + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—'}</span>
+        <span class="pct">${(() => {
+          // F2: a formula row's percentage comes from the character's
+          // attributes, not from the stored `base` — which is 0 on those rows
+          // and would render as an em dash, telling the player that a skill
+          // they can take and which the sheet will score has no percentage.
+          const b = skillBase(s, S.attrs);
+          return b ? b + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—';
+        })()}</span>
       </label>`;
     }).join('');
   };
@@ -2916,7 +2927,8 @@ function skillsAtLevelOne() {
     // choice group's `bonus`, for the same reason.
     ...S.related.map((n) => {
       const row = find(n);
-      const base = row.base || 0;
+      // F2: a formula-derived base, falling back to the stored one.
+      const base = skillBase(row, S.attrs) || 0;
       return { name: n, category: row.category, pct: base ? base + categoryBonus(relatedCats(), row) : 0,
                per_level: row.per_level || 0, type: 'related' };
     }),
@@ -2924,7 +2936,7 @@ function skillsAtLevelOne() {
     // skills increase as the character grows in experience". Storing 0 here
     // stopped them advancing forever, so a level 10 character's hobby skills
     // sat at their level 1 values.
-    ...S.secondary.map((n) => ({ name: n, category: find(n).category, pct: find(n).base || 0, per_level: find(n).per_level || 0, type: 'secondary' })),
+    ...S.secondary.map((n) => ({ name: n, category: find(n).category, pct: skillBase(find(n), S.attrs) || 0, per_level: find(n).per_level || 0, type: 'secondary' })),
   ].map(withIq);
 }
 

@@ -22,7 +22,7 @@ export async function onRequestGet({ request, env }) {
     // sheet was right, because its endpoint selects the column itself, and
     // only the wizard silently showed a fighting style granting nothing.
     // Roughly 28KB across the 36 rows that have one.
-    env.DB.prepare('SELECT name, category, base, per_level, systems, source_book, bonuses, level_bonuses FROM skills ORDER BY category, name').all(),
+    env.DB.prepare('SELECT name, category, base, base_formula, per_level, systems, source_book, bonuses, level_bonuses FROM skills ORDER BY category, name').all(),
     // `system` likewise: the wizard filters spells and powers by the campaign's
     // system client-side, the same way it already does skills.
     env.DB.prepare('SELECT name, level, ppe, ppe_note, system, source_book FROM spells ORDER BY level, name').all(),
