@@ -929,6 +929,21 @@ skipped — one line, *"Step 8 (Advancement) does not apply to this character."*
 keep the `title` for the mouse. Add `aria-current="step"` to `.st cur` in the same
 edit.
 
+**Taken, 2026-08-31 (PR #N).** Both halves, in one edit, with the proposal's own
+sentence: a Palladium Fantasy R.C.C. build at step 9 renders
+*"Step 8 (Advancement) does not apply to this character."* under the pills, and
+`aria-current="step"` lands on *9. Details*. The `title` stays for the pointer.
+
+**More than one step can be skipped at once, which the finding's single-sentence
+wording did not cover.** An O.C.C.-first build skips Occupation *and*
+Advancement, so the line is built rather than hard-coded and agrees with itself:
+Rifts → Body Fixer renders *"Steps 4 (Occupation) and 8 (Advancement) do not
+apply to this character."* — plural noun, list, plural verb.
+
+Verified at 1440×900 and at 390×844, which is the width the finding was about:
+the line sits at y=227, 334px wide, centred under the stepper and fully legible
+where the `title` could never be reached at all.
+
 ---
 
 ### F20 — low — `var(--warn, …)` names a token that does not exist, so the fallback is permanent
