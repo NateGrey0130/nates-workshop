@@ -346,7 +346,7 @@ regression `docs/wizard-and-sheet.md` describes has not come back.
 and drop `flex: 1 0 auto` to `flex: 1 1 auto`) instead of scrolling, so all six tabs
 are visible at once. Adds nothing new; uses a breakpoint that already exists.
 
-**Taken, 2026-08-31 (PR #N).** Implemented as written, at the breakpoint written,
+**Taken, 2026-08-31 (PR #440).** Implemented as written, at the breakpoint written,
 with both declarations. All six tabs are now fully visible at 390×844 in two rows
 of three, `overflowing: false`, and the `44px` touch height survives the wrap.
 
