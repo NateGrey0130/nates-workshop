@@ -117,12 +117,23 @@ does not re-run the scan.
 
 ## Classes
 
-**46 entries named across the two indexes. 42 carry a stat block; 35 of those
+**46 entries named across the two indexes. 42 carry a stat block; 34 of those
 are playable and 31 are named in an experience ladder.** The ladder is the line,
-and the four playable entries not named in one inherit a ladder the book states
+and the three playable entries not named in one inherit a ladder the book states
 in their own text.
 
-### Playable (35) — the import target
+**Corrected 2026-08-30, in the batch that reached this chapter.** The first pass
+counted 35 playable and put the Royal Kreeghor among them, on the reasoning that
+it shares the kreeghor ladder. It does not share it and it is not playable: the
+heading on printed 74 reads *Royal Kreeghor R.C.C. / **NPC Villains***, the
+entry closes with "Royal Kreeghor are not intended to be player-characters. They
+are a sub-race of supernatural monsters used as villains and antagonists", and
+p.183 names no ladder for it. Both authorities agree and the survey disagreed
+with both. The Contents does not label it, which is how it got past - the label
+is in the section heading itself, and this is the only entry in the book where
+those two disagree.
+
+### Playable (34) — the import target
 
 XP ladders are shared; the column names the ladder as printed on p.183.
 
@@ -152,7 +163,6 @@ XP ladders are shared; the column names the ladder as printed on p.183.
 | Catyr | 68-69 | Seljuk, Noro Mystic Warrior, Kreeghor, and Catyr |
 | Seljuk | 69-70 | Seljuk, Noro Mystic Warrior, Kreeghor, and Catyr |
 | Kreeghor | 73-74 | Seljuk, Noro Mystic Warrior, Kreeghor, and Catyr |
-| Royal Kreeghor | 74-76 | (uses the Kreeghor ladder) |
 | Machine People | 77-80 | Machine People & Phantom / Vacuum Wasps |
 | Silhouette | 80-82 | Silhouette, Draconid & Repo-Bots |
 | Imperial Legionnaire | 82 | TVIA Agent, CAF Fleet Officer, Imperial Legionnaire |
@@ -181,15 +191,17 @@ one. The book simply prints one ladder twice for seven classes.
 band's low is its high plus one; only the fifteenth high breaks it. Transcribed
 as printed — a book typo is recorded, not corrected.
 
-### Named but not playable (11)
+### Named but not playable (12)
 
-Seven the book labels NPC or GM material in its own Contents, and four that are
-lore, a cross-reference or a generator and carry no stat block at all:
+Eight the book labels NPC or GM material - seven in its own Contents and one in
+its section heading - and four that are lore, a cross-reference or a generator
+and carry no stat block at all:
 
 | entry | printed | why it is out |
 |---|---|---|
 | Second Stage Promethean | 31-35 | Contents labels it NPC |
 | True Naruni | 48-49 | Contents labels it NPC Villain |
+| Royal Kreeghor | 74-76 | its own heading labels it NPC Villains; no ladder on p.183 |
 | Kreeghor Emperor | 76-77 | Contents labels it NPC Villain |
 | Killer Beetles | 91-92 | Contents labels it NPC Villain |
 | Worker Ants | 94-95 | Contents labels it NPC Villain |
@@ -353,6 +365,40 @@ Phase 4 costs money; everything above was free.
      exist** - the class-import skill's rule about unmodelled keys applies in
      this direction too, and it is the direction with no error message.
      Corrected by `fix-noro-mind-control-saves.sql` in batch 3.
+   - **`js/leveling.js` IS THE REFERENCE FOR SCHEDULES, not `frontmatter.md`.**
+     That file lists four keys under `magic` and calls them examples, and the
+     real set is much larger. `spells_per_level` with
+     `spells_per_level_levels: up_to_character_level` expresses "two more spells
+     per level, never above your own level" exactly - it is the Ley Line
+     Walker's rule and it is named in the comment above `spellLevelsForGrant`.
+     A `powers_schedule` or `spells_schedule` ENTRY carries its own `categories`
+     or `spell_levels`, which OVERRIDE the class-wide gate rather than narrowing
+     it, and its own `note`, which is shown to the player at the moment of the
+     pick - the intended home for a restriction the catalog cannot enforce. And
+     `powers_starting_groups` splits a starting allowance across categories, so
+     "two from each of the four" is not `powers_starting: 8`.
+
+     Batch 4 found all four of those by grepping, and used them to fix batch 2:
+     the noro psychic could never take the Super power its book grants at second
+     level, both noro schedules stopped at level 3 where the book says "third
+     level and beyond", and the mystic warrior could take eight Super powers
+     where the book grants two. See `fix-noro-psionic-schedules.sql`. This is
+     the SECOND correction of this shape in three batches; the first was
+     `mind_control`. Both were notes asserting a limit that was not there.
+
+   - **A section heading can carry the NPC label the Contents does not.** The
+     Royal Kreeghor is headed *NPC Villains* on printed 74 and the Contents
+     lists it plainly, so a survey built from the Contents counted it playable.
+     p.183 agrees with the heading by giving it no ladder. Where a class is
+     absent from p.183, read its own heading before inheriting a ladder for it.
+
+   - **A conditional bonus can be almost the whole bonus line.** The Silhouette
+     prints "+2 on initiative, +2 to strike, parry and dodge, +4 to roll with
+     impact, but only when in the shadows. +4 to save vs horror factor." Four of
+     its five bonuses evaporate in daylight, so `bonuses` holds one number and
+     the rest are prose. Storing that line as written would have made the race a
+     good fighter everywhere.
+
    - **A wrapped inline list is a parse error, not a style choice.** The
      frontmatter parser is line-based: an inline `[...]` or `{...}` must close
      on the SAME line. A twelve-name `psionics.powers` list wrapped across three
@@ -419,27 +465,29 @@ What is deliberately left, with the reason for each:
 | 2026-08-30 | [#408](https://github.com/NateGrey0130/nates-workshop/pull/408) | survey: real `source-coverage` paste replacing the pre-import one - `phase-world 66 / 0`, `rifts-skill-list` 48 -> 40. No data. |
 | 2026-08-30 | [#409](https://github.com/NateGrey0130/nates-workshop/pull/409) | **classes, batch 2 - the noro**: Noro R.C.C., Noro Psychic, Noro Mystic Warrior (printed 61-65). Catalog 130 -> 133 classes. The book's first R.C.C. and its first two psionics blocks here. Second occurrence added to F3. Applied `--remote` before the PR. |
 | 2026-08-30 | [#410](https://github.com/NateGrey0130/nates-workshop/pull/410) | **classes, batch 3 - the rest of the CCW**: Space Wolfen, Wolfen Quatoria, Catyr, Seljuk (printed 65-70). Catalog 133 -> 137 classes. Also `fix-noro-mind-control-saves.sql`, correcting a save both noro O.C.C.s shipped without in #409. The CCW chapter is complete. Applied `--remote` before the PR. |
+| 2026-08-30 | [#411](https://github.com/NateGrey0130/nates-workshop/pull/411) | **classes, batch 4 - the Transgalactic Empire races**: Kreeghor, Machine People, Silhouette (printed 73-81). Catalog 137 -> 140 classes. Also `fix-noro-psionic-schedules.sql`, correcting a psionic power schedule both noro O.C.C.s shipped wrong in #409, and the survey correction that moves the Royal Kreeghor out of the playable list. Finding F5 filed. Applied `--remote` before the PR. |
 
 ### What remains
 
-`node scripts/source-coverage.mjs --remote`, after the first four PRs:
+`node scripts/source-coverage.mjs --remote`, after batch 4:
 
 ```
   rue                648 / 23
   pf                 583 / 3
   bom                412 / 0
-  (unresolved)         0 / 214
   ww                 130 / 0
-  phase-world         66 / 0
+  phase-world         76 / 0
   ju                  62 / 0
   rifts-skill-list     0 / 40
 ```
 
-**`phase-world` is 66 traceable and 0 other.** Every row citing this book names a
-page range this machine holds - 9 skills, 8 re-citations, 43 gear and the four
-class citations - which is what `traceable` means and all it means. It does not
-say the numbers are right; the gear script's own defence for that is the
-fourteen 200 dpi renders it was read from.
+**`phase-world` is 76 traceable and 0 other.** Every row citing this book names a
+page range this machine holds - 9 skills, 8 re-citations, 43 gear and 14 class
+citations - which is what `traceable` means and all it means. It does not say the
+numbers are right; the gear script's own defence for that is the fourteen 200 dpi
+renders it was read from, and each class batch has its own.
+
+It was 66 after the first four PRs and 73 after batch 3. Each class adds one.
 
 **`rifts-skill-list` is down from 48 to 40** and will not go lower from this
 book. The remaining 40 are `not-cached` and permanently so: the citation names a

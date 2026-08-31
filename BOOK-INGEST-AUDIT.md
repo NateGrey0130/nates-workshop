@@ -202,3 +202,49 @@ class ships wrong because of this one; the trooper was corrected by hand in the
 same PR that found it.
 
 **Open.**
+
+### F5 - `attribute_dice` cannot say an attribute does not exist, and the app fills one in
+
+The Machine People R.C.C. (Phase World, printed 78) prints its attribute line as
+**"I.Q. 2D6+10, M.E. 2D6+10, M.A. 2D6+10, P.S. 6D6, P.P. 5D6, P.E. N/A,
+P.B. 2D6+12, Spd. 6D6"**. A machine person is a living machine with no
+constitution to model, so the book does not give it a P.E. at all.
+
+There is no way to write that. `attribute_dice` is a map of dice strings, and
+`app.js` resolves a missing one as
+
+```js
+return rollAttribute(S.cls?.attribute_dice?.[attr] || '3d6');
+```
+
+so a class that states nothing and a class that states **N/A** produce the same
+character: one with a rolled P.E. of about ten. The import omits the key, which
+is the honest choice of the two available - writing a number would assert one -
+but the sheet still shows a P.E. the book denies, and the value feeds save vs
+coma/death like any other.
+
+**This is a display and a derivation problem at once**, and the second half is
+what makes it more than cosmetic. P.E. is read wherever a save vs coma/death or
+an S.D.C. figure is computed. A machine person is an M.D.C. being that is
+impervious to toxins, drugs and radiation, so most of those paths are moot for
+*this* race - which is exactly why it will not be noticed until a book states
+N/A for an attribute that is not moot.
+
+**Proposal:** accept the literal string `"N/A"` as a value in `attribute_dice`,
+meaning *this creature has no such attribute*, and have `rollAttribute` return
+null for it rather than falling through to `3d6`. The sheet then shows a dash
+where the number would be, the wizard's re-roll button for that attribute is
+suppressed, and `attribute_requirements` on an O.C.C. naming that attribute
+fails closed - a machine person cannot take a class that requires a P.E., which
+is the right answer and the one nobody would get by hand.
+
+Cheaper alternative if that is too wide: leave the roll alone and add the
+absence to the parser as a warning, so at least the import is told. That fixes
+nothing and is not recommended; it is here because it is one line.
+
+Only one class in this book needs it, which is why this is filed rather than
+built. It is the first attribute-shaped hole to turn up, and it is the same
+shape as F2 - a column that holds one kind of value being asked to hold the
+statement *there is no value*.
+
+**Open.**
