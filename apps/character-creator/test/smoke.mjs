@@ -4072,6 +4072,79 @@ skills:
   })());
 }
 
+section('Psionic category narrowing');
+{
+  // BOOK-INGEST-AUDIT.md F16. A skill category has taken `only` / `except`
+  // since the beginning; a psionic category could not. The Crazy's book allows
+  // two categories "excluding Astral Projection, Ectoplasm, Object Read and
+  // Telekinesis", and the only way to say that was `powers_from`, which
+  // REPLACES the category gate rather than narrowing it - so it would have
+  // meant enumerating the other forty-seven and re-enumerating them whenever a
+  // Sensitive power was added.
+  const mk = (block) => parseClassMarkdown(
+    `---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: occ\npsionics:\n${block}\n---\n\n## Lore\n\nx\n`);
+
+  const narrowed = mk(`  type: "minor"
+  powers_starting: 3
+  categories_allowed:
+    - { name: "Sensitive", except: ["Object Read (Psychometry)"] }
+    - "Physical"`);
+  check('a psionic category takes an except', narrowed.ok, JSON.stringify(narrowed.errors));
+
+  // The SAME function the skill pickers use, so the two cannot disagree about
+  // what a category entry means.
+  const cats = narrowed.data.psionics.categories_allowed;
+  check('and the excluded power is refused',
+    !categoryAllows(cats, { name: 'Object Read (Psychometry)', category: 'Sensitive' }));
+  check('while the rest of its category is allowed',
+    categoryAllows(cats, { name: 'Sixth Sense', category: 'Sensitive' }));
+  check('and an unnarrowed category is untouched',
+    categoryAllows(cats, { name: 'Levitation', category: 'Physical' }));
+  check('and a category the class never named is still refused',
+    !categoryAllows(cats, { name: 'Bio-Regeneration', category: 'Healing' }));
+
+  check('an only list narrows the other way', (() => {
+    const only = mk('  type: "minor"\n  categories_allowed:\n    - { name: "Physical", only: ["Levitation"] }');
+    const c = only.data.psionics.categories_allowed;
+    return categoryAllows(c, { name: 'Levitation', category: 'Physical' })
+      && !categoryAllows(c, { name: 'Ectoplasm', category: 'Physical' });
+  })());
+
+  // A plain string still means the whole category - every other class in the
+  // catalog writes one, and none of them may change meaning.
+  check('a plain string still opens the whole category', (() => {
+    const plain = mk('  type: "minor"\n  categories_allowed: ["Physical"]');
+    return categoryAllows(plain.data.psionics.categories_allowed,
+      { name: 'Ectoplasm', category: 'Physical' });
+  })());
+
+  // A percentage is a SKILL idea: a psionic power has an I.S.P. cost and no
+  // percentage to raise, so a bonus here would be stored and never read.
+  check('a bonus on a psionic category is a parse error',
+    !mk('  type: "minor"\n  categories_allowed:\n    - { name: "Physical", bonus: 10 }').ok);
+  check('and both narrowings at once is still an error',
+    !mk('  type: "minor"\n  categories_allowed:\n    - { name: "Physical", only: ["Levitation"], except: ["Ectoplasm"] }').ok);
+
+  // An ability that GRANTS psionics carries the same block and reaches the same
+  // gate, so it is validated too.
+  check('an ability\'s psionics block is validated as well', (() => {
+    const bad = parseClassMarkdown('---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: occ\n'
+      + 'special_abilities:\n  - name: "Awakening"\n    description: "d"\n    psionics: { type: master, categories_allowed: [{ name: "Super", bonus: 5 }] }\n'
+      + '---\n\n## Lore\n\nx\n');
+    return !bad.ok;
+  })());
+
+  // The server refuses what the picker will not offer - one function, three
+  // call sites, the wizard twice and the grant checker once.
+  const picks = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator',
+    '_lib', 'power-picks.js'), 'utf8');
+  check('the server gates psionic grants through the same function',
+    picks.includes('categoryAllows(cats, row)'));
+  const appSrc = readFileSync(join(repoRoot, 'apps', 'character-creator', 'app.js'), 'utf8');
+  check('and neither wizard picker still tests membership by hand',
+    !/allowed\.includes\(\w+\.category\)/.test(appSrc));
+}
+
 section('Magic composition');
 {
   // BOOK-INGEST-AUDIT.md F14. F10 excluded magic saying no race/O.C.C. pair
