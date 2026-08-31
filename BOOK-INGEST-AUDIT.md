@@ -618,6 +618,17 @@ Applied `--remote` before the PR.
 Smoke 1342 -> 1349, regression 212 unchanged. Zero of the 160 published classes
 trip the new error.
 
+**Addendum, 2026-08-31 (PR #425) - this finding shipped with a second stale note
+it did not correct.** TWO published classes cite F8, not one. The Repo-Bot was
+corrected above; the PHANTOM was missed. Its note explains that storing `"0"`
+for the energy form's P.S. would have been worse than the compromise it chose,
+because `rollAttribute` would discard it - which stopped being true the moment
+this finding merged. `fix-phantom-fixed-attribute-note.sql` corrects it. The
+DECISION stands and no attribute value moves: the shell's 4D6 is still stored,
+for the reason that there is one field per attribute rather than the reason that
+a zero could not be. Filed as F12, which is what a hand sweep for citers keeps
+missing.
+
 **Closed.**
 
 ### F9 - a cross-category `only` pick silently loses the percentage printed beside it
@@ -868,5 +879,62 @@ discard for some race it can be taken with. It fixes no character and it is the
 same shape as F10's cheaper alternative - but between them the two would cover
 every field `combineClasses` decides, and it would have said something on the
 day this class was imported rather than on the day someone rolls one.
+
+**Open.**
+
+### F12 - a class note that records the app's limits ages badly, and nothing sweeps the citers
+
+An `extraction_notes` entry does two jobs at once. One is permanent - **what the
+book prints and what was stored**. The other is perishable - **what the app could
+do on the day of the import**. They sit in the same paragraph, so the perishable
+half rots inside a record that otherwise stays true, and nothing marks the seam.
+
+**Five occurrences, four of them corrected by hand and one missed.**
+
+| class | asserted | falsified by |
+|---|---|---|
+| both noro O.C.C.s | the sheet has no mind-control save | `fix-noro-mind-control-saves.sql` |
+| `apok` | `bonuses.attributes` takes flat numbers only | the Godling's +1D4 initiative |
+| `naruni-repo-bot` | a fixed attribute falls back to 3d6 | F8 (PR #422) |
+| `vacuum-wasp`, `termite-engineer` | the cross-category +5% does not land | F9 (PR #424) |
+| `machine-people`, `pleasurer` | there is no way to say an attribute is absent | F5 (PR #423) |
+| `phantom` | storing `"0"` would be worse than a compromise | F8 - **and it was missed for three PRs** |
+
+The Phantom is the argument. F8 corrected one of its two citers, both tests
+passed, and the false claim reached production and stayed there. It was found
+only by counting citations while writing this finding - not by any check, and not
+by the person who had just done the same correction by hand three times.
+
+**The exposure is knowable and small.** Sixteen of 160 published classes carry at
+least one `BOOK-INGEST-AUDIT.md FN` citation, across nine findings: F2 (5), F3
+(5), F7 (4), F5/F8/F9/F10/F11 (2 each), F6 (1). Six findings on this menu are
+still open, so this will recur about six more times unless something changes.
+
+**Proposal, in three parts, and the third is deliberately weak.**
+
+1. **Convention.** A class note records the DECISION and cites the finding; the
+   finding owns the mechanism. *"Not stored; see F8"* never goes stale.
+   *"`rollAttribute` parses only NdM forms"* always will. Where the mechanism
+   must be in the class, write it past-tense and dated - which is the doctrine
+   this repo already applies to audit files (*do not rewrite a measurement*),
+   extended to class prose.
+2. **Protocol.** Taking a finding already requires an outcome note in the same
+   PR. Add: *and correct every class note that cites it.* One line in the
+   `audit-menu` skill, and it is the step that was skipped.
+3. **Tooling: a cross-reference, NOT a status oracle.** A flag that lists which
+   classes cite which finding, so step 2 is a command rather than a memory.
+   **It must parse no outcome notes.** The `audit-menu` skill forbids a check
+   that decides whether a finding was taken, because a mechanical reader of
+   those notes has been wrong five times; this one answers only *who mentions
+   F8* and leaves *is F8 still true* to the person taking it.
+
+**Posture: convention and protocol first, tooling last and advisory.** Parts 1
+and 2 are documentation and cost nothing. Part 3 should be a listing with no
+exit code of its own - a gate here would fire on every class citing an open
+finding, which is the correct and useless answer.
+
+**Not urgent, and it repairs nothing already shipped** - the five occurrences
+above are all corrected as of PR #425. What it buys is that the sixth is found
+by a command rather than by someone noticing.
 
 **Open.**
