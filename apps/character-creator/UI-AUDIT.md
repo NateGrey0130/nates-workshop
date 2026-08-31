@@ -967,7 +967,7 @@ minimum, under the 44×44 the app's own `.tabbar .tab` sets for itself.
 in the equipment row renderer and on the sheet's inventory rows. Do not resize them in
 this PR — that changes row height everywhere.
 
-**Taken, 2026-08-31 (PR #N).** Both renderers, `aria-label` and `title`, and the
+**Taken, 2026-08-31 (PR #447).** Both renderers, `aria-label` and `title`, and the
 buttons are **not** resized — still 32×24, as the finding required.
 
 **One correction: not every `✕` was bare.** The enchantment remove button
