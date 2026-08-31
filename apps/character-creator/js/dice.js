@@ -6,12 +6,47 @@ export const d = (sides) => 1 + Math.floor(Math.random() * sides);
 
 const DICE_EXPR = /^(\d+)\s*d\s*(\d+)(?:\s*x\s*(\d+))?(?:\s*([+-])\s*(\d+))?$/i;
 
+// A FIXED value, which is not a roll at all (BOOK-INGEST-AUDIT.md F8).
+//
+// The Naruni Repo-Bot's chassis has "a P.S. of 50, P.P. 26" — the same figures
+// for every unit ever built — and `attribute_dice` looks like the field for
+// them and was not. A bare integer matched no grammar here, so it fell through
+// to the human default AND had its notation rewritten: measured before this
+// went in, `rollAttribute("50")` returned 9 and reported `"3d6"`. One published
+// class was already carrying it — the Holy Terror's `PS: "50"` from Wormwood,
+// which had a human's strength from import with every check calling it ready.
+//
+// Kept as its own constant rather than folded into DICE_EXPR as an alternative,
+// which is what F8 sketched: an alternation there shifts every capture-group
+// index in three functions, to express a thing that has no dice, no multiplier
+// and no modifier. The BEHAVIOUR is exactly what was proposed — accept it,
+// return it unchanged, and report the real notation.
+const FIXED_EXPR = /^(\d+)$/;
+
+// The number a fixed expression states, or null when it is not one. Internal:
+// callers outside this module ask isAttributeExpr instead.
+function fixedValue(expr) {
+  const m = String(expr ?? '').trim().match(FIXED_EXPR);
+  return m ? +m[1] : null;
+}
+
+// Does this parse as EITHER grammar? `class-check` asks, because a value
+// parsing as neither is the silent failure F8 is about.
+export function isAttributeExpr(expr) {
+  const s = String(expr ?? '').trim();
+  return DICE_EXPR.test(s) || FIXED_EXPR.test(s);
+}
+
 // One parse path for a roll and for its bounds. `die(sides)` supplies each
 // die's value, so the same walk that rolls also answers "what is the least or
 // most this expression can come up" — two implementations of the grammar would
 // drift, and a bounds check that disagrees with the roll it bounds is worse
 // than none.
+//
+// A fixed value is its own floor and ceiling, so it needs no `die` at all.
 function evalDiceWith(expr, die) {
+  const fixed = fixedValue(expr);
+  if (fixed !== null) return fixed;
   const m = String(expr).trim().match(DICE_EXPR);
   if (!m) return null;
   let total = 0;
@@ -73,6 +108,14 @@ const EXCEPTIONAL_AT = { 2: 12, 3: 16 };
 // looks like one even when it is right.
 export function rollAttribute(expr) {
   const s = String(expr ?? '').trim() || '3d6';
+  // A FIXED value is not rolled and earns no exceptional die: a chassis with a
+  // P.S. of 50 has a P.S. of 50. The notation reported is the value itself,
+  // which is the half of F8 that made the old behaviour silent — the wizard's
+  // re-roll button used to read `(3d6)` beside a number the class never stated.
+  const fixed = fixedValue(s);
+  if (fixed !== null) {
+    return { notation: s, base: fixed, modifier: 0, exceptional: [], total: fixed };
+  }
   const m = s.match(DICE_EXPR);
   // An unparseable expression is not a reason to leave the attribute empty;
   // fall back to the human default rather than returning null.
@@ -234,6 +277,12 @@ function poolBaseWith(expr, attrs, die) {
 // exceptional chain, and the chain is at most two extra six-sided dice.
 export function attributeCeiling(expr) {
   const s = String(expr ?? '').trim() || '3d6';
+  // A fixed value is its own ceiling, and this is a real gain rather than
+  // bookkeeping: `"50"` used to return null, so the server-side
+  // attribute_above_ceiling check skipped the one class already carrying a
+  // fixed attribute entirely. It now has a ceiling like every other class.
+  const fixed = fixedValue(s);
+  if (fixed !== null) return fixed;
   const m = s.match(DICE_EXPR);
   if (!m) return null;
   const count = +m[1], sides = +m[2];

@@ -41,6 +41,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { parseClassMarkdown } from '../apps/character-creator/js/parser.js';
+import { isAttributeExpr } from '../apps/character-creator/js/dice.js';
 import { crossReference, buildStubStatements, restrictionNames } from '../functions/api/character-creator/_lib/catalog.js';
 import {
   extractClassMarkdown, unmodelledKeys, crossCategoryRestrictions, unclosedFlowLines,
@@ -147,6 +148,22 @@ if (data?.source_book && !registryBookSlug(data.source_book, bookRegistry)) {
   warnings.push(`source_book "${data.source_book}" matches no title or alias in `
     + 'scripts/books.json. If this is a book already in there, use its canonical '
     + 'spelling or add this one to its `aliases`; if it is a new book, add an entry.');
+}
+
+// Every attribute_dice value must parse as ONE of the two grammars the app
+// reads — dice, or a fixed number (BOOK-INGEST-AUDIT.md F8). Anything else is
+// SILENTLY replaced by 3d6 at roll time, with the notation rewritten to match,
+// so the class ships looking complete and describes a different creature.
+//
+// This is the half of F8 that would have caught the Holy Terror. An ERROR
+// rather than a warning: there is no reading under which an unparseable
+// attribute is what the author meant. The app will substitute a value either
+// way, and the only question is whether anyone is told.
+for (const [attr, expr] of Object.entries(data?.attribute_dice ?? {})) {
+  if (isAttributeExpr(expr)) continue;
+  errors.push(`attribute_dice.${attr} is "${expr}", which parses as neither dice `
+    + '(3d6, 4d6+4, 2d4x10) nor a fixed number (50). rollAttribute would discard it, '
+    + 'roll 3d6 instead, and report the notation as 3d6.');
 }
 
 const list = (label, items) => {

@@ -530,7 +530,53 @@ fixed: the book heads that stat block **"Bonuses (Includes P.P. bonuses)"**, so
 the printed +8 to strike, parry and dodge already contains it, and `derive.js`
 would have added its own `pp_combat` bonus on top.
 
-**Open.**
+**Taken, 2026-08-31 (PR #422), both halves.** A bare integer in
+`attribute_dice` is now a FIXED value: returned unchanged, reporting its own
+notation, earning no exceptional die, and acting as its own ceiling. And
+`class-check` now REJECTS an `attribute_dice` value parsing as neither grammar
+- the half this finding says would have caught the Holy Terror.
+
+**Every premise held**, which is unusual here and worth saying plainly. The
+measured `rollAttribute("50") -> 9, notation "3d6"` was reproduced before the
+change. The sweep still finds **exactly one** published class carrying a fixed
+value, now across 160 rather than 148: `holy-terror.PS`.
+
+**Structure differs from the sketch, behaviour does not.** F8 proposed *one
+alternative in `DICE_EXPR`*. That alternation would shift every capture-group
+index in three functions to express a thing with no dice, no multiplier and no
+modifier, so it is a second constant and an early return in each. Widening the
+shared grammar was audited rather than assumed: `evalDice` and `diceBounds` are
+only ever fed `perLevelDiceOf` output, which is dice-shaped; `poolBaseWith`
+already resolved bare numbers to the same value by a later branch; and no
+equipment quantity is a bare numeric string. `DICE_RE`, which finds dice inside
+prose, is deliberately untouched.
+
+**A THIRD GAIN THIS FINDING DOES NOT MENTION.** `attributeCeiling("50")`
+returned `null`, and the server-side `attribute_above_ceiling` check skips a
+null ceiling - so the one class already carrying a fixed attribute was exempt
+from the gate as well as mis-rolled. It now has a ceiling like every other
+class.
+
+**The Holy Terror is repaired by the code change alone**, with no data script:
+its `PS: "50"` was always stored and is now read. New characters roll 50 where
+they rolled about ten; existing ones keep the attributes stored at creation,
+so nothing is rewritten under anyone.
+
+**One data script, and it is a note rather than a number.**
+`fix-repo-bot-fixed-attribute-note.sql` corrects the Repo-Bot's
+`extraction_notes`, which described this limitation as current and measured -
+true the day it was written, false the moment this shipped. That is the exact
+failure this book has already hit twice. It deliberately does NOT add
+`PS: "50"` to the Repo-Bot: the app could hold it now, but changing a published
+class's attributes changes the characters made from it, and that is a decision
+rather than a consequence of fixing the mechanism. The note says so. The P.P.
+stays out for the unrelated double-counting reason above, which is untouched.
+Applied `--remote` before the PR.
+
+Smoke 1342 -> 1349, regression 212 unchanged. Zero of the 160 published classes
+trip the new error.
+
+**Closed.**
 
 ### F9 - a cross-category `only` pick silently loses the percentage printed beside it
 
