@@ -348,7 +348,49 @@ than built. It is the first attribute-shaped hole to turn up, and it is the same
 shape as F2 - a column that holds one kind of value being asked to hold the
 statement *there is no value*.
 
-**Open.**
+**Taken, 2026-08-31 (PR #423), as proposed.** `attribute_dice` accepts the
+literal `N/A`, `rollAttribute` returns null for it, and both classes now say so.
+
+**THREE OF THE FOUR OUTCOMES THIS FINDING ASKS FOR ALREADY WORKED**, and that is
+the correction to lead with. It reads as four changes; it is one. `sheet.js`
+already renders a dash for a null attribute (`attrs[a] == null ? '-'`), and
+`validate-character.js` already raises an `attribute_missing` VIOLATION when a
+required attribute is not a finite number - so the fail-closed behaviour the
+finding describes as a thing to build was waiting for an input it never got.
+The only missing piece was the mechanism to PRODUCE the null. Everything else
+was downstream of `rollAttribute` falling back to 3d6.
+
+**One consequence the finding does not mention, and it would have broken the
+wizard.** `renderAttributes` blocks the Next button on `S.attrs[a] == null` for
+any of the eight. Returning null without touching that would have made every
+affected race UNCREATABLE - permanently stuck on step 3 with no control to
+satisfy. So `missing` now skips an absent attribute while `unmet` still counts
+it, which is precisely the split the finding wants: creatable, and still barred
+from an occupation that requires the attribute. `rollAll` and `setAllMethod`
+skip it too, or Point-buy would have handed a machine person the base
+constitution its book denies.
+
+**Verified in the browser, not only in the tests**, because the failure mode was
+a dead wizard rather than a wrong number. Walked to the attribute step as a
+Machine People on a local dev server: the P.E. row renders
+`PE - Machine People has no PE` with no method select and no roll button, the
+other seven roll normally, `S.attrs` carries no P.E. at all, and Next is
+ENABLED. Injecting an occupation requiring `PE: 12` disables Next with
+*Class minimum not met: PE 12+*.
+
+`fix-absent-attributes-na.sql` adds the key to both classes and corrects both
+`extraction_notes`, each of which asserted the limitation as current - true when
+written, false as of this PR. That is the THIRD note of this shape in this book.
+Existing characters are not rewritten: attributes are rolled once and stored, so
+this changes what new characters get. Applied `--remote` before the PR.
+
+The grammar is deliberately narrow - `N/A` and `n/a`, nothing else. `NA`,
+`none` and `0` are all still errors under F8's check, because each of them
+means something different and only one of the three is this.
+
+Smoke 1349 -> 1353, regression 212 unchanged.
+
+**Closed.**
 
 ### F6 - `occ_related_skills` cannot express a per-category MINIMUM
 

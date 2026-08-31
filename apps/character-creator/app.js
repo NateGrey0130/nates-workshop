@@ -11,7 +11,8 @@
 // /shared/js/ui.js loads first as a classic script, so escHtml() is global;
 // inline onclick handlers need their entry points on window — see the
 // Object.assign at the bottom.
-import { evalDice, rollPoolFormula, rollAttribute, rollQuantity } from './js/dice.js';
+import { evalDice, rollPoolFormula, rollAttribute, rollQuantity,
+         isAbsentAttribute } from './js/dice.js';
 import { isFamilyName, isRepeatableRow, otherRowFor, familySkillName,
          promptFor } from './js/language-skills.js';
 import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSIONIC_TIER_RULES,
@@ -168,8 +169,18 @@ const esc = escHtml; // from /shared/js/ui.js
 function rollAttr(attr) {
   return rollAttribute(S.cls?.attribute_dice?.[attr] || '3d6');
 }
+// An attribute the class states as N/A is one this creature does not have
+// (BOOK-INGEST-AUDIT.md F5) — a machine person has no constitution, a pleasurer
+// no fixed beauty. It is not rolled, not entered, and not counted as missing;
+// it stays null, which is what the sheet renders as a dash and what the server
+// treats as a violation if some occupation requires it.
+const attrAbsent = (a) => isAbsentAttribute(S.cls?.attribute_dice?.[a]);
 function setRoll(a) {
   const r = rollAttr(a);
+  // rollAttribute returns null ONLY for an absent attribute. Storing the null
+  // is the whole point: a fallback here would put back the rolled ten the book
+  // denies.
+  if (!r) { S.attrs[a] = null; S.attrRolls[a] = null; return; }
   S.attrs[a] = r.total;
   S.attrRolls[a] = r.exceptional.length ? r : null;
 }
@@ -1667,6 +1678,13 @@ function renderAttributes() {
     const v = S.attrs[a];
     const dice = S.cls.attribute_dice?.[a];
     let control;
+    if (attrAbsent(a)) {
+      // No method select and no control at all: there is nothing to roll, buy
+      // or type. Offering a disabled input would still read as "a value goes
+      // here", which is the impression this exists to remove.
+      return `<tr><td><b>${a}</b></td><td colspan="2"><span class="muted">—</span></td>
+        <td><span class="attr-note">${esc(S.cls.name)} has no ${a}</span></td></tr>`;
+    }
     if (m === 'roll') {
       // An exceptional roll is rare enough that an unexplained 24 off a 3d6
       // reads as a bug, and the second die — earned only by rolling a six on
@@ -1709,8 +1727,12 @@ function renderAttributes() {
       <td>${control}</td><td>${req}${boost}${floorNote}${dice ? ` <span class="attr-note">racial dice: ${esc(dice)}</span>` : ''}</td></tr>`;
   }).join('');
 
+  // An absent attribute is not "still to roll" — it is never going to have a
+  // value, and counting it here would leave the step permanently unable to
+  // continue. It stays in `unmet` when an occupation requires it, which is the
+  // fail-closed half: a machine person cannot take a class that needs a P.E.
   const unmet = Object.entries(reqs).filter(([k, min]) => (S.attrs[k] ?? -1) < min);
-  const missing = ATTRS.filter((a) => S.attrs[a] == null);
+  const missing = ATTRS.filter((a) => !attrAbsent(a) && S.attrs[a] == null);
   const usesPB = ATTRS.some((a) => method(a) === 'point');
   const over = spent > PB_POOL;
   const canNext = missing.length === 0 && unmet.length === 0 && !over;
@@ -1749,9 +1771,12 @@ function renderAttributes() {
 // A roll's breakdown is cleared whenever the value stops being that roll —
 // otherwise "exceptional +4" hangs beside a number the player typed by hand.
 function setMethod(a, m) { S.attrMethods[a] = m; if (m !== 'roll') S.attrRolls[a] = null; if (m === 'point') S.attrs[a] = S.attrs[a] ?? PB_BASE; render(); }
-function setAllMethod(m) { ATTRS.forEach((a) => { S.attrMethods[a] = m; if (m !== 'roll') S.attrRolls[a] = null; if (m === 'point') S.attrs[a] = S.attrs[a] ?? PB_BASE; }); render(); }
+// The bulk buttons skip an absent attribute, or "Point-buy" would hand a
+// machine person the PB_BASE constitution its book denies it, and "Roll all"
+// would leave it holding a value from a method it has no row for.
+function setAllMethod(m) { ATTRS.filter((a) => !attrAbsent(a)).forEach((a) => { S.attrMethods[a] = m; if (m !== 'roll') S.attrRolls[a] = null; if (m === 'point') S.attrs[a] = S.attrs[a] ?? PB_BASE; }); render(); }
 function doRoll(a) { setRoll(a); render(); }
-function rollAll() { ATTRS.forEach((a) => { S.attrMethods[a] = 'roll'; setRoll(a); }); render(); }
+function rollAll() { ATTRS.filter((a) => !attrAbsent(a)).forEach((a) => { S.attrMethods[a] = 'roll'; setRoll(a); }); render(); }
 function manualSet(a, v) { const n = parseInt(v, 10); S.attrs[a] = Number.isFinite(n) && n > 0 ? n : null; S.attrRolls[a] = null; render(); }
 function pbAdj(a, delta) {
   const cur = S.attrs[a] ?? PB_BASE;
