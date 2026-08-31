@@ -4,6 +4,8 @@
 //   node scripts/source-coverage.mjs            (--remote)
 //   node scripts/source-coverage.mjs --local
 //   node scripts/source-coverage.mjs --offenders   list every row, not the first few
+//   node scripts/source-coverage.mjs --values      is the NUMBER printed on the cited
+//                                                  page? gear numerics, advisory
 //   node scripts/source-coverage.mjs --vs-build    the same table for a database
 //                                                  built from the repo, side by side
 //
@@ -41,7 +43,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DB, d1Query, repoRoot, targetFromArgv } from './d1-query-lib.mjs';
 import { loadBookRegistry, loadNotBooks } from './books-lib.mjs';
-import { BUCKETS, summarise } from './source-coverage-lib.mjs';
+import { BUCKETS, summarise, summariseValues } from './source-coverage-lib.mjs';
 
 const target = targetFromArgv();
 const showAll = process.argv.includes('--offenders');
@@ -167,6 +169,81 @@ for (const b of BUCKETS) {
     }
     if (!showAll && group.length > 3) console.log(`      ... and ${group.length - 3} more`);
   }
+}
+
+// ── values ──────────────────────────────────────────────────────────────────
+// BOOK-INGEST-AUDIT.md F1. COVERAGE above asks whether the cited page is one
+// this machine holds; this asks whether the number is printed on it.
+//
+// GEAR ONLY, and F1 says why: `skills.base` / `per_level` are two-digit values
+// and a bare `30` appears on almost any page, so that half would be nearly all
+// noise. `imported_classes.starting_money` is deliberately absent too - it is a
+// dice expression rather than a number, and `class-check --field-sources`
+// already traces it to the cache lines it was drawn from, one draft at a time.
+// What has never had a check of any kind is the gear numerics, and what has
+// never had one at all is a SWEEP over rows that already shipped.
+//
+// Advisory. It prints a rate beside the misses because the rate is the thing
+// that tells you how much to trust the list, and it never touches the exit code.
+if (process.argv.includes('--values')) {
+  const gear = d1('SELECT name AS label, source_book AS sb, cost, mdc, ar, sdc, weight_lbs FROM gear');
+  const rows = gear.map((r) => ({
+    label: r.label,
+    sourceBook: r.sb,
+    values: { cost: r.cost, mdc: r.mdc, ar: r.ar, sdc: r.sdc, weight_lbs: r.weight_lbs },
+  }));
+  const cache = new Map();
+  const pageText = (slug, n) => {
+    const key = `${slug}/${n}`;
+    if (!cache.has(key)) {
+      const f = join(cacheDir, slug, 'txt', `p${String(n).padStart(3, '0')}.txt`);
+      cache.set(key, existsSync(f) ? readFileSync(f, 'utf8') : null);
+    }
+    return cache.get(key);
+  };
+  const v = summariseValues(rows, opts, pageText);
+  const rate = (m, t) => (t ? `${((m / t) * 100).toFixed(1)}%` : '-');
+
+  console.log('\nVALUES        gear numerics, tested against the pages their own row cites');
+  for (const [col, c] of [...v.columns].sort((a, b) => b[1].tested - a[1].tested)) {
+    console.log(`  ${pad('gear.' + col, 18)}${String(c.tested).padStart(5)} tested`
+      + `${String(c.misses.length).padStart(6)} not found   ${rate(c.misses.length, c.tested)}`);
+  }
+  console.log(`  ${pad('overall', 18)}${String(v.tested).padStart(5)} tested`
+    + `${String(v.missed).padStart(6)} not found   ${rate(v.missed, v.tested)}`);
+  if (v.noWindow) {
+    console.log(`  ${v.noWindow} row(s) had no page window to test against `
+      + '- that is a COVERAGE gap, counted above, not a value one.');
+  }
+
+  // The split is the useful half. `late` and `early` say the VALUE is right and
+  // the CITATION is short by a page; only `absent` is a question about the row.
+  console.log(`\n  of the ${v.missed} not found: ${v.byWhere.late} are on the page AFTER `
+    + `the cited window, ${v.byWhere.early} on the page BEFORE, ${v.byWhere.absent} nowhere near.`);
+  console.log('  The first two are short CITATIONS on entries that straddle a page break,');
+  console.log('  which is a fixable defect in the row rather than a wrong number. The window');
+  console.log('  is deliberately NOT widened to absorb them - that would hide them.');
+
+  for (const [col, c] of v.columns) {
+    if (!c.misses.length) continue;
+    const absent = c.misses.filter((m) => m.where === 'absent');
+    const near = c.misses.filter((m) => m.where !== 'absent');
+    console.log(`\n  gear.${col} (${c.misses.length}: ${absent.length} absent, ${near.length} off by a page)`);
+    for (const m of showAll ? absent : absent.slice(0, 3)) {
+      console.log(`      ABSENT  ${m.label} = ${m.value} — not on ${m.slug} p${m.window[0]}-p${m.window[1]} or either side`);
+    }
+    if (!showAll && absent.length > 3) console.log(`      ... and ${absent.length - 3} more absent`);
+    for (const m of showAll ? near : near.slice(0, 2)) {
+      console.log(`      ${m.where.toUpperCase().padEnd(7)} ${m.label} = ${m.value} — cites ${m.slug} p${m.window[0]}-p${m.window[1]}, printed one page ${m.where === 'late' ? 'later' : 'earlier'}`);
+    }
+    if (!showAll && near.length > 2) console.log(`      ... and ${near.length - 2} more off by a page`);
+  }
+
+  console.log('\n  A MISS IS A ROW WORTH READING BY EYE, NEVER A FAILURE. Known causes that');
+  console.log('  are not errors: a price the book states in words ("3.6 million credits"),');
+  console.log('  a figure derived from a table rather than printed, and a value the row');
+  console.log('  carries a cost_note for. Three bare/comma/dot spellings of each number');
+  console.log('  are tried; words are not. This never changes the exit code.');
 }
 
 // ── backlog ─────────────────────────────────────────────────────────────────
