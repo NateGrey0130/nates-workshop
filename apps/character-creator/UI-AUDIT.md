@@ -473,7 +473,7 @@ shared stylesheet, so it moves `filament-forge`, `media-vault` and `pick3cut5` t
 each needs a screenshot pass before merge. `--border` is a **separate** finding — it
 has a different threshold and a different visual risk.
 
-**Taken, 2026-08-31 (PR #N), with a scope Nate chose over the one proposed
+**Taken, 2026-08-31 (PR #451), with a scope Nate chose over the one proposed
 here.** `--text-muted: #81889e` overrides the token in
 `apps/character-creator/styles.css`'s own `:root`. `shared/styles.css` is
 **untouched**, so `filament-forge`, `media-vault` and `pick3cut5` are unchanged
