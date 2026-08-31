@@ -26,6 +26,23 @@ const SAVE_FIELDS = [
 // Play mode rolls a d20, so the one percentile row is not one of its buttons.
 // Filtered rather than listed again, which is how the two drifted the first time.
 const SAVE_ROLLS = SAVE_FIELDS.filter(([key]) => !key.endsWith('_pct'));
+
+// The saves a book states that the sixteen fields above do not name
+// (BOOK-INGEST-AUDIT.md F7) — the Spacer's "+2 to any saves against explosive
+// decompression or other space dangers" being the case that filed it.
+//
+// Read straight off the class, not out of the derived saves map. These carry no
+// attribute chart and nothing to override, so there is no derived value for a
+// stored one to win over; they are what the book printed and that is all.
+// Defensive about shape because a class row is data, not a contract.
+function otherSaves(cls) {
+  const list = cls?.bonuses?.saves?.other;
+  if (!Array.isArray(list)) return [];
+  return list.filter((e) => e && typeof e === 'object'
+    && typeof e.label === 'string' && e.label.trim()
+    && Number.isFinite(Number(e.bonus)) && Number(e.bonus) !== 0);
+}
+
 const id = new URLSearchParams(location.search).get('id');
 
 const C = { data: null, items: [], journal: [], catalog: [], cls: null, canWrite: false, isGm: false,
@@ -702,7 +719,17 @@ function renderPlay() {
     return `<button class="play-roll" onclick="rollD20('save', '${label}', ${Number(v) || 0}, ${target})">
       <span>${label}${target ? ` <span class="muted small">(${target}+)</span>` : ''}</span>
       <span class="pr-num">${v > 0 ? '+' + v : v}</span></button>`;
-  }).join('');
+  }).join('')
+    // The saves the sixteen fields do not name, in the book's own words
+    // (BOOK-INGEST-AUDIT.md F7). Rollable like any other, because a save that
+    // cannot be rolled is prose. Read from the CLASS rather than the derived
+    // map: these have no attribute chart to combine with, which is the point.
+    + otherSaves(C.cls).map((e) => {
+      const v = Number(e.bonus) || 0;
+      return `<button class="play-roll" onclick="rollD20('save', '${escHtml(e.label).replace(/'/g, '&#39;')}', ${v}, null)">
+      <span>${escHtml(e.label)}</span>
+      <span class="pr-num">${v > 0 ? '+' + v : v}</span></button>`;
+    }).join('');
 
   const skillGroups = [['occ', 'Class Skills'], ['related', 'Related Skills'], ['secondary', 'Secondary Skills']]
     .map(([type, label]) => {
@@ -1119,7 +1146,19 @@ function render() {
         `vs Psionics — roll${cls.psionics?.type ? ` (${escHtml(cls.psionics.type)})` : ''}`,
         saves.psionics_target, c.saves, { suffix: '+' }) +
       SAVE_FIELDS.map(([k, l]) =>
-      editField('saves', k, l, saves[k], c.saves, { suffix: k === 'coma_death_pct' ? '%' : '', parts: savesParts })).join(''),
+      editField('saves', k, l, saves[k], c.saves, { suffix: k === 'coma_death_pct' ? '%' : '', parts: savesParts })).join('')
+      // Book-stated saves the sixteen do not name (F7), after them and READ
+      // ONLY. Not editField: an editable row needs a storage key to write to,
+      // and these are identified by a free-text label rather than a key. There
+      // is also nothing to override — no chart contributed to them, so the
+      // printed number IS the value.
+      + otherSaves(cls).map((e) => {
+        const v = Number(e.bonus);
+        const why = e.note ? `${e.note} - stated by ${cls.name || 'the class'}`
+          : `Stated by ${cls.name || 'the class'}`;
+        return `<div class="field"><span class="lbl">${escHtml(e.label)}</span><span class="dots"></span>
+          <span class="val dim" title="${escHtml(why)}">${v > 0 ? '+' + v : v}</span></div>`;
+      }).join(''),
       '<span class="muted" style="font-size:9px">DERIVED · OVERRIDABLE</span>')}
 
     ${box('Combat', COMBAT_FIELDS.map(([k, l]) =>
