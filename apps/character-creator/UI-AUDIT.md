@@ -114,7 +114,7 @@ above it is unaffected. Do **not** restack the equipment table into cards at pho
 width in the same PR — that is a bigger design decision and would make this fix
 unreviewable.
 
-**Taken, 2026-08-31.** Implemented as written: `overflow-x: auto` on
+**Taken, 2026-08-31 (PR #439).** Implemented as written: `overflow-x: auto` on
 `.box > .box-body`, not on `.box`. Posture as written — one declaration, and the
 equipment table was **not** restacked into cards.
 
