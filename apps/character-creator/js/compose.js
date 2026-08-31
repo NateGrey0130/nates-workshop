@@ -261,6 +261,21 @@ export const CORE_SDC_BY_CLASS = {
   // always takes 1D6 here, which is what the catalog's Palladium `wolfen`
   // already gets for the same reason and the same shape.
   'space-wolfen': '1D6',
+
+  // The Transgalactic Empire's three O.C.C.s, printed 82-84. None states an
+  // S.D.C. or a hit point formula, and none is a mega-damage being, so all
+  // three need an entry here or the smoke test fails them.
+  //
+  // The book files them under a NATION rather than under one of the five O.C.C.
+  // groups, so the 3D6-or-1D6 call is read off what the entry describes. The
+  // Legionnaire is the Empire's line infantry and the Freedom Fighter is the
+  // rebellion's - both soldiers, both 3D6. The Security Agent is secret police:
+  // its skill list is cryptography, surveillance, disguise, forgery and prowl,
+  // it is `occ_group: optional` on the TVIA Inspector's precedent, and it takes
+  // 1D6 like the inspector it mirrors.
+  'imperial-legionnaire': '3D6',
+  'freedom-fighter': '3D6',
+  'imperial-security-agent': '1D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence

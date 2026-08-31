@@ -31,16 +31,16 @@ and registers, by design.
 
 ### `phase-world` progress, 2026-08-30
 
-Eleven PRs - five carrying data, each applied `--remote` before merging, and
-six carrying survey, docs or a correction. Catalog totals moved 336 -> 345
-skills, 975 -> 1020 gear, 126 -> 140 classes.
+Twelve PRs - six carrying data, each applied `--remote` before merging, and six
+carrying survey, docs or a correction. Catalog totals moved 336 -> 345 skills,
+975 -> 1020 gear, 126 -> 143 classes.
 
 | category | in | left |
 |---|---|---|
 | skills | **9** - 7 new plus 2 the CCW classes turned up (Fighter Combat: Basic and Elite, printed 151) | none known; the book collects its new skills on printed 52-53 and 150-151 and both were read whole |
 | re-citations | **8** rows moved off the phantom `Rifts Skill List` onto printed 52-53 and 150-151, taking it from 48 untraceable rows to 40 | the other 40, which are not this book's |
 | gear | **43**, printed 114-129, every number read off a 200 dpi render | none in that range |
-| classes | **14** of 34 - the whole CCW chapter, printed 56-70 (four O.C.C.s, the noro and its two O.C.C.s, Space Wolfen, Wolfen Quatoria, Catyr, Seljuk), plus the three Transgalactic Empire races, printed 73-81 (Kreeghor, Machine People, Silhouette) | **20** - the Prometheans (24-31), the Phase World and Naruni entries (35-48), the Empire's three O.C.C.s (82-84), Pleasurer, the Star Hives and the Cosmo-Knights |
+| classes | **17** of 34 - two whole chapters. The CCW, printed 56-70: four O.C.C.s, the noro and its two O.C.C.s, Space Wolfen, Wolfen Quatoria, Catyr, Seljuk. The Transgalactic Empire, printed 73-84: Kreeghor, Machine People, Silhouette, Imperial Legionnaire, Imperial Security Agent, Freedom Fighter | **17** - the Prometheans (24-31), the Phase World and Naruni entries (35-48), Pleasurer (88-90), the Star Hives (92-94) and the Cosmo-Knights (99-104) |
 | spells, psionics | n/a | the book defines **zero** of either, checked by stat-block scan rather than assumed |
 
 **What is deliberately not imported, and will not be by a later batch either:**
@@ -68,11 +68,14 @@ player-characters", and p.183 gives it no ladder. The Contents does not label it
 and the survey read the Contents. It is the only entry in the book where the
 heading and the Contents disagree about that.
 
-Four findings have come out of this book so far - F2, F3, F4 and F5 in
+Five findings have come out of this book so far - F2 through F6 in
 `BOOK-INGEST-AUDIT.md`. None was implemented, per the standing constraint. F5 is
 `attribute_dice` having no way to say an attribute DOES NOT EXIST: the Machine
 People print "P.E. N/A" and `app.js` falls back to `3d6`, so the sheet shows a
-constitution the book denies.
+constitution the book denies. F6 is `occ_related_skills` having no way to state
+a per-category MINIMUM: both Empire O.C.C.s require at least two of their eight
+related picks from Espionage and two from Rogue, and the app offers all eight
+freely.
 F3 has since gained a second occurrence: the Noro Mystic Warrior is issued a
 suit of psionic power armour as standard equipment, and that suit is one of the
 25 vessels the finding excludes, so the class ships without the one item its own
