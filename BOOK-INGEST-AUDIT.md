@@ -366,3 +366,67 @@ and because the near-miss it invites is the kind of error nothing downstream can
 catch.
 
 **Open.**
+
+### F8 - a FIXED attribute value in `attribute_dice` is silently replaced by 3d6
+
+The Naruni Repo-Bot (Phase World, printed 46) prints **"Robot attributes: The
+robot has a P.S. of 50, P.P. 26"**. Those are not dice. They are the chassis'
+figures, the same for every Repo-Bot ever built, and `attribute_dice` looks
+like the field for them.
+
+It is not, and the failure is silent. `rollAttribute` in `js/dice.js` matches
+one grammar:
+
+```js
+const DICE_EXPR = /^(\d+)\s*d\s*(\d+)(?:\s*x\s*(\d+))?(?:\s*([+-])\s*(\d+))?$/i;
+...
+if (!m) return rollAttribute('3d6');
+```
+
+A bare integer does not match, so it falls through to the human default.
+Measured this session:
+
+```
+rollAttribute("50") -> total 9,  notation "3d6"
+rollAttribute("26") -> total 8,  notation "3d6"
+```
+
+**The notation is rewritten too**, which is what makes this worse than F5. The
+class stores `"50"`, the wizard's re-roll button reads `(3d6)`, and nothing
+anywhere reports that a value was discarded. F5 is a class that cannot say
+*there is no attribute*; this is a class that says *the attribute is 50* and is
+not heard.
+
+**One published class already carries it.** A sweep of all 148 published
+classes on 2026-08-31 - every `attribute_dice` value in every markdown row,
+tested against `DICE_EXPR` - found exactly one that does not parse:
+
+| class | attribute | stored | rolls |
+|---|---|---|---|
+| `holy-terror` | P.S. | `"50"` | 3d6, about 10 |
+
+The Holy Terror is a Wormwood R.C.C. with 2D4x100+200 M.D.C. whose whole
+character is supernatural strength, and it has had an ordinary human's P.S.
+since it was imported. Nothing failed: `class-check` reports it `ready`, the
+parser accepts it, the smoke test passes.
+
+**Proposal:** accept a bare integer in `attribute_dice` as a fixed value.
+`evalDiceWith` already walks one grammar for both the roll and its bounds, so
+the change is one alternative in `DICE_EXPR` plus returning the number
+unchanged - and the notation then reports `50` rather than lying. `class-check`
+should reject anything that parses as neither, which is the half that would
+have caught the Holy Terror.
+
+Cheaper alternative: make `class-check` warn on an `attribute_dice` value that
+does not match `DICE_EXPR`. That fixes no character but ends the silence, and
+it is the smaller change of the two.
+
+The Repo-Bot import does **not** write `PS: "50"`, for this reason, and puts
+both figures in a natural ability instead - an absent value that reads as
+absent beats a stored one that reads as effective, which is F7's rule in the
+other direction. It also could not have stored the P.P. even if this were
+fixed: the book heads that stat block **"Bonuses (Includes P.P. bonuses)"**, so
+the printed +8 to strike, parry and dodge already contains it, and `derive.js`
+would have added its own `pp_combat` bonus on top.
+
+**Open.**

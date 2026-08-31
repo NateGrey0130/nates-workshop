@@ -29,18 +29,18 @@ for any session continuing it, and its ledger is the authority on what has
 already gone in. The other six books are cache-only: the kickoff session caches
 and registers, by design.
 
-### `phase-world` progress, 2026-08-30
+### `phase-world` progress, 2026-08-31
 
-Thirteen PRs - seven carrying data, each applied `--remote` before merging, and
+Fourteen PRs - eight carrying data, each applied `--remote` before merging, and
 six carrying survey, docs or a correction. Catalog totals moved 336 -> 345
-skills, 975 -> 1020 gear, 126 -> 148 classes.
+skills, 975 -> 1021 gear, 126 -> 151 classes.
 
 | category | in | left |
 |---|---|---|
 | skills | **9** - 7 new plus 2 the CCW classes turned up (Fighter Combat: Basic and Elite, printed 151) | none known; the book collects its new skills on printed 52-53 and 150-151 and both were read whole |
 | re-citations | **8** rows moved off the phantom `Rifts Skill List` onto printed 52-53 and 150-151, taking it from 48 untraceable rows to 40 | the other 40, which are not this book's |
-| gear | **43**, printed 114-129, every number read off a 200 dpi render | none in that range |
-| classes | **22** of 34. The CCW, printed 56-70: four O.C.C.s, the noro and its two O.C.C.s, Space Wolfen, Wolfen Quatoria, Catyr, Seljuk. The Transgalactic Empire, printed 73-84: Kreeghor, Machine People, Silhouette, Imperial Legionnaire, Imperial Security Agent, Freedom Fighter. The five spacefaring trades, printed 38-43: Spacer, Galactic Tracer, Space Pirate, Runner, Colonist | **12** - the Prometheans (24-31), Draconid and Phantom (35-38), the Naruni Repo-Bot (46-48), Pleasurer (88-90), the Star Hives (92-94) and the Cosmo-Knights (99-104) |
+| gear | **44** - 43 from printed 114-129, every number read off a 200 dpi render, plus one STUB the Repo-Bot needed. The Plasma Hand Cannon appears exactly once in this book, in that class's equipment line, with its 2D6x10 M.D. and nothing else; it is stat-blocked nowhere, so the row carries the class-import stub marker rather than invented stats | none in that range |
+| classes | **25** of 34. The CCW, printed 56-70: four O.C.C.s, the noro and its two O.C.C.s, Space Wolfen, Wolfen Quatoria, Catyr, Seljuk. The Transgalactic Empire, printed 73-84: Kreeghor, Machine People, Silhouette, Imperial Legionnaire, Imperial Security Agent, Freedom Fighter. The five spacefaring trades, printed 38-43: Spacer, Galactic Tracer, Space Pirate, Runner, Colonist. Two races and the Naruni enforcer, printed 35-38 and 46-48: Draconid, Phantom, Naruni Repo-Bot | **9** - the Prometheans (24-31), Pleasurer (88-90), the Star Hives (92-94) and the Cosmo-Knights (99-104) |
 | spells, psionics | n/a | the book defines **zero** of either, checked by stat-block scan rather than assumed |
 
 **What is deliberately not imported, and will not be by a later batch either:**
@@ -68,7 +68,7 @@ player-characters", and p.183 gives it no ladder. The Contents does not label it
 and the survey read the Contents. It is the only entry in the book where the
 heading and the Contents disagree about that.
 
-Six findings have come out of this book so far - F2 through F7 in
+Seven findings have come out of this book so far - F2 through F8 in
 `BOOK-INGEST-AUDIT.md`. None was implemented, per the standing constraint. F5 is
 `attribute_dice` having no way to say an attribute DOES NOT EXIST: the Machine
 People print "P.E. N/A" and `app.js` falls back to `3d6`, so the sheet shows a
@@ -79,7 +79,16 @@ freely. F7 is the save list being SIXTEEN FIXED FIELDS: the Spacer's whole
 mechanical grant is "+2 vs explosive decompression and other space dangers",
 there is no environmental save in `SAVE_FIELDS`, and the near-miss that suggests
 itself - `toxins_poisons` - would grant a real resistance to venom the book
-never gave.
+never gave. F8 is `attribute_dice` SILENTLY DISCARDING A FIXED VALUE: the Naruni
+Repo-Bot's chassis has "a P.S. of 50, P.P. 26", `rollAttribute` in `js/dice.js`
+parses only `NdM` forms, and anything else falls through to `3d6` with the
+notation rewritten to match - measured, `rollAttribute("50")` returns 9 and
+reports `"3d6"`. It is F5's neighbour and worse: F5 is a class that cannot say
+an attribute does not exist, F8 is a class that says the attribute is 50 and is
+not heard. A sweep of all 148 published classes found one already carrying it,
+the Holy Terror's `PS: "50"` from Wormwood, which has had a human's strength
+since it was imported with every check calling it ready. The Repo-Bot does not
+write it; both figures are prose in a natural ability.
 F3 has since gained a second occurrence: the Noro Mystic Warrior is issued a
 suit of psionic power armour as standard equipment, and that suit is one of the
 25 vessels the finding excludes, so the class ships without the one item its own

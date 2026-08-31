@@ -94,6 +94,18 @@ two lists agreeing. `Noro Psychic` and `Naruni Repo-Bot` are a real O.C.C./R.C.C
 disagreement inside one book and are settled per class from the stat block's own
 heading, not from any index.
 
+**Corrected 2026-08-31 by the batch that imported the Repo-Bot: the heading is
+not the authority either. The FIELDS are.** The Naruni Repo-Bot is headed
+`R.C.C.` on printed 46 and its stat block prints `Attribute Requirements`,
+`O.C.C. Abilities and Bonuses`, `O.C.C. Skills`, `O.C.C. Related Skills`,
+`Standard Equipment`, `Money` and `Cybernetics` - and **no `Attributes:` line at
+all**, where every R.C.C. in this book rolls eight. Three lists say race, every
+field says occupation, and only the fields decide what the app does with it:
+`category: rcc` makes `app.js` offer an occupation step whose related and
+secondary allowances REPLACE the class's own, which for this class is the whole
+of what it grants. Imported as `occ`. The rule above still settles a NAME; it
+does not settle a category, and this is the entry that separates the two.
+
 Skill percentages are printed **once**, in the skill's own description. There is
 no second table to reconcile them against, so every number below was transcribed
 off a 200 dpi render rather than trusted to OCR.
@@ -487,6 +499,55 @@ Phase 4 costs money; everything above was free.
      production because it ACCUMULATES; here it was 52 rows behind, which is the
      same rule failing in the other direction and is worse, because a missing row
      produces a confident instruction to create one.
+
+   - **A FIXED ATTRIBUTE VALUE IS NOT A DICE STRING, AND THE APP EATS IT
+     SILENTLY.** The Repo-Bot's chassis has "a P.S. of 50, P.P. 26".
+     `attribute_dice` looks like the field for that and is not:
+     `rollAttribute` in `js/dice.js` matches only `NdM` forms and falls back to
+     `3d6` on anything else, **rewriting the notation as it goes** - measured,
+     `rollAttribute("50")` returns 9 and reports `"3d6"`. A sweep of all 148
+     published classes found exactly one already carrying it, the Holy Terror's
+     `PS: "50"` from Wormwood, which has had a human's strength since import
+     with `class-check` calling it `ready` the whole time. Filed as F8. Neither
+     Repo-Bot figure is stored; both are in a natural ability. This is F7's rule
+     in the other direction - an absent value that reads as absent beats a
+     stored one that reads as effective.
+
+   - **"Includes P.P. bonuses" MEANS THE APP WOULD DOUBLE-COUNT.** Even with F8
+     fixed, the Repo-Bot's P.P. could not go in. Its bonus line is headed
+     *Bonuses (Includes P.P. bonuses)*, so the printed +8 to strike, parry and
+     dodge already contains it, and `derive.js` adds its own `pp_combat` figure
+     on top of whatever `attribute_dice` supplies. Read the bonus HEADING, not
+     just the numbers under it.
+
+   - **`variants` CANNOT CARRY A MAGIC OR PSIONICS BRANCH.** Every draconid is
+     born either a ley line walker or a mind melter, in full. `VARIANT_OVERRIDES`
+     in `js/parser.js` is a literal list of seven keys - `attribute_dice`,
+     `attribute_requirements`, the four pool bases, `starting_money`, `bonuses`
+     and `skill_overrides` - and `magic` and `psionics` are not among them. A
+     variant would have carried the magician's P.P.E. bonus and silently dropped
+     the spell casting it exists to grant, which is the near-miss shape of F7.
+     Grepped rather than assumed, and it is the counter-example to the
+     `js/leveling.js` lesson above: that file is a bigger contract than
+     `frontmatter.md` says, and this one is exactly as small as it looks.
+
+   - **A CATEGORY PRINTED AS `None` IS AN EXCLUSION, NOT A ZERO BONUS.** The
+     Repo-Bot's related list prints *Electrical: None, Mechanical: None,
+     Medical: None, Physical: None, Science: None*. Those five are omitted from
+     `categories` entirely; listing them without a bonus would offer skills the
+     book bars, and the OCR renders `Espionage: None` identically to a category
+     printed with no bonus. THIS IS NOT RARE AND THE FIRST DRAFT SAID IT WAS: a
+     grep of the cached pages finds `<category>: None` on printed 28, 39, 42,
+     43, 48, 49, 59, 64, 68, 76, 82, 89, 93 and 94 - at least a dozen entries,
+     several of them already imported. What is distinctive about the Repo-Bot is
+     only the COUNT: five, where no other entry bars more than four.
+
+   - **A FULL-PAGE ILLUSTRATION CAN SPLIT ONE ENTRY.** The Repo-Bot's numbered
+     abilities run 1-3 on printed 46 and resume at 4 on printed 48; printed 47
+     is a full-page picture whose OCR is `KS` and `YY`. `--field-sources` prints
+     that gap as "span ends near the bottom of the page" and shows the noise,
+     which is the tell. Render the intervening page rather than assuming a
+     numbered list is contiguous.
  The p.183 ladders group classes that
    share an XP table, and classes that share a ladder sit in the same chapter, so
    the ladder is also the cheapest batching. Order by how much the app can
@@ -535,6 +596,7 @@ What is deliberately left, with the reason for each:
 | 2026-08-30 | [#412](https://github.com/NateGrey0130/nates-workshop/pull/412) | **classes, batch 5 - the Transgalactic Empire O.C.C.s**: Imperial Legionnaire, Imperial Security Agent, Freedom Fighter (printed 82-84). Catalog 140 -> 143 classes. The Empire chapter is complete. Finding F6 filed. Applied `--remote` before the PR. |
 | 2026-08-30 | [#413](https://github.com/NateGrey0130/nates-workshop/pull/413) | **classes, batch 6 - the five spacefaring trades**: Spacer, Galactic Tracer, Space Pirate, Runner, Colonist (printed 38-43). Catalog 143 -> 148 classes. Finding F7 filed. Applied `--remote` before the PR. |
 | 2026-08-31 | [#414](https://github.com/NateGrey0130/nates-workshop/pull/414) | survey: the three page numbers - cache pNNN, read-columns.py N, pymupdf doc[N-1] - written out as a table, after a batch-4 render came back one page late. No data. |
+| 2026-08-31 | [#415](https://github.com/NateGrey0130/nates-workshop/pull/415) | **classes, batch 7 - two races and the Naruni enforcer**: Draconid (printed 35-36), Phantom (36-38) and the Naruni Repo-Bot (46-48). Catalog 148 -> 151 classes, 1020 -> 1021 gear (a `plasma-hand-cannon` stub; the weapon appears once in the whole book and is stat-blocked nowhere). Finding F8 filed, with a sweep of all 148 published classes behind it. The Repo-Bot's category corrected away from its own heading; see the Quick Find section. Applied `--remote` before the PR. |
 
 ### What remains
 
