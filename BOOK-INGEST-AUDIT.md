@@ -1610,4 +1610,134 @@ the F10 merge makes the consequence *wider* rather than narrower: a race
 composed with the Crazy now carries the Crazy's two dead names alongside its own
 real ones, so the dead entries travel.
 
+**Taken, 2026-08-31 (PR #435), as proposed - one class, one data script, no
+code, plus the invariant.** Both names now point at `Sensitive` and `Physical`
+and the Crazy is offered a real pool. The claim that it is the only class
+affected held on a fresh count: **77 `categories_allowed` entries across all 160
+published classes, and exactly these two resolve to nothing.**
+
+**THE TRANSCRIPTION WAS FAITHFUL, WHICH THE FINDING GETS SLIGHTLY WRONG.** F15
+calls the names "a longer form" of the book's section headings. They are not a
+form of anything. Rifts Ultimate Edition printed 55 states the rule in exactly
+those words - *"select three psionic powers from either the Psychic Sensitive or
+Physical Psychic category"* - read off the page, in the block belonging to this
+class. It is the vocabulary gap `catalog-diff` warns about, the book's word
+against the catalog's, not a sloppy reading. The note now carries both spellings
+so the next person sees why they differ.
+
+**THE SAME SENTENCE CARRIES AN EXCLUSION THE FINDING DOES NOT MENTION, AND
+FIXING THE CATEGORIES MAKES IT LIVE.** The book continues: *"(excluding Astral
+Projection, Ectoplasm, Object Read and Telekinesis)"*. That was already recorded
+in the class's `extraction_notes` and it is not enforceable: `psionics` has no
+exclusion, and `powers_from` is a positive list that REPLACES the category gate
+rather than narrowing it, so expressing this today means enumerating the other
+forty-seven and re-enumerating them whenever a Sensitive power is added.
+
+It was moot while the class could pick nothing - a class with no legal pool
+cannot pick the wrong thing - and this PR makes it real. Three picks from 51
+where four should be barred is a large improvement on three picks from zero, and
+it is worth saying rather than leaving the class unplayable to avoid admitting
+it. Filed as **F16**.
+
+**A second gap found on the same page and filed as F17**: the Crazy's
+`isp_base` is `"6d6"` where printed 55 says *"6D6 plus the M.E. attribute
+number, +1D6 I.S.P. per level of experience, starting with level two"*. Its own
+extraction note quotes the full sentence, so the field is short of both the book
+and its own record. A bare dice figure is legitimate for the fifteen classes
+whose books state one; this is not one of them.
+
+**The invariant is asserted over the live catalog**, not a fixed list: every
+`categories_allowed` entry in every published class - including those inside a
+special ability's psionics block - must name a category `/catalogs` actually
+reports. Regression 233 -> 235.
+
+### F16 - a psionic grant cannot exclude a power, and one class's book does
+
+Rifts Ultimate Edition printed 55, the Crazy: *"Select three psionic powers from
+either the Psychic Sensitive or Physical Psychic category (excluding Astral
+Projection, Ectoplasm, Object Read and Telekinesis)."*
+
+The parenthetical is unstorable. `psionics.categories_allowed` opens a category
+and `psionics.powers_from` names an explicit list, and the two do not compose:
+
+```js
+// app.js psiConfig()
+// A named list is MORE specific than a category gate, so it replaces it rather
+// than narrowing within it, exactly as a skill choice-group's `from` list does.
+from: Array.isArray(p.powers_from) && p.powers_from.length ? p.powers_from.map(String) : null,
+```
+
+So the only way to say "these two categories except these four" today is to
+enumerate the **forty-seven** powers that remain - and re-enumerate them every
+time a Sensitive or Physical power is added to the catalog. The catalog holds 29
+Sensitive and 22 Physical as of 2026-08-31.
+
+**The skill side has had this since the beginning.** `occ_related_skills`
+categories take `only` and `except`, and the class-import skill documents both,
+including that an unmatched `except` fails OPEN. The psionic side has `only`'s
+equivalent and not `except`'s.
+
+**This was moot until F15 (PR #435).** The Crazy's two categories named nothing
+the catalog has, so its three picks had no legal pool at all and it could not
+pick a forbidden power because it could not pick anything. Repairing the
+categories made the exclusion real: the class now offers 51 powers where the
+book allows 47.
+
+**Proposal:** `psionics.categories_allowed` entries take the same shape as
+`occ_related_skills.categories` - a plain string, or an object with `only` /
+`except`. `categoryAllows()` in `js/parser.js` already implements exactly that
+grammar for skills and is shared with the server validator, so the parse, the
+picker gate and the save check would come from one function rather than three.
+Touches the psionics validator, `psiConfig()` in the wizard, and the server-side
+power check.
+
+**Cheaper alternative:** enumerate the forty-seven in `powers_from` and accept
+that it goes stale. It is expressible today and it is one data script, but it
+trades a rule the book states for a snapshot of a catalog that grows.
+
+**Posture: no new gate.** A class stating an exclusion nothing can enforce is
+the current behaviour and it should stay legal - the note records it and a GM
+reads it. What is being asked for is the ability to say it, not a check that
+punishes not saying it.
+
+**One class, one book, four powers.** Worth knowing before this is taken: the
+skill-side equivalent has never had more than a handful of users either, and the
+argument for it was the same.
+
+**Open.**
+
+### F17 - the Crazy's I.S.P. formula is short of both its book and its own note
+
+`crazy` stores:
+
+```yaml
+psionics:
+  isp_base: "6d6"
+```
+
+Rifts Ultimate Edition printed 55 says *"I.S.P. Base: 6D6 plus the M.E.
+attribute number, +1D6 I.S.P. per level of experience, starting with level
+two."* The class's own `extraction_notes` quotes that sentence in full, so the
+field is short of the book **and** of the record beside it.
+
+`rollPoolFormula` is handed the character's attributes and resolves an attribute
+named in the formula, so `"6d6 plus M.E. attribute number, +1d6 per level"` is a
+storable string - 23 classes in the catalog store one of that shape. A Crazy
+therefore rolls 6-36 I.S.P. where the book gives it 6-36 **plus its M.E.**, and
+gains nothing per level.
+
+**A bare dice figure is not itself wrong.** Fifteen classes store one, and for
+most of them - the dragon hatchlings, the entrancer, the shade - it is what
+their books print. This is a transcription that dropped two thirds of a
+sentence, not a convention.
+
+**Proposal:** a `fix-crazy-isp-base.sql` writing the printed formula, guarded on
+the text it replaces. One class, one data script, no code.
+
+**Worth doing as a sweep rather than a fix.** The interesting question is not
+the Crazy: it is whether any of the other fourteen bare figures is also short of
+its page. That is fourteen `--field-sources` reads against the OCR cache, which
+is free, and it is the only way to know whether this is one class or a habit.
+Found while taking F15, on the page F15 sent me to.
+
 **Open.**
