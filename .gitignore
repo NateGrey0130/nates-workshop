@@ -22,3 +22,10 @@ __pycache__/
 
 # OCR caches of commercial sourcebooks - local only, never committed.
 .cache/
+
+# Commit-message and PR-body scratch files. ship-pr says to write a commit
+# message to a file and pass it with -F, because backticks in a -m string are
+# evaluated by the shell - and this repo's prose is full of backticks. The trap
+# it does not name is `git add -A` BEFORE the commit, which sweeps that file in:
+# commit-msg.tmp shipped inside PR #404 that way.
+*.tmp
