@@ -306,7 +306,7 @@ the remainder behind a `Show the N that match nothing` disclosure. Keep the rank
 the badges exactly as they are. Do not change the three questions or the scoring in
 this PR.
 
-**Taken, 2026-08-31 (PR #N).** Implemented as written. The three questions and
+**Taken, 2026-08-31 (PR #443).** Implemented as written. The three questions and
 `quizScore()` are untouched; the ranking and the `match N/6` badges render exactly
 as before. Classes scoring zero move into a closed `<details>` — *"Show the N that
 match nothing"* — rather than being dropped, because the guided mode is a
