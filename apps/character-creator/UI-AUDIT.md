@@ -414,7 +414,7 @@ card-link pattern (a focusable title inside a plain card). Related: `<p>` inside
 complaint, and it is what makes the name long. Both belong to one follow-up
 finding rather than to this PR.
 
-**Closed, 2026-08-31 (PR #N) — the remaining three sites.** F5 is now fully
+**Closed, 2026-08-31 (PR #446) — the remaining three sites.** F5 is now fully
 taken.
 
 - **The stepper** (`app.js:543`). A *completed* step is a `<button>`; the current
