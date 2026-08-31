@@ -177,7 +177,7 @@ violation server-side and that the two wizard paths surface it at different step
 Reconciling (1) and (2) into one behaviour is a **separate, larger** finding and should
 not be folded into this PR.
 
-**Taken, 2026-08-31 (PR #N).** Posture as written: copy and documentation only.
+**Taken, 2026-08-31 (PR #441).** Posture as written: copy and documentation only.
 Neither gate moved, and reconciling (1) and (2) remains open and unstarted.
 
 **The proposal's own suggested sentence was false, and was not shipped.** It
