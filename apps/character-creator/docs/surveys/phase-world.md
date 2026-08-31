@@ -331,7 +331,20 @@ Phase 4 costs money; everything above was free.
 
 1. **Skills, printed 52-53 and 150-151.** 7 new rows plus 8 re-citations. One
    PR. Already fully transcribed off renders — no further extraction needed.
-2. **Classes, in ladder-shaped batches.** The p.183 ladders group classes that
+2. **Classes, in ladder-shaped batches.** Batch 1 (the four CCW O.C.C.s of
+   printed 56-61) is shipped; see the ledger. Two things it established that
+   the rest of the batches inherit:
+
+   - **A class's O.C.C. skill list can name a skill the book collects nowhere.**
+     "Fighter Pilot: Basic" is not in the `Space Skills (New)` section and is
+     not a trade tongue; its bonuses are printed on the far side of printed 151
+     under a heading that does not say "skill". A section heading that says
+     *New* is not the whole of what a book adds - check each class's list
+     against the catalog rather than assuming the skills batch covered it.
+   - **An "any language" pick must offer `Language: Other`, never a category.**
+     `regression.mjs` holds this as an invariant and it is easy to get wrong;
+     see F4 for the case it does not catch.
+ The p.183 ladders group classes that
    share an XP table, and classes that share a ladder sit in the same chapter, so
    the ladder is also the cheapest batching. Order by how much the app can
    express: the CAF/CCW and Transgalactic O.C.C.s first (ordinary skill-and-gear
@@ -369,6 +382,8 @@ What is deliberately left, with the reason for each:
 | 2026-08-30 | [#401](https://github.com/NateGrey0130/nates-workshop/pull/401) | survey written; inventory, both authority tables, the full catalog diff, findings F2 and F3, two corrections to the book's `books.json` note. No data. MERGED. |
 | 2026-08-30 | [#403](https://github.com/NateGrey0130/nates-workshop/pull/403) | **skills**: 7 new rows (4 Trade Tongues, Law: CCW, Space: Contragravity Pak, Space: Zero Gravity Movement & Combat) and 8 re-cited off `Rifts Skill List` onto printed 52-53 and 150-151. Catalog 336 -> 343 skills; `rifts-skill-list` 48 -> 40 untraceable. Applied `--remote` before the PR. |
 | 2026-08-30 | [#404](https://github.com/NateGrey0130/nates-workshop/pull/404) | **gear**: 43 rows from printed 114-129 - 22 weapon, 15 armor, 6 gear. Catalog 975 -> 1018. Every number read off a 200 dpi render; the OCR agreed on all 43. No vessels (F3). Applied `--remote` before the PR. |
+| 2026-08-30 | [#405](https://github.com/NateGrey0130/nates-workshop/pull/405) | housekeeping: a commit message that shipped as a file, removed, and `*.tmp` gitignored. No data. |
+| 2026-08-30 | [#406](https://github.com/NateGrey0130/nates-workshop/pull/406) | **classes, batch 1 of the CCW O.C.C.s**: CAF Trooper, CAF Fleet Officer, TVIA Inspector, CAF Scientist (printed 56-61). Catalog 126 -> 130 classes, 343 -> 345 skills (Fighter Combat: Basic and Elite, off printed 151, which the skills batch missed), 1018 -> 1020 gear. Finding F4 filed. Applied `--remote` before the PR. |
 
 ### What remains
 

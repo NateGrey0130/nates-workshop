@@ -19,12 +19,48 @@ the human view of the same thing plus the import status.
 | `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | cached |
 | `mystic-russia` | Rifts WB 18: Mystic Russia | 178 | text layer | 176 | +1 | cached |
 | `free-quebec` | Rifts WB 22: Free Quebec | 194 | text layer | 192 | +1 | cached |
-| `phase-world` | Rifts DB 2: Phase World | 209 | SCAN (OCR) | 208 | **+0** | **surveyed** |
+| `phase-world` | Rifts DB 2: Phase World | 209 | SCAN (OCR) | 208 | **+0** | **importing** |
 
-Status is `cached` -> `surveyed` -> `imported`. `phase-world` was surveyed on
-2026-08-30 - see `apps/character-creator/docs/surveys/phase-world.md`, which is
-the boot file for any session continuing it. The other six are cache-only: the
-kickoff session caches and registers, by design.
+Status is `cached` -> `surveyed` -> `imported`. `phase-world` is **importing**,
+a fourth state the earlier sessions did not need: surveyed on 2026-08-30 and
+shipping in category batches, with four of its thirty-five classes in. The
+survey at `apps/character-creator/docs/surveys/phase-world.md` is the boot file
+for any session continuing it, and its ledger is the authority on what has
+already gone in. The other six books are cache-only: the kickoff session caches
+and registers, by design.
+
+### `phase-world` progress, 2026-08-30
+
+Four PRs, each applied `--remote` before merging. Catalog totals moved
+336 -> 345 skills, 975 -> 1020 gear, 126 -> 130 classes.
+
+| category | in | left |
+|---|---|---|
+| skills | **9** - 7 new plus 2 the CCW classes turned up (Fighter Combat: Basic and Elite, printed 151) | none known; the book collects its new skills on printed 52-53 and 150-151 and both were read whole |
+| re-citations | **8** rows moved off the phantom `Rifts Skill List` onto printed 52-53 and 150-151, taking it from 48 untraceable rows to 40 | the other 40, which are not this book's |
+| gear | **43**, printed 114-129, every number read off a 200 dpi render | none in that range |
+| classes | **4** of 35 - CAF Trooper, CAF Fleet Officer, TVIA Inspector, CAF Scientist, printed 56-61 | **31**, listed with their pages and XP ladders in the survey |
+| spells, psionics | n/a | the book defines **zero** of either, checked by stat-block scan rather than assumed |
+
+**What is deliberately not imported, and will not be by a later batch either:**
+the book's 25 vessels - 6 power armor and robots, 5 tanks, 14 starships and
+shuttles, printed 130-149 and 157-173. `gear` holds one `mdc`, one `damage`, one
+`range` and one `payload`; a vessel stat block here has M.D.C. by location,
+five to eight numbered weapon systems each with four stats of its own, crew and
+passenger complements, speed in three regimes and FTL range in light years per
+hour. Keeping one weapon out of eight and dropping the rest is worse than not
+storing it, because the row would then read as complete. Filed as
+`BOOK-INGEST-AUDIT.md` F3, which also records that this is not new with this
+book - the catalog's existing robot rows lose the same data silently.
+
+Also out, on the book's own say-so: the **11 entries it names but does not make
+playable** - six labelled NPC or GM material in its own Contents, four that are
+lore or a cross-reference or the alien-race generator, and the Dominator, which
+has no experience ladder and no O.C.C. skills. The Experience Tables on printed
+183 are the authority for that line; see the survey.
+
+Three findings came out of this book so far - F2, F3 and F4 in
+`BOOK-INGEST-AUDIT.md`. None was implemented, per the standing constraint.
 
 **`triax` and `new-west` were already registry stubs** with `source_pdf: null` —
 one gear row cites Triax, one skill row cites New West. Their entries were
