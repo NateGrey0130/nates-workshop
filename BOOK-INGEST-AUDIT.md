@@ -306,3 +306,63 @@ per-category quota and the second column that could not hold one, and because
 the psionic answer is already in the tree to copy.
 
 **Open.**
+
+### F7 - the save list is sixteen fixed fields, and a book bonus outside them vanishes
+
+The Spacer O.C.C. (Phase World, printed 38) has exactly one bonus, and it is
+this:
+
+> The spacers' experience in dealing with the vacuum of space gives them a
+> **+2 bonus to any saves against explosive decompression or other space
+> dangers.**
+
+`sheet.js` renders saves from `SAVE_FIELDS`, a literal list of sixteen:
+spell magic, ritual magic, psionics, toxins/poisons, harmful drugs, insanity,
+possession, horror factor, coma/death, pain, illusionary magic, mind control,
+curses, faerie magic, disease, fatigue. `derive.js` computes the same sixteen
+from the attribute charts. There is no environmental, vacuum or decompression
+save anywhere in either.
+
+**The parser accepts a key the sheet will never draw.** `validateBonuses()`
+warns on an unrecognised *group*, not on an unrecognised key inside `saves` -
+which is correct and deliberate, because that is what lets `mind_control`,
+`possession`, `curses` and the rest work without a schema change. The cost is
+that `saves: { space_hazards: 2 }` parses cleanly, stores cleanly, validates
+cleanly, and then renders nowhere. A class would look complete and grant
+nothing.
+
+**And the obvious workaround is worse.** The first draft of this class wrote
+`saves: { toxins_poisons: 2 }`, on the reasoning that it is the nearest label a
+GM would reach for. That is a real, rendered +2 against venom that the book
+never granted, applied every time the character is poisoned. It was caught by
+reading `SAVE_FIELDS`, not by any check. **A near-miss mapping is worse than an
+absent one**, and the same temptation exists for every environmental rule a book
+states: radiation, pressure, heat, cold, drowning.
+
+**Proposal:** add an `other` sub-map under `bonuses.saves`, keyed by free text:
+
+```yaml
+bonuses:
+  saves:
+    other:
+      - { label: "vs explosive decompression and other space dangers", bonus: 2 }
+```
+
+`derive.js` would pass them through untouched (there is no attribute chart to
+combine them with, which is the point - a book-stated flat bonus needs none),
+and the sheet would render them as extra rows after the sixteen, labelled in
+the book's own words and rollable like any other save. No new derived field, no
+new chart, no guess about which existing save it resembles.
+
+Cheaper alternative: extend `SAVE_FIELDS` with the handful of environmental
+saves the Palladium line actually uses. That is a smaller change and it fails
+the next time a book invents one, which is the failure mode this finding is
+about.
+
+**Not urgent, and honest as it stands** - the Spacer's bonus is in its
+`extraction_notes` and its GM Notes, so a table can apply it. Filed because it
+is the first class in this import whose ENTIRE mechanical grant is unstorable,
+and because the near-miss it invites is the kind of error nothing downstream can
+catch.
+
+**Open.**

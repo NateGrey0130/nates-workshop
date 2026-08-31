@@ -392,6 +392,31 @@ Phase 4 costs money; everything above was free.
      p.183 agrees with the heading by giving it no ladder. Where a class is
      absent from p.183, read its own heading before inheriting a ladder for it.
 
+   - **A RENDER CAN CORRECT A NUMBER, NOT JUST DISAMBIGUATE ONE.** The Runner's
+     cached text reads `EVA (45%)`. The page reads `EVA (+5%)`. A plus sign
+     lost to the scan turned a five into a forty-five, and nothing downstream
+     would ever have flagged a 45% skill bonus as impossible - every check in
+     the tree is structural. Every percentage in this batch was read off a
+     200 dpi render for that reason.
+
+   - **A NEAR-MISS SAVE KEY IS WORSE THAN NO KEY AT ALL.** The Spacer's only
+     mechanical grant is "+2 to any saves against explosive decompression or
+     other space dangers", and `sheet.js` renders saves from `SAVE_FIELDS`, a
+     literal list of SIXTEEN. There is no environmental save in it. The first
+     draft wrote `toxins_poisons: 2` - the nearest label a GM would reach for -
+     which would have handed the class a real, rendered +2 against venom the
+     book never granted. `bonuses.saves` accepting an unknown key is what makes
+     `mind_control` work without a schema change; the cost is that
+     `space_hazards: 2` parses, validates and renders NOWHERE. Filed as F7.
+     Read `SAVE_FIELDS` before mapping a save.
+
+   - **A BOOK CAN PRINT A PERCENTAGE THAT BELONGS TO SKILLS RATHER THAN TO A
+     CATEGORY.** The Spacer's list has "Science: Any (+10% ON MATH)" and
+     "Technical: Any (+10% ON LANGUAGE AND COMPUTER SKILLS)"; the Machine
+     People had "Rogue: Any (+10% ON COMPUTER HACKING)". `occ_related_skills`
+     can only put a bonus on a whole category, so storing these would hand the
+     percentage to every pick in it. They go in the note.
+
    - **TWO CLASSES CAN SHARE A PAGE AND TWO CATEGORY LISTS CAN SHARE A COLUMN.**
      Printed 83 carries the Imperial Security Agent's related-skill list in its
      right column and the Freedom Fighter's heading below it; the Freedom
@@ -483,29 +508,30 @@ What is deliberately left, with the reason for each:
 | 2026-08-30 | [#410](https://github.com/NateGrey0130/nates-workshop/pull/410) | **classes, batch 3 - the rest of the CCW**: Space Wolfen, Wolfen Quatoria, Catyr, Seljuk (printed 65-70). Catalog 133 -> 137 classes. Also `fix-noro-mind-control-saves.sql`, correcting a save both noro O.C.C.s shipped without in #409. The CCW chapter is complete. Applied `--remote` before the PR. |
 | 2026-08-30 | [#411](https://github.com/NateGrey0130/nates-workshop/pull/411) | **classes, batch 4 - the Transgalactic Empire races**: Kreeghor, Machine People, Silhouette (printed 73-81). Catalog 137 -> 140 classes. Also `fix-noro-psionic-schedules.sql`, correcting a psionic power schedule both noro O.C.C.s shipped wrong in #409, and the survey correction that moves the Royal Kreeghor out of the playable list. Finding F5 filed. Applied `--remote` before the PR. |
 | 2026-08-30 | [#412](https://github.com/NateGrey0130/nates-workshop/pull/412) | **classes, batch 5 - the Transgalactic Empire O.C.C.s**: Imperial Legionnaire, Imperial Security Agent, Freedom Fighter (printed 82-84). Catalog 140 -> 143 classes. The Empire chapter is complete. Finding F6 filed. Applied `--remote` before the PR. |
+| 2026-08-30 | [#413](https://github.com/NateGrey0130/nates-workshop/pull/413) | **classes, batch 6 - the five spacefaring trades**: Spacer, Galactic Tracer, Space Pirate, Runner, Colonist (printed 38-43). Catalog 143 -> 148 classes. Finding F7 filed. Applied `--remote` before the PR. |
 
 ### What remains
 
-`node scripts/source-coverage.mjs --remote`, after batch 5:
+`node scripts/source-coverage.mjs --remote`, after batch 6:
 
 ```
   rue                648 / 23
   pf                 583 / 3
   bom                412 / 0
   ww                 130 / 0
-  phase-world         79 / 0
+  phase-world         84 / 0
   ju                  62 / 0
   rifts-skill-list     0 / 40
 ```
 
-**`phase-world` is 79 traceable and 0 other.** Every row citing this book names a
-page range this machine holds - 9 skills, 8 re-citations, 43 gear and 17 class
+**`phase-world` is 84 traceable and 0 other.** Every row citing this book names a
+page range this machine holds - 9 skills, 8 re-citations, 43 gear and 22 class
 citations - which is what `traceable` means and all it means. It does not say the
 numbers are right; the gear script's own defence for that is the fourteen 200 dpi
 renders it was read from, and each class batch has its own.
 
-It was 66 after the first four PRs, 73 after batch 3 and 76 after batch 4. Each
-class adds one.
+It was 66 after the first four PRs, 73 after batch 3, 76 after batch 4 and 79
+after batch 5. Each class adds one.
 
 **`rifts-skill-list` is down from 48 to 40** and will not go lower from this
 book. The remaining 40 are `not-cached` and permanently so: the citation names a
