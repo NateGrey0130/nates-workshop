@@ -398,15 +398,30 @@ What is deliberately left, with the reason for each:
 
 ### What remains
 
-From `node scripts/source-coverage.mjs --remote` at the time this survey was
-written — before anything from this book had shipped:
+`node scripts/source-coverage.mjs --remote`, after the first four PRs:
 
 ```
-  rifts-skill-list     0 / 48
-  phase-world        (absent — no row cites this book)
+  rue                648 / 23
+  pf                 583 / 3
+  bom                412 / 0
+  (unresolved)         0 / 214
+  ww                 130 / 0
+  phase-world         66 / 0
+  ju                  62 / 0
+  rifts-skill-list     0 / 40
 ```
 
-`rifts-skill-list`'s 48 are `not-cached`: the citation names a source that is
-not a book and that no cache can ever hold. **Eight of the 48 are printed in
-this book** and this batch moves them; the other 40 stay untraceable and are not
-this book's problem.
+**`phase-world` is 66 traceable and 0 other.** Every row citing this book names a
+page range this machine holds - 9 skills, 8 re-citations, 43 gear and the four
+class citations - which is what `traceable` means and all it means. It does not
+say the numbers are right; the gear script's own defence for that is the
+fourteen 200 dpi renders it was read from.
+
+**`rifts-skill-list` is down from 48 to 40** and will not go lower from this
+book. The remaining 40 are `not-cached` and permanently so: the citation names a
+one-page sheet, not a book, and there is no PDF to cache. Finding the real book
+*under* a phantom source is the only thing that moves that number, and eight of
+them turned out to be printed here.
+
+The pre-import paste this section used to hold said `phase-world (absent - no
+row cites this book)`. That is the line this batch replaced.
