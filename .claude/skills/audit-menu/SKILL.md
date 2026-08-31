@@ -67,18 +67,35 @@ PR shipped the wrong count.
 
 | file | prefix | level | shape |
 |---|---|---|---|
+| `BOOK-INGEST-AUDIT.md` | `F` | `###` | em dash on `F1`–`F4`, hyphen from `F5` on |
 | `DOCS-AUDIT.md` | `D` | `###` | `### D1 — …` |
 | `EFFICIENCY-AUDIT.md` | `F` | `###` | `### F1 — …` |
-| `apps/character-creator/AUDIT.md` | `D`, `S` | `###` | closed, all fourteen |
-| `apps/character-creator/CLASS-AUDIT.md` | `F`, `S` | `###` | severity word: `### F17 — low — …` |
+| `apps/character-creator/AUDIT.md` | `D`, `C`, `F` | `###` | severity word: `### D1 — low — …` |
+| `apps/character-creator/CLASS-AUDIT.md` | `F`; `S` | `###`; **not a heading** | `### F17 — low — …`, and `- **S1 — …**` as BULLETS under `## Schema-can-now-express` |
 | `apps/character-creator/INGESTION-AUDIT.md` | `F` | `###` | `### F1 — …` |
+| `apps/character-creator/REBUILD-AUDIT.md` | `F` | `###` | `### F1 — …` |
 | `apps/media-vault/BULK-AUDIT.md` | `B` | `##` | `## B1 — …` |
 | `apps/media-vault/ISBN-AUDIT.md` | `F` | `##` | `## F1 — …` |
-| `apps/pick3cut5/AUDIT.md` | `F`, `T` | `###` | trailing period: `### F1. …` |
+| `apps/pick3cut5/AUDIT.md` | `F`; `T` | `###`; **not a heading** | `### F1. …`, and `**T1. … — PASSED.**` as BOLD PARAGRAPH LEADS under `## T — paths that have never run` |
 
-Two heading levels, five prefixes, an optional severity word, an em dash or a
-period. Any regex will be wrong about at least one file — which is the argument
-for reading, and against pinning any of this with a check.
+Two heading levels, **six** prefixes, an optional severity word, an em dash or a
+hyphen or a period — and two files where a whole family of items is **not a
+heading at all**. Any regex will be wrong about at least one file — which is the
+argument for reading, and against pinning any of this with a check.
+
+**The not-a-heading rows are the sharpest version of that argument.**
+`CLASS-AUDIT`'s nine `S` items are bullets and `pick3cut5/AUDIT`'s eleven `T`
+items are bold paragraph leads, so a scan that walks `###` headings does not
+report them open — it does not see them at all, and twenty items vanish with no
+error. Both live under their own `##` section, which is the thing to look for.
+
+**This table is a snapshot and it has been wrong.** Read on 2026-08-31 it was
+missing two whole files and wrong about three cells. Get the current list from
+the tree rather than from here, then read each file's own headings:
+
+```bash
+find . -name '*AUDIT*.md' -not -path './.cache/*' -not -path './node_modules/*'
+```
 
 ## Audit files are RECORDS. Do not rewrite a measurement
 

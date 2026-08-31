@@ -12,7 +12,7 @@ this landed, which is what keeps the corpus table usable as an acceptance
 test.
 
 **Investigated 2026-08-26** against `9d16e9a` (`main`). The bulk/feature menu is
-a separate file, `MEDIA-VAULT-BULK-AUDIT.md`, whose findings are numbered
+a separate file, `BULK-AUDIT.md`, whose findings are numbered
 `B1`…`B9`.
 
 ## How this was verified
@@ -625,7 +625,7 @@ B6.
 
 **Independence.** Take alone, but it is **only worth taking if you intend to
 take B6** (bulk re-lookup) or want to future-proof. On its own it changes
-nothing a user can see. **Cross-file dependency: `MEDIA-VAULT-BULK-AUDIT.md`
+nothing a user can see. **Cross-file dependency: `BULK-AUDIT.md`
 B6 depends on this finding** — without it, bulk re-lookup can only match by
 title, which is lossy.
 
@@ -724,7 +724,7 @@ Verifiable before merge with a pasted list built from the corpus table.
 **Independence.** **Requires F1 and F8.** Without F1 it silently drops ~1 in 10
 ISBN-10s from every pasted list; without F8 a typo in a 60-line paste is
 indistinguishable from a missing book and the user has no way to find it.
-**Cross-file dependency: `MEDIA-VAULT-BULK-AUDIT.md` B6 (bulk re-lookup) shares
+**Cross-file dependency: `BULK-AUDIT.md` B6 (bulk re-lookup) shares
 this finding's rate-limit, partial-failure and run-size analysis** — build the
 per-item throttled lookup loop here and B6 should reuse it rather than write a
 second one.
