@@ -1305,6 +1305,57 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     kept.length === 5, kept.map((r) => r.slug).join(', '));
 }
 
+// ---------- per-category skill floors ----------
+// BOOK-INGEST-AUDIT.md F6. Eleven published classes print "select N other
+// skills, but at least two must be selected from espionage" or its like, and
+// every one of them offered all its picks freely until `minimums` existed.
+{
+  const classes = (await api('GET', '/classes?limit=200')).body.classes || [];
+
+  // Asserted as an INVARIANT rather than a list of eleven ids. A count would
+  // pass forever while the next book imported the twelfth as prose - which is
+  // exactly how these ten sat for months. The question asked here is "does any
+  // class STATE a floor it does not HOLD", and it catches the next one.
+  //
+  // Read off the related-skills note, which is where a floor lands when nobody
+  // has a field for it. Measured over the whole corpus: eleven notes match this
+  // phrase and all eleven are real floors, so it is at zero with no exceptions
+  // to carve out.
+  const FLOOR_PHRASE = /\b(?:at least|no fewer than)\s+(?:one|two|three|four|five|six|\d+)\b/i;
+  const statesFloor = classes.filter((c) => FLOOR_PHRASE.test(c.skills?.occ_related_skills?.note || ''));
+  const unheld = statesFloor.filter((c) => !(c.skills.occ_related_skills.minimums || []).length);
+  check('every class whose note states a per-category floor also holds one',
+    statesFloor.length > 0 && unheld.length === 0,
+    `${unheld.length} of ${statesFloor.length} state a floor and hold none: ${unheld.map((c) => c.id).join(', ')}`);
+
+  // A floor naming a category the class does not grant would refuse EVERY
+  // character of that class - the worst failure this key can have, and one the
+  // parser rejects at load. Re-checked against live data because a CATEGORY
+  // RENAME breaks it later, the same way a rename broke six classes' `except`
+  // restrictions and nothing routine said so.
+  const norm = (x) => String((typeof x === 'string' ? x : x?.name) ?? '').trim().toLowerCase();
+  const orphaned = [];
+  const oversized = [];
+  for (const c of classes) {
+    const rel = c.skills?.occ_related_skills;
+    const mins = rel?.minimums || [];
+    if (!mins.length) continue;
+    const granted = new Set((rel.categories || []).map(norm));
+    for (const m of mins) {
+      const cats = Array.isArray(m.categories) ? m.categories : [m.category];
+      for (const cat of cats) {
+        if (!granted.has(norm(cat))) orphaned.push(`${c.id}: ${cat}`);
+      }
+    }
+    const sum = mins.reduce((n, m) => n + (m.count || 0), 0);
+    if (sum > rel.count) oversized.push(`${c.id}: ${sum} > ${rel.count}`);
+  }
+  check('every floor names a category its class actually grants',
+    orphaned.length === 0, orphaned.join('; '));
+  check('and no class floors more picks than it grants',
+    oversized.length === 0, oversized.join('; '));
+}
+
 // ---------- race and O.C.C. restrictions ----------
 // Printed 21: not all O.C.C.s are open to every race. Eight of the fourteen
 // Palladium races print a real limit, and until `occ_restrictions` landed the

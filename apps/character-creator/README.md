@@ -305,6 +305,10 @@ skills:
       - { name: "Science", except: ["Anthropology"] }
       - { name: "Technical", bonus: 10 }
     schedule: [{ level: 3, count: 1 }, { level: 6, count: 1 }]
+    # A FLOOR per category, spent out of `count` above rather than on top of it.
+    # An entry names one category or a list satisfied by any of them.
+    minimums:
+      - { count: 2, category: "Espionage" }
   secondary_skills:
     count: 2
     schedule: [{ level: 4, count: 1 }]   # secondary grants schedule too
@@ -383,6 +387,14 @@ encode absence as `"none"` or a note.
 
 `occ_related_skills.schedule` **is** enforced: crossing one of its levels grants
 that many extra skill picks. See [Level-up skill picks](docs/leveling.md#level-up-skill-picks).
+
+`occ_related_skills.minimums` **is** enforced. It is the only floor in the block
+- `count`, `categories`, `only` and `except` are all ceilings - and it exists
+because eight classes across four books print a rule like *"select 8 other
+skills, but at least two must be selected from espionage and two from rogue
+skills"*. The wizard shows a running total per floor; the server refuses a
+character that can NO LONGER reach one, rather than one that has not reached it
+yet, so a half-built character still saves.
 
 The parser supports a YAML subset: nested maps, block and inline sequences,
 inline objects, and `|` / `>` block scalars. Block-scalar bodies are taken raw,
