@@ -318,14 +318,14 @@ function portraitSrc(n) {
 }
 
 function npcRow(n) {
-  return `<div class="chkrow" style="cursor:pointer" onclick="openNpc(${n.id})">
+  return `<button type="button" class="chkrow" style="cursor:pointer" onclick="openNpc(${n.id})">
     ${n.portrait_key ? `<img src="${portraitSrc(n)}"
       alt="" style="width:34px;height:34px;border-radius:50%;object-fit:cover">` : ''}
     <span><b>${esc(n.name)}</b>
       ${n.faction ? `<span class="tag">${esc(n.faction)}</span>` : ''}
       ${n.disposition ? `<span class="muted small"> — ${esc(n.disposition)}</span>` : ''}</span>
     <span class="pct">${n.mention_count} ${n.mention_count === 1 ? 'mention' : 'mentions'}</span>
-  </div>`;
+  </button>`;
 }
 
 function sweepPanel() {

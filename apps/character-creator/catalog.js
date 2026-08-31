@@ -298,7 +298,7 @@ function render() {
     : rows.length
       ? rows.map((r) => S.openId === r.id
         ? `<div class="cat-row open">${rowForm(r)}</div>`
-        : `<div class="cat-row" data-edit="${r.id}">
+        : `<div class="cat-row" role="button" tabindex="0" data-edit="${r.id}">
              <span class="slug">${escHtml(r[c.displayField] || '(unnamed)')}</span>
              ${c.uniqueField !== c.displayField
                ? `<code class="cat-key">${escHtml(r[c.uniqueField] || '')}</code>` : ''}
@@ -530,11 +530,20 @@ function wire() {
     el.addEventListener('click', () => removeRedirect(+el.dataset.unredirect));
   }
 
+  // A catalog row opens into a form IN PLACE, so it cannot be a <button> — the
+  // form would end up inside one. It gets the other half instead: role, tab
+  // stop, and the two keys a button would have answered to on its own.
   for (const el of document.querySelectorAll('[data-edit]')) {
-    el.addEventListener('click', () => {
+    const open = () => {
       S.openId = parseInt(el.dataset.edit, 10);
       S.msg = null;
       render();
+    };
+    el.addEventListener('click', open);
+    el.addEventListener('keydown', (ev) => {
+      if (ev.key !== 'Enter' && ev.key !== ' ') return;
+      ev.preventDefault();     // Space would scroll the list out from under it.
+      open();
     });
   }
 

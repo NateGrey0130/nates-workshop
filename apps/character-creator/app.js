@@ -540,8 +540,11 @@ function renderStepper() {
     // step for this one" is information.
     if (!stepApplies(i)) return `<span class="st na" title="Does not apply to this character">${i + 1}. ${name}</span>`;
     const cls = i === S.step ? 'st cur' : i < S.step ? 'st done' : 'st';
-    const go = i < S.step ? ` onclick="goStep(${i})"` : '';
-    return `<span class="${cls}"${go}>${i + 1} — ${name}</span>`.replace(' — ', '. ');
+    // Only a completed step is clickable, so only a completed step is a button.
+    // The rest stay spans: a focusable control that does nothing when you press
+    // it is worse than plain text, and the stepper is a summary, not a menu.
+    if (i < S.step) return `<button type="button" class="${cls}" onclick="goStep(${i})">${i + 1}. ${name}</button>`;
+    return `<span class="${cls}">${i + 1}. ${name}</span>`;
   }).join('');
   // Rendered here because it is the one element every step draws, and a
   // warning that autosave has stopped must not depend on which step you are on.

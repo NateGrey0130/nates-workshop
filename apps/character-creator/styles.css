@@ -150,6 +150,10 @@ th {
   background: var(--bg-secondary); border: 1px solid var(--border);
   color: var(--text-muted);
 }
+/* A COMPLETED step is a <button> and the rest are spans — only the completed
+   ones go anywhere. A button carries its own line-height, which sits the pill a
+   pixel off its neighbours; inheriting puts it back on the line with them. */
+.stepper button.st { line-height: inherit; }
 .stepper .st.done { color: var(--accent); border-color: var(--accent); cursor: pointer; }
 .stepper .st.cur { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
 /* A step that does not apply to THIS character — the Occupation step for a
@@ -211,6 +215,15 @@ th {
 
 .chkrow { display: flex; align-items: baseline; gap: 7px; padding: 3px 0; font-size: 13px; }
 .chkrow .pct { color: var(--text-muted); font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+/* The campaign's NPC row is a <button> — it opens a dossier. Everything else
+   wearing .chkrow is a <label> around a checkbox, which is already focusable,
+   so this is scoped to the button and strips the chrome a button arrives with.
+   Not `font: inherit`: that shorthand would also overwrite .chkrow's 13px. */
+button.chkrow {
+  width: 100%; text-align: left;
+  background: transparent; border: 0; color: inherit;
+  font-family: inherit;
+}
 .attr-note { font-size: 11px; color: var(--text-muted); }
 .nav { display: flex; justify-content: space-between; margin-top: 16px; }
 /* Why the primary action is unavailable, between Back and the disabled button.

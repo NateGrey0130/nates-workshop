@@ -414,6 +414,30 @@ card-link pattern (a focusable title inside a plain card). Related: `<p>` inside
 complaint, and it is what makes the name long. Both belong to one follow-up
 finding rather than to this PR.
 
+**Closed, 2026-08-31 (PR #N) — the remaining three sites.** F5 is now fully
+taken.
+
+- **The stepper** (`app.js:543`). A *completed* step is a `<button>`; the current
+  one, the future ones and the `.na` ones stay spans. Only completed steps go
+  anywhere, and a focusable control that does nothing when pressed is worse than
+  plain text. Measured: every pill is 24px tall and buttons share their row's
+  `top` with the spans beside them, which is what `.stepper button.st {
+  line-height: inherit }` is for — a button's own line-height sat the pill off
+  the line.
+- **The NPC row** (`campaign.js:321`). Now a `<button>`; `button.chkrow` strips
+  the chrome a button arrives with. Deliberately **not** `font: inherit`, which
+  would also overwrite `.chkrow`'s own 13px. Everything else wearing `.chkrow` is
+  a `<label>` around a checkbox and is already focusable, so nothing else moves.
+  Measured: both rows `BUTTON`, `tabIndex 0`, full width, left-aligned, 13px,
+  `--text-primary`, transparent.
+- **The catalog rows** (`catalog.js:301`). These got `role="button"` +
+  `tabindex="0"` + a keydown handler rather than a `<button>`, exactly as the
+  finding proposed — the row opens into a **form in place**, and a form inside a
+  button is not a thing. All **345** rows carry the role and the tab stop;
+  `Enter` and `Space` both open the row's form, and Space is
+  `preventDefault()`ed so it does not scroll the list out from under the row it
+  just opened.
+
 ---
 
 ### F6 — high — `--text-muted` fails contrast on every background in the system, at 9–13px
