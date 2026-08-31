@@ -186,6 +186,18 @@ th {
 /* The tag row and the lore blurb were touching. */
 .pick .tag { margin-bottom: 2px; }
 .pick p { margin-top: 10px; line-height: 1.5; }
+/* The system and class cards are <button>s. They were `<div onclick>`, which no
+   keyboard can reach, and they are steps 1 and 2 — so the wizard could not be
+   BEGUN without a mouse. A button brings its own defaults with it (centred
+   text, its own font and colour, shrink-to-fit width), and these four lines put
+   the card back the way it looked as a div.
+
+   Scoped to `.grid >` deliberately: the MOS picker also renders `.pick` as a
+   button, inside `.pickgrid`, and is not part of this change. */
+.grid > button.pick {
+  display: block; width: 100%; text-align: left;
+  font: inherit; color: inherit;
+}
 
 .toggle {
   display: inline-flex; border: 1px solid var(--border);
