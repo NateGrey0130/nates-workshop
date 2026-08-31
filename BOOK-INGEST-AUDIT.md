@@ -1166,7 +1166,7 @@ same shape as F10's cheaper alternative - but between them the two would cover
 every field `combineClasses` decides, and it would have said something on the
 day this class was imported rather than on the day someone rolls one.
 
-**Taken, 2026-08-31 (PR #NNN).** Implemented as the finding's PRIMARY proposal:
+**Taken, 2026-08-31 (PR #430).** Implemented as the finding's PRIMARY proposal:
 `supersedes_race: true`, one opt-in flag on the O.C.C., read by
 `combineClasses`. Pools, `starting_money` and `xp_table` become the
 occupation's; `occ_skills` replace the race's rather than unioning;

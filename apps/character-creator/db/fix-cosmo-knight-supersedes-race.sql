@@ -1,6 +1,6 @@
 -- Let the Cosmo-Knight say that it replaces the race.
 --
--- BOOK-INGEST-AUDIT.md F11, taken in PR #NNN. The code half is
+-- BOOK-INGEST-AUDIT.md F11, taken in PR #430. The code half is
 -- `supersedes_race` in js/parser.js; this sets it on the one class in the
 -- catalog whose book says the character stops being what it was.
 --
