@@ -251,7 +251,50 @@ Not urgent, and stated plainly: **the rule is right and its aim is off.** No
 class ships wrong because of this one; the trooper was corrected by hand in the
 same PR that found it.
 
-**Open.**
+**Taken, 2026-08-31 (PR #421) - as the ALTERNATIVE, because the primary
+proposal was measured against the corpus and does not work.**
+
+The primary was to decide the group by SHAPE: `categories` naming Technical or
+Communications with no `from`, on the reasoning that the deliberate category
+picks are *few enough of the latter to name*. Run over every published class it
+finds **nine** groups and **not one is a language pick** - four Lore picks (the
+catalog files lore under Technical), two science-or-technical picks, and three
+general skill choices. Naming those nine would rebuild the id list this
+invariant was written to replace, and it would go stale the same way.
+
+So the finding's own stated alternative went in instead: a SECOND detector that
+shares no regex with the first. Any `occ_skills` choice group offered through a
+CATEGORY whose note mentions a language at all. Measured both widths - restricted
+to Technical/Communications as proposed, and left open to any category - and both
+are at **zero** hits, so the wider one is used: it cannot miss and costs nothing.
+
+**The gap is LIVE, which this finding does not quite say.** It reports that no
+class ships wrong, and that is still true. What it does not say is that the CAF
+Trooper - corrected by hand and correct today - is **still invisible to the prose
+detector**, because its note begins *Language: any two* and matches none of the
+three alternatives. Nothing would have noticed if that group were regressed to a
+category. It is covered now.
+
+**Widening `ABOUT_LANGUAGES` would have broken a correct class**, which is the
+argument for a second check rather than a bigger regex, and is worth recording
+because widening is the obvious move. Adding `^Language: ` pulls in the CAF
+Trooper's OTHER group - a pick of one specific Trade Tongue from three named
+rows - which correctly offers no `Language: Other` and would then fail the
+assertion that every language pick offers the repeatable row.
+
+**The literacy family has the same hole and got the same check.** F4 left that
+open (*worth settling when taken*); it reads the same free text with a different
+regex and is equally narrowable. Also at zero.
+
+Proved to FIRE rather than merely pass: the detector was run against the CAF
+Trooper's shape as it originally shipped and against the 25-class Communications
+defect - it fires on both - and against the corrected Trooper, a Lore pick and a
+fixed skill, where it stays silent. A check that has never been shown to fail is
+not evidence of anything.
+
+Regression 210 -> 212.
+
+**Closed.**
 
 ### F5 - `attribute_dice` cannot say an attribute does not exist, and the app fills one in
 

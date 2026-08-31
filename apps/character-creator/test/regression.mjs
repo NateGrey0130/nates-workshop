@@ -794,6 +794,53 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   check('and every one of them offers the repeatable language row',
     notFromTheRow.length === 0, notFromTheRow.map((x) => x.id).join(', '));
 
+  // ── the SECOND, INDEPENDENT detector (BOOK-INGEST-AUDIT.md F4) ─────────────
+  //
+  // Everything above finds the group by READING ITS NOTE, and an invariant
+  // stated over every class is then narrowed by a regex over free text - which
+  // is the same shape as the bug it guards. The CAF Trooper transcribes its
+  // book as "Language: any two", which matches none of the three alternatives,
+  // and its identical defect passed the whole suite.
+  //
+  // So this asks the question from the other side and shares no regex with it:
+  // a choice group offered through a CATEGORY whose note mentions a language at
+  // all is either the bug or a rare deliberate pick, and there are currently
+  // none of either. Measured across all published classes: zero hits whether
+  // the categories are restricted to Technical/Communications as F4 proposed or
+  // left open, so the wider form is used - it cannot miss and costs nothing.
+  //
+  // WIDENING `ABOUT_LANGUAGES` INSTEAD WOULD BREAK A GOOD CLASS, which is why
+  // this is a second check rather than a bigger regex. Adding `^Language: `
+  // would pull in the CAF Trooper's OTHER group - a pick of one specific Trade
+  // Tongue from three named rows - which correctly offers no `Language: Other`
+  // and would fail the assertion above.
+  //
+  // F4's PRIMARY proposal was to decide the group by shape alone: `categories`
+  // naming Technical or Communications with no `from`. That was tried against
+  // the corpus first and it does not work - it finds nine groups and not one is
+  // a language pick. They are Lore picks (the catalog files lore under
+  // Technical), science-or-technical picks, and general skill choices. Naming
+  // them would rebuild the id list this invariant was written to replace.
+  const catNameOf = (x) => (typeof x === 'string' ? x : x?.name) || '';
+  const categoryLanguagePicks = [];
+  const categoryLiteracyPicks = [];
+  for (const c of classes) {
+    for (const e of (c.skills?.occ_skills || [])) {
+      if (!e || e.name || !Array.isArray(e.categories) || !e.categories.length) continue;
+      const note = e.note || '';
+      const where = `${c.id} (${e.categories.map(catNameOf).join('/')}): ${note.slice(0, 60)}`;
+      if (/\blanguages?\b/i.test(note)) categoryLanguagePicks.push(where);
+      if (/\bliterac(y|ies)\b|\bliterate\b/i.test(note)) categoryLiteracyPicks.push(where);
+    }
+  }
+  check('no choice group offers a CATEGORY for a pick whose note mentions a language',
+    categoryLanguagePicks.length === 0, categoryLanguagePicks.join('; '));
+  // F4 asked whether the literacy family below has the same hole. It does - it
+  // reads the same free text with a different regex - so it gets the same
+  // independent check, and is also at zero.
+  check('and none offers a CATEGORY for a pick whose note mentions literacy',
+    categoryLiteracyPicks.length === 0, categoryLiteracyPicks.join('; '));
+
   // The bonus is what makes the pick worth taking, and losing one in the
   // rewrite would be silent because the row still resolves. Two classes had
   // none to begin with and gained the figure their own note recorded.
