@@ -303,11 +303,16 @@ for the catalog editor rather than SQL:**
 attribute-derived percentage. `skills.base` is `INTEGER NOT NULL`, so the schema
 cannot hold it. See `BOOK-INGEST-AUDIT.md` F2.
 
-### Gear: ~42 personal-equipment rows, 0 false gaps possible
+### Gear: 43 personal-equipment rows, 0 false gaps possible
 
 Printed 114-129: energy weapons, body armor, force fields, phase technology,
 gravitonic weapons and psionic crystal technology. 42 `Weight:` lines across the
-range. Nothing in the catalog cites this book, and the names are
+range. **43 items were imported**, and that count comes from reading the
+headings rather than from the `Weight:` scan: seven entries print no weight at
+all - the Imperial Legionnaire's Armor, the Phase Sword, the OP-Field, the field
+med kit, the Crystal-Cell, the Augmenting Helmet and the Telepathic
+Communicator - while some entries carry a second `Weight:` line for an
+accessory. A stat-block label count sizes a section; it does not enumerate it. Nothing in the catalog cites this book, and the names are
 manufacturer-coded (`HI-30`, `NE-200`, `PH-400`, `GR-45HP`), so a false gap is
 not possible — a collision would have to be another book selling the same model
 number.
@@ -363,6 +368,7 @@ What is deliberately left, with the reason for each:
 | 2026-08-28 | [#400](https://github.com/NateGrey0130/nates-workshop/pull/400) | cache built (209 pp), registered in `books.json`, offset 0 verified |
 | 2026-08-30 | [#401](https://github.com/NateGrey0130/nates-workshop/pull/401) | survey written; inventory, both authority tables, the full catalog diff, findings F2 and F3, two corrections to the book's `books.json` note. No data. MERGED. |
 | 2026-08-30 | [#403](https://github.com/NateGrey0130/nates-workshop/pull/403) | **skills**: 7 new rows (4 Trade Tongues, Law: CCW, Space: Contragravity Pak, Space: Zero Gravity Movement & Combat) and 8 re-cited off `Rifts Skill List` onto printed 52-53 and 150-151. Catalog 336 -> 343 skills; `rifts-skill-list` 48 -> 40 untraceable. Applied `--remote` before the PR. |
+| 2026-08-30 | [#404](https://github.com/NateGrey0130/nates-workshop/pull/404) | **gear**: 43 rows from printed 114-129 - 22 weapon, 15 armor, 6 gear. Catalog 975 -> 1018. Every number read off a 200 dpi render; the OCR agreed on all 43. No vessels (F3). Applied `--remote` before the PR. |
 
 ### What remains
 
