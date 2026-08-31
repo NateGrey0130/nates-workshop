@@ -31,15 +31,15 @@ and registers, by design.
 
 ### `phase-world` progress, 2026-08-30
 
-Seven PRs, each applied `--remote` before merging. Catalog totals moved
-336 -> 345 skills, 975 -> 1020 gear, 126 -> 133 classes.
+Eight PRs, each applied `--remote` before merging. Catalog totals moved
+336 -> 345 skills, 975 -> 1020 gear, 126 -> 137 classes.
 
 | category | in | left |
 |---|---|---|
 | skills | **9** - 7 new plus 2 the CCW classes turned up (Fighter Combat: Basic and Elite, printed 151) | none known; the book collects its new skills on printed 52-53 and 150-151 and both were read whole |
 | re-citations | **8** rows moved off the phantom `Rifts Skill List` onto printed 52-53 and 150-151, taking it from 48 untraceable rows to 40 | the other 40, which are not this book's |
 | gear | **43**, printed 114-129, every number read off a 200 dpi render | none in that range |
-| classes | **7** of 35 - the four CCW O.C.C.s of printed 56-61, then the noro: Noro R.C.C., Noro Psychic, Noro Mystic Warrior, printed 61-65 | **28**, listed with their pages and XP ladders in the survey |
+| classes | **11** of 35 - the whole CCW chapter, printed 56-70: four O.C.C.s, the noro and its two O.C.C.s, then Space Wolfen, Wolfen Quatoria, Catyr and Seljuk | **24** - the Prometheans (24-31), the Phase World and Naruni entries (35-48), the Transgalactic Empire (73-83), Pleasurer, the Star Hives and the Cosmo-Knights |
 | spells, psionics | n/a | the book defines **zero** of either, checked by stat-block scan rather than assumed |
 
 **What is deliberately not imported, and will not be by a later batch either:**

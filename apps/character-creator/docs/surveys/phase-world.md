@@ -344,6 +344,15 @@ Phase 4 costs money; everything above was free.
    - **An "any language" pick must offer `Language: Other`, never a category.**
      `regression.mjs` holds this as an invariant and it is easy to get wrong;
      see F4 for the case it does not catch.
+   - **`mind_control` IS a save key, and so are the rest of an open set.**
+     Batch 2 shipped both noro O.C.C.s without the mind-control bonus their book
+     prints, on an assertion that the sheet had no field for it. `js/derive.js`
+     reads `mind_control` and five published classes were already using it. The
+     frontmatter reference lists save keys as EXAMPLES and says outright that
+     combat and saves are open sets. **Grep before concluding a key does not
+     exist** - the class-import skill's rule about unmodelled keys applies in
+     this direction too, and it is the direction with no error message.
+     Corrected by `fix-noro-mind-control-saves.sql` in batch 3.
    - **A wrapped inline list is a parse error, not a style choice.** The
      frontmatter parser is line-based: an inline `[...]` or `{...}` must close
      on the SAME line. A twelve-name `psionics.powers` list wrapped across three
@@ -409,6 +418,7 @@ What is deliberately left, with the reason for each:
 | 2026-08-30 | [#407](https://github.com/NateGrey0130/nates-workshop/pull/407) | survey note: run `class-check` with `--remote`, because this machine's local D1 was 52 skills behind. No data. |
 | 2026-08-30 | [#408](https://github.com/NateGrey0130/nates-workshop/pull/408) | survey: real `source-coverage` paste replacing the pre-import one - `phase-world 66 / 0`, `rifts-skill-list` 48 -> 40. No data. |
 | 2026-08-30 | [#409](https://github.com/NateGrey0130/nates-workshop/pull/409) | **classes, batch 2 - the noro**: Noro R.C.C., Noro Psychic, Noro Mystic Warrior (printed 61-65). Catalog 130 -> 133 classes. The book's first R.C.C. and its first two psionics blocks here. Second occurrence added to F3. Applied `--remote` before the PR. |
+| 2026-08-30 | [#410](https://github.com/NateGrey0130/nates-workshop/pull/410) | **classes, batch 3 - the rest of the CCW**: Space Wolfen, Wolfen Quatoria, Catyr, Seljuk (printed 65-70). Catalog 133 -> 137 classes. Also `fix-noro-mind-control-saves.sql`, correcting a save both noro O.C.C.s shipped without in #409. The CCW chapter is complete. Applied `--remote` before the PR. |
 
 ### What remains
 
