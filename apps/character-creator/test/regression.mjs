@@ -1386,6 +1386,40 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     drifted.length === 0, drifted.slice(0, 5).join('; '));
 }
 
+// ---------- psionic category vocabulary ----------
+// BOOK-INGEST-AUDIT.md F15. `categories_allowed` gates the psionic picker by
+// EXACT category name, and the Crazy asked for "Psychic Sensitive" and
+// "Physical Psychic" - the words its own book prints, and not the words the
+// catalog files powers under. Three starting picks from a pool of nothing, and
+// nothing said so.
+//
+// This is the psionic twin of the restriction failure class-import documents:
+// six classes naming `Robots and Power Armor` after the catalog renamed that
+// row. An unmatched name fails silently. It fails CLOSED here, which is the
+// safer direction and the reason it went unnoticed.
+{
+  const classes = (await api('GET', '/classes?limit=200')).body.classes || [];
+  const cats = new Set(((await api('GET', '/catalogs')).body.psionics || [])
+    .map((p) => String(p.category ?? '').trim().toLowerCase()).filter(Boolean));
+
+  const orphans = [];
+  let entries = 0;
+  for (const c of classes) {
+    const blocks = [c.psionics, ...((c.special_abilities || [])
+      .filter((d) => d && typeof d === 'object' && d.psionics).map((d) => d.psionics))];
+    for (const p of blocks) {
+      for (const name of (p?.categories_allowed || [])) {
+        entries++;
+        if (!cats.has(String(name).trim().toLowerCase())) orphans.push(`${c.id}: ${name}`);
+      }
+    }
+  }
+  check('the psionic catalog reports categories at all', cats.size >= 4, [...cats].join(', '));
+  check('every categories_allowed entry names a category the catalog has',
+    entries > 0 && orphans.length === 0,
+    `${orphans.length} of ${entries} resolve to nothing: ${orphans.slice(0, 6).join('; ')}`);
+}
+
 // ---------- magic composition ----------
 // BOOK-INGEST-AUDIT.md F14, the magic half of F10. Thirteen races and eighteen
 // occupations state `magic`; before the merge the occupation won all 234 pairs
