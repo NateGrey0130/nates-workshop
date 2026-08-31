@@ -189,6 +189,44 @@ Three rules earned by getting them wrong first:
   Wizard against the dragon alone reports every skill its occupation grants as a
   violation.
 
+### A class may supersede its race
+
+Everything above is the DEFAULT, and one flag inverts it. `supersedes_race: true`
+on an O.C.C. says the book describes a transformation rather than a trade
+(BOOK-INGEST-AUDIT.md F11):
+
+| | superseding |
+|---|---|
+| attribute dice | compared **per attribute**, the higher kept |
+| pool formulas, `starting_money`, `xp_table` | the **occupation's** |
+| fixed skills | the occupation's **alone** - the race's are dropped, not unioned |
+| everything else | unchanged |
+
+The Cosmo-Knight is the only class that carries it. Phase World printed 100 says
+*"use these die rolls, or the attributes of the character's original race,
+whichever are HIGHER"*, and printed 102 says *"when the character is
+transformed, the skills of his past life are lost and the character is
+reborn"*. Composed race-first it arrived wrong in **56 of its 57 possible
+pairings** - a kreeghor cosmo-knight rolled P.S. 3d6+10 where the book prints
+3d6+32, with a seventh of the M.D.C. and a fiftieth of the P.P.E.
+
+**The comparison is the MEAN of the dice, not the ceiling.** `attributeCeiling`
+was the obvious reuse and is wrong for it: the exceptional-dice chain only
+applies to a plain 2d6 or 3d6, so a bare `3d6` scored 18+12 against `4d6+4`'s 28
+and the weaker dice won for 41 of the 57 races.
+
+**Opt-in, and nothing infers it.** Almost every O.C.C. prints its own dice and
+the race is meant to win; the test is whether the book says the character ceases
+to be its race.
+
+**One gap remains, and it is about step order rather than composition.** The
+wizard rolls attributes at step 3 and asks for the occupation at step 4, so a
+character built straight through rolls the RACE's dice and only sees the merged
+ones on going back. The Attributes step labels them *"transformed dice"* once an
+occupation is chosen. The precedent for closing this is
+`trimRelatedToAllowance`, which handles the same out-of-order problem for a
+rolled major psionic.
+
 ### Psionics is merged, not chosen
 
 A race says what a member of that race is **born with**; an occupation says what

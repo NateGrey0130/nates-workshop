@@ -368,17 +368,20 @@ exactly that, read off the table with no parsing.
 
 | file | lines | |
 |---|---|---|
-| `app.js` | ~3,000 | the wizard; the largest file in the app |
-| `sheet.js` | ~2,000 | |
-| `js/parser.js` | ~1,600 | **third** largest, and not a page script at all |
+| `app.js` | ~3,350 | the wizard; the largest file in the app |
+| `js/parser.js` | ~2,100 | **second** largest, and not a page script at all |
+| `sheet.js` | ~2,050 | |
 | `catalog.js` | ~700 | |
 | `campaign.js` | ~640 | |
-| `dashboard.js` | ~110 | |
+| `dashboard.js` | ~140 | |
 
 **A smoke check now holds these to 25%**, because the previous two sets of
 figures both went stale in the same way. The set before this one said `app.js`
 was "roughly 1,900" when it was 2,950 — 55% out — and called `parser.js` the
-*second* largest file when `sheet.js` sits between them. The set before THAT had
+*second* largest file when `sheet.js` sat between them. That has since become
+true by a different route: `parser.js` overtook `sheet.js` on the psionics merge
+and the supersede rule (BOOK-INGEST-AUDIT.md F10 and F11), and the ordering
+check is what said so. The set before THAT had
 drifted 80% on `sheet.js` while claiming a 20% tolerance. Twice is a pattern, and
 prose that says "treat these as orders of magnitude" is not a tolerance, it is an
 apology for not having one.

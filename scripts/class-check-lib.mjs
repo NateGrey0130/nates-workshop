@@ -43,6 +43,11 @@ export const KNOWN_KEYS = new Set([
   // The mirror: which races may take an O.C.C. "none" is the human case,
   // because Rifts prints no Human R.C.C.
   'race_restrictions',
+  // An O.C.C. whose book says the character stops being what it was - the
+  // Cosmo-Knight's transformation. Read by combineClasses, which then takes the
+  // occupation's pools and skills and the HIGHER of the two attribute dice.
+  // BOOK-INGEST-AUDIT.md F11.
+  'supersedes_race',
   // Produced by the parser from the body, never written by hand.
   'lore', 'gm_notes', 'sections',
 ]);

@@ -1702,6 +1702,13 @@ function renderAttributes() {
       control = `<input type="number" min="1" max="40" value="${v ?? ''}" onchange="manualSet('${a}', this.value)">`;
     }
     const req = reqs[a] ? `<span class="attr-note ${v != null && v < reqs[a] ? 'err' : 'ok'}">need ${reqs[a]}+</span>` : '';
+    // "racial dice" stopped being true for a class that SUPERSEDES its race
+    // (F11): the Cosmo-Knight's transformation takes whichever of the two is
+    // higher per attribute, so the expression beside P.S. is usually the
+    // occupation's and the one beside M.E. may still be the race's. Calling
+    // both racial would be a small lie in the one place a player checks the
+    // number against the book.
+    const diceLabel = S.occ && S.cls?.supersedes_race ? 'transformed dice' : 'racial dice';
     // A class bonus is shown here but never rolled into the stored value — what
     // gets saved is what was rolled, and the bonus is added wherever the number
     // is actually used.
@@ -1725,7 +1732,7 @@ function renderAttributes() {
         <option value="point" ${m === 'point' ? 'selected' : ''}>Point-buy</option>
         <option value="manual" ${m === 'manual' ? 'selected' : ''}>Manual entry</option>
       </select></td>
-      <td>${control}</td><td>${req}${boost}${floorNote}${dice ? ` <span class="attr-note">racial dice: ${esc(dice)}</span>` : ''}</td></tr>`;
+      <td>${control}</td><td>${req}${boost}${floorNote}${dice ? ` <span class="attr-note">${diceLabel}: ${esc(dice)}</span>` : ''}</td></tr>`;
   }).join('');
 
   // An absent attribute is not "still to roll" — it is never going to have a
