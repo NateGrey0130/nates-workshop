@@ -1779,4 +1779,33 @@ its page. That is fourteen `--field-sources` reads against the OCR cache, which
 is free, and it is the only way to know whether this is one class or a habit.
 Found while taking F15, on the page F15 sent me to.
 
-**Open.**
+**Taken, 2026-08-31 (PR #NNN), as a sweep first and then a one-class fix.**
+`isp_base` is now the printed formula, read off a 200 dpi render of Rifts
+Ultimate Edition printed 55 - the folio confirms the book's +3 offset - and the
+M.E. term resolves: a Crazy with M.E. 14 now rolls 20-50 I.S.P. where it rolled
+6-36.
+
+**THE SWEEP'S ANSWER IS ONE CLASS, NOT A HABIT**, which is the answer worth
+having and the reason the finding asked for it. Fifteen classes store an
+`isp_base` with no attribute term and fourteen are right:
+
+- the **shade**, **entrancer**, **holy terror** and **morphworm** were read line
+  by line against their own pages in the Wormwood cache, and all four print a
+  bare figure - *"Psionic Powers: Major psionic, 3D4 x 10 I.S.P."*;
+- the six **dragon hatchling variants** store the per-level term their pages
+  print, on Rifts Ultimate 160-161;
+- the **pleasurer**, **vacuum wasp** and **termite engineer** store theirs too;
+- the base **Dragon Hatchling**'s entry gives no I.S.P. figure at all - *"Most
+  dragons possess some range of psychic ability"* is the whole line - and its
+  3D4x10 is a documented earlier decision recorded in its own note.
+
+**WHERE THE 6D6 CAME FROM, which is the part worth keeping.** Two lines below
+the psionics entry the same page prints **"P.P.E. Base: 6D6 P.P.E."**, and the
+class stores `ppe_base: "6d6"` correctly. Two figures, adjacent, identical at a
+glance, and only one of them carries the extra terms. It is the only class in
+the catalog whose `isp_base` and `ppe_base` are the identical string - checked
+across all 160 - so the slip did not spread, and that comparison is now a
+regression invariant. It proves nothing on its own; it is one comparison, and it
+is the shape this error takes.
+
+Regression 236 -> 237.
