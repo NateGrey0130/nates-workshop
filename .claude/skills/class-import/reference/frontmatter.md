@@ -222,11 +222,14 @@ occupation's when it states one - running both ladders would fire both sets of
 grants at every threshold. The tier is the stronger of the two and `isp_base`
 travels with it, a tie going to the occupation.
 
+`magic` merges the same way (F14), with one difference: `psionics.type` is a
+ladder and `magic.type` is not - `spell`, `elemental`, `druid` and `intuitive`
+are KINDS, so the occupation's wins outright where it states one. `spells` and
+`spell_levels_allowed` are unioned; `spells_starting` takes the higher.
+
 This matters when transcribing a RACE that its own book pairs with an O.C.C.:
 write what the race page grants and nothing more, because the occupation's page
-is imported separately and the two now add up. `magic` is still CHOSEN - the
-occupation wins outright when both state it - which is a different question and
-is filed separately.
+is imported separately and the two now add up.
 
 ## Bonuses — the numbers the sheet adds up
 

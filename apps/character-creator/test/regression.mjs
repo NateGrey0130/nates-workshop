@@ -1386,6 +1386,55 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     drifted.length === 0, drifted.slice(0, 5).join('; '));
 }
 
+// ---------- magic composition ----------
+// BOOK-INGEST-AUDIT.md F14, the magic half of F10. Thirteen races and eighteen
+// occupations state `magic`; before the merge the occupation won all 234 pairs
+// outright, with no comparison at all.
+{
+  const classes = (await api('GET', '/classes?limit=200')).body.classes || [];
+  const races = classes.filter((c) => c.category === 'rcc' && c.magic);
+  const occs = classes.filter((c) => c.category === 'occ' && c.magic);
+  const norm = (x) => String((typeof x === 'string' ? x : x?.name) ?? '').trim().toLowerCase();
+
+  const lostSpells = [], lostLevels = [], weakened = [], wrongType = [];
+  let pairs = 0;
+  for (const r of races) {
+    for (const o of occs) {
+      pairs++;
+      const c = combineClasses(r, o).magic || {};
+      const held = new Set((c.spells || []).map(norm));
+      for (const x of [...(r.magic.spells || []), ...(o.magic.spells || [])]) {
+        if (!held.has(norm(x))) lostSpells.push(`${r.id}+${o.id}: ${norm(x)}`);
+      }
+      const levels = new Set(c.spell_levels_allowed || []);
+      for (const L of [...(r.magic.spell_levels_allowed || []), ...(o.magic.spell_levels_allowed || [])]) {
+        if (!levels.has(L)) lostLevels.push(`${r.id}+${o.id}: level ${L}`);
+      }
+      for (const k of ['spells_starting', 'spells_per_level']) {
+        const floor = Math.max(Number.isFinite(r.magic[k]) ? r.magic[k] : -Infinity,
+                               Number.isFinite(o.magic[k]) ? o.magic[k] : -Infinity);
+        if (floor > -Infinity && !(c[k] >= floor)) weakened.push(`${r.id}+${o.id}: ${k} ${c[k]} < ${floor}`);
+      }
+      // The type is a KIND, not a degree - the occupation's statement about how
+      // it casts must not be overwritten by a race's generic "spell".
+      if (o.magic.type !== undefined && c.type !== o.magic.type) {
+        wrongType.push(`${r.id}+${o.id}: ${c.type} not ${o.magic.type}`);
+      }
+    }
+  }
+  check('every magic race composes with every magic occupation',
+    pairs === races.length * occs.length && pairs > 0,
+    `${races.length} races x ${occs.length} occupations = ${pairs}`);
+  check('and no granted spell is lost to composition',
+    lostSpells.length === 0, lostSpells.slice(0, 5).join('; '));
+  check('and no allowed spell level is lost',
+    lostLevels.length === 0, lostLevels.slice(0, 5).join('; '));
+  check('and no starting count comes out below what either side states alone',
+    weakened.length === 0, weakened.slice(0, 5).join('; '));
+  check('and the magic TYPE is the occupation\'s wherever it states one',
+    wrongType.length === 0, wrongType.slice(0, 5).join('; '));
+}
+
 // ---------- psionics composition ----------
 // BOOK-INGEST-AUDIT.md F10. Composing a psychic race with a psychic occupation
 // used to keep ONE of the two blocks and throw the other away entire. Measured

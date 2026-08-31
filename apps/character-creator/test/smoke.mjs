@@ -4072,6 +4072,73 @@ skills:
   })());
 }
 
+section('Magic composition');
+{
+  // BOOK-INGEST-AUDIT.md F14. F10 excluded magic saying no race/O.C.C. pair
+  // states both. Thirteen races and eighteen occupations do - 234 pairs - and
+  // the line was worse than the psionics bug beside it: psionics at least gave
+  // the RACE the tie, magic handed the occupation the win with no comparison.
+  const mk = (cat, magic) => parseClassMarkdown(
+    `---\nid: t-${cat}\nname: T\nsystem: rifts\nsource_book: B\ncategory: ${cat}\nmagic:\n${magic}\n---\n\n## Lore\n\nx\n`).data;
+
+  const race = mk('rcc', `  type: "spell"
+  spells: ["Globe of Daylight", "Cloud of Smoke"]
+  spells_starting: 10
+  spell_levels_allowed: [1, 2, 3, 4]`);
+  const occ = mk('occ', `  type: "elemental"
+  spells: ["Cloud of Smoke", "Fire Bolt"]
+  spells_starting: 3
+  spell_levels_allowed: [1]`);
+  const both = combineClasses(race, occ).magic;
+
+  check('a race and an occupation both stating magic keep both', (both.spells || []).length === 3);
+  check('and a spell both grant is held once',
+    both.spells.filter((n) => n === 'Cloud of Smoke').length === 1);
+
+  // THE TYPE IS A KIND, NOT A DEGREE - the one real difference from psionics.
+  // `spell`, `elemental`, `druid`, `intuitive` are how a character casts, so
+  // there is no stronger to compute and the occupation's statement wins.
+  check('the type is the occupation\'s, because it is a kind and not a degree',
+    both.type === 'elemental');
+
+  // A count takes the higher, the reading F10 arrived at: taking the
+  // occupation's is LOWER in 35 of the 108 live pairs that state both.
+  check('a count takes the higher of the two', both.spells_starting === 10);
+
+  // The level set is WIDENED. Taking the occupation's drops a level the race
+  // allows in 19 of the 28 pairs stating both - an entrancer who becomes a
+  // Warlock would lose levels 2, 3 and 4 from its own page.
+  check('the allowed spell levels are unioned and sorted',
+    JSON.stringify(both.spell_levels_allowed) === JSON.stringify([1, 2, 3, 4]));
+
+  check('one side alone is untouched', (() => {
+    const bare = parseClassMarkdown('---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: occ\n---\n\n## Lore\n\nx\n').data;
+    return combineClasses(race, bare).magic.spells_starting === 10
+      && combineClasses(parseClassMarkdown('---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: rcc\n---\n\n## Lore\n\nx\n').data, occ).magic.spells_starting === 3;
+  })());
+
+  check('an unenumerated key survives the merge', (() => {
+    const withLists = mk('occ', '  type: "spell"\n  spell_lists: ["Ley Line"]');
+    return combineClasses(race, withLists).magic.spell_lists[0] === 'Ley Line';
+  })());
+
+  // A superseding class does not inherit the race's magic either - the same
+  // exception it makes everywhere else (F11). Unexercised today, because the
+  // only class carrying the flag states no magic, and coherent for when one does.
+  check('a superseding class takes its own magic outright', (() => {
+    const reborn = parseClassMarkdown(
+      '---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: occ\nsupersedes_race: true\nmagic:\n  type: "druid"\n  spells_starting: 2\n---\n\n## Lore\n\nx\n').data;
+    const c = combineClasses(race, reborn).magic;
+    return c.type === 'druid' && c.spells_starting === 2 && !c.spells;
+  })());
+
+  // Both merges share one union helper, because they ask the same question of
+  // different columns and the pair written twice is the pair that drifts.
+  const src = readFileSync(join(repoRoot, 'apps', 'character-creator', 'js', 'parser.js'), 'utf8');
+  check('the psionics and magic merges share one union helper',
+    (src.match(/unionByName\(/g) || []).length >= 4 && (src.match(/function unionByName/g) || []).length === 1);
+}
+
 section('Psionics composition');
 {
   // BOOK-INGEST-AUDIT.md F10. `combineClasses` used to CHOOSE between a race's

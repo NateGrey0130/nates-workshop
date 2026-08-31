@@ -1517,7 +1517,53 @@ has to show separately? F11 is about a class REPLACING its race, and if a
 Godling's magic is meant to be replaced rather than added to, this finding is
 partly answered by that one. Read them together.
 
-**Open.**
+**Taken, 2026-08-31 (PR #434).** `mergeMagic`, on F10's rules, sharing its union
+helper. Every premise held on re-measurement: 13 R.C.C.s, 18 O.C.C.s, 234 pairs,
+and the line was `out.magic = occ.magic || rcc.magic` with no comparison at all.
+
+**The Godling question answers itself, and not the way the finding frames it.**
+The Godling's block is `type: none` and nothing else - a placeholder for its
+*Magic Powers* ability, which grants a practitioner class outright. Six of the
+thirteen races are `(type only)` like that: the Godling and five of the six
+dragon hatchlings. **Seven races actually lose content**, and the entrancer is
+the sharp case - it loses eleven granted spells, six of its ten starting picks,
+and three of its four allowed spell levels, to any spellcasting occupation.
+
+**THE TYPE IS A KIND, NOT A DEGREE. That is the one real difference from F10**
+and the finding is right about it. `psionics.type` is minor < major < master and
+there is a stronger to compute; the magic types here are `spell`, `elemental`,
+`druid`, `intuitive`, `none`, and two named after their class. They say HOW a
+character casts. So the occupation's wins outright where it states one - a
+race's generic `spell` must not overwrite a Warlock's `elemental`.
+
+**Two rules had to be measured rather than assumed, and both came out the way
+F10's did:**
+
+| | pairs stating both | where preferring the occupation's is WORSE |
+|---|---|---|
+| `spells_starting` | 108 | **35** lower - a royal frilled hatchling would drop from 6 starting spells to 1 for studying as an Elemental Fusionist |
+| `spell_levels_allowed` | 28 | **19** narrower - an entrancer who becomes a Warlock loses levels 2, 3 and 4 |
+
+So counts take the higher and levels are unioned, which is what the finding
+proposed. 28 pairs grant named spells on both sides and **9 overlap**, so the
+dedupe is load-bearing rather than tidy.
+
+**F11 turned out to be the other half of the answer.** A class carrying
+`supersedes_race` takes its magic outright rather than merging - the same
+exception it already makes for pools and skills. Unexercised today, because the
+only class carrying the flag states no magic; written now so the rule is
+coherent rather than discovered later as an inconsistency.
+
+**Eleven keys, two more than psionics** - `spell_lists` and
+`spells_starting_groups` appear once each - which is why the block is spread
+before the rules are applied rather than enumerated.
+
+The union helper is now shared by both merges. They ask the same question of
+different columns, and the pair written twice is the pair that drifts.
+
+Smoke 1439 -> 1448. Regression 228 -> 233, composing all 234 live pairs and
+asserting no spell, level or count comes out below what either half states
+alone, and that the type is always the occupation's.
 
 ### F15 - the Crazy allows two psionic categories that do not exist, so its three starting picks have no legal pool
 

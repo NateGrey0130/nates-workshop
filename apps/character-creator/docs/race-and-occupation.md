@@ -173,7 +173,7 @@ pool bases as before — none of them knows a character can have two classes.
 | related & secondary allowances | the **occupation** |
 | bonuses | **both** — flat numbers summed, dice collected (see below) |
 | psionics | **both** - merged, the stronger tier winning the tier (see below) |
-| magic | the **occupation** |
+| magic | **both** - merged, the occupation setting the KIND (see below) |
 | equipment, abilities, level progression | **both** |
 
 Three rules earned by getting them wrong first:
@@ -256,8 +256,26 @@ powers to one for studying as a Dog Boy, which is the loss this rule exists to
 prevent. A ladder cannot be maxed and is not concatenated either, because
 running both would fire both sets of grants at every threshold.
 
-**`magic` is still chosen** - `out.magic = occ.magic || rcc.magic`, the
-occupation outright. That is a separate question with its own finding.
+**Magic merges too** (BOOK-INGEST-AUDIT.md F14), on the same rules with one
+difference: `psionics.type` is a LADDER - minor, major, master - and there is a
+stronger to compute, while the magic types in this catalog are `spell`,
+`elemental`, `druid`, `intuitive` and two named after their class. Those are
+KINDS, not degrees, so the occupation's wins where it states one: a race's
+generic `spell` must not overwrite a Warlock's `elemental`, which says how the
+character casts.
+
+| | |
+|---|---|
+| `type` | the occupation's where it states one |
+| `spells` | **unioned**, deduplicated by name |
+| `spell_levels_allowed` | **unioned** and sorted |
+| `spells_starting`, `spells_per_level` | the **higher** of the two |
+| anything else | the occupation's where it states it, the race's otherwise |
+
+Before the merge the occupation won all 234 pairs **outright, with no comparison
+at all** - worse than the psionics bug beside it, which at least gave the race
+the tie. An entrancer who became a Warlock lost its eleven granted spells, six
+of its ten starting picks and three of its four allowed spell levels.
 - **A dice bonus cannot be summed, so it is collected.** A race granting
   `+1d4 P.S.` and an occupation granting `+2d6` means both are rolled; there is
   no single expression that says so, so the merged value is `["1d4", "2d6"]` and
