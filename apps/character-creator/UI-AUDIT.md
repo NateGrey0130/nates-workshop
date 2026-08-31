@@ -346,6 +346,29 @@ regression `docs/wizard-and-sheet.md` describes has not come back.
 and drop `flex: 1 0 auto` to `flex: 1 1 auto`) instead of scrolling, so all six tabs
 are visible at once. Adds nothing new; uses a breakpoint that already exists.
 
+**Taken, 2026-08-31 (PR #N).** Implemented as written, at the breakpoint written,
+with both declarations. All six tabs are now fully visible at 390×844 in two rows
+of three, `overflowing: false`, and the `44px` touch height survives the wrap.
+
+**Two corrections to the measurements above.** The strip needs **569px**, not
+544 — the Notes tab gained a `2` count pill once the audit's journal entries
+existed, and the right edges shift with it (Notes ends at 597, not 572). The
+conclusion is unchanged: three of six visible before, six of six after.
+
+**And the breakpoint does not quite reach the overflow.** 620px was chosen
+because it already exists, but the strip stops overflowing at **632px**, so
+between 621 and 631 the old scrolling behaviour survives and the Notes tab is
+cut by about 4px. Left as written rather than widened to 700: the band is 11px
+across, no common device sits in it, and moving the breakpoint is a decision
+about the whole stylesheet rather than about this bar. Recorded here so the next
+reader does not rediscover it as a bug.
+
+The sticky bar grows from **76px to 111px** at phone width — 13% of an 844px
+viewport, permanently. It stays above the fold (top 352). Tab text does not clip:
+`1 1 auto` lets flex wrap before it shrinks, and every tab's `scrollWidth` still
+equals its `clientWidth` at 390px. `.tabbar` is used only by `sheet.js`, so
+nothing else in the app moves.
+
 ---
 
 ### F8 — medium — Required-looking skill picks can be skipped in silence, and only an admin screen ever says so
