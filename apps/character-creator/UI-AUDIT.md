@@ -680,6 +680,33 @@ applied inconsistently.
 two places rather than twenty. Attribute-method selects and the Review fields are a
 **separate** PR.
 
+**Taken, 2026-08-31 (PR #N).** Scope as written: the Details step only. The
+attribute-method selects and the Review step's *Character name* and *Campaign*
+fields are untouched and stay open.
+
+**`kvRow()` does not exist, and the fix lands in ONE place.** Every row on this
+step comes from a single function, `bioInput()`. The `.kv-row` class the name
+suggests belongs to the **admin catalog editor** (`catalog.js:137`, a local
+`row(k, val)` arrow) — a different page, not this step. Nothing was skipped by
+there being one function instead of two.
+
+The id is derived from the field key, which is a fixed slug in `BIO_FIELDS`
+(`bio-race`, `bio-true_name`, …), so two rows cannot collide and no id has to be
+tracked by hand. Measured on the live step: **17 controls, 17 unique ids, 17
+associated labels**, and the accessibility tree now reads back
+`textbox "Race"`, `textbox "True Name"`, `textbox "Native Language(s)"`,
+`textbox "Gold"` and the rest by name, where every one of them was anonymous
+before.
+
+**One claim in this finding was a misreading of the tool, not a defect.** The
+`checkbox "on"` cited above is the *long-lived race (×2)* option, and it was
+already correctly labelled — it is **wrapped** in its `<label>`, the pattern this
+same finding praises two paragraphs earlier, and reports `labels.length === 1`
+with the name *"long-lived race (×2)"*. `read_page` prints a checkbox's **value**
+and a select's **selected option** rather than its accessible name, which is why
+it looked nameless and why the alignment select still prints as
+`combobox "— choose —"` after this change. Both are named.
+
 ---
 
 ### F13 — medium — Discarding an unfinished build is one unconfirmed click

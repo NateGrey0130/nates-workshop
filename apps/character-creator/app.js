@@ -2831,12 +2831,17 @@ function renderDetails() {
 }
 
 function bioInput([key, label]) {
+  // The label is a SIBLING of the control, so without a for= it names nothing:
+  // the whole step read back as twenty anonymous textboxes. The id is derived
+  // from the field key, which is a fixed slug from BIO_FIELDS, so two rows
+  // cannot collide and nothing has to be tracked by hand.
+  const id = `bio-${key}`;
   // Alignment is the one field on this step the book calls mandatory, and the
   // only one with a closed set of answers. Everything else here is free text
   // flavour that can stay blank forever.
   const control = key === 'alignment'
-    ? `<select onchange="setBio('alignment', this.value)" style="flex:1">${rules.alignmentOptions(S.bio.alignment)}</select>`
-    : `<input type="text" value="${esc(S.bio[key] ?? '')}" onchange="setBio('${key}', this.value)" style="flex:1">`;
+    ? `<select id="${id}" onchange="setBio('alignment', this.value)" style="flex:1">${rules.alignmentOptions(S.bio.alignment)}</select>`
+    : `<input type="text" id="${id}" value="${esc(S.bio[key] ?? '')}" onchange="setBio('${key}', this.value)" style="flex:1">`;
   // Every field the book prints a table for gets a die beside it. The rest are
   // free text: there is no table for a character's name.
   const rollable = !!rules.BACKGROUND_TABLES[key];
@@ -2847,7 +2852,7 @@ function bioInput([key, label]) {
     ? ` <label class="small" title="Multiply the rolled age by two, per the table's note">
         <input type="checkbox" ${S.longLived ? 'checked' : ''} onchange="setLongLived(this.checked)"> long-lived race (×2)</label>` : '';
   return `<div class="rowline">
-    <label class="small" style="min-width:132px">${esc(bioLabel([key, label]))}${key === 'alignment' ? ' <span class="req">*</span>' : ''}</label>
+    <label class="small" for="${id}" style="min-width:132px">${esc(bioLabel([key, label]))}${key === 'alignment' ? ' <span class="req">*</span>' : ''}</label>
     ${control}${die}${ageOpt}
   </div>`;
 }
