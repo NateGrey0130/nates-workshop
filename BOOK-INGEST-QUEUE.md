@@ -23,7 +23,8 @@ the human view of the same thing plus the import status.
 
 Status is `cached` -> `surveyed` -> `imported`. `phase-world` is **importing**,
 a fourth state the earlier sessions did not need: surveyed on 2026-08-30 and
-shipping in category batches, with four of its thirty-five classes in. The
+shipping in category batches, with thirty-two of its thirty-four playable
+classes in and two left. The
 survey at `apps/character-creator/docs/surveys/phase-world.md` is the boot file
 for any session continuing it, and its ledger is the authority on what has
 already gone in. The other six books are cache-only: the kickoff session caches
@@ -31,17 +32,18 @@ and registers, by design.
 
 ### `phase-world` progress, 2026-08-31
 
-Fifteen PRs - nine carrying data, each applied `--remote` before merging, and
-six carrying survey, docs or a correction. Catalog totals moved 336 -> 345
-skills, 975 -> 1021 gear, 126 -> 154 classes.
+Sixteen PRs - ten carrying data, each applied `--remote` before merging, and six
+carrying survey, docs or a correction. Catalog totals moved 336 -> 345 skills,
+975 -> 1024 gear, 101 -> 116 psionic powers, 126 -> 158 classes.
 
 | category | in | left |
 |---|---|---|
 | skills | **9** - 7 new plus 2 the CCW classes turned up (Fighter Combat: Basic and Elite, printed 151) | none known; the book collects its new skills on printed 52-53 and 150-151 and both were read whole |
 | re-citations | **8** rows moved off the phantom `Rifts Skill List` onto printed 52-53 and 150-151, taking it from 48 untraceable rows to 40 | the other 40, which are not this book's |
-| gear | **44** - 43 from printed 114-129, every number read off a 200 dpi render, plus one STUB the Repo-Bot needed. The Plasma Hand Cannon appears exactly once in this book, in that class's equipment line, with its 2D6x10 M.D. and nothing else; it is stat-blocked nowhere, so the row carries the class-import stub marker rather than invented stats | none in that range |
-| classes | **28** of 34. The CCW, printed 56-70: four O.C.C.s, the noro and its two O.C.C.s, Space Wolfen, Wolfen Quatoria, Catyr, Seljuk. The Transgalactic Empire, printed 73-84: Kreeghor, Machine People, Silhouette, Imperial Legionnaire, Imperial Security Agent, Freedom Fighter. The five spacefaring trades, printed 38-43: Spacer, Galactic Tracer, Space Pirate, Runner, Colonist. Two races and the Naruni enforcer, printed 35-38 and 46-48: Draconid, Phantom, Naruni Repo-Bot. The Pleasurer and the two playable hive-spawn, printed 88-89 and 92-94: Pleasurer, Vacuum Wasp, Termite Engineer | **6** - the Prometheans (24-31) and the Cosmo-Knights (99-104) |
-| spells, psionics | n/a | the book defines **zero** of either, checked by stat-block scan rather than assumed |
+| gear | **47** - 43 from printed 114-129, every number read off a 200 dpi render, plus four the class entries themselves state. Three of the four are real rows rather than stubs: the Steelcloth Robes (A.R. 12, 90 M.D.C., printed 27) and the Steelcloth Robes and Jumpsuit (A.R. 19, 40 M.D.C., printed 29) are named AND statted inside their own class entries, which is more than the gear chapter gives some of its own rows. The two STUBS are the Plasma Hand Cannon, which appears exactly once in the whole book with its 2D6x10 M.D. and nothing else, and the Meditation Chip, which the two phase O.C.C.s carry and the book never stats | none in that range |
+| classes | **32** of 34. The CCW, printed 56-70: four O.C.C.s, the noro and its two O.C.C.s, Space Wolfen, Wolfen Quatoria, Catyr, Seljuk. The Transgalactic Empire, printed 73-84: Kreeghor, Machine People, Silhouette, Imperial Legionnaire, Imperial Security Agent, Freedom Fighter. The five spacefaring trades, printed 38-43: Spacer, Galactic Tracer, Space Pirate, Runner, Colonist. Two races and the Naruni enforcer, printed 35-38 and 46-48: Draconid, Phantom, Naruni Repo-Bot. The Pleasurer and the two playable hive-spawn, printed 88-89 and 92-94: Pleasurer, Vacuum Wasp, Termite Engineer. The four Prometheans, printed 25-29: First Stage Promethean, Promethean Phase Adept, Promethean Time Master, Phase Mystic | **2** - the two Cosmo-Knights, printed 99-104, which finish the book |
+| psionic powers | **15** - the Phase Powers of printed 32-35, in a new `Phase` category. The book calls them "a variation on psionic abilities... activated by using I.S.P.", and each prints Range, Duration, I.S.P. and a description - the exact column set the table holds | none; the book has no other power list |
+| spells | **0** | the book defines **zero**, checked by stat-block scan rather than assumed. The Promethean Time Master's temporal magic is from Rifts England, which this catalog does not hold |
 
 **Batch 8 added no skills and no gear, and that is the entry's own doing rather
 than an omission.** None of the three states a `Money:` line, a
@@ -79,7 +81,7 @@ player-characters", and p.183 gives it no ladder. The Contents does not label it
 and the survey read the Contents. It is the only entry in the book where the
 heading and the Contents disagree about that.
 
-Eight findings have come out of this book so far - F2 through F9 in
+Nine findings have come out of this book so far - F2 through F10 in
 `BOOK-INGEST-AUDIT.md`. None was implemented, per the standing constraint. F5 is
 `attribute_dice` having no way to say an attribute DOES NOT EXIST: the Machine
 People print "P.E. N/A" and `app.js` falls back to `3d6`, so the sheet shows a
@@ -107,7 +109,33 @@ skill's real category, deliberately and for a good reason - drops the +5%. The
 picker still shows the player the +5%, so the wizard promises what the sheet
 does not give. A sweep of every published class found exactly three rows in
 this shape, one of them the Phaeton Juicer, so it did not arrive with this
-book.
+book. F10 is a RACE AND AN O.C.C. THAT ARE BOTH PSYCHIC KEEPING ONLY ONE
+PSIONICS BLOCK: `combineClasses` merges skills, sums bonuses and concatenates
+abilities, then CHOOSES `psionics` by whichever tier is strictly higher, so a
+tie goes to the race and the occupation's granted powers, starting picks,
+categories and whole level schedule are discarded. Measured on all 361
+race/occupation pairs where both state psionics - 93 discard a block that had
+picks to lose, across 17 O.C.C.s. Two of this book's own shipped that way in
+#409: `noro` and `noro-psychic` are both major, so the twelve powers and the
+schedule that `fix-noro-psionic-schedules.sql` corrected in #411 have never
+composed. The Promethean Phase Adept is the third, and its tier is not the
+lever - master is the top of the ladder, the race holds it, and the comparison
+is strict.
+
+**What batch 9 deliberately did not import.** The Promethean Time Master's
+TEMPORAL MAGIC: it learns two temporal spells plus two normal ones at first
+level and one of each per level after, and only the normal half is granted. The
+catalog holds 607 spells and not one is temporal magic - zero rows cite Rifts
+England, and the five time-flavoured spells it does hold are ordinary
+invocations from the Book of Magic and Palladium Fantasy. Granting a note with
+no gate would have offered the whole catalog for a pick the book restricts to a
+list this machine does not have, which is F7's shape; under-granting and saying
+so at the table is the smaller error. Also out: the First Stage Promethean's
+rule that up to four of its fourteen related picks may be spent on phase powers
+or temporal spells INSTEAD of skills - a skill slot traded for a catalog entry
+of another kind is not a shape `occ_related_skills` has - and the NPC Second
+Stage Promethean of printed 31-35, which the book labels Non-Player Characters
+in its own heading and says outright is "unfit as player characters".
 F5 has also gained a second occurrence: the Pleasurer prints "P.B. N/A", and
 unlike the Machine People's P.E. it is not moot - a shapeshifter whose whole
 trade is appearance is shown a rolled beauty score the book denies it.
