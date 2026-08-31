@@ -242,6 +242,18 @@ offers a re-roll on the Occupation step; see
 [The race is chosen first](race-and-occupation.md#the-race-is-chosen-first). A greyed button with no reason,
 or a reason beside a live button, are each worse than either alone.
 
+**Not gated is not the same as allowed, and the two paths surface it at
+different steps.** Where the class is already known by the Attributes step — the
+O.C.C.-first path — that step *does* gate on it, which is the "class minimum
+unmet" reason listed above. Where the race came first and the occupation is
+chosen at step 4, only the warning fires. **Either way the save refuses the
+character**: `_lib/validate-character.js` returns `attribute_minimum` as a
+blocking violation and the create endpoint answers 422. There is no GM
+exemption — `enforcePools` is the only rule that yields to a GM's ruling, and it
+governs pool maxima, not attributes. The warning on the Occupation step used to
+say continuing was *"allowed and is flagged on the character"*, which was untrue
+in both halves; see `UI-AUDIT.md` F2.
+
 This exists because a disabled button was the entire explanation. Picking a Ley
 Line Walker greyed the primary action with no visible cause, and the requirement
 (choose a power) rendered below the fold. Reported as "nothing happens".

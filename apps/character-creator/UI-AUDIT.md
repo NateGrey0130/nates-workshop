@@ -177,6 +177,39 @@ violation server-side and that the two wizard paths surface it at different step
 Reconciling (1) and (2) into one behaviour is a **separate, larger** finding and should
 not be folded into this PR.
 
+**Taken, 2026-08-31 (PR #N).** Posture as written: copy and documentation only.
+Neither gate moved, and reconciling (1) and (2) remains open and unstarted.
+
+**The proposal's own suggested sentence was false, and was not shipped.** It
+offered *"…will be refused on save unless a GM overrides it"*. There is no GM
+override for an attribute minimum. `characters.js:191` returns 422 the moment
+`violations` is non-empty, and the only rule in the file that yields to a GM is
+`enforcePools: email !== campaign.gm_email` (`characters.js:184`) — which governs
+pool maxima, not attributes. The audit's own step-10 refusal was in fact a GM
+being refused; the character it built carries the `GM` tag. Writing the sentence
+as proposed would have replaced one false statement with another.
+
+What shipped instead, both lines of the panel, because both were untrue:
+
+- *"…or continue as you are — nothing here stops the build"* → *"…or go back and
+  choose an occupation this character meets."*
+- *"Continuing with a minimum unmet is allowed and is flagged on the character"*
+  → *"This step will let you carry on, but the save at the end will not: a
+  character below its class minimum is refused, the GM's own included."*
+
+The second half of the old sentence — *"and is flagged on the character"* — was
+false in its own right and is simply gone: a character that cannot be saved
+cannot carry a flag.
+
+`docs/wizard-and-sheet.md` gains a paragraph under *A blocked step says why*
+recording that not-gated is not the same as allowed, that the O.C.C.-first path
+gates at Attributes while the R.C.C.-first path only warns at Occupation, and
+that the save refuses either way with no GM exemption.
+
+Verified by driving the wizard: Palladium Fantasy → Elf → manual attributes with
+IQ 6 → Occupation → Wizard renders the new panel, `IQ 6 — needs 10+, short by 4`,
+with the primary button still live. Screenshot at 1440×900.
+
 ---
 
 ### F3 — high — Race step: 120 unfiltered class cards, and the primary button 12 screens down

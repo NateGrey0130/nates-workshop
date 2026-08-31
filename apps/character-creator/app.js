@@ -1631,13 +1631,14 @@ function shortfallPanel(short) {
     <h3>Below ${esc(occName)}'s minimum</h3>
     <p class="muted small">Your race and your occupation both set minimums and the stricter of
       each applies, so this is the first step that could know. Re-roll the attribute that fell
-      short, or continue as you are — nothing here stops the build.</p>
+      short, or go back and choose an occupation this character meets.</p>
     ${short.map(({ attr, have, need }) => `<div class="chkrow">
       <button class="btn btn-sm" onclick="rerollForMinimum('${attr}')">
         🎲 Re-roll ${attr} <span class="muted">(${esc(S.cls?.attribute_dice?.[attr] || '3d6')})</span></button>
       <span><b>${attr} ${have}</b> <span class="muted">— needs ${need}+, short by ${need - have}</span></span>
     </div>`).join('')}
-    <p class="warn">Continuing with a minimum unmet is allowed and is flagged on the character.</p>
+    <p class="warn">This step will let you carry on, but the save at the end will not: a
+      character below its class minimum is refused, the GM's own included.</p>
   </div>`;
 }
 
