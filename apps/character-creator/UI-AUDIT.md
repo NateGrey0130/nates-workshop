@@ -680,7 +680,7 @@ applied inconsistently.
 two places rather than twenty. Attribute-method selects and the Review fields are a
 **separate** PR.
 
-**Taken, 2026-08-31 (PR #N).** Scope as written: the Details step only. The
+**Taken, 2026-08-31 (PR #448).** Scope as written: the Details step only. The
 attribute-method selects and the Review step's *Character name* and *Campaign*
 fields are untouched and stay open.
 
