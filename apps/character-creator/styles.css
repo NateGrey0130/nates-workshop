@@ -82,6 +82,22 @@ input[type=text], input[type=number], select, textarea {
   transition: border-color var(--transition);
 }
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--border-focus); }
+
+/* Every interactive element gets a focus ring you can actually see. The default
+   is a hairline against a near-black background, which on this palette reads as
+   no focus state at all — and the rule above had removed even that from every
+   text control, leaving a 1px border colour change as the only keyboard
+   affordance in the app. Lifted verbatim from apps/pick3cut5/styles.css, which
+   solved this first; borrowing it rather than inventing a second convention.
+   The border change above stays as the pointer-and-typing affordance.
+   Deliberately NOT promoted to /shared/styles.css: that would hand three other
+   apps a focus ring overnight, which is a bigger change than it looks. */
+:where(button, input, a, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--accent-secondary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
 input[type=number] { width: 76px; }
 textarea { width: 100%; min-height: 68px; resize: vertical; }
 input[type=checkbox] { accent-color: var(--accent); cursor: pointer; }
