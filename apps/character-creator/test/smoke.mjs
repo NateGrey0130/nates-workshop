@@ -242,7 +242,7 @@ import { validateMos } from '../js/parser.js';
 import { chunks, D1_MAX_BINDS, BIND_CHUNK } from '../../../functions/api/character-creator/_lib/sql-chunk.js';
 import { LANGUAGE_OTHER, LITERACY_OTHER, isFamilyName, isRepeatableRow,
          otherRowFor, familySkillName } from '../js/language-skills.js';
-import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityOccOptions, abilityOptions, applyAbilities, applyVariant, bonusesFromSkills, categoryAllows, categoryBonus, categoryLabel, combineClasses, isGearChoice, needsOccupation, parseClassMarkdown, parseYaml, validateBonuses } from '../js/parser.js';
+import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityOccOptions, abilityOptions, applyAbilities, applyVariant, bonusesFromSkills, categoryAllows, categoryBonus, categoryLabel, combineClasses, isGearChoice, needsOccupation, parseClassMarkdown, parseYaml, sumBonusGroups, validateBonuses } from '../js/parser.js';
 import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rollsForPsionics, withRolledPsionics } from '../js/psionics.js';
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -2706,6 +2706,48 @@ section('Category skill bonuses');
     check('an unadmitted cross-category pick scores nothing',
       categoryBonus(unbounded, { name: 'Prowl', category: 'Physical' }) === 0
       && categoryAllows(unbounded, { name: 'Prowl', category: 'Physical' }) === false);
+  }
+
+  // ── a save the sixteen fields do not name (F7) ────────────────────────────
+  // The Spacer's whole mechanical grant is "+2 to any saves against explosive
+  // decompression or other space dangers". Writing it as an invented key
+  // (`space_hazards: 2`) parsed and rendered nowhere; writing it as the nearest
+  // real one (`toxins_poisons: 2`) granted a resistance to venom the book never
+  // gave. `saves.other` is the third answer: labelled in the book's own words.
+  {
+    const ok1 = { saves: { horror_factor: 2, other: [{ label: 'vs vacuum', bonus: 2 }] } };
+    const e1 = [], w1 = [];
+    validateBonuses(ok1, e1, w1);
+    check('a labelled save validates alongside the keyed ones',
+      e1.length === 0 && w1.length === 0, [...e1, ...w1].join('; '));
+
+    // A LABEL IS THE WHOLE DESIGN. Without one this is the unrendered key it
+    // replaces, so an entry missing it is an error rather than a warning.
+    for (const [why, block] of [
+      ['a map instead of a list', { saves: { other: { label: 'x', bonus: 1 } } }],
+      ['an entry with no label', { saves: { other: [{ bonus: 2 }] } }],
+      ['an entry with a blank label', { saves: { other: [{ label: '  ', bonus: 2 }] } }],
+      ['an entry with no bonus', { saves: { other: [{ label: 'vs vacuum' }] } }],
+    ]) {
+      const e = [];
+      validateBonuses(block, e, []);
+      check(`saves.other rejects ${why}`, e.length > 0);
+    }
+
+    // Composed side by side, not summed: a race granting +3 vs radiation and an
+    // occupation granting +2 vs vacuum grant BOTH. The keyed saves still sum.
+    const merged = sumBonusGroups(
+      { saves: { horror_factor: 1, other: [{ label: 'vs radiation', bonus: 3 }] } },
+      { saves: { horror_factor: 2, other: [{ label: 'vs vacuum', bonus: 2 }] } });
+    check('two classes keep both labelled saves and still sum the keyed one',
+      merged.saves.horror_factor === 3 && merged.saves.other.length === 2
+      && merged.saves.other.map((e) => e.label).join('|') === 'vs radiation|vs vacuum');
+
+    // It must not leak into the derived save numbers - `other` is a list, and a
+    // list added to a chart value is how this would go wrong quietly.
+    const d = derive.classBonuses({ bonuses: ok1 }, 1, null);
+    check('a labelled save contributes nothing to the numeric save map',
+      d.saves.other === undefined && d.saves.horror_factor === 2);
   }
 
   // The restriction and the percentage arrive in one parenthetical on the page,

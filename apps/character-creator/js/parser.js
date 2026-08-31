@@ -317,7 +317,16 @@ function mergeBonusValue(have, incoming) {
 
 function mergeBonusBlock(a, b) {
   const merged = { ...(a || {}) };
-  for (const [k, v] of Object.entries(b || {})) merged[k] = mergeBonusValue(merged[k], v);
+  for (const [k, v] of Object.entries(b || {})) {
+    // `saves.other` is a LIST of labelled bonuses, not a keyed number
+    // (BOOK-INGEST-AUDIT.md F7). Summing it the way the numeric keys are summed
+    // would produce nonsense; it is concatenated by sumBonusGroups below, for
+    // the same reason `at_level` is - a race granting +2 against vacuum and an
+    // occupation granting +1 against radiation grant BOTH.
+    if (k === 'other') continue;
+    merged[k] = mergeBonusValue(merged[k], v);
+  }
+  delete merged.other;
   return merged;
 }
 
@@ -330,6 +339,9 @@ export function sumBonusGroups(a, b) {
     const merged = mergeBonusBlock(a?.[group], b?.[group]);
     if (Object.keys(merged).length) out[group] = merged;
   }
+  // The labelled saves both halves state, kept side by side (F7).
+  const otherSaves = [...(a?.saves?.other || []), ...(b?.saves?.other || [])];
+  if (otherSaves.length) out.saves = { ...(out.saves || {}), other: otherSaves };
   // at_level entries are kept side by side rather than merged by level:
   // classBonuses() folds every entry at or below the character's level anyway,
   // so two classes each granting +1 attack at level 5 correctly gives +2.
@@ -814,6 +826,9 @@ function validateBonusGroup(where, group, block, errors, warnings) {
     return;
   }
   for (const [k, v] of Object.entries(block)) {
+    // `saves.other` is a labelled list rather than a keyed number, and has its
+    // own validator (BOOK-INGEST-AUDIT.md F7).
+    if (group === 'saves' && k === 'other') continue;
     const dice = isDiceBonus(v);
     if (!dice && (typeof v !== 'number' || !Number.isFinite(v))) {
       errors.push(`${where}.${group}.${k} must be a number or a dice expression like "2d6"`);
@@ -823,6 +838,51 @@ function validateBonusGroup(where, group, block, errors, warnings) {
       warnings.push(`${where}.${group}.${k} is 0 and will do nothing`);
     }
   }
+}
+
+// A save the sixteen fixed fields do not name (BOOK-INGEST-AUDIT.md F7).
+//
+// `SAVE_FIELDS` in sheet.js is a literal list, and a book bonus outside it -
+// the Spacer's "+2 to any saves against explosive decompression or other space
+// dangers" - had nowhere to go. The parser accepted any key inside `saves` and
+// still does, which is what lets `mind_control` work without a schema change;
+// the cost was that `space_hazards: 2` parsed, validated and rendered NOWHERE.
+//
+// So the escape hatch is explicit and labelled in the book's own words rather
+// than mapped onto the nearest existing field. That mapping is the trap this
+// avoids: the Spacer's first draft wrote `toxins_poisons: 2`, which is a real,
+// rendered +2 against venom the book never granted.
+//
+// A LABEL IS REQUIRED, and that is the whole design. An unlabelled entry is
+// indistinguishable from the unrendered key this replaces.
+function validateSaveOther(where, list, errors, warnings) {
+  if (list === undefined || list === null) return;
+  if (!Array.isArray(list)) {
+    errors.push(`${where}.saves.other must be a list of { label, bonus }`);
+    return;
+  }
+  list.forEach((e, i) => {
+    const at = `${where}.saves.other[${i}]`;
+    if (!e || typeof e !== 'object' || Array.isArray(e)) {
+      errors.push(`${at} must be a map with a label and a bonus`);
+      return;
+    }
+    if (typeof e.label !== 'string' || !e.label.trim()) {
+      errors.push(`${at}.label is required - it is what the sheet shows in place of `
+        + 'a field name, so an entry without one renders as an unnamed number');
+    }
+    const dice = isDiceBonus(e.bonus);
+    if (!dice && (typeof e.bonus !== 'number' || !Number.isFinite(e.bonus))) {
+      errors.push(`${at}.bonus must be a number or a dice expression like "2d6"`);
+    } else if (e.bonus === 0) {
+      warnings.push(`${at}.bonus is 0 and will do nothing`);
+    }
+    for (const k of Object.keys(e)) {
+      if (k !== 'label' && k !== 'bonus' && k !== 'note') {
+        warnings.push(`${at}.${k} is not read (label, bonus, note)`);
+      }
+    }
+  });
 }
 
 // A flat number or a dice expression, keyed by pool. Dice are the common case —
@@ -891,6 +951,8 @@ export function validateBonuses(bonuses, errors, warnings, opts = {}) {
     }
   }
   for (const g of BONUS_GROUPS) validateBonusGroup('bonuses', g, bonuses[g], errors, warnings);
+
+  validateSaveOther('bonuses', bonuses.saves?.other, errors, warnings);
 
   validateAttributeMinimums(bonuses.attribute_minimums, errors);
 

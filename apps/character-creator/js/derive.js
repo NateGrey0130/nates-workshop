@@ -228,6 +228,13 @@
     const fold = (from) => {
       for (const group of ['attributes', 'combat', 'saves']) {
         for (const [k, v] of Object.entries(from?.[group] || {})) {
+          // `saves.other` is a LIST of labelled bonuses, not a keyed number
+          // (BOOK-INGEST-AUDIT.md F7). It has no chart to combine with and no
+          // field on the sheet to land in, so it does not belong in this map at
+          // all. Without this it read as an unrolled dice LIST and folded in as
+          // a zero — harmless arithmetic, and a key called `other` sitting in
+          // the numeric saves alongside `horror_factor`.
+          if (group === 'saves' && k === 'other') continue;
           // A number counts itself; a dice expression — or a list of them, once
           // two classes have been composed — counts what it actually rolled.
           const isDice = typeof v === 'string' || Array.isArray(v);

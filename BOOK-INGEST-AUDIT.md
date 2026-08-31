@@ -508,7 +508,55 @@ is the first class in this import whose ENTIRE mechanical grant is unstorable,
 and because the near-miss it invites is the kind of error nothing downstream can
 catch.
 
-**Open.**
+**Taken, 2026-08-31 (PR #426), as proposed.** `bonuses.saves.other` is a list of
+`{ label, bonus, note }`, rendered on the sheet after the sixteen and rollable in
+play mode, labelled in the book's own words.
+
+**Every premise held.** `validateBonusGroup` key-checks only `attributes`, so an
+unknown key inside `saves` still parses and renders nowhere - which is exactly
+what keeps `mind_control` working without a schema change, and exactly what made
+`space_hazards: 2` silent. Both halves confirmed by reading the code.
+
+**A label is required, and that is the whole design.** An unlabelled entry is
+indistinguishable from the unrendered key it replaces, so it is an ERROR rather
+than a warning. So is a non-list, a missing bonus and a blank label.
+
+**THREE THINGS THE PROPOSAL DOES NOT MENTION, EACH FOUND BY BUILDING IT.**
+
+1. **Composition had to be taught the shape.** `mergeBonusBlock` sums a group's
+   keys, and summing two LISTS is nonsense. `saves.other` is concatenated
+   instead, like `at_level`: a race granting +3 vs radiation and an occupation
+   granting +2 vs vacuum grant BOTH.
+2. **`derive.classBonuses` folded it in as a zero.** A list reads as an unrolled
+   dice bonus there, so `other: 0` appeared in the numeric saves map beside
+   `horror_factor`. Harmless arithmetic and wrong furniture; it is skipped
+   explicitly now.
+3. **The sheet row is READ-ONLY, deliberately.** `editField` needs a storage key
+   to write into and these are identified by free text, and there is nothing to
+   override - no chart contributed, so the printed number IS the value. It is
+   rollable in play mode, which is where a save is used.
+
+**Verified in the browser** on a real Spacer character: the row renders after the
+sixteen as *vs explosive decompression and other space dangers +2*, and play mode
+rolls it - `d20 11 + 2 = 13`, logged under the book's wording.
+
+`fix-labelled-saves.sql` stores two bonuses that were prose: the Spacer's +2
+(which had no `bonuses:` key at all, because there was nothing it could legally
+hold) and the Cosmo-Knight's +4 vs bio-wizard microbes and parasites, the half of
+its printed +4 that had no field. The Cosmo-Knight's `saves:` changes from an
+inline flow map to a block one so a list can hang off it; NO VALUE CHANGES. The
+Colonist's note is corrected in the same script - it cited the Spacer's save as
+an example of one with no field at all. Applied `--remote` before the PR.
+
+**The Vacuum Wasp cites F7 and is deliberately NOT covered.** Its case is
+`dogfighting`, a COMBAT field, and this proposal says `saves`. The same escape
+hatch under `bonuses.combat` is the obvious follow-up and is not taken here,
+because widening a taken finding's scope silently is how a menu stops meaning
+anything. Its note stays true and needed no edit.
+
+Smoke 1357 -> 1364, regression 212 unchanged.
+
+**Closed.**
 
 ### F8 - a FIXED attribute value in `attribute_dice` is silently replaced by 3d6
 
@@ -971,5 +1019,44 @@ finding, which is the correct and useless answer.
 **Not urgent, and it repairs nothing already shipped** - the five occurrences
 above are all corrected as of PR #425. What it buys is that the sixth is found
 by a command rather than by someone noticing.
+
+**Open.**
+
+### F13 - ten published classes carry a doubled apostrophe in their stored markdown
+
+Found while taking F7, by a `replace()` that would not match. The Colonist's
+note reads *unlike the Spacer''s decompression save* - two apostrophes, in the
+markdown as stored, not as escaped for SQL. An escaping was applied twice
+somewhere between the draft and the row.
+
+**Ten published classes are affected**, counted against production on
+2026-08-31: `imperial-security-agent`, `freedom-fighter`, `spacer`,
+`galactic-tracer`, `space-pirate`, `runner`, `colonist` and three more. Every
+one is a Phase World class, which narrows where to look.
+
+It is cosmetic and it is real: the text is rendered to the reader as written, so
+a class detail page shows `the Spacer''s` where the author wrote one apostrophe.
+Nothing computes on it and no number is affected.
+
+**It also makes a `fix-` script's guard fail in a way that reads as a missing
+row.** That is how this was found: a correction matched nothing, and the obvious
+conclusion - wrong class, wrong text, already applied - is wrong in a way that
+costs a while to see. The Colonist's occurrence is repaired in passing by F7's
+script, because that script had to match it to do its own job.
+
+**Proposal:** find the double-escape first, then sweep. Do NOT start with a
+blanket `replace(markdown, '''''''', '''''')` - a doubled apostrophe is legal
+inside a class's prose if the author meant it, and more importantly a sweep that
+does not know the cause will be needed again the next time an importer runs. The
+generator to check is `class-check --emit-script`, which doubles apostrophes when
+it splices markdown into the INSERT; the question is whether some path doubles
+them twice, and whether the affected ten came through one importer.
+
+**Posture: diagnose, then a one-off data script; no new gate.** A check that
+rejects `''` in stored markdown would be wrong - it is legal text - and this is
+a defect in one code path rather than a class of authoring error.
+
+**Nine remain.** The Colonist's was repaired as a side effect of F7 and the
+other nine are untouched.
 
 **Open.**
