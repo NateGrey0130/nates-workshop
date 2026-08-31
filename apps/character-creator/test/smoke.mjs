@@ -3898,6 +3898,57 @@ section('Variable spell costs');
 }
 
 // ---------- 1c26. Secondary schedules and group bonuses ----------
+section('Audit citation sweep');
+{
+  // BOOK-INGEST-AUDIT.md F12. A class's extraction note records both what the
+  // BOOK prints - permanent - and what the APP could do that day - perishable -
+  // in the same paragraph, and nothing swept the citers when a finding was
+  // taken. `scripts/audit-citations.mjs` turns "who mentions F8" into a command.
+  //
+  // WHAT IS PINNED HERE IS ITS POSTURE, not its output: the output depends on a
+  // live database and belongs to the person taking a finding.
+  const cites = readFileSync(join(repoRoot, 'scripts', 'audit-citations.mjs'), 'utf8');
+
+  // Executable lines only. The file EXPLAINS in prose why it does not read an
+  // outcome note, quoting the words those notes use - so a check that scanned
+  // the whole file would fail on the comment that exists to prevent the thing
+  // it is checking for. That is not hypothetical: INGESTION-AUDIT F14, the
+  // finding that DESCRIBES the outcome-note format, carries the note's own
+  // shape inside backticks and every grep reports it taken when it is open.
+  const code = cites.split('\n')
+    .filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l))
+    .join('\n');
+
+  check('the citation sweep reads no outcome note', (() => {
+    // The words an outcome note is written in. Any of them in EXECUTABLE code
+    // would mean it had started deciding whether a finding was taken.
+    return !/\b(Taken|Adjusted|Moot|Closed without)\b/.test(code);
+  })(), 'it must answer who cites what, never whether the finding still stands');
+
+  check('and sets no exit code of its own',
+    !/process\.exit|process\.exitCode|exitCode\s*=/.test(code),
+    'a gate here fires on every class citing a still-open finding');
+
+  // It has to know BOTH shapes the corpus uses. The Galactic Tracer writes
+  // "Filed as F6 in the Empire batch" and everything else writes the path;
+  // matching only the path missed a real citer.
+  check('and knows both citation shapes the corpus uses',
+    cites.includes('BOOK-INGEST-AUDIT') && cites.includes('Filed as'));
+
+  // The protocol half. Taking a finding already required an outcome note in the
+  // same PR; the step that was skipped is correcting the classes that cite it.
+  const menu = readFileSync(join(repoRoot, '.claude', 'skills', 'audit-menu', 'SKILL.md'), 'utf8');
+  check('the audit-menu skill requires citing classes to be corrected',
+    /Correct every class note that cites the finding/.test(menu));
+  check('and points at the command that lists them',
+    /audit-citations\.mjs/.test(menu));
+
+  // The convention half - where a note should draw the line in the first place.
+  const importSkill = readFileSync(join(repoRoot, '.claude', 'skills', 'class-import', 'SKILL.md'), 'utf8');
+  check('the class-import skill separates the permanent half from the perishable',
+    /extraction_notes/.test(importSkill) && /perishable/i.test(importSkill));
+}
+
 section('A class that supersedes its race');
 {
   // BOOK-INGEST-AUDIT.md F11. The Cosmo-Knight is a transformation, not a
