@@ -18,14 +18,39 @@ The FOURTH zero-offset book here, after `potm`, `ww` and `triax`. `book-survey`
 0d's warning applies: a zero offset leaves no discrepancy to explain when a page
 reads wrong.
 
+### The three page numbers, because they are not the same number
+
+| you want printed N | use |
+|---|---|
+| the cached OCR text | `.cache/books/phase-world/txt/pNNN.txt` — **N** |
+| `scripts/read-columns.py` | **N** (it calls `doc[n - 1]` itself) |
+| a `pymupdf` render or probe | **`doc[N - 1]`** |
+
+```python
+import pymupdf
+doc = pymupdf.open(pdf)
+doc[74 - 1].get_pixmap(dpi=200).save('p074.png')   # printed 74
+```
+
+**`page_offset: 0` describes the CACHE, not the PDF index**, and that is the
+whole reason these differ. `ocr-book.py` numbers its output by the folio it
+measured; the PDF's own index depends on how many unnumbered pages sit in front
+of folio 1, which varies book to book. `book-survey` 0d illustrates a
+zero-offset book as printed 16 -> `d[16]`, which is `potm`'s answer and is one
+higher than this book's. The registry note carries the same inheritance: it says
+`read-columns.py N+1` after potm, ww and triax, and here it is N.
+
+**Read the folio off the render every time.** It is free, it is printed at the
+bottom of the page, and it is the only check that catches this. The batch-4
+session rendered `doc[74]`, got printed **75**, and only noticed because the
+page was a full-page illustration where a stat block should have been.
+
 **Two corrections to the registry note, both measured this session.**
 
-- The note says `read-columns.py N+1`. It is **N**. `read-columns.py` calls
-  `doc[n - 1]`, and printed 150 renders from `doc[149]`, so printed N is
-  `read-columns.py N`. The distinction is moot in practice — this book has no
-  text layer, so `read-columns.py` returns an empty page for every number you
-  give it — but the number was wrong and would have been believed on a book
-  where it mattered.
+- The note says `read-columns.py N+1`. It is **N** — see the table above.
+  The distinction is moot in practice for this book, which has no text layer, so
+  `read-columns.py` returns an empty page for every number you give it. It was
+  still wrong, and it would have been believed on a book where it mattered.
 - The note says printed **203-208** are blank character record sheets. The real
   range is **184-208**, twenty-five pages: three generic sheets (184-186) and
   twenty-two per-class ones (187-208). The note's *rule* is right and is the
@@ -509,6 +534,7 @@ What is deliberately left, with the reason for each:
 | 2026-08-30 | [#411](https://github.com/NateGrey0130/nates-workshop/pull/411) | **classes, batch 4 - the Transgalactic Empire races**: Kreeghor, Machine People, Silhouette (printed 73-81). Catalog 137 -> 140 classes. Also `fix-noro-psionic-schedules.sql`, correcting a psionic power schedule both noro O.C.C.s shipped wrong in #409, and the survey correction that moves the Royal Kreeghor out of the playable list. Finding F5 filed. Applied `--remote` before the PR. |
 | 2026-08-30 | [#412](https://github.com/NateGrey0130/nates-workshop/pull/412) | **classes, batch 5 - the Transgalactic Empire O.C.C.s**: Imperial Legionnaire, Imperial Security Agent, Freedom Fighter (printed 82-84). Catalog 140 -> 143 classes. The Empire chapter is complete. Finding F6 filed. Applied `--remote` before the PR. |
 | 2026-08-30 | [#413](https://github.com/NateGrey0130/nates-workshop/pull/413) | **classes, batch 6 - the five spacefaring trades**: Spacer, Galactic Tracer, Space Pirate, Runner, Colonist (printed 38-43). Catalog 143 -> 148 classes. Finding F7 filed. Applied `--remote` before the PR. |
+| 2026-08-31 | [#414](https://github.com/NateGrey0130/nates-workshop/pull/414) | survey: the three page numbers - cache pNNN, read-columns.py N, pymupdf doc[N-1] - written out as a table, after a batch-4 render came back one page late. No data. |
 
 ### What remains
 
