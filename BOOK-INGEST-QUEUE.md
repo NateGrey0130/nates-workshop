@@ -31,17 +31,28 @@ and registers, by design.
 
 ### `phase-world` progress, 2026-08-31
 
-Fourteen PRs - eight carrying data, each applied `--remote` before merging, and
+Fifteen PRs - nine carrying data, each applied `--remote` before merging, and
 six carrying survey, docs or a correction. Catalog totals moved 336 -> 345
-skills, 975 -> 1021 gear, 126 -> 151 classes.
+skills, 975 -> 1021 gear, 126 -> 154 classes.
 
 | category | in | left |
 |---|---|---|
 | skills | **9** - 7 new plus 2 the CCW classes turned up (Fighter Combat: Basic and Elite, printed 151) | none known; the book collects its new skills on printed 52-53 and 150-151 and both were read whole |
 | re-citations | **8** rows moved off the phantom `Rifts Skill List` onto printed 52-53 and 150-151, taking it from 48 untraceable rows to 40 | the other 40, which are not this book's |
 | gear | **44** - 43 from printed 114-129, every number read off a 200 dpi render, plus one STUB the Repo-Bot needed. The Plasma Hand Cannon appears exactly once in this book, in that class's equipment line, with its 2D6x10 M.D. and nothing else; it is stat-blocked nowhere, so the row carries the class-import stub marker rather than invented stats | none in that range |
-| classes | **25** of 34. The CCW, printed 56-70: four O.C.C.s, the noro and its two O.C.C.s, Space Wolfen, Wolfen Quatoria, Catyr, Seljuk. The Transgalactic Empire, printed 73-84: Kreeghor, Machine People, Silhouette, Imperial Legionnaire, Imperial Security Agent, Freedom Fighter. The five spacefaring trades, printed 38-43: Spacer, Galactic Tracer, Space Pirate, Runner, Colonist. Two races and the Naruni enforcer, printed 35-38 and 46-48: Draconid, Phantom, Naruni Repo-Bot | **9** - the Prometheans (24-31), Pleasurer (88-90), the Star Hives (92-94) and the Cosmo-Knights (99-104) |
+| classes | **28** of 34. The CCW, printed 56-70: four O.C.C.s, the noro and its two O.C.C.s, Space Wolfen, Wolfen Quatoria, Catyr, Seljuk. The Transgalactic Empire, printed 73-84: Kreeghor, Machine People, Silhouette, Imperial Legionnaire, Imperial Security Agent, Freedom Fighter. The five spacefaring trades, printed 38-43: Spacer, Galactic Tracer, Space Pirate, Runner, Colonist. Two races and the Naruni enforcer, printed 35-38 and 46-48: Draconid, Phantom, Naruni Repo-Bot. The Pleasurer and the two playable hive-spawn, printed 88-89 and 92-94: Pleasurer, Vacuum Wasp, Termite Engineer | **6** - the Prometheans (24-31) and the Cosmo-Knights (99-104) |
 | spells, psionics | n/a | the book defines **zero** of either, checked by stat-block scan rather than assumed |
+
+**Batch 8 added no skills and no gear, and that is the entry's own doing rather
+than an omission.** None of the three states a `Money:` line, a
+`Standard Equipment:` line or a Cybernetics line - grepped across the whole
+Star Hives chapter, printed 88 to 95, and there is not one of any of them on
+any of the five entries there, playable or NPC. The Termite Engineer's Chitin
+Molding, the one percentage in the batch with no catalog row behind it, is
+deliberately NOT made a skills row: the book defines it inside one race's
+R.C.C. Skills line and nowhere else, and a skills row would offer it to every
+class granting whatever category it was filed under. It is a natural ability
+carrying both of its numbers instead.
 
 **What is deliberately not imported, and will not be by a later batch either:**
 the book's 25 vessels - 6 power armor and robots, 5 tanks, 14 starships and
@@ -68,7 +79,7 @@ player-characters", and p.183 gives it no ladder. The Contents does not label it
 and the survey read the Contents. It is the only entry in the book where the
 heading and the Contents disagree about that.
 
-Seven findings have come out of this book so far - F2 through F8 in
+Eight findings have come out of this book so far - F2 through F9 in
 `BOOK-INGEST-AUDIT.md`. None was implemented, per the standing constraint. F5 is
 `attribute_dice` having no way to say an attribute DOES NOT EXIST: the Machine
 People print "P.E. N/A" and `app.js` falls back to `3d6`, so the sheet shows a
@@ -88,12 +99,36 @@ an attribute does not exist, F8 is a class that says the attribute is 50 and is
 not heard. A sweep of all 148 published classes found one already carrying it,
 the Holy Terror's `PS: "50"` from Wormwood, which has had a human's strength
 since it was imported with every check calling it ready. The Repo-Bot does not
-write it; both figures are prose in a natural ability.
+write it; both figures are prose in a natural ability. F9 is a cross-category
+`only` pick LOSING THE PERCENTAGE PRINTED BESIDE IT: both playable hive-spawn
+print "Rogue: Prowl only (+5%)", the catalog files Prowl under Physical, and
+`categoryAllows` admits the skill while `categoryBonus` - which keys on the
+skill's real category, deliberately and for a good reason - drops the +5%. The
+picker still shows the player the +5%, so the wizard promises what the sheet
+does not give. A sweep of every published class found exactly three rows in
+this shape, one of them the Phaeton Juicer, so it did not arrive with this
+book.
+F5 has also gained a second occurrence: the Pleasurer prints "P.B. N/A", and
+unlike the Machine People's P.E. it is not moot - a shapeshifter whose whole
+trade is appearance is shown a rolled beauty score the book denies it.
 F3 has since gained a second occurrence: the Noro Mystic Warrior is issued a
 suit of psionic power armour as standard equipment, and that suit is one of the
 25 vessels the finding excludes, so the class ships without the one item its own
 book says it starts with. That is a sharper cost than a GM being unable to look
 a starship up.
+
+**A third correction, and it is a different mistake from the first two.**
+`fix-galactic-tracer-rogue-note.sql` corrects two claims PR #413 shipped about
+this book's +6% Rogue bonus - that the figure appears twice on printed 40, and
+that the book uses it nowhere else. It appears once, and the book prints the
+same +6% for the Noro Mystic Warrior on printed 64 and for the Pleasurer on
+printed 89; all three store 6, so the catalog was contradicting the note when it
+was written. No number moved and no character changed. The reason to fix it is
+that the next session reading the tracer would take a +6% elsewhere in this book
+for an OCR error to be normalised to +5, which is exactly the reading the
+Pleasurer import had to talk itself out of. **Tally the cache before writing
+"the only" into a note** - `grep -ohE '\(\+[0-9]+%\)' | sort | uniq -c` over
+the whole book answers it and costs nothing.
 
 **Two corrections have been shipped against classes this batch already
 imported**, both the same mistake: an extraction note asserting the app could not

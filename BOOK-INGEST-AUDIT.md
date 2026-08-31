@@ -242,8 +242,16 @@ Cheaper alternative if that is too wide: leave the roll alone and add the
 absence to the parser as a warning, so at least the import is told. That fixes
 nothing and is not recommended; it is here because it is one line.
 
-Only one class in this book needs it, which is why this is filed rather than
-built. It is the first attribute-shaped hole to turn up, and it is the same
+**Second occurrence, 2026-08-31: the Pleasurer R.C.C., printed 89**, whose
+attribute line reads "P.B. N/A". A pleasurer wears whatever face its client
+wants, so beauty is not a number it has, and the import omits the key for the
+same reason the Machine People's P.E. is omitted. This one is closer to the
+case the paragraph above predicted than the Machine People was: P.B. is not
+moot for a shapeshifting entertainer whose whole trade is appearance, and the
+sheet shows it a rolled ten or so.
+
+Two classes in this book need it now, which is still why this is filed rather
+than built. It is the first attribute-shaped hole to turn up, and it is the same
 shape as F2 - a column that holds one kind of value being asked to hold the
 statement *there is no value*.
 
@@ -428,5 +436,66 @@ other direction. It also could not have stored the P.P. even if this were
 fixed: the book heads that stat block **"Bonuses (Includes P.P. bonuses)"**, so
 the printed +8 to strike, parry and dodge already contains it, and `derive.js`
 would have added its own `pp_combat` bonus on top.
+
+**Open.**
+
+### F9 - a cross-category `only` pick silently loses the percentage printed beside it
+
+Two classes in the Star Hives chapter - the Vacuum Wasp (printed 93) and the
+Termite Engineer (printed 94) - print the same related-skill line:
+
+  Rogue: Prowl only (+5%)
+
+The catalog files Prowl under **Physical**, not Rogue. `categoryAllows` in
+`js/parser.js` handles that half correctly and deliberately: a cross-category
+`only` is admitted as long as the class also lists the skill's real category,
+which both of these do. The skill is reachable and the grant works.
+
+The percentage does not survive the trip. `categoryBonus`, ten lines above it,
+looks the bonus up by the skill's **real** category:
+
+```js
+const entry = categories.find((c) => normName(categoryName(c)) === normName(skill?.category));
+```
+
+so a Prowl taken by a vacuum wasp resolves against the class's *Physical* entry,
+which carries no bonus, and the +5% the book printed beside Rogue is dropped.
+The player is still shown the label `Rogue (Prowl only; +5%)`, because
+`categoryLabel` reads the entry the book wrote rather than the catalog's
+filing - so the wizard promises a bonus the sheet does not give.
+
+**That keying is deliberate and its reason is sound.** The comment above
+`categoryBonus` names the case it exists for: the Glitter Boy's "Espionage:
+Wilderness Survival only", where handing a Wilderness skill an Espionage bonus
+would invent one the book never printed. The gap is that the rule cannot tell
+the two apart - a cross-category line with **no** printed percentage, where
+inheriting one would be wrong, from a cross-category line **with** one, where
+dropping it is wrong.
+
+**How many rows this touches: three, swept rather than estimated.** Parsing
+every published class against `SELECT name, category FROM skills` on
+2026-08-31 found exactly three category entries that carry both an `only`
+naming a skill the catalog files elsewhere and a non-zero `bonus`:
+
+| class | entry | names | catalog files it under |
+|---|---|---|---|
+| `phaeton-juicer` | Espionage (+5%) | Wilderness Survival | Wilderness |
+| `vacuum-wasp` | Rogue (+5%) | Prowl | Physical |
+| `termite-engineer` | Rogue (+5%) | Prowl | Physical |
+
+The first predates this book, so this is not a Phase World problem that arrived
+with Phase World; it is one this book made visible.
+
+**Proposal:** score a pick against the entry that ADMITTED it. When a skill is
+admitted by a cross-category `only`, use that entry's bonus; otherwise keep the
+present behaviour. That is the same "the more specific statement wins" rule
+`categoryAllows` already applies one function away, and it leaves the Glitter
+Boy alone - its Espionage entry names Wilderness Survival with no percentage,
+so there is nothing to inherit.
+
+Cheaper alternative: have `class-check`'s existing `cross-category` report say
+when the entry carries a bonus, so the import at least knows the number is
+being dropped. It fixes no character, and it would have turned this up in batch
+6 rather than batch 8.
 
 **Open.**
