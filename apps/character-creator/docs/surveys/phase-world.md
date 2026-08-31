@@ -205,7 +205,7 @@ XP ladders are shared; the column names the ladder as printed on p.183.
 | Imperial Legionnaire | 82 | TVIA Agent, CAF Fleet Officer, Imperial Legionnaire |
 | Imperial Security Agent | 82-83 | Freedom Fighter & Imperial Security / Galactic Tracer, Runner |
 | Freedom Fighter | 83-84 | Freedom Fighter & Imperial Security / Galactic Tracer, Runner |
-| Pleasurer | 88-90 | Pleasurer & Termite Engineers |
+| Pleasurer | 88-89 | Pleasurer & Termite Engineers |
 | Vacuum Wasp | 92-93 | Machine People & Phantom / Vacuum Wasps |
 | Termite Engineer | 93-94 | Pleasurer & Termite Engineers |
 | Cosmo-Knight | 99-102 | Cosmo-Knight |
@@ -548,6 +548,69 @@ Phase 4 costs money; everything above was free.
      that gap as "span ends near the bottom of the page" and shows the noise,
      which is the tell. Render the intervening page rather than assuming a
      numbered list is contiguous.
+
+   - **A CHAPTER CAN INTERLEAVE PLAYABLE ENTRIES WITH NPC ONES, IN THE SAME
+     COLUMN.** The Star Hives run Killer Beetles (NPC, 91-92), Vacuum Wasp
+     (playable, 92-93), Termite Engineer (playable, 93-94), Worker Ants (NPC,
+     94-95), Hive Queen (95-96), and printed 92 and printed 94 each carry one of
+     each. The money check `--field-sources` exists for could not fire here -
+     grepping printed 88-95 finds NO `Money:` and NO `Standard Equipment:` line
+     at all, on any of the five - so the whole risk sat in the stat blocks and
+     the category lists, and the only defence was reading each entry's own
+     column off a render. The reconcile pass found no crossed numbers and DID
+     find one crossed sentence: a natural-ability description that had borrowed
+     the Killer Beetles' remark about attacking the spawn of OTHER hives, from
+     their paragraph on printed 91. Prose bleeds before numbers do.
+
+   - **THE BOOK'S ODD PERCENTAGES ARE REAL, AND THEY ARE NOT ONE-OFFS.** Nine
+     hundred-odd percentages in this book are multiples of five; ten are not.
+     `(+6%)` appears three times, always as `Rogue: Any (+6%)` - printed 40
+     (Galactic Tracer), printed 64 (Noro Mystic Warrior), printed 89
+     (Pleasurer) - and `(+8%)` and `(+12%)` once each, both on printed 42
+     (Runner). All six rows store what is printed. The Galactic Tracer shipped
+     in #413 saying its +6% was unique to it and appeared on its page twice;
+     both halves were false and `fix-galactic-tracer-rogue-note.sql` corrects
+     them. **Tally the whole cache before writing "the only" into a note** -
+     one `grep -ohE '\(\+[0-9]+%\)' | sort | uniq -c` answers it, and it is
+     free. Two of batch 7's notes and two of batch 6's failed this way.
+
+   - **A PARENTHESISED SECOND ATTRIBUTE IS A DIFFERENT CREATURE, AND THE SKILL
+     LIST DECIDES WHICH ONE YOU ARE IMPORTING.** Both hive classes print
+     "I.Q. 2D6 (3D6)" or "I.Q. 3D6 (3D6+6)" and say the parenthetical is for the
+     sentient ones. The R.C.C. Skills line then says outright that the normal
+     ones have no skills at all. Import the skill list and you have imported the
+     sentient creature, so the parenthetical I.Q. is the one that belongs beside
+     it; storing the low figure with the high creature's skills describes
+     neither.
+
+   - **A CROSS-CATEGORY `only` KEEPS THE SKILL AND LOSES THE PERCENTAGE.**
+     "Rogue: Prowl only (+5%)" works - `categoryAllows` admits the name because
+     the class also lists Physical, which is where the catalog files Prowl - but
+     `categoryBonus` keys on the skill's REAL category, so the +5% lands
+     nowhere while the picker still shows the player "Rogue (Prowl only; +5%)".
+     Deliberate, and its reason is good; it just cannot tell a cross-category
+     line WITH a printed percentage from one without. Three rows in the whole
+     catalog are affected, swept rather than guessed. Filed as F9.
+
+   - **A PERCENTAGE STATED OUTSIDE THE SKILL LIST MAY STILL BE A SKILL.** The
+     Pleasurer's shapeshifting gives "Disguise ability equal to 70% +2% per
+     level", printed under Natural Abilities. The catalog has a Disguise row and
+     the entry keys `base` and `per_level` say exactly that, so it is granted as
+     a skill rather than described in prose. The Termite Engineer's "Chitin
+     Molding 50% +2% per level" is the same sentence with the opposite answer:
+     no catalog row, one race, and a new skills row would offer it to every
+     class granting whatever category it was filed under. The test is whether
+     the catalog already holds the row, not whether the book calls it a skill -
+     the book calls both of them skills.
+
+   - **AN S.D.C. LINE READING "PLUS SKILL AND O.C.C. BONUSES" IS A POOL BONUS.**
+     The Pleasurer's "1D6x10 + 40 S.D.C. plus skill and O.C.C. bonuses" is the
+     cumulative shape, so it is `bonuses.pools.sdc` and not `sdc_base` - written
+     as a base it would REPLACE the occupation's roll. The consequence is easy
+     to miss: a pool bonus cannot conjure a pool into existence, so a race with
+     no occupation then has no S.D.C. at all unless the class also gets a
+     `CORE_SDC_BY_CLASS` entry. That entry is the one code change this book is
+     allowed, and it is required rather than optional.
  The p.183 ladders group classes that
    share an XP table, and classes that share a ladder sit in the same chapter, so
    the ladder is also the cheapest batching. Order by how much the app can
@@ -597,6 +660,7 @@ What is deliberately left, with the reason for each:
 | 2026-08-30 | [#413](https://github.com/NateGrey0130/nates-workshop/pull/413) | **classes, batch 6 - the five spacefaring trades**: Spacer, Galactic Tracer, Space Pirate, Runner, Colonist (printed 38-43). Catalog 143 -> 148 classes. Finding F7 filed. Applied `--remote` before the PR. |
 | 2026-08-31 | [#414](https://github.com/NateGrey0130/nates-workshop/pull/414) | survey: the three page numbers - cache pNNN, read-columns.py N, pymupdf doc[N-1] - written out as a table, after a batch-4 render came back one page late. No data. |
 | 2026-08-31 | [#415](https://github.com/NateGrey0130/nates-workshop/pull/415) | **classes, batch 7 - two races and the Naruni enforcer**: Draconid (printed 35-36), Phantom (36-38) and the Naruni Repo-Bot (46-48). Catalog 148 -> 151 classes, 1020 -> 1021 gear (a `plasma-hand-cannon` stub; the weapon appears once in the whole book and is stat-blocked nowhere). Finding F8 filed, with a sweep of all 148 published classes behind it. The Repo-Bot's category corrected away from its own heading; see the Quick Find section. Applied `--remote` before the PR. |
+| 2026-08-31 | [#416](https://github.com/NateGrey0130/nates-workshop/pull/416) | **classes, batch 8 - the Pleasurer and two hive-spawn**: Pleasurer (printed 88-89), Vacuum Wasp (92-93) and Termite Engineer (93-94). Catalog 151 -> 154 classes; no new skills and no new gear, because none of the three states any. Also `fix-galactic-tracer-rogue-note.sql`, correcting two false claims #413 shipped about the book's +6%. Finding F9 filed, with a three-row sweep behind it, and the Pleasurer added to F5 as its second occurrence. One `CORE_SDC_BY_CLASS` entry in `js/compose.js`, for the Pleasurer. Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -607,19 +671,25 @@ What is deliberately left, with the reason for each:
   pf                 583 / 3
   bom                412 / 0
   ww                 130 / 0
-  phase-world         84 / 0
+  phase-world         91 / 0
   ju                  62 / 0
   rifts-skill-list     0 / 40
 ```
 
-**`phase-world` is 84 traceable and 0 other.** Every row citing this book names a
-page range this machine holds - 9 skills, 8 re-citations, 43 gear and 22 class
-citations - which is what `traceable` means and all it means. It does not say the
-numbers are right; the gear script's own defence for that is the fourteen 200 dpi
-renders it was read from, and each class batch has its own.
+**`phase-world` is 91 traceable and 0 other.** Every row citing this book names a
+page range this machine holds, across skills, gear and classes, which is what
+`traceable` means and all it means. It does not say the numbers are right; the
+gear script's own defence for that is the fourteen 200 dpi renders it was read
+from, and each class batch has its own.
 
-It was 66 after the first four PRs, 73 after batch 3, 76 after batch 4 and 79
-after batch 5. Each class adds one.
+The per-table breakdown this paragraph used to spell out is deliberately gone.
+It said "9 skills, 8 re-citations, 43 gear and 22 class citations" beside a
+total of 84, and those four numbers add to 82. Nothing checks a hand-kept
+breakdown, and this one was already wrong. Re-run `source-coverage.mjs
+--remote` for the total; it is the only figure here that any tool produces.
+
+It was 66 after the first four PRs, 73 after batch 3, 76 after batch 4, 79
+after batch 5, 84 after batch 6 and 88 after batch 7. Each class adds one.
 
 **`rifts-skill-list` is down from 48 to 40** and will not go lower from this
 book. The remaining 40 are `not-cached` and permanently so: the citation names a

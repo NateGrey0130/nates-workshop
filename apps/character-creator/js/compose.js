@@ -293,6 +293,16 @@ export const CORE_SDC_BY_CLASS = {
   'spacer': '1D6',
   'runner': '1D6',
   'colonist': '1D6',
+
+  // The Pleasurer R.C.C., printed 88-89, and the only class in the Star Hives
+  // batch that needs an entry: the Vacuum Wasp and the Termite Engineer are
+  // mega-damage beings and carry their own mdc_base.
+  //
+  // Its S.D.C. is a POOL BONUS - "1D6x10 + 40 S.D.C. plus skill and O.C.C.
+  // bonuses" - so the race states no S.D.C. FORMULA and the core rule reaches
+  // it, with the 1D6x10+40 landing on top. Same shape as the Space Wolfen's 30
+  // above. 1D6 because a race always takes 1D6 here.
+  'pleasurer': '1D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence
