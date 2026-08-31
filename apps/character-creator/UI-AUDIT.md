@@ -374,7 +374,7 @@ add the `:focus-visible` rule from F16 so the focus lands somewhere visible. Shi
 starting a character, and `.pick` is styled as a block so the `<button>` swap needs
 `display: block; width: 100%; text-align: left` and will want its own screenshot pass.
 
-**Partly taken, 2026-08-31 (PR #N) — the `.pick` cards only.** Split into two PRs
+**Partly taken, 2026-08-31 (PR #445) — the `.pick` cards only.** Split into two PRs
 by the finding's own instruction to ship those first and alone. **F5 stays open**
 for the stepper (`app.js:543`), the NPC row (`campaign.js:321`) and the 345
 catalog rows (`catalog.js:301`).
