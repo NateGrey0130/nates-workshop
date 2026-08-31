@@ -554,7 +554,9 @@ if (noCatalog || fieldSources) {
         console.log(`      ${g.category} only: "${g.name}" - the catalog files it under ${g.actual ?? 'no category'}`);
       }
       console.log('      These work: the class lists that category too, so the name');
-      console.log('      match is admitted - which is what the book means.');
+      console.log('      match is admitted - which is what the book means. Since');
+      console.log('      BOOK-INGEST-AUDIT.md F9, a percentage printed on the admitting');
+      console.log('      entry is applied to the pick as well, so nothing is dropped.');
     }
 
     if (noop.length) {

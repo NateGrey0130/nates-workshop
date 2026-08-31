@@ -642,14 +642,45 @@ export function categoryLabel(entry) {
 
 // The percentage this category list adds to a RELATED pick of `skill`, or 0.
 //
-// Deliberately keyed on the skill's REAL catalog category rather than on
-// whichever entry `categoryAllows` used to admit it. A cross-category `only`
-// entry says "you may spend a pick here on this skill"; it does not say the
-// skill joins that category for scoring, and reading it that way would hand the
-// Glitter Boy's Wilderness Survival an Espionage bonus it was never printed.
+// Keyed on the skill's REAL catalog category, with ONE exception: an entry that
+// admitted this pick through a cross-category `only` AND carries a percentage
+// of its own scores it (BOOK-INGEST-AUDIT.md F9).
+//
+// The default is deliberate and stays. A cross-category `only` entry says "you
+// may spend a pick here on this skill"; it does not by itself say the skill
+// joins that category for scoring, and reading it that way unconditionally
+// would hand the Glitter Boy's Wilderness Survival an Espionage bonus that was
+// never printed.
+//
+// What the default could not tell apart is a cross-category line with NO
+// printed percentage, where inheriting one would invent it, from a line WITH
+// one, where dropping it loses what the book printed. Two classes print
+// "Rogue: Prowl only (+5%)", the catalog files Prowl under Physical, and the
+// +5% landed nowhere while the picker still showed the player "Rogue (Prowl
+// only; +5%)" - the wizard promising what the sheet did not give.
+//
+// THE `!== 0` GUARD IS LOAD-BEARING and is why this is not simply "the
+// admitting entry wins". Swept across every published class, EIGHTEEN picks are
+// admitted by a cross-category `only` and only THREE of them name a percentage.
+// Of the other fifteen, three sit on a real category that DOES pay - the
+// Glitter Boy's Wilderness at +2%, the Combat Cyborg's Military at +10%, the
+// CAF Trooper's Wilderness at +5% - so an unconditional swap would have taken
+// those three to zero. The specific statement wins only where the book made one.
 export function categoryBonus(categories, skill) {
   if (!Array.isArray(categories) || !categories.length) return 0;
-  const entry = categories.find((c) => normName(categoryName(c)) === normName(skill?.category));
+  const name = normName(skill?.name);
+  const real = normName(skill?.category);
+  // Bounded exactly as categoryAllows bounds the same rule: the class must also
+  // list the skill's real category, or the pick was never admitted this way.
+  if (name && categories.some((c) => normName(categoryName(c)) === real)) {
+    const admitting = categories.find((c) => c && typeof c === 'object'
+      && normName(categoryName(c)) !== real
+      && Array.isArray(c.only) && c.only.some((n) => normName(n) === name));
+    if (admitting && Number.isFinite(admitting.bonus) && admitting.bonus !== 0) {
+      return admitting.bonus;
+    }
+  }
+  const entry = categories.find((c) => normName(categoryName(c)) === real);
   if (!entry || typeof entry === 'string') return 0;
   return Number.isFinite(entry.bonus) ? entry.bonus : 0;
 }
