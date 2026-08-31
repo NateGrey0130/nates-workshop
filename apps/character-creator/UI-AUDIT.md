@@ -967,6 +967,27 @@ minimum, under the 44×44 the app's own `.tabbar .tab` sets for itself.
 in the equipment row renderer and on the sheet's inventory rows. Do not resize them in
 this PR — that changes row height everywhere.
 
+**Taken, 2026-08-31 (PR #N).** Both renderers, `aria-label` and `title`, and the
+buttons are **not** resized — still 32×24, as the finding required.
+
+**One correction: not every `✕` was bare.** The enchantment remove button
+(`sheet.js:1757`) already carried `title="Remove this enchantment"`, and a
+`title` is an accessible name, so that one always had one. It is left alone. The
+two that were genuinely nameless were the wizard's equipment table and the
+sheet's inventory rows, and both are fixed.
+
+**The label needed a second escape.** `escHtml()` builds its output through
+`textContent`, which escapes `&`, `<` and `>` but leaves `"` alone — fine for
+text, wrong inside an attribute, where a custom item name carrying a double quote
+would have ended it early. The labels take one more pass, and the live proof is a
+catalog row that happens to be named `"Rolling Thunder" All-Purpose Vehicle`: its
+button's `aria-label` reads `Remove "Rolling Thunder" All-Purpose Vehicle`
+intact, where without the pass the name would have been cut at `Remove `.
+
+Measured on the audit character's Gear tab: 23 remove buttons, 23 distinct
+labels, no duplicates. (The finding's 21 was the Equipment step's count for a
+different build — both figures are content-dependent.)
+
 ---
 
 ### F23 — low — Filtering one skill column to nothing leaves a 5,606px empty column beside the other

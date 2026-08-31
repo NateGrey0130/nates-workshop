@@ -2275,10 +2275,17 @@ function toggleGearPick(gi, slug, limit) {
 }
 function renderEquipment() {
   initEquipment();
-  const rows = S.equipment.map((e, i) =>
-    `<tr><td>${esc(e.name || e.custom_name)}</td><td>×${e.qty}</td>
+  const rows = S.equipment.map((e, i) => {
+    // The remove button's entire accessible name was the glyph, so a reader met
+    // twenty-one identical "✕" with nothing to say which row each belonged to.
+    // escHtml() does not escape quotes and this goes inside an attribute, so a
+    // custom item name gets one more pass before it lands there.
+    const label = `Remove ${esc(e.name || e.custom_name)}`.replace(/"/g, '&quot;');
+    return `<tr><td>${esc(e.name || e.custom_name)}</td><td>×${e.qty}</td>
      <td><span class="tag">${e.source}</span></td><td class="muted small">${esc(e.notes || '')}</td>
-     <td><button class="btn btn-sm btn-ghost" onclick="rmEquip(${i})">✕</button></td></tr>`).join('');
+     <td><button class="btn btn-sm btn-ghost" aria-label="${label}" title="${label}"
+       onclick="rmEquip(${i})">✕</button></td></tr>`;
+  }).join('');
   // Filtered rather than dumped: the gear catalog is 74 rows and grows with
   // every book imported, and picking one item out of a native dropdown that
   // long means scrolling past everything you did not want.
