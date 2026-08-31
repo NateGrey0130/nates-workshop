@@ -1386,6 +1386,28 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     drifted.length === 0, drifted.slice(0, 5).join('; '));
 }
 
+// ---------- a pool formula copied from its neighbour ----------
+// BOOK-INGEST-AUDIT.md F17. The Crazy's `isp_base` was "6d6" where its book
+// prints "6D6 plus the M.E. attribute number, +1D6 per level" - and two lines
+// below on the same page sits "P.P.E. Base: 6D6 P.P.E.", which the class stores
+// correctly. Two adjacent figures, identical at a glance, only one carrying the
+// extra terms.
+//
+// An INVARIANT rather than a fix: a class whose I.S.P. and P.P.E. formulas are
+// the identical string is not proof of anything, but it is the shape this error
+// takes and it costs one comparison to ask. Zero across the corpus after F17.
+{
+  const classes = (await api('GET', '/classes?limit=200')).body.classes || [];
+  const twins = classes.filter((c) => {
+    const isp = c.psionics?.isp_base, ppe = c.ppe_base;
+    return isp && ppe && String(isp).trim().toLowerCase() === String(ppe).trim().toLowerCase();
+  });
+  check('no class states the same formula for its I.S.P. and its P.P.E.',
+    twins.length === 0,
+    twins.map((c) => `${c.id}: ${c.ppe_base}`).join('; ')
+      + ' - check the page; the two sit next to each other in a stat block');
+}
+
 // ---------- psionic category vocabulary ----------
 // BOOK-INGEST-AUDIT.md F15. `categories_allowed` gates the psionic picker by
 // EXACT category name, and the Crazy asked for "Psychic Sensitive" and
