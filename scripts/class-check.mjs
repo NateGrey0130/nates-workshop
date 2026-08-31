@@ -166,6 +166,28 @@ for (const [attr, expr] of Object.entries(data?.attribute_dice ?? {})) {
     + 'roll 3d6 instead, and report the notation as 3d6.');
 }
 
+// A DRAFT whose prose already carries doubled apostrophes has been escaped for
+// SQL too early, and `--emit-script` will double them AGAIN: the row then stores
+// "the Spacer''s decompression save" and renders it to the reader exactly so.
+// BOOK-INGEST-AUDIT.md F13 - ten Phase World classes shipped that way, and it
+// was found only because a later fix script's guard would not match.
+//
+// A WARNING, NOT AN ERROR, and it moves no exit code. A doubled apostrophe is
+// legal prose if the author meant it, and F13's posture is explicit that a gate
+// on it would be wrong. Every one of the thirty-six real occurrences was a
+// possessive, so the odds are strongly one way - but "strongly" is what a
+// warning is for.
+{
+  const doubled = [...String(markdown ?? '').matchAll(/''/g)];
+  if (doubled.length) {
+    const where = doubled.slice(0, 3)
+      .map((m) => JSON.stringify(markdown.slice(Math.max(0, m.index - 24), m.index + 8).replace(/\s+/g, ' ')));
+    warnings.push(`${doubled.length} doubled apostrophe(s) in the draft `
+      + `- ${where.join(', ')}. If these are SQL escaping, remove them: `
+      + '--emit-script doubles apostrophes itself, and the row would store both.');
+  }
+}
+
 const list = (label, items) => {
   if (!items.length) return;
   console.log(`\n${label} (${items.length})`);
