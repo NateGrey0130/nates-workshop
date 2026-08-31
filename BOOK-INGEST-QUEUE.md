@@ -31,15 +31,15 @@ and registers, by design.
 
 ### `phase-world` progress, 2026-08-30
 
-Four PRs, each applied `--remote` before merging. Catalog totals moved
-336 -> 345 skills, 975 -> 1020 gear, 126 -> 130 classes.
+Seven PRs, each applied `--remote` before merging. Catalog totals moved
+336 -> 345 skills, 975 -> 1020 gear, 126 -> 133 classes.
 
 | category | in | left |
 |---|---|---|
 | skills | **9** - 7 new plus 2 the CCW classes turned up (Fighter Combat: Basic and Elite, printed 151) | none known; the book collects its new skills on printed 52-53 and 150-151 and both were read whole |
 | re-citations | **8** rows moved off the phantom `Rifts Skill List` onto printed 52-53 and 150-151, taking it from 48 untraceable rows to 40 | the other 40, which are not this book's |
 | gear | **43**, printed 114-129, every number read off a 200 dpi render | none in that range |
-| classes | **4** of 35 - CAF Trooper, CAF Fleet Officer, TVIA Inspector, CAF Scientist, printed 56-61 | **31**, listed with their pages and XP ladders in the survey |
+| classes | **7** of 35 - the four CCW O.C.C.s of printed 56-61, then the noro: Noro R.C.C., Noro Psychic, Noro Mystic Warrior, printed 61-65 | **28**, listed with their pages and XP ladders in the survey |
 | spells, psionics | n/a | the book defines **zero** of either, checked by stat-block scan rather than assumed |
 
 **What is deliberately not imported, and will not be by a later batch either:**
@@ -61,6 +61,11 @@ has no experience ladder and no O.C.C. skills. The Experience Tables on printed
 
 Three findings came out of this book so far - F2, F3 and F4 in
 `BOOK-INGEST-AUDIT.md`. None was implemented, per the standing constraint.
+F3 has since gained a second occurrence: the Noro Mystic Warrior is issued a
+suit of psionic power armour as standard equipment, and that suit is one of the
+25 vessels the finding excludes, so the class ships without the one item its own
+book says it starts with. That is a sharper cost than a GM being unable to look
+a starship up.
 
 **`triax` and `new-west` were already registry stubs** with `source_pdf: null` —
 one gear row cites Triax, one skill row cites New West. Their entries were

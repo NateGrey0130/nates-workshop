@@ -139,6 +139,22 @@ is the record**: when a vessel row looks thin, this is why, and it was a choice.
 Until then the batch imports **no** vessels from this book, and the survey says
 so in its extraction plan.
 
+**A second occurrence, 2026-08-30 — it now costs a player their starting kit.**
+The Noro Mystic Warrior (printed 64-65) is issued *a suit of psionic power
+armor* as standard equipment. That suit is printed on 128-130 as a power armor
+stat block, so it is excluded here, and the class ships without the one item its
+own book says it starts with. Everything else on its list is imported.
+
+That is a different cost from the one this finding opened with. Leaving a
+starship out of the catalog means a GM cannot look one up; leaving this out means
+a **character sheet is wrong** the moment it is generated. It does not change the
+proposal - a `gear` row that keeps one weapon out of eight would be worse - but
+it moves the question from "what can the catalog hold" to "what does a class
+need to be complete", and the second is a stronger reason to answer it.
+
+Worth knowing when this is taken: the noro power armour is the *only* vessel in
+this book that any class is issued. The rest are bought.
+
 **Open.**
 
 ### F4 — The language-pick invariant matches on prose, and missed one of three

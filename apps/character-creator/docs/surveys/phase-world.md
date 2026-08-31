@@ -344,6 +344,17 @@ Phase 4 costs money; everything above was free.
    - **An "any language" pick must offer `Language: Other`, never a category.**
      `regression.mjs` holds this as an invariant and it is easy to get wrong;
      see F4 for the case it does not catch.
+   - **A wrapped inline list is a parse error, not a style choice.** The
+     frontmatter parser is line-based: an inline `[...]` or `{...}` must close
+     on the SAME line. A twelve-name `psionics.powers` list wrapped across three
+     lines made `class-check` throw a `TypeError` out of `catalog.js` - though
+     it did print `UNCLOSED FLOW` above the stack, which is the line to read.
+   - **A psionic class's `categories_allowed` will usually be an approximation.**
+     Both noro O.C.C.s widen their allowed categories with level - three at
+     first, plus Super at second, anything at third - and the key is one list
+     for the whole class. Set it to the FIRST level's set, which fails closed,
+     and put the schedule in `extraction_notes`. Named exclusions (mind wipe,
+     psi-sword, possess others) cannot be expressed at all.
    - **Run `class-check` with `--remote`, always.** This machine's local D1 held
      **293** skills against production's **345** on 2026-08-30, so the default
      `--local` run reported seven skills as missing that production has had for
@@ -395,6 +406,9 @@ What is deliberately left, with the reason for each:
 | 2026-08-30 | [#404](https://github.com/NateGrey0130/nates-workshop/pull/404) | **gear**: 43 rows from printed 114-129 - 22 weapon, 15 armor, 6 gear. Catalog 975 -> 1018. Every number read off a 200 dpi render; the OCR agreed on all 43. No vessels (F3). Applied `--remote` before the PR. |
 | 2026-08-30 | [#405](https://github.com/NateGrey0130/nates-workshop/pull/405) | housekeeping: a commit message that shipped as a file, removed, and `*.tmp` gitignored. No data. |
 | 2026-08-30 | [#406](https://github.com/NateGrey0130/nates-workshop/pull/406) | **classes, batch 1 of the CCW O.C.C.s**: CAF Trooper, CAF Fleet Officer, TVIA Inspector, CAF Scientist (printed 56-61). Catalog 126 -> 130 classes, 343 -> 345 skills (Fighter Combat: Basic and Elite, off printed 151, which the skills batch missed), 1018 -> 1020 gear. Finding F4 filed. Applied `--remote` before the PR. |
+| 2026-08-30 | [#407](https://github.com/NateGrey0130/nates-workshop/pull/407) | survey note: run `class-check` with `--remote`, because this machine's local D1 was 52 skills behind. No data. |
+| 2026-08-30 | [#408](https://github.com/NateGrey0130/nates-workshop/pull/408) | survey: real `source-coverage` paste replacing the pre-import one - `phase-world 66 / 0`, `rifts-skill-list` 48 -> 40. No data. |
+| 2026-08-30 | [#409](https://github.com/NateGrey0130/nates-workshop/pull/409) | **classes, batch 2 - the noro**: Noro R.C.C., Noro Psychic, Noro Mystic Warrior (printed 61-65). Catalog 130 -> 133 classes. The book's first R.C.C. and its first two psionics blocks here. Second occurrence added to F3. Applied `--remote` before the PR. |
 
 ### What remains
 

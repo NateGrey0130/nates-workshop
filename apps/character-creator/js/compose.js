@@ -234,6 +234,22 @@ export const CORE_SDC_BY_CLASS = {
   'caf-fleet-officer': '3D6',
   'tvia-inspector': '1D6',
   'caf-scientist': '1D6',
+  // Rifts Dimension Book 2: Phase World, the noro, printed 61-65. None of the
+  // three prints an S.D.C. formula. The RACE states "S.D.C./Hit Points:
+  // Standard, P.E. plus 1D6 per level" - the hit points are a formula and the
+  // S.D.C. is the word Standard - so the core rule reaches it, at 1D6, which
+  // is what a race always takes here.
+  //
+  // The MYSTIC WARRIOR is the one worth arguing about and it goes to 3D6 on
+  // the psi-stalker precedent already in this table: psychic by the book's own
+  // grouping - printed 62 lists it beside the mind melter and the noro psychic
+  // - and a fighter by trade and armed as such, with energy pistol, energy
+  // rifle, power armor training and Hand to Hand Expert granted outright. Its
+  // Bio-feedback ability gives 3D6x10 S.D.C. for 1 I.S.P., which is BOUGHT and
+  // temporary and is not a base; it is a special ability on the class.
+  'noro': '1D6',
+  'noro-psychic': '1D6',
+  'noro-mystic-warrior': '3D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence
