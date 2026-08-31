@@ -499,3 +499,97 @@ being dropped. It fixes no character, and it would have turned this up in batch
 6 rather than batch 8.
 
 **Open.**
+
+### F10 - an R.C.C. and an O.C.C. that are BOTH psychic keep only one block, and the race wins every tie
+
+`combineClasses` in `js/parser.js` folds a race and an occupation into one
+class. Every other field is merged - skills are unioned, bonuses are summed,
+equipment and abilities are concatenated. `psionics` is not merged. It is
+CHOSEN:
+
+```js
+// The stronger psychic wins: a dragon that is already a Major psychic does
+// not become weaker by studying an O.C.C. with minor psionics.
+if (rcc.psionics || occ.psionics) {
+  out.psionics = tierRank(occ.psionics?.type) > tierRank(rcc.psionics?.type)
+    ? occ.psionics : (rcc.psionics || occ.psionics);
+}
+```
+
+The comparison is **strictly greater**, so a tie goes to the RACE, and the
+occupation's entire block is discarded - its granted powers, its
+`powers_starting`, its `powers_starting_groups`, its `categories_allowed`, its
+whole `powers_schedule`, and its `isp_base`.
+
+**The premise is sound and the implementation is one operator away from it.**
+"A dragon that is already a Major psychic does not become weaker" is exactly
+right for the TIER. It is wrong for everything else in the block: a race states
+what a member of that race is born with, and an O.C.C. states what training
+adds. Nothing about the noro being a major psychic means a noro psychic should
+not learn the twelve powers its own page grants. The two are not competing
+claims about one number; they are two different sentences, and the code treats
+them as rival answers to one question.
+
+**Measured, not reasoned about.** Parsing all 154 published classes plus this
+batch's four through the real parser and calling the real `combineClasses` on
+every race/occupation pair where BOTH state psionics:
+
+| | |
+|---|---|
+| R.C.C.s with a psionics block | 19 |
+| O.C.C.s with a psionics block | 19 |
+| pairs where both state psionics | 361 |
+| pairs where the O.C.C.'s block is discarded AND it had picks to lose | **93** |
+| distinct O.C.C.s that lose their block to at least one race | **17** |
+
+The worst are the ones a book would actually pair:
+
+| O.C.C. | tier | loses its block to |
+|---|---|---|
+| `crazy` | minor | 17 of 19 races |
+| `cyber-knight`, `mystic`, `noro-psychic`, `noro-mystic-warrior` | major | 10 of 19 races each |
+| eleven more, `phase-mystic` and `promethean-phase-adept` among them | master | 3 of 19 races each |
+
+**Two classes have already shipped broken, and their own book is what pairs
+them.** `noro` + `noro-psychic` are both `major`, so composing them keeps the
+race's five granted powers and throws away the O.C.C.'s twelve, its two
+starting picks and all fifteen schedule entries - including the level-2 Super
+power and the "any category from third level" widening that
+`fix-noro-psionic-schedules.sql` was written in #411 to get right. The same is
+true of `noro` + `noro-mystic-warrior`, which loses four starting groups and
+eight picks. Both went in with #409 and neither has ever composed correctly.
+
+**This batch adds a third, and the tier is not the cause.** The First Stage
+Promethean is "Considered a master psionic" (printed 26) and the Promethean
+Phase Adept is a first stage promethean who grants a super-psionic power, so it
+is a master too. Master is the TOP of the ladder, so lowering the O.C.C.'s tier
+could not rescue it: the race holds the maximum and the comparison is strict.
+The Phase Adept's six phase powers, its super-psionic pick and its
+twenty-eight schedule entries are dropped in the only pairing the book allows.
+The Promethean Time Master is untouched because it states no psionics at all,
+and the Phase Mystic is untouched because the five races its book permits -
+human, draconid, wolfen, seljuk, noro - are three with no psionics block and
+one major; the only three races that would displace it are the catalog's other
+two masters and the promethean, and none of them may be a phase mystic.
+
+**Proposal:** merge the block instead of choosing it. Take the higher `type`
+and the higher `isp_base` - that is the sentence the comment defends - and
+UNION the rest: concatenate `powers`, and take the O.C.C.'s
+`powers_starting` / `powers_starting_groups` / `powers_schedule` /
+`powers_per_level` / `categories_allowed` where it states them, falling back to
+the race's. Training adds to birth; it does not replace it.
+
+The awkward case is a race and an O.C.C. that both state `powers_starting`,
+where adding them may over-grant. The books this catalog holds do not do that
+often, and where they do the O.C.C.'s number is the one written for a character
+who also has the race - so preferring the O.C.C.'s single count while unioning
+the granted lists is the conservative reading. `spells` has the same shape one
+line below (`out.magic = occ.magic || rcc.magic`) and the same question; it is
+not part of this finding because no race/O.C.C. pair in the catalog states both.
+
+**Cheaper alternative:** make `class-check` warn when a class's `psionics`
+block would be discarded by composition with any race it can be taken with. It
+fixes no character, but it would have caught the noro in batch 2 instead of
+batch 9.
+
+**Open.**

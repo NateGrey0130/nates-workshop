@@ -303,6 +303,37 @@ export const CORE_SDC_BY_CLASS = {
   // it, with the 1D6x10+40 landing on top. Same shape as the Space Wolfen's 30
   // above. 1D6 because a race always takes 1D6 here.
   'pleasurer': '1D6',
+
+  // The Prometheans, printed 25-31. Three of the four need an entry: the First
+  // Stage Promethean states "1D6x100 S.D.C. and P.E.x5 hit points" outright, so
+  // the core rule never reaches the race. None of its three O.C.C.s states an
+  // S.D.C. or a hit point formula and none is a mega-damage being.
+  //
+  // Phase World still has no Men of Arms heading, so the call is read off what
+  // each entry is, the same way the CCW's four and the Empire's three were.
+  // The PHASE ADEPT is the promethean mystic warrior in all but name - the book
+  // says so in those words - with Hand to Hand: Martial Arts, W.P. sword,
+  // energy pistol and energy rifle granted outright, an extra attack per melee,
+  // +2 on initiative and +3D6x10 S.D.C. from its own training. The PHASE MYSTIC
+  // is its pupil and takes "similar training and initiation rituals", with the
+  // same three W.P.s, Hand to Hand: Expert granted outright and +2 on
+  // initiative; smaller numbers, the same trade. Both go to 3D6 on the
+  // noro-mystic-warrior precedent above, which is the same shape: psychic by
+  // the book's own grouping, a fighter by trade and armed as such.
+  //
+  // The TIME MASTER is not. It is a spell caster with Hand to Hand: Basic, one
+  // W.P., no combat bonus block at all, and its own Military related category
+  // printed as None - 1D6, like every other caster in this table.
+  //
+  // Note where these actually fire. withCorePools looks the OCCUPATION up
+  // first and stops as soon as the class states an sdc_base, so a phase adept
+  // played on its own race - the only way the book allows it - takes the
+  // promethean's 1D6x100 and never reaches these lines. They are what a phase
+  // mystic on a human, or either promethean O.C.C. played with no race at all,
+  // falls through to.
+  'promethean-phase-adept': '3D6',
+  'phase-mystic': '3D6',
+  'promethean-time-master': '1D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence

@@ -138,19 +138,35 @@ Counted by structure over all 209 cached pages, not by reading prose.
 | **Experience Tables** | **183** | the playable-class authority |
 | Character record sheets | 184-208 | blank forms — NOT an inventory source |
 
-### Spells and psionics: this book defines ZERO of either
+### Spells: this book defines ZERO. Psionics: fifteen, under another name
 
 Checked by stat-block scan, not by reading. A `^P.P.E.( Cost)?:` scan hits 46
 pages and an `^I.S.P.( Cost)?:` scan hits 25, and **every hit is a class or NPC
-stat block's own pool line**, not a spell or power entry. There is no spell list,
-no psionic power list, and no section heading for either in the Contents.
+stat block's own pool line**, not a spell or power entry. There is no spell list
+and no section heading for one in the Contents. That half stands: after nine
+batches, no row citing this book is in `spells`.
 
-The 15 **Phase Powers** on printed 32-35 are the closest thing, and they are not
-psionic powers: they are the Second Stage Promethean's racial abilities, costed
-in I.S.P. but available to exactly one race and listed under its R.C.C. rather
-than in any catalog-shaped table. They belong in that class's
-`special_abilities`, not in `psionic_powers`. Recorded here so the next session
-does not re-run the scan.
+**The psionics half of this paragraph was wrong twice over and batch 9 corrected
+it.** It said the 15 **Phase Powers** on printed 32-35 were the Second Stage
+Promethean's racial abilities, available to exactly one race, and belonged in
+that class's `special_abilities`. Printed 32's own opening paragraph says
+otherwise on both counts: it calls them a variation on psionic abilities,
+activated with I.S.P., and names the phase mystic O.C.C. as the only learner
+besides the prometheans themselves.
+
+So they belong to the whole promethean race and to one non-promethean O.C.C.,
+not to the NPC second stager; and three of the four playable entries in printed
+25-31 select from them by count and by level - the Phase Adept takes six at
+first level and one per level after, the Phase Mystic four and one per level,
+and a first stage promethean may spend up to four "other" skill picks on them.
+They went in as **fifteen `psionic_powers` rows in a new category, `Phase`**.
+Each prints Range, Duration, I.S.P. and a description, which is the exact column
+set that table holds, and `js/catalog-fields.js` carries `allowOther` on the
+category select with a comment saying in as many words that a later book may add
+a category the core four do not cover.
+
+**Where a section heading says "not psionic powers", check what the entries
+print.** This one was written off a Contents scan that never opened printed 32.
 
 ## Classes
 
@@ -176,10 +192,10 @@ XP ladders are shared; the column names the ladder as printed on p.183.
 
 | class | printed | ladder (p.183) |
 |---|---|---|
-| First Stage Promethean | 25-26 | Noro Psychic / Promethean (First Stage) |
+| First Stage Promethean | 25-27 | Noro Psychic / Promethean (First Stage) |
 | Promethean Phase Adept | 27-28 | Phase Adept, Time Master & Wolfen Quatoria |
 | Promethean Time Master | 28-29 | Phase Adept, Time Master & Wolfen Quatoria |
-| Phase Mystic | 29-31 | Phase Mystic |
+| Phase Mystic | 29 | Phase Mystic |
 | Draconid | 35-36 | Silhouette, Draconid & Repo-Bots |
 | Phantom | 36-38 | Machine People & Phantom / Vacuum Wasps |
 | Spacer | 38-39 | Spacer & Colonist |
@@ -603,6 +619,86 @@ Phase 4 costs money; everything above was free.
      the catalog already holds the row, not whether the book calls it a skill -
      the book calls both of them skills.
 
+   - **A RACE AND AN O.C.C. THAT ARE BOTH PSYCHIC KEEP ONLY ONE BLOCK.**
+     `combineClasses` merges skills, sums bonuses and concatenates abilities,
+     and then CHOOSES `psionics`: whichever tier is STRICTLY higher, so a tie
+     goes to the race and the occupation's granted powers, starting picks,
+     categories and whole level schedule are discarded. Measured on all 361
+     race/occupation pairs where both state psionics: 93 discard a block that
+     had picks to lose, across 17 O.C.C.s. Two of this book's own have already
+     shipped that way - `noro` + `noro-psychic` are both major, so #409's
+     twelve powers and #411's corrected schedule have never composed. Filed as
+     F10. **The tier is not the lever**: master is the top of the ladder, so a
+     master race beats a master O.C.C. and lowering the O.C.C. cannot help.
+     Check the pairing the BOOK intends before assuming a psionics block will
+     be read at all.
+
+   - **A "NOT A CATALOG CATEGORY" NOTE IS A CLAIM, AND THIS SURVEY'S WAS FALSE.**
+     The Phase Powers were written off as one NPC class's racial abilities on a
+     Contents scan that never opened printed 32, whose first sentence says they
+     are a variation on psionic abilities, available to every promethean and to
+     the phase mystic O.C.C. Three playable entries select from them by count
+     and by level. They became fifteen `psionic_powers` rows in a new `Phase`
+     category - `js/catalog-fields.js` carries `allowOther` on that select with
+     a comment inviting exactly this. **Before writing "the app has no table for
+     this", open the pages and read what the entries print**; and before adding
+     a category, check the gate fails CLOSED. `psiConfig` in `app.js` defaults a
+     class stating no `categories_allowed` to the core four rather than to
+     anything, and the eight psionic classes that state none were checked one at
+     a time - not one has a `powers_schedule` or a `powers_per_level`, so none
+     has a level-up picker to leak through either.
+
+   - **`powers_starting_groups` AND A SLOTTED `powers_schedule` EXPRESS TWO
+     POOLS GROWING AT ONCE.** The Phase Adept takes six phase powers AND one
+     super-psionic at first level, then one of each at every level after.
+     `entryAt` indexes a schedule by (level, slot), so two entries at the same
+     level with different `categories` is the supported shape, not a workaround
+     - the Shifter's three slots are the comment's own example. Twenty-eight
+     entries is verbose and exact; a single `powers_per_level: 2` would have
+     let a player take two phase powers and no psionics.
+
+   - **A BOOK CAN NAME A SPELL LIST THIS CATALOG DOES NOT HAVE, AND THE HONEST
+     ANSWER IS TO GRANT LESS.** The Time Master learns two temporal magic spells
+     plus two normal ones at first level, and one of each per level after. The
+     catalog holds 607 spells and NOT ONE is temporal magic - zero rows cite
+     Rifts England, and the five time-flavoured spells it does hold are ordinary
+     invocations from the Book of Magic and Palladium Fantasy. A spell group
+     with a note and no gate would have offered the whole catalog for a pick the
+     book restricts to a list this machine does not have, which is F7's shape.
+     Only the normal half is granted; the temporal half is a special ability the
+     player reads at the table. `spells_per_level: 1` with
+     `spells_per_level_levels: up_to_character_level` says "of the same or lower
+     level as the character" exactly.
+
+   - **A SPECIFIC NAMED LANGUAGE WITH NO CATALOG ROW GOES THROUGH
+     `Language: Other`.** All four entries grant "Language and literacy:
+     Promethean 98%", and Promethean is not in the book's own Languages section
+     on printed 52-53, which defines the six Galactic Trade Tongues and nothing
+     else. A mention is not a definition, so no row was invented; the precedent
+     is the catalog's existing `{ name: "Language: Other", base: 98, note: "His
+     native tongue of Br'talb" }`. This is the F4 invariant reaching a case it
+     was not written for: it is not an "any language" pick, and it resolves the
+     same way.
+
+   - **THE APOK'S NOTE ABOUT `bonuses.attributes` IS STALE, AND IT WAS BELIEVED
+     ONCE.** It says the key takes flat numbers only, so the Apok's +2D6 P.S.
+     was dropped to prose. `validateBonusGroup` in `js/parser.js` accepts a dice
+     expression in EVERY group and has since the Godling's +1D4 initiative;
+     eight published classes already carry one. The Phase Adept's +1D6 to P.S.
+     and +1D4 to P.P. are stored as dice. **A note in a shipped class is not a
+     contract** - the same rule as `frontmatter.md` versus `js/leveling.js`,
+     failing in the same direction.
+
+   - **THE PAGE RANGES IN THIS SURVEY'S OWN TABLE ARE STILL WRONG, TWO MORE OF
+     THEM.** The First Stage Promethean is printed 25-**27**, not 25-26: its
+     Secondary Skills, Alliances, Weapons, Body Armor and Equipment lines are at
+     the head of 27 above the Phase Adept's heading. The Phase Mystic is printed
+     **29 alone**, not 29-31: it opens and closes on one page, printed 30 is a
+     full-page illustration whose folio reads 30 on the render, and printed 31
+     opens the NPC Second Stage Promethean. That is four corrections in two
+     batches - the Pleasurer in #416 was the other two. **Re-derive every range
+     from the entry's own heading and its own last line.**
+
    - **AN S.D.C. LINE READING "PLUS SKILL AND O.C.C. BONUSES" IS A POOL BONUS.**
      The Pleasurer's "1D6x10 + 40 S.D.C. plus skill and O.C.C. bonuses" is the
      cumulative shape, so it is `bonuses.pools.sdc` and not `sdc_base` - written
@@ -634,8 +730,12 @@ What is deliberately left, with the reason for each:
   location-by-location M.D.C. breakdown with a dozen entries. There is no table
   for a vessel and this batch does not add one. Filed as
   `BOOK-INGEST-AUDIT.md` F3.
-- **Phase Powers (32-35).** Racial abilities of one class, not a catalog
-  category — they go in that class's `special_abilities`.
+- ~~**Phase Powers (32-35).**~~ **Imported after all, in batch 9** - fifteen
+  `psionic_powers` rows in a new `Phase` category. This line said they were one
+  NPC class's racial abilities and belonged in `special_abilities`; printed 32
+  says they are a variation on psionic abilities available to every promethean
+  and to the phase mystic O.C.C., and three playable entries select from them.
+  See the psionics section above.
 - **Dog-fighting and space combat rules (151-157).** Rules text, not catalog
   data. The app has no vehicle combat model.
 - **The `Space:` family rename.** Eight rows keep their catalog names; only their
@@ -661,22 +761,23 @@ What is deliberately left, with the reason for each:
 | 2026-08-31 | [#414](https://github.com/NateGrey0130/nates-workshop/pull/414) | survey: the three page numbers - cache pNNN, read-columns.py N, pymupdf doc[N-1] - written out as a table, after a batch-4 render came back one page late. No data. |
 | 2026-08-31 | [#415](https://github.com/NateGrey0130/nates-workshop/pull/415) | **classes, batch 7 - two races and the Naruni enforcer**: Draconid (printed 35-36), Phantom (36-38) and the Naruni Repo-Bot (46-48). Catalog 148 -> 151 classes, 1020 -> 1021 gear (a `plasma-hand-cannon` stub; the weapon appears once in the whole book and is stat-blocked nowhere). Finding F8 filed, with a sweep of all 148 published classes behind it. The Repo-Bot's category corrected away from its own heading; see the Quick Find section. Applied `--remote` before the PR. |
 | 2026-08-31 | [#416](https://github.com/NateGrey0130/nates-workshop/pull/416) | **classes, batch 8 - the Pleasurer and two hive-spawn**: Pleasurer (printed 88-89), Vacuum Wasp (92-93) and Termite Engineer (93-94). Catalog 151 -> 154 classes; no new skills and no new gear, because none of the three states any. Also `fix-galactic-tracer-rogue-note.sql`, correcting two false claims #413 shipped about the book's +6%. Finding F9 filed, with a three-row sweep behind it, and the Pleasurer added to F5 as its second occurrence. One `CORE_SDC_BY_CLASS` entry in `js/compose.js`, for the Pleasurer. Applied `--remote` before the PR. |
+| 2026-08-31 | [#417](https://github.com/NateGrey0130/nates-workshop/pull/417) | **classes, batch 9 - the four Prometheans**: First Stage Promethean (printed 25-27), Promethean Phase Adept (27-28), Promethean Time Master (28-29) and Phase Mystic (29). Catalog 154 -> 158 classes, 101 -> 116 psionic powers, 1021 -> 1024 gear. The book's FIRST psionic rows and its first magic-granting class. The 15 Phase Powers of printed 32-35 went in as `psionic_powers` in a new `Phase` category, correcting this survey, which had them down as one NPC class's racial abilities; three of the four playable entries select from them. Gear: two steelcloth armors read off their class pages (A.R. 12/90 M.D.C. and A.R. 19/40 M.D.C.) plus one stub, the meditation chip. Finding F10 filed, with a 361-pair sweep behind it - a race and an O.C.C. that are both psychic keep only one block, and the race wins every tie. Three `CORE_SDC_BY_CLASS` entries in `js/compose.js`, for the three O.C.C.s. Two page-range corrections and no new skills or spells. Applied `--remote` before the PR. |
 
 ### What remains
 
-`node scripts/source-coverage.mjs --remote`, after batch 6:
+`node scripts/source-coverage.mjs --remote`, after batch 9:
 
 ```
   rue                648 / 23
   pf                 583 / 3
   bom                412 / 0
   ww                 130 / 0
-  phase-world         91 / 0
+  phase-world        113 / 0
   ju                  62 / 0
   rifts-skill-list     0 / 40
 ```
 
-**`phase-world` is 91 traceable and 0 other.** Every row citing this book names a
+**`phase-world` is 113 traceable and 0 other.** Every row citing this book names a
 page range this machine holds, across skills, gear and classes, which is what
 `traceable` means and all it means. It does not say the numbers are right; the
 gear script's own defence for that is the fourteen 200 dpi renders it was read
@@ -689,7 +790,12 @@ breakdown, and this one was already wrong. Re-run `source-coverage.mjs
 --remote` for the total; it is the only figure here that any tool produces.
 
 It was 66 after the first four PRs, 73 after batch 3, 76 after batch 4, 79
-after batch 5, 84 after batch 6 and 88 after batch 7. Each class adds one.
+after batch 5, 84 after batch 6, 88 after batch 7 and 91 after batch 8.
+
+**"Each class adds one" was true for six batches and batch 9 broke it**, moving
+the figure by 22 for four classes: the four class rows, fifteen `psionic_powers`
+rows for the Phase Powers, and three gear rows. A batch adds one per class only
+while it adds nothing else, and this ledger counts ROWS rather than entries.
 
 **`rifts-skill-list` is down from 48 to 40** and will not go lower from this
 book. The remaining 40 are `not-cached` and permanently so: the citation names a
