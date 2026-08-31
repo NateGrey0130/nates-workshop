@@ -31,15 +31,16 @@ and registers, by design.
 
 ### `phase-world` progress, 2026-08-30
 
-Eight PRs, each applied `--remote` before merging. Catalog totals moved
-336 -> 345 skills, 975 -> 1020 gear, 126 -> 137 classes.
+Eleven PRs - five carrying data, each applied `--remote` before merging, and
+six carrying survey, docs or a correction. Catalog totals moved 336 -> 345
+skills, 975 -> 1020 gear, 126 -> 140 classes.
 
 | category | in | left |
 |---|---|---|
 | skills | **9** - 7 new plus 2 the CCW classes turned up (Fighter Combat: Basic and Elite, printed 151) | none known; the book collects its new skills on printed 52-53 and 150-151 and both were read whole |
 | re-citations | **8** rows moved off the phantom `Rifts Skill List` onto printed 52-53 and 150-151, taking it from 48 untraceable rows to 40 | the other 40, which are not this book's |
 | gear | **43**, printed 114-129, every number read off a 200 dpi render | none in that range |
-| classes | **11** of 35 - the whole CCW chapter, printed 56-70: four O.C.C.s, the noro and its two O.C.C.s, then Space Wolfen, Wolfen Quatoria, Catyr and Seljuk | **24** - the Prometheans (24-31), the Phase World and Naruni entries (35-48), the Transgalactic Empire (73-83), Pleasurer, the Star Hives and the Cosmo-Knights |
+| classes | **14** of 34 - the whole CCW chapter, printed 56-70 (four O.C.C.s, the noro and its two O.C.C.s, Space Wolfen, Wolfen Quatoria, Catyr, Seljuk), plus the three Transgalactic Empire races, printed 73-81 (Kreeghor, Machine People, Silhouette) | **20** - the Prometheans (24-31), the Phase World and Naruni entries (35-48), the Empire's three O.C.C.s (82-84), Pleasurer, the Star Hives and the Cosmo-Knights |
 | spells, psionics | n/a | the book defines **zero** of either, checked by stat-block scan rather than assumed |
 
 **What is deliberately not imported, and will not be by a later batch either:**
@@ -53,19 +54,42 @@ storing it, because the row would then read as complete. Filed as
 `BOOK-INGEST-AUDIT.md` F3, which also records that this is not new with this
 book - the catalog's existing robot rows lose the same data silently.
 
-Also out, on the book's own say-so: the **11 entries it names but does not make
-playable** - six labelled NPC or GM material in its own Contents, four that are
-lore or a cross-reference or the alien-race generator, and the Dominator, which
-has no experience ladder and no O.C.C. skills. The Experience Tables on printed
-183 are the authority for that line; see the survey.
+Also out, on the book's own say-so: the **12 entries it names but does not make
+playable** - seven labelled NPC or GM material in its own Contents, one labelled
+so in its section heading, three that are lore or a cross-reference or the
+alien-race generator, and the Dominator, which has no experience ladder and no
+O.C.C. skills. The Experience Tables on printed 183 are the authority for that
+line; see the survey.
 
-Three findings came out of this book so far - F2, F3 and F4 in
-`BOOK-INGEST-AUDIT.md`. None was implemented, per the standing constraint.
+That count was 11 until this batch reached the Transgalactic Empire. The **Royal
+Kreeghor** was surveyed as playable and is not: the heading on printed 74 reads
+*Royal Kreeghor R.C.C. / NPC Villains*, the entry ends "not intended to be
+player-characters", and p.183 gives it no ladder. The Contents does not label it,
+and the survey read the Contents. It is the only entry in the book where the
+heading and the Contents disagree about that.
+
+Four findings have come out of this book so far - F2, F3, F4 and F5 in
+`BOOK-INGEST-AUDIT.md`. None was implemented, per the standing constraint. F5 is
+`attribute_dice` having no way to say an attribute DOES NOT EXIST: the Machine
+People print "P.E. N/A" and `app.js` falls back to `3d6`, so the sheet shows a
+constitution the book denies.
 F3 has since gained a second occurrence: the Noro Mystic Warrior is issued a
 suit of psionic power armour as standard equipment, and that suit is one of the
 25 vessels the finding excludes, so the class ships without the one item its own
 book says it starts with. That is a sharper cost than a GM being unable to look
 a starship up.
+
+**Two corrections have been shipped against classes this batch already
+imported**, both the same mistake: an extraction note asserting the app could not
+express something, written from memory of `frontmatter.md` rather than from the
+code. `fix-noro-mind-control-saves.sql` restored a save key that five published
+classes were already using. `fix-noro-psionic-schedules.sql` restored a per-entry
+`categories` on the psionic power schedule, which had been denying the noro
+psychic the Super power its book grants and letting the mystic warrior take eight
+Super powers where the book grants two. Nothing failed either time; both classes
+parsed, validated, composed and passed the full regression run. **Grep `js/` and
+`functions/` before writing "the app cannot hold this" into a note** - that
+sentence is durable and the next session believes it.
 
 **`triax` and `new-west` were already registry stubs** with `source_pdf: null` —
 one gear row cites Triax, one skill row cites New West. Their entries were
