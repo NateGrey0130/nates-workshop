@@ -3898,6 +3898,91 @@ section('Variable spell costs');
 }
 
 // ---------- 1c26. Secondary schedules and group bonuses ----------
+section('A class that supersedes its race');
+{
+  // BOOK-INGEST-AUDIT.md F11. The Cosmo-Knight is a transformation, not a
+  // trade: the Cosmic Forge rebuilds the body, the entry prints its own dice,
+  // M.D.C. and P.P.E., and its skills line says the skills of his past life are
+  // lost and the character is reborn (Phase World printed 100 and 102).
+  //
+  // combineClasses was race-primary with no way to say otherwise, so the class
+  // arrived wrong in 56 of its 57 possible pairings.
+  const mk = (cat, body) => parseClassMarkdown(
+    `---\nid: t-${cat}\nname: T\nsystem: rifts\nsource_book: B\ncategory: ${cat}\n${body}\n---\n\n## Lore\n\nx\n`).data;
+
+  const race = mk('rcc', `attribute_dice: { IQ: "3d6", ME: "3d6", PS: "3d6+10", PB: "6d6" }
+mdc_base: "2d6x10+20"
+ppe_base: "3d6+6"
+skills:
+  occ_skills:
+    - { name: "Climbing", base: 50 }
+    - { name: "Prowl", base: 40 }`);
+
+  const body = `attribute_dice: { IQ: "3d6+2", ME: "4d6+4", PS: "3d6+32", PB: "3d6" }
+mdc_base: "4d6x10+60"
+ppe_base: "1d6x100"
+skills:
+  occ_skills:
+    - { name: "Navigation: Space", base: 60 }
+  occ_related_skills: { count: 4, categories: ["Physical"] }`;
+  const plain = mk('occ', body);
+  const reborn = mk('occ', 'supersedes_race: true\n' + body);
+
+  check('supersedes_race parses on an O.C.C.', reborn.supersedes_race === true);
+  check('and is rejected unless it is exactly true', (() => {
+    const bad = parseClassMarkdown(
+      '---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: occ\nsupersedes_race: false\n---\n\n## Lore\n\nx\n');
+    return !bad.ok;
+  })());
+  check('and warns on something that is not an O.C.C.', (() => {
+    const r = parseClassMarkdown(
+      '---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: rcc\nsupersedes_race: true\n---\n\n## Lore\n\nx\n');
+    return r.ok && r.warnings.some((w) => /supersedes_race/.test(w));
+  })());
+
+  // THE POSTURE IS OPT-IN. Every class in the catalog wants the race-primary
+  // policy - a dragon that studies an O.C.C. is still a dragon - so an
+  // occupation WITHOUT the flag must compose exactly as it always did.
+  const before = combineClasses(race, plain);
+  check('without the flag the race still wins the pools', before.mdc_base === '2d6x10+20'
+    && before.ppe_base === '3d6+6');
+  check('and the race still wins the dice', before.attribute_dice.PS === '3d6+10');
+  check('and the skills are still unioned', before.skills.occ_skills.length === 3);
+
+  const after = combineClasses(race, reborn);
+  check('with the flag the class keeps its own M.D.C. and P.P.E.',
+    after.mdc_base === '4d6x10+60' && after.ppe_base === '1d6x100');
+
+  // "the skills of his past life are lost and the character is reborn"
+  check('and the past life\'s skills are gone', after.skills.occ_skills.length === 1
+    && after.skills.occ_skills[0].name === 'Navigation: Space');
+  check('and the occupation still sets the related allowance',
+    after.skills.occ_related_skills.count === 4);
+
+  // THE ATTRIBUTES ARE THE ONE CARVE-OUT: "use these die rolls, or the
+  // attributes of the character's original race, WHICHEVER ARE HIGHER" - per
+  // attribute, so a race with a better P.B. keeps its P.B. and nothing else.
+  check('the class wins an attribute it prints higher', after.attribute_dice.PS === '3d6+32');
+  check('and the race keeps one IT prints higher', after.attribute_dice.PB === '6d6');
+  check('and neither side invents a third expression',
+    ['IQ', 'ME', 'PS', 'PB'].every((a) => after.attribute_dice[a] === reborn.attribute_dice[a]
+      || after.attribute_dice[a] === race.attribute_dice[a]));
+
+  // The comparison is the MEAN, not the ceiling. attributeCeiling was the
+  // obvious reuse and is wrong here: it adds the exceptional-dice chain, which
+  // only a plain 2d6 or 3d6 earns, so a bare 3d6 scored 18+12 against 4d6+4's
+  // 28 and the WEAKER dice won. 41 of the 57 races beat this class's printed
+  // M.E. that way before the comparator was changed.
+  check('4d6+4 beats a plain 3d6, which a ceiling comparison got backwards',
+    after.attribute_dice.ME === '4d6+4');
+
+  // An absent attribute (F5) has nothing to compare and must not win.
+  check('an absent racial attribute never displaces a real one', (() => {
+    const noPe = mk('rcc', 'attribute_dice: { PE: "N/A", PS: "3d6" }');
+    return combineClasses(noPe, reborn).attribute_dice.PS === '3d6+32';
+  })());
+}
+
 section('Psionics composition');
 {
   // BOOK-INGEST-AUDIT.md F10. `combineClasses` used to CHOOSE between a race's

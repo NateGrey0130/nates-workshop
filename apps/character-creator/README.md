@@ -388,6 +388,14 @@ encode absence as `"none"` or a note.
 `occ_related_skills.schedule` **is** enforced: crossing one of its levels grants
 that many extra skill picks. See [Level-up skill picks](docs/leveling.md#level-up-skill-picks).
 
+`supersedes_race: true` on an O.C.C. **is** enforced: composition is
+race-primary by default, and this inverts it for a class whose book says the
+character stops being what it was. Pools, `starting_money` and `xp_table` become
+the occupation's, its `occ_skills` replace the race's rather than unioning, and
+`attribute_dice` are compared per attribute and the higher kept. The
+Cosmo-Knight is the only class that carries it. See
+[Race and occupation](docs/race-and-occupation.md).
+
 `occ_related_skills.minimums` **is** enforced. It is the only floor in the block
 - `count`, `categories`, `only` and `except` are all ceilings - and it exists
 because eight classes across four books print a rule like *"select 8 other

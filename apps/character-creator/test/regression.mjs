@@ -1305,6 +1305,87 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     kept.length === 5, kept.map((r) => r.slug).join(', '));
 }
 
+// ---------- a class that supersedes its race ----------
+// BOOK-INGEST-AUDIT.md F11. The Cosmo-Knight is a transformation: the entry
+// prints its own dice, M.D.C. and P.P.E., and its skills line says the skills
+// of the past life are lost. Composed race-first it arrived wrong in 56 of its
+// 57 possible pairings.
+{
+  const classes = (await api('GET', '/classes?limit=200')).body.classes || [];
+  const races = classes.filter((c) => c.category === 'rcc');
+  const flagged = classes.filter((c) => c.supersedes_race === true);
+
+  // The flag is opt-in and only an O.C.C. can act on it.
+  const misplaced = flagged.filter((c) => c.category !== 'occ');
+  check('every class declaring supersedes_race is an O.C.C.',
+    misplaced.length === 0, misplaced.map((c) => c.id).join(', '));
+
+  // The mean of an attribute expression, computed here rather than imported, so
+  // this checks the parser's answer instead of restating it.
+  const reach = (e) => {
+    const m = String(e ?? '').trim().match(/^(\d+)d(\d+)(?:x(\d+))?(?:([+-])(\d+))?$/i);
+    if (!m) return null;
+    const mult = m[3] ? +m[3] : 1;
+    return ((+m[1] + (+m[1] * +m[2])) * mult) / 2 + (m[4] ? (m[4] === '-' ? -1 : 1) * +m[5] : 0);
+  };
+
+  const lostPool = [], carried = [], weaker = [], invented = [];
+  let pairs = 0;
+  for (const occ of flagged) {
+    const own = new Set((occ.skills?.occ_skills || []).filter((e) => e?.name).map((e) => e.name));
+    for (const r of races) {
+      pairs++;
+      const c = combineClasses(r, occ);
+
+      // The transformed body is the class's, not the race's.
+      for (const k of ['hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base', 'starting_money']) {
+        if (occ[k] != null && c[k] !== occ[k]) lostPool.push(`${r.id}+${occ.id}: ${k}`);
+      }
+      // "the skills of his past life are lost and the character is reborn"
+      const through = (c.skills?.occ_skills || []).filter((e) => e?.name && !own.has(e.name));
+      if (through.length) carried.push(`${r.id}+${occ.id}: ${through.length}`);
+
+      // Attributes are the carve-out: whichever reaches higher, per attribute,
+      // and never below what the class prints on its own.
+      for (const a of ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd']) {
+        const got = c.attribute_dice?.[a];
+        if (got == null) continue;
+        if (got !== occ.attribute_dice?.[a] && got !== r.attribute_dice?.[a]) {
+          invented.push(`${r.id}+${occ.id}: ${a}`);
+        }
+        const mine = reach(occ.attribute_dice?.[a]), now = reach(got);
+        if (mine != null && now != null && now < mine) weaker.push(`${r.id}+${occ.id}: ${a} ${got} < ${occ.attribute_dice[a]}`);
+      }
+    }
+  }
+  check('a superseding class composes against every race',
+    flagged.length === 0 || pairs === flagged.length * races.length,
+    `${flagged.length} flagged x ${races.length} races = ${pairs}`);
+  check('and keeps its own pools rather than the race\'s',
+    lostPool.length === 0, lostPool.slice(0, 5).join('; '));
+  check('and no past-life skill survives the transformation',
+    carried.length === 0, carried.slice(0, 5).join('; '));
+  check('and no attribute comes out below what the class prints alone',
+    weaker.length === 0, weaker.slice(0, 5).join('; '));
+  check('and every attribute expression is one of the two, never invented',
+    invented.length === 0, invented.slice(0, 5).join('; '));
+
+  // THE POSTURE. Every class WITHOUT the flag must compose exactly as it did
+  // before F11 - race-primary, pools from the race wherever it states them.
+  const plain = classes.filter((c) => c.category === 'occ' && c.supersedes_race !== true);
+  const drifted = [];
+  for (const occ of plain.slice(0, 25)) {
+    for (const r of races.slice(0, 12)) {
+      const c = combineClasses(r, occ);
+      for (const k of ['mdc_base', 'ppe_base', 'sdc_base']) {
+        if (r[k] != null && c[k] !== r[k]) drifted.push(`${r.id}+${occ.id}: ${k}`);
+      }
+    }
+  }
+  check('and an occupation without the flag still loses its pools to the race',
+    drifted.length === 0, drifted.slice(0, 5).join('; '));
+}
+
 // ---------- psionics composition ----------
 // BOOK-INGEST-AUDIT.md F10. Composing a psychic race with a psychic occupation
 // used to keep ONE of the two blocks and throw the other away entire. Measured

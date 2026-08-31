@@ -195,6 +195,24 @@ magic:
 
 Named powers and spells need catalog rows; `class-check` lists the missing ones.
 
+**`supersedes_race: true` says the character stops being what it was**
+(BOOK-INGEST-AUDIT.md F11). Composition is race-primary by default - a dragon
+that studies an O.C.C. is still a dragon - and this flag inverts it for the
+handful of entries whose book describes a transformation. The Cosmo-Knight is
+the only class in the catalog that carries it:
+
+- pools (`hit_points_base`, `sdc_base`, `mdc_base`, `ppe_base`),
+  `starting_money` and `xp_table` become the OCCUPATION's;
+- `occ_skills` REPLACE the race's rather than unioning - *"the skills of his
+  past life are lost and the character is reborn"*;
+- `attribute_dice` are compared PER ATTRIBUTE and the higher kept, because that
+  is the one thing the Cosmo-Knight's page carves out: *"use these die rolls, or
+  the attributes of the character's original race, whichever are HIGHER"*.
+
+**Do not reach for it because a class prints its own dice.** Almost every O.C.C.
+does, and the race is meant to win. The test is whether the book says the
+character ceases to be its race.
+
 **A race and an occupation that BOTH state psionics are MERGED, not chosen
 between** (BOOK-INGEST-AUDIT.md F10). A race says what a member of that race is
 born with and an occupation says what training adds, so `powers` and

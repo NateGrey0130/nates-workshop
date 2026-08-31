@@ -1,3 +1,5 @@
+import { diceBounds, isAbsentAttribute } from './dice.js';
+
 // RCC/OCC markdown parser — YAML frontmatter → structured data, body → lore sections.
 // Zero dependencies; runs in the browser, Node, and Cloudflare Pages Functions.
 //
@@ -295,6 +297,32 @@ function validateVariants(variants, errors, warnings, granted = null) {
 //
 // Weakest first. Duplicated from derive.js's ordering, which answers a
 // different question (the psionic save TARGET) — keep the two in step.
+// The only thing this file imports. `dice.js` imports nothing, so the edge is
+// one-way and there is no cycle to reason about. F11 needs to compare two
+// attribute dice expressions and say which is higher.
+//
+// NOT `attributeCeiling`, which was the obvious reuse and is WRONG for this.
+// It adds the exceptional-dice chain, and that chain only applies to a plain
+// 2d6 or 3d6 - so a bare `3d6` scores 18 + 12 while `4d6+4` scores 28 with no
+// chain at all, and the weaker dice win. Measured before the swap: 41 of the 57
+// races beat the Cosmo-Knight's printed M.E. that way.
+//
+// The mean is the comparison, from the dice bounds: it is what "these dice are
+// higher than those" means, and it is stable where a ceiling is not - 1d20 and
+// 3d6+2 share a ceiling of 20 and are not the same offer.
+// How high an attribute expression reaches on average, for the one comparison
+// this file makes (F11). Null when there is nothing to compare: an ABSENT
+// attribute (F5) has no value, and an unreadable expression has no opinion -
+// both lose to a side that does have one.
+function attrReach(expr) {
+  const s = String(expr ?? '').trim();
+  if (!s || isAbsentAttribute(s)) return null;
+  // A FIXED value is its own reach (F8).
+  if (/^\d+$/.test(s)) return Number(s);
+  const b = diceBounds(s);
+  return b ? (b.min + b.max) / 2 : null;
+}
+
 const PSI_TIERS = ['minor', 'major', 'master'];
 const tierRank = (t) => PSI_TIERS.indexOf(String(t ?? '').toLowerCase());
 
@@ -632,9 +660,51 @@ export function combineClasses(rcc, occ) {
   // from what you do. Left off, an occupation's table was dropped on every
   // Palladium character (race primary, occupation second since #210) and the
   // race's absent table won, silently falling back to the house-rule default.
+  //
+  // UNLESS THE OCCUPATION SUPERSEDES THE RACE (F11). The Cosmo-Knight is not a
+  // trade the character takes up, it is a transformation: the Cosmic Forge
+  // rebuilds the body, the entry prints its own dice, M.D.C. and P.P.E., and
+  // its skills line says the skills of his past life are lost and the character
+  // is reborn (Phase World printed 100 and 102).
+  //
+  // Composed race-first, that class arrived wrong in almost every pairing.
+  // Measured over all 57 published races: its `attribute_dice` survived 3
+  // times, its `mdc_base` was discarded 36 times, its `ppe_base` 50 times, and
+  // 37 races carried named skills through the transformation. ALL FOUR were
+  // right for exactly ONE race - and that race states nothing in any of them.
+  // A kreeghor cosmo-knight came out with roughly half the printed strength, a
+  // seventh of the M.D.C. and a fiftieth of the P.P.E., on a class whose whole
+  // character is going toe to toe with a starship.
+  const superseded = occ.supersedes_race === true;
+  // Carried onto the composed object, because callers need to know that what
+  // they are looking at is a transformation. The wizard's Attributes step reads
+  // it to stop calling the merged expressions "racial dice" when half of them
+  // are the occupation's.
+  if (superseded) out.supersedes_race = true;
   for (const key of ['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',
                      'starting_money', 'xp_table']) {
-    if (rcc[key] == null && occ[key] != null) out[key] = occ[key];
+    if (superseded && occ[key] != null) out[key] = occ[key];
+    else if (rcc[key] == null && occ[key] != null) out[key] = occ[key];
+  }
+  // The attributes are the ONE field the book carves out, and it does not say
+  // replace - it says "use these die rolls, or the attributes of the
+  // character's original race, WHICHEVER ARE HIGHER". Per attribute, because
+  // that is how the sentence reads: a race with better P.S. keeps its P.S.
+  // without keeping anything else.
+  //
+  // Compared by ceiling rather than by rolling, because composition happens
+  // before a die is thrown and the stored value is an expression, not a number.
+  // A side with no readable ceiling loses to one that has it; when neither
+  // does, the transformed class keeps its own, which is the direction the rest
+  // of this block already runs.
+  if (superseded && occ.attribute_dice && rcc.attribute_dice) {
+    const merged = { ...occ.attribute_dice };
+    for (const [attr, raceExpr] of Object.entries(rcc.attribute_dice)) {
+      const mine = attrReach(merged[attr]);
+      const theirs = attrReach(raceExpr);
+      if (theirs != null && (mine == null || theirs > mine)) merged[attr] = raceExpr;
+    }
+    out.attribute_dice = merged;
   }
   // An M.D.C. race is the one case where silence IS the statement: it tracks
   // M.D.C. instead of hit points, so an O.C.C.'s hit points must not sneak in.
@@ -660,16 +730,23 @@ export function combineClasses(rcc, occ) {
   // Only NAMED entries collapse. A choice-group has no name and no identity to
   // match on, so two groups stay two groups — "pick 3 Science" from each class
   // is genuinely six picks.
+  //
+  // A SUPERSEDING CLASS DOES NOT UNION THEM (F11). "When the character is
+  // transformed, the skills of his past life are lost and the character is
+  // reborn" is a replacement, and it was the loudest half of the defect: 37 of
+  // the 57 races carried between 1 and 17 named skills through a
+  // transformation that is supposed to erase them.
   const bySkill = new Map();
   const groups = [];
-  for (const entry of [...(rcc.skills?.occ_skills || []), ...(occ.skills?.occ_skills || [])]) {
+  const pastLife = superseded ? [] : (rcc.skills?.occ_skills || []);
+  for (const entry of [...pastLife, ...(occ.skills?.occ_skills || [])]) {
     if (!entry?.name) { groups.push(entry); continue; }
     const key = String(entry.name).toLowerCase();
     const seen = bySkill.get(key);
     if (!seen || (entry.base ?? 0) > (seen.base ?? 0)) bySkill.set(key, entry);
   }
   out.skills = {
-    ...(rcc.skills || {}),
+    ...(superseded ? {} : (rcc.skills || {})),
     occ_skills: [...bySkill.values(), ...groups],
   };
   if (occ.skills?.occ_related_skills) out.skills.occ_related_skills = occ.skills.occ_related_skills;
@@ -1843,6 +1920,18 @@ export function parseClassMarkdown(text) {
   }
   if (data.occ_group !== undefined && data.category !== 'occ') {
     warnings.push('occ_group is set on something that is not an O.C.C. and will do nothing');
+  }
+  // F11. A class whose book says the character stops being what it was.
+  // OPT-IN AND FALSE BY DEFAULT: every class in the catalog today wants the
+  // race-primary policy - a dragon that studies an O.C.C. is still a dragon -
+  // so this must never be inferred, only declared.
+  if (data.supersedes_race !== undefined) {
+    if (data.supersedes_race !== true) {
+      errors.push('supersedes_race is a flag and may only be true; omit it otherwise');
+    }
+    if (data.category !== 'occ') {
+      warnings.push('supersedes_race is set on something that is not an O.C.C. and will do nothing');
+    }
   }
   if (data.occ_restrictions !== undefined && data.category !== 'rcc') {
     warnings.push('occ_restrictions is set on something that is not a race and will do nothing');

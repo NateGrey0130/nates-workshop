@@ -1166,7 +1166,70 @@ same shape as F10's cheaper alternative - but between them the two would cover
 every field `combineClasses` decides, and it would have said something on the
 day this class was imported rather than on the day someone rolls one.
 
-**Open.**
+**Taken, 2026-08-31 (PR #430).** Implemented as the finding's PRIMARY proposal:
+`supersedes_race: true`, one opt-in flag on the O.C.C., read by
+`combineClasses`. Pools, `starting_money` and `xp_table` become the
+occupation's; `occ_skills` replace the race's rather than unioning;
+`attribute_dice` are compared per attribute and the higher kept. Posture as
+written - the flag defaults off, and an occupation without it composes exactly
+as it did, which the regression asserts rather than assumes.
+
+**The premises held.** Every number re-measured against production: dice survive
+3 of 57, `mdc_base` discarded 36 of 57, `ppe_base` 50 of 57, all four right for
+1 of 57, and the three surviving races are the three that state no dice at all.
+The kreeghor example reproduces exactly. One small drift: the skills carried
+through are **1 to 17** each, not 1 to 19. Both book sentences were read off
+their own printed pages and are quoted correctly.
+
+**After the flag: 57 of 57 compose correctly in all four places.** Thirty-two
+races still keep at least one of their own attribute dice, which is the book's
+carve-out doing its job - a dragon hatchling keeps I.Q. 5d6 and P.B. 6d6, and a
+kreeghor keeps M.E. 2d6+12 over the class's 4d6+4 while losing P.S. 3d6+10 to
+its 3d6+32.
+
+**THE OBVIOUS COMPARATOR WAS WRONG, and it failed loudly enough to catch.**
+F11 says the comparison could come from `evalDiceWith` walking the grammar with
+each die pinned to a bound, and `attributeCeiling` is exactly that helper -
+already handling an ABSENT attribute (F5) and a FIXED one (F8), so reusing it
+looked like the disciplined choice. It adds the **exceptional-dice chain**,
+which only a plain 2d6 or 3d6 earns: a bare `3d6` scores 18+12 against
+`4d6+4`'s 28, so the WEAKER dice win. **41 of the 57 races beat this class's
+printed M.E. that way.** The comparison is the MEAN of the dice bounds instead,
+which is also stable where a ceiling is not - 1d20 and 3d6+2 share a ceiling of
+20 and are not the same offer.
+
+**THE FALLEN COSMO-KNIGHT DOES NOT GET THE FLAG, deliberately.** Its
+composition is broken identically - 3 of 57, 36 of 57, 49 of 57, 1 of 57 - and
+F11 does not name it. More than that, it needs a *different rule*: printed 103
+states its attributes as "use the cosmo-knight attributes, but reduce them as
+follows", so a fallen knight whose original race had the higher P.S. should
+carry that race's number **reduced by the printed 22**, where this flag would
+hand it the race's number untouched. Setting it would trade one wrong answer for
+another. It wants a rule this key cannot express.
+
+**One gap remains, and it is step order rather than composition.** The wizard
+rolls attributes at step 3 and asks for the occupation at step 4, so a character
+built straight through rolls the RACE's dice; the merged ones appear only on
+going back to Attributes, where they are now labelled *"transformed dice"*
+rather than *"racial dice"* - a phrase this change made false. The precedent for
+closing it is `trimRelatedToAllowance`, which handles the same out-of-order
+problem for a rolled major psionic and tells the player what it did. Not folded
+in here because silently re-rolling attributes when an occupation is picked
+would be worse than the gap.
+
+**Verified in the wizard**, not only in tests. A Kreeghor Cosmo-Knight shows
+P.S. 3d6+32 against the race's 3d6+10, M.E. 2d6+12 where the race is higher, and
+a P.P.E. pool of **200** - impossible for the kreeghor's own 3d6+6, which tops
+out at 24.
+
+Smoke 1414 -> 1428. Regression 221 -> 228, the new checks composing every
+flagged class against all 57 races and asserting no pool, skill or attribute
+comes out below what the class prints alone - plus one that an occupation
+WITHOUT the flag still loses its pools to the race, which is the posture.
+
+**The `class-check` warning in the cheaper alternative was not built**, and it
+is still worth having: it would cover the fields this flag does not, and would
+have said something on the day the class was imported.
 
 ### F12 - a class note that records the app's limits ages badly, and nothing sweeps the citers
 
