@@ -252,7 +252,56 @@ need to be complete", and the second is a stronger reason to answer it.
 Worth knowing when this is taken: the noro power armour is the *only* vessel in
 this book that any class is issued. The rest are bought.
 
-**Open.**
+**Partly taken, 2026-08-31 (PR #431) - the character-completeness half only.
+THE SCHEMA QUESTION IS STILL OPEN.** Asked and answered directly: import the one
+suit now, defer the schema. No migration, no new column, no new table; one data
+script.
+
+The `Psionic Power Armor` is a `gear` row and the Noro Mystic Warrior is issued
+it. Every figure was read off a **200 dpi render of printed 129 and 130**, not
+from the OCR - the folio on that render reads 129, which also re-confirms this
+book's zero page offset. The **Mark V** is stored: the book prints two marks,
+the class's equipment line names neither, and the Mark X adds contragravity
+flight, weighs twice as much and costs eight million credits rather than four.
+
+**What the measurement changed about the question.** F3 opened as "a GM cannot
+look one up". Measured against production before the change:
+
+| | |
+|---|---|
+| `gear` rows with `category = 'vehicle'` | **35** |
+| ...already carrying a full per-location M.D.C. breakdown in `description` prose | **23** |
+| ...cramming more than one weapon system into `damage` | **4** |
+| classes noting a vessel they did not import | **4** |
+| ...of which are the GM's option rather than issued | **4** |
+| classes ISSUED a vessel and shipping without it | **1** |
+
+So the structure F3 says `gear` cannot hold is **already in the database**, as
+prose nothing can read, in two thirds of the vehicle rows. The choice was never
+"store it or drop it" - it is whether anything should be able to READ it. And
+the only live defect was one character sheet: the Galactic Tracer, Space Pirate,
+Runner and Naruni Repo-Bot vessels are all *"the GM can let the character
+own..."*, checked one by one rather than assumed.
+
+**This row makes exactly the compromise the other 35 make**, deliberately -
+`mdc` is the MAIN BODY (210) alone, the six locations are in `description`, and
+all six weapon systems are in `damage` as prose, with `range` holding the speed
+and `payload` the power system, which is what those columns already mean for a
+vehicle here. It is consistent with the catalog rather than a new shape, and it
+is still lossy. A row that read as complete would be worse, which is F3's own
+argument and is why the description says so in the row itself.
+
+**Still not imported, and still the open question**: the 25 vessels this book
+prints that no class is issued, and the four conditional spaceships. The three
+options F3 lists are unchanged - a `vehicles` table (nine places), a JSON
+`systems` column on `gear` (five, plus the `catalogs.js` SELECT), or continuing
+to drop them. Worth recording for whoever takes it: **a JSON column nothing
+reads is the silent-storage failure `class-import` warns about**, so that option
+wants a reader in the same PR, and the 23 rows whose breakdown is already sitting
+in prose are the backfill it would start from.
+
+Regression 228, with the clean-run gear count moved 1024 -> 1025 - the check
+that pins it is what caught the row landing.
 
 ### F4 — The language-pick invariant matches on prose, and missed one of three
 
