@@ -1,6 +1,6 @@
 -- Correct three class notes that describe an app limit which no longer exists.
 --
--- BOOK-INGEST-AUDIT.md F12, taken in PR #NNN. F12 says an `extraction_notes`
+-- BOOK-INGEST-AUDIT.md F12, taken in PR #432. F12 says an `extraction_notes`
 -- entry does two jobs in one paragraph - what the BOOK prints, which is
 -- permanent, and what the APP could do on the day of the import, which is not -
 -- and that nothing sweeps the classes citing a finding when it is taken.

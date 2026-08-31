@@ -1335,7 +1335,7 @@ finding, which is the correct and useless answer.
 above are all corrected as of PR #425. What it buys is that the sixth is found
 by a command rather than by someone noticing.
 
-**Taken, 2026-08-31 (PR #NNN), all three parts, postures as written.** Part 1
+**Taken, 2026-08-31 (PR #432), all three parts, postures as written.** Part 1
 convention and part 2 protocol are documentation; part 3 is
 `scripts/audit-citations.mjs`, a listing with **no exit code and no
 outcome-note parsing**.
