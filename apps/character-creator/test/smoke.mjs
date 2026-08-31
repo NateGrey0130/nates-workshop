@@ -2680,6 +2680,34 @@ section('Category skill bonuses');
     categoryBonus([], { name: 'X', category: 'Technical' }) === 0
     && categoryBonus(null, { name: 'X', category: 'Technical' }) === 0);
 
+  // ── a cross-category `only` that carries a percentage (F9) ───────────────
+  // "Rogue: Prowl only (+5%)" - the catalog files Prowl under Physical, so the
+  // +5% used to land nowhere while the picker still showed it to the player.
+  {
+    const wasp = [{ name: 'Rogue', only: ['Prowl'], bonus: 5 }, 'Physical'];
+    check('a cross-category only pick is scored by the entry that admitted it',
+      categoryBonus(wasp, { name: 'Prowl', category: 'Physical' }) === 5);
+    check('and it is still admitted, which was never the broken half',
+      categoryAllows(wasp, { name: 'Prowl', category: 'Physical' }) === true);
+
+    // THE GUARD THAT MAKES THIS SAFE. An admitting entry with NO percentage
+    // must not zero out a real-category bonus that does exist: the Glitter Boy
+    // names Wilderness Survival under Espionage with no figure, and its
+    // Wilderness entry pays +2%. Swept across every published class, 18 picks
+    // are admitted this way and only 3 name a percentage - so an unconditional
+    // swap would have taken three classes to zero.
+    const gb = [{ name: 'Espionage', only: ['Wilderness Survival'] }, { name: 'Wilderness', bonus: 2 }];
+    check('an admitting entry with no percentage leaves the real category alone',
+      categoryBonus(gb, { name: 'Wilderness Survival', category: 'Wilderness' }) === 2);
+
+    // Bounded exactly as categoryAllows bounds it: without the real category
+    // listed the pick was never admitted, so there is no bonus to award.
+    const unbounded = [{ name: 'Rogue', only: ['Prowl'], bonus: 5 }];
+    check('an unadmitted cross-category pick scores nothing',
+      categoryBonus(unbounded, { name: 'Prowl', category: 'Physical' }) === 0
+      && categoryAllows(unbounded, { name: 'Prowl', category: 'Physical' }) === false);
+  }
+
   // The restriction and the percentage arrive in one parenthetical on the page,
   // so a picker showing half of it would be lying about the other half.
   check('the label shows the bonus, with or without a restriction', (() => {

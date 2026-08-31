@@ -679,7 +679,42 @@ when the entry carries a bonus, so the import at least knows the number is
 being dropped. It fixes no character, and it would have turned this up in batch
 6 rather than batch 8.
 
-**Open.**
+**Taken, 2026-08-31 (PR #424), the main proposal - with ONE GUARD THE PROPOSAL
+DOES NOT STATE, and without it three classes would have lost a bonus they
+already had.**
+
+The wording is *use that entry's bonus*. Implemented literally that zeroes any
+pick whose admitting entry carries NO percentage - and the sweep says that is
+the common case, not the rare one. Eighteen picks across the catalog are
+admitted by a cross-category `only`; only **three** name a percentage. Of the
+other fifteen, three sit on a real category that pays: the Glitter Boy's
+Wilderness at +2%, the Combat Cyborg's Military at +10%, the CAF Trooper's
+Wilderness at +5%. So the admitting entry wins ONLY where it states a figure,
+which is what the finding's own sentence about the Glitter Boy - *nothing to
+inherit* - assumes without saying.
+
+**The three-row sweep is confirmed exactly**, re-run against 160 published
+classes rather than the 148 of the day: `phaeton-juicer` Wilderness Survival,
+`vacuum-wasp` Prowl, `termite-engineer` Prowl. All three go 0% -> 5%. The other
+fifteen are byte-identical before and after, verified by running the real
+`categoryBonus` over every one.
+
+**And the cheaper alternative was taken as well, because it costs one line now
+that the behaviour has changed.** `class-check`'s `cross-category` report said
+only that these work; it now says a printed percentage is applied too, so the
+next import is not left to infer it from this file.
+
+`fix-cross-category-bonus-notes.sql` corrects the Vacuum Wasp's and the Termite
+Engineer's `extraction_notes`, both of which stated the +5% does not land -
+true when written, false as of this PR. That is the FOURTH note of this shape
+corrected in this book. The Phaeton Juicer carries no such note and needed no
+edit. NO NUMBER MOVES IN THAT SCRIPT: `bonus: 5` was always stored on the Rogue
+entry and the parser simply never read it, so the data script is prose only.
+Applied `--remote` before the PR.
+
+Smoke 1353 -> 1357, regression 212 unchanged.
+
+**Closed.**
 
 ### F10 - an R.C.C. and an O.C.C. that are BOTH psychic keep only one block, and the race wins every tie
 
