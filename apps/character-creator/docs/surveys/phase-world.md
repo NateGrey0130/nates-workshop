@@ -225,7 +225,7 @@ XP ladders are shared; the column names the ladder as printed on p.183.
 | Vacuum Wasp | 92-93 | Machine People & Phantom / Vacuum Wasps |
 | Termite Engineer | 93-94 | Pleasurer & Termite Engineers |
 | Cosmo-Knight | 99-102 | Cosmo-Knight |
-| Fallen Cosmo-Knight | 102-104 | (uses the Cosmo-Knight ladder) |
+| Fallen Cosmo-Knight | 102-104 | Cosmo-Knight (its own prose names a *Fallen Knight* table p.183 does not have) |
 
 **`xp_table` goes on the O.C.C.s only.** `frontmatter.md` is explicit that a race
 carrying one wins over the occupation's and silently drops it — the bug that
@@ -707,6 +707,99 @@ Phase 4 costs money; everything above was free.
      no occupation then has no S.D.C. at all unless the class also gets a
      `CORE_SDC_BY_CLASS` entry. That entry is the one code change this book is
      allowed, and it is required rather than optional.
+
+   - **A BOOK CAN CONTRADICT ITS OWN AUTHORITY TABLE, AND THE TABLE WINS.**
+     Printed 103 says a fallen knight's level improvement continues on the
+     Fallen Knight Experience Table. There is no such table. Printed 183 was
+     rendered whole and carries FOURTEEN ladders, one headed `Cosmo-Knight` and
+     none headed Fallen; the word `Fallen` is absent from that page's OCR
+     entirely, appearing in the cache only on printed 5, 6, 96 and 99-104. The
+     alphabetical index on printed 6 then files the entry as
+     *Cosmo-Knight: Fallen O.C.C.* at page 102 - a SUB-ENTRY of the
+     Cosmo-Knight, not a class of its own. Two authorities against one
+     sentence, so the pair share the Cosmo-Knight ladder. This is the Royal
+     Kreeghor with the signs reversed: there a section heading corrected a
+     survey built from the Contents, here a table corrected a sentence in the
+     entry's own prose. **Which authority lost is worth writing down**, because
+     the losing reading is the one a later session will find first.
+
+   - **A SUBHEADING CAN CARRY BOTH LABELS AT ONCE.** The Fallen Knight's is
+     *Optional Player Character or NPC Villains*, printed 102 - a shape neither
+     the Royal Kreeghor rule (a heading carrying the NPC label the Contents
+     does not) nor the Vacuum Wasp rule (playable entries interleaved with NPC
+     ones) covers, because it is both labels in one line. The entry settles it
+     itself four paragraphs later, on printed 103, with a bold line of its own:
+     available as player characters. The printed-6 index agrees - it calls the
+     entry an O.C.C. and attaches no NPC label, where it does label four other
+     entries NPC. **Read to the entry's own statement before deciding from its
+     heading.**
+
+   - **`variants` STILL CANNOT CARRY WHAT AN ENTRY TAKES AWAY.** The Fallen
+     Knight is printed entirely as deltas off the Cosmo-Knight - use its
+     attributes but reduce them, halve the M.D.C., halve the P.P.E., same
+     skills at -20% - which reads exactly like `variants` and is not one.
+     `VARIANT_OVERRIDES` was grepped rather than assumed: `special_abilities`
+     is not in it, so a variant INHERITS the base's abilities wholesale, and
+     the sentence this entry turns on is that ALL former cosmo-knight powers
+     and O.C.C. bonuses are lost. A variant would have shipped a fallen knight
+     still carrying every power the entry exists to remove. Two classes, on the
+     draconid's precedent. **That list is exactly as small as it looks**, which
+     is the opposite of the `js/leveling.js` lesson and has now been checked
+     from both directions in this book.
+
+   - **`combineClasses` HAS THREE FIXED POLICIES AND THIS BOOK HAS DISAGREED
+     WITH ALL THREE.** F10 is the psionics block being CHOSEN where it should
+     merge. F11 is the Cosmo-Knight, whose transformation replaces the
+     character's body and past: its attribute line says to take the HIGHER of
+     its dice and the race's, its M.D.C. and P.P.E. are the new body's, and its
+     O.C.C. Skills line says the skills of the past life are lost. The function
+     gives the race precedence on dice and pools and UNIONS the skills.
+     Measured against all 57 published R.C.C.s: the dice survive on 3, the
+     M.D.C. is discarded on 36, the P.P.E. on 50, and 37 races carry between 1
+     and 19 named skills through a transformation the book says erases them.
+     **Exactly ONE race of 57 composes this class correctly**, and only by
+     stating nothing in any of the four places. The figures are stored anyway:
+     a character with no race then gets them, and omitting them would be wrong
+     in 57 cases instead of 54.
+
+   - **A CLASS CAN GRANT THE SAME SKILL TWICE AT TWO FIGURES.** The
+     Cosmo-Knight's O.C.C. Skills line prints Navigation: Space (+15%), which
+     over the catalog base of 40 is 55%; its Galactic Awareness power on
+     printed 101 then states an EFFECTIVE navigation: space skill of 89%. The
+     result-shaped figure is stored and the bonus-shaped one recorded, on the
+     doctrine that a book disagreeing with itself gets one reading stored and
+     the other written down. The same sentence's land navigation of 92% has no
+     competing entry and is granted outright - the Pleasurer's test, whether
+     the catalog already holds the row, decides it.
+
+   - **THE PAGE RANGES IN THIS SURVEY'S TABLE WERE RIGHT THIS TIME**, and after
+     four corrections across three batches that is worth recording. Both were
+     re-derived from the entry's own heading and its own last line rather than
+     inherited: 99-102 and 102-104, both confirmed. The warning above is about
+     CHECKING, not about the table being wrong - it had been wrong four times
+     and was right twice here, and a session that stops checking because the
+     last two held will find the fifth.
+
+   - **A BLANKET PERCENTAGE PENALTY DOES NOT REACH EVERYWHERE THE BOOK POINTS
+     IT.** The Fallen Knight has the Cosmo-Knight's skills at -20%. It cannot
+     reach the SECONDARY skills, because `parser.js` rejects a bonus on a
+     secondary category outright - deliberately, reasoning that a book's
+     parenthetical percentage applies to related selections only, which was
+     true of every class before this one. It also must not reach Weapon
+     Proficiencies, whose catalog rows are base 0 with no percentage to reduce.
+     Both are in the class's notes for a GM to apply.
+
+   - **AND IT COST THE REGRESSION SUITE ONE PINNED INVARIANT.**
+     `regression.mjs` required every language choice group to carry a bonus
+     GREATER than zero. A fallen knight's is exactly zero - the Cosmo-Knight's
+     +20% less this entry's -20% - and the pick then resolves at the catalog's
+     own 50% +5%/level, which is right. The check's own comment says it exists
+     to catch a bonus LOST in a rewrite, which arrives as `undefined` rather
+     than as 0, so the comparison moved to `>= 0` and catches every case it was
+     built for. **This is the only code this book changed**, it is a test
+     rather than the app, and the zero is written out explicitly in the class
+     so an absent bonus and a computed one still read differently.
+
  The p.183 ladders group classes that
    share an XP table, and classes that share a ladder sit in the same chapter, so
    the ladder is also the cheapest batching. Order by how much the app can
@@ -763,21 +856,41 @@ What is deliberately left, with the reason for each:
 | 2026-08-31 | [#416](https://github.com/NateGrey0130/nates-workshop/pull/416) | **classes, batch 8 - the Pleasurer and two hive-spawn**: Pleasurer (printed 88-89), Vacuum Wasp (92-93) and Termite Engineer (93-94). Catalog 151 -> 154 classes; no new skills and no new gear, because none of the three states any. Also `fix-galactic-tracer-rogue-note.sql`, correcting two false claims #413 shipped about the book's +6%. Finding F9 filed, with a three-row sweep behind it, and the Pleasurer added to F5 as its second occurrence. One `CORE_SDC_BY_CLASS` entry in `js/compose.js`, for the Pleasurer. Applied `--remote` before the PR. |
 | 2026-08-31 | [#417](https://github.com/NateGrey0130/nates-workshop/pull/417) | **classes, batch 9 - the four Prometheans**: First Stage Promethean (printed 25-27), Promethean Phase Adept (27-28), Promethean Time Master (28-29) and Phase Mystic (29). Catalog 154 -> 158 classes, 101 -> 116 psionic powers, 1021 -> 1024 gear. The book's FIRST psionic rows and its first magic-granting class. The 15 Phase Powers of printed 32-35 went in as `psionic_powers` in a new `Phase` category, correcting this survey, which had them down as one NPC class's racial abilities; three of the four playable entries select from them. Gear: two steelcloth armors read off their class pages (A.R. 12/90 M.D.C. and A.R. 19/40 M.D.C.) plus one stub, the meditation chip. Finding F10 filed, with a 361-pair sweep behind it - a race and an O.C.C. that are both psychic keep only one block, and the race wins every tie. Three `CORE_SDC_BY_CLASS` entries in `js/compose.js`, for the three O.C.C.s. Two page-range corrections and no new skills or spells. Applied `--remote` before the PR. |
 
+| 2026-08-31 | [#418](https://github.com/NateGrey0130/nates-workshop/pull/418) | **classes, batch 10 - the two Cosmo-Knights, and the last**: Cosmo-Knight (printed 99-102) and Fallen Cosmo-Knight (102-104). Catalog 158 -> 160 classes; no new skills, gear, spells or psionics, because neither entry prints a `Money:` line anywhere in printed 99-104 and the Cosmo-Knight's Standard Equipment is prose naming no item. **34 of 34 playable classes are in and the book is closed** - `BOOK-INGEST-QUEUE.md` moves `phase-world` from `importing` to `imported`. The Fallen Knight's own prose sends level improvement to a Fallen Knight Experience Table that printed 183 does not contain; the table won, the pair share the Cosmo-Knight ladder, and the losing reading is recorded. Not a variant: `VARIANT_OVERRIDES` excludes `special_abilities`, so a variant would have kept every power the entry exists to remove. Finding F11 filed, with a 57-race sweep behind it - a class whose book says it REPLACES the race cannot say so, and exactly one race of 57 composes the Cosmo-Knight correctly. One line of code changed, the only code this book changed: `regression.mjs` required a POSITIVE bonus on every language pick and a fallen knight's is exactly zero, so the comparison moved to `>= 0`. Applied `--remote` before the PR. |
+
 ### What remains
 
-`node scripts/source-coverage.mjs --remote`, after batch 9:
+**Nothing this book defines and this app can hold.** The import closed on
+2026-08-31 with the two Cosmo-Knights, and all **34** playable classes are in,
+alongside 9 skills, 8 re-citations, 47 gear rows and 15 psionic powers.
+`BOOK-INGEST-QUEUE.md` moves `phase-world` from `importing` to `imported` in
+the same PR.
+
+What is left is left ON PURPOSE, and each reason is in the extraction plan
+above rather than restated here: the **25 vessels** of printed 130-149 and
+157-173, which `gear` has no shape for (`BOOK-INGEST-AUDIT.md` F3); the **12
+entries the book names but does not make playable**, seven labelled NPC or GM
+material in its own Contents, one in its section heading, three that are lore
+or a cross-reference or the alien-race generator, and the Dominator; the
+**dog-fighting and space combat rules** of 151-157, which are rules text and
+not catalog data; and the **`Space:` family rename**, which is duplicate-tool
+work rather than an import. Ten findings, F2 through F11, record every
+mechanic the book asked for and the app could not express; none was
+implemented, per the standing constraint.
+
+`node scripts/source-coverage.mjs --remote`, after batch 10 - the last:
 
 ```
   rue                648 / 23
   pf                 583 / 3
   bom                412 / 0
   ww                 130 / 0
-  phase-world        113 / 0
+  phase-world        115 / 0
   ju                  62 / 0
   rifts-skill-list     0 / 40
 ```
 
-**`phase-world` is 113 traceable and 0 other.** Every row citing this book names a
+**`phase-world` is 115 traceable and 0 other.** Every row citing this book names a
 page range this machine holds, across skills, gear and classes, which is what
 `traceable` means and all it means. It does not say the numbers are right; the
 gear script's own defence for that is the fourteen 200 dpi renders it was read

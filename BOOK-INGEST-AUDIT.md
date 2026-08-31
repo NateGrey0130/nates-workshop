@@ -593,3 +593,99 @@ fixes no character, but it would have caught the noro in batch 2 instead of
 batch 9.
 
 **Open.**
+
+### F11 - a class whose book says it REPLACES the race cannot say so, and `combineClasses` gives the race precedence in four places at once
+
+The Cosmo-Knight O.C.C. (Phase World, printed 100-102) is a transformation, not
+a trade. The Cosmic Forge rebuilds the body: the entry prints its own attribute
+dice, its own M.D.C., its own P.P.E., and an O.C.C. Skills line whose first
+sentence is that when the character is transformed the skills of his past life
+are lost and the character is reborn. The attribute line is stronger still - it
+says to use these die rolls OR the attributes of the character's original race,
+**whichever are HIGHER**.
+
+`combineClasses` in `js/parser.js` cannot express any of that. Its policy is
+fixed and race-primary:
+
+```js
+for (const key of ['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',
+                   'starting_money', 'xp_table']) {
+  if (rcc[key] == null && occ[key] != null) out[key] = occ[key];
+}
+```
+
+The occupation's value is used **only when the race states none**. There is no
+comparison, so a take-the-higher rule is unrepresentable; and the skills a few
+lines below are UNIONED, so a replace rule is unrepresentable too.
+
+**Measured, not reasoned about.** All 158 published classes parsed through the
+real parser, and the real `combineClasses` called on this class against every
+one of the 57 published R.C.C.s, 2026-08-31:
+
+| | |
+|---|---|
+| races the Cosmo-Knight's `attribute_dice` survives | **3** of 57 |
+| races its `mdc_base` is discarded on | **36** of 57 |
+| races its `ppe_base` is discarded on | **50** of 57 |
+| races that carry named skills through the transformation | **37** of 57, between 1 and 19 skills each |
+| races where all four compose correctly | **1** of 57 |
+
+The three races the dice survive on - `chiang-ku-dragon`,
+`warrior-of-valhalla`, `murder-wraith` - survive by ACCIDENT: they are the only
+published races that state no `attribute_dice` at all, so nothing was compared
+there either. The one race that composes correctly in all four places,
+`warrior-of-valhalla`, does so by stating nothing in any of them.
+
+A concrete pair, printed by the same run:
+
+```
+kreeghor + cosmo-knight
+  attribute_dice.PS = "3d6+10"     the kreeghor's. The cosmo-knight prints 3d6+32
+  mdc_base          = "2d6x10+20, plus 3d6 per level of experience"
+  ppe_base          = "3d6+6"      the cosmo-knight prints 1d6x100
+```
+
+A kreeghor cosmo-knight comes out with roughly half the printed strength, a
+seventh of the printed M.D.C. and a fiftieth of the printed P.P.E., on a class
+whose whole character is going toe to toe with a starship.
+
+**This is F10's mechanism on four more fields.** F10 is `combineClasses`
+CHOOSING a `psionics` block where it should merge; this is `combineClasses`
+choosing a race's pools and dice where the book says compare, and unioning
+skills where the book says replace. Three fixed policies, one function, and the
+books have now disagreed with all three. It is NOT F5 or F8, which are about
+what a single `attribute_dice` cell may CONTAIN; this is about what happens to
+two cells that both exist.
+
+**The import stores the class's own figures anyway**, which is the least-wrong
+of the two available answers rather than a good one: a character created with no
+race at all then gets the printed values, and omitting them would produce a flat
+3d6 and no pools in every case instead of in 54 of 57.
+
+**Proposal:** let a class declare that it supersedes the race, and make
+`combineClasses` honour it. One key on the O.C.C. -
+`supersedes_race: true`, or a narrower `race_composition: replace | higher` if
+the two rules want separating - which changes the loop above from *race wins
+unless absent* to *this class's value wins*, and makes the skills merge drop the
+race's `occ_skills` rather than union them. The attribute half wants the
+comparison rather than the replacement, and the comparison is not free: a dice
+expression has no single number to compare, so "whichever are HIGHER" has to
+mean comparing the two expressions' means (or their maxima) at creation and
+keeping the winner per attribute. `evalDiceWith` already walks the grammar with
+each die pinned to its floor or ceiling, which is where the bound would come
+from.
+
+**Posture: opt-in, and no existing class changes behaviour.** Every class in
+the catalog today wants the current policy - a dragon that studies an O.C.C. is
+still a dragon - so the new key must default off and the 158 published rows must
+compose exactly as they do now. This is a mechanism for the handful of entries
+whose book says the character stops being what it was.
+
+**Cheaper alternative:** make `class-check` warn when a class states an
+`attribute_dice`, a pool base or an `occ_skills` list that composition would
+discard for some race it can be taken with. It fixes no character and it is the
+same shape as F10's cheaper alternative - but between them the two would cover
+every field `combineClasses` decides, and it would have said something on the
+day this class was imported rather than on the day someone rolls one.
+
+**Open.**

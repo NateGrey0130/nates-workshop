@@ -19,29 +19,30 @@ the human view of the same thing plus the import status.
 | `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | cached |
 | `mystic-russia` | Rifts WB 18: Mystic Russia | 178 | text layer | 176 | +1 | cached |
 | `free-quebec` | Rifts WB 22: Free Quebec | 194 | text layer | 192 | +1 | cached |
-| `phase-world` | Rifts DB 2: Phase World | 209 | SCAN (OCR) | 208 | **+0** | **importing** |
+| `phase-world` | Rifts DB 2: Phase World | 209 | SCAN (OCR) | 208 | **+0** | **imported** |
 
-Status is `cached` -> `surveyed` -> `imported`. `phase-world` is **importing**,
-a fourth state the earlier sessions did not need: surveyed on 2026-08-30 and
-shipping in category batches, with thirty-two of its thirty-four playable
-classes in and two left. The
-survey at `apps/character-creator/docs/surveys/phase-world.md` is the boot file
-for any session continuing it, and its ledger is the authority on what has
-already gone in. The other six books are cache-only: the kickoff session caches
-and registers, by design.
+Status is `cached` -> `surveyed` -> `imported`. `phase-world` is **imported** as
+of 2026-08-31: surveyed on 2026-08-30, then shipped in ten category batches,
+and all THIRTY-FOUR of its playable classes are in. It also passed through a
+fourth state the earlier sessions did not need - `importing`, for a book
+shipping in batches across many sessions - and that state is now empty. The
+survey at `apps/character-creator/docs/surveys/phase-world.md` remains the
+record of what went in and what was deliberately left; its ledger is the
+authority. The other six books are cache-only: the kickoff session caches and
+registers, by design.
 
 ### `phase-world` progress, 2026-08-31
 
-Sixteen PRs - ten carrying data, each applied `--remote` before merging, and six
-carrying survey, docs or a correction. Catalog totals moved 336 -> 345 skills,
-975 -> 1024 gear, 101 -> 116 psionic powers, 126 -> 158 classes.
+Seventeen PRs - eleven carrying data, each applied `--remote` before merging, and
+six carrying survey, docs or a correction. Catalog totals moved 336 -> 345 skills,
+975 -> 1024 gear, 101 -> 116 psionic powers, 126 -> 160 classes.
 
 | category | in | left |
 |---|---|---|
 | skills | **9** - 7 new plus 2 the CCW classes turned up (Fighter Combat: Basic and Elite, printed 151) | none known; the book collects its new skills on printed 52-53 and 150-151 and both were read whole |
 | re-citations | **8** rows moved off the phantom `Rifts Skill List` onto printed 52-53 and 150-151, taking it from 48 untraceable rows to 40 | the other 40, which are not this book's |
 | gear | **47** - 43 from printed 114-129, every number read off a 200 dpi render, plus four the class entries themselves state. Three of the four are real rows rather than stubs: the Steelcloth Robes (A.R. 12, 90 M.D.C., printed 27) and the Steelcloth Robes and Jumpsuit (A.R. 19, 40 M.D.C., printed 29) are named AND statted inside their own class entries, which is more than the gear chapter gives some of its own rows. The two STUBS are the Plasma Hand Cannon, which appears exactly once in the whole book with its 2D6x10 M.D. and nothing else, and the Meditation Chip, which the two phase O.C.C.s carry and the book never stats | none in that range |
-| classes | **32** of 34. The CCW, printed 56-70: four O.C.C.s, the noro and its two O.C.C.s, Space Wolfen, Wolfen Quatoria, Catyr, Seljuk. The Transgalactic Empire, printed 73-84: Kreeghor, Machine People, Silhouette, Imperial Legionnaire, Imperial Security Agent, Freedom Fighter. The five spacefaring trades, printed 38-43: Spacer, Galactic Tracer, Space Pirate, Runner, Colonist. Two races and the Naruni enforcer, printed 35-38 and 46-48: Draconid, Phantom, Naruni Repo-Bot. The Pleasurer and the two playable hive-spawn, printed 88-89 and 92-94: Pleasurer, Vacuum Wasp, Termite Engineer. The four Prometheans, printed 25-29: First Stage Promethean, Promethean Phase Adept, Promethean Time Master, Phase Mystic | **2** - the two Cosmo-Knights, printed 99-104, which finish the book |
+| classes | **34** of 34 - the book is complete. The CCW, printed 56-70: four O.C.C.s, the noro and its two O.C.C.s, Space Wolfen, Wolfen Quatoria, Catyr, Seljuk. The Transgalactic Empire, printed 73-84: Kreeghor, Machine People, Silhouette, Imperial Legionnaire, Imperial Security Agent, Freedom Fighter. The five spacefaring trades, printed 38-43: Spacer, Galactic Tracer, Space Pirate, Runner, Colonist. Two races and the Naruni enforcer, printed 35-38 and 46-48: Draconid, Phantom, Naruni Repo-Bot. The Pleasurer and the two playable hive-spawn, printed 88-89 and 92-94: Pleasurer, Vacuum Wasp, Termite Engineer. The four Prometheans, printed 25-29: First Stage Promethean, Promethean Phase Adept, Promethean Time Master, Phase Mystic. The two Cosmo-Knights, printed 99-104: Cosmo-Knight and Fallen Cosmo-Knight | **none** - every playable class the book defines is in |
 | psionic powers | **15** - the Phase Powers of printed 32-35, in a new `Phase` category. The book calls them "a variation on psionic abilities... activated by using I.S.P.", and each prints Range, Duration, I.S.P. and a description - the exact column set the table holds | none; the book has no other power list |
 | spells | **0** | the book defines **zero**, checked by stat-block scan rather than assumed. The Promethean Time Master's temporal magic is from Rifts England, which this catalog does not hold |
 
@@ -81,7 +82,7 @@ player-characters", and p.183 gives it no ladder. The Contents does not label it
 and the survey read the Contents. It is the only entry in the book where the
 heading and the Contents disagree about that.
 
-Nine findings have come out of this book so far - F2 through F10 in
+Ten findings have come out of this book - F2 through F11 in
 `BOOK-INGEST-AUDIT.md`. None was implemented, per the standing constraint. F5 is
 `attribute_dice` having no way to say an attribute DOES NOT EXIST: the Machine
 People print "P.E. N/A" and `app.js` falls back to `3d6`, so the sheet shows a
@@ -122,6 +123,24 @@ composed. The Promethean Phase Adept is the third, and its tier is not the
 lever - master is the top of the ladder, the race holds it, and the comparison
 is strict.
 
+F11 is the LAST of them and it is F10's mechanism on four more fields. The
+Cosmo-Knight is a transformation rather than a trade: its attribute line says to
+take the HIGHER of its dice and the character's original race's, its M.D.C. and
+P.P.E. are the new body's, and its O.C.C. Skills line says the skills of the past
+life are lost and the character is reborn. `combineClasses` gives the RACE
+precedence on `attribute_dice` and on every pool base - the occupation's value is
+used only where the race states none, so nothing is ever compared - and it UNIONS
+the two skill lists, so nothing can be replaced either. Measured against all 57
+published R.C.C.s: the class's own dice survive on 3, its M.D.C. is discarded on
+36, its P.P.E. on 50, and 37 races carry between 1 and 19 named skills through the
+transformation. Exactly ONE race of 57 composes it correctly in all four places,
+and only by stating nothing in any of them. A kreeghor cosmo-knight comes out with
+P.S. 3d6+10 where the class prints 3d6+32. The figures are stored anyway, because
+a character with no race then gets them and omitting them would be wrong in 57
+cases rather than 54. It is NOT F5 or F8, which are about what one
+`attribute_dice` cell may contain; this is about what happens to two cells that
+both exist.
+
 **What batch 9 deliberately did not import.** The Promethean Time Master's
 TEMPORAL MAGIC: it learns two temporal spells plus two normal ones at first
 level and one of each per level after, and only the normal half is granted. The
@@ -157,6 +176,42 @@ for an OCR error to be normalised to +5, which is exactly the reading the
 Pleasurer import had to talk itself out of. **Tally the cache before writing
 "the only" into a note** - `grep -ohE '\(\+[0-9]+%\)' | sort | uniq -c` over
 the whole book answers it and costs nothing.
+
+**Batch 10 closed the book, and it added no skills, no gear and no spells** -
+the same shape as batch 8, and for the same reason. Neither cosmo-knight entry
+prints a `Money:` line: grepped across printed 99 to 104, there is not one, and
+the Cosmo-Knight's Standard Equipment is prose naming no item the catalog could
+hold. So both classes ship with no `starting_money` and no `equipment_starting`,
+and `class-check --field-sources` reports outright that there are no free-text
+fields to trace - an absence that is the entry's own doing rather than a gap in
+the reading. Neither needed a `CORE_SDC_BY_CLASS` entry either: `withCorePools`
+returns early for a class stating an `mdc_base`, and both state one.
+
+**What batch 10 could not import, beyond F11.** The Fallen Knight's magic-or-
+psionics option is described and not granted: the book points at the ley line
+walker and the mind melter for progression, withholds their special abilities,
+and adds two more classes from Conversion Books this catalog does not hold. A
+`magic` or `psionics` block would have to replicate one of two other classes'
+whole ladders and then choose between them at creation. Granting less and saying
+so is the Time Master's precedent from batch 9, and both named classes are in
+this catalog for a player to read. The blanket -20% also stops twice: at the
+SECONDARY skills, because `parser.js` rejects a bonus on a secondary category
+outright - deliberately, on the reasoning that a book's parenthetical percentage
+applies to related selections only, which was true of every class before this
+one - and at Weapon Proficiencies, whose catalog rows are base 0 with no
+percentage to reduce. Both are in the class's notes for a GM to apply.
+
+**And batch 10 changed one line of code, which is the only code this book
+changed.** `regression.mjs` required every language choice group to carry a
+bonus GREATER than zero. A fallen knight's is exactly zero - the Cosmo-Knight's
++20% less this entry's -20% - and the pick then resolves at the catalog's own
+50% +5%/level, which is the right answer. The check's own comment says it exists
+to catch a bonus LOST in a rewrite, and a lost bonus arrives as `undefined`
+rather than as 0, so the comparison moved to `>= 0` and still catches every case
+it was built for. It is a test rather than the app, the schema, a validator or a
+generator, and the zero is written out explicitly in the class so an absent
+bonus and a computed one still read differently.
+
 
 **Two corrections have been shipped against classes this batch already
 imported**, both the same mistake: an extraction note asserting the app could not

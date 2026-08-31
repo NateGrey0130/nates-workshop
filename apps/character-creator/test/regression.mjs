@@ -797,8 +797,16 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // The bonus is what makes the pick worth taking, and losing one in the
   // rewrite would be silent because the row still resolves. Two classes had
   // none to begin with and gained the figure their own note recorded.
-  const noBonus = languageGroups.filter(({ e }) => !(typeof e.bonus === 'number' && e.bonus > 0));
-  check('and every one keeps a positive bonus', noBonus.length === 0,
+  //
+  // The test is that a bonus was STATED, not that it is positive. It read
+  // `> 0` until the Fallen Cosmo-Knight, whose book grants the Cosmo-Knight's
+  // skills - three languages at +20% among them - and then reduces every one
+  // of them by 20 points. Zero is that class's correct figure, and the row
+  // resolves at the catalog's own 50% +5%/level, which is right. The failure
+  // this check was written for is an ABSENT bonus, and `>= 0` still catches
+  // every one of those: a bonus lost in a rewrite is undefined, not zero.
+  const noBonus = languageGroups.filter(({ e }) => !(typeof e.bonus === 'number' && e.bonus >= 0));
+  check('and every one states a bonus, none of them negative', noBonus.length === 0,
     noBonus.map((x) => x.id).join(', '));
 
   // A language must never be FIXED at a flat percentage: it resolves off the
