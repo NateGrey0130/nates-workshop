@@ -19,7 +19,13 @@ from them nine times before this was written.
 3. **One PR per finding.** Not two in a PR, not one across two.
 4. A dated outcome note — `**Taken, <date> (PR #N)**` — appended under the
    finding **in the same PR**, including whatever you found that contradicts it.
-5. **Merge on a separate word.** Opening the PR is not permission to merge it.
+5. **Correct every class note that cites the finding, in the same PR.** A
+   class's `extraction_notes` records both what the book prints and what the app
+   could do that day; taking a finding falsifies the second half wherever it was
+   written down. `node scripts/audit-citations.mjs --remote F10` lists who cites
+   what — it has no opinion about whether the finding was taken, which is
+   deliberate (see below).
+6. **Merge on a separate word.** Opening the PR is not permission to merge it.
 
 "Take F6" means **as written — scope and posture both**, not the version you
 would have proposed. If the finding is wrong, say so in the note and implement
@@ -43,6 +49,29 @@ slur on the audits, just what happens when a document sits still while the tree
 moves. One such error would have shipped a silent bug if implemented as written.
 Distrust first whatever is cheapest to check: line numbers, counts, "X exists
 nowhere", and any claim about what another finding says.
+
+## A class note that cites a finding goes stale when the finding is taken
+
+An `extraction_notes` entry does two jobs in one paragraph. *What the book
+prints and what was stored* is permanent. *What the app could do on the day of
+the import* is not, and it rots inside a record that otherwise stays true.
+
+**Write the DECISION and cite the finding; let the finding own the mechanism.**
+*"Not stored; see F8"* never goes stale. *"`rollAttribute` parses only NdM
+forms"* always will. Where the mechanism has to be in the class, write it
+past-tense and name the PR — the same doctrine this file already applies to
+audit measurements, extended to class prose.
+
+`scripts/audit-citations.mjs` lists which classes cite which finding, and flags
+passages carrying limitation language beside a citation. **It parses no outcome
+notes and has no exit code**, for the reason in the next section: a mechanical
+reader of those notes has been wrong five times, and a gate would fire on every
+class citing a still-open finding, which is the correct and useless answer. It
+answers *who mentions F8*; whether the citation is stale stays a judgement.
+
+This was skipped once and the false claim reached production and stayed for
+three PRs. It recurred three more times in a single day — two Prometheans and
+the Fallen Cosmo-Knight, from PRs merged hours earlier.
 
 ## Never grep for the outcome note. Read under the heading
 

@@ -591,6 +591,10 @@ scripts/
 │                           reads the snapshot; only this script talks to OFD
 ├── ofd-refresh-lib.mjs     Its deterministic half — CSV in, ASCII SQL out —
 │                           so FilamentForge's smoke test can run it
+├── audit-citations.mjs     Which published classes cite which audit finding, and
+│                           which of those passages describe an app LIMIT that a
+│                           taken finding may have lifted. Parses no outcome
+│                           notes and sets no exit code, deliberately
 ├── drift-check.mjs         Repo vs live database: migrations, data scripts,
 │                           tables, columns, classes, and an advisory citation
 │                           check against every cached book books.json knows

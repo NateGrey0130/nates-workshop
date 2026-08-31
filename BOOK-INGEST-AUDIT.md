@@ -1335,7 +1335,53 @@ finding, which is the correct and useless answer.
 above are all corrected as of PR #425. What it buys is that the sixth is found
 by a command rather than by someone noticing.
 
-**Open.**
+**Taken, 2026-08-31 (PR #432), all three parts, postures as written.** Part 1
+convention and part 2 protocol are documentation; part 3 is
+`scripts/audit-citations.mjs`, a listing with **no exit code and no
+outcome-note parsing**.
+
+**"IT REPAIRS NOTHING ALREADY SHIPPED" WAS TRUE WHEN FILED AND FALSE BY THE TIME
+IT WAS TAKEN.** Three new stale citations appeared while this sat on the menu,
+all from PRs merged the same day, all mine:
+
+| class | cites | asserted | falsified by |
+|---|---|---|---|
+| `first-stage-promethean` | F10 | the Phase Adept's block "are discarded" | F10, PR #429 |
+| `promethean-phase-adept` | F10 | its powers and schedule "are dropped" | F10, PR #429 |
+| `fallen-cosmo-knight` | F11 | the take-the-higher rule is "equally unstorable" | F11, PR #430 |
+
+F12 predicted this would recur "about six more times unless something changes".
+It recurred three times in one day, to the person who had just written the
+finding, which is a better argument for part 2 than the finding makes. All three
+are corrected in `fix-stale-finding-citations.sql`, applied `--remote`.
+
+The third is the interesting one. It is not simply false - `supersedes_race`
+exists now, and the Fallen deliberately does not carry it because printed 103
+states a different rule. A note saying "unstorable" makes a considered omission
+read as an oversight, so it now says which and why.
+
+**The corpus is bigger than the finding recorded**: 20 of 160 classes cite a
+finding, not 16, across nine findings - F2 (6), F3 (5), F6 (4), F7 (4), F5 (2),
+F8 (2), F9 (2), F10 (2), F11 (2). The counts moved because five findings were
+taken between the filing and the taking.
+
+**The tool's own comments are the trap it exists to avoid.** It explains in
+prose why it does not read an outcome note, quoting the words those notes use -
+so a check scanning the whole file would fail on the comment that exists to
+prevent the thing it checks for. The smoke check strips comments first and
+tests EXECUTABLE lines only. This is INGESTION-AUDIT F14 exactly: the finding
+that describes the outcome-note format carries the format inside backticks, and
+every grep reports it taken when it is open.
+
+**The signal-to-noise is the argument for the posture.** Run against production
+it flagged **seven** passages carrying limitation language beside a citation:
+three stale, four describing limits that are still real - all four being F3
+citers, whose "`gear` has no shape for a vessel" remains true because F3's
+schema half is still open. A gate would have failed on all seven. A listing
+hands over seven paragraphs to re-read, which is thirty seconds.
+
+Smoke 1428 -> 1434. The new checks pin the POSTURE rather than the output - the
+output needs a live database and belongs to whoever is taking a finding.
 
 ### F13 - ten published classes carry a doubled apostrophe in their stored markdown
 

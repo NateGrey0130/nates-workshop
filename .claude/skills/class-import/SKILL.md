@@ -201,6 +201,27 @@ string and is fine.
   heading — and for a RACE it is always `1D6`, because a race is never a man of
   arms and the entry only fires for a race played with no occupation at all.
 
+## An extraction note that describes the APP will go stale
+
+`extraction_notes` does two jobs at once, and only one of them is permanent:
+
+| | |
+|---|---|
+| what the book prints, and what was stored | **permanent** — it is the record |
+| what the app could do on the day of the import | **perishable** — it rots silently |
+
+They end up in the same paragraph and nothing marks the seam, so write the
+DECISION and cite the finding rather than explaining the mechanism:
+
+> Not stored; see BOOK-INGEST-AUDIT.md F8.  ← never goes stale
+> `rollAttribute` parses only NdM forms, so a fixed value falls back to 3d6.  ← always will
+
+Where the mechanism has to be in the class, write it past-tense and name the PR.
+
+`node scripts/audit-citations.mjs --remote F8` lists every class citing a
+finding, which is the command that makes the correction step possible when a
+finding is taken. It has no opinion about whether the finding still stands.
+
 ## Correcting a class that already shipped
 
 **Do not edit the original `add-*-class.sql`.** Those are one-shot scripts,
