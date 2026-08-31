@@ -240,7 +240,13 @@ th {
   justify-content: space-between;
   gap: 8px;
 }
-.box > .box-body { padding: 9px 10px; }
+/* Scrolls the CONTENT, never the box. A table wider than its column - the
+   equipment table is 367px inside 332px at 390px wide - was cut by .box's own
+   `overflow: hidden`, which offers no scrollbar to recover what it hid, and the
+   page never widened either. That left every remove button 35px past the edge
+   and unreachable on a phone. The hidden stays on .box, where the rounded
+   corners and the title bar need it. */
+.box > .box-body { padding: 9px 10px; overflow-x: auto; }
 
 /* Label/value rows with a dotted leader, echoing the form's ruled fields. */
 .field {

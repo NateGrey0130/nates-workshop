@@ -114,6 +114,28 @@ above it is unaffected. Do **not** restack the equipment table into cards at pho
 width in the same PR — that is a bigger design decision and would make this fix
 unreviewable.
 
+**Taken, 2026-08-31 (PR #439).** Implemented as written: `overflow-x: auto` on
+`.box > .box-body`, not on `.box`. Posture as written — one declaration, and the
+equipment table was **not** restacked into cards.
+
+Every premise was re-measured at 390×844 before the change and all of them held:
+23 remove buttons at left 364 / right 396 against a `.box-body` right edge of
+361, `.box` computing `overflow: hidden`, `.box-body` computing
+`overflow-x: visible`, and `document.documentElement.scrollWidth` sitting at 390,
+so the page offered no scroll of its own to recover them. After: the body scrolls
+55px, the button lands at right 341 inside a right edge of 361, and the page
+still does not scroll horizontally.
+
+The sticky `.tabbar` is unaffected. It is a sibling of the tab panels rather than
+a descendant of any `.box-body` (`sheet.js:1095`), and still computes
+`position: sticky` after the change. At 1440×900 none of the sheet's 16 box
+bodies overflows at all, so the rule is inert everywhere it is not needed.
+
+One consequence the finding did not raise, recorded rather than acted on: paper
+cannot scroll, so a table wider than its printed box is still clipped. That is
+not a regression — `.box`'s `overflow: hidden` clipped it identically before —
+but it belongs with **F17** whenever print is actually verified.
+
 ---
 
 ### F2 — high — One attribute-minimum rule, three different behaviours, and the middle one's copy is false
