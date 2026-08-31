@@ -7,9 +7,17 @@ took two of them** — #323 for its layer 1, which is the ISBN file's `F7`, then
 evidence throughout describes the app as it stood **before** any of this landed.
 
 **Investigated 2026-08-26** against `9d16e9a` (`main`). The live ISBN bug is a
-separate file, `MEDIA-VAULT-ISBN-AUDIT.md`, whose findings are numbered
+separate file, `ISBN-AUDIT.md`, whose findings are numbered
 `F1`…`F10` — all shipped but `F7`. Two findings here depend on that file and
 say so by number.
+
+**Adjusted 2026-08-31.** The sentence above is the state on the morning of
+2026-08-26 and it is left standing as one. `ISBN-AUDIT.md` `F1`-`F10` are
+**all ten closed**, `F7` included: it shipped later the same day as PR #323,
+which is the same PR the paragraph above already credits with B6's layer 1.
+The two statements were three lines apart and disagreed from the moment the
+second was written. Read each finding's own note; this header is a summary and
+summaries here go stale.
 
 Much of what the brief asks for already exists. Where it does, this says so and
 gives the line that proves it, rather than proposing it again.
@@ -549,7 +557,7 @@ title-only match is fuzzier still.
 
 **Proposed fix.** Three layers, and **do not build layer 3 without layer 1**:
 
-1. **Store the source id first.** This is `MEDIA-VAULT-ISBN-AUDIT.md` **F7** —
+1. **Store the source id first.** This is `ISBN-AUDIT.md` **F7** —
    one `source_id TEXT NOT NULL DEFAULT ''` column, populated on new saves. It
    only helps items added *after* it lands, which is why layer 2 exists.
 2. **Backfill by confirmed match, never automatically.** A "Find covers"
@@ -571,7 +579,7 @@ title-only match is fuzzier still.
   a non-empty `cover` is not automatically a *correct* cover — offer an explicit
   "replace existing covers too" checkbox, default off, rather than deciding for
   the user.
-- **Rate limits and run size: reuse `MEDIA-VAULT-ISBN-AUDIT.md` F9's loop.**
+- **Rate limits and run size: reuse `ISBN-AUDIT.md` F9's loop.**
   Measured against OpenLibrary during this audit: 30 back-to-back requests all
   returned 200 in **16.3 s** (~540 ms each); 12 concurrent all returned 200 in
   **2.0 s**; no rate-limit headers are exposed. TMDB's published limits are
@@ -603,7 +611,7 @@ green. **It cannot be verified against the affected data before merge** — the
 non-production copy of them. Verify the mechanics locally on seeded rows, then
 ship it behind a first run the user drives themselves over a small selection.
 
-**Independence.** **Requires `MEDIA-VAULT-ISBN-AUDIT.md` F7** for exact
+**Independence.** **Requires `ISBN-AUDIT.md` F7** for exact
 re-lookup, and **shares its throttled per-item loop with F9** — build the loop
 once in F9 and reuse it here, or you will write it twice. Layer 2 (confirmed
 match) can technically be taken without F7 and is the fastest route to covers on
