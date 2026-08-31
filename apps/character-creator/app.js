@@ -151,6 +151,7 @@ const S = {
   // Picker filter text. Transient view state, never persisted in a draft —
   // resuming a build should not resume half a search.
   gearFilter: '', relatedFilter: '', secondaryFilter: '', spellFilter: '', psiFilter: '',
+  classFilter: '',
 };
 
 const $ = (id) => document.getElementById(id);
@@ -582,7 +583,8 @@ function wirePickers() {
     },
   });
 
-  for (const [id, key] of [['related-filter', 'relatedFilter'], ['secondary-filter', 'secondaryFilter'],
+  for (const [id, key] of [['class-filter', 'classFilter'],
+    ['related-filter', 'relatedFilter'], ['secondary-filter', 'secondaryFilter'],
     ['spell-filter', 'spellFilter'], ['psi-filter', 'psiFilter']]) {
     Picker.wire(id, { onInput: (v) => { S[key] = v; render(); } });
   }
@@ -679,9 +681,20 @@ function renderRace() {
   const mode = S.classMode;
   let inner;
   if (mode === 'browse') {
-    inner = classGroups(list).map(([label, note, rows]) =>
-      `<div class="pick-group over-grid">${esc(label)} <span class="muted small">&mdash; ${esc(note)}</span><span class="pick-group-n">${rows.length}</span></div>
-       <div class="grid">` + rows.map((c) => classCard(c)).join('') + `</div>`).join('');
+    // The longest list in the application was the one picker without a filter:
+    // 120 cards for Rifts, and the primary button twelve screens below them at
+    // desktop, thirty-one at phone. Same input, same `N of M` count and the same
+    // name/category/source-book matching as the Skills step — a class here is a
+    // catalog row like any other. The selected card can be filtered out of the
+    // grid; classDetail() below still renders it, so the choice is never hidden.
+    const matches = Picker.filter(list, S.classFilter);
+    inner = Picker.inputHtml({ id: 'class-filter', value: S.classFilter,
+      placeholder: 'Filter classes…', shown: matches.length, total: list.length });
+    inner += matches.length
+      ? classGroups(matches).map(([label, note, rows]) =>
+        `<div class="pick-group over-grid">${esc(label)} <span class="muted small">&mdash; ${esc(note)}</span><span class="pick-group-n">${rows.length}</span></div>
+       <div class="grid">` + rows.map((c) => classCard(c)).join('') + `</div>`).join('')
+      : '<p class="muted small">Nothing matches that filter.</p>';
   } else {
     const answered = S.quiz.every((a) => a);
     inner = QUIZ.map((q, i) => `

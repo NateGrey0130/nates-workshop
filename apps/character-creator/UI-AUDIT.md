@@ -245,6 +245,38 @@ name/category/source-book matching). This reuses `js/picker.js` and introduces n
 component. Making the nav sticky is a **separate** finding and should not ride along —
 it would change every step, not this one.
 
+**Taken, 2026-08-31 (PR #442).** Implemented as written: `Picker.inputHtml` above
+the grid, `class-filter` added to the `wirePickers()` loop beside the other four,
+and `Picker.filter` over the same `name` / `category` / `source_book` fields the
+Skills step uses. No new component, and the nav is still `position: static` —
+that stays a separate finding.
+
+Measured on the Rifts race step at 1440×900:
+
+| | before | typing `ley` |
+|---|---|---|
+| cards | 120 | 2 |
+| count | *(none)* | `2 of 120` |
+| page height | 11,052px | **900px** |
+| screens | 12.3 | **1.0** |
+| primary button | 12.1 screens down | on screen, y=533 |
+
+`occ` narrows to 78 of 120 through the category field and a book name narrows
+through `source_book`, so the matching genuinely is the Skills step's. The caret
+survives a keystroke — `Picker.wire`'s reason for existing — verified by reading
+`selectionStart` back after an input event.
+
+Two behaviours worth recording because they are deliberate. **A selected class
+can be filtered out of the grid**: `classDetail()` renders below the grid rather
+than inside it, so the choice, its variant picker and its ability picker all stay
+on screen and the Confirm button keeps working. And **the filter input renders
+even when nothing matches** (`Nothing matches that filter.`, `0 of 120`), so the
+box that emptied the page is still there to clear.
+
+`S.classFilter` sits with the other four filters and is **not** in `DRAFT_KEYS` —
+transient view state, so resuming a build does not resume half a search. No
+draft-shape change and no `STEPS_VERSION` bump.
+
 ---
 
 ### F4 — high — "Help me choose" returns all 120 classes, 38 of which match nothing, on a longer page
