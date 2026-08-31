@@ -245,7 +245,7 @@ name/category/source-book matching). This reuses `js/picker.js` and introduces n
 component. Making the nav sticky is a **separate** finding and should not ride along —
 it would change every step, not this one.
 
-**Taken, 2026-08-31 (PR #N).** Implemented as written: `Picker.inputHtml` above
+**Taken, 2026-08-31 (PR #442).** Implemented as written: `Picker.inputHtml` above
 the grid, `class-filter` added to the `wirePickers()` loop beside the other four,
 and `Picker.filter` over the same `name` / `category` / `source_book` fields the
 Skills step uses. No new component, and the nav is still `position: static` —
