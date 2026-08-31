@@ -741,6 +741,25 @@ would give three other apps a focus ring overnight and is a bigger finding than 
 looks. `prefers-reduced-motion` is a **separate** item and genuinely low value here:
 the app's only transitions are `color`/`border-color` at 0.2s.
 
+**Taken, 2026-08-31 (PR #N).** Copied verbatim from `apps/pick3cut5/styles.css`,
+into the app stylesheet only. `shared/styles.css` is untouched, so the other three
+apps are unchanged. Line 84's `outline: none` + border change stays as the
+pointer-and-typing affordance. `prefers-reduced-motion` was **not** taken — it is
+a separate item and stays open. The `.sr-only` helper was not brought across
+either: nothing in this app uses one yet, and copying an unused rule is how
+`.cols-5` (F15) happened.
+
+Verified with a real `Tab` keypress rather than a scripted `.focus()`, which
+never sets `:focus-visible`: the Vitals tab reports `focus-visible: true` and
+`outline: 3px solid rgb(240, 160, 75)` at `outline-offset: 2px`. That colour is
+this app's `--accent-secondary` (`#f0a04b`), which its `:root` overrides — so the
+ring reads orange here against the purple accent, where the same rule in
+pick3cut5 renders in that app's colour. Screenshot at 1440×900.
+
+This lands **before F5** deliberately: converting the wizard's `<div onclick>`
+cards to real buttons puts focus somewhere that had no visible indicator until
+this rule existed.
+
 ---
 
 ### F17 — medium — Print: a long table splits across pages with no repeated header, and I could not render a preview
