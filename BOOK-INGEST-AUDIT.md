@@ -495,7 +495,7 @@ where a GM will see it. Filed because it is the second time a book has stated a
 per-category quota and the second column that could not hold one, and because
 the psionic answer is already in the tree to copy.
 
-**Taken, 2026-08-31 (PR #NNN).** Implemented as proposed - `occ_related_skills.
+**Taken, 2026-08-31 (PR #428).** Implemented as proposed - `occ_related_skills.
 minimums`, a list beside `count`, validated in the parser, refused by the server
 validator, shown by the wizard's skills step - and applied `--remote` before the
 merge. Posture as written: the picks still come out of the same `count`, the
