@@ -1420,7 +1420,48 @@ a defect in one code path rather than a class of authoring error.
 **Nine remain.** The Colonist's was repaired as a side effect of F7 and the
 other nine are untouched.
 
-**Open.**
+**Taken, 2026-08-31 (PR #433), posture as written - diagnosed first, then a
+one-off data script, and no new gate.**
+
+**THE CAUSE, WHICH THE FINDING ASKS FOR BEFORE THE SWEEP. It is not the
+generator.** `class-check --emit-script` has exactly one escaping site for
+spliced markdown - `literal()` - and it doubles each apostrophe once, which is
+correct. The proof is arithmetic rather than a reading: **all 157
+`add-*-class.sql` files were emitted through it and exactly TEN contain
+`''''`** - the same ten rows carrying `''` in production, with the counts
+matching one for one. A generator that double-escaped would have done it to all
+157.
+
+So the **drafts arrived pre-escaped**: the apostrophes had already been doubled
+for SQL in the `.md` before `--emit-script` doubled them again. All ten are
+Phase World classes, which is the narrowing the finding predicted.
+
+**"Nine remain" was wrong - ten did.** The Colonist still carried one of its
+two; F7's script repaired the one it happened to need to match, not both. The
+sweep took 36 occurrences across the ten.
+
+**The blanket replace F13 warns against turned out to be the right instrument,
+and only because it was checked first.** Every one of the 36 was printed and
+read before anything ran, and every one is a possessive - *the catalog's*, *the
+character's*, *the Galactic Tracer's* - or the plural possessive in *"1D6x1000
+credits' worth of items"*, which the book writes with one apostrophe. None is
+intentional. The statement is scoped to the ten ids rather than the table, so a
+class that legitimately wants `''` later is untouched.
+
+**No gate, one advisory.** A check rejecting `''` in stored markdown would be
+wrong, as the finding says. What is added instead is a `class-check` WARNING
+when a **draft** carries doubled apostrophes - the point where a pre-escaped
+`.md` can still be fixed, and where the odds are strongly one way. It moves no
+exit code. Verified both ways: it fires on `add-colonist-class.sql` naming the
+two passages, and is silent on `add-cosmo-knight-class.sql`.
+
+**The ten `add-*-class.sql` files are not edited** - they are one-shot scripts
+that have already run. On a clean rebuild the glob applies them in sorted order
+and `fix-` sorts after `add-`, so the sweep runs last and the rebuild converges.
+
+Production now carries **zero** doubled apostrophes across all 160 classes,
+which is the readback that would also catch a class outside the ten drifting the
+same way. Smoke 1434 -> 1439.
 
 ### F14 - a race and an occupation that BOTH state magic keep only one block, and the occupation wins every time
 

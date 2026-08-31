@@ -3898,6 +3898,44 @@ section('Variable spell costs');
 }
 
 // ---------- 1c26. Secondary schedules and group bonuses ----------
+section('Draft apostrophe escaping');
+{
+  // BOOK-INGEST-AUDIT.md F13. Ten Phase World classes shipped with doubled
+  // apostrophes in their STORED markdown, because the drafts had been escaped
+  // for SQL before `--emit-script` escaped them again. It renders to the reader
+  // exactly as stored, so a class detail page showed two where one was written.
+  //
+  // The generator was never the cause, and this pins that: `literal()` doubles
+  // each apostrophe exactly ONCE. All 157 add-*-class.sql files went through it
+  // and exactly ten came out over-escaped, which is the arithmetic that
+  // acquitted it - a broken generator would have done it to all 157.
+  const cc = readFileSync(join(repoRoot, 'scripts', 'class-check.mjs'), 'utf8');
+  const doublings = [...cc.matchAll(/replace\(\/'\/g, ?"''"\)/g)];
+  check('class-check doubles an apostrophe in exactly two places',
+    doublings.length === 2,
+    `${doublings.length} - one for column values, one for spliced markdown`);
+
+  // The advisory that catches the next pre-escaped draft. A WARNING, because a
+  // doubled apostrophe is legal prose if the author meant it, and F13's posture
+  // is explicit that a gate on it would be wrong.
+  check('and warns when a draft arrives already escaped',
+    cc.includes('doubled apostrophe(s) in the draft'));
+  check('and that warning moves no exit code', (() => {
+    const at = cc.indexOf('doubled apostrophe(s) in the draft');
+    const block = cc.slice(cc.lastIndexOf('const doubled', at), at + 200);
+    return block.includes('warnings.push') && !block.includes('errors.push');
+  })());
+
+  // The sweep is scoped to the ten ids rather than the whole table, so a class
+  // that legitimately wants a doubled apostrophe later is untouched.
+  const sweep = readFileSync(join(repoRoot, 'apps', 'character-creator', 'db',
+    'fix-doubled-apostrophes.sql'), 'utf8');
+  check('the sweep is scoped to named classes, not the whole table',
+    sweep.includes('WHERE class_id IN ('));
+  check('and it names every class it touches in its header',
+    (sweep.match(/^--   [a-z-]+ +\d+$/gm) || []).length === 10);
+}
+
 section('Audit citation sweep');
 {
   // BOOK-INGEST-AUDIT.md F12. A class's extraction note records both what the
