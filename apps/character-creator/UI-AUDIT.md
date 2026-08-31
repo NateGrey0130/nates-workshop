@@ -306,6 +306,36 @@ the remainder behind a `Show the N that match nothing` disclosure. Keep the rank
 the badges exactly as they are. Do not change the three questions or the scoring in
 this PR.
 
+**Taken, 2026-08-31 (PR #N).** Implemented as written. The three questions and
+`quizScore()` are untouched; the ranking and the `match N/6` badges render exactly
+as before. Classes scoring zero move into a closed `<details>` — *"Show the N that
+match nothing"* — rather than being dropped, because the guided mode is a
+suggestion and hiding a class outright would make it a filter.
+
+**The 0/6 count is answer-dependent, so the finding's 38 is one reading of many.**
+Measured on Rifts with *occupation / mystic / high-tech*: 98 score above zero and
+**22** score zero. On Palladium Fantasy with *race / melee / grit*: 20 and 20.
+The shape of the complaint holds at every combination tried; only the number moves.
+
+Same answers, before and after (Rifts, 1440×900):
+
+| | before | after |
+|---|---|---|
+| cards on the page | 120 | 98 + 22 collapsed |
+| page height | 12,276px | **10,194px** |
+| vs *Browse all* (11,027px) | longer | **shorter** |
+
+**An asymmetry this opens, recorded and NOT taken:** F3 gave *Browse all* a filter
+box; the guided shortlist has none, so its 98 remaining cards are still an
+unfiltered scroll. Whether the filter belongs over a ranked list is a question
+about what guided mode is for, and it is a finding of its own rather than
+something to fold in here.
+
+Evidence is DOM-measured. **Correction to this file's own blockage note:** the
+pane's blank frames are not about page height — a 2,506px page came back blank
+too. They happen whenever the page is **scrolled**; every screenshot taken at
+`scrollY: 0` in this session rendered, at page heights up to 11,052px.
+
 ---
 
 ### F5 — high — The wizard cannot be completed with a keyboard: every choice is a non-focusable `<div>`
