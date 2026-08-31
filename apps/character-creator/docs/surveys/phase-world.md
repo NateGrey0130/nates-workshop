@@ -344,6 +344,17 @@ Phase 4 costs money; everything above was free.
    - **An "any language" pick must offer `Language: Other`, never a category.**
      `regression.mjs` holds this as an invariant and it is easy to get wrong;
      see F4 for the case it does not catch.
+   - **Run `class-check` with `--remote`, always.** This machine's local D1 held
+     **293** skills against production's **345** on 2026-08-30, so the default
+     `--local` run reported seven skills as missing that production has had for
+     months - `Radio: Basic`, `Climbing`, `Swimming`, both energy-weapon W.P.s
+     and two more - and offered stub SQL for every one. Emitting a script from
+     that report writes stubs that then SHADOW the real rows, because a stub
+     `INSERT OR IGNORE` in an `add-<class>-class.sql` sorts before the file that
+     creates them properly. CLAUDE.md warns that local is not a mirror of
+     production because it ACCUMULATES; here it was 52 rows behind, which is the
+     same rule failing in the other direction and is worse, because a missing row
+     produces a confident instruction to create one.
  The p.183 ladders group classes that
    share an XP table, and classes that share a ladder sit in the same chapter, so
    the ladder is also the cheapest batching. Order by how much the app can
