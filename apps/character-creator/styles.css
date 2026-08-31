@@ -848,6 +848,17 @@ body.play-mode #print-btn { display: none; }
 }
 .tabbar .tab.on .tab-n { background: var(--accent); color: var(--bg-primary); }
 
+/* Six tabs need 569px and a phone gives the strip 334, so scrolling hid half of
+   them - Gear cut mid-word, Bio and Notes entirely off-strip, with a scrollbar
+   as the only hint they existed. Gear is the tab a player opens most at the
+   table. Wrapping to two rows shows all six at once; `1 1 auto` lets them share
+   the row rather than each holding its widest width, and the `overflow-x: auto`
+   above goes inert because nothing overflows any more. */
+@media (max-width: 620px) {
+  .tabbar { flex-wrap: wrap; }
+  .tabbar .tab { flex: 1 1 auto; }
+}
+
 .tabpanel { display: none; }
 .tabpanel.on { display: block; }
 
