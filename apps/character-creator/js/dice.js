@@ -30,11 +30,32 @@ function fixedValue(expr) {
   return m ? +m[1] : null;
 }
 
-// Does this parse as EITHER grammar? `class-check` asks, because a value
-// parsing as neither is the silent failure F8 is about.
+// An attribute the creature DOES NOT HAVE (BOOK-INGEST-AUDIT.md F5).
+//
+// The Machine People are living machines with no constitution, so their book
+// prints "P.E. N/A"; the Pleasurer wears whatever face its client wants, so its
+// beauty is "P.B. N/A". `attribute_dice` had no way to say that. Omitting the
+// key and writing a number produce the SAME character - `app.js` resolves a
+// missing entry as `3d6` - so the sheet showed a constitution and a beauty
+// score the books deny.
+//
+// This is not "zero" and not "unknown". It is the statement that the axis does
+// not apply, and the value that carries it is null: the sheet already renders a
+// dash for a null attribute, and the server already treats a required attribute
+// that is null as a VIOLATION rather than a pass. Both of those were true
+// before this went in; the only thing missing was a way to produce the null.
+const ABSENT_EXPR = /^N\/A$/i;
+
+// Does this say the attribute does not exist?
+export function isAbsentAttribute(expr) {
+  return ABSENT_EXPR.test(String(expr ?? '').trim());
+}
+
+// Does this parse as ANY of the three grammars? `class-check` asks, because a
+// value parsing as none of them is the silent failure F8 is about.
 export function isAttributeExpr(expr) {
   const s = String(expr ?? '').trim();
-  return DICE_EXPR.test(s) || FIXED_EXPR.test(s);
+  return DICE_EXPR.test(s) || FIXED_EXPR.test(s) || ABSENT_EXPR.test(s);
 }
 
 // One parse path for a roll and for its bounds. `die(sides)` supplies each
@@ -108,6 +129,11 @@ const EXCEPTIONAL_AT = { 2: 12, 3: 16 };
 // looks like one even when it is right.
 export function rollAttribute(expr) {
   const s = String(expr ?? '').trim() || '3d6';
+  // An attribute the creature does not have is NULL, and this is the one input
+  // for which falling back to 3d6 is wrong rather than merely unhelpful (F5).
+  // Callers must handle it: `app.js` is the only one in the app, and it stores
+  // the null rather than a rolled ten.
+  if (isAbsentAttribute(s)) return null;
   // A FIXED value is not rolled and earns no exceptional die: a chassis with a
   // P.S. of 50 has a P.S. of 50. The notation reported is the value itself,
   // which is the half of F8 that made the old behaviour silent — the wizard's
@@ -277,6 +303,9 @@ function poolBaseWith(expr, attrs, die) {
 // exceptional chain, and the chain is at most two extra six-sided dice.
 export function attributeCeiling(expr) {
   const s = String(expr ?? '').trim() || '3d6';
+  // An attribute that does not exist has no ceiling to exceed. Null here means
+  // "no opinion", which is what the caller already does nothing with.
+  if (isAbsentAttribute(s)) return null;
   // A fixed value is its own ceiling, and this is a real gain rather than
   // bookkeeping: `"50"` used to return null, so the server-side
   // attribute_above_ceiling check skipped the one class already carrying a

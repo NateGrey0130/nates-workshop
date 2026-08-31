@@ -237,7 +237,7 @@ import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import { composeClass } from '../js/compose.js';
 import { evalDice, rollAttribute, rollPoolFormula, rollQuantity,
          poolFormulaBounds, diceBounds, attributeCeiling,
-         isAttributeExpr } from '../js/dice.js';
+         isAttributeExpr, isAbsentAttribute } from '../js/dice.js';
 import { validateMos } from '../js/parser.js';
 import { chunks, D1_MAX_BINDS, BIND_CHUNK } from '../../../functions/api/character-creator/_lib/sql-chunk.js';
 import { LANGUAGE_OTHER, LITERACY_OTHER, isFamilyName, isRepeatableRow,
@@ -631,9 +631,30 @@ section('Creation validation');
     rollAttribute('3d6+2').notation === '3d6+2'
     && rollAttribute('garbage').notation === '3d6'
     && rollAttribute('50 lbs').notation === '3d6');
-  check('isAttributeExpr admits both grammars and nothing else',
+  check('isAttributeExpr admits all three grammars and nothing else',
     isAttributeExpr('50') && isAttributeExpr('3d6') && isAttributeExpr('2d4x10+6')
-    && !isAttributeExpr('N/A') && !isAttributeExpr('50 lbs') && !isAttributeExpr(''));
+    && isAttributeExpr('N/A')
+    && !isAttributeExpr('50 lbs') && !isAttributeExpr('none') && !isAttributeExpr(''));
+
+  // ── an ABSENT attribute (BOOK-INGEST-AUDIT.md F5) ────────────────────────
+  // The Machine People have no constitution and the Pleasurer no fixed beauty,
+  // and their books say so with "N/A". Omitting the key and writing a number
+  // produced the SAME character, because app.js resolved a missing entry as
+  // 3d6 — so both sheets showed a score the book denies.
+  check('an absent attribute is null, not a roll and not a zero',
+    rollAttribute('N/A') === null && rollAttribute('n/a') === null);
+  check('and it has no ceiling to exceed',
+    attributeCeiling('N/A') === null);
+  check('isAbsentAttribute is narrow — only the literal the books print',
+    isAbsentAttribute('N/A') && isAbsentAttribute(' n/a ')
+    && !isAbsentAttribute('NA') && !isAbsentAttribute('none')
+    && !isAbsentAttribute('0') && !isAbsentAttribute('3d6'));
+  // null is the ONE thing that must not be confused with a rolled value, so
+  // pin the difference from the two neighbours it sits between.
+  check('absent, fixed and rolled are three different answers',
+    rollAttribute('N/A') === null
+    && rollAttribute('0').total === 0
+    && rollAttribute('3d6').total >= 3);
 }
 
 // ---------- 1c4. Psychic tiers ----------
