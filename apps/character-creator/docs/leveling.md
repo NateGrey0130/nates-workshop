@@ -309,8 +309,11 @@ a real choice the player made, and dropping it would leave the sheet disagreeing
 with what they picked. An option no definition covers is a warning, not an error
 — books routinely name a power they describe only in prose.
 
-Psionics uses the **stronger tier wins** rule composition already uses, so an
-ability cannot make a Master psychic weaker.
+Psionics uses the **same merge** composition uses: the stronger tier wins the
+tier and the rest of the block folds together, so an ability can only add. The
+Godling is why that matters - it is a minor psychic whose *Super-Psionic Powers*
+ability grants `{ type: master }` and nothing else, and choosing the ability's
+block outright replaced the class's I.S.P. formula with none at all.
 
 **An ability may demand an occupation.** The Godling's Magic Powers grants
 "all the abilities of a practitioner of magic - pick one: Ley Line Walker,

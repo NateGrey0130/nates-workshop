@@ -22,7 +22,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { tmpdir } from 'node:os';
 import { validateBonuses, occAllowedForRace, raceAllowedForOcc, OCC_GROUPS, RACE_NONE,
-  parseClassMarkdown } from '../js/parser.js';
+  parseClassMarkdown, combineClasses } from '../js/parser.js';
 import { referencedGear } from '../../../functions/api/character-creator/_lib/catalog.js';
 
 const testDir = dirname(fileURLToPath(import.meta.url));
@@ -1303,6 +1303,73 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     + "'juicer-assassin-plate-armor-non-environmental')");
   check('and the five that only look like duplicates are still there',
     kept.length === 5, kept.map((r) => r.slug).join(', '));
+}
+
+// ---------- psionics composition ----------
+// BOOK-INGEST-AUDIT.md F10. Composing a psychic race with a psychic occupation
+// used to keep ONE of the two blocks and throw the other away entire. Measured
+// on the live catalog the day it was fixed: 19 races and 19 occupations state
+// psionics, and 113 of their 361 pairings discarded a block with content in it.
+{
+  const classes = (await api('GET', '/classes?limit=200')).body.classes || [];
+  const races = classes.filter((c) => c.category === 'rcc' && c.psionics);
+  const occs = classes.filter((c) => c.category === 'occ' && c.psionics);
+  const norm = (x) => String((typeof x === 'string' ? x : x?.name) ?? '').trim().toLowerCase();
+
+  const lostPowers = [];
+  const lostCats = [];
+  const weakened = [];
+  const droppedTier = [];
+  const noIsp = [];
+  let pairs = 0;
+  for (const r of races) {
+    for (const o of occs) {
+      pairs++;
+      const c = combineClasses(r, o).psionics || {};
+      const R = r.psionics, O = o.psionics;
+
+      // Nothing either side grants outright may vanish. This is the finding.
+      const held = new Set((c.powers || []).map(norm));
+      for (const x of [...(R.powers || []), ...(O.powers || [])]) {
+        if (!held.has(norm(x))) lostPowers.push(`${r.id}+${o.id}: ${norm(x)}`);
+      }
+      const cats = new Set((c.categories_allowed || []).map(norm));
+      for (const x of [...(R.categories_allowed || []), ...(O.categories_allowed || [])]) {
+        if (!cats.has(norm(x))) lostCats.push(`${r.id}+${o.id}: ${norm(x)}`);
+      }
+
+      // A count may never come out below what either side states ALONE. Written
+      // as an inequality rather than a rule, because the rule is what is being
+      // tested: preferring the occupation's figure - which is what F10 asked
+      // for - is lower in the majority of these pairs.
+      for (const k of ['powers_starting', 'powers_per_level']) {
+        const floor = Math.max(Number.isFinite(R[k]) ? R[k] : -Infinity,
+                               Number.isFinite(O[k]) ? O[k] : -Infinity);
+        if (floor > -Infinity && !(c[k] >= floor)) weakened.push(`${r.id}+${o.id}: ${k} ${c[k]} < ${floor}`);
+      }
+
+      // The tier is the one thing the pre-F10 comment was right about.
+      const rank = (t) => ['minor', 'major', 'master'].indexOf(norm(t));
+      if (rank(c.type) < Math.max(rank(R.type), rank(O.type))) droppedTier.push(`${r.id}+${o.id}`);
+
+      // An I.S.P. formula is always one of the two, never invented and never
+      // blanked - the Godling lost its formula this way to an ability grant.
+      if ((R.isp_base || O.isp_base) && !c.isp_base) noIsp.push(`${r.id}+${o.id}: blanked`);
+      if (c.isp_base && c.isp_base !== R.isp_base && c.isp_base !== O.isp_base) noIsp.push(`${r.id}+${o.id}: invented`);
+    }
+  }
+  check('every psychic race composes with every psychic occupation',
+    pairs > 0 && races.length > 0 && occs.length > 0, `${races.length} races x ${occs.length} occupations`);
+  check('and no granted psionic power is lost to composition',
+    lostPowers.length === 0, lostPowers.slice(0, 5).join('; '));
+  check('and no allowed category is lost',
+    lostCats.length === 0, lostCats.slice(0, 5).join('; '));
+  check('and no starting count comes out below what either side states alone',
+    weakened.length === 0, weakened.slice(0, 5).join('; '));
+  check('and the tier is never below the stronger half',
+    droppedTier.length === 0, droppedTier.slice(0, 5).join('; '));
+  check('and the I.S.P. formula is always one of the two',
+    noIsp.length === 0, noIsp.slice(0, 5).join('; '));
 }
 
 // ---------- per-category skill floors ----------

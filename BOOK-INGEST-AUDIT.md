@@ -996,7 +996,81 @@ block would be discarded by composition with any race it can be taken with. It
 fixes no character, but it would have caught the noro in batch 2 instead of
 batch 9.
 
-**Open.**
+**Taken, 2026-08-31 (PR #429).** `mergePsionics` replaces the choice. Powers and
+`categories_allowed` are unioned, the tier is the stronger of the two with
+`isp_base` travelling with it, and the ladders (`powers_schedule`,
+`powers_starting_groups`) take the occupation's where it states one. Code only -
+no data script, no migration, no class edited.
+
+**The numbers moved, all in the direction that makes the finding bigger.**
+Re-measured against production the day it was taken:
+
+| | filed | now |
+|---|---|---|
+| pairs losing a block with content | 93 | **113** |
+| distinct O.C.C.s losing their block | 17 | **19** |
+
+Nineteen of nineteen, which is to say **every occupation with a psionics block
+lost it to at least one race**. The finding's list of worst cases also misses
+`techno-wizard`, which ties `crazy` at 17 of 19.
+
+**TWO OF THE PROPOSAL'S THREE RULES WOULD HAVE MADE CHARACTERS WORSE, and both
+contradict the finding's own sentence - *training adds to birth; it does not
+replace it*.**
+
+- **`categories_allowed`** is listed among the fields to take from the
+  occupation. Taking it there **narrows in 110 of the 204 pairs** that state it
+  on both sides: a psychic dragon hatchling who becomes a Crazy would lose
+  Healing, Physical and Sensitive - three categories its own race page grants
+  it. Unioned instead.
+- **`powers_starting`** is listed the same way, with the argument that the
+  occupation's number is written for a character who also has the race. True of
+  a specialisation like the noro psychic; false of an occupation a strong
+  psychic race merely takes. **165 pairs state a count on both sides and in 89
+  of them - the majority - the occupation's is LOWER.** A psychic dragon
+  hatchling would have dropped from eight starting powers to one for studying as
+  a Dog Boy. The higher of the two never weakens anyone and never exceeds what a
+  book states alone, which adding them would.
+
+**"The higher `isp_base`" is not computable where the merge happens.**
+Composition runs before attributes are rolled, and 7 of the 33 I.S.P. formulas
+in the catalog lead with the M.E. term - `poolFormulaBounds` returns null for
+every one of those without an attribute to substitute, and reads several of the
+rest as their leading dice alone. So the formula travels with the tier, and a
+TIE goes to the occupation. That is the right answer in all three ties the
+catalog has: 3d6x10 against the noro's 1d4x10, 4d6x10 against it, and the phase
+adept's 1d4x100 against the promethean's M.E. x5.
+
+**A SECOND SITE THE FINDING DOES NOT MENTION.** `applyAbilities` folds an
+ability's psionics block with the same strictly-greater operator, and its
+comment claims it is *"the same rule composing a race with an occupation uses"* -
+which fixing only `combineClasses` would have made false. It is not
+hypothetical: the **Godling** is a minor psychic whose *Super-Psionic Powers*
+ability grants `{ type: master }` and nothing else, so choosing the ability's
+block outright replaced the class's I.S.P. formula with none at all. Fixed in
+the same function.
+
+**The `magic` premise is wrong, and it is an absence claim.** F10 says `spells`
+is excluded because *"no race/O.C.C. pair in the catalog states both"*. Thirteen
+R.C.C.s and eighteen O.C.C.s state `magic`: **234 pairs**, every one of which
+discards the race's block. Filed as **F14** rather than folded in here, because
+the scope agreed to was psionics.
+
+**Verified end to end**, not only in tests. A Noro + Noro Psychic built in the
+wizard shows *"Psionic powers - 0/2 (major psychic - Healing, Sensitive,
+Physical)"* where the race alone offers none of that, thirteen granted powers
+where the race grants five, and an I.S.P. pool of **78 at M.E. 18** - outside
+the 28-58 the race's own formula can reach, so the pool is demonstrably rolled
+from the occupation's.
+
+Smoke 1398 -> 1414. Regression 215 -> 221, the six new checks composing all 361
+live pairs and asserting no power, category, count or tier comes out below what
+either half states alone - an invariant, so the next psychic class imported is
+covered without anyone remembering to add it.
+
+**Also found while measuring, and filed as F15:** the **Crazy** allows
+`["Psychic Sensitive", "Physical Psychic"]`, and neither is a category the
+catalog has. Its three starting psionic picks have no legal pool at all.
 
 ### F11 - a class whose book says it REPLACES the race cannot say so, and `combineClasses` gives the race precedence in four places at once
 
@@ -1187,5 +1261,108 @@ a defect in one code path rather than a class of authoring error.
 
 **Nine remain.** The Colonist's was repaired as a side effect of F7 and the
 other nine are untouched.
+
+**Open.**
+
+### F14 - a race and an occupation that BOTH state magic keep only one block, and the occupation wins every time
+
+The psionics half of this was F10. `combineClasses` folds a race and an
+occupation into one class, and the line immediately after the psionics merge is:
+
+```js
+// Magic is what you studied, so the O.C.C. wins when both state it.
+if (occ.magic || rcc.magic) out.magic = occ.magic || rcc.magic;
+```
+
+The race's entire `magic` block is discarded - its `spells`, its
+`spells_starting`, its `spell_levels_allowed`, everything.
+
+**F10 excluded this on a premise that is false.** It says *"`spells` has the
+same shape one line below and the same question; it is not part of this finding
+because no race/O.C.C. pair in the catalog states both."* Measured against
+production on 2026-08-31, parsing all 160 published classes:
+
+| | |
+|---|---|
+| R.C.C.s stating `magic` | **13** |
+| O.C.C.s stating `magic` | **18** |
+| pairs stating both | **234** |
+
+The thirteen are `godling`, `entrancer`, `holy-terror`, `morphworm`, `rumbler`,
+`shade`, `silhouette`, and the six dragon hatchling variants. Every one of them
+loses its innate magic to any spellcasting occupation.
+
+Note the asymmetry with F10 before the fix: psionics at least gave the RACE the
+tie. Magic gives the occupation the win **unconditionally** - there is no
+comparison at all - so a Godling who studies as a Ley Line Walker loses the
+magic its own godhood grants, not merely a tie-break.
+
+**The comment is a real argument and it is only half right.** Magic IS what you
+studied, for a practitioner. It is not what an entrancer or a dragon has: those
+books grant spell-like power as a property of the creature, the same way the
+noro is born a major psychic. That is exactly the distinction F10 turned out to
+be about.
+
+**Proposal:** the same merge F10 built. Union `spells`, take the higher
+`spells_starting`, take the wider `spell_levels_allowed`, and prefer the
+occupation's for anything shaped like a ladder. `mergePsionics` in
+`js/parser.js` is the worked example and the shapes are close enough that the
+two could plausibly share a helper - though `magic.type` has no ordered ladder
+the way `psionics.type` does, so there is no "stronger" to compute and the
+occupation's type should simply win.
+
+**The question that needs answering first**, and the reason this is not a
+one-line change: what does a Godling who is also a Ley Line Walker actually
+have? Two spell lists that merge cleanly, or two different magics that a sheet
+has to show separately? F11 is about a class REPLACING its race, and if a
+Godling's magic is meant to be replaced rather than added to, this finding is
+partly answered by that one. Read them together.
+
+**Open.**
+
+### F15 - the Crazy allows two psionic categories that do not exist, so its three starting picks have no legal pool
+
+`crazy` states:
+
+```yaml
+psionics:
+  type: minor
+  isp_base: "6d6"
+  powers_starting: 3
+  categories_allowed: ["Psychic Sensitive", "Physical Psychic"]
+```
+
+The catalog's psionic categories are `Healing`, `Phase`, `Physical`,
+`Sensitive` and `Super`. **Neither name the Crazy asks for is one of them.**
+`categories_allowed` gates the picker by exact category name, so a Crazy is
+offered three picks from a pool of nothing.
+
+It is the only class in the catalog whose `categories_allowed` names anything
+outside the five - checked, not assumed, by parsing all 160 published classes
+and comparing every entry against `SELECT DISTINCT category FROM
+psionic_powers`.
+
+The names are the book's own section headings - Rifts prints "Physical
+Psionics" and "Sensitive Psionics" as headings and the transcription kept a
+longer form of them. The catalog's shorter names are what every other class
+uses.
+
+**This is the psionic twin of the restriction failure the class-import skill
+documents**: six classes naming `Robots and Power Armor` after the catalog
+renamed that row to `Robots & Power Armor`. An unmatched name fails silently,
+and it fails OPEN for an `except` and CLOSED here - the Crazy gets nothing
+rather than everything, which is at least the safer direction.
+
+**Proposal:** a `fix-crazy-psionic-categories.sql` rewriting the two names to
+`Sensitive` and `Physical`, guarded on the text it replaces. One class, one
+data script, no code.
+
+**And a check, because this will happen again.** A regression invariant that
+every `categories_allowed` entry in every published class resolves to a real
+`psionic_powers.category` - the same shape as the related-skill floor check
+added with F6, and the thing that would have caught this at import. Note that
+the F10 merge makes the consequence *wider* rather than narrower: a race
+composed with the Crazy now carries the Crazy's two dead names alongside its own
+real ones, so the dead entries travel.
 
 **Open.**

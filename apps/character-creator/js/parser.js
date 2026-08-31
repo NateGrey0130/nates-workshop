@@ -298,6 +298,106 @@ function validateVariants(variants, errors, warnings, granted = null) {
 const PSI_TIERS = ['minor', 'major', 'master'];
 const tierRank = (t) => PSI_TIERS.indexOf(String(t ?? '').toLowerCase());
 
+// Fold two psionics blocks into one. BOOK-INGEST-AUDIT.md F10.
+//
+// This used to CHOOSE between them - the stronger tier took the whole block and
+// the other was discarded entire. The premise was right about the TIER and
+// wrong about everything else: a race states what a member of that race is born
+// with, an occupation states what training adds, and the two are not rival
+// answers to one question. Nothing about the noro being a major psychic means a
+// noro psychic should not learn the twelve powers its own page grants.
+//
+// Measured over the live catalog before the change: 19 races and 19 occupations
+// state psionics, and in 113 of their 361 pairings the occupation's block was
+// thrown away with content in it. EVERY ONE of the nineteen occupations lost
+// its block to at least one race. Two shipped classes had never composed
+// correctly in the only pairing their own book sanctions - noro + noro-psychic
+// and noro + noro-mystic-warrior are both `major`, so the tie went to the race.
+//
+// `born` is the race (or the class as already composed); `trained` is the
+// occupation (or an ability the player took). The names matter, because the
+// rules below are not symmetric.
+function mergePsionics(born, trained) {
+  if (!born) return trained;
+  if (!trained) return born;
+
+  // Spread first, so a key neither this function nor F10 knows about survives
+  // rather than being silently dropped. The corpus uses nine, and `powers_from`
+  // appears exactly once - which is the argument for not enumerating.
+  const out = { ...born };
+  for (const [k, v] of Object.entries(trained)) if (v !== undefined) out[k] = v;
+
+  // A LADDER keeps the occupation's where it states one, falling back to the
+  // race's - which is what the spread above already did. `powers_schedule` and
+  // `powers_starting_groups` are per-level grants, and running both ladders
+  // would fire both sets of grants at every threshold, which really would
+  // over-grant. The occupation's is the career one.
+
+  // A COUNT TAKES THE HIGHER, WHICH F10 DOES NOT ASK FOR. The finding says to
+  // prefer the occupation's single count, reasoning that it is the number
+  // written for a character who also has the race. That is true of a
+  // specialisation like the noro psychic and false of an occupation a strong
+  // psychic race merely takes: 165 of the 361 pairs state `powers_starting` on
+  // both sides, and in 89 of them - the MAJORITY - the occupation's figure is
+  // LOWER. Implemented as written, the change meant to stop a psychic losing
+  // what it was born with would have cut a psychic dragon hatchling from eight
+  // starting powers to one for studying as a Dog Boy. The higher of the two
+  // never weakens anyone and never exceeds what a book states on its own, which
+  // adding them would.
+  for (const k of ['powers_starting', 'powers_per_level']) {
+    const a = born[k], b = trained[k];
+    if (Number.isFinite(a) && Number.isFinite(b)) out[k] = Math.max(a, b);
+  }
+
+  // The tier is the one thing the old comment was right about, and the I.S.P.
+  // formula travels with it: one pool, one formula, belonging to whichever
+  // block sets the tier. A TIE goes to the occupation, which is where all three
+  // known ties are also the richer formula - the noro psychic's 3d6x10 against
+  // the noro's 1d4x10, the mystic warrior's 4d6x10, the phase adept's 1d4x100
+  // against the promethean's M.E. x5.
+  //
+  // F10 asks for "the higher isp_base" and that is NOT COMPUTABLE HERE.
+  // Composition runs before attributes are rolled, and 7 of the 33 formulas in
+  // the catalog lead with the M.E. term - `poolFormulaBounds` returns null for
+  // every one of them without an attribute to substitute, and reads several of
+  // the others as their leading dice alone. Choosing on a comparison that is
+  // silently wrong is worse than choosing on a rule that is written down.
+  const stronger = tierRank(trained.type) >= tierRank(born.type) ? trained : born;
+  out.type = stronger.type;
+  const isp = stronger.isp_base ?? born.isp_base ?? trained.isp_base;
+  if (isp !== undefined) out.isp_base = isp;
+
+  // A LIST is additive, and these two are the whole point of the finding.
+  // Deduplicated by name because 66 of the pairs grant a power both sides also
+  // grant - the entrancer and the noro psychic share three - and a character
+  // must not hold the same power twice.
+  const union = (a, b) => {
+    const seen = new Set();
+    const merged = [];
+    for (const x of [...(a || []), ...(b || [])]) {
+      const key = normName(typeof x === 'string' ? x : x?.name);
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      merged.push(x);
+    }
+    return merged;
+  };
+  const powers = union(born.powers, trained.powers);
+  if (powers.length) out.powers = powers;
+
+  // `categories_allowed` IS UNIONED, WHICH F10 DOES NOT ASK FOR. The finding
+  // lists it among the fields to take from the occupation, and taking it there
+  // NARROWS in 110 of the 204 pairs that state it on both sides: a psychic
+  // dragon hatchling who becomes a Crazy would lose Healing, Physical and
+  // Sensitive - three categories its own race page grants it. That is the exact
+  // loss F10 was written to stop, and its own sentence is the argument against
+  // its list: training adds to birth, it does not replace it.
+  const cats = union(born.categories_allowed, trained.categories_allowed);
+  if (cats.length) out.categories_allowed = cats;
+
+  return out;
+}
+
 // Merging two classes' bonuses for one key.
 //
 // Numbers add. Anything else — a dice expression — CANNOT be added: a race
@@ -584,12 +684,9 @@ export function combineClasses(rcc, occ) {
 
   out.bonuses = sumBonusGroups(rcc.bonuses, occ.bonuses);
 
-  // The stronger psychic wins: a dragon that is already a Major psychic does
-  // not become weaker by studying an O.C.C. with minor psionics.
-  if (rcc.psionics || occ.psionics) {
-    out.psionics = tierRank(occ.psionics?.type) > tierRank(rcc.psionics?.type)
-      ? occ.psionics : (rcc.psionics || occ.psionics);
-  }
+  // Born plus trained, not one or the other (F10). The race is what a member of
+  // that race comes with; the occupation is what its page teaches.
+  if (rcc.psionics || occ.psionics) out.psionics = mergePsionics(rcc.psionics, occ.psionics);
   // Magic is what you studied, so the O.C.C. wins when both state it.
   if (occ.magic || rcc.magic) out.magic = occ.magic || rcc.magic;
 
@@ -1279,12 +1376,14 @@ export function applyAbilities(cls, chosen) {
     if (!def) { taken.push({ name, times: n, granted: false, ...(gm ? { gm: true } : {}) }); continue; }
 
     if (def.bonuses) out.bonuses = sumBonusGroups(out.bonuses, def.bonuses);
-    // The stronger tier wins, the same rule composing a race with an occupation
-    // uses, so an ability cannot make a Master psychic weaker.
-    if (def.psionics) {
-      out.psionics = tierRank(def.psionics.type) > tierRank(out.psionics?.type)
-        ? def.psionics : (out.psionics || def.psionics);
-    }
+    // The stronger tier wins and the rest of the block is merged, the same rule
+    // composing a race with an occupation uses, so an ability can only add.
+    // The same fold, because the comment above claims it is the same rule and
+    // F10 would otherwise have made that false. It is not hypothetical: the
+    // Godling is a minor psychic whose "Super-Psionic Powers" ability grants
+    // `{ type: master }` and nothing else, so choosing the ability's block
+    // outright replaced the class's I.S.P. formula with none at all.
+    if (def.psionics) out.psionics = mergePsionics(out.psionics, def.psionics);
     if (def.magic) out.magic = out.magic || def.magic;
     taken.push({ name: def.name, times: n, granted: true, ...(gm ? { gm: true } : {}),
       description: def.description, on_repeat: n > 1 ? def.on_repeat : undefined });
