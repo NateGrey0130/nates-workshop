@@ -252,7 +252,7 @@ need to be complete", and the second is a stronger reason to answer it.
 Worth knowing when this is taken: the noro power armour is the *only* vessel in
 this book that any class is issued. The rest are bought.
 
-**Partly taken, 2026-08-31 (PR #NNN) - the character-completeness half only.
+**Partly taken, 2026-08-31 (PR #431) - the character-completeness half only.
 THE SCHEMA QUESTION IS STILL OPEN.** Asked and answered directly: import the one
 suit now, defer the schema. No migration, no new column, no new table; one data
 script.

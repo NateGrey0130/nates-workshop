@@ -1,6 +1,6 @@
 -- Import the one vessel a class is actually issued.
 --
--- BOOK-INGEST-AUDIT.md F3, the cheap half, taken in PR #NNN.
+-- BOOK-INGEST-AUDIT.md F3, the cheap half, taken in PR #431.
 --
 -- F3 records that `gear` has no shape for a vessel and proposes nothing yet:
 -- the options are a `vehicles` table, a JSON `systems` column, or continuing to
