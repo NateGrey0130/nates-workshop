@@ -702,9 +702,26 @@ function renderRace() {
       <div class="rowline">` + q.opts.map(([val, label]) =>
         `<button class="btn btn-sm ${S.quiz[i] === val ? '' : 'btn-ghost'}" onclick="quizPick(${i},'${val}')">${label}</button>`).join('') + `</div>`).join('');
     if (answered) {
+      // A shortlist that held the entire catalogue, a third of it scoring zero,
+      // was longer than the browse list it exists to replace. The ranking and
+      // the badges are the useful half and are untouched; what changed is that
+      // a class matching NONE of the three answers is no longer printed in full
+      // beside the ones that match all three. It is still reachable — the
+      // guided mode is a suggestion, not a filter, and hiding a class outright
+      // would make it one.
       const ranked = list.map((c) => [quizScore(c), c]).sort((x, y) => y[0] - x[0]);
-      inner += `<h3>Your shortlist</h3><div class="grid">` +
-        ranked.map(([score, c]) => classCard(c, score)).join('') + `</div>`;
+      const hits = ranked.filter(([score]) => score > 0);
+      const misses = ranked.filter(([score]) => score === 0);
+      inner += `<h3>Your shortlist</h3>`;
+      inner += hits.length
+        ? `<div class="grid">` + hits.map(([score, c]) => classCard(c, score)).join('') + `</div>`
+        : `<p class="muted small">Nothing scored above zero on those three answers — the whole list is below.</p>`;
+      if (misses.length) {
+        inner += `<details style="margin-top:16px">
+          <summary class="muted small" style="cursor:pointer">Show the ${misses.length} that match nothing</summary>
+          <div class="grid" style="margin-top:10px">`
+          + misses.map(([score, c]) => classCard(c, score)).join('') + `</div></details>`;
+      }
     } else {
       inner += `<p class="muted" style="margin-top:12px">Answer all three to see your shortlist.</p>`;
     }
