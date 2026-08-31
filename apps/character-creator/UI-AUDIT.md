@@ -1056,6 +1056,20 @@ Confirmed on the live Race step: `h1count: 0`, one `h2`, zero `h3`, 120 `h4`.
 five one-line edits, no visual change, since `.logo` carries its own type. Fixing the
 `h2`→`h4` jumps inside `app.js`/`catalog.js` is a **separate** finding.
 
+**Taken, 2026-08-31 (PR #N).** Five one-line edits, and the visual claim holds:
+`shared/styles.css` opens with `* { margin: 0; padding: 0 }` and `.logo` sets its
+own `font-size: 22px` and `font-weight: 800`, so an `<h1>` inherits neither the
+UA margin nor the UA size. Measured on the sheet before and after: 22px, weight
+800, `margin: 0px`, 161×28 at y=16 — identical.
+
+Every one of the five pages now reports exactly **one** `h1`.
+
+**The level skips are NOT fixed, as scoped.** Three pages are now clean from the
+top (`wizard H1→H2`, `campaign H1→H2→H3`, `dashboard H1→H2→H3`); **two still
+skip** — the sheet runs `H1→H3` because `sheet.js` contains no `h2`, and the
+catalog runs `H1→H4` because `catalog.js` has only `h4`. That is the separate
+finding this one names, and it is still open.
+
 ---
 
 ### F25 — low — The app stylesheet's header comment describes three pages; there are five
