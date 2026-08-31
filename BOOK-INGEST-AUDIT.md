@@ -1610,7 +1610,7 @@ the F10 merge makes the consequence *wider* rather than narrower: a race
 composed with the Crazy now carries the Crazy's two dead names alongside its own
 real ones, so the dead entries travel.
 
-**Taken, 2026-08-31 (PR #NNN), as proposed - one class, one data script, no
+**Taken, 2026-08-31 (PR #435), as proposed - one class, one data script, no
 code, plus the invariant.** Both names now point at `Sensitive` and `Physical`
 and the Crazy is offered a real pool. The claim that it is the only class
 affected held on a fresh count: **77 `categories_allowed` entries across all 160
@@ -1677,7 +1677,7 @@ categories take `only` and `except`, and the class-import skill documents both,
 including that an unmatched `except` fails OPEN. The psionic side has `only`'s
 equivalent and not `except`'s.
 
-**This was moot until F15 (PR #NNN).** The Crazy's two categories named nothing
+**This was moot until F15 (PR #435).** The Crazy's two categories named nothing
 the catalog has, so its three picks had no legal pool at all and it could not
 pick a forbidden power because it could not pick anything. Repairing the
 categories made the exclusion real: the class now offers 51 powers where the

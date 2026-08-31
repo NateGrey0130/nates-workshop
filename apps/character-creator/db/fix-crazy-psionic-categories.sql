@@ -1,6 +1,6 @@
 -- Point the Crazy's psionic categories at categories the catalog has.
 --
--- BOOK-INGEST-AUDIT.md F15, taken in PR #NNN. The class asked for
+-- BOOK-INGEST-AUDIT.md F15, taken in PR #435. The class asked for
 -- ["Psychic Sensitive", "Physical Psychic"]; the catalog's five categories are
 -- Healing, Phase, Physical, Sensitive and Super. `categories_allowed` gates the
 -- picker by exact name, so a Crazy was offered three starting picks from a pool
