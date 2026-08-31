@@ -1780,7 +1780,12 @@ function inventoryRowsHtml() {
     const eq = w
       ? `<input type="checkbox" ${it.equipped ? 'checked' : ''} onchange="patchItem(${it.id}, {equipped: this.checked})"><span class="print-only">${it.equipped ? '✔' : '—'}</span>`
       : (it.equipped ? '✔' : '');
-    const rm = w ? `<td><button class="btn btn-sm btn-ghost" onclick="removeItem(${it.id})">✕</button></td>` : '<td></td>';
+    // Same as the wizard's equipment table: the glyph was the whole accessible
+    // name, on every row. escHtml() leaves quotes alone and this lands in an
+    // attribute, so a custom item name gets one more pass.
+    const rmLabel = `Remove ${name}`.replace(/"/g, '&quot;');
+    const rm = w ? `<td><button class="btn btn-sm btn-ghost" aria-label="${rmLabel}" title="${rmLabel}"
+      onclick="removeItem(${it.id})">✕</button></td>` : '<td></td>';
     return `<tr><td>${name} ${kind}${enchantHtml(it)}</td><td>${qty}</td><td>${eq}</td>
       <td class="muted small">${escHtml(it.notes || '')}</td>${rm}</tr>`;
   }).join('');
