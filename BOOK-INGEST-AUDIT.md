@@ -149,7 +149,54 @@ Two things to settle when this is taken, not before:
   later*, not *definitely*. A second occurrence is a better trigger than this
   finding is.
 
-**Open.**
+**Taken, 2026-08-31 (PR #427), as proposed.** `skills.base_formula` holds an
+attribute token and a multiplier - `PP*5` - consulted only when set, so `base`
+keeps its meaning and stays the fallback for all 344 rows without one.
+
+**The two questions this finding left open, settled.**
+
+*Where the evaluation lives:* in the wizard, and it turns out there is only one
+place it COULD live. The server never validates a skill percentage and
+`leveling.js` advances from the STORED `pct`, so a skill's base is resolved
+exactly once - at character creation, in `app.js`, where the attributes already
+are. The pure half is `js/skill-base.js` so the smoke test can drive it off a
+fixture; nothing server-side needed changing at all.
+
+*Whether one row justifies a column:* on the evidence, yes, and for a reason
+sharper than under-storage. Storing it at 0 was not merely lossy, it was
+AMBIGUOUS - the schema comment defines `base` 0 as *non-percentile (W.P.s, hand
+to hand)*, so a skill the book starts near 50% was indistinguishable from a
+weapon proficiency. That is a wrong statement, not a missing one.
+
+**One premise drifted:** the finding says *336 rows rely on that reading*. The
+catalog is 345 skills now and **64** of them sit at base 0; every one of those
+was checked and is a genuine non-percentile skill or is marked `Special`. This
+is still the only attribute-derived base in the catalog.
+
+**THE PICKER WAS A SECOND DISPLAY SITE AND THE TESTS COULD NOT SEE IT.** With
+`resolveSkill` fixed, the class-skills row rendered correctly and the
+related/secondary picker still read the raw `base`, so it showed an em dash -
+telling a player that a skill they may take, and which the sheet then scores at
+60%, has no percentage at all. Found in the browser, not by 1373 checks.
+
+Verified end to end on a Cosmo-Knight, which grants this skill: at P.P. 12 the
+class row reads 70% (60 derived, plus the class's printed +10%) and both picker
+rows read 60%; at P.P. 18 it is 100%, at P.P. 3 it is 25%.
+
+The grammar is one shape - `ATTR*N` - which is what was proposed and all one row
+needs. A formula that does NOT parse falls back to `base` silently, which is
+F8's shape, so the smoke test sweeps every `base_formula` any data script writes
+and fails if one would not parse.
+
+Five places per the `schema-change` skill: migration 042, the `CREATE`, a
+guarded seed line, the `docs/operations.md` row, and the README data model. Plus
+the catalogs `SELECT`, without which the column exists and never reaches the
+app. Migration applied `--remote` and confirmed by asking
+`schema_migrations`, then the data script.
+
+Smoke 1364 -> 1373, regression 212 unchanged.
+
+**Closed.**
 
 ### F3 — `gear` has no shape for a vessel, and this batch has 25 of them
 

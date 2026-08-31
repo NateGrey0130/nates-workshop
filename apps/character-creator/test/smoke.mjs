@@ -239,6 +239,7 @@ import { evalDice, rollAttribute, rollPoolFormula, rollQuantity,
          poolFormulaBounds, diceBounds, attributeCeiling,
          isAttributeExpr, isAbsentAttribute } from '../js/dice.js';
 import { validateMos } from '../js/parser.js';
+import { skillBase, isBaseFormula } from '../js/skill-base.js';
 import { chunks, D1_MAX_BINDS, BIND_CHUNK } from '../../../functions/api/character-creator/_lib/sql-chunk.js';
 import { LANGUAGE_OTHER, LITERACY_OTHER, isFamilyName, isRepeatableRow,
          otherRowFor, familySkillName } from '../js/language-skills.js';
@@ -2654,6 +2655,58 @@ section('Category restrictions');
       '_lib', 'validate-character.js'), 'utf8');
     return src.includes('categoryAllows(allowed,');
   })());
+}
+
+// ---------- 1c25a1. An attribute-derived skill base ----------
+// BOOK-INGEST-AUDIT.md F2. Phase World states Zero Gravity Movement & Combat as
+// "the P.P. attribute number x5%, plus 4% per level". `per_level` held the 4;
+// `base` is an INTEGER and held 0 — which the schema defines as NON-PERCENTILE,
+// so a skill starting near 50% read as a weapon proficiency.
+section('Attribute-derived skill base');
+{
+  check('a formula yields the attribute times its multiplier',
+    skillBase({ base: 0, base_formula: 'PP*5' }, { PP: 12 }) === 60);
+  check('and it is space- and case-tolerant, because a data script is hand-written',
+    skillBase({ base_formula: ' pp * 5 ' }, { PP: 10 }) === 50);
+
+  // THE FALLBACK IS THE WHOLE COMPATIBILITY STORY. Every row without a formula
+  // must read exactly as it did before the column existed.
+  check('no formula means the stored base, untouched',
+    skillBase({ base: 40, per_level: 5 }, { PP: 12 }) === 40
+    && skillBase({ base: 0 }, { PP: 12 }) === 0
+    && skillBase({}, {}) === 0);
+
+  // Null means "no opinion", and the caller falls back — which matters since
+  // F5, where a creature can legitimately have no such attribute at all.
+  check('an attribute the character does not have falls back to base',
+    skillBase({ base: 7, base_formula: 'PE*5' }, { PP: 12 }) === 7);
+  check('and so does a formula that does not parse',
+    skillBase({ base: 7, base_formula: 'PP times five' }, { PP: 12 }) === 7
+    && skillBase({ base: 7, base_formula: 'PP*' }, { PP: 12 }) === 7);
+
+  check('isBaseFormula admits the one shape and nothing else',
+    isBaseFormula('PP*5') && isBaseFormula('Spd*2')
+    && !isBaseFormula('PP*5+10') && !isBaseFormula('XX*5')
+    && !isBaseFormula('5') && !isBaseFormula(''));
+
+  // A formula that does not parse falls back SILENTLY, which is F8's shape: a
+  // value stored and never heard. Nothing validates a skills row on the way in,
+  // so this is the guard — every formula any data script writes must parse.
+  // Read off the SCRIPTS rather than a database: the scripts are what ships,
+  // and a local database is whatever the last session left in it.
+  {
+    const sdir = join(appDir, 'db');
+    const written = [];
+    for (const f of readdirSync(sdir).filter((n) => n.endsWith('.sql'))) {
+      const sql = readFileSync(join(sdir, f), 'utf8');
+      for (const m of sql.matchAll(/base_formula\s*=\s*'([^']*)'/g)) written.push({ f, v: m[1] });
+    }
+    const bad = written.filter((w) => !isBaseFormula(w.v));
+    check('every base_formula a data script writes actually parses',
+      bad.length === 0, bad.map((w) => `${w.f}: ${w.v}`).join(', '));
+    check('and the sweep found the one row this finding exists for',
+      written.some((w) => w.v.toUpperCase() === 'PP*5'), `found ${written.length}`);
+  }
 }
 
 // ---------- 1c25a2. The percentage printed beside a category ----------
