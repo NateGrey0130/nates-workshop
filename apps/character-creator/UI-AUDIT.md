@@ -929,7 +929,7 @@ skipped — one line, *"Step 8 (Advancement) does not apply to this character."*
 keep the `title` for the mouse. Add `aria-current="step"` to `.st cur` in the same
 edit.
 
-**Taken, 2026-08-31 (PR #N).** Both halves, in one edit, with the proposal's own
+**Taken, 2026-08-31 (PR #450).** Both halves, in one edit, with the proposal's own
 sentence: a Palladium Fantasy R.C.C. build at step 9 renders
 *"Step 8 (Advancement) does not apply to this character."* under the pills, and
 `aria-current="step"` lands on *9. Details*. The `title` stays for the pointer.
