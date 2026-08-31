@@ -1056,7 +1056,7 @@ Confirmed on the live Race step: `h1count: 0`, one `h2`, zero `h3`, 120 `h4`.
 five one-line edits, no visual change, since `.logo` carries its own type. Fixing the
 `h2`→`h4` jumps inside `app.js`/`catalog.js` is a **separate** finding.
 
-**Taken, 2026-08-31 (PR #N).** Five one-line edits, and the visual claim holds:
+**Taken, 2026-08-31 (PR #449).** Five one-line edits, and the visual claim holds:
 `shared/styles.css` opens with `* { margin: 0; padding: 0 }` and `.logo` sets its
 own `font-size: 22px` and `font-weight: 800`, so an `<h1>` inherits neither the
 UA margin nor the UA size. Measured on the sheet before and after: 22px, weight
