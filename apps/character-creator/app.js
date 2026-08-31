@@ -544,8 +544,19 @@ function renderStepper() {
     // The rest stay spans: a focusable control that does nothing when you press
     // it is worse than plain text, and the stepper is a summary, not a menu.
     if (i < S.step) return `<button type="button" class="${cls}" onclick="goStep(${i})">${i + 1}. ${name}</button>`;
-    return `<span class="${cls}">${i + 1}. ${name}</span>`;
+    // Which step you are on is otherwise carried in colour alone — ten pills
+    // that read identically to anything not looking at them.
+    const cur = i === S.step ? ' aria-current="step"' : '';
+    return `<span class="${cls}"${cur}>${i + 1}. ${name}</span>`;
   }).join('');
+  // Why a step is greyed used to live only in a title=, which is a pointer
+  // affordance: at phone and tablet width there was no way to find out at all,
+  // and no legend anywhere on the page. The title stays for the mouse.
+  const na = STEPS.map((name, i) => [i, name]).filter(([i]) => !stepApplies(i));
+  const phrase = (xs) => (xs.length < 2 ? xs[0] : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
+  const naNote = !na.length ? '' : `<p class="attr-note" style="width:100%; text-align:center; margin:6px 0 0">
+    ${na.length === 1 ? 'Step' : 'Steps'} ${phrase(na.map(([i, name]) => `${i + 1} (${name})`))}
+    ${na.length === 1 ? 'does' : 'do'} not apply to this character.</p>`;
   // Rendered here because it is the one element every step draws, and a
   // warning that autosave has stopped must not depend on which step you are on.
   const c = S.draftConflict;
@@ -554,7 +565,7 @@ function renderStepper() {
       c !== true && c.class_name ? ` (now ${esc(c.class_name)}, step ${c.step + 1})` : ''}.
     Your work here is safe on screen — finish and save, or reload to take theirs.
   </p>`;
-  $('stepper').innerHTML = steps + notice;
+  $('stepper').innerHTML = steps + naNote + notice;
 }
 
 function render() {
