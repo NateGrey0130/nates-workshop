@@ -1,6 +1,6 @@
 -- Give the Crazy the exclusion its book states.
 --
--- BOOK-INGEST-AUDIT.md F16, taken in PR #NNN. The code half teaches
+-- BOOK-INGEST-AUDIT.md F16, taken in PR #436. The code half teaches
 -- `psionics.categories_allowed` the same only/except grammar a skill category
 -- has had since the beginning; this is the one class in the catalog that needs
 -- it.

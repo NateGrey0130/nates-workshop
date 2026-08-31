@@ -1704,7 +1704,7 @@ punishes not saying it.
 skill-side equivalent has never had more than a handful of users either, and the
 argument for it was the same.
 
-**Taken, 2026-08-31 (PR #NNN), the PRIMARY proposal, posture as written - no new
+**Taken, 2026-08-31 (PR #436), the PRIMARY proposal, posture as written - no new
 gate.** `psionics.categories_allowed` entries now take the same grammar as
 `occ_related_skills.categories`: a plain string, or an object with `only` /
 `except`. `categoryAllows()` does the work at all three call sites, so the
