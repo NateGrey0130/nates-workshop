@@ -374,6 +374,46 @@ add the `:focus-visible` rule from F16 so the focus lands somewhere visible. Shi
 starting a character, and `.pick` is styled as a block so the `<button>` swap needs
 `display: block; width: 100%; text-align: left` and will want its own screenshot pass.
 
+**Partly taken, 2026-08-31 (PR #N) — the `.pick` cards only.** Split into two PRs
+by the finding's own instruction to ship those first and alone. **F5 stays open**
+for the stepper (`app.js:543`), the NPC row (`campaign.js:321`) and the 345
+catalog rows (`catalog.js:301`).
+
+All six sites were re-checked and all six are real. One thing the finding did not
+mention: **`.pick` is already rendered as a `<button>`** by the MOS picker
+(`app.js:1987`), inside `.pickgrid`. That is why the new layout rules are scoped
+`.grid > button.pick` — the MOS cards are not part of this change and must not
+move under it. (`.pickgrid` itself is used in `app.js` and defined in no
+stylesheet in the repo — a second instance of F10's pattern, recorded here, not
+taken.)
+
+Verified: all 40 Palladium Fantasy class cards and both system cards report
+`tagName BUTTON` and `tabIndex 0`; text stays left-aligned at 16px in
+`--text-primary` with the 15px `h4`, so the card is visually unchanged.
+
+**The focus ring appears to be white for its first 200ms**, and that is `.pick`'s
+own `transition: all var(--transition)` animating `outline-color` from
+`currentColor`. Settled state measured repeatedly at
+`rgb(240, 160, 75) @ 2px` — F16's ring. A screenshot taken during the transition
+shows a white ring and is not evidence of a broken rule.
+
+**Enter activation could not be demonstrated in the pane, and the pane is the
+reason.** Control experiment on a button this PR never touched — the
+*Help me choose* toggle: `Tab` focuses it, the pane's `Enter` does nothing, and
+`.click()` on a converted card does advance the wizard from step 1 to step 2. The
+pane's `key` action moves focus but does not synthesize activation. Enter and
+Space on a real `<button>` are a platform guarantee, not app code.
+
+**Recorded, not taken — the accessible name is now the whole card.** A converted
+class card announces as *"Changeling rccPalladium Fantasy RPG Main Book
+p.308-310pairs with an O.C.C. …"*, because a `<button>` flattens its contents
+into its name. That is more than the nothing a `<div onclick>` offered, but a
+button named after its own lore blurb wants either an `aria-label` or the
+card-link pattern (a focusable title inside a plain card). Related: `<p>` inside
+`<button>` is outside the HTML content model — browsers nest it without
+complaint, and it is what makes the name long. Both belong to one follow-up
+finding rather than to this PR.
+
 ---
 
 ### F6 — high — `--text-muted` fails contrast on every background in the system, at 9–13px

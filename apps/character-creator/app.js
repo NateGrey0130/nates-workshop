@@ -629,12 +629,12 @@ function renderSystem() {
   <div class="panel">
     <h2>Choose a game system</h2>
     <div class="grid">
-      <div class="pick ${S.system === 'palladium-fantasy' ? 'sel' : ''}" onclick="pickSystem('palladium-fantasy')">
+      <button type="button" class="pick ${S.system === 'palladium-fantasy' ? 'sel' : ''}" onclick="pickSystem('palladium-fantasy')">
         <h4>⚔️ Palladium Fantasy</h4><p class="muted">Swords, sorcery, and the Old Kingdom.</p>
-      </div>
-      <div class="pick ${S.system === 'rifts' ? 'sel' : ''}" onclick="pickSystem('rifts')">
+      </button>
+      <button type="button" class="pick ${S.system === 'rifts' ? 'sel' : ''}" onclick="pickSystem('rifts')">
         <h4>☢️ Rifts</h4><p class="muted">Mega-damage, magic, and machines on post-apocalyptic Earth.</p>
-      </div>
+      </button>
     </div>
     ${S.isAdmin ? `<h3>Admin</h3>
     <p class="small"><a href="catalog.html">✏️ Edit catalogs</a>
@@ -926,12 +926,12 @@ function classGroups(list) {
 function classCard(c, score) {
   const sel = S.rcc?.id === c.id ? ' sel' : '';
   const badge = score != null ? `<span class="tag score">match ${score}/6</span>` : '';
-  return `<div class="pick${sel}" onclick="pickClass('${c.id}')">
+  return `<button type="button" class="pick${sel}" onclick="pickClass('${c.id}')">
     <h4>${esc(c.name)}</h4>
     <span class="tag">${esc(c.category)}</span><span class="tag">${esc(c.source_book)}</span>${
       needsOccupation(c) ? '<span class="tag">pairs with an O.C.C.</span>' : ''}${badge}
     <p class="muted small">${esc(blurb(c.lore, 110))}</p>
-  </div>`;
+  </button>`;
 }
 function classDetail(c) {
   const reqs = c.attribute_requirements
