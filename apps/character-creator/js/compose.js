@@ -276,6 +276,23 @@ export const CORE_SDC_BY_CLASS = {
   'imperial-legionnaire': '3D6',
   'freedom-fighter': '3D6',
   'imperial-security-agent': '1D6',
+
+  // The five spacefaring trades of printed 38-43. None states an S.D.C. or a
+  // hit point formula and none is a mega-damage being, so all five need an
+  // entry here. The book files them under "Other races & O.C.C.s of note"
+  // rather than under one of the five O.C.C. groups, so the call is read off
+  // what each entry actually is.
+  //
+  // Two are fighters: the Galactic Tracer is the spaceways bounty hunter and
+  // the book points at Rifts Mercenaries, where the Bounty Hunter is a man of
+  // arms; the Space Pirate has attribute minimums, Hand to Hand: Expert and
+  // combat bonuses. The other three are trades - a cargo pilot, a smuggler and
+  // a pioneer, all Hand to Hand: Basic, none with a combat bonus.
+  'galactic-tracer': '3D6',
+  'space-pirate': '3D6',
+  'spacer': '1D6',
+  'runner': '1D6',
+  'colonist': '1D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence
