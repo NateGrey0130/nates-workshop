@@ -1517,7 +1517,7 @@ has to show separately? F11 is about a class REPLACING its race, and if a
 Godling's magic is meant to be replaced rather than added to, this finding is
 partly answered by that one. Read them together.
 
-**Taken, 2026-08-31 (PR #NNN).** `mergeMagic`, on F10's rules, sharing its union
+**Taken, 2026-08-31 (PR #434).** `mergeMagic`, on F10's rules, sharing its union
 helper. Every premise held on re-measurement: 13 R.C.C.s, 18 O.C.C.s, 234 pairs,
 and the line was `out.magic = occ.magic || rcc.magic` with no comparison at all.
 
