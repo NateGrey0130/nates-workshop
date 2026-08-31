@@ -996,7 +996,7 @@ block would be discarded by composition with any race it can be taken with. It
 fixes no character, but it would have caught the noro in batch 2 instead of
 batch 9.
 
-**Taken, 2026-08-31 (PR #NNN).** `mergePsionics` replaces the choice. Powers and
+**Taken, 2026-08-31 (PR #429).** `mergePsionics` replaces the choice. Powers and
 `categories_allowed` are unioned, the tier is the stronger of the two with
 `isp_base` travelling with it, and the ladders (`powers_schedule`,
 `powers_starting_groups`) take the occupation's where it states one. Code only -
