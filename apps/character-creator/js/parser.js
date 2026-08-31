@@ -326,6 +326,25 @@ function attrReach(expr) {
 const PSI_TIERS = ['minor', 'major', 'master'];
 const tierRank = (t) => PSI_TIERS.indexOf(String(t ?? '').toLowerCase());
 
+// Two lists into one, keeping the first spelling of anything named twice.
+// Entries are either bare strings or objects with a `name`, which is every
+// shape the granted-power, category and spell lists use.
+//
+// Shared by the psionics and magic merges (F10, F14). They ask the same
+// question of different columns and one answer is easier to keep right than
+// two - the pair that drifts is the pair that was written twice.
+function unionByName(a, b) {
+  const seen = new Set();
+  const merged = [];
+  for (const x of [...(a || []), ...(b || [])]) {
+    const key = normName(typeof x === 'string' ? x : x?.name);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    merged.push(x);
+  }
+  return merged;
+}
+
 // Fold two psionics blocks into one. BOOK-INGEST-AUDIT.md F10.
 //
 // This used to CHOOSE between them - the stronger tier took the whole block and
@@ -399,18 +418,7 @@ function mergePsionics(born, trained) {
   // Deduplicated by name because 66 of the pairs grant a power both sides also
   // grant - the entrancer and the noro psychic share three - and a character
   // must not hold the same power twice.
-  const union = (a, b) => {
-    const seen = new Set();
-    const merged = [];
-    for (const x of [...(a || []), ...(b || [])]) {
-      const key = normName(typeof x === 'string' ? x : x?.name);
-      if (!key || seen.has(key)) continue;
-      seen.add(key);
-      merged.push(x);
-    }
-    return merged;
-  };
-  const powers = union(born.powers, trained.powers);
+  const powers = unionByName(born.powers, trained.powers);
   if (powers.length) out.powers = powers;
 
   // `categories_allowed` IS UNIONED, WHICH F10 DOES NOT ASK FOR. The finding
@@ -420,9 +428,64 @@ function mergePsionics(born, trained) {
   // Sensitive - three categories its own race page grants it. That is the exact
   // loss F10 was written to stop, and its own sentence is the argument against
   // its list: training adds to birth, it does not replace it.
-  const cats = union(born.categories_allowed, trained.categories_allowed);
+  const cats = unionByName(born.categories_allowed, trained.categories_allowed);
   if (cats.length) out.categories_allowed = cats;
 
+  return out;
+}
+
+// The same fold for magic. BOOK-INGEST-AUDIT.md F14.
+//
+// F10 excluded this saying "no race/O.C.C. pair in the catalog states both".
+// THIRTEEN races and eighteen occupations state `magic` - 234 pairs - and the
+// line this replaces was `out.magic = occ.magic || rcc.magic`, which is worse
+// than the psionics bug it sat beside: psionics at least gave the RACE the tie,
+// while magic handed the occupation the win with no comparison at all.
+//
+// THE TYPE IS NOT A LADDER, which is the one real difference from psionics.
+// `psionics.type` is minor < major < master and there is a stronger to compute.
+// The magic types in this catalog are `spell`, `elemental`, `druid`,
+// `intuitive`, `none`, and two named after their class - they are KINDS, not
+// degrees. So the occupation's wins where it states one: a race's generic
+// `spell` must not overwrite a Warlock's `elemental`, which says how the
+// character casts.
+function mergeMagic(born, trained) {
+  if (!born) return trained;
+  if (!trained) return born;
+
+  // Spread first, so an unenumerated key survives. The magic blocks in this
+  // catalog use ELEVEN keys - two more than psionics, `spell_lists` and
+  // `spells_starting_groups` appearing once each - which is the argument for
+  // not writing the list out.
+  const out = { ...born };
+  for (const [k, v] of Object.entries(trained)) if (v !== undefined) out[k] = v;
+
+  // Inventories add up. 28 pairs grant named spells on both sides and 9 of them
+  // overlap, so the dedupe is not decoration.
+  const spells = unionByName(born.spells, trained.spells);
+  if (spells.length) out.spells = spells;
+
+  // `spell_levels_allowed` is a set of levels, and the wider one is the answer
+  // for the same reason `categories_allowed` is unioned: taking the
+  // occupation's DROPS a level the race allows in 19 of the 28 pairs that state
+  // both - an entrancer who becomes a Warlock would lose levels 2, 3 and 4 its
+  // own page grants.
+  const levels = [...new Set([...(born.spell_levels_allowed || []),
+                              ...(trained.spell_levels_allowed || [])])]
+    .filter((n) => Number.isFinite(n)).sort((a, b) => a - b);
+  if (levels.length) out.spell_levels_allowed = levels;
+
+  // A count takes the higher, the same reading F10 arrived at: 108 pairs state
+  // `spells_starting` on both sides and the occupation's is LOWER in 35 of
+  // them, so preferring it would cut a royal frilled dragon hatchling from six
+  // starting spells to one for studying as an Elemental Fusionist.
+  for (const k of ['spells_starting', 'spells_per_level']) {
+    const a = born[k], b = trained[k];
+    if (Number.isFinite(a) && Number.isFinite(b)) out[k] = Math.max(a, b);
+  }
+
+  // Everything else - the ladders and the named source lists - keeps the
+  // occupation's where it states one, which the spread above already did.
   return out;
 }
 
@@ -764,8 +827,13 @@ export function combineClasses(rcc, occ) {
   // Born plus trained, not one or the other (F10). The race is what a member of
   // that race comes with; the occupation is what its page teaches.
   if (rcc.psionics || occ.psionics) out.psionics = mergePsionics(rcc.psionics, occ.psionics);
-  // Magic is what you studied, so the O.C.C. wins when both state it.
-  if (occ.magic || rcc.magic) out.magic = occ.magic || rcc.magic;
+  // Magic is what you studied AND what a creature was born with, and the two add
+  // up the same way psionics do (F14). A superseding class is the exception, as
+  // it is everywhere else: a character the book says was remade does not keep
+  // its old race's magic either.
+  if (occ.magic || rcc.magic) {
+    out.magic = superseded ? (occ.magic || rcc.magic) : mergeMagic(rcc.magic, occ.magic);
+  }
 
   for (const key of ['equipment_starting', 'level_progression', 'special_abilities',
                      'natural_abilities', 'restrictions']) {
