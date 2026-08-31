@@ -236,7 +236,8 @@ import { collapseWhitespace, statements, stripComments, trailingSelects } from '
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import { composeClass } from '../js/compose.js';
 import { evalDice, rollAttribute, rollPoolFormula, rollQuantity,
-         poolFormulaBounds, diceBounds, attributeCeiling } from '../js/dice.js';
+         poolFormulaBounds, diceBounds, attributeCeiling,
+         isAttributeExpr } from '../js/dice.js';
 import { validateMos } from '../js/parser.js';
 import { chunks, D1_MAX_BINDS, BIND_CHUNK } from '../../../functions/api/character-creator/_lib/sql-chunk.js';
 import { LANGUAGE_OTHER, LITERACY_OTHER, isFamilyName, isRepeatableRow,
@@ -603,6 +604,36 @@ section('Creation validation');
     attributeCeiling('3d6') === 30 && attributeCeiling('2d6') === 24
     && attributeCeiling('4d6') === 24 && attributeCeiling('3d6+6') === 36
     && attributeCeiling('not dice') === null);
+
+  // ── a FIXED attribute value (BOOK-INGEST-AUDIT.md F8) ────────────────────
+  // The Naruni Repo-Bot's chassis has "a P.S. of 50, P.P. 26". Before this, a
+  // bare integer matched no grammar, so rollAttribute discarded it, rolled 3d6,
+  // AND rewrote the notation to match — a class that says the attribute is 50
+  // and is not heard.
+  {
+    const r = rollAttribute('50');
+    check('a fixed attribute value is returned unchanged, not rolled',
+      r.total === 50 && r.base === 50 && r.modifier === 0);
+    check('and it reports its OWN notation rather than 3d6',
+      r.notation === '50', `notation was ${r.notation}`);
+    check('a fixed value earns no exceptional die - it is not a roll',
+      r.exceptional.length === 0);
+    check('and it is its own ceiling, so the server-side gate finally covers it',
+      attributeCeiling('50') === 50);
+    check('a fixed value reads the same through evalDice and diceBounds',
+      evalDice('50') === 50 && JSON.stringify(diceBounds('50')) === '{"min":50,"max":50}');
+  }
+
+  // The grammar must stay NARROW, or this trades a silent substitution for a
+  // silent acceptance. Only a bare integer counts; anything else still falls
+  // through to 3d6, and is now an ERROR at import time rather than a surprise.
+  check('dice still parse as dice, and the fallback still fires for real junk',
+    rollAttribute('3d6+2').notation === '3d6+2'
+    && rollAttribute('garbage').notation === '3d6'
+    && rollAttribute('50 lbs').notation === '3d6');
+  check('isAttributeExpr admits both grammars and nothing else',
+    isAttributeExpr('50') && isAttributeExpr('3d6') && isAttributeExpr('2d4x10+6')
+    && !isAttributeExpr('N/A') && !isAttributeExpr('50 lbs') && !isAttributeExpr(''));
 }
 
 // ---------- 1c4. Psychic tiers ----------
