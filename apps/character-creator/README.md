@@ -599,7 +599,13 @@ scripts/
 │                           no-page-range / unknown-book / not-cached /
 │                           outside-cache, plus the importer stub backlog.
 │                           Advisory, always exits 0 - the caches are
-│                           gitignored and a clean clone traces nothing
+│                           gitignored and a clean clone traces nothing.
+│                           --values asks the NEXT question: is the number
+│                           printed on the page the row cites? Gear
+│                           numerics only, and every miss is classed late /
+│                           early / absent, because a short citation on an
+│                           entry that straddles a page break is a different
+│                           defect from a wrong value
 ├── source-coverage-lib.mjs Its pure half: one source_book string in, one
 │                           bucket out, so the smoke test pins the bucketing
 │                           against a fixture and never against live caches

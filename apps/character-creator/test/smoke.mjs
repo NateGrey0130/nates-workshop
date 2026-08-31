@@ -229,7 +229,8 @@ import {
   fieldSourceSpans, bestMatchingPages,
 } from '../../../scripts/class-check-lib.mjs';
 import { bookSpellings, bookTitles, cacheCoverage, loadBookRegistry, loadNotBooks } from '../../../scripts/books-lib.mjs';
-import { bucketFor, summarise } from '../../../scripts/source-coverage-lib.mjs';
+import { bucketFor, summarise, summariseValues, valuePresent, valueSpellings }
+  from '../../../scripts/source-coverage-lib.mjs';
 import { buildUserPrompt, SYSTEM_PROMPT_CACHE } from '../../../scripts/extraction-prompt.mjs';
 import { collapseWhitespace, statements, stripComments, trailingSelects } from '../../../scripts/sql-statements.mjs';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
@@ -5450,6 +5451,57 @@ section('Book registry');
       rolled.total === 3 && rolled.counts.traceable === 1
       && rolled.offenders['outside-cache'][0].label === 'b'
       && rolled.offenders.traceable.length === 0);
+
+    // ── the VALUES pass (BOOK-INGEST-AUDIT.md F1) ───────────────────────────
+    // Is the NUMBER printed on the page the row cites? Driven from a fixture
+    // here rather than from whatever caches this machine has, which is the
+    // whole reason the pure half lives in the lib.
+    check('a number is spelled three ways: bare, comma-grouped, and the dot form the OCR produces',
+      JSON.stringify(valueSpellings(18000)) === JSON.stringify(['18000', '18,000', '18.000']));
+    check('and a value with nothing to check yields no spellings at all',
+      valueSpellings(0).length === 0 && valueSpellings(null).length === 0);
+
+    check('the comma form is found where the book prints one',
+      valuePresent(18000, 'Black Market Cost: 18,000 credits.'));
+    check('and so is the dot form a scan produces for it',
+      valuePresent(18000, 'Black Market Cost: 18.000 credits.'));
+
+    // The boundary rule, both directions. Both were live bugs in the first
+    // draft: the first over-matched, the second under-matched.
+    check('a value is NOT found inside a longer number',
+      !valuePresent(18000, 'costs 118,000 credits') && !valuePresent(500, 'adds 1,500 M.D.C.'));
+    check('but a trailing comma is punctuation, not a digit group',
+      valuePresent(12, 'Steelcloth loose-fitting robes (A.R. 12,')
+      && valuePresent(65, 'Main body M.D.C. 65. The turret'));
+
+    // A price the book states in words is the false positive this pass cannot
+    // see past, and pretending otherwise would trade it for a silent miss.
+    check('a figure printed in words reads as absent, and that is known and accepted',
+      !valuePresent(3600000, 'Cost: 3.6 million credits'));
+
+    const vpages = {
+      'rue/103': 'NG-101 Rail Gun. Weight: 128 lbs.',
+      'rue/104': 'Black Market Cost: 55,000 credits.',
+      'rue/102': 'Main body M.D.C. 140.',
+    };
+    const vals = summariseValues([
+      { label: 'on-the-page', sourceBook: 'Rifts Ultimate Edition p.100-100', values: { weight_lbs: 128 } },
+      { label: 'one-page-late', sourceBook: 'Rifts Ultimate Edition p.100-100', values: { cost: 55000 } },
+      { label: 'one-page-early', sourceBook: 'Rifts Ultimate Edition p.100-100', values: { mdc: 140 } },
+      { label: 'nowhere', sourceBook: 'Rifts Ultimate Edition p.100-100', values: { cost: 987654 } },
+      { label: 'no-window', sourceBook: null, values: { cost: 12 } },
+    ], opts, (slug, n) => vpages[`${slug}/${n}`] ?? null);
+
+    check('a value printed on the cited page is not a miss',
+      vals.columns.get('weight_lbs').misses.length === 0);
+    check('a miss on the NEXT page is reported as a short citation, not a wrong number',
+      vals.byWhere.late === 1 && vals.columns.get('cost').misses[0].where === 'late');
+    check('and a miss on the PREVIOUS page the same way',
+      vals.byWhere.early === 1 && vals.columns.get('mdc').misses[0].where === 'early');
+    check('only a value near neither page counts as absent',
+      vals.byWhere.absent === 1);
+    check('a row with no page window is a coverage gap, not a value one',
+      vals.noWindow === 1 && vals.tested === 4);
   }
 
   // catalog-diff answers the question that decides what gets extracted, and

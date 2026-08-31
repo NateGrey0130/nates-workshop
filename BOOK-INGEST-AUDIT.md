@@ -58,7 +58,57 @@ Worth deciding when taken, not before: whether the same pass covers
 the check would be nearly all noise. The gear columns are the ones with the
 signal.
 
-**Open.**
+**Taken, 2026-08-31 (PR #420). Posture held: advisory, log-only, exit code
+untouched.** `--values` on `scripts/source-coverage.mjs`, gear numerics only,
+with `skills.base` / `per_level` left out on this finding's own advice.
+
+**Two premises were wrong, and the table above is where.** It says
+`imported_classes.starting_money` is *checked by nothing*. It has been checked
+since `class-check --field-sources`, which traces that field and
+`equipment_starting` back to the cache lines they were drawn from and prints
+the next page when a span ends near a page break - built for the very PR #280
+failure this table cites as the thing nothing catches. What is true, and is
+the finding's real content, is narrower: that check runs on ONE DRAFT at
+import time and there has never been a sweep over rows that already shipped,
+and the gear numerics have had no check of any kind. `starting_money` is
+therefore NOT in this pass - it is a dice expression rather than a number, and
+it already has a better check than this one would be.
+
+**And the 7% false-positive rate does not survive contact with the corpus.**
+It came from a 42-row sample. Over 1,154 gear values the first run missed
+23.7%, and the reason matters more than the number: **160 of the 274 misses
+are values printed one page either side of the window the row cites**, on
+entries that straddle a page break. The NG-101 Rail Gun cites `rue p.273`, its
+Black Market Cost is printed on 274, and the citation is simply a page short.
+That is a fixable defect in the ROW, and it is a different thing from the 114
+values that are near neither page.
+
+So every miss is classified `late` / `early` / `absent` - an addition beyond
+the written scope, declared here rather than made quietly. The window is
+deliberately NOT widened to absorb the off-by-one hits, because absorbing them
+would hide the short citations, which are the actionable half. A third
+spelling was added for the same reason: this repo's OCR renders `18,000` as
+`18.000` with 93-97 confidence, so bare and comma-grouped alone would have
+reported a scanned book's prices missing in bulk.
+
+**One bug in this pass was caught by the data and is worth recording**, because
+it is the shape a value check fails in. The first boundary rule excluded a `.`
+or `,` on either side of a hit outright, to stop `18000` matching inside
+`118,000`. It also stopped `12` matching `(A.R. 12,` - where the comma is
+punctuation and the value is right there. That single rule produced most of an
+apparent miss rate on `gear.ar`, which is **0%** once a separator is only a
+boundary BETWEEN DIGITS. A value check that is slightly wrong reports other
+people's rows as broken, which is the expensive direction.
+
+Twelve smoke checks drive the new lib functions off a fixture, including both
+directions of that boundary rule and the words-not-numerals false positive
+this cannot see past.
+
+**What it found on the day it shipped, for whoever picks this up:** 114 gear
+values near neither page and 160 short citations. Neither is repaired here -
+this finding asked for a check, and repairing rows is its own work.
+
+**Closed.**
 
 ### F2 — `skills.base` cannot hold a percentage derived from an attribute
 
