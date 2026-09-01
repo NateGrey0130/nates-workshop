@@ -3954,6 +3954,49 @@ section('Trackable resources');
     'nothing warns that the famous example is not in the imported text');
 }
 
+// ---------- The session log ----------
+// What the sheet recorded, beside the journal, which is what a person wrote.
+// Two separate boxes because they are two kinds of thing: one is a machine's
+// account and cannot be edited, the other is prose and can.
+section('The session log');
+{
+  const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  const layout = readFileSync(join(appDir, 'js', 'sheet-layout.js'), 'utf8');
+  const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
+
+  check('the sheet has a session log box',
+    /box\('Session log'/.test(sheet), 'the session log box is gone');
+  check('and it sits in the prose column beside the journal',
+    /'session-log': 'c',/.test(layout), 'the session log has no column');
+
+  // LAZY. The sheet already makes four requests before it can draw, and the log
+  // is the one thing most sessions never open. Paying for it every time to
+  // serve the times it is wanted is the wrong way round.
+  check('it loads on first open, not at render',
+    /<details[^>]*id="log-details"[^>]*ontoggle="loadLog\(\)"/.test(sheet),
+    'the log is not wired to open lazily');
+  check('and render() does not fetch events',
+    !/function render\(\)[\s\S]*?events\?limit[\s\S]*?^}/m.test(sheet),
+    'the sheet fetches the event log at render');
+  check('it fetches once, not on every open',
+    /logLoaded = true;/.test(sheet), 'nothing stops a re-fetch on each toggle');
+  check('but a failed load stays retryable',
+    /logLoaded = false;[\s\S]{0,200}?Could not load/.test(sheet),
+    'a failed load leaves the box permanently empty');
+
+  // An undone event is part of the account, not removed from it.
+  check('an undone event is shown struck through rather than hidden',
+    /log-row\.undone \.log-note \{ text-decoration: line-through/.test(css)
+    && /e\.undone_at \? ' undone' : ''/.test(sheet),
+    'undone events vanish from the log');
+
+  // Phase 7 asked for this and could not add it: the class did not exist yet.
+  const print = css.slice(css.lastIndexOf('@media print'));
+  check('a machine-written log does not print',
+    /\.box\[data-box="session-log"\] \{ display: none !important; \}/.test(print),
+    'the event log prints on the character sheet');
+}
+
 // ---------- Military Occupational Specialty ----------
 // RUE gives several classes an MOS: "select one area of specialty, gain all
 // skills under that MOS" (Coalition Technical Officer p236, Robot Pilot p84).

@@ -472,6 +472,21 @@ button.chkrow {
   padding: 14px; margin: 10px 0; background: var(--accent-glow);
 }
 
+/* ─── SESSION LOG ───
+   What the sheet recorded, beside the journal, which is what a person wrote.
+   Machine-written and not editable, so it reads as a list of facts rather
+   than as a feed: kind, what happened, when. An undone event stays visible
+   and struck through - the undo is part of the account. */
+.log-row {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 4px 0; border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.log-row:last-child { border-bottom: 0; }
+.log-note { flex: 1; min-width: 0; }
+.log-when { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.log-row.undone .log-note { text-decoration: line-through; color: var(--text-muted); }
+
 /* ─── DASHBOARD ─── */
 
 /* dashboard.html only. The roster is a five-column table already using 798px,
@@ -1483,6 +1498,11 @@ body.play-mode #print-btn { display: none; }
      and 730 drawing operators against 8037 on page 1. The long lists are
      allowed to break; their rows already avoid breaking away from their own
      footnotes. */
+  /* A machine-generated event log has no place on a printed character
+     sheet. Phase 7 could not add this rule - .session-log did not exist
+     until the box did. */
+  .box[data-box="session-log"] { display: none !important; }
+
   .vital .val b { display: inline !important; }
   .vital .bar, .vital .steppers { display: none !important; }
 }

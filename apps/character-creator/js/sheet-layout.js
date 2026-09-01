@@ -109,6 +109,7 @@
     'class-skills': 'b', 'related-skills': 'b', 'secondary-skills': 'b',
     granted: 'b', armor: 'b', equipment: 'b',
     'psionics-magic': 'c', background: 'c', bearing: 'c', notes: 'c', journal: 'c',
+    'session-log': 'c',
   };
 
   const box = (title, body, extra = '') => {
