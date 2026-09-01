@@ -71,6 +71,45 @@ row already says so.
 **Posture: dim and disable, do not hide.** A spell you cannot currently afford is one you
 still need to see; removing the row would hide a power the player forgot they had.
 
+**Taken, 2026-08-31 (PR #462).** Posture held: dim and disable, never hide. The finding
+was wrong twice, and one of the errors was the half that matters most.
+
+**There are two use buttons, not one.** This finding cited only the sheet's and asserted
+its power rows were "the only place" a control is offered and then argues. `renderPlay`
+has its own — `sheet.js:766` after this change — gated on the identical condition and
+routed to the same `usePower`. Play mode is the phone-at-the-table view, so taking the
+finding as scoped would have fixed the lesser of the two.
+
+**And play mode never re-renders.** A pool there moves by targeted DOM update:
+`adjustPool`, `takeDamage`, `rest` and `usePower` each write `C.data` and set the
+`play-cur-<pool>` span by hand. Gating at render alone would have moved the false promise
+one action later instead of removing it. `syncPowerBtns()` re-reads every button from the
+pool it declares — the buttons now carry `data-pool` and `data-cost` — and is called
+wherever a pool moves, on both the optimistic path and the rollback. `takeDamage` is
+deliberately not among them: it reaches H.P., S.D.C. and M.D.C. and can never change what
+a power spends from.
+
+**Nothing needed styling.** `shared/styles.css` already dims `:disabled` to 0.45 with
+`cursor: not-allowed`, and its comment describes this same bug in the wizard — "press a
+button that looked ready and have nothing happen". The finding asked for the wizard's 0.45
+without knowing it was already inheritable.
+
+**The cost-dimming half was NOT applied**, on Nate's call. The cost is 11px and sits at
+6.3:1 on `--bg-primary`; at `opacity:0.45` it composites to `#4c3e7c` and **2.13:1**,
+which fails 4.5 and would put the first contrast failure back on a page measuring zero.
+It is also the text that says *why* the button is dead, so dimming it works against this
+finding's own "the row still reads". Two alternatives were measured and not chosen:
+`--text-secondary` at 6.31:1, and leaving it as is. The finding's mechanism was right and
+its treatment was not — the same shape as F20 and F6 in [UI-AUDIT.md](UI-AUDIT.md).
+
+Verified at `localhost:8793` against a wizard holding 12 spells costing 1 to 12, pool set
+to 6: nine buttons live, the three at 10, 10 and 12 disabled; cost 6 with 6 left stays
+live, because `usePower`'s own guard is `cur < cost` and the two now agree exactly.
+Casting at 6 took the pool to 0 and all twelve went dead. In play mode, spending 4 killed
+the cost-4 and cost-6 buttons and `adjustPool(+4)` brought them back — both times with the
+button nodes identity-equal across the change, which is the proof that the sync ran and no
+re-render did.
+
 ---
 
 ### R2 — high — Current H.P. is unreachable from five of the six tabs
