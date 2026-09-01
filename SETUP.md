@@ -250,7 +250,7 @@ Two halves, and **both** are required — either one alone leaves the app broken
    | `api/pick3cut5` | rooms, WebSocket, solo generation |
    | `shared/styles.css` | the design system the page loads |
    | `shared/js/ui.js` | `escHtml`, which the game calls on every flip |
-   | `shared/fonts` | Outfit and JetBrains Mono, self-hosted since the fonts came off the CDN |
+   | `shared/fonts` | Saira and IBM Plex Sans, self-hosted since the fonts came off the CDN |
 
    **`shared/fonts` is the fifth and last destination that fits** — the limit is
    five, so a sixth dependency needs a second Access application rather than a
