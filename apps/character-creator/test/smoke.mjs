@@ -3890,6 +3890,70 @@ section('The printed sheet');
     'the tab bar is a div and the blanket button rule does not reach it');
 }
 
+// ---------- Trackable resources ----------
+// A countable thing a class hands out that is not a pool, a skill or a power.
+// It is a FRONTMATTER KEY, not a database column: the markdown is the class,
+// and a column populated at runtime would be class data the repo cannot
+// rebuild - which is the one thing drift-check and repo-vs-live exist to
+// assert. See CHANGE-PLAN.md phase 8, which specified the column.
+section('Trackable resources');
+{
+  const layout = readFileSync(join(appDir, 'js', 'sheet-layout.js'), 'utf8');
+  const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  const fmDoc = readFileSync(join(repoRoot, '.claude', 'skills', 'class-import',
+    'reference', 'frontmatter.md'), 'utf8');
+
+  // The frontmatter parser already carried a list of maps; nothing about it
+  // needed changing, which is most of why this shape was chosen.
+  const md = [
+    '---', 'id: probe-tr', 'name: Probe', 'system: rifts',
+    'source_book: Test', 'category: occ',
+    'trackable_resources:',
+    '  - key: uppers',
+    '    label: Juicer Uppers',
+    '    max: 3',
+    '    reset_on: day',
+    '---', '', '## Lore', 'x', '',
+  ].join('\n');
+  const parsed = parseClassMarkdown(md);
+  check('a class may declare trackable resources in frontmatter',
+    parsed.ok && Array.isArray(parsed.data.trackable_resources),
+    `errors: ${parsed.errors.join('; ')}`);
+  check('and the values keep their types',
+    parsed.data?.trackable_resources?.[0]?.max === 3,
+    'max came back as something other than the number 3');
+  check('declaring one is not a validation error',
+    parsed.errors.length === 0 && parsed.warnings.length === 0,
+    `errors: ${parsed.errors.join('; ')} warnings: ${parsed.warnings.join('; ')}`);
+
+  // The renderer lives with the other markup helpers, not in the data file.
+  check('the renderer is in the presentation module',
+    /const trackableRows = /.test(layout), 'trackableRows is not in sheet-layout.js');
+  check('and sheet.js does not define its own',
+    !/const trackableRows = /.test(sheet), 'trackableRows has drifted into sheet.js');
+
+  // THE DEFAULT IS NOTHING. Every class in the catalogue is in this state.
+  check('a class that declares none gets no box',
+    /const rows = trackableRows\(cls\.trackable_resources\);[\s\S]{0,200}?rows \? box\(/.test(sheet),
+    'the box renders even when the class declares nothing');
+
+  check('the box has a stable hook and a column',
+    /resources: 'a',/.test(layout), 'the resources box has no column and will flow anywhere');
+
+  // Documented where classes are authored, which is the class-import skill.
+  check('the key is documented for the people who write classes',
+    /^## Trackable resources/m.test(fmDoc), 'frontmatter.md does not mention it');
+  check('omitted and empty are distinguished in the docs',
+    /Omitted and empty are different/.test(fmDoc),
+    'nothing says what an empty list means');
+  // The stock example is not in any imported Juicer, and this is the repo that
+  // has a reconciliation pass specifically to stop remembered numbers landing
+  // in the catalogue.
+  check('and the docs warn against filling it from memory',
+    /comes from the book/i.test(fmDoc) && /uppers/i.test(fmDoc),
+    'nothing warns that the famous example is not in the imported text');
+}
+
 // ---------- Military Occupational Specialty ----------
 // RUE gives several classes an MOS: "select one area of specialty, gain all
 // skills under that MOS" (Coalition Technical Officer p236, Robot Pilot p84).
