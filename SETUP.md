@@ -272,8 +272,6 @@ Two halves, and **both** are required — either one alone leaves the app broken
    the stylesheets it loads, and fails if it and this table disagree; `--remote`
    checks the live policy, and checks the content type as well as the status —
    Pages answers a path it does not have with the landing page, at 200.
-   Note Access allows five destinations per application, so one more dependency
-   fits and the one after that needs a second application.
 2. **`PUBLIC_PREFIXES` in `functions/api/_middleware.js`**, which already lists
    `/api/pick3cut5/`. A bypass policy lets the request through *without*
    minting a JWT, so without this exemption every call takes a hard 403 from

@@ -907,6 +907,83 @@ wording rather than the fact.
 
 **Posture: documentation only.** No test change, no code change, no Access change.
 
+**Taken, 2026-09-01 (PR #474).** Posture held: one sentence deleted from `SETUP.md`. No test
+changed, no code changed, and nothing in Cloudflare was touched — the Access application was
+opened read-only and left without saving.
+
+**The finding's own line count is wrong, an hour after it was written.** It says the
+contradicting sentence sits *"eight lines above"*; it is **twenty** lines above on `main`
+today and was **seventeen** when N7 was opened. The rule that taking a finding means
+auditing it applies to a finding written in the same session as the audit of it, which is
+worth recording as the cheapest possible demonstration of why the rule exists.
+
+**The two claims that carry the finding both held, and were checked rather than assumed.**
+
+- *"Four were in use when that was written."* `git log -S` puts the sentence in **af6e394,
+  2026-08-24**, *"Smoke-test the Access bypass against what the page loads"*. That commit's
+  table has **four** rows and says `**four** destinations`. The sentence was true the day it
+  was written and went stale when `shared/fonts` became the fifth.
+- *"Nothing pins it."* The smoke suite reads `SETUP.md` in three places — `setup.includes()`
+  per derived destination, the endpoint count, and the skills-junction paragraph. None of
+  them touches this sentence.
+
+**It disagreed with Cloudflare, not just with the paragraph above it.** The finding argued
+from an internal contradiction. Checked against the product instead, in the dashboard:
+*Pick 3 Cut 5 (public)* holds five destinations —
+
+`apps/pick3cut5`, `api/pick3cut5`, `shared/styles.css`, `shared/js/ui.js`, `shared/fonts`
+
+— in that order, matching the `SETUP.md` table row for row, and Cloudflare's own UI says
+**"You've added the maximum number of hostnames per application allowed."** beside
+*"you can have up to five destinations per app."* The deleted sentence was not merely
+inconsistent with a bolded line; it told a reader something the dashboard refuses to let
+them do.
+
+**Deleted rather than reworded**, which is the branch the proposal argues for. The bolded
+sentence twenty lines up already carries both halves — the limit *and* the consequence —
+correctly: *"the limit is five, so a sixth dependency needs a second Access application
+rather than a surprise."* Nothing true was lost, and the second statement of the same rule
+is the thing that drifted. No check was added, per the proposal: the ceiling is already
+asserted in `apps/pick3cut5/test/smoke.mjs`, which is where it can be asserted against the
+derived list rather than against a wording.
+
+**One more sentence in that paragraph is wrong for the same reason and is not fixed here.**
+See [N8](#n8--low--the-forgotten-two-sentence-in-setupmd-now-points-at-the-wrong-two) —
+opened rather than folded in, and the first cross-finding anchor link written in ordinary
+use since N3 made them work.
+
+---
+
+### N8 — low — The forgotten-two sentence in `SETUP.md` now points at the wrong two
+
+Opened while taking N7. Same cause, same paragraph, different sentence; kept separate
+because N7's scope was the ceiling claim and nothing else.
+
+The Access section says, immediately under the destination table:
+
+> **The last two are the ones that get forgotten.** The app shipped without them and was
+> broken for every unauthenticated player: the page rendered in Times New Roman and
+> `escHtml is not defined` froze the game at the first flip…
+
+That was exact at **af6e394 (2026-08-24)**, where the table had four rows and the last two
+were `shared/styles.css` and `shared/js/ui.js` — the two the app really did ship without.
+The table has five rows now, so *"the last two"* reads as `shared/js/ui.js` and
+`shared/fonts`, while the story attached to it is about `shared/styles.css` and
+`shared/js/ui.js`. A reader who trusts the phrase and skims the story takes away that the
+fonts row is one of the two that caused the outage. It did not exist yet.
+
+`shared/fonts` is genuinely the most forgettable row of the five — it is the one no tag in
+`index.html` names — so the sentence is not merely stale, it is stale in the direction that
+sounds plausible.
+
+**Proposal:** name the two rather than counting them — *"the three `shared/` rows are the
+ones that get forgotten"*, or *"`shared/styles.css` and `shared/js/ui.js` are the ones that
+were forgotten"* if the sentence is meant to stay a report of the outage rather than a
+warning about today. Decide which of the two it is; the current wording is trying to be
+both.
+
+**Posture: documentation only.** One sentence. No table change, no test, no Access change.
+
 ---
 
 ## Not carried forward, and why
