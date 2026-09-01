@@ -10,19 +10,62 @@
    a second to fonts.gstatic.com before they could paint, on a site that
    otherwise makes no third-party request at all and sits behind Access.
 
-   BOTH FACES ARE VARIABLE, which is not what the ten weights in the old query
-   implied. Google Fonts answers `wght@300;400;500;600;700;800` with one file
-   and lets font-weight interpolate it: the six Outfit downloads came back
-   byte-identical, md5 fdf9c509…, and the four JetBrains Mono ones likewise.
-   So this is two files and two @font-face rules covering every weight the four
-   apps ask for, 63KB in total rather than the 312KB ten separate files would
-   have been.
+   EVERY FACE HERE IS VARIABLE, which is not what a per-weight query implies.
+   Google Fonts answers a `wght@300..900` range with one file and lets
+   font-weight interpolate it, so each family below is one download covering
+   every weight the four apps ask for rather than one download per weight.
+
+   THE DISPLAY FACE IS 'Saira', NOT 'Saira Condensed'. Saira Condensed exists
+   only as nine static weights — `family=Saira+Condensed:wght@100..900` answers
+   `400: Font family not found`. Variable Saira carries a WIDTH axis instead
+   (`font-stretch: 75% 100%`), and 75% is the condensed instance. One file at
+   96KB beats the alternative on both counts: the six static Saira Condensed
+   weights this repo actually uses come to 108KB, and they cannot interpolate
+   the 900 the wizard stepper wants in a later phase.
+
+   THERE IS NO ITALIC, on purpose. IBM Plex Sans ships roman and italic as
+   SEPARATE variable files - no single file carries both - and the italic is
+   50,184 bytes to serve the two rules in the whole workshop that ask for one
+   (media-vault's .stats-empty and pick3cut5's .final-empty, both muted labels).
+   Those two get a synthetic oblique instead, which is exactly what they got
+   before: neither face this replaced shipped an italic either. If a real
+   italic is ever wanted, it is one file and one @font-face rule, and the two
+   rules that would benefit are already written.
+
+   Sizes, measured on disk: saira 98,912 + plex roman 45,712 = 141KB, against
+   63KB for the Outfit and JetBrains Mono pair. Most of the increase is the
+   display face carrying a width axis, which is still cheaper than the 108KB
+   the six static Saira Condensed weights this repo uses would have cost.
 
    font-display: swap keeps the old behaviour - text paints in the fallback and
    reflows once - rather than blocking on a local file that is already there.
 
-   Licences ship beside them: both are SIL Open Font License 1.1, which requires
-   the licence to travel with the font. See shared/fonts/OFL-*.txt. */
+   Licences ship beside them: all are SIL Open Font License 1.1, which requires
+   the licence to travel with the font. See shared/fonts/OFL-*.txt.
+
+   Outfit and JetBrains Mono are still declared below and still on disk. Three
+   of the four apps have not been converted yet and every merge here deploys,
+   so removing them now would put the intervening states live with 88 rules
+   pointing at a family that no longer exists. They go in the cleanup PR once
+   nothing references them. */
+@font-face {
+  font-family: 'Saira';
+  src: url('/shared/fonts/saira-variable.woff2') format('woff2-variations'),
+       url('/shared/fonts/saira-variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-stretch: 75% 100%;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  src: url('/shared/fonts/ibm-plex-sans-variable.woff2') format('woff2-variations'),
+       url('/shared/fonts/ibm-plex-sans-variable.woff2') format('woff2');
+  font-weight: 100 700;
+  font-style: normal;
+  font-display: swap;
+}
+/* Retired, pending the cleanup PR — see the note above. */
 @font-face {
   font-family: 'Outfit';
   src: url('/shared/fonts/outfit-variable.woff2') format('woff2-variations'),
@@ -101,8 +144,28 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* ─── TYPE ───
+   Body prose is IBM Plex Sans; the condensed face is opt-in per element. That
+   is the inverse of the old arrangement, where a display face carried the body
+   too, and it is what keeps a journal entry readable at a paragraph's length.
+
+   --font-display resolves the width axis in one place. Saira's condensed
+   instance is font-stretch: 75%, and a rule that sets the family without the
+   stretch silently gets the 100% width - the same glyphs a quarter wider, which
+   reads as the wrong font rather than as a bug. Set both, or use .display. */
+:root {
+  --font-body:    'IBM Plex Sans', system-ui, sans-serif;
+  --font-display: 'Saira', system-ui, sans-serif;
+  --font-mono:    ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+h1, h2, h3, h4, .logo, .btn, th, .display {
+  font-family: var(--font-display);
+  font-stretch: 75%;
+}
+
 body {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-body);
   background: var(--bg-primary);
   color: var(--text-primary);
   min-height: 100vh;
@@ -146,16 +209,20 @@ body {
   color: var(--accent);
 }
 
+/* The strapline under the logo. It was mono for the machine-label look, not
+   for alignment - nothing about it is tabular - so it takes the condensed face
+   and keeps the look without spending a monospace download on it. */
 .logo-sub {
   font-size: 12px;
   color: var(--text-muted);
   font-weight: 400;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-display);
+  font-stretch: 75%;
+  letter-spacing: 0.04em;
 }
 
 /* ─── BUTTONS (app adds padding / display specifics) ─── */
 .btn {
-  font-family: 'Outfit', sans-serif;
   font-size: 13px;
   font-weight: 500;
   border-radius: var(--radius-sm);

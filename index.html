@@ -7,20 +7,29 @@
 <style>
 /* This page is the ONE of the ten that does not load /shared/styles.css - it is
    deliberately a single self-contained file with its own tokens - so it needs
-   its own copy of the two @font-face rules. Everything else inherits them from
-   shared. Both faces are variable: one file covers the whole weight axis.
-   Keep in step with the block at the top of /shared/styles.css. */
+   its own copy of the @font-face rules. Everything else inherits them from
+   shared. Every face is variable: one file covers the whole weight axis.
+   Keep in step with the block at the top of /shared/styles.css.
+
+   The display face is 'Saira' at font-stretch: 75%, NOT 'Saira Condensed' -
+   that family is static-only and Google answers a weight range for it with a
+   404. Setting the family without the stretch gets the 100% width instead,
+   which looks like the wrong font rather than like a mistake.
+
+   This page keeps its OWN palette and is still on the pre-Rust & Ash colours;
+   only the type moves here. The colours are a later phase. */
 @font-face {
-  font-family: 'Outfit';
-  src: url('/shared/fonts/outfit-variable.woff2') format('woff2');
-  font-weight: 300 800;
+  font-family: 'Saira';
+  src: url('/shared/fonts/saira-variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-stretch: 75% 100%;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'JetBrains Mono';
-  src: url('/shared/fonts/jetbrains-mono-variable.woff2') format('woff2');
-  font-weight: 400 700;
+  font-family: 'IBM Plex Sans';
+  src: url('/shared/fonts/ibm-plex-sans-variable.woff2') format('woff2');
+  font-weight: 100 700;
   font-style: normal;
   font-display: swap;
 }
@@ -39,7 +48,7 @@
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -53,6 +62,8 @@ body {
   margin-bottom: 56px;
 }
 .hero h1 {
+  font-family: 'Saira', system-ui, sans-serif;
+  font-stretch: 75%;
   font-size: 42px;
   font-weight: 800;
   letter-spacing: -1px;
@@ -112,6 +123,8 @@ body {
   border-radius: 12px;
 }
 .card h2 {
+  font-family: 'Saira', system-ui, sans-serif;
+  font-stretch: 75%;
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.3px;
@@ -125,7 +138,8 @@ body {
 }
 .card-tag {
   display: inline-block;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Saira', system-ui, sans-serif;
+  font-stretch: 75%;
   font-size: 11px;
   padding: 3px 8px;
   border-radius: 4px;
@@ -145,7 +159,9 @@ footer {
   margin-top: 80px;
   color: var(--text-muted);
   font-size: 13px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Saira', system-ui, sans-serif;
+  font-stretch: 75%;
+  letter-spacing: 0.04em;
 }
 </style>
 </head>
