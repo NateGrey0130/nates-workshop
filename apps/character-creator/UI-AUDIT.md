@@ -1783,6 +1783,50 @@ doing its job on screen.
 
 ---
 
+**Taken, 2026-09-01 (PR #460), as written.** All three skills lists are real
+`<table>`s with real `<thead>`s. Every premise checked out — one renderer
+(`sheet.js:855`) called three times at 1203–1205, line 856 exact, and exactly
+one pre-existing `<thead>` in the file.
+
+**Proved the same way the finding was**: the same character, the same 70 probe
+skills, the same headless render, before and after.
+
+| page 4 opens with | |
+|---|---|
+| before | `Print probe skill 36…` — no header |
+| after | **`SKILL +%/LVL %`** then `Print probe skill 39…` |
+
+**The note row is the part the proposal understates.** `.skill-row .note` was
+`grid-column: 1 / -1` — a second line spanning the full width *inside the same
+grid item's container*. A table row cannot hold a cell that wraps underneath its
+siblings, so a noted skill now emits **two** `<tr>`s, the second with
+`colspan="3"`. That moves the dotted rule: it has to sit under whichever of the
+pair is last, or it cuts between a skill and its own footnote.
+`.skill-row:has(+ .skill-note) > td { border-bottom: 0 }` handles it, and
+`break-after: avoid` on the same selector keeps the pair together across a page
+break. Exercised deliberately — no skill on any character carries a `note`
+today, so three were given one locally and removed afterwards.
+
+**The global `td, th` rule had to be undone rather than inherited.** It is 13px
+with `7px 10px` of padding and a solid border on every cell, written for the
+equipment and level tables; a skills list at those numbers is half again as
+tall. `.skill-table`'s own rules are more specific and win, but the values are
+restated, not inherited.
+
+**Nothing moved on screen.** Measured at 1440 before and after: name column
+starts at x=309 in both, the `%` column ends at x=560 in both, the header
+baseline is 353 in both, rows are 22px in both. The three boxes got **13px
+shorter** — `table-layout: fixed` gives the name column the 12px the grid was
+spending on `gap`, which is enough for *Electronic Countermeasures* to stop
+wrapping. Checked at 390 and 820 as well: no overflow, no clipping, notes wrap
+to their own full-width line.
+
+**The open question in this finding is now answered differently.** It asked how
+often this bites, and guessed "not never". It is still not never — but the fix
+cost 13px of height and nothing else, so the question stopped mattering.
+
+---
+
 ## Verified clean
 
 Screens and behaviours looked at hard, at the viewports named, where nothing was found.

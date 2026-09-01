@@ -852,14 +852,33 @@ function render() {
   const byType = (t) => clusterLanguages(skills.filter((s) => s.type === t));
 
   // Skills carry +%/Lvl and % columns, as on the printed sheet.
+  //
+  // A REAL <table> WITH A REAL <thead>, and that is the whole point of it.
+  // This was three divs on a CSS grid, which reads as a table and prints like
+  // a list: `display: table-header-group` is what repeats a header across
+  // printed pages and it has nothing to attach to on a <div>. Proved on a
+  // headless render (UI-AUDIT F17/F29) - a Class Skills list padded to 70
+  // entries ran onto a second page that began mid-list with no column
+  // headings, while the equipment table two boxes down repeated its own
+  // correctly, because it was already a table.
+  //
+  // The note is its own <tr> rather than a fourth cell. On the grid it was
+  // `grid-column: 1 / -1`, a second line spanning the full width; a table row
+  // cannot hold a cell that wraps underneath its siblings, so it takes a row
+  // of its own with colspan. The dotted rule then belongs to whichever of the
+  // two is last, which the stylesheet handles with :has().
   const skillBox = (title, list) => box(title, list.length ? `
-    <div class="skill-head"><span>Skill</span><span style="text-align:right">+%/Lvl</span><span style="text-align:right">%</span></div>
-    ${list.map((s) => `<div class="skill-row">
-      <span>${escHtml(s.name)}${s.iq_bonus ? ` <span class="note-inline" title="Includes a one-time +${s.iq_bonus}% from I.Q.">+${s.iq_bonus} I.Q.</span>` : ''}</span>
-      <span class="num">${s.per_level ? '+' + s.per_level : '—'}</span>
-      <span class="num pct">${s.pct ? s.pct + '%' : '—'}</span>
-      ${s.note ? `<span class="note">↳ ${escHtml(s.note)}</span>` : ''}
-    </div>`).join('')}` : '<p class="muted small">None.</p>');
+    <table class="skill-table">
+      <thead><tr class="skill-head">
+        <th>Skill</th><th class="num">+%/Lvl</th><th class="num">%</th>
+      </tr></thead>
+      <tbody>${list.map((s) => `<tr class="skill-row">
+        <td>${escHtml(s.name)}${s.iq_bonus ? ` <span class="note-inline" title="Includes a one-time +${s.iq_bonus}% from I.Q.">+${s.iq_bonus} I.Q.</span>` : ''}</td>
+        <td class="num">${s.per_level ? '+' + s.per_level : '—'}</td>
+        <td class="num pct">${s.pct ? s.pct + '%' : '—'}</td>
+      </tr>${s.note ? `<tr class="skill-note"><td colspan="3">
+        <span class="note">↳ ${escHtml(s.note)}</span></td></tr>` : ''}`).join('')}</tbody>
+    </table>` : '<p class="muted small">None.</p>');
 
   const vitals = POOLS.map(([key, label]) => {
     const max = c[key + '_max'], cur = c[key + '_current'];
