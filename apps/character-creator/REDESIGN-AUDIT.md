@@ -170,8 +170,8 @@ Verified at `localhost:8793`: the H.P. input is present, visible and editable fr
 five previously blind tabs; the strip holds three cells and the panels hold zero; a value
 typed on the Skills tab and saved reached the server as `hp_current: 12`.
 
-**One thing this opened, recorded as [N1](#n1--low--the-vitals-tab-no-longer-holds-the-vitals):**
-the tab named *Vitals* no longer contains any.
+**One thing this opened, recorded as N1** in the `N` section below: the tab named *Vitals*
+no longer contains any.
 
 ---
 
@@ -201,6 +201,44 @@ is a prediction to verify, not a given.
 
 **Posture: measure, and revert on a worse number.** Widening the container touches only
 `sheet.html`; `wrap-wide` already exists and is used by `catalog.html`.
+
+**Closed unadopted, 2026-08-31 (PR #464).** The posture decided it: the numbers came back
+and one of them was worse. Nothing shipped.
+
+**The premise was wrong.** The skills tab is not "one column of rows". It has been
+`sheet-grid cols-3` for some time — three boxes side by side, Class / Related / Secondary,
+at **273px each** inside the 900px container. The finding described a single full-width
+strip and there is none. What *is* true is the 540px of empty screen beside the container.
+
+**Measured at 1440×900, with 60 skills on the character** (15 real plus 45 probe rows
+loaded into local D1 and removed afterwards, the technique from
+[[print-render-headless-chrome]]):
+
+| | `wrap` 900px | `wrap-wide` 1280px |
+|---|---|---|
+| skills panel height | 565px | **550px** (−15, −2.7%) |
+| skill box width | 273px | 400px |
+| wrapped name cells | 4 | 3 |
+| journal body width | 363px | 553px |
+| **journal characters per line** | **56** | **85** |
+| bio box width | 416px | 606px |
+| gear panel height | 1500px | 1500px |
+| document height | 1015px | 1000px |
+
+The skills gain is real and trivial: 2.7%, because the panel's height is set by the
+*number of rows* in the tallest group, and widening cannot remove a row. The cost is not
+trivial. `.wrap` is shared by every tab, so widening the sheet takes the journal from 56
+characters per line to 85 — out of the range prose is comfortable in and into the range it
+is not. Fifteen pixels of skills is not worth that.
+
+**The trap the `catalog.html` comment warned about was real, and landed somewhere else.**
+There, gridding inside a fixed container made the list *taller*. Here the height barely
+moved and the damage went to the prose measure instead — the same lesson, that `.wrap`'s
+900px is load-bearing for something, arriving through a different door.
+
+**The narrower version was NOT substituted for the finding as written**, per the
+audit-menu rule against quietly changing scope. It is recorded as **N2** in the `N`
+section below, for a separate decision.
 
 ---
 
@@ -311,6 +349,50 @@ matters: it is what `localStorage['sheet-tab-'+id]` and the `#vitals` hash both 
 changing it would strand every saved tab and every pasted link.
 
 **Posture: rename the label only.** No new tab, no reordering, no id change.
+
+### N2 — low — The skill columns are cramped at 273px, but the sheet's width is the wrong lever
+
+Opened by R3 (PR #464), which closed unadopted. Widening the whole sheet fixes the cramp
+and costs the journal its reading measure — 56 characters per line to 85, measured. But
+the cramp itself is real: three skill boxes at **273px** each, of which a fixed `46px` and
+`40px` go to the two numeric columns, leaving roughly 160px for a name like *Language:
+Native Tongue*. Four of 60 name cells wrapped to two lines at that width; none of the
+other tabs asked for the extra room that fixing it would hand them.
+
+**Proposal:** widen the container for the **skills tab only**, not the sheet — a modifier
+on the skills `.tabpanel` (or its grid) rather than on `.wrap`, so the journal, bio and
+gear tabs keep the 900px measure that `styles.css:77` argues for. Measure the same four
+numbers before and after; the skills panel should shrink and the journal figure must not
+move at all.
+
+**Posture: one tab's width, not the sheet's.** If it cannot be scoped to the skills panel
+without restructuring the grid, close it — R3 already showed the whole-sheet version is
+not worth it.
+
+### N3 — low — A finding heading cannot be linked to, and the smoke test and GitHub disagree about why
+
+Opened by R2 and R3 (PRs #463, #464), which each tried to link one finding to another and
+put a broken link on `main` for a few minutes.
+
+The link checker in `test/checks/environment.mjs:336` slugs a heading by collapsing every
+run of whitespace to **one** hyphen: `.replace(/\s+/g, '-')`. GitHub, rendering the same
+file, strips the em-dashes and keeps the **two** spaces they leave behind, producing two
+hyphens. For an ordinary prose heading the two rules agree, which is why every existing
+anchor link in the repo works and why this went unnoticed. For this file's headings —
+`### R4 — medium — Two different reasons…` — they disagree, so an anchor that satisfies
+the test is broken on GitHub and an anchor that works on GitHub fails the test.
+
+Both links were removed rather than resolved in either direction, since either choice is
+wrong somewhere. Findings now refer to each other by bare number.
+
+**Proposal:** make the checker's slug match GitHub's — strip the punctuation first and
+*then* collapse, rather than collapsing what the strip left behind — so that
+`R4 — medium — Title` yields the double hyphen GitHub yields. Verify by adding one link
+to a dashed heading and confirming it resolves both in the test and on the rendered page.
+
+**Posture: fix the checker, not the headings.** The heading format is shared with eight
+other audit files and is not the thing that is wrong. No heading gets reworded to make a
+link work.
 
 ---
 
