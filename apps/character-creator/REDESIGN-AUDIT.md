@@ -170,8 +170,8 @@ Verified at `localhost:8793`: the H.P. input is present, visible and editable fr
 five previously blind tabs; the strip holds three cells and the panels hold zero; a value
 typed on the Skills tab and saved reached the server as `hp_current: 12`.
 
-**One thing this opened, recorded as [N1](#n1--low--the-vitals-tab-no-longer-holds-the-vitals):**
-the tab named *Vitals* no longer contains any.
+**One thing this opened, recorded as N1** in the `N` section below: the tab named *Vitals*
+no longer contains any.
 
 ---
 
@@ -237,9 +237,8 @@ moved and the damage went to the prose measure instead — the same lesson, that
 900px is load-bearing for something, arriving through a different door.
 
 **The narrower version was NOT substituted for the finding as written**, per the
-audit-menu rule against quietly changing scope. It is recorded as
-[N2](#n2--low--the-skill-columns-are-cramped-at-273px-but-the-sheets-width-is-the-wrong-lever)
-for a separate decision.
+audit-menu rule against quietly changing scope. It is recorded as **N2** in the `N`
+section below, for a separate decision.
 
 ---
 
@@ -369,6 +368,31 @@ move at all.
 **Posture: one tab's width, not the sheet's.** If it cannot be scoped to the skills panel
 without restructuring the grid, close it — R3 already showed the whole-sheet version is
 not worth it.
+
+### N3 — low — A finding heading cannot be linked to, and the smoke test and GitHub disagree about why
+
+Opened by R2 and R3 (PRs #463, #464), which each tried to link one finding to another and
+put a broken link on `main` for a few minutes.
+
+The link checker in `test/checks/environment.mjs:336` slugs a heading by collapsing every
+run of whitespace to **one** hyphen: `.replace(/\s+/g, '-')`. GitHub, rendering the same
+file, strips the em-dashes and keeps the **two** spaces they leave behind, producing two
+hyphens. For an ordinary prose heading the two rules agree, which is why every existing
+anchor link in the repo works and why this went unnoticed. For this file's headings —
+`### R4 — medium — Two different reasons…` — they disagree, so an anchor that satisfies
+the test is broken on GitHub and an anchor that works on GitHub fails the test.
+
+Both links were removed rather than resolved in either direction, since either choice is
+wrong somewhere. Findings now refer to each other by bare number.
+
+**Proposal:** make the checker's slug match GitHub's — strip the punctuation first and
+*then* collapse, rather than collapsing what the strip left behind — so that
+`R4 — medium — Title` yields the double hyphen GitHub yields. Verify by adding one link
+to a dashed heading and confirming it resolves both in the test and on the rendered page.
+
+**Posture: fix the checker, not the headings.** The heading format is shared with eight
+other audit files and is not the thing that is wrong. No heading gets reworded to make a
+link work.
 
 ---
 
