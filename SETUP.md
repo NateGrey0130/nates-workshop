@@ -242,7 +242,7 @@ Two halves, and **both** are required — either one alone leaves the app broken
 
 1. **Zero Trust → Access → Applications**, one self-hosted application named
    *Pick 3 Cut 5 (public)* with a **Bypass** policy (include: Everyone) and
-   **four** destinations, all on `nates-workshop.pages.dev`:
+   **five** destinations, all on `nates-workshop.pages.dev`:
 
    | path | why |
    |---|---|
@@ -250,6 +250,14 @@ Two halves, and **both** are required — either one alone leaves the app broken
    | `api/pick3cut5` | rooms, WebSocket, solo generation |
    | `shared/styles.css` | the design system the page loads |
    | `shared/js/ui.js` | `escHtml`, which the game calls on every flip |
+   | `shared/fonts` | Outfit and JetBrains Mono, self-hosted since the fonts came off the CDN |
+
+   **`shared/fonts` is the fifth and last destination that fits** — the limit is
+   five, so a sixth dependency needs a second Access application rather than a
+   surprise. It is also the first one invisible to `index.html`: the fonts are
+   referenced from inside `shared/styles.css`, and the derivation in
+   `apps/pick3cut5/test/smoke.mjs` reads the HTML, so it cannot see them. Until
+   it can, this row is maintained by hand.
 
    Dashboard only; the `CLOUDFLARE_API_TOKEN` in `CLAUDE.md` is scoped to D1
    and cannot create it.

@@ -419,6 +419,36 @@ separate decision and is not proposed here. The change lands in `shared/`, so it
 filament-forge, media-vault and pick3cut5 as well — all four apps get checked, or the
 finding is not done.
 
+**Implemented and HELD, 2026-09-01 (PR #468) — deliberately not merged.** Posture held:
+same two typefaces, same weights, transport only. It is complete and verified, and merging
+it would degrade a live app until a Cloudflare dashboard change is made that cannot be
+made from this repo. See **N5**.
+
+**It is two files, not ten, because both faces are variable.** The finding inherited the
+prompt's "one `@font-face` per weight". Google Fonts answers
+`wght@300;400;500;600;700;800` with a single file and lets `font-weight` interpolate it:
+the six Outfit downloads came back **byte-identical** (md5 `fdf9c509…`) and the four
+JetBrains Mono ones likewise (`b636a65d…`). So this is two `@font-face` rules covering
+every weight the four apps ask for, and **63KB rather than the 312KB** ten files would
+have been.
+
+**The weight list was also short by one.** The finding said JetBrains Mono 400/500/600,
+reading nine of the ten pages; `apps/filament-forge/index.html` asks for **700** as well.
+Moot in the end — a variable face covers the axis — but it would have silently synthesised
+filament-forge's bold mono under the ten-file plan.
+
+**The landing page is not like the other nine.** `index.html` at the repo root is the only
+one of the ten that does **not** load `/shared/styles.css` — it is a self-contained file
+with its own token vocabulary — so stripping its `<link>` left it with no font source at
+all. Caught by measuring rendered text width rather than by `document.fonts.check()`, which
+returns true for a system fallback and said everything was fine. It carries its own copy of
+the two rules now, with a comment on both sides.
+
+Verified on all ten pages: two faces `loaded`, the weight axis registering as `300 800` and
+`400 700`, exactly two local font requests and none to `fonts.googleapis.com` or
+`fonts.gstatic.com` anywhere in the tree. All four smoke suites pass. Both OFL licences
+ship beside the files, as the licence requires.
+
 ---
 
 ## N — opened while taking R1–R7
@@ -508,6 +538,55 @@ carries. Either way, move the "does not apply to this character" explanation out
 
 **Posture: legibility only.** The step stays non-clickable and keeps its dashed border; it
 is not being promoted to a control.
+
+### N5 — high — `/shared/fonts/` needs an Access destination before R7 can merge
+
+Opened by R7 (PR #468), which is held open because of this.
+
+Pick 3 Cut 5 is played by people with a room code and no login, so its assets sit outside
+the Access wall by explicit bypass. Measured against production with no session:
+
+| path | status |
+|---|---|
+| `/shared/styles.css` | 200 |
+| `/shared/js/ui.js` | 200 |
+| `/shared/fonts/outfit-variable.woff2` | **302 → `fatmans.cloudflareaccess.com`** |
+
+Merging R7 without the destination gives every unauthenticated player a page whose fonts
+bounce off the login and fall back to system faces — the same failure the pick3cut5 smoke
+test was written for after the app shipped in Times New Roman, arriving through the one
+door that test cannot see (**N6**).
+
+**Proposal:** add `shared/fonts` as a fifth destination on the *Pick 3 Cut 5 (public)*
+Access application, then merge PR #468 and confirm with
+`node apps/pick3cut5/test/smoke.mjs --remote`. `SETUP.md` already documents the row.
+
+**This consumes the last destination slot.** The limit is five and four were in use; a
+sixth public dependency now needs a second Access application rather than an edit.
+
+**Posture: dashboard change, by Nate.** Access policy is a security setting and there is no
+policy-as-code here; the repo's `CLOUDFLARE_API_TOKEN` is scoped to D1 and cannot write it.
+
+### N6 — medium — The pick3cut5 public-path derivation cannot see assets referenced from CSS
+
+Opened by R7 (PR #468).
+
+`apps/pick3cut5/test/smoke.mjs` derives the set of paths needing an Access bypass by
+matching `<script src>` and `<link href>` in `index.html`, and its own comment makes the
+promise: *"Add a script tag for /shared/js/api.js and this notices."* It does. What it
+cannot notice is an asset the browser fetches because a **stylesheet** asked for it —
+`url()` inside `/shared/styles.css` is invisible to an HTML scan.
+
+R7 is exactly that case, and the derived list stayed at two while the real dependency count
+went to three. Nothing failed; the check simply had nothing to say.
+
+**Proposal:** extend the derivation to follow the CSS it already found — for each absolute
+stylesheet in the HTML, read it and collect absolute `url(...)` targets, folding each
+asset's directory into `requiredPublic`. Keep the destination-count assertion pointed at
+the widened list so the five-slot ceiling stays honest.
+
+**Posture: widen the derivation, not the bypass.** The test should discover the
+dependency; deciding it deserves a bypass stays a human step.
 
 ---
 

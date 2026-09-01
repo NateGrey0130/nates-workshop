@@ -10,3 +10,9 @@
 # published for the version stays verifiable against the checkout. No
 # line-ending normalization.
 apps/filament-forge/vendor/* -text
+
+# Self-hosted webfonts. Git detects these as binary on its own - woff2 is full
+# of NUL bytes - but the whole file is a checksummed container, so the one
+# outcome worth ruling out explicitly is a future core.autocrlf setting deciding
+# otherwise. Same reasoning as the vendored libraries above.
+shared/fonts/*.woff2 -text
