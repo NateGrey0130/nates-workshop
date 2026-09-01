@@ -629,6 +629,55 @@ to a dashed heading and confirming it resolves both in the test and on the rende
 other audit files and is not the thing that is wrong. No heading gets reworded to make a
 link work.
 
+**Taken, 2026-09-01 (PR #473).** Posture held: `test/checks/environment.mjs` changed, not one
+heading in 881 across 75 files. Nothing was reworded to make a link work.
+
+**The proposal describes a fix the code already has.** *"Strip the punctuation first and
+then collapse, rather than collapsing what the strip left behind"* — it already stripped
+first. The order was never wrong; `.replace(/[^\w\s-]/g, '')` ran before
+`.replace(/\s+/g, '-')` and always had. **The bug is the `+`.** Collapsing a run of
+whitespace to one hyphen is the disagreement, so the fix is to stop collapsing —
+`.replace(/\s/g, '-')`, one hyphen per space, which is what GitHub does. Reordering
+anything would have changed nothing at all.
+
+**A second disagreement was in the same line, and the finding did not see it.** The old
+slug stripped `_` along with the backticks and asterisks. Backtick and asterisk are markup
+and GitHub slugs the *rendered* heading, where a code span and a bold run are already just
+their contents — so deleting those is right. An underscore is not markup: GFM does not
+parse emphasis inside a word, so `text_layer` renders literally and GitHub keeps the
+underscore. Three headings in the tree carry one —
+`INGESTION-AUDIT.md`, this app's `README.md`, and `EFFICIENCY-AUDIT.md` — and none is a
+link target yet, which is why nothing had gone red. Fixed in the same line, since the
+proposal's stated goal is to match GitHub rather than to move by the smallest step.
+
+| heading | old slug | new slug |
+|---|---|---|
+| `N4 — low — The not-applicable…` | `n4-low-the-not-applicable…` | `n4--low--the-not-applicable…` |
+| `Premise corrections — read first` | `premise-corrections-read-first` | `premise-corrections--read-first` |
+| `text_layer, page_offset, …` | `textlayer-pageoffset-…` | `text_layer-page_offset-…` |
+
+**Nothing broke, and that is a measurement.** 250 of the 881 headings hold a run of spaces
+after punctuation is deleted, so a quarter of the file's anchors change shape — and all
+existing internal links still resolve, because every one of them points at ordinary prose
+where the two rules agree. `all internal markdown links resolve (75 files)` passes.
+
+**Verified in both directions, which is the only way this is worth anything.**
+
+- **The new anchor resolves in the test.** This sentence carries a live link to
+  [N4](#n4--low--the-not-applicable-wizard-step-is-1851-and-says-something-worth-reading),
+  a `— low —` heading, written with the double hyphen. It is the first anchor link to a
+  dashed heading in the repo. The smoke run below is with that link in the file.
+- **The old anchor now fails.** A probe link carrying the collapsed form was inserted
+  temporarily and the checker named it:
+  `FAIL all internal markdown links resolve — REDESIGN-AUDIT.md -> #n4-low-the-not-applicable-wizard-step-is-1851-and-says-something-worth-reading`.
+  Removed after. A checker that accepts both spellings would have been no fix at all.
+- **And it resolves on the rendered GitHub page**, which is the half the test cannot
+  answer for itself — confirmed on the merged file rather than predicted from the rule.
+
+**Findings in this file may link to each other again.** The convention of referring to
+them by bare number was a workaround for this and is no longer required; the notes above
+were written under it and are left as they stand.
+
 ### N4 — low — The not-applicable wizard step is 1.85:1 and says something worth reading
 
 Found by R6's contrast sweep (PR #467), pre-existing and unrelated to that change.
