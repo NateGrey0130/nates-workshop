@@ -3455,7 +3455,10 @@ section('The sheet shows every derived combat row');
 // value. Nothing on screen says anything is wrong.
 section('One pool widget, both modes');
 {
-  const src = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  // The sheet's presentation lives in js/sheet-layout.js and its data logic
+  // in sheet.js. This contract spans both, so both are read.
+  const src = readFileSync(join(appDir, 'sheet.js'), 'utf8')
+    + readFileSync(join(appDir, 'js', 'sheet-layout.js'), 'utf8');
   const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
 
   check('there is a single pool component',
@@ -3556,7 +3559,10 @@ section('One pool widget, both modes');
 // above Psionics.
 section('The sheet body, three columns');
 {
-  const src = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  // The sheet's presentation lives in js/sheet-layout.js and its data logic
+  // in sheet.js. This contract spans both, so both are read.
+  const src = readFileSync(join(appDir, 'sheet.js'), 'utf8')
+    + readFileSync(join(appDir, 'js', 'sheet-layout.js'), 'utf8');
   const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
   const html = readFileSync(join(appDir, 'sheet.html'), 'utf8');
 
@@ -3635,6 +3641,49 @@ section('The sheet body, three columns');
     '66ch is narrower than a page column and runs the sheet long');
   check('and print keeps the pool value at a paper size',
     /\.vital \.val \{ font-size: 17px/.test(printBlock), 'a 44px pool value goes to paper');
+}
+
+// ---------- Presentation is a separate file ----------
+// sheet.js is data logic - fetch a character, derive its numbers, save edits,
+// reconcile play events. js/sheet-layout.js is what the sheet looks like. The
+// split only means anything if it keeps holding, so these pin it: the helpers
+// live in the module, sheet.js does not redefine them, and the module does not
+// learn about application state.
+section('Presentation is a separate file');
+{
+  const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  const layout = readFileSync(join(appDir, 'js', 'sheet-layout.js'), 'utf8');
+  const html = readFileSync(join(appDir, 'sheet.html'), 'utf8');
+
+  check('the module exposes one global, like derive.js and rules.js',
+    /global\.sheetLayout = \{/.test(layout), 'sheetLayout is not exposed');
+  check('and sheet.html loads it before sheet.js',
+    html.indexOf('js/sheet-layout.js') > -1
+    && html.indexOf('js/sheet-layout.js') < html.indexOf('src="sheet.js"'),
+    'the module loads after the file that destructures it');
+
+  for (const name of ['poolCard', 'box', 'field', 'boxSlug']) {
+    check(`${name} is defined in the module`,
+      new RegExp(`(function|const) ${name}\\b`).test(layout),
+      `${name} is not in sheet-layout.js`);
+    check(`and sheet.js does not redefine ${name}`,
+      !new RegExp(`^\\s*(function|const) ${name}\\b`, 'm').test(sheet),
+      `${name} has drifted back into sheet.js`);
+  }
+
+  // The whole point of the split. A presentation file that reads C is a second
+  // place that knows what a character is, which is the thing being undone.
+  // onclick strings are excluded: they are HTML the page evaluates, not a
+  // dependency of this module.
+  check('the module never reads application state',
+    !/\bC\.(data|items|journal|cls|canWrite|isGm|playMode)\b/
+      .test(layout.replace(/onclick="[^"]*"/g, '')),
+    'sheet-layout.js reaches for C outside an onclick string');
+  check('paintPool is handed the data instead of fetching it',
+    /function paintPool\(key, data\)/.test(layout), 'paintPool still reaches for C');
+  check('and sheet.js supplies it in one place, not seven',
+    /const paintPool = \(key\) => sheetLayout\.paintPool\(key, C\.data\);/.test(sheet),
+    'each call site supplies the character data separately');
 }
 
 // ---------- Military Occupational Specialty ----------

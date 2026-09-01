@@ -6,57 +6,6 @@
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
 const POOLS = [['hp', 'H.P.'], ['sdc', 'S.D.C.'], ['mdc', 'M.D.C.'], ['ppe', 'P.P.E.'], ['isp', 'I.S.P.']];
 const POOL_LABELS = { hp_max: 'H.P. max', sdc_max: 'S.D.C. max', mdc_max: 'M.D.C. max', ppe_max: 'P.P.E. max', isp_max: 'I.S.P. max' };
-// Each pool's own colour, spent on the top rule, the bar, and - below a third
-// - the number. The point is that a glance at the strip says WHICH pool is
-// low, not merely that something is. Token names rather than hexes, so the
-// widget follows the palette; styles.css records the measured ratios.
-const POOL_TONES = { hp: '--danger', sdc: '--warning', mdc: '--accent-secondary', ppe: '--success', isp: '--accent' };
-const POOL_LOW = 0.34;
-
-// ONE pool widget, used by the sheet and by play mode. The block comment over
-// .vital in styles.css says why the value is two nodes rather than one; the
-// short version is that seven mutation paths write to the <b> by id with
-// .textContent, and an input would have swallowed every one of them.
-//
-//   w        can this viewer write
-//   stepper  offer the +/- pair. CSS still gates it on body.play-mode, so a
-//            sheet-mode render cannot leak steppers even if this is true.
-function poolCard(key, label, cur, max, w, stepper) {
-  if (max == null && cur == null) return '';
-  const pct = (max > 0 && cur != null) ? Math.max(0, Math.min(1, cur / max)) : 0;
-  const low = max > 0 && cur != null && pct <= POOL_LOW;
-  return `<div class="vital${low ? ' low' : ''}" style="--tone: var(${POOL_TONES[key]})">
-    <div class="lbl">${label}</div>
-    <div class="val">${w ? `<input type="number" id="stat-${key}" value="${cur ?? ''}">` : ''}<b id="play-cur-${key}">${cur ?? '—'}</b> <span class="max">/ ${max ?? '—'}</span></div>
-    <div class="bar"><i style="width:${Math.round(pct * 100)}%"></i></div>
-    ${stepper && w ? `<div class="steppers">
-      <button type="button" aria-label="${label} down" onclick="adjustPool('${key}', -C.playAmt)">−</button>
-      <button type="button" aria-label="${label} up" onclick="adjustPool('${key}', C.playAmt)">+</button>
-    </div>` : ''}
-  </div>`;
-}
-
-// Paint one pool from C.data: the number, the bar, the low tone and the
-// input. PLAY MODE NEVER RE-RENDERS, so every path that changes a pool calls
-// this rather than writing the number by hand. Writing the number alone was
-// enough while the widget was only a number; now that it carries a bar, a
-// half-update leaves the bar at its render-time width - measured, not
-// theorised: H.P. at 4 of 14 still drew a full bar and no low tone until a
-// mode toggle forced a re-render. A bar that reports full at 29% is worse
-// than no bar.
-function paintPool(key) {
-  const cur = C.data[key + '_current'], max = C.data[key + '_max'];
-  const el = $('play-cur-' + key);
-  if (el) el.textContent = cur ?? '—';
-  const card = el && el.closest('.vital');
-  if (!card) return;
-  const pct = (max > 0 && cur != null) ? Math.max(0, Math.min(1, cur / max)) : 0;
-  const bar = card.querySelector('.bar > i');
-  if (bar) bar.style.width = Math.round(pct * 100) + '%';
-  card.classList.toggle('low', max > 0 && cur != null && pct <= POOL_LOW);
-  const inp = card.querySelector('input');
-  if (inp) inp.value = cur ?? '';
-}
 // Every save derive.js produces, in the order the sheet prints them. ONE list,
 // because there were two: the sheet's carried all thirteen and play mode's
 // carried the first eight, so a Juicer's +6 vs mind control, an adult
@@ -116,6 +65,17 @@ const C = { data: null, items: [], journal: [], catalog: [], cls: null, canWrite
             grants: [] };
 const $ = (i) => document.getElementById(i);
 
+// Presentation lives in js/sheet-layout.js - the pool widget, the box and
+// field helpers, and the table that decides a box's column. Destructured
+// here so this file's call sites read exactly as they did before the split.
+const { POOL_TONES, POOL_LOW, poolCard, boxSlug, BOX_COL, box, field } = sheetLayout;
+
+// The one binding that is not a straight re-export. sheetLayout.paintPool is
+// pure - it paints whatever data it is handed and knows nothing about C -
+// so the app's copy of the character is supplied here, once, rather than by
+// each of the seven mutation paths that call it.
+const paintPool = (key) => sheetLayout.paintPool(key, C.data);
+
 // api() and errorDetails() come from js/api.js, loaded first as a classic script.
 const jsonReq = (method, body) => ({ method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
@@ -169,44 +129,6 @@ function flash(text, isError) {
 }
 
 // ─── small builders for the sheet's boxed idiom ───
-// data-box is the box's own name, so a rule can reach one box without relying
-// on its position. The journal's reading measure is capped that way. Derived
-// from the title rather than passed, because a box whose title and hook
-// disagree is a bug waiting to happen.
-const boxSlug = (title) => String(title)
-  .replace(/<[^>]*>/g, '')          // some titles carry tags - the name box has two
-  .replace(/&amp;/g, ' ')
-  .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-
-// THE COLUMN ASSIGNMENT, IN ONE PLACE. data-col places a box in the
-// three-column body; WITHOUT IT A BOX FLOWS IN DOM ORDER, which is tab order,
-// and tab order is not lookup order - see the .sheet-3 comment in styles.css.
-//
-// The split is by how often you look a thing up rather than by topic:
-//   a  numbers read constantly, in a narrow fixed column
-//   b  the long lists you scan, in the column that takes the slack
-//   c  what you read a paragraph of, capped to a reading measure
-//
-// A box with no entry gets no column and flows, which is correct for the name
-// header - it sits outside .sheet-3 entirely. The smoke test pins that every
-// box INSIDE the body has one, so a new box cannot silently land anywhere.
-const BOX_COL = {
-  attributes: 'a', vitals: 'a', experience: 'a', 'saving-throws': 'a', combat: 'a',
-  'class-skills': 'b', 'related-skills': 'b', 'secondary-skills': 'b',
-  granted: 'b', armor: 'b', equipment: 'b',
-  'psionics-magic': 'c', background: 'c', bearing: 'c', notes: 'c', journal: 'c',
-};
-
-const box = (title, body, extra = '') => {
-  const slug = boxSlug(title);
-  const col = BOX_COL[slug];
-  return `<div class="box" data-box="${slug}"${col ? ` data-col="${col}"` : ''}>` +
-    `<div class="box-title"><span>${title}</span>${extra}</div><div class="box-body">${body}</div></div>`;
-};
-
-const field = (label, value, dim) =>
-  `<div class="field"><span class="lbl">${label}</span><span class="dots"></span>` +
-  `<span class="val${dim ? ' dim' : ''}">${value}</span></div>`;
 
 // side_effects / restrictions come off the class as free text or a list.
 // The powers this character actually chose, as opposed to the list its class
