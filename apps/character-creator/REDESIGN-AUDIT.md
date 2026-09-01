@@ -671,8 +671,18 @@ where the two rules agree. `all internal markdown links resolve (75 files)` pass
   temporarily and the checker named it:
   `FAIL all internal markdown links resolve — REDESIGN-AUDIT.md -> #n4-low-the-not-applicable-wizard-step-is-1851-and-says-something-worth-reading`.
   Removed after. A checker that accepts both spellings would have been no fix at all.
-- **And it resolves on the rendered GitHub page**, which is the half the test cannot
-  answer for itself — confirmed on the merged file rather than predicted from the rule.
+- **And it resolves on the rendered GitHub page**, which is the half the test cannot answer
+  for itself. Loaded on the branch before merging: GitHub emits
+  `id="user-content-n4--low--…-worth-reading"`, the double hyphen predicted, and the page
+  lands with the N4 heading **127px** from the top of the viewport.
+
+  **The first two attempts said it did not scroll, and both were wrong.** Clicking the link
+  on an already-loaded page, and navigating to the same URL with a hash appended, are both
+  *same-document* hash changes — GitHub's blob viewer scrolls on load, so neither fired.
+  A known-good long-standing anchor, `README.md#permissions`, was run as a control on the
+  same viewer and behaved identically: 12960px and 125px from the top on a fresh load,
+  nothing on a hash-only change. The tell was that the control failed the same way. Only a
+  fresh cross-document load tests this at all.
 
 **Findings in this file may link to each other again.** The convention of referring to
 them by bare number was a workaround for this and is no longer required; the notes above
