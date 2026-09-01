@@ -538,6 +538,72 @@ move at all.
 without restructuring the grid, close it — R3 already showed the whole-sheet version is
 not worth it.
 
+**Taken, 2026-09-01 (PR #471).** Posture held: one tab's width. `.wrap` is untouched at
+900px, the grid was not restructured, and the whole change is one rule at
+`styles.css:443` — `width: min(1224px, calc(100vw - 56px))` with `margin-left: 50%` and
+`translate: -50%` on `.tabpanel[data-tab="skills"]`. Auto margins cannot centre a child
+wider than its parent; they resolve to 0 and the box overflows right only, which is why the
+translate is there rather than as decoration.
+
+**Three corrections, and one of them shrinks the finding.**
+
+- **"Four of 60 name cells wrapped" did not reproduce. One did.** R3's 45 probe rows were
+  not recorded, so they could not be reused; this run took **every 7th name from the
+  345-row skills catalog in alphabetical order** — a representative spread, mean name
+  length 16 characters, longest 34 — rather than the longest 45, which would have loaded
+  the count in one direction on purpose. At 273px, **1 of 60** name cells wraps, not 4. The
+  cramp is real and it is smaller than the finding says, and how much smaller depends on
+  which skills the character happens to hold.
+- **`styles.css:77` is the wrong line, and it argues the other way.** The 900px measure is
+  `.wrap` at lines 71–72. Line 77 opens the comment explaining why `catalog.html` gets
+  `wrap-wide` at 1280px — the case *for* widening, cited as the case for not widening.
+- **R3's "56 characters per line" reproduced as 57**, measuring the alphabet's average
+  advance on a canvas at the element's computed font. Within rounding of the earlier
+  number, which is the point of saying so: it is the same measurement, so the before/after
+  below can be read against R3's table.
+
+**Measured at 1440×900, 60 skills** (15 real plus 45 probe rows in local D1, snapshotted
+before and restored after — `json_array_length(skills)` back to 15, `character_drafts` 0
+throughout):
+
+| | before | after |
+|---|---|---|
+| skills panel width | 844px | **1224px** |
+| **skill box width** | **273px** | **400px** |
+| skills panel height | 597px | **582px** (−15, −2.5%) |
+| wrapped name cells, of 60 | 1 | **0** |
+| **journal characters per line** | **57** | **57 — unmoved** |
+| journal body width | 363px | 363px |
+| bio box width | 416px | 416px |
+| gear panel height | 1500px | 1500px |
+| Core panel width | 844px | 844px |
+| `.wrap` width | 900px | 900px |
+| document height | 1681px | 1681px |
+| horizontal scroll | none | none |
+
+**The skills gain is the same 15px R3 measured for the whole sheet.** That is the finding's
+argument made arithmetic: the panel's height is set by the number of rows in the tallest
+group and widening cannot remove a row, so the ceiling on the gain is the same either way.
+What this version drops is the bill — 400px boxes at 57 characters per line of journal,
+where R3 got 400px boxes at 85.
+
+**Print was predicted unaffected and the prediction was rendered, not read.** The print
+block sets `.tabpanel { display: contents }`, which removes the box from layout along with
+its width. Headless Chrome `--print-to-pdf` before and after, read with `pymupdf`: **7
+pages both, 606 text spans both, every span identical to a tenth of a point**, max right
+edge 569.2pt inside a 612pt page. Not "no visible difference" — the same numbers.
+
+**Narrow viewports lose nothing and gain no scrollbar.** At 1000×900 the panel is 944px
+spanning 25→969 inside a 994px client box; at 375×812 it is **319px, exactly `.wrap`'s
+content width**, so a phone gets what it had. `document.scrollWidth === clientWidth` at
+1440, 1000 and 375.
+
+**One consequence worth writing down rather than fixing.** Widening the panel widens
+everything in it, so the skill filter added by R5 is now a 1147px input. That is the
+finding as written — the panel was the named lever, and `(or its grid)` was its own
+alternative — so it stands. If the long search field is unwanted, it is a new finding and
+not a quiet edit here.
+
 ### N3 — low — A finding heading cannot be linked to, and the smoke test and GitHub disagree about why
 
 Opened by R2 and R3 (PRs #463, #464), which each tried to link one finding to another and

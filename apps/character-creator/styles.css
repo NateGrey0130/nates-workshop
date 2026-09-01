@@ -419,6 +419,33 @@ button.chkrow {
 .vital .val input { width: 52px; text-align: center; padding: 2px 4px; font-size: 15px; }
 .vital .max { color: var(--text-muted); font-size: 13px; }
 
+/* ONE TAB IS WIDER THAN THE SHEET, AND ONLY THIS ONE.
+
+   Three skill boxes share .wrap's 844px of content, so each is 273px and the
+   two numeric columns take a fixed 46 and 40 off that before a name gets any
+   of it. R3 tried the obvious lever - `wrap-wide` on the whole sheet - and
+   measured the bill: the journal goes from 56 characters per line to 85, out
+   of the range prose is comfortable in, to buy 15px of skills. It closed
+   unadopted. This is the same room bought without that bill.
+
+   width + margin-left:50% + translate:-50% centres a child that is WIDER than
+   its parent, which auto margins cannot do - they resolve to 0 when there is
+   no space and the box overflows to the right only. Nothing about .wrap
+   changes, so no other tab moves.
+
+   Capped at the viewport less .wrap's own 56px of padding, so anything under
+   about 1280px gets exactly what it had, phones included - and the cap is
+   wider than any scrollbar, so it cannot introduce a horizontal scroll.
+
+   Print is untouched, and not by accident: the print block sets
+   .tabpanel { display: contents }, which removes this box from layout along
+   with its width. Verified with a real print render, not by reading this. */
+.tabpanel[data-tab="skills"] {
+  width: min(1224px, calc(100vw - 56px));
+  margin-left: 50%;
+  translate: -50%;
+}
+
 /* Skill rows: name, then +%/Lvl and % columns as on the form.
 
    A REAL TABLE since PR #460, which it was pretending to be for the whole of
