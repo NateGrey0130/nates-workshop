@@ -198,6 +198,14 @@ Smoke 1364 -> 1373, regression 212 unchanged.
 
 **Closed.**
 
+**Reopened as a new finding, 2026-09-01. See F18.** The settled answer to *where
+the evaluation lives* holds for the two DISPLAY sites this note found and misses
+a third site that WRITES the number: `resolvePicks` in
+`_lib/skill-picks.js` sets a spent pick's `pct` from the stored `base` alone, so
+a skill gained after creation is stored at 0 and stays there. Nothing about the
+column, the grammar, the fallback or the five places is affected - F18 is one
+`SELECT` and one call, on a path this note did not look at.
+
 ### F3 — `gear` has no shape for a vessel, and this batch has 25 of them
 
 `phase-world` prints 6 power armor and robots (130-142), 5 tanks and IFVs
@@ -1809,3 +1817,78 @@ regression invariant. It proves nothing on its own; it is one comparison, and it
 is the shape this error takes.
 
 Regression 236 -> 237.
+
+### F18 - a skill's base percentage is resolved on the SERVER too, and that path never reads `base_formula`
+
+F2 added `skills.base_formula` and `js/skill-base.js`, whose `skillBase(row,
+attrs)` is documented as *the ONLY place the two are chosen between, so a caller
+cannot read one and forget the other*. One caller does exactly that.
+
+**`resolvePicks` in `functions/api/character-creator/_lib/skill-picks.js` does
+not select the column and does not call the helper.** Its lookup is
+`SELECT name, category, base, per_level FROM skills`, and it stores
+`pct: base ? base + catBonus : 0`. With `base` 0 - which is what an
+attribute-derived row stores, by design - a spent pick lands on the sheet at
+zero.
+
+Two endpoints route through it: `characters/[id]/picks.js` (a banked pick spent
+later) and `characters/[id]/level-confirm.js` (a pick spent at the level-up
+itself). **Creation is correct and everything after it is not**: `app.js`
+resolves through `skillBase()` at four sites, so the same skill taken at
+character creation is right and the same skill taken at level 4 is 0%.
+
+It does not self-correct. `js/leveling.js` advances from the STORED `pct`, so a
+skill banked at 0 climbs by its per-level step from 0 forever.
+
+**Premises, measured 2026-09-01 against `--remote`:**
+
+- **One** catalog row carries a `base_formula`: `Space: Zero Gravity Movement &
+  Combat`, `PP*5`, `base` 0, `per_level` 4, Phase World p.150. Still the only
+  one, as F2's own follow-up said.
+- `skillBase()` has exactly five callers - four in `app.js`, one in
+  `_lib/grants.js`. Nothing else in `functions/` consults it.
+- **No live character holds the skill**, so nothing is wrong on the site today.
+  This is latent, and filing it while that is true is the cheap moment.
+
+**Reachable from any class, not just those allowing Physical.** The skill is
+Physical, but `resolvePicks` spends an out-of-category pick as a SECONDARY
+skill, and secondary picks are deliberately unrestricted. Any character with a
+secondary slot can take it.
+
+**How it survived F2.** That finding asked where the evaluation belongs and
+answered *the wizard*, on the reasoning that a base is resolved once, at
+creation. That is true of both places it went looking, and both were display:
+the class-skills row and the picker. `resolvePicks` is a WRITE site, and it
+computes the same number a third way. The finding's own note records the picker
+as the site the tests could not see; this is the fourth, and the same test
+suite still cannot see it, because no fixture spends a pick on the one row that
+has a formula.
+
+It came to light from `_lib/grants.js`, written for plan 19 (PR #482), which
+reads through `skillBase()` because the helper's own comment said to. Having two
+server paths that disagree is what made the older one visible.
+
+**Proposal.**
+
+- Add `base_formula` to the `SELECT` in `resolvePicks` and resolve the
+  percentage through `skillBase()` rather than off `base`.
+- Thread the character's attributes into `resolvePicks`. **This needs no new
+  query**: both callers already load the whole character and already hand
+  `character.attributes` to `validateCharacter`, so it is one more field on an
+  options object that is already being built.
+- **Get the category bonus right, and it is the one judgement here.** The
+  `base ? base + catBonus : 0` guard exists so a W.P. has no percentage for a
+  percentage bonus to modify. A formula-derived base IS a real percentage and
+  should take the class's per-category bonus. So the guard has to become *did we
+  end up with a percentage*, not *is the stored base non-zero* - otherwise the
+  fix trades a 0% for a percentage that is missing its class bonus, which is
+  harder to notice than the bug it replaces.
+- **Backfill: nothing to do, and check that again when this is taken.** No
+  character holds the skill today. If one does by then, its stored `pct` is
+  wrong and no code path will revisit it, so it wants a data script rather than
+  being left to the next level-up.
+
+**Posture: fix the write path only.** No new gate, no exit code, no change to
+`base`, the grammar or the fallback. A test that spends a pick on a
+formula-carrying row is the thing that would have caught this and is worth
+having; it is a fixture, not a check on anyone's build.
