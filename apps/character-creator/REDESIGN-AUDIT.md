@@ -984,6 +984,35 @@ both.
 
 **Posture: documentation only.** One sentence. No table change, no test, no Access change.
 
+**Taken, 2026-09-01 (PR #475).** Posture held: the bolded sentence and the pronoun that
+depended on it. No table change, no test, no Access change.
+
+**The decision the proposal asked for: a warning about today, not a report of the outage.**
+The paragraph sits in a runbook, and a runbook's job is to stop the next person forgetting —
+so the bolded sentence now names the live set, **the three `shared/` rows**, and the outage
+stays behind it in the past tense with the two that caused it named outright.
+
+**Two words had to move, not one, and the finding did not notice.** The next sentence was
+*"The app shipped without **them**"*, and `them` took its antecedent from the sentence being
+replaced. Widening the warning to three rows without touching the pronoun would have said
+the app shipped without `shared/fonts` — which is the exact false claim N8 was opened
+about, re-created by the fix for it. The pronoun is now the two names.
+
+**The symptom proves the finding is worse than it looks, and this belongs here rather than
+in the runbook.** *"The page rendered in Times New Roman"* identifies `shared/styles.css`
+specifically and **cannot** come from `shared/fonts`: the stylesheet declares
+`font-family: 'Outfit', sans-serif` (`shared/styles.css:70`), so a blocked font file falls
+back to the system sans — a serif means no stylesheet at all, not a missing webfont. So a
+reader who mapped *"the last two"* onto `shared/js/ui.js` and `shared/fonts` was being
+pointed at a symptom that row provably cannot produce. Left out of `SETUP.md` because the
+posture says one sentence, and a diagnostic paragraph is not one sentence.
+
+**Verified by reading the rendered runbook rather than the diff**, and by the suite: the
+pick3cut5 smoke test asserts `SETUP.md` still names each of the five derived destinations
+by string, and it passes flagless and `--remote`. Both `shared/styles.css` and
+`shared/js/ui.js` are now named in the prose as well as in the table, which strengthens
+that check rather than weakening it.
+
 ---
 
 ## Not carried forward, and why
