@@ -530,6 +530,46 @@ async function undoLast() {
   }
 }
 
+// The session log: what the sheet recorded, as opposed to the journal, which
+// is what a person wrote. Separate boxes because they are separate kinds of
+// thing - one is a machine's account and cannot be edited, the other is prose
+// and can.
+//
+// LOADED ON FIRST OPEN, not at render. The sheet already makes four requests
+// before it can draw anything, and the log is the one thing most sessions
+// never look at; paying for it every time to serve the times it is wanted is
+// the wrong way round. <details ontoggle> is the whole mechanism.
+let logLoaded = false;
+async function loadLog() {
+  const d = $('log-details'), body = $('log-body');
+  if (!d || !d.open || logLoaded || !body) return;
+  logLoaded = true;
+  body.innerHTML = '<p class="muted small">Loading…</p>';
+  let events;
+  try {
+    events = (await api(`characters/${id}/events?limit=300`)).events;
+  } catch (err) {
+    // Left retryable: a failed load must not leave the box permanently empty.
+    logLoaded = false;
+    body.innerHTML = `<p class="err small">Could not load: ${escHtml(err.message)}</p>`;
+    return;
+  }
+  if (!events.length) {
+    body.innerHTML = '<p class="muted small">Nothing recorded yet.</p>';
+    return;
+  }
+  // Newest first, like the journal beside it.
+  body.innerHTML = [...events].reverse().map((e) => {
+    const when = String(e.created_at || '').replace('T', ' ').replace('Z', '');
+    const note = e.payload?.note || e.kind;
+    return `<div class="log-row${e.undone_at ? ' undone' : ''}">
+      <span class="tag">${escHtml(e.kind)}</span>
+      <span class="log-note">${escHtml(note)}</span>
+      <span class="muted small log-when">${escHtml(when)}</span>
+    </div>`;
+  }).join('');
+}
+
 // The recap walks events since the last 'recap' marker, counts what happened,
 // posts a journal entry, and drops the next marker. The entry is plain text a
 // human can edit in the journal afterwards - the log summarises, it does not
@@ -1430,6 +1470,11 @@ function render() {
       ${C.cls?._retired
         ? advisory('Retired class', 'This class has been retired and can no longer be chosen for new characters. This character is unaffected.')
         : ''}`)}
+
+    ${box('Session log', `<details class="play-sec" id="log-details" ontoggle="loadLog()">
+      <summary>What happened, as the sheet recorded it</summary>
+      <div id="log-body"><p class="muted small">Opening this loads the log.</p></div>
+    </details>`, '<span class="muted small">machine-written</span>')}
 
     ${box('Journal', `
       ${w ? `<div class="noprint">
