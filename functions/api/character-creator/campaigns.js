@@ -13,10 +13,21 @@ export async function onRequestGet({ request, env }) {
   const where = system ? ' WHERE system = ?' : '';
   const binds = system ? [system] : [];
 
+  // created_at and the character count are here so the wizard's step 1 can
+  // tell two campaigns of the same name apart. It could not: a save refused
+  // after the campaign row was already created leaves an empty duplicate, and
+  // the list rendered nothing but the name and the system, so both rows read
+  // identically and neither said which one held the character. UI-AUDIT F9.
+  //
+  // Read-only, and it does not touch the create-before-validate ordering that
+  // produces the duplicate - that is a server question and F9 puts it out of
+  // scope on purpose.
   const page = await pagedQuery(env, {
     countSql: `SELECT count(*) AS n FROM campaigns${where}`,
     countBinds: binds,
-    rowsSql: `SELECT id, name, system, gm_email, open FROM campaigns${where} ORDER BY name`,
+    rowsSql: `SELECT c.id, c.name, c.system, c.gm_email, c.open, c.created_at,
+        (SELECT count(*) FROM characters WHERE campaign_id = c.id) AS character_count
+      FROM campaigns c${where ? ' WHERE c.system = ?' : ''} ORDER BY c.name`,
     rowsBinds: binds,
     limit, offset,
   });

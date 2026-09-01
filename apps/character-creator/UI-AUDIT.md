@@ -664,6 +664,39 @@ touch the create ordering in this PR.
 
 ---
 
+**Taken, 2026-09-01 (PR #457). Display only, as the finding scopes it.** Each
+campaign on step 1 now sits on its own line and says how many characters it
+holds and when it was made:
+
+> 🗺 **The Northern Wilds** (palladium-fantasy) · 0 characters · 31 Aug
+> 🗺 **The Northern Wilds** (palladium-fantasy) · 1 character · 31 Aug
+
+Which is the finding's own two rows, reproduced live from the same pair of
+campaigns it was written against — and now telling you which one holds the
+character. No delete control was added and the create-before-validate ordering
+is untouched.
+
+**It needed the endpoint, which the finding does not mention.**
+`GET /campaigns` returned `id, name, system, gm_email, open` and nothing else,
+so neither half of the proposal was available on the client. It now also selects
+`created_at` and a correlated `count(*)` of that campaign's characters. Both are
+read-only and neither is new information — the campaign list is already visible
+to any signed-in user, and the Review step's picker already shows GM emails.
+
+**The date is parsed by hand rather than through `Date`.** `created_at` is
+stored as UTC with a space and no `Z`, which `Date` reads as local time and can
+shift by a day. `shortDate()` also keeps the year once it has turned — a bare
+day-and-month is unambiguous only inside one year, and a campaign list is
+exactly where old rows accumulate. Checked against `2026-08-31 21:17:28` → *31
+Aug*, `2025-01-05` → *5 Jan 2025*, and empty / malformed / month 13 → dropped
+rather than rendered.
+
+**One entry per line rather than the old inline run.** Separated by `·` on one
+line, as it was, two campaigns of the same name are a single string — which is
+how the finding's screenshot came to look like one campaign listed twice.
+
+---
+
 ### F10 — medium — `.panel-inset` is used 16 times and defined nowhere
 
 **Step 4 (visual consistency).** Screenshot evidence: none needed — verified by
