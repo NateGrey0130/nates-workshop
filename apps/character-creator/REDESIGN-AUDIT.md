@@ -804,6 +804,38 @@ sixth public dependency now needs a second Access application rather than an edi
 **Posture: dashboard change, by Nate.** Access policy is a security setting and there is no
 policy-as-code here; the repo's `CLOUDFLARE_API_TOKEN` is scoped to D1 and cannot write it.
 
+**Done, 2026-09-01 — note written late, PR #476.** Posture held exactly: the destination was
+added in the Cloudflare dashboard by Nate, and nothing in this repo could have done it. This
+note records the work; it did not do it.
+
+**The measurement that opened this finding no longer holds, which is the point.** N5's table
+recorded `/shared/fonts/outfit-variable.woff2` at **302 → `fatmans.cloudflareaccess.com`**.
+Measured now against production with no session, both files answer **200 `font/woff2`** —
+`outfit-variable.woff2` 32,292 bytes and `jetbrains-mono-variable.woff2` 31,432. R7 merged
+as `e40b6e1` at **07:00 on 2026-09-01**, after the destination existed rather than before,
+which is the ordering the finding asked for.
+
+The dashboard agrees with the runbook: *Pick 3 Cut 5 (public)* lists `apps/pick3cut5`,
+`api/pick3cut5`, `shared/styles.css`, `shared/js/ui.js`, `shared/fonts` in that order,
+matching `SETUP.md`'s table row for row.
+
+**"This consumes the last destination slot" was right, and is now confirmed by Cloudflare
+rather than by arithmetic.** The application's own edit screen says *"You've added the
+maximum number of hostnames per application allowed."* beside *"you can have up to five
+destinations per app."* The sixth needs a second application, today.
+
+**Why this note is a day late, which is worth more than the note.** The protocol puts the
+outcome note *in the same PR as the work*. N5's posture put the work in a **dashboard**, so
+there was no PR to carry it — and PR #468, the one that unblocked, closed R7 rather than
+N5. The gap had a cost that is already recorded above: N6 was written afterwards and says
+*"Opened by R7 (PR #468), which is held open because of this"*, which was false by the time
+anyone read it, and taking N6 began by correcting it.
+
+**A finding whose work is not a code change has no PR, and therefore no note.** N5 is the
+first of those in this menu. The fix is not in this file — it belongs wherever the protocol
+itself is written — so it is flagged here and not invented as a finding in a menu whose
+scope is the interface.
+
 ### N6 — medium — The pick3cut5 public-path derivation cannot see assets referenced from CSS
 
 Opened by R7 (PR #468).
