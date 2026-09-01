@@ -43,11 +43,13 @@
    Licences ship beside them: all are SIL Open Font License 1.1, which requires
    the licence to travel with the font. See shared/fonts/OFL-*.txt.
 
-   Outfit and JetBrains Mono are still declared below and still on disk. Three
-   of the four apps have not been converted yet and every merge here deploys,
-   so removing them now would put the intervening states live with 88 rules
-   pointing at a family that no longer exists. They go in the cleanup PR once
-   nothing references them. */
+   TWO FILES, NOT FOUR. Outfit and JetBrains Mono were kept alongside these
+   through the four app conversions, because every merge here deploys and
+   dropping them earlier would have put the intervening states live with 88
+   rules naming a family that no longer existed. All 88 are converted, so both
+   files, both licences and both @font-face rules are gone. Nothing in apps/,
+   shared/ or index.html names either family now; REDESIGN-AUDIT.md still does,
+   as the record of how they got here. */
 @font-face {
   font-family: 'Saira';
   src: url('/shared/fonts/saira-variable.woff2') format('woff2-variations'),
@@ -62,23 +64,6 @@
   src: url('/shared/fonts/ibm-plex-sans-variable.woff2') format('woff2-variations'),
        url('/shared/fonts/ibm-plex-sans-variable.woff2') format('woff2');
   font-weight: 100 700;
-  font-style: normal;
-  font-display: swap;
-}
-/* Retired, pending the cleanup PR — see the note above. */
-@font-face {
-  font-family: 'Outfit';
-  src: url('/shared/fonts/outfit-variable.woff2') format('woff2-variations'),
-       url('/shared/fonts/outfit-variable.woff2') format('woff2');
-  font-weight: 300 800;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'JetBrains Mono';
-  src: url('/shared/fonts/jetbrains-mono-variable.woff2') format('woff2-variations'),
-       url('/shared/fonts/jetbrains-mono-variable.woff2') format('woff2');
-  font-weight: 400 700;
   font-style: normal;
   font-display: swap;
 }

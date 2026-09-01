@@ -259,7 +259,7 @@ if (process.argv.includes('--remote')) {
   // broken test rather than a missing Access destination.
   //
   // Matched as a PREFIX now that the list can hold directories. An equality
-  // test would call /shared/fonts/outfit-variable.woff2 a path that ought to be
+  // test would call /shared/fonts/saira-variable.woff2 a path that ought to be
   // gated while the loop above insists it must be public.
   const gated = ['/', '/shared/js/api.js', '/apps/character-creator/']
     .filter((p) => !requiredPublic.some((r) => p === r || p.startsWith(r + '/')));
