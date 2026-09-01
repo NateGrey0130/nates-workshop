@@ -473,7 +473,41 @@ button.chkrow {
 }
 
 /* ─── DASHBOARD ─── */
-.pools-cell { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+
+/* dashboard.html only. The roster is a five-column table already using 798px,
+   and the GM notes wanted a rail beside it - which inside the 900px .wrap
+   would have left the roster 464px and squeezed the Pools column, the widest
+   at 296px and the one a GM actually scans, by about 40%, with
+   white-space: nowrap stopping it from wrapping. That is an overflow rather
+   than a reflow. 1280px keeps the roster near its current width and still fits
+   the rail. Same lever as .wrap-sheet and .wrap-wizard. */
+.wrap.wrap-dash { max-width: 1280px; }
+
+/* The roster and the GM notes, side by side. THE CLASS IS ONLY EMITTED WHEN
+   THERE IS A RAIL: the notes panel is GM-only, so for a player this element
+   stays a plain block and the roster keeps the full width rather than sitting
+   beside 380px of nothing. */
+.dash-grid {
+  display: grid; grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 14px; align-items: start;
+}
+.dash-grid > .panel { margin-bottom: 0; }
+@media (max-width: 1100px) {
+  .dash-grid { grid-template-columns: 1fr; }
+  .dash-grid > .panel { margin-bottom: 16px; }
+}
+
+/* Current over max, one row per character. It is read DOWN the column, so the
+   digits have to line up. It never had a font-family, which is why phase 2 did
+   not convert it - that phase moved rules that named a face, and this one
+   inherited the body - so it kept proportional figures while every other
+   numeric column in the app moved. Measured before fixing: font-variant-numeric
+   was `normal` on the live page. */
+.pools-cell {
+  font-size: 12px; color: var(--text-secondary); white-space: nowrap;
+  font-family: var(--font-display); font-stretch: 75%;
+  font-variant-numeric: tabular-nums;
+}
 
 /* ═══ CHARACTER SHEET ═══
    Laid out after the printed Rifts sheet: boxed panels with small-caps rules,
