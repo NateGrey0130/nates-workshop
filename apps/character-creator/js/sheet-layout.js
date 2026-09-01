@@ -105,6 +105,7 @@
   // anywhere.
   const BOX_COL = {
     attributes: 'a', vitals: 'a', experience: 'a', 'saving-throws': 'a', combat: 'a',
+    resources: 'a',
     'class-skills': 'b', 'related-skills': 'b', 'secondary-skills': 'b',
     granted: 'b', armor: 'b', equipment: 'b',
     'psionics-magic': 'c', background: 'c', bearing: 'c', notes: 'c', journal: 'c',
@@ -117,11 +118,40 @@
       `<div class="box-title"><span>${title}</span>${extra}</div><div class="box-body">${body}</div></div>`;
   };
 
+  // What a class hands out that is not a pool, a skill or a power - doses,
+  // charges, uses per day. Declared in the class's own frontmatter under
+  // trackable_resources; see the class-import skill's frontmatter reference.
+  //
+  // NOTHING IS INVENTED HERE. A class that declares none gets no box, which
+  // is every class in the catalogue today: the mechanics are famous enough
+  // to fill in from memory and that is exactly the failure the book-ingest
+  // rules exist to stop. `uppers` is the stock Juicer example and appears in
+  // none of the twelve imported Juicers' text.
+  //
+  // max_formula is shown as written rather than evaluated. Resolving it needs
+  // the character's attributes, and this file does not read character state.
+  const trackableRows = (list) => (Array.isArray(list) ? list : [])
+    .filter((r) => r && (r.label || r.key))
+    .map((r) => {
+      const cap = r.max != null ? String(r.max)
+        : (r.max_formula ? String(r.max_formula) : '\u2014');
+      const reset = r.reset_on && r.reset_on !== 'never'
+        ? `<span class="muted small">per ${escHtml(String(r.reset_on))}</span>` : '';
+      return `<div class="field">
+        <span class="lbl">${escHtml(String(r.label || r.key))}</span>
+        <span class="dots"></span>
+        <span class="val">${escHtml(cap)}</span>
+      </div>${reset || r.note ? `<div class="muted small" style="margin:-2px 0 6px">
+        ${reset}${reset && r.note ? ' \u00b7 ' : ''}${r.note ? escHtml(String(r.note)) : ''}
+      </div>` : ''}`;
+    }).join('');
+
   const field = (label, value, dim) =>
     `<div class="field"><span class="lbl">${label}</span><span class="dots"></span>` +
     `<span class="val${dim ? ' dim' : ''}">${value}</span></div>`;
 
   global.sheetLayout = {
     POOL_TONES, POOL_LOW, poolCard, paintPool, boxSlug, BOX_COL, box, field,
+    trackableRows,
   };
 })(globalThis);

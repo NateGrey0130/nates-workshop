@@ -297,6 +297,32 @@ side_effects: "..."               # drawback mechanics, display only
 extraction_notes: "..."           # anything unresolved, for a human to chase
 ```
 
+## Trackable resources — what a player spends during play
+
+```yaml
+trackable_resources:              # optional; omit entirely if the class has none
+  - key: uppers                   # stable slug, unique within the class
+    label: "Juicer Uppers"        # what the sheet calls it
+    max: 3                        # a fixed number, OR
+    max_formula: "PE"             # an attribute expression, same grammar as pools
+    reset_on: day                 # day | session | never — when it comes back
+    note: "+1 attack, +2 initiative, 4 minutes"   # display only
+```
+
+A countable thing the class hands out that is not a pool, not a skill and not a
+power — doses, charges, uses per day. The sheet draws one box per class that
+declares any, and nothing at all for a class that does not.
+
+**Omitted and empty are different.** No key means nobody has looked at this
+class yet. `trackable_resources: []` means someone read the book and it has
+none. Both render nothing; only the second one says so.
+
+**Every value comes from the book, like every other number here.** This key is
+tempting to fill from memory because the mechanics are famous — Juicer uppers
+are the stock example and appear in NO imported Juicer's text. Twelve Juicer
+classes are imported and `uppers` is in none of them. If the book does not say
+it, it does not go here; `extraction_notes` is where an unresolved one goes.
+
 ## Variants — one creature, several stages
 
 ```yaml

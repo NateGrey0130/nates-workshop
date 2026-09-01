@@ -68,7 +68,8 @@ const $ = (i) => document.getElementById(i);
 // Presentation lives in js/sheet-layout.js - the pool widget, the box and
 // field helpers, and the table that decides a box's column. Destructured
 // here so this file's call sites read exactly as they did before the split.
-const { POOL_TONES, POOL_LOW, poolCard, boxSlug, BOX_COL, box, field } = sheetLayout;
+const { POOL_TONES, POOL_LOW, poolCard, boxSlug, BOX_COL, box, field,
+  trackableRows } = sheetLayout;
 
 // The one binding that is not a straight re-export. sheetLayout.paintPool is
 // pure - it paints whatever data it is handed and knows nothing about C -
@@ -1343,6 +1344,16 @@ function render() {
               <span class="muted">${escHtml(w.applies_when)}</span> ${escHtml(parts)}</p>`;
           }).join('')}
         </div>`))}
+
+    ${(() => {
+      // One box per class that declares trackable resources, and none at all
+      // for a class that does not - which is every class today. The title is
+      // stable so the column assignment can find it; the class name rides in
+      // the title bar beside it.
+      const rows = trackableRows(cls.trackable_resources);
+      return rows ? box('Resources', rows,
+        `<span class="muted small">${escHtml(cls.name || '')}</span>`) : '';
+    })()}
 
     ${box('Armor', `<div id="armor-list">${armorRows}</div>` +
       (armorRows ? '' : '<p class="muted small" id="armor-empty">No armor recorded.</p>') +
