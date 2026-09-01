@@ -28,6 +28,9 @@ a table actually hands out.
 4. **The player enters it on their own sheet.** The G.M. usually says it
    verbally; the player types it in.
 
+Three more were settled while this plan was in review; they are recorded at
+the end, under [Settled in review](#settled-in-review).
+
 Decision 4 is the one that shapes everything else. This cannot be a G.M.-only
 feature, so **integrity comes from the record rather than from a permission
 wall**: every grant stores who added it, when, and why, and is labelled as a
@@ -85,9 +88,18 @@ between a record and an unfalsifiable claim. A grant nobody can explain is one
 the G.M. can see and question at a glance. This is the load-bearing column of
 the whole design and it should be the last one anyone makes optional.
 
-**Removal is a hard `DELETE`.** A grant is current state, not a ledger. History
-belongs to `play_events`, which already exists for exactly this and describes
-itself as commentary rather than a ledger — see the constraint on it below.
+**Removal is a hard `DELETE`, by owner or G.M., and it is logged.** A grant is
+current state, not a ledger. History belongs to `play_events`, which already
+exists for exactly this and describes itself as commentary rather than a ledger
+— see the constraint on it below.
+
+The guard is `requireCharacter`, the same one that let the grant be added. Making
+removal G.M.-only was considered and rejected: adding is already open under
+decision 4, so a G.M.-only retraction would protect the record from everyone
+except the person most likely to want it gone, while turning every typo into a
+message to the G.M. The trail is what carries the weight instead — **a removal
+writes a `play_event` exactly as an add does**, so a grant that appeared and
+vanished between sessions is still legible after the row is gone.
 
 `campaign_items`' soft delete was the obvious model and is rejected: an item
 that left the party is an object that still exists somewhere, whereas a removed
@@ -277,14 +289,31 @@ One PR each. Merge on a separate word.
 | # | Slice | Provable by |
 |---|---|---|
 | 0 | This plan | — |
-| 1 | Migration 043, the table, and the grant endpoints. No UI | `regression.mjs` |
-| 2 | Named grants: skills, spells, psionics, abilities. `gm_abilities` retired, powers exemption, both render sites | browser + print render |
-| 3 | The stat half: attributes, combat and saves through `classBonuses`; pools through the column and the clamp | browser |
+| 1 | **Skills, end to end**: migration 043, the table, add and remove, the sheet control, both render sites, print | `regression.mjs`, browser, print render |
+| 2 | Spells, psionics and abilities along the same path — plus the powers exemption and retiring `gm_abilities` | browser |
+| 3 | The stat half: attributes, combat and saves through `classBonuses`; pools through the column and the clamp; the minimums warning | browser |
 | 4 | The choice half: an unspent grant, and spending it | browser |
-| 5 | Docs — `known-limitations.md`, `house-rules.md`, `wizard-and-sheet.md`, plans README | `smoke.mjs` |
+| 5 | Docs — `known-limitations.md`, `wizard-and-sheet.md`, plans README | `smoke.mjs` |
 
 Slice 1 applies its migration to production **before** the merge that needs it,
 per the ordering rule.
+
+**Slice 1 is one kind carried all the way through rather than the whole schema
+with no interface**, which is what an earlier draft of this table proposed and
+what this repo usually does. The reason for the change is in problem 5: the way
+this feature fails is silently, by storing a row correctly and never drawing it,
+and a schema-first slice defers every render and print question to last. One
+kind end to end proves the whole path — table, endpoint, control, both lenses,
+the printed sheet — and every later slice then adds kinds to a path already
+known to work.
+
+Skills are the right kind to be first: they are the only one of the eight that
+needs **no** validator change, so slice 1 carries the render risk without also
+carrying the rules risk.
+
+`house-rules.md` is deliberately off the docs list. It was on it in the first
+draft on the assumption that it constrained what a G.M. may do; it mentions the
+G.M. nowhere at all.
 
 ## What this deliberately does not do
 
@@ -299,12 +328,48 @@ per the ordering rule.
   says so and moves on. Log and label, do not block.
 - **No new permission tier.** Owner-or-G.M., as everywhere else.
 
-## Open, and worth deciding before slice 3
+## Settled in review
 
-**What a granted attribute does to a class minimum.** The validator checks
-`attribute_requirements` against the stored `attributes`, not against
-`effective()`. A character granted the two points of I.Q. that would qualify
-them for their own class still fails the minimum. Arguably correct — the class
-was entered without them — and arguably absurd. It is out of scope for slice 3
-either way, but the answer decides whether the granted layer is a display
-concern or a rules one, and that is a bigger question than it looks.
+Three questions the first draft left open, answered 2026-09-01. Two of them
+went against what this plan recommended, and the reasoning is recorded here
+rather than quietly rewritten above.
+
+### A granted attribute WARNS at a class minimum. It does not satisfy it
+
+The validator checks `attribute_requirements` against the stored `attributes`,
+not against `effective()`. So a character granted the two points of I.Q. that
+would qualify them for their own class still fails the minimum.
+
+Neither available answer was right. Reading the rolled value only is the status
+quo and makes a real table ruling — *train up and you can take it* —
+unrepresentable. Reading the effective value lets someone save an illegal
+character and then grant their way legal, which stops the validator being a
+boundary on the one thing it was written to bound.
+
+**So the gap is reported rather than judged.** Where the stored value is below
+the minimum and a grant closes the gap, `attribute_minimum` becomes a WARNING
+naming the grant it rests on, instead of a violation. Where nothing closes it,
+the violation stands exactly as today. The character saves either way, the audit
+says what the qualification rests on, and no rule is decided by the app.
+
+This is the same posture as `xp_below_level` and the choice-group checks, which
+is the argument for it: it is a third state, but not a new IDEA, and it is the
+one this file already reaches for when a number is legitimate and surprising.
+
+Two implementation constraints, neither optional:
+
+- **The granted total is a new optional argument to `validateCharacter`.** With
+  it absent the function must behave exactly as it does today, because three of
+  its four call sites will not have grants in hand on the day this lands.
+- **Class bonuses are NOT folded in here.** A class's own +2 P.S. has never
+  counted toward its own minimum, and quietly changing that would flip existing
+  violations to warnings across characters nobody touched. Only grants soften a
+  minimum, and only to a warning.
+
+### Removal is owner-or-G.M., and logged
+
+Recorded under [the shape](#the-shape), with the rejected alternative.
+
+### Slice 1 is one kind end to end, not the whole schema
+
+Recorded under [slices](#slices). This reverses what the first draft proposed.
