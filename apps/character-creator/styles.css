@@ -1,6 +1,8 @@
 /* Character Creator — app styles on top of /shared/styles.css.
-   One stylesheet for all three pages (wizard, sheet, dashboard); they share
-   most of their vocabulary (panels, tags, tables, pools). */
+   One stylesheet for all five pages (wizard, sheet, dashboard, campaign,
+   catalog); they share most of their vocabulary (panels, tags, tables,
+   pools). The catalog's .imp-* and .cat-* blocks are a large part of this
+   file — a class that looks wizard-only is probably not. */
 
 :root {
   --accent: #9d7cff;
@@ -128,8 +130,17 @@ th {
 
 /* ─── SHARED BITS ─── */
 .rowline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 7px 0; }
-.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
 @media (max-width: 700px) { .cols { grid-template-columns: 1fr; } }
+
+/* Used 16 times across app.js and campaign.js for a block nested inside a
+   panel — race briefing, the pickers, level-up skill picks, campaign notes.
+   It had no definition at all, so all sixteen rendered flush with the panel
+   they were meant to sit inside. */
+.panel-inset {
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 12px; margin: 10px 0;
+}
 
 .statline { display: inline-block; margin: 0 16px 6px 0; font-size: 13px; }
 .statline b { color: var(--text-primary); font-size: 15px; }
@@ -464,13 +475,19 @@ pre.snippet {
   gap: 10px;
   margin-bottom: 16px;
 }
-/* Four in the catalog editor, five on the import page. The count comes from the
-   number of importers, so both variants exist rather than a magic number. */
+/* The count comes from CATALOG_KEYS.length, so every variant that count can
+   reach needs a rule and needs naming in every breakpoint below. cols-4 was
+   hardcoded while the data said five, and the 900px rule listed only cols-5,
+   which nothing used - so the tablet rule fired on nothing for months. */
 .imp-tabs.cols-4 { grid-template-columns: repeat(4, 1fr); }
 .imp-tabs.cols-5 { grid-template-columns: repeat(5, 1fr); }
-@media (max-width: 900px) { .imp-tabs.cols-5 { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 900px) {
+  .imp-tabs.cols-4, .imp-tabs.cols-5 { grid-template-columns: repeat(3, 1fr); }
+}
 @media (max-width: 780px) { .imp-tabs.cols-4, .imp-tabs.cols-5 { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 620px) { .imp-tabs, .imp-tabs.cols-4 { grid-template-columns: 1fr; } }
+@media (max-width: 620px) {
+  .imp-tabs, .imp-tabs.cols-4, .imp-tabs.cols-5 { grid-template-columns: 1fr; }
+}
 .imp-tab {
   display: flex; flex-direction: column; gap: 2px;
   text-align: left; padding: 11px 14px;

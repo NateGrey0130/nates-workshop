@@ -663,6 +663,27 @@ change even though no markup moves. App stylesheet only; this does not belong in
 
 ---
 
+**Taken, 2026-08-31 (PR #452).** Both numbers hold: 16 uses (12 in `app.js`, 4 in
+`campaign.js`), 0 definitions anywhere in the repo. One rule added to
+`apps/character-creator/styles.css` exactly as proposed — `--bg-secondary`, a 1px
+`--border`, `--radius-sm`, `10px 12px`, `10px 0`.
+
+Screenshotted before and after on the Race step at 1200×2200 (the pane cannot
+screenshot a scrolled page, so the viewport was made tall enough to hold the
+whole step). The difference is the one the finding predicted: *What Body Fixer
+grants* and *Starting level* previously ran flush into six paragraphs of class
+description with nothing marking where the class blurb ended and the mechanics
+began. `#starting-level` nests inside `#race-briefing`, so that pair renders as
+an inset within an inset — checked deliberately, and it reads as intended
+rather than as an accident.
+
+Not screenshotted individually: the ten uses reached only through the level-up
+flow and the shortfall panel. They are the same single rule on the same kind of
+nested block, and the computed values were confirmed on the two that were seen
+(`rgb(18, 21, 28)`, `1px rgb(42, 47, 62)`, `10px 12px`, `6px`).
+
+---
+
 ### F11 — medium — Three different tab bars do the same job in one app
 
 **Step 4 (component drift).** Screenshot evidence: yes — sheet, campaign and catalog.
@@ -833,6 +854,40 @@ cramped tabs plus an orphan in a ~760px column.
 grid tracks the catalogue count, and extend line 411 to cover `.cols-4` as well as
 `.cols-5`. Two small edits, one in `catalog.js` and one in `styles.css`. Deleting the
 now-reachable-again `cols-5` rules is **not** part of this; they become correct.
+
+---
+
+**Taken, 2026-08-31 (PR #452), and it had a trap the finding did not see.**
+
+Premises verified: `cols-4` is hardcoded at `catalog.js:179`, `CATALOG_KEYS` is
+5 (`skills, spells, psionics, enchantments, gear`), and `cols-5` appears in zero
+JS or HTML. **The line numbers have drifted** — the CSS block is 479–488, not
+409–413, and `.cols` is 131, not 102.
+
+Both proposed edits made: `cols-${CATALOG_KEYS.length}` in `catalog.js`, and the
+900px rule extended to `.cols-4`.
+
+**A third edit was needed and it is the reason this had to be screenshotted.**
+Changing the class from `cols-4` to `cols-5` silently changed the *phone*
+layout, because the 620px rule reads `.imp-tabs, .imp-tabs.cols-4` — and
+`.imp-tabs.cols-5` (0,2,0) outranks the bare `.imp-tabs` (0,1,0) that was
+supposed to catch it. At 390px the catalog went from one column to two. Taking
+this finding exactly as written would have shipped that. `.cols-5` is now named
+in the 620px rule as well.
+
+Measured after, on `catalog.html`:
+
+| viewport | columns | rows |
+|---|---|---|
+| 1440 | 5 | 1 — gear no longer orphaned |
+| 820 | 3 | 2 — the tablet rule fires for the first time |
+| 760 | 2 | 3 |
+| 390 | 1 | 5 — unchanged from before |
+
+The comment above the block claimed the two variants existed because the
+catalog editor had four importers and the import page five. There is no import
+page. It now says where the count comes from and that every breakpoint has to
+name every variant.
 
 ---
 
@@ -1102,6 +1157,26 @@ declaration; check the Review step, which also uses `.cols`.
 
 ---
 
+**Taken, 2026-08-31 (PR #452).** `align-items: start` added to `.cols`.
+
+The mechanism is confirmed rather than assumed — measured with the declaration
+on and forced back off, on the Skills step at 1200 wide:
+
+| state | Related column | Secondary column |
+|---|---|---|
+| unfiltered, `stretch` (before) | 8486px | 8486px |
+| unfiltered, `start` (after) | 7816px | 8486px |
+| Secondary filtered to nothing, `stretch` | 7816px | **7816px** |
+| Secondary filtered to nothing, `start` | 7816px | **104px** |
+
+The 5,606px in the finding was a different character's skill list; the defect
+and the fix are the same. **One premise correction:** the finding says to check
+the Review step, which also uses `.cols`. It does not — the second and only
+other `.cols` is the **Details** step's two columns of bio fields
+(`app.js:2830`), which has no stretch dependency either.
+
+---
+
 ### F24 — low — No `<h1>` on any page, and heading order skips levels
 
 **Step 5 (accessibility).** Screenshot evidence: none — read from the five shells and
@@ -1156,6 +1231,14 @@ trusting the comment will not think to check the catalog when changing a shared 
 which is how F15's `cols-5` came to be dead.
 
 **Proposal:** correct the comment to name all five pages. Documentation only.
+
+---
+
+**Taken, 2026-08-31 (PR #452).** The comment now names all five pages and says
+the thing the finding was actually about — that the catalog's `.imp-*` and
+`.cat-*` blocks are a large part of this file, so a class that looks
+wizard-only probably is not. Which is exactly how F15's phone-width trap was
+built.
 
 ---
 
