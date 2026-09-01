@@ -2125,11 +2125,29 @@ async function saveStats() {
     const el = $('stat-' + key);
     if (el) body[key + '_current'] = el.value === '' ? null : +el.value;
   }
+  // Which version this tab believes it is changing. Two people on one
+  // character - a player and a G.M. at the same table, or the same person in
+  // two tabs - used to overwrite each other silently, last write winning with
+  // nothing said. The server refuses a write against a version that has moved.
+  body.expect_updated_at = C.data?.updated_at || undefined;
   try {
-    await api('characters/' + id, jsonReq('PATCH', body));
+    const res = await api('characters/' + id, jsonReq('PATCH', body));
+    if (res?.updated_at) C.data.updated_at = res.updated_at;
     flash('Saved.');
     await load();
   } catch (err) {
+    if (err.status === 409 && err.detail?.conflict) {
+      // Nothing was written, so nothing is lost on the server. What is at risk
+      // is what is typed on this screen, which is why this asks rather than
+      // reloading over it.
+      flash('Not saved: this character changed somewhere else since you opened it.', true);
+      const msg = 'This character was changed somewhere else. Reload to see the '
+        + 'current version? Your unsaved edits on this screen will be lost.';
+      if (confirm(msg)) {
+        await load();
+      }
+      return;
+    }
     const details = errorDetails(err);
     flash('Save failed: ' + err.message + (details.length ? ' — ' + details.join('; ') : ''), true);
   }
