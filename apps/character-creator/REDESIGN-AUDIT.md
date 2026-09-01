@@ -449,6 +449,23 @@ Verified on all ten pages: two faces `loaded`, the weight axis registering as `3
 `fonts.gstatic.com` anywhere in the tree. All four smoke suites pass. Both OFL licences
 ship beside the files, as the licence requires.
 
+**Merged 2026-09-01 as `e40b6e1`, 07:00** — the note above was written while the hold was
+in force and stops there; this is the rest of it. The hold ended the way it was supposed
+to: `shared/fonts` became an Access destination first, and the merge followed. That
+ordering is what N5 was for, and it held.
+
+**Re-measured on production after the deploy**, since everything above was measured against
+a dev server. On `/apps/character-creator/` and on the repo-root landing page — the one that
+does not load `/shared/styles.css` and carries its own copy of the two rules — both report
+`Outfit 300 800` and `JetBrains Mono 400 700` loaded, exactly two font requests, both under
+`/shared/fonts/`, and **zero** to `fonts.googleapis.com` or `fonts.gstatic.com`.
+
+Proved by rendered width rather than by `document.fonts.check()`, which is the trap this
+finding already caught once: `'Outfit', sans-serif` measures **438.32px** against
+**449.08px** for the bare generic, and `'JetBrains Mono', monospace` **528px** against
+**483.83px**. Two faces that measured the same as their fallbacks would be two faces that
+never arrived.
+
 ---
 
 ## N — opened while taking R1–R7
