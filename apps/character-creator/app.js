@@ -654,6 +654,23 @@ function prevStep() { goStep(seekStep(S.step, -1)); }
 function gmCampaigns() {
   return S.me ? S.campaigns.filter((c) => c.gm_email === S.me) : [];
 }
+
+// `2026-08-31 21:17:28` as `31 Aug`, and `31 Aug 2025` once the year has
+// turned - a bare day and month is only unambiguous inside one year, and a
+// campaign list is exactly the place old rows accumulate. Parsed by hand
+// rather than through Date: the column is stored as UTC without a Z, which
+// Date reads as local time and can shift by a day.
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function shortDate(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+  if (!m) return null;
+  const [, y, mo, d] = m;
+  const month = MONTHS[parseInt(mo, 10) - 1];
+  if (!month) return null;
+  const thisYear = String(new Date().getUTCFullYear());
+  return `${parseInt(d, 10)} ${month}${y === thisYear ? '' : ' ' + y}`;
+}
 function renderSystem() {
   $('app').innerHTML = `
   <div class="panel">
@@ -670,9 +687,22 @@ function renderSystem() {
     <p class="small"><a href="catalog.html">✏️ Edit catalogs</a>
       <span class="muted">— fix skills, spells, psionics and gear by hand</span></p>` : ''}
     ${gmCampaigns().length ? `<h3>Your campaigns (GM)</h3>
-    <p class="small">${gmCampaigns().map((c) =>
-      `<a href="dashboard.html?campaign_id=${c.id}">🗺 ${esc(c.name)}</a> <span class="muted">(${esc(c.system)})</span>`
-    ).join(' &nbsp;·&nbsp; ')}</p>` : ''}
+    ${gmCampaigns().map((c) => {
+      // One per line, and each one says how many characters it holds and when
+      // it was made. Run together on one line separated by dots, as this used
+      // to be, two campaigns of the same name are one string.
+      const n = c.character_count;
+      const when = shortDate(c.created_at);
+      const bits = [
+        n === undefined || n === null ? null
+          : `${n} character${n === 1 ? '' : 's'}`,
+        when,
+      ].filter(Boolean);
+      return `<p class="small" style="margin:4px 0">
+        <a href="dashboard.html?campaign_id=${c.id}">🗺 ${esc(c.name)}</a>
+        <span class="muted">(${esc(c.system)})${bits.length ? ' · ' + esc(bits.join(' · ')) : ''}</span>
+      </p>`;
+    }).join('')}` : ''}
     ${S.existing.length ? `<h3>Existing characters</h3>
     <p class="small">${S.existing.map((c) =>
       `<a href="sheet.html?id=${c.id}">${esc(c.name)}</a> <span class="muted">(${esc(className(c.class_id))}${c.occ_class_id ? ' ' + esc(className(c.occ_class_id)) : ''} L${c.level} · ${esc(c.campaign_name)})</span>`
