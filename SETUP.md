@@ -263,11 +263,12 @@ Two halves, and **both** are required — either one alone leaves the app broken
    Dashboard only; the `CLOUDFLARE_API_TOKEN` in `CLAUDE.md` is scoped to D1
    and cannot create it.
 
-   **The last two are the ones that get forgotten.** The app shipped without
-   them and was broken for every unauthenticated player: the page rendered in
-   Times New Roman and `escHtml is not defined` froze the game at the first
-   flip, while `curl /apps/pick3cut5/` cheerfully returned 200. A route
-   answering is not the same as a page working.
+   **The three `shared/` rows are the ones that get forgotten.** The app shipped
+   without `shared/styles.css` and `shared/js/ui.js` and was broken for every
+   unauthenticated player: the page rendered in Times New Roman and
+   `escHtml is not defined` froze the game at the first flip, while
+   `curl /apps/pick3cut5/` cheerfully returned 200. A route answering is not the
+   same as a page working.
    `node apps/pick3cut5/test/smoke.mjs` derives this list from `index.html` and
    the stylesheets it loads, and fails if it and this table disagree; `--remote`
    checks the live policy, and checks the content type as well as the status —
