@@ -473,6 +473,45 @@ shared stylesheet, so it moves `filament-forge`, `media-vault` and `pick3cut5` t
 each needs a screenshot pass before merge. `--border` is a **separate** finding — it
 has a different threshold and a different visual risk.
 
+**Taken, 2026-08-31 (PR #451), with a scope Nate chose over the one proposed
+here.** `--text-muted: #81889e` overrides the token in
+`apps/character-creator/styles.css`'s own `:root`. `shared/styles.css` is
+**untouched**, so `filament-forge`, `media-vault` and `pick3cut5` are unchanged
+and needed no screenshot pass. `--border` was not touched and stays open.
+
+**The ratios in this finding are right — I recomputed all twenty from the token
+values and they match to the second decimal.** Two things around them are not:
+
+- **The suggested value does not do what it says.** `#7b8296` reaches **4.13**
+  on `--bg-input`, not 4.5. Nothing clears `--bg-input` short of `#8b92a8` —
+  which *is* `--text-secondary`. Written as proposed, this finding ends with the
+  muted tier deleted rather than fixed.
+- **`--bg-input` carries no muted text, and neither does `--bg-tertiary`.**
+  Every element whose computed colour is the muted token, across all five pages,
+  sits on one of three opaque backgrounds — `--bg-primary`, `--bg-secondary`,
+  `--bg-card` — plus **one** translucent case. So the background the proposal
+  optimised for is the one the app never uses.
+
+`#81889e` clears 4.5:1 on all three real backgrounds (5.45 / 5.08 / 4.93) and on
+`--bg-tertiary` (4.64) so a future muted label on a tag still passes. It leaves
+`--bg-input` at 4.40 — no muted text is there, and closing that last 0.1 costs
+the tier its identity: muted and secondary are already only 1.14:1 apart at this
+value, and 1.07:1 at the value `--bg-input` would demand.
+
+**The one translucent case got its own line rather than the token.**
+`.imp-tab.on .imp-tab-sub` — the selected catalog tab's sub-label — sits on
+`--accent-glow` blended with `--bg-secondary`, which is `#27243e`, lighter than
+any opaque background in the system. Muted reaches only 4.22 there, so that one
+sub-label uses `--text-secondary` (4.81).
+
+Measured live, per page, by walking every text node and computing its ratio
+against its effective background — sheet **97 → 1**, dashboard **7 → 1**,
+catalog **7 → 2**, campaign **2 → 1**, wizard step 1 **11 → 0**, step 2
+**13 → 1**, step 3 **15 → 1**. **152 failures → 7**, and none of the seven is
+`--text-muted`: five are white on `--accent` in `.btn-primary` (3.11, see
+**F28**, two of them on a disabled button and therefore exempt) and two are the
+`.dupe-badge` (3.25, see the note under **F20**).
+
 ---
 
 ### F7 — medium — Half the sheet's tabs are outside the visible tab strip at phone width
@@ -969,6 +1008,20 @@ unreachable and would take over if the token were ever renamed.
 `#2e7d32` fallbacks. Three characters of real change; screenshot the duplicates panel
 because the badge colour visibly moves.
 
+**Still open — but read this before taking it, added 2026-08-31 while measuring
+F6.** The badge is `color: #fff` on that background, and the proposal as written
+would make its contrast **worse, not better**:
+
+| badge background | ratio against `#fff` |
+|---|---|
+| `#b8860b` — today's dead fallback | **3.25** (already under 4.5) |
+| `--warning` `#fbbf24` — what this finding proposes | **1.67** |
+
+Taking F20 as written ships white text on bright amber. The token swap is still
+right; it needs the foreground to move with it — `#0a0c10` on `--warning` is
+**11.72**. Both remaining contrast failures on `catalog.html` after F6 are this
+badge.
+
 ---
 
 ### F21 — low — The catalog is 345 rows of ragged inline text with no pagination
@@ -1152,6 +1205,36 @@ divider or a gap so the two groups do not interleave when they wrap, and give
 `campaign.html`'s dashboard link a static `href` that does not depend on JS. Normalising
 the back-link ladder across all five pages is a **separate** decision — the current
 depths are arguably each correct for their page.
+
+---
+
+### F28 — medium — White on `--accent` is 3.11:1, and it is every primary button
+
+**Added 2026-08-31**, not by the original pass — it is what was left standing when
+F6 cleared the muted text out of the way, and it is now the most common contrast
+failure in the app.
+
+`.btn-primary` is `color: #fff` on `--accent` `#9d7cff`. Measured **3.11:1** at
+13px, against a 4.5 requirement. It is the *Save*, *Post note*, *Save GM notes*,
+*Confirm and roll →*, *Skills →*, *Review →* button — the primary action of every
+screen that has one. Two of the seven instances found were on a **disabled**
+button (`opacity: 0.45`), which WCAG exempts; the rest are live controls.
+
+This is `--accent`, which the character creator overrides in its own `:root`
+(`#9d7cff`, where shared ships `#4f8eff`) — so like F6 it can be fixed app-local,
+and unlike F6 it cannot be fixed by moving the text colour alone: white is
+already the lightest end.
+
+**Proposal:** darken the button only — an `--accent-strong` behind
+`.btn-primary`, leaving `--accent` itself alone so every border, link and focus
+ring keeps its current tone. Values computed against white: `#7c5cfc` (shared's
+`--accent-secondary`) is **4.38** and still short; `#6b4bd8` is **5.80** and
+clears. **Do not** darken `--accent` globally — it is the link colour and the
+focus-ring colour and both want the brighter tone. Screenshot every page with a
+primary button.
+
+Out of scope here and worth someone's attention: shared's own `--accent`
+`#4f8eff` is **3.16** against white, so the other three apps have this too.
 
 ---
 

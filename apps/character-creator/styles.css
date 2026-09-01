@@ -7,6 +7,19 @@
   --accent-glow: rgba(157, 124, 255, 0.15);
   --accent-secondary: #f0a04b;
   --border-focus: var(--accent);
+  /* Shared ships #5a6178, which fails WCAG AA on every background in the
+     system — 3.18 on --bg-primary down to 2.57 on --bg-input — and this app
+     spends it on 9-13px labels, so the large-text allowance never applies.
+     Overridden HERE rather than in /shared/styles.css, which would re-tone
+     three other apps in a change nobody asked for.
+
+     #81889e clears 4.5:1 on every background this app actually puts muted text
+     on (--bg-primary 5.45, --bg-secondary 5.08, --bg-card 4.93 — measured, not
+     assumed) and on --bg-tertiary too (4.64), so a future rule can move a muted
+     label onto a tag without reopening this. --bg-input reaches 4.40 and no
+     muted text sits there; nothing lighter fixes that without collapsing muted
+     into --text-secondary, which is 1.14:1 away as it is. See UI-AUDIT.md F6. */
+  --text-muted: #81889e;
 }
 
 /* ─── LAYOUT ─── */
@@ -481,6 +494,13 @@ pre.snippet {
   font-size: 10.5px;
   color: var(--text-muted);
 }
+/* The one place in the app where muted text sits on something translucent: the
+   selected tab's --accent-glow blends with --bg-secondary to #27243e, lighter
+   than any opaque background in the system, and muted reaches only 4.22 there.
+   One step up the ramp rather than one step up for the whole token — this is a
+   single sub-label, and paying for it in the token would have cost the muted
+   tier its distinction everywhere. --text-secondary makes it 4.81. */
+.imp-tab.on .imp-tab-sub { color: var(--text-secondary); }
 
 /* One extracted skill awaiting a decision. */
 .imp-row {
