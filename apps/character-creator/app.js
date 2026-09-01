@@ -704,9 +704,18 @@ function renderSystem() {
       </p>`;
     }).join('')}` : ''}
     ${S.existing.length ? `<h3>Existing characters</h3>
-    <p class="small">${S.existing.map((c) =>
-      `<a href="sheet.html?id=${c.id}">${esc(c.name)}</a> <span class="muted">(${esc(className(c.class_id))}${c.occ_class_id ? ' ' + esc(className(c.occ_class_id)) : ''} L${c.level} · ${esc(c.campaign_name)})</span>`
-    ).join(' &nbsp;·&nbsp; ')}</p>` : ''}
+    ${S.existing.map((c) =>
+      // One per line, for the reason the campaign list above already carries.
+      // Run together and separated by dots, as this used to be, the separator
+      // is the same middot each entry already uses INSIDE its own parenthesis
+      // — so the boundary between two characters looks exactly like the
+      // boundary between a level and a campaign name, and a name is only a
+      // name if you can see where it starts.
+      `<p class="small" style="margin:4px 0">
+        <a href="sheet.html?id=${c.id}">${esc(c.name)}</a>
+        <span class="muted">(${esc(className(c.class_id))}${c.occ_class_id ? ' ' + esc(className(c.occ_class_id)) : ''} L${c.level} · ${esc(c.campaign_name)})</span>
+      </p>`
+    ).join('')}` : ''}
   </div>`;
 }
 function pickSystem(sys) {
