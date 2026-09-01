@@ -472,6 +472,53 @@ changing it would strand every saved tab and every pasted link.
 
 **Posture: rename the label only.** No new tab, no reordering, no id change.
 
+**Taken, 2026-09-01 (PR #470).** Posture held: one string changed, `sheet.js:1152`,
+`'Vitals'` to `'Core'`. No new tab, no reordering, and the id is still `vitals` in
+`TAB_IDS` at `sheet.js:812`, in the hash, and in `localStorage`.
+
+**Four corrections, none of them fatal to the finding.**
+
+- **The tab holds five boxes, not four.** The finding lists Attributes, Combat, Saving
+  Throws and Experience; rendered at `?id=1` it is **Attributes, Experience, Saving Throws,
+  Combat and Armor**. *Core* still covers all five, which is the answer to the only question
+  the extra box raises.
+- **"Only the visible string changes" — there are two visible strings, and one of them
+  stays.** `sheet.js:1178` renders `box('Vitals', 'None recorded.')` inside this tab for a
+  character with no pools. That box is about actual vitals and is correct as it stands: on a
+  poolless character the sticky strip is absent, and the Core tab says, accurately, that no
+  vitals were recorded. It was left alone deliberately, not overlooked.
+- **The finding does not mention the documentation, and the documentation names the tabs.**
+  `docs/wizard-and-sheet.md` said *"six tabs: **Vitals, Skills, Powers, Gear, Bio,
+  Notes**"*. Corrected in the same commit, with a paragraph on why the id and the label
+  disagree — otherwise the next reader reconciles them and strands the saved tabs this
+  finding exists to protect.
+- **Nothing pins the label, in either direction.** `Vitals` appears nowhere under `test/`;
+  the smoke suite has no opinion about tab labels. So this rename was invisible to 1460
+  checks, and a rename back would be too. That is the argument for the comment now sitting
+  above `TAB_IDS` rather than for a new check: the thing at risk is a link someone else
+  pasted into Discord months ago, which no test in this repo can see.
+
+**Also worth writing down: no `#vitals` link exists anywhere in the tree.** `grep` over
+`apps/` and `shared/` finds the hash only in this audit file. Every link the finding is
+protecting is outside the repo, which is exactly why keeping the id is not negotiable and
+why nothing would have failed if it had been changed.
+
+The `.vitals`, `.vitals-strip` and `.vitals-save` CSS classes are untouched. They name the
+sticky pools strip, which really does hold the vitals — the strip is the reason the tab
+stopped holding them.
+
+**Driven at `localhost:8793`, `sheet.html?id=1`.** Screenshot at `scrollY: 0` shows the bar
+reading **Core · Skills 15 · Powers 12 · Gear 23 · Bio · Notes 2** under an H.P./S.D.C./P.P.E.
+strip. Three round-trips, all green:
+
+| what was tried | result |
+|---|---|
+| `localStorage['sheet-tab-1'] = 'vitals'`, no hash | opened on `vitals`, label **Core** |
+| pasted `…sheet.html?id=1#vitals`, saved tab set to `gear` | hash won; opened on `vitals` |
+| clicked **Core** after clicking Skills | wrote back `sheet-tab-1=vitals` and `#vitals` |
+
+Local `character_drafts` was 0 before and 0 after — the sheet was loaded, not the wizard.
+
 ### N2 — low — The skill columns are cramped at 273px, but the sheet's width is the wrong lever
 
 Opened by R3 (PR #464), which closed unadopted. Widening the whole sheet fixes the cramp
