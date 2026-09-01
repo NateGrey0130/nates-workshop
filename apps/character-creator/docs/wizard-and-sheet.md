@@ -10,8 +10,15 @@ Part of the [character creator](../README.md) documentation.
 ## The sheet is tabbed on screen and whole on paper
 
 The sheet ran 4105px on desktop and 6316px on a tablet - about six screens -
-with 104 inputs in one column of scroll. It is now six tabs: **Vitals, Skills,
+with 104 inputs in one column of scroll. It is now six tabs: **Core, Skills,
 Powers, Gear, Bio, Notes**, each 1.1-2.2 tablet screens.
+
+**The first tab's id is `vitals` and its label is Core**, and the two are not
+going to be reconciled. It was called Vitals when it held the five pools; the
+pools moved to the sticky strip, leaving attributes, combat, saving throws and
+experience. The label follows the contents, the id does not:
+`localStorage['sheet-tab-<id>']` stores it and `#vitals` links are already in
+circulation, so changing the id would strand both.
 
 **Tabs are a screen affordance only.** There is no such thing as a hidden tab on
 paper, so the print block dissolves the panels rather than revealing them

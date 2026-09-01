@@ -803,6 +803,12 @@ function renderPlay() {
 }
 
 
+// The first id is 'vitals' and its label reads **Core**, and that mismatch is
+// deliberate. The five pools moved to the sticky strip, so the tab holds
+// attributes, combat, saves and XP and not one vital - but the id is what
+// localStorage['sheet-tab-<id>'] holds and what a pasted #vitals link asks for,
+// so renaming it would strand every saved tab and every link already sent.
+// The label is the part a player reads; the id is the part they saved.
 const TAB_IDS = ['vitals', 'skills', 'powers', 'gear', 'bio', 'notes'];
 
 // The hash wins over the stored tab, so a link ending #gear opens on gear.
@@ -1143,7 +1149,7 @@ function render() {
         <span id="msg"></span>` : ''}
         <span class="muted small">current / max</span></div>` : ''}
     <nav class="tabbar noprint" role="tablist">
-      ${[['vitals', 'Vitals', 0], ['skills', 'Skills', skills.length],
+      ${[['vitals', 'Core', 0], ['skills', 'Skills', skills.length],
          ['powers', 'Powers', powers.length], ['gear', 'Gear', C.items.length],
          ['bio', 'Bio', 0], ['notes', 'Notes', C.journal.length]].map(([tid, label, n]) =>
         `<button class="tab${C.tab === tid ? ' on' : ''}" data-tab="${tid}" role="tab"
