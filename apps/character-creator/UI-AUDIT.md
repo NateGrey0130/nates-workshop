@@ -1142,6 +1142,54 @@ preview shows tables already behaving, close this as moot and record that.
 
 ---
 
+**Closed as moot, 2026-09-01 (PR #459) — which is what this finding asks for.**
+It says: *"Verify against a real print preview first — if the preview shows
+tables already behaving, close this as moot and record that."* They do.
+
+**The blockage is broken.** Headless Chrome renders print media directly:
+
+```
+chrome --headless=new --disable-gpu --no-pdf-header-footer \
+  --virtual-time-budget=20000 --print-to-pdf=out.pdf <url>
+```
+
+No dialog, real `@media print`, real pagination. The sheet for character 1 came
+out at 5 pages, and with 60 probe inventory rows and 70 probe skills added to
+the local database it came out at 9 — long enough for both a table and a skills
+list to cross a page boundary. Probe rows removed afterwards; the character is
+back to its 23 items and 15 skills.
+
+**What the render shows, against what this finding predicted:**
+
+| | predicted | actual |
+|---|---|---|
+| equipment table splits | yes | yes — pages 6, 7, 8 |
+| its header on the continuation pages | **absent** | **present** — pages 7 and 8 both open `ITEM QTY EQ NOTES` |
+| skills list splits | yes | yes — pages 3, 4 |
+| its header on the continuation page | absent | absent |
+
+**So both proposed edits are no-ops.**
+
+- `thead { display: table-header-group }` — `table-header-group` is already the
+  browser default for `<thead>`, which is why the equipment header repeats with
+  no rule at all. There is exactly **one** `<thead>` in `sheet.js` (line 1219),
+  and it is that table.
+- `table { break-inside: auto }` — `auto` is already the initial value, and the
+  table demonstrably splits despite `.panel, .box { break-inside: avoid }`
+  sitting above it.
+
+**The real defect is a different one, and the render proved it.** It is
+recorded below as **F29** rather than fixed here: the skills list is not a
+`<table>` at all, so no `thead` rule can ever reach it.
+
+**The ink observation stands and was not taken.** `.stepper .st`, `.lvl-row`,
+`pre.snippet` and `.cat-row.open` still get no light background in the print
+block. It was never part of the proposal, it only bites a reader who ticks
+*Background graphics*, and three of those four selectors belong to the wizard
+and catalog, which nobody prints.
+
+---
+
 ### F18 — low — Catalog rows print raw JSON at the reader
 
 **Step 2 (density).** Screenshot evidence: yes, `catalog.html` at both viewports.
@@ -1697,6 +1745,44 @@ the finding says.
 
 ---
 
+### F29 — low — The skills list is a div wearing a table's clothes, and its header cannot repeat in print
+
+**Added 2026-09-01**, not by the original pass — it is what the print render
+done for F17 turned up once a real preview could finally be produced.
+
+`sheet.js:856` renders the skills list as
+
+```html
+<div class="skill-head"><span>Skill</span><span>+%/Lvl</span><span>%</span></div>
+```
+
+followed by `.skill-row` divs. It reads as a table with a header row and is
+not one, so `display: table-header-group` — the mechanism that makes a header
+repeat across printed pages — has nothing to attach to.
+
+Proved rather than reasoned: with 70 probe skills added locally, the printed
+Class Skills list ran from page 3 onto page 4, and page 4 begins at
+*Print probe skill 36* with no `SKILL +%/LVL %` above it. The equipment table
+on pages 7 and 8 of the same document repeats its header correctly, because it
+is a real `<table>` with a real `<thead>`.
+
+**How often this bites is the open question, and it is not "never".** Aelric's
+15 skills fit comfortably; a high-level character with a full related and
+secondary list plus a Military Occupational Specialty would not. The probe was
+70 skills, which is more than any real character has today.
+
+**Proposal:** make the three skills lists real tables — `<table>` with a
+`<thead>` carrying the same three cells — so the header repeats for free, as
+the equipment table's already does. `.skill-head` and `.skill-row` keep their
+class names and most of their CSS; the grid becomes `table-layout: fixed`.
+Screenshot all three skill boxes at 390, 820 and 1440 because the layout
+primitive changes underneath them, and re-render the print PDF to confirm the
+header repeats. **Alternatively close it**: the counter-argument is that a
+character long enough to trigger this may not exist yet, and the div layout is
+doing its job on screen.
+
+---
+
 ## Verified clean
 
 Screens and behaviours looked at hard, at the viewports named, where nothing was found.
@@ -1753,6 +1839,11 @@ Recorded so they are not re-audited from scratch.
 ## Blockages
 
 Recorded rather than worked around or guessed at.
+
+**Blockage 1 was lifted on 2026-09-01 (PR #459)** — see F17. Headless Chrome's
+`--print-to-pdf` renders print media with no dialog, so any future print finding
+can be checked against a real page rather than read off the stylesheet. The
+entry below stands as written; it was true on the day.
 
 1. **No print preview could be rendered.** The Browser pane exposes no print-media
    emulation, and `window.print()` opens a blocking dialog. **F17 is therefore derived
