@@ -8,7 +8,8 @@ not a description of the current code; deleting them would remove the reasoning
 and leave only the outcome. What replaced them is `scripts/extract-class.mjs`
 and a hand-written data script. See `docs/importing-from-pdfs.md`.
 
-**Every plan here is built and merged.** These files are kept as the record of
+**Every plan here is built and merged except 19**, which is a specification
+waiting on its first slice. These files are kept as the record of
 *why* things are the way they are, not as a to-do list. (This line read "all
 twelve" long after the table had grown past eighteen plans and PR #228. A count
 in a heading is a maintenance burden nobody signed up for, so it is gone.)
@@ -85,6 +86,16 @@ Two things in them are larger than they look. **PR 14 adds class-format keys**
 and psionic gains are not in the extracted data at all, and the importer prompt
 has to name them or they never arrive. **PR 16 adds the site's first R2
 binding**, as shared infrastructure rather than a character-creator private.
+
+## Planned, not yet built
+
+| # | Plan | Depends on |
+|---|---|---|
+| 19 | [G.M. grants](19-gm-grants.md) — skills, spells, psionics, abilities and stats a table hands out, entered by the player and recorded with who and why | — |
+
+It is a specification rather than a record, so read it the way plans 13–16 were
+read before they were built: the rejected alternatives in it were rejected on
+purpose, and the section it calls open is open.
 
 ## Where the plans were wrong
 
