@@ -333,8 +333,25 @@ section('Documentation claims');
 // 23 files linking to each other by relative path and to their own headings.
 // A renamed section leaves a link that looks fine and goes nowhere.
 {
-  const slug = (h) => h.trim().toLowerCase().replace(/[`*_]/g, '')
-    .replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+  // GitHub's rule rather than an approximation of it: render the heading,
+  // downcase, delete everything that is not a letter, digit, space or hyphen,
+  // then replace EACH remaining space with one hyphen.
+  //
+  // The `\s+` this used to end with was the bug. A heading of the form
+  // `### R4 - medium - Title`, written here with em dashes, loses them to the
+  // delete step and keeps the two spaces that surrounded each - so GitHub emits
+  // `r4--medium--title` while a collapsing rule emits `r4-medium-title`. The
+  // two agree on ordinary prose, which is why every anchor in the repo worked
+  // and why this stayed hidden until a finding tried to link to a finding and
+  // put a red link on main for a few minutes.
+  //
+  // Backticks and asterisks are deleted first because they are MARKUP: GitHub
+  // slugs the RENDERED heading, where a code span and a bold run have already
+  // become their contents. An underscore is NOT markup here - GFM does not
+  // parse emphasis inside a word, so `text_layer` renders literally and GitHub
+  // keeps the underscore. Stripping it was a second, quieter disagreement.
+  const slug = (h) => h.trim().toLowerCase().replace(/[`*]/g, '')
+    .replace(/[^\w\s-]/g, '').replace(/\s/g, '-');
   const docs = [];
   const walkMd = (dir) => {
     for (const e of readdirSync(dir, { withFileTypes: true })) {
