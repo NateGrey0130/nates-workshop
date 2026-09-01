@@ -175,7 +175,7 @@ touches MediaVault and FilamentForge too — they use its `openModal` /
 
 ## Data model
 
-Thirty-two tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
+Thirty-three tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
 and one R2 bucket (`MEDIA`, same name) for the only binary this app stores.
 `media_items` belongs to MediaVault, and the six tables prefixed `ff_` belong
 to FilamentForge — that prefix is the collision boundary, because this app's
@@ -196,6 +196,7 @@ database bookkeeping shared by all; the rest are this app.
 | `level_history` | One row per confirmed level-up; `changes` is a JSON diff of what was actually applied. |
 | `pending_skill_picks` | Skill picks a level-up granted and nobody has spent yet. One row per **grant**, not per pick, so "2 picks from level 3" stays itemised. `categories` is copied from the class at level-up time — the class can change later, what you were granted cannot. |
 | `pending_power_picks` | The same for spells and psionic powers. `spell_levels` is the cap the granting level carried, copied for the same reason — a Ley Line Walker's level-4 pair stays capped at spell level 4 however the class is later re-imported. |
+| `character_grants` | What a table handed a character outside its class schedule — skills, and seven more kinds the `CHECK` names but nothing implements yet. The granted SKILL itself lives in `characters.skills` as a `type: 'gm'` entry, because level-up advances that array and a composed row would never improve; this table is its provenance. `reason` is required: the player enters their own grants, so the record is what carries the weight rather than a permission wall. Removal is a hard `DELETE`, logged to `play_events`. |
 | `campaign_items` | The party stash: `character_items`' shape, owned by a campaign. `removed_at` NULL means still held; `claimed_by_character_id` says it left for a sheet rather than being spent or lost. |
 | `campaign_currency` | Party money as an append-only **ledger**. The balance is `SUM(delta)`, so no stored total can disagree with its own history. `currency` is free text — the two systems use different coin. |
 | `journal_fts` | FTS5 index over `journal_entries`. External-content: it holds no copy of the text, and three triggers keep it current. |
@@ -447,6 +448,8 @@ writes are gated (see [Permissions](#permissions)).
 | `characters/[id]/variant` | POST | Owner/GM. `{to_variant}` proposes a change of stage; add `confirm: true` with the accepted attributes and pools to apply it |
 | `characters/[id]/level-confirm` | POST | Apply a confirmed diff, write `level_history`. `picks` spends granted skill picks; unspent ones are banked. Validated |
 | `characters/[id]/picks` | GET / POST | Owner/GM to spend. Unspent skill picks; POST applies some. Validated |
+| `characters/[id]/grants` | GET / POST | What a table handed this character outside its class schedule, and adding one. Owner **or** G.M., deliberately — the G.M. says the grant out loud and the player types it in. `{kind, name, reason}`; `reason` is required. Only `kind: 'skill'` is live. A granted skill lands in `characters.skills` as `type: 'gm'`, which every class-allowance and category check ignores by construction |
+| `characters/[id]/grants/[grantId]` | DELETE | Take a grant back. Owner or G.M., and logged to `play_events`. The row goes for good — a grant is current state, not a ledger |
 | `characters/[id]/events` | GET / POST | Play events. GET lists recent (`?since=`, `?limit=`); POST applies a play action and records it in one batch — `{kind, note, changes}` with absolute from/to values. Rolls carry no changes and are pure records |
 | `characters/[id]/events/undo` | POST | Owner/GM. Reverses the **latest** not-undone event that carries changes and stamps `undone_at` — "take back the last thing", never a history editor |
 | `admin/audit` | GET | Admin, read-only. Which existing characters break their class rules |

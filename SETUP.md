@@ -90,7 +90,7 @@ nates-workshop/
         │                     and both thin proxies to the Worker
         ├── filament-forge/   catalog (the OFD snapshot) + data (per-user
         │                     config/history/presets/custom filaments)
-        └── character-creator/  33 endpoints + _lib; see the app README
+        └── character-creator/  35 endpoints + _lib; see the app README
 ```
 
 **The skills and the agents need a junction, once per machine.** The book work
