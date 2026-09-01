@@ -49,6 +49,13 @@
   padding: 24px 28px 60px;
 }
 
+/* catalog.html only. 900px is the right measure for four pages of prose,
+   forms and panels; the fifth is a 345-row table, and inside this container
+   its five columns share 798px while 540 sit empty on a 1440 screen. Laying
+   those columns out on a grid at 798px aligns them and makes the list 17%
+   TALLER, measured - the width is half of that fix, not a separate wish. */
+.wrap.wrap-wide { max-width: 1280px; }
+
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
@@ -592,6 +599,46 @@ pre.snippet {
 .cat-row:last-child { border-bottom: 0; }
 .cat-row:hover { background: var(--bg-secondary); }
 .cat-row .slug { font-weight: 600; color: var(--text-primary); font-family: inherit; }
+
+/* 345 rows of bold name followed by four inline spans, so `Base %: 30` landed
+   at a different x on every row depending on how long the name was, and one
+   long source book wrapped its fields onto a second line and broke the rhythm
+   for the rows below it. Measured on the real 345: 341 distinct column-x
+   patterns across 345 rows. A fixed name track and four weighted summary
+   tracks bring that to TWO - one for rows with four fields, one for rows with
+   three - at no cost in height (12,134px against the flex row's 12,074).
+
+   THE FIELDS THEMSELVES STAY PER-ROW, which is why the labels stay too.
+   summaryFor() picks the first four a row actually fills, deliberately:
+   measured 2026-09-01, skills has 3 distinct column shapes across 345 rows
+   but gear has 22 across 1,025 - a rifle, a suit of armour and a backpack
+   have almost disjoint useful numbers. Any fixed field list serves skills and
+   guts gear. So a slot aligns with the slot above it and says what it holds.
+
+   AND GEAR IS EXCLUDED, which is what `:not(:has(.cat-key))` is doing - the
+   key column only exists where the unique field is not the name, which today
+   is gear alone. Aligning gear costs 7,446px (43,738 against 36,292) to line
+   up columns that hold a different statistic on almost every row, which is
+   the trade the paragraph above says not to make. Gear gets the width and
+   keeps the flex row, where it reaches 98% single-line.
+
+   THE WIDTHS COME FROM fitColumns() IN catalog.js, not from here. Five
+   catalogs with different fields cannot share one set of hand-tuned weights:
+   a template fitted to skills put 99% of its rows on one line and 69% of
+   spells', because `System: palladium-fantasy` landed in a track sized for
+   `Base %: 30`. The fallback below is that skills-shaped guess, and it is
+   only what renders in the moment before the measurement lands.
+
+   Above 900px only. Narrower than that there is no room for five tracks and
+   the flex row above wraps, which is the right behaviour there. */
+@media (min-width: 900px) {
+  .cat-row:not(.open):not(:has(.cat-key)) {
+    display: grid;
+    grid-template-columns: var(--cat-cols, 16em minmax(0, 1fr)
+      minmax(0, 0.6fr) minmax(0, 0.6fr) minmax(0, 1.8fr));
+    align-items: baseline; gap: 3px 12px;
+  }
+}
 
 /* The open row is a form, not a list item — drop the row affordances. */
 .cat-row.open {
