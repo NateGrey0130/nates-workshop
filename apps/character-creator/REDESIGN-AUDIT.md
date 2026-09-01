@@ -306,6 +306,33 @@ than re-rendering (`sheet.js:803`) — a rebuild costs a half-typed note.
 { display: none } }` at `styles.css:818`, so print needs no new hook. Skills only — not
 gear, not powers — until this one is seen working.
 
+**Taken, 2026-08-31 (PR #466).** Posture held: the existing `.pick-filter`, skills only,
+nothing added to gear or powers and no new CSS component.
+
+**"Print needs no new hook" was half right.** The filter box itself needs none — the rule
+at `styles.css:818` already hides it. But hiding rows leaves them hidden, so the print
+block gained one rule putting `.filtered-out` rows back at `display: table-row`. What
+someone typed to find a percentage is not a statement about which skills the character
+has, and a filtered sheet must still print complete.
+
+**A skill with a note owns two rows** since PR #460 — the note is its own
+`<tr colspan="3">` — so the note follows its skill into and out of hiding. Filtering
+without that leaves a footnote pointing at a row that is no longer there. The finding did
+not mention it; the change would have shipped that bug.
+
+**The first version read the query back from the DOM, and this file had already ruled
+against that.** `C` carries `invFilter` and `pickFilter` under the comment *"state rather
+than DOM so a re-render cannot discard them"*, and reading the input meant any re-render —
+after a save, a power use, a level-up — silently dropped what had been typed.
+`C.skillFilter` joins them. Caught by testing the re-render rather than by reading the
+code, which is the argument for driving the thing.
+
+Verified on a character with 15 skills: empty box reads `15 known` with nothing hidden;
+`lang` reads `4 of 15` with 11 hidden and comes through a `render()` unchanged, input
+value included. With a note attached to *Lore: Magic*, a filter excluding it hides skill
+and note together and one matching it returns both. The print render is five pages with no
+filter box, no count, and every sampled skill name present.
+
 ---
 
 ### R6 — low — Four of the twenty-two `--accent` uses sit on things you cannot act on

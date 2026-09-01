@@ -445,6 +445,12 @@ button.chkrow {
   padding-bottom: 4px;
   font-weight: 500;
 }
+/* Hidden by the sheet's skill filter. A SCREEN state only: a filter is how you
+   found something mid-session, never a statement about which skills the
+   character has, so paper gets all of them back regardless of what is typed in
+   the box. Same reasoning as the tab bar two hundred lines down. */
+.skill-row.filtered-out, .skill-note.filtered-out { display: none; }
+
 /* First body row clears the header's rule. */
 .skill-table tbody tr:first-child > * { padding-top: 3px; }
 .skill-row > td { border-bottom: 1px dotted var(--border); }
@@ -879,6 +885,9 @@ input.class-boosted { border-bottom-width: 2px; }
   /* The global print rule below puts 3px 6px on every cell and a solid rule
      under it. The skills table sets its own, as it does on screen. */
   .skill-table th, .skill-table td { padding: 1px 0; }
+  /* Whatever is typed in the filter box, the printed sheet carries every skill
+     the character has. */
+  .skill-row.filtered-out, .skill-note.filtered-out { display: table-row !important; }
   /* A skill and its footnote are one thing; do not break between them. */
   .skill-row:has(+ .skill-note) { break-after: avoid; }
   .power-row .cost { color: #000; }
