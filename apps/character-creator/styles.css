@@ -118,7 +118,11 @@ a:hover { text-decoration: underline; }
 }
 .tag.gm { background: rgba(52, 211, 153, 0.1); border-color: rgba(52, 211, 153, 0.35); color: var(--success); }
 .tag.ro { background: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.35); color: var(--danger); }
-.tag.score { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
+/* The match score is a READOUT, not a control - pressing it does nothing - so its
+   number is --text-primary. --accent is reserved for what you can act on. The
+   glow and border stay: they mark which tag this is among several, and the rule
+   is about the accent-coloured TEXT. */
+.tag.score { background: var(--accent-glow); border-color: var(--accent); color: var(--text-primary); }
 
 /* ─── CONTROLS ─── */
 button { font-family: 'Outfit', sans-serif; cursor: pointer; }
@@ -502,7 +506,10 @@ button.chkrow {
   gap: 8px; align-items: center;
   padding: 3px 0; border-bottom: 1px dotted var(--border); font-size: 12.5px;
 }
-.power-row .cost { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); white-space: nowrap; }
+/* The cost is a static number sitting in the same row as the ⚡ button, and only
+   one of the two does anything. Accent went on the number and not on the control,
+   which is backwards; the cost is metadata beside the name, so --text-secondary. */
+.power-row .cost { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-secondary); white-space: nowrap; }
 
 /* Compact inline inputs used across the sheet's field rows. A "derived" input
    shows its calculated value as a placeholder until someone overrides it. */
