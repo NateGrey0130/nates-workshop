@@ -26,6 +26,13 @@
 // fails immediately, naming the file and the dashboard change it needs, instead
 // of shipping and breaking for exactly the people the app is for.
 //
+// It scans the CSS as well as the HTML, and that is not decoration. Self-hosting
+// the fonts (R7) added two /shared/fonts/*.woff2 requests that no tag in
+// index.html mentions - a stylesheet asked for them with url(). An HTML scan
+// cannot see a request a stylesheet makes, so the derived list sat at two while
+// the real dependency count was three, and nothing failed. The check simply had
+// nothing to say, through the one door it was written to watch.
+//
 // Run from anywhere:  node apps/pick3cut5/test/smoke.mjs
 //              live:  node apps/pick3cut5/test/smoke.mjs --remote
 //
@@ -47,8 +54,11 @@ const setup = readFileSync(join(repoRoot, 'SETUP.md'), 'utf8');
 const PRODUCTION = 'https://nates-workshop.pages.dev';
 const APP_PATH = 'apps/pick3cut5';
 
-// Cloudflare's limit. Four are in use; a fifth dependency is the last one that
-// fits, and the sixth needs a second application rather than a surprise.
+// Cloudflare's limit, and all five are now in use: the app path, the api path,
+// /shared/styles.css, /shared/js/ui.js and /shared/fonts. There is no slot left
+// to absorb a surprise, so the sixth dependency needs a second Access
+// application - which is a decision, and this is where it gets made rather than
+// discovered by a player with a room code.
 const MAX_ACCESS_DESTINATIONS = 5;
 
 // ---------- 1. What the page loads ----------
@@ -76,10 +86,50 @@ check('external assets are fonts only',
   external.every((r) => r.startsWith('https://fonts.googleapis.com/')),
   external.filter((r) => !r.startsWith('https://fonts.googleapis.com/')).join(', '));
 
+// ---------- 1b. What the CSS then loads ----------
+//
+// Follow the stylesheets the HTML scan already found. A url() inside one of
+// them is a request the browser makes without any tag in index.html naming it,
+// and that is the gap R7 walked through.
+//
+// Absolute targets only, for the same reason the HTML scan takes only absolute
+// ones: a relative url() resolves beside its own stylesheet, under a directory
+// that stylesheet's destination already covers.
+const stylesheets = absolute.filter((r) => /\.css(\?|$)/.test(r));
+const cssAssets = [];
+let cssRead = 0;
+for (const href of stylesheets) {
+  const text = readFileSync(join(repoRoot, href.replace(/^\//, '').split('?')[0]), 'utf8');
+  cssRead += 1;
+  for (const m of text.matchAll(/url\(\s*['"]?(\/[^'")\s]+)['"]?\s*\)/g)) {
+    cssAssets.push(m[1].split('?')[0]);
+  }
+}
+
+// Not "did we find any assets" - a stylesheet is allowed to reference nothing.
+// What must not silently become zero is the READING. If the filter above stops
+// recognising a stylesheet, this half of the derivation goes quiet and looks
+// exactly like a page that loads no fonts.
+check('every absolute stylesheet the page loads was read for url() assets',
+  cssRead === stylesheets.length && stylesheets.length > 0,
+  `read ${cssRead} of ${stylesheets.length} - the CSS half of the derivation is blind`);
+
 // THE DERIVED LIST. Not maintained by hand - this is what the page actually
 // asks the browser to fetch from outside its own directory.
-const requiredPublic = [...new Set(absolute)].sort();
+//
+// A CSS asset is folded in by its DIRECTORY, not its own path. An Access
+// destination is a path prefix and there are five of them; two font files
+// would spend the last two slots on one typeface, and the next weight would
+// have nowhere to go.
+const assetDirs = cssAssets.map((p) => p.slice(0, p.lastIndexOf('/')));
+const requiredPublic = [...new Set([...absolute, ...assetDirs])].sort();
 console.log('  ->  needs its own Access destination: ' + requiredPublic.join(', '));
+
+// The concrete files behind that list. The destinations are what the dashboard
+// needs; these are what the browser actually asks for, and they are what gets
+// fetched in section 5 - a directory has no page of its own to fetch.
+const fetched = [...new Set([...absolute, ...cssAssets])].sort();
+console.log('  ->  the browser fetches: ' + fetched.join(', '));
 
 // ---------- 2. SETUP.md documents them ----------
 section('SETUP.md documents every public path');
@@ -171,20 +221,34 @@ check('the snapshot exposes the reserve as a count',
 if (process.argv.includes('--remote')) {
   section('Production, with no Access session');
 
-  const status = async (path) => {
+  const get = async (path) => {
     try {
       const res = await fetch(PRODUCTION + path, { redirect: 'manual' });
-      return res.status;
+      return { code: res.status, type: res.headers.get('content-type') || '' };
     } catch (err) {
-      return 'ERR ' + err.message;
+      return { code: 'ERR ' + err.message, type: '' };
     }
   };
+  const status = async (path) => (await get(path)).code;
 
-  for (const path of [...requiredPublic, `/${APP_PATH}/`]) {
-    check(`${path} is reachable without logging in`,
-      (await status(path)) === 200,
-      'add it to the Pick 3 Cut 5 (public) Access application');
+  // The FILES, not the destinations. /shared/fonts is a directory: asking for
+  // it proves nothing, because Pages answers a path it does not have with the
+  // workshop landing page, at 200, and a 200 is what this loop is looking for.
+  for (const path of fetched) {
+    const { code, type } = await get(path);
+    check(`${path} is reachable without logging in`, code === 200,
+      'add its directory to the Pick 3 Cut 5 (public) Access application');
+    // Same trap from the other side. A font that was renamed or never deployed
+    // still answers 200 with the landing page's HTML, and the player still gets
+    // Times New Roman. Nothing here is an HTML document.
+    check(`${path} is served as an asset, not the landing page`,
+      code === 200 && !/^text\/html/.test(type),
+      `content-type ${type || '(none)'} - a 200 on a path Pages does not have`);
   }
+
+  check(`/${APP_PATH}/ is reachable without logging in`,
+    (await status(`/${APP_PATH}/`)) === 200,
+    'add it to the Pick 3 Cut 5 (public) Access application');
 
   // The other direction, and the one nobody thinks to check: the bypass must
   // not have taken the rest of the site with it.
@@ -193,8 +257,12 @@ if (process.argv.includes('--remote')) {
   // newly added dependency gets reported twice in opposite directions - "must
   // be reachable" and "must be gated" - and the contradiction reads as a
   // broken test rather than a missing Access destination.
+  //
+  // Matched as a PREFIX now that the list can hold directories. An equality
+  // test would call /shared/fonts/outfit-variable.woff2 a path that ought to be
+  // gated while the loop above insists it must be public.
   const gated = ['/', '/shared/js/api.js', '/apps/character-creator/']
-    .filter((p) => !requiredPublic.includes(p));
+    .filter((p) => !requiredPublic.some((r) => p === r || p.startsWith(r + '/')));
   for (const path of gated) {
     const code = await status(path);
     check(`${path} is still behind the login wall`, code !== 200,

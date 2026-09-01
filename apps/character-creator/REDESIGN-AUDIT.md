@@ -588,6 +588,88 @@ the widened list so the five-slot ceiling stays honest.
 **Posture: widen the derivation, not the bypass.** The test should discover the
 dependency; deciding it deserves a bypass stays a human step.
 
+**Taken, 2026-09-01 (PR #469).** Posture held: the derivation widened, no bypass widened,
+no Access policy touched. The test now discovers `/shared/fonts`; a human still decided it
+deserved a destination, in the dashboard, before this ran.
+
+**Three things this finding says are no longer or were never true.**
+
+- **It says R7 is held open by N5. R7 merged** as `e40b6e1` on 2026-09-01, so the Access
+  destination N5 asked for exists. Measured here with no session: both font files answer
+  **200 `font/woff2`**, where N5 measured a 302 to `fatmans.cloudflareaccess.com`. This
+  finding was written while that was still the open question and reads as though it still
+  is.
+- **"The real dependency count went to three" counts destinations, not files.** There are
+  **two** `.woff2` files, and they fold into **one** destination — which is the whole
+  reason the fold is by directory. A destination per font file would have spent slots four
+  and five on one typeface and left the next weight nowhere to go.
+- **The file's own comment said four destinations were in use.** Five are, and have been
+  since R7. Corrected in the same commit; the ceiling assertion now computes 5 of 5 and
+  fails at 6, which was checked rather than assumed.
+
+**What the proposal did not account for, and what it cost.** `requiredPublic` was doing
+three jobs — the SETUP.md lookup, the destination count, and the list of paths fetched
+from production. Folding a directory into it is right for the first two and **wrong for
+the third**: Pages answers a path it does not have with the workshop landing page, at
+**200** and `text/html`, so probing `/shared/fonts` would have reported a font reachable
+whether or not it was ever deployed. Measured directly:
+`GET /shared/fonts/nope.woff2` → `200 text/html; charset=utf-8`, 4554 bytes, the same
+bytes as `/shared/fonts/`. So the list was split: `requiredPublic` holds the three
+**destinations** and drives the SETUP check and the count, and a second list holds the
+four **files** the browser actually asks for and drives the live fetch. Each of those four
+is now asserted to be 200 *and* not HTML.
+
+The `gated` filter had to become a prefix match at the same time. It excluded the app's own
+dependencies from the "still behind the wall" list with `requiredPublic.includes(p)`, which
+stops working the moment an entry is a directory: an equality test would have demanded
+`/shared/fonts/outfit-variable.woff2` be gated while the loop above insisted it be public,
+and the contradiction reads as a broken test.
+
+**Driven, not read.** Four deliberate breakages, each reverted:
+
+| what was broken | what fired |
+|---|---|
+| a `url()` pointed at a font that is not on production | `reachable` **passed**, `served as an asset` failed — the case the content-type check exists for |
+| a `url()` added for `/shared/img/paper.png` | SETUP.md check failed, and the ceiling failed at **6 of 5** |
+| the stylesheet made relative, so the CSS half sees nothing | `read 0 of 0 — the CSS half of the derivation is blind` |
+| a `?v=2` on the stylesheet href | derivation survived it and read the file; the pre-existing SETUP lookup fails loudly on the query string, which is the safe direction |
+
+Counts: the derived destination list goes **2 → 3**, the computed total **4 → 5**, and the
+suite **17 → 19** checks flagless, **23 → 31** with `--remote`. Both runs pass.
+
+**Two sentences in `SETUP.md` are falsified by this and are corrected in the same commit** —
+that the derivation "reads the HTML, so it cannot see them" and that the `shared/fonts` row
+is "maintained by hand". A third sentence in that section is wrong for a reason this PR did
+not cause, and is **N7** rather than a quiet fix here.
+
+---
+
+### N7 — low — `SETUP.md` says one more Access destination fits, and none does
+
+Opened while taking N6. Pre-existing, and not caused by that change.
+
+The Access section of `SETUP.md` says, at the end of the paragraph under the destination
+table: *"Note Access allows five destinations per application, so one more dependency fits
+and the one after that needs a second application."* Four were in use when that was
+written. Five are in use now — `shared/fonts` was added by N5 — so **none** fits, and the
+next dependency needs the second application today.
+
+It contradicts a bolded sentence eight lines above it in the same section, which says
+`shared/fonts` is "the fifth and last destination that fits". A reader who stops at the
+first of the two gets the right answer and a reader who reads to the end of the paragraph
+gets the wrong one, which is worse than either alone.
+
+Nothing pins it. The smoke test asserts the ceiling against the derived list and asserts
+that SETUP.md *names* each destination, but it has no opinion about the prose around the
+table, and prose is what a person follows when they are standing in the dashboard.
+
+**Proposal:** correct the sentence to say the five are spent, or delete it — the bolded
+sentence above already carries the rule and carries it correctly. Do not add a check: the
+count is already asserted where it can be asserted, and pinning a sentence would pin the
+wording rather than the fact.
+
+**Posture: documentation only.** No test change, no code change, no Access change.
+
 ---
 
 ## Not carried forward, and why
