@@ -72,16 +72,24 @@ function render() {
     </div>`;
     return;
   }
-  const tabs = [['notes', `Notes (${D.entriesTotal})`],
-                ['people', `People (${D.npcs.length})`],
-                ['stash', `Party stash (${D.items.filter((i) => !i.removed_at).length})`],
-                ['money', 'Currency']];
+  // Four panels behind a control shaped like a two-state toggle, while the sheet
+  // next door switches six with a real tab bar. This is the sheet's `.tabbar`,
+  // reused rather than re-styled: 44px targets, its `.tab-n` count pill, and the
+  // tablist/tab/aria-selected roles the toggle never had. It sits OUTSIDE the
+  // panel, as the sheet's does, because `.tabbar` is sticky and paints itself in
+  // --bg-primary — inside a card it would smear the wrong colour on scroll.
+  const tabs = [['notes', 'Notes', D.entriesTotal],
+                ['people', 'People', D.npcs.length],
+                ['stash', 'Party stash', D.items.filter((i) => !i.removed_at).length],
+                ['money', 'Currency', 0]];
   $('app').innerHTML = `
     <div class="panel">
       <h2>${esc(D.campaign.name)} <span class="muted small">(${esc(D.campaign.system)})</span></h2>
-      <div class="toggle">${tabs.map(([k, label]) =>
-        `<button class="${D.tab === k ? 'on' : ''}" onclick="setTab('${k}')">${esc(label)}</button>`).join('')}</div>
     </div>
+    <nav class="tabbar" role="tablist">${tabs.map(([k, label, n]) =>
+      `<button class="tab${D.tab === k ? ' on' : ''}" role="tab" aria-selected="${D.tab === k}"
+         onclick="setTab('${k}')">${esc(label)}${
+         n ? ` <span class="tab-n">${n}</span>` : ''}</button>`).join('')}</nav>
     ${D.tab === 'notes' ? notesView()
       : D.tab === 'people' ? peopleView()
       : D.tab === 'stash' ? stashView() : moneyView()}`;
@@ -114,6 +122,36 @@ function notesView() {
   </div>`;
 }
 
+// The note form promises that typing @Name links someone to their dossier, and
+// the dossier half was true from the start — the half on screen was not. The
+// mentions rendered as plain text, so the reader saw a promise the page did not
+// keep.
+//
+// Linked against D.npcs — the dossiers this campaign actually has — rather than
+// by re-running the server's @-pattern here. A second copy of that rule would
+// drift from `_lib/mentions.js`, and the failure would be a link to a dossier
+// that does not exist. No dossier, no link, by construction.
+//
+// ONE pass over an alternation sorted longest-first, never one pass per name:
+// with an "Osric" and a "Brother Osric" on the roster, a second pass would
+// match inside the anchor the first pass just wrote and nest a link in a link.
+// The names are HTML-escaped before they are regex-escaped, because the body
+// they are matched against has already been through esc().
+const reEsc = (v) => v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+function linkifyMentions(body) {
+  const html = esc(body);
+  const named = D.npcs.filter((n) => n.name).sort((a, b) => b.name.length - a.name.length);
+  if (!named.length) return html;
+  const byName = new Map(named.map((n) => [esc(n.name).toLowerCase(), n.id]));
+  const re = new RegExp('@(' + named.map((n) => reEsc(esc(n.name))).join('|') + ')(?![\\p{L}])', 'giu');
+  return html.replace(re, (m, name) => {
+    const id = byName.get(name.toLowerCase());
+    return id === undefined ? m
+      : `<a href="#" class="mention" onclick="openNpc(${id}); return false">${m}</a>`;
+  });
+}
+
 function entryCard(e) {
   return `<div class="panel-inset" style="margin-top:10px">
     <div class="rowline" style="justify-content:space-between">
@@ -121,7 +159,7 @@ function entryCard(e) {
       <span class="muted small">${esc(e.author_email)} · ${esc(when(e))}${
         e.character_id ? ' · character note' : ''}</span>
     </div>
-    <p class="small" style="white-space:pre-wrap; margin-top:6px">${esc(e.body)}</p>
+    <p class="small" style="white-space:pre-wrap; margin-top:6px">${linkifyMentions(e.body)}</p>
     <div class="rowline">
       <button class="btn btn-sm btn-ghost" onclick="removeEntry(${e.id})">delete</button>
     </div>
@@ -409,7 +447,7 @@ function dossierView() {
         <span class="muted small">${esc(m.author_email)} · ${esc(when(m))}${
           m.source === 'ai' ? ' · <span class="tag">found by sweep</span>' : ''}</span>
       </div>
-      <p class="small" style="white-space:pre-wrap; margin-top:6px">${esc(m.body)}</p>
+      <p class="small" style="white-space:pre-wrap; margin-top:6px">${linkifyMentions(m.body)}</p>
     </div>`).join('') : '<p class="muted">No notes mention them yet.</p>'}
   </div>`;
 }
@@ -417,6 +455,10 @@ function dossierView() {
 async function openNpc(id) {
   try {
     D.npc = await api(`campaigns/${campaignId}/npcs/${id}`);
+    // Reachable from a mention inside a note now, not just from the People tab,
+    // and render() picks the view from D.tab — without this the dossier loads
+    // and nothing on screen changes.
+    D.tab = 'people';
     render();
   } catch (err) { alert('Failed: ' + err.message); }
 }
