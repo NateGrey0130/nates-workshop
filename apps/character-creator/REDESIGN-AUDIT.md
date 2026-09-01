@@ -142,6 +142,37 @@ value stays a real input; max stays text.
 no change to which tabs exist. If the strip cannot be added without restructuring the
 sheet, that is a reason to stop and say so, not a reason to widen the finding.
 
+**Taken, 2026-08-31 (PR #463).** Posture held: one strip, no new grid, no new tab scheme,
+no change to which tabs exist, and no number rendered twice.
+
+**The second trap was understated — the tab bar's sticky had never worked at all.** This
+finding predicted a conflict between two elements claiming `top: 0`. Measured at 1440×900
+while scrolled, the tab bar was **61px tall with 0px visible**: `.header` sticks at the
+same `0` with `z-index: 100` and simply covered it. The rule was dead, not contested.
+Both now stick as one block at `top: var(--header-h)`, and the tab bar is visible while
+scrolling for the first time — 61 of 61 pixels, measured the same way. `--header-h` is
+written from the rendered header by `sizeSticky()` on every render and on resize, because
+`.header` wraps to a second row on a narrow screen (77px at 1440, 166px at 390) and any
+constant would be wrong at one of them.
+
+**The first trap was exactly right**, and cost nothing: the markup moved intact, so the
+`.print-only` `<b>` beside each input came with it. The rendered PDF carries H.P. 14 / 14,
+S.D.C. 11 / 11 and P.P.E. 13 / 13 on page one, with no Save button and no tab labels, at
+five pages. `[data-sticky]` is pinned to `position: static` for paper.
+
+**Two things the finding did not mention.** The Save button had to move with the inputs —
+the pool inputs are only committed by `saveStats()`, so leaving it behind would have made
+the strip readable and uncommittable from everywhere else. And the "current / max" hint
+now renders for read-only viewers, having previously sat inside the owner-only row where
+a viewer never saw it.
+
+Verified at `localhost:8793`: the H.P. input is present, visible and editable from all
+five previously blind tabs; the strip holds three cells and the panels hold zero; a value
+typed on the Skills tab and saved reached the server as `hp_current: 12`.
+
+**One thing this opened, recorded as [N1](#n1--low--the-vitals-tab-no-longer-holds-the-vitals):**
+the tab named *Vitals* no longer contains any.
+
 ---
 
 ### R3 — medium — The sheet is 900px wide and spends none of a 1440 screen on its longest list
@@ -257,6 +288,29 @@ Condensed and IBM Plex Sans across the app. Changing which faces the app uses is
 separate decision and is not proposed here. The change lands in `shared/`, so it touches
 filament-forge, media-vault and pick3cut5 as well — all four apps get checked, or the
 finding is not done.
+
+---
+
+## N — opened while taking R1–R7
+
+Defects found *during* the work rather than during the audit, kept out of the PR that
+found them because the numbering exists so the decision to take one can be separate.
+**To be addressed after R7 is merged.** Same rules: take one at a time, on a word.
+
+### N1 — low — The Vitals tab no longer holds the vitals
+
+Opened by R2 (PR #463). The five pools now live in the sticky strip, so the tab still
+called **Vitals** contains Attributes, Combat, Saving Throws and Experience, and not one
+vital. R2's posture explicitly forbade changing which tabs exist, so the label was left
+alone rather than quietly renamed inside another finding's PR.
+
+**Proposal:** rename the tab — *Core* is the closest honest word for attributes, combat,
+saves and XP. `TAB_IDS` is the id list and the label is separate (`sheet.js`, the tabbar
+map), so the id `vitals` can stay and only the visible string changes. Keeping the id
+matters: it is what `localStorage['sheet-tab-'+id]` and the `#vitals` hash both store, and
+changing it would strand every saved tab and every pasted link.
+
+**Posture: rename the label only.** No new tab, no reordering, no id change.
 
 ---
 
