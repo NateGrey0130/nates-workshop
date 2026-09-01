@@ -507,7 +507,21 @@ function resumeDraft() {
   render();
 }
 
+// The one destructive action in this file that never asked. sheet.js has three
+// confirm() calls, campaign.js two, catalog.js two; this had none, and it sits
+// a few hundred pixels from `Resume this build` in the same .nav row. What it
+// destroys includes the rolled attributes, which docs/wizard-and-sheet.md names
+// as the exact thing the draft feature exists to protect.
+//
+// The attributes are named only when there ARE some. A draft abandoned on the
+// Class step has nothing rolled yet, and a warning about losing rolls that do
+// not exist is the kind of sentence that teaches people to click through.
 async function dismissDraft() {
+  const d = S.draftOffer;
+  const what = d?.class_name || d?.class_id || 'unfinished';
+  const rolled = Object.values(d?.state?.attrs || {}).some((v) => v != null);
+  if (!confirm(`Discard the ${what} build${d?.char_name ? ` for ${d.char_name}` : ''}`
+    + `${rolled ? ', including its rolled attributes' : ''}? This cannot be undone.`)) return;
   S.draftOffer = null;
   await discardDraft();
   render();
@@ -529,6 +543,8 @@ function renderDraftOffer() {
       <button class="btn btn-primary" onclick="resumeDraft()">Resume this build</button>
       <button class="btn btn-ghost" onclick="dismissDraft()">Discard and start fresh</button>
     </div>
+    <p class="muted small">There is one draft at a time, so there is no third option here:
+      starting fresh discards this build.</p>
   </div>`;
 }
 
@@ -3127,6 +3143,29 @@ function listSection(title, entries) {
     </div>`;
 }
 
+// Choice groups the player has not finished — "Pick 2" with one ticked.
+//
+// Read from S.groupPicks, which is what the Skills step's own pickers write,
+// so these are the SAME numbers the player watched count up there. The server
+// audit reports the same gap and hedges it as `approximate`, because it works
+// backwards from a saved skill list where a group pick is indistinguishable
+// from a skill the class granted by name. Here nothing has been flattened yet
+// and the count is exact, so the hedge would be false and is not repeated.
+function shortGroups() {
+  const occ = psiClass().skills?.occ_skills || [];
+  return occ.flatMap((g, gi) => {
+    if (!isGroup(g)) return [];
+    const want = parseInt(g.choose, 10);
+    if (!Number.isFinite(want) || want <= 0) return [];
+    const have = (S.groupPicks[gi] || []).length;
+    if (have >= want) return [];
+    const from = (g.from || []).map((r) => (typeof r === 'string' ? r : r?.name)).filter(Boolean);
+    const label = from.length ? from.join(' / ')
+      : (g.categories || []).map(categoryLabel).join(' / ') || 'the listed options';
+    return [{ want, have, label }];
+  });
+}
+
 function renderReview() {
   if (!S.pools) computePools();
   if (S.level > 1) rollAdvancement();
@@ -3174,6 +3213,17 @@ function renderReview() {
         ${short.map((f) => `${f.count} ${esc(f.categories.join(' or '))}`).join(' and ')}
         among its related skills, and the picks left cannot reach it — go back to
         Skills, or the save will be refused.</p>` : '';
+    })()}
+    ${(() => {
+      // WARN, DO NOT BLOCK. The save succeeds either way and the primary button
+      // stays live — docs/wizard-and-sheet.md argues against gating on these and
+      // that reasoning stands. What it did not argue for was saying nothing at
+      // all: until now the only surface in the app that mentioned an unfinished
+      // choice group was the admin-only character audit, AFTER the save.
+      const short = shortGroups();
+      if (!short.length) return '';
+      const one = (g) => `${g.have}/${g.want} from ${esc(g.label)}`;
+      return `<div class="advisory"><b>Still to pick on the Skills step:</b> ${short.map(one).join('; ')}. You can save without them — the class simply grants fewer skills than it offers.</div>`;
     })()}
 
     <div class="review-stats">

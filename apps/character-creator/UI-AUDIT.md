@@ -604,6 +604,35 @@ already produces, with the primary button left live. Reuse the existing
 
 ---
 
+**Taken, 2026-09-01 (PR #455). Warn, do not block — posture said back
+deliberately.** The Review step now carries an `.advisory` line naming every
+choice group still short; the primary button stays live and the Skills step's
+own gating is untouched. The save still succeeds.
+
+Premises verified on a Body Fixer draft: three groups at *Pick 2 — 0/2*,
+*Pick 1 — 0/1* and *Pick 1 Pilot — 0/1*, the primary button reading
+`Equipment →` and **enabled**, and no `.nav-why` anywhere.
+
+**One correction, and it is about the wording the finding asks for.** The
+proposal says to reuse the audit endpoint's own phrasing. That phrasing ends
+`— approximate`, and the hedge is real *there*: `validate-character.js` works
+backwards from a saved skill list, where a group pick is indistinguishable
+from a skill the class granted by name. **On the Review step nothing has been
+flattened yet.** `S.groupPicks` is what the Skills step's pickers write, keyed
+by group, so the count is exact and the same one the player watched count up.
+Copying the hedge would have shipped a sentence that is false in this context.
+What renders instead:
+
+> **Still to pick on the Skills step:** 0/2 from Language: Other; 0/1 from
+> Athletics (general) / Body Building & Weight Lifting; 0/1 from Pilot. You can
+> save without them — the class simply grants fewer skills than it offers.
+
+Both halves confirmed live: with the three groups unfinished the advisory
+renders under the alignment line and `💾 Save character` is live; with all
+three filled it disappears entirely.
+
+---
+
 ### F9 — medium — A refused save leaves an orphan campaign, and the landing page cannot tell the two apart
 
 **Step 3 (states/errors).** Screenshot evidence: yes, wizard step 1 in the full state.
@@ -818,6 +847,31 @@ Elsewhere in the app destructive actions **are** confirmed — `sheet.js` has 3
 **Proposal:** wrap `dismissDraft()` in a `confirm()` naming what is lost — *"Discard
 the unfinished Elf build, including its rolled attributes?"* — matching the existing
 confirm pattern in `sheet.js`. No new component, no modal.
+
+---
+
+**Taken, 2026-09-01 (PR #455).** All of it holds — `app.js` had **zero**
+`confirm()` calls against `sheet.js` 3, `campaign.js` 2 and `catalog.js` 2, and
+the discard sat in the same `.nav` row as *Resume this build*.
+
+`dismissDraft()` now confirms, in the `sheet.js` pattern: no new component, no
+modal.
+
+**The rolled attributes are named only when there are some.** A draft abandoned
+on the Class step has nothing rolled, and warning about losing rolls that do
+not exist is the kind of sentence that teaches people to click through. Both
+branches exercised:
+
+> Discard the Body Fixer build, including its rolled attributes? This cannot be undone.
+> Discard the Body Fixer build? This cannot be undone.
+
+Cancelling was confirmed to leave the draft standing. The two other
+`discardDraft()` callers — the post-save cleanups at `app.js:3258` and `:3370` —
+are untouched and stay silent, which is correct: discarding after a successful
+save is not a decision.
+
+**`discardDraft()`'s `catch { }` is unchanged.** The finding mentions it; the
+proposal does not ask for it, and error handling is a separate call.
 
 ---
 
@@ -1356,6 +1410,19 @@ it impossible to also build a second character without destroying it.
 **Proposal:** documentation only — say so on the prompt itself, one line under the two
 buttons: *"There is one draft at a time; starting fresh discards this build."* Making
 drafts multiple is a schema change and a much larger decision.
+
+---
+
+**Taken, 2026-09-01 (PR #455). Documentation only, as proposed.** One line
+under the two buttons:
+
+> There is one draft at a time, so there is no third option here: starting fresh
+> discards this build.
+
+The `UNIQUE (owner_email)` constraint and the argument in
+`docs/wizard-and-sheet.md` are untouched. Shipped alongside F13, so the two
+halves of this prompt's problem — that it does not say what it will destroy, and
+that it does not say why there is no third button — are fixed in one place.
 
 ---
 
