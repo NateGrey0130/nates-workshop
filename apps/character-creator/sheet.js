@@ -6,6 +6,57 @@
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
 const POOLS = [['hp', 'H.P.'], ['sdc', 'S.D.C.'], ['mdc', 'M.D.C.'], ['ppe', 'P.P.E.'], ['isp', 'I.S.P.']];
 const POOL_LABELS = { hp_max: 'H.P. max', sdc_max: 'S.D.C. max', mdc_max: 'M.D.C. max', ppe_max: 'P.P.E. max', isp_max: 'I.S.P. max' };
+// Each pool's own colour, spent on the top rule, the bar, and - below a third
+// - the number. The point is that a glance at the strip says WHICH pool is
+// low, not merely that something is. Token names rather than hexes, so the
+// widget follows the palette; styles.css records the measured ratios.
+const POOL_TONES = { hp: '--danger', sdc: '--warning', mdc: '--accent-secondary', ppe: '--success', isp: '--accent' };
+const POOL_LOW = 0.34;
+
+// ONE pool widget, used by the sheet and by play mode. The block comment over
+// .vital in styles.css says why the value is two nodes rather than one; the
+// short version is that seven mutation paths write to the <b> by id with
+// .textContent, and an input would have swallowed every one of them.
+//
+//   w        can this viewer write
+//   stepper  offer the +/- pair. CSS still gates it on body.play-mode, so a
+//            sheet-mode render cannot leak steppers even if this is true.
+function poolCard(key, label, cur, max, w, stepper) {
+  if (max == null && cur == null) return '';
+  const pct = (max > 0 && cur != null) ? Math.max(0, Math.min(1, cur / max)) : 0;
+  const low = max > 0 && cur != null && pct <= POOL_LOW;
+  return `<div class="vital${low ? ' low' : ''}" style="--tone: var(${POOL_TONES[key]})">
+    <div class="lbl">${label}</div>
+    <div class="val">${w ? `<input type="number" id="stat-${key}" value="${cur ?? ''}">` : ''}<b id="play-cur-${key}">${cur ?? '—'}</b> <span class="max">/ ${max ?? '—'}</span></div>
+    <div class="bar"><i style="width:${Math.round(pct * 100)}%"></i></div>
+    ${stepper && w ? `<div class="steppers">
+      <button type="button" aria-label="${label} down" onclick="adjustPool('${key}', -C.playAmt)">−</button>
+      <button type="button" aria-label="${label} up" onclick="adjustPool('${key}', C.playAmt)">+</button>
+    </div>` : ''}
+  </div>`;
+}
+
+// Paint one pool from C.data: the number, the bar, the low tone and the
+// input. PLAY MODE NEVER RE-RENDERS, so every path that changes a pool calls
+// this rather than writing the number by hand. Writing the number alone was
+// enough while the widget was only a number; now that it carries a bar, a
+// half-update leaves the bar at its render-time width - measured, not
+// theorised: H.P. at 4 of 14 still drew a full bar and no low tone until a
+// mode toggle forced a re-render. A bar that reports full at 29% is worse
+// than no bar.
+function paintPool(key) {
+  const cur = C.data[key + '_current'], max = C.data[key + '_max'];
+  const el = $('play-cur-' + key);
+  if (el) el.textContent = cur ?? '—';
+  const card = el && el.closest('.vital');
+  if (!card) return;
+  const pct = (max > 0 && cur != null) ? Math.max(0, Math.min(1, cur / max)) : 0;
+  const bar = card.querySelector('.bar > i');
+  if (bar) bar.style.width = Math.round(pct * 100) + '%';
+  card.classList.toggle('low', max > 0 && cur != null && pct <= POOL_LOW);
+  const inp = card.querySelector('input');
+  if (inp) inp.value = cur ?? '';
+}
 // Every save derive.js produces, in the order the sheet prints them. ONE list,
 // because there were two: the sheet's carried all thirteen and play mode's
 // carried the first eight, so a Juicer's +6 vs mind control, an adult
@@ -425,14 +476,13 @@ async function adjustPool(key, delta) {
   const next = cur + delta;
   const prev = cur;
   C.data[key + '_current'] = next;
-  const el = $('play-cur-' + key);
-  if (el) el.textContent = next;
+  paintPool(key);
   syncPowerBtns();
   try {
     await postEvent('pool', `${key.toUpperCase()} ${delta > 0 ? '+' : ''}${delta}`, { character: { [key + '_current']: { from: prev, to: next } } });
   } catch (err) {
     C.data[key + '_current'] = prev;
-    if (el) el.textContent = prev;
+    paintPool(key);
     syncPowerBtns();
     alert('Failed: ' + err.message);
   }
@@ -458,16 +508,14 @@ async function quickDamage() {
   for (const k of Object.keys(patch)) {
     prev[k] = C.data[k];
     C.data[k] = patch[k];
-    const el = $('play-cur-' + k.replace('_current', ''));
-    if (el) el.textContent = patch[k];
+    paintPool(k.replace('_current', ''));
   }
   try {
     await postEvent('damage', `took ${amt}`, { character: Object.fromEntries(Object.keys(patch).map((k) => [k, { from: prev[k], to: patch[k] }])) });
   } catch (err) {
     for (const k of Object.keys(prev)) {
       C.data[k] = prev[k];
-      const el = $('play-cur-' + k.replace('_current', ''));
-      if (el) el.textContent = prev[k];
+      paintPool(k.replace('_current', ''));
     }
     alert('Failed: ' + err.message);
   }
@@ -510,8 +558,7 @@ async function undoLast() {
     const res = await api(`characters/${id}/events/undo`, jsonReq('POST', {}));
     for (const [field, v] of Object.entries(res.restored.character || {})) {
       C.data[field] = v;
-      const el = $('play-cur-' + field.replace('_current', ''));
-      if (el) el.textContent = v;
+      paintPool(field.replace('_current', ''));
     }
     if (res.restored.item) {
       const it = C.items.find((x) => x.id === res.restored.item.id);
@@ -770,8 +817,7 @@ async function applyRest() {
   for (const [field, v] of Object.entries(changes.character)) {
     prev[field] = C.data[field];
     C.data[field] = v.to;
-    const el = $('play-cur-' + field.replace('_current', ''));
-    if (el) el.textContent = v.to;
+    paintPool(field.replace('_current', ''));
   }
   // A rest recovers P.P.E. and I.S.P. as well as H.P., so it can bring a ⚡
   // button back to life.
@@ -782,8 +828,7 @@ async function applyRest() {
   } catch (err) {
     for (const [field, v] of Object.entries(prev)) {
       C.data[field] = v;
-      const el = $('play-cur-' + field.replace('_current', ''));
-      if (el) el.textContent = v;
+      paintPool(field.replace('_current', ''));
     }
     syncPowerBtns();
     alert('Failed: ' + err.message);
@@ -824,19 +869,8 @@ function renderPlay() {
   const combat = derive.combat(attrs, c.combat, bonuses);
   const saves = derive.saves(attrs, c.saves, cls.psionics?.type, bonuses);
 
-  const poolCards = POOLS.map(([key, label]) => {
-    const max = c[key + '_max'];
-    if (max == null && c[key + '_current'] == null) return '';
-    const cur = c[key + '_current'];
-    return `<div class="play-pool">
-      <div class="pp-label">${label}</div>
-      <div class="pp-val"><b id="play-cur-${key}">${cur ?? '—'}</b><span class="pp-max">/ ${max ?? '—'}</span></div>
-      ${w ? `<div class="pp-btns">
-        <button onclick="adjustPool('${key}', -C.playAmt)">−</button>
-        <button onclick="adjustPool('${key}', C.playAmt)">+</button>
-      </div>` : ''}
-    </div>`;
-  }).join('');
+  const poolCards = POOLS.map(([key, label]) =>
+    poolCard(key, label, c[key + '_current'], c[key + '_max'], w, true)).join('');
 
   const amts = [1, 5, 10, 20].map((n) =>
     `<button data-amt="${n}" class="${n === C.playAmt ? 'on' : ''}" onclick="setPlayAmt(${n})">${n}</button>`).join('');
@@ -1023,15 +1057,8 @@ function render() {
         <span class="note">↳ ${escHtml(s.note)}</span></td></tr>` : ''}`).join('')}</tbody>
     </table>` : '<p class="muted small">None.</p>');
 
-  const vitals = POOLS.map(([key, label]) => {
-    const max = c[key + '_max'], cur = c[key + '_current'];
-    if (max == null && cur == null) return '';
-    const curHtml = w
-      ? `<input type="number" id="stat-${key}" value="${cur ?? ''}"><b class="print-only">${cur ?? '—'}</b>`
-      : `<b>${cur ?? '—'}</b>`;
-    return `<div class="vital"><div class="lbl">${label}</div>
-      <div class="val">${curHtml} <span class="max">/ ${max ?? '—'}</span></div></div>`;
-  }).join('');
+  const vitals = POOLS.map(([key, label]) =>
+    poolCard(key, label, c[key + '_current'], c[key + '_max'], w, false)).join('');
 
   // Display order: spells first, by level then name; psionics after, by
   // category (Healing/Physical/Sensitive/Super — alphabetical IS the book
@@ -1911,8 +1938,7 @@ async function usePower(index) {
     }
     C.data[pool + '_current'] = cur - p.cost;
     if (C.playMode) {
-      const el = $('play-cur-' + pool);
-      if (el) el.textContent = cur - p.cost;
+      paintPool(pool);
       // Spending is the commonest way to make the next ⚡ unaffordable, and
       // play mode never re-renders, so the buttons are re-read here.
       syncPowerBtns();
