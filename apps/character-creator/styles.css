@@ -4,31 +4,13 @@
    pools). The catalog's .imp-* and .cat-* blocks are a large part of this
    file — a class that looks wizard-only is probably not. */
 
-:root {
-  --accent: #9d7cff;
-  --accent-glow: rgba(157, 124, 255, 0.15);
-  --accent-secondary: #f0a04b;
-  --border-focus: var(--accent);
-  /* Shared ships #5a6178, which fails WCAG AA on every background in the
-     system — 3.18 on --bg-primary down to 2.57 on --bg-input — and this app
-     spends it on 9-13px labels, so the large-text allowance never applies.
-     Overridden HERE rather than in /shared/styles.css, which would re-tone
-     three other apps in a change nobody asked for.
-
-     #81889e clears 4.5:1 on every background this app actually puts muted text
-     on (--bg-primary 5.45, --bg-secondary 5.08, --bg-card 4.93 — measured, not
-     assumed) and on --bg-tertiary too (4.64), so a future rule can move a muted
-     label onto a tag without reopening this. --bg-input reaches 4.40 and no
-     muted text sits there; nothing lighter fixes that without collapsing muted
-     into --text-secondary, which is 1.14:1 away as it is. See UI-AUDIT.md F6. */
-  --text-muted: #81889e;
-  /* White on --accent is 3.11:1, and --accent is every primary button in
-     the app. It cannot be fixed from the text side: white is already the
-     lightest end. This darker tone is 5.80:1 against white and is used by
-     .btn-primary ALONE - --accent itself stays put, because it is also the
-     link colour and the focus-ring colour and both want the brighter tone. */
-  --accent-strong: #6b4bd8;
-}
+/* No :root here any more. This app used to override five tokens — --accent,
+   --accent-glow, --accent-secondary, --text-muted and --accent-strong — four
+   of them because shared's blue/violet scheme failed contrast where this app
+   spends colour, on 9-13px labels and on primary buttons. Rust & Ash carries
+   correct values for all five in /shared/styles.css, so the overrides are
+   gone rather than retoned. --border-focus is shared's `var(--accent)` and
+   needed restating no more than the rest. See CHANGE-PLAN.md phase 1. */
 
 /* ─── LAYOUT ─── */
 .header { padding: 16px 28px; }
@@ -81,7 +63,10 @@
    TALLER, measured - the width is half of that fix, not a separate wish. */
 .wrap.wrap-wide { max-width: 1280px; }
 
-a { color: var(--accent); text-decoration: none; }
+/* --accent-link, not --accent: inline link text is the one place the accent is
+   a small glyph rather than a fill or a border, and --accent is 4.60:1 where
+   --accent-link is 5.79. The rest of the app keeps --accent. */
+a { color: var(--accent-link); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
 .panel {
@@ -116,8 +101,8 @@ a:hover { text-decoration: underline; }
   color: var(--text-secondary);
   margin-right: 5px;
 }
-.tag.gm { background: rgba(52, 211, 153, 0.1); border-color: rgba(52, 211, 153, 0.35); color: var(--success); }
-.tag.ro { background: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.35); color: var(--danger); }
+.tag.gm { background: rgba(126, 154, 94, 0.1); border-color: rgba(126, 154, 94, 0.35); color: var(--success); }
+.tag.ro { background: rgba(217, 97, 74, 0.1); border-color: rgba(217, 97, 74, 0.35); color: var(--danger); }
 /* The match score is a READOUT, not a control - pressing it does nothing - so its
    number is --text-primary. --accent is reserved for what you can act on. The
    glow and border stay: they mark which tag this is among several, and the rule
@@ -140,19 +125,12 @@ button { font-family: 'Outfit', sans-serif; cursor: pointer; }
 .btn-danger { background: transparent; border-color: var(--border); color: var(--danger); }
 .btn-danger:hover { background: var(--bg-tertiary); border-color: var(--danger); }
 
-/* Shared paints .btn-primary in --accent, which is 3.11:1 under its own
-   white text. Repainted here in --accent-strong (5.80:1) rather than in
-   shared/, on the same reasoning as --text-muted above: the other three
-   apps carry this too, but giving all four a new primary colour is a
-   bigger change than it looks and is not this app's call to make.
-   The disabled-hover pair has to be repeated because shared pins it back
-   to --accent by name; without it, hovering a dead primary button would
-   light it up brighter than the live one. */
-.btn-primary { background: var(--accent-strong); border-color: var(--accent-strong); }
-.btn-primary:disabled:hover,
-.btn-primary[disabled]:hover {
-  background: var(--accent-strong); border-color: var(--accent-strong);
-}
+/* .btn-primary is shared's now. It used to be repainted here in
+   --accent-strong because white on the old violet --accent was 3.11:1, and
+   the disabled-hover pair had to be repeated because shared pins that back to
+   --accent by name. Neither is needed: shared paints the primary button in
+   --accent with --bg-primary text at 4.60:1, and its own disabled-hover rule
+   resolves to the same fill once nothing overrides the background. */
 
 input[type=text], input[type=number], select, textarea {
   font-family: 'Outfit', sans-serif; font-size: 13px;
@@ -586,7 +564,7 @@ button.chkrow {
 /* ─── IMPORT (admin) ─── */
 .notes-banner {
   border: 1px solid var(--warning);
-  background: rgba(251, 191, 36, 0.08);
+  background: rgba(201, 154, 62, 0.08);
   border-radius: var(--radius);
   padding: 14px 16px;
   margin-bottom: 16px;
@@ -655,11 +633,11 @@ pre.snippet {
   color: var(--text-muted);
 }
 /* The one place in the app where muted text sits on something translucent: the
-   selected tab's --accent-glow blends with --bg-secondary to #27243e, lighter
-   than any opaque background in the system, and muted reaches only 4.22 there.
+   selected tab's --accent-glow blends with --bg-secondary to #342218, lighter
+   than any opaque background in the system, and muted reaches only 3.91 there.
    One step up the ramp rather than one step up for the whole token — this is a
    single sub-label, and paying for it in the token would have cost the muted
-   tier its distinction everywhere. --text-secondary makes it 4.81. */
+   tier its distinction everywhere. --text-secondary makes it 4.95. */
 .imp-tab.on .imp-tab-sub { color: var(--text-secondary); }
 
 /* One extracted skill awaiting a decision. */
@@ -670,7 +648,7 @@ pre.snippet {
   padding: 7px 0; border-bottom: 1px solid var(--border);
 }
 @media (max-width: 820px) { .imp-row { grid-template-columns: 1fr; gap: 4px; } }
-.imp-row.duplicate { background: rgba(251, 191, 36, 0.045); }
+.imp-row.duplicate { background: rgba(201, 154, 62, 0.045); }
 .imp-main { display: flex; flex-direction: column; gap: 2px; }
 .imp-name { font-weight: 600; font-size: 13px; }
 .imp-status { display: flex; flex-direction: column; gap: 2px; font-size: 12px; }
@@ -803,10 +781,12 @@ input.class-boosted { border-bottom-width: 2px; }
 .dupe-badge {
   display: inline-block; min-width: 16px; padding: 0 5px; margin-left: 4px;
   /* --warn was never a token in any stylesheet here, so #b8860b fired 100%
-     of the time and the badge sat outside the palette. --warning is the
-     real token; the text had to move with it, because white on #fbbf24 is
-     1.67:1 - worse than the goldenrod it replaces. #0a0c10 on it is 11.72. */
-  border-radius: 999px; background: var(--warning); color: #0a0c10;
+     of the time and the badge sat outside the palette. --warning is the real
+     token; the text is the dark end of the ramp rather than white, because
+     white on --warning is 2.57:1 and --bg-primary on it is 7.32. Written as
+     the token rather than the literal, so it follows --bg-primary if the
+     scheme moves again — it was #0a0c10 before Rust & Ash. */
+  border-radius: 999px; background: var(--warning); color: var(--bg-primary);
   font-size: 11px; font-weight: 700; line-height: 16px; text-align: center;
 }
 
