@@ -3997,6 +3997,48 @@ section('The session log');
     'the event log prints on the character sheet');
 }
 
+// ---------- Two people, one character ----------
+// PATCH used to be `UPDATE characters SET ... WHERE id = ?` with no version
+// check: a player and a G.M. at the same table, or one person in two tabs,
+// overwrote each other silently with last write winning. The draft had the
+// same problem and already solved it; this is the same guard.
+section('Two people, one character');
+{
+  const src = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator',
+    'characters', '[id].js'), 'utf8');
+  const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+
+  check('a caller may say which version it is changing',
+    /body\.expect_updated_at/.test(src), 'the PATCH takes no expected version');
+
+  // Guarded IN THE WHERE. Reading the row and then writing leaves exactly the
+  // gap this exists to close.
+  check('the guard is in the WHERE, not a read followed by a write',
+    /AND updated_at = \?/.test(src), 'the version check is not part of the statement');
+  check('and it only applies when a version was claimed',
+    /\$\{expected \? ' AND updated_at = \?' : ''\}/.test(src),
+    'every existing caller breaks, or none of them is guarded');
+
+  check('a refused write says so, and says what is there now',
+    /conflict: true,/.test(src) && /current_updated_at/.test(src),
+    'a conflict cannot be told apart from a failure');
+  check('a missing character is a 404, not a conflict',
+    /if \(!current\) return json\(\{ error: 'Character not found' \}, 404\);/.test(src),
+    'a deleted character reports as an edit conflict');
+  check('a successful write returns the new version',
+    /return json\(\{ ok: true, updated_at:/.test(src),
+    'a caller must re-read the character to make a second guarded write');
+
+  // The sheet's Save is the write most likely to clobber someone: it sends the
+  // whole editable sheet at once.
+  check('the sheet sends the version it loaded',
+    /body\.expect_updated_at = C\.data\?\.updated_at/.test(sheet),
+    'Save still overwrites blindly');
+  check('and asks before throwing away what is on screen',
+    /err\.status === 409 && err\.detail\?\.conflict/.test(sheet) && /confirm\(msg\)/.test(sheet),
+    'a conflict either reloads over the typing or reports as a generic failure');
+}
+
 // ---------- Military Occupational Specialty ----------
 // RUE gives several classes an MOS: "select one area of specialty, gain all
 // skills under that MOS" (Coalition Technical Officer p236, Robot Pilot p84).

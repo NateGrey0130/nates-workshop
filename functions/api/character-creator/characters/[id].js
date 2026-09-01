@@ -189,10 +189,48 @@ export async function onRequestPatch({ request, env, params }) {
 
   if (!sets.length) return json({ error: 'No editable fields in body' }, 400);
 
-  await env.DB.prepare(
-    `UPDATE characters SET ${sets.join(', ')}, updated_at = datetime('now') WHERE id = ?`
-  ).bind(...binds, params.id).run();
-  return json({ ok: true });
+  // WHICH VERSION THE CALLER BELIEVES IT IS CHANGING. Optional, and honoured
+  // when sent: two people on one character - a player and a G.M. at the same
+  // table, or the same person in two tabs - previously overwrote each other
+  // silently, last write winning with nothing said. The same guard the draft
+  // has carried since it had the same problem.
+  //
+  // Guarded IN THE WHERE, one statement. Reading the row first and then
+  // writing leaves exactly the gap this exists to close.
+  //
+  // Optional rather than required because every existing caller predates it
+  // and a required field would break them all at once. A caller that sends
+  // nothing gets the old last-write-wins behaviour, which is no worse than
+  // what it had.
+  const expected = typeof body.expect_updated_at === 'string' && body.expect_updated_at
+    ? body.expect_updated_at : null;
+
+  const res = await env.DB.prepare(
+    `UPDATE characters SET ${sets.join(', ')}, updated_at = datetime('now')`
+    + ` WHERE id = ?${expected ? ' AND updated_at = ?' : ''}`
+  ).bind(...binds, params.id, ...(expected ? [expected] : [])).run();
+
+  if (expected && !(res.meta?.changes ?? 0)) {
+    // Say what is there now, so the client can offer a real choice rather
+    // than reporting that something went wrong. A missing row is a 404 and
+    // not a conflict - the character was deleted, not edited.
+    const current = await env.DB.prepare(
+      'SELECT updated_at FROM characters WHERE id = ?'
+    ).bind(params.id).first();
+    if (!current) return json({ error: 'Character not found' }, 404);
+    return json({
+      error: 'This character was changed somewhere else since you loaded it',
+      conflict: true,
+      current_updated_at: current.updated_at,
+    }, 409);
+  }
+
+  // The new version, so a caller can keep making guarded writes without
+  // re-reading the whole character between them.
+  const after = await env.DB.prepare(
+    'SELECT updated_at FROM characters WHERE id = ?'
+  ).bind(params.id).first();
+  return json({ ok: true, updated_at: after?.updated_at ?? null });
 }
 
 // DELETE /api/character-creator/characters/:id — owner or G.M. removes the
