@@ -4,8 +4,27 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nate's Workshop</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+/* This page is the ONE of the ten that does not load /shared/styles.css - it is
+   deliberately a single self-contained file with its own tokens - so it needs
+   its own copy of the two @font-face rules. Everything else inherits them from
+   shared. Both faces are variable: one file covers the whole weight axis.
+   Keep in step with the block at the top of /shared/styles.css. */
+@font-face {
+  font-family: 'Outfit';
+  src: url('/shared/fonts/outfit-variable.woff2') format('woff2');
+  font-weight: 300 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/shared/fonts/jetbrains-mono-variable.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --bg: #0a0c10;
   --bg-card: #12151c;

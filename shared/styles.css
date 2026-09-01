@@ -5,6 +5,41 @@
    --border-focus in the app's :root to re-theme.
    ═══════════════════════════════════════════════════════ */
 
+/* ─── FONTS ───
+   Self-hosted. Ten pages used to open a connection to fonts.googleapis.com and
+   a second to fonts.gstatic.com before they could paint, on a site that
+   otherwise makes no third-party request at all and sits behind Access.
+
+   BOTH FACES ARE VARIABLE, which is not what the ten weights in the old query
+   implied. Google Fonts answers `wght@300;400;500;600;700;800` with one file
+   and lets font-weight interpolate it: the six Outfit downloads came back
+   byte-identical, md5 fdf9c509…, and the four JetBrains Mono ones likewise.
+   So this is two files and two @font-face rules covering every weight the four
+   apps ask for, 63KB in total rather than the 312KB ten separate files would
+   have been.
+
+   font-display: swap keeps the old behaviour - text paints in the fallback and
+   reflows once - rather than blocking on a local file that is already there.
+
+   Licences ship beside them: both are SIL Open Font License 1.1, which requires
+   the licence to travel with the font. See shared/fonts/OFL-*.txt. */
+@font-face {
+  font-family: 'Outfit';
+  src: url('/shared/fonts/outfit-variable.woff2') format('woff2-variations'),
+       url('/shared/fonts/outfit-variable.woff2') format('woff2');
+  font-weight: 300 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/shared/fonts/jetbrains-mono-variable.woff2') format('woff2-variations'),
+       url('/shared/fonts/jetbrains-mono-variable.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --bg-primary: #0a0c10;
   --bg-secondary: #12151c;
