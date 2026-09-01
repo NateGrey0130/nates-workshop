@@ -51,7 +51,7 @@ const C = { data: null, items: [], journal: [], catalog: [], cls: null, canWrite
             proposal: null, nextThreshold: null,
             // Picker filter text, and the skill picks chosen so far. Both are
             // state rather than DOM so a re-render cannot discard them.
-            invFilter: '', pickFilter: '', pickValues: {}, pickLangs: {},
+            invFilter: '', pickFilter: '', skillFilter: '', pickValues: {}, pickLangs: {},
             // Play mode: the same data through an action-first, phone-shaped
             // lens. playAmt is the selected quick-action amount; rollLog is
             // structured from day one so phase 3 can persist it unchanged.
@@ -1247,6 +1247,12 @@ function render() {
   </section>
 
   <section class="tabpanel${C.tab === 'skills' ? ' on' : ''}" data-tab="skills">
+  <div class="pick-filter noprint">
+    <input type="search" id="skill-filter" placeholder="Filter skills…"
+      value="${escHtml(C.skillFilter)}"
+      oninput="filterSkills(this.value)" aria-label="Filter skills">
+    <span class="pick-count" id="skill-count"></span>
+  </div>
   <div class="sheet-grid cols-3" style="margin-top:12px">
     ${skillBox('Class Skills', byType('occ'))}
     ${skillBox('Related Skills', byType('related'))}
@@ -1325,6 +1331,37 @@ function render() {
 
   wirePickers();
   sizeSticky();
+  // The count is filterSkills' job, so there is one implementation of it rather
+  // than a number rendered here and a different one written on the first
+  // keystroke. Re-applying C.skillFilter is also what carries a typed query
+  // across a re-render, the same reason invFilter and pickFilter are state.
+  filterSkills(C.skillFilter);
+}
+
+// Filter the sheet's three skill tables in place. Class, Related and Secondary
+// are separate tables, so this walks all three and keeps one count across them.
+//
+// Rows are hidden with a class rather than re-rendered, for the reason pickTab
+// gives: a re-render rebuilds every input on the sheet, and this is used
+// mid-session with a half-typed journal entry sitting two tabs over.
+//
+// A skill carrying a note emits TWO rows - the note is its own <tr colspan="3">
+// since PR #460 - so the note follows its skill into and out of hiding, or a
+// filtered-out skill leaves its footnote behind pointing at nothing.
+function filterSkills(q) {
+  C.skillFilter = String(q ?? '');
+  const needle = C.skillFilter.trim().toLowerCase();
+  let shown = 0, total = 0;
+  for (const row of document.querySelectorAll('.skill-table .skill-row')) {
+    total++;
+    const hit = !needle || (row.cells[0]?.textContent || '').toLowerCase().includes(needle);
+    if (hit) shown++;
+    row.classList.toggle('filtered-out', !hit);
+    const note = row.nextElementSibling;
+    if (note?.classList.contains('skill-note')) note.classList.toggle('filtered-out', !hit);
+  }
+  const el = $('skill-count');
+  if (el) el.textContent = needle ? `${shown} of ${total}` : `${total} known`;
 }
 
 // The pools strip sticks below the shared header, so it needs the header's
