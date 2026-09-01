@@ -415,25 +415,46 @@ button.chkrow {
 .vital .val input { width: 52px; text-align: center; padding: 2px 4px; font-size: 15px; }
 .vital .max { color: var(--text-muted); font-size: 13px; }
 
-/* Skill rows: name, then +%/Lvl and % columns as on the form. */
-.skill-head, .skill-row {
-  display: grid;
-  grid-template-columns: 1fr 46px 40px;
-  gap: 6px;
-  align-items: baseline;
+/* Skill rows: name, then +%/Lvl and % columns as on the form.
+
+   A REAL TABLE since PR #460, which it was pretending to be for the whole of
+   its life. `1fr 46px 40px` on a grid becomes `table-layout: fixed` plus two
+   fixed column widths - the same three columns, sized the same way, and now
+   carrying a <thead> that repeats itself on every printed page.
+
+   THE GLOBAL td/th RULE HAS TO BE UNDONE HERE. It is 13px with 7px 10px of
+   padding and a solid bottom border on every cell, written for the sheet's
+   equipment and level tables; a skills list at those numbers is half as tall
+   again and stops fitting three boxes to a screen. These rules are more
+   specific, so they win, but the values had to be restated rather than
+   inherited. */
+.skill-table { table-layout: fixed; width: 100%; }
+.skill-table th, .skill-table td {
   font-size: 12.5px;
   padding: 2px 0;
+  border-bottom: 0;
+  vertical-align: baseline;
+  text-align: left;
 }
-.skill-head {
+.skill-table th.num, .skill-table td.num { width: 46px; text-align: right; }
+.skill-table th.num:last-child, .skill-table td.num:last-child { width: 40px; }
+.skill-head th {
   font-family: 'JetBrains Mono', monospace;
   font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em;
   color: var(--text-muted); border-bottom: 1px solid var(--border);
-  padding-bottom: 4px; margin-bottom: 3px;
+  padding-bottom: 4px;
+  font-weight: 500;
 }
-.skill-row { border-bottom: 1px dotted var(--border); }
-.skill-row .num { font-family: 'JetBrains Mono', monospace; text-align: right; color: var(--text-secondary); }
-.skill-row .num.pct { color: var(--text-primary); font-weight: 600; }
-.skill-row .note { grid-column: 1 / -1; font-size: 11px; color: var(--text-muted); padding-left: 10px; }
+/* First body row clears the header's rule. */
+.skill-table tbody tr:first-child > * { padding-top: 3px; }
+.skill-row > td { border-bottom: 1px dotted var(--border); }
+/* A skill with a note owns two rows, and the rule belongs under the second
+   of them - otherwise it cuts between a skill and its own footnote. */
+.skill-row:has(+ .skill-note) > td { border-bottom: 0; }
+.skill-note > td { border-bottom: 1px dotted var(--border); }
+.skill-table .num { font-family: 'JetBrains Mono', monospace; color: var(--text-secondary); }
+.skill-table td.num.pct { color: var(--text-primary); font-weight: 600; }
+.skill-note .note { font-size: 11px; color: var(--text-muted); padding-left: 10px; }
 /* Where a skill's percentage came from. Sits inline after the name rather than
    on its own line, so it does not push every skill to double height. */
 .skill-row .note-inline { font-size: 10px; color: var(--text-muted); white-space: nowrap; }
@@ -852,9 +873,14 @@ input.class-boosted { border-bottom-width: 2px; }
   .box > .box-body { padding: 6px 8px; }
   .sheet-grid { gap: 8px; }
   .field > .dots { border-bottom-color: #bbb; }
-  .field > .lbl, .skill-head, .vital .lbl { color: #333 !important; }
+  .field > .lbl, .skill-head th, .vital .lbl { color: #333 !important; }
   .vital { border-color: #999; }
-  .skill-row, .power-row { border-bottom-color: #ddd; }
+  .skill-row > td, .skill-note > td, .power-row { border-bottom-color: #ddd; }
+  /* The global print rule below puts 3px 6px on every cell and a solid rule
+     under it. The skills table sets its own, as it does on screen. */
+  .skill-table th, .skill-table td { padding: 1px 0; }
+  /* A skill and its footnote are one thing; do not break between them. */
+  .skill-row:has(+ .skill-note) { break-after: avoid; }
   .power-row .cost { color: #000; }
   .power-group { color: #222; break-after: avoid; }
   .advisory { border-left-color: #999; color: #222 !important; }
