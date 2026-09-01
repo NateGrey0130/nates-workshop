@@ -254,10 +254,11 @@ Two halves, and **both** are required — either one alone leaves the app broken
 
    **`shared/fonts` is the fifth and last destination that fits** — the limit is
    five, so a sixth dependency needs a second Access application rather than a
-   surprise. It is also the first one invisible to `index.html`: the fonts are
-   referenced from inside `shared/styles.css`, and the derivation in
-   `apps/pick3cut5/test/smoke.mjs` reads the HTML, so it cannot see them. Until
-   it can, this row is maintained by hand.
+   surprise. It is also the only one invisible to `index.html`: the fonts are
+   referenced from inside `shared/styles.css`, by a `url()` no tag mentions.
+   Since 2026-09-01 the derivation in `apps/pick3cut5/test/smoke.mjs` follows
+   the stylesheets it finds in the HTML, so this row is derived like the other
+   four rather than kept by hand.
 
    Dashboard only; the `CLOUDFLARE_API_TOKEN` in `CLAUDE.md` is scoped to D1
    and cannot create it.
@@ -268,7 +269,9 @@ Two halves, and **both** are required — either one alone leaves the app broken
    flip, while `curl /apps/pick3cut5/` cheerfully returned 200. A route
    answering is not the same as a page working.
    `node apps/pick3cut5/test/smoke.mjs` derives this list from `index.html` and
-   fails if it and this table disagree; `--remote` checks the live policy.
+   the stylesheets it loads, and fails if it and this table disagree; `--remote`
+   checks the live policy, and checks the content type as well as the status —
+   Pages answers a path it does not have with the landing page, at 200.
    Note Access allows five destinations per application, so one more dependency
    fits and the one after that needs a second application.
 2. **`PUBLIC_PREFIXES` in `functions/api/_middleware.js`**, which already lists
