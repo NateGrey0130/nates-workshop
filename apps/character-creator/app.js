@@ -2144,9 +2144,17 @@ function renderSkills() {
         : '';
       lastCat = cat;
       const on = chosen.includes(s.name);
-      const blocked = !on && (taken.has(s.name.toLowerCase()) || chosen.length >= limit);
+      // Two reasons a row is blocked, and they used to render identically. The
+      // cap explains itself: the counter above the list reads N/M chosen and
+      // EVERY unpicked row dims at the same moment. Already-taken is the one
+      // that looks arbitrary, because it dims a single row for a reason living
+      // on a different list - takenNames() spans the O.C.C. skills, the group
+      // picks and both pick lists. Only that branch earns a reason on the row.
+      const held = !on && taken.has(s.name.toLowerCase());
+      const blocked = held || (!on && chosen.length >= limit);
       const hint = isRepeatableRow(s.name)
-        ? ' <span class="muted small">— once per language; you will be asked which</span>' : '';
+        ? ' <span class="muted small">— once per language; you will be asked which</span>'
+        : held ? ' <span class="muted small">— already on this character</span>' : '';
       // The category is the heading now, so the row carries only its numbers.
       return head + `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
         <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}

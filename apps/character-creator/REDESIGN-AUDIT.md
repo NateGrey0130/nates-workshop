@@ -260,6 +260,32 @@ its counter is the explanation and duplicating it on every row is noise.
 **Posture: a word on the row, not a tooltip and not a new component.** No hover-only
 affordance — this has to be readable on a phone.
 
+**Taken, 2026-08-31 (PR #465).** Posture held: a muted span appended to the label, the same
+mechanism the repeatable-language rows already use. No new component, no tooltip, nothing
+hover-only.
+
+**The premises held exactly** — the first finding in this menu of which that is true.
+`app.js:2147` was the two-reason expression the finding quoted, the repeatable hint at
+`app.js:2148` was the mechanism to copy, and the cap branch did have its counter.
+
+Wording is *"already on this character"* rather than the finding's *"already taken"*: a row
+ticked **here** is `on` rather than blocked, so "taken" reads like the state it is not. The
+reason it earns a row-level explanation at all is that `takenNames()` spans the O.C.C.
+skills, the group picks *and* both pick lists — the skill blocking you can be three
+sections up the page, which no counter above this list can explain.
+
+The blocked expression is unchanged in meaning: `held || (!on && chosen.length >= limit)`
+distributes to exactly the `!on && (taken || full)` it replaces.
+
+Verified on an Elf Mercenary Fighter walked from step 1. Before any pick, 14 blocked rows
+and all 14 carry the reason. At the related cap of 10, 203 blocked rows: 7 carry the reason
+and **196 carry nothing** — the cap branch, untouched, which is the half of this finding
+that was about restraint.
+
+**Checked and not filed:** ticking a checkbox felt slow while driving the step, but a
+single click measures 3ms synchronously — the delay was the test's own sleeps. There is no
+performance finding here.
+
 ---
 
 ### R5 — medium — The sheet's skills list has no filter and no count
