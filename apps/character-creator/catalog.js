@@ -176,7 +176,9 @@ function collectDraft() {
 // ─── render ───
 
 function tabs() {
-  return `<div class="imp-tabs cols-4">${CATALOG_KEYS.map((k) => `
+  // The column count follows the catalogue count; hardcoding 4 dropped gear
+  // onto a row of its own the day a fifth catalogue was added.
+  return `<div class="imp-tabs cols-${CATALOG_KEYS.length}">${CATALOG_KEYS.map((k) => `
     <button class="imp-tab${k === S.catalog ? ' on' : ''}" data-catalog="${k}">
       <span class="imp-tab-label">${escHtml(CATALOGS[k].label)}</span>
       <span class="imp-tab-sub">${S.catalog === k ? `${S.rows.length} rows` : 'edit'}</span>
