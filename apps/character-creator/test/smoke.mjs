@@ -3537,8 +3537,8 @@ section('One pool widget, both modes');
     'a sheet-mode render could leak steppers');
 
   // Every pool has a tone, or --tone falls back and the bar goes grey.
-  const tones = src.slice(src.indexOf('const POOL_TONES'), src.indexOf('\r\n', src.indexOf('const POOL_TONES')));
-  const pools = src.slice(src.indexOf('const POOLS ='), src.indexOf('\r\n', src.indexOf('const POOLS =')));
+  const tones = src.slice(src.indexOf('const POOL_TONES'), src.indexOf('};', src.indexOf('const POOL_TONES')));
+  const pools = src.slice(src.indexOf('const POOLS ='), src.indexOf('];', src.indexOf('const POOLS =')));
   const poolKeys = [...pools.matchAll(/\['([a-z]+)',/g)].map((m) => m[1]);
   const missingTone = poolKeys.filter((k) => !new RegExp(`\\b${k}:`).test(tones));
   check('every pool in POOLS has a tone', missingTone.length === 0,
@@ -3684,6 +3684,93 @@ section('Presentation is a separate file');
   check('and sheet.js supplies it in one place, not seven',
     /const paintPool = \(key\) => sheetLayout\.paintPool\(key, C\.data\);/.test(sheet),
     'each call site supplies the character data separately');
+}
+
+// ---------- The wizard rail ----------
+// The stepper is a sticky rail of ten labels with a summary strip under it.
+// These pin the parts that go wrong quietly.
+//
+// The first one is the reason this section exists. The redesign brief that
+// produced this phase specified `repeat(7, 1fr)` and "seven progress bars",
+// twice, because it was written against a seven-step wizard that has not
+// existed for a long time. A hardcoded column count does not fail loudly when
+// the step list changes - it just puts the last steps off the end of the grid.
+section('The wizard rail');
+{
+  const app = readFileSync(join(appDir, 'app.js'), 'utf8');
+  const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
+  const html = readFileSync(join(appDir, 'index.html'), 'utf8');
+
+  const stepCount = (app.match(/const STEPS = \[([^\]]*)\]/)?.[1] || '')
+    .split(',').map((x) => x.trim()).filter(Boolean).length;
+  const cols = Number(css.match(/\.step-rail \{[\s\S]*?repeat\((\d+), 1fr\)/)?.[1]);
+  check('the rail has one column per step', cols === stepCount,
+    `STEPS is ${stepCount} and the grid is ${cols}; the brief said 7`);
+
+  check('the step number is its own element, not text in the label',
+    /const stepNum = \(i\) =>[\s\S]*?class="n"/.test(app), 'stepNum is gone');
+  check('and it is padded, so step ten does not shift its column',
+    /padStart\(2, "0"\)/.test(app), 'the number is not two digits');
+
+  // The N/A step's full opacity is load-bearing and measured: 1.84:1 at 0.4,
+  // 3.49 at 0.75, 4.45 at 0.9. Nothing short of 1 clears the bar.
+  const naRule = css.match(/\.step-rail \.st\.na \{[^}]*\}/)?.[0] || '';
+  check('a step that does not apply is never dimmed',
+    naRule.length > 0 && !/opacity/.test(naRule),
+    'opacity is back on .st.na; the comment above it says what that measures');
+  check('it is marked by a dashed rule instead',
+    /border-bottom-style: dashed/.test(naRule), '.na has lost its dashed border');
+
+  // The strip carries what used to be two paragraphs under the stepper.
+  check('the greyed-step sentence lives in the summary strip',
+    /class="ws-note"/.test(app) && !/class="attr-note"[^`]*does not apply/.test(app),
+    'the N/A sentence is still its own paragraph');
+  check('and so does the autosave warning',
+    /ws-note warn err/.test(app), 'the draft-conflict notice is outside the strip');
+
+  // Derived, stored nowhere new - the plan's constraint.
+  const summary = app.slice(app.indexOf('function summaryItems()'),
+    app.indexOf('function renderStepper()'));
+  check('the summary is built from wizard state', summary.length > 0, 'summaryItems is gone');
+  check('and stores nothing of its own',
+    !/localStorage|sessionStorage|S\.summary/.test(summary),
+    'the summary strip has grown its own state');
+  check('every settled item links back to its step',
+    /onclick="goStep\(\$\{step\}\)"/.test(summary), 'summary items are not links back');
+
+  // Gold in Palladium, credits in Rifts. The brief said "credits".
+  check('money is labelled by the system, not called credits',
+    /rules\.currencyLabel\(S\.system\)/.test(summary) && !/'Credits'/.test(summary),
+    'the strip hardcodes a currency name');
+
+  // The rail sticks under a header whose height is measured, not assumed.
+  check('sizeSticky is shared rather than copied',
+    existsSync(join(appDir, 'js', 'sticky.js')), 'js/sticky.js is missing');
+  const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  check('and neither page keeps its own copy',
+    !/function sizeSticky\(/.test(sheet) && !/function sizeSticky\(/.test(app),
+    'a page still defines its own sizeSticky');
+  for (const page of ['index.html', 'sheet.html']) {
+    check(`${page} loads it`,
+      readFileSync(join(appDir, page), 'utf8').includes('js/sticky.js'),
+      `${page} sticks against an unset --header-h`);
+  }
+  check('the wizard measures the header on render',
+    /sticky\.sizeSticky\(\);/.test(app), 'the wizard never measures the header');
+
+  // On a phone the labels go and the bars remain. font-size: 0 rather than
+  // display: none, so the button keeps its accessible name.
+  const phone = css.slice(css.indexOf('@media (max-width: 900px)'));
+  check('the labels are hidden without removing them from the accessibility tree',
+    /font-size: 0/.test(phone) && !/\.st \{[^}]*display: none/.test(phone),
+    'the phone rail hides the steps outright');
+  check('and every step still has a visible track',
+    /border-bottom-color: var\(--border\)/.test(phone),
+    'unreached steps are transparent, so the phone shows gaps rather than ten bars');
+
+  check('the wizard has its own container',
+    /\.wrap\.wrap-wizard \{ max-width: 1180px; \}/.test(css) && /wrap wrap-wizard/.test(html),
+    'the rail is back inside a 900px container it does not fit');
 }
 
 // ---------- Military Occupational Specialty ----------

@@ -227,19 +227,69 @@ th {
 #msg { min-height: 18px; font-size: 13px; }
 
 /* ─── WIZARD ─── */
-.stepper { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-bottom: 22px; }
-.stepper .st {
-  font-family: var(--font-display); font-stretch: 75%; font-size: 11px;
-  padding: 4px 11px; border-radius: 999px;
-  background: var(--bg-secondary); border: 1px solid var(--border);
+
+/* The wizard's container. The stepper is TEN steps, not the seven the plan
+   assumed, and ten labels do not fit 900px: measured at 15px uppercase in the
+   condensed face, `Advancement` alone is 89px inside an 88px column, before
+   any padding, in the bold current state that is the widest of the three.
+   1180px gives each step 118px and the widest label 29px of air. Narrower than
+   the sheet's 1640 because the wizard is one column of forms under the rail,
+   and those do not want the sheet's width. */
+.wrap.wrap-wizard { max-width: 1180px; }
+
+/* The rail sticks under the shared header rather than scrolling away, so
+   mid-wizard you can still see where you are. It sits OUTSIDE .wrap in the
+   markup and carries its own copy, because a sticky element cannot be inside
+   the container it needs to span. --header-h comes from js/sticky.js. */
+.wizard-sticky {
+  position: sticky; top: var(--header-h, 0px); z-index: 20;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 0 0;
+  margin-bottom: 18px;
+}
+
+/* Ten steps across, as a row of labels underlined by their own state rather
+   than a row of pills. Hierarchy comes from WEIGHT - 300 not reached, 600
+   done, 900 current - which is what a nine-weight variable face was chosen
+   for, and it survives being read by someone not looking for colour. */
+/* .stepper is the whole block now - the rail plus the summary under it -
+   so the grid lives on the rail rather than on the container. .step-rail,
+   not .rail: .sheet-grid.rail is a different thing on the sheet. */
+.stepper { margin: 0; }
+.stepper .step-rail {
+  display: grid; grid-template-columns: repeat(10, 1fr);
+  gap: 2px;
+}
+.stepper .step-rail .st {
+  display: block; width: 100%; text-align: left;
+  padding: 0 0 9px;
+  background: transparent; border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  font-family: var(--font-display); font-stretch: 75%;
+  font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase;
+  font-weight: 300; color: var(--text-muted);
+}
+/* The step number, which was already in the label as "1. System" and could not
+   be styled apart from it. Two digits so the column does not shift at ten. */
+.stepper .step-rail .st .n {
+  display: block;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
   color: var(--text-muted);
+  margin-bottom: 2px;
 }
 /* A COMPLETED step is a <button> and the rest are spans — only the completed
    ones go anywhere. A button carries its own line-height, which sits the pill a
    pixel off its neighbours; inheriting puts it back on the line with them. */
-.stepper button.st { line-height: inherit; }
-.stepper .st.done { color: var(--accent); border-color: var(--accent); cursor: pointer; }
-.stepper .st.cur { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
+.stepper .step-rail button.st { line-height: inherit; font: inherit; }
+.stepper .step-rail .st.done {
+  font-weight: 600; color: var(--text-primary);
+  border-bottom-color: var(--border-strong); cursor: pointer;
+}
+.stepper .step-rail .st.done:hover { border-bottom-color: var(--accent); }
+.stepper .step-rail .st.cur { font-weight: 900; color: var(--text-primary); border-bottom-color: var(--accent); }
+.stepper .step-rail .st.cur .n { color: var(--accent); }
 /* A step that does not apply to THIS character — the Occupation step for a
    character whose primary class is already an O.C.C. Shown rather than removed,
    so the numbering stays the same between two characters sitting side by side
@@ -253,9 +303,68 @@ th {
    be the least legible thing on the page.
 
    The state is carried by the dashed border and, since the wizard started
-   saying so in words, by the sentence under the stepper naming the step. It is
-   still not a control: no pointer, no focus, and it is a <span>. */
-.stepper .st.na { border-style: dashed; cursor: default; }
+   saying so in words, by the sentence naming the step - which now lives in the
+   summary strip below rather than as its own paragraph. It is still not a
+   control: no pointer, no focus, and it is a <span>. */
+.stepper .step-rail .st.na { border-bottom-style: dashed; border-bottom-color: var(--border); cursor: default; }
+
+/* ─── SUMMARY STRIP ───
+   What the character is so far, under the rail and sticky with it, so the
+   answers you have already given stop being three steps behind you. Every
+   value is derived from the wizard's own state at render - nothing is stored
+   for this - and every one is a link back to the step that set it.
+
+   It also absorbed the sentence that used to explain a greyed step. That
+   sentence was a <p> under the stepper; it says the same thing here, in the
+   place a reader is already looking to find out what is settled. */
+.wiz-summary {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 18px;
+  padding: 10px 0 12px;
+  font-size: 13px;
+}
+.wiz-summary .ws {
+  display: inline-flex; align-items: baseline; gap: 6px;
+  background: none; border: 0; padding: 0;
+  color: var(--text-secondary); font-size: 13px; text-align: left;
+}
+.wiz-summary button.ws { cursor: pointer; }
+.wiz-summary button.ws:hover .ws-v { text-decoration: underline; }
+.wiz-summary .ws-k {
+  font-family: var(--font-display); font-stretch: 75%;
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+.wiz-summary .ws-v {
+  font-family: var(--font-display); font-stretch: 75%;
+  font-weight: 700; font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+/* The greyed-step sentence, and the autosave warning, both of which were
+   paragraphs under the stepper. Full width so they read as sentences rather
+   than as another summary item. */
+.wiz-summary .ws-note { flex: 1 0 100%; color: var(--text-secondary); font-size: 13px; }
+
+/* Ten labels do not fit a phone at any weight, so below 900px the rail stops
+   being labels and becomes ten bars - position without words. The step you
+   are on is named by the summary strip underneath, which is why the labels
+   can go at all: the information moves rather than disappearing.
+
+   font-size: 0 hides the text without display:none, so the <button> keeps
+   its accessible name and a screen reader still reads the step. */
+@media (max-width: 900px) {
+  .stepper .step-rail { gap: 3px; }
+  /* Every bar needs a track, or the pattern is not ten bars - it is however
+     many steps happen to be coloured. On desktop an unreached step has a
+     transparent underline and reads as a plain label; here that leaves gaps
+     where the remaining steps should be, so the base gets a visible rule and
+     done/current/na paint over it. */
+  .stepper .step-rail .st {
+    font-size: 0; padding: 0; height: 6px;
+    border-bottom-width: 6px; border-bottom-color: var(--border);
+  }
+  .stepper .step-rail .st .n { display: none; }
+  .wizard-sticky { padding-top: 10px; }
+}
 
 /* Advancement: one collapsible row per level gained. Collapsed by default —
    the step opens on the summary, and a level is opened only when someone wants
@@ -330,7 +439,21 @@ button.chkrow {
   font-family: inherit;
 }
 .attr-note { font-size: 11px; color: var(--text-muted); }
-.nav { display: flex; justify-content: space-between; margin-top: 16px; }
+/* The wizard's primary action sticks to the bottom of the viewport rather
+   than to the bottom of a long step, so Next is reachable without scrolling
+   past a skill list to find it. .nav-why rides with it, unchanged - it is the
+   sentence saying why Next is unavailable, and it is worth more beside the
+   button than at the end of the page. */
+.nav {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 12px; margin-top: 16px;
+  position: sticky; bottom: 0; z-index: 15;
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border);
+  padding: 10px 0 12px;
+}
+/* Sized for a finger on both, which the tab bar already does. */
+.nav .btn { min-height: 44px; }
 /* Why the primary action is unavailable, between Back and the disabled button.
    Muted rather than an error colour: nothing has gone wrong, there is simply a
    choice still to make. align-self keeps it on the buttons' line. */
