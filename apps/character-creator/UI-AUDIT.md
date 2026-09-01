@@ -1557,6 +1557,73 @@ depths are arguably each correct for their page.
 
 ---
 
+**Taken, 2026-09-01 (PR #458) — the first half. The second half is moot, and
+that is recorded rather than worked around.**
+
+The table is accurate and the 132px is exact: measured again at 390×844,
+`sheet.html`'s header was **132px, 16% of the viewport**.
+
+**But it was not wrapping.** `shared/styles.css:67` sets `.header-right` to
+`display: flex` with no `flex-wrap`, so the four controls stayed on one row and
+the *text inside them* broke instead. Measured tops and heights:
+
+| control | top | height |
+|---|---|---|
+| ▶ Play | 46 | 39 |
+| 🖨 Print / Save as PDF | 16 | **99** — one word per line |
+| ← character creator | 40 | 51 — two lines |
+| ← workshop | 49 | 34 |
+
+Four controls, four different heights, four different starting offsets. The
+finding calls it interleaving, which is what it looks like; the mechanism is
+that nothing wrapped at all.
+
+So: `white-space: nowrap` on the controls and `flex-wrap` on the row, which
+swaps the behaviour round — a control that does not fit moves to the next line
+*whole*. `.header-group` wraps each of `sheet.html`'s two pairs so the buttons
+cannot interleave with the links, which is the divider the finding asks for.
+`.header` wraps too, or `.header-right` has nowhere to go: `space-between` on a
+nowrap parent squeezes it against the logo instead of moving it down.
+
+**Wrapping alone fixed the raggedness and not the height** — three tidy rows
+came to 134px, where four squeezed ones had been 132. The 28px/16px padding is
+sized for a one-row desktop header, so it drops to 16px/10px below 620px.
+Measured at 390×844, after:
+
+| page | before | after |
+|---|---|---|
+| sheet | 132px, 16% | **122px, 14%** |
+| campaign | ragged, 3 links across 2 lines | **88px, 10%**, all three on one line |
+| dashboard, catalog | — | 88px |
+| wizard | — | 65px |
+
+Nothing moves at 820 or 1440: the header measures **77px on both, before and
+after**, checked by stashing the change and re-measuring. The sheet's tab bar
+stays above the fold at 390 (y=342, was 352), which *Verified clean* pins.
+
+**The `campaign.html` half is closed as moot.** The finding says a static
+`href` is needed because "if the script does not run, the link lands on the *No
+campaign_id* error page". Two things:
+
+- **Without JS there is no campaign page at all.** `campaign.html`'s entire
+  body is `<div id="app"><p class="muted">Loading campaign…</p></div>`;
+  `campaign.js` renders everything into it. A visitor with JS off sees
+  *Loading campaign…* forever, and the back link's `href` is not the problem
+  they have.
+- **The destination is not an error page.** `dashboard.js:135` without an id
+  renders *"No campaign_id — open a dashboard from the Character Creator
+  landing page."* — a written empty state that says what to do, which this
+  audit's own *Verified clean* section already credits.
+
+A static `href` that actually reaches the right dashboard needs the
+`campaign_id`, which exists only in the URL at runtime — so the only available
+change is pointing it somewhere worse. Left alone.
+
+**Normalising the back-link ladder across the five pages remains a separate
+decision**, as the finding says.
+
+---
+
 ### F28 — medium — White on `--accent` is 3.11:1, and it is every primary button
 
 **Added 2026-08-31**, not by the original pass — it is what was left standing when

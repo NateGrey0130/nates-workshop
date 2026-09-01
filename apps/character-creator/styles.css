@@ -32,7 +32,32 @@
 
 /* ─── LAYOUT ─── */
 .header { padding: 16px 28px; }
-.header-right { gap: 10px; }
+/* The header did not wrap - shared sets .header-right to flex with no
+   flex-wrap - so at 390px its four controls stayed on one row and the TEXT
+   inside them broke instead: `Print / Save as PDF` came out one word per
+   line, 99px tall, next to a two-line `character creator` and a one-line
+   `workshop`, each starting at a different height. 132px of header, 16% of
+   the viewport, on the page a player actually holds at the table.
+
+   nowrap on the controls and wrap on the row swaps that round: a control
+   that does not fit moves to the next line whole. .header-group keeps the
+   two sheet buttons together so they cannot interleave with the back links
+   when that happens - the sheet is the only page mixing the two kinds.
+
+   .header wraps too, or .header-right has nowhere to go: space-between on a
+   nowrap parent squeezes it against the logo rather than moving it down. */
+.header { flex-wrap: wrap; row-gap: 6px; }
+.header-right { gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.header-group { display: flex; align-items: center; gap: 10px; }
+.header-right .btn, .header-right .home-link { white-space: nowrap; }
+
+/* Wrapping whole controls fixes the ragged interleave but not the HEIGHT -
+   three tidy rows come to the same 134px the four squeezed ones did. The
+   28px side padding and 16px top and bottom are sized for a desktop header
+   with one row in it. */
+@media (max-width: 620px) {
+  .header { padding: 10px 16px; }
+}
 
 .home-link {
   color: var(--text-muted);
