@@ -3,7 +3,12 @@
 // `from` value and stamp the event's undone_at. Only the latest, by design:
 // undoing an older event under newer ones is ambiguous arithmetic, and the
 // button this backs is "take back the last thing", not a history editor.
-// Rolls and recaps carry no changes and are skipped over when finding it.
+// Pure records are skipped over when finding it. They are excluded BY KIND
+// rather than by having no `changes`, which is worth saying because the two
+// are not the same test: an event of an unlisted kind with nothing to restore
+// is still selected, still stamped undone, and still restores nothing -- so it
+// eats the press and leaves the real last change standing. Any new kind that
+// carries no changes belongs in the list below, and `grant` is one.
 //
 // The undo is itself visible history — the row stays, marked, and the
 // response says what was restored so the client can update in place.
@@ -16,7 +21,7 @@ export async function onRequestPost({ request, env, params }) {
 
   const { results } = await env.DB.prepare(
     `SELECT id, kind, payload FROM play_events
-     WHERE character_id = ? AND undone_at IS NULL AND kind NOT IN ('roll', 'recap')
+     WHERE character_id = ? AND undone_at IS NULL AND kind NOT IN ('roll', 'recap', 'grant')
      ORDER BY id DESC LIMIT 1`
   ).bind(params.id).all();
   if (!results.length) return json({ error: 'Nothing to undo' }, 404);

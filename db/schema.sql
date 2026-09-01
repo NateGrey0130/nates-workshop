@@ -388,6 +388,35 @@ CREATE TABLE IF NOT EXISTS pending_power_picks (
 );
 CREATE INDEX IF NOT EXISTS idx_pending_power_picks_character
   ON pending_power_picks (character_id, claimed_at);
+
+-- Things a table hands out that no class schedule granted: a patron teaches a
+-- skill, an artefact confers a power, an implant adds S.D.C. The G.M. usually
+-- says so out loud mid-session, so the PLAYER types it in on their own sheet.
+-- That is why this is not a G.M.-only table, and why `reason` is NOT NULL with
+-- no default: the person entering a grant is usually its beneficiary, and the
+-- reason is the only thing between a record and an unfalsifiable claim.
+--
+-- All eight kinds are in the CHECK though only 'skill' is implemented, because
+-- SQLite cannot alter one -- adding a kind later would mean the table rebuild
+-- 036 had to do. Removal is a hard DELETE, logged to play_events: a grant is
+-- current state, and a withdrawn ruling is not a stash item that left the
+-- party. See apps/character-creator/docs/plans/19-gm-grants.md. Migration 043.
+CREATE TABLE IF NOT EXISTS character_grants (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  character_id INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL CHECK (kind IN
+    ('skill', 'spell', 'psionic', 'ability', 'attribute', 'pool', 'combat', 'save')),
+  name TEXT NOT NULL,                   -- catalog name, or the key: 'PS', 'sdc_max', 'attacks'
+  value INTEGER,                        -- the delta, for the four numeric kinds; NULL otherwise
+  detail TEXT,                          -- JSON: what was written, or a choice's terms
+  reason TEXT NOT NULL,                 -- why the table gave it
+  granted_by TEXT NOT NULL,             -- Access identity of whoever typed it in
+  granted_at_level INTEGER,             -- what level the character was when it landed
+  claimed_at TEXT,                      -- for a CHOICE: NULL until the player spends it
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_character_grants_character
+  ON character_grants (character_id, kind);
 -- Shared gear catalog for character sheets. Named `gear` rather than `items`
 -- because this database is shared with MediaVault's `media_items`, and a table
 -- called `items` sitting next to it was the most likely future collision.
@@ -845,3 +874,7 @@ WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'ff_co
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '040-media-vault-source-id.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('media_items') WHERE name = 'source_id');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '043-character-grants.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'character_grants');

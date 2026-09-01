@@ -6,6 +6,7 @@
 import { getUserEmail, unauthorized, json, readJson, requireCharacter } from '../_lib/auth.js';
 import { listPending } from '../_lib/skill-picks.js';
 import { listPendingPowers } from '../_lib/power-picks.js';
+import { listGrants } from '../_lib/grants.js';
 import { decodeCharacter, decodeItemEnchantments } from '../_lib/character-json.js';
 import { getStored } from '../_lib/class-store.js';
 import { parseClassMarkdown } from '../../../../apps/character-creator/js/parser.js';
@@ -41,6 +42,11 @@ export async function onRequestGet({ request, env, params }) {
   // So the sheet can badge unspent skill picks without a second request.
   const pending_picks = await listPending(env, params.id);
   const pending_powers = await listPendingPowers(env, params.id);
+  // What a table handed this character outside its class schedule. Rides
+  // along for the same reason the pending picks do: the sheet needs it on
+  // first paint, and the granted skills are already IN `character.skills`, so
+  // without this it can show them and not say where they came from.
+  const grants = await listGrants(env, params.id);
 
   // The class as this character plays it, variant already applied.
   //
@@ -108,6 +114,7 @@ export async function onRequestGet({ request, env, params }) {
     pending_picks_total: pending_picks.reduce((n, g) => n + g.count, 0),
     pending_powers,
     pending_powers_total: pending_powers.reduce((n, g) => n + g.count, 0),
+    grants,
   });
 }
 
@@ -192,8 +199,8 @@ export async function onRequestPatch({ request, env, params }) {
 // character. Their journal entries are KEPT.
 //
 // Everything that is only meaningful as part of this character goes with it,
-// by foreign key: inventory, level history, unspent skill and power picks, and
-// the play log. A campaign item they had claimed returns to the stash rather
+// by foreign key: inventory, level history, unspent skill and power picks, the
+// play log, and the grants a table handed out (migration 043). A campaign item they had claimed returns to the stash rather
 // than vanishing — campaign_items.claimed_by_character_id is ON DELETE SET NULL
 // — which is the right answer for an object the party still owns.
 //

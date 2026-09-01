@@ -58,7 +58,11 @@ const C = { data: null, items: [], journal: [], catalog: [], cls: null, canWrite
             playMode: new URLSearchParams(location.search).get('play') === '1',
             playAmt: 1, lastRoll: null, rollLog: [],
             // A proposed change of stage, awaiting confirmation.
-            variantProposal: null };
+            variantProposal: null,
+            // What a table handed this character outside its class schedule.
+            // The granted SKILLS are already in `data.skills` as type 'gm';
+            // these rows are what say who gave them and why.
+            grants: [] };
 const $ = (i) => document.getElementById(i);
 
 // api() and errorDetails() come from js/api.js, loaded first as a classic script.
@@ -73,6 +77,7 @@ async function load() {
     C.skillLevelNotes = res.skill_level_notes || [];
     C.weaponBonuses = res.weapon_bonuses || [];
     C.pendingPicksTotal = res.pending_picks_total || 0;
+    C.grants = res.grants || [];
     // The class comes with the character now, already resolved to this
     // character's variant and still returned when it has been retired. It used
     // to mean fetching every class and finding this one, which could not apply
@@ -221,6 +226,113 @@ async function removeGmPower(name) {
     await api('characters/' + id, jsonReq('PATCH', { gm_abilities: gmPowerNames().filter((n) => n !== name) }));
     await refreshPowers();
   } catch (err) { alert(err.message); }
+}
+
+// ─── Granted skills ──────────────────────────────────────────────────────
+// Things a table handed out that no class schedule granted. The G.M. says so
+// out loud mid-session and the player types it in here, so nothing about this
+// is G.M.-only — what carries the weight instead is that every row shows the
+// reason it was given and who entered it.
+//
+// Its own full-width box rather than a fourth column beside Class, Related and
+// Secondary, because each row carries something those do not: the reason. The
+// three-column grid has no room for a sentence.
+//
+// Rebuilt in place after an edit, like the powers block above and for the same
+// reason — a full render() would discard anything typed into the section
+// inputs and not yet saved.
+function grantedSkillsHtml() {
+  const skills = Array.isArray(C.data?.skills) ? C.data.skills : [];
+  const granted = skills.filter((s) => s.type === 'gm');
+  const w = C.canWrite;
+  if (!granted.length && !w) return '';
+
+  const grantOf = (name) => (C.grants || []).find((g) => g.kind === 'skill'
+    && String(g.name).toLowerCase() === String(name).toLowerCase());
+
+  // The Remove button sits in the note row rather than beside the name,
+  // because filterSkills() matches on the first cell's text — a button in
+  // there would make every granted skill match a search for "remove".
+  const rows = granted.map((s) => {
+    const g = grantOf(s.name);
+    return `<tr class="skill-row">
+      <td>${escHtml(s.name)}</td>
+      <td class="num">${s.per_level ? '+' + s.per_level : '—'}</td>
+      <td class="num pct">${s.pct ? s.pct + '%' : '—'}</td>
+    </tr>${g ? `<tr class="skill-note"><td colspan="3">
+      <span class="note">↳ ${escHtml(g.reason)}
+        <span class="muted">— ${escHtml(g.granted_by)}${
+          g.granted_at_level ? `, at level ${g.granted_at_level}` : ''}</span></span>
+      ${w ? `<button class="btn btn-sm btn-ghost noprint" onclick="removeSkillGrant(${g.id})"
+        aria-label="Remove granted skill ${escHtml(s.name)}">Remove</button>` : ''}
+    </td></tr>` : `<tr class="skill-note"><td colspan="3">
+      <span class="note err">↳ granted, but no record of who or why</span></td></tr>`}`;
+  }).join('');
+
+  const table = granted.length ? `<table class="skill-table">
+    <thead><tr class="skill-head">
+      <th>Skill</th><th class="num">+%/Lvl</th><th class="num">%</th>
+    </tr></thead><tbody>${rows}</tbody></table>`
+    : '<p class="muted small">Nothing granted.</p>';
+
+  // Free text with a datalist rather than a select: the catalog is the common
+  // case, and a language or literacy the catalog does not name — "Language:
+  // Dragonese" — is a legitimate thing for a patron to teach. The server
+  // resolves those against their family's Other row.
+  const add = w ? `<div class="rowline noprint" style="margin-top:8px">
+      <input id="grant-name" class="mini-in wide" list="grant-skill-list"
+        placeholder="Skill name" aria-label="Skill to grant">
+      <input id="grant-reason" class="mini-in wide"
+        placeholder="Why the table gave it (required)" aria-label="Reason">
+      <button class="btn btn-sm" onclick="addSkillGrant()">Grant</button>
+    </div>
+    <datalist id="grant-skill-list">${(C.skillCatalog || [])
+      .map((s) => `<option value="${escHtml(s.name)}">`).join('')}</datalist>` : '';
+
+  return box('Granted', table + add);
+}
+
+async function addSkillGrant() {
+  const name = $('grant-name')?.value.trim();
+  const reason = $('grant-reason')?.value.trim();
+  if (!name) { flash('Name the skill.', true); return; }
+  // Refused here as well as on the server, so the message arrives before the
+  // round trip. The reason is the whole record: anyone who can add a grant is
+  // usually the one it benefits.
+  if (!reason) { flash('Say why the table gave it — the reason is the record.', true); return; }
+  try {
+    const res = await api(`characters/${id}/grants`, jsonReq('POST', { kind: 'skill', name, reason }));
+    C.data.skills = res.skills;
+    C.grants = [...(C.grants || []), res.grant];
+    refreshGranted();
+    flash(`Granted ${res.grant.name}.`);
+  } catch (err) { flash(err.message, true); }
+}
+
+async function removeSkillGrant(grantId) {
+  const g = (C.grants || []).find((x) => x.id === grantId);
+  if (!g) return;
+  if (!confirm(`Remove the granted skill "${g.name}"?\n\n`
+    + `It leaves the sheet. Why it was given — ${g.reason} — stays in the play log.`)) return;
+  try {
+    const res = await api(`characters/${id}/grants/${grantId}`, { method: 'DELETE' });
+    C.data.skills = res.skills;
+    C.grants = (C.grants || []).filter((x) => x.id !== grantId);
+    refreshGranted();
+  } catch (err) { flash(err.message, true); }
+}
+
+function refreshGranted() {
+  const block = $('granted-block');
+  if (block) block.innerHTML = grantedSkillsHtml();
+  // The tab badge and the filter's "N known" are both computed inside
+  // render(), which a targeted refresh deliberately does not run. Left alone
+  // they read 15 with 16 rows on the page - the same species of bug as the
+  // fourth skill type being invisible: a number that disagrees with what is
+  // on screen, and no error anywhere.
+  const badge = document.querySelector('.tabbar .tab[data-tab="skills"] .tab-n');
+  if (badge) badge.textContent = (C.data?.skills || []).length;
+  filterSkills(C.skillFilter);
 }
 
 const advisory = (label, value) => {
@@ -432,12 +544,16 @@ async function endSession() {
   let damage = 0;
   const powers = {};
   let shots = 0, reloads = 0, rolls = 0, passes = 0, fails = 0, pools = 0;
+  // Grants are listed rather than counted. "3 grants" says nothing a table
+  // would want in a recap; the note already reads as a sentence.
+  const grants = [];
   for (const e of session) {
     const note = e.payload?.note || '';
     if (e.kind === 'damage') { const m = note.match(/took (\d+)/); if (m) damage += +m[1]; }
     else if (e.kind === 'power') { const name = note.split(' −')[0] || note; powers[name] = (powers[name] || 0) + 1; }
     else if (e.kind === 'ammo') { if (/shot fired/.test(note)) shots++; else if (/reload/.test(note)) reloads++; }
     else if (e.kind === 'pool') pools++;
+    else if (e.kind === 'grant') grants.push(note);
     else if (e.kind === 'roll') { rolls++; if (/— pass/.test(note)) passes++; else if (/— fail/.test(note)) fails++; }
   }
   const lines = [`Play session: ${session.length} actions.`];
@@ -446,6 +562,7 @@ async function endSession() {
   if (powerNames.length) lines.push(`Powers used: ${powerNames.join(', ')}.`);
   if (shots || reloads) lines.push(`Shots fired: ${shots}${reloads ? ` (${reloads} reload${reloads > 1 ? 's' : ''})` : ''}.`);
   if (pools) lines.push(`Pool adjustments: ${pools}.`);
+  for (const g of grants) lines.push(g.charAt(0).toUpperCase() + g.slice(1) + '.');
   if (rolls) lines.push(`Rolls: ${rolls}${passes + fails ? ` (${passes} passed, ${fails} failed of those with a target)` : ''}.`);
 
   if (!confirm(`Post this recap to the journal?\n\n${lines.join('\n')}`)) return;
@@ -749,7 +866,8 @@ function renderPlay() {
       <span class="pr-num">${v > 0 ? '+' + v : v}</span></button>`;
     }).join('');
 
-  const skillGroups = [['occ', 'Class Skills'], ['related', 'Related Skills'], ['secondary', 'Secondary Skills']]
+  const skillGroups = [['occ', 'Class Skills'], ['related', 'Related Skills'],
+                       ['secondary', 'Secondary Skills'], ['gm', 'Granted']]
     .map(([type, label]) => {
       const list = skills.filter((s) => s.type === type && s.pct);
       if (!list.length) return '';
@@ -1264,6 +1382,7 @@ function render() {
     ${skillBox('Related Skills', byType('related'))}
     ${skillBox('Secondary Skills', byType('secondary'))}
   </div>
+  <div id="granted-block" class="sheet-grid" style="margin-top:12px">${grantedSkillsHtml()}</div>
 
   </section>
 
