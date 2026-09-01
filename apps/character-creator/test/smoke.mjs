@@ -3544,6 +3544,99 @@ section('One pool widget, both modes');
     !/#[0-9a-fA-F]{3,8}/.test(tones), 'a pool tone hardcodes a colour');
 }
 
+// ---------- The sheet body, three columns ----------
+// The sheet used to show one tab at a time on a 1440 desktop, the same as on a
+// 390 phone, inside a 900px container sized for prose. It is now a three-column
+// body in its own container, with tabs demoted to a phone affordance.
+//
+// These checks pin the parts that fail SILENTLY. The loudest is the column
+// assignment: display: contents does not change the DOM tree, so a box left
+// unplaced does not error - it lands in whatever column has room, three columns
+// from the thing it belongs to. That is how the skills filter first rendered
+// above Psionics.
+section('The sheet body, three columns');
+{
+  const src = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
+  const html = readFileSync(join(appDir, 'sheet.html'), 'utf8');
+
+  check('the sheet has its own container',
+    /\.wrap\.wrap-sheet \{ max-width: 1640px; \}/.test(css), 'wrap-sheet is gone');
+  check('and sheet.html asks for it',
+    /<main class="wrap wrap-sheet">/.test(html), 'sheet.html is back on the prose container');
+
+  // N2's escape hatch existed only because .wrap was 900px.
+  check('the skills escape hatch is gone with the container that caused it',
+    !/\.tabpanel\[data-tab="skills"\] \{/.test(css), 'the width + translate hack is still here');
+
+  // Tabs: a phone affordance, not the desktop default.
+  check('panels dissolve by default',
+    /^\.tabpanel \{ display: contents; \}/m.test(css), 'tabpanel is not display: contents');
+  check('the tab bar is hidden by default',
+    /^\.tabbar \{ display: none; \}/m.test(css), 'the tab bar still shows on desktop');
+  check('and both come back on a phone',
+    /@media \(max-width: 820px\) \{[\s\S]*?\.tabbar \{ display: flex; \}[\s\S]*?\.tabpanel \{ display: none; \}/.test(css),
+    'below 820px the tabs no longer return');
+
+  // Column assignment. Every box the body holds must be placed.
+  const colBlock = src.slice(src.indexOf('const BOX_COL'), src.indexOf('};', src.indexOf('const BOX_COL')));
+  const assigned = [...colBlock.matchAll(/'?([a-z-]+)'?\s*:\s*'([abc])'/g)].map((m) => m[1]);
+  check('there is a single column table', assigned.length > 0, 'BOX_COL is gone');
+
+  // Titles come from box('...') calls; the name header is a template literal
+  // and is deliberately unplaced, so only quoted titles are required to map.
+  const titles = [...src.matchAll(/\bbox\('([^']+)'/g)].map((m) => m[1]);
+  const slug = (t) => t.replace(/<[^>]*>/g, '').replace(/&amp;/g, ' ')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const unplaced = titles.map(slug).filter((s) => !assigned.includes(s));
+  check('every box in the body is assigned a column', unplaced.length === 0,
+    `unplaced: ${unplaced.join(', ')} — an unplaced box lands wherever there is room`);
+
+  // The skill boxes are built through a helper, so their titles are not literals
+  // at the box() call. They are the widest thing on the sheet and must be in b.
+  for (const s of ['class-skills', 'related-skills', 'secondary-skills']) {
+    check(`${s} is in the wide column`, assigned.includes(s) && /(['"]?)class-skills\1?: 'b'/.test(colBlock) !== null
+      && new RegExp(`'${s}': 'b'`).test(colBlock), `${s} is not in column b`);
+  }
+
+  check('the columns are placed by attribute, not by source order',
+    /\.sheet-grid\.sheet-3 \[data-col="a"\] \{ grid-column: 1; \}/.test(css)
+    && /\.sheet-grid\.sheet-3 \[data-col="b"\] \{ grid-column: 2; \}/.test(css)
+    && /\.sheet-grid\.sheet-3 \[data-col="c"\] \{ grid-column: 3; \}/.test(css),
+    'a column rule is missing');
+
+  // display: contents leaves the DOM tree alone, so a child combinator here
+  // matches nothing - the boxes are grandchildren through .tabpanel.
+  check('and by a descendant selector, because the boxes are grandchildren',
+    !/\.sheet-grid\.sheet-3 > \[data-col/.test(css),
+    'a child combinator is back; display: contents does not reparent anything');
+
+  check('the skills filter is placed too, or it drifts',
+    /\.sheet-grid\.sheet-3 \.pick-filter \{ grid-column: 2; \}/.test(css),
+    '.pick-filter has no column and will land wherever there is room');
+
+  // Prose keeps a measure; the sheet around it does not have to.
+  check('prose is capped where it lives',
+    /\[data-box="journal"\] \.box-body/.test(css) && /max-width: 66ch/.test(css),
+    'the journal has no reading measure');
+
+  // PAPER IS NOT A 1640px SCREEN. Every one of these was measured: without them
+  // the printed sheet went from seven pages to eight.
+  const printBlock = css.slice(css.lastIndexOf('@media print'));
+  check('print puts the body back to a block',
+    /\.sheet-grid\.sheet-3 \{ display: block; \}/.test(printBlock), 'print inherits the three columns');
+  check('print puts the inner grids back',
+    /\.sheet-grid\.sheet-3 \.tabpanel > \.sheet-grid \{ display: grid; \}/.test(printBlock),
+    'the inner grids stay dissolved on paper');
+  check('print releases the column assignments',
+    /grid-column: auto;/.test(printBlock), 'boxes keep their screen columns on paper');
+  check('print releases the prose cap',
+    /\.box\[data-box\] \.box-body \{ max-width: none; \}/.test(printBlock),
+    '66ch is narrower than a page column and runs the sheet long');
+  check('and print keeps the pool value at a paper size',
+    /\.vital \.val \{ font-size: 17px/.test(printBlock), 'a 44px pool value goes to paper');
+}
+
 // ---------- Military Occupational Specialty ----------
 // RUE gives several classes an MOS: "select one area of specialty, gain all
 // skills under that MOS" (Coalition Technical Officer p236, Robot Pilot p84).

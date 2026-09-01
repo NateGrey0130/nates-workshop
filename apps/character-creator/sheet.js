@@ -169,8 +169,40 @@ function flash(text, isError) {
 }
 
 // ─── small builders for the sheet's boxed idiom ───
-const box = (title, body, extra = '') =>
-  `<div class="box"><div class="box-title"><span>${title}</span>${extra}</div><div class="box-body">${body}</div></div>`;
+// data-box is the box's own name, so a rule can reach one box without relying
+// on its position. The journal's reading measure is capped that way. Derived
+// from the title rather than passed, because a box whose title and hook
+// disagree is a bug waiting to happen.
+const boxSlug = (title) => String(title)
+  .replace(/<[^>]*>/g, '')          // some titles carry tags - the name box has two
+  .replace(/&amp;/g, ' ')
+  .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+// THE COLUMN ASSIGNMENT, IN ONE PLACE. data-col places a box in the
+// three-column body; WITHOUT IT A BOX FLOWS IN DOM ORDER, which is tab order,
+// and tab order is not lookup order - see the .sheet-3 comment in styles.css.
+//
+// The split is by how often you look a thing up rather than by topic:
+//   a  numbers read constantly, in a narrow fixed column
+//   b  the long lists you scan, in the column that takes the slack
+//   c  what you read a paragraph of, capped to a reading measure
+//
+// A box with no entry gets no column and flows, which is correct for the name
+// header - it sits outside .sheet-3 entirely. The smoke test pins that every
+// box INSIDE the body has one, so a new box cannot silently land anywhere.
+const BOX_COL = {
+  attributes: 'a', vitals: 'a', experience: 'a', 'saving-throws': 'a', combat: 'a',
+  'class-skills': 'b', 'related-skills': 'b', 'secondary-skills': 'b',
+  granted: 'b', armor: 'b', equipment: 'b',
+  'psionics-magic': 'c', background: 'c', bearing: 'c', notes: 'c', journal: 'c',
+};
+
+const box = (title, body, extra = '') => {
+  const slug = boxSlug(title);
+  const col = BOX_COL[slug];
+  return `<div class="box" data-box="${slug}"${col ? ` data-col="${col}"` : ''}>` +
+    `<div class="box-title"><span>${title}</span>${extra}</div><div class="box-body">${body}</div></div>`;
+};
 
 const field = (label, value, dim) =>
   `<div class="field"><span class="lbl">${label}</span><span class="dots"></span>` +
@@ -1303,6 +1335,7 @@ function render() {
     </nav>
   </div>
 
+  <div class="sheet-body sheet-grid sheet-3">
   <section class="tabpanel${C.tab === 'vitals' ? ' on' : ''}" data-tab="vitals">
   <div class="sheet-grid rail" style="margin-top:12px">
     ${box('Attributes', `<div class="attr-stack">
@@ -1479,7 +1512,8 @@ function render() {
       ${journalMore}`,
       '<span class="muted" style="font-size:9px">NEWEST FIRST</span>')}
   </div>
-  </section>`;
+  </section>
+  </div>`;
 
   wirePickers();
   sizeSticky();
