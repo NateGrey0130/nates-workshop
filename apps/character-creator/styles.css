@@ -1433,6 +1433,10 @@ body.play-mode #print-btn { display: none; }
      prints blank, which is a failure only paper would show. */
   [data-sticky] { position: static !important; }
   .vitals-strip { padding-top: 0; break-inside: avoid; }
+  /* Five pools, five columns. On screen this is auto-fit at a 84px minimum,
+     which on a 700px page resolves to eight tracks for five items and leaves
+     three empty. Paper knows exactly how many there are. */
+  .vitals { grid-template-columns: repeat(5, 1fr); }
   /* PAPER IS NOT A 1640px SCREEN. The three-column body and the 44px pool
      value are screen decisions; letting print inherit them squeezed the
      columns into a 700px page and took the sheet from seven pages to eight.
@@ -1443,13 +1447,42 @@ body.play-mode #print-btn { display: none; }
   /* The prose cap is a screen decision too: on a 700px page 66ch is
      NARROWER than the column, so it wraps more and runs longer. */
   .box[data-box] .box-body { max-width: none; }
-  .sheet-grid.sheet-3 { display: block; }
-  .sheet-grid.sheet-3 .tabpanel > .sheet-grid { display: grid; }
+  /* MULTICOL, NOT GRID. A two-column grid was the obvious answer and it did
+     not work: a grid row is as tall as its tallest box, so a long Equipment
+     list beside a six-row Combat box leaves the rest of that row blank, and
+     the page count did not move. Measured, both ways - five pages either
+     way, with pages 3-5 carrying 1957, 2238 and 730 drawing operators.
+     Multicol FLOWS: it fills column one, then column two, then the next
+     page, and break-inside on each box decides where it may split. */
+  .sheet-grid.sheet-3 {
+    display: block; columns: 2; column-gap: 10px;
+  }
+  .sheet-grid.sheet-3 .tabpanel > .sheet-grid { display: block; }
+  .sheet-grid.sheet-3 .box { break-inside: avoid; margin: 0 0 8px; }
+  /* Short boxes stay whole; the long lists are allowed to split across a
+     column or a page. An unbreakable Equipment box at 23 items, or Skills at
+     sixty, is taller than the space left more often than not, and pushes a
+     column break that leaves the rest of it blank. Their rows already avoid
+     breaking away from their own footnotes, so a split lands between
+     entries. Same specificity as the rule above, stated after it. */
+  .sheet-grid.sheet-3 .box[data-box="equipment"],
+  .sheet-grid.sheet-3 .box[data-box="class-skills"],
+  .sheet-grid.sheet-3 .box[data-box="related-skills"],
+  .sheet-grid.sheet-3 .box[data-box="secondary-skills"],
+  .sheet-grid.sheet-3 .box[data-box="psionics-magic"],
+  .sheet-grid.sheet-3 .box[data-box="journal"] { break-inside: auto; }
   .sheet-grid.sheet-3 [data-col],
   .sheet-grid.sheet-3 .pick-filter { grid-column: auto; }
   .vital .val { font-size: 17px; font-weight: 700; line-height: 1.2; }
   .attr-stack .field > .val { font-size: 15px; }
 
+  /* The page-count driver. Every .box is break-inside: avoid, which is right
+     for a six-row Combat box and wrong for Equipment at 23 items or Skills at
+     sixty: an unbreakable box taller than the space left pushes a whole page
+     and leaves the rest of it blank. Measured: pages 3-5 carried 1957, 2238
+     and 730 drawing operators against 8037 on page 1. The long lists are
+     allowed to break; their rows already avoid breaking away from their own
+     footnotes. */
   .vital .val b { display: inline !important; }
   .vital .bar, .vital .steppers { display: none !important; }
 }
