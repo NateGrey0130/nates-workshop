@@ -292,6 +292,18 @@ function rollD20(kind, name, bonus, target) {
     target: target || null, ok: target ? roll + b >= target : null });
 }
 
+// Every ⚡ button carries the pool it spends and what it costs, so its disabled
+// state can be re-read from C.data without a render. Play mode moves a pool by
+// targeted DOM update rather than a re-render - see adjustPool below - so a
+// button rendered live stays live after the pool it spends has run out, which
+// is the same false promise one action later. Called wherever a pool moves.
+function syncPowerBtns() {
+  for (const b of document.querySelectorAll('button[data-pool][data-cost]')) {
+    const left = C.data[b.dataset.pool + '_current'];
+    b.disabled = left != null && left < Number(b.dataset.cost);
+  }
+}
+
 // Quick pool arithmetic: optimistic, targeted DOM update, PATCH behind it.
 // No clamping - negative H.P. is a real Palladium state (coma), and a G.M.
 // may allow over-maximum; arithmetic is offered, never enforced.
@@ -303,11 +315,13 @@ async function adjustPool(key, delta) {
   C.data[key + '_current'] = next;
   const el = $('play-cur-' + key);
   if (el) el.textContent = next;
+  syncPowerBtns();
   try {
     await postEvent('pool', `${key.toUpperCase()} ${delta > 0 ? '+' : ''}${delta}`, { character: { [key + '_current']: { from: prev, to: next } } });
   } catch (err) {
     C.data[key + '_current'] = prev;
     if (el) el.textContent = prev;
+    syncPowerBtns();
     alert('Failed: ' + err.message);
   }
 }
@@ -642,6 +656,9 @@ async function applyRest() {
     const el = $('play-cur-' + field.replace('_current', ''));
     if (el) el.textContent = v.to;
   }
+  // A rest recovers P.P.E. and I.S.P. as well as H.P., so it can bring a ⚡
+  // button back to life.
+  syncPowerBtns();
   try {
     await postEvent('pool', `rested ${hours}h: ${applied.join(', ')}`, changes);
     recordRoll('rest', `Rested ${hours}h`, { note: applied.join(', ') });
@@ -651,6 +668,7 @@ async function applyRest() {
       const el = $('play-cur-' + field.replace('_current', ''));
       if (el) el.textContent = v;
     }
+    syncPowerBtns();
     alert('Failed: ' + err.message);
   }
 }
@@ -743,9 +761,10 @@ function renderPlay() {
   const powerRows = powers.map((p, idx) => {
     const pool = p.type === 'spell' ? 'ppe' : 'isp';
     const cost = typeof p.cost === 'number' ? p.cost : null;
+    const left = c[pool + '_current'];
     return `<div class="play-power">
       <span>${escHtml(p.name)} <span class="muted small">${cost != null ? cost + (p.cost_note && cost > 0 ? '+' : '') + ' ' + (pool === 'ppe' ? 'P.P.E.' : 'I.S.P.') : ''}</span></span>
-      ${w && cost != null && c[pool + '_current'] != null ? `<button class="btn btn-sm" onclick="usePower(${idx})">⚡</button>` : ''}
+      ${w && cost != null && left != null ? `<button class="btn btn-sm" data-pool="${pool}" data-cost="${cost}"${left < cost ? ' disabled' : ''} onclick="usePower(${idx})">⚡</button>` : ''}
     </div>`;
   }).join('');
 
@@ -919,8 +938,14 @@ function render() {
       : (p.category ? `Psionics — ${p.category}` : 'Psionics');
     const head = group !== lastPowerGroup ? `<div class="power-group">${escHtml(group)}</div>` : '';
     lastPowerGroup = group;
-    const useBtn = w && cost != null && c[pool + '_current'] != null
-      ? `<button class="btn btn-sm btn-ghost noprint" onclick="usePower(${i})">⚡ use</button>` : '';
+    // Offered only when the pool can pay for it. shared/styles.css already dims
+    // :disabled to 0.45 and sets cursor: not-allowed, so this needs no styling
+    // of its own, and usePower keeps its guard for the call arriving by hand.
+    // A variable-cost power is judged on its minimum - the same number usePower
+    // deducts - so the button stays live and the G.M. adjusts for the rest.
+    const left = c[pool + '_current'];
+    const useBtn = w && cost != null && left != null
+      ? `<button class="btn btn-sm btn-ghost noprint" data-pool="${pool}" data-cost="${cost}"${left < cost ? ' disabled' : ''} onclick="usePower(${i})">⚡ use</button>` : '';
     // A cost_note marks a variable cost: `cost` is the minimum, the use button
     // deducts it, and the note says how the real spend grows — the G.M. adjusts
     // the pool by hand for bigger spends, as at a real table.
@@ -1710,6 +1735,9 @@ async function usePower(index) {
     if (C.playMode) {
       const el = $('play-cur-' + pool);
       if (el) el.textContent = cur - p.cost;
+      // Spending is the commonest way to make the next ⚡ unaffordable, and
+      // play mode never re-renders, so the buttons are re-read here.
+      syncPowerBtns();
       recordRoll('power', p.name, { die: 0, roll: 0, target: null, ok: null,
         note: `-${p.cost} ${pool === 'ppe' ? 'P.P.E.' : 'I.S.P.'}` });
     } else await load();
