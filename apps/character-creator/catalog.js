@@ -333,6 +333,7 @@ function render() {
   </div>`;
 
   wire();
+  fitColumns();
 }
 
 // Only the two trustworthy tiers are counted. Measured against the real 138-row
@@ -432,11 +433,38 @@ function redirectPanel() {
 //
 // `0` is deliberately NOT empty: a skill's base 0 means non-percentile (W.P.s,
 // hand to hand), which is a fact about the skill rather than a missing value.
+// A bonuses block, as the reader would say it out loud rather than as it is
+// stored. The first row of the skills catalog used to read
+// `Bonuses: {"attributes":{"PS":1,"PP":1,"PE":1},"combat":{…` - serialized
+// JSON, truncated mid-object, simultaneously unreadable and incomplete, and
+// the widest thing in the row.
+//
+// Same grouping and the same `+` handling as the wizard's race briefing
+// (app.js raceBriefing), which is where this shape is already spoken aloud.
+// Not shared with it: that one emits `<span class="tag">` chrome for a panel
+// and this is plain text for a table cell that summaryValue then truncates.
+const POOL_LABELS = { hp: 'H.P.', sdc: 'S.D.C.', mdc: 'M.D.C.', ppe: 'P.P.E.', isp: 'I.S.P.' };
+
+function bonusesSummary(v) {
+  let b = v;
+  if (typeof b === 'string') { try { b = JSON.parse(b); } catch { return null; } }
+  if (!b || typeof b !== 'object') return null;
+  const plus = (x) => (typeof x === 'number' && x > 0 ? '+' : '') + [x].flat().join(' & +');
+  const bits = [
+    ...Object.entries(b.attributes || {}).map(([k, x]) => `${k} ${plus(x)}`),
+    ...Object.entries(b.pools || {}).map(([k, x]) => `${POOL_LABELS[k] || k} ${plus(x)}`),
+    ...Object.entries(b.combat || {}).map(([k, x]) => `${k.replace(/_/g, ' ')} ${plus(x)}`),
+    ...Object.entries(b.saves || {}).map(([k, x]) => `save vs ${k.replace(/_/g, ' ')} ${plus(x)}`),
+  ];
+  return bits.length ? bits.join(' \u00b7 ') : null;
+}
+
 function summaryValue(f, v) {
   // NULL systems means "both", which is true of nearly every row — printing it
   // 128 times says nothing. Show it only when the row is actually restricted.
   if (f.type === 'systems') return Array.isArray(v) && v.length ? v.join(', ') : null;
   if (f.type === 'bool') return v ? 'yes' : null;
+  if (f.type === 'bonuses') return bonusesSummary(v);
   if (v === null || v === undefined || v === '') return null;
 
   // Books write damage as a sentence — the JA-11's runs to 140 characters and
@@ -476,6 +504,62 @@ function summaryFor(c, r) {
     .slice(0, 4)
     .map(({ f, text }) => `<span class="muted small">${escHtml(f.label)}: ${escHtml(text)}</span>`)
     .join('');
+}
+
+// The collapsed rows line up in columns, and the column widths are MEASURED
+// rather than written down. Five catalogs with different fields cannot share
+// one set of hand-tuned weights: a template fitted to skills put 99% of its
+// rows on one line and only 69% of spells', because `System: palladium-fantasy`
+// lands in a track sized for `Base %: 30`.
+//
+// The 99th percentile, not the maximum. One 300-character outlier would size
+// the whole column for the other 606 rows; at p99 the outliers wrap and
+// everything else fits. Measured on the rows CURRENTLY RENDERED, so filtering
+// to one category re-fits to what is on screen.
+//
+// Only where the grid applies. Gear and enchantments key on a slug rather than
+// a name, and that extra column leaves too little for the rest - fitted, they
+// go from 98% single-line to 0% and half again as tall. They keep the flex row
+// and the widened container; the CSS excludes them with :not(:has(.cat-key))
+// and this returns early on the same test so the two cannot disagree.
+const COL_PCT = 0.99;
+const COL_GAP = 12;
+
+function fitColumns() {
+  const root = document.documentElement;
+  const rows = [...document.querySelectorAll('.cat-row:not(.open)')];
+  if (!rows.length || rows.some((r) => r.querySelector('.cat-key'))) {
+    root.style.removeProperty('--cat-cols');
+    return;
+  }
+  const cv = document.createElement('canvas').getContext('2d');
+  const fontOf = (el) => {
+    const c = getComputedStyle(el);
+    return `${c.fontWeight} ${c.fontSize} ${c.fontFamily}`;
+  };
+  const pct = (widths) => {
+    widths.sort((a, b) => a - b);
+    return Math.ceil(widths[Math.min(widths.length - 1, Math.floor(widths.length * COL_PCT))]);
+  };
+  cv.font = fontOf(rows[0].querySelector('.slug'));
+  const name = pct(rows.map((r) => cv.measureText(r.querySelector('.slug').textContent).width));
+  const sample = rows.find((r) => r.querySelector('.muted'))?.querySelector('.muted');
+  if (!sample) { root.style.removeProperty('--cat-cols'); return; }
+  cv.font = fontOf(sample);
+  // Four summary slots; the fourth takes the slack, so only three need a width.
+  const slots = [0, 1, 2].map((i) => pct(rows.map((r) => {
+    const el = r.querySelectorAll('.muted')[i];
+    return el ? cv.measureText(el.textContent).width : 0;
+  })));
+  const cols = [name, ...slots];
+  const avail = rows[0].getBoundingClientRect().width - COL_GAP * 4;
+  const want = cols.reduce((a, b) => a + b, 0);
+  // Leave at least a third of the row for the fourth slot, which is the source
+  // book on most rows and the longest thing on any of them.
+  const room = avail * 0.66;
+  const scale = want > room ? room / want : 1;
+  const px = cols.map((w) => Math.max(40, Math.round(w * scale)));
+  root.style.setProperty('--cat-cols', `${px.join('px ')}px minmax(0, 1fr)`);
 }
 
 function wire() {

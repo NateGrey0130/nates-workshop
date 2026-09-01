@@ -1126,6 +1126,23 @@ already produces, or omit it from the row and keep it in the edit form. Display 
 
 ---
 
+**Taken, 2026-09-01 (PR #456).** Confirmed on the live page — the first skills
+row read `Bonuses: {"attributes":{"PS":1,"PP":1,"PE":1},"combat":{…`, serialized
+and truncated mid-object.
+
+`summaryValue()` gained a `bonuses` case, so it now reads
+
+> `Bonuses: PS +1 · PP +1 · PE +1 · roll +2`
+
+**One premise correction.** The finding says to reuse the summary *the sheet*
+already produces. The sheet does not produce one — nothing in `sheet.js`
+formats a bonuses block for reading. The renderer that does is the wizard's
+`raceBriefing()` (`app.js:808`), whose grouping and `+` handling this follows.
+Not shared with it: that one emits `<span class="tag">` chrome for a panel and
+this is plain text for a cell `summaryValue()` then truncates.
+
+---
+
 ### F19 — low — Why a step is skipped is available only on hover
 
 **Step 3 (flow).** Screenshot evidence: yes, stepper at 1440×900 and 390×844.
@@ -1246,6 +1263,58 @@ what makes this liveable — but the default state is a wall.
 **Proposal:** lay the row fields out as a fixed grid (name / category / base % / per
 level / source) so the columns line up, reusing `.kv-row`'s existing grid vocabulary.
 Pagination is a **separate**, larger question — the filter mostly covers it.
+
+---
+
+**Taken, 2026-09-01 (PR #456), and the proposal is half of the fix. The other
+half is the container.**
+
+The ragged alignment is real and was measured rather than eyeballed: **341
+distinct column-x patterns across 345 skill rows**, 590 across 607 spells, 997
+across 1,025 gear.
+
+**Laying those columns out on a grid inside the existing container makes the
+list TALLER.** `main.wrap` is `max-width: 900px` — right for four pages of
+prose, forms and panels, and wrong for the fifth, which is a 345-row table. It
+gives five columns 798px to share while 540 sit empty on a 1440 screen. Gridded
+at 798px, skills went from 96% single-line rows to 45% and from 12,321px to
+15,134. So `catalog.html` gets `wrap-wide` (1280px); the width is not a separate
+wish, it is what makes the grid a fix rather than a trade.
+
+**`.kv-row`'s grid vocabulary was not reused, and a fixed field list is not
+possible.** `summaryFor()` picks the first four fields each ROW fills,
+deliberately — measured 2026-09-01, skills has **3** distinct column shapes
+across 345 rows but gear has **22** across 1,025. The finding's suggested
+columns (name / category / base % / per level / source) serve skills and gut
+gear. The labels therefore stay, and a slot aligns with the slot above it while
+saying what it holds.
+
+**The widths are measured at render time, not written into the stylesheet.** A
+template hand-fitted to skills put 99% of its rows on one line and only 69% of
+spells' — `System: palladium-fantasy` landing in a track sized for `Base %: 30`.
+`fitColumns()` takes the 99th percentile of each column's rendered text across
+the rows currently on screen and writes `--cat-cols`; the CSS carries the
+skills-shaped guess only as the fallback before it lands. It re-fits on filter
+and clears itself on the empty state — both confirmed.
+
+**Gear and enchantments are excluded, on the measurements.** They key on a slug
+rather than a name, and that extra column leaves too little for the rest:
+fitted, gear goes from 98% single-line to **0%** and from 36,490px to 51,529.
+They keep the flex row and take the width alone, which is most of the win there
+anyway — gear was 45,336px at 900 and is 36,490 at 1280.
+
+Where the grid does apply:
+
+| catalog | x-patterns before → after | single-line | total height, flex → grid |
+|---|---|---|---|
+| skills | 341 → **2** | 99% | 12,074 → 12,134 |
+| spells | 590 → **3** | 97% | 21,244 → 21,544 |
+| psionic powers | 115 → **2** | 97% | 4,059 → 4,109 |
+
+Alignment for a third of a percent of height. Below 900px the flex row is
+unchanged and no horizontal overflow appears at 390.
+
+**Pagination remains out of scope**, as the finding says.
 
 ---
 
