@@ -3629,11 +3629,19 @@ section('The sheet body, three columns');
   // PAPER IS NOT A 1640px SCREEN. Every one of these was measured: without them
   // the printed sheet went from seven pages to eight.
   const printBlock = css.slice(css.lastIndexOf('@media print'));
-  check('print puts the body back to a block',
-    /\.sheet-grid\.sheet-3 \{ display: block; \}/.test(printBlock), 'print inherits the three columns');
-  check('print puts the inner grids back',
-    /\.sheet-grid\.sheet-3 \.tabpanel > \.sheet-grid \{ display: grid; \}/.test(printBlock),
-    'the inner grids stay dissolved on paper');
+  // Phase 4 held paper still by putting the body back to a plain block and
+  // restoring the inner grids - the layout paper had before that phase.
+  // Phase 7 replaced the hold with a real print layout: the body flows in
+  // two columns and the inner grids dissolve into that flow. What both
+  // versions assert is the same thing, which is that paper does not inherit
+  // the three-column screen body.
+  check('paper does not inherit the three-column body',
+    /\.sheet-grid\.sheet-3 \{[\s\S]*?display: block;/.test(printBlock)
+    && !/\.sheet-grid\.sheet-3 \{[\s\S]*?grid-template-columns: 296px/.test(printBlock),
+    'print inherits the three-column screen grid');
+  check('and lays itself out for a page instead',
+    /\.sheet-grid\.sheet-3 \{[\s\S]*?columns: 2;/.test(printBlock),
+    'paper has no print layout of its own');
   check('print releases the column assignments',
     /grid-column: auto;/.test(printBlock), 'boxes keep their screen columns on paper');
   check('print releases the prose cap',
@@ -3819,6 +3827,67 @@ section('The GM dashboard');
   check('and the display face, like every other numeric column',
     /var\(--font-display\)/.test(pools) && /font-stretch: 75%/.test(pools),
     'the pools column is the one numeric column still on the body face');
+}
+
+// ---------- The printed sheet ----------
+// Paper is not a screen, and every rule here exists because a screen decision
+// reached it and cost pages. The numbers in the comments are from real print
+// renders, so a change that undoes one of these shows up as a longer sheet
+// rather than as a failing assertion - which is why these pin the mechanism.
+section('The printed sheet');
+{
+  const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
+  const print = css.slice(css.lastIndexOf('@media print'));
+
+  // Multicol, not grid. A grid row is as tall as its tallest box, so a long
+  // list beside a short one leaves the rest of the row blank; measured at five
+  // pages either way before this changed.
+  check('the body flows in columns on paper',
+    /\.sheet-grid\.sheet-3 \{[\s\S]*?columns: 2;/.test(print),
+    'paper is back on a grid, which leaves a row as tall as its tallest box');
+  check('and the inner grids are plain blocks so the flow is continuous',
+    /\.sheet-grid\.sheet-3 \.tabpanel > \.sheet-grid \{ display: block; \}/.test(print),
+    'the inner grids still lay out on their own');
+
+  // The page-count driver.
+  check('short boxes stay whole',
+    /\.sheet-grid\.sheet-3 \.box \{ break-inside: avoid;/.test(print),
+    'a six-row box may now split for no reason');
+  const longLists = ['equipment', 'class-skills', 'related-skills',
+    'secondary-skills', 'psionics-magic', 'journal'];
+  const missing = longLists.filter((b) =>
+    !new RegExp(`\\.sheet-grid\\.sheet-3 \\.box\\[data-box="${b}"\\]`).test(print));
+  check('and the long lists are allowed to split', missing.length === 0,
+    `still unbreakable: ${missing.join(', ')} — an unbreakable long list pushes a page and leaves it blank`);
+  // Specificity, not order alone: .sheet-grid.sheet-3 .box is (0,3,0) and the
+  // exception must match it or the exception silently loses.
+  check('the exception can actually win',
+    print.indexOf('break-inside: auto') > print.indexOf('.sheet-grid.sheet-3 .box { break-inside: avoid'),
+    'the break-inside exception is stated before the rule it overrides');
+
+  // Screen decisions that must not reach paper. Each of these was measured.
+  check('the 44px pool value does not go to paper',
+    /\.vital \.val \{ font-size: 17px/.test(print), 'a 44px pool value prints');
+  check('nor the prose cap',
+    /\.box\[data-box\] \.box-body \{ max-width: none; \}/.test(print),
+    '66ch is narrower than a page column and runs the sheet long');
+  check('nor the three-column assignments',
+    /grid-column: auto;/.test(print), 'boxes keep their screen columns on paper');
+  check('the pools know there are five of them',
+    /\.vitals \{ grid-template-columns: repeat\(5, 1fr\); \}/.test(print),
+    'auto-fit gives eight tracks for five pools on a page');
+
+  // The pool value reaches paper through the <b>, because print hides inputs.
+  check('every pool still prints its number',
+    /\.vital \.val b \{ display: inline !important; \}/.test(print),
+    'the pools print blank');
+  check('and the screen affordances do not',
+    /\.vital \.bar, \.vital \.steppers \{ display: none !important; \}/.test(print),
+    'the bar or the steppers print');
+
+  check('the tab bar is hidden explicitly, not by the button rule',
+    /\.tabbar \{ display: none !important; \}/.test(print),
+    'the tab bar is a div and the blanket button rule does not reach it');
 }
 
 // ---------- Military Occupational Specialty ----------
