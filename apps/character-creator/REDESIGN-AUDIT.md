@@ -844,9 +844,12 @@ destinations per app."* The sixth needs a second application, today.
 **Why this note is a day late, which is worth more than the note.** The protocol puts the
 outcome note *in the same PR as the work*. N5's posture put the work in a **dashboard**, so
 there was no PR to carry it — and PR #468, the one that unblocked, closed R7 rather than
-N5. The gap had a cost that is already recorded above: N6 was written afterwards and says
-*"Opened by R7 (PR #468), which is held open because of this"*, which was false by the time
-anyone read it, and taking N6 began by correcting it.
+N5. The gap had a cost, and it is not the obvious one. This finding's own first line and
+R7's outcome note both went on asserting the hold with nothing beneath either saying
+otherwise — and when N6 was taken, that lingering state was read as N6's claim and
+"corrected" against N6, which had never made it. **A record left without its closing line
+does not sit quietly; it gets cited, and then it gets cited against the wrong finding.**
+That misattribution is itself corrected under N6, in PR #478.
 
 **A finding whose work is not a code change has no PR, and therefore no note.** N5 is the
 first of those in this menu. The fix is not in this file — it belongs wherever the protocol
@@ -878,13 +881,8 @@ dependency; deciding it deserves a bypass stays a human step.
 no Access policy touched. The test now discovers `/shared/fonts`; a human still decided it
 deserved a destination, in the dashboard, before this ran.
 
-**Three things this finding says are no longer or were never true.**
+**Two things this finding says are no longer or were never true.**
 
-- **It says R7 is held open by N5. R7 merged** as `e40b6e1` on 2026-09-01, so the Access
-  destination N5 asked for exists. Measured here with no session: both font files answer
-  **200 `font/woff2`**, where N5 measured a 302 to `fatmans.cloudflareaccess.com`. This
-  finding was written while that was still the open question and reads as though it still
-  is.
 - **"The real dependency count went to three" counts destinations, not files.** There are
   **two** `.woff2` files, and they fold into **one** destination — which is the whole
   reason the fold is by directory. A destination per font file would have spent slots four
@@ -927,6 +925,18 @@ suite **17 → 19** checks flagless, **23 → 31** with `--remote`. Both runs pa
 that the derivation "reads the HTML, so it cannot see them" and that the `shared/fonts` row
 is "maintained by hand". A third sentence in that section is wrong for a reason this PR did
 not cause, and is **N7** rather than a quiet fix here.
+
+**Corrected 2026-09-01 (PR #478).** This note opened with a third item, saying N6 claimed R7
+was held open by N5. **N6 makes no such claim** — its opening line is *"Opened by R7 (PR
+#468)."* and nothing more. The hold was asserted by N5's own first line and by R7's outcome
+note, and correcting it here aimed the correction at a finding that never made the mistake.
+The item is removed rather than reworded, because a note listing a finding's errors must not
+invent one.
+
+What was true inside it is kept, since it is the context this PR ran in: R7 merged as
+`e40b6e1` at 07:00 on 2026-09-01, both font files answer **200 `font/woff2`** with no
+session where N5 measured a 302, and N6 was written during the hold. That is a fact about
+R7 and N5, not a defect in N6.
 
 ---
 
