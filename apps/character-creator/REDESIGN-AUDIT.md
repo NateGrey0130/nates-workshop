@@ -652,6 +652,71 @@ carries. Either way, move the "does not apply to this character" explanation out
 **Posture: legibility only.** The step stays non-clickable and keeps its dashed border; it
 is not being promoted to a control.
 
+**Taken, 2026-09-01 (PR #472).** Posture held: legibility only. The step is still a
+`<span>`, still `cursor: default`, still dashed, still not focusable. Nothing was promoted.
+
+**The finding offers two fixes and the first one does not work.** *"Raise `.st.na` to
+roughly `opacity: 0.75` and confirm it clears 4.5:1"* — it does not clear it. Swept against
+a scanner that composites the group down to opaque, at 11px on this background:
+
+| `opacity` | ratio |
+|---|---|
+| 0.4 (as shipped) | **1.84** |
+| 0.6 | 2.68 |
+| 0.7 | 3.20 |
+| **0.75 (proposed)** | **3.49** |
+| 0.8 | 3.80 |
+| 0.9 | 4.45 |
+| **1.0** | **passes** |
+
+There is no dimming that satisfies the finding's own acceptance test — 0.9 misses by 0.05.
+So the **second** branch was taken, which the finding also authorises: the opacity is gone
+and the dashed border carries the state. Said plainly because it is a real narrowing of a
+two-option proposal down to the one option that works.
+
+**The second half of the finding was already done before it was written.** *"Move the
+explanation out of `title=` into text, since a `title` tooltip has no phone equivalent"* —
+`app.js:571` has rendered a sentence under the stepper since the UI audit's wizard work:
+**"Step 8 (Advancement) does not apply to this character."** It is on screen at every
+width, and the code comment beside it says why. The `title` was kept then and is kept now,
+deliberately, as a mouse affordance on top of the text rather than instead of it; removing
+it would take something away and give nothing back. This half of N4 needed no change, and
+the note says so rather than claiming credit for it.
+
+**1.85:1 reproduced as 1.84:1**, which is the finding's number. Worth recording how,
+because the arithmetic is easy to get wrong from the tokens alone: the pill is
+`--text-muted` on `--bg-secondary`, and `--text-muted` is **`#81889e`**
+(`styles.css:24`), not the `#5a6178` in `shared/styles.css:53` — the character creator
+overrides it. Compositing the shared value gives 1.41 and a wrong conclusion.
+
+**The scanner is not committed anywhere and was written for this**, per the same rule that
+produced the R6 sweep: walk text nodes, composite every translucent layer — rgba
+backgrounds *and* ancestor `opacity`, which is the one a naive sweep misses — down to
+opaque, then apply the 3:1 large-text allowance by computed size and weight. Run after the
+change:
+
+| page | elements checked | failures |
+|---|---|---|
+| wizard, step 1 | 30 | **0** |
+| sheet — Core | 105 | **0** |
+| sheet — Skills | 96 | **0** |
+| sheet — Powers | 80 | **0** |
+| sheet — Gear | 138 | **0** |
+| sheet — Bio | 61 | **0** |
+| sheet — Notes | 62 | **0** |
+
+**572 text elements, zero failures.** The one the app had is gone and no new one arrived.
+
+**What the change costs, stated rather than glossed.** At full opacity a not-applicable
+step differs from a plain future step *only* by `border-style: dashed` — same text colour,
+same border colour, same background. The dimming was the loudest signal and it is gone.
+Rendered and looked at rather than argued about: at 1.6× the dashed pill is unmistakable
+beside nine solid ones, and the sentence naming the step sits directly beneath the row. The
+state is now carried by shape and by words instead of by being hard to read, which is the
+trade the finding asked for.
+
+Local `character_drafts` was 0 before and 0 after; the wizard was loaded, not walked.
+
 ### N5 — high — `/shared/fonts/` needs an Access destination before R7 can merge
 
 Opened by R7 (PR #468), which is held open because of this.

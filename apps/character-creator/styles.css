@@ -239,8 +239,19 @@ th {
 /* A step that does not apply to THIS character — the Occupation step for a
    character whose primary class is already an O.C.C. Shown rather than removed,
    so the numbering stays the same between two characters sitting side by side
-   and "there is no occupation step for this one" reads as information. */
-.stepper .st.na { opacity: 0.4; border-style: dashed; cursor: default; }
+   and "there is no occupation step for this one" reads as information.
+
+   NO OPACITY, and the number is the reason. At `opacity: 0.4` this was the
+   only text anywhere in the app under 4.5:1 — 1.84:1, measured by compositing
+   the group down to opaque rather than by reading the token. Dimming cannot be
+   tuned out of that: 0.75 reaches 3.49 and 0.9 reaches 4.45, so no value short
+   of 1 clears the bar. Information the player is meant to read does not get to
+   be the least legible thing on the page.
+
+   The state is carried by the dashed border and, since the wizard started
+   saying so in words, by the sentence under the stepper naming the step. It is
+   still not a control: no pointer, no focus, and it is a <span>. */
+.stepper .st.na { border-style: dashed; cursor: default; }
 
 /* Advancement: one collapsible row per level gained. Collapsed by default —
    the step opens on the summary, and a level is opened only when someone wants
