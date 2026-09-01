@@ -709,6 +709,32 @@ One page, one component swap.
 
 ---
 
+**Taken, 2026-09-01 (PR #454).** The table is accurate — three components,
+three visual languages, three counting conventions. `campaign.js`'s
+four-panel `.toggle` is now the sheet's `.tabbar`, reused rather than
+re-styled: 44px targets, the `.tab-n` count pill, and `role="tablist"` /
+`role="tab"` / `aria-selected` it never had.
+
+**It had to move out of the `.panel`.** `.tabbar` is `position: sticky` and
+paints itself in `--bg-primary`; inside a card it smears the wrong colour
+down the page on scroll. The sheet's is a top-level `<nav>` beside its
+panels, and the campaign's is now too — so the panel holds the campaign name
+alone.
+
+**One convention borrowed with the component:** the sheet suppresses a zero
+count rather than showing `0`, so *Party stash* and *Currency* carry no pill
+on an empty campaign where the old toggle read `Party stash (0)`.
+
+Measured after, `campaign.html`: four `role="tab"` buttons at 44px inside a
+`role="tablist"`, `aria-selected` tracking the panel, and at 390px the bar
+wraps to two rows with no horizontal overflow — inheriting F7's rule, which
+was written for the sheet.
+
+`catalog.js`'s `.imp-tabs` left alone as instructed, and the wizard's genuine
+two-state `.toggle` untouched. `.toggle`'s CSS stays: the wizard still uses it.
+
+---
+
 ### F12 — medium — The Details step's ~20 fields have no programmatic label
 
 **Step 5 (accessibility).** Screenshot evidence: none — read from source and confirmed
@@ -818,6 +844,50 @@ link affordance beyond `cursor: pointer`).
 `openNpc(id)` the People tab uses, styled as a link. Do this **after** F5 converts
 those targets to real controls, so the new links inherit a focusable one rather than
 adding a sixth `div onclick`.
+
+---
+
+**Taken, 2026-09-01 (PR #454), after F5 and F11 as the finding instructs.**
+
+Verified: the note body renders through `esc()` into
+`<p class="small" style="white-space:pre-wrap">` with no links at all, while
+the form directly above it promises `@Name` links someone to their dossier.
+The dossier half was always true; the half on screen was not.
+
+**Linked against `D.npcs` rather than by re-running the server's pattern.**
+The client already holds every dossier in the campaign, id and name. A second
+copy of `_lib/mentions.js`'s `MENTION` regex here would drift from the
+original, and the failure mode of drift is a link to a dossier that does not
+exist. **No dossier, no link, by construction.**
+
+**One pass over an alternation sorted longest-first, never one pass per
+name.** With an *Osric* and a *Brother Osric* on the roster, a second pass
+would match inside the anchor the first pass had just written and nest a link
+in a link. Names are HTML-escaped before they are regex-escaped, because the
+body they are matched against has already been through `esc()`.
+
+Behaviour checked case by case against a stubbed roster:
+
+| body | roster | result |
+|---|---|---|
+| `@Brother Osric … @Osric` | both | two separate links, correct ids, no nesting |
+| `@Osric` | *Brother Osric* only | **no link** — there is no dossier |
+| `@Kevik,` `@Kevik.` `@Kevikson` | *Kevik* | first two link, `@Kevikson` does not |
+| `@A.B` and `@AxB` | *A.B* | only the literal `A.B` links |
+| `@D"Ante <b>` | that name | linked, and `<b>` still escaped |
+| `@Tom & Jerry` | that name | linked, `&` still escaped |
+
+**`openNpc()` needed one line the finding does not mention.** It set `D.npc`
+and re-rendered, but `render()` picks the view from `D.tab` — reached from a
+note, the dossier loaded and nothing on screen changed. It now sets
+`D.tab = 'people'`. Confirmed live: clicking `@Halgi` inside a note moved
+`aria-selected` to People and opened Halgi's dossier, with `location.hash`
+still empty.
+
+`.mention` is underlined as well as accent-coloured — a run of accent text
+inside a paragraph of body text is not, on its own, an affordance. Measured
+at 4.5:1+ on every page; `campaign.html` reports zero contrast failures at
+390px.
 
 ---
 
