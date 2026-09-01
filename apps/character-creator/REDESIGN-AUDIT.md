@@ -358,6 +358,45 @@ each warrants. Nothing else changes.
 explicitly *not* the prompt's Phase 1 — see *Not carried forward*. Re-run the contrast
 scanner after, since three of the four are moving to a different foreground.
 
+**Taken in part, 2026-08-31 (PR #467): two of the four lines. Posture held** — no palette
+change, no new tokens, only the `color` on the rules named.
+
+**Two of the four were not accent-on-something-static, and changing them would have broken
+the rule this finding exists to enforce.** Its own test is *"if a rule uses `--accent` on
+something the user can't act on, it's wrong"*, and these two fail that test for inclusion
+rather than passing it:
+
+- **`.play-roll .pr-num` is on a button.** The finding called it "the roll result, after
+  the fact". It is not: `.pr-num` occurs exactly four times in `sheet.js` — 731, 739, 749
+  and 757 — and **all four sit inside `<button class="play-roll" onclick="rollD20(…)">` or
+  `rollSkill(…)`**. It is the modifier or percentage printed *on the control you press to
+  roll it*. Accent is correct there.
+- **`.mini-in.derived::placeholder` is inside an editable input** (`sheet.js:1051, 1073`).
+  It marks a value as derived rather than typed, on a field you act on by typing over it —
+  a state marker on a control, not decoration on a static number.
+
+**The two that were right, measured before and after:**
+
+| rule | was | now | ratio |
+|---|---|---|---|
+| `.tag.score` | `--accent` | `--text-primary` | **4.50 → 11.81** |
+| `.power-row .cost` | `--accent` | `--text-secondary` | 5.60 → **5.61** |
+
+`.tag.score` had been sitting exactly *on* the 4.5 line at 10px, so this is a legibility
+gain as well as a semantic one. The power cost is unchanged in contrast and de-emphasised
+by hue alone, which is what "the weight each warrants" wanted: it is metadata beside the
+name, and the ⚡ button next to it is the thing that acts.
+
+**The contrast scanner is not committed anywhere** — it was a one-off in the UI-audit
+session — so it was rewritten for this: a text-node walk compositing every translucent
+layer down to opaque, with the 3:1 large-text allowance applied by computed size and
+weight. **Zero failures across all six sheet tabs.** It found one on the wizard, which is
+pre-existing and not from this change; recorded as **N4**.
+
+If the two rejected lines should change anyway they are a two-line follow-up. They were
+left because applying them contradicts the finding's own rule, not because they were
+awkward.
+
 ---
 
 ### R7 — low — Every page in the repo fetches its fonts from a third-party CDN
@@ -446,6 +485,29 @@ to a dashed heading and confirming it resolves both in the test and on the rende
 **Posture: fix the checker, not the headings.** The heading format is shared with eight
 other audit files and is not the thing that is wrong. No heading gets reworded to make a
 link work.
+
+### N4 — low — The not-applicable wizard step is 1.85:1 and says something worth reading
+
+Found by R6's contrast sweep (PR #467), pre-existing and unrelated to that change.
+
+`.stepper .st.na` (`styles.css:243`) is `opacity: 0.4` over `--text-muted` at 11px, which
+composites to **1.85:1** — the only contrast failure the sweep found anywhere, against zero
+across all six sheet tabs. It is not exempt as an inactive control: it is a `<span>`, not a
+disabled button, and it carries information the player wants — *"8. Advancement — does not
+apply to this character"*, with the explanation only in a `title` attribute a phone cannot
+show.
+
+This is also a correction to the UI audit's claim of zero failures across all five pages.
+That sweep almost certainly exempted anything reading as disabled; this element reads as
+disabled and is not.
+
+**Proposal:** raise `.st.na` to roughly `opacity: 0.75` and confirm it clears 4.5:1 at
+11px, or drop the opacity entirely and mark the state with the dashed border it already
+carries. Either way, move the "does not apply to this character" explanation out of
+`title=` into text, since a `title` tooltip has no phone equivalent.
+
+**Posture: legibility only.** The step stays non-clickable and keeps its dashed border; it
+is not being promoted to a control.
 
 ---
 
