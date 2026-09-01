@@ -549,39 +549,94 @@ function renderDraftOffer() {
 }
 
 // ---------- rendering ----------
+// The step number, in its own element. It was always in the label - the
+// steps have read "1. System" since the wizard was written - but as text it
+// could not be sized or coloured apart from the name. Padded to two digits
+// so the tenth step does not shift its column.
+const stepNum = (i) => `<span class="n">${String(i + 1).padStart(2, "0")}</span>`;
+
+const SYSTEM_LABEL = { 'palladium-fantasy': 'Palladium Fantasy', rifts: 'Rifts' };
+
+// What the character is so far, under the rail. Every value is read from S
+// at render - nothing is stored for this - and every settled one is a button
+// back to the step that set it. A value not yet decided is left out rather
+// than shown empty: the strip is what you HAVE answered.
+function summaryItems() {
+  const out = [];
+  const add = (k, v, step) => {
+    if (v == null || v === '') return;
+    const inner = `<span class="ws-k">${esc(k)}</span><span class="ws-v">${esc(String(v))}</span>`;
+    out.push(step != null && step < S.step
+      ? `<button type="button" class="ws" onclick="goStep(${step})">${inner}</button>`
+      : `<span class="ws">${inner}</span>`);
+  };
+
+  add('System', SYSTEM_LABEL[S.system] || S.system, ST.SYSTEM);
+  add('Class', S.cls?.name, ST.RACE);
+
+  // Attribute total is derived here, not stored - there is no such field.
+  const attrs = S.attrs || {};
+  const rolled = ATTRS.filter((a) => typeof attrs[a] === 'number');
+  if (rolled.length) add('Attributes', rolled.reduce((n, a) => n + attrs[a], 0), ST.ATTRIBUTES);
+
+  // Guarded on S.cls: skillsAtLevelOne() reads S.cls.skills directly and
+  // throws before a class is chosen, which is every render of step 1. The
+  // strip is the one thing drawn on EVERY step, so anything it calls has to
+  // survive the empty state.
+  if (S.cls) {
+    const skills = skillsAtLevelOne();
+    if (Array.isArray(skills) && skills.length) add('Skills', skills.length, ST.SKILLS);
+  }
+
+  // Gold in Palladium, credits in Rifts - the label is the system's.
+  if (S.bio && S.bio.money) add(rules.currencyLabel(S.system), S.bio.money, ST.EQUIPMENT);
+
+  return out;
+}
 function renderStepper() {
   const steps = STEPS.map((name, i) => {
     // A step that does not apply is shown greyed rather than removed: the
     // numbering stays stable between characters, and "there is no occupation
     // step for this one" is information.
-    if (!stepApplies(i)) return `<span class="st na" title="Does not apply to this character">${i + 1}. ${name}</span>`;
+    if (!stepApplies(i)) return `<span class="st na" title="Does not apply to this character">${stepNum(i)}${name}</span>`;
     const cls = i === S.step ? 'st cur' : i < S.step ? 'st done' : 'st';
     // Only a completed step is clickable, so only a completed step is a button.
     // The rest stay spans: a focusable control that does nothing when you press
     // it is worse than plain text, and the stepper is a summary, not a menu.
-    if (i < S.step) return `<button type="button" class="${cls}" onclick="goStep(${i})">${i + 1}. ${name}</button>`;
+    if (i < S.step) return `<button type="button" class="${cls}" onclick="goStep(${i})">${stepNum(i)}${name}</button>`;
     // Which step you are on is otherwise carried in colour alone — ten pills
     // that read identically to anything not looking at them.
     const cur = i === S.step ? ' aria-current="step"' : '';
-    return `<span class="${cls}"${cur}>${i + 1}. ${name}</span>`;
+    return `<span class="${cls}"${cur}>${stepNum(i)}${name}</span>`;
   }).join('');
   // Why a step is greyed used to live only in a title=, which is a pointer
   // affordance: at phone and tablet width there was no way to find out at all,
-  // and no legend anywhere on the page. The title stays for the mouse.
+  // and no legend anywhere on the page. The title stays for the mouse. The
+  // sentence now sits in the summary strip rather than in a paragraph of its
+  // own - same words, in the place a reader already looks to see what is
+  // settled, and it survives the labels disappearing on a phone.
   const na = STEPS.map((name, i) => [i, name]).filter(([i]) => !stepApplies(i));
   const phrase = (xs) => (xs.length < 2 ? xs[0] : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
-  const naNote = !na.length ? '' : `<p class="attr-note" style="width:100%; text-align:center; margin:6px 0 0">
+  const naNote = !na.length ? '' : `<p class="ws-note">
     ${na.length === 1 ? 'Step' : 'Steps'} ${phrase(na.map(([i, name]) => `${i + 1} (${name})`))}
     ${na.length === 1 ? 'does' : 'do'} not apply to this character.</p>`;
   // Rendered here because it is the one element every step draws, and a
-  // warning that autosave has stopped must not depend on which step you are on.
+  // warning that autosave has stopped must not depend on which step you are
+  // on. It rides in the strip for the same reason, which is now sticky - so
+  // it stays on screen instead of scrolling away with the rail.
   const c = S.draftConflict;
-  const notice = !c ? '' : `<p class="warn err" style="margin:10px 0 0">
+  const notice = !c ? '' : `<p class="ws-note warn err">
     Autosave stopped: this draft was taken over somewhere else${
       c !== true && c.class_name ? ` (now ${esc(c.class_name)}, step ${c.step + 1})` : ''}.
     Your work here is safe on screen — finish and save, or reload to take theirs.
   </p>`;
-  $('stepper').innerHTML = steps + naNote + notice;
+  const summary = summaryItems().join('') + naNote + notice;
+  $('stepper').innerHTML = `<div class="step-rail">${steps}</div>`
+    + (summary ? `<div class="wiz-summary">${summary}</div>` : '');
+  // The rail sticks under .header, so it needs the header's measured height.
+  // Called on every render because .header wraps at narrow widths and the
+  // wizard re-renders on every step; js/sticky.js also re-measures on resize.
+  sticky.sizeSticky();
 }
 
 function render() {

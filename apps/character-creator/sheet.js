@@ -1438,7 +1438,7 @@ function render() {
   </div>`;
 
   wirePickers();
-  sizeSticky();
+  sticky.sizeSticky();
   // The count is filterSkills' job, so there is one implementation of it rather
   // than a number rendered here and a different one written on the first
   // keystroke. Re-applying C.skillFilter is also what carries a typed query
@@ -1472,16 +1472,6 @@ function filterSkills(q) {
   if (el) el.textContent = needle ? `${shown} of ${total}` : `${total} known`;
 }
 
-// The pools strip sticks below the shared header, so it needs the header's
-// height as a number. .header wraps to a second row on a narrow screen - 77px
-// at 1440, 166px at 390 - so this is measured rather than assumed, on every
-// render and on resize. A missing header leaves --header-h unset and the CSS
-// falls back to 0px, which is the old behaviour rather than a broken one.
-function sizeSticky() {
-  const h = document.querySelector('.header');
-  if (h) document.documentElement.style.setProperty('--header-h', h.offsetHeight + 'px');
-}
-window.addEventListener('resize', sizeSticky);
 
 // Filter inputs are destroyed and rebuilt by every render, so their listeners
 // are re-bound here. Picker.wire restores the caret, which a delegated listener
