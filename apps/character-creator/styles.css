@@ -1030,10 +1030,24 @@ body.play-mode #print-btn { display: none; }
    on paper, so the print block below dissolves the panels with
    `display: contents`: the section wrappers leave the layout entirely and the
    grids inside them lay out exactly as they did before tabs existed. */
+/* The pools strip and the tab bar stick as ONE block, and it sticks BELOW the
+   shared header rather than underneath it. The tab bar used to carry `top: 0`
+   alone, and shared/styles.css sticks .header at that same 0 with z-index 100,
+   so the tab bar sat entirely behind it - 61px tall with 0px of it visible at
+   1440x900, measured. Its sticky did nothing at all for as long as it existed.
+
+   `--header-h` is written from the rendered header by sizeSticky() rather than
+   hard-coded, because .header wraps to a second row on a narrow screen (77px at
+   1440, 166px at 390) and any constant would be wrong at one of them. */
+.sheet-sticky {
+  position: sticky; top: var(--header-h, 0px); z-index: 20;
+  background: var(--bg-primary);
+}
+.vitals-strip { padding-top: 10px; }
+.vitals-save { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+
 .tabbar {
   display: flex; gap: 6px; margin-top: 12px;
-  position: sticky; top: 0; z-index: 20;
-  background: var(--bg-primary);
   padding: 8px 0; overflow-x: auto;
   border-bottom: 1px solid var(--border);
 }
@@ -1075,4 +1089,9 @@ body.play-mode #print-btn { display: none; }
 @media print {
   .tabbar { display: none !important; }
   .tabpanel { display: contents !important; }
+  /* Nothing sticks to paper. The strip inside it still prints - its current
+     values reach the page through the .print-only mirrors beside each input,
+     because the global print rule hides every input outright. */
+  [data-sticky] { position: static !important; }
+  .vitals-strip { padding-top: 0; break-inside: avoid; }
 }

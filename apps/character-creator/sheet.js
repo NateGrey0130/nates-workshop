@@ -1136,14 +1136,21 @@ function render() {
   ${w && !C.proposal && C.pendingPicksTotal ? pendingPicksPanel() : ''}
   ${w && !C.proposal && C.pendingPowersTotal ? pendingPowersPanel() : ''}
 
-  <nav class="tabbar noprint" role="tablist">
-    ${[['vitals', 'Vitals', 0], ['skills', 'Skills', skills.length],
-       ['powers', 'Powers', powers.length], ['gear', 'Gear', C.items.length],
-       ['bio', 'Bio', 0], ['notes', 'Notes', C.journal.length]].map(([tid, label, n]) =>
-      `<button class="tab${C.tab === tid ? ' on' : ''}" data-tab="${tid}" role="tab"
-         aria-selected="${C.tab === tid}" onclick="pickTab('${tid}')">${label}${
-         n ? ` <span class="tab-n">${n}</span>` : ''}</button>`).join('')}
-  </nav>
+  <div class="sheet-sticky" data-sticky>
+    ${vitals ? `<div class="vitals vitals-strip">${vitals}</div>
+      <div class="rowline noprint vitals-save">
+        ${w ? `<button class="btn btn-sm btn-primary" onclick="saveStats()">Save</button>
+        <span id="msg"></span>` : ''}
+        <span class="muted small">current / max</span></div>` : ''}
+    <nav class="tabbar noprint" role="tablist">
+      ${[['vitals', 'Vitals', 0], ['skills', 'Skills', skills.length],
+         ['powers', 'Powers', powers.length], ['gear', 'Gear', C.items.length],
+         ['bio', 'Bio', 0], ['notes', 'Notes', C.journal.length]].map(([tid, label, n]) =>
+        `<button class="tab${C.tab === tid ? ' on' : ''}" data-tab="${tid}" role="tab"
+           aria-selected="${C.tab === tid}" onclick="pickTab('${tid}')">${label}${
+           n ? ` <span class="tab-n">${n}</span>` : ''}</button>`).join('')}
+    </nav>
+  </div>
 
   <section class="tabpanel${C.tab === 'vitals' ? ' on' : ''}" data-tab="vitals">
   <div class="sheet-grid rail" style="margin-top:12px">
@@ -1162,10 +1169,7 @@ function render() {
       }).join('')}
     </div>`)}
 
-    ${box('Vitals', `<div class="vitals">${vitals || '<span class="muted small">None recorded.</span>'}</div>
-      ${w ? `<div class="rowline noprint" style="margin-top:8px">
-        <button class="btn btn-sm btn-primary" onclick="saveStats()">Save</button><span id="msg"></span></div>` : ''}`,
-      '<span class="muted" style="font-size:9px">CURRENT / MAX</span>')}
+    ${vitals ? '' : box('Vitals', '<span class="muted small">None recorded.</span>')}
 
     ${box('Experience', `
       ${field('Level', c.level)}
@@ -1320,7 +1324,19 @@ function render() {
   </section>`;
 
   wirePickers();
+  sizeSticky();
 }
+
+// The pools strip sticks below the shared header, so it needs the header's
+// height as a number. .header wraps to a second row on a narrow screen - 77px
+// at 1440, 166px at 390 - so this is measured rather than assumed, on every
+// render and on resize. A missing header leaves --header-h unset and the CSS
+// falls back to 0px, which is the old behaviour rather than a broken one.
+function sizeSticky() {
+  const h = document.querySelector('.header');
+  if (h) document.documentElement.style.setProperty('--header-h', h.offsetHeight + 'px');
+}
+window.addEventListener('resize', sizeSticky);
 
 // Filter inputs are destroyed and rebuilt by every render, so their listeners
 // are re-bound here. Picker.wire restores the caret, which a delegated listener
