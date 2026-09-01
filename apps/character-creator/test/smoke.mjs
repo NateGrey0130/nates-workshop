@@ -3773,6 +3773,54 @@ section('The wizard rail');
     'the rail is back inside a 900px container it does not fit');
 }
 
+// ---------- The GM dashboard ----------
+// The roster and the GM notes share a row; the journal runs full width under
+// them. Two of these pin things the redesign brief got wrong, so they are
+// worth more than the layout they describe.
+section('The GM dashboard');
+{
+  const js = readFileSync(join(appDir, 'dashboard.js'), 'utf8');
+  const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
+  const html = readFileSync(join(appDir, 'dashboard.html'), 'utf8');
+
+  check('the dashboard has its own container',
+    /\.wrap\.wrap-dash \{ max-width: 1280px; \}/.test(css), 'wrap-dash is gone');
+  check('and dashboard.html asks for it',
+    /<main class="wrap wrap-dash">/.test(html), 'the dashboard is back on the 900px container');
+
+  check('the roster and the rail sit side by side',
+    /\.dash-grid \{[\s\S]*?grid-template-columns: minmax\(0, 1fr\) 380px;/.test(css),
+    'the dash grid is gone');
+  check('and stack below 1100px',
+    /@media \(max-width: 1100px\) \{[\s\S]*?\.dash-grid \{ grid-template-columns: 1fr; \}/.test(css),
+    'the rail never collapses');
+
+  // The notes panel is GM-only. A player gridded against it would get a 380px
+  // column of nothing beside a squeezed roster, so the class is conditional.
+  check('the grid is only applied when there is a rail to fill',
+    /class="\$\{D\.isGm \? 'dash-grid' : ''\}"/.test(js),
+    'a player gets a two-column layout with an empty rail');
+  check('and the notes panel is still GM-only',
+    /\$\{D\.isGm \? `/.test(js), 'the GM notes are no longer gated');
+
+  // Source order: notes before journal, which is the "surface it" change.
+  check('the notes come before the journal',
+    js.indexOf('gm-notes') < js.indexOf('Campaign journal'),
+    'the notes panel is still below the journal');
+
+  // Read DOWN the column, so the digits line up. This one never had a
+  // font-family, so phase 2 - which moved rules that named a face - did not
+  // touch it, and it kept proportional figures. Measured at `normal` on the
+  // live page before the fix.
+  const pools = css.match(/\.pools-cell \{[^}]*\}/)?.[0] || '';
+  check('the pools column has tabular figures',
+    /font-variant-numeric: tabular-nums/.test(pools),
+    'pools read down a column with proportional digits');
+  check('and the display face, like every other numeric column',
+    /var\(--font-display\)/.test(pools) && /font-stretch: 75%/.test(pools),
+    'the pools column is the one numeric column still on the body face');
+}
+
 // ---------- Military Occupational Specialty ----------
 // RUE gives several classes an MOS: "select one area of specialty, gain all
 // skills under that MOS" (Coalition Technical Officer p236, Robot Pilot p84).

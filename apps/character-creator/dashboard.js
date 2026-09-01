@@ -69,7 +69,12 @@ function render() {
     ? `<p class="muted small">Showing the 20 most recent of ${D.journalTotal} entries.</p>`
     : '';
 
+  // The roster and the GM notes share a row; the journal runs full width
+  // under them. The grid class is only set when there is something to put in
+  // the rail - the notes panel is GM-only, and a player should get the whole
+  // width for the roster rather than a 380px column of nothing beside it.
   $('app').innerHTML = `
+  <div class="${D.isGm ? 'dash-grid' : ''}">
   <div class="panel">
     <h2>${escHtml(camp.name)} ${D.isGm ? '<span class="tag gm">you are the GM</span>' : ''}</h2>
     <p class="muted">${escHtml(camp.system)} · GM: ${escHtml(camp.gm_email)}${camp.description ? ' — ' + escHtml(camp.description) : ''}</p>
@@ -89,6 +94,7 @@ function render() {
       <span class="muted">— anyone on the site can join this campaign by creating one here; unticked, only you and current players can</span>
       <span id="open-msg" class="muted small"></span></label>
   </div>` : ''}
+  </div>
 
   <div class="panel">
     <h3 style="margin-top:0">Campaign journal <span class="muted small">(newest first)</span></h3>
