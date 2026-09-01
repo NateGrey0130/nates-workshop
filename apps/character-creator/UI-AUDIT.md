@@ -1079,6 +1079,33 @@ badge.
 
 ---
 
+**Taken, 2026-09-01 (PR #453), with the foreground moved as Nate chose.**
+
+Every premise holds. `--warn` is defined in no stylesheet in the repo — the only
+token is `--warning: #fbbf24` (`shared/styles.css:23`) — so `#b8860b` fired 100%
+of the time. Both `#2e7d32` fallbacks are likewise unreachable, `--success`
+being `#34d399`. **Line numbers have drifted**: the badge is 622, not 538, and
+the two `--success` fallbacks are 603 and 608, not 519 and 524.
+
+The regression warned about above is why this was not taken as written. Given
+the four options, Nate took **swap the token and darken the text**:
+
+| | background | text | ratio |
+|---|---|---|---|
+| before | `#b8860b` (dead fallback) | `#fff` | 3.25 |
+| as the finding proposed | `--warning` `#fbbf24` | `#fff` | **1.67** |
+| **shipped** | `--warning` `#fbbf24` | `#0a0c10` | **11.72** |
+
+Rejected on the way: white with a border (1.67 at any border treatment), and
+keeping the goldenrod under a new `--warn-deep` token (nothing moves visually,
+but 3.25 survives).
+
+Both dead `#2e7d32` fallbacks dropped. Measured live on `catalog.html`: both
+badges — *Audit characters ①* and *Find duplicates ②* — read
+`rgb(251, 191, 36)` on `rgb(10, 12, 16)` at **11.72**.
+
+---
+
 ### F21 — low — The catalog is 345 rows of ragged inline text with no pagination
 
 **Step 2 (density).** Screenshot evidence: yes, at 1440×900 and 820×1180.
@@ -1318,6 +1345,49 @@ primary button.
 
 Out of scope here and worth someone's attention: shared's own `--accent`
 `#4f8eff` is **3.16** against white, so the other three apps have this too.
+
+---
+
+**Taken, 2026-09-01 (PR #453), app-local, exactly as proposed.**
+
+Unusually for this menu, **every number in this finding is right**, recomputed
+from the token values: `#9d7cff` 3.11, `#7c5cfc` 4.38, `#6b4bd8` 5.80, and
+shared's `#4f8eff` 3.16.
+
+`--accent-strong: #6b4bd8` added to the app's own `:root` and used by
+`.btn-primary` alone. `--accent` is untouched, so every link, border and focus
+ring keeps the brighter tone, exactly as the proposal insisted.
+
+**The disabled-hover pair had to be repeated.** `shared/styles.css:125` pins
+`.btn-primary:disabled:hover` back to `--accent` **by name** at (0,3,0)
+specificity; without repeating it here, hovering a *dead* primary button would
+have lit it brighter than the live one. That rule is not mentioned in the
+finding and is the only thing in it that needed more than the token.
+
+Measured live, all five pages, walking every text node and compositing every
+translucent layer down to opaque before computing the ratio:
+
+| page | failures after F6 | after this |
+|---|---|---|
+| wizard | 1 | **0** |
+| sheet | 1 | **0** |
+| dashboard | 1 | **0** |
+| catalog | 2 | **0** |
+| campaign | 1 | **0** |
+
+**The app now measures zero contrast failures on every page**, from 152 before
+F6. Screenshotted at 1440×900; the primary button is visibly deeper and still
+reads as the primary.
+
+**Recorded, not fixed — one thing found while measuring.** `shared/styles.css:101`
+is `.btn:hover { background: var(--bg-input) }` at (0,2,0), which outranks
+`.btn-primary` at (0,1,0). So hovering a live primary button turns it grey
+rather than darkening it, in all four apps. No contrast failure results — white
+on `--bg-input` is comfortable — but it is not what either rule intends, and it
+is outside this finding's scope.
+
+Shared's own `--accent` `#4f8eff` at 3.16 remains out of scope and unfixed, as
+the finding says.
 
 ---
 

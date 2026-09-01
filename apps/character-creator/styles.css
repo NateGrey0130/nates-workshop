@@ -22,6 +22,12 @@
      muted text sits there; nothing lighter fixes that without collapsing muted
      into --text-secondary, which is 1.14:1 away as it is. See UI-AUDIT.md F6. */
   --text-muted: #81889e;
+  /* White on --accent is 3.11:1, and --accent is every primary button in
+     the app. It cannot be fixed from the text side: white is already the
+     lightest end. This darker tone is 5.80:1 against white and is used by
+     .btn-primary ALONE - --accent itself stays put, because it is also the
+     link colour and the focus-ring colour and both want the brighter tone. */
+  --accent-strong: #6b4bd8;
 }
 
 /* ─── LAYOUT ─── */
@@ -88,6 +94,20 @@ button { font-family: 'Outfit', sans-serif; cursor: pointer; }
 .btn-sm { padding: 3px 10px; font-size: 12px; }
 .btn-ghost { background: transparent; border-color: var(--border); color: var(--text-secondary); }
 .btn-ghost:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+
+/* Shared paints .btn-primary in --accent, which is 3.11:1 under its own
+   white text. Repainted here in --accent-strong (5.80:1) rather than in
+   shared/, on the same reasoning as --text-muted above: the other three
+   apps carry this too, but giving all four a new primary colour is a
+   bigger change than it looks and is not this app's call to make.
+   The disabled-hover pair has to be repeated because shared pins it back
+   to --accent by name; without it, hovering a dead primary button would
+   light it up brighter than the live one. */
+.btn-primary { background: var(--accent-strong); border-color: var(--accent-strong); }
+.btn-primary:disabled:hover,
+.btn-primary[disabled]:hover {
+  background: var(--accent-strong); border-color: var(--accent-strong);
+}
 
 input[type=text], input[type=number], select, textarea {
   font-family: 'Outfit', sans-serif; font-size: 13px;
@@ -600,12 +620,12 @@ pre.snippet {
 /* A class bonus riding alongside the rolled attribute, rather than folded into
    it — the stored number stays the one that was rolled. */
 .attr-bonus {
-  color: var(--success, #2e7d32); font-weight: 700; font-size: 0.9em;
+  color: var(--success); font-weight: 700; font-size: 0.9em;
   cursor: help;
 }
 /* A derived number the class contributed to. Marked so a boosted value is
    visible without hovering; the hover says how much came from where. */
-.class-boosted { border-bottom: 1px dotted var(--success, #2e7d32); cursor: help; }
+.class-boosted { border-bottom: 1px dotted var(--success); cursor: help; }
 input.class-boosted { border-bottom-width: 2px; }
 
 /* The unique key (gear's slug), shown apart from the stat columns because it is
@@ -619,7 +639,11 @@ input.class-boosted { border-bottom-width: 2px; }
    counted, so a number here always means something worth a look. */
 .dupe-badge {
   display: inline-block; min-width: 16px; padding: 0 5px; margin-left: 4px;
-  border-radius: 999px; background: var(--warn, #b8860b); color: #fff;
+  /* --warn was never a token in any stylesheet here, so #b8860b fired 100%
+     of the time and the badge sat outside the palette. --warning is the
+     real token; the text had to move with it, because white on #fbbf24 is
+     1.67:1 - worse than the goldenrod it replaces. #0a0c10 on it is 11.72. */
+  border-radius: 999px; background: var(--warning); color: #0a0c10;
   font-size: 11px; font-weight: 700; line-height: 16px; text-align: center;
 }
 
