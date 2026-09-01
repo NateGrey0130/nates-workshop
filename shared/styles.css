@@ -40,28 +40,63 @@
   font-display: swap;
 }
 
+/* ─── TOKENS ───
+   Rust & Ash, replacing the blue/violet scheme, CHANGE-PLAN.md phase 1. Every
+   name that existed still exists: 222 references live in apps/character-creator
+   alone and the tokens are read by four apps, so this phase moves values only.
+
+   Two tokens are new. --border-strong is the heavier rule the sheet's sticky
+   vitals strip and the wizard stepper want in later phases; nothing reads it
+   yet. --accent-link exists because --accent measures 4.60:1 on --bg-primary
+   — fine for fills, borders and the focus ring, short of comfortable for
+   inline link text, which is the one place it is a small glyph rather than a
+   surface. --accent-link is 5.79:1 and is used by the `a` rule alone.
+
+   Several values below look like mistakes and are not. --bg-card equals
+   --bg-secondary and --bg-input equals --bg-tertiary: this scheme has fewer
+   surface levels than the old one, and both names stay so no rule has to be
+   rewritten. --radius-lg collapses to 4px for the same reason — nine rules
+   reference it and the design is flat 3-4px corners everywhere, so the token
+   stays alive rather than forcing a find-and-replace. --shadow is none.
+
+   Contrast, measured against this palette rather than carried over. On
+   --bg-primary: --text-primary 14.74, --text-secondary 6.16, --text-muted
+   4.86, --accent 4.60, --accent-link 5.79, --accent-secondary 8.17,
+   --success 5.97, --warning 7.32, --danger 5.16. The floor is 4.5, and the
+   thinnest margin is --text-muted on --bg-tertiary/--bg-input at 4.32 —
+   the muted tier is 11-13px labels on --bg-primary, --bg-secondary and
+   --bg-card in practice, which clear it at 4.86, 4.60 and 4.60.
+
+   --danger is #D9614A rather than the #A33B2A the plan specified. The plan's
+   contrast table measured six tokens and --danger was not among them; the
+   darker tone is 2.88:1 on --bg-primary, and --danger is TEXT in fourteen
+   rules across all four apps at 12-13px, so it would have failed not just the
+   4.5 floor but the 3.0 large-text one. The app currently measures zero
+   contrast failures across five pages. #D9614A is 5.16. */
 :root {
-  --bg-primary: #0a0c10;
-  --bg-secondary: #12151c;
-  --bg-tertiary: #1a1e28;
-  --bg-card: #161a24;
-  --bg-input: #1e2230;
-  --border: #2a2f3e;
-  --border-focus: #4f8eff;
-  --text-primary: #e8ecf4;
-  --text-secondary: #8b92a8;
-  --text-muted: #5a6178;
-  --accent: #4f8eff;
-  --accent-glow: rgba(79, 142, 255, 0.15);
-  --accent-secondary: #7c5cfc;
-  --success: #34d399;
-  --warning: #fbbf24;
-  --danger: #f87171;
-  --radius: 10px;
-  --radius-sm: 6px;
-  --radius-lg: 14px;
-  --shadow: 0 4px 24px rgba(0,0,0,0.4);
-  --transition: 0.2s ease;
+  --bg-primary:       #14110F;
+  --bg-secondary:     #1B1714;
+  --bg-tertiary:      #221D19;
+  --bg-card:          #1B1714;
+  --bg-input:         #221D19;
+  --border:           #302A24;
+  --border-strong:    #3D352C;
+  --border-focus:     var(--accent);
+  --text-primary:     #E9E3DA;
+  --text-secondary:   #9C9287;
+  --text-muted:       #8A8076;
+  --accent:           #C4622D;
+  --accent-link:      #D9733A;
+  --accent-glow:      rgba(196, 98, 45, 0.15);
+  --accent-secondary: #D9A05B;
+  --success:          #7E9A5E;
+  --warning:          #C99A3E;
+  --danger:           #D9614A;
+  --radius:           4px;
+  --radius-sm:        3px;
+  --radius-lg:        4px;
+  --shadow:           none;
+  --transition:       0.2s ease;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -108,9 +143,7 @@ body {
   font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.5px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--accent);
 }
 
 .logo-sub {
@@ -163,10 +196,14 @@ body {
   background: var(--accent);
 }
 
+/* The foreground is --bg-primary, not white. White on --accent measures
+   4.09:1 and this is 13px at weight 600, which is not large text, so it wants
+   4.5. The dark tone on the same fill is 4.60. It is also what .dupe-badge
+   already does with --warning, for the same reason. */
 .btn-primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--bg-primary);
   font-weight: 600;
 }
 

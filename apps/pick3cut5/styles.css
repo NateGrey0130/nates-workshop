@@ -60,9 +60,9 @@ main { padding: 20px 18px 48px; max-width: 620px; margin: 0 auto; }
 [hidden] { display: none !important; }
 
 .banner {
-  background: rgba(248, 113, 113, 0.12);
+  background: rgba(217, 97, 74, 0.12);
   border: 1px solid var(--danger);
-  color: #ffd9d9;
+  color: var(--text-primary);
   padding: 12px 16px;
   margin: 0 18px 4px;
   border-radius: var(--radius);

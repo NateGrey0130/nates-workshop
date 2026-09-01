@@ -245,9 +245,9 @@ select.toolbar-select:focus { border-color: var(--accent); }
   font-weight: 600;
   text-transform: uppercase;
 }
-.type-audiobook { background: var(--tag-audiobook); color: #1a1e28; }
-.type-movie { background: var(--tag-movie); color: #1a1e28; }
-.type-series { background: #34d399; color: #1a1e28; }
+.type-audiobook { background: var(--tag-audiobook); color: var(--bg-primary); }
+.type-movie { background: var(--tag-movie); color: var(--bg-primary); }
+.type-series { background: #34d399; color: var(--bg-primary); }
 .media-card-info {
   padding: 12px;
 }
@@ -318,7 +318,7 @@ select.toolbar-select:focus { border-color: var(--accent); }
   gap: 12px;
   padding: 10px 14px;
   align-items: center;
-  border-bottom: 1px solid rgba(42,47,62,0.5);
+  border-bottom: 1px solid rgba(48,42,36,0.5);
   font-size: 13px;
   cursor: pointer;
   transition: background var(--transition);
@@ -455,7 +455,7 @@ select.toolbar-select:focus { border-color: var(--accent); }
   gap: 10px;
   padding: 9px 12px;
   cursor: pointer;
-  border-bottom: 1px solid rgba(42,47,62,0.5);
+  border-bottom: 1px solid rgba(48,42,36,0.5);
   transition: background var(--transition);
   font-size: 13px;
 }
@@ -686,7 +686,7 @@ select.toolbar-select:focus { border-color: var(--accent); }
 
 .isbn-paste-row:last-child { border-bottom: none; }
 .isbn-paste-row code { font-size: 11px; color: var(--text-muted); }
-.isbn-paste-row.failed span { color: #f87171; }
+.isbn-paste-row.failed span { color: var(--danger); }
 .isbn-paste-row.excluded { opacity: 0.45; }
 
 /* The duplicate scan reuses the paste list, but it names whole titles rather
@@ -696,7 +696,7 @@ select.toolbar-select:focus { border-color: var(--accent); }
 .dup-results { max-height: 340px; }
 .dup-row { grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.4fr); }
 .dup-row code { color: var(--text-secondary); overflow-wrap: anywhere; }
-.isbn-paste-row.conflict span { color: #fbbf24; }
+.isbn-paste-row.conflict span { color: var(--warning); }
 
 /* ─── RESPONSIVE ─── */
 @media (max-width: 768px) {
@@ -807,7 +807,6 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
   font-size: 13px;
   color: var(--text-secondary);
   z-index: 320;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
   transition: bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -844,7 +843,7 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
   justify-content: center;
   width: fit-content;
   z-index: 300;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px var(--accent-glow);
+  box-shadow: 0 0 0 1px var(--accent-glow);
   transition: bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   white-space: nowrap;
 }

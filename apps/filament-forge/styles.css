@@ -21,7 +21,9 @@
   gap: 6px;
 }
 
-.btn-primary:hover { background: #3a7aee; }
+/* A darkening of --accent. Was #3a7aee, a darkening of the OLD shared
+   --accent, which after Rust & Ash left a blue hover on a rust button. */
+.btn-primary:hover { background: #A34E22; }
 
 .btn-primary:disabled {
   opacity: 0.5;
@@ -208,7 +210,7 @@
 /* ─── SELECTED FILAMENT ─── */
 .selected-filament {
   background: var(--accent-glow);
-  border: 1px solid rgba(79, 142, 255, 0.3);
+  border: 1px solid rgba(196, 98, 45, 0.3);
   border-radius: var(--radius-sm);
   padding: 10px 12px;
   display: none;
@@ -330,7 +332,7 @@
   overflow: hidden;
 }
 
-.btn-generate:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(79,142,255,0.3); }
+.btn-generate:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(196,98,45,0.3); }
 .btn-generate:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
 
 .btn-generate.loading {
@@ -428,7 +430,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 6px 0;
-  border-bottom: 1px solid rgba(42, 47, 62, 0.5);
+  border-bottom: 1px solid rgba(48, 42, 36, 0.5);
 }
 
 .setting-row:last-child { border-bottom: none; }
@@ -509,7 +511,7 @@
 .upload-zone.has-file {
   border-color: var(--success);
   border-style: solid;
-  background: rgba(52, 211, 153, 0.05);
+  background: rgba(126, 154, 94, 0.05);
 }
 
 .upload-icon { font-size: 28px; margin-bottom: 6px; }
@@ -582,8 +584,8 @@
   border-radius: 4px;
 }
 
-.status-badge.connected { background: rgba(52,211,153,0.12); color: var(--success); }
-.status-badge.disconnected { background: rgba(248,113,113,0.12); color: var(--danger); }
+.status-badge.connected { background: rgba(126,154,94,0.12); color: var(--success); }
+.status-badge.disconnected { background: rgba(217,97,74,0.12); color: var(--danger); }
 
 /* ─── RESPONSIVE ─── */
 @media (max-width: 900px) {
@@ -781,7 +783,7 @@
   letter-spacing: 0.5px;
   padding: 2px 5px;
   border-radius: 3px;
-  background: rgba(79, 142, 255, 0.15);
+  background: rgba(196, 98, 45, 0.15);
   color: var(--accent);
   margin-left: 6px;
 }
@@ -879,7 +881,6 @@
   max-width: 92vw;
   max-height: 85vh;
   overflow-y: auto;
-  box-shadow: 0 12px 48px rgba(0,0,0,0.5);
 }
 
 .onboarding .ob-logo {
@@ -1000,7 +1001,7 @@
   display: none;
   position: absolute;
   inset: 0;
-  background: rgba(10, 12, 16, 0.85);
+  background: rgba(20, 17, 15, 0.85);
   backdrop-filter: blur(4px);
   z-index: 50;
   align-items: center;

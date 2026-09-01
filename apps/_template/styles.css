@@ -1,9 +1,9 @@
 /* App-specific styles. Override the shared accent to give the app its own color. */
 
 :root {
-  --accent: #4f8eff;
-  --accent-glow: rgba(79, 142, 255, 0.15);
-  --accent-secondary: #7c5cfc;
+  --accent: #C4622D;
+  --accent-glow: rgba(196, 98, 45, 0.15);
+  --accent-secondary: #D9A05B;
   --border-focus: var(--accent);
 }
 
