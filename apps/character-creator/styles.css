@@ -406,9 +406,40 @@ button.chkrow {
 .attr-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
 .attr-stack .field > .val { font-size: 15px; font-family: var(--font-display); font-stretch: 75%; font-variant-numeric: tabular-nums; }
 
-/* Pools as current/max pairs. */
+/* ─── POOLS: ONE WIDGET, BOTH MODES ───
+   There used to be two. The sheet drew .vital - an input, a max, 17px - and
+   play mode drew .play-pool from a separate code path in renderPlay(): a
+   different element, a different size, its own +/- buttons, and the better of
+   the two hidden behind a toggle. The pools you change constantly were drawn
+   twice, at two sizes, by two widgets that disagreed. This is that widget,
+   once.
+
+   THE VALUE IS TWO NODES, deliberately rather than redundantly. The <input> is
+   what the sheet edits and what saveSheet() reads by its stat-<key> id. The
+   <b> is what play mode shows and what SEVEN mutation paths write to by its
+   play-cur-<key> id - adjustPool, take-damage and its rollback, undo, rest and
+   its rollback, and spending a power. All seven set .textContent, which does
+   nothing to an input, so collapsing the two into one input would have made
+   every one of them a silent no-op: the number would sit still while the data
+   underneath changed correctly. Keeping both nodes meant not one of those call
+   sites had to move.
+
+   It also settles print. The global print rule hides every input outright,
+   which is why the old .vital carried a .print-only mirror beside its input;
+   the <b> IS that mirror now, and the print block just stops hiding it.
+
+   Nothing keeps the two in sync by hand: togglePlay() calls render(), and all
+   seven paths write C.data, so the input is rebuilt from current data every
+   time the mode changes. */
 .vitals { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 8px; }
-.vital { text-align: center; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 4px; }
+.vital {
+  text-align: center;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--tone, var(--border-strong));
+  border-radius: var(--radius-sm);
+  padding: 6px 4px;
+}
 .vital .lbl {
   font-family: var(--font-display); font-stretch: 75%; font-size: 9px;
   text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);
@@ -416,6 +447,36 @@ button.chkrow {
 .vital .val { font-size: 17px; font-family: var(--font-display); font-stretch: 75%; font-variant-numeric: tabular-nums; margin-top: 2px; }
 .vital .val input { width: 52px; text-align: center; padding: 2px 4px; font-size: 15px; }
 .vital .max { color: var(--text-muted); font-size: 13px; }
+
+/* Sheet mode edits, play mode reads. */
+.vital .val b { display: none; }
+body.play-mode .vital .val input { display: none; }
+body.play-mode .vital .val b { display: inline; }
+
+/* The bar shows in both modes - it is the one thing that says "nearly out" at
+   a glance rather than by arithmetic. Its width comes from sheet.js, because
+   only sheet.js knows current over max. */
+.vital .bar {
+  height: 3px; margin-top: 6px; border-radius: 2px;
+  background: var(--border); overflow: hidden;
+}
+.vital .bar > i { display: block; height: 100%; background: var(--tone, var(--text-muted)); }
+
+/* At a third or less the number takes the pool's own tone. Every tone clears
+   3.0 on --bg-tertiary, the floor that applies once phase 4 takes this value
+   to 44px/900: --accent is the tightest at 4.08 and the other four are 4.58 or
+   better. Measured against this palette, not carried over from the last one. */
+.vital.low .val b, .vital.low .val input { color: var(--tone); }
+
+/* Steppers are play mode only, at the 44px target the phone work already set. */
+.vital .steppers { display: none; }
+body.play-mode .vital .steppers { display: flex; gap: 6px; margin-top: 6px; }
+body.play-mode .vital .steppers button {
+  flex: 1; min-height: 44px; font-size: 20px; border-radius: var(--radius-sm);
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  color: var(--text-primary); cursor: pointer;
+}
+body.play-mode .vital .steppers button:active { background: var(--accent-glow); }
 
 /* ONE TAB IS WIDER THAN THE SHEET, AND ONLY THIS ONE.
 
@@ -975,20 +1036,7 @@ body.play-mode #print-btn { display: none; }
   display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 8px; margin-bottom: 12px;
 }
-.play-pool {
-  background: var(--bg-secondary); border: 1px solid var(--border);
-  border-radius: 10px; padding: 10px 12px; text-align: center;
-}
-.play-pool .pp-label { font-size: 11px; color: var(--text-muted); font-family: var(--font-display); font-stretch: 75%; }
-.play-pool .pp-val { font-size: 26px; font-weight: 700; margin: 2px 0 6px; }
-.play-pool .pp-max { font-size: 14px; color: var(--text-muted); font-weight: 400; margin-left: 4px; }
-.play-pool .pp-btns { display: flex; gap: 6px; }
-.play-pool .pp-btns button {
-  flex: 1; min-height: 44px; font-size: 20px; border-radius: 8px;
-  background: var(--bg-tertiary); border: 1px solid var(--border);
-  color: var(--text-primary); cursor: pointer;
-}
-.play-pool .pp-btns button:active { background: var(--accent-glow); }
+/* .play-pool and its .pp-* children are gone: .vital is both widgets now. */
 
 .play-sec { margin-bottom: 10px; }
 .play-sec summary {
@@ -1133,8 +1181,14 @@ body.play-mode #print-btn { display: none; }
   .tabbar { display: none !important; }
   .tabpanel { display: contents !important; }
   /* Nothing sticks to paper. The strip inside it still prints - its current
-     values reach the page through the .print-only mirrors beside each input,
-     because the global print rule hides every input outright. */
+     values reach the page through the <b> beside each input, because the
+     global print rule hides every input outright. That <b> is the same node
+     play mode reads and the seven pool mutation paths write to; it used to be
+     a separate .print-only mirror, and folding the two into one is why the
+     unified widget carries two value nodes. Without this rule every pool
+     prints blank, which is a failure only paper would show. */
   [data-sticky] { position: static !important; }
   .vitals-strip { padding-top: 0; break-inside: avoid; }
+  .vital .val b { display: inline !important; }
+  .vital .bar, .vital .steppers { display: none !important; }
 }

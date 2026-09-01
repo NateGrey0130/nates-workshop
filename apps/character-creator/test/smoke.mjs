@@ -3439,6 +3439,111 @@ section('The sheet shows every derived combat row');
     missing.length === 0, missing.join(', '));
 }
 
+// ---------- One pool widget, both modes ----------
+// The sheet and play mode used to draw pools from two separate code paths:
+// .vital with an input, and .play-pool with its own +/- buttons, at two sizes.
+// They are one component now, and these checks pin the parts of that contract
+// that fail SILENTLY - each of them is something no other test in this file
+// would notice.
+//
+// The load-bearing one is the value being two nodes. Seven mutation paths
+// write a pool by id with .textContent - adjustPool, take-damage and its
+// rollback, undo, rest and its rollback, and spending a power. .textContent
+// does nothing to an <input>, so if the widget ever collapses to a single
+// input every one of those becomes a no-op: the number sits still while the
+// data underneath changes correctly, and the sheet still saves the right
+// value. Nothing on screen says anything is wrong.
+section('One pool widget, both modes');
+{
+  const src = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
+
+  check('there is a single pool component',
+    /function poolCard\(/.test(src), 'poolCard() is gone');
+
+  const callers = [...src.matchAll(/poolCard\(/g)].length;
+  check('and both render paths call it', callers >= 3,
+    `poolCard appears ${callers} times; expected its definition plus two callers`);
+
+  const body = src.slice(src.indexOf('function poolCard('),
+    src.indexOf('\r\n}', src.indexOf('function poolCard(')));
+
+  check('the widget renders the input the sheet saves through',
+    body.includes('id="stat-${key}"'), 'saveSheet() reads $(\'stat-\' + key)');
+  check('and the <b> the seven mutation paths write to',
+    body.includes('id="play-cur-${key}"'),
+    'adjustPool, damage, undo, rest and power spend all target play-cur-<key>');
+
+  // Both nodes, in one element. A widget carrying only one of them would pass
+  // the two checks above if the ids were merely present somewhere in the file.
+  check('both live in the same .val, so neither can drift out of the widget',
+    /class="val">[^\n]*id="stat-\$\{key\}"[^\n]*id="play-cur-\$\{key\}"/.test(body),
+    'the input and the <b> are no longer siblings in .val');
+
+  // Every path that changes a pool paints through ONE function. Writing the
+  // number by hand was enough while the widget was only a number; it now
+  // carries a bar and a low tone, and a half-update leaves the bar at its
+  // render-time width - H.P. at 4 of 14 drew a full bar until a mode toggle
+  // forced a re-render. Play mode never re-renders, so that bar stayed wrong
+  // for the whole session.
+  check('there is one function that paints a pool',
+    /function paintPool\(/.test(src), 'paintPool() is gone');
+  const painters = [...src.matchAll(/paintPool\(/g)].length;
+  check('and all seven mutation paths go through it', painters >= 8,
+    `found ${painters}; expected its definition plus seven call sites`);
+  const EOL = String.fromCharCode(13, 10);
+  const painter = src.slice(src.indexOf('function paintPool('),
+    src.indexOf(EOL + '}' + EOL, src.indexOf('function paintPool(')));
+  check('it repaints the bar, not just the number',
+    painter.includes("querySelector('.bar > i')"), 'paintPool leaves the bar stale');
+  check('and the low tone',
+    /classList\.toggle\('low'/.test(painter), 'paintPool leaves the low class stale');
+  // paintPool itself is the one legitimate writer, so it is cut out before
+  // asking whether anything else still sets the number by hand.
+  const elsewhere = src.replace(painter, '');
+  check('no pool write bypasses it',
+    !elsewhere.includes("$('play-cur-'"),
+    'a mutation path still reaches for the pool node directly');
+
+  check('the retired widget is gone from the markup',
+    !/class="play-pool"|pp-val|pp-label|pp-btns/.test(src),
+    'renderPlay() still emits .play-pool');
+  check('and from the stylesheet',
+    !/^\.play-pool[\s.{]/m.test(css), 'styles.css still styles .play-pool');
+
+  // Print hides every input outright, so the <b> is the only thing that can
+  // carry a pool value onto paper. This rule is the whole reason the printed
+  // sheet still has numbers in it.
+  check('print reveals the <b>, or every pool prints blank',
+    /\.vital \.val b \{ display: inline !important; \}/.test(css),
+    'the print block no longer un-hides the pool value');
+  check('and hides the bar and steppers, which are screen affordances',
+    /\.vital \.bar, \.vital \.steppers \{ display: none !important; \}/.test(css),
+    'print still draws the bar or the steppers');
+
+  // Mode is decided in CSS, not by rendering two different widgets.
+  check('sheet mode shows the input and hides the <b>',
+    /\.vital \.val b \{ display: none; \}/.test(css), 'the <b> is not hidden by default');
+  check('play mode swaps them',
+    /body\.play-mode \.vital \.val input \{ display: none; \}/.test(css)
+    && /body\.play-mode \.vital \.val b \{ display: inline; \}/.test(css),
+    'body.play-mode no longer swaps the two value nodes');
+  check('and steppers are gated on play mode in CSS, not just on a flag',
+    /\.vital \.steppers \{ display: none; \}/.test(css)
+    && /body\.play-mode \.vital \.steppers \{/.test(css),
+    'a sheet-mode render could leak steppers');
+
+  // Every pool has a tone, or --tone falls back and the bar goes grey.
+  const tones = src.slice(src.indexOf('const POOL_TONES'), src.indexOf('\r\n', src.indexOf('const POOL_TONES')));
+  const pools = src.slice(src.indexOf('const POOLS ='), src.indexOf('\r\n', src.indexOf('const POOLS =')));
+  const poolKeys = [...pools.matchAll(/\['([a-z]+)',/g)].map((m) => m[1]);
+  const missingTone = poolKeys.filter((k) => !new RegExp(`\\b${k}:`).test(tones));
+  check('every pool in POOLS has a tone', missingTone.length === 0,
+    `no --tone for: ${missingTone.join(', ')}`);
+  check('and every tone is a token, not a hex',
+    !/#[0-9a-fA-F]{3,8}/.test(tones), 'a pool tone hardcodes a colour');
+}
+
 // ---------- Military Occupational Specialty ----------
 // RUE gives several classes an MOS: "select one area of specialty, gain all
 // skills under that MOS" (Coalition Technical Officer p236, Robot Pilot p84).
