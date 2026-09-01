@@ -202,6 +202,45 @@ is a prediction to verify, not a given.
 **Posture: measure, and revert on a worse number.** Widening the container touches only
 `sheet.html`; `wrap-wide` already exists and is used by `catalog.html`.
 
+**Closed unadopted, 2026-08-31 (PR #464).** The posture decided it: the numbers came back
+and one of them was worse. Nothing shipped.
+
+**The premise was wrong.** The skills tab is not "one column of rows". It has been
+`sheet-grid cols-3` for some time — three boxes side by side, Class / Related / Secondary,
+at **273px each** inside the 900px container. The finding described a single full-width
+strip and there is none. What *is* true is the 540px of empty screen beside the container.
+
+**Measured at 1440×900, with 60 skills on the character** (15 real plus 45 probe rows
+loaded into local D1 and removed afterwards, the technique from
+[[print-render-headless-chrome]]):
+
+| | `wrap` 900px | `wrap-wide` 1280px |
+|---|---|---|
+| skills panel height | 565px | **550px** (−15, −2.7%) |
+| skill box width | 273px | 400px |
+| wrapped name cells | 4 | 3 |
+| journal body width | 363px | 553px |
+| **journal characters per line** | **56** | **85** |
+| bio box width | 416px | 606px |
+| gear panel height | 1500px | 1500px |
+| document height | 1015px | 1000px |
+
+The skills gain is real and trivial: 2.7%, because the panel's height is set by the
+*number of rows* in the tallest group, and widening cannot remove a row. The cost is not
+trivial. `.wrap` is shared by every tab, so widening the sheet takes the journal from 56
+characters per line to 85 — out of the range prose is comfortable in and into the range it
+is not. Fifteen pixels of skills is not worth that.
+
+**The trap the `catalog.html` comment warned about was real, and landed somewhere else.**
+There, gridding inside a fixed container made the list *taller*. Here the height barely
+moved and the damage went to the prose measure instead — the same lesson, that `.wrap`'s
+900px is load-bearing for something, arriving through a different door.
+
+**The narrower version was NOT substituted for the finding as written**, per the
+audit-menu rule against quietly changing scope. It is recorded as
+[N2](#n2--low--the-skill-columns-are-cramped-at-273px-but-the-sheets-width-is-the-wrong-lever)
+for a separate decision.
+
 ---
 
 ### R4 — medium — Two different reasons a skill row is blocked render identically
@@ -311,6 +350,25 @@ matters: it is what `localStorage['sheet-tab-'+id]` and the `#vitals` hash both 
 changing it would strand every saved tab and every pasted link.
 
 **Posture: rename the label only.** No new tab, no reordering, no id change.
+
+### N2 — low — The skill columns are cramped at 273px, but the sheet's width is the wrong lever
+
+Opened by R3 (PR #464), which closed unadopted. Widening the whole sheet fixes the cramp
+and costs the journal its reading measure — 56 characters per line to 85, measured. But
+the cramp itself is real: three skill boxes at **273px** each, of which a fixed `46px` and
+`40px` go to the two numeric columns, leaving roughly 160px for a name like *Language:
+Native Tongue*. Four of 60 name cells wrapped to two lines at that width; none of the
+other tabs asked for the extra room that fixing it would hand them.
+
+**Proposal:** widen the container for the **skills tab only**, not the sheet — a modifier
+on the skills `.tabpanel` (or its grid) rather than on `.wrap`, so the journal, bio and
+gear tabs keep the 900px measure that `styles.css:77` argues for. Measure the same four
+numbers before and after; the skills panel should shrink and the journal figure must not
+move at all.
+
+**Posture: one tab's width, not the sheet's.** If it cannot be scoped to the skills panel
+without restructuring the grid, close it — R3 already showed the whole-sheet version is
+not worth it.
 
 ---
 
