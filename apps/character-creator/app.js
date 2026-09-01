@@ -655,6 +655,45 @@ function gmCampaigns() {
   return S.me ? S.campaigns.filter((c) => c.gm_email === S.me) : [];
 }
 
+// The same rule characterAccess() applies on the server: a character belongs to
+// its owner and to its campaign's G.M. This decides whether the Delete button is
+// DRAWN; the endpoint decides whether it works, and is the one that matters.
+// Kept in that order deliberately - offering a control that then refuses is the
+// thing R1 was about.
+function canDeleteCharacter(c) {
+  if (!S.me) return false;
+  if (c.player_email === S.me) return true;
+  return S.campaigns.some((g) => g.id === c.campaign_id && g.gm_email === S.me);
+}
+
+// The most destructive thing this page can do, so the confirmation says what
+// goes and what stays rather than asking whether you are sure. The journal line
+// is there because it is the part people would otherwise assume wrong, and
+// wrong in the dangerous direction: the foreign key alone WOULD take a player's
+// posts out of the campaign log, and the endpoint detaches them first
+// specifically so it does not.
+async function deleteCharacter(id) {
+  const c = S.existing.find((x) => x.id === id);
+  if (!c) return;
+  if (!confirm(`Delete ${c.name} (level ${c.level})? This cannot be undone.\n\n`
+    + `Their inventory, level history, unspent picks and play log go with them. `
+    + `Anything they had claimed from the campaign stash returns to it.\n\n`
+    + `Journal entries they wrote stay in the campaign log.`)) return;
+  try {
+    await api('characters/' + id, { method: 'DELETE' });
+  } catch (err) {
+    alert('Could not delete ' + c.name + ': ' + err.message);
+    return;
+  }
+  S.existing = S.existing.filter((x) => x.id !== id);
+  // The campaign list above prints its own "N characters" and that count came
+  // from the server; without this it keeps the old number until a reload, on
+  // the same screen as the row that just disappeared.
+  const camp = S.campaigns.find((g) => g.id === c.campaign_id);
+  if (camp && typeof camp.character_count === 'number') camp.character_count -= 1;
+  render();
+}
+
 // `2026-08-31 21:17:28` as `31 Aug`, and `31 Aug 2025` once the year has
 // turned - a bare day and month is only unambiguous inside one year, and a
 // campaign list is exactly the place old rows accumulate. Parsed by hand
@@ -714,6 +753,9 @@ function renderSystem() {
       `<p class="small" style="margin:4px 0">
         <a href="sheet.html?id=${c.id}">${esc(c.name)}</a>
         <span class="muted">(${esc(className(c.class_id))}${c.occ_class_id ? ' ' + esc(className(c.occ_class_id)) : ''} L${c.level} · ${esc(c.campaign_name)})</span>
+        ${canDeleteCharacter(c) ? `<button type="button" class="btn btn-sm btn-danger"
+          onclick="deleteCharacter(${c.id})"
+          aria-label="Delete ${esc(c.name)}">Delete</button>` : ''}
       </p>`
     ).join('')}` : ''}
   </div>`;
@@ -3516,6 +3558,7 @@ Object.assign(window, {
   rollBio, rollBioAll, setLongLived,
   rmEquip, addCatalog, addCustom, setBio, save, startOver,
   resumeDraft, dismissDraft, pickVariant, pickOcc, takeAbility, dropAbility,
+  deleteCharacter,
 });
 
 boot();

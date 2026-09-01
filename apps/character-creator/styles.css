@@ -131,6 +131,15 @@ button { font-family: 'Outfit', sans-serif; cursor: pointer; }
 .btn-ghost { background: transparent; border-color: var(--border); color: var(--text-secondary); }
 .btn-ghost:hover { background: var(--bg-tertiary); color: var(--text-primary); }
 
+/* Destructive, and the only one in the app so far. --danger on the TEXT rather
+   than as a fill: a solid red button beside a character's name reads as the
+   loudest thing on a quiet page, and R6's argument against spending --accent on
+   scenery applies to --danger for the same reason. The border stays neutral
+   until hover, so the row is a name with an action beside it rather than a
+   warning. Contrast was measured, not assumed - see the note under N4. */
+.btn-danger { background: transparent; border-color: var(--border); color: var(--danger); }
+.btn-danger:hover { background: var(--bg-tertiary); border-color: var(--danger); }
+
 /* Shared paints .btn-primary in --accent, which is 3.11:1 under its own
    white text. Repainted here in --accent-strong (5.80:1) rather than in
    shared/, on the same reasoning as --text-muted above: the other three

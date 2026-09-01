@@ -187,3 +187,36 @@ export async function onRequestPatch({ request, env, params }) {
   ).bind(...binds, params.id).run();
   return json({ ok: true });
 }
+
+// DELETE /api/character-creator/characters/:id — owner or G.M. removes the
+// character. Their journal entries are KEPT.
+//
+// Everything that is only meaningful as part of this character goes with it,
+// by foreign key: inventory, level history, unspent skill and power picks, and
+// the play log. A campaign item they had claimed returns to the stash rather
+// than vanishing — campaign_items.claimed_by_character_id is ON DELETE SET NULL
+// — which is the right answer for an object the party still owns.
+//
+// The journal is the exception, and it is deliberate. journal_entries.character_id
+// is ON DELETE CASCADE, so the plain delete would take a player's posts out of a
+// log the G.M. and everyone else reads. Nobody's account of a session should
+// disappear because its author retired a character. The column already models
+// the alternative — its own comment says "NULL = campaign-level entry" — so the
+// posts are detached first and stay in the campaign log under the email that
+// wrote them.
+//
+// Batched, so the detach and the delete land together or not at all. Run apart,
+// a failed DELETE leaves a live character whose journal has silently become
+// campaign-level: nothing reports it and nobody would think to look.
+export async function onRequestDelete({ request, env, params }) {
+  const guard = await requireCharacter(request, env, params.id);
+  if (guard.res) return guard.res;
+
+  const [detached] = await env.DB.batch([
+    env.DB.prepare('UPDATE journal_entries SET character_id = NULL WHERE character_id = ?').bind(params.id),
+    env.DB.prepare('DELETE FROM characters WHERE id = ?').bind(params.id),
+  ]);
+
+  // Returned so the client can say what survived rather than guess.
+  return json({ ok: true, journal_entries_kept: detached?.meta?.changes ?? 0 });
+}
