@@ -1343,8 +1343,15 @@ body.play-mode #print-btn { display: none; }
   font-size: 16px; text-align: center;
 }
 #play-roll-bar.empty { border-top-color: var(--border); }
-#play-roll-bar .ok { color: #5dd39e; }
-#play-roll-bar .ko { color: #e2606c; }
+/* The success/miss tones on the roll result. These were a mint #5dd39e and a
+   coral #e2606c, left from the scheme before Rust & Ash: phase 1 retoned by
+   grepping for a list of specific old hexes rather than for literals, so the
+   two colours on the element play mode looks at most were the two it missed.
+   Measured against this bar's own --bg-secondary ground at its 16px:
+   --success 5.66:1, --danger 4.88:1. Both clear the 4.5 floor, and --success
+   is the wider margin of the two rather than the narrow one. */
+#play-roll-bar .ok { color: var(--success); }
+#play-roll-bar .ko { color: var(--danger); }
 
 @media (min-width: 700px) {
   .play-view { max-width: 900px; }
