@@ -1,10 +1,18 @@
 /* MediaVault — app-specific styles (imports shared/styles.css first) */
 
+/* THE ACCENT IS SHARED'S. It was overridden here with #e07a3a, and
+   --border-focus and --accent-secondary with it — four tokens, no comment,
+   left from the blue/violet era when every app retoned its own accent to
+   reach contrast. Rust & Ash deleted the character creator's overrides for
+   that reason and did not come back for these, so this app stayed rust-orange
+   through one whole scheme change and would have stayed rust-orange through
+   this one: an app's :root loads after shared's and wins. The front door and
+   the rooms have to agree, and that is not a thing a per-app accent can do.
+
+   The tag palette below is NOT an accent. These five are the categories
+   themselves, they are read against each other rather than against the
+   scheme, and they stay exactly as they are. */
 :root {
-  --border-focus: #e07a3a;
-  --accent: #e07a3a;
-  --accent-glow: rgba(224, 122, 58, 0.15);
-  --accent-secondary: #d4a853;
   --tag-audiobook: #c084fc;
   --tag-movie: #60a5fa;
   --tag-physical: #34d399;
