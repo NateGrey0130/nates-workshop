@@ -6,8 +6,8 @@ brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
 `low`. Nothing here is taken until Nate names it; one PR per finding, outcome
 note appended under the finding in the same PR.
 
-**Status, 2026-09-02: `M1`, `M2`, `M3`, `M5` and `M6` taken and closed — the
-whole environment half except `M4`. `M16` was opened while taking `M1` and is
+**Status, 2026-09-02: `M1`, `M2`, `M3`, `M5`, `M6` and `M15` taken and closed —
+the whole environment half except `M4`. `M16` was opened while taking `M1` and is
 filed but NOT taken. Everything else is open.** Read the lines under a finding for its status — the notes here vary in
 wording like every other menu in this repo, and grepping for one has been wrong
 in both directions.
@@ -805,6 +805,35 @@ writes unpredictably, and syncing it is worse than not.
 
 **Posture:** no change to either. This finding is taken by appending a note that
 says it was considered and declined, and closing it.
+
+**Taken, 2026-09-02 (PR #577), and declined — which is the finding.** Nothing was
+changed. Both claims re-measured rather than re-read, and both hold exactly:
+
+```
+~/.claude.json           allowedTools  trust
+  C:\Users\natha\Downloads                    0   True
+  C:/WINDOWS/system32                         0   True
+  C:/Users/natha/Projects/nates-apps          0   True
+  C:\Users\natha\Projects\nates-apps          0   True
+
+HKCU User Shell Folders
+  Personal        C:\Users\natha\OneDrive\Documents
+  Desktop         C:\Users\natha\OneDrive\Desktop
+  My Pictures     C:\Users\natha\OneDrive\Pictures
+  {374DE290-…}    C:\Users\natha\Downloads      <- Downloads, NOT redirected
+```
+
+`allowedTools` is empty and trust is accepted in **all four** keys, so the
+duplicate spelling splits nothing that matters. Declined as stated: hand-editing
+a file Claude Code rewrites on every exit, for no behavioural gain.
+
+**One consequence this finding could not have known, recorded so it is not later
+mistaken for a defect.** `M7` gives a session a new working directory, which
+creates a **fifth** project key — `C:\Users\natha\Projects\workshop`. It starts
+with `allowedTools` empty and no accepted trust, so **the first session started
+there will ask the trust question once.** That is normal and is not the `M10`
+memory problem or the `M11` permission problem; both of those are solved by the
+directory move itself, and neither produces a prompt.
 
 ---
 
