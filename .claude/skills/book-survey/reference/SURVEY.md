@@ -37,8 +37,8 @@ value and its `note` here, and say what it means for this book:
 is `p<F+N>.txt` and `read-columns.py <F+N>`.
 
 <If the registry carries `page_offset_exceptions`, say which printed range takes
-which offset and why the majority vote cannot see it. `pf` is the only book with
-one today.>
+which offset and why the majority vote cannot see it. `pf` and `underseas` both
+carry one; ask `scripts/books.json` for who else does, not this template.>
 
 <A line on OCR quality if it is a scan: median chars/page, whether stat-block
 labels survived, whether any page needed a re-render. Note curly quotes and
