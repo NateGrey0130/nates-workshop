@@ -6,11 +6,12 @@ brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
 `low`. Nothing here is taken until Nate names it; one PR per finding, outcome
 note appended under the finding in the same PR.
 
-**Status, 2026-09-02: `M1`, `M2`, `M3`, `M5`, `M6`, `M13`, `M14` and `M15`
-taken and closed — the whole environment half except `M4`. `M16` was opened while taking
-`M1` and is filed but NOT taken. Everything else is open.** Read the lines under
-a finding for its status — the notes here vary in wording like every other menu
-in this repo, and grepping for one has been wrong in both directions.
+**Status, 2026-09-02: `M1`, `M2`, `M3`, `M5`, `M6`, `M10`, `M13`, `M14` and
+`M15` taken and closed — the whole environment half except `M4`. `M16` and `M17`
+were opened while taking other findings and are filed but NOT taken. `M7`, `M8`,
+`M9`, `M11` and `M12` are open.** Read the lines under a finding for its
+status — the notes here vary in wording like every other menu in this repo, and
+grepping for one has been wrong in both directions.
 
 > **This menu's own trap: nothing in it is pinned by anything.** Every other
 > audit file here describes the repo, so the test suite, a rebuild or a `--remote`
@@ -618,6 +619,33 @@ directory and confirm a specific memory recalls — `nates-apps-monorepo` and
 
 **Posture:** copy, do not move; delete nothing in this finding.
 
+**Taken, 2026-09-02 (PR #580).** Posture kept: copied, nothing moved, nothing
+deleted. The 74 transcripts stay under the old key.
+
+Every count re-measured and every one holds — 64 memory files, 74 transcripts,
+three project keys. The new key is
+`~/.claude/projects/C--Users-natha-Projects-workshop/memory/`, derived the same
+way the existing two are.
+
+**Verified by hash rather than by count**, which is a stronger version of what
+this finding asks for: 64 of 64 present, **zero name mismatches and zero SHA-256
+mismatches**, `MEMORY.md` included. A matching count proves the copy ran; matching
+hashes prove it copied *this* store. `nates-apps-monorepo` and
+`book-ingest-batch-protocol` were both opened and read intact.
+
+**The recall check is still Nate's**, and is the one thing that cannot be done
+from here: start a session in the new directory and ask for a memory by name. A
+file being present is not the same as it being recalled.
+
+**Two `[[links]]` in the store point at nothing** — `[[audit-menu]]` and
+`[[claim-audit]]`. They name *skills*, not memories. Pre-existing and identical
+in the source, so not introduced by the copy and deliberately not fixed here.
+
+**And the finding's scope stops short of a real problem, now filed as `M17`.**
+This finding moves the memory *store*. Eleven of the 64 files name
+`C:\Users\natha\Downloads` inside their own *content*, and `M7` makes some of
+those false.
+
 ### M11 — medium — the permission file follows for free, and should not be promoted into the repo
 
 The brief treated `Downloads\.claude\settings.local.json` as 77 KB of value at
@@ -922,6 +950,45 @@ order to expose a theoretical one.
 **Posture:** documentation only. **Filed, not taken** — opened while taking `M1`
 and left for a separate word, because the numbering exists so that the decision
 to take it can be separate from the decision to write it down.
+
+### M17 — medium — eleven memories name `Downloads` in their own text, and `M7` makes some of them wrong
+
+Noticed while taking `M14`, confirmed while taking `M10`. **`M10` moves the
+memory *store*; it says nothing about the *content*.** Eleven of the 64 files
+name `C:\Users\natha\Downloads` in their body:
+
+| file | what it says |
+|---|---|
+| `nates-apps-monorepo` | sessions "are often launched from" it — **and its `description` says so too**, which is the field recall matches on |
+| `book-ingest-batch-protocol` | points at `Downloads\BOOK-INGEST-PROMPT.md` as where the prompts live |
+| `two-allowlists-downloads-and-repo` | is *named* for `Downloads\.claude\settings.local.json` |
+| `ui-audit-menu`, `redesign-audit-menu`, `review-brief-tracks-never-run`, `rust-ash-cleanup-residue` | each says its brief sits in `Downloads` "with the other prompts of its kind" |
+| `filament-forge-standardization` | "the full prompt lives at `Downloads\…`" |
+| `pantheons-of-the-megaverse-survey` | records which PDF a measurement was read from |
+| `media-vault-standardization`, `dev-server-8788-is-another-worktree` | incidental mentions |
+
+**They are not one kind of claim and must not be edited as one.** Some are
+**records** — which PDF a number came from is permanently true and rewriting it
+destroys the only account of where the number came from. Others are **pointers**
+that go false the moment `M7` lands, inside a surface that loads in *every*
+session. That second group is the `M2`/`M3` failure exactly: a wrong instruction
+in a loading surface, with nothing to contradict it.
+
+**Several of the pointers are redundant rather than merely relocating.**
+`docs/prompts/` archives those briefs and `M13` verified all 18 as identical, so
+the correct target is the archive — the copy that is version-controlled and
+cannot move again — not the new directory.
+
+**Proposal:** after `M7`, read all eleven and correct **only the pointers**,
+leaving the records standing. Point brief references at `docs/prompts/` rather
+than at any directory on this disk. Fix `nates-apps-monorepo`'s `description` as
+well as its body, since the description is what recall reads. Leave the
+`[[audit-menu]]` and `[[claim-audit]]` links alone — they name skills, not
+memories, and were already like that.
+
+**Posture:** memory maintenance, no repo change beyond this note. **Its own PR,
+immediately after `M7`** — the window in which these are wrong should be short,
+but folding it into the move would put two decisions in one PR.
 
 ---
 
