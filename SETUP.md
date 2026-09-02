@@ -613,6 +613,25 @@ environment is fixed when it starts and nothing updates it afterwards. Open a ne
 window before concluding the change did not work — this is the step that makes a
 correct fix read as broken.
 
+**`tesseract` is required, is NOT on PATH, and works anyway.**
+`scripts/ocr-book.py` shells out to it to OCR a page image, and exits with
+*"tesseract not found - install it or put it on PATH"* when it cannot find one.
+On this machine it sits at `C:\Program Files\Tesseract-OCR\tesseract.exe` —
+**v5.4.0, carrying only the `eng` and `osd` language data** — and that directory
+is *not* on PATH. The script runs because `find_tesseract()` tries
+`shutil.which` first and then two absolute Program Files locations, and the first
+of those matches. Exercised rather than theoretical: an `ocr-book.py` run on
+2026-09-02 OCR'd a page through it.
+
+**So that fallback is load-bearing while reading like a nicety** — the same shape
+as the `pdftotext` gap above. Nothing reports a missing tool, because on this
+machine nothing is missing. A machine that installs Tesseract anywhere else — a
+different drive, a user-scoped install, whatever path a package manager picks —
+gets the hard exit instead, and the repair is a PATH entry, **not** an edit to the
+script. Leave `find_tesseract()` alone: it is what makes this machine work, and
+removing the fallback to "expose" the gap would break the working case to prove a
+point (`MACHINE-AUDIT` `M16`).
+
 **`python` resolves through the Microsoft Store alias, and that is fine.**
 `AppData\Local\Microsoft\WindowsApps\python.exe` forwards to
 `AppData\Local\Python\pythoncore-3.14-64\python.exe` — 3.14.3 as of 2026-09-02.

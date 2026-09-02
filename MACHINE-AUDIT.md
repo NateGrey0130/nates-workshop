@@ -6,10 +6,10 @@ brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
 `low`. Nothing here is taken until Nate names it; one PR per finding, outcome
 note appended under the finding in the same PR.
 
-**Status, 2026-09-02: `M1`–`M15` are all taken and closed, and `M17` with them.
-Open: `M16`, filed but not taken; and `M18`, which is an OBSERVATION rather than
-a finding — it proposes nothing, and exists so a recurrence has somewhere to
-attach and four dead hypotheses are not re-run.**
+**Status, 2026-09-02: `M1`–`M17` are all taken and closed. Nothing is open
+except `M18`, which is an OBSERVATION rather than a finding — it proposes
+nothing, and exists so a recurrence has somewhere to attach and four dead
+hypotheses are not re-run.**
 **`M8` was taken with its posture overridden** — deletion, on explicit
 instruction — which its own note records. Read the lines under a finding for its
 status — the notes here vary in wording like every other menu in this repo, and
@@ -1118,6 +1118,27 @@ order to expose a theoretical one.
 **Posture:** documentation only. **Filed, not taken** — opened while taking `M1`
 and left for a separate word, because the numbering exists so that the decision
 to take it can be separate from the decision to write it down.
+
+**Taken, 2026-09-02 (PR #586)**, on Nate's word. Posture kept exactly:
+documentation only, **no check added, and `find_tesseract()` untouched.**
+
+Every premise re-measured and every one holds — `tesseract` still absent from a
+shell carrying only the persisted PATH, still present at
+`C:\Program Files\Tesseract-OCR\tesseract.exe`, the `(x86)` alternative still
+absent, and `find_tesseract()` unchanged.
+
+**Two details this finding did not have**, both worth a fresh machine knowing:
+it is **v5.4.0** (leptonica 1.84.1), and it carries **only the `eng` and `osd`
+language data**. A machine that installs Tesseract without the English
+traineddata fails differently from one that lacks the binary, and neither failure
+names PATH.
+
+**One claim was softened rather than repeated.** This finding says sixteen book
+caches were built through the fallback. Sixteen caches exist, but not all of them
+went through Tesseract — `bom` was re-cached from its *text layer*, and
+`ocr-book.py` skips OCR for a PDF that has one. What is provable is smaller and
+enough: an `ocr-book.py` run on 2026-09-02 OCR'd a page through that fallback,
+during `M7`'s verification. `SETUP.md` says that instead.
 
 ### M18 — OBSERVATION, NOT A DIAGNOSIS — `CommandNotFoundException` on a bare command name that resolves minutes later
 
