@@ -594,6 +594,24 @@ inside one file.
 
 **Confidence.** High.
 
+**Taken, 2026-09-02 (PR #525),** taking the better of the two options offered:
+describe the failure, not its tally. All three sites now say **repeatedly, and
+in both directions**, which is the half a reader can act on.
+
+The finding said "add today's instance if a count is kept". No count was kept,
+so the instances went in as evidence for *why* — and there were two, both from
+the day this audit ran: the census script that split a block on an inline
+`**F10 …**` cross-reference and called a shipped finding open, and
+`apps/character-creator/AUDIT.md`'s header recording its **third** scan
+misreading D1–D6. **The tally moved twice inside the PR that removed it**, which
+is the argument arriving as its own worked example.
+
+**One site left alone**, deliberately: *"reconstructed from them nine times"* in
+the opening paragraph. That is a different claim — how often the protocol was
+rebuilt out of the files, not how often a grep lied — and this finding named
+three sites, not four. It is a number that moves and a candidate for the same
+treatment; it is not this finding's scope.
+
 ---
 
 ### F11 — Low — two documents are reachable from nothing
