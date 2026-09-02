@@ -7,10 +7,10 @@ brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
 note appended under the finding in the same PR.
 
 **Status, 2026-09-02: `M1`, `M2`, `M3`, `M5`, `M6`, `M13` and `M15` taken and
-closed — the whole environment half except `M4`. `M16` was opened while taking `M1` and is
-filed but NOT taken. Everything else is open.** Read the lines under a finding for its status — the notes here vary in
-wording like every other menu in this repo, and grepping for one has been wrong
-in both directions.
+closed — the whole environment half except `M4`. `M16` was opened while taking
+`M1` and is filed but NOT taken. Everything else is open.** Read the lines under
+a finding for its status — the notes here vary in wording like every other menu
+in this repo, and grepping for one has been wrong in both directions.
 
 > **This menu's own trap: nothing in it is pinned by anything.** Every other
 > audit file here describes the repo, so the test suite, a rebuild or a `--remote`
