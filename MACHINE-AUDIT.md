@@ -1,0 +1,748 @@
+# MACHINE-AUDIT — where things sit on this PC, and why commands fail
+
+**Run 2026-09-02** against `C:\Users\natha` on Windows 11 Pro 26200, from the
+brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
+`M2`, … as `### M1 — <severity> — <title>`, severity being `high` / `medium` /
+`low`. Nothing here is taken until Nate names it; one PR per finding, outcome
+note appended under the finding in the same PR.
+
+**Status: all findings open except `M1`, whose machine half was applied on
+2026-09-02 out of band on explicit instruction — see its note.**
+
+> **This menu's own trap: nothing in it is pinned by anything.** Every other
+> audit file here describes the repo, so the test suite, a rebuild or a `--remote`
+> query can contradict it. This one describes a machine that no file in the tree
+> observes, so a stale claim here fails silently and forever. Two consequences.
+> **First, every number below carries the timestamp it was measured at and
+> nothing keeps it current** — `Downloads` held 539 entries when the brief was
+> written this morning and 543 when this was measured at 13:20, four files
+> arriving from a browser in between. **Second, `M7` names its files
+> individually on purpose.** A rule re-run at take-time selects a different set
+> than the one reviewed here, and the directory it selects from also holds tax
+> returns, medical records and a custody document. Take `M7` against the list,
+> not against a fresh scan.
+
+---
+
+## Decisions already made — do not re-open these
+
+Answered by Nate on 2026-09-02, before the audit was written.
+
+1. **The working directory moves to a dedicated directory beside the repo** —
+   `C:\Users\natha\Projects\workshop\` unless a better name can be argued,
+   holding the sourcebook PDFs, the loose briefs, and anything else that is work
+   rather than a download. **Design the move; do not re-litigate it.** Not inside
+   the repo (1.8 GB of PDFs in a git working tree), and not staying in
+   `Downloads`.
+2. **The environment fixes go through the menu like everything else** — numbered
+   findings, one PR each, taken on his word. They are numbered **first**, because
+   they fix the reported symptom independently of the move.
+3. **`DiceRoller` is abandoned.** Recorded as a hazard, no finding, no work:
+   `C:\Users\natha\OneDrive\Documents\DiceRoller\.git` is a git repository inside
+   a syncing OneDrive folder, which is a corruption risk if it is ever used again.
+   It is not being used.
+4. **Where the PowerShell profile should live is still open** and this audit
+   decides it — `M4`.
+
+---
+
+## Corrections to the brief, first
+
+The brief asked to be re-checked rather than believed. It held up on the shape of
+the problem and was wrong or imprecise on nine measurements. Leading with those,
+because two of them change what the findings should be.
+
+**Confirmed as written:** `pdftotext` genuinely absent from the persisted PATH;
+no PowerShell profile at any of the four paths; the profile path resolves into
+OneDrive; `python` resolves through the Microsoft Store alias; `Downloads` is the
+one user folder not redirected to OneDrive while `Documents`, `Desktop` and
+`Pictures` are; both suspected `.md` duplicate pairs are byte-identical;
+`Projects\` contains only `nates-apps` with exactly one worktree, on `main`;
+`scripts/books.json` records `C:\Users\natha\Downloads` on all 18 entries;
+`Downloads\.claude\launch.json` is untracked and hardcodes `cd /d` into the repo.
+
+**Wrong or imprecise:**
+
+| # | the brief said | measured 2026-09-02 |
+|---|---|---|
+| 1 | `Downloads` has 539 entries | **543** at 13:20 — 535 files, 8 directories, 13.29 GB over 644 files recursively |
+| 2 | ~45 sourcebook PDFs, ~1.8 GB | **50 game PDFs, 1,787.9 MB.** Of 99 PDFs in the directory, **49 are not game material** |
+| 3 | 24 working `.md` briefs | **25**, and **one of them is not work at all** — personal interview preparation |
+| 4 | ~40 tracked md files contain `C:\Users\natha\…` | **25 tracked files**, of which only **three** are instructions rather than records; the grep shape used also misses `scripts/books.json`, whose 18 values are the ones that actually have to change |
+| 5 | the memory store holds 61 files | **64** — 63 memories plus `MEMORY.md` |
+| 6 | there is a second memory store | there are **three** project keys; the third is `C--WINDOWS-system32` |
+| 7 | the loose briefs vs `docs/prompts/` is an open question | **it is not.** All 18 archived briefs are **content-identical** to their loose copies; the only difference is CRLF, introduced at checkout by `core.autocrlf=true`. See `M13` |
+| 8 | 77 KB of permission grants do not follow the move | **206 of the 258 entries are path-independent** and survive a move of the `.claude/` directory verbatim. The move costs almost nothing. See `M11` |
+| 9 | the junction apparatus is "the highest-leverage item" | it is the **lowest**. The junctions live in `~/.claude`, are keyed to nothing about the working directory, and survive the move untouched. Verified: nine junctions, all resolving into the repo. See `M12` |
+
+**Found, and not in the brief:**
+
+- **The `windows-shell` skill carries a diagnosis of this exact symptom, and it
+  is false.** This is the largest thing in the audit — `M2`.
+- **Three more identical duplicate pairs, all large PDFs, 122.4 MB** between
+  them, on top of the two `.md` pairs the brief knew about — `M8`.
+- **17 sourcebooks sit in `Downloads` that are not in the registry, totalling
+  1,243.4 MB** — more un-ingested book weight than ingested (534.0 MB across the
+  18 registry books). Three of those 17 are the duplicate copies above. **No
+  finding**: what to ingest belongs to `BOOK-INGEST-AUDIT.md`, not here. Noted
+  only because it is most of what the move is carrying.
+- **`~/.claude.json` holds four project keys and two of them are the same
+  directory** spelled with forward and back slashes — `M15`.
+- **`curl` in PowerShell is an alias for `Invoke-WebRequest`** — `M5`.
+- **`.gitattributes` exists** and explains the CRLF asymmetry in correction 7.
+- **Nothing outside `books.json` reads `Downloads` at runtime.** A grep of every
+  `.mjs`, `.js`, `.py`, `.json` and `.jsonc` in the tree returns one hit, and it
+  is a `//` comment inside `.claude/launch.json`. The move's blast radius on code
+  is zero.
+- **PowerShell 7 is not installed** (`pwsh` NOT FOUND). Everything is Windows
+  PowerShell 5.1 — no `&&`, no ternary, no `Start-Process -Environment`. That is
+  permanent, not a gap to fill, and `M4` has to be written for 5.1.
+- **`SETUP.md` says "the six repo junctions" one line after a block that loops
+  over nine** — `M12`.
+
+---
+
+# Environment — `M1`–`M6`
+
+Reorganising directories fixes none of this. These are cheap, reversible, and
+independent of the move.
+
+### M1 — high — `pdftotext` ships inside Git for Windows and nothing said so
+
+**The reported symptom, and the concrete instance of it.** `pdftotext.exe` lives
+at `C:\Program Files\Git\mingw64\bin\pdftotext.exe`. The persisted PATH carried
+`C:\Program Files\Git\cmd` and not `mingw64\bin`, so an agent session — which
+runs under Git Bash and inherits `/mingw64/bin` — found the command and Nate's
+own PowerShell did not. `.claude/settings.json` allows `Bash(pdftotext *)`, so
+this was invisible from the agent side for as long as it existed.
+
+Proved before fixing, in a shell whose PATH was rebuilt from the persisted
+Machine + User values only:
+
+```
+before:  pdftotext NOT FOUND
+after:   C:\Program Files\Git\mingw64\bin\pdftotext.exe   (pdftotext version 4.00)
+```
+
+**Two things that make the fix less obvious than it looks**, both of which will
+apply to the next person who edits this PATH:
+
+- `HKCU\Environment\PATH` is **`REG_EXPAND_SZ`** and begins with
+  `%USERPROFILE%`. `[Environment]::SetEnvironmentVariable(…,'User')` rewrites it
+  as `REG_SZ`, which turns `%USERPROFILE%\AppData\Local\Microsoft\WindowsApps`
+  into a literal path that resolves to nothing — and that is where `python`,
+  `python3` and `py` come from. The write has to go through
+  `Microsoft.Win32.Registry` with `RegistryValueKind::ExpandString`.
+- `mingw64\bin` contains **51 executables**, exactly one of which — `curl.exe` —
+  collides with a Windows one. Appending to the **end** of the *User* PATH keeps
+  Machine PATH ahead of it, so `C:\WINDOWS\system32\curl.exe` still wins. Checked
+  in both PowerShell and `cmd`; it does.
+
+**Proposal:** the machine half is done. The repo half is open — `SETUP.md`
+§"Setting up a machine" describes what a fresh machine needs and never mentions
+`pdftotext`, though `book-survey` depends on it and the book work is the reason
+that section exists. Add the requirement, the fact that it comes from Git for
+Windows rather than a separate install, the `REG_EXPAND_SZ` warning above, and
+one line stating that **a PATH change does not reach an already-open terminal**,
+because that makes a correct fix look broken.
+
+**Posture:** documentation, plus the one-line machine step. No script, no check,
+nothing that runs. `SETUP.md` is a reference; this is a sentence in it.
+
+**Taken, 2026-09-02 — machine half only, out of band.** Nate said "just fix the
+pdftotext path now", overriding decision 2 for this item specifically.
+`C:\Program Files\Git\mingw64\bin` was appended to the User PATH via the registry
+API with the value kind preserved, `WM_SETTINGCHANGE` was broadcast, and the
+prior value was backed up to the session scratchpad. `node`, `npm`, `git`, `gh`,
+`python` and `wrangler` were re-checked afterwards and all resolve where they did
+before. **The `SETUP.md` half was not done and is what remains of this finding.**
+
+### M2 — high — the skill's explanation of this whole class of failure is wrong
+
+`.claude/skills/windows-shell/SKILL.md` ends with a section titled *"Nate's shell
+is not your shell"*. It states that his interactive PowerShell does not see
+`%APPDATA%\npm` **although the persisted user PATH contains it**, attributes this
+to *"a stale environment block inherited from a long-lived `explorer.exe`"*,
+concludes *"the config is fine, the inheritance is not"*, and prescribes: **"Call
+binaries by absolute path in anything you hand him to run."** Dated 2026-09-01,
+one day old, and left unresolved at his call.
+
+**It does not hold.** The claim is checkable, and the check is not a
+reconstruction of his shell — `explorer.exe` can be asked to launch a process,
+and that process inherits explorer's actual environment block, which is the thing
+under dispute. Run 2026-09-02 at 13:47:
+
+```
+explorer.exe has been running since 2026-08-26 19:20  (6d 18h, never restarted)
+HKCU\Environment last written  2026-09-02 13:39       (eight minutes earlier)
+
+PATH as inherited from explorer.exe:
+  …;C:\Program Files\nodejs\;C:\Program Files\GitHub CLI\;
+  C:\Users\natha\AppData\Local\Microsoft\WindowsApps;…;
+  C:\Users\natha\AppData\Roaming\npm;C:\Program Files\Git\mingw64\bin
+
+contains AppData\Roaming\npm?   YES
+contains mingw64\bin?           YES
+where pdftotext                 C:\Program Files\Git\mingw64\bin\pdftotext.exe
+where wrangler                  C:\Users\natha\AppData\Roaming\npm\wrangler.cmd
+```
+
+An explorer seven days old is handing out a directory added to the registry eight
+minutes ago. **The block is not stale; it tracks `WM_SETTINGCHANGE`.** And the
+specific variable the skill says is missing is present.
+
+So the skill is wrong twice over: `%APPDATA%\npm` is visible to his shell, and
+the mechanism it blames is not a mechanism that is failing. The prescription that
+follows — write absolute paths into everything you hand him — is a permanent tax
+paid to avoid a problem that is not there, and it is the kind of advice that
+makes the real cause harder to find next time, because every command that
+would have exposed it has been pre-worked-around.
+
+**What was actually true**, and what is worth keeping: the two shells did differ,
+and `M1` is what the difference was. An agent's Bash runs under Git Bash, which
+prepends `/mingw64/bin`, `/usr/bin` and its own vendored tools; Nate's PowerShell
+gets Machine PATH + User PATH and nothing else. That is a real and permanent
+asymmetry — `git` resolves to `/mingw64/bin/git` for an agent and
+`C:\Program Files\Git\cmd\git.exe` for him, and `sed`, `diff`, `file` and `tr`
+exist for one and not the other — but it is a *difference in which shell*, not a
+stale inheritance, and it is diagnosable in one command rather than worked
+around.
+
+**Proposal:** replace the *"Nate's shell is not your shell"* section with what is
+measured above. Keep the heading and the lesson; replace the mechanism, the
+prescription, and the "config is fine, inheritance is not" conclusion. State the
+real asymmetry (Git Bash's prepended toolchain vs Machine+User PATH), give the
+one-line way to see his PATH rather than guess at it, and drop the
+absolute-path rule. Per the audit-menu convention, **correct the claim without
+quoting the phrase being replaced.**
+
+**Posture:** documentation only, in one skill. No new rule, no check, and
+explicitly **no replacement workaround** — the point of the finding is that the
+workaround was the cost.
+
+> **This is also a `SKILL-AUDIT.md` shaped problem**, and deliberately filed
+> here anyway: it was found by measuring the machine, it is about the machine,
+> and `SKILL-AUDIT.md` audits the instruction layers as layers rather than
+> fact-checking their claims against hardware. If Nate would rather it lived
+> there, moving it costs nothing.
+
+### M3 — medium — a memory file records the same false claim
+
+`~/.claude/projects/C--Users-natha-Downloads/memory/interactive-shell-lacks-npm-path.md`
+carries the `M2` claim in its own words — that agent tools see `%APPDATA%\npm`
+and his PowerShell does not, and that binaries should be called by absolute path.
+The measurement in `M2` falsifies it.
+
+This is the failure mode the `audit-menu` skill already names: *"when a finding
+is taken, grep the whole tree for its number — and check the memory store too,
+which no grep of the repo reaches."* Here the memory and the skill were written
+from the same investigation on the same day, so correcting one and not the other
+leaves the wrong version in the surface that loads **first** and in **every**
+session, including sessions that never open the repo.
+
+**Proposal:** rewrite that memory file to record what `M2` measured — that
+explorer's block is current, that the real asymmetry is Git Bash's prepended
+toolchain, and that the absolute-path rule was a workaround for a
+misdiagnosis. Delete nothing else; the file's *existence* is right, its content
+is not.
+
+**Posture:** memory maintenance, not a repo change — this finding has no PR of
+its own and should be taken **in the same PR as `M2`**, as the memory half of it.
+Flagged separately only so that taking `M2` cannot silently leave it behind,
+which is exactly what happened to the two files it is about.
+
+### M4 — medium — there is no PowerShell profile, and the default location is the wrong one
+
+None of the four profile paths exist:
+
+```
+False  C:\Windows\System32\WindowsPowerShell\v1.0\profile.ps1
+False  C:\Windows\System32\WindowsPowerShell\v1.0\Microsoft.PowerShell_profile.ps1
+False  C:\Users\natha\OneDrive\Documents\WindowsPowerShell\profile.ps1
+False  C:\Users\natha\OneDrive\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1
+```
+
+There is nowhere for an alias, a `cd` shortcut or a helper function to live, which
+is why every convenience so far has been re-typed. And the per-user paths resolve
+into **OneDrive**, because `Documents` is redirected there
+(`HKCU\…\User Shell Folders\Personal` = `C:\Users\natha\OneDrive\Documents`).
+`$PROFILE` is computed from that redirection and cannot be pointed elsewhere
+without an environment variable that would then have to be maintained.
+
+**Decision 4 asked this audit to choose. The trade, named:**
+
+*OneDrive* gives sync and version history for free, and costs a conflict-copy
+risk on a file that every shell executes — `profile-DESKTOP-x.ps1` beside
+`profile.ps1` is silent, and a half-synced profile is a shell that behaves
+differently in a way nothing reports. *Outside OneDrive* has no backup at all,
+which is the same regime `Downloads` is in and the one this whole audit is trying
+to leave.
+
+**Proposal — take the trade apart rather than pick a side.** Put a two-line stub
+at `$PROFILE.CurrentUserAllHosts` (the OneDrive path, unavoidable) that
+dot-sources the real profile from the new working directory:
+
+```powershell
+# C:\Users\natha\OneDrive\Documents\WindowsPowerShell\profile.ps1
+$local = 'C:\Users\natha\Projects\workshop\profile.ps1'
+if (Test-Path $local) { . $local }
+```
+
+The stub never changes, so it never generates a conflict copy; the content lives
+where the work lives and moves with it; and a conflict copy of the stub, if one
+ever appears, is inert because PowerShell only loads the exact filename. `AllHosts`
+rather than `CurrentHost` so the VS Code integrated terminal gets it too.
+
+What goes **in** the real profile is deliberately small, and deliberately **not**
+a PATH edit — PATH belongs in the registry, where `M1` put it, and a profile that
+edits PATH creates a second source of truth that only some shells see:
+
+- a `cd` function for the repo and for the new working directory
+- the `workerd` + `wrangler` kill block from `windows-shell` §"Killing a dev
+  server", which is currently pasted by hand every time
+- nothing else until something is typed twice
+
+**Posture:** opt-in and minimal. Creating a profile changes the startup of every
+PowerShell on the machine, so this finding is the stub plus at most those two
+helpers, and additions are their own decision later. **Write it for 5.1** —
+`pwsh` is not installed, so no `??`, no ternary, no `&&`.
+
+### M5 — low — `curl` in PowerShell is not curl
+
+`curl` is a PowerShell alias for `Invoke-WebRequest`, so `(Get-Command curl).Source`
+is empty and a `curl -s -o /dev/null -w '%{http_code}'` written for the real
+binary silently does something else. `curl.exe` reaches the real one, and
+resolution order after `M1` is:
+
+```
+C:\WINDOWS\system32\curl.exe                 <- wins, in both PowerShell and cmd
+C:\Program Files\Git\mingw64\bin\curl.exe
+```
+
+This cost time during this audit, and it is the same *class* as `M1`: a command
+that resolves to different things in the agent's shell and his, without failing.
+`windows-shell` §"Killing a dev server" already tells the reader to use a curl
+returning `HTTP 000` as a diagnostic, without saying which curl.
+
+**Proposal:** one line in `windows-shell`, in the section `M2` is already
+rewriting — in PowerShell, write `curl.exe`. Same for `wget` and `ls`, which are
+also aliases, if that is free to state.
+
+**Posture:** documentation only. **Do not** propose removing the alias; it is a
+default that other things rely on.
+
+### M6 — low — `python` is fine, and the failure mode is worth one sentence
+
+Verified rather than assumed, because a working `python --version` says nothing
+about what the scripts import:
+
+```
+python           3.14.3   via C:\Users\natha\AppData\Local\Microsoft\WindowsApps\python.exe
+                          (Store App Execution Alias -> AppData\Local\Python)
+pip                       C:\Users\natha\AppData\Local\Python\bin\pip.exe
+import pymupdf   OK       PyMuPDF 1.28.2
+```
+
+`scripts/ocr-book.py` imports `argparse, importlib.util, io, json, os, re,
+shutil, statistics, subprocess, sys` — all stdlib — plus `pymupdf`, and
+`scripts/read-columns.py` imports `sys` and `pymupdf`. Those are the only two
+Python files in the tree. Nothing is missing. `pdfminer.six`, `pdfplumber`,
+`pypdf` and `pypdfium2` are also installed and nothing here uses them.
+
+**The failure mode worth recording:** the Store alias is a stub that Windows can
+turn off — Settings → Apps → Advanced → App execution aliases — and when it is
+off, `python` does not fail, it opens the Microsoft Store. It is also ahead of
+`AppData\Local\Python\bin` on PATH, so a real install would be shadowed by the
+stub rather than replacing it.
+
+**Proposal:** one sentence in `SETUP.md` §"Setting up a machine", beside `M1`'s.
+Do **not** pin the interpreter, do not add a `requirements.txt`, do not reorder
+PATH. This is a working configuration with a documented way to break; the finding
+is the documentation.
+
+**Posture:** documentation only. **This is a "leave it alone" finding** and
+should stay one — the temptation on reading it is to "fix" the alias ordering,
+which would change a working toolchain to prevent a setting nobody has touched.
+
+---
+
+# Layout — `M7`–`M15`
+
+The move itself. `Downloads` and `Projects` are on the same volume (`C:`, 398 GB
+free), so every move below is a rename: instant, and reversible by renaming back.
+
+### M7 — high — what moves to `C:\Users\natha\Projects\workshop\`, named file by file
+
+**The inclusion rule has to be a list, not a pattern**, and this is the finding
+the trap at the top of this file is about. `Downloads` holds 543 entries of which
+roughly 40 are work; the rest includes tax documents, medical records, lab
+results, a mortgage statement and a custody agreement. **No filename outside the
+work set appears anywhere in this document**, and none should appear in the PR
+that takes this finding either — a list of what to move is safe to review, a list
+of what to leave is not.
+
+**Moves — 50 PDFs, 1,787.9 MB:**
+
+- the **18 registry books**, exactly the `source_pdf` values in
+  `scripts/books.json`. All 18 were stat-ed on 2026-09-02 and all 18 are present.
+  This list must be read from `books.json` at take-time rather than copied here,
+  so the two cannot disagree.
+- the **17 sourcebooks not in the registry**, 1,243.4 MB — Baalgor Wastelands,
+  Old Ones, Heroes Unlimited 2e, Africa (two copies), World Books 23–32, and the
+  duplicate copies of Ultimate Edition and Dragons and Gods that `M8` covers.
+- the **10 page-range extracts** cut from books already in the list —
+  `juicer-pp69-72.pdf`, four `Rifts - Ultimate Edition-<pages>.pdf`, four
+  `Rifts Main-<pages>.pdf`, and `PFRPG - Dragons and Gods-23-24.pdf`. 9.5 MB.
+- **5 other game PDFs**: `Rifts-Character-Sheet-fillable.pdf`,
+  `Weapon PRoficiencies.pdf`, `mech-boxer-GM-packet.pdf`,
+  `occ-rcc-import-tool-spec.md.pdf`, `rifts-character-creator-spec.md.pdf`.
+
+**Moves — 24 of the 25 `.md` files.** All except the personal interview
+preparation file, which is not work and stays. `M13` covers what happens to the
+briefs after they move.
+
+**Moves — `Downloads\.claude\`, whole directory.** `launch.json`,
+`settings.local.json` and its `.bak`. `M11` covers why moving it wholesale is
+the right shape.
+
+**Does NOT move — `Downloads\.wrangler\`.** 21 entries, 0.07 MB, residue from
+`wrangler` having been run in `Downloads` at some point. It holds
+`cache/wrangler-account.json`, `cache/cf.json` and a miniflare cache. It is
+regenerable, it is not referenced by anything, and it should be deleted rather
+than carried — **but deletion is not in scope**, so this proposes only that it is
+not moved, and flags it for the same call as `M8`.
+
+**Does NOT move — everything else**, which is 49 non-game PDFs (51.3 MB), 208
+`.3mf`, 38 `.stl`, 40 `.png`, 25 `.jpeg`, 20 `.zip`, 18 `.exe` and the remaining
+directories.
+
+**Proposal:** move the named set. Nothing is renamed, nothing is deleted, nothing
+outside the list is touched. Take this finding **after** `M9` and `M10` — see
+*Order* below.
+
+**Posture:** move only. No deletion in this finding, no reorganisation of what
+stays behind, and no cleanup of `Downloads` as a directory — that is a separate
+decision Nate takes separately, and this finding is careful not to pre-empt it.
+
+### M8 — medium — five identical duplicate pairs, 122.4 MB of it in three PDFs
+
+SHA-256 compared, 2026-09-02. All five pairs are **byte-identical**:
+
+| kept | duplicate | wasted |
+|---|---|---|
+| `Rifts - Ultimate Edition.pdf` | `442806688-Palladium-Books-Rifts-Ultimate-Edition-pdf.pdf` | 58.7 MB |
+| `PFRPG - Dragons and Gods (1).pdf` | `PFRPG - Dragons and Gods.pdf` | 53.3 MB |
+| `604225358-Rifts-World-Book-04-Africa.pdf` | `604225358-Rifts-World-Book-04-Africa (1).pdf` | 10.4 MB |
+| `REVIEW-BRIEF.md` | `REVIEWBRIEF.md` | — |
+| `setup-v2-rewrite-prompt.md` | `setupv2rewriteprompt.md` | — |
+
+The two `.md` pairs are the ones the brief knew about, and `docs/prompts/README.md`
+already resolved the second of them in favour of the hyphenated name and calls the
+pattern *"what an unmanaged directory does over time."* **The three PDF pairs are
+new to this audit** and are 122.4 MB between them.
+
+The *kept* column is not arbitrary: for the first two, the name in the left column
+is the one `scripts/books.json` records as `source_pdf`, so deleting the other
+side is the only choice that leaves the registry true. For Africa, neither is in
+the registry and the `(1)` suffix marks the later download.
+
+**Proposal:** move only the left column under `M7`; leave the right column in
+`Downloads` for Nate to delete, together with `.wrangler\`. **Deletion is not in
+scope for this menu** — the finding is the identification and the hashes, and the
+call is his.
+
+**Posture:** identify, do not delete. If he would rather they were carried across
+too, that is a smaller change than deleting them and this finding does not
+object.
+
+### M9 — high — `books.json`'s 18 `source_pdf_dir` values, and the test that will not catch them
+
+Every one of the 18 registry entries records
+`"source_pdf_dir": "C:\\Users\\natha\\Downloads"`. The field is the recovery
+record: `.cache/books/` is gitignored, holds the full text of books Palladium
+still sells, and is rebuilt by one `ocr-book.py` run from `source_pdf` +
+`source_pdf_dir`. Nothing rebuilds a PDF that was not kept.
+
+**The trap is what pins it.** `apps/character-creator/test/smoke.mjs` checks that
+every book naming a `source_pdf` also names a `source_pdf_dir`, and that no book
+names a directory without a PDF. **Both checks are on presence, not on value.**
+A registry whose 18 entries all point at a directory that no longer holds the
+PDFs passes the suite cleanly, and the failure surfaces the next time somebody
+needs to rebuild a cache — which is exactly the moment there is no fallback.
+
+Two registry books have no cache today, `rifts-core` and `rifts-skill-list`; the
+second is a known non-book. Neither changes this finding, and neither is in scope.
+
+**Proposal:** update all 18 values to the new directory **in the same PR that
+takes `M7`, and after the files have moved** — see *Order*. Do not add a check
+that the directory exists: it would fail on any machine that is not this one, and
+`.cache/` is rebuildable by design.
+
+**Posture:** data change, no new gate, no change to `smoke.mjs`. The presence
+checks stay exactly as they are; this finding does not propose making them
+value-aware, because a path check in a test suite is a machine assumption in the
+one place the repo has been careful not to put one.
+
+### M10 — high — the memory store is keyed to the working directory and does not follow
+
+`~/.claude/projects/C--Users-natha-Downloads/memory/` holds **64 files** — 63
+memories plus `MEMORY.md`, which is the index loaded into every session. The key
+is derived from the working directory, so a session started in
+`C:\Users\natha\Projects\workshop` reads
+`~/.claude/projects/C--Users-natha-Projects-workshop/memory/`, which does not
+exist. The memories do not follow, and nothing reports their absence — the next
+session simply starts with no history and re-learns.
+
+Three project keys exist today: `C--Users-natha-Downloads` (64 memory files, 74
+session transcripts), `C--Users-natha-Projects-nates-apps` (0 memory files, 1
+transcript) and `C--WINDOWS-system32` (0, 1).
+
+**Proposal:** create the new key's directory and **copy** `memory/` into it —
+all 64 files, `MEMORY.md` included. Copy rather than move, and leave the 74
+session transcripts under the old key: the transcripts are a record of sessions
+that genuinely ran in `Downloads`, several memory files cite them, and renaming
+the whole project directory to carry them would rewrite that history for no gain.
+The old `memory/` copy becomes dead weight and can be removed later once the new
+one is confirmed — that is a second decision, not part of this one.
+
+**Verify by name, not by count.** A count of 64 on both sides proves the copy
+ran; it does not prove the *right* store was copied. Start one session in the new
+directory and confirm a specific memory recalls — `nates-apps-monorepo` and
+`book-ingest-batch-protocol` are the two the book work depends on first.
+
+**Posture:** copy, do not move; delete nothing in this finding.
+
+### M11 — medium — the permission file follows for free, and should not be promoted into the repo
+
+The brief treated `Downloads\.claude\settings.local.json` as 77 KB of value at
+risk. Measured, it mostly is not at risk and mostly is not value:
+
+```
+258 allow entries
+  206  path-independent command strings  -> survive a move of .claude/ verbatim
+   47  literal session-scratchpad paths keyed to C--Users-natha-Downloads
+        (the session directories are gone; these are already dead)
+    5  one-off reads of specific Downloads files
+```
+
+Because `settings.local.json` lives at `<working directory>\.claude\`, **moving
+the `.claude/` directory with everything else carries the 206 useful entries
+unchanged.** There is no migration to design. The 47 dead entries were already
+identified in `CLAUDE.md` as *"dead rather than dangerous"* and left alone; that
+judgement still holds and this finding does not revisit it.
+
+**On the brief's suggestion that some entries be promoted into the repo's tracked
+`.claude/settings.json`: no, and it is worth saying why in the finding.** The
+`.gitignore` rule — *"launch.json is shared, local permissions are not"* — and
+`CLAUDE.md` §"The permission allowlist is read-only, and its gaps are the point"
+are the same decision written twice. That file was pruned on 2026-09-02 precisely
+to make the two lists agree in posture: writes and arbitrary execution ask,
+wherever the session started. Promoting accumulated approvals into the tracked
+file would move grants from a list that is per-machine and disposable into one
+that is version-controlled, reviewed and shared — the opposite direction from the
+prune, and it would re-open a question the prune closed.
+
+**Proposal:** move `.claude/` as part of `M7` and change nothing inside it. State
+in `SETUP.md` that the working directory's `.claude/` moves with the working
+directory, since that is the non-obvious part.
+
+**Posture:** **leave it alone.** No promotion, no pruning, no restructuring — the
+finding is the measurement and the explicit "no" to promotion, so that the
+question is closed with a reason rather than left to be re-asked.
+
+### M12 — medium — the junctions survive; the pointer and a count do not
+
+The brief called the junction apparatus the highest-leverage item in the menu. It
+is the lowest — verified, not assumed:
+
+```
+~/.claude/skills/    9 junctions, all -> C:\Users\natha\Projects\nates-apps\.claude\skills\<name>
+                     (audit-menu, book-survey, claim-audit, class-import,
+                      pick3cut5, schema-change, ship-pr, verify-ui, windows-shell)
+                     10 plugin skills sit beside them as real directories
+~/.claude/agents     1 junction  -> C:\Users\natha\Projects\nates-apps\.claude\agents
+```
+
+None of these is keyed to the working directory. They live in `~/.claude`, they
+target the repo by absolute path, and the repo is not moving. **A session started
+in `Projects\workshop` finds all nine skills and the subagent by name for exactly
+the same reason one started in `Downloads` does.** The move changes nothing here
+and the finding is mostly a "confirmed, no work" — except for two things it
+turned up.
+
+**First, `SETUP.md` contradicts itself by three.** The PowerShell block at line
+464 loops over nine skills; the prose at line 479 says *"plugin-installed skills
+sit beside the six repo junctions."* Disk has nine. A reader copying the block
+gets the right answer and a reader reading the sentence does not — which is the
+identical failure `SETUP-v2-CHANGES.md` §2 recorded about the structure tree, one
+section away, on a different count.
+
+**Second, `~/.claude/CLAUDE.md` needs one word changed and one count.** It is the
+user-level pointer, it loads in every session on this machine, it is *checked in
+nowhere*, and it says the book work runs from `Downloads` and that **six** skills
+are junction-linked. After the move both halves are wrong. Nothing in the repo
+can catch this: it is the one file in the instruction surface that no test, no
+grep of the tree and no other document reaches.
+
+**Proposal:** correct the count in `SETUP.md` §"Setting up a machine" to nine and
+say the loop is the authority. Rewrite `~/.claude/CLAUDE.md`'s directory
+reference and count in the same PR that takes `M7`, and add a line to `SETUP.md`
+recording that this file exists, is not checked in, and has to be edited by hand
+when the working directory changes — that being the entire reason it is capable
+of going stale.
+
+**Posture:** documentation. **Do not** propose checking `~/.claude/CLAUDE.md`
+into the repo or generating it — `SETUP.md` already argues that a copy would be a
+second surface to keep in sync, and that argument has not changed.
+
+### M13 — low — the loose briefs are already archived, byte for byte
+
+The brief asked what happens to the loose copies in `Downloads` if the working
+directory moves, treating their relationship to `docs/prompts/` as open. It is
+not open. Every one of the 18 archived briefs was compared to its loose copy on
+2026-09-02:
+
+```
+18 of 18  content-identical
+ 0 of 18  any real difference
+```
+
+The files differ on disk only in line endings — the loose originals are LF, the
+checked-out copies are CRLF, because `core.autocrlf=true` and `.gitattributes`
+pins LF for `*.sql` only. So `docs/prompts/` is a complete and faithful archive,
+and the loose copies are redundant rather than authoritative.
+
+Five loose `.md` files are **not** archived: `juicer.md`,
+`mech-boxer-statblocks.md`, `portability-audit-prompt.md`,
+`workstation-consolidation-prompt.md` (this menu's own brief), and the personal
+interview file that `M7` leaves behind.
+
+**Proposal:** move the 24 work `.md` files under `M7` and stop there for the
+archived 18 — they are working copies, they are safe to keep, and they are safe
+to lose. Archive `workstation-consolidation-prompt.md` into `docs/prompts/` when
+this menu is opened, matching what every other brief in there did.
+`portability-audit-prompt.md` describes an investigation that was **dropped on
+2026-09-02**; archive it too, since the archive's own README argues that a brief
+is a record of what was asked, and a dropped direction is a record worth having.
+`juicer.md` and `mech-boxer-statblocks.md` are game content rather than briefs
+and belong in the new directory, not in `docs/prompts/`.
+
+**Posture:** move and archive. **Do not edit any archived brief to match what
+happened** — `docs/prompts/README.md` is explicit that a brief is a record, not a
+document, and `portability-audit-prompt.md` in particular must go in describing
+the investigation that was dropped, not annotated with the fact that it was.
+
+### M14 — medium — two `launch.json` files, and they have already drifted
+
+`.claude/launch.json` is tracked. `Downloads\.claude\launch.json` is not, and it
+is not a copy — the two have diverged in four ways:
+
+| | tracked `.claude/launch.json` | `Downloads\.claude\launch.json` |
+|---|---|---|
+| commands | `npx wrangler …` | `cmd /c cd /d C:\Users\natha\Projects\nates-apps && npx wrangler …` |
+| comments | 20 `//` lines: the 8788 collision trap, why the `-879x` hatches exist | **none** |
+| entries | 5 | 6 — has an extra `workshop-attach` that attaches to port 8788 without starting anything |
+| naming | `nates-apps+pick3cut5` | `nates-apps-pick3cut5` |
+
+**The untracked one has to exist**, and the reason is the same reason the
+junctions exist: a session started outside the repo has the wrong working
+directory, so every command needs the `cd /d` wrapper. That does not change after
+the move — `Projects\workshop` is outside the repo too — so the file moves with
+`.claude/` under `M7` and keeps working, since it hardcodes the *repo* path
+rather than the *working directory* path.
+
+**What is wrong is the drift, and specifically which half is missing.** The 20
+comment lines are the only written record of the 8788 trap — a `pages dev` on a
+port already serving another worktree's code, where the page loads, looks like
+your app, and is not. The file a session *outside the repo* actually loads is the
+one with none of that. There is exactly one worktree on disk today
+(`C:\Users\natha\Projects\nates-apps`, on `main`), so the trap has no live
+instance right now; it had three.
+
+**Proposal:** make the untracked file a stated derivative of the tracked one —
+same entries, same names, same comments, plus the `cd /d` wrapper and the
+`workshop-attach` entry. Record in `SETUP.md` that it is derived, that it is
+untracked on purpose, and that a change to the tracked one has to be mirrored.
+Consider promoting `workshop-attach` **into** the tracked file, since attaching
+to a running server is not a Downloads-specific idea and its absence there is
+probably an accident.
+
+**Posture:** synchronise and document; no script. A generator for a five-entry
+JSON file is more machinery than the problem justifies, and the mirror rule is
+one sentence. **Do not** delete the untracked file — it is load-bearing.
+
+### M15 — low — the two things to leave exactly as they are
+
+Filed as a finding because both look like defects on sight and neither is, and
+because an unrecorded "we looked at this" gets re-opened.
+
+**`~/.claude.json` holds four project keys, two of which are the same
+directory.** `C:/Users/natha/Projects/nates-apps` and
+`C:\Users\natha\Projects\nates-apps` are separate entries with separate state, as
+are `C:/WINDOWS/system32` and the `Downloads` key. The obvious worry is that
+permissions and trust are split across spellings and that this is why things
+re-prompt. Checked: `allowedTools` is **empty in all four** and
+`hasTrustDialogAccepted` is **true in all four**. The real grants live in
+`settings.local.json`, which is keyed to the directory rather than to the string.
+The duplicate is cosmetic. **Leave it** — hand-editing `~/.claude.json` to merge
+keys risks a 52 KB file that Claude Code rewrites on every exit, for no
+behavioural gain.
+
+**The OneDrive redirection of `Documents`, `Desktop` and `Pictures`.** It is the
+reason `$PROFILE` lands where it does (`M4`) and the reason an abandoned git
+repository is syncing (decision 3). Un-redirecting is a large, disruptive,
+whole-machine change that would move files the audit has no business moving.
+`M4`'s stub is the targeted answer to the one consequence that matters. **Leave
+the redirection alone**, and note that `Downloads` staying un-redirected is
+*correct* rather than an inconsistency — it is the one folder where a browser
+writes unpredictably, and syncing it is worse than not.
+
+**Posture:** no change to either. This finding is taken by appending a note that
+says it was considered and declined, and closing it.
+
+---
+
+## Order
+
+Six of these have a real dependency. The rest can be taken in any order.
+
+1. **`M1`** (`SETUP.md` half), **`M2`+`M3`**, **`M5`**, **`M6`** — environment
+   and documentation. No dependency on anything. Cheap, reversible, and they fix
+   the reported symptom whether or not the move ever happens.
+2. **`M4`** — the profile. Independent, but written for the new directory, so it
+   is easier after the destination exists.
+3. **`M10`** — copy the memory store to the new key **before** any session is
+   started there. A session that runs first writes a fresh empty store and the
+   copy then has to merge rather than land.
+4. **`M7`** — the move itself, with `M8`'s duplicates resolved as part of
+   deciding what carries.
+5. **`M9`** — `books.json`, in the same PR as `M7` and **after** the files have
+   physically moved. The window to avoid is a registry pointing at a directory
+   that no longer holds the PDFs; because `smoke.mjs` checks presence and not
+   value, nothing in the suite would report that window while it was open.
+6. **`M12`**'s `~/.claude/CLAUDE.md` edit, in the same PR as `M7`. It is the
+   file that tells every session where the work is.
+
+`M11`, `M13`, `M14` and `M15` have no ordering constraint.
+
+## Verification
+
+After `M7` and `M9`, before the PR merges:
+
+- **A book resolves to its cache.** Pick one of the 16 registry books that has a
+  cache and confirm the text still reads. This exercises `books.json` and the
+  cache path together.
+- **`ocr-book.py` runs end to end** against one moved PDF, into a scratch cache
+  directory. This is the check that `source_pdf_dir` is actually right rather
+  than merely present, which is the one thing `smoke.mjs` cannot tell you.
+- **The nine skills load by name from the new directory**, and `book-reconcile`
+  can be spawned there. Ask for one by name; do not infer it from the junction
+  existing.
+- **`npx wrangler d1 info nates-workshop-media`** from the new directory, which
+  is the repo's own health check.
+- **The full suite**, because `M9` edits a file the suite reads.
+
+And for `M1`–`M6`, the rule the brief set and this audit followed: **prove it by
+making it fail first.** A PATH claim checked only in a shell you constructed is a
+claim about your reconstruction — `M2` is in this menu because a plausible
+diagnosis went a day without anyone asking `explorer.exe` what it actually held.
