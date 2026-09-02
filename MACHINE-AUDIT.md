@@ -6,10 +6,11 @@ brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
 `low`. Nothing here is taken until Nate names it; one PR per finding, outcome
 note appended under the finding in the same PR.
 
-**Status, 2026-09-02: `M1`, `M2`, `M3`, `M5`, `M6`, `M10`, `M13`, `M14` and
-`M15` taken and closed — the whole environment half except `M4`. `M16` and `M17`
-were opened while taking other findings and are filed but NOT taken. `M7`, `M8`,
-`M9`, `M11` and `M12` are open.** Read the lines under a finding for its
+**Status, 2026-09-02: every finding is taken and closed except `M4`, `M11`,
+`M16` and `M17`.** `M4` waits on nothing but a word; `M11` is next. `M16` and
+`M17` were opened while taking other findings and are filed but NOT taken.
+**`M8` was taken with its posture overridden** — deletion, on explicit
+instruction — which its own note records. Read the lines under a finding for its
 status — the notes here vary in wording like every other menu in this repo, and
 grepping for one has been wrong in both directions.
 
@@ -531,6 +532,31 @@ outside the list is touched. Take this finding **after** `M9` and `M10` — see
 stays behind, and no cleanup of `Downloads` as a directory — that is a separate
 decision Nate takes separately, and this finding is careful not to pre-empt it.
 
+**Taken, 2026-09-02 (PR #581)**, with `M9` and `M12` per *Order*.
+
+```
+workshop/books      47 PDFs      (50 moved, then M8's 3 deleted)
+workshop/briefs     26 .md
+workshop/.claude    moved whole
+
+Downloads: 49 non-game PDFs, the 1 personal .md, .wrangler/ — untouched
+```
+
+**Taken against the list, not a fresh scan**, which is what the header asks for.
+The 18 registry books were read from `books.json` at run time so the two could
+not disagree; the other 32 came from the literal names above. The script refused
+to proceed unless every named file was present and no name appeared twice.
+
+**Two numbers moved, both upward and both harmless.** 26 `.md` files rather than
+24 — `M13`'s note explains the two that arrived after the 13:20 measurement. The
+PDF count and total held exactly at 50 and 1,787.9 MB.
+
+**The internal layout was not specified by this finding and had to be decided.**
+The brief asked for it — *"Books, briefs, and config are three different things;
+say whether they get subdirectories and why"* — and `M7` lists what moves without
+saying where it lands. Nate chose `books\` + `briefs\` + `.claude\`, which is what
+`M9` then wrote into `source_pdf_dir`.
+
 ### M8 — medium — five identical duplicate pairs, 122.4 MB of it in three PDFs
 
 SHA-256 compared, 2026-09-02. All five pairs are **byte-identical**:
@@ -562,6 +588,31 @@ call is his.
 too, that is a smaller change than deleting them and this finding does not
 object.
 
+**Taken, 2026-09-02 (PR #581), AND THE POSTURE WAS OVERRIDDEN.** Nate was asked
+which of two conflicting instructions to follow and answered *move everything,
+then delete the duplicates now*. So the three PDFs were carried across with
+everything else and then deleted — 122.4 MB. **This finding says do not delete;
+it was deleted on his explicit word, and that is recorded here rather than
+quietly done.** The two `.md` duplicates were carried across and left alone.
+
+**This finding and `M7` contradicted each other and could not both be taken as
+written.** `M7`'s file list includes the three duplicates in its 17 unregistered
+sourcebooks; this finding says move only the kept side. Surfaced before the move
+rather than resolved by picking one.
+
+**Re-hashed immediately before deleting**, not trusted from the morning:
+
+```
+IDENTICAL  58.7 MB  442806688-Palladium-Books-Rifts-Ultimate-Edition-pdf.pdf
+IDENTICAL  53.3 MB  PFRPG - Dragons and Gods.pdf
+IDENTICAL  10.4 MB  604225358-Rifts-World-Book-04-Africa (1).pdf
+```
+
+And checked first that **each kept side was itself in a move list**, so deleting a
+twin could not lose a book — two are named in `books.json`, the third in `M7`'s
+unregistered list. A hash proves two files are the same; it does not prove the
+survivor is going anywhere.
+
 ### M9 — high — `books.json`'s 18 `source_pdf_dir` values, and the test that will not catch them
 
 Every one of the 18 registry entries records
@@ -589,6 +640,26 @@ that the directory exists: it would fail on any machine that is not this one, an
 checks stay exactly as they are; this finding does not propose making them
 value-aware, because a path check in a test suite is a machine assumption in the
 one place the repo has been careful not to put one.
+
+**Taken, 2026-09-02 (PR #581)**, in `M7`'s PR and after the files had physically
+moved, which is the ordering this finding asks for. Posture kept: **no new gate,
+`smoke.mjs` untouched, the presence checks left exactly as they are.** All 18
+values now read `C:\Users\natha\Projects\workshop\books`.
+
+**One mistake worth recording, because the obvious method is wrong.**
+`JSON.stringify` was the natural way to rewrite 18 values and it **reformatted
+the whole file** — the blank lines separating this registry's sections are not
+recoverable from the parsed object, so an 18-value change landed as a 46/45 diff.
+Reverted, and redone as a literal substitution on the value string. That version
+**proves itself by round-tripping**: undoing the replacement has to reproduce the
+original byte for byte or it refuses to write. Result `18/18`.
+
+**And it checks what the suite will not.** Before writing, it confirms all 18
+`source_pdf` files resolve *under the new directory*. Afterwards,
+`ocr-book.py` was run end to end against a PDF resolved **from this file** — one
+page OCR'd into a scratch cache. That is the only evidence that the recovery
+record is right rather than merely present, and it is exactly the gap this
+finding names.
 
 ### M10 — high — the memory store is keyed to the working directory and does not follow
 
@@ -728,6 +799,37 @@ of going stale.
 **Posture:** documentation. **Do not** propose checking `~/.claude/CLAUDE.md`
 into the repo or generating it — `SETUP.md` already argues that a copy would be a
 second surface to keep in sync, and that argument has not changed.
+
+**Taken, 2026-09-02 (PR #581)**, in `M7`'s PR because the pointer is the file
+that tells every session where the work is. Posture kept: **documentation only,
+nothing generated, and `~/.claude/CLAUDE.md` is not checked into the repo.**
+
+**The junctions survived untouched, as predicted** — nine, all resolving into the
+repo, plus the agents directory. Confirmed rather than assumed. Nothing about
+them was keyed to the working directory.
+
+**The count was wrong in three places, not the two this finding names.**
+
+| where | said | is |
+|---|---|---|
+| `SETUP.md`, junction prose | six repo junctions | **nine** |
+| `SETUP.md`, the `CLAUDE.md` paragraph | six skills | **nine** |
+| `SETUP.md`, the `notepad` block | the pointer runs to six short paragraphs | **four** |
+| `~/.claude/CLAUDE.md` | the count, **twice**, and the previous working directory | corrected |
+
+The third is new to this pass. All four are fixed, and the `notepad` block no
+longer states a count at all — a number describing a file nothing measures is the
+same class of claim as the two that had already rotted.
+
+**Why only these rotted, in one line:** the suite pins the skill count in
+`CLAUDE.md` **as a word**, and pins the junction loop's *completeness*. It pins
+no prose count in `SETUP.md`. The pinned numbers held; every unpinned one drifted.
+
+`SETUP.md` now also records that the pointer is maintained by nothing but a hand,
+and names the two things it carries that have moved before.
+
+**Also on disk:** eleven plugin directories sit beside the nine junctions, where
+this finding counts ten.
 
 ### M13 — low — the loose briefs are already archived, byte for byte
 
