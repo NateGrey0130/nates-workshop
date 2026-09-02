@@ -568,6 +568,30 @@ body.play-mode .vital.conflict .val > input,
    psionics/magic table. Dark theme retained — the structure is borrowed, not
    the photocopy. */
 
+/* THESE ARE NOT THE PRE-sheet-3 LAYOUTS, AND THEY ARE NOT DEAD. It reads that
+   way - .sheet-3 below is the sheet's layout now - and it has been proposed for
+   deletion once on that reading. sheet.js emits all three, six times:
+     cols-2  1386  the name header's two columns   <- REAL LAYOUT, load-bearing
+     rail    1429, 1458                            \
+     cols-3  1539                                   |  inner grids, inside a
+     cols-2  1576, 1587                            /   .tabpanel
+
+   The five inside a .tabpanel resolve to `display: contents` from the
+   .sheet-grid.sheet-3 .tabpanel > .sheet-grid rule further down, so their
+   grid-template-columns is computed but inert - the box leaves the layout and
+   .sheet-3 lays its children out directly. Measured in the page, not read off
+   the cascade.
+
+   The name header is the exception and the reason none of this can go: it is
+   inside a .box-body rather than a .tabpanel, so it computes to a real grid
+   (672px 672px at 1440), and the 860px rule below genuinely collapses it to
+   one column (297px at 375, 402px 402px at 900). Deleting these would flatten
+   the character's own header on every width.
+
+   So the inert three stay too. Their inertness is a side effect of a rule
+   about .tabpanel, not a property of themselves; restructure the tabs and
+   rail and cols-3 come back to life. A class the JS still emits is not dead
+   CSS, it is CSS whose turn has not come round again. */
 .sheet-grid { display: grid; gap: 12px; }
 .sheet-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
 .sheet-grid.cols-2 { grid-template-columns: 1fr 1fr; }
