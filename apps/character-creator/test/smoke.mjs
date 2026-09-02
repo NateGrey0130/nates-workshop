@@ -3960,6 +3960,20 @@ section('Play mode is a mode, not a layout');
   check('and the roll controls',
     /body\.play-mode \.roll-btn \{ display: inline-flex/.test(css),
     'the roll controls are not gated on body.play-mode');
+
+  // SHIPPED BROKEN ONCE. .skill-table is `table-layout: fixed` with its last
+  // numeric column pinned at 40px, so a 44px control in that cell does not
+  // widen it - it hangs out of the table and the box's overflow-x cuts it in
+  // half. It reached production looking like that. These two facts are only a
+  // bug TOGETHER, so both are pinned together: if the fixed layout or the 40px
+  // pin ever goes, this check should be revisited rather than deleted.
+  check('the skills table is still fixed-layout with a pinned last column',
+    /\.skill-table \{ table-layout: fixed/.test(css)
+    && /\.skill-table th\.num:last-child, \.skill-table td\.num:last-child \{ width: 40px; \}/.test(css),
+    'the assumption behind the play-mode column width changed');
+  check('so play mode widens it to fit the control',
+    /body\.play-mode \.skill-table th\.num:last-child,[\s\S]{0,90}?td\.num:last-child \{ width: 92px; \}/.test(css),
+    'the roll control will be clipped by the pinned 40px column again');
 }
 section('Trackable resources');
 {

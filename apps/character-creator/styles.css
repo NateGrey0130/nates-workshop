@@ -1374,6 +1374,26 @@ body.play-mode .roll-btn { display: inline-flex; align-items: center; justify-co
    nudges the printout is not free. Inside the cell it costs nothing - the
    button is display:none in sheet mode and in print, and an out-of-flow child
    does not widen its cell. The skill-note colspan stays 3 for the same reason. */
+/* .skill-table is `table-layout: fixed` and its last numeric column is pinned
+   at 40px, so the column is 40px WHATEVER is in it - a 44px button in there
+   does not widen the cell, it hangs out of the table and the box's
+   overflow-x: auto cuts it in half. Measured: the button's right edge landed
+   20.7px past the box.
+
+   So the column is widened for the mode that has a button in it. 92px holds
+   `98%` plus the 6px gap plus the 44px control, and fixed layout takes the
+   difference off the name column, which is the one that can afford it.
+
+   Screen only, and that is the point: print keeps the 40px because these rules
+   are not in @media print and the button is display:none there. The printed
+   sheet stays byte-identical, which is the whole reason the control went into
+   this cell rather than a column of its own. */
+body.play-mode .skill-table th.num:last-child,
+body.play-mode .skill-table td.num:last-child { width: 92px; }
+/* The header has no button under it, so right-aligning it in the widened cell
+   parks `%` above the dice instead of above the percentages. Pad it by the
+   control's own width plus its gap to put it back over its column. */
+body.play-mode .skill-table th.num:last-child { padding-right: 50px; }
 body.play-mode .skill-table .pct { white-space: nowrap; }
 body.play-mode .skill-table .roll-btn { margin-left: 6px; vertical-align: middle; }
 
