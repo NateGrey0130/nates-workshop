@@ -291,6 +291,23 @@ outside it. Posture: **describe the row, not its value** — the same fix
 
 **Confidence.** High. All three counts were read from the tree this session.
 
+**Taken, 2026-09-02 (PR #523), with F11 folded in as F11 proposed.** Posture
+held: the opening sentence carries no number, and neither does the "six
+prefixes" tally below the table, which `R`, `N` and a prefix-less file had
+already broken.
+
+**The finding's own numbers went stale between filing and taking, which is the
+finding.** It reported eight / ten / twelve. By the time this PR ran, the tree
+held **fourteen** — `HEALTH-AUDIT.md` had joined it. What replaced the sentence
+is that whole sequence rather than a fifth number.
+
+Of the two options offered, **naming rather than renaming**.
+`SETUP-v2-CHANGES.md` keeps its filename: renaming it to fit the `*AUDIT*` glob
+would break the PR #503 record that refers to it by name, in order to make a
+glob correct that this same file argues nobody should rely on. It is now named
+twice — a table row, and a paragraph under the `find` command saying the command
+does not return it and that this is not a bug in the command.
+
 ---
 
 ### F5 — Medium — `schema-change` quotes a table count that is seven tables stale, because nothing parses a skill
@@ -589,6 +606,16 @@ structure block. Posture: **make them findable; change neither file's body.**
 **Ongoing cost.** None.
 
 **Confidence.** High.
+
+**Taken, 2026-09-02 (PR #523), folded into F4 as this finding proposed.** Both
+orphans are now rows in the `audit-menu` skill's table. Posture held — neither
+file's body was touched.
+
+Verified rather than assumed: the orphan scan was re-run after the edit and
+**neither `SETUP-v2-CHANGES.md` nor `REDESIGN-AUDIT.md` is an orphan any
+more.** The five `docs/surveys/*.md` the same scan still reports are reachable
+through the directory link in the README's Contents table, exactly as this
+finding said when it declined to count them.
 
 ---
 
