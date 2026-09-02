@@ -8,7 +8,7 @@ note appended under the finding in the same PR.
 
 **Status, 2026-09-02: `M1`–`M18` are all taken and closed. Nothing is open.**
 `M18` is an OBSERVATION rather than a finding — the fault it records is still
-unexplained, and five hypotheses are dead. Taking it meant attempting a
+unexplained, six hypotheses are dead and a seventh cannot be provoked. Taking it meant attempting a
 reproduction (1,592 lookups, not reproduced) and automating the capture its own
 text asks for, since a person cannot catch it by hand. **If
 `workshop\command-not-found.log` ever appears, read it before anything else.**
@@ -1313,6 +1313,46 @@ keeps the recorder from breaking the shell swallowed it silently**, so the hook
 simply stopped firing with no sign why. Found by running the body with the catch
 removed. A recorder that fails silently is worse than none, which is the same
 lesson as `M9`'s `smoke.mjs` trap one file over.
+
+**Two more hypotheses tested the same day, after the recorder shipped.**
+
+**Six: PowerShell's `CommandAnalysis` cache.** A corrupted command-discovery
+cache is a documented cause of exactly this symptom — a name on PATH reported
+not found. **Dead: the cache directory does not exist on this machine**, so
+there is nothing to corrupt.
+
+**Seven: on-access antivirus.** Defender real-time protection is **on with zero
+exclusion paths**, so every open of those shims is scanned — which makes a
+transient scan-hold the only mechanism still standing. Attacked directly: three
+background readers hammering `claude`, `claude.cmd` and `claude.ps1` while the
+name was resolved in a loop.
+
+```
+bare lookups under contention   6,100     failures: 0
+file opens forced               18,300    open failures: 0
+```
+
+**Not reproduced.** Combined with the quiet run, that is **~7,700 bare lookups
+and 60 fresh processes with no failure**, which is where the cheap experiments
+end. It does not clear Defender — an on-access hold under a definition update or
+a scheduled scan is a different condition than contention — but it does mean the
+hypothesis cannot be provoked on demand either.
+
+**No exclusion was added and none should be.** Excluding the npm directory would
+weaken real coverage on a hypothesis nothing has evidenced, and it would be a
+workaround rather than a diagnosis — the reflex `M2` retired. The recorder
+already discriminates this: a capture showing the files **present** while
+`Get-Command -All` is **empty** is the signature of a transient access denial,
+and a capture showing them **absent** points at something rewriting them instead.
+
+**And one pattern worth watching.** Both known occurrences were `claude`
+specifically — never `wrangler`, `node`, `git` or `npm`, which have the identical
+three-shim shape in the same directory. With the 2026-09-01 record that an
+*absolute* path to the shim failed too, which only happens if the file is
+genuinely gone, the leading unproven hypothesis is that Claude Code's own updater
+briefly replaces its shims. The counter-evidence is that those shims still carry
+their 2026-08-17 timestamps through an update that ran at 15:37:48. The watchlist
+covers the other commands precisely so a recurrence says which it is.
 
 ### M17 — medium — eleven memories name `Downloads` in their own text, and `M7` makes some of them wrong
 
