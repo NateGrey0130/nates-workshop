@@ -1,7 +1,7 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **Status 2026-09-02: `F1`–`F5`, `F7`, `F11`, `F13`, `F15` and `F16` taken
-> (PRs #541–#551).
+> **Status 2026-09-02: `F1`–`F5`, `F7`, `F11`, `F13`, `F15`, `F16` and `F20`
+> taken (PRs #541–#552).
 > `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while taking
 > `F2`, and `F25` by taking `F4`. Everything else is open.** `F` numbers
 > are findings about instructions that exist; `N` numbers are new-skill
@@ -1314,6 +1314,34 @@ hat, and it is the thing `audit-menu` exists to argue against.
 
 **Evidence.** Git history — commit timestamps on `db92adc` and `9991425`,
 2026-09-02.
+
+**Taken, 2026-09-02 (PR #552).** Posture as proposed: **append** the banner
+rather than edit it, add the general rule to the skill, and **no new gate** —
+specifically not a script scanning menus for citations of other menus.
+
+Premises held to the minute: the banner landed at **07:55:48** and the skill was
+corrected at **08:06:43**. True for eleven minutes.
+
+**The general half turned out to be bigger than the finding described, and the
+evidence for it was produced by this audit.** The finding proposed one sentence
+generalising step 5 from class notes to "anything that cites a finding". Writing
+it, the four kinds of citing file are worth a table, because
+`audit-citations.mjs` covers exactly one of them — and **all three uncovered
+kinds have gone stale in practice**, two of them within the hour:
+
+- this banner, eleven minutes (`F20`);
+- `MEMORY.md`'s health-audit line, seventeen minutes (`F16`, taken an hour
+  before this);
+- the `audit-menu` skill itself, five days (`HEALTH-AUDIT` F22).
+
+So the section now says: grep the **whole tree** for a taken finding's number,
+and check `~/.claude/.../memory/` as well, which no grep of the repo reaches.
+That last clause is the one a session would otherwise never think of, and it is
+where `F16`'s failure lived.
+
+**No script, and the reason is already in the paragraph above it in that same
+skill.** A mechanical reader would fire on every citation of a still-open
+finding — correct, and useless. The grep is the tool; noticing is the work.
 
 ---
 

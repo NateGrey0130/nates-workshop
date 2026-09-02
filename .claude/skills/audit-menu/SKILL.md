@@ -84,6 +84,38 @@ This was skipped once and the false claim reached production and stayed for
 three PRs. It recurred three more times in a single day — two Prometheans and
 the Fallen Cosmo-Knight, from PRs merged hours earlier.
 
+### It is not only class notes. ANYTHING that cites a finding goes stale
+
+Step 5 says *class notes* because that is where it was first caught, and the
+scope is wrong. Four kinds of file cite findings here, and
+`audit-citations.mjs` can see **one** of them:
+
+| what cites a finding | covered by the script |
+|---|---|
+| a class's `extraction_notes` | **yes** |
+| another menu's header or a finding's body | no |
+| a memory file | no |
+| a skill | no |
+
+All three of the uncovered kinds have gone stale in practice, and two did so
+within the hour:
+
+- `INGESTION-AUDIT`'s header said the `audit-menu` skill still called F14 open.
+  The skill was corrected **eleven minutes later** and nothing revisited the
+  header (`SKILL-AUDIT` F20).
+- `MEMORY.md`'s line for the health audit said its findings were all closed; a
+  new one merged **seventeen minutes** after that line was written
+  (`SKILL-AUDIT` F16).
+- This skill itself said F14 was open for five days after F14 shipped, which is
+  what `HEALTH-AUDIT` F22 fixed.
+
+**So when a finding is taken, grep the whole tree for its number — not just the
+classes** — and check `~/.claude/.../memory/` too, which no grep of the repo
+reaches. **No script is proposed for this**, for the reason the paragraph above
+gives about `audit-citations.mjs`: a mechanical reader would fire on every
+citation of a still-open finding, which is correct and useless. The grep is the
+tool; noticing is the work.
+
 ## Never grep for the outcome note. Read under the heading
 
 Grepping for `Taken` has produced false findings here **repeatedly, and in both
