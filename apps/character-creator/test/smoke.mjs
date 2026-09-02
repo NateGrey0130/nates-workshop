@@ -6600,6 +6600,23 @@ section('Documented counts');
     check('and the table is still in descending order of size',
       sizes.every((n, i) => i === 0 || sizes[i - 1] >= n),
       rows.map(([, f], i) => `${f}=${sizes[i]}`).join(' '));
+
+    // The PARAGRAPH under the table, not the figures. It argues the cost of
+    // splitting in script tags and load order - a cost that is real for a
+    // classic script and not for a module. app.js stopped being a classic
+    // script, and the paragraph went on recommending a file that had been
+    // deleted weeks earlier (`import.js`, retired with the in-app importer)
+    // because prose is what was holding the claim. Whichever way either half
+    // moves next, one of these fails and the paragraph gets reread.
+    const moduleTag = (html, src) =>
+      new RegExp(`<script[^>]*\\btype="module"[^>]*\\bsrc="${src}"|<script[^>]*\\bsrc="${src}"[^>]*\\btype="module"`)
+        .test(readFileSync(join(appDir, html), 'utf8'));
+    check('app.js is still a module, as known-limitations.md says it is',
+      moduleTag('index.html', 'app\\.js'),
+      'index.html no longer loads app.js as type="module" - the split-cost paragraph now overstates the cost');
+    check('and sheet.js is still a classic script, as the same paragraph says',
+      !moduleTag('sheet.html', 'sheet\\.js'),
+      'sheet.html loads sheet.js as a module - the split-cost paragraph now overstates the cost for it too');
   }
 }
 

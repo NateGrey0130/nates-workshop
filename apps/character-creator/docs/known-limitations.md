@@ -395,8 +395,26 @@ splitting means more `<script>` tags, hand-managed load order, and the
 classic-script/module distinction to keep straight. The cost is real and the
 benefit is aesthetic. That case was argued when `sheet.js` was around 900 lines
 and it has since more than doubled, so it is worth re-examining rather than
-inheriting. `import.js` remains the clearest seam, since its class, skills and
-session-based flows share a page and almost no logic.
+inheriting.
+
+**That cost is a fact about CLASSIC scripts, and it stopped covering the whole
+table.** Measured 2026-09-02: `index.html` loads `app.js` as `type="module"`, it
+already pulls modules out of `js/` with `import`, and every entry point its
+generated `onclick` markup reaches is exposed through one explicit
+`Object.assign(window, …)` at the foot of the file. Splitting **that** file
+costs no new `<script>` tag and no hand-managed load order, so the case for
+leaving it whole has to be made on some other ground. `sheet.js` and the other
+apps' page scripts are classic scripts, and the paragraph above applies to them
+in full — which is why the two halves of this table are no longer one decision.
+
+A smoke check holds both halves, for the same reason the figures above are
+pinned: this paragraph previously recommended a file that had been deleted
+weeks earlier, and nothing failed.
+
+**Whichever file is opened first, cut along the seam the file already marks** —
+a step the player passes through once, whose renderer is contiguous and which
+nothing outside it calls. Naming today's cleanest one here is how the last
+recommendation rotted, so it is deliberately not named.
 
 ### Two traps outside the app itself
 
