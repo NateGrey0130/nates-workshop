@@ -1,7 +1,28 @@
 # Class frontmatter reference
 
-Every top-level key the app reads. Anything else parses and is then ignored by
-everything — `class-check` reports it as `UNMODELLED`.
+The blocks worth explaining, with what reads each one. **This is not a complete
+key list and must not be read as one** — the contract is `js/parser.js`,
+`js/derive.js` and, for anything about levels, spells or psionic powers,
+`js/leveling.js`. A key absent from this file may be fully modelled.
+
+That distinction has cost mechanics twice. Both Phase World noro O.C.C.s shipped
+without the mind-control save their book prints; two batches later the same
+classes turned out to carry a psionic schedule that denied the psychic its Super
+power at every level, stopped at level 3 where the book says *"third level and
+beyond"*, and let the mystic warrior take eight Super powers where the book
+grants two (`fix-noro-mind-control-saves.sql` #410,
+`fix-noro-psionic-schedules.sql` #411). Each was preceded by an
+`extraction_notes` line asserting the app could not express it. Nothing failed:
+they parsed, validated, composed and passed 210 regression checks.
+
+So `class-import`'s unmodelled-keys rule applies in **both** directions: grep
+`js/` and `functions/` before writing either *"the app cannot express this"* or
+*"this key does nothing"*. Believing a key is unmodelled costs a working field;
+believing a key does not exist costs a mechanic, silently.
+
+A key nothing downstream reads parses and is then ignored — `class-check`
+reports it as `UNMODELLED`, from a hand-maintained list that has itself been
+wrong twice.
 
 The parser is a small hand-written YAML subset, not a full YAML implementation.
 Inline maps and lists (`{ a: 1 }`, `[1, 2]`) work; anchors, multi-line scalars
@@ -193,6 +214,61 @@ magic:
   spells: ["Globe of Daylight"]   # granted by name
 ```
 
+### The two blocks are symmetric, and the ladder keys are not above
+
+The nine keys above are the ones a simple class needs. **A class that gains
+spells or powers as it levels needs more**, and `js/leveling.js` is where they
+are read. `STARTING_SPEC` there pairs the two blocks name for name:
+
+| psionics | magic | what it is |
+|---|---|---|
+| `powers_starting` | `spells_starting` | the TOTAL picked at creation |
+| `powers_starting_groups` | `spells_starting_groups` | that total split across restrictions |
+| `powers_from` | `spells_from` | a named list that REPLACES the gate |
+| `categories_allowed` | `spell_levels_allowed` | the class-wide gate |
+| `powers` | `spells` | granted outright, by name |
+| `powers_per_level` | `spells_per_level` | a flat number gained each level |
+| `powers_schedule` | `spells_schedule` | per-level grants, when a flat number will not do |
+
+Magic has two more that psionics has no equivalent for: **`spell_lists`**, a map
+of named lists a schedule entry draws from, and **`spells_per_level_levels`,**
+the cap on which spell levels a per-level grant may pick from —
+`up_to_character_level` is the Ley Line Walker's *"two more per level, never
+above your own level"*. **`spells_per_level_from`** is the single list form of
+`spell_lists`.
+
+That is nine psionics keys and eleven magic keys in the live catalog as of
+2026-09-02; `mergePsionics` and `mergeMagic` in `parser.js` both say so in
+their own comments, and both spread unknown keys through rather than
+enumerating, so the count moves without anything failing.
+
+**A schedule entry carries its own restriction, and it OVERRIDES rather than
+narrows:**
+
+```yaml
+magic:
+  spells_schedule:
+    - { level: 2, count: 4, spell_levels: [1, 2, 3] }
+    - { level: 3, count: 2, from_list: "A", note: "Any Summoning spell." }
+```
+
+- entries are matched by `level` **and slot** — several may share a level, and
+  each carries its own cap;
+- `spell_levels` / `categories` on an entry replace the class-wide gate, because
+  a book naming Super for one slot is granting an exception rather than
+  narrowing;
+- `from` (inline list) or `from_list` (`true` for `spells_per_level_from`, or a
+  string naming an entry in `spell_lists`) is the tightest restriction there is
+  and replaces the level cap outright;
+- `note` is shown to the player at the pick. It is the home for a rule the
+  catalog **cannot** enforce — spells carry no category, only a name, level and
+  cost, so *"non-dimension related or control based"* has nothing to filter on.
+  State it and let the player honour it rather than dropping it or guessing.
+
+Creation is not a level-up: `perLevelGrants` skips every entry at or below the
+level asked from, and creation asks from level 1, so a **level-1 schedule entry
+does not fire.** A starting pick's restriction goes in `*_starting_groups`.
+
 `psionics.categories_allowed` takes the **same grammar as a skill category**
 (BOOK-INGEST-AUDIT.md F16): a plain string, or an object narrowing itself with
 `only` / `except`.
@@ -261,13 +337,58 @@ bonuses:
   combat: { attacks: 1, strike: 2, parry: 1, dodge: 1, initiative: 1 }
   saves: { spell_magic: 2, psionics: 1, horror_factor: 4 }
   pools: { mdc: 20 }              # hp sdc mdc ppe isp
+  attribute_minimums: { PS: 16 }  # a floor, not a bonus
   at_level:
     - { level: 5, combat: { attacks: 1 } }
 ```
 
-An unrecognised group is a warning, not an error, so a typo here does nothing
-loudly. `at_level` entries start at level 2 — level 1 belongs in `bonuses`
-itself. `pools` inside `at_level` is **not** applied.
+An unrecognised **group** is a warning, not an error, so a typo there does
+nothing loudly. `at_level` entries start at level 2 — level 1 belongs in
+`bonuses` itself. `pools` inside `at_level` is **not** applied.
+
+### `combat` and `saves` accept any key. The SHEET does not
+
+This is the trap, and it is the opposite way round from what the openness
+suggests. `validateBonuses` checks the group names and not the keys inside them,
+and `addBonus` in `derive.js` adds any finite number under any key — so a
+misspelled or invented key **parses, validates, composes and renders nowhere.**
+
+The sheet draws two literal lists: `SAVE_FIELDS`, sixteen rows, and
+`COMBAT_FIELDS`, nineteen. A key outside them is stored and invisible. The
+vacuum-wasp's own notes put it exactly right — *"`combat: { dogfighting: 2 }`
+would parse, validate and render NOWHERE"* — and `sheet.js` records that the two
+copies have already drifted once, when three keys were added to `derive.js` and
+only one list was updated.
+
+**Read the lists in `sheet.js` before inventing a key.** They are longer than
+the examples above: sixteen saves including `ritual_magic`, `mind_control`,
+`possession`, `illusionary_magic`, `toxins_poisons`, `harmful_drugs`,
+`coma_death_pct` (a percentage, not a d20 bonus, and the `_pct` suffix is what
+makes it one), `disease`, `curses`, `faerie_magic`, `insanity`, `pain` and
+`fatigue`; and nineteen combat rows including `perception`, `pull_punch`,
+`roll`, `disarm`, `entangle`, `body_flip`, `automatic_dodge`, `damage_bonus`
+and `run_yards_per_melee`.
+
+**For a save the sixteen do not name, use `saves.other`** —
+`BOOK-INGEST-AUDIT.md` F7, filed for the Spacer's *"+2 to any saves against
+explosive decompression"*. It is a list of `{ label, bonus }` shown read-only
+after the sixteen, because these have no attribute chart and nothing to
+override:
+
+```yaml
+  saves:
+    horror_factor: 2
+    other: [ { label: "vs explosive decompression", bonus: 2 } ]
+```
+
+There is no `combat.other`. A combat bonus the nineteen do not name goes in a
+`special_abilities` entry, which is what the vacuum-wasp did with its
+dogfighting line.
+
+**`attacks_base` is the one combat key that is not a bonus.** It STATES a
+starting number of attacks rather than adding to one, is taken as the higher
+when a race and an occupation both give it, and is stripped before the combat
+map reaches the sheet — so it is correctly absent from `COMBAT_FIELDS`.
 
 ## Abilities
 

@@ -309,8 +309,20 @@ Two legitimate answers, and it is the user's call which:
   | `apps/character-creator/README.md` or the right file under `docs/` | What it means and why it exists |
 
   Prefer extending an existing block over adding a top-level key — `bonuses`
-  already covers attributes, combat, saves, pools and `at_level`, and `combat`
-  and `saves` are open sets, so a new key there costs nothing.
+  already covers attributes, combat, saves, pools, `attribute_minimums` and
+  `at_level`.
+
+  **But `combat` and `saves` are open at the validator and CLOSED at the
+  sheet**, which is the opposite of what "open set" suggests and is why this
+  sentence used to end *"so a new key there costs nothing"*. It costs silence:
+  `validateBonuses` checks group names rather than the keys inside them, and
+  `addBonus` adds any finite number under any key, so an invented key parses,
+  validates, composes and renders nowhere. `sheet.js` draws two literal lists —
+  `SAVE_FIELDS` and `COMBAT_FIELDS` — and a key outside them is stored and
+  invisible. A new key means editing `derive.js` **and** that list; they have
+  drifted once already. Use `saves.other` for a book-stated save the sixteen do
+  not name, and a `special_abilities` entry for a combat bonus. See
+  `reference/frontmatter.md` → *Bonuses*.
 
   **Reuse the validator.** A skill's bonuses go through the same
   `validateBonuses()` a class's do, which is why `derive.js` needed no new
