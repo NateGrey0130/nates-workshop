@@ -1,7 +1,7 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **Status 2026-09-02: `F1`–`F7`, `F10`–`F18` and `F20` taken (PRs #541–#558)
-> — `F12` in part, its documentation half only.
+> **Status 2026-09-02: `F1`–`F7`, `F10`–`F20` taken (PRs #541–#559) — `F12` in
+> part, its documentation half only.
 > `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while taking
 > `F2`, and `F25` by taking `F4`. Everything else is open.** `F` numbers
 > are findings about instructions that exist; `N` numbers are new-skill
@@ -1451,6 +1451,32 @@ is the whole content of the README's table.
 
 **Evidence.** Live repo state (`cmp` of every `Downloads/*.md` against
 `docs/prompts/`, 2026-09-02) and git history (`a1bc5ee`).
+
+**Taken, 2026-09-02 (PR #559).** Posture as proposed: copy three files, add one
+README paragraph, **documentation only**, originals left in place, and **no check
+added** — the directory holds mock-interview notes and statblocks, and deciding
+what counts as a brief is the whole content of the README's table.
+
+Bytes verified rather than assumed: 23,152 / 11,235 / 6,513 in `Downloads`, and
+the same in `docs/prompts/`. The originals are untouched, as F3 did.
+
+**The records/templates split turned out to matter more than the finding argued,
+because the template is already wrong.** `BOOK-INGEST-PROMPT.md` opens by telling
+the reader to read the repo's `CLAUDE.md` *"it does not auto-load from
+Downloads"* — a workaround `F11` removed this morning by adding
+`~/.claude/CLAUDE.md`. So the one file here written to be **re-run** carries an
+instruction that is now obsolete, and the README's *"do not edit them"* rule
+would have preserved that obsolescence indefinitely. The README now says which
+file the rule does not apply to, and why, and points at `book-survey` §8 — where
+`F17` put its durable content an hour earlier.
+
+**One thing the README gained that the proposal did not ask for**, because it is
+the transferable lesson rather than this finding's particulars: *an archive
+assembled by hand is missing something the day it lands*. This one was missing
+three briefs within hours of being created, and the largest of them drove
+seventeen PRs. That is worth a reader knowing before trusting the list to be
+complete — which the closing *"Nothing requires a future prompt to land here"*
+section, correctly, still declines to solve with a process.
 
 ---
 
