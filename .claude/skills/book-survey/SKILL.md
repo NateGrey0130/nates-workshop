@@ -192,7 +192,13 @@ That is what `page_offset_exceptions` is for:
 ```
 
 First match wins; everything past the last exception falls through to
-`page_offset`. `pf` is the only book that has one. If you cache a new book,
+`page_offset`. **`pf` and `underseas` both have one, and `scripts/books.json` is
+the authority on who else does — not this sentence, which said `pf` was the only
+one for five days while `BOOK-INGEST-QUEUE.md` recorded `underseas` as the
+second.** Both files were written on 2026-08-28 and disagreed from that day.
+`underseas` is the case to know about: **its split falls in the middle of the
+book**, where `pf`'s is early enough to dismiss as a front-matter quirk. Ask the
+registry for the number. If you cache a new book,
 `class-check --field-sources` will tell you when it needs one — it reports every
 offset region it detects and says so when the registry does not describe them,
 and the smoke test fails if any cache on this machine shows a region
