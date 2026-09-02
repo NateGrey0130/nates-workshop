@@ -1334,6 +1334,21 @@ rather than opening one for this. Posture: **cosmetic.**
 
 **Confidence.** High.
 
+**Taken, 2026-09-02 (PR #533).** Pointed at the published URL rather than
+deleted, of the two options offered — the two files where a config mistake is
+expensive are exactly these, and editor validation is worth more there than a
+removed line. **Verified before asserting it:** the URL returns 200 and 354 KB
+of JSON on unpkg and on jsdelivr, both files still parse, and
+`npx wrangler d1 info` still reads the config it just edited.
+
+One deviation: this finding said to fold it into another PR touching a wrangler
+config. Nothing else in the wave touched one, so it got its own — which is the
+only reason it was ever likely to be done at all, and worth noting as a general
+point about "fold this in" proposals.
+
+A comment now says *why* it is a URL, so the next `wrangler init` habit does not
+quietly restore the path.
+
 ---
 
 ## What was checked and found healthy — platform
