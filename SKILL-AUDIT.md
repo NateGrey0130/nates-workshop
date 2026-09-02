@@ -1,6 +1,6 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **Status 2026-09-02: `F1`–`F7`, `F10`–`F16` and `F20` taken (PRs #541–#556)
+> **Status 2026-09-02: `F1`–`F7`, `F10`–`F17` and `F20` taken (PRs #541–#557)
 > — `F12` in part, its documentation half only.
 > `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while taking
 > `F2`, and `F25` by taking `F4`. Everything else is open.** `F` numbers
@@ -1291,6 +1291,39 @@ between two descriptions that both match "here is the PDF", which is the failure
 
 **Evidence.** Memory layer, live repo state, and session transcripts (the
 prompt-A boilerplate recurring across the seven-book batch).
+
+**Taken, 2026-09-02 (PR #557).** Posture as proposed: a section in an existing
+skill, **not a new skill** — a second book skill would split the trigger surface
+between two descriptions that both match "here is the PDF".
+
+Premise verified precisely: before this, `book-survey`'s only occurrence of
+`BOOK-INGEST` was a sentence added under `F5` an hour earlier. The queue, the
+ladder and the batch rule appeared nowhere in it.
+
+**One claim caught before shipping.** The draft said `BOOK-INGEST-AUDIT.md` *"is
+a menu that stays open by design"* — present tense, and false: its header records
+all 17 findings closed. Rewritten to say it **accumulates** open findings while a
+batch runs, which is the durable rule, and to send the reader to its own header
+for where it stands. Exactly the shape `F3` and `F21` are about, caught in a
+sentence written to fix a different finding.
+
+**The memory carried `F6`'s error too.** `book-ingest-batch-protocol.md` listed
+*four* zero-offset books including `potm`, which the registry records at `1` —
+the same base collision, in a third file, after the skill and
+`pantheons-of-the-megaverse-survey.md`. Corrected to the three actually
+registered at 0, with a pointer to the rule. **That is `F20`'s instruction
+working the first time it was needed:** grep the whole tree, memory included,
+when correcting something.
+
+The memory was trimmed rather than deleted — it now opens by pointing at the
+skill for the protocol and keeps only what the skill does not carry: that this
+was Nathan's decision, the seven-book roster, and `underseas`'s negative split
+being caused by **printed page 131 missing from its PDF**, a source defect no
+re-run fixes and which nothing can cite.
+
+`book-survey` is now **672 lines**, up from 585 when this audit measured it —
+four findings have added to it today. `F8`'s split is more pressing than when it
+was filed.
 
 ---
 
