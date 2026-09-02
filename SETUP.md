@@ -494,6 +494,23 @@ asks for, and update the Access application domain to match.
 
 ## Troubleshooting
 
+**There are no server logs for the Pages half. The browser console is the
+tool.** Every entry below is diagnosed by reproducing it, because there is
+nothing to read afterwards: the 35 character-creator endpoints, MediaVault's
+CRUD and lookup proxy, FilamentForge's data routes and `/api/claude` produce no
+queryable log at all. **Checked against the API on 2026-09-02**, not assumed —
+the Pages project's production deployment config exposes no `observability` and
+no `logpush` key, the project does not appear in `workers_list`, and over seven
+days the only service emitting observability events was `pick3cut5-room`.
+
+That Worker is the exception, and deliberately: it sets
+`"observability": { "enabled": true }`, which is why *"when a room misbehaves in
+production this is the only way to find out why"*. The asymmetry is Cloudflare's,
+not a setting anybody forgot.
+
+So the floor on how fast anything here is noticed is **a person hitting it and
+saying so**. Worth knowing before assuming a quiet week means a healthy one.
+
 **"API key not configured on server"**
 → `ANTHROPIC_API_KEY` unset, or set but not yet redeployed.
 
