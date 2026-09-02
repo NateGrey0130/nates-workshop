@@ -6,9 +6,9 @@ brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
 `low`. Nothing here is taken until Nate names it; one PR per finding, outcome
 note appended under the finding in the same PR.
 
-**Status, 2026-09-02: `M2` and `M3` taken. `M1`'s machine half was applied out of
-band on explicit instruction; its `SETUP.md` half is open. Everything else is
-open.** Read the lines under a finding for its status — the notes here vary in
+**Status, 2026-09-02: `M2`, `M3` and `M5` taken. `M1`'s machine half was applied
+out of band on explicit instruction; its `SETUP.md` half is open. Everything else
+is open.** Read the lines under a finding for its status — the notes here vary in
 wording like every other menu in this repo, and grepping for one has been wrong
 in both directions.
 
@@ -379,6 +379,29 @@ also aliases, if that is free to state.
 
 **Posture:** documentation only. **Do not** propose removing the alias; it is a
 default that other things rely on.
+
+**Taken, 2026-09-02 (PR #574).** Posture kept — documentation only, no alias
+removed.
+
+**The count was wrong and the example was not the worst case.** This finding
+names three aliases; a fresh PowerShell has **sixteen**, and `ls`, one of the
+three, is at the *harmless* end of the range. Two the finding never mentions are
+worse than `curl`:
+
+- **`diff a b` on two identical files reports both as differing** — it is
+  `Compare-Object` comparing the two path *strings* — and `$?` is `True`.
+- **`sort f` prints nothing at all** and also succeeds.
+
+One inverts its answer, the other erases it, and neither fails. `curl` and `wget`
+are the *loud* case by comparison: `Invoke-WebRequest` refuses the flags rather
+than lying about them. A check built on `diff` or `sort` is worse than no check,
+which is a sharper statement of this finding's own class than the finding makes.
+
+**The `HTTP 000` line this finding pointed at is fixed** in the same section.
+Every other `curl` in the instruction layer was read: all but one are prose about
+what a fetch returned, and the one runnable command sits in a ` ```bash ` fence
+where `curl` and `grep` both exist. Correct for the shell that runs it; left
+alone.
 
 ### M6 — low — `python` is fine, and the failure mode is worth one sentence
 
