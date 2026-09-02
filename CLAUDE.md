@@ -222,25 +222,26 @@ here instead. See `HEALTH-AUDIT.md` F6.
 
 ### There is a SECOND allowlist, and it is not this one
 
-`C:\Users\natha\Downloads\.claude\settings.local.json` — untracked, 77KB, **273
-allow entries** accumulated by approval and last written **2026-08-28**. It is
-the project settings for a session started in `Downloads`, which this file calls
-the one place the book work runs. Twenty-five entries are wildcards, including:
+`C:\Users\natha\Downloads\.claude\settings.local.json` — untracked, accumulated
+by approval. It is the project settings for a session started in `Downloads`,
+which this file calls the one place the book work runs.
 
-```
-Bash(npx wrangler *)   Bash(gh pr *)       Bash(gh api *)
-Bash(git push *)       Bash(git commit *)  Bash(git add *)
-Bash(git reset *)      Bash(git checkout *)
-```
+**Pruned 2026-09-02.** It held wildcards for every action the section above
+withholds on purpose — `npx wrangler *`, `gh pr *`, `git push *`, `git commit *`,
+`git add *`, `git reset *`, `git checkout *` — plus `gh api *` in the exact form
+this file says not to write, and `python -c ' *` / `node -e ' *` for arbitrary
+code. **Fifteen entries removed** (273 → 258), backed up beside the file. What
+stayed is read-only: `git fetch`, `git ls-remote`, `git check-ignore` and some
+`Read()` paths.
 
-**That is every action the section above withholds on purpose**, plus `gh api *`
-in the exact form this file says not to write, plus `Bash(python -c ' *)`. A
-further 45 entries are literal command strings pinned to session scratchpad
-directories that no longer exist, and are dead.
+**So the two lists now agree in posture**, which they did not before: writes and
+arbitrary execution ask, wherever the session started. A further ~45 entries are
+literal command strings pinned to session scratchpad directories that no longer
+exist; they are dead rather than dangerous and were left alone.
 
-**Established:** the file exists, holds the above, is scoped to `Downloads`
-rather than to this repo, and **stopped growing on 2026-08-28** — unchanged in
-bytes and entry count across a long working session on 2026-09-02.
+**Established:** the file is scoped to `Downloads` rather than to this repo, and
+had **stopped growing on 2026-08-28** — unchanged across a long working session
+on 2026-09-02, before the prune.
 
 **NOT established, and do not assume either way:** whether a session started in
 `Downloads` is governed by that file, by this repo's, or by both composed. That
@@ -248,6 +249,7 @@ needs a deliberate test — run one command allowlisted here and absent there, a
 one of the reverse, from each directory, and watch which prompts. It has not been
 run.
 
-So the section above states a **posture**, and this repo's file enforces it for
-sessions started inside the repo. Worth knowing before quoting *"the actions
-worth stopping for"* as a guarantee. See `SKILL-AUDIT.md` F12.
+That question is now less load-bearing than it was — both lists withhold the
+same actions — but it is still the difference between a posture and a
+guarantee, and the file starts accumulating again the next time something is
+approved. See `SKILL-AUDIT.md` F12.
