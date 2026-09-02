@@ -554,6 +554,23 @@ environment is fixed when it starts and nothing updates it afterwards. Open a ne
 window before concluding the change did not work — this is the step that makes a
 correct fix read as broken.
 
+**`python` resolves through the Microsoft Store alias, and that is fine.**
+`AppData\Local\Microsoft\WindowsApps\python.exe` forwards to
+`AppData\Local\Python\pythoncore-3.14-64\python.exe` — 3.14.3 as of 2026-09-02.
+`pymupdf` (1.28.2) is installed and is the *only* third-party import in the tree:
+`scripts/ocr-book.py` and `scripts/read-columns.py` are the only two `.py` files
+and everything else they import is stdlib. **This is a working configuration —
+leave it alone.** There is deliberately no pinned interpreter and no
+`requirements.txt`.
+
+The failure mode worth knowing, because it does not look like one: the alias is a
+stub Windows can switch off, under Settings → Apps → Advanced app settings → App
+execution aliases. With it off, `python` does not fail — **it opens the Microsoft
+Store.** The stub also sits *ahead* of `AppData\Local\Python\bin` on PATH, so
+installing Python properly shadows the real interpreter behind the stub rather
+than replacing it. Neither is worth pre-empting by reordering PATH; both are
+worth recognising in the ten seconds after they happen.
+
 ## Adding a New App
 
 1. Copy the template:
