@@ -1147,10 +1147,88 @@ pre.snippet {
 }
 .cat-row.open:hover { background: var(--bg-secondary); }
 
-.cat-form { display: grid; gap: 10px; }
-.cat-field { display: flex; flex-direction: column; gap: 3px; }
+/* ─── THE ROW FORM, IN COLUMNS ───
+   `.cat-form` was `display: grid` with no grid-template-columns, which is one
+   column, so every field got a full 1154px row whatever it held. Measured at
+   1600px before this: Skills 8 fields / 610px, Psionics 11 / 835, Enchantments
+   11 / 893, Spells 13 / 933, and Gear 17 / 1201 - a form taller than the
+   viewport, in which A.R. and Mega-damage each had 1154px to hold two
+   characters and a checkbox.
+
+   THE SPAN IS CHOSEN BY WHAT THE FIELD IS. js/catalog-fields.js already
+   declares a `type` for every field, the write endpoints already coerce and
+   validate against it, and the row table already reads it - so the form takes
+   its width from the same word rather than from a second list that can
+   disagree. A new field arrives with a width instead of needing one.
+
+   THESE ARE NOT COLUMN STACKS, and the difference is the point. The sheet body
+   stacks because its boxes are independent, so a row track between them is
+   dead space and nothing is lost by letting each column run at its own pace. A
+   form is read and TABBED in order: fields stay in flow order and share rows,
+   and the height a row gives up is bounded by one field's help text rather
+   than by a 600px neighbour. align-items: start is what keeps the inputs on
+   one line rather than stretching the short ones down the row. */
+.cat-form {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 10px 14px;
+  align-items: start;
+}
+.cat-field { display: flex; flex-direction: column; gap: 3px; grid-column: span 4; }
+/* text restates the default rather than leaning on it. The span table has to
+   name every type the config declares - a type with no rule of its own takes
+   whatever .cat-field says and looks deliberate while being an oversight, so
+   the smoke test reads the types out of js/catalog-fields.js and requires a
+   rule for each. The span above stays as the fallback for a type that has not
+   been given one yet. */
+.cat-field[data-type="text"] { grid-column: span 4; }
+.cat-field[data-type="int"],
+.cat-field[data-type="real"],
+.cat-field[data-type="bool"] { grid-column: span 2; }
+.cat-field[data-type="select"] { grid-column: span 3; }
+.cat-field[data-type="systems"] { grid-column: span 6; }
+.cat-field[data-type="longtext"],
+.cat-field[data-type="bonuses"],
+.cat-field[data-type="kv"] { grid-column: span 12; }
+
+/* Help text is what actually sets a field's height. `cost` is an integer with
+   a 120-character explanation under it, and at span 2 that wraps to eight
+   lines which every field beside it then has to stand next to - the narrow
+   span would have made the form TALLER. A field carrying help takes at least a
+   third of the row.
+
+   Stated after the type table and at the same specificity, so it wins over the
+   narrow spans by source order; the full-width and systems types restate
+   themselves one specificity step up so it cannot shrink them. */
+.cat-field[data-help] { grid-column: span 4; }
+.cat-field[data-type="systems"][data-help] { grid-column: span 6; }
+.cat-field[data-type="longtext"][data-help],
+.cat-field[data-type="bonuses"][data-help],
+.cat-field[data-type="kv"][data-help] { grid-column: span 12; }
+
 .cat-field > label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
-.cat-form-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.cat-form-actions {
+  display: flex; align-items: center; gap: 8px; margin-top: 4px;
+  grid-column: 1 / -1;
+}
+
+/* Twelve columns need the width to be worth having. Six at 1000px, one at
+   700 - which is the layout this form had at every width until now. */
+@media (max-width: 1000px) {
+  .cat-form { grid-template-columns: repeat(6, 1fr); }
+  .cat-form .cat-field[data-type] { grid-column: span 3; }
+  .cat-form .cat-field[data-type="int"],
+  .cat-form .cat-field[data-type="real"],
+  .cat-form .cat-field[data-type="bool"] { grid-column: span 2; }
+  .cat-form .cat-field[data-type="systems"],
+  .cat-form .cat-field[data-type="longtext"],
+  .cat-form .cat-field[data-type="bonuses"],
+  .cat-form .cat-field[data-type="kv"] { grid-column: 1 / -1; }
+}
+@media (max-width: 700px) {
+  .cat-form { grid-template-columns: 1fr; }
+  .cat-form .cat-field[data-type] { grid-column: 1 / -1; }
+}
 
 .sys-picker { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .inline-check { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; cursor: pointer; }

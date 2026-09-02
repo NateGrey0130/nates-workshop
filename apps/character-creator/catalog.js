@@ -272,8 +272,14 @@ function rowForm(row) {
   const c = cat();
   const isNew = !row;
   return `<div class="cat-form">
+    ${/* data-type is the width. The config already declares what every field
+          is and the write endpoints already validate against it, so the form
+          reads its layout off the same word rather than a second list that
+          can disagree with it - see .cat-form in styles.css. data-help is
+          there because help text is prose in a form of inputs and is what
+          actually sets a field's height. */''}
     ${c.fields.map((f) => `
-      <div class="cat-field">
+      <div class="cat-field" data-field="${f.name}" data-type="${f.type}"${f.help ? ' data-help' : ''}>
         <label for="f-${f.name}">${escHtml(f.label)}${f.required ? ' *' : ''}</label>
         ${inputFor(f, row ? row[f.name] : undefined)}
         ${f.help ? `<span class="muted small">${escHtml(f.help)}</span>` : ''}
