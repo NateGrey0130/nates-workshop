@@ -1435,6 +1435,57 @@ filter that cannot yet be written, is the wrong order.**
 command fails identically, nothing is routed around, and the watchlist is the
 same nine names.
 
+**Adjusted, 2026-09-02 (PR #595) — Process Monitor staged, on Nate's
+instruction, against the recommendation recorded above.** The note above argued
+for holding it until the recorder fires, on the grounds that the filter to write
+depends on which of three cases the fault is. **He called it, and one part of
+that argument was mine and wrong.**
+
+**The cost estimate was wrong.** "A boot-persistent ring buffer someone has to
+maintain" assumed a broad filter. The filter is one rule —
+`Path begins with C:\Users\natha\AppData\Roaming\npm` — which captures every
+access to the shims by any process, drops everything else, and fits in a plain
+backing file at a few MB a day. No ring, no eviction, and **nothing that can
+discard the event being waited for**, which a ring buffer can. The remaining
+half of the argument still stands: the recorder's one line is what makes the
+capture readable, so the two instruments are complements and this is not a
+substitute for it.
+
+**Staged at `workshop\tools\procmon\`**, downloaded from
+`download.sysinternals.com` and Authenticode-verified — three binaries, all
+signed by Microsoft. **Not running, and it starts only by hand from an elevated
+shell.** No PATH entry, no service, no scheduled task, no registry outside
+Procmon's own key; deleting the directory removes it entirely. It does not
+survive a reboot, deliberately — a driver-loading capture that resumes forever is
+a larger standing change than this fault has earned, and the posture here is
+still observation only.
+
+**The filter is not generated, and that is the considered choice.** Procmon keeps
+filters in an undocumented binary blob, in the registry and inside a `.pmc`. It
+could be fabricated; a wrong one loads as nothing or as garbage, and **a capture
+that quietly filters nothing is indistinguishable from a working one until the
+day someone goes to read it.** That is precisely the failure this finding has
+already paid for twice — a recorder whose header shattered, and a recorder whose
+`try/catch` swallowed its own crash. The one step that cannot be verified
+without running the program is therefore done in the program: six clicks, once,
+written out in `README.md` beside the scripts.
+
+**The scripts refuse rather than degrade.** `m18-capture-start.ps1` will not run
+unelevated and **will not run without the filter file**, so an unfiltered capture
+is not reachable by accident. Both refusals were exercised; the parse of all
+three scripts was checked against the PowerShell parser rather than assumed.
+
+**The one check that matters is manual**, and it is in the README and in
+`SETUP.md`: the backing file's size after a day. A few MB means the filter
+loaded; GB means it did not. Nothing can assert that from here, which is why it
+is written down in two places rather than automated in neither.
+
+**What it will say when it fires.** `NAME NOT FOUND` means the shims genuinely
+were absent and something removes and restores them. `ACCESS DENIED` means they
+were present and something refused the open. **`SUCCESS` means the open was fine
+and the fault is above the filesystem entirely** — a real answer, and the one no
+hypothesis in this finding has proposed.
+
 ### M17 — medium — eleven memories name `Downloads` in their own text, and `M7` makes some of them wrong
 
 Noticed while taking `M14`, confirmed while taking `M10`. **`M10` moves the
