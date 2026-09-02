@@ -1815,3 +1815,86 @@ fix with the same instrument that found the problem, rather than by reading it.
 The example now ends on the fact instead of the verdict: a grep reports F14
 taken, F14 *is* taken, and the grep was still wrong for two days before the world
 moved under it. **A coincidence is not a check.** Better than what it replaced.
+
+---
+
+### F23 — Medium — nothing watches the one component a merge does not deploy
+
+**Raised.** Closing out the audit, 2026-09-02, from the gap F16's outcome note
+names and does not fix.
+
+**Evidence.** `scripts/deploy-sweep.mjs` (F2) answers *did anything merged
+actually ship* by reading each merge commit's **Pages** check-run.
+`workers/pick3cut5-room` has none — it is a standalone Worker, deployed by hand
+with `npx wrangler deploy --config`, and no merge produces a check-run for it.
+So the sweep printing `NOTHING MISSING` is silent about it by construction, and
+says so in no way a reader would notice.
+
+The comparison that would catch it was computed for the first time while writing
+this finding, and it **fired immediately**:
+
+```
+newest Worker-touching commit : 2026-09-02T12:03:32Z   (PR #533, F19)
+active deployment created_on  : 2026-09-02T11:49:49Z   (baa00f7e, 100%)
+STALE by 14 minutes
+```
+
+`main` has carried a Worker directory the deployed Worker does not match since
+the moment F19 merged, and nothing anywhere would ever have said so.
+
+**Two facts that make this cheap, both verified rather than assumed.**
+`wrangler deployments list --config … --json` returns machine-readable
+deployments with `created_on` and the active version's `percentage`. And the
+`CLOUDFLARE_API_TOKEN` this repo runs under **can read them** — `whoami`
+confirms that token is what answered. `CLAUDE.md` documents the token as unable
+to reach R2 or Pages; Workers deployments are neither, and nothing had tested it.
+
+**Impact.** The realistic failure is not the one above. It is a change to
+`room.js` or `generate.js` merged and never deployed: party mode and solo
+generation keep running the previous code, indefinitely, on the component that
+holds its own copy of the Anthropic key and serves the only publicly reachable
+path that spends it. There is no preview to catch it — the Access bypass is
+hostname-specific and does not follow the app onto preview URLs — and the smoke
+suite tests the repo's source, not what is deployed, so **every existing check
+passes while production runs something else.**
+
+That is the 2026-08-30 outage shape with the detection removed. It is Medium
+rather than High only because it requires somebody to merge Worker code and
+forget a documented step, where the Pages outage needed nobody to make a mistake
+at all.
+
+**Proposal.** Extend `scripts/deploy-sweep.mjs` with a second, clearly separated
+section: compare the newest commit touching `workers/pick3cut5-room/` on
+`origin/main` against the active deployment's `created_on`, and print the gap
+when the commit is newer. Report only, no exit code, same posture as the rest of
+that script. It belongs there rather than in a new file because the question is
+identical — *did what I merged actually ship* — and one command should answer it
+for the whole site.
+
+The sweep's summary line must also stop being unqualified: `NOTHING MISSING` is
+currently a claim about Pages wearing the clothes of a claim about the site.
+
+**Scope it to the whole directory, not `src/`.** `wrangler.jsonc` changes are
+deploy-relevant — bindings, vars, the rate-limit numbers — so narrowing to code
+would miss the ones that matter most.
+
+**Effort.** S. The comparison is four lines and is already written in this
+finding.
+
+**Ongoing cost.** Real, and the reason to take this deliberately rather than
+automatically. One network call per sweep. And it will produce **false
+positives**: the very first firing, above, is a `$schema` editor hint that
+wrangler ignores, so the deployed Worker is functionally identical to `main` and
+the check cannot tell. A timestamp knows that something changed, never whether
+it mattered. Anyone taking this should decide in advance that a noisy true
+statement beats a silent gap here — and if that trade is unwelcome, **decline
+this and leave the gap documented instead**, which is the honest alternative.
+
+**Confidence.** High throughout. Every number came from a command run while
+writing this: the commit timestamp from `git log`, the deployment from
+`wrangler deployments list --json`, and the credential from `whoami`.
+
+**When — after the waves, and it is the last thing on this menu.** Nothing is
+blocked by it. The 14-minute staleness it found is inert and was deliberately
+**not** redeployed while filing this: a `$schema` line does not justify a
+production deploy, and taking a finding is not licence to act on what it finds.
