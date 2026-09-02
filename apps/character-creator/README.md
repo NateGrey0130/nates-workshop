@@ -601,6 +601,12 @@ scripts/
 ├── drift-check.mjs         Repo vs live database: migrations, data scripts,
 │                           tables, columns, classes, and an advisory citation
 │                           check against every cached book books.json knows
+├── deploy-sweep.mjs        Did anything merged actually SHIP? Walks the last
+│                           twenty merge commits on origin/main and names any
+│                           whose Pages check-run is not success, or that has
+│                           no check-run at all. Report only, no exit code -
+│                           65 consecutive merges once failed with a perfectly
+│                           clear signal nobody read
 ├── catalog-match-lib.mjs   Matching a book's names to the catalog's. Exact
 │                           first; a relaxed match only when unambiguous on
 │                           BOTH sides. See below - do NOT merge this with
