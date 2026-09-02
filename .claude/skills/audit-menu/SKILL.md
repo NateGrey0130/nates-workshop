@@ -5,10 +5,17 @@ description: Run this repo's audit-menu protocol — how a finding is numbered, 
 
 # The audit-menu protocol
 
-Eight files here are **findings menus**: dated records of an investigation,
-carrying numbered findings taken one at a time, on a separate word, one PR each.
-Nothing enforces any of it — it lived only in the files, and was reconstructed
-from them nine times before this was written.
+A **findings menu** is a dated record of an investigation, carrying numbered
+findings taken one at a time, on a separate word, one PR each. Several files
+here are one. Nothing enforces any of it — it lived only in the files, and was
+reconstructed from them nine times before this was written.
+
+**Do not trust a count of them, including one written here.** This sentence used
+to say "Eight files", the table below listed ten, and the tree held twelve — and
+by the time that was corrected the tree held fourteen. Get the list from the
+tree, with the command under the table, and remember the fourteenth:
+`SETUP-v2-CHANGES.md` is a menu whose filename does not say `AUDIT`, so no glob
+for that word will find it.
 
 ## The loop
 
@@ -103,13 +110,18 @@ PR shipped the wrong count.
 | `apps/character-creator/CLASS-AUDIT.md` | `F`; `S` | `###`; **not a heading** | `### F17 — low — …`, and `- **S1 — …**` as BULLETS under `## Schema-can-now-express` |
 | `apps/character-creator/INGESTION-AUDIT.md` | `F` | `###` | `### F1 — …` |
 | `apps/character-creator/REBUILD-AUDIT.md` | `F` | `###` | `### F1 — …` |
+| `apps/character-creator/REDESIGN-AUDIT.md` | `R`, `N` | `###` | severity word: `### R1 — high — …` |
+| `apps/character-creator/UI-AUDIT.md` | `F` | `###` | severity word: `### F1 — high — …` |
 | `apps/media-vault/BULK-AUDIT.md` | `B` | `##` | `## B1 — …` |
 | `apps/media-vault/ISBN-AUDIT.md` | `F` | `##` | `## F1 — …` |
 | `apps/pick3cut5/AUDIT.md` | `F`; `T` | `###`; **not a heading** | `### F1. …`, and `**T1. … — PASSED.**` as BOLD PARAGRAPH LEADS under `## T — paths that have never run` |
+| `HEALTH-AUDIT.md` | `F` | `###` | severity word, capitalised: `### F1 — Critical — …` |
+| `SETUP-v2-CHANGES.md` | **none** | `###` | `### 1. …` — bare numbers under `## Changes`, and the one menu whose filename does not say `AUDIT` |
 
-Two heading levels, **six** prefixes, an optional severity word, an em dash or a
-hyphen or a period — and two files where a whole family of items is **not a
-heading at all**. Any regex will be wrong about at least one file — which is the
+Two heading levels, an optional severity word in either case, an em dash or a
+hyphen or a period, more distinct prefixes than are worth counting — one file
+uses no prefix at all — and two files where a whole family of items is **not a
+heading at all**. Any regex will be wrong about at least one file, which is the
 argument for reading, and against pinning any of this with a check.
 
 **The not-a-heading rows are the sharpest version of that argument.**
@@ -118,13 +130,19 @@ items are bold paragraph leads, so a scan that walks `###` headings does not
 report them open — it does not see them at all, and twenty items vanish with no
 error. Both live under their own `##` section, which is the thing to look for.
 
-**This table is a snapshot and it has been wrong.** Read on 2026-08-31 it was
-missing two whole files and wrong about three cells. Get the current list from
-the tree rather than from here, then read each file's own headings:
+**This table is a snapshot and it has been wrong twice.** Read on 2026-08-31 it
+was missing two whole files and wrong about three cells; read on 2026-09-02 it
+was missing four. Get the current list from the tree rather than from here, then
+read each file's own headings:
 
 ```bash
 find . -name '*AUDIT*.md' -not -path './.cache/*' -not -path './node_modules/*'
 ```
+
+**That command does not find every menu, and the gap is not a bug in it.**
+`SETUP-v2-CHANGES.md` carries eight numbered changes with dated outcome notes
+and is a menu by every property except its filename. A glob is the wrong shape
+for a convention nothing enforces — which is this whole section in one line.
 
 ## Audit files are RECORDS. Do not rewrite a measurement
 
