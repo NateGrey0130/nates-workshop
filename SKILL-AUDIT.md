@@ -1,8 +1,15 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **All 21 items below are OPEN. Nothing here has been taken.** `F1`–`F21` are
-> findings about instructions that exist; `N1`–`N8` are new-skill proposals.
-> `###`, em dash, no severity word.
+> **Status 2026-09-02: `F1` taken (PR #541); `F22` and `F23` were opened by
+> taking it. `F2`–`F23` and every `N` are open.** `F` numbers are findings about
+> instructions that exist; `N` numbers are new-skill proposals. `###`, em dash,
+> no severity word. This line is a summary and summaries here go stale — read
+> each finding's own note.
+>
+> **The one that misreads:** `F22` and `F23` sit under their own
+> `## Opened while taking a finding` heading **between `F21` and the `N`
+> section**, not in numeric order after `F21`. A reader walking the file top to
+> bottom meets them after the cross-layer pair and may take them for proposals.
 >
 > **The trap this file sets for its own reader:** filing it makes a **fifteenth**
 > findings menu, which falsifies `F7` — the finding that corrects `audit-menu`'s
@@ -152,6 +159,57 @@ paragraph or not.
 
 **Evidence.** Live repo state (grep of `js/` and `functions/` against the
 reference, 2026-09-02) plus the memory layer.
+
+**Taken, 2026-09-02 (PR #541).** Posture as proposed: the reference rewritten,
+**no new gate.** Four corrections to the finding's own premises, and the third
+inverts a line the proposal asked for.
+
+1. **`powers_per_level` is not absent.** It sits at `frontmatter.md:239`, in the
+   race/occupation merge paragraph. Three keys live only in that paragraph and
+   never in the `## Powers` block a transcriber copies from:
+   `powers_per_level`, `powers_starting_groups`, `powers_schedule`.
+2. **Three keys the finding did not list are missing** — `spells_from`,
+   `spells_per_level_from` and `spell_lists`. Asked of production rather than
+   counted off the file: 160 published classes use **nine** `psionics` keys and
+   **eleven** `magic` keys, exactly what `mergePsionics` and `mergeMagic` state
+   in their own comments. The reference showed five and four.
+3. **"`combat` and `saves` are open sets" is true of the validator and FALSE of
+   the sheet — so the proposal's "add one line saying they are open sets" would
+   have shipped the bug it was written to prevent.** `validateBonuses` checks
+   group names, not the keys inside them, and `addBonus` adds any finite number
+   under any key; but `sheet.js` draws `SAVE_FIELDS` (sixteen) and
+   `COMBAT_FIELDS` (nineteen) as literal lists, so an invented key parses,
+   validates, composes and renders **nowhere**. `vacuum-wasp`'s own
+   `extraction_notes` says this correctly and was the only place in the repo
+   that did. `class-import/SKILL.md`'s *"so a new key there costs nothing"* was
+   corrected in the same PR: it is one skill's two files disagreeing, which is
+   this finding's subject, but the proposal did not name that line.
+4. **The spelling is `coma_death_pct`, not `coma_death`.** The finding and the
+   memory both had it wrong. The suffix is load-bearing — it is what makes the
+   sheet render a percentage and what excludes the row from `SAVE_ROLLS`.
+
+**One alarm raised and killed.** A first pass reported `dogfighting` as a combat
+key used in production that nothing reads — a live silent defect. It is not: it
+sits inside a quoted `extraction_notes` string in `vacuum-wasp` explaining why
+that bonus is **not** stored, and an inline-`{ }` regex read it as data. That is
+`CLASS-AUDIT` F17's shape exactly, committed in the same week the protocol warns
+about it. Re-checked with a strict frontmatter parse: every save key in
+production is one of `SAVE_FIELDS`' sixteen and every combat key one of
+`COMBAT_FIELDS`' nineteen, except `attacks_base`, which is deliberately
+special-cased in `parser.js` and stripped in `derive.js`. **Nothing in the live
+catalog is silently dropped.**
+
+Shipped: `frontmatter.md`'s opening rewritten to name `parser.js`, `derive.js`
+and `leveling.js` as the contract and to state the rule in both directions; a
+`## Powers` subsection carrying the two blocks' symmetric key table and the
+schedule entry's own shape — `level`, `count`, `from` / `from_list`,
+`spell_levels` / `categories`, `note` — including that an entry OVERRIDES rather
+than narrows and that a level-1 entry does not fire at creation; a `## Bonuses`
+subsection on the validator/sheet split, `saves.other`, `attribute_minimums` and
+`attacks_base`; the `SKILL.md` line corrected; and the false sentence removed
+from `saves-and-combat-are-open-sets.md`.
+
+**Two further findings opened by taking this one:** `F22` and `F23`.
 
 ---
 
@@ -1033,6 +1091,90 @@ other, and if `F9` is closed for false positives this one still stands.
 
 ---
 
+## Opened while taking a finding
+
+### F22 — the sheet-list drift check guards the list that never drifted, and not the one that did
+
+Taking `F1` turned up a check in `smoke.mjs` — *"every derived combat row has a
+labelled field on the sheet"* — that runs `derive.combat()` and asserts every key
+it produces appears in `COMBAT_FIELDS`. Its comment names the bug it was written
+for: *"That is exactly how Perception went missing."*
+
+**There is no equivalent for saves.** `SAVE_FIELDS` is referenced exactly once in
+the whole suite, at `smoke.mjs:4834`, and only to assert that `SAVE_ROLLS` is
+derived from it by `.filter` rather than written out twice.
+
+The asymmetry runs the wrong way. `sheet.js:14-15` records that the **saves**
+list is the copy that has actually drifted:
+
+> was not a shorter view chosen on purpose — it was the first list before three
+> keys were added to `derive.js` and only one copy was updated.
+
+So the side with a documented drift incident is unchecked, and the side that got
+the check is the one whose incident the comment attributes to the other list.
+Verified 2026-09-02: all sixteen keys `deriveSaves()` produces are currently in
+`SAVE_FIELDS`, so nothing is broken now — this is the guard, not a defect.
+
+**Proposal.** Add a check beside the combat one, in the same section, running
+`deriveSaves()` and asserting every key it produces has a labelled row in
+`SAVE_FIELDS` — excluding `psionics_target`, which the sheet renders separately
+above the sixteen, and `other`, which is a list rather than a keyed number and is
+skipped by the derived path on purpose. Same shape, same section, same failure
+message.
+
+**Posture:** new check, **fails the build**, matching its combat twin exactly. A
+warn-only twin beside a build-failing original would be the posture mismatch
+`audit-menu` warns about.
+
+**Evidence.** Live repo state, found while taking `F1`, 2026-09-02.
+
+---
+
+### F23 — no check asks whether the keys published CLASSES write can be rendered at all
+
+`F22`'s check and its combat twin both start from `derive*()` — the rows the app
+computes from attributes. A class-authored key is never in that set, so neither
+check can see one. `bonuses.combat: { dogfighting: 2 }` passes `validateBonuses`,
+is added by `addBonus`, appears in no `derive.combat()` output, and renders
+nowhere. Both checks pass.
+
+The hazard is documented in exactly one place in the repo, and it is the wrong
+kind of place: `vacuum-wasp`'s `extraction_notes`, which is per-class data doing
+an instruction's job. `F1` moved the doctrine into `frontmatter.md`; this is the
+mechanical half.
+
+Measured 2026-09-02 against production, 160 published classes, with a strict
+frontmatter parse: **every** save key used is one of `SAVE_FIELDS`' sixteen, and
+every combat key one of `COMBAT_FIELDS`' nineteen except `attacks_base`, which is
+special-cased in `parser.js` and stripped in `derive.js`. **Nothing is broken
+today**, which is the moment to add the check rather than the moment after.
+
+**Proposal.** A check that parses every `bonuses.combat` / `bonuses.saves` map
+out of the data scripts in `apps/character-creator/db/*.sql` — the repo's own
+copy, so the check runs offline and needs no `--remote` — and fails on a key that
+is in neither `COMBAT_FIELDS` / `SAVE_FIELDS` nor the special-cased set
+(`attacks_base`, `saves.other`, `psionics_target`). The failure message should
+name the class, the key and the two lists, and say that `saves.other` is the
+escape hatch for a save the sixteen do not name.
+
+**Prove it by making it fail** before shipping it: add `dogfighting: 2` to a
+scratch copy, watch the check name it, then remove it. A check that has only ever
+passed proves nothing, and this one is being written while the tree is clean, so
+its passing run carries no information at all.
+
+**Posture:** new check, **fails the build.** The parse must be strict about
+quoted strings — a naive inline-`{ }` regex reads `vacuum-wasp`'s
+`extraction_notes` prose as data and reports a key that is not there, which is
+what happened while `F1` was being taken.
+
+**Effort.** S. **Ongoing cost:** none; it reads two literal lists and the data
+scripts.
+
+**Evidence.** Live repo state and production, found while taking `F1`,
+2026-09-02.
+
+---
+
 # New skills
 
 Ranked by evidence, most-supported first. `N1`–`N3` are backed by recurring,
@@ -1271,8 +1413,8 @@ Recorded so it is not re-derived. Every item below was verified on 2026-09-02.
 
 # Counts
 
-**21 findings, 8 proposals.** By layer, counting the layer a finding's *fix*
-lands in:
+**Filed 21 findings and 8 proposals.** By layer, counting the layer a finding's
+*fix* lands in — the count as filed, before `F22` and `F23`:
 
 | layer | findings |
 |---|---|
@@ -1289,4 +1431,8 @@ Eight findings are single-file edits of under ten lines (`F3`, `F4`, `F5`, `F7`,
 (`F12` documents, `F9` may close). One is a new file (`F11`), one a new section
 in a skill (`F17`), one a split (`F8`).
 
-Nothing is taken until Nate names one.
+**Added 2026-09-02:** `F22` and `F23`, both in the test suite rather than in any
+instruction layer, both opened by taking `F1`. The table above is the census as
+filed and is left standing as one; it does not include them.
+
+Nothing else is taken until Nate names it.
