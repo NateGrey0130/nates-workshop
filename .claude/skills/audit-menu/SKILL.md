@@ -72,7 +72,7 @@ audit measurements, extended to class prose.
 `scripts/audit-citations.mjs` lists which classes cite which finding, and flags
 passages carrying limitation language beside a citation. **It parses no outcome
 notes and has no exit code**, for the reason in the next section: a mechanical
-reader of those notes has been wrong five times, and a gate would fire on every
+reader of those notes has been wrong repeatedly, and a gate would fire on every
 class citing a still-open finding, which is the correct and useless answer. It
 answers *who mentions F8*; whether the citation is stale stays a judgement.
 
@@ -82,7 +82,18 @@ the Fallen Cosmo-Knight, from PRs merged hours earlier.
 
 ## Never grep for the outcome note. Read under the heading
 
-Grepping for `Taken` has produced **four** false findings here.
+Grepping for `Taken` has produced false findings here **repeatedly, and in both
+directions** — work reported open that had shipped, and work reported closed
+that had not.
+
+**How many times is not written down on purpose.** This section used to say
+four; two paragraphs earlier the same file said five, and a third place said
+four again. The number was wrong somewhere no matter which you believed, and it
+moved twice more on 2026-09-02 alone — once when an audit's own census script
+split a finding's block on an inline `**F10 …**` cross-reference and reported a
+shipped finding as open, and again when `apps/character-creator/AUDIT.md`'s
+header caught its third scan misreading D1–D6. A tally of a recurring failure is
+one more thing to keep current, and this file is about not doing that.
 
 The notes are prose — `Taken`, `Adjusted`, `Closed`, `Moot`, `Closed without
 being taken`, or a bare date — sitting under the finding, inside its `Proposal`
@@ -189,4 +200,4 @@ Do not open a new menu for work belonging in an existing one, and do not add a
 finding you intend to take in the same PR — the numbering exists so the decision
 to take it can be separate. Do not add a check that a finding was taken or that
 the open count is right: the notes vary in wording by design, and a mechanical
-reader is exactly the thing that has got this wrong four times.
+reader is exactly the thing that keeps getting this wrong.
