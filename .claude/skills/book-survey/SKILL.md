@@ -623,6 +623,43 @@ repo, the skills, the OCR cache, and this file. **Start a fresh session every
 Because the survey is tracked, a fresh session on a fresh clone boots from it
 too. The OCR caches do not travel; the judgement in this file does.
 
+## 8. A BATCH has a second state file, and it is not the survey
+
+The survey is per book. When several books are handed over at once — which is
+how they arrive — the cross-session state lives in **`BOOK-INGEST-QUEUE.md`** at
+the repo root. **Read it first and update it last**, every session.
+
+It holds the roster and each book's status on a three-step ladder:
+
+```
+cached  ->  surveyed  ->  imported
+```
+
+`cached` is what the kickoff session does for every book at once — §0b, plus a
+`scripts/books.json` entry. A book sitting at `cached` is not neglected; it is
+waiting its turn, and the queue says so. A long batch also passes through
+`importing`, for a book shipping across many sessions.
+
+**One session per book.** Not one session per batch — see §7 on why a
+conversation is the most expensive place to keep what a repo can hold.
+
+**The rule that keeps a batch moving is the one worth memorising:**
+
+> Import what the schema supports, record what was dropped in the row's
+> `extraction_notes`, file the gap in `BOOK-INGEST-AUDIT.md`, and keep going.
+> **Do not stop to implement.**
+
+So a book that needs a mechanic the app cannot express does not block. The
+finding goes in `BOOK-INGEST-AUDIT.md` — code changes only — and the book ships
+without it. **Data ships with its book; only CODE waits.** Classes, skills,
+spells, psionics, gear and `books.json` entries all go in with the book they came
+from, applied `--remote` before the merge that needs them, per `ship-pr`.
+
+That division is what stops a batch turning into one enormous PR. It also means
+`BOOK-INGEST-AUDIT.md` accumulates open findings *while* a batch runs, which is
+the one menu here where that is correct rather than a backlog — read its own
+header for where it currently stands, not this sentence.
+
 ## What "surveyed" means
 
 - an inventory table of the book, by chapter, with counts
