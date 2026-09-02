@@ -77,8 +77,10 @@ The parent node process respawns it, the port never frees, and each new
 reports success and the PID is gone.
 
 Fifteen dev servers accumulated in one session before the port began returning
-`HTTP 000` and a test run failed for reasons unrelated to the code. **A curl
-returning `HTTP 000` against a port that IS listening is the tell.**
+`HTTP 000` and a test run failed for reasons unrelated to the code. **A
+`curl.exe` returning `HTTP 000` against a port that IS listening is the tell** —
+`.exe`, because in PowerShell a bare `curl` is `Invoke-WebRequest` and never
+prints a bare status code at all.
 
 Stop both halves, from PowerShell:
 
@@ -146,6 +148,25 @@ the persisted values alone:
 
 The bottom two rows are the dangerous ones: nothing fails, and the wrong program
 answers.
+
+### In PowerShell, write `curl.exe`
+
+**Sixteen Unix names are aliases there** — measured 2026-09-02, not a
+representative sample. Appending `.exe` reaches the real binary, and
+`C:\WINDOWS\system32\curl.exe` wins over the Git one in both PowerShell and
+`cmd`. **Leave the aliases alone**; they are defaults other things rely on. What
+matters is which ones take a Unix argument and quietly do something else with it:
+
+| you write | you get | what it does |
+|---|---|---|
+| `diff a b` | `Compare-Object` | compares the two *path strings*. On two **identical** files it reports both as differing, and `$?` is `True` |
+| `sort f` | `Sort-Object` | reads no file. Prints **nothing**, succeeds |
+| `curl` `wget` | `Invoke-WebRequest` | `-s -o -w '%{http_code}'` is not its syntax |
+| `ls` `cat` `rm` `cp` `mv` `ps` `kill` `echo` `pwd` `tee` `sleep` `man` | the obvious cmdlet | fine bare; error on `-la`, `-n`, `-rf` |
+
+The first two are the ones to fear. Everything else either works or fails
+loudly; `diff` **inverts** its answer and `sort` **erases** its answer, and both
+report success. A check built on either is worse than no check.
 
 **Ask what his PATH is; do not model it.** One line prints what a new window of
 his will resolve against:
