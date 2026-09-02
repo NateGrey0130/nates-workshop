@@ -1943,3 +1943,80 @@ than the one it appears to answer, and `NOTHING MISSING` no longer reads as a
 claim about the site while being a claim about one of its two deploy paths. That
 gap existed for the eleven hours between F2 shipping and this — the tool built
 to catch silent divergence had one.
+
+---
+
+### F24 — Medium — a preview build wedged before `clone_repo` and silently held the production deploy behind it for 32 minutes
+
+**Not an audit finding. An incident, recorded 2026-09-02 while taking
+`SKILL-AUDIT` F2, and filed because nothing in the repo would have explained it.**
+
+**What happened.** The merge of #542 (`9440750`) reported
+`Cloudflare Pages  in_progress` for 32 minutes, where the four merges before it
+completed in 20-35 seconds. It was not the merge. Asking Cloudflare rather than
+GitHub:
+
+| deployment | env | commit | stage | since |
+|---|---|---|---|---|
+| `d36329ae` | **preview** | `4f9bab9`, branch `f2-claim-audit-searches-docs` | `initialize` = **active** | 14:02:50 |
+| `8e2611b4` | production | `9440750` (the merge) | `queued` | 14:03:01 |
+| `011b5457` | preview | `eec0fcc`, branch `f11-...` | `queued` | 14:22:01 |
+
+`d36329ae` passed `queued`, entered `initialize` **220ms** after creation
+(`created_on` 14:02:49.966, `modified_on` 14:02:50.220) and never moved again.
+`clone_repo`, `build` and `deploy` all stayed `idle`. Its build log is **empty**
+- `history/logs` returns `total: 0`. There is no build to have failed.
+
+Deleting it released the queue immediately: `8e2611b4` reached
+`deploy = success` **19 seconds later**, at 14:35:29, and `011b5457` started
+building. Production had been serving `d9451fcf` (#541) throughout, and the
+undelivered change was two markdown files, so nothing user-visible was affected.
+
+**Why it is worth a finding rather than a shrug. Three things this exposed:**
+
+1. **A branch push competes for the build slot with the merge it is about to
+   become.** Every `git push -u origin <branch>` starts a **preview** build, and
+   previews share one serialised queue with production. Here the preview for the
+   F2 branch was created 12 seconds before the production build for the F2
+   merge, wedged, and blocked it. `SETUP.md`'s *How deploys work* and the
+   `ship-pr` skill both describe merging to `main` as the deploy and neither
+   mentions preview builds at all - so the queue they contend for is invisible
+   in the documentation, and the failure looked like "my merge is broken".
+2. **`deploy-sweep.mjs` cannot tell a wedged build from a fresh one.** It buckets
+   any non-`completed` check as `pending` and prints
+   `Pages: 19 deployed, 1 still building, nothing missing.` A build 20 seconds
+   old and one wedged for half an hour produce the identical line. The tool
+   built to catch a deploy that silently did not happen has no notion of *how
+   long*, which is the only signal that separates the two.
+3. **The GitHub check-run's stage is not Cloudflare's.** It said `Building` and
+   `output.title: "Building"` the entire time, while Cloudflare's own
+   `latest_stage` said `queued`, then `initialize`. Reading the check-run alone,
+   the natural conclusion is a slow or hanging *build* - and the repo's one
+   documented Pages failure mode is a compile error under `functions/`, which
+   sends you looking at a diff that in this case touched no code at all.
+
+**To investigate.** Why a deployment enters `initialize` and stops with no log
+output is not answerable from here; the API exposes stage and timing and nothing
+about the scheduler. Worth watching for a recurrence and, if it recurs, worth
+asking Cloudflare with these two deployment IDs
+(`d36329ae-22c1-4a0a-b9d6-768c0b75b643`, and whichever repeats). **A single
+occurrence is not a pattern** and this may be one bad scheduler slot.
+
+**Proposal.** Three parts, independent, take singly:
+
+- **(a)** Teach `deploy-sweep.mjs` the age of a pending check: report a build
+  `in_progress` for more than ~10 minutes separately from one that is merely
+  recent, and name the likely cause - a wedged deployment ahead of it in the
+  queue. Posture: **report only, no exit code**, matching everything else in
+  that script.
+- **(b)** One paragraph in `SETUP.md` -> *How deploys work* saying that branch
+  pushes trigger preview builds, that previews and production share one queue,
+  and that a stalled preview therefore delays a merge. Documentation only.
+- **(c)** Record the diagnosis path, since it is not obvious: the GitHub
+  check-run reports a stage of its own, and Cloudflare's `latest_stage` and
+  `stages[]` on the deployment are what actually say where a build is. See
+  `SKILL-AUDIT` F24 for the access question that makes this reachable at all.
+
+**Effort.** (a) S, (b) XS, (c) XS.
+
+**Evidence.** Live incident, 2026-09-02, timings from the Pages deployments API.
