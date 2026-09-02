@@ -19,6 +19,7 @@
 
 import { Room } from './room.js';
 import { runPipeline, validateCategory, normalize, GenerationError, AnthropicError } from './generate.js';
+import { soloLimitDecision } from './limits.js';
 
 export { Room };
 
@@ -32,14 +33,6 @@ const json = (body, status = 200) => Response.json(body, { status });
 function newCode() {
   const bytes = crypto.getRandomValues(new Uint8Array(CODE_LENGTH));
   return [...bytes].map((b) => ALPHABET[b % ALPHABET.length]).join('');
-}
-
-// The rate limiter key. Hashed so a raw address never becomes a string this
-// Worker is holding onto; truncated because collision resistance past 16 hex
-// characters buys nothing for a bucket key.
-async function ipKey(ip) {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`p3c5:${ip}`));
-  return [...new Uint8Array(digest)].slice(0, 8).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 export default {
@@ -98,17 +91,10 @@ export default {
     if (url.pathname === '/solo/generate' && request.method === 'POST') {
       const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
 
-      const perIp = await env.SOLO_LIMIT.limit({ key: await ipKey(ip) });
-      if (!perIp.success) {
-        return json({ error: 'Slow down a moment, then try again.' }, 429);
-      }
-
-      // A per-IP limit is one botnet away from meaningless, and the failure
-      // mode here is money rather than downtime. This is the blast radius cap.
-      const global = await env.SOLO_LIMIT_GLOBAL.limit({ key: 'solo' });
-      if (!global.success) {
-        return json({ error: 'Solo mode is busy right now. Try again shortly.' }, 429);
-      }
+      // Both buckets, per-IP first, in limits.js so they can be tested without
+      // a Worker runtime. Returns null to proceed, or the refusal to return.
+      const denied = await soloLimitDecision(env, ip);
+      if (denied) return json({ error: denied.error }, denied.status);
 
       let body;
       try { body = await request.json(); } catch { return json({ error: 'Bad request' }, 400); }
