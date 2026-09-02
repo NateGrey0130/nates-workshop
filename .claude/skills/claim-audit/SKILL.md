@@ -23,7 +23,7 @@ reading a sentence and then asking the code.
 | code comments in `js/` **and `functions/`** | everywhere | counts of things ("offers five"), and "cannot express" |
 | class markdown in D1 | a couple of sentences per published class | `extraction_notes` saying the schema cannot hold something |
 | `docs/rules-audit.md`, `docs/plans/` | | superseded by later work; the plans README says so |
-| `.claude/skills/`, `.claude/agents/`, `CLAUDE.md`, `~/.claude/.../memory/` | six skills, four reference files, one agent | the same two shapes as everything above — **and these are the files that TELL you what to believe** |
+| `.claude/skills/`, `.claude/agents/`, `CLAUDE.md`, `~/.claude/.../memory/` | the skills, their reference files, one agent | the same two shapes as everything above — **and these are the files that TELL you what to believe** |
 
 **The instruction layer is in scope, and it was the last place anyone looked.**
 Five of `SKILL-AUDIT.md`'s findings were sentences inside `.claude/` that a
