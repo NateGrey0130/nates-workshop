@@ -1,7 +1,7 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **Status 2026-09-02: `F1`–`F7`, `F10`, `F11`, `F13`, `F15`, `F16` and `F20`
-> taken (PRs #541–#554).
+> **Status 2026-09-02: `F1`–`F7`, `F10`–`F13`, `F15`, `F16` and `F20` taken
+> (PRs #541–#555) — `F12` in part, its documentation half only.
 > `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while taking
 > `F2`, and `F25` by taking `F4`. Everything else is open.** `F` numbers
 > are findings about instructions that exist; `N` numbers are new-skill
@@ -936,6 +936,36 @@ Downloads file or delete it and let it re-accumulate.
 live allowlist is a working-habits change and belongs behind its own decision.
 
 **Evidence.** Live repo state — both files parsed, 2026-09-02.
+
+**Taken in part, 2026-09-02 (PR #555): the documentation half only, as the
+finding proposed. No settings file was edited, and pruning stays Nate's call.**
+
+Premises held — 273 entries, 25 wildcards, 45 pinned to dead scratchpad paths,
+and the eight withheld commands all granted.
+
+**One correction, and it lowers the temperature.** The finding says the file
+"accumulates by approval". It **stopped accumulating on 2026-08-28**: measured
+across this whole working session it was unchanged — same mtime, same 77,627
+bytes, same 273 entries, and not one entry naming any branch created today. It
+is a frozen artifact rather than a growing one, which makes it less urgent than
+the finding implies, though the 25 wildcards remain whatever the file's growth
+rate is.
+
+**Part 2 was attempted and could not be completed, which is recorded rather than
+papered over.** The proposal required stating which allowlist governs a
+`Downloads` session **"established by testing rather than reasoned about"**. The
+test available from inside a session — watch whether the file grows when a
+withheld command runs — returned *no change*, which is consistent both with "that
+file does not govern" and with "it governs and nothing prompted". It does not
+discriminate. So `CLAUDE.md` now says plainly that the question is **not
+established**, names the deliberate test that would settle it (one command
+allowlisted here and absent there, and one of the reverse, from each directory),
+and says not to assume either way.
+
+That is the honest version of the doctrine this file already applies to the
+Cloudflare token: *ask for the specific thing you need, and let the tool tell
+you which credential answered.* Writing a confident answer here would have been
+the reasoning the section itself warns against.
 
 ---
 

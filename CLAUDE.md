@@ -184,3 +184,35 @@ commits API has no write verbs. **Do not widen it.**
 schema that rejects unrecognised top-level keys, so the `"//"` convention that
 `.claude/launch.json` uses is refused there — which is why this explanation lives
 here instead. See `HEALTH-AUDIT.md` F6.
+
+### There is a SECOND allowlist, and it is not this one
+
+`C:\Users\natha\Downloads\.claude\settings.local.json` — untracked, 77KB, **273
+allow entries** accumulated by approval and last written **2026-08-28**. It is
+the project settings for a session started in `Downloads`, which this file calls
+the one place the book work runs. Twenty-five entries are wildcards, including:
+
+```
+Bash(npx wrangler *)   Bash(gh pr *)       Bash(gh api *)
+Bash(git push *)       Bash(git commit *)  Bash(git add *)
+Bash(git reset *)      Bash(git checkout *)
+```
+
+**That is every action the section above withholds on purpose**, plus `gh api *`
+in the exact form this file says not to write, plus `Bash(python -c ' *)`. A
+further 45 entries are literal command strings pinned to session scratchpad
+directories that no longer exist, and are dead.
+
+**Established:** the file exists, holds the above, is scoped to `Downloads`
+rather than to this repo, and **stopped growing on 2026-08-28** — unchanged in
+bytes and entry count across a long working session on 2026-09-02.
+
+**NOT established, and do not assume either way:** whether a session started in
+`Downloads` is governed by that file, by this repo's, or by both composed. That
+needs a deliberate test — run one command allowlisted here and absent there, and
+one of the reverse, from each directory, and watch which prompts. It has not been
+run.
+
+So the section above states a **posture**, and this repo's file enforces it for
+sessions started inside the repo. Worth knowing before quoting *"the actions
+worth stopping for"* as a guarantee. See `SKILL-AUDIT.md` F12.
