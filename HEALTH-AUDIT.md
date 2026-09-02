@@ -156,6 +156,28 @@ already required by the merge loop.
 **Confidence.** High. The 65/65 failure sequence and the current 8/8 success
 sequence were both read from the GitHub API this session.
 
+**Taken, 2026-09-02 (PR #517).** As proposed, posture included: `scripts/deploy-sweep.mjs`
+reports and never moves the exit code. `ship-pr` gains it as the end-of-session
+backstop and keeps step 9 unchanged.
+
+Three things the work turned up that the finding did not say:
+
+- **It reports three states, not two.** A merge commit with *no* check-run at
+  all is listed as not deployed. Pages registers one per merge, so an empty list
+  means the deploy never started — and that is indistinguishable from a quiet
+  healthy merge on every other signal. The finding assumed a `failure`
+  conclusion was the only shape.
+- **Validated against the outage rather than reasoned about.** Over the last 130
+  merges it names 23 that did not deploy, all 2026-08-27 and 08-28, none before
+  or since. On the last 10 it reports `NOTHING MISSING`, which is also how PR
+  #516 was confirmed live.
+- **The smoke test failed the first run**, on a check the finding did not know
+  existed: *"every script in `scripts/` is named in the file map"*, a reverse
+  check added after two scripts sat undocumented for several PRs. The README's
+  script map gains an entry. That the gate caught it is the pattern F5 describes
+  working — and the fact that a new script has a documentation step written down
+  nowhere but the test is filed as **F20**.
+
 ---
 
 ### F3 — High — the method that produced this repo is not in this repo
@@ -1112,3 +1134,74 @@ system and its fix — Access policy-as-code, or an exported record of the
 policies — is a decision about how much infrastructure this project wants, not a
 defect to be filed. Both are recorded here so they are chosen rather than
 forgotten.
+
+---
+
+# Findings raised while working the menu
+
+Findings that did not exist when the audit was written, added as the menu was
+worked. Numbered from `F20` and appended here rather than filed among F1–F19,
+because those are a dated record of what two sessions found and renumbering them
+would destroy it.
+
+Each carries a **When** line: whether it should be settled before the next wave
+of the plan, or after the waves are done.
+
+---
+
+### F20 — Nit — a new script in `scripts/` has a documentation step that exists only in the test
+
+**Raised.** Taking F2 (PR #517).
+
+**Evidence.** The first merge-gate run on F2's branch failed:
+
+```
+FAIL  every script in scripts/ is named in the file map — deploy-sweep.mjs - add it or delete it
+```
+
+`apps/character-creator/test/smoke.mjs:6346-6358` reads the README's *The
+scripts at the repo root* section and requires every `.mjs`, `.py`, `.txt` and
+`.json` on disk to appear in it. Its comment gives the reason: `read-columns.py`
+and `ocr-fields-lib.mjs` both sat in `scripts/` undocumented for several PRs,
+*"and a file map that quietly stops being a map is worse than none, because the
+count of entries reassures you the list is whole."*
+
+The requirement is written down nowhere else. `schema-change` documents the
+**five** places a column lands and the nine a table needs; `ship-pr` covers the
+merge loop; neither mentions that adding a script has a second place. Nothing in
+`CLAUDE.md` or `SETUP.md` does either.
+
+**Impact.** Nearly none, and this finding argues for its own decline. The check
+is a hard gate, so the map cannot silently rot — which is the failure it was
+built for, and it holds. The cost is one failed test run and one confused minute,
+paid by whoever adds the next script.
+
+The error message already does most of the work a document would: it names the
+file and says *"add it or delete it"*. What it does not say is **where** the map
+is, which is the only part a reader has to go and find.
+
+**Proposal.** The cheapest version is not a document at all — extend the check's
+failure message to name the section and the file, so the answer arrives with the
+question:
+
+```
+deploy-sweep.mjs - add it to "The scripts at the repo root" in
+apps/character-creator/README.md, or delete it
+```
+
+Decline the documentation half. A line in `ship-pr` saying "a new script needs a
+README entry" would be a second place to keep current, describing a rule the
+test already enforces perfectly, in a skill that is read before the merge loop
+rather than before writing a script. Posture: **improve the message, add no
+document.**
+
+**Effort.** S — one string.
+
+**Ongoing cost.** None. It replaces a string with a longer string.
+
+**Confidence.** High. Reproduced by failing the gate, then fixed by adding the
+entry and passing it.
+
+**When — after the waves.** Nothing is blocked by it. Every remaining wave that
+adds a script will hit the same clear failure and recover in a minute, which is
+evidence for the finding rather than a reason to hurry it.
