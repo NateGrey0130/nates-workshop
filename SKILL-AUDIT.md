@@ -2406,6 +2406,15 @@ four times.** Not the old ones — the new ones.
 | handed over a bare `claude` | `windows-shell` → *call binaries by absolute path in anything you hand him to run* |
 | then handed over the `npm\claude.cmd` shim | `interactive-shell-lacks-npm-path`, which records **that exact path as already having failed** and names the one that works |
 
+> **Adjusted 2026-09-02 — `MACHINE-AUDIT` `M2`.** The rule in row three no
+> longer exists. `windows-shell` was measured against the machine rather than
+> read, the diagnosis beneath that prescription did not survive it, and the
+> prescription was retired with it. So row three now records a violation of an
+> instruction that should never have been written — which leaves the observation
+> below untouched and sharpens the closing paragraph: the defence named there,
+> *measure the thing rather than trusting the sentence about it*, is also what
+> retired the rule. The table is left standing as filed.
+
 I caught the first two. Nate caught the third. **The fourth is the one worth
 keeping:** the memory holding the right answer also named my wrong answer as
 wrong, it was in this session's context throughout, and I reached for a
