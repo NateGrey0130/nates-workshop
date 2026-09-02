@@ -8,7 +8,8 @@ note appended under the finding in the same PR.
 
 **Status, 2026-09-02: `M1`–`M18` are all taken and closed. Nothing is open.**
 `M18` is an OBSERVATION rather than a finding — the fault it records is still
-unexplained, six hypotheses are dead and a seventh cannot be provoked. Taking it meant attempting a
+unexplained, every hypothesis raised against it is dead or cannot be provoked, and its
+recorder was repaired the same day it shipped. Taking it meant attempting a
 reproduction (1,592 lookups, not reproduced) and automating the capture its own
 text asks for, since a person cannot catch it by hand. **If
 `workshop\command-not-found.log` ever appears, read it before anything else.**
@@ -1353,6 +1354,86 @@ genuinely gone, the leading unproven hypothesis is that Claude Code's own update
 briefly replaces its shims. The counter-evidence is that those shims still carry
 their 2026-08-17 timestamps through an update that ran at 15:37:48. The watchlist
 covers the other commands precisely so a recurrence says which it is.
+
+**Adjusted, 2026-09-02 (PR #594).** The recorder had two blind spots. **One of
+them would have thrown away the fault in exactly the shape the paragraph above
+calls the leading hypothesis.**
+
+**One — a path-shaped invocation was never recorded.** The hook *does* fire for
+one; `C:\…\npm\claude.cmd` and `.\claude.cmd` both reach it, measured. But the
+watchlist test compared the **whole invoked string** against bare names, so
+anything carrying a directory or an extension returned early. `M2`'s session
+recorded an **absolute path** to the shim failing, and that is the one piece of
+evidence this finding leans on hardest. The recorder built to catch this fault
+could not have caught it in its only documented form. It now matches on the leaf
+with a known extension stripped, and each capture carries `invoked as` and, for
+a path, `literal exists` — which is the difference between *the file was gone*
+and *the file was there and discovery refused it*.
+
+**Two — nothing Claude Code launches loads this profile at all.** Its PowerShell
+tool runs `powershell.exe -NoProfile -NonInteractive`, one fresh process per
+call, parented to `claude`; the hook is `NULL` in every agent shell and the
+profile's functions are undefined. Measured, by reading the launching command
+line, not inferred from the symptom.
+
+**That one is not fixed, and is not fixable from here.** No userland mechanism
+hooks a `-NoProfile` shell — the ones that exist are machine-wide and far more
+invasive than an intermittent fault with no established cost justifies. It is
+recorded so that no future instrumentation is placed in this profile expecting
+to see agent traffic, and because it re-labels a number above: the *60 fresh
+PowerShell processes* of the reproduction run were **agent** shells. That is a
+fair test of the fault. It was never a test of the recorder.
+
+**Three — the Defender timeline is now carried by each capture** rather than
+reconstructed afterwards, which is what had to be done today. It is written in
+its own `try/catch` **after** the primary record is already on disk: the
+timeline is context, and a slow or failing event-log query must never be able to
+cost the capture. That ordering is the silent-catch lesson above, applied
+forward rather than learned again.
+
+**Two more hypotheses died, both by measurement and both cheap.**
+
+**Eight: Controlled Folder Access or an ASR rule.** Never checked — only
+`ExclusionPath` had been, and it is the wrong knob for a blocked file open.
+`EnableControlledFolderAccess` is `0` and there are no ASR rules. Neither
+mechanism is armed on this machine.
+
+**Nine: the failure coincided with a Defender event.** It did not. Local time is
+UTC−4, so the failure sits between **15:08** (`M4`, PR #584) and **15:46** (this
+finding filed, PR #585). The Defender operational log across that window holds
+one hourly health report and nothing else; the nearest real events are a
+signature update at **09:29**, an aborted scan at **08:07**, and an engine update
+at **16:43** — an hour *after* the fact.
+
+**This does not clear Defender**, and the distinction matters: an on-access hold
+on a single file logs nothing at all, so absence of events is not absence of
+scanning. What died is the specific *"a definition update or a scheduled scan
+was running"* version, which was the only form of the hypothesis that could be
+tested without new tooling.
+
+**Verification — four cases, against the real file after editing:**
+
+| case | invoked | result |
+|---|---|---|
+| A | bare `claude`, PATH stripped | captured; `Get-Command -All` empty |
+| B | `C:\nope\claude.cmd` | captured; `literal exists: False` **while all three shims list as present** |
+| C | `.\pdftotext.exe` | captured; leaf matched through a relative path |
+| D | `nates-apps-monorepo`, `C:\nope\definitelynotwatched.cmd` | **not** logged — an ordinary typo still costs nothing |
+
+`B` is the case that did not exist before, and its two lines disagreeing with
+each other is the whole point of it.
+
+**Process Monitor was considered and deliberately not installed.** It is the only
+instrument that would *explain* this rather than describe it — it would give the
+`NTSTATUS` of the failing open — but it is a boot-persistent ring buffer someone
+has to maintain, and the filter to write depends on which of three cases this
+is: PATH lost the entry, the shims were absent, or discovery failed with both
+intact. The recorder answers that in one line. **Buying a daily cost now, for a
+filter that cannot yet be written, is the wrong order.**
+
+**Posture unchanged: observation only, records-only, still no workaround.** The
+command fails identically, nothing is routed around, and the watchlist is the
+same nine names.
 
 ### M17 — medium — eleven memories name `Downloads` in their own text, and `M7` makes some of them wrong
 
