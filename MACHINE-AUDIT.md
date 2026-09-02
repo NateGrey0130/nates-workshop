@@ -759,6 +759,34 @@ hashes prove it copied *this* store. `nates-apps-monorepo` and
 from here: start a session in the new directory and ask for a memory by name. A
 file being present is not the same as it being recalled.
 
+**Adjusted 2026-09-02, later the same day — the recall check passed, and the old
+store is deleted.** A session started in `C:\Users\natha\Projects\workshop`
+returned the specifics that exist only in memory: `one-session-at-a-time`'s date
+of 2026-08-26 and its reasoning about what was merged versus pushed versus
+uncommitted, and `run-commands-dont-hand-them-over`'s exact exception list.
+
+**The strongest evidence was accidental.** Asked to list its index, the session
+returned a line written *minutes earlier in this menu's own take* — the machine
+audit entry reading `M1–M18 all shipped 2026-09-02`. A stale or wrongly-keyed
+store could not have produced it. That is a recall proof no count or hash could
+give, and it arrived from the confirming question rather than the primary one.
+
+**A first draft of that check would have proved nothing**, and it is worth
+recording why: the question originally proposed was *"what do you know about the
+nates-apps monorepo?"* — which a session in the new directory can answer from the
+repo's own `CLAUDE.md` and `SETUP.md` without any memory at all. The test had to
+ask for something with **no repo counterpart**, which is what the `feedback`
+memories about working style are. Same failure shape as every false confirmation
+in this file.
+
+So the second decision this finding deferred is taken: the 65 files under
+`C--Users-natha-Downloads/memory/` were re-hashed against the new store, found
+identical, and deleted. **The 74 transcripts stay**, as this finding requires.
+The reason for deleting rather than keeping a spare is the argument `SETUP.md`
+already makes about `CLAUDE.md`: a second synced copy is a second surface to keep
+in sync, and it had to be hand-synced four times in one day — once per finding
+that touched a memory.
+
 **Two `[[links]]` in the store point at nothing** — `[[audit-menu]]` and
 `[[claim-audit]]`. They name *skills*, not memories. Pre-existing and identical
 in the source, so not introduced by the copy and deliberately not fixed here.
