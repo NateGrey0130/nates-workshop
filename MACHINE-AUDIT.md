@@ -6,9 +6,8 @@ brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
 `low`. Nothing here is taken until Nate names it; one PR per finding, outcome
 note appended under the finding in the same PR.
 
-**Status, 2026-09-02: `M2`, `M3` and `M5` taken. `M1`'s machine half was applied
-out of band on explicit instruction; its `SETUP.md` half is open. Everything else
-is open.** Read the lines under a finding for its status — the notes here vary in
+**Status, 2026-09-02: `M1`, `M2`, `M3` and `M5` taken and closed. `M16` was
+opened while taking `M1` and is filed but NOT taken. Everything else is open.** Read the lines under a finding for its status — the notes here vary in
 wording like every other menu in this repo, and grepping for one has been wrong
 in both directions.
 
@@ -159,6 +158,28 @@ API with the value kind preserved, `WM_SETTINGCHANGE` was broadcast, and the
 prior value was backed up to the session scratchpad. `node`, `npm`, `git`, `gh`,
 `python` and `wrangler` were re-checked afterwards and all resolve where they did
 before. **The `SETUP.md` half was not done and is what remains of this finding.**
+
+**Taken, 2026-09-02 (PR #575) — the `SETUP.md` half, closing the finding.**
+Posture kept: documentation, no script, no check. It went in as a new
+*The command-line tools* subsection, because §"Setting up a machine" described
+junctions and the user-level pointer and said nothing about tooling at all.
+
+**The justification above is wrong, and the correction is more interesting than
+the finding.** This finding says `book-survey` depends on `pdftotext`. **Nothing
+in this repo calls `pdftotext`** — `ocr-book.py` and `read-columns.py` both use
+PyMuPDF, `book-survey` does not mention it, and every other appearance in the
+tree is historical prose saying its column handling is *not* what this cache
+does. It is an ad-hoc tool for reading a text layer, granted in
+`.claude/settings.json`. The symptom was real and the fix was right; the reason
+was not, and `SETUP.md` carries the true one. **A tool nothing calls is exactly
+the tool whose absence nobody notices** — the grant meant the only side that
+could see it never had to look.
+
+**Checking that premise opened `M16`**, which is the dependency that is real:
+`ocr-book.py` hard-exits without `tesseract`, `tesseract` is not on PATH here,
+and a hardcoded fallback inside `find_tesseract()` is the only reason sixteen
+book caches ever built. Same shape as this finding, one script over, and still
+undocumented.
 
 ### M2 — high — the skill's explanation of this whole class of failure is wrong
 
@@ -771,6 +792,48 @@ writes unpredictably, and syncing it is worse than not.
 
 **Posture:** no change to either. This finding is taken by appending a note that
 says it was considered and declined, and closing it.
+
+---
+
+# Opened while taking a finding
+
+### M16 — high — `ocr-book.py` requires `tesseract`, it is not on PATH, and a hardcoded fallback is the only reason that does not show
+
+Found while taking `M1`, by checking its premise. `scripts/ocr-book.py` — the
+script `M9`'s entire recovery story rests on — **does not call `pdftotext`.** It
+shells out to **`tesseract`**, and exits with *"tesseract not found - install it
+or put it on PATH"* when it cannot find one. `scripts/read-columns.py` uses
+PyMuPDF and shells out to nothing. Every other mention of `pdftotext` in the tree
+is historical prose about how its column handling is *not* what this cache does.
+
+Measured 2026-09-02, in a shell carrying only the persisted PATH:
+
+```
+tesseract                                       NOT FOUND on PATH
+C:\Program Files\Tesseract-OCR\tesseract.exe    present
+```
+
+It runs today only because `find_tesseract()` carries that absolute path as a
+fallback after `shutil.which`. Sixteen book caches under `.cache/books/` were
+built through it, so the path is exercised rather than theoretical.
+
+**Two things follow.** A fresh machine that installs Tesseract anywhere else gets
+the hard exit, and `SETUP.md` does not mention Tesseract at all. And the fallback
+is doing load-bearing work while reading as a nicety — which makes the missing
+PATH entry invisible in **exactly** the way `M1`'s was, one script over, at a
+moment when nobody was looking for a second instance of it.
+
+**Proposal:** one paragraph in `SETUP.md` §"Setting up a machine" → *The
+command-line tools*, beside `pdftotext`'s: Tesseract is required by
+`ocr-book.py`, it is not on PATH here, the script reaches it through a hardcoded
+fallback, and a machine that installs it elsewhere has to put it on PATH. Do
+**not** add a check, and do **not** touch `find_tesseract()` — the fallback is
+what makes this machine work, and removing it would break the working case in
+order to expose a theoretical one.
+
+**Posture:** documentation only. **Filed, not taken** — opened while taking `M1`
+and left for a separate word, because the numbering exists so that the decision
+to take it can be separate from the decision to write it down.
 
 ---
 
