@@ -1,6 +1,8 @@
 # UI-AUDIT.md — Character Creator interface
 
-> **All 29 findings (`F1`–`F29`) are closed**, re-verified on 2026-09-02.
+> **`F1`–`F29` are closed**, re-verified on 2026-09-02. **`F30` is OPEN** — filed
+> later that day from outside the audit run, while verifying
+> `BOOK-INGEST-AUDIT` `F18` on production.
 >
 > **The one that misreads:** `F17` closes as **moot** rather than taken — it was
 > checked against a real print render (PR #459) and the defect was not there.
@@ -1834,6 +1836,73 @@ cost 13px of height and nothing else, so the question stopped mattering.
 
 ---
 
+### F30 — medium — The banked-picks picker offers every skill for every slot when one banked pick is secondary, and the server permits only one
+
+**Filed 2026-09-02, after the audit run.** Found while verifying
+`BOOK-INGEST-AUDIT` `F18` on production, not by an audit step — Nate read the
+sheet's unspent-picks panel and concluded there was *no way to spend a secondary
+pick at all*.
+
+**The client and the server compute the same allowance differently.**
+
+```js
+// sheet.js  pickerBlock()  — over ALL grants, secondary included
+const allowed = grants.some((g) => !g.categories) ? null : [...];
+
+// picks.js  — over RELATED grants only, secondary tracked separately
+const related = pending.filter((g) => g.kind !== 'secondary');
+const secondaryAllowance = pending.filter((g) => g.kind === 'secondary')...;
+const categories = related.some((g) => !g.categories) ? null : dedupe(...);
+```
+
+A secondary grant carries `categories: null`. The client's `some()` therefore
+sees a null and sets `allowed = null`, which unrestricts **every** slot. The
+server keeps the related grants' categories and allows exactly
+`secondaryAllowance` picks outside them.
+
+**So with one banked secondary pick, the picker offers the whole catalog for all
+three slots and the server will accept one.** Choosing two out-of-category skills
+returns 422 — *"X is Physical, which this grant does not cover"* — after the
+choice is made, not while it is being made.
+
+**Measured on production, 2026-09-02.** Character `1212`, level 6, three banked
+picks: related at 3, **secondary at 4**, related at 6. Its related grants carry
+thirteen categories including
+`{"name":"Physical","except":["Acrobatics","Boxing","Wrestling"]}`.
+
+**Two smaller things fall out of the same code.**
+
+- Because `allowed` is null, `hiddenCount` is 0, so the *"show all skills"*
+  checkbox **never renders** when a secondary pick is banked. The list silently
+  widens and nothing says why.
+- The panel reads *"🎓 3 unspent skill picks — earned at level 3, 4, 6"* and the
+  block beneath it *"1 from level 3, 1 from level 4, 1 from level 6"* — **neither
+  names the kind.** `app.js`'s level-up picker already does, one screen over:
+  `${g.count} ${g.kind === 'secondary' ? 'secondary' : 'related'} picks`. The two
+  UIs for one concept disagree about whether the kind is worth showing, and the
+  one that hides it is the one where it changes what you may choose.
+
+**Proposal.** Make the client agree with the server: build the restricted list
+from the **related** grants only, and offer `secondaryAllowance` additional slots
+that are explicitly unrestricted — labelled, the way the level-up picker labels
+them. **Do not change the server**; it is already right, and `F18` is a fresh
+reminder of what happens when two places compute one number.
+
+**Posture: UI only.** No server change, no schema change, no change to what is
+legal — only to what the picker offers and what it says. A player should not be
+able to choose something the next request will refuse.
+
+> **A first reading of this was wrong and is recorded so it is not re-derived.**
+> The initial diagnosis was that the list stays filtered to the related grants'
+> categories and the escape hatch is the checkbox worded *"picking one is flagged
+> as an override"*. That is what happens with **no** secondary grant banked. With
+> one, `allowed` is null and neither the filtering nor the checkbox occurs at
+> all. Read `pickerBlock` before implementing from the paragraph above — this
+> file's own header warns that seven of its proposals were wrong rather than
+> stale, and this one nearly made eight.
+
+---
+
 ## Verified clean
 
 Screens and behaviours looked at hard, at the viewports named, where nothing was found.
@@ -1955,3 +2024,10 @@ re-derived rather than quoted from the brief.
 
 Catalog counts here describe the **local** database rebuilt from the repo on this date.
 They are not production numbers and nothing in this menu depends on them.
+
+**`F30` was filed later and its numbers are dated separately — 2026-09-02, and
+they are production, not local.** Character `1212`'s three banked picks, their
+kinds and their thirteen categories were read with
+`wrangler d1 execute --remote` against `pending_skill_picks`; the client and
+server allowance expressions were read from `sheet.js` and `picks.js` in the
+working tree. Nothing else in this table is affected.
