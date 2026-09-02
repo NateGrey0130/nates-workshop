@@ -4,9 +4,11 @@ Plain HTML/JS/CSS, zero dependencies, no build step. There is no `package.json`
 and no `node_modules`; `npx wrangler` resolves from the npx cache. Merging to
 `main` IS the deploy — there is no CI.
 
-App conventions, the data model, and the migration list live in
-`apps/character-creator/README.md`. This file covers the six skills and what is
-easy to get wrong about Cloudflare auth.
+App conventions and the data model live in `apps/character-creator/README.md`.
+**The migration list is not there** — it moved to
+`apps/character-creator/docs/operations.md` when that README was split, and its
+table is the one place each migration says what it adds. This file covers the
+six skills and what is easy to get wrong about Cloudflare auth.
 
 ## Six skills, and they load from anywhere on this machine
 
