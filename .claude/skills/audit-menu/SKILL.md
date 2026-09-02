@@ -102,11 +102,25 @@ away.
 
 The worst case is not odd wording. `INGESTION-AUDIT` **F14**, the finding that
 *describes this format*, carries the note's own shape inside backticks as an
-example, so every grep reports it taken. It is open. The trap runs the other way
-too: F12, F16 and F19 there are closed as moot in a retirement section rather
-than under their headings, so scanning the findings alone reports three open
-that are not. On one page the two errors cancelled into a plausible total and a
-PR shipped the wrong count.
+example, so every grep reports it taken.
+
+**And it IS taken — in PR #364, which is the PR that produced this file.** That
+is the sharper version of the lesson, not a softer one. The grep said "taken"
+from 2026-08-26, when F14 was filed, until 2026-08-28, when it shipped: two days
+of being confidently right about a question it had not looked at. It stopped
+being wrong because the world moved, not because anything checked. **A
+coincidence is not a check**, and a reader who confirmed the grep's answer
+against reality on 08-29 would have concluded the method works.
+
+*(Until 2026-09-02 this paragraph ended by declaring F14 outstanding — true when
+written, because F14 was still open while the skill it asked for was being
+drafted, and left standing for five days after it shipped. The file that warns
+against stale outcome claims carried one about its own origin.)*
+
+The trap runs the other way too: F12, F16 and F19 there are closed as moot in a
+retirement section rather than under their headings, so scanning the findings
+alone reports three open that are not. On one page the two errors cancelled into
+a plausible total and a PR shipped the wrong count.
 
 **Read the lines under the heading, to the next heading.** Thirty seconds.
 
