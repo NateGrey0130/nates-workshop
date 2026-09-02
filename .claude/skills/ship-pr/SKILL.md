@@ -95,7 +95,49 @@ caught for you, so the checks happen before the merge or they do not happen.
    and #177 printed it because the work was already local. Only `state` and the
    merge commit distinguish them, and `git log --oneline -2 origin/main` should
    show the merge commit on top.
-9. **Verify production**, by asking it — not by reading the exit code.
+9. **Confirm the deploy actually ran.** Not optional, and not the same step as
+   confirming the merge. See [the deploy is not
+   guaranteed](#the-deploy-is-not-guaranteed).
+   ```bash
+   gh api repos/NateGrey0130/nates-workshop/commits/<sha>/check-runs --jq '.check_runs[] | .name + "  " + .conclusion'
+   ```
+10. **Verify production**, by asking it — not by reading the exit code.
+
+## The deploy is not guaranteed
+
+Merging to `main` starts a deploy. It does not finish one. Cloudflare Pages
+compiles **every** file under `functions/` — routed or not — plus everything
+they import, with the wrangler its build image ships rather than the one here.
+Syntax that image cannot parse fails the whole deploy, and nothing on the
+request path changes: the site keeps serving the last build that compiled.
+Merges landed on `main` for four days in August 2026 without one of them
+reaching production. `SETUP.md` → *When the merge does not deploy* has the
+mechanism.
+
+So the merge commit's own check-runs are the step, above — and a `conclusion`
+of anything but `success` on the Pages run means the merge did not ship.
+`gh pr checks` is not a substitute: it has shown a red "Cloudflare Pages fail"
+on PRs that deployed perfectly well, so the mark there is noise.
+
+Then ask production for **a string this change added** — a route, a heading, a
+new class name. It is the only check that distinguishes deployed from merged,
+and D1 cannot answer it: the database moved *before* the merge, so it looks
+identical whether or not the code shipped.
+
+```bash
+curl -s https://nates-workshop.pages.dev/apps/pick3cut5/ | grep -c '<a string the change added>'
+```
+
+Most of the site 302s to the Access login wall, so a fetch like that only works
+on the Pick 3 Cut 5 bypass paths. For anything else, load the page in a logged-in
+browser and look for the string there — the point is the string, not the tool.
+
+The known shape of this is caught *before* the merge by the smoke test's
+*What Pages will compile* section
+(`apps/character-creator/test/checks/environment.mjs` §9), which the flagless
+run in step 4 already covers. It is a text check on purpose: building with the
+wrangler that resolves here compiles the broken syntax happily, so a
+build-based check would pass straight through the outage it exists to prevent.
 
 ## Pruning is not a step
 
@@ -254,5 +296,7 @@ Production reads its own copy as a Pages secret, so a rotation is **two** places
 - `node scripts/drift-check.mjs --remote` prints `NO DRIFT`
 - production queried and matching what the change intended
 - the PR shows `MERGED` and its merge commit is on top of `origin/main`
+- **the merge commit's check-runs show the Pages deploy at `success`, and
+  production answers with a string the change added** — merged is not deployed
 - branch deleted on both sides, `git status` clean
 - if the change is user-visible, it has been exercised in a browser
