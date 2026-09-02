@@ -2,7 +2,8 @@
 
 > **Status 2026-09-02: `F1`–`F7`, `F10`–`F21` taken (PRs #541–#560) — `F12` in
 > part, its documentation half only. `F8`, `F22`, `F23` taken (#561–#563); **`F9`
-> CLOSED without being taken** (#564). Open: `F24`, `F25`, all `N`.
+> CLOSED without being taken** (#564); `F24` taken (#565). Open: `F25`, all
+> `N`.
 > `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while taking
 > `F2`, and `F25` by taking `F4`. Everything else is open.** `F` numbers
 > are findings about instructions that exist; `N` numbers are new-skill
@@ -1913,6 +1914,34 @@ should cost a deliberate keystroke applies to it exactly as it does to
 
 **Evidence.** Live incident, 2026-09-02 — four Pages API calls including one
 write, against the claim in `CLAUDE.md` and `nates-workshop-production-url.md`.
+
+**Taken, 2026-09-02 (PR #565).** Posture as proposed: rewrite the coupled
+sentences plus one memory, **documentation only, widens nothing**. The token was
+re-tested the same day and still cannot reach Pages — the premise is intact and
+now dated where it sits.
+
+**A three-row table replaced the "which to reach for" line the proposal asked
+for**, because two credentials had been conflated into one sentence for weeks and
+a sentence would invite the same collapse: `npx wrangler` for D1, the
+`cloudflare-api` plugin for a Pages question or deployment, Chrome for Access.
+
+**Access stays untested and the note says so twice** — in `CLAUDE.md` and in the
+memory. The original sentence coupled *"Pages and Access"*, only the Pages half
+was exercised, and the cheap error here would be replacing one over-broad claim
+with another.
+
+**One consequence added that the proposal did not name.** `CLAUDE.md`'s
+health-check section teaches *let `whoami` tell you which credential answered* —
+and `whoami` describes the environment token and is silent about the plugin. The
+doctrine is right and now has a second credential it does not cover, which is
+worth stating where the doctrine is. Also stated: a Pages **deploy** through the
+plugin would still be the deliberate keystroke the allowlist section argues for,
+exactly as `d1-apply.mjs` is. Reading Pages is now cheap; that is not a licence
+to deploy from a script.
+
+The memory's `description:` and its `MEMORY.md` line both carried the coupling
+and both were corrected — those are the lines recall matches on, and `F16`
+established that leaving them is how a correction fails to arrive.
 
 ---
 
