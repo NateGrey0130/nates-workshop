@@ -68,19 +68,14 @@ with "OCR it once, properly", and OCRing a book that did not need it would have
 spent hours reproducing text that was already there, worse.
 
 A text layer is not perfect, and its damage is different from OCR's — it is
-typesetting, not misreading. What the Palladium book's actually did:
-
-| what arrived | what it is |
-|---|---|
-| `EyesofThoth(S)` | spaces missing entirely, and a mis-set `8` as `S` |
-| `Vagabond/Peasant/Farmel` | a mis-set final `r` |
-| `14272,881-324,880` | a missing space between the level and the number |
-| `per addi- tional magician` | a hyphen kept from the end of a column line |
-| `...one foot of metal. Level Eight` | a section heading welded onto the previous description |
-
-None of those is fixed by a better reader. They are fixed by knowing what the
-value should look like: a one-character parenthetical where a cost belongs is a
+typesetting, not misreading: missing spaces, a mis-set character, a hyphen kept
+from the end of a column line, a heading welded onto the previous paragraph.
+**None of it is fixed by a better reader.** It is fixed by knowing what the value
+should look like — a one-character parenthetical where a cost belongs is a
 mis-set digit, and the OTHER authority table has the real one.
+
+Five real examples from the Palladium book: `reference/WORKED-EXAMPLES.md` →
+*Palladium Fantasy's text layer*.
 
 ## 0b. Cache it — the SAME command either way
 
@@ -353,16 +348,12 @@ and is not. The copy is gone.
 geometry has to come from Tesseract, and *how you ask it* matters more than the
 bucketing:
 
-| approach | what it produced |
-|---|---|
-| OCR text, read linearly | headings emitted `One, Three, Two, Four` — columns interleave |
-| `--psm 6` + word boxes | one uniform block: `Level Two  Magic Shield (6)  Distant Voice (10)` welded into a single line |
-| word boxes into N equal columns | assumes even spacing; that page has 2-column prose above a 3-column index, and no single division fits both |
-| **`--psm 3`, group by `block_num`** | **each heading and its entries land in their own block — emitted order stops mattering** |
-
 Let Tesseract do the layout analysis and group by its blocks. Reconstructing
 columns from raw x coordinates is the thing that looks rigorous and keeps being
 wrong.
+
+Four approaches were tried and three failed, including the rigorous-looking one:
+`reference/WORKED-EXAMPLES.md` → *Reading a column index off a SCAN*.
 
 ```
 tesseract page.png out --psm 3 tsv     # then group rows by block_num
@@ -478,22 +469,14 @@ ceiling is rejected rather than half-saved.
 
 ## 4b. A book may ship TWO authorities, and they check each other
 
-The Palladium Fantasy main book prints its spells twice: an alphabetical list
-**by level** (printed 187), which is the only place a level is stated at all,
-and an alphabetical list **by page** (printed 188), which repeats every cost.
-Parse both and reconcile them and you get three independent readings of every
-cost — the two indexes and the `P.P.E.` line in the spell's own stat block,
-usually spelled out in words there, *Twenty-Five* against the index's 25.
+**Look for a second one before parsing the first.** Where a book indexes its
+entries twice — by level and by page, say — parsing both gives you independent
+readings of every value, and a third if the entry's own stat block repeats it.
 
-That is not belt and braces. It is what turned two typesetting accidents into
-data:
-
-- `EyesofThoth(S)` in the by-level table has no number at all. The by-page table
-  says `Eyes of Thoth (8)`. Without the second table, a strict cost pattern
-  drops the spell entirely and a lax one stores `S`.
-- The two disagree on exactly **two costs out of 182**. Both were already known
-  and neither was in the batch — but the point is that *finding out* cost
-  nothing, where trusting one table silently would have been free too.
+That is not belt and braces. It is what rescues an entry whose cost the first
+table mangled, and what tells you how far two tables disagree instead of leaving
+you assuming they do not. The Palladium Fantasy case, and the two accidents it
+turned into data: `reference/WORKED-EXAMPLES.md` → *Two authorities*.
 
 Reconcile them by NAME with the same normalisation the catalog diff uses, and
 keep a tiny explicit alias list for the names the book spells differently
@@ -506,26 +489,21 @@ match to guess at, so list them rather than lowering the edit-distance bar.
 **The index wins, and the page is recorded.** But go and find out which is
 wrong before deciding, because the answer is not always the index.
 
-The Palladium Fantasy spell pages state a level only six times in 180 entries.
-Five are the book's own Spells of Legend, which sit outside the numbered ladder.
-The sixth is *The Finger of Lictalon*, headed `Level: Spell of Legend` while the
-by-level index files it under Level Eleven.
+**Settle it with independent readings and a magnitude argument, not with the
+rule.** Count the readings that agree, and ask whether the disputed value is the
+right SIZE for where it would sit — a cost three orders of magnitude off its
+claimed tier is an argument by itself. Store the winner and put the losing
+reading in `variant_note`: the same doctrine as *the later book wins, and the
+losing number is recorded*, applied to a book disagreeing with itself.
 
-Three things decided it, and none of them is "the index is the authority":
+The worked case is *The Finger of Lictalon*, where three things decided it and
+none was "the index is the authority":
+`reference/WORKED-EXAMPLES.md` → *The Finger of Lictalon*.
 
-1. the by-level index says eleven;
-2. the Spells of Legend list does not name it;
-3. its **150 P.P.E. sits with the level elevens**, where the legends cost 1000
-   to 5000.
-
-Two independent readings against one, and a magnitude argument. It is stored at
-eleven with the losing reading in `variant_note` — which is the same doctrine as
-"the later book wins, and the losing number is recorded", applied to a book
-disagreeing with itself.
-
-**A page that states a fact only six times in 180 entries is telling you
-something by the exception.** Count how often the field appears before deciding
-what its presence means.
+**A page that states a fact only a handful of times in a whole chapter is
+telling you something by the exception.** Count how often the field appears
+before deciding what its presence means — on those spell pages it was six times
+in 180 entries, and five of the six were a category of their own.
 
 ## 5. Reconcile — the step that is easiest to skip
 
