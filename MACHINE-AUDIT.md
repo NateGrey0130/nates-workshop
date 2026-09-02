@@ -6,10 +6,12 @@ brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
 `low`. Nothing here is taken until Nate names it; one PR per finding, outcome
 note appended under the finding in the same PR.
 
-**Status, 2026-09-02: `M1`–`M17` are all taken and closed. Nothing is open
-except `M18`, which is an OBSERVATION rather than a finding — it proposes
-nothing, and exists so a recurrence has somewhere to attach and four dead
-hypotheses are not re-run.**
+**Status, 2026-09-02: `M1`–`M18` are all taken and closed. Nothing is open.**
+`M18` is an OBSERVATION rather than a finding — the fault it records is still
+unexplained, and five hypotheses are dead. Taking it meant attempting a
+reproduction (1,592 lookups, not reproduced) and automating the capture its own
+text asks for, since a person cannot catch it by hand. **If
+`workshop\command-not-found.log` ever appears, read it before anything else.**
 **`M8` was taken with its posture overridden** — deletion, on explicit
 instruction — which its own note records. Read the lines under a finding for its
 status — the notes here vary in wording like every other menu in this repo, and
@@ -1224,6 +1226,65 @@ described a machine that had already recovered.
 WORKAROUND.** Reaching for absolute paths again is exactly the reflex `M2`
 retired, and against an intermittent fault it would once more hide the only
 symptom capable of exposing it.
+
+**Taken, 2026-09-02 (PR #588).** This finding proposes nothing to implement, so
+taking it meant doing the two things it actually asks for: **try to reproduce
+it**, and **make a recurrence catchable**.
+
+**Reproduction attempted, and failed — which is itself a result.**
+
+```
+in-process bare lookups          1,592     failures: 0
+shim existence checks            4,776     missing:  0
+claude.exe --version launches       10     shims never blinked
+fresh PowerShell processes          60     failures: 0
+```
+
+So it is **not** a startup-path fault, **not** a routine flake at anything like
+1-in-1,600, and **not** triggered by launching the binary. It also kills a fifth
+hypothesis raised while taking this: the `@anthropic-ai/claude-code` package
+*was* rewritten at 15:37:48 that day by Claude Code's own self-update — but the
+npm shims were untouched (still dated 2026-08-17), no `npm install` appears in
+the day's npm logs, and the update ran **after** the failure, not during it.
+
+**The consequence is the finding's real conclusion:** if 1,592 automated lookups
+cannot catch it, a person will not catch it by hand mid-frustration, and this
+finding's own instruction — *capture it before running anything else* — is not
+executable by a human.
+
+**So the capture was automated.** `workshop\profile.ps1` now sets
+`$ExecutionContext.InvokeCommand.CommandNotFoundAction`, scoped to a watchlist of
+names that should always resolve. On a failure it appends the timestamp, PID and
+process start, `PATH`, `PATHEXT`, what matches on disk, and what
+`Get-Command -All` saw, to `workshop\command-not-found.log`.
+
+**This is a recorder, not a workaround, and the distinction is the whole finding.**
+The command still fails identically; nothing is routed around; a typo not on the
+list costs nothing. Proved by making it fire — a watched name in a shell with a
+stripped PATH captured this:
+
+```
+=== 2026-09-02 16:19:03.268  claude NOT FOUND ===
+npm dir on PATH: False
+files matching : claude, claude.cmd, claude.ps1
+Get-Command -All:
+    (nothing)
+```
+
+Which is exactly the discrimination that was impossible after the fact: it
+separates *PATH lost the entry* from *the shims vanished* from *discovery failed
+with both intact*.
+
+**Two bugs in the recorder, both caught before shipping and both worth naming.**
+The first build shattered its own header across five lines, because the hook does
+not hand back a plain string and concatenating it produced an array — a capture
+nothing can `grep` is not a capture. The fix then introduced a second: `-f` binds
+to the first expression alone, so `'{0} {1}' -f (expr), $name` throws *"index
+must be less than the size of the argument list"* — **and the `try/catch` that
+keeps the recorder from breaking the shell swallowed it silently**, so the hook
+simply stopped firing with no sign why. Found by running the body with the catch
+removed. A recorder that fails silently is worse than none, which is the same
+lesson as `M9`'s `smoke.mjs` trap one file over.
 
 ### M17 — medium — eleven memories name `Downloads` in their own text, and `M7` makes some of them wrong
 

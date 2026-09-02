@@ -578,6 +578,16 @@ profile that edits it creates a second source of truth only interactive shells
 see (`MACHINE-AUDIT` `M4`). It is a convenience, not a requirement: nothing here
 breaks on a machine without it.
 
+The real profile also installs a **`CommandNotFoundAction` recorder** for
+`MACHINE-AUDIT` `M18` — a bare command name that should always resolve once
+threw `CommandNotFoundException` and worked again minutes later, and the state
+that would explain it only exists at the moment of failure. When one of a short
+watchlist fails to resolve, it appends PATH, `PATHEXT`, what is on disk and what
+discovery saw to `workshop\command-not-found.log`, then returns. **It records; it
+does not intervene** — the command still fails identically, and an ordinary typo
+costs nothing because it is not on the list. **If that file ever appears, read it
+before doing anything else**, including reopening the shell.
+
 ### The command-line tools
 
 `node`, `npm`, `git` and `gh` put themselves on PATH and need nothing here.
