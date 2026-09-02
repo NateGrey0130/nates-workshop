@@ -1,7 +1,7 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **Status 2026-09-02: `F1`–`F4` and `F11` taken (PRs #541, #542, #543, #545,
-> #546). `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while
+> **Status 2026-09-02: `F1`–`F5` and `F11` taken (PRs #541, #542, #543, #545,
+> #546, #547). `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while
 > taking `F2`, and `F25` by taking `F4`. Everything else is open.** `F` numbers
 > are findings about instructions that exist; `N` numbers are new-skill
 > proposals. `###`, em dash, no severity word. This line is a summary and summaries here go stale — read
@@ -430,6 +430,29 @@ cannot resolve, which is the mechanical half.
 
 **Evidence.** Live repo state (`scripts/books.json`, 2026-09-02) against the
 skill and `BOOK-INGEST-QUEUE.md`.
+
+**Taken, 2026-09-02 (PR #547).** Posture as proposed: one sentence, documentation
+only, **no new gate** — the smoke test already fails on a cache whose detected
+offset regions the registry cannot resolve, and that stays the mechanical half.
+
+Premises held exactly. `scripts/books.json` registers two books with
+`page_offset_exceptions`, `pf` and `underseas`; `book-survey` was last edited
+`2c95d54` on 2026-08-28; and `BOOK-INGEST-QUEUE.md` has said `+0 / -1 split`
+since the same day.
+
+**One thing the finding understated.** It says the queue's table recorded the
+split. The queue is more explicit than that — line 299 reads *"`underseas` is the
+second split-offset book in the catalog, after `pf`"*, in prose, written on the
+day the skill's sentence was last touched. The two files did not drift apart:
+they **disagreed from the moment both were written**, which is a worse shape than
+rot and is now what the skill's replacement sentence says.
+
+**One deviation, corrected before shipping.** The first draft named the printed
+page `underseas` splits at. The proposal says explicitly *"Do not list
+`underseas`'s values; the registry is the authority"* — so the shipped sentence
+says the split falls **in the middle of the book**, which is the part that
+changes how you hunt for one, and sends the reader to the registry for the
+number. The actionable contrast survives without the value.
 
 ---
 
