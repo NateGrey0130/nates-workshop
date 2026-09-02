@@ -297,6 +297,72 @@ proves one would work. And `scripts/repo-vs-live.mjs`'s own opening question -
 *"Can the repo rebuild the live catalog, row for row?"* - is scoped correctly
 where the prose around it sometimes is not: the CATALOG, never the database.
 
+### Recovery
+
+The paragraphs above establish what this repo cannot restore. This is what can.
+
+**D1 Time Travel is the protection, and it is a rolling 30 days.** Not a backup
+you hold - a window Cloudflare keeps, which moves forward every day. Damage older
+than thirty days is not recoverable by any mechanism in this account. Measured
+against the live database on 2026-09-02 rather than quoted: a timestamp 45 days
+back is refused with *"Please provide a timestamp within the last 30 days"*, and
+one 20 days back resolves to a bookmark.
+
+Find a point to restore to - either the current bookmark, or the one covering a
+moment before the damage:
+
+```bash
+npx wrangler d1 time-travel info nates-workshop-media
+npx wrangler d1 time-travel info nates-workshop-media --timestamp "2026-08-30T12:00:00Z"
+```
+
+Both print the exact `restore` invocation for what they found. The
+`CLOUDFLARE_API_TOKEN` in `CLAUDE.md` reaches this, unlike R2 and Pages.
+
+**Do not run `restore` as a drill.** It rewrites the live database, and there is
+no scratch database to rehearse on. Practise the `info` half; trust the other.
+
+**`wrangler d1 export` does not work on this database.** It is the obvious
+command and it fails outright:
+
+```
+D1 Export error: cannot export databases with Virtual Tables (fts5)
+```
+
+`journal_fts` is that virtual table - campaign-note search, from
+`026-campaign-notes.sql`. One FTS5 table makes the whole database
+un-exportable by that path, and no flag skips it.
+
+**A per-table dump is the way to hold a copy off Cloudflare**, and it works.
+Verified 2026-09-02 against the largest table: 3,639 rows, 2.2 MB, exit 0.
+
+```bash
+npx wrangler d1 execute nates-workshop-media --remote --json \
+  --command "SELECT * FROM media_items" > media_items.json
+```
+
+Repeat per table. `journal_fts` does not need one - it is derived from
+`journal_entries` by triggers and rebuilds itself. Nothing in the repo automates
+this loop; see `HEALTH-AUDIT.md` F21 for the proposal to write it.
+
+**What each mechanism actually covers:**
+
+| | Time Travel | a repo rebuild | a per-table dump |
+|---|---|---|---|
+| the 6,006 rows in the table above | ✅ 30 days | ❌ never | ✅ whenever it was run |
+| catalog and class definitions | ✅ 30 days | ✅ | ✅ |
+| holds up if the Cloudflare account is lost | ❌ | ✅ | ✅ |
+
+**`NO DRIFT` is not "the repo can reproduce production".** The two checks answer
+different questions and both are correct:
+[`drift-check.mjs`](../../../scripts/drift-check.mjs) compares migrations, data
+scripts, tables, columns and class *names*;
+[`repo-vs-live.mjs`](../../../scripts/repo-vs-live.mjs) compares *values*, and
+on 2026-09-02 reported **32 fields across 30 rows** differing - reported without
+moving the exit code, by design. A green `drift-check` beside a 30-row value gap
+is the normal state, and it is the reason a rebuild is not a restore even for
+the half of the database a rebuild covers.
+
 ### The rebuild did not match production, and nothing was watching
 
 Pinning those counts immediately found that two of them disagreed with
