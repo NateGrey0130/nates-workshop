@@ -1,5 +1,9 @@
 # The book-ingestion loop — efficiency audit, 2026-08-25
 
+> **All 7 findings (`F1`–`F7`) are closed**, re-verified on 2026-09-02. Every outcome
+> note sits under its own finding, in the ordinary shape. **No trap in this
+> file** — it is the one menu a scan reads correctly.
+
 An audit of the loop itself, not the code it produces. Evidence: the 22
 session transcripts under `C:\Users\natha\.claude\projects\C--Users-natha-Downloads\`
 (parsed by script, deduplicated — see Methodology), the merge history of PRs

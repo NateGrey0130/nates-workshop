@@ -1,5 +1,18 @@
 # Character creator — ingestion and tooling audit, 2026-08-26
 
+> **All 24 findings are closed**, re-verified on 2026-09-02. The header corrections
+> below track how the open list shrank; the last of them ends *"NONE now — the
+> menu is clear."*
+>
+> **Two that misread, in opposite directions.** `F12`, `F16` and `F19` close as
+> **moot** in a retirement table roughly 1,300 lines from their headings, so
+> reading only under the heading reports three open that are not. And `F14` —
+> the finding that describes this note's own format — carries `**Taken,
+> 2026-08-25**` inside backticks as an example, so every grep reports it taken.
+> **It also IS taken**, in PR #364, which is what produced
+> `.claude/skills/audit-menu/SKILL.md`. That skill still says F14 is open; it
+> was written while F14 was, and the sentence outlived it.
+
 Read-only audit of **Track E (the PDF import process)** and **Track F (skills
 and tooling gaps)** from the 2026-08-26 review brief. Tracks A–D and G are a
 different session and are not covered here; see *Not covered* at the end.

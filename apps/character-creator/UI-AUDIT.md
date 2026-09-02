@@ -1,5 +1,12 @@
 # UI-AUDIT.md — Character Creator interface
 
+> **All 29 findings (`F1`–`F29`) are closed**, re-verified on 2026-09-02.
+>
+> **The one that misreads:** `F17` closes as **moot** rather than taken — it was
+> checked against a real print render (PR #459) and the defect was not there.
+> Seven of this file's proposals turned out to be wrong rather than merely
+> stale, which is worth knowing before implementing one from its text alone.
+
 Audited 2026-08-31, against the working tree at `C:\Users\natha\Projects\nates-apps`,
 served from `wrangler pages dev --port 8791` (the `nates-apps-8791` launch config —
 **not** 8788, which belongs to another worktree).

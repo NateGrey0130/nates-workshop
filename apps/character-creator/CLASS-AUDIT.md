@@ -1,5 +1,12 @@
 # Character creator — class audit, 2026-08-25
 
+> **All 29 items are closed**, re-verified on 2026-09-02: `F1`–`F20` and `S1`–`S9`.
+>
+> **The one that misreads:** the nine `S` items are **bullets**, not headings —
+> `- **S1 — …**` under `## Schema-can-now-express`. A scan that walks `###`
+> headings does not report them open; it does not see them at all, and nine
+> items vanish with no error.
+
 Read-only audit of every published class in production against the source
 books. Verified against production D1 (`--remote`, per the repo's rule) as of
 `main` @ `652cc4f`, baseline **109 published classes**, smoke suite green

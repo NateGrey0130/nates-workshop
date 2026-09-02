@@ -1,5 +1,12 @@
 # Rebuild audit — what a fresh build of this database actually breaks
 
+> **All 20 findings (`F1`–`F20`) are closed**, re-verified on 2026-09-02.
+>
+> **The one that misreads:** `F16` has no `Taken` note and is not open. It ends
+> *"Posture: blocked, no action. This finding exists so the negative result is
+> not re-derived"* — a deliberate dead end, recorded so two plausible OCR runs
+> are not spent rediscovering it.
+
 **2026-08-28.** Audit only. Nothing here was repaired, and production was read
 but never written: every remote call in this pass was a `SELECT`.
 
