@@ -451,8 +451,10 @@ that costs the game is under *It cannot be played on a preview* above.
 ## Setting up a machine
 
 **The skills and the agents need a junction, once per machine.** The book work
-runs from Downloads (the PDFs land there, and the session memory is keyed to
-it), and a session started outside the repo registers neither `.claude/skills/`
+runs from `C:\Users\natha\Projects\workshop` — the sourcebook PDFs and the loose
+briefs live there and the session memory is keyed to it; it was `Downloads` until
+2026-09-02 (`MACHINE-AUDIT.md` `M7`). A session started outside the repo
+registers neither `.claude/skills/`
 nor `.claude/agents/` — so the skills were being pasted into context by hand
 instead of loading by name (efficiency audit, F5), and the `book-reconcile`
 subagent `book-survey` §5 calls for simply did not exist there
@@ -476,7 +478,7 @@ keeps the "no admin rights" property this whole block depends on.
 
 It has one consequence worth knowing: `~/.claude/agents` **is** the repo's
 directory, so nothing else can live there. `~/.claude/skills` is shared —
-plugin-installed skills sit beside the six repo junctions as real directories —
+plugin-installed skills sit beside the nine repo junctions as real directories —
 and the agents directory cannot be. If a non-repo agent is ever wanted, this
 link has to become per-file, and that will need elevation.
 
@@ -494,9 +496,10 @@ machine has to run it before the book work will find them by name.
 you would confirm a skill — by asking for it by name, not by trusting this line.
 
 **`CLAUDE.md` is NOT linked, and cannot usefully be.** A repo `CLAUDE.md` loads
-only inside its own directory, so a session started in Downloads gets all six
-skills, the subagent, and none of the file that says which skill to use, what the
-Cloudflare token can reach, or that `--local` is not a mirror. That gap was being
+only inside its own directory, so a session started in the working directory gets
+all nine skills, the subagent, and none of the file that says which skill to use,
+what the Cloudflare token can reach, or that `--local` is not a mirror. That gap
+was being
 closed by hand: sixteen sessions opened with a typed *"read its `CLAUDE.md`
 first, it does not auto-load from Downloads"*, and `BOOK-INGEST-PROMPT.md` prints
 the same sentence as the first line of its own template (`SKILL-AUDIT.md` F11).
@@ -505,8 +508,9 @@ The answer is a **pointer at the user level** — `~/.claude/CLAUDE.md`, which
 loads in every session on this machine regardless of directory:
 
 ```powershell
-# Six short paragraphs: where the repo is, read its CLAUDE.md when the work
-# touches it, and a note that the skills DO load by name. Nothing else.
+# A few short paragraphs: where the repo is, read its CLAUDE.md when the work
+# touches it, where the working directory is, and a note that the skills DO
+# load by name. Nothing else.
 notepad "$env:USERPROFILE\.claude\CLAUDE.md"
 ```
 
@@ -516,8 +520,15 @@ the file has to sit *at* `~/.claude/CLAUDE.md` rather than in a directory of its
 own. **Keep it short and scoped to pointing**: it loads for every session on this
 machine, including work that has nothing to do with this repo.
 
-It is checked in nowhere, so a fresh machine writes it alongside running the
-block above.
+**It is checked in nowhere, so nothing on earth updates it but a hand.** No test
+reads it, no grep of this tree reaches it, and no other document mentions it
+except this paragraph. That is the price of the pointer being a pointer, and it
+comes due whenever something it names changes: **it names the working directory
+and the skill count, and both have moved before.** On 2026-09-02 it was wrong
+about both at once — it named the previous working directory, and undercounted
+the skills by three (`MACHINE-AUDIT.md` `M12`). A fresh machine writes it
+alongside running the block above; an existing machine edits it by hand, in the
+same PR that moves whatever it names.
 
 **`launch.json` exists twice, and the second copy is untracked on purpose.**
 `.claude/launch.json` is tracked and machine-independent. The *working

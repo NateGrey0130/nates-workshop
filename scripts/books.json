@@ -70,7 +70,7 @@
       "title": "Rifts Ultimate Edition",
       "aliases": [],
       "source_pdf": "Rifts - Ultimate Edition.pdf",
-      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": 374,
       "page_offset": 3
     },
@@ -84,7 +84,7 @@
         "palladium-fantasy-core"
       ],
       "source_pdf": "Palladium RPG - Main Book.pdf",
-      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": 336,
       "page_offset": 2,
       "page_offset_exceptions": [
@@ -97,7 +97,7 @@
       "title": "Rifts Book of Magic",
       "aliases": [],
       "source_pdf": "526065744-Rifts-Book-of-Magic.pdf",
-      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": 352,
       "page_offset": 1,
       "note": "Re-cached 2026-08-28 from its TEXT LAYER, all 360 pages (INGESTION-AUDIT F24). The layer is not sparse - --probe medians 5,411 chars/page, comparable to pf - and the earlier six-page OCR cache (p090-p095) was the mistake this note used to describe as a decision. printed_pages stays 352 and NOT the 347 ocr-book.py measured: printed 348-352 is the Index of Rifts Magic, the authority table giving every spell a name, cost and page, and its folios do not surface the same way. This is the case the _doc's 'the registry outranks the manifest' rule was written for."
@@ -107,7 +107,7 @@
       "title": "Rifts Conversion Book One",
       "aliases": [],
       "source_pdf": "595586607-Rifts-Conversion-Book-1-Revised-and-Updated-PAL803P.pdf",
-      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": 172,
       "page_offset": 1,
       "note": "The 200-page PDF ends in a Palladium catalogue and order form the book does not number; the last folio is 172."
@@ -117,7 +117,7 @@
       "title": "Palladium Fantasy Dragons and Gods",
       "aliases": ["dragons-and-gods"],
       "source_pdf": "PFRPG - Dragons and Gods (1).pdf",
-      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": 232,
       "page_offset": 1,
       "note": "Same appended catalogue as cb1: 240 PDF pages, 232 numbered."
@@ -127,7 +127,7 @@
       "title": "Rifts World Book 16: Federation of Magic",
       "aliases": [],
       "source_pdf": "Rifts- World Book 16 Federation of Magic.pdf",
-      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": 159,
       "page_offset": 1,
       "note": "Nothing in production cites this book yet. Its cache stopped at file p073 - printed 72, mid-word and mid-class - until the resume fix in F2 read the remaining 88 pages off the source PDF; it now holds all 161."
@@ -137,7 +137,7 @@
       "title": "Rifts World Book 10: Juicer Uprising",
       "aliases": [],
       "source_pdf": "Rifts- World Book 10 Juicer Uprising.pdf",
-      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": 159,
       "page_offset": 1
     },
@@ -146,7 +146,7 @@
       "title": "Rifts Conversion Book Two: Pantheons of the Megaverse",
       "aliases": ["pantheons-of-the-megaverse", "Pantheons of the Megaverse"],
       "source_pdf": "Pantheons of the Megaverse.pdf",
-      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": 208,
       "page_offset": 1,
       "note": "Content ends at printed 203 and the index runs to 208. The cache held 202 of the PDF's 210 pages until the resume fix in F2 topped it up; it now holds all 210."
@@ -156,7 +156,7 @@
       "title": "Rifts Dimension Book 1: Wormwood",
       "aliases": ["Wormwood", "Rifts Dimension Book One: Wormwood"],
       "source_pdf": "Rifts- Dimension Book 1 Wormwood.pdf",
-      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": 159,
       "page_offset": 0,
       "note": "The second book here with a ZERO offset, and the only one whose folios line up with the PDF end to end: printed N is cache pNNN and read-columns.py N. Verified on printed 3, 4, 5, 6, 83 and 157 by reading the folio off the render, and measured independently by ocr-book.py. A scan with no text layer, but a clean one - no page needed a re-read and no table pages needed a higher dpi."
@@ -166,7 +166,7 @@
       "title": "Rifts RPG (original core book)",
       "aliases": ["Rifts RPG"],
       "source_pdf": "Rifts Main.pdf",
-      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": null,
       "page_offset": null,
       "note": "NOT A MISSING BOOK AND NOT ONE TO CACHE. This is the ORIGINAL Rifts core book; Rifts Ultimate Edition is its errata'd revision - the same book, a later edition. Cited by NOTHING since 2026-08-28: the last row citing it, the dragon-hatchling class, was re-cited to RUE p.156-159 alongside its six variants (REBUILD-AUDIT.md F17). Kept in the registry so the spelling stays known vocabulary if it reappears. The earlier note here said two classes cited it and that it was the next book to cache; one did, and it is not."
@@ -176,7 +176,7 @@
       "title": "Rifts Skill List",
       "aliases": [],
       "source_pdf": "31810627-Rifts-Skills-List.pdf",
-      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": null,
       "page_offset": null,
       "note": "Not a Palladium book - a compiled skill list PDF, cited by 48 skills. Registered so those rows read as known vocabulary rather than as an unknown book."
@@ -186,7 +186,7 @@
       "title": "Rifts World Book 5: Triax and the NGR",
       "aliases": ["Triax & The NGR"],
       "source_pdf": "Rifts- World Book 5 Triax and the NGR.pdf",
-      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": 222,
       "page_offset": 0,
       "note": "Cached 2026-08-28 from a SCAN - no text layer, --probe medians 0 chars/page across all twenty samples. The THIRD zero-offset book here after potm and ww: printed N is cache pNNN, and read-columns.py N. Verified by folio rather than assumed - 177 pages agree at +0 against 1 at +1 - which matters because a zero offset leaves no discrepancy to explain when a page reads wrong. The five disagreements are OCR misreading the folio itself (p134 reads 693), not an offset region. This note said read-columns.py N+1 until 2026-08-30 and that was wrong, the same error the phase-world note carried: ocr-book.py writes cache pNNN from doc[pno - 1] and read-columns.py reads doc[n - 1], so cache pN IS read-columns.py N in every book, and page_offset relates that shared number to the printed folio and nothing else. It came from book-survey 0d's table, where 'zero-offset book' means printed N is pymupdf index N (potm, whose page_offset is 1) rather than page_offset 0 - two senses of the same phrase. Was a stub carrying one gear row and no copy on hand until the PDF arrived in the seven-book batch; the alias is live vocabulary that row resolves through and is kept."
@@ -196,7 +196,7 @@
       "title": "Rifts World Book 7: Underseas",
       "aliases": [],
       "source_pdf": "Rifts- World Book 7 Underseas.pdf",
-      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": 214,
       "page_offset": -1,
       "page_offset_exceptions": [
@@ -209,7 +209,7 @@
       "title": "Rifts World Book 14: New West",
       "aliases": ["Rifts New West"],
       "source_pdf": "Rifts- World Book 14 New West.pdf",
-      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": 224,
       "page_offset": 1,
       "note": "Cached 2026-08-28 from its TEXT LAYER, median 3,784 chars/page. printed_pages is 224 and NOT the 222 ocr-book.py measured: printed 223-224 are the experience tables, which print no folio, and the registry outranks the manifest for exactly this reason (see bom). Offset verified by folio, 198 pages agreeing against 3 - and those 3 are contents pages listing many numbers, not a second offset region. Was a stub carrying one skill row (W.P. Rope) and no copy on hand; the alias is kept as live vocabulary."
@@ -219,7 +219,7 @@
       "title": "Rifts World Book 15: Spirit West",
       "aliases": [],
       "source_pdf": "Rifts- World Book 15 Spirit West.pdf",
-      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": 208,
       "page_offset": 1,
       "note": "Cached 2026-08-28 from its TEXT LAYER, median 5,468 chars/page. Offset verified by folio: 190 pages agree, the 2 that do not are contents pages. Nothing in production cites this book yet."
@@ -229,7 +229,7 @@
       "title": "Rifts World Book 18: Mystic Russia",
       "aliases": [],
       "source_pdf": "Rifts- World Book 18 Mystic Russia.pdf",
-      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": 176,
       "page_offset": 1,
       "note": "Cached 2026-08-28 from its TEXT LAYER, median 5,102 chars/page. The cleanest offset measurement in the batch - 157 pages agree at +1 and NONE disagree. The last three cache pages are Palladium house ads for The Rifter, which the book does not number. Nothing in production cites this book yet."
@@ -239,7 +239,7 @@
       "title": "Rifts World Book 22: Free Quebec",
       "aliases": [],
       "source_pdf": "Rifts- World Book 22 Free Quebec.pdf",
-      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": 192,
       "page_offset": 1,
       "note": "Cached 2026-08-28 from its TEXT LAYER, median 4,801 chars/page. Offset verified by folio, 165 pages agreeing against 4; two of those are contents pages and two (p86, p181) are stray numbers in prose on pages whose folio did not survive as a bare line. Nothing in production cites this book yet."
@@ -249,7 +249,7 @@
       "title": "Rifts Dimension Book 2: Phase World",
       "aliases": [],
       "source_pdf": "Rifts- Dimension Book 2 Phase World.pdf",
-      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": 208,
       "page_offset": 0,
       "note": "Cached 2026-08-28 from a SCAN - --probe medians 0 chars/page, OCR medians 4,119. The FOURTH zero-offset book here, after potm, ww and triax: printed N is cache pNNN, and read-columns.py N (verified 2026-08-30 by render - printed 150 is doc[149]; this note said N+1 and was wrong by one. Moot for this book, which has no text layer for read-columns.py to read, but the triax note carries the same sentence and it is wrong there too). Verified by folio and decisive - 166 pages agree at +0 against 3, one region from p010 to p208 with no split. printed_pages is 208, the last page of content; p209 is a Palladium house ad the book does not number. Printed 184-208 are blank character record sheets - three generic (184-186) and twenty-two per class (187-208); this note recorded 203-208 and the range was re-measured 2026-08-30. They name twenty-two of the book's forty-two classes without defining them - a mention is not a definition, so survey from the stat blocks rather than from those sheets. Nothing in production cites this book yet."
