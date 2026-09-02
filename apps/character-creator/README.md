@@ -810,6 +810,18 @@ nothing rewrites it. `/character-creator/` is *not* the URL; it silently returns
 the workshop landing page, since Pages falls back to the root `index.html` for
 paths it cannot match.
 
+**8788 is a convention, not a reservation, and a second checkout makes it a
+trap.** Three separate audits found it already listening and moved to another
+port: `UI-AUDIT.md` (*"which belongs to another worktree"*), `BULK-AUDIT.md`
+(ran on 8801), `ISBN-AUDIT.md` (*"already listening, owned by another
+process"*). The failure is not the collision — `pages dev` says plainly that the
+port is taken. It is what happens when you *do* get 8788 and it is serving
+**another worktree's** code: the page loads, it looks like your app, and it is
+not. Verification then passes against something you did not write.
+
+So before trusting anything you see there, confirm the page carries a string
+your branch added. A screenshot proves nothing about which checkout produced it.
+
 A database created before the `db/migrations/` files existed also needs those,
 once each — see [Production configuration](docs/operations.md#production-configuration).
 
