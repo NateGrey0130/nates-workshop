@@ -658,6 +658,34 @@ the F6 note. **No new gate.**
 **Evidence.** Live repo state (`ls ~/.claude`, 2026-09-02), git history
 (`HEALTH-AUDIT.md` F6, PR #518), and session transcripts (16 sessions).
 
+**Taken, 2026-09-02 (PR #543).** Both parts as proposed, posture included: a
+pointer rather than a copy, documented in `SETUP.md`, and F6 **appended** rather
+than edited. Every premise held — no `~/.claude/CLAUDE.md` existed, both junction
+sets resolve into the repo, F6's sentence is verbatim as quoted, and
+`BOOK-INGEST-PROMPT.md` opens with the hand-typed pointer.
+
+**One correction to the proposal's own wording.** It says *"Document the file and
+its one-line contents in the junction block"*. One line is too short to be
+useful and six paragraphs is too long to quote, so `SETUP.md` describes the
+file's job rather than reproducing it — the same *describe the shape, not the
+value* rule `F21` is about, applied to the thing being written rather than to a
+count.
+
+**One thing the finding did not anticipate, and it constrains the file.**
+`~/.claude/CLAUDE.md` loads in **every** session on this machine, not only
+nates-apps ones — the transcripts carry MediaVault work, a Robinhood MCP setup
+and interview prep in the same directory. So it is scoped to pointing: where the
+repo is, read its `CLAUDE.md` when the work touches it, and a note that the
+skills *do* load by name. `SETUP.md` says to keep it that way, because the
+obvious next edit is to start moving repo content into it, and that would
+recreate the divergence the junctions exist to prevent.
+
+The reason for the pointer shape is also now written down where someone would
+reach for a junction and find they cannot: the file has to sit *at*
+`~/.claude/CLAUDE.md` rather than in a directory of its own, and a Windows
+junction only works on a directory — the same constraint that forced the agents
+link to cover the whole directory.
+
 ---
 
 ### F12 — the deliberate gaps in the repo allowlist are granted by wildcard in the directory the book work runs from
