@@ -1607,6 +1607,27 @@ entry and passing it.
 adds a script will hit the same clear failure and recover in a minute, which is
 evidence for the finding rather than a reason to hurry it.
 
+**Closed without being taken, 2026-09-02, as already-solved.** Nothing was
+implemented — not the failure-message change, and not the documentation half it
+argued against.
+
+**What solved it was filing it.** Two PRs later, F21 added `d1-backup.mjs` and
+put its README script-map entry in the *same* PR, before the smoke test asked.
+The gap this finding describes is a discoverability gap, and describing it in a
+place people read closed it for the only reader it had.
+
+**What is honestly not solved**, so the record does not overclaim: the failure
+message still does not name where the map is. The next person to add a script —
+one who has not read this entry — still pays one failed test run and one minute
+of looking. That cost is now accepted rather than unexamined, which is the whole
+difference between this and the state the finding found.
+
+Worth carrying: a finding whose entire value is *someone knowing* can be
+discharged by writing it down. Not every nit needs a PR, and the ongoing-cost
+line on this one — a second document to keep current, describing a rule the test
+already enforces perfectly — was the right argument all along. It just applied to
+the fix rather than only to the alternative.
+
 ---
 
 ### F21 — Medium — the one-command way to copy this database off Cloudflare does not run, and nothing replaces it
