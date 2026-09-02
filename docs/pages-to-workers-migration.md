@@ -133,3 +133,40 @@ The moment to do it is when one of these becomes true:
 
 Until then, the standalone Worker is a contained cost: one extra deploy
 command, documented in SETUP.md, touching one app.
+
+## Revisited 2026-09-01
+
+**The recommendation above stands. This section is here so the argument is on
+record as predating a failure it did not anticipate.**
+
+Everything above was written on 2026-08-24, when the cost/benefit was drawn
+between Pages' present-day conveniences and Workers' unused capabilities. Three
+days later a Pages-specific build failure happened for real: a JSON import
+written the way Node requires it (`with { type: 'json' }`) parsed under the
+wrangler this repo runs and did not parse under the 3.114.17 the Pages build
+image ships, so every deploy from `d5280fe` (2026-08-27) failed silently until
+PR #399 restored it on 2026-08-30. Merges kept landing on `main` and none of
+them reached production. The mechanism is written up in SETUP.md under *When
+the merge does not deploy*.
+
+Two of the gains in the table above turn out to describe exactly that outage —
+Workers Builds surfaces a build failure as a build failure, and Workers Logs
+would have made the gap between "merged" and "serving" visible rather than
+inferable. So the table understated its own case: **"Merging is the deploy"
+becomes true again** was written about the second deploy command for
+`pick3cut5-room`, and it also covers a deploy that silently does not happen.
+
+It is still not enough to move. The failure has a guard now
+(`apps/character-creator/test/checks/environment.mjs` §9) and a verification
+step in the `ship-pr` skill, both of which cost a fraction of the build step
+this migration would introduce — and the build step is still the cultural
+objection that *What it would cost* leads with. The trigger conditions above are
+unchanged.
+
+One correction to how they are phrased, though. The second trigger says
+"something in production breaks in a way that real-time tail cannot explain."
+This broke in a way real-time tail could not have *noticed*: there was nothing
+to tail. The site served every request correctly, from code four days old. If
+that trigger is ever read as a threshold, it should be read to include this —
+a deploy that does not happen is a production failure with no signal on the
+request path at all.

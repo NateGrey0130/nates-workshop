@@ -13,17 +13,29 @@ in `apps/character-creator/README.md`.
 `/apps/character-creator/`, because `pages_build_output_dir` is the repo root and
 nothing rewrites paths.
 
-**Cloudflare Access fronts every route, `/api/*` included**, so this URL is not
-reachable from anything without a session:
+**Cloudflare Access fronts every route, `/api/*` included**, so with one
+standing exception this URL is not reachable from anything without a session:
 
 | From | What you get |
 |---|---|
 | a browser you are logged into | the app |
 | `curl`, a script, an automated browser | **302 to the Access login wall** |
+| either of those, on a Pick 3 Cut 5 bypass path | the real response, no session needed |
 
 That 302 is easy to misread as the site being down or a path being wrong. It is
-neither — it is the login wall doing its job. To check production from a tool,
-query D1 directly (see `CLAUDE.md`) rather than fetching the site.
+neither — it is the login wall doing its job. For most checks against
+production, query D1 directly (see `CLAUDE.md`) rather than fetching the site.
+
+Two standing checks fetch it anyway, on purpose:
+
+- **`node apps/pick3cut5/test/smoke.mjs --remote`** fetches the bypass paths
+  with no session — that is the exception in the table, and the test exists to
+  confirm it holds while everything *else* still 302s.
+- **Confirming a deploy landed** means asking production for a string the change
+  added, in whatever way reaches the page — a fetch on a bypass path, a
+  logged-in browser anywhere else. D1 cannot answer it at all: the database
+  moved *before* the merge, so it reads the same whether or not the code ever
+  shipped. See *When the merge does not deploy* below.
 
 ## Project Structure
 
@@ -51,9 +63,15 @@ nates-workshop/
 │   │                         (ff_-prefixed) and the character creator.
 │   │                         Idempotent: every statement IF NOT EXISTS
 │   └── migrations/           One-shot ALTERs, tracked in schema_migrations
+├── docs/
+│   └── pages-to-workers-migration.md   The Workers alternative — written up
+│                             and not taken; the second-Worker section cites it
 ├── .claude/
 │   ├── launch.json           Dev-server config for the editor's preview
+│   ├── agents/               Subagents, one per file
+│   │   └── book-reconcile.md   Checks extracted rows against the book's own text
 │   └── skills/               Repo-specific instructions, loaded by name
+│       ├── audit-menu/       Numbering, taking and recording an audit finding
 │       ├── book-survey/      Surveying a sourcebook PDF before extracting
 │       ├── claim-audit/      Checking what the repo says against what it does
 │       ├── class-import/     Transcribing a class from a sourcebook
@@ -93,48 +111,9 @@ nates-workshop/
         └── character-creator/  35 endpoints + _lib; see the app README
 ```
 
-**The skills and the agents need a junction, once per machine.** The book work
-runs from Downloads (the PDFs land there, and the session memory is keyed to
-it), and a session started outside the repo registers neither `.claude/skills/`
-nor `.claude/agents/` — so the skills were being pasted into context by hand
-instead of loading by name (efficiency audit, F5), and the `book-reconcile`
-subagent `book-survey` §5 calls for simply did not exist there
-(`INGESTION-AUDIT` F8). Junction-link them into the global directories;
-junctions, so repo edits propagate, and no admin rights are needed:
-
-```powershell
-foreach ($s in 'audit-menu','book-survey','claim-audit','class-import','schema-change','ship-pr') {
-  New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\$s" -Target "C:\Users\natha\Projects\nates-apps\.claude\skills\$s"
-}
-New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\agents" -Target "C:\Users\natha\Projects\nates-apps\.claude\agents"
-```
-
-**The agents line links the whole DIRECTORY, and the skills are linked one by
-one. That difference is forced, not stylistic.** An agent is a *file*
-(`.claude/agents/book-reconcile.md`), a Windows junction only works on a
-directory, and the per-file alternative — `-ItemType SymbolicLink` — **fails
-with "Administrator privilege required"** on this machine, which has Developer
-Mode off (re-tested 2026-08-28). Linking the directory is the only shape that
-keeps the "no admin rights" property this whole block depends on.
-
-It has one consequence worth knowing: `~/.claude/agents` **is** the repo's
-directory, so nothing else can live there. `~/.claude/skills` is shared —
-plugin-installed skills sit beside the six repo junctions as real directories —
-and the agents directory cannot be. If a non-repo agent is ever wanted, this
-link has to become per-file, and that will need elevation.
-
-A skill added to the repo later needs its own link — there is nothing that
-notices the gap, so add the link in the same PR that adds the skill. **A new
-agent needs nothing**: the directory junction covers it the moment the file
-lands.
-
-**Once these exist, `CLAUDE.md` says the skills load from anywhere, and that
-sentence is only true on a machine that has run the block above.** A fresh
-machine has to run it before the book work will find them by name.
-
-`.claude/agents/` is covered as of 2026-08-28 (`INGESTION-AUDIT` F8), so
-`book-survey` §5 can spawn `book-reconcile` from Downloads. Confirm it the way
-you would confirm a skill — by asking for it by name, not by trusting this line.
+Everything under `.claude/` is repo-local until a machine links it into the
+global directories — see *Setting up a machine*, below, for the once-per-machine
+step that makes the skills and the subagent load by name.
 
 **R2**: the site binds one bucket, `nates-workshop-media`, as `MEDIA`. It holds
 NPC portraits today and is named for the site rather than for that app because
@@ -167,8 +146,44 @@ See `apps/character-creator/docs/operations.md` for the full migration
 convention, and `CLAUDE.md` for the `CLOUDFLARE_API_TOKEN` setup the routine
 expects.
 
-**One thing in this repo is not covered by that sentence.** `workers/pick3cut5-room/`
-is a standalone Worker and merging does not deploy it — see the next section.
+**Two things in this repo are not covered by that sentence.** One is
+`workers/pick3cut5-room/`, a standalone Worker that merging does not deploy —
+see the next section. The other is the deploy failing outright.
+
+### When the merge does not deploy
+
+Pages compiles **every** file under `functions/` — reachable from a route or
+not — and everything those files import, using the wrangler its **build image**
+ships (3.114.17) rather than the one this repo runs. Syntax that image cannot
+parse fails the whole deploy. Not the one route: the deploy.
+
+**The failure is silent in both directions.** The site keeps serving the last
+build that compiled, so every symptom you would look for is absent — pages load,
+the API answers, and the code is simply old. And `gh pr checks` has shown a red
+"Cloudflare Pages fail" on PRs that deployed perfectly well for months, so a red
+mark there carries no information and reads as noise.
+
+That is how this ran undetected from `d5280fe` (2026-08-27) until PR #399
+restored it on 2026-08-30: a JSON import written the way Node requires it —
+`with { type: 'json' }` — parses under a current wrangler and does not parse
+under 3.114.17. Merges kept landing on `main`, and not one of them reached
+production.
+
+The guard that now exists is
+`apps/character-creator/test/checks/environment.mjs` §9, *What Pages will
+compile*. It walks `functions/` plus the closure of everything the routes
+import, and fails on an import attribute in either spelling, or on any reach
+into `scripts/`. **It is a TEXT check, deliberately.** Shelling out to
+`npx wrangler pages functions build` would use whatever version resolves on this
+machine, which is newer than the build image and compiles the broken syntax
+happily — a check written that way would have passed through the whole outage.
+That was measured, not assumed.
+
+The guard catches the shape that has already bitten. Confirming that a given
+deploy actually landed is a separate step, and it belongs to the merge loop
+rather than to this document: **the `ship-pr` skill requires it** — the merge
+commit's check-runs read from the GitHub API, plus asking production for a
+string the change added.
 
 ## Pick 3 Cut 5 and the second Worker
 
@@ -214,19 +229,13 @@ fail-open, so a missing table or a D1 hiccup can never break a round.
 
 No game state touches D1 — rooms still live and die in Durable Object memory.
 
-### Previews are gated, deliberately
+### It cannot be played on a preview
 
-Pick 3 Cut 5 **cannot be played on a PR preview**. The bypass application targets
-`nates-workshop.pages.dev`; a preview lands on `<hash>.nates-workshop.pages.dev`,
-which it does not match, and the preview-access application gates it.
-
-Opening previews would need a second Access application on
-`*.nates-workshop.pages.dev` — which would make every preview of the whole site
-public on those paths, including a generation endpoint per live preview.
-Declined 2026-08-24: too much permanent exposure for a convenience.
-
-So this app is **verified on production immediately after merge**. That is
-weaker than a preview, and the check that makes it good enough is:
+Previews are gated, and the bypass does not follow the app onto them — both
+halves of that are under *Access*, because both are site-wide. The consequence
+here is that a PR preview cannot be played, so this app is **verified on
+production immediately after merge**. That is weaker than a preview, and the
+check that makes it good enough is:
 
 ```bash
 node apps/pick3cut5/test/smoke.mjs --remote
@@ -368,6 +377,60 @@ the production database. That wall is a second, auto-created Access policy —
 separate from the Friends Only one — so a friend who needs to see a preview
 must be added to it in Zero Trust.
 
+**The Pick 3 Cut 5 bypass does not reach a preview either.** Its destinations
+are hostname-specific — all on `nates-workshop.pages.dev` — and a preview lands
+on `<hash>.nates-workshop.pages.dev`, which they do not match. Letting the app
+out on previews would mean a second bypass application on
+`*.nates-workshop.pages.dev`, which would make every preview of the whole site
+public on those paths, including a generation endpoint per live preview.
+**Declined 2026-08-24**: too much permanent exposure for a convenience. What
+that costs the game is under *It cannot be played on a preview* above.
+
+## Setting up a machine
+
+**The skills and the agents need a junction, once per machine.** The book work
+runs from Downloads (the PDFs land there, and the session memory is keyed to
+it), and a session started outside the repo registers neither `.claude/skills/`
+nor `.claude/agents/` — so the skills were being pasted into context by hand
+instead of loading by name (efficiency audit, F5), and the `book-reconcile`
+subagent `book-survey` §5 calls for simply did not exist there
+(`INGESTION-AUDIT` F8). Junction-link them into the global directories;
+junctions, so repo edits propagate, and no admin rights are needed:
+
+```powershell
+foreach ($s in 'audit-menu','book-survey','claim-audit','class-import','schema-change','ship-pr') {
+  New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\$s" -Target "C:\Users\natha\Projects\nates-apps\.claude\skills\$s"
+}
+New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\agents" -Target "C:\Users\natha\Projects\nates-apps\.claude\agents"
+```
+
+**The agents line links the whole DIRECTORY, and the skills are linked one by
+one. That difference is forced, not stylistic.** An agent is a *file*
+(`.claude/agents/book-reconcile.md`), a Windows junction only works on a
+directory, and the per-file alternative — `-ItemType SymbolicLink` — **fails
+with "Administrator privilege required"** on this machine, which has Developer
+Mode off (re-tested 2026-08-28). Linking the directory is the only shape that
+keeps the "no admin rights" property this whole block depends on.
+
+It has one consequence worth knowing: `~/.claude/agents` **is** the repo's
+directory, so nothing else can live there. `~/.claude/skills` is shared —
+plugin-installed skills sit beside the six repo junctions as real directories —
+and the agents directory cannot be. If a non-repo agent is ever wanted, this
+link has to become per-file, and that will need elevation.
+
+A skill added to the repo later needs its own link — there is nothing that
+notices the gap, so add the link in the same PR that adds the skill. **A new
+agent needs nothing**: the directory junction covers it the moment the file
+lands.
+
+**Once these exist, `CLAUDE.md` says the skills load from anywhere, and that
+sentence is only true on a machine that has run the block above.** A fresh
+machine has to run it before the book work will find them by name.
+
+`.claude/agents/` is covered as of 2026-08-28 (`INGESTION-AUDIT` F8), so
+`book-survey` §5 can spawn `book-reconcile` from Downloads. Confirm it the way
+you would confirm a skill — by asking for it by name, not by trusting this line.
+
 ## Adding a New App
 
 1. Copy the template:
@@ -397,7 +460,9 @@ asks for, and update the Access application domain to match.
 |--------------------------|---------|---------------------------------|
 | Cloudflare Pages         | Free    | Unlimited static sites          |
 | Cloudflare Functions     | Free    | 100K requests/day               |
+| Cloudflare Workers       | Free    | The standalone `pick3cut5-room` — a separate script with its own request budget |
 | Cloudflare D1            | Free    | 5M row reads/day on free plan   |
+| Cloudflare R2            | Free    | `nates-workshop-media`, bound as `MEDIA`; free storage allowance, no egress fees |
 | Cloudflare Access        | Free    | Up to 50 users                  |
 | GitHub (private repo)    | Free    | Unlimited                       |
 | Anthropic API            | Usage   | Pennies; PDF imports are the costly calls |
@@ -413,6 +478,12 @@ asks for, and update the Access application domain to match.
 **An app's Generate/API call does nothing**
 → Browser console (F12). If `/api/...` returns HTML, Access intercepted the
 request — usually a session that expired mid-use; reload and log back in.
+
+**I merged and production did not change**
+→ The deploy failed to compile, and nothing said so. Read the merge commit's
+check-runs, then look for a file under `functions/` — or anything one of them
+imports — using syntax the pinned build wrangler rejects. See *When the merge
+does not deploy* above; `ship-pr` carries the check as a step.
 
 **Every API call returns 503 naming signing keys**
 → `ACCESS_TEAM_DOMAIN` is set but wrong (or the certs endpoint is unreachable).
