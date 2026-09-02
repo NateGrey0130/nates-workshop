@@ -769,6 +769,31 @@ function currentAmmo(it, cap) {
 function isWeapon(it) {
   return it.item_id && (it.item_damage != null || it.item_category === 'weapon');
 }
+// A class's trackable resources with every max_formula that CAN be resolved
+// turned into a number, and every one that cannot left exactly as written.
+//
+// This happens here rather than in sheet-layout.js on purpose. That file reads
+// no character state - it takes values and returns markup - and resolving a
+// formula needs the character's attributes. Handing it rows that are already
+// resolved keeps that property intact; the alternative was passing the
+// character into the markup helper, which is the thing the file exists to
+// avoid.
+//
+// Only formulas with no dice in them resolve; see fixedFormulaValue in dice.js
+// for why rolling one at render time would move the character's capacity. The
+// guard matches rollWeaponDamage's: dice.js is a module and this is a classic
+// script, so diceRoll can genuinely be absent, and absent means show the
+// formula - which is what the sheet did with all of them before.
+function resolvedResources(list, attrs) {
+  if (!Array.isArray(list)) return list;
+  const fixed = globalThis.diceRoll && diceRoll.fixedFormulaValue;
+  if (!fixed) return list;
+  return list.map((r) => {
+    if (!r || r.max != null || !r.max_formula) return r;
+    const v = fixed(r.max_formula, attrs);
+    return v == null ? r : { ...r, max: v };
+  });
+}
 
 function rollWeaponDamage(name, expr) {
   const total = globalThis.diceRoll ? diceRoll.evalDice(expr) : null;
@@ -1516,7 +1541,7 @@ function render() {
       // for a class that does not - which is every class today. The title is
       // stable so the column assignment can find it; the class name rides in
       // the title bar beside it.
-      const rows = trackableRows(cls.trackable_resources);
+      const rows = trackableRows(resolvedResources(cls.trackable_resources, attrs));
       return rows ? box('Resources', rows,
         `<span class="muted small">${escHtml(cls.name || '')}</span>`) : '';
     })()}

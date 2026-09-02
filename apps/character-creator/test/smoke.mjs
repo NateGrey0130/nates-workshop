@@ -235,7 +235,7 @@ import { buildUserPrompt, SYSTEM_PROMPT_CACHE } from '../../../scripts/extractio
 import { collapseWhitespace, statements, stripComments, trailingSelects } from '../../../scripts/sql-statements.mjs';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import { composeClass } from '../js/compose.js';
-import { evalDice, rollAttribute, rollPoolFormula, rollQuantity,
+import { evalDice, fixedFormulaValue, rollAttribute, rollPoolFormula, rollQuantity,
          poolFormulaBounds, diceBounds, attributeCeiling,
          isAttributeExpr, isAbsentAttribute } from '../js/dice.js';
 import { validateMos } from '../js/parser.js';
@@ -3934,9 +3934,48 @@ section('Trackable resources');
     !/const trackableRows = /.test(sheet), 'trackableRows has drifted into sheet.js');
 
   // THE DEFAULT IS NOTHING. Every class in the catalogue is in this state.
+  // The argument is deliberately loose - it went from `cls.trackable_resources`
+  // to a resolved copy of it and the guard is what this pins, not the
+  // expression feeding it.
   check('a class that declares none gets no box',
-    /const rows = trackableRows\(cls\.trackable_resources\);[\s\S]{0,200}?rows \? box\(/.test(sheet),
+    /const rows = trackableRows\([^;]*cls\.trackable_resources[^;]*\);[\s\S]{0,200}?rows \? box\(/.test(sheet),
     'the box renders even when the class declares nothing');
+
+  // ---- max_formula resolution -------------------------------------------
+  // A formula that cannot vary becomes a number; one with a die in it does
+  // NOT, because a resource has nowhere to store a roll and re-rolling on
+  // every render would move the character's capacity.
+  check('an attribute expression resolves to a number',
+    fixedFormulaValue('PE', { PE: 14 }) === 14,
+    `PE with P.E. 14 came back as ${fixedFormulaValue('PE', { PE: 14 })}`);
+  check('and so does one the book multiplies',
+    fixedFormulaValue('P.E. x 2', { PE: 14 }) === 28,
+    `got ${fixedFormulaValue('P.E. x 2', { PE: 14 })}`);
+  check('a plain number resolves to itself',
+    fixedFormulaValue('3', {}) === 3);
+  check('ANYTHING WITH A DIE IN IT DOES NOT RESOLVE',
+    fixedFormulaValue('1D4+ME', { ME: 12 }) === null
+    && fixedFormulaValue('2d6', {}) === null,
+    'a dice formula resolved, so the max moves on every render');
+  check('an unreadable formula does not resolve either',
+    fixedFormulaValue('whatever the GM says', {}) === null);
+  check('an attribute the character does not have does not resolve',
+    fixedFormulaValue('PE', {}) === null,
+    'resolved a formula against an absent attribute');
+
+  // The resolution happens in sheet.js, because sheet-layout.js reads no
+  // character state and passing the character in would end that. The `(` is
+  // load-bearing: sheet-layout.js NAMES fixedFormulaValue in the comment that
+  // explains why it does not evaluate formulas, so a bare name match fails on
+  // the documentation of the very property it is checking.
+  check('sheet.js resolves the formula, not the markup helper',
+    /function resolvedResources\(/.test(sheet)
+    && !/fixedFormulaValue\(/.test(layout),
+    'formula resolution has drifted into sheet-layout.js');
+  check('and dice.js exposes it to the classic scripts',
+    /globalThis\.diceRoll = \{[^}]*fixedFormulaValue/.test(
+      readFileSync(join(appDir, 'js', 'dice.js'), 'utf8')),
+    'sheet.js is a classic script and cannot import the module directly');
 
   check('the box has a stable hook and a column',
     /resources: 'a',/.test(layout), 'the resources box has no column and will flow anywhere');
