@@ -265,8 +265,18 @@ silently undone:
 `fix-long-bowman-armor.sql` sorted before `fix-long-bowman.sql` — `-` is 0x2D
 and `.` is 0x2E — and was overwritten by it on every rebuild. Only
 `repo-vs-live.mjs` caught it, because production had them in the order they were
-run by hand. `zz-` exists as a prefix for exactly this: a file that must sort
-after everything.
+run by hand.
+
+**A `z`-prefix buys position against what is in the directory TODAY, and nothing
+more.** `zz-` was adopted to mean "sorts after everything"; the tier has since
+escalated to `zzz-`, `zzzz-` and `zzzzz-`, so a new `zz-` file now sorts
+**before** three dozen others. Nothing announced that, and nothing will announce
+the next one.
+
+So the prefix is not the answer — **the command above is.** It is three lines
+long, it costs nothing, and it is right on the day you run it whatever anyone has
+added since. Run it, read where your name lands, and pick a prefix that puts you
+after the files you must not be undone by. Do not reason from the convention.
 
 The armor file has **since been folded away** — only `fix-long-bowman.sql` is in
 the tree now — so do not go looking for it. The hazard is what survives, not
