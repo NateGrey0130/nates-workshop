@@ -659,6 +659,39 @@ installing Python properly shadows the real interpreter behind the stub rather
 than replacing it. Neither is worth pre-empting by reordering PATH; both are
 worth recognising in the ten seconds after they happen.
 
+### Process Monitor, staged and not running
+
+`C:\Users\natha\Projects\workshop\tools\procmon\` holds Sysinternals Process
+Monitor, downloaded 2026-09-02 from `download.sysinternals.com` and verified by
+Authenticode — all three binaries signed by Microsoft. It is there for
+`MACHINE-AUDIT` `M18` and nothing else. **Nothing on the machine depends on it**:
+no PATH entry, no service, no scheduled task, no registry outside Procmon's own
+key. Deleting that directory removes it completely.
+
+The `CommandNotFoundAction` recorder above answers *what the machine looked like*
+when a lookup failed. This answers *why the open failed* — the `NTSTATUS` on the
+shim, which is the one fact no after-the-fact measurement can recover.
+
+**It is not capturing.** Starting it is deliberate and manual, needs an
+administrator shell, and requires a filter file that has to be made once in the
+GUI. `README.md` in that directory carries the six steps and the reason the
+filter is not generated: Procmon keeps filters in an undocumented binary blob,
+and a malformed one loads as nothing while looking exactly like a working
+capture. **A capture that quietly filters nothing is worse than no capture** —
+which is the failure `M18`'s own recorder has already paid for twice.
+
+The filter is a single rule, `Path begins with C:\Users\natha\AppData\Roaming\npm`,
+which is what makes this affordable: a few MB a day into a plain backing file,
+rather than the ring buffer a broader filter would need. **The one check that
+matters is the backing file's size after a day.** A few MB means the filter
+loaded; growth measured in GB means it did not, and the capture is worthless.
+That is the only way this fails silently, so it is the only thing worth
+verifying by hand.
+
+It does not survive a reboot, on purpose. A driver-loading capture that resumes
+forever is a larger standing change than an intermittent fault with no
+established cost has earned.
+
 ## Adding a New App
 
 1. Copy the template:
