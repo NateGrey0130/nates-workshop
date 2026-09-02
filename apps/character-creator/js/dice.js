@@ -253,6 +253,28 @@ export function poolFormulaBounds(expr, attrs = {}, bonus = null) {
     max: poolBaseWith(expr, attrs, MAX_DIE) + bonusWith(bonus, MAX_DIE),
   };
 }
+// A formula's value when - and ONLY when - it cannot vary.
+//
+// Everything else that reads a formula here rolls it ONCE and stores the
+// result, because re-evaluating on every render moves the number: pools store
+// `*_max`, gear stores its rolled quantity, and both carry a comment saying so.
+// A trackable resource has nowhere to store a roll - there is no column for it
+// and deliberately so - which makes rolling its max at render time the one
+// thing this must not do. A Juicer would open the sheet with three doses and
+// reload with five.
+//
+// So resolve only what has no dice in it. poolFormulaBounds already walks the
+// grammar twice, pinning every die to its floor and then to its ceiling, so
+// `min === max` IS the statement 'there are no dice here' - an attribute
+// expression like `PE`, `P.E. x 10`, or a plain number. It is not a second
+// reading of the grammar that could disagree with the first.
+//
+// Null for anything with a die in it, and for anything unreadable. Both are
+// shown as written, which is what the sheet did with all of them before.
+export function fixedFormulaValue(expr, attrs = {}) {
+  const b = poolFormulaBounds(expr, attrs);
+  return b && b.min === b.max ? b.min : null;
+}
 
 function poolBaseWith(expr, attrs, die) {
   if (expr == null) return null;
@@ -325,4 +347,4 @@ export function attributeCeiling(expr) {
 // The sheet is a plain-script page and cannot import a module; its play-mode
 // weapon cards read this mirror, installed by the <script type="module"> tag
 // sheet.html loads - the language-skills.js precedent. Harmless server-side.
-globalThis.diceRoll = { d, evalDice };
+globalThis.diceRoll = { d, evalDice, fixedFormulaValue };

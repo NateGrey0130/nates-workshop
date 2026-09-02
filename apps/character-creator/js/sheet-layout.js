@@ -165,8 +165,16 @@
   // rules exist to stop. `uppers` is the stock Juicer example and appears in
   // none of the twelve imported Juicers' text.
   //
-  // max_formula is shown as written rather than evaluated. Resolving it needs
-  // the character's attributes, and this file does not read character state.
+  // max_formula is shown as written. It is not evaluated HERE and never will
+  // be: resolving one needs the character's attributes, and this file reads no
+  // character state. sheet.js resolves what it can before calling this and
+  // hands over rows whose `max` is already a number, so a resolved resource
+  // arrives looking exactly like one that declared `max: 3` outright.
+  //
+  // What still arrives as a formula is anything with a die in it. That is not
+  // an oversight - a resource has nowhere to store a roll, so evaluating it
+  // per render would move the character's capacity every time the page
+  // painted. See fixedFormulaValue in dice.js.
   const trackableRows = (list) => (Array.isArray(list) ? list : [])
     .filter((r) => r && (r.label || r.key))
     .map((r) => {
