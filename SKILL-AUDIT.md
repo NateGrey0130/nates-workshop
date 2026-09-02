@@ -1,7 +1,7 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **Status 2026-09-02: `F1`–`F7`, `F10`–`F13`, `F15`, `F16` and `F20` taken
-> (PRs #541–#555) — `F12` in part, its documentation half only.
+> **Status 2026-09-02: `F1`–`F7`, `F10`–`F16` and `F20` taken (PRs #541–#556)
+> — `F12` in part, its documentation half only.
 > `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while taking
 > `F2`, and `F25` by taking `F4`. Everything else is open.** `F` numbers
 > are findings about instructions that exist; `N` numbers are new-skill
@@ -1080,6 +1080,34 @@ configs the audits actually used.
 
 **Evidence.** Live repo state (both `launch.json` files, 2026-09-02) against
 `UI-AUDIT.md`'s header and `HEALTH-AUDIT.md` F7.
+
+**Taken, 2026-09-02 (PR #556).** Posture as proposed: add two configurations and
+a comment block, **no behaviour change** — nothing that runs today runs
+differently; the repo simply gains the two configs the audits actually used.
+
+Premises held. The repo's `launch.json` had three configurations and neither
+escape hatch; the Downloads copy has six and carries no comments at all;
+`UI-AUDIT.md`'s header cites `nates-apps-8791`, a config that existed **only**
+in the untracked file.
+
+**The finding under-read one memory, and the correction matters beyond this
+finding.** `dev-server-8788-is-another-worktree` does not merely record the
+workaround — it states outright that *"the repo's `.claude/launch.json` is NOT
+what `preview_start` reads from a Downloads session"*, observed 2026-08-25. So
+for `launch.json` the resolution question `F12` leaves open **has** an answer
+from experience: the Downloads copy wins in a Downloads session.
+
+**That does not settle `F12` and the memory now says so.** `launch.json`
+resolving to the Downloads copy is not evidence that `settings.json` does; they
+are different files read by different machinery. Both notes now cross-reference,
+and `F12`'s "not established, here is the test" stands.
+
+A consequence worth stating: the two hatches are now in **both** files, so the
+config exists whichever way a session starts — which is the actual fix, rather
+than moving them from one file to the other.
+
+The memory was rewritten to describe both files and which is read when, instead
+of instructing the reader to add a temporary entry to the untracked one.
 
 ---
 

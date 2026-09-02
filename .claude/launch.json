@@ -9,6 +9,11 @@
       "//5": "page loads, looks like your app, and is not. Confirm the page",
       "//6": "carries a string your branch added before trusting it. See the",
       "//7": "Local development section of apps/character-creator/README.md.",
+      "//8": "The two -879x entries below are the escape hatches. UI-AUDIT.md was",
+      "//9": "run on 8791 for exactly this reason, and that config lived ONLY in",
+      "//10": "Downloads\\.claude\\launch.json until 2026-09-02 - a second, untracked",
+      "//11": "config a session outside the repo loads instead of this one. If a",
+      "//12": "port here is taken, take a hatch rather than editing this entry.",
       "name": "nates-apps",
       "runtimeExecutable": "npx",
       "runtimeArgs": ["wrangler", "pages", "dev", "--port", "8788"],
@@ -32,6 +37,23 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["wrangler", "dev", "--config", "workers/pick3cut5-room/wrangler.jsonc", "--port", "8799"],
       "port": 8799
+    },
+    {
+      "//": "ESCAPE HATCH. Use when 8788 is already listening - which means",
+      "//2": "another worktree, not a stale process. UI-AUDIT.md was served from",
+      "//3": "this one and says so in its header. A page on your own port cannot",
+      "//4": "be another checkout's, which is the whole point.",
+      "name": "nates-apps-8791",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["wrangler", "pages", "dev", "--port", "8791"],
+      "port": 8791
+    },
+    {
+      "//": "Second escape hatch, for when two worktrees are already served.",
+      "name": "nates-apps-8793",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["wrangler", "pages", "dev", "--port", "8793"],
+      "port": 8793
     }
   ]
 }
