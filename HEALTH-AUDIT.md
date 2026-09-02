@@ -517,6 +517,16 @@ Posture: **one sentence, no restructuring.**
 
 **Confidence.** High. Both files were read this session.
 
+**Taken, 2026-09-02 (PR #522).** As proposed: one sentence, no restructuring.
+Re-audited first and the premise held exactly — `operations.md` carries **43**
+migration-table rows, the README carries **0**, and the other two things the
+sentence claims (app conventions, `## Data model` at README:176) are still
+there.
+
+Written as a **negative** rather than simply corrected: *"The migration list is
+**not** there."* A reader who half-remembers the old sentence needs to be told
+the thing they are looking for moved, not just shown a different filename.
+
 ---
 
 ### F10 — Low — the same fact is stated as "four" and as "five" in the same skill
