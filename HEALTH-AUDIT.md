@@ -1716,3 +1716,31 @@ sequence and the existence of the skill file were all read this session.
 survived two edits nearby, so it will not fix itself. But nothing is blocked by
 it and F8's new status line on `INGESTION-AUDIT.md` now states the truth at the
 other end of the contradiction.
+
+**Taken, 2026-09-02 (PR #534),** in the same session it was raised — the wave had
+room and it is one sentence. Posture held: the verdict changed, the example
+kept.
+
+**Two corrections to this finding, made while taking it.**
+
+- **It says the grep was wrong for "four days". It was two.**
+  `INGESTION-AUDIT.md` is dated 2026-08-26 and PR #364 merged 2026-08-28,
+  both read this session. Four was a guess dressed as a measurement, in a
+  finding about a claim nobody checked — which is the joke writing itself.
+  The number that *is* four-ish belongs elsewhere: the stale sentence stood
+  **five** days after F14 shipped.
+- **The first draft of the fix broke the rule it was fixing.** It retired the
+  old verdict by quoting it, and this skill says outright: *never quote the
+  stale phrase you replace — a note repeating the old wording defeats a grep
+  for it.* Caught by grepping for the phrase after the edit and finding it
+  still present at count 1. Rewritten to describe the old claim rather than
+  reproduce it; count is now 0 and the example is intact.
+
+That second one is worth more than the finding. **The rule is easy to agree with
+and hard to follow**, because the natural way to explain a correction is to show
+what it replaced. Both F5 and this one were caught the same way — by checking the
+fix with the same instrument that found the problem, rather than by reading it.
+
+The example now ends on the fact instead of the verdict: a grep reports F14
+taken, F14 *is* taken, and the grep was still wrong for two days before the world
+moved under it. **A coincidence is not a check.** Better than what it replaced.
