@@ -1,5 +1,12 @@
 # REDESIGN-AUDIT.md — what survived the redesign prompt
 
+> **All 15 items are closed**, re-verified on 2026-09-02: `R1`–`R7` and `N1`–`N8`.
+>
+> **Two that misread:** `R3` is **closed unadopted** (PR #464) — decided against,
+> not outstanding. And `R7`'s note first recorded a **hold**; the rest of the
+> story was appended later (PR #477), so reading only the first paragraph of it
+> reports work that has since shipped.
+
 Written 2026-08-31, against the working tree at `C:\Users\natha\Projects\nates-apps`
 on `main` at `918a20e`.
 

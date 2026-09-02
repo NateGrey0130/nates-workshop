@@ -571,6 +571,30 @@ extra line in a commit that is already touching the file.
 **Confidence.** High that all 200 are closed. High that the pattern works —
 `AUDIT.md` is the worked example and it demonstrably shortened this audit.
 
+**Taken, 2026-09-02 (PR #531).** Posture held: one line per file, no automation,
+no reformatting of any finding, and **no check asserts any of these lines** —
+the skill's rule against a mechanical reader stands.
+
+Every count was re-measured by a fresh census rather than read out of this file,
+as the finding asked. All 200 remain closed.
+
+**Two corrections, both found by doing it.**
+
+- **Nine files needed a line, not eleven.** `BULK-AUDIT.md` and `ISBN-AUDIT.md`
+  already open with one, and so does `SETUP-v2-CHANGES.md`. This finding counted
+  only `AUDIT.md` because it looked through the `*AUDIT*` glob — **the same
+  blind spot F4 was about**, in the audit that found F4.
+- **`INGESTION-AUDIT` F14 is closed**, in PR #364 — the PR that created
+  `.claude/skills/audit-menu/SKILL.md`. That skill still says *"It is open."*
+  Session 1 never verified that one directly and inherited the skill's claim
+  while separately concluding all 200 were closed; the two statements sat in the
+  same audit without meeting. Filed as **F22**, not fixed here.
+
+`HEALTH-AUDIT.md` deliberately did **not** get a line. It is the live menu, its
+status changes several times an hour, and a count in its header would be the
+moving number F4, F5 and F10 are all about. Its status is the outcome notes
+under each finding.
+
 ---
 
 ### F9 — Low — `CLAUDE.md` sends a reader to the wrong file for the migration list
@@ -1603,3 +1627,61 @@ One thing left undone on purpose: `d1-backup.mjs` is **not** in the
 `.claude/settings.json` allowlist. It only reads D1, but it writes files to a
 caller-named path, which is a different question from the read-only rule F6
 settled. Worth a decision rather than a default.
+
+---
+
+### F22 — Low — the `audit-menu` skill says the finding that created it is still open
+
+**Raised.** Taking F8 (PR #531).
+
+**Evidence.** `.claude/skills/audit-menu/SKILL.md`, under *Never grep for the
+outcome note*:
+
+> `INGESTION-AUDIT` **F14**, the finding that *describes this format*, carries
+> the note's own shape inside backticks as an example, so every grep reports it
+> taken. **It is open.**
+
+F14 is not open. `INGESTION-AUDIT.md:320` records it as shipped in **PR #364**,
+with the artefact named: *"`.claude/skills/audit-menu/SKILL.md` — the sixth
+skill, junctioned in the same PR"*. The file's own correction sequence ends
+*"NONE now — the menu is clear"* (line 352). The skill exists.
+
+**So the skill is asserting its own non-existence.** F14 *is* the finding that
+proposed it; the sentence was true while it was being written and outlived the
+thing it described by the length of one PR.
+
+**Impact.** Low and specific. The surrounding paragraph is still correct and
+still valuable — F14 really does carry `**Taken, 2026-08-25**` inside backticks
+as an example, so a grep really does report it taken, and that really is the
+sharpest illustration of why the notes cannot be read mechanically. Only the
+verdict at the end is wrong.
+
+But it is wrong in the expensive direction. A reader who checks the skill's one
+named example against the file finds a contradiction and has no way to tell
+which side is stale, which is exactly the cost `AUDIT.md`'s header was written to
+avoid. It also survived a re-read of this skill during F4 and F10, both of which
+edited within twenty lines of it — twice, because the sentence is about a
+*trap*, and its final clause reads as part of the trap rather than as a claim.
+
+**Proposal.** One PR changing the verdict and keeping the illustration. The
+example is worth more with the ending it actually had: a grep reports F14 taken,
+F14 **is** taken, and the grep was still wrong for four days before it happened
+to become right — a coincidence is not a check. Say that instead of *"It is
+open."* Posture: **one sentence, and do not remove the example.**
+
+Fold it into any other PR that touches this skill rather than opening one for a
+sentence.
+
+**Effort.** S.
+
+**Ongoing cost.** None. It removes a status claim about another file, which is
+the kind of thing that goes stale by definition — the replacement states a fact
+about the past that cannot.
+
+**Confidence.** High. The skill, `INGESTION-AUDIT.md`'s PR table, its correction
+sequence and the existence of the skill file were all read this session.
+
+**When — after the waves.** It misleads a reader who checks, and it has already
+survived two edits nearby, so it will not fix itself. But nothing is blocked by
+it and F8's new status line on `INGESTION-AUDIT.md` now states the truth at the
+other end of the contradiction.

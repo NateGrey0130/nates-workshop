@@ -1,5 +1,14 @@
 # Book-ingestion batch — deferred code changes, 2026-08-28
 
+> **All 17 findings (`F1`–`F17`) are closed**, re-verified against the file on
+> 2026-09-02. Every outcome note sits under its own finding.
+>
+> **The one that misreads:** `F14`'s `Taken, 2026-08-31 (PR #434)` note sits
+> below an inline `**F10 excluded this on a premise that is false.**` — a bold
+> lead that a block-splitting scan mistakes for the start of a new finding,
+> hiding the note behind it. It has produced a false "open" once. Read to the
+> next `###`, not to the next bold line.
+
 Findings menu for the seven-book ingestion batch registered in
 `BOOK-INGEST-QUEUE.md`. **This file holds code changes only.** Data — classes,
 skills, spells, psionics, gear, `scripts/books.json` entries, class markdown —

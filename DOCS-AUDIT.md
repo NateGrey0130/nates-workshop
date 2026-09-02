@@ -1,5 +1,13 @@
 # Documentation audit, 2026-08-25
 
+> **All 5 findings (`D1`–`D5`) are closed**, re-verified on 2026-09-02. D1–D3 carry
+> `Taken` notes, **D5 is WITHDRAWN** and deliberately left in place because how
+> it went wrong is the subject of the audit.
+>
+> **The one that misreads:** `D4` is an information item whose closure is the
+> words *"No action proposed."* — which wrap across a line break, so a search for
+> that phrase does not find it.
+
 Read-only pass over every `.md` in the repo — 38 files, ~11,600 lines — asking
 what has gone stale, what points at nothing, and what records a decision that
 has since been reversed. Checked against `main` @ the merge of #268, production

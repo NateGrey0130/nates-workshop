@@ -1,5 +1,17 @@
 # Pick 3 Cut 5 — outstanding items, 2026-08-24
 
+> **All 21 items are closed**, re-verified on 2026-09-02: `F1`–`F10` and `T1`–`T11`.
+>
+> **Two that misread.** The eleven `T` items are **bold paragraph leads**, not
+> headings — `**T1. … — PASSED.**` under `## T — paths that have never run` — so
+> a scan walking `###` never sees them. And `T6`'s entire outcome lives in its
+> own heading (*"DID NOT TRIGGER, AND THAT IS THE FINDING"*) with no note
+> beneath it saying so.
+>
+> `F6` reads *"**Not now**, as recommended"* and `F10` *"**Not code** — nothing
+> to implement"*. Both are closed. A grep for `Taken` finds neither, and that
+> already produced one withdrawn finding in `DOCS-AUDIT.md` (`D5`).
+
 Written at the end of the build session that shipped the app, against `main` @
 `601d45f`. Everything below is either a path that has **never run**, a decision
 deliberately deferred, or a proposal. Nothing here is a known-broken behaviour:
