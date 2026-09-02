@@ -735,10 +735,30 @@ body.play-mode .vital.conflict .val > input,
   text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);
 }
 .vital .val { font-size: 44px; font-weight: 900; line-height: 0.95; letter-spacing: -0.02em; font-family: var(--font-display); font-stretch: 75%; font-variant-numeric: tabular-nums; margin-top: 2px; }
+/* The input carries NO font-size of its own. `font: inherit` takes .val's 44px
+   whole, so the editable number and the read-only <b> cannot be a different
+   size - they are the same declaration rather than two numbers someone has to
+   remember to keep equal. It used to say 34px here, which made sheet mode -
+   the mode you EDIT these in - 10px smaller than play mode, where you only
+   read them.
+
+   appearance is the price of the size. Chrome draws native spinner arrows on
+   HOVER - not on focus, which is why they are easy to miss when checking - and
+   scales them to the input box, which this change takes from 54px to 69px tall.
+   Measured by hovering the H.P. cell: a full-height arrow stack against the
+   right edge, over the digits once the number needs the width. The play-mode
+   +/- pair is the real control at its 44px targets, and the keyboard arrows
+   still work on the input. -webkit-appearance for Chrome and Safari,
+   appearance: textfield for Firefox, which ignores the first.
+
+   No iOS zoom risk: Safari zooms a focused input only below 16px. */
 .vital .val input {
   width: 100%; text-align: center; padding: 0; background: transparent; border: 0;
-  font: inherit; font-size: 34px; font-weight: 900; color: inherit;
+  font: inherit; font-weight: 900; color: inherit;
+  -webkit-appearance: none; appearance: textfield;
 }
+.vital .val input::-webkit-outer-spin-button,
+.vital .val input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .vital .max { color: var(--text-muted); font-size: 13px; }
 
 /* Sheet mode edits, play mode reads. */
