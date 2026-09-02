@@ -1898,3 +1898,35 @@ writing this: the commit timestamp from `git log`, the deployment from
 blocked by it. The 14-minute staleness it found is inert and was deliberately
 **not** redeployed while filing this: a `$schema` line does not justify a
 production deploy, and taking a finding is not licence to act on what it finds.
+
+**Taken, 2026-09-02 (PR #539),** in the same session it was filed, on Nate's
+word. Posture held: report only, no exit code, whole directory rather than
+`src/`, and the cost stated rather than hidden. Premises re-checked first and
+all held, including the 14-minute staleness.
+
+**All three branches were verified by causing them** — stale on live data, a
+directory with no commits, and an unreadable config. The third one changed the
+code: the catch printed wrangler's *last* 200 characters, which is its
+`logs were written to …` line rather than the error, so a failed check named a
+**log file instead of the fault**. It now prefers the line wrangler marked as an
+error. *An error message that reports less than it knows* is the failure this
+section exists to end, and the first draft of the section committed it.
+
+**One implementation note worth carrying.** The wrangler call runs npm's own
+`npx-cli.js` under this Node rather than through a shell. The first version used
+`shell: true`, which works and emits **DEP0190 on every run** — a deprecation
+warning on a tool meant to be run every session, which is how a useful check
+becomes one people learn to scroll past. The npx-cli trick was already in
+`d1-query-lib` and `d1-apply` for the same Windows `.cmd` reason; reaching for
+the repo's existing answer would have skipped the detour.
+
+**The staleness it reports was deliberately not cleared.** A `$schema` line does
+not justify a production deploy. The check's whole point is that a human decides
+whether the diff matters, and the first thing to do with a new instrument is not
+to silence its first reading.
+
+**What this closes.** `deploy-sweep.mjs` no longer answers a question narrower
+than the one it appears to answer, and `NOTHING MISSING` no longer reads as a
+claim about the site while being a claim about one of its two deploy paths. That
+gap existed for the eleven hours between F2 shipping and this — the tool built
+to catch silent divergence had one.
