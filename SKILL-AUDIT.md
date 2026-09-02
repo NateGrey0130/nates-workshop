@@ -1,8 +1,8 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
 > **Status 2026-09-02: `F1`–`F7`, `F10`–`F21` taken (PRs #541–#560) — `F12` in
-> part, its documentation half only. `F22` taken (#561). Open: `F8`, `F9`,
-> `F23`–`F25`, all `N`.
+> part, its documentation half only. `F22`/`F23` taken (#561, #562). Open: `F8`,
+> `F9`, `F24`, `F25`, all `N`.
 > `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while taking
 > `F2`, and `F25` by taking `F4`. Everything else is open.** `F` numbers
 > are findings about instructions that exist; `N` numbers are new-skill
@@ -1746,6 +1746,40 @@ scripts.
 
 **Evidence.** Live repo state and production, found while taking `F1`,
 2026-09-02.
+
+**Taken, 2026-09-02 (PR #562).** Posture as proposed: a check over the repo's own
+data scripts, **failing the build**, offline, no `--remote`. Smoke 1,647 →
+**1,649** in 112 sections.
+
+**One deviation, and it is the whole reason this works.** The proposal said to
+*parse the maps out of the SQL* and warned that the parse "must be strict about
+quoted strings". Strictness is not the answer — the answer is not to regex at
+all. The check runs `extractClassMarkdown` (already in `class-check-lib.mjs`) to
+unwrap the SQL literal, then `parseClassMarkdown` — the **real parser** — and
+reads `bonuses.combat` / `bonuses.saves` as structure. Prose cannot reach a
+parsed object, so the vacuum-wasp trap is closed by construction rather than by a
+better pattern.
+
+It also covers two shapes a flat read would miss: `bonuses.at_level[]` entries
+and `variants[].bonuses`, both of which carry their own `combat`/`saves` maps.
+
+**Proved by making it fail, twice, in opposite directions:**
+
+1. Injected `dogfighting: 2` into `vacuum-wasp`'s real `combat` map →
+   `FAIL … bonuses.combat.dogfighting - add it to COMBAT_FIELDS/SAVE_FIELDS in
+   sheet.js, or use saves.other / a special_ability`.
+2. Restored the file — leaving the word `dogfighting` present **three times as
+   prose** in that same file's `extraction_notes` — and the check passes.
+
+That second half is the one that matters: it is the exact discrimination the
+regex in `F1`'s first pass got wrong, and it now demonstrably holds.
+
+A companion check asserts more than 100 scripts were actually parsed, so the
+check cannot pass vacuously by extracting nothing — which is how a check like
+this fails silently. 157 of 157 `add-*-class.sql` files yield markdown today.
+
+**Nothing was found broken**, consistent with the strict re-measurement in
+`F1`'s note. This is the guard.
 
 ---
 
