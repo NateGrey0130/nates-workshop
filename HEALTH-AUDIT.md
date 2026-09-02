@@ -1310,6 +1310,35 @@ answer is no.**
 that claim comes from a code comment of unknown age and was not verified, which
 is the whole proposal.
 
+**Taken, 2026-09-02 (PR #535), on the second branch.** The low-confidence half
+is now high: **it cannot be**, and the Worker's comment of unknown age is
+correct.
+
+Three independent checks against the Cloudflare API, none of them a dashboard
+screenshot:
+
+- the Pages project's production deployment config exposes **no `observability`
+  key and no `logpush` key** — the surface does not exist for a Pages project,
+  where on a Worker it is valid config;
+- `nates-workshop` does not appear in `workers_list` at all;
+- across seven days of Workers Observability data, the **only** service emitting
+  events is `pick3cut5-room`, with 15.
+
+So the asymmetry is Cloudflare's, not a setting anybody forgot, and the Worker is
+the exception on purpose. `SETUP.md`'s Troubleshooting section now opens by
+saying so — the right home, because every entry in it is already diagnosed by
+reproducing the fault, for exactly this reason.
+
+**The sentence worth keeping** is the one the finding's impact paragraph implied
+and did not state: the floor on how fast anything in the Pages half is noticed is
+*a person hitting it and saying so*.
+
+**Found in passing, and relevant to F14:** the same API read returns
+`build_image_major_version: 3` for this project, which confirms that version gap
+from Cloudflare rather than from documentation. It is not usable as a repo
+check — the `CLOUDFLARE_API_TOKEN` this repo runs under cannot read Pages, as
+`CLAUDE.md` documents — so F14's decline stands.
+
 ---
 
 ### F19 — Nit — both wrangler configs point `$schema` at a directory this repo does not have
