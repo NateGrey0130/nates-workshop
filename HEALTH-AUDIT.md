@@ -256,6 +256,30 @@ only then.
 keeping — that is Nate's call per file, and the PR should list them rather than
 assume.
 
+**Taken, 2026-09-02 (PR #527).** `docs/prompts/`, fifteen briefs plus an index.
+Posture held: archival, no new process, nothing requires a future prompt to land
+there. Scanned for secrets first — none.
+
+**The mapping was derived rather than remembered, and two of three would have
+been wrong from memory.** Each brief was grepped for the artefact filenames it
+names. Three asked for a name that shipped differently:
+`whatbrokeevalprompt.md` offered `DATA-SCRIPT-AUDIT.md` *"(or a name you argue
+for)"* and became `REBUILD-AUDIT.md`, whose own header carries the argument; the
+media-vault brief asked for `MEDIA-VAULT-` prefixed files that shipped without
+the prefix; `REVIEW-BRIEF.md` planned seven tracks and ran one. The index
+records all three, because the gap between what was asked and what was built is
+the part worth keeping.
+
+**Copied, not moved.** The finding says "moving in". Deleting files out of
+`Downloads` is a destructive act on files outside the repo and is Nate's call,
+not a side effect of an archival PR. The originals are untouched and the index
+says so.
+
+One thing this finding was wrong about, in the harmless direction: it worried
+about line endings. `core.autocrlf=true` on this clone, so the object store
+already holds LF for every `.md` here — the prompts are stored byte-consistently
+with `CLAUDE.md` and everything else. There was nothing to reconcile.
+
 ---
 
 ### F4 — Medium — the skill about not trusting a count states three wrong ones about itself
