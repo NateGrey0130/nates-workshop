@@ -474,6 +474,29 @@ nothing.
 Medium that this still happens — nothing was listening on 8788 or 8799 during
 this session, so the collision was not reproduced here.
 
+**Taken, 2026-09-02 (PR #526).** As proposed: documentation only, no port
+change. Every premise held on re-check.
+
+**Placement differs, because the place the finding named does not exist.** It
+asked for "`SETUP.md`'s local-development material"; `SETUP.md` has no
+local-development section — its only `localhost` mentions are the Access
+middleware exemption and the `dev@localhost` auth fallback. The note went where
+the claim being qualified actually lives: the character creator README's
+*Local development* section, beside the sentence stating the URL, plus
+`launch.json`'s comment block as the finding also asked.
+
+One correction to the finding's own text: it says 8788 is hardcoded in "both
+`pages dev` configurations", which is right, but `launch.json` has **three**
+configurations — the third is the standalone Worker on 8799. The heading's
+"three places" counts `launch.json` twice and the README once, which is the
+number that matters and is easy to misread as three files.
+
+Worth carrying: the sharpest part of this was not in the finding either. The
+hazard is not the collision — `pages dev` announces a taken port. It is
+**getting 8788 while it serves another worktree's code**, where everything looks
+right and the verification is against something you did not write. The note ends
+on the only defence: confirm the page carries a string your branch added.
+
 ---
 
 ### F8 — Medium — no menu states its own status, so establishing that there is no open work costs an audit
