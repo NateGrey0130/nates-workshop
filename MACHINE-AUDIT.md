@@ -1486,6 +1486,40 @@ were present and something refused the open. **`SUCCESS` means the open was fine
 and the fault is above the filesystem entirely** — a real answer, and the one no
 hypothesis in this finding has proposed.
 
+**Adjusted, 2026-09-02 (PR #596) — the check this note prescribed does not
+work, and the setup it described was incomplete.** Both were corrected the same
+evening, in `SETUP.md` and the tool's own `README.md`. The text above stands as
+written; what follows replaces its verification advice.
+
+**The filter is two settings, not one.** The path rule needs
+**Filter → Drop Filtered Events** beside it. Procmon's filter is a *display*
+filter: without that second setting every event on the machine still reaches the
+backing file and is only hidden from the window — **which looks identical to a
+working capture.** The instruction as written would have produced a filtered
+window over an unfiltered capture, and nothing in it would have said so.
+
+**And the size check cannot detect that, or anything else.** Procmon
+**preallocates**: the backing file is 128 MB within seconds and stays there. *A
+few MB* is not a state this file ever occupies, so the threshold reads as
+alarming while the capture is healthy and stays silent while it is broken —
+wrong in both directions. `m18-capture-health.ps1` reports the **written extent**
+instead, which is the number that actually moves.
+
+**What verified it was not a number read off the file.** It was making the
+machine produce events the filter was supposed to reject: 1,499 unrelated opens
+under `System32` and 150 forced opens of the shims. Twelve of the 1,499 were
+sampled and **none reached the capture**; the shim paths did; the written extent
+was **71.8 KB**.
+
+**That is three wrong checks on this finding in one day** — a recorder blind to
+path-shaped names (#594), a filter priced as needing a ring buffer it does not
+need (#595), and now a size threshold that could not see the failure it was
+watching for. **All three failed in the same direction: reporting fine while
+measuring nothing.** At this point the recurrence is the finding. A check earns
+its place by being shown to fail on the condition it claims to detect, and none
+of these three ever was.
+
+
 ### M17 — medium — eleven memories name `Downloads` in their own text, and `M7` makes some of them wrong
 
 Noticed while taking `M14`, confirmed while taking `M10`. **`M10` moves the
