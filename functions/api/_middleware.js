@@ -35,10 +35,26 @@ const refuse = (status, error) => new Response(JSON.stringify({ error }), {
 // dashboard policy and this array have to agree, or the app is broken in
 // exactly one direction and the error says nothing about why.
 //
-// Prefix-matched against the pathname, so '/api/pick3cut5/' covers the routes
-// beneath it and nothing else. Adding an entry here opens a hole in the site's
-// only wall — do it deliberately or not at all.
-const PUBLIC_PREFIXES = ['/api/pick3cut5/'];
+// EXACT paths, not a prefix, and that changed on 2026-09-02. It used to be
+// `['/api/pick3cut5/']` matched with startsWith, which let through every path
+// beneath it — including the ones no function claims. Pages answers an unrouted
+// path with the site's landing page at 200, so
+// `GET /api/pick3cut5/anything-at-all` served `index.html` — 7,255 bytes of a
+// page that 302s to the login wall at its own URL — to anyone who asked.
+//
+// Nothing was leaked that matters: the landing page renders app names and
+// descriptions out of apps/manifest.json, no data and no API. But it was the
+// one place the site's only wall was bypassed by a static fallback rather than
+// by a decision, and it would have served whatever that page grew into next.
+//
+// This list is literal because a Worker cannot read the filesystem to derive
+// it. `apps/pick3cut5/test/smoke.mjs` derives it instead — from the function
+// files under functions/api/pick3cut5/ — and fails if the two disagree, the
+// same shape as the Access-destination check that already lives there. So a new
+// route added to that directory fails the suite until it is named here, which
+// is the point: adding an entry opens a hole in the site's only wall, and it
+// should cost a deliberate line.
+const PUBLIC_PATHS = ['/api/pick3cut5/room', '/api/pick3cut5/solo'];
 
 export async function onRequest(context) {
   const { request, env, next } = context;
@@ -47,7 +63,9 @@ export async function onRequest(context) {
   if (!domain || !aud) return next();
 
   const { pathname } = new URL(request.url);
-  if (PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return next();
+  // Exact match. A query string is not part of pathname, so the WebSocket
+  // upgrade at /api/pick3cut5/room?code=ABCD still matches.
+  if (PUBLIC_PATHS.includes(pathname)) return next();
 
   // The arming variables live in wrangler.jsonc, so `wrangler pages dev`
   // reads them too — and local dev has no Access in front of it to mint a
