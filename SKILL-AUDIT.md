@@ -248,6 +248,33 @@ the command answer, per this skill's own rule against counts in prose.
 
 **Evidence.** Live repo state, 2026-09-02, plus `git log -1` on the skill.
 
+**Taken, 2026-09-02 (PR #542).** Posture as proposed: one command, one table row,
+**documentation only**, and no count quoted in the skill. Every premise re-checked
+and every one held — 137 in scope, 205 in `docs/`, 104 in `functions/`;
+`known-limitations.md` 414 lines and 18 hits; `claim-audit` last edited
+2026-08-25 (`38a88aa`) and PR #309 merged 2026-08-26T14:41Z.
+
+**One correction, in the finding's favour.** The proposal says *"naming `docs/`
+as thirteen files"*. Thirteen is right today; the split created **eleven**, and
+two arrived later. Both numbers are in the skill's own no-quoted-counts scope, so
+the shipped row names neither — it says *"more limitation prose than the
+README"*, which is the fact that does not move. The dated sentence below it cites
+eleven at the split and thirteen now, as a measurement rather than a claim about
+the present.
+
+**One thing added that the proposal did not ask for**, because writing the
+command without it would have been writing a new false sentence: the paragraph on
+`readme-section.mjs` now says it indexes `docs/` as well as the README. That was
+verified by running it against a `docs/`-only heading rather than assumed —
+`node scripts/readme-section.mjs "Retired keys keep resolving"` returns
+`apps/character-creator/docs/catalog.md lines 369-411`, exit 0.
+
+Shipped: the grep takes all four paths with a line saying dropping one is not a
+narrower search but a search that misses most of the corpus; a `docs/*.md` row in
+*Where the claims live*; `functions/` added to the code-comments row; and the
+README row relabelled from *"the largest doc by far"* — which stopped being true
+at the split — to *"the spine"*.
+
 ---
 
 ### F3 — `claim-audit` opens by calling the README 4,600 lines; it is 973
