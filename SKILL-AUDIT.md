@@ -1,7 +1,7 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **Status 2026-09-02: `F1`–`F7`, `F10`–`F20` taken (PRs #541–#559) — `F12` in
-> part, its documentation half only.
+> **Status 2026-09-02: `F1`–`F7`, `F10`–`F21` taken (PRs #541–#560) — `F12` in
+> part, its documentation half only. Open: `F8`, `F9`, `F22`–`F25`, all `N`.
 > `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while taking
 > `F2`, and `F25` by taking `F4`. Everything else is open.** `F` numbers
 > are findings about instructions that exist; `N` numbers are new-skill
@@ -1598,6 +1598,43 @@ other, and if `F9` is closed for false positives this one still stands.
 
 **Evidence.** Live repo state, 2026-09-02, and the outcome notes of
 `HEALTH-AUDIT` F5 and F10.
+
+**Taken, 2026-09-02 (PR #560).** Posture as proposed: add a section and one table
+row to `claim-audit`, **documentation only**, and distinct from `F9`'s mechanical
+half, which stands or falls separately.
+
+**The finding's own table is already stale, and that is the right outcome.** All
+three breaches it lists were closed earlier today — `F3` (#545), `F4` (#546),
+`F5` (#547) — and re-checked before writing this: zero occurrences of any of the
+three in the skills. So the section shipped here is not a fix for those; it is
+the generalisation, which is what the finding actually argued for.
+
+**The distinction is the content.** A dated past-tense **measurement** keeps
+forever and is usually the strongest sentence in the file, because it is the
+evidence for a rule. An undated present-tense **claim** rots. Stripping numbers
+indiscriminately would have deleted the good half — and `F3` nearly did exactly
+that, calling a correctly-past-tense sentence stale.
+
+Two rules fall out of it, both learned in this batch rather than theorised:
+
+- **Grep the whole file, not the paragraph.** `claim-audit` had deleted its own
+  counts from one table and left the same figure three lines above and again at
+  the bottom.
+- **Do not restate the wording you replace.** Caught in this PR's own draft: the
+  new table first quoted the three deleted claims verbatim as examples, which
+  would have made the file findable for exactly the strings it teaches you to
+  hunt. Paraphrased, with a parenthetical saying why — each stale string now
+  appears **once** across all six skills, inside its dated record.
+
+**`.claude/` is now in the *Where the claims live* table**, which is the half
+that changes what a future pass looks at: five of this audit's findings were
+sentences inside skills that a `claim-audit` run would never have opened, and
+memory is worse still — no grep of the repo reaches it.
+
+The closing note is the one worth keeping: **the three skills that state this
+rule are the three that broke it.** Each had fixed its own file after being
+burned and none had looked at the others'. Authoring a rule is not evidence of
+following it.
 
 ---
 

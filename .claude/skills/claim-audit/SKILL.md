@@ -23,6 +23,14 @@ reading a sentence and then asking the code.
 | code comments in `js/` **and `functions/`** | everywhere | counts of things ("offers five"), and "cannot express" |
 | class markdown in D1 | a couple of sentences per published class | `extraction_notes` saying the schema cannot hold something |
 | `docs/rules-audit.md`, `docs/plans/` | | superseded by later work; the plans README says so |
+| `.claude/skills/`, `.claude/agents/`, `CLAUDE.md`, `~/.claude/.../memory/` | six skills, four reference files, one agent | the same two shapes as everything above — **and these are the files that TELL you what to believe** |
+
+**The instruction layer is in scope, and it was the last place anyone looked.**
+Five of `SKILL-AUDIT.md`'s findings were sentences inside `.claude/` that a
+`claim-audit` pass would never have opened, because this table did not list them.
+A wrong sentence in a skill is worse than a wrong sentence in the README: the
+README describes the app, and a skill tells the next session what to do. Memory
+is worse again — no grep of the repo reaches it.
 
 **The `docs/` row is the one this skill kept missing.** The README was split into
 a spine plus eleven topic files on 2026-08-26 (PR #309) — thirteen now — and the
@@ -159,6 +167,45 @@ said *"the app currently derives 12"*.
 - **Ask production, not local.** A local database accumulates. An audit run
   against mine reported two catalog duplicates that production had merged away
   weeks earlier.
+
+## A MEASUREMENT keeps. A CLAIM ABOUT NOW rots. Tell them apart before deleting
+
+Not every number is a liability, and stripping the good ones makes a file
+weaker. The test is the tense and the date, not the digits:
+
+| shape | looks like | fate |
+|---|---|---|
+| **measurement** — past tense, dated | *"N spells came back one level too high"*, *"local held N skills where production had M"* | keeps forever |
+| **claim about now** — present tense, undated | *"an N-line README"*, *"N scripts follow this shape"*, *"X is the only book that does Y"* | wrong within weeks |
+
+The measurements are the strongest sentences in the files they sit in: they are
+the evidence for a rule, and evidence does not expire. The claims were all true
+when written.
+
+*(The examples above are deliberately paraphrased. Reprinting the exact wording
+of a claim you deleted defeats the grep that should find the next copy of it —
+see the second rule below, which this table would otherwise break.)*
+
+So: **date a measurement and keep it. Replace a claim with the shape.** *"Most
+corrections follow this pattern"* cannot rot; *"Fifteen do"* did, by a factor of
+five.
+
+Two rules that fall out of it, both learned the expensive way:
+
+- **Grep the whole file, not the paragraph.** `claim-audit` deleted its own
+  counts from one table and left the same figure standing three lines above and
+  again at the bottom — the fix went where the number had been noticed rather
+  than to the file.
+- **Do not restate the wording you are replacing.** A note quoting the old
+  phrase defeats the grep that should find the next copy. Describe what the
+  sentence said; do not reprint it.
+
+**The three skills that state this rule are the three that broke it.**
+`claim-audit`, `ship-pr` and `schema-change` each say some version of *do not
+quote a moving number* — and on 2026-09-02 the live breaches were in
+`claim-audit`, `class-import` and `book-survey`. Each of the three had fixed its
+own file after being burned and none had looked at the others'. Being the author
+of the rule is not evidence of following it.
 
 ## Turning a finding into something that cannot recur
 
