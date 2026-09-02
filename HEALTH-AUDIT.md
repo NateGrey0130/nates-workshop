@@ -1017,6 +1017,22 @@ the file. Medium on the proposal: whether a 3.114.17 build actually reproduces
 the Pages environment closely enough to be worth the maintenance is exactly what
 the trial would establish.
 
+**Taken in part, 2026-09-02 (PR #532). The cheap half only, and the pinned-build
+check is DECLINED**, on Nate's decision and on this finding's own ongoing-cost
+argument: a version literal Cloudflare can invalidate without telling anyone,
+plus a network fetch on every pre-merge run, against a text check in
+`environment.mjs` §9 that already guards the shape which has actually bitten.
+
+The version was re-measured rather than carried over: `npx wrangler --version`
+still resolved **4.114.0** on the day this was taken, against the build image's
+3.114.17. `SETUP.md`'s *When the merge does not deploy* now states both numbers
+where the outage is explained.
+
+The sentence that earns the PR is not the version pair, which will drift, but
+what it means: **the local toolchain is not a preview of the one that decides
+whether a deploy succeeds — it is a more permissive one.** That stays true at
+any two versions, which is why it is written that way.
+
 ---
 
 ### F15 — Medium — the Access bypass prefix serves the gated landing page to anyone, on any path under it
