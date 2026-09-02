@@ -215,6 +215,11 @@ a skill gained after creation is stored at 0 and stays there. Nothing about the
 column, the grammar, the fallback or the five places is affected - F18 is one
 `SELECT` and one call, on a path this note did not look at.
 
+**F18 was taken 2026-09-02 and that write path now resolves through
+`skillBase()`**, so the paragraph above describes what was true between
+2026-09-01 and then. This note's own measurements stand: the column, the grammar,
+the fallback and the five places were never affected.
+
 ### F3 — `gear` has no shape for a vessel, and this batch has 25 of them
 
 `phase-world` prints 6 power armor and robots (130-142), 5 tanks and IFVs
@@ -1901,3 +1906,40 @@ server paths that disagree is what made the older one visible.
 `base`, the grammar or the fallback. A test that spends a pick on a
 formula-carrying row is the thing that would have caught this and is worth
 having; it is a fixture, not a check on anyone's build.
+
+**Taken, 2026-09-02 (PR #590).** Posture kept: the write path only, no new gate,
+no exit code, `base` and the grammar and the fallback all untouched. The test is
+a fixture.
+
+`resolvePicks` now selects `base_formula` and resolves through `skillBase()`, and
+both callers thread `character.attributes` — which cost no query, exactly as this
+finding predicted: each already loads the whole character and already hands the
+attributes to `validateCharacter`.
+
+**Every premise re-measured against `--remote`, and all hold.** One catalog row
+carries a formula (`Space: Zero Gravity Movement & Combat`, `PP*5`, base 0,
+per_level 4). `skillBase()` still has five callers, four in `app.js` and one in
+`_lib/grants.js`. And the backfill check this finding asks to re-run at take-time
+returns **0 characters holding the skill**, so there is still nothing to backfill
+and no data script is needed.
+
+**The judgement went the way this finding argued.** The guard is now on the
+*resolved* percentage rather than on the stored `base`, so a formula-derived base
+takes the class category bonus like any other percentage, and a W.P. still takes
+nothing. Both are asserted.
+
+**Proved by making it fail**, which is the only reason to trust a new fixture:
+with the one line reverted, the new section reports **2 of 4 checks failing** —
+the derived base and the category bonus — while the fallback and the W.P. guard
+still pass, which is exactly the split the fix should produce. Restored, and the
+whole suite run flagless.
+
+Smoke 1649 → **1653 in 113 sections**; regression **237**, unchanged.
+
+**One thing worth recording for the protocol rather than for this fix.**
+`audit-menu` says to grep the tree for a finding's number when it is taken. Here
+that is actively misleading: **six menus in this repo have an `F18`** —
+`CLASS-AUDIT`, `INGESTION-AUDIT`, `REBUILD-AUDIT`, `HEALTH-AUDIT`, `SKILL-AUDIT`
+and `UI-AUDIT` — and every hit outside this file belonged to a different one. A
+bare finding number is not a unique key across menus, and a sweep that treats it
+as one will read another menu's history as this one's citations.
