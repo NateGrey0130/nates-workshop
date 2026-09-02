@@ -1351,9 +1351,9 @@ function abilityPicker() {
       const full = picked >= limit;
       return `<div class="chkrow">
         <button class="btn btn-sm btn-ghost" ${times === 0 ? 'disabled' : ''}
-          onclick="dropAbility('${esc(name).replace(/'/g, "&#39;")}')">&minus;</button>
+          onclick="dropAbility('${escJs(name)}')">&minus;</button>
         <button class="btn btn-sm" ${full || (times > 0 && !repeatable) ? 'disabled' : ''}
-          onclick="takeAbility('${esc(name).replace(/'/g, "&#39;")}')">+</button>
+          onclick="takeAbility('${escJs(name)}')">+</button>
         <span><b>${esc(name)}</b>${times > 1 ? ` <span class="tag">taken ${times}&times;</span>`
           : times === 1 ? ' <span class="tag">taken</span>' : ''}
           ${repeatable ? '<span class="muted small">&nbsp;may be taken twice</span>' : ''}</span>
@@ -2150,7 +2150,7 @@ function renderSkills() {
           const on = String(S.mos || '').toLowerCase() === String(id).toLowerCase();
           const grants = (o.skills || []).map((x) => x.name
             || `${x.choose} from ${(x.categories || x.from || []).join(', ')}`).join(', ');
-          return `<button class="pick${on ? ' on' : ''}" onclick="pickMos('${esc(String(id))}')">
+          return `<button class="pick${on ? ' on' : ''}" onclick="pickMos('${escJs(id)}')">
             <b>${esc(o.name)}</b><span class="attr-note">${esc(grants)}</span></button>`;
         }).join('')}
       </div>
@@ -2449,9 +2449,9 @@ function renderEquipment() {
   const rows = S.equipment.map((e, i) => {
     // The remove button's entire accessible name was the glyph, so a reader met
     // twenty-one identical "✕" with nothing to say which row each belonged to.
-    // escHtml() does not escape quotes and this goes inside an attribute, so a
-    // custom item name gets one more pass before it lands there.
-    const label = `Remove ${esc(e.name || e.custom_name)}`.replace(/"/g, '&quot;');
+    // esc() escapes the quote now, so the name is already safe in an attribute
+    // and needs no second pass.
+    const label = `Remove ${esc(e.name || e.custom_name)}`;
     return `<tr><td>${esc(e.name || e.custom_name)}</td><td>×${e.qty}</td>
      <td><span class="tag">${e.source}</span></td><td class="muted small">${esc(e.notes || '')}</td>
      <td><button class="btn btn-sm btn-ghost" aria-label="${label}" title="${label}"

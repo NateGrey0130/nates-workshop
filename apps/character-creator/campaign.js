@@ -392,8 +392,12 @@ function sweepPanel() {
   </div>`;
 }
 
-// A name goes into an inline onclick, so a quote in it would end the attribute.
-const escAttr = (v) => esc(String(v)).replace(/'/g, '&#39;');
+// A name goes into an inline onclick, so it needs escaping for the attribute
+// AND for the JS string inside it. This was `esc(v).replace(/'/g, '&#39;')`,
+// which reads right and is not: the attribute is entity-decoded before the JS
+// is parsed, so an NPC called O'Brien produced a SyntaxError rather than a
+// dismiss button. escJs in /shared/js/ui.js does both layers.
+const escAttr = escJs;
 
 function dossierView() {
   const n = D.npc.npc;

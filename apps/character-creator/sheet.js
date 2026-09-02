@@ -177,7 +177,7 @@ function powersHtml(cls) {
     <b>${escHtml(a.name)}</b>${a.times > 1 ? ` <span class="tag">taken ${a.times}&times;</span>` : ''}
     ${a.gm ? ' <span class="tag gm">G.M.</span>' : ''}
     ${a.granted === false ? ' <span class="err small">no definition found</span>' : ''}
-    ${w && a.gm ? `<button class="btn btn-sm btn-ghost noprint" onclick="removeGmPower('${escHtml(a.name).replace(/'/g, '&#39;')}')">Remove</button>` : ''}
+    ${w && a.gm ? `<button class="btn btn-sm btn-ghost noprint" onclick="removeGmPower('${escJs(a.name)}')">Remove</button>` : ''}
     ${a.description ? `<div class="muted small">${escHtml(a.description)}</div>` : ''}
     ${a.on_repeat ? `<div class="small"><b>Twice:</b> ${escHtml(a.on_repeat)}</div>` : ''}
   </li>`).join('');
@@ -853,7 +853,7 @@ function weaponCardsHtml(w, strikeBonus) {
   const carried = weapons.filter((it) => !it.equipped);
   const cards = equipped.map((it) => {
     const name = it.item_name || it.custom_name || '?';
-    const safe = escHtml(name).replace(/'/g, '&#39;');
+    const safe = escJs(name);
     const dice = leadingDice(it.item_damage);
     const cap = payloadCapacity(it.item_payload);
     const ammo = cap != null ? currentAmmo(it, cap) : null;
@@ -905,7 +905,7 @@ function meleeState() {
 // Not gated on `w`: rolling changes nothing, and a read-only viewer at the
 // table rolls their own dice. The old play path did not gate it either.
 function rollBtn(r) {
-  const safe = escHtml(String(r.name)).replace(/'/g, '&#39;');
+  const safe = escJs(String(r.name));
   const call = r.pct != null
     ? `rollSkill('${safe}', ${Number(r.pct) || 0})`
     : `rollD20('${r.kind}', '${safe}', ${Number(r.bonus) || 0}, ${r.target ?? null})`;
@@ -2189,9 +2189,9 @@ function inventoryRowsHtml() {
       ? `<input type="checkbox" ${it.equipped ? 'checked' : ''} onchange="patchItem(${it.id}, {equipped: this.checked})"><span class="print-only">${it.equipped ? '✔' : '—'}</span>`
       : (it.equipped ? '✔' : '');
     // Same as the wizard's equipment table: the glyph was the whole accessible
-    // name, on every row. escHtml() leaves quotes alone and this lands in an
-    // attribute, so a custom item name gets one more pass.
-    const rmLabel = `Remove ${name}`.replace(/"/g, '&quot;');
+    // name, on every row. `name` is already escaped for an attribute - escHtml
+    // escapes the quote now - so this needs no second pass.
+    const rmLabel = `Remove ${name}`;
     const rm = w ? `<td><button class="btn btn-sm btn-ghost" aria-label="${rmLabel}" title="${rmLabel}"
       onclick="removeItem(${it.id})">✕</button></td>` : '<td></td>';
     return `<tr><td>${name} ${kind}${enchantHtml(it)}</td><td>${qty}</td><td>${eq}</td>
