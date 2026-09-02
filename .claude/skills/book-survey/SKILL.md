@@ -231,15 +231,43 @@ offset with one and read with the other and you land one page early: a whole
 page of the wrong class, which reads as the book not saying what you expected
 rather than as an off-by-one.
 
-**A zero offset is the worst case, not the easiest.** Pantheons of the
-Megaverse has one — printed N is `d[N]` — so there is no real offset to hunt,
-and this is then the ONLY discrepancy left to explain. It cost a wrong page read
-on the first attempt at the Godling.
+**A zero offset is the worst case, not the easiest**, and it is no longer rare:
+`ww`, `triax` and `phase-world` are all registered `page_offset: 0`, meaning the
+**cache page IS the printed folio**. There is then no real offset to hunt, so it
+becomes the ONLY discrepancy left to explain, and a wrong page reads as the book
+not saying what you expected. It cost a wrong page read on the first attempt at
+the Godling.
 
-| you want | pymupdf probe | read-columns.py |
-|---|---|---|
-| printed p.16, zero-offset book | `d[16]` | `... 17 17` |
-| printed p.16, offset +2 | `d[18]` | `... 19 19` |
+**State an offset in the registry's base, or say which base you mean.** That
+Godling read is in Pantheons of the Megaverse, which `scripts/books.json`
+registers at **`page_offset: 1`** — and this paragraph used to call it a
+zero-offset book, because `printed N is d[N]` is true in 0-based `pymupdf` and
+describes the same page. Both were right and they could not both be checked: a
+reader doing what §0d says — *read the offset from the registry* — opened
+`books.json`, saw `1` where this file said `0`, and had no way to tell which was
+wrong. That is the base collision three paragraphs down, committed in the
+paragraph warning about it.
+
+**One rule converts all of them**, verified against three caches by reading the
+folio printed on the page:
+
+```
+cache page = printed folio + page_offset        cache pNNN = pymupdf d[NNN - 1]
+```
+
+`read-columns.py` takes the cache page number directly, because it is the number
+a PDF viewer shows.
+
+| printed p.16 in a book registered… | cache page | pymupdf probe | `read-columns.py` |
+|---|---|---|---|
+| `page_offset: 0` — `phase-world`, `triax`, `ww` | `p016` | `d[15]` | `... 16 16` |
+| `page_offset: 1` — `potm` and most books | `p017` | `d[16]` | `... 17 17` |
+| `page_offset: 2` — `pf` past its exception | `p018` | `d[17]` | `... 18 18` |
+
+**This table used to label its first row "zero-offset book" and give `d[16]` for
+it — which is the `potm` row, a book the registry records at 1.** Every value
+was right in a base the registry does not use, so checking any of them against
+`books.json` produced a contradiction and no way to resolve it.
 
 The folio at the end of read-columns' output is the check, and it is free. Read
 it every time. Note that a SINGLE-page call prints no `===== pN =====` header at

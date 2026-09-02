@@ -1,7 +1,7 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **Status 2026-09-02: `F1`–`F5`, `F7`, `F11`, `F13`, `F15`, `F16` and `F20`
-> taken (PRs #541–#552).
+> **Status 2026-09-02: `F1`–`F7`, `F11`, `F13`, `F15`, `F16` and `F20` taken
+> (PRs #541–#553).
 > `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while taking
 > `F2`, and `F25` by taking `F4`. Everything else is open.** `F` numbers
 > are findings about instructions that exist; `N` numbers are new-skill
@@ -504,6 +504,45 @@ only.**
 
 **Evidence.** Live repo state (`books.json`, the `potm` manifest, the survey)
 against the skill and the memory layer, 2026-09-02.
+
+**Taken, 2026-09-02 (PR #553).** Posture as proposed: rewrite the paragraph plus
+one memory correction, **documentation only**. Premises held.
+
+**The finding stopped one paragraph short.** It says the *prose* names a book in
+the wrong base. The **table three lines below it did the same thing**, and that
+was not noticed until the values were checked: its first row was labelled
+*"zero-offset book"* and gave `d[16]`, which is the `potm` row — a book the
+registry records at **1**. Every value in that table was right in a base the
+registry does not use, so checking any of them against `books.json` produced a
+contradiction with no way to resolve it. Fixing the prose and leaving the table
+would have left the collision intact one line away.
+
+**Verified empirically rather than reasoned about**, by reading the folio printed
+on the cached page across three books:
+
+| book | registry | cache page | folio on it |
+|---|---|---|---|
+| `phase-world` | `0` | `p016` | **16** |
+| `potm` | `1` | `p017` | **16** |
+| `pf` | `2` (past its exception) | `p018` | **17** |
+
+That gives one rule covering every case — `cache page = printed folio +
+page_offset`, and `cache pNNN = pymupdf d[NNN-1]` — which is now in the skill
+above a table restated in the registry's base with the book slugs named.
+`read-columns.py` takes the cache page number directly.
+
+**The memory contradicted itself, four lines apart.**
+`pantheons-of-the-megaverse-survey.md` said *"the printed-to-PDF offset is
+ZERO"* and, four lines later, *"cache file = 1-based reader page = printed+1"*.
+Both true, in two bases, in one file. Corrected to the registry's base with a
+note saying which base to use and why — it is the one `class-check
+--field-sources` and `drift-check` read, so it is the one that settles arguments.
+The `MEMORY.md` line said "page offset zero" with no base at all and now cites
+`books.json`.
+
+**Zero is no longer the exotic case**, which was the finding's other half:
+`ww`, `triax` and `phase-world` are all registered at 0, and the skill now names
+them.
 
 ---
 
