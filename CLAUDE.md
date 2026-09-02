@@ -161,3 +161,24 @@ It requires an explicit `--remote` or `--local`, pre-flights every file (exists,
 pure ASCII, no CR) before running any of them, applies in the order given, and
 stops at the first failure. Under `CLOUDFLARE_API_TOKEN` it prints
 `skipping auth warm-up` and goes straight to applying — expected, not a warning.
+
+## The permission allowlist is read-only, and its gaps are the point
+
+`.claude/settings.json` allows the tests, the reporting scripts, and read-only
+`git` and `gh`. Everything on it either reports or asks a question.
+
+**What is deliberately absent, so nobody reads it as an oversight and "fixes" it:**
+`scripts/d1-apply.mjs` — the script directly above, which writes production —
+plus `gh pr merge`, `gh pr create`, `git push`, `git commit`, `git checkout`, and
+every `wrangler d1 execute`. Those are the actions worth stopping for. A merge
+here IS the deploy, and an apply moves the live database before the merge that
+needs it; both should cost a deliberate keystroke.
+
+The `gh api` entry is pinned to this repo's `commits/` path rather than written
+as `gh api *`, because a prefix wildcard cannot exclude a `-X DELETE` and the
+commits API has no write verbs. **Do not widen it.**
+
+**Comments do not survive in this file.** `settings.json` is validated against a
+schema that rejects unrecognised top-level keys, so the `"//"` convention that
+`.claude/launch.json` uses is refused there — which is why this explanation lives
+here instead. See `HEALTH-AUDIT.md` F6.
