@@ -341,6 +341,27 @@ PR should say so in a comment so the omission is not read as an oversight and
 friction, and he is the one who knows whether these actually prompt often enough
 to matter.
 
+**Taken, 2026-09-02 (PR #518).** As proposed, posture included: thirteen
+read-only entries added, every write action left off. `deploy-sweep.mjs` was
+added alongside the two the finding named — it did not exist when F6 was written
+and shipped one PR earlier.
+
+Two things the finding did not anticipate:
+
+- **`settings.json` cannot hold a comment, so the explanation could not go where
+  the proposal put it.** The finding asked for the omission to be stated "in a
+  comment so it is not read as an oversight". A top-level `"//"` key — the
+  convention `.claude/launch.json` already uses, and one the published schema
+  appears to permit through `additionalProperties` — is **rejected**:
+  `Unrecognized field: //`. The explanation is in `CLAUDE.md` instead, which is
+  the better home anyway: it is the one file loaded in every session regardless
+  of working directory. That section also records the constraint, so the next
+  person does not retry the `"//"` key.
+- **The `gh api` entry had to be narrowed to be safe.** A prefix wildcard cannot
+  exclude a `-X DELETE`, so `gh api *` would not have been read-only in any
+  meaningful sense. It is pinned to this repo's `commits/` path, which GitHub
+  exposes no write verbs on. Written into `CLAUDE.md` as *do not widen*.
+
 ---
 
 ### F7 — Medium — port 8788 is hardcoded in three places, and three separate audits found it occupied by something else

@@ -26,7 +26,20 @@
       "Bash(python scripts/ocr-book.py *)",
       "Bash(python scripts/read-columns.py *)",
       "Bash(pdftotext *)",
-      "Bash(node --check *)"
+      "Bash(node --check *)",
+      "Bash(node scripts/audit-citations.mjs *)",
+      "Bash(node scripts/catalog-diff.mjs *)",
+      "Bash(node scripts/deploy-sweep.mjs)",
+      "Bash(node scripts/deploy-sweep.mjs *)",
+      "Bash(git status)",
+      "Bash(git status *)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git ls-files *)",
+      "Bash(gh pr list *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr checks *)",
+      "Bash(gh api repos/NateGrey0130/nates-workshop/commits/*)"
     ]
   }
 }
