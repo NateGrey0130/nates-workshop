@@ -1,6 +1,6 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **Status 2026-09-02: `F1`–`F5`, `F7` and `F11` taken (PRs #541–#548).
+> **Status 2026-09-02: `F1`–`F5`, `F7`, `F11` and `F13` taken (PRs #541–#549).
 > `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while taking
 > `F2`, and `F25` by taking `F4`. Everything else is open.** `F` numbers
 > are findings about instructions that exist; `N` numbers are new-skill
@@ -910,6 +910,38 @@ first place.
 
 **Evidence.** Live repo state — both settings files against the skill,
 2026-09-02.
+
+**Taken, 2026-09-02 (PR #549).** Posture as proposed: rewrite the parenthetical,
+add one clause to §0c, **documentation only**, and independent of `F12` as the
+finding said.
+
+Premises held, and the Downloads side is worse than the finding stated. That
+allowlist grants `python -c` **nine** ways: `Bash(python -c ' *)` by wildcard,
+plus eight literal entries, plus `Bash(node -e ' *)` alongside. The friction the
+skill claimed does not exist in the directory the skill fires in.
+
+**The replacement does not argue about permissions at all**, which is the point
+of taking this: a rationale that rests on a settings file is a rationale that can
+be falsified by a settings file. `ocr-book.py` earns its place because it writes
+the page-addressed cache `class-check --field-sources` and `drift-check` read,
+records `page_offset` in the manifest, resumes, and refuses to overwrite a
+text-layer cache with OCR — and §0b's *seven of the first eight caches were
+hand-rolled and do not agree with each other* is the evidence, already in the
+file two paragraphs down. That reason holds regardless of where the session
+started or what anyone allowlists later.
+
+**§0c resolved rather than excused.** The finding noted the tension — §0c tells
+you to render a page with a bare `pymupdf` snippet four sections after saying
+such a thing prompts every time. With the friction claim gone the tension goes
+too, but the distinction is worth stating, so §0c now says outright that its
+snippet **is** a throwaway probe: it writes a PNG you look at once and nothing
+depends on afterwards, which is exactly what separates it from §0b's cache. The
+rule is not "never write a script", it is "never hand-roll the artifact other
+tools read".
+
+The old claim is described rather than restated, per `audit-menu` — the
+paragraph says the friction argument was false, without reprinting the sentence
+that made it.
 
 ---
 

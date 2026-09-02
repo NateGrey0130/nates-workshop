@@ -36,9 +36,23 @@ python scripts/ocr-book.py "path/to/Book.pdf" --probe
 ```
 
 It samples twenty pages spread through the book, prints the character count of
-each, and says TEXT LAYER or SCAN. It writes nothing. Use it rather than a bare
-`python -c` — that is deliberately outside the allowlist and prompts every
-single time, and this is the first command aimed at every new book.
+each, and says TEXT LAYER or SCAN. It writes nothing.
+
+**Use it rather than a bare `python -c`, and the reason is the cache rather than
+the keystrokes.** `ocr-book.py` is one command that also writes the
+page-addressed cache `class-check --field-sources` and `drift-check` both read,
+records `page_offset` in the manifest, resumes correctly on a re-run, and
+refuses to overwrite a text-layer cache with OCR. A hand-rolled probe does none
+of that, and §0b below is the cost of finding out: **seven of the first eight
+caches were built by throwaway code that is in no commit, and they do not agree
+with each other.**
+
+*This paragraph used to argue that `python -c` sits outside the allowlist and
+prompts every time. It is outside the repo's — and `Downloads\.claude\`, which is
+where a session holding a PDF actually starts, grants `Bash(python -c ' *)` by
+wildcard. The friction argument was false exactly where this skill fires, and a
+reader who checked would have found the instruction resting on nothing. The
+reason above does not depend on where the session started.*
 
 Zeros mean a scan. Thousands mean a text layer, and a text layer changes
 everything downstream: **no OCR, no model call, no confidence problem, and no
@@ -137,7 +151,9 @@ Every authority table in this repo that mattered had to be read as an image:
 | Types of Armor (PF 270) | column fragments on the page *after* it, headers detached from values |
 | Coalition SAMAS Pilot's skills (RUE 233) | merged with the Coalition Grunt's column beside it, six wrong numbers |
 
-**Render it and read it:**
+**Render it and read it.** This one *is* a throwaway probe — it writes a PNG you
+look at once and nothing depends on it afterwards, which is the whole difference
+from §0b's cache:
 
 ```python
 import pymupdf
