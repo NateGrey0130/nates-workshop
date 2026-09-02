@@ -460,7 +460,7 @@ subagent `book-survey` §5 calls for simply did not exist there
 junctions, so repo edits propagate, and no admin rights are needed:
 
 ```powershell
-foreach ($s in 'audit-menu','book-survey','claim-audit','class-import','schema-change','ship-pr') {
+foreach ($s in 'audit-menu','book-survey','claim-audit','class-import','pick3cut5','schema-change','ship-pr','verify-ui','windows-shell') {
   New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\$s" -Target "C:\Users\natha\Projects\nates-apps\.claude\skills\$s"
 }
 New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\agents" -Target "C:\Users\natha\Projects\nates-apps\.claude\agents"

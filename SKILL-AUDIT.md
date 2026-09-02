@@ -3,7 +3,8 @@
 > **Status 2026-09-02: `F1`–`F7`, `F10`–`F21` taken (PRs #541–#560) — `F12` in
 > part, its documentation half only. `F8`, `F22`, `F23` taken (#561–#563); **`F9`
 > CLOSED without being taken** (#564); `F24` taken (#565); `F25` part (a) taken,
-> part (b) closed by decision (#567). **Every `F` is now closed.** Open: `N1`–`N8`.
+> part (b) closed by decision (#567). **Every `F` is closed**, and `N1`–`N3`
+> are written (#568). Open: `N4`–`N8`, all speculative.
 > `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while taking
 > `F2`, and `F25` by taking `F4`.** `F` numbers
 > are findings about instructions that exist; `N` numbers are new-skill
@@ -2064,6 +2065,21 @@ this evidence is a few times a season.
 **Rank: 1.** More independent recorded failures than any other proposal, and
 `ship-pr` is currently silent on all of them.
 
+**WRITTEN, 2026-09-02 (PR #568).** `.claude/skills/verify-ui/`, junctioned,
+and a row in `CLAUDE.md`. All six memories are represented and none was
+copied wholesale — each contributes the rule and the incident that produced it.
+
+**Two things emerged from writing it that the proposal did not list.** The
+`verify-ui` sections fall naturally into *before* (which port, and confirm the
+page is yours), *during* (the pane's three lies, the fold, the right box to
+measure against) and *after* (print, and what writes on production) — so the
+skill is ordered by when you need each rather than by which memory it came from.
+And the **production-writes** rule turned out to be the one with real
+consequences: a single roll click to prove a fix put a `play_events` row in
+Nate's real character log with no DELETE route, and it had to come out of
+production D1 by hand. That is the section a session is most likely to skip and
+least able to undo.
+
 ---
 
 ### N2 — a `windows-shell` skill: the traps that have corrupted commands and commits here
@@ -2090,6 +2106,13 @@ to LF *because a CRLF checkout once changed the bytes that reached production*.
 
 **Cost.** ~90 lines. Fires on any file rewrite, any shell loop, any commit.
 Ongoing: near zero — these are properties of the machine, not the repo.
+
+**WRITTEN, 2026-09-02 (PR #568), with the move the proposal insisted on.**
+`ship-pr` **lost** its shell material rather than gaining a duplicate: the
+commit-message backticks, the `git add -A` amend trap, the three PowerShell
+query traps and the line-ending rule are now one-line pointers into
+`windows-shell`. That was the finding's condition — *do not duplicate it, which
+is this audit's `F1` in miniature* — and it is why `ship-pr` came out shorter.
 
 **Rank: 2.** Five recorded incidents; two of them silent. The counter-argument is
 real: `ship-pr` already carries the commit-message traps and splitting them
@@ -2122,6 +2145,10 @@ closed on 2026-08-26, and both are pinned by their own smoke tests.
 
 **Cost.** ~110 lines, one file. Fires on any change to `apps/pick3cut5/`,
 `workers/pick3cut5-room/`, `shared/`, or any Access policy.
+
+**WRITTEN, 2026-09-02 (PR #568).** One skill, not three — `media-vault` and
+`filament-forge` still have no recorded pain to teach from, and a skill written
+from nothing is the procedure-only kind this brief warns about.
 
 **Rank: 3.** Four documented incidents, three of them reaching production. **I am
 proposing one skill, not three** — media-vault and filament-forge have no

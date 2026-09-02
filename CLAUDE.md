@@ -8,9 +8,9 @@ App conventions and the data model live in `apps/character-creator/README.md`.
 **The migration list is not there** — it moved to
 `apps/character-creator/docs/operations.md` when that README was split, and its
 table is the one place each migration says what it adds. This file covers the
-six skills and what is easy to get wrong about Cloudflare auth.
+skills and what is easy to get wrong about Cloudflare auth.
 
-## Six skills, and they load from anywhere on this machine
+## Nine skills, and they load from anywhere on this machine
 
 `.claude/skills/` holds them. They are **directory-scoped** by nature: a session
 started anywhere else — in `Downloads`, say, with the PDF — would not see them,
@@ -40,6 +40,9 @@ repo. See the junction block in `SETUP.md`.
 | `schema-change` | any new D1 table or column — a column lands in **five** places, a table in nine |
 | `ship-pr` | branch to deployed, and **whenever a change touches D1**, because data is applied BEFORE the merge |
 | `claim-audit` | checking what the docs, comments and class prose say against what the code does |
+| `verify-ui` | any CSS, template or layout change, and before calling anything visual done |
+| `windows-shell` | before an in-place edit, an inline script with backslashes, or a query whose answer you will act on |
+| `pick3cut5` | anything under `apps/pick3cut5/`, `workers/pick3cut5-room/`, `shared/`, or an Access policy |
 
 **Read the skill before the code.** Each one is written from failures that
 reached production, and several name the exact wrong turn that is about to look

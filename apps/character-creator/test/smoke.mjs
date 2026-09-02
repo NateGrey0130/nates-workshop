@@ -6425,12 +6425,13 @@ section('Documented counts');
   const skillsUnnamed = skills.filter((s) => !claudeMd.includes('`' + s + '`'));
   check('every skill is named in CLAUDE.md', skillsUnnamed.length === 0,
     skillsUnnamed.join(', ') + ' - a session outside the repo root sees only CLAUDE.md');
-  const claimed = [...claudeMd.matchAll(/^\| `([a-z-]+)` \| /gm)].map((m) => m[1]).sort();
+  const claimed = [...claudeMd.matchAll(/^\| `([a-z0-9-]+)` \| /gm)].map((m) => m[1]).sort();
   check('and CLAUDE.md names no skill that does not exist',
     claimed.every((c) => skills.includes(c)),
     claimed.filter((c) => !skills.includes(c)).join(', '));
   check('and says how many there are', new RegExp(`\\b${
-    ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'][skills.length - 1]
+    ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+      'eleven', 'twelve'][skills.length - 1] ?? '<no word for this many>'
   } skills\\b`, 'i').test(claudeMd), `there are ${skills.length}`);
 
   // And CLAUDE.md must not go back to saying they DO NOT load. It said so for
@@ -6449,7 +6450,7 @@ section('Documented counts');
     /New-Item -ItemType Junction/.test(setup));
   // The loop in SETUP.md is the thing a fresh machine runs, so it has to name
   // every skill - the same completeness problem as the CLAUDE.md table.
-  const linked = [...setup.matchAll(/'([a-z-]+)'/g)].map((m) => m[1]);
+  const linked = [...setup.matchAll(/'([a-z0-9-]+)'/g)].map((m) => m[1]);
   const unlinked = skills.filter((s) => !linked.includes(s));
   check('and its junction loop names every skill',
     unlinked.length === 0,

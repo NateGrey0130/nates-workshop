@@ -271,21 +271,11 @@ back:
 npx wrangler d1 execute DB --remote --command "SELECT count(*) FROM schema_migrations;"
 ```
 
-Two traps when writing that query from PowerShell:
-
-- **`\"` does not escape anything.** The string ends early and the rest
-  word-splits into arguments wrangler rejects. Class markdown cites gear as
-  `item_id: "slug"`, so the queries most worth running are the ones that break.
-  Build the quote in SQL instead: `char(34)`. Same trick as `char(8212)` for an
-  em-dash.
-- **`--file` returns a summary over `--remote`, not results.** A `SELECT` sent
-  with `--file` comes back as `Total queries executed / Rows read`, so every
-  count reads as 1 and a drift check built on it reports everything as missing.
-  Use `--command` for anything whose rows you need.
-- **Read results from a file, not the terminal.** `--json | Out-File -Encoding
-  utf8 out.json`, then read `out.json`. Transcribing from terminal output put
-  `ng-15-northern-gun-laser-rifle` a keystroke away from being written into a
-  class definition; the real slug is `ng-l5-`.
+**Three ways that query comes back wrong rather than failing** — `\"` escapes
+nothing in PowerShell, `--file` returns a summary instead of rows over
+`--remote`, and transcribing from terminal output has put a wrong gear slug one
+keystroke from a class definition. Each is in the **`windows-shell`** skill with
+its case. Read it before writing a query whose answer you intend to act on.
 
 ## Commit messages
 
@@ -293,25 +283,24 @@ This repo's history reads as prose. A message says what was wrong and why, not
 what files moved — `git log` is the only place some of these decisions are
 recorded. Match the surrounding style before writing one.
 
-**Write it to a file and use `-F`.** Backticks in a `-m` string are evaluated by
-the shell: a commit message here once ran `wrangler d1 execute` and pasted its
-help output into the commit. Backticks are natural in this repo's prose, so this
-is not a hypothetical.
+**Write it to a file and use `-F`** — backticks in a `-m` string are evaluated by
+the shell, and this repo's prose is full of them. Details, and the `git add -A`
+trap that eats the message file, are in the **`windows-shell`** skill.
 
 ```bash
 git commit -F commit-msg.tmp
 ```
 
-**Do not `git add -A` immediately before `--amend`.** It sweeps the message file
-into the commit. If it happens: `git add -A && git commit --amend --no-edit`
-after deleting the file, then confirm with `git ls-tree -r HEAD --name-only`.
-
 ## Line endings
 
 `.sql` is pinned to LF by `.gitattributes` — a CRLF checkout once changed the
-bytes that reached production. Everything else in the repo is CRLF. A script
-that rewrites a file must preserve what that file had; the smoke test fails a
-`.sql` carrying a CR.
+bytes that reached production. Everything else in the repo is CRLF, and the
+smoke test fails a `.sql` carrying a CR.
+
+**A script that rewrites a file must preserve what that file had**, and the
+usual tools do not: `sed -i` flips a whole file to LF, and the obvious grep
+check reports it clean anyway. See the **`windows-shell`** skill before any
+in-place edit.
 
 ## A changed secret needs the dev server restarted
 
