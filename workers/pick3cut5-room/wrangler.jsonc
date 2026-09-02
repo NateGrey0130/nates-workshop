@@ -1,5 +1,8 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
+  // Published URL, not 'node_modules/wrangler/config-schema.json': this repo has
+  // no package.json and no node_modules, so the path every wrangler init writes
+  // resolves to nothing here. Editors validate this file against the URL instead.
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
   "name": "pick3cut5-room",
   "main": "src/index.js",
   "compatibility_date": "2026-04-19",
