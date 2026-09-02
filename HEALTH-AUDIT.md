@@ -1127,8 +1127,9 @@ proposal: whether those two seams are cleanly extractable was not verified, and
 if `generate.js` is tightly coupled to the Worker runtime the effort is L rather
 than M.
 
-**Taken, 2026-09-02 (PR #529) — code merged, Worker NOT YET DEPLOYED.** See the
-deploy note at the end of this entry; it is the part that matters.
+**Taken, 2026-09-02 (PR #529), and fully shipped.** The code merged, and the
+Worker was deployed separately an hour later — see the deploy note at the end,
+written while that deploy was still refused, and the line following it.
 
 Posture held: pure-function tests only. The Durable Object, the Anthropic call
 and the WebSocket are untouched.
@@ -1162,6 +1163,25 @@ but the repo and the deployed Worker have diverged, which is the exact class of
 silent gap this menu exists to close. **It stays open until someone runs that
 command**, and `deploy-sweep.mjs` cannot see it: the sweep reads Pages
 check-runs, and this Worker has none.
+
+**Deployed, 2026-09-02, on Nate's authorisation.** Version
+`baa00f7e-1ffc-407a-ac76-cefc9253a8ca`, confirmed at 100% by
+`wrangler deployments list` rather than by the deploy's own output — which
+printed the expected and misleading `No targets deployed for pick3cut5-room`.
+All bindings resolved on upload: `ROOM`, `DB`, both rate limiters, and the three
+model vars.
+
+Then proved by asking production rather than reading an exit code: a `POST` to
+`/api/pick3cut5/room` returned `{"code":"T7YZ"}`, which exercises Pages → the
+service binding → the Worker's fetch handler → the collision-probe loop → the
+Durable Object namespace, on the new code, and spends nothing. Solo generation
+was deliberately **not** triggered: it is the one path that costs money, and a
+smoke test is not worth ~$0.19 of it.
+
+The paragraph above stands as written because the gap it describes was real for
+about an hour, and because the sentence about `deploy-sweep.mjs` remains true:
+**nothing in this repo watches this Worker's deploy.** That is not a finding
+here yet.
 
 ---
 
