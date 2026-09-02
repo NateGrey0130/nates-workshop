@@ -1,7 +1,7 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **Status 2026-09-02: `F1`–`F5`, `F7`, `F11`, `F13` and `F15` taken
-> (PRs #541–#550).
+> **Status 2026-09-02: `F1`–`F5`, `F7`, `F11`, `F13`, `F15` and `F16` taken
+> (PRs #541–#551).
 > `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while taking
 > `F2`, and `F25` by taking `F4`. Everything else is open.** `F` numbers
 > are findings about instructions that exist; `N` numbers are new-skill
@@ -1088,6 +1088,44 @@ outcome notes that `audit-menu` spends a section arguing against, pointed at a
 layer where it would be even less reliable.
 
 **Evidence.** Memory layer against git history, 2026-09-02.
+
+**Taken, 2026-09-02 (PR #551).** Posture as proposed: rewrite index lines, delete
+counts, add none, and **explicitly no new gate** — a check that memory agrees
+with the repo is the mechanical reader of outcome notes pointed at a layer where
+it would be even less reliable.
+
+Premises held. `health-audit-menu.md` was last written **08:42:18** and
+`HEALTH-AUDIT` F23 merged at **08:59:54** — true for seventeen minutes, with no
+occurrence of `F23` anywhere in the file. That menu then gained an `F24` two
+hours later, so the line was wrong twice over by the time it was read.
+
+**Six index lines rewritten, not three.** The finding named three; a sweep for
+menu-status claims found six — `audit-outcome-notes-vary`, `efficiency-audit`,
+`ingestion-audit`, `class-audit`, `health-audit` and `ui-audit` — each quoting a
+finding range, a PR range or "all closed". Each now says what its menu is *about*
+and sends the reader to the menu's own header. `redesign-audit-menu`, corrected
+under `F15` an hour earlier, was brought into the same shape for consistency:
+its line had still asserted a status, just an accurate one.
+
+**Two files corrected beyond the index**, because the `description:` is the line
+recall actually matches on and both carried the same claim: `health-audit-menu`'s
+description dropped its finding range, and `audit-outcome-notes-vary`'s "all 200
+findings across the twelve menus" is now marked as a **measurement of 2026-09-02
+whose numbers moved within hours**, left standing as one rather than updated.
+That is the measurement-versus-claim distinction from `F21`, applied inside
+memory.
+
+The new section in `audit-outcome-notes-vary-in-wording.md` records the
+seventeen-minute case and draws the general rule: **a memory cannot hold a
+status**, because nothing revisits a memory when the world moves — the layer is
+written-once, read-by-relevance, and a menu's dated header is maintained by the
+protocol. It also notes that `docs-quote-moving-numbers` sits two lines above in
+the same index saying *only test-pinned counts survive*, and that nothing in
+memory is test-pinned: the rule was being stated in the one layer where it can
+never be enforced.
+
+Index integrity re-checked after the pass: **60 lines, 60 files, no orphan and no
+dangling link.**
 
 ---
 
