@@ -38,7 +38,7 @@
 //
 // The harness is the character creator's, same as FilamentForge's.
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { section, check, summary } from '../../character-creator/test/harness.mjs';
@@ -157,33 +157,61 @@ section('The middleware exemption matches the client');
 
 // Scoped to the array literal, NOT the whole file. Matching '/api/...' anywhere
 // in _middleware.js read the explanatory comment above the array as though it
-// were the array: emptying PUBLIC_PREFIXES entirely still "passed", because the
-// comment still mentioned the prefix it no longer contained.
-const arrayLiteral = middleware.match(/const PUBLIC_PREFIXES\s*=\s*\[([^\]]*)\]/);
-check('_middleware.js declares a PUBLIC_PREFIXES array', Boolean(arrayLiteral));
+// were the array: emptying the list entirely still "passed", because the
+// comment still mentioned the path it no longer contained.
+const arrayLiteral = middleware.match(/const PUBLIC_PATHS\s*=\s*\[([^\]]*)\]/);
+check('_middleware.js declares a PUBLIC_PATHS array', Boolean(arrayLiteral));
 
-const prefixes = arrayLiteral
+const publicPaths = arrayLiteral
   ? [...arrayLiteral[1].matchAll(/'([^']+)'/g)].map((m) => m[1])
   : [];
-check('_middleware.js declares at least one public prefix',
-  prefixes.length > 0, 'PUBLIC_PREFIXES is how a bypassed route avoids our own 403');
+check('_middleware.js declares at least one public path',
+  publicPaths.length > 0, 'PUBLIC_PATHS is how a bypassed route avoids our own 403');
+
+// EXACT paths, not prefixes, since 2026-09-02. A prefix let every unrouted path
+// beneath it through, and Pages answers an unrouted path with the landing page
+// at 200 — so `/api/pick3cut5/anything` served index.html to anyone, at a URL
+// that 302s to the login wall on its own. Assert the shape, because reverting
+// to a prefix would look like a harmless one-character edit.
+check('and they are exact paths, not prefixes',
+  publicPaths.every((p) => !p.endsWith('/')),
+  `${publicPaths.filter((p) => p.endsWith('/')).join(', ')} — a trailing slash reads as a prefix`);
+check('and the middleware matches them exactly',
+  /PUBLIC_PATHS\.includes\(pathname\)/.test(middleware),
+  'startsWith here reopens the landing-page hole');
+
+// DERIVED, so the list cannot drift from the routes. One file under
+// functions/api/pick3cut5/ is one route; anything there without an entry takes
+// a hard 403 from us despite the dashboard bypass, and anything here without a
+// file is a hole guarding nothing.
+const routeFiles = readdirSync(join(repoRoot, 'functions', 'api', 'pick3cut5'))
+  .filter((f) => f.endsWith('.js'))
+  .map((f) => `/api/pick3cut5/${f.replace(/\.js$/, '')}`);
+const unexempt = routeFiles.filter((r) => !publicPaths.includes(r));
+check(`every pick3cut5 route is exempted (${routeFiles.length} found)`,
+  unexempt.length === 0,
+  `${unexempt.join(', ')} — add it to PUBLIC_PATHS or it 403s behind the bypass`);
+const stale = publicPaths.filter((p) => !routeFiles.includes(p));
+check('and no exemption names a route that does not exist',
+  stale.length === 0, `${stale.join(', ')} — a hole guarding nothing`);
 
 const apiConst = appSrc.match(/const API = '([^']+)'/);
 check('app.js declares its API base as a constant', Boolean(apiConst));
 
 if (apiConst) {
   const base = apiConst[1];
-  check(`the client's API base (${base}) is exempted in _middleware.js`,
-    prefixes.some((p) => (base + '/').startsWith(p)),
-    `PUBLIC_PREFIXES has ${prefixes.join(', ')} — a bypassed route without this takes a 403 from us`);
+  check(`the client's API base (${base}) has exempted routes beneath it`,
+    publicPaths.some((p) => p.startsWith(`${base}/`)),
+    `PUBLIC_PATHS has ${publicPaths.join(', ')}`);
 }
 
 // Any OTHER absolute /api/ string in the client would be a route the exemption
-// does not cover, which is the same bug wearing a different hat.
+// does not cover, which is the same bug wearing a different hat. Template
+// literals build `${API}/room`, so compare the resolved paths.
 const strayApi = [...appSrc.matchAll(/['"`](\/api\/[^'"`$]*)/g)]
   .map((m) => m[1])
-  .filter((p) => !prefixes.some((pre) => (p + '/').startsWith(pre)));
-check('the client calls no /api/ path outside the exempted prefix',
+  .filter((p) => !publicPaths.includes(p) && !publicPaths.some((e) => e.startsWith(`${p}/`)));
+check('the client calls no /api/ path outside the exempted set',
   strayApi.length === 0, strayApi.join(', '));
 
 // ---------- 4. Hidden information ----------
