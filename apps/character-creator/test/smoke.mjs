@@ -3572,6 +3572,26 @@ section('The sheet shows every derived combat row');
   const missing = derived.filter((k) => !shown.includes(k));
   check('every derived combat row has a labelled field on the sheet',
     missing.length === 0, missing.join(', '));
+
+  // The same contract for saves - and this is the list that actually drifted.
+  // sheet.js says so directly above SAVE_FIELDS: it "was not a shorter view
+  // chosen on purpose - it was the first list before three keys were added to
+  // derive.js and only one copy was updated". The combat check existed and this
+  // one did not, so the guarded side was the side that never broke, and the
+  // side with a recorded incident was unguarded (SKILL-AUDIT F22).
+  //
+  // `psionics_target` is excluded deliberately: the sheet renders it ABOVE the
+  // sixteen as its own editField, because it is the number you roll against
+  // rather than a bonus - the only absolute value in that box.
+  const savesDerived = Object.keys(win.derive.saves({ ME: 12, PE: 12, PP: 12 }))
+    .filter((k) => k !== 'psionics_target');
+  const savesBlock = sheet.slice(sheet.indexOf('const SAVE_FIELDS'),
+    sheet.indexOf('];', sheet.indexOf('const SAVE_FIELDS')));
+  const savesShown = [...savesBlock.matchAll(/\['([a-z_]+)',/g)].map((m) => m[1]);
+  const savesMissing = savesDerived.filter((k) => !savesShown.includes(k));
+  check('every derived save row has a labelled field on the sheet',
+    savesMissing.length === 0,
+    `${savesMissing.join(', ')} - add it to SAVE_FIELDS in sheet.js, or the bonus lands in the data and never reaches the player`);
 }
 
 // ---------- One pool widget, both modes ----------
