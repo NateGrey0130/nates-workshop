@@ -547,6 +547,25 @@ file that a session outside the repo is precisely the one to load
 the other by hand**, comments included. There is no generator, and a five-entry
 JSON file does not justify one.
 
+**The whole of the working directory's `.claude/` moves with it, permissions
+included.** `settings.local.json` sits at `<working directory>\.claude\`, so
+relocating that directory carries the accumulated grants across unchanged and
+there is no migration to perform. Measured 2026-09-02, of 258 allow entries:
+
+| | |
+|---|---|
+| **206** | survive a move — 77 name the *repo* by absolute path, which does not move, and 126 name no path at all |
+| 47 | were already dead, pinned to session scratchpad directories that no longer exist |
+| 5 | named the old working directory, and are dead now |
+
+**Do not promote any of it into the tracked `.claude/settings.json`.** That file
+is deliberately read-only in what it grants; `.gitignore` says *"launch.json is
+shared, local permissions are not"*; and the local file was pruned on 2026-09-02
+so that the two agree in **posture** — writes and arbitrary execution ask,
+wherever the session started. Promoting accumulated approvals would move grants
+out of a per-machine, disposable list into a version-controlled and shared one,
+which is the opposite direction from that prune (`MACHINE-AUDIT` `M11`).
+
 ### The command-line tools
 
 `node`, `npm`, `git` and `gh` put themselves on PATH and need nothing here.
