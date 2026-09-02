@@ -370,7 +370,7 @@ th {
    the step opens on the summary, and a level is opened only when someone wants
    to roll it on its own. */
 .lvl-row {
-  border: 1px solid var(--border); border-radius: 8px;
+  border: 1px solid var(--border); border-radius: var(--radius);
   padding: 8px 12px; margin-top: 8px; background: var(--bg-secondary);
 }
 .lvl-row > summary { cursor: pointer; list-style: none; }
@@ -1283,7 +1283,13 @@ input.class-boosted { border-bottom-width: 2px; }
 /* ─── PLAY MODE ───
    The sheet through an action-first lens, shaped for a phone at the table:
    44px tap targets, single column, roll results in a fixed thumb-zone bar.
-   Rendered by sheet.js renderPlay(); body.play-mode hides sheet-only chrome. */
+   Rendered by sheet.js renderPlay(); body.play-mode hides sheet-only chrome.
+
+   Corners come from --radius and --radius-sm like everything else. They were
+   written as 8px and 10px here, which is where a player at the table actually
+   looks - four of the six literals in this file were in this section - and a
+   10px card against a 4px sheet reads as a different app rather than as the
+   same one in another mode. */
 
 body.play-mode #print-btn { display: none; }
 
@@ -1300,7 +1306,7 @@ body.play-mode #print-btn { display: none; }
   display: flex; align-items: center; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;
 }
 .play-amt button {
-  min-width: 44px; min-height: 40px; border-radius: 8px;
+  min-width: 44px; min-height: 40px; border-radius: var(--radius-sm);
   background: var(--bg-tertiary); border: 1px solid var(--border);
   color: var(--text-secondary); font-size: 15px; cursor: pointer;
 }
@@ -1343,8 +1349,15 @@ body.play-mode #print-btn { display: none; }
   font-size: 16px; text-align: center;
 }
 #play-roll-bar.empty { border-top-color: var(--border); }
-#play-roll-bar .ok { color: #5dd39e; }
-#play-roll-bar .ko { color: #e2606c; }
+/* The success/miss tones on the roll result. These were a mint #5dd39e and a
+   coral #e2606c, left from the scheme before Rust & Ash: phase 1 retoned by
+   grepping for a list of specific old hexes rather than for literals, so the
+   two colours on the element play mode looks at most were the two it missed.
+   Measured against this bar's own --bg-secondary ground at its 16px:
+   --success 5.66:1, --danger 4.88:1. Both clear the 4.5 floor, and --success
+   is the wider margin of the two rather than the narrow one. */
+#play-roll-bar .ok { color: var(--success); }
+#play-roll-bar .ko { color: var(--danger); }
 
 @media (min-width: 700px) {
   .play-view { max-width: 900px; }
@@ -1354,12 +1367,12 @@ body.play-mode #print-btn { display: none; }
 /* Play mode phase 2: weapon cards */
 .play-weapon {
   background: var(--bg-secondary); border: 1px solid var(--border);
-  border-radius: 10px; padding: 10px 12px; margin: 8px 0;
+  border-radius: var(--radius); padding: 10px 12px; margin: 8px 0;
 }
 .play-weapon .pw-head { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; margin-bottom: 8px; }
 .play-weapon .pw-btns { display: flex; flex-wrap: wrap; gap: 6px; }
 .play-weapon .pw-btns button {
-  min-height: 44px; padding: 0 14px; border-radius: 8px; font-size: 15px;
+  min-height: 44px; padding: 0 14px; border-radius: var(--radius-sm); font-size: 15px;
   background: var(--bg-tertiary); border: 1px solid var(--border);
   color: var(--text-primary); cursor: pointer;
 }
@@ -1370,11 +1383,11 @@ body.play-mode #print-btn { display: none; }
 .play-melee {
   display: flex; justify-content: space-between; align-items: center; gap: 8px;
   flex-wrap: wrap; background: var(--bg-secondary); border: 1px solid var(--border);
-  border-radius: 10px; padding: 8px 12px; margin-bottom: 12px;
+  border-radius: var(--radius); padding: 8px 12px; margin-bottom: 12px;
   font-family: var(--font-display); font-stretch: 75%; font-variant-numeric: tabular-nums; font-size: 13px;
 }
 .play-melee button {
-  min-height: 40px; padding: 0 12px; border-radius: 8px;
+  min-height: 40px; padding: 0 12px; border-radius: var(--radius-sm);
   background: var(--bg-tertiary); border: 1px solid var(--border);
   color: var(--text-primary); font-size: 14px; cursor: pointer;
 }
