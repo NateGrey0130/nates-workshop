@@ -6,11 +6,11 @@ brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
 `low`. Nothing here is taken until Nate names it; one PR per finding, outcome
 note appended under the finding in the same PR.
 
-**Status, 2026-09-02: `M1`, `M2`, `M3`, `M5`, `M6` and `M15` taken and closed —
-the whole environment half except `M4`. `M16` was opened while taking `M1` and is
-filed but NOT taken. Everything else is open.** Read the lines under a finding for its status — the notes here vary in
-wording like every other menu in this repo, and grepping for one has been wrong
-in both directions.
+**Status, 2026-09-02: `M1`, `M2`, `M3`, `M5`, `M6`, `M13` and `M15` taken and
+closed — the whole environment half except `M4`. `M16` was opened while taking
+`M1` and is filed but NOT taken. Everything else is open.** Read the lines under
+a finding for its status — the notes here vary in wording like every other menu
+in this repo, and grepping for one has been wrong in both directions.
 
 > **This menu's own trap: nothing in it is pinned by anything.** Every other
 > audit file here describes the repo, so the test suite, a rebuild or a `--remote`
@@ -737,6 +737,31 @@ and belong in the new directory, not in `docs/prompts/`.
 happened** — `docs/prompts/README.md` is explicit that a brief is a record, not a
 document, and `portability-audit-prompt.md` in particular must go in describing
 the investigation that was dropped, not annotated with the fact that it was.
+
+**Taken, 2026-09-02 (PR #578) — the archive half.** The file *moves* belong to
+`M7` and are not in that PR. Posture kept: nothing already archived was edited,
+and `portability-audit-prompt.md` went in un-annotated.
+
+**18 of 18 re-verified** content-identical to their loose copies. The claim holds.
+
+**The count moved between the measurement and the take, and this menu's own
+header predicted it.** 25 loose `.md` files at 13:20; **27** now, so the
+unarchived list is **seven**, not five. The two additions are
+`SPELL-DESCRIPTIONS-RESEARCH-PROMPT.md` (written 13:51) and
+`RETRO-CHECK-PROMPT.md` (13:58) — **both after this audit measured the
+directory**. Not a miscount; the trap firing on the one finding that is about
+files in that directory, inside four hours.
+
+**Neither was archived, by the archive's own rule.** Both are briefs that have
+not been run, and `docs/prompts/README.md` says to copy a brief in when it
+produces something worth keeping and only then. They are work, so they move to
+`workshop\briefs\` under `M7`.
+
+**One tension in this finding, resolved rather than stepped around.** Archiving
+`portability-audit-prompt.md` breaks that same rule — it produced no artefact.
+The README now carries a short section saying so and why it is kept: a decision
+*not* to do something is the hardest thing to reconstruct afterwards, and this
+menu's own opening claim that portability was dropped needs a file to point at.
 
 ### M14 — medium — two `launch.json` files, and they have already drifted
 

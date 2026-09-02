@@ -69,6 +69,8 @@ Audit briefs:
 | `health-audit-prompt.md` | `HEALTH-AUDIT.md`, both halves |
 | `REVIEW-BRIEF.md` | `apps/character-creator/INGESTION-AUDIT.md` — tracks E and F only |
 | `SKILLAUDITPROMPT.md` | `SKILL-AUDIT.md` — the instruction-layer audit, and this row |
+| `workstation-consolidation-prompt.md` | `MACHINE-AUDIT.md` — the machine rather than the repo |
+| `portability-audit-prompt.md` | **nothing.** The investigation was dropped the day it was written — see below |
 
 ## Three of them named a file that shipped under a different name
 
@@ -87,6 +89,24 @@ Worth knowing before searching for an artefact by the name its brief used.
   `HEALTH-AUDIT.md` — were superseded by `health-audit-prompt.md`, written from
   scratch rather than reused. **Its baseline numbers are stale** (recorded
   against `main` @ `ad6b818`); read it for what was scoped, never for a value.
+
+## One of them produced nothing, and that is why it is kept
+
+`portability-audit-prompt.md` asked what it would take to lift this setup off
+this PC and work from any machine or device. It was written and dropped on the
+same day — 2026-09-02 — before any of it was investigated. The question
+underneath it turned out to be about where things sit on *this* machine, and that
+became `workstation-consolidation-prompt.md` and `MACHINE-AUDIT.md` instead.
+
+So it is the one file here that breaks the rule at the bottom of this page: it
+produced no artefact at all. It is kept because **a decision not to do something
+is the hardest thing to reconstruct afterwards.** `MACHINE-AUDIT.md` opens by
+stating that portability *was investigated on 2026-09-02 and dropped*, and this
+is the file that sentence points at. Read it as a record of a direction
+considered, not of work done.
+
+Per `MACHINE-AUDIT` `M13` it is deliberately **not** annotated with the fact that
+it was dropped. That fact belongs here, in the index, and not inside a record.
 
 ## One duplicate was resolved
 
