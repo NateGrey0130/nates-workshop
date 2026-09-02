@@ -6,9 +6,10 @@ brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
 `low`. Nothing here is taken until Nate names it; one PR per finding, outcome
 note appended under the finding in the same PR.
 
-**Status, 2026-09-02: every finding is taken and closed except `M4`, `M11`,
-`M16` and `M17`.** `M4` waits on nothing but a word; `M11` is next. `M16` and
-`M17` were opened while taking other findings and are filed but NOT taken.
+**Status, 2026-09-02: every finding is taken and closed except `M4`, `M11` and
+`M16`.** `M4` waits on nothing but a word; `M11` is next. `M16` was opened while
+taking `M1` and is filed but NOT taken; `M17` was opened the same way and has
+since been taken.
 **`M8` was taken with its posture overridden** — deletion, on explicit
 instruction — which its own note records. Read the lines under a finding for its
 status — the notes here vary in wording like every other menu in this repo, and
@@ -1091,6 +1092,44 @@ memories, and were already like that.
 **Posture:** memory maintenance, no repo change beyond this note. **Its own PR,
 immediately after `M7`** — the window in which these are wrong should be short,
 but folding it into the move would put two decisions in one PR.
+
+**Taken, 2026-09-02 (PR #582)**, in its own PR immediately after `M7`, which is
+the posture. Nineteen substitutions across ten files, **each asserted to match
+exactly once** before anything was written; the script refused to write until all
+nineteen did.
+
+**Two files were deliberately not touched**, which is the half of this finding
+that matters:
+
+- `pantheons-of-the-megaverse-survey` records which PDF a measurement came back
+  from, on a date. Permanently true.
+- `review-brief-tracks-never-run` records a dated rescue-copy of a brief out of a
+  temp directory that would have deleted it. An event, not a location.
+
+Rewriting either would destroy the only account of where something came from, to
+fix a path nobody will follow. A third file, `nates-apps-monorepo`, still names
+the old directory **on purpose** — the correction says which directory it was
+until 2026-09-02, because a reader who remembers the old one needs to be told it
+changed rather than left to notice.
+
+**Seven pointers now aim at `docs/prompts/` rather than at any directory on this
+disk.** That is the version-controlled copy, `M13` verified all 18 identical, and
+it cannot move again — so the correction is durable in a way that pointing at the
+new working directory would not have been.
+
+`nates-apps-monorepo`'s **`description`** was fixed as well as its body. That
+field is what recall matches on, so a body correction alone would have left the
+wrong claim in the part that decides whether the file is read at all.
+
+**The old project key was synced to match**, so a session started in `Downloads`
+out of habit is not handed a different answer. Whether that store is deleted
+stays the separate decision `M10` left it as.
+
+**Found while doing it:** the memory store has **mixed line endings** — some
+files CRLF, some LF, and `rust-ash-cleanup-residue` is both at once. It broke two
+substitutions that had assumed LF, which is how it was noticed. Not a defect
+worth a finding; worth knowing before writing a multi-line match against these
+files.
 
 ---
 
