@@ -1360,3 +1360,38 @@ can wait until after the waves without risk. But it belongs with F1 and F13 in
 the data-protection wave rather than filed among the cleanups: it is the missing
 half of the runbook that just shipped, and the `operations.md` sentence pointing
 at it is written as an open loop.
+
+**Taken, 2026-09-02 (PR #521).** `scripts/d1-backup.mjs`, run against production
+before it was committed: **33 of 33 tables, 8,723 rows, complete**, with the six
+skips resolving exactly as intended (`_cf_KV`, `journal_fts`, and its four
+shadow tables).
+
+Two departures from the proposal, both deliberate:
+
+- **It derives the skip list instead of naming the four shadow tables.** The
+  proposal listed `journal_fts_data`, `_idx`, `_docsize` and `_config` by hand.
+  Virtual tables come out of `CREATE VIRTUAL TABLE` in `sqlite_master`, their
+  shadow tables from a prefix off the virtual table's own name, and Cloudflare's
+  from `_cf_`. A second FTS table added later is covered without editing the
+  file; the hardcoded list would have been wrong the day that happened, silently
+  and in the direction that writes junk into a backup.
+- **It exits non-zero when a table fails**, which reads against the stated
+  report-only posture and is not. Report-only here means it gates nothing and
+  schedules nothing — no cron, no hook, no Action, nothing consuming the exit
+  code. A backup tool that reports success after writing half a database is a
+  defect rather than a posture, and the two ideas were worth separating in the
+  file itself.
+
+Everything else held: manual, no dependency, and `d1 export` was **not** worked
+around by touching `journal_fts` in production. `operations.md`'s Recovery
+section lost its "nothing automates this loop" sentence and points here.
+
+The README script map entry went in with the PR rather than after the smoke test
+asked for it — **F20 being useful one PR after it was filed**, which is a
+small argument that F20 should be closed as already-solved-by-knowing rather
+than taken.
+
+One thing left undone on purpose: `d1-backup.mjs` is **not** in the
+`.claude/settings.json` allowlist. It only reads D1, but it writes files to a
+caller-named path, which is a different question from the read-only rule F6
+settled. Worth a decision rather than a default.
