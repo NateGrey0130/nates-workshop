@@ -1271,6 +1271,27 @@ contradict a decision already made and written down.
 looks is inferred from there being no mechanism, not from evidence that Nate
 does not run the query.
 
+**Closed as NOT CODE, 2026-09-02.** Nate set a **$25 monthly spending limit with
+an email notification at $15** on the Anthropic account. That is the option this
+finding recommended and the reason it recommended it: the cheapest control was
+never in this repo. It **refuses** rather than reports, needs no maintenance, and
+cannot silently stop the way a scheduled job can.
+
+No PR, and the repo-side rollup was **not** taken. The posture said not to add a
+cap, a refusal or a gate on the request path, and a real cap now exists one layer
+up — so the reporting half would be duplicating a control that already works,
+which is the ongoing cost this menu keeps arguing against.
+
+Sizing it against the measurements above: spend since 2026-08-24 is ~350K input
+tokens across 28 calls — comfortably under a dollar — so $25 is not a budget, it
+is a **blast-radius cap**. It sits far under the documented worst case
+(~$180/hour sustained at the global rate limit, ~$4,300/day) and far over any
+honest month. The alert at $15 is the part that catches a slow leak; the cap is
+the part that catches a fast one.
+
+`SETUP.md`'s *"Spend visibility, not a cap"* remains true of **this repo**, which
+is the scope that sentence claims, and is left standing.
+
 ---
 
 ### F18 — Low — the Worker has observability enabled and the Pages half has nothing configured
