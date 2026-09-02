@@ -91,6 +91,9 @@ export async function onRequestPost({ request, env, params }) {
     categories,
     secondaryAllowance,
     level: toLevel,
+    // A skill whose base is derived from an attribute needs them to resolve at
+    // all — without this it stores 0 and climbs from 0 (F18).
+    attributes: character.attributes,
   });
   if (picked.errors?.length) return pickErrors(picked.errors);
 

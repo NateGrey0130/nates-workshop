@@ -348,6 +348,7 @@ import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicG
          grantNote, startingPicksFor } from '../../../functions/api/character-creator/_lib/leveling.js';
 import { toMatchQuery } from '../../../functions/api/character-creator/campaigns/[id]/search.js';
 import { powerGrantsFor, remainingPowerGrants } from '../../../functions/api/character-creator/_lib/power-picks.js';
+import { resolvePicks } from '../../../functions/api/character-creator/_lib/skill-picks.js';
 import { aliasCounts, buildIndex, diffCatalog, loose, match, nearest, normalise,
          stem, variants, vocabularyWarnings } from '../../../scripts/catalog-match-lib.mjs';
 import { dice, isMegaDamage, isVariableCost, money, weightLbs }
@@ -2873,6 +2874,59 @@ section('Attribute-derived skill base');
     check('and the sweep found the one row this finding exists for',
       written.some((w) => w.v.toUpperCase() === 'PP*5'), `found ${written.length}`);
   }
+}
+
+// ---------- 1c25a1b. Spending a PICK on an attribute-derived skill ----------
+// BOOK-INGEST-AUDIT F18. skillBase() is documented as the ONLY place `base` and
+// `base_formula` are chosen between — and `resolvePicks`, a WRITE path, did not
+// call it. A pick spent on Zero Gravity Movement & Combat stored 0, and
+// js/leveling.js advances from the STORED pct, so it climbed from 0 forever.
+// Creation was right and every level-up after it was wrong.
+//
+// F2 asked where the evaluation belongs and answered "the wizard" — correct for
+// both sites it looked at, and both were DISPLAY. This is the WRITE site. No
+// fixture had ever spent a pick on a formula-carrying row, which is exactly why
+// the suite could not see it.
+section('A pick spent on an attribute-derived skill');
+{
+  const ZERO_G = {
+    name: 'Space: Zero Gravity Movement & Combat', category: 'Physical',
+    base: 0, base_formula: 'PP*5', per_level: 4,
+  };
+  const picksDb = (rows) => ({
+    DB: { prepare: () => ({ bind: () => ({ all: async () => ({ results: rows }) }) }) },
+  });
+  const spend = (row, opts) => resolvePicks(picksDb([row]), {
+    picks: [{ name: row.name }], existingSkills: [], allowance: 1,
+    categories: null, level: 4, ...opts,
+  });
+
+  const derived = await spend(ZERO_G, { attributes: { PP: 12 } });
+  check('the formula resolves on the server write path, not only at creation',
+    derived.skills[0]?.pct === 60, `got ${derived.skills[0]?.pct}`);
+
+  // The fallback still holds: a caller with no attributes gets the stored base
+  // rather than an invented number.
+  const noAttrs = await spend(ZERO_G, {});
+  check('and with no attributes it falls back rather than inventing a number',
+    noAttrs.skills[0]?.pct === 0);
+
+  // THE JUDGEMENT F18 NAMES. The guard exists so a W.P. has no percentage for a
+  // percentage bonus to modify. A formula-derived base IS a real percentage and
+  // must take the class bonus — guarding on `row.base`, which is 0 here, would
+  // have traded a visible 0% for a percentage quietly missing its bonus.
+  const withBonus = await spend(ZERO_G, {
+    attributes: { PP: 12 }, categories: [{ name: 'Physical', bonus: 5 }],
+  });
+  check('a formula-derived base takes the class category bonus',
+    withBonus.skills[0]?.pct === 65, `got ${withBonus.skills[0]?.pct}`);
+
+  // And the case the guard was written for is untouched.
+  const wp = await spend(
+    { name: 'W.P. Sword', category: 'Weapon Proficiencies', base: 0, per_level: 0 },
+    { attributes: { PP: 12 }, categories: [{ name: 'Weapon Proficiencies', bonus: 5 }] });
+  check('while a non-percentile skill still takes no bonus at all',
+    wp.skills[0]?.pct === 0, `got ${wp.skills[0]?.pct}`);
 }
 
 // ---------- 1c25a2. The percentage printed beside a category ----------

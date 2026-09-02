@@ -12,6 +12,7 @@ import { json } from './auth.js';
 import { safeParse } from './character-json.js';
 import { categoryAllows, categoryBonus } from '../../../../apps/character-creator/js/parser.js';
 import { REPEATABLE_ROWS, isFamilyName, otherRowFor } from '../../../../apps/character-creator/js/language-skills.js';
+import { skillBase } from '../../../../apps/character-creator/js/skill-base.js';
 import { selectInChunks } from './sql-chunk.js';
 
 export async function listPending(env, characterId) {
@@ -94,7 +95,12 @@ export function dedupeCategories(entries) {
 // secondary slots is what makes an out-of-category pick an error.
 //
 // `secondaryAllowance` of 0 restores the old behaviour exactly.
-export async function resolvePicks(env, { picks, existingSkills, allowance, categories, level, secondaryAllowance = 0 }) {
+// `attributes` is the character's attribute block, needed because a skill's
+// starting percentage can be DERIVED from one — Zero Gravity Movement & Combat
+// is P.P. x5 (BOOK-INGEST-AUDIT F2). Without it that skill is stored at 0 and,
+// because js/leveling.js advances from the stored `pct`, climbs from 0 forever
+// (F18). Both callers already have the character loaded, so this costs no query.
+export async function resolvePicks(env, { picks, existingSkills, allowance, categories, level, secondaryAllowance = 0, attributes = {} }) {
   if (!Array.isArray(picks) || !picks.length) return { skills: [], errors: [] };
   if (picks.length > allowance) {
     return { errors: [`That is ${picks.length} picks but only ${allowance} are available`] };
@@ -126,7 +132,7 @@ export async function resolvePicks(env, { picks, existingSkills, allowance, cate
   // along in EVERY chunk, not just the first - a custom language landing in the
   // second chunk needs them as much as one in the first.
   const results = await selectInChunks(names, (batch) => env.DB.prepare(
-    `SELECT name, category, base, per_level FROM skills
+    `SELECT name, category, base, base_formula, per_level FROM skills
      WHERE name COLLATE NOCASE IN (${[...batch, ...REPEATABLE_ROWS].map(() => '?').join(',')})`
   ).bind(...batch, ...REPEATABLE_ROWS));
   const catalog = new Map(results.map((r) => [r.name.toLowerCase(), r]));
@@ -166,11 +172,15 @@ export async function resolvePicks(env, { picks, existingSkills, allowance, cate
     // which is the same rule the wizard applies at creation and the same rule
     // the books state: the parenthetical percentage is for related selections.
     //
-    // Guarded on the base for the same reason as at creation - a W.P. has no
-    // percentage for a percentage bonus to modify.
+    // Guarded on the RESOLVED percentage, not on the stored `base`. The guard
+    // exists so a W.P. has no percentage for a percentage bonus to modify — and
+    // a formula-derived base IS a real percentage, so it takes the bonus like
+    // any other. Testing `row.base` here would trade F18's visible 0% for a
+    // percentage quietly missing its class bonus, which is harder to notice than
+    // the bug it replaces. BOOK-INGEST-AUDIT F18.
     const catBonus = !asSecondary && allowed
       ? categoryBonus(allowed, { name: row.name, category: row.category }) : 0;
-    const base = row.base ?? 0;
+    const base = skillBase(row, attributes);
 
     skills.push({
       name: row.name,
