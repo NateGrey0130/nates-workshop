@@ -26,12 +26,19 @@ not the whole key list.
    nothing will ever flag it.
 2. **Write the markdown to a scratch `.md` file first**, not straight into SQL.
    Iterating on bare markdown avoids re-escaping quotes every pass.
-3. **Check it:**
+3. **Check it — against production:**
    ```bash
-   node scripts/class-check.mjs draft.md
+   node scripts/class-check.mjs draft.md --remote
    ```
-   Parses through the real parser and cross-references the real catalogs. Free,
-   no API call, no writes. Iterate here until it reads `ready`.
+   Parses through the real parser and cross-references the real catalogs. No API
+   call, no writes. Iterate here until it reads `ready`.
+
+   **`--remote`, not the default.** `class-check` defaults to `--local`, and a
+   local database that is BEHIND production makes it report a skill or gear row
+   as absent and print stub `INSERT OR IGNORE` SQL to create it. See *Rules that
+   are easy to get wrong*: that stub then outlives the mistake. It is slower —
+   slow enough to time out a two-minute call on four classes, so run them a
+   couple at a time.
 
    Then check the fields nothing pins against the page they came from:
    ```bash
@@ -50,8 +57,10 @@ not the whole key list.
    through `char()`, the readback `SELECT`s and the `data_script_runs` footer
    naming its own file:
    ```bash
-   node scripts/class-check.mjs draft.md --emit-script <id> > apps/character-creator/db/add-<id>-class.sql
+   node scripts/class-check.mjs draft.md --remote --emit-script <id> > apps/character-creator/db/add-<id>-class.sql
    ```
+   **`--remote` here above all**, because this is the step that writes the stubs
+   into a file that ships.
    It writes to **stdout only** — the report goes to stderr, it creates no file
    and applies nothing — and it refuses to emit from a draft that is not
    `ready`, or when the id disagrees with the frontmatter. The escaping is what
@@ -167,6 +176,17 @@ string and is fine.
 - **Pilot skills store without a `Pilot:` or `Military:` prefix.** The catalog
   row is `Jet Fighters`, not `Military: Jet Fighters`. Naming the prefixed form
   cost three classes a restriction that silently did nothing.
+- **Local D1 drifts in BOTH directions, and BEHIND is the dangerous one.**
+  `ship-pr` and `CLAUDE.md` both describe it accumulating — extra rows, a false
+  duplicate report, harmless. It has also been **52 skills SHORT**: 293 against
+  production's 345 on 2026-08-30. A missing row makes `class-check` report the
+  skill as absent and print stub SQL for it, `--emit-script` writes that stub
+  into `add-<id>-class.sql`, and the stub **sorts before the file that creates
+  the row properly** — so on a clean rebuild the stub wins and the real row is
+  ignored. An extra local row costs a false report; a missing one produces a
+  confident instruction to create a bad one. Pass `--remote`.
+  `rebuild-local.mjs` does not help: it builds a separate sqlite file, not the
+  wrangler `--local` D1 that `class-check` and the app read.
 - **Money is coin only.** `starting_money` is credits or gold; starting gear
   goes in `equipment_starting`.
 - **Every gear item needs a catalog row.** Missing ones get a stub carrying the

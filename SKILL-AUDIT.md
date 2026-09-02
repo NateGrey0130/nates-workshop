@@ -1,6 +1,6 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **Status 2026-09-02: `F1`–`F7`, `F10`–`F17` and `F20` taken (PRs #541–#557)
+> **Status 2026-09-02: `F1`–`F7`, `F10`–`F18` and `F20` taken (PRs #541–#558)
 > — `F12` in part, its documentation half only.
 > `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while taking
 > `F2`, and `F25` by taking `F4`. Everything else is open.** `F` numbers
@@ -1373,6 +1373,34 @@ gate** — `--remote` as a default for `class-check` is a tooling change with it
 own latency cost, and is not what this proposes.
 
 **Evidence.** Memory layer against `class-import` and `ship-pr`, 2026-09-02.
+
+**Taken, 2026-09-02 (PR #558).** Posture as proposed: two commands, three lines
+and one clause. **No new gate** — making `--remote` the *default* for
+`class-check` is a tooling change with its own latency cost and was not proposed.
+
+Premises held: both `class-check` invocations in the loop were flagless,
+`class-check` defaults to `--local`, and `ship-pr` described the drift in one
+direction only.
+
+**One thing worth stating that the finding left implicit.** The reason this is a
+skill change rather than a tooling change is that the two directions are not
+symmetrical and **neither is visible from inside the local database**. Extra rows
+produce a false report you can dismiss; missing rows produce a *confident
+instruction to create a bad row*, which `--emit-script` then writes into a file
+that ships and which sorts before the file that would have created it properly.
+That is `class-import`'s filename-order trap and `local` drift compounding into
+a third failure neither section predicts on its own — which is why the new
+paragraph sits in *Rules that are easy to get wrong* beside the sort rule, rather
+than in a footnote about databases.
+
+The latency cost is stated where the command is, not hidden: `--remote` is slow
+enough to time out a two-minute call on four classes, so run them a couple at a
+time. A session that hits that timeout and quietly drops back to `--local` is the
+obvious way this fix fails, and saying so is cheaper than discovering it.
+
+The memory is trimmed to what the skills do not carry — the timeout, and that
+`rebuild-local.mjs` builds a *separate* sqlite file rather than the wrangler
+`--local` D1 the app and `class-check` actually read.
 
 ---
 

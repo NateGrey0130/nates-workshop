@@ -221,6 +221,14 @@ carried **327 skills where the repo and production both have 324**, and an
 audit run against it reported two catalog duplicates that production merged away
 weeks ago — a finding that would have been fixed twice and was never real.
 
+**It drifts the other way too, and that direction is worse.** On 2026-08-30 the
+same database held **293 skills against production's 345** — 52 short. An extra
+row costs a false report; a missing one makes `class-check` print stub SQL to
+create a row that already exists, which `--emit-script` then writes into a file
+that ships. See `class-import` → *Rules that are easy to get wrong*. Neither
+direction is detectable from inside the local database, which is the argument
+for `--remote` rather than for keeping local tidy.
+
 Local is for *applying and testing a script*. Production is for *asking what is
 true*, and `repo-vs-live.mjs` is what proves the two agree:
 
