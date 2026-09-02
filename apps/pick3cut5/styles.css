@@ -2,11 +2,20 @@
    up at each other more than down at the screen.
    Everything below assumes a thumb, not a cursor. */
 
+/* THE ACCENT IS SHARED'S, for the reason in MediaVault's stylesheet — an
+   app's :root wins over shared's, so a scheme change reaches every app that
+   does not override it and stops at every app that does.
+
+   Here it also ends a collision. #ff6b4a sat dE00 9.8 from --cut #f87171,
+   which is close enough to read as one colour: the accent is what you can
+   press and --cut is one of the two things pressing it means. Shared's
+   verdigris is 61.6 from --cut and 26.4 from --keep. --border-focus was
+   var(--accent) here and is var(--accent) in shared, so it needed restating
+   no more than the rest.
+
+   --keep, --cut and --auto are the game's own vocabulary, not the scheme's,
+   and are untouched. */
 :root {
-  --accent: #ff6b4a;
-  --accent-glow: rgba(255, 107, 74, 0.15);
-  --accent-secondary: #ffb703;
-  --border-focus: var(--accent);
   --keep: #34d399;
   --keep-dim: rgba(52, 211, 153, 0.14);
   --cut: #f87171;

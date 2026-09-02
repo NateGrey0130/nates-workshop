@@ -39,17 +39,21 @@
    self-contained - see the note above the fonts - but a visitor should not
    be able to tell that the front door is a different file from the rooms.
 
-   --text-muted is #8A8076 rather than the #6B6259 the palette was drafted
-   with: 3.1:1 against this background, which is the same failure the old
-   #5a6178 had. 4.86 measured. */
+   --text-muted is #84938E rather than a darker draft: the muted tier is the
+   one that has failed here twice, at 3.1:1 under Rust & Ash's first draft and
+   again with the blue scheme's #5a6178. 5.80 measured against this background.
+
+   The smoke test compares these ten values against shared/styles.css by ROLE,
+   because a comment telling this file to keep in step did not stop it staying
+   blue and violet for months after every room behind it was retoned. */
 :root {
-  --bg: #14110F;
-  --bg-card: #1B1714;
-  --border: #302A24;
-  --text: #E9E3DA;
-  --text-sub: #9C9287;
-  --text-muted: #8A8076;
-  --accent: #C4622D;
+  --bg: #0F1412;
+  --bg-card: #151C19;
+  --border: #29332F;
+  --text: #E2E9E5;
+  --text-sub: #93A29D;
+  --text-muted: #84938E;
+  --accent: #35A0AE;
   --accent2: #D9A05B;
   --success: #7E9A5E;
   --warning: #C99A3E;

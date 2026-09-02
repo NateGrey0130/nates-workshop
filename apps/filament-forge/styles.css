@@ -6,7 +6,6 @@
   --tag-abs: #f87171;
   --tag-tpu: #c084fc;
   --tag-other: #fbbf24;
-  --orange: #fb923c;
 }
 
 /* ─── HEADER ─── */
@@ -21,9 +20,18 @@
   gap: 6px;
 }
 
-/* A darkening of --accent. Was #3a7aee, a darkening of the OLD shared
-   --accent, which after Rust & Ash left a blue hover on a rust button. */
-.btn-primary:hover { background: #A34E22; }
+/* A darkening of --accent, and now written AS --accent rather than as a
+   literal of it. This line has been wrong after both scheme changes it has
+   lived through: #3a7aee, a darkening of the blue accent, left a blue hover
+   on a rust button, and #A34E22 would have left a rust hover on a verdigris
+   one. Third time it follows the token.
+
+   88%, measured rather than picked. .btn-primary's foreground is
+   --bg-primary at 13px/600, which is not large text, so the hover has the
+   same 4.5 floor as the button: 88% of --accent is 4.77 against --bg-primary
+   where the literal it replaces was 3.29 and had been failing quietly for as
+   long as it existed. Below about 85% the hover starts failing again. */
+.btn-primary:hover { background: color-mix(in srgb, var(--accent) 88%, #000); }
 
 .btn-primary:disabled {
   opacity: 0.5;
