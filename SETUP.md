@@ -150,6 +150,43 @@ expects.
 `workers/pick3cut5-room/`, a standalone Worker that merging does not deploy —
 see the next section. The other is the deploy failing outright.
 
+### A branch push competes with the merge it is about to become
+
+**Every `git push` of a branch starts a PREVIEW build, and previews share one
+serialised build queue with production.** So pushing a branch queues a build
+roughly ten seconds before the merge queues the production one — and if the
+preview wedges, it holds the production deploy behind it.
+
+That happened on 2026-09-02. A preview for `f2-claim-audit-searches-docs`
+entered `initialize` 220ms after creation and never moved; the production build
+for that branch's merge sat `queued` behind it for **32 minutes**, and a second
+preview queued behind that. Deleting the wedged preview released the queue and
+production deployed 19 seconds later.
+
+Two things make it hard to recognise:
+
+- **A normal build here takes 20-35 seconds**, so anything past a couple of
+  minutes is stuck rather than slow.
+- **GitHub's check-run says `Building` for a deployment Cloudflare has not
+  started.** Its stage said `queued`, then `initialize`, with an empty build
+  log. Reading the check-run alone sends you hunting a compile error under
+  `functions/` — in a diff that may touch no code at all.
+
+**Ask Cloudflare for the real stage**, which the `cloudflare-api` MCP plugin can
+do (`CLAUDE.md` → *Three credentials*):
+
+```
+GET /accounts/{id}/pages/projects/nates-workshop/deployments
+    -> per deployment: environment, latest_stage.name, latest_stage.status
+```
+
+The oldest one not in `deploy` is the blocker. Deleting it releases the queue.
+`node scripts/deploy-sweep.mjs` now flags any build pending over ten minutes and
+prints this procedure. **Why a deployment stalls before `clone_repo` is not
+known** — the API exposes stage and timing and nothing about the scheduler. One
+occurrence is not a pattern; `HEALTH-AUDIT.md` F24 records the deployment id for
+a recurrence.
+
 ### When the merge does not deploy
 
 Pages compiles **every** file under `functions/` — reachable from a route or

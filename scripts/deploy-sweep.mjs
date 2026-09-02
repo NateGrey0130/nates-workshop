@@ -94,7 +94,11 @@ for (const c of commits) {
   try {
     const out = run('gh', [
       'api', `repos/${REPO}/commits/${c.sha}/check-runs`,
-      '--jq', '[.check_runs[] | .name + "=" + (.conclusion // "pending")] | join(",")',
+      // `started_at` rides along so a pending run can be AGED. Without it a
+      // build twenty seconds old and one wedged for half an hour print the
+      // same line - which is how a stalled deploy read as healthy here for 32
+      // minutes on 2026-09-02 (HEALTH-AUDIT F24).
+      '--jq', '[.check_runs[] | .name + "=" + (.conclusion // "pending") + "@" + (.started_at // "")] | join(",")',
     ]).trim();
     conclusions = out;
   } catch (err) {
@@ -112,7 +116,14 @@ for (const c of commits) {
     continue;
   }
   if (conclusions.includes('=pending')) {
-    pending.push({ ...c, why: conclusions });
+    // How long has it been pending? A Pages build here finishes in 20-35
+    // seconds, so ten minutes is not "slow", it is stuck - usually behind a
+    // wedged PREVIEW build, because previews and production share one
+    // serialised queue and a branch push queues one 12 seconds before the
+    // merge does. SETUP.md -> "How deploys work" has the mechanism.
+    const started = conclusions.match(/=pending@([^,]+)/)?.[1];
+    const mins = started ? Math.floor((Date.now() - Date.parse(started)) / 60000) : null;
+    pending.push({ ...c, why: conclusions, mins });
     continue;
   }
   if (conclusions.includes('=success') && !/=(failure|cancelled|timed_out|action_required)/.test(conclusions)) {
@@ -131,16 +142,44 @@ if (bad.length) {
   for (const c of bad) console.log(`    ${short(c)}\n        ${c.why}`);
   console.log('');
 }
-if (pending.length) {
-  console.log(`  ${pending.length} still building:\n`);
-  for (const c of pending) console.log(`    ${short(c)}`);
+// Ten minutes. A Pages build on this project takes 20-35 seconds, so this is
+// not a tight threshold - it is twenty times the normal run.
+const STALLED_MINS = 10;
+const stalled = pending.filter((c) => c.mins !== null && c.mins >= STALLED_MINS);
+const building = pending.filter((c) => !stalled.includes(c));
+
+if (building.length) {
+  console.log(`  ${building.length} still building:\n`);
+  for (const c of building) {
+    console.log(`    ${short(c)}${c.mins !== null ? `  (${c.mins}m)` : ''}`);
+  }
   console.log('');
+}
+if (stalled.length) {
+  console.log(`  ${stalled.length} PENDING FOR OVER ${STALLED_MINS} MINUTES - probably stuck:\n`);
+  for (const c of stalled) console.log(`    ${short(c)}  (${c.mins}m)`);
+  console.log('');
+  console.log('  A build here normally takes 20-35 seconds. Previews and production share');
+  console.log('  one queue, so the usual cause is a wedged PREVIEW build ahead of this one -');
+  console.log('  often the preview for the same branch, queued by the push seconds before');
+  console.log('  the merge. GitHub reports "Building" for a deployment Cloudflare has not');
+  console.log('  started; ask Cloudflare for the real stage:\n');
+  console.log('    GET /accounts/{id}/pages/projects/nates-workshop/deployments');
+  console.log('        -> latest_stage.name + .status per deployment');
+  console.log('');
+  console.log('  Deleting the wedged one releases the queue. SETUP.md -> "How deploys work".\n');
 }
 
 if (!bad.length) {
   // "Pages:" is load bearing. Unqualified, this line read as a claim about the
   // site while being a claim about one of its two deploy paths.
-  console.log(`  Pages: ${ok} deployed${pending.length ? `, ${pending.length} still building` : ''}, nothing missing.\n`);
+  // A stalled build is NOT "nothing missing" - the change it carries is not on
+  // the site. Saying so is the whole of F24: the old line read identically at
+  // twenty seconds and at thirty-two minutes.
+  const tail = stalled.length
+    ? `, ${stalled.length} STUCK - see above`
+    : ', nothing missing.';
+  console.log(`  Pages: ${ok} deployed${building.length ? `, ${building.length} still building` : ''}${tail}\n`);
 } else {
   console.log('  The site is serving the last build that compiled. Find the first bad');
   console.log('  commit above, then look for a file under functions/ - or anything one');
