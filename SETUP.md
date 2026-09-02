@@ -519,6 +519,23 @@ machine, including work that has nothing to do with this repo.
 It is checked in nowhere, so a fresh machine writes it alongside running the
 block above.
 
+**`launch.json` exists twice, and the second copy is untracked on purpose.**
+`.claude/launch.json` is tracked and machine-independent. The *working
+directory's* own `.claude/launch.json` — the one a session started **outside** the
+repo loads instead — is a **derivative** of it: same entries, same names, same
+ports, same comments, with every command wrapped in
+`cmd /c cd /d C:\Users\natha\Projects\nates-apps && …`, because that session has
+the wrong working directory. Same reason the junctions above exist.
+
+It cannot be tracked, because it hardcodes an absolute path and the tracked file
+has to stay machine-independent. **So nothing keeps the two in step, and by
+2026-09-02 they had drifted** — the untracked copy had lost all twenty comment
+lines, which are the only written record of the 8788 collision trap, from the
+file that a session outside the repo is precisely the one to load
+(`MACHINE-AUDIT` `M14`). **A change to the tracked file has to be mirrored into
+the other by hand**, comments included. There is no generator, and a five-entry
+JSON file does not justify one.
+
 ### The command-line tools
 
 `node`, `npm`, `git` and `gh` put themselves on PATH and need nothing here.
