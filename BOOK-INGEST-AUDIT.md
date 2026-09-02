@@ -1936,6 +1936,41 @@ whole suite run flagless.
 
 Smoke 1649 → **1653 in 113 sections**; regression **237**, unchanged.
 
+**Verified END TO END on production, 2026-09-02.** Nate spent a real banked pick
+on `1212` (level 6, P.P. 15) through the live sheet, and D1 was read back rather
+than the sheet trusted:
+
+```
+pct         75          = P.P. 15 x 5.  The shipped bug would have stored 0.
+type        related     correct - Physical IS in the grant's categories
+unspent     3 -> 2      a banked pick was genuinely consumed
+claimed     0 -> 1      the level-3 grant: oldest first, as claimStatements says
+grant_rows  unchanged   so this was resolvePicks, not the grants.js path
+override    absent      correctly in-category
+```
+
+At level 10 that character now reads **91%** where the old code gives **16%**.
+
+**Three earlier attempts at this verification all landed on healthy paths**, and
+that is the durable lesson rather than the fix. A level-1 character exercised
+*creation*, which `app.js` already resolved correctly. A GM grant exercised
+`_lib/grants.js`, which already called `skillBase()` — the very path whose
+disagreement exposed this finding. Both produced a **correct number from code
+that was never broken**, and both read as a pass. What finally discriminated was
+not the percentage at all but the **pick counters**: `unspent` and `claimed` are
+the only evidence that `resolvePicks` ran, and no other path can move them.
+
+**A verification needs a signature, not a value.** The value was satisfiable
+three ways.
+
+**And one prediction here was wrong, from a self-inflicted truncation.** `type`
+was expected to be `secondary`, on the reading that the grant covered only
+Communications. Its category list holds thirteen entries and the sixth is
+`{"name":"Physical","except":["Acrobatics","Boxing","Wrestling"]}` — the display
+that said otherwise had been cut to 60 characters *by the query that printed
+it*. Same shape as the terminal-transcription trap `windows-shell` records: read
+the value from the file, not from a rendering of it.
+
 **One thing worth recording for the protocol rather than for this fix.**
 `audit-menu` says to grep the tree for a finding's number when it is taken. Here
 that is actively misleading: **six menus in this repo have an `F18`** —
