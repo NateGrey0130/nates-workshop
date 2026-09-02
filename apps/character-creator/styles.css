@@ -1528,8 +1528,10 @@ body.play-mode #print-btn { display: none; }
      columns into a 700px page and took the sheet from seven pages to eight.
      Measured, not predicted. The body goes back to a block and the inner
      grids go back to being grids, which is exactly the layout paper had
-     before this phase. Phase 7 owns print properly; this only holds it
-     still. */
+     before this phase. This was written as a holding rule for phase 7 to
+     take over; phase 7 is the pagination work below, and it left these
+     lines alone - the layout half was already right, and the page count
+     turned out to be content rather than layout. */
   /* The prose cap is a screen decision too: on a 700px page 66ch is
      NARROWER than the column, so it wraps more and runs longer. */
   .box[data-box] .box-body { max-width: none; }
@@ -1539,7 +1541,12 @@ body.play-mode #print-btn { display: none; }
      the page count did not move. Measured, both ways - five pages either
      way, with pages 3-5 carrying 1957, 2238 and 730 drawing operators.
      Multicol FLOWS: it fills column one, then column two, then the next
-     page, and break-inside on each box decides where it may split. */
+     page, and break-inside on each box decides where it may split.
+
+     Those five-page figures are the RECORD OF THAT COMPARISON, not the
+     current state, and they do not reproduce: character 1 renders 3 pages
+     today. The comparison still stands - it is grid against multicol on one
+     character at one moment - but do not read the numbers as a baseline. */
   .sheet-grid.sheet-3 {
     display: block; columns: 2; column-gap: 10px;
   }
@@ -1562,17 +1569,40 @@ body.play-mode #print-btn { display: none; }
   .vital .val { font-size: 17px; font-weight: 700; line-height: 1.2; }
   .attr-stack .field > .val { font-size: 15px; }
 
-  /* The page-count driver. Every .box is break-inside: avoid, which is right
-     for a six-row Combat box and wrong for Equipment at 23 items or Skills at
-     sixty: an unbreakable box taller than the space left pushes a whole page
-     and leaves the rest of it blank. Measured: pages 3-5 carried 1957, 2238
-     and 730 drawing operators against 8037 on page 1. The long lists are
-     allowed to break; their rows already avoid breaking away from their own
-     footnotes. */
   /* A machine-generated event log has no place on a printed character
      sheet. Phase 7 could not add this rule - .session-log did not exist
      until the box did. */
   .box[data-box="session-log"] { display: none !important; }
+
+  /* THE PAGE COUNT IS CONTENT, NOT LAYOUT, so this cuts content rather than
+     shrinking type. Background and Bearing are character-CREATION prose -
+     where you grew up, what you sound like - and nothing there is looked up
+     mid-session.
+
+     Measured on character 1, one step at a time, in drawing operators per
+     page: 3 pages at 20025/15418/7134 before, 3 at 20025/12812/4666 after.
+     THIS DOES NOT REACH TWO PAGES and the comment should not pretend it does.
+     It is the right cut on its own terms - creation prose is not table
+     reference - and it takes 5074 operators of it off paper.
+
+     Two further attempts were made and BOTH REVERTED, because neither
+     reached two pages and each cost something:
+       - cutting Notes as well: 3 pages at 20025/13697/959. It would have paid
+         a box the player writes for themselves and bought no page.
+       - letting Notes break like the long lists do: 3 pages at
+         20025/13612/3923. It fills the whitespace at the foot of page two's
+         second column, but splits the box mid-prose and still does not
+         close the page.
+
+     WHY THREE PAGES IS WHERE THIS STOPS. Page three is Notes and Journal,
+     whole and unsplit - about a quarter page of content past the break. Both
+     are table reference rather than creation prose, so cutting them is a
+     different trade from cutting Background and Bearing. Shrinking type or
+     tightening padding would close it and is the one thing not on the table:
+     a printed sheet that is hard to read at the table has failed differently.
+     A lighter character reaches two pages on these rules already. */
+  .box[data-box="background"],
+  .box[data-box="bearing"] { display: none; }
 
   .vital .val b { display: inline !important; }
   .vital .bar, .vital .steppers { display: none !important; }
