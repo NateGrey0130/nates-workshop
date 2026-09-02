@@ -566,6 +566,18 @@ wherever the session started. Promoting accumulated approvals would move grants
 out of a per-machine, disposable list into a version-controlled and shared one,
 which is the opposite direction from that prune (`MACHINE-AUDIT` `M11`).
 
+**There is a PowerShell profile, and it is in two pieces on purpose.**
+`$PROFILE.CurrentUserAllHosts` resolves into OneDrive — `Documents` is redirected
+there and `$PROFILE` is computed from that redirection — so what sits at that
+path is a two-line **stub** that dot-sources
+`C:\Users\natha\Projects\workshop\profile.ps1`. The stub never changes, so
+OneDrive never conflict-copies a file that every shell executes; the content
+lives beside the work and moves with it. Add things to the real file, never to
+the stub, and **keep PATH out of both** — PATH belongs in the registry, and a
+profile that edits it creates a second source of truth only interactive shells
+see (`MACHINE-AUDIT` `M4`). It is a convenience, not a requirement: nothing here
+breaks on a machine without it.
+
 ### The command-line tools
 
 `node`, `npm`, `git` and `gh` put themselves on PATH and need nothing here.
