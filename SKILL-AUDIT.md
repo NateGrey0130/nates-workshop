@@ -1,6 +1,7 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **Status 2026-09-02: `F1`–`F5`, `F7`, `F11` and `F13` taken (PRs #541–#549).
+> **Status 2026-09-02: `F1`–`F5`, `F7`, `F11`, `F13` and `F15` taken
+> (PRs #541–#550).
 > `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while taking
 > `F2`, and `F25` by taking `F4`. Everything else is open.** `F` numbers
 > are findings about instructions that exist; `N` numbers are new-skill
@@ -1025,6 +1026,31 @@ still correct.
 current claim; do not quote the phrase being replaced**, per `audit-menu`.
 
 **Evidence.** Memory layer against the repo, 2026-09-02.
+
+**Taken, 2026-09-02 (PR #550).** Posture as proposed: rewrite the status
+paragraph, the `description:` and the index line; keep everything else. Premises
+held — `N1` #470, `N3` #473, `N4` #472 and `N6` #469 all merged 2026-09-01, and
+the memory was last written 2026-09-01T11:03Z.
+
+**One correction to the finding, and it makes the case worse rather than
+better.** The finding says four closed items were reported open. Read against
+every heading in `REDESIGN-AUDIT.md`, the memory was wrong about **seven of
+fifteen**: those four, plus *"six findings were opened"* where there are eight
+(`N7` and `N8` were opened and taken the same day, #474 and #475), plus `R7`,
+which it credits to #468 when #468 was the **held** implementation and the work
+shipped as #477. Every error points the same way — it recorded the state of one
+afternoon and nothing revisited it.
+
+**The rewrite makes the memory stop competing with the file.** Rather than
+restating a status that will rot again, the paragraph now points at
+`REDESIGN-AUDIT.md`'s own header, which is measured, dated and maintained by the
+protocol — and keeps only what the file does not carry: `R3` unadopted, `R6`
+partial and why, `R7` held-then-shipped, and the `N2` twist where its escape
+hatch was later deleted by the Rust & Ash redesign's phase 4. The `description:`
+says the same, because that is the line recall matches on.
+
+The correction names the current state without reprinting the sentence it
+replaces, per `audit-menu`.
 
 ---
 
