@@ -6,8 +6,9 @@ brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
 `low`. Nothing here is taken until Nate names it; one PR per finding, outcome
 note appended under the finding in the same PR.
 
-**Status, 2026-09-02: `M1`, `M2`, `M3` and `M5` taken and closed. `M16` was
-opened while taking `M1` and is filed but NOT taken. Everything else is open.** Read the lines under a finding for its status — the notes here vary in
+**Status, 2026-09-02: `M1`, `M2`, `M3`, `M5` and `M6` taken and closed — the
+whole environment half except `M4`. `M16` was opened while taking `M1` and is
+filed but NOT taken. Everything else is open.** Read the lines under a finding for its status — the notes here vary in
 wording like every other menu in this repo, and grepping for one has been wrong
 in both directions.
 
@@ -456,6 +457,18 @@ is the documentation.
 **Posture:** documentation only. **This is a "leave it alone" finding** and
 should stay one — the temptation on reading it is to "fix" the alias ordering,
 which would change a working toolchain to prevent a setting nobody has touched.
+
+**Taken, 2026-09-02 (PR #576)**, and left alone, which is the posture. No
+interpreter pinned, no `requirements.txt`, no PATH reordering.
+
+Every premise re-checked and confirmed, including the absence claim — the one
+this menu's own protocol says is most likely to be wrong. Proved by reading
+rather than grepping: `scripts/` holds exactly two `.py` files and `pymupdf` is
+the only third-party import between them.
+
+**One refinement.** The alias target is given here as `AppData\Local\Python`; the
+interpreter is at `AppData\Local\Python\pythoncore-3.14-64\python.exe`.
+`SETUP.md` records the measured path.
 
 ---
 
