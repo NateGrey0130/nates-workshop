@@ -127,8 +127,61 @@ into the commit. If it happens: delete the file, then
 
 ## Nate's shell is not your shell
 
-His interactive PowerShell does not see `%APPDATA%\npm`, though the persisted
-user PATH contains it and the directory exists — his sessions inherit a stale
-environment block from a long-lived `explorer.exe`. **Call binaries by absolute
-path in anything you hand him to run.** Investigated 2026-09-01 and left
-unresolved at his call; the config is fine, the inheritance is not.
+**Your Bash is Git Bash. His is Windows PowerShell 5.1.** That is the whole
+difference, and it is permanent rather than broken. Git Bash prepends its own
+toolchain — `/mingw64/bin`, `/usr/local/bin`, `/usr/bin` — ahead of everything
+Windows persists. A freshly-opened PowerShell gets the Machine PATH and the User
+PATH concatenated, and nothing else.
+
+So a command can exist for you and not for him, or exist for both and **be a
+different program**. Measured 2026-09-02, in a shell whose PATH was rebuilt from
+the persisted values alone:
+
+| you type | you get | he gets |
+|---|---|---|
+| `git` | `/mingw64/bin/git` | `C:\Program Files\Git\cmd\git.exe` |
+| `sed` `awk` `file` `tr` `grep` | `/usr/bin/…` | **nothing** |
+| `find` | `/usr/bin/find`, GNU | `C:\WINDOWS\system32\find.exe`, not GNU |
+| `diff` `curl` | `/usr/bin/diff`, `/mingw64/bin/curl` | PowerShell **aliases** for `Compare-Object` and `Invoke-WebRequest` |
+
+The bottom two rows are the dangerous ones: nothing fails, and the wrong program
+answers.
+
+**Ask what his PATH is; do not model it.** One line prints what a new window of
+his will resolve against:
+
+```powershell
+([Environment]::GetEnvironmentVariable('PATH','Machine') + ';' +
+ [Environment]::GetEnvironmentVariable('PATH','User')) -split ';'
+```
+
+**Two things that are not the mechanism**, both believed here on 2026-09-01 and
+neither surviving a check a day later:
+
+- **An inherited environment block is not going stale.** Tested by trying to
+  make it: a fresh value was written to `HKCU\Environment` with **no**
+  `WM_SETTINGCHANGE` broadcast at all, and a process launched by an
+  `explorer.exe` that had been running six days saw it immediately. Explorer
+  picks up registry changes here on its own. The one environment that really is
+  frozen is **a window that is already open** — a process's block is fixed when
+  it starts and nothing updates it afterwards. That is a reason to open a new
+  window, never a reason to work around anything.
+- **PATH was not what failed.** That session's own record shows an *absolute*
+  path to the npm shim failing as well. PATH cannot make an absolute path fail,
+  so resolution was never the fault — and `%APPDATA%\npm` is on his PATH, where
+  `wrangler` resolves for him today.
+
+To observe his environment rather than model it, have `explorer.exe` launch the
+probe so the probe inherits the block in question. A shell you rebuild yourself
+answers a question about your reconstruction.
+
+**There is no workaround here, and absolute paths are not one.** Writing full
+paths into everything you hand him hides the asymmetry rather than showing it,
+and then every command that would have exposed a real gap has been
+pre-worked-around. That is how `pdftotext` stayed off his PATH for as long as it
+did while every agent session ran it without noticing. When something you hand
+him fails, the table above says why at a glance, and the repair is a PATH entry
+or a different command name — never a longer string.
+
+**A PATH change does not reach an already-open terminal.** New window, or a
+correct fix reads as broken.
