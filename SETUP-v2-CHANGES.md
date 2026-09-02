@@ -1,5 +1,30 @@
 # SETUP.md v2: Changes
 
+**All eight taken, 2026-09-02 (PR #502), in one commit.** SETUP.md is v2 on
+`main`, and the deploy was confirmed at `success` on the merge commit's
+check-runs — which is, appropriately, the step change 1 is about.
+
+Three decisions made alongside them, recorded here because they are not visible
+in SETUP.md:
+
+- **Change 1 split across two files.** SETUP.md describes the failure mode;
+  `.claude/skills/ship-pr/SKILL.md` carries the verification as a required step
+  in the merge loop. That answers **open question 2** the second way.
+- **`docs/pages-to-workers-migration.md` gained a dated *Revisited 2026-09-01*
+  section** keeping its recommendation and putting the cost/benefit on record
+  as predating the outage. **Open question 3** closed without reopening the
+  Pages-vs-Workers decision.
+- **Open question 1 answered, not acted on.** The `fonts.googleapis.com`
+  allowance in `apps/pick3cut5/test/smoke.mjs` is dead — the fonts are
+  self-hosted, the list is always empty, and the check passes vacuously. A test
+  finding rather than a documentation one; filed for a separate PR.
+
+**This file stays.** It holds the rationale for each change and the sections
+read and confirmed unchanged, neither of which the rewritten SETUP.md carries.
+One correction to it: change 3's rationale says `docs/` is cited twice in the
+body. It is cited once, in the second-Worker section. Everything else below was
+re-checked against the working tree during the rewrite and held.
+
 > After full review, create a fresh v2 incorporating all changes.
 > Do NOT edit SETUP.md inline from this document — start a fresh session with
 > SETUP.md, this file, and `CLAUDE.md` + `docs/pages-to-workers-migration.md`
