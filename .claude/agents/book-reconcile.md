@@ -29,6 +29,38 @@ A set of proposed rows or corrections, and the path to the book's OCR cache
 (`.cache/books/<slug>/txt/*.txt`, with word geometry in `../tsv/`). Read the
 book. Do not take the proposal's word for anything.
 
+## A CACHE PAGE IS NOT A PRINTED PAGE. Convert before you cite one
+
+You are asked below to report *where in the book* you read a fact, and the cache
+is not addressed by printed page. Get this wrong and you quote the book correctly
+off the wrong page — which surfaces as your most severe verdict, *"the index does
+not list this at all"*, with a good row reported wrong and nothing looking
+unusual.
+
+```
+cache page = printed folio + page_offset
+```
+
+`scripts/books.json` records `page_offset` per slug, and the cache's own
+`manifest.json` records what was measured when it was built. **Read it from one
+of those rather than deriving it.** Offsets here run from `-1` to `3`, so
+assuming +1 is wrong more often than right.
+
+**Two books change offset partway through.** `pf` and `underseas` carry a
+`page_offset_exceptions` list — `[{ printed_through, offset }]`, first match
+wins, everything past the last entry falling through to `page_offset`. A single
+number sends every lookup on one side of the split to the wrong page, and
+`underseas` splits in the middle of the book.
+
+**The folio printed on the page is the free check and it settles everything.**
+Read it before citing a page. If it disagrees with what the registry predicts,
+**say so** — that is a real finding about the cache, not something to work around
+quietly.
+
+**Cite the PRINTED folio**, because that is what the book, its index and every
+other reader use. Name the cache page as well only when the two are worth showing
+together.
+
 ## How to check
 
 **Read every number twice, from two places.** Most books state a fact in two

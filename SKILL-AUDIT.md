@@ -1,7 +1,7 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **Status 2026-09-02: `F1`–`F7`, `F11`, `F13`, `F15`, `F16` and `F20` taken
-> (PRs #541–#553).
+> **Status 2026-09-02: `F1`–`F7`, `F10`, `F11`, `F13`, `F15`, `F16` and `F20`
+> taken (PRs #541–#554).
 > `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while taking
 > `F2`, and `F25` by taking `F4`. Everything else is open.** `F` numbers
 > are findings about instructions that exist; `N` numbers are new-skill
@@ -750,6 +750,34 @@ report-only mandate.**
 
 **Evidence.** Git history (`git log -1` on `.claude/agents/`) against
 `scripts/books.json` and `book-survey` §0d, 2026-09-02.
+
+**Taken, 2026-09-02 (PR #554).** Posture as proposed: add a section, **no change
+to the agent's scope, tools or report-only mandate**, and no tool added — it
+already has `Read` and `Bash`, so it can open `books.json` itself.
+
+Premises held. `.claude/agents/` was last touched **2026-08-22** (`8fe6f67`),
+eleven days before everything else in this surface and before the offset registry
+existed. The file contained **zero** occurrences of `offset`, `books.json`,
+`folio` or `printed`, while its output contract asks for *"where in the book you
+read it — page and which reading"*.
+
+**Written with the rule `F6` had just established** rather than a fresh
+derivation: `cache page = printed folio + page_offset`, verified an hour earlier
+against three caches by reading the folio on the page. Taking `F6` first made
+this section a citation instead of an investigation.
+
+**One thing added the proposal did not list**, and it is the half that matters
+for a reconciler: **cite the printed folio, not the cache page.** The agent's
+whole output is *"here is where I read it"*, consumed by someone holding the
+book — so the conversion has to run in the reporting direction too, not only when
+looking a page up. The proposal covered the lookup and stopped there.
+
+Also stated: the folio printed on the page is the free check and a disagreement
+with the registry is **a finding to report**, not something to work around
+quietly. That matches the agent's existing posture — it reports and never fixes.
+
+Junction verified after the edit: `~/.claude/agents/book-reconcile.md` is
+byte-identical, as the whole-directory junction guarantees.
 
 ---
 
