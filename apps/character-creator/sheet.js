@@ -26,6 +26,13 @@ const SAVE_FIELDS = [
 // Play mode rolls a d20, so the one percentile row is not one of its buttons.
 // Filtered rather than listed again, which is how the two drifted the first time.
 const SAVE_ROLLS = SAVE_FIELDS.filter(([key]) => !key.endsWith('_pct'));
+// The combat rows play mode offers a die on: the four the old play view drew as
+// .play-roll buttons, and no more. Attacks per melee, damage bonuses and Run
+// are numbers you READ mid-fight rather than d20 rolls, and a die beside them
+// would invite a roll that means nothing. A Set rather than a second list of
+// labels, so it is keyed off COMBAT_FIELDS' own keys and cannot drift from
+// them the way SAVE_ROLLS was written to avoid.
+const ROLLABLE_COMBAT = new Set(['initiative', 'strike', 'parry', 'dodge']);
 
 // The saves a book states that the sixteen fields above do not name
 // (BOOK-INGEST-AUDIT.md F7) — the Spacer's "+2 to any saves against explosive
@@ -355,12 +362,17 @@ const advisory = (label, value) => {
 // sheet lens leaves to a human. Writes ride the existing PATCH; there is no
 // play-specific endpoint.
 
+// A CLASS FLIP, NOT A RE-RENDER. Both modes are in the DOM at once now, so
+// switching is CSS - which means it no longer rebuilds every input on the
+// sheet, and no longer eats a half-typed note. Same reason pickTab toggles
+// classes rather than re-rendering.
 function togglePlay() {
   C.playMode = !C.playMode;
   const url = new URL(location.href);
   if (C.playMode) url.searchParams.set('play', '1'); else url.searchParams.delete('play');
   history.replaceState(null, '', url);
-  render();
+  syncPlayChrome();
+  sticky.sizeSticky();
 }
 
 function syncPlayChrome() {
@@ -881,6 +893,51 @@ function meleeState() {
   return C.melee;
 }
 
+// ONE ROLL CONTROL, used by every rollable row on the sheet.
+//
+// Play mode used to be a second render path that drew the same skills, saves
+// and combat bonuses again as .play-roll buttons. It is a MODE now: the sheet
+// renders once, and these buttons sit beside the numbers, hidden until
+// body.play-mode shows them. The rows themselves stay tables and field divs,
+// which is what keeps print unchanged - a row that BECAME a button would have
+// vanished from paper, because the print block hides every button outright.
+//
+// Not gated on `w`: rolling changes nothing, and a read-only viewer at the
+// table rolls their own dice. The old play path did not gate it either.
+function rollBtn(r) {
+  const safe = escHtml(String(r.name)).replace(/'/g, '&#39;');
+  const call = r.pct != null
+    ? `rollSkill('${safe}', ${Number(r.pct) || 0})`
+    : `rollD20('${r.kind}', '${safe}', ${Number(r.bonus) || 0}, ${r.target ?? null})`;
+  return `<button type="button" class="roll-btn noprint"
+    aria-label="Roll ${safe}" onclick="${call}">🎲</button>`;
+}
+
+// Everything play mode adds to the sheet: the amount strip, the melee counter,
+// the weapon cards and the rest panel. Rendered ALWAYS and shown by CSS, so
+// switching modes is a class flip rather than a re-render - which is what lets
+// togglePlay stop rebuilding the page and stop eating a half-typed note, the
+// same reason pickTab toggles classes instead of re-rendering.
+function playControlsHtml(w, combat) {
+  const amts = [1, 5, 10, 20].map((n) =>
+    `<button data-amt="${n}" class="${n === C.playAmt ? 'on' : ''}" onclick="setPlayAmt(${n})">${n}</button>`).join('');
+  return `<div id="play-controls" class="noprint">
+    ${w ? `<div class="play-amt"><span class="muted small">Amount</span>${amts}
+      <button class="dmg" onclick="quickDamage()">💥 Damage</button>
+      <button onclick="undoLast()">↶</button>
+      <button onclick="endSession()">✎ End session</button></div>` : ''}
+    <div class="play-melee">
+      <span id="play-melee-label">${meleeLabel(combat.attacks)}</span>
+      <span>
+        <button onclick="nextAttack(${Number(combat.attacks) || 0})">Next attack</button>
+        <button onclick="newRound(${Number(combat.attacks) || 0})">New round</button>
+        <button class="ghost" onclick="resetMelee(${Number(combat.attacks) || 0})">⟲</button>
+      </span>
+    </div>
+    ${weaponCardsHtml(w, combat.strike)}
+    ${w ? restPanelHtml() : ''}
+  </div>`;
+}
 function meleeLabel(attacksPer) {
   const m = meleeState();
   return `Round ${m.round} — attack ${m.attack} of ${attacksPer || '?'}`;
@@ -995,107 +1052,6 @@ function restPanelHtml() {
 }
 
 
-function renderPlay() {
-  const c = C.data, w = C.canWrite;
-  const cls = C.cls || {};
-  const skills = Array.isArray(c.skills) ? c.skills : [];
-  const powers = Array.isArray(c.powers) ? c.powers : [];
-  const attrs = c.attributes || {};
-  const bonuses = derive.classBonuses(cls, c.level, {
-    attributes: c.attribute_bonuses || {},
-    combat: c.rolled_bonuses?.combat || {},
-    saves: c.rolled_bonuses?.saves || {},
-  });
-  const combat = derive.combat(attrs, c.combat, bonuses);
-  const saves = derive.saves(attrs, c.saves, cls.psionics?.type, bonuses);
-
-  const poolCards = POOLS.map(([key, label]) =>
-    poolCard(key, label, c[key + '_current'], c[key + '_max'], w, true)).join('');
-
-  const amts = [1, 5, 10, 20].map((n) =>
-    `<button data-amt="${n}" class="${n === C.playAmt ? 'on' : ''}" onclick="setPlayAmt(${n})">${n}</button>`).join('');
-
-  const combatRows = [
-    ['Initiative', combat.initiative], ['Strike', combat.strike],
-    ['Parry', combat.parry], ['Dodge', combat.dodge],
-  ].map(([label, v]) => `<button class="play-roll" onclick="rollD20('combat', '${label}', ${Number(v) || 0}, null)">
-      <span>${label}</span><span class="pr-num">${v > 0 ? '+' + v : v || '+0'}</span></button>`).join('');
-
-  const saveRows = SAVE_ROLLS.map(([key, label]) => {
-    const v = saves[key];
-    if (v == null) return '';
-    const target = key === 'psionics' ? (saves.psionics_target || null) : null;
-    return `<button class="play-roll" onclick="rollD20('save', '${label}', ${Number(v) || 0}, ${target})">
-      <span>${label}${target ? ` <span class="muted small">(${target}+)</span>` : ''}</span>
-      <span class="pr-num">${v > 0 ? '+' + v : v}</span></button>`;
-  }).join('')
-    // The saves the sixteen fields do not name, in the book's own words
-    // (BOOK-INGEST-AUDIT.md F7). Rollable like any other, because a save that
-    // cannot be rolled is prose. Read from the CLASS rather than the derived
-    // map: these have no attribute chart to combine with, which is the point.
-    + otherSaves(C.cls).map((e) => {
-      const v = Number(e.bonus) || 0;
-      return `<button class="play-roll" onclick="rollD20('save', '${escHtml(e.label).replace(/'/g, '&#39;')}', ${v}, null)">
-      <span>${escHtml(e.label)}</span>
-      <span class="pr-num">${v > 0 ? '+' + v : v}</span></button>`;
-    }).join('');
-
-  const skillGroups = [['occ', 'Class Skills'], ['related', 'Related Skills'],
-                       ['secondary', 'Secondary Skills'], ['gm', 'Granted']]
-    .map(([type, label]) => {
-      const list = skills.filter((s) => s.type === type && s.pct);
-      if (!list.length) return '';
-      const rows = list.map((s) => `<button class="play-roll" onclick="rollSkill('${escHtml(s.name).replace(/'/g, '&#39;')}', ${s.pct})">
-          <span>${escHtml(s.name)}</span><span class="pr-num">${s.pct}%</span></button>`).join('');
-      return `<details class="play-sec" open><summary>${label} <span class="muted small">${list.length}</span></summary>${rows}</details>`;
-    }).join('');
-
-  const powerRows = powers.map((p, idx) => {
-    const pool = p.type === 'spell' ? 'ppe' : 'isp';
-    const cost = typeof p.cost === 'number' ? p.cost : null;
-    const left = c[pool + '_current'];
-    return `<div class="play-power">
-      <span>${escHtml(p.name)} <span class="muted small">${cost != null ? cost + (p.cost_note && cost > 0 ? '+' : '') + ' ' + (pool === 'ppe' ? 'P.P.E.' : 'I.S.P.') : ''}</span></span>
-      ${w && cost != null && left != null ? `<button class="btn btn-sm" data-pool="${pool}" data-cost="${cost}"${left < cost ? ' disabled' : ''} onclick="usePower(${idx})">⚡</button>` : ''}
-    </div>`;
-  }).join('');
-
-  const xpRow = w ? `<div class="play-xp">
-      <span class="muted small">XP ${c.xp ?? 0}${C.nextThreshold ? ` · next level at ${C.nextThreshold}` : ''}</span>
-      <span><input type="number" id="xp-delta" placeholder="+XP" class="mini-in"><button class="btn btn-sm" onclick="logXp()">Log</button></span>
-    </div>` : '';
-
-  return `
-  <div class="play-view">
-    <div class="play-head">
-      <div><b>${escHtml(c.name)}</b> <span class="muted small">${escHtml(cls.name || '')} · L${c.level}</span></div>
-      ${xpRow}
-    </div>
-    ${w ? `<div class="play-amt"><span class="muted small">Amount</span>${amts}
-      <button class="dmg" onclick="quickDamage()">💥 Damage</button>
-      <button onclick="undoLast()">↶</button>
-      <button onclick="endSession()">✎ End session</button></div>` : ''}
-    <div class="play-pools">${poolCards}</div>
-    <div id="queue-state" class="queue-state noprint"></div>
-    <div class="play-melee">
-      <span id="play-melee-label">${meleeLabel(combat.attacks)}</span>
-      <span>
-        <button onclick="nextAttack(${Number(combat.attacks) || 0})">Next attack</button>
-        <button onclick="newRound(${Number(combat.attacks) || 0})">New round</button>
-        <button class="ghost" onclick="resetMelee(${Number(combat.attacks) || 0})">⟲</button>
-      </span>
-    </div>
-    ${weaponCardsHtml(w, combat.strike)}
-    <details class="play-sec" open><summary>Combat</summary>${combatRows}</details>
-    <details class="play-sec" open><summary>Saving Throws</summary>${saveRows}</details>
-    ${powers.length ? `<details class="play-sec" open><summary>Powers</summary>${powerRows}</details>` : ''}
-    ${skillGroups}
-    ${w ? restPanelHtml() : ''}
-    <div id="play-roll-bar" class="${C.lastRoll ? '' : 'empty'}">${rollBarHtml()}</div>
-  </div>`;
-}
-
-
 // The first id is 'vitals' and its label reads **Core**, and that mismatch is
 // deliberate. The five pools moved to the sticky strip, so the tab holds
 // attributes, combat, saves and XP and not one vital - but the id is what
@@ -1147,9 +1103,17 @@ window.addEventListener('hashchange', () => {
   if (TAB_IDS.includes(tab) && tab !== C.tab) pickTab(tab);
 });
 
+// ONE RENDER PATH. There used to be two - this, and renderPlay() drawing the
+// same skills, saves and combat bonuses again in a 720px single column. Play
+// mode is a MODE on this sheet now: the steppers, the roll controls, the
+// control strip and the roll bar are all in the markup below, and
+// body.play-mode is what shows them.
+//
+// The sheet earned that. Play mode existed because the sheet did not work on a
+// phone; it has sticky vitals, tabs below 820px and 44px targets throughout,
+// so the second layout was answering a question that had stopped being asked.
 function render() {
   syncPlayChrome();
-  if (C.playMode) { $('app').innerHTML = renderPlay(); return; }
   const c = C.data, w = C.canWrite;
   if (!C.tab) C.tab = readTab();
   const skills = Array.isArray(c.skills) ? c.skills : [];
@@ -1197,13 +1161,17 @@ function render() {
       <tbody>${list.map((s) => `<tr class="skill-row">
         <td>${escHtml(s.name)}${s.iq_bonus ? ` <span class="note-inline" title="Includes a one-time +${s.iq_bonus}% from I.Q.">+${s.iq_bonus} I.Q.</span>` : ''}</td>
         <td class="num">${s.per_level ? '+' + s.per_level : '—'}</td>
-        <td class="num pct">${s.pct ? s.pct + '%' : '—'}</td>
+        <td class="num pct">${s.pct ? s.pct + '%' : '—'}${s.pct ? rollBtn({ name: s.name, pct: s.pct }) : ''}</td>
       </tr>${s.note ? `<tr class="skill-note"><td colspan="3">
         <span class="note">↳ ${escHtml(s.note)}</span></td></tr>` : ''}`).join('')}</tbody>
     </table>` : '<p class="muted small">None.</p>');
 
+  // stepper: true unconditionally. There is one render now, so the steppers
+  // have to be IN it; styles.css shows them only under body.play-mode, which
+  // is what poolCard's own comment already promised - "CSS still gates it on
+  // body.play-mode, so a sheet-mode render cannot leak steppers".
   const vitals = POOLS.map(([key, label]) =>
-    poolCard(key, label, c[key + '_current'], c[key + '_max'], w, false)).join('');
+    poolCard(key, label, c[key + '_current'], c[key + '_max'], w, true)).join('');
 
   // Display order: spells first, by level then name; psionics after, by
   // category (Healing/Physical/Sensitive/Super — alphabetical IS the book
@@ -1338,9 +1306,15 @@ function render() {
     // and a skill raising it is no less worth seeing without hovering.
     const pk = opts.parts?.[key];
     const fromClass = isDerived && (pk?.from_class || pk?.from_skills) ? ' class-boosted' : '';
+    // The roll control, when this row is one you roll. A THIRD node beside the
+    // input and the print mirror, on the same principle: one node per mode,
+    // switched by CSS, rather than one node that has to be two things. It is a
+    // real <button> so a keyboard can reach it, and the global print rule hides
+    // every button - which is why the row's own markup could not become one.
+    const roll = opts.roll ? rollBtn(opts.roll) : '';
     if (!w) {
       return `<div class="field"><span class="lbl">${label}</span><span class="dots"></span>
-        <span class="val${isDerived ? ' dim' : ''}${fromClass}" title="${escHtml(why)}">${escHtml(String(value ?? '—'))}${suffix}</span></div>`;
+        <span class="val${isDerived ? ' dim' : ''}${fromClass}" title="${escHtml(why)}">${escHtml(String(value ?? '—'))}${suffix}</span>${roll}</div>`;
     }
     return `<div class="field"><span class="lbl">${label}</span><span class="dots"></span>
       <span class="val">
@@ -1348,7 +1322,7 @@ function render() {
           type="${opts.type || 'text'}" value="${escHtml(stored?.[key] ?? '')}"
           placeholder="${escHtml(String(value ?? ''))}" title="${escHtml(why)}">${suffix}
         <b class="print-only">${escHtml(String(value ?? '—'))}${suffix}</b>
-      </span></div>`;
+      </span>${roll}</div>`;
   };
 
   // Alignment is a closed set (p.23), so it gets a picker rather than a text
@@ -1449,6 +1423,8 @@ function render() {
     </nav>
   </div>
 
+  ${playControlsHtml(w, combat)}
+
   <div class="sheet-body sheet-grid sheet-3">
   <section class="tabpanel${C.tab === 'vitals' ? ' on' : ''}" data-tab="vitals">
   <div class="sheet-grid rail" style="margin-top:12px">
@@ -1492,7 +1468,13 @@ function render() {
         `vs Psionics — roll${cls.psionics?.type ? ` (${escHtml(cls.psionics.type)})` : ''}`,
         saves.psionics_target, c.saves, { suffix: '+' }) +
       SAVE_FIELDS.map(([k, l]) =>
-      editField('saves', k, l, saves[k], c.saves, { suffix: k === 'coma_death_pct' ? '%' : '', parts: savesParts })).join('')
+      editField('saves', k, l, saves[k], c.saves, { suffix: k === 'coma_death_pct' ? '%' : '', parts: savesParts,
+        // The percentage saves roll under on d100; the rest are d20 + bonus.
+        // Same split SAVE_ROLLS makes, read the same way.
+        roll: k.endsWith('_pct')
+          ? { name: l, pct: saves[k] }
+          : { kind: 'save', name: l, bonus: saves[k],
+              target: k === 'psionics' ? (saves.psionics_target || null) : null } })).join('')
       // Book-stated saves the sixteen do not name (F7), after them and READ
       // ONLY. Not editField: an editable row needs a storage key to write to,
       // and these are identified by a free-text label rather than a key. There
@@ -1503,12 +1485,18 @@ function render() {
         const why = e.note ? `${e.note} - stated by ${cls.name || 'the class'}`
           : `Stated by ${cls.name || 'the class'}`;
         return `<div class="field"><span class="lbl">${escHtml(e.label)}</span><span class="dots"></span>
-          <span class="val dim" title="${escHtml(why)}">${v > 0 ? '+' + v : v}</span></div>`;
+          <span class="val dim" title="${escHtml(why)}">${v > 0 ? '+' + v : v}</span>
+          ${rollBtn({ kind: 'save', name: e.label, bonus: v, target: null })}</div>`;
       }).join(''),
       '<span class="muted" style="font-size:9px">DERIVED · OVERRIDABLE</span>')}
 
     ${box('Combat', COMBAT_FIELDS.map(([k, l]) =>
-      editField('combat', k, l, combat[k], c.combat, { parts: combatParts })).join('')
+      editField('combat', k, l, combat[k], c.combat, { parts: combatParts,
+        // Only the four the old play view rolled. Attacks per melee and
+        // damage bonuses are numbers you READ mid-fight, not d20 rolls,
+        // and a die on them would be an invitation to roll nothing.
+        roll: ROLLABLE_COMBAT.has(k)
+          ? { kind: 'combat', name: l, bonus: combat[k], target: null } : null })).join('')
       // What the character's training grants that is not a number. Read-only:
       // these are capabilities the book confers at a level, not values anyone
       // edits, and every one of them is already earned by the level shown.
@@ -1642,7 +1630,9 @@ function render() {
       '<span class="muted" style="font-size:9px">NEWEST FIRST</span>')}
   </div>
   </section>
-  </div>`;
+  </div>
+
+  <div id="play-roll-bar" class="noprint ${C.lastRoll ? '' : 'empty'}">${rollBarHtml()}</div>`;
 
   wirePickers();
   sticky.sizeSticky();
