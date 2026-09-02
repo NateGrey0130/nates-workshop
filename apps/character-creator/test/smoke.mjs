@@ -181,6 +181,62 @@ for (const [key, c] of Object.entries(CATALOGS)) {
 }
 check('catalog configs are internally consistent', catalogProblems.length === 0, catalogProblems.join('; '));
 
+// ---------- 1c. The row form takes its widths from the field type ----------
+// .cat-form was a grid with no grid-template-columns - one column, one field
+// per row, every field the full 1154px whatever it held. Gear measured 1201px
+// tall, more than the viewport, with A.R. and Mega-damage each holding two
+// characters across the whole width.
+//
+// The span now comes from the field's own `type`, which this config already
+// declares and the write endpoints already validate against. That only stays
+// true if every type in the config has a rule: a type with none silently gets
+// the default span, which is the failure mode that does not look like one.
+section('The row form takes its widths from the field type');
+{
+  const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
+  const cat = readFileSync(join(appDir, 'catalog.js'), 'utf8');
+
+  check('the form is a grid of columns, not of one column',
+    /\.cat-form \{[\s\S]*?grid-template-columns: repeat\(12, 1fr\);/.test(css),
+    '.cat-form is back to a single implicit column');
+  check('and its fields do not stretch to the tallest in the row',
+    /\.cat-form \{[\s\S]*?align-items: start;/.test(css),
+    'a short field stretches down beside a field carrying help text');
+
+  // The form reads the type off the config rather than off a second list.
+  check('the field carries its type into the markup',
+    /<div class="cat-field" data-field="\$\{f\.name\}" data-type="\$\{f\.type\}"/.test(cat),
+    'rowForm no longer emits data-type and every field falls to the default span');
+  check('and says when it carries help',
+    /\$\{f\.help \? ' data-help' : ''\}/.test(cat),
+    'a narrow field with a long help string wraps to eight lines and makes the form taller');
+
+  // EVERY type in the config, not a list written here. A new field type
+  // arrives with a width or fails this.
+  const types = [...new Set(Object.values(CATALOGS)
+    .flatMap((c) => c.fields.map((f) => f.type)))].sort();
+  const unsized = types.filter((t) =>
+    !new RegExp(`\\.cat-field\\[data-type="${t}"\\]`).test(css));
+  check(`every field type in the config has a span (${types.length} types)`,
+    unsized.length === 0,
+    `no rule for: ${unsized.join(', ')} — they take the default span silently`);
+
+  // Source order is load-bearing: [data-help] and the narrow type rules are
+  // the same specificity, so the help override only wins by coming after.
+  check('the help override is stated after the type table',
+    css.indexOf('.cat-field[data-help]') > css.indexOf('.cat-field[data-type="int"]'),
+    'the narrow spans now win and a field with help wraps instead');
+  // ...and the full-width types restate themselves a step up so it cannot
+  // shrink them back to a third of a row.
+  check('and cannot shrink a description to a third of a row',
+    /\.cat-field\[data-type="longtext"\]\[data-help\]/.test(css),
+    'longtext + help falls back to span 4');
+
+  check('a phone gets the one column this form always had',
+    /@media \(max-width: 700px\) \{[\s\S]*?\.cat-form \{ grid-template-columns: 1fr; \}/.test(css),
+    'twelve columns survive to 390px');
+}
+
 // A blank NOT NULL column must coerce to its default, not NULL, or the insert
 // dies on a constraint. This is the bug that made every "create" 500.
 const notNullBlanks = [];
