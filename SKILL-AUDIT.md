@@ -1,15 +1,22 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **Status 2026-09-02: `F1`–`F7`, `F10`–`F21` taken (PRs #541–#560) — `F12` in
-> part, its documentation half only. `F8`, `F22`, `F23` taken (#561–#563); **`F9`
-> CLOSED without being taken** (#564); `F24` taken (#565); `F25` part (a) taken,
-> part (b) closed by decision (#567). **Every `F` is closed**, and `N1`–`N3`
-> are written (#568). Open: `N4`–`N8`, all speculative.
+> **THIS MENU HAS NO OPEN WORK.** Filed and closed 2026-09-02, PRs #540–#569.
+> All 25 `F` findings are closed and all 8 `N` proposals decided. **Read each
+> finding's own note; this header is a summary and summaries here go stale.**
+>
+> | | |
+> |---|---|
+> | `F1`–`F8`, `F10`–`F25` | taken |
+> | `F9` | **closed without being taken** — measured, and its own instruction said to close rather than weaken |
+> | `F12` | taken **in part**: the documentation half. Whether the second allowlist governs a `Downloads` session is **untested**, and the finding names the test |
+> | `F25` | part (a) taken; part (b) **closed by decision** — the `z`-tiers stay |
+> | `N1`–`N3` | written: `verify-ui`, `windows-shell`, `pick3cut5` |
+> | `N4`–`N8` | **declined**, each on its own stated condition |
+>
 > `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while taking
-> `F2`, and `F25` by taking `F4`.** `F` numbers
-> are findings about instructions that exist; `N` numbers are new-skill
-> proposals. `###`, em dash, no severity word. This line is a summary and
-> summaries here go stale — read each finding's own note.
+> `F2`, and `F25` by taking `F4`. `F` numbers are findings about instructions
+> that exist; `N` numbers are new-skill proposals. `###`, em dash, no severity
+> word.
 >
 > **The one that misreads:** `F22`–`F25` sit under their own
 > `## Opened while taking a finding` heading **between `F21` and the `N`
@@ -2176,6 +2183,12 @@ something, and the only honest trigger is "you just merged", which is exactly wh
 than taking.** Recorded so the negative result is not re-derived — the shape
 `REBUILD-AUDIT` F16 uses.
 
+**DECLINED, 2026-09-02.** Nate's call, and it matches the recommendation. The
+negative result stands as the record: the material is right and its only honest
+trigger is *"you just merged"*, which is exactly when `ship-pr` is already
+loaded. Splitting it would move the step further from the moment. Do not
+re-propose without a new failure.
+
 ---
 
 ### N5 — `catalog-import`: skills, spells, psionics and gear, as distinct from classes
@@ -2200,6 +2213,13 @@ or belong there.
 **Cost:** ~120 lines plus moving `reference/catalog.md`. **Rank: 5, take only if
 a catalog-only import goes wrong first.**
 
+**DECLINED, 2026-09-02**, on its own condition: no catalog-only import has gone
+wrong. The ground is real — `class-import`'s description claims it and its body
+is almost entirely about a class — but every catalog trap that has actually
+bitten is already in `class-import` or belongs there. **Revisit if a
+catalog-only import produces a defect**, which is the trigger this proposal
+named for itself.
+
 ---
 
 ### N6 — `write-a-memory`: what belongs in memory rather than a skill
@@ -2220,6 +2240,13 @@ skill's table for the same reason.
 **Cost:** ~50 lines, or ~8 folded into `claim-audit`. **Rank: 6, prefer the
 paragraph.**
 
+**DECLINED as a skill, 2026-09-02 — and its substance already shipped.** `F21`
+put the measurement-versus-claim distinction into `claim-audit` and added
+`.claude/` and the memory directory to *Where the claims live*, and `F20`
+added *grep the whole tree, memory included, when a finding is taken*. That is
+the paragraph this proposal preferred to a skill, arrived at from two other
+directions. Nothing further is outstanding.
+
 ---
 
 ### N7 — `new-app`: standing up a fourth app in this monorepo
@@ -2233,6 +2260,11 @@ generalisable procedure.
 Against: no third instance is planned, and a skill written from two examples with
 no failure to teach from is the procedure-only kind. **Cost:** ~80 lines.
 **Rank: 7, do not take without a third app.**
+
+**DECLINED, 2026-09-02**, on its own condition: there is no third app planned.
+Two standardizations are not a pattern, and a skill written from two examples
+with no failure to teach from is the procedure-only kind this brief warns
+about — a session would follow it correctly and get burned anyway.
 
 ---
 
@@ -2248,6 +2280,14 @@ Against: every Access change is dashboard work through Nate's Chrome, so a skill
 would be advising on a surface it cannot touch, and `N3` would carry the half
 that matters for the one app with public paths. **Cost:** ~70 lines.
 **Rank: 8, fold what is worth keeping into `N3`.**
+
+**DECLINED, 2026-09-02, and the fold happened.** `N3`'s `pick3cut5` skill
+carries the Access material that has actually cost something: the bypass being a
+list of paths rather than pages, the five-destination limit, the prefix-match
+that answers 200 with the landing page, and verifying with no Access session. The
+remainder is dashboard work through Nate's Chrome, which a skill cannot perform —
+and `SKILL-AUDIT` F24 has since established that Pages, though not Access, is
+reachable without it.
 
 ---
 
