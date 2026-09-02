@@ -8,7 +8,7 @@
 > |---|---|
 > | `F1`–`F8`, `F10`–`F25` | taken |
 > | `F9` | **closed without being taken** — measured, and its own instruction said to close rather than weaken |
-> | `F12` | taken **in part**: the documentation half. Whether the second allowlist governs a `Downloads` session is **untested**, and the finding names the test |
+> | `F12` | documentation taken, and the prune **completed** (#571). Which file governs is still **untested**; the finding names the test |
 > | `F25` | part (a) taken; part (b) **closed by decision** — the `z`-tiers stay |
 > | `N1`–`N3` | written: `verify-ui`, `windows-shell`, `pick3cut5` |
 > | `N4`–`N8` | **declined**, each on its own stated condition |
@@ -1029,7 +1029,31 @@ live allowlist is a working-habits change and belongs behind its own decision.
 **Evidence.** Live repo state — both files parsed, 2026-09-02.
 
 **Taken in part, 2026-09-02 (PR #555): the documentation half only, as the
-finding proposed. No settings file was edited, and pruning stays Nate's call.**
+finding proposed. No settings file was edited in that PR.**
+
+**Completed 2026-09-02 (PR #571): the prune, on Nate's word.** Fifteen
+write-capable wildcards removed from `Downloads\.claude\settings.local.json`
+(273 → 258 entries), the file backed up beside itself first. Gone: the eight
+`CLAUDE.md` names as deliberately absent — `npx wrangler *`, `gh pr *`,
+`gh api *`, `git push *`, `git commit *`, `git add *`, `git reset *`,
+`git checkout *` — plus `git config *`, `git pull *`, `git stash *`,
+`gh auth *`, `claude mcp *`, and `python -c ' *` / `node -e ' *` for arbitrary
+code execution.
+
+**Kept, because the criterion is the repo's own — *everything on it either
+reports or asks a question*:** `git fetch`, `git ls-remote`, `git check-ignore`
+and seven `Read()` path globs. Read-only, and removing them would buy friction
+rather than safety.
+
+**The ~45 dead entries were left alone.** They are literal command strings
+pinned to session scratchpad directories that no longer exist — unreachable
+rather than dangerous, and deleting them is tidying beyond what was asked.
+
+**What this does and does not settle.** The two lists now withhold the same
+actions, so the posture holds wherever a session starts — which was the point.
+It does **not** answer which file governs; that is still untested and
+`CLAUDE.md` still says so and still names the test. And the file will begin
+accumulating again at the next approval, so this is a reset rather than a fix.
 
 Premises held — 273 entries, 25 wildcards, 45 pinned to dead scratchpad paths,
 and the eight withheld commands all granted.
