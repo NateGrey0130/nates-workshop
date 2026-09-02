@@ -3688,9 +3688,10 @@ section('Presentation is a separate file');
       .test(layout.replace(/onclick="[^"]*"/g, '')),
     'sheet-layout.js reaches for C outside an onclick string');
   check('paintPool is handed the data instead of fetching it',
-    /function paintPool\(key, data\)/.test(layout), 'paintPool still reaches for C');
+    /function paintPool\(key, data(, conflicts)?\)/.test(layout),
+    'paintPool still reaches for C');
   check('and sheet.js supplies it in one place, not seven',
-    /const paintPool = \(key\) => sheetLayout\.paintPool\(key, C\.data\);/.test(sheet),
+    /const paintPool = \(key\) => sheetLayout\.paintPool\(key, C\.data[^)]*\);/.test(sheet),
     'each call site supplies the character data separately');
 }
 
@@ -4088,6 +4089,76 @@ section('The front door agrees with the rooms');
   check('the coming-soon card is not dimmed below readable',
     !/\.card-soon \{[^}]*opacity/.test(landing),
     'opacity on that card measured 2.48:1 on its description text');
+}
+
+// ---------- Changes that could not be sent ----------
+// A pool change made with no network stays on screen and waits, instead of
+// rolling back. What this is NOT is offline support: nothing here serves the
+// page, so a tab closed without a connection will not open again. The queue
+// survives a drop and a reload with the tab open, and that is the whole claim.
+section('Changes that could not be sent');
+{
+  const queue = readFileSync(join(appDir, 'js', 'play-queue.js'), 'utf8');
+  const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  const layout = readFileSync(join(appDir, 'js', 'sheet-layout.js'), 'utf8');
+  const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
+  const html = readFileSync(join(appDir, 'sheet.html'), 'utf8');
+  const events = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator',
+    'characters', '[id]', 'events.js'), 'utf8');
+
+  check('the queue exists and is loaded', /global\.playQueue/.test(queue)
+    && html.includes('js/play-queue.js'), 'js/play-queue.js is missing or not loaded');
+  check('and the promise it makes is written down, not implied',
+    /does not promise/i.test(queue) && /service worker/i.test(queue),
+    'nothing says this is not offline support');
+
+  // Order is the contract: two adjustments to one pool only compose if they
+  // are replayed in the sequence they were made.
+  check('the queue keeps its order',
+    /autoIncrement: true/.test(queue), 'the queue has no inherent order');
+  check('and the flush replays serially, not in parallel',
+    /for \(const e of pending\)/.test(sheet), 'the flush fires everything at once');
+
+  // A REFUSAL AND A SILENCE ARE DIFFERENT THINGS.
+  check('a server refusal still rolls back',
+    /if \(err\.status === undefined && await queuePoolChange/.test(sheet),
+    'anything that fails is queued, including changes the server rejected on merit');
+  check('and a browser with no IndexedDB falls back to rolling back',
+    /if \(!window\.playQueue \|\| !\(await playQueue\.available\(\)\)\) return false;/.test(sheet),
+    'a private window loses the change with no rollback');
+
+  // The trap this repo has been bitten by before: Access answers with HTML, and
+  // api() returns {} for a body it cannot parse, so a replay after the session
+  // expires looks exactly like success.
+  check('a replay that lands on the login page is not counted as sent',
+    /res\.event_id == null/.test(sheet),
+    'an expired Access session silently eats the queue');
+
+  // Guarded replay, per field.
+  check('the server can be asked to check where the pool was',
+    /if \(b\.guard\)/.test(events), 'events.js ignores `from` as it always did');
+  check('and it checks each pool, not the row',
+    /guards\.push\(`\$\{field\} IS \?`\)/.test(events),
+    'two people touching different pools are called a conflict');
+  check('a clash reports both sides',
+    /mine: charFields\[f\]\.to, theirs: current\[f\]/.test(events),
+    'the client cannot offer a choice because it is only told one number');
+  check('and nothing is logged for a change that did not apply',
+    events.indexOf('conflict: true') < events.indexOf('await env.DB.batch(statements)'),
+    'a refused replay still writes a play event');
+
+  // The cell keeps its size and nothing else is blocked.
+  check('the conflict splits the value in two',
+    /function conflictMarkup/.test(layout) && /cf-half/.test(css),
+    'there is no conflict UI');
+  check('each side is a finger-sized target',
+    /\.vital \.cf-half \{[\s\S]*?min-height: 44px;/.test(css), 'the halves are mouse-sized');
+  check('and the stale number is hidden in BOTH modes',
+    /body\.play-mode \.vital\.conflict \.val > b,/.test(css),
+    'play mode reveals the <b> at higher specificity, so the cell shows three figures');
+
+  check('the flush runs when the network returns',
+    /addEventListener\('online'/.test(sheet), 'a reconnect does not flush');
 }
 
 // ---------- Military Occupational Specialty ----------

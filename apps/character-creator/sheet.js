@@ -45,7 +45,7 @@ function otherSaves(cls) {
 
 const id = new URLSearchParams(location.search).get('id');
 
-const C = { data: null, items: [], journal: [], catalog: [], cls: null, canWrite: false, isGm: false,
+const C = { data: null, items: [], journal: [], catalog: [], cls: null, canWrite: false, isGm: false, conflicts: {},
   // What the character's Hand to Hand training grants in words, by level.
             skillLevelNotes: [], weaponBonuses: [],
             proposal: null, nextThreshold: null,
@@ -75,7 +75,7 @@ const { POOL_TONES, POOL_LOW, poolCard, boxSlug, BOX_COL, box, field,
 // pure - it paints whatever data it is handed and knows nothing about C -
 // so the app's copy of the character is supplied here, once, rather than by
 // each of the seven mutation paths that call it.
-const paintPool = (key) => sheetLayout.paintPool(key, C.data);
+const paintPool = (key) => sheetLayout.paintPool(key, C.data, C.conflicts);
 
 // api() and errorDetails() come from js/api.js, loaded first as a classic script.
 const jsonReq = (method, body) => ({ method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -436,11 +436,131 @@ async function adjustPool(key, delta) {
   try {
     await postEvent('pool', `${key.toUpperCase()} ${delta > 0 ? '+' : ''}${delta}`, { character: { [key + '_current']: { from: prev, to: next } } });
   } catch (err) {
+    // A REFUSAL AND A SILENCE ARE DIFFERENT THINGS. err.status means the
+    // server answered and said no - a bad field, a gone character - and the
+    // change was never valid, so it rolls back the way it always did. No
+    // status means the request never arrived: the change is fine and the
+    // wi-fi is not, so it stands on screen and waits in the queue.
+    if (err.status === undefined && await queuePoolChange(key, prev, next, delta)) {
+      renderQueueState();
+      return;
+    }
     C.data[key + '_current'] = prev;
     paintPool(key);
     syncPowerBtns();
     alert('Failed: ' + err.message);
   }
+}
+
+// ---------- the queue ----------
+// See js/play-queue.js for what this does and does not promise. The short
+// version: it survives a network drop and a reload with the tab open, and it
+// is not offline support.
+
+// A pool change that could not be sent. Returns false if the queue is not
+// usable at all - a private window, site data blocked - in which case the
+// caller rolls back exactly as it did before there was a queue.
+async function queuePoolChange(key, from, to, delta) {
+  if (!window.playQueue || !(await playQueue.available())) return false;
+  try {
+    await playQueue.push({
+      characterId: Number(id), key, from, to,
+      note: `${key.toUpperCase()} ${delta > 0 ? '+' : ''}${delta}`,
+    });
+    return true;
+  } catch { return false; }
+}
+
+// Replay everything queued for this character, oldest first. ORDER IS THE
+// CONTRACT: two adjustments to the same pool only compose if they are sent in
+// the sequence they were made, which is why this is a serial loop and not a
+// Promise.all.
+async function flushQueue() {
+  if (!window.playQueue || !C.canWrite || !(await playQueue.available())) return;
+  const pending = (await playQueue.all(Number(id))).sort((a, b) => a.seq - b.seq);
+  if (!pending.length) { renderQueueState(); return; }
+
+  for (const e of pending) {
+    let res;
+    try {
+      res = await api(`characters/${id}/events`, jsonReq('POST', {
+        kind: 'pool',
+        note: e.note,
+        guard: true,
+        changes: { character: { [e.key + '_current']: { from: e.from, to: e.to } } },
+      }));
+    } catch (err) {
+      if (err.status === 409 && err.detail?.conflict) {
+        // Someone else moved this pool while we were away. Stop here: the
+        // entries behind this one are built on a value that is no longer
+        // true, and replaying them would compound the divergence rather
+        // than resolve it. The player chooses, then the flush resumes.
+        const f = err.detail.fields?.[e.key + '_current'];
+        if (f) {
+          C.conflicts[e.key] = { mine: f.mine, theirs: f.theirs, seq: e.seq };
+          paintPool(e.key);
+          renderQueueState();
+        }
+        return;
+      }
+      if (err.status === undefined) { renderQueueState(); return; }  // still offline
+      // The server refused it on its merits. It will never succeed, so it
+      // leaves the queue rather than blocking everything behind it.
+      await playQueue.remove(e.seq);
+      continue;
+    }
+
+    // A REQUEST THAT LANDS ON THE ACCESS LOGIN PAGE COMES BACK AS HTML, and
+    // api() answers {} for a body it cannot parse - so a replay after the
+    // session expired looks exactly like success. The event id is the proof
+    // that our API answered and not the login wall.
+    if (!res || res.event_id == null) {
+      flash('Queued changes need you to sign in again. Reload the page.', true);
+      renderQueueState();
+      return;
+    }
+    await playQueue.remove(e.seq);
+  }
+  renderQueueState();
+  await load();
+}
+
+// How many are waiting, said once, near the pools they belong to.
+async function renderQueueState() {
+  const el = $('queue-state');
+  if (!el || !window.playQueue) return;
+  let n = 0;
+  try { n = await playQueue.count(Number(id)); } catch { return; }
+  const conflicts = Object.keys(C.conflicts).length;
+  el.className = n ? 'queue-state on' : 'queue-state';
+  el.textContent = !n ? ''
+    : conflicts ? `${n} change${n === 1 ? '' : 's'} waiting — resolve the highlighted pool`
+    : `${n} change${n === 1 ? '' : 's'} waiting for the network`;
+}
+
+// The player picked a side. Their value is written from the server's current
+// one as the base, so the write cannot fail on the same conflict twice.
+async function resolveConflict(key, side) {
+  const c = C.conflicts[key];
+  if (!c) return;
+  const chosen = side === 'mine' ? c.mine : c.theirs;
+  try {
+    if (side === 'mine') {
+      await api(`characters/${id}/events`, jsonReq('POST', {
+        kind: 'pool', note: `${key.toUpperCase()} resolved to ${chosen}`, guard: true,
+        changes: { character: { [key + '_current']: { from: c.theirs, to: chosen } } },
+      }));
+    }
+    // Choosing theirs needs no write: the server already holds it.
+    await playQueue.remove(c.seq);
+  } catch (err) {
+    alert('Could not resolve: ' + err.message);
+    return;
+  }
+  delete C.conflicts[key];
+  C.data[key + '_current'] = chosen;
+  paintPool(key);
+  await flushQueue();
 }
 
 // The book's damage flow, offered as one button: M.D.C. beings take it on
@@ -931,6 +1051,7 @@ function renderPlay() {
       <button onclick="undoLast()">↶</button>
       <button onclick="endSession()">✎ End session</button></div>` : ''}
     <div class="play-pools">${poolCards}</div>
+    <div id="queue-state" class="queue-state noprint"></div>
     <div class="play-melee">
       <span id="play-melee-label">${meleeLabel(combat.attacks)}</span>
       <span>
@@ -992,6 +1113,10 @@ function pickTab(tab) {
 // this a pasted or hand-edited '#gear' would leave the sheet on whatever tab it
 // was already showing. pickTab uses replaceState rather than pushState, so Back
 // still leaves the sheet for the character list instead of walking tab history.
+// Queued changes go out when the network returns. A tab reopened after a
+// drop has a queue and no 'online' event coming, so load() flushes too.
+window.addEventListener('online', () => { flushQueue(); });
+
 window.addEventListener('hashchange', () => {
   const tab = location.hash.slice(1);
   if (TAB_IDS.includes(tab) && tab !== C.tab) pickTab(tab);
@@ -1284,6 +1409,7 @@ function render() {
 
   <div class="sheet-sticky" data-sticky>
     ${vitals ? `<div class="vitals vitals-strip">${vitals}</div>
+      <div id="queue-state" class="queue-state noprint"></div>
       <div class="rowline noprint vitals-save">
         ${w ? `<button class="btn btn-sm btn-primary" onclick="saveStats()">Save</button>
         <span id="msg"></span>` : ''}
@@ -1495,6 +1621,8 @@ function render() {
 
   wirePickers();
   sticky.sizeSticky();
+  // A tab reopened after a drop has a queue and no 'online' event coming.
+  flushQueue();
   // The count is filterSkills' job, so there is one implementation of it rather
   // than a number rendered here and a different one written on the first
   // keystroke. Re-applying C.skillFilter is also what carries a typed query

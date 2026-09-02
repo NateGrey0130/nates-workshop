@@ -65,13 +65,49 @@
   // measured, not theorised: H.P. at 4 of 14 still drew a full bar and no low
   // tone until a mode toggle forced a re-render. A bar that reports full at
   // 29% is worse than no bar.
-  function paintPool(key, data) {
+  // A pool the server and this tab disagree about. The value splits into two
+  // tappable halves - yours and theirs - and the cell keeps its size, so
+  // nothing else on the sheet moves and nothing else is blocked: the other
+  // pools, the rolls and the rest of the sheet all still work while this
+  // sits here waiting to be answered.
+  //
+  // Both numbers are shown rather than one plus an explanation, because the
+  // question at the table is which number is right, and that is answered by
+  // seeing both.
+  function conflictMarkup(key, c) {
+    const half = (side, v, who) =>
+      `<button type="button" class="cf-half" aria-label="${who}: ${v}"`
+      + ` onclick="resolveConflict('${key}', '${side}')">`
+      + `<span class="who">${who}</span>${v}</button>`;
+    return half('mine', c.mine, 'yours')
+      + '<i class="cf-rule"></i>'
+      + half('theirs', c.theirs, 'theirs');
+  }
+
+  function paintPool(key, data, conflicts) {
     if (!data) return;
     const cur = data[key + '_current'], max = data[key + '_max'];
     const el = document.getElementById('play-cur-' + key);
     if (el) el.textContent = cur ?? '—';
     const card = el && el.closest('.vital');
     if (!card) return;
+
+    // A conflict replaces the number with the choice, and clearing it puts
+    // the number back - so this is the one place that owns .val's contents.
+    const c = conflicts && conflicts[key];
+    card.classList.toggle('conflict', !!c);
+    const val = card.querySelector('.val');
+    if (val) {
+      const holder = val.querySelector('.cf');
+      if (c) {
+        const d = holder || document.createElement('span');
+        d.className = 'cf';
+        d.innerHTML = conflictMarkup(key, c);
+        if (!holder) val.appendChild(d);
+      } else if (holder) {
+        holder.remove();
+      }
+    }
     const pct = fraction(cur, max);
     const bar = card.querySelector('.bar > i');
     if (bar) bar.style.width = Math.round(pct * 100) + '%';
