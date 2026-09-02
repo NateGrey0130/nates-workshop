@@ -2,10 +2,10 @@
 
 > **Status 2026-09-02: `F1`–`F7`, `F10`–`F21` taken (PRs #541–#560) — `F12` in
 > part, its documentation half only. `F8`, `F22`, `F23` taken (#561–#563); **`F9`
-> CLOSED without being taken** (#564); `F24` taken (#565). Open: `F25`, all
-> `N`.
+> CLOSED without being taken** (#564); `F24` taken (#565); `F25` part (a) taken,
+> part (b) closed by decision (#567). **Every `F` is now closed.** Open: `N1`–`N8`.
 > `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while taking
-> `F2`, and `F25` by taking `F4`. Everything else is open.** `F` numbers
+> `F2`, and `F25` by taking `F4`.** `F` numbers
 > are findings about instructions that exist; `N` numbers are new-skill
 > proposals. `###`, em dash, no severity word. This line is a summary and
 > summaries here go stale — read each finding's own note.
@@ -696,7 +696,9 @@ times in 180".
 on "here is the PDF". Getting it materially shorter is a different decision —
 which sections stop being in the skill at all — and this posture explicitly
 forbids taking that unilaterally: *a worse `book-survey` is a much worse outcome
-than a long one*. Raised with Nate rather than attempted.
+than a long one*. **Raised with Nate 2026-09-02 and CLOSED: leave it long.** The
+skill fires once per book rather than once per message, and a lossy one costs
+more than a long one. Not to be re-proposed.
 
 ---
 
@@ -1999,6 +2001,27 @@ mechanically knowable.
 **Evidence.** Live repo state, found while taking `F4` — the prefix census run to
 check one of my own replacement sentences falsified one of the skill's, three
 paragraphs below the line being edited.
+
+**Taken in part, 2026-09-02 (PR #567): part (a) only. Part (b) CLOSED by
+decision, not deferred** — Nate chose documentation only, leaving the four tiers
+as they are. Recorded so it is not re-proposed: the escalation is untidy and has
+never actually broken anything, and every alternative is a migration of applied
+one-shot scripts, which is the category `repo-vs-live.mjs` exists to catch.
+
+Shipped: the sentence claiming `zz-` sorts after everything is gone. In its place
+— **a `z`-prefix buys position against what is in the directory today and nothing
+more**, the tier has escalated three times, and a new `zz-` file now sorts
+**before three dozen** others. Nothing announced that and nothing will announce
+the next one.
+
+**The replacement points at the command instead of a prefix**, which is the
+durable half: the `sort` one-liner already sits three lines above the sentence,
+costs nothing, and is right on the day it is run whatever anyone added since. The
+instruction is now *run it, read where your name lands, pick a prefix that puts
+you after what must not undo you* — and explicitly **do not reason from the
+convention**.
+
+No count is quoted in the skill. "Three dozen" is the shape; the census is here.
 
 ---
 
