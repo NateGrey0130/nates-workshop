@@ -157,6 +157,18 @@ not — and everything those files import, using the wrangler its **build image*
 ships (3.114.17) rather than the one this repo runs. Syntax that image cannot
 parse fails the whole deploy. Not the one route: the deploy.
 
+**Those two are a full major version apart.** `npx wrangler --version` here
+resolved **4.114.0** on 2026-09-02; the build image is on **3.x**. Nothing pins
+either side — there is no `package.json` and no lockfile, so `npx` serves
+whatever its cache holds and Cloudflare moves the build image on its own
+schedule. So the local toolchain is not a preview of the one that decides
+whether a deploy succeeds; it is a **more permissive** one, and it will accept
+things the deploy rejects without saying so.
+
+Read the outage below as *two major versions apart*, not as one unlucky import.
+The import attribute is the divergence that has bitten; it is not the only one
+available.
+
 **The failure is silent in both directions.** The site keeps serving the last
 build that compiled, so every symptom you would look for is absent — pages load,
 the API answers, and the code is simply old. And `gh pr checks` has shown a red
