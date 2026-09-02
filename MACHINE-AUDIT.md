@@ -7,8 +7,9 @@ brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
 note appended under the finding in the same PR.
 
 **Status, 2026-09-02: `M1`–`M15` are all taken and closed, and `M17` with them.
-The only thing open is `M16`**, which was opened while taking `M1` and is filed
-but NOT taken.
+Open: `M16`, filed but not taken; and `M18`, which is an OBSERVATION rather than
+a finding — it proposes nothing, and exists so a recurrence has somewhere to
+attach and four dead hypotheses are not re-run.**
 **`M8` was taken with its posture overridden** — deletion, on explicit
 instruction — which its own note records. Read the lines under a finding for its
 status — the notes here vary in wording like every other menu in this repo, and
@@ -1117,6 +1118,83 @@ order to expose a theoretical one.
 **Posture:** documentation only. **Filed, not taken** — opened while taking `M1`
 and left for a separate word, because the numbering exists so that the decision
 to take it can be separate from the decision to write it down.
+
+### M18 — OBSERVATION, NOT A DIAGNOSIS — `CommandNotFoundException` on a bare command name that resolves minutes later
+
+**This finding proposes nothing and explains nothing. It exists so that a
+recurrence has something to attach to, and so that four dead hypotheses are not
+re-run.**
+
+Observed 2026-09-02 in Nate's own interactive PowerShell, immediately after `M7`
+and `M4` shipped, while verifying them:
+
+```
+PS C:\Users\natha\Projects\workshop> claude
+claude : The term 'claude' is not recognized as the name of a cmdlet, function,
+script file, or operable program.
+```
+
+Minutes later, **same window, same PATH, nothing reconfigured**:
+
+```
+bare claude found:   True
+bare wrangler found: True
+  ExternalScript  C:\Users\natha\AppData\Roaming\npm\claude.ps1
+  Application     C:\Users\natha\AppData\Roaming\npm\claude.cmd
+  Application     C:\Users\natha\AppData\Roaming\npm\claude
+```
+
+**Every static precondition was measured while it was failing, and all of them
+hold:**
+
+| checked in his window, at failure time | result |
+|---|---|
+| `C:\Users\natha\AppData\Roaming\npm` on `$env:PATH` | present |
+| `claude.cmd` on disk | present |
+| `Get-Command claude.cmd` (exact name) | **resolves** |
+| elevated? | no |
+| `$env:PATHEXT` | `.COM;.EXE;.BAT;.CMD;…` — `.CMD` present, byte-identical to a working shell |
+
+**Four hypotheses, all falsified by measurement rather than by argument:**
+
+1. **The extensionless npm shim shadows bare-name lookup.** Built it: a scratch
+   directory on PATH with a `.cmd` alone, then the extensionless twin added
+   beside it. The bare name resolved to the `.cmd` in both cases. Dead.
+2. **Elevation.** His window reported `IsInRole('Administrators')` = `False`. Dead.
+3. **`PATHEXT` missing `.CMD`.** It is not missing; his value is identical to a
+   shell where the same command resolves. Dead.
+4. **Running the `.exe` repaired the shims.** Contradicted by the timeline —
+   `claude.cmd` already resolved by exact name *before* the `.exe` was run. Dead.
+
+**Why this is filed as an observation and nothing more.** The one thing known
+about it is that it is **intermittent**: it recovered with no configuration
+change, in the same process. A plausible-sounding mechanism written down here
+would be indistinguishable from the 2026-09-01 diagnosis that `M2` had to
+retire — and that one cost a day and bought a permanent absolute-path tax on
+every command handed over. **The fault is real, and unexplained is the honest
+state.**
+
+It also makes one older observation less mysterious and more interesting.
+`M2`'s source session recorded that an **absolute path to the npm shim failed
+too** — the fact that killed every PATH theory. An intermittent discovery fault
+fits that shape where no configuration explanation ever did, though this is a
+resemblance and explicitly not a finding.
+
+**Nothing in `windows-shell` needs correcting.** The sentence shipped there on
+2026-09-02 says `%APPDATA%\npm` is on his PATH and `wrangler` resolves there for
+him; `bare wrangler found: True` measured in his own shell. It is right as
+written.
+
+**Proposal:** none, beyond this record. **If it recurs, capture it before running
+anything else** — in the failing window, `Get-Command <name> -All`,
+`$env:PATH -split ';'`, and `$env:PATHEXT`. Those three at the moment of failure
+are the only data that would advance this; everything gathered afterwards has
+described a machine that had already recovered.
+
+**Posture:** observation only. **No change, no check, and explicitly NO
+WORKAROUND.** Reaching for absolute paths again is exactly the reflex `M2`
+retired, and against an intermittent fault it would once more hide the only
+symptom capable of exposing it.
 
 ### M17 — medium — eleven memories name `Downloads` in their own text, and `M7` makes some of them wrong
 
