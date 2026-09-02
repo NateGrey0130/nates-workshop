@@ -1127,6 +1127,42 @@ proposal: whether those two seams are cleanly extractable was not verified, and
 if `generate.js` is tightly coupled to the Worker runtime the effort is L rather
 than M.
 
+**Taken, 2026-09-02 (PR #529) — code merged, Worker NOT YET DEPLOYED.** See the
+deploy note at the end of this entry; it is the part that matters.
+
+Posture held: pure-function tests only. The Durable Object, the Anthropic call
+and the WebSocket are untouched.
+
+**The extractability question resolved better than expected.** The first seam
+needed no extraction at all — `validateCategory` was already exported, already
+pure, and `generate.js` imports cleanly into plain Node. The second needed a
+minimum one: the per-IP and global limiter calls and `ipKey` moved out of the
+fetch handler into `src/limits.js`, and `index.js` now calls
+`soloLimitDecision(env, ip)`. Effort was M, not L.
+
+Twenty-four checks. The one worth naming asserts an **order**: per-IP is
+consulted first and returns before the global bucket is touched, so a caller
+already being refused cannot also burn the budget refusing it. Fake bindings
+record their calls, so the order is asserted rather than assumed — it was a
+comment before and is now a test.
+
+Two checks watch the extraction itself: `index.js` must route through
+`soloLimitDecision`, and must keep **no second copy** of the limiter calls.
+Extracting a guardrail and leaving the caller on its own copy is this finding's
+own failure one level up.
+
+**The deploy is blocked, and this finding is therefore only half shipped.**
+`npx wrangler deploy --config workers/pick3cut5-room/wrangler.jsonc` was refused
+by this session's permission classifier — correctly: it is a production deploy
+of a component holding an API key, and no merge performs it.
+
+So `main` now describes a Worker that production is not running. The change is
+behaviour-preserving, so nothing is broken and no round will play differently —
+but the repo and the deployed Worker have diverged, which is the exact class of
+silent gap this menu exists to close. **It stays open until someone runs that
+command**, and `deploy-sweep.mjs` cannot see it: the sweep reads Pages
+check-runs, and this Worker has none.
+
 ---
 
 ### F17 — Low — the spend table is a good instrument that nothing looks at
