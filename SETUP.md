@@ -586,7 +586,7 @@ watchlist fails to resolve, it appends PATH, `PATHEXT`, what is on disk and what
 discovery saw to `workshop\command-not-found.log`, then returns. **It records; it
 does not intervene** — the command still fails identically, and an ordinary typo
 costs nothing because it is not on the list. **If that file ever appears, read it
-before doing anything else**, including reopening the shell.
+before doing anything else**, including reopening the shell. It covers **interactive shells only**: Claude Code runs `powershell.exe -NoProfile`, so nothing an agent launches loads this profile, and no instrumentation put here will ever see agent traffic.
 
 ### The command-line tools
 
