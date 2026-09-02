@@ -119,6 +119,26 @@ of anything but `success` on the Pages run means the merge did not ship.
 `gh pr checks` is not a substitute: it has shown a red "Cloudflare Pages fail"
 on PRs that deployed perfectly well, so the mark there is noise.
 
+**Step 9 is per-merge, and it is a thing to remember.** The signal was never the
+problem: every merge commit across those four days reports
+`Cloudflare Pages=failure` — 65 consecutive, no flapping, no ambiguity — and
+every merge since reports `success`. Nobody read it, at a merge rate that has
+twice passed 45 in a day. So end a working session with the backstop:
+
+```bash
+node scripts/deploy-sweep.mjs
+```
+
+It walks the last twenty merge commits on `origin/main` and names any that did
+not ship, including one that registered no check-run at all — which looks
+exactly like a quiet healthy merge and is not one. Report only: it never moves
+the exit code, because a deploy that failed needs a person rather than a
+non-zero, and a script that failed on four-day-old history would fail every run
+until someone rewrote the past.
+
+It does **not** replace step 9. The sweep tells you something is broken; step 9
+tells you *while you still remember what you merged*.
+
 Then ask production for **a string this change added** — a route, a heading, a
 new class name. It is the only check that distinguishes deployed from merged,
 and D1 cannot answer it: the database moved *before* the merge, so it looks
