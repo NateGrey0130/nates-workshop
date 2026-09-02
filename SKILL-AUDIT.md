@@ -1,15 +1,19 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **Status 2026-09-02: `F1` taken (PR #541); `F22` and `F23` were opened by
-> taking it. `F2`–`F23` and every `N` are open.** `F` numbers are findings about
+> **Status 2026-09-02: `F1`, `F2` and `F11` taken (PRs #541, #542, #543).
+> `F22`–`F23` were opened by taking `F1`, and `F24` by a stalled deploy while
+> taking `F2`. Everything else is open.** `F` numbers are findings about
 > instructions that exist; `N` numbers are new-skill proposals. `###`, em dash,
 > no severity word. This line is a summary and summaries here go stale — read
 > each finding's own note.
 >
-> **The one that misreads:** `F22` and `F23` sit under their own
+> **The one that misreads:** `F22`, `F23` and `F24` sit under their own
 > `## Opened while taking a finding` heading **between `F21` and the `N`
 > section**, not in numeric order after `F21`. A reader walking the file top to
 > bottom meets them after the cross-layer pair and may take them for proposals.
+> `F24` there is a different finding from `HEALTH-AUDIT.md`'s `F24`, filed the
+> same hour about the same incident — this one is about what the instruction
+> layer says can reach Pages, that one about the stalled build itself.
 >
 > **The trap this file sets for its own reader:** filing it makes a **fifteenth**
 > findings menu, which falsifies `F7` — the finding that corrects `audit-menu`'s
@@ -1227,6 +1231,60 @@ scripts.
 
 **Evidence.** Live repo state and production, found while taking `F1`,
 2026-09-02.
+
+---
+
+### F24 — `CLAUDE.md` says Pages is dashboard-or-Chrome work; the Cloudflare MCP plugin reads and writes it directly
+
+`CLAUDE.md` says, and the memory layer repeats:
+
+> `pages project list` fails the same way and for the same reason, **which is why
+> every Pages and Access change is dashboard work through Nate's Chrome.**
+
+The **premise still holds** and is in this audit's healthy list:
+`CLOUDFLARE_API_TOKEN` has no Pages scope and `npx wrangler pages project list`
+exits 1, re-tested today. **The conclusion drawn from it does not.** On
+2026-09-02, diagnosing `HEALTH-AUDIT` F24, the `cloudflare-api` MCP plugin —
+which authenticates separately from the environment token and is enabled in
+`~/.claude/settings.json` under `enabledPlugins` — served:
+
+- `GET /accounts/{id}/pages/projects/nates-workshop` — the project, its
+  `canonical_deployment` and `latest_deployment`;
+- `GET .../deployments` — every deployment with `environment`, `latest_stage`,
+  `stages[]` and trigger metadata, which is what identified the wedge;
+- `GET .../deployments/{id}/history/logs` — build logs;
+- `DELETE .../deployments/{id}` — **a write**, which is what cleared it.
+
+So a Pages question is answerable, and at least one Pages action takeable,
+without the dashboard. That matters beyond convenience: the stall was diagnosed
+in one call where the documented answer was a hand-off to Chrome. It also gives
+the *"let `whoami` tell you which credential answered"* doctrine in that same
+section a **second credential** to be explicit about — `whoami` describes the
+environment token and says nothing about the plugin.
+
+**Unverified, deliberately: Access.** The sentence couples *"Pages and Access"*
+and only the Pages half was exercised. Do not assume the plugin reaches Access
+policies; this finding claims Pages and nothing more.
+
+**Proposal.** Rewrite the coupled sentences in `CLAUDE.md` — the R2/Pages section
+and the health-check section — to separate premise from conclusion: the
+environment token has no Pages or R2 scope, unchanged; the `cloudflare-api` MCP
+plugin is a second credential that does reach Pages, read and write; Access is
+untested and stays dashboard work until someone tests it. Add one line on which
+to reach for — `wrangler` for D1, the plugin for a Pages question, Chrome for
+Access. Then correct `nates-workshop-production-url.md`, which carries the same
+coupling.
+
+**Posture:** rewrite two sentences plus one memory. **Documentation only, and it
+widens nothing** — the plugin's reach already exists and the instruction layer is
+simply wrong about it. Explicitly **not** proposed: adding the plugin's Pages
+verbs to any allowlist, or using it to deploy. Deleting that deployment was
+warranted and confirmed first, and `CLAUDE.md`'s own reasoning about actions that
+should cost a deliberate keystroke applies to it exactly as it does to
+`d1-apply.mjs`.
+
+**Evidence.** Live incident, 2026-09-02 — four Pages API calls including one
+write, against the claim in `CLAUDE.md` and `nates-workshop-production-url.md`.
 
 ---
 
