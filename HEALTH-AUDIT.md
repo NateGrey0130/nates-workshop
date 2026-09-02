@@ -2020,3 +2020,39 @@ occurrence is not a pattern** and this may be one bad scheduler slot.
 **Effort.** (a) S, (b) XS, (c) XS.
 
 **Evidence.** Live incident, 2026-09-02, timings from the Pages deployments API.
+
+**Taken, 2026-09-02 (PR #566): all three parts.** Posture as proposed —
+`deploy-sweep.mjs` **reports only and still never moves the exit code**,
+confirmed by running it.
+
+**(a)** The sweep now carries `started_at` on every pending check and ages it.
+Under ten minutes prints `still building (Nm)`; over it prints
+`PENDING FOR OVER 10 MINUTES - probably stuck`, names the likely cause and the
+API call that answers it. **The summary line was the real defect and the finding
+under-stated it**: it read `Pages: N deployed, 1 still building, nothing
+missing.` A stalled build is *not* nothing missing — the change it carries is not
+on the site — so a stall now ends `, N STUCK - see above` and the reassuring
+half is withheld. Ten minutes is twenty times the normal 20-35 second run, so
+this is not a tight threshold.
+
+**Proved by making it fail:** the pending branch was forced for every commit and
+the stalled block rendered with its guidance and the `STUCK` summary; restored,
+the sweep returns `Pages: 20 deployed, nothing missing.` and exit 0. A check
+written while nothing is broken has to be broken once on purpose.
+
+**(b)** `SETUP.md` → *How deploys work* gains **A branch push competes with the
+merge it is about to become**: previews and production share one serialised
+queue, a push queues a preview ~10s before the merge queues production, and a
+wedged preview holds the merge behind it. With the incident's timings.
+
+**(c)** The diagnosis path is in both places, because the wrong reading is the
+natural one: **GitHub's check-run says `Building` for a deployment Cloudflare
+has not started.** Cloudflare's `latest_stage` said `queued`, then `initialize`,
+with an empty build log. Reading the check-run alone sends you hunting a compile
+error under `functions/` in a diff that touched no code — which is this repo's
+one documented Pages failure mode, and was the wrong one.
+
+**Still not known: why a deployment stalls before `clone_repo`.** The API exposes
+stage and timing and nothing about the scheduler. Recorded, not solved — one
+occurrence is not a pattern, and the deployment id above is here for a
+recurrence.
