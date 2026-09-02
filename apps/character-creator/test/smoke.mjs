@@ -163,6 +163,85 @@ section('Browser scripts parse');
   }
 }
 
+// ---------- 1a2. Escaping a value into markup ----------
+// Two contexts, two escapes, and for a long time one function.
+//
+// escHtml was textContent -> innerHTML, which does not escape `"`, and 25 call
+// sites put its result inside a double-quoted attribute. A gear row named
+// "Rolling Thunder" All-Purpose Vehicle rendered its Name input EMPTY; a
+// skill's bonuses JSON rendered as value="{" plus the rest of the JSON
+// reparsed as attribute names, and saving that row wrote `{` back over the
+// bonuses.
+//
+// The inline handlers had the mirror of it: escHtml(v).replace(/'/g, '&#39;')
+// in six places, which is correct for the attribute and wrong for the JS
+// inside it - an attribute is entity-decoded BEFORE its contents are parsed as
+// JavaScript, so &#39; hands the apostrophe back to the string literal it was
+// meant to escape.
+//
+// These are behavioural rather than textual: the two functions are pure now,
+// so the test runs them, decodes the result the way a browser would, and
+// requires the value that comes back out to be the value that went in.
+section('Escaping a value into markup');
+{
+  const ui = readFileSync(join(repoRoot, 'shared', 'js', 'ui.js'), 'utf8');
+  const start = ui.indexOf('function escHtml');
+  const jsStart = ui.indexOf('function escJs', start);
+  const end = ui.indexOf('\n}', jsStart) + 2;
+  check('shared/js/ui.js exports both escapes',
+    start !== -1 && jsStart !== -1, 'escHtml or escJs is gone');
+  const { escHtml: eh, escJs: ej } =
+    new Function(ui.slice(start, end) + '\nreturn { escHtml, escJs };')();
+
+  // How a browser reads an attribute value back.
+  const decode = (s) => s.replace(/&quot;/g, '"').replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+
+  const cases = [
+    ['"Rolling Thunder" All-Purpose Vehicle', 'a gear name that carries quotes'],
+    ['{"attributes":{"PS":1},"combat":{"roll":2}}', "a skill's bonuses JSON"],
+    ["Dragon's Claw", 'an apostrophe'],
+    ['A & B <tag>', 'an ampersand and a tag'],
+    ['back\\slash', 'a backslash'],
+  ];
+  const attrBad = cases.filter(([v]) => decode(eh(v)) !== v).map(([, w]) => w);
+  check('a value survives value="..." and comes back out whole', attrBad.length === 0,
+    `broken: ${attrBad.join('; ')}`);
+
+  // eslint-disable-next-line no-eval -- this IS the thing being tested: the
+  // string the browser hands to the JS parser after decoding the attribute.
+  const jsBad = cases.filter(([v]) => {
+    try { return eval("'" + decode(ej(v)) + "'") !== v; } catch { return true; }
+  }).map(([, w]) => w);
+  check('and survives onclick="fn(\'...\')" as a JS string literal', jsBad.length === 0,
+    `broken: ${jsBad.join('; ')}`);
+
+  check('escHtml escapes the quote it used to leave alone',
+    eh('"') === '&quot;', 'escHtml is back to a text-node-only escape');
+  // Coercion is what 200-odd call sites were written against.
+  check('and coerces the way the textContent setter did',
+    eh(null) === '' && eh(undefined) === 'undefined' && eh(12) === '12',
+    'null/undefined/number no longer stringify as they did');
+
+  // The workarounds this replaces. Each was correct about the attribute and
+  // wrong about what the attribute contained, and each carried a comment
+  // saying escHtml leaves quotes alone - which is now false.
+  // Comments stripped first. Both files that lost a workaround now carry a
+  // comment SAYING what the workaround was, which reads to a naive search
+  // exactly like the workaround - the same trap the landing-page check names.
+  const consumers = ['sheet.js', 'app.js', 'campaign.js', 'catalog.js']
+    .map((f) => readFileSync(join(appDir, f), 'utf8'))
+    .join('\n')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/^\s*\/\/.*$/gm, '');
+  check('no call site still patches the apostrophe by hand',
+    !/replace\(\/'\/g, ?['"]&#39;['"]\)/.test(consumers),
+    "an escHtml(...).replace(/'/g,'&#39;') is back; it breaks the handler it is meant to fix");
+  check('and none still patches the double quote by hand',
+    !/replace\(\/"\/g, ?'&quot;'\)/.test(consumers),
+    'a second escaping pass is back; escHtml does it now');
+}
+
 // ---------- 1b. Catalog field config ----------
 // The editor, the write endpoints and the importers all generate themselves
 // from this, so an inconsistent entry breaks three things at once.
