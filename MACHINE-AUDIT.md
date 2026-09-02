@@ -6,9 +6,9 @@ brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
 `low`. Nothing here is taken until Nate names it; one PR per finding, outcome
 note appended under the finding in the same PR.
 
-**Status, 2026-09-02: every finding is taken and closed except `M4` and `M16`.**
-`M4` waits on nothing but a word. `M16` was opened while taking `M1` and is
-filed but NOT taken; `M17` was opened the same way and has since been taken.
+**Status, 2026-09-02: `M1`–`M15` are all taken and closed, and `M17` with them.
+The only thing open is `M16`**, which was opened while taking `M1` and is filed
+but NOT taken.
 **`M8` was taken with its posture overridden** — deletion, on explicit
 instruction — which its own note records. Read the lines under a finding for its
 status — the notes here vary in wording like every other menu in this repo, and
@@ -379,6 +379,46 @@ edits PATH creates a second source of truth that only some shells see:
 PowerShell on the machine, so this finding is the stub plus at most those two
 helpers, and additions are their own decision later. **Write it for 5.1** —
 `pwsh` is not installed, so no `??`, no ternary, no `&&`.
+
+**Taken, 2026-09-02 (PR #584)**, last of the menu because it is easier once the
+destination exists. Every premise re-checked: all four profile paths still
+absent, `$PROFILE.CurrentUserAllHosts` still resolving into OneDrive, `pwsh`
+still not installed, PowerShell 5.1.26100.9168.
+
+Two files, exactly as proposed. The stub at the OneDrive path dot-sources
+`C:\Users\natha\Projects\workshop\profile.ps1`, which holds two `Set-Location`
+helpers and the `workerd` + `wrangler` kill block, and **no PATH edit** — PATH
+belongs in the registry where `M1` put it, and a profile that edits it creates a
+second source of truth that only interactive shells see, which is a harder
+version of the problem `M1` and `M2` were about.
+
+**One thing written differently from the letter of the proposal, on purpose.**
+This finding asks for "a `cd` function". The helpers are named `repo` and
+`workshop` rather than overriding `cd` — **overriding a built-in alias is exactly
+the trap `M5` is about**, where the command still runs and quietly does something
+else, and shadowing `cd` on a machine whose owner already fights shell surprises
+would be the worst possible place to demonstrate it. `cd` is untouched and still
+resolves to `Set-Location`.
+
+**Proved by making it fail, both ways:**
+
+```
+fresh shell WITH the profile   repo / workshop / Stop-DevServer  all defined
+                               cd still resolves to Set-Location
+                               startup errors: 0
+                               repo -> ...\nates-apps   workshop -> ...\workshop
+
+real profile renamed away      startup errors: 0    repo defined? False
+```
+
+The second is the load-bearing one: the stub has to be **inert**, not merely
+correct, because it lives in a syncing directory and a half-synced profile is a
+shell that misbehaves with nothing reporting it.
+
+**`Stop-DevServer` is the one part not exercised**, because running it would kill
+whatever is serving. Its body is verbatim from `windows-shell`; both files parse
+with zero errors, and its two queries were run read-only — 0 `workerd` processes
+and 0 `wrangler pages dev` parents alive right now.
 
 ### M5 — low — `curl` in PowerShell is not curl
 
