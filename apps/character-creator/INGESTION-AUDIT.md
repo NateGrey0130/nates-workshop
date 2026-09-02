@@ -12,6 +12,13 @@
 > **It also IS taken**, in PR #364, which is what produced
 > `.claude/skills/audit-menu/SKILL.md`. That skill still says F14 is open; it
 > was written while F14 was, and the sentence outlived it.
+>
+> **Adjusted 2026-09-02 (PR #552).** The last sentence above stopped being true
+> eleven minutes after it was written. This banner landed at 07:55 (PR #531) and
+> the skill was corrected at 08:06 (PR #534) — it now records F14 as taken, and
+> records that its own wrong sentence stood for five days. Everything else here
+> stands: F14 is taken, and this file's note remains the one every grep
+> misreads. See `SKILL-AUDIT.md` F20.
 
 Read-only audit of **Track E (the PDF import process)** and **Track F (skills
 and tooling gaps)** from the 2026-08-26 review brief. Tracks A–D and G are a
