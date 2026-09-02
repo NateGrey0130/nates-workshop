@@ -472,6 +472,44 @@ button.chkrow {
   padding: 14px; margin: 10px 0; background: var(--accent-glow);
 }
 
+/* ─── QUEUED CHANGES AND CONFLICTS ───
+   A pool change that could not reach the server stays on screen and waits.
+   The strip says how many are waiting, once, near the pools they belong to -
+   not per pool, which would be five copies of the same sentence. */
+.queue-state { font-size: 12px; color: var(--text-muted); min-height: 0; }
+.queue-state.on {
+  min-height: 18px; margin-top: 6px; color: var(--warning);
+  font-family: var(--font-display); font-stretch: 75%;
+}
+
+/* The disagreement, in the cell it is about. The card keeps its size and its
+   place - nothing reflows and nothing else on the sheet is blocked - and the
+   number is replaced by the two candidates, each a 44px target. */
+.vital.conflict { border-top-color: var(--warning); }
+/* The old number goes while the choice is up, or the cell shows three
+   figures and two of them are stale. Scoped through body.play-mode as well,
+   because the rule that REVEALS the <b> in play mode is (0,3,2) and a plain
+   .vital.conflict .val > b is (0,3,1) - it lost, and the screenshot was the
+   only thing that said so. */
+.vital.conflict .val > b,
+body.play-mode .vital.conflict .val > b,
+.vital.conflict .val > input,
+body.play-mode .vital.conflict .val > input,
+.vital.conflict .max { display: none; }
+.vital .cf { display: grid; grid-template-columns: 1fr 1px 1fr; align-items: stretch; }
+.vital .cf-half {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 44px; padding: 2px 0;
+  background: transparent; border: 0; cursor: pointer;
+  font: inherit; font-size: 30px; line-height: 1; color: var(--text-primary);
+}
+.vital .cf-half:active { background: var(--accent-glow); }
+.vital .cf-half .who {
+  display: block; font-size: 10px; font-weight: 800; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--text-muted); margin-bottom: 2px;
+}
+.vital .cf-rule { background: var(--border-strong); }
+
 /* ─── SESSION LOG ───
    What the sheet recorded, beside the journal, which is what a person wrote.
    Machine-written and not editable, so it reads as a list of facts rather

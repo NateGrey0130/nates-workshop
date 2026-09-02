@@ -56,10 +56,53 @@ export async function onRequestPost({ request, env, params }) {
     }
     sets.push(`${field} = ?`); binds.push(fv.to);
   }
+  // GUARDED REPLAY. `from` has always been sent and validated and never used:
+  // it is the client's belief about where the pool was, kept for undo. A queued
+  // event replayed after a spell offline may be replaying onto a pool someone
+  // else has moved, and applying `to` blindly would silently discard their
+  // change - which is the whole failure the queue exists to avoid making
+  // worse.
+  //
+  // Guarded PER FIELD rather than on the row, because two people touching
+  // different pools are not in conflict. A row-level check would call that a
+  // clash and a per-field one does not.
+  //
+  // Opt-in via `guard`, so every existing caller keeps the behaviour it has.
   if (sets.length) {
+    const guards = [], guardBinds = [];
+    if (b.guard) {
+      for (const [field, fv] of Object.entries(charFields)) {
+        guards.push(`${field} IS ?`);
+        guardBinds.push(fv.from);
+      }
+    }
     statements.push(env.DB.prepare(
-      `UPDATE characters SET ${sets.join(', ')}, updated_at = datetime('now') WHERE id = ?`
-    ).bind(...binds, params.id));
+      `UPDATE characters SET ${sets.join(', ')}, updated_at = datetime('now')`
+      + ` WHERE id = ?${guards.length ? ' AND ' + guards.join(' AND ') : ''}`
+    ).bind(...binds, params.id, ...guardBinds));
+  }
+
+  // Checked BEFORE the batch, because a batch that applies nothing still
+  // inserts the event and would leave a log entry for a change that never
+  // happened.
+  if (b.guard && sets.length) {
+    const cols = Object.keys(charFields);
+    const current = await env.DB.prepare(
+      `SELECT ${cols.join(', ')} FROM characters WHERE id = ?`
+    ).bind(params.id).first();
+    if (!current) return json({ error: 'Character not found' }, 404);
+    const moved = cols.filter((f) => current[f] !== charFields[f].from);
+    if (moved.length) {
+      return json({
+        error: 'These pools changed somewhere else since this was queued',
+        conflict: true,
+        // Both sides, so the client can offer a real choice rather than
+        // picking one on the player's behalf.
+        fields: Object.fromEntries(moved.map((f) => [f, {
+          mine: charFields[f].to, theirs: current[f], base: charFields[f].from,
+        }])),
+      }, 409);
+    }
   }
 
   if (changes.item) {
