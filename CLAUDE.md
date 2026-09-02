@@ -96,9 +96,14 @@ token removes the expired-OAuth failure mode (`Authentication error [code:
 
 It was cut as Account → D1 → Edit and is **wider than that now** — it reads the
 account list, which the original could not. Nobody wrote down when or why, which
-is the argument for testing rather than quoting: as of 2026-08-25 it does D1 and
-reads the account, and it does **not** do R2 or Pages. Check what you need
-against the thing itself; this line will drift again.
+is the argument for testing rather than quoting: re-tested **2026-09-02**, it
+does D1 and reads the account, and it does **not** do R2 or Pages. Check what you
+need against the thing itself; this line will drift again.
+
+**"The token cannot" is not "this repo cannot."** Pages is reachable through the
+`cloudflare-api` MCP plugin, which authenticates separately — see *Three
+credentials* under the R2 section. The two facts lived in one sentence here for
+weeks and only the first half was ever true.
 
 Set them with PowerShell, not the Windows Environment Variables dialog:
 
@@ -138,8 +143,35 @@ with, `whoami` having started succeeding. The follow-on line about failing to
 retrieve account IDs, and the `User->Memberships->Read` warning, are wrangler's
 fallback attempts after the first failure rather than separate problems.
 
-`pages project list` fails the same way and for the same reason, which is why
-every Pages and Access change is dashboard work through Nate's Chrome.
+`pages project list` fails the same way and for the same reason. **That is a
+fact about this token, and it is no longer a fact about Pages.**
+
+### Three credentials, and only one of them is the token
+
+| you want | reach for |
+|---|---|
+| D1 — read or write, local or `--remote` | `npx wrangler`, under `CLOUDFLARE_API_TOKEN` |
+| a Pages question, or a deployment | the **`cloudflare-api` MCP plugin** |
+| Access policies, destinations, the dashboard | Nate's Chrome |
+
+The plugin authenticates **separately from the environment token** and is enabled
+in `~/.claude/settings.json`. On 2026-09-02 it served the project, the full
+deployment list with `latest_stage` and `stages[]`, a deployment's build logs,
+and a `DELETE` on a wedged deployment — which is how a stalled build was
+diagnosed and cleared in one call, where this file's advice was a hand-off. See
+`HEALTH-AUDIT.md` F24.
+
+**Access was NOT tested and stays Chrome work.** The sentence this replaces
+coupled "Pages and Access" and only the Pages half has been exercised; do not
+assume the plugin reaches Access policies.
+
+This changes nothing about the token and widens nothing — the plugin's reach
+already existed and this file was simply wrong about it. It does mean the
+*"let `whoami` tell you which credential answered"* rule above now has a second
+credential to be explicit about: `whoami` describes the environment token and
+says nothing about the plugin. And a Pages **deploy** through it would still be
+the deliberate keystroke the allowlist section argues for, exactly as
+`d1-apply.mjs` is.
 
 Creating or listing a bucket needs **Workers R2 Storage -> Edit** added to the
 token, or the Cloudflare dashboard. Widening the token is the bigger decision of
