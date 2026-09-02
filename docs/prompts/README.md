@@ -1,6 +1,6 @@
 # The prompts that produced this repo
 
-Fifteen briefs, each of which produced something committed. They lived only in
+Briefs that each produced something committed. They lived only in
 `C:\Users\natha\Downloads`, untracked, beside PDFs and 3MF files, and one of
 them (`REVIEW-BRIEF.md`) had already been rescued once from a session-keyed temp
 directory that a cleanup would have emptied.
@@ -8,11 +8,35 @@ directory that a cleanup would have emptied.
 The outputs were all versioned. The instructions that produced them were not.
 That is the whole reason this directory exists — `HEALTH-AUDIT.md` F3.
 
+**Three more arrived on 2026-09-02**, hours after this directory was created:
+`CHANGE-PLAN.md`, `BOOK-INGEST-PROMPT.md` and `SKILLAUDITPROMPT.md`. All three
+existed in `Downloads` that morning and were missed — `SKILL-AUDIT.md` F19. The
+largest by output was `CHANGE-PLAN.md`, which drove seventeen PRs. **An archive
+assembled by hand is missing something the day it lands**, which is worth knowing
+before trusting this list to be complete.
+
 **These are records, not documents.** Do not edit them to match what happened.
 A brief that asked for the wrong thing, or named a file that shipped under a
 different name, is more useful left as it was written: the difference between
 what was asked and what was built is the interesting part, and the audit files
 themselves already carry the reasoning for each divergence.
+
+### One of them is not a record
+
+**`BOOK-INGEST-PROMPT.md` is a TEMPLATE**, and the rule above does not fit it. It
+holds three prompts — kickoff, one per book, and a planning pass — and prompt B
+was run seven times, once per book in the 2026-08-28 batch. It is written to be
+run again.
+
+That makes it the only file here that can be *wrong* rather than merely
+historical, and it already is: it opens by telling the reader to read the repo's
+`CLAUDE.md` because it does not auto-load from `Downloads` — a workaround that
+`SKILL-AUDIT.md` F11 replaced with `~/.claude/CLAUDE.md` on 2026-09-02. Its
+durable content moved into `book-survey` §8 under F17.
+
+**If you run it, read `book-survey` first and treat this as the roster.** If you
+edit it, it stops being a record — which is fine for this one file and for no
+other here.
 
 The copies in `Downloads` were left in place rather than deleted.
 
@@ -29,6 +53,8 @@ Build briefs, in rough order:
 | `gm-grants-prompt.md` | `apps/character-creator/docs/plans/19-gm-grants.md`, then the first grants slice |
 | `surveycommittableprompt.md` | `apps/character-creator/docs/surveys/` — one file per cached sourcebook |
 | `setup-v2-rewrite-prompt.md` | `SETUP.md` v2, and `SETUP-v2-CHANGES.md` as its findings menu |
+| `CHANGE-PLAN.md` | the Rust & Ash redesign — nine phases plus a module extraction and the landing page, PRs #484-#500 |
+| `BOOK-INGEST-PROMPT.md` | the seven-book batch of 2026-08-28 — **a template, not a record**, see above |
 
 Audit briefs:
 
@@ -42,6 +68,7 @@ Audit briefs:
 | `n-findings-prompt.md` | the `N` series in `apps/character-creator/REDESIGN-AUDIT.md` |
 | `health-audit-prompt.md` | `HEALTH-AUDIT.md`, both halves |
 | `REVIEW-BRIEF.md` | `apps/character-creator/INGESTION-AUDIT.md` — tracks E and F only |
+| `SKILLAUDITPROMPT.md` | `SKILL-AUDIT.md` — the instruction-layer audit, and this row |
 
 ## Three of them named a file that shipped under a different name
 
