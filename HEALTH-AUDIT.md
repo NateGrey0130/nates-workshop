@@ -456,6 +456,19 @@ Two things the finding did not anticipate:
   meaningful sense. It is pinned to this repo's `commits/` path, which GitHub
   exposes no write verbs on. Written into `CLAUDE.md` as *do not widen*.
 
+**Adjusted 2026-09-02 (PR #543).** The decision stands and the reason given for
+it was wrong. A repo `CLAUDE.md` loads only inside its own directory: a session
+started in `Downloads` — which `CLAUDE.md` itself calls the one place the book
+work runs — loaded the six skills, the subagent and not that file. Sixteen
+sessions had been closing the gap by hand with a typed pointer at it.
+
+`CLAUDE.md` is still the right home, for the reason the note gives second: it is
+where the constraint belongs and where a reader of the allowlist will look. What
+has changed is that the claim is now true rather than assumed —
+`~/.claude/CLAUDE.md` was added as a short pointer, and `SETUP.md`'s
+machine-setup block says why it is a pointer and not a copy or a junction. See
+`SKILL-AUDIT.md` F11.
+
 ---
 
 ### F7 — Medium — port 8788 is hardcoded in three places, and three separate audits found it occupied by something else

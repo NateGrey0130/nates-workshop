@@ -456,6 +456,32 @@ machine has to run it before the book work will find them by name.
 `book-survey` §5 can spawn `book-reconcile` from Downloads. Confirm it the way
 you would confirm a skill — by asking for it by name, not by trusting this line.
 
+**`CLAUDE.md` is NOT linked, and cannot usefully be.** A repo `CLAUDE.md` loads
+only inside its own directory, so a session started in Downloads gets all six
+skills, the subagent, and none of the file that says which skill to use, what the
+Cloudflare token can reach, or that `--local` is not a mirror. That gap was being
+closed by hand: sixteen sessions opened with a typed *"read its `CLAUDE.md`
+first, it does not auto-load from Downloads"*, and `BOOK-INGEST-PROMPT.md` prints
+the same sentence as the first line of its own template (`SKILL-AUDIT.md` F11).
+
+The answer is a **pointer at the user level** — `~/.claude/CLAUDE.md`, which
+loads in every session on this machine regardless of directory:
+
+```powershell
+# Six short paragraphs: where the repo is, read its CLAUDE.md when the work
+# touches it, and a note that the skills DO load by name. Nothing else.
+notepad "$env:USERPROFILE\.claude\CLAUDE.md"
+```
+
+Neither a copy nor a junction. A copy would be a second surface to keep in sync,
+which is what the junctions exist to avoid, and a junction cannot be used because
+the file has to sit *at* `~/.claude/CLAUDE.md` rather than in a directory of its
+own. **Keep it short and scoped to pointing**: it loads for every session on this
+machine, including work that has nothing to do with this repo.
+
+It is checked in nowhere, so a fresh machine writes it alongside running the
+block above.
+
 ## Adding a New App
 
 1. Copy the template:
