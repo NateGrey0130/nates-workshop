@@ -6,10 +6,9 @@ brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
 `low`. Nothing here is taken until Nate names it; one PR per finding, outcome
 note appended under the finding in the same PR.
 
-**Status, 2026-09-02: every finding is taken and closed except `M4`, `M11` and
-`M16`.** `M4` waits on nothing but a word; `M11` is next. `M16` was opened while
-taking `M1` and is filed but NOT taken; `M17` was opened the same way and has
-since been taken.
+**Status, 2026-09-02: every finding is taken and closed except `M4` and `M16`.**
+`M4` waits on nothing but a word. `M16` was opened while taking `M1` and is
+filed but NOT taken; `M17` was opened the same way and has since been taken.
 **`M8` was taken with its posture overridden** — deletion, on explicit
 instruction — which its own note records. Read the lines under a finding for its
 status — the notes here vary in wording like every other menu in this repo, and
@@ -755,6 +754,31 @@ directory, since that is the non-obvious part.
 **Posture:** **leave it alone.** No promotion, no pruning, no restructuring — the
 finding is the measurement and the explicit "no" to promotion, so that the
 question is closed with a reason rather than left to be re-asked.
+
+**Taken, 2026-09-02 (PR #583), and left alone.** Not one byte of
+`settings.local.json` changed. It rode across inside `.claude/` under `M7` and
+still holds 258 entries at 75.4 KB. `SETUP.md` now carries the measurement and
+the explicit "no".
+
+**Re-measured after the move, and this finding's numbers are exactly right** —
+47 dead scratchpad entries, 5 naming the old working directory, **206
+surviving**. Reaching that took three attempts and the two failures are the
+useful part:
+
+- A drive-letter regex counted `https://` as an absolute path, because `s:/`
+  matches `[A-Za-z]:[\\/]`. It inflated the path-dependent count by 31.
+- The entries store Windows paths with **doubled** backslashes — they are command
+  strings that were themselves escaped — so a search for
+  `C:\Users\natha\Projects\nates-apps` matches none of the 77 entries that
+  contain it.
+
+Either error alone would have produced a confident wrong number and a false
+correction to a finding that was right.
+
+**The breakdown is sharper than "path-independent" suggests.** Of the 206, **77
+name the repo by absolute path** and survive for a specific reason — the repo did
+not move — and 126 name no path at all. Only 3 name anywhere else; two of those
+reach a `palladium` checkout under OneDrive that nothing else here mentions.
 
 ### M12 — medium — the junctions survive; the pointer and a count do not
 
