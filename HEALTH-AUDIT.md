@@ -1049,6 +1049,34 @@ Medium on the proposal shape: whether the route list is cleanly derivable from
 `app.js` was not checked, and if it is not, a hand-maintained list may be worse
 than the prefix.
 
+**Taken, 2026-09-02 (PR #528).** As proposed, posture included: the hole is
+narrowed and nothing the game depends on changed. `PUBLIC_PREFIXES` →
+`PUBLIC_PATHS`, exact match, two entries.
+
+**The open question resolved yes.** Two derivations agree: `app.js` builds every
+call from `const API = '/api/pick3cut5'` as `${API}/room` and `${API}/solo`, and
+`functions/api/pick3cut5/` holds exactly `room.js` and `solo.js`. So the
+hand-maintained list the finding feared was avoidable — the array is literal
+(a Worker cannot read the filesystem) but the **test derives it** from the route
+files and fails on either kind of drift.
+
+Four checks, and **both failure modes were verified by causing them**: a
+temporary third route file, and the prefix restored. A check that has only ever
+passed proves nothing about what it would catch — the same lesson F5 produced,
+applied deliberately this time rather than by accident.
+
+One incidental correction to this menu: an earlier probe treated
+`/api/pick3cut5/solo/generate` as a route. It is not — that is the path *inside*
+the Worker. The Pages route is `/api/pick3cut5/solo`, which is why that probe
+returned the landing page and is itself an instance of the finding.
+
+**A self-inflicted detour worth recording**, because it nearly shipped a partial
+change: reverting a temporary test mutation with
+`git checkout functions/api/_middleware.js` restored the file from the **index**,
+which wiped the real change alongside it. Caught by re-reading the file rather
+than by any check. Do not use `git checkout <path>` on a file carrying
+uncommitted work.
+
 ---
 
 ### F16 — Medium — the component holding the key, the money path and the rate limiters is the one with 2.5% test coverage, no preview and a manual deploy
