@@ -1,7 +1,8 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
 > **Status 2026-09-02: `F1`–`F7`, `F10`–`F21` taken (PRs #541–#560) — `F12` in
-> part, its documentation half only. Open: `F8`, `F9`, `F22`–`F25`, all `N`.
+> part, its documentation half only. `F22` taken (#561). Open: `F8`, `F9`,
+> `F23`–`F25`, all `N`.
 > `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while taking
 > `F2`, and `F25` by taking `F4`. Everything else is open.** `F` numbers
 > are findings about instructions that exist; `N` numbers are new-skill
@@ -1674,6 +1675,32 @@ warn-only twin beside a build-failing original would be the posture mismatch
 `audit-menu` warns about.
 
 **Evidence.** Live repo state, found while taking `F1`, 2026-09-02.
+
+**Taken, 2026-09-02 (PR #561).** Posture as proposed: a check beside the combat
+one, in the same section, **failing the build** like its twin. Smoke 1,646 →
+**1,647**.
+
+Premises held. `derive.saves()` produces **17** keys; `SAVE_FIELDS` holds
+**16**; the single difference is `psionics_target`, which the sheet renders
+deliberately above the sixteen as its own `editField` — the number you roll
+against rather than a bonus. It is excluded with that reason in a comment, as the
+proposal specified.
+
+**Proved by making it fail**, per `prove-a-check-by-making-it-fail`: removing the
+`curses` row from `SAVE_FIELDS` produced
+
+```
+FAIL every derived save row has a labelled field on the sheet
+     — curses - add it to SAVE_FIELDS in sheet.js, or the bonus lands in
+       the data and never reaches the player
+```
+
+and restoring it returned the section to green. `sheet.js` was restored from a
+byte copy and `git diff` confirms it untouched. A check that has only ever passed
+proves nothing, and this one was written against a tree where nothing was broken.
+
+**Nothing was found broken** — all sixteen derived keys are present today. This
+is the guard, not a repair.
 
 ---
 
