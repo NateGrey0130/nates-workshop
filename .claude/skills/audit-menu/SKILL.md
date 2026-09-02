@@ -12,10 +12,14 @@ reconstructed from them nine times before this was written.
 
 **Do not trust a count of them, including one written here.** This sentence used
 to say "Eight files", the table below listed ten, and the tree held twelve — and
-by the time that was corrected the tree held fourteen. Get the list from the
-tree, with the command under the table, and remember the fourteenth:
-`SETUP-v2-CHANGES.md` is a menu whose filename does not say `AUDIT`, so no glob
-for that word will find it.
+by the time that was corrected the tree held fourteen, which was wrong within the
+week. **It no longer says how many, and it will not say again**: an ordinal in
+this paragraph has been wrong every single time anyone has read it, including the
+one that replaced the last wrong one.
+
+Get the list from the tree, with the command under the table, then add the one it
+cannot find: `SETUP-v2-CHANGES.md` is a menu whose filename does not say `AUDIT`,
+so no glob for that word will find it.
 
 ## The loop
 
@@ -129,7 +133,7 @@ a plausible total and a PR shipped the wrong count.
 | file | prefix | level | shape |
 |---|---|---|---|
 | `BOOK-INGEST-AUDIT.md` | `F` | `###` | em dash on `F1`–`F4`, hyphen from `F5` on |
-| `DOCS-AUDIT.md` | `D` | `###` | `### D1 — …` |
+| `DOCS-AUDIT.md` | `D` | `###` | severity **or status** word: `### D1 — low — …`, and `### D5 — WITHDRAWN — …` |
 | `EFFICIENCY-AUDIT.md` | `F` | `###` | `### F1 — …` |
 | `apps/character-creator/AUDIT.md` | `D`, `C`, `F` | `###` | severity word: `### D1 — low — …` |
 | `apps/character-creator/CLASS-AUDIT.md` | `F`; `S` | `###`; **not a heading** | `### F17 — low — …`, and `- **S1 — …**` as BULLETS under `## Schema-can-now-express` |
@@ -141,6 +145,7 @@ a plausible total and a PR shipped the wrong count.
 | `apps/media-vault/ISBN-AUDIT.md` | `F` | `##` | `## F1 — …` |
 | `apps/pick3cut5/AUDIT.md` | `F`; `T` | `###`; **not a heading** | `### F1. …`, and `**T1. … — PASSED.**` as BOLD PARAGRAPH LEADS under `## T — paths that have never run` |
 | `HEALTH-AUDIT.md` | `F` | `###` | severity word, capitalised: `### F1 — Critical — …` |
+| `SKILL-AUDIT.md` | `F`, `N` | `###` | `### F1 — …`, no severity word — but `F22` onward sit under `## Opened while taking a finding`, **out of numeric order, after `F21` and before the `N` block** |
 | `SETUP-v2-CHANGES.md` | **none** | `###` | `### 1. …` — bare numbers under `## Changes`, and the one menu whose filename does not say `AUDIT` |
 
 Two heading levels, an optional severity word in either case, an em dash or a
@@ -155,10 +160,19 @@ items are bold paragraph leads, so a scan that walks `###` headings does not
 report them open — it does not see them at all, and twenty items vanish with no
 error. Both live under their own `##` section, which is the thing to look for.
 
-**This table is a snapshot and it has been wrong twice.** Read on 2026-08-31 it
-was missing two whole files and wrong about three cells; read on 2026-09-02 it
-was missing four. Get the current list from the tree rather than from here, then
-read each file's own headings:
+**This table is a snapshot and it has been wrong every time it has been
+checked.** Read on 2026-08-31 it was missing two whole files and wrong about
+three cells; read on 2026-09-02 it was missing four. Audited against every file's
+headings later the same day, it was **right on thirteen rows of fourteen and
+wrong on one cell** — `DOCS-AUDIT.md`, whose findings all carry a word in the
+severity slot, and whose `D5` carries `WITHDRAWN` there: a *status* where four
+other files put a severity, and the one cell in this table that would change a
+scan's answer.
+
+The failure mode has changed shape over those three readings — missing rows,
+then more missing rows, then a wrong cell — which is the argument for reading the
+files rather than for fixing this table again. Get the current list from the tree
+rather than from here, then read each file's own headings:
 
 ```bash
 find . -name '*AUDIT*.md' -not -path './.cache/*' -not -path './node_modules/*'

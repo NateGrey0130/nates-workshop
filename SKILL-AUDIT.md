@@ -1,11 +1,11 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **Status 2026-09-02: `F1`–`F5` and `F11` taken (PRs #541, #542, #543, #545,
-> #546, #547). `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while
-> taking `F2`, and `F25` by taking `F4`. Everything else is open.** `F` numbers
+> **Status 2026-09-02: `F1`–`F5`, `F7` and `F11` taken (PRs #541–#548).
+> `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while taking
+> `F2`, and `F25` by taking `F4`. Everything else is open.** `F` numbers
 > are findings about instructions that exist; `N` numbers are new-skill
-> proposals. `###`, em dash, no severity word. This line is a summary and summaries here go stale — read
-> each finding's own note.
+> proposals. `###`, em dash, no severity word. This line is a summary and
+> summaries here go stale — read each finding's own note.
 >
 > **The one that misreads:** `F22`–`F25` sit under their own
 > `## Opened while taking a finding` heading **between `F21` and the `N`
@@ -547,6 +547,38 @@ least one file, and that argument is the reason not to pin it.
 
 **Evidence.** Git history and the closed menus — every menu's headings read
 directly, 2026-09-02.
+
+**Taken, 2026-09-02 (PR #548).** Posture as proposed: correct one cell, add one
+row, **documentation only, no new gate** — the skill's argument that any regex
+over this table will be wrong about at least one file is the reason not to pin
+it, and it stands.
+
+Premises held. All five `D` findings carry a word in the severity slot, and `D5`
+carries `WITHDRAWN` there — a *status* where four other files put a severity.
+The table's neighbouring row for `apps/character-creator/AUDIT.md` records the
+severity word correctly, so this was one wrong cell rather than a rule the table
+did not know.
+
+**The finding predicted its own falsification and was right.** Filing
+`SKILL-AUDIT.md` made a fifteenth menu, so the table needed the row as well as
+the correction — both in this PR, as the proposal said.
+
+**One thing done beyond the proposal, and it is the durable half.** The paragraph
+above the table ended *"remember the fourteenth: `SETUP-v2-CHANGES.md`"* — an
+**ordinal**, in the paragraph whose subject is that counts of these files are
+never right. It was already wrong: the tree holds fifteen. Rather than change
+fourteen to fifteen and leave the same trap armed, the sentence no longer states
+a number at all — *get the list from the tree, then add the one it cannot find*.
+The `SETUP-v2-CHANGES.md` point is what that sentence was for; the ordinal was
+never load-bearing and had been wrong at every reading.
+
+The snapshot caveat below the table was updated in the same spirit: it said the
+table *"has been wrong twice"*, which is now three times and a fourth shape —
+missing rows, then more missing rows, then a wrong cell. It now says it has been
+wrong every time it has been checked, and names this reading's error, without
+keeping a tally. `audit-menu` argues at length against tallies of its own
+recurring failures; a count of how often the table was wrong is one more thing to
+keep current.
 
 ---
 
