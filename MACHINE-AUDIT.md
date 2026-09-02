@@ -6,8 +6,11 @@ brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
 `low`. Nothing here is taken until Nate names it; one PR per finding, outcome
 note appended under the finding in the same PR.
 
-**Status: all findings open except `M1`, whose machine half was applied on
-2026-09-02 out of band on explicit instruction — see its note.**
+**Status, 2026-09-02: `M2` and `M3` taken. `M1`'s machine half was applied out of
+band on explicit instruction; its `SETUP.md` half is open. Everything else is
+open.** Read the lines under a finding for its status — the notes here vary in
+wording like every other menu in this repo, and grepping for one has been wrong
+in both directions.
 
 > **This menu's own trap: nothing in it is pinned by anything.** Every other
 > audit file here describes the repo, so the test suite, a rebuild or a `--remote`
@@ -226,6 +229,34 @@ workaround was the cost.
 > fact-checking their claims against hardware. If Nate would rather it lived
 > there, moving it costs nothing.
 
+**Taken, 2026-09-02 (PR #573).** As written — documentation only, one skill, no
+replacement workaround, the absolute-path rule removed rather than softened.
+
+**Its own evidence did not survive being taken.** The 13:47 explorer probe this
+finding argues from ran **eight minutes after `M1`'s fix broadcast
+`WM_SETTINGCHANGE`**, so it cannot separate *explorer was never stale* from *that
+broadcast is what refreshed it*. Both predict the result quoted above. Retested
+by making it fail: a throwaway value written to `HKCU\Environment` with **no**
+broadcast at all was visible immediately to a process launched by an
+`explorer.exe` six days old. The conclusion holds — on better evidence than the
+evidence filed for it.
+
+**And the decisive fact had been in the 2026-09-01 record the whole time.** That
+session recorded an *absolute* path to the npm shim failing as well, and PATH
+cannot make an absolute path fail. No inheritance theory was ever consistent with
+the note that proposed it. A cheaper falsification than any measurement, sitting
+inside the file the finding is about.
+
+**Two additions to the asymmetry, found while building the table** — same class
+as `M5`, and worse than a missing command because nothing fails and a different
+program answers: `diff` is a PowerShell alias for `Compare-Object`, and `find`
+resolves to `C:\WINDOWS\system32\find.exe` rather than GNU `find`. `M5` names
+only `curl`, `wget` and `ls`; these belong beside them.
+
+**Left here rather than moved to `SKILL-AUDIT.md`**, per the offer above. What
+went there instead is a dated adjustment under its closing table, which cites the
+retired sentence.
+
 ### M3 — medium — a memory file records the same false claim
 
 `~/.claude/projects/C--Users-natha-Downloads/memory/interactive-shell-lacks-npm-path.md`
@@ -250,6 +281,24 @@ is not.
 its own and should be taken **in the same PR as `M2`**, as the memory half of it.
 Flagged separately only so that taking `M2` cannot silently leave it behind,
 which is exactly what happened to the two files it is about.
+
+**Taken, 2026-09-02 (PR #573)**, inside `M2`'s PR as its memory half — the
+posture this finding asked for. The file keeps the one thing in it that was
+operationally right, that the `claude` `.exe` works where the `.cmd` and `.ps1`
+shims do not, with the path re-verified as present; it loses the causal claim.
+Nothing else was deleted.
+
+**The claim reached two surfaces this finding does not name**, which is the
+failure mode it was filed to prevent, one level up:
+
+- **`MEMORY.md`'s index line** carried the same claim in its own words.
+  Corrected. That line is the surface that loads *first*, in every session,
+  including sessions that never open a memory file at all.
+- **`instructions-do-not-fire-by-themselves`** cites the retired rule in a table
+  of instructions its author broke. That is a record, so it stands as filed and
+  gained a dated adjustment: I was faulted there for not following a rule that
+  was itself wrong, which is not a defence — **a rule being wrong and a rule not
+  firing are different problems, and that table is only about the second.**
 
 ### M4 — medium — there is no PowerShell profile, and the default location is the wrong one
 
