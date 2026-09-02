@@ -350,6 +350,28 @@ whose wording varies applies here and should not be overridden.
 were all read. Medium on the check being worth it: it pins one sentence shape
 and would not have caught the other four instances `DOCS-AUDIT` fixed.
 
+**Taken, 2026-09-02 (PR #524).** As proposed, posture included: one narrow
+check, not a skill-prose linter, and a skill may still quote the value — it just
+cannot quote a wrong one. Every premise held on re-check (skill *Twenty-six*,
+README *Thirty-three*, `schema.sql` 33).
+
+**The check was verified by watching it fail**, with `Twenty-six` still in place,
+naming the file, the stale word and the real count. A check that has only ever
+passed proves nothing about what it would catch — worth stating because this
+menu's own F15 turns on a smoke check that "passes vacuously on an empty list".
+
+**Then it caught the fix, which is the part worth carrying.** The first rewrite
+still contained the sentence shape — *"N tables in one shared D1 database"* as a
+placeholder — and the check fired on it, correctly: a placeholder is a quoted
+instance, and `num('N')` is not 33. The row is now a description with **no
+instance of the sentence in it at all**, pointing at
+`readme-section.mjs "Data model"` to find the real one.
+
+So *describe the row, not its value* is harder than it reads. The obvious way to
+describe a sentence is to show its shape, and showing its shape is quoting it.
+`DOCS-AUDIT` named this rule in four places and nothing until now could tell
+whether any of the four actually complied.
+
 ---
 
 ### F6 — Medium — the permission allowlist covers the read-only scripts and not the loop
