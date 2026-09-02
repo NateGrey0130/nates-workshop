@@ -54,6 +54,19 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["wrangler", "pages", "dev", "--port", "8793"],
       "port": 8793
+    },
+    {
+      "//": "ATTACH ONLY - starts nothing, and so is the entry MOST exposed to",
+      "//2": "the 8788 trap at the top of this file. Every other entry at least",
+      "//3": "tries to bind the port and says so when it cannot; this one",
+      "//4": "silently attaches to whatever is already listening, including",
+      "//5": "another worktree's server. Use it only for a server you started",
+      "//6": "yourself, and confirm the page carries a string your branch added",
+      "//7": "before trusting it. Lived only in the untracked copy until",
+      "//8": "2026-09-02 - MACHINE-AUDIT M14.",
+      "name": "workshop-attach",
+      "url": "http://localhost:8788",
+      "port": 8788
     }
   ]
 }
