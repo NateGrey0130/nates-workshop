@@ -16,8 +16,8 @@
    404. Setting the family without the stretch gets the 100% width instead,
    which looks like the wrong font rather than like a mistake.
 
-   This page keeps its OWN palette and is still on the pre-Rust & Ash colours;
-   only the type moves here. The colours are a later phase. */
+   This page keeps its OWN palette - its token names are its own - but the
+   values are Rust & Ash, same as everything behind it. See the block below. */
 @font-face {
   font-family: 'Saira';
   src: url('/shared/fonts/saira-variable.woff2') format('woff2');
@@ -34,17 +34,25 @@
   font-display: swap;
 }
 
+/* Rust & Ash, the same values shared/styles.css carries under different
+   names. The names stay this page's own because the page is deliberately
+   self-contained - see the note above the fonts - but a visitor should not
+   be able to tell that the front door is a different file from the rooms.
+
+   --text-muted is #8A8076 rather than the #6B6259 the palette was drafted
+   with: 3.1:1 against this background, which is the same failure the old
+   #5a6178 had. 4.86 measured. */
 :root {
-  --bg: #0a0c10;
-  --bg-card: #12151c;
-  --border: #1e2230;
-  --text: #e8ecf4;
-  --text-sub: #8b92a8;
-  --text-muted: #5a6178;
-  --accent: #4f8eff;
-  --accent2: #7c5cfc;
-  --success: #34d399;
-  --warning: #fbbf24;
+  --bg: #14110F;
+  --bg-card: #1B1714;
+  --border: #302A24;
+  --text: #E9E3DA;
+  --text-sub: #9C9287;
+  --text-muted: #8A8076;
+  --accent: #C4622D;
+  --accent2: #D9A05B;
+  --success: #7E9A5E;
+  --warning: #C99A3E;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -67,9 +75,10 @@ body {
   font-size: 42px;
   font-weight: 800;
   letter-spacing: -1px;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  /* Solid, not a gradient clipped to the text - the same change .logo took
+     in phase 1, for the same reason: a gradient on a wordmark reads as a
+     an effect rather than as a colour, and this scheme does not do effects. */
+  color: var(--accent);
   margin-bottom: 8px;
 }
 .hero p {
@@ -87,7 +96,7 @@ body {
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 4px;
   padding: 32px 28px;
   text-decoration: none;
   color: var(--text);
@@ -102,14 +111,16 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(79,142,255,0.04), rgba(124,92,252,0.04));
+  background: linear-gradient(135deg, rgba(196,98,45,0.05), rgba(217,160,91,0.05));
   opacity: 0;
   transition: opacity 0.25s ease;
 }
+/* The lift stays and the glow goes: --shadow is `none` in this scheme, and a
+   32px blur under one card is the thing that token turned off everywhere
+   else. */
 .card:hover {
   border-color: var(--accent);
   transform: translateY(-3px);
-  box-shadow: 0 8px 32px rgba(79,142,255,0.12);
 }
 .card:hover::before { opacity: 1; }
 .card-icon {
@@ -119,8 +130,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(79,142,255,0.08);
-  border-radius: 12px;
+  background: rgba(196,98,45,0.10);
+  border-radius: 4px;
 }
 .card h2 {
   font-family: 'Saira', system-ui, sans-serif;
@@ -136,25 +147,40 @@ body {
   line-height: 1.6;
   position: relative;
 }
+/* align-self, because inline-block does not survive a flex column: .card is
+   flex with the default align-items: stretch, so the tag was a 250px bar with
+   the word `live` at one end of it. Pre-existing and easy to miss in numbers -
+   the computed display really is inline-block - but obvious in a screenshot. */
 .card-tag {
   display: inline-block;
+  align-self: flex-start;
   font-family: 'Saira', system-ui, sans-serif;
   font-stretch: 75%;
   font-size: 11px;
   padding: 3px 8px;
-  border-radius: 4px;
-  background: rgba(52,211,153,0.1);
+  border-radius: 3px;
+  background: rgba(126,154,94,0.12);
   color: var(--success);
   position: relative;
 }
 .card-soon .card-tag {
-  background: rgba(251,191,36,0.1);
+  background: rgba(201,154,62,0.12);
   color: var(--warning);
 }
+/* NO OPACITY, and the numbers are the reason - the same finding the wizard's
+   .st.na rule carries. At opacity 0.5, composited down to opaque against this
+   background, this card's description measured 2.48:1 and its `soon` tag
+   2.76:1, against 5.83 and 6.93 undimmed. It is a card describing something
+   that is coming, which is information someone is meant to read.
+
+   Unavailable is already said three other ways: the tag reads `soon`, there is
+   no link to follow, and pointer-events is off. The dashed border says it once
+   more, the way the wizard marks a step that does not apply. */
 .card-soon {
-  opacity: 0.5;
+  border-style: dashed;
   pointer-events: none;
 }
+.card-soon h2, .card-soon .card-icon { color: var(--text-sub); }
 footer {
   margin-top: 80px;
   color: var(--text-muted);

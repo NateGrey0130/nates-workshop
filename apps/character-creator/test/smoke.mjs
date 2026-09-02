@@ -4039,6 +4039,57 @@ section('Two people, one character');
     'a conflict either reloads over the typing or reports as a generic failure');
 }
 
+// ---------- The front door agrees with the rooms ----------
+// index.html is the ONE page that does not load /shared/styles.css - it is
+// deliberately self-contained - so it carries its own copy of the palette under
+// its own names. That copy drifted for the whole of the Rust & Ash redesign:
+// every app behind it was retoned in phase 1 and the landing page stayed blue
+// and violet until it was done deliberately, months of commits later.
+//
+// A comment already told it to keep in step and did not stop that happening.
+// This compares the values.
+//
+// It lives in this suite because no suite owns repo-root files and this is the
+// one that already reaches outside its own app.
+section('The front door agrees with the rooms');
+{
+  const landing = readFileSync(join(repoRoot, 'index.html'), 'utf8');
+  const shared = readFileSync(join(repoRoot, 'shared', 'styles.css'), 'utf8');
+
+  // Comments first: shared/styles.css records its measured contrast ratios
+  // in prose that names the tokens, and a line reading
+  // `--bg-primary: --text-primary 14.74, ...` matches a naive search.
+  const noComments = (src) => src.replace(/\/\*[\s\S]*?\*\//g, '');
+  const declared = (src, name) =>
+    (noComments(src).match(new RegExp(`--${name}:\\s*([^;]+);`)) || [])[1]?.trim().toLowerCase();
+
+  // Its names are its own; the values have to match by ROLE.
+  const pairs = [
+    ['bg', 'bg-primary'], ['bg-card', 'bg-card'], ['border', 'border'],
+    ['text', 'text-primary'], ['text-sub', 'text-secondary'],
+    ['text-muted', 'text-muted'], ['accent', 'accent'],
+    ['accent2', 'accent-secondary'], ['success', 'success'], ['warning', 'warning'],
+  ];
+  const wrong = pairs.filter(([here, there]) =>
+    declared(landing, here) !== declared(shared, there));
+  check('every colour on the landing page is the shared one under another name',
+    wrong.length === 0,
+    wrong.map(([a, b]) =>
+      `--${a} is ${declared(landing, a)} where --${b} is ${declared(shared, b)}`).join('; '));
+
+  // The two things phase 1 did to .logo, which this page's h1 had too.
+  check('the wordmark is a colour, not a gradient clipped to text',
+    !/-webkit-background-clip: text/.test(landing),
+    'the hero still paints its heading with a gradient');
+  check('and nothing here casts a shadow, because --shadow is none',
+    !/box-shadow/.test(landing), 'a card still has a blur under it');
+
+  // The same finding as the wizard's .st.na, on the same kind of element.
+  check('the coming-soon card is not dimmed below readable',
+    !/\.card-soon \{[^}]*opacity/.test(landing),
+    'opacity on that card measured 2.48:1 on its description text');
+}
+
 // ---------- Military Occupational Specialty ----------
 // RUE gives several classes an MOS: "select one area of specialty, gain all
 // skills under that MOS" (Coalition Technical Officer p236, Robot Pilot p84).
