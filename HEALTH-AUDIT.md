@@ -115,6 +115,37 @@ stops is worse than a documented manual one.
 `.md`. Medium on what recovery is actually available: D1 Time Travel is the
 obvious candidate and this audit did not run it. Verifying it is step (a).
 
+**Taken, 2026-09-02 (PR #519), with F12 folded in as F12 proposed.** A
+`### Recovery` section in `operations.md`, beneath the paragraph this finding
+named. Posture held: documentation plus verified commands, no automation, no
+scheduled job, no new dependency. `time-travel restore` was **not** run — it
+rewrites the live database and there is no scratch database to rehearse on.
+
+**Step (b) of this proposal was impossible as written.** It asked for "a single
+copy-pasteable export command". `wrangler d1 export` **fails outright on this
+database**:
+
+```
+D1 Export error: cannot export databases with Virtual Tables (fts5)
+```
+
+`journal_fts`, from `026-campaign-notes.sql`, makes the *whole* database
+un-exportable by that path, and no flag skips it. The finding assumed the
+obvious command existed. It does not, and nothing in the repo had ever tried it.
+
+What replaced it is a per-table dump, verified on the largest table rather than
+assumed — 3,639 rows of `media_items`, 2.2 MB, exit 0. The loop over the other
+thirty-three tables is **not** written here: this finding's posture was
+documentation plus one command, and a backup script is a different decision.
+Filed as **F21**.
+
+Two smaller deviations, both recorded in the PR: the section is a `###` rather
+than the `##` proposed, because the placement this finding specified sits inside
+*Standing up a new environment* and a `##` there would have orphaned everything
+after it; and step (c)'s table was written as a three-way comparison of what each
+mechanism covers, because the interesting column turned out to be *survives
+losing the Cloudflare account*, where Time Travel is the one that fails.
+
 ---
 
 ### F2 — High — the deploy check is correct, and it is a thing to remember once per merge, 48 times a day
@@ -703,6 +734,19 @@ on a scratch database if it is wanted at all.
 **Confidence.** High throughout. Every number was produced by a command this
 session, not quoted.
 
+**Taken, 2026-09-02 (PR #519), folded into F1 as this finding proposed.** The
+`### Recovery` section carries the rolling 30-day window, both `time-travel`
+invocations, that the D1-scoped token reaches them, and the plain statement that
+`NO DRIFT` and the 30-row value diff answer different questions.
+
+**One thing this finding had right and F1 did not, and one it missed.** It was
+right that the recovery story needed the *rolling* qualifier rather than just the
+number. It missed that `wrangler d1 export` does not run here at all — see F1's
+note and **F21**. That failure strengthens this finding rather than weakening it:
+the 30-day window is not merely the *only documented* recovery, it is the only
+recovery reachable by a single command, and it lives inside the same Cloudflare
+account as the thing it protects.
+
 ---
 
 ### F13 — Medium — a third production secret exists, and the section that enumerates the secrets says there are two
@@ -1226,3 +1270,70 @@ entry and passing it.
 **When — after the waves.** Nothing is blocked by it. Every remaining wave that
 adds a script will hit the same clear failure and recover in a minute, which is
 evidence for the finding rather than a reason to hurry it.
+
+---
+
+### F21 — Medium — the one-command way to copy this database off Cloudflare does not run, and nothing replaces it
+
+**Raised.** Taking F1 (PR #519).
+
+**Evidence.** `wrangler d1 export nates-workshop-media --remote` fails on this
+database, every time:
+
+```
+D1 Export error: cannot export databases with Virtual Tables (fts5)
+```
+
+The virtual table is `journal_fts` — campaign-note search, created by
+`db/migrations/026-campaign-notes.sql`. One FTS5 table makes the **whole**
+database un-exportable by that path; there is no flag that skips it, and the
+error is a hard refusal rather than a partial export.
+
+The per-table alternative works. Verified against the largest table on
+2026-09-02: `--json --command "SELECT * FROM media_items"` returned all **3,639
+rows**, 2.2 MB, exit 0. The database has **34 tables**; nothing loops them.
+
+**Impact.** F1 and F12 establish that D1 Time Travel is the recovery mechanism
+and that it is a rolling 30 days. What this finding adds is that Time Travel
+lives **inside the same Cloudflare account as the data it protects**, and the
+standard way to hold a copy anywhere else does not run here. So the account
+itself is a single point of failure with no working one-command mitigation — not
+because the data cannot be copied, but because copying it takes a loop nobody has
+written and nobody has run.
+
+This is not urgent in the way F1 reads. The realistic loss is not "Cloudflare
+deletes the account"; it is that the only off-platform copy requires
+thirty-four commands typed by hand at exactly the moment somebody is panicking.
+
+**Proposal.** One PR adding `scripts/d1-backup.mjs`: enumerate the user tables
+from `sqlite_master`, skip the FTS5 virtual table and its four shadow tables
+(`journal_fts_data`, `_idx`, `_docsize`, `_config` — all derived, all rebuilt by
+the triggers in `026`), and write one JSON file per table into a directory the
+caller names. Print a row count per table and a total, so a short file is
+visible rather than silent.
+
+Posture: **manual, report-only, no schedule and no new dependency.** Do not add
+a cron, a hook, or a GitHub Action — F1's posture note applies here too, and a
+scheduled export that quietly stops is worse than a documented manual one. Do not
+attempt to make `d1 export` work by dropping and recreating `journal_fts`; that
+is a production mutation in a recovery tool, which is the wrong shape entirely.
+
+It needs a README script-map entry in the same PR (see **F20**), and the
+`### Recovery` section in `operations.md` should lose its "nothing automates this
+loop" sentence when it lands.
+
+**Effort.** S — a `sqlite_master` query, a loop, and the invocation this session
+already verified.
+
+**Ongoing cost.** Two lines: a file-map entry to keep current, and a script that
+will need touching if a table is ever added whose contents should not be written
+to disk. Running it is the operator's choice, not an obligation.
+
+**Confidence.** High on both halves — the export failure and the per-table
+success were each reproduced this session against production.
+
+**When — before wave 3, if it is taken at all.** Nothing is blocked by it and it
+can wait until after the waves without risk. But it belongs with F1 and F13 in
+the data-protection wave rather than filed among the cleanups: it is the missing
+half of the runbook that just shipped, and the `operations.md` sentence pointing
+at it is written as an open loop.
