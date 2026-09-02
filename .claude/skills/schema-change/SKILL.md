@@ -39,10 +39,18 @@ either:
 | 6 | `js/catalog-fields.js` | its fields, **if it is a catalog.** This one is worth the trouble: the editor UI, the write endpoints and the importers all build themselves from that config, so a catalog declared there arrives with all three |
 | 7 | `functions/api/character-creator/catalogs.js` | one more `SELECT`, if the wizard needs it at boot |
 | 8 | `_lib/character-json.js` | the right EMPTY value, if it adds a JSON column to `characters` — `[]` and `{}` are not interchangeable and `null` is neither |
-| 9 | the README data-model **table count** | *"Twenty-six tables in one shared D1 database"* is parsed and compared against `schema.sql`. A new table moves it, and the smoke test fails until it does |
+| 9 | the README data-model **table count** | the sentence opening the *Data model* section that says how many tables the shared database has, spelled as a word rather than a numeral. It is parsed back out of the prose and compared against `schema.sql`; a new table moves it, and the smoke test fails until it does. Find it with `node scripts/readme-section.mjs "Data model"`, and let the test tell you the current value — quoting one here is how this row was wrong for seven tables |
 
 Step 9 is the one that catches the others: `and it matches schema.sql` fires the
 moment the count is stale, which is usually the moment the table lands.
+
+**This row used to quote the number, and the number went stale.** It said
+twenty-six while the README said thirty-three and `schema.sql` had 33 — in the
+file whose job is to tell you to update that count. The README was fine the
+whole time, because a check reads it back out of the prose; nothing read this.
+There is now a companion check — *"and no skill quotes a table count that
+disagrees with it"* — so a value quoted in any skill has to be right. The
+cheaper habit is not to quote one.
 
 ## Writing the migration
 

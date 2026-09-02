@@ -6297,6 +6297,37 @@ section('Documented counts');
     stated && num(stated[1]) === tables,
     stated ? `README says ${stated[1]} (${num(stated[1])}), schema has ${tables}` : '');
 
+  // The same sentence, quoted inside a SKILL, where nothing parses it.
+  // schema-change/SKILL.md illustrated step 9 with "Twenty-six tables in one
+  // shared D1 database" while the README said thirty-three and schema.sql had
+  // 33 — seven tables stale, in the file that tells you to update the README.
+  // The README survived because the check above reads it back out of the prose.
+  // Skill bodies are the largest body of live instruction with nothing doing
+  // that for them, which is where the rot moved rather than stopped.
+  //
+  // Narrow on purpose: this pins ONE sentence shape, not skill prose in
+  // general. The audit-menu skill's argument against mechanical readers of
+  // these files is correct and this does not overturn it. A skill may quote
+  // the value — it just cannot quote a WRONG one, which is what happened.
+  const skillFiles = [];
+  const walkSkills = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, e.name);
+      if (e.isDirectory()) walkSkills(full);
+      else if (e.name.endsWith('.md')) skillFiles.push(full);
+    }
+  };
+  walkSkills(join(appDir, '..', '..', '.claude', 'skills'));
+  const staleQuotes = [];
+  for (const f of skillFiles) {
+    for (const m of readFileSync(f, 'utf8').matchAll(/([\w-]+) tables in one shared D1 database/g)) {
+      if (num(m[1]) !== tables) staleQuotes.push(`${f.replace(/\\/g, '/').split('/.claude/')[1]} says ${m[1]}`);
+    }
+  }
+  check('and no skill quotes a table count that disagrees with it',
+    staleQuotes.length === 0,
+    `${staleQuotes.join('; ')} — schema has ${tables}. Describe the row, not its value`);
+
   // A correct count over an incomplete description is the worse failure of the
   // two, because the number reassures you the list is whole. The README said
   // seventeen and described fifteen — `import_sessions` and `import_staged` had
