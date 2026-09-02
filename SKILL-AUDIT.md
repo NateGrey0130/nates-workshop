@@ -1,7 +1,7 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
 > **Status 2026-09-02: `F1`–`F7`, `F10`–`F21` taken (PRs #541–#560) — `F12` in
-> part, its documentation half only. `F22`/`F23` taken (#561, #562). Open: `F8`,
+> part, its documentation half only. `F8`, `F22`, `F23` taken (#561–#563). Open:
 > `F9`, `F24`, `F25`, all `N`.
 > `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while taking
 > `F2`, and `F25` by taking `F4`. Everything else is open.** `F` numbers
@@ -657,6 +657,40 @@ done without moving a rule, do not do it: this is the least urgent finding here
 and a worse `book-survey` is a much worse outcome than a long one.
 
 **Evidence.** Live repo state (`wc`) plus `EFFICIENCY-AUDIT.md` F1, 2026-08-25.
+
+**Taken, 2026-09-02 (PR #563). Posture held — no rule moved — and the finding's
+own arithmetic was wrong.**
+
+The four named passages moved to `reference/WORKED-EXAMPLES.md` (107 lines).
+`SKILL.md` went **672 → 650**. The proposal targeted **~380**.
+
+**That target was never reachable by this change, and the finding should have
+seen it.** The four passages are roughly sixty lines between them, and each is
+rule-and-evidence interleaved rather than a liftable block — every one needed its
+rule left behind and a pointer added, so the net is about twenty lines. Reaching
+380 would mean removing nearly 300, which is not four passages; it is most of the
+file. The finding named the right passages and then quoted a number it had not
+derived from them — `F21`'s shape, in a proposal written the same morning.
+
+**Verified after the split:** all six load-bearing rules still in `SKILL.md`,
+each exactly once — *none of it is fixed by a better reader*, *let Tesseract do
+the layout analysis*, *reconcile them by NAME*, *keep a tiny explicit alias
+list*, *the index wins and the page is recorded*, *telling you something by the
+exception*. Four pointers added. §0, §0d and §5 untouched, as required.
+
+**Two rules came out stronger for losing their example**, which is the argument
+for the split beyond length. §4b's was stated as a fact about the Palladium
+Fantasy main book; it now says *look for a second authority before parsing the
+first* — a rule about any book. §4c's was a Finger-of-Lictalon adjudication; it
+now says *settle it with independent readings and a magnitude argument, not with
+the rule*, and the count-the-exceptions line no longer hangs off one book's "six
+times in 180".
+
+**What this does NOT solve is the length.** A 650-line skill still loads in full
+on "here is the PDF". Getting it materially shorter is a different decision —
+which sections stop being in the skill at all — and this posture explicitly
+forbids taking that unilaterally: *a worse `book-survey` is a much worse outcome
+than a long one*. Raised with Nate rather than attempted.
 
 ---
 
