@@ -583,6 +583,14 @@ workshop/.claude    moved whole
 Downloads: 49 non-game PDFs, the 1 personal .md, .wrangler/ — untouched
 ```
 
+**Adjusted 2026-09-02, later the same day: `.wrangler/` is gone.** The block
+above is left as it was measured. On Nate's word it was inspected and deleted —
+10 files, 94 KB: three API caches, a miniflare `CacheObject` and two build temp
+directories. **Checked first that `state/v3/` held no `d1` directory**, so no
+local database was in it and nothing was lost. `Downloads` is now 467 entries
+with no work artefact left in it. This finding proposed only that `.wrangler/`
+not be *moved*; deleting it was the separate call it flagged for `M8`.
+
 **Taken against the list, not a fresh scan**, which is what the header asks for.
 The 18 registry books were read from `books.json` at run time so the two could
 not disagree; the other 32 came from the literal names above. The script refused
