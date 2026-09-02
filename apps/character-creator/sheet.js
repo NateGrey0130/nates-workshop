@@ -76,7 +76,7 @@ const $ = (i) => document.getElementById(i);
 // field helpers, and the table that decides a box's column. Destructured
 // here so this file's call sites read exactly as they did before the split.
 const { POOL_TONES, POOL_LOW, poolCard, boxSlug, BOX_COL, box, field,
-  trackableRows } = sheetLayout;
+  trackableRows, stackColumns } = sheetLayout;
 
 // The one binding that is not a straight re-export. sheetLayout.paintPool is
 // pure - it paints whatever data it is handed and knows nothing about C -
@@ -1543,7 +1543,12 @@ function render() {
   </section>
 
   <section class="tabpanel${C.tab === 'skills' ? ' on' : ''}" data-tab="skills">
-  <div class="pick-filter noprint">
+  ${/* data-col is what stackColumns places on, so the filter carries one
+        for the same reason every box does: without it the filter is a stray
+        and lands under whichever column the pass files strays in - which is
+        how it once rendered above Psionics, three columns from the list it
+        filters. */''}
+  <div class="pick-filter noprint" data-col="b">
     <input type="search" id="skill-filter" placeholder="Filter skills…"
       value="${escHtml(C.skillFilter)}"
       oninput="filterSkills(this.value)" aria-label="Filter skills">
@@ -1554,7 +1559,10 @@ function render() {
     ${skillBox('Related Skills', byType('related'))}
     ${skillBox('Secondary Skills', byType('secondary'))}
   </div>
-  <div id="granted-block" class="sheet-grid" style="margin-top:12px">${grantedSkillsHtml()}</div>
+  ${/* Placed as a UNIT rather than by its contents: refreshGranted() rewrites
+        this block's innerHTML long after the layout pass has run, and boxes
+        written into an already-placed container inherit its column. */''}
+  <div id="granted-block" class="sheet-grid" data-col="b" style="margin-top:12px">${grantedSkillsHtml()}</div>
 
   </section>
 
@@ -1633,6 +1641,10 @@ function render() {
   </div>
 
   <div id="play-roll-bar" class="noprint ${C.lastRoll ? '' : 'empty'}">${rollBarHtml()}</div>`;
+
+  // Before anything measures the page: the three column stacks are built by
+  // moving nodes, and sizeSticky() reads rendered heights.
+  stackColumns($('app').querySelector('.sheet-body'));
 
   wirePickers();
   sticky.sizeSticky();
@@ -2393,7 +2405,11 @@ function variantPanel() {
   const options = variants.filter((v) => v.id !== current);
   if (!options.length) return '';
 
-  return `<div class="box noprint">
+  // data-box and data-col by hand, because this box is built by hand. It had
+  // neither until the column stacks went in, which meant it placed on `auto`
+  // and sat whereever the grid had room - beside Attributes by luck, not by
+  // decision. BOX_COL stays the one place a column is chosen.
+  return `<div class="box noprint" data-box="stage" data-col="${BOX_COL.stage}">
     <div class="box-title"><span>Stage</span></div>
     <div class="box-body">
       <p class="muted small" style="margin:0 0 6px">

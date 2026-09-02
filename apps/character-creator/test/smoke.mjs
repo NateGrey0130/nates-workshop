@@ -3554,7 +3554,7 @@ section('One pool widget, both modes');
     !/#[0-9a-fA-F]{3,8}/.test(tones), 'a pool tone hardcodes a colour');
 }
 
-// ---------- The sheet body, three columns ----------
+// ---------- The sheet body, three column stacks ----------
 // The sheet used to show one tab at a time on a 1440 desktop, the same as on a
 // 390 phone, inside a 900px container sized for prose. It is now a three-column
 // body in its own container, with tabs demoted to a phone affordance.
@@ -3564,7 +3564,7 @@ section('One pool widget, both modes');
 // unplaced does not error - it lands in whatever column has room, three columns
 // from the thing it belongs to. That is how the skills filter first rendered
 // above Psionics.
-section('The sheet body, three columns');
+section('The sheet body, three column stacks');
 {
   // The sheet's presentation lives in js/sheet-layout.js and its data logic
   // in sheet.js. This contract spans both, so both are read.
@@ -3612,21 +3612,65 @@ section('The sheet body, three columns');
       && new RegExp(`'${s}': 'b'`).test(colBlock), `${s} is not in column b`);
   }
 
-  check('the columns are placed by attribute, not by source order',
-    /\.sheet-grid\.sheet-3 \[data-col="a"\] \{ grid-column: 1; \}/.test(css)
-    && /\.sheet-grid\.sheet-3 \[data-col="b"\] \{ grid-column: 2; \}/.test(css)
-    && /\.sheet-grid\.sheet-3 \[data-col="c"\] \{ grid-column: 3; \}/.test(css),
+  // THE GRID PLACES THE STACKS. It used to place every box, and a box in a
+  // grid row is as tall as the tallest box in that row - which is where the
+  // 3281px of dead space came from. The child combinator is what keeps these
+  // rules off the boxes INSIDE a stack: they carry data-col too, because it is
+  // what stackColumns() reads, and they are not grid items.
+  check('the stacks are placed by attribute, not by source order',
+    /\.sheet-grid\.sheet-3 > \.sheet-col\[data-col="a"\] \{ grid-column: 1; \}/.test(css)
+    && /\.sheet-grid\.sheet-3 > \.sheet-col\[data-col="b"\] \{ grid-column: 2; \}/.test(css)
+    && /\.sheet-grid\.sheet-3 > \.sheet-col\[data-col="c"\] \{ grid-column: 3; \}/.test(css),
     'a column rule is missing');
+  check('and the boxes themselves are not placed at all any more',
+    !/\.sheet-grid\.sheet-3 \[data-col="[abc]"\] \{ grid-column/.test(css),
+    'a bare [data-col] rule is back; it sets grid-column on things that are not grid items');
 
-  // display: contents leaves the DOM tree alone, so a child combinator here
-  // matches nothing - the boxes are grandchildren through .tabpanel.
-  check('and by a descendant selector, because the boxes are grandchildren',
-    !/\.sheet-grid\.sheet-3 > \[data-col/.test(css),
-    'a child combinator is back; display: contents does not reparent anything');
+  // A stack, not a fourth grid. Rows are the whole of what this removes.
+  check('a stack is a stack',
+    /\.sheet-col \{ display: flex; flex-direction: column; gap: 14px; min-width: 0; \}/.test(css),
+    '.sheet-col is not a flex column');
+  check('and something builds them',
+    /function stackColumns\(/.test(src)
+    && /stackColumns\(\$\('app'\)\.querySelector\('\.sheet-body'\)\)/.test(src),
+    'stackColumns is not defined, or render() never calls it');
 
-  check('the skills filter is placed too, or it drifts',
-    /\.sheet-grid\.sheet-3 \.pick-filter \{ grid-column: 2; \}/.test(css),
-    '.pick-filter has no column and will land wherever there is room');
+  // Everything the pass moves is found BY data-col. A node without one is a
+  // stray: filed under b with a console warning, which is a signal nobody is
+  // watching for. These three are the nodes that are not plain boxes.
+  check('the skills filter carries a column, or it drifts',
+    /<div class="pick-filter noprint" data-col="b">/.test(src),
+    '.pick-filter has no column and will be filed as a stray');
+  check('the granted block is placed as a unit',
+    /<div id="granted-block" class="sheet-grid" data-col="b"/.test(src),
+    'refreshGranted() would write boxes into a container with no column of its own');
+  check('and the hand-built Stage box is placed from the same table',
+    /<div class="box noprint" data-box="stage" data-col="\$\{BOX_COL\.stage\}">/.test(src)
+    && /stage: 'a'/.test(colBlock),
+    'the Stage box is unplaced, or BOX_COL no longer decides where it goes');
+
+  // Stage is the reason the stray path exists: it was built by hand rather
+  // than through box(), so the title scan above never saw it, and it placed on
+  // `auto` for as long as the three columns existed. Any future hand-built box
+  // would do the same, so they are counted rather than trusted.
+  const handBuilt = [...src.matchAll(/<div class="box(?:"|\s[^"]*")([^>]*)>/g)]
+    .filter((m) => !m[1].includes('data-col')).map((m) => m[0]);
+  check('every hand-built box carries one', handBuilt.length === 0,
+    `unplaced: ${handBuilt.join(' ')} - box() adds data-col, hand-written markup does not`);
+
+  // One column, and the tabs with it. The stacks dissolve rather than collapse,
+  // or a tab whose boxes span two columns would be split down the page by an
+  // assignment that has nothing left to say. The gap is the older bug: a
+  // display: block panel stacked its margin-less boxes flush, measured 0, 0, 0
+  // at 390px.
+  const phoneBlock = css.slice(css.indexOf('@media (max-width: 820px)',
+    css.indexOf('@media (max-width: 1180px)'))).slice(0, 400);
+  check('a phone dissolves the stacks',
+    /\.sheet-grid\.sheet-3 > \.sheet-col \{ display: contents; \}/.test(phoneBlock),
+    'below 820px the stacks stay and split each tab down the page');
+  check('and spaces the boxes of the open tab',
+    /\.sheet-grid\.sheet-3 \.tabpanel\.on \{ display: flex; flex-direction: column; gap: 14px; \}/.test(phoneBlock),
+    'the open tab stacks its boxes flush, with no rule between any two');
 
   // Prose keeps a measure; the sheet around it does not have to.
   check('prose is capped where it lives',
@@ -3651,6 +3695,11 @@ section('The sheet body, three columns');
     'paper has no print layout of its own');
   check('print releases the column assignments',
     /grid-column: auto;/.test(printBlock), 'boxes keep their screen columns on paper');
+  // Multicol FLOWS one column into the next, so three stacks standing in the
+  // way is three columns of boxes inside two columns of page.
+  check('and dissolves the stacks so the boxes reach the flow',
+    /\.sheet-grid\.sheet-3 > \.sheet-col \{ display: contents; \}/.test(printBlock),
+    'the stacks survive into print and the multicol sees three items');
   check('print releases the prose cap',
     /\.box\[data-box\] \.box-body \{ max-width: none; \}/.test(printBlock),
     '66ch is narrower than a page column and runs the sheet long');

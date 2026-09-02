@@ -141,12 +141,103 @@
   // anywhere.
   const BOX_COL = {
     attributes: 'a', vitals: 'a', experience: 'a', 'saving-throws': 'a', combat: 'a',
-    resources: 'a',
+    resources: 'a', stage: 'a',
     'class-skills': 'b', 'related-skills': 'b', 'secondary-skills': 'b',
     granted: 'b', armor: 'b', equipment: 'b',
     'psionics-magic': 'c', background: 'c', bearing: 'c', notes: 'c', journal: 'c',
     'session-log': 'c',
   };
+
+  // ─── THE THREE COLUMN STACKS ───
+  // A grid gives you columns. It does not give you column STACKS, and the
+  // difference is the whole of this function.
+  //
+  // Every box in a grid ROW is as tall as the tallest box in that row.
+  // Attributes is six lines; it shared a row with Psionics & Magic and held
+  // 500px of nothing underneath until the row could end and Experience could
+  // start. No value reaches that space - it is a row track, not a gap, and
+  // `gap`, `align-items` and `grid-auto-flow: row dense` are all answers to
+  // different questions. (Dense backfills empty CELLS within a row. There is
+  // no vertical backfill in grid at all.)
+  //
+  // Masonry is the direct answer and no shipping browser has it: checked in
+  // Chrome 148, neither `grid-template-rows: masonry` nor the `item-pack`
+  // spelling the spec is currently arguing about. So the boxes are moved into
+  // three real stacks and the grid is left holding three items instead of
+  // twenty. A stack has no rows to align: a short box is followed by the next
+  // box, 14px down, at every height of neighbour.
+  //
+  // THE TABS SURVIVE THIS. A panel is SPLIT rather than dissolved - a panel
+  // with boxes in two columns becomes two <section>s carrying the same
+  // data-tab - so pickTab's querySelectorAll('.tabpanel') still toggles all
+  // the pieces of a tab together, and the phone breakpoint and the print
+  // block still act on the nodes they always did.
+  //
+  // Column ORDER is preserved exactly: panels are walked in DOM order and each
+  // column keeps the order its boxes already had. What moves is where a column
+  // starts, not what is in it.
+  //
+  // Runs on markup that has just been written by render(), so it is idempotent
+  // by construction rather than by a guard.
+  const SHEET_COLS = ['a', 'b', 'c'];
+
+  // What the pass moves: the OUTERMOST elements carrying data-col. It stops
+  // descending at one, so #granted-block travels as a unit and the boxes
+  // refreshGranted() later writes into it stay in the column it is already in.
+  //
+  // An element with no data-col and nothing placed inside it is a STRAY, and
+  // it is collected rather than skipped, because the panel it came from is
+  // removed at the end of the pass - anything left behind would leave the page
+  // silently. The Stage box was in exactly that state before this: built by
+  // hand rather than through box(), with no column, landing wherever the grid
+  // had room. It has one now, and this catches the next one.
+  function placeable(root) {
+    const out = [];
+    const walk = (node) => {
+      for (const el of node.children) {
+        if (el.hasAttribute('data-col')) { out.push(el); continue; }
+        const before = out.length;
+        walk(el);
+        if (out.length === before) out.push(el);
+      }
+    };
+    walk(root);
+    return out;
+  }
+
+  function stackColumns(body) {
+    if (!body) return;
+    const cols = new Map(SHEET_COLS.map((c) => {
+      const el = document.createElement('div');
+      el.className = 'sheet-col';
+      el.dataset.col = c;
+      return [c, el];
+    }));
+
+    for (const panel of [...body.children]) {
+      if (!panel.classList.contains('tabpanel')) continue;
+      // cloneNode(false) copies the tag, the classes - .on included - and
+      // data-tab, and nothing else. That is the entire contract pickTab needs.
+      const slices = new Map();
+      for (const item of placeable(panel)) {
+        let col = item.dataset.col;
+        if (!cols.has(col)) {
+          console.warn('sheet: no column for', item, '\u2014 filed under b');
+          col = 'b';
+        }
+        let slice = slices.get(col);
+        if (!slice) {
+          slice = panel.cloneNode(false);
+          cols.get(col).appendChild(slice);
+          slices.set(col, slice);
+        }
+        slice.appendChild(item);
+      }
+      panel.remove();
+    }
+
+    for (const c of SHEET_COLS) body.appendChild(cols.get(c));
+  }
 
   const box = (title, body, extra = '') => {
     const slug = boxSlug(title);
@@ -197,6 +288,6 @@
 
   global.sheetLayout = {
     POOL_TONES, POOL_LOW, poolCard, paintPool, boxSlug, BOX_COL, box, field,
-    trackableRows,
+    trackableRows, stackColumns,
   };
 })(globalThis);
