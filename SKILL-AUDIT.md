@@ -1058,6 +1058,20 @@ Cloudflare token: *ask for the specific thing you need, and let the tool tell
 you which credential answered.* Writing a confident answer here would have been
 the reasoning the section itself warns against.
 
+**Attempted and abandoned, 2026-09-02; left untested by decision.** The real
+test needs an interactive Claude Code session in each directory, because the
+allowlist governs commands *Claude* runs — a command typed straight into
+PowerShell never touches it. Two runs failed before that was established: the
+first pasted the probes into a raw shell, where no prompt was ever possible; the
+second could not launch `claude` at all.
+
+**The probe pair, if anyone runs it later.**
+`node scripts/drift-check.mjs --remote` is on the repo list only and
+`git --version` on the Downloads list only; the two lists share exactly **one**
+entry, the repo has no `settings.local.json`, and the user level has no
+`permissions` block — so the four cells are unambiguous. Default permission
+mode, and decline every prompt: the answer is whether it **asks**.
+
 ---
 
 ### F13 — `book-survey`'s first command is justified by a permission fact that is not true where the skill runs
@@ -2353,3 +2367,36 @@ instruction layer, both opened by taking `F1`. The table above is the census as
 filed and is left standing as one; it does not include them.
 
 Nothing else is taken until Nate names it.
+
+---
+
+## A closing observation, about this audit rather than its findings
+
+**Instructions this session wrote were violated by their author, the same day,
+four times.** Not the old ones — the new ones.
+
+| what I did | the rule, written hours earlier |
+|---|---|
+| an inline PowerShell command whose backslashes collapsed | `windows-shell` → *the Bash tool unescapes before bash sees it* |
+| committed a 4,603-line phantom CRLF flip in this file | `windows-shell` → *editing a file in place* |
+| handed over a bare `claude` | `windows-shell` → *call binaries by absolute path in anything you hand him to run* |
+| then handed over the `npm\claude.cmd` shim | `interactive-shell-lacks-npm-path`, which records **that exact path as already having failed** and names the one that works |
+
+I caught the first two. Nate caught the third. **The fourth is the one worth
+keeping:** the memory holding the right answer also named my wrong answer as
+wrong, it was in this session's context throughout, and I reached for a
+directory listing instead of reading it.
+
+So the audit's subject was demonstrated on the audit. `F1` is a lesson written
+to memory that asserted a fix had already landed in a skill. `F20` is citations
+nothing revisits. `F16` is a status a memory cannot hold. This is the same
+thing again: **writing an instruction down is not the same as it firing.**
+
+The instruction layer is not a guarantee — it is a prompt to a reader who may
+not read it. The only defence observed working here was *measure the thing
+rather than trusting the sentence about it*, which is what caught `F1`'s
+inverted premise, `F4`'s two false replacements, `F8`'s impossible arithmetic
+and `F9`'s 74 false positives.
+
+Recorded here rather than filed as a finding, because there is nothing to
+implement. It is the result.
