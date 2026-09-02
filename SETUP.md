@@ -519,6 +519,41 @@ machine, including work that has nothing to do with this repo.
 It is checked in nowhere, so a fresh machine writes it alongside running the
 block above.
 
+### The command-line tools
+
+`node`, `npm`, `git` and `gh` put themselves on PATH and need nothing here.
+
+**`pdftotext` ships inside Git for Windows** — at
+`C:\Program Files\Git\mingw64\bin\pdftotext.exe`, with no separate poppler
+install to do. That directory is **not** on the default PATH, while
+`C:\Program Files\Git\cmd` is. Nothing in this repo calls it; it is an ad-hoc
+tool for reading a PDF's text layer, allowed in `.claude/settings.json` as
+`Bash(pdftotext *)`. An agent session gets it for free, because an agent's Bash
+is Git Bash and prepends `/mingw64/bin`. **So it worked for every agent and
+failed for every human, silently, for as long as it existed** — nothing reported
+a missing tool, because from the side that could see it nothing was missing.
+Appended to the User PATH on 2026-09-02.
+
+**Append to the END of the User PATH, and preserve the value kind.** Two traps,
+both of which will bite the next person to edit this:
+
+- `HKCU\Environment\PATH` is a **`REG_EXPAND_SZ`** value beginning with
+  `%USERPROFILE%`. `[Environment]::SetEnvironmentVariable(…,'User')` rewrites the
+  whole thing as `REG_SZ`, which turns
+  `%USERPROFILE%\AppData\Local\Microsoft\WindowsApps` into a literal path
+  resolving to nothing — and that is where `python`, `python3` and `py` come
+  from. Write through `Microsoft.Win32.Registry` with
+  `RegistryValueKind::ExpandString`.
+- `mingw64\bin` holds 51 executables, exactly one of which collides with a
+  Windows one: `curl.exe`. Appending to the **end** of the *User* PATH keeps
+  Machine PATH ahead of it, so `C:\WINDOWS\system32\curl.exe` still wins.
+  Verified in both PowerShell and `cmd`.
+
+**A PATH change does not reach an already-open terminal.** A process's
+environment is fixed when it starts and nothing updates it afterwards. Open a new
+window before concluding the change did not work — this is the step that makes a
+correct fix read as broken.
+
 ## Adding a New App
 
 1. Copy the template:

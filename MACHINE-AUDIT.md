@@ -774,6 +774,48 @@ says it was considered and declined, and closing it.
 
 ---
 
+# Opened while taking a finding
+
+### M16 — high — `ocr-book.py` requires `tesseract`, it is not on PATH, and a hardcoded fallback is the only reason that does not show
+
+Found while taking `M1`, by checking its premise. `scripts/ocr-book.py` — the
+script `M9`'s entire recovery story rests on — **does not call `pdftotext`.** It
+shells out to **`tesseract`**, and exits with *"tesseract not found - install it
+or put it on PATH"* when it cannot find one. `scripts/read-columns.py` uses
+PyMuPDF and shells out to nothing. Every other mention of `pdftotext` in the tree
+is historical prose about how its column handling is *not* what this cache does.
+
+Measured 2026-09-02, in a shell carrying only the persisted PATH:
+
+```
+tesseract                                       NOT FOUND on PATH
+C:\Program Files\Tesseract-OCR\tesseract.exe    present
+```
+
+It runs today only because `find_tesseract()` carries that absolute path as a
+fallback after `shutil.which`. Sixteen book caches under `.cache/books/` were
+built through it, so the path is exercised rather than theoretical.
+
+**Two things follow.** A fresh machine that installs Tesseract anywhere else gets
+the hard exit, and `SETUP.md` does not mention Tesseract at all. And the fallback
+is doing load-bearing work while reading as a nicety — which makes the missing
+PATH entry invisible in **exactly** the way `M1`'s was, one script over, at a
+moment when nobody was looking for a second instance of it.
+
+**Proposal:** one paragraph in `SETUP.md` §"Setting up a machine" → *The
+command-line tools*, beside `pdftotext`'s: Tesseract is required by
+`ocr-book.py`, it is not on PATH here, the script reaches it through a hardcoded
+fallback, and a machine that installs it elsewhere has to put it on PATH. Do
+**not** add a check, and do **not** touch `find_tesseract()` — the fallback is
+what makes this machine work, and removing it would break the working case in
+order to expose a theoretical one.
+
+**Posture:** documentation only. **Filed, not taken** — opened while taking `M1`
+and left for a separate word, because the numbering exists so that the decision
+to take it can be separate from the decision to write it down.
+
+---
+
 ## Order
 
 Six of these have a real dependency. The rest can be taken in any order.
