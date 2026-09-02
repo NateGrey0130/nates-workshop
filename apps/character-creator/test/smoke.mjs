@@ -3464,9 +3464,16 @@ section('One pool widget, both modes');
   check('there is a single pool component',
     /function poolCard\(/.test(src), 'poolCard() is gone');
 
+  // This used to read `callers >= 3` - the definition plus TWO render paths,
+  // which was the phase-3 property. There is one render path now, so the
+  // stronger statement is exactly one caller, and an extra one means a second
+  // path has grown back.
   const callers = [...src.matchAll(/poolCard\(/g)].length;
-  check('and both render paths call it', callers >= 3,
-    `poolCard appears ${callers} times; expected its definition plus two callers`);
+  check('the one render path is its only caller', callers === 2,
+    `poolCard appears ${callers} times; expected its definition plus ONE caller`);
+  check('and it is asked for steppers, which CSS then gates',
+    /poolCard\(key, label, c\[key \+ '_current'\], c\[key \+ '_max'\], w, true\)/.test(src),
+    'the sheet no longer renders the steppers play mode reveals');
 
   const body = src.slice(src.indexOf('function poolCard('),
     src.indexOf('\r\n}', src.indexOf('function poolCard(')));
@@ -3510,7 +3517,7 @@ section('One pool widget, both modes');
 
   check('the retired widget is gone from the markup',
     !/class="play-pool"|pp-val|pp-label|pp-btns/.test(src),
-    'renderPlay() still emits .play-pool');
+    'something still emits .play-pool');
   check('and from the stylesheet',
     !/^\.play-pool[\s.{]/m.test(css), 'styles.css still styles .play-pool');
 
@@ -3897,6 +3904,63 @@ section('The printed sheet');
 // and a column populated at runtime would be class data the repo cannot
 // rebuild - which is the one thing drift-check and repo-vs-live exist to
 // assert. See CHANGE-PLAN.md phase 8, which specified the column.
+// Play mode was a second render path - renderPlay() drew the same skills, saves
+// and combat bonuses again in a 720px single column. It is a MODE on the sheet
+// now. What these pin is the shape that makes that safe, because the failure
+// would be silent: a second path that drifts from the first is exactly the bug
+// phase 3 already fixed once, when two pool widgets disagreed.
+section('Play mode is a mode, not a layout');
+{
+  const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
+
+  check('there is no second render path',
+    !/function renderPlay\(/.test(sheet), 'renderPlay() is back');
+  check('and render() does not branch on the mode',
+    !/if \(C\.playMode\) \{ \$\('app'\)\.innerHTML/.test(sheet),
+    'render() dispatches to a second path again');
+  check('the play layout is gone from the stylesheet',
+    !/\.play-view[\s.{,]/.test(css.replace(/\/\*[\s\S]*?\*\//g, '')),
+    'a .play-view rule survives outside a comment');
+
+  // Switching modes must not rebuild the page: a re-render replaces every
+  // input, and the one thing a mode toggle must never cost is a half-typed
+  // note. Same rule pickTab already follows.
+  const toggle = sheet.slice(sheet.indexOf('function togglePlay()'),
+    sheet.indexOf(String.fromCharCode(13, 10) + '}', sheet.indexOf('function togglePlay()')));
+  check('toggling the mode is a class flip, not a re-render',
+    !/render\(\)/.test(toggle) && /syncPlayChrome\(\)/.test(toggle),
+    'togglePlay re-renders and will eat a half-typed note');
+
+  // THE PRINT RULE IS WHY THE ROWS ARE NOT BUTTONS. `button` is hidden
+  // outright on paper, so a skill row that BECAME a button would have
+  // disappeared from the printed sheet. The control sits BESIDE the number.
+  check('the roll control is a button, so a keyboard can reach it',
+    /<button type="button" class="roll-btn/.test(sheet),
+    'the roll control is not a button');
+  check('and the rows it sits in are still rows',
+    /<tr class="skill-row">/.test(sheet) && /<div class="field">/.test(sheet),
+    'a row became a control and will not print');
+  check('print hides everything play mode adds',
+    /@media print \{ #play-controls, #play-roll-bar, \.roll-btn \{ display: none !important; \} \}/.test(css),
+    'the print block no longer hides the play blocks');
+  // A fourth column for the control moved the printed sheet - the +%/Lvl
+  // column shifted 4.5pt left on every skill table. Measured, and the reason
+  // the control lives INSIDE the % cell instead.
+  check('the skill table gained no column for the control',
+    !/roll-col/.test(sheet) && /<th>Skill<\/th><th class="num">\+%\/Lvl<\/th><th class="num">%<\/th>/.test(sheet),
+    'the roll control took a table column again and will move the printout');
+  check('so the skill note still spans exactly three',
+    /<tr class="skill-note"><td colspan="3">/.test(sheet),
+    'the note colspan no longer matches the table');
+
+  check('the mode is what reveals the play blocks',
+    /body:not\(\.play-mode\) #play-controls,[\s\S]{0,80}?#play-roll-bar \{ display: none; \}/.test(css),
+    'the play blocks are not gated on body.play-mode');
+  check('and the roll controls',
+    /body\.play-mode \.roll-btn \{ display: inline-flex/.test(css),
+    'the roll controls are not gated on body.play-mode');
+}
 section('Trackable resources');
 {
   const layout = readFileSync(join(appDir, 'js', 'sheet-layout.js'), 'utf8');

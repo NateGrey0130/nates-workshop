@@ -1328,14 +1328,57 @@ input.class-boosted { border-bottom-width: 2px; }
 
 body.play-mode #print-btn { display: none; }
 
-.play-view { max-width: 720px; margin: 0 auto; padding-bottom: 72px; }
+/* PLAY MODE IS A MODE, NOT A LAYOUT. .play-view was a 720/900px single column
+   drawn by a second render path; both are gone. What is left here dresses the
+   blocks the ONE sheet render now emits and body.play-mode reveals.
 
-.play-head {
-  display: flex; flex-wrap: wrap; justify-content: space-between;
-  align-items: baseline; gap: 8px; margin-bottom: 10px; font-size: 17px;
+   The sheet earned the collapse: sticky vitals, tabs below 820px and 44px
+   targets throughout. Play mode existed because the sheet did not work on a
+   phone, and that stopped being true. */
+body:not(.play-mode) #play-controls,
+body:not(.play-mode) #play-roll-bar { display: none; }
+
+/* Room for the fixed roll bar so it cannot cover the last row of the sheet. */
+body.play-mode { padding-bottom: 72px; }
+
+/* Record-keeping does not belong at the table. These four are the boxes play
+   mode never showed; everything else the sheet has - attributes, armor, gear,
+   notes - it now shows, which is more than the old play view offered and all
+   of it lookup a player does mid-session. */
+body.play-mode .box[data-box="journal"],
+body.play-mode .box[data-box="session-log"],
+body.play-mode .box[data-box="background"],
+body.play-mode .box[data-box="bearing"] { display: none; }
+
+/* THE ROLL CONTROL. Hidden until play mode, then a 44px target sitting beside
+   the number it rolls. It is a real <button> - a keyboard reaches it, and the
+   print block hides every button, which is exactly why the ROW could not
+   become one: a row that was a button would have vanished from paper.
+
+   No tabindex either way: display:none takes it out of the tab order in sheet
+   mode for free, and showing it puts it back. An explicit -1 would have had to
+   be removed by JS on every toggle, which is state to keep in step for nothing. */
+.roll-btn {
+  display: none;
+  min-width: 44px; min-height: 44px; padding: 0 10px; margin-left: 8px;
+  background: var(--bg-tertiary); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text-secondary);
+  font-size: 15px; line-height: 1; cursor: pointer;
 }
-.play-xp { display: flex; align-items: center; gap: 8px; }
-.play-xp input { width: 72px; }
+.roll-btn:active { background: var(--accent-glow); border-color: var(--accent); }
+body.play-mode .roll-btn { display: inline-flex; align-items: center; justify-content: center; }
+/* IN THE % CELL, NOT A COLUMN OF ITS OWN. A fourth <th>/<td> marked .noprint
+   was the obvious shape and it moved the printed sheet: the +%/Lvl column
+   shifted 4.5pt left on every skill table, measured against the render before
+   it. Nothing else moved and no page broke differently, but a control that
+   nudges the printout is not free. Inside the cell it costs nothing - the
+   button is display:none in sheet mode and in print, and an out-of-flow child
+   does not widen its cell. The skill-note colspan stays 3 for the same reason. */
+body.play-mode .skill-table .pct { white-space: nowrap; }
+body.play-mode .skill-table .roll-btn { margin-left: 6px; vertical-align: middle; }
+
+#play-controls { margin: 12px 0; }
+
 
 .play-amt {
   display: flex; align-items: center; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;
@@ -1351,30 +1394,11 @@ body.play-mode #print-btn { display: none; }
   border-color: var(--accent-secondary); color: var(--accent-secondary);
 }
 
-.play-pools {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 8px; margin-bottom: 12px;
-}
-/* .play-pool and its .pp-* children are gone: .vital is both widgets now. */
 
 .play-sec { margin-bottom: 10px; }
 .play-sec summary {
   cursor: pointer; font-weight: 600; padding: 8px 2px;
   border-bottom: 1px solid var(--border); user-select: none;
-}
-.play-roll {
-  display: flex; justify-content: space-between; align-items: center;
-  width: 100%; min-height: 44px; padding: 8px 10px; text-align: left;
-  background: transparent; border: none; border-bottom: 1px dotted var(--border);
-  color: var(--text-primary); font-size: 15px; cursor: pointer;
-}
-.play-roll:active { background: var(--accent-glow); }
-.play-roll .pr-num { font-family: var(--font-display); font-stretch: 75%; font-variant-numeric: tabular-nums; color: var(--accent); }
-
-.play-power {
-  display: flex; justify-content: space-between; align-items: center;
-  min-height: 44px; padding: 6px 10px; border-bottom: 1px dotted var(--border);
-  font-size: 15px;
 }
 
 #play-roll-bar {
@@ -1394,10 +1418,10 @@ body.play-mode #print-btn { display: none; }
 #play-roll-bar .ok { color: var(--success); }
 #play-roll-bar .ko { color: var(--danger); }
 
-@media (min-width: 700px) {
-  .play-view { max-width: 900px; }
-}
-@media print { .play-view, #play-roll-bar { display: none; } }
+/* Nothing play mode adds reaches paper. Both blocks carry .noprint as well;
+   this is the belt to that braces, and it is the rule that used to hide the
+   whole .play-view. */
+@media print { #play-controls, #play-roll-bar, .roll-btn { display: none !important; } }
 
 /* Play mode phase 2: weapon cards */
 .play-weapon {
