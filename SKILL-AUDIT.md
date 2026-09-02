@@ -1,8 +1,8 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
 > **Status 2026-09-02: `F1`–`F7`, `F10`–`F21` taken (PRs #541–#560) — `F12` in
-> part, its documentation half only. `F8`, `F22`, `F23` taken (#561–#563). Open:
-> `F9`, `F24`, `F25`, all `N`.
+> part, its documentation half only. `F8`, `F22`, `F23` taken (#561–#563); **`F9`
+> CLOSED without being taken** (#564). Open: `F24`, `F25`, all `N`.
 > `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while taking
 > `F2`, and `F25` by taking `F4`. Everything else is open.** `F` numbers
 > are findings about instructions that exist; `N` numbers are new-skill
@@ -433,6 +433,11 @@ cannot resolve, which is the mechanical half.
 **Evidence.** Live repo state (`scripts/books.json`, 2026-09-02) against the
 skill and `BOOK-INGEST-QUEUE.md`.
 
+**Adjusted 2026-09-02 (PR #564).** The same claim was still standing in
+`reference/SURVEY.md`, the survey template, and was found four hours later by
+`F9`'s prototype rather than by hand. This finding corrected the file it was
+looking at and missed the other one in the same skill. Fixed there too.
+
 **Taken, 2026-09-02 (PR #547).** Posture as proposed: one sentence, documentation
 only, **no new gate** — the smoke test already fails on a cache whose detected
 offset regions the registry cannot resolve, and that stays the mechanical half.
@@ -738,6 +743,46 @@ current, which is the failure mode `audit-menu` exists to name.
 
 **Evidence.** Live repo state — the check read in `smoke.mjs`, 2026-09-02 — plus
 `HEALTH-AUDIT.md` F5.
+
+**CLOSED WITHOUT BEING TAKEN, 2026-09-02 (PR #564) — on the finding's own
+instruction**, which said to close it rather than weaken it if false positives
+could not be held near one per skill. They could not. **No check was added.**
+
+**Measured, not estimated.** A prototype of the four shapes the proposal named,
+run against the six skills and four reference files on a tree where all three
+known breaches were already fixed:
+
+| version | hits | real |
+|---|---|---|
+| the four shapes as proposed | **74** | 0 |
+| tightened to present-tense assertion + repo-countable noun | **8** | **1** |
+
+Twelve per skill, then 1.3. And the survivors cannot be tightened away, because
+they are the same shapes used correctly: *"this is the only check that can catch
+the bug"* is a rule, and *"`pf` is the only book that has one"* was a claim — one
+regex, both sentences. *"52 skills SHORT: 293 against 345"* is a dated
+measurement `F18` shipped deliberately. Worst of all, `claim-audit`'s new
+`F21` table **must** contain the shapes in order to teach them, so any version of
+this check fires on the skill that documents it.
+
+Getting past that needs an allowlist, and the proposal ruled it out in advance:
+*one more thing to keep current, which is the failure mode `audit-menu` exists to
+name.* The distinction is tense and intent — measurement versus claim — and no
+regex reaches it. **`F21` is the version of this that works, and it is prose.**
+
+**The prototype earned its keep anyway, and this is the part worth carrying.** At
+the tightened setting it found **one real breach that hand-checking had missed**:
+`book-survey/reference/SURVEY.md` still read *"`pf` is the only book with one
+today"* — the exact claim `F5` corrected in `SKILL.md` **four hours earlier**.
+`F5` fixed the file it was looking at and not the skill. That is `F3`'s *grep the
+whole file, not the paragraph* recurring at the level of a directory, inside a
+batch where it had already been named twice.
+
+It is fixed in this PR, and `F5` carries an `Adjusted` note.
+
+**So: no gate, but the probe is worth re-running by hand after a batch like this
+one** — as an audit aid whose 7 known false positives a person reads past in
+under a minute, not as a build step that fires on them forever.
 
 ---
 
