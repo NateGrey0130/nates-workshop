@@ -7837,6 +7837,74 @@ check('diffCatalog reports catalog rows the book never mentions', (() => {
 
 
 // The environment half lives in its own file; it runs last because it is the
+section('A class cannot write a bonus the sheet will not draw');
+{
+  // `bonuses.combat` and `bonuses.saves` are open at the VALIDATOR - group
+  // names are checked, the keys inside them are not, and derive.js's addBonus
+  // adds any finite number under any key. They are CLOSED at the sheet, which
+  // draws SAVE_FIELDS and COMBAT_FIELDS as literal lists. So an invented or
+  // misspelled key parses, validates, composes, and renders NOWHERE.
+  //
+  // The two checks above start from derive*() output, so neither can see a key
+  // a CLASS writes - a class-authored key is never in the derived set.
+  // vacuum-wasp's own extraction_notes is the only place this was written
+  // down: "combat: { dogfighting: 2 } would parse, validate and render
+  // NOWHERE". SKILL-AUDIT F23.
+  //
+  // Parsed through the REAL parser, not a regex over the SQL. A naive inline
+  // `{ }` match reads that very note's prose as data and reports a key that
+  // is not there - which is what happened while F1 was being taken, and is
+  // CLASS-AUDIT F17's shape.
+  const sheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  const listKeys = (name) => {
+    const b = sheetSrc.slice(sheetSrc.indexOf(`const ${name}`),
+      sheetSrc.indexOf('];', sheetSrc.indexOf(`const ${name}`)));
+    return [...b.matchAll(/\['([a-z_]+)',/g)].map((m) => m[1]);
+  };
+  const drawable = {
+    combat: new Set([
+      ...listKeys('COMBAT_FIELDS'),
+      // States a starting number rather than adding to one. parser.js folds it
+      // and derive.js strips it before the combat map reaches the sheet, so it
+      // is correctly absent from COMBAT_FIELDS.
+      'attacks_base',
+    ]),
+    saves: new Set([
+      ...listKeys('SAVE_FIELDS'),
+      // Rendered above the sixteen as its own editField.
+      'psionics_target',
+      // A LIST of { label, bonus }, not a keyed number - the escape hatch for a
+      // save the sixteen do not name (BOOK-INGEST-AUDIT F7).
+      'other',
+    ]),
+  };
+
+  const offenders = [];
+  let parsed = 0;
+  for (const f of readdirSync(join(appDir, 'db')).filter((n) => /^add-.*-class\.sql$/.test(n))) {
+    let md = null;
+    try { md = extractClassMarkdown(readFileSync(join(appDir, 'db', f), 'utf8')); } catch { md = null; }
+    if (!md) continue;
+    const res = parseClassMarkdown(md);
+    if (!res?.ok || !res.data) continue;
+    parsed++;
+    const groups = [res.data.bonuses, ...(res.data.bonuses?.at_level || []),
+      ...(res.data.variants || []).map((v) => v.bonuses)].filter(Boolean);
+    for (const g of groups) {
+      for (const kind of ['combat', 'saves']) {
+        for (const key of Object.keys(g[kind] || {})) {
+          if (!drawable[kind].has(key)) offenders.push(`${f}: bonuses.${kind}.${key}`);
+        }
+      }
+    }
+  }
+
+  check('every add-*-class.sql was parsed', parsed > 100, `only ${parsed}`);
+  check('no class writes a combat or save key the sheet cannot draw',
+    offenders.length === 0,
+    `${offenders.join('; ')} - add it to COMBAT_FIELDS/SAVE_FIELDS in sheet.js, or use saves.other / a special_ability`);
+}
+
 // slow one - it shells out to wrangler.
 environmentChecks();
 catalogDataChecks();
