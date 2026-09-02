@@ -6,8 +6,8 @@ brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
 `low`. Nothing here is taken until Nate names it; one PR per finding, outcome
 note appended under the finding in the same PR.
 
-**Status, 2026-09-02: `M1`, `M2`, `M3`, `M5`, `M6`, `M13` and `M15` taken and
-closed — the whole environment half except `M4`. `M16` was opened while taking
+**Status, 2026-09-02: `M1`, `M2`, `M3`, `M5`, `M6`, `M13`, `M14` and `M15`
+taken and closed — the whole environment half except `M4`. `M16` was opened while taking
 `M1` and is filed but NOT taken. Everything else is open.** Read the lines under
 a finding for its status — the notes here vary in wording like every other menu
 in this repo, and grepping for one has been wrong in both directions.
@@ -801,6 +801,27 @@ probably an accident.
 **Posture:** synchronise and document; no script. A generator for a five-entry
 JSON file is more machinery than the problem justifies, and the mirror rule is
 one sentence. **Do not** delete the untracked file — it is load-bearing.
+
+**Taken, 2026-09-02 (PR #579).** All four drift points confirmed. Posture kept:
+no generator, nothing deleted, `SETUP.md` carries the mirror rule.
+
+The untracked file now matches entry for entry, name for name, port for port and
+comment for comment, plus the wrapper. **Checked mechanically rather than by
+eye** — no tracked entry missing, no port mismatch, and no command difference
+once the `cd /d` prefix is stripped.
+
+**`workshop-attach` promoted, carrying a warning it had nowhere.** This finding
+invited the promotion; taking it turned up *why that entry is the interesting
+one.* It is **attach-only**, which makes it the entry **most** exposed to the
+same 8788 trap the rest of the file documents: every other entry at least tries
+to bind the port and reports failure, while this one silently attaches to
+whatever is already listening — including another worktree's server. It carried
+no comment at all in the single copy that had it, which is this finding's own
+drift one level down.
+
+**Found while taking this, and carried to `M10`:** eleven files in the memory
+store name the `Downloads` path *inside their own content*. `M10` describes the
+store not following the move and does not mention that.
 
 ### M15 — low — the two things to leave exactly as they are
 
