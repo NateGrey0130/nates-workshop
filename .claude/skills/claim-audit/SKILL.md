@@ -18,10 +18,18 @@ reading a sentence and then asking the code.
 
 | where | how many | what goes stale |
 |---|---|---|
-| `apps/character-creator/README.md` | the largest doc by far | counts, "N of M" sentences, "the app does X" |
-| code comments | everywhere | counts of things ("offers five"), and "cannot express" |
+| `apps/character-creator/README.md` | the spine | counts, "N of M" sentences, "the app does X" |
+| `apps/character-creator/docs/*.md` | **more limitation prose than the README** | everything the README row says, and `known-limitations.md` is a whole file of it |
+| code comments in `js/` **and `functions/`** | everywhere | counts of things ("offers five"), and "cannot express" |
 | class markdown in D1 | a couple of sentences per published class | `extraction_notes` saying the schema cannot hold something |
 | `docs/rules-audit.md`, `docs/plans/` | | superseded by later work; the plans README says so |
+
+**The `docs/` row is the one this skill kept missing.** The README was split into
+a spine plus eleven topic files on 2026-08-26 (PR #309) — thirteen now — and the
+command below was written the day before and not touched again, so for a week it
+searched the spine and skipped the majority of what it hunts. A file named
+`known-limitations.md` is precisely the shape described two sections down as *the
+expensive one*, and the skill's own search could not see it.
 
 **Sizes and class counts are deliberately not given here.** This table used to
 say "~4,600 lines" and "~190 sentences over 76 classes"; the README passed 5,600
@@ -55,15 +63,21 @@ from true into false across four classes in a single PR.
 
 ```bash
 grep -rn "currently\|does not\|cannot\|has no\|is not modelled\|not modeled" \
-  apps/character-creator/README.md apps/character-creator/js/ | head -60
+  apps/character-creator/README.md apps/character-creator/docs/ \
+  apps/character-creator/js/ functions/ | head -60
 ```
+
+**All four paths, every time.** Dropping `docs/` or `functions/` is not a
+narrower search, it is a search that misses most of the corpus — and both
+omissions were invisible because what came back still looked like a full result.
 
 When a hit needs its surrounding section, take the section, not the file:
 `node scripts/readme-section.mjs "<heading>"` prints exactly one, bounded by
-the next heading of any depth (no arguments prints the index). Auditing a
-sentence never requires the thousands of lines around it — the efficiency
-audit counted 37 full reads of this README in one season, and the audit
-session itself was responsible for seven of them.
+the next heading of any depth (no arguments prints the index). **It indexes
+`docs/` as well as the README**, so a heading from either answers the same way.
+Auditing a sentence never requires the thousands of lines around it — the
+efficiency audit counted 37 full reads of this README in one season, and the
+audit session itself was responsible for seven of them.
 
 ## What actually turned up
 
