@@ -606,12 +606,16 @@ scripts/
 ├── drift-check.mjs         Repo vs live database: migrations, data scripts,
 │                           tables, columns, classes, and an advisory citation
 │                           check against every cached book books.json knows
-├── deploy-sweep.mjs        Did anything merged actually SHIP? Walks the last
-│                           twenty merge commits on origin/main and names any
-│                           whose Pages check-run is not success, or that has
-│                           no check-run at all. Report only, no exit code -
+├── deploy-sweep.mjs        Did anything merged actually SHIP? TWO halves, because
+│                           the site deploys two ways. Pages: the last twenty
+│                           merge commits on origin/main, naming any whose
+│                           check-run is not success or that has none at all -
 │                           65 consecutive merges once failed with a perfectly
-│                           clear signal nobody read
+│                           clear signal nobody read. Then pick3cut5-room, which
+│                           a merge does NOT deploy and which therefore has no
+│                           check-run to read: its newest commit compared against
+│                           the active deployment's timestamp. Report only, no
+│                           exit code
 ├── catalog-match-lib.mjs   Matching a book's names to the catalog's. Exact
 │                           first; a relaxed match only when unambiguous on
 │                           BOTH sides. See below - do NOT merge this with

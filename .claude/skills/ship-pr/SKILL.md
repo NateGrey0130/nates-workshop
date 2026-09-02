@@ -136,6 +136,18 @@ the exit code, because a deploy that failed needs a person rather than a
 non-zero, and a script that failed on four-day-old history would fail every run
 until someone rewrote the past.
 
+**It answers for both deploy paths, and that is the second half.**
+`workers/pick3cut5-room` produces no check-run at all — a merge does not deploy
+it — so the Pages half is silent about it by construction, and the sweep once
+printed a clean summary while saying nothing about the one component you deploy
+by hand. It now compares the newest commit touching that directory against the
+active deployment's timestamp and reports the gap.
+
+**A timestamp cannot tell you whether the change mattered.** A `$schema` line
+fires it as loudly as a rewrite of `room.js`. Read the diff it names, then either
+deploy or decide it does not need deploying — but do not silence it, because the
+alternative it replaced was a gap nothing reported at all.
+
 It does **not** replace step 9. The sweep tells you something is broken; step 9
 tells you *while you still remember what you merged*.
 
