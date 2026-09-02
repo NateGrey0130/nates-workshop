@@ -681,12 +681,24 @@ capture. **A capture that quietly filters nothing is worse than no capture** —
 which is the failure `M18`'s own recorder has already paid for twice.
 
 The filter is a single rule, `Path begins with C:\Users\natha\AppData\Roaming\npm`,
-which is what makes this affordable: a few MB a day into a plain backing file,
-rather than the ring buffer a broader filter would need. **The one check that
-matters is the backing file's size after a day.** A few MB means the filter
-loaded; growth measured in GB means it did not, and the capture is worthless.
-That is the only way this fails silently, so it is the only thing worth
-verifying by hand.
+paired with **Filter → Drop Filtered Events**. Both halves are required and the
+second is the one that gets missed: Procmon's filter is a *display* filter, so
+without it every event on the machine still reaches the backing file and is
+merely hidden from the window. **The window looks identical either way.**
+
+**Do not check this by the backing file's size.** Procmon **preallocates** — the
+file is 128 MB within seconds of starting and stays there. Run
+`m18-capture-health.ps1` instead, unelevated and safe while capturing: it reports
+the **written extent**, how far into that preallocated block real bytes reach.
+Tens or hundreds of KB after a day is healthy; hundreds of MB means Drop Filtered
+Events came unticked.
+
+**Verified on the day it was set up**, by making the machine produce events the
+filter was supposed to reject: 1,499 unrelated file opens under `System32` and
+150 forced opens of the shims. Twelve of the 1,499 were sampled and **none
+reached the capture**, the shim paths did, and the written extent was **71.8 KB**.
+That is the shape of check this needs — events it must keep and events it must
+drop — rather than a number read off a file.
 
 It does not survive a reboot, on purpose. A driver-loading capture that resumes
 forever is a larger standing change than an intermittent fault with no
