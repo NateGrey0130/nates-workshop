@@ -299,18 +299,31 @@ deployed; what stays here is the part that needs the Cloudflare dashboard.
 
 ## Environment configuration (Cloudflare Pages dashboard)
 
-Settings → Environment variables, both encrypted:
+Settings → Environment variables, each an encrypted secret. **This list is the
+whole of it** — if you are rotating, or standing an environment up from nothing,
+it is these and nothing else:
 
 - `ANTHROPIC_API_KEY` — used by the `/api/claude` proxy and the character
   creator's PDF importers. A new value takes effect on the **next deployment**.
+  The standalone Pick 3 Cut 5 Worker holds its **own** copy, so rotating this
+  one is two places — see *Its secret is separate* above.
 - `ADMIN_EMAIL` — the single email allowed to use the importers and catalog
   editor. The check **fails closed** when unset.
+- `TMDB_API_KEY` — MediaVault's video metadata lookups, proxied through
+  `functions/api/media-vault/lookup.js` so the browser never carries the key.
+  It gates the three `video-*` modes only; ISBN and book lookups go to
+  OpenLibrary and need no key. Unset, those three answer **503** —
+  *"Lookup unavailable: the TMDB_API_KEY secret is not configured"* — and the
+  rest of MediaVault carries on working, which is how this one goes unnoticed.
+  It must be TMDB's **32-character v3 API key, not a v4 read access token**;
+  a v4 token gets far enough to return 401s, which the route reports by name.
 - `ACCESS_TEAM_DOMAIN` + `ACCESS_AUD` — turn on JWT verification of the
   Access identity on every `/api/*` route (defence in depth — the identity
   header alone is only as good as the Access application staying configured).
   **Both live in `wrangler.jsonc` `vars`, not the dashboard**: this project
   manages plain variables through its wrangler config (the dashboard holds
-  only the two encrypted secrets above), and neither value is a secret — the
+  the encrypted secrets above and nothing else), and neither value is a
+  secret — the
   AUD tag rides in every login redirect URL. `ACCESS_TEAM_DOMAIN` is the
   team's domain (`<team>.cloudflareaccess.com`); `ACCESS_AUD` is the Access
   application's **Application Audience (AUD) tag** (Zero Trust → Access →

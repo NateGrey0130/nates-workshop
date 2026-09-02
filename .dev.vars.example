@@ -10,3 +10,10 @@ ANTHROPIC_API_KEY=sk-ant-...
 # falls back to dev@localhost, so use that to exercise admin locally.
 # In production set this to your real Access email.
 ADMIN_EMAIL=dev@localhost
+
+# MediaVault's video metadata lookups (functions/api/media-vault/lookup.js).
+# Only the video-* modes need it - ISBN and book lookups go to OpenLibrary and
+# work without one. Leave it unset and those three answer 503 while the rest of
+# MediaVault carries on, which is how its absence goes unnoticed.
+# TMDB's 32-character v3 API key, NOT a v4 read access token.
+TMDB_API_KEY=

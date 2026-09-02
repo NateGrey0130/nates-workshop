@@ -791,6 +791,29 @@ current wording is a number that moves, which is this repo's known rot pattern.
 
 **Confidence.** High. All four files were read this session.
 
+**Taken, 2026-09-02 (PR #520).** As proposed, posture included — documentation
+only, no secret created, rotated or moved. `TMDB_API_KEY` is in `SETUP.md` with
+the same shape as its neighbours and in `.dev.vars.example`; both counts were
+removed rather than corrected, since "two" is a number that moves.
+
+**Every premise held on re-check** — the first taken finding in this menu that
+needed no correction. Two things were added that it did not name, both belonging
+where a rotation actually starts:
+
+- **The Anthropic key is a two-place rotation.** The standalone Worker holds its
+  own copy. `SETUP.md` said so two sections up, under *Its secret is separate*,
+  and not in the list an operator would work from.
+- **TMDB's key must be the 32-character v3 key, not a v4 read access token.**
+  `lookup.js:47` knows this well enough to report it by name on a 401. No
+  document said it.
+
+Worth carrying to the next inventory: this secret could sit unlisted because its
+failure is *partial*. Only the three `video-*` modes need it, so an unset key
+takes out part of one app while every other route stays healthy. **An inventory
+omission survives in proportion to how gracefully the thing degrades** — which
+is an argument for auditing secrets from the code that reads them rather than
+from the document that lists them.
+
 ---
 
 ### F14 — Medium — local wrangler is a full major version ahead of the one that compiles the deploy, and one text check guards one syntax
