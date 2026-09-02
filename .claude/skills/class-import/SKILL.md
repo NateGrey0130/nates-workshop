@@ -9,9 +9,11 @@ A class is a markdown file — YAML frontmatter for mechanics, prose body for
 lore — stored as one row in `imported_classes`. Adding one means writing a
 one-off SQL data script under `apps/character-creator/db/`.
 
-**Do not read `js/parser.js` to work out the format.** It is 1100+ lines and
-`reference/frontmatter.md` covers what it accepts. Read the parser only when
-modelling something new (see the last section).
+**Do not read `js/parser.js` to work out the format.** It is the largest file in
+the app and `reference/frontmatter.md` covers what it accepts. Read the parser
+only when modelling something new (see the last section) — and when you do, read
+it rather than the reference, which describes the blocks worth explaining and is
+not the whole key list.
 
 ## The loop
 
@@ -227,7 +229,9 @@ finding is taken. It has no opinion about whether the finding still stands.
 **Do not edit the original `add-*-class.sql`.** Those are one-shot scripts,
 already applied. Add a new `fix-*.sql` alongside, guarded on the text it
 replaces so re-running is a no-op, with readback `SELECT`s that assert the
-result. Fifteen `fix-*.sql` / `apply-*.sql` scripts follow this shape.
+result. That is the standard shape for a correction here. `fix-` and `apply-`
+are the usual prefixes; `backfill-`, `merge-`, `rename-` and `retire-` name more
+specific jobs.
 
 **CHECK WHERE THE NEW NAME SORTS BEFORE YOU CHOOSE IT.** A clean rebuild applies
 `apps/character-creator/db/*.sql` as one sorted glob, so filename order IS

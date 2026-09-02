@@ -1,13 +1,13 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **Status 2026-09-02: `F1`, `F2` and `F11` taken (PRs #541, #542, #543).
-> `F22`–`F23` were opened by taking `F1`, and `F24` by a stalled deploy while
-> taking `F2`. Everything else is open.** `F` numbers are findings about
-> instructions that exist; `N` numbers are new-skill proposals. `###`, em dash,
-> no severity word. This line is a summary and summaries here go stale — read
+> **Status 2026-09-02: `F1`–`F4` and `F11` taken (PRs #541, #542, #543, #545,
+> #546). `F22`–`F23` were opened by taking `F1`, `F24` by a stalled deploy while
+> taking `F2`, and `F25` by taking `F4`. Everything else is open.** `F` numbers
+> are findings about instructions that exist; `N` numbers are new-skill
+> proposals. `###`, em dash, no severity word. This line is a summary and summaries here go stale — read
 > each finding's own note.
 >
-> **The one that misreads:** `F22`, `F23` and `F24` sit under their own
+> **The one that misreads:** `F22`–`F25` sit under their own
 > `## Opened while taking a finding` heading **between `F21` and the `N`
 > section**, not in numeric order after `F21`. A reader walking the file top to
 > bottom meets them after the cross-layer pair and may take them for proposals.
@@ -365,6 +365,35 @@ replacement can go stale.
 **Posture:** delete two counts. **Documentation only.**
 
 **Evidence.** Live repo state, 2026-09-02 (`ls | wc -l`, `wc -l`).
+
+**Taken, 2026-09-02 (PR #546).** Posture as proposed. Both premises held —
+`fix-` 77 plus `apply-` 6 against the stated fifteen, and `parser.js` at 2,223
+lines against "1100+".
+
+**Two of my own replacement sentences were false, and both were caught by
+measuring instead of shipping.** This is worth recording because the finding's
+whole subject is unverified counts, and writing the fix produced two more:
+
+1. The first replacement read *"Most of the corrections … it is by far the
+   commonest kind of file in that directory."* The prefix census says `add-` is
+   **197** against `fix-`'s 77, so `fix-` is not the commonest by a factor of
+   2.5 in the other direction.
+2. The second read *"`backfill-`, `merge-`, `rename-` and `retire-` … follow the
+   same guarded, idempotent rule."* Sampled six `backfill-` scripts and five
+   carry no guard of that shape at all.
+
+The shipped sentence asserts no population and no behaviour: it names the shape,
+says `fix-` and `apply-` are the usual prefixes, and says the other four name
+more specific jobs. *Describe the shape, not the value*, applied to the
+replacement rather than only to the thing replaced.
+
+Shipped: `parser.js` is now *"the largest file in the app"* with a clause
+pointing at `F1`'s correction — read the parser rather than the reference when
+modelling something new; and the correction-script sentence loses its count.
+
+**One finding opened by taking this one:** `F25`. The prefix census that
+falsified my own sentence also falsified one of the skill's, three paragraphs
+below the one I was editing.
 
 ---
 
@@ -1316,6 +1345,63 @@ should cost a deliberate keystroke applies to it exactly as it does to
 
 **Evidence.** Live incident, 2026-09-02 — four Pages API calls including one
 write, against the claim in `CLAUDE.md` and `nates-workshop-production-url.md`.
+
+---
+
+### F25 — `zz-` no longer sorts after everything, and the sentence saying it does sits in the section about exactly that failure
+
+`class-import`'s *Correcting a class that already shipped* spends a paragraph on
+the sharpest silent failure in the repo — a clean rebuild applies
+`apps/character-creator/db/*.sql` as one sorted glob, so **filename order is
+execution order**, and a correction sorting before the file it corrects is
+undone on every rebuild with no error. `fix-long-bowman-armor.sql` sorting before
+`fix-long-bowman.sql` is the worked example, and only `repo-vs-live.mjs` caught
+it. The paragraph ends:
+
+> `zz-` exists as a prefix for exactly this: a file that must sort after
+> everything.
+
+**That is now false.** Prefix census of the 359 scripts, 2026-09-02:
+
+| prefix | files |
+|---|---|
+| `zz-` | 13 |
+| `zzz-` | 9 |
+| `zzzz-` | 14 |
+| `zzzzz-` | 2 |
+
+The escalation has happened **three times** since `zz-` was adopted, and nothing
+recorded it. Measured directly: a new `zz-my-new-fix.sql` sorts **before 35
+existing files**. A session that follows the sentence gets a file it believes
+runs last and which 35 files run after — which is the precise failure the
+surrounding paragraph exists to prevent, produced by the paragraph's own advice.
+
+Nothing is known to be broken by it today; this is the instruction being wrong,
+not a diagnosed defect. Whether any of the 35 actually conflicts with a `zz-`
+file's intent has not been checked, and checking it is part of taking this.
+
+**Proposal.** Two parts.
+
+- **(a)** Replace the sentence with the method rather than a prefix: the `sort`
+  one-liner already printed three lines above it **is** the answer, and it is the
+  only thing here that cannot go stale. Say that a `z`-prefix buys position
+  against what exists today and nothing more, and that the tier has escalated
+  three times.
+- **(b)** Decide whether the escalation is a convention worth keeping or a smell.
+  A fifth tier is the obvious next step and is not obviously right; a
+  `zzzz-`-and-done rule, or numbering by intended run order, or making the
+  rebuild order explicit rather than lexical, are the alternatives. **This half
+  is a design decision, not a documentation fix, and should not be taken as
+  one.**
+
+**Posture:** (a) rewrite one sentence, documentation only. (b) **open question,
+no change proposed.** Explicitly not proposed: a check that files sort correctly
+— "correctly" depends on what each file intends to override, which is not
+mechanically knowable.
+
+**Evidence.** Live repo state, found while taking `F4` — the prefix census run to
+check one of my own replacement sentences falsified one of the skill's, three
+paragraphs below the line being edited.
 
 ---
 
