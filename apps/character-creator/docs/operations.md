@@ -333,17 +333,26 @@ D1 Export error: cannot export databases with Virtual Tables (fts5)
 `026-campaign-notes.sql`. One FTS5 table makes the whole database
 un-exportable by that path, and no flag skips it.
 
-**A per-table dump is the way to hold a copy off Cloudflare**, and it works.
-Verified 2026-09-02 against the largest table: 3,639 rows, 2.2 MB, exit 0.
+**A per-table dump is the way to hold a copy off Cloudflare**, and
+[`d1-backup.mjs`](../../../scripts/d1-backup.mjs) is that loop:
 
 ```bash
-npx wrangler d1 execute nates-workshop-media --remote --json \
-  --command "SELECT * FROM media_items" > media_items.json
+node scripts/d1-backup.mjs backups/2026-09-02
 ```
 
-Repeat per table. `journal_fts` does not need one - it is derived from
-`journal_entries` by triggers and rebuilds itself. Nothing in the repo automates
-this loop; see `HEALTH-AUDIT.md` F21 for the proposal to write it.
+One JSON file per table, a row count and a byte count for each, and a **non-zero
+exit if any table fails** - a backup that reports success after writing half a
+database is a defect rather than a posture. Verified against production on
+2026-09-02: **33 of 33 tables, 8,723 rows**.
+
+It derives what to skip rather than carrying a list: virtual tables
+(`journal_fts` is an INDEX of `journal_entries`, rebuilt by the triggers in
+`026`), their shadow tables - found by prefix off the virtual table's own name -
+and Cloudflare's own `_cf_*` bookkeeping. A second FTS table added later is
+covered without editing the script.
+
+**It is manual, deliberately.** A scheduled export that quietly stops is worse
+than a documented one somebody runs, because the first kind is believed.
 
 **What each mechanism actually covers:**
 

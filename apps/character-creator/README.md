@@ -589,6 +589,11 @@ scripts/
 │                           Refuses non-ASCII and honours `-- local-only`
 ├── d1-query-lib.mjs        One statement, one line, rows back. The banner-skip
 │                           and buffer size that every caller needs
+├── d1-backup.mjs           One JSON file per table, on disk, because
+│                           `wrangler d1 export` REFUSES this database — one
+│                           fts5 virtual table makes the whole of it
+│                           un-exportable. Derives what to skip rather than
+│                           naming it. Manual; see docs/operations.md Recovery
 ├── ofd-refresh.mjs         Snapshot the Open Filament Database into ff_brands
 │                           and ff_filaments — FilamentForge's catalog. The app
 │                           reads the snapshot; only this script talks to OFD
