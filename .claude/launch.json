@@ -2,6 +2,13 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "//": "8788 is a convention, not a reservation. A SECOND CHECKOUT MAKES IT",
+      "//2": "A TRAP: three audits found it already listening and moved ports.",
+      "//3": "The danger is not the collision - pages dev says the port is taken",
+      "//4": "- it is getting 8788 while it serves ANOTHER worktree's code. The",
+      "//5": "page loads, looks like your app, and is not. Confirm the page",
+      "//6": "carries a string your branch added before trusting it. See the",
+      "//7": "Local development section of apps/character-creator/README.md.",
       "name": "nates-apps",
       "runtimeExecutable": "npx",
       "runtimeArgs": ["wrangler", "pages", "dev", "--port", "8788"],
