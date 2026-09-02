@@ -5,10 +5,10 @@ description: Check what this repo says about itself against what it does — REA
 
 # Auditing what the repo claims about itself
 
-This repo explains itself unusually well, and that is the hazard. A 4,600-line
-README, comments that argue their case, and class markdown carrying
-`extraction_notes` about what the app cannot do — all of it written when it was
-true, and none of it rechecked when it stopped being.
+This repo explains itself unusually well, and that is the hazard. A README and
+thirteen topic files under `docs/`, comments that argue their case, and class
+markdown carrying `extraction_notes` about what the app cannot do — all of it
+written when it was true, and none of it rechecked when it stopped being.
 
 **A note describing a fixed limitation is worse than no note**, because the
 instruction attached to it is *do not try*. Every finding below was found by
@@ -32,10 +32,22 @@ searched the spine and skipped the majority of what it hunts. A file named
 expensive one*, and the skill's own search could not see it.
 
 **Sizes and class counts are deliberately not given here.** This table used to
-say "~4,600 lines" and "~190 sentences over 76 classes"; the README passed 5,600
-lines and the catalog passed 88 classes, and a skill about stale claims that
-carries stale claims is the worst possible advertisement. Count them when you
-need the number.
+say "~4,600 lines" and "~190 sentences over 76 classes"; by 2026-08-25 the README
+had passed 5,600 lines and the catalog 88 classes, and a skill about stale claims
+that carries stale claims is the worst possible advertisement. Count them when
+you need the number.
+
+**Removing them from the table was not enough, which is the lesson.** The line
+count survived three lines above this paragraph, in the opening sentence, and the
+sentence count survived in *When not to* at the bottom: the fix was applied where
+the number had been noticed rather than to the file. Both were still standing on
+2026-09-02, by which time the README had been **split** (PR #309) and was under a
+thousand lines — the figure was out by nearly a factor of five, in the skill
+whose subject is exactly that.
+
+**Grep the whole file for a number you are deleting, not just the paragraph you
+are editing** — and do not restate the deleted wording anywhere, or the grep that
+should find the next copy finds your note instead.
 
 Class markdown is the one people forget, because it is **in the database**, not
 in the repo. It does not turn up in a grep of the working tree.
@@ -170,10 +182,10 @@ A corrected sentence goes stale again. Where the claim is checkable, pin it:
 
 ## When not to
 
-Do not turn an audit into a rewrite. Most of those 190 sentences are correct and
-carefully argued, and the ones describing a book against the schema will still be
-true in a year. Read for the two shapes above, check those, and leave the rest
-alone.
+Do not turn an audit into a rewrite. Most of the class prose is correct and
+carefully argued, and the sentences describing a book against the schema will
+still be true in a year. Read for the two shapes above, check those, and leave
+the rest alone.
 
 And keep a behaviour change out of a documentation pass. Seven classes offering
 the whole Technical category where the book says "two languages of choice" is a

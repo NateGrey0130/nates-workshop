@@ -309,6 +309,37 @@ Three edits, no new numbers introduced.
 
 **Evidence.** Live repo state, 2026-09-02.
 
+**Taken, 2026-09-02 (PR #545).** Posture as proposed, and **one premise of the
+finding was wrong in the skill's favour.**
+
+The finding says *"The correction paragraph is now also stale: it says the README
+passed 5,600 lines, which describes a file that no longer exists in that form."*
+**It is not stale.** *"The README passed 5,600 lines"* is past tense — a
+threshold that was crossed, and it was. That is a **measurement**, which is
+exactly the category `F21` argues survives; only present-tense claims rot. The
+same goes for *"the catalog passed 88 classes"*, which is true and now sits
+beside a live figure of 160. So two of the finding's three targets were one
+target, and the third — line 173's *"those 190 sentences"* — was correctly
+identified. The paragraph gained a date rather than an edit.
+
+**What the file actually shows is better than the finding claimed.** The numbers
+were removed from the table *and left standing three lines above it and again at
+the bottom* — the fix was applied where the number had been noticed rather than
+to the file. That is the transferable lesson and it is now written down, along
+with the instruction to grep the whole file for a number being deleted.
+
+**One thing caught while writing it.** The first draft of that new paragraph
+quoted both stale strings verbatim to explain them — which is precisely
+`audit-menu`'s *"never quote the stale phrase you replace: a note repeating the
+old wording defeats a grep for it."* It would have made the file unsearchable for
+the next copy while claiming to teach the opposite. Rewritten to describe the
+numbers rather than restate them. Each stale string now appears **once** in the
+file, inside the dated historical sentence that records what was removed.
+
+Shipped: the opening sentence now says *"a README and thirteen topic files under
+`docs/`"*; the measurement paragraph is dated to 2026-08-25 and gains the lesson
+paragraph; *When not to* loses its count.
+
 ---
 
 ### F4 — `class-import` quotes two counts that have moved by 5.5× and 2×
