@@ -6,12 +6,13 @@ brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
 `low`. Nothing here is taken until Nate names it; one PR per finding, outcome
 note appended under the finding in the same PR.
 
-**Status: `M19`, `M20` and `M21` are OPEN, all `low`. Everything else on this
-menu is taken and closed** — status for any one of them lives under its own
-heading, and this line deliberately does not count them. `M19` and `M20` were
-filed 2026-09-02 by the documentation audit (`DOCS-AUDIT-2.md`), which found
-them on this menu's surface rather than its own; `M21` was filed 2026-09-03 and
-neither touches what the closed findings established.
+**Status: `M19` and `M21` are OPEN, both `low`. Everything else on this menu is
+taken or closed** — status for any one of them lives under its own heading, and
+this line deliberately does not count them. `M19` was filed 2026-09-02 by the
+documentation audit (`DOCS-AUDIT-2.md`), which found it on this menu's surface
+rather than its own; `M21` was filed 2026-09-03. `M20` is **closed without being
+taken**, superseded by `M22`, which was filed and taken the same day and is the
+one finding here that changed the machine rather than the repo.
 `M18` is an OBSERVATION rather than a finding — the fault it records is still
 unexplained, every hypothesis raised against it is dead or cannot be provoked, and its
 recorder was repaired the same day it shipped. Taking it meant attempting a
@@ -1710,6 +1711,24 @@ declined a comparable cosmetic duplicate — the old `Downloads` key in
 `~/.claude.json`, which it checked and found harmless — and the same reasoning
 covers this one.
 
+**Closed without being taken, 2026-09-03 (PR #607) — superseded by `M22`.** The
+husk is gone, so this finding's concrete ask is satisfied, but not by the
+mechanism proposed here: it was replaced by a junction at the real store rather
+than deleted outright.
+
+**Two of this finding's premises were wrong, and both understate the problem.**
+It says the practical effect is *"limited to sessions started in a directory
+nothing starts in any more"*. A session started there on 2026-09-03 and ran a
+full day's work against the empty store. And it treats the husk as the only one:
+`C--Users-natha-Projects-nates-apps` had **no memory directory at all**, so the
+repo itself — the most natural place to start — was a second silent-empty key
+this finding does not mention. `M22` has the measurements.
+
+The reasoning borrowed from `M15` is where it went wrong, and it is worth naming.
+`M15` declined a *cosmetic* duplicate it had checked and found harmless. This one
+looked like the same shape and was not: an empty memory store is not cosmetic,
+because nothing distinguishes it from a new one.
+
 ### M21 — low — the "`--remote` hangs from the agent's shell" caution is in no repo file, and all three of its commands ran clean
 
 A hand-off prompt written the evening of 2026-09-02 tells the next session that
@@ -1778,3 +1797,109 @@ already recovered.
 brief. That is a real position — it costs one deferred command per session and
 never risks an agent confidently diagnosing Cloudflare from a hang, which is the
 failure the original warning was written to prevent.
+
+### M22 — medium — memory is keyed to the working directory, three keys exist, and only one of them had the store
+
+`M10` moved the memory store from the `Downloads` key to the `workshop` key by
+**copying** it. That solved the move. It did not solve the class of failure the
+move was an instance of, and the failure recurred on 2026-09-03 in the direction
+`M10` did not anticipate: not the working directory changing, but **a session
+starting somewhere else.**
+
+Measured 2026-09-03, before this finding was taken:
+
+| project key | memory files | transcripts |
+|---|---|---|
+| `C--Users-natha-Projects-workshop` | **66** | 1 |
+| `C--Users-natha-Downloads` | 0 | 78 |
+| `C--Users-natha-Projects-nates-apps` | **0** | 1 |
+| `C--WINDOWS-system32` | 0 | 1 |
+
+**`M20` names only the first of the two empty ones, and it is the less
+important one.** A session started in `nates-apps` — the repo, the most natural
+place to start for any code work in it — also loaded **zero** memories, silently.
+"Start in `workshop`" is therefore a narrower rule than the problem, and it fails
+in a directory there is every reason to be in.
+
+**A whole session ran this way on 2026-09-03**, in `Downloads`, taking five
+findings end to end while loading none of the 66 memories. Nothing reported it.
+An empty store is indistinguishable from a new one, which is `M20`'s own
+observation applied one directory over.
+
+**This machine already solves exactly this, everywhere except here.** Nine skills
+and the `agents` directory are junction-linked into `~/.claude` precisely so that
+directory-scoped things load from any working directory — `CLAUDE.md` and
+`SETUP.md` both explain the mechanism, and `SKILL-AUDIT.md` F11 records the one
+part of that surface that was never linked. Memory is the other one. `M10`
+reached for a copy where the established pattern is a link, and a copy is a
+snapshot of one key rather than a fix for all of them.
+
+**Taken, 2026-09-03 (PR #607), and filed in the same PR at Nate's instruction.**
+That collapses the usual separation between proposing and taking — declared here
+rather than done quietly, because `audit-menu` asks for the two to be separate
+decisions and in this case both were made explicitly in one instruction.
+
+The empty `Downloads` husk was removed and both non-workshop keys were
+junction-linked at the real store:
+
+```powershell
+New-Item -ItemType Junction `
+  -Path   "$env:USERPROFILE\.claude\projects\C--Users-natha-Downloads\memory" `
+  -Target "$env:USERPROFILE\.claude\projects\C--Users-natha-Projects-workshop\memory"
+```
+
+and the same for `C--Users-natha-Projects-nates-apps\memory`, which did not
+exist at all.
+
+**Verified, not assumed** — a read-only link would be a trap worse than the
+husk:
+
+| | |
+|---|---|
+| files visible through each junction | **66**, matching the real store |
+| `MEMORY.md` readable through a junction | yes |
+| a file written *through* the `Downloads` junction | landed in the real store |
+| ...and was visible through the `nates-apps` junction | yes |
+| administrator rights required | **none** — a directory junction, unlike a per-file symlink |
+
+The test file was removed and all three paths report 66 again.
+
+**`C--WINDOWS-system32` was deliberately left alone.** It is not this body of
+work, and linking it would share the store into a directory nothing should be
+running in.
+
+**This supersedes `M20`**, which proposed deleting the husk so a session there
+would report *no* store rather than an empty one. That makes the failure honest;
+it does not prevent it, and it does nothing for the `nates-apps` key. The husk is
+gone either way, so `M20`'s concrete ask is satisfied — by a link rather than by
+a hole.
+
+**Posture: machine change, outside the repo, no repo behaviour and no check.**
+Nothing in git can observe a junction, which is the argument for this record
+existing at all — the skills junctions have the same property and `SETUP.md`
+carries them for the same reason.
+
+**What would break it, and what to look at.** If Claude Code ever deletes and
+recreates a project's `memory/` directory, the junction becomes a real empty
+directory again and **nothing will report it** — the same silence this finding
+is about. The tell is a session that loads no memories from a key that should
+have them. One line names the current state:
+
+```powershell
+Get-ChildItem "$env:USERPROFILE\.claude\projects" -Force |
+  ForEach-Object { $m = Join-Path $_.FullName 'memory'
+    if (Test-Path $m) { '{0}  {1}  {2}' -f $_.Name, (Get-Item $m -Force).LinkType, (Get-ChildItem $m -Force -File).Count } }
+```
+
+**Not proposed: a check.** Nothing in this repo can see `~/.claude`, and
+`SKILL-AUDIT.md` F11 is the standing argument against reaching out of the repo to
+assert things about the machine — it is why the global `CLAUDE.md` is a pointer
+rather than a copy.
+
+**One thing this does not fix.** `openitems20260902prompt.md` still sits in
+`Downloads` and its own first line says to paste it into a session started in
+`workshop` — so the file that gives that instruction is the reason a session
+starts in the wrong place. Memory no longer cares, which is the point of this
+finding, but moving hand-off briefs to `workshop\briefs\` beside the others
+would remove the attractor as well. Not done here; it is a file move outside the
+repo and belongs to whoever owns the brief.
