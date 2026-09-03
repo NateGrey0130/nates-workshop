@@ -1994,3 +1994,96 @@ that is actively misleading: **six menus in this repo have an `F18`** —
 and `UI-AUDIT` — and every hit outside this file belonged to a different one. A
 bare finding number is not a unique key across menus, and a sweep that treats it
 as one will read another menu's history as this one's citations.
+
+### F19 - the citation check searches the catalog's category prefix as part of the name, and 213 of its 216 warnings are its own
+
+`drift-check --remote` prints `NO DRIFT` and then an advisory block —
+`citations:    948 row(s) checked, 216 worth a look` — each line of the form
+*`spells.Air: Tornado` claims "Rifts Book of Magic" — name absent from its
+text*.
+
+**Almost none of the 216 is a bad citation.** The check flattens both the book's
+text and the row's name to bare alphanumerics and asks whether the name appears.
+The catalog's category prefix goes into the search string with everything else:
+
+```js
+const flat = (n) => String(n).replace(/\([^)]*\)/g, ' ')
+  .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+```
+
+So `Air: Tornado` normalises to `air tornado`, and no book prints that. The book
+prints *Tornado*, in a list headed *Air*.
+
+**Measured against production and the real `txt` caches, 2026-09-03** — the
+whole advisory block re-tested row by row against each row's own cited book:
+
+| | rows |
+|---|---|
+| flagged today | **216** |
+| carrying a colon prefix — `Air:` `Earth:` `Fire:` `Water:` `Language:` `Space:` `Navigation:` | 210 |
+| carrying `W.P. `, which has no colon | 5 |
+| carrying no prefix at all | 1 |
+| **found once the prefix is dropped** | **213** |
+| surviving | **3** |
+
+The four elemental families are 193 of the 216 on their own. All 231 elemental
+spells are present in the `bom` cache under their bare names; 193 are absent
+with the prefix attached, and the 38 that do match prefixed match by accident —
+running prose puts *Air* beside *Cloud of Slumber*.
+
+So a check whose own comment argues that **a check that cries wolf 35 times is
+worse than no check** is now crying wolf 213 times, and the rows that might be
+real are invisible inside it.
+
+**This is not `F1`, and not the `--values` pass `F1` produced.** That check asks
+whether a *numeric value* is printed inside the *specific pages* a row cites,
+over `gear` — which this check excludes by name, because a gear name here is
+reworded prose rather than a heading the book prints. Its false positives are
+prices stated in words and citations that are a page short: defects in the ROW,
+and the actionable half of its output. This check asks whether a *name* appears
+anywhere in the *whole book*, over `spells`, `psionic_powers` and `skills`, and
+its false positives are manufactured by its own normalisation. **`F1`'s misses
+point at rows to fix. These point at the check.**
+
+**Proposal:** add a de-prefixed form to the `forms` set that `found()` already
+builds. It derives singular/plural variants and an `&`-expanded reading; a
+prefix strip is the same shape of variant, and seeding it before the existing
+plural loop gets its plural for free.
+
+**The strip needs two shapes, not one, and that is the part to get right.**
+`W.P.` carries no colon, so a colon-anchored `^[A-Za-z .]+:\s*` never reaches
+it. Measured both ways against production: colon alone resolves **209** and
+leaves **7**; colon plus a `^W\.P\.\s*` strip resolves **213** and leaves **3**.
+Four of the five `W.P.` rows — *Automatic Pistol*, *Bolt Action Rifle*,
+*Revolver* and *Rope* — are present in their books under the bare name. Note
+that `W.P. Rope` cites **New West**, not RUE: tested against the wrong book it
+reads as found, which hides that it is flagged at all.
+
+**Posture: advisory only, and the exit code must not move.** The block is
+deliberately not a gate — the comment beside it says wiring it into the exit
+code *"would fail every run over a name the book spells differently - which is
+how a useful check gets ignored"* — and that stays true with a better matcher.
+Nothing here touches `problems`, the verdict line, or the exit status.
+
+**Do not rename any catalog row to match a book.** The prefix is the catalog's
+naming convention, and rows are referenced by their exact stored name: 146 data
+scripts under `apps/character-creator/db/` carry 469 occurrences of a prefixed
+name. Nothing parses the prefix — no code in `js/` or `functions/` splits on it
+— so the cost of renaming is not a parser, it is every script that names the
+row. The check is what should learn.
+
+**Worth deciding when taken, not before.** One of the three survivors is still
+the check rather than the data. `Language: Trade Five/Reptile` cites Phase
+World, which prints *Language: Trade Five* at 98% in an R.C.C. skill list; the
+`/Reptile` half is the catalog's own gloss and the word *reptile* appears
+nowhere in that book. `flat()` turns the slash into a space, so a de-prefixed
+`trade five reptile` still misses. Whether `found()` should also try each side
+of a `/` is a second variant carrying its own false-positive risk, and it is a
+much smaller problem than the prefix — one row against 213.
+
+**The other two survivors are a data question and are deliberately not part of
+this.** `W.P. Automatic and Semi-automatic Rifles` (RUE) and `Summon and Control
+Canines` (Book of Magic) are absent with and without a prefix. A book that
+writes a name differently reads exactly like one that never had it — the
+advisory's own warning — so those want their cited pages read by eye rather than
+a code change, and not in the PR that changes the check.
