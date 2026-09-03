@@ -1,7 +1,7 @@
 # Meta-audit — the menus as a reference, and the discipline that fills them, 2026-09-03
 
-> **STATUS: `A3`, `A5` and `A11` are taken (PRs #643, #644, #642). The other
-> nine are OPEN.** Filed
+> **STATUS: `A3`, `A4`, `A5` and `A11` are taken (PRs #643, #645, #644, #642).
+> The other eight are OPEN.** Filed
 > 2026-09-03 against `main` @ `3332349` (the merge of #641). Findings are
 > `### A<n> — <severity> — <title>`, severity lowercase. Status for any finding
 > lives under its own heading; this line does not count them.
@@ -684,6 +684,37 @@ status header confirmed by reading `HEALTH-AUDIT.md:1–60` and by
 `grep -nE '^> |Status|nothing is open'`; the absence-of-a-record claim proved by
 a fresh grep across the tree and the memory store rather than by a pattern
 match — per the skill's rule on absence claims.
+
+**Taken, 2026-09-03 (PR #645). Posture held exactly: one paragraph recording the
+abstention, and NO status header added** — adding one is the thing the decision
+refused, and this finding would have been implemented wrong if it had.
+
+**Half the recorded reason had expired, which the finding did not anticipate.**
+PR #531's commit message gives two grounds. *"It is the live menu"* was true on
+2026-09-02 and is not now — `REPO-AUDIT` and this file both came after, and
+`HEALTH-AUDIT`'s findings all carry outcome notes. Repeating it as a live reason
+would have shipped a stale claim inside a note about stale claims.
+
+**So the paragraph carries the durable half and dates the expired one.** The
+surviving ground is that a count in this header would be the moving number `F4`,
+`F5` and `F10` are about — three findings in that same file about documents
+quoting figures that cannot stay right.
+
+**And the case is stronger now than when it was made**, which is worth more than
+the original reasoning. Two things measured for this menu since: `BOOK-INGEST`'s
+status header went stale **within five minutes** of `F3` closing, and three
+sources describing `MACHINE-AUDIT`'s status disagree three ways while two of them
+carry an explicit *do not trust this line* guard. The paragraph says so, because
+a decision defended only by its original author's reasoning is weaker than one
+with evidence behind it.
+
+**`A11`'s grep confirmed the finding's absence claim** — no menu, skill or memory
+file records the abstention; it existed only in `3a8f0ca`. Re-run 2026-09-03 and
+still true, which is why this paragraph had somewhere to be.
+
+**Deliberately not done:** no status line, no count, no re-verification date, and
+nothing about the file's own findings. The paragraph says where status lives —
+under each heading — and stops.
 
 ---
 

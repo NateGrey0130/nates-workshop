@@ -1,5 +1,23 @@
 # Health audit — process, 2026-09-02
 
+> **This menu carries no status header, and that is a decision rather than an
+> oversight.** It is the only one here without one — `F8`, filed in this file,
+> is what gave every other menu the line it now opens with, and PR #531 left this
+> file out on purpose. **Status for any finding lives under its own heading; read
+> to the next `###`.**
+>
+> The reason, from #531's commit message, was two-part and only half of it has
+> lasted. *"It is the live menu"* was true on 2026-09-02 and is not now. The
+> durable half is the other one: **a count in this header would be the moving
+> number `F4`, `F5` and `F10` are about** — the three findings in this file about
+> documents quoting figures that cannot stay right.
+>
+> **The intervening evidence strengthens it.** `BOOK-INGEST-AUDIT`'s status
+> header went stale within five minutes of a finding closing, and three sources
+> describing `MACHINE-AUDIT`'s status disagree three ways. A status line is a
+> claim that has to be re-checked by hand, and the hand is what keeps missing.
+> So: do not add one here. `META-AUDIT` `A4`.
+
 Read-only review of how this repo is documented, worked and tooled. Checked
 against `main` @ `34a7eea` (the merge of #515), the GitHub merge and check-run
 history, and the files themselves. No production data was queried and nothing
