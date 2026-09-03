@@ -1,10 +1,10 @@
 # Character creator — ingestion and tooling audit, 2026-08-26
 
-> **`F25` is OPEN**, filed 2026-09-03 — the first thing open on this menu since
-> it was cleared. Everything before it is closed and was re-verified on
-> 2026-09-02; the header corrections below track how that list shrank, and the
-> last of them ends *"NONE now — the menu is clear."*, which was true the day it
-> was written. Status for any finding lives under its own heading; this line
+> **Nothing is open on this menu.** `F25` was filed and taken on 2026-09-03;
+> everything before it was closed and re-verified on 2026-09-02. The header
+> corrections below track how that list shrank, and the last of them ends
+> *"NONE now — the menu is clear."*, which was true the day it was written and
+> is true again. Status for any finding lives under its own heading; this line
 > deliberately does not count them.
 >
 > **Two that misread, in opposite directions.** `F12`, `F16` and `F19` close as
@@ -2822,6 +2822,69 @@ count when this is taken; it was 1 of 4 characters on the day it was filed.
 Canines` cites `Rifts Book of Magic p.131` and the book prints it there — as
 **`Summon & Control Canines (ritual)`**, with an ampersand. That is a defect in
 the check, not the row, and it is recorded under `F19` rather than here.
+
+**Taken, 2026-09-03 (PR #618), as REPOINT rather than retire.** Nate's call, on
+the reasoning that settles it: *while similar those are separate skills.* An
+Automatic Pistol proficiency is not a Handgun proficiency wearing a different
+name, so merging them into RUE's two would lose a distinction the earlier
+edition drew on purpose. All four keep their names; only `source_book` moves.
+
+`apps/character-creator/db/fix-wp-source-pre-rue-citations.sql`, applied to
+production **before** the merge and read back rather than trusted.
+
+**This finding is the thread another script left to be pulled, which is the most
+useful thing here.** `fix-wp-source-and-literacy.sql` filled eight blank W.P.
+`source_book` values with `Rifts Ultimate Edition` and said, in its own comment:
+
+> Recorded plainly because it IS an assumption: the aimed/burst numbers on some
+> of these rows come from an older edition's tables, and the label now says RUE
+> anyway. **If that ever matters, this comment is the thread to pull.**
+
+It mattered. **These rows are not wrong because anyone transcribed carelessly** —
+they are wrong because a deliberate blanket assumption was recorded *as* an
+assumption, and this is the case where it failed. A comment that predicts its own
+failure mode and names the thread is worth more than one that is merely correct.
+
+**The target was measured, not assumed, and the obvious candidates both fail.**
+
+| candidate | why not |
+|---|---|
+| a cached Palladium book | **none DEFINES them.** They appear only inside O.C.C. skill lists — Mystic Russia printed 136 has *"W.P. Automatic and Semi-Automatic Rifles (including shotguns)"* between *"W.P. Ancient, three of choice"* and *"W.P. Modern Weapons, two of choice"*, which is a class **using** the skill. That is the same trap this finding names for RUE's own *"Typical Payload: Revolver: Six bullets"* prose. |
+| `rifts-core`, the original core book | `scripts/books.json` records it as deliberately **not** cached — *"Rifts Ultimate Edition is its errata'd revision"* — and `REBUILD-AUDIT` F17 re-cited its last remaining row to RUE. Citing it would reverse a decision already made. |
+
+**`Rifts Skill List` is where they belong, and the repo already says so.** It is
+the registry's compiled skill list, and **40 skills** cite it for exactly this
+situation: real Rifts skills no cached Palladium book defines — `Juicer
+Technology`, `Falconry`, `Combat Pod`, the whole `Space:` family. These four are
+that, and now cite it too. *(The registry's note calls it "cited by 48 skills";
+it was 40 before this and is 44 after. A count in prose, drifting.)*
+
+**The fifth pageless row was checked and deliberately left alone.**
+`W.P. Heavy M.D. Weapons` also carried a bare `Rifts Ultimate Edition`, and RUE
+really does print it — so it stays. Repointing it would have been the same error
+in the opposite direction.
+
+**Nothing on any character sheet moved.** No skill name changed, so character
+`9914`, which holds two of these four, is untouched — which is the concrete
+advantage of repointing over retiring, and the reason the cost table above
+mattered.
+
+**Verified against production:** `repointed 4`, `still_bare_rue 1`, and
+`rifles_handguns 2` — the RUE replacements untouched on `p.302-303`.
+
+```
+drift-check   citations: 944 row(s) checked, 0 worth a look
+              NO DRIFT (--remote)
+```
+
+**The advisory is empty for the first time, and it is worth being exact about
+why.** It read 216 this morning, 2 after `F19`, 1 after `F20`, and 0 now. This
+last step is not the same kind of move as the others: those taught the check to
+read names correctly, while this one **corrected the data** — and the row count
+fell **948 → 944** because a book with no cache cannot be checked at all. The
+four rows are now *right* rather than *verified*. That is the correct outcome —
+a true citation the checker cannot read beats a false one it can — but a reader
+of a quiet advisory block should know the difference.
 
 
 ---
