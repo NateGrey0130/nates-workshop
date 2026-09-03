@@ -2125,3 +2125,67 @@ Five/Reptile` and `Summon and Control Canines`, both artifacts of the check, and
 `W.P. Automatic and Semi-automatic Rifles`, which is real. Plus **three real
 citation errors that stop being printed**, which is the part a reader of a quiet
 advisory block would not know to look for.
+
+**Taken, 2026-09-03 (PR #605). Posture held: advisory only, exit code
+untouched.** Nothing was added to `problems`, the verdict line is unchanged, and
+both runs below exited 0 on `NO DRIFT`. No catalog row was renamed and no gate
+was added.
+
+`found()` gains a `dePrefix()` variant in the set it already builds — both
+shapes, `^[A-Za-z .]+?:` and `^W\.P\.`, lazy so a name with two colons loses only
+the first — plus the `and`-elided form the *Adjusted* note above asked for.
+**Every form is ADDED, never substituted**, so `base` stays in the set and a row
+whose full prefixed name really is printed still matches on it.
+
+**Measured against production the same day, before and after, same catalog:**
+
+| | |
+|---|---|
+| before | `948 row(s) checked, **216** worth a look` |
+| after | `948 row(s) checked, **2** worth a look` |
+| lines removed | **214** |
+| lines in the after-run that were NOT in the before-run | **0** |
+| every non-citation line of the two runs | identical |
+
+That last pair is the property worth having rather than the count: because the
+change only ever adds readings, `.some()` can only become more likely to be
+true, so this **cannot lengthen the advisory**. It was checked by set
+comparison, not assumed.
+
+**One better than this finding predicted, and the reason matters.** It said
+three would survive; two did. `Summon and Control Canines` went with the
+`and`-elision, which is the variant the *Adjusted* note added — so the elision
+earned its place on a row this finding had already diagnosed rather than on
+speculation. The two left are exactly the two named above as real questions:
+`W.P. Automatic and Semi-automatic Rifles` (`INGESTION-AUDIT.md` `F25`) and
+`Language: Trade Five/Reptile`, the `/` gloss this finding deliberately declined.
+
+**What auditing this turned up, and it is the most useful thing here.**
+`scripts/catalog-match-lib.mjs` **already exists** and already solves two of the
+three variant problems, from real Palladium-vs-catalog differences:
+
+- `loose()` drops `and` and `or` — the same transform hand-rolled here, and its
+  docstring cites *"Animate and Control Dead"* against the book's
+  *"Animate/Control Dead"*.
+- `variants()` carries a **slash-half rule** — *"Impervious to Poison/Toxin
+  should meet Impervious to Poison"* — which is exactly the shape of `Language:
+  Trade Five/Reptile`, guarded by a substantial-half length test that is a
+  better answer than the one this finding declined to invent.
+- its plural comment uses **`Summon & Control Canines`** as its worked example.
+
+**It has no notion of a category prefix**, so the central fix here is genuinely
+new. But `drift-check`'s `found()` is a second, hand-rolled matcher standing
+beside a shared one that `catalog-diff.mjs` uses and
+`test/checks/catalog-matching.mjs` pins. **That duplication was not touched**,
+deliberately: adopting `variants()` swaps `flat()`'s pipeline for `normalise()`'s
+— which expands `&` to `and` where `flat()` deletes it — and the comment above
+records 18 skills that go missing when that expansion is applied alone. That is
+a real change of behaviour, outside this finding's scope, and it wants its own
+number rather than a quiet ride here.
+
+**`found()` has no test, and none was added.** It is a closure inside the
+per-book loop, so testing it means extracting it, which is the refactor the
+paragraph above says to decide separately. The proof here is the before/after
+pair on the same catalog on the same day, plus the set comparison — not a
+fixture. Worth knowing when the consolidation above is taken: that refactor is
+what would make this matcher testable at all.

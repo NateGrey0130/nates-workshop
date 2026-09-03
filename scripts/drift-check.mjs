@@ -244,11 +244,35 @@ for (const slug of Object.keys(bookRegistry)) {
   // readings, and both numbers.
   const flat = (n) => String(n).replace(/\([^)]*\)/g, ' ')
     .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+
+  // F19. The catalog's CATEGORY PREFIX is part of the stored name and no book
+  // prints it: "Air: Tornado" flattened to "air tornado" while the book says
+  // "Tornado" under a heading "Air". 213 of 216 advisory lines were that.
+  //
+  // TWO shapes, because "W.P." carries no colon and a colon-anchored pattern
+  // never reaches it - measured against production, colon alone cleared 209 of
+  // the 216 and the pair cleared 213. Lazy `+?` so a name with two colons
+  // loses only the first.
+  const dePrefix = (n) => String(n).replace(/^(?:[A-Za-z .]+?:|W\.P\.)\s*/, '');
   const found = (n) => {
     const base = flat(n);
     if (!base) return true;
     const forms = new Set([base, String(n).toLowerCase().replace(/&/g, ' and ')
       .replace(/\([^)]*\)/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim()]);
+    // F19. The flattener DELETES the book's "&", so a book printing "Summon &
+    // Control Canines" reads as "summon control canines" while the catalog
+    // spells the word. The comment above handles the opposite direction - a
+    // catalog name carrying "&" - and there was no transform for this one.
+    for (const f of [...forms]) forms.add(f.replace(/ and /g, ' '));
+    // F19. ADDED, never substituted: `base` stays in the set, so a row whose
+    // full prefixed name really is printed still matches on it. Every form here
+    // can only make `.some()` below more likely to be true, so this change can
+    // shorten the advisory and can never lengthen it.
+    const bare = flat(dePrefix(n));
+    if (bare && bare !== base) {
+      forms.add(bare);
+      forms.add(bare.replace(/ and /g, ' '));
+    }
     for (const f of [...forms]) {
       forms.add(f.endsWith('s') ? f.slice(0, -1) : f + 's');
     }
