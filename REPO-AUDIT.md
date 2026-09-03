@@ -294,6 +294,34 @@ claims (`Documentation claims` is a named section in
 extend that check's surface — which is fine, but the count moves and the pass
 line changes.
 
+**Taken, 2026-09-03 (PR #623). Posture held: documentation only, one screen, and
+it restates nothing.**
+
+**The finding's own instruction — "the four apps with one line and a link each" —
+was not followed, deliberately.** Those one-liners already exist in
+`apps/manifest.json`, which the landing page reads at runtime, so writing them
+into a README would have created a second copy of live data and a fifth place to
+go stale. The table names the apps and links their directories; the descriptions
+are pointed at, with a sentence saying the manifest is the source and the table
+is deliberately not repeating it. **This is the one place a finding said "copy
+this" and copying it was the wrong move.**
+
+**No count appears in it.** The draft said *"the five test suites"* and that was
+cut — a sixth app would falsify it, and the finding itself warns that every
+count a README quotes is either pinned elsewhere or free to drift.
+
+**One paragraph was written and then removed, because it belongs to `G2`.** A
+note that the catalog is transcribed from Palladium Books material, unaffiliated
+and unendorsed, is exactly what `G2`'s path B calls for *"in the root README
+(G3)"* — but `G2` is undecided and unowned, and adding the note here would have
+implemented half of it without the decision. It is a two-minute edit whenever
+`G2` resolves; it is moot if the repo goes private.
+
+**Verified rather than assumed:** every one of the nine links in the file
+resolves, checked with a loop over the extracted paths. The smoke suite did not
+gain or lose a check — 1665 before and after — so the `Documentation claims`
+surface was not extended, which the caution above allowed for either way.
+
 ### G4 — low — branch deletion on merge is discipline, not a setting
 
 `"delete_branch_on_merge": false`. The remote nonetheless holds exactly one
