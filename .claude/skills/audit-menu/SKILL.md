@@ -55,9 +55,26 @@ the outcome note — cheapest place to catch a misread.
 **The highest-value rule here.** Verify the premises against current code before
 scoping, and lead the report with the corrections.
 
-Every finding taken so far has turned up an error in its own premises — not a
-slur on the audits, just what happens when a document sits still while the tree
-moves. One such error would have shipped a silent bug if implemented as written.
+**Checking a finding before scoping it turns something up nearly every time, and
+it is usually not the premises.** Two different failures hide behind that, and
+they need different remedies:
+
+- **The finding's premises are wrong.** Rarer, and the expensive one, because a
+  taker implements from them. `REPO-AUDIT` `G8` said the suite had never run on
+  a bare clone; a bare clone passes everything. One such error would have shipped
+  a silent bug if implemented as written. **Re-measuring catches these.**
+- **Something else is found wrong while doing the work.** Near-universal, and
+  mostly healthy — it is what auditing the finding is *for*. `SKILL-AUDIT` `F4`
+  confirmed both its premises and then caught **two of its own replacement
+  sentences** being false, by measuring the fix instead of shipping it.
+  **Re-measuring the finding does not catch these. Measuring what you are about
+  to write does.**
+
+Plenty of notes here record premises that held exactly — `HEALTH-AUDIT` `F5`,
+`F7`, `F9`, `F23`; `MACHINE-AUDIT` `M4`, `M6`, `M15`, `M16`; `SKILL-AUDIT` `F2`,
+`F4`, `F11`, `F15`. **The check earns its place by what it finds, not by the
+document being untrustworthy**, which is a better reason to run it every time.
+
 Distrust first whatever is cheapest to check: line numbers, counts, "X exists
 nowhere", and any claim about what another finding says.
 
@@ -410,6 +427,36 @@ to be a suspicion. **A proposal specific enough to implement from is not.**
 
 **No check, and no retrofit of existing findings** — same reason as everything
 else on this page. `REPO-AUDIT.md` G18.
+
+**This did not start with `G18`, and knowing that is worth more than the rule.**
+`G18`'s note calls it *"a convention that starts today"*. It was already in force
+the day before, in the two menus filed immediately ahead of `REPO-AUDIT`, and it
+came from a **brief** rather than from here — `health-audit-prompt.md` prescribes
+a finding template whose fields include *Evidence — the command, file:line, or PR
+that proves it*. Censused 2026-09-03:
+
+| menu | findings | `**Evidence**` lines | `**Confidence**` lines |
+|---|---|---|---|
+| `HEALTH-AUDIT.md` (2026-09-02) | 24 | **24** | **23** |
+| `SKILL-AUDIT.md` (2026-09-02) | 25 `F` | **25** | 0 |
+| `REPO-AUDIT.md` (2026-09-03) | 18 | **0** | 0 |
+
+So the rule has been **tried**, and there is evidence about it rather than none.
+Two things follow.
+
+**The `Confidence` line did the job it was added for, at least once.**
+`HEALTH-AUDIT` `F18` carried a low-confidence half, and that half is the one that
+moved when the finding was taken — its note reads *"The low-confidence half is
+now high."* A marker that flags the part most likely to be wrong, and then is
+right about which part, has earned a look. It is **not** adopted here; that is
+its own decision.
+
+**And `REPO-AUDIT` inherited none of it, because it had no brief.** No brief for
+that menu exists anywhere on this machine (`docs/prompts/README.md` carries the
+row). It is also the menu with five wrong claims in eighteen findings. **That is
+a correlation and not a demonstrated cause** — different subject matter, and n of
+18 against 24 — and it is the only evidence available either way. `META-AUDIT`
+`A8`, `A9`.
 
 ## Where a new menu goes
 
