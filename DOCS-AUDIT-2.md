@@ -1,9 +1,9 @@
 # Documentation audit, second pass — 2026-09-02
 
-> **Status: `D2` and `D3` are OPEN, both `low`. `D1` is taken.** Status for any
-> finding lives under its own heading; this line does not count them. Five
-> repairs were made in this pass and are listed under **Fixed here**; they are
-> not findings and carry no numbers.
+> **Status: `D3` is OPEN. `D1` and `D2` are taken.** Status for any finding lives
+> under its own heading; this line does not count them. Five repairs were made in
+> this pass and are listed under **Fixed here**; they are not findings and carry
+> no numbers.
 >
 > **This menu's own trap:** four of the five things it repaired were *already
 > recorded as done* by a closed finding in another menu. `M7` moved the working
@@ -183,6 +183,63 @@ as-of-date rule, and listing the slugs with their book titles. **Do not** put
 counts of spells or skills in it.
 
 **Posture:** documentation only, one new file, no survey body touched.
+
+**Taken, 2026-09-03 (PR #610).** One new file,
+`apps/character-creator/docs/surveys/README.md`. **No survey body touched**, and
+**no counts of spells, skills, gear or classes** — the file says why it carries
+none, since that is the instruction most likely to be undone by a later reader
+trying to be helpful.
+
+**One line of test code was changed, which this finding's posture did not
+allow for, and it was forced rather than chosen.** `docs/surveys/` is **pinned**:
+`test/checks/environment.mjs` §*Book surveys* walks every `*.md` there and
+requires the filename to be a slug `scripts/books.json` registers. The first
+flagless run after adding the index failed on exactly that —
+
+```
+FAIL every survey names a slug scripts/books.json registers (11 files)
+     — README — no book registry entry, so the file has no book
+```
+
+— so *"one new file, nothing else touched"* was not achievable as written: the
+directory cannot hold an index without the check being told what an index is.
+`README.md` is now excluded from that walk, once, at the top of the section
+rather than in each check, because every rule there is a rule about a **survey**
+— the filename is a book slug, the body paraphrases a book it must not quote —
+and the index has neither. The count in the check's own label moved 11 → **10**,
+which is the assertion that it is now looking at surveys only.
+
+**That the check caught this is the finding working, not the finding being
+wrong.** `D2` reasoned about the directory as documentation; it is also a
+tested surface, and nothing in the finding could have known that without
+running the suite.
+
+**Every premise here holds.** Ten surveys, no index; `docs/plans/` has one. Six
+of the ten — `cb1`, `dag`, `fom`, `ju`, `pf`, `rue` — have zero inbound
+references, exactly as stated.
+
+**The as-of-date rule turned out to be sharper than a disclaimer, and that is
+the one thing added beyond the written scope.** All ten surveys share a shape:
+`Ledger`, `Inventory`, `Extraction plan`, `Classes`, `Catalog diff`, and most
+carry `Page offset` and the book's authority tables. Those sections do not age
+equally. `Ledger`, `Inventory`, `Page offset` and the authority tables are facts
+about a printed book and never rot; `Catalog diff` is a comparison against the
+catalog on the survey date and rots immediately; `Extraction plan` proposes work,
+some of which has since been done. So the README says **which sections age**
+rather than warning that the file might be old — the difference between a reader
+distrusting the whole survey and a reader knowing that *"the book prints this on
+131"* is still good while *"this is missing from the catalog"* needs re-checking.
+
+**One measurement corrected mid-flight.** Reading only the first six lines of
+each file reported seven of the ten as carrying no date at all. They all carry
+one — nine dated 2026-08-28 and `ww` 2026-08-27 — and the earlier answer was an
+artifact of the window, not of the files. It is the same shape as this audit's
+own note about a truncated grep looking exactly like a complete one.
+
+The README also records the six-with-no-inbound-link fact and why it is not a
+defect, with a pointer to *What was checked and found healthy* below — because
+that surface has read as a defect to someone once already, and the next link
+check will run over this directory too.
 
 ### D3 — low — two byte-identical duplicate pairs inside `briefs\`
 

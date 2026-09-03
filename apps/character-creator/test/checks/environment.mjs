@@ -535,8 +535,12 @@ section('Skills stay true');
 section('Book surveys');
 {
   const surveyDir = join(appDir, 'docs', 'surveys');
+  // README.md is the directory's INDEX, not a survey - DOCS-AUDIT-2 D2. It is
+  // excluded here rather than special-cased in each check below, because every
+  // rule in this section is a rule about a survey: the filename is a book slug,
+  // and the body paraphrases a book it must not quote. The index has no book.
   const surveys = existsSync(surveyDir)
-    ? readdirSync(surveyDir).filter((f) => f.endsWith('.md')) : [];
+    ? readdirSync(surveyDir).filter((f) => f.endsWith('.md') && f !== 'README.md') : [];
 
   check('surveys are present', surveys.length > 0, 'no docs/surveys/*.md');
 
