@@ -6,11 +6,11 @@ brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
 `low`. Nothing here is taken until Nate names it; one PR per finding, outcome
 note appended under the finding in the same PR.
 
-**Status: `M21` is OPEN, `low`. Everything else on this menu is taken or
-closed** — status for any one of them lives under its own heading, and this line
-deliberately does not count them. `M21` was filed 2026-09-03. `M20` is **closed
-without being taken**, superseded by `M22`, which was filed and taken the same
+**Status: nothing is open on this menu.** Status for any finding lives under its
+own heading, and this line deliberately does not count them. `M20` is **closed
+without being taken**, superseded by `M22`; `M22` was filed and taken the same
 day and is the one finding here that changed the machine rather than the repo.
+`M19` and `M21` were taken 2026-09-03.
 `M18` is an OBSERVATION rather than a finding — the fault it records is still
 unexplained, every hypothesis raised against it is dead or cannot be provoked, and its
 recorder was repaired the same day it shipped. Taking it meant attempting a
@@ -1833,6 +1833,34 @@ already recovered.
 brief. That is a real position — it costs one deferred command per session and
 never risks an agent confidently diagnosing Cloudflare from a hang, which is the
 failure the original warning was written to prevent.
+
+**Taken, 2026-09-03 (PR #613), as proposed.** A subsection in
+`.claude/skills/windows-shell/SKILL.md` under *Nate's shell is not your shell*.
+**Documentation only, no check, and no workaround** — asserting these commands
+are safe is the same error inverted, and the text says so.
+
+It carries the three measurements with their times, and the capture instruction
+`M18`'s pattern asks for. It deliberately does **not** say the commands are
+reliable. What it says is the narrower and useful thing:
+
+> **That is not a promise, and one clean day does not disprove an intermittent
+> fault.** What it does mean is that **deferring these commands is a cost, not a
+> default** — a session that hands all three over is paying for a fault nobody
+> has reproduced.
+
+**The skill was the right home and this menu was not, which is worth recording
+because the finding could have gone either way.** A finding here is a record; a
+skill is what a session actually loads, by name, from any working directory on
+this machine. The caution being corrected was itself never in any file — it was
+carried between sessions inside hand-off prompts, and that is precisely why it
+outlived its own evidence. Putting the correction anywhere that does not load
+would have reproduced the failure it documents.
+
+**One measurement worth more than the three timings.** `deploy-sweep` was the
+last command still being handed over at the end of the session that filed this,
+and it takes **17 seconds**. It had been deferred all day on the strength of a
+warning already disproved for its neighbour hours earlier. That is the cost this
+finding is about, in one number: not a hang, a habit.
 
 ### M22 — medium — memory is keyed to the working directory, three keys exist, and only one of them had the store
 
