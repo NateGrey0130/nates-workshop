@@ -6,9 +6,9 @@
 |---|---|
 | **taken** | `G1`–`G8`, `G11`–`G15`, `G17`, `G18` |
 | **closed, not taken** | `G9`, `G10` — each already decided by another menu |
-| **closed by decision** | `G16` — declined, and the decline written into `SETUP.md` |
+| **closed by decision** | `G16` — declined, and the decline written into `SETUP.md`; and `G5` half (b), 2026-09-03, squash and rebase stay enabled |
 | **re-scoped before being taken** | `G5`, `G11`, `G15` — their `Adjusted` notes stand above the re-scopes |
-| **taken in part** | `G2` via path B, `G5` half (a) only |
+| **taken in part** | `G2` via path B. **`G5` half (a) taken, half (b) closed by decision — the finding is closed entire** |
 
 **Read the lines under a finding's own heading for its state, and its PR
 number.** This block is a convenience and it is the kind of thing that goes
@@ -595,6 +595,39 @@ was written filtered from the start.
 **Fixed here rather than filed** because the alternative was leaving a live
 false alarm in the tool this menu had just finished repairing. Recorded so the
 scope stretch is visible.
+
+**Half (b) CLOSED BY DECISION, 2026-09-03 (PR #655), on Nate's word. Squash and
+rebase stay enabled and no repository setting was changed.** Recorded so it is
+not re-proposed: this is a decision about the merge button, not a deferral, and
+the finding is now closed entire.
+
+**The re-scope had already argued itself out of it and the measurements hold.**
+Re-verified against the GitHub API and the tree on 2026-09-03, before deciding:
+
+| | |
+|---|---|
+| `allow_merge_commit` / `allow_squash_merge` / `allow_rebase_merge` | **all still `true`** |
+| squash merges on `main` | **117**, unchanged |
+| `scripts/deploy-sweep.mjs:89` | `git log --first-parent` |
+| `.github/workflows/deploy-alarm.yml:81` | `git log --first-parent` |
+| `deploy-sweep --last 250` | **250 first-parent commits, all deployed** — the squash ones included |
+
+**Three reasons, and the first is this finding's own.** (b) *"fixes nothing on
+its own"* — half (a) repaired both readers, which is where the defect actually
+was. **The 117 existing squash commits do not go away**, so anything reasoning
+over `main`'s history has to cope with both shapes whatever the button offers;
+narrowing what can arrive next does not narrow what is already there. And under
+`G1`'s ruleset every merge is a PR merge whose dropdown still offers squash, so
+disabling it narrows a dropdown rather than a risk.
+
+**What is given up, stated rather than waved past.** A future session could still
+squash-merge and produce a history shape the repo mostly does not use. That is
+now a cosmetic inconsistency rather than a monitoring gap, which is exactly the
+change half (a) made — and it is the trade being accepted.
+
+**This closes `G5` and nothing else changes.** The original proposal and the
+re-scope both stand above as the record of what was believed and why the scope
+moved twice.
 
 ### G6 — medium — Issues, Projects and Wiki are all enabled and all empty
 

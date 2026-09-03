@@ -96,6 +96,16 @@ next heading.
 `BOOK-INGEST-AUDIT.md`'s header says `F3`'s schema question is still open. It
 closed at **08:41 today** in PR #616. See `A3`.
 
+> **Adjusted 2026-09-03, later the same day. The table above is the baseline as
+> measured and stands as one; three of its four rows have since closed.**
+> `SETUP-v2-CHANGES` open question 1 became `apps/pick3cut5/AUDIT.md` `F11`
+> (`A5`), which was taken in PR #653 along with the `F12` it opened.
+> **`REPO-AUDIT` `G5` half (b) was closed by decision in PR #655** — squash and
+> rebase stay enabled, and that finding is now closed entire. Only
+> **`SKILL-AUDIT` `F12`'s named test** is still outstanding, and it is still
+> correctly labelled *not measured*: the test names itself and nobody has run it.
+> `UI-AUDIT` `F30` remains open as filed.
+
 So: **four open items, in four different menus, and only one of them is a
 finding whose own heading a reader would find by scanning.** Two are halves of
 findings the headers describe as taken, and one is a sentence in a decisions
@@ -1671,6 +1681,15 @@ standing, and record why — the unnumbered one-line recommendation at the end o
 *The plan*. It is deliberately not a finding here, because `G5` is
 `REPO-AUDIT`'s and closing it is Nate's call on that menu.
 
+**Recommendation acted on: `G5` half (b) was CLOSED BY DECISION 2026-09-03 (PR
+#655).** Squash and rebase stay enabled, no repository setting changed, and `G5`
+is closed entire. Every premise was re-measured first and all held — the three
+merge buttons still `true` via the GitHub API, 117 squash merges unchanged, both
+monitors confirmed on `--first-parent`, and `deploy-sweep --last 250` reaching
+all 250 first-parent commits. **The retrofit label above needs no revision:** it
+said *measured*, the measurement survived re-measurement, and the finding closed
+on the strength of it rather than in spite of it.
+
 ### `SETUP-v2-CHANGES` open question 1 — **measured**, and it survives
 
 See `A5`. Re-measured today: the check stands, `external` is empty, the fonts are
@@ -1744,6 +1763,9 @@ its only argument; leaving it open means the next reader of that menu's *"nothin
 is open"* header meets a live proposal three hundred lines down. This is
 deliberately not numbered as a proposal against another menu's finding — it is
 Nate's call on `G5`, and the note belongs under `G5`.
+
+**DONE 2026-09-03 (PR #655): closed by decision, and the note went under `G5`
+where this paragraph said it belonged.** Squash and rebase stay enabled.
 
 ---
 
