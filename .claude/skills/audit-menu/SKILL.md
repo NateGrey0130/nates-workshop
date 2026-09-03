@@ -287,6 +287,45 @@ production merged away weeks earlier. Quote a moving number only where something
 pins it; the test suite pins the README's counts, so those survive, and a count
 in prose does not.
 
+### And a `Proposal` says whether its central claim was measured or reasoned to
+
+The rule above covers numbers. **The claims that have actually caused damage
+here carried no number at all.**
+
+`REPO-AUDIT.md` produced five wrong ones in eighteen findings, and they share a
+shape: every one was **reasoned to rather than run**. Its `G8` said the test
+suite "has never been runnable on a bare clone" — a bare clone passes all 1662
+checks, and the sentence contains no figure to date or source. `G5` said merge
+commits were used "exclusively" against 117 squash merges. `G15` said a deploy
+path produced "no signal at all" while the tool already reported it. **Every
+claim in that menu that came from a command someone actually ran has survived
+re-measurement.**
+
+The cost is not symmetric, which is why this is worth a line:
+
+- **A wrong measurement is caught the moment someone re-runs the command.**
+- **A wrong inference gets implemented.** It reads as settled, and there is
+  nothing to re-run.
+
+So a **`Proposal:` paragraph** names its evidence, in one line:
+
+- the **command and the day** it was run — `drift-check.mjs --remote,
+  2026-09-03`; or
+- the words **inferred**, **not measured**, or **reported by `<file>`**.
+
+**And where a proposal tells a taker to run a command, say whether you ran it.**
+`REPO-AUDIT.md` `G1` shipped a verification command that counts 117
+squash-merged PRs as direct pushes. Nobody had run it, and nothing on the page
+said so.
+
+**Bound to the `Proposal` paragraph only, deliberately.** The observation above
+it stays free-form: a menu exists to catch a suspicion before it is lost, and
+friction there is friction on the wrong part of the loop. A suspicion is allowed
+to be a suspicion. **A proposal specific enough to implement from is not.**
+
+**No check, and no retrofit of existing findings** — same reason as everything
+else on this page. `REPO-AUDIT.md` G18.
+
 ## Where a new menu goes
 
 Decide by **what the menu is about**, not by where similar-sounding files
