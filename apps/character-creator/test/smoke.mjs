@@ -393,6 +393,7 @@ import { run as bookRegistryChecks } from './checks/book-registry.mjs';
 import { run as renderedUiChecks } from './checks/rendered-ui.mjs';
 import { run as classCheckToolChecks } from './checks/class-check-tool.mjs';
 import { run as catalogMatchingChecks } from './checks/catalog-matching.mjs';
+import { run as instructionPathChecks } from './checks/instruction-paths.mjs';
 // ---------- 1c2. Level-up skill grants ----------
 // occ_related_skills.schedule recorded these for a long time and nothing read
 // them. The itemisation matters: a grant knows which level earned it.
@@ -5867,6 +5868,8 @@ section('A class cannot write a bonus the sheet will not draw');
     offenders.length === 0,
     `${offenders.join('; ')} - add it to COMBAT_FIELDS/SAVE_FIELDS in sheet.js, or use saves.other / a special_ability`);
 }
+
+instructionPathChecks();
 
 // slow one - it shells out to wrangler.
 environmentChecks();
