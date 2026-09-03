@@ -6,11 +6,19 @@ description: Take a change in this repo from branch to deployed, the way this re
 # Shipping a change
 
 **Merging to `main` IS the deploy.** Cloudflare Pages publishes the repo root on
-every merge. There is no build step, no CI, and nothing runs your tests for you.
-Whatever is on `main` is live within a minute or two.
+every merge. There is no build step, and nothing gates the merge. Whatever is on
+`main` is live within a minute or two.
 
 That single fact drives everything below: there is no stage where a mistake is
 caught for you, so the checks happen before the merge or they do not happen.
+
+**Step 4 is still yours, even though a workflow now runs the same suites.**
+`.github/workflows/tests.yml` runs the five smoke suites on every pull request
+(`REPO-AUDIT.md` G8), and it is **reporting only** — not a required status
+check, no ruleset behind it, and a red run does not stop a merge. It also
+reports *after* you have opened the PR, which is after the point where step 4
+would have saved you. Treat it as a second pair of eyes on a run you already
+did, never as the reason to skip one. `regression.mjs` is not in it at all.
 
 ## The loop
 

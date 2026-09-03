@@ -97,6 +97,36 @@ export function run() {
   check('absolute paths are still being extracted', real.length >= 8,
     `${real.length} checkable, ${found.length - real.length} templated and skipped`);
 
+  // ── the one check in the suite that cannot run on another platform ─────────
+  //
+  // REPO-AUDIT.md G8. This assertion IS `existsSync` against a `C:\` path, so
+  // all eleven are dead on a Linux runner and the check reports failures that
+  // mean nothing about the repo. That makes it the only thing standing between
+  // this suite and CI - established by measurement after G8's premise that a
+  // bare clone fails turned out to be FALSE: a fresh clone with no `.wrangler`
+  // and no `.cache` passes all 1662 checks on this machine.
+  //
+  // The platform is the probe, and it is deliberately NOT a flag. The flagless
+  // run here is the merge gate and must keep resolving every path; a
+  // `--portable` flag would be a way to opt out of that and still quote the
+  // result as the gate.
+  //
+  // The skip sits AFTER the two guards above on purpose. Both assert that
+  // extraction still works, both touch no filesystem, and they are the only
+  // defence against this check passing while reading nothing - the failure mode
+  // this file's own header names twice. Skipping the section wholesale off
+  // Windows would take them with it and turn a foreign platform into exactly
+  // that vacuous pass. As written, Linux still proves the paths are being
+  // FOUND and only declines to say whether they exist.
+  //
+  // Consistent with the doctrine stated at the top of this file: a miss, not a
+  // false failure, is the right direction for a gate to fail in.
+  if (process.platform !== 'win32') {
+    check(`absolute paths are not resolved on ${process.platform}`, true,
+      `${real.length} Windows path(s) extracted, left unresolved - this assertion is Windows-only`);
+    return;
+  }
+
   const dead = real.filter((h) => !existsSync(h.path));
   check('every absolute path in the instruction layer resolves', dead.length === 0,
     dead.length

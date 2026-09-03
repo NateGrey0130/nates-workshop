@@ -1,7 +1,10 @@
 # Nate's Workshop — Deployment Reference
 
 This repo is **live**: Cloudflare Pages deploys `main` on every merge — no
-build step, no CI. This file describes how the deployment is configured and
+build step, and nothing gates the merge. The five smoke suites do run on every
+pull request since 2026-09-03 (`.github/workflows/tests.yml`, `REPO-AUDIT.md`
+G8), reporting only: no required status check, no ruleset, and a red run does
+not stop a deploy. This file describes how the deployment is configured and
 what to touch when adding to it. Guidance for working *in* the repo (D1 auth,
 the apply routine) is in `CLAUDE.md`; the character creator documents itself
 in `apps/character-creator/README.md`.

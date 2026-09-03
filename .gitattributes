@@ -16,3 +16,19 @@ apps/filament-forge/vendor/* -text
 # outcome worth ruling out explicitly is a future core.autocrlf setting deciding
 # otherwise. Same reasoning as the vendored libraries above.
 shared/fonts/*.woff2 -text
+
+# Workflow YAML. Actions writes each `run:` step to a script and executes it
+# with bash, where a trailing CR would fail as `$'\r': command not found`.
+#
+# THAT CANNOT HAPPEN TODAY AND THIS RULE IS NOT FIXING A LIVE FAULT - measured
+# 2026-09-03, not reasoned about. Git already stores LF in the index for every
+# text file here (`core.autocrlf` is true on this machine, so the CRLF is a
+# working-tree artifact and the blobs are LF), and a Linux runner checks out
+# what is stored. The risk this rules out is a FUTURE `core.autocrlf` or
+# attribute change deciding otherwise on some other machine - exactly the
+# reasoning the woff2 rule above states for itself, and unlike the .sql rule at
+# the top, which was written after an outage rather than before one.
+#
+# It also keeps this one file LF in the working tree, so what is edited and run
+# locally is byte-identical to what the runner executes. REPO-AUDIT.md G8.
+.github/workflows/*.yml text eol=lf

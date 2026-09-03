@@ -1,0 +1,82 @@
+# The five smoke suites, on every pull request. REPO-AUDIT.md G8.
+#
+# REPORTING ONLY, AND THAT IS THE POSTURE RATHER THAN AN OVERSIGHT. This
+# workflow is not wired to a required status check and `main` has no ruleset, so
+# a red run here does not stop a merge. G8 was taken on that basis: the repo's
+# rule is warn, do not block. If someone later makes this a required check, that
+# is a different decision and it needs its own finding.
+#
+# WHY THIS EXISTS AT ALL. Nothing but a person had ever run these suites. The
+# PR bodies prove they get run, and they get run because an agent read `ship-pr`
+# and did it - which is a habit, and habits are what failed when the Pages check
+# reported failure on 65 consecutive merges for four days and nobody read it
+# (G14, and `scripts/deploy-sweep.mjs`'s header).
+#
+# WHAT G8 GOT WRONG, since this file is the thing it asked for. G8 said the
+# suite "has never been runnable on a bare clone" and that CI was therefore
+# blocked. Measured 2026-09-03: a fresh clone with no `.wrangler`, no `.cache`
+# and no `.dev.vars` passes all 1662 checks. Clone state was never the problem.
+# The platform was - one check resolved `C:\` paths - and that is handled in
+# `apps/character-creator/test/checks/instruction-paths.mjs`, not here.
+#
+# NO CREDENTIALS, DELIBERATELY. Every D1 call in the suite is `--local`, which
+# is a SQLite file the runner creates and throws away. Nothing here needs
+# `CLOUDFLARE_API_TOKEN`, and nothing here should ever be given it: this repo's
+# posture is that a write to production costs a deliberate keystroke, so CI does
+# not get a credential that could perform one.
+#
+# `regression.mjs` IS DELIBERATELY NOT HERE. It boots `wrangler pages dev` and
+# tears the server down along a platform-specific path, so it is the piece most
+# likely to be red for reasons that are not about the repo. It is the most
+# valuable check for a fresh environment and it should be added - as its own
+# finding, once this file has a track record.
+
+name: tests
+
+on:
+  pull_request:
+
+# A pull request that is pushed to twice does not need the first run finished.
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+# Read-only. This workflow inspects the tree and nothing else.
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # There is no package.json here by design, so `npx wrangler` resolves from
+      # the npx cache and PROMPTS to install when it cannot. A runner has no
+      # terminal to answer, so the prompt becomes a hang or a failure. This
+      # answers it once for the whole job.
+      NPM_CONFIG_YES: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Matches the version this repo is developed on. No cache key: there
+          # is no lockfile to key on.
+          node-version: '24'
+
+      # Named individually rather than looped, so a failure names its own app in
+      # the step list instead of inside a log.
+      - name: character-creator
+        run: node apps/character-creator/test/smoke.mjs
+
+      - name: filament-forge
+        run: node apps/filament-forge/test/smoke.mjs
+
+      - name: pick3cut5 smoke
+        run: node apps/pick3cut5/test/smoke.mjs
+
+      - name: pick3cut5 game
+        run: node apps/pick3cut5/test/game.mjs
+
+      - name: media-vault
+        run: node apps/media-vault/test/smoke.mjs

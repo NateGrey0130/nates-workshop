@@ -1,9 +1,17 @@
 # Repository architecture audit — git, GitHub, layout and the merge path, 2026-09-03
 
-**Status: all seventeen findings OPEN. Nothing here has been taken.** Every
-`G` number below is a proposal awaiting a word. When one is taken, its outcome
-note is appended under its own heading in the same PR — not here, and not in a
-table.
+**Status: `G8` taken 2026-09-03 (PR #620). The other sixteen are OPEN.** Read
+the lines under a finding's own heading for its state — this line is a
+convenience and it is the kind of line that goes stale first. Every other `G`
+number is a proposal awaiting a word.
+
+**`G8`'s central premise was false, and its note is worth reading before taking
+anything else here.** It claimed the suite "has never been runnable on a bare
+clone"; a bare clone passes all 1662 checks. The real blocker was one
+`existsSync` assertion. That is the second finding in this menu whose premises
+did not survive contact — the header below already records two caught before
+filing — so treat the *reasoning* in these findings as a lead, not as
+established fact.
 
 **This menu's own trap, stated first, as the `audit-menu` skill asks.** Every
 number in this file is a **GitHub-side or filesystem-side measurement taken on
@@ -340,6 +348,84 @@ than doing the work twice.
 bodies prove it by pasting the pass lines, and the marginal value of CI on a
 solo repo where the agent already runs the tests is smaller than it looks. The
 honest version of this finding is *"step 1 is valuable, step 2 is tidiness."*
+
+**Taken, 2026-09-03 (PR #620). Posture held: reporting only, no required
+status check, no ruleset.** Both steps shipped.
+
+**This finding's central premise was FALSE, and the correction is the most
+useful thing the work produced.** *"The suite has never been runnable on a bare
+clone"* does not reproduce. Measured by cloning this repo into a scratch
+directory with no `.wrangler`, no `.cache` and no `.dev.vars` and running the
+flagless suite: **1662 checks, PASSED.** Clone state was never the obstacle, and
+the two sources the finding leaned on were both about something else —
+`portability-audit-prompt.md` §3 and the *"fresh worktree fails two checks"*
+note describe `class-check --local` and phantom **drift**, not the smoke suite.
+The finding took two true statements about D1 tooling and concluded something
+false about the test suite.
+
+**What actually blocked CI was one assertion, not a class of them.**
+`instruction-paths.mjs` ends in `existsSync` against `C:\` paths — eleven of
+them — which cannot resolve on Linux. That is the whole of step 1.
+
+**So step 1 shipped much smaller than proposed, and by a different mechanism.**
+Not a `--portable` flag and not `--section` gating: the check now **probes
+`process.platform`** and skips only its final assertion off Windows. A flag was
+rejected on the finding's own logic — the flagless run here is the merge gate,
+and a flag is a way to opt out of it and still quote the result. The skip is
+placed *after* the two anti-vacuous-pass guards, which touch no filesystem, so
+Linux still proves the paths are being **found** and only declines to say
+whether they exist. That preserves the defence the check's author built twice
+and named in its header.
+
+**Proved by making it fail, not by watching it pass.** Faking
+`process.platform = 'linux'` and re-running the real suite shows the skip firing
+(`absolute paths are not resolved on linux`) with both guards still green.
+
+**That same run also produced twelve failures that are NOT real, and nearly
+sent this in the wrong direction.** All twelve were the wrangler-backed local-D1
+section. The cause was the instrument: overriding `process.platform` changes
+which shell Node's own `spawnSync` selects, so every `npx wrangler` call died on
+`spawnSync /bin/sh ENOENT` — a fault of the fake, absent on a real runner.
+Confirmed directly rather than assumed. **The faked platform can prove the probe
+and can say nothing about the wrangler half**; only a real Linux runner can, and
+this PR's own workflow run is that test, read before the merge rather than
+after.
+
+**Two things added that the finding did not ask for, both defensive:**
+
+- `.github/workflows/*.yml text eol=lf` in `.gitattributes` — kept, but **not
+  for the reason it was added**, and the correction is worth more than the rule.
+  It went in to stop a trailing CR reaching a bash `run:` step. Then the
+  measurement that justified it turned out to be taken with a broken instrument:
+  `grep -c $'\r$'` returns the **line count** for every file in this repo,
+  because the `$'…'` quoting does not survive the tool, so the pattern matches
+  every line. Re-measured with `tr -cd '\r' | wc -c`: git stores **LF** in the
+  index for every text file here — `HEALTH-AUDIT.md`'s committed blob is **0
+  CR** — the CRLF is a working-tree artifact of `core.autocrlf`, and a Linux
+  runner checks out what is stored. **The fault the rule prevents could not
+  occur.** It stays as a pin against a future `core.autocrlf` or attribute
+  change, which is precisely what the `woff2` rule beside it already says of
+  itself, and its comment now says that rather than claiming a live fault.
+  **PR #619's body carries the same broken measurement** — it reports this
+  file's blob as "614 CR for 614 lines" and every neighbour likewise. The
+  conclusion it drew (consistent with its neighbours) was right; the number
+  supporting it was noise. Left standing there as a record, corrected here.
+- `regression.mjs` is deliberately **excluded** from the workflow. It boots
+  `wrangler pages dev` and tears it down along a platform-specific path, making
+  it the piece most likely to be red for reasons that are not about the repo.
+  It is also the most valuable check for a fresh environment, so it should be
+  added — **as its own finding**, once this workflow has a track record.
+
+**Four live claims that this change falsified were corrected in the same PR**,
+per the rule that anything citing a finding goes stale: `CLAUDE.md`,
+`.claude/skills/ship-pr/SKILL.md`, `SETUP.md` and
+`apps/character-creator/docs/operations.md` each said *no CI*. All four now say
+what is true — nothing gates the merge, and the suites report on a PR. The same
+phrase in the audit menus and in `docs/prompts/` was **left alone**: those are
+records.
+
+**The boundary held.** No portability work was done here beyond the single
+platform probe, and `PORTABILITY-AUDIT.md` remains unwritten and unclaimed.
 
 ### G9 — medium — eleven markdown files at the root, and the canonical way to list them misses one
 
