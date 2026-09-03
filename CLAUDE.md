@@ -2,7 +2,14 @@
 
 Plain HTML/JS/CSS, zero dependencies, no build step. There is no `package.json`
 and no `node_modules`; `npx wrangler` resolves from the npx cache. Merging to
-`main` IS the deploy — there is no CI.
+`main` IS the deploy, and **nothing gates that merge**.
+
+Since 2026-09-03 the five smoke suites also run on every pull request
+(`.github/workflows/tests.yml`, `REPO-AUDIT.md` G8). That is **reporting only**:
+it is not a required status check, `main` has no ruleset, and a red run does not
+stop a merge. So it does not move the rule below — the checks still happen
+before the merge or they do not happen — it only means a skipped run gets
+noticed afterwards instead of never.
 
 App conventions and the data model live in `apps/character-creator/README.md`.
 **The migration list is not there** — it moved to

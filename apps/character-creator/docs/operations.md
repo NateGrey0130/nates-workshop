@@ -675,7 +675,10 @@ scripts has met that bar.
 
 The audit that produced most of them is [`docs/rules-audit.md`](rules-audit.md).
 
-Merging to `main` is the deploy — Pages auto-deploys, no CI, no build command.
+Merging to `main` is the deploy — Pages auto-deploys, no build command, and
+nothing gates the merge. The five smoke suites run on every pull request
+(`.github/workflows/tests.yml`, `REPO-AUDIT.md` G8) and report only: they are
+not a required status check and cannot block a deploy.
 Cloudflare Access fronts the whole site with the path left blank, so every route
 including `/api/*` is covered; there is no Access policy-as-code in the repo.
 
