@@ -140,6 +140,15 @@ sentence, in a file nobody had reason to open.
 
 Both would have been "corrected" into falsehoods by a careless pass.
 
+**Re-verified against production on 2026-09-02 and written up as a fixture:**
+`reference/negatives.md`. Score a sweep with it — a proposed edit to any of
+those sentences is a failure however good the rest of the pass was. Two things
+that check turned up. The axe claim is in **six** class records, not the two
+named above, and two of those phrase it as a compound that also asserts Siege
+has no row — a sweep can get Large Axes right and still have answered half the
+question. And the *"twelve poisons"* figure two lines up does not reproduce by
+a name match on `gear`, which returns eight.
+
 Two shapes repeat, and they are worth recognising on sight:
 
 1. **A count in prose.** *"offers five"*, *"two Palladium O.C.C.s"*, *"the
