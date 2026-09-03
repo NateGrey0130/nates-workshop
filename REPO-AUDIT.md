@@ -1,6 +1,6 @@
 # Repository architecture audit — git, GitHub, layout and the merge path, 2026-09-03
 
-**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G12`+`G13` taken together (PR #627); `G4` (PR #628), `G6` (PR #629) and `G14` (PR #630, fixed in #631) taken; `G16` CLOSED BY DECISION - declined and recorded (PR #632); `G2` taken via PATH B - stays public, deliberately (PR #633); `G9` and `G10` closed WITHOUT being taken (PRs #625, #626); `G5`, `G11` and `G15`
+**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G12`+`G13` taken together (PR #627); `G4` (PR #628), `G6` (PR #629) and `G14` (PR #630, fixed in #631) taken; `G16` CLOSED BY DECISION - declined and recorded (PR #632); `G2` taken via PATH B - stays public, deliberately (PR #633); `G17` taken (PR #634); `G9` and `G10` closed WITHOUT being taken (PRs #625, #626); `G5`, `G11` and `G15`
 carry `Adjusted` notes; `G18` filed 2026-09-03. The rest are OPEN.**
 Read the lines under a finding's own heading for its state — this line is a
 convenience and it is the kind of line that goes stale first.
@@ -1280,6 +1280,37 @@ by that licence.
 **Do not treat a licence as protection.** It clarifies intent for the code; it
 does not create a right to redistribute the book content. G2 is where that
 question actually lives.
+
+**Taken, 2026-09-03 (PR #634), unblocked by `G2` choosing to stay public.**
+`LICENSE` (MIT, © 2026 Nathan Rapert) and `NOTICE`.
+
+**Two files rather than one, and the reason is the whole care in this finding.**
+A bare MIT `LICENSE` would have been **worse than none**: it would read as
+licensing the transcribed sourcebook text along with the JavaScript, which is
+not mine to license and not what is meant. But appending a scope note to the MIT
+text makes the file no longer MIT — GitHub's detector stops recognising it, and
+more importantly a modified licence is a licence a reader has to parse rather
+than recognise.
+
+So `LICENSE` is **verbatim MIT**, unambiguous about the code, and `NOTICE`
+carries the scope: what the licence covers, and that the catalog — classes,
+skills, spells, psionic powers, gear and the descriptive text stored with them —
+is Palladium Books' material, not licensed here and not mine to license.
+`NOTICE` says why it exists as a separate file, so nobody later "tidies" it by
+folding it into `LICENSE`.
+
+The README's *A note on the game data*, added by `G2`, gains one sentence
+pointing at both.
+
+**The copyright holder is a real name, and that was a deliberate choice** rather
+than a default: the repo previously showed only the `NateGrey0130` handle, and
+naming a person in a licence on a public repo publishes something the repo did
+not previously carry. Asked and answered rather than assumed.
+
+**This does not make the transcription lawful, and the finding already said
+so.** A licence clarifies intent for the code; it creates no right to the book
+content, and `NOTICE` states that outright rather than implying a permission by
+silence.
 
 ### G18 — medium — a finding does not say whether its central claim was measured or reasoned to
 

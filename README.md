@@ -49,3 +49,7 @@ The audit menus are also where work is tracked.
 The character creator's catalog is transcribed from Palladium Books sourcebooks
 for personal use at one table. This project is unaffiliated with and unendorsed
 by Palladium Books, and the rules text it stores belongs to them.
+
+**The code here is MIT licensed. That licence does not extend to the game
+content** — [`LICENSE`](LICENSE) is the licence, [`NOTICE`](NOTICE) is what it
+does and does not cover.
