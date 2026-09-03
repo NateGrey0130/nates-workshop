@@ -2273,3 +2273,55 @@ the check's own 948, seven rows resolving through a registry alias the harness
 does not implement. **The A-versus-B comparison is over the same 941 either
 way**, so the 2-vs-1 and the zero-regression result stand; the absolute counts
 are the harness's, not the check's. Re-run the check itself when this is taken.
+
+**Taken, 2026-09-03 (PR #614). Posture held: advisory only, exit code untouched,
+no gate.** `found()` is now `new Set([...variants(n), ...variants(dePrefix(n))])`
+and nothing else; the hand-rolled `flat()` and the `and`-elision loop are gone.
+The diff is +32/−31, which is the shape a consolidation should have.
+
+**The acceptance test this finding set was met exactly.** It said the visible
+effect should be *one fewer advisory line*, and that a move larger than that in
+either direction means the diff is wrong. Run against production:
+
+| | |
+|---|---|
+| before | `948 row(s) checked, **2** worth a look` |
+| after | `948 row(s) checked, **1** worth a look` |
+| exit | **0**, `NO DRIFT`, both runs |
+
+The line that went is `Language: Trade Five/Reptile`, closed by the library's
+**slash-half rule** — the case `F19` declined to invent a rule for, arriving for
+free with a length guard better than the one that was declined. What remains is
+`W.P. Automatic and Semi-automatic Rifles`, which is real and is
+`INGESTION-AUDIT.md` `F25`. **The advisory block is now one line, and that line
+is a defect.**
+
+**The objection `F19` raised was re-tested against the real thing before
+switching, not taken on the harness's word.** 27 catalog rows carry an `&` and
+all 27 are found either way; `loose()` strips the `and` that `normalise()`
+introduces. The 18-skill failure the old comment recorded was real against
+`normalise()` **alone**, and was never an argument against `variants()`.
+
+**The prefix strip stayed local, and this is the decision the finding asked to be
+made by measurement.** It said *prefer `drift-check` unless `catalog-diff` is
+measured to want it*. Measured — and `catalog-diff` **does** want it, larger than
+expected. It indexes catalog rows by `variants()` and looks up book-entry names
+against that index, so a prefixed row is indexed with no bare form:
+
+| the 374 prefixed catalog rows, a book printing the BARE name | today | with a de-prefixed form in the index |
+|---|---|---|
+| finds the right row | **0** | **269** |
+| finds nothing | 317 | 49 |
+
+21 de-prefixed keys are claimed by more than one row — `Circle of Rain` is both
+`Air:` and `Water:`, `Cloud of Steam` is Air, Fire and Water — and the library's
+both-sides ambiguity rule refuses those rather than guessing, which is the rule
+working.
+
+**It was still not moved, and the reason is this finding's own posture.** A
+0 → 269 change in what a second tool matches is not *"one fewer advisory line"*;
+it is a different change wearing this one's clothes, and `audit-menu` is explicit
+that a finding taken with the right mechanism and the wrong posture has shipped
+the wrong change. It also moves a pinned smoke section. **So the measurement is
+recorded here and the decision is unfiled** — it wants its own number, and
+whoever takes it starts from the table above rather than from a hunch.
