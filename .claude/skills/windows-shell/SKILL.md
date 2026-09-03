@@ -206,3 +206,24 @@ or a different command name — never a longer string.
 
 **A PATH change does not reach an already-open terminal.** New window, or a
 correct fix reads as broken.
+
+### `--remote` from your shell: measured, not assumed
+
+Hand-off briefs have carried a caution that `drift-check --remote`,
+`deploy-sweep` and a one-row `q.mjs --remote` all **hang past 500s** from the
+agent's Bash tool, and to hand them to Nate instead. Re-measured **2026-09-03**
+from that shell, all three ran clean — `drift-check` five times at ~4 min each,
+`deploy-sweep` in **17s**, `q.mjs` in **8s**, plus six other `--remote` D1 calls.
+The `deploy-sweep` output was byte-identical to the same command in his shell
+minutes earlier.
+
+**That is not a promise, and one clean day does not disprove an intermittent
+fault.** What it does mean is that **deferring these commands is a cost, not a
+default** — a session that hands all three over is paying for a fault nobody has
+reproduced. Run them; if one hangs, that is new information.
+
+**If it hangs, capture it before retrying** — the same instruction `M18` gives,
+for the same reason. The command, how long it ran, whether any output appeared,
+and `Get-Process node,workerd` while it is still stuck. Anything gathered after a
+retry describes a machine that already recovered. `MACHINE-AUDIT.md` `M21` holds
+the measurements and the two citations that sent readers to the wrong findings.
