@@ -6,10 +6,12 @@ brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
 `low`. Nothing here is taken until Nate names it; one PR per finding, outcome
 note appended under the finding in the same PR.
 
-**Status, 2026-09-02: `M1`–`M18` are all taken and closed. `M19` and `M20` are
-OPEN** — filed later the same day by the documentation audit
-(`DOCS-AUDIT-2.md`), which found them on this menu's surface rather than its own.
-Both are `low` and neither touches anything `M1`–`M18` established.
+**Status: `M19`, `M20` and `M21` are OPEN, all `low`. Everything else on this
+menu is taken and closed** — status for any one of them lives under its own
+heading, and this line deliberately does not count them. `M19` and `M20` were
+filed 2026-09-02 by the documentation audit (`DOCS-AUDIT-2.md`), which found
+them on this menu's surface rather than its own; `M21` was filed 2026-09-03 and
+neither touches what the closed findings established.
 `M18` is an OBSERVATION rather than a finding — the fault it records is still
 unexplained, every hypothesis raised against it is dead or cannot be provoked, and its
 recorder was repaired the same day it shipped. Taking it meant attempting a
@@ -1707,3 +1709,72 @@ limited to sessions started in a directory nothing starts in any more. `M15`
 declined a comparable cosmetic duplicate — the old `Downloads` key in
 `~/.claude.json`, which it checked and found harmless — and the same reasoning
 covers this one.
+
+### M21 — low — the "`--remote` hangs from the agent's shell" caution is in no repo file, and all three of its commands ran clean
+
+A hand-off prompt written the evening of 2026-09-02 tells the next session that
+`drift-check --remote`, `deploy-sweep` and a one-row `q.mjs --remote` all **hung
+past 500s** from the agent's Bash tool with no output and no lingering
+`node`/`workerd`, then ran fine in Nate's PowerShell moments later. Its
+instruction is *"do not diagnose Cloudflare from a hang here — ask him to run
+it."*
+
+**Re-measured 2026-09-03, from the agent's Bash tool, on this machine:**
+
+| command | result | time |
+|---|---|---|
+| `node scripts/drift-check.mjs` (defaults to `--remote`) | clean, exit 0, **5 completions** across the day | ~4 min each |
+| `node scripts/deploy-sweep.mjs` | clean, exit 0 | **17.2s** |
+| `node scripts/q.mjs "SELECT count(*) FROM skills"` (`--remote`) | clean, exit 0, returned `345` | **7.6s** |
+
+Roughly six further `--remote` D1 calls the same day — `audit-citations
+--remote`, and four ad-hoc queries through `d1-query-lib` — also completed. **No
+hang, no partial output, no zombie process.** The deploy-sweep output was
+byte-identical to the same command run in Nate's own shell minutes earlier,
+three times.
+
+**This does NOT refute the 2026-09-02 observation, and the distinction is the
+whole point of filing it.** An intermittent fault is not disproved by a clean
+run; `M18` is the local precedent and it makes the argument better than this
+finding can — it attempted reproduction, failed, and recorded the failure *as a
+result* rather than as an explanation. Same posture here. What is established is
+narrower and still useful: **the caution is not a standing property of this
+machine**, so a session that defers all three commands on the strength of it is
+paying a real cost against an unreproduced fault.
+
+**Two pointers in that prompt are wrong, and that is the more durable defect.**
+
+- It cites **`M18`**. `M18` is `CommandNotFoundException` on a bare command name
+  — a command that does not *resolve*. A `--remote` call that hangs *after*
+  resolving is a different fault, and `M18` says nothing about it.
+- It cites **`windows-shell` → *Nate's shell is not your shell***. That section
+  is about PATH and alias differences — which program answers a name. It also
+  says nothing about hangs.
+
+**The caution exists in no file in this repo.** Not in this menu, not in
+`windows-shell`. It has been carried between sessions only inside hand-off
+prompts, which is why it has never been re-measured and why its two citations
+were never checked against what they point at.
+
+**Proposal:** one sentence in `windows-shell`, under *Nate's shell is not your
+shell*, recording that these three were measured working from the agent's shell
+on 2026-09-03 with times, and that a hang — if it recurs — should be captured
+rather than worked around. A skill is the right home because it is the surface
+that actually reaches a session started anywhere on this machine; a finding in
+this file does not.
+
+**Posture: documentation only, one sentence, and NO WORKAROUND.** Explicitly
+**not** a rule that these commands are safe to assume — that is the error this
+finding is correcting, inverted. And **no check**: there is nothing to assert
+about a fault nobody can reproduce.
+
+**If it recurs, capture it before running anything else** — the same instruction
+`M18` gives, for the same reason. From the failing shell: the exact command, how
+long it ran, whether any output appeared, and `Get-Process node,workerd` while
+it is still stuck. Everything gathered after a retry describes a machine that
+already recovered.
+
+**Decline it** if you would rather the caution keep being carried by hand in the
+brief. That is a real position — it costs one deferred command per session and
+never risks an agent confidently diagnosing Cloudflare from a hang, which is the
+failure the original warning was written to prevent.
