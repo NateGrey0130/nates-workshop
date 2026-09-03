@@ -1,8 +1,11 @@
 # Character creator — ingestion and tooling audit, 2026-08-26
 
-> **All 24 findings are closed**, re-verified on 2026-09-02. The header corrections
-> below track how the open list shrank; the last of them ends *"NONE now — the
-> menu is clear."*
+> **`F25` is OPEN**, filed 2026-09-03 — the first thing open on this menu since
+> it was cleared. Everything before it is closed and was re-verified on
+> 2026-09-02; the header corrections below track how that list shrank, and the
+> last of them ends *"NONE now — the menu is clear."*, which was true the day it
+> was written. Status for any finding lives under its own heading; this line
+> deliberately does not count them.
 >
 > **Two that misread, in opposite directions.** `F12`, `F16` and `F19` close as
 > **moot** in a retirement table roughly 1,300 lines from their headings, so
@@ -2731,6 +2734,94 @@ no exit code moved.**
 book with no page range at all — larger than what was repaired here. The
 *Index of Rifts Magic* that resolved these 231 covers them too. Scoped as its
 own book batch, not as an item on this menu.
+
+### F25 — four W.P. rows cite RUE for skills RUE replaced, and the catalog already holds the replacements
+
+`W.P. Automatic and Semi-automatic Rifles` was one of the two rows
+`BOOK-INGEST-AUDIT.md` `F19` set aside as *"a data question, keep it out of the
+PR that changes the check"*. Read against the book, it is not a naming variance.
+**RUE does not have that W.P., and it does not have three of its neighbours
+either.**
+
+RUE prints **one** rifle proficiency, on printed 328 (cached `p331.txt`, offset
+3):
+
+> **W.P. Rifles**: A familiarity with the very accurate, single shot,
+> bolt-action style of rifles used for hunting and sniping, and automatic and
+> semi-automatic, military assault rifles like the M-16 and AK-47.
+
+and one handgun proficiency, `W.P. Handguns`, on the same printed page. Its W.P.
+checklist on printed 303 lists neither an Automatic Pistol, nor a Revolver, nor
+a Bolt Action Rifle. Measured against the whole 382-page cache, 2026-09-03:
+`w p automatic`, `w p revolver` and `w p bolt action` appear **nowhere in the
+book**, in any form.
+
+**The offset was checked rather than assumed**, because it is where a citation
+finding goes wrong quietly. `page_offset` is 3, so a cached `pNNN.txt` is printed
+`NNN - 3`, and three of the catalog's own correct W.P. citations confirm it
+independently: cached `p329` → printed 326, which is where `W.P. Archery` is
+cited; `p330` → 327, `W.P. Knife`; `p332` → 329, `W.P. Energy Pistol`. The
+checklist at printed 303 is likewise the tail of the `p.302-303` that
+`W.P. Rifles` and `W.P. Handguns` already carry.
+
+These four are the **pre-RUE breakdown** that RUE consolidated:
+
+| catalog row | cited as | RUE's actual entry |
+|---|---|---|
+| `W.P. Automatic and Semi-automatic Rifles` | `Rifts Ultimate Edition` | `W.P. Rifles` (printed 328) |
+| `W.P. Bolt Action Rifle` | `Rifts Ultimate Edition` | `W.P. Rifles` (printed 328) |
+| `W.P. Automatic Pistol` | `Rifts Ultimate Edition` | `W.P. Handguns` (printed 328) |
+| `W.P. Revolver` | `Rifts Ultimate Edition` | `W.P. Handguns` (printed 328) |
+
+**The catalog already holds both replacements**, correctly cited as
+`Rifts Ultimate Edition p.302-303`. So this is four duplicate rows under
+superseded names, not four missing ones.
+
+**The tell is structural, and worth more than the four rows.** Every W.P. row
+in the catalog that carries a page number is real. Five carry the bare string
+`Rifts Ultimate Edition` with no page, and four of those five are these. The
+fifth, `W.P. Heavy M.D. Weapons`, is genuine. **A pageless citation is where
+this defect lives**, which is a cheaper thing to look for than a name.
+
+**This will go quiet on its own if `F19` is taken first, and that is the reason
+to record it now.** `F19` proposes searching the book for the row's name with
+its prefix stripped. Three of these four then MATCH — on prose, not on a
+definition. RUE writes *"Typical Payload: Revolver: Six bullets. Automatic
+Pistol: 8-16 rounds"* in a weapon stat block, and *"bolt-action rifle"* in a
+list of gun types. None of those is a W.P. **A whole-book name search cannot
+tell "the book defines this" from "the book uses these words"**, so `F19`'s fix
+silences three real citation errors while clearing 213 false ones. That is not
+an argument against `F19` — it is the limit to write down before anyone relies
+on a quiet advisory block.
+
+**Proposal:** repoint the four rows at what actually prints them, or retire
+them into the two RUE entries the catalog already has. Both are defensible and
+the choice is a catalog-naming decision rather than a factual one — the pre-RUE
+names exist in earlier Palladium books, so *repoint* keeps a real distinction
+that RUE dropped, and *retire* matches the edition the rest of the W.P. list is
+cited from.
+
+**Posture: data only, one script, no schema and no check.** Nothing here asks
+for a gate; `F19` owns the tooling half and this owns the rows.
+
+**Measured cost, production, 2026-09-03 — it is not a free rename.**
+
+| | |
+|---|---|
+| published classes naming any of the four | **0** |
+| `character_grants` rows naming any of the four | **0** |
+| **live characters holding one** | **1** |
+
+Character `9914` (*Donald*, `chiang-ku-dragon`, level 5) holds **both**
+`W.P. Automatic Pistol` and `W.P. Automatic and Semi-automatic Rifles`. Any
+retire-and-merge therefore moves a live sheet and wants a data script that
+rewrites that character's skills, not a `UPDATE skills SET name`. Re-check that
+count when this is taken; it was 1 of 4 characters on the day it was filed.
+
+**The other row `F19` set aside is fine and needs nothing.** `Summon and Control
+Canines` cites `Rifts Book of Magic p.131` and the book prints it there — as
+**`Summon & Control Canines (ritual)`**, with an ampersand. That is a defect in
+the check, not the row, and it is recorded under `F19` rather than here.
 
 
 ---

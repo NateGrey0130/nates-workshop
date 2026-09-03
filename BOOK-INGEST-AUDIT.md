@@ -2087,3 +2087,41 @@ Canines` (Book of Magic) are absent with and without a prefix. A book that
 writes a name differently reads exactly like one that never had it — the
 advisory's own warning — so those want their cited pages read by eye rather than
 a code change, and not in the PR that changes the check.
+
+**Adjusted 2026-09-03 — both were read, and only one of them is a data
+question.**
+
+`Summon and Control Canines` is **a third artifact of this same check**. Book of
+Magic printed 131 — cached `p132.txt`, offset 1 — prints **`Summon & Control
+Canines (ritual)`**, so the citation is exactly right. The flattener deletes the
+book's `&`, leaving `summon control canines`, which is present; the catalog
+spells the word out, giving `summon and control canines`, which is not.
+`found()` already expands `&` to `and` on the NAME side, for a catalog name
+carrying an ampersand — the comment beside it records that case and the 18
+skills it was written for. **There is no transform in the other direction**, so a
+catalog name that spells *and* can never meet a book that printed `&`. Its five
+siblings — *Animals*, *Entity*, *Rain*, *Storm*, *Rodents* — each appear
+somewhere in `bom` with *and* spelled out, which is the only reason this row is
+alone in the advisory rather than joined by all six. **Worth folding into this
+finding's proposal when it is taken:** an `and`-elided form is the same shape of
+variant as the prefix strip, in the same `forms` set.
+
+`W.P. Automatic and Semi-automatic Rifles` **is** a data question, and it is four
+rows rather than one. Filed as `INGESTION-AUDIT.md` `F25`.
+
+**`F25` also names a limit of the proposal above, which belongs here.** A
+de-prefixed whole-book name search matches **prose**. Three rows beside that one
+— `W.P. Automatic Pistol`, `W.P. Revolver`, `W.P. Bolt Action Rifle` — cite RUE
+for proficiencies RUE does not define, and every one of them goes quiet under
+this fix, because RUE writes *"Typical Payload: Revolver: Six bullets. Automatic
+Pistol: 8-16 rounds"* in a weapon stat block and *"bolt-action rifle"* in a list
+of gun types. **This check cannot tell "the book defines this" from "the book
+uses these words."** Clearing 213 false alarms will also hide three true ones.
+That argues for keeping the block advisory — which it already is, and which this
+finding's posture already requires — not for leaving it noisy.
+
+So the residual after this fix is **three lines printed**: `Language: Trade
+Five/Reptile` and `Summon and Control Canines`, both artifacts of the check, and
+`W.P. Automatic and Semi-automatic Rifles`, which is real. Plus **three real
+citation errors that stop being printed**, which is the part a reader of a quiet
+advisory block would not know to look for.
