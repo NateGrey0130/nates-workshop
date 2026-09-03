@@ -22,7 +22,11 @@ did, never as the reason to skip one. `regression.mjs` is not in it at all.
 
 ## The loop
 
-1. **Branch.** Never commit to `main` — it deploys.
+1. **Branch.** Never commit to `main` — it deploys. Since 2026-09-03 a GitHub
+   ruleset refuses a direct push to `main` server-side, so this is enforced
+   rather than remembered (`REPO-AUDIT.md` G1) — but it fires at `git push`,
+   after you have already committed, and unpicking a commit made on `main` is
+   still your problem. Branch first.
    ```bash
    git checkout -b short-kebab-description
    ```

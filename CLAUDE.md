@@ -231,6 +231,41 @@ schema that rejects unrecognised top-level keys, so the `"//"` convention that
 `.claude/launch.json` uses is refused there — which is why this explanation lives
 here instead. See `HEALTH-AUDIT.md` F6.
 
+### And since 2026-09-03 the allowlist is no longer the only thing holding that line
+
+`git push` being absent above stops **an agent in this repo**. It is a
+client-side convention on one machine, and it stopped nothing else: not a
+session started elsewhere, not a push by hand, not a second machine.
+
+There is now a GitHub **ruleset** on `main` — *"main: require a pull request"* —
+that refuses a direct push server-side (`REPO-AUDIT.md` G1). Exactly one rule,
+and the list of what it does **not** do is the point:
+
+| | |
+|---|---|
+| required approving reviews | **0** — self-merge works |
+| required status checks | **none**, and the `tests` workflow is deliberately not one |
+| conversation resolution | not required |
+| linear history, signed commits, deletion, force-push rules | not enabled |
+| bypass actors | **none** |
+
+**So the merge button is exactly as free as it was, and only the bypass is
+gone.** If anything about merging got harder, that is a defect rather than the
+rule working.
+
+**It is not a lock-out.** An admin can delete or disable the ruleset from the
+repository's Rules settings in seconds, which is the escape hatch the emergency
+direct push used to be — and that hatch was measured before this went in: **21
+direct pushes, all of them between 2026-04-18 and 2026-04-26**, the repo's first
+nine days, and **none in the four months and ~600 pull requests since.**
+
+**A caution about measuring that yourself**, because the obvious command is
+misleading: `git log --first-parent --no-merges main` reports **138** commits
+here, and **117 of them are squash-merged pull requests** carrying a `(#N)`
+suffix. Squash merges reach `main` without a merge *commit* while still going
+through a PR. Filter on the suffix, or you will conclude this repo has been
+pushed to directly a hundred times.
+
 ### There is a SECOND allowlist, and it is not this one
 
 `C:\Users\natha\Projects\workshop\.claude\settings.local.json` — untracked,
