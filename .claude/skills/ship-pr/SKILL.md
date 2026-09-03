@@ -30,6 +30,13 @@ did, never as the reason to skip one. `regression.mjs` is not in it at all.
    ```bash
    git checkout -b short-kebab-description
    ```
+   **If the change takes a numbered finding, the branch and the commit subject
+   name the menu** — `ui-audit-f30-banked-picks` and `Take UI-AUDIT F30: …`,
+   not `f30-banked-picks` and `Take F30: …`. Eleven menus number with `F`,
+   three with `D` and two with `N`, so a bare number identifies nothing once
+   the branch is deleted and `git log --grep` is all that is left. Anything
+   that is **not** a finding keeps the plain slug above. `audit-menu` →
+   *Which is why a finding reference names its menu*; `REPO-AUDIT.md` G12/G13.
 2. **Make the change.**
 3. **Apply schema and data FIRST, if the change needs them.** See
    [ordering](#the-ordering-rule) below. This is the step that is wrong by

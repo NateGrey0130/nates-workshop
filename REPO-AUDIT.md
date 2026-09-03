@@ -1,6 +1,6 @@
 # Repository architecture audit — git, GitHub, layout and the merge path, 2026-09-03
 
-**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G9` and `G10` closed WITHOUT being taken (PRs #625, #626); `G5`, `G11` and `G15`
+**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G12`+`G13` taken together (PR #627); `G9` and `G10` closed WITHOUT being taken (PRs #625, #626); `G5`, `G11` and `G15`
 carry `Adjusted` notes; `G18` filed 2026-09-03. The rest are OPEN.**
 Read the lines under a finding's own heading for its state — this line is a
 convenience and it is the kind of line that goes stale first.
@@ -894,6 +894,37 @@ hook enforcing a prefix would be one.
 currently unique to one menu, so the rule bites almost entirely on `F`. Say that
 in the rule, or it reads as heavier than it is.
 
+**Taken with `G13`, 2026-09-03 (PR #627). Posture held: convention,
+documentation only, no hook and no check, going forward only.**
+
+**The caution directly above is wrong, and the rule is heavier than it says.**
+Censused 2026-09-03 by walking every menu's own headings: **`D` is used by three
+menus** — `DOCS-AUDIT`, `DOCS-AUDIT-2` and `apps/character-creator/AUDIT` — and
+**`N` by two**, `SKILL-AUDIT` and `REDESIGN-AUDIT`. Three prefixes collide, not
+one. The caution was reasoned from the shape table in the `audit-menu` skill
+rather than from the tree, which is failure shape one again, in a paragraph
+warning the reader not to overstate the finding.
+
+`S`, `T` and `P` are absent from that census because they are **not headings** —
+`CLASS-AUDIT`'s `S` items are bullets, `pick3cut5/AUDIT`'s `T` items are bold
+paragraph leads — so the real figure is a floor, not a total. The skill's own
+heading table says so, and the census inherits the blind spot it warns about.
+
+**Shipped in two places, neither of them a new document.** `audit-menu` gains
+*Which is why a finding reference names its menu*, placed deliberately against
+the existing *"grep the whole tree for its number"* rule — **that grep is the
+tool this finding exists to un-break**, and the two paragraphs now sit together.
+`ship-pr` step 1 gains the branch-and-subject form, which is `G13`.
+
+**One boundary the rule states explicitly:** inside its own file a bare number
+stays correct — `G12` referring to `G9` needs no prefix, and adding one there is
+noise. The rule binds only where a number is written **outside** its own menu:
+commit subjects, branch names, and cross-references from another menu, a skill
+or a memory file.
+
+**History is not rewritten.** The nine unqualified subjects already in `git log`
+stand.
+
 ### G13 — low — branch names come in at least three shapes
 
 From the last 60 merges: `<menu>-<id>-<slug>`
@@ -911,6 +942,21 @@ in the same `ship-pr` edit.
 
 **Posture: convention only.** Filed separately so it can be declined
 independently if G12 is taken narrowly.
+
+**Taken with `G12`, 2026-09-03 (PR #627), exactly as this finding asked — folded
+into the same `ship-pr` edit rather than taken separately.**
+
+The shape shipped as `<menu>-<id>-<slug>` for a finding and a plain slug for
+everything else, which preserves the existing `short-kebab-description` line
+above it rather than replacing it: **most branches here are not findings**, and
+`memory-store-junctions` or `test-extract-smoke-modules` were never wrong.
+
+**This PR's own branch was renamed before pushing** to obey the rule it
+introduces — `repo-audit-g12-g13-qualify-refs`, not the
+`g12-g13-qualify-finding-refs` it was created as. Worth recording because the
+first branch created under the new convention broke it, which is the same
+lesson `SKILL-AUDIT` keeps filing: **a rule written today does not fire
+tomorrow by itself.**
 
 ### G14 — high — the Pages check went red for 65 consecutive merges and nobody saw it
 
