@@ -1,7 +1,7 @@
 # Meta-audit — the menus as a reference, and the discipline that fills them, 2026-09-03
 
-> **STATUS: `A3`, `A4`, `A5` and `A11` are taken (PRs #643, #645, #644, #642).
-> The other eight are OPEN.** Filed
+> **STATUS: `A3`, `A4`, `A5`, `A11` and `A12` are taken (PRs #643, #645, #644,
+> #642, #646). The other seven are OPEN.** Filed
 > 2026-09-03 against `main` @ `3332349` (the merge of #641). Findings are
 > `### A<n> — <severity> — <title>`, severity lowercase. Status for any finding
 > lives under its own heading; this line does not count them.
@@ -1273,6 +1273,42 @@ existing decline of one is left standing.**
 **Evidence:** `ls` of both directories and `md5sum` on the two pairs, 2026-09-03;
 `grep -rl "REPO-AUDIT"` across `Downloads\` and `workshop\` returning one file;
 `docs/prompts/README.md` read in full the same day.
+
+**Taken, 2026-09-03 (PR #646), as proposed. Posture held: two files copied,
+three README rows, and NO rule requiring a future brief to land here** — that
+decision stands and the finding said not to touch it.
+
+`docs/prompts/` gains `docs-audit-2-prompt.md` and `meta-audit-prompt.md`, plus a
+row recording that `REPO-AUDIT.md`'s brief was never saved.
+
+**The records were copied, not edited, and that was proved rather than
+asserted.** The README's own first rule is *"These are records, not documents. Do
+not edit them to match what happened."* Both files were written CRLF to match
+every other file in this working tree, and then the **staged blob was compared
+byte-for-byte against the source**: identical for both. Git stores LF for `.md`
+here — `core.autocrlf` is `true` and `.gitattributes` pins only `*.sql` and the
+workflow YAML — so the working-tree conversion is invisible in the commit and the
+archived record is the brief exactly as it was written.
+
+**`A11`'s grep found the governing decision, and it is a boundary rather than a
+block.** `docs/prompts/README.md` ends *"Nothing requires a future prompt to land
+here. This is an archive, not a process."* `A12` anticipated that and proposed
+nothing against it; this PR copies two files and states an absence, and adds no
+rule, no check and no obligation.
+
+**The `REPO-AUDIT` row says more than `A12` asked for, and the addition is
+argued.** `A12` proposed recording that the brief was not kept. The row also
+carries what that costs, because `A9` establishes the discipline travels by
+brief — and it is labelled **a correlation and not a demonstrated cause**, which
+is the whole point of the menu it sits in. Stating the absence without stating
+why it matters would have been a tidier row and a less useful one.
+
+**Deliberately not done: the duplicate pairs.** Two byte-identical brief pairs
+still exist across `Downloads\` and `workshop\briefs\`, the same shape
+`DOCS-AUDIT-2` `D3` deleted two of this morning. They are outside the repo, `D3`
+is closed, and this finding said explicitly not to propose anything about them.
+The shape stays recorded here so the next reader knows deleting pairs does not
+reach the naming habit that produces them.
 
 ---
 
