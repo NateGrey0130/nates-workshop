@@ -263,6 +263,34 @@ list has to be extended by hand. Tagging gear would fix this properly; it was
 deferred as a larger change than the problem currently warrants. See
 [Starting gear the class leaves open](wizard-and-sheet.md#starting-gear-the-class-leaves-open).
 
+**A vehicle row in `gear` is lossy, and that is a decision rather than an
+oversight.** `gear` holds one `mdc`, one `damage`, one `range`, one `payload`.
+A Palladium vessel prints M.D.C. **by location** — main body, engines, turrets,
+sensors, each with its own destruction rules — a numbered list of five to eight
+weapon systems, crew and passenger capacity separately, and speed in three
+regimes. Stored as `gear`, most of that entry has nowhere to go.
+
+Measured on production 2026-09-03: of **36** rows with `category = 'vehicle'`,
+**24** carry their per-location breakdown as prose inside `description`, and
+**4** cram more than one weapon system into `damage`. So `mdc` on a vehicle row
+is the **main body alone** — a Glitter Boy's arms and legs are not in it — and
+the rest is present but unreadable, sitting in prose no code parses.
+
+**The 25 vessels Phase World prints are deliberately not imported at all**, and
+its survey says so in its extraction plan. The one exception is the Noro Mystic
+Warrior's `Psionic Power Armor`, imported because a class is *issued* it and the
+sheet was wrong without it.
+
+**Why there is no `vehicles` table and no JSON `systems` column.** Both were
+considered and neither is built, because nothing in the app does anything with a
+starship: re-checked 2026-09-03, no table and no column anywhere in 40 tables
+names a vehicle, vessel or ship. A JSON column nothing reads is the
+silent-storage failure `class-import` warns about, and a nine-place table for a
+feature nobody has asked for is worse. **Reopen this the moment something asks**
+— the 24 rows whose breakdown already sits in prose are the backfill it would
+start from. `BOOK-INGEST-AUDIT.md` `F3` carries the full reasoning and the
+options.
+
 **Migrations are still applied by hand.** `schema_migrations` records what has
 run where and the smoke test checks it, but applying a migration is still a
 manual `wrangler d1 execute` per environment. That is a deliberate stopping

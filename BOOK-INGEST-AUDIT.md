@@ -341,6 +341,42 @@ in prose are the backfill it would start from.
 Regression 228, with the clean-run gear count moved 1024 -> 1025 - the check
 that pins it is what caught the row landing.
 
+**The schema half is now CLOSED, 2026-09-03 (PR #616), as the third option:
+keep dropping, and say so where a reader will find it.** No `vehicles` table, no
+JSON `systems` column, no migration, no data touched. `F3` is fully closed.
+
+**The decision was made on the measurement this finding asked for, and the
+measurement has not moved in a month.** `F3` says the choice *"is about what the
+app wants to do with a starship, which nothing has asked for."* Re-checked
+against production:
+
+| | 2026-08-31 | 2026-09-03 |
+|---|---|---|
+| `gear` rows with `category = 'vehicle'` | 35 | **36** |
+| ...carrying a per-location breakdown in `description` | 23 | **24** |
+| ...cramming more than one weapon system into `damage` | 4 | **4** |
+| tables or columns anywhere naming a vehicle, vessel or ship | — | **0**, across 40 tables |
+
+The `+1` on the first two rows is the `Psionic Power Armor` this finding's own
+first half imported. **Nothing has asked**, which is the whole basis for
+declining the other two options — and this finding's own note supplies the
+argument against the cheaper of them: *a JSON column nothing reads is the
+silent-storage failure `class-import` warns about*. A nine-place table for a
+feature nobody has requested is worse than that, not better.
+
+**"Say so" was the part actually missing, and it is what shipped.** `F3` has said
+since 2026-08-28 that a thin vessel row is a choice, and that sentence has lived
+only inside a 2,400-line audit menu. A reader who opens `gear` and sees `mdc:
+170` on a power armour has no way to reach it. The standing limitation is now in
+`docs/known-limitations.md` beside the other gear entries, with the numbers, the
+reason both schema options were declined, and the trigger for revisiting.
+
+**This is the reversible option and it was chosen partly for that.** Nothing is
+foreclosed: the 24 rows whose breakdown already sits in prose are the backfill a
+future `vehicles` table would start from, and that is written down where the
+next person will be standing. **Reopen it the moment something asks** — a sheet
+that renders a vessel, a GM lookup, a class that grants one beyond the Noro.
+
 ### F4 — The language-pick invariant matches on prose, and missed one of three
 
 `regression.mjs` holds a good rule: an "any language" pick must offer the
