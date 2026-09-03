@@ -1,8 +1,9 @@
 # Meta-audit — the menus as a reference, and the discipline that fills them, 2026-09-03
 
-> **STATUS: `A2`, `A3`, `A4`, `A5`, `A7`, `A8`, `A9`, `A11` and `A12` are taken
-> (PRs #647, #643, #645, #644, #647, #648, #649, #642, #646). `A1`, `A6` and
-> `A10` are OPEN.** Filed
+> **STATUS: `A2`–`A9`, `A11` and `A12` are taken. `A1` and `A10` are OPEN.**
+> Read each finding's own heading for its state and its PR number; this line does
+> not carry them, for the reason `A6` records about statuses held anywhere but
+> under the finding. Filed
 > 2026-09-03 against `main` @ `3332349` (the merge of #641). Findings are
 > `### A<n> — <severity> — <title>`, severity lowercase. Status for any finding
 > lives under its own heading; this line does not count them.
@@ -911,6 +912,56 @@ pipeline eating the first character of every filename. Re-run correctly, the
 index is perfect. **A tree-wide disagreement is more likely to be your parser
 than the tree** — the same lesson `G8` recorded twice about a faked
 `process.platform` and a broken `grep -c $'\r$'`.)*
+
+**Taken, 2026-09-03 (PR #650). Posture held: corrections to existing memories,
+and NO memory listing open work** — that was the finding's own recommendation
+against itself and it stands.
+
+**`A11`'s grep found the governing rule, and I was already inside it.**
+`audit-outcome-notes-vary-in-wording` records a `MEMORY.md` line that went stale
+in **seventeen minutes** on 2026-09-02, and the decision it produced:
+
+> the index lines here no longer quote finding ranges or "all closed" for any
+> menu: they say what the menu is *about* and send the reader to its header.
+
+So the fix was settled a day before this finding was written, and applied to six
+lines. **What this PR found is that the rule was applied to `MEMORY.md`'s index
+lines and stopped there** — the memories' own bodies and `description:` fields
+kept the defect, and a `description:` is loaded exactly the same way. That is the
+finding underneath `A6`, and it was not visible until the rule was found.
+
+**`A6` named two stale lines. Reading found four, plus two more of the same shape
+in a layer it did not consider.**
+
+| | said | true |
+|---|---|---|
+| `MEMORY.md`'s `MACHINE-AUDIT` line | `M19`/`M20` filed OPEN | `M19`/`M21` taken, `M20` superseded by `M22` |
+| `machine-audit-menu.md` body + `description` | `M1`–`M18` closed, nothing open | silent on `M19`–`M22` entirely |
+| **`MEMORY.md`'s `DOCS-AUDIT-2` line** | `D1`-`D3` open | **all three taken 2026-09-03** |
+| **`docs-audit-2-menu.md` body + `description`** | `D1`-`D3` open, nothing taken | as above |
+| `repo-audit-menu.md` | PRs `#619-#640` | short by one before the day ended (`#641`) |
+| **`class-audit-menu.md` `description`** | *"S1-S9 remain"* | **all nine done 2026-08-26, PR #330** |
+
+**Every one is now a pointer rather than a restatement**, which is the shape the
+rule prescribes and the only shape that cannot rot. The two `MACHINE-AUDIT`
+sources also record *why* the guard failed: both already carried *read its header,
+never this line*, and **a line that says do not trust me is still the line that
+gets read.** Removing the restatement is what the guard could not do.
+
+**One thing added beyond the proposal, and it is the gap `A6` measured.**
+`META-AUDIT.md` had no memory at all, so nothing in the store pointed at the menu
+carrying the open work — the exact failure `A6` names, arriving about itself.
+`meta-audit-menu.md` now exists. **It states no status**, per the rule: it carries
+what the menu is *about*, its own severity-order trap, the declined index, the
+subject grep, and a pointer to its header.
+
+**Still not done, and still recommended against:** a memory listing the open
+items. It would be a status field one layer further from anything that could
+contradict it, which is `A1`'s argument and this finding's own.
+
+**Verified after the edits:** 67 index links against 67 files, zero orphans in
+either direction, and no memory now states a menu status that its header
+contradicts.
 
 ---
 
