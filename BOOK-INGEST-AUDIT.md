@@ -2189,3 +2189,87 @@ paragraph above says to decide separately. The proof here is the before/after
 pair on the same catalog on the same day, plus the set comparison — not a
 fixture. Worth knowing when the consolidation above is taken: that refactor is
 what would make this matcher testable at all.
+
+### F20 - two name matchers, one of them shared and tested, and `drift-check` uses the other
+
+`F19`'s outcome note records this and gives it no number. This is the number.
+
+`scripts/catalog-match-lib.mjs` is a name-matching library built from real
+Palladium-vs-catalog differences, used by `catalog-diff.mjs` and pinned by
+`apps/character-creator/test/checks/catalog-matching.mjs`. `drift-check`'s
+`found()` is a **second, hand-rolled matcher** that solves the same problem
+worse, and every variant `F19` added to it already existed in the library:
+
+| the library already has | `found()` after `F19` |
+|---|---|
+| `loose()` — drops `and` and `or` | a hand-rolled ` and ` elision |
+| singular/plural on the last word | the same, hand-rolled |
+| `stem()` — parenthetical dropped | the same, hand-rolled |
+| **a slash-half rule**, guarded by a substantial-half length test | **nothing** |
+| — | **the category-prefix strip**, which the library does not have |
+
+**Measured 2026-09-03, over the 941 catalog rows whose cited book has a cache,
+each against its own book:**
+
+| matcher | rows flagged |
+|---|---|
+| `found()` as it stands after `F19` | **2** |
+| `variants(name)` + `variants(dePrefix(name))` | **1** |
+| flagged by the library and **not** by `found()` | **0** |
+
+**Zero regressions, and one fewer false alarm.** The row the library resolves and
+`found()` does not is `Language: Trade Five/Reptile` — the `/` gloss `F19`
+explicitly declined to invent a rule for. The library's rule is better than the
+one that was declined: it takes a slash half only when the half is at least
+substantial relative to the whole, so it does not register `toxin` as an alias of
+*Impervious to Poison/Toxin*, which is the failure a naive split produces.
+
+**The objection `F19` raised against this does not survive measurement, and that
+is the point of filing it.** `F19` declined the consolidation because
+`variants()` runs through `normalise()`, which expands `&` to `and`, where
+`flat()` deletes it — and the comment in `found()` records **18 skills** that
+went missing when that expansion was applied alone. Tested directly: **27 rows
+carry an `&` in their name, and all 27 are found by both matchers.** None is lost.
+`loose()` is why — it strips the `and` that `normalise()` introduced, so the pair
+covers the reading `flat()` gets in one step. The 18-skill failure was real
+against `normalise()` *alone*; it is not an argument against `variants()`, which
+is `normalise()` plus the compensating form.
+
+**Proposal:** replace the hand-rolled set in `found()` with `variants()` from the
+library, keeping the de-prefixed name as a second call —
+`new Set([...variants(n), ...variants(dePrefix(n))])` is the whole of it. That
+deletes the duplicate and inherits the slash rule, the length guard and the
+library's tests.
+
+**The one real decision: where the prefix strip lives.** The library has no
+notion of a category prefix, and there are two places to put it:
+
+- **In `drift-check`**, as it is now — the library is untouched, `catalog-diff`
+  is unaffected, and `test/checks/catalog-matching.mjs` needs no change. Smaller,
+  and leaves the prefix knowledge outside the shared thing that has tests.
+- **In `variants()`** — `catalog-diff` gets it too, which is probably right,
+  since a catalog row prefixed `Air:` is as hard for that tool to match as for
+  this one. But it changes behaviour that a smoke section pins, so the test moves
+  in the same PR and the blast radius is real.
+
+**Prefer the first unless `catalog-diff` is measured to want it**, and measure
+that before deciding rather than reasoning about it — `F19` reasoned about the
+`&` case and was wrong.
+
+**Posture: advisory only, exit code untouched, no gate**, exactly as `F19`. This
+is a refactor whose visible effect is one fewer advisory line; if the count moves
+by more than that in either direction, something else changed and the diff is
+wrong.
+
+**It also makes the matcher testable, which nothing else will.** `found()` is a
+closure inside the per-book loop and has no test of its own; `F19` recorded that
+and declined the extraction as out of scope. Consolidating removes the closure's
+reason to exist, and `variants()` arrives already covered.
+
+**One caveat on the numbers above.** They come from a harness that reproduces
+`drift-check`'s text flattening and slug resolution rather than from
+`drift-check` itself, and its slug mapping is a shade narrower — 941 rows against
+the check's own 948, seven rows resolving through a registry alias the harness
+does not implement. **The A-versus-B comparison is over the same 941 either
+way**, so the 2-vs-1 and the zero-regression result stand; the absolute counts
+are the harness's, not the check's. Re-run the check itself when this is taken.
