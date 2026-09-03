@@ -1,7 +1,7 @@
 # Meta-audit — the menus as a reference, and the discipline that fills them, 2026-09-03
 
-> **STATUS: `A2`, `A3`, `A4`, `A5`, `A7`, `A11` and `A12` are taken (PRs #647,
-> #643, #645, #644, #647, #642, #646). `A8` and `A9` are next; `A1`, `A6` and
+> **STATUS: `A2`, `A3`, `A4`, `A5`, `A7`, `A8`, `A11` and `A12` are taken (PRs
+> #647, #643, #645, #644, #647, #648, #642, #646). `A9` is next; `A1`, `A6` and
 > `A10` are OPEN.** Filed
 > 2026-09-03 against `main` @ `3332349` (the merge of #641). Findings are
 > `### A<n> — <severity> — <title>`, severity lowercase. Status for any finding
@@ -1024,6 +1024,58 @@ retrofit of any menu, and no count.**
 premises-held quotations read from their own blocks the same day, from a
 100-finding extraction across five menus; `health-audit-prompt.md` lines 100–116
 read 2026-09-03.
+
+**Taken, 2026-09-03 (PR #648), both edits. Posture held: documentation only, two
+passages in one skill, no check, no retrofit of any menu, and no count.**
+
+**Half of edit (1) had already shipped — inside `A11`'s PR, four hours earlier,
+by me.** `A11`'s new subsection names `G18`'s *"convention that starts today"* as
+one of its four instances. That is the right place for it as an example of the
+already-decided shape, and **the wrong place for a reader of the evidence rule**,
+who never gets there. So edit (1) went where `G18`'s rule actually lives, and
+carries what `A11`'s one-line mention could not: the census table, the brief the
+convention came from, and the `Confidence` evidence.
+
+**`A11`'s grep found two more sites of the doctrine sentence, and both stay.**
+`apps/character-creator/INGESTION-AUDIT.md:103` carries it inside *"This audit's
+own premises were wrong in nine places"* — scoped to that audit, dated
+2026-08-26, a record. `docs/prompts/surveycommittableprompt.md:130` is a brief,
+and briefs here are records by the archive's own first rule. **Only the skill
+states it as a live, unscoped claim**, and only the skill was edited.
+
+**The replacement says something the original could not.** The old sentence
+collapsed two failures; the new passage splits them and gives each its remedy —
+wrong premises are caught by **re-measuring the finding**, while a wrong
+*replacement sentence* is caught only by **measuring what you are about to
+write**, which is what `SKILL-AUDIT` `F4` did to itself twice. It also names the
+twelve findings whose notes record premises holding exactly, so the rule is
+justified by what checking finds rather than by the documents being untrustworthy.
+
+**The `Confidence` finding is stated and explicitly not adopted.**
+`HEALTH-AUDIT` `F18`'s low-confidence half is the one that moved when it was
+taken. That is one instance, it is real, and whether to adopt the marker is
+`A9`'s question and Nate's decision — the skill now records the evidence without
+making the call.
+
+**Two bugs in my own verification instrument, found by running it.** Checking
+that all twelve cited notes really say what the skill now claims, two came back
+`NOT FOUND`:
+
+- **`MACHINE-AUDIT` `M16`** says *"Every premise **re-measured** and every one
+  holds"* — my pattern listed *re-checked*, *held*, *hold*, *confirmed*,
+  *intact*, and not *re-measured*.
+- **`SKILL-AUDIT` `F15`** says *"Premises held"* **wrapped across a line break**,
+  so a line-based grep cannot see it. That is exactly the trap `DOCS-AUDIT`'s own
+  header records about `D4`, whose closure phrase *"No action proposed."* wraps
+  the same way — **a live second instance of it, found by accident.**
+
+Both citations are correct; both failures were the instrument. Verified by
+reading the two blocks directly. **Three separate scans in this session have now
+produced a false negative about these files**, which is the argument the skill
+makes about mechanical readers, arriving three more times.
+
+Diff **+50 / −3** on one skill, read off `git diff --numstat` rather than
+estimated. The replaced sentence is **not quoted back**.
 
 ---
 
