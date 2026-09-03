@@ -1,9 +1,13 @@
 # Pick 3 Cut 5 — outstanding items, 2026-08-24
 
-> **`F12` is OPEN.** `F11` was taken 2026-09-03; everything else here is closed,
-> re-verified on 2026-09-02: `F1`–`F10` and `T1`–`T11`. **`F12` was opened while
-> filing `F11` and is the stronger of the two** — `F11` guarded the HTML door,
-> and `F12` is the one a stylesheet walks through.
+> **Nothing is open.** `F11` and `F12` were both taken 2026-09-03; everything
+> else here is closed, re-verified on 2026-09-02: `F1`–`F10` and `T1`–`T11`.
+>
+> **`F11` and `F12` ended as ONE check, which is what `F12` asked for.** Reading
+> `F11` alone now misleads: its own assertion no longer exists as a separate
+> check — it moved to the end of §1b and widened to cover `url()` targets as well
+> as tags. Read both notes, in order, or the test will not match either finding's
+> text.
 >
 > **Two that misread.** The eleven `T` items are **bold paragraph leads**, not
 > headings — `**T1. … — PASSED.**` under `## T — paths that have never run` — so
@@ -577,6 +581,55 @@ though it covers CSS.
 **Evidence:** the regex run against three synthetic stylesheet lines,
 2026-09-03 (table above); `apps/pick3cut5/test/smoke.mjs` §1 and §1b read the
 same day; `node apps/pick3cut5/test/smoke.mjs` green before and after filing.
+
+**Taken, 2026-09-03 (PR #654), as proposed and as ONE assertion over both doors,
+which is what this finding asked for.** Posture held: the derivation is extended,
+**nothing about what is public changed and no Access destination was added.**
+Smoke 47 → **48**.
+
+§1b now collects **every** `url()` target and splits them: same-origin absolute
+paths feed `requiredPublic` exactly as before; anything carrying a scheme or a
+leading `//` becomes an **external CSS request**. `F11`'s assertion moved to the
+end of §1b and became `nothing this page loads comes from a third party, by tag
+or by url()` over `[...external, ...cssExternal]` — one check, both doors, as
+this finding required rather than one per door.
+
+**The order of the split is the whole trap and the code says so.** `//host`
+starts with a slash and is **not** same-origin, so the scheme-or-`//` test has to
+run first. Getting that backwards reproduces the exact defect being fixed.
+
+**Proved by making it fail, in all four states:**
+
+| injected | result |
+|---|---|
+| `url('https://fonts.gstatic.com/…')` in `shared/styles.css` | **FAIL**, naming the URL — the door neither scan could see |
+| `url('//fonts.gstatic.com/…')` | **FAIL**, naming it — and **absent from `requiredPublic`**, which still reads `/shared/fonts, /shared/js/ui.js, /shared/styles.css` |
+| `<link href="https://cdn.example/x.css">` in `index.html` | **FAIL** — `F11`'s door still covered after the move |
+| nothing injected | **PASSED (48)**, and both files confirmed unchanged by `git status` |
+
+The second row is the one worth keeping: under the old regex that target matched
+and was folded in **by directory**, so the derived list would have demanded an
+Access destination named `//fonts.gstatic.com` — in an app with five and none
+spare. It is now named as a third-party request instead, which is what it is.
+
+**One anti-vacuous guard added, because a widening can silently narrow.** *"the
+widened `url()` scan finds at least the same-origin assets it used to"* asserts
+`cssTargets >= cssAssets.length` and that every same-origin entry still starts
+with `/`. If the split breaks, that fails rather than the derivation going quiet
+— the same defence the neighbouring *"every absolute stylesheet … was read"*
+check exists to provide.
+
+**An instrument fault caught in the act, and it nearly produced a false
+result.** The first injection attempt replaced `url(/shared/fonts/…)` — the real
+stylesheet writes `url('/shared/fonts/…')` **with single quotes**, so the
+substitution matched nothing, the file was untouched, and the suite passed. Read
+carelessly that is *"the check does not fire."* The second attempt asserts the
+replacement actually applied and exits non-zero if not. **The check's own regex
+handles quoted and unquoted forms; my test harness did not.**
+
+**Nothing was broken before this PR and nothing is now.** The stylesheets the
+page loads reference `shared/fonts/` only; `requiredPublic` derived correctly
+before and after; `smoke.mjs --remote` green against production.
 
 ---
 

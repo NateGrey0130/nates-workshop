@@ -94,13 +94,8 @@ check('every relative asset stays inside the app directory',
 // bypass list cannot cover: this is the one page outside the wall, so an
 // unauthenticated player makes it. That is what a non-zero count means.
 //
-// HTML ONLY. A url() inside a stylesheet has no tag here and does not appear
-// in `external` - see the CSS half below, and F12.
-check('index.html fetches nothing from a third party',
-  external.length === 0,
-  external.length
-    ? `${external.join(', ')} - an unauthenticated request from the one page outside Access`
-    : '');
+// The assertion itself lives at the end of 1b, because a third-party request
+// can arrive through EITHER door and one check should cover both. F12.
 
 // ---------- 1b. What the CSS then loads ----------
 //
@@ -108,19 +103,39 @@ check('index.html fetches nothing from a third party',
 // them is a request the browser makes without any tag in index.html naming it,
 // and that is the gap R7 walked through.
 //
-// Absolute targets only, for the same reason the HTML scan takes only absolute
-// ones: a relative url() resolves beside its own stylesheet, under a directory
-// that stylesheet's destination already covers.
+// EVERY url() target, not just absolute ones. The narrow regex this replaces
+// required a leading slash, so `url(https://fonts.gstatic.com/...)` was not
+// seen at all - invisible to the HTML scan for want of a tag, and to this one
+// for want of a slash, which is precisely the door F11's check does not cover.
+// Worse: `url(//host/path)` DID match, and was then treated as a same-origin
+// path, so it would have demanded an Access destination named `//host`. A wrong
+// answer rather than a missing one, in an app whose five destinations are spent.
 const stylesheets = absolute.filter((r) => /\.css(\?|$)/.test(r));
-const cssAssets = [];
+const cssAssets = [];       // same-origin absolute - these need destinations
+const cssExternal = [];     // anything off-origin - these need to not exist
 let cssRead = 0;
+let cssTargets = 0;
 for (const href of stylesheets) {
   const text = readFileSync(join(repoRoot, href.replace(/^\//, '').split('?')[0]), 'utf8');
   cssRead += 1;
-  for (const m of text.matchAll(/url\(\s*['"]?(\/[^'")\s]+)['"]?\s*\)/g)) {
-    cssAssets.push(m[1].split('?')[0]);
+  for (const m of text.matchAll(/url\(\s*['"]?([^'")\s]+)['"]?\s*\)/g)) {
+    const target = m[1].split('?')[0];
+    cssTargets += 1;
+    // Order matters: `//host` starts with a slash and is NOT same-origin.
+    if (/^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(target)) cssExternal.push(target);
+    else if (target.startsWith('/')) cssAssets.push(target);
+    // else: relative, resolving beside its own stylesheet, under a directory
+    // that stylesheet's destination already covers. Same reason as the HTML scan.
   }
 }
+
+// The widening must not silently narrow. Every target the old slash-anchored
+// regex would have found is still found, so this cannot regress into the bug it
+// fixes: same-origin absolutes are a subset of all targets by construction, and
+// if that stops being true the split above has broken.
+check('the widened url() scan finds at least the same-origin assets it used to',
+  cssTargets >= cssAssets.length && cssAssets.every((a) => a.startsWith('/')),
+  `${cssTargets} target(s) but ${cssAssets.length} same-origin - the split is wrong`);
 
 // Not "did we find any assets" - a stylesheet is allowed to reference nothing.
 // What must not silently become zero is the READING. If the filter above stops
@@ -129,6 +144,21 @@ for (const href of stylesheets) {
 check('every absolute stylesheet the page loads was read for url() assets',
   cssRead === stylesheets.length && stylesheets.length > 0,
   `read ${cssRead} of ${stylesheets.length} - the CSS half of the derivation is blind`);
+
+// ONE assertion over BOTH doors, which is the whole point of F12. A third-party
+// request reaches this page either as a tag in index.html or as a url() inside a
+// stylesheet it loads, and until now only the first was looked at - by a check
+// that allowed a font CDN and then went quiet when the fonts moved (F11).
+//
+// This page is the ONE thing outside the Access wall. A third-party fetch here
+// is made by an unauthenticated player, is invisible to the bypass list, and
+// cannot be covered by an Access destination however many were spare.
+const thirdParty = [...external, ...cssExternal];
+check('nothing this page loads comes from a third party, by tag or by url()',
+  thirdParty.length === 0,
+  thirdParty.length
+    ? `${thirdParty.join(', ')} - an unauthenticated request from the one page outside Access`
+    : '');
 
 // THE DERIVED LIST. Not maintained by hand - this is what the page actually
 // asks the browser to fetch from outside its own directory.
