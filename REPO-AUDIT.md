@@ -359,6 +359,32 @@ where today the hand step at least *could* be skipped. If stacked PRs are still
 part of the workflow, **decline this**, and say so in the note so it is not
 re-proposed.
 
+**Taken, 2026-09-03 (PR #628).** `delete_branch_on_merge` is now `true`.
+
+**The decline path was measured rather than weighed, and it did not survive.**
+Every pull request in the repo was checked for a base other than `main`:
+
+| | |
+|---|---|
+| stacked PRs, ever | **three** — #89, #90, #261 |
+| when | **2026-08-18 to 2026-08-24**, none since |
+| how they ended | **two of the three closed unmerged**; only #89 merged |
+
+So the pattern the decline path protects was tried briefly, killed two of its
+own three PRs — the death-on-base-deletion this finding describes — and was
+abandoned ten days before the finding was written. Nothing was being protected.
+
+**What the setting actually buys is narrower than "tidiness", and it is worth
+saying because the remote was already clean.** `ship-pr`'s hand step was being
+performed reliably across 616 PRs, so this changes nothing about the path an
+agent follows. It covers **the merge that does not go through `ship-pr`** — the
+web UI's merge button, which passes no flag and left a branch behind every time.
+
+**`ship-pr` keeps `--delete-branch`.** The setting deletes the *remote* branch
+only; the local one is still the flag's job, and dropping it would have traded a
+guarantee for a mess in the working copy. The skill now says which half each
+mechanism owns.
+
 ### G5 — low — three merge methods are enabled and only one is used
 
 `allow_merge_commit`, `allow_squash_merge` and `allow_rebase_merge` are all

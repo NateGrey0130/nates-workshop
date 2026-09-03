@@ -98,6 +98,11 @@ did, never as the reason to skip one. `regression.mjs` is not in it at all.
    ```
 7. **Merge**, only when asked. It deploys. `--delete-branch` removes the
    branch from GitHub *and* locally, so there is nothing left to tidy.
+   Since 2026-09-03 the repository also has **`delete_branch_on_merge`** on, so
+   the **remote** branch goes whether or not you pass the flag — including on a
+   merge from the web UI, which is the case the setting was turned on for
+   (`REPO-AUDIT.md` G4). **Keep passing `--delete-branch` anyway:** the setting
+   does nothing about your *local* branch, and that half is still yours.
    ```bash
    gh pr merge <n> --merge --delete-branch
    ```
