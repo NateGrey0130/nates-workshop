@@ -1,6 +1,6 @@
 # Repository architecture audit — git, GitHub, layout and the merge path, 2026-09-03
 
-**Status: `G8` and `G1` taken 2026-09-03 (PRs #620, #621); `G5`, `G11` and `G15`
+**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G9` closed WITHOUT being taken (PR #625); `G5`, `G11` and `G15`
 carry `Adjusted` notes; `G18` filed 2026-09-03. The rest are OPEN.**
 Read the lines under a finding's own heading for its state — this line is a
 convenience and it is the kind of line that goes stale first.
@@ -31,12 +31,21 @@ was written. **Two were materially wrong and now carry `Adjusted` banners:**
 | `G2` `G3` `G4` `G7` `G9` `G12` `G13` `G14` `G16` `G17` | central claim **holds** |
 | `G3` `G9` `G10` `G12` | hold, with counts that have since **drifted** — see each note |
 
-**The failure has one shape, and naming it is the useful part.** Every wrong
-claim in this menu — `G8`'s bare clone, `G1`'s counting command, `G5`'s
-"exclusively", `G11`'s totals, `G15`'s "no signal" — was **reasoned to rather
-than run**. Every claim that came from a command that was actually executed has
-held. The menu wrote both in the same voice, and nothing on the page told a
-reader which was which. `G18` proposes the fix.
+**There are two failure shapes, and naming them is the useful part.**
+
+**One: reasoned to rather than run.** `G8`'s bare clone, `G1`'s counting
+command, `G5`'s "exclusively", `G11`'s totals, `G15`'s "no signal". Every claim
+that came from a command actually executed has held; the menu wrote both kinds
+in the same voice, and nothing on the page told a reader which was which.
+`G18` proposes the fix.
+
+**Two: proposing something another menu had already decided.** `G9` asked to
+rename `SETUP-v2-CHANGES.md`. `HEALTH-AUDIT.md` F4 had settled that on
+2026-09-02 in PR #523 and chosen the opposite, with reasons. **Re-measuring
+would never have caught this** — `G9`'s facts were right — and the check is a
+grep for the subject across the other menus, thirty seconds, not done. Added
+here on 2026-09-03 when `G9` was closed; the paragraph above used to say the
+failure had *one* shape.
 
 **`G6` is the subtler case and worth reading twice.** It was right, and it was
 right by luck: the check performed confirmed the tabs were *enabled*, and the
@@ -671,6 +680,42 @@ check. Nothing enforces the convention afterwards either — that is accepted.
 It is a change to its *name* rather than its content, which this menu reads as
 permitted, but if that reads as too much, decline — and then leave the skill's
 warning paragraph exactly where it is.
+
+**Closed without being taken, 2026-09-03 (PR #625). This had already been
+decided, one day earlier, the other way.**
+
+`HEALTH-AUDIT.md` F4 was **taken 2026-09-02 in PR #523** and considered this
+exact choice — *"either rename `SETUP-v2-CHANGES.md` to match the `*AUDIT*`
+convention or note in the skill that one menu sits outside it."* It chose
+**naming rather than renaming**, for two reasons this finding never weighed:
+
+> renaming it to fit the `*AUDIT*` glob would break the PR #503 record that
+> refers to it by name, in order to make a glob correct that this same file
+> argues nobody should rely on.
+
+**The second reason is the stronger one, and this finding half-made the same
+argument itself** — it declined to propose an index precisely because the
+`audit-menu` skill argues against relying on a mechanical list. Renaming the
+file to satisfy the glob is that same reliance, arriving from the other
+direction.
+
+**So the premise was also incomplete.** This finding says the skill's listing
+command "misses one" and treats that as an unaddressed gap. It is addressed, by
+a different mechanism, on purpose: the skill names `SETUP-v2-CHANGES.md` **three
+times** — in the paragraph above the command, in the shape table, and in the
+paragraph below the command that says outright the command does not return it
+and that this is not a bug in the command. What remains is a glob with a
+documented blind spot, which is the state F4 deliberately chose.
+
+**Nothing was renamed.** The ~24 repo references and 2 memory files stay as they
+are, and the PR #503 record keeps meaning what it says.
+
+**The thing worth carrying forward is the failure shape**, which is not the one
+`G18` describes. This finding was not wrong about a fact it failed to measure —
+the glob really does miss the file, verified twice. It proposed **reversing a
+shipped decision without checking whether one existed**. No amount of
+re-measuring would have caught that; the check is a grep for the filename across
+the other menus, which takes thirty seconds and was not done.
 
 ### G10 — medium — 359 run-once scripts in one flat directory, ordered by filename, escalated five `z` deep
 
