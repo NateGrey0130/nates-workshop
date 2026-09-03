@@ -18,8 +18,11 @@ and is not: an API layer once showed old markdown while
 `wrangler d1 execute --local` readbacks showed the fix applied.
 
 Use an escape hatch — `nates-apps-8791` or `nates-apps-8793`, in both
-`.claude/launch.json` and `Downloads\.claude\launch.json`. A different port is
-also a different **origin**, so `localStorage` state cannot collide either.
+`.claude/launch.json` and the working directory's own
+(`C:\Users\natha\Projects\workshop\.claude\launch.json` since the move on
+2026-09-02, `MACHINE-AUDIT.md` M7/M9/M12; both entries are present there). A
+different port is also a different **origin**, so `localStorage` state cannot
+collide either.
 
 **Confirm the page is yours before trusting it:** find a string your branch
 added and check it is on the page. Port ownership is not evidence.
