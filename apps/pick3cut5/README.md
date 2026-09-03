@@ -49,7 +49,8 @@ workers/pick3cut5-room/   The standalone Worker. Deploys on its own.
 └── src/rules.js          The budget rules as pure arithmetic, so they can be
                           tested without a Durable Object
 
-functions/api/_middleware.js   PUBLIC_PREFIXES — the code half of the bypass
+functions/api/_middleware.js   PUBLIC_PATHS — the code half of the bypass;
+                          exact paths, not a prefix, since 2026-09-02
 ```
 
 The shared framework rules apply: the app is registered in `apps/manifest.json`
