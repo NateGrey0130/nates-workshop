@@ -13,8 +13,9 @@ skills and what is easy to get wrong about Cloudflare auth.
 ## Nine skills, and they load from anywhere on this machine
 
 `.claude/skills/` holds them. They are **directory-scoped** by nature: a session
-started anywhere else — in `Downloads`, say, with the PDF — would not see them,
-and one session ran an entire class import by hand for exactly that reason.
+started anywhere else — in the working directory, say, with the PDF — would not
+see them, and one session ran an entire class import by hand for exactly that
+reason.
 That is why each skill is **junction-linked into `~/.claude/skills`** — see the
 junction block in `SETUP.md`. They load by name from any working directory now.
 
@@ -23,8 +24,11 @@ the gap: the skill simply does not exist for a session started outside the repo,
 which is the working directory the book work uses.
 
 **The subagent is linked too, since 2026-08-28** (`INGESTION-AUDIT` F8).
-`book-survey` §5 can spawn `book-reconcile` from `Downloads`, the one place the
-book work runs. Until then it could not: `~/.claude/agents` did not exist at all.
+`book-survey` §5 can spawn `book-reconcile` from the working directory, the one
+place the book work runs — `C:\Users\natha\Projects\workshop` since 2026-09-02
+(`MACHINE-AUDIT.md` M7/M9/M12), and `Downloads` before that. The link is to the
+whole directory, so it followed the move without being touched. Until it existed
+the spawn could not happen at all: `~/.claude/agents` was not there.
 
 The agents link is the **whole directory**, not one entry per file, because an
 agent is a file and a junction only works on a directory — the per-file symlink
@@ -222,9 +226,12 @@ here instead. See `HEALTH-AUDIT.md` F6.
 
 ### There is a SECOND allowlist, and it is not this one
 
-`C:\Users\natha\Downloads\.claude\settings.local.json` — untracked, accumulated
-by approval. It is the project settings for a session started in `Downloads`,
-which this file calls the one place the book work runs.
+`C:\Users\natha\Projects\workshop\.claude\settings.local.json` — untracked,
+accumulated by approval. It is the project settings for a session started in the
+working directory, which this file calls the one place the book work runs. **It
+moved there with everything else on 2026-09-02** (`MACHINE-AUDIT.md`
+M7/M9/M12); the path it had before the move no longer exists, and neither does
+the `.claude` directory that held it.
 
 **Pruned 2026-09-02.** It held wildcards for every action the section above
 withholds on purpose — `npx wrangler *`, `gh pr *`, `git push *`, `git commit *`,
@@ -239,13 +246,15 @@ arbitrary execution ask, wherever the session started. A further ~45 entries are
 literal command strings pinned to session scratchpad directories that no longer
 exist; they are dead rather than dangerous and were left alone.
 
-**Established:** the file is scoped to `Downloads` rather than to this repo, and
-had **stopped growing on 2026-08-28** — unchanged across a long working session
-on 2026-09-02, before the prune.
+**Established:** the file is scoped to the working directory rather than to this
+repo, and had **stopped growing on 2026-08-28** — unchanged across a long
+working session on 2026-09-02, before the prune. That scoping is why the move
+carried it: it belongs to the directory, not to the repo.
 
 **NOT established, and do not assume either way:** whether a session started in
-`Downloads` is governed by that file, by this repo's, or by both composed. That
-needs a deliberate test — run one command allowlisted here and absent there, and
+the working directory is governed by that file, by this repo's, or by both
+composed. That needs a deliberate test — run one command allowlisted here and
+absent there, and
 one of the reverse, from each directory, and watch which prompts. It has not been
 run.
 

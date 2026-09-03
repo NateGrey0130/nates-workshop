@@ -6,7 +6,10 @@ brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
 `low`. Nothing here is taken until Nate names it; one PR per finding, outcome
 note appended under the finding in the same PR.
 
-**Status, 2026-09-02: `M1`–`M18` are all taken and closed. Nothing is open.**
+**Status, 2026-09-02: `M1`–`M18` are all taken and closed. `M19` and `M20` are
+OPEN** — filed later the same day by the documentation audit
+(`DOCS-AUDIT-2.md`), which found them on this menu's surface rather than its own.
+Both are `low` and neither touches anything `M1`–`M18` established.
 `M18` is an OBSERVATION rather than a finding — the fault it records is still
 unexplained, every hypothesis raised against it is dead or cannot be provoked, and its
 recorder was repaired the same day it shipped. Taking it meant attempting a
@@ -1643,3 +1646,64 @@ And for `M1`–`M6`, the rule the brief set and this audit followed: **prove it 
 making it fail first.** A PATH claim checked only in a shell you constructed is a
 claim about your reconstruction — `M2` is in this menu because a plausible
 diagnosis went a day without anyone asking `explorer.exe` what it actually held.
+
+### M19 — low — the global `CLAUDE.md` lists what the working directory holds, and the list went short the same day
+
+`~/.claude/CLAUDE.md` names the new working directory and then says what it
+holds. Two entries created later on 2026-09-02 are not in that list:
+`profile.ps1`, which `M4` created, and `tools\`, which holds the Process Monitor
+capture staged for `M18`.
+
+**The file predicts this in its own text** — it says that nothing but a hand
+updates it, that no test and no grep of the repo reaches it, and that it must be
+edited when the directory changes. It was right, and the prediction came true
+within hours, in the direction nobody watches: not the *location* changing, which
+is what the sentence anticipates, but the *contents* growing underneath a list
+that reads as complete.
+
+The machine-audit memory has the fuller list, including `profile.ps1`, so the two
+records of the same directory already disagree.
+
+**Proposal:** stop enumerating. Replace the contents list with what the directory
+is *for* — the working directory the book work runs from, holding the sourcebook
+PDFs, the loose briefs and its own `.claude\`. A reader who needs the current
+contents can list the directory; a list in prose that nothing checks will go short
+again the next time anything is added, and this is the second record of it to
+disagree already.
+
+**Posture:** documentation only, in a file outside the repo. One sentence
+rewritten, no behaviour, no move, and **no check** — the file's whole argument is
+that nothing mechanical reaches it, and adding a check that reads it from inside
+the repo would contradict `SKILL-AUDIT.md` F11, which is why this file exists.
+
+**Decline it** if you would rather the list stay literal and be corrected by hand;
+that is a real position, and the file already tells its reader that a hand is the
+only thing maintaining it.
+
+### M20 — low — the old memory store's `memory\` directory survives as an empty husk
+
+`M10` moved the memory store and recorded the old one as removed. What is on disk
+under the old key is a `memory\` directory containing **nothing** — sixty-five
+files live under the new key, zero under the old, and the empty directory remains
+alongside the session transcripts, which were correctly left in place.
+
+The consequence is quiet rather than harmful: a session started in the old
+directory finds the store, finds it empty, and loads no memories at all. There is
+no error, because an empty memory store is indistinguishable from a new one. **A
+session in this state was the one that ran this audit**, which is how the husk was
+noticed — the working directory has moved, so nothing routine will start there
+again.
+
+**Proposal:** delete the empty `memory\` directory under the old key, leaving the
+transcripts untouched, so that a session opened there in future reports no store
+rather than an empty one.
+
+**Posture:** delete one empty directory. **Do not touch the `.jsonl` transcripts
+beside it** — they are the record this machine's audits have been reconstructed
+from, `M10` deliberately left them, and they are not what this finding is about.
+
+**Decline it** if an empty directory is not worth a PR; the practical effect is
+limited to sessions started in a directory nothing starts in any more. `M15`
+declined a comparable cosmetic duplicate — the old `Downloads` key in
+`~/.claude.json`, which it checked and found harmless — and the same reasoning
+covers this one.

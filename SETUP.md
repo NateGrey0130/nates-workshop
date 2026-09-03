@@ -492,8 +492,10 @@ sentence is only true on a machine that has run the block above.** A fresh
 machine has to run it before the book work will find them by name.
 
 `.claude/agents/` is covered as of 2026-08-28 (`INGESTION-AUDIT` F8), so
-`book-survey` §5 can spawn `book-reconcile` from Downloads. Confirm it the way
-you would confirm a skill — by asking for it by name, not by trusting this line.
+`book-survey` §5 can spawn `book-reconcile` from the working directory. Because
+the link is to the whole directory rather than to the file, it kept working
+across the 2026-09-02 move without being re-made. Confirm it the way you would
+confirm a skill — by asking for it by name, not by trusting this line.
 
 **`CLAUDE.md` is NOT linked, and cannot usefully be.** A repo `CLAUDE.md` loads
 only inside its own directory, so a session started in the working directory gets

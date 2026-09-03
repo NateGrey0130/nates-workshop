@@ -47,12 +47,18 @@ of that, and §0b below is the cost of finding out: **seven of the first eight
 caches were built by throwaway code that is in no commit, and they do not agree
 with each other.**
 
-*This paragraph used to argue that `python -c` sits outside the allowlist and
-prompts every time. It is outside the repo's — and `Downloads\.claude\`, which is
-where a session holding a PDF actually starts, grants `Bash(python -c ' *)` by
-wildcard. The friction argument was false exactly where this skill fires, and a
-reader who checked would have found the instruction resting on nothing. The
-reason above does not depend on where the session started.*
+*This paragraph has been wrong twice, in opposite directions. It first argued
+that `python -c` sits outside the allowlist and prompts every time; it was then
+corrected to say the working directory's own settings granted that family by
+wildcard, so the friction argument was false exactly where this skill fires.
+**Both readings are now out of date.** On 2026-09-02 the working directory moved
+to `C:\Users\natha\Projects\workshop` (`MACHINE-AUDIT.md` M7/M9/M12), taking
+that settings file with it, and the same day's prune took the
+arbitrary-execution wildcards out of it — what is left for `python -c` is a
+handful of fully-literal command strings, so anything not already listed prompts
+again. **Do not rebuild an argument on top of this line:** check the allowlist
+governing the directory you are actually in, on the day you are in it. The
+reason above does not depend on where the session started, which is the point.*
 
 Zeros mean a scan. Thousands mean a text layer, and a text layer changes
 everything downstream: **no OCR, no model call, no confidence problem, and no
