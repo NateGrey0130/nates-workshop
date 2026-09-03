@@ -63,6 +63,14 @@ done for neither.
 *and* never ran the one command that would have shown its mechanism backwards:
 a `NNN-` prefix sorts **first**, not last.
 
+**And shape two is not only a finding's failure — this menu committed it in its
+own scope statement.** *What this menu does NOT cover* called
+`portability-audit-prompt.md` "never run" and deferred to a
+`PORTABILITY-AUDIT.md` that had been **dropped on 2026-09-02**, said so in four
+files, and was never coming. The header that warns about the shape carried an
+instance of it from the day it was written. Corrected 2026-09-03; the original
+stands beside the correction.
+
 This section was added on 2026-09-03 when `G9` was closed, and widened when
 `G10` was; the paragraph above it used to say the failure had *one* shape.
 
@@ -90,6 +98,36 @@ lowercase — `high`, `medium`, `low` — in the `UI-AUDIT.md` and
 capitalised one.
 
 ## What this menu does NOT cover
+
+**CORRECTED 2026-09-03. `PORTABILITY-AUDIT.md` will never exist, and that was
+settled the day before this menu was written.** Everything in the two paragraphs
+below defers to a menu that was never coming.
+
+`docs/prompts/portability-audit-prompt.md` was *"written and dropped on the same
+day — 2026-09-02 — before any of it was investigated"*
+(`docs/prompts/README.md`, under *One of them produced nothing, and that is why
+it is kept*). The question underneath it turned out to be about where things sit
+on **this** machine, and became `workstation-consolidation-prompt.md` and
+`MACHINE-AUDIT.md` instead — which opens by stating that portability was
+investigated and dropped. `MACHINE-AUDIT` M13 archived the brief **deliberately
+un-annotated**: a dropped direction is a record worth keeping, and the drop
+belongs in the index rather than inside the record. That still holds — the brief
+is not to be edited.
+
+**So this menu called a dropped direction "never run" and handed it territory it
+could never take up.** That is failure shape two from the section above —
+asserting what another document had already settled — committed by the menu that
+closed `G9` and `G10` for precisely it. **Four files said so and none was read:**
+`docs/prompts/README.md` twice, `workstation-consolidation-prompt.md`, and
+`MACHINE-AUDIT.md`.
+
+**Nothing is handed back, because there is nobody to hand it to.** Portability
+is not deferred to another menu's ownership; it is **not being pursued**, by a
+decision predating this file. `G8`'s single point of contact needed no successor
+and has none. Anything portability-shaped that matters later belongs in
+`MACHINE-AUDIT.md`, which is where that ground actually went.
+
+**The original two paragraphs stand below as the record of what was believed.**
 
 **Portability is not here.** `docs/prompts/portability-audit-prompt.md` — added
 2026-09-02 in `c7fe004`, and **never run** — asks for `PORTABILITY-AUDIT.md`
@@ -713,6 +751,10 @@ without stopping a merge.
 is produced first, this finding should defer to its numbering and say so rather
 than doing the work twice.
 
+*(Corrected 2026-09-03: that menu will never be produced — the direction was
+dropped 2026-09-02. There is nothing to defer to, and step 1 was simply this
+finding's own work.)*
+
 **Decline path:** the suites are in fact run before every merge today, the PR
 bodies prove it by pasting the pass lines, and the marginal value of CI on a
 solo repo where the agent already runs the tests is smaller than it looks. The
@@ -832,6 +874,14 @@ change the input, not the platform report.
 **The boundary held.** No portability work was done here beyond the single
 platform probe and the line-ending fix the run forced.
 `PORTABILITY-AUDIT.md` remains unwritten and unclaimed.
+
+**Corrected 2026-09-03: "unwritten and unclaimed" was wrong, and so was the
+boundary it describes.** `PORTABILITY-AUDIT.md` will never be written — the
+direction was dropped on 2026-09-02, before this menu existed. See the
+correction under *What this menu does NOT cover*. **Nothing about the work
+changes**: the platform probe and the line-ending fix were the right scope, and
+they were the right scope for their own reasons rather than because a successor
+menu was going to take the rest. There is no successor, and none is needed.
 
 ### G9 — medium — eleven markdown files at the root, and the canonical way to list them misses one
 
