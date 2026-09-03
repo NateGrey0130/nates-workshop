@@ -43,3 +43,9 @@ know before touching this repo.
 | `*-AUDIT.md` | Findings menus. Each is a dated record of one investigation, with numbered findings taken one at a time. They are **records, not documentation** — a number in one was true on the day it was measured |
 
 The audit menus are also where work is tracked.
+
+## A note on the game data
+
+The character creator's catalog is transcribed from Palladium Books sourcebooks
+for personal use at one table. This project is unaffiliated with and unendorsed
+by Palladium Books, and the rules text it stores belongs to them.

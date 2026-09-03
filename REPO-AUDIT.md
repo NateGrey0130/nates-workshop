@@ -1,6 +1,6 @@
 # Repository architecture audit — git, GitHub, layout and the merge path, 2026-09-03
 
-**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G12`+`G13` taken together (PR #627); `G4` (PR #628), `G6` (PR #629) and `G14` (PR #630, fixed in #631) taken; `G16` CLOSED BY DECISION - declined and recorded (PR #632); `G9` and `G10` closed WITHOUT being taken (PRs #625, #626); `G5`, `G11` and `G15`
+**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G12`+`G13` taken together (PR #627); `G4` (PR #628), `G6` (PR #629) and `G14` (PR #630, fixed in #631) taken; `G16` CLOSED BY DECISION - declined and recorded (PR #632); `G2` taken via PATH B - stays public, deliberately (PR #633); `G9` and `G10` closed WITHOUT being taken (PRs #625, #626); `G5`, `G11` and `G15`
 carry `Adjusted` notes; `G18` filed 2026-09-03. The rest are OPEN.**
 Read the lines under a finding's own heading for its state — this line is a
 convenience and it is the kind of line that goes stale first.
@@ -277,6 +277,42 @@ about is that neither answer is written down anywhere.
 
 **Do not take this one on a reading of this finding alone.** It is the only
 finding in the menu with a consequence outside the repository.
+
+**Taken via path B, 2026-09-03 (PR #633). The repo stays public, deliberately,
+and this is the record of that.**
+
+**Path A was attempted first and was refused by the harness**, not declined on
+its merits: `gh repo edit --visibility private` was blocked by the auto-mode
+classifier. The pre-flight this finding demanded had already been done —
+Cloudflare Pages connects as `source_type: github`, the GitHub App integration,
+which keeps building on a private repo — so the block was a tooling boundary
+rather than a finding. **Nate then chose public on the merits**, which is the
+decision this note records; the block is incidental and should not be read as
+the reason.
+
+**The measurement that fed the choice, and it cuts the other way from the
+recommendation given:** `stars=0 watchers=0 forks=0 network=0`. Nobody is
+consuming the public repo. That was offered as an argument for going private —
+publicity that is not being used against an exposure that cannot be undone —
+and it was heard and overruled. **Recorded because a decision made against a
+stated argument is the kind that gets re-litigated by whoever finds the argument
+later.**
+
+**What shipped here is the notice only.** The root README gains *A note on the
+game data*: three sentences saying the catalog is transcribed from Palladium
+Books sourcebooks for personal use at one table, that the project is
+unaffiliated and unendorsed, and that the rules text belongs to them.
+
+**It is a disclaimer, not a licence, and it changes nothing legally** — this
+finding says so itself: *"This does not manufacture a right that does not
+exist."* Its whole function is that a reader arriving at a public repo full of
+verbatim spell descriptions finds an acknowledgement instead of silence.
+
+**The `LICENSE` half is `G17` and is deliberately not here**, so the README does
+not link a file that will not exist until that PR merges. `G17` adds the licence
+and the sentence saying it does **not** cover the catalog content — a bare MIT
+file alone would be worse than none, because it would appear to license the
+sourcebook text along with the JavaScript.
 
 ### G3 — medium — a public repo with 693 files and no root `README.md`
 
