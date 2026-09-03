@@ -1097,6 +1097,37 @@ the only thing covering that half.
 `deploy-sweep.mjs`'s header records that this *"looks exactly like a quiet
 healthy merge and is not one."*
 
+**Its first real run failed, and the alarm was wrong rather than the deploy
+(PR #631).** Dispatched immediately after merging, it reported `NO RUN` for
+`1ce6ea92` — **its own merge commit** — and exited 1. That commit had deployed
+fine; read minutes later it gives
+`Cloudflare Pages status=completed conclusion=success`.
+
+**The bug: `conclusion` is `null` while a run is in flight, and the jq collapsed
+null into `MISSING`.** The alarm could not tell *still building* from *never
+ran*, which need opposite answers, so every merge checked shortly after landing
+would have alarmed.
+
+**This is the failure the workflow's own header warns about, arriving on its
+first run** — a false red is how a check trains everyone to ignore it, which is
+precisely how 65 real ones went unread. Two fixes:
+
+- **Read `status` as well as `conclusion`.** `completed/success` passes,
+  `completed/<anything else>` fails, no check-run at all is `MISSING`, and
+  `queued/` or `in_progress/` past the grace period prints `PENDING` **without
+  failing** — a build wedged for half an hour is worth seeing, and #565 was
+  exactly that.
+- **A 30-minute grace period.** A merge younger than that is legitimately still
+  deploying and is skipped as `young`.
+
+**Re-proved in both directions after the fix**, because verifying a repair only
+on the happy path is how the first version shipped:
+
+| window | result |
+|---|---|
+| last 26 hours | five recent merges skipped as `young`, older `ok` — **exit 0** |
+| 2026-08-28, the outage | **4 of 4 `FAILED`** — **exit 1**, still fires |
+
 ### G15 — medium — one of the two deploy paths produces no signal at all
 
 **Adjusted 2026-09-03 — the heading is false, and this finding predicted its own

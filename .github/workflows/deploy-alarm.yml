@@ -79,29 +79,55 @@ jobs:
             exit 0
           fi
 
+          # A merge younger than this is legitimately still deploying: the
+          # check-run takes a moment to be created and a couple of minutes to
+          # finish. Without this, the alarm's OWN merge trips it - which is
+          # exactly what happened on its first real run (REPO-AUDIT.md G14).
+          GRACE_SECONDS=1800
+          NOW=$(date -u +%s)
+
           BAD=0
           for sha in $SHAS; do
             subject=$(git log -1 --format='%s' "$sha")
+            age=$(( NOW - $(git log -1 --format='%ct' "$sha") ))
+
+            if [ "$age" -lt "$GRACE_SECONDS" ]; then
+              echo "  young    ${sha:0:8}  $subject  (${age}s old, still deploying)"
+              continue
+            fi
+
+            # status AND conclusion. `conclusion` is null while a run is in
+            # flight, so reading it alone cannot tell "still building" from
+            # "never ran" - and those need opposite answers.
             runs=$(gh api "repos/${GITHUB_REPOSITORY}/commits/$sha/check-runs" \
-                     --jq '[.check_runs[] | select(.name=="Cloudflare Pages")] | .[0].conclusion // "MISSING"' \
+                     --jq '[.check_runs[] | select(.name=="Cloudflare Pages")]
+                           | if length == 0 then "MISSING"
+                             else (.[0].status + "/" + (.[0].conclusion // "null")) end' \
                    2>/dev/null || echo "APIERROR")
 
             case "$runs" in
-              success)
+              completed/success)
                 echo "  ok       ${sha:0:8}  $subject"
                 ;;
               MISSING)
                 # deploy-sweep's header: a merge registering no check-run at all
-                # looks exactly like a quiet healthy merge and is not one.
+                # looks exactly like a quiet healthy merge and is not one. Past
+                # the grace period this is real.
                 echo "  NO RUN   ${sha:0:8}  $subject"
                 BAD=1
                 ;;
               APIERROR)
                 echo "  ?        ${sha:0:8}  $subject  (could not read check-runs)"
                 ;;
-              *)
-                echo "  FAILED   ${sha:0:8}  $subject  (Cloudflare Pages=$runs)"
+              completed/*)
+                echo "  FAILED   ${sha:0:8}  $subject  (Cloudflare Pages=${runs#completed/})"
                 BAD=1
+                ;;
+              *)
+                # queued/ or in_progress/ past the grace period. Not a failure
+                # to report, but not a pass either - a build wedged for half an
+                # hour is worth seeing, and #565 was exactly that.
+                echo "  PENDING  ${sha:0:8}  $subject  (${runs%%/*} after ${age}s)"
                 ;;
             esac
           done
