@@ -6,13 +6,11 @@ brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
 `low`. Nothing here is taken until Nate names it; one PR per finding, outcome
 note appended under the finding in the same PR.
 
-**Status: `M19` and `M21` are OPEN, both `low`. Everything else on this menu is
-taken or closed** — status for any one of them lives under its own heading, and
-this line deliberately does not count them. `M19` was filed 2026-09-02 by the
-documentation audit (`DOCS-AUDIT-2.md`), which found it on this menu's surface
-rather than its own; `M21` was filed 2026-09-03. `M20` is **closed without being
-taken**, superseded by `M22`, which was filed and taken the same day and is the
-one finding here that changed the machine rather than the repo.
+**Status: `M21` is OPEN, `low`. Everything else on this menu is taken or
+closed** — status for any one of them lives under its own heading, and this line
+deliberately does not count them. `M21` was filed 2026-09-03. `M20` is **closed
+without being taken**, superseded by `M22`, which was filed and taken the same
+day and is the one finding here that changed the machine rather than the repo.
 `M18` is an OBSERVATION rather than a finding — the fault it records is still
 unexplained, every hypothesis raised against it is dead or cannot be provoked, and its
 recorder was repaired the same day it shipped. Taking it meant attempting a
@@ -1682,6 +1680,44 @@ the repo would contradict `SKILL-AUDIT.md` F11, which is why this file exists.
 **Decline it** if you would rather the list stay literal and be corrected by hand;
 that is a real position, and the file already tells its reader that a hand is the
 only thing maintaining it.
+
+**Taken, 2026-09-03 (PR #612), as proposed.** `~/.claude/CLAUDE.md` no longer
+enumerates the directory's contents. One paragraph rewritten; **no behaviour, no
+move, no check** — the file's own argument is that nothing mechanical reaches it,
+and a check reading it from inside the repo would contradict `SKILL-AUDIT.md`
+F11.
+
+**Both premises confirmed before the edit.** The sentence listed `books\`,
+`briefs\` and `.claude\`. The directory holds **five** entries — `.claude`,
+`books`, `briefs`, `profile.ps1`, `tools` — so exactly the two this finding names
+were missing, and no others.
+
+It now says what the directory is *for*, and tells the reader to list it:
+
+> It is where the book work runs from — the sourcebook PDFs, the loose briefs,
+> and its own `.claude\`. **List it if you need to know what is in it**; this
+> sentence used to enumerate the contents and went short the same day it was
+> written, because things get added to a working directory and nothing walks from
+> that to here.
+
+**The trigger sentence was narrowed in the same edit, and that is the part beyond
+the letter of the proposal.** It said the file must be edited *"if that directory
+changes"* — which is what made a growing directory look like it demanded an edit
+here. It now says **moves**. The distinction is the whole finding: a *move*
+breaks this file and a hand has to fix it, while a *contents change* does not
+break anything and should never have been this file's business.
+
+**The nearest thing to a check is the shape this file already uses.** Nothing
+mechanical can reach it — that is `SKILL-AUDIT.md` F11 and the reason this file is
+a pointer rather than a copy — so what replaces enumeration is a sentence that
+**cannot go stale**: a description plus an instruction to look. The same move
+`BOOK-INGEST-AUDIT.md`'s header made earlier the same day, for the same reason,
+and it is the third record in two days to conclude that a list in prose that
+nothing checks is a liability rather than a service.
+
+**Line endings:** the file is outside the repo and is uniformly **LF**. It was LF
+before and is LF after — the repo's CRLF convention does not reach it, and the
+edit did not mix the two.
 
 ### M20 — low — the old memory store's `memory\` directory survives as an empty husk
 
