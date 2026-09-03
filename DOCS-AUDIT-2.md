@@ -1,8 +1,9 @@
 # Documentation audit, second pass — 2026-09-02
 
-> **Status: `D1`–`D3` are OPEN.** Nothing here has been taken. Five repairs were
-> made in this pass and are listed under **Fixed here**; they are not findings
-> and carry no numbers.
+> **Status: `D2` and `D3` are OPEN, both `low`. `D1` is taken.** Status for any
+> finding lives under its own heading; this line does not count them. Five
+> repairs were made in this pass and are listed under **Fixed here**; they are
+> not findings and carry no numbers.
 >
 > **This menu's own trap:** four of the five things it repaired were *already
 > recorded as done* by a closed finding in another menu. `M7` moved the working
@@ -94,6 +95,73 @@ it excuses.
 justifies; the alternative is one sentence in `claim-audit` telling a mover to
 grep the instruction layer for the path they changed, which is cheaper and
 weaker.
+
+**Taken, 2026-09-03 (PR #609), as the PRIMARY proposal — the check, in the smoke
+suite, failing the build.** Scope as written: `CLAUDE.md`, `SETUP.md`,
+`.claude/skills/**`, `.claude/agents/**`. Not a grep for the old directory name.
+**No exemption list**, which this finding's posture forbids and which turned out
+not to be needed at all.
+
+`apps/character-creator/test/checks/instruction-paths.mjs`, wired into
+`smoke.mjs` beside the other check modules and run before the wrangler-backed
+ones.
+
+**The open question this finding leads with does not arise, and that is why the
+primary proposal was taken rather than the cheaper alternative.** It asks how to
+exempt *"paths inside explicitly dated historical sentences"*, and calls that the
+thing that might make this more machinery than it is worth. Measured
+2026-09-03: **15 checkable absolute paths in the instruction layer and all 15
+resolve.** Nothing is dead, so nothing needs exempting, and no date rule was
+built. If a genuinely historical path is ever written there, the first failure is
+the right moment to decide — cheaper than machinery built for a case that does
+not exist.
+
+**What is actually hard is extraction, which this finding does not mention.**
+A whitespace-delimited regex over the same corpus was measured at a **100%
+false-positive rate**: five reported failures, all five spurious.
+
+| what broke it | example |
+|---|---|
+| a path containing a **space** | `` `C:\Program Files\Git\cmd` `` truncates to `C:\Program`, which never resolves — four of the five |
+| a **shell template**, not a path | `"…\.claude\skills\$s"`, a PowerShell loop variable in a fenced block in `SETUP.md` |
+
+So paths are read out of **inline code spans and quoted strings** — which is how
+this repo writes them, and which gives a delimiter that survives a space — and
+any span carrying `$`, `%VAR%` or a `<placeholder>` is skipped as a template.
+That templated skip is narrower and simpler than the *"exempt fenced blocks"*
+rule sketched above, and it covers the only fenced-block path that exists. A real
+path written outside a span is invisible to the check: a **miss**, not a false
+failure, which is the direction a gate should fail in.
+
+**Proved by making it fail**, which is the only reason to trust a new gate. Two
+dead paths were planted in `CLAUDE.md` and the check reported both and exited
+**1**:
+
+```
+FAIL every absolute path in the instruction layer resolves —
+  CLAUDE.md:7 C:\Users\natha\Projects\moved-away\briefs;
+  CLAUDE.md:8 C:\Program Files\NotInstalled\thing.exe
+```
+
+The second is the one that matters: **a spaced path, caught** — the exact shape
+the naive version could not even represent. Reverted, and the flagless suite runs
+clean.
+
+**Two guards against a vacuous pass**, because "every path resolves" is trivially
+true when nothing is being read. The check asserts the walk finds at least ten
+instruction files and that at least eight checkable paths were extracted. Without
+those, a broken walk or a broken span regex reports success while checking
+nothing — which is this finding's own failure mode wearing a green tick.
+
+Smoke 1655 → **1658 in 114 sections.**
+
+**One consequence worth stating, since this finding did not.** The check resolves
+paths **on this machine**, so a fresh clone elsewhere fails it — every
+`C:\Users\natha\…` is absent there. That is not a new class of problem: the
+suite already shells out to `wrangler` and reads a local D1, so it has never been
+runnable on a bare clone. But it is one more thing `SETUP.md` → *Setting up a
+machine* would have to account for, and it is recorded here rather than
+discovered there.
 
 ### D2 — low — `docs/surveys/` has no index, and `docs/plans/` does
 
