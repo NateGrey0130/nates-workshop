@@ -259,25 +259,17 @@ for (const slug of Object.keys(bookRegistry)) {
   // strips the "and" that `normalise` introduces. The 18-skill failure was real
   // against `normalise` ALONE and was never an argument against `variants`.
   //
-  // THE PREFIX STRIP STAYS LOCAL. The catalog's category prefix - "Air: ",
-  // "W.P. " - is part of the stored name and no book prints it, so a book saying
-  // "Tornado" under a heading "Air" must still meet `Air: Tornado`. Two shapes,
-  // because "W.P." carries no colon; lazy `+?` so a name with two colons loses
-  // only the first.
-  //
-  // `variants` has no notion of a prefix, and giving it one is a SEPARATE
-  // decision rather than a side effect of this one: measured, it would move
-  // `catalog-diff` from 0 to 269 matched rows on the 374 prefixed names, which
-  // is far outside "one fewer advisory line" - the acceptance test F20 sets for
-  // this change. The measurement is under F20's outcome note in
-  // BOOK-INGEST-AUDIT.md, unfiled and waiting on a number.
-  const dePrefix = (n) => String(n).replace(/^(?:[A-Za-z .]+?:|W\.P\.)\s*/, '');
+  // F21. The category-prefix strip lived here as a local `dePrefix` and now
+  // lives in `variants` itself, so this is one matcher in one place rather than
+  // a rule with two copies. F20 kept it local deliberately - moving it changes
+  // what `catalog-diff` matches, measured at 0 -> 269 rows, which is a decision
+  // rather than a side effect - and F21 is where that decision was made.
   const found = (n) => {
     // An empty name cannot be searched for; treat it as present rather than
     // accusing the row. `variants('')` is empty, so this guard is load-bearing.
-    if (!variants(n).length) return true;
-    const forms = new Set([...variants(n), ...variants(dePrefix(n))]);
-    return [...forms].some((f) => f && text.includes(` ${f} `));
+    const forms = variants(n);
+    if (!forms.length) return true;
+    return forms.some((f) => f && text.includes(` ${f} `));
   };
 
   // NOT gear. A gear name in this catalog is reworded prose, not a heading the

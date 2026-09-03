@@ -87,6 +87,30 @@ export function variants(s) {
       if (h && h.length * 2 >= base.length) out.add(h);
     }
   }
+  // The catalog's CATEGORY PREFIX, dropped: "Air: Tornado" also reads as
+  // "Tornado", "W.P. Rope" as "Rope". BOOK-INGEST-AUDIT.md F21.
+  //
+  // The prefix is a convention of THIS catalog and no book prints it, so a
+  // prefixed row was indexed with no bare form and a book printing the bare name
+  // could not reach it. Measured over the 374 prefixed rows: 0 found by their
+  // own printed name before, 269 after, and 0 rows regressed - `match` consults
+  // the exact index first, keyed on `normalise`, where an added alias cannot
+  // reach.
+  //
+  // TWO shapes, because "W.P." carries no colon. Lazy `+?` so a name with two
+  // colons loses only the first. ADDED, never substituted: `normalise(s)` and
+  // `base` stay in the set, so a row whose full prefixed name IS printed still
+  // matches on it.
+  //
+  // This is the one entry here that is not a difference observed between a book
+  // and this catalog. It is a difference the catalog imposes on itself, which is
+  // why it is safe where a general fuzzy expansion would not be: anchored at the
+  // start, bounded to two shapes, and worth exactly one extra reading.
+  const bare = String(s ?? '').replace(/^(?:[A-Za-z .]+?:|W\.P\.)\s*/, '');
+  if (bare !== String(s ?? '')) {
+    const b = stem(bare);
+    if (b) { out.add(b); out.add(loose(bare)); }
+  }
   out.add(loose(s));
   return [...out].filter(Boolean);
 }

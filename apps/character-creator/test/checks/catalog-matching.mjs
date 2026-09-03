@@ -126,7 +126,23 @@ export function run() {
         && hit('Animate/Control Dead') === 'Animate and Control Dead';
   })());
 
-  check('variants stay small', variants('Commune with Spirits').length <= 4);
+  // BOOK-INGEST-AUDIT.md F21. This was `variants('Commune with Spirits').length
+  // <= 4` alone - an UNPREFIXED name yielding 2, so it passed with room to spare
+  // and would have gone on passing while the property it guards stopped holding.
+  // The guard exists because `variants`' own docstring says a general-purpose
+  // fuzzy expansion is how Telekinetic Push gets matched to Telekinetic Punch,
+  // so it has to bind the WORST case rather than one comfortable example.
+  //
+  // A prefixed name is the worst case: it takes the prefix strip on top of
+  // everything else. 6 is the measured ceiling across the whole catalog.
+  check('variants stay small - unprefixed', variants('Commune with Spirits').length <= 4);
+  check('variants stay small - prefixed, the worst case',
+    variants('Air: Summon & Control Canines/Felines').length <= 6,
+    `${variants('Air: Summon & Control Canines/Felines').length} forms`);
+  check('a prefixed name gains its bare reading', variants('Air: Tornado').includes('tornado'));
+  check('W.P. is stripped too, having no colon', variants('W.P. Rope').includes('rope'));
+  check('the strip is anchored - an unprefixed name gains nothing',
+    !variants('Bolt Action Rifle').some((f) => f === 'action rifle' || f === 'rifle'));
 
   // --- the diff, end to end ---
   check('diffCatalog separates corrections from gaps', (() => {

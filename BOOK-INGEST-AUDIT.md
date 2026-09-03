@@ -2440,3 +2440,55 @@ shared library that four things depend on. That is a real position — nothing i
 broken today, the tool simply reports as missing a set of rows that are present,
 and `F20` already took the cheap half. The cost of declining is that the two
 matchers stay divergent, which is the condition `F20` was filed to end.
+
+**Taken, 2026-09-03 (PR #617), as proposed, both halves.** The de-prefixed
+reading is in `variants()`; `dePrefix` is **gone from `drift-check.mjs`**, which
+was the point — one matcher in one place rather than a rule with two copies.
+**No exit code moves anywhere.**
+
+**Both acceptance numbers hit, and the second is the one that mattered.**
+
+| | wanted | got |
+|---|---|---|
+| `catalog-diff`: prefixed rows found by their book's bare name | ~269 | **269** of 374 |
+| `drift-check` advisory | **stays at 1** | `948 row(s) checked, **1** worth a look`, `NO DRIFT`, exit 0 |
+
+The advisory holding still is what proves the local strip and the library's
+agree. Had it moved, the two would have been computing different things and the
+diff would have been wrong — which is why that number was written into the
+finding before the change rather than read off after it.
+
+**The guard was re-pinned on the property, not raised.** `variants stay small`
+was `variants('Commune with Spirits').length <= 4` — an unprefixed name yielding
+**2**, passing with room to spare and certain to go on passing while the property
+it guards stopped holding. It is now three assertions binding the **worst case**:
+
+- unprefixed, unchanged at `<= 4`
+- **prefixed and slashed and ampersanded** — `Air: Summon & Control
+  Canines/Felines` — at `<= 6`, which is the measured ceiling across the whole
+  catalog. One more variant and it fails.
+- **the strip is anchored**: `Bolt Action Rifle` gains neither `rifle` nor
+  `action rifle`, so a name with no prefix gains nothing at all.
+
+Two more assert the strip does what it says: `Air: Tornado` yields `tornado`, and
+`W.P. Rope` yields `rope` despite carrying no colon.
+
+**Nothing regressed**, measured against the library *before* the change:
+**1053 rows found themselves by their own full name, 1053 after, 0 lost.**
+`match()` consults `index.exact` first, keyed on `normalise`, where an added
+alias cannot reach — so the risk this finding named, `Air: Darkness` knocking a
+row called *Darkness* off its own key, does not occur.
+
+**The 53 contested names behave exactly as this finding predicted.** With the
+strip live, 59 of the 374 prefixed rows resolve to a *different* row and 46 to
+nothing. Those are the general-invocation-versus-Warlock pairs — `Cloud of
+Smoke` against `Fire: Cloud of Smoke` — and the both-sides ambiguity rule
+refusing to guess is the correct answer to a genuinely ambiguous name, not a
+loss.
+
+**One thing worth recording about this entry specifically.** It is the only form
+in `variants()` that is *not* a difference observed between a book and this
+catalog — it is a difference the catalog imposes on itself. That is written into
+the comment, because the docstring's warning against general fuzzy expansion is
+the reason this library is trustworthy, and the next person adding a form should
+have to notice that this one is the exception and why.
