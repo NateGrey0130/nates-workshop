@@ -61,6 +61,57 @@ moves. One such error would have shipped a silent bug if implemented as written.
 Distrust first whatever is cheapest to check: line numbers, counts, "X exists
 nowhere", and any claim about what another finding says.
 
+### And before WRITING a proposal, grep the other menus for its subject
+
+The rule above fires when a finding is **taken**. This one fires earlier, when
+one is **written**, and it catches a different failure: **a proposal that
+reverses a decision another menu already made, on purpose, with reasons.**
+
+**Not a grep for a finding number — a grep for the thing being proposed**: the
+filename, the mechanism, the setting, the convention. And
+`~/.claude/.../memory/` is part of it, which no grep of this repo reaches. That
+is a different sweep from the one further down this page, which runs *after* a
+finding is taken and searches for its *number*.
+
+**Re-measuring cannot catch this, and neither can an evidence line.** The facts
+in these were right; what was missing was that somebody had already weighed
+them:
+
+- `REPO-AUDIT` `G9` proposed renaming `SETUP-v2-CHANGES.md` to fit the glob.
+  `HEALTH-AUDIT` `F4` had chosen the opposite **the day before**, in PR #523,
+  and written down why. `G9` had verified its own facts twice.
+- `REPO-AUDIT` `G10` proposed numbering the data scripts. `SKILL-AUDIT` `F25(b)`
+  had closed that in PR #567, in a note ending *"recorded so it is not
+  re-proposed"* — the clause exists for precisely this, and nobody read it.
+- `REPO-AUDIT`'s own **scope statement** handed territory to a
+  `PORTABILITY-AUDIT.md` that had been dropped the day before, and said so in
+  four files. The header warning about this shape carried an instance of it.
+- `REPO-AUDIT` `G18` proposed the evidence line as a new convention.
+  `HEALTH-AUDIT` and `SKILL-AUDIT` had been writing one on every finding since
+  the previous day; its note calls it *"a convention that starts today"*.
+
+**No tally of these is kept, deliberately** — see *Never grep for the outcome
+note* below for what a maintained count of a recurring failure costs here. They
+are named instead, because a name stays right.
+
+**What a hit looks like.** Menus here defend their closed decisions in writing,
+and the phrasing is consistent enough to search for: `SKILL-AUDIT` `F8` ends
+*"Not to be re-proposed"*, `F25(b)` *"Recorded so it is not re-proposed"*, and
+`REDESIGN-AUDIT` carries a whole `## Not carried forward, and why` section
+opening *"Recorded so the same material does not get re-proposed from the same
+prompt."* Those sentences were written for this grep. Nothing makes them fire on
+their own.
+
+**A finding may still re-propose a settled decision.** Circumstances change, and
+`G10` had a second, independent ground that killed it anyway. What a finding may
+**not** do is fail to say that a decision exists. `G10`'s note is the model: it
+names `F25(b)`, quotes it, and then argues past it.
+
+**No script, and this is not the mechanical reader ruled out below.** It greps
+for a *subject* and hands back paragraphs for a person to read — the same posture
+as `scripts/audit-citations.mjs`, and for the same reason. **The grep is the
+tool; noticing is the work.** Thirty seconds.
+
 ## A class note that cites a finding goes stale when the finding is taken
 
 An `extraction_notes` entry does two jobs in one paragraph. *What the book
