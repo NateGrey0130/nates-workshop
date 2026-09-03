@@ -178,6 +178,39 @@ for a *subject* and hands back paragraphs for a person to read — the same post
 as `scripts/audit-citations.mjs`, and for the same reason. **The grep is the
 tool; noticing is the work.** Thirty seconds.
 
+### And before the menu is handed over, re-run every command it quotes
+
+The rule above fires per proposal. This one fires **once, on the whole menu, just
+before Nate reads it** — and it is the cheapest of the three, because the
+commands are already written inside the findings.
+
+**Report the pass in the menu**, including what did *not* move. `REPO-AUDIT`'s is
+the worked example: a table naming every finding re-measured, the two found
+materially wrong, and the ten whose central claim held. The rows that held are
+what make the wrong ones legible; a pass that reports only its catches reads like
+a list of complaints and tells a reader nothing about coverage.
+
+**What it caught, stated exactly**, because the tempting version of this number
+is wrong: of the **thirteen** findings still open when `REPO-AUDIT` ran its pass,
+it found **`G11` and `G15` materially wrong**, and flagged **`G6` as right by
+luck** — verified *enabled* while asserting *empty*. That menu's other three
+wrong claims were in findings **already taken by then**; the pass never saw them,
+and it was prompted by their failure rather than the reverse. **Run it earlier
+than `REPO-AUDIT` did and it is strictly better than that record.**
+
+**Say what the pass cannot see**, in the menu, so its silence is not read as
+coverage:
+
+- **A finding with no command to re-run is not verified by it.** That is the
+  asymmetry `G18` names — a wrong inference has nothing to re-run.
+- **A finding proposing a *decision* is untouched by it.** `G9` and `G10` had
+  their facts right; no amount of re-measuring reaches an already-settled
+  question. That is the grep above, not this pass.
+
+**No check, no schedule, and it is not a phase.** `REPO-AUDIT` ran its pass
+because the error rate alarmed whoever was writing, which is the right trigger.
+`META-AUDIT` `A10`.
+
 ## A class note that cites a finding goes stale when the finding is taken
 
 An `extraction_notes` entry does two jobs in one paragraph. *What the book

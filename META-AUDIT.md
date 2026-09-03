@@ -1,9 +1,8 @@
 # Meta-audit — the menus as a reference, and the discipline that fills them, 2026-09-03
 
-> **STATUS: `A2`–`A9`, `A11` and `A12` are taken. `A1` and `A10` are OPEN.**
-> Read each finding's own heading for its state and its PR number; this line does
-> not carry them, for the reason `A6` records about statuses held anywhere but
-> under the finding. Filed
+> **STATUS: `A2`–`A12` are taken. `A1` is OPEN.** Read each finding's own
+> heading for its state and its PR number; this line does not carry them, for the
+> reason `A6` records about statuses held anywhere but under the finding. Filed
 > 2026-09-03 against `main` @ `3332349` (the merge of #641). Findings are
 > `### A<n> — <severity> — <title>`, severity lowercase. Status for any finding
 > lives under its own heading; this line does not count them.
@@ -1295,6 +1294,50 @@ second file at all.
 `G1`, `G5`, `G8`, `G9`, `G10`, `G11`, `G15`, each read to the next heading,
 2026-09-03. The coverage table above is derived from those notes and from
 nothing else.
+
+**Taken, 2026-09-03 (PR #651), as written. Posture held: a convention for a new
+menu, documentation only — not a required phase, not a checkable artifact, and no
+check.** The separate evidence-log artifact stays argued against, on this
+finding's own reasoning.
+
+**This finding's central number was wrong, and taking it is what found that.**
+`A10` says the pass caught *"three of five wrong claims before hand-over"* and
+tabulates `G8`, `G1` and `G5` as ones it **missed**. It did not miss them — **it
+never saw them.** `REPO-AUDIT`'s pass covers *"every **remaining** finding"*, and
+those three had already been taken when it ran:
+
+| | |
+|---|---|
+| `G8` taken | PR #620, merged 16:41 UTC |
+| `G1` taken | PR #621, merged 16:55 UTC |
+| `G5` half (a) taken | PR #636, merged 18:43 UTC |
+| the pass's own table | lists thirteen findings, and none of those three |
+
+And the direction is the opposite of what `A10` implies: the pass was **prompted
+by** those three failures — its own opening line says *"prompted by the error
+rate above, not by a schedule"* — so implementing had already exposed them before
+the pass existed.
+
+**The corrected record is smaller and it argues harder.** Of the **thirteen**
+findings the pass examined, it found **two materially wrong** (`G11`, `G15`) and
+flagged **one right by luck** (`G6` — verified *enabled* while asserting
+*empty*). Ten held. That is what went into the skill, with the clause `A10` could
+not have written: **run it earlier than `REPO-AUDIT` did and it is strictly
+better than that record**, because `REPO-AUDIT`'s ran late and still caught two.
+
+**`A11`'s grep found no prior decision either way.** What it found was the
+practice happening unnamed — `CLASS-AUDIT`, `apps/character-creator/AUDIT` and
+`INGESTION-AUDIT` all say *"re-verified on <date>"* in their headers. Those are
+re-verifications of **closed** findings, a different act from `REPO-AUDIT`'s
+pre-hand-over pass over **open** ones, and the skill now names only the second.
+
+**Two clauses carried across because they are the value, not the mechanism.**
+Report the findings that **held** as well as the ones that moved — the rows that
+held are what make the wrong ones legible. And **state what the pass cannot
+see**, in the menu, so its silence is not read as coverage: a finding with no
+command to re-run is not verified by it, and a finding proposing a *decision* is
+untouched by it entirely. That second one is `A11`'s grep, and the skill says so
+rather than letting a reader assume one pass covers both.
 
 ---
 
