@@ -1,9 +1,9 @@
 # Documentation audit, second pass — 2026-09-02
 
-> **Status: `D3` is OPEN. `D1` and `D2` are taken.** Status for any finding lives
-> under its own heading; this line does not count them. Five repairs were made in
-> this pass and are listed under **Fixed here**; they are not findings and carry
-> no numbers.
+> **Status: nothing is open. `D1`, `D2` and `D3` are all taken**, on 2026-09-03.
+> Status for any finding lives under its own heading; this line does not count
+> them. Five repairs were made in this pass and are listed under **Fixed here**;
+> they are not findings and carry no numbers.
 >
 > **This menu's own trap:** four of the five things it repaired were *already
 > recorded as done* by a closed finding in another menu. `M7` moved the working
@@ -259,6 +259,43 @@ either name.
 **Posture:** delete two untracked working files outside the repo, nothing else.
 **Decline it** freely — by `M13`'s own reasoning these are safe to keep, and the
 only cost is two confusing filenames in a directory a person reads by eye.
+
+**Taken, 2026-09-03 (PR #611), as proposed.** `workshop\briefs\REVIEWBRIEF.md`
+and `workshop\briefs\setupv2rewriteprompt.md` deleted; both hyphenated twins
+confirmed still present, and the directory went 28 files → **26**. Nothing inside
+the repo changed except this note.
+
+**Nothing was lost, and that was established before deleting rather than
+afterwards.** Each copy's content survives in **two** other places, one of them
+version-controlled:
+
+| deleted | loose twin | archived, in git |
+|---|---|---|
+| `REVIEWBRIEF.md` | `briefs\REVIEW-BRIEF.md` | `docs/prompts/REVIEW-BRIEF.md` |
+| `setupv2rewriteprompt.md` | `briefs\setup-v2-rewrite-prompt.md` | `docs/prompts/setup-v2-rewrite-prompt.md` |
+
+Both archived copies were compared against their loose twins and are
+content-identical once line endings are normalised — `M13`'s 18-of-18 result,
+re-confirmed for these two on the day they were deleted.
+
+**One premise needs correcting, and it is the sentence that authorises the
+delete.** This finding says *"Nothing references them by either name."* Six
+places in the repo name them, plus two outside it:
+
+- `docs/prompts/workstation-consolidation-prompt.md` (three mentions) — the
+  brief that **asked** for this duplicate resolution
+- `MACHINE-AUDIT.md` `M13`'s comparison table
+- `HEALTH-AUDIT.md` (two mentions)
+- `docs/prompts/README.md`, already in the past tense
+- and this finding itself
+
+**Every one is prose *about* the duplication, not a reference *to* a file**, so
+the finding's conclusion holds and its wording does not. The distinction is worth
+keeping: a mention in a dated record is history and stays true after the file is
+gone; a reference that resolves to a path is a dependency and would break. There
+were zero of the second kind. **None of those records was edited** — they
+describe a state that existed on the day each was written, which is what
+`audit-menu` means by not rewriting a measurement.
 
 ## Routed elsewhere
 
