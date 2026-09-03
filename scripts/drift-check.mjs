@@ -36,6 +36,7 @@ import { DB, d1Query, repoRoot, targetFromArgv } from './d1-query-lib.mjs';
 import { join } from 'node:path';
 import { cacheCoverage, loadBookRegistry } from './books-lib.mjs';
 import { registryBookSlug } from './class-check-lib.mjs';
+import { variants } from './catalog-match-lib.mjs';
 
 
 const target = targetFromArgv();
@@ -242,40 +243,40 @@ for (const slug of Object.keys(bookRegistry)) {
   // look absent - "Motorcycles & Snowmobiles" became "motorcycles and
   // snowmobiles" while the book held "motorcycles snowmobiles". Try both
   // readings, and both numbers.
-  const flat = (n) => String(n).replace(/\([^)]*\)/g, ' ')
-    .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-
-  // F19. The catalog's CATEGORY PREFIX is part of the stored name and no book
-  // prints it: "Air: Tornado" flattened to "air tornado" while the book says
-  // "Tornado" under a heading "Air". 213 of 216 advisory lines were that.
+  // F20. The name spellings come from `catalog-match-lib.mjs`, which is the
+  // repo's name matcher: `catalog-diff.mjs` uses it and
+  // `test/checks/catalog-matching.mjs` pins it. What stood here was a SECOND,
+  // hand-rolled matcher solving the same problem worse - every variant F19
+  // added to it (an `and`/`or` elision, singular/plural, parenthetical dropped)
+  // already existed there as `loose`, `variants` and `stem`, and the library
+  // also has a slash-half rule this had nothing for.
   //
-  // TWO shapes, because "W.P." carries no colon and a colon-anchored pattern
-  // never reaches it - measured against production, colon alone cleared 209 of
-  // the 216 and the pair cleared 213. Lazy `+?` so a name with two colons
-  // loses only the first.
+  // F19 declined this consolidation on the reading that `variants` runs through
+  // `normalise`, which expands "&" to "and" where the old flattener DELETED it -
+  // and the comment that used to sit here recorded 18 skills that went missing
+  // when that expansion was applied alone. Measured before switching: 27 catalog
+  // rows carry an "&" and all 27 are found either way. `loose` is why, since it
+  // strips the "and" that `normalise` introduces. The 18-skill failure was real
+  // against `normalise` ALONE and was never an argument against `variants`.
+  //
+  // THE PREFIX STRIP STAYS LOCAL. The catalog's category prefix - "Air: ",
+  // "W.P. " - is part of the stored name and no book prints it, so a book saying
+  // "Tornado" under a heading "Air" must still meet `Air: Tornado`. Two shapes,
+  // because "W.P." carries no colon; lazy `+?` so a name with two colons loses
+  // only the first.
+  //
+  // `variants` has no notion of a prefix, and giving it one is a SEPARATE
+  // decision rather than a side effect of this one: measured, it would move
+  // `catalog-diff` from 0 to 269 matched rows on the 374 prefixed names, which
+  // is far outside "one fewer advisory line" - the acceptance test F20 sets for
+  // this change. The measurement is under F20's outcome note in
+  // BOOK-INGEST-AUDIT.md, unfiled and waiting on a number.
   const dePrefix = (n) => String(n).replace(/^(?:[A-Za-z .]+?:|W\.P\.)\s*/, '');
   const found = (n) => {
-    const base = flat(n);
-    if (!base) return true;
-    const forms = new Set([base, String(n).toLowerCase().replace(/&/g, ' and ')
-      .replace(/\([^)]*\)/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim()]);
-    // F19. The flattener DELETES the book's "&", so a book printing "Summon &
-    // Control Canines" reads as "summon control canines" while the catalog
-    // spells the word. The comment above handles the opposite direction - a
-    // catalog name carrying "&" - and there was no transform for this one.
-    for (const f of [...forms]) forms.add(f.replace(/ and /g, ' '));
-    // F19. ADDED, never substituted: `base` stays in the set, so a row whose
-    // full prefixed name really is printed still matches on it. Every form here
-    // can only make `.some()` below more likely to be true, so this change can
-    // shorten the advisory and can never lengthen it.
-    const bare = flat(dePrefix(n));
-    if (bare && bare !== base) {
-      forms.add(bare);
-      forms.add(bare.replace(/ and /g, ' '));
-    }
-    for (const f of [...forms]) {
-      forms.add(f.endsWith('s') ? f.slice(0, -1) : f + 's');
-    }
+    // An empty name cannot be searched for; treat it as present rather than
+    // accusing the row. `variants('')` is empty, so this guard is load-bearing.
+    if (!variants(n).length) return true;
+    const forms = new Set([...variants(n), ...variants(dePrefix(n))]);
     return [...forms].some((f) => f && text.includes(` ${f} `));
   };
 
