@@ -1,6 +1,6 @@
 # Repository architecture audit — git, GitHub, layout and the merge path, 2026-09-03
 
-**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G12`+`G13` taken together (PR #627); `G4` (PR #628), `G6` (PR #629) and `G14` (PR #630, fixed in #631) taken; `G16` CLOSED BY DECISION - declined and recorded (PR #632); `G2` taken via PATH B - stays public, deliberately (PR #633); `G17` taken (PR #634); `G9` and `G10` closed WITHOUT being taken (PRs #625, #626); `G5` RE-SCOPED then TAKEN, half (a) only (PRs #635, #636); `G11` and `G15` re-scoped and now takeable; those two
+**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G12`+`G13` taken together (PR #627); `G4` (PR #628), `G6` (PR #629) and `G14` (PR #630, fixed in #631) taken; `G16` CLOSED BY DECISION - declined and recorded (PR #632); `G2` taken via PATH B - stays public, deliberately (PR #633); `G17` taken (PR #634); `G9` and `G10` closed WITHOUT being taken (PRs #625, #626); `G5` RE-SCOPED then TAKEN, half (a) only (PRs #635, #636); `G11` re-scoped then TAKEN (PR #637); `G15` re-scoped and takeable; those
 carry `Adjusted` notes; `G18` filed 2026-09-03. The rest are OPEN.**
 Read the lines under a finding's own heading for its state — this line is a
 convenience and it is the kind of line that goes stale first.
@@ -1057,6 +1057,30 @@ from other menus, from skills and from the memory store, and a move would break
 citations that no repo grep reaches — that part of the original stands unchanged.
 
 **Posture: documentation only, zero files moved, no number that can go stale.**
+
+**Taken as re-scoped, 2026-09-03 (PR #637). Zero files moved, and no count in
+the rule.**
+
+`audit-menu` gains *Where a new menu goes*, placed immediately before *When not
+to* — the section that already governs whether to open a menu at all, which is
+the same decision one step earlier.
+
+The rule is the re-scoped one: **decide by what the menu is about**, root for
+anything spanning apps or covering the repo, process, machine or instruction
+layer; the app's own directory for anything scoped to one app.
+
+**It carries no tally, and the paragraph says why** — this finding's own attempt
+to state the question by counting got both numbers wrong, the root figure
+because it used the `*AUDIT*.md` glob that misses `SETUP-v2-CHANGES.md`. A rule
+with a count in it needs re-counting every time a menu lands, with the tool that
+has already proven wrong. Recording that inside the rule is the point: the next
+reader is told not to reach for the glob, in the place they would reach for it.
+
+**`BOOK-INGEST-AUDIT.md` is named in the skill as the standing
+counter-example** — at the root, entirely about the character creator's catalog,
+and explicitly not moved. The rule is for the next menu, not a mandate to
+rearrange the existing ones, whose paths are cited from other menus, from skills
+and from the memory store.
 
 ### G12 — medium — `F18` names eleven different things, and the branch names inherit the ambiguity
 

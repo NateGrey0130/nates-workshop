@@ -287,6 +287,29 @@ production merged away weeks earlier. Quote a moving number only where something
 pins it; the test suite pins the README's counts, so those survive, and a count
 in prose does not.
 
+## Where a new menu goes
+
+Decide by **what the menu is about**, not by where similar-sounding files
+already sit:
+
+- **the repo root** — anything spanning more than one app, or covering the repo,
+  the process, the machine, or the instruction layer;
+- **the app's own directory** — anything scoped to exactly one app.
+
+**No count belongs in this rule, and that is deliberate.** `REPO-AUDIT.md` G11
+tried to state the placement question by counting the menus in each location and
+got both numbers wrong — the root figure because it was counted with the
+`*AUDIT*.md` glob that misses `SETUP-v2-CHANGES.md`, which is the trap described
+above the `find` command earlier in this file. A rule carrying a tally needs
+re-counting every time a menu lands, with the tool that has already proven
+wrong. This one does not.
+
+**`BOOK-INGEST-AUDIT.md` is the standing counter-example.** It sits at the root
+and is entirely about the character creator's catalog. It is **not** moved to
+fit this rule, and the rule does not pretend it fits: existing paths are cited
+from other menus, from skills and from the memory store, and a move breaks
+citations no grep of this repo reaches. The rule is for the **next** menu.
+
 ## When not to
 
 Do not open a new menu for work belonging in an existing one, and do not add a
