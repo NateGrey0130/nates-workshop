@@ -50,6 +50,55 @@ wrong change: when a proposal says "add a check but move no exit code", a check
 that fails the build is a defect even though it works. Say the posture back in
 the outcome note — cheapest place to catch a misread.
 
+## The shape a finding takes, so a brief does not have to say
+
+**A brief can now say "findings follow the `audit-menu` shape" and stop.** Until
+2026-09-03 it could not: every brief in `docs/prompts/` re-derived the research
+discipline in its own words — *"Verify, don't infer"*, *"Do not quote a count you
+did not verify against the tree in front of you"*, *"quote counts only if you
+verified them against `--remote`"*, *"Verify before asserting"*, *"check before
+filing"* — five wordings of one rule, and this file owned none of it.
+
+**That mattered, because a menu inherits its brief's discipline and one menu had
+no brief.** `REPO-AUDIT.md` has none on this machine, and it is the menu whose
+own header records five wrong claims in eighteen findings. **A correlation, not a
+demonstrated cause** — different subject matter, and small numbers — and the only
+evidence either way.
+
+A finding carries these, and the list is deliberately short:
+
+- **Severity** in the heading, in whatever shape the menu already uses.
+- **`Proposal`** specific enough to implement from, and a stated **posture**.
+- **Evidence** — the command and the day, or *inferred* / *not measured* /
+  *reported by `<file>`*. The rule and its reasoning are further down, under
+  *Every number carries its date and its source*.
+- **Confidence** — high / medium / low, **and what would raise it.** The last
+  clause is the whole value: *"medium until someone runs X"* tells a taker where
+  to start, and a bare *medium* tells them nothing.
+- **Ongoing cost** — what the proposal costs *forever* once adopted: a check to
+  remember, a file to keep current, a CI minute. **A proposal whose ongoing cost
+  exceeds its impact should say so and recommend declining itself.**
+
+**Two fields are deliberately absent.** *Effort* (S/M/L) has been wrong in both
+directions here — `REPO-AUDIT` `G8` shipped far smaller than proposed and `G5`
+grew a second defect while being taken — and *Impact* duplicates what a severity
+word and a proposal already say.
+
+**Bound to the `Proposal`, like `G18`, and for the same reason.** A finding that
+is still a suspicion needs none of this. Filing one must stay cheap, and friction
+there is friction on the wrong part of the loop.
+
+**What it costs, stated rather than hidden**, because a rule that adds an hour to
+every pass is a trade and not a free improvement: four fields at roughly two to
+four lines each, so tens of lines and perhaps a quarter of an hour on a menu of
+any size. **No check enforces it and no existing menu is retrofitted.**
+
+**This is not new, which is the argument for it.** `HEALTH-AUDIT` carries
+`Evidence` on every finding and `Confidence` on all but one, and `SKILL-AUDIT`
+carries `Evidence` throughout — both from `health-audit-prompt.md`'s template,
+both filed 2026-09-02. The fields above are that template minus the two that rot.
+`META-AUDIT` `A9`.
+
 ## Taking a finding is also AUDITING the finding
 
 **The highest-value rule here.** Verify the premises against current code before
