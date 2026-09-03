@@ -19,6 +19,13 @@ in SETUP.md:
   self-hosted, the list is always empty, and the check passes vacuously. A test
   finding rather than a documentation one; filed for a separate PR.
 
+  **It now has a number: `apps/pick3cut5/AUDIT.md` `F11`, filed 2026-09-03**
+  (`META-AUDIT` `A5`). It had none for a day, which is the point worth keeping:
+  a sentence in this paragraph carries no heading and no outcome note, so it is
+  reached by nobody reading the header above or the findings below. Filing it
+  also opened **`F12`** there — the same regression arriving through CSS, which
+  neither half of that test can see.
+
 **This file stays.** It holds the rationale for each change and the sections
 read and confirmed unchanged, neither of which the rewritten SETUP.md carries.
 One correction to it: change 3's rationale says `docs/` is cited twice in the
