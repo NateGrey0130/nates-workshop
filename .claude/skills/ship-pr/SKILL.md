@@ -155,7 +155,8 @@ twice passed 45 in a day. So end a working session with the backstop:
 node scripts/deploy-sweep.mjs
 ```
 
-It walks the last twenty merge commits on `origin/main` and names any that did
+It walks the last twenty **first-parent** commits on `origin/main` and names any
+that did
 not ship, including one that registered no check-run at all — which looks
 exactly like a quiet healthy merge and is not one. Report only: it never moves
 the exit code, because a deploy that failed needs a person rather than a

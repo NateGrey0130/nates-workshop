@@ -32,8 +32,23 @@
 //
 // DO NOT confuse this with `gh pr checks`, which reads the PR's head commit.
 // That has shown a red "Cloudflare Pages fail" on PRs that deployed perfectly
-// well for months, so the mark there carries no information. The MERGE
-// commit's check-runs are the signal.
+// well for months, so the mark there carries no information. The check-runs on
+// the commit that LANDED ON MAIN are the signal.
+//
+// WHY --first-parent AND NOT --merges. This walked `--merges` until 2026-09-03,
+// so it saw merge commits and nothing else - and this repo has 117 SQUASH
+// merges on main, spanning 2026-08-16 to 2026-08-31, which `--merges` returns
+// none of. Three were checked directly: all carry a real `Cloudflare Pages`
+// check-run and this script read none of them. A squash-merged deploy failure
+// was invisible here - the four-day outage's failure mode reached by another
+// route (REPO-AUDIT.md G5).
+//
+// `--first-parent` is the fix rather than adding squash detection, because the
+// question is not "how did this land" but "was this a state main was in".
+// Every first-parent commit is one, whatever produced it - a merge commit, a
+// squash, or a direct push - and each triggered a build that either succeeded
+// or did not. The squash BUTTON stays enabled: that is a separate decision, and
+// disabling it would not have fixed the 117 already on main.
 //
 // Report only. This never moves the exit code, for the same reason
 // repo-vs-live.mjs does not: a failed deploy needs a person to look at it, and
@@ -71,7 +86,7 @@ try {
   console.log('  (could not fetch; reading origin/main as of the last fetch)');
 }
 
-const logArgs = ['log', '--merges', '--format=%H%x09%ad%x09%s', '--date=short'];
+const logArgs = ['log', '--first-parent', '--format=%H%x09%ad%x09%s', '--date=short'];
 if (!all) logArgs.push(`-${limit}`);
 logArgs.push('origin/main');
 
@@ -81,7 +96,7 @@ const commits = run('git', logArgs).trim().split('\n').filter(Boolean).map((line
 });
 
 if (commits.length === 0) {
-  console.log('No merge commits on origin/main.');
+  console.log('No commits on origin/main.');
   process.exit(0);
 }
 
@@ -98,7 +113,19 @@ for (const c of commits) {
       // build twenty seconds old and one wedged for half an hour print the
       // same line - which is how a stalled deploy read as healthy here for 32
       // minutes on 2026-09-02 (HEALTH-AUDIT F24).
-      '--jq', '[.check_runs[] | .name + "=" + (.conclusion // "pending") + "@" + (.started_at // "")] | join(",")',
+      //
+      // FILTERED TO THE PAGES RUN, and it has to be. This read EVERY check-run
+      // on the commit and failed the commit if any of them failed. That was
+      // harmless while Pages was the only thing posting one, and stopped being
+      // harmless on 2026-09-03 when `deploy-alarm.yml` started posting
+      // `check-recent-deploys` to main. Its first run was buggy and red, and
+      // this script then reported `1ce6ea9` as DID NOT DEPLOY while the same
+      // line showed `Cloudflare Pages=success` - a deploy monitor calling a
+      // successful deploy a failure because a different monitor had failed.
+      // Two tools feeding each other false alarms is precisely how a check
+      // stops being read. The header above already says the Pages run is the
+      // signal; now the query agrees with it.
+      '--jq', '[.check_runs[] | select(.name=="Cloudflare Pages") | .name + "=" + (.conclusion // "pending") + "@" + (.started_at // "")] | join(",")',
     ]).trim();
     conclusions = out;
   } catch (err) {
@@ -135,7 +162,7 @@ for (const c of commits) {
 
 const short = (c) => `${c.sha.slice(0, 7)}  ${c.date}  ${c.subject.slice(0, 62)}`;
 
-console.log(`\nDeploy sweep - ${commits.length} merge commit(s) on origin/main\n`);
+console.log(`\nDeploy sweep - ${commits.length} first-parent commit(s) on origin/main\n`);
 
 if (bad.length) {
   console.log(`  ${bad.length} DID NOT DEPLOY:\n`);
