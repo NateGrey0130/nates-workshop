@@ -1,8 +1,11 @@
 # Meta-audit — the menus as a reference, and the discipline that fills them, 2026-09-03
 
-> **STATUS: `A2`–`A12` are taken. `A1` is OPEN.** Read each finding's own
-> heading for its state and its PR number; this line does not carry them, for the
-> reason `A6` records about statuses held anywhere but under the finding. Filed
+> **STATUS: `A2`–`A12` are taken. `A1` is DECLINED — no index was built, and
+> the skill records why beside the `find` command. Nothing on this menu is
+> open.** Read each finding's own heading for its state and its PR number; this
+> line does not carry them, for the reason `A6` records about statuses held
+> anywhere but under the finding. **Two findings this menu FILED are open
+> elsewhere** — `apps/pick3cut5/AUDIT.md` `F11` and `F12`. Filed
 > 2026-09-03 against `main` @ `3332349` (the merge of #641). Findings are
 > `### A<n> — <severity> — <title>`, severity lowercase. Status for any finding
 > lives under its own heading; this line does not count them.
@@ -495,6 +498,43 @@ fifth partial index rather than a first complete one, and the four that exist
 are each wrong about a different field today. If he wants it anyway, **build the
 one in `A2` instead** — it is the same information with the rotting half
 deleted.
+
+**DECLINED, 2026-09-03 (PR #652), on Nate's word and on this finding's own
+recommendation. No `AUDITS.md` exists and none is to be built.**
+
+**This is the outcome the finding argued for against the person who asked for
+it**, which is the whole reason it was written that way: Nate asked for the
+index-only option, and a finding that tells him his stated preference was already
+decided the other way — with reasons — is worth more than one that builds what
+was asked for. He read the argument and made the call.
+
+**The decline is recorded in the skill, beside the `find` command**, which is
+where a reader reaches for a list and where the next person will propose one. It
+states both halves, because they fail differently:
+
+- **the file list is derivable**, so an index is a second place to be wrong
+  rather than a first place to be right — and the shape table *was* that index,
+  wrong on all five readings;
+- **a status column is not derivable and rots faster** — three sources described
+  one menu's status on 2026-09-03 and all three disagreed, two of them while
+  carrying an explicit *do not trust this line* guard.
+
+**It also records that this is the second decline, not the first.** `REPO-AUDIT`
+`G9` said *"Explicitly NOT proposed: an index file listing the menus"* earlier the
+same day. `A11`'s grep found it, and the skill now names both — so a third
+proposal meets two dated refusals rather than none, which is the entire mechanism
+`A11` exists to create.
+
+**What replaced it is already shipped and is the honest answer to the request.**
+`A2` kept the shape table's useful half and deleted its claim to completeness;
+`A7` made the `find` command's two blind spots explicit; `A6` made the memory
+store point rather than restate. **A reader today gets the list from the tree in
+one command and the status from each menu's own header** — which is what an index
+was wanted for, without a file that has to be maintained to stay true.
+
+**Nothing was built, and nothing was removed.** The four partial indexes that
+exist — the skill's shape table, `docs/prompts/README.md`, the memory store, each
+menu's own header — stay exactly as they are.
 
 ---
 
@@ -1676,6 +1716,9 @@ paid for itself once inside this document.
   against; **do not take both**, and if the index is built, `A2` becomes more
   urgent rather than less, because the skill's table would then be the *second*
   wrong list rather than the only one.
+
+  **RESOLVED 2026-09-03: `A1` was declined and no index was built** (PR #652).
+  The paragraph above stands as what the choice looked like beforehand.
 
 **Ordering that matters:**
 
