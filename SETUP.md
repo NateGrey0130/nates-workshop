@@ -237,6 +237,29 @@ rather than to this document: **the `ship-pr` skill requires it** — the merge
 commit's check-runs read from the GitHub API, plus asking production for a
 string the change added.
 
+Since 2026-09-03 a **daily alarm** covers the merge nobody confirmed:
+`.github/workflows/deploy-alarm.yml` walks the last 26 hours of merges and fails
+its own run — which is how it notifies — when one did not deploy. It is not a
+required check and cannot block anything (`REPO-AUDIT.md` G14).
+
+### There are no tags, and that is a decision
+
+`git tag` returns nothing, across 1,200-odd commits and 600-odd merged pull
+requests. **Declined deliberately on 2026-09-03** (`REPO-AUDIT.md` G16), recorded
+here so the absence is not read as an oversight and "fixed".
+
+The site is continuously deployed and has no consumers pinning a version, so a
+tag would name nothing anyone can install. The one question a tag would answer —
+*what was live on the day that bug appeared* — already has two answers:
+`git log --first-parent main` gives the merge order, and Cloudflare's deployment
+list gives the times. **A tag convention nobody maintains is worse than none**,
+because it looks authoritative while silently going stale, which is the failure
+this repo keeps filing findings about.
+
+If that ever changes, the lightest thing that works is an annotated tag at a
+point worth returning to, created by hand. No automation, no schedule, no
+`v1.0.0` ladder.
+
 ## Pick 3 Cut 5 and the second Worker
 
 Pick 3 Cut 5 needs a Durable Object per room, and **a Pages project cannot

@@ -1,6 +1,6 @@
 # Repository architecture audit — git, GitHub, layout and the merge path, 2026-09-03
 
-**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G12`+`G13` taken together (PR #627); `G4` (PR #628), `G6` (PR #629) and `G14` (PR #630) taken; `G9` and `G10` closed WITHOUT being taken (PRs #625, #626); `G5`, `G11` and `G15`
+**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G12`+`G13` taken together (PR #627); `G4` (PR #628), `G6` (PR #629) and `G14` (PR #630, fixed in #631) taken; `G16` CLOSED BY DECISION - declined and recorded (PR #632); `G9` and `G10` closed WITHOUT being taken (PRs #625, #626); `G5`, `G11` and `G15`
 carry `Adjusted` notes; `G18` filed 2026-09-03. The rest are OPEN.**
 Read the lines under a finding's own heading for its state — this line is a
 convenience and it is the kind of line that goes stale first.
@@ -1206,6 +1206,25 @@ to, created by hand, no automation and no schedule.
 
 **Posture: low, and declining it is a perfectly good outcome.** Filed so the
 absence is a decision rather than an omission.
+
+**Closed by decision, 2026-09-03 (PR #632) — declined, and recorded.** The
+finding offered two outcomes and the decline was chosen, which is why this says
+*closed by decision* rather than *closed without being taken*: the work it asked
+for was done, and that work was writing down a no.
+
+`SETUP.md` → *How deploys work* gains **"There are no tags, and that is a
+decision"**, so the absence is not read later as an oversight and "fixed". The
+reasoning recorded there: the site is continuously deployed with no consumers
+pinning a version, and the one question a tag would answer — *what was live
+when* — already has two answers, `git log --first-parent main` for the order and
+Cloudflare's deployment list for the times. **A tag convention nobody maintains
+is worse than none**, because it looks authoritative while going stale, which is
+the failure this repo keeps filing findings about.
+
+The escape hatch is recorded too: if it ever changes, an annotated tag by hand
+at a point worth returning to. No automation, no schedule, no `v1.0.0` ladder.
+
+**Still zero tags** — `git tag` re-checked the same day, returns nothing.
 
 ### G17 — low — a public repo with no `LICENSE`
 
