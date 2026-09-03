@@ -2,9 +2,23 @@
 
 > **Status lives under each finding, not in this header.** Every finding here
 > carries its own dated outcome note beneath its heading; read to the next
-> `###`. **They are not all closed** — `F3` is *partly* taken, its
-> character-completeness half shipped in PR #431 and its schema question still
-> open, which `F12`'s outcome note independently records.
+> `###`. **`F3`'s schema half closed 2026-09-03 in PR #616** — the keep-dropping
+> option, with the standing limitation written into `docs/known-limitations.md`
+> where a reader of `gear` will meet it. It was the only finding on this menu
+> ever taken in halves.
+>
+> **This header still states no overall verdict, and that is deliberate.**
+> Several findings here close with a residue rather than a full stop: `F3` names
+> the trigger that would reopen it, and `F11` records a `class-check` warning it
+> decided against building and still thinks worth having. A one-word status
+> would flatten those into *closed* or reopen them wrongly. Read the notes.
+>
+> **`F12`'s outcome note still says `F3`'s schema half is open, and it is not
+> wrong.** It is a measurement dated 2026-08-31 and it stays as one, per this
+> repo's rule that an audit file is a record. The same goes for the four class
+> notes citing `F3`: *"`gear` has no shape for a vessel"* survived the closure,
+> because what closed was a decision to keep dropping vessels rather than a
+> change to the schema.
 >
 > **The one that misreads:** `F14`'s `Taken, 2026-08-31 (PR #434)` note sits
 > below an inline `**F10 excluded this on a premise that is false.**` — a bold
@@ -20,8 +34,8 @@
 >
 > **This header no longer enumerates, and should not again.** Corrected
 > 2026-09-03: the closed range it used to carry was wrong twice over — never
-> extended when `F18` landed on 2026-09-02, and sweeping up `F3`, which has
-> never been fully taken. It also carried a re-verification date more recent
+> extended when `F18` landed on 2026-09-02, and sweeping up `F3`, which had not
+> then been fully taken. It also carried a re-verification date more recent
 > than both errors, which is the part worth noticing: a count in a header is
 > re-checked by hand or not at all, and the hand is what keeps missing.
 
