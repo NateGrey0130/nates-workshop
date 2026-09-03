@@ -428,6 +428,21 @@ today and wrong the moment a menu lands under `docs/` — a rule with an expiry
 date nobody will notice. A glob is the wrong shape for a convention nothing
 enforces, which is this whole section in one line.
 
+**And do not fix it with an index file either. That has now been declined
+twice** — `REPO-AUDIT` `G9` on 2026-09-03, and `META-AUDIT` `A1` the same day
+with the evidence `G9` did not have. The two halves an `AUDITS.md` would carry
+fail differently and both fail:
+
+- **The file list is derivable**, so an index adds a second place to be wrong
+  rather than a first place to be right — and the table above *was* that index,
+  wrong on all five of its readings.
+- **A status column is not derivable and rots faster.** On 2026-09-03 three
+  sources described one menu's status and **all three disagreed**, two of them
+  while carrying an explicit *do not trust this line* guard. A memory cannot hold
+  a status and neither can an index; **a menu's own dated header is the only
+  place one belongs**, which is the same conclusion the memory store reached
+  after a line there went stale in seventeen minutes.
+
 *(The over-return went unstated until 2026-09-03, `META-AUDIT` `A7`. The
 paragraph prepared a reader for exactly one of the two errors, and `REPO-AUDIT`
 `G11` then miscounted the root with this command and was re-scoped for it.)*
