@@ -1,6 +1,6 @@
 # Repository architecture audit — git, GitHub, layout and the merge path, 2026-09-03
 
-**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G12`+`G13` taken together (PR #627); `G9` and `G10` closed WITHOUT being taken (PRs #625, #626); `G5`, `G11` and `G15`
+**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G12`+`G13` taken together (PR #627); `G4` (PR #628) and `G6` (PR #629) taken; `G9` and `G10` closed WITHOUT being taken (PRs #625, #626); `G5`, `G11` and `G15`
 carry `Adjusted` notes; `G18` filed 2026-09-03. The rest are OPEN.**
 Read the lines under a finding's own heading for its state — this line is a
 convenience and it is the kind of line that goes stale first.
@@ -456,6 +456,34 @@ with `blank_issues_enabled: false` and one contact link pointing at the menus.
 **Posture: reduce the number of places to look.** Whichever way Issues goes,
 the outcome note should say which and why, because "we use the menus" is exactly
 the kind of unwritten convention this repo keeps rediscovering.
+
+**Taken, 2026-09-03 (PR #629). All three disabled** — `has_issues`,
+`has_projects` and `has_wiki` are now `false`.
+
+**Issues went off rather than staying with a template**, which was the fork.
+The reasoning, recorded so it is not re-litigated: the menus are the tracker,
+there is no second contributor, and an enabled Issues tab is a place someone can
+file into that nobody reads. A contact link would have been a second thing to
+maintain pointing at a queue that already has a home. **If a contact channel is
+ever wanted, re-enabling Issues with
+`.github/ISSUE_TEMPLATE/config.yml` is a two-minute change** — nothing here
+forecloses it.
+
+**Nothing was lost, verified before disabling rather than assumed:** `0` issues
+ever (`search/issues?q=repo:…+is:issue` → `total_count: 0`), no wiki — cloning
+`…nates-workshop.wiki.git` returned *"Repository not found"*, so one was never
+created — and no classic projects. Disabling a tab hides it; it does not delete
+content, and there was none.
+
+**This finding's claim was true and had not been checked when it was written** —
+only "enabled" had been measured, never "empty". See the verification pass in
+this menu's header, and the trap it turns on: `gh api repos/…/issues?state=all`
+returns **100** rows for a repo with zero issues, because that endpoint includes
+pull requests.
+
+**One consequence for `G14`**, which is why these were sequenced together: with
+Issues off, `G14`'s deploy alarm **cannot file an issue** and has to take the
+workflow-failure form instead. That is now the only shape available to it.
 
 ### G7 — medium — the PR convention is excellent, and invisible to GitHub
 
