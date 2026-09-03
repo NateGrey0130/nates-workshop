@@ -1,6 +1,7 @@
 # Meta-audit — the menus as a reference, and the discipline that fills them, 2026-09-03
 
-> **STATUS: `A11` is taken (PR #642). The other eleven are OPEN.** Filed
+> **STATUS: `A3` and `A11` are taken (PRs #643, #642). The other ten are
+> OPEN.** Filed
 > 2026-09-03 against `main` @ `3332349` (the merge of #641). Findings are
 > `### A<n> — <severity> — <title>`, severity lowercase. Status for any finding
 > lives under its own heading; this line does not count them.
@@ -583,6 +584,70 @@ no check.**
 **Evidence:** `git log --format='%h %ci %s' -- BOOK-INGEST-AUDIT.md` and the two
 commit timestamps, run 2026-09-03; `F3`'s note read to the next `###`;
 `scripts/audit-citations.mjs --remote F3` run 2026-09-03 (read-only).
+
+**Taken, 2026-09-03 (PR #643). Posture held: the header only — no finding, no
+class note, no check, and nothing else in the file.**
+
+**`A11`'s rule was run on this finding and it changed the implementation.** The
+grep for the subject — *how this header should read* — returned
+`MACHINE-AUDIT` `M19`, whose note cites this very header as its precedent:
+
+> The nearest thing to a check is the shape this file already uses… what
+> replaces enumeration is a sentence that **cannot go stale**: a description plus
+> an instruction to look. The same move `BOOK-INGEST-AUDIT.md`'s header made
+> earlier the same day, for the same reason, and it is the third record in two
+> days to conclude that a list in prose that nothing checks is a liability rather
+> than a service.
+
+**So a settled decision governs this header**, made hours before the finding was
+filed, and `A3`'s proposal as written would have walked into it: saying *"`F3`
+closed, everything is now closed"* is an enumerated present-tense verdict, which
+is the shape both `M19` and this header's own last paragraph rule out. **The
+header now records the dated fact and refuses the verdict**, and says why. The
+rule shipped in PR #642 caught this on its first real use, which is the strongest
+thing that can be said for it.
+
+**Three findings had to be established by reading before a word was written**,
+because a status claim cannot be made from a scan of this file — the header's own
+second paragraph says so:
+
+- **`F3` is fully closed** (PR #616, the keep-dropping option) and was **the only
+  finding on this menu ever taken in halves** — confirmed by grepping for
+  *partly taken* / *in part* / *half only* and reading each hit, not by trusting
+  the count.
+- **`F11` is closed, not open**, though its last paragraph records a
+  `class-check` warning it decided against building and still thinks worth
+  having. That is a residue like `HEALTH-AUDIT` `F20`'s *"honestly not solved"*,
+  not open work, and it carries no number.
+- **`F2` was reopened as `F18`**, which is taken (PR #590).
+
+**A second stale sentence was found in the same header and fixed.** Its closing
+paragraph said `F3` *"has never been fully taken"* — present-perfect, and false
+since 08:41 that morning. Changed to *"had not then been fully taken"*, which
+preserves the record of why the enumeration was removed while removing the false
+tense. **Beyond `A3`'s letter, which said the status claim only** — flagged
+rather than folded in silently, and it is the same defect in the same header, two
+paragraphs down.
+
+**One thing deliberately not done.** `F12`'s note and the four class notes citing
+`F3` still say a vessel has no shape in `gear`. **They are correct** — the
+closure decided to keep dropping vessels, so the limitation survived it — and
+`F12`'s is a dated measurement besides. The new header says this outright, so the
+next reader does not sweep them up as rot. `scripts/audit-citations.mjs --remote
+F3` re-run: five citers, four limitation passages, all four still true.
+
+**And my own census instrument was wrong about this file, in the way the corpus
+already records.** The script used to extract outcome notes across the corpus
+split blocks on bold leads as well as headings, and printed `F17`'s note under
+`F3`'s heading. That is the same class of fault the
+`audit-outcome-notes-vary-in-wording` memory records — a scan splitting on an
+inline `**F10 …**` and hiding a `Taken` note. Every claim above was re-derived by
+reading `### F\d+` blocks only. **The header this finding fixes was wrong for one
+reason and my reading of it was nearly wrong for another.**
+
+Diff: **+19 / −5** on one file, CRLF preserved (2,508 CRLF, 0 bare LF, 0 control
+characters), and the replaced phrase is **not quoted back** anywhere, per the
+skill's rule against defeating a future grep for it.
 
 ---
 
