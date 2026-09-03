@@ -1,0 +1,24 @@
+Nate's Workshop — what LICENSE does and does not cover
+======================================================
+
+LICENSE is an unmodified MIT licence. It covers THE CODE in this repository:
+the HTML, CSS, JavaScript, the Pages Functions, the Worker, the build and
+reporting scripts, the SQL schema and migrations, and the documentation written
+for this project.
+
+IT DOES NOT COVER THE GAME CONTENT.
+
+The character creator's catalog — class definitions, skills, spells, psionic
+powers, gear, and the descriptive text stored with them — is transcribed from
+Palladium Books sourcebooks for personal use at one table. That material belongs
+to Palladium Books. It is not licensed here, it is not mine to license, and
+nothing in LICENSE grants any right to it.
+
+This project is unaffiliated with and unendorsed by Palladium Books. Rifts(R)
+and Palladium Fantasy Role-Playing Game(R) are registered trademarks of
+Palladium Books Inc.
+
+This file exists because LICENSE is deliberately left as the verbatim MIT text,
+so that it is recognisable as MIT and unambiguous about the code. Appending a
+scope note to it would have made it something other than MIT. The scope note
+lives here instead, and README.md points at both.
