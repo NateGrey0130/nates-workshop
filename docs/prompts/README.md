@@ -70,7 +70,34 @@ Audit briefs:
 | `REVIEW-BRIEF.md` | `apps/character-creator/INGESTION-AUDIT.md` — tracks E and F only |
 | `SKILLAUDITPROMPT.md` | `SKILL-AUDIT.md` — the instruction-layer audit, and this row |
 | `workstation-consolidation-prompt.md` | `MACHINE-AUDIT.md` — the machine rather than the repo |
+| `docs-audit-2-prompt.md` | `DOCS-AUDIT-2.md` — the second documentation pass |
+| `meta-audit-prompt.md` | `META-AUDIT.md` — the menus themselves, and the discipline that fills them |
+| *(none kept)* | `REPO-AUDIT.md` — **its brief was not saved.** See below |
 | `portability-audit-prompt.md` | **nothing.** The investigation was dropped the day it was written — see below |
+
+**Added 2026-09-03 (`META-AUDIT` `A12`).** The first two rows above,
+plus the `REPO-AUDIT` row, landed a day after `SKILL-AUDIT` `F19` added three
+briefs this directory had already missed. **That is the second time this archive
+has been found short**, and the sentence at the top of this file — *an archive
+assembled by hand is missing something the day it lands* — has now been true
+twice, of two different hands.
+
+### One menu's brief does not exist, and that is worth a row of its own
+
+`REPO-AUDIT.md` produced the `main` ruleset, CI on every pull request, and the
+`audit-menu` evidence rule. **No brief for it exists anywhere on this machine** —
+grepped 2026-09-03 across `C:\Users\natha\Downloads\` and
+`C:\Users\natha\Projects\workshop\`, which is where every other brief here came
+from. The only file mentioning that menu by name is the meta-audit's own.
+
+**An absence stated is worth more than a gap**, which is why it is a row rather
+than an omission. It also has a consequence worth recording: `META-AUDIT` `A9`
+establishes that the research discipline in this repo is transmitted **by the
+brief** — five briefs state a *verify, don't infer* rule in five wordings, and
+the skill owned none of it until 2026-09-03. `REPO-AUDIT` is the menu that
+inherited none, and it is the one whose header records five wrong claims in
+eighteen findings. **That is a correlation and not a demonstrated cause**, and it
+is the only evidence available either way.
 
 ## Three of them named a file that shipped under a different name
 
