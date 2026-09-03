@@ -1,9 +1,9 @@
 # Pick 3 Cut 5 — outstanding items, 2026-08-24
 
-> **`F11` and `F12` are OPEN**, both filed 2026-09-03 — see `META-AUDIT` `A5`.
-> Everything else here is closed, re-verified on 2026-09-02: `F1`–`F10` and
-> `T1`–`T11`. **`F12` was opened while filing `F11` and is the stronger of the
-> two**; `F11`'s check guards a door the fonts have already left.
+> **`F12` is OPEN.** `F11` was taken 2026-09-03; everything else here is closed,
+> re-verified on 2026-09-02: `F1`–`F10` and `T1`–`T11`. **`F12` was opened while
+> filing `F11` and is the stronger of the two** — `F11` guarded the HTML door,
+> and `F12` is the one a stylesheet walks through.
 >
 > **Two that misread.** The eleven `T` items are **bold paragraph leads**, not
 > headings — `**T1. … — PASSED.**` under `## T — paths that have never run` — so
@@ -480,6 +480,43 @@ and no change to what is public.** This is a test finding, not an Access change.
 same day. The history is **reported by** `SETUP-v2-CHANGES.md` and
 `docs/prompts/setup-v2-rewrite-prompt.md`, which flagged it out of scope and said
 to file it separately.
+
+**Taken, 2026-09-03 (PR #653) as option (a). Posture held: one check, no exit
+code moved beyond what the suite already does, and nothing about what is public
+changed.** Smoke 47 → **47** — one assertion replaced, not added.
+
+The check now reads *"index.html fetches nothing from a third party"* and asserts
+`external.length === 0`. Its failure message names the URL and says what a
+non-zero means: **an unauthenticated request from the one page outside Access.**
+
+**Option (b), deletion, was rejected on `F12`'s account.** `F12` needs a home for
+the external-CSS half, and deleting this check would mean re-adding it one PR
+later. Recording the reason because the finding deliberately picked neither.
+
+**Proved by making it fail, which is the only way this one could be proved** — it
+had passed every run since the fonts were self-hosted while comparing nothing.
+Injecting a `<link>` to a font CDN into `index.html`:
+
+| | on the injected regression | on the real page |
+|---|---|---|
+| the old predicate | **PASSES** — the CDN link is exactly what it allowed | passes vacuously, nothing compared |
+| the new predicate | **FAILS**, naming the URL | passes, having asserted the invariant |
+
+`SMOKE TEST FAILED (1 of 47 checks)` on the injection, `PASSED (47)` after
+restoring `index.html` — confirmed unchanged by `git diff`. **The old check would
+have waved through the precise regression it was written to catch**, which is
+worth more than the vacuity: it was not merely silent, it was permissive.
+
+**One correction to this finding's own evidence line.** It says *"5 refs, 0
+external"*. The test's regex matches `<script>` and `<link>` only and finds
+**4**; the fifth was `<a href="/">`, which the file's own comment excludes on
+purpose — counting a navigation as a dependency would demand a bypass that must
+never exist. My count used a looser pattern than the "file's own regex" I claimed.
+**`0 external` is right either way and is the half the finding rests on.**
+
+**Deliberately still true after this PR: the check is HTML-only**, and its
+comment says so and points at `F12`. A `url()` inside a stylesheet has no tag and
+never enters `external`.
 
 ---
 

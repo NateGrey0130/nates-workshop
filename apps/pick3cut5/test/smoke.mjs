@@ -84,9 +84,23 @@ check('every relative asset stays inside the app directory',
   relative.every((r) => !r.startsWith('..')),
   relative.filter((r) => r.startsWith('..')).join(', '));
 
-check('external assets are fonts only',
-  external.every((r) => r.startsWith('https://fonts.googleapis.com/')),
-  external.filter((r) => !r.startsWith('https://fonts.googleapis.com/')).join(', '));
+// This page fetches NOTHING from a third party, and that is the assertion -
+// not "external assets are fonts only", which allowed a font CDN and then went
+// quiet when the fonts were self-hosted into shared/fonts/. An empty list
+// satisfies .every() no matter what the predicate says, so that check passed
+// without comparing anything from the day the CDN link came out. F11.
+//
+// A third-party request here is a request the Access wall never sees and the
+// bypass list cannot cover: this is the one page outside the wall, so an
+// unauthenticated player makes it. That is what a non-zero count means.
+//
+// HTML ONLY. A url() inside a stylesheet has no tag here and does not appear
+// in `external` - see the CSS half below, and F12.
+check('index.html fetches nothing from a third party',
+  external.length === 0,
+  external.length
+    ? `${external.join(', ')} - an unauthenticated request from the one page outside Access`
+    : '');
 
 // ---------- 1b. What the CSS then loads ----------
 //
