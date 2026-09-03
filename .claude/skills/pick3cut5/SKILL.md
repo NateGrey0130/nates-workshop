@@ -89,8 +89,14 @@ a DO class** — only bind to one exported from a standalone Worker, with
 and deploys by hand:
 
 ```bash
-npx wrangler deploy --config workers/pick3cut5-room/wrangler.jsonc
+npx wrangler deploy --config workers/pick3cut5-room/wrangler.jsonc --var GIT_SHA:$(git rev-parse HEAD)
 ```
+
+**The `--var` is not optional decoration.** It records the commit the live
+Worker was built from as a plain-text binding, and `deploy-sweep.mjs` reads it
+back to answer *which build is live* — a question the timestamp comparison
+below cannot answer at all. Deploy without it and the binding disappears; the
+sweep says so and falls back to timestamps (`REPO-AUDIT.md` G15).
 
 **Order matters and nothing enforces it.** The Worker must exist *before* the
 Pages deploy that binds it. Backwards, party mode answers 503 while the rest of
