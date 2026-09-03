@@ -1,7 +1,7 @@
 # Repository architecture audit — git, GitHub, layout and the merge path, 2026-09-03
 
-**Status: `G8` taken 2026-09-03 (PR #620), `G1` taken 2026-09-03 (PR #621), and
-`G5` carries an `Adjusted` note rather than being taken. The rest are OPEN.**
+**Status: `G8` and `G1` taken 2026-09-03 (PRs #620, #621); `G5`, `G11` and `G15`
+carry `Adjusted` notes; `G18` filed 2026-09-03. The rest are OPEN.**
 Read the lines under a finding's own heading for its state — this line is a
 convenience and it is the kind of line that goes stale first.
 
@@ -16,6 +16,34 @@ And taking `G1` disproved **`G5`**, which still says merge commits are used
 So: **treat the reasoning in these findings as a lead, not as established
 fact**, and distrust first anything cheap to check — a count, a command, or a
 claim that something has never happened.
+
+## Every remaining finding was re-verified on 2026-09-03
+
+Prompted by the error rate above, not by a schedule. Each open finding's central
+claim was re-measured against the repo and the GitHub API the same day the menu
+was written. **Two were materially wrong and now carry `Adjusted` banners:**
+
+| finding | verdict |
+|---|---|
+| `G11` | **WRONG** — "eight under `apps/`" is nine, and it miscounted the root with the very glob `G9` says is incomplete |
+| `G15` | **WRONG** — "produces no signal at all" is false; `deploy-sweep.mjs` already reports the Worker, and most of the proposal exists |
+| `G6` | claim TRUE, but it was **unverified when written** — only "enabled" had been checked, never "empty" |
+| `G2` `G3` `G4` `G7` `G9` `G12` `G13` `G14` `G16` `G17` | central claim **holds** |
+| `G3` `G9` `G10` `G12` | hold, with counts that have since **drifted** — see each note |
+
+**The failure has one shape, and naming it is the useful part.** Every wrong
+claim in this menu — `G8`'s bare clone, `G1`'s counting command, `G5`'s
+"exclusively", `G11`'s totals, `G15`'s "no signal" — was **reasoned to rather
+than run**. Every claim that came from a command that was actually executed has
+held. The menu wrote both in the same voice, and nothing on the page told a
+reader which was which. `G18` proposes the fix.
+
+**`G6` is the subtler case and worth reading twice.** It was right, and it was
+right by luck: the check performed confirmed the tabs were *enabled*, and the
+finding asserted they were *empty*. Verifying it required excluding pull
+requests from the issues endpoint, which returns 100 rows for a repo with zero
+issues. **A coincidence is not a check** — the same lesson `audit-menu` records
+about `INGESTION-AUDIT` F14.
 
 **This menu's own trap, stated first, as the `audit-menu` skill asks.** Every
 number in this file is a **GitHub-side or filesystem-side measurement taken on
@@ -235,6 +263,10 @@ finding in the menu with a consequence outside the repository.
 
 ### G3 — medium — a public repo with 693 files and no root `README.md`
 
+**Re-verified 2026-09-03: holds.** Still no `README.md`, `LICENSE`,
+`CONTRIBUTING.md` or `SECURITY.md`. The tracked-file count has drifted 693 →
+**696**; the claim does not depend on it.
+
 There is no `README.md`, `LICENSE`, `CONTRIBUTING.md` or `SECURITY.md` at the
 root. GitHub's landing page for this repository is a bare file listing whose
 first readable entry is `BOOK-INGEST-AUDIT.md`, a 139 KB menu.
@@ -322,6 +354,19 @@ keys on merge commits rather than merely defaulting to them — the header says
 "the last 20 merge commits", which reads as a window rather than a contract.
 
 ### G6 — medium — Issues, Projects and Wiki are all enabled and all empty
+
+**Verified 2026-09-03, and it had NOT been when this was written.** The original
+check confirmed the three tabs were *enabled*; the finding then asserted they
+were *empty*, which is a different claim. Now measured: **0 issues ever**
+(`search/issues?q=repo:…+is:issue` → `total_count: 0`), **no wiki** — cloning
+`…nates-workshop.wiki.git` returns *"Repository not found"*, so one was never
+created — and no classic projects.
+
+**The trap that makes this worth stating:** the obvious command,
+`gh api repos/…/issues?state=all`, returns **100** rows for a repo with zero
+issues, because that endpoint includes pull requests. Filter on
+`select(.pull_request == null)`. The finding was right; the reasoning behind it
+had not been done.
 
 `has_issues`, `has_projects`, `has_wiki` — all `true`. The tracker in practice
 is the audit-menu system: seventeen files, numbered findings, taken one at a
@@ -527,6 +572,12 @@ platform probe and the line-ending fix the run forced.
 
 ### G9 — medium — eleven markdown files at the root, and the canonical way to list them misses one
 
+**Re-verified 2026-09-03: the core claim holds and the count has drifted — by
+this menu's own doing.** The glob still cannot see `SETUP-v2-CHANGES.md`
+(`find … -name '*AUDIT*.md' | grep -c 'SETUP-v2'` → **0**), which is the whole
+finding. The root is now **twelve** `.md` files rather than eleven, because
+`REPO-AUDIT.md` is one of them.
+
 The root holds **eleven** `.md` files totalling roughly 700 KB, seven of which
 are audit menus. The `audit-menu` skill's own listing command —
 
@@ -564,6 +615,12 @@ permitted, but if that reads as too much, decline — and then leave the skill's
 warning paragraph exactly where it is.
 
 ### G10 — medium — 359 run-once scripts in one flat directory, ordered by filename, escalated five `z` deep
+
+**Re-verified 2026-09-03: holds, with drift from another session.** Now **360**
+`.sql` files and **78** `fix-` (was 359 and 77) — one `fix-` script landed while
+this menu was being written. The `z` tiers are unchanged and confirmed at
+**13 / 9 / 14 / 2 = 38** files. The ledger constraint that shapes the proposal —
+`data_script_runs` keyed on filename — is unchanged.
 
 `apps/character-creator/db/` holds **359** `.sql` files totalling **4.5 MB**,
 applied by a rebuild as one sorted glob. Filename order is execution order, and
@@ -603,6 +660,18 @@ finding if it is ever wanted.
 
 ### G11 — low — audit menus sit at the root or in an app directory by no stated rule
 
+**Adjusted 2026-09-03 — both counts in the first sentence are wrong, and the
+way they are wrong is the joke.** There are **nine** menus under `apps/`, not
+eight (`find apps -name '*AUDIT*.md'`). And the root count was taken with the
+`*AUDIT*.md` glob — **the exact incomplete instrument `G9`, two findings above,
+exists to warn about** — so it missed `SETUP-v2-CHANGES.md`, making the root
+figure 8 at the time of writing rather than 7. It is 9 now, because this menu
+added a file to the root.
+
+The finding's substance is untouched: there is still no stated rule for where a
+menu goes, and the two ingestion menus are still easy to confuse. Only the
+arithmetic was wrong. The original sentence stands below.
+
 Seven menus at the root; eight under `apps/`. `BOOK-INGEST-AUDIT.md` is at the
 root though it is entirely about the character creator's catalog;
 `apps/character-creator/INGESTION-AUDIT.md` is app-scoped and covers adjacent
@@ -620,6 +689,11 @@ and a move would invalidate citations that no repo grep reaches.
 **Posture: documentation only, zero files moved.**
 
 ### G12 — medium — `F18` names eleven different things, and the branch names inherit the ambiguity
+
+**Re-verified 2026-09-03: holds.** Still **eleven** menus using `F`. The
+subject counts have moved with this session's own commits — unqualified **9**
+(unchanged), qualified **5 → 8**, over **772** non-merge subjects rather than
+767. The collision is unaffected.
 
 Eleven menus number their findings with `F`:
 
@@ -722,6 +796,38 @@ check on a day you did not finish cleanly.
 
 ### G15 — medium — one of the two deploy paths produces no signal at all
 
+**Adjusted 2026-09-03 — the heading is false, and this finding predicted its own
+error.** Its last line said this was "the premise in the menu most likely to be
+stale" and told a taker to read `deploy-sweep.mjs`'s Worker half first. Done,
+and the warning was right.
+
+**There is a signal.** `deploy-sweep.mjs` shells out to `wrangler deployments
+list` for `workers/pick3cut5-room`, takes the active deployment, and compares
+its timestamp against the newest commit touching that directory on
+`origin/main`. Run twice on 2026-09-03, it printed:
+
+```
+workers/pick3cut5-room - deployed by hand, so no check-run exists for it
+  up to date - 7ed9f916 deployed 2026-09-02T13:01:56.478Z
+  newest commit d5de69f 2026-09-02T12:03:32.000Z
+```
+
+So "produces **no signal at all**" is wrong — what is true is the narrower
+"produces no **check-run**", which the body already said. And the proposal's
+second half — *"a recorded deployment id the sweep compares against
+`workers/pick3cut5-room`'s HEAD"* — **is substantially what already exists**,
+except keyed on timestamps rather than on an id.
+
+**What is genuinely left is smaller and different in kind**, and
+`deploy-sweep.mjs`'s own header states it: *a timestamp cannot tell you whether
+the change mattered* — a `$schema` edit fires it as loudly as a rewrite of
+`room.js`. So the residual gap is that nothing identifies **which build** is
+live, only that something newer exists in git. A version string the Worker
+serves would close that; the timestamp comparison cannot.
+
+**Re-scope to that before taking it**, and drop the half of the proposal that is
+already built. The original text stands below.
+
 The site deploys two ways. Merging to `main` deploys Pages and posts a
 check-run. `workers/pick3cut5-room` — which owns the Durable Object and the rate
 limit binding — is deployed **by hand** and **produces no check-run at all**.
@@ -785,6 +891,52 @@ by that licence.
 **Do not treat a licence as protection.** It clarifies intent for the code; it
 does not create a right to redistribute the book content. G2 is where that
 question actually lives.
+
+### G18 — medium — a finding does not say whether its central claim was measured or reasoned to
+
+**Filed 2026-09-03, out of this menu's own error rate rather than from a survey
+of anything else.** Five claims here have been wrong: `G8`'s bare clone, `G1`'s
+counting command, `G5`'s "exclusively", `G11`'s totals, `G15`'s "no signal at
+all".
+
+**They have one shape.** Every one was **reasoned to rather than run**. Every
+claim that came from a command actually executed has survived re-measurement —
+including the ones that sound most fragile, like `404 Branch not protected` and
+`eleven menus number with F`. The problem is not carelessness about facts; it is
+that a finding presents *"I ran this and it printed that"* and *"this follows
+from those two things"* in the same voice, and a reader — including the person
+who wrote it a week later — cannot tell which is which.
+
+The consequences are not symmetrical. A wrong measurement is usually caught the
+moment someone re-runs the command. **A wrong inference gets implemented**,
+because it reads as settled and there is nothing to re-run. `G8` would have sent
+a taker into portability work that was not needed; `G5` still proposes disabling
+a merge button on the grounds that it is unused, when it has been used 117
+times.
+
+**Proposal:** every finding names its evidence for its central claim, in one of
+two forms — the **command and the date**, or the words *inferred*, *reported by*
+or *not measured*. One line. Where a proposal tells a taker to run a command, it
+says whether the author ran it: `G1`'s did not, and it was wrong.
+
+`audit-menu` already requires *"every number carries its date and its source"*.
+**This is that rule extended from numbers to claims**, which is where it was
+actually needed — `G8`'s bare-clone sentence contains no number at all and was
+the most expensive error in the menu.
+
+**Posture: convention for new findings, documentation only.** No retrofit of
+existing menus, and **no check** — the `audit-menu` skill argues at length that
+a mechanical reader of these files keeps being wrong, and a linter for
+"does this finding cite evidence" would be exactly that.
+
+**Decline path, and it is not weak.** Findings are meant to be cheap to file,
+and a required evidence line is friction on the part of the loop that should
+stay frictionless — the menu exists to capture a suspicion before it is lost.
+The counter-argument is that the five errors above all reached a *proposal*
+specific enough to implement from, which is past the suspicion stage; the rule
+could bind only on the `**Proposal:**` paragraph and leave the observation free.
+**That narrower version is probably the right one** and is offered as the
+default reading if this is taken.
 
 ---
 
