@@ -1,9 +1,20 @@
 # Repository architecture audit — git, GitHub, layout and the merge path, 2026-09-03
 
-**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G12`+`G13` taken together (PR #627); `G4` (PR #628), `G6` (PR #629) and `G14` (PR #630, fixed in #631) taken; `G16` CLOSED BY DECISION - declined and recorded (PR #632); `G2` taken via PATH B - stays public, deliberately (PR #633); `G17` taken (PR #634); `G9` and `G10` closed WITHOUT being taken (PRs #625, #626); `G5` RE-SCOPED then TAKEN, half (a) only (PRs #635, #636); `G11` re-scoped then TAKEN (PR #637); `G15` re-scoped then TAKEN, no public route (PR #639); those
-carry `Adjusted` notes; `G18` filed 2026-09-03. The rest are OPEN.**
-Read the lines under a finding's own heading for its state — this line is a
-convenience and it is the kind of line that goes stale first.
+**Status, all of it 2026-09-03: nothing is open.**
+
+| | |
+|---|---|
+| **taken** | `G1`–`G8`, `G11`–`G15`, `G17`, `G18` |
+| **closed, not taken** | `G9`, `G10` — each already decided by another menu |
+| **closed by decision** | `G16` — declined, and the decline written into `SETUP.md` |
+| **re-scoped before being taken** | `G5`, `G11`, `G15` — their `Adjusted` notes stand above the re-scopes |
+| **taken in part** | `G2` via path B, `G5` half (a) only |
+
+**Read the lines under a finding's own heading for its state, and its PR
+number.** This block is a convenience and it is the kind of thing that goes
+stale first — it was a run-on sentence carrying twelve PR numbers until it was
+rewritten, which is the failure it warns about, arriving in the status line
+itself.
 
 **Every finding taken from this menu so far has turned up an error in its own
 premises, and one of them was in a finding nobody had touched.** `G8` claimed
@@ -1583,6 +1594,42 @@ specific enough to implement from, which is past the suspicion stage; the rule
 could bind only on the `**Proposal:**` paragraph and leave the observation free.
 **That narrower version is probably the right one** and is offered as the
 default reading if this is taken.
+
+**Taken, 2026-09-03 (PR #640), in the narrower form this finding recommended to
+itself.** `audit-menu` gains *And a `Proposal` says whether its central claim was
+measured or reasoned to*, placed as a subsection of *Every number carries its
+date and its source* — because it is that rule extended from numbers to claims,
+and putting it anywhere else would have made it look like a second, competing
+one.
+
+**Bound to the `Proposal` paragraph only.** The observation above it stays
+free-form, and the skill says why: a menu exists to catch a suspicion before it
+is lost, and friction there is friction on the wrong part of the loop. **A
+suspicion is allowed to be a suspicion; a proposal specific enough to implement
+from is not.**
+
+The rule is one line — the command and the day, or the words *inferred*, *not
+measured*, or *reported by `<file>`* — plus the clause that cost the most to
+learn: **where a proposal tells a taker to run a command, say whether you ran
+it.** `G1` shipped one nobody had run, and it was wrong.
+
+**The evidence in the skill is this menu's own record**, named rather than
+generalised: `G8`'s bare clone, `G5`'s "exclusively", `G15`'s "no signal", and
+the asymmetry that makes it matter — a wrong measurement is caught the moment
+someone re-runs the command, and **a wrong inference gets implemented**, because
+it reads as settled and there is nothing to re-run.
+
+**No check and no retrofit**, as the posture required. Nothing scans for the
+line, and the seventeen findings above it are left exactly as written — several
+of them without evidence lines, which is the honest state of a convention that
+starts today.
+
+**One thing this does not fix, and the menu should not pretend otherwise.**
+`G9` and `G10` were closed because they re-proposed decisions other menus had
+already made, and **an evidence line would have caught neither** — their facts
+were right. That check is a grep for the subject across the other menus, which
+lives in this menu's header rather than in the skill, and remains a habit rather
+than a rule.
 
 ---
 
