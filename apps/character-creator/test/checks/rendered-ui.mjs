@@ -19,6 +19,39 @@ import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 import { fixedFormulaValue } from '../../js/dice.js';
 import { parseClassMarkdown } from '../../js/parser.js';
 
+// Cut one function's body out of a source file, on either line ending.
+//
+// REPO-AUDIT.md G8, and this is what the first CI run on Linux found. Three
+// places here sliced a function body by searching for a HARDCODED CRLF -
+// `'\r\n}'`, or `String.fromCharCode(13, 10)`. On a LF checkout every one of
+// those `indexOf` calls returns -1, and `slice(start, -1)` does not fail: it
+// silently returns the whole rest of the file.
+//
+// That went two ways, and the quiet one is the reason this helper exists rather
+// than three small edits:
+//
+//   * `togglePlay` FAILED loudly - the rest of the file contains `render()`,
+//     which is exactly what that check forbids.
+//   * `paintPool` PASSED VACUOUSLY. Its `painter` became the rest of the file,
+//     so the `src.replace(painter, '')` below it deleted nearly everything and
+//     the "no pool write bypasses it" check then searched a handful of lines
+//     and found nothing wrong. Green, and testing almost none of the file.
+//
+// So this returns null when it cannot find both ends, and every caller asserts
+// that before using the body. A missing delimiter is now a named failure
+// instead of either a confusing one or a silent pass.
+//
+// The column-0 `}` assumption is the original's and is kept: a function body
+// indents its inner braces, so the first line-initial `}` after the signature
+// is the function's own.
+function functionBody(src, signature) {
+  const from = src.indexOf(signature);
+  if (from === -1) return null;
+  const rest = src.slice(from);
+  const end = rest.search(/\r?\n\}/);
+  return end === -1 ? null : rest.slice(0, end);
+}
+
 // Declared so a --section run can skip the module without reading it.
 const SECTIONS = [
   'Perception',
@@ -143,8 +176,10 @@ export function run() {
       /poolCard\(key, label, c\[key \+ '_current'\], c\[key \+ '_max'\], w, true\)/.test(src),
       'the sheet no longer renders the steppers play mode reveals');
 
-    const body = src.slice(src.indexOf('function poolCard('),
-      src.indexOf('\r\n}', src.indexOf('function poolCard(')));
+    const poolCardBody = functionBody(src, 'function poolCard(');
+    check('poolCard()\'s body can be located', poolCardBody !== null,
+      'no line-initial closing brace after the signature - the checks below would read the whole file');
+    const body = poolCardBody ?? '';
 
     check('the widget renders the input the sheet saves through',
       body.includes('id="stat-${key}"'), 'saveSheet() reads $(\'stat-\' + key)');
@@ -169,9 +204,13 @@ export function run() {
     const painters = [...src.matchAll(/paintPool\(/g)].length;
     check('and all seven mutation paths go through it', painters >= 8,
       `found ${painters}; expected its definition plus seven call sites`);
-    const EOL = String.fromCharCode(13, 10);
-    const painter = src.slice(src.indexOf('function paintPool('),
-      src.indexOf(EOL + '}' + EOL, src.indexOf('function paintPool(')));
+    // The guard matters most here. When this slice silently became the rest of
+    // the file, `src.replace(painter, '')` below deleted nearly all of it and
+    // the bypass check passed while reading almost nothing.
+    const paintPoolBody = functionBody(src, 'function paintPool(');
+    check('paintPool()\'s body can be located', paintPoolBody !== null,
+      'no line-initial closing brace after the signature - the bypass check below would read almost nothing');
+    const painter = paintPoolBody ?? '';
     check('it repaints the bar, not just the number',
       painter.includes("querySelector('.bar > i')"), 'paintPool leaves the bar stale');
     check('and the low tone',
@@ -643,8 +682,12 @@ export function run() {
     // Switching modes must not rebuild the page: a re-render replaces every
     // input, and the one thing a mode toggle must never cost is a half-typed
     // note. Same rule pickTab already follows.
-    const toggle = sheet.slice(sheet.indexOf('function togglePlay()'),
-      sheet.indexOf(String.fromCharCode(13, 10) + '}', sheet.indexOf('function togglePlay()')));
+    // This is the one that failed on the first Linux run, and it failed in the
+    // right direction: the rest of the file contains `render()`.
+    const togglePlayBody = functionBody(sheet, 'function togglePlay()');
+    check('togglePlay()\'s body can be located', togglePlayBody !== null,
+      'no line-initial closing brace after the signature - the check below would read the whole file');
+    const toggle = togglePlayBody ?? '';
     check('toggling the mode is a class flip, not a re-render',
       !/\brender\(\)/.test(toggle) && /syncPlayChrome\(\)/.test(toggle),
       'togglePlay re-renders and will eat a half-typed note');

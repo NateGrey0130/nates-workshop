@@ -424,8 +424,45 @@ what is true — nothing gates the merge, and the suites report on a PR. The sam
 phrase in the audit menus and in `docs/prompts/` was **left alone**: those are
 records.
 
+**The first Linux run FAILED, and reading it before the merge is the whole
+reason this was sequenced that way.** `1 of 1662` — and not a platform check.
+The failure was a real assertion, `toggling the mode is a class flip, not a
+re-render`, and behind it were **three** function-body slices in
+`test/checks/rendered-ui.mjs` searching for a **hardcoded CRLF** (`'\r\n}'`, or
+`String.fromCharCode(13, 10)`). On an LF checkout every one of those `indexOf`
+calls returns `-1`, and `slice(start, -1)` does not fail — it silently returns
+the rest of the file.
+
+**One of the three was failing loudly and one was passing vacuously**, which is
+why this became a shared helper rather than three small edits:
+
+| slice | on LF |
+|---|---|
+| `togglePlay` | **FAILED** — the rest of the file contains `render()`, which the check forbids |
+| `paintPool` | **PASSED while testing almost nothing.** Its body became the rest of the file, so the `src.replace(painter, '')` under it deleted nearly everything and *"no pool write bypasses it"* then searched a handful of lines |
+| `poolCard` | passed by luck — the ids it looks for are present either way |
+
+So the fix is one `functionBody()` helper, tolerant of both line endings, which
+**returns null rather than guessing**, plus a named guard per caller asserting
+the body was located. A missing delimiter is now a named failure instead of
+either a confusing one or a silent pass. **1662 → 1665 checks.**
+
+**Reproduced locally without a Linux box, and the rig is reusable.** In a
+throwaway clone: `git config core.autocrlf false`, then `git rm --cached -r .`
+and `git reset --hard` to re-materialise the working tree from the blobs. That
+gives a true LF tree on this machine, and it reproduced the CI failure exactly —
+same check, same `1 of 1662`. After the fix: **1665 passed on the LF tree and
+1665 on this repo's CRLF tree.** Both platforms, same number.
+
+**That is the second broken-instrument lesson of this finding, pointing the
+other way.** The faked `process.platform` proved a probe and lied about twelve
+checks; a real LF checkout cost three shell commands and found a defect nothing
+else had. When the question is *"does this behave differently over there"*,
+change the input, not the platform report.
+
 **The boundary held.** No portability work was done here beyond the single
-platform probe, and `PORTABILITY-AUDIT.md` remains unwritten and unclaimed.
+platform probe and the line-ending fix the run forced.
+`PORTABILITY-AUDIT.md` remains unwritten and unclaimed.
 
 ### G9 — medium — eleven markdown files at the root, and the canonical way to list them misses one
 
