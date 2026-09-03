@@ -275,7 +275,77 @@ try {
       const commitAt = new Date(iso);
       const deployAt = new Date(active.created_on);
       const version = (active.versions && active.versions[0] && active.versions[0].version_id) || '????????';
-      if (commitAt > deployAt) {
+
+      // WHICH BUILD IS LIVE, when the deploy recorded it (REPO-AUDIT.md G15).
+      //
+      // The timestamp comparison below cannot tell whether a change mattered -
+      // that is stated at length above and is still true. A sha can: deploy
+      // with `--var GIT_SHA:$(git rev-parse HEAD)` and the live Worker carries
+      // the commit it was built from, as a plain-text binding readable from the
+      // API. Then "is it stale" stops being a guess about clocks and becomes
+      // `git log <deployed>..origin/main -- workers/pick3cut5-room`, which is
+      // empty or it is not.
+      //
+      // NO PUBLIC ROUTE, deliberately. The obvious shape was a version endpoint
+      // the sweep fetches, but that means a new entry in `PUBLIC_PATHS` and a
+      // hole in the site's only wall for a diagnostic. The binding is already
+      // readable without one - measured 2026-09-03: the environment token
+      // returns HTTP 200 for this settings endpoint, which CLAUDE.md's account
+      // of that token does not mention.
+      //
+      // ABSENT IS NOT AN ERROR. A deploy that omits the var leaves no binding,
+      // and this says so and falls through to the timestamp. That is the state
+      // the repo is in until the next hand deploy.
+      let sinceSha = null;
+      let shaNote = null;
+      try {
+        const acct = process.env.CLOUDFLARE_ACCOUNT_ID;
+        const token = process.env.CLOUDFLARE_API_TOKEN;
+        if (!acct || !token) {
+          shaNote = 'CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN not set';
+        } else {
+          const res = await fetch(
+            `https://api.cloudflare.com/client/v4/accounts/${acct}/workers/scripts/pick3cut5-room/settings`,
+            { headers: { Authorization: `Bearer ${token}` } },
+          );
+          if (!res.ok) {
+            shaNote = `settings read failed: HTTP ${res.status}`;
+          } else {
+            const body = await res.json();
+            const bind = (body.result?.bindings || []).find((b) => b.name === 'GIT_SHA');
+            if (bind && bind.text) sinceSha = bind.text.trim();
+            else shaNote = 'the live Worker carries no GIT_SHA binding';
+          }
+        }
+      } catch (err) {
+        shaNote = `settings unreadable: ${String(err.message).split('\n')[0]}`;
+      }
+
+      if (sinceSha) {
+        let behind = '';
+        try {
+          behind = run('git', ['log', '--oneline', `${sinceSha}..origin/main`, '--', WORKER_DIR]).trim();
+        } catch {
+          // A sha origin/main has never heard of - a deploy from a branch, or
+          // history that moved. Say which rather than reporting "up to date".
+          console.log(`    DEPLOYED FROM AN UNKNOWN COMMIT - ${sinceSha.slice(0, 8)} is not on origin/main\n`);
+          behind = null;
+        }
+        if (behind === '') {
+          console.log(`    up to date - ${version.slice(0, 8)} deployed from ${sinceSha.slice(0, 8)}`);
+          console.log(`    nothing has touched ${WORKER_DIR} since that commit\n`);
+        } else if (behind) {
+          const lines = behind.split(/\r?\n/);
+          console.log(`    STALE - ${lines.length} commit(s) have touched ${WORKER_DIR} since the deploy`);
+          console.log(`      deployed from  ${sinceSha.slice(0, 8)}`);
+          for (const l of lines.slice(0, 5)) console.log(`      ${l}`);
+          if (lines.length > 5) console.log(`      ... and ${lines.length - 5} more`);
+          console.log('');
+          console.log('    This one is exact - it is not a timestamp guess. Deploy it:');
+          console.log(`      npx wrangler deploy --config ${WORKER_DIR}/wrangler.jsonc --var GIT_SHA:$(git rev-parse HEAD)\n`);
+        }
+      } else if (commitAt > deployAt) {
+        console.log(`    (no deployed sha to compare - ${shaNote}; falling back to timestamps)`);
         console.log(`    STALE by ${Math.round((commitAt - deployAt) / 60000)} minute(s) - origin/main has moved since the deploy`);
         console.log(`      newest commit  ${sha}  ${commitAt.toISOString()}  ${subject.slice(0, 52)}`);
         console.log(`      deployed       ${version.slice(0, 8)}  ${deployAt.toISOString()}`);
@@ -283,10 +353,11 @@ try {
         console.log('    A timestamp cannot say whether that change mattered. Read the diff,');
         console.log('    then either deploy it or decide it does not need deploying:');
         console.log(`      git log --oneline ${sha} -1 -- ${WORKER_DIR}`);
-        console.log(`      npx wrangler deploy --config ${WORKER_DIR}/wrangler.jsonc\n`);
+        console.log(`      npx wrangler deploy --config ${WORKER_DIR}/wrangler.jsonc --var GIT_SHA:$(git rev-parse HEAD)\n`);
       } else {
         console.log(`    up to date - ${version.slice(0, 8)} deployed ${deployAt.toISOString()}`);
-        console.log(`    newest commit ${sha} ${commitAt.toISOString()}\n`);
+        console.log(`    newest commit ${sha} ${commitAt.toISOString()}`);
+        console.log(`    (by timestamp only - ${shaNote}; deploy with --var GIT_SHA:$(git rev-parse HEAD) to make this exact)\n`);
       }
     }
   }

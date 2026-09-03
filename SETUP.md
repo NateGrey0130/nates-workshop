@@ -277,8 +277,19 @@ discipline as creating an R2 bucket before binding it. Get it backwards and
 party mode answers 503 while the rest of the site looks completely fine.
 
 ```bash
-npx wrangler deploy --config workers/pick3cut5-room/wrangler.jsonc
+npx wrangler deploy --config workers/pick3cut5-room/wrangler.jsonc --var GIT_SHA:$(git rev-parse HEAD)
 ```
+
+**Keep the `--var`.** It stores the commit the live Worker was built from as a
+plain-text binding, and `scripts/deploy-sweep.mjs` reads it back through the
+Cloudflare API to say exactly which build is live — replacing a timestamp
+comparison that could never tell whether a change mattered (`REPO-AUDIT.md`
+G15). Omit it and the binding is simply absent: the sweep reports that and falls
+back to timestamps, so nothing breaks, it just stops being exact.
+
+There is deliberately **no public version route**. The binding is readable
+without one, and a diagnostic endpoint would have meant another entry in
+`PUBLIC_PATHS` — a hole in the site's only wall for the sake of a status check.
 
 Then merge. On any later change that touches only `apps/pick3cut5/`, merging is
 enough; on any change under `workers/pick3cut5-room/`, deploy the Worker again.

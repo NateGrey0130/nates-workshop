@@ -1,6 +1,6 @@
 # Repository architecture audit — git, GitHub, layout and the merge path, 2026-09-03
 
-**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G12`+`G13` taken together (PR #627); `G4` (PR #628), `G6` (PR #629) and `G14` (PR #630, fixed in #631) taken; `G16` CLOSED BY DECISION - declined and recorded (PR #632); `G2` taken via PATH B - stays public, deliberately (PR #633); `G17` taken (PR #634); `G9` and `G10` closed WITHOUT being taken (PRs #625, #626); `G5` RE-SCOPED then TAKEN, half (a) only (PRs #635, #636); `G11` re-scoped then TAKEN (PR #637); `G15` re-scoped and takeable; those
+**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G12`+`G13` taken together (PR #627); `G4` (PR #628), `G6` (PR #629) and `G14` (PR #630, fixed in #631) taken; `G16` CLOSED BY DECISION - declined and recorded (PR #632); `G2` taken via PATH B - stays public, deliberately (PR #633); `G17` taken (PR #634); `G9` and `G10` closed WITHOUT being taken (PRs #625, #626); `G5` RE-SCOPED then TAKEN, half (a) only (PRs #635, #636); `G11` re-scoped then TAKEN (PR #637); `G15` re-scoped then TAKEN, no public route (PR #639); those
 carry `Adjusted` notes; `G18` filed 2026-09-03. The rest are OPEN.**
 Read the lines under a finding's own heading for its state — this line is a
 convenience and it is the kind of line that goes stale first.
@@ -1408,6 +1408,48 @@ deliberate keystroke it is.
 session, or the sweep cannot read it — `pick3cut5` already has bypass paths, and
 `apps/pick3cut5/test/smoke.mjs --remote` is the check that they still work. A
 version route that 302s to the login wall answers nothing.
+
+**Taken, 2026-09-03 (PR #639), with NO public route — and that is a change of
+mechanism, not just of scope.**
+
+**The re-scope's own note above is what killed its mechanism.** A version
+endpoint has to be public for the sweep to read it, which means another entry in
+`PUBLIC_PATHS` — a hole in the site's only wall, opened for a diagnostic. Nate
+chose the variant that adds nothing public.
+
+**So the Worker states its version as a binding rather than as a route.** Deploy
+with `--var GIT_SHA:$(git rev-parse HEAD)` and the commit rides along as a
+plain-text binding. `deploy-sweep.mjs` reads it from the Cloudflare API and runs
+`git log <deployed>..origin/main -- workers/pick3cut5-room`, which is empty or
+it is not. **No route, no `PUBLIC_PATHS` entry, no Access destination** — which
+matters, because the five destinations are spent and a sixth needs a second
+Access application.
+
+**One measurement that made it possible, and it contradicts `CLAUDE.md`.** That
+file says the environment token does D1 and reads the account, and cannot do R2
+or Pages. It also reads **Workers script settings** — `GET
+/accounts/…/workers/scripts/pick3cut5-room/settings` returns **HTTP 200** under
+it, bindings and all. Measured 2026-09-03. Not written into `CLAUDE.md` here:
+that file's own standing advice is to test rather than quote, and this is one
+more capability nobody had asked it for.
+
+**Proved in all three states before shipping**, none of which needed a deploy:
+
+| deployed sha | `git log <sha>..origin/main -- workers/pick3cut5-room` | reported |
+|---|---|---|
+| newest commit touching the dir | **0 commits** | up to date, exactly |
+| four commits back | **3 commits**, listed | STALE, and it names them |
+| a sha not on `origin/main` | `fatal: Invalid revision range` | DEPLOYED FROM AN UNKNOWN COMMIT |
+
+**It is inert until the next hand deploy, and it says so out loud rather than
+pretending.** No deploy has carried `--var GIT_SHA` yet, so the sweep currently
+prints *"by timestamp only — the live Worker carries no GIT_SHA binding"* and
+falls back to the old comparison. Verified by running it. That is the honest
+state: the machinery is in place, the first `--var` deploy switches it on, and
+nothing degrades in the meantime.
+
+**The timestamp comparison stays**, as the re-scope required — it is the
+fallback, not the answer.
 
 ### G16 — low — 1,267 commits, 616 PRs, zero tags
 
