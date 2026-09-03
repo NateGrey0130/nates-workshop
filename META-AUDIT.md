@@ -1,7 +1,7 @@
 # Meta-audit — the menus as a reference, and the discipline that fills them, 2026-09-03
 
-> **STATUS: `A3` and `A11` are taken (PRs #643, #642). The other ten are
-> OPEN.** Filed
+> **STATUS: `A3`, `A5` and `A11` are taken (PRs #643, #644, #642). The other
+> nine are OPEN.** Filed
 > 2026-09-03 against `main` @ `3332349` (the merge of #641). Findings are
 > `### A<n> — <severity> — <title>`, severity lowercase. Status for any finding
 > lives under its own heading; this line does not count them.
@@ -730,6 +730,58 @@ a separate decision.**
 external-ref count measured the same day by running the file's own regex over
 `index.html` (`0 external of 5 refs`); `ls shared/fonts`; and a grep for the
 subject across all eighteen menus returning nothing.
+
+**Taken, 2026-09-03 (PR #644). Posture held: file, do not fix — no test was
+changed, no Access destination touched, nothing about what is public moved.**
+
+`apps/pick3cut5/AUDIT.md` gains **`F11`**, the vacuous check, in that file's own
+`### F11.` shape. `SETUP-v2-CHANGES.md`'s decisions paragraph gains the pointer,
+and that menu's header now names the two open findings instead of saying
+everything is closed.
+
+**`A11`'s grep found the decision, and it authorises this rather than blocking
+it.** The subject search returned
+`docs/prompts/setup-v2-rewrite-prompt.md`'s *Out of scope — note, do not fix*
+section: *"Real, but a test finding rather than a documentation one. Flag it for
+a separate PR."* So the deferral was deliberate and this PR is the separate one
+it asked for. Recorded because the check is worth as much when it confirms a
+proposal as when it kills one.
+
+**Two findings were filed, not one, and that is a departure from `A5` as
+written.** `F12` was opened while filing `F11`, by checking a claim `A5` made in
+passing — and it is the more valuable of the two.
+
+**`A5`'s parenthetical is wrong.** It said asserting the list is empty *"would
+have caught `REDESIGN-AUDIT` `N6`'s CSS-fetched font."* It would not.
+`external` is derived from the **HTML** scan; `N6`'s gap was a font fetched from
+inside a **stylesheet**, and what closed that was §1b of the same test. The two
+halves guard different doors and `A5` collapsed them.
+
+**Checking that turned up the real gap, proved by running the regex rather than
+reading it:**
+
+| in a stylesheet | §1b |
+|---|---|
+| `url(/shared/fonts/saira-variable.woff2)` | matched |
+| `url(https://fonts.gstatic.com/s/saira/v1/x.woff2)` | **not seen** — the regex requires a leading `/` |
+| `url(//fonts.gstatic.com/x.woff2)` | **matched, as a same-origin path** |
+
+So an external font request from CSS is invisible to the HTML scan (no tag) and
+to the CSS scan (no leading `/`) — the exact regression `F11`'s dead check was
+written to prevent, arriving through the door `R7`/`N6` opened. **And the
+protocol-relative row is a wrong answer rather than a missing one**: it would be
+folded into the derived public list as a directory named `//fonts.gstatic.com`,
+in an app whose five Access destinations are spent. That is `F12`, and this menu
+would rather Nate saw it than that the count stayed at one.
+
+**Nothing is broken today, said plainly so the filing is not read as an alarm.**
+The stylesheets the page loads reference `shared/fonts/` only, `requiredPublic`
+derives correctly, and both `smoke.mjs` and `smoke.mjs --remote` pass. `F11` and
+`F12` are blind spots, not live faults.
+
+**The second half of `A5`'s proposal — the test change — is untouched by
+design.** `F11` states two options and picks neither; `F12` names the shape a
+combined fix would take. That is the separate decision `A5`'s posture reserved.
 
 ---
 

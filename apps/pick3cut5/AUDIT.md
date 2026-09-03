@@ -1,6 +1,9 @@
 # Pick 3 Cut 5 — outstanding items, 2026-08-24
 
-> **All 21 items are closed**, re-verified on 2026-09-02: `F1`–`F10` and `T1`–`T11`.
+> **`F11` and `F12` are OPEN**, both filed 2026-09-03 — see `META-AUDIT` `A5`.
+> Everything else here is closed, re-verified on 2026-09-02: `F1`–`F10` and
+> `T1`–`T11`. **`F12` was opened while filing `F11` and is the stronger of the
+> two**; `F11`'s check guards a door the fonts have already left.
 >
 > **Two that misread.** The eleven `T` items are **bold paragraph leads**, not
 > headings — `**T1. … — PASSED.**` under `## T — paths that have never run` — so
@@ -421,6 +424,122 @@ I do not know whether a **production** Durable Object can lose an alarm the same
 way. If it cannot, this is dead code on the hot path — one timestamp comparison
 per message, so the cost is nil, but it is unproven insurance and should be
 described that way rather than as a fix for a known production bug.
+
+---
+
+### F11. The "external assets are fonts only" check has passed vacuously since the fonts came off the CDN
+
+**Filed 2026-09-03 from `META-AUDIT` `A5`, which is the only reason it has a
+number.** It was found during the `SETUP.md` v2 rewrite on 2026-09-02, recorded
+in `SETUP-v2-CHANGES.md`'s decisions paragraph as *"filed for a separate PR"*,
+and never filed. It sat in a sentence with no heading and no number, under a
+header that correctly said everything numbered was closed, for a day.
+
+`apps/pick3cut5/test/smoke.mjs` derives what must be public by reading
+`index.html`, and asserts:
+
+```js
+check('external assets are fonts only',
+  external.every((r) => r.startsWith('https://fonts.googleapis.com/')), …);
+```
+
+`external` is the `<script src>` / `<link href>` refs matching `^https?://`.
+**There are none.** The fonts were self-hosted into `shared/fonts/` during the
+Rust & Ash work, so the array is empty and `[].every(…)` is `true`. The check
+passes without comparing anything, and would keep passing if the assertion were
+inverted.
+
+**Measured 2026-09-03** by running the file's own regex over `index.html`: 5
+refs, **0 external**. `shared/fonts/` holds `saira-variable.woff2` and
+`ibm-plex-sans-variable.woff2`, so the self-hosting is real and this is not a
+regression waiting to be noticed — it is a guard that stopped guarding when the
+thing it guarded went away.
+
+**What it was for still matters.** A `<link>` back to a font CDN would put an
+unauthenticated third-party request on the one page outside the Access wall, and
+nothing else in this suite would say so.
+
+**Proposal, and it is a judgement call rather than a mechanism.** Two options,
+and this finding does not pick one:
+
+- **(a) Assert the invariant that is actually true**: `external.length === 0`,
+  with a message naming what a non-zero means — a dependency the Access
+  destinations do not cover. This is the anti-vacuous-pass shape `DOCS-AUDIT-2`
+  `D1` and `REPO-AUDIT` `G8` both landed on, and it fails the moment a CDN
+  `<link>` returns.
+- **(b) Delete it.** The check has no live subject; `F12` below is the gap that
+  does.
+
+**Do not read (a) as covering the CSS path.** It does not, and `F12` is why.
+
+**Posture: one check, no exit-code change beyond what the suite already does,
+and no change to what is public.** This is a test finding, not an Access change.
+
+**Evidence:** the file's own regex run over `apps/pick3cut5/index.html`,
+2026-09-03 — 5 refs, 0 external; `ls shared/fonts`; `smoke.mjs:87-89` read the
+same day. The history is **reported by** `SETUP-v2-CHANGES.md` and
+`docs/prompts/setup-v2-rewrite-prompt.md`, which flagged it out of scope and said
+to file it separately.
+
+---
+
+### F12. A stylesheet that fetches a font from a third-party CDN is invisible to both halves of the derivation — and a protocol-relative one is read as same-origin
+
+**Opened 2026-09-03 while filing `F11`**, by checking a claim `META-AUDIT` `A5`
+made in passing and finding it false. `A5` said fixing `F11` *"would have caught
+`REDESIGN-AUDIT` `N6`'s CSS-fetched font."* **It would not**, and the reason is a
+gap worth more than `F11`.
+
+The derivation has two halves and an external CSS request falls between them:
+
+| | sees a `<link>` to a CDN | sees `url(https://cdn/…)` inside a stylesheet |
+|---|---|---|
+| §1 the HTML scan | **yes** — that is `F11`'s check | no — there is no tag |
+| §1b the CSS scan | n/a | **no** — its regex requires a leading `/` |
+
+§1b closed the gap `R7`/`N6` walked through, which was a **same-origin** font
+loaded from CSS. It matches `url\(\s*['"]?(\/[^'")\s]+)…\)`, and the leading `/`
+is load-bearing: an absolute third-party URL never matches.
+
+**Proved by running the regex, 2026-09-03**, rather than read off the source:
+
+| in a stylesheet | result |
+|---|---|
+| `url(/shared/fonts/saira-variable.woff2)` | matched |
+| `url(https://fonts.gstatic.com/s/saira/v1/x.woff2)` | **not seen** |
+| `url(//fonts.gstatic.com/x.woff2)` | **matched as `//fonts.gstatic.com/x.woff2`** |
+
+**The third row is the worse half and was not expected.** A protocol-relative
+url() matches, and is then treated as a same-origin absolute path: it is folded
+into `requiredPublic` by directory, so the derived list would demand an Access
+destination for `//fonts.gstatic.com`. That is a **wrong answer rather than a
+missing one**, and this app has five destinations with none spare.
+
+**Why this is the version that matters.** `F11`'s check guards a door the fonts
+already left. This one is the door they would come back through: the Rust & Ash
+work moved fonts into CSS, so a future `@font-face` pointing at a CDN is the
+realistic regression, and the suite is silent on it in one direction and wrong in
+the other.
+
+**Nothing is broken today.** Measured 2026-09-03: the stylesheets the page loads
+reference `shared/fonts/` only, `requiredPublic` derives correctly, and
+`smoke.mjs` and `smoke.mjs --remote` both pass. This is a blind spot, not a live
+fault.
+
+**Proposal.** Extend §1b to collect **every** `url()` target, not only those
+starting `/`, then split them: same-origin absolute paths feed `requiredPublic`
+as now; anything with a scheme or a leading `//` is an **external** CSS request
+and joins whatever `F11` decides about external HTML refs. One assertion covering
+both doors rather than one per door.
+
+**Posture: extend the derivation, change nothing about what is public, and add no
+Access destination.** If the two findings are taken together the assertion should
+be one check over both sources; if `F11` is taken alone, it must not be worded as
+though it covers CSS.
+
+**Evidence:** the regex run against three synthetic stylesheet lines,
+2026-09-03 (table above); `apps/pick3cut5/test/smoke.mjs` §1 and §1b read the
+same day; `node apps/pick3cut5/test/smoke.mjs` green before and after filing.
 
 ---
 
