@@ -357,10 +357,17 @@ Two halves, and **both** are required — either one alone leaves the app broken
    the stylesheets it loads, and fails if it and this table disagree; `--remote`
    checks the live policy, and checks the content type as well as the status —
    Pages answers a path it does not have with the landing page, at 200.
-2. **`PUBLIC_PREFIXES` in `functions/api/_middleware.js`**, which already lists
-   `/api/pick3cut5/`. A bypass policy lets the request through *without*
-   minting a JWT, so without this exemption every call takes a hard 403 from
-   our own middleware.
+2. **`PUBLIC_PATHS` in `functions/api/_middleware.js`**, which lists
+   `/api/pick3cut5/room` and `/api/pick3cut5/solo`. A bypass policy lets the
+   request through *without* minting a JWT, so without this exemption every call
+   takes a hard 403 from our own middleware.
+
+   **Exact paths, not the prefix, since 2026-09-02** (`HEALTH-AUDIT.md` F15).
+   The Access destination is still the whole `api/pick3cut5` prefix, so this
+   list is the second gate that decides which paths under it are actually
+   public — and an unlisted one now takes that 403 rather than being served the
+   landing page. Adding a route to `functions/api/pick3cut5/` fails
+   `apps/pick3cut5/test/smoke.mjs` until it is named here, which is deliberate.
 
 Everything else in the Workshop stays gated. The room code is the only barrier
 on party mode, by design.

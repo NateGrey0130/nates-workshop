@@ -13,8 +13,8 @@ Every rule here is an incident. Three of the four reached production.
 ## The wall is the whole problem
 
 The site sits behind Cloudflare Access. This app is the one thing outside it, via
-`PUBLIC_PREFIXES` in `functions/api/_middleware.js` and a set of Access bypass
-destinations on the Pages project.
+`PUBLIC_PATHS` in `functions/api/_middleware.js` — **exact paths, not a
+prefix** — and a set of Access bypass destinations on the Pages project.
 
 **The bypass is a list of paths, not a list of pages.** A page is not one path:
 it is its HTML plus everything that HTML pulls in.
@@ -45,18 +45,41 @@ Four are in use plus `shared/fonts`. **A new public asset may not fit**, which
 turns "add a destination" into a design decision rather than a chore. Check
 before promising anything is public.
 
-### A path under the prefix that no function claims answers 200
+### A listed path with no handler for that METHOD answers 200
 
-`PUBLIC_PREFIXES` is **prefix-matched** and calls `next()`. Where no function
-matches, Pages' static handler answers with the landing page:
+**The bypass list is exact paths, not a prefix, and has been since
+2026-09-02.** `PUBLIC_PATHS` in `functions/api/_middleware.js` is
+`['/api/pick3cut5/room', '/api/pick3cut5/solo']`, matched with `includes`. A
+path under `/api/pick3cut5/` that is not on that list is **not** public:
 
 ```
-GET /api/pick3cut5/zzz-not-a-route  ->  200  text/html   (index.html)
+GET /api/pick3cut5/zzz-not-a-route  ->  403  application/json
 ```
 
-That is why the smoke test checks **content type** rather than status. It also
-means a probe under that prefix cannot tell "route exists" from "route does
-not" — the same confusion `/shared/` already caused once.
+Measured against production 2026-09-03 with no Access session.
+
+*(This section described the opposite until then — a prefix match serving
+`index.html` at 200 for anything beneath it. That was true once; it was a hole
+in the site's only wall, and the exact list is what closed it. The skill went on
+describing the bug for a day after it was fixed.)*
+
+**The 200 is still reachable by a narrower route, so the smoke test's reason
+survives.** A path that IS listed, hit with a method no function exports, has no
+handler — and Pages' static handler answers with the landing page:
+
+```
+GET /api/pick3cut5/solo  ->  200  text/html   (index.html)     # solo is POST-only
+```
+
+So status alone still cannot tell "route exists" from "route does not":
+**check content type.** `room.js` exports `onRequestPost` and `onRequestGet`;
+`solo.js` exports `onRequestPost` only.
+
+**Access still bypasses the whole `api/pick3cut5` prefix** — that destination is
+a path prefix, and the middleware is the second gate pinning it to two exact
+paths. The two have to agree. A new route under `functions/api/pick3cut5/` fails
+the smoke test until it is named in `PUBLIC_PATHS`, which is deliberate: the
+entry opens a hole in the wall and should cost a line.
 
 ## A merge does not deploy the Worker
 
