@@ -84,8 +84,10 @@ caught for you, so the checks happen before the merge or they do not happen.
    ```
 8. **Sync**, then confirm the merge from GitHub rather than from the pull.
    ```bash
-   git checkout main && git pull origin main
+   git checkout main && git pull
    ```
+   **Bare, with no `origin main` after it.** Naming a refspec is what stops the
+   merged branch's tracking ref being pruned — see [pruning](#pruning-is-a-step-only-when-you-name-a-refspec).
    ```bash
    gh pr view <n> --json state,mergeCommit --jq '.state + "  " + .mergeCommit.oid'
    ```
@@ -171,7 +173,7 @@ run in step 4 already covers. It is a text check on purpose: building with the
 wrangler that resolves here compiles the broken syntax happily, so a
 build-based check would pass straight through the outage it exists to prevent.
 
-## Pruning is not a step
+## Pruning is a step only when you name a refspec
 
 This clone sets:
 
@@ -179,9 +181,29 @@ This clone sets:
 git config remote.origin.prune true
 ```
 
-so every `git fetch` — and therefore every `git pull` — drops
-remote-tracking refs whose branch is gone from GitHub. Nothing needs pruning
-by hand.
+**That config is necessary and it is not sufficient, and the difference is the
+form of the command you fetch with.** Pruning only ever considers the refs the
+refspec covers. Fetch with an explicit one — `git pull origin main` — and the
+refspec is that branch alone, so no other ref is even a candidate and the
+merged branch's `origin/*` survives. Fetch bare, and the default refspec covers
+every branch, so the dead ones go.
+
+Measured 2026-09-02, both with `remote.origin.prune` and `fetch.prune` already
+`true`, against a tracking ref pointed at a branch that does not exist on the
+remote:
+
+| command | the dead ref |
+|---|---|
+| `git pull origin main` | **survives** |
+| `git pull` | pruned |
+| `git fetch` | pruned |
+
+So step 8 above is bare on purpose. This section previously reasoned from the
+config to the outcome and got it wrong in the direction that hides: the config
+was set, the reasoning was plausible, and nothing failed — the stale ref just
+sat in `git branch -r` looking like a branch that had not been cleaned up. It
+was caught twice in one session, after two merges that had both deleted their
+branch correctly.
 
 It is set **per clone**, not in the repo, because git has no way to ship
 config with a checkout. A fresh clone needs the one line above; until then it
@@ -189,10 +211,18 @@ accumulates stale `origin/*` refs that are cosmetic but keep showing up in
 `git branch -r`.
 
 What used to be here was a four-command dance — delete the remote branch,
-delete the local branch, fetch with `--prune`. Three of those four are
+delete the local branch, fetch with `--prune`. Three of those four are still
 unnecessary: `gh pr merge --delete-branch` does both deletions, and the config
-does the pruning. The dance was being repeated by hand every few PRs, which is
-the tell that it should have been configuration rather than instructions.
+plus a bare fetch does the pruning. The dance was being repeated by hand every
+few PRs, which is the tell that it should have been configuration rather than
+instructions.
+
+**Retiring the dance was right; the sentence that replaced it claimed one step
+too few.** Configuration removed the three commands it could remove, and then
+the note read as though it had removed all four. That is the failure worth
+remembering here — not the git behaviour, which is documented, but the habit of
+writing down what a change was *supposed* to achieve rather than what was left
+standing afterwards.
 
 ---
 
