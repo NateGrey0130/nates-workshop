@@ -1,7 +1,7 @@
 # Meta-audit — the menus as a reference, and the discipline that fills them, 2026-09-03
 
-> **STATUS: `A2`, `A3`, `A4`, `A5`, `A7`, `A8`, `A11` and `A12` are taken (PRs
-> #647, #643, #645, #644, #647, #648, #642, #646). `A9` is next; `A1`, `A6` and
+> **STATUS: `A2`, `A3`, `A4`, `A5`, `A7`, `A8`, `A9`, `A11` and `A12` are taken
+> (PRs #647, #643, #645, #644, #647, #648, #649, #642, #646). `A1`, `A6` and
 > `A10` are OPEN.** Filed
 > 2026-09-03 against `main` @ `3332349` (the merge of #641). Findings are
 > `### A<n> — <severity> — <title>`, severity lowercase. Status for any finding
@@ -1138,6 +1138,51 @@ evidence for this finding.
 **Evidence:** the five briefs read and diffed 2026-09-03; the evidence-line
 census in `A8`; the error counts in Part 2, counted by reading every outcome note
 across five menus by the method stated there.
+
+**Taken, 2026-09-03 (PR #649), as written. Posture held: documentation only, one
+skill section, no check, no retrofit of any menu, and no brief edited** — the
+briefs are records and their re-derivations stay as this finding's evidence.
+
+`.claude/skills/audit-menu/SKILL.md` gains *The shape a finding takes, so a brief
+does not have to say*, placed after *Posture is half of what is being agreed to*
+— posture is one of its fields, so the section can lean on it rather than restate
+it.
+
+**This finding cited a finding that does not exist, and taking it is what found
+that.** Its `Confidence` bullet reads *"`A11` argues this one separately."*
+`A11` is the *has-this-been-decided* grep and argues nothing about confidence
+markers. A separate confidence finding was drafted while this menu was being
+assembled and **folded away during consolidation**; the cross-reference was never
+updated. So `A9` deferred a decision to nobody.
+
+**Combined with `A8`, that left `Confidence` genuinely unowned.** `A8` shipped
+the evidence for it — `HEALTH-AUDIT` `F18`'s low-confidence half is the one that
+moved — and explicitly declined to adopt it, saying *"that is `A9`'s question."*
+`A9` then pointed at `A11`. **This PR resolves it: `Confidence` is adopted**, on
+`A9`'s own field list, and the section makes the *"and what would raise it"*
+clause the load-bearing half — *"medium until someone runs X"* tells a taker
+where to start; a bare *medium* tells them nothing.
+
+**One measurement moved in the finding's favour.** `A9` says five briefs state
+the rule in five wordings. Re-checked at take-time, each quotation resolves and
+**"Verify before asserting" appears in three briefs**, not one —
+`portability-audit-prompt.md`, `setup-v2-rewrite-prompt.md` and
+`workstation-consolidation-prompt.md`. Seven statements of one rule across the
+archive, and the skill owned none of it.
+
+**`A11`'s grep found no prior decision for or against a template**, which is the
+answer that authorises this one. The template existed in exactly one brief and
+was practised in two menus; nothing had ever declined it.
+
+**What is deliberately absent.** No check enforces the fields, nothing is
+retrofitted, `Effort` and `Impact` are named as rejected rather than omitted, and
+the section carries **no count of fields** — it lists them and stops, because a
+tally is the one thing this file argues against everywhere else.
+
+**And the cost is stated in the skill rather than in this note**, where a reader
+deciding whether to follow it will actually meet it: tens of lines and about a
+quarter of an hour per menu, buying nothing on a suspicion, bound to the
+`Proposal` exactly as `G18` is.
 
 ---
 
