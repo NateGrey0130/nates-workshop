@@ -8,7 +8,7 @@
 > |---|---|
 > | `F1`–`F8`, `F10`–`F25` | taken |
 > | `F9` | **closed without being taken** — measured, and its own instruction said to close rather than weaken |
-> | `F12` | documentation taken, and the prune **completed** (#571). Which file governs is still **untested**; the finding names the test |
+> | `F12` | documentation taken, the prune **completed** (#571), and the named test **RUN 2026-09-03** (#656) — each directory is governed by its own project settings, which do not compose |
 > | `F25` | part (a) taken; part (b) **closed by decision** — the `z`-tiers stay |
 > | `N1`–`N3` | written: `verify-ui`, `windows-shell`, `pick3cut5` |
 > | `N4`–`N8` | **declined**, each on its own stated condition |
@@ -1055,6 +1055,11 @@ It does **not** answer which file governs; that is still untested and
 `CLAUDE.md` still says so and still names the test. And the file will begin
 accumulating again at the next approval, so this is a reset rather than a fix.
 
+*(The middle clause stopped being true on 2026-09-03: the test was run, each
+directory is governed by its own project settings, and `CLAUDE.md` now records
+that instead of the caution. The first and last clauses stand — the prune was a
+reset, not a fix. See the note under the probe pair below.)*
+
 Premises held — 273 entries, 25 wildcards, 45 pinned to dead scratchpad paths,
 and the eight withheld commands all granted.
 
@@ -1095,6 +1100,49 @@ second could not launch `claude` at all.
 entry, the repo has no `settings.local.json`, and the user level has no
 `permissions` block — so the four cells are unambiguous. Default permission
 mode, and decline every prompt: the answer is whether it **asks**.
+
+**RUN, 2026-09-03 (PR #656). Each directory is governed by its OWN project
+settings. They do not compose, in either direction.**
+
+| cwd | probe | on repo list | on workshop list | result |
+|---|---|---|---|---|
+| `nates-apps` | `node --check <file>` | **yes** | no | **ALLOWED** — ran |
+| `nates-apps` | `git --version` | no | **yes** | **DENIED** — *"This command requires approval"* |
+| `workshop` | `node --check <file>` | **yes** | no | **DENIED** — *"This command requires approval"* |
+| `workshop` | `git --version` | no | **yes** | **ALLOWED** — `git version 2.53.0.windows.3` |
+
+**The answer is the reassuring one, and it was worth not assuming.** The repo's
+deliberate gaps are not silently widened by the 258-entry list when work happens
+in the repo, and the repo's entries do not reach a session in the working
+directory. `F12`'s documentation half — which described the two lists as separate
+postures rather than one composed set — was right.
+
+**Why this ran when the 2026-09-02 attempt could not.** That attempt concluded
+the test *"needs an interactive Claude Code session in each directory"* and
+stopped. **It does not.** `claude -p` consults the same allowlist; the only
+difference is what happens on a miss — a print-mode session cannot prompt, so it
+**denies**, and that denial is the same observable the prompt would have been.
+With `--output-format stream-json` the `tool_use` and its `tool_result` are both
+visible, so nothing rests on reading prose.
+
+The other two obstacles were real and are recorded correctly: the first attempt
+pasted probes into a raw shell, where the allowlist is never consulted at all —
+this run went through Claude's own `Bash` tool — and the second could not launch
+`claude`. It launches from Git Bash via the npm shim.
+
+**One improvement on the probe pair above.** `node --check <file>` replaced
+`drift-check.mjs --remote` on the repo side: identical allowlist status, but
+instant and read-only rather than a four-minute production query. The four cells
+are unchanged by the substitution — re-verified 2026-09-03 that the two lists
+still share exactly **one** entry
+(`Bash(node apps/character-creator/test/smoke.mjs)`, neither probe), the repo
+still has no `settings.local.json`, and `~/.claude/settings.json` still has no
+`permissions` block.
+
+**Scope of the answer, stated so it is not over-read.** This tested two
+*different* project directories, in print mode, with the settings as they stood
+on 2026-09-03. It says nothing about a subdirectory inheriting its parent's
+settings, and nothing about `--add-dir`.
 
 ---
 

@@ -293,12 +293,33 @@ repo, and had **stopped growing on 2026-08-28** — unchanged across a long
 working session on 2026-09-02, before the prune. That scoping is why the move
 carried it: it belongs to the directory, not to the repo.
 
-**NOT established, and do not assume either way:** whether a session started in
-the working directory is governed by that file, by this repo's, or by both
-composed. That needs a deliberate test — run one command allowlisted here and
-absent there, and
-one of the reverse, from each directory, and watch which prompts. It has not been
-run.
+**Established 2026-09-03, by running the test rather than reasoning about it:
+each directory is governed by its OWN project settings, and they do not
+compose.** A session started in the working directory is governed by
+`workshop\.claude\settings.local.json` alone; a session started here is governed
+by this repo's `.claude/settings.json` alone. Neither list reaches the other
+directory.
+
+Four cells, each a `claude -p` run whose `Bash` call was either permitted or
+refused:
+
+| session started in | probe | on this repo's list | on the working directory's | result |
+|---|---|---|---|---|
+| the repo | `node --check <file>` | **yes** | no | **allowed** |
+| the repo | `git --version` | no | **yes** | **refused** |
+| the working directory | `node --check <file>` | **yes** | no | **refused** |
+| the working directory | `git --version` | no | **yes** | **allowed** |
+
+**So the section above means what it says.** The actions this repo withholds on
+purpose are withheld from a session started here, and the working directory's
+258 entries cannot widen them. That was the reassuring possibility and it is the
+true one — but it was worth testing, because the opposite would have meant every
+gap above was decorative whenever work started one directory over.
+
+**What this does NOT settle:** whether a *subdirectory* of a project inherits its
+parent's settings, and anything about `--add-dir`. Neither was tested.
+`SKILL-AUDIT.md` F12 carries the method, the probe pair, and why an earlier
+attempt concluded the test was impossible when it was not.
 
 That question is now less load-bearing than it was — both lists withhold the
 same actions — but it is still the difference between a posture and a

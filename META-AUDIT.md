@@ -101,10 +101,10 @@ closed at **08:41 today** in PR #616. See `A3`.
 > `SETUP-v2-CHANGES` open question 1 became `apps/pick3cut5/AUDIT.md` `F11`
 > (`A5`), which was taken in PR #653 along with the `F12` it opened.
 > **`REPO-AUDIT` `G5` half (b) was closed by decision in PR #655** — squash and
-> rebase stay enabled, and that finding is now closed entire. Only
-> **`SKILL-AUDIT` `F12`'s named test** is still outstanding, and it is still
-> correctly labelled *not measured*: the test names itself and nobody has run it.
-> `UI-AUDIT` `F30` remains open as filed.
+> rebase stay enabled, and that finding is now closed entire. **`SKILL-AUDIT`
+> `F12`'s named test was RUN in PR #656**: each directory is governed by its own
+> project settings, and they do not compose. Of the four rows above, only
+> **`UI-AUDIT` `F30`** remains open as filed.
 
 So: **four open items, in four different menus, and only one of them is a
 finding whose own heading a reader would find by scanning.** Two are halves of
@@ -1704,6 +1704,22 @@ this repo's, or by both composed.* Still untested. `CLAUDE.md` says so outright:
 test has not been run. It is less load-bearing than it was, because the prune
 (#571) made both lists withhold the same actions, which is the difference between
 a posture and a guarantee.
+
+**The label was right and is now spent: the test was RUN on 2026-09-03 (PR
+#656).** Each directory is governed by its own project settings and they do not
+compose — four cells, all four as that answer predicts. **`not measured` was the
+honest label for exactly one day**, which is the best case for the convention
+`G18` and `A9` argue about: it named the gap precisely enough that closing it was
+a morning's work rather than a research project.
+
+**Why it had gone unrun is the part worth carrying.** The 2026-09-02 attempt
+concluded the test *"needs an interactive Claude Code session in each
+directory"* and stopped. **It does not** — `claude -p` consults the same
+allowlist and *refuses* on a miss because it cannot prompt, which is the same
+observable. A finding can be blocked by a wrong premise about the **method** as
+easily as by one about the subject, and **nothing in this menu's machinery would
+have caught it**: not the evidence line, not the self-check pass, not the subject
+grep. Only trying it did.
 
 **Nothing in the open set failed re-verification.** All four survive. The one
 claim that did not survive was `BOOK-INGEST-AUDIT`'s **header**, which said `F3`
