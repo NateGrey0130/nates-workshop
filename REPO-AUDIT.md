@@ -436,6 +436,36 @@ argument `CLAUDE.md` already makes about junctions.
 **Posture: documentation only, no gate.** Nothing checks that the template was
 filled in.
 
+**Taken, 2026-09-03 (PR #624). Posture held: a prompt, no gate, nothing checks
+it.**
+
+Six headings — the gap, what was measured, posture, nothing regresses, the
+decline path, verification — each carrying an HTML comment saying what belongs
+under it, and an opening comment stating that `ship-pr` owns the loop and
+`audit-menu` owns what taking a finding means. **It does not restate either**,
+which was the finding's explicit constraint.
+
+**The comments carry the traps rather than the steps**, which is what makes it a
+prompt instead of a second copy: `--local` accumulates, the merge gate is the
+flagless run because a `--section` run labels itself `PARTIAL`, D1 files are
+already applied by review time, and an absence claim has to be proven by reading.
+Each is one line, and each is a failure this repo has actually had.
+
+**One line was added that the finding did not ask for**, under *what was
+measured*: *"If a claim here was reasoned to rather than run, say so in those
+words."* That is `G18`'s proposal, and it is here only because this template was
+being written anyway and the sentence costs nothing. **It does not take `G18`** —
+that finding asks for the convention across the menus, and a hint in a compose
+box is not that.
+
+**Its reach is narrower than it looks, and that is fine.** `--body-file`
+replaces the template entirely, which is how every PR in this repo is opened,
+so this changes nothing about the agent path. It is for a PR opened in the
+browser, or by `gh pr create` with no body — the case that has never happened
+here and would be the first one written by someone who had not read `ship-pr`.
+**Verified on this PR:** opened with `--body-file`, and the resulting body
+contains none of the template's markers.
+
 ### G8 — high — nothing but a person ever runs the tests, and CI is foreclosed by something upstream of CI
 
 There is no `.github/workflows/`. The five suites — 1,662 checks in the
