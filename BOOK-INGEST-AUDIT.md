@@ -1,13 +1,29 @@
 # Book-ingestion batch — deferred code changes, 2026-08-28
 
-> **All 17 findings (`F1`–`F17`) are closed**, re-verified against the file on
-> 2026-09-02. Every outcome note sits under its own finding.
+> **Status lives under each finding, not in this header.** Every finding here
+> carries its own dated outcome note beneath its heading; read to the next
+> `###`. **They are not all closed** — `F3` is *partly* taken, its
+> character-completeness half shipped in PR #431 and its schema question still
+> open, which `F12`'s outcome note independently records.
 >
 > **The one that misreads:** `F14`'s `Taken, 2026-08-31 (PR #434)` note sits
 > below an inline `**F10 excluded this on a premise that is false.**` — a bold
 > lead that a block-splitting scan mistakes for the start of a new finding,
 > hiding the note behind it. It has produced a false "open" once. Read to the
 > next `###`, not to the next bold line.
+>
+> **`F18` here is not `F18` anywhere else.** Six other menus in this repo carry
+> one — `CLASS-AUDIT`, `INGESTION-AUDIT`, `REBUILD-AUDIT`, `HEALTH-AUDIT`,
+> `SKILL-AUDIT` and `UI-AUDIT` — so cite a finding in this file by filename, and
+> expect a tree-wide grep for a bare number to return mostly other menus'
+> history. `F18`'s own note records how that was found.
+>
+> **This header no longer enumerates, and should not again.** Corrected
+> 2026-09-03: the closed range it used to carry was wrong twice over — never
+> extended when `F18` landed on 2026-09-02, and sweeping up `F3`, which has
+> never been fully taken. It also carried a re-verification date more recent
+> than both errors, which is the part worth noticing: a count in a header is
+> re-checked by hand or not at all, and the hand is what keeps missing.
 
 Findings menu for the seven-book ingestion batch registered in
 `BOOK-INGEST-QUEUE.md`. **This file holds code changes only.** Data — classes,
