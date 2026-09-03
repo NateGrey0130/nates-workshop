@@ -1,7 +1,8 @@
 # Meta-audit — the menus as a reference, and the discipline that fills them, 2026-09-03
 
-> **STATUS: `A3`, `A4`, `A5`, `A11` and `A12` are taken (PRs #643, #645, #644,
-> #642, #646). The other seven are OPEN.** Filed
+> **STATUS: `A2`, `A3`, `A4`, `A5`, `A7`, `A11` and `A12` are taken (PRs #647,
+> #643, #645, #644, #647, #642, #646). `A8` and `A9` are next; `A1`, `A6` and
+> `A10` are OPEN.** Filed
 > 2026-09-03 against `main` @ `3332349` (the merge of #641). Findings are
 > `### A<n> — <severity> — <title>`, severity lowercase. Status for any finding
 > lives under its own heading; this line does not count them.
@@ -542,6 +543,56 @@ reported a phantom `R` prefix in `HEALTH-AUDIT.md`. The match is
 loose enough to find the bullets and bold leads is loose enough to invent
 findings, which is the same argument one level down.
 
+**Taken, 2026-09-03 (PR #647), with `A7` folded in as `A7` itself directs.
+Posture held: documentation only, no check, and no regex over the table.**
+
+**The count moved between filing and taking, and it moved because of this
+menu.** `A2` said 15 rows against 18 menus, missing three. Re-measured at
+take-time: **15 rows against 19 menus, missing four** — the fourth being
+`META-AUDIT.md`, which did not exist when the finding was written. The artifact
+falsified itself again, in the four hours between proposing the fix and applying
+it, which is the finding's entire argument arriving unprompted.
+
+**`A11`'s grep returned `SKILL-AUDIT` `F7`, and it is a warrant rather than an
+obstacle.** `F7` corrected this table on 2026-09-02, predicted its own
+falsification in the same paragraph, and was right within the hour. Its outcome
+note contains the move this finding extends:
+
+> Rather than change fourteen to fifteen and leave the same trap armed, the
+> sentence no longer states a number at all.
+
+`F7` did that to the **ordinal in the prose above the table**. `A2` is the same
+operation on **the row list itself**, which is that trap one level down. So this
+does not reverse `F7`; it finishes it. `F7`'s other decision — *no regex, no
+gate, because any pattern will be wrong about at least one file* — is untouched
+and restated.
+
+**What shipped, and one part is beyond `A2`'s letter.**
+
+1. **The caption change, which is the fix.** The table now says outright that it
+   is a shape reference for the files it names, **not** the list of menus, and
+   that a file missing from it is missing rather than absent. Once it stops
+   claiming completeness, being incomplete stops being a defect.
+2. **The four missing rows were added anyway** — `DOCS-AUDIT-2`, `MACHINE-AUDIT`,
+   `META-AUDIT`, `REPO-AUDIT`, each shape read from the file's own first heading
+   rather than assumed. `A2` said *"do not add the missing rows **and stop
+   there**"*, and the emphasis is on stopping: adding rows without the caption is
+   the fix that failed four times. With the caption, they are useful reference
+   data that cannot go stale into an error. **Declared because it is a judgement
+   call**, and because the honest test of the caption is whether it makes the
+   rows safe — if it does not, the caption is wrong and the rows should come out.
+3. **The snapshot paragraph now names what has actually been failing.** Across
+   five readings the **cells have been reliable and the roll-call has not**. That
+   is the sentence the four corrections were missing, and it is why the split in
+   (1) is the right one rather than an arbitrary one.
+
+**Verified after the edit rather than assumed:** 19 rows against 19 menus, zero
+missing, zero rows naming something that is not a menu. That equality is a
+by-product and **not a claim the table makes** — the caption is what matters, and
+the next menu will make it 19-of-20 without anything being wrong.
+
+Diff **+51 / −17** on one skill, CRLF preserved, 0 control characters.
+
 ---
 
 ### A3 — medium — `BOOK-INGEST-AUDIT`'s status header says `F3` is open; it closed four minutes before the file's next commit
@@ -891,6 +942,27 @@ is a decision rather than a slip. If that reads wrong, take `A7` alone and leave
 
 **Evidence:** `ls docs/rules-audit.md` → *No such file or directory*, and the
 full 18-path glob output, both 2026-09-03.
+
+**Taken, 2026-09-03 (PR #647), inside `A2` exactly as this finding directed.**
+That is a deliberate exception to *one PR per finding*, argued in the proposal
+above and taken on its terms: both findings edit the same paragraph, and two PRs
+touching one caption is churn rather than rigour.
+
+The `find` command's paragraph now states **both** blind spots — it misses
+`SETUP-v2-CHANGES.md` and it returns `docs/prompts/SKILLAUDITPROMPT.md`, a brief
+— and says the answer is *the glob's output, minus the briefs, plus the one it
+cannot see*.
+
+**The proposal's refusal to fix it with a better pattern is in the skill
+verbatim**, because it is the durable half: `-not -path './docs/*'` is correct
+today and wrong the moment a menu lands under `docs/`, which is a rule with an
+expiry date nobody will notice.
+
+**One line added beyond the proposal**, and it is why the finding is worth more
+than it looks: `REPO-AUDIT` `G11` **miscounted the root with this exact command
+and was re-scoped for it**. The paragraph had prepared a reader for one of the
+two errors and `G11` walked into the other. Naming the casualty is what turns a
+tidy-up into an explanation.
 
 ---
 

@@ -246,9 +246,29 @@ a plausible total and a PR shipped the wrong count.
 
 ## The headings are not uniform, and that is the argument
 
+**This table is a shape reference for the files it names. It is NOT the list of
+menus, and a file missing from it is missing rather than absent.** Get the list
+from the tree with the command below, every time. The rows exist to record what
+no command can tell you — which files put a severity word in the heading, which
+put a *status* there, and which keep a whole family of items somewhere a `###`
+scan will never see.
+
+*That distinction is the fix, and it arrives late.* This table has been read five
+times and been wrong five times, always about the same half: **the rows it did
+not have.** `SKILL-AUDIT` `F7` corrected it on 2026-09-02, predicted its own
+falsification in the same paragraph, and was right within the hour. What `F7`
+also did is the model for this — it removed the *ordinal* from the paragraph
+above rather than incrementing it, on the grounds that changing fourteen to
+fifteen *"leaves the same trap armed."* A row list that claims to be complete is
+that trap one level down.
+
 | file | prefix | level | shape |
 |---|---|---|---|
 | `BOOK-INGEST-AUDIT.md` | `F` | `###` | em dash on `F1`–`F4`, hyphen from `F5` on |
+| `DOCS-AUDIT-2.md` | `D` | `###` | severity word: `### D1 — medium — …` |
+| `MACHINE-AUDIT.md` | `M` | `###` | severity word: `### M1 — high — …` |
+| `META-AUDIT.md` | `A` | `###` | severity word: `### A1 — medium — …`, **not in severity order** — it runs in its brief's order |
+| `REPO-AUDIT.md` | `G` | `###` | severity word: `### G1 — high — …` |
 | `DOCS-AUDIT.md` | `D` | `###` | severity **or status** word: `### D1 — low — …`, and `### D5 — WITHDRAWN — …` |
 | `EFFICIENCY-AUDIT.md` | `F` | `###` | `### F1 — …` |
 | `apps/character-creator/AUDIT.md` | `D`, `C`, `F` | `###` | severity word: `### D1 — low — …` |
@@ -276,28 +296,42 @@ items are bold paragraph leads, so a scan that walks `###` headings does not
 report them open — it does not see them at all, and twenty items vanish with no
 error. Both live under their own `##` section, which is the thing to look for.
 
-**This table is a snapshot and it has been wrong every time it has been
-checked.** Read on 2026-08-31 it was missing two whole files and wrong about
-three cells; read on 2026-09-02 it was missing four. Audited against every file's
-headings later the same day, it was **right on thirteen rows of fourteen and
-wrong on one cell** — `DOCS-AUDIT.md`, whose findings all carry a word in the
-severity slot, and whose `D5` carries `WITHDRAWN` there: a *status* where four
-other files put a severity, and the one cell in this table that would change a
-scan's answer.
+**Every reading of this table has found it wrong, and always about the rows.**
+Read on 2026-08-31 it was missing two whole files and wrong about three cells;
+read on 2026-09-02 it was missing four. Audited against every file's headings
+later the same day, it was **right on thirteen rows of fourteen and wrong on one
+cell** — `DOCS-AUDIT.md`, whose findings all carry a word in the severity slot,
+and whose `D5` carries `WITHDRAWN` there: a *status* where four other files put a
+severity, and the one cell here that would change a scan's answer. Read again on
+2026-09-03 it was **missing four**, one of them the menu doing the reading.
 
-The failure mode has changed shape over those three readings — missing rows,
-then more missing rows, then a wrong cell — which is the argument for reading the
-files rather than for fixing this table again. Get the current list from the tree
-rather than from here, then read each file's own headings:
+The failure mode changed shape across those readings — missing rows, more missing
+rows, a wrong cell, missing rows again — and the constant is that **the cells
+have been reliable and the roll-call has not.** That is why the table stopped
+claiming to be one. Get the list from the tree, then read each file's own
+headings:
 
 ```bash
 find . -name '*AUDIT*.md' -not -path './.cache/*' -not -path './node_modules/*'
 ```
 
-**That command does not find every menu, and the gap is not a bug in it.**
-`SETUP-v2-CHANGES.md` carries eight numbered changes with dated outcome notes
-and is a menu by every property except its filename. A glob is the wrong shape
-for a convention nothing enforces — which is this whole section in one line.
+**That command is wrong in BOTH directions, and neither gap is a bug in it.**
+
+- **It misses one.** `SETUP-v2-CHANGES.md` carries eight numbered changes with
+  dated outcome notes and is a menu by every property except its filename.
+- **It returns one that is not a menu.** `docs/prompts/SKILLAUDITPROMPT.md` is
+  the *brief* that produced `SKILL-AUDIT.md`, archived under `HEALTH-AUDIT` `F3`.
+  Anything in `docs/prompts/` matching the word is a brief, not a menu.
+
+So the answer is the glob's output, minus the briefs, plus the one it cannot see.
+**Do not fix this with a better pattern.** `-not -path './docs/*'` is correct
+today and wrong the moment a menu lands under `docs/` — a rule with an expiry
+date nobody will notice. A glob is the wrong shape for a convention nothing
+enforces, which is this whole section in one line.
+
+*(The over-return went unstated until 2026-09-03, `META-AUDIT` `A7`. The
+paragraph prepared a reader for exactly one of the two errors, and `REPO-AUDIT`
+`G11` then miscounted the root with this command and was re-scoped for it.)*
 
 ## Audit files are RECORDS. Do not rewrite a measurement
 
