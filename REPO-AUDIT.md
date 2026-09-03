@@ -1,17 +1,21 @@
 # Repository architecture audit — git, GitHub, layout and the merge path, 2026-09-03
 
-**Status: `G8` taken 2026-09-03 (PR #620). The other sixteen are OPEN.** Read
-the lines under a finding's own heading for its state — this line is a
-convenience and it is the kind of line that goes stale first. Every other `G`
-number is a proposal awaiting a word.
+**Status: `G8` taken 2026-09-03 (PR #620), `G1` taken 2026-09-03 (PR #621), and
+`G5` carries an `Adjusted` note rather than being taken. The rest are OPEN.**
+Read the lines under a finding's own heading for its state — this line is a
+convenience and it is the kind of line that goes stale first.
 
-**`G8`'s central premise was false, and its note is worth reading before taking
-anything else here.** It claimed the suite "has never been runnable on a bare
-clone"; a bare clone passes all 1662 checks. The real blocker was one
-`existsSync` assertion. That is the second finding in this menu whose premises
-did not survive contact — the header below already records two caught before
-filing — so treat the *reasoning* in these findings as a lead, not as
-established fact.
+**Every finding taken from this menu so far has turned up an error in its own
+premises, and one of them was in a finding nobody had touched.** `G8` claimed
+the suite "has never been runnable on a bare clone" — a bare clone passes
+everything, and the real blocker was one `existsSync` assertion. `G1`'s
+suggested verification command counts 117 squash-merged PRs as direct pushes.
+And taking `G1` disproved **`G5`**, which still says merge commits are used
+"exclusively"; it now carries an `Adjusted` banner.
+
+So: **treat the reasoning in these findings as a lead, not as established
+fact**, and distrust first anything cheap to check — a count, a command, or a
+claim that something has never happened.
 
 **This menu's own trap, stated first, as the `audit-menu` skill asks.** Every
 number in this file is a **GitHub-side or filesystem-side measurement taken on
@@ -141,6 +145,46 @@ here and the escape hatch has never been used. **Check that second claim before
 relying on it** — `git log --first-parent main` will show any commit that
 reached `main` without a merge.
 
+**Taken, 2026-09-03 (PR #621). Posture held: the bypass is gone and nothing is
+gated.** Ruleset `22209348`, *"main: require a pull request"*, `enforcement:
+active`, one rule, **no bypass actors**.
+
+Verified by asking GitHub which rules evaluate for the branch —
+`gh api repos/…/rules/branches/main` returns exactly `pull_request`, with
+`required_approving_review_count: 0`, no `required_status_checks` rule at all,
+`required_review_thread_resolution: false`, and no linear-history, signed-commit,
+deletion or force-push rule. Legacy branch protection is still absent (`404`),
+so this ruleset is the only thing evaluating.
+
+**GitHub added a gate that was not asked for, and it had to be switched off
+explicitly.** The created ruleset came back carrying
+`require_extra_approval_for_unattributed_changes: true` — a server-side default
+that can demand an approval even where `required_approving_review_count` is `0`.
+Under this finding's posture that is a defect, so it was set to `false` and
+re-read. **Worth knowing for any future ruleset here: the parameters you send
+are not the parameters you get.**
+
+**The decline path resolved on measurement, and the finding's own suggested
+command would have got it wrong.** `git log --first-parent --no-merges main`
+reports **138** commits — but **117 of them carry a `(#N)` suffix and are
+squash-merged pull requests**, which reach `main` without a merge *commit* while
+still going through a PR. The real count of direct pushes is **21**, every one
+between **2026-04-18 and 2026-04-26** — the repo's first nine days — and **none
+in the four months and roughly 600 pull requests since**. The escape hatch was
+not in use, so no bypass actor was added.
+
+**It is still reversible in seconds.** An admin can disable or delete the
+ruleset from the repository's Rules settings, which is now the escape hatch the
+direct push used to be. That is why "no bypass actors" is not a lock-out.
+
+**One live instruction corrected in the same PR:** `ship-pr` step 1 said *"Never
+commit to `main`"* as advice; it now says the push is refused server-side, while
+keeping the advice, because the rule fires at `git push` and a commit already
+made on `main` is still yours to unpick.
+
+**This PR was its own acceptance test** — opened, checked and merged under the
+new rule.
+
 ### G2 — high — the repo is public, and no file in it records that as a decision
 
 `"private": false, "visibility": "public"` — measured 2026-09-03. Nothing in
@@ -249,6 +293,23 @@ That history shape is genuinely useful here: `deploy-sweep.mjs` walks merge
 commits on `main` as its unit of work, and `--first-parent` gives a clean
 per-PR ledger. Squashing would flatten it; rebasing would remove the merge
 commits the script counts.
+
+**Adjusted 2026-09-03, while taking G1 — this finding's premise is wrong.**
+"The merge-commit path, exclusively" is false. `git log --first-parent
+--no-merges main` filtered on a `(#N)` suffix finds **117 squash-merged pull
+requests** on `main`, alongside the 501 merge commits. The squash button has not
+merely been available, it has been **used**, on more than a sixth of this
+repo's PRs.
+
+That makes this finding *more* worth taking rather than less — a script keying
+on merge commits is already blind to 117 of them — but it also means the
+proposal below is **not** the no-op it claims. Disabling squash would change
+which button is available for a path the repo has actually used, and anything
+reasoning over `main`'s history has to cope with both shapes regardless, since
+the existing 117 do not go away. **Re-scope before taking it**, and check
+`deploy-sweep.mjs` against a squash-merged commit specifically.
+
+The original measurement and proposal are left standing below.
 
 **Proposal:** disable squash and rebase merging, leaving merge commits as the
 only button. Nothing about existing history changes.
