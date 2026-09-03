@@ -1,6 +1,6 @@
 # Repository architecture audit — git, GitHub, layout and the merge path, 2026-09-03
 
-**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G12`+`G13` taken together (PR #627); `G4` (PR #628) and `G6` (PR #629) taken; `G9` and `G10` closed WITHOUT being taken (PRs #625, #626); `G5`, `G11` and `G15`
+**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G12`+`G13` taken together (PR #627); `G4` (PR #628), `G6` (PR #629) and `G14` (PR #630) taken; `G9` and `G10` closed WITHOUT being taken (PRs #625, #626); `G5`, `G11` and `G15`
 carry `Adjusted` notes; `G18` filed 2026-09-03. The rest are OPEN.**
 Read the lines under a finding's own heading for its state — this line is a
 convenience and it is the kind of line that goes stale first.
@@ -1050,6 +1050,52 @@ interact — take them in a known order and say which in the note.**
 **Decline path:** `deploy-sweep.mjs` exists, works, and is cheap to run. If the
 session-end habit is holding, the marginal value here is the merge you did not
 check on a day you did not finish cleanly.
+
+**Taken, 2026-09-03 (PR #630).** `.github/workflows/deploy-alarm.yml` — a daily
+cron that walks the last 26 hours of merges on `main`, reads each one's
+`Cloudflare Pages` check-run, and **fails its own run** when any did not deploy.
+
+**The form was forced by `G6`.** With Issues disabled there is no issue to file,
+so the failed run *is* the alarm, reaching you through GitHub's Actions failure
+notification. That makes it depend on notifications being on for this repo —
+stated in the workflow's header rather than assumed.
+
+**It moves an exit code, which `deploy-sweep.mjs` deliberately does not**, and
+the divergence is the interesting part. That script says outright: *"Report
+only. This never moves the exit code"* — because a deploy that failed needs a
+person rather than a non-zero, and a script failing on four-day-old history
+would fail every run until someone rewrote the past.
+
+That reasoning is about **a script a person runs.** Here the exit code **is the
+notification channel**: a green run nobody looks at is precisely the thing that
+already went wrong. **The 26-hour window is what makes it safe** — an old
+failure ages out instead of alarming forever, so this cannot decay into the
+permanent red tick that trained everyone to ignore check-runs in the first
+place. 26 rather than 24 because the schedule drifts and a gap between windows
+would let a failure through unseen.
+
+**Proved in both directions before shipping, not after.**
+
+| window | result |
+|---|---|
+| last 26 hours (67 merges) | every one `ok`, **exit 0** |
+| 2026-08-28, the outage | **8 of 8 `FAILED`**, exit 1 — the alarm fires |
+
+The second row is the one that matters: a check that has only ever passed proves
+nothing.
+
+**Three things it deliberately does not do.** It has **no `pull_request`
+trigger** — at push time Pages has not finished building, so a fresh merge is
+legitimately pending and would alarm falsely. It is **not a required status
+check**, so it cannot block a merge or a deploy; `G1`'s ruleset requires a PR
+and nothing else. And it **does not answer for the Worker**, because
+`workers/pick3cut5-room` produces no check-run and reaching it needs Cloudflare
+credentials that CI is deliberately not given (`G8`). `deploy-sweep.mjs` remains
+the only thing covering that half.
+
+**A merge carrying no check-run at all counts as a failure**, not a pass —
+`deploy-sweep.mjs`'s header records that this *"looks exactly like a quiet
+healthy merge and is not one."*
 
 ### G15 — medium — one of the two deploy paths produces no signal at all
 

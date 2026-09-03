@@ -1,0 +1,118 @@
+# Did a merge in the last day fail to deploy? REPO-AUDIT.md G14.
+#
+# THE FAILURE THIS EXISTS FOR. Every merge commit from 2026-08-27 to the fix in
+# #399 reported `Cloudflare Pages=failure` on its own check-runs - 65
+# consecutive, no flapping, no ambiguity - and nobody read it, for four days, at
+# a merge rate that has twice passed 45 in a day. The signal was never the
+# problem. Reading it was.
+#
+# `scripts/deploy-sweep.mjs` is the session-end backstop and `ship-pr` step 9 is
+# the per-merge read. Both depend on a person remembering, which is the
+# mechanism that already failed. This one runs whether or not anyone remembers.
+#
+# WHY IT FAILS ON PURPOSE, WHEN deploy-sweep DELIBERATELY DOES NOT.
+# `deploy-sweep.mjs` says outright: "Report only. This never moves the exit
+# code" - because a deploy that failed needs a person rather than a non-zero,
+# and a script failing on four-day-old history would fail every run until
+# someone rewrote the past.
+#
+# That reasoning is about a script a person runs. Here the exit code IS the
+# notification channel: a failed scheduled run is what GitHub emails about, and
+# a green run nobody looks at is the thing that already went wrong. The window
+# below is what makes it safe - an old failure ages out instead of alarming
+# forever, so this cannot become the boring red tick that trained everyone to
+# ignore check-runs in the first place.
+#
+# NOT A GATE. It runs on a schedule, never on a pull request, and it is not a
+# required status check. It cannot block a merge or a deploy. G1's ruleset
+# requires a PR and nothing else; adding this as a required check would be a
+# different decision and needs its own finding.
+#
+# ISSUES ARE OFF (G6), so filing one is not available. The failed run is the
+# whole alarm - it reaches you through GitHub's Actions failure notification,
+# which means it depends on notifications being on for this repo.
+#
+# THE WORKER HALF IS NOT HERE. `workers/pick3cut5-room` produces no check-run at
+# all and answering for it needs Cloudflare credentials, which CI deliberately
+# does not get (G8). `deploy-sweep.mjs` covers that half and remains the only
+# thing that does.
+
+name: deploy alarm
+
+on:
+  schedule:
+    # Daily, mid-morning UTC. No push trigger: at push time Pages has not
+    # finished building, so a fresh merge is legitimately still pending.
+    - cron: '0 10 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: read
+
+jobs:
+  check-recent-deploys:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Enough history to walk a day of merges. A shallow clone would
+          # silently find none and pass.
+          fetch-depth: 200
+
+      - name: read the check-runs of the last day's merges
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -uo pipefail
+
+          # 26 hours, not 24: the schedule drifts and a gap between windows
+          # would let a failure through unseen.
+          SINCE=$(date -u -d '26 hours ago' +%Y-%m-%dT%H:%M:%SZ)
+          echo "window: merges on main since $SINCE"
+
+          SHAS=$(git log --merges --format='%H' --since="$SINCE" origin/main)
+
+          if [ -z "$SHAS" ]; then
+            echo "no merges in the window - nothing to check"
+            exit 0
+          fi
+
+          BAD=0
+          for sha in $SHAS; do
+            subject=$(git log -1 --format='%s' "$sha")
+            runs=$(gh api "repos/${GITHUB_REPOSITORY}/commits/$sha/check-runs" \
+                     --jq '[.check_runs[] | select(.name=="Cloudflare Pages")] | .[0].conclusion // "MISSING"' \
+                   2>/dev/null || echo "APIERROR")
+
+            case "$runs" in
+              success)
+                echo "  ok       ${sha:0:8}  $subject"
+                ;;
+              MISSING)
+                # deploy-sweep's header: a merge registering no check-run at all
+                # looks exactly like a quiet healthy merge and is not one.
+                echo "  NO RUN   ${sha:0:8}  $subject"
+                BAD=1
+                ;;
+              APIERROR)
+                echo "  ?        ${sha:0:8}  $subject  (could not read check-runs)"
+                ;;
+              *)
+                echo "  FAILED   ${sha:0:8}  $subject  (Cloudflare Pages=$runs)"
+                BAD=1
+                ;;
+            esac
+          done
+
+          if [ "$BAD" -ne 0 ]; then
+            echo ""
+            echo "A merge in the last day did not deploy. The site is still"
+            echo "serving the last build that compiled."
+            echo "SETUP.md -> 'When the merge does not deploy' has the mechanism."
+            exit 1
+          fi
+
+          echo ""
+          echo "every merge in the window deployed"
