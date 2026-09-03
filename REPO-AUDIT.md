@@ -1,6 +1,6 @@
 # Repository architecture audit — git, GitHub, layout and the merge path, 2026-09-03
 
-**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G9` closed WITHOUT being taken (PR #625); `G5`, `G11` and `G15`
+**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G9` and `G10` closed WITHOUT being taken (PRs #625, #626); `G5`, `G11` and `G15`
 carry `Adjusted` notes; `G18` filed 2026-09-03. The rest are OPEN.**
 Read the lines under a finding's own heading for its state — this line is a
 convenience and it is the kind of line that goes stale first.
@@ -40,12 +40,20 @@ in the same voice, and nothing on the page told a reader which was which.
 `G18` proposes the fix.
 
 **Two: proposing something another menu had already decided.** `G9` asked to
-rename `SETUP-v2-CHANGES.md`. `HEALTH-AUDIT.md` F4 had settled that on
-2026-09-02 in PR #523 and chosen the opposite, with reasons. **Re-measuring
-would never have caught this** — `G9`'s facts were right — and the check is a
-grep for the subject across the other menus, thirty seconds, not done. Added
-here on 2026-09-03 when `G9` was closed; the paragraph above used to say the
-failure had *one* shape.
+rename `SETUP-v2-CHANGES.md`; `HEALTH-AUDIT.md` F4 had settled that on
+2026-09-02 in PR #523 and chosen the opposite, with reasons. `G10` proposed
+numbering the data scripts; `SKILL-AUDIT.md` F25(b) had closed that on
+2026-09-02 in PR #567, and its note ends *"recorded so it is not re-proposed."*
+**Re-measuring would never have caught either** — `G9`'s facts were right — and
+the check is a grep for the subject across the other menus, thirty seconds,
+done for neither.
+
+**Both shapes can occur in one finding.** `G10` re-proposed a settled decision
+*and* never ran the one command that would have shown its mechanism backwards:
+a `NNN-` prefix sorts **first**, not last.
+
+This section was added on 2026-09-03 when `G9` was closed, and widened when
+`G10` was; the paragraph above it used to say the failure had *one* shape.
 
 **`G6` is the subtler case and worth reading twice.** It was right, and it was
 right by luck: the check performed confirmed the tabs were *enabled*, and the
@@ -760,6 +768,52 @@ describing the glob — a schema-change-shaped job, and it should be its own
 finding if it is ever wanted.
 
 **Posture: convention for new files, nothing retroactive, no rename.**
+
+**Closed without being taken, 2026-09-03 (PR #626). Two independent reasons,
+either of which is sufficient.**
+
+**One — the design question was closed by decision the day before.**
+`SKILL-AUDIT.md` F25 part (b) asked whether the `z` escalation is a convention
+worth keeping, and listed the alternatives: *"a `zzzz-`-and-done rule, or
+**numbering by intended run order**, or making the rebuild order explicit rather
+than lexical."* Its outcome note reads:
+
+> Part (b) **CLOSED by decision, not deferred** — Nate chose documentation only,
+> leaving the four tiers as they are. **Recorded so it is not re-proposed**: the
+> escalation is untidy and has never actually broken anything, and every
+> alternative is a migration of applied one-shot scripts.
+
+This finding re-proposed it, one day later, in the teeth of a note whose last
+clause exists to prevent exactly that. Part of the closure reasoning does not
+bite here — a new-files-only convention is not a migration of applied scripts —
+but the decision covered the design question, not one mechanism for it.
+
+**Two — and this one kills it regardless: `NNN-` sorts the wrong way.**
+Measured 2026-09-03 by adding two synthetic names to the real listing and
+sorting it:
+
+| name | position of 362 |
+|---|---|
+| `001-a-new-script.sql` | **1** |
+| `500-a-new-script.sql` | **2** |
+| `add-apok-class.sql` | 3 |
+
+Digits precede letters in ASCII, so **every** numerically prefixed file sorts
+ahead of **all 360** existing scripts, whatever number it carries. A new data
+script almost always has to run *after* what is already there. The proposal
+would have put new work first and called it ordering — producing the silent
+undo-on-rebuild failure that the `z` tiers, `repo-vs-live.mjs` and F25 all exist
+to prevent.
+
+**This finding is the first here to exhibit both failure shapes at once.** It
+re-proposed a settled decision without checking (shape two, as `G9` did), *and*
+its mechanism was reasoned to rather than run (shape one) — the sort order was
+never tested, and testing it takes one command.
+
+**Nothing changed in the repo.** The four `z` tiers stand exactly as F25(b)
+decided. `docs/operations.md` keeps its ordering table, and the durable
+instruction remains the one F25(a) shipped: run the `sort` one-liner, read where
+your name lands, and **do not reason from the convention**.
 
 ### G11 — low — audit menus sit at the root or in an app directory by no stated rule
 
