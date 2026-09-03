@@ -1,6 +1,6 @@
 # Repository architecture audit — git, GitHub, layout and the merge path, 2026-09-03
 
-**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G12`+`G13` taken together (PR #627); `G4` (PR #628), `G6` (PR #629) and `G14` (PR #630, fixed in #631) taken; `G16` CLOSED BY DECISION - declined and recorded (PR #632); `G2` taken via PATH B - stays public, deliberately (PR #633); `G17` taken (PR #634); `G9` and `G10` closed WITHOUT being taken (PRs #625, #626); `G5`, `G11` and `G15`
+**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G12`+`G13` taken together (PR #627); `G4` (PR #628), `G6` (PR #629) and `G14` (PR #630, fixed in #631) taken; `G16` CLOSED BY DECISION - declined and recorded (PR #632); `G2` taken via PATH B - stays public, deliberately (PR #633); `G17` taken (PR #634); `G9` and `G10` closed WITHOUT being taken (PRs #625, #626); `G5`, `G11` and `G15` RE-SCOPED 2026-09-03 (PR #635) and now takeable; they
 carry `Adjusted` notes; `G18` filed 2026-09-03. The rest are OPEN.**
 Read the lines under a finding's own heading for its state — this line is a
 convenience and it is the kind of line that goes stale first.
@@ -459,6 +459,50 @@ shape a script depends on not seeing.
 **Verify one premise before taking it.** Confirm `deploy-sweep.mjs` genuinely
 keys on merge commits rather than merely defaulting to them — the header says
 "the last 20 merge commits", which reads as a window rather than a contract.
+
+**RE-SCOPED 2026-09-03 — this is not a tidiness finding. Both deploy monitors
+are blind to a merge shape the repo has used 117 times, most recently three days
+ago, and the button still offers it.** The premise check above was run, and it
+turned this into a different finding.
+
+| measured 2026-09-03 | |
+|---|---|
+| `scripts/deploy-sweep.mjs:74` | `git log --merges` — **merge commits only** |
+| `.github/workflows/deploy-alarm.yml:75` | `git log --merges` — **the same** |
+| squash merges on `main` | **117**, spanning 2026-08-16 → **2026-08-31** |
+| squash button today | **still enabled** |
+
+**The signal exists on those commits and nothing reads it.** Three squash-merged
+commits from 2026-08-31 were checked directly and all carry
+`Cloudflare Pages completed/success` — and `git log --merges` returns **zero** of
+them. A squash-merged deploy *failure* would be reported by neither tool: the
+four-day outage's failure mode, reached by a different route.
+
+**`G14`'s alarm inherited the defect on the day it shipped**, from the script it
+was modelled on. This is not dormant history; it is a live blind spot in code
+merged an hour before this re-scope was written.
+
+**Re-scoped proposal, two independent halves.**
+
+- **(a) The substantive fix: walk `--first-parent`, not `--merges`**, in both
+  `deploy-sweep.mjs` and `deploy-alarm.yml`. Every first-parent commit on `main`
+  is a state the branch was in, and therefore a deploy that either happened or
+  did not — which is the question both tools ask. One pass covers merge commits,
+  squash merges and direct pushes, and it needs no repository setting to be
+  correct.
+- **(b) Optional, and no longer the point: disable squash and rebase.** It
+  narrows what can arrive, but it does **not** fix either tool for the 117
+  commits already on `main`, and under `G1`'s ruleset every merge is a PR merge
+  whose dropdown still offers squash. Take (a) whether or not (b) is taken;
+  **taking (b) alone leaves the bug.**
+
+**Posture: fix the readers; treat the button as a separate call.** The original
+proposal is left standing above, and its *"nothing about existing history
+changes"* is now visibly the error — what needed changing was never the button.
+
+**Acceptance test:** after (a), both tools must report the three 2026-08-31
+squash commits. Today they return nothing for them, which is the check that
+proves the fix rather than assuming it.
 
 ### G6 — medium — Issues, Projects and Wiki are all enabled and all empty
 
@@ -935,6 +979,42 @@ and a move would invalidate citations that no repo grep reaches.
 
 **Posture: documentation only, zero files moved.**
 
+**RE-SCOPED 2026-09-03 — the substance survives, the arithmetic is replaced, and
+the rule must be written so it does not need the arithmetic.**
+
+Correct figures, from the tree rather than from a glob:
+
+| | |
+|---|---|
+| under `apps/` | **nine** — six in `character-creator`, two in `media-vault`, one in `pick3cut5` |
+| at the root | **nine** — eight matching `*AUDIT*.md`, plus `SETUP-v2-CHANGES.md` |
+
+The original said seven and eight. Both were wrong, and the root figure was
+wrong **because it was taken with the `*AUDIT*.md` glob that `G9` exists to warn
+about** — the same instrument, two findings apart.
+
+**That is the re-scope, not a correction.** A placement rule stated as *"there
+are nine and nine"* is a rule that needs re-counting every time a menu is added,
+and this finding has already demonstrated that the count will be taken with the
+wrong tool. **The rule must be countless.**
+
+**Re-scoped proposal.** One paragraph in the `audit-menu` skill, beside the
+placement question it already implies, saying:
+
+- **root** — anything spanning apps, or covering the repo, the process, the
+  machine or the instruction layer;
+- **the app directory** — anything scoped to exactly one app;
+- and that the decision is made by **what the menu is about**, not by where
+  similar-sounding files already sit. `BOOK-INGEST-AUDIT.md` sits at the root
+  while being about the character creator's catalog, and is the standing
+  counter-example: it is not moved, and the rule does not pretend it fits.
+
+**No counts in the paragraph. No files moved.** Every existing path is cited
+from other menus, from skills and from the memory store, and a move would break
+citations that no repo grep reaches — that part of the original stands unchanged.
+
+**Posture: documentation only, zero files moved, no number that can go stale.**
+
 ### G12 — medium — `F18` names eleven different things, and the branch names inherit the ambiguity
 
 **Re-verified 2026-09-03: holds.** Still **eleven** menus using `F`. The
@@ -1224,6 +1304,43 @@ production costs a deliberate keystroke.
 **Verify before scoping.** Read `deploy-sweep.mjs`'s Worker half first — it may
 already answer this, in which case the finding shrinks to a documentation note.
 This is the premise in the menu most likely to be stale.
+
+**RE-SCOPED 2026-09-03. The finding shrank, as its own caution predicted, and
+what is left is one specific question the existing tool cannot answer.**
+
+**Drop entirely:** *"produces no signal at all"*, and the half of the proposal
+asking for a deployment id the sweep compares. Both are already built —
+`deploy-sweep.mjs` runs `wrangler deployments list`, takes the active
+deployment, and compares its timestamp against the newest commit touching
+`workers/pick3cut5-room`.
+
+**What remains, in the sweep's own words:** *"A timestamp cannot tell you whether
+the change mattered. A `$schema` line fires it as loudly as a rewrite of
+`room.js`."* So the tool answers *"something newer exists in git"* and cannot
+answer **"which build is actually live"**. Those are different questions, and
+only the second one settles whether party mode is running the code you think it
+is.
+
+**Re-scoped proposal: the Worker states its own version, and the sweep reads it
+back.**
+
+- The Worker serves its commit sha — an existing route, or a trivial
+  `/api/pick3cut5/version`. It is deployed by hand with `wrangler`, so the sha
+  can be injected at deploy time (`--var` or equivalent); no build step exists
+  or is wanted.
+- `deploy-sweep.mjs` fetches it and compares against `git rev-parse HEAD` for
+  `workers/pick3cut5-room`. **Equal is the answer the timestamp cannot give.**
+- The timestamp comparison **stays** as the fallback for when the route cannot
+  be reached at all.
+
+**Posture unchanged and worth restating: make it observable, do not automate the
+deploy.** No Cloudflare credentials in CI (`G8`), and the deploy stays the
+deliberate keystroke it is.
+
+**Note for whoever takes it:** the route must be reachable without an Access
+session, or the sweep cannot read it — `pick3cut5` already has bypass paths, and
+`apps/pick3cut5/test/smoke.mjs --remote` is the check that they still work. A
+version route that 302s to the login wall answers nothing.
 
 ### G16 — low — 1,267 commits, 616 PRs, zero tags
 
