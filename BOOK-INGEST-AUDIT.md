@@ -2325,3 +2325,82 @@ that a finding taken with the right mechanism and the wrong posture has shipped
 the wrong change. It also moves a pinned smoke section. **So the measurement is
 recorded here and the decision is unfiled** — it wants its own number, and
 whoever takes it starts from the table above rather than from a hunch.
+
+**Filed as `F21`, 2026-09-03 (PR #615).** The number the paragraph above asks
+for.
+
+### F21 - `catalog-diff` cannot match a prefixed catalog row from the name its book prints
+
+`F20` left this measured and unnumbered. `drift-check` now strips the catalog's
+category prefix locally; `catalog-match-lib.mjs` still has no notion of one, and
+`catalog-diff.mjs` is the tool that pays for it.
+
+`diffCatalog` indexes **catalog rows** by `variants()` and looks up **book-entry
+names** against that index. A row stored as `Air: Tornado` is indexed under
+`air tornado` and its variants — never `tornado` — so a book printing *Tornado*
+cannot reach it. `F19` established that the bare name is what books print: 213 of
+216 rows it flagged were found the moment the prefix came off.
+
+**Measured against production, 2026-09-03**, over the 374 prefixed rows of 1,068:
+
+| a book printing the BARE name | today | with a de-prefixed reading indexed |
+|---|---|---|
+| finds the right row | **0** | **269** |
+| finds nothing | 317 | 49 |
+
+**Nothing regresses, and this was checked rather than assumed.** Every row that
+finds itself by its own full name today still does: **1053 before, 1053 after,
+0 regressed.** `match()` consults `index.exact` first, keyed on `normalise(name)`,
+and adding alias keys cannot disturb an exact hit. The risk this rules out is the
+obvious one — that `Air: Darkness` claiming `darkness` would knock a row actually
+named *Darkness* off its own key.
+
+**The real cost is 53 contested names, and they are contested for a good
+reason.** That many bare names are held by **both** a prefixed and an unprefixed
+row, because Palladium prints both a general invocation and an elemental Warlock
+version of the same spell:
+
+| unprefixed row | prefixed row |
+|---|---|
+| `Cloud of Smoke` — Rifts Ultimate Edition p.198 | `Fire: Cloud of Smoke` — Book of Magic p.74 |
+| `Blinding Flash` | `Fire: Blinding Flash` — Book of Magic p.74 |
+| `Thunderclap` | `Air: Thunderclap` — Book of Magic p.57-66 |
+
+These are **different spells**, not duplicates. A book printing *Blinding Flash*
+genuinely could mean either, and the library's both-sides ambiguity rule refuses
+to guess — which is that rule working, not a defect. The 269 above already has
+these refusals subtracted.
+
+**One guard's letter survives and its spirit does not, which is the part worth
+arguing about.** `test/checks/catalog-matching.mjs` pins *"variants stay small"*
+as `variants('Commune with Spirits').length <= 4`. That assertion still passes:
+the name it uses carries no prefix and yields **2**. But across the catalog the
+combined set reaches **6**, with **22 rows over 4** — so the check would go on
+passing while the property it was written to protect quietly stopped holding.
+`variants()`'s own docstring is the reason to care: *"Deliberately small. Every
+entry here is a difference actually observed between a Palladium book and this
+catalog — a general-purpose fuzzy expansion is how you get Telekinetic Push
+matched to Telekinetic Punch."*
+
+**Proposal:** add the de-prefixed reading to `variants()`, and **re-pin the
+guard on the property rather than on one name** — assert the bound over a
+prefixed name too, so the check fails when the set grows rather than when one
+unprefixed example happens to. Raising `4` without doing that would remove the
+only thing standing between this library and general fuzzy matching.
+
+**Posture: no exit code moves anywhere.** `catalog-diff` is a report, and
+`drift-check`'s advisory is not a gate. **The acceptance test is two numbers**:
+`catalog-diff`'s matched count rises by roughly 269 on the prefixed rows, and
+`drift-check`'s advisory **stays at 1** — it already strips the prefix locally,
+so this must not change what it prints. If the advisory moves, the local strip
+and the library's are disagreeing and the diff is wrong.
+
+**Then delete `dePrefix` from `drift-check.mjs`**, which is the point of doing
+this at all: one matcher, one place, and the local strip retired in the same PR
+rather than left as a second copy of the rule.
+
+**Decline it** if `catalog-diff` matching 269 more rows is not worth touching a
+shared library that four things depend on. That is a real position — nothing is
+broken today, the tool simply reports as missing a set of rows that are present,
+and `F20` already took the cheap half. The cost of declining is that the two
+matchers stay divergent, which is the condition `F20` was filed to end.
