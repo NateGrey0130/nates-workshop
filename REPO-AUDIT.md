@@ -1,6 +1,6 @@
 # Repository architecture audit — git, GitHub, layout and the merge path, 2026-09-03
 
-**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G12`+`G13` taken together (PR #627); `G4` (PR #628), `G6` (PR #629) and `G14` (PR #630, fixed in #631) taken; `G16` CLOSED BY DECISION - declined and recorded (PR #632); `G2` taken via PATH B - stays public, deliberately (PR #633); `G17` taken (PR #634); `G9` and `G10` closed WITHOUT being taken (PRs #625, #626); `G5`, `G11` and `G15` RE-SCOPED 2026-09-03 (PR #635) and now takeable; they
+**Status: `G8`, `G1`, `G3` and `G7` taken 2026-09-03 (PRs #620, #621, #623, #624); `G12`+`G13` taken together (PR #627); `G4` (PR #628), `G6` (PR #629) and `G14` (PR #630, fixed in #631) taken; `G16` CLOSED BY DECISION - declined and recorded (PR #632); `G2` taken via PATH B - stays public, deliberately (PR #633); `G17` taken (PR #634); `G9` and `G10` closed WITHOUT being taken (PRs #625, #626); `G5` RE-SCOPED then TAKEN, half (a) only (PRs #635, #636); `G11` and `G15` re-scoped and now takeable; those two
 carry `Adjusted` notes; `G18` filed 2026-09-03. The rest are OPEN.**
 Read the lines under a finding's own heading for its state — this line is a
 convenience and it is the kind of line that goes stale first.
@@ -503,6 +503,49 @@ changes"* is now visibly the error — what needed changing was never the button
 **Acceptance test:** after (a), both tools must report the three 2026-08-31
 squash commits. Today they return nothing for them, which is the check that
 proves the fix rather than assuming it.
+
+**Taken, 2026-09-03 (PR #636) — half (a) only, as the re-scope directs. Half (b)
+is NOT taken: squash and rebase remain enabled.** That was the re-scope's own
+instruction — *fix the readers, treat the button as a separate call* — and (b)
+is still available as a narrowing, but it fixes nothing on its own.
+
+`--merges` → `--first-parent` in both `scripts/deploy-sweep.mjs` and
+`.github/workflows/deploy-alarm.yml`, plus the labels and prose that said
+*"merge commits"*, including `ship-pr`'s claim that the sweep *"walks the last
+twenty merge commits"*.
+
+**Acceptance test met, and run in both directions:**
+
+| the three 2026-08-31 squash commits | |
+|---|---|
+| under the old `--merges` walk | **INVISIBLE** — all three |
+| under `--first-parent` | **SEEN** — all three |
+
+`deploy-sweep --last 200` now reaches them (they sit at depth 199) and reports
+**200 first-parent commits, all deployed**. The alarm's walk goes from 67 to 68
+commits over the same 26 hours.
+
+**Taking this exposed a second defect, and it is beyond `G5`'s letter — fixed
+here anyway, flagged rather than folded in silently.** The first re-run reported
+`1ce6ea9` as **DID NOT DEPLOY** on a line that also read `Cloudflare
+Pages=success`.
+
+The cause: `deploy-sweep.mjs` read **every** check-run on a commit and failed the
+commit if any of them failed. Harmless while Pages was the only thing posting
+one — and it stopped being harmless hours earlier, when `G14`'s
+`deploy-alarm.yml` began posting `check-recent-deploys` to `main`, and its
+buggy first run left a red mark there. **A deploy monitor was calling a
+successful deploy a failure because a different monitor had failed.** Two tools
+feeding each other false alarms is exactly how a check stops being read, which
+is the whole subject of `G14`.
+
+The query is now filtered to `select(.name=="Cloudflare Pages")` — which is what
+that script's own header always claimed it did. The alarm needed no such fix: it
+was written filtered from the start.
+
+**Fixed here rather than filed** because the alternative was leaving a live
+false alarm in the tool this menu had just finished repairing. Recorded so the
+scope stretch is visible.
 
 ### G6 — medium — Issues, Projects and Wiki are all enabled and all empty
 

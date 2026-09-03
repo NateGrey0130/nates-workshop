@@ -70,12 +70,18 @@ jobs:
           # 26 hours, not 24: the schedule drifts and a gap between windows
           # would let a failure through unseen.
           SINCE=$(date -u -d '26 hours ago' +%Y-%m-%dT%H:%M:%SZ)
-          echo "window: merges on main since $SINCE"
+          echo "window: everything that landed on main since $SINCE"
 
-          SHAS=$(git log --merges --format='%H' --since="$SINCE" origin/main)
+          # --first-parent, NOT --merges. This walked `--merges` on the day it
+          # shipped and inherited deploy-sweep's blind spot: 117 squash merges
+          # on main that `--merges` returns none of, each carrying a real
+          # check-run nobody read (REPO-AUDIT.md G5). Every first-parent commit
+          # is a state main was in - merge commit, squash or direct push - and
+          # each triggered a build that either succeeded or did not.
+          SHAS=$(git log --first-parent --format='%H' --since="$SINCE" origin/main)
 
           if [ -z "$SHAS" ]; then
-            echo "no merges in the window - nothing to check"
+            echo "nothing landed on main in the window - nothing to check"
             exit 0
           fi
 
