@@ -116,6 +116,39 @@ gives about `audit-citations.mjs`: a mechanical reader would fire on every
 citation of a still-open finding, which is correct and useless. The grep is the
 tool; noticing is the work.
 
+### Which is why a finding reference names its menu
+
+That grep is the tool, and **a bare number defeats it.** Prefixes are not unique
+across menus — censused 2026-09-03 by walking every menu's own headings:
+
+| prefix | menus using it |
+|---|---|
+| `F` | **eleven** |
+| `D` | **three** — `DOCS-AUDIT`, `DOCS-AUDIT-2`, `apps/character-creator/AUDIT` |
+| `N` | **two** — `SKILL-AUDIT`, `apps/character-creator/REDESIGN-AUDIT` |
+| `B` `C` `G` `M` `R` | one each |
+
+So `git log --grep='F18'` cannot tell you which `F18`, and neither can a branch
+name after the branch is deleted. `S`, `T` and `P` are absent from that table
+because they are **not headings** — `CLASS-AUDIT`'s `S` items are bullets and
+`pick3cut5/AUDIT`'s `T` items are bold paragraph leads — so the census
+undercounts, exactly as the heading table further down warns.
+
+**Going forward, name the menu wherever a finding number is written outside its
+own file** — commit subjects, branch names, and cross-references in another
+menu, a skill or a memory file:
+
+- `Take UI-AUDIT F30: …`, not `Take F30: …`
+- branch `ui-audit-f30-banked-picks`, not `f30-banked-picks`
+- *"see `SKILL-AUDIT` F25(b)"*, not *"see F25(b)"*
+
+**Inside its own file a bare number is right** and should stay — `G12` referring
+to `G9` needs no prefix, and adding one there is noise.
+
+**No check enforces this, deliberately** — same reason as everything else on
+this page. History is not rewritten either: the unqualified subjects already in
+`git log` stay as they are. `REPO-AUDIT.md` G12/G13.
+
 ## Never grep for the outcome note. Read under the heading
 
 Grepping for `Taken` has produced false findings here **repeatedly, and in both
