@@ -519,6 +519,26 @@ Do that while taking it.
 
 **Ongoing cost:** one sentence.
 
+**Taken, 2026-09-03 (PR #665).** Documentation only, one paragraph in step 7, the
+merge command unchanged, and the memory entry deliberately kept.
+
+**Confidence closes at high, by doing what the finding said would raise it.**
+Verified on GitHub, not from memory: **#261** is `CLOSED` with `mergedAt` null
+and base `category-skill-bonus`; **#260** merged that base at 19:13 on
+2026-08-24; **#262** — same title, same head branch, against `main` — merged
+ninety seconds later. Both numbers are in the shipped sentence, which is what
+makes it checkable by the next reader.
+
+**One thing not re-run, and it is stated in the PR rather than hidden:** the two
+error strings (`gh pr reopen` → *"Could not open the pull request"*, and
+`gh pr edit --base` refusing on a closed PR) come from the memory entry written
+on the day. Reproducing them would mean deliberately closing a live PR.
+
+**The two-layer duplication is intended here**, against this menu's general
+preference. The memory entry keeps the case and the errors; the skill takes the
+rule and the recovery, because the rule is needed at the moment the command is
+typed and memory only fires when it happens to be recalled.
+
 ---
 
 ### F8 — three passages that should be cut or moved, and a rule about which
