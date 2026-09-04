@@ -728,6 +728,42 @@ each time a capability is added.
 **Ongoing cost: real, and the reason this is `low` rather than higher.** One more
 list to update when a capability lands, and nothing makes it fire.
 
+**Taken, 2026-09-04 (PR #717)** — `scripts/retro-check.mjs`, ten capability
+pairs, posture exactly as proposed: **reports only, no exit code, no CI gate.**
+
+**It found its own design flaw on the first run, which is the best thing about
+it.** It reported `spacer` and `dragon-hatchling-royal-frilled` — both corrected
+hours earlier by `R1` and `R6`. Their corrected notes **quote the sentence they
+corrected**, because that is what a correction does and what `audit-menu` asks
+for, so the denial phrase survives in the record forever and a naive matcher
+reports every fix as the defect. This is the hole `scripts/menu-check.mjs`
+documents about quoted specimens, reached independently. A denial sitting within
+260 characters of a finding citation is now reported as a **quotation, not a
+claim** — printed under its own heading rather than dropped, because the check
+cannot tell a quotation from a claim that merely happens to cite something.
+
+**It proves itself before it reports, and that was not in the proposal.** A check
+whose healthy answer is *"nothing to report"* is indistinguishable from a regex
+that silently stopped matching, and this menu's own `R1` was found by a detector
+that had only ever produced plausible output. So every pair is fired at a
+specimen of the defect it looks for — verbatim pre-fix text from the classes
+`R1` and `R6` corrected — before any real class is read, and it prints
+`7/7 pairs matched their own specimen, 3 unproven (no specimen)`. **The
+unproven three say so rather than passing quietly**, which is the honest state
+for a hand-maintained list.
+
+**Proved by making it fail**, not by watching it pass: breaking one `deny` regex
+produces `*** retro-check SELF-TEST FAILED - do not trust the report below ***`
+and names the pair.
+
+**Against production today it reports NOTHING**, which is the right answer — `R1`'s
+five are fixed. The `wilderness-scout` whitespace trap is carried in the code as
+the reason for normalising, since that hit was invisible until it did.
+
+**The smoke suite caught the documentation step**, as it did for
+`deploy-sweep.mjs` in `HEALTH-AUDIT` `F20`: *"every script in `scripts/` is named
+in the file map"*. The README entry landed in the same commit.
+
 ---
 
 ## Not established

@@ -623,6 +623,15 @@ scripts/
 │                           the truth - a backticked path is NOT a citation.
 │                           Runs in CI on the lines a PR ADDS, so no existing
 │                           menu is retrofitted
+├── retro-check.mjs         Does a class DENY a key it already carries? The data
+│                           is right, so nothing fails; only the sentence is
+│                           false, and it tells the next reader not to try. NOT a
+│                           capability-vs-date diff - that is 11% precision,
+│                           because every capability here has a meaningful unset
+│                           default. Reports only, NO exit code, and it fires
+│                           every regex at a specimen of the defect first, so a
+│                           quiet pass cannot be mistaken for a broken matcher.
+│                           RETRO-AUDIT R8
 ├── catalog-match-lib.mjs   Matching a book's names to the catalog's. Exact
 │                           first; a relaxed match only when unambiguous on
 │                           BOTH sides. See below - do NOT merge this with
