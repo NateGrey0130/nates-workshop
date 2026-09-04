@@ -436,6 +436,64 @@ a plausible total and a PR shipped the wrong count.
 
 **Read the lines under the heading, to the next heading.** Thirty seconds.
 
+## What a status header may carry, and what it may not
+
+A menu's dated header is the only place a status belongs — the section above and
+the index-decline further down both land there. **Nothing said how much of one
+it may hold, and the headers grew with the churn beneath them** until the widest
+ran to 98 lines naming 33 findings, and the menu that had audited every header
+for accuracy carried a stale one of its own within a day. `META-AUDIT` `A13`.
+
+**The line is not length. It is whether the sentence can go stale on its own.**
+
+**A header MAY carry** — these survive:
+
+- **whether anything is open**, and the instruction to read under the finding;
+- **how to read the file**: where a family of items hides from a `###` scan,
+  which heading level and prefix it uses, where the `##` sections sit and in
+  what order, what a reader will misread if they stop early;
+- **scope, method, and the day it was written**;
+- **a dated historical statement**, marked as one.
+
+**A header MAY NOT carry a per-finding state.** Not a range of closed numbers,
+not a count, not "`F3` is still open", not a roll-call. Where a finding's state
+needs saying, say **read under the heading** and stop. The state lives under the
+finding, in the same PR that changes it — which is the one place it cannot
+disagree with itself.
+
+**The trap paragraphs are NOT what this restricts, and deleting them would take
+the half that works.** Every *"the one that misreads"* and *"this menu's own
+trap"* paragraph in this repo describes **shape** — that `CLASS-AUDIT`'s `S`
+items are bullets, that `INGESTION-AUDIT` `F14` quotes its own note format so
+every grep reports it taken, that `pick3cut5/AUDIT`'s `T` items are bold
+paragraph leads. **Shape does not change when a finding closes**, which is
+exactly why those have stayed true while the status narrations rotted. Keep
+them. Write more of them.
+
+**Two of them carry an instruction to a taker** — `MACHINE-AUDIT`'s *"Take `M7`
+against the list, not against a fresh scan"* and `SKILL-AUDIT`'s pointer to
+`F7` — and both name findings that have since been taken. They are still
+correct as dated statements and they are the edge of this rule rather than a
+violation of it: an instruction about *how to implement* is not a claim about
+*what is open*.
+
+**Arrangement belongs in a header, and that settles a question `SKILL-AUDIT`
+`F42` leaves open.** `F42` proposes cutting arrangement prose out of the shape
+table below on the grounds that the table's job is shape, and says arrangement
+belongs *"a menu's own dated header, which is where `audit-menu` already puts
+status for the same reason."* **That is consistent with this section**, because
+arrangement is *how to read the file* and not a per-finding state: "the `N`
+block sits in the middle of the `F` run" stays true as findings close. So the
+two do not conflict, and `F42` may be taken without reopening this. **What a
+header still may not do is give each of those findings its state on the way
+past.**
+
+**No retrofit, no check, and no count in this rule.** Existing headers are
+records and stay as they are; this governs the next header written and the next
+line added to one. A check is ruled out for the reason the whole page gives —
+the notes vary in wording by design and a mechanical reader keeps getting this
+wrong.
+
 ## The headings are not uniform, and that is the argument
 
 **This table is a shape reference for the files it names. It is NOT the list of
