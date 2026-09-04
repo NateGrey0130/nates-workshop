@@ -577,6 +577,23 @@ this is a taste call and should be taken as one.
 
 **Ongoing cost: negative**, which is the point of the finding.
 
+**Taken, 2026-09-03 (PR #666).** All three items, the third on Nate's explicit
+call. `ship-pr` **−21 net**; `windows-shell` **+11**, which is where the
+changed-secret material landed, under *Killing a dev server*, next to the
+wrangler-process guidance it belongs beside.
+
+**The one line kept from the section that moved** is the half that is about
+shipping: production reads its own copy as a Pages secret, so a rotation is two
+places and only one of them ships. A shipping skill owns that; the 0-second tell
+and `.dev.vars`-at-boot are local-shell facts and went with the rest.
+
+**The arithmetic this finding cannot fix, stated plainly.** The skill was **386
+lines when this menu was filed and is 438 after this PR** — `F1`, `F2`, `F3`,
+`F6` and `F7` added substantive material and this takes 21 back. **The pass grew
+the file by roughly 13%.** `F8`'s premise was that the file is long for what it
+does; that premise survives the taking, and the remedy set was never sized to
+reverse it. Recorded rather than left for the next reader to compute: see `F11`.
+
 ---
 
 ### F9 — the ordering rule writes to production and never names the copy you hold yourself

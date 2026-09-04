@@ -314,13 +314,6 @@ plus a bare fetch does the pruning. The dance was being repeated by hand every
 few PRs, which is the tell that it should have been configuration rather than
 instructions.
 
-**Retiring the dance was right; the sentence that replaced it claimed one step
-too few.** Configuration removed the three commands it could remove, and then
-the note read as though it had removed all four. That is the failure worth
-remembering here — not the git behaviour, which is documented, but the habit of
-writing down what a change was *supposed* to achieve rather than what was left
-standing afterwards.
-
 ---
 
 ## The ordering rule
@@ -421,31 +414,17 @@ git commit -F commit-msg.tmp
 
 ## Line endings
 
-`.sql` is pinned to LF by `.gitattributes` — a CRLF checkout once changed the
-bytes that reached production. Everything else in the repo is CRLF, and the
-smoke test fails a `.sql` carrying a CR.
+`.sql` is pinned to LF by `.gitattributes` and the smoke test fails a `.sql`
+carrying a CR; everything else here is CRLF. **Read `windows-shell` before any
+in-place edit** — the usual tools do not preserve what a file had, and the
+obvious check reports them clean anyway.
 
-**A script that rewrites a file must preserve what that file had**, and the
-usual tools do not: `sed -i` flips a whole file to LF, and the obvious grep
-check reports it clean anyway. See the **`windows-shell`** skill before any
-in-place edit.
+## A rotated secret is two places
 
-## A changed secret needs the dev server restarted
-
-`wrangler pages dev` reads `.dev.vars` **at boot**. Rotate a key, and the running
-server keeps sending the old one — so the importer reported
-`credit balance is too low` against an account that had just been topped up,
-while the same key tested `200 OK` when called directly.
-
-The tell is the shape of the failure, not its text: real API calls take seconds,
-and every one of these came back in **0s**. A fast failure is a local one.
-
-```bash
-# after editing .dev.vars, or rotating a key
-# stop and restart the preview server, then retry one small request
-```
-
-Production reads its own copy as a Pages secret, so a rotation is **two** places.
+Production reads its own copy as a Pages secret, so rotating a key is a change
+**here and there**, and only the second one ships. The local half — that
+`wrangler pages dev` reads `.dev.vars` at boot, and a 0-second failure is a
+stale server rather than a bad key — is in **`windows-shell`**.
 
 ## What "done" means
 
