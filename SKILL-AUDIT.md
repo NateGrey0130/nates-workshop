@@ -1,8 +1,9 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **`F42` IS OPEN.** `F41` was taken 2026-09-04 (PR #704), with its posture
-> **widened on Nate's word** from one agent file to four; read its note before
-> citing it. Findings sit under
+> **NOTHING ON THIS MENU IS OPEN.** `F41` and `F42` were taken 2026-09-04
+> (PRs #704, #705). `F41`'s posture was **widened on Nate's word** from one
+> agent file to four, and `F42` corrected a paragraph `A13` had shipped hours
+> earlier — read both notes before citing either. Findings sit under
 > **`## Opened while closing out 2026-09-04`**. **`F42` partly reverses `F40`**
 > and says so — `F40` fixed a false arrangement sentence and recorded that
 > *deleting* it was the better fix it was not scoped to make. `F40` taken 2026-09-04 (PR #698) — `audit-menu`'s shape
@@ -3898,6 +3899,67 @@ nothing records.
 
 **Ongoing cost: negative.** It removes the two cells that have needed correcting
 and leaves nothing in their place to go stale.
+
+**Taken, 2026-09-04 (PR #705). Posture held: documentation only and SUBTRACTIVE
+— two clauses out of one table, no check.** One thing was added and it is a
+correction rather than content; see (1).
+
+**The premise audit found four things. None killed it, and the file had moved
+under it four times.**
+
+**1. A paragraph in the same skill cited this finding as open, and it was
+shipped after this finding was filed.** `META-AUDIT` `A13` (PR #703) added *What
+a status header may carry* hours ago, and it said `F42` *"proposes"* cutting
+arrangement prose and *"may be taken"*. **Taking `F42` would have made that
+paragraph describe a proposal against a table that no longer holds it, in
+present tense, in the same file.** Corrected in this PR to past tense, and the
+`N`-block sentence kept as the *illustration* of durable arrangement rather than
+as a quotation of a live table cell. **That is the loop's step 5 — anything that
+cites a finding goes stale, and a skill is one of the three kinds
+`audit-citations.mjs` cannot see — not an expansion of the subtractive posture.**
+
+**2. A third row carries something arguable and it STAYS, on Nate's word.**
+`META-AUDIT.md`'s row says *"not in severity order — it runs in its brief's
+order"*. Read 2026-09-04: that qualifies the **severity-word** cell, which is
+the first of the table's three stated jobs — it says the severity words are
+there and the findings are not sorted by them. It is not a statement about where
+`##` sections sit. **So this finding's "two rows and no other row does" is
+right, and the reason is now on the record so the row is not re-derived as a
+miss.** It also carries a real reader warning that `META-AUDIT`'s own header
+repeats: a reader who knows this repo opens at `A1` expecting the worst, and
+`A1` is `medium`.
+
+**3. The stated reason for keeping the `SETUP-v2-CHANGES` row is wrong for that
+row.** This finding groups it with `CLASS-AUDIT` and `pick3cut5/AUDIT` as rows
+that *"say where a family of items hides from a `###` scan"*. True of the other
+two — bullets and bold leads. **`SETUP-v2-CHANGES`'s items ARE `###` headings**
+(`grep -n '^### ' SETUP-v2-CHANGES.md`, 2026-09-04, returns eight). What hides
+them is the **missing letter prefix** — the census regex matches
+`^#{2,3} \`?[A-Z][0-9]+` and its items are bare numbers — plus the filename.
+**The row stays either way**, so the outcome is unchanged and the reasoning is
+corrected here.
+
+**4. Every line number in this finding is off by +75**, because `A14`, `A15` and
+`A13` all landed in that file after it was filed: `:461`→`536`, `:462`→`537`,
+the table body `:444–:463`→`519–538`, the job statement `:425-429`→`501–504`.
+**The two target rows were byte-identical to the quotations** — `git log -L536,538`
+shows their last change was `F40` in PR #698, before this was written — so the
+premises survived four edits to the surrounding file untouched.
+
+**What the deletion actually loses, stated rather than assumed.** Both headers
+carry their own arrangement, so the substance survives: `SKILL-AUDIT`'s names its
+sections and the `N` block's position, and `SHIP-PR-AUDIT`'s says `F11`–`F14`
+*"sit under their own heading after `F10`, in numeric order"*. **What is lost is
+the heading's NAME** — `## Opened while taking a finding` — which only the table
+carried, and the deliberate contrast between the two files' arrangements, which
+this finding chose to drop. That contrast also survives outside the repo, in the
+memory store's `ship-pr-audit-menu.md`: *"deliberately not `SKILL-AUDIT`'s
+arrangement"*. **This finding's own medium confidence was about exactly that
+question**, and the answer is that the information exists in two other places.
+
+**`F40`'s note is now a dated record.** It says `:462` *"is untouched and still
+reads correctly"*, which was true when written and is superseded by this
+deletion. Left standing, per the rule that a measurement is not rewritten.
 
 ---
 
