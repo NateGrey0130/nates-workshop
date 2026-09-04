@@ -530,6 +530,36 @@ counted by searching all 160 published class markdowns for each slug.
 real damage figure — no false positive in the set.
 **Ongoing cost:** none.
 
+**Taken, 2026-09-04 (PR #715)** — **all thirteen**, not the eight. The finding
+said the five unreferenced rows could ride along if cheaper; they are four
+`UPDATE`s in the same script, so they did.
+
+**The confidence held exactly: 13 candidates, 13 real, no false positive.** That
+makes the `Does NDN` pattern the highest-precision detector in this whole pass —
+higher than detector 1∩3, and it needed no capability timeline.
+
+**Posture held: the value was COPIED, not moved.** A readback asserts all
+thirteen descriptions still carry the figure. Removing it would have traded one
+gap for another, since `description` is the row's provenance and the sentence the
+catalog editor shows.
+
+**`sdc` was deliberately left NULL on all thirteen**, and a readback asserts it.
+What these rows print is what the item **deals**, and `sdc` is what an object
+**takes** — the exact confusion the `sdc` help text in
+`apps/character-creator/js/catalog-fields.js` warns about by name: *"Not the '1D6
+S.D.C.' a knife deals, which is Damage."*
+
+**The four magic rows are written as printed** rather than flattened to a die,
+per the `damage` help text's own example: `acid-metal-dissolver` carries *"3D6
+per melee round for three minutes to metal; 2D4 per melee round for four melees
+to organic materials, leather and skin"*. A single die would have lost the rule.
+
+**This is the only part of the gear stat block that reaches a player**, which is
+why R5 stopped at `damage` and `R7` records the rest:
+`functions/api/character-creator/characters/[id].js` joins `gear.category`,
+`gear.damage` and `gear.payload` for play mode's weapon cards, and selects no
+other stat.
+
 ### R6 — medium — three classes carry a mechanic the schema gained after they were imported
 
 Three separate capabilities, one class each, all found by detector 2 and all
