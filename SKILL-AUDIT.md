@@ -1,6 +1,10 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **NOTHING IS OPEN AGAIN as of 2026-09-04.** `F26` taken (PR #679) after its
+> **`F29`–`F32` ARE OPEN, filed 2026-09-04** under **`## Opened by taking F28`**,
+> which is a third placement on this page — after the `N` block and after
+> `## Opened while building the verifier agents`. They are the four things
+> `F28`'s runs turned up, which its own posture forbade it from fixing.
+> `F26`–`F28` are all taken. `F26` taken (PR #679) after its
 > mechanism test ran first and moved it to high confidence; `F27` taken (PR
 > #680), scoped to one agent, **with its verification owed** — the swapped agent
 > could not be spawned in the session that changed it, which is `F26`. **`F28`
@@ -2689,6 +2693,150 @@ agent rather than verification, so it is not made here.
 
 ---
 
+## Opened by taking F28
+
+Filed 2026-09-04. `F28`'s posture was verification only, so the four things its
+runs turned up were recorded in its note and repaired nowhere. They are findings
+here so each gets its own word. **Every premise below was re-verified by hand
+after the agent that found it reported it** — an agent's finding is still a claim
+about another file.
+
+### F29 — four live-instruction files say `main` has no ruleset, and one of them contradicts itself
+
+`CLAUDE.md:9`, `SETUP.md:6`, `.claude/skills/ship-pr/SKILL.md:18` and
+`.github/workflows/tests.yml:4` all say the CI workflow is reporting-only and
+that **`main` has no ruleset**. `tests.yml:113`, in the same file, says
+*"`main`'s ruleset requires a pull request and no status checks."*
+
+A ruleset exists. **The substance of `REPO-AUDIT` `G8`'s posture still holds** —
+it carries one `pull_request` rule and **zero** `required_status_checks`, so
+nothing gates a merge on a red run. It is the clause that is false, not the
+posture, and that distinction is the whole finding: a reader who checks and finds
+a ruleset has no way to tell which half was wrong.
+
+**This is the most consequential of the four**, because `ship-pr` and `CLAUDE.md`
+are read by a session about to merge.
+
+**Proposal:** correct the clause in all four files to say what is true — a
+ruleset requiring a pull request, with no required status checks, so a red run
+still does not stop a merge — and remove the self-contradiction in `tests.yml` by
+making line 4 agree with line 113. **Posture: documentation only. Change no
+setting, add no required check, and do not touch the ruleset itself.**
+
+**Evidence.** `gh api repos/NateGrey0130/nates-workshop/rulesets`, 2026-09-04 →
+`22209348`, *"main: require a pull request"*, `active`, created
+`2026-09-03T12:46:10-04:00` — five minutes after `G8` merged at 12:41. Rule types
+from `.../rulesets/22209348`: `pull_request`, and a filter for
+`required_status_checks` returns `0`. Line numbers from
+`grep -n 'ruleset' <each file>`, same day.
+
+**Confidence: high.** Measured directly against the GitHub API, and the four
+sentences were read in place. Nothing would raise it.
+
+**Ongoing cost:** four sentences that must change again if the ruleset does.
+`G8`'s note went stale within five minutes of merging, so this is a real cost
+rather than a notional one — which is an argument for saying *what the ruleset
+does* rather than *that there is not one*.
+
+### F30 — `audit-citations.mjs` silently ignores a finding number that is not an `F`
+
+`scripts/audit-citations.mjs:47` selects its argument with
+`process.argv.slice(2).find((a) => /^F\d+$/i.test(a))`. A `G8`, `M4`, `D1`, `A9`,
+`B2`, `R1`, `S1` or `T1` never matches, `only` falls through to `null`, and the
+script prints its **whole unfiltered** output as though no argument had been
+given. Its patterns at `:36`–`:37` only ever match
+`BOOK-INGEST-AUDIT.md F<n>` and `Filed as F<n>` anyway.
+
+`audit-menu` step 5 tells a taker to run this script with the number they were
+given, and `audit-menu` separately establishes that **`F` is one of eight
+prefixes in use across the menus**. So the documented workflow hands it an
+argument it discards, with no error, and the taker reads the result as *"these
+classes cite my finding."*
+
+**Proposal:** accept any `<letter><digits>` argument, and where the script cannot
+answer for that prefix, **say so and exit rather than printing an unfiltered
+list**. **Posture: no new gate and no exit code for the citation question itself
+— the script keeps having no opinion about whether a citation is stale.** This is
+about refusing to answer a question it was not asked.
+
+**Evidence.** Read 2026-09-04:
+`grep -n 'argv\|F\\d' scripts/audit-citations.mjs` → the regex at `:47` and the
+patterns at `:36`–`:37`. Observed live: `audit-premise-auditor` ran
+`--remote G8` while auditing `REPO-AUDIT` `G8` and got BOOK-INGEST `F`-numbers
+back.
+
+**Confidence: high** on the behaviour, read from the source. **Medium on the
+remedy** — whether the right answer is a wider regex or a hard error depends on
+whether the script is ever meant to serve non-BOOK-INGEST menus at all, which
+nothing states. What would raise it: a decision on that scope.
+
+**Ongoing cost:** none beyond the edit; it removes a failure mode rather than
+adding a surface.
+
+### F31 — the README says `extraction-prompt.mjs` has "Two system prompts"; there is one
+
+`apps/character-creator/README.md:705`, in the file map:
+*"…documents. Two system prompts: one for a PDF page image, one for cached text…"*
+
+`scripts/extraction-prompt.mjs` exports exactly one — `SYSTEM_PROMPT_CACHE`, at
+`:38`. The file's own header records that the second went when the in-app
+importer that used it was retired.
+
+**Not pinned, and that is the interesting half.** `documented-counts.mjs` checks
+that every script on disk is named in the file map and every name is a real
+script — it diffs **filenames**, never the prose beside them. So the map's
+descriptions are free to drift while the check that guards the map passes.
+
+**Proposal:** correct the sentence to describe the one prompt that exists.
+**Posture: documentation only. Do not extend `documented-counts.mjs` to parse
+descriptions** — that is a much larger check and this finding does not carry the
+evidence for it.
+
+**Evidence.** `grep -n 'SYSTEM_PROMPT' scripts/extraction-prompt.mjs` → one line,
+`:38`. `grep -n 'system prompts' apps/character-creator/README.md` → `:705`. Both
+2026-09-04.
+
+**Confidence: high.** Both files read directly.
+
+**Ongoing cost:** none. One sentence, and it becomes true rather than needing
+maintenance.
+
+### F32 — `REPO-AUDIT` `G8` deferred a follow-up to "its own finding" and none was ever filed
+
+`REPO-AUDIT.md:885` says `regression.mjs` should be added to CI *"as its own
+finding, once this workflow has a track record."* The condition is met and no
+such finding exists on any menu.
+
+The gap it names is real: `.github/workflows/tests.yml` runs the five smoke
+suites and **not** `regression.mjs`, which is the only check that builds a
+database from nothing and drives the real routes — the one thing that catches a
+fresh environment being broken.
+
+**Proposal:** decide whether `regression.mjs` joins the workflow, and record the
+decision either way. **Posture, if it is added: reporting only, matching
+`G8` — no required status check, no ruleset rule, a red run does not stop a
+merge.** A decision not to add it is a complete answer and should be written
+down so `G8`'s deferral stops looking outstanding.
+
+**Evidence.** `REPO-AUDIT.md:885`, read 2026-09-04. Track record measured the
+same day: `gh run list --workflow=tests.yml --limit 10` → **8 `success`, 1
+`failure`, 1 still running**. A repo-wide grep for `regression.mjs` in `*.md`
+returns skills and docs describing how to run it locally, and no menu proposing
+it for CI.
+
+**Confidence: high that no finding exists**, from the grep plus reading the
+menus' own headings. **Low on which way it should go** — this finding proposes a
+decision, not an outcome, and `audit-menu` is explicit that re-measuring cannot
+reach an already-settled question. What would raise it: knowing why
+`regression.mjs` was left out of `G8`'s scope in the first place, which its note
+does not say.
+
+**Ongoing cost, if added:** one more CI job per pull request, and a suite that
+builds a database from scratch is the slowest thing here. That cost is the main
+argument against, and it belongs in the decision rather than in this line.
+
+---
+
 # Counts
 
 **Filed 21 findings and 8 proposals.** By layer, counting the layer a finding's
@@ -2717,6 +2865,12 @@ filed and is left standing as one; it does not include them.
 anything on this menu. By the same rule they are not in the table either: `F26`
 would land in layers 3 and 5, `F27` in layer 2, `F28` in neither — it proposes
 running things rather than editing a file.
+
+**Added later the same day:** `F29`–`F32`, opened by taking `F28`. Also not in
+the table. Three of the four land outside this audit's six layers entirely —
+`F29` reaches a GitHub setting and a workflow file, `F30` and `F31` are scripts
+and a README. That is a fact about where the agents looked, not a defect in the
+census.
 
 Nothing else is taken until Nate names it.
 
