@@ -1,7 +1,7 @@
 # `ship-pr` against the workflow it now describes, 2026-09-03
 
 > **STATUS: `F1`–`F9` taken (PRs #659–#667), `F10` DECLINED (#668), `F13` taken
-> (#670), and `F11`, `F12`, `F14` OPEN — nothing on those three has been
+> (#670), `F14` taken (#671), and `F11` and `F12` OPEN — neither has been
 > decided.** Read each finding's own note; this line is a summary and summaries
 > here go stale. `F11`–`F14` were opened *while taking* the first ten and sit
 > under their own heading after `F10`, in numeric order.
@@ -899,3 +899,30 @@ against its merge commit. 2026-09-03.
 
 **Ongoing cost:** one paragraph. **Cheap, and the failure it prevents is
 silent** — which is the combination this repo usually takes.
+
+**Taken, 2026-09-04 (PR #671).** Documentation only, no gate, and `ship-pr` was
+deliberately not edited — it already points at `windows-shell` three times, and a
+fourth copy of the rule there is the duplication this menu argued against
+throughout.
+
+**This finding's own premise was wrong.** It said the paragraph should sit
+*"beside the existing exit-code material"* in `windows-shell`. There is none:
+`grep -n "exit\|status"` returns two lines and neither is a section. The nearest
+thing is the page's opening thesis — *"Every one of these succeeds. Nothing exits
+non-zero"* — which is what a masked exit code actually belongs to, so it became
+its own `##` section. **A claim about what another file contains, wrong again**,
+which is the third time in this menu: `F3` (`G7` on `ship-pr`), `F12`
+(`audit-menu`'s table), and now this. `audit-menu` lists that shape as the one to
+distrust first and it keeps earning the listing.
+
+**Both directions were demonstrated rather than asserted**, including making the
+failure fire: `false | tail -1` exits `0` here, the same pipeline under
+`set -o pipefail` exits `1`, and `set -o` confirms `pipefail` is off by default.
+
+**One addition the finding did not ask for: a clause in the `description`.** That
+field is the whole trigger surface, and it named line endings, encoding,
+unescaping, wrangler and PowerShell — nothing that fires when someone is about to
+chain a merge onto a check. **A paragraph in a file that does not load for the
+case it was written for is not documentation**, so the description gained
+*"when chaining a command on another command's success"* and *"the pipe that
+discards the exit code you were testing"*. Still documentation only.
