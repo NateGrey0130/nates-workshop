@@ -477,16 +477,16 @@ correct as dated statements and they are the edge of this rule rather than a
 violation of it: an instruction about *how to implement* is not a claim about
 *what is open*.
 
-**Arrangement belongs in a header, and that settles a question `SKILL-AUDIT`
-`F42` leaves open.** `F42` proposes cutting arrangement prose out of the shape
-table below on the grounds that the table's job is shape, and says arrangement
-belongs *"a menu's own dated header, which is where `audit-menu` already puts
-status for the same reason."* **That is consistent with this section**, because
-arrangement is *how to read the file* and not a per-finding state: "the `N`
-block sits in the middle of the `F` run" stays true as findings close. So the
-two do not conflict, and `F42` may be taken without reopening this. **What a
-header still may not do is give each of those findings its state on the way
-past.**
+**Arrangement belongs in a header, not in the shape table below.** `SKILL-AUDIT`
+`F42` cut the arrangement prose out of that table on 2026-09-04, on the grounds
+that the table's job is shape, and put arrangement where *"a menu's own dated
+header, which is where `audit-menu` already puts status for the same reason."*
+**That is consistent with this section**, because arrangement is *how to read
+the file* and not a per-finding state: a sentence like *"the `N` block sits in
+the middle of the `F` run"* stays true as findings close, which is exactly why
+it belongs in a header and why `F42` could remove it from a table about shape
+without anything being lost. **What a header still may not do is give each of
+those findings its state on the way past.**
 
 **No retrofit, no check, and no count in this rule.** Existing headers are
 records and stay as they are; this governs the next header written and the next
@@ -533,8 +533,8 @@ that trap one level down.
 | `apps/media-vault/ISBN-AUDIT.md` | `F` | `##` | `## F1 — …` |
 | `apps/pick3cut5/AUDIT.md` | `F`; `T` | `###`; **not a heading** | `### F1. …`, and `**T1. … — PASSED.**` as BOLD PARAGRAPH LEADS under `## T — paths that have never run` |
 | `HEALTH-AUDIT.md` | `F` | `###` | severity word, capitalised: `### F1 — Critical — …` |
-| `SKILL-AUDIT.md` | `F`, `N` | `###` | `### F1 — …`, no severity word, and **every `###` is a finding** (`F38`, 2026-09-04) — but they are **split across many `##` sections, with the `N` block sitting in the middle of the `F` run**, so there is no one contiguous list. That file's own header names the sections; no count is kept here, because they accrue. |
-| `SHIP-PR-AUDIT.md` | `F` | `###` | `### F1 — …`, no severity word — and `F11`–`F14` sit under `## Opened while taking a finding` **after `F10`, in numeric order**, deliberately not the row above's arrangement |
+| `SKILL-AUDIT.md` | `F`, `N` | `###` | `### F1 — …`, no severity word, and **every `###` is a finding** (`F38`, 2026-09-04). That file's own header names its sections. |
+| `SHIP-PR-AUDIT.md` | `F` | `###` | `### F1 — …`, no severity word |
 | `SETUP-v2-CHANGES.md` | **none** | `###` | `### 1. …` — bare numbers under `## Changes`, and the one menu whose filename does not say `AUDIT` |
 
 Two heading levels, an optional severity word in either case, an em dash or a
