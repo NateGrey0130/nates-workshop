@@ -7,9 +7,10 @@
 > `F28`'s runs turned up, which its own posture forbade it from fixing.
 > `F26`–`F28` are all taken. `F26` taken (PR #679) after its
 > mechanism test ran first and moved it to high confidence; `F27` taken (PR
-> #680), scoped to one agent, **with its verification owed** — the swapped agent
-> could not be spawned in the session that changed it, which is `F26`. **`F28`
-> was taken 2026-09-04 (PR #678)** — all four
+> #680), scoped to one agent, and **verified 2026-09-04 (PR #683)** — the
+> verification was owed a day because a swapped agent cannot be spawned in the
+> session that changed it, which is `F26` catching the work that followed it.
+> **`F28` was taken 2026-09-04 (PR #678)** — all four
 > agents run, all four kept, and its note carries four separate things the runs
 > turned up that are **not** fixed there and need their own findings. Filed
 > 2026-09-04. Everything from the original pass
@@ -2584,6 +2585,31 @@ invocation is the verification, and it is owed.** What would settle it: run it o
 a finding whose answer is known and confirm from its own report that `audit-menu`
 loaded — the same shape as the probes in `F27`'s evidence, which quote a heading
 back as proof rather than reporting success.
+
+**Verified 2026-09-04 (PR #683). The debt above is paid and the swap works.**
+The agent was run on `F30` — real work rather than a rehearsal — and reported
+back, unprompted by anything but its own contract: first heading
+`# The audit-menu protocol`, and the sentence *"Grepping for `Taken` has produced
+false findings here repeatedly, and in both directions — work reported open that
+had shipped, and work reported closed that had not."* It then re-read four
+sections straight off `~/.claude/skills/audit-menu/SKILL.md` with `sed -n` and
+confirmed the injected text matched the file, which is a better check than the
+one asked for: it proves the skill arrived intact rather than merely arrived.
+
+**Three things this settles beyond the swap.** `Skill` works in a restricted
+`tools:` list under real load, not only in a probe. The skill resolves for a
+subagent whose working directory is not the repo. And an agent that loads a
+skill can be held to it — this one quoted the authority back at its own
+frontmatter, which is the next paragraph.
+
+**The verification found a defect in the agent it was verifying, which is the
+argument for `F27` in one line.** Its frontmatter says *"the record is unanimous:
+every finding taken so far has turned up an error in its own premises."*
+`audit-menu` says the opposite by name — *"Plenty of notes here record premises
+that held exactly"* — and lists twelve. The agent noticed the contradiction
+**because it had just loaded the skill**, and noted that its own file contradicts
+itself two paragraphs later. Inlined, it would have had nothing to check that
+sentence against. Filed as `F34`.
 
 ### F28 — all four agents added in #676 shipped without ever being invoked
 
