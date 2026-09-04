@@ -444,9 +444,9 @@ git commit -F commit-msg.tmp
 ## Line endings
 
 `.sql` is pinned to LF by `.gitattributes` and the smoke test fails a `.sql`
-carrying a CR; everything else here is CRLF. **Read `windows-shell` before any
-in-place edit** — the usual tools do not preserve what a file had, and the
-obvious check reports them clean anyway.
+carrying a CR. **Read `windows-shell` before any in-place edit** — the usual
+tools do not preserve what a file had, and the obvious check reports them clean
+anyway.
 
 ## A rotated secret is two places
 
