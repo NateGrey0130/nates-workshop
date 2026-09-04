@@ -351,8 +351,8 @@ re-walked 2026-09-04:
 | prefix | menus using it |
 |---|---|
 | `F` | **most of them**, and far more than any other letter — this is the one a bare number never identifies |
-| `D`, `N` | **more than one each** — `D` includes `DOCS-AUDIT`, `DOCS-AUDIT-2` and `apps/character-creator/AUDIT`; `N` includes `SKILL-AUDIT` and `apps/character-creator/REDESIGN-AUDIT` |
-| `A` `B` `C` `G` `M` `R` | one each |
+| `D`, `N`, `R` | **more than one each** — `D` includes `DOCS-AUDIT`, `DOCS-AUDIT-2` and `apps/character-creator/AUDIT`; `N` includes `SKILL-AUDIT` and `apps/character-creator/REDESIGN-AUDIT`; `R` includes `apps/character-creator/REDESIGN-AUDIT` and `apps/character-creator/RETRO-AUDIT` |
+| `A` `B` `C` `G` `M` | one each |
 
 **This table carried counts until 2026-09-04 and no longer does** —
 `META-AUDIT` `A14`. The `F` row said *eleven*, which was true when it was
@@ -528,6 +528,7 @@ that trap one level down.
 | `apps/character-creator/INGESTION-AUDIT.md` | `F` | `###` | `### F1 — …` |
 | `apps/character-creator/REBUILD-AUDIT.md` | `F` | `###` | `### F1 — …` |
 | `apps/character-creator/REDESIGN-AUDIT.md` | `R`, `N` | `###` | severity word: `### R1 — high — …` |
+| `apps/character-creator/RETRO-AUDIT.md` | `R` | `###` | severity word: `### R1 — high — …`. **Its `R` collides with `REDESIGN-AUDIT`'s**, so a bare `R3` names neither. `R9` was filed after `R8` and sits last rather than in severity order, because it was filed and taken on the same day the other eight were |
 | `apps/character-creator/UI-AUDIT.md` | `F` | `###` | severity word: `### F1 — high — …` |
 | `apps/media-vault/BULK-AUDIT.md` | `B` | `##` | `## B1 — …` |
 | `apps/media-vault/ISBN-AUDIT.md` | `F` | `##` | `## F1 — …` |
