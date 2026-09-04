@@ -1,8 +1,11 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **NOTHING IS OPEN. `F29`–`F32` were all taken 2026-09-04 (PRs #682, #684,
-> #685, #686).** `F30` was scoped **wider than filed** and its own proposal was
-> wrong about the mechanism; `F32` added a **path-filtered** CI job, where a
+> **`F33` AND `F34` ARE OPEN**, filed 2026-09-04 under
+> **`## Opened while taking F29 to F32`** — a **fourth** placement on this page,
+> after the `N` block, `## Opened while building the verifier agents` and
+> `## Opened by taking F28`. **`F29`–`F32` were all taken 2026-09-04** (PRs
+> #682, #684, #685, #686). `F30` was scoped **wider than filed** and its own
+> proposal was wrong about the mechanism; `F32` added a **path-filtered** CI job, where a
 > green pull request outside those paths means the suite was never asked. Read
 > both notes rather than this line. Filed
 > 2026-09-04 under **`## Opened by taking F28`**,
@@ -3023,6 +3026,95 @@ it is `F29`'s taking introducing a defect that nothing checked.
 
 ---
 
+## Opened while taking F29 to F32
+
+Filed 2026-09-04, a **fourth** placement on this page — the header says so
+because out-of-order sections are this file's own named trap. Both came out of
+doing the work rather than out of auditing a finding: one from an error the
+instruction layer led me into, one from an agent reading its own file against
+the skill it had just loaded.
+
+### F33 — `windows-shell` states the line-ending rule as one exception; `.gitattributes` has four
+
+`.claude/skills/windows-shell/SKILL.md:12` opens the whole skill with: *"The repo
+is CRLF everywhere except `*.sql`, which `.gitattributes` pins to LF."*
+
+`.gitattributes` carries **four** non-comment rules, read 2026-09-04:
+
+| rule | line | effect |
+|---|---|---|
+| `*.sql text eol=lf` | 7 | LF — the one the skill names |
+| `apps/filament-forge/vendor/* -text` | 12 | **no normalisation at all** |
+| `shared/fonts/*.woff2 -text` | 18 | no normalisation at all |
+| `.github/workflows/*.yml text eol=lf` | 34 | **LF — the one that bites** |
+
+So the sentence is wrong twice: it misses a second LF pin, and *"CRLF
+everywhere"* is not true of the two `-text` paths either.
+
+**It has a demonstrated cost, which is why this is filed rather than shrugged
+at.** Taking `F29` (PR #682) I normalised `.github/workflows/tests.yml` to CRLF
+because this sentence says to. Git's own warning caught it — *"CRLF will be
+replaced by LF the next time Git touches it"* — and the committed blob was fine,
+but only because git normalised behind me. Writing `regression.yml` for `F32` an
+hour later I had to remember the exception by hand, because the skill still says
+there is one.
+
+**Proposal:** correct the sentence to name both LF pins and both `-text` paths,
+and point at `.gitattributes` as the list rather than restating it — a count in
+that sentence rots the next time a rule lands. **Posture: documentation only.
+One sentence in one skill. No check, no gate**; a check that reconciled the skill
+against `.gitattributes` is a bigger idea and this finding does not carry the
+evidence for one.
+
+**Evidence.** `grep -n 'CRLF everywhere' .claude/skills/windows-shell/SKILL.md`
+→ `:12`. `grep -vn '^#' .gitattributes` → the four rules above. The failure is
+recorded in `F29`'s and `F32`'s notes, both 2026-09-04.
+
+**Confidence: high.** Both files read directly, and the error was made rather
+than predicted.
+
+**Ongoing cost:** none if the sentence points at `.gitattributes` instead of
+enumerating it. If it enumerates, it is a list to maintain — which is the trap
+the proposal is written to avoid.
+
+### F34 — `audit-premise-auditor` tells itself every finding has had a bad premise; its own authority says otherwise
+
+`.claude/agents/audit-premise-auditor.md:14-15`: *"the record is unanimous:
+**every finding taken so far has turned up an error in its own premises**."*
+
+`audit-menu` — which that agent now loads, and which its own file names as the
+authority — says the opposite at `SKILL.md:134-137`: *"Plenty of notes here
+record premises that held exactly"*, listing **twelve** by name across
+`HEALTH-AUDIT`, `MACHINE-AUDIT` and `SKILL-AUDIT`. `F31` on this page, taken
+2026-09-04, is a thirteenth.
+
+**The agent's own file contradicts itself two paragraphs later**, in its return
+contract: *"A finding whose premises are all sound is a real and common
+result."*
+
+**This is not cosmetic.** The sentence tells the agent an error is always there
+to be found, which is precisely the pressure toward inventing an objection that
+the same file warns against. **I wrote it**, in PR #676, from a real but much
+narrower observation about a handful of findings.
+
+**Proposal:** replace the unanimity claim with what is actually true — checking a
+finding before scoping it turns something up nearly every time, and it is usually
+**not** the premises — which is `audit-menu`'s own formulation and keeps the
+argument for the agent intact. **Posture: documentation only, one agent file, no
+frontmatter or tools change.**
+
+**Evidence.** Read 2026-09-04:
+`grep -n 'unanimous' .claude/agents/audit-premise-auditor.md` → `:14`;
+`grep -n 'held exactly' .claude/skills/audit-menu/SKILL.md` → `:134`. **Found by
+the agent itself**, during `F27`'s verification run (PR #683) — it noticed
+because it had loaded the skill, which is the case for `F27` in one observation.
+
+**Confidence: high.** Both texts read directly, and the two disagree in words.
+
+**Ongoing cost:** none. One sentence becomes true.
+
+---
+
 # Counts
 
 **Filed 21 findings and 8 proposals.** By layer, counting the layer a finding's
@@ -3057,6 +3149,12 @@ the table. Three of the four land outside this audit's six layers entirely —
 `F29` reaches a GitHub setting and a workflow file, `F30` and `F31` are scripts
 and a README. That is a fact about where the agents looked, not a defect in the
 census.
+
+**And `F33`–`F34`, opened while taking `F29` to `F32`.** These two land back
+inside the original layers — `F33` in layer 1 (a skill) and `F34` in layer 2 (the
+agents) — which is the first time since `F25` that a finding here is about the
+surface this audit was scoped to. Still not added to the table above; it is the
+census as filed.
 
 Nothing else is taken until Nate names it.
 
