@@ -738,6 +738,13 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     'coalition-technical-officer': 7,
     'merc-soldier': 7,
     'robot-pilot': 2,
+    // Both Wormwood, and both arrived by correction the same way the two above
+    // did - RETRO-AUDIT R2. The demon-goblin's three R.C.C. skill packages
+    // (printed 123-124) and the monk's three Areas of Mastery (printed 60-61)
+    // sat in prose under a note saying the app could not grant skills on a
+    // choice, which stopped being true when 031-character-mos.sql landed.
+    'demon-goblin': 3,
+    'monk': 3,
   };
   for (const [id, want] of Object.entries(MOS_PACKAGES)) {
     const cls = classes.find((c) => c.id === id);
