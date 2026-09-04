@@ -1,13 +1,13 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **`F43` IS OPEN**, filed 2026-09-04 under the existing
-> **`## Opened while closing out 2026-09-04`** — a false frequency claim about
-> page offsets, carried by both book agents and contradicted by the skill that
-> spawns them. It also **closes `F41`'s tone observation** rather than carrying
-> it, so that is not re-proposed. `F41` and `F42` were taken 2026-09-04
-> (PRs #704, #705). `F41`'s posture was **widened on Nate's word** from one
-> agent file to four, and `F42` corrected a paragraph `A13` had shipped hours
-> earlier — read both notes before citing either. Findings sit under
+> **NOTHING ON THIS MENU IS OPEN.** `F41`, `F42` and `F43` were all taken
+> 2026-09-04 (PRs #704, #705, #707); `F43` was filed and taken the same day, in
+> separate PRs. Three notes carry things a citer needs: `F41`'s posture was
+> **widened on Nate's word** from one agent file to four, `F42` corrected a
+> paragraph `A13` had shipped hours earlier, and `F43` shipped as the
+> **subtractive** variant and records what that cut costs plus two errors in its
+> own text. `F43` also **closes `F41`'s tone observation**, so that is not
+> re-proposed. Findings sit under
 > **`## Opened while closing out 2026-09-04`**. **`F42` partly reverses `F40`**
 > and says so — `F40` fixed a false arrangement sentence and recorded that
 > *deleting* it was the better fix it was not scoped to make. `F40` taken 2026-09-04 (PR #698) — `audit-menu`'s shape
@@ -4051,6 +4051,89 @@ anti-padding line `F34` added elsewhere — *"Do not pad. A slice that holds fou
 rows returns four rows."* **Recorded so it is not re-proposed.** The irony worth
 keeping: the paragraph accused of priming for friction turned out to contain a
 false frequency claim pointing the other way, which is this finding.
+
+**Taken, 2026-09-04 (PR #707), as the SUBTRACTIVE variant on Nate's word.** The
+clause is gone from both agent files and nothing replaced it; each paragraph now
+ends on its bolded **read it, do not derive it** instruction. Diff: four lines
+deleted, two reflowed, nothing added. **Posture held exactly, including the
+constraint this finding set itself — no number that moves went in, because no
+number went in at all.**
+
+**The clause was never true, and that is the finding underneath the finding.**
+It first appears in `1f7b396` (2026-09-02, taking `F10`) and was copied into the
+worker in `bd49881` (2026-09-04). `git show 1f7b396:scripts/books.json`, run
+2026-09-04, gives the distribution at that commit as `-1`:1, `0`:3, `1`:10,
+`2`:1, `3`:1 — **identical to today's.** So this is not documentation rot, no
+future ingest would have made it right, and it was false on the day it was
+written. **A wrong inference, not a stale measurement**, which is the class
+`audit-menu` says gets implemented because there is nothing to re-run.
+
+**An early draft of this take added a replacement guard** — *"and do not assume
+a value because it is the usual one"* — and it was removed before commit. The
+variant chosen says *"leaving **only** read it, do not derive it"*, and a clause
+added under a subtractive posture is the quiet scope substitution the skill
+warns about, however reasonable it reads.
+
+**The range went with the frequency claim, deliberately.** *"Offsets here run
+from `-1` to `3`"* is bound to the falsehood by *"so"* — it was the premise, and
+cutting the conclusion alone leaves a dangling one. It is also itself a moving
+number: one book ingested at `+4` falsifies it. Checked 2026-09-04: nothing in
+either agent file, or in `book-survey`, depends on the reader having been told
+the range — the exceptions paragraph below it opens *"Two books change offset
+partway through"* and carries no reference back.
+
+**What this cut costs, stated because a taker should not find it in the diff.**
+`book-extract-worker` also loses **"zero is common"**, which is **true** — zero
+is the second-most-frequent value, three books against ten at `+1`. It was the
+only warning inside a worker's own contract about the zero-offset trap, and
+`book-survey` devotes a paragraph to that trap being *"the worst case, not the
+easiest"* — a spawned worker does not read `book-survey`. `book-reconcile` never
+carried the clause, so the cut is asymmetric between the two files. **A
+follow-up worth its own number** would put a non-numeric zero-offset warning in
+the worker's contract; it is not this finding and was not filed here.
+
+**Two errors in this finding's own text, neither of which changes the outcome.**
+
+**The ordinal is wrong.** It calls *"zero is common"* the **third**-most-frequent
+value. <!-- claim-ok: quoting the ordinal this note corrects --> Zero is
+**second**, at 3 of 16, ahead of `-1`, `2` and `3` tied at one each. Both are
+below `+1`'s ten, which is what the finding was arguing, so the argument stands
+and the ordinal does not. **Do not restate it.**
+
+**"Three files" understates the corpus, and the score is the other way round.**
+Two more files carry the same subject and **both side with `book-survey`**, not
+with the agents: the memory store's `book-ingest-batch-protocol.md` and
+`BOOK-INGEST-QUEUE.md` each say most books are `+1` and tell a reader to consult
+`scripts/books.json`. So it was **three files right against two wrong**, not one
+against two. Neither goes stale from this cut. Both carry a softer version of
+the same overstatement — *"a coin flip"* for a 10-against-3 split — and
+`BOOK-INGEST-QUEUE.md` carries a stale count beside it. **Outside this posture
+and deliberately not touched.**
+
+**Two adjacent defects were found and deliberately left**, named so the next
+reader recognises them rather than folding them into something else:
+
+- **`scripts/books.json`'s own `_doc` block says `page_offset_exceptions` is
+  something *"Only `pf` has one"*.** `underseas` has one too, in the same file.
+  `book-survey` already records this exact sentence being wrong once before.
+- **No `manifest.json` carries `page_offset_exceptions` at all** — checked
+  across all sixteen caches, 2026-09-04 — while both agent paragraphs present
+  `books.json` and the manifest as equal sources. For `pf` and `underseas` the
+  manifest gives a number that is wrong for part of the book. `book-survey`
+  resolves this by naming `books.json` as the authority; neither agent does.
+
+**One number this finding never stated and a re-deriver will trip on.** The
+sixteen are the books with a *measured* offset. `scripts/books.json` holds
+**eighteen** entries — `rifts-core` and `rifts-skill-list` carry
+`page_offset: null` and have no cache — so `Object.keys(books).length` returns
+18 and the table looks wrong. The two sources agree on all sixteen that exist in
+both, with zero disagreements.
+
+**And the exceptions do not move the argument.** `pf` and `underseas` change
+offset partway through, so the registry value oversimplifies them. Weighted by
+printed pages rather than by book, `+1` is still the mode at roughly 58% and
+still about three times the next value. The 10-of-16 figure stands as a count of
+books, which is what both named sources record.
 
 ---
 

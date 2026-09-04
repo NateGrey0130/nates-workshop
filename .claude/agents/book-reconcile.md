@@ -43,8 +43,7 @@ cache page = printed folio + page_offset
 
 `scripts/books.json` records `page_offset` per slug, and the cache's own
 `manifest.json` records what was measured when it was built. **Read it from one
-of those rather than deriving it.** Offsets here run from `-1` to `3`, so
-assuming +1 is wrong more often than right.
+of those rather than deriving it.**
 
 **Two books change offset partway through.** `pf` and `underseas` carry a
 `page_offset_exceptions` list — `[{ printed_through, offset }]`, first match
