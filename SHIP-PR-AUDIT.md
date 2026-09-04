@@ -1,10 +1,11 @@
 # `ship-pr` against the workflow it now describes, 2026-09-03
 
-> **STATUS: `F1`–`F9` taken (PRs #659–#667), `F10` DECLINED (#668), `F13` taken
-> (#670), `F14` taken (#671), and `F11` and `F12` OPEN — neither has been
-> decided.** Read each finding's own note; this line is a summary and summaries
-> here go stale. `F11`–`F14` were opened *while taking* the first ten and sit
-> under their own heading after `F10`, in numeric order.
+> **STATUS: everything is closed but `F11`.** `F1`–`F9` taken (PRs #659–#667),
+> `F10` DECLINED (#668), `F12`–`F14` taken (#672, #670, #671), and **`F11` is
+> the only thing open** — it proposes doing nothing yet and argues against
+> itself. Read each finding's own note; this line is a summary and summaries here
+> go stale. `F11`–`F14` were opened *while taking* the first ten and sit under
+> their own heading after `F10`, in numeric order.
 >
 > **`F13` was taken before it was filed**, which inverts the protocol on purpose:
 > it is the finding that describes why this file's own PR could not go green, so
@@ -798,6 +799,37 @@ rows, no `SHIP-PR-AUDIT.md`. `SKILL-AUDIT.md` `F7` and its header.
 
 **Ongoing cost:** one row now; the recurring cost is the point of the second
 half.
+
+**Taken, 2026-09-04 (PR #672).** Documentation only, one file.
+
+**Half of this proposal was already done, and that is this finding's own premise
+being wrong.** It asked that `audit-menu` say outright that the table is a shape
+reference and not a list of menus. **It already says exactly that**, in the
+paragraph immediately above the table: *"This table is a shape reference for the
+files it names. It is NOT the list of menus, and a file missing from it is
+missing rather than absent."* Nothing was added for that half.
+
+**That is the fourth wrong claim-about-another-file in this menu** — `F3`
+(`G7` on `ship-pr`), `F12` here, `F14` (`windows-shell`'s exit-code material),
+and this menu's own header on the sixteenth-menu cost. Four out of fourteen
+findings, every one of them a statement about a file other than the one being
+changed. `audit-menu` names that shape as the one to distrust first; on this
+menu's evidence it should be distrusted *before* the finding is written, not
+only when it is taken.
+
+**The reading turned up something the finding did not name, one paragraph
+further up.** *"This table has been read five times and been wrong five times"* —
+reading it a sixth time falsified that sentence, inside the paragraph whose
+subject is why ordinals here go stale, two lines below the line praising
+`SKILL-AUDIT` `F7` for **removing** an ordinal rather than incrementing it. **The
+count is gone.** What survives is *wrong every time it has been read*, which does
+not rot.
+
+**One sentence added that the finding did not ask for:** the missing row has now
+twice been the reader's own. `F7` predicted that about itself and was right
+within the hour; this menu's header did it again one menu later. The section now
+says so — *the menu you are writing is the row you will forget* — because that is
+the only part of this PR that changes the odds next time.
 
 ### F13 — the CI smoke job downloads wrangler inside a 120-second timeout, and went red on a documentation-only PR
 
