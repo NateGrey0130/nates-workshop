@@ -1,0 +1,84 @@
+# The end-to-end regression suite, on pull requests that could break it.
+# SKILL-AUDIT.md F32, which closes a follow-up REPO-AUDIT.md G8 deferred.
+#
+# REPORTING ONLY, the same posture as tests.yml. Not a required status check,
+# and `main`'s ruleset carries one `pull_request` rule and ZERO required status
+# checks, so a red run here does not stop a merge. Making it required is a
+# different decision and needs its own finding.
+#
+# WHY IT IS SEPARATE FROM tests.yml. `on: pull_request: paths:` filters a whole
+# workflow, not one job, and tests.yml must keep running on every pull request.
+# A separate file is the only native way to filter, and it follows what
+# deploy-alarm.yml already does: one file per concern.
+#
+# WHY IT IS FILTERED AT ALL. It builds a D1 from nothing and boots wrangler,
+# measured at 170 seconds on the development machine 2026-09-04. tests.yml runs
+# on documentation-only pull requests - most of them lately - and three minutes
+# on every one of those buys nothing.
+#
+# THE FILTER IS A RULE WITH AN EXPIRY DATE AND NOBODY WILL NOTICE IT EXPIRE.
+# Said plainly because this repo has argued against exactly this shape before:
+# a path list is correct on the day it is written and silently wrong the moment
+# something regression.mjs reads moves outside it. The list below was derived by
+# reading what the suite actually opens - db/schema.sql, the data scripts,
+# ../js/parser.js, functions/.../_lib/catalog.js, the README's clean-run counts
+# and docs/operations.md - not by guessing at what looks related. If it is ever
+# wrong, the failure is SILENT: the suite simply does not run, and green means
+# "not asked" rather than "passed". Check this list when moving any of those.
+#
+# WHAT THIS DOES NOT COVER. smoke.mjs proves the machinery; this proves a
+# REQUEST works against a database built from nothing, which is the only thing
+# that catches a fresh environment being broken. A local run cannot substitute:
+# a development machine has a warm .wrangler directory and a runner does not,
+# which is the whole reason a bare-clone check belongs in CI.
+
+on:
+  pull_request:
+    paths:
+      - 'db/**'
+      - 'functions/**'
+      - 'apps/character-creator/db/**'
+      - 'apps/character-creator/js/**'
+      - 'apps/character-creator/README.md'
+      - 'apps/character-creator/docs/operations.md'
+      - 'apps/character-creator/test/regression.mjs'
+      - '.github/workflows/regression.yml'
+
+# A pull request pushed to twice does not need the first run finished.
+concurrency:
+  group: regression-${{ github.ref }}
+  cancel-in-progress: true
+
+# Read-only. This workflow inspects the tree and nothing else.
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    # 170s on the development machine; a cold runner is slower and boots
+    # wrangler as well. Generous rather than tight - a timeout here would read
+    # as a broken suite.
+    timeout-minutes: 20
+    env:
+      # There is no package.json here by design, so `npx wrangler` resolves from
+      # the npx cache and PROMPTS to install when it cannot. A runner has no
+      # terminal to answer, so the prompt becomes a hang or a failure.
+      NPM_CONFIG_YES: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Matches the version this repo is developed on. No cache key: there
+          # is no lockfile to key on.
+          node-version: '24'
+
+      # WARM THE npx CACHE BEFORE ANYTHING IS TIMED. Same reason as tests.yml
+      # SHIP-PR-AUDIT.md F13: this suite spawns wrangler, and a cold download
+      # inside a timed region is what turned that job red on PRs #668 and #669.
+      - name: warm the npx cache
+        run: npx wrangler --version
+
+      - name: regression
+        run: node apps/character-creator/test/regression.mjs

@@ -17,7 +17,16 @@ caught for you, so the checks happen before the merge or they do not happen.
 (`REPO-AUDIT.md` G8), and it is **reporting only** — not a required status
 check, and a red run does not stop a merge. It also
 reports *after* you have opened the PR, which is after the point where step 4
-would have saved you.
+would have saved you. **Treat it as a second pair of eyes on a run you already
+did, never as the reason to skip one.**
+
+**`regression.mjs` runs in CI too, since 2026-09-04** — `.github/workflows/regression.yml`,
+`SKILL-AUDIT` `F32`, closing a follow-up `REPO-AUDIT` `G8` deferred. Same
+posture: reporting only, no required check. **It is PATH-FILTERED and that is
+the part to know**: it fires only on a pull request touching `db/`, `functions/`,
+the character-creator's `db/`, `js/`, `README.md`, `docs/operations.md` or the
+suite itself. **A green pull request outside those paths means the suite was
+never asked**, not that it passed — so step 4 still owns it.
 
 **There IS a ruleset on `main`, and it does not gate CI.** `22209348`, *"main:
 require a pull request"*, active since 2026-09-03 — one `pull_request` rule,
@@ -25,8 +34,7 @@ require a pull request"*, active since 2026-09-03 — one `pull_request` rule,
 describes; it is not what a red run runs into. This passage denied its existence
 for a day (`SKILL-AUDIT` `F29`, 2026-09-04), which left a reader who checked
 unable to tell which half of the posture was wrong. Ask it:
-`gh api repos/NateGrey0130/nates-workshop/rulesets`. Treat it as a second pair of eyes on a run you already
-did, never as the reason to skip one. `regression.mjs` is not in it at all.
+`gh api repos/NateGrey0130/nates-workshop/rulesets`.
 
 ## The loop
 
