@@ -1,6 +1,9 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **`F33` IS OPEN; `F34` was taken 2026-09-04 (PR #688).** Filed 2026-09-04 under
+> **NOTHING IS OPEN. `F33` and `F34` were taken 2026-09-04 (PRs #689, #688).**
+> `F33`'s note records **four other places carrying the same falsehood**, left
+> unfixed because its posture was one sentence in one skill — `ship-pr` is the
+> one that matters and needs its own finding. Filed 2026-09-04 under
 > **`## Opened while taking F29 to F32`** — a **fourth** placement on this page,
 > after the `N` block, `## Opened while building the verifier agents` and
 > `## Opened by taking F28`. **`F29`–`F32` were all taken 2026-09-04** (PRs
@@ -3076,6 +3079,65 @@ than predicted.
 **Ongoing cost:** none if the sentence points at `.gitattributes` instead of
 enumerating it. If it enumerates, it is a list to maintain — which is the trap
 the proposal is written to avoid.
+
+**Taken, 2026-09-04 (PR #689). Posture held: documentation only — one skill, one
+passage. `.gitattributes` untouched, no check, no gate.**
+
+`windows-shell/SKILL.md:12` now names both LF pins with the reason for each, names
+the two `-text` paths, and — the half the proposal cared about — says
+`.gitattributes` **is** the list while the paragraph is only a summary of it,
+with the instruction to read the file before writing anything that rewrites line
+endings. The `*.sql` clause about bytes reaching the database is kept; it is the
+reason that rule exists.
+
+**Its premises were audited first, and F33 was wrong about its own evidence.**
+
+**1. The Evidence line was false.** It said *"The failure is recorded in `F29`'s
+and `F32`'s notes."* Neither note mentions line endings, CRLF, `eol` or
+`.gitattributes` — checked by reading both sections. The two textual premises
+stand on their own, but **the corroboration does not exist**, and the CRLF
+episode leaves no artifact either: git stores LF for a workflow file whichever
+way the working tree is written, so nothing in history records it. This note is
+the only place that account will ever live, which is the honest status of it.
+
+**2. The quoted sentence was truncated.** F33 quoted it ending at *"pins to
+LF."* It actually runs on into an italic clause giving the `*.sql` rule its
+reason. The proposal was silent on whether that clause survives; it does.
+
+**3. A minor overstatement.** `grep -vn '^#' .gitattributes` returns **seven**
+lines, not the four rules — two blanks and a comment-continuation line come with
+them. The four rules and their line numbers are exactly right.
+
+**And one thing that verified stronger than filed.** All 712 tracked text files
+were scanned for bare LF: the complete set of non-CRLF files is `*.sql`,
+`.github/workflows/*.yml` and `apps/filament-forge/vendor/jszip.min.js`, with no
+mixed files. So *"point at `.gitattributes`"* is not merely cheaper — that file
+**is** the exhaustive list of exceptions today.
+
+**A pinned collision, avoided rather than hit.** `apps/filament-forge/test/smoke.mjs:180-181`
+asserts `.gitattributes` contains the literal string
+`apps/filament-forge/vendor/* -text`; reordering or rewording that line fails
+the FilamentForge suite. `F33` does not propose editing `.gitattributes` and
+this take did not.
+
+### The same falsehood is in four other places, and this finding does not reach them
+
+Found by the premise audit, recorded here, **not fixed** — `F33`'s posture is
+one sentence in one skill, and widening a taken finding is not the taker's call.
+
+| where | layer |
+|---|---|
+| `.claude/skills/ship-pr/SKILL.md:444-445` | a skill — and **the one open during a shipping session**, which is exactly when this bites |
+| `~/.claude/projects/<project>/memory/sed-i-strips-crlf.md:11` | memory, indexed from `MEMORY.md`; no grep of this repo reaches it |
+| `docs/prompts/gm-grants-prompt.md:180` and the workshop copy of the same file | a brief, in two content-identical places (`MACHINE-AUDIT` `M13`) |
+| `docs/prompts/n-findings-prompt.md:58` | narrowly false — `jszip.min.js` is a pure-LF `.js` |
+
+**`ship-pr` is the one that matters** and it is a separate finding, not a
+widening of this one.
+
+**Correct statements already exist and can be cited rather than re-derived:**
+`META-AUDIT.md:1520-1521` names both LF pins, and `REPO-AUDIT.md:864-874`
+explains the workflow pin. Both are dated records and stay as they are.
 
 ### F34 — `audit-premise-auditor` tells itself every finding has had a bad premise; its own authority says otherwise
 

@@ -9,8 +9,19 @@ Every one of these **succeeds**. Nothing exits non-zero, nothing warns, and in
 three cases the obvious check reports clean. They are collected here because
 each cost a session or reached production.
 
-The repo is CRLF everywhere except `*.sql`, which `.gitattributes` pins to LF
-*because a CRLF checkout once changed the bytes that reached the database*.
+**The repo is CRLF except where `.gitattributes` says otherwise, and it says so
+about more than one thing.** Two paths are pinned to LF: `*.sql`, *because a
+CRLF checkout once changed the bytes that reached the database*, and
+`.github/workflows/*.yml`, because a runner hands each `run:` step to bash,
+where a trailing CR fails as `$'\r': command not found`. Two more are `-text` —
+normalised in neither direction — the vendored FilamentForge libraries and the
+self-hosted woff2 fonts.
+
+**Read `.gitattributes` before writing anything that rewrites line endings.** It
+is the list; the paragraph above is a summary of it, and a summary goes stale the
+next time a rule lands. This sentence named only `*.sql` until 2026-09-04, and a
+normaliser written from it put a workflow file back to CRLF that same day —
+git's own warning on the next `add` was the only thing that caught it.
 
 ## Editing a file in place
 
