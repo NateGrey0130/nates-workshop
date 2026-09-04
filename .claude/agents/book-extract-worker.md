@@ -67,9 +67,16 @@ a whole-book pass does not have. A stat block straddling the first or last page
 of your slice loses whatever fell outside it. The signature is a cost of `0`
 with no note, or a description that stops mid-sentence.
 
-**Read one page beyond each end of your range** to find the boundary, and report
-any row that crosses it as **incomplete**, naming which side is missing. Do not
-reconstruct the far side; another slice has it.
+**A page break INSIDE your range loses nothing, and a row crossing one is
+complete.** You hold both pages; read straight through it and return the row
+like any other. Only the **slice edge** — the first and last page of your range
+— can take half a row away from you. The two are easy to conflate, and flagging
+an internal straddle as incomplete costs a reconcile pass on a row that was
+never broken.
+
+**Read one page beyond each end of your range** to find the slice edge, and
+report any row that crosses **that edge** as **incomplete**, naming which side
+is missing. Do not reconstruct the far side; another slice has it.
 
 **Section headings sit partway down a page**, so your first page may carry the
 tail of the previous section. Thirteen spells once came back exactly one level

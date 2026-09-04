@@ -72,9 +72,15 @@ can make it. Where they disagree, say so and quote both - do not pick.
 category was inferred from "which section of the page it fell in", verify it
 against the book's own index. This is the single most productive check.
 
-**Watch for rows that straddle a page break.** A stat block split across pages
-loses whatever fell on the far side. The signature is a cost of 0 with no note,
-or a description that stops mid-sentence.
+**Watch for rows that straddle a SLICE or BATCH boundary.** A stat block split
+across the edge of the range someone extracted loses whatever fell outside it.
+The signature is a cost of 0 with no note, or a description that stops
+mid-sentence.
+
+**A plain page break inside the range is not that**, and a row crossing one is
+complete — whoever read it held both pages. The two look identical in the
+output and only one of them is a defect, so check which boundary the row
+actually crossed before reporting it.
 
 **Check for a name that is really two names, or two that are really one.**
 `Telekinetic Push` and `Telekinetic Punch` are two characters apart and are

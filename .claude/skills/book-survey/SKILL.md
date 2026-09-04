@@ -480,10 +480,16 @@ guessing at conventions in parallel produce uniform, confident, wrong output
 that all agrees with itself.
 
 **Give each worker one page beyond each end of its range.** Two things a slice
-loses that a whole-book pass does not: a stat block straddling a boundary, and a
-governing heading sitting outside the range — the same mid-page heading problem
-that put 13 spells one level too high in phase 5 below. The worker reports both
-rather than reconstructing them; the far side belongs to another slice.
+loses that a whole-book pass does not: a stat block straddling **its slice
+edge**, and a governing heading sitting outside the range — the same mid-page
+heading problem that put 13 spells one level too high in phase 5 below. The
+worker reports both rather than reconstructing them; the far side belongs to
+another slice.
+
+**Say slice edge rather than boundary when you brief a worker.** A page break
+inside the range loses nothing — the worker holds both pages — and a worker told
+to flag rows crossing "a boundary" will over-flag internal straddles, which
+costs a reconcile pass on rows that were never broken. `SKILL-AUDIT` `F41`.
 
 **Fanning out does not skip phase 5.** More parallel extraction is more for
 `book-reconcile` to check, not less.
@@ -551,10 +557,16 @@ Three more checks worth running every time:
   cost the index prints. 108 of 108 agreed here; where a class page disagreed on
   an earlier import, the other two agreed with each other and the class page was
   the outlier.
-- **A row straddling a page break loses whatever fell on the far side.**
-  `Rift Teleportation` starts on p143 and its `P.P.E.:` line is on p144, so the
-  next batch produced a second row — conflated name, wrong level, **no cost**.
-  Look for cost 0 with no note.
+- **A row straddling a BATCH or SLICE edge loses whatever fell on the far
+  side.** `Rift Teleportation` starts on p143 and its `P.P.E.:` line is on
+  p144 — and **p143/p144 was where one batch stopped and the next began**, which
+  is why the next batch produced a second row: conflated name, wrong level,
+  **no cost**. Look for cost 0 with no note.
+
+  **The page break is not what broke it; the batch edge is.** A row crossing a
+  page break *inside* one range is complete, because whoever read it held both
+  pages. This bullet said "page break" until 2026-09-04 and that was the wrong
+  lesson from its own example — `SKILL-AUDIT` `F41`.
 - **Anything the authority does not list at all.** Either the name is mangled or
   the book never defines it. Both need eyes, neither is a guess.
 

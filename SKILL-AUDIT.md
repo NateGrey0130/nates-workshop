@@ -1,6 +1,8 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **`F41` AND `F42` ARE OPEN**, filed 2026-09-04 under the existing
+> **`F42` IS OPEN.** `F41` was taken 2026-09-04 (PR #704), with its posture
+> **widened on Nate's word** from one agent file to four; read its note before
+> citing it. Findings sit under
 > **`## Opened while closing out 2026-09-04`**. **`F42` partly reverses `F40`**
 > and says so — `F40` fixed a false arrangement sentence and recorded that
 > *deleting* it was the better fix it was not scoped to make. `F40` taken 2026-09-04 (PR #698) — `audit-menu`'s shape
@@ -3777,6 +3779,63 @@ did not manufacture a disagreement to satisfy that. It behaved correctly, so
 there is nothing to fix today — but a prompt that leans toward finding a problem
 is the same defect `F34` corrected in `audit-premise-auditor`, and it is worth
 knowing it may exist here too.
+
+**Taken, 2026-09-04 (PR #704). POSTURE WIDENED ON NATE'S EXPLICIT WORD, from
+"one agent file" to four files**, and recorded here rather than quietly
+substituted. The premise audit found the same conflation in three more places,
+one of them flatly asserting the proposition this finding retracts.
+
+**Why it could not stay at one file.** `book-survey/SKILL.md` is the skill that
+*spawns* this worker, and it said — read 2026-09-04 — **"A row straddling a page
+break loses whatever fell on the far side."** <!-- claim-ok: quoting the sentence this finding corrects -->
+Fixing only the agent file would have left the spawner asserting the exact thing
+the worker was newly told was false, in two files read in sequence. Also fixed:
+`book-survey/SKILL.md`'s fan-out paragraph, which briefed workers to flag rows
+straddling *"a boundary"* with no definition, and `book-reconcile.md`, which
+carried the page-break framing and is what reads the worker's output.
+
+**The example that taught the wrong lesson, which is the best thing here.**
+`book-survey`'s bullet cites `Rift Teleportation` — starts p143, `P.P.E.:` line
+on p144, second row produced with no cost. **p143/p144 is where one batch
+stopped and the next began.** The break that lost the data was the *batch edge*;
+the page break was incidental and the bullet generalised from the wrong half of
+its own case. That is now written into the bullet.
+
+**This finding's absence claim was too broad.** It says *"the contract never
+says the two are different"*. <!-- claim-ok: quoting the claim this note corrects -->
+Two passages already narrowed it, read 2026-09-04: `:71-72` continues *"Do not
+reconstruct the far side; another slice has it"* — which only parses if "it" is
+the slice edge, and this finding's quotation stopped one clause short of it —
+and `:84` already names the reportable category as *"rows that cross a slice
+boundary"*. **What was genuinely absent is the affirmative half**: nothing said
+an internally-straddling row is *complete*. That sentence is what shipped.
+
+**Half the proposal was dropped as redundant.** Its second sentence — "only a
+row crossing the slice boundary is incomplete" — would have restated `:84`
+twelve lines above. Posture was documentation-only either way; adding a
+duplicate of a line already on the page is not an improvement.
+
+**A detail in the evidence is wrong and the conclusion is not.** This finding
+says *Locate Places of Evil* was *"cut mid-word at the foot of p.86"*.
+<!-- claim-ok: quoting the detail this note corrects --> `.cache/books/ww/txt/p086.txt`
+ends on a complete sentence; the hyphenated break is mid-page. The row is still
+incomplete at the slice edge, which is what mattered.
+
+**The run itself is not verifiable from anything committed** — `.cache/` is
+gitignored — **but its substance reproduces exactly** on this machine, 2026-09-04
+(`ww` has `page_offset: 0`, so printed = cache page): 15 entries across printed
+84–86, exactly one crossing the trailing slice edge (*Locate Places of Evil*,
+p086→p087), exactly two straddling internal page breaks (*Create Stairs* 84→85,
+*Destroy Life Force Cauldron* 85→86), and nothing crossing the leading edge.
+Four counts, four matches.
+
+**The tone observation above is NOT taken and is now settled — see `F43`.** The
+premise audit checked it against the current text and it is **not** the `F34`
+defect: `book-extract-worker` contains no equivalent of `F34`'s false frequency
+claim, its offset section is conditional (*"If it disagrees"*), it says *"zero
+is common"*, and `:91-93` already carries the anti-padding line `F34` added
+elsewhere. **What that check turned up instead is a factual error in the same
+paragraph**, filed as `F43`.
 
 ### F42 — the shape table narrates arrangement in two rows, and arrangement is not what it is for
 
