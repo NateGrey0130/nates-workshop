@@ -193,6 +193,26 @@ alternative it replaced was a gap nothing reported at all.
 It does **not** replace step 9. The sweep tells you something is broken; step 9
 tells you *while you still remember what you merged*.
 
+**There is a third one, and it is the only one that does not depend on you.**
+`.github/workflows/deploy-alarm.yml` runs daily on a schedule, walks the same
+`--first-parent` history over a 26-hour window, and **fails on purpose** —
+because a failed scheduled run is what GitHub emails about, and that email is
+the whole alarm. Three things about it are worth knowing at a merge and are not
+worth reading its header for:
+
+- **It is not a gate.** It runs on a schedule, never on a pull request, and it
+  is not a required status check. It cannot block a merge or a deploy.
+- **Its channel is notification email**, confirmed reaching Nate on its first
+  red run, 2026-09-03. Mute this repo's Actions notifications and the alarm goes
+  silent without failing.
+- **It answers only for Pages.** `workers/pick3cut5-room` needs Cloudflare
+  credentials that CI deliberately does not get, so the sweep above remains the
+  only thing covering that half.
+
+It changes nothing about steps 9 and 10, which still happen at the merge. What
+it changes is the consequence of forgetting them: a day, rather than the four
+that went unnoticed in August.
+
 Then ask production for **a string this change added** — a route, a heading, a
 new class name. It is the only check that distinguishes deployed from merged,
 and D1 cannot answer it: the database moved *before* the merge, so it looks
