@@ -798,6 +798,63 @@ the reason for normalising, since that hit was invisible until it did.
 `deploy-sweep.mjs` in `HEALTH-AUDIT` `F20`: *"every script in `scripts/` is named
 in the file map"*. The README entry landed in the same commit.
 
+### R9 — medium — the Crazy is missing the +3 Perception its own ability describes
+
+**Filed and taken the same day, 2026-09-04**, which is why it sits after `R8`
+rather than in severity order. It began under *Not established* and moved here
+when the page was read.
+
+`crazy` carried `bonuses.combat: { initiative: 2, attacks: 1, roll: 4 }` and **no
+`perception`**, while its M.O.M. Induced Abilities prose describes a +3.
+
+**The book settles it, and it is unconditional.** Rifts Ultimate Edition
+**printed 55** (`rue` cache `p058`, the registry's `+3` offset), item 5:
+
+> *"Enhanced Senses: +3 on Perception Rolls even when acting silly and bouncing
+> around, or seemingly bored. Very alert."*
+
+The clause *"even when acting silly and bouncing around"* is the book saying the
+bonus never lapses — so it belongs in `bonuses`, not in an `applies_when` entry.
+
+**The rest of the class was already right**, which is what makes this a single
+dropped value rather than a bad import: items 1-4 on the same page give +2
+initiative, +1 attack, +4 roll with impact and 1D6 to P.P. with a minimum of 17,
+and the class carries all of them, plus its `2d4`/`4d6`/`1d6`/`1d6` attribute
+dice and the P.S. 19 minimum. Only item 5's number was left in prose.
+
+**Nothing recorded whether it had been considered.** `CLASS-AUDIT` `F8` granted
+`combat.perception` to twelve classes in
+`apps/character-creator/db/fix-perception-bonuses.sql` and named three deliberate
+exclusions; `crazy` was on **neither** list.
+
+```bash
+node scripts/q.mjs --remote "SELECT class_id, instr(markdown,'perception: 3')>0 AS has_it FROM imported_classes WHERE class_id='crazy'"
+```
+
+**Proposal:** add `perception: 3` to the existing combat block and say in the
+ability's prose where it now lives. **Posture: one bonus value, nothing else
+moved** — readbacks assert the other three combat bonuses, the attribute dice and
+both minimums are unchanged.
+
+**Evidence:** the page above, read 2026-09-04; production `--remote` for the
+stored state.
+**Confidence: high.** The book text is unambiguous and the surrounding values all
+match, so a transcription error in the other direction is ruled out.
+**Ongoing cost:** none.
+
+**Taken, 2026-09-04 (PR #719)** — as written. `crazy` re-parses at **0 errors and
+0 warnings**, and its combat block reads
+`{"initiative":2,"attacks":1,"roll":4,"perception":3}`.
+
+**How it was found is the part worth keeping.** **None of this menu's four
+detectors saw it.** It has no key to contradict, so `R8`'s check is blind to it;
+it post-dates nothing, so the capability diff is blind to it; and its note is not
+a limitation claim, so the sweep was blind to it. It surfaced only because
+`audit-premise-auditor` was checking `R1`'s premises and looked at the class
+beside them — **a prose-only PR is exactly the PR that walks past a missing
+mechanic.** That is an argument for running the premise check on every finding,
+not for a fifth detector.
+
 ---
 
 ## Not established
@@ -825,15 +882,5 @@ Recorded rather than resolved by inference.
 - **Per-row provenance for catalog rows does not exist** and was not
   reconstructed. Every catalog finding here rests on the row's *content*, not on
   a date.
-- **Whether `crazy` is missing a `combat.perception` grant.** Turned up while
-  `R1` was being taken, 2026-09-04. The class carries
-  `bonuses.combat: { initiative: 2, attacks: 1, roll: 4 }` and no `perception`,
-  while its Heightened Senses ability description reads *"+3 on Perception Rolls
-  even when acting silly and bouncing around, or seemingly bored"* — which does
-  not read conditional. `CLASS-AUDIT` `F8` and
-  `apps/character-creator/db/fix-perception-bonuses.sql` granted the key to
-  twelve classes and named three deliberate exclusions; `crazy` is on neither
-  list, so it is unclear whether it was skipped on purpose. **Settling it needs
-  RUE printed 53-57, which was not opened.** If the bonus is real and
-  unconditional this is a missing mechanic rather than note rot, and a finding of
-  its own.
+- ~~Whether `crazy` is missing a `combat.perception` grant.~~ **Settled
+  2026-09-04 by reading the page. It was real — see `R9` below.**
