@@ -1,8 +1,10 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **`F39` IS OPEN; `F38` was taken 2026-09-04 (PR #695)** — every `###` heading
-> in this file is now a finding, which is more than `F38` asked for. `F37` is
-> **filed WITH its outcome**, all 2026-09-04
+> **NOTHING IS OPEN.** `F38` taken 2026-09-04 (PR #695) — every `###` heading in
+> this file is now a finding, which is more than `F38` asked for. **`F39` closed
+> without being taken** (PR #696), agreeing with its own recommendation and
+> recorded so it is not re-proposed. `F37` is **filed WITH its outcome**, all
+> 2026-09-04
 > under **`## Opened while closing out 2026-09-04`**, a seventh placement. `F37`
 > carries its outcome because the file it corrects is **outside this repo** and
 > no pull request could take it. **`F39` recommends declining itself** and exists
@@ -3604,6 +3606,28 @@ bottom and saying whether the sections help or hinder.
 **Ongoing cost of declining: one paragraph in the header** that has to keep
 naming the placements as they accumulate. That is the real cost and it is
 recorded rather than hidden.
+
+**Closed without being taken, 2026-09-04 (PR #696), on Nate's word** — and
+agreeing with the finding's own recommendation, which is the shape `audit-menu`
+provides for when a proposal's cost exceeds its impact.
+
+**Recorded so it is not re-proposed**, which is the whole reason this was filed
+rather than simply not done. The next reader to scroll seven `##` sections will
+have the same idea; the reasons it was declined are above, and the strongest is
+that **the findings were already in strict numeric order**, so the arrangement a
+reader needs was never broken.
+
+**What changed underneath it, between filing and closing.** `F38` shipped in PR
+#695, and every `###` heading in this file is now a finding — so a scan of the
+page yields exactly the findings regardless of how many `##` sections sit above
+them. **That removes the only mechanical harm** the placements could do, and
+leaves this as purely a question of how the page reads. It is why declining got
+easier rather than harder.
+
+**If it is ever re-opened, the bar to clear** is the one this note leaves
+standing: a shape that merges the 2026-09-04 sections **without moving a finding
+body**, since moving them is a large diff across a record file and every moved
+line re-enters `menu-check` as an added line. Nobody has proposed one.
 
 ---
 
