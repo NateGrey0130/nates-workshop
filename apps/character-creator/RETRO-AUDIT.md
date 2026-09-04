@@ -302,6 +302,53 @@ one-Force/two-Force rule is settled: the class's own note says
 ability, so a naive `spells_from` may need to be per-variant.
 **Ongoing cost:** none.
 
+**Taken, 2026-09-04 (PR #713) — and the finding was largely WRONG.** Taken
+note-only on Nate's word, and the note records the error rather than
+implementing the proposal.
+
+**The defect is real; the diagnosis was not.** R3 read this as the Elemental
+Fusionist case (`CLASS-AUDIT` `S1`) left undone. It is not the same case. The
+Fusionists' orientation is fixed **by the class** — there are two of them,
+`elemental-fusionist-fire-water` and `elemental-fusionist-earth-air` — so a
+class-level `spells_from` names exactly the right spells. The Warlock's Force is
+chosen **per character**, and its variants are `one-force` and `two-forces`:
+they record *how many* Forces, not *which*. There is no field anywhere for "this
+Warlock chose Fire".
+
+**So `magic.spells_from` cannot fix it.** The union of all four spheres is 37
+level-1 spells where a Fire Warlock should see 9, against 50 level-1 spells in
+the catalog — a quarter of the way, and it would look complete. That is `S7`'s
+Dog Boy objection, and the reason this was not shipped.
+
+```bash
+node scripts/q.mjs --remote "SELECT substr(name,1,instr(name,':')-1) AS sphere, count(*) AS n, sum(level=1) AS lvl1 FROM spells WHERE name LIKE 'Air:%' OR name LIKE 'Earth:%' OR name LIKE 'Fire:%' OR name LIKE 'Water:%' GROUP BY sphere"
+```
+→ 231 elemental spells, 37 at level 1 (Air 7, Earth 11, Fire 9, Water 10).
+
+**R3 called a TRUE note stale, which is the failure a claim sweep cannot score
+itself on.** The class's `extraction_notes` already say, accurately: *"The
+ELEMENT choice itself is per-character and has no schema shape … the wizard's
+spell picker filters by level, not by sphere"*, and they name the filter-box
+workaround. R3 quoted half that sentence as evidence of a gap. **It is left
+exactly as it stands, and a readback asserts it survived.**
+
+**Two things were genuinely wrong and both are fixed.** A restriction said the
+variant *"records which"* Force — it records how many. And **nothing anywhere
+recorded that the picker lets a Warlock take non-elemental magic**, which the
+class's own summary forbids outright; that is the real, undocumented defect
+underneath R3, and it is now written where the next reader will find it.
+
+**The route that works is per-Force classes**, the way the Fusionists are split
+— an import decision rather than a transcription, and Nate's. Same conclusion
+`CLASS-AUDIT` `S8` reached for the Goblin Cobbler. **No mechanic moved:** a
+readback asserts no `spells_from:` key was added.
+
+**One readback had to be rewritten because it quoted its own replacement text.**
+The new note mentions `magic.spells_from` in prose, so `instr(markdown,
+'spells_from') = 0` could never pass. It matches the YAML key with its colon
+instead. Zero saved Warlock characters exist, so nothing could have broken
+either way.
+
 ### R4 — high — seven catalog skills say their conditional bonuses cannot be stored, and 29 sibling rows store exactly that
 
 Seven `skills` rows carry a note explaining that what they grant is conditional
