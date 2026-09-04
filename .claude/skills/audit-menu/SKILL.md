@@ -352,9 +352,11 @@ no command can tell you — which files put a severity word in the heading, whic
 put a *status* there, and which keep a whole family of items somewhere a `###`
 scan will never see.
 
-*That distinction is the fix, and it arrives late.* This table has been read five
-times and been wrong five times, always about the same half: **the rows it did
-not have.** `SKILL-AUDIT` `F7` corrected it on 2026-09-02, predicted its own
+*That distinction is the fix, and it arrives late.* This table has been wrong
+**every time it has been read**, always about the same half: **the rows it did
+not have.** The count of readings is deliberately not given — it was `five` here
+until 2026-09-04, when a sixth reading made it wrong in the one paragraph
+explaining why ordinals in this section go stale. `SKILL-AUDIT` `F7` corrected it on 2026-09-02, predicted its own
 falsification in the same paragraph, and was right within the hour. What `F7`
 also did is the model for this — it removed the *ordinal* from the paragraph
 above rather than incrementing it, on the grounds that changing fourteen to
@@ -381,6 +383,7 @@ that trap one level down.
 | `apps/pick3cut5/AUDIT.md` | `F`; `T` | `###`; **not a heading** | `### F1. …`, and `**T1. … — PASSED.**` as BOLD PARAGRAPH LEADS under `## T — paths that have never run` |
 | `HEALTH-AUDIT.md` | `F` | `###` | severity word, capitalised: `### F1 — Critical — …` |
 | `SKILL-AUDIT.md` | `F`, `N` | `###` | `### F1 — …`, no severity word — but `F22` onward sit under `## Opened while taking a finding`, **out of numeric order, after `F21` and before the `N` block** |
+| `SHIP-PR-AUDIT.md` | `F` | `###` | `### F1 — …`, no severity word — and `F11`–`F14` sit under `## Opened while taking a finding` **after `F10`, in numeric order**, deliberately not the row above's arrangement |
 | `SETUP-v2-CHANGES.md` | **none** | `###` | `### 1. …` — bare numbers under `## Changes`, and the one menu whose filename does not say `AUDIT` |
 
 Two heading levels, an optional severity word in either case, an em dash or a
@@ -402,12 +405,20 @@ later the same day, it was **right on thirteen rows of fourteen and wrong on one
 cell** — `DOCS-AUDIT.md`, whose findings all carry a word in the severity slot,
 and whose `D5` carries `WITHDRAWN` there: a *status* where four other files put a
 severity, and the one cell here that would change a scan's answer. Read again on
-2026-09-03 it was **missing four**, one of them the menu doing the reading.
+2026-09-03 it was **missing four**, one of them the menu doing the reading. Read
+on 2026-09-04 it was **missing one — again the menu doing the reading**
+(`SHIP-PR-AUDIT` `F12`), whose own header had stated a different and wrong cost
+for filing a new menu, written by someone who had just read `F7`.
 
 The failure mode changed shape across those readings — missing rows, more missing
 rows, a wrong cell, missing rows again — and the constant is that **the cells
 have been reliable and the roll-call has not.** That is why the table stopped
-claiming to be one. Get the list from the tree, then read each file's own
+claiming to be one.
+
+**The row that is missing has twice been the reader's own.** That is not
+coincidence, and it is the practical instruction hiding in this section: *the
+menu you are writing is the row you will forget.* Add it in the PR that creates
+the file, or accept that the next reader finds it. Get the list from the tree, then read each file's own
 headings:
 
 ```bash
