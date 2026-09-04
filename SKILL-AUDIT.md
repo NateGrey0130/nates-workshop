@@ -1,6 +1,10 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **NOTHING ON THIS MENU IS OPEN.** `F41` and `F42` were taken 2026-09-04
+> **`F43` IS OPEN**, filed 2026-09-04 under the existing
+> **`## Opened while closing out 2026-09-04`** — a false frequency claim about
+> page offsets, carried by both book agents and contradicted by the skill that
+> spawns them. It also **closes `F41`'s tone observation** rather than carrying
+> it, so that is not re-proposed. `F41` and `F42` were taken 2026-09-04
 > (PRs #704, #705). `F41`'s posture was **widened on Nate's word** from one
 > agent file to four, and `F42` corrected a paragraph `A13` had shipped hours
 > earlier — read both notes before citing either. Findings sit under
@@ -3960,6 +3964,93 @@ question**, and the answer is that the information exists in two other places.
 **`F40`'s note is now a dated record.** It says `:462` *"is untouched and still
 reads correctly"*, which was true when written and is superseded by this
 deletion. Left standing, per the rule that a measurement is not rewritten.
+
+### F43 — both book agents say assuming `+1` is "wrong more often than right"; it is right for ten of sixteen books
+
+**Opened 2026-09-04 by the premise audit run before taking `F41`.** `F41`
+recorded a tone observation about the same paragraph and did not propose it;
+checking that observation is what turned this up. **The tone half is settled and
+is not this finding** — see the bottom.
+
+`.claude/agents/book-extract-worker.md:36-37`:
+
+> Offsets here run from `-1` to `3`, so assuming `+1` is wrong more often than
+> right, and **zero is common**.
+
+`.claude/agents/book-reconcile.md:46-47` carries the same clause:
+
+> Offsets here run from `-1` to `3`, so assuming +1 is wrong more often than
+> right.
+
+**`+1` is right for ten of the sixteen books.** Measured 2026-09-04 against both
+sources those same paragraphs tell the agent to read — `scripts/books.json` and
+each cache `manifest.json` — which agree exactly:
+
+| `page_offset` | books | which |
+|---|---|---|
+| `1` | **10** | `bom` `cb1` `dag` `fom` `free-quebec` `ju` `mystic-russia` `new-west` `potm` `spirit-west` |
+| `0` | 3 | `phase-world` `triax` `ww` |
+| `-1` | 1 | `underseas` |
+| `2` | 1 | `pf` |
+| `3` | 1 | `rue` |
+
+So `+1` is correct **62.5%** of the time and is the mode by a factor of three.
+*"Wrong more often than right"* is false, and *"zero is common"* describes the
+third-most-frequent value at 3 of 16 while sitting in the same sentence as the
+claim that dismisses the most frequent one.
+
+**The skill that spawns both agents says the opposite and is right.**
+`.claude/skills/book-survey/SKILL.md:265`, read 2026-09-04, labels its worked
+example *"`page_offset: 1` — `potm` and most books"*. **Three files, two of them
+agents that run unattended, and the two that are wrong are the two nobody reads
+in full.**
+
+**Why this is worth a number rather than a silent fix.** The instruction is not
+merely inaccurate, it is *directionally* wrong about a check the agent performs
+on every slice: it tells a worker that the most likely offset is the unlikely
+one. `F41`'s live run showed a worker doing offset checks correctly, so nothing
+is known to have broken — but `BOOK-INGEST-AUDIT` and the `juicer` import both
+record what a wrong page offset costs when it does, which is a citation that
+looks perfectly ordinary and points at the wrong page.
+
+**Proposal:** correct the clause in both agent files to say what the registry
+says — most books are `+1`, the range runs `-1` to `3`, and it must still be
+read rather than assumed. **Keep the read-it-do-not-derive-it instruction, which
+is the point of the paragraph and is unaffected.** Do not put a count of books
+in the sentence: `META-AUDIT` `A14` removed exactly that shape from `audit-menu`
+hours earlier, and a tally of books needs re-counting every time one is
+ingested. **Posture: documentation only, two agent files, one clause each, no
+frontmatter or tools change, no check, and no number that moves.**
+
+**Evidence:** both agent passages read at the line numbers above, 2026-09-04;
+`scripts/books.json` parsed for `page_offset` and cross-checked against every
+`.cache/books/*/manifest.json` the same day — the two sources agree on all
+sixteen; `book-survey/SKILL.md:265` read the same day.
+
+**Confidence: high.** Every figure came from a command, and from the two sources
+the paragraph itself names. **What would lower it:** nothing measured — the only
+judgement is whether *"most books are `+1`"* is worth saying at all, versus
+cutting the frequency claim entirely and leaving only *read it, do not derive
+it*. **A taker may reasonably choose the shorter, subtractive version**, and
+that would also satisfy the no-moving-number constraint.
+
+**Ongoing cost: none.** It replaces a false clause with a true one, or removes
+it. Nothing new to maintain.
+
+**The `F41` tone observation is CLOSED here, not carried.** `F41` suggested the
+offset paragraph *"primes you to expect friction"* and might be the defect `F34`
+corrected in `audit-premise-auditor`. **Checked against the current text,
+2026-09-04: it is not.** `F34`'s defect was a false *frequency* claim about the
+record — *"every finding taken so far has turned up an error in its own
+premises"* — telling the agent an error is always there.
+<!-- claim-ok: quoting F34's corrected sentence, read 2026-09-04 -->
+`book-extract-worker` contains no equivalent: its offset section is conditional
+(*"**If** it disagrees … say so"*), its required-output slot for folio
+disagreements is allowed to be empty, and `:91-93` already carries the
+anti-padding line `F34` added elsewhere — *"Do not pad. A slice that holds four
+rows returns four rows."* **Recorded so it is not re-proposed.** The irony worth
+keeping: the paragraph accused of priming for friction turned out to contain a
+false frequency claim pointing the other way, which is this finding.
 
 ---
 
