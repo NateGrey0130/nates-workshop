@@ -352,6 +352,23 @@ down.** ~9 lines out, ~2 in.
 **Ongoing cost: negative.** This is one of the few findings here that makes the
 file shorter.
 
+**Taken, 2026-09-03 (PR #662).** Both halves as written and in opposite
+directions: the Pick 3 Cut 5 bullet compressed to command, one line of *what
+only this check sees*, and a pointer; the browser bullet kept in place with
+`verify-ui` named in it. **6 insertions, 9 deletions.**
+
+**The clause that had to survive the compression, and did.** *"fetches the app
+**and its assets**"* is the whole reason that check is not
+`curl /apps/pick3cut5/`, and it is kept verbatim. What went was the nine-line
+retelling of the incident — to a file that already contains it, which is the
+test of a move rather than a deletion.
+
+**A caveat on the arithmetic this menu should not hide.** `F4` makes the file
+three lines shorter and `F1`–`F3` made it fifty-three lines longer. The skill is
+**439 lines against 386 when this menu was filed**. `F8` is the only finding
+here that materially reverses that, and it should be read as load-bearing rather
+than as tidying.
+
 ---
 
 ### F5 — the `git add -A` pointer is stale, and configuration closed it three days before the skill that carries it was written
