@@ -742,6 +742,30 @@ here and would be the first one written by someone who had not read `ship-pr`.
 **Verified on this PR:** opened with `--body-file`, and the resulting body
 contains none of the template's markers.
 
+**CORRECTION, 2026-09-03 (`SHIP-PR-AUDIT` F3).** This finding's premise was
+false. *"That shape exists only inside the `ship-pr` skill"* — it did not exist
+there at all. Step 6 passed `--body-file pr-body.tmp` and never said what went
+in the file; the skill's only word on a PR body was one sentence in the ordering
+rule about naming the D1 files already applied. Measured by reading the skill
+end to end, 2026-09-03.
+
+**The consequence is the reverse of what this finding intended.** G7 was careful
+not to duplicate the skill, on the stated grounds that a second copy is a second
+thing to keep in sync. Because the first copy never existed, the template was
+not a second copy — it was the original, sitting in the one file the normal path
+never reads, since `--body-file` replaces it and that is how every PR here is
+opened. **The template shipped correct and unreachable.**
+
+`SHIP-PR-AUDIT` F3 puts the six headings in step 6 and makes the template say it
+follows them. The paragraph above about reach still holds and is why this
+mattered: a convention documented only where nobody looks is a convention with
+no written copy.
+
+**This is `audit-menu`'s "taking a finding is also auditing the finding" firing
+one menu late.** G7 was taken as written and the premise was never checked,
+because checking it meant reading a *different* file than the one being changed.
+That is the shape to distrust: a claim about what some other document says.
+
 ### G8 — high — nothing but a person ever runs the tests, and CI is foreclosed by something upstream of CI
 
 There is no `.github/workflows/`. The five suites — 1,662 checks in the
