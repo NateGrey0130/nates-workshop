@@ -1,6 +1,10 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **NOTHING IS OPEN. `F35` was taken 2026-09-04 (PR #693)** — subtractive, one
+> **`F38` AND `F39` ARE OPEN; `F37` is filed WITH its outcome**, all 2026-09-04
+> under **`## Opened while closing out 2026-09-04`**, a seventh placement. `F37`
+> carries its outcome because the file it corrects is **outside this repo** and
+> no pull request could take it. **`F39` recommends declining itself** and exists
+> so the idea is not re-derived. **`F35` was taken 2026-09-04 (PR #693)** — subtractive, one
 > clause, and **four of its own premises were wrong**; read its note before
 > citing it. **`F36` was taken 2026-09-04 (PR #692)** — it removed the path
 > filter `F32` had added hours earlier, because the number justifying that filter
@@ -3429,6 +3433,137 @@ reading what the last one wrote.
 
 That is the loop working, and it is also the argument for keeping these passes
 short and separate. **A bigger batch would have buried all three.**
+
+---
+
+## Opened while closing out 2026-09-04
+
+Filed 2026-09-04. A **seventh** placement, and `F39` below is about exactly that.
+
+### F37 — the memory copy of the line-ending rule, corrected outside the repo
+
+`F33` and `F35` each listed the copies of the false line-ending claim they did
+not reach, and both named the same one as *"worth a separate decision"*:
+`~/.claude/projects/C--Users-natha-Projects-workshop/memory/sed-i-strips-crlf.md`.
+It said every file in this repo except `*.sql` is CRLF. It is indexed from
+`MEMORY.md:39` and loads in every session started from the working directory,
+and **no grep of this repo reaches it**, which is why it outlived four findings
+about the same sentence.
+
+**Corrected 2026-09-04**, and this finding is filed *with* its outcome because
+**there was no pull request in which to take it** — the file is outside the repo
+and a PR cannot touch it. `SHIP-PR-AUDIT`'s header records the same shape and
+the same remedy: *"One finding was taken before it was filed … Both PRs say
+so."* This one says so.
+
+**What changed.** It now says most files are CRLF, that `.gitattributes` is the
+list of exceptions, that `*.sql` **and** `.github/workflows/*.yml` are pinned to
+LF with two more paths `-text`, and to read that file before writing anything
+that rewrites line endings.
+
+**A second staleness found while editing, not in `F33`'s list.** The same memory
+told a reader to use `latin1` for in-place edits, with no caveat.
+`windows-shell` establishes that `latin1` **silently truncates any character
+above U+00FF that you supply** — an inserted em-dash becomes an invisible control
+byte — and that `utf8` round-trips CRLF just as well. The memory now carries
+that, and a note that for an LF-pinned file the restore recipe stops at the first
+replace.
+
+**Posture: documentation only, outside the repo. No check, no gate**, and none is
+possible: nothing in this repo can see that file.
+
+**Evidence.** File read and rewritten 2026-09-04; LF endings preserved (0 CRLF
+before and after, verified with node). `find` across all three
+`~/.claude/projects/*/memory/` directories returns exactly one copy.
+
+**Confidence: high** — the file was read, edited and re-read. **Ongoing cost:
+none, and that is the problem.** Nothing will notice when it goes stale again.
+
+### F38 — a commentary heading is indistinguishable from a finding, and a scan of this file now counts 37 findings where there are 36
+
+**`grep -cE '^### F[0-9]+' SKILL-AUDIT.md` returns exactly one more than the
+number of `F` findings.** Measured on `main` at `f9461e8`: **37 against 36**. The
+figures move every time a finding lands — this very PR makes it 40 against 39 —
+so **the invariant is the +1, not either number.**
+
+The extra is the heading `### F36 is the shape this menu keeps producing, and it
+is worth naming`, a commentary heading added by me in PR #692 that a finding scan
+reads as a second `F36`.
+
+Two more `###` headings sit under findings and are not findings: `:2698` *What
+the runs turned up that is NOT this finding* (under `F28`) and `:3131` *The same
+falsehood is in four other places* (under `F33`). Those two do not collide with
+`F\d+`, but a bare `^### ` scan reads all three as findings.
+
+**This is the failure this menu's own material predicts**, one level in: its
+heading table warns that a `###` walk misses `CLASS-AUDIT`'s bullet `S` items and
+`pick3cut5/AUDIT`'s bold `T` leads. This is the same class of error in the
+opposite direction — a scan that finds **more** than exists.
+
+**Proposal:** demote the three to `####`, so `^### ` on this file yields findings
+and nothing else. **The third is the one that matters** and is worth doing alone
+if the other two are contentious: a heading beginning `F36` that is not `F36` is
+a trap, not a formatting preference. **Posture: formatting only. No content
+moves, no finding text changes, no check** — and explicitly **not** a proposal to
+make headings uniform across menus, which `audit-menu` argues against at length
+and which this does not touch.
+
+**Evidence.** `grep -cE '^### F[0-9]+' SKILL-AUDIT.md` → 37 on `main` at
+`f9461e8`, 2026-09-04, against `F1`–`F36`; the full listing was read to identify
+the extra rather than inferred from the count. **Re-run it against the current
+finding count, not against 37** — both numbers move, the `+1` does not, and this
+finding would otherwise be one more count in prose on the menu that keeps
+catching them.
+
+**Confidence: high** on the collision, which is reproducible in one command.
+**Ongoing cost: none** — three characters, and it removes a way for a census to
+be wrong.
+
+### F39 — the seven section placements on this page, and the case for leaving them
+
+This file now carries **seven** `##` sections holding findings, four of them
+filed on 2026-09-04, plus the `N` block. The header names all of them, which is
+the only reason a reader finds `F35` at `:3212` and `F36` at `:3319`.
+
+**This finding recommends DECLINING itself**, and is filed so the idea is
+recorded rather than re-proposed by the next person who scrolls this file.
+
+**Why consolidation looks right.** Seven headings for what is one day's work
+reads as sprawl, and the header has grown a paragraph of navigation to
+compensate.
+
+**Why it is wrong anyway, in order of weight:**
+
+- **The findings are already in strict numeric order.** `F26`–`F28`, `F29`–`F32`,
+  `F33`–`F34`, `F35`, `F36` — ascending, top to bottom, no exceptions. The
+  arrangement a reader actually needs is intact; only the headings are many.
+- **Consolidation means moving finding bodies in a record file**, which is a
+  large diff over `Audit files are RECORDS` territory for a cosmetic gain, and
+  every moved line re-enters `menu-check` as an added line.
+- **The section names carry provenance that would be lost** — *opened by taking
+  `F28`*, *opened by `F32`'s own CI run*. That is the causal chain between the
+  findings, and this menu's most-repeated observation is that taking a finding
+  produces the next one.
+- **`F38` fixes the part that is actually broken.** Once a `###` scan yields
+  exactly the findings, the number of `##` sections above them costs a reader
+  nothing.
+
+**Proposal:** close as declined, and record it here so it is not re-derived.
+**Posture: no change to any file.** If it is ever taken instead, the shape to
+prefer is merging the four 2026-09-04 sections **without moving any finding**,
+which is not obviously possible and is why this recommends against.
+
+**Evidence.** Section and finding line numbers from `grep -n '^##\+ '
+SKILL-AUDIT.md`, read 2026-09-04. The ordering claim was checked against that
+listing rather than assumed.
+
+**Confidence: medium, and it is a taste call** — the kind `SHIP-PR-AUDIT` `F8`
+says should be taken as one. What would raise it: Nate reading the file top to
+bottom and saying whether the sections help or hinder.
+
+**Ongoing cost of declining: one paragraph in the header** that has to keep
+naming the placements as they accumulate. That is the real cost and it is
+recorded rather than hidden.
 
 ---
 
