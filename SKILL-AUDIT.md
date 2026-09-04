@@ -1,6 +1,8 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **`F30`–`F32` ARE OPEN; `F29` was taken 2026-09-04 (PR #682).** Filed
+> **`F31`–`F32` ARE OPEN; `F29` and `F30` were taken 2026-09-04 (PRs #682,
+> #684).** `F30` was scoped **wider than filed** and its own proposal was wrong
+> about the mechanism — read its note. Filed
 > 2026-09-04 under **`## Opened by taking F28`**,
 > which is a third placement on this page — after the `N` block and after
 > `## Opened while building the verifier agents`. They are the four things
@@ -2827,6 +2829,58 @@ nothing states. What would raise it: a decision on that scope.
 
 **Ongoing cost:** none beyond the edit; it removes a failure mode rather than
 adding a surface.
+
+**Taken, 2026-09-04 (PR #684). Posture held: no gate, no exit code, read-only.**
+Scoped **wider than proposed**, on Nate's word — the refusal covers any finding
+this script cannot answer for, not only a non-`F` prefix.
+
+**Its premises were audited first by `audit-premise-auditor`, and three things
+came back.** Recorded here because the finding was wrong about two of them.
+
+**1. The proposal's own remedy would have broken a pinned check, and its own
+posture.** It said *"say so and **exit** rather than printing an unfiltered
+list."* `apps/character-creator/test/smoke.mjs:4116-4118` asserts this file sets
+no exit code, testing **comment-stripped** source, so `process.exit`,
+`process.exitCode` and `exitCode =` all fail it — **including `process.exit(0)`**,
+because the regex matches the call and not the status. The file is top-level ESM,
+so a bare `return` is illegal too. Implemented instead as an `if`/`else` around
+the query: it **prints a refusal and falls through**, with no exit anywhere. The
+word "exit" in the proposal read as permission the repo does not give, and the
+finding's own stated posture — *no new gate and no exit code* — is what the
+implementation actually honours.
+
+**2. "`F` is one of eight prefixes" understates its own source.** `audit-menu`'s
+census table lists eight and then disclaims itself in the next paragraph: `S`,
+`T` and `P` are excluded because they are not headings, and `A` (`META-AUDIT`) is
+missing from the census while appearing in the shape table below it. **At least
+eleven.** The finding quoted a number from another file without the sentence that
+qualifies it, which is the shape this menu exists to catch — and it made the
+finding *weaker* than the truth, not stronger.
+
+**3. "The documented workflow hands it an argument it discards" is not accurate.**
+All three documented invocations use an `F`: `audit-menu` step 5 (`--remote F10`),
+`class-import` (`--remote F8`), and `docs-audit-2-prompt.md` (`--remote <F>`, a
+placeholder literally named `F`). **No instruction file tells anyone to pass a
+`G8`**, and none tells them not to. The defect is real; it fires when a reader
+generalises from `F10`, which is exactly how it was found. The framing is
+narrowed, the substance stands.
+
+**And the audit found the case the finding never reached, which is why the scope
+widened.** `--remote F30` returned *"0 of 160 (filtered to F30)"* — true of
+BOOK-INGEST `F30` and read as *"no class cites `SKILL-AUDIT` F30"*, a different
+finding this script cannot see. Every prefix here is shared across menus, so an
+`F` is as ambiguous as a `G`. A zero now names the question it answered, and an
+explicit menu argument (`BOOK-INGEST-AUDIT F10`) disambiguates.
+
+**Verified by running all four paths, 2026-09-04, `--remote`:** `G8` refuses;
+`SKILL-AUDIT F30` refuses on the menu; `F30` returns zero *and says which zero*;
+`F10` still answers `2 of 160 — first-stage-promethean, promethean-phase-adept`.
+The pinned assertion was replicated directly against the new source and passes.
+
+**Not done, and deliberately.** `apps/character-creator/README.md:602-605`
+describes this script and is **still true** — it parses no outcome notes and sets
+no exit code. It under-describes the BOOK-INGEST-only scope, but editing the file
+map was not in this finding and the row is not false.
 
 ### F31 — the README says `extraction-prompt.mjs` has "Two system prompts"; there is one
 
