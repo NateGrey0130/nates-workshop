@@ -1,6 +1,10 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **NOTHING ON THIS MENU IS OPEN.** `F41`, `F42` and `F43` were all taken
+> **`F44` IS OPEN**, filed 2026-09-04 — the three ways a worker cannot learn a
+> book's page offset from the two sources both agents send it to. **One of its
+> three parts is a cost `F43` created**, so read `F43`'s note with it. It also
+> names, and deliberately excludes, a live wrong number in
+> `BOOK-INGEST-QUEUE.md`. `F41`, `F42` and `F43` were all taken
 > 2026-09-04 (PRs #704, #705, #707); `F43` was filed and taken the same day, in
 > separate PRs. Three notes carry things a citer needs: `F41`'s posture was
 > **widened on Nate's word** from one agent file to four, `F42` corrected a
@@ -4134,6 +4138,109 @@ offset partway through, so the registry value oversimplifies them. Weighted by
 printed pages rather than by book, `+1` is still the mode at roughly 58% and
 still about three times the next value. The 10-of-16 figure stands as a count of
 books, which is what both named sources record.
+
+### F44 — what a worker can learn about page offsets from the two sources it is told to read, and the three places that fails
+
+**Opened 2026-09-04 while taking `F43`.** `F43` cut a false frequency claim out
+of both book agents; its premise audit and its own subtractive cut left three
+gaps in the same contract, named in `F43`'s note and deliberately not folded
+into it. This is that follow-up, filed as one finding because all three are the
+same question: **what can a worker actually find out about a book's page offset
+from `scripts/books.json` and the cache `manifest.json`, which both agents
+present as equal sources?**
+
+**(a) `scripts/books.json`'s own `_doc` block contradicts the data beneath it.**
+`scripts/books.json:45`, read 2026-09-04, describing `page_offset_exceptions`:
+
+> the last falls through to page_offset. **Only `pf` has one,**
+<!-- claim-ok: quoting the line this finding corrects; scripts/books.json:45, read 2026-09-04 -->
+
+**Two books have one.** Parsed from the same file the same day: `pf`
+(`printed_through: 16, offset: 1`) and `underseas`
+(`printed_through: 130, offset: 0`). The `_doc` goes on to reason from the false
+premise — *"a majority vote over the whole book cannot see it: the minority
+region is 11 pages against 287"* — which describes `pf` and is not true of
+`underseas`, whose split is at printed 130 of 216.
+
+**This exact sentence has been wrong before, and the correction landed
+everywhere except here.** `.claude/skills/book-survey/SKILL.md:210-215`, read
+2026-09-04, says `pf` and `underseas` **both** have one and adds: *"not this
+sentence, which said `pf` was the only one for five days while
+`BOOK-INGEST-QUEUE.md` recorded `underseas` as the second."* **The skill is
+describing the `books.json` `_doc` — and it is still saying it.** The skill also
+names `books.json` as *"the authority"*, so a reader sent to the authority meets
+the false sentence at the top of it.
+
+**(b) No `manifest.json` can carry an exception, and both agents call the two
+sources equal.** Checked across all sixteen caches, 2026-09-04: **zero** carry a
+`page_offset_exceptions` key. Both agent files say, in almost the same words,
+*"`scripts/books.json` records `page_offset` per slug and the cache's own
+`manifest.json` records what was measured when it was built. Read it from one of
+those"* — `.claude/agents/book-extract-worker.md:34-36` and
+`.claude/agents/book-reconcile.md:44-46`.
+
+**For `pf` and `underseas` the manifest gives a number that is wrong for part of
+the book**, and a worker told the sources are interchangeable has no way to know
+which half it is holding. `book-survey` resolves this by naming `books.json` as
+the authority; **neither agent file does**, and an agent does not read
+`book-survey`.
+
+**(c) The worker's contract now says nothing at all about a zero offset, and
+that is a cost `F43` created.** `F43` cut *"and **zero is common**"* — which was
+**true** — as part of removing the false clause it was welded to. Confirmed
+2026-09-04: `grep -n "zero"` over both agent files returns **nothing**.
+
+**`book-survey` has a paragraph on exactly this trap** (`SKILL.md:235-240`):
+*"**A zero offset is the worst case, not the easiest**… There is then no real
+offset to hunt, so it becomes the ONLY discrepancy left to explain, and a wrong
+page reads as the book not saying what you expected. It cost a wrong page read
+on the first attempt at the Godling."* **A spawned worker never reads that
+file.** `book-reconcile` never carried the clause at all, so the gap predates
+`F43` in one of the two agents and was created by it in the other.
+
+**Proposal:** one edit per file, three files.
+
+- **`scripts/books.json`** — correct the `_doc` to name both books, or to name
+  neither and say the entries themselves are the list. **Prefer the second**: a
+  roster in a comment is the shape that has now been wrong twice, and the data
+  is directly beneath it.
+- **Both agent files** — say `scripts/books.json` is the authority for
+  exceptions and the manifest cannot express one, and give the worker the
+  zero-offset warning in a form carrying no frequency: that a zero offset means
+  the cache page *is* the printed folio, so a mismatch has nowhere else to hide.
+
+**Posture: documentation only. One data-file comment and one paragraph in each
+of two agent files. No frontmatter or tools change, no check, no schema change,
+and NO count of books anywhere** — `META-AUDIT` `A14` and `F43` both removed
+exactly that shape from this repo today.
+
+**Evidence:** `scripts/books.json:45` read and the file parsed for
+`page_offset_exceptions`, 2026-09-04; all sixteen `.cache/books/*/manifest.json`
+checked for the key, 2026-09-04, zero hits; both agent passages read at the line
+numbers above the same day; `book-survey/SKILL.md:210-215` and `:235-240` read
+the same day; `grep -n "zero"` over both agents returning nothing, after `F43`.
+
+**Confidence: high on (a) and (b)** — both came from parsing the files, and (a)
+is contradicted by data in the same file. **Medium on (c)**, and the medium half
+is worth stating: a worker told *read it, do not derive it* arguably needs no
+warning at all, which is the argument that produced `F43`'s subtractive cut in
+the first place. **What would settle it:** whether a worker has ever mis-cited
+against a zero-offset book. The Godling case `book-survey` records was a
+human-driven read, not a spawned worker.
+
+**Ongoing cost: none for (a) and (b)** — one comment corrected, one authority
+named. **(c) adds two sentences to each agent's contract**, which is a real cost
+in files whose whole point is that they are short enough to be read in full.
+
+**Deliberately NOT in this finding, and named so it is not lost.**
+`BOOK-INGEST-QUEUE.md:295-296` says *"Four of fifteen cached books have one"*
+<!-- claim-ok: quoting a line this finding excludes; BOOK-INGEST-QUEUE.md:295, read 2026-09-04 -->
+about zero offsets — it is **three of sixteen**, wrong in both numbers, measured
+2026-09-04 — and calls assuming `+1` *"a coin-flip"* for what is a 10-against-3
+split. **Scoped out on Nate's word** as ordinary staleness rather than this
+finding's structural subject. It is a live wrong number and needs its own
+number or a one-line fix; `A5` is the record of what happens when a defect is
+noted in passing and never filed.
 
 ---
 
