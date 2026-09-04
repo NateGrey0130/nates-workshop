@@ -1,7 +1,13 @@
 # RETRO-AUDIT.md — does the catalog benefit from the schema it grew?
 
-> **Read under the heading for a finding's state.** Outcome notes are appended
-> where each finding sits.
+> **Nothing is open.** Every finding was taken on **2026-09-04**, the day the
+> audit ran. **Read under the heading for what actually happened to each** —
+> two of them turned out to be wrong about their own premises, and the outcome
+> notes are where that is recorded.
+>
+> **`R9` breaks the severity order and that is deliberate.** It was filed after
+> `R8` had already shipped, so it sits last rather than among the mediums. It
+> also began life in *Not established* at the foot of this file.
 >
 > **This menu's own trap: its headline precision figure rests on n=2.** The
 > "detector 1 alone is 11%, detector 1 AND 3 is 100%" result in *Method* below
