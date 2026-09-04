@@ -1,11 +1,17 @@
 # `ship-pr` against the workflow it now describes, 2026-09-03
 
-> **STATUS: everything is closed but `F11`.** `F1`–`F9` taken (PRs #659–#667),
-> `F10` DECLINED (#668), `F12`–`F14` taken (#672, #670, #671), and **`F11` is
-> the only thing open** — it proposes doing nothing yet and argues against
-> itself. Read each finding's own note; this line is a summary and summaries here
-> go stale. `F11`–`F14` were opened *while taking* the first ten and sit under
-> their own heading after `F10`, in numeric order.
+> **THIS MENU HAS NO OPEN WORK.** Filed and closed 2026-09-03/04, PRs #658–#673.
+> `F1`–`F9` and `F12`–`F14` taken; `F10` and `F11` DECLINED, each on its own
+> stated condition. **Read each finding's own note — this header is a summary and
+> summaries here go stale.** `F11`–`F14` were opened *while taking* the first ten
+> and sit under their own heading after `F10`, in numeric order.
+>
+> **Two declines, and neither means "not a problem."** `F10`'s gap is real and
+> open — nothing reads the CI result before a merge — and it was declined because
+> the fix would be a fourth thing to remember. `F11`'s number is real and got
+> worse — this pass grew `ship-pr` by 63 lines — and it was declined because a
+> split is the wrong remedy and nobody has read the file cold. Each note says what
+> would reopen it.
 >
 > **`F13` was taken before it was filed**, which inverts the protocol on purpose:
 > it is the finding that describes why this file's own PR could not go green, so
@@ -766,6 +772,49 @@ raise it: someone reading the file cold and reporting where they stopped.
 
 **Ongoing cost if taken:** a second file, a pointer to maintain, and a decision
 at every future edit about which half a sentence belongs in.
+
+**DECLINED, 2026-09-04.** Nate's call, and it matches what this finding proposed
+for itself — *do nothing yet*. **Nothing was changed in any skill.**
+
+**This finding's own number was wrong, and the correction makes its premise
+stronger rather than weaker.** It says *"438 after `F9`"*. **438 was after `F8`**;
+`F9` added the recovery paragraph and took it to **449**. Traced commit by
+commit, 2026-09-04:
+
+| after | lines |
+|---|---|
+| filing | 386 |
+| `F1` | 401 |
+| `F2` | 421 |
+| `F3` | 442 |
+| `F4` | 439 |
+| `F5` | 440 |
+| `F6` | 448 |
+| `F7` | 459 |
+| `F8` | 438 |
+| `F9` | **449** |
+
+So the pass added **63 lines, about 16%**, not 13. `F8`'s trim took the file
+from its peak of 459 back to 438 and `F9` gave 11 of those back the same day.
+
+**What is being declined is the remedy, not the observation.** The file is
+longer than it was and `F8`'s premise still holds. What the decline says is that
+**a split is the wrong answer and no other answer was proposed** — `SKILL-AUDIT`
+`N4` refused a split of this exact file, the subagent version was refused on
+2026-09-03, and both refusals turn on the same point: the only honest trigger for
+the split-off half is *"you just merged"*, which is when `ship-pr` is already
+loaded. A length problem is not a new trigger.
+
+**What this decline does NOT claim, stated plainly so nobody reads it as more
+than it is: nobody read the file cold.** `F11` named that as the thing that would
+raise its confidence and it was not done. This is a decision not to act on a line
+count, not a judgement that the file reads well at 449 lines.
+
+**What would reopen it:** someone reading `ship-pr` end to end without knowing
+it, and reporting where they stopped. Anyone reopening it must answer `N4` first.
+
+**`F8` already took the only reduction available short of a split**, which is
+why there is nothing smaller to fall back to here.
 
 ### F12 — filing this menu falsified `audit-menu`'s file table, and this menu's own header did not notice
 
