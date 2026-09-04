@@ -124,6 +124,17 @@ did, never as the reason to skip one. `regression.mjs` is not in it at all.
    ```bash
    gh pr merge <n> --merge --delete-branch
    ```
+   **If another open PR is based on this branch, that flag closes it, and a
+   closed PR whose base is gone cannot be recovered.** GitHub retargets a
+   stacked child only when the base merges *without* the branch being deleted in
+   the same operation, and this command always deletes. #261 went that way on
+   2026-08-24 and had to be replaced by #262 from the same head branch —
+   `gh pr reopen` answers *"Could not open the pull request"* and
+   `gh pr edit --base main` refuses on a closed PR. **Prefer not to stack.** If a
+   stack already exists: merge the base with no `--delete-branch`, retarget the
+   child with `gh pr edit <child> --base main`, then delete the base branch by
+   hand.
+
    **`--merge` is the shape this repo uses, and squash and rebase are enabled
    and not wrong.** `REPO-AUDIT.md` G5(b) decided that deliberately. The reason
    for the default is that this history reads as prose and a merge commit keeps
