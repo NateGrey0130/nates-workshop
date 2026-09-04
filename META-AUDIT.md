@@ -1868,8 +1868,15 @@ and is it still worth what it costs.* A convention can be accurate everywhere an
 still be the wrong shape, and nothing here had asked that.
 
 **One question closed with the convention vindicated.** `A14` is not a compliance
-failure; the citation rule is being followed at 28 of 36. Recorded so the
-opposite is not inferred from a finding existing.
+failure; the citation rule is being followed, with two known bare citations in
+the whole instruction layer. Recorded so the opposite is not inferred from a
+finding existing.
+
+**Adjusted 2026-09-04**, when `A14` was taken: this sentence carried the
+fraction *28 of 36* and both figures were wrong. The count does not reproduce,
+`A14`'s own outcome note re-derives it with a command, and the fraction is gone
+from here rather than corrected, because the claim that matters is *the rule
+holds* and a ratio in a preamble is the moving number this pass is about.
 
 ### A13 — medium — nothing bounds what a status header may carry, and the menu that audited the headers now has a stale one
 
@@ -2057,6 +2064,65 @@ argument in words.
 **Ongoing cost: negative.** It removes the cell that has to be re-counted every
 time a menu is filed, and adds nothing that can go stale.
 
+**Taken, 2026-09-04 (PR #701). Posture held: documentation only, subtractive,
+one table in one skill. No check, no retrofit of citations, no history
+rewritten, and `ship-pr`'s bare `F36` deliberately left alone.**
+
+**The premise audit found four things, and one would have shipped a wrong row.**
+Led with, per the skill.
+
+**1. The bottom row was missing a letter, which is worse than the count this
+finding is named for.** It read `` `B` `C` `G` `M` `R` `` — one each. But
+`META-AUDIT.md` was created at 16:20 on 2026-09-03, two and a half hours *after*
+the census landed at 13:50, and its `A` was never added. **Implementing this
+finding's own words — "the rest by one each" — would have re-shipped that row
+still wrong.** It now reads `` `A` `B` `C` `G` `M` `R` ``. Re-walked 2026-09-04
+with the command now printed under the table: `F` 12 menus, `D` 3, `N` 2, the
+rest one each. **This is not a scope substitution** — the proposal says keep the
+letters and drop the numbers, and a missing letter is that proposal implemented
+incorrectly rather than a second finding.
+
+**2. The compliance figure in this finding is wrong and does not reproduce.** It
+says *"of 36 citations … 28 name their menu"*. <!-- claim-ok: quoting the figure this note corrects -->
+Re-derived 2026-09-04 with a stated command over
+`.claude/skills/*/SKILL.md`, `.claude/agents/*.md` and `CLAUDE.md`
+(`grep -noHE` for a backticked `[FDN][0-9]+` token, piped to `wc -l`), the total
+is **39, not 36**, and they sit in four files only — `audit-menu` on 24 lines,
+`ship-pr` 3, `claim-audit` 1, `CLAUDE.md` 2. **All five agent files and six of
+the nine skills carry none.** The breakdown was wrong too: **seven** shape-table
+rows rather than six, and two further rows counted as table rows belong to the
+false-premise table under *A claim about ANOTHER FILE*, whose first cell is a
+sentence and not a filename. **The finding's stated confidence — "high, every
+claim here came from a command" — was false of this one figure**: no script for
+it was committed, so it was the single number a reader could not re-run. The
+conclusion it supports is unchanged, and now rests on a command instead.
+
+**3. A second genuine bare citation exists, in the section that teaches the
+rule.** `.claude/skills/audit-menu/SKILL.md` writes *"written by someone who had
+just read `F7`"* immediately after naming `SHIP-PR-AUDIT` — which has an `F7` of
+its own, while the one meant is `SKILL-AUDIT`'s. **Left unfixed, matching the
+posture that left `ship-pr`'s `F36` alone**, and recorded so *"the genuine
+violation is one"* is not restated from this page. Both are one-word edits for
+whoever next opens those files.
+
+**4. Sharper evidence than the finding used.** Commit `37e4acc` (2026-09-03
+22:47, taking `SHIP-PR-AUDIT` `F12`) **added the `SHIP-PR-AUDIT.md` row to the
+shape table about 110 lines below this census, and left `eleven` untouched.** So
+"nothing re-counted the table" is not that nobody looked: somebody edited the
+same file, in the same session, for the same reason, and the count was not near
+enough to be noticed.
+
+**What the edit preserved on purpose.** The heading
+`### Which is why a finding reference names its menu` is cited by three files —
+`.claude/skills/ship-pr/SKILL.md`, `REPO-AUDIT.md` and
+`docs/prompts/protocol-retrospective-prompt.md`, checked 2026-09-04 — so it
+survives verbatim. The `D`/`N` row now says *includes* rather than naming a
+closed set, so a fourth `D` menu cannot falsify it.
+
+**`SKILL-AUDIT` `F42` is open and edits the same file**, deleting the two
+arrangement cells from the shape table. Not touched here. Whichever ships second
+should re-read the file rather than either menu's quotation of it.
+
 ### A15 — low — nothing says where a closed menu goes, and seventeen of nineteen are closed
 
 `audit-menu` has `## Where a new menu goes` and `## When not to`. **There is no
@@ -2162,3 +2228,23 @@ evidence inside the commit that files them. Every figure is now pinned to
 menu's header should simply be allowed to grow — rests on no command and nothing
 re-runs it. That is the asymmetry `G18` names, and it is why `A13`'s confidence
 is medium on the remedy while high on the measurements.
+
+**The row reading `28 of 36 … held` is WRONG, and the row stays as it is.**
+Established 2026-09-04 by the premise audit run before `A14` was taken: the
+total is 39, the breakdown behind it was wrong, and no command for it was ever
+committed. It is left standing because this table is a record of what the pass
+reported, and **the interesting part is why the pass reported it.**
+
+**A10's hand-over pass re-runs the commands a menu quotes. This figure quoted
+no command** — its evidence line said *"by script"* and named no script, and
+none was committed. So "re-running" it meant running the same ad-hoc pipeline
+from the same head that wrote it, which reproduced the original error exactly
+and returned **held**. A pass that re-runs the author's own unstated method is
+not an independent check of it. That is a real hole in `A10` and it is not the
+hole `A10` already names: `G18`'s asymmetry is about a claim with *nothing* to
+re-run, and this one looked like it had something.
+
+**What caught it was the premise auditor**, which had no access to the method
+and derived its own — the difference `audit-menu` describes when it says the
+check exists because the same session that verifies a premise has already
+decided it wants it to hold.

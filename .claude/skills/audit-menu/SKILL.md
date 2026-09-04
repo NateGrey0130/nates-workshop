@@ -345,14 +345,31 @@ tool; noticing is the work.
 ### Which is why a finding reference names its menu
 
 That grep is the tool, and **a bare number defeats it.** Prefixes are not unique
-across menus — censused 2026-09-03 by walking every menu's own headings:
+across menus — established 2026-09-03 by walking every menu's own headings, and
+re-walked 2026-09-04:
 
 | prefix | menus using it |
 |---|---|
-| `F` | **eleven** |
-| `D` | **three** — `DOCS-AUDIT`, `DOCS-AUDIT-2`, `apps/character-creator/AUDIT` |
-| `N` | **two** — `SKILL-AUDIT`, `apps/character-creator/REDESIGN-AUDIT` |
-| `B` `C` `G` `M` `R` | one each |
+| `F` | **most of them**, and far more than any other letter — this is the one a bare number never identifies |
+| `D`, `N` | **more than one each** — `D` includes `DOCS-AUDIT`, `DOCS-AUDIT-2` and `apps/character-creator/AUDIT`; `N` includes `SKILL-AUDIT` and `apps/character-creator/REDESIGN-AUDIT` |
+| `A` `B` `C` `G` `M` `R` | one each |
+
+**This table carried counts until 2026-09-04 and no longer does** —
+`META-AUDIT` `A14`. The `F` row said *eleven*, which was true when it was
+written at 13:50 on 2026-09-03 and false by 20:48, when `SHIP-PR-AUDIT.md`
+landed with ten `F` headings. **The bottom row was wrong the same day in a way a
+count would not have caught**: `META-AUDIT.md` was created at 16:20 that
+afternoon and its `A` was missing from it until `A14` was taken. So a letter
+rotted as well as a number, and the row now lists `A`. **Do not put the figures
+back.** Per `SKILL-AUDIT` `F7`, removing an ordinal beats incrementing one,
+because incrementing leaves the same trap armed — and the argument this table
+exists to make needs no arithmetic. Re-walk it with:
+
+```bash
+for f in $(find . -name '*AUDIT*.md' -not -path './.cache/*' -not -path './docs/*') ./SETUP-v2-CHANGES.md; do
+  grep -oE '^#{2,3} `?[A-Z][0-9]+' "$f" | sed -E 's/^#+ `?//; s/[0-9]+//' | sort -u
+done | sort | uniq -c
+```
 
 So `git log --grep='F18'` cannot tell you which `F18`, and neither can a branch
 name after the branch is deleted. `S`, `T` and `P` are absent from that table
