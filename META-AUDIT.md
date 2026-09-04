@@ -1891,21 +1891,33 @@ new menu goes*, *When not to*). The status material in it governs **where**
 status lives, never **how much** of it a header may restate.
 
 **So the headers grow with the churn of the menu beneath them.** Measured
-2026-09-04 by taking each file from line 1 to its first `## ` and counting
-distinct `` `X<n>` `` finding IDs named:
+2026-09-04 **at `2eed604`, the merge of #699 — before this PR's own edits**, by
+taking each file from line 1 to its first `## ` and counting distinct
+`` `X<n>` `` finding IDs named:
+
+```bash
+git show 2eed604:META-AUDIT.md | awk 'NR>1 && /^## / {exit} {print}' > /tmp/h
+wc -l < /tmp/h ; grep -oE '`[A-Z][0-9]+`' /tmp/h | sort -u | wc -l
+```
 
 | menu | header lines | finding IDs named | findings in file |
 |---|---|---|---|
-| `SKILL-AUDIT.md` | **97** | **33** | 42 |
-| `SHIP-PR-AUDIT.md` | 68 | 10 | 14 |
-| `BOOK-INGEST-AUDIT.md` | 61 | 5 | 21 |
-| `META-AUDIT.md` | 38 | 13 | 12 |
-| `MACHINE-AUDIT.md` | 38 | 9 | 22 |
-| `EFFICIENCY-AUDIT.md` | **18** | **2** | 7 |
-| `apps/media-vault/ISBN-AUDIT.md` | 16 | 5 | 10 |
+| `SKILL-AUDIT.md` | **98** | **33** | 42 |
+| `SHIP-PR-AUDIT.md` | 69 | 10 | 14 |
+| `BOOK-INGEST-AUDIT.md` | 62 | 5 | 21 |
+| `META-AUDIT.md` | 39 | 13 | 12 |
+| `MACHINE-AUDIT.md` | 39 | 9 | 22 |
+| `EFFICIENCY-AUDIT.md` | **19** | **2** | 7 |
+| `apps/media-vault/ISBN-AUDIT.md` | 17 | 5 | 10 |
 
-**`SKILL-AUDIT`'s header is longer than nine of the nineteen menus' entire
-findings sections are wide**, and it narrates findings that reverse each other
+**The pin matters and is not decoration.** Filing this finding moved
+`META-AUDIT`'s own row from 39 lines and 13 IDs to 50 and 16 — the act of
+recording a status grew the header being measured, inside the PR that measures
+it. That is the finding restated as an accident, and it is why every figure here
+names the commit it was read at rather than only the day.
+
+**`SKILL-AUDIT`'s header is 98 lines — 29 longer than the next widest and five
+times `EFFICIENCY-AUDIT`'s**, and it narrates findings that reverse each other
 inside a morning — `F42` partly reverses `F40`, taken hours earlier, and the
 header says so. Its own text says the fifth and sixth `##` placements are *"past
 the point where the arrangement helps anyone."* <!-- claim-ok: quoting SKILL-AUDIT's own header, read 2026-09-04 -->
@@ -2053,11 +2065,15 @@ the output of `grep -nE '^## ' .claude/skills/audit-menu/SKILL.md`, which return
 eleven sections, listed in full in `A13`'s evidence above. Read, not inferred
 from a pattern.
 
-**The scale.** 19 menus, **27,952 lines**, measured 2026-09-04
-(`wc -l` over the glob plus `SETUP-v2-CHANGES.md`). Two carry open work —
-`SKILL-AUDIT` (`F41`, `F42`) and, until this file lands, none elsewhere. The
-other seventeen are finished records sitting in every glob and every grep beside
-the documents describing how the repo works today.
+**The scale.** 19 menus, **27,952 lines**, measured 2026-09-04 **at `2eed604`,
+the merge of #699** (`wc -l` over the glob plus `SETUP-v2-CHANGES.md`). Two carry
+open work — `SKILL-AUDIT` (`F41`, `F42`) and, until this file lands, none
+elsewhere. The other seventeen are finished records sitting in every glob and
+every grep beside the documents describing how the repo works today.
+
+**Filing this finding took the corpus to 28,454 lines**, which is stated because
+a reader re-running the `wc -l` today gets the larger number and should not read
+the difference as an error.
 
 **Already decided, and this finding reopens none of it.** An index: declined
 twice, `REPO-AUDIT` `G9` and `A1` in this file. Moving a menu: refused for
@@ -2067,7 +2083,9 @@ paths are cited from other menus, from skills and from the memory store, and
 generalises to all seventeen**, so a proposal to archive or relocate starts from
 behind. This one does not make it.
 
-**The cost of them staying, measured rather than asserted**, 2026-09-04:
+**The cost of them staying, measured rather than asserted**, 2026-09-04 **at
+`2eed604`** — re-running them after this PR returns 29/11 and 9/7, because this
+finding's own text contains both search terms:
 
 | a real lookup | `.md` files hit | of which menus |
 |---|---|---|
@@ -2114,3 +2132,33 @@ impact is one paragraph preventing a re-derivation that has not yet happened;
 `audit-menu` is already 688 lines, and `SHIP-PR-AUDIT` `F11` was declined on the
 ground that the file nobody has read cold should not grow. If it is declined,
 the decline itself answers the question and should be recorded here.
+
+### The hand-over pass on these three, per `A10`
+
+Every command quoted in `A13`–`A15` was re-run on 2026-09-04 before this file
+was handed over. **Reporting what held as well as what moved**, because a pass
+that lists only its catches says nothing about coverage.
+
+| claim | re-run result |
+|---|---|
+| twelve menus use the `F` prefix | **held** |
+| `SHIP-PR-AUDIT` carried ten `### F<n>` at creation (`9e9a219`) | **held** |
+| the census landed at `07cf1ec`, 2026-09-03 13:50 | **held** |
+| `audit-menu` has eleven `## ` sections, none about a closed menu | **held** |
+| `pick3cut5` `F11`/`F12` taken in #653/#654 | **held** |
+| 28 of 36 ambiguous-prefix citations name their menu | **held** |
+| header line counts | **MOVED — off by one throughout**, `echo "$h" \| wc -l` against `wc -l < file`. Table corrected to the file-based method and the command is now printed above it |
+| `META-AUDIT`'s own header row | **MOVED — 39/13 to 50/16, by this PR** |
+| corpus at 27,952 lines | **MOVED — 28,454 after this PR** |
+| the two `grep -rl` lookups | **MOVED — 28/10 and 8/6 became 29/11 and 9/7**, because `A15`'s own text contains both search terms |
+
+**Four of the ten moved, and three moved because of this PR.** That is not a
+defect in the measurements; it is `A13` and `A15` happening to their own
+evidence inside the commit that files them. Every figure is now pinned to
+`2eed604` and the post-PR value is stated beside it.
+
+**What this pass cannot see**, stated so its silence is not read as coverage:
+`A13`'s remedy — whether a *bound* is the right instrument, or whether a live
+menu's header should simply be allowed to grow — rests on no command and nothing
+re-runs it. That is the asymmetry `G18` names, and it is why `A13`'s confidence
+is medium on the remedy while high on the measurements.
