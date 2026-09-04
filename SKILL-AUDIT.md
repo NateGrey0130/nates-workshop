@@ -1,6 +1,9 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **NOTHING IS OPEN.** `F40` taken 2026-09-04 (PR #698) — `audit-menu`'s shape
+> **`F41` AND `F42` ARE OPEN**, filed 2026-09-04 under the existing
+> **`## Opened while closing out 2026-09-04`**. **`F42` partly reverses `F40`**
+> and says so — `F40` fixed a false arrangement sentence and recorded that
+> *deleting* it was the better fix it was not scoped to make. `F40` taken 2026-09-04 (PR #698) — `audit-menu`'s shape
 > table row for this file described an arrangement it no longer has, and now
 > carries no count of sections, deliberately. It sits under the existing
 > **`## Opened while closing out 2026-09-04`**, not an eighth placement, since
@@ -3730,6 +3733,112 @@ again the next time the arrangement changes. Refusing to carry a count narrows
 the failure to one sentence rather than a number, but the honest remedy — cutting
 arrangement prose from a table whose stated job is *shape* — is a change to the
 table's design and was not proposed.
+
+### F41 — `book-extract-worker` conflates a page break with a slice boundary, and worked it out unaided
+
+`.claude/agents/book-extract-worker.md:70-72`: *"Read one page beyond each end of
+your range to find the boundary, and report any row that crosses **it** as
+**incomplete**, naming which side is missing."*
+
+**"It" is ambiguous.** The preceding sentence talks about *"a stat block
+straddling the first or last page of your slice"* — the slice edge — but "the
+boundary" reads equally as any page break, and the contract never says the two
+are different. **They are:** a row spanning pages 84–85 inside an 84–86 slice is
+**complete**; only a row crossing the slice edge loses a half.
+
+**Found by running it, not by reading it.** Given `ww` printed 84–86 the agent
+returned 15 rows, correctly flagged exactly one as incomplete — *Locate Places of
+Evil*, cut mid-word at the foot of p.86 and continuing on p.87 — and reported
+that it had to make the distinction itself: two other rows straddled internal
+page breaks and it declined to flag them, *"to avoid over-flagging complete rows
+as incomplete."*
+
+**It got it right, which is the argument for fixing it rather than against.** The
+next reader of that contract may not, and over-flagging is the direction that
+wastes a reconcile pass; under-flagging is the direction that ships a truncated
+row.
+
+**Proposal:** say in that paragraph that a row straddling a page break **inside**
+the range is complete and reported as such, and only a row crossing the **slice**
+boundary is incomplete. Two sentences at most. **Posture: documentation only, one
+agent file, no frontmatter or tools change, no check.**
+
+**Evidence.** Contract read at `:70-72`, 2026-09-04. Behaviour observed in a live
+run the same day over `ww` 84–86, whose report named the ambiguity in its own
+words when asked what did not match its instructions.
+
+**Confidence: high** — the text is ambiguous on reading and the agent said so
+independently. **Ongoing cost: none**; it removes a way for a slice to be
+mis-reported.
+
+**One more thing that run turned up, not proposed here.** The agent noted the
+contract's tone on offset checks *"primes you to expect friction"* and said it
+did not manufacture a disagreement to satisfy that. It behaved correctly, so
+there is nothing to fix today — but a prompt that leans toward finding a problem
+is the same defect `F34` corrected in `audit-premise-auditor`, and it is worth
+knowing it may exist here too.
+
+### F42 — the shape table narrates arrangement in two rows, and arrangement is not what it is for
+
+The table under *The headings are not uniform* states its own job:
+*"the rows exist to record what no command can tell you — which files put a
+severity word in the heading, which put a **status** there, and which keep a whole
+family of items somewhere a `###` scan will never see."*
+
+**All three are shape. Arrangement is not among them**, and it is derivable from
+one `grep -n '^## '` on the file in question.
+
+**Two rows carry arrangement prose and no other row does**, read 2026-09-04:
+
+- `:461` `SKILL-AUDIT.md` — *"split across many `##` sections, with the `N` block
+  sitting in the middle of the `F` run…"*
+- `:462` `SHIP-PR-AUDIT.md` — *"`F11`–`F14` sit under `## Opened while taking a
+  finding` after `F10`, in numeric order, deliberately not the row above's
+  arrangement"*
+
+**The rows that look similar are not.** `:452` `CLASS-AUDIT.md`, `:459`
+`pick3cut5/AUDIT.md` and `:463` `SETUP-v2-CHANGES.md` each name a `##` section
+too — but they do it to say **where a family of items hides from a `###` scan**,
+which is the table's third stated job verbatim. Those stay.
+
+**This is the part of the table that rots.** `F7` corrected a cell here; `F40`
+corrected a cell here; both cells were arrangement or status prose rather than
+heading shape. `F40`'s own note named this as the honest remedy and deferred it:
+*"cutting arrangement prose from a table whose stated job is shape — is a change
+to the table's design and was not proposed."* This proposes it.
+
+**Proposal:** delete the arrangement clauses from `:461` and `:462`, leaving each
+row's shape half intact — `:461` keeps *"`### F1 — …`, no severity word, and every
+`###` is a finding"*, `:462` keeps *"`### F1 — …`, no severity word."* **Posture:
+documentation only, and SUBTRACTIVE — two clauses out of one table, nothing
+added, no check.**
+
+**`:462`'s cross-reference goes with it, and that is deliberate.** It exists only
+to contrast against `:461`'s arrangement; with both arrangements gone there is
+nothing to contrast, and leaving a dangling *"not the row above's arrangement"*
+would be worse than cutting it.
+
+**This partly reverses `F40`, taken hours earlier, and says so.** `F40` rewrote
+`:461`'s arrangement prose to be true; `F42` removes it. That is not churn for
+its own sake — `F40` fixed a false sentence and explicitly recorded that deleting
+the sentence was the better fix it was not scoped to make.
+
+**Where arrangement belongs instead:** a menu's own dated header, which is where
+`audit-menu` already puts status for the same reason — *"a memory cannot hold a
+status and neither can an index; a menu's own dated header is the only place one
+belongs."* `SKILL-AUDIT`'s header already names its sections.
+
+**Evidence.** Table read row by row at `:444`–`:463`, 2026-09-04; the job
+statement at `:425-429`. `F7` and `F40` read for the pattern.
+
+**Confidence: high on the principle** — the table says what it is for and two
+rows exceed it. **Medium on the second row**: `:462`'s contrast was written
+deliberately and cutting it loses an intentional cross-reference. What would
+settle it: whether that contrast was ever load-bearing for a reader, which
+nothing records.
+
+**Ongoing cost: negative.** It removes the two cells that have needed correcting
+and leaves nothing in their place to go stale.
 
 ---
 
