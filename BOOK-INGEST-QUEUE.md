@@ -292,9 +292,16 @@ which is the trap that section is thirty lines about, arrived at from the other
 side. **Derive the number from the two scripts, not from prose about a third
 book.**
 
-**Zero offset is no longer the oddity the skill describes.** Four of fifteen
-cached books have one and only `pf` and `underseas` split. Assuming +1 because
-most books have it is now a coin-flip, not a default: read the registry.
+**Zero offset is no longer the oddity the skill describes**, and only `pf` and
+`underseas` split. **It is not the common case either — `+1` is, by a wide
+margin. Read the registry; do not assume from either claim.**
+
+**Corrected 2026-09-04.** This paragraph read *"Four of fifteen cached books
+have one"* — wrong in both numbers — and called assuming `+1` *"a coin-flip"*,
+which understated `+1` by roughly three to one. **No replacement figures are
+given on purpose**: a ratio here moves every time a book is cached, and it went
+stale unnoticed once already. `scripts/books.json` is the one place that cannot.
+`SKILL-AUDIT` `F43`.
 
 **`underseas` is the second split-offset book in the catalog, after `pf`, and
 the first with a NEGATIVE offset.** Printed 1-130 sit at +0; printed 132-216 sit
