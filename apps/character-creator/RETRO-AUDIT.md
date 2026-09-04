@@ -416,6 +416,61 @@ The new note mentions `magic.spells_from` in prose, so `instr(markdown,
 instead. Zero saved Warlock characters exist, so nothing could have broken
 either way.
 
+**Taken a second time, 2026-09-04 (PR #723) — the import decision, on Nate's
+word.** The note-only pass above closed the false sentences; this one builds
+what the note said was the route that works.
+
+**Ten classes**, one per Elemental Force and one per pair, generated from the
+generic one so everything but `magic`, `ppe_base` and
+`attribute_requirements` is byte-identical to what it replaces:
+`warlock-air`, `-earth`, `-fire`, `-water`, and `-air-earth`, `-air-fire`,
+`-air-water`, `-earth-fire`, `-earth-water`, `-fire-water`.
+
+**The generic `warlock` is retired**, soft-deleted per migration 003.
+`retire-warlock-generic.sql` sorts after every `add-warlock-*` file, so a clean
+rebuild adds the ten and then retires the one. Narrowing it instead would have
+left a row offering a Fire Warlock the Air spells — `CLASS-AUDIT` `S7`'s
+half-modelled objection — under a name a player would reasonably pick.
+
+**The rule, from Conversion Book One printed 67** (`cb1` cache `p068`, offset 1):
+three spells at first level from the sphere's own first-level list and three more
+each level for one Force; **two** per level, one from *each* sphere, for two —
+*"the character only gets two spell selections per level of experience, instead
+of three"* — with I.Q. 12 / M.E. 14 required. *"Elemental Magic goes up to eighth
+level only"*, and all 231 elemental spells in the catalog sit at spell level 1-8,
+which corroborates it.
+
+**A named `from` list REPLACES the spell-level cap rather than combining with
+it**, so the cap lives inside the lists: one cumulative list per spell level,
+with the schedule pointing each experience level at the right one and levels
+9-15 all pointing at `L8`.
+
+**Verified through the real machinery at every level of all ten**, not spot
+checked: starting picks 3 (or 1+1), per-level grants 3 (or 1 from each sphere),
+no off-sphere spell in any list, and no list offering a spell above the
+character's cap. A two-Force class's two grants are asserted to draw from
+*different* spheres.
+
+**Three things the suites caught that the finding did not mention**, each a real
+defect rather than a pin:
+
+- **`CORE_SDC_BY_CLASS` had no entry for any of the ten**, so every new Warlock
+  would have saved with `sdc_max` NULL. All ten inherit the generic one's `1D6`,
+  and its row **stays** so an existing character holding the retired class is not
+  left with a NULL either.
+- **Two races pointed `occ_restrictions.only` at the retired id.** `norse-giant`
+  and `scorpion-person` both name `warlock`, and that reference fails **open** —
+  the pairing would simply vanish from the picker with no error. Both now name
+  all ten, because neither book restricts *which* Force.
+- **The regression check for the Warlock's XP table looked up `id === 'warlock'`**
+  and would have passed vacuously on `undefined` once the class was gone. It now
+  checks all ten and asserts there are ten.
+
+Pinned counts moved with it: classes 160 → **169**, and *"Seventy-seven of
+one-hundred-and-sixty"* → *"Eighty-six of one-hundred-and-sixty-nine"*.
+`drift-check --remote` reads **169 published live, 170 creatable from the repo** —
+the extra being the retired generic class, which the repo can still recreate.
+
 ### R4 — high — seven catalog skills say their conditional bonuses cannot be stored, and 29 sibling rows store exactly that
 
 Seven `skills` rows carry a note explaining that what they grant is conditional
