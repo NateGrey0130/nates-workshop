@@ -631,6 +631,22 @@ itself, and declining it outright is a defensible outcome.**
 
 **Ongoing cost:** one sentence.
 
+**Taken, 2026-09-03 (PR #667).** In the smallest version, which is the version
+this finding recommended for itself: one paragraph, documentation only, **no
+per-apply backup step**, and the paragraph says that outright so nobody reads a
+protection into it that is not there.
+
+**Two facts went in rather than one, because both are counter-intuitive.** Time
+Travel is a rolling window *inside the same account as the data*, so it is not a
+backup in the sense most people mean; and `wrangler d1 export` does not run here
+at all — `journal_fts` is fts5, one such table makes the whole database
+un-exportable, and no flag skips it. That second one is why a script exists for
+something that looks like it should be one command.
+
+**One thing checked that the finding did not mention:** the destination path.
+`operations.md` is at `apps/character-creator/docs/`, not `docs/`, since that
+README was split. The pointer is written in full.
+
 ---
 
 ### F10 — no step reads the CI run before merging, and this finding recommends declining
