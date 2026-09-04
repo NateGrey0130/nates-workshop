@@ -702,9 +702,10 @@ scripts/
 │                           and sending it is how a class loses a third of
 │                           itself. Drafts only; class-check is the next step
 ├── extraction-prompt.mjs   The class extraction prompt, and the schema it
-│                           documents. Two system prompts: one for a PDF page
-│                           image, one for cached text whose columns are
-│                           ALREADY resolved and must not be re-ordered
+│                           documents. ONE system prompt, for cached text whose
+│                           columns are ALREADY resolved and must not be
+│                           re-ordered. A second, for a PDF page image, went
+│                           when the in-app importer did - its header says so
 ├── books.json              The book registry: one entry per sourcebook the
 │                           catalog cites, keyed by its .cache/books slug. The
 │                           canonical title, every OTHER spelling production

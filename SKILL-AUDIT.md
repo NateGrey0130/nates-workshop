@@ -1,7 +1,7 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **`F31`–`F32` ARE OPEN; `F29` and `F30` were taken 2026-09-04 (PRs #682,
-> #684).** `F30` was scoped **wider than filed** and its own proposal was wrong
+> **`F32` IS OPEN; `F29`, `F30` and `F31` were taken 2026-09-04 (PRs #682, #684,
+> #685).** `F30` was scoped **wider than filed** and its own proposal was wrong
 > about the mechanism — read its note. Filed
 > 2026-09-04 under **`## Opened by taking F28`**,
 > which is a third placement on this page — after the `N` block and after
@@ -2909,6 +2909,33 @@ evidence for it.
 
 **Ongoing cost:** none. One sentence, and it becomes true rather than needing
 maintenance.
+
+**Taken, 2026-09-04 (PR #685). Posture held: documentation only —
+`documented-counts.mjs` is untouched, exactly as the proposal required.**
+
+`apps/character-creator/README.md:704-708` now says **one** system prompt, names
+what it is for, and says the second went with the in-app importer rather than
+silently dropping the fact. The retirement is already recorded in
+`scripts/extraction-prompt.mjs:10-13` — *"There used to be a second prompt here
+for sending the PDF page itself … it went when the in-app importer that used it
+was retired"* — so the README now agrees with the file it describes instead of
+preserving its pre-retirement state.
+
+**Premises held exactly**, which is worth recording because this menu's own
+material warns against assuming otherwise: one `SYSTEM_PROMPT_CACHE` export at
+`:38`, one README sentence at `:705`, both read directly.
+
+**The box-drawing alignment was checked rather than assumed.** The row grew from
+three continuation lines to four, and the file map's column is load-bearing;
+verified with an `awk` slice of the prefix across lines 700–710 that the new
+lines match their neighbours.
+
+**Why the guard did not catch this, restated because it is the reusable half.**
+`documented-counts.mjs` diffs **filenames** — every script on disk is named in
+the map, every name is a real script — and never reads the prose beside them. So
+the map's descriptions drift freely while the check guarding the map passes.
+Extending it to parse descriptions is a much larger check and this finding
+deliberately did not carry the evidence for one.
 
 ### F32 — `REPO-AUDIT` `G8` deferred a follow-up to "its own finding" and none was ever filed
 
