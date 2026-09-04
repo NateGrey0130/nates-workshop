@@ -96,6 +96,17 @@ kill-by-command-line rule applies to headless Chrome: match its
 `--user-data-dir`, never the image name, or a blanket `taskkill /IM chrome.exe`
 takes Nate's real browser with it.
 
+**A running server holds the secrets it booted with.** `wrangler pages dev`
+reads `.dev.vars` **at boot**, so rotating a key leaves the live server sending
+the old one: the importer reported `credit balance is too low` against an
+account that had just been topped up, while the same key answered `200 OK`
+called directly. **The tell is the shape of the failure, not its text** — real
+API calls take seconds and every one of these returned in **0s**. A fast failure
+is a local one. Stop and restart the server, then retry one small request.
+
+Production reads its own copy as a Pages secret, so a rotation is two places;
+`ship-pr` carries that half, because only one of the two ships.
+
 ## PowerShell, and queries that return wrong data
 
 - **`\"` does not escape anything.** The string ends early and the rest
