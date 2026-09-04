@@ -1,6 +1,7 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **`F29`–`F32` ARE OPEN, filed 2026-09-04** under **`## Opened by taking F28`**,
+> **`F30`–`F32` ARE OPEN; `F29` was taken 2026-09-04 (PR #682).** Filed
+> 2026-09-04 under **`## Opened by taking F28`**,
 > which is a third placement on this page — after the `N` block and after
 > `## Opened while building the verifier agents`. They are the four things
 > `F28`'s runs turned up, which its own posture forbade it from fixing.
@@ -2737,6 +2738,34 @@ sentences were read in place. Nothing would raise it.
 `G8`'s note went stale within five minutes of merging, so this is a real cost
 rather than a notional one — which is an argument for saying *what the ruleset
 does* rather than *that there is not one*.
+
+**Taken, 2026-09-04 (PR #682). Posture held: documentation only — four passages
+corrected, no setting changed, no required check added, the ruleset itself
+untouched.**
+
+All four now say what the ruleset **does** rather than denying it exists, which
+is the ongoing-cost argument above applied to the fix: `CLAUDE.md:10-15`,
+`SETUP.md:6-11`, `.claude/skills/ship-pr/SKILL.md:22-27`, and
+`.github/workflows/tests.yml:3-15`. Each carries the id, the rule type, the zero
+required status checks, the date, and the command — so the next reader asks
+GitHub instead of believing a sentence.
+
+**The self-contradiction in `tests.yml` is gone.** Its header comment and its
+menu-check job comment now agree, and the header says outright that the two
+disagreed for a day, because one file arguing with itself is the tell that
+neither half was checked.
+
+**`audit-menu` caught one of my own edits while I made it.** All four
+corrections initially **quoted the stale phrase** they replaced, which that skill
+forbids in as many words — *"a note repeating the old wording defeats a grep for
+it."* A sweep for the false sentence would have found four fresh copies of it in
+the very PR that removed it. Rewritten to describe the error without reproducing
+it. **The rule was in force and being read, and the edit broke it anyway**, which
+is this menu's own closing observation happening again.
+
+**Two records were deliberately left alone**, per *Audit files are RECORDS*:
+`REPO-AUDIT.md:203` and `:821` state the position as measured on 2026-09-03 and
+are true as of that date. They are not corrected and should not be.
 
 ### F30 — `audit-citations.mjs` silently ignores a finding number that is not an `F`
 

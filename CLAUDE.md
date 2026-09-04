@@ -6,8 +6,16 @@ and no `node_modules`; `npx wrangler` resolves from the npx cache. Merging to
 
 Since 2026-09-03 the five smoke suites also run on every pull request
 (`.github/workflows/tests.yml`, `REPO-AUDIT.md` G8). That is **reporting only**:
-it is not a required status check, `main` has no ruleset, and a red run does not
-stop a merge. So it does not move the rule below — the checks still happen
+it is not a required status check, and a red run does not stop a merge.
+
+**`main` does have a ruleset — it just does not gate on CI.** `22209348`,
+*"main: require a pull request"*, active since 2026-09-03: one `pull_request`
+rule and **zero** required status checks, so a direct push is refused and a red
+run is not. It was created five minutes after `G8` merged, and this sentence was
+wrong about it for a day (`SKILL-AUDIT` `F29`, 2026-09-04). Ask it rather than
+trusting this line — `gh api repos/NateGrey0130/nates-workshop/rulesets`.
+
+So it does not move the rule below — the checks still happen
 before the merge or they do not happen — it only means a skipped run gets
 noticed afterwards instead of never.
 

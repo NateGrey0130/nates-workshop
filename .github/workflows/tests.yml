@@ -1,10 +1,18 @@
 # The five smoke suites, on every pull request. REPO-AUDIT.md G8.
 #
 # REPORTING ONLY, AND THAT IS THE POSTURE RATHER THAN AN OVERSIGHT. This
-# workflow is not wired to a required status check and `main` has no ruleset, so
-# a red run here does not stop a merge. G8 was taken on that basis: the repo's
-# rule is warn, do not block. If someone later makes this a required check, that
-# is a different decision and it needs its own finding.
+# workflow is not wired to a required status check. `main` DOES have a ruleset -
+# `22209348`, "main: require a pull request", active since 2026-09-03, five
+# minutes after G8 merged - and it carries one `pull_request` rule and ZERO
+# required status checks, so a red run here still does not stop a merge. G8 was
+# taken on that basis: the repo's rule is warn, do not block. If someone later
+# makes this a required check, that is a different decision and it needs its own
+# finding.
+#
+# This comment denied the ruleset's existence for a day (SKILL-AUDIT F29,
+# 2026-09-04) while the menu-check job's comment below described it correctly -
+# one file disagreeing with itself. Read the ruleset rather than either line:
+#   gh api repos/NateGrey0130/nates-workshop/rulesets
 #
 # WHY THIS EXISTS AT ALL. Nothing but a person had ever run these suites. The
 # PR bodies prove they get run, and they get run because an agent read `ship-pr`
