@@ -458,7 +458,7 @@ that trap one level down.
 | `apps/media-vault/ISBN-AUDIT.md` | `F` | `##` | `## F1 — …` |
 | `apps/pick3cut5/AUDIT.md` | `F`; `T` | `###`; **not a heading** | `### F1. …`, and `**T1. … — PASSED.**` as BOLD PARAGRAPH LEADS under `## T — paths that have never run` |
 | `HEALTH-AUDIT.md` | `F` | `###` | severity word, capitalised: `### F1 — Critical — …` |
-| `SKILL-AUDIT.md` | `F`, `N` | `###` | `### F1 — …`, no severity word — but `F22` onward sit under `## Opened while taking a finding`, **out of numeric order, after `F21` and before the `N` block** |
+| `SKILL-AUDIT.md` | `F`, `N` | `###` | `### F1 — …`, no severity word, and **every `###` is a finding** (`F38`, 2026-09-04) — but they are **split across many `##` sections, with the `N` block sitting in the middle of the `F` run**, so there is no one contiguous list. That file's own header names the sections; no count is kept here, because they accrue. |
 | `SHIP-PR-AUDIT.md` | `F` | `###` | `### F1 — …`, no severity word — and `F11`–`F14` sit under `## Opened while taking a finding` **after `F10`, in numeric order**, deliberately not the row above's arrangement |
 | `SETUP-v2-CHANGES.md` | **none** | `###` | `### 1. …` — bare numbers under `## Changes`, and the one menu whose filename does not say `AUDIT` |
 
