@@ -1,6 +1,8 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **`F35` IS OPEN; `F36` was taken 2026-09-04 (PR #692)** — it removed the path
+> **NOTHING IS OPEN. `F35` was taken 2026-09-04 (PR #693)** — subtractive, one
+> clause, and **four of its own premises were wrong**; read its note before
+> citing it. **`F36` was taken 2026-09-04 (PR #692)** — it removed the path
 > filter `F32` had added hours earlier, because the number justifying that filter
 > was measured on the wrong machine. Both were filed 2026-09-04 under
 > **`## Opened while taking F33`** and **`## Opened by F32's own CI run`** — a
@@ -3266,6 +3268,51 @@ file `sed-i-strips-crlf.md`, `docs/prompts/gm-grants-prompt.md:180` with its
 workshop twin, and `docs/prompts/n-findings-prompt.md:58`. The briefs are
 archived records of what was said at the time. The memory file is outside this
 repo and no grep of it reaches; it is the one worth a separate decision.
+
+**Taken, 2026-09-04 (PR #693). Posture held: documentation only and subtractive
+— one clause out of one skill, nothing added, no check, no gate.**
+`ship-pr`'s *Line endings* section now reads: the `.sql` pin, the smoke test's CR
+failure, and the pointer to `windows-shell`. **`grep -n 'CRLF'` on that file now
+returns nothing** — the deleted clause was its only mention.
+
+**Four of this finding's own premises were wrong, and one materially.**
+
+**1. The history claim was false.** `F35` said the clause *"arrived with the
+compression and nothing asked for it."* It did not. Verified against
+`git show fb4e081^1:.claude/skills/ship-pr/SKILL.md`, the state before PR #666:
+the section already read *"Everything else in the repo is CRLF."* **PR #666
+reworded the clause; it did not introduce it.** What is true — and all the
+finding needed — is that `F8`'s prescription omits it, so the compression
+preserved something it was not asked to keep. The stronger claim was mine and it
+was wrong.
+
+**2. The line citation was off by two.** `F35` cited `:444-445` three times;
+`:444` is the heading and `:445` is blank. The sentence was at `:446-447` and the
+paragraph ran to `:449`.
+
+**3. "What remains is exactly `F8`'s two lines" overstated it — four lines
+remain.** The trailing sentence about tools not preserving what a file had is
+**not** in `F8`'s prescription either. That phrasing was the one way a
+subtractive taker could overshoot: read as licence, it would have cut a true and
+useful sentence. **It was not cut.** The posture was one clause, and one clause
+is what came out.
+
+**4. The `N2` citation pointed at the wrong lines** — `:2230-2235` is the memory
+argument and the Cost paragraph. The condition is at `:2246-2247`. The *reading*
+of `N2` was right: non-duplication was its explicit condition, and naming all four
+rules here would have violated it.
+
+**And one thing that cannot be settled either way.** `F35` said the clause misled
+during `F29`. Both `ship-pr` and `windows-shell` carried the same falsehood that
+day, `F33`'s note attributes it to `windows-shell:12`, and the episode leaves no
+artifact in git. **Which file misled is not testable**, and the finding's textual
+grounds never needed it. That is the same corroboration-shaped error `F33`'s
+audit caught, made again one finding later.
+
+**Nothing pinned the passage.** Checked for an `F30`-shaped collision and there
+is none: `environment.mjs:488-509` reads this file's **`bash` fences** only, and
+its two corpus-wide scans match backticked repo paths and smoke-check names,
+neither of which this paragraph contains. No test pins `ship-pr`'s line count.
 
 ---
 
