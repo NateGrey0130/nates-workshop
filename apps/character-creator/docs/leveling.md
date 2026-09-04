@@ -39,8 +39,13 @@ everything at or below the character's level is summed.
   fighting styles fights at the better one instead of adding them together.
 - **What is not a number goes in `note`.** "Karate Kick (2D6 damage)", "Death
   blow on a Natural 20", and the Assassin's bonuses that apply only to guns or
-  thrown weapons. A conditional bonus in `combat` would apply unconditionally,
-  which is the same reason Fencing carries its bonuses as a note.
+  thrown weapons. A conditional bonus written into `combat` would apply
+  unconditionally — but a conditional bonus does **not** have to be prose, and
+  this bullet said it did until `RETRO-AUDIT` `R4`. It goes in an entry carrying
+  `applies_when` (below), which is a third destination between `combat` and
+  `note`. Fencing was the example given here for prose and is now the example
+  of that shape instead. A `note` is for what is not a **number** — dice, or a
+  rule.
 - **A level of `null` grants nothing.** That is deliberately different from
   level 1: a caller that cannot say how experienced the character is should not
   silently hand out first level bonuses.
@@ -58,7 +63,13 @@ along the way went unmentioned.
 for this. `combat` and `saves` are open sets on purpose, so no validator
 changed — only `derive.js`, which now knows what to call them.
 
-### A W.P. bonus applies only with that weapon
+### A conditional bonus applies only in the situation named
+
+**W.P.s are where this started and are no longer the only users of it** —
+`RETRO-AUDIT` `R4` gave Fencing, Sniper, Weapon Systems and the four robot and
+fighter combat trainings the same shape, because "while piloting the Glitter
+Boy" restricts a bonus exactly the way "with a sword" does. The W.P. case below
+is the argument; the mechanism is general.
 
 Every numeric Weapon Proficiency bonus is **conditional**. p.326:
 

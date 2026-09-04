@@ -299,6 +299,50 @@ at the lines cited.
 **Confidence: very high** on the capability. **High** on the seven rows.
 **Ongoing cost:** none.
 
+**Taken, 2026-09-04 (PR #711)** — as written, and the posture held: **no flat
+`bonuses` value was added to any of the seven**, which is asserted by a readback
+rather than claimed. All seven now carry a `level_bonuses` schedule with
+`applies_when`; the count of skills using that shape went 29 → 36, which is the
+arithmetic the script's last readback checks.
+
+**The finding was right and incomplete, and the missing half was a rendering
+one.** Storing the data was necessary and not sufficient: the sheet listed these
+under a heading reading *"Weapon proficiencies — these apply only with that
+weapon"*, which is wrong for *"while piloting the Glitter Boy"*, and `WP_LABELS`
+in `apps/character-creator/sheet.js` had no short form for `attacks`, `roll` or
+`pull_punch`, so the fallback would have printed the raw column name —
+`+4 pull_punch`. Both were fixed in this PR: the heading is now *"Conditional
+bonuses — these apply only in the situation named"*. **`skillRows` was never
+filtered to W.P.s**, which is why the data renders at all; that was checked
+before the script was written, because a filter there would have made the whole
+finding a no-op.
+
+**Two prose surfaces cited the old state and were corrected in the same PR**, per
+the `claim-audit` rule. `apps/character-creator/docs/leveling.md` said *"A
+conditional bonus in `combat` would apply unconditionally, which is the same
+reason Fencing carries its bonuses as a note"* — Fencing is now the example of
+the `applies_when` shape rather than of prose — and its heading *"A W.P. bonus
+applies only with that weapon"* is now *"A conditional bonus applies only in the
+situation named"*. No link pointed at the old anchor; checked by grep before
+renaming.
+
+**The local apply caught two conventions the finding did not mention**, both
+worth the next taker's time: `check` is a reserved word in SQLite, so
+`SELECT … AS check` is a syntax error; and the smoke suite refuses a data script
+that guards an underscored key with `LIKE`, because `_` is a single-character
+**wildcard** — `LIKE '%applies_when%'` also matches `applies?when`. The readbacks
+use `instr()` instead. Re-running the production count under `instr` returned the
+same 29, so this menu's figure was not affected.
+
+**Verified in the running sheet, not only in the tests.** A level-12 character
+carrying Fencing, W.P. Sword, Fighter Combat: Elite and Robot Combat Elite:
+Glitter Boy renders five conditional rows with the right per-level accumulation
+(Glitter Boy +5 attacks at level 12: 2 at level 1, +1 each at 3, 7 and 11) —
+**and the Combat block above still reads 0 for strike, parry, dodge, initiative
+and pull punch**, which is the "nothing regressed" claim shown rather than
+asserted. Measured against the box that clips it: 274×220 inside a 294px
+`.box-body`, no row overflowing, no horizontal body scroll.
+
 ### R5 — medium — eight class-referenced weapons carry their damage in prose while `gear.damage` is null
 
 Thirteen `gear` rows print a damage figure in `description` and hold `damage`
