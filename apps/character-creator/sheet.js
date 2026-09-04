@@ -1374,10 +1374,18 @@ function render() {
     ['body_flip', 'Body Flip/Throw'], ['automatic_dodge', 'Auto Dodge'],
     ['run_yards_per_melee', 'Run (yds/melee)'],
   ];
-  // Short forms for the weapon-proficiency list, which has no room for
+  // Short forms for the conditional-bonus list, which has no room for
   // '# of Attacks'-length labels beside a condition.
+  //
+  // It was a weapon-proficiency list until RETRO-AUDIT R4, when seven pilot and
+  // fighting skills started carrying `applies_when` too - so the keys a robot
+  // or fighter pilot earns (attacks, roll, pull_punch) needed short forms of
+  // their own. A missing key falls back to the raw column name, which is how
+  // `pull_punch` would have reached the sheet with an underscore in it.
   const WP_LABELS = { strike: 'strike', parry: 'parry', dodge: 'dodge', disarm: 'disarm',
-    entangle: 'entangle', damage_bonus: 'damage', initiative: 'initiative' };
+    entangle: 'entangle', damage_bonus: 'damage', initiative: 'initiative',
+    attacks: 'attacks', roll: 'roll w/ impact', pull_punch: 'pull punch',
+    perception: 'Perception' };
   const armorRows = armorList.map((a, i) => armorSlotHtml(a, i, w)).join('');
 
   $('app').innerHTML = `
@@ -1511,10 +1519,16 @@ function render() {
       // they are shown apart from the combat numbers rather than added to them.
       // Listing them beside the block they do NOT belong to is the point: a
       // player needs both, and needs to know which is which.
+      //
+      // The heading no longer says "Weapon proficiencies" because W.P.s are no
+      // longer the only skills here: RETRO-AUDIT R4 gave Fencing, Sniper,
+      // Weapon Systems and the four robot/fighter combat trainings the same
+      // `applies_when` shape, and "while piloting the Glitter Boy" is not a
+      // weapon proficiency. The condition is printed per row either way.
       + (!(C.weaponBonuses || []).length ? '' : `
         <div class="wp-bonuses" style="margin-top:10px">
           <p class="muted small" style="margin:0 0 4px">
-            Weapon proficiencies <span class="muted">&mdash; these apply only with that weapon</span></p>
+            Conditional bonuses <span class="muted">&mdash; these apply only in the situation named</span></p>
           ${C.weaponBonuses.map((w) => {
             const parts = Object.entries(w.combat)
               .map(([k, v]) => `${v > 0 ? '+' : ''}${v} ${WP_LABELS[k] || k}`).join(', ');
