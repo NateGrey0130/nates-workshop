@@ -1,13 +1,15 @@
 # RETRO-AUDIT.md — does the catalog benefit from the schema it grew?
 
-> **Nothing is open.** Every finding was taken on **2026-09-04**, the day the
+> **`R11` is open. Everything before it was taken on 2026-09-04**, the day the
 > audit ran. **Read under the heading for what actually happened to each** —
-> two of them turned out to be wrong about their own premises, and the outcome
-> notes are where that is recorded.
+> two findings turned out to be wrong about their own premises, and one corrects
+> a defect this menu's own work shipped. The outcome notes are where that is
+> recorded.
 >
-> **`R9` breaks the severity order and that is deliberate.** It was filed after
-> `R8` had already shipped, so it sits last rather than among the mediums. It
-> also began life in *Not established* at the foot of this file.
+> **`R9`, `R10` and `R11` break the severity order and that is deliberate.** All
+> three were filed after `R8` had already shipped, so they sit last rather than
+> among the highs and mediums. `R9` also began life in *Not established* at the
+> foot of this file.
 >
 > **This menu's own trap: its headline precision figure rests on n=2.** The
 > "detector 1 alone is 11%, detector 1 AND 3 is 100%" result in *Method* below
@@ -977,6 +979,58 @@ exists to undo.
 The re-sweep read it because it re-read the whole corpus after the day's changes,
 which is an argument for re-sweeping **after** a batch of fixes rather than only
 before one.
+
+### R11 — medium — six more classes carry a capability claim that is false today
+
+**FILED, NOT TAKEN.** Everything above was taken on 2026-09-04; this is what the
+claim re-sweep turned up beyond `R10`, recorded so it is not lost.
+
+The re-sweep bounded claims on **YAML structure** rather than sentence
+boundaries, which is what the first sweep got wrong: 198 whole units across 103
+classes, of which **185 hold, 9 carry a false assertion and 4 could not be
+settled** — against 47 judged and 54 unsettled the first time.
+
+| class | the claim | what expresses it |
+|---|---|---|
+| `ley-line-rifter` | *"the picker cannot restrict to a named list"*, and *"several List A spells are not yet in the spell catalog"* | **both false.** `spells_starting_groups` with a per-group `from`; and all 17 List A names are in the catalog |
+| `psi-mystic` | *"the block cannot say three from one and two from the other two"* | `psionics.powers_starting_groups` — the same key `R6` gave the royal-frilled |
+| `techno-wizard` | *"a composition constraint the count field cannot express"* | `occ_related_skills.minimums`, in its **union** spelling — live on `city-rat` |
+| the ten Warlocks | the same sentence, inherited from the generic class by `R3` | the same key |
+| `apok` | *"bonuses.attributes takes flat numbers only"* | a **positive** dice string is fine; the supernatural-P.S. half of that note still holds |
+| `wormspeaker` | *"dice or percentages that bonuses.attributes cannot take"* | `+1D6 M.E.` and `+1D4 M.A.` are storable; `-1D4 Spd` and "halved" still are not |
+| `merc-soldier` | *"The MOS system … has no schema shape"* | the class **carries a live `mos` block**; this paragraph was simply never rewritten when the block landed |
+
+**`ley-line-rifter` is the one to take first**, and it is the largest: six
+starting spell picks sit in prose, the machinery is already in that class's own
+row (`spell_lists: A` and `B`, used by its `spells_schedule`), and both the
+wizard and the server read it.
+
+```bash
+node scripts/q.mjs --remote "SELECT class_id, instr(markdown,'a composition constraint the count field cannot express')>0 AS has_claim FROM imported_classes WHERE class_id LIKE 'warlock-%' AND deleted_at IS NULL"
+```
+→ all ten.
+
+**A control-set tension this menu will not resolve on its own.** `CLASS-AUDIT`'s
+*"Checked and still true"* list says `occ_related_skills` **cannot** span a
+constraint across two categories, naming the assassin, the juicer-wannabe and the
+merc-soldier. But `minimums` takes a `categories` union — `city-rat` carries
+`{ count: 3, categories: ["Physical", "Rogue"] }` in production — and the
+juicer-wannabe half of that line was closed by `R1` today. **That sentence needs
+re-verifying by a person**; the sweep deliberately did not touch the assassin
+claim, which is a control-set member.
+
+**Four units are unsettled**, all the same shape: whether a verbose-but-working
+spelling counts as *expressible* — a 13-entry schedule for "two per level from
+third", and duplicate same-name entries in a category list, which are untested.
+Those are rulings, not measurements.
+
+**Evidence:** the `claim-capability-verifier` re-sweep of 2026-09-04, over a
+corpus rebuilt from production after that day's twelve merges; the command above
+re-run against `--remote`.
+**Confidence: medium-high** on the seven stale claims — each names a code path
+the pass cited, but **none was independently re-confirmed the way `R1`'s five
+were**, and that is the gap to close before scoping any of them.
+**Ongoing cost:** none.
 
 ---
 
