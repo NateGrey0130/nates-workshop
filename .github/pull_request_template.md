@@ -9,6 +9,13 @@
   Passing `--body-file` REPLACES this template, which is the normal path here -
   so this text is for a PR opened in the browser, or by `gh pr create` with no
   body.
+
+  THE HEADINGS BELOW ARE `ship-pr` STEP 6's LIST, AND THAT IS THE COPY THAT GETS
+  READ. G7 was taken on the premise that the convention already lived in that
+  skill. It did not - this file was the only written copy of it, which is the
+  reverse of what G7 intended, since the path that replaces this template is the
+  path every PR here takes. The skill now carries the list and this file follows
+  it. If the two ever disagree, the skill is right. SHIP-PR-AUDIT.md F3.
 -->
 
 ## The gap

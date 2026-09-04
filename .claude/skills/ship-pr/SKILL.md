@@ -96,6 +96,27 @@ did, never as the reason to skip one. `regression.mjs` is not in it at all.
    git push -u origin short-kebab-description
    gh pr create --base main --head short-kebab-description --title "..." --body-file pr-body.tmp
    ```
+   **What goes in the body**, one line each, and delete any that does not apply —
+   a short honest PR beats a padded one:
+   - **The gap** — what was wrong, and why it mattered. Not what files moved.
+   - **What was measured** — numbers with their SOURCE and their DATE, and
+     whether `--remote` or `--local`. **If a claim was reasoned to rather than
+     run, say so in those words.**
+   - **Posture** — log/cap, warn/block, opt-in, documentation only, no new gate.
+     Half of what is being agreed to, and the cheapest thing to get wrong.
+   - **Nothing regresses — checked, not assumed** — what could have broken and
+     the check that says it did not. *"Nothing else uses this"* is an absence
+     claim: prove it by reading, not by grepping one of its two shapes.
+   - **Decline path** — the honest case for NOT doing this, so declining stays a
+     real option.
+   - **Verification** — paste the pass lines. **The merge gate is the flagless
+     run**; a `--section` run labels itself `PARTIAL` so it cannot stand in.
+     Touched D1? Say which files are **already applied**.
+
+   `.github/pull_request_template.md` carries the same six as a compose-box
+   prompt for a PR opened in the browser. `--body-file` replaces it, which is
+   this path, so **this list is the copy that gets read** and the template
+   follows it.
 7. **Merge**, only when asked. It deploys. `--delete-branch` removes the
    branch from GitHub *and* locally, so there is nothing left to tidy.
    Since 2026-09-03 the repository also has **`delete_branch_on_merge`** on, so
