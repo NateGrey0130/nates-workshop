@@ -598,6 +598,50 @@ against production the way `R1`'s five were.**
 class back before scoping.
 **Ongoing cost:** none.
 
+**Taken, 2026-09-04 (PR #716)** — and the medium confidence earned its keep:
+**checking each part before scoping changed two of the three.**
+
+**`dragon-hatchling-royal-frilled` — real, and much worse than filed.** R6 said
+the class could not mark which psionic schedule entries are Super. True — and the
+schedule was also **wrong**. Re-read from the book (Rifts Ultimate Edition
+**printed 162**, `rue` cache `p165`, the registry's `+3` offset):
+
+> *"a total of 12 psychic powers from … Sensitive, Physical, and/or Healing. Also
+> select two Super Psionic Powers at level one. Select an additional Super
+> Psi-Power at levels 5, 9, 14, 18 and 22. Select an additional two psychic
+> powers from any of the three previous categories … at levels 3, 6, 9, 12, 15,
+> 18 and 21."*
+
+Production held `powers_starting: 12`, so **every royal frilled hatchling was two
+Super powers short at creation**; the Super grants at levels **9 and 18 were
+missing entirely**, level 18's ordinary pair had been collapsed to a single
+entry, and levels **21 and 22 were absent**. Now `powers_starting_groups` splits
+the level-one pick (12 + 2) and every entry states its own `categories`. Two
+entries share levels 9 and 18 — `slot` is derived by position in
+`apps/character-creator/js/leveling.js`, so nothing states it by hand.
+
+Verified through the real `startingGroups` and `psionicGrantsFor`: Super at
+**5, 9, 14, 18, 22** and two ordinary at **3, 6, 9, 12, 15, 18, 21**, matching
+the page.
+
+**`freelancer` — real, as filed.** Both attribute entries on the Special
+Freelancer's chart now carry their dice halves: `{ PS: 6, PE: "1d4" }` with
+`pools: { mdc: "1d4x10" }`, and `{ PP: "1d4", Spd: "4d6" }`. The Godling's
+abilities were already this exact shape.
+
+**`seljuk` — NOT a mechanic. Note rot, exactly as R6 predicted.** The claim that
+`occ_restrictions` "cannot express by name" which class pairs with a race is
+false as a statement about the schema. But the rule is **already enforced from
+the other side**: `psi-stalker` and `wild-psi-stalker` both carry
+`race_restrictions: only: ["none"]`, so `raceAllowedForOcc` refuses the pairing
+for every race. **No `occ_restrictions` block was added**, and a readback asserts
+it — a second copy of a working rule is a second place to get it wrong.
+
+**The readback-quotes-its-own-phrase trap fired again**, for the second time in
+this menu after `R3`. Each correction quotes the sentence it replaces, so an
+assertion greping the limitation wording matches its own replacement text. The
+assertions match phrases unique to the **old** text instead.
+
 ### R7 — medium — two capabilities were built, populated, and wired to nothing
 
 Found by accident, by asking *who reads this* rather than *who sets this* — which
