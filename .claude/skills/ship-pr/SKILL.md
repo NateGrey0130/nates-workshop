@@ -331,6 +331,17 @@ by the time anyone reviews it, merging those is a no-op and the branch is only
 catching the repo up to a database that already moved. A reviewer who does not
 know that will look for the deploy step and not find one.
 
+**This step writes to production ahead of any review, so know what recovery
+is before you run it.** D1 Time Travel is the mechanism, and it is a *rolling*
+30 days held by Cloudflare in the same account as the data it protects;
+`scripts/d1-backup.mjs` is the copy you hold yourself, and it exists because
+`wrangler d1 export` fails outright here — one fts5 virtual table makes the
+whole database un-exportable and no flag skips it.
+`apps/character-creator/docs/operations.md` → *Recovery* has both.
+**No backup step is prescribed per apply.** Most applies here are one data
+script, and a ritual attached to every one of them would be skipped inside a
+week.
+
 For anything about migrations themselves, use the `schema-change` skill.
 
 ## `--local` is not a mirror of production
