@@ -124,6 +124,14 @@ did, never as the reason to skip one. `regression.mjs` is not in it at all.
    ```bash
    gh pr merge <n> --merge --delete-branch
    ```
+   **`--merge` is the shape this repo uses, and squash and rebase are enabled
+   and not wrong.** `REPO-AUDIT.md` G5(b) decided that deliberately. The reason
+   for the default is that this history reads as prose and a merge commit keeps
+   the branch's own messages; a large fraction of `main` arrived by squash
+   anyway. **Nothing downstream cares**: a squash still lands exactly one
+   first-parent commit, which is the commit step 9 reads and the one both deploy
+   monitors walk. They walk `--first-parent` rather than `--merges` precisely so
+   that a squash is not invisible to them.
 8. **Sync**, then confirm the merge from GitHub rather than from the pull.
    ```bash
    git checkout main && git pull
