@@ -61,14 +61,11 @@ did, never as the reason to skip one. `regression.mjs` is not in it at all.
      A partial run labels its summary `PARTIAL SMOKE PASSED` precisely so its
      output cannot be quoted as this step.
    - **touched anything Pick 3 Cut 5 loads, or any Access policy:**
-     `node apps/pick3cut5/test/smoke.mjs --remote`. It fetches the app and its
-     assets from production with **no** Access session, and checks the rest of
-     the site is still gated. This is the only check that can catch the bug it
-     was written for: the app shipped bypassed on its own two paths but not on
-     `/shared/styles.css` or `/shared/js/ui.js`, so every friend with a room
-     code got an unstyled page and `escHtml is not defined` at the first flip —
-     while `curl /apps/pick3cut5/` returned 200 the whole time and local dev,
-     which has no Access at all, played perfectly.
+     `node apps/pick3cut5/test/smoke.mjs --remote`. It fetches the app *and its
+     assets* from production with **no** Access session, and it is the only
+     check that sees a bypass covering the app's own paths but not the shared
+     CSS and JS it loads. `pick3cut5` has the case, and read it before touching
+     an Access policy.
    - added a class or catalog rows: **update the README's pinned counts in the
      same commit.** `test/regression.mjs` reads them out of the prose and
      compares against a database built from nothing, so they fail the run rather
@@ -85,7 +82,7 @@ did, never as the reason to skip one. `regression.mjs` is not in it at all.
      `node apps/character-creator/test/regression.mjs` — it builds a database
      from nothing and drives the real routes, which is the only thing that
      catches a fresh environment being broken
-   - changed anything visible: drive it in a browser
+   - changed anything visible: **`verify-ui`**, then drive it in a browser
 
    The three catch different classes of bug and none substitutes for another.
    A class picker that rendered everything 1300px below the fold passed all 768
