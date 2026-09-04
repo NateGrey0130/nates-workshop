@@ -1,8 +1,10 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **`F32` IS OPEN; `F29`, `F30` and `F31` were taken 2026-09-04 (PRs #682, #684,
-> #685).** `F30` was scoped **wider than filed** and its own proposal was wrong
-> about the mechanism — read its note. Filed
+> **NOTHING IS OPEN. `F29`–`F32` were all taken 2026-09-04 (PRs #682, #684,
+> #685, #686).** `F30` was scoped **wider than filed** and its own proposal was
+> wrong about the mechanism; `F32` added a **path-filtered** CI job, where a
+> green pull request outside those paths means the suite was never asked. Read
+> both notes rather than this line. Filed
 > 2026-09-04 under **`## Opened by taking F28`**,
 > which is a third placement on this page — after the `N` block and after
 > `## Opened while building the verifier agents`. They are the four things
@@ -2970,6 +2972,54 @@ does not say.
 **Ongoing cost, if added:** one more CI job per pull request, and a suite that
 builds a database from scratch is the slowest thing here. That cost is the main
 argument against, and it belongs in the decision rather than in this line.
+
+**Taken, 2026-09-04 (PR #686). Posture held: reporting only, matching `G8` — not
+a required status check, and a red run does not stop a merge.** The decision Nate
+made: **add it, path-filtered.** `REPO-AUDIT` `G8`'s deferral is closed.
+
+`.github/workflows/regression.yml` — **a separate file, because
+`on: pull_request: paths:` filters a whole workflow rather than one job**, and
+`tests.yml` must keep running on every pull request. One file per concern, as
+`deploy-alarm.yml` already does.
+
+**The filter was derived by reading what the suite opens, not by guessing at
+what looks related:** `db/schema.sql` and the data scripts it applies
+(`regression.mjs:86,99`), `../js/parser.js` (`:25`),
+`functions/api/character-creator/_lib/catalog.js` (`:26`), the README's
+clean-run counts (`:589,635`) and `docs/operations.md`, which is where that
+table moved in the README split (`:220`). Plus the suite itself and the workflow
+file, so a change to the filter is covered by the filter.
+
+**The measurement that made "filtered" the answer rather than "always":** 170
+seconds, timed on the development machine 2026-09-04, exit 0, 237 checks. It
+boots wrangler and builds a D1 under a scratch `--persist-to`; its header states
+*"Nothing here talks to production"*, so it needs no credentials, which is why
+CI can run it at all.
+
+**The known defect in this shape, stated in the workflow's own header rather than
+discovered later.** A path list is correct on the day it is written and silently
+wrong the moment something `regression.mjs` reads moves outside it — and the
+failure is invisible: the suite does not run, and **green means "not asked"
+rather than "passed"**. This repo has argued against rules with an expiry date
+before. It is accepted here deliberately, against paying three minutes on the
+documentation-only pull requests that are most of them lately.
+
+**A sentence this falsified, corrected in the same PR.**
+`.claude/skills/ship-pr/SKILL.md` stated the suite was absent from CI — read at
+line 29 on 2026-09-04, before this PR replaced the passage. It now describes the
+new workflow **and** the path filter, because a green pull request outside those
+paths means the suite was never asked and step 4 still owns it.
+
+*(The old wording is described rather than quoted, deliberately. `audit-menu`
+says a note repeating a stale phrase defeats a grep for it — and `menu-check`
+flagged the quoted draft of this paragraph, which is its documented false
+positive. The fix was to stop quoting, not to mark it exempt.)*
+
+**And a defect of my own, found while editing that passage.** PR #682's `F29`
+edit had spliced the ruleset paragraph into the middle of a sentence, leaving
+*"…rulesets`. Treat it as a second pair of eyes…"* running two sentences
+together. Repaired here because this PR rewrites the same block; recorded because
+it is `F29`'s taking introducing a defect that nothing checked.
 
 ---
 
