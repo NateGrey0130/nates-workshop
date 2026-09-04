@@ -413,6 +413,24 @@ reasoned, not run, and the check that would raise it is one command, named above
 
 **Ongoing cost: none.** Two sentences get shorter.
 
+**Taken, 2026-09-03 (PR #663).** Documentation only, two files, no configuration
+change. **The medium half was run before anything was written**, as the finding
+required: `git check-ignore -v commit-msg.tmp` returns `.gitignore:31:*.tmp`, and
+`git add -A` with that file in the tree stages nothing. Confidence closes at
+high.
+
+**The replacement is a shape rather than a rule, which is the better outcome and
+was not what the finding proposed.** It asked for the instruction to be replaced
+with the outcome. What shipped is *name the scratch file `.tmp` and the trap
+cannot fire* — a thing that cannot be forgotten at the wrong moment, rather than
+a prohibition to remember. `ship-pr` carries that clause inline instead of only
+pointing, because it is the half you need while writing the file.
+
+**Two gaps kept rather than dropped**: a scratch file under any other extension
+is not covered, and `git ls-tree -r HEAD --name-only` is still the way to confirm
+what landed. A narrower true rule loses coverage, and saying where is part of
+taking this.
+
 ---
 
 ### F6 — step 7 names one merge shape; 137 commits on `main` are not that shape
