@@ -392,8 +392,9 @@ what files moved — `git log` is the only place some of these decisions are
 recorded. Match the surrounding style before writing one.
 
 **Write it to a file and use `-F`** — backticks in a `-m` string are evaluated by
-the shell, and this repo's prose is full of them. Details, and the `git add -A`
-trap that eats the message file, are in the **`windows-shell`** skill.
+the shell, and this repo's prose is full of them. **Name it `.tmp`**: `*.tmp` is
+gitignored, so `git add -A` cannot sweep it into the commit the way one shipped
+inside PR #404. Details in the **`windows-shell`** skill.
 
 ```bash
 git commit -F commit-msg.tmp

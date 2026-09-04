@@ -122,10 +122,22 @@ Backticks are natural in this repo's prose, so this is not hypothetical.
 git commit -F commit-msg.tmp
 ```
 
-**Do not `git add -A` immediately before `--amend`** — it sweeps the message file
-into the commit. If it happens: delete the file, then
-`git add -A && git commit --amend --no-edit`, and confirm with
-`git ls-tree -r HEAD --name-only`.
+**`git add -A` used to sweep that file into the commit, and configuration closed
+it.** `commit-msg.tmp` shipped inside PR #404 that way, and `.gitignore:31` has
+carried `*.tmp` since **2026-08-30** in answer. Measured 2026-09-03:
+`git check-ignore -v commit-msg.tmp` returns `.gitignore:31:*.tmp`, and
+`git add -A` with that file present stages nothing.
+
+**Name the scratch file `.tmp` and the trap cannot fire.** That is the whole of
+the surviving instruction — a scratch file under any other extension is not
+covered, and `git ls-tree -r HEAD --name-only` is still how you check what
+actually landed.
+
+**This page forbade the command for three days after it stopped being
+possible.** The rule was written here on 2026-09-02 and this file was edited
+again on 2026-09-03, both after the fix. A hand step retired by configuration
+and written down anyway is the same failure `ship-pr`'s pruning section
+describes from the other direction.
 
 ## Nate's shell is not your shell
 
