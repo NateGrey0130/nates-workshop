@@ -157,6 +157,27 @@ Two shapes repeat, and they are worth recognising on sight:
    built. These are the expensive ones: the Merc Soldier's cost a player seven
    skills, not a paragraph.
 
+**Each shape has its own subagent, and the split is the point.** Neither has
+write tools, so neither can "correct" a sentence it misread:
+
+- shape 1 → **`claim-count-verifier`** (`sonnet`). Volume work — go count it.
+- shape 2 → **`claim-capability-verifier`** (`opus`). Low volume, high cost of
+  error, and every expensive miss above came from here.
+
+**Hand them claims, not a corpus.** Bound each hit with
+`scripts/readme-section.mjs` first; a whole-file read is what `EFFICIENCY-AUDIT`
+`F4` measured and closed.
+
+**They are scored against `reference/negatives.md`** — three claims that look
+stale and are true, across six class records. An agent that proposes an edit to
+any of those six sentences has failed the sweep however good the rest of it was.
+
+**Do not hand that fixture to the agent.** It is the answer key; an agent that
+has read it cannot be scored, and the score is the only reason to trust the
+sweep. The file carries its own scoring rules and the result of the last run.
+It measures **precision only** — a pass that touches nothing scores clean — so
+pair it with a claim you know to be stale before believing a number.
+
 ## The rule that makes it cheap
 
 **When you lift a limitation, grep for the sentence that described it — in the
