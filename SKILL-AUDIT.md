@@ -1,6 +1,8 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **`F38` AND `F39` ARE OPEN; `F37` is filed WITH its outcome**, all 2026-09-04
+> **`F39` IS OPEN; `F38` was taken 2026-09-04 (PR #695)** — every `###` heading
+> in this file is now a finding, which is more than `F38` asked for. `F37` is
+> **filed WITH its outcome**, all 2026-09-04
 > under **`## Opened while closing out 2026-09-04`**, a seventh placement. `F37`
 > carries its outcome because the file it corrects is **outside this repo** and
 > no pull request could take it. **`F39` recommends declining itself** and exists
@@ -2699,7 +2701,7 @@ said so, and named the decision rather than padding. It read `page_offset` from
 than assuming, and reported both boundary-straddling items — the governing
 heading sitting on printed 43, and *Dimensional Doorways* continuing onto 46.
 
-### What the runs turned up that is NOT this finding
+#### What the runs turned up that is NOT this finding
 
 Recorded here because the exercise produced them; **none is fixed in this PR**,
 which would have broken the posture. Each needs its own finding and its own word.
@@ -3132,7 +3134,7 @@ asserts `.gitattributes` contains the literal string
 the FilamentForge suite. `F33` does not propose editing `.gitattributes` and
 this take did not.
 
-### The same falsehood is in four other places, and this finding does not reach them
+#### The same falsehood is in four other places, and this finding does not reach them
 
 Found by the premise audit, recorded here, **not fixed** — `F33`'s posture is
 one sentence in one skill, and widening a taken finding is not the taker's call.
@@ -3424,7 +3426,7 @@ slower of the two, as the concurrency argument predicted. `gh pr checks 692`,
 2026-09-04. The `name:` key is confirmed working in the same output: the check
 reads `regression` rather than a file path.
 
-### F36 is the shape this menu keeps producing, and it is worth naming
+#### F36 is the shape this menu keeps producing, and it is worth naming
 
 Three of the last four findings here were **defects introduced by taking the
 finding before them** — `F34` by `F27`, the spliced sentence by `F29`, and now a
@@ -3518,6 +3520,44 @@ catching them.
 **Confidence: high** on the collision, which is reproducible in one command.
 **Ongoing cost: none** — three characters, and it removes a way for a census to
 be wrong.
+
+**Taken, 2026-09-04 (PR #695). Posture held: formatting only — three heading
+levels, no content moved, no finding text changed, no check added.** All three
+demoted, not just the colliding one.
+
+**Measured before and after, which is the whole of it:**
+
+| | headings matching `^### F[0-9]+` | highest finding | difference |
+|---|---|---|---|
+| before | 39 | `F39` | **+1** |
+| after | 39 | `F39` | **0** |
+
+And the stronger check, which the finding did not ask for:
+`grep -nE '^### ' SKILL-AUDIT.md` filtered for anything that is not
+`### [FN]<n> —` now returns **nothing**. **Every `###` heading in this file is a
+finding**, which is more than the `+1` this was filed about.
+
+**Premises held exactly.** The three headings were at the lines stated, and the
+`+1` reproduced on the branch before the edit.
+
+**Nothing depended on them, checked rather than assumed.** No file outside this
+menu cites any of the three section titles; neither `menu-check.mjs` nor
+`audit-citations.mjs` parses `###` at all; and no tool bounds a section of this
+file by heading depth.
+
+**Demoted, not renamed.** The colliding heading still begins with the characters
+`F36`, and an *unanchored* regex would still match it — but an unanchored regex
+matches paragraph prose too, so it was never the realistic scan. The proposal
+said demote; demoting is what happened, and renaming stays available if anyone
+wants belt and braces.
+
+**One thing observed and deliberately not fixed.** `audit-menu`'s shape table at
+`.claude/skills/audit-menu/SKILL.md:461` describes this file as having findings
+under **one** `##` section; there are seven. That row's *shape* cell is still
+right — findings are `###`, no severity word, and this change makes that cleaner
+— so nothing here falsified it; it was already understated before this PR. It is
+out of scope and belongs in its own finding. `audit-menu` says of that very table
+that *"the row that is missing has twice been the reader's own."*
 
 ### F39 — the seven section placements on this page, and the case for leaving them
 
