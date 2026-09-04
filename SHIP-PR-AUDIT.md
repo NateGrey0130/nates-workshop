@@ -1,6 +1,13 @@
 # `ship-pr` against the workflow it now describes, 2026-09-03
 
-> **Nothing here is taken.** Ten findings, `F1`–`F10`, from the brief at
+> **STATUS, 2026-09-03: `F1`–`F9` taken (PRs #659–#667), `F10` DECLINED (#668),
+> and `F11`–`F14` OPEN — nothing on those four has been decided.** Read each
+> finding's own note; this line is a summary and summaries here go stale.
+> `F11`–`F14` were opened *while taking* the first ten and sit under their own
+> heading after `F10`, in numeric order.
+>
+> **Filed 2026-09-03 with nothing taken.** Ten findings, `F1`–`F10`, from the
+> brief at
 > `docs/prompts/ship-pr-audit-prompt.md`. `###`, em dash, **no severity word** —
 > the shape `SKILL-AUDIT.md` uses, said here so the next reader does not infer
 > it. Each finding carries a `**Proposal:**` with a stated posture, evidence
@@ -708,3 +715,161 @@ number, rather than re-proposed here.
 **Ten findings, and this is the one where doing nothing was the work.** Recorded
 in full because a menu that only records what it changed teaches the wrong
 lesson about what a pass is for.
+
+---
+
+## Opened while taking a finding
+
+**Four findings that did not exist when this menu was filed.** They are numbered
+in sequence with the rest and sit under their own heading, after `F10` and in
+numeric order — deliberately *not* the arrangement `SKILL-AUDIT` used, whose own
+header calls that placement the thing that misreads it.
+
+**None of these is taken.** Nothing below has been decided.
+
+### F11 — the pass grew the file it audits by roughly 13%
+
+`ship-pr/SKILL.md` was **386 lines when this menu was filed** and is **438 after
+`F9`**. `F1`, `F2`, `F3`, `F6`, `F7` and `F9` added substantive material; `F8`
+took 21 lines back and was never sized to reverse the rest.
+
+`F8`'s premise — the file is long for what it does, and everything added to step
+4 competes with step 9 for attention at the moment step 9 is skipped — **survives
+its own taking, and this menu made it worse.** That is not an argument that the
+additions were wrong. Every one of them is a fact a session needs. It is an
+argument that the skill is now carrying more than one job.
+
+**Proposal.** Do nothing yet, and **re-read the file end to end before proposing
+anything** — a length finding written from `wc -l` is the shape this repo keeps
+catching. If it is genuinely too long, the split with a chance is *the loop*
+against *the reference material below the first `---`*: steps 1–10 are what a
+session reads under pressure, and the eight sections beneath are what it reads
+once. **Posture if taken: split, not delete.** No content leaves the repo.
+
+**The argument against is on the record twice.** `SKILL-AUDIT` `N4` declined a
+split of exactly this file, and Nate declined the subagent version on
+2026-09-03, both on the same ground: the only honest trigger for the split-off
+half is *"you just merged"*, which is when `ship-pr` is already loaded. **A
+length problem is not a new trigger.** Anyone proposing this must answer `N4`
+first.
+
+**Evidence.** `wc -l` before and after, from the taking branches, and
+`git diff --stat` on PRs #659–#667. 2026-09-03.
+
+**Confidence: high on the number, low that a split is the answer.** What would
+raise it: someone reading the file cold and reporting where they stopped.
+
+**Ongoing cost if taken:** a second file, a pointer to maintain, and a decision
+at every future edit about which half a sentence belongs in.
+
+### F12 — filing this menu falsified `audit-menu`'s file table, and this menu's own header did not notice
+
+`audit-menu`'s file table lists nineteen menus with their prefix, heading level
+and shape. **`SHIP-PR-AUDIT.md` is not in it**, and has not been since it was
+committed on 2026-09-03.
+
+This menu's header states the sixteenth-menu cost and cites `META-AUDIT` `A1`.
+**It states the wrong cost.** The cost is not that a sixteenth menu is untidy —
+it is that a table inside a skill goes stale the moment a menu is added, which
+is exactly the trap `SKILL-AUDIT` `F7` named about the fifteenth: *"filing it
+falsifies `F7` the moment this file is committed."* **It happened again, one
+menu later, in a header written by someone who had just read `F7`.**
+
+**Proposal.** Add the row — `SHIP-PR-AUDIT.md`, prefix `F`, level `###`, shape
+*"`### F1 — …`, no severity word; `F11`–`F14` under
+`## Opened while taking a finding`, after `F10` and in numeric order."* One line.
+**Posture: documentation only.**
+
+**And say the second thing, because the row alone repeats the mistake.** The
+table has now been wrong on the day a menu shipped, twice running. Either
+something derives it, or `audit-menu` says outright that the table is a **shape
+reference and not a list of menus** — which the paragraph above it already
+half-says about counts. **Recommend the sentence over the mechanism:** a script
+that regenerates a table nobody reads is more machinery than the problem earns.
+
+**Evidence.** `audit-menu/SKILL.md`, the file table, read 2026-09-03 — nineteen
+rows, no `SHIP-PR-AUDIT.md`. `SKILL-AUDIT.md` `F7` and its header.
+
+**Confidence: high.** One table, read directly.
+
+**Ongoing cost:** one row now; the recurring cost is the point of the second
+half.
+
+### F13 — the CI smoke job downloads wrangler inside a 120-second timeout, and went red on a documentation-only PR
+
+`apps/character-creator/test/checks/environment.mjs:40` spawns `npx wrangler`
+with `timeout: 120000`. On a GitHub runner the npx cache is cold, so that budget
+has to cover **downloading wrangler and applying the schema**. On PR #668 — one
+markdown file changed — *"schema applies cleanly"* failed after exactly 120
+seconds, every table check then reported `0`, and the job ended
+`SMOKE TEST FAILED (8 of 1665 checks)`. **Re-running the same commit failed the
+same way**, so this is not a flake in the ordinary sense; it is a budget the
+runner does not reliably fit inside.
+
+The nine PRs before it passed, with job times climbing — 25s, 32s, 39s, 42s,
+31s, 25s, 1m0s, 1m31s, 1m32s — and then 3m13s, red.
+
+**`tests.yml` makes the download deliberate**: there is no `package.json`, so
+`npx wrangler` resolves from the npx cache with `NPM_CONFIG_YES` answering the
+install prompt. That is what puts a network fetch inside the timed region.
+
+**Proposal.** One of two, and they are not equivalent. **Either** raise the
+timeout on the `--local` D1 calls and say in the comment that the budget covers
+a download on a cold cache — smallest change, suite identical everywhere;
+**or** warm the cache in the workflow with an explicit `npx wrangler --version`
+step before the suites, so the download happens outside the timed region and a
+genuine 120-second schema apply still fails. **Recommend the second:** it treats
+the cause rather than the symptom, and it keeps the timeout meaning what it says.
+**Posture: a workflow or test change, no new gate** — `tests.yml` stays
+reporting-only either way.
+
+**Do not pin a wrangler version to fix this.** That is a larger decision about
+how this repo resolves wrangler at all, and it belongs to `REPO-AUDIT`.
+
+**This is `F10`'s stated reopen condition, and it fired within the hour.** `F10`
+was declined the same day with *"what would reopen it: a red `tests` run that
+reached `main` unnoticed."* PR #668 is that run — but read what actually
+happened before reopening anything: the run was **not** unnoticed. It was
+noticed, and merged anyway. That is `F14`, and it is a different failure.
+
+**Evidence.** `gh run view 33826205525 --log-failed`, and the same run re-run
+and failed again; `environment.mjs:40`; job durations from `gh pr checks` across
+PRs #659–#668. 2026-09-03/04.
+
+**Confidence: high that it failed and reproduces. Medium on the cause** — the
+120-second boundary and the cold cache are both measured, but that the *download*
+consumed the budget is inferred from the timing rather than read from a log line
+saying so. **What would raise it:** the second proposal, run once, which proves
+the cause by removing it.
+
+**Ongoing cost:** one step in a workflow, or one number in a test.
+
+### F14 — a red CI run was merged because the command that read it was piped into `tail`
+
+PR #668 merged with `smoke` red. The check **was** read and the failure printed
+on screen; the merge ran anyway, because the sequence was
+`gh pr checks … | tail -2 && gh pr merge …`. **A pipeline's exit status is its
+last command's**, so `tail` succeeding masked `gh pr checks` failing, and `&&`
+saw success.
+
+Nine PRs in the same batch went through the identical construction and were
+green, so nothing ever signalled that the guard did not work.
+
+**This is not `F10`.** `F10` is about nobody looking. This is looking, seeing
+`fail`, and being overruled by shell semantics — which is worse, because the
+screen said one thing while the next command did another.
+
+**Proposal.** One paragraph in `windows-shell`, beside the exit-code material it
+already carries: **never pipe a command whose exit status is the thing you are
+testing.** `set -o pipefail`, or capture the status first, or split the call from
+its display. Name this incident. **Posture: documentation only.** Do **not**
+propose a gate — a required status check is a `REPO-AUDIT` decision that both
+`tests.yml` and `deploy-alarm.yml` deliberately leave open.
+
+**Evidence.** The command as run, and PR #668's `smoke` conclusion of `failure`
+against its merge commit. 2026-09-03.
+
+**Confidence: high.** Standard shell behaviour, and the incident is on the PR.
+
+**Ongoing cost:** one paragraph. **Cheap, and the failure it prevents is
+silent** — which is the combination this repo usually takes.
