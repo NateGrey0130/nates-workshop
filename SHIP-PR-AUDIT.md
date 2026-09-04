@@ -164,6 +164,25 @@ proven on the jq rather than on a real bare commit.
 **Ongoing cost: none.** It is the same one call in the same place, with a
 different filter.
 
+**Taken, 2026-09-03 (PR #659).** As proposed, posture included: one command, one
+paragraph, one sentence of prose, no new gate and no new script. The grace period
+was deliberately not lifted from `deploy-alarm.yml`, as the finding said.
+
+**All three premises reproduced** — `4e4eb128` still carries both check-runs, and
+the gojq null test still prints a bare name. Two things the work turned up that
+the finding did not say:
+
+- **The proposal's "add one sentence saying empty output means no run" was the
+  wrong shape, and the finding's own replacement query already contained the
+  right one.** A sentence telling a reader to interpret silence correctly is the
+  kind of instruction this menu's `F10` argues against. The query says `NO RUN`
+  in words instead, so there is no silence to interpret.
+- **The `NO RUN` branch was proven by making it fire**, with
+  `select(.name=="NoSuchCheck")` against a real commit. The finding recorded that
+  it could not be demonstrated on this repo's history, since every commit here
+  carries at least one check-run; that was true and is not a reason to ship an
+  untested branch.
+
 ---
 
 ### F2 — the deploy section's premise is false: a third mechanism exists and the skill has never heard of it

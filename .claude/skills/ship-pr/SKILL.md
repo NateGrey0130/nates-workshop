@@ -125,8 +125,20 @@ did, never as the reason to skip one. `regression.mjs` is not in it at all.
    confirming the merge. See [the deploy is not
    guaranteed](#the-deploy-is-not-guaranteed).
    ```bash
-   gh api repos/NateGrey0130/nates-workshop/commits/<sha>/check-runs --jq '.check_runs[] | .name + "  " + .conclusion'
+   gh api repos/NateGrey0130/nates-workshop/commits/<sha>/check-runs \
+     --jq '[.check_runs[] | select(.name=="Cloudflare Pages")]
+           | if length == 0 then "NO RUN" else (.[0].status + "/" + (.[0].conclusion // "pending")) end'
    ```
+   **Filtered to the Pages run, and printing status as well as conclusion.**
+   Both halves are load-bearing. Another workflow posts `check-recent-deploys`
+   to `main`, so an unfiltered read fails the commit when a *different* monitor
+   is red — `deploy-sweep.mjs` did exactly that on 2026-09-03 and calls it
+   "two tools feeding each other false alarms". And `conclusion` is **null while
+   a build is in flight**, which is where you are standing: this runs seconds
+   after the merge and a Pages build takes 20-35 of them. `gh`'s jq is gojq,
+   where `null` is the identity for `+`, so the old command printed the check's
+   name and nothing else — a blank that is not `success` and is not a failure
+   either. `completed/success` is the pass. `pending` means wait and look again.
 10. **Verify production**, by asking it — not by reading the exit code.
 
 ## The deploy is not guaranteed
@@ -140,10 +152,13 @@ Merges landed on `main` for four days in August 2026 without one of them
 reaching production. `SETUP.md` → *When the merge does not deploy* has the
 mechanism.
 
-So the merge commit's own check-runs are the step, above — and a `conclusion`
-of anything but `success` on the Pages run means the merge did not ship.
-`gh pr checks` is not a substitute: it has shown a red "Cloudflare Pages fail"
-on PRs that deployed perfectly well, so the mark there is noise.
+So the merge commit's own check-runs are the step, above — and anything but
+`completed/success` on the Pages run means the merge has not shipped **yet**.
+`NO RUN` is the one that misreads: a merge registering no check-run at all looks
+exactly like a quiet healthy merge and is not one, which is why the query says
+so in words rather than printing nothing. `gh pr checks` is not a substitute: it
+has shown a red "Cloudflare Pages fail" on PRs that deployed perfectly well, so
+the mark there is noise.
 
 **Step 9 is per-merge, and it is a thing to remember.** The signal was never the
 problem: every merge commit across those four days reports
