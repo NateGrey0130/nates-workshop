@@ -64,6 +64,29 @@ jobs:
           # is no lockfile to key on.
           node-version: '24'
 
+      # WARM THE npx CACHE BEFORE ANYTHING IS TIMED. SHIP-PR-AUDIT.md F13.
+      #
+      # `apps/character-creator/test/checks/environment.mjs` spawns
+      # `npx wrangler` with `timeout: 120000`. A runner's npx cache is cold, so
+      # without this step that budget has to cover DOWNLOADING wrangler as well
+      # as applying the schema - and on 2026-09-03/04 it stopped fitting.
+      # "schema applies cleanly" failed at exactly 120 seconds on PR #668, which
+      # changed one markdown file; again on the same commit re-run; and again on
+      # #669. Job times had climbed all batch - 25s, 32s, 39s, 42s, 31s, 25s,
+      # 1m0s, 1m31s, 1m32s - and then 3m13s, red.
+      #
+      # THE TIMEOUT IS NOT RAISED, DELIBERATELY. Moving the download out of the
+      # timed region keeps 120 seconds meaning what it says: a schema apply that
+      # genuinely takes two minutes still fails. Raising the number would have
+      # hidden the next real slowdown behind this one.
+      #
+      # NOT A VERSION PIN. `npx wrangler` still resolves whatever is current,
+      # which is this repo's deliberate posture - there is no package.json.
+      # Pinning is a larger decision about how wrangler resolves here at all and
+      # belongs to REPO-AUDIT rather than to this file.
+      - name: warm the npx cache
+        run: npx wrangler --version
+
       # Named individually rather than looped, so a failure names its own app in
       # the step list instead of inside a log.
       - name: character-creator
