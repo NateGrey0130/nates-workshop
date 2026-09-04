@@ -325,6 +325,13 @@ language of choice, and the assassin's *"+5% on all acrobatic skills"* — which
 needs the per-skill modifier `CLASS-AUDIT`'s *"Checked and still true"* list
 records as absent.
 
+> **The paragraph above was WRONG about the weapon-proficiency picks and the
+> language, and it shipped.** They are expressible, they were expressible the day
+> `R2` was taken, and both classes were left short of them until `R10` (below,
+> PR #722). **The assassin's acrobatic modifier is the only part of that sentence
+> that survived.** Left standing above rather than edited, because an outcome note
+> is a record of what was believed at the time — but do not read it as current.
+
 ### R3 — high — the Warlock permits spell picks its own record forbids
 
 `warlock` carries `spells_starting: 3` and `spell_levels_allowed: [1]` and **no
@@ -860,6 +867,61 @@ a limitation claim, so the sweep was blind to it. It surfaced only because
 beside them — **a prose-only PR is exactly the PR that walks past a missing
 mechanic.** That is an argument for running the premise check on every finding,
 not for a fifth detector.
+
+### R10 — high — `R2` shipped a false "not expressible" note, and both classes were left short
+
+**This menu's own work was the defect.** `R2` (PR #714) gave the demon-goblin and
+the monk their MOS packages and wrote on both `mos` blocks: *"NOT EXPRESSIBLE
+HERE … the open weapon-proficiency picks"*. That was false when it was written.
+
+**An MOS option takes the same skill entries `occ_skills` does, choice groups
+included**, and `validateSkillEntries` says so in its own header:
+
+> *"occ_skills uses it and so does every MOS option, because a book that says
+> 'gain all skills under that MOS' is describing the same list in a smaller box."*
+
+`isChoiceGroup` (`apps/character-creator/js/parser.js:41`) admits `categories`,
+and the parser documents that form as *"when the book says 'any N skills from
+&lt;category&gt;'"*. `Weapon Proficiencies` is a real catalog category, and
+eleven-plus published classes already use that literal group in `occ_skills`.
+
+**So the classes were short of exactly what `R2` claimed to have rescued.** A
+monk taking the Arts of Offense was **four** weapon proficiencies short; Defense
+and Meditation two each; the demon-goblin's assassin two, its thief one, its spy
+two plus a language.
+
+```bash
+node scripts/q.mjs --remote "SELECT class_id, instr(markdown,'categories: [\"Weapon Proficiencies\"]')>0 AS has_group FROM imported_classes WHERE class_id IN ('monk','demon-goblin')"
+```
+
+**Proposal:** add the choice groups to all six options and rewrite both notes.
+**Posture: additive. Nothing `R2` granted moves** — a readback asserts its named
+skills are still present.
+
+**Evidence:** the claim re-sweep of 2026-09-04, which re-read `R2`'s own note as
+a claim and disagreed with it; parser paths read at the lines cited.
+**Confidence: very high.** The parser's own comment states the rule.
+**Ongoing cost:** none.
+
+**Taken, 2026-09-04 (PR #722)** — as written. Composed once per option through
+the real `composeClass`: assassin 14, thief 16, spy 15, defense 4, offense 4,
+meditation 7 granted entries, no duplicates, every name in the live catalog, and
+`class-check --remote` reads `ready — 0 errors` for both.
+
+**What survived of `R2`'s sentence is one clause, checked rather than assumed:**
+the assassin's *"+5% on all acrobatic skills"*. The assassin package grants **no
+acrobatic skill at all**, so it modifies skills obtained elsewhere — the
+race-level per-skill modifier `CLASS-AUDIT`'s *"Checked and still true"* list
+records as absent. Newly stated and not in `R2`: the catalog does not divide
+Weapon Proficiencies into ancient and modern, so the assassin's and thief's
+groups are **broader than the book** by that much. That is on the option, rather
+than used as a reason to grant nothing — which is the mistake this finding
+exists to undo.
+
+**Why the first sweep could not have caught it:** `R2`'s note did not exist yet.
+The re-sweep read it because it re-read the whole corpus after the day's changes,
+which is an argument for re-sweeping **after** a batch of fixes rather than only
+before one.
 
 ---
 
