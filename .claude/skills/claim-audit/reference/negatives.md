@@ -110,6 +110,56 @@ A sweep that simply declines to touch anything scores a false pass here. These
 negatives measure precision only. Pair them with the confirmed-stale findings in
 `SKILL.md` if what you want is a score.
 
+## The run of 2026-09-04 — both models scored 9/9
+
+**Method.** Nine claims: the six above, plus three synthetic positives of the
+same shape whose rows do exist — `Boxing`, `Prowl` and `W.P. Paired Weapons`,
+all seed rows. Read-only, against `--remote`.
+
+The agent's method was used with **the pointer to this file and both worked
+examples removed**. `claim-capability-verifier` as first written told itself to
+read this fixture, which made it impossible to score at all; that flaw was
+fixed the same day, and the agent now says outright not to open this file while
+working.
+
+**Result.** Both models returned six `HOLDS` and three `STALE` — no false
+positive on any of the six, and both split the Siege conjunction into its two
+parts unprompted.
+
+| | `sonnet` | `opus` |
+|---|---|---|
+| verdicts | 9/9 | 9/9 |
+| tokens | 101,487 | 106,883 |
+| tool calls | 33 | 22 |
+| wall clock | 4m46s | 5m43s |
+
+**The pin stays `sonnet`**, on measurement rather than argument: `opus` cost
+roughly 2.5× for the same verdicts.
+
+**What `opus` did better anyway, none of which changed an answer.** It read the
+book's own OCR cache to confirm the source text — `pf` p122 prints *"Any, except
+Large Axes, Pole Arms and Lance"* — checked `catalog_redirects` so a renamed row
+could not masquerade as an absent one, confirmed every row carries
+`systems = NULL` so no claim could be rescued by arguing a system mismatch, and
+classified `Boxing` as a **seed** row, which makes that note false when written
+rather than merely outdated.
+
+**Three limits, so nobody reads this as stronger than it is:**
+
+- **Neither model met the trap.** Both reached `skills` by reasoning from the
+  category name, and **neither looked in `gear` at all** — so neither had to
+  reject the eight rows matching `%poison%`. The discrimination this fixture
+  exists to test went unexercised, and a clean score did not depend on it. The
+  agent now has to report a rejected near-match explicitly, which is the change
+  that would surface it next time.
+- **The synthetic positives were weak.** Both agents independently established
+  that claims 7–9 appear in no file and in neither database, and said so
+  unprompted. They verified the catalog facts correctly regardless, so recall
+  was measured — but a real stale sentence is a better control than an invented
+  one.
+- **Nine claims is a small sample**, and the six negatives are **three** distinct
+  shapes, not six independent ones.
+
 ## One figure that did not reproduce
 
 `SKILL.md` says of N1: *"twelve poisons had just been imported."* A name match

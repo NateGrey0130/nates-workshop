@@ -104,6 +104,18 @@ both filed 2026-09-02. The fields above are that template minus the two that rot
 **The highest-value rule here.** Verify the premises against current code before
 scoping, and lead the report with the corrections.
 
+**Hand that check to the `audit-premise-auditor` subagent.** It has no write
+tools, so it cannot begin implementing while it is still checking — which is the
+failure this rule keeps losing to: the same session verifies the premises and
+then writes the PR, having already decided it wants them to hold. It reads the
+menu's status header first, never greps an outcome note, carries the bare-number
+ambiguity from the section below, and returns the **posture** in the proposal's
+own words.
+
+**It covers the first failure below, not the second.** Re-measuring a finding is
+work an agent can do cold. Measuring what *you* are about to write is yours, and
+no hand-off reaches it.
+
 **Checking a finding before scoping it turns something up nearly every time, and
 it is usually not the premises.** Two different failures hide behind that, and
 they need different remedies:

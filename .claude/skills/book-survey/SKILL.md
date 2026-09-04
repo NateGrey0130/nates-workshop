@@ -473,6 +473,21 @@ Necessary. **Not sufficient — see phase 5.**
 Keep batches small. Spell entries are long, and a reply that overruns the output
 ceiling is rejected rather than half-saved.
 
+**A book too big for one pass fans out to the `book-extract-worker` subagent**,
+one invocation per slice. It returns rows cited to the **printed folio** and
+stops there — it does not map to catalog vocabulary, because twenty slices
+guessing at conventions in parallel produce uniform, confident, wrong output
+that all agrees with itself.
+
+**Give each worker one page beyond each end of its range.** Two things a slice
+loses that a whole-book pass does not: a stat block straddling a boundary, and a
+governing heading sitting outside the range — the same mid-page heading problem
+that put 13 spells one level too high in phase 5 below. The worker reports both
+rather than reconstructing them; the far side belongs to another slice.
+
+**Fanning out does not skip phase 5.** More parallel extraction is more for
+`book-reconcile` to check, not less.
+
 ## 4b. A book may ship TWO authorities, and they check each other
 
 **Look for a second one before parsing the first.** Where a book indexes its

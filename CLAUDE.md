@@ -30,7 +30,10 @@ junction block in `SETUP.md`. They load by name from any working directory now.
 the gap: the skill simply does not exist for a session started outside the repo,
 which is the working directory the book work uses.
 
-**The subagent is linked too, since 2026-08-28** (`INGESTION-AUDIT` F8).
+**The agents directory is linked too, since 2026-08-28** (`INGESTION-AUDIT` F8),
+when `book-reconcile` was the only agent in it. There are more now — `ls
+.claude/agents/` is the list, and it is the **only** list; nothing enumerates
+them, so a count written here would rot the next time one lands.
 `book-survey` §5 can spawn `book-reconcile` from the working directory, the one
 place the book work runs — `C:\Users\natha\Projects\workshop` since 2026-09-02
 (`MACHINE-AUDIT.md` M7/M9/M12), and `Downloads` before that. The link is to the
