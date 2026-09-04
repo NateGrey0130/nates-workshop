@@ -1,10 +1,14 @@
 # `ship-pr` against the workflow it now describes, 2026-09-03
 
-> **STATUS, 2026-09-03: `F1`–`F9` taken (PRs #659–#667), `F10` DECLINED (#668),
-> and `F11`–`F14` OPEN — nothing on those four has been decided.** Read each
-> finding's own note; this line is a summary and summaries here go stale.
-> `F11`–`F14` were opened *while taking* the first ten and sit under their own
-> heading after `F10`, in numeric order.
+> **STATUS: `F1`–`F9` taken (PRs #659–#667), `F10` DECLINED (#668), `F13` taken
+> (#670), and `F11`, `F12`, `F14` OPEN — nothing on those three has been
+> decided.** Read each finding's own note; this line is a summary and summaries
+> here go stale. `F11`–`F14` were opened *while taking* the first ten and sit
+> under their own heading after `F10`, in numeric order.
+>
+> **`F13` was taken before it was filed**, which inverts the protocol on purpose:
+> it is the finding that describes why this file's own PR could not go green, so
+> its fix had to land first. Its note is here rather than in #670.
 >
 > **Filed 2026-09-03 with nothing taken.** Ten findings, `F1`–`F10`, from the
 > brief at
@@ -843,6 +847,28 @@ saying so. **What would raise it:** the second proposal, run once, which proves
 the cause by removing it.
 
 **Ongoing cost:** one step in a workflow, or one number in a test.
+
+**Taken, 2026-09-04 (PR #670), on the second proposal.** One step —
+`npx wrangler --version` — before the suites, so the download happens outside the
+timed region. **The timeout was not raised and no version was pinned**, both for
+the reasons the finding gave.
+
+**The medium-confidence cause is confirmed, by removal.** #670's own CI run
+passed — **and still took 3m3s**, against 3m13s and 3m15s for the two red ones.
+The work was always about three minutes; what changed is that the 120-second
+budget no longer has a package download inside it. That is the strongest shape
+this evidence could take: the fix did not make the job faster, it made the timed
+region honest. Confidence closes at **high**.
+
+**The protocol was inverted here, deliberately, and it is worth naming.** This
+finding was **taken before it was filed** — `F13` lives on PR #669, which was
+open and red *for the reason `F13` describes*, so the finding's subject was
+blocking its own filing. The note therefore lands in the filing PR rather than
+the taking one, against `audit-menu`'s rule that the note goes in the same PR as
+the change. #670's body says so rather than leaving it to be noticed.
+
+**What this does not do:** `tests.yml` is still reporting-only and a red run
+still cannot stop a merge. `F14` is the finding about that, and it is untouched.
 
 ### F14 — a red CI run was merged because the command that read it was piped into `tail`
 
