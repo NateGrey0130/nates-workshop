@@ -231,6 +231,21 @@ reached him by email. If it did not, this finding is more urgent, not less.
 **Ongoing cost:** one paragraph, plus a third mechanism to keep current if the
 schedule changes. Real but small.
 
+**Taken, 2026-09-03 (PR #660).** As proposed: documentation only, one paragraph
+and a three-item list, and the workflow's own header left as the explanation.
+
+**The medium-confidence clause resolved in the direction that closes it.** The
+finding could not confirm that the alarm's email had ever reached anyone, and
+said the finding would be *more* urgent if it had not. Nate confirms the first
+red run on 2026-09-03 reached him, so the channel is proven end to end and the
+paragraph states it as fact with its date rather than hedging.
+
+**One thing added that the finding did not ask for:** the sentence that muting
+this repo's Actions notifications silences the alarm without failing it. The
+workflow's header says the alarm *depends on* notifications being on; it does
+not say what that looks like from the outside, which is nothing at all. A person
+needs to have read that once.
+
 ---
 
 ### F3 — the PR body convention is nowhere in the skill, and a taken finding was built on the claim that it is
