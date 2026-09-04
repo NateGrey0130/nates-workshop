@@ -1,6 +1,6 @@
 ---
 name: windows-shell
-description: The shell traps on this Windows machine that corrupt a file, a command or a commit without failing. Use before any in-place edit of repo source, before writing an inline script with backslashes or Windows paths, when a dev-server port will not free, when a commit message contains backticks, and when a wrangler query returns something that looks wrong. Covers line endings, encoding, the Bash tool's own unescaping, killing wrangler properly, and the PowerShell quoting that has produced wrong data.
+description: The shell traps on this Windows machine that corrupt a file, a command or a commit without failing. Use before any in-place edit of repo source, before writing an inline script with backslashes or Windows paths, when a dev-server port will not free, when a commit message contains backticks, when chaining a command on another command's success, and when a wrangler query returns something that looks wrong. Covers line endings, encoding, the Bash tool's own unescaping, killing wrangler properly, the pipe that discards the exit code you were testing, and the PowerShell quoting that has produced wrong data.
 ---
 
 # Shell traps on this machine
@@ -68,6 +68,36 @@ collapses again.
 **Write the script to the scratchpad with the Write tool and run it by path.**
 Write content is not unescaped. Inside Python, build a backslash with `chr(92)`.
 Keep Windows paths out of inline heredocs.
+
+## A pipe throws away the exit code you were testing
+
+**Never pipe a command whose exit status is the thing you are checking.** A
+pipeline exits with its *last* command's status, and `pipefail` is **off** here:
+
+```bash
+false | tail -1 ; echo $?              # 0
+( set -o pipefail; false | tail -1 ) ; echo $?   # 1
+```
+
+So `gh pr checks <n> | tail -2 && gh pr merge <n>` **merges on a red build**.
+That is not hypothetical: PR #668 merged with `smoke` at `failure` on
+2026-09-04, and the word `fail` was on screen when it did. Nine PRs in the same
+batch used the identical construction and were green, so nothing ever showed
+that the guard did not work — which is this page's whole thesis, applied to the
+shell rather than to a file.
+
+**Three fixes, in order of preference:**
+
+```bash
+OUT=$(gh pr checks 670 2>&1); RC=$?; echo "$OUT" | tail -3   # capture first, display after
+set -o pipefail                                              # per-command-block, not persisted
+gh run watch <id> --exit-status                              # let the tool carry the status
+```
+
+The first is the one to reach for, because it survives being copied into a
+context where `pipefail` was never set. **`| head`, `| tail`, `| grep` and
+`| jq` are all the same trap** — and `grep` is the worst of them, because it has
+a meaningful exit code of its own that then becomes the pipeline's.
 
 ## Killing a dev server
 
