@@ -1,9 +1,11 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **NOTHING IS OPEN. `F33` and `F34` were taken 2026-09-04 (PRs #689, #688).**
-> `F33`'s note records **four other places carrying the same falsehood**, left
-> unfixed because its posture was one sentence in one skill — `ship-pr` is the
-> one that matters and needs its own finding. Filed 2026-09-04 under
+> **`F35` IS OPEN**, filed 2026-09-04 under **`## Opened while taking F33`** — a
+> **fifth** placement on this page. **`F33` and `F34` were taken 2026-09-04**
+> (PRs #689, #688). `F33`'s note records four other places carrying the same
+> falsehood, left unfixed because its posture was one sentence in one skill;
+> `F35` is the one that matters, and it is **subtractive** — read its note before
+> proposing anything additive there. Filed 2026-09-04 under
 > **`## Opened while taking F29 to F32`** — a **fourth** placement on this page,
 > after the `N` block, `## Opened while building the verifier agents` and
 > `## Opened by taking F28`. **`F29`–`F32` were all taken 2026-09-04** (PRs
@@ -3198,6 +3200,68 @@ recorded them saying.
 verification (PR #683). It could check its own file only because `F27` had given
 it the skill to check it against — so `F27` earned its place by catching a defect
 in the change that `F27` itself was.
+
+---
+
+## Opened while taking F33
+
+Filed 2026-09-04. A **fifth** placement on this page; the header says so. `F33`'s
+note listed four other copies of the line-ending falsehood and left them, its
+posture being one sentence in one skill. This is the one that matters.
+
+### F35 — `ship-pr` carries the same false line-ending clause, and the clause was never part of what it was told to say
+
+`.claude/skills/ship-pr/SKILL.md:444-445`, read 2026-09-04: *"`.sql` is pinned to
+LF by `.gitattributes` and the smoke test fails a `.sql` carrying a CR;
+**everything else here is CRLF**."*
+
+The last clause is false in the two ways `F33` established: `.github/workflows/*.yml`
+is pinned to LF as well, and the two `-text` paths are normalised in neither
+direction. **This is the skill a session has open while shipping a change to a
+workflow file**, which is precisely when the sentence misleads — and it did,
+during `F29` (PR #682).
+
+**Two settled decisions bear on this and neither is being reversed.** Naming
+them because a proposal that fails to say a decision exists is the shape
+`audit-menu` warns about:
+
+- **`SHIP-PR-AUDIT` `F8`, taken 2026-09-03 (PR #666)** compressed this very
+  section from nine lines to two, and prescribed the content: *"`.sql` is LF by
+  `.gitattributes` and the smoke test fails a CR; `windows-shell` before any
+  in-place edit."* **The false clause is not in that prescription.** It arrived
+  with the compression and nothing asked for it. This finding restores `F8`'s
+  intent rather than undoing it.
+- **`SKILL-AUDIT` `N2`, written 2026-09-02 (PR #568)** made *"do not duplicate
+  it"* its explicit condition — `ship-pr` keeps one-line pointers into
+  `windows-shell` rather than copies, which is why `ship-pr` came out shorter.
+  **So the fix here is emphatically NOT to name all four rules**, which is what
+  `F33` did for `windows-shell` and what would re-create the duplicate `N2`
+  forbade.
+
+**Proposal:** delete the clause *"everything else here is CRLF"* and add nothing
+in its place. What remains is exactly `F8`'s two lines — the `.sql` pin, the
+smoke test's CR failure, and the pointer to `windows-shell`, which now owns the
+complete list. **Posture: documentation only, and SUBTRACTIVE — one clause out,
+no new content, no check, no gate.** A taker who finds themselves adding a
+sentence has misread this.
+
+**Evidence.** `.claude/skills/ship-pr/SKILL.md:444-445` read in place 2026-09-04.
+`F8`'s prescription read at `SHIP-PR-AUDIT.md:574-577`; `N2`'s condition at
+`SKILL-AUDIT.md:2230-2235`. The falsity of the clause is `F33`'s evidence,
+re-verified there against `.gitattributes` the same day.
+
+**Confidence: high.** Every input is a passage read directly, and the remedy is a
+deletion, which cannot introduce a new claim.
+
+**Ongoing cost: negative.** One fewer copy of a fact that has now been wrong in
+five places at once, and one less line in a skill that `SHIP-PR-AUDIT` `F8`
+already judged too long for what it does.
+
+**Three copies remain after this, and they are not proposed here** — the memory
+file `sed-i-strips-crlf.md`, `docs/prompts/gm-grants-prompt.md:180` with its
+workshop twin, and `docs/prompts/n-findings-prompt.md:58`. The briefs are
+archived records of what was said at the time. The memory file is outside this
+repo and no grep of it reaches; it is the one worth a separate decision.
 
 ---
 
