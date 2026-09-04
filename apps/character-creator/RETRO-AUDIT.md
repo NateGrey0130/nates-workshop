@@ -687,6 +687,40 @@ The defect is that nothing says so.
 measurement**, and re-measuring cannot settle it.
 **Ongoing cost:** (b) is one paragraph. (a) is a permanent surface.
 
+**Taken, 2026-09-04 (PR #718) — option (b), the finding's own recommendation.**
+Documentation only. No column was wired to a surface, and none was removed.
+
+A new section, *"Some of those columns are stored but not rendered"*, sits
+directly beneath the migration table in
+`apps/character-creator/docs/operations.md`, immediately before its
+*"One database, and the case for keeping it that way"* heading. That table is
+where a migration states what it adds — the repo's own `CLAUDE.md` calls it
+*"the one place each migration says what it adds"* — so the caveat now sits
+where a reader meets the promise.
+
+**The facts were re-measured on the day rather than carried from the finding**,
+and one number moved: it is **18 spells + 2 psionic powers** with a
+`variant_note`, **34** gear rows with an `sdc` and **243** with a `cost_note` —
+277 stored values across columns nothing renders. The `variant_note` grep still
+returns nothing, and the only `gear.sdc`-shaped hit anywhere in `functions/` is
+a **character's own pools** in `characters.js`, not a gear projection.
+
+**The section says what IS served**, because that is the half a reader needs:
+three columns, and only on a character's own items — `gear.category`,
+`gear.damage` and `gear.payload`, for play mode's weapon cards. The picker
+projects eight columns and not one is a stat.
+
+**It does not propose wiring anything up**, and says so. `034-gear-sdc.sql` was
+not wrong to move S.D.C. out of prose — a column can be queried, corrected and
+counted where a sentence cannot — but the payoff its own text named, *"no sheet
+and no arithmetic can reach"*, has not arrived, and building a surface for a
+field nobody has asked to see is a worse trade than saying so once.
+
+**This is the finding this pass is least sure was worth filing and most sure was
+worth writing down.** It was found by accident, by asking *who reads this* rather
+than *who sets this* — the question none of the four detectors asks, and the one
+that would have caught it years earlier.
+
 ### R8 — low — a standing check, and it is not the capability-vs-date diff
 
 The brief asked whether this becomes `scripts/retro-check.mjs` run after every
