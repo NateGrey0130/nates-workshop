@@ -165,6 +165,54 @@ than claimed, the way `fix-godling-skill-category-bonuses-note.sql` did.
 the claim were both confirmed present in the same record.
 **Ongoing cost:** none. `R8` is what would stop it recurring.
 
+**Taken, 2026-09-04 (PR #712)** — posture held exactly: **prose only, no mechanic,
+no column, no bonus value changed**, and eight readbacks assert it rather than
+claiming it. Five of the eight check that the key each note denied is *still
+present* after the rewrite.
+
+**`audit-premise-auditor` changed the scope in three ways before anything was
+written, and every one of them mattered.** The finding as filed would have
+shipped two errors:
+
+- **Two of the sentences R1 quoted are TRUE and are untouched.** `spacer`'s *"The
+  saves list is a fixed sixteen and none of them is a vacuum"* is correct —
+  `SAVE_FIELDS` in `apps/character-creator/sheet.js` is exactly sixteen entries
+  and none is a vacuum, confirmed by reading it. What was false was the
+  *conclusion* drawn from it, that the bonus is therefore not on the sheet;
+  `otherSaves()` renders `bonuses.saves.other` **after** those sixteen. And
+  `crazy`'s sentence is compound — *"The per-level ISP growth and category
+  exclusions are prose-only"* — of which only the second half is false. The
+  per-level I.S.P. half is right in the sense meant: `parser.js` warns outright
+  that `bonuses.at_level.pools` is not applied, so the growth belongs in the
+  `isp_base` formula, where the class already puts it. **A sweep that replaced
+  either sentence whole would have turned a true claim into a false one**, which
+  is the failure `reference/negatives.md` exists to score.
+- **R1 quoted the weaker of `spacer`'s two false sentences.** Its
+  `extraction_notes` carry a flatly false one the finding never named — *"THE
+  ONLY BONUS THIS CLASS HAS IS NOT STORED, and `bonuses` is empty because of
+  it"* — which is the sentence most likely to stop the next reader. Both are
+  rewritten here; a PR taking R1 as written would have left it standing.
+- **`juicer-wannabe`'s mid-campaign conversion sentence is on `CLASS-AUDIT`'s
+  *"Checked and still true"* list** and sits in the same paragraph. Untouched,
+  and the rewritten sentence beside it now says so explicitly.
+
+**The wrap trap fired exactly as the finding predicted.** `wilderness-scout`'s
+note is stored as `(Perception` + newline + `    has no bonus key`, so the
+replacement had to be built with `char(10)` and the original indentation — the
+convention `add-noro-psionic-power-armor.sql` already uses. All five classes
+re-parse through the real parser at **0 errors** after the edit, which is the
+check that the YAML block scalars survived.
+
+**Found while doing the work, and NOT folded in:** `crazy` carries
+`bonuses.combat: { initiative: 2, attacks: 1, roll: 4 }` with **no `perception`**,
+while its own Heightened Senses ability opens *"+3 on Perception Rolls even when
+acting silly and bouncing around"*, which reads unconditional. `CLASS-AUDIT` `F8`
+granted `combat.perception` to twelve classes and named its deliberate
+exclusions; `crazy` is in neither list. That is a possible **missing mechanic**,
+not note rot, and settling it needs RUE printed 53-57. Recorded under *Not
+established* rather than fixed here, because a prose-only PR is exactly the PR
+that would have walked past it.
+
 ### R2 — high — `demon-goblin` and `monk` keep whole skill packages in prose, and `skills.mos` grants them
 
 This is the **Merc Soldier defect, still live in two more classes.** Both records
@@ -532,3 +580,15 @@ Recorded rather than resolved by inference.
 - **Per-row provenance for catalog rows does not exist** and was not
   reconstructed. Every catalog finding here rests on the row's *content*, not on
   a date.
+- **Whether `crazy` is missing a `combat.perception` grant.** Turned up while
+  `R1` was being taken, 2026-09-04. The class carries
+  `bonuses.combat: { initiative: 2, attacks: 1, roll: 4 }` and no `perception`,
+  while its Heightened Senses ability description reads *"+3 on Perception Rolls
+  even when acting silly and bouncing around, or seemingly bored"* — which does
+  not read conditional. `CLASS-AUDIT` `F8` and
+  `apps/character-creator/db/fix-perception-bonuses.sql` granted the key to
+  twelve classes and named three deliberate exclusions; `crazy` is on neither
+  list, so it is unclear whether it was skipped on purpose. **Settling it needs
+  RUE printed 53-57, which was not opened.** If the bonus is real and
+  unconditional this is a missing mechanic rather than note rot, and a finding of
+  its own.
