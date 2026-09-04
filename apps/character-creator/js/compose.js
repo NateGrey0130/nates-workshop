@@ -138,7 +138,22 @@ export const CORE_SDC_BY_CLASS = {
   'shifter': '1D6',
   'stone-master': '1D6',
   'techno-wizard': '1D6',
+  // The generic `warlock` is retired (retire-warlock-generic.sql) and replaced
+  // by ten per-Force classes, RETRO-AUDIT R3. Its entry STAYS: a retired class
+  // still composes for a character who already holds one, and dropping the row
+  // would give them a NULL S.D.C. All ten inherit its grouping, because a
+  // Warlock is a practitioner of magic whichever Element it draws on.
   'warlock': '1D6',
+  'warlock-air': '1D6',
+  'warlock-earth': '1D6',
+  'warlock-fire': '1D6',
+  'warlock-water': '1D6',
+  'warlock-air-earth': '1D6',
+  'warlock-air-fire': '1D6',
+  'warlock-air-water': '1D6',
+  'warlock-earth-fire': '1D6',
+  'warlock-earth-water': '1D6',
+  'warlock-fire-water': '1D6',
   // Rifts Ultimate Edition, printed 86-99 - the Adventurers & Scholars
   // section, which is where the book itself files all eight of these.
   'body-fixer': '1D6',

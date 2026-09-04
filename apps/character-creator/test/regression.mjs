@@ -1065,10 +1065,16 @@ console.log('\n' + '[7/7] Checks that only a database can make');
 
   // The Warlock's row is the Rifts printing, so its Palladium figures belong in
   // its delta section and NOT in its frontmatter.
-  const warlock = classes.find((c) => c.id === 'warlock');
+  //
+  // Checked across ALL TEN per-Force Warlocks rather than the one generic class
+  // this used to name: RETRO-AUDIT R3 retired `warlock` and replaced it with one
+  // class per Elemental Force and one per pair, so a lookup by that id now finds
+  // nothing and the check would pass vacuously on `undefined === undefined`.
+  const warlocks = classes.filter((c) => c.id.startsWith('warlock-'));
+  check('all ten Warlocks are live to check', warlocks.length === 10, warlocks.length);
   check('the Warlock takes its Palladium experience as a delta, not a table',
-    warlock && warlock.xp_table === undefined,
-    JSON.stringify(warlock?.xp_table));
+    warlocks.length === 10 && warlocks.every((w) => w.xp_table === undefined),
+    JSON.stringify(warlocks.filter((w) => w.xp_table !== undefined).map((w) => w.id)));
 }
 
 // ---------- gear.sdc ----------
