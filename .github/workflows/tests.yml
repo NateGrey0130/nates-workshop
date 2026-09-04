@@ -103,3 +103,38 @@ jobs:
 
       - name: media-vault
         run: node apps/media-vault/test/smoke.mjs
+
+  # DOES EVERY NEW CLAIM ABOUT ANOTHER FILE SAY WHERE IT WAS READ?
+  #
+  # Its own job rather than a step in `smoke`, for two reasons: it needs the
+  # full history the diff walks and `smoke` deliberately does not, and a red
+  # menu check should not read as a broken test suite.
+  #
+  # REPORTING ONLY, like everything else here. `main`'s ruleset requires a pull
+  # request and no status checks, so this shows a red X and does not stop a
+  # merge. That is the repo's rule - warn, do not block - and making it required
+  # would be a different decision needing its own finding.
+  #
+  # WHY IT EXISTS: of the four false premises in SHIP-PR-AUDIT.md, every one was
+  # a claim about what a DIFFERENT file said, and `audit-menu` already carried
+  # five rules that would have caught them - one of which landed on `main` three
+  # and a half hours before that menu was filed. Rules that are read do not
+  # fire; a job that runs does. `scripts/menu-check.mjs` has the full argument.
+  menus:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The check diffs this branch against origin/main and judges only the
+          # lines it ADDS, so the shallow default clone is not enough.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: menu claims name their source
+        run: |
+          git fetch --no-tags origin main
+          MENU_CHECK_BASE=origin/main node scripts/menu-check.mjs
