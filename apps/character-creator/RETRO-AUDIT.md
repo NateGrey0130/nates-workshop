@@ -265,6 +265,60 @@ against the book yet, and `CLASS-AUDIT` `F17` is the standing warning that a
 finding's size is the part most likely to be wrong.
 **Ongoing cost:** none.
 
+**Taken, 2026-09-04 (PR #714)** — as written, both classes in one `fix-` script,
+the shape `fix-merc-soldier-and-robot-pilot-mos.sql` established. **The premises
+held and the medium-confidence scope resolved upward**: it is six packages, not
+two classes' worth of hand-waving.
+
+Read from the `ww` OCR cache — **printed 123-124** for the demon-goblin,
+**printed 60-61** for the monk. `scripts/books.json` gives Wormwood a **zero**
+page offset, so printed N is cache `pNNN`; reading the registry rather than
+assuming `+1` is what put the pass on the right pages.
+
+| class | options | skills granted |
+|---|---|---|
+| `demon-goblin` | Assassin / Thief / Spy | 13 / 15 / 13 |
+| `monk` | Defense / Offense / Meditation | 3 / 3 / 6 |
+
+**Both classes independently confirmed the transcription**, which is the check
+worth having. The demon-goblin's own note already recorded the per-profession
+bonuses — *"prowl +10/+5/+10, climbing +10/+5/+5, land navigation +10/+5/+10,
+streetwise +4/+6/+8"* — and all twelve match what was read off the page. The
+monk's note listed all three masteries' skills, and they match too.
+
+**The demon-goblin was worse off than the finding said.** Land Navigation, Prowl,
+Palming, Climbing, Streetwise and its two languages sat in `occ_skills` at their
+**catalog base with no bonus applied at all**, under a note saying the bonus
+"differs and is recorded on each" — so every demon-goblin was short every one of
+those bonuses regardless of profession. They now sit on their own option with
+their own number. Leaving them in `occ_skills` as well would have **doubled**
+them: `applyMos()` appends to `occ_skills` rather than merging, which was checked
+in `apps/character-creator/js/compose.js` before the script was written.
+
+**Moving them is safe because the pick is server-enforced.**
+`functions/api/character-creator/_lib/validate-character.js` refuses to save a
+character with an unchosen MOS (`rule: 'mos_unchosen'`), and production holds
+**zero** demon-goblin and monk characters.
+
+**The regression suite caught the pin, as designed.** `MOS_PACKAGES` in
+`apps/character-creator/test/regression.mjs` names the exact set of classes with
+an MOS and asserts *"no other class has one"*; adding two made it red until the
+list was updated in the same commit. 237 checks → **243**.
+
+**A shell trap bit on the way through and is worth recording:** `node
+test/regression.mjs | tail -3` exits with `tail`'s status, so a chained
+`&& d1-apply --remote` ran while the suite was red. The failure was the pin
+above and nothing was wrong with the data, but the apply should not have
+started. **Redirect to a file and read `$?`** — the `windows-shell` skill's
+pipe-discards-the-exit-code rule, met in the wild.
+
+**What still will not fit** is on each option's `mos` note rather than dropped:
+the open weapon-proficiency picks (*"one W.P. of choice"*, *"two W.P.s of choice
+from any category"*, and the monk's two/four/two), the spy's one additional
+language of choice, and the assassin's *"+5% on all acrobatic skills"* — which
+needs the per-skill modifier `CLASS-AUDIT`'s *"Checked and still true"* list
+records as absent.
+
 ### R3 — high — the Warlock permits spell picks its own record forbids
 
 `warlock` carries `spells_starting: 3` and `spell_levels_allowed: [1]` and **no
