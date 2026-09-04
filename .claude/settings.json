@@ -19,6 +19,8 @@
       "Bash(node scripts/class-check.mjs *)",
       "Bash(node scripts/repo-vs-live.mjs)",
       "Bash(node scripts/repo-vs-live.mjs *)",
+      "Bash(node scripts/retro-check.mjs)",
+      "Bash(node scripts/retro-check.mjs *)",
       "Bash(node scripts/source-coverage.mjs)",
       "Bash(node scripts/source-coverage.mjs *)",
       "Bash(node scripts/readme-section.mjs)",
