@@ -1922,13 +1922,20 @@ function pendingPicksPanel() {
     return `
     <div class="levelup noprint">
       <h3 style="margin-top:0">🎓 ${n} unspent skill pick${n > 1 ? 's' : ''}
-        <span class="muted small">— earned at ${C.pendingPicks.map((g) => 'level ' + g.granted_at_level).join(', ')}</span></h3>
+        <span class="muted small">— ${C.pendingPicks.map((g) =>
+          `${g.count} ${g.kind === 'secondary' ? 'secondary' : 'related'} at level ${g.granted_at_level}`).join(', ')}</span></h3>
       <button class="btn" onclick="C.claiming = true; render()">Choose now</button>
     </div>`;
   }
   return `
   <div class="levelup noprint">
-    ${pickerBlock(C.pendingPicks.map((g) => ({ level: g.granted_at_level, count: g.count, categories: g.categories })), n, 'claim')}
+    ${pickerBlock(C.pendingPicks.map((g) => ({
+      level: g.granted_at_level, count: g.count, categories: g.categories,
+      // `kind` was dropped here, which is why the banked picker was the worst
+      // affected: pickerBlock could not tell a secondary grant from a related
+      // one and treated the whole block as unrestricted. F30.
+      kind: g.kind,
+    })), n, 'claim')}
     <div class="rowline" style="margin-top:10px">
       <button class="btn btn-primary" onclick="claimPicks()">Add to sheet</button>
       <button class="btn btn-sm btn-ghost" onclick="C.claiming = false; C.pickShowAll = false; C.pickFilter = ''; C.pickValues = {}; C.pickLangs = {}; render()">Later</button>
@@ -1942,15 +1949,42 @@ function pendingPicksPanel() {
 // Skipping is deliberately free: the picks are banked either way, so nobody is
 // stuck at the table choosing skills before they can carry on playing.
 function pickerBlock(grants, total, prefix) {
-  const allowed = grants.some((g) => !g.categories)
+  // Related and secondary grants are kept APART, exactly as the server keeps
+  // them (picks.js, level-confirm.js). A secondary grant carries
+  // `categories: null`, so folding it in makes `some(g => !g.categories)` true
+  // and unrestricts every slot — which is what this did until F30. One banked
+  // secondary pick offered the whole catalog for all three slots while the
+  // server accepted exactly one out-of-category choice and refused the second
+  // with a 422, after it had been made.
+  //
+  // `kind !== 'secondary'`, not `kind === 'related'`: a grant banked before that
+  // column existed carries kind NULL, and the server counts those as related.
+  // Testing for 'related' would silently reclassify every older grant as
+  // unrestricted — the same bug again, from the other side.
+  const related = grants.filter((g) => g.kind !== 'secondary');
+  const secondaryAllowance = grants
+    .filter((g) => g.kind === 'secondary')
+    .reduce((n, g) => n + g.count, 0);
+  const allowed = related.some((g) => !g.categories)
     ? null
-    : [...new Set(grants.flatMap((g) => g.categories || []))];
+    : [...new Set(related.flatMap((g) => g.categories || []))];
+  // The last `secondaryAllowance` rows draw from the whole catalog. Every
+  // submission this can produce is one the server accepts: it permits that many
+  // picks outside the related categories, and an in-category choice made in one
+  // of those rows is simply in-category to it.
+  const restricted = Math.max(0, total - secondaryAllowance);
 
   const held = new Set((C.data.skills || []).map((s) => s.name));
   const showAll = C.pickShowAll;
-  const pool = (C.skillCatalog || [])
-    .filter((s) => !held.has(s.name))
-    .filter((s) => showAll || !allowed || allowed.includes(s.category));
+  const unheld = (C.skillCatalog || []).filter((s) => !held.has(s.name));
+  // categoryAllows, not a plain `includes` — an entry may be an OBJECT narrowing
+  // what it admits, and ten of one live grant's thirteen categories are objects.
+  // `includes` would drop all ten and offer three categories where the class
+  // grants thirteen. Same helper as the server, the wizard and the validator.
+  const admits = (s) => (globalThis.skillCats
+    ? globalThis.skillCats.categoryAllows(allowed, s)
+    : allowed.includes(s.category));
+  const pool = unheld.filter((s) => showAll || !allowed || admits(s));
 
   // One filter feeding every dropdown in the block, because they draw from one
   // pool — you are picking N different skills out of the same 128, not
@@ -1959,9 +1993,14 @@ function pickerBlock(grants, total, prefix) {
   const options = shown
     .map((s) => `<option value="${escHtml(s.name)}">${escHtml(s.name)} — ${escHtml(s.category || '?')} ${s.base}%</option>`)
     .join('');
+  // The unrestricted rows get their own list: everything not already held.
+  const shownAny = Picker.filter(unheld, C.pickFilter);
+  const optionsAny = shownAny
+    .map((s) => `<option value="${escHtml(s.name)}">${escHtml(s.name)} — ${escHtml(s.category || '?')} ${s.base}%</option>`)
+    .join('');
 
   const hiddenCount = allowed && !showAll
-    ? (C.skillCatalog || []).filter((s) => !held.has(s.name) && !allowed.includes(s.category)).length
+    ? unheld.filter((s) => !admits(s)).length
     : 0;
 
   // Selections live in state, not in the DOM. They used to be read off the
@@ -1970,11 +2009,17 @@ function pickerBlock(grants, total, prefix) {
   // that re-renders on every keystroke would do it constantly.
   const rows = Array.from({ length: total }, (_, i) => {
     const chosen = C.pickValues[`${prefix}-${i}`] || '';
+    // Rows past the related allowance are the secondary ones and are NOT
+    // filtered by category. Labelled, because a row that silently offers more
+    // than its neighbour is the confusing half of F30 rather than the fixed one.
+    const isSecondary = i >= restricted;
+    const rowShown = isSecondary ? shownAny : shown;
+    const rowOptions = isSecondary ? optionsAny : options;
     // A skill you have already chosen stays in its own dropdown even when the
     // filter excludes it, or narrowing the list would un-pick it.
-    const extra = chosen && !shown.some((s) => s.name === chosen)
+    const extra = chosen && !rowShown.some((s) => s.name === chosen)
       ? `<option value="${escHtml(chosen)}" selected>${escHtml(chosen)}</option>` : '';
-    const opts = options.replace(`value="${escHtml(chosen)}"`, `value="${escHtml(chosen)}" selected`);
+    const opts = rowOptions.replace(`value="${escHtml(chosen)}"`, `value="${escHtml(chosen)}" selected`);
     // Language: Other and Literacy: Other are each one catalog row standing for
     // every unlisted member of their family; choosing one asks WHICH, and the
     // composed name is what gets submitted (see js/language-skills.js). Same
@@ -1985,7 +2030,8 @@ function pickerBlock(grants, total, prefix) {
     return `
     <div class="rowline">
       <select id="${prefix}-pick-${i}" onchange="C.pickValues['${prefix}-${i}'] = this.value; render()">
-        <option value="">— skip —</option>${extra}${chosen ? opts : options}</select>
+        <option value="">— skip —</option>${extra}${chosen ? opts : rowOptions}</select>
+      ${isSecondary ? '<span class="muted small">secondary — any category</span>' : ''}
       ${isOther ? `<input class="mini-in wide" id="${prefix}-lang-${i}"
         placeholder="${chosen === langSkills.LITERACY_OTHER ? 'Which written language?' : 'Which language?'}"
         value="${escHtml(lang)}" oninput="C.pickLangs['${prefix}-${i}'] = this.value">` : ''}
@@ -1995,7 +2041,7 @@ function pickerBlock(grants, total, prefix) {
   return `
   <h3 style="margin-bottom:4px">New skill${total > 1 ? 's' : ''} — ${total} to choose</h3>
   <p class="muted small" style="margin-top:0">
-    ${grants.map((g) => `${g.count} from level ${g.level}`).join(', ')}.
+    ${grants.map((g) => `${g.count} ${g.kind === 'secondary' ? 'secondary' : 'related'} from level ${g.level}`).join(', ')}.
     New skills start at their base percentage. Leave any blank and it waits on your sheet.</p>
   ${Picker.inputHtml({ id: `${prefix}-pick-filter`, value: C.pickFilter,
     placeholder: 'Filter skills…', shown: shown.length, total: pool.length })}

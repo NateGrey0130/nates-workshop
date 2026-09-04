@@ -1,8 +1,8 @@
 # UI-AUDIT.md — Character Creator interface
 
-> **`F1`–`F29` are closed**, re-verified on 2026-09-02. **`F30` is OPEN** — filed
-> later that day from outside the audit run, while verifying
-> `BOOK-INGEST-AUDIT` `F18` on production.
+> **Nothing is open.** `F1`–`F29` were re-verified closed on 2026-09-02, and
+> **`F30` was taken 2026-09-03** (PR #657). It was filed on 2026-09-02 from
+> outside the audit run, while verifying `BOOK-INGEST-AUDIT` `F18` on production.
 >
 > **The one that misreads:** `F17` closes as **moot** rather than taken — it was
 > checked against a real print render (PR #459) and the defect was not there.
@@ -1900,6 +1900,76 @@ able to choose something the next request will refuse.
 > all. Read `pickerBlock` before implementing from the paragraph above — this
 > file's own header warns that seven of its proposals were wrong rather than
 > stale, and this one nearly made eight.
+
+**Taken, 2026-09-03 (PR #657), as proposed. Posture held exactly: UI only — no
+server change, no schema change, and nothing about what is legal moved.** Smoke
+1665 unchanged, regression 237 unchanged.
+
+`pickerBlock` now splits the grants the way the server does. The restricted rows
+draw from the **related** grants' categories; the last `secondaryAllowance` rows
+draw from the whole catalog and say so — *"secondary — any category"*. The
+`kind` the caller was dropping is passed through, `hiddenCount` is non-zero
+again so the *show all skills* checkbox reappears, and both the panel heading and
+the sub-line name the kind.
+
+**One thing beyond the letter, and the finding is wrong without it.** The
+proposal says to build the restricted list from the related grants — it does not
+say *how to match a category*, and `pickerBlock` used `allowed.includes(s.category)`.
+**A category entry may be an object.** Read from production 2026-09-03, one live
+banked grant carries **thirteen categories of which ten are objects**:
+
+```
+{"name":"Physical","except":["Acrobatics","Boxing","Wrestling"]}, "Domestic", …
+```
+
+`includes` matches only the three plain strings. Implementing the split alone
+would have taken a picker that offers **too much** and made it offer **far too
+little** — three categories where the class grants thirteen — which is the same
+client/server disagreement inverted, and visibly worse for the player. So the
+sheet now uses `categoryAllows`, the matcher the server, the wizard and the
+validator already share, reached through a small module bridge in `sheet.html`.
+**A fourth copy of that rule was the alternative, and `BOOK-INGEST-AUDIT` `F20`
+is what two copies of a matcher costs.**
+
+**A second detail that would have shipped a bug.** The server tests
+`kind !== 'secondary'`, not `kind === 'related'`, because **a grant banked before
+that column existed carries `kind` NULL**. Production confirms it: the live grant
+above has `kind: null`. Testing for `'related'` would have reclassified every
+older grant as unrestricted — F30's own bug, arriving from the other side. The
+client uses the server's test.
+
+**Verified in the running app on port 8791**, against a local character seeded
+with that exact production shape — a related grant carrying `Domestic` plus
+`Physical except Acrobatics/Boxing/Wrestling`, and one secondary grant:
+
+| | |
+|---|---|
+| restricted rows (2) | **38 options, Domestic and Physical only** — the object entry matched, which `includes` could not do |
+| `except` honoured | Acrobatics, Boxing, Wrestling **absent** from the restricted rows and **present** in the unrestricted one |
+| unrestricted row (1) | **330 options, all 18 categories**, labelled *secondary — any category* |
+| *show all skills* checkbox | **renders** — *"292 outside this grant's categories"*, and 38 + 292 = 330 |
+| heading | *"🎓 3 unspent skill picks — 2 related at level 3, 1 secondary at level 4"* |
+| sub-line | *"2 related from level 3, 1 secondary from level 4"* |
+
+**And the client/server agreement was proved against the endpoint, not asserted.**
+One out-of-category pick is **accepted** (`ok: true`, `override: false` — the
+secondary allowance spent); two in one submission are **refused**, *"Astronomy is
+Science, which this grant does not cover"* — F30's own quoted error. **The picker
+now offers exactly one unrestricted row, so the refused submission is no longer
+reachable through the UI**, which is this finding's posture in one line.
+
+**It fixes the level-up picker too, which F30 does not mention.** `pickerBlock`
+is shared, and `skillGrantsFor` has always passed `kind` — so that path had the
+same latent defect and one change covers both. `level-confirm.js` computes the
+identical related/secondary split, so the client now agrees with both endpoints.
+
+**Screenshotted at desktop and 820×1180**, judged above the fold: the whole
+picker sits above it at both, horizontal overflow is zero, and the *secondary*
+label does not wrap. Local test rows were removed afterwards and the character
+restored — 0 pending, 15 skills, no leftovers.
+
+**Production was read, never written.** The category shapes came from a
+`SELECT` against `--remote`; every write in this verification was local.
 
 ---
 

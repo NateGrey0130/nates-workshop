@@ -97,14 +97,16 @@ next heading.
 closed at **08:41 today** in PR #616. See `A3`.
 
 > **Adjusted 2026-09-03, later the same day. The table above is the baseline as
-> measured and stands as one; three of its four rows have since closed.**
+> measured and stands as one; ALL FOUR of its rows have since closed.**
 > `SETUP-v2-CHANGES` open question 1 became `apps/pick3cut5/AUDIT.md` `F11`
 > (`A5`), which was taken in PR #653 along with the `F12` it opened.
 > **`REPO-AUDIT` `G5` half (b) was closed by decision in PR #655** — squash and
 > rebase stay enabled, and that finding is now closed entire. **`SKILL-AUDIT`
 > `F12`'s named test was RUN in PR #656**: each directory is governed by its own
-> project settings, and they do not compose. Of the four rows above, only
-> **`UI-AUDIT` `F30`** remains open as filed.
+> project settings, and they do not compose. **`UI-AUDIT` `F30` was taken in PR
+> #657**, and taking it turned up a second defect the finding never mentions —
+> the picker matched categories with a plain `includes`, which drops ten of one
+> live grant's thirteen. Nothing this menu found or filed is open.
 
 So: **four open items, in four different menus, and only one of them is a
 finding whose own heading a reader would find by scanning.** Two are halves of
