@@ -1,8 +1,12 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **THIS MENU HAS NO OPEN WORK.** Filed and closed 2026-09-02, PRs #540–#569.
-> All 25 `F` findings are closed and all 8 `N` proposals decided. **Read each
-> finding's own note; this header is a summary and summaries here go stale.**
+> **`F26`–`F28` ARE OPEN, filed 2026-09-04.** Everything from the original pass
+> is closed: 25 `F` findings and all 8 `N` proposals, 2026-09-02, PRs
+> #540–#569. The three new ones sit under **`## Opened while building the
+> verifier agents`**, after the `N` block and before `# Counts` — *not* under
+> `## Opened while taking a finding`, because no finding was being taken; they
+> came out of PR #676. **Read each finding's own note; this header is a summary
+> and summaries here go stale.**
 >
 > | | |
 > |---|---|
@@ -2414,6 +2418,132 @@ Recorded so it is not re-derived. Every item below was verified on 2026-09-02.
 
 ---
 
+## Opened while building the verifier agents
+
+Filed 2026-09-04, out of PR #676, which added four read-only subagents and wired
+them into three skills. Not opened by taking a finding — nothing on this menu was
+being taken — so they sit here rather than in the section above.
+
+**No new subagent is proposed by any of these.** Nate declined a `ship-verify`
+subagent on 2026-09-03 (`SHIP-PR-AUDIT.md` header, *"do not re-propose without a
+new failure"*), agreeing with `N4` below, and that decision stands untouched:
+these three are about agents that already exist and about two sentences
+describing them.
+
+### F26 — `SETUP.md` and `CLAUDE.md` say a new agent works "the moment its file lands"; the junction is instant and the harness is not
+
+Both sentences are about the directory junction and both are true about it.
+`SETUP.md`, *Setting up a machine*: **"A new agent needs nothing: the directory
+junction covers it the moment the file lands."** `CLAUDE.md` line 42: **"So a new
+agent is covered the moment its file lands."**
+
+Read as *"so you can use it"* — which is how a session writing an agent will read
+them — they are wrong. An agent file written during a session is **not spawnable
+in that session**. The file is on disk, it is visible through the junction, and
+the harness still answers `Agent type '<name>' not found`.
+
+This cost a measurable thing rather than a hypothetical one: an eval intended to
+run against a purpose-built blind agent had to be re-done with `general-purpose`
+and the method pasted into the prompt, because the agent written for it never
+became available.
+
+**Proposal:** add one sentence to each of the two passages — the junction covers
+a new agent file immediately, but the harness registers agent files at a turn
+boundary, so an agent written mid-session cannot be spawned until the next turn.
+Put it beside the existing sentence in each file rather than in a new section.
+**Posture: documentation only. No new gate, no check, no script.**
+
+**Evidence.** Measured 2026-09-04 in the session that filed this: three spawn
+attempts across two agent files (`zz-eval-blind`, `zz-skill-tool-test`), each
+returning `Agent type '<name>' not found` while `ls ~/.claude/agents` listed the
+file. Both later registered, announced by a system notice, at the next turn.
+
+**Confidence: high that the behaviour is real** — three observations, two files,
+and both eventually registered. **Medium on the mechanism.** "Turn boundary" is
+what was observed, not a documented contract; a periodic sync that happened to
+align with the turns would look identical. What would raise it: write an agent
+file, then run several tool calls without a user turn, and see whether it appears
+without one.
+
+**Ongoing cost:** two sentences to keep true if the harness changes, sitting
+beside sentences already being maintained. Low.
+
+### F27 — a subagent CAN load a project skill by name, and all five agent files are written as though it cannot
+
+Every file in `.claude/agents/` inlines its guidance and points at a `SKILL.md`
+by path for the detail. That shape was chosen because whether a subagent could
+hold the `Skill` tool was untested on this machine. It is now tested, in both
+forms that matter, and the answer is yes.
+
+**Evidence.** Two probes, 2026-09-04, each with a deliberate control:
+
+| probe | tools | result | control `no-such-skill-xyzzy` |
+|---|---|---|---|
+| `general-purpose`, cwd `C:\Users\natha\Downloads` | `*` | listed all nine project skills; loaded `claim-audit` and `windows-shell`, returning body text | `Unknown skill: no-such-skill-xyzzy` |
+| purpose-built probe | `Read, Skill` | loaded `claim-audit`, returning body text | `Unknown skill: no-such-skill-xyzzy` |
+
+Both resolved from `C:\Users\natha\.claude\skills\…` — the junctioned copies,
+from a directory that is not the repo. The restricted-list probe answers the
+narrower question: `Skill` is accepted as a **named entry**, not only under `*`.
+
+Relevant measurement already on record: `EFFICIENCY-AUDIT.md` `F1`(3) found that
+across the book sessions the Skill tool invoked a repo skill **4 times total**
+while `SKILL.md` files were `cat`-ed into context **73 times (283K chars, ~71K
+tokens)**.
+
+**Proposal:** decide **per agent** whether to drop inlined guidance and add
+`Skill` to its tools list instead. Not a blanket change, and the arithmetic cuts
+both ways: `audit-menu` is 676 lines and `book-survey` 656 (`wc -l`, 2026-09-04),
+and a loaded skill is paid on **every** invocation, so for a high-volume verifier
+the ~40 inlined lines may still be cheaper than loading a 250-line skill per
+slice. **Posture: opt-in, per agent, frontmatter and documentation only. No new
+gate.**
+
+**Confidence: high that skills load** — two probes, two tool shapes, controls in
+both. **Low that swapping is net-positive for any particular agent.** What would
+raise it: run one agent both ways against `.claude/skills/claim-audit/reference/negatives.md`
+and compare tokens as well as verdicts.
+
+**Ongoing cost:** none if declined. If adopted for an agent, that agent's
+guidance lives in one place instead of two, which is a reduction rather than a
+cost — offset by the per-invocation size above.
+
+### F28 — all four agents added in #676 shipped without ever being invoked
+
+Three of them have never run at all, and the fourth has never run **as itself**.
+The eval that scored the capability method used a *blind copy* of that method
+inlined into `general-purpose`, because the shipped agent's own body told it to
+read the answer key. So `reference/negatives.md`'s 9/9 result describes the
+method, not the agent file.
+
+That is not an argument that they are broken. It is a record of what has and has
+not been exercised, filed because the menu is the only place it would otherwise
+be written down.
+
+**Proposal:** run each once on a real, low-stakes task and record the outcome —
+`claim-count-verifier` on one README section, `claim-capability-verifier` on the
+fixture as itself now that the answer-key pointer is gone,
+`audit-premise-auditor` on a closed finding whose answer is already known, and
+`book-extract-worker` on one chapter of a cached book. **Posture: verification
+only. No code change, no new gate.** A reasoned decision to delete an agent that
+does not earn its place is an acceptable outcome of this, and
+`book-extract-worker` is the likeliest candidate — it was filed as
+lower-confidence in its own brief.
+
+**Evidence.** PR #676, merged 2026-09-04 as `6a8463c`, Pages `completed/success`.
+The eval method and its three limits are recorded in
+`.claude/skills/claim-audit/reference/negatives.md` under *The run of
+2026-09-04*. Not measured: anything about how the four behave when invoked,
+because none has been.
+
+**Confidence: high.** It is a record of what was run, not an inference. Nothing
+would raise it; running them closes it.
+
+**Ongoing cost:** none. One-time, and it ends either in four exercised agents or
+in fewer agents.
+
+---
+
 # Counts
 
 **Filed 21 findings and 8 proposals.** By layer, counting the layer a finding's
@@ -2437,6 +2567,11 @@ in a skill (`F17`), one a split (`F8`).
 **Added 2026-09-02:** `F22` and `F23`, both in the test suite rather than in any
 instruction layer, both opened by taking `F1`. The table above is the census as
 filed and is left standing as one; it does not include them.
+
+**Added 2026-09-04:** `F26`–`F28`, out of PR #676 rather than out of taking
+anything on this menu. By the same rule they are not in the table either: `F26`
+would land in layers 3 and 5, `F27` in layer 2, `F28` in neither — it proposes
+running things rather than editing a file.
 
 Nothing else is taken until Nate names it.
 
