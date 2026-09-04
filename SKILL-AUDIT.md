@@ -1,11 +1,11 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **`F35` AND `F36` ARE OPEN**, filed 2026-09-04 under
+> **`F35` IS OPEN; `F36` was taken 2026-09-04 (PR #692)** — it removed the path
+> filter `F32` had added hours earlier, because the number justifying that filter
+> was measured on the wrong machine. Both were filed 2026-09-04 under
 > **`## Opened while taking F33`** and **`## Opened by F32's own CI run`** — a
 > **fifth and sixth** placement on this page, which is past the point where the
-> arrangement helps anyone and is worth a finding of its own.
-> `F36` revisits part of `F32`, taken hours earlier, because the number
-> justifying it was measured on the wrong machine. **`F33` and `F34` were taken 2026-09-04**
+> arrangement helps anyone and is worth a finding of its own. **`F33` and `F34` were taken 2026-09-04**
 > (PRs #689, #688). `F33`'s note records four other places carrying the same
 > falsehood, left unfixed because its posture was one sentence in one skill;
 > `F35` is the one that matters, and it is **subtractive** — read its note before
@@ -3337,6 +3337,51 @@ covering things without saying so.
 `regression.yml` has no `name:` key, so `gh run list` and the PR check list show
 it as `.github/workflows/regression.yml` where every other workflow shows a
 word. One line, in the file the proposal already edits.
+
+**Taken, 2026-09-04 (PR #692). Posture held: reporting only, unchanged from
+`F32` — not a required status check, a red run still does not stop a merge. Only
+*when* the job runs changed.** Subtractive as proposed: the `paths:` block is
+gone and no new mechanism replaced it. The `name: regression` key was added, the
+one line the finding put in scope.
+
+**The header now argues the opposite of what it argued this morning, and says
+so.** It records that the filter existed, that 170s justified it, that CI does
+the same work in 56s, and that the deciding argument was never the seconds — a
+path list that goes stale makes the check answer *"not asked"* while showing
+green. Both burns are named beside it so the reasoning survives the next person
+who wants to re-add a filter.
+
+**The split from `tests.yml` is kept, and the reason changed.** It was split off
+*in order to be filtered*, and that reason is gone — but the two workflows run
+concurrently with distinct concurrency groups, so a pull request waits for the
+slower rather than for both. Folded back into `tests.yml` as another step, this
+suite would extend that job instead of running beside it. The header states that,
+so the split does not look vestigial.
+
+**A sentence this falsified, corrected in the same PR.**
+`.claude/skills/ship-pr/SKILL.md:23-29` described the filter and told a reader
+that a green check outside those paths meant the suite was never asked. It now
+says the suite runs on every pull request, concurrently — **and that a green
+regression check therefore means the suite ran**, which is the thing a filtered
+one could not promise.
+
+**The `n = 1` caveat is closed by this PR itself.** `F36` noted that the filter
+included `regression.yml`, so the PR removing it would exercise the filter one
+last time and produce a second timing. It did: **56 seconds again**, identical to
+the first, with `smoke` at 22s on the same pull request — so wall clock was the
+slower of the two, as the concurrency argument predicted. `gh pr checks 692`,
+2026-09-04. The `name:` key is confirmed working in the same output: the check
+reads `regression` rather than a file path.
+
+### F36 is the shape this menu keeps producing, and it is worth naming
+
+Three of the last four findings here were **defects introduced by taking the
+finding before them** — `F34` by `F27`, the spliced sentence by `F29`, and now a
+filter by `F32`. None was caught by a check; each was caught by the next pass
+reading what the last one wrote.
+
+That is the loop working, and it is also the argument for keeping these passes
+short and separate. **A bigger batch would have buried all three.**
 
 ---
 

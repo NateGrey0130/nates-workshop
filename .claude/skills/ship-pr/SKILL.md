@@ -22,11 +22,13 @@ did, never as the reason to skip one.**
 
 **`regression.mjs` runs in CI too, since 2026-09-04** — `.github/workflows/regression.yml`,
 `SKILL-AUDIT` `F32`, closing a follow-up `REPO-AUDIT` `G8` deferred. Same
-posture: reporting only, no required check. **It is PATH-FILTERED and that is
-the part to know**: it fires only on a pull request touching `db/`, `functions/`,
-the character-creator's `db/`, `js/`, `README.md`, `docs/operations.md` or the
-suite itself. **A green pull request outside those paths means the suite was
-never asked**, not that it passed — so step 4 still owns it.
+posture: reporting only, no required check. **On every pull request**, and
+concurrently with the smoke workflow rather than after it, so a run costs the
+slower of the two rather than the sum.
+
+It was path-filtered for part of that day and is not now (`F36`) — **so a green
+regression check means the suite ran**, which is what a filtered one could not
+promise. It still reports *after* the PR is open, so step 4 above is unchanged.
 
 **There IS a ruleset on `main`, and it does not gate CI.** `22209348`, *"main:
 require a pull request"*, active since 2026-09-03 — one `pull_request` rule,
