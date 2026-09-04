@@ -42,6 +42,18 @@
 <script src="js/api.js"></script>
 <script type="module" src="js/language-skills.js"></script>
 <script type="module" src="js/dice.js"></script>
+<!-- The banked-picks picker filters the catalog by a grant's categories, and an
+     entry may be an OBJECT narrowing what it admits -
+     {"name":"Physical","except":["Acrobatics",...]}. A plain `includes` matches
+     only the plain-string entries: one live grant carries thirteen categories of
+     which TEN are objects, so ten categories would vanish from the picker.
+     `categoryAllows` is the matcher the server, the wizard and the validator
+     already share - the sheet uses it rather than keeping a fourth copy of the
+     rule. UI-AUDIT F30. -->
+<script type="module">
+  import { categoryAllows, categoryLabel } from './js/parser.js';
+  globalThis.skillCats = { categoryAllows, categoryLabel };
+</script>
 <script src="sheet.js"></script>
 </body>
 </html>
