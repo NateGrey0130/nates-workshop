@@ -467,6 +467,21 @@ being squashed and something downstream mis-reading it. Take it low.
 
 **Ongoing cost:** one clause, and it does not name a number, so it does not rot.
 
+**Taken, 2026-09-03 (PR #664).** One clause, documentation only, merge command
+unchanged, `G5(b)` not reopened.
+
+**The finding's own instruction not to quote a count was vindicated inside the
+life of this menu.** `G5` counted 117 single-parent first-parent commits; the
+re-measure on the taking branch returned **137 against 541 merge commits** —
+twenty more in about a day. The clause says *"a large fraction"*, which stays
+true without maintenance.
+
+**Confidence was medium on whether this was worth a clause and the work did not
+raise it.** No incident is attached and every PR here has used `--merge`. What
+justifies it is one level down: step 9 and both deploy monitors already depend on
+a squash landing one first-parent commit, so the skill was relying on a fact it
+had never written. Taken low, as the finding said.
+
 ---
 
 ### F7 — nothing about a stacked PR, and step 7 recommends the flag that kills one
