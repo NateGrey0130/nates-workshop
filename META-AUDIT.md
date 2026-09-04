@@ -1,14 +1,25 @@
 # Meta-audit — the menus as a reference, and the discipline that fills them, 2026-09-03
 
-> **STATUS: `A2`–`A12` are taken. `A1` is DECLINED — no index was built, and
-> the skill records why beside the `find` command. Nothing on this menu is
-> open.** Read each finding's own heading for its state and its PR number; this
+> **`A13`, `A14` and `A15` ARE OPEN**, filed 2026-09-04 under
+> **`## Opened by the protocol retrospective, 2026-09-04`** at the end of this
+> file. Everything from the original pass is settled: `A2`–`A12` taken, `A1`
+> DECLINED — no index was built, and the skill records why beside the `find`
+> command. Read each finding's own heading for its state and its PR number; this
 > line does not carry them, for the reason `A6` records about statuses held
-> anywhere but under the finding. **Two findings this menu FILED are open
-> elsewhere** — `apps/pick3cut5/AUDIT.md` `F11` and `F12`. Filed
-> 2026-09-03 against `main` @ `3332349` (the merge of #641). Findings are
+> anywhere but under the finding. Original pass filed
+> 2026-09-03 against `main` @ `3332349` (the merge of #641); the retrospective
+> against `2eed604` (the merge of #699). Findings are
 > `### A<n> — <severity> — <title>`, severity lowercase. Status for any finding
 > lives under its own heading; this line does not count them.
+>
+> **A sentence about `apps/pick3cut5/AUDIT.md` `F11` and `F12` was corrected out
+> of this header on 2026-09-04.** It described them as open work this menu had
+> filed elsewhere; both were taken on 2026-09-03, in PRs #653 and #654, hours
+> after this file was written against #641. That menu's own header says nothing
+> is open there. The correction follows `A3` — the status claim only, and the
+> replaced wording is not reproduced here. **`A13` is the finding about why it
+> was there**, and it treats this header as its evidence rather than as an
+> incidental repair.
 >
 > **`A` because it collides with nothing.** Censused 2026-09-03 by walking every
 > menu's own item markers — `###`/`##` headings, the `- **S1 —**` bullets in
@@ -1838,3 +1849,316 @@ of the files are ones a finding here proposes editing.** Re-run the command in
 the finding. And re-read the trap in this file's own header before implementing
 the second finding taken from it — the first one will have moved the skill this
 one quotes.
+
+---
+
+## Opened by the protocol retrospective, 2026-09-04
+
+Three findings, `A13`–`A15`, from the brief at
+`docs/prompts/protocol-retrospective-prompt.md`. They sit here rather than in a
+twentieth menu because `audit-menu` → *When not to* says a single finding about
+the apparatus belongs on whichever existing menu owns that surface, and this one
+owns the protocol. Nate asked for the pass by name on 2026-09-04, which is the
+condition that section states.
+
+**The question this pass asked is not the question the rest of this menu asked.**
+Everything above — and the eight menus whose subject is the way of working —
+asks *is this sentence still true.* This pass asked *was this the right shape,
+and is it still worth what it costs.* A convention can be accurate everywhere and
+still be the wrong shape, and nothing here had asked that.
+
+**One question closed with the convention vindicated.** `A14` is not a compliance
+failure; the citation rule is being followed at 28 of 36. Recorded so the
+opposite is not inferred from a finding existing.
+
+### A13 — medium — nothing bounds what a status header may carry, and the menu that audited the headers now has a stale one
+
+**What is already decided, and this finding does not reopen any of it.**
+`HEALTH-AUDIT` `F8` created the convention and PR #531 gave every other menu a
+status line. `A3` corrected `BOOK-INGEST-AUDIT`'s. `A4` recorded
+`HEALTH-AUDIT`'s abstention. **`## The status headers, checked against their own
+findings`, above in this file, read all eighteen on 2026-09-03** and found twelve
+accurate, one stale, one absent by decision, one silent about a live item.
+
+**That was a correctness pass, and correctness is not the constraint that binds.**
+Nothing in `audit-menu` says what a header may contain — verified 2026-09-04 by
+reading all eleven `## ` sections of `.claude/skills/audit-menu/SKILL.md`
+(`grep -nE '^## '`, which returns *The loop*, *Posture…*, *The shape a finding
+takes*, *Taking a finding is also AUDITING the finding*, *A class note that
+cites a finding…*, *Never grep for the outcome note*, *The headings are not
+uniform*, *Audit files are RECORDS*, *Every number carries its date*, *Where a
+new menu goes*, *When not to*). The status material in it governs **where**
+status lives, never **how much** of it a header may restate.
+
+**So the headers grow with the churn of the menu beneath them.** Measured
+2026-09-04 **at `2eed604`, the merge of #699 — before this PR's own edits**, by
+taking each file from line 1 to its first `## ` and counting distinct
+`` `X<n>` `` finding IDs named:
+
+```bash
+git show 2eed604:META-AUDIT.md | awk 'NR>1 && /^## / {exit} {print}' > /tmp/h
+wc -l < /tmp/h ; grep -oE '`[A-Z][0-9]+`' /tmp/h | sort -u | wc -l
+```
+
+| menu | header lines | finding IDs named | findings in file |
+|---|---|---|---|
+| `SKILL-AUDIT.md` | **98** | **33** | 42 |
+| `SHIP-PR-AUDIT.md` | 69 | 10 | 14 |
+| `BOOK-INGEST-AUDIT.md` | 62 | 5 | 21 |
+| `META-AUDIT.md` | 39 | 13 | 12 |
+| `MACHINE-AUDIT.md` | 39 | 9 | 22 |
+| `EFFICIENCY-AUDIT.md` | **19** | **2** | 7 |
+| `apps/media-vault/ISBN-AUDIT.md` | 17 | 5 | 10 |
+
+**The pin matters and is not decoration.** Filing this finding moved
+`META-AUDIT`'s own row from 39 lines and 13 IDs to 50 and 16 — the act of
+recording a status grew the header being measured, inside the PR that measures
+it. That is the finding restated as an accident, and it is why every figure here
+names the commit it was read at rather than only the day.
+
+**`SKILL-AUDIT`'s header is 98 lines — 29 longer than the next widest and five
+times `EFFICIENCY-AUDIT`'s**, and it narrates findings that reverse each other
+inside a morning — `F42` partly reverses `F40`, taken hours earlier, and the
+header says so. Its own text says the fifth and sixth `##` placements are *"past
+the point where the arrangement helps anyone."* <!-- claim-ok: quoting SKILL-AUDIT's own header, read 2026-09-04 -->
+
+**The failure this produces is in this file.** `META-AUDIT`'s header says:
+
+> **Two findings this menu FILED are open elsewhere** — `apps/pick3cut5/AUDIT.md` `F11` and `F12`.
+<!-- claim-ok: quoting the stale sentence this finding corrects -->
+
+**Both were taken on 2026-09-03.** Read under their own headings in
+`apps/pick3cut5/AUDIT.md` on 2026-09-04: `F11` carries *"Taken, 2026-09-03 (PR
+#653) as option (a)"* and `F12` carries *"Taken, 2026-09-03 (PR #654), as
+proposed and as ONE assertion over both doors"*. That menu's own header opens
+*"Nothing is open."* This menu was filed against `main` @ `3332349`, the merge of
+#641; #653 and #654 merged after it. **The header of the menu that audited the
+headers went stale the same day it was written, in the direction `A3` named as
+costing most — advertising open work that is done.**
+
+**Two headers carry an explicit disclaimer and then do the thing anyway.**
+Counted 2026-09-04 over the same header blocks: `META-AUDIT` says *"this line
+does not count them"* and *"this line does not carry them"* while naming
+thirteen finding IDs with their states; `MACHINE-AUDIT` says *"this line
+deliberately does not count them"* while naming nine.
+<!-- claim-ok: quoting both headers, read 2026-09-04 --> `INGESTION-AUDIT`
+carries the same formula and names five. **The sentence from `A4` and `A6` was
+adopted as a disclaimer rather than as a behaviour**, which is the same shape
+`A6` already found in the memory store — *"a line that says do not trust me is
+still the line that gets read."*
+
+**What is NOT wrong here, and must not be swept up.** The *"one that misreads"*
+and *"this menu's own trap"* paragraphs — ten menus carry one, `MACHINE-AUDIT`
+five and `REPO-AUDIT` four. **Not one of them has gone stale.** They describe a
+file's *shape*: that `CLASS-AUDIT`'s `S` items are bullets, that
+`INGESTION-AUDIT` `F14` quotes its own note format so every grep reports it
+taken, that `pick3cut5/AUDIT`'s `T` items are bold paragraph leads. Shape does
+not change when a finding closes, which is exactly why those have survived and
+the status narrations have not. **They are the durable half of a header and this
+proposal keeps every one of them.**
+
+**Proposal:** one section in `.claude/skills/audit-menu/SKILL.md`, beside the
+existing status material, bounding what a header may carry — **whether anything
+is open, and how to read the file.** A per-finding state does not go in a
+header; where one needs saying the header says *read under the heading* and
+stops. The section must say explicitly that the shape/trap paragraphs are **not**
+what it restricts, or taking it will delete the half that works.
+
+**Posture: documentation only. One section in one skill. NO retrofit of any
+existing header, no check, no script, no count of menus in the rule.** The bound
+governs the next header written and the next line added to an existing one.
+
+**The stale sentence in this file's own header is corrected in the PR that files
+this finding, and that is deliberate rather than a scope violation** — a header
+being edited to announce new findings must not keep carrying a claim the same PR
+proves false. It follows `A3`'s precedent exactly: the status claim only, and
+the replaced phrase is not quoted in the header. **That correction is not part
+of this finding's proposal and taking `A13` does not depend on it.**
+
+**Evidence:** header blocks extracted with
+`awk 'NR>1 && /^## / {exit} {print}'` over all 20 menus and finding IDs counted
+with `grep -oE '\`[A-Z][0-9]+\`' | sort -u`, 2026-09-04; `A3`/`A4` and
+`## The status headers, checked against their own findings` read in this file,
+2026-09-04; `apps/pick3cut5/AUDIT.md` `F11` and `F12` read under their own
+headings, not grepped, 2026-09-04; `git log --format='%h %ci %s' -- SHIP-PR-AUDIT.md`
+and the merge order of #641/#653/#654, 2026-09-04; all eleven `## ` sections of
+`audit-menu/SKILL.md` read, 2026-09-04.
+
+**Confidence: high on the measurements and on the stale sentence** — both were
+run rather than reasoned to. **Medium on the remedy.** A bound is one instrument;
+the other is accepting that a live menu's header grows and that this is the cost
+of the only place a status legitimately lives. **What would raise it:** whether a
+long header has ever actually misled a reader, as distinct from being long.
+Nothing on this machine records one, and this finding does not claim it has.
+
+**Ongoing cost: one more clause in a 688-line skill, and a judgement to make
+each time a header is edited.** That is a real cost and it is the honest
+argument against this finding: the rule it adds is a rule someone has to
+remember, which is the objection `SHIP-PR-AUDIT` `F10` was declined on.
+
+### A14 — low — the prefix census says eleven menus use `F`; twelve do, and the count is the part that rots
+
+`audit-menu` → *Which is why a finding reference names its menu* carries a
+census table whose `F` row reads **eleven**.
+<!-- claim-ok: quoting the cell this finding corrects; read 2026-09-04 -->
+
+**Twelve menus use `F` as a heading prefix.** Measured 2026-09-04 with
+`grep -cE '^#{2,3} \`?F[0-9]+'` over every menu: `SKILL-AUDIT` (42),
+`UI-AUDIT` (30), `INGESTION-AUDIT` (25), `HEALTH-AUDIT` (24),
+`BOOK-INGEST-AUDIT` (21), `REBUILD-AUDIT` (20), `CLASS-AUDIT` (20),
+`SHIP-PR-AUDIT` (14), `pick3cut5/AUDIT` (12), `ISBN-AUDIT` (10),
+`EFFICIENCY-AUDIT` (7), `apps/character-creator/AUDIT` (6).
+
+**It was right when it was written and went wrong in seven hours.** The census
+landed in `07cf1ec`, 2026-09-03 13:50, taking `REPO-AUDIT` `G12`/`G13`.
+`SHIP-PR-AUDIT.md` was created in `9e9a219` at 20:48 the same day carrying ten
+`### F<n>` headings — `git show 9e9a219:SHIP-PR-AUDIT.md | grep -cE '^### F[0-9]+'`
+returns 10, run 2026-09-04. Nothing re-counted the table.
+
+**The convention the table justifies is holding, and that is the more useful
+half of this finding.** Measured 2026-09-04 across the nine skills, the five
+agent files and `CLAUDE.md`: of 36 citations carrying an ambiguous prefix
+(`F`, `D`, `N`), **28 name their menu within the preceding clause.** Of the eight
+that do not, six are rows of the shape table whose own first cell is the
+filename, and one is the deliberate `git log --grep='F18'` illustration in the
+section that teaches the rule. **The genuine violation is one:**
+`.claude/skills/ship-pr/SKILL.md` writes *"It was path-filtered for part of that
+day and is not now (`F36`)"* for `SKILL-AUDIT` `F36`. Bare citations otherwise
+cluster on `G` and `M`, which one menu each uses, where nothing is ambiguous.
+
+**So this is not a compliance finding and should not be taken as one.** The rule
+works. What rots is the number defending it — and the skill's own doctrine, from
+`SKILL-AUDIT` `F7`, is that removing an ordinal beats incrementing it because
+*"incrementing leaves the same trap armed."*
+
+**Proposal:** SUBTRACTIVE. Replace the numeric column in that census table with
+the fact that carries the argument — `F` is used by many menus, `D` and `N` by
+more than one, the rest by one each — so the table states what makes a bare
+number ambiguous without stating a figure that has to be re-counted every time a
+menu lands. **Do not change eleven to twelve.**
+
+**Posture: documentation only, subtractive, one table in one skill. No check, no
+retrofit of existing citations, and `git log` history is not rewritten** — the
+same posture `G12`/`G13` set. Fixing `ship-pr`'s one bare `F36` is **not** in
+this posture; it is a one-word edit for whoever next opens that file.
+
+**Evidence:** the census table read at
+`.claude/skills/audit-menu/SKILL.md`, 2026-09-04; the twelve-menu count by the
+`grep -cE` above, 2026-09-04; `git log -S` for the census text and
+`git log --diff-filter=A -- SHIP-PR-AUDIT.md`, both 2026-09-04; the 36-citation
+compliance count by script over `.claude/skills/*/SKILL.md`,
+`.claude/agents/*.md` and `CLAUDE.md`, 2026-09-04.
+
+**Confidence: high.** Every claim here came from a command. **What would lower
+it:** nothing measured — the only judgement is whether a census table with no
+numbers still makes its argument, and the paragraph above it already states the
+argument in words.
+
+**Ongoing cost: negative.** It removes the cell that has to be re-counted every
+time a menu is filed, and adds nothing that can go stale.
+
+### A15 — low — nothing says where a closed menu goes, and seventeen of nineteen are closed
+
+`audit-menu` has `## Where a new menu goes` and `## When not to`. **There is no
+section on what becomes of a finished one** — established 2026-09-04 by reading
+the output of `grep -nE '^## ' .claude/skills/audit-menu/SKILL.md`, which returns
+eleven sections, listed in full in `A13`'s evidence above. Read, not inferred
+from a pattern.
+
+**The scale.** 19 menus, **27,952 lines**, measured 2026-09-04 **at `2eed604`,
+the merge of #699** (`wc -l` over the glob plus `SETUP-v2-CHANGES.md`). Two carry
+open work — `SKILL-AUDIT` (`F41`, `F42`) and, until this file lands, none
+elsewhere. The other seventeen are finished records sitting in every glob and
+every grep beside the documents describing how the repo works today.
+
+**Filing this finding took the corpus to 28,454 lines**, which is stated because
+a reader re-running the `wc -l` today gets the larger number and should not read
+the difference as an error.
+
+**Already decided, and this finding reopens none of it.** An index: declined
+twice, `REPO-AUDIT` `G9` and `A1` in this file. Moving a menu: refused for
+`BOOK-INGEST-AUDIT.md` in `## Where a new menu goes`, on the ground that its
+paths are cited from other menus, from skills and from the memory store, and
+*"a move breaks citations no grep of this repo reaches."* **That reason
+generalises to all seventeen**, so a proposal to archive or relocate starts from
+behind. This one does not make it.
+
+**The cost of them staying, measured rather than asserted**, 2026-09-04 **at
+`2eed604`** — re-running them after this PR returns 29/11 and 9/7, because this
+finding's own text contains both search terms:
+
+| a real lookup | `.md` files hit | of which menus |
+|---|---|---|
+| `grep -rl "schema-change" --include="*.md"` | 28 | 10 |
+| `grep -rl "line ending" --include="*.md"` | 8 | 6 |
+
+**And the second row does not mean what it looks like.** Three of those six
+menu hits are `SKILL-AUDIT` `F33`, `F35` and `F37`, filed and taken on
+2026-09-04 — live, not residue. **The noise is real and it is smaller than the
+raw ratio suggests**, which is stated here because the tempting version of this
+number would justify a bigger proposal than the evidence supports.
+
+**So the likely correct answer is that closed menus stay exactly where they are,
+permanently. The finding is that nothing says so.** An absent decision and a
+deliberate one are indistinguishable in the tree — which is precisely the
+argument `A4` made about `HEALTH-AUDIT`'s missing status header, and it was
+worth a paragraph there.
+
+**Proposal:** one short section in `.claude/skills/audit-menu/SKILL.md` beside
+*Where a new menu goes*, recording where a closed menu goes — **nowhere; it
+stays** — and why: the citation surface above, plus the fact that a closed menu
+is still the only record of what was decided and why. Name the two things
+already declined so they are not re-derived.
+
+**Posture: documentation only, one section, and it decides in favour of the
+status quo. NO file moved, no `archive/` directory, no index, no count of menus
+in the rule.**
+
+**Evidence:** the eleven `## ` sections of `audit-menu/SKILL.md` read in full,
+2026-09-04; `wc -l` over the menu glob plus `SETUP-v2-CHANGES.md`, 2026-09-04;
+the two `grep -rl` lookups above with their hits classified by hand,
+2026-09-04; `G9` and `A1` read in this file and `## Where a new menu goes` read
+in the skill, 2026-09-04.
+
+**Confidence: high that the gap exists** — it was established by reading the
+section list, not by grepping for a phrase. **Low on whether recording it earns
+a section.** **What would raise it:** one instance of a reader treating a closed
+menu as live guidance. Nothing on this machine records one, and this finding
+does not claim otherwise.
+
+**Ongoing cost: zero once written**, since the decision it records is *do
+nothing*. **And this finding recommends weighing a decline seriously.** Its
+impact is one paragraph preventing a re-derivation that has not yet happened;
+`audit-menu` is already 688 lines, and `SHIP-PR-AUDIT` `F11` was declined on the
+ground that the file nobody has read cold should not grow. If it is declined,
+the decline itself answers the question and should be recorded here.
+
+### The hand-over pass on these three, per `A10`
+
+Every command quoted in `A13`–`A15` was re-run on 2026-09-04 before this file
+was handed over. **Reporting what held as well as what moved**, because a pass
+that lists only its catches says nothing about coverage.
+
+| claim | re-run result |
+|---|---|
+| twelve menus use the `F` prefix | **held** |
+| `SHIP-PR-AUDIT` carried ten `### F<n>` at creation (`9e9a219`) | **held** |
+| the census landed at `07cf1ec`, 2026-09-03 13:50 | **held** |
+| `audit-menu` has eleven `## ` sections, none about a closed menu | **held** |
+| `pick3cut5` `F11`/`F12` taken in #653/#654 | **held** |
+| 28 of 36 ambiguous-prefix citations name their menu | **held** |
+| header line counts | **MOVED — off by one throughout**, `echo "$h" \| wc -l` against `wc -l < file`. Table corrected to the file-based method and the command is now printed above it |
+| `META-AUDIT`'s own header row | **MOVED — 39/13 to 50/16, by this PR** |
+| corpus at 27,952 lines | **MOVED — 28,454 after this PR** |
+| the two `grep -rl` lookups | **MOVED — 28/10 and 8/6 became 29/11 and 9/7**, because `A15`'s own text contains both search terms |
+
+**Four of the ten moved, and three moved because of this PR.** That is not a
+defect in the measurements; it is `A13` and `A15` happening to their own
+evidence inside the commit that files them. Every figure is now pinned to
+`2eed604` and the post-PR value is stated beside it.
+
+**What this pass cannot see**, stated so its silence is not read as coverage:
+`A13`'s remedy — whether a *bound* is the right instrument, or whether a live
+menu's header should simply be allowed to grow — rests on no command and nothing
+re-runs it. That is the asymmetry `G18` names, and it is why `A13`'s confidence
+is medium on the remedy while high on the measurements.

@@ -73,6 +73,7 @@ Audit briefs:
 | `docs-audit-2-prompt.md` | `DOCS-AUDIT-2.md` — the second documentation pass |
 | `meta-audit-prompt.md` | `META-AUDIT.md` — the menus themselves, and the discipline that fills them |
 | `ship-pr-audit-prompt.md` | `SHIP-PR-AUDIT.md` — one skill, against the workflow that changed under it |
+| `protocol-retrospective-prompt.md` | `META-AUDIT.md` `A13`–`A15` — three conventions, asked whether they still earn their cost rather than whether they are still true. **Filed into an existing menu, not a new one** |
 | *(none kept)* | `REPO-AUDIT.md` — **its brief was not saved.** See below |
 | `portability-audit-prompt.md` | **nothing.** The investigation was dropped the day it was written — see below |
 
