@@ -61,9 +61,9 @@ filing"* — five wordings of one rule, and this file owned none of it.
 
 **That mattered, because a menu inherits its brief's discipline and one menu had
 no brief.** `REPO-AUDIT.md` has none on this machine, and it is the menu whose
-own header records five wrong claims in eighteen findings. **A correlation, not a
-demonstrated cause** — different subject matter, and small numbers — and the only
-evidence either way.
+own header records a substantial minority of its findings carrying wrong claims.
+**A correlation, not a demonstrated cause** — different subject matter, and small
+numbers — and the only evidence either way.
 
 A finding carries these, and the list is deliberately short:
 
@@ -125,7 +125,9 @@ Plenty of notes here record premises that held exactly — `HEALTH-AUDIT` `F5`,
 document being untrustworthy**, which is a better reason to run it every time.
 
 Distrust first whatever is cheapest to check: line numbers, counts, "X exists
-nowhere", and any claim about what another finding says.
+nowhere", and any claim about what another **file** or finding says. **That last
+one is the shape that actually fails**, it has its own section below, and it is
+the only one of the three with something that runs.
 
 ### And before WRITING a proposal, grep the other menus for its subject
 
@@ -202,7 +204,9 @@ than `REPO-AUDIT` did and it is strictly better than that record.**
 coverage:
 
 - **A finding with no command to re-run is not verified by it.** That is the
-  asymmetry `G18` names — a wrong inference has nothing to re-run.
+  asymmetry `G18` names — a wrong inference has nothing to re-run. **Half of that
+  hole is now covered by something that runs** — the section below, and
+  `scripts/menu-check.mjs`.
 - **A finding proposing a *decision* is untouched by it.** `G9` and `G10` had
   their facts right; no amount of re-measuring reaches an already-settled
   question. That is the grep above, not this pass.
@@ -210,6 +214,66 @@ coverage:
 **No check, no schedule, and it is not a phase.** `REPO-AUDIT` ran its pass
 because the error rate alarmed whoever was writing, which is the right trigger.
 `META-AUDIT` `A10`.
+
+### A claim about ANOTHER FILE is the shape that fails
+
+**The three rules above, plus this one, plus the `Proposal` evidence rule further
+down, are five statements of one idea, and they were all in force when the shape
+got through anyway.** That is the argument for reading this section rather than
+trusting that you already know it.
+
+**Of the four false premises on `SHIP-PR-AUDIT`, every one was a claim about what
+a different file said** — not a measurement, not a count, not a claim about the
+file being changed:
+
+| the sentence | what was true |
+|---|---|
+| `REPO-AUDIT` `G7` — the PR body convention *"exists only inside the `ship-pr` skill"* | it was in no file at all, so the template `G7` built shipped as the only written copy of a convention it said lived elsewhere |
+| `F12` — asked this skill to say its table is not a list of menus | it already said exactly that, in the paragraph above the table |
+| `F14` — place a paragraph *"beside the existing exit-code material"* in `windows-shell` | there was none |
+| the menu's own header | stated the wrong cost for filing a new menu, written by someone who had just read the finding naming the right one |
+
+**A claim about the file you are editing gets checked, because you have it open.
+A claim about a different file is the one nobody opens** — and it is cheaper to
+check than any measurement, which is what makes it worth a rule rather than a
+habit.
+
+**The older half of this section, and the reason absence is the worst case.**
+`CLASS-AUDIT` `F17` reported missing attribute requirements in seven classes.
+**Five of the seven were false** — those classes held their printed requirements
+in multi-line blocks and the audit had grepped the inline `{ }` form, concluding
+absence from a pattern matching one of two shapes. What was real was smaller and
+different in kind: one class carried *wrong* values rather than none, and the fix
+turned up two page ranges the finding never listed. **"X appears nowhere" is the
+claim most likely to be wrong**, and wrong in the direction that makes a finding
+look bigger than it is. Prove absence by reading.
+
+**So: before FILING a finding, open every file it makes a claim about, read the
+section, and put the grep, the path with a line number, or the date in the same
+paragraph.** Not when the finding is taken — by then the sentence has already
+been read and believed.
+
+**`scripts/menu-check.mjs` runs this in CI**, on the lines a pull request adds to
+any menu. It flags the phrasing — *appears nowhere*, *exists only in*, *does not
+mention*, *already says*, *the existing* — where nothing nearby gives a command,
+a date or a line number. **A backticked path deliberately does NOT count as a
+citation:** naming the file you are making a claim about is not evidence that you
+opened it, which is exactly how `G7` read as sound. It cannot tell whether a
+claim is true; it can refuse to let the sentence stay invisible.
+
+**It also cannot tell a QUOTED specimen from an assertion, and you will hit
+this.** An outcome note correcting a false premise quotes the false phrasing —
+that is what an outcome note is for — and the check reads the quote as a fresh
+claim. Mark those `<!-- claim-ok: quoting the premise this note corrects -->`.
+The table three paragraphs above trips its own check four times for exactly this
+reason, which is the honest state of a matcher that reads phrasing rather than
+meaning.
+
+**Why a check and not a sixth rule.** `SHIP-PR-AUDIT` was filed at 20:48 on
+2026-09-03. The hand-over pass above landed on `main` at 17:16 the same day, and
+*"an absence claim needs a fresh read"* had been in this file since 2026-08-28.
+Three and a half hours, five rules, four false premises. **Rules that are read do
+not fire; a job that runs does.**
 
 ## A class note that cites a finding goes stale when the finding is taken
 
@@ -476,18 +540,6 @@ repeating the old wording defeats a grep for it, and a check asserting a file
 listing what was open *before* four findings were added is not a statement about
 all of them, and a correction to it is not either. Say which scope you mean.
 
-## An absence claim needs a fresh read, not a grep
-
-`CLASS-AUDIT` F17 reported missing attribute requirements in seven classes.
-**Five of the seven were false** — those classes held their printed requirements
-in multi-line blocks and the audit had grepped the inline `{ }` form, concluding
-absence from a pattern matching one of two shapes. What was real was smaller and
-different in kind: one class carried *wrong* values rather than none, and the
-fix turned up two page ranges the finding never listed.
-
-**"X appears nowhere" is the claim most likely to be wrong**, and wrong in the
-direction that makes a finding look bigger than it is. Prove absence by reading.
-
 ## Every number carries its date and its source
 
 `124 / 126 classes` means nothing alone. Write where it came from —
@@ -502,14 +554,22 @@ in prose does not.
 The rule above covers numbers. **The claims that have actually caused damage
 here carried no number at all.**
 
-`REPO-AUDIT.md` produced five wrong ones in eighteen findings, and they share a
-shape: every one was **reasoned to rather than run**. Its `G8` said the test
-suite "has never been runnable on a bare clone" — a bare clone passes all 1662
-checks, and the sentence contains no figure to date or source. `G5` said merge
-commits were used "exclusively" against 117 squash merges. `G15` said a deploy
-path produced "no signal at all" while the tool already reported it. **Every
-claim in that menu that came from a command someone actually ran has survived
-re-measurement.**
+`REPO-AUDIT.md` produced a run of them, and most share a shape: **reasoned to
+rather than run**. Its `G8` said the test suite "has never been runnable on a
+bare clone" — a bare clone passes all 1662 checks, and the sentence contains no
+figure to date or source. `G5` said merge commits were used "exclusively" against
+117 squash merges. `G15` said a deploy path produced "no signal at all" while the
+tool already reported it. **Every claim in that menu that came from a command
+someone actually ran has survived re-measurement.**
+
+*(A count opened this paragraph until 2026-09-04 and no longer does. It said
+five of eighteen; `G7` made it six, in a passage whose subject is claims that go
+stale. `SKILL-AUDIT` `F7`'s rule applies here too — removing the ordinal beats
+incrementing it, because incrementing leaves the same trap armed.)*
+
+**The second shape is not this one, and re-measuring never reaches it** — a claim
+about what another file says. See *A claim about ANOTHER FILE is the shape that
+fails*, above, which is the only one of these with a check behind it.
 
 The cost is not symmetric, which is why this is worth a line:
 
@@ -561,10 +621,10 @@ its own decision.
 
 **And `REPO-AUDIT` inherited none of it, because it had no brief.** No brief for
 that menu exists anywhere on this machine (`docs/prompts/README.md` carries the
-row). It is also the menu with five wrong claims in eighteen findings. **That is
-a correlation and not a demonstrated cause** — different subject matter, and n of
-18 against 24 — and it is the only evidence available either way. `META-AUDIT`
-`A8`, `A9`.
+row). It is also the menu carrying the largest share of wrong claims. **That is
+a correlation and not a demonstrated cause** — different subject matter, and
+small numbers against 24 — and it is the only evidence available either way.
+`META-AUDIT` `A8`, `A9`.
 
 ## Where a new menu goes
 
@@ -596,3 +656,21 @@ finding you intend to take in the same PR — the numbering exists so the decisi
 to take it can be separate. Do not add a check that a finding was taken or that
 the open count is right: the notes vary in wording by design, and a mechanical
 reader is exactly the thing that keeps getting this wrong.
+
+**And as of 2026-09-04, do not open a menu about the audit apparatus itself
+without Nate asking for one by name.** Measured by first-commit date on
+2026-09-04: **seven menus were filed on 2026-09-02 and 2026-09-03, and not one
+is about an app or the data** — `SKILL-AUDIT`, `META-AUDIT` and `SHIP-PR-AUDIT`
+audit the instruction layer, `REPO-AUDIT` and `HEALTH-AUDIT` the process and the
+platform, `MACHINE-AUDIT` the PC, `DOCS-AUDIT-2` the documentation. The last
+menus about the product itself are `UI-AUDIT` and `REDESIGN-AUDIT`, both
+2026-08-31.
+
+The apparatus is now the most-measured thing here, and the findings arrive at a
+real error rate, so a menu whose subject is the loop can cost more in rework than
+it returns. **Menus about the product — an app, the catalog, the data, the UI —
+are unaffected and stay the normal way to work.**
+
+This is a **pause and a default, not a closed door.** It expires when Nate says
+so, and any single finding about the apparatus still belongs on whichever
+existing menu owns that surface.
