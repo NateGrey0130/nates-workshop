@@ -294,6 +294,21 @@ raise it is his answer.
 template already carries that cost; this makes it two places, which is the
 argument for the decline path.
 
+**Taken, 2026-09-03 (PR #661).** Nate chose the full version over the decline
+path: the six headings into step 6, the template amended to say it follows the
+skill, and `REPO-AUDIT` G7's premise corrected under G7 in the same PR.
+
+**The two-places cost is real and was paid deliberately, so it is written into
+the tie-break** rather than left for someone to discover: the template's opening
+comment now says the skill's list is the copy that gets read and the skill wins
+if they disagree. `G7`'s own constraint — *do not grow it into a second copy* —
+is why the template keeps its six headings and gains a pointer instead of prose.
+
+**One thing worth naming beyond the finding.** G7's false premise was a claim
+about what a *different* file said, and checking it required reading something
+other than the file being changed. `audit-menu` already lists that as the class
+to distrust first; this is a live instance, and G7's correction says so.
+
 ---
 
 ### F4 — step 4's browser bullet and the Pick 3 Cut 5 bullet predate the two skills that own them
