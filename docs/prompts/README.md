@@ -72,6 +72,7 @@ Audit briefs:
 | `workstation-consolidation-prompt.md` | `MACHINE-AUDIT.md` — the machine rather than the repo |
 | `docs-audit-2-prompt.md` | `DOCS-AUDIT-2.md` — the second documentation pass |
 | `meta-audit-prompt.md` | `META-AUDIT.md` — the menus themselves, and the discipline that fills them |
+| `ship-pr-audit-prompt.md` | `SHIP-PR-AUDIT.md` — one skill, against the workflow that changed under it |
 | *(none kept)* | `REPO-AUDIT.md` — **its brief was not saved.** See below |
 | `portability-audit-prompt.md` | **nothing.** The investigation was dropped the day it was written — see below |
 
