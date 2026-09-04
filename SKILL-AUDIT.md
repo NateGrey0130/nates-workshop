@@ -1,6 +1,9 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **`F26`–`F28` ARE OPEN, filed 2026-09-04.** Everything from the original pass
+> **`F26` AND `F27` ARE OPEN. `F28` was taken 2026-09-04 (PR #678)** — all four
+> agents run, all four kept, and its note carries four separate things the runs
+> turned up that are **not** fixed there and need their own findings. Filed
+> 2026-09-04. Everything from the original pass
 > is closed: 25 `F` findings and all 8 `N` proposals, 2026-09-02, PRs
 > #540–#569. The three new ones sit under **`## Opened while building the
 > verifier agents`**, after the `N` block and before `# Counts` — *not* under
@@ -2541,6 +2544,79 @@ would raise it; running them closes it.
 
 **Ongoing cost:** none. One-time, and it ends either in four exercised agents or
 in fewer agents.
+
+**Taken, 2026-09-04 (PR #678). Posture held: verification only — all four were
+run, nothing was fixed, no code changed and no gate was added.** All four earn
+their place, and none is proposed for deletion. **Every one of them found
+something on its first run**, which is the result that was not guaranteed.
+
+| agent | task | outcome |
+|---|---|---|
+| `claim-count-verifier` | every count in README `## The scripts at the repo root` | **1 stale claim** out of ~12 checked, 0 unsettled |
+| `claim-capability-verifier` | the six fixture records, as itself | 6 HOLD, 0 stale, 0 unsettled — **and it met the trap** |
+| `audit-premise-auditor` | `REPO-AUDIT` `G8` | killed the task as posed, then **4 disagreements** |
+| `book-extract-worker` | `ww` printed 44–45 | 0 rows, **and it refused to invent any** |
+
+**The premise about the answer-key pointer held.** `claim-capability-verifier`
+ran as itself and reported *"I did not open `reference/negatives.md`; it surfaced
+as a path in one grep hit list and was not read."*
+
+**The near-match requirement added after the blind eval did the job it was added
+for.** The eval's recorded limit was that neither model looked in `gear`, so a
+clean score never exercised the discrimination. Run as itself, the agent found
+and rejected **two** near-matches — the eight `gear` rows matching `%poison%`,
+and `gear` id **10485 `Large Axe`**, an exact-name hit nobody had noticed in any
+prior pass. It also checked `catalog_redirects` for aliases. The limit recorded
+in `negatives.md` is now closed by measurement rather than by argument.
+
+**`book-extract-worker` did the thing it was written to do**, which was not to
+find rows: printed 44–45 of `ww` is narrative prose, it returned **zero** rows,
+said so, and named the decision rather than padding. It read `page_offset` from
+**both** `books.json` and the cache manifest, caught that cache `p044` carries
+**no folio digit at all** in the OCR footer band and flagged that as a gap rather
+than assuming, and reported both boundary-straddling items — the governing
+heading sitting on printed 43, and *Dimensional Doorways* continuing onto 46.
+
+### What the runs turned up that is NOT this finding
+
+Recorded here because the exercise produced them; **none is fixed in this PR**,
+which would have broken the posture. Each needs its own finding and its own word.
+
+- **Four live-instruction files say `main` has no ruleset, and one of them
+  contradicts itself.** `CLAUDE.md:9`, `SETUP.md:6`,
+  `.claude/skills/ship-pr/SKILL.md:18` and `.github/workflows/tests.yml:4` all
+  say *"no ruleset"*; `tests.yml:113` says *"`main`'s ruleset requires a pull
+  request"*. Verified independently of the agent, 2026-09-04:
+  `gh api repos/NateGrey0130/nates-workshop/rulesets` returns **`22209348`,
+  "main: require a pull request", active, created 2026-09-03T12:46:10-04:00** —
+  five minutes after `G8` merged. **The substance of `G8`'s posture still
+  holds**: the ruleset carries one `pull_request` rule and **zero**
+  `required_status_checks`, so nothing gates a merge on a red run. It is the
+  clause that is false, not the posture. **This is the most consequential of the
+  four** — it is what a session reads today.
+- **`scripts/audit-citations.mjs` silently ignores a non-`F` finding argument.**
+  It matches `/BOOK-INGEST-AUDIT\.md\s+(F\d+)/gi` and filters on `/^F\d+$/i`, so
+  `--remote G8` discarded the argument and printed BOOK-INGEST `F`-numbers
+  instead. Wrong output, no error, and `audit-menu` step 5 tells a taker to run
+  it with whatever number they were given.
+- **README `## The scripts at the repo root` says `extraction-prompt.mjs` has
+  "Two system prompts".** There is one — `SYSTEM_PROMPT_CACHE`; the file's own
+  header records that the second went when the in-app importer was retired. Not
+  pinned: `documented-counts.mjs` diffs filenames, never the prose beside them.
+- **`REPO-AUDIT` `G8`'s deferred follow-up was never filed.** Its note says
+  `regression.mjs` should be added to CI *"as its own finding, once this workflow
+  has a track record"*. `gh run list --workflow=tests.yml` shows eight runs on
+  2026-09-04, seven green, so the condition is met and no finding exists.
+
+**One thing the exercise found about an agent rather than about the repo.**
+`book-extract-worker`'s contract assumes a slice contains stat-block-shaped rows.
+Read 2026-09-04: `.claude/agents/book-extract-worker.md:81` opens its return
+contract *"For each row: the name as printed, the fields the book gives…"*, and
+`:57` and `:66` both reason about stat blocks, while
+`grep -n 'prose' .claude/agents/book-extract-worker.md` returns nothing — so the
+prose case is covered nowhere in it. The agent handled it correctly anyway and
+reported the gap itself, but the file should carry it, and that is a change to an
+agent rather than verification, so it is not made here.
 
 ---
 
