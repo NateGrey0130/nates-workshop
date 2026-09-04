@@ -1,6 +1,8 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **`F26` AND `F27` ARE OPEN. `F28` was taken 2026-09-04 (PR #678)** — all four
+> **`F27` IS OPEN. `F26` was taken 2026-09-04 (PR #679)** — its mechanism test
+> ran first and moved it to high confidence. **`F28` was taken 2026-09-04 (PR
+> #678)** — all four
 > agents run, all four kept, and its note carries four separate things the runs
 > turned up that are **not** fixed there and need their own findings. Filed
 > 2026-09-04. Everything from the original pass
@@ -2470,6 +2472,40 @@ without one.
 
 **Ongoing cost:** two sentences to keep true if the harness changes, sitting
 beside sentences already being maintained. Low.
+
+**Taken, 2026-09-04 (PR #679). Posture held: documentation only — two sentences,
+no gate, no check, no script.** Taken as written, in **both** files, rather than
+the one-file version I would have preferred: `audit-menu` says as written, scope
+and posture both.
+
+**The confidence-raising test named in the finding was run first, and it moved
+the answer.** `F26` filed at *medium on the mechanism* — "turn boundary" was
+observed, and a periodic sync that happened to align would have looked identical.
+The test it asked for was: write an agent file, then run several tool calls
+without a user turn.
+
+| attempt | elapsed since write | intervening work | result |
+|---|---|---|---|
+| 1 | ~0s | none | `not found` |
+| 2 | ~52s | character-creator smoke, 1665 checks | `not found` |
+| 3 | ~82s | four more suites and `deploy-sweep`, 10+ tool calls | `not found` |
+
+Written 12:00:52 UTC, probe removed 12:02:43. `ls ~/.claude/agents/` listed the
+file at T0, so the junction half really is instant. **It is not elapsed time and
+not tool-call count**, and four separate agent files have become available at a
+turn boundary and none before one. Confidence on the mechanism is now high, and
+both sentences carry the measurement rather than the claim.
+
+**One thing the test could not separate**, said in the sentences: *a turn* is
+what correlates. Anything else that happens at a turn boundary would look the
+same. The actionable half — write it in one pass, use it in the next — does not
+depend on which.
+
+**A hazard found while doing it, worth more than the finding.** The probe file is
+`.claude/agents/zz-registration-probe.md`, and **a stray `.md` there is not
+gitignored** the way `*.tmp` is. A `git add -A` between writing a probe and
+deleting it would commit it into the live instruction surface, where the agents
+junction publishes it to every session on the machine. Nothing catches that.
 
 ### F27 — a subagent CAN load a project skill by name, and all five agent files are written as though it cannot
 

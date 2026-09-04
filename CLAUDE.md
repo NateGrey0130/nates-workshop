@@ -46,6 +46,15 @@ needs administrator rights on this machine. So a new agent is covered the moment
 its file lands, and `~/.claude/agents` cannot hold anything that is not in this
 repo. See the junction block in `SETUP.md`.
 
+**Covered is not usable, and the gap costs a session that does not know it.** An
+agent file written mid-session **cannot be spawned in that session**: the
+junction shows it instantly and a spawn still answers `Agent type '<name>' not
+found` until the next turn. Measured 2026-09-04 (`SKILL-AUDIT` `F26`) — three
+attempts across 82 seconds and ten tool calls, five test suites among them, all
+`not found`; it is the turn, not elapsed time and not tool calls. **Write the
+agent in one pass and use it in the next**, and do not build a plan that spawns
+something it just wrote.
+
 | skill | when |
 |---|---|
 | `audit-menu` | reading or writing an audit file, and whenever a numbered finding is taken |
