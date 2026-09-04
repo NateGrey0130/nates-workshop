@@ -1,6 +1,6 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **`F33` AND `F34` ARE OPEN**, filed 2026-09-04 under
+> **`F33` IS OPEN; `F34` was taken 2026-09-04 (PR #688).** Filed 2026-09-04 under
 > **`## Opened while taking F29 to F32`** — a **fourth** placement on this page,
 > after the `N` block, `## Opened while building the verifier agents` and
 > `## Opened by taking F28`. **`F29`–`F32` were all taken 2026-09-04** (PRs
@@ -3112,6 +3112,30 @@ because it had loaded the skill, which is the case for `F27` in one observation.
 **Confidence: high.** Both texts read directly, and the two disagree in words.
 
 **Ongoing cost:** none. One sentence becomes true.
+
+**Taken, 2026-09-04 (PR #688). Posture held: documentation only — one agent
+file, no frontmatter change, no tools change, no code.**
+
+The unanimity claim is replaced with `audit-menu`'s own formulation: *checking a
+finding before scoping it turns something up nearly every time, and it is usually
+**not** the premises.* The expensive case is kept and named as the expensive
+case — a wrong premise is what a taker implements from, and one would have
+shipped a silent bug — so the argument for the agent survives intact without the
+false half carrying it.
+
+**One line added that the finding did not ask for, and it is the behavioural
+half:** *"You are not here to find fault; you are here to say which of these two
+happened."* The defect was never really the arithmetic — twelve versus all — it
+was that a sentence promising an error is always present pushes an agent to
+produce one. The correction is only worth making if it removes that push.
+
+**Premises held.** Both texts were re-read before editing and say what `F33`/`F34`
+recorded them saying.
+
+**The agent that found this was the agent it is about**, during `F27`'s
+verification (PR #683). It could check its own file only because `F27` had given
+it the skill to check it against — so `F27` earned its place by catching a defect
+in the change that `F27` itself was.
 
 ---
 
