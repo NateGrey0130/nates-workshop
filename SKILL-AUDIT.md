@@ -1,8 +1,10 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **`F27` IS OPEN. `F26` was taken 2026-09-04 (PR #679)** — its mechanism test
-> ran first and moved it to high confidence. **`F28` was taken 2026-09-04 (PR
-> #678)** — all four
+> **NOTHING IS OPEN AGAIN as of 2026-09-04.** `F26` taken (PR #679) after its
+> mechanism test ran first and moved it to high confidence; `F27` taken (PR
+> #680), scoped to one agent, **with its verification owed** — the swapped agent
+> could not be spawned in the session that changed it, which is `F26`. **`F28`
+> was taken 2026-09-04 (PR #678)** — all four
 > agents run, all four kept, and its note carries four separate things the runs
 > turned up that are **not** fixed there and need their own findings. Filed
 > 2026-09-04. Everything from the original pass
@@ -2546,6 +2548,37 @@ and compare tokens as well as verdicts.
 **Ongoing cost:** none if declined. If adopted for an agent, that agent's
 guidance lives in one place instead of two, which is a reduction rather than a
 cost — offset by the per-invocation size above.
+
+**Taken, 2026-09-04 (PR #680). Posture held: opt-in and per agent — frontmatter
+and documentation only, one agent changed, no gate, no script, no code.**
+
+**Scope: `audit-premise-auditor` only**, on Nate's word and on the arithmetic
+this finding asked for. It fires **once per finding**, so paying `audit-menu`'s
+676 lines per invocation costs almost nothing, and that skill is precisely the
+procedure the agent was duplicating. The other three are deliberately untouched:
+both claim verifiers run per-slice at volume, where loading a 271-line
+`claim-audit` on every call is the wrong trade, and `book-extract-worker`
+deliberately does **not** map to catalog vocabulary, so it never needed
+`class-import` at all.
+
+`tools:` gained `Skill`; the agent now invokes `audit-menu` before reading the
+finding, and the file says outright that **the skill is the authority and the
+agent does not restate it** — so the two cannot drift into disagreeing, which was
+the standing cost. The file went **110 lines to 80**, and what left was exactly
+the duplicated half: outcome notes never being grepped, the not-a-heading menus,
+the bare-number ambiguity, the posture definition, and which script covers which
+part of the citation sweep. What stayed is what the skill does not own — that it
+is a second reader with no write tools, the order to work in, and the return
+contract.
+
+**Not verified in the PR that made it, and this is `F26` biting the session that
+had just documented it.** A tools change to an existing agent is a change to an
+agent file, and an agent file is not re-read until a turn boundary, so the
+swapped agent could not be spawned in the session that wrote it. **The first real
+invocation is the verification, and it is owed.** What would settle it: run it on
+a finding whose answer is known and confirm from its own report that `audit-menu`
+loaded — the same shape as the probes in `F27`'s evidence, which quote a heading
+back as proof rather than reporting success.
 
 ### F28 — all four agents added in #676 shipped without ever being invoked
 
