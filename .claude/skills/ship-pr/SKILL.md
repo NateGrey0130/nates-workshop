@@ -15,9 +15,17 @@ caught for you, so the checks happen before the merge or they do not happen.
 **Step 4 is still yours, even though a workflow now runs the same suites.**
 `.github/workflows/tests.yml` runs the five smoke suites on every pull request
 (`REPO-AUDIT.md` G8), and it is **reporting only** — not a required status
-check, no ruleset behind it, and a red run does not stop a merge. It also
+check, and a red run does not stop a merge. It also
 reports *after* you have opened the PR, which is after the point where step 4
-would have saved you. Treat it as a second pair of eyes on a run you already
+would have saved you.
+
+**There IS a ruleset on `main`, and it does not gate CI.** `22209348`, *"main:
+require a pull request"*, active since 2026-09-03 — one `pull_request` rule,
+**zero** required status checks. It is what refuses the direct push step 1
+describes; it is not what a red run runs into. This passage denied its existence
+for a day (`SKILL-AUDIT` `F29`, 2026-09-04), which left a reader who checked
+unable to tell which half of the posture was wrong. Ask it:
+`gh api repos/NateGrey0130/nates-workshop/rulesets`. Treat it as a second pair of eyes on a run you already
 did, never as the reason to skip one. `regression.mjs` is not in it at all.
 
 ## The loop
