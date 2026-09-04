@@ -1,9 +1,10 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **`F40` IS OPEN**, filed 2026-09-04 — `audit-menu`'s shape table describes this
-> file's arrangement and that cell is now wrong. It sits under the existing
-> **`## Opened while closing out 2026-09-04`**, deliberately **not** an eighth
-> placement, since `F39` was closed on the argument that the existing ones stand.
+> **NOTHING IS OPEN.** `F40` taken 2026-09-04 (PR #698) — `audit-menu`'s shape
+> table row for this file described an arrangement it no longer has, and now
+> carries no count of sections, deliberately. It sits under the existing
+> **`## Opened while closing out 2026-09-04`**, not an eighth placement, since
+> `F39` was closed on the argument that the existing ones stand.
 > `F38` taken 2026-09-04 (PR #695) — every `###` heading in
 > this file is now a finding, which is more than `F38` asked for. **`F39` closed
 > without being taken** (PR #696), agreeing with its own recommendation and
@@ -3693,6 +3694,42 @@ which is an argument for the countless phrasing above, not against the finding.
 cost is a re-read every time a section lands here — which is the trap this table
 keeps falling into, and the reason its own paragraphs have been stripped of
 ordinals rather than corrected.
+
+**Taken, 2026-09-04 (PR #698). Posture held: documentation only — one table cell
+in one skill, and both prohibitions observed.** No number of sections was
+written, and the table's errors are named rather than tallied.
+
+The cell now says findings are **split across many `##` sections with the `N`
+block sitting in the middle of the `F` run**, that there is no one contiguous
+list, that the file's own header names the sections — and, in the same breath,
+**why no count appears there: because they accrue.** It also records `F38`'s
+result, that every `###` in that file is a finding, which is the thing the table
+exists to capture.
+
+**A dependency the finding did not mention, found before editing.** The row
+immediately below — `SHIP-PR-AUDIT.md` at `:462` — ends *"deliberately not the
+row above's arrangement."* It contrasts itself against this cell, so a rewrite
+could have left it pointing at nothing. The replacement keeps a contrast worth
+pointing at: `SHIP-PR-AUDIT` is one appended block in order, this file is many
+sections interrupted by the `N` block. **`:462` is untouched and still reads
+correctly.**
+
+**Premises held**, and the arrangement was re-listed rather than trusted from the
+filing an hour earlier.
+
+**Nothing pins the table**, checked rather than assumed: no script reads
+`audit-menu`'s shape section, and the only `audit-menu` mention in the test tree
+is a comment in `documented-counts.mjs:175` quoting its argument against
+mechanical readers. Table integrity was verified after the edit — every row in
+the block carries the same pipe count — and the new text adds no backticked repo
+path, so the corpus-wide *every repo path a skill names exists* check has nothing
+new to resolve.
+
+**What this does not fix, and the decline path said so.** The cell will go wrong
+again the next time the arrangement changes. Refusing to carry a count narrows
+the failure to one sentence rather than a number, but the honest remedy — cutting
+arrangement prose from a table whose stated job is *shape* — is a change to the
+table's design and was not proposed.
 
 ---
 
