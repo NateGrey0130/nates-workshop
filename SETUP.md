@@ -531,6 +531,14 @@ notices the gap, so add the link in the same PR that adds the skill. **A new
 agent needs nothing**: the directory junction covers it the moment the file
 lands.
 
+**That is the junction, not the harness. An agent file written during a session
+cannot be spawned in that session** — the file is on disk and `ls
+~/.claude/agents` lists it, and a spawn still answers `Agent type '<name>' not
+found` until the next turn. Measured 2026-09-04 (`SKILL-AUDIT` `F26`): three
+attempts over 82 seconds and ten tool calls, including five test suites, all
+`not found`; four separate agent files have become available at a turn boundary
+and none before one. **So write the agent in one pass and use it in the next.**
+
 **Once these exist, `CLAUDE.md` says the skills load from anywhere, and that
 sentence is only true on a machine that has run the block above.** A fresh
 machine has to run it before the book work will find them by name.
