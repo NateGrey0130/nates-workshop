@@ -687,3 +687,24 @@ reached `main`.
 
 **Ongoing cost if taken:** a check to remember, forever, which is the whole
 argument against it.
+
+**DECLINED, 2026-09-03.** Nate's call, and it matches the finding's own
+recommendation. **Nothing was changed in the skill** — no clause in step 7, no
+mention of reading the CI result before merging.
+
+**The reason stands as the record, so it is not derived a third time.** The gap
+is real: `tests.yml` reports after the PR is opened and no step reads it. But the
+failure this would guard is the one this repo has already had twice, and both
+times the answer that worked was **unattended** — `deploy-alarm.yml` — while the
+answer that failed was a person remembering. Adding a fourth manual read to a
+loop that runs 48 times in a day is the mechanism that already failed, dressed as
+a fix.
+
+**What would reopen it:** a red `tests` run that reached `main` without being
+noticed. That is a `REPO-AUDIT` finding about an unattended CI alarm, not a
+`ship-pr` finding about the skill — and it should be filed there, with its own
+number, rather than re-proposed here.
+
+**Ten findings, and this is the one where doing nothing was the work.** Recorded
+in full because a menu that only records what it changed teaches the wrong
+lesson about what a pass is for.
