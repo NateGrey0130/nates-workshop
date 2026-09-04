@@ -104,6 +104,44 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `026-campaign-notes.sql` | `journal_fts` and its three triggers, plus `campaign_items` and `campaign_currency`. The FTS table is external-content, so the triggers are not optional — without them the index silently stops matching anything written after the migration ran |
 | `025-skill-level-bonuses.sql` | `skills.level_bonuses` — what a skill grants **at each level**, summed up to the character's. The Hand to Hand tables are level-by-level and accumulative, which the flat `bonuses` column cannot express; entries may carry `applies_when` for a W.P. bonus that needs that weapon in hand |
 
+### Some of those columns are stored but not rendered
+
+**A column in the table above is not a promise that anything shows it.** Several
+are written by data scripts, hold real values, and reach **no runtime surface** —
+no API projection selects them, so nothing a player opens can display them. That
+is not a defect list; it is a fact worth writing down once, because a retro
+audit rediscovered it as one (`RETRO-AUDIT` `R7`, 2026-09-04) after asking *who
+reads this* rather than *who sets this* — a question none of that audit's four
+detectors asked.
+
+Measured against production on **2026-09-04** with
+`grep -rn "variant_note" --include=*.js apps/ functions/ scripts/` and by reading
+each endpoint's projection:
+
+| column | migration | rows set | read by |
+|---|---|---|---|
+| `spells.variant_note`, `psionic_powers.variant_note` | `033` | 18 + 2 | **nothing.** Not in any API projection, and not in `apps/character-creator/js/catalog-fields.js` either, so it is not even editable in the catalog admin UI |
+| `gear.sdc` | `034` | 34 | the catalog editor only |
+| `gear.cost_note` | `032` | 243 | the catalog editor only |
+| `gear.ar`, `gear.mdc`, `gear.range`, `gear.rate_of_fire` | `008` | — | the catalog editor only |
+
+**What IS served from the gear stat block is three columns**, and only on a
+character's own items: `functions/api/character-creator/characters/[id].js`
+joins `gear.category`, `gear.damage` and `gear.payload` for play mode's weapon
+cards. `functions/api/character-creator/items.js` — the picker — projects eight
+columns and **not one of them is a stat**.
+
+**`034-gear-sdc.sql` justified itself on the grounds that S.D.C. in free text is
+somewhere "no sheet and no arithmetic can reach".** That is still true of the
+column: no sheet reaches it either. The migration was not wrong to move the data
+out of prose — a column can be queried, corrected and counted where a sentence
+cannot — but the payoff it named has not arrived.
+
+**Nothing here is proposed as a fix.** Wiring a field to a surface is real UI
+work for data nobody has asked to see, and `RETRO-AUDIT` `R7` recommends
+declining that until someone does. This section exists so the next audit finds
+the answer instead of the question.
+
 ### One database, and the case for keeping it that way
 
 Every app in the monorepo shares one D1, `nates-workshop-media`, bound as `DB`.
