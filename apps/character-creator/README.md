@@ -616,6 +616,13 @@ scripts/
 │                           check-run to read: its newest commit compared against
 │                           the active deployment's timestamp. Report only, no
 │                           exit code
+├── menu-check.mjs          Does a new claim about ANOTHER file say where it was
+│                           read? Every false premise on SHIP-PR-AUDIT was that
+│                           one shape, and audit-menu already carried five rules
+│                           that would have caught them. Flags the phrasing, not
+│                           the truth - a backticked path is NOT a citation.
+│                           Runs in CI on the lines a PR ADDS, so no existing
+│                           menu is retrofitted
 ├── catalog-match-lib.mjs   Matching a book's names to the catalog's. Exact
 │                           first; a relaxed match only when unambiguous on
 │                           BOTH sides. See below - do NOT merge this with
