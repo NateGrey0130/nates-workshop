@@ -2060,9 +2060,13 @@ as a measurement with no command printed beside it, in a finding whose header
 table does print one. Same failure as `A15`'s inherited off-by-one, in the same
 pass.
 
-**And `REPO-AUDIT`'s trap paragraph is not in its header block at all** — it
-sits after the first `## `, so a rule bounding header content never reaches it.
-The finding's own example was outside its own scope.
+**And `REPO-AUDIT`'s trap paragraph is not in its header block at all** — read
+2026-09-04, it opens at `REPO-AUDIT.md:84` while that file's first `## ` is at
+`:31`, and `awk 'NR>1 && /^## / {exit} {print}' REPO-AUDIT.md | grep -c "own
+trap\|one that misreads"` returns **0**. So a rule bounding header content never
+reaches it, and the finding's own example was outside its own scope.
+`MACHINE-AUDIT`'s single paragraph, by the same commands, is at `:25` against a
+first `## ` at `:40` — inside its header, and in scope.
 
 **4. "All eleven `## ` sections" is twelve**, and it was `A15` — taken an hour
 earlier from this same menu — that added the twelfth. **The absence claim
