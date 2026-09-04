@@ -1,7 +1,11 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **`F35` IS OPEN**, filed 2026-09-04 under **`## Opened while taking F33`** — a
-> **fifth** placement on this page. **`F33` and `F34` were taken 2026-09-04**
+> **`F35` AND `F36` ARE OPEN**, filed 2026-09-04 under
+> **`## Opened while taking F33`** and **`## Opened by F32's own CI run`** — a
+> **fifth and sixth** placement on this page, which is past the point where the
+> arrangement helps anyone and is worth a finding of its own.
+> `F36` revisits part of `F32`, taken hours earlier, because the number
+> justifying it was measured on the wrong machine. **`F33` and `F34` were taken 2026-09-04**
 > (PRs #689, #688). `F33`'s note records four other places carrying the same
 > falsehood, left unfixed because its posture was one sentence in one skill;
 > `F35` is the one that matters, and it is **subtractive** — read its note before
@@ -3262,6 +3266,77 @@ file `sed-i-strips-crlf.md`, `docs/prompts/gm-grants-prompt.md:180` with its
 workshop twin, and `docs/prompts/n-findings-prompt.md:58`. The briefs are
 archived records of what was said at the time. The memory file is outside this
 repo and no grep of it reaches; it is the one worth a separate decision.
+
+---
+
+## Opened by F32's own CI run
+
+Filed 2026-09-04. A **sixth** placement on this page. Six is past the point where
+the arrangement helps anybody; consolidating them is worth its own finding and is
+not attempted here.
+
+### F36 — `F32`'s path filter was justified with a number measured on the wrong machine
+
+`F32` added `.github/workflows/regression.yml` and filtered it by path, on the
+stated ground that the suite costs **170 seconds** and that paying that on the
+documentation-only pull requests that are most of them lately buys nothing.
+
+**That 170s was measured on this Windows machine. In CI the same suite takes 56
+seconds** — and the two were never compared, because the local figure was taken
+first and the CI figure did not exist until the workflow ran.
+
+**The cost is also not additive, which is the part that settles it.**
+`tests.yml` and `regression.yml` are separate workflows with distinct
+concurrency groups, so they run **concurrently**. Measured on PR #686: both runs
+were created at `2026-09-04T13:12:22Z` — the same second — and finished at
+`13:12:51` (29s) and `13:13:18` (56s). Unfiltered, a pull request's CI wall clock
+goes from about 30 seconds to about 56. **It does not add three minutes, and it
+does not add 56 seconds.**
+
+**The filter's failure mode is silent, which is this repo's worst category.** A
+path list is correct the day it is written and wrong the moment something
+`regression.mjs` reads moves outside it — and then the suite simply does not run,
+so **green means "not asked" rather than "passed."** That is the shape of the
+`grep -c` that reported 272/272 clean on a pure-LF file, and of the 65
+consecutive Pages failures nobody read.
+
+**The argument against the filter is already in the filter's own header** — *a
+rule with an expiry date and nobody will notice it expire*. It was accepted
+anyway, and the only thing buying it was the 170s.
+
+**Proposal:** delete the `paths:` block from `.github/workflows/regression.yml`
+so the suite runs on every pull request, and rewrite the header paragraphs that
+justify filtering. **Posture: unchanged from `F32` — reporting only, not a
+required status check, a red run does not stop a merge.** This changes *when the
+job runs* and nothing else, and it is **subtractive**: a block comes out and no
+new mechanism goes in.
+
+**This revisits a decision made deliberately hours earlier, and says so.**
+`F32` chose filtering **on Nate's explicit answer**, from options that quoted the
+170s figure — so the call was sound on the evidence available and is being
+revisited because the evidence changed. `F32`'s note and `regression.yml`'s
+header both stand as the record of what was believed then; neither is rewritten.
+
+**Evidence.** `gh run list --workflow=regression.yml` and
+`--workflow=tests.yml`, 2026-09-04: one regression run,
+`13:12:22Z → 13:13:18Z`, success; the five most recent `tests.yml` runs at 29s,
+33s, 25s, 34s and 29s. Concurrency groups read at `tests.yml:49` and
+`regression.yml:49`. The 170s is `F32`'s own figure, timed locally the same day.
+
+**Confidence: high on the mechanism** — concurrency and the silent failure are
+structural, not statistical. **Medium on the number, because `n = 1`.** One CI
+run, and a runner's speed varies. What would raise it: two or three more runs,
+cheaply obtained — the current filter includes `regression.yml` itself, so **the
+pull request that removes the filter exercises it one last time.**
+
+**Ongoing cost: negative.** It deletes a path list that must be revisited every
+time something the suite reads moves, and removes a way for the check to stop
+covering things without saying so.
+
+**One cosmetic defect found while measuring, in scope for the taker.**
+`regression.yml` has no `name:` key, so `gh run list` and the PR check list show
+it as `.github/workflows/regression.yml` where every other workflow shows a
+word. One line, in the file the proposal already edits.
 
 ---
 
