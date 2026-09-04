@@ -1,16 +1,27 @@
 # Meta-audit — the menus as a reference, and the discipline that fills them, 2026-09-03
 
-> **`A13`, `A14` and `A15` ARE OPEN**, filed 2026-09-04 under
+> **NOTHING ON THIS MENU IS OPEN.** Read each finding's own heading for its
+> state and its PR number. The protocol retrospective's findings sit under
 > **`## Opened by the protocol retrospective, 2026-09-04`** at the end of this
-> file. Everything from the original pass is settled: `A2`–`A12` taken, `A1`
-> DECLINED — no index was built, and the skill records why beside the `find`
-> command. Read each finding's own heading for its state and its PR number; this
-> line does not carry them, for the reason `A6` records about statuses held
-> anywhere but under the finding. Original pass filed
-> 2026-09-03 against `main` @ `3332349` (the merge of #641); the retrospective
-> against `2eed604` (the merge of #699). Findings are
-> `### A<n> — <severity> — <title>`, severity lowercase. Status for any finding
-> lives under its own heading; this line does not count them.
+> file, after the original pass; the original pass was filed 2026-09-03 against
+> `main` @ `3332349` (the merge of #641), the retrospective against `2eed604`
+> (the merge of #699). Findings are `### A<n> — <severity> — <title>`, severity
+> lowercase.
+>
+> **This header does not comply with the rule `A13` shipped, and is deliberately
+> not retrofitted to.** `A13` added *What a status header may carry, and what it
+> may not* to `audit-menu` on 2026-09-04, and its posture was **no retrofit of
+> any existing header** — records stay as they are, and the rule governs the
+> next line written. The sentence above is that next line, and it carries a
+> verdict and a reading instruction and no per-finding state. **The paragraph
+> below it does not**, and stays: it enumerates the original pass, which is what
+> the rule now says a header may not do. Left standing on purpose, as the
+> nearest thing to a worked example of the difference.
+>
+> Everything from the original pass is settled: `A2`–`A12` taken, `A1` DECLINED
+> — no index was built, and the skill records why beside the `find` command.
+> Status for any finding lives under its own heading; this line does not count
+> them.
 >
 > **A sentence about `apps/pick3cut5/AUDIT.md` `F11` and `F12` was corrected out
 > of this header on 2026-09-04.** It described them as open work this menu had
@@ -2002,6 +2013,85 @@ Nothing on this machine records one, and this finding does not claim it has.
 each time a header is edited.** That is a real cost and it is the honest
 argument against this finding: the rule it adds is a rule someone has to
 remember, which is the objection `SHIP-PR-AUDIT` `F10` was declined on.
+
+**Taken, 2026-09-04 (PR #703). Posture held: documentation only, one section in
+one skill, NO retrofit of any header, no check, no script, no count of menus in
+the rule. The section says explicitly that the trap paragraphs are not what it
+restricts**, which the proposal named as the way this could be implemented
+wrong.
+
+**The premise audit found six things. Two changed the implementation.** Led
+with, per the skill.
+
+**1. This finding never engaged `SKILL-AUDIT` `F42`, and its own brief said it
+must.** `F42` is open and argues arrangement prose belongs *"a menu's own dated
+header, which is where `audit-menu` already puts status for the same reason"* —
+pushing **more** into headers while this finding asks whether they already carry
+too much. The brief called that *"the live tension and the pass must engage it
+directly."* This finding mentions `F42` once, only as an example of a header
+narrating self-reversing findings, and never states which side of its own line
+arrangement falls on.
+
+**The shipped section resolves it rather than ducking it**, and the resolution
+is the useful part: **the line is not length, it is whether a sentence can go
+stale on its own.** Arrangement is *how to read the file* and stays true as
+findings close, so it is permitted and `F42` may be taken without reopening
+this. What a header still may not do is give each of those findings its state on
+the way past. **Had this finding been implemented as written, `F42` and `A13`
+would have contradicted each other in the same file.**
+
+**2. The proposal's placement instruction named a location that does not
+exist.** It said *"beside the existing status material"* <!-- claim-ok: quoting the placement this note corrects -->
+— but there is no status section in `audit-menu`; the only such material is two
+lines inside the index-decline bullet list under *The headings are not uniform*.
+**That is the `SHIP-PR-AUDIT` `F14` shape**, the one this repo has a rule and a
+CI check about: a claim about another file that named a place with nothing in
+it. The section went in as its own `## `, immediately before *The headings are
+not uniform*, next to the material about where status lives.
+
+**3. `MACHINE-AUDIT` five and `REPO-AUDIT` four does not reproduce. Both have
+one.** <!-- claim-ok: quoting the figures this note corrects --> Measured
+2026-09-04 by counting the paragraphs rather than the word: `MACHINE-AUDIT.md`
+carries one such paragraph, at `:25`; `REPO-AUDIT.md` one, at `:84`. **The "ten
+menus" holds** and reconciles exactly — the union of both phrases is eleven
+files, of which `HEALTH-AUDIT`'s two hits are body prose and it has no status
+header at all by `A4`. **The 5/4 came from the brief unverified**, restated here
+as a measurement with no command printed beside it, in a finding whose header
+table does print one. Same failure as `A15`'s inherited off-by-one, in the same
+pass.
+
+**And `REPO-AUDIT`'s trap paragraph is not in its header block at all** — it
+sits after the first `## `, so a rule bounding header content never reaches it.
+The finding's own example was outside its own scope.
+
+**4. "All eleven `## ` sections" is twelve**, and it was `A15` — taken an hour
+earlier from this same menu — that added the twelfth. **The absence claim
+survives**: re-read 2026-09-04, none of the twelve bounds header content, and
+`A15`'s new section governs where a closed menu goes. The skill is **742 lines,
+not the 688** this finding costs against; `A14` and `A15` took it there. Two
+other places inherit the stale count — `A15`'s body and the hand-over table row
+reading *"`audit-menu` has eleven `## ` sections … held"*, which is now false in
+both halves and stays as the record of what the pass reported.
+
+**5. This finding quotes four of five verdicts from the section it cites.**
+`## The status headers, checked against their own findings` also found *"one is
+accurate but reads as more final than it is"* — `REPO-AUDIT`, `G5` half (b).
+Neither list totals eighteen; that section's own arithmetic is 16 of 18.
+
+**6. Two of the ten trap paragraphs contain instructions naming taken
+findings.** `MACHINE-AUDIT`'s *"Take `M7` against the list"* and `SKILL-AUDIT`'s
+pointer to `F7`. **Not stale**, on the reading this menu already applied to
+`SKILL-AUDIT`'s header — a dated instruction about how to implement is not a
+claim about what is open — but close enough to the line that the shipped section
+names both and says why they sit at its edge rather than outside it.
+
+**What held, and one of them is worth more than the corrections.** The header
+measurement table reproduces **exactly, row for row**, at `2eed604`. And
+`META-AUDIT`'s own row is 50 lines / 16 IDs at HEAD — **precisely the figure
+this finding predicted** — while `A14` and `A15`, taken since, did **not** move
+it again: both wrote their outcome notes under their own headings instead of
+into the header. **That is the protocol working, measured, in the window this
+finding is about.**
 
 ### A14 — low — the prefix census says eleven menus use `F`; twelve do, and the count is the part that rots
 
