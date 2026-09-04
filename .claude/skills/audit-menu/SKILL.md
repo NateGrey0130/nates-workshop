@@ -678,6 +678,43 @@ fit this rule, and the rule does not pretend it fits: existing paths are cited
 from other menus, from skills and from the memory store, and a move breaks
 citations no grep of this repo reaches. The rule is for the **next** menu.
 
+## And where a closed menu goes: nowhere. It stays
+
+A menu with no open work is **not** archived, moved, folded into another file,
+or deleted. It stays at the path it was written at, indefinitely.
+
+**This is a decision Nate already made, not a new rule.** `docs/prompts/meta-audit-prompt.md`
+→ *Posture, fixed by Nate*, 2026-09-03: *"Index only. Move nothing, merge
+nothing, rename nothing. Do not propose archiving closed menus into
+`docs/audits/`, folding them into a single file, or renaming anything to fit the
+glob."* It is written here because a decision that lives only in a brief is
+invisible to anyone reading the skill, and the natural repair — tidying the
+closed ones away — is the thing it refuses. `META-AUDIT` `A15`.
+
+**The reason is the one directly above**, and it is why *closed* changes
+nothing: a menu's path is cited from other menus, from skills, from
+`docs/prompts/`, and from the memory store, and a move breaks citations no grep
+of this repo reaches. Closing a menu does not retract a single one of those
+citations. A closed menu is also still the only record of what was decided and
+why, which is the other half — the findings are the reasoning, not a to-do list
+that has been emptied.
+
+**Three things are already decided and should not be re-proposed:**
+
+- **An index of the menus.** Declined twice — `REPO-AUDIT` `G9`, then
+  `META-AUDIT` `A1` with the evidence `G9` did not have. The reasoning is with
+  the `find` command earlier in this file.
+- **Archiving or relocating closed menus.** Nate's posture above.
+- **A retirement section inside a menu**, collecting closed items away from
+  their headings. `INGESTION-AUDIT` has one and it is a documented trap: `F12`,
+  `F16` and `F19` close as moot roughly 1,300 lines from their headings, so
+  reading under the headings alone reports three open that are not.
+
+**What this costs, stated rather than hidden:** the closed menus stay in every
+glob and every grep, beside the documents describing how the repo works today.
+That is a real tax on a tree-wide search and it is accepted, because every
+alternative measured so far breaks something that cannot be grepped for.
+
 ## When not to
 
 Do not open a new menu for work belonging in an existing one, and do not add a

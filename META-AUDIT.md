@@ -2199,6 +2199,76 @@ impact is one paragraph preventing a re-derivation that has not yet happened;
 ground that the file nobody has read cold should not grow. If it is declined,
 the decline itself answers the question and should be recorded here.
 
+**Taken, 2026-09-04 (PR #702), on Nate's instruction to take all three. Posture
+held: documentation only, one section, status quo, no file moved, no `archive/`
+directory, no index, and NO count of menus in the rule.**
+
+**The premise audit recommended DECLINING this finding, and that recommendation
+was overridden rather than answered.** Recorded plainly because reversing it
+costs one PR and the case is on this page. What the audit found:
+
+**1. The decision is not absent, which is the finding's central claim.**
+`docs/prompts/meta-audit-prompt.md` → *Posture, fixed by Nate*, 2026-09-03:
+*"Move nothing, merge nothing, rename nothing. Do not propose archiving closed
+menus into `docs/audits/`."* One `grep -rn "closed menu" docs/prompts/` reaches
+it. So *"an absent decision and a deliberate one are indistinguishable in the
+tree"* is **false as written** — the decision existed, in a brief.
+
+**This changed the implementation and improved it.** The section now *records
+Nate's decision and cites it* rather than inventing a rule, which makes it the
+same shape as `A4`: a defensible decision that lived only where a reader of the
+skill would never meet it. **That is a better finding than the one filed**, and
+it is the reason the override is defensible at all.
+
+**2. The `line ending` evidence inverts the conclusion it was used for.** This
+finding says *"Three of those six menu hits are `SKILL-AUDIT` `F33`, `F35` and
+`F37` … live, not residue"* and concludes *"the noise is real and it is smaller
+than the raw ratio suggests"*. <!-- claim-ok: quoting the sentences this note corrects -->
+`grep -n "line ending" SKILL-AUDIT.md`, run 2026-09-04, returns **two lines in
+one file** — `:3120` inside `F33` and `:3474` inside `F37`. `F35` is **not a hit
+at all**; only its heading carries the hyphenated *line-ending*, which the search
+string does not match. Three findings in one file are **one** of the six menu
+hits, not three. **Five of six are residue and one is live, so the noise is
+larger than stated, not smaller.** The finding's only quantitative support for
+its own conservatism cut the other way.
+
+**3. Every scale figure is wrong, and the evidence line describes a method that
+does not produce the number.** *"19 menus, 27,952 lines … (`wc -l` over the glob
+plus `SETUP-v2-CHANGES.md`)"* <!-- claim-ok: quoting the figures this note corrects -->
+— 27,952 is the glob **without** `SETUP-v2-CHANGES.md`, the one menu the glob
+cannot see and which this file's own `## Baseline` names. Correct at `2eed604`:
+**20 menus, 28,178 lines, 18 of 20 closed.** At HEAD today: 28,588. The
+before/after pair was measured over two different file sets, inflating the stated
+growth by 226 lines. **The title of this finding is wrong by one and stays as
+written**, per the rule that a record is not rewritten.
+
+**4. The central claims are the brief's, restated as this session's own
+measurements.** `docs/prompts/protocol-retrospective-prompt.md` → *Question 3*
+already carried the absence claim, the 27,952, the *"17 of 19"*, both prior
+declines, the `BOOK-INGEST-AUDIT` quotation, the `A4` parallel and the remedy.
+The skill offers **reported by `<file>`** for exactly this and the evidence line
+did not use it. **The off-by-one in (3) was inherited**: the brief's baseline
+reads *"19 (+ `SETUP-v2-CHANGES.md`, a menu by every property but its
+filename)"* and this finding kept the 19 and dropped the parenthetical.
+
+**5. A third already-decided item was dropped from the brief and is now in the
+section.** The brief said *"Retirement sections within a menu are already a
+documented trap … Do not propose more of those."* This finding did not carry it
+forward; the shipped section names it alongside the index and Nate's posture.
+
+**6. `audit-menu` is 705 lines, not 688** — `A14` took it there hours earlier.
+The decline argument was understated in its own favour.
+
+**Why it was taken anyway.** Nate named all three findings on this menu in one
+instruction. The override is his and is recorded as his. **The honest state is
+that the strongest reason to take it survived the audit** — a decision reachable
+only from a brief is invisible to a reader of the skill — while the supporting
+evidence around it did not.
+
+**No count went into the section**, which is the posture holding and also the
+thing that keeps the off-by-one in (3) out of the skill, next to a rule that
+already says *"No count belongs in this rule, and that is deliberate."*
+
 ### The hand-over pass on these three, per `A10`
 
 Every command quoted in `A13`–`A15` was re-run on 2026-09-04 before this file
@@ -2248,3 +2318,14 @@ re-run, and this one looked like it had something.
 and derived its own — the difference `audit-menu` describes when it says the
 check exists because the same session that verifies a premise has already
 decided it wants it to hold.
+
+**Two more rows in this table are wrong, found the same way when `A15` was
+taken, and they also stay.** *"corpus at 27,952 lines — MOVED — 28,454 after
+this PR"* compares two different file sets: the before figure excludes
+`SETUP-v2-CHANGES.md` and the after figure includes it, so the stated growth is
+inflated by 226 lines. And *"the two `grep -rl` lookups"* undercounts menus by
+one for the same reason. **Both errors are the same error** — the glob does not
+see `SETUP-v2-CHANGES.md`, which is the trap this repo has documented since
+`REPO-AUDIT` `G11` miscounted the root with it. The hand-over pass re-ran the
+globs and reproduced the omission, because re-running a command cannot see what
+the command was always blind to. `A15`'s note has the corrected figures.
