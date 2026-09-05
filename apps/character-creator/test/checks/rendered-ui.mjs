@@ -322,9 +322,26 @@ export function run() {
       /^\.tabpanel \{ display: contents; \}/m.test(css), 'tabpanel is not display: contents');
     check('the tab bar is hidden by default',
       /^\.tabbar \{ display: none; \}/m.test(css), 'the tab bar still shows on desktop');
-    check('and both come back on a phone',
-      /@media \(max-width: 820px\) \{[\s\S]*?\.tabbar \{ display: flex; \}[\s\S]*?\.tabpanel \{ display: none; \}/.test(css),
-      'below 820px the tabs no longer return');
+    // A PHONE **OR ANY TOUCH SCREEN**, which is not the same as a narrow one.
+    // An iPad Pro 13" is 1032px in portrait and 1376 in landscape, so the width
+    // test alone handed the tablet these tabs were built for the desktop body:
+    // 5,908px of scroll in portrait, against 1,225px on an 820px iPad Air
+    // showing the same character.
+    //
+    // Anchored INSIDE the block with \s*, rather than spanning to it with
+    // [\s\S]*?. The regex this replaces did span, and when the condition
+    // changed it kept passing — by starting at an unrelated `.imp-row` media
+    // query 600 lines earlier and finding these rules outside any 820-only
+    // block at all. It was green and testing nothing.
+    check('and both come back on a phone, or on any touch screen at any width',
+      /@media \(max-width: 820px\), \(pointer: coarse\) \{\s*\.tabbar \{ display: flex; \}\s*\.tabpanel \{ display: none; \}/.test(css),
+      'the tabs no longer return below 820px or on a touch device');
+    check('and the body agrees with the tab bar about which layout is on',
+      /@media \(max-width: 820px\), \(pointer: coarse\) \{\s*\.sheet-grid\.sheet-3 \{ grid-template-columns: 1fr; \}/.test(css),
+      'the conditions have drifted: a tab bar over already-visible panels, or hidden panels with nothing to press');
+    check('and a wide touch screen caps the single column',
+      /@media \(pointer: coarse\) and \(min-width: 900px\) \{\s*\.sheet-grid\.sheet-3 \{ max-width: 900px;/.test(css),
+      'an iPad in landscape drags a skills table across 1376px');
 
     // Column assignment. Every box the body holds must be placed.
     const colBlock = src.slice(src.indexOf('const BOX_COL'), src.indexOf('};', src.indexOf('const BOX_COL')));
