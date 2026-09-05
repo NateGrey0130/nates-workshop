@@ -1635,7 +1635,7 @@ imported the twelfth as prose"*. It then says the invariant *"catches the next
 one"*. `R14` was the next one, and it did not.
 
 ```js
-// apps/character-creator/test/regression.mjs:1610
+// apps/character-creator/test/regression.mjs, at :1610 when this was filed
 const FLOOR_PHRASE = /\b(?:at least|no fewer than)\s+(?:one|two|three|four|five|six|\d+)\b/i;
 const statesFloor = classes.filter((c) => FLOOR_PHRASE.test(c.skills?.occ_related_skills?.note || ''));
 ```
@@ -1675,6 +1675,73 @@ holding at zero without exceptions, until it is run.
 cost is the argument for reading the shape (a floor sentence beside no
 `minimums`) rather than the words, which is a bigger change than this proposes.
 
+**Taken, 2026-09-05 (PR #741) — as written, and the posture held: test and
+comment only.** No data moved, no new gate, no new script; the check stays a
+`check()` inside the existing suite. `REGRESSION PASSED (263 checks)`.
+
+The matcher now reads the block note **and** every category note, and matches
+five verbs. Derived over the live corpus before a line was written:
+
+| | classes matched | stating a floor they do not hold |
+|---|---|---|
+| the old matcher | 11 | 0 |
+| the widened one | **29** | **0** |
+
+The eighteen it newly sees are `R14`'s five, `R15`'s two, the ten Warlocks and
+the assassin.
+
+**Its "medium" confidence resolves to high, and the tuning it budgeted for was
+not needed.** The finding said *"a widened matcher will find prose it should
+not"* and expected exceptions. There are none: every one of the 29 holds a
+floor. That is only true **in this order** — taken before `R15`, the same check
+is red on two.
+
+### Proved by making it fail, which is the only reason to believe it
+
+A check that has only ever passed proves nothing. Re-run against the corpus with
+the floors stripped back to where they were:
+
+| corpus | widened check | old check |
+|---|---|---|
+| today | green, 29 flagged | green |
+| before `R15` | **RED on 2** — the two Ley Line classes | green |
+| before `R14` and `R15` | **RED on 7** | **green** |
+
+**The last cell is the finding in one line.** With all seven floors removed the
+old matcher stays green, because it flags eleven other classes and none of these
+— exactly the blindness `R16` was filed for, now demonstrated rather than
+argued.
+
+### Two things written into the comment rather than the pattern
+
+- **`naruni-repo-bot` is a live false-positive specimen, one word away.** Its
+  note reads *"this book does it in at least a dozen entries and five is the
+  most any of them bars"* — not a floor, and it holds none. It misses **only**
+  because *"a dozen"* is not a numeral. Loosen that branch, or match a number
+  anywhere in the same sentence rather than adjacent to the phrase, and that
+  class goes red. The pattern keeps the numeral adjacent for this reason and the
+  comment says so.
+- **`techno-wizard` prints a sixth phrasing this still does not catch** — *"TWO
+  of the seven must be Electrical or Mechanical skills"*, with no *"from"*. It
+  holds its floor, so the check is silent rather than wrong. Left uncaught on
+  purpose and named in the comment, as the standing example of what a
+  hand-maintained phrase list costs. `R16`'s own *Ongoing cost* paragraph
+  predicted this arriving with the next book; it was already in the corpus.
+
+### A `TypeError` waiting on nearly half the entries
+
+A `categories` entry is a bare **string** or an **object**: **716 and 900** of
+them respectively across the live corpus, 126 of the objects carrying a note.
+Reading `e.note` without a `typeof` guard throws on the strings, and the two
+`R15` classes are the clean illustration — the Walker's `Science` is
+`{ name: "Science", bonus: 10 }`, the Rifter's is the bare string `"Science"`.
+
+### What this makes stale, corrected below
+
+`R17` told its taker that `regression.mjs`'s *"eleven"* comments were correct and
+must not be changed. **This PR removed them**, so that instruction is retired
+where it stands rather than left to mislead.
+
 ### R17 — low — six places say eight classes hold a floor, and twenty-eight do
 
 **FILED, NOT TAKEN.** Turned up by `R14`'s release audit, and **it predates
@@ -1695,9 +1762,17 @@ Twenty-eight published classes hold `occ_related_skills.minimums` — derived by
 **parsing** every class rather than string-matching, `--remote`, 2026-09-05, for
 the `attribute_minimums` reason `R15` records above.
 
-`regression.mjs:1595` and `:1607` say **eleven** and are **correct**: eleven
+~~`regression.mjs:1595` and `:1607` say **eleven** and are **correct**: eleven
 block-level notes match the floor phrase and all eleven hold a floor. Do not
-"fix" those to match.
+"fix" those to match.~~ **Retired 2026-09-05 by `R16` (PR #741), which
+rewrote that comment block.** It was true when filed: eleven block notes matched
+and all eleven held a floor. `R16` widened the matcher to read category notes
+and five verbs, so the number is **29**, and the comment now states it that way
+along with what it deliberately does not catch. **There is no longer an
+"eleven" in that file to leave alone** — the two that remain (`:694`, `:2023`)
+are a numeral map and an armour-feature count, unrelated to floors. The line
+numbers above were also stale when written; the block had moved twice the same
+day.
 
 **Proposal:** this is a decision rather than an edit, which is why it is filed
 rather than swept. The number moves every time a class gains a floor and
