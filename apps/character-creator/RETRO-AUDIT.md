@@ -1032,6 +1032,56 @@ the pass cited, but **none was independently re-confirmed the way `R1`'s five
 were**, and that is the gap to close before scoping any of them.
 **Ongoing cost:** none.
 
+**`ley-line-rifter` taken, 2026-09-04 (PR #725). The other six rows stay open.**
+
+Both halves of the sentence were false, as filed. But `audit-premise-auditor`
+found the finding's *guidance* wrong in a way that would have shipped a silent
+defect, and that is the part worth keeping.
+
+**`from_list` was silently ignored in a starting group.** R11 said *"the
+machinery is already in that class's own row … and both the wizard and the server
+read it"*. True of the **schedule** path, false of the **starting** path:
+`startingGroups` read only an inline `from`, so `{ count: 4, from_list: "A" }`
+dropped the list **and kept `spell_levels_allowed: [1, 2]`** — rendering a picker
+of level-1 and level-2 spells containing **none** of List A, whose lowest entry
+is spell level 4. No error, no violation, nothing logged, and `class-check`
+cannot see it either: `KNOWN_KEYS` validates top-level frontmatter and never
+looks inside `magic`. Confirmed by running it both ways before writing anything.
+
+**It had already cost something.** `add-warlock-*-class.sql` — shipped by `R3`
+hours earlier — writes its starting groups with inline `from`, duplicating lists
+that `spell_lists` declares four lines below. That was this limit, worked around
+without knowing why.
+
+So the fix is an **app change plus the data**: `startingGroups` now resolves
+`from_list` against the block's `spell_lists`, mirroring `spellNamesForGrant`.
+Additive — of the **14** classes carrying a starting-groups block in production,
+**zero** use `from_list`, so none of them moves.
+
+**The book gives four groups, not two, and R11 undercounted.** RUE **printed
+117** (`rue` cache `p120`, offset 3): *"Select three spells from (Invocation)
+spell level one and three from level two. Then select four from List A and two
+from List B."* R11 called it *"six starting spell picks in prose"*; the other six
+were **also wrong**, granted as one pool of six over levels 1-2 so a Rifter could
+take six level-two spells. Fixed in the same edit — it is the same six lines of
+YAML, and `ley-line-rifter-spells-per-level.sql` had already flagged *"four
+separate starting groups"* and deferred it. `spells_starting` is the total, so 6
+became 12.
+
+**The premise audit's own "nothing breaks" was wrong, and a readback caught it.**
+It reported zero characters on this class, having queried `class_id` only — a
+Ley Line Rifter is an **O.C.C.**, so it lives in `occ_class_id`. There is **one**
+live character. The change cannot refuse them, and that was **proved rather than
+reasoned**: the real `validateCharacter` was run against that character's actual
+`powers` with the class before and after — **zero spell violations both times**.
+It is structurally safe (allowance rises, the level gate is unchanged at {1,2},
+and 38 list names are *added* to what passes), and the readback now asserts that
+safety property instead of a headcount.
+
+**Left alone deliberately:** that character now holds 6 of the 12 spells the book
+gives, a shortfall this finding *revealed* rather than caused. Topping up someone
+else's character is not a data fix.
+
 ---
 
 ## Not established

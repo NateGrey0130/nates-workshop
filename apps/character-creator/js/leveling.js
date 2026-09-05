@@ -290,13 +290,17 @@ export function grantNote(cls, kind, level, slot = 0) {
 //
 // A named `from` list is the tightest restriction there is and replaces the
 // spell-level cap or the category gate outright, exactly as it does on a grant.
+// `lists` is the block key `from_list` names, and only the spell side has one.
+// A starting group may say `from_list: "A"` exactly as a schedule entry does —
+// see the note on `from_list` in startingGroups below for why it did not, and
+// what that cost.
 const STARTING_SPEC = {
   spell: { block: 'magic', count: 'spells_starting', groups: 'spells_starting_groups',
            from: 'spells_from', gate: 'spell_levels_allowed', gateKey: 'spell_levels',
-           granted: 'spells', schedule: 'spells_schedule' },
+           granted: 'spells', schedule: 'spells_schedule', lists: 'spell_lists' },
   psionic: { block: 'psionics', count: 'powers_starting', groups: 'powers_starting_groups',
              from: 'powers_from', gate: 'categories_allowed', gateKey: 'categories',
-             granted: 'powers', schedule: 'powers_schedule' },
+             granted: 'powers', schedule: 'powers_schedule', lists: null },
 };
 
 const nonEmpty = (v) => (Array.isArray(v) && v.length ? v : null);
@@ -316,12 +320,32 @@ export function startingGroups(cls, kind) {
     ...(note ? { note } : {}),
   });
 
+  // `from_list: "A"` names an entry in the block's `spell_lists`, exactly as it
+  // does on a schedule entry. It resolves here since RETRO-AUDIT R11.
+  //
+  // BEFORE THAT IT WAS SILENTLY IGNORED, and the failure was invisible in every
+  // direction: the group kept the block's `spell_levels_allowed` instead, so a
+  // `from_list: "A"` on the Ley Line Rifter — whose List A is spell level 4 and
+  // up — rendered a picker of level-1 and level-2 spells containing NONE of the
+  // list. No error, no violation, nothing logged, and `class-check` cannot see
+  // it either: `KNOWN_KEYS` validates top-level frontmatter only and never
+  // inspects inside `magic`.
+  //
+  // It cost something before it was found. `add-warlock-*-class.sql` writes its
+  // starting groups with inline `from`, duplicating lists that `spell_lists`
+  // declares four lines below, because whoever wrote it hit this limit and
+  // worked around it rather than reading why.
+  const namedList = (key) => {
+    if (typeof key !== 'string' || !spec.lists) return null;
+    return nonEmpty(block[spec.lists]?.[key])?.map(String) ?? null;
+  };
+
   const groups = nonEmpty(block[spec.groups]);
   if (groups) {
     return groups
       .filter((g) => Number(g?.count) > 0)
       .map((g) => {
-        const from = nonEmpty(g.from)?.map(String) ?? blockFrom;
+        const from = nonEmpty(g.from)?.map(String) ?? namedList(g.from_list) ?? blockFrom;
         return shape(Number(g.count), from, nonEmpty(g[spec.gateKey]) ?? blockGate,
                      typeof g.note === 'string' && g.note.trim() ? g.note.trim() : null);
       });
