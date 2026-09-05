@@ -1,10 +1,13 @@
 # RETRO-AUDIT.md — does the catalog benefit from the schema it grew?
 
 > **Work is open on this menu, and this line will not say which findings.**
-> **Read under the heading for what actually happened to each** — several turned
-> out to be wrong about their own premises, two correct defects this menu's own
-> work shipped hours earlier the same day, and two needed app changes their
-> finding framed as data-only. The outcome notes are where that is recorded.
+> **Read under the heading for what actually happened to each** — some turned
+> out to be wrong about their own premises, some correct defects this menu's own
+> work shipped hours earlier the same day, and some needed app changes their
+> finding framed as data-only. The outcome notes are where that is recorded, and
+> **no tally of them belongs in this paragraph**: the version written on
+> 2026-09-05 said *two* of the third kind and *two* of the second, and the
+> second was three (`R10`, `R12` and `R13`) before the day it was written ended.
 >
 > *(Until 2026-09-05 this paragraph named the one finding then open, and said
 > everything before it had been taken. That was true when written and false
@@ -1367,10 +1370,13 @@ both `class_id` and `occ_class_id`, `--remote`, 2026-09-05.
 
 **There are seven classes with this shape, not five.** `ley-line-walker` and
 `ley-line-rifter` carry *"two of the seven must be from Science and one from
-Technical"* and hold no `minimums`. R14's detection query missed them for two
-independent reasons: they say **"must be from"** where it matched *"must come
-from"*, and the floor sits in the block-level `note` where it read per-category
-notes. **Filed as `R15` below rather than folded in** — and not only for scope
+Technical"* and hold no `minimums`. R14's detection query missed them for
+**exactly one reason**: they say *"must be from"* where it matched *"must come
+from"*. It is an `instr()` over the whole record and reads no note at all, so
+where in the record the sentence sits could not have hidden anything from it —
+that blind spot belongs to `regression.mjs` and is `R16`. Keeping the two apart
+matters, because whoever takes `R15` or `R16` will write a detection query of
+their own. **Filed as `R15` below rather than folded in** — and not only for scope
 discipline. Draft 285 has all seven related picks spent with **zero Science**,
 so unlike these five, `R15` breaks something live the day it ships.
 
@@ -1422,8 +1428,12 @@ when `unreachable`, and it is wider than the finding said: `characters.js`
 answers it on create, and `characters/[id]/picks.js`, `level-confirm.js` and
 `variant.js` answer it on an **existing** character.
 
-**The standing check cannot see any of this**, which the finding's *"ongoing
-cost: none"* did not anticipate. Filed as `R16`.
+**`regression.mjs`'s floor invariant cannot see any of this**, which the
+finding's *"ongoing cost: none"* did not anticipate — filed as `R16`. Not to be
+confused with this menu's own *standing* check: `retro-check.mjs` (`R8`) is
+blind to it too, for a third reason. It looks for a record that carries a key
+while its prose denies it, and none of these five denied anything — they were
+simply silent.
 
 ### R15 — medium — the two Ley Line classes carry the same floor, and one live draft breaks
 
@@ -1461,12 +1471,23 @@ larger change than this finding.
 **Posture: ENFORCEMENT, and unlike `R14` it reaches live data.** That is what is
 being agreed to.
 
+**Do not reuse `R14`'s guard as written.** Its script guards each insert with
+`instr(markdown, 'minimums') = 0`, and both findings' detection queries filter
+on `instr(markdown,'minimums:') = 0` — **every one of those substrings is inside
+`attribute_minimums:`**, which 15 published classes carry
+(`node scripts/q.mjs --remote "SELECT count(*) FROM imported_classes WHERE deleted_at IS NULL AND instr(markdown,'attribute_minimums') > 0"`,
+2026-09-05). Such a class would have its floor **silently skipped** and still
+satisfy the readback. It did not bite `R14` — none of its five carries attribute
+minimums, and the readbacks assert the floor literals as well — and the corpus
+re-derived by *parsing* rather than string-matching is clean today, which is how
+this was established rather than assumed. Guard on the literal being inserted.
+
 **Evidence:** the query above and the draft read individually,
 `--remote`, 2026-09-05; the page re-read from the `rue` cache.
 **Confidence: high** on the floors and on the draft.
 **Ongoing cost:** none, beyond whatever is decided about the draft.
 
-### R16 — medium — the check that is supposed to catch the next floor cannot see five of the seven
+### R16 — medium — the check that is supposed to catch the next floor cannot see any of the seven
 
 **FILED, NOT TAKEN.** `regression.mjs`'s per-category floor invariant came from
 `BOOK-INGEST-AUDIT` `F6`, and its comment argues — correctly — that an invariant
@@ -1514,6 +1535,46 @@ holding at zero without exceptions, until it is run.
 — the same hand-maintained-list cost `R8` named and `R12` collected on. That
 cost is the argument for reading the shape (a floor sentence beside no
 `minimums`) rather than the words, which is a bigger change than this proposes.
+
+### R17 — low — six places say eight classes hold a floor, and twenty-eight do
+
+**FILED, NOT TAKEN.** Turned up by `R14`'s release audit, and **it predates
+`R14`** — `zzzzz-retro-r11-remaining.sql` gave the Techno-Wizard and the ten
+Warlocks floors on 2026-09-04 and `R13` the assassin, so the number was already
+wrong by twenty before this finding moved it by five.
+
+| file | the sentence |
+|---|---|
+| `apps/character-creator/README.md:402` | *"it exists because eight classes across four books print a rule like…"* |
+| `.claude/skills/class-import/reference/frontmatter.md:173` | *"eight classes across four books print one"* |
+| `apps/character-creator/js/parser.js:1044` | *"so eight classes across four books carried the rule as prose"* |
+| `apps/character-creator/js/parser.js:1072` | *"Empty when the class has none, which is all but eight of them"* (wrapped across 1072-1073) |
+| `functions/api/character-creator/_lib/validate-character.js:234` | *"Eight classes across four books state a floor like this"* |
+| `apps/character-creator/app.js:2031` | *"eight classes say…"* |
+
+Twenty-eight published classes hold `occ_related_skills.minimums` — derived by
+**parsing** every class rather than string-matching, `--remote`, 2026-09-05, for
+the `attribute_minimums` reason `R15` records above.
+
+`regression.mjs:1595` and `:1607` say **eleven** and are **correct**: eleven
+block-level notes match the floor phrase and all eleven hold a floor. Do not
+"fix" those to match.
+
+**Proposal:** this is a decision rather than an edit, which is why it is filed
+rather than swept. The number moves every time a class gains a floor and
+**nothing pins any of these six** — the smoke suite pins the README's catalog
+counts and not this sentence. So either drop the count from all six (*"classes
+across several books print a rule like this"*) or replace it with something
+derivable. Dropping it is the recommendation, on `SKILL-AUDIT` `F7`'s grounds:
+correcting an ordinal leaves the same trap armed, and every one of these six has
+now been wrong for a day without anything noticing.
+**Posture: PROSE AND COMMENTS ONLY.** No behaviour, no test, no data.
+
+**Evidence:** the six sites read individually, 2026-09-05; the count derived by
+parsing the live corpus the same day.
+**Confidence: high.**
+**Ongoing cost:** none if the count is dropped; the same rot again if it is
+merely updated.
 
 ---
 

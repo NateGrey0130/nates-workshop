@@ -528,7 +528,7 @@ that trap one level down.
 | `apps/character-creator/INGESTION-AUDIT.md` | `F` | `###` | `### F1 — …` |
 | `apps/character-creator/REBUILD-AUDIT.md` | `F` | `###` | `### F1 — …` |
 | `apps/character-creator/REDESIGN-AUDIT.md` | `R`, `N` | `###` | severity word: `### R1 — high — …` |
-| `apps/character-creator/RETRO-AUDIT.md` | `R` | `###` | severity word: `### R1 — high — …`. **Its `R` collides with `REDESIGN-AUDIT`'s**, so a bare `R3` names neither. Findings filed after the first pass shipped run in FILING order at the foot rather than by severity — arrangement, so it lives in that menu's own header per `F42`, and the sentence removed from here named three findings and was stale within a day |
+| `apps/character-creator/RETRO-AUDIT.md` | `R` | `###` | severity word: `### R1 — high — …`. **Its `R` collides with `REDESIGN-AUDIT`'s**, so a bare `R3` names neither |
 | `apps/character-creator/UI-AUDIT.md` | `F` | `###` | severity word: `### F1 — high — …` |
 | `apps/media-vault/BULK-AUDIT.md` | `B` | `##` | `## B1 — …` |
 | `apps/media-vault/ISBN-AUDIT.md` | `F` | `##` | `## F1 — …` |
