@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Character Creator — Nate's Workshop</title>
+<title>Codex — Nate's Workshop</title>
 <link rel="stylesheet" href="/shared/styles.css">
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -12,32 +12,22 @@
 <header class="header">
   <div class="header-left">
     <div>
-      <h1 class="logo">Character Creator</h1>
-      <div class="logo-sub">palladium fantasy &amp; rifts</div>
+      <h1 class="logo">Codex</h1>
+      <div class="logo-sub">every spell &amp; psionic power, and what it does</div>
     </div>
   </div>
   <div class="header-right">
-    <a href="codex.html" class="home-link">codex</a>
+    <a href="/apps/character-creator/" class="home-link">← character creator</a>
     <a href="/" class="home-link">← workshop</a>
   </div>
 </header>
 
-<div class="wizard-sticky" data-sticky>
-  <div class="wrap wrap-wizard">
-    <div class="stepper" id="stepper"></div>
-  </div>
-</div>
-
-<main class="wrap wrap-wizard">
+<main class="wrap wrap-wide">
   <div id="app"><p class="muted">Loading…</p></div>
 </main>
 
 <script src="/shared/js/ui.js"></script>
-<script src="js/sticky.js"></script>
-<script src="js/derive.js"></script>
-<script src="js/rules.js"></script>
-<script src="js/picker.js"></script>
 <script src="js/api.js"></script>
-<script type="module" src="app.js"></script>
+<script src="codex.js"></script>
 </body>
 </html>
