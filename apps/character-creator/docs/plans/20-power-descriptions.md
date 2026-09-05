@@ -17,7 +17,8 @@ bytes: every description a character holds costs **4.4 KB gzipped in the worst
 case on production today**, against **72.4 KB** for shipping all of them to
 everyone on every load. Inline expansion at the table is therefore nearly free
 and needs no round trip on a bad connection; the codex is where the other 691
-rows live, fetched only by someone who went looking. The two are not a
+rows live — 723 in the two catalogs, less the 32 distinct names held across every
+character on production today — fetched only by someone who went looking. The two are not a
 compromise between the options — they are the same feature split at the point
 where the cost changes by a factor of sixteen.
 
@@ -36,6 +37,14 @@ will actually travel as.
 | today, no descriptions | 208.3 KB | **25.1 KB** | 20.4 KB |
 | + spell & psionic descriptions | 422.6 KB | **97.5 KB** | 78.8 KB |
 | + first-sentence teasers only | 253.9 KB | **38.2 KB** | 31.1 KB |
+
+The teaser row is measured against a stated rule, because there is no
+implementation to point at: **the text up to the first `". "` if that falls
+within 160 characters, else the first 120 characters, with an ellipsis.** A
+different rule moves this row by a few percent — an abbreviation-aware split, for
+instance, reads `M.D.C.` as a sentence end and lands about 4% higher. The
+conclusion is not sensitive to that; the number is, so the rule is written down
+rather than left to be guessed at.
 
 **The headline number in the brief was raw bytes and it overstates the cost by
 about three times.** The real question is +72.4 KB gzipped — but that is a
@@ -99,12 +108,20 @@ catalogs, against 288% for the whole corpus.
 
 `catalogs.js` ships enchantment descriptions and justified it by the catalog
 being small; migration 036 doubled the row count and nobody noticed. That has
-been read as evidence the boot budget has room. Measured, the growth from 32
-rows to 62 was **+1,673 bytes gzipped**. It is not evidence about +72.4 KB —
-the thing nobody noticed was **43 times smaller** than the thing being argued
-for. The precedent supports shipping a few kilobytes of description text
-without ceremony, which is exactly what the recommendation does, and it says
-nothing about shipping seventy.
+been read as evidence the boot budget has room.
+
+Measured properly — the thirty charm rows identified by slug from
+`db/add-pf-charm-enchantments.sql`, removed from the live 62, and the **whole
+boot payload** gzipped with and without them — the growth was **+1,073 bytes**.
+It is not evidence about +72.4 KB: the thing nobody noticed was **about 69 times
+smaller** than the thing it is cited to justify. The precedent supports shipping
+a couple of kilobytes of description text without ceremony, which is exactly what
+the recommendation does, and says nothing about shipping seventy.
+
+(An earlier draft put this at +1,673 bytes, from slicing the first 32 rows of a
+list ordered by `applies_to, name` instead of identifying the 32 that predate the
+migration. Those are different sets of rows, and the wrong one flattered the
+argument this paragraph is making.)
 
 ## The options
 
@@ -195,8 +212,11 @@ reachable. So the backfill gates option 5 and does not gate option 4.
 The print block dissolves the tabs rather than revealing them
 (`.tabpanel { display: contents }`, `docs/wizard-and-sheet.md`), so an inline
 description added to the Powers panel **prints by default** unless something
-stops it. Donald's 13 powers carry 8,753 characters of prose — roughly 1,400
-words, about three extra pages on a sheet that currently fits on a few.
+stops it. Donald's 13 powers carry **8,215 characters** of description text —
+roughly 1,300 words, about three extra pages on a sheet that currently fits on a
+few. (The 8,753 B in the table above is the serialised payload for the same
+powers, not the prose length; they are different quantities and only the smaller
+one belongs in a page estimate.)
 
 **Recommendation: descriptions are hidden in print by default**, with the option
 of a deliberate "print with descriptions" pass for a player who wants a paper
