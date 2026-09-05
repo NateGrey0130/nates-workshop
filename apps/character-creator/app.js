@@ -2028,9 +2028,19 @@ function skillByName() {
 }
 
 // How each of a class's related-skill FLOORS is doing, given the picks made so
-// far. BOOK-INGEST-AUDIT.md F6: eight classes say "select N other skills, but
-// at least two must be selected from espionage", and until `minimums` existed
-// the picker offered every pick freely and left the rule in a note.
+// far. BOOK-INGEST-AUDIT.md F6: classes say "select N other skills, but at
+// least two must be selected from espionage", and until `minimums` existed the
+// picker offered every pick freely and left the rule in a note.
+//
+// NO COUNT HERE, AND THAT IS THE POINT. Six comments across this repo each
+// carried a fixed number of classes and a fixed number of books. Both figures
+// were wrong - thirty and five by the time anyone looked - and both had moved
+// twice in two days. RETRO-AUDIT R17 dropped them rather than correcting them,
+// because nothing pins any of these sentences - the
+// smoke suite pins the README's catalog counts and not this sentence. If you
+// want the number, derive it: parse every class and count the ones whose
+// `occ_related_skills.minimums` is non-empty. Do NOT string-match `minimums:`,
+// which also matches `attribute_minimums:` on fifteen classes.
 //
 // The server refuses a set that can no longer reach a floor; this is the
 // DISPLAY, so the player learns it at the moment of the pick rather than at the

@@ -231,7 +231,7 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
   // ─── per-category floors ───
   // "Select 8 other skills, but at least two must be selected from espionage
   // and two from rogue skills" (Phase World printed 83). BOOK-INGEST-AUDIT.md
-  // F6. Eight classes across four books state a floor like this, and until the
+  // F6. Classes across several books state a floor like this, and until the
   // `minimums` block existed every one of them offered all its picks freely.
   //
   // A floor that is merely unmet may still be met by the picks not yet spent, so

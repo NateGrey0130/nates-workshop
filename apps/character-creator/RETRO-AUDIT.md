@@ -1790,6 +1790,66 @@ parsing the live corpus the same day.
 **Ongoing cost:** none if the count is dropped; the same rot again if it is
 merely updated.
 
+**Taken, 2026-09-05 (PR #PRNUM) — the count is dropped, not corrected**, which
+is what Nate chose and what `SKILL-AUDIT` `F7` argues for: correcting an ordinal
+leaves the same trap armed. **Posture held: prose and comments only** for the
+six repo sites; the seventh needed a data script, below.
+
+### It was six sites and a seventh, and two stale numbers rather than one
+
+**`across four books` is wrong as well.** Every one of the six said *"eight
+classes across four books"*, and **both halves** were stale — **thirty classes
+across five books**, derived by parsing every published class on 2026-09-05
+rather than by matching `minimums:`, which also matches `attribute_minimums:` on
+fifteen of them:
+
+| classes | book |
+|---|---|
+| 10 | Rifts Conversion Book One |
+| 8 | Rifts Ultimate Edition |
+| 6 | `palladium-fantasy-core` |
+| 4 | Rifts Dimension Book 2: Phase World |
+| 2 | Rifts World Book 10: Juicer Uprising |
+
+`R17` did not say this. A taker dropping only *"eight classes"* would have left
+the surviving half wrong, so both figures come out of all six.
+
+**The seventh site is live data, and `R17`'s sweep could not have found it.**
+`galactic-tracer`'s `extraction_notes`, in production, said the floor was
+*"taken across all eleven classes in three books that print a floor like this"*
+— a **different** wrong number, so a grep for the six never reached it. This is
+exactly the surface `audit-menu` step 5 exists for, and it is the only one of
+the seven that needed a data script
+(`zzzzz-retro-r17-galactic-tracer-count.sql`, four readbacks, `--remote`).
+
+The half of that note that records **what the book prints** is untouched — a
+class note's book half is permanent and only the app-of-the-day half rots. The
+floor itself is untouched too, and a readback asserts it.
+
+### Two things went wrong while writing it, both caught by running it
+
+- **The stored note is line-WRAPPED**, inside a YAML bullet with four-space
+  continuation indents. The first version of the script matched it as one line,
+  found nothing, and **silently did nothing** — a `replace()` that matches
+  nothing is indistinguishable from one with nothing to do, which is the trap
+  `docs/operations.md` records under the `zz-` escalation. The readback is what
+  said so.
+- **`instr()` is case-sensitive**, and the readback asserted a phrase whose
+  casing I had changed in the replacement. It reported `got 0` on an edit that
+  had actually landed.
+
+### And one correction that could not be made here
+
+`R17` told its taker that `regression.mjs`'s *"eleven"* comments were correct and
+must not be touched. **`R16` removed them the same day**, so that instruction is
+struck through above rather than left standing — retired in `R16`'s PR, which is
+where the change was made.
+
+**`fix-related-skill-minimums.sql` wrote the `galactic-tracer` sentence** and
+its line 1 carries the same tally in a `--` comment. A one-shot script is not
+edited and a comment is not data, so the data script above is the correction of
+record and sorts after it.
+
 ---
 
 ## Not established
