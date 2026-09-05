@@ -1790,7 +1790,7 @@ parsing the live corpus the same day.
 **Ongoing cost:** none if the count is dropped; the same rot again if it is
 merely updated.
 
-**Taken, 2026-09-05 (PR #PRNUM) — the count is dropped, not corrected**, which
+**Taken, 2026-09-05 (PR #742) — the count is dropped, not corrected**, which
 is what Nate chose and what `SKILL-AUDIT` `F7` argues for: correcting an ordinal
 leaves the same trap armed. **Posture held: prose and comments only** for the
 six repo sites; the seventh needed a data script, below.
