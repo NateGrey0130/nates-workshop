@@ -1587,6 +1587,13 @@ Recorded rather than resolved by inference.
   prose asserting no app limitation, or provenance notes about how a class was
   transcribed. **A re-sweep bounded on the YAML block would judge them**; this
   one could not.
+  **Settled 2026-09-05: `R11` ran exactly that re-sweep, the same day this was
+  written.** Bounding on YAML structure rather than sentence boundaries gave
+  **198 whole units across 103 classes - 185 hold, 9 carry a false assertion, 4
+  could not be settled** - against 47 judged and 54 unsettled here. The nine are
+  `R11`'s table and all were taken (PRs #725, #726). **The four that remain
+  unsettled are the only survivors of this bullet**, and they are named under
+  `R11` rather than repeated here.
 - **The Robot Pilot's *"the gear catalog carries no open-market power armour
   rows"*.** There are four power-armour rows and three carry a price
   (`samas-power-armor`, `ng-jk1-juicer-killer-power-armor`,
@@ -1595,8 +1602,15 @@ Recorded rather than resolved by inference.
   SAMAS is Coalition military issue and the NG-JK1 is a Northern Gun commercial
   product. **That is a wording judgement, not a measurement**, and no amount of
   re-querying settles it.
-- **Whether `magic.spells_from` is needed per-variant on the Warlock** — see
-  `R3`. The one-Force/two-Force rule may not fit a single class-level list.
+- ~~Whether `magic.spells_from` is needed per-variant on the Warlock~~ —
+  **settled 2026-09-04 by `R3`, and the question dissolved rather than being
+  answered.** There is no variant to need one: the generic Warlock was retired
+  (soft-deleted 2026-09-04 22:03:59) and replaced by ten classes, one per
+  Elemental Force and one per pair. All ten carry `spell_lists` and
+  `magic.spells_from` and **none carries a `variants:` block** - checked
+  `--remote`, 2026-09-05. `R12` then had to rewrite the notes on all ten,
+  because they had been generated from the class this bullet was written about
+  and still described it.
 - **The five unreferenced gear rows in `R5`** (`knife-large`, `roman-candle`,
   `acid-organic`, `acid-cleanser`, `acid-metal-dissolver`) — no class cites them,
   so nothing turns on whether they are filled.
