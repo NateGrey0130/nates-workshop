@@ -1115,6 +1115,59 @@ Juicer Wannabe's mid-campaign conversion remain out of scope; mind-mage's
 P.C.C. category note stands; conditional bonuses (rage, in-armor, underwater,
 drug-dependent, helmet-dependent) correctly live in prose throughout.
 
+**Adjusted 2026-09-04 — one entry of the eight above is partly stale, and the
+other seven were re-checked and hold.** Nate released the entry for correction;
+the original sentence is left standing above because this file is a record.
+
+**`occ_related_skills` cannot span a constraint across two categories** — the
+entry, and what is now true of each example it names:
+
+- **`assassin` — FALSE.** Its rule is two Espionage, two Rogue-or-Physical and
+  five free (Palladium Fantasy printed 95, `pf` cache `p097`). That is one
+  single-category floor plus one **union** floor, and
+  `occ_related_skills.minimums` takes both. Fixed by `RETRO-AUDIT` `R13`
+  (`zzzzz-retro-r13-assassin-minimums.sql`), which is also where the numbers and
+  the enforcement posture are recorded.
+- **`juicer-wannabe` — never an instance.** It carries two *independent
+  single-category* floors, two Rogue and two Physical, which is an AND of two
+  simple floors rather than a span. `RETRO-AUDIT` `R1` gave it those on
+  2026-09-04.
+- **`merc-soldier` — STILL TRUE, and mis-filed here.** Its either/or is *"two
+  W.P.s of choice, OR two Demolition skills"*, which does span two categories —
+  all three Demolition rows are `category = Military` and W.P.s are
+  `Weapon Proficiencies`, checked against production on 2026-09-04 with
+  `node scripts/q.mjs --remote "SELECT name, category FROM skills WHERE lower(name) LIKE '%demolition%'"`.
+  It is still not expressible for two reasons: it is an **exclusive** or, and a
+  union floor would permit one of each, which the book forbids; and it lives in
+  a `mos` option, where `minimums` does not exist at all. It was filed under
+  `occ_related_skills` in this list, which is the wrong block.
+
+**So the entry should be read as: a *span* is expressible now; an *exclusive
+choice between two groups* is not.** `RETRO-AUDIT` `R11`'s outcome note called
+the merc-soldier *"entirely within one category"* — that is wrong, and is
+corrected in `RETRO-AUDIT.md` as well as here.
+
+**The other seven entries were each re-checked against the code on 2026-09-04
+and all hold**, which is the half that makes this list worth keeping: `variants`
+still cannot override those five keys (`VARIANT_OVERRIDES` in
+`apps/character-creator/js/parser.js`); a spell schedule still degrades a
+dice-valued count to 1 silently (`perLevelGrants` in
+`apps/character-creator/js/leveling.js`); there is still no race-level per-skill
+modifier and no Spell Strength key anywhere in `apps/character-creator/` or
+`functions/`; the Diabolist's wards, the Juicer Wannabe's conversion and the
+mind-mage's P.C.C. note all stand.
+
+**One caveat on the eighth, stated rather than resolved.** *"Conditional bonuses
+… correctly live in prose throughout"* holds **at class level** — a class's
+`bonuses` has no conditional form. It does **not** hold for catalog **skill**
+rows, where `level_bonuses` entries take `applies_when`; `RETRO-AUDIT` `R4`
+moved seven of them on 2026-09-04. Whether *"throughout"* was ever meant to cover
+skill rows is a wording judgement, so the entry is annotated rather than changed.
+
+**Two entries were never verifiable "against the current code" as the lead-in
+claims** — the Diabolist/Wannabe scope decision and the mind-mage's P.C.C. note
+are decisions, not capability checks. True today either way.
+
 ---
 
 ## Recurring shapes worth a structural answer

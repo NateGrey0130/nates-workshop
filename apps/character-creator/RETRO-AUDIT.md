@@ -1,7 +1,8 @@
 # RETRO-AUDIT.md — does the catalog benefit from the schema it grew?
 
-> **Nothing is open.** Every finding was taken on **2026-09-04**, the day the
-> audit ran — `R12` included, which corrects a defect `R3` shipped that same day. **Read under the heading for what actually happened to each** —
+> **`R14` is open. Everything before it was taken on 2026-09-04**, the day the
+> audit ran — `R12` and `R13` included, which correct defects this menu's own
+> work shipped earlier the same day. **Read under the heading for what actually happened to each** —
 > several turned out to be wrong about their own premises, one corrects a defect
 > this menu's own work shipped, and two needed app changes their finding framed
 > as data-only. The outcome notes are where that is recorded.
@@ -1140,7 +1141,11 @@ juicer-wannabe, merc-soldier's either/or groups)"* fails on all three examples:
 the assassin's rule is expressible today as one single-category floor plus one
 union floor; the juicer-wannabe was closed by `R1`; and the merc-soldier's
 either/or is entirely *within* one category, so it was misattributed from the
-start. **Releasing a control-set claim is Nate's, not a sweep's** — recorded
+start. **That last clause is WRONG, and `R13` corrected it on 2026-09-04:** the
+Demolition skills are `category = Military` and the W.P.s are
+`Weapon Proficiencies`, so it *does* span two categories and is *still* not
+expressible — an **exclusive** or, in a `mos` option where `minimums` does not
+exist. Left standing because an outcome note is a record of what was believed. **Releasing a control-set claim is Nate's, not a sweep's** — recorded
 here, and the assassin's sentence is asserted unchanged.
 
 **A third instance of the quotation trap, in a new place.** The readback for
@@ -1198,6 +1203,125 @@ the only part no check reads.
 **Caught by asking what was outstanding**, not by any detector — the same way
 `R9` surfaced. That is twice now that the honest inventory found more than the
 tooling did.
+
+### R13 — high — releasing the cross-category control-set claim, and what the release audit corrected
+
+**Filed and taken 2026-09-04 (PR #728), on Nate's word.** `CLASS-AUDIT`'s
+*"Checked and still true (do not fix these)"* list is the one thing a sweep may
+not edit; releasing an entry is his call, and he made it.
+
+**The release audit stopped a bad edit.** `R11`'s outcome note said the entry was
+stale *"in all three of its examples"*, giving as the reason that the
+merc-soldier's either/or is *"entirely within one category"*. **That is wrong.**
+Its rule is *"two W.P.s of choice, OR two Demolition skills"* — and all three
+Demolition rows are `category = Military` while W.P.s are
+`Weapon Proficiencies`:
+
+```bash
+node scripts/q.mjs --remote "SELECT name, category FROM skills WHERE lower(name) LIKE '%demolition%'"
+```
+→ three rows, all `Military`.
+
+So it **does** span two categories, and it is **still not expressible**: it is an
+**exclusive** or, where a union floor would permit one of each and the book
+forbids that, and it sits in a `mos` option, where `minimums` does not exist at
+all. Deleting the sentence would have thrown away a true instance.
+
+**The juicer-wannabe was never an instance either**, in the opposite direction:
+it carries two *independent single-category* floors, which is an AND of two
+simple floors rather than a span.
+
+**So only the assassin demonstrates that a span became expressible**, and only
+the assassin is fixed:
+
+```yaml
+minimums:
+  - { count: 2, category: "Espionage" }
+  - { count: 2, categories: ["Physical", "Rogue"] }
+```
+
+Read off the page rather than the class's note — Palladium Fantasy printed 95
+(`pf` cache `p097`, offset 2): *"Select two espionage skills, two rogue or
+physical skills and five other skills of choice (including additional skills
+from espionage, rogue or physical)."* The parenthetical is why floors are the
+right model: a floor is a **minimum**, not a cap, so the five free may also come
+from those categories.
+
+**Posture: this ENFORCES.** `relatedFloorStatus` → `validate-character.js` →
+**HTTP 422**. Production holds zero assassin characters and zero drafts, checked
+on **both** `class_id` and `occ_class_id`.
+
+**A correction to my own earlier evidence.** `R11`'s outcome note says the
+enforcement was *"Proved by running `relatedFloorStatus` against the
+techno-wizard's own block"*. **That call was malformed** — the signature is
+`(cls, categoryNames, allowance)` and it was passed skill objects and a level, so
+it returned `unreachable: true` for every input including an empty one. The
+conclusion was right and the demonstration was not. Re-run correctly here:
+
+| picks | result |
+|---|---|
+| nothing picked, 9 to spend | reachable — a fresh build is not blocked |
+| 9 all Science | **unreachable** |
+| 2 Espionage + 1 Rogue + 1 Physical + 5 free | reachable |
+| 2 Espionage + 2 Physical + 5 free | reachable — the union accepts either |
+| 8 Science, 1 slot left | **unreachable** |
+
+**A stale readback is retired rather than edited.**
+`zzzzz-retro-r11-remaining.sql` asserts the assassin's claim is still present
+(`want 1`), which was true when it ran and is false from here. A one-shot script
+is not edited, so `R13`'s script asserts the inverse and sorts after it
+(`r11` < `r13`). `d1-apply` prints trailing SELECTs rather than enforcing them,
+so the stale line costs a confusing rebuild message and nothing more — but it
+should not go unexplained.
+
+**The other seven list entries were re-checked and all hold**, so this is not a
+third pass over that list. One carries a caveat: *"conditional bonuses correctly
+live in prose throughout"* holds **at class level** but not for catalog **skill**
+rows, where `R4` moved seven into `level_bonuses.applies_when` today. Annotated
+in `CLASS-AUDIT.md` rather than changed, because whether *"throughout"* covered
+skill rows is a wording judgement.
+
+**Five classes with the same unexpressed floor are NOT touched**, and a readback
+asserts it: `knight`, `palladin` and `thief` (single-category) and `soldier` and
+`witch` (union). `add-soldier-class.sql` carries the same claim in its own words.
+Each would gain the same HTTP 422 enforcement, which is more than releasing one
+sentence authorised — **filed as `R14` below rather than folded in.**
+
+### R14 — medium — five more classes carry a related-skill floor only in prose
+
+**FILED, NOT TAKEN.** Turned up by `R13`'s release audit.
+
+| class | the floor, from its own category note | spelling |
+|---|---|---|
+| `knight` | 2 of 8 from Communications | single |
+| `palladin` | 2 of 7 from Communications | single |
+| `thief` | 2 of 8 from Espionage | single |
+| `soldier` | 2 of 9 from **Military or Espionage** | union |
+| `witch` | 2 of 10 from **Wilderness or Domestic** | union |
+
+```bash
+node scripts/q.mjs --remote "SELECT class_id FROM imported_classes WHERE deleted_at IS NULL AND instr(markdown,'minimums:') = 0 AND (instr(lower(markdown),'must come from') > 0 OR instr(lower(markdown),'at least two must') > 0)"
+```
+
+The three single-category floors were expressible long before today — `minimums`
+took a `category` from the start — so those are simply unfixed rather than
+stale. The two unions are the shape `R13` just released.
+
+**Proposal:** add `minimums` to all five and rewrite each category note.
+**Posture: ENFORCEMENT — five more classes answer HTTP 422 on a save that
+misses a floor.** That is the whole of what is being agreed to, and it is why
+this is filed rather than taken alongside `R13`.
+
+**`apps/character-creator/db/add-soldier-class.sql` states the limit in its own
+words** — an applied script asserting something no longer true, which is the
+`claim-audit` shape and cannot be edited in place.
+
+**Evidence:** the query above, `--remote`, 2026-09-04; each class's note read
+individually.
+**Confidence: high** on the floors existing. **Medium** on the exact numbers
+until each page is re-read — every floor fix in this menu so far has moved on a
+book re-read.
+**Ongoing cost:** none.
 
 ---
 
