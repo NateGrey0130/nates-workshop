@@ -1341,7 +1341,7 @@ until each page is re-read — every floor fix in this menu so far has moved on 
 book re-read.
 **Ongoing cost:** none.
 
-**Taken, 2026-09-05 (PR #PRNUM) — as written: five classes, seven notes, and
+**Taken, 2026-09-05 (PR #729) — as written: five classes, seven notes, and
 the enforcement posture the proposal spelled out.** All five now hold a floor in
 `occ_related_skills.minimums`, applied to production before the merge
 (`zzzzz-retro-r14-related-floors.sql`, eight readbacks, `--remote`).
