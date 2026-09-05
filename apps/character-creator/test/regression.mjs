@@ -204,6 +204,38 @@ check('and carries skills, spells and psionics',
   && catalogs.body.spells?.length > 0 && catalogs.body.psionics?.length > 0,
   Object.keys(catalogs.body || {}));
 
+// The wizard boots on this and the sheet fetches it again on every load, so it
+// carries a validator the way /classes does. Its validator is a hash of the
+// body rather than count-and-max-updated_at, because no catalog table has a
+// timestamp column — so the check that earns its place is not "an ETag exists"
+// but "an edit in place changes it", which is what a count-based validator
+// would get wrong. Node's fetch has no HTTP cache, so the conditional request
+// is ours to send.
+{
+  const first = await fetch(`${BASE}/catalogs`);
+  const tag = first.headers.get('ETag');
+  check('/catalogs sends a validator', !!tag, 'no ETag header');
+  check('and says to revalidate, never to serve stale',
+    /no-cache/.test(first.headers.get('Cache-Control') || ''), first.headers.get('Cache-Control'));
+  const again = await fetch(`${BASE}/catalogs`, { headers: { 'If-None-Match': tag || '' } });
+  check('a warm load revalidates to a 304', again.status === 304, again.status);
+  check('with no body to re-download', (await again.text()).length === 0);
+
+  // Change a percentage in place: no row added, no id moved, nothing a count
+  // or a max(id) could see. The validator has to move anyway.
+  const rows = await api('GET', '/catalogs/rows?catalog=skills');
+  const row = (rows.body.rows || []).find((r) => typeof r.base === 'number');
+  check('a skills row is available to edit', !!row, rows.status);
+  if (row) {
+    const bump = await api('PATCH', `/catalogs/rows?catalog=skills&id=${row.id}`, { base: row.base + 1 });
+    check('an admin can edit a catalog row in place', bump.status === 200, bump.body);
+    const afterEdit = await fetch(`${BASE}/catalogs`, { headers: { 'If-None-Match': tag || '' } });
+    check('and an in-place edit invalidates the cached catalog', afterEdit.status === 200,
+      `${afterEdit.status} — a count-based validator would have answered 304 here`);
+    await api('PATCH', `/catalogs/rows?catalog=skills&id=${row.id}`, { base: row.base });
+  }
+}
+
 const items = await api('GET', '/items');
 check('/items returns the gear catalog', items.status === 200 && items.body.items.length > 0, items.body);
 

@@ -421,7 +421,7 @@ writes are gated (see [Permissions](#permissions)).
 |---|---|---|
 | `me` | GET | Caller's email and `is_admin` |
 | `classes` | GET | Published classes, parsed. `?system=` `?category=` `?include_retired=1`; `?names=1` is the id→name label projection (unfiltered, retired included). Sends an `ETag`, so a warm boot revalidates to an empty 304 instead of re-downloading ~750KB of markdown |
-| `catalogs` | GET | Skills, spells, psionic powers in one call — trimmed projection the wizard boots on |
+| `catalogs` | GET | Skills, spells, psionic powers in one call — trimmed projection the wizard boots on. Sends an `ETag`, so a warm load revalidates to an empty 304 instead of re-sending ~25KB gzipped. The validator is a **hash of the body**, not the count-and-`max(updated_at)` aggregate `classes` uses: no catalog table has a timestamp column, and the editor's PATCH changes a value in place without moving a count or a max id |
 | `catalogs/rows` | GET / POST / PATCH | Admin. Whole rows for one catalog (`?catalog=`), create, and update (`&id=`). No delete |
 | `catalogs/duplicates` | GET / POST | Admin. Suggested duplicate pairs for a catalog; POST merges two rows. `?counts_only=1` returns just the per-tier counts, for the badge |
 | `catalogs/redirects` | GET / DELETE | Admin. Retired keys and where they resolve (`?catalog=`); DELETE stops forwarding one (`&id=`). No POST — redirects are written by merges and renames |
