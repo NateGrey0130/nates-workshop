@@ -1694,23 +1694,63 @@ console.log('\n' + '[7/7] Checks that only a database can make');
 }
 
 // ---------- per-category skill floors ----------
-// BOOK-INGEST-AUDIT.md F6. Eleven published classes print "select N other
-// skills, but at least two must be selected from espionage" or its like, and
-// every one of them offered all its picks freely until `minimums` existed.
+// BOOK-INGEST-AUDIT.md F6. Published classes print "select N other skills, but
+// at least two must be selected from espionage" or its like, and every one of
+// them offered all its picks freely until `minimums` existed.
 {
   const classes = (await api('GET', '/classes?limit=200')).body.classes || [];
 
-  // Asserted as an INVARIANT rather than a list of eleven ids. A count would
-  // pass forever while the next book imported the twelfth as prose - which is
-  // exactly how these ten sat for months. The question asked here is "does any
-  // class STATE a floor it does not HOLD", and it catches the next one.
+  // Asserted as an INVARIANT rather than a list of ids. A count would pass
+  // forever while the next book imported the next one as prose - which is
+  // exactly how the first ten sat for months. The question asked here is "does
+  // any class STATE a floor it does not HOLD".
   //
-  // Read off the related-skills note, which is where a floor lands when nobody
-  // has a field for it. Measured over the whole corpus: eleven notes match this
-  // phrase and all eleven are real floors, so it is at zero with no exceptions
-  // to carve out.
-  const FLOOR_PHRASE = /\b(?:at least|no fewer than)\s+(?:one|two|three|four|five|six|\d+)\b/i;
-  const statesFloor = classes.filter((c) => FLOOR_PHRASE.test(c.skills?.occ_related_skills?.note || ''));
+  // WIDENED BY RETRO-AUDIT R16, because this comment used to claim it "catches
+  // the next one" and then did not - twice in two days. R14 gave five classes a
+  // floor and R15 two more, and it saw NONE of the seven:
+  //
+  //   1. it read the BLOCK note only, and all five of R14's state their floor
+  //      in a per-CATEGORY note;
+  //   2. it matched "at least" / "no fewer than" only, and R15's two say
+  //      "must be from".
+  //
+  // So it now reads both places and five verbs. Derived over the live corpus
+  // before being written here: 29 classes match and all 29 hold a floor, up
+  // from 11 - the 18 new ones being R14's five, R15's two, the ten Warlocks and
+  // the assassin.
+  //
+  // TWO THINGS TO KNOW BEFORE TOUCHING THE PATTERN.
+  //
+  // The numeral must stay ADJACENT to the phrase. `naruni-repo-bot` says "this
+  // book does it in at least a dozen entries and five is the most any of them
+  // bars" - not a floor, and it holds none. It misses only because "a dozen" is
+  // not a numeral; loosen that branch, or match a number anywhere in the same
+  // sentence, and that class goes red.
+  //
+  // `techno-wizard` prints a SIXTH phrasing this still does not catch - "TWO of
+  // the seven must be Electrical or Mechanical skills", with no "from". It
+  // holds its floor, so the check is silent rather than wrong, and it is left
+  // as the standing example of what a hand-maintained phrase list costs. The
+  // fix for that is to read the SHAPE - a floor sentence beside no `minimums` -
+  // which is a bigger change than R16 asked for.
+  const NUM = '(?:one|two|three|four|five|six|seven|eight|nine|ten|\\d+)';
+  const FLOOR_PHRASE = new RegExp([
+    `(?:at least|no fewer than)\\s+${NUM}\\b`,
+    `\\b${NUM}\\b[^.]{0,80}?must\\s+(?:be|come)\\s+(?:from|selected\\s+from)`,
+  ].join('|'), 'i');
+
+  // A floor can be written in the block note or in any category note, so both
+  // are searched. A `categories` entry is a bare STRING or an object - 716 and
+  // 900 of them respectively across the live corpus - so reading `e.note`
+  // without the typeof guard is a TypeError on nearly half the entries.
+  const floorText = (rel) => {
+    if (!rel) return '';
+    const cats = Array.isArray(rel.categories) ? rel.categories : [];
+    return [rel.note || '', ...cats.map((e) => (typeof e === 'string' ? '' : (e?.note || '')))]
+      .filter(Boolean).join(' ');
+  };
+
+  const statesFloor = classes.filter((c) => FLOOR_PHRASE.test(floorText(c.skills?.occ_related_skills)));
   const unheld = statesFloor.filter((c) => !(c.skills.occ_related_skills.minimums || []).length);
   check('every class whose note states a per-category floor also holds one',
     statesFloor.length > 0 && unheld.length === 0,
