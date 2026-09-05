@@ -186,7 +186,8 @@ fact about this token, and it is no longer a fact about Pages.**
 |---|---|
 | D1 — read or write, local or `--remote` | `npx wrangler`, under `CLOUDFLARE_API_TOKEN` |
 | a Pages question, or a deployment | the **`cloudflare-api` MCP plugin** |
-| Access policies, destinations, the dashboard | Nate's Chrome |
+| an Access **question** — who is allowed, which IdPs, how long a session lasts | the **plugin**. It reads Access |
+| an Access **change**, destinations, the dashboard | Nate's Chrome |
 
 The plugin authenticates **separately from the environment token** and is enabled
 in `~/.claude/settings.json`. On 2026-09-02 it served the project, the full
@@ -195,9 +196,37 @@ and a `DELETE` on a wedged deployment — which is how a stalled build was
 diagnosed and cleared in one call, where this file's advice was a hand-off. See
 `HEALTH-AUDIT.md` F24.
 
-**Access was NOT tested and stays Chrome work.** The sentence this replaces
-coupled "Pages and Access" and only the Pages half has been exercised; do not
-assume the plugin reaches Access policies.
+**Access is now tested, and it splits: the plugin READS it and cannot WRITE it.**
+This line said "Access was NOT tested and stays Chrome work" until 2026-09-05,
+which was a recorded unknown rather than a known no — and reading it turned out
+to work on the first try.
+
+What the plugin served, unprompted by any dashboard session:
+
+- `GET /accounts/{id}/access/apps` — all three applications, with
+  `session_duration`, `allowed_idps` and `auto_redirect_to_identity`
+- `GET /accounts/{id}/access/apps/{app}/policies` — the *Friends Only* policy
+  and the four addresses it admits
+- `GET /accounts/{id}/access/identity_providers` — the configured IdPs
+- `GET /accounts/{id}/access/organizations` — the team domain,
+  `fatmans.cloudflareaccess.com`, which is what a new IdP's redirect URI is
+  built from
+
+The write is refused, and it fails cleanly rather than silently:
+
+```
+PATCH /accounts/{id}/access/apps/{app}
+  → 10405: Method not allowed for this authentication scheme
+```
+
+**That error is about the credential, not the endpoint.** The app was read back
+afterwards and was unchanged, so a refused Access write costs nothing but the
+call. Changing an IdP, a session duration or a policy is still Chrome.
+
+The practical shape: **diagnose Access here, change it there.** A question like
+"why does the phone ask for a code every day" is now answerable in one call —
+it was `session_duration: 24h` with `onetimepin` as the only provider — without
+anyone opening a browser.
 
 This changes nothing about the token and widens nothing — the plugin's reach
 already existed and this file was simply wrong about it. It does mean the
