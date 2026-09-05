@@ -29,8 +29,14 @@ export async function onRequestGet({ request, env }) {
     // min_tier is in the boot projection because the powers picker filters on
     // it client-side; without it there is nothing to gate against.
     env.DB.prepare('SELECT name, category, isp, isp_note, min_tier, system, source_book FROM psionic_powers ORDER BY category, name').all(),
-    // Enchantments are small - 32 rows - and the SHEET is what needs them: an
-    // item carries slugs, and a slug without its definition renders as a slug.
+    // Enchantments are small - 62 rows carrying about 5KB of description text,
+    // production, 2026-09-05 - and the SHEET is what needs them: an item
+    // carries slugs, and a slug without its definition renders as a slug.
+    // The row count moves with the books; migration 036 added thirty charms to
+    // the thirty-two 035 seeded. What decides whether this projection stays
+    // honest is the KILOBYTES it adds to every boot, so measure those rather
+    // than counting rows - `description` is the column that can grow without
+    // the count moving at all.
     // `bonuses` rides along for the same reason skills' does, so whatever shows
     // an enchanted weapon can say what it adds without a second request.
     env.DB.prepare('SELECT slug, name, applies_to, cost, cost_note, max_per_item, limits, bonuses, description, system, source_book FROM enchantments ORDER BY applies_to, name').all(),
