@@ -1,7 +1,7 @@
 # RETRO-AUDIT.md — does the catalog benefit from the schema it grew?
 
 > **Nothing is open.** Every finding was taken on **2026-09-04**, the day the
-> audit ran. **Read under the heading for what actually happened to each** —
+> audit ran — `R12` included, which corrects a defect `R3` shipped that same day. **Read under the heading for what actually happened to each** —
 > several turned out to be wrong about their own premises, one corrects a defect
 > this menu's own work shipped, and two needed app changes their finding framed
 > as data-only. The outcome notes are where that is recorded.
@@ -1149,6 +1149,55 @@ contains *"bonuses.attributes takes flat numbers only"* because its note
 **quotes the apok's claim in order to refute it** — the repo held the refutation
 before R11 filed the finding. The trap has now appeared in a replacement text
 (`R3`), in a checker (`R8`), and in a third class's note.
+
+### R12 — high — the ten per-Force Warlocks described the class they replaced
+
+**This menu's own doing, for the second time.** `R3` (PR #723) generated the ten
+per-Force Warlocks from the generic one and copied its `extraction_notes` and
+`restrictions` verbatim. Three passages were true of the class being replaced and
+**false of all ten replacing it, from the moment they shipped**:
+
+| the note said | what is true of these ten |
+|---|---|
+| *"The ELEMENT choice itself is per-character and has no schema shape: a class is static"* | the element **is** the class; there are ten of them |
+| *"a first-level Warlock is offered all 50 level-1 spells … `magic.spells_from` could narrow that to the 37 … but not to the 9 a Fire Warlock should see"* | each carries exactly its own sphere's list — the whole point of them |
+| *"the variant records HOW MANY, not which … a Fire Warlock and an Air Warlock are the same class"* | the `variants` block was **removed** when these were generated |
+
+```bash
+node scripts/q.mjs --remote "SELECT count(*) AS n FROM imported_classes WHERE class_id LIKE 'warlock-%' AND deleted_at IS NULL AND instr(markdown,'The ELEMENT choice itself is per-character')>0"
+```
+
+**`scripts/retro-check.mjs` did not catch it**, and that is the finding inside
+the finding. Its `magic.spells_from` pair looks for *"record picks by hand"* and
+*"not yet in the spell catalog"*; none of the three passages uses that wording.
+**`R8` named this exact cost** — a hand-maintained pair list needing an entry
+each time a capability is added — and it arrived within the day.
+
+**Proposal:** rewrite the three passages on all ten. **Posture: prose only.** The
+mechanics are untouched and readbacks assert it — the four one-Force classes
+still start with three spells at I.Q. 6 / M.E. 10, the six two-Force with two at
+I.Q. 12 / M.E. 14, and all ten keep their sphere lists and their related-skill
+floor.
+
+**Evidence:** production `--remote`, 2026-09-04, command above.
+**Confidence: very high.** All ten carry the passages byte-identically — they
+came from one generator — which was checked before a single statement was
+written.
+**Ongoing cost:** none.
+
+**Taken, 2026-09-04 (PR #727)** — as written. All ten re-parse at **0 errors**,
+and the spell machinery re-verifies unchanged: starting picks and every level
+2-15 still correct, no off-sphere spell, no list above the cap.
+
+**The lesson is not "check generated classes".** It is that **generating a class
+from another one copies its notes, and a note is about the class it was written
+for.** `R3` verified the mechanics of all ten exhaustively and never re-read the
+prose it had carried across. Every mechanical check passed; what was wrong was
+the only part no check reads.
+
+**Caught by asking what was outstanding**, not by any detector — the same way
+`R9` surfaced. That is twice now that the honest inventory found more than the
+tooling did.
 
 ---
 
