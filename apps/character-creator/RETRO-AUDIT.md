@@ -1487,6 +1487,145 @@ this was established rather than assumed. Guard on the literal being inserted.
 **Confidence: high** on the floors and on the draft.
 **Ongoing cost:** none, beyond whatever is decided about the draft.
 
+**Taken, 2026-09-05 (PR #PRNUM) — as written: both classes, both floors, the
+enforcement posture.** Applied to production before the merge
+(`zzzzz-retro-r15-ley-line-floors.sql`, six readbacks, `--remote`). Thirty
+published classes now hold a related-skill floor.
+
+```yaml
+minimums:
+  - { count: 2, category: "Science" }
+  - { count: 1, category: "Technical" }
+```
+
+Two **independent single-category** floors, not a union and not one floor of
+three — asserted by a readback that fails on a `categories: ["Science",
+"Technical"]` spelling, because that would satisfy the obvious check while
+meaning something the book does not say. Rifts Ultimate Edition printed 116,
+re-read off the `rue` cache with the folio verified inside the page.
+
+### The finding was wrong about the one thing that made it separate from R14
+
+`R15` said draft 285 would be *"owed 2, remaining 0"* and refused — *"a real
+person's half-built character refused by a rule the app did not have when they
+started it."* **`owed 2` is right. `remaining 0` is not, and it inverts the
+conclusion.**
+
+**The draft is at level 3, and the allowance grows with the schedule.**
+`relatedAllowance(cls, 3)` is `count: 7` plus the `{ level: 3, count: 2 }` grant
+= **9**. So `owed 2, remaining 2`, and `unreachable` is `owed > remaining` —
+false. **The server accepts the save.**
+
+Better still, one of the two floors is already met:
+
+| pick | catalog category |
+|---|---|
+| Swimming | Physical |
+| Navigation | Pilot Related |
+| **Language: Dragonese** | **Technical** |
+| **Lore: Magic** | **Technical** |
+| W.P. Revolver | Weapon Proficiencies |
+| Identify Plants & Fruit | Wilderness |
+| Radio: Basic | Communications |
+
+**Technical is 2 of 1, with one to spare. Only Science is short**, by two, and
+the two banked level-3 picks cover it. **The player loses nothing** — which is
+not what this finding was taken on, and Nate should have it: the answer to *"they
+re-pick"* turned out to be *"they spend two picks they had not spent yet."*
+
+### Which leaves a real defect, and it is not this one
+
+**The wizard will tell that player the opposite.** `app.js:2044-2046` passes
+`cls.skills.occ_related_skills.count` as the allowance where the server passes
+`relatedAllowance(cls, level)`:
+
+```js
+return relatedFloorStatus(cls, S.related.map((n) => index.get(n)?.category),
+  cls?.skills?.occ_related_skills?.count);
+```
+
+So the review step renders *"the picks left cannot reach it — go back to Skills,
+or the save will be refused"* on a character the server would accept. **That is
+wrong today for every one of the thirty classes holding a floor, at any level
+above one** — `R15` did not create it and does not carry it. **Filed as `R18`.**
+
+The deferred half is real, though: if that player later spends the two banked
+picks off-Science, `characters/[id]/picks.js` **will** answer 422.
+
+### The proof, and the harness's own first attempt was wrong
+
+Run against **production before the script applied**, where it failed — no floor
+parsed, `owed 0`. Then, after applying:
+
+| case | result |
+|---|---|
+| fresh level-1 build | reachable |
+| 7 picks, none on either floor, level 1 | **unreachable** |
+| the same 7 at level 3 | **still unreachable** — owed 3, remaining 2 |
+| Technical met, Science short, level 3 | reachable — owed 2, remaining 2 |
+| the same picks at level 1 | **unreachable** — the allowance is the difference |
+| 3 Science, 0 Technical | **unreachable** — two floors, not one of three |
+
+**My first version of row three asserted the opposite** and failed. Seven wholly
+off-floor picks owe three, and level 3 banks only two, so they stay refused;
+draft 285 is reachable because its Technical floor is already met. Getting that
+backwards in a harness written to check exactly this is the same shape as the
+finding's own error, caught the same way — by running it.
+
+### Three things the release audit corrected in passing
+
+- **The Rifter's note is not a bare cross-reference.** `R15`'s table quotes only
+  *"Stats are the Ley Line Walker's"*; the note goes on to spell the floor out in
+  full, which is why the detection query found it at all.
+- **`add-ley-line-walker-class.sql` no longer owns the Walker's note** —
+  `fix-pre-rue-class-audit.sql:387` wrote the live text. A replacement guarded on
+  the `add-` script's wording would have silently done nothing. Both replacements
+  here are matched against the live text.
+- **Neither `add-` script carries a limitation claim** about the floor, checked.
+  So unlike `R14`'s soldier there is no stale assertion to correct.
+
+**And a readback in `R14`'s own applied script expires with this PR** —
+*"the two ley line classes are untouched … want 0"* now reads `got 2`. A one-shot
+script is not edited, so the inverse is asserted here, which sorts after it.
+
+### R18 — medium — the wizard counts related picks against the wrong allowance
+
+**FILED, NOT TAKEN.** Turned up by `R15`'s release audit.
+
+`functions/api/character-creator/_lib/validate-character.js:67-76` computes the
+related-skill allowance as `count` **plus every related grant scheduled through
+the character's level**. `apps/character-creator/app.js:2044-2046` passes plain
+`count`. The two disagree for any character above the level at which its class
+first grants more related picks.
+
+**What that costs.** The wizard's floor readout and its review-step blocker both
+run off the wrong number, so a character can be told *"the picks left cannot
+reach it, or the save will be refused"* when the server would accept the save.
+It cannot fail the other way — the wizard's allowance is never larger than the
+server's — so this is a false alarm rather than a hole. Draft 285 is a live
+instance: allowance 9 on the server, 7 in the wizard.
+
+**Thirty classes hold a floor and every one of them has a related-skill
+schedule**, so the disagreement is not confined to the Ley Line pair.
+
+**Proposal:** give the wizard the same allowance the server uses. The arithmetic
+already exists in `relatedAllowance`, and the two are supposed to agree by
+design — `relatedFloorStatus`' own header says the wizard and the validator
+*"must not disagree about whether a character is legal"*, and here they do.
+**Posture: APP FIX, no data and no new gate.** It makes a warning stop firing;
+it does not make any save succeed that would have failed, nor the reverse.
+
+**Watch the level the wizard is building at.** The server validates at the level
+being created; the wizard's `S.level` must be the same number, and a mismatch
+here would replace a false alarm with a missed one — which is the direction that
+matters.
+
+**Evidence:** the two functions read side by side, 2026-09-05; draft 285 run
+through both (`relatedAllowance` 9 vs `count` 7).
+**Confidence: high** on the disagreement. **Medium** on nothing else depending
+on the wizard's narrower number until the change is run against the suite.
+**Ongoing cost:** none — it removes a second copy of an arithmetic rule.
+
 ### R16 — medium — the check that is supposed to catch the next floor cannot see any of the seven
 
 **FILED, NOT TAKEN.** `regression.mjs`'s per-category floor invariant came from
