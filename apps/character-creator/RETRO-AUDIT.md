@@ -1850,6 +1850,49 @@ its line 1 carries the same tally in a `--` comment. A one-shot script is not
 edited and a comment is not data, so the data script above is the correction of
 record and sorts after it.
 
+### R19 — low — four psionic powers are cited to a list page and carry no stat block
+
+**FILED, NOT TAKEN.** Turned up while filling the one psionic power that had no
+description at all - `Machine Ghost`, shipped separately.
+
+| id | power | category | cited |
+|---|---|---|---|
+| 106 | Deaden Senses | Physical | Rifts Ultimate Edition p.141 |
+| 107 | Sense Time | Sensitive | p.141 |
+| 108 | Psychic Body Field | Super | p.141 |
+| 109 | Radiate Horror Factor | Super | p.141 |
+
+All four have `range`, `duration` and `saving_throw` **NULL**, and all four are
+cited to the same page. **Printed 141 is a list page** — it carries these as
+names with an I.S.P. cost in brackets (`Deaden Senses (4)`,
+`Psychic Body Field (Super - 30; counts as two selections)`), not as entries.
+Read off `rue` cache `p144` directly, 2026-09-05.
+
+```bash
+node scripts/q.mjs --remote "SELECT id, name, source_book FROM psionic_powers WHERE range IS NULL OR range = ''"
+```
+
+**This is the same defect the spell backfill is full of** — a row cited to the
+book's own summary list rather than to its entry — and it is why the stat block
+is empty: whoever imported these read the list. All four carry a real
+description, so nothing about them looks wrong in a listing.
+
+**Proposal:** find each entry, correct the citation, fill the stat block.
+**Posture: DATA ONLY**; the prose is already there.
+**Recommendation: fold this into the spell backfill's PR rather than take it
+alone** — that PR is already correcting a run of citations of exactly this
+shape, and four rows do not earn their own release.
+
+**The psionic catalog is otherwise healthy**, which is worth recording because
+the spell catalog was not: 116 powers, and after `Machine Ghost` every one has a
+real description with **no stub problem** — not one carries a category label
+where a description belongs, unlike the 230 spells that did.
+
+**Evidence:** the query above and `rue` `p144` read individually, `--remote`,
+2026-09-05.
+**Confidence: high.**
+**Ongoing cost:** none.
+
 ---
 
 ## Not established
