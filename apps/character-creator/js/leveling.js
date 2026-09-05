@@ -342,13 +342,34 @@ export function startingGroups(cls, kind) {
 
   const groups = nonEmpty(block[spec.groups]);
   if (groups) {
-    return groups
+    const split = groups
       .filter((g) => Number(g?.count) > 0)
       .map((g) => {
         const from = nonEmpty(g.from)?.map(String) ?? namedList(g.from_list) ?? blockFrom;
         return shape(Number(g.count), from, nonEmpty(g[spec.gateKey]) ?? blockGate,
                      typeof g.note === 'string' && g.note.trim() ? g.note.trim() : null);
       });
+
+    // THE COUNT CAN BE HIGHER THAN THE GROUPS, and only composition makes it so.
+    //
+    // `combineClasses` takes the HIGHER of the race's and the occupation's
+    // `powers_starting` on purpose (parser.js) — the rule that stops a psychic
+    // dragon hatchling being cut to one starting power for studying as a Dog
+    // Boy. But the groups themselves are carried by a plain spread, so the
+    // OCCUPATION's win outright, and reading only them threw that rule away: a
+    // 7-power race taking a 5-power occupation with groups silently got 5.
+    //
+    // So whatever the composed count has over the groups comes back as one more
+    // pick under the block's own gate. A class whose groups already sum to its
+    // count — every class that states both — is untouched, because the
+    // remainder is zero.
+    const declared = Number(block[spec.count]);
+    const summed = split.reduce((n, g) => n + g.count, 0);
+    if (Number.isFinite(declared) && declared > summed) {
+      split.push(shape(declared - summed, blockFrom, blockGate,
+        'From the racial class, which grants more than the occupation splits.'));
+    }
+    return split;
   }
 
   const count = Number(block[spec.count]);

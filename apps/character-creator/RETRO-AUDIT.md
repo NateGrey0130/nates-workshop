@@ -1,10 +1,15 @@
 # RETRO-AUDIT.md — does the catalog benefit from the schema it grew?
 
-> **`R11` is open. Everything before it was taken on 2026-09-04**, the day the
+> **Nothing is open.** Every finding was taken on **2026-09-04**, the day the
 > audit ran. **Read under the heading for what actually happened to each** —
-> two findings turned out to be wrong about their own premises, and one corrects
-> a defect this menu's own work shipped. The outcome notes are where that is
-> recorded.
+> several turned out to be wrong about their own premises, one corrects a defect
+> this menu's own work shipped, and two needed app changes their finding framed
+> as data-only. The outcome notes are where that is recorded.
+>
+> **One thing this menu found and did NOT act on**, because it is not a sweep's
+> to decide: `CLASS-AUDIT`'s *"Checked and still true"* entry saying
+> `occ_related_skills` cannot span two categories is stale in all three of its
+> examples. `R11`'s outcome note has the detail.
 >
 > **`R9`, `R10` and `R11` break the severity order and that is deliberate.** All
 > three were filed after `R8` had already shipped, so they sit last rather than
@@ -1081,6 +1086,69 @@ safety property instead of a headcount.
 **Left alone deliberately:** that character now holds 6 of the 12 spells the book
 gives, a shortfall this finding *revealed* rather than caused. Topping up someone
 else's character is not a data fix.
+
+**The remaining six rows taken, 2026-09-04 (PR #726). R11 is closed.** Twelve
+classes moved; the claim sentences and the code paths held for all six, and what
+did **not** hold was R11's guidance.
+
+**The posture R11 never stated, and it is half the change.** `psi-mystic`, `apok`
+and `wormspeaker` only change what a picker offers. But `minimums` on
+`techno-wizard` and the ten Warlocks is **enforcement**: `relatedFloorStatus`
+feeds `validate-character.js`, which raises a `related_minimum` violation, and
+`functions/api/character-creator/characters.js` answers **HTTP 422**. Eleven
+classes moved from prose a player may ignore to a save that is refused. Proved by
+running `relatedFloorStatus` against the techno-wizard's own block with seven
+off-category picks: `unreachable: true`.
+
+**Row 1 needed an app change, and R11 implied data-only.** Giving an *occupation*
+`powers_starting_groups` **defeated the max-of-two composition rule**:
+`parser.js` takes the higher of the race's and the occupation's
+`powers_starting`, but the groups are a plain spread so the occupation's win, and
+`startingGroups` read only the groups. Measured before the fix — a
+`chiang-ku-dragon` (7) taking the Psi-Mystic (5) silently dropped to **5**.
+`startingGroups` now returns the surplus as one more pick under the block's own
+gate; after the fix the same pairing composes to 7 again. **None of the fourteen
+classes carrying a starting-groups block moves**, because their groups already
+sum to their count.
+
+**The book was re-read for row 1**, because both R11 rows resolved before it had
+moved on one. This time the class's note was exactly right — Palladium Fantasy,
+*"three powers from the sensitive category and two from either the physical or
+healing category"* (`pf` cache `p161`; the entry runs printed 159-160 and the
+class cites 160).
+
+**Signed dice are a hard parse error, which is a better answer than the finding
+had.** `DICE_BONUS` is anchored on a digit, so `"+1d6"` is rejected **loudly**.
+Rows 4 and 5 are written unsigned, and the wormspeaker's `-1D4 Spd` and *"P.B.
+halved"* therefore genuinely cannot be stored — the half of its claim that
+survives, now with a reason that runs rather than an inference.
+
+**`merc-soldier` was false in a second place.** Its note also said *"the
+restriction above says to apply one by hand"*; the restriction says the
+opposite, and has since `fix-merc-soldier-and-robot-pilot-mos.sql`. Both
+corrected. Its **GM Notes still transcribe all seven packages** beside the live
+block — left alone, being an import decision rather than a note fix.
+
+**Two things deliberately untouched, each asserted by a readback.**
+`wolfen-quatoria` also mentions `bonuses.attributes` and its claim is **true**
+(the block *adds* to a rolled value, wrong for a fixed conversion attribute). And
+**the `assassin`** — see below.
+
+**`CLASS-AUDIT`'s control-set sentence is stale, and this pass did not touch it.**
+*"`occ_related_skills` cannot span a constraint across two categories (assassin,
+juicer-wannabe, merc-soldier's either/or groups)"* fails on all three examples:
+the assassin's rule is expressible today as one single-category floor plus one
+union floor; the juicer-wannabe was closed by `R1`; and the merc-soldier's
+either/or is entirely *within* one category, so it was misattributed from the
+start. **Releasing a control-set claim is Nate's, not a sweep's** — recorded
+here, and the assassin's sentence is asserted unchanged.
+
+**A third instance of the quotation trap, in a new place.** The readback for
+"no class still denies these" failed until it was scoped: `promethean-phase-adept`
+contains *"bonuses.attributes takes flat numbers only"* because its note
+**quotes the apok's claim in order to refute it** — the repo held the refutation
+before R11 filed the finding. The trap has now appeared in a replacement text
+(`R3`), in a checker (`R8`), and in a third class's note.
 
 ---
 
