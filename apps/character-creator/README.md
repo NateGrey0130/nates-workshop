@@ -66,7 +66,7 @@ apps/character-creator/
 │                             anyone. Read-only by construction — one GET and no
 │                             write path. NOT the editor above unlocked; see
 │                             docs/plans/20-power-descriptions.md
-├── styles.css                All seven pages, layered on /shared/styles.css
+├── styles.css                All six pages, layered on /shared/styles.css
 ├── js/parser.js              RCC/OCC markdown parser (ES module — also used by the API)
 ├── js/dice.js                Dice evaluator (ES module — also used by the API)
 ├── js/leveling.js            XP curve and the level-up diff (ES module — the API
@@ -85,7 +85,7 @@ apps/character-creator/
 │                             the Workers runtime needs it too)
 ├── js/compose.js             The ONE place a character's classes become the
 │                             thing it is played as (ES module)
-├── js/api.js                 The one HTTP helper for all seven pages, and
+├── js/api.js                 The one HTTP helper for all six pages, and
 │                             errorDetails() (classic script)
 │   (also loaded by every page: /shared/js/ui.js, for escHtml — see below)
 ├── js/picker.js              Catalog picker filtering — matching, the filter
@@ -158,7 +158,7 @@ exposure (see the `Object.assign(window, …)` block at the bottom of `app.js`).
 
 `js/derive.js`, `js/picker.js` and `js/api.js` are deliberately *classic*
 scripts rather than modules, so the plain-script pages can use them without
-converting the whole file. `js/api.js` is loaded by all seven pages and defines
+converting the whole file. `js/api.js` is loaded by all six pages and defines
 `api()` and `errorDetails()`; there used to be five copies of `api()` in three
 variants, which is a nuisance while they agree and a bug when they do not — the
 wizard and the sheet learned to carry a failed response's `violations` through
