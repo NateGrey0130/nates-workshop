@@ -170,7 +170,7 @@ skills:
   before the key existed dropped them: the Godling lost five.
 - **`minimums` is the only FLOOR in this block; everything else is a ceiling.**
   "Select 8 other skills, but at least two must be selected from espionage and
-  two from rogue skills" is a floor, and eight classes across four books print
+  two from rogue skills" is a floor, and classes across several books print
   one. The picks come out of the same `count` - two floors of two over eight
   leave four free - so the sum of the floors may not exceed it, and every
   category named must be one the class grants. An entry holds a LIST because the
