@@ -189,12 +189,53 @@ GET /accounts/{id}/pages/projects/nates-workshop/deployments
     -> per deployment: environment, latest_stage.name, latest_stage.status
 ```
 
+You do not have to hunt for the deployment: the Pages check-run's `details_url`
+**is** the deployment id, so `.../deployments/{id}` answers for one build
+directly. `node scripts/deploy-sweep.mjs` prints that URL beside any build it
+reports.
+
 The oldest one not in `deploy` is the blocker. Deleting it releases the queue.
-`node scripts/deploy-sweep.mjs` now flags any build pending over ten minutes and
-prints this procedure. **Why a deployment stalls before `clone_repo` is not
-known** — the API exposes stage and timing and nothing about the scheduler. One
-occurrence is not a pattern; `HEALTH-AUDIT.md` F24 records the deployment id for
-a recurrence.
+**Read the stage before deleting anything** — see the next section for the case
+that looks identical and must not be deleted. **Why a deployment stalls before
+`clone_repo` is not known** — the API exposes stage and timing and nothing about
+the scheduler. One occurrence is not a pattern; `HEALTH-AUDIT.md` F24 records
+the deployment id for a recurrence.
+
+### A skipped deployment looks exactly like a wedged one
+
+**Merges seconds apart do not each get a build.** Cloudflare collapses the
+production queue and **skips** the ones a later build overtakes:
+`latest_stage.name = queued`, `latest_stage.status = skipped`. The skipped
+deployment's GitHub check-run then says `Building` **forever** — it never
+concludes, so ageing it only ever says it is old.
+
+That is the same signature as the wedged build above, and it needs the opposite
+response. On 2026-09-04, `#714`–`#717` merged inside 17 seconds; all four were
+skipped, and the sweep reported them as *probably stuck* at 498 minutes while
+pointing at deleting a deployment to release a queue that did not exist.
+
+**Nothing was missing.** A Pages build publishes the whole repo root, so the
+content of all four shipped with `#718`, which merged four seconds after the
+last of them and built normally.
+
+**Tell them apart by what came after, not by how long it has been pending.**
+
+| | superseded | wedged |
+|---|---|---|
+| a later commit deployed | **yes** — it carried this content | no — the wedge blocks the queue |
+| `latest_stage` | `queued` / `skipped` | `queued` or `initialize`, empty log |
+| the content | already on the site | **not** on the site |
+| what to do | nothing | delete the blocker |
+
+`deploy-sweep.mjs` now makes that distinction itself and reports the two
+separately. It does it **without asking Cloudflare**, because a script here
+cannot: the `cloudflare-api` plugin is not callable from `node`, and
+`CLOUDFLARE_API_TOKEN` returns HTTP 403 `code: 10000` for every Pages endpoint —
+the projects list, the deployments list, and a single deployment by id alike
+(measured 2026-09-05). It reasons from first-parent order instead: **a pending
+commit with a newer commit that deployed has shipped**, whatever became of its
+own deployment. A wedged build has nothing succeeding behind it, so it still
+reports at full volume.
 
 ### When the merge does not deploy
 
