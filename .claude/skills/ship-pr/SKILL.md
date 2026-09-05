@@ -233,6 +233,28 @@ the exit code, because a deploy that failed needs a person rather than a
 non-zero, and a script that failed on four-day-old history would fail every run
 until someone rewrote the past.
 
+**Merging a batch back to back produces builds that never run, and that is not
+a failure.** Cloudflare collapses the production queue and **skips** the
+deployments a later build overtakes — `latest_stage.status = skipped` — and a
+skipped deployment's check-run says `Building` for good. It never concludes, so
+step 9 above sits at `pending` for that merge no matter how long you wait, and
+running it again is not the answer.
+
+**Nothing is missing when that happens**: a Pages build publishes the whole repo
+root, so the next build that *does* run carries every commit under it. On
+2026-09-04, `#714`–`#717` merged inside 17 seconds, all four were skipped, and
+all four shipped with `#718`, which merged four seconds later.
+
+The sweep now separates that from a genuinely wedged build and says which is
+which. **The test is whether a later commit deployed, not how long the build has
+been pending** — for eight hours the sweep called those four *probably stuck*
+and pointed at deleting a deployment to release a queue that did not exist. So
+take the answer from the sweep rather than from step 9's `pending`, and **do not
+delete a deployment on the strength of a pending check-run**; `SETUP.md` → *A
+skipped deployment looks exactly like a wedged one* has the table. When you are
+merging a batch, the cheap habit is one sweep at the end rather than step 9
+after each merge.
+
 **It answers for both deploy paths, and that is the second half.**
 `workers/pick3cut5-room` produces no check-run at all — a merge does not deploy
 it — so the Pages half is silent about it by construction, and the sweep once

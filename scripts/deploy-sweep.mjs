@@ -58,6 +58,15 @@
 // A deploy takes up to a minute or so to finish. A merge made seconds ago
 // reports `in_progress` with no conclusion yet - that is reported as PENDING,
 // which is not a failure and not a pass. Run it again.
+//
+// AND A CHECK-RUN THAT NEVER CONCLUDES IS A THIRD THING. Cloudflare skips a
+// production deployment that a later one overtakes, and the skipped build's
+// check-run says "Building" for good. Running it again does not help; ageing
+// it says only that it is old. This script called four of those stuck at 498
+// minutes and told a reader to delete a deployment to release a queue that did
+// not exist. The classifier for that sits above the STALLED report below, and
+// it is the one place here that reasons about a commit's NEIGHBOURS rather
+// than about the commit.
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -102,10 +111,15 @@ if (commits.length === 0) {
 
 const bad = [];
 const pending = [];
+// Which commits DEPLOYED, keyed by index into `commits` - which is
+// `--first-parent` order, newest first. The supersession test below is the only
+// reader, and an index is all it needs: a smaller index is a later build.
+const deployed = new Set();
 let ok = 0;
 
-for (const c of commits) {
+for (const [idx, c] of commits.entries()) {
   let conclusions;
+  let deployId = null;
   try {
     const out = run('gh', [
       'api', `repos/${REPO}/commits/${c.sha}/check-runs`,
@@ -125,9 +139,17 @@ for (const c of commits) {
       // Two tools feeding each other false alarms is precisely how a check
       // stops being read. The header above already says the Pages run is the
       // signal; now the query agrees with it.
-      '--jq', '[.check_runs[] | select(.name=="Cloudflare Pages") | .name + "=" + (.conclusion // "pending") + "@" + (.started_at // "")] | join(",")',
+      //
+      // `details_url` rides along for its UUID: it is the Pages DEPLOYMENT id,
+      // and it is the thing you actually need to ask Cloudflare about one
+      // build. Both remedies below used to send you paging the whole
+      // deployments list to find by hand what the check-run had all along.
+      '--jq', '[.check_runs[] | select(.name=="Cloudflare Pages") | .name + "=" + (.conclusion // "pending") + "@" + (.started_at // "") + "#" + (.details_url // "")] | join(",")',
     ]).trim();
-    conclusions = out;
+    deployId = out.match(/[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}/)?.[0] ?? null;
+    // Strip the URLs back out for matching and display. Every test below is a
+    // substring or regex over this string, and a failure line prints it raw.
+    conclusions = out.replace(/#[^,]*/g, '');
   } catch (err) {
     // A commit GitHub cannot answer for is not a passing commit. Say so rather
     // than counting it as fine.
@@ -143,17 +165,18 @@ for (const c of commits) {
     continue;
   }
   if (conclusions.includes('=pending')) {
-    // How long has it been pending? A Pages build here finishes in 20-35
-    // seconds, so ten minutes is not "slow", it is stuck - usually behind a
-    // wedged PREVIEW build, because previews and production share one
-    // serialised queue and a branch push queues one 12 seconds before the
-    // merge does. SETUP.md -> "How deploys work" has the mechanism.
+    // A check-run that has not concluded. It is aged here and SORTED LATER -
+    // pending has three meanings and the age alone separates only two of them.
+    // A build here finishes in 20-35 seconds, so ten minutes is not "slow";
+    // but a check-run that never concludes at all is not slow either, and for
+    // eight hours this script called that one stuck. See the classifier below.
     const started = conclusions.match(/=pending@([^,]+)/)?.[1];
     const mins = started ? Math.floor((Date.now() - Date.parse(started)) / 60000) : null;
-    pending.push({ ...c, why: conclusions, mins });
+    pending.push({ ...c, idx, why: conclusions, mins, deployId });
     continue;
   }
   if (conclusions.includes('=success') && !/=(failure|cancelled|timed_out|action_required)/.test(conclusions)) {
+    deployed.add(idx);
     ok += 1;
     continue;
   }
@@ -172,8 +195,61 @@ if (bad.length) {
 // Ten minutes. A Pages build on this project takes 20-35 seconds, so this is
 // not a tight threshold - it is twenty times the normal run.
 const STALLED_MINS = 10;
-const stalled = pending.filter((c) => c.mins !== null && c.mins >= STALLED_MINS);
-const building = pending.filter((c) => !stalled.includes(c));
+
+// ── SUPERSEDED IS NOT STUCK ─────────────────────────────────────────────────
+//
+// Four production merges landed within 17 seconds of each other on 2026-09-04
+// (#714-#717). Cloudflare collapsed the queue and SKIPPED the three it
+// overtook plus the first - `latest_stage.name=queued`, `.status=skipped` on
+// all four - and a skipped deployment's check-run never concludes. It sits at
+// `in_progress` / "Building" forever.
+//
+// That is bit-for-bit the signature this script called stuck. It reported all
+// four as PENDING FOR OVER 10 MINUTES at 498 minutes and printed the wedged-
+// preview remedy: delete the blocking deployment to release the queue. There
+// was no queue to release, nothing was missing, and deleting is a destructive
+// action advised on a false premise.
+//
+// THE ANSWER WAS ALREADY IN HAND. A Pages build publishes the whole repo root
+// at its commit, and `--first-parent` order is newest first. So a pending
+// commit that has a NEWER commit reporting `success` HAS SHIPPED - the later
+// build published a tree containing it. That holds whether its own deployment
+// was skipped or wedged, which is exactly why the conclusion does not need
+// Cloudflare's `latest_stage` to reach it. What the sweep loses by not asking
+// is the reason; what it keeps is the only fact that decides anything, which
+// is whether the content is on the site.
+//
+// IT CANNOT QUIET A REAL OUTAGE, and that is the property to preserve:
+//   - A genuinely wedged build BLOCKS the queue. Nothing behind it succeeds,
+//     so nothing behind it is superseded, and it prints below at full volume -
+//     32 minutes of exactly that on 2026-09-02 (HEALTH-AUDIT F24).
+//   - The four-day August outage never reaches this path at all. Those 65
+//     commits CONCLUDED `failure`; they are `bad`, printed first and loudest.
+// Supersession can only ever quieten a commit that a later build carried.
+//
+// WHY THIS DOES NOT ASK CLOUDFLARE: because a script here cannot. The
+// `cloudflare-api` MCP plugin reaches Pages and `node` cannot call it, and the
+// environment `CLOUDFLARE_API_TOKEN` - the only credential a script in this
+// repo has - is refused. Measured 2026-09-05: `/pages/projects`, the
+// deployments list, and a single deployment by id all return HTTP 403
+// `code: 10000`, matching what CLAUDE.md -> "Three credentials" says of
+// `pages project list`. A sweep that silently needed a credential the repo's
+// own token does not have would be a worse trap than the one it replaced.
+const supersededBy = (c) => {
+  // The NEAREST later success, not the newest: that is the build that first
+  // carried this commit's content onto the site.
+  for (let j = c.idx - 1; j >= 0; j -= 1) if (deployed.has(j)) return commits[j];
+  return null;
+};
+const superseded = [];
+const stalled = [];
+const building = [];
+for (const c of pending) {
+  const by = supersededBy(c);
+  if (by) superseded.push({ ...c, by });
+  else if (c.mins !== null && c.mins >= STALLED_MINS) stalled.push(c);
+  else building.push(c);
+}
 
 if (building.length) {
   console.log(`  ${building.length} still building:\n`);
@@ -182,19 +258,49 @@ if (building.length) {
   }
   console.log('');
 }
+if (superseded.length) {
+  // Reported, not dropped. The content is on the site, so this is not a
+  // failure - but a merge whose own deployment never ran is a thing to have
+  // seen, and silence here would be indistinguishable from the sweep not
+  // having looked.
+  console.log(`  ${superseded.length} superseded - never built, and shipped anyway:\n`);
+  for (const c of superseded) {
+    console.log(`    ${short(c)}  (${c.mins}m)`);
+    console.log(`        carried by ${c.by.sha.slice(0, 7)}, which deployed after it`);
+  }
+  console.log('');
+  console.log('  Merges seconds apart share one production queue and Cloudflare skips the');
+  console.log('  ones a later build overtakes - latest_stage.name=queued, status=skipped -');
+  console.log('  leaving a check-run that says "Building" forever. NOTHING IS MISSING: a');
+  console.log('  build publishes the whole repo root, so the later commit carried these');
+  console.log('  too. Do not delete anything. To read the stage itself, the cloudflare-api');
+  console.log('  MCP plugin can (CLAUDE.md -> "Three credentials"); this script cannot,');
+  console.log('  because CLOUDFLARE_API_TOKEN gets 403 from every Pages endpoint:\n');
+  for (const c of superseded.filter((x) => x.deployId)) {
+    console.log(`    GET /accounts/{id}/pages/projects/nates-workshop/deployments/${c.deployId}`);
+  }
+  console.log('');
+}
 if (stalled.length) {
   console.log(`  ${stalled.length} PENDING FOR OVER ${STALLED_MINS} MINUTES - probably stuck:\n`);
   for (const c of stalled) console.log(`    ${short(c)}  (${c.mins}m)`);
   console.log('');
-  console.log('  A build here normally takes 20-35 seconds. Previews and production share');
-  console.log('  one queue, so the usual cause is a wedged PREVIEW build ahead of this one -');
-  console.log('  often the preview for the same branch, queued by the push seconds before');
-  console.log('  the merge. GitHub reports "Building" for a deployment Cloudflare has not');
-  console.log('  started; ask Cloudflare for the real stage:\n');
-  console.log('    GET /accounts/{id}/pages/projects/nates-workshop/deployments');
-  console.log('        -> latest_stage.name + .status per deployment');
+  console.log('  A build here normally takes 20-35 seconds, and nothing newer has deployed');
+  console.log('  past these - so unlike a superseded build, this content is NOT on the');
+  console.log('  site. Previews and production share one queue, so the usual cause is a');
+  console.log('  wedged PREVIEW ahead of this one, often the preview for the same branch,');
+  console.log('  queued by the push seconds before the merge. GitHub reports "Building"');
+  console.log('  for a deployment Cloudflare has not started; ask Cloudflare for the real');
+  console.log('  stage, which the cloudflare-api MCP plugin can do and this script cannot:\n');
+  for (const c of stalled.filter((x) => x.deployId)) {
+    console.log(`    GET /accounts/{id}/pages/projects/nates-workshop/deployments/${c.deployId}`);
+  }
+  console.log('    -> latest_stage.name + .status');
   console.log('');
-  console.log('  Deleting the wedged one releases the queue. SETUP.md -> "How deploys work".\n');
+  console.log('  CHECK THAT STAGE BEFORE DELETING ANYTHING. `queued`/`skipped` means');
+  console.log('  Cloudflare dropped it and there is no queue to release. A build wedged in');
+  console.log('  `queued` or `initialize` with an empty log is the real one, and deleting');
+  console.log('  it releases the queue. SETUP.md -> "How deploys work".\n');
 }
 
 if (!bad.length) {
@@ -203,10 +309,15 @@ if (!bad.length) {
   // A stalled build is NOT "nothing missing" - the change it carries is not on
   // the site. Saying so is the whole of F24: the old line read identically at
   // twenty seconds and at thirty-two minutes.
+  //
+  // A SUPERSEDED build is the opposite case and gets counted, not warned
+  // about: its content IS on the site. It still gets its own word rather than
+  // being folded into `deployed`, because "deployed" would claim a build ran.
   const tail = stalled.length
     ? `, ${stalled.length} STUCK - see above`
     : ', nothing missing.';
-  console.log(`  Pages: ${ok} deployed${building.length ? `, ${building.length} still building` : ''}${tail}\n`);
+  const sup = superseded.length ? `, ${superseded.length} superseded but shipped` : '';
+  console.log(`  Pages: ${ok} deployed${sup}${building.length ? `, ${building.length} still building` : ''}${tail}\n`);
 } else {
   console.log('  The site is serving the last build that compiled. Find the first bad');
   console.log('  commit above, then look for a file under functions/ - or anything one');
