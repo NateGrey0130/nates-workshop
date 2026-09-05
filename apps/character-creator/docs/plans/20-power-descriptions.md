@@ -16,7 +16,7 @@ codex page.** The dividing line is not a taste in interfaces, it is who pays the
 bytes: every description a character holds costs **4.4 KB gzipped in the worst
 case on production today**, against **72.4 KB** for shipping all of them to
 everyone on every load. Inline expansion at the table is therefore nearly free
-and needs no round trip on a bad connection; the codex is where the other 685
+and needs no round trip on a bad connection; the codex is where the other 691
 rows live, fetched only by someone who went looking. The two are not a
 compromise between the options — they are the same feature split at the point
 where the cost changes by a factor of sixteen.
@@ -52,12 +52,23 @@ What the current 25.1 KB is made of:
 | psionics | 17.2 KB | 2.0 KB |
 | enchantments | 22.0 KB | 3.7 KB |
 
-**Nothing caches any of it.** `_lib/auth.js`'s `json()` sets `Content-Type` and
-nothing else — no `Cache-Control`, no `ETag`, no `Last-Modified` — so no cache is
-told it may reuse the response. `sheet.js:112` requests it on every sheet load
-and `app.js:3536` on every wizard boot. Whatever this payload weighs, it weighs
-that much every single time, which is the fact that makes a 288% increase worse
-than a one-off download of the same size.
+**Nothing caches this endpoint.** `catalogs.js:45` calls `json()` with no headers
+of its own, so the response carries `Content-Type` and nothing else — no
+`Cache-Control`, no `ETag`, no `Last-Modified`. There is no `_headers` file in
+the repo, `functions/api/_middleware.js` does not touch response headers, and
+`js/api.js` adds no client-side cache. `sheet.js:112` requests it on every sheet
+load and `app.js:3536` on every wizard boot, so whatever this payload weighs, it
+weighs that much every single time.
+
+**That is a fact about this endpoint, not about the app, and the difference
+matters to the options below.** `json()` takes a third `headers` argument
+(`auth.js:22`), and `classes.js:46-48` already uses it to send a weak `ETag` with
+`Cache-Control: private, no-cache` and answer `If-None-Match` with a `304` — a
+pattern pinned by `regression.mjs:174-177` and documented in the README. A
+validator on `/catalogs` is therefore a scoped change with a working template
+forty lines away, and it would turn most of these loads into `304`s. Every
+figure below is the cost **as the endpoint behaves today**; see the rejected
+options, where this is the one thing that could reopen them.
 
 ### One description, fetched on demand
 
@@ -99,7 +110,7 @@ nothing about shipping seventy.
 
 | # | Option | Cost | Verdict |
 |---|---|---|---|
-| 1 | Full descriptions in the boot payload | +72.4 KB gzip, every load, uncached | **No.** Quadruples a payload nothing caches, to deliver 685 rows a player will never open |
+| 1 | Full descriptions in the boot payload | +72.4 KB gzip, every load, uncached today | **No.** Quadruples a payload nothing caches, to deliver 691 rows a player will never open. **Conditional:** an `ETag` would turn most loads into `304`s and make this arguable — but the first load on each device still pays it |
 | 2 | First-sentence teasers at boot | +13.1 KB gzip (+52%) | **No**, but the closest rival. Pays on every load for a summary that is wrong for the powers whose text is a table of ranges |
 | 3 | Lazy per-row fetch on expand | ~228 B median per lookup | **No** as the primary path. Cheap, but it is a network round trip at the moment of use, at a table, on someone's house wifi |
 | 4 | **Descriptions for held powers, with the character** | **+4.4 KB gzip worst case** | **Yes.** Recommended |
@@ -115,8 +126,10 @@ panel at `sheet.js:1583`), and the Powers tab is already a single-purpose screen
 An overlay covering a screen that holds nothing but powers buys nothing and costs
 the P.P.E. strip, which is sticky and is what a player checks while deciding
 whether to cast. Expansion in place is the smaller change and the better one.
-`.skill-note` (`sheet.js:1166`) is the existing precedent for a second row
-carrying prose under a first.
+`.skill-note` (`sheet.js:1165`) is the existing precedent for a second row
+carrying prose under a first, and `styles.css:1418-1420` already forces those
+notes visible on paper with `break-after: avoid` on the row above them — so the
+print question below has a worked answer in the same stylesheet.
 
 **Why the codex is not `catalog.html` unlocked.** `catalogs/rows.js` is
 `requireAdmin` at the route, and its own header explains it is admin-gated
@@ -133,9 +146,9 @@ joins on name. Measured across all four characters on production:
 
 - **40 stored power rows. 40 resolve directly against the catalog. Zero needed
   `catalog_redirects`, and zero failed.**
-- The same pass over stored skills: 120 rows, **5 unresolved across 4 distinct
-  names** — `Language: Elven` (×2), `Language: Northern`, `Language: Southern`,
-  `Language: Wolfen`.
+- The same pass over stored skills: 120 rows, **5 that a naive name lookup
+  misses, across 4 distinct names** — `Language: Elven` (×2), `Language:
+  Northern`, `Language: Southern`, `Language: Wolfen`.
 
 **The power result is clean and the sample is too small to be reassurance.** Four
 characters, 40 rows, one campaign. It says the mechanism works today; it does not
@@ -143,10 +156,28 @@ say it survives a rename, and `catalog_redirects` exists because renames happen.
 Whatever ships should resolve through redirects from the first commit rather than
 adding them after the first miss.
 
-**The skill result is a real finding and it is structural.** Language skills are
-synthesised by `js/language-skills.js`, not stored as catalog rows, so a
-name-keyed description lookup misses every one of them by construction. Any
-decision to give skills descriptions has to answer for languages first.
+**The query this needs already exists.** `loadPowerCatalog(env, names, system)`
+in `functions/api/character-creator/_lib/power-picks.js:194` loads held power
+names against `spells` and `psionic_powers` with `name COLLATE NOCASE IN (…)`,
+chunked around D1's 100-parameter limit — which is the case a caster holding a
+hundred spells would otherwise walk straight into. The recommended option is
+mostly a projection change plus a call to that.
+
+**The skill result is smaller than it first looked, and it is a lesson about the
+audit rather than about the catalog.** The `skills` catalog *does* hold language
+rows — 18 of them, `Language: Dragonese` through `Language: Trade Six`. The four
+names above are instances of the `Language: Other` escape hatch, where a player
+types a language the books do not enumerate, and **the repo already ships the
+resolver**: `otherRowFor()` in `js/language-skills.js` maps `Language: Elven` to
+the real `Language: Other` row, and nine call sites across `app.js`, `sheet.js`
+and three `_lib` modules already use it. My audit pass did not, which is why it
+reported five misses.
+
+So the true statement is narrow: **a lookup that joins on the stored name alone
+misses escape-hatch members, and the fix is to call the function the rest of the
+app already calls.** What survives for a skills description feature is milder
+and worth writing down anyway — `Language: Other` is one row, so every language
+a player invents would show the same generic text.
 
 ## Coverage: where the 29% gap is actually felt
 
@@ -182,12 +213,19 @@ count is arithmetic from character counts, not a measured render.
 ## Skills and enchantments
 
 **Skills: defer, and do not add a `description` column yet.** The column is not
-free — `schema-change` puts it in five places — and unlike spells there is no
-book text waiting to fill it: `skills.note` averages 47 characters across the 132
-rows that have one, and nothing has been extracted. Add to that the language
-problem above, and a skills column would ship an empty feature with a known hole
-in it. The honest sequence is to decide what a skill description *is* (the book's
-paragraph? the percentile table's conditions?) before cutting a column to hold it.
+free — `schema-change` puts it in five places — and the argument for deferring is
+*not* that there is nothing to show. `skills.note` holds 17,442 characters across
+the 132 rows that have one, **averaging 132 characters each**: short, but real
+prose rather than the fragment the boot projection implies, and already shipped
+to the client today. The reason to wait is that nobody has decided what a skill
+description *is* — the book's paragraph, or the conditions attached to the
+percentile — and a column cut before that question is answered will be filled
+with whichever the first importer happened to grab.
+
+An earlier draft of this plan put that average at 47 characters. That was the
+same 17,442 divided by all 345 skills rather than by the 132 with a note, and it
+made the corpus look 2.8× thinner than it is. The defer still stands; the
+argument that it rested on does not.
 
 **Enchantments: nothing to do.** They already ship `description` to the client and
 the sheet already needs it to render an enchanted item. They are listed here so
@@ -231,12 +269,14 @@ the codex is what exposes the gap.
 - **Client-side caching of the full corpus in `localStorage`.** It would work,
   and it moves a 74.5 KB decision into a place with no eviction policy and no
   version. If the corpus is worth caching, it is worth an `ETag` on the endpoint.
-- **Adding `Cache-Control` to `json()` as part of this.** It is the single
-  highest-value change this measurement turned up and it is **not** part of this
-  plan, because it changes the caching behaviour of every endpoint in the app at
-  once. It deserves its own decision, and it makes options 1 and 2 meaningfully
-  cheaper if it ever lands — which is a reason to take it first, not a reason to
-  bundle it.
+- **An `ETag` on `/catalogs`.** It is the highest-value change this measurement
+  turned up, it is cheap, and it is deliberately not bundled here: it is a
+  behaviour change to a shared endpoint, and a documentation PR is the wrong
+  place to hide one. `classes.js:46-48` is the template. **Take it first if any
+  of this is going to be built** — it does not alter the recommendation, whose
+  4.4 KB is paid on a request that has to happen anyway, but it is the one thing
+  that would make options 1 and 2 arguable again, and it should be measured
+  rather than assumed to.
 - **Descriptions in the wizard's pickers.** The wizard is where a player chooses
   a spell, so it is the obvious next surface. It is also the one place the full
   corpus genuinely is needed, and it reopens the boot-payload question this plan
