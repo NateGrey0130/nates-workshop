@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Print fixture — power descriptions</title>
+<link rel="stylesheet" href="/shared/styles.css">
+<link rel="stylesheet" href="/apps/character-creator/styles.css">
+</head>
+<body>
+<!--
+  Why this file exists.
+
+  The print rule under test is `@media print { .power-desc { display: none } }`,
+  and it only does anything to a description that is OPEN — a closed one carries
+  the `hidden` attribute and would be absent from the paper whatever the rule
+  said. So a print render of the real sheet cannot exercise it: Chrome's
+  `--print-to-pdf` cannot drive the page first, and nothing opens a description
+  without a press. (`verify-ui` §4 names this exact case and points at CDP; this
+  is the cheaper answer for one CSS rule.)
+
+  So: the same markup sheet.js emits, with one description already open, plus a
+  `.skill-note` as a CONTROL. The skill note is forced visible in print by
+  styles.css. If the note prints and the description does not, the print
+  stylesheet is demonstrably applied and the rule is doing its job. If NEITHER
+  prints, the render is broken and the result means nothing — which is the
+  failure this control exists to tell apart from a pass.
+-->
+<main class="wrap">
+  <div class="panel">
+    <h3>Psionics &amp; Magic</h3>
+    <div class="power-group">Spells — Level 1</div>
+
+    <div class="power-row">
+      <span><button type="button" class="power-toggle" aria-expanded="true"
+        aria-controls="pdesc-0">Death Trance</button></span>
+      <span class="cost">1 P.P.E.</span>
+    </div>
+    <div class="power-desc" id="pdesc-0">SENTINEL_DESCRIPTION_PRINTED a magically induced trance which makes the caster appear to be dead.</div>
+
+    <div class="power-row">
+      <span><button type="button" class="power-toggle" aria-expanded="false"
+        aria-controls="pdesc-1">Blinding Flash</button></span>
+      <span class="cost">1 P.P.E.</span>
+    </div>
+    <div class="power-desc" id="pdesc-1" hidden>SENTINEL_CLOSED_DESCRIPTION_PRINTED</div>
+  </div>
+
+  <div class="panel">
+    <h3>Skills</h3>
+    <table class="skill-table">
+      <tbody>
+        <tr class="skill-row"><td>Climbing</td><td class="num">+5</td><td class="num pct">70%</td></tr>
+        <tr class="skill-note"><td colspan="3"><span class="note">↳ SENTINEL_SKILL_NOTE_PRINTED</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+</body>
+</html>

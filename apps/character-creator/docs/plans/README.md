@@ -8,8 +8,10 @@ not a description of the current code; deleting them would remove the reasoning
 and leave only the outcome. What replaced them is `scripts/extract-class.mjs`
 and a hand-written data script. See `docs/importing-from-pdfs.md`.
 
-**Every plan here is built and merged except 19 and 20**, which are
-specifications waiting on their first slice. These files are kept as the record of
+**Every plan here is built and merged except 19, which is a specification
+waiting on its first slice, and 20, which has had one.** Plan 20's recommended
+half is live — a held power's description opens under its row on the sheet.
+Its codex and its Book of Magic backfill are not built. These files are kept as the record of
 *why* things are the way they are, not as a to-do list. (This line read "all
 twelve" long after the table had grown past eighteen plans and PR #228. A count
 in a heading is a maintenance burden nobody signed up for, so it is gone.)
@@ -92,7 +94,7 @@ binding**, as shared infrastructure rather than a character-creator private.
 | # | Plan | Depends on |
 |---|---|---|
 | 19 | [G.M. grants](19-gm-grants.md) — skills, spells, psionics, abilities and stats a table hands out, entered by the player and recorded with who and why | — |
-| 20 | [Reading what a power does](20-power-descriptions.md) — descriptions for held powers ride with the character and expand inline; a read-only codex covers the rest | — |
+| 20 | [Reading what a power does](20-power-descriptions.md) — descriptions for held powers ride with the character and expand inline; a read-only codex covers the rest | — · **inline half built**, codex and backfill outstanding |
 
 It is a specification rather than a record, so read it the way plans 13–16 were
 read before they were built: the rejected alternatives in it were rejected on

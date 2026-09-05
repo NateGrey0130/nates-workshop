@@ -583,6 +583,41 @@ check('a nonsense limit falls back rather than 400ing',
   check('a legal pick within the allowance still creates',
     legit.status === 201, JSON.stringify(legit.body).slice(0, 250));
 
+  // The description of a power the character HOLDS rides with the character,
+  // so the sheet can open it in place with no second request at a table. The
+  // catalog seed carries no description text, so this writes one through the
+  // admin route rather than hoping a seeded row has some — which also proves
+  // the join is live rather than a snapshot taken when the character was made.
+  if (legit.status === 201) {
+    const held = inCap.slice(0, Math.min(2, starting))[0];
+    const before = await api('GET', `/characters/${legit.body.id}`);
+    check('a character carries a power_descriptions map',
+      before.status === 200 && before.body.power_descriptions
+      && typeof before.body.power_descriptions === 'object',
+      Object.keys(before.body || {}).join(', '));
+
+    if (held) {
+      const rows = await api('GET', '/catalogs/rows?catalog=spells');
+      const row = (rows.body.rows || []).find((r) => r.name === held.name);
+      const text = 'A test description, written by the regression suite.';
+      const wrote = await api('PATCH', `/catalogs/rows?catalog=spells&id=${row?.id}`, { description: text });
+      check('a spell can be given description text', wrote.status === 200, wrote.body);
+
+      const after = await api('GET', `/characters/${legit.body.id}`);
+      check('and a character holding that spell is sent the text',
+        after.body.power_descriptions?.[held.name.toLowerCase()] === text,
+        JSON.stringify(after.body.power_descriptions || {}).slice(0, 200));
+      check('keyed by the lowercased name the character holds',
+        Object.keys(after.body.power_descriptions || {}).every((k) => k === k.toLowerCase()),
+        Object.keys(after.body.power_descriptions || {}).join(', '));
+      // A power the catalog has no text for is ABSENT rather than present and
+      // empty — the sheet decides whether a row is expandable on that.
+      check('and a power with no text is absent rather than empty',
+        !Object.values(after.body.power_descriptions || {}).some((v) => !v),
+        JSON.stringify(after.body.power_descriptions || {}).slice(0, 200));
+    }
+  }
+
   // Out-of-range pools and over-ceiling attributes create fine FOR THE GM —
   // dev@localhost made this campaign, and a GM ruling beats a computed number
   // — and the audit below is where the warnings surface. 'Honest Caster'

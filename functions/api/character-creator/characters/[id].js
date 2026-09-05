@@ -5,7 +5,7 @@
 
 import { getUserEmail, unauthorized, json, readJson, requireCharacter } from '../_lib/auth.js';
 import { listPending } from '../_lib/skill-picks.js';
-import { listPendingPowers } from '../_lib/power-picks.js';
+import { listPendingPowers, loadPowerDescriptions } from '../_lib/power-picks.js';
 import { listGrants } from '../_lib/grants.js';
 import { decodeCharacter, decodeItemEnchantments } from '../_lib/character-json.js';
 import { getStored } from '../_lib/class-store.js';
@@ -107,6 +107,12 @@ export async function onRequestGet({ request, env, params }) {
   // cannot see them cannot use them.
   const weapon_bonuses = skillConditionalBonuses(skillRows, character.level);
 
+  // What each held power DOES, so the sheet can open it in place. Only the
+  // powers this character holds, keyed by the name it holds them under - the
+  // catalogs' whole description corpus is sixteen times bigger and belongs
+  // nowhere near a boot payload. See docs/plans/20-power-descriptions.md.
+  const power_descriptions = await loadPowerDescriptions(env, character.powers);
+
   return json({
     character, items, can_write, class: cls, skill_level_notes, weapon_bonuses,
     is_gm: email === character.campaign_gm,
@@ -115,6 +121,7 @@ export async function onRequestGet({ request, env, params }) {
     pending_powers,
     pending_powers_total: pending_powers.reduce((n, g) => n + g.count, 0),
     grants,
+    power_descriptions,
   });
 }
 
