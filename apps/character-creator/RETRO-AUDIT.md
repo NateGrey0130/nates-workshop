@@ -1675,7 +1675,7 @@ holding at zero without exceptions, until it is run.
 cost is the argument for reading the shape (a floor sentence beside no
 `minimums`) rather than the words, which is a bigger change than this proposes.
 
-**Taken, 2026-09-05 (PR #PRNUM) — as written, and the posture held: test and
+**Taken, 2026-09-05 (PR #741) — as written, and the posture held: test and
 comment only.** No data moved, no new gate, no new script; the check stays a
 `check()` inside the existing suite. `REGRESSION PASSED (263 checks)`.
 
@@ -1764,7 +1764,7 @@ the `attribute_minimums` reason `R15` records above.
 
 ~~`regression.mjs:1595` and `:1607` say **eleven** and are **correct**: eleven
 block-level notes match the floor phrase and all eleven hold a floor. Do not
-"fix" those to match.~~ **Retired 2026-09-05 by `R16` (PR #PRNUM), which
+"fix" those to match.~~ **Retired 2026-09-05 by `R16` (PR #741), which
 rewrote that comment block.** It was true when filed: eleven block notes matched
 and all eleven held a floor. `R16` widened the matcher to read category notes
 and five verbs, so the number is **29**, and the comment now states it that way
