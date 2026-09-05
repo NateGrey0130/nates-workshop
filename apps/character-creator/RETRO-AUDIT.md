@@ -1,21 +1,42 @@
 # RETRO-AUDIT.md — does the catalog benefit from the schema it grew?
 
-> **`R14` is open. Everything before it was taken on 2026-09-04**, the day the
-> audit ran — `R12` and `R13` included, which correct defects this menu's own
-> work shipped earlier the same day. **Read under the heading for what actually happened to each** —
-> several turned out to be wrong about their own premises, one corrects a defect
-> this menu's own work shipped, and two needed app changes their finding framed
-> as data-only. The outcome notes are where that is recorded.
+> **Work is open on this menu, and this line will not say which findings.**
+> **Read under the heading for what actually happened to each** — some turned
+> out to be wrong about their own premises, some correct defects this menu's own
+> work shipped hours earlier the same day, and some needed app changes their
+> finding framed as data-only. The outcome notes are where that is recorded, and
+> **no tally of them belongs in this paragraph**: the version written on
+> 2026-09-05 said *two* of the third kind and *two* of the second, and the
+> second was three (`R10`, `R12` and `R13`) before the day it was written ended.
+>
+> *(Until 2026-09-05 this paragraph named the one finding then open, and said
+> everything before it had been taken. That was true when written and false
+> within the day, twice over. `audit-menu` → What a status header may carry
+> forbids a per-finding state here for exactly this reason, and the line that
+> broke the rule is the line that rotted.)*
 >
 > **One thing this menu found and did NOT act on**, because it is not a sweep's
 > to decide: `CLASS-AUDIT`'s *"Checked and still true"* entry saying
 > `occ_related_skills` cannot span two categories is stale in all three of its
 > examples. `R11`'s outcome note has the detail.
 >
-> **`R9`, `R10` and `R11` break the severity order and that is deliberate.** All
-> three were filed after `R8` had already shipped, so they sit last rather than
-> among the highs and mediums. `R9` also began life in *Not established* at the
-> foot of this file.
+> <!-- claim-ok: quoting the header claim this note corrects -->
+> **Adjusted 2026-09-05, and both halves of that paragraph are now false.** Nate
+> released the entry on 2026-09-04 and `R13` took it, so the menu DID act on it.
+> And the release audit found only **one** of the three examples stale, not
+> three: the merc-soldier's *"two W.P.s of choice, OR two Demolition skills"*
+> spans `Weapon Proficiencies` and `Military` — checked with
+> `node scripts/q.mjs --remote "SELECT name, category FROM skills WHERE lower(name) LIKE '%demolition%'"`,
+> three rows, all `Military` — and is still not expressible, being an exclusive
+> or inside a `mos` option. The juicer-wannabe was never an instance. The
+> paragraph above is left standing because this file is a record; `R11` and
+> `R13` carry the detail.
+>
+> **Everything from `R9` on breaks the severity order and that is deliberate.**
+> Each was filed after `R8` had already shipped, so they run in FILING order at
+> the foot of the file rather than sitting among the highs and mediums. That is
+> shape rather than status: it stays true as findings close, and as more are
+> filed at the foot. `R9` also began life in *Not established* below.
 >
 > **This menu's own trap: its headline precision figure rests on n=2.** The
 > "detector 1 alone is 11%, detector 1 AND 3 is 100%" result in *Method* below
@@ -1322,6 +1343,238 @@ individually.
 until each page is re-read — every floor fix in this menu so far has moved on a
 book re-read.
 **Ongoing cost:** none.
+
+**Taken, 2026-09-05 (PR #729) — as written: five classes, seven notes, and
+the enforcement posture the proposal spelled out.** All five now hold a floor in
+`occ_related_skills.minimums`, applied to production before the merge
+(`zzzzz-retro-r14-related-floors.sql`, eight readbacks, `--remote`).
+
+| class | floor | spelling | printed |
+|---|---|---|---|
+| `knight` | 2 of 8 Communications | single | 87 (`pf` `p089`) |
+| `palladin` | 2 of 7 Communications | single | 89 (`p091`) |
+| `thief` | 2 of 8 Espionage | single | 94 (`p096`) |
+| `soldier` | 2 of 9 Military **or** Espionage | union | 83 (`p085`) |
+| `witch` | 2 of 10 Wilderness **or** Domestic | union | 116 (`p118`) |
+
+**The numbers were the half this finding was least sure of, and they all held.**
+Its own confidence line said *"medium on the exact numbers until each page is
+re-read"*, so each page was re-read off the `pf` cache rather than off the
+class's own note — the arithmetic on every one matches the count already stored,
+so **no count moved**. Raise that to high.
+
+**Nothing live was at risk.** Zero characters and zero drafts on all five, on
+both `class_id` and `occ_class_id`, `--remote`, 2026-09-05.
+
+### The scope was wrong by two, and the finding's own query is why
+
+**There are seven classes with this shape, not five.** `ley-line-walker` and
+`ley-line-rifter` carry *"two of the seven must be from Science and one from
+Technical"* and hold no `minimums`. R14's detection query missed them for
+**exactly one reason**: they say *"must be from"* where it matched *"must come
+from"*. It is an `instr()` over the whole record and reads no note at all, so
+where in the record the sentence sits could not have hidden anything from it —
+that blind spot belongs to `regression.mjs` and is `R16`. Keeping the two apart
+matters, because whoever takes `R15` or `R16` will write a detection query of
+their own. **Filed as `R15` below rather than folded in** — and not only for scope
+discipline. Draft 285 has all seven related picks spent with **zero Science**,
+so unlike these five, `R15` breaks something live the day it ships.
+
+The lesson is the one `R8` already paid for once: **a detector built from the
+phrasings you have found so far finds the phrasings you have already found.**
+This is the second time in two days a hand-maintained phrase list has come up
+short — `R12` was the first.
+
+### Two claims in the finding were overstated, and one was exactly right
+
+- **"The two unions are the shape `R13` just released"** — no. `categories:` and
+  the one-element `category:` sugar landed together in PR #428
+  (`BOOK-INGEST-AUDIT` `F6`, 2026-08-31), and `city-rat` has held a union in
+  production since that day. `R13` released a **documentation claim**, not a
+  capability. All five floors were expressible before either finding existed.
+- **The union stated itself twice.** The soldier and the witch each carry that
+  sentence in **both** named category notes, which reads like two floors of two
+  and is one floor of two across a pair. That is why the proposal's *"rewrite
+  each category note"* came to **seven** notes rather than five, and why the
+  rewrites say `ONE union floor across the pair` in words.
+- **`add-soldier-class.sql` really does carry the claim** — lines 18–23,
+  *"no way to say 'two of the nine from this pair'"*, false from today. It is a
+  `--` comment rather than data, so no rebuild repeats it into D1 and there is
+  nothing to replace there; a one-shot script is not edited, so the data script
+  for this finding is the correction of record and sorts after it. The knight,
+  palladin, thief and witch scripts carry no such comment — checked, 2026-09-05.
+
+### The proof, run with the right signature this time
+
+`R11`'s outcome note claimed enforcement was proved by running
+`relatedFloorStatus`, and `R13` recorded that the call had been malformed. This
+one was run as `(cls, categoryNames, allowance)` and, before the script was
+applied to production, **against production** — where it FAILED, `owed 0`, no
+floor parsed. That is the check failing first; the same harness passes on all
+five afterwards, 44 assertions:
+
+| case | result |
+|---|---|
+| fresh build, nothing picked | **reachable** — creation is never blocked |
+| every pick spent off the floor | **unreachable** → HTTP 422 |
+| floor met, remainder anywhere | reachable |
+| union met entirely from either side | reachable |
+| union met one from each | reachable |
+| one of the pair and the rest spent | **unreachable** — it is one floor, not two |
+| exactly two picks left, none on the floor | reachable — a floor is not a ceiling |
+
+The 422 comes from `_lib/validate-character.js` pushing `related_minimum` only
+when `unreachable`, and it is wider than the finding said: `characters.js`
+answers it on create, and `characters/[id]/picks.js`, `level-confirm.js` and
+`variant.js` answer it on an **existing** character.
+
+**`regression.mjs`'s floor invariant cannot see any of this**, which the
+finding's *"ongoing cost: none"* did not anticipate — filed as `R16`. Not to be
+confused with this menu's own *standing* check: `retro-check.mjs` (`R8`) is
+blind to it too, for a third reason. It looks for a record that carries a key
+while its prose denies it, and none of these five denied anything — they were
+simply silent.
+
+### R15 — medium — the two Ley Line classes carry the same floor, and one live draft breaks
+
+**FILED, NOT TAKEN.** Turned up by `R14`'s release audit, which found the scope
+of `R14` short by two.
+
+| class | the floor, from its block note | spelling |
+|---|---|---|
+| `ley-line-walker` | 2 of 7 Science **and** 1 of 7 Technical | two singles |
+| `ley-line-rifter` | the same, stated as *"Stats are the Ley Line Walker's"* | two singles |
+
+Rifts Ultimate Edition printed 116 (`rue` cache `p119`): *"Select seven other
+skills, but two must be selected from the science category and one from
+technical."* Two independent single-category floors, both expressible since
+PR #428.
+
+```bash
+node scripts/q.mjs --remote "SELECT class_id FROM imported_classes WHERE deleted_at IS NULL AND instr(markdown,'minimums:') = 0 AND instr(lower(markdown),'must be from') > 0"
+```
+
+**This one is NOT free, and that is the whole reason it is separate from `R14`.**
+Draft `285` sits at step 4 on `ley-line-walker` with all seven related picks
+spent — Swimming, Navigation, Language: Dragonese, Lore: Magic, W.P. Revolver,
+Identify Plants & Fruit, Radio: Basic — and **not one of them is Science**. The
+floor would be `owed 2, remaining 0` the moment that draft is finished: a real
+person's half-built character refused by a rule the app did not have when they
+started it. Character `9917` holds `occ_class_id: ley-line-rifter` and no
+related-typed skills, so it stays reachable.
+
+**Proposal:** add `minimums` to both, rewrite both block notes — **and decide
+what happens to draft 285 first.** The options are to leave it (the player loses
+two picks' worth of choices and must re-pick), or to widen the draft so a
+pre-existing draft is graded against the rules it was started under, which is a
+larger change than this finding.
+**Posture: ENFORCEMENT, and unlike `R14` it reaches live data.** That is what is
+being agreed to.
+
+**Do not reuse `R14`'s guard as written.** Its script guards each insert with
+`instr(markdown, 'minimums') = 0`, and both findings' detection queries filter
+on `instr(markdown,'minimums:') = 0` — **every one of those substrings is inside
+`attribute_minimums:`**, which 15 published classes carry
+(`node scripts/q.mjs --remote "SELECT count(*) FROM imported_classes WHERE deleted_at IS NULL AND instr(markdown,'attribute_minimums') > 0"`,
+2026-09-05). Such a class would have its floor **silently skipped** and still
+satisfy the readback. It did not bite `R14` — none of its five carries attribute
+minimums, and the readbacks assert the floor literals as well — and the corpus
+re-derived by *parsing* rather than string-matching is clean today, which is how
+this was established rather than assumed. Guard on the literal being inserted.
+
+**Evidence:** the query above and the draft read individually,
+`--remote`, 2026-09-05; the page re-read from the `rue` cache.
+**Confidence: high** on the floors and on the draft.
+**Ongoing cost:** none, beyond whatever is decided about the draft.
+
+### R16 — medium — the check that is supposed to catch the next floor cannot see any of the seven
+
+**FILED, NOT TAKEN.** `regression.mjs`'s per-category floor invariant came from
+`BOOK-INGEST-AUDIT` `F6`, and its comment argues — correctly — that an invariant
+beats a count of eleven because *"a count would pass forever while the next book
+imported the twelfth as prose"*. It then says the invariant *"catches the next
+one"*. `R14` was the next one, and it did not.
+
+```js
+// apps/character-creator/test/regression.mjs:1610
+const FLOOR_PHRASE = /\b(?:at least|no fewer than)\s+(?:one|two|three|four|five|six|\d+)\b/i;
+const statesFloor = classes.filter((c) => FLOOR_PHRASE.test(c.skills?.occ_related_skills?.note || ''));
+```
+
+Two limits, and each alone hides a different half:
+
+- **it reads the block-level `note` only**, so all five of `R14`'s classes are
+  invisible — every one of them states its floor in a **category** note;
+- **it matches only *at least* / *no fewer than***, so both `R15` classes are
+  invisible even though their floor IS in the block note: they say *"must be
+  from"*.
+
+The check passes today, and passed throughout, at `11 of 11` — verified by
+re-running it against the live corpus on 2026-09-05. It is not broken; it is
+narrower than its own comment claims.
+
+**Proposal:** widen it to read the category notes as well as the block note, and
+to match the verbs the corpus actually uses (`must be from`, `must come from`,
+`must be selected from`). Correct the comment's *"catches the next one"* to say
+what it does catch. **Posture: TEST AND COMMENT ONLY — no data changes, no new
+gate, and the check stays inside the existing suite rather than becoming its own
+script.**
+
+**A widened matcher will find prose it should not.** A category note reading
+*"two of the eight must come from here"* on a class that HOLDS the floor must
+not fail, and after `R14` five classes carry exactly that. The rewritten notes
+were written to make this possible — each says `occ_related_skills.minimums` in
+so many words — but the widened check has to be run against the live corpus and
+tuned before it can be trusted, which is work rather than a one-line edit.
+
+**Evidence:** the source above at `regression.mjs:1610-1615`, read 2026-09-05;
+the corpus re-run the same day; and `R14`, which is the demonstration.
+**Confidence: high** on the blind spots. **Medium** on the widened matcher
+holding at zero without exceptions, until it is run.
+**Ongoing cost:** a regex that needs an entry when a book prints a new phrasing
+— the same hand-maintained-list cost `R8` named and `R12` collected on. That
+cost is the argument for reading the shape (a floor sentence beside no
+`minimums`) rather than the words, which is a bigger change than this proposes.
+
+### R17 — low — six places say eight classes hold a floor, and twenty-eight do
+
+**FILED, NOT TAKEN.** Turned up by `R14`'s release audit, and **it predates
+`R14`** — `zzzzz-retro-r11-remaining.sql` gave the Techno-Wizard and the ten
+Warlocks floors on 2026-09-04 and `R13` the assassin, so the number was already
+wrong by twenty before this finding moved it by five.
+
+| file | the sentence |
+|---|---|
+| `apps/character-creator/README.md:402` | *"it exists because eight classes across four books print a rule like…"* |
+| `.claude/skills/class-import/reference/frontmatter.md:173` | *"eight classes across four books print one"* |
+| `apps/character-creator/js/parser.js:1044` | *"so eight classes across four books carried the rule as prose"* |
+| `apps/character-creator/js/parser.js:1072` | *"Empty when the class has none, which is all but eight of them"* (wrapped across 1072-1073) |
+| `functions/api/character-creator/_lib/validate-character.js:234` | *"Eight classes across four books state a floor like this"* |
+| `apps/character-creator/app.js:2031` | *"eight classes say…"* |
+
+Twenty-eight published classes hold `occ_related_skills.minimums` — derived by
+**parsing** every class rather than string-matching, `--remote`, 2026-09-05, for
+the `attribute_minimums` reason `R15` records above.
+
+`regression.mjs:1595` and `:1607` say **eleven** and are **correct**: eleven
+block-level notes match the floor phrase and all eleven hold a floor. Do not
+"fix" those to match.
+
+**Proposal:** this is a decision rather than an edit, which is why it is filed
+rather than swept. The number moves every time a class gains a floor and
+**nothing pins any of these six** — the smoke suite pins the README's catalog
+counts and not this sentence. So either drop the count from all six (*"classes
+across several books print a rule like this"*) or replace it with something
+derivable. Dropping it is the recommendation, on `SKILL-AUDIT` `F7`'s grounds:
+correcting an ordinal leaves the same trap armed, and every one of these six has
+now been wrong for a day without anything noticing.
+**Posture: PROSE AND COMMENTS ONLY.** No behaviour, no test, no data.
+
+**Evidence:** the six sites read individually, 2026-09-05; the count derived by
+parsing the live corpus the same day.
+**Confidence: high.**
+**Ongoing cost:** none if the count is dropped; the same rot again if it is
+merely updated.
 
 ---
 
