@@ -62,7 +62,11 @@ apps/character-creator/
 │                             the party stash and the currency ledger
 ├── catalog.html / catalog.js Admin-only catalog editor, generated from the
 │                             field config. catalog.js is an ES module.
-├── styles.css                All six pages, layered on /shared/styles.css
+├── codex.html / codex.js     Every spell and psionic power with its text, for
+│                             anyone. Read-only by construction — one GET and no
+│                             write path. NOT the editor above unlocked; see
+│                             docs/plans/20-power-descriptions.md
+├── styles.css                All seven pages, layered on /shared/styles.css
 ├── js/parser.js              RCC/OCC markdown parser (ES module — also used by the API)
 ├── js/dice.js                Dice evaluator (ES module — also used by the API)
 ├── js/leveling.js            XP curve and the level-up diff (ES module — the API
@@ -81,7 +85,7 @@ apps/character-creator/
 │                             the Workers runtime needs it too)
 ├── js/compose.js             The ONE place a character's classes become the
 │                             thing it is played as (ES module)
-├── js/api.js                 The one HTTP helper for all six pages, and
+├── js/api.js                 The one HTTP helper for all seven pages, and
 │                             errorDetails() (classic script)
 │   (also loaded by every page: /shared/js/ui.js, for escHtml — see below)
 ├── js/picker.js              Catalog picker filtering — matching, the filter
@@ -154,7 +158,7 @@ exposure (see the `Object.assign(window, …)` block at the bottom of `app.js`).
 
 `js/derive.js`, `js/picker.js` and `js/api.js` are deliberately *classic*
 scripts rather than modules, so the plain-script pages can use them without
-converting the whole file. `js/api.js` is loaded by all six pages and defines
+converting the whole file. `js/api.js` is loaded by all seven pages and defines
 `api()` and `errorDetails()`; there used to be five copies of `api()` in three
 variants, which is a nuisance while they agree and a bug when they do not — the
 wizard and the sheet learned to carry a failed response's `violations` through
@@ -422,6 +426,7 @@ writes are gated (see [Permissions](#permissions)).
 | `me` | GET | Caller's email and `is_admin` |
 | `classes` | GET | Published classes, parsed. `?system=` `?category=` `?include_retired=1`; `?names=1` is the id→name label projection (unfiltered, retired included). Sends an `ETag`, so a warm boot revalidates to an empty 304 instead of re-downloading ~750KB of markdown |
 | `catalogs` | GET | Skills, spells, psionic powers in one call — trimmed projection the wizard boots on. Sends an `ETag`, so a warm load revalidates to an empty 304 instead of re-sending ~25KB gzipped. The validator is a **hash of the body**, not the count-and-`max(updated_at)` aggregate `classes` uses: no catalog table has a timestamp column, and the editor's PATCH changes a value in place without moving a count or a max id |
+| `codex` | GET | Every spell and psionic power **with its description and stat block** — what `catalogs` deliberately omits. Any authenticated reader, not just an admin: it only reads. Its own route rather than a wider `catalogs`, because that payload is paid on every wizard boot and every sheet load and this one is paid by whoever opens the codex. Same body-hash `ETag`. See [plan 20](docs/plans/20-power-descriptions.md) |
 | `catalogs/rows` | GET / POST / PATCH | Admin. Whole rows for one catalog (`?catalog=`), create, and update (`&id=`). No delete |
 | `catalogs/duplicates` | GET / POST | Admin. Suggested duplicate pairs for a catalog; POST merges two rows. `?counts_only=1` returns just the per-tier counts, for the badge |
 | `catalogs/redirects` | GET / DELETE | Admin. Retired keys and where they resolve (`?catalog=`); DELETE stops forwarding one (`&id=`). No POST — redirects are written by merges and renames |

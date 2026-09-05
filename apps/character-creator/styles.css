@@ -1847,3 +1847,81 @@ body.play-mode .skill-table .roll-btn { margin-left: 6px; vertical-align: middle
   .vital .val b { display: inline !important; }
   .vital .bar, .vital .steppers { display: none !important; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   The codex — codex.html, every spell and psionic power with its text.
+   Its own page, so these rules touch nothing the sheet or the wizard uses.
+   See docs/plans/20-power-descriptions.md. */
+
+/* THE SHEET'S TAB BAR IS A NARROW-SCREEN AFFORDANCE: `.tabbar` is
+   display:none above 820px, where the sheet shows every panel at once. The
+   codex's tabs are its primary navigation at every width, and reusing the
+   class without this made them vanish on a desktop. Two classes, so the
+   .tabbar .tab styling still applies and the specificity (0,2,0) wins at
+   every width without depending on rule order. */
+.tabbar.codex-tabs { display: flex; }
+
+.codex-toolbar {
+  display: flex; align-items: center; gap: 8px;
+  margin: 10px 0 4px; flex-wrap: wrap;
+}
+.codex-toolbar input[type="search"] { flex: 1 1 220px; min-width: 0; }
+.codex-toolbar select { flex: 0 0 auto; }
+
+.codex-list { padding: 4px 0; }
+
+.codex-entry { border-bottom: 1px dotted var(--border); }
+.codex-entry:last-child { border-bottom: 0; }
+
+/* The whole row is the control, not a caret at one end: on a phone the target
+   should be the line you are already looking at. A grid rather than flex so
+   the cost column lines up down the page whatever the names do. */
+.codex-head {
+  display: grid; grid-template-columns: 1fr auto auto;
+  gap: 10px; align-items: baseline; width: 100%;
+  min-height: 44px;              /* sized for a finger, like .tabbar .tab */
+  padding: 6px 8px; text-align: left;
+  background: none; border: 0; color: inherit; font: inherit; cursor: pointer;
+}
+.codex-head:hover { background: var(--bg-tertiary); }
+.codex-name { font-size: 13.5px; }
+.codex-meta { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+.codex-cost {
+  font-family: var(--font-display); font-stretch: 75%; font-variant-numeric: tabular-nums;
+  font-size: 11px; color: var(--text-secondary); white-space: nowrap;
+}
+.codex-entry.open .codex-name { color: var(--accent); }
+
+.codex-body { padding: 2px 10px 12px; border-left: 2px solid var(--border); margin-left: 8px; }
+
+/* The printed stat block, label beside value. `auto 1fr` rather than two equal
+   columns: "Saving throw" and "Range" are very different lengths and a fixed
+   split leaves one of them looking orphaned. */
+.codex-stats {
+  display: grid; grid-template-columns: auto 1fr; gap: 2px 10px;
+  margin: 0 0 8px; font-size: 12px;
+}
+.codex-stats dt { color: var(--text-muted); }
+.codex-stats dd { margin: 0; color: var(--text-secondary); }
+
+/* pre-wrap for the same reason .power-desc uses it: the catalog holds the
+   book's own paragraph breaks, and escHtml plus pre-wrap shows them without
+   parsing prose that came out of a PDF. */
+.codex-text {
+  margin: 0 0 6px; font-size: 12.5px; line-height: 1.55;
+  color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: break-word;
+}
+
+/* A codex IS a reference document, so unlike the sheet it prints its prose.
+   But `.codex-head` is a <button>, and the shared print block hides every
+   button — printing the codex would have produced stat blocks with no names
+   above them, which is the exact bug .power-toggle hit on the sheet. */
+@media print {
+  .codex-toolbar, .tabbar.codex-tabs { display: none !important; }
+  /* min-height goes with it. 44px is a fingertip; carrying it to paper turned
+     607 spells into 29 pages where the same list fits in roughly half. */
+  .codex-head { display: grid !important; padding: 1px 0; min-height: 0; }
+  .codex-name, .codex-meta, .codex-cost { color: #000 !important; }
+  .codex-entry { break-inside: avoid; }
+  .codex-text, .codex-stats dd { color: #222 !important; }
+}

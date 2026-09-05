@@ -236,6 +236,41 @@ check('and carries skills, spells and psionics',
   }
 }
 
+// The codex: the same two catalogs WITH their description text, for the powers
+// a character does NOT hold. Its own route rather than a wider /catalogs,
+// because that payload is paid on every wizard boot and every sheet load. See
+// docs/plans/20-power-descriptions.md.
+{
+  const codex = await api('GET', '/codex');
+  check('/codex answers on a database built only from schema.sql',
+    codex.status === 200, codex.body);
+  check('and carries both catalogs whole',
+    (codex.body.spells || []).length === catalogs.body.spells.length
+    && (codex.body.psionics || []).length === catalogs.body.psionics.length,
+    `${(codex.body.spells || []).length}/${catalogs.body.spells.length} spells, ` +
+    `${(codex.body.psionics || []).length}/${catalogs.body.psionics.length} psionics`);
+  // The whole reason the route exists: the fields /catalogs deliberately omits.
+  check('with the description and stat-block fields /catalogs leaves out',
+    ['description', 'range', 'duration', 'saving_throw', 'casting_time']
+      .every((f) => f in (codex.body.spells?.[0] || {})),
+    Object.keys(codex.body.spells?.[0] || {}).join(', '));
+
+  // A player, not an admin. `catalogs/rows` is requireAdmin because it WRITES;
+  // this one only reads, and a codex only an admin can open is no codex.
+  const asPlayer = await apiAs('stranger@example.com', 'GET', '/codex');
+  check('any authenticated friend can read it, not just an admin',
+    asPlayer.status === 200, asPlayer.status);
+  const rowsAsPlayer = await apiAs('stranger@example.com', 'GET', '/catalogs/rows?catalog=spells');
+  check('while the editor route it replaces stays admin-only',
+    rowsAsPlayer.status === 403, rowsAsPlayer.status);
+
+  const firstHit = await fetch(`${BASE}/codex`);
+  const tag = firstHit.headers.get('ETag');
+  check('/codex sends a validator', !!tag, 'no ETag header');
+  const again = await fetch(`${BASE}/codex`, { headers: { 'If-None-Match': tag || '' } });
+  check('and a second visit revalidates to a 304', again.status === 304, again.status);
+}
+
 const items = await api('GET', '/items');
 check('/items returns the gear catalog', items.status === 200 && items.body.items.length > 0, items.body);
 

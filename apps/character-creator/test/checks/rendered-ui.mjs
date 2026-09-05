@@ -15,9 +15,37 @@
 
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+
 import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 import { fixedFormulaValue } from '../../js/dice.js';
 import { parseClassMarkdown } from '../../js/parser.js';
+
+// Every @media print block's body, brace-matched and concatenated.
+//
+// This replaces `css.slice(css.lastIndexOf('@media print'))`, which assumed the
+// LAST print block was the sheet's. styles.css has seven of them, and appending
+// an eighth for the codex retargeted eighteen assertions at it — all eighteen
+// failed at once, which was at least loud. The quiet version of that failure is
+// worse: a rule that happens to match in the wrong block reads as a pass. The
+// slice also swept up the ordinary screen CSS sitting between two print blocks,
+// so a screen rule could satisfy a print assertion.
+function printCss(css) {
+  const out = [];
+  let i = 0;
+  while ((i = css.indexOf('@media print', i)) !== -1) {
+    const open = css.indexOf('{', i);
+    if (open === -1) break;
+    let depth = 0;
+    let j = open;
+    for (; j < css.length; j++) {
+      if (css[j] === '{') depth++;
+      else if (css[j] === '}' && --depth === 0) break;
+    }
+    out.push(css.slice(open + 1, j));
+    i = j + 1;
+  }
+  return out.join('\n');
+}
 
 // Cut one function's body out of a source file, on either line ending.
 //
@@ -386,7 +414,7 @@ export function run() {
 
     // PAPER IS NOT A 1640px SCREEN. Every one of these was measured: without them
     // the printed sheet went from seven pages to eight.
-    const printBlock = css.slice(css.lastIndexOf('@media print'));
+    const printBlock = printCss(css);
     // Phase 4 held paper still by putting the body back to a plain block and
     // restoring the inner grids - the layout paper had before that phase.
     // Phase 7 replaced the hold with a real print layout: the body flows in
@@ -601,7 +629,7 @@ export function run() {
   section('The printed sheet');
   {
     const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
-    const print = css.slice(css.lastIndexOf('@media print'));
+    const print = printCss(css);
 
     // Multicol, not grid. A grid row is as tall as its tallest box, so a long
     // list beside a short one leaves the rest of the row blank; measured at five
@@ -890,7 +918,7 @@ export function run() {
       'undone events vanish from the log');
 
     // Phase 7 asked for this and could not add it: the class did not exist yet.
-    const print = css.slice(css.lastIndexOf('@media print'));
+    const print = printCss(css);
     check('a machine-written log does not print',
       /\.box\[data-box="session-log"\] \{ display: none !important; \}/.test(print),
       'the event log prints on the character sheet');
@@ -1057,5 +1085,51 @@ export function run() {
 
     check('the flush runs when the network returns',
       /addEventListener\('online'/.test(sheet), 'a reconnect does not flush');
+  }
+
+  // ---------- The codex ----------
+  // Plan 20's second half: every spell and psionic power with its text, for the
+  // ones a character does NOT hold. A seventh page, read-only by construction.
+  section('The codex');
+  {
+    const html = readFileSync(join(appDir, 'codex.html'), 'utf8');
+    const js = readFileSync(join(appDir, 'codex.js'), 'utf8');
+    const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
+    const sheetHtml = readFileSync(join(appDir, 'sheet.html'), 'utf8');
+    const wizardHtml = readFileSync(join(appDir, 'index.html'), 'utf8');
+    const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+
+    check('the page exists and loads its script',
+      /src="codex\.js"/.test(html) && /js\/api\.js/.test(html), 'codex.html does not load codex.js');
+
+    // Read-only is the security posture AND the reason it can be a player page
+    // at all: there is no write path to get wrong. Asserted against the file
+    // rather than trusted, because adding one would be a one-line change.
+    check('it is read-only by construction',
+      !/method:\s*'(POST|PATCH|PUT|DELETE)'/i.test(js) && !/jsonReq\(/.test(js),
+      'codex.js has grown a write path; it is served to every authenticated player');
+    check('and it asks for its own route, not the boot payload',
+      /api\('codex'\)/.test(js) && !/api\('catalogs'\)/.test(js),
+      'the codex is loading /catalogs, which is the payload plan 20 kept it out of');
+
+    // THE TRAP: .tabbar is display:none above 820px, because the SHEET's tabs
+    // are a narrow-screen affordance. Reusing the class without this rule makes
+    // the codex's tabs vanish on a desktop, which is where you browse a codex.
+    check('its tabs survive at desktop width',
+      /\.tabbar\.codex-tabs \{ display: flex; \}/.test(css),
+      '.tabbar is display:none above 820px and the codex would show no tabs there');
+
+    // Same lesson as .power-toggle on the sheet: the shared print block hides
+    // every button, and the codex row IS a button. A codex is a reference
+    // document, so unlike the sheet it prints its prose.
+    check('and its rows print, being a reference document',
+      /\.codex-head \{ display: grid !important;/.test(css),
+      'the blanket button rule leaves the printed codex as stat blocks with no names');
+
+    check('the sheet points at it from the powers tab',
+      /codex\.html/.test(sheet), 'nothing on the sheet mentions the codex');
+    check('and both pages carry a header link',
+      /codex\.html/.test(sheetHtml) && /codex\.html/.test(wizardHtml),
+      'the codex is reachable only by typing the URL');
   }
 }

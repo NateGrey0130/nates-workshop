@@ -1611,9 +1611,14 @@ function render() {
   </section>
 
   <section class="tabpanel${C.tab === 'powers' ? ' on' : ''}" data-tab="powers">
-    ${box('Psionics &amp; Magic', powers.length
+    ${box('Psionics &amp; Magic', (powers.length
       ? powerRows
-      : '<p class="muted small">None.</p>')}
+      : '<p class="muted small">None.</p>')
+      // The held powers carry their own text; everything this character does
+      // NOT have lives in the codex. Marked noprint: a link is useless on paper.
+      + `<p class="muted small noprint" style="margin-top:10px">
+           Looking for something this character does not have?
+           <a href="codex.html">Browse the codex</a>.</p>`)}
 
   </section>
 
