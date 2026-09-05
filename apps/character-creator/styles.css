@@ -948,6 +948,46 @@ body.play-mode .vital .steppers button:active { background: var(--accent-glow); 
    which is backwards; the cost is metadata beside the name, so --text-secondary. */
 .power-row .cost { font-family: var(--font-display); font-stretch: 75%; font-variant-numeric: tabular-nums; font-size: 11px; color: var(--text-secondary); white-space: nowrap; }
 
+/* A power the catalog has text for: the NAME is the control, so the press
+   target is the thing a player is already reading rather than a chevron bolted
+   on beside it. Styled to sit exactly where the plain text sat — same size,
+   same colour, no button chrome — because the row is dense and a real-looking
+   button on every line would read as a row of actions.
+
+   `text-align: left` and the padding reset are not optional: a <button>
+   centres its label and carries a user-agent padding, so without them every
+   row with a description would sit a few pixels off from the rows without one.
+   The caret is a ::after so it is not picked up when a player copies a spell
+   list out of the sheet. */
+.power-toggle {
+  display: inline; padding: 0; border: 0; background: none; text-align: left;
+  font: inherit; color: inherit; cursor: pointer;
+}
+/* 11px and --text-secondary, not 9px muted: at 9px this glyph renders as a
+   speck that reads as punctuation, and on a touch screen there is no hover
+   state to fall back on — the caret IS the whole affordance there. Checked on
+   a 768px render before and after. */
+.power-toggle::after {
+  content: '▸'; margin-left: 5px; font-size: 11px; color: var(--text-secondary);
+  display: inline-block; transition: transform 0.12s ease;
+}
+.power-toggle[aria-expanded="true"]::after { transform: rotate(90deg); }
+.power-toggle:hover, .power-toggle:hover::after { color: var(--accent); }
+
+/* The description itself. `pre-wrap` because the catalog stores the book's
+   paragraphs with their own line breaks, and turning those into <p> would mean
+   parsing prose that came out of a PDF — escHtml plus pre-wrap shows exactly
+   what the row holds and cannot inject markup.
+
+   Ruled on the left rather than boxed, so a long description sitting between
+   two power rows still reads as belonging to the one above it. */
+.power-desc {
+  margin: 2px 0 8px; padding: 6px 10px;
+  border-left: 2px solid var(--border);
+  font-size: 12px; line-height: 1.5; color: var(--text-secondary);
+  white-space: pre-wrap; overflow-wrap: break-word;
+}
+
 /* Compact inline inputs used across the sheet's field rows. A "derived" input
    shows its calculated value as a placeholder until someone overrides it. */
 .mini-in {
@@ -1420,6 +1460,22 @@ input.class-boosted { border-bottom-width: 2px; }
   .skill-row:has(+ .skill-note) { break-after: avoid; }
   .power-row .cost { color: #000; }
   .power-group { color: #222; break-after: avoid; }
+  /* Descriptions are a screen affordance. Plan 20 decided this deliberately:
+     one character's held powers carry about 8,000 characters of book prose,
+     which is roughly three extra pages on a sheet that exists to be a control
+     panel at a table. The caret goes with them — on paper the name is just a
+     name, not something that looks pressable. */
+  .power-desc { display: none !important; }
+  .power-toggle::after { display: none !important; }
+  /* AND THE NAME ITSELF HAS TO BE PUT BACK. The blanket rule above hides every
+     `button`, so making the power name a <button> deleted the spell names from
+     the printed sheet — costs and ⚡ columns with nothing to say what they were
+     for. Caught by a print render, invisible on screen, and the same trap
+     .roll-btn's comment already warns about: "the print block hides every
+     button, which is exactly why the ROW could not become one". `inline`
+     rather than the class's own `display`, because that is what the plain
+     <span> it replaced printed as. */
+  .power-toggle { display: inline !important; color: #000 !important; }
   .advisory { border-left-color: #999; color: #222 !important; }
   .panel h2 { font-size: 15pt; }
   .panel h3 { font-size: 10.5pt; color: #000; margin: 8px 0 2px; break-after: avoid; }

@@ -59,6 +59,37 @@ URL hash, so a link ending `#gear` opens on gear; a `hashchange` listener covers
 the same-document case, where nothing reloads. `replaceState`, not `pushState` -
 Back should leave the sheet for the character list, not walk tab history.
 
+## A power says what it does, in place
+
+Press a power's NAME in the Powers tab and its description opens under the row.
+The name is the control rather than a chevron beside it: it is the biggest
+target in a dense row and the thing a player is already looking at. A power the
+catalog has no text for keeps a plain span, so nothing offers a press that does
+nothing.
+
+**The text arrives with the character, not with the catalog.** `characters/[id]`
+returns `power_descriptions` for the powers this character holds — 4.4KB
+gzipped for the heaviest character on production, against 72.4KB to put the two
+catalogs' whole description corpus in the boot payload every wizard and sheet
+load already pays for. [Plan 20](plans/20-power-descriptions.md) has the
+measurements and the four options it rejected.
+
+Two things about it are load-bearing and easy to undo:
+
+**Which rows are open is state, not DOM.** `C.openPowerDescs` holds the indices.
+Plenty of things re-render this sheet — spending P.P.E. with the use button one
+row down does — and a description that closed itself when you cast something
+reads as a bug. The toggle itself does not re-render, for the same reason
+switching tabs does not.
+
+**On paper the name is a name and the description is gone.** Making the name a
+`<button>` put it inside the print block's blanket `button { display: none }`,
+which deleted every spell name from the printed sheet — a P.P.E. column with
+nothing to say what it was for. `.power-toggle` is put back explicitly, exactly
+as `.vital .val b` is. The descriptions themselves stay off paper on purpose:
+one character's held powers are about 8,000 characters of book prose, roughly
+three pages on a sheet that exists to be a control panel at a table.
+
 ## Filtering the catalog pickers
 
 Every picker used to render its whole catalog: 74 gear rows in two places, 128

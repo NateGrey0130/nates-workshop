@@ -652,6 +652,27 @@ export function run() {
     check('the tab bar is hidden explicitly, not by the button rule',
       /\.tabbar \{ display: none !important; \}/.test(print),
       'the tab bar is a div and the blanket button rule does not reach it');
+
+    // The same trap as the pool <b> above, and it was walked straight into: a
+    // power name with a description became a <button> so it could be pressed,
+    // and the blanket rule deleted every spell name from the printed sheet —
+    // a P.P.E. column with nothing left to say what it was for. A print render
+    // found it and nothing on screen could have. The fixture that caught it is
+    // test/fixtures/print-power-desc.html; plan 20 has the rest.
+    // `print` above is the LAST @media print block, which is the one that lays
+    // the paper out in columns. There are six in this stylesheet, and the power
+    // rules belong in the sheet's own block beside `.power-row .cost` rather
+    // than in the layout one — so these three read every print block.
+    const everyPrint = css.split('@media print').slice(1).join('\n@media print ');
+    check('a power name that became a button still prints',
+      /\.power-toggle \{ display: inline !important;/.test(everyPrint),
+      'the blanket button rule is deleting spell names from paper');
+    check('but its caret does not, being an affordance',
+      /\.power-toggle::after \{ display: none !important; \}/.test(everyPrint),
+      'a press-me caret prints beside every named power');
+    check('and a held power description stays off paper',
+      /\.power-desc \{ display: none !important; \}/.test(everyPrint),
+      'about 8,000 characters of book prose per character, roughly three pages');
   }
 
   // ---------- Trackable resources ----------

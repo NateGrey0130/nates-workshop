@@ -12,7 +12,8 @@
 // `spellLevelsForGrant` in js/leveling.js.
 
 import { json } from './auth.js';
-import { chunks } from './sql-chunk.js';
+import { chunks, selectInChunks } from './sql-chunk.js';
+import { resolveKeys } from './catalog-redirects.js';
 import { safeParse } from './character-json.js';
 import { categoryAllows, categoryLabel } from '../../../../apps/character-creator/js/parser.js';
 import { spellLevelsForGrant, psionicCategoriesForGrant, spellNamesForGrant, grantNote,
@@ -217,6 +218,68 @@ export async function loadPowerCatalog(env, names, system) {
   for (const r of spells.filter(keep)) empty.spell.set(r.name.toLowerCase(), r);
   for (const r of psionics.filter(keep)) empty.psionic.set(r.name.toLowerCase(), r);
   return empty;
+}
+
+// The description text for the powers a character ALREADY HOLDS, so the sheet
+// can render it inline without a second request at the table.
+//
+// This travels with the character rather than with the catalog, and that is the
+// whole design: the two catalogs' description text is 74.5KB gzipped and would
+// ride on every wizard boot and every sheet load, where the heaviest character
+// on production needs 4.4KB of it. Measured in
+// `docs/plans/20-power-descriptions.md`, which is also where the rejected
+// options are recorded.
+//
+// Keyed by the LOWERCASED NAME THE CHARACTER HOLDS, not by the catalog row's
+// name, because those two come apart: a stored power is a name-keyed snapshot,
+// and `catalog_redirects` exists because merges and renames retire the key it
+// snapshotted. Resolving through redirects is what class citations already do;
+// without it a renamed spell quietly loses its text and nothing says why.
+export async function loadPowerDescriptions(env, powers) {
+  const out = {};
+  const list = Array.isArray(powers) ? powers : [];
+  if (!list.length) return out;
+
+  // Which catalog each held name belongs to. A duplicate name across two
+  // characters' powers is one lookup, not two.
+  const wanted = new Map();
+  for (const p of list) {
+    const name = String(p?.name ?? '').trim();
+    if (name) wanted.set(name.toLowerCase(), p?.type === 'psionic' ? 'psionics' : 'spells');
+  }
+
+  for (const [catalogKey, table] of [['spells', 'spells'], ['psionics', 'psionic_powers']]) {
+    const names = [...wanted].filter(([, k]) => k === catalogKey).map(([n]) => n);
+    if (!names.length) continue;
+
+    // NOCASE, matching how loadPowerCatalog reads the same names.
+    const rows = await selectInChunks(names, (chunk) => env.DB.prepare(
+      `SELECT name, description FROM ${table}
+       WHERE name COLLATE NOCASE IN (${chunk.map(() => '?').join(', ')})`
+    ).bind(...chunk));
+    for (const r of rows) {
+      if (r.description) out[String(r.name).toLowerCase()] = r.description;
+    }
+
+    // Anything still unmatched may be a key that was retired under the
+    // character's feet. Ask where it went.
+    const missing = names.filter((n) => !(n in out));
+    if (!missing.length) continue;
+    const targets = await resolveKeys(env, catalogKey, missing);
+    if (!targets.size) continue;
+
+    const moved = await selectInChunks([...new Set(targets.values())], (chunk) => env.DB.prepare(
+      `SELECT id, description FROM ${table} WHERE id IN (${chunk.map(() => '?').join(', ')})`
+    ).bind(...chunk));
+    const byId = new Map(moved.map((r) => [r.id, r.description]));
+    for (const [heldName, id] of targets) {
+      const text = byId.get(id);
+      // Filed under the name the character holds, so the sheet can look it up
+      // with the string it already has in hand.
+      if (text) out[heldName] = text;
+    }
+  }
+  return out;
 }
 
 // What is left of a set of grants after some were spent, consuming from the

@@ -59,6 +59,9 @@ const C = { data: null, items: [], journal: [], catalog: [], cls: null, canWrite
             // Picker filter text, and the skill picks chosen so far. Both are
             // state rather than DOM so a re-render cannot discard them.
             invFilter: '', pickFilter: '', skillFilter: '', pickValues: {}, pickLangs: {},
+            // Held power descriptions, and which of them are open. State for
+            // the same reason as the filters above: the use button re-renders.
+            powerDescriptions: {}, openPowerDescs: new Set(),
             // Play mode: the same data through an action-first, phone-shaped
             // lens. playAmt is the selected quick-action amount; rollLog is
             // structured from day one so phase 3 can persist it unchanged.
@@ -118,6 +121,11 @@ async function load() {
     C.spellCatalog = catalogs.spells || [];
     C.pendingPowers = res.pending_powers || [];
     C.pendingPowersTotal = res.pending_powers_total || 0;
+    // What each held power does, for the Powers tab. Only this character's, and
+    // only the ones the catalog has text for — see the power rows below, and
+    // docs/plans/20-power-descriptions.md for why it does not come from
+    // /catalogs with everything else.
+    C.powerDescriptions = res.power_descriptions || {};
     C.psiCatalog = catalogs.psionics || [];
     // An inventory row stores enchantment SLUGS; without the definitions a
     // slug renders as a slug.
@@ -1210,15 +1218,37 @@ function render() {
     const left = c[pool + '_current'];
     const useBtn = w && cost != null && left != null
       ? `<button class="btn btn-sm btn-ghost noprint" data-pool="${pool}" data-cost="${cost}"${left < cost ? ' disabled' : ''} onclick="usePower(${i})">⚡ use</button>` : '';
+    // What the power DOES, when the catalog knows. It arrives with the
+    // character (`power_descriptions`), keyed by the lowercased name this
+    // character holds, so a row that resolves shows its text with no second
+    // request — the point being that the lookup still works when the wifi at
+    // somebody's kitchen table does not.
+    //
+    // The name becomes the control rather than adding a separate chevron: it is
+    // the biggest target in the row and the thing a player is already looking
+    // at. A row with no text keeps a plain span, so nothing offers a press that
+    // does nothing.
+    //
+    // Which rows are open is held in state rather than read off the DOM,
+    // because plenty of things re-render this sheet — spending P.P.E. with the
+    // use button one row down does — and a description that closed itself when
+    // you cast something would read as a bug. `i` is the index into
+    // `C.data.powers`, which is stable across a render.
+    const desc = (C.powerDescriptions || {})[String(p.name || '').toLowerCase()];
+    const open = C.openPowerDescs.has(i);
+    const nameCell = desc
+      ? `<button type="button" class="power-toggle" aria-expanded="${open}"
+           aria-controls="pdesc-${i}" onclick="togglePowerDesc(${i})">${escHtml(p.name)}</button>`
+      : escHtml(p.name);
     // A cost_note marks a variable cost: `cost` is the minimum, the use button
     // deducts it, and the note says how the real spend grows — the G.M. adjusts
     // the pool by hand for bigger spends, as at a real table.
     return head + `<div class="power-row">
-      <span>${escHtml(p.name)}
+      <span>${nameCell}
         ${p.cost_note ? `<span class="muted small">— ${escHtml(p.cost_note)}</span>` : ''}</span>
       <span class="cost">${cost != null ? cost + (p.cost_note && cost > 0 ? '+' : '') + (pool === 'ppe' ? ' P.P.E.' : ' I.S.P.') : '—'}</span>
       ${useBtn}
-    </div>`;
+    </div>${desc ? `<div class="power-desc" id="pdesc-${i}"${open ? '' : ' hidden'}>${escHtml(desc)}</div>` : ''}`;
   }).join('');
 
   const invRows = inventoryRowsHtml();
@@ -2139,6 +2169,26 @@ async function claimPicks() {
 
 // Spend PPE/ISP on a power — client-side arithmetic + the existing PATCH
 // endpoint (server still enforces owner/GM on the PATCH itself).
+// Open or close one power's description. Toggles the element rather than
+// re-rendering: a re-render rebuilds every input on the sheet, and the one
+// thing a press must never cost a player is a half-typed note — the same
+// reason switching tabs toggles classes. The state is recorded so a render
+// triggered by something else puts it back.
+function togglePowerDesc(index) {
+  // NOT `box`: js/sheet-layout.js exports a `box` helper and the smoke test
+  // fails a sheet.js that redefines one of its names, drift being how the two
+  // files came apart last time.
+  const descEl = document.getElementById('pdesc-' + index);
+  if (!descEl) return;
+  const opening = descEl.hasAttribute('hidden');
+  if (opening) descEl.removeAttribute('hidden');
+  else descEl.setAttribute('hidden', '');
+  if (opening) C.openPowerDescs.add(index);
+  else C.openPowerDescs.delete(index);
+  const btn = document.querySelector('[aria-controls="pdesc-' + index + '"]');
+  if (btn) btn.setAttribute('aria-expanded', String(opening));
+}
+
 async function usePower(index) {
   const p = (C.data.powers || [])[index];
   if (!p || typeof p.cost !== 'number') return;
