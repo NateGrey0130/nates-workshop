@@ -403,7 +403,7 @@ Cosmo-Knight is the only class that carries it. See
 
 `occ_related_skills.minimums` **is** enforced. It is the only floor in the block
 - `count`, `categories`, `only` and `except` are all ceilings - and it exists
-because eight classes across four books print a rule like *"select 8 other
+because classes across several books print a rule like *"select 8 other
 skills, but at least two must be selected from espionage and two from rogue
 skills"*. The wizard shows a running total per floor; the server refuses a
 character that can NO LONGER reach one, rather than one that has not reached it

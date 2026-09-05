@@ -1041,9 +1041,9 @@ function validateCategories(where, categories, errors) {
 //
 // `occ_related_skills` already says HOW MANY picks and WHICH categories are
 // legal, and narrows a category with `only` / `except`. All three are ceilings.
-// A floor is the opposite shape and could not be written at all, so eight
-// classes across four books carried the rule as prose in a `note` and offered
-// every pick freely - including the one thing each of their books forbids.
+// A floor is the opposite shape and could not be written at all, so classes
+// across several books carried the rule as prose in a `note` and offered every
+// pick freely - including the one thing each of their books forbids.
 //
 // TWO SPELLINGS, and the second is not decoration. The Freedom Fighter's floor
 // names one category:
@@ -1069,8 +1069,8 @@ const minimumCategories = (m) => (Array.isArray(m?.categories)
 
 /**
  * The related-skill floors of a class, normalised to `{ count, categories }`
- * with the sugar expanded. Empty when the class has none, which is all but
- * eight of them.
+ * with the sugar expanded. Empty when the class has none, which is most of
+ * them.
  *
  * The wizard, the server validator and this file's own checks all read the
  * floors through here, so the two spellings are resolved in exactly one place.
