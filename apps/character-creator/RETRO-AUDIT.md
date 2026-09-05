@@ -1487,7 +1487,7 @@ this was established rather than assumed. Guard on the literal being inserted.
 **Confidence: high** on the floors and on the draft.
 **Ongoing cost:** none, beyond whatever is decided about the draft.
 
-**Taken, 2026-09-05 (PR #PRNUM) — as written: both classes, both floors, the
+**Taken, 2026-09-05 (PR #740) — as written: both classes, both floors, the
 enforcement posture.** Applied to production before the merge
 (`zzzzz-retro-r15-ley-line-floors.sql`, six readbacks, `--remote`). Thirty
 published classes now hold a related-skill floor.
