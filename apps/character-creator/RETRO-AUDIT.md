@@ -1893,7 +1893,7 @@ where a description belongs, unlike the 230 spells that did.
 **Confidence: high.**
 **Ongoing cost:** none.
 
-**Taken, 2026-09-05 (PR #PRNUM) — folded into the spell backfill, as the finding
+**Taken, 2026-09-05 (PR #744) — folded into the spell backfill, as the finding
 recommended.** All four now carry the stat block the book prints and a citation
 that points at their entry (`zzzzz-r19-psionic-stat-blocks.sql`, seven
 readbacks, `--remote`). **Posture held: data only** — no description was touched.
