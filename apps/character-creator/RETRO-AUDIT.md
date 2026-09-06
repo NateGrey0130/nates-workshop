@@ -2421,7 +2421,7 @@ one was simply wrong.
 
 ---
 
-**`gear.slug NOT NULL` taken, 2026-09-06 (PR #PRNUM).** Migration
+**`gear.slug NOT NULL` taken, 2026-09-06 (PR #750).** Migration
 `047-gear-slug-not-null.sql`, applied to production before the merge.
 **`R21` now has nothing left standing.**
 
