@@ -774,6 +774,51 @@ glob and every grep, beside the documents describing how the repo works today.
 That is a real tax on a tree-wide search and it is accepted, because every
 alternative measured so far breaks something that cannot be grepped for.
 
+## A deferral is work. Give it a number or say you are dropping it
+
+A finding that scopes part of its subject out usually names the remainder as
+*"a separate finding"*, *"its own finding"* or *"a separate PR"* — and then
+nothing files one. The work is real, it has been measured, and it is now
+reachable only by reading the interior of a **closed** finding. It is not open,
+because open is a property of findings and this has no number.
+
+**So: file it in the same PR and cite it by number, or write that you are
+dropping it.** Filing costs a heading and a paragraph and obliges nobody —
+`## When not to` below forbids *taking* a finding in the PR that adds it, not
+adding one. `META-AUDIT` `A5` is the precedent for the mechanism: PR #644 filed
+`pick3cut5/AUDIT` `F11` and `F12` while taking `A5`, and took neither.
+
+**This is a generalisation, not a new rule.** `book-survey` → §8 has carried the
+workflow-scoped version since the batch protocol was written, as the rule *"worth
+memorising"*:
+
+> Import what the schema supports, record what was dropped in the row's
+> `extraction_notes`, file the gap in `BOOK-INGEST-AUDIT.md`, and keep going.
+> **Do not stop to implement.**
+
+`class-import` carries the citing half — *"Not stored; see `BOOK-INGEST-AUDIT.md`
+F8. ← never goes stale"*. What neither says, and what this section adds, is that
+the same discipline applies when the thing being deferred is **another finding**
+rather than a book's mechanic.
+
+**Measured 2026-09-06, which is why this is here rather than assumed.** Four
+deferrals were standing at `c54a794` with no number between them. Two were
+eventually caught by later passes, each as a one-off — `META-AUDIT` `A5` and
+`SKILL-AUDIT` `F32`, neither of which generalised. One resolved itself and left
+its own record asserting a condition that had become false. The rest were still
+true and still invisible, the oldest ten days old, on menus whose status headers
+correctly said nothing was open.
+
+**A deliberate drop is a complete answer and is cheaper than a number.** *"The
+`h2`→`h4` jumps are not worth fixing and this finding is not proposing them"*
+closes the question forever. What this section refuses is the third option —
+naming work, not filing it, and leaving a reader to infer which of the two
+happened.
+
+**No check, no list, no index of deferrals**, for the reasons the rest of this
+page gives. This governs the next finding written, and **no existing menu is
+retrofitted.** `META-AUDIT` `A16`.
+
 ## When not to
 
 Do not open a new menu for work belonging in an existing one, and do not add a
