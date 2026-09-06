@@ -47,7 +47,14 @@ import { isChoiceGroup, categoryAllows, categoryName, needsOccupation, relatedFl
          isAbilityChoice, isAbilityDefinition, abilityOptions, normalizeAbilities, abilityOccOptions } from '../../../../apps/character-creator/js/parser.js';
 
 import { skillGrantsFor, xpTableFor, thresholdFor, perLevelDiceOf,
-         startingGroups } from './leveling.js';
+         startingGroups, relatedAllowance, secondaryAllowance } from './leveling.js';
+
+// RE-EXPORTED, NOT DEFINED HERE, since RETRO-AUDIT R18. Both allowances moved to
+// `js/leveling.js` so the wizard can read the same implementation - it cannot
+// import from `functions/`, and a second copy is exactly the disagreement R18
+// was filed about. Re-exported so every existing server import and
+// `test/smoke.mjs` are unchanged.
+export { relatedAllowance, secondaryAllowance };
 import { isRepeatableRow, otherRowFor } from '../../../../apps/character-creator/js/language-skills.js';
 import { poolFormulaBounds, diceBounds, attributeCeiling } from '../../../../apps/character-creator/js/dice.js';
 import { psionicShape } from '../../../../apps/character-creator/js/psionics.js';
@@ -59,32 +66,6 @@ const norm = (s) => String(s ?? '').trim().toLowerCase();
 export async function loadSkillCategories(env) {
   const { results } = await env.DB.prepare('SELECT name, category FROM skills').all();
   return new Map(results.map((r) => [norm(r.name), r.category]));
-}
-
-// Related-skill allowance grows with level: the class's starting count plus
-// every scheduled grant the character has reached. Without this, any character
-// who levelled up and spent a pick would read as over their limit.
-export function relatedAllowance(cls, level) {
-  const base = cls?.skills?.occ_related_skills?.count ?? 0;
-  // Only related-kind grants. A class can schedule secondary picks too, and
-  // counting those here would let a character hold more related skills than the
-  // class ever allowed.
-  const granted = skillGrantsFor(cls, 1, level)
-    .filter((g) => g.kind !== 'secondary')
-    .reduce((n, g) => n + g.count, 0);
-  return base + granted;
-}
-
-// The same for secondary skills, which can also arrive on a schedule — the Long
-// Bowman gets one more at levels 4, 7, 10 and 13. Without this the class's
-// starting count was the permanent ceiling, so spending a pick the class had
-// just granted failed validation.
-export function secondaryAllowance(cls, level) {
-  const base = cls?.skills?.secondary_skills?.count ?? 0;
-  const granted = skillGrantsFor(cls, 1, level)
-    .filter((g) => g.kind === 'secondary')
-    .reduce((n, g) => n + g.count, 0);
-  return base + granted;
 }
 
 export function validateCharacter({ character, cls, skills, attributes, abilities, catalog,

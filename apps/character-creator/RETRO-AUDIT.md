@@ -1626,6 +1626,80 @@ through both (`relatedAllowance` 9 vs `count` 7).
 on the wizard's narrower number until the change is run against the suite.
 **Ongoing cost:** none — it removes a second copy of an arithmetic rule.
 
+**Taken, 2026-09-05 (PR #PRNUM) — WIDENED, on Nate's word, and the widening is
+the whole finding.** Taken as written it would have shipped the exact failure it
+says is impossible.
+
+### The finding was right about the bug and wrong about the fix
+
+> *"It cannot fail the other way — the wizard's allowance is never larger than
+> the server's — so this is a false alarm rather than a hole."*
+
+**True of the code as it stood. False the moment you change only the allowance**,
+because the allowance is only half of what the two sides disagree about. The
+**held list** is the other half, and `R18` never mentions it:
+
+- the server counts **every** row of `type: 'related'`, which includes the picks
+  made on the Advancement step (`app.js` writes them that way);
+- the wizard passed `S.related` alone — the level-one picks.
+
+So the wizard was narrow on **both** numbers and the errors cancelled in the
+safe direction. Raise one and it goes wide on that one and stays narrow on the
+other:
+
+| a Ley Line Walker at level 3, both banked picks spent off-Science | verdict |
+|---|---|
+| server | **422** — nine held, nine allowed, two owed, none left |
+| wizard as it was | warns — by luck, but it warns |
+| wizard with the allowance alone fixed | **silent** |
+| wizard with both fixed | warns, agreeing with the server |
+
+**That third row is the direction `R18`'s own text calls the one that matters.**
+It is reachable through the wizard's own UI, not only a crafted request.
+
+So both arguments now mirror the server: `relatedAllowance(cls, S.level)` and
+`S.related` plus the related-kind rows of `levelPickRows()`.
+
+### "The arithmetic already exists" understated it
+
+`relatedAllowance` lived in `functions/`, and **the wizard cannot import from
+there** — no build step, and nothing under `apps/` reaches into `functions/`.
+Taking this meant **moving** the function, or writing the second copy the
+finding says it is removing. It now lives in `apps/character-creator/js/leveling.js`
+beside `skillGrantsFor`, the only thing it needs, and `validate-character.js`
+re-exports it so every server import and `test/smoke.mjs` are unchanged. That is
+the precedent `functions/.../_lib/leveling.js` already sets in its own header.
+
+### Nothing in the suite touched this, so something does now
+
+`app.js` is only ever read as **source text** by the smoke suite, never
+executed, so this fix would neither break a test nor be verified by one. Six
+checks were added against the lifted helper, and they pin the two boundary cases
+rather than the happy path: **the false alarm** the old code produced, and **the
+silent failure** a half-fix would have. `SMOKE TEST PASSED (1684 checks)`, up
+from 1678.
+
+### What is NOT verified, stated rather than glossed
+
+**The rendered readout was not seen.** The dev server was started on 8791 and
+confirmed to be serving this branch — the new comment, the new import and the
+moved function were all fetched off it — but the wizard walk did not reach the
+Skills step: the class picker would not register a selection through the pane,
+leaving *"Choose 1 more power to continue"* and a disabled Confirm. **So this is
+verified at the unit level and unverified at the page level**, which
+`verify-ui` says to declare rather than let a DOM-based check read as
+confirmation.
+
+The residual risk is small and worth naming precisely: **no markup and no CSS
+changed**, and `floorsHtml` is untouched — only the two numbers handed to it
+move. What a render would catch that the unit checks cannot is a wiring mistake
+in `relatedFloors` itself, and the six checks exercise that function's exact
+arithmetic on both sides of the boundary.
+
+**The local wizard draft was snapshotted before the walk and restored after**,
+byte-for-byte including its `updated_at`; the dev server's whole process tree
+was killed by command line, leaving the other wrangler instance alone.
+
 ### R16 — medium — the check that is supposed to catch the next floor cannot see any of the seven
 
 **FILED, NOT TAKEN.** `regression.mjs`'s per-category floor invariant came from

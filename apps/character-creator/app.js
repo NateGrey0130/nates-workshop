@@ -26,7 +26,7 @@ import { composeClass } from './js/compose.js';
 import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant,
          spellNamesForGrant, grantNote,
          skillGrantsFor, spellGrantsFor, psionicGrantsFor, startingGroups,
-         startingPicksFor } from './js/leveling.js';
+         startingPicksFor, relatedAllowance } from './js/leveling.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
 const STEPS = ['System', 'Race', 'Attributes', 'Occupation', 'Skills', 'Equipment', 'Powers',
@@ -2051,10 +2051,30 @@ function skillByName() {
 // Categories come from the CATALOG row, not from the class's own list: the
 // class names a category it allows, and whether a given skill belongs to it is
 // the catalog's answer. The same rule the server validator follows.
+//
+// BOTH ARGUMENTS HAVE TO MATCH THE SERVER, and RETRO-AUDIT R18 is about what
+// happens when only one of them does. This used to pass
+// `occ_related_skills.count` as the allowance and `S.related` alone as the
+// picks held. Both were narrower than the server's view, and the two errors
+// cancelled: the wizard over-warned, which is wrong but safe.
+//
+// Fixing only the allowance would have been WORSE THAN THE BUG. Wide on one
+// side and narrow on the other, the wizard would fall silent on a build the
+// server refuses - a Ley Line Walker who spends both level-3 picks off-Science
+// gets HTTP 422 while the review step says nothing. A missed alarm beats a
+// false one only for whoever is not holding the character.
+//
+// So the allowance grows with the level, exactly as `relatedAllowance` does
+// server-side, AND the level-granted picks count toward the floors, because
+// `levelPickRows()` writes them with `type: 'related'` and the validator reads
+// every related-typed row.
 function relatedFloors(cls) {
   const index = skillByName();
-  return relatedFloorStatus(cls, S.related.map((n) => index.get(n)?.category),
-    cls?.skills?.occ_related_skills?.count);
+  const held = [
+    ...S.related.map((n) => index.get(n)?.category),
+    ...levelPickRows().filter((r) => r.type === 'related').map((r) => r.category),
+  ];
+  return relatedFloorStatus(cls, held, relatedAllowance(cls, S.level));
 }
 
 // "at least 2 Espionage (1) and 2 Rogue (0)" - the running total per floor,
