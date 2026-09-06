@@ -423,7 +423,11 @@ CREATE INDEX IF NOT EXISTS idx_character_grants_character
 -- called `items` sitting next to it was the most likely future collision.
 CREATE TABLE IF NOT EXISTS gear (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  slug TEXT UNIQUE,                     -- matches equipment_starting item_id refs in class markdown
+  slug TEXT NOT NULL UNIQUE,            -- matches equipment_starting item_id refs in class markdown,
+                                        -- and since migration 046 the only key inventory
+                                        -- holds. NOT NULL since 047: UNIQUE alone permits
+                                        -- any number of NULLs, and a slugless gear row
+                                        -- would join to nothing.
   name TEXT NOT NULL,
   system TEXT CHECK (system IN ('rifts', 'palladium-fantasy', 'both')),
   category TEXT,                        -- weapon | armor | vehicle | cybernetics | gear
@@ -727,6 +731,14 @@ WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'chara
 -- 004's rename does: the new column present AND the old one gone. Testing only
 -- for the absence would mark a database that never had the column as migrated,
 -- and testing only for the presence would mark 044 as 045.
+-- 047 adds a constraint rather than a column, and `notnull` is the one schema
+-- feature pragma_table_info DOES expose - so unlike 045's guard this needs no
+-- sqlite_master text match.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '047-gear-slug-not-null.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('gear')
+               WHERE name = 'slug' AND "notnull" = 1);
+
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '046-drop-inventory-item-id.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('character_items') WHERE name = 'gear_slug')
