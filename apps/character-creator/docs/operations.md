@@ -600,12 +600,28 @@ says `--file` returns a summary rather than results and that exit codes here are
 advisory; the counts inside that summary are advisory too. Dump the table and
 diff it.
 
-Three conventions hold across all of them, with one stated exception: the
-dev seed is a different kind of file and follows only the third. Its inserts
-are unguarded and re-applying it fails on `gear.slug`, which is the right
-behaviour for a file whose whole job is to put known rows into an empty
+Four conventions hold across all of them, with one stated exception: the
+dev seed is a different kind of file and follows only the run-recording one.
+Its inserts are unguarded and re-applying it fails on `gear.slug`, which is the
+right behaviour for a file whose whole job is to put known rows into an empty
 local database.
 
+- **Never key a catalog write on a literal `id`.** Match on `name` for skills,
+  spells and psionic powers, and on `slug` for gear; all four columns are
+  `UNIQUE`, so it costs nothing. Catalog ids are
+  `INTEGER PRIMARY KEY AUTOINCREMENT` — **insertion order**, and insertion
+  order is not the same in two databases. Measured against a rebuild on
+  2026-09-05: **0 of 1025 gear ids matched production**, along with 344 of 345
+  skills, 551 of 607 spells and 96 of 116 psionic powers. So `WHERE id = 283`
+  is `Fire: Fire Gout` in production and `Earth: Track` in a rebuilt database,
+  and a script written that way writes the right data onto the wrong rows
+  **with no error at all**. It happened while writing the Book of Magic
+  backfill, and the readback caught it only because it counted the whole
+  corpus rather than the rows the script had touched — which is the argument
+  for writing readbacks that way.
+  **A JOIN on an id is fine**: `gear.id = character_items.item_id` is a
+  relation inside one database and says nothing about which. Eight scripts do
+  it and all eight are correct. `test/smoke.mjs` refuses only a literal number.
 - **Every statement guards itself**, so a script is safe to run twice and safe
   to run *early*. `retire-gear-placeholders.sql` is the clearest case — it does
   nothing at all until the options it rewrites toward exist, and its closing

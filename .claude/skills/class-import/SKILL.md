@@ -298,6 +298,16 @@ A consequence worth knowing: running `class-check` against the original `.sql`
 afterwards still reports the pre-fix state. **The `.sql` reports the state it
 creates; the database is the current truth.**
 
+**Key a CATALOG write on `name`, or on `slug` for gear - never on a literal
+`id`.** Classes are keyed on `class_id`, which is a slug and stable, so the
+example above is right. A catalog row is not: `spells.id` and its siblings are
+`INTEGER PRIMARY KEY AUTOINCREMENT`, so they are insertion order, and insertion
+order differs per environment. Measured on 2026-09-05, a database rebuilt from
+the repo matched production on **0 of 1025 gear ids**. `WHERE id = 283` is
+`Fire: Fire Gout` in production and `Earth: Track` in that rebuild - the right
+data on the wrong row, with no error. `name` and `slug` are `UNIQUE`, so the
+safe key costs nothing, and `test/smoke.mjs` refuses a literal one.
+
 ## When a class needs the app to change
 
 Expected, not a failure of the import. The Godling's Magic Powers demanding an
