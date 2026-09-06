@@ -3536,3 +3536,174 @@ and it now goes red under the same injection. **A check whose name overstates
 what it pins is worse than no check**, and this one was mine.
 
 Smoke 1694 → **1698.**
+
+---
+
+## Filed 2026-09-06, from what F29 made visible
+
+`F29` ended by saying gear now returns **511 pairs, 34 of them `certain`**, and
+that the button finally has something behind it. Reading those 34 is what
+produced these. **None is taken by the PR that filed it.**
+
+The 34 split three ways, and only one of them is a duplicate:
+
+| shape | count | what it is |
+|---|---|---|
+| bare vs qualified — `Cape` / `Cape (Long)`, `Plate Armor` / `(Half Suit)` | **27** | distinct items |
+| cross-system — `Large sack` `palladium-fantasy` vs `Large Sack` `rifts` | **18** | deliberate, one row per book |
+| same system, same shape, genuinely one row twice | **1** | `F32` |
+
+*(The two shapes overlap: 15 pairs are both.)*
+
+### F30 — medium — `F27`'s rule was built on one instance and gear gives 27 counterexamples
+
+`F27` demotes a `certain` pair when **both** names carry a bracketed qualifier
+and they differ. It deliberately left the **bare-vs-qualified** case in
+`certain`, on this reasoning, quoted from its own text:
+
+> *"only one of those two carries a qualifier — the other is the bare form, which
+> is what a real duplicate of this shape looks like."*
+
+**That generalised from a single instance, and it is wrong on gear.** Measured
+2026-09-06 over the live gear rows: **27 of the 34 `certain` pairs are
+bare-vs-qualified, and not one of them is a duplicate.** `Plate Armor` against
+`Plate Armor (Half Suit)`; `Cape` against `(Short)`, `(Long)`, `(Long, hooded)`;
+`Tent` against `(One man)`, `(Two man)`, `(4 man)`; `Charcoal` against
+`(per pound)` and `(Dozen sticks)`; `Healing` against `Healing (superior)`;
+eight armour half-suits. On a gear catalog that shape means **base item and its
+variant**, which is exactly what a catalog should hold separately.
+
+**`Law` / `Law (General)` was the exception, and it took two books to know
+that.** It read as a duplicate only because one side was a stale import citing
+`Rifts Skill List`, which is not a book — `F28` had to read RUE printed 303 to
+establish it. Nothing mechanical separates the two cases: `same_numbers` does
+not, because `Law` differed 25 against 35 exactly as `Plate Armor` differs from
+its half suit.
+
+**Proposal, and it is a reversal of something shipped hours earlier.** Demote
+bare-vs-qualified to `contains` as well — that is, treat *any* disagreement in
+the bracketed qualifiers as a demotion, including the case where one side has
+none. `contains` is a list to read, so nothing is lost but the word `certain`,
+and the honest state of that pair is *"probably a variant, look at it"*.
+
+**What it costs, stated rather than hidden:** the `Law` pair would have been
+demoted too, and `F28` might not have been noticed. That is the real trade and
+it is why this is filed rather than taken — `certain` becoming empty on skills
+and near-empty on gear is a defensible outcome only if the tier's job is
+*"merge without re-reading"*, which is what its own comment says it is.
+
+**Posture: one condition widened in `catalog-merge.js`, and the comment `F27`
+rewrote corrected again. No pair dropped, no merge performed, nothing written.**
+
+**Decline it** if the judgement is that a `certain` tier which is right once in
+thirty-four is still better than one that is empty. The counter is that a tier
+nobody can trust is a `contains` list with a misleading name.
+
+**Evidence:** the 34 pairs computed from the live gear rows 2026-09-06, with the
+bare-vs-qualified split counted per pair; `F27`'s own text read the same day;
+`F28`'s outcome note for why `Law` needed the book.
+
+**Confidence: high** on the 27 and on none of them being duplicates — they are
+readable one line at a time. **Medium** on the remedy, because it removes the
+only mechanism that surfaced `F28`. What would raise it: whether any real
+duplicate anywhere in the catalogs has the bare-vs-qualified shape, which is one
+pass over all four catalogs and was not run.
+
+**Ongoing cost:** none.
+
+### F31 — medium — `findDuplicates` has no `system` guard, and gear is duplicated across systems on purpose
+
+The tier logic demotes a pair whose rows sit in different **categories**, and
+`catalog-merge.js:118-127` explains why: *"Two rows filed under different
+categories are not the same row, however alike the names look."*
+
+**`system` is the same argument one column over, and it is not checked.** Gear
+carries `rifts`, `palladium-fantasy` and `both`, and the catalog deliberately
+holds one row per book because the economies differ. Measured 2026-09-06:
+**18 of the 34 `certain` gear pairs are cross-system.**
+
+`Large sack` (`palladium-fantasy`, cost 3) against `Large Sack` (`rifts`,
+cost 2). `Sleeping bag` (`palladium-fantasy`, 30) against `Sleeping Bag`
+(`rifts`, 110). `Back pack` against `Backpack`. The `-pf` suffix on those slugs
+says outright that the split is intentional.
+
+**Proposal:** extend the existing `clash` test to `system` as well as
+`category` — two rows are not the same row if either column disagrees. Reuse the
+same demotion and the same *"probably different"* confidence sentence rather
+than inventing a second mechanism.
+
+**Posture: one condition, mirroring the guard beside it. Demote, never drop.**
+A cross-system pair still appears under `contains`, because a row filed under
+the wrong system is itself worth seeing.
+
+**Decline it** if a cross-system pair is considered worth a confident flag. It
+is not obviously wrong to want them surfaced — but `certain` is the tier a
+person acts on, and the action repoints characters.
+
+**Evidence:** the 34 pairs computed from live gear rows 2026-09-06, split by
+`system`; the four rows above read from production the same day;
+`catalog-merge.js:118-133` read the same day.
+
+**Confidence: high.** The mechanism already exists for `category` and this is the
+same test on a second column. **What would raise nothing** — this one is not in
+doubt; the only judgement is whether the guard is wanted.
+
+**Ongoing cost:** none.
+
+### F32 — low — `Sleeping Bag` exists twice under `rifts`, and one of the rows says so in its own description
+
+The one unambiguous duplicate in the gear catalog. Production, 2026-09-06:
+
+| id | slug | name | system | cost | cited by |
+|---|---|---|---|---|---|
+| 10020 | `sleeping-bag` | Sleeping Bag | `rifts` | 110 | **3 classes** |
+| 10523 | `sleeping-bag-rifts` | Sleeping Bag | `rifts` | 110 | **10 classes** |
+
+Same name, same system, same category, same cost, same
+`Rifts Ultimate Edition p.261-265`. And **10523's own `description` ends**:
+*"Same item as the plain Sleeping Bag row; the two should probably be merged."*
+
+**Somebody already found this and wrote it into the data, where nothing acts on
+it.** That is `META-AUDIT` `A16`'s shape in a place `A16` did not look — not a
+deferral to an unfiled finding, but a note in a row. No sweep reads catalog
+descriptions for todo items, and none should; the row is the wrong home for it.
+
+**No character holds either** — `character_items` is 0 for both slugs — so
+nothing a player owns changes.
+
+**Proposal: keep `sleeping-bag`, retire `sleeping-bag-rifts`, and move the ten
+citations in the same script**, with a `catalog_redirects` row as belt and
+braces. `sleeping-bag` is the canonical slug; `-rifts` exists only because an
+importer collided with a name already taken, and it is the row carrying the
+apology.
+
+**The citations must move rather than rely on the redirect.** Class equipment is
+cited by **slug**, and `RETRO-AUDIT` `R20` established that the wizard's boot
+payload carries no redirects — the server resolves them and the picker does not.
+`F28` took the other direction for exactly this reason and could, because the
+survivor's name did not change. Here it does, so the ten move.
+
+**Ten, not thirteen, and zero classes cite both** — `burster`, `psi-stalker`,
+`freelancer`, the two Knights of the Order, `symbiotic-warrior`, `apok`, `monk`,
+`wormspeaker`, `wormwood-priest-of-light`.
+
+**Posture: one data script, applied to production before its own merge. No
+schema change, no code change. It DOES rewrite class markdown**, which `F28`'s
+did not — ten `item_id` values, guarded on the old slug.
+
+**Decline it** if two rows for one sleeping bag is not worth ten class edits.
+The counter is that the picker offers both today, indistinguishable, and a class
+list that grants one is one row away from granting the other.
+
+**Evidence:** both rows read from production 2026-09-06; the citation counts
+from a script over all 169 published classes' markdown, matching the quoted slug
+forms exactly — **the inline `LIKE` version of that count was wrong**, reporting
+ten classes citing both when the answer is zero, which is `windows-shell`'s
+quoting trap and the reason the count was redone in a file.
+
+**Confidence: high** on the duplicate and on the counts. **Medium** on ten class
+edits being the right shape rather than keeping `-rifts` and moving three; what
+would settle it is whether anything outside class markdown cites either slug,
+which was checked for `character_items` and not for the rest of the tree.
+
+**Ongoing cost:** none.
