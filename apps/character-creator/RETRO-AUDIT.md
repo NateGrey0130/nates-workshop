@@ -2330,7 +2330,7 @@ was its own — the payload returns `items` at the top level.
 
 ---
 
-**The drop taken, 2026-09-06 (PR #PRNUM).** Migrations `045-inventory-check-on-slug.sql`
+**The drop taken, 2026-09-06 (PR #749).** Migrations `045-inventory-check-on-slug.sql`
 and `046-drop-inventory-item-id.sql`. `item_id` is gone from both tables and
 `gear_slug` is the only key. **The first of the two things left standing above is
 now done; the second, `gear.slug NOT NULL`, still is not.**
