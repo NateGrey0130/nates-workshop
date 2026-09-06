@@ -738,6 +738,23 @@ header calls that placement the thing that misreads it.
 
 **None of these is taken.** Nothing below has been decided.
 
+**Corrected 2026-09-06: the sentence above is a record of 2026-09-03 and has
+been false since the next day.** `F12`, `F13` and `F14` below it were all taken
+2026-09-04 — PRs #672, #670 and #671 — and `F11` was declined. **Read each
+finding's own note**; this line is left standing rather than edited, because
+this file is a record and because how it went wrong is worth more than a tidy
+paragraph.
+
+**It is the exhibit `META-AUDIT` `A17` was re-scoped onto, and the reason is
+that nothing could have caught it.** The sentence names **no finding number**,
+so a taker of `F12` grepping this very file for `F12` gets thirteen lines and
+this is not one of them; the tree-wide sweep in `audit-menu` →
+*ANYTHING that cites a finding goes stale* cannot see it either, and neither can
+`scripts/audit-citations.mjs`. `A13` forbids a per-finding state in a **status
+header** and this is a `##` section lead, which that rule did not reach until
+`A17` extended it. **A numberless claim about numbered work is invisible to
+every sweep here**, which is why not writing one is the only defence.
+
 ### F11 — the pass grew the file it audits by roughly 13%
 
 `ship-pr/SKILL.md` was **386 lines when this menu was filed** and is **438 after
