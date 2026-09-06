@@ -108,6 +108,20 @@ export const CORE_SDC_BY_CLASS = {
   'ngr-infantry-soldier': '3D6',
   'ngr-communications-officer': '3D6',
   'ngr-medical-officer': '3D6',
+  // The Armored Division, printed 161-170. Same reading as the Army above.
+  // Three of these five have a body the catalog does not store - the Cyborg
+  // Soldier's chassis, the Robot Soldier's robot, and the Power Armor
+  // Commando's T-31 - so their real durability is M.D.C. that lives in a
+  // BOOK-INGEST-AUDIT.md F3 vessel, and the S.D.C. here is what the character
+  // has outside it. For the ROBOT SOLDIER that is close to moot: it has no
+  // human body left at all. It is listed at 3D6 rather than left out because
+  // the table's own rule is that a class printing no S.D.C. formula must
+  // appear here or fail the smoke test, and 3D6 is what its division gets.
+  'ngr-cyborg-soldier': '3D6',
+  'ngr-field-mechanic': '3D6',
+  'ngr-power-armor-commando': '3D6',
+  'ngr-robot-combat-pilot': '3D6',
+  'ngr-robot-soldier': '3D6',
 
   // Practitioners of magic, psychics and scholars — 1D6.
   'burster': '1D6',

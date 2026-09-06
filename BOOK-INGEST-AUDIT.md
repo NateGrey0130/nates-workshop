@@ -2679,3 +2679,57 @@ signature "counts 21 rows and 20 of them are correct". `INGESTION-AUDIT` `F5`'s
 outcome note settled on 5 stubs of 21, which makes 16 correct. They disagree by
 four, and neither figure is this finding's. Not filed as a finding; raise it if
 it is worth one.
+
+### F23 - an O.C.C. whose skills are ANOTHER O.C.C.'s, and a skill grant that picks CATEGORIES rather than skills
+
+**Filed 2026-09-06, from the `triax` Armored Division batch (PR #777). Not
+implemented, per the standing constraint.** The NGR Robot Soldier
+(`ngr-robot-soldier`, `apps/character-creator/db/add-ngr-robot-soldier-class.sql`)
+shipped with **no `occ_skills`, no `occ_related_skills` and no
+`secondary_skills` block at all** - the only published O.C.C. in the catalog in
+that state - because both of the ways its book gives it skills are shapes the
+app does not have. It parses, validates and composes; it simply grants nothing.
+
+**Two distinct gaps, filed together because one class needs both.**
+
+**(a) Skills inherited from a DIFFERENT occupation, frozen at a level.** Rifts
+World Book 5 printed 170 says the robot soldier's range of skills IS the
+character's previous O.C.C. training - presumably one of the military O.C.C.s -
+held at the experience level it had when the conversion happened, and that those
+skills do not improve again until the character reaches that same level as a
+robot soldier. A character therefore has two occupations in sequence, not one,
+and the second one's ladder gates when the first one's percentages resume
+rising. `combineClasses` composes a RACE with an OCCUPATION; there is no slot
+for a prior occupation, and `supersedes_race` is not it - that flag is about a
+race being replaced, and this is an occupation being carried forward with its
+skills frozen.
+
+**(b) A grant of CATEGORIES rather than of skills.** The same page lets the
+character select up to three skill categories and makes **every** skill in each
+selected category available at a flat 38%, with no bonuses, no per-level gain,
+and every task taking 1D4 times longer. `occ_related_skills` picks N skills from
+a list of categories; this picks N categories and grants all of their contents
+at a fixed percentage. The two are not the same shape and the second cannot be
+expressed as the first: writing it as a large `count` would let the player take
+38% skills from a category the book did not grant, and writing it as one
+category with `only` would need every skill name enumerated and re-enumerated
+whenever the catalog grows - which is the objection `class-import`'s reference
+already records against `powers_from`.
+
+**What was stored instead.** Only what the book states in its own right: the
+combat bonuses, the four saves, the three extra melee attacks at levels 2, 6 and
+12, and `starting_money`. The inherited-skills rule, the three skill programs
+and the book's fourteen categories with their exclusions are written out in the
+class body, so a GM at the table has them and the app does not pretend to.
+
+**Not urgent, and worth saying so.** One class in 177 is affected, its book
+gives a GM a workable manual procedure, and the class is playable without it.
+The reason to record it is that a reader meeting a skill-less O.C.C. will
+reasonably assume the import was incomplete. It was not.
+
+**A caution for whoever takes this.** Do NOT read (b) as an argument for a
+`categories_allowed`-style key on skills. `psionics.categories_allowed` narrows
+what a pick may come from; this grants the whole category outright at a fixed
+percentage and is closer to a second, parallel skill list than to a restriction.
+Check what `js/leveling.js` and `js/derive.js` do with a skill carrying no
+per-level gain before assuming a flat 38% is expressible either.
