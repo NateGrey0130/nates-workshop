@@ -2698,6 +2698,68 @@ pass can tell, and that is stated rather than left implied.
 
 **Ongoing cost:** none. It replaces one grep with a narrower one.
 
+**Adjusted 2026-09-06, and RE-SCOPED before being taken. The central inference
+above does not hold.** `audit-premise-auditor` checked it before implementation
+and the proposal shipped is not the one written above. Nate approved the
+re-scope. The original text stands because this file is a record, and because
+being wrong in this particular way is the more useful half.
+
+**The inference that fails is *"the sweep was run and defeated by ambiguity."*
+Three separate things break it, and none of them was measured above.**
+
+- **Exhibit 2 is not stale, and `A3` had already settled it.**
+  `BOOK-INGEST-AUDIT`'s header — the one `A3` itself shipped — says: *"`F12`'s
+  outcome note still says `F3`'s schema half is open, **and it is not wrong.** It
+  is a measurement dated 2026-08-31 and it stays as one."* `A3`'s own text goes
+  further: *"Leave `F12`'s note, the class notes, and the rest of the header
+  alone."* So the sweep **found** it and a finding **chose** to leave it. The
+  claim above that *"the header and a finding in the same file now disagree"* is
+  **false** — the header reconciles them in writing, and this finding failed to
+  read the finding that owns the surface.
+- **Exhibits 1 and 2 predate the rule they are offered as failures of.** *"Grep
+  the whole tree for its number"* entered the skill on **2026-09-02**;
+  `REBUILD-AUDIT` `F13`/`F15` shipped 2026-08-28 and `BOOK-INGEST` `F12`'s note
+  is dated 2026-08-31. Only exhibit 3 postdates it.
+- **Exhibit 3 carries no finding number at all**, so **no** grep of any width
+  reaches it — not tree-wide, not per-menu, not `audit-citations.mjs`. It is not
+  evidence about ambiguity; it is evidence about something else entirely, and it
+  is the one exhibit that survives.
+
+**Three smaller errors, each of which would have misled a taker.** The
+*twelve menus / 75%* figures are **not** in `## Which is why a finding reference
+names its menu` — `A14` removed every count from that table and wrote *"Do not
+put the figures back"*; they live in `docs/prompts/protocol-retrospective-prompt.md`.
+The evidence line's `:395` names the wrong section (`Never grep for the outcome
+note`); the one meant is at `:345` and is a `###`. And the hit counts reproduce
+only **with a word boundary** — a literally bare `grep -c F3` returns **252**,
+because it eats `F30`–`F39`.
+
+**What survives is narrower, newer, and does not need a grep at all.**
+
+> A sentence that states **another finding's state** is unreachable by every
+> sweep this repo has, when it is written **without a number**. `A13` forbids one
+> in a status header. Nothing forbids one in a `##` section lead, and
+> `SHIP-PR-AUDIT`'s *"None of these is taken. Nothing below has been decided"*
+> is exactly that: written after the rule landed, above four findings that are
+> now decided (`F12`, `F13`, `F14` taken as #672, #670, #671; `F11` declined),
+> and containing **no `F11`, no `F12`, no number of any kind** — so a taker of
+> `F12` grepping that very file for `F12` gets thirteen lines and **line 739 is
+> not one of them.**
+
+**Taken, 2026-09-06, as the re-scope. Posture held: documentation only, one
+paragraph in one existing section, no check, no script, no retrofit, and the
+three sentences above are records and were NOT edited.** The paragraph extends
+`## What a status header may carry, and what it may not` from headers to any
+prose, on the ground `A13` already gives — the state lives under the finding,
+which is the one place it cannot disagree with itself.
+
+**The per-menu grep was NOT shipped**, and that is the substantive change from
+the text above. It would have addressed the two exhibits that predate the rule
+and missed the one that postdates it. Its own proposal contradicted itself on
+whether it replaced the tree-wide sweep or sat beside it, which is the tell.
+**Not to be re-proposed** without an exhibit that a number grep could actually
+have caught.
+
 ### A18 — low — the open set, measured once, and the one bit a durable header still gets wrong
 
 Nate's third question was what is actually open, because answering it today means

@@ -488,6 +488,22 @@ it belongs in a header and why `F42` could remove it from a table about shape
 without anything being lost. **What a header still may not do is give each of
 those findings its state on the way past.**
 
+**And the same prohibition applies wherever the sentence is written, not only in
+a header.** A `##` section lead, an outcome note, a preamble — a sentence giving
+*other* findings' state rots in all of them, for the reason this section already
+gives: the state lives under the finding, which is the one place it cannot
+disagree with itself. Say **read under the heading** and stop.
+
+**The reason this is worth stating separately is that nothing can catch it after
+the fact.** `SHIP-PR-AUDIT`'s *"None of these is taken. Nothing below has been
+decided"* sits above four findings that are now decided, and it contains **no
+finding number of any kind** — so a taker of the finding it is wrong about,
+grepping that file for that number, does not see the line. The tree-wide sweep in
+*ANYTHING that cites a finding goes stale* cannot reach it either, and neither
+can `audit-citations.mjs`. **A numberless claim about numbered work is invisible
+to every sweep here**, which makes not writing one the only defence.
+`META-AUDIT` `A17`.
+
 **No retrofit, no check, and no count in this rule.** Existing headers are
 records and stay as they are; this governs the next header written and the next
 line added to one. A check is ruled out for the reason the whole page gives —
