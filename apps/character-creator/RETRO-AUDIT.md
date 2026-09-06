@@ -1626,7 +1626,7 @@ through both (`relatedAllowance` 9 vs `count` 7).
 on the wizard's narrower number until the change is run against the suite.
 **Ongoing cost:** none — it removes a second copy of an arithmetic rule.
 
-**Taken, 2026-09-05 (PR #PRNUM) — WIDENED, on Nate's word, and the widening is
+**Taken, 2026-09-05 (PR #745) — WIDENED, on Nate's word, and the widening is
 the whole finding.** Taken as written it would have shipped the exact failure it
 says is impossible.
 
