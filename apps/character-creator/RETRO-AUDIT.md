@@ -1626,6 +1626,116 @@ through both (`relatedAllowance` 9 vs `count` 7).
 on the wizard's narrower number until the change is run against the suite.
 **Ongoing cost:** none — it removes a second copy of an arithmetic rule.
 
+**Taken, 2026-09-05 (PR #745) — WIDENED, on Nate's word, and the widening is
+the whole finding.** Taken as written it would have shipped the exact failure it
+says is impossible.
+
+### The finding was right about the bug and wrong about the fix
+
+> *"It cannot fail the other way — the wizard's allowance is never larger than
+> the server's — so this is a false alarm rather than a hole."*
+
+**True of the code as it stood. False the moment you change only the allowance**,
+because the allowance is only half of what the two sides disagree about. The
+**held list** is the other half, and `R18` never mentions it:
+
+- the server counts **every** row of `type: 'related'`, which includes the picks
+  made on the Advancement step (`app.js` writes them that way);
+- the wizard passed `S.related` alone — the level-one picks.
+
+So the wizard was narrow on **both** numbers and the errors cancelled in the
+safe direction. Raise one and it goes wide on that one and stays narrow on the
+other:
+
+| a Ley Line Walker at level 3, both banked picks spent off-Science | verdict |
+|---|---|
+| server | **422** — nine held, nine allowed, two owed, none left |
+| wizard as it was | warns — by luck, but it warns |
+| wizard with the allowance alone fixed | **silent** |
+| wizard with both fixed | warns, agreeing with the server |
+
+**That third row is the direction `R18`'s own text calls the one that matters.**
+It is reachable through the wizard's own UI, not only a crafted request.
+
+So both arguments now mirror the server: `relatedAllowance(cls, S.level)` and
+`S.related` plus the related-kind rows of `levelPickRows()`.
+
+### "The arithmetic already exists" understated it
+
+`relatedAllowance` lived in `functions/`, and **the wizard cannot import from
+there** — no build step, and nothing under `apps/` reaches into `functions/`.
+Taking this meant **moving** the function, or writing the second copy the
+finding says it is removing. It now lives in `apps/character-creator/js/leveling.js`
+beside `skillGrantsFor`, the only thing it needs, and `validate-character.js`
+re-exports it so every server import and `test/smoke.mjs` are unchanged. That is
+the precedent `functions/.../_lib/leveling.js` already sets in its own header.
+
+### Nothing in the suite touched this, so something does now
+
+`app.js` is only ever read as **source text** by the smoke suite, never
+executed, so this fix would neither break a test nor be verified by one. Six
+checks were added against the lifted helper, and they pin the two boundary cases
+rather than the happy path: **the false alarm** the old code produced, and **the
+silent failure** a half-fix would have. `SMOKE TEST PASSED (1684 checks)`, up
+from 1678.
+
+### Verified in the browser, on the second attempt
+
+**The first attempt failed and the outcome note said so.** The class picker
+would not register a selection, leaving *"Choose 1 more power to continue"* and
+a disabled Confirm — because the Ley Line Walker's own **Powers — choose 1**
+block sits below the class list on that step and had not been answered. Named
+here because that is the step, not a pane limitation.
+
+Walked properly on 8793, served from this branch (the new comment, the new
+import and the moved function all fetched off it), a **level 3** Ley Line Walker
+with seven related picks spent — six Domestic/Communications and one Technical,
+which is **draft 285's exact shape**:
+
+> The book sets a floor per category: **0/2 Science**, 1/1 Technical.
+
+Rendered, at tablet and at desktop, above the fold, with `0/2 Science` in the
+warning colour and `1/1 Technical` muted — `f.met ? 'muted' : 'warn'` doing its
+job on a real character rather than in a harness.
+
+**And the numbers themselves, computed in the page from the modules the page
+loaded**, against that draft's real picks:
+
+| | allowance | owed | remaining | `unreachable` |
+|---|---|---|---|---|
+| the old wizard (`count`) | 7 | 2 | 0 | **true** — cries wolf |
+| this fix (`relatedAllowance`) | **9** | 2 | 2 | **false** |
+| the server | 9 | 2 | 2 | false — accepts the save |
+
+**That is the whole finding, seen rather than argued**: the same character, the
+same picks, one number apart, and the old wizard telling a player their save
+would be refused when it would not.
+
+*(A pane limitation did bite and is worth recording: a screenshot taken while
+scrolled comes back blank, as `verify-ui` says. Proved against a control this
+change never touched — the same page shot at `scrollY: 0` rendered fine — and
+worked around by collapsing what sat above the block so it rendered at the top.)*
+
+### A stale sentence, found by looking at the page
+
+The block being edited told the player the scheduled picks were *"recorded on
+the class, **not yet prompted at level-up**"*. They are prompted —
+`level-confirm.js` banks and resolves them, `picks.js` spends them, and the
+wizard's own Advancement step asks at creation. The release audit flagged it;
+seeing it rendered is what made it worth fixing in the same PR. It now reads:
+
+> Also grants +2 at level 3, +1 at level 6, +1 at level 9, +1 at level 12 —
+> asked for on the Advancement step, and banked until spent if you skip them.
+> They count toward the floors above, so a character at level three is measured
+> against **9** picks rather than 7.
+
+That last clause is the fix, stated to the player in the place the confusion
+happens, and the 9 is computed rather than written down.
+
+**The local wizard draft was snapshotted before the walk and restored after**,
+byte-for-byte including its `updated_at`; the dev server's whole process tree
+was killed by command line, leaving the other wrangler instance alone.
+
 ### R16 — medium — the check that is supposed to catch the next floor cannot see any of the seven
 
 **FILED, NOT TAKEN.** `regression.mjs`'s per-category floor invariant came from

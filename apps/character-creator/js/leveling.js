@@ -21,6 +21,39 @@ const DEFAULT_XP_TABLE = [
   70000, 95000, 125000, 160000, 200000, 250000, 300000,
 ];
 
+// Related-skill allowance grows with level: the class's starting count plus
+// every scheduled grant the character has reached. Without this, any character
+// who levelled up and spent a pick would read as over their limit.
+//
+// LIVES HERE, NOT IN THE SERVER VALIDATOR, since RETRO-AUDIT R18. The wizard
+// and the validator have to agree about whether a character is legal, and the
+// wizard cannot import from `functions/` - there is no build step. Keeping it
+// beside `skillGrantsFor`, which is the only thing it needs, is what makes one
+// implementation reachable from both sides; `validate-character.js` re-exports
+// it so every existing server import is unchanged.
+export function relatedAllowance(cls, level) {
+  const base = cls?.skills?.occ_related_skills?.count ?? 0;
+  // Only related-kind grants. A class can schedule secondary picks too, and
+  // counting those here would let a character hold more related skills than the
+  // class ever allowed.
+  const granted = skillGrantsFor(cls, 1, level)
+    .filter((g) => g.kind !== 'secondary')
+    .reduce((n, g) => n + g.count, 0);
+  return base + granted;
+}
+
+// The same for secondary skills, which can also arrive on a schedule - the Long
+// Bowman gets one more at levels 4, 7, 10 and 13. Without this the class's
+// starting count was the permanent ceiling, so spending a pick the class had
+// just granted failed validation.
+export function secondaryAllowance(cls, level) {
+  const base = cls?.skills?.secondary_skills?.count ?? 0;
+  const granted = skillGrantsFor(cls, 1, level)
+    .filter((g) => g.kind === 'secondary')
+    .reduce((n, g) => n + g.count, 0);
+  return base + granted;
+}
+
 export function xpTableFor(cls) {
   const t = cls?.xp_table;
   const valid = Array.isArray(t) && t.length >= 2 && t.every((x) => typeof x === 'number') &&

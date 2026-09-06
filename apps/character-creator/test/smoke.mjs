@@ -4660,6 +4660,53 @@ section('Related-skill floors');
   // weaker reading never refuses a character the book allows.
   check('a bigger allowance leaves more room, never less',
     st(['Physical', 'Physical', 'Physical', 'Physical', 'Physical', 'Physical'], 12).unreachable === false);
+
+  // ── the wizard and the server must not disagree — RETRO-AUDIT R18 ──
+  //
+  // `relatedFloorStatus` takes an allowance and a list of the categories held,
+  // and the wizard and the validator have to pass the SAME pair. They did not:
+  // the wizard passed `occ_related_skills.count` and only the level-one picks,
+  // while the server passes `relatedAllowance(cls, level)` and every
+  // related-typed row, level-granted ones included.
+  //
+  // NOTHING EXERCISES THE WIZARD ITSELF - `app.js` is read here as source text
+  // and never executed - so this pins the arithmetic the wizard is now supposed
+  // to do, and the case that made a half-fix worse than the bug.
+  const lvlCls = parseClassMarkdown(
+    `---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: occ\nskills:\n`
+    + `  occ_related_skills:\n    count: 7\n`
+    + `    minimums:\n      - { count: 2, category: "Science" }\n`
+    + `    categories: ["Science", "Physical"]\n`
+    + `    schedule: [{ level: 3, count: 2 }]\n---\n\n## Lore\n\nx\n`).data;
+
+  check('the allowance a level-3 character gets is the count plus the grant',
+    relatedAllowance(lvlCls, 1) === 7 && relatedAllowance(lvlCls, 3) === 9);
+
+  // Seven off-floor picks at level 1: no room left, so the floor is out of
+  // reach and the save is refused. Both sides agree, and always did.
+  const seven = Array.from({ length: 7 }, () => 'Physical');
+  check('spent out at level one is unreachable',
+    relatedFloorStatus(lvlCls, seven, relatedAllowance(lvlCls, 1)).unreachable === true);
+
+  // THE CASE THE OLD WIZARD GOT RIGHT BY ACCIDENT. At level 3 the same seven
+  // picks leave two banked, so the floor is still reachable and the server
+  // accepts. Passing `count` here says unreachable - a false alarm.
+  check('and reachable at level three, because the schedule banked two',
+    relatedFloorStatus(lvlCls, seven, relatedAllowance(lvlCls, 3)).unreachable === false);
+  check('where the old count-only allowance would have cried wolf',
+    relatedFloorStatus(lvlCls, seven,
+      lvlCls.skills.occ_related_skills.count).unreachable === true);
+
+  // THE CASE A HALF-FIX WOULD HAVE MISSED, which is the one that matters. Spend
+  // the two banked picks off-floor as well and the character really is illegal.
+  // The server counts all nine because level-granted picks are stored
+  // `type: 'related'`; a wizard that raised the allowance to 9 but still counted
+  // only the first seven would compute two picks remaining and say NOTHING.
+  const nine = Array.from({ length: 9 }, () => 'Physical');
+  check('nine off-floor picks at level three are unreachable',
+    relatedFloorStatus(lvlCls, nine, relatedAllowance(lvlCls, 3)).unreachable === true);
+  check('and counting only the level-one picks would have gone silent on it',
+    relatedFloorStatus(lvlCls, seven, relatedAllowance(lvlCls, 3)).unreachable === false);
 }
 
 section('Secondary schedules & group bonuses');
