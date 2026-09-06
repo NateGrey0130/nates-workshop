@@ -13,7 +13,7 @@ the human view of the same thing plus the import status.
 
 | slug | book | PDF pages | layer | printed | offset | status |
 |---|---|---|---|---|---|---|
-| `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 222 — see below | **+0** | **importing** — 3 of 21 classes |
+| `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 222 — see below | **+0** | **importing** — 8 of 21 classes |
 | `underseas` | Rifts WB 7: Underseas | 216 | SCAN (OCR) | 214 | **+0 / -1 split** | cached |
 | `new-west` | Rifts WB 14: New West | 226 | text layer | 224 | +1 | cached |
 | `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | cached |
@@ -464,3 +464,43 @@ argument that they are worth re-reading either.
 - **No application code, schema, validator or generator changes from a book.**
   Import what the schema supports, note the drop in `extraction_notes`, file the
   gap in `BOOK-INGEST-AUDIT.md`, keep going.
+
+### `triax` batch 2 — the NGR Armored Division, 2026-09-06 (PR #777)
+
+Five more classes, printed 161-170: Cyborg Soldier, Field Mechanic, Power Armor
+Commando, Robot Combat Pilot, Robot Soldier. **Eight of twenty-one now in.**
+Catalog totals moved 172 -> **177** classes, 346 -> **353** skills, 1024 ->
+**1025** gear. Applied `--remote` before the PR; production read back at all
+three, and `regression.mjs` produces the same three from nothing.
+
+**The seven new skills are `Robot Combat Elite:` rows, one per Triax machine**,
+following the catalog's existing `Robot Combat Elite: Glitter Boy` and
+`: SAMAS` rather than collapsing into the generic row. Collapsing would have
+granted the Power Armor Commando ONE elite proficiency where its book grants
+three. The machines themselves stay out under F3, and that is not a
+contradiction: an elite row is a training proficiency, base 0, meaningful
+whether or not the machine can be stored.
+
+**F3 bites harder in this division than anywhere else in the batch so far**, and
+in a new way. For the Army classes a vessel was equipment. Here it is the
+character: the Cyborg Soldier's chassis, the Power Armor Commando's T-31 and
+the Robot Soldier's robot body are all F3 vessels, so all three ship with no
+`mdc_base` and take the core S.D.C. rule, which is a human's. Each says so in
+its own `extraction_notes` and body. No new finding - this is F3 doing what F3
+says.
+
+**One finding filed: `BOOK-INGEST-AUDIT.md` F23.** The Robot Soldier is the only
+published O.C.C. in the catalog granting NO skills at all, and both reasons are
+the book's: printed 170 says its skills are the character's PREVIOUS O.C.C.'s,
+frozen at the level held at conversion, and it grants up to three skill
+CATEGORIES wholesale at a flat 38% rather than N skills from a list. Neither is
+a shape the app has. What the book states in its own right - combat bonuses,
+four saves, three extra attacks at levels 2, 6 and 12 - is stored; the rest is
+in the class body for the GM.
+
+**A reading worth carrying to the next batch**: three entries in this division
+print a percentage with no plus sign or defer a weapon to another book. The
+Field Mechanic's `Math: Advanced (10%)` is the sharp one - read as +10%, because
+a fixed 10% would be worse than the untrained base, which no Palladium class
+prints. Its laser torch and laser wand are deferred to Wilk's and are not
+stubbed.

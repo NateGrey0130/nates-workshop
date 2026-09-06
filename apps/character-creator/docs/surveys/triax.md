@@ -391,6 +391,7 @@ What is deliberately left, with the reason for each:
 | 2026-08-28 | [#400](https://github.com/NateGrey0130/nates-workshop/pull/400) | cache built (225 pp), registered in `books.json`, offset 0 measured — kickoff session, seven books |
 | 2026-09-06 | — | surveyed: two authorities agreed, 21 playable classes established, skills diff came back near-empty |
 | 2026-09-06 | [#776](https://github.com/NateGrey0130/nates-workshop/pull/776) | **batch 1, NGR Army (3 of 21 classes)**: Infantry Soldier, Communications Officer, Medic/Medical Officer. Classes 169 -> **172**, skills 344 -> **346** (`Language: Euro`, `Literacy: Euro`, both cited to RUE), gear 1021 -> **1024** (three stubs for the gear batch to fill). Applied `--remote` before the PR; production read back at 172/346/1024. |
+| 2026-09-06 | [#777](https://github.com/NateGrey0130/nates-workshop/pull/777) | **batch 2, NGR Armored Division (5 of 21 classes, 8 cumulative)**: Cyborg Soldier, Field Mechanic, Power Armor Commando, Robot Combat Pilot, Robot Soldier. Classes 172 -> **177**, skills 346 -> **353** (seven machine-specific `Robot Combat Elite:` rows), gear 1024 -> **1025** (one stub). Filed `BOOK-INGEST-AUDIT.md` **F23** - the Robot Soldier grants no skills, because both ways its book gives it skills are shapes the app lacks. Applied `--remote` before the PR; production read back at 177/353/1025. |
 
 ### What remains
 
