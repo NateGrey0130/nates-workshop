@@ -1087,6 +1087,18 @@ The comment in the script now says so, because a future reader will hit it.
 The sixteen that remain are entirely the `system` column, and closing them means
 correcting production, not the repo. That is F15 and it is not taken.
 
+**Corrected 2026-09-06: `F15` was taken the same day this note was written**, as
+PR #391, and it is the finding that changed production. The sentence above was
+true when it was written — `F13` shipped as #381, ten PRs earlier — and stopped
+being true within hours. **It is left standing because this file is a record**,
+and the correction is appended rather than made in place.
+
+Found by `META-AUDIT` `A17`. The rule it demonstrates is the one `A17` shipped
+into `audit-menu`: **a sentence giving another finding's state belongs nowhere**,
+not only out of a status header — the state lives under the finding, which is
+the one place it cannot disagree with itself. Here the two sit 74 lines apart in
+the same file.
+
 ### F14 — export the 25 divergent skills, and read them before assuming enrichment
 
 The other catalog F6 leaves open: **37 field values across 25 of the 336
