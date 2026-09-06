@@ -2086,7 +2086,7 @@ rather than silently reconciling them.
 which is the decision this finding is really asking for.
 **Ongoing cost:** none, plus one redirect row per rename forever.
 
-**Taken, 2026-09-06 (PR #PRNUM) - EIGHT of the twelve, on Nate's word: the rows
+**Taken, 2026-09-06 (PR #748) - EIGHT of the twelve, on Nate's word: the rows
 whose drift sits INSIDE the elemental prefix.** Applied to production before the
 merge, `zzzzz-retro-r20-spell-names.sql`, eleven readbacks green.
 
