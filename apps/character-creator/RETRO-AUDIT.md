@@ -1679,22 +1679,58 @@ rather than the happy path: **the false alarm** the old code produced, and **the
 silent failure** a half-fix would have. `SMOKE TEST PASSED (1684 checks)`, up
 from 1678.
 
-### What is NOT verified, stated rather than glossed
+### Verified in the browser, on the second attempt
 
-**The rendered readout was not seen.** The dev server was started on 8791 and
-confirmed to be serving this branch — the new comment, the new import and the
-moved function were all fetched off it — but the wizard walk did not reach the
-Skills step: the class picker would not register a selection through the pane,
-leaving *"Choose 1 more power to continue"* and a disabled Confirm. **So this is
-verified at the unit level and unverified at the page level**, which
-`verify-ui` says to declare rather than let a DOM-based check read as
-confirmation.
+**The first attempt failed and the outcome note said so.** The class picker
+would not register a selection, leaving *"Choose 1 more power to continue"* and
+a disabled Confirm — because the Ley Line Walker's own **Powers — choose 1**
+block sits below the class list on that step and had not been answered. Named
+here because that is the step, not a pane limitation.
 
-The residual risk is small and worth naming precisely: **no markup and no CSS
-changed**, and `floorsHtml` is untouched — only the two numbers handed to it
-move. What a render would catch that the unit checks cannot is a wiring mistake
-in `relatedFloors` itself, and the six checks exercise that function's exact
-arithmetic on both sides of the boundary.
+Walked properly on 8793, served from this branch (the new comment, the new
+import and the moved function all fetched off it), a **level 3** Ley Line Walker
+with seven related picks spent — six Domestic/Communications and one Technical,
+which is **draft 285's exact shape**:
+
+> The book sets a floor per category: **0/2 Science**, 1/1 Technical.
+
+Rendered, at tablet and at desktop, above the fold, with `0/2 Science` in the
+warning colour and `1/1 Technical` muted — `f.met ? 'muted' : 'warn'` doing its
+job on a real character rather than in a harness.
+
+**And the numbers themselves, computed in the page from the modules the page
+loaded**, against that draft's real picks:
+
+| | allowance | owed | remaining | `unreachable` |
+|---|---|---|---|---|
+| the old wizard (`count`) | 7 | 2 | 0 | **true** — cries wolf |
+| this fix (`relatedAllowance`) | **9** | 2 | 2 | **false** |
+| the server | 9 | 2 | 2 | false — accepts the save |
+
+**That is the whole finding, seen rather than argued**: the same character, the
+same picks, one number apart, and the old wizard telling a player their save
+would be refused when it would not.
+
+*(A pane limitation did bite and is worth recording: a screenshot taken while
+scrolled comes back blank, as `verify-ui` says. Proved against a control this
+change never touched — the same page shot at `scrollY: 0` rendered fine — and
+worked around by collapsing what sat above the block so it rendered at the top.)*
+
+### A stale sentence, found by looking at the page
+
+The block being edited told the player the scheduled picks were *"recorded on
+the class, **not yet prompted at level-up**"*. They are prompted —
+`level-confirm.js` banks and resolves them, `picks.js` spends them, and the
+wizard's own Advancement step asks at creation. The release audit flagged it;
+seeing it rendered is what made it worth fixing in the same PR. It now reads:
+
+> Also grants +2 at level 3, +1 at level 6, +1 at level 9, +1 at level 12 —
+> asked for on the Advancement step, and banked until spent if you skip them.
+> They count toward the floors above, so a character at level three is measured
+> against **9** picks rather than 7.
+
+That last clause is the fix, stated to the player in the place the confusion
+happens, and the 9 is computed rather than written down.
 
 **The local wizard draft was snapshotted before the walk and restored after**,
 byte-for-byte including its `updated_at`; the dev server's whole process tree

@@ -2323,7 +2323,9 @@ function renderSkills() {
         <p class="muted small">Allowed: ${esc((relatedCfg.categories || []).map(categoryLabel).join(', ') || '—')}</p>
         ${floorsHtml(effective)}
         ${schedule.length ? `<p class="attr-note">Also grants ${schedule.map((s) => `+${s.count} at level ${s.level}`).join(', ')}
-          — recorded on the class, not yet prompted at level-up.</p>` : ''}
+          — asked for on the Advancement step, and banked until spent if you skip them.
+          They count toward the floors above, so a character at level three is measured
+          against ${relatedAllowance(effective, S.level)} picks rather than ${relatedCfg.count}.</p>` : ''}
         ${Picker.inputHtml({ id: 'related-filter', value: S.relatedFilter,
           placeholder: 'Filter…', shown: Picker.filter(relatedPool, S.relatedFilter).length,
           total: relatedPool.length })}
