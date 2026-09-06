@@ -3718,6 +3718,57 @@ section('MOS');
         .test(mosDoc.replace(/\r/g, '')));
     check('and parser.js agrees with it',
       /Technical Officer offers seven, the Merc Soldier seven and the/.test(srcParser.replace(/\r/g, '')));
+
+    // ── NO DATA SCRIPT MAY KEY ON A LITERAL CATALOG id ──
+    //
+    // Catalog ids are `INTEGER PRIMARY KEY AUTOINCREMENT`, so they are
+    // INSERTION ORDER, and insertion order differs between environments.
+    // Measured against a database rebuilt from this repo on 2026-09-05:
+    //
+    //   gear             0 of 1025 ids matched production
+    //   skills           1 of 345
+    //   spells          56 of 607
+    //   psionic_powers  20 of 116
+    //
+    // So `WHERE id = 283` picks Fire: Fire Gout in production and Earth: Track
+    // in a local or rebuilt database. A script written that way puts the right
+    // data on the wrong rows ANYWHERE but the database it was generated
+    // against, and it does it silently - there is no error, just wrong rows.
+    // That happened here while writing the Book of Magic backfill; the readback
+    // caught it only because it counted the whole corpus rather than the rows
+    // the script itself had touched.
+    //
+    // THE NATURAL KEY ALREADY EXISTS AND IS ALREADY UNIQUE - `name` on skills,
+    // spells and psionic_powers, `slug` on gear - so keying on it costs
+    // nothing.
+    //
+    // A JOIN ON AN id IS FINE and must stay fine: `gear.id =
+    // character_items.item_id` is a relation inside one database and says
+    // nothing about which database. Eight scripts do that and all eight are
+    // correct. Only a literal NUMBER is refused.
+    //
+    // Asserted over the WHOLE corpus rather than over the lines a branch adds,
+    // because the corpus is at zero and an invariant that is already true is
+    // the cheap kind to keep.
+    const CATALOG = 'spells|skills|psionic_powers|gear|enchantments';
+    const LITERAL_ID = new RegExp(
+      `(?:UPDATE|DELETE\\s+FROM)\\s+(?:${CATALOG})\\b[\\s\\S]{0,400}?`
+      + `WHERE[\\s\\S]{0,120}?\\bid\\s*(?:=|IN\\s*\\()\\s*\\d`, 'i');
+    const idKeyed = files.filter((f) => LITERAL_ID.test(read(f)));
+    check('no data script keys a catalog write on a literal id',
+      idKeyed.length === 0,
+      `${idKeyed.join(', ')} - ids are insertion order and differ per environment; `
+      + 'key on name (or slug, for gear)');
+
+    // And the check is not vacuous: the pattern it looks for really does match
+    // the shape it forbids. Without this, a regex that never matched anything
+    // would pass forever and prove nothing - the failure R16 was filed for.
+    check('and the guard matches the shape it forbids',
+      LITERAL_ID.test("UPDATE spells SET description = 'x' WHERE id = 283;")
+      && LITERAL_ID.test('DELETE FROM gear WHERE id IN (1, 2);'));
+    check('while leaving an id JOIN alone',
+      !LITERAL_ID.test('UPDATE character_items SET custom_name = '
+        + '(SELECT name FROM gear WHERE gear.id = character_items.item_id);'));
   }
 
   const names = (c) => (c.skills.occ_skills || []).map((x) => x.name).filter(Boolean);

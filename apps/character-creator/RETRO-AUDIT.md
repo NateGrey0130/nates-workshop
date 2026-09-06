@@ -1893,6 +1893,66 @@ where a description belongs, unlike the 230 spells that did.
 **Confidence: high.**
 **Ongoing cost:** none.
 
+### R21 — medium — `character_items.item_id` stores a number that means nothing outside one database
+
+**FILED, NOT TAKEN.** Turned up by the Book of Magic backfill, which keyed its
+first draft on `id` and wrote the right text onto the wrong rows locally.
+
+**Catalog ids are insertion order.** All four catalog tables are
+`INTEGER PRIMARY KEY AUTOINCREMENT`, and production's insertion order is months
+of data scripts, catalog-editor writes and importer confirms, while a rebuild's
+is filename order. Measured against a database rebuilt from this repo,
+`--remote` vs `scripts/rebuild-local.mjs`, 2026-09-05:
+
+| table | rows | ids matching production |
+|---|---|---|
+| `gear` | 1025 | **0** |
+| `skills` | 345 | 1 |
+| `spells` | 607 | 56 |
+| `psionic_powers` | 116 | 20 |
+
+**For three of the four that is harmless**, because characters reference skills,
+spells and psionics **by name** inside their JSON columns — the id is purely
+internal. **Gear is the exception**, and it is referenced *by id*:
+
+```
+db/schema.sql:252   campaign_items.item_id  INTEGER REFERENCES gear(id)
+db/schema.sql:486   character_items.item_id INTEGER REFERENCES gear(id)
+```
+
+So **a database rebuilt from this repo would attach every character's inventory
+to the wrong item**, silently, with the foreign key satisfied throughout.
+
+**Why this is latent rather than on fire.** `scripts/d1-backup.mjs` is the
+recovery path and copies the live database *with* its ids, and a freshly built
+environment has no characters to mis-wire. It bites only where a rebuilt
+database meets real character data — which is precisely the moment nobody would
+be looking for it.
+
+**Proposal:** store the gear **slug** rather than the id. Add `item_slug`,
+backfill it from `gear.slug`, move reads and writes over, then drop `item_id`;
+same for `campaign_items`. **Posture: SCHEMA CHANGE** — `schema-change` says a
+column lands in five places, and this one also touches the API and the sheet.
+
+**There is a second argument for it beyond portability, and it may be the
+better one.** Class markdown already cites gear by **slug**, in a field also
+called `item_id` (`equipment_starting[].item_id`). The same name means a slug in
+one place and an integer in another, which is its own trap; this change makes
+them agree.
+
+**What is already done and is NOT this finding:** `test/smoke.mjs` now refuses a
+data script that keys a catalog write on a literal id, and `operations.md` and
+the `class-import` skill carry the rule. That closes the authoring hazard for
+all four tables. `R21` is only about the stored foreign key.
+
+**Evidence:** the rebuild comparison above, 2026-09-05; both `REFERENCES gear(id)`
+lines read individually; `characters.skills` / `characters.powers` confirmed to
+store names.
+**Confidence: high** on the id instability and on the two foreign keys.
+**Medium** on the migration's blast radius until the call sites are counted.
+**Ongoing cost:** none once done; it removes a portability trap rather than
+adding a rule to remember.
+
 ---
 
 ## Not established
