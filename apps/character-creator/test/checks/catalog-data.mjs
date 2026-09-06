@@ -563,7 +563,14 @@ const dataDir = join(appDir, 'db');
 // Scripts that ASSIGN the marker, not merely mention it. The estimate script
 // names the web tier in a comment explaining where its own tier sits below
 // it, and was failing the header check for describing a neighbour.
-const assigns = (text, marker) => text.includes("source_book = '" + marker + "'");
+// A WHERE guard is not an assignment, and the difference matters: a script that
+// REMOVES the marker mentions it in exactly the same shape as one that writes
+// it. INGESTION-AUDIT F33's script guards on the marker to replace it with a
+// book citation, and was flagged for failing to document provenance it was
+// deleting. Anything preceded by AND or WHERE on the same line is a guard.
+const assigns = (text, marker) => text.split(/\r?\n/).some(
+  (line) => line.includes("source_book = '" + marker + "'")
+    && !/\b(?:AND|WHERE)\s+source_book\s*=/i.test(line));
 const scriptsUsingMarker = readdirSync(dataDir)
   .filter((f) => f.endsWith('.sql'))
   .filter((f) => assigns(readFileSync(join(dataDir, f), 'utf8'), MARKER));
