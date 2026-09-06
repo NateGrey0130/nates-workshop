@@ -3364,6 +3364,70 @@ not read for this finding.
 
 **Ongoing cost:** none.
 
+**Taken, 2026-09-06 (`zzzzzz-ingestion-f28-law-canonical.sql`). Posture held:
+one data script, applied to production before its own merge, no schema change,
+no code change, and no class markdown touched.**
+
+`Law` (id 311) takes RUE's number and RUE's citation — **base 25 → 35**,
+`source_book` → `Rifts Ultimate Edition p.302-303`. `Law (General)` (id 244) is
+retired, and `catalog_redirects` forwards its name to id 311. Every statement is
+guarded on the value it expects, so a second run is a no-op.
+
+**Verified by asking production, not by an exit code.** Four readbacks in the
+script itself, all `got == want`: one `Law` row at 35 with RUE's citation; zero
+`Law (General)`; the retired name forwarding to the survivor; and **`Law: CCW`
+untouched at 30**, which is a different skill from a different book and the
+obvious collateral. `drift-check --remote` prints `NO DRIFT`. Skills **345 →
+344**, and the **62** classes citing `Law` still cite a row that exists.
+
+**The script's first version was missing its own run record, and `drift-check`
+caught it.** The convention here is that a data script ends by inserting its
+filename into `data_script_runs`; mine did not, so the rows changed while the
+ledger said `DATA SCRIPT NOT RUN`. That is the check doing exactly its job, and
+it is worth recording because the SQL had already applied correctly — a readback
+would have said everything was fine.
+
+**One knock-on this finding did not predict, and it moved a number written an
+hour earlier.** Giving `Law` a page citation takes it out of `F26`'s page-less
+backlog: **56 of 345 → 55 of 344**, and the `Rifts Skill List` share **44 → 43**.
+`docs/importing-from-pdfs.md` is corrected with a dated parenthetical saying why
+the figure moved, because a reader who saw the first version would otherwise
+have two numbers and no account of the difference.
+
+**The README's pinned count moved with it.** `docs/operations.md`'s clean-run
+table went `skills | 345` → `344`; `regression.mjs` reads that number out of the
+prose and failed on it first — `README says 345, a clean run produced 344` —
+which is the pin working rather than a surprise.
+
+**The suite caught two more convention breaches after that, and both were
+mine.** *"Every data script is covered by the Data scripts table"* — the file
+needed a row in `docs/operations.md`, and the `zzzzzz-` tier did not exist yet;
+it is now documented as a fifth escalation, with the note that the count of
+`z`'s is ordering and never severity. And *"every data script is pure ASCII"* —
+the script carried one box-drawing character, `U+2500`, in a comment divider.
+Both were fixed before the merge and neither had reached production as data.
+
+**A small inaccuracy in that second check's own message, recorded and NOT
+filed.** It says *"`scripts/d1-apply.mjs` refuses these"*. `d1-apply` refuses
+non-ASCII **in executable SQL** — its own comment says so at `:28` — and mine
+was in a `--` comment, which is why it applied cleanly and only the smoke check
+objected. So the two guards differ in strictness and the message describes the
+stricter one as the looser one. **Dropped rather than deferred**, per the section
+`META-AUDIT` `A16` shipped: it is a one-line message, nothing acts on it, and
+naming it here is worth more than a number.
+
+**One divergence worth stating.** The script was applied to production **before**
+that character was stripped, so the SQL production ran and the SQL in this repo
+differ by one byte in a comment. Nothing executable changed, the rows are
+identical, and `data_script_runs` keys on the filename — but an applied script is
+normally never edited, and this one was.
+
+**What this deliberately does not do.** The catalog now holds a name RUE does
+not print, beside `Law: CCW`. That was the trade: keeping the book's spelling
+would have meant rewriting 62 classes' frontmatter in this script, because the
+wizard's picker cannot see redirects. Recorded so the naming is read as a
+decision rather than an oversight.
+
 ### F29 — high — `Find duplicates` cannot run on the gear catalog, and never could at this size
 
 `GET /api/character-creator/catalogs/duplicates?catalog=gear` returns **503**
