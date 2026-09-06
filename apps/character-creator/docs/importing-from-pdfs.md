@@ -256,9 +256,14 @@ page:
 
 | | 2026-08-27 | 2026-09-06 |
 |---|---|---|
-| a book, no page | **105** of 333 | **56** of 345 |
+| a book, no page | **105** of 333 | **55** of 344 |
 
-Of the 56, **44 name `Rifts Skill List`**, which is **not a book**. It has no
+*(It read `56 of 345` for about an hour on 2026-09-06. `INGESTION-AUDIT` `F28`
+then gave the `Law` row RUE's page citation and retired its duplicate, taking one
+row out of this backlog and one out of the catalog. The figure moved because the
+backlog shrank, which is the direction this table exists to show.)*
+
+Of the 55, **43 name `Rifts Skill List`**, which is **not a book**. It has no
 scan, no cache entry and no printed pages, so those rows cannot be given a
 citation by reading a PDF and **will stay page-less permanently**. Caching it
 would make the ledger claim a source that does not exist. The other **12** name
