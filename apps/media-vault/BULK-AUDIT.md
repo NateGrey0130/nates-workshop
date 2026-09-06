@@ -667,6 +667,38 @@ largest item on this menu — do not take it in the same week as the ISBN fix.
   film or series. The local key is the burned one, so every video path here was
   proven with a stubbed response.
 
+  <!-- claim-ok: quoting the residue this note narrows -->
+  **Checked 2026-09-06, and the residue is real but NARROWER than it reads.**
+
+  The local key is **still** the burned one — a direct read-only request to
+  `api.themoviedb.org/3/search/movie` with the 32-character key from `.dev.vars`
+  returns **HTTP 401**, `"Invalid API key: You must be granted a valid key."`
+  So the video path still cannot be exercised against real TMDB from this
+  machine, and that half of the sentence stands.
+
+  **What is narrower is which request shapes are unproven.** The enrich loop
+  calls **no lookup mode the ordinary UI does not also call** — read in
+  `apps/media-vault/app.js` on 2026-09-06, its four calls are `mode=isbn`
+  (`:1620`), `mode=video-detail` (`:1626`), `mode=book-title` (`:1635`) and
+  `mode=video-title` (`:1641`), and every one of those is the same mode the
+  normal add flow uses (`:837`, `:1188`, `:1033`, `:1149`). The enrich path
+  introduces no new TMDB URL, no new parameter and no new endpoint; what was
+  stubbed is its **orchestration** over modes the app exercises in production
+  whenever anyone adds a film.
+
+  **So what is genuinely unproven is the sequencing, not the request.** Whether
+  a confirmed guess records a TMDB id and the next run resolves it exactly
+  through `video-detail` has only ever been watched against a stub.
+
+  **And it cannot be closed from here.** Production holds a working
+  `TMDB_API_KEY` secret, but the only way to drive the enrich loop against it is
+  to run enrichment over the live library — which is `lillcreeper`'s, and a
+  **write**. Read-only alternatives that would settle it: a valid TMDB key in
+  `.dev.vars`, or a single authenticated read-only
+  `GET /api/media-vault/lookup?mode=video-detail&id=…&kind=movie` against
+  production through Nate's own Chrome. Recorded so the negative result is not
+  re-derived — the shape `REBUILD-AUDIT` `F16` uses.
+
 ---
 
 ## B7 — "Select All" reaches past the page and nothing on screen says so
