@@ -3978,3 +3978,49 @@ which row should survive — keeping the cited one is the low-churn choice, and
 transfers rather than loses.
 
 **Ongoing cost:** none.
+
+**Adjusted 2026-09-06 and RE-SCOPED before being taken. This finding read the
+two rows as duplicates. They are not two products — they are ONE BUNDLE under
+two slugs, and this directory had already decided what to do with those.** The
+original text stands because the file is a record.
+
+`fix-structural-gear-rows.sql` §2 is titled *"Bundles become two entries. One
+book line, two objects. The character was holding neither."* It split
+`air-filter-and-gas-mask` into `air-filter` + `gas-mask` across thirteen
+classes, and §5 dropped the row once nothing cited it. **It never touched
+`gas-mask-and-air-filter`** — the same bundle with the words reversed, cited by
+one class. That omission *is* `F34`.
+
+**So the remedy is to finish the earlier decision, not to merge two rows into
+one bundle the repo had already ruled against.**
+
+| slug | cited | history |
+|---|---|---|
+| `air-filter-and-gas-mask` | 0 | dropped once by `fix-structural-gear-rows.sql`, then **re-inserted by `zz-reconcile-gear-with-production.sql`** purely to match production, where it had survived |
+| `gas-mask-and-air-filter` | 1 (`crazy`) | never reached by that pass at all |
+
+**Taken, 2026-09-06 (`zzzzzz-ingestion-f34-gas-mask-bundle.sql`). Posture held:
+one data script, applied to production before its own merge, no schema change,
+no code change. It rewrites one class's markdown**, which the re-scope requires
+and the filed proposal did not.
+
+**No redirect is written, and that is the precedent rather than an omission.** A
+bundle has no single successor to forward to; `fix-structural-gear-rows.sql` set
+`gear_slug` to NULL with a note instead, and this does the same.
+
+**The grant does not change in substance.** `crazy` receives an air filter and a
+gas mask — what the book line says, and what the other thirteen classes already
+get. 5 + 50 credits against the bundle's 55.
+
+**Five readbacks, all `got == want`, on production:** both bundle rows gone; no
+published class citing either slug; `crazy` granting both halves; **both halves
+still existing to be granted**; and no character left pointing at a bundle.
+`drift-check --remote` prints `NO DRIFT`. Regression **269 passed**. Gear
+**1,023 → 1,021** — two rows, not one — and the pinned clean-run count moved
+with it.
+
+**The finding's central claim was right and its framing was wrong**, which is
+worth separating. *"`Gas Mask and Air Filter` exists twice"* — true. *"The note
+saying so is itself wrong"* — true, and measured: `air-filter-and-gas-mask` was
+referenced by no class. What was wrong was reading a bundle as a product, and
+the correction came from reading the directory rather than the rows.
