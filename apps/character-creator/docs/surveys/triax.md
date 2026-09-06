@@ -288,6 +288,33 @@ So: **2 new skill rows, 1 re-citation, 1 re-citation of an uncited row to RUE, 0
 corrections.** The extraction budget for skills is near zero, which is the whole
 point of doing phase 3 first.
 
+**Corrected 2026-09-06, by the NGR Army batch: that count was two rows short,
+and the reason is a real limit of this section's method.** Everything above was
+derived from printed 155, the book's own *New Skills* heading — and a class may
+grant a skill the catalog lacks without the book calling it new. All three NGR
+Army O.C.C.s grant **`Literacy: Euro`** and **`Language: Euro`** outright, and
+the catalog held neither. Euro is not new to Triax at all: it is one of the nine
+major languages of Rifts, named on RUE printed 304, which is exactly why printed
+155 does not list it. Both rows were added by `add-euro-language-skills.sql`,
+**cited to RUE p.302-304 rather than to this book**, at the catalog's own values
+rather than RUE's printed `+3%` per level — the script's header carries the
+argument for both decisions.
+
+**So the remaining batches should expect the same shape** and not treat this
+section as a closed list. The check that finds them is `class-check --remote` on
+each draft, not another read of printed 155.
+
+**A second disagreement, recorded before the gargoyle batch needs it.** Printed
+155 lists Gargoyle, Brodkil and Demongogian as three separate languages. **RUE
+printed 304 says Demongogian is itself the language of gargoyles and brodkil**,
+which would make two of the three the same row the catalog already holds. Under
+the later-book-wins rule that argues against adding `Language: Gargoyle` and
+`Language: Brodkil` at all — but this book's own gargoyle R.C.C.s grant *speak
+Gargoyle* by name and never mention Demongogian, so the two readings are not
+merely a spelling difference. **Settle it in the gargoyle batch, from the R.C.C.
+entries on printed 198-202**, and do not let the plan above decide it by
+default.
+
 ### gear: ~55 importable rows, 1 existing row to resolve
 
 `triax-pump-weapon` is the single production row citing this book, and it is
@@ -363,6 +390,7 @@ What is deliberately left, with the reason for each:
 |---|---|---|
 | 2026-08-28 | [#400](https://github.com/NateGrey0130/nates-workshop/pull/400) | cache built (225 pp), registered in `books.json`, offset 0 measured — kickoff session, seven books |
 | 2026-09-06 | — | surveyed: two authorities agreed, 21 playable classes established, skills diff came back near-empty |
+| 2026-09-06 | [#776](https://github.com/NateGrey0130/nates-workshop/pull/776) | **batch 1, NGR Army (3 of 21 classes)**: Infantry Soldier, Communications Officer, Medic/Medical Officer. Classes 169 -> **172**, skills 344 -> **346** (`Language: Euro`, `Literacy: Euro`, both cited to RUE), gear 1021 -> **1024** (three stubs for the gear batch to fill). Applied `--remote` before the PR; production read back at 172/346/1024. |
 
 ### What remains
 

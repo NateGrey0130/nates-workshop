@@ -96,6 +96,18 @@ export const CORE_SDC_BY_CLASS = {
   // skills are borrowed from the vagabond and the wilderness scout, both 1D6 -
   // but a borrowed skill list is not what this table keys on.
   'berserker': '3D6',
+  // Triax and the NGR, the Military O.C.C.s of printed 156-174. The book's own
+  // roster on printed 156 files these under Military O.C.C.s and its divisions
+  // - Army, Armored, Intelligence - and no entry prints an S.D.C. formula, so
+  // the core rule applies. The MEDICAL OFFICER is the one worth a sentence: it
+  // is a doctor rather than a fighter, and it is here because printed 156 puts
+  // it in the NGR Army beside the infantry, and printed 159 says every military
+  // doctor is trained in self defence and the energy rifle whether they use
+  // them or not. Its entry grants Hand to Hand: Basic and two W.P.s, which no
+  // 1D6 class in this table does.
+  'ngr-infantry-soldier': '3D6',
+  'ngr-communications-officer': '3D6',
+  'ngr-medical-officer': '3D6',
 
   // Practitioners of magic, psychics and scholars — 1D6.
   'burster': '1D6',
