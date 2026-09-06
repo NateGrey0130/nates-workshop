@@ -996,6 +996,48 @@ check('a missing category on either row is not a clash', await (async () => {
   return pairs[0]?.tier === 'certain' && !pairs[0].category_clash;
 })());
 
+// INGESTION-AUDIT F29. The all-pairs walk became a token-prefix index, and the
+// risk of an index is a pair it never compares. These are the three shapes that
+// reach THRESHOLD without sharing a whole token, so if the bucket key is ever
+// narrowed they are what goes quiet - and a missed pair is invisible, because
+// the endpoint simply reports one fewer suggestion.
+// `Math` and `Mathematics` share NO exact token - the pair exists only because
+// tokenPairs prefix-matches from four characters - so an index keyed on whole
+// tokens loses it. Chosen deliberately over `Mathematics - Basic` / `Basic
+// Math`, which survives an exact-token index by sharing `basic` and therefore
+// pins nothing about prefixes.
+check('the index still finds a pair that matches ONLY by prefix', await (async () => {
+  const pairs = await findDuplicates(catalogDb([
+    { id: 1, name: 'Math', category: null },
+    { id: 2, name: 'Mathematics', category: null },
+  ]), 'skills');
+  return pairs.length === 1 && pairs[0].score >= 0.7;
+})());
+check('the index still finds a pair that differs only by spacing', await (async () => {
+  const pairs = await findDuplicates(catalogDb([
+    { id: 1, name: 'Back Pack', category: 'gear' },
+    { id: 2, name: 'Backpack', category: 'gear' },
+  ]), 'gear');
+  return pairs.length === 1 && pairs[0].score === 1;
+})());
+check('the index still finds a containment pair', await (async () => {
+  const pairs = await findDuplicates(catalogDb([
+    { id: 1, name: 'Laser', category: null },
+    { id: 2, name: 'Laser Communications', category: null },
+  ]), 'skills');
+  return pairs.length === 1 && pairs[0].tier === 'contains';
+})());
+// The other half: rows sharing no token must not become candidates. This is
+// what stops the index quietly widening into the walk it replaced.
+check('rows sharing no token produce no pair', await (async () => {
+  const pairs = await findDuplicates(catalogDb([
+    { id: 1, name: 'Climbing', category: null },
+    { id: 2, name: 'Astronomy', category: null },
+    { id: 3, name: 'Barter', category: null },
+  ]), 'skills');
+  return pairs.length === 0;
+})());
+
 // Class definitions cite skills by display name and gear by SLUG. A gear merge
 // that only checked the name reported nothing, so a character built from that
 // class afterwards would re-create the very stub the merge removed.

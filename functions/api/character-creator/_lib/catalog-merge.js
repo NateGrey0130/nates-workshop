@@ -127,9 +127,40 @@ export async function findDuplicates(env, catalogKey) {
   // Fields whose disagreement is worth showing: the numbers, not the prose.
   const numeric = cat.fields.filter((f) => f.type === 'int' || f.type === 'real').map((f) => f.name);
 
+  // Only pairs that share a token are candidates, and that is exact rather than
+  // an approximation. `similarity` returns at least THRESHOLD only when at least
+  // one token matched - `matched / large.length` needs `matched >= 1` to clear
+  // 0.7 - and `tokenPairs` matches either identical tokens or two tokens of four
+  // or more characters where one prefixes the other. Both cases share the first
+  // four characters, so bucketing on that key cannot drop a pair the all-pairs
+  // walk would have found. INGESTION-AUDIT F29.
+  //
+  // The walk it replaces was O(n^2): gear is roughly 900 rows, ~404,000 pairs,
+  // and the endpoint exceeded the Worker CPU limit and returned 503 every time -
+  // including the counts_only request the catalog page fires on every load to
+  // badge the button, where the failure was silent and no badge read as no
+  // duplicates.
+  const bucketKey = (t) => (t.length >= 4 ? t.slice(0, 4) : t);
+  const buckets = new Map();
+  results.forEach((row, idx) => {
+    for (const k of new Set(tokens(row[cat.displayField]).map(bucketKey))) {
+      if (!buckets.has(k)) buckets.set(k, []);
+      buckets.get(k).push(idx);
+    }
+  });
+
   const pairs = [];
-  for (let i = 0; i < results.length; i++) {
-    for (let j = i + 1; j < results.length; j++) {
+  const seen = new Set();
+  for (const idxs of buckets.values()) {
+    for (let x = 0; x < idxs.length; x++) {
+      for (let y = x + 1; y < idxs.length; y++) {
+        // i < j preserved, so `a` and `b` keep the order the all-pairs walk gave
+        // them and a pair reached through two shared tokens is only built once.
+        const i = Math.min(idxs[x], idxs[y]), j = Math.max(idxs[x], idxs[y]);
+        const seenKey = i * results.length + j;
+        if (seen.has(seenKey)) continue;
+        seen.add(seenKey);
+
       const a = results[i], b = results[j];
       const score = similarity(a[cat.displayField], b[cat.displayField]);
       if (score < THRESHOLD) continue;
@@ -175,6 +206,7 @@ export async function findDuplicates(env, catalogKey) {
           : tier === 'likely' ? 'same words, different order or ending'
           : 'one name contains the other — check this one',
       });
+      }
     }
   }
   // Strongest first, and identical numbers ahead of differing ones at the same

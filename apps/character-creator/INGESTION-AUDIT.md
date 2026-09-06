@@ -3483,3 +3483,56 @@ bucketing design being sufficient for `contains`, whose predicate is
 containment rather than equality.
 
 **Ongoing cost:** none. Less work per request than today.
+
+**Taken, 2026-09-06. Posture held: performance only — identical output on every
+catalog, no tier redefined, no pair dropped, nothing written.**
+
+The all-pairs walk becomes a **token-prefix index**, and the reason it is exact
+rather than an approximation is worth stating: `similarity` clears `THRESHOLD`
+only when at least one token matched — `matched / large.length` needs
+`matched >= 1` to reach 0.7 — and `tokenPairs` matches either identical tokens
+or two tokens of four-plus characters where one prefixes the other. **Both cases
+share their first four characters**, so bucketing on that key cannot drop a pair
+the walk would have found.
+
+**Proved by running both implementations over the same production rows**, rather
+than by reasoning about the bound:
+
+| catalog | rows | all-pairs comparisons | all-pairs walk | token index | result |
+|---|---|---|---|---|---|
+| skills | 344 | 58,996 | 46 pairs, 393ms | 46 pairs, **21ms** | **identical**, 18.7× |
+| gear | **1,025** | **524,800** | 511 pairs, 3,710ms | 511 pairs, **81ms** | **identical**, 45.8× |
+
+Pairs compared as `score|id|id`, sorted: **none missed, none invented**, on
+either catalog.
+
+**This finding's row count was wrong and it said so.** It gave gear as *"roughly
+900"* at medium confidence, naming the uncounted figure as its own uncertainty.
+It is **1,025**, so the walk was 524,800 comparisons rather than the ~404,000
+estimated — about 30% worse than the finding claimed.
+
+**The acceptance test this finding wrote no longer describes the catalog, and
+that is `F27` and `F28` rather than a regression.** It said skills must return
+**48 pairs, 2 `certain`, 46 `contains`**, and predicted **1 / 47** if `F27`
+landed first. Measured after both: **46 pairs, 0 `certain`, 46 `contains`**.
+`F27` demoted the `Gambling` pair and `F28` retired `Law (General)`, which
+removed the other `certain` pair and one `contains` pair with it. Four checks
+now pin the index's behaviour directly instead, which is the durable version of
+what that test was for.
+
+**And the fix surfaces something nobody has been able to see.** Gear returns
+**511 pairs — 34 `certain`, 3 `likely`, 474 `contains`**. Those 34 confident
+suggestions have existed for as long as the catalog has been this size and the
+endpoint has never once answered for them. **They are not acted on here**: this
+finding's posture is performance, and a merge repoints characters. They are
+named so the next person knows the button now has something behind it.
+
+**Proved by making it fail, and the first attempt did not.** Narrowing
+`bucketKey` to whole tokens broke the spacing case — but *"a pair that matches
+only by prefix"* still **passed**, because `Mathematics — Basic` and `Basic
+Math` share the token `basic` and were never testing prefixes at all. The check
+was rewritten to `Math` against `Mathematics`, which share **no** exact token,
+and it now goes red under the same injection. **A check whose name overstates
+what it pins is worse than no check**, and this one was mine.
+
+Smoke 1694 → **1698.**
