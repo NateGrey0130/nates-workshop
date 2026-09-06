@@ -1932,6 +1932,37 @@ gated on `UI-AUDIT.md`, which still does not exist. **F15 is now taken to the
 extent it can be**: parts (1) and (2) shipped, part (3) deferred by its own
 terms rather than left undone.
 
+<!-- claim-ok: quoting the gate this note reports met -->
+**Part (3) IS SATISFIED, and has been since 2026-09-02. Closed 2026-09-06.**
+The sentence above — *"still gated on `UI-AUDIT.md`, which still does not
+exist"* — was true when written and stopped being true two days later. It is
+left standing because this file is a record.
+
+**Both halves of the gate were met and nothing said so.** `UI-AUDIT.md` was
+filed **2026-08-31**, and the skill part (3) deferred was written **2026-09-02**
+as `.claude/skills/verify-ui/SKILL.md` — commit `4ea4eaa`, *"Three skills for
+the ground the other six do not cover (N1, N2, N3)"*, taken as `SKILL-AUDIT`
+`N1`. It is one of the nine skills junction-linked into `~/.claude/skills`.
+
+**`N1` and this finding were never connected by number**, in either direction:
+`N1` cites six memories and does not cite `F15`, and nothing on that menu names
+it. So the work this finding deferred was **done by someone who did not know
+they were doing it**, and the only record of the deferral kept asserting a
+condition that had become false.
+
+**`N1` also answered the question part (3) actually asked** — whether the failure
+it names is *"one rule that belongs in an existing skill or a sixth skill's
+worth of surface."* The answer was a skill: `verify-ui` opens with the tab bar
+that shipped below the fold, which is the incident part (3) quotes.
+
+**Found by `META-AUDIT` `A16`**, which measured four standing deferrals and
+named this as **the only one of the four whose deferred work was actually
+done**. It is closed rather than filed as a new finding for that reason: there
+is nothing to decide, and filing a finding to close it in the same breath is
+what `audit-menu` → *When not to* warns against.
+
+**F15 is now closed entire**, parts (1) through (3).
+
 ### F16 — every class extraction is taught the format by the two oldest and most-corrected classes in the repo, forever
 
 **What is true today.** `_lib/class-store.js` `getExamples(env, limit = 2)`
