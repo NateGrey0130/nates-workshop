@@ -90,6 +90,7 @@ npx wrangler d1 execute nates-workshop-media --remote --command "SELECT filename
 | `033-variant-note.sql` | `spells.variant_note` and `psionic_powers.variant_note` — what an OLDER book prints instead. Not `ppe_note`: the wizard treats the mere presence of that column as "this cost varies" and renders `7+ P.P.E.`, so a cross-book note there would make fourteen fixed-cost spells look variable |
 | `040-media-vault-source-id.sql` | `media_items.source_id` — where a MediaVault row came from, so its lookup can be re-run exactly. Not this app's table either. One generic column rather than two nullable ones: the normalised ISBN for a book, `tmdb:movie:1234` / `tmdb:tv:1234` for video, so the prefix names the lookup and the rest is its key. Empty on every pre-existing row, which is why the backfill it enables matters more than the column |
 | `041-drop-import-staging.sql` | drops `import_sessions` + `import_staged`. The in-app importer that wrote them was retired without ever having written a row - both held ZERO in production on the day they went, and `claude_usage` held no import call that could have produced one. 006 is not deleted: a recorded migration with no file is drift in the other direction |
+| `044-inventory-gear-slug.sql` | adds `gear_slug` to `character_items` and `campaign_items`, and backfills it from the id already there. A gear id is `AUTOINCREMENT`, so it is INSERTION ORDER, and insertion order is not the same in two databases - measured 2026-09-05, a rebuild from this repo matched production on **0 of 1025** gear ids, so a rebuilt database would attach every inventory row to the wrong item with the foreign key satisfied throughout. `item_id` STAYS: dropping it needs a full table rebuild (SQLite refuses the drop while the `CHECK` names the column, tested), and ten data scripts join on it. Not called `item_slug`, which two endpoints already use as an alias for `gear.slug`. See `RETRO-AUDIT.md` R21 |
 | `043-character-grants.sql` | `character_grants` — things a table hands out that no class schedule granted: a patron teaches a skill, an artefact confers a power, an implant adds S.D.C. The G.M. usually says so out loud mid-session, so the PLAYER types it in on their own sheet; that is why it is not a G.M.-only table and why `reason` is NOT NULL with no default — the person entering a grant is usually its beneficiary. All eight kinds are in the `CHECK` though only `skill` is implemented, because SQLite cannot alter one. See `docs/plans/19-gm-grants.md` |
 | `042-skill-base-formula.sql` | adds `skills.base_formula`, an attribute-derived starting percentage such as `PP*5`. One skill needs it - Phase World's Zero Gravity Movement & Combat, stated as the P.P. attribute number x5% - and storing it at `base` 0 made it indistinguishable from a W.P., which is what 0 means in that column. Consulted only when set, so `base` keeps its meaning and stays the fallback. See `BOOK-INGEST-AUDIT.md` F2 |
 | `039-filament-forge.sql` | The six `ff_` tables — FilamentForge's whole server side, not this app's. Its OFD catalog snapshot (`ff_brands`, `ff_filaments`, refreshed by `scripts/ofd-refresh.mjs`) and what its localStorage used to hold (`ff_config`, `ff_history`, `ff_presets`, `ff_custom_filaments`), keyed to the Access email the way `media_items` is |
@@ -600,12 +601,28 @@ says `--file` returns a summary rather than results and that exit codes here are
 advisory; the counts inside that summary are advisory too. Dump the table and
 diff it.
 
-Three conventions hold across all of them, with one stated exception: the
-dev seed is a different kind of file and follows only the third. Its inserts
-are unguarded and re-applying it fails on `gear.slug`, which is the right
-behaviour for a file whose whole job is to put known rows into an empty
+Four conventions hold across all of them, with one stated exception: the
+dev seed is a different kind of file and follows only the run-recording one.
+Its inserts are unguarded and re-applying it fails on `gear.slug`, which is the
+right behaviour for a file whose whole job is to put known rows into an empty
 local database.
 
+- **Never key a catalog write on a literal `id`.** Match on `name` for skills,
+  spells and psionic powers, and on `slug` for gear; all four columns are
+  `UNIQUE`, so it costs nothing. Catalog ids are
+  `INTEGER PRIMARY KEY AUTOINCREMENT` — **insertion order**, and insertion
+  order is not the same in two databases. Measured against a rebuild on
+  2026-09-05: **0 of 1025 gear ids matched production**, along with 344 of 345
+  skills, 551 of 607 spells and 96 of 116 psionic powers. So `WHERE id = 283`
+  is `Fire: Fire Gout` in production and `Earth: Track` in a rebuilt database,
+  and a script written that way writes the right data onto the wrong rows
+  **with no error at all**. It happened while writing the Book of Magic
+  backfill, and the readback caught it only because it counted the whole
+  corpus rather than the rows the script had touched — which is the argument
+  for writing readbacks that way.
+  **A JOIN on an id is fine**: `gear.id = character_items.item_id` is a
+  relation inside one database and says nothing about which. Eight scripts do
+  it and all eight are correct. `test/smoke.mjs` refuses only a literal number.
 - **Every statement guards itself**, so a script is safe to run twice and safe
   to run *early*. `retire-gear-placeholders.sql` is the clearest case — it does
   nothing at all until the options it rewrites toward exist, and its closing

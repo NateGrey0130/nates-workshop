@@ -74,10 +74,13 @@ export async function onRequestPost({ request, env, params }) {
       `UPDATE campaign_items SET removed_at = datetime('now'), removed_by = ?,
               claimed_by_character_id = ? WHERE id = ?`
     ).bind(guard.email, characterId, row.id),
+    // Derived from the id rather than copied from row.gear_slug, so a stash row
+    // written before migration 044 - which has an id and no slug - still lands
+    // on the sheet with both. RETRO-AUDIT R21.
     env.DB.prepare(
-      `INSERT INTO character_items (character_id, item_id, custom_name, qty, notes, journal_entry_id)
-       VALUES (?, ?, ?, ?, ?, ?)`
-    ).bind(characterId, row.item_id, row.custom_name, row.qty, row.notes, row.journal_entry_id),
+      `INSERT INTO character_items (character_id, item_id, gear_slug, custom_name, qty, notes, journal_entry_id)
+       VALUES (?, ?, (SELECT slug FROM gear WHERE id = ?), ?, ?, ?, ?)`
+    ).bind(characterId, row.item_id, row.item_id, row.custom_name, row.qty, row.notes, row.journal_entry_id),
   ]);
 
   return json({ ok: true, claimed_by: character.name });

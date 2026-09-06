@@ -250,6 +250,7 @@ CREATE TABLE IF NOT EXISTS campaign_items (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
   item_id INTEGER REFERENCES gear(id),              -- NULL = freeform custom item
+  gear_slug TEXT REFERENCES gear(slug),            -- the PORTABLE key; see migration 044
   custom_name TEXT,                                 -- required for freeform items
   qty INTEGER NOT NULL DEFAULT 1,
   notes TEXT,
@@ -484,6 +485,10 @@ CREATE TABLE IF NOT EXISTS character_items (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   character_id INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
   item_id INTEGER REFERENCES gear(id),                -- NULL = freeform custom item
+  gear_slug TEXT REFERENCES gear(slug),              -- the PORTABLE key. A gear id is
+                                                     -- insertion order and means nothing
+                                                     -- in another database; the slug does.
+                                                     -- Migration 044, RETRO-AUDIT R21.
   custom_name TEXT,                                   -- required for freeform items
   qty INTEGER NOT NULL DEFAULT 1,
   equipped INTEGER NOT NULL DEFAULT 0,
@@ -697,6 +702,13 @@ CREATE INDEX IF NOT EXISTS idx_catalog_redirects_target ON catalog_redirects (ca
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '010-catalog-redirects.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'catalog_redirects');
+
+-- Guarded on the column the migration adds, on BOTH tables, because 044 alters
+-- both and a database with one of them is not migrated.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '044-inventory-gear-slug.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('character_items') WHERE name = 'gear_slug')
+  AND EXISTS (SELECT 1 FROM pragma_table_info('campaign_items') WHERE name = 'gear_slug');
 
 -- ═══════════════════════════════════════════════════════════════════
 -- Play mode's event log. Commentary, not a ledger: the character row stays

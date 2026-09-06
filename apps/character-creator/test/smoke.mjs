@@ -383,6 +383,7 @@ import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityOccOptions, 
 import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rollsForPsionics, withRolledPsionics } from '../js/psionics.js';
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { DatabaseSync } from 'node:sqlite';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { appDir, repoRoot, check, section, summary } from './harness.mjs';
@@ -997,6 +998,58 @@ check('class-mention lookup skips blank terms', await (async () => {
 // are the ones where it must NOT be written: a key the surviving row already
 // answers to would shadow a live key with a forwarding address.
 section('Catalog redirects');
+
+// ── the inventory join survives a gear RENAME — RETRO-AUDIT R21 ──
+//
+// Keying inventory on the slug bought portability and cost something the id
+// gave for free: a gear row's slug can be RENAMED by an admin
+// (`catalogs/rows.js`, which files a 'rename' redirect), and twenty renames
+// have already happened on skills. Held by id, a rename could not reach the
+// inventory. Held by slug it would orphan every row - the LEFT JOIN yields
+// NULL and the sheet renders a bare custom line - unless the read falls
+// through `catalog_redirects`.
+//
+// Proved on an in-memory database rather than against the real one, so it
+// can assert the FAILING direction too: the plain join really does lose the
+// row, which is the only reason to believe the redirect arm is doing work.
+{
+  const mem = new DatabaseSync(':memory:');
+  mem.exec(`CREATE TABLE gear (id INTEGER PRIMARY KEY, slug TEXT UNIQUE, name TEXT);
+    CREATE TABLE character_items (id INTEGER PRIMARY KEY, item_id INTEGER, gear_slug TEXT);
+    CREATE TABLE catalog_redirects (catalog TEXT, from_key TEXT, to_id INTEGER, reason TEXT);
+    INSERT INTO gear VALUES (7, 'long-sword', 'Long Sword');
+    INSERT INTO character_items VALUES (1, 7, 'long-sword');`);
+
+  const resolved = () => mem.prepare(
+    `SELECT g.name AS item_name FROM character_items ci
+     LEFT JOIN catalog_redirects cr ON cr.catalog = 'gear' AND cr.from_key = ci.gear_slug
+     LEFT JOIN gear g ON g.slug = ci.gear_slug OR g.id = cr.to_id
+                      OR (ci.gear_slug IS NULL AND g.id = ci.item_id)
+     WHERE ci.id = 1`).get()?.item_name ?? null;
+  const plain = () => mem.prepare(
+    `SELECT g.name AS item_name FROM character_items ci
+     LEFT JOIN gear g ON g.slug = ci.gear_slug WHERE ci.id = 1`).get()?.item_name ?? null;
+
+  check('the inventory join resolves an unrenamed slug', resolved() === 'Long Sword');
+
+  mem.exec(`UPDATE gear SET slug = 'sword-long' WHERE id = 7;
+    INSERT INTO catalog_redirects VALUES ('gear', 'long-sword', 7, 'rename');`);
+  check('a plain slug join LOSES the row after a rename', plain() === null);
+  check('and the redirect arm still resolves it', resolved() === 'Long Sword');
+
+  // The legacy arm: a row written before migration 044 has an id and no
+  // slug, and must still resolve.
+  mem.exec(`INSERT INTO character_items VALUES (2, 7, NULL);`);
+  const legacy = mem.prepare(
+    `SELECT g.name AS item_name FROM character_items ci
+     LEFT JOIN catalog_redirects cr ON cr.catalog = 'gear' AND cr.from_key = ci.gear_slug
+     LEFT JOIN gear g ON g.slug = ci.gear_slug OR g.id = cr.to_id
+                      OR (ci.gear_slug IS NULL AND g.id = ci.item_id)
+     WHERE ci.id = 2`).get()?.item_name ?? null;
+  check('and a pre-044 row with only an id still resolves', legacy === 'Long Sword');
+  mem.close();
+}
+
 
 const capturingDb = (results = []) => ({
   DB: { prepare: (sql) => ({ bind: (...args) => ({ sql, args, all: async () => ({ results }) }) }) },
@@ -3665,6 +3718,57 @@ section('MOS');
         .test(mosDoc.replace(/\r/g, '')));
     check('and parser.js agrees with it',
       /Technical Officer offers seven, the Merc Soldier seven and the/.test(srcParser.replace(/\r/g, '')));
+
+    // ── NO DATA SCRIPT MAY KEY ON A LITERAL CATALOG id ──
+    //
+    // Catalog ids are `INTEGER PRIMARY KEY AUTOINCREMENT`, so they are
+    // INSERTION ORDER, and insertion order differs between environments.
+    // Measured against a database rebuilt from this repo on 2026-09-05:
+    //
+    //   gear             0 of 1025 ids matched production
+    //   skills           1 of 345
+    //   spells          56 of 607
+    //   psionic_powers  20 of 116
+    //
+    // So `WHERE id = 283` picks Fire: Fire Gout in production and Earth: Track
+    // in a local or rebuilt database. A script written that way puts the right
+    // data on the wrong rows ANYWHERE but the database it was generated
+    // against, and it does it silently - there is no error, just wrong rows.
+    // That happened here while writing the Book of Magic backfill; the readback
+    // caught it only because it counted the whole corpus rather than the rows
+    // the script itself had touched.
+    //
+    // THE NATURAL KEY ALREADY EXISTS AND IS ALREADY UNIQUE - `name` on skills,
+    // spells and psionic_powers, `slug` on gear - so keying on it costs
+    // nothing.
+    //
+    // A JOIN ON AN id IS FINE and must stay fine: `gear.id =
+    // character_items.item_id` is a relation inside one database and says
+    // nothing about which database. Eight scripts do that and all eight are
+    // correct. Only a literal NUMBER is refused.
+    //
+    // Asserted over the WHOLE corpus rather than over the lines a branch adds,
+    // because the corpus is at zero and an invariant that is already true is
+    // the cheap kind to keep.
+    const CATALOG = 'spells|skills|psionic_powers|gear|enchantments';
+    const LITERAL_ID = new RegExp(
+      `(?:UPDATE|DELETE\\s+FROM)\\s+(?:${CATALOG})\\b[\\s\\S]{0,400}?`
+      + `WHERE[\\s\\S]{0,120}?\\bid\\s*(?:=|IN\\s*\\()\\s*\\d`, 'i');
+    const idKeyed = files.filter((f) => LITERAL_ID.test(read(f)));
+    check('no data script keys a catalog write on a literal id',
+      idKeyed.length === 0,
+      `${idKeyed.join(', ')} - ids are insertion order and differ per environment; `
+      + 'key on name (or slug, for gear)');
+
+    // And the check is not vacuous: the pattern it looks for really does match
+    // the shape it forbids. Without this, a regex that never matched anything
+    // would pass forever and prove nothing - the failure R16 was filed for.
+    check('and the guard matches the shape it forbids',
+      LITERAL_ID.test("UPDATE spells SET description = 'x' WHERE id = 283;")
+      && LITERAL_ID.test('DELETE FROM gear WHERE id IN (1, 2);'));
+    check('while leaving an id JOIN alone',
+      !LITERAL_ID.test('UPDATE character_items SET custom_name = '
+        + '(SELECT name FROM gear WHERE gear.id = character_items.item_id);'));
   }
 
   const names = (c) => (c.skills.occ_skills || []).map((x) => x.name).filter(Boolean);

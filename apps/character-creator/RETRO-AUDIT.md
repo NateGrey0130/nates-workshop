@@ -1976,6 +1976,138 @@ rather than silently reconciling them.
 which is the decision this finding is really asking for.
 **Ongoing cost:** none, plus one redirect row per rename forever.
 
+### R21 — medium — `character_items.item_id` stores a number that means nothing outside one database
+
+**FILED, NOT TAKEN.** Turned up by the Book of Magic backfill, which keyed its
+first draft on `id` and wrote the right text onto the wrong rows locally.
+
+**Catalog ids are insertion order.** All four catalog tables are
+`INTEGER PRIMARY KEY AUTOINCREMENT`, and production's insertion order is months
+of data scripts, catalog-editor writes and importer confirms, while a rebuild's
+is filename order. Measured against a database rebuilt from this repo,
+`--remote` vs `scripts/rebuild-local.mjs`, 2026-09-05:
+
+| table | rows | ids matching production |
+|---|---|---|
+| `gear` | 1025 | **0** |
+| `skills` | 345 | 1 |
+| `spells` | 607 | 56 |
+| `psionic_powers` | 116 | 20 |
+
+**For three of the four that is harmless**, because characters reference skills,
+spells and psionics **by name** inside their JSON columns — the id is purely
+internal. **Gear is the exception**, and it is referenced *by id*:
+
+```
+db/schema.sql:252   campaign_items.item_id  INTEGER REFERENCES gear(id)
+db/schema.sql:486   character_items.item_id INTEGER REFERENCES gear(id)
+```
+
+So **a database rebuilt from this repo would attach every character's inventory
+to the wrong item**, silently, with the foreign key satisfied throughout.
+
+**Why this is latent rather than on fire.** `scripts/d1-backup.mjs` is the
+recovery path and copies the live database *with* its ids, and a freshly built
+environment has no characters to mis-wire. It bites only where a rebuilt
+database meets real character data — which is precisely the moment nobody would
+be looking for it.
+
+**Proposal:** store the gear **slug** rather than the id. Add `item_slug`,
+backfill it from `gear.slug`, move reads and writes over, then drop `item_id`;
+same for `campaign_items`. **Posture: SCHEMA CHANGE** — `schema-change` says a
+column lands in five places, and this one also touches the API and the sheet.
+
+**There is a second argument for it beyond portability, and it may be the
+better one.** Class markdown already cites gear by **slug**, in a field also
+called `item_id` (`equipment_starting[].item_id`). The same name means a slug in
+one place and an integer in another, which is its own trap; this change makes
+them agree.
+
+**What is already done and is NOT this finding:** `test/smoke.mjs` now refuses a
+data script that keys a catalog write on a literal id, and `operations.md` and
+the `class-import` skill carry the rule. That closes the authoring hazard for
+all four tables. `R21` is only about the stored foreign key.
+
+**Evidence:** the rebuild comparison above, 2026-09-05; both `REFERENCES gear(id)`
+lines read individually; `characters.skills` / `characters.powers` confirmed to
+store names.
+**Confidence: high** on the id instability and on the two foreign keys.
+**Medium** on the migration's blast radius until the call sites are counted.
+**Ongoing cost:** none once done; it removes a portability trap rather than
+adding a rule to remember.
+
+**Taken, 2026-09-05 (PR #747) — ADDITIVE, on Nate's word: the column lands,
+the drop does not.** Migration `044-inventory-gear-slug.sql` applied to
+production before the merge; all **78** inventory rows backfilled, **zero**
+disagreeing with their id, `campaign_items` empty as expected.
+
+### The release audit found a defect the plan would have shipped
+
+**The column could not be called `item_slug`.** `characters/[id].js` and
+`campaigns/[id]/items.js` both alias `gear.slug AS item_slug` beside a
+`SELECT <table>.*`, so a stored column of that name returns **two columns called
+`item_slug`** and the row object silently keeps one — engine-dependent, and
+`test/regression.mjs` matches on that alias to find the armour and weapon rows.
+It is `gear_slug`.
+
+### A decision this finding should have named
+
+`docs/plans/03-items-to-gear.md` → *Scope of the change* says *"`character_items`
+keeps its name and its `item_id` column"*, and `known-limitations.md:377` says
+the same. **Those settled a different question** — *renaming* for naming purity
+in PR #17, not *re-keying* for portability — so this is not a re-proposal. But
+`audit-menu` says a finding may not fail to say a decision exists, and `R21`
+did not.
+
+### Why the drop is not here
+
+- **SQLite refuses it while the `CHECK` names the column** — tested, not
+  assumed: `no such column: item_id`. It needs a full table rebuild, and both
+  tables carry indexes and outgoing foreign keys that `036`'s precedent
+  explicitly did **not** have.
+- **Ten committed data scripts join on `item_id`**, and `rebuild-local.mjs`
+  replays every one — the repo's own portability check would start failing.
+- **The smoke check that polices `schema-change` step 2 only understands
+  `ALTER TABLE ADD COLUMN`**, so a rebuild-style migration is invisible to it.
+
+The portability hazard closes the moment reads prefer the slug, which is now.
+
+### What the audit found that R21's evidence method could not
+
+`R21` cited *"both `REFERENCES gear(id)` lines read individually"*, and that
+method only finds declared foreign keys. **`character_drafts.state` holds raw
+gear ids in its JSON** — one live draft, two of them. So the wizard still POSTs
+integers, and a draft saved before this deploy and resumed after it still will.
+That is why every write **derives the slug from the id inside the same
+statement** rather than expecting one from the client: there is no window and no
+caller that can supply one key without the other.
+
+### The cost of the slug, paid rather than discovered later
+
+Held by id, inventory was insulated from a gear **rename**. Held by slug it is
+not — and renaming a catalog row is a live admin path that has already been used
+**twenty times** on skills. So the read falls through `catalog_redirects`, and a
+smoke check proves the arm does real work by asserting the failing direction
+too: *a plain slug join LOSES the row after a rename*, while the redirect arm
+still resolves it. A third arm keeps a pre-`044` row resolving on its id alone.
+
+The audit also noted an argument for `R21` that `R21` never made: a slug-keyed
+row that missed a merge repoint becomes **recoverable** through
+`catalog_redirects`, where an id-keyed one is simply wrong.
+
+### Two things left standing, deliberately
+
+- **`gear.slug` is `UNIQUE` but nullable.** Production is clean — 0 null or
+  empty, 1025 distinct of 1025 — so the backfill was safe. Making it `NOT NULL`
+  is a second table rebuild and belongs with the drop.
+- **`R21`'s "ongoing cost: none" is now "one invariant"** until the drop: two
+  columns that could disagree. `regression.mjs` asserts they do not, on a real
+  round trip through the API.
+
+**Also corrected in passing:** my own first version of that regression check
+looked for the items under `character.items` and reported a join failure that
+was its own — the payload returns `items` at the top level.
+
 ---
 
 ## Not established
