@@ -94,6 +94,11 @@ a:hover { text-decoration: underline; }
   margin-bottom: 16px;
 }
 .panel h2 { font-size: 21px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 4px; }
+/* UI-AUDIT F31 promoted the catalog's group headings h4 -> h2 (that page had no
+   h2 or h3 at all, so it ran H1 -> H4). .dupe-head alone loses to .panel h2
+   above, so this restates the h4 rendering at a specificity that wins.
+   Measured: 13px/700/normal/margin 0 0 2px before and after. */
+.panel h2.dupe-head { font-size: 13px; letter-spacing: normal; margin: 0 0 2px; }
 .panel h3 {
   font-size: 14px; font-weight: 600; color: var(--text-primary);
   margin: 16px 0 7px;
@@ -167,6 +172,15 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--b
    The border change above stays as the pointer-and-typing affordance.
    Deliberately NOT promoted to /shared/styles.css: that would hand three other
    apps a focus ring overnight, which is a bigger change than it looks. */
+/* UI-AUDIT F31. sheet.js emitted h3 under the shell's h1 with no h2 between,
+   so the sheet ran H1 -> H3. Those headings are now h2 and carry .sub-h, which
+   holds the size they had - UA h3 is 1.17em, UA h2 is 1.5em, and nothing in
+   either stylesheet sized them. A CLASS rather than a container selector on
+   purpose: the promoted headings sit in .box, in modals and in composed
+   fragments, and a bare `h2` rule would also catch campaign.js and
+   dashboard.js, whose h2s render at 1.5em today and must keep doing so. */
+.sub-h { font-size: 1.17em; }
+
 :where(button, input, a, summary, [tabindex]):focus-visible {
   outline: 3px solid var(--accent-secondary);
   outline-offset: 2px;
@@ -399,6 +413,13 @@ th {
 .pick:hover { border-color: var(--accent); transform: translateY(-2px); }
 .pick.sel { border-color: var(--accent); background: var(--accent-glow); }
 .pick h4 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+/* UI-AUDIT F31 promoted these card titles h4 -> h3 so the wizard stops skipping
+   a level under its <h2>. The tag change is NOT free: an h3 in a .panel picks up
+   .panel h3 (14px, 16px top margin), so this holds the render at what .pick h4
+   gave. Measured before/after over both stylesheets: 15px/600/margin 0 0 8px,
+   identical. Same specificity as .panel h3 and later in the file, which is what
+   makes it win - do not move it above line 97. */
+.pick h3 { font-size: 15px; font-weight: 600; margin: 0 0 8px; }
 /* The tag row and the lore blurb were touching. */
 .pick .tag { margin-bottom: 2px; }
 .pick p { margin-top: 10px; line-height: 1.5; }

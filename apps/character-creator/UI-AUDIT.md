@@ -2183,6 +2183,65 @@ before/after measurement `F24` already demonstrated on `.logo`.
 
 **Ongoing cost:** none.
 
+**Taken, 2026-09-06, with the posture WIDENED on Nate's word — markup plus the
+CSS needed to hold the render.** The finding's own posture said *"no CSS rule
+added"*, and that was not achievable: it rested on a claim that is false.
+
+**The false claim, and how it was caught.** This finding says *"no CSS rule in
+`apps/character-creator/styles.css` selects any of these by element name, which
+is what makes it a tag swap rather than a restyle."* **Eight rules do** —
+`.panel h2` `:96`, `.panel h3` `:97`, `.pick h4` `:385`, `.notes-banner h3`
+`:1041`, `.stat-col h4` `:1356`, `.block-editors h4` `:1392`, and two print rules
+at `:1497-1498`. `audit-premise-auditor` found them and **measured what the swap
+would do** rather than reasoning about it.
+
+**Measured before and after, on a fixture linking both stylesheets in the
+shells' own load order, rendered headless over CDP:**
+
+| | before | promoted, unpinned | as shipped |
+|---|---|---|---|
+| catalog `.dupe-head` | 13px / 700 / normal / `0 0 2px` | **21px, letter-spacing −0.3px, margin 4px** | **13px / 700 / normal / `0 0 2px`** |
+| wizard `.pick` card title | 15px / 600 / `0 0 8px` | **14px, and a 16px TOP margin appears** | **15px / 600 / `0 0 8px`** |
+| sheet section heading | 18.72px / 700 / `0` | **24px** | **18.72px / 700 / `0`** |
+| sheet modal title | 18.72px / 700 / `0` | **24px** | **18.72px / 700 / `0`** |
+
+**So the finding's *"if a level change moves a single rendered pixel it has been
+done wrong"* is kept — by adding three rules, which is what the finding said it
+would not do.** The half that mattered survived; the half that was a guess about
+the stylesheet did not.
+
+**Scope, smaller than the finding in one place and larger in another.**
+
+- **`app.js`: three `h4` promoted to `h3`** — `:774` and `:777` under the `h2` at
+  `:771`, and `:1096` under the `h2` at `:899`. **`:3407` and `:3411` were left
+  alone**: they sit under the `h3` at `:3371`, so `h3`→`h4` there is already legal
+  and promoting them would have *created* a skip rather than closed one. This
+  finding did not distinguish them.
+- **`catalog.js`: all four `.dupe-head` promoted `h4` → `h2`.** That page had no
+  `h2` and no `h3` at all.
+- **`sheet.js`: ten of eleven `h3` promoted to `h2.sub-h`. `:1761` was left as an
+  `h3` on purpose** — *"New abilities"* is a sub-heading inside the level-up modal
+  whose title is `:1758`, so promoting both would have flattened two levels into
+  one. This finding called the eleven a block; they are not.
+
+**Why a class rather than a container selector**, which is the one design
+decision here. The promoted sheet headings sit in `.box`, in modals and in
+composed fragments, and nothing in either stylesheet sized them — they were UA
+defaults, `1.17em` for `h3` against `1.5em` for `h2`. A bare `h2` rule would also
+have caught `campaign.js` and `dashboard.js`, whose `h2`s render at 24px today and
+must keep doing so. `.sub-h` cannot collide, and the fixture proves both: a plain
+`h2` still measures **24px** and `.panel h2` still **21px** after the change.
+
+**Verified on the live pages as far as they can be reached without touching
+state.** The catalog page reports one `h1` and no skip; the wizard reports
+`H1 → H2`. The wizard's system cards and the sheet could **not** be rendered live
+because a real draft sits in local `character_drafts`, and `verify-ui` is explicit
+that *Discard and start fresh* destroys it — so it was left alone and the draft
+count was confirmed unchanged at **1** afterwards. **Those two contexts are
+fixture-measured rather than app-measured, and that is stated rather than
+implied.**
+
+
 ### F32 — low — `prefers-reduced-motion` is absent from the character creator, and present in the sibling app
 
 **Deferred by `F16`**, whose outcome note reads *"`prefers-reduced-motion` was

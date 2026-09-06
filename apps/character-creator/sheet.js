@@ -168,7 +168,7 @@ function naturalAbilities(cls) {
     return `<li><b>${escHtml(name || '')}</b>
       ${desc ? `<div class="muted small">${escHtml(desc)}</div>` : ''}</li>`;
   }).join('');
-  return `<h3>Natural abilities</h3><ul style="margin-left:18px">${rows}</ul>`;
+  return `<h2 class="sub-h">Natural abilities</h2><ul style="margin-left:18px">${rows}</ul>`;
 }
 
 // Rebuilt in place after a G.M. edit — the same targeted-refresh discipline
@@ -205,7 +205,7 @@ function powersHtml(cls) {
       <input id="gm-power-name" class="mini-in wide" style="display:none" placeholder="Power name">
       <button class="btn btn-sm noprint" onclick="addGmPower()">Add</button>
     </div>` : '';
-  const heading = taken.length || w ? '<h3>Chosen powers</h3>' : '';
+  const heading = taken.length || w ? '<h2 class="sub-h">Chosen powers</h2>' : '';
   return `${heading}<ul style="margin-left:18px">${rows}</ul>${add}`;
 }
 
@@ -1755,7 +1755,7 @@ function levelUpPanel() {
     `<li class="small">Level ${g.level}: ${g.grants.map(escHtml).join('; ')}</li>`).join('');
   return `
   <div class="levelup noprint">
-    <h3 style="margin-top:0">⬆ Level up! ${p.from_level} → ${p.to_level}
+    <h2 class="sub-h" style="margin-top:0">⬆ Level up! ${p.from_level} → ${p.to_level}
       <span class="muted small">— review, tweak if your GM says so, then confirm</span></h3>
     <table>${poolRows}${skillRows}</table>
     ${grants ? `<h3>New abilities</h3><ul style="margin-left:18px">${grants}</ul>` : ''}
@@ -1790,7 +1790,7 @@ function powerKindBlock(grant, kind) {
   const isSpell = kind === 'spell';
   const label = isSpell ? 'Spells' : 'Psionic powers';
   if (grant.unknown) {
-    return `<h3>${label}</h3><p class="warn small">This class's definition does not record how
+    return `<h2 class="sub-h">${label}</h2><p class="warn small">This class's definition does not record how
       many ${isSpell ? 'spells' : 'powers'} it learns per level, so none are offered. Nothing is
       guessed — add them by hand, or re-import the class with
       <code>${isSpell ? 'spells_per_level' : 'powers_per_level'}</code>.</p>`;
@@ -1833,7 +1833,7 @@ function powerKindBlock(grant, kind) {
       </div>`).join('');
   }).join('');
 
-  return `<h3>${label} <span class="muted small">— ${grant.total} earned</span></h3>
+  return `<h2 class="sub-h">${label} <span class="muted small">— ${grant.total} earned</span></h2>
     <p class="muted small">Anything left blank is banked and waits on the sheet.</p>${rows}`;
 }
 
@@ -1900,7 +1900,7 @@ function pendingPowersPanel() {
   if (!C.claimingPowers) {
     return `
     <div class="levelup noprint">
-      <h3 style="margin-top:0">✨ ${n} unspent ${n > 1 ? 'powers' : 'power'}
+      <h2 class="sub-h" style="margin-top:0">✨ ${n} unspent ${n > 1 ? 'powers' : 'power'}
         <span class="muted small">— earned at ${
           C.pendingPowers.map((g) => 'level ' + g.granted_at_level).join(', ')}</span></h3>
       <button class="btn" onclick="C.claimingPowers = true; render()">Choose now</button>
@@ -1938,7 +1938,7 @@ function pendingPowersPanel() {
   }).join('');
   return `
   <div class="levelup noprint">
-    <h3 style="margin-top:0">✨ Choose ${n} ${n > 1 ? 'powers' : 'power'}</h3>
+    <h2 class="sub-h" style="margin-top:0">✨ Choose ${n} ${n > 1 ? 'powers' : 'power'}</h2>
     ${rows}
     <div class="rowline" style="margin-top:10px">
       <button class="btn btn-primary" onclick="claimPowers()">Learn these</button>
@@ -1970,7 +1970,7 @@ function pendingPicksPanel() {
   if (!C.claiming) {
     return `
     <div class="levelup noprint">
-      <h3 style="margin-top:0">🎓 ${n} unspent skill pick${n > 1 ? 's' : ''}
+      <h2 class="sub-h" style="margin-top:0">🎓 ${n} unspent skill pick${n > 1 ? 's' : ''}
         <span class="muted small">— ${C.pendingPicks.map((g) =>
           `${g.count} ${g.kind === 'secondary' ? 'secondary' : 'related'} at level ${g.granted_at_level}`).join(', ')}</span></h3>
       <button class="btn" onclick="C.claiming = true; render()">Choose now</button>
@@ -2088,7 +2088,7 @@ function pickerBlock(grants, total, prefix) {
   }).join('');
 
   return `
-  <h3 style="margin-bottom:4px">New skill${total > 1 ? 's' : ''} — ${total} to choose</h3>
+  <h2 class="sub-h" style="margin-bottom:4px">New skill${total > 1 ? 's' : ''} — ${total} to choose</h2>
   <p class="muted small" style="margin-top:0">
     ${grants.map((g) => `${g.count} ${g.kind === 'secondary' ? 'secondary' : 'related'} from level ${g.level}`).join(', ')}.
     New skills start at their base percentage. Leave any blank and it waits on your sheet.</p>
@@ -2564,7 +2564,7 @@ function variantProposalPanel() {
   const nothing = !attrRows && !poolRows;
   return `
   <div class="levelup noprint">
-    <h3 style="margin-top:0">${escHtml(p.from_name || 'Current')} → ${escHtml(p.to_name)}</h3>
+    <h2 class="sub-h" style="margin-top:0">${escHtml(p.from_name || 'Current')} → ${escHtml(p.to_name)}</h2>
     ${nothing
       ? `<p class="small">This stage sets no different dice or pools — only what the class grants
          changes, and that applies as soon as the stage does.</p>`
