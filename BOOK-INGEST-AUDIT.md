@@ -2611,3 +2611,71 @@ renders. Measured 2026-09-06 across the 588 spells carrying
 `area_of_effect` on 13 - so no column is being categorically dropped by the
 importers, and what is left is per-row fidelity against the printed page, which
 is `F1` on this menu. Dropped deliberately, not deferred.
+
+**Taken, 2026-09-06 (PR #774).** Leading with the corrections, because the
+premise audit disagreed with this finding in six places and two of them changed
+what shipped.
+
+**Two things this finding asked for could not be done as written.** Both were
+put to Nate rather than quietly rescoped, and both answers are in the PR:
+
+- **The `catalog.md` sentence named a column that does not exist.** It asked for
+  a rule about "a spell or psionic row carrying a level, a cost and no
+  `description`", and `psionic_powers` has no `level` column at all - read at
+  `db/schema.sql` lines 590-611 on 2026-09-06. That sentence also defined a
+  NARROWER stub than the predicate this same finding proposed two paragraphs
+  below it, which tests the text alone. Answered **doc matches check**: the
+  definition that shipped is the text alone, for both tables, and it says so.
+- **The delivery claim was false, and it was the sentence justifying the whole
+  posture.** This finding said `book-survey` already requires pasting
+  `source-coverage.mjs --remote` into every survey, so the new lines would reach
+  a book session without a rule anyone has to remember. What
+  `book-survey/reference/SURVEY.md` asks for is the PER-BOOK coverage line; the
+  BACKLOG block is five global counts and was never part of it.
+  `grep -rln BACKLOG apps/character-creator/docs/surveys/` returned nothing on
+  2026-09-06 - zero of ten surveys carry one. Answered by **widening the scope**
+  rather than by correcting the note alone: `SURVEY.md` now asks for the BACKLOG
+  block beside the coverage line, which is what makes the claim true.
+
+**Four further corrections, none of which changed what shipped:**
+
+- This finding's own opening list of the five signatures dropped the
+  `source = 'import'` clause from three of them. Its later paragraph - three of
+  five carry the filter, both gear lines do not - is the correct one, and is the
+  one the change was built from.
+- The `INGESTION-AUDIT` `F5` arithmetic was over-attributed here. That note
+  accounts for 13 of the 16 (five Hand to Hand rows and eight non-percentile
+  skills), not 16. The "4x" and the narrowed definition are quoted correctly.
+- *"Nothing here is inferred"* overreached. The delivery claim above was reasoned
+  to rather than run, and so is *"there is no spell whose text is correctly
+  absent"* - which stays unsettled, exactly as this finding's own Confidence line
+  says, until a book lands a row with no text.
+- Every D1 number in this finding was re-run independently and **reproduced
+  exactly**: 607/0/63/463, 116/0/65/655, 17 seed and 6 import of the 23, and
+  588 imported spells with damage 95, casting_time 43, area_of_effect 13.
+
+**What shipped**, posture unchanged - advisory, log-not-cap, and
+`scripts/source-coverage.mjs` still has exactly two exit points, both
+`process.exit(0)`:
+
+- two `backlog` entries, `spell text missing` and `psionic text missing`, keyed
+  on the text alone with no `source` filter;
+- the *Stubs* section of `class-import`'s `catalog.md` now says a spell or
+  psionic power with no `description` is a stub, and that the test is the text
+  alone;
+- `book-survey`'s `reference/SURVEY.md` asks a survey to paste the BACKLOG block
+  alongside the per-book coverage line.
+
+**Proved by making it fail.** Two rows carrying no description were inserted
+into the local database: both new lines moved 0 to 1, no other backlog line
+moved, and deleting the rows returned both to 0. Both proof rows were
+`source = 'seed'`, which exercises the absent filter as well. A check that has
+only ever printed zero has not been shown to work, and this one now has.
+
+**Observed and deliberately NOT changed, recorded so it is neither lost nor left
+as a nameless deferral** (`META-AUDIT` `A16`): the comment above the array this
+PR edits, `scripts/source-coverage.mjs` lines 252-257, says the 0/0 skill
+signature "counts 21 rows and 20 of them are correct". `INGESTION-AUDIT` `F5`'s
+outcome note settled on 5 stubs of 21, which makes 16 correct. They disagree by
+four, and neither figure is this finding's. Not filed as a finding; raise it if
+it is worth one.
