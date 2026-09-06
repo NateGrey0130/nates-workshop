@@ -13,7 +13,7 @@ the human view of the same thing plus the import status.
 
 | slug | book | PDF pages | layer | printed | offset | status |
 |---|---|---|---|---|---|---|
-| `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 222 | **+0** | cached |
+| `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 222 — see below | **+0** | **surveyed** |
 | `underseas` | Rifts WB 7: Underseas | 216 | SCAN (OCR) | 214 | **+0 / -1 split** | cached |
 | `new-west` | Rifts WB 14: New West | 226 | text layer | 224 | +1 | cached |
 | `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | cached |
@@ -257,6 +257,72 @@ retiring or merging one belongs to the catalog editor's duplicate tools, which
 write redirects and rewrite characters. SQL cannot do it safely — the same
 reasoning `add-juicer-uprising-skills.sql` records for Interrogation Techniques.
 Establish what the row should be before touching it.
+
+### `triax` survey, 2026-09-06
+
+Surveyed, nothing imported yet. The survey is
+`apps/character-creator/docs/surveys/triax.md` and it is what the next session
+boots from. Four things it established that change what the import will cost:
+
+**The book ships TWO class authorities and they agree exactly.** The O.C.C.
+roster on printed 156 and the Experience Tables on printed 224 name the same
+sixteen O.C.C.s. Fourteen ladder headings cover those sixteen because two ladders
+are shared — one by the Infantry Soldier and the Police, one by the
+Communications Officer, the Medic and the Field Mechanic. Printed 224 was read as
+a 200 dpi render, not off the OCR, which is what established that; the text layer
+welds its five columns.
+
+**Twenty-one playable classes, from twenty entries.** Sixteen O.C.C.s plus four
+gargoyle R.C.C. entries, one of which — the Gargoyle and Gurgoyle — states two
+creatures separately at every point that matters and splits into two rows. The
+back cover's "20 new O.C.C.s" is marketing copy and counts neither the split nor
+the R.C.C.s; do not use it as an authority.
+
+**The four R.C.C.s carry NO ladder on printed 224 and are still playable.** Each
+says player characters use another class's table — the psi-stalker's, the
+dragon's, the Dog Pack's — and they sit under a heading that calls them optional
+player characters. This is the Royal Kreeghor check run from the other side: an
+absent ladder is a question, not a verdict, and reading the entry answered it.
+`M.O.M. Conversion` (printed 168-170) is the one that really is not a class — a
+process description, absent from both authorities, with no attribute, skill or
+equipment line.
+
+**The skills diff came back near-empty, and that is the useful part.** Printed 155
+prints seven new skills and the catalog already holds all seven; RUE defines six
+of them on its own skill list, so they are false gaps rather than imports. Only
+`Language: Gargoyle` and `Language: Brodkil` are new rows. `Streetwise: Drugs`
+is a **re-citation** — it currently cites the phantom `Rifts Skill List`, and
+Triax printed 155 is the earliest real printing on this machine, which takes that
+book from 43 untraceable rows to 42.
+
+**One trap worth carrying forward.** `Horsemanship: Exotic Animals` is uncited in
+the catalog and Triax prints `30% +4%` beside the catalog's `+5%`, which reads
+exactly like an error to correct. It is not: RUE printed 302 gives `30%/20% +5%`
+and RUE is the later book, so the catalog is already right and Triax's figure is
+the variant. Correcting it would have moved a value every published class can
+reach.
+
+The vessel exclusion is larger here than in any book this batch has taken —
+about **107 of the 222 printed pages** are power armor, robots, drones, borg
+models, combat vehicles and gargoyle machines, all `BOOK-INGEST-AUDIT.md` F3.
+No new finding was filed; the book needs no mechanic F3 through F11 do not
+already name.
+
+**`printed_pages` in `scripts/books.json` is 222 and the book's last folio is
+224.** Printed 223 is the map and printed 224 is the Experience Tables, which
+carries its folio plainly. Nothing is broken by it today — the gate wants the
+cache to hold at least `printed_pages` pages and it holds 225 — but a row cited
+to p.224 would cite a page the registry thinks does not exist. **Correct it in
+the first data PR.** The offset was re-checked at the back of the book rather
+than trusted from the whole-book vote, on the `underseas` precedent: `p222`
+carries folio 222 and `p224` carries 224, so +0 is constant end to end.
+
+`triax-pump-weapon` is still the one untraceable row and it is now understood:
+the book prints two pump weapons, the TX-5 Pump Pistol on printed 143 and the
+TX-16 Pump Rifle on printed 144, plus the pump-round costs on 141. The stub is
+referenced by the twelve Warlock classes, so it gets a page range and the two
+real rows get imported — **it is not retired or merged in SQL**, for the same
+reason `W.P. Rope` is not.
 
 ## What the kickoff session established
 
