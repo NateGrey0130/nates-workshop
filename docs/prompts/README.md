@@ -74,6 +74,7 @@ Audit briefs:
 | `meta-audit-prompt.md` | `META-AUDIT.md` — the menus themselves, and the discipline that fills them |
 | `ship-pr-audit-prompt.md` | `SHIP-PR-AUDIT.md` — one skill, against the workflow that changed under it |
 | `protocol-retrospective-prompt.md` | `META-AUDIT.md` `A13`–`A15` — three conventions, asked whether they still earn their cost rather than whether they are still true. **Filed into an existing menu, not a new one** |
+| `audit-retrospective-prompt.md` | `META-AUDIT.md` `A16`–`A18` — the corpus read as a board: cross-menu handoffs, the closures with no PR behind them, and the open set. **Filed into the same existing menu.** Its own evidence table was falsified by #748 while it was being written, and the correction is left visible in it |
 | *(none kept)* | `REPO-AUDIT.md` — **its brief was not saved.** See below |
 | `portability-audit-prompt.md` | **nothing.** The investigation was dropped the day it was written — see below |
 

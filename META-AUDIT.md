@@ -1,12 +1,18 @@
 # Meta-audit — the menus as a reference, and the discipline that fills them, 2026-09-03
 
-> **NOTHING ON THIS MENU IS OPEN.** Read each finding's own heading for its
-> state and its PR number. The protocol retrospective's findings sit under
-> **`## Opened by the protocol retrospective, 2026-09-04`** at the end of this
-> file, after the original pass; the original pass was filed 2026-09-03 against
-> `main` @ `3332349` (the merge of #641), the retrospective against `2eed604`
-> (the merge of #699). Findings are `### A<n> — <severity> — <title>`, severity
-> lowercase.
+> **There is open work on this menu.** Read each finding's own heading for its
+> state and its PR number. Two later passes have added sections after the
+> original one, each under its own dated `##` heading at the end of the file:
+> **`## Opened by the protocol retrospective, 2026-09-04`**, then
+> **`## Opened by the audit retrospective, 2026-09-06`**. The original pass was
+> filed 2026-09-03 against `main` @ `3332349` (the merge of #641), the protocol
+> retrospective against `2eed604` (the merge of #699), and the audit
+> retrospective against `c54a794` (the merge of #750). Findings are
+> `### A<n> — <severity> — <title>`, severity lowercase, and they run in each
+> pass's own order rather than in severity order across the file.
+>
+> **`A18` is an information item that proposes nothing**, which is worth knowing
+> before reading it as outstanding — it is a dated snapshot and says so.
 >
 > **This header does not comply with the rule `A13` shipped, and is deliberately
 > not retrofitted to.** `A13` added *What a status header may carry, and what it
@@ -2423,3 +2429,316 @@ see `SETUP-v2-CHANGES.md`, which is the trap this repo has documented since
 `REPO-AUDIT` `G11` miscounted the root with it. The hand-over pass re-ran the
 globs and reproduced the omission, because re-running a command cannot see what
 the command was always blind to. `A15`'s note has the corrected figures.
+
+---
+
+## Opened by the audit retrospective, 2026-09-06
+
+Three findings, `A16`–`A18`, from the brief at
+`docs/prompts/audit-retrospective-prompt.md`. They sit here rather than in a
+twenty-second menu for the reason `A13`–`A15` did: `audit-menu` → *When not to*
+says a single finding about the apparatus belongs on whichever existing menu
+owns that surface. Nate asked for the pass by name on 2026-09-06 and named its
+three questions — do the menus conflict or block each other; do the closures with
+no pull request behind them hold up; and what is actually open.
+
+**Read against `main` @ `c54a794`** (the merge of #750), all 21 menus read under
+the headings rather than grepped. **31,736 lines**, up from 27,952 at the
+protocol retrospective two days earlier and up 56 lines during the writing of
+the brief itself.
+
+**The first question closed with the frame corrected rather than confirmed.**
+Nate's worry was *conflicting menus*. Across 634 cross-menu citations this pass
+found **no two menus asserting opposite facts**. What it found instead is the
+opposite shape: menus that hand work to each other correctly and visibly —
+`ISBN-AUDIT` `F7` and `BULK-AUDIT` `B6` declare their dependency by number in
+both directions and were taken in that order; `DOCS-AUDIT-2` routed two findings
+to `MACHINE-AUDIT` as `M19`/`M20` rather than duplicating them, citing the rule
+by name; `EFFICIENCY-AUDIT` `F1` and `F7` and `cc/AUDIT` `F3` each carry a
+supersession by another menu under the finding. **The cross-menu machinery
+works.** `A16` is about the one place it has nothing to work with.
+
+**The second question closed with the method already in the tree.** The
+non-taken closures — `moot`, `declined`, `withdrawn`, `blocked`, `closed not
+taken` — were re-read, and the pattern is that the corpus already re-audits
+them. `CLASS-AUDIT`'s *"Checked and still true"* capability list, the
+highest-risk surface in the corpus, was re-swept on 2026-09-04 by `RETRO-AUDIT`
+`R11`/`R13`: **one of eight entries partly stale, seven re-checked and holding,
+one annotated, and two that were never verifiable "against the current code" as
+the list's own lead-in claimed.** `CLASS-AUDIT`'s *"Blocked: need book"* item
+was closed out on 2026-08-26 with **both of its book claims wrong** — the book
+it said was not on this machine already was. `A17` is not about a missing
+method; it is about a remedy that exists and is defeated by something else this
+repo has measured.
+
+**A result of "the board reads better than the worry suggests" is most of what
+this pass found, and it is stated plainly rather than padded with marginal
+findings.** Three findings follow, and two of them name work that is genuinely
+lost rather than merely untidy.
+
+### A16 — medium — a finding may hand work to "a separate finding" without filing one, and three such deferrals are still standing
+
+A finding that scopes part of its subject out often names the remainder as *"a
+separate finding"*, *"its own finding"* or *"a separate PR"* — and then nothing
+files one. The work is real, measured and written down, and it is invisible to
+every reader afterwards, because the menu's status lives under numbered findings
+and this work has no number.
+
+**This shape has been caught twice already, each time as a single instance, and
+neither pass proposed a general remedy.**
+
+- `META-AUDIT` `A5` — `SETUP-v2-CHANGES` recorded a live defect as *"filed for a
+  separate PR"*; it was never filed. It got a number a day later as
+  `pick3cut5/AUDIT` `F11`, and filing it immediately opened `F12`, a worse gap
+  neither `A5` nor `F11` had seen.
+- `SKILL-AUDIT` `F32` — `REPO-AUDIT` `G8` deferred `regression.mjs` in CI to
+  *"its own finding, once this workflow has a track record"*; the condition was
+  met and no such finding existed. Taken as #686.
+
+**Three more are standing today, and all three are still true.** Measured
+2026-09-06 at `c54a794`:
+
+| where | the deferred work | still true? |
+|---|---|---|
+| `UI-AUDIT` `F24` | *"Fixing the `h2`→`h4` jumps inside `app.js`/`catalog.js` is a **separate** finding"*, and its outcome note adds *"That is the separate finding this one names, and it is still open."* | **yes** — `grep -co '<h2' sheet.js` = **0** with 11 `<h3>`, so the sheet runs `H1→H3`; `catalog.js` is `h2:0 h3:0 h4:4`, so the catalog runs `H1→H4`. Exactly the two the note names. |
+| `UI-AUDIT` `F16` | *"`prefers-reduced-motion` was **not** taken — it is a separate item and stays open."* | **yes** — `grep -rn "prefers-reduced-motion" apps/character-creator shared` returns **0**. `apps/pick3cut5/styles.css` has it, which is the comparison `F16`'s own heading draws. |
+| `INGESTION-AUDIT` `F6`/`F18` | *"Its 105 page-less rows need their own finding"*, restated as *"are a different finding"*, and again in the retirement table as *"still in the catalog and still page-less"*. | **yes** — production carries **108** skills whose `source_book` holds no `p.` citation (`node scripts/q.mjs --remote`, 2026-09-06). See the note on this number below. |
+
+**The number 108 is corroboration, not a re-measurement.** `INGESTION-AUDIT`'s
+figure is **105, split 93/5/4/3 across four books**, on a predicate this pass did
+not reproduce; 108 comes from my own `NOT LIKE '%p.%'` test. The two are not the
+same question and the difference is not evidence of drift. What the query
+establishes is only that the rows are still there in quantity.
+
+**Nothing anywhere names any of the three.** A tree-wide search of every `.md`
+outside `docs/prompts/` for `prefers-reduced-motion` or *heading order* returns
+`UI-AUDIT.md` and `pick3cut5/AUDIT.md` and nothing else — and `pick3cut5`'s
+mentions are about its own app, which **has** the rule. `page-less` returns only
+`INGESTION-AUDIT` and one unrelated `CLASS-AUDIT` line.
+
+**All three sit on menus whose headers are correct.** `UI-AUDIT` says *"Nothing
+is open"*; `INGESTION-AUDIT` says *"Nothing is open on this menu."* Both are
+true, and that is the point: **unnumbered work cannot be open, because open is a
+property of findings.** The header rule `A13` shipped is working exactly as
+designed and cannot reach this.
+
+**Proposal.** One short section in `.claude/skills/audit-menu/SKILL.md`, beside
+*When not to*: **when a finding scopes work out to a future finding, file that
+finding in the same PR and cite it by number, or say in so many words that the
+work is being dropped.** A number costs a heading and a paragraph; it does not
+oblige anyone to take it, which is the whole reason the numbering exists. The
+alternative wording — *"do not write 'a separate finding' without a number"* —
+is the same rule stated as a prohibition and is worse, because the useful half
+is the filing, not the abstention.
+
+**Posture: documentation only, one section in one skill. No check, no script, no
+retrofit of the two closed instances, and no index of deferrals.** A check is
+ruled out for the reason the whole skill gives; an index is declined three times
+over. **And this proposal does not file the three standing items** — each is a
+finding on its own menu and belongs to Nate's word, not to this pass.
+
+**Decline it** if the judgement is that a deferral without a number is a healthy
+way to record a suspicion cheaply, which is a real argument the skill makes about
+filing elsewhere. The cost of declining is stated above: three pieces of measured
+work are currently reachable only by reading the interior of a closed finding.
+
+**Evidence.** The three rows measured 2026-09-06 with the commands quoted in
+them, at `c54a794`; the two prior instances read in `META-AUDIT` `A5` and
+`SKILL-AUDIT` `F32` the same day; the negative search for an existing rule run
+over `.claude/`, `CLAUDE.md`, every menu, `SETUP.md` and
+`~/.claude/projects/C--Users-natha-Downloads/memory/` — **nothing proposes
+numbering a deferral.**
+
+**Confidence: high** that the three are unfiled and still true — each is a
+filesystem or database fact re-measured today, and the negative search was run
+over the whole corpus rather than the menus alone. **Medium** on whether a rule
+changes behaviour: `A5` and `F32` were both caught by later passes without one,
+so the existing machinery does eventually find these. What would raise it: a
+count of how long each stood before being caught. `G8`'s stood from 2026-09-03
+to 2026-09-04; `SETUP-v2`'s stood a day; `UI-AUDIT` `F16`'s has stood since
+2026-08-31 — **six days and counting**, which is the only one of the five that
+suggests the catch is not reliable.
+
+**Ongoing cost:** one heading and one paragraph per deferral, forever, on the
+findings that defer. Most findings defer nothing.
+
+### A17 — medium — the sweep that catches a stale cross-finding claim is defeated by the prefix ambiguity this repo has already measured, and three claims are stale behind it
+
+`audit-menu` → *It is not only class notes. ANYTHING that cites a finding goes
+stale* names four kinds of citer and says a script covers exactly one. Its
+remedy for the other three is explicit: **when a finding is taken, grep the whole
+tree for its number.** `## Which is why a finding reference names its menu`
+records why that is hard — `F` is used by twelve menus and 75% of findings live
+under an ambiguous ID — and mitigates it by asking that a citation name its menu.
+
+**The two sections are each correct and together they do not work, because a
+finding's own body cites its neighbours by bare number and is right to.** The
+skill says so: *"Inside its own file a bare number is right and should stay."*
+So the citations most likely to go stale are precisely the ones the naming
+convention exempts, and the grep that is supposed to catch them cannot tell them
+from twelve menus' history.
+
+**Measured 2026-09-06 across the 21 menus:**
+
+| a taker greps the tree for | hits | menus |
+|---|---|---|
+| `F15` | **46** | 8 |
+| `F12` | **90** | 11 |
+| `F3` | **126** | 15 |
+
+A taker of `REBUILD-AUDIT` `F15` who follows the rule reads 46 lines to find the
+one that matters. **They did not**, and here is what is behind it.
+
+**Three stale claims, in three different structural positions:**
+
+- **An outcome note.** `REBUILD-AUDIT` `F13` ends *"That is F15 and it is not
+  taken."* `F15` was taken the **same day** — `F13` shipped as #381, `F15` as
+  #391, both 2026-08-28.
+- **An outcome note, where the file's own header was corrected and the note was
+  not.** `BOOK-INGEST-AUDIT` `F12`'s note says four passages describe limits that
+  are still real *"whose `gear` has no shape for a vessel remains true because
+  F3's schema half is still open."* `F3`'s schema half **closed 2026-09-03 in PR
+  #616**, and this file's header says so in its second sentence. `META-AUDIT`
+  `A3` is the finding that corrected that header; it did not reach the note.
+  **The header and a finding in the same file now disagree about `F3`.**
+- **A section lead.** `SHIP-PR-AUDIT:739`, opening *Opened while taking a
+  finding*: *"**None of these is taken.** Nothing below has been decided."*
+  `F12`, `F13` and `F14` below it carry Taken notes — #672, #670, #671, all
+  2026-09-04 — and `F11` is declined. Four findings, none of them undecided.
+
+**`A13` cannot reach any of the three, and that is the finding.** It governs what
+a **status header** may carry and says so; an outcome note and a `##` section
+lead are neither. The three positions above are the header rule's blind side, and
+the tree-wide grep is the only thing pointed at them.
+
+**Proposal.** Extend the existing sentence rather than adding a mechanism: in
+`audit-menu` → *It is not only class notes*, say that **the grep is run per menu,
+not per tree** — `grep -n 'F15' apps/character-creator/REBUILD-AUDIT.md` is one
+file and a handful of lines, and it is where a bare number is unambiguous by the
+skill's own rule. The tree-wide sweep stays for the qualified citations it was
+written for.
+
+**Posture: documentation only, one clause in one existing section. No check, no
+script, no retrofit.** The three stale sentences above are **records** and stay
+exactly as they are — `audit-menu` is explicit that a measurement is not
+rewritten, and two of the three are useful precisely because they show the
+failure. A correction, if Nate wants one, is a dated line appended under each
+finding, and it is a separate decision on each of three menus.
+
+**Decline it** if one grep per menu reads as re-stating what a careful person
+already does. The counter-argument is the measurement: three claims stale, in
+three different positions, in a corpus that has audited its own headers twice.
+
+**Evidence.** Hit counts from `grep -c` over the 21-menu list, 2026-09-06. The
+three stale claims read under their own headings the same day and each checked
+against the merge that falsified it — `#391` (`gh pr view`), `#616` (named in
+`BOOK-INGEST-AUDIT`'s own header), `#670`–`#672` (`grep -nE '^\*\*(Taken|Declined)'`
+over `SHIP-PR-AUDIT.md`, four notes below the sentence). The skill's two sections
+read at `:290` and `:395` on 2026-09-06.
+
+**Confidence: high** on all three being stale — each is a two-command check.
+**Medium** on the remedy, because a per-menu grep is a discipline and this page
+is full of disciplines that do not fire. What would raise it: whether any of the
+three cost a wrong action rather than a slow read. **None did**, as far as this
+pass can tell, and that is stated rather than left implied.
+
+**Ongoing cost:** none. It replaces one grep with a narrower one.
+
+### A18 — low — the open set, measured once, and the one bit a durable header still gets wrong
+
+Nate's third question was what is actually open, because answering it today means
+reading 31,736 lines. **This finding answers it once, as a dated measurement, and
+deliberately does not create anything that must be kept right.** An index has
+been declined three times (`REPO-AUDIT` `G9`, `META-AUDIT` `A1`, and the skill
+carries the decline) and `A13` forbids a per-finding roll-call in a header. This
+is a record of a reading, in the same sense as every other measurement in this
+corpus, and it **begins going stale the moment it is written** — `RETRO-AUDIT`'s
+own header says its equivalent list *"was true when written and false within the
+day, twice over."*
+
+**Measured 2026-09-06 at `c54a794`, reading under every heading in all 21
+menus:**
+
+**One numbered finding is open in the entire corpus** — `SKILL-AUDIT` `F44`,
+filed 2026-09-04, the three ways a worker cannot learn a book's page offset. Its
+own last line reads *"Nothing else is taken until Nate names it."*
+
+Everything else numbered is closed. That includes the two menus a reader cannot
+learn this from: `HEALTH-AUDIT`, which carries no status header by decision
+(`A4`), has all 24 findings closed; and `RETRO-AUDIT`, whose header refuses to
+name findings, has all 21 closed.
+
+**`RETRO-AUDIT`'s header is wrong, and it is wrong in the direction nobody
+watches for.** It opens *"Work is open on this menu, and this line will not say
+which findings."* Every one of `R1`–`R21` carries a Taken note; there is no
+*stays open*, *still open* or *not taken* anywhere in the file outside the
+`FILED, NOT TAKEN.` marker each finding gets when filed, and every one of those
+is followed by its Taken note. The last open work was `R21`, closed by **#750 at
+05:47 today** — whose own title is *"the last thing the finding left standing."*
+The header has been wrong for a few hours.
+
+**That is worth a paragraph because the header is written in the shape `A13`
+recommends.** It refuses to name findings, it instructs the reader to read under
+the heading, and it still went stale — because the one thing it does assert,
+*whether anything is open*, is itself a claim with a lifetime. `A13` reduced what
+a header may carry to the smallest set that survives; this is the measurement
+that the smallest set is not zero. **No proposal follows from that**, and
+deliberately: the alternative is a header that says nothing at all, which is
+`HEALTH-AUDIT`'s shape and was already argued for and against in `A4`. It is
+recorded so the next person to find a stale header knows the reduced form rots
+too, and does not re-derive `A13` from it.
+
+**Not open, and not nothing — three categories a bare open/closed reading loses:**
+
+- **Work deferred to a finding that was never filed.** Three items, `A16`.
+- **Residues under taken findings**, each recorded under its own heading and
+  none of them open: `BOOK-INGEST` `F3` (vessels, with a named reopen trigger)
+  and `F11`; `RETRO-AUDIT` `R20` (four of twelve spell names left alone by
+  decision) and `R21` (`NOT NULL` shipped, `CHECK (slug <> '')` named as a
+  further decision and a fourth table rebuild); `REDESIGN-AUDIT` `R6` (two of
+  four lines); `BULK-AUDIT` `B6` (**TMDB never verified against the real API** —
+  every video path proven against a stub, because the local key is the burned
+  one); `pick3cut5/AUDIT` `F4` (dissolves with `F6`) and `F6` (on hold, trigger
+  named: *"the day a second app wants a Durable Object"*).
+- **Verification gaps inside items recorded as passed.** `pick3cut5/AUDIT`'s
+  `T7` (the 30-round cap still untested), `T9` (the room code read across an
+  actual room), and `T10` — whose reason is a **method** claim: *"the browser
+  pane does not deliver those keys to the page"*, so Tab traversal and
+  Enter/Space were never driven and no screen reader was run. `audit-menu`'s
+  lesson from `SKILL-AUDIT` `F12` is that a finding blocked by a wrong premise
+  about the method looks identical to one blocked by its subject, and this repo
+  has since established that CDP can be driven here without a dependency. **Not
+  a finding, and not re-tested by this read-only pass** — recorded because it is
+  the one closure in the corpus whose stated obstacle is a tool limit rather
+  than a fact about the app.
+
+**Proposal: none. This is an information item.** Nothing is asked for and nothing
+should be built from it. **No action proposed.**
+
+**Evidence.** All 21 menus read under their headings 2026-09-06 at `c54a794`; the
+`RETRO-AUDIT` result cross-checked by `grep -nE "stays open|remain(s)? open|still
+open|not taken"` over that file, which returns nothing outside the filing
+markers, and by `gh pr view 750`. The corpus figures — 21 menus, 31,736 lines —
+reproduced with the file list in the brief, which is hand-built and should be
+re-derived rather than trusted.
+
+**Confidence: high** on `F44` being the only open numbered finding, from reading
+rather than grepping. **Medium on completeness**, and the reason is worth
+stating: this pass's own extractor missed outcome notes worded `WRITTEN` and
+`DECLINED`, and reported `SKILL-AUDIT` `N2`/`N3` and five others as having no
+outcome until they were read by hand. **The notes vary in wording by design and a
+mechanical reader got it wrong again**, exactly as the skill says it will. Every
+flag it raised was resolved by reading; what cannot be ruled out is a note it did
+not flag and nobody read.
+
+**One error this pass made and corrected, recorded because it is this menu's own
+subject.** Reading `RETRO-AUDIT` `R11`, a `grep` piped through `head -8` returned
+*"`ley-line-rifter` taken (PR #725). The other six rows stay open"* and the
+conclusion drawn was that six rows were open. **`R11` is closed** — PR #726 took
+the remaining six and appended *"The remaining six rows taken… R11 is closed"*
+further down the same region, past the cut. `DOCS-AUDIT-2` records the identical
+failure in its own process note: *a truncated grep looks exactly like a complete
+one.* It was caught by checking the PR rather than by re-reading, which is the
+only reason it is here as a correction and not as a finding.
+
+**Ongoing cost:** none. Nothing here is maintained.
