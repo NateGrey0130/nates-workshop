@@ -13,7 +13,7 @@ the human view of the same thing plus the import status.
 
 | slug | book | PDF pages | layer | printed | offset | status |
 |---|---|---|---|---|---|---|
-| `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 222 — see below | **+0** | **surveyed** |
+| `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 222 — see below | **+0** | **importing** — 3 of 21 classes |
 | `underseas` | Rifts WB 7: Underseas | 216 | SCAN (OCR) | 214 | **+0 / -1 split** | cached |
 | `new-west` | Rifts WB 14: New West | 226 | text layer | 224 | +1 | cached |
 | `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | cached |
@@ -323,6 +323,38 @@ TX-16 Pump Rifle on printed 144, plus the pump-round costs on 141. The stub is
 referenced by the twelve Warlock classes, so it gets a page range and the two
 real rows get imported — **it is not retired or merged in SQL**, for the same
 reason `W.P. Rope` is not.
+
+### `triax` batch 1 — the NGR Army, 2026-09-06 (PR #776)
+
+Three of the twenty-one playable classes: Infantry Soldier, Communications
+Officer, Medic/Medical Officer, printed 156-160. Catalog totals moved 169 ->
+**172** classes, 344 -> **346** skills, 1021 -> **1024** gear. Applied
+`--remote` before the PR; production read back at all three figures, and
+`regression.mjs` produces the same three from a database built from nothing.
+
+**The batch found two skills the survey did not, and the reason generalises.**
+All three classes grant `Literacy: Euro` and `Language: Euro` and the catalog
+held neither. The survey missed them because it derived its skills diff from
+printed 155, the book's own *New Skills* heading — and Euro is not new, it is
+one of the nine major languages of Rifts, named on RUE printed 304. **A class
+can grant a skill the catalog lacks without the book calling it new**, so the
+remaining batches should expect the same and find them with `class-check
+--remote` rather than another read of printed 155. Both rows were added cited
+to **RUE p.302-304, not to this book**, at the catalog's values rather than
+RUE's printed `+3%`.
+
+**A book-vs-book disagreement is now recorded and NOT yet settled.** Printed 155
+lists Gargoyle, Brodkil and Demongogian as three languages; RUE printed 304 says
+Demongogian **is** the language of gargoyles and brodkil, which would make two of
+the three the row the catalog already holds. This book's own gargoyle R.C.C.s
+grant *speak Gargoyle* by name and never mention Demongogian, so it is not a
+spelling difference. **The gargoyle batch settles it from printed 198-202.**
+
+No finding was filed. This batch needed no mechanic `BOOK-INGEST-AUDIT.md`
+F1-F22 do not already name, and the only code it touched is three
+`CORE_SDC_BY_CLASS` entries in `js/compose.js` — per-class data the smoke test
+requires of any class printing no S.D.C. formula, which every class import
+adds.
 
 ## What the kickoff session established
 
