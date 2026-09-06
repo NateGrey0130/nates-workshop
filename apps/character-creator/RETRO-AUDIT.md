@@ -2333,7 +2333,9 @@ was its own — the payload returns `items` at the top level.
 **The drop taken, 2026-09-06 (PR #749).** Migrations `045-inventory-check-on-slug.sql`
 and `046-drop-inventory-item-id.sql`. `item_id` is gone from both tables and
 `gear_slug` is the only key. **The first of the two things left standing above is
-now done; the second, `gear.slug NOT NULL`, still is not.**
+now done.** *(The second, `gear.slug NOT NULL`, was taken later the same day -
+see the note below this one. This sentence said "still is not" when it was
+written, which was true for about an hour.)*
 
 ### It took two migrations, and the second one is why
 
@@ -2416,6 +2418,60 @@ uses the same slug-plus-redirect join as the sheet.
 than folded in. Worth recording that the drop *improves* it: a stash row left on
 a merged-away slug now resolves through `catalog_redirects`, where an id-keyed
 one was simply wrong.
+
+---
+
+**`gear.slug NOT NULL` taken, 2026-09-06 (PR #750).** Migration
+`047-gear-slug-not-null.sql`, applied to production before the merge.
+**`R21` now has nothing left standing.**
+
+Re-measured for this rather than carried from the note above: **1,025 gear rows,
+0 null, 0 empty, 1,025 distinct**. Afterwards: 1,025 rows, **max id 11199
+preserved**, 12 gear redirects resolving, 78 inventory rows joining, both
+indexes back, no leftover tables.
+
+**No code change, and therefore no deploy window** — unlike `045`/`046`, which
+needed two steps because a drop breaks deployed code. The database simply starts
+refusing what the app already refused: `catalog-fields.js` marks gear's slug
+`required: true` and `coerceField` counts `''` as blank, so no write path has
+ever been able to produce one, and all **477** committed `INSERT INTO gear`
+statements name the column.
+
+### `036`'s precedent does not cover this, and its own header says so
+
+`gear` is the first table here that anything **references** — `character_items`
+and `campaign_items` both declare `gear_slug TEXT REFERENCES gear(slug)`.
+`036`'s comment notes in passing that *"nothing references it by foreign key"*,
+which is exactly the case this is not. Two ways of borrowing its pattern were
+tried against local D1 and **both failed**:
+
+| attempt | result |
+|---|---|
+| `PRAGMA foreign_keys = OFF` | **ignored.** D1 enforces anyway: *"FOREIGN KEY constraint failed"* |
+| `PRAGMA defer_foreign_keys = ON` | **honoured, and still fails.** Enforcement moves to commit — *"the application left the database in a state where constraints were violated"* — because dropping the parent records one violation per orphaned child and recreating it afterwards does not clear them |
+
+Both left the database untouched: D1 rolled the Durable Object back to its last
+good state, which is the right failure.
+
+**So the ORDER does the work and no `PRAGMA` is used.** Build `gear_new` with
+the constraint; rebuild each child to reference `gear_new`; drop `gear`, now
+unreferenced; rename `gear_new` to `gear`. Every step is legal with foreign keys
+fully enforced throughout — three tables rebuilt to change one column.
+
+The last step rests on SQLite rewriting the children's `REFERENCES` clauses to
+follow a rename, **so that was probed rather than trusted**: a throwaway parent
+and child on local D1, renamed, and the child read back out of `sqlite_master`
+as `REFERENCES "zz_parent_new"(slug)`. Production's children now read
+`REFERENCES "gear"(slug)` — quoted, which is cosmetic, and `drift-check
+--remote` is clean.
+
+### What it deliberately does not do
+
+**It does not refuse an empty string.** `NOT NULL` is what this finding asked
+for, and `''` would satisfy it while joining to nothing — the same hazard in a
+different disguise. Unreachable through the API today, and closing it in the
+database needs a `CHECK (slug <> '')`, which is a further decision and a fourth
+rebuild. Recorded here rather than left to be discovered.
 
 ---
 
