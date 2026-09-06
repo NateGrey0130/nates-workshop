@@ -1953,7 +1953,7 @@ store names.
 **Ongoing cost:** none once done; it removes a portability trap rather than
 adding a rule to remember.
 
-**Taken, 2026-09-05 (PR #PRNUM) — ADDITIVE, on Nate's word: the column lands,
+**Taken, 2026-09-05 (PR #747) — ADDITIVE, on Nate's word: the column lands,
 the drop does not.** Migration `044-inventory-gear-slug.sql` applied to
 production before the merge; all **78** inventory rows backfilled, **zero**
 disagreeing with their id, `campaign_items` empty as expected.
