@@ -3743,3 +3743,42 @@ would settle it is whether anything outside class markdown cites either slug,
 which was checked for `character_items` and not for the rest of the tree.
 
 **Ongoing cost:** none.
+
+**Taken, 2026-09-06 (`zzzzzz-ingestion-f32-sleeping-bag.sql`). Posture held: one
+data script, applied to production before its own merge, no schema change, no
+code change. It DOES rewrite class markdown**, which this finding said it would.
+
+**It is a class-import stub that was fleshed out instead of retired, and that is
+worth more than the merge.** `add-burster-class.sql:16` and
+`add-psi-stalker-class.sql:20` both create `sleeping-bag-rifts` as
+`'STUB - created by class import, needs stats'` — the exact shape
+`retire-orphan-gear-stubs.sql` exists for, described in its header as *"a class
+import creates a stub catalog row for every equipment id it cannot find."* Then
+`backfill-rue-equipment.sql` and `zzz-gear-tidy-1-names.sql` gave it real stats
+and the real name, so **it stopped looking like a stub and started looking like a
+second product**, and the stub sweep could no longer recognise it.
+
+**Six readbacks, all `got == want`, on production**: one `Sleeping Bag` under
+`rifts`; the stub retired; no published class still citing it; **thirteen**
+classes citing the survivor (3 that already did, plus the 10 moved); the retired
+slug forwarding; and **`sleeping-bag-pf` untouched at cost 30**, which is a
+different item from a different book and the obvious collateral.
+
+`drift-check --remote` prints `NO DRIFT`. Regression **269 passed**. Gear
+**1,025 to 1,024**, and `docs/operations.md`'s pinned clean-run count moved with
+it.
+
+**What it leaves behind is the point.** Gear's `certain` tier has now gone
+**34 → 25** (`F31`, the system guard) **→ 24** (this), and **every one of the
+remaining 24 is bare-vs-qualified** — checked programmatically, not by eye. That
+is exactly `F30`'s population and nothing else. So the tier is now a single
+question rather than three mixed ones: *is a bare name beside its qualified
+variant ever a duplicate?* `F30` says no on gear, `F28` says yes once on skills,
+and it is filed rather than taken because that is the trade.
+
+**One prediction of this finding was wrong and it is the direction that
+mattered.** It said ten citations would move, and thirteen classes cite the
+survivor afterwards — which is the ten plus the three that already did, and
+exactly what the readback asserts. The count of *edits* was ten; the count of
+*citers* is thirteen. Stated because the two numbers are easy to conflate and
+the readback pins the second.
