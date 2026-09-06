@@ -337,7 +337,7 @@ check('systems: empty and all-selected both store NULL',
 check('systems: one system stores a JSON array',
   coerceField(sysField, ['rifts']).value === '["rifts"]');
 
-import { classesMentioning, findDuplicates, normaliseName, similarity } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
+import { classesMentioning, findDuplicates, normaliseName, qualifiersDisagree, similarity } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
 import { collapseStatement, keysOf, redirectStatements, resolveKeys } from '../../../functions/api/character-creator/_lib/catalog-redirects.js';
 import { buildStubStatements, referencedGear, restrictionNames } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { CHARACTER_JSON_COLUMNS } from '../../../functions/api/character-creator/_lib/character-json.js';
@@ -923,6 +923,28 @@ check('a containment pair scores below the likely band', (() => {
   const s = similarity('Laser', 'Laser Communications');
   return s >= 0.7 && s < 0.9;
 })());
+
+// INGESTION-AUDIT F27. normaliseName drops brackets, so two rows differing ONLY
+// inside them score a perfect 1 and used to land in `certain` - the tier whose
+// whole job is to be trusted, because merging repoints every character holding
+// the losing name. The category-clash guard cannot see these: both Gambling
+// rows are Rogue, and all three Acid rows are magic.
+check('two rows differing only inside their brackets disagree',
+  qualifiersDisagree('Gambling (Standard)', 'Gambling (Dirty Tricks)')
+  && qualifiersDisagree('Acid (cleanser)', 'Acid (organic)')
+  && qualifiersDisagree('Arrows (long bow)', 'Arrows (short bow)'));
+// The opposite case, and the one that must NOT be demoted: a bare form beside a
+// qualified one is what a real duplicate of this shape looks like. `Law` and
+// `Law (General)` are one skill, and RUE printed 303 prints the second.
+check('a bare name beside a qualified one still reads as one row',
+  qualifiersDisagree('Law', 'Law (General)') === false
+  && qualifiersDisagree('Tracking (people)', 'Tracking (people)') === false
+  && qualifiersDisagree('Back Pack', 'Backpack') === false);
+// The scores are untouched: this changes the TIER, never whether a pair is
+// reported. A demoted pair still appears under `contains`.
+check('demotion does not change the similarity score',
+  similarity('Gambling (Standard)', 'Gambling (Dirty Tricks)') === 1
+  && similarity('Law', 'Law (General)') === 1);
 
 // Genuinely different skills that share words. These SHOULD score low enough
 // to sit in the loosest group rather than looking confident.

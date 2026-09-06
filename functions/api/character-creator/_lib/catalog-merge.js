@@ -52,6 +52,26 @@ export function normaliseName(name) {
     .trim();
 }
 
+// The bracketed qualifiers normaliseName throws away, normalised the same way.
+// Two rows whose names differ ONLY inside their brackets are distinguished BY
+// those brackets - "Gambling (Standard)" and "Gambling (Dirty Tricks)" are two
+// skills on one RUE page at 30% and 20%. INGESTION-AUDIT F27.
+export function qualifiers(name) {
+  return [...String(name ?? '').matchAll(/\(([^)]*)\)/g)]
+    .map((m) => m[1].toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim())
+    .filter(Boolean);
+}
+
+// True when both names carry a qualifier and the sets differ. One name having
+// none is the opposite case - "Law" against "Law (General)" is the bare form
+// beside the qualified one, which is what a real duplicate of this shape looks
+// like - so that stays confident.
+export function qualifiersDisagree(nameA, nameB) {
+  const a = qualifiers(nameA), b = qualifiers(nameB);
+  if (!a.length || !b.length) return false;
+  return a.join('|') !== b.join('|');
+}
+
 const STOPWORDS = new Set(['and', 'of', 'the', 'a', 'an']);
 
 function tokens(name) {
@@ -127,11 +147,21 @@ export async function findDuplicates(env, catalogKey) {
       const clash = a.category && b.category
         && String(a.category).toLowerCase() !== String(b.category).toLowerCase();
 
-      // The tiers have very different precision, measured against a real
-      // catalog: `certain` and `likely` produced no false positives at all,
-      // while `contains` was right about 40% of the time. Grouping by tier is
-      // the difference between a usable list and 27 undifferentiated rows.
-      const tier = clash ? 'contains'
+      // Same shape as `clash`, for the case a category cannot see: the names
+      // are identical once normaliseName drops their brackets, and the brackets
+      // are the whole distinction. On gear that is 68 pairs across 36 groups -
+      // Acid three ways, Jacket five - all in one category. Demoted rather than
+      // dropped, for `clash`'s reason: the pair is still worth a glance.
+      const bracketed = qualifiersDisagree(a[cat.displayField], b[cat.displayField]);
+
+      // The tiers have different precision. `contains` was measured at about
+      // 40% on a real catalog. `certain` and `likely` were measured at no false
+      // positives, and `certain` no longer holds that: on the skills catalog it
+      // offers two pairs and one of them - `Gambling (Standard)` against
+      // `Gambling (Dirty Tricks)` - is wrong, which is what `bracketed` above
+      // now demotes. Do not restore the old claim without re-measuring it.
+      // INGESTION-AUDIT F27.
+      const tier = clash || bracketed ? 'contains'
         : score >= 1 ? 'certain' : score >= 0.9 ? 'likely' : 'contains';
       pairs.push({
         score: Math.round(score * 100) / 100,
@@ -140,6 +170,7 @@ export async function findDuplicates(env, catalogKey) {
         category_clash: !!clash,
         a, b,
         confidence: clash ? `same name, but filed as ${a.category} and ${b.category} — probably different powers`
+          : bracketed ? 'same name, but the brackets differ — probably two variants, not one row'
           : tier === 'certain' ? 'identical once punctuation is ignored'
           : tier === 'likely' ? 'same words, different order or ending'
           : 'one name contains the other — check this one',
