@@ -3181,3 +3181,203 @@ shipped, work handed to the future gets a number or is dropped: this keeps
 five books' pages open; the bounded task is 12 citations. The 52 book-less rows
 are **not** part of it and would need their own finding if anyone wants them
 examined.
+
+---
+
+## Filed 2026-09-06, from the catalog's own duplicate suggestions
+
+Three findings turned up by reading the `Find duplicates` panel on production —
+the skills catalog reports **48 pairs: 2 `certain`, 0 `likely`, 46 `contains`**
+(`GET /api/character-creator/catalogs/duplicates?catalog=skills`, 2026-09-06).
+Reading all 48 is what produced these.
+
+**None is taken by the PR that filed it.**
+
+### F27 — medium — the `certain` tier's "no false positives" claim is false, and the mechanism is the bracket-stripping the code documents two lines above it
+
+`functions/api/character-creator/_lib/catalog-merge.js:130-133` says, of the
+tiers: *"measured against a real catalog: `certain` and `likely` produced no
+false positives at all, while `contains` was right about 40% of the time."*
+
+**`certain` has two suggestions on the skills catalog and one of them is
+wrong.**
+
+| pair | category | base | verdict |
+|---|---|---|---|
+| `Law (General)` vs `Law` | Technical / Technical | 35 / 25 | **real duplicate** — see `F28` |
+| `Gambling (Standard)` vs `Gambling (Dirty Tricks)` | Rogue / Rogue | 30 / 20 | **FALSE POSITIVE** — two distinct skills, printed on the same RUE page, with different base percentages |
+
+**The cause is already written down, three lines above the claim.**
+`normaliseName` strips every bracketed qualifier, so both Gambling rows
+normalise to `gambling` and score a perfect 1.0. The comment at `:118-127`
+describes exactly this failure for psionics — `Telekinesis` at 3 I.S.P. against
+`Telekinesis (Super)` at 10 — and the guard it added is the **category clash**
+demotion at `:128`. That guard cannot see this pair: both Gambling rows are
+`Rogue`.
+
+**So the guard covers cross-category and misses same-category, and the skills
+catalog is where that first shows.**
+
+**It is much worse on gear, and invisible there for a different reason.**
+Measured against production 2026-09-06:
+
+```
+SELECT SUM(n*(n-1)/2), COUNT(*) FROM (SELECT COUNT(*) AS n FROM gear
+  WHERE instr(name,' (')>1 GROUP BY substr(name,1,instr(name,' (')-1) HAVING n>1)
+```
+
+**68 pairs across 36 groups** differ only by the qualifier the normaliser
+strips — `Acid (cleanser)` / `(metal dissolver)` / `(organic)`, all category
+`magic`; `Jacket` with five variants; `Boots` with four; `Arrows (long bow)` /
+`(short bow)`. Same query gives **1** on skills and **0** on psionics. Nobody has
+seen those 68 because the endpoint cannot run on gear at all — that is `F29`.
+
+**Proposal.** Demote to `contains` when **both** names carry a bracketed
+qualifier **and the qualifiers differ**. That is the signal that the qualifier is
+the distinction rather than noise. It demotes `Gambling (Standard)` /
+`(Dirty Tricks)` and every one of the 68 gear pairs, and leaves
+`Law` / `Law (General)` in `certain`, because only one of those two carries a
+qualifier — the other is the bare form, which is what a real duplicate of this
+shape looks like.
+
+**Correct the comment in the same PR.** It states a measured precision that no
+longer holds, and it is the sentence a reader trusts when deciding whether to
+merge.
+
+**Posture: change which TIER a pair lands in, and the comment. No pair is
+dropped, no merge is performed, nothing is written to any catalog.** A demoted
+pair is still reported — `contains` is a list to read, not a bin.
+
+**Decline it** if the judgement is that two suggestions on one catalog is too
+thin to change a heuristic on. The counter is the 68 on gear, and that `certain`
+is the tier whose whole purpose is to be trusted: merging repoints every
+character holding the losing name.
+
+**Evidence:** the endpoint's live response for `catalog=skills`, 2026-09-06;
+`catalog-merge.js:100-150` read the same day; the gear/skills/psionics
+qualifier-pair counts from the SQL above, `--remote`; both Gambling rows read
+from production (`Rogue`, base 30 and 20, both `Rifts Ultimate Edition
+p.302-303`).
+
+**Confidence: high** that the Gambling pair is a false positive and that the
+mechanism is bracket-stripping — both are readable in one query and one
+function. **Medium** that the proposed rule is the right shape; what would raise
+it is running it against the gear catalog, which needs `F29` first.
+
+**Ongoing cost:** none.
+
+### F28 — low — two `Law` rows, and the one 62 classes cite is the one with no book
+
+`Law` and `Law (General)` are the same skill. Production, 2026-09-06:
+
+| id | name | category | base | per level | `source_book` | cited by |
+|---|---|---|---|---|---|---|
+| 311 | `Law` | Technical | **25** | 5 | **`Rifts Skill List`** | **62 published classes** |
+| 244 | `Law (General)` | Technical | **35** | 5 | `Rifts Ultimate Edition p.302-303` | **0** |
+
+**The book settles the number.** RUE printed page 303 — `.cache/books/rue`,
+cache page `p306`, registry `page_offset: 3` — prints
+**`Law (General; 35%+5%)`**. So `35%+5%` is right and `base: 25` is not RUE's
+number.
+
+**`Rifts Skill List` is not a book.** It has no entry in `scripts/books.json`,
+so nothing resolves a row citing it to a page; `INGESTION-AUDIT` `F26` documents
+it as permanently page-less and counts **44** skill rows carrying it. This is one
+of them, and it is the one 62 classes were built against.
+
+**No character holds either row** — `SELECT COUNT(*) FROM characters WHERE
+skills LIKE '%"Law"%'` returns **0** — so nothing a player owns changes.
+
+**Proposal: keep `Law`, correct it to the book, retire `Law (General)`.**
+Set id 311's `base` to **35** and its `source_book` to
+`Rifts Ultimate Edition p.302-303`; delete id 244; add a `catalog_redirects` row
+from `law (general)` to id 311 so the retired name still resolves.
+
+**Why that direction rather than the book's own name.** The wizard's boot
+payload carries **no redirects** — `catalogs.js` sends none, and `app.js`
+filters a class's named skills by exact lowercased name against that payload.
+That is `RETRO-AUDIT` `R20`'s finding, and it applies to skills as much as to
+spells: the server resolves redirects (`skill-bonuses.js:52`, `catalog.js:70`)
+and **the picker does not**. Keeping `Law (General)` would therefore mean
+rewriting 62 classes' frontmatter in the same script — R20's *"the citations
+move WITH the rename"* — for a name change nobody asked for. Keeping `Law` costs
+zero citation churn and buys the same corrected number.
+
+**What that trade gives up, stated plainly:** the catalog keeps a name RUE does
+not print, sitting beside `Law: CCW`. The number is right and the name is ours.
+
+**Posture: one data script, applied to production before its own merge. No
+schema change, no code change, no class markdown touched.**
+
+**Decline it** if the 10-point base difference is wanted — if `Law` at 25 is
+deliberately a different, narrower skill than RUE's general one. Nothing in
+either row's `note` says so (both are `NULL`), which is why this is filed as a
+duplicate rather than as a divergence.
+
+**Evidence:** both rows read from production 2026-09-06; the citation counts
+from `imported_classes` `--remote` (62 and 0); the character count above; RUE
+printed 303 read from the OCR cache; `catalogs.js` grepped for `redirect` —
+no hit — and `app.js:1626` read for the exact-name filter.
+
+**Confidence: high** on every measured number. **Medium** on it being a
+duplicate rather than a deliberate distinction, and the thing that would settle
+it is the `Rifts Skills List` PDF on this machine, which is not cached and was
+not read for this finding.
+
+**Ongoing cost:** none.
+
+### F29 — high — `Find duplicates` cannot run on the gear catalog, and never could at this size
+
+`GET /api/character-creator/catalogs/duplicates?catalog=gear` returns **503**
+with a Cloudflare error page rather than the endpoint's own JSON. Measured
+2026-09-06 on production, after a rest, with `catalog=skills` answering
+**200 in 60ms** in the same session: gear ran for **1,766ms** and then failed —
+the shape of a Worker exceeding its CPU limit, not a fast reject.
+
+**`findDuplicates` is O(n²) with a string similarity in the inner loop**
+(`catalog-merge.js:110-113`): every row against every later row. Skills is 345
+rows, ~59,000 pairs, and answers. Gear is roughly 900 rows, **~404,000 pairs**,
+and does not.
+
+**Two consequences, and the second is why this is `high` rather than `medium`.**
+The button is simply broken on that catalog. And the catalog page fires
+`counts_only=1` **on every load** to put a badge on the button
+(`duplicates.js:22-24`, `catalog.js:74`) — so on gear that request 503s
+silently, every time, and the absence of a badge is indistinguishable from
+"no duplicates found."
+
+**Proposal.** Replace the all-pairs walk with an index, keeping all three tiers:
+bucket on the normalised name for `certain`, on a sorted-token signature for
+`likely`, and on the first token for `contains` — then compare only within
+buckets. That turns hundreds of thousands of comparisons into a few hundred
+without changing what a tier means.
+
+**The acceptance test is already known**, which is what makes this safe to
+change: the skills catalog must still return **48 pairs — 2 `certain`, 0
+`likely`, 46 `contains`** — and the two `certain` pairs must still be the Law and
+Gambling ones. Any rewrite that moves those numbers has changed behaviour rather
+than cost.
+
+**Posture: performance only. Identical output on every catalog that answers
+today, no tier redefined, no pair dropped, nothing written.** If `F27` is taken
+first, the expected skills output becomes 48 pairs with **1** `certain` and
+**47** `contains`, and the test should be written against whichever landed.
+
+**Decline it** if a broken button on one catalog is acceptable — nobody has
+reported it, and the merge feature is admin-only. The counter is the silent
+badge: the page asks this question on every load and shows nothing when the
+answer fails, so gear looks clean rather than unanswered.
+
+**Evidence:** three timed `fetch` probes from the logged-in catalog page,
+2026-09-06 — `skills` 200/60ms, `gear` 503/1766ms after a 20-second pause, and
+`characters`, `classes?names=1` and `admin/audit?counts_only=1` all 200 in the
+same minute, so the app was healthy and only this route was failing.
+`catalog-merge.js:100-150` and `duplicates.js:20-30` read the same day.
+
+**Confidence: high** on the failure and on it being CPU rather than data — the
+1,766ms and the healthy sibling routes are both measured. **Medium** on the
+exact row count for gear, which was not counted for this finding, and on the
+bucketing design being sufficient for `contains`, whose predicate is
+containment rather than equality.
+
+**Ongoing cost:** none. Less work per request than today.
