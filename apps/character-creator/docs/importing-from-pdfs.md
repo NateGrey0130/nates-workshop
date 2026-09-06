@@ -242,3 +242,35 @@ number instead.
 
 **A stored 75 that came from 15-75 is indistinguishable from a flat 75.** That
 is the whole reason the column exists.
+
+## Page-less skill rows, and which of them will stay that way
+
+A skill row whose `source_book` names a book but carries no `p.N-M` cannot be
+checked against a page. That is the state 105 rows were in when the skill
+importer was taught to collect a page range (`INGESTION-AUDIT` `F18`, PR #351,
+2026-08-27), and the rows already written were deliberately left alone.
+
+**They have fallen since, as `F18` predicted, and the remainder splits in two.**
+Asked of production 2026-09-06 with the same predicate `F18` used — a book, no
+page:
+
+| | 2026-08-27 | 2026-09-06 |
+|---|---|---|
+| a book, no page | **105** of 333 | **56** of 345 |
+
+Of the 56, **44 name `Rifts Skill List`**, which is **not a book**. It has no
+scan, no cache entry and no printed pages, so those rows cannot be given a
+citation by reading a PDF and **will stay page-less permanently**. Caching it
+would make the ledger claim a source that does not exist. The other **12** name
+real, cached books — Rifts Ultimate Edition (5), Pantheons of the Megaverse (4),
+and one each from Palladium Fantasy core, Rifts New West and Palladium Fantasy
+RPG 2nd Ed. — and those are backfillable by reading pages.
+
+**A third category exists and is outside all of the above: 52 skills carry no
+`source_book` at all.** `F18`'s count never included them, so *"105"* and *"it
+can only fall"* were never statements about these. Nothing has examined them.
+
+Read a page-less row as *"this row was written before the importer collected
+pages, or it comes from a list with no book"* — never as a defect in the
+importer, which has collected a range on every skill it has confirmed since
+2026-08-27. `INGESTION-AUDIT` `F26`.

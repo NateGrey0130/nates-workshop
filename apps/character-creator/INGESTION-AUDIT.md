@@ -3094,3 +3094,59 @@ turns on. What would raise it: the predicate behind 93/5/4/3, which may be
 recoverable from PR #351's diff.
 
 **Ongoing cost:** none for (a). For (b), one data script and nothing recurring.
+
+**Taken, 2026-09-06 as option (a) — reconcile, then accept and document — with
+(c) eliminated by measurement and (b) left standing as this finding's remaining
+half.** Posture held: the investigation ran first, no data script was written,
+no schema changed, and no row was touched.
+
+**The predicate was found, and it is in PR #351's body rather than in this
+menu.** *"105 of 333 skills got **a book and no page** — 93 `Rifts Ultimate
+Edition`, 5 `palladium-fantasy-core`, 4 `pantheons-of-the-megaverse`, 3
+`Palladium Fantasy RPG 2nd Ed.`"* So the count deliberately **excluded rows with
+no book at all**, which is exactly what this finding's own 108 included. The two
+numbers were never measuring the same set.
+
+**On `F18`'s own predicate the backlog FELL, and its claim holds.** Asked of
+production 2026-09-06:
+
+| | 2026-08-27 | 2026-09-06 |
+|---|---|---|
+| a book, no page | **105** of 333 | **56** of 345 |
+
+**So option (c) is dead and `F18`'s *"it can only fall"* is vindicated** — down
+49 while the catalog grew by 12. Nothing is writing page-less rows. This
+finding's own suspicion of growth was an artifact of its predicate, and that is
+recorded here rather than quietly dropped.
+
+**The 56 split two ways, and only one half is work.** **44 name `Rifts Skill
+List`**, which is not a book — no scan, no cache entry, no printed pages — so
+those rows **cannot** be given a citation by reading a PDF and are permanently
+page-less. The remaining **12** name real, cached books (RUE 5, Pantheons 4, and
+one each from `palladium-fantasy-core`, `Rifts New West` and `Palladium Fantasy
+RPG 2nd Ed.`) and are backfillable.
+
+**The 93 → 5 collapse in the Rifts Ultimate Edition bucket is not this finding's
+to explain**, and it is flagged rather than guessed at: 44 rows now carry `Rifts
+Skill List`, a value that does not appear in `F18`'s split at all, so some of
+the 93 were most likely re-attributed rather than cited. Whoever takes the
+remaining half should establish that before reading a page.
+
+**What shipped: one section in `docs/importing-from-pdfs.md`** — *Page-less skill
+rows, and which of them will stay that way* — carrying the two-date table, the
+44/12 split, the permanence of the `Rifts Skill List` rows, and the third
+category below. It sits where a reader of a page-less row will meet it, which is
+what `F3`'s closure established as the shape for an accepted limitation.
+
+**A third category was found and is named rather than opened: 52 skills carry no
+`source_book` at all.** `F18`'s count never included them, so neither *"105"*
+nor *"it can only fall"* was ever a statement about these, and nothing has
+examined them. 52 + 56 + 237 with pages = 345, which is the whole catalog.
+
+**This finding stays open on its (b) half — the 12 backfillable rows — and that
+is deliberate rather than a deferral.** Per the section `META-AUDIT` `A16`
+shipped, work handed to the future gets a number or is dropped: this keeps
+`F26`'s number rather than inventing one. The trigger is a session with those
+five books' pages open; the bounded task is 12 citations. The 52 book-less rows
+are **not** part of it and would need their own finding if anyone wants them
+examined.
