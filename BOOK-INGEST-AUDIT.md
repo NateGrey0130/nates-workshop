@@ -2506,3 +2506,108 @@ catalog — it is a difference the catalog imposes on itself. That is written in
 the comment, because the docstring's warning against general fuzzy expansion is
 the reason this library is trustworthy, and the next person adding a form should
 have to notice that this one is the exception and why.
+
+### F22 - a spell or psionic power with no description is a stub nothing counts, and the codex is the page it shows up on
+
+`/api/character-creator/codex` serves every spell and psionic power together
+with the text that says what it does - the second half of
+`apps/character-creator/docs/plans/20-power-descriptions.md`, written for the
+691 powers a character does NOT hold. `description` is the column that page
+exists to render.
+
+The backlog table in `scripts/source-coverage.mjs` reports five kinds of
+unfinished row and no kind that would catch an empty one. Read at lines 258-272
+on 2026-09-06: `gear stubs` keys on `description LIKE 'STUB%'`, `skill stubs` on
+`source = 'import' AND base = 0 AND per_level = 0`, `spell stubs` on
+`level = 0 AND ppe = 0`, `psionic stubs` on `isp = 0`, and the fifth is gear
+with no price. A spell imported with a level, a P.P.E. cost and no text carries
+none of those signatures. It reads as finished in every report this repo has,
+and renders as an empty entry in the codex.
+
+**The instruction layer is silent about the codex too.**
+`grep -ril codex .claude/skills .claude/agents scripts` returned no match on
+2026-09-06. The descriptions that ARE stored got there because the spell and
+psionic data scripts happen to carry the column -
+`apps/character-creator/db/add-phase-world-phase-powers.sql` inserts
+`range, duration, saving_throw, description` per row and argues in its header
+that this is "the exact column set this table holds" - rather than because any
+rule asks for it.
+
+**It is latent, not live.** Measured 2026-09-06,
+`npx wrangler d1 execute nates-workshop-media --remote`:
+
+| table | rows | blank description | shortest | mean |
+|---|---|---|---|---|
+| `spells` | 607 | **0** | 63 chars | 463 |
+| `psionic_powers` | 116 | **0** | 65 chars | 655 |
+
+Neither table holds a `STUB%` or `See %` placeholder in that column either. So
+this proposes a ledger line for a number that is zero today, on the argument
+`INGESTION-AUDIT` `F5` made for the backlog table itself: small numbers are
+worth counting before a shelf of books turns them into a project.
+
+**A decision already exists here, and this finding argues past it rather than
+around it.** `INGESTION-AUDIT` `F5`'s outcome note NARROWED the stub signatures
+after its own figure came back a 4x over-count - 21 imported skills at 0/0 were
+5, the other 16 being Hand to Hand rows and deliberately-modelled non-percentile
+skills whose long `note` says why nothing is stored - and settled the definition
+as a row an importer created and nobody touched since. A blank description does
+not reopen that argument: there is no spell whose text is correctly absent, so
+the false-positive class that produced the 4x cannot form here.
+
+**The `source = 'import'` filter is deliberately absent from the predicate**,
+which departs from three of the five lines above it and matches the two gear
+ones. Measured 2026-09-06: of the 23 rows
+`apps/character-creator/db/backfill-spell-descriptions.sql` filled - the last
+blank descriptions this catalog actually had - **17 are `source = 'seed'`** and
+6 are `source = 'import'`. A detector watching importers alone would have missed
+seventeen of twenty-three.
+
+**Proposal:** two lines in the `backlog` array of `scripts/source-coverage.mjs`:
+
+```js
+['spell text missing', "SELECT count(*) AS n FROM spells "
+  + "WHERE description IS NULL OR trim(description) = ''",
+  'nothing for the codex to show'],
+['psionic text missing', "SELECT count(*) AS n FROM psionic_powers "
+  + "WHERE description IS NULL OR trim(description) = ''",
+  'nothing for the codex to show'],
+```
+
+and, in the same PR, extend the *Stubs* section of
+`.claude/skills/class-import/reference/catalog.md` - read 2026-09-06, it defines
+a stub for gear and for skills and stops there - to say that a spell or psionic
+row carrying a level, a cost and no `description` is a stub as well.
+
+**Posture: advisory, log-not-cap.** `scripts/source-coverage.mjs` always exits 0
+and must keep doing so; no test, no CI check, no exit code moves. The report
+reaches a book session because `book-survey` already requires pasting
+`source-coverage.mjs --remote` into every survey, not because anyone remembers
+this rule.
+
+**Prove it by making it fail.** Both lines report 0 on the day they land, and a
+check that has only ever printed zero has not been shown to work. Blank one
+description in a `--local` database, confirm the line reports 1, restore it, and
+record that in the outcome note.
+
+**Evidence:** the `--remote` queries and the `grep` above, all run 2026-09-06;
+`scripts/source-coverage.mjs`, `catalog.md` and
+`apps/character-creator/test/checks/catalog-data.mjs` read the same day. Nothing
+here is inferred.
+
+**Confidence:** high that the mechanism is right - the predicate is binary and
+the table it joins already exists. **Medium on whether it earns its line, and
+the next book import is what would raise it:** until a book lands a row with no
+text, this is two lines reporting zero.
+
+**Ongoing cost:** two SQL strings inside a script that already runs on every
+book survey. No new file, no scheduled job, no CI minute, nothing to keep
+current.
+
+**What this finding does NOT propose, recorded rather than left as a deferral**
+(`META-AUDIT` `A16`): a check on the sparse stat-block columns the codex also
+renders. Measured 2026-09-06 across the 588 spells carrying
+`source = 'import'`, `damage` is populated on 95, `casting_time` on 43 and
+`area_of_effect` on 13 - so no column is being categorically dropped by the
+importers, and what is left is per-row fidelity against the printed page, which
+is `F1` on this menu. Dropped deliberately, not deferred.
