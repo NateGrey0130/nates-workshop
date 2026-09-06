@@ -1,6 +1,7 @@
 # RETRO-AUDIT.md — does the catalog benefit from the schema it grew?
 
-> **Work is open on this menu, and this line will not say which findings.**
+> **Nothing is open on this menu, as of 2026-09-06.** This line will not say
+> which findings, and it did not when there was work open either.
 > **Read under the heading for what actually happened to each** — some turned
 > out to be wrong about their own premises, some correct defects this menu's own
 > work shipped hours earlier the same day, and some needed app changes their
@@ -14,6 +15,16 @@
 > within the day, twice over. `audit-menu` → What a status header may carry
 > forbids a per-finding state here for exactly this reason, and the line that
 > broke the rule is the line that rotted.)*
+>
+> <!-- claim-ok: quoting the header claim this note corrects -->
+> *(**And the durable shape rots too, which is the newer lesson.** From
+> 2026-09-05 until 2026-09-06 this paragraph opened "Work is open on this menu,
+> and this line will not say which findings." It named none, exactly as `A13`
+> asks — and it was still wrong from 05:47 on 2026-09-06, when `#750` closed
+> `R21`, until it was corrected. Refusing to name a finding removes the roll-call
+> that rots fastest; it does not remove the claim. **Whether anything is open is
+> itself a sentence with a lifetime**, and this is the file that demonstrates it.
+> `META-AUDIT` `A18`.)*
 >
 > **One thing this menu found and did NOT act on**, because it is not a sweep's
 > to decide: `CLASS-AUDIT`'s *"Checked and still true"* entry saying
