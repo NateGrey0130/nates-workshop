@@ -178,6 +178,20 @@ export async function findDuplicates(env, catalogKey) {
       const clash = a.category && b.category
         && String(a.category).toLowerCase() !== String(b.category).toLowerCase();
 
+      // The same argument one column over. Gear carries `system` and the catalog
+      // holds ONE ROW PER BOOK on purpose, because the economies differ: `Large
+      // sack` is 3 in Palladium Fantasy and `Large Sack` is 2 in Rifts, and the
+      // `-pf` slugs say the split is deliberate. 18 of gear's 34 confident pairs
+      // were this. INGESTION-AUDIT F31.
+      //
+      // `both` is NOT a clash with either specific system: a row offered to
+      // everyone and a row offered to one system can genuinely be the same item
+      // filed twice, which is the case worth keeping confident. Only two
+      // DIFFERENT specific systems are evidence of two different books.
+      const specific = (v) => v && String(v).toLowerCase() !== 'both';
+      const systemClash = specific(a.system) && specific(b.system)
+        && String(a.system).toLowerCase() !== String(b.system).toLowerCase();
+
       // Same shape as `clash`, for the case a category cannot see: the names
       // are identical once normaliseName drops their brackets, and the brackets
       // are the whole distinction. On gear that is 68 pairs across 36 groups -
@@ -192,15 +206,17 @@ export async function findDuplicates(env, catalogKey) {
       // `Gambling (Dirty Tricks)` - is wrong, which is what `bracketed` above
       // now demotes. Do not restore the old claim without re-measuring it.
       // INGESTION-AUDIT F27.
-      const tier = clash || bracketed ? 'contains'
+      const tier = clash || systemClash || bracketed ? 'contains'
         : score >= 1 ? 'certain' : score >= 0.9 ? 'likely' : 'contains';
       pairs.push({
         score: Math.round(score * 100) / 100,
         same_numbers: sameNumbers,
         tier,
         category_clash: !!clash,
+        system_clash: !!systemClash,
         a, b,
         confidence: clash ? `same name, but filed as ${a.category} and ${b.category} — probably different powers`
+          : systemClash ? `same name, but ${a.system} and ${b.system} — one row per book, probably deliberate`
           : bracketed ? 'same name, but the brackets differ — probably two variants, not one row'
           : tier === 'certain' ? 'identical once punctuation is ignored'
           : tier === 'likely' ? 'same words, different order or ending'

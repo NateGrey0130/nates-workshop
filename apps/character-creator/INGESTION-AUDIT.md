@@ -3650,7 +3650,43 @@ doubt; the only judgement is whether the guard is wanted.
 
 **Ongoing cost:** none.
 
-### F32 — low — `Sleeping Bag` exists twice under `rifts`, and one of the rows says so in its own description
+**Taken, 2026-09-06. Posture held: one condition mirroring the guard beside it.
+Demote, never drop — a cross-system pair still appears under `contains`, because
+a row filed under the wrong system is itself worth seeing.**
+
+`systemClash` sits directly under `clash` and the tier decision becomes
+`clash || systemClash || bracketed`. The pair gains its own sentence — *"same
+name, but `<a>` and `<b>` — one row per book, probably deliberate"* — and a
+`system_clash` flag beside `category_clash`.
+
+**`both` is deliberately NOT a clash**, and that is the one judgement here. A row
+offered to everyone beside a row offered to one system can genuinely be the same
+item filed twice, which is the case worth keeping confident. Only two
+**different specific** systems are evidence of two books. Gear carries
+`palladium-fantasy` (522), `rifts` (481) and `both` (22).
+
+**Measured against the live rows, 2026-09-06:**
+
+| catalog | rows | pairs | `certain` before | `certain` after | demoted by this guard |
+|---|---|---|---|---|---|
+| gear | 1,025 | 511 | **34** | **25** | 111 pairs flagged `system_clash` across all tiers |
+| spells | 607 | 310 | 1 | **1 — unchanged** | 5, all already in `contains` |
+| psionics | 116 | 11 | 0 | **0 — unchanged** | 0 |
+| skills | 344 | 46 | 0 | **0 — unchanged** | 0 — `skills` carries `systems`, a JSON array, not a scalar `system`, so the guard cannot fire there at all |
+
+**So the whole effect is on gear, which is where the evidence came from.** The
+nine it removed from `certain` are the cross-system pairs; the 25 that remain are
+**24 bare-vs-qualified — `F30`'s subject, and not taken** — plus the one real
+duplicate, `F32`.
+
+**Proved by making it fail, in both directions**, because a guard can be wrong by
+being too broad as easily as by being absent. Making `both` count as a clash
+turned *"`both` does not clash with a specific system"* red; dropping the guard
+turned *"two different systems demote the pair"* red. One check each way, plus a
+third pinning that the same system on both rows stays confident — which is the
+`Sleeping Bag` pair the guard must not touch.
+
+Smoke 1698 → **1701.** under `rifts`, and one of the rows says so in its own description
 
 The one unambiguous duplicate in the gear catalog. Production, 2026-09-06:
 
