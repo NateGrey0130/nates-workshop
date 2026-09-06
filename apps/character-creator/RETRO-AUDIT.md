@@ -1953,6 +1953,78 @@ store names.
 **Ongoing cost:** none once done; it removes a portability trap rather than
 adding a rule to remember.
 
+**Taken, 2026-09-05 (PR #747) — ADDITIVE, on Nate's word: the column lands,
+the drop does not.** Migration `044-inventory-gear-slug.sql` applied to
+production before the merge; all **78** inventory rows backfilled, **zero**
+disagreeing with their id, `campaign_items` empty as expected.
+
+### The release audit found a defect the plan would have shipped
+
+**The column could not be called `item_slug`.** `characters/[id].js` and
+`campaigns/[id]/items.js` both alias `gear.slug AS item_slug` beside a
+`SELECT <table>.*`, so a stored column of that name returns **two columns called
+`item_slug`** and the row object silently keeps one — engine-dependent, and
+`test/regression.mjs` matches on that alias to find the armour and weapon rows.
+It is `gear_slug`.
+
+### A decision this finding should have named
+
+`docs/plans/03-items-to-gear.md` → *Scope of the change* says *"`character_items`
+keeps its name and its `item_id` column"*, and `known-limitations.md:377` says
+the same. **Those settled a different question** — *renaming* for naming purity
+in PR #17, not *re-keying* for portability — so this is not a re-proposal. But
+`audit-menu` says a finding may not fail to say a decision exists, and `R21`
+did not.
+
+### Why the drop is not here
+
+- **SQLite refuses it while the `CHECK` names the column** — tested, not
+  assumed: `no such column: item_id`. It needs a full table rebuild, and both
+  tables carry indexes and outgoing foreign keys that `036`'s precedent
+  explicitly did **not** have.
+- **Ten committed data scripts join on `item_id`**, and `rebuild-local.mjs`
+  replays every one — the repo's own portability check would start failing.
+- **The smoke check that polices `schema-change` step 2 only understands
+  `ALTER TABLE ADD COLUMN`**, so a rebuild-style migration is invisible to it.
+
+The portability hazard closes the moment reads prefer the slug, which is now.
+
+### What the audit found that R21's evidence method could not
+
+`R21` cited *"both `REFERENCES gear(id)` lines read individually"*, and that
+method only finds declared foreign keys. **`character_drafts.state` holds raw
+gear ids in its JSON** — one live draft, two of them. So the wizard still POSTs
+integers, and a draft saved before this deploy and resumed after it still will.
+That is why every write **derives the slug from the id inside the same
+statement** rather than expecting one from the client: there is no window and no
+caller that can supply one key without the other.
+
+### The cost of the slug, paid rather than discovered later
+
+Held by id, inventory was insulated from a gear **rename**. Held by slug it is
+not — and renaming a catalog row is a live admin path that has already been used
+**twenty times** on skills. So the read falls through `catalog_redirects`, and a
+smoke check proves the arm does real work by asserting the failing direction
+too: *a plain slug join LOSES the row after a rename*, while the redirect arm
+still resolves it. A third arm keeps a pre-`044` row resolving on its id alone.
+
+The audit also noted an argument for `R21` that `R21` never made: a slug-keyed
+row that missed a merge repoint becomes **recoverable** through
+`catalog_redirects`, where an id-keyed one is simply wrong.
+
+### Two things left standing, deliberately
+
+- **`gear.slug` is `UNIQUE` but nullable.** Production is clean — 0 null or
+  empty, 1025 distinct of 1025 — so the backfill was safe. Making it `NOT NULL`
+  is a second table rebuild and belongs with the drop.
+- **`R21`'s "ongoing cost: none" is now "one invariant"** until the drop: two
+  columns that could disagree. `regression.mjs` asserts they do not, on a real
+  round trip through the API.
+
+**Also corrected in passing:** my own first version of that regression check
+looked for the items under `character.items` and reported a join failure that
+was its own — the payload returns `items` at the top level.
+
 ---
 
 ## Not established
