@@ -996,6 +996,36 @@ check('a missing category on either row is not a clash', await (async () => {
   return pairs[0]?.tier === 'certain' && !pairs[0].category_clash;
 })());
 
+// INGESTION-AUDIT F31. Gear holds one row per book on purpose - Large sack is 3
+// in Palladium Fantasy and Large Sack is 2 in Rifts - so two DIFFERENT specific
+// systems are evidence of two books rather than of one row typed twice. This is
+// the category-clash guard beside it, one column over.
+check('two different systems demote the pair', await (async () => {
+  const pairs = await findDuplicates(catalogDb([
+    { id: 1, slug: 'large-sack', name: 'Large Sack', system: 'rifts', category: 'gear' },
+    { id: 2, slug: 'large-sack-pf', name: 'Large sack', system: 'palladium-fantasy', category: 'gear' },
+  ]), 'gear');
+  return pairs.length === 1 && pairs[0].tier === 'contains' && pairs[0].system_clash === true;
+})());
+// `both` is deliberately NOT a clash: a row offered to everyone beside a row
+// offered to one system can genuinely be the same item filed twice, and that is
+// the case worth keeping confident.
+check('`both` does not clash with a specific system', await (async () => {
+  const pairs = await findDuplicates(catalogDb([
+    { id: 1, slug: 'cape', name: 'Cape', system: 'both', category: 'gear' },
+    { id: 2, slug: 'cape-2', name: 'Cape', system: 'palladium-fantasy', category: 'gear' },
+  ]), 'gear');
+  return pairs.length === 1 && pairs[0].system_clash === false && pairs[0].tier === 'certain';
+})());
+// And the one real duplicate this guard must not touch: same name, same system.
+check('one system on both rows stays confident', await (async () => {
+  const pairs = await findDuplicates(catalogDb([
+    { id: 1, slug: 'sleeping-bag', name: 'Sleeping Bag', system: 'rifts', category: 'gear' },
+    { id: 2, slug: 'sleeping-bag-rifts', name: 'Sleeping Bag', system: 'rifts', category: 'gear' },
+  ]), 'gear');
+  return pairs.length === 1 && pairs[0].tier === 'certain' && pairs[0].system_clash === false;
+})());
+
 // INGESTION-AUDIT F29. The all-pairs walk became a token-prefix index, and the
 // risk of an index is a pair it never compares. These are the three shapes that
 // reach THRESHOLD without sharing a whole token, so if the bucket key is ever

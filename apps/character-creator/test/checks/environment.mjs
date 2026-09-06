@@ -182,7 +182,8 @@ check('every data script records its own run', unrecorded.length === 0,
 check('no data script records another script\'s name', misnamed.length === 0,
   misnamed.join('; ') + ' — a copy-pasted footer logs the wrong script');
 check('every data script is pure ASCII', notAscii.length === 0,
-  'non-ASCII in: ' + notAscii.join(', ') + ' — scripts/d1-apply.mjs refuses these, and '
+  'non-ASCII in: ' + notAscii.join(', ') + ' — scripts/d1-apply.mjs refuses these in EXECUTABLE SQL '
+  + '(this check is stricter and covers comments too), and '
   + 'wrangler on Windows has turned them into mojibake in production');
 check('no data script carries a CR', hasCr.length === 0,
   'CRLF in: ' + hasCr.join(', ') + ' — the .gitattributes *.sql rule pins LF');
