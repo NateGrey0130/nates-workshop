@@ -209,6 +209,38 @@ pane does not deliver those keys to the page (a `keydown` listener recorded
 nothing), so this is a tooling limit rather than an app result. And no screen
 reader was run.
 
+<!-- claim-ok: quoting the premise this note corrects -->
+**The keyboard half was RUN on 2026-09-06, and the sentence above was wrong
+about the tooling rather than about the app.** *"The browser pane does not
+deliver those keys"* is true of the in-app pane and was read as *"those keys
+cannot be delivered here"*, which is a different claim and a false one. Driven
+over CDP instead — headless Chrome with `--remote-debugging-port`, its own
+`--user-data-dir`, `PUT /json/new`, then `Input.dispatchKeyEvent`, from Node 24
+with no dependencies — against this checkout on **port 8791**.
+
+| driven | result |
+|---|---|
+| 12 × `Tab` from `document.body` | **12 keydowns received by the page, every one `isTrusted: true`.** Four focus stops in DOM order — `← workshop`, `btnHost`, `btnJoinToggle`, `btnSoloToggle` — then a wrap through `BODY`, twice over |
+| `Enter` on a focused `btnHost` | **one trusted `click`**, `{on: "BUTTON#btnHost", isTrusted: true}`, and `aria-expanded` flipped to `true` |
+| `Space` on an untouched `btnSoloToggle` | `aria-expanded` **`false` → `true`**, one trusted `click`, and `#formSolo` became visible |
+| `a` and `Escape` | both delivered, so it is not special-cased to navigation keys |
+
+**So Tab traversal and Enter/Space activation both work**, and the reason they
+read as untestable was a premise about the instrument. `SKILL-AUDIT` `F12` is
+the precedent: a finding blocked by a wrong premise about the **method** looks
+exactly like one blocked by its subject, and only trying it tells them apart.
+`verify-ui` → *The Browser pane lies in three specific ways* already says the
+pane moves focus but does not activate; what it did not say, and what this
+settles, is that CDP does both.
+
+**T10's own shipped fix was re-checked in the same run and holds:** all three
+tiles carry `aria-expanded` **and** `aria-controls` at rest —
+`formHost`, `formJoin`, `formSolo`.
+
+**The screen-reader half is still not run, and CDP does not substitute for
+it.** Driving keys proves the controls are operable; it says nothing about what
+is announced. That half of this item stands exactly as written.
+
 Original note: `aria-live` announcements, focus
 rings, and `prefers-reduced-motion` are all implemented; none has been driven
 by an actual assistive tech.
