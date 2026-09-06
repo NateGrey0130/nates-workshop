@@ -3832,3 +3832,93 @@ survivor afterwards — which is the ten plus the three that already did, and
 exactly what the readback asserts. The count of *edits* was ten; the count of
 *citers* is thirteen. Stated because the two numbers are easy to conflate and
 the readback pins the second.
+---
+
+## Filed 2026-09-06, found while measuring F30
+
+Both are `F32`'s shape — a duplicate somebody noticed and wrote into a row's
+`description`, where nothing reads it. **Neither is taken by the PR that filed
+it.**
+
+### F33 — low — `Gas Mask` and `Gas Mask (human-size)` are the same mask
+
+The only pair `F30` left in gear's `certain` tier that is actually a duplicate.
+Production, 2026-09-06:
+
+| id | slug | cost | `source_book` | `description` | cited by | held by |
+|---|---|---|---|---|---|---|
+| 10042 | `gas-mask` | 50 | **`Web reference (not book-verified)`** | *"A human-sized gas mask. Typically 50 to 80 credits; a version sized for something larger than a human runs roughly 80 to 120."* | **21 classes** | **3 characters** |
+| 10797 | `gas-mask-human-size` | 50 | `Rifts Ultimate Edition p.261-270` | *"80 cr."* | **0** | **0** |
+
+**The plain row's own description says it IS the human-sized one**, and both cost
+50. The genuine variant is a third row, `gas-mask-oversized` at 80, which nothing
+here touches.
+
+**Proposal: retire `gas-mask-human-size`, keep `gas-mask`, add a redirect.** It
+is cited by nothing and held by nobody, so **no citation moves and no character
+changes** — this is `F32` without the ten class edits.
+
+**Posture: one data script, applied to production before its own merge. No
+schema change, no code change, and NO class markdown touched.**
+
+**One thing deliberately dropped rather than deferred**, per the section
+`META-AUDIT` `A16` shipped. The surviving row cites
+**`Web reference (not book-verified)`**, which `scripts/books.json` lists under
+`not_books` — so it resolves to no page, exactly like the `Rifts Skill List`
+rows `F26` documented. Correcting it needs the RUE gear pages read, and it is
+**one instance of a catalog-wide pattern already recorded**, not a fact about
+this merge. It is named here and **not** filed; `F26` is where that surface
+lives.
+
+**Decline it** if two gas mask rows costing the same is not worth a script. The
+counter is that the picker offers both and one of them has a description reading
+only *"80 cr."* against a cost of 50 — a row that contradicts itself.
+
+**Evidence:** both rows read from production 2026-09-06; citation counts from a
+script over all 169 published classes matching the quoted slug, and
+`character_items` grouped by `gear_slug` — **counted in a file rather than an
+inline `LIKE`**, which is how `F32`'s first count went wrong.
+
+**Confidence: high.** Same cost, same system, same category, and the surviving
+row's own prose identifies it as the human-sized mask.
+
+**Ongoing cost:** none.
+
+### F34 — low — `Gas Mask and Air Filter` exists twice, and the note saying so is itself wrong
+
+| id | slug | cost | `description` | cited by |
+|---|---|---|---|---|
+| 10628 | `air-filter-and-gas-mask` | 55 | *"A human-sized gas mask (50-80 credits) with disposable air filters (12 for 5 credits)."* | **0** |
+| 10641 | `gas-mask-and-air-filter` | 55 | *"…Duplicates `air-filter-and-gas-mask`; **both slugs are referenced by classes**."* | **1** (`crazy`) |
+
+Same cost, same weight, same system, same `Rifts Ultimate Edition p.261-263`.
+Word-order variants of one item — a `likely`-tier pair, so `F30` never reached
+it.
+
+**The note is wrong in the detail that would have made it urgent.** *"Both slugs
+are referenced by classes"* — measured 2026-09-06, `air-filter-and-gas-mask` is
+referenced by **none**. Whoever wrote that either miscounted or the citations
+have moved since. **A false claim in a `description` is worse than no claim**,
+because the row is the one place a reader will not think to re-check.
+
+**Proposal: retire `air-filter-and-gas-mask`, keep `gas-mask-and-air-filter`,
+add a redirect, and rewrite the surviving description** so it stops asserting
+something untrue. Keeping the cited row means no citation moves.
+
+**Posture: one data script, applied to production before its own merge. No
+schema change, no code change, no class markdown touched.**
+
+**Decline it** more readily than `F33` — nobody is confused by two rows for a
+gas mask with filters, and the pair sits in `likely` rather than `certain`, so
+nothing is claiming they are the same. The case for is the false sentence, which
+survives whatever happens to the rows.
+
+**Evidence:** both rows read from production 2026-09-06; the citation counts
+from the same script as `F33`.
+
+**Confidence: high** on the duplicate and on the note being false. **Medium** on
+which row should survive — keeping the cited one is the low-churn choice, and
+`air-filter-and-gas-mask` has the better description, which the proposal
+transfers rather than loses.
+
+**Ongoing cost:** none.
