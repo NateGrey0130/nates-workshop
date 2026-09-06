@@ -64,6 +64,18 @@ changes and inventory rows keep resolving.
 Non-percentile rows are **not** stubs. W.P.s, Hand to Hand, Boxing, Wrestling
 and Robot Combat legitimately carry `base 0, per_level 0`.
 
+**A spell or psionic power with no `description` is a stub too, and it is the
+one with no marker.** The row carries its name, its cost and its level or
+category, so it reads as finished in every report here — and the codex, the
+page that exists to render that column, draws it blank.
+
+The test is **the text alone**: not the level, not the cost, and not who
+created the row. `psionic_powers` has no `level` column at all, and a blank
+description is wrong however the row arrived — the last 23 this catalog had
+came in overwhelmingly with the seed rather than through an importer.
+`source-coverage.mjs` counts them as `spell text missing` and
+`psionic text missing`. BOOK-INGEST-AUDIT F22.
+
 ## A skill can grant bonuses
 
 `skills.bonuses` holds what a skill grants beyond its percentage, in **the same

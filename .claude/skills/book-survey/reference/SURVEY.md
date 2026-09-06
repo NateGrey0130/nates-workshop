@@ -146,6 +146,21 @@ stale the next time anything ships:
   <slug>             <traceable> / <other>
 ```
 
+**Paste that run's `BACKLOG` block as well.** It is five global counts rather
+than per-book ones, which is exactly why it belongs here: the only thing that
+moves it is an import leaving something unfinished, so a number that changed
+is this book, and a number that did not is the answer to "did we finish?".
+
+```
+  BACKLOG       rows an importer created and nobody finished
+    <label>            <n>   <why>
+```
+
+<A line that moved needs a sentence saying whether it is yours and what you
+are doing about it. `spell text missing` and `psionic text missing` are the
+two that a spell or power import can move without anything else noticing —
+BOOK-INGEST-AUDIT F22.>
+
 <What `other` is made of for this book — rows with no page range, rows citing
 pages the cache does not hold, rows the resolver cannot attribute. A number with
 no explanation is not an answer.>

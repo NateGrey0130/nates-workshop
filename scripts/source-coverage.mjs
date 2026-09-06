@@ -269,6 +269,22 @@ const backlog = [
     + 'AND level = 0 AND ppe = 0', 'level 0 and 0 P.P.E.'],
   ['psionic stubs', "SELECT count(*) AS n FROM psionic_powers WHERE source = 'import' "
     + 'AND isp = 0', '0 I.S.P.'],
+  // A row with no TEXT is the stub with no marker. It carries its name, its
+  // level or category and its cost, so every signature above reports it
+  // finished, and the codex - the page that exists to render this column -
+  // draws it blank. BOOK-INGEST-AUDIT F22.
+  //
+  // NO `source = 'import'` FILTER, unlike the three above and like both gear
+  // lines. Of the 23 rows backfill-spell-descriptions.sql filled - the last
+  // blank descriptions this catalog actually had - 17 are seed and 6 are
+  // import (--remote, 2026-09-06), so watching importers alone would have
+  // missed seventeen of twenty-three.
+  ['spell text missing', 'SELECT count(*) AS n FROM spells '
+    + "WHERE description IS NULL OR trim(description) = ''",
+    'nothing for the codex to show'],
+  ['psionic text missing', 'SELECT count(*) AS n FROM psionic_powers '
+    + "WHERE description IS NULL OR trim(description) = ''",
+    'nothing for the codex to show'],
 ];
 console.log('\nBACKLOG       rows an importer created and nobody finished');
 for (const [label, sql, why] of backlog) {
