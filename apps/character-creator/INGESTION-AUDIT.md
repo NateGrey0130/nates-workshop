@@ -3611,6 +3611,56 @@ pass over all four catalogs and was not run.
 
 **Ongoing cost:** none.
 
+**Adjusted 2026-09-06 and RE-SCOPED before being taken, on Nate's word. The
+diagnosis stands; the remedy is narrower than proposed.** This finding asked to
+demote **every** bare-vs-qualified pair. What shipped demotes them **only when a
+numeric field differs**. The original text stands because this file is a record.
+
+**The numbers turned out to separate the two populations, which this finding did
+not check.** Of the 24 bare-vs-qualified pairs left in gear's `certain` tier
+after `F31` and `F32`:
+
+| | count | what they are |
+|---|---|---|
+| differ in price | **22** | `Plate Armor` 1000 against its half suit 450; `Sunglasses` 15 against `(fancy or light adjusting)` 100; every shield, cape, tent and half-suit — **all genuine variants** |
+| identical numbers | **2** | `Gas Mask` / `Gas Mask (human-size)`, both 50 — **a real duplicate**; and `Robe (Heavy)` / `Robe`, both 30 — **a coincidence** inside a 20/30/35 clothing set |
+
+**A variant that costs something different is a different product.** That is the
+whole rule, and it is why the finding's own *"nothing mechanical separates the
+two cases"* was too pessimistic — `same_numbers` separates them at 22 of 24.
+
+**Taken, 2026-09-06 as the re-scope. Posture held: one condition in
+`catalog-merge.js`. No pair dropped, no merge performed, nothing written.**
+
+**Measured across all four catalogs afterwards:**
+
+| catalog | `certain` before | after |
+|---|---|---|
+| gear | 24 | **2** — `Gas Mask` (real) and `Robe (Heavy)` (chance) |
+| spells | 1 | **0** |
+| skills | 0 | 0 |
+| psionics | 0 | 0 |
+
+**The five spells it demoted are the corroboration.** They are
+`Water: Calm Waters` against `(greater)` — 3/15 PPE against 8/100 —
+`Invisibility: Simple` against `(Superior)`, and three more of that shape. **The
+first is one of `RETRO-AUDIT` `R20`'s four deliberate keeps**, kept because *"the
+book disambiguates by position and the catalog cannot."* The duplicate finder was
+calling a pair another finding had deliberately preserved *identical*. It no
+longer does, and a check pins that by name.
+
+**The cost this accepts, unchanged from the filed text: it would have demoted
+`Law` too**, whose base was 25 against 35. `F28` would have been found under
+`contains` rather than `certain`. Stated rather than discovered later.
+
+**Proved by making it fail, in both directions.** Ignoring the numbers — the
+version this finding originally proposed — turned *"a qualified variant with
+identical numbers stays confident"* red **and** tripped a pre-existing check that
+a real duplicate in one category still reaches `certain`. Dropping the rule
+turned the other two red. Two checks each way.
+
+Smoke 1701 → **1704.**
+
 ### F31 — medium — `findDuplicates` has no `system` guard, and gear is duplicated across systems on purpose
 
 The tier logic demotes a pair whose rows sit in different **categories**, and

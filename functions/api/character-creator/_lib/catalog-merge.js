@@ -199,6 +199,28 @@ export async function findDuplicates(env, catalogKey) {
       // dropped, for `clash`'s reason: the pair is still worth a glance.
       const bracketed = qualifiersDisagree(a[cat.displayField], b[cat.displayField]);
 
+      // The other half of the same shape, added by INGESTION-AUDIT F30 after F27
+      // got it wrong. F27 kept a BARE name beside a QUALIFIED one confident, on
+      // the strength of one instance - `Law` against `Law (General)`, which was a
+      // real duplicate. Gear gave 24 counterexamples and no supporting cases:
+      // `Plate Armor` against `Plate Armor (Half Suit)`, `Cape` against `(Short)`
+      // and `(Long)`, `Tent` against `(One man)`. On a gear catalog that shape is
+      // a base item and its variant, which is what a catalog should hold twice.
+      //
+      // The numbers separate them. 22 of those 24 differ in price - a half suit
+      // is 450 against 1000 - and a variant that costs something different is a
+      // different product. The two that matched were `Gas Mask` against
+      // `Gas Mask (human-size)`, a real duplicate, and `Robe (Heavy)` against
+      // `Robe`, a coincidence inside a 20/30/35 clothing set.
+      //
+      // Stated rather than hidden: this would have demoted `Law` too, whose base
+      // was 25 against 35. F28 would have been found in `contains` instead of
+      // `certain`. That is the accepted cost.
+      const qualifierCount = (n) => qualifiers(n).length;
+      const oneSideQualified =
+        (qualifierCount(a[cat.displayField]) > 0) !== (qualifierCount(b[cat.displayField]) > 0);
+      const variantByNumbers = oneSideQualified && !sameNumbers;
+
       // The tiers have different precision. `contains` was measured at about
       // 40% on a real catalog. `certain` and `likely` were measured at no false
       // positives, and `certain` no longer holds that: on the skills catalog it
@@ -206,7 +228,7 @@ export async function findDuplicates(env, catalogKey) {
       // `Gambling (Dirty Tricks)` - is wrong, which is what `bracketed` above
       // now demotes. Do not restore the old claim without re-measuring it.
       // INGESTION-AUDIT F27.
-      const tier = clash || systemClash || bracketed ? 'contains'
+      const tier = clash || systemClash || bracketed || variantByNumbers ? 'contains'
         : score >= 1 ? 'certain' : score >= 0.9 ? 'likely' : 'contains';
       pairs.push({
         score: Math.round(score * 100) / 100,
@@ -218,6 +240,7 @@ export async function findDuplicates(env, catalogKey) {
         confidence: clash ? `same name, but filed as ${a.category} and ${b.category} — probably different powers`
           : systemClash ? `same name, but ${a.system} and ${b.system} — one row per book, probably deliberate`
           : bracketed ? 'same name, but the brackets differ — probably two variants, not one row'
+          : variantByNumbers ? 'one name is the other plus a qualifier, and the numbers differ — probably a variant'
           : tier === 'certain' ? 'identical once punctuation is ignored'
           : tier === 'likely' ? 'same words, different order or ending'
           : 'one name contains the other — check this one',
