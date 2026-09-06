@@ -229,7 +229,7 @@ function auditPanel() {
   // A character whose class no longer resolves is not an offender — class
   // soft-delete exists precisely so it keeps working, and the validator skips it.
   const unvalidatable = a.unvalidatable.length ? `
-    <h4 class="dupe-head">Not checked <span class="muted small">— ${a.unvalidatable.length}</span></h4>
+    <h2 class="dupe-head">Not checked <span class="muted small">— ${a.unvalidatable.length}</span></h2>
     <p class="muted small" style="margin:0 0 6px">No class definition resolves for these, so no rule can be
       applied. They load and save normally; this is what retiring a class is supposed to do.</p>
     ${a.unvalidatable.map((u) => `<div class="audit-row">
@@ -254,12 +254,12 @@ function auditPanel() {
     ${byRule.length ? `<p class="small" style="margin:0 0 8px">${byRule.map(([rule, n]) =>
       `<span class="tag">${escHtml(rule)} ×${n}</span>`).join(' ')}</p>` : ''}
     ${blocked.length ? `
-      <h4 class="dupe-head">Would be refused on save <span class="muted small">— ${blocked.length}</span></h4>
+      <h2 class="dupe-head">Would be refused on save <span class="muted small">— ${blocked.length}</span></h2>
       <p class="muted small" style="margin:0 0 6px">A rule the class states outright. These load and save
         as they are today; the refusal happens on the next edit that touches skills.</p>
       ${blocked.map(offender).join('')}` : ''}
     ${warned.length ? `
-      <h4 class="dupe-head">Worth a look <span class="muted small">— ${warned.length}</span></h4>
+      <h2 class="dupe-head">Worth a look <span class="muted small">— ${warned.length}</span></h2>
       <p class="muted small" style="margin:0 0 6px">Warnings only, so these are legal and save normally.
         A character does not record which choice-group a skill was taken for, so counting by category
         both over- and under-counts — that is why these warn rather than block.</p>
@@ -387,7 +387,7 @@ function dupePanel() {
   // Grouped because the tiers are not equally trustworthy, and one flat list
   // buries the reliable matches among the guesses.
   const group = (list, heading, blurb) => list.length ? `
-    <h4 class="dupe-head">${heading} <span class="muted small">— ${list.length}</span></h4>
+    <h2 class="dupe-head">${heading} <span class="muted small">— ${list.length}</span></h2>
     <p class="muted small" style="margin:0 0 6px">${blurb}</p>
     ${list.map(pair).join('')}` : '';
 

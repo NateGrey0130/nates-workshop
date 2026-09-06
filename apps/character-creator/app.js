@@ -771,10 +771,10 @@ function renderSystem() {
     <h2>Choose a game system</h2>
     <div class="grid">
       <button type="button" class="pick ${S.system === 'palladium-fantasy' ? 'sel' : ''}" onclick="pickSystem('palladium-fantasy')">
-        <h4>⚔️ Palladium Fantasy</h4><p class="muted">Swords, sorcery, and the Old Kingdom.</p>
+        <h3>⚔️ Palladium Fantasy</h3><p class="muted">Swords, sorcery, and the Old Kingdom.</p>
       </button>
       <button type="button" class="pick ${S.system === 'rifts' ? 'sel' : ''}" onclick="pickSystem('rifts')">
-        <h4>☢️ Rifts</h4><p class="muted">Mega-damage, magic, and machines on post-apocalyptic Earth.</p>
+        <h3>☢️ Rifts</h3><p class="muted">Mega-damage, magic, and machines on post-apocalyptic Earth.</p>
       </button>
     </div>
     ${S.isAdmin ? `<h3>Admin</h3>
@@ -1093,7 +1093,7 @@ function classCard(c, score) {
   const sel = S.rcc?.id === c.id ? ' sel' : '';
   const badge = score != null ? `<span class="tag score">match ${score}/6</span>` : '';
   return `<button type="button" class="pick${sel}" onclick="pickClass('${c.id}')">
-    <h4>${esc(c.name)}</h4>
+    <h3>${esc(c.name)}</h3>
     <span class="tag">${esc(c.category)}</span><span class="tag">${esc(c.source_book)}</span>${
       needsOccupation(c) ? '<span class="tag">pairs with an O.C.C.</span>' : ''}${badge}
     <p class="muted small">${esc(blurb(c.lore, 110))}</p>
