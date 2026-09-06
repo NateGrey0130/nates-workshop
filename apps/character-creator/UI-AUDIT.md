@@ -2101,3 +2101,119 @@ kinds and their thirteen categories were read with
 `wrangler d1 execute --remote` against `pending_skill_picks`; the client and
 server allowance expressions were read from `sheet.js` and `picks.js` in the
 working tree. Nothing else in this table is affected.
+
+---
+
+## Filed by META-AUDIT A16, 2026-09-06
+
+Two findings that already existed as measured work, deferred by `F24` and `F16`
+to *"a separate finding"* that was never filed. `META-AUDIT` `A16` is the
+finding about the deferral; these are the work. Both were re-measured on
+2026-09-06 at `main` @ the merge of #755 before being numbered.
+
+**Neither is taken by the PR that filed it**, per `audit-menu`.
+
+### F31 — low — two of the six pages still skip a heading level, and `app.js` skips inside a page
+
+**Deferred by `F24`**, whose proposal reads *"Fixing the `h2`→`h4` jumps inside
+`app.js`/`catalog.js` is a **separate** finding"*, and whose outcome note adds
+*"That is the separate finding this one names, and it is still open."* No such
+finding was filed. `F24` itself is closed and its own half — one `<h1>` per page
+— shipped in PR #449 and still holds.
+
+**What is true today.** Measured 2026-09-06 with `grep -co '<hN'` over each page
+script, and `grep -co '<h1'` over each shell:
+
+| page | first heading after the shell's `h1` | skips |
+|---|---|---|
+| `sheet.js` | `h3` (11 of them, **no `h2`**) | **`H1→H3`** |
+| `catalog.js` | `h4` (4 of them, no `h2`, no `h3`) | **`H1→H4`** |
+| `app.js` | `h2` — but see below | **inside the page** |
+| `campaign.js`, `dashboard.js` | `h2` | no |
+| `codex.js` | none of its own | n/a |
+
+**`app.js` is the part `F24`'s note dropped.** Its own deferral names `app.js`
+first, and the note then measures only the two pages that skip *from the top*.
+Read 2026-09-06: `<h2>Choose a game system</h2>` at `:771` sits above `<h4>` at
+`:774` and `:777`, and `<h2>Pick your class` at `:899` sits above `<h4>` at
+`:1096`. `F24` cited the first pair as `app.js:631,634`; the line numbers moved,
+the structure did not.
+
+**There are six pages now, not five.** `codex.html` did not exist when `F24` was
+written. It carries an `h1` and `codex.js` emits no headings at all, so it is
+correct by default and is listed only so the next reader is not surprised by the
+count.
+
+**Proposal:** promote the first heading on each page to the level below its
+`h1` — `sheet.js`'s `h3` block to `h2`, `catalog.js`'s `h4` block to `h2` — and
+in `app.js`, take the two `h4` runs that sit directly under an `h2` to `h3`.
+Class and style hooks travel with the tag; no CSS rule in
+`apps/character-creator/styles.css` selects any of these by element name, which
+is what makes it a tag swap rather than a restyle.
+
+**Posture: markup only, no visual change, no new component, no CSS rule added.**
+If a level change moves a single rendered pixel it has been done wrong — `F24`
+established the pattern when it promoted `.logo` to `<h1>` and measured 22px /
+weight 800 / `margin: 0` identical before and after.
+
+**Decline it** if the judgement is that heading order below the first level is
+not worth a markup sweep on an app used by one household. The counter is that
+this is the second half of a finding already taken, and it is the half that
+makes the first half useful: an `h1` with an `h3` under it announces a missing
+section to a screen reader.
+
+**Evidence:** `grep -n "<h[1-6]" apps/character-creator/app.js` and `grep -co`
+over the six page scripts and six shells, all 2026-09-06 at the merge of #755.
+`F24`'s text and note read the same day. **Not driven in a browser** — the claim
+is structural, and `verify-ui` is where the taker proves the render is unchanged.
+
+**Confidence: high** on the structure, which is a grep anyone can repeat.
+**Medium** on the tag swap being visually free; what would raise it is the
+before/after measurement `F24` already demonstrated on `.logo`.
+
+**Ongoing cost:** none.
+
+### F32 — low — `prefers-reduced-motion` is absent from the character creator, and present in the sibling app
+
+**Deferred by `F16`**, whose outcome note reads *"`prefers-reduced-motion` was
+**not** taken — it is a separate item and stays open."* No such item was ever
+filed. `F16`'s other half — `:focus-visible`, copied from `apps/pick3cut5` —
+shipped in PR #444 and holds.
+
+**What is true today.** The app has exactly two stylesheets and **neither
+contains the rule**:
+`grep -rn "prefers-reduced-motion" --include=*.css apps/character-creator shared`
+returns nothing, 2026-09-06. `apps/pick3cut5/styles.css:557` has it, which is the
+comparison `F16`'s own heading draws — *"while a sibling app has both done
+well."*
+
+**There is motion to reduce, which is why this is not vacuous.** Six
+`transition:` declarations in `apps/character-creator/styles.css` and four in
+`shared/styles.css`, plus two keyframe animations in `shared/styles.css:302-303`
+— `spin` (a continuous rotation) and `pulse` (an opacity oscillation). A
+continuous spinner is the case the media query exists for.
+
+**Proposal:** copy the block from `apps/pick3cut5/styles.css:557-563` into
+`apps/character-creator/styles.css` — `animation-duration`,
+`animation-iteration-count` and `transition-duration` clamped under
+`@media (prefers-reduced-motion: reduce)`. **App-local, not `shared/`**, which is
+the same scoping decision `F16` made when it copied `:focus-visible`: `shared/`
+is loaded by four apps and two of them have made no such decision.
+
+**Posture: one media block in one app stylesheet. No shared file touched, no
+component changed, no JS.**
+
+**Decline it** if the judgement is that a household app with two keyframe
+animations does not need the query. The counter is `F16`'s own framing: the
+sibling app has it, the difference is unexplained, and the two animations that
+exist are in `shared/` where every app sees them.
+
+**Evidence:** the two `grep -rn --include=*.css` runs above and
+`grep -coE "transition:|animation:|@keyframes"` over both stylesheets, all
+2026-09-06. `apps/pick3cut5/styles.css:557-563` read the same day.
+
+**Confidence: high.** It is an absence proved by reading both files that could
+hold it, rather than by one grep shape — which is the failure `CLASS-AUDIT`
+`F17` recorded.
+
+**Ongoing cost:** none. Seven lines that need no maintenance.
