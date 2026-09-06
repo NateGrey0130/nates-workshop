@@ -2086,6 +2086,116 @@ rather than silently reconciling them.
 which is the decision this finding is really asking for.
 **Ongoing cost:** none, plus one redirect row per rename forever.
 
+**Taken, 2026-09-06 (PR #PRNUM) - EIGHT of the twelve, on Nate's word: the rows
+whose drift sits INSIDE the elemental prefix.** Applied to production before the
+merge, `zzzzz-retro-r20-spell-names.sql`, eleven readbacks green.
+
+### The mechanism this finding proposed does not work for spells
+
+`R20` says a rename *"needs a `catalog_redirects` row so class markdown citing
+the old key keeps resolving"*. **It does not.** A spell citation is resolved in
+three places and none of them ever sees a redirect:
+
+| where | what it does |
+|---|---|
+| `catalogs.js` | the wizard boot payload - selects `name, level, ppe, ...` from `spells` and sends no redirect table at all |
+| `app.js:1626` and `app.js:2848`, read 2026-09-06 | filters a class's named list by **exact lowercased name** against that payload, and tells the player *"N named spells are not in the catalog yet"*. Two sites, not three - `grep -n "named.has(String"` returns five, and the other three (`1705`, `2908`, `2966`) filter `psiCatalog`, not spells |
+| `_lib/power-picks.js` `loadPowerCatalog` | backs level-up confirm and `validate-character.js`. Only `loadPowerDescriptions` resolves redirects; the catalog loader does not |
+
+So a bare rename **422s a level-up confirm in both directions**: the old name is
+not in the catalog, and the new name is not on the list the grant draws from.
+
+**And the repo had already answered this, twice, in writing.**
+`fix-rue-spell-levels.sql` refuses five RUE spellings on exactly these grounds -
+*"a citation is matched in the browser where catalog_redirects are not sent"* -
+and `docs/spell-and-psionic-imports.md` restates it. `audit-menu` says a finding
+may not fail to say a decision exists, and `R20` did not. The decision is not
+binding here (these are Book-of-Magic Warlock rows, not RUE invocations) but a
+taker needed to know it.
+
+**The citations therefore move WITH the rename**, in the same script, and the
+eight redirects are belt and braces for the importer's `crossReference()` rather
+than the plan. They are the first spell redirects this database has ever held.
+
+### The blast radius was understated by an order of magnitude
+
+`R20` reads as one citation per class. Measured against production:
+**134 occurrences across 11 classes** - the ten per-Force Warlocks and the
+Fire/Water Elemental Fusionist - because each name repeats in every
+**cumulative** level list. `Water: Breathe Underwater` alone appears in `L2`
+through `L8` of five classes.
+
+The precedent's warning that markdown is *"frontmatter mixed with lore prose"*
+was answered by measurement rather than waved at: **all 134 sit in the YAML
+frontmatter, zero in the prose body, and all 134 are double-quoted**. So the
+replace matches the name *with its quotes* - which also makes it idempotent for
+free on the one row whose old name is a prefix of its replacement, where an
+unquoted replace would have compounded to `Essence & Intellect & Intellect` on
+the second run.
+
+### The four left alone, each for a reason that is not taste
+
+- **`Fire: Fire Ball` and `Air: Wind Rush`.** RUE already supplies an unprefixed
+  `Fire Ball` and `Wind Rush`, and `spells.name` is `UNIQUE`. The elemental
+  prefix is doing precisely the job the book's own *"(Warlock)"* parenthetical
+  does; adopting the book's wording trades a working disambiguator for a broken
+  one and drops both rows out of the picker's `Fire:` / `Air:` filter.
+- **`Water: Swim as a Fish: Superior`.** `stem()` drops a parenthetical, so the
+  book's `(Superior)` would give the row the bare alias `swim as a fish`,
+  already held by two others - the importer's refuse-to-match case. No test
+  would have gone red, because the fixture pinning it is hardcoded.
+- **`Water: Calm Waters (greater)`.** Verified on the pages: printed 84 at level
+  3 / 15 PPE and printed 88 at level 8 / 100 PPE, matching the catalog's two
+  rows exactly. The book disambiguates by position and the catalog cannot.
+
+**The prefix is load-bearing and perfectly consistent**: 231 spells carry one,
+231 spells cite the four elemental blocks on printed 57-90, and they are the
+same 231 rows. All eight renames keep theirs, so that count did not move.
+
+### The check that should have caught this walked two classes
+
+`regression.mjs`'s *"every named spell list resolves against the catalog"*
+iterated `['shifter', 'ley-line-rifter']`. **Eleven Warlock classes and 134
+citations were outside it**, so renaming a Warlock spell could have broken every
+Warlock in the catalog without turning the suite red. It now walks every
+published class - 18 carry a draw-from list, 5,103 names between them - and the
+per-class fetch went with it, since `GET /classes` already returns parsed
+classes.
+
+**Its normaliser was also looser than the app.** `norm()` strips punctuation,
+while every path that resolves a citation for real compares the plain name. A
+second check now asserts the exact match.
+
+**Both were proved by making them fail, and the first attempt to do so was
+wrong** - which is the part worth keeping. Reverting one citation to
+`Fire: Heat Object/Boil Water` turned the *normalised* check red, not the exact
+one, because `norm()` maps `&` to the word *"and"* rather than deleting it, so
+that pair never collided. What only the exact check sees is punctuation `norm()`
+strips outright: dropping the colon from `Water: Swim as a Fish: Superior` left
+the first check green and the second red, across all seven of that class's
+level lists. **The floor check went red on its own first run too** - it asserted
+25 classes, reasoned from the 40 that carry a magic block, where 18 carry a
+draw-from list.
+
+### Two things the pages settled that the cache could not
+
+- **Printed 84 is corrupt in the source PDF**, and it is where
+  `Impervious to Ocean Depths` lives. Rendered with PyMuPDF and read by eye:
+  folio, heading and *"P.P.E.: Twelve"* all legible, matching the row's level 3
+  / 12 PPE.
+- **`drift-check --remote` now carries one advisory**, and it is expected:
+  `Water: Summon Sharks/Whales` reads as *"name absent from its text"* because
+  the OCR renders the slash as an `l` (`Summon SharkslWhales`). The printed page
+  was rendered too - **Summon Sharks/Whales**, a real forward slash, P.P.E.
+  Fifty against the row's 50. The catalog is right and the checker cannot see
+  it.
+
+**One more disagreement worth recording:** printed 74's *summary list* spells
+the fire spell `Heat Object/Boil Water` while its entry on printed 76 prints
+`Heat Object & Boil Water`. **The book disagrees with itself**, and the entry
+wins - the same rule that governed the citation repair, where every wrong
+citation pointed at a summary list rather than an entry.
+
 ### R21 — medium — `character_items.item_id` stores a number that means nothing outside one database
 
 **FILED, NOT TAKEN.** Turned up by the Book of Magic backfill, which keyed its

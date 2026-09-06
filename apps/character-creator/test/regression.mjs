@@ -776,25 +776,81 @@ console.log('\n' + '[7/7] Checks that only a database can make');
 
   // Every named spell list must still resolve, or the README's "all 34 resolve
   // now" becomes the next stale claim.
+  //
+  // WIDENED FOR RETRO-AUDIT R20, in the PR that renamed eight spells. This loop
+  // used to walk TWO class ids - shifter and ley-line-rifter - so the eleven
+  // classes carrying 134 elemental spell citations sat outside it entirely, and
+  // renaming a Warlock spell could break every Warlock in the catalog without
+  // turning this red. It now walks every published class.
+  //
+  // The per-class fetch went with it. `GET /classes` already returns fully
+  // parsed classes - `names=1` is the roster variant - so the extra request per
+  // id was re-fetching what was already in hand.
+  //
+  // THE LIST KEYS ARE NOT GUESSED. `parser.js` deliberately does not enumerate
+  // the magic block's keys, so they were measured off the corpus instead: three
+  // keys hold names a class DRAWS FROM - spell_lists.<level> (4,850 names),
+  // spells_from (182) and spells_per_level_from (71). `magic.spells` also holds
+  // names but is a different question - what a class is GIVEN, not what it may
+  // draw from - and folding it in here would quietly change what this check
+  // asserts.
   const catalogs = await api('GET', '/catalogs');
   const norm = (x) => String(x).toLowerCase().replace(/&/g, 'and')
     .replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+  const exact = (x) => String(x).toLowerCase();
   const haveSpell = new Set((catalogs.body.spells || []).map((r) => norm(r.name)));
+  const haveSpellExact = new Set((catalogs.body.spells || []).map((r) => exact(r.name)));
 
-  let unresolved = [];
-  for (const id of ['shifter', 'ley-line-rifter']) {
-    const one = await api('GET', '/classes?class_id=' + id);
-    const md = (one.body.classes || []).find((c) => c.id === id);
-    const cls = md || classes.find((c) => c.id === id);
+  let unresolved = [], inexact = [], spellNamesSeen = 0, classesWithLists = 0;
+  for (const cls of classes) {
     if (!cls || !cls.magic) continue;
     const lists = { ...(cls.magic.spell_lists || {}) };
-    if (cls.magic.spells_per_level_from) lists.single = cls.magic.spells_per_level_from;
+    if (cls.magic.spells_per_level_from) lists.spells_per_level_from = cls.magic.spells_per_level_from;
+    if (cls.magic.spells_from) lists.spells_from = cls.magic.spells_from;
+    if (!Object.keys(lists).length) continue;
+    classesWithLists++;
     for (const [listName, list] of Object.entries(lists)) {
-      for (const n of list) if (!haveSpell.has(norm(n))) unresolved.push(id + '/' + listName + ': ' + n);
+      for (const n of (Array.isArray(list) ? list : [])) {
+        if (typeof n !== 'string') continue;
+        spellNamesSeen++;
+        if (!haveSpell.has(norm(n))) unresolved.push(cls.id + '/' + listName + ': ' + n);
+        else if (!haveSpellExact.has(exact(n))) inexact.push(cls.id + '/' + listName + ': ' + n);
+      }
     }
   }
   check('every named spell list resolves against the catalog',
     unresolved.length === 0, unresolved.slice(0, 6).join('; '));
+
+  // AND ON THE NAME THE APP ACTUALLY COMPARES. norm() folds & to "and" and
+  // strips punctuation, which is LOOSER than every path that resolves a spell
+  // citation for real: catalogs.js sends plain names, app.js filters a class's
+  // named list by exact lowercased name, and loadPowerCatalog matches NOCASE.
+  // None of them sees catalog_redirects. So a citation differing from the
+  // catalog only in punctuation would pass the check above and still 422 a
+  // level-up confirm in both directions. That gap is what R20's premise audit
+  // found.
+  //
+  // BOTH CHECKS WERE PROVED BY MAKING THEM FAIL, one case each, and the first
+  // case chosen was wrong in a way worth recording: reverting one citation to
+  // "Fire: Heat Object/Boil Water" turned the NORMALISED check red, not this
+  // one, because norm() maps & to the WORD "and" rather than deleting it - so
+  // "object and boil" and "object boil" do not collide after all. What only
+  // this check sees is punctuation norm() strips outright: dropping the colon
+  // from "Water: Swim as a Fish: Superior" left the check above green and this
+  // one red, across all seven of that class's cumulative level lists.
+  check('and resolves on the EXACT name the app compares, not a normalised one',
+    inexact.length === 0, inexact.slice(0, 6).join('; '));
+
+  // A check that examined nothing would pass both of the above. These floors are
+  // MEASURED: 18 published classes carry a draw-from list and the three keys
+  // hold 5,103 names between them. The first version of this line said 25
+  // classes, reasoning from the 40 that carry a magic block - and went red on
+  // its own first run, which is the whole argument for asserting a floor rather
+  // than trusting that the loop found something. Set under the real figures so
+  // adding a caster does not turn it red.
+  check('and it examined enough of the corpus to mean anything',
+    classesWithLists >= 15 && spellNamesSeen >= 4500,
+    classesWithLists + ' classes with lists, ' + spellNamesSeen + ' names seen');
 
   // -- every only/except name must match a real skill row --------------------
   //
