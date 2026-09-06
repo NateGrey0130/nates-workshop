@@ -1893,6 +1893,89 @@ where a description belongs, unlike the 230 spells that did.
 **Confidence: high.**
 **Ongoing cost:** none.
 
+**Taken, 2026-09-05 (PR #744) — folded into the spell backfill, as the finding
+recommended.** All four now carry the stat block the book prints and a citation
+that points at their entry (`zzzzz-r19-psionic-stat-blocks.sql`, seven
+readbacks, `--remote`). **Posture held: data only** — no description was touched.
+
+| power | was cited | really on |
+|---|---|---|
+| Deaden Senses | printed 141 | **167** |
+| Sense Time | 141 | **177** |
+| Psychic Body Field | 141 | **181** |
+| Radiate Horror Factor | 141 | **183** |
+
+**Every printed I.S.P. matched the cost the list page gives** — 4, 2, 30 and 8 —
+which is the cross-check that these are the right entries and not four
+same-named powers somewhere else in the book.
+
+**Two of the four have no Saving Throw line at all**, and theirs stays NULL. A
+`"None"` there would have been an invention: silence and an explicit *None* are
+different facts, and only one of them is the book's.
+
+### An OCR trap that a careful reader would have stored wrong
+
+`Deaden Senses` reads **`Duration: 216 minutes`** in the text layer. The same
+line says *"roll for random determination of duration"* — which no fixed number
+needs. Rendering the page shows it prints **`2D6`**; the D was read as a 1, the
+same scanno family as the `ID6` and `IDS` forms elsewhere in these books. A
+readback now asserts the dice form so a rebuild cannot quietly put `216` back.
+
+**This is the second time on this job that rendering a page beat reading its
+text layer**, the first being bom printed 84.
+
+### One spell corrected on the way
+
+`Realm of Chaos` stored **`ppe: 0`**; the Book of Magic printed 130 gives
+*"P.P.E.: Seventy"*. A free 9th-level spell is the kind of wrong number noticed
+at a table rather than in a query.
+
+**Three spells legitimately cost nothing and were left alone** — `Death Curse`
+prints *"P.P.E.: None/Special."*, and the two Wormwood level-0 entries are
+abilities rather than costed invocations. The readback asserts **three**, not
+zero, so a later sweep does not "fix" them.
+
+### R20 — low — the catalog and the book disagree about a dozen spell names
+
+**FILED, NOT TAKEN.** Turned up by the backfill, which read every one of these
+entries on its own page.
+
+| catalog | the book prints |
+|---|---|
+| `Air: Atmospheric Manipulation` | Atmosphere Manipulation |
+| `Air: Wind Rush` | Wind Rush (60 mph) |
+| `Earth: Sculpt & Animate Clay` | Sculpt and Animate Clay Animals |
+| `Earth: Transference of Essence` | Transference of Essence & Intellect |
+| `Fire: Fire Ball` | Fire Ball (Warlock) |
+| `Fire: Heat Object/Boil Water` | Heat Object & Boil Water |
+| `Water: Breathe Underwater` | Breathe Under Water |
+| `Water: Communicate with Sea Creature` | Communicate with Sea Creatures |
+| `Water: Impervious to Ocean Depth` | Impervious to Ocean Depths |
+| `Water: Summon Sharks or Whales` | Summon Sharks/Whales |
+| `Water: Swim as a Fish: Superior` | Swim as a Fish (Superior) |
+| `Water: Calm Waters (greater)` | Calm Waters — the book does not disambiguate |
+
+**Not all of these are errors, and that is the whole difficulty.** The `Water: `
+and `Air: ` prefixes are a deliberate catalog convention for the elemental
+lists, and `(greater)` exists because the book prints **two** spells called Calm
+Waters — a level 3 and a level 8 — which the catalog cannot. Others are plainly
+transcription drift: *Atmosphere* for *Atmospheric*, a dropped *Animals*, a
+dropped *& Intellect*, a singular for a plural.
+
+**Proposal:** decide per row whether the book's wording or the catalog's
+convention wins, and rename only the drifted ones.
+**Posture: RENAME, which is heavier than it sounds.** A rename needs a
+`catalog_redirects` row so class markdown citing the old key keeps resolving,
+which is why this was NOT folded into the backfill: filling a column cannot
+break a class, and renaming a row can.
+
+**Evidence:** each entry read on its own printed page during the backfill,
+2026-09-05; the readers reported the printed heading alongside the catalog name
+rather than silently reconciling them.
+**Confidence: high** on the disagreements. **Low** on which side should win,
+which is the decision this finding is really asking for.
+**Ongoing cost:** none, plus one redirect row per rename forever.
+
 ### R21 — medium — `character_items.item_id` stores a number that means nothing outside one database
 
 **FILED, NOT TAKEN.** Turned up by the Book of Magic backfill, which keyed its
