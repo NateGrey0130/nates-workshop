@@ -996,6 +996,38 @@ check('a missing category on either row is not a clash', await (async () => {
   return pairs[0]?.tier === 'certain' && !pairs[0].category_clash;
 })());
 
+// INGESTION-AUDIT F30. F27 kept a BARE name beside a QUALIFIED one confident on
+// the strength of one instance. Gear gave 24 counterexamples - a half suit, a
+// long cape, a two-man tent - and the numbers are what separate them: a variant
+// that costs something different is a different product.
+check('a qualified variant with different numbers is demoted', await (async () => {
+  const pairs = await findDuplicates(catalogDb([
+    { id: 1, slug: 'plate-armor', name: 'Plate Armor', system: 'palladium-fantasy', category: 'armor', cost: 1000 },
+    { id: 2, slug: 'plate-armor-half', name: 'Plate Armor (Half Suit)', system: 'palladium-fantasy', category: 'armor', cost: 450 },
+  ]), 'gear');
+  return pairs.length === 1 && pairs[0].tier === 'contains';
+})());
+// The half that must NOT be demoted, and the reason the rule keys on numbers
+// rather than on brackets alone: same price means the qualifier is a spelling of
+// one item, not a second product. This pair is a real duplicate.
+check('a qualified variant with identical numbers stays confident', await (async () => {
+  const pairs = await findDuplicates(catalogDb([
+    { id: 1, slug: 'gas-mask', name: 'Gas Mask', system: 'rifts', category: 'gear', cost: 50 },
+    { id: 2, slug: 'gas-mask-human-size', name: 'Gas Mask (human-size)', system: 'rifts', category: 'gear', cost: 50 },
+  ]), 'gear');
+  return pairs.length === 1 && pairs[0].tier === 'certain';
+})());
+// RETRO-AUDIT R20 kept `Water: Calm Waters` and `(greater)` as two rows on
+// purpose - "the book disambiguates by position and the catalog cannot". The
+// duplicate finder used to call them identical. It must not.
+check('a pair another finding deliberately kept is not called certain', await (async () => {
+  const pairs = await findDuplicates(catalogDb([
+    { id: 1, name: 'Water: Calm Waters', level: 3, ppe: 15, system: 'rifts' },
+    { id: 2, name: 'Water: Calm Waters (greater)', level: 8, ppe: 100, system: 'rifts' },
+  ]), 'spells');
+  return pairs.length === 1 && pairs[0].tier !== 'certain';
+})());
+
 // INGESTION-AUDIT F31. Gear holds one row per book on purpose - Large sack is 3
 // in Palladium Fantasy and Large Sack is 2 in Rifts - so two DIFFERENT specific
 // systems are evidence of two books rather than of one row typed twice. This is
