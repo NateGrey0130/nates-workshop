@@ -60,7 +60,7 @@ WHERE slug = 'energy-rifle'
   AND NOT EXISTS (SELECT 1 FROM imported_classes c
                   WHERE c.deleted_at IS NULL
                     AND instr(c.markdown, 'item_id: ' || char(34) || 'energy-rifle' || char(34)) > 0)
-  AND NOT EXISTS (SELECT 1 FROM character_items ci JOIN gear g ON g.id = ci.item_id
+  AND NOT EXISTS (SELECT 1 FROM character_items ci JOIN gear g ON g.slug = ci.gear_slug
                   WHERE g.slug = 'energy-rifle');
 
 -- Reports what the environment now has, so the result is read rather than

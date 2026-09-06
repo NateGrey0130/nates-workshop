@@ -88,8 +88,8 @@ SELECT 'gear', 'crusader-body-armor', (SELECT id FROM gear WHERE slug = 'crusade
 DELETE FROM gear
  WHERE slug = 'crusader-body-armor'
    AND EXISTS (SELECT 1 FROM gear WHERE slug = 'crusader-full-environmental-body-armor')
-   AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.item_id = gear.id)
-   AND NOT EXISTS (SELECT 1 FROM campaign_items gi WHERE gi.item_id = gear.id)
+   AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.gear_slug = gear.slug)
+   AND NOT EXISTS (SELECT 1 FROM campaign_items gi WHERE gi.gear_slug = gear.slug)
    AND NOT EXISTS (SELECT 1 FROM imported_classes c
                    WHERE instr(c.markdown, 'item_id: ' || char(34) || gear.slug || char(34)) > 0)
    AND NOT EXISTS (SELECT 1 FROM catalog_redirects r
@@ -104,8 +104,8 @@ SELECT 'gear', 'gladiator-body-armor', (SELECT id FROM gear WHERE slug = 'gladia
 DELETE FROM gear
  WHERE slug = 'gladiator-body-armor'
    AND EXISTS (SELECT 1 FROM gear WHERE slug = 'gladiator-full-environmental-body-armor')
-   AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.item_id = gear.id)
-   AND NOT EXISTS (SELECT 1 FROM campaign_items gi WHERE gi.item_id = gear.id)
+   AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.gear_slug = gear.slug)
+   AND NOT EXISTS (SELECT 1 FROM campaign_items gi WHERE gi.gear_slug = gear.slug)
    AND NOT EXISTS (SELECT 1 FROM imported_classes c
                    WHERE instr(c.markdown, 'item_id: ' || char(34) || gear.slug || char(34)) > 0)
    AND NOT EXISTS (SELECT 1 FROM catalog_redirects r
@@ -120,8 +120,8 @@ SELECT 'gear', 'plastic-man-body-armor', (SELECT id FROM gear WHERE slug = 'plas
 DELETE FROM gear
  WHERE slug = 'plastic-man-body-armor'
    AND EXISTS (SELECT 1 FROM gear WHERE slug = 'plastic-man-full-environmental-body-armor')
-   AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.item_id = gear.id)
-   AND NOT EXISTS (SELECT 1 FROM campaign_items gi WHERE gi.item_id = gear.id)
+   AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.gear_slug = gear.slug)
+   AND NOT EXISTS (SELECT 1 FROM campaign_items gi WHERE gi.gear_slug = gear.slug)
    AND NOT EXISTS (SELECT 1 FROM imported_classes c
                    WHERE instr(c.markdown, 'item_id: ' || char(34) || gear.slug || char(34)) > 0)
    AND NOT EXISTS (SELECT 1 FROM catalog_redirects r
@@ -136,8 +136,8 @@ SELECT 'gear', 'urban-warrior-body-armor', (SELECT id FROM gear WHERE slug = 'ur
 DELETE FROM gear
  WHERE slug = 'urban-warrior-body-armor'
    AND EXISTS (SELECT 1 FROM gear WHERE slug = 'urban-warrior-padded-environmental-body-armor')
-   AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.item_id = gear.id)
-   AND NOT EXISTS (SELECT 1 FROM campaign_items gi WHERE gi.item_id = gear.id)
+   AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.gear_slug = gear.slug)
+   AND NOT EXISTS (SELECT 1 FROM campaign_items gi WHERE gi.gear_slug = gear.slug)
    AND NOT EXISTS (SELECT 1 FROM imported_classes c
                    WHERE instr(c.markdown, 'item_id: ' || char(34) || gear.slug || char(34)) > 0)
    AND NOT EXISTS (SELECT 1 FROM catalog_redirects r
@@ -152,8 +152,8 @@ SELECT 'gear', 'dead-boy-armor-ca-1-heavy', (SELECT id FROM gear WHERE slug = 'c
 DELETE FROM gear
  WHERE slug = 'dead-boy-armor-ca-1-heavy'
    AND EXISTS (SELECT 1 FROM gear WHERE slug = 'ca-1-heavy-dead-boy-armor')
-   AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.item_id = gear.id)
-   AND NOT EXISTS (SELECT 1 FROM campaign_items gi WHERE gi.item_id = gear.id)
+   AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.gear_slug = gear.slug)
+   AND NOT EXISTS (SELECT 1 FROM campaign_items gi WHERE gi.gear_slug = gear.slug)
    AND NOT EXISTS (SELECT 1 FROM imported_classes c
                    WHERE instr(c.markdown, 'item_id: ' || char(34) || gear.slug || char(34)) > 0)
    AND NOT EXISTS (SELECT 1 FROM catalog_redirects r
@@ -168,8 +168,8 @@ SELECT 'gear', 'dead-boy-armor-ca-2-light', (SELECT id FROM gear WHERE slug = 'c
 DELETE FROM gear
  WHERE slug = 'dead-boy-armor-ca-2-light'
    AND EXISTS (SELECT 1 FROM gear WHERE slug = 'ca-2-light-dead-boy-armor')
-   AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.item_id = gear.id)
-   AND NOT EXISTS (SELECT 1 FROM campaign_items gi WHERE gi.item_id = gear.id)
+   AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.gear_slug = gear.slug)
+   AND NOT EXISTS (SELECT 1 FROM campaign_items gi WHERE gi.gear_slug = gear.slug)
    AND NOT EXISTS (SELECT 1 FROM imported_classes c
                    WHERE instr(c.markdown, 'item_id: ' || char(34) || gear.slug || char(34)) > 0)
    AND NOT EXISTS (SELECT 1 FROM catalog_redirects r
@@ -184,8 +184,8 @@ SELECT 'gear', 'dead-boy-armor-black-market', (SELECT id FROM gear WHERE slug = 
 DELETE FROM gear
  WHERE slug = 'dead-boy-armor-black-market'
    AND EXISTS (SELECT 1 FROM gear WHERE slug = 'ca-2-light-dead-boy-armor')
-   AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.item_id = gear.id)
-   AND NOT EXISTS (SELECT 1 FROM campaign_items gi WHERE gi.item_id = gear.id)
+   AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.gear_slug = gear.slug)
+   AND NOT EXISTS (SELECT 1 FROM campaign_items gi WHERE gi.gear_slug = gear.slug)
    AND NOT EXISTS (SELECT 1 FROM imported_classes c
                    WHERE instr(c.markdown, 'item_id: ' || char(34) || gear.slug || char(34)) > 0)
    AND NOT EXISTS (SELECT 1 FROM catalog_redirects r

@@ -72,14 +72,14 @@ WHERE class_id = 'juicer'
 -- Only for placeholders that are actually about to be retired. The placeholder
 -- was never a real item, so a freeform inventory line naming it is the truthful
 -- representation - and it is the same shape the wizard already falls back to.
--- The CHECK constraint allows a NULL item_id exactly when custom_name is set, so
+-- The CHECK constraint allows a NULL gear_slug exactly when custom_name is set, so
 -- these two columns must move together.
 UPDATE character_items
-SET custom_name = (SELECT name FROM gear WHERE gear.id = character_items.item_id),
+SET custom_name = (SELECT name FROM gear WHERE gear.slug = character_items.gear_slug),
     notes = COALESCE(NULLIF(notes, ''), 'was a placeholder catalog entry; pick a real item'),
-    item_id = NULL
-WHERE item_id IN (
-  SELECT g.id FROM gear g
+    gear_slug = NULL
+WHERE gear_slug IN (
+  SELECT g.slug FROM gear g
   WHERE g.slug IN ('energy-pistol', 'energy-rifle', 'vibro-blade', 'ancient-weapon')
     AND NOT EXISTS (SELECT 1 FROM imported_classes c
                     WHERE c.deleted_at IS NULL AND instr(c.markdown, 'item_id: "' || g.slug || '"') > 0));
@@ -98,7 +98,7 @@ SELECT (SELECT count(*) FROM gear
        (SELECT count(*) FROM imported_classes
         WHERE deleted_at IS NULL
           AND (instr(markdown, 'item_id: "energy-pistol"') > 0 OR instr(markdown, 'item_id: "vibro-blade"') > 0)) AS classes_still_citing,
-       (SELECT count(*) FROM character_items ci JOIN gear g ON g.id = ci.item_id
+       (SELECT count(*) FROM character_items ci JOIN gear g ON g.slug = ci.gear_slug
         WHERE g.slug IN ('energy-pistol', 'energy-rifle', 'vibro-blade', 'ancient-weapon')) AS inventory_rows_still_attached,
        -- 0 means the equipment chapter has not been imported here yet; re-run
        -- this script after it has.

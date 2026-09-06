@@ -189,11 +189,11 @@ WHERE instr(markdown, 'item_id: "traveling-robe-or-cloak-with-hood"') > 0
 -- representation. Only for rows no live class still cites, so an environment
 -- where step 2 or 3 could not run keeps its references intact.
 UPDATE character_items
-SET custom_name = (SELECT name FROM gear WHERE gear.id = character_items.item_id),
+SET custom_name = (SELECT name FROM gear WHERE gear.slug = character_items.gear_slug),
     notes = COALESCE(NULLIF(notes, ''), 'was a bundle or choice row, not an item; pick the real one'),
-    item_id = NULL
-WHERE item_id IN (
-  SELECT g.id FROM gear g
+    gear_slug = NULL
+WHERE gear_slug IN (
+  SELECT g.slug FROM gear g
   WHERE g.slug IN ('air-filter-and-gas-mask', 'wooden-stake-and-mallet', 'military-fatigues-and-dress-uniform', 'flint-and-charcoal', 'air-filter-or-gas-mask', 'sunglasses-or-tinted-goggles', 'tinted-goggles-or-sunglasses', 'note-or-sketch-pad', 'pen-or-pencil', 'robe-or-cape', 'traveling-robe-or-cloak-with-hood', 'camouflage-fatigues-and-armor')
     AND NOT EXISTS (SELECT 1 FROM imported_classes c
                     WHERE c.deleted_at IS NULL AND instr(c.markdown, 'item_id: "' || g.slug || '"') > 0));
@@ -204,7 +204,7 @@ WHERE slug IN ('air-filter-and-gas-mask', 'wooden-stake-and-mallet', 'military-f
   AND NOT EXISTS (SELECT 1 FROM imported_classes c
                   WHERE c.deleted_at IS NULL
                     AND instr(c.markdown, 'item_id: "' || gear.slug || '"') > 0)
-  AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.item_id = gear.id);
+  AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.gear_slug = gear.slug);
 
 -- Reports the result back, so it is read rather than assumed.
 --   structural_left      0 = every bundle and choice row is gone
@@ -217,7 +217,7 @@ SELECT (SELECT count(*) FROM gear WHERE slug IN ('air-filter-and-gas-mask', 'woo
        (SELECT count(*) FROM imported_classes c, gear g
           WHERE c.deleted_at IS NULL AND g.slug IN ('air-filter-and-gas-mask', 'wooden-stake-and-mallet', 'military-fatigues-and-dress-uniform', 'flint-and-charcoal', 'air-filter-or-gas-mask', 'sunglasses-or-tinted-goggles', 'tinted-goggles-or-sunglasses', 'note-or-sketch-pad', 'pen-or-pencil', 'robe-or-cape', 'traveling-robe-or-cloak-with-hood', 'camouflage-fatigues-and-armor')
             AND instr(c.markdown, 'item_id: "' || g.slug || '"') > 0) AS still_cited,
-       (SELECT count(*) FROM character_items ci JOIN gear g ON g.id = ci.item_id
+       (SELECT count(*) FROM character_items ci JOIN gear g ON g.slug = ci.gear_slug
           WHERE g.slug IN ('air-filter-and-gas-mask', 'wooden-stake-and-mallet', 'military-fatigues-and-dress-uniform', 'flint-and-charcoal', 'air-filter-or-gas-mask', 'sunglasses-or-tinted-goggles', 'tinted-goggles-or-sunglasses', 'note-or-sketch-pad', 'pen-or-pencil', 'robe-or-cape', 'traveling-robe-or-cloak-with-hood', 'camouflage-fatigues-and-armor')) AS inventory_attached,
        (SELECT count(*) FROM gear WHERE slug IN ('tinted-goggles', 'robe', 'cape', 'pen', 'pencil', 'note-pad', 'sketch-pad', 'flint', 'charcoal', 'camouflage-fatigues')) AS new_items,
        (SELECT count(*) FROM imported_classes

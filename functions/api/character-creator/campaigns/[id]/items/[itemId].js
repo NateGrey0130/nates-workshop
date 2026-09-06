@@ -74,13 +74,14 @@ export async function onRequestPost({ request, env, params }) {
       `UPDATE campaign_items SET removed_at = datetime('now'), removed_by = ?,
               claimed_by_character_id = ? WHERE id = ?`
     ).bind(guard.email, characterId, row.id),
-    // Derived from the id rather than copied from row.gear_slug, so a stash row
-    // written before migration 044 - which has an id and no slug - still lands
-    // on the sheet with both. RETRO-AUDIT R21.
+    // The stash row's own slug, carried straight across. Until migration 046
+    // this derived the slug from the id, because a row written before 044 had
+    // an id and no slug; 045 backfilled every such row and dropped the column,
+    // so the slug is now the only thing there is to copy. RETRO-AUDIT R21.
     env.DB.prepare(
-      `INSERT INTO character_items (character_id, item_id, gear_slug, custom_name, qty, notes, journal_entry_id)
-       VALUES (?, ?, (SELECT slug FROM gear WHERE id = ?), ?, ?, ?, ?)`
-    ).bind(characterId, row.item_id, row.item_id, row.custom_name, row.qty, row.notes, row.journal_entry_id),
+      `INSERT INTO character_items (character_id, gear_slug, custom_name, qty, notes, journal_entry_id)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    ).bind(characterId, row.gear_slug, row.custom_name, row.qty, row.notes, row.journal_entry_id),
   ]);
 
   return json({ ok: true, claimed_by: character.name });

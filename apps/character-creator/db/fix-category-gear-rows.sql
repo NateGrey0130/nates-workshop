@@ -92,11 +92,11 @@ WHERE instr(markdown, 'item_id: "ns-turbo-cyclone"') > 0
 -- The row was never a real item, so naming it as text is the truthful
 -- representation. Only for rows no live class still cites.
 UPDATE character_items
-SET custom_name = (SELECT name FROM gear WHERE gear.id = character_items.item_id),
+SET custom_name = (SELECT name FROM gear WHERE gear.slug = character_items.gear_slug),
     notes = COALESCE(NULLIF(notes, ''), 'was a category, not an item; pick a real one'),
-    item_id = NULL
-WHERE item_id IN (
-  SELECT g.id FROM gear g
+    gear_slug = NULL
+WHERE gear_slug IN (
+  SELECT g.slug FROM gear g
   WHERE g.slug IN ('light-mdc-body-armor', 'heavy-mdc-body-armor', 'mdc-body-armor', 'ns-turbo-cyclone')
     AND NOT EXISTS (SELECT 1 FROM imported_classes c
                     WHERE c.deleted_at IS NULL AND instr(c.markdown, 'item_id: "' || g.slug || '"') > 0));
@@ -107,7 +107,7 @@ WHERE slug IN ('light-mdc-body-armor', 'heavy-mdc-body-armor', 'mdc-body-armor',
   AND NOT EXISTS (SELECT 1 FROM imported_classes c
                   WHERE c.deleted_at IS NULL
                     AND instr(c.markdown, 'item_id: "' || gear.slug || '"') > 0)
-  AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.item_id = gear.id);
+  AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.gear_slug = gear.slug);
 
 -- Reports the result back, so it is read rather than assumed.
 --   categories_left     0 = all four are gone
@@ -120,7 +120,7 @@ SELECT (SELECT count(*) FROM gear WHERE slug IN ('light-mdc-body-armor', 'heavy-
        (SELECT count(*) FROM imported_classes c, gear g
           WHERE c.deleted_at IS NULL AND g.slug IN ('light-mdc-body-armor', 'heavy-mdc-body-armor', 'mdc-body-armor', 'ns-turbo-cyclone')
             AND instr(c.markdown, 'item_id: "' || g.slug || '"') > 0) AS still_cited,
-       (SELECT count(*) FROM character_items ci JOIN gear g ON g.id = ci.item_id
+       (SELECT count(*) FROM character_items ci JOIN gear g ON g.slug = ci.gear_slug
           WHERE g.slug IN ('light-mdc-body-armor', 'heavy-mdc-body-armor', 'mdc-body-armor', 'ns-turbo-cyclone')) AS inventory_attached,
        (SELECT count(*) FROM gear WHERE slug IN ('plastic-man-body-armor', 'urban-warrior-body-armor', 'ca-2-light-dead-boy-armor', 'gladiator-body-armor', 'ca-1-heavy-dead-boy-armor', 'crusader-body-armor')) AS suits_added,
        (SELECT min(mdc) || '-' || max(mdc) FROM gear

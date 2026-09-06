@@ -376,6 +376,10 @@ renamed away from `items` to stay clear of MediaVault's `media_items`; the route
 was deliberately left alone, since both the wizard and the sheet call it and the
 blast radius was not worth end-to-end naming purity. `character_items` and its
 `item_id` column keep their names too — only the catalog table was ambiguous.
+**The column is gone as of migration 046**, and that is not this decision being
+reversed: this settled a question about NAMING, in PR #17, and 045 answered a
+different one about KEYING - a gear id is insertion order and means nothing in
+another database. The table still keeps its name.
 
 **Catalog lists are deliberately unbounded.** `characters`, `campaigns` and
 `journal` take `limit` and `offset` (default 200, max 500) and report a `total`.

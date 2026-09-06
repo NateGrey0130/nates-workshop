@@ -76,10 +76,10 @@ UPDATE imported_classes
 -- happened, because an item changing name underneath a player with no
 -- explanation is worse than the wrong name.
 UPDATE character_items
-   SET item_id = (SELECT id FROM gear WHERE slug = 'studded-leather'),
+   SET gear_slug = 'studded-leather',
        notes = COALESCE(notes || ' ', '')
          || 'Was Leather Armor, an unstatted import placeholder; corrected to studded leather (A.R. 13, 38 S.D.C.), which the Long Bowman page states.'
- WHERE item_id = (SELECT id FROM gear WHERE slug = 'leather-armor')
+ WHERE gear_slug = 'leather-armor'
    AND EXISTS (SELECT 1 FROM characters c
                 WHERE c.id = character_items.character_id
                   AND (c.class_id = 'long-bowman' OR c.occ_class_id = 'long-bowman'));
@@ -113,8 +113,8 @@ DELETE FROM gear
    AND description LIKE 'STUB%'
    AND NOT EXISTS (SELECT 1 FROM imported_classes c
                    WHERE instr(c.markdown, 'item_id: ' || char(34) || gear.slug || char(34)) > 0)
-   AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.item_id = gear.id)
-   AND NOT EXISTS (SELECT 1 FROM campaign_items gi WHERE gi.item_id = gear.id)
+   AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.gear_slug = gear.slug)
+   AND NOT EXISTS (SELECT 1 FROM campaign_items gi WHERE gi.gear_slug = gear.slug)
    AND NOT EXISTS (SELECT 1 FROM catalog_redirects r
                    WHERE r.catalog = 'gear' AND r.to_id = gear.id);
 
@@ -128,13 +128,13 @@ SELECT count(*) AS classes_citing_studded FROM imported_classes
    AND instr(markdown, 'item_id: ' || char(34) || 'studded-leather' || char(34)) > 0;
 -- Expect 0: nothing is holding the placeholder any more.
 SELECT count(*) AS inventory_rows_left FROM character_items ci
-  JOIN gear g ON g.id = ci.item_id WHERE g.slug = 'leather-armor';
+  JOIN gear g ON g.slug = ci.gear_slug WHERE g.slug = 'leather-armor';
 -- Expect 0: the row is gone.
 SELECT count(*) AS placeholder_rows FROM gear WHERE slug = 'leather-armor';
 -- What the corrected Long Bowman is now wearing.
 SELECT c.id, c.name, g.slug, g.ar, g.cost FROM character_items ci
   JOIN characters c ON c.id = ci.character_id
-  JOIN gear g ON g.id = ci.item_id
+  JOIN gear g ON g.slug = ci.gear_slug
  WHERE g.slug = 'studded-leather' AND (c.class_id = 'long-bowman' OR c.occ_class_id = 'long-bowman');
 
 INSERT INTO data_script_runs (filename) VALUES ('retire-leather-armor-placeholder.sql');

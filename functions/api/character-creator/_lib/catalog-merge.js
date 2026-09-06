@@ -15,9 +15,10 @@
 //
 // REFERENCES DIFFER BY CATALOG, and that is the part worth reading carefully.
 // Skills, spells and psionic powers are referenced BY NAME inside characters'
-// JSON columns. Gear is referenced BY ID, through character_items.item_id.
-// Merging therefore rewrites JSON for the first three and repoints a foreign key
-// for the last.
+// JSON columns. Gear is referenced BY SLUG, through character_items.gear_slug -
+// it was by id until migration 046, and the id is what made a gear merge a
+// straight integer repoint. Merging therefore rewrites JSON for the first three
+// and repoints a text key for the last.
 
 import { CATALOGS, getCatalog } from '../../../../apps/character-creator/js/catalog-fields.js';
 import { json } from './auth.js';
@@ -30,7 +31,10 @@ const MERGE_REFS = {
   skills: { kind: 'json', column: 'skills' },
   spells: { kind: 'json', column: 'powers', type: 'spell' },
   psionics: { kind: 'json', column: 'powers', type: 'psionic' },
-  gear: { kind: 'fk', table: 'character_items', column: 'item_id' },
+  // `key` is the column on the CATALOG row whose value the reference stores.
+  // For gear that is the slug; before migration 046 the reference stored the
+  // id and this branch could bind keepId/removeId directly.
+  gear: { kind: 'fk', table: 'character_items', column: 'gear_slug', key: 'slug' },
 };
 
 // ─── name normalisation ───
@@ -221,16 +225,24 @@ export async function mergeRows(env, catalogKey, keepId, removeId) {
   const repointed = [];
 
   if (ref.kind === 'fk') {
-    // Gear: inventory points at the row by id, so this is a straight repoint.
-    // A character holding both rows keeps both inventory lines, which is
-    // correct — two of the same item is a quantity, not a duplicate.
+    // Gear: inventory points at the row by SLUG, so this is a straight repoint
+    // of one text key onto another. A character holding both rows keeps both
+    // inventory lines, which is correct — two of the same item is a quantity,
+    // not a duplicate.
+    //
+    // Binds keep[ref.key] rather than keepId. Before migration 046 the stored
+    // reference WAS the id, so binding the ids was right; it is now a slug, and
+    // binding an integer here would match nothing and silently repoint no rows -
+    // the merge would appear to succeed and leave every inventory line pointing
+    // at the row it just deleted. RETRO-AUDIT R21.
+    const keepKey = keep[ref.key], removeKey = remove[ref.key];
     const { results } = await env.DB.prepare(
       `SELECT id FROM ${ref.table} WHERE ${ref.column} = ?`
-    ).bind(removeId).all();
+    ).bind(removeKey).all();
     if (results.length) {
       statements.push(env.DB.prepare(
         `UPDATE ${ref.table} SET ${ref.column} = ? WHERE ${ref.column} = ?`
-      ).bind(keepId, removeId));
+      ).bind(keepKey, removeKey));
       repointed.push({ table: ref.table, rows: results.length });
     }
   } else {

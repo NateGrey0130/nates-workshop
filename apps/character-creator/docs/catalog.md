@@ -357,7 +357,8 @@ name typed two ways.
   columns, so every character holding the losing name is rewritten. A character
   holding **both** names has them collapsed into one, or the validator would
   then flag it as a duplicate skill.
-- **Gear** is referenced *by id* through `character_items.item_id`, so that
+- **Gear** is referenced *by slug* through `character_items.gear_slug` - it was
+  by id until migration 046 - so that
   foreign key is repointed instead.
 - The losing row is then deleted, all in one batch.
 

@@ -68,7 +68,9 @@ export async function onRequestPost({ request, env, params }) {
     env.DB.prepare(
       `SELECT COALESCE(g.name, ci.custom_name) AS name, ci.qty, ci.notes,
               ci.removed_at IS NOT NULL AS gone
-       FROM campaign_items ci LEFT JOIN gear g ON g.id = ci.item_id
+       FROM campaign_items ci
+       LEFT JOIN catalog_redirects cr ON cr.catalog = 'gear' AND cr.from_key = ci.gear_slug
+       LEFT JOIN gear g ON g.slug = ci.gear_slug OR g.id = cr.to_id
        WHERE ci.campaign_id = ? ORDER BY gone, name LIMIT 200`
     ).bind(params.id),
     env.DB.prepare(

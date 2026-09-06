@@ -87,7 +87,7 @@ WHERE slug IN (
   AND description LIKE 'STUB%'
   AND NOT EXISTS (SELECT 1 FROM imported_classes c
                   WHERE instr(c.markdown, 'item_id: ' || char(34) || gear.slug || char(34)) > 0)
-  AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.item_id = gear.id)
+  AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.gear_slug = gear.slug)
   AND NOT EXISTS (SELECT 1 FROM catalog_redirects r
                   WHERE r.catalog = 'gear' AND r.to_id = gear.id);
 

@@ -215,14 +215,17 @@ export async function onRequestPost({ request, env }) {
   ).first();
 
   const items = (b.items || []).filter((it) => it.item_id || it.custom_name);
-  // The wizard still POSTs a numeric item_id, and a draft saved before this
-  // deploy and resumed after it will keep doing so - which is exactly why the
-  // slug is derived here rather than expected from the client.
+  // The wizard still POSTs a numeric item_id, and `character_drafts.state` holds
+  // raw gear ids in its JSON, so a draft saved before this deploy and resumed
+  // after it will keep doing so. That is exactly why the slug is DERIVED here,
+  // inside the statement, rather than expected from the client - the stored
+  // column is gone since migration 046, but the wire format is unchanged and
+  // nothing outside had to be redeployed in step. RETRO-AUDIT R21.
   const statements = items.map((it) =>
     env.DB.prepare(
-      'INSERT INTO character_items (character_id, item_id, gear_slug, custom_name, qty, equipped, notes) '
-      + 'VALUES (?, ?, (SELECT slug FROM gear WHERE id = ?), ?, ?, ?, ?)'
-    ).bind(row.id, it.item_id ?? null, it.item_id ?? null, it.custom_name ?? null,
+      'INSERT INTO character_items (character_id, gear_slug, custom_name, qty, equipped, notes) '
+      + 'VALUES (?, (SELECT slug FROM gear WHERE id = ?), ?, ?, ?, ?)'
+    ).bind(row.id, it.item_id ?? null, it.custom_name ?? null,
            it.qty || 1, it.equipped ? 1 : 0, it.notes ?? null));
 
   // Skill picks the levels above 1 earned and the player did not spend. The

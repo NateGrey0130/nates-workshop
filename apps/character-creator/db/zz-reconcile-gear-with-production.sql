@@ -71,22 +71,22 @@ VALUES ('light-mdc-body-armor', 'Light Mdc Body Armor', 'rifts',
 DELETE FROM gear
  WHERE name = 'Energy Rifle'
    AND description LIKE 'STUB%'
-   AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.item_id = gear.id);
+   AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.gear_slug = gear.slug);
 DELETE FROM gear
  WHERE name = 'Sunglasses Or Tinted Goggles'
    AND description LIKE 'STUB%'
-   AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.item_id = gear.id);
+   AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.gear_slug = gear.slug);
 DELETE FROM gear
  WHERE name = 'Traveling Robe Or Cloak With Hood'
    AND description LIKE 'STUB%'
-   AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.item_id = gear.id);
+   AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.gear_slug = gear.slug);
 
 -- Read the result back rather than trusting the exit code.
 --   restored     4 = the production-only rows now exist here too
 --   superseded   0 = the three generic stubs are gone
 --   orphans      0 = no inventory row points at gear that no longer exists.
---                    item_id IS NULL is EXCLUDED on purpose: a custom item
---                    is stored with a null item_id and its own custom_name,
+--                    gear_slug IS NULL is EXCLUDED on purpose: a custom item
+--                    is stored with a null gear_slug and its own custom_name,
 --                    and counting those reported 11 'orphans' on a database
 --                    with none.
 SELECT (SELECT count(*) FROM gear WHERE name IN
@@ -96,8 +96,8 @@ SELECT (SELECT count(*) FROM gear WHERE name IN
           ('Energy Rifle', 'Sunglasses Or Tinted Goggles',
            'Traveling Robe Or Cloak With Hood')) AS superseded,
        (SELECT count(*) FROM character_items ci
-          WHERE ci.item_id IS NOT NULL
-            AND NOT EXISTS (SELECT 1 FROM gear g WHERE g.id = ci.item_id)) AS orphans;
+          WHERE ci.gear_slug IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM gear g WHERE g.slug = ci.gear_slug)) AS orphans;
 
 SELECT count(*) AS gear_total FROM gear;
 
