@@ -1967,6 +1967,221 @@ where a description belongs, unlike the 230 spells that did.
 **Confidence: high.**
 **Ongoing cost:** none.
 
+**Taken, 2026-09-05 (PR #744) — folded into the spell backfill, as the finding
+recommended.** All four now carry the stat block the book prints and a citation
+that points at their entry (`zzzzz-r19-psionic-stat-blocks.sql`, seven
+readbacks, `--remote`). **Posture held: data only** — no description was touched.
+
+| power | was cited | really on |
+|---|---|---|
+| Deaden Senses | printed 141 | **167** |
+| Sense Time | 141 | **177** |
+| Psychic Body Field | 141 | **181** |
+| Radiate Horror Factor | 141 | **183** |
+
+**Every printed I.S.P. matched the cost the list page gives** — 4, 2, 30 and 8 —
+which is the cross-check that these are the right entries and not four
+same-named powers somewhere else in the book.
+
+**Two of the four have no Saving Throw line at all**, and theirs stays NULL. A
+`"None"` there would have been an invention: silence and an explicit *None* are
+different facts, and only one of them is the book's.
+
+### An OCR trap that a careful reader would have stored wrong
+
+`Deaden Senses` reads **`Duration: 216 minutes`** in the text layer. The same
+line says *"roll for random determination of duration"* — which no fixed number
+needs. Rendering the page shows it prints **`2D6`**; the D was read as a 1, the
+same scanno family as the `ID6` and `IDS` forms elsewhere in these books. A
+readback now asserts the dice form so a rebuild cannot quietly put `216` back.
+
+**This is the second time on this job that rendering a page beat reading its
+text layer**, the first being bom printed 84.
+
+### One spell corrected on the way
+
+`Realm of Chaos` stored **`ppe: 0`**; the Book of Magic printed 130 gives
+*"P.P.E.: Seventy"*. A free 9th-level spell is the kind of wrong number noticed
+at a table rather than in a query.
+
+**Three spells legitimately cost nothing and were left alone** — `Death Curse`
+prints *"P.P.E.: None/Special."*, and the two Wormwood level-0 entries are
+abilities rather than costed invocations. The readback asserts **three**, not
+zero, so a later sweep does not "fix" them.
+
+### R20 — low — the catalog and the book disagree about a dozen spell names
+
+**FILED, NOT TAKEN.** Turned up by the backfill, which read every one of these
+entries on its own page.
+
+| catalog | the book prints |
+|---|---|
+| `Air: Atmospheric Manipulation` | Atmosphere Manipulation |
+| `Air: Wind Rush` | Wind Rush (60 mph) |
+| `Earth: Sculpt & Animate Clay` | Sculpt and Animate Clay Animals |
+| `Earth: Transference of Essence` | Transference of Essence & Intellect |
+| `Fire: Fire Ball` | Fire Ball (Warlock) |
+| `Fire: Heat Object/Boil Water` | Heat Object & Boil Water |
+| `Water: Breathe Underwater` | Breathe Under Water |
+| `Water: Communicate with Sea Creature` | Communicate with Sea Creatures |
+| `Water: Impervious to Ocean Depth` | Impervious to Ocean Depths |
+| `Water: Summon Sharks or Whales` | Summon Sharks/Whales |
+| `Water: Swim as a Fish: Superior` | Swim as a Fish (Superior) |
+| `Water: Calm Waters (greater)` | Calm Waters — the book does not disambiguate |
+
+**Not all of these are errors, and that is the whole difficulty.** The `Water: `
+and `Air: ` prefixes are a deliberate catalog convention for the elemental
+lists, and `(greater)` exists because the book prints **two** spells called Calm
+Waters — a level 3 and a level 8 — which the catalog cannot. Others are plainly
+transcription drift: *Atmosphere* for *Atmospheric*, a dropped *Animals*, a
+dropped *& Intellect*, a singular for a plural.
+
+**Proposal:** decide per row whether the book's wording or the catalog's
+convention wins, and rename only the drifted ones.
+**Posture: RENAME, which is heavier than it sounds.** A rename needs a
+`catalog_redirects` row so class markdown citing the old key keeps resolving,
+which is why this was NOT folded into the backfill: filling a column cannot
+break a class, and renaming a row can.
+
+**Evidence:** each entry read on its own printed page during the backfill,
+2026-09-05; the readers reported the printed heading alongside the catalog name
+rather than silently reconciling them.
+**Confidence: high** on the disagreements. **Low** on which side should win,
+which is the decision this finding is really asking for.
+**Ongoing cost:** none, plus one redirect row per rename forever.
+
+### R21 — medium — `character_items.item_id` stores a number that means nothing outside one database
+
+**FILED, NOT TAKEN.** Turned up by the Book of Magic backfill, which keyed its
+first draft on `id` and wrote the right text onto the wrong rows locally.
+
+**Catalog ids are insertion order.** All four catalog tables are
+`INTEGER PRIMARY KEY AUTOINCREMENT`, and production's insertion order is months
+of data scripts, catalog-editor writes and importer confirms, while a rebuild's
+is filename order. Measured against a database rebuilt from this repo,
+`--remote` vs `scripts/rebuild-local.mjs`, 2026-09-05:
+
+| table | rows | ids matching production |
+|---|---|---|
+| `gear` | 1025 | **0** |
+| `skills` | 345 | 1 |
+| `spells` | 607 | 56 |
+| `psionic_powers` | 116 | 20 |
+
+**For three of the four that is harmless**, because characters reference skills,
+spells and psionics **by name** inside their JSON columns — the id is purely
+internal. **Gear is the exception**, and it is referenced *by id*:
+
+```
+db/schema.sql:252   campaign_items.item_id  INTEGER REFERENCES gear(id)
+db/schema.sql:486   character_items.item_id INTEGER REFERENCES gear(id)
+```
+
+So **a database rebuilt from this repo would attach every character's inventory
+to the wrong item**, silently, with the foreign key satisfied throughout.
+
+**Why this is latent rather than on fire.** `scripts/d1-backup.mjs` is the
+recovery path and copies the live database *with* its ids, and a freshly built
+environment has no characters to mis-wire. It bites only where a rebuilt
+database meets real character data — which is precisely the moment nobody would
+be looking for it.
+
+**Proposal:** store the gear **slug** rather than the id. Add `item_slug`,
+backfill it from `gear.slug`, move reads and writes over, then drop `item_id`;
+same for `campaign_items`. **Posture: SCHEMA CHANGE** — `schema-change` says a
+column lands in five places, and this one also touches the API and the sheet.
+
+**There is a second argument for it beyond portability, and it may be the
+better one.** Class markdown already cites gear by **slug**, in a field also
+called `item_id` (`equipment_starting[].item_id`). The same name means a slug in
+one place and an integer in another, which is its own trap; this change makes
+them agree.
+
+**What is already done and is NOT this finding:** `test/smoke.mjs` now refuses a
+data script that keys a catalog write on a literal id, and `operations.md` and
+the `class-import` skill carry the rule. That closes the authoring hazard for
+all four tables. `R21` is only about the stored foreign key.
+
+**Evidence:** the rebuild comparison above, 2026-09-05; both `REFERENCES gear(id)`
+lines read individually; `characters.skills` / `characters.powers` confirmed to
+store names.
+**Confidence: high** on the id instability and on the two foreign keys.
+**Medium** on the migration's blast radius until the call sites are counted.
+**Ongoing cost:** none once done; it removes a portability trap rather than
+adding a rule to remember.
+
+**Taken, 2026-09-05 (PR #747) — ADDITIVE, on Nate's word: the column lands,
+the drop does not.** Migration `044-inventory-gear-slug.sql` applied to
+production before the merge; all **78** inventory rows backfilled, **zero**
+disagreeing with their id, `campaign_items` empty as expected.
+
+### The release audit found a defect the plan would have shipped
+
+**The column could not be called `item_slug`.** `characters/[id].js` and
+`campaigns/[id]/items.js` both alias `gear.slug AS item_slug` beside a
+`SELECT <table>.*`, so a stored column of that name returns **two columns called
+`item_slug`** and the row object silently keeps one — engine-dependent, and
+`test/regression.mjs` matches on that alias to find the armour and weapon rows.
+It is `gear_slug`.
+
+### A decision this finding should have named
+
+`docs/plans/03-items-to-gear.md` → *Scope of the change* says *"`character_items`
+keeps its name and its `item_id` column"*, and `known-limitations.md:377` says
+the same. **Those settled a different question** — *renaming* for naming purity
+in PR #17, not *re-keying* for portability — so this is not a re-proposal. But
+`audit-menu` says a finding may not fail to say a decision exists, and `R21`
+did not.
+
+### Why the drop is not here
+
+- **SQLite refuses it while the `CHECK` names the column** — tested, not
+  assumed: `no such column: item_id`. It needs a full table rebuild, and both
+  tables carry indexes and outgoing foreign keys that `036`'s precedent
+  explicitly did **not** have.
+- **Ten committed data scripts join on `item_id`**, and `rebuild-local.mjs`
+  replays every one — the repo's own portability check would start failing.
+- **The smoke check that polices `schema-change` step 2 only understands
+  `ALTER TABLE ADD COLUMN`**, so a rebuild-style migration is invisible to it.
+
+The portability hazard closes the moment reads prefer the slug, which is now.
+
+### What the audit found that R21's evidence method could not
+
+`R21` cited *"both `REFERENCES gear(id)` lines read individually"*, and that
+method only finds declared foreign keys. **`character_drafts.state` holds raw
+gear ids in its JSON** — one live draft, two of them. So the wizard still POSTs
+integers, and a draft saved before this deploy and resumed after it still will.
+That is why every write **derives the slug from the id inside the same
+statement** rather than expecting one from the client: there is no window and no
+caller that can supply one key without the other.
+
+### The cost of the slug, paid rather than discovered later
+
+Held by id, inventory was insulated from a gear **rename**. Held by slug it is
+not — and renaming a catalog row is a live admin path that has already been used
+**twenty times** on skills. So the read falls through `catalog_redirects`, and a
+smoke check proves the arm does real work by asserting the failing direction
+too: *a plain slug join LOSES the row after a rename*, while the redirect arm
+still resolves it. A third arm keeps a pre-`044` row resolving on its id alone.
+
+The audit also noted an argument for `R21` that `R21` never made: a slug-keyed
+row that missed a merge repoint becomes **recoverable** through
+`catalog_redirects`, where an id-keyed one is simply wrong.
+
+### Two things left standing, deliberately
+
+- **`gear.slug` is `UNIQUE` but nullable.** Production is clean — 0 null or
+  empty, 1025 distinct of 1025 — so the backfill was safe. Making it `NOT NULL`
+  is a second table rebuild and belongs with the drop.
+- **`R21`'s "ongoing cost: none" is now "one invariant"** until the drop: two
+  columns that could disagree. `regression.mjs` asserts they do not, on a real
+  round trip through the API.
+
+**Also corrected in passing:** my own first version of that regression check
+looked for the items under `character.items` and reported a join failure that
+was its own — the payload returns `items` at the top level.
+
 ---
 
 ## Not established

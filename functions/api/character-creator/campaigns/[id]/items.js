@@ -13,10 +13,15 @@ import { paging, pagedQuery, pageBody } from '../../_lib/paging.js';
 
 // The gear row is joined in rather than copied, so a catalog correction reaches
 // the stash the same way it reaches a character sheet.
+// Joined on the slug since RETRO-AUDIT R21 - same three arms as the character
+// sheet's read, and the same reason: a gear id is insertion order.
 const SELECT = `SELECT ci.*, g.name AS item_name, g.slug AS item_slug, g.category AS item_category,
                        g.weight_lbs, g.cost, c.name AS claimed_by_name
                 FROM campaign_items ci
-                LEFT JOIN gear g ON g.id = ci.item_id
+                LEFT JOIN catalog_redirects cr ON cr.catalog = 'gear' AND cr.from_key = ci.gear_slug
+                LEFT JOIN gear g ON g.slug = ci.gear_slug
+                                 OR g.id = cr.to_id
+                                 OR (ci.gear_slug IS NULL AND g.id = ci.item_id)
                 LEFT JOIN characters c ON c.id = ci.claimed_by_character_id`;
 
 export async function onRequestGet({ request, env, params }) {
@@ -62,9 +67,9 @@ export async function onRequestPost({ request, env, params }) {
   const entryId = await entryInCampaign(env, b.journal_entry_id, params.id);
 
   const row = await env.DB.prepare(
-    `INSERT INTO campaign_items (campaign_id, item_id, custom_name, qty, notes, journal_entry_id, added_by)
-     VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id`
-  ).bind(params.id, itemId, customName, qty, b.notes ?? null, entryId, guard.email).first();
+    `INSERT INTO campaign_items (campaign_id, item_id, gear_slug, custom_name, qty, notes, journal_entry_id, added_by)
+     VALUES (?, ?, (SELECT slug FROM gear WHERE id = ?), ?, ?, ?, ?, ?) RETURNING id`
+  ).bind(params.id, itemId, itemId, customName, qty, b.notes ?? null, entryId, guard.email).first();
 
   const created = await env.DB.prepare(`${SELECT} WHERE ci.id = ?`).bind(row.id).first();
   return json({ item: created }, 201);

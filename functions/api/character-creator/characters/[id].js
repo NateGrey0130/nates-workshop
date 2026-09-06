@@ -29,9 +29,26 @@ export async function onRequestGet({ request, env, params }) {
   const { results: items } = await env.DB.prepare(
     // category/damage/payload ride along for play mode's weapon cards -
     // per held item, deliberately NOT added to the /items picker projection.
+    // JOINED ON THE SLUG since RETRO-AUDIT R21, because a gear id is insertion
+    // order and means nothing outside the database that assigned it. Three
+    // arms, in order of preference:
+    //   1. the slug as stored;
+    //   2. a slug that has since been RENAMED or merged away, resolved through
+    //      catalog_redirects - which the id used to insulate this from, and
+    //      which is now the thing that would orphan a row silently;
+    //   3. the legacy id, for any row written before 044 or by a deploy that
+    //      had not caught up.
+    // `item_slug` remains the ALIAS of gear.slug, not the stored column - the
+    // stored one is `gear_slug` precisely so these two cannot collide.
     `SELECT character_items.*, gear.name AS item_name, gear.slug AS item_slug,
             gear.category AS item_category, gear.damage AS item_damage, gear.payload AS item_payload
-     FROM character_items LEFT JOIN gear ON gear.id = character_items.item_id
+     FROM character_items
+     LEFT JOIN catalog_redirects cr
+            ON cr.catalog = 'gear' AND cr.from_key = character_items.gear_slug
+     LEFT JOIN gear
+            ON gear.slug = character_items.gear_slug
+            OR gear.id = cr.to_id
+            OR (character_items.gear_slug IS NULL AND gear.id = character_items.item_id)
      WHERE character_items.character_id = ? AND character_items.removed_at IS NULL
      ORDER BY character_items.id`
   ).bind(params.id).all();
