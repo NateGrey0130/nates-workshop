@@ -3266,6 +3266,44 @@ it is running it against the gear catalog, which needs `F29` first.
 
 **Ongoing cost:** none.
 
+**Taken, 2026-09-06. Posture held: this changes which TIER a pair lands in, and
+the comment. No pair is dropped, no merge is performed, and nothing was written
+to any catalog.**
+
+`qualifiers()` and `qualifiersDisagree()` are exported beside `normaliseName` in
+`catalog-merge.js`, and the tier decision becomes `clash || bracketed`. A demoted
+pair keeps its score of 1 and gains its own sentence — *"same name, but the
+brackets differ — probably two variants, not one row"* — so it reads as a
+judgement rather than as a near-miss.
+
+**The stale comment is replaced rather than edited around.** It now says
+`contains` was measured at about 40%, that `certain` no longer holds its
+no-false-positives claim, names the Gambling pair as the instance, and ends
+*"Do not restore the old claim without re-measuring it."*
+
+**Seven cases, and the discrimination is the whole finding:**
+
+| pair | demoted? | why |
+|---|---|---|
+| `Gambling (Standard)` / `(Dirty Tricks)` | **yes** | the false positive this finding is about |
+| `Acid (cleanser)` / `(organic)` | **yes** | one of the 68 gear pairs |
+| `Arrows (long bow)` / `(short bow)` | **yes** | gear |
+| **`Law` / `Law (General)`** | **no** | bare form beside a qualified one — the real duplicate, `F28` |
+| `Telekinesis` / `Telekinesis (Super)` | no | already demoted by the category clash; unchanged |
+| `Tracking (people)` / `Tracking (people)` | no | same qualifier is not a disagreement |
+| `Back Pack` / `Backpack` | no | no brackets at all |
+
+**Proved by making it fail.** Three checks were added beside the existing
+similarity ones and then broken deliberately — `qualifiersDisagree` forced to
+`return false` — which turned *"two rows differing only inside their brackets
+disagree"* red, `PARTIAL SMOKE FAILED (1 of 22)`. Restored and green. A check
+that has only ever passed proves nothing.
+
+**One thing this does NOT do, and it matters for `F29`.** The 68 gear pairs are
+still unreachable: the endpoint cannot run on that catalog, so this fix is
+unverifiable there until `F29` is taken. It is verified on skills, where the
+expected result moves from **2 `certain` / 46 `contains`** to **1 / 47**.
+
 ### F28 — low — two `Law` rows, and the one 62 classes cite is the one with no book
 
 `Law` and `Law (General)` are the same skill. Production, 2026-09-06:
