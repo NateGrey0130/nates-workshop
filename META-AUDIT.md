@@ -2562,6 +2562,60 @@ suggests the catch is not reliable.
 **Ongoing cost:** one heading and one paragraph per deferral, forever, on the
 findings that defer. Most findings defer nothing.
 
+**Taken, 2026-09-06. Posture held: documentation only, one new section in
+`.claude/skills/audit-menu/SKILL.md`** — *A deferral is work. Give it a number or
+say you are dropping it*, placed immediately before `## When not to`. No check,
+no script, no list, no index, no retrofit, and **the standing deferrals were not
+filed by this PR**, exactly as the finding said it would not.
+
+**Five things in the text above are wrong, and the first is the shape this menu
+exists to catch.** Every one was found by `audit-premise-auditor` before the
+section was written, which is the rule working rather than the document being
+untrustworthy.
+
+**1. The negative search was wrong, and a precedent existed.** This finding says
+*"nothing proposes numbering a deferral."* `book-survey` → §8 has carried the
+workflow-scoped version all along, and calls it *"the rule that keeps a batch
+moving is the one worth memorising"* — file the gap in `BOOK-INGEST-AUDIT.md`
+and keep going. `class-import` carries the citing half. The memory store states
+it too. **So the section shipped is a generalisation and says so**, naming
+`book-survey` as its precedent. This is `G9`/`G10`/`G18`'s shape — facts right,
+prior decision unread — in the finding whose own subject is work going missing
+between files.
+
+**2. There are FOUR standing deferrals, not three.** `INGESTION-AUDIT` `F15`
+part (3) deferred a UI skill *"to after `UI-AUDIT.md` exists"*, and its note
+still reads *"still gated on `UI-AUDIT.md`, which still does not exist."* That
+file has existed since 2026-08-31 and the skill was built as `SKILL-AUDIT` `N1`
+(`verify-ui`) — the two were never connected by number, so the gate was met, the
+work shipped, and the record still asserts the condition. **It is the only one of
+the four where the deferred work was actually done**, which is why the count in
+`A18`'s list is also wrong.
+
+**3. The `prefers-reduced-motion` command does not reproduce.** The evidence line
+quotes `grep -rn "prefers-reduced-motion" apps/character-creator shared` returning
+**0**; it returns **4**, all of them `UI-AUDIT.md`'s own text. The substantive
+claim holds and was re-checked: the app has exactly two stylesheets and
+**neither contains the rule**, while `apps/pick3cut5/styles.css` has it. Use
+`--include=*.css`, which is what should have been written.
+
+**4. `F24`'s deferral names THREE files and this finding verified two.** It says
+*"the `h2`→`h4` jumps inside `app.js`/`catalog.js`"*, and `app.js` still skips —
+`<h2>Choose a game system</h2>` at `:771` above `<h4>` at `:774` and `:777`, and
+`<h2>Pick your class` at `:899` above `<h4>` at `:1096`. Read 2026-09-06. The
+deferred work is larger than the row measured.
+
+**5. The age claim is wrong in the direction that understates it.** *"`F16`'s has
+stood since 2026-08-31 — six days, the only one of the five"* — `F24`'s is the
+same audit and the same day, and `INGESTION-AUDIT` `F6`'s sits under
+`## Status, 2026-08-27`, **ten days**. Three of them are six days or older.
+
+**One tension the finding named as its decline path is real and is accepted
+rather than answered.** This page says filing must stay cheap and *"friction
+there is friction on the wrong part of the loop."* A bare stub is one heading and
+one paragraph; the moment it carries a `Proposal:`, `## The shape a finding
+takes` binds four more fields to it. The section is worded to permit the stub.
+
 ### A17 — medium — the sweep that catches a stale cross-finding claim is defeated by the prefix ambiguity this repo has already measured, and three claims are stale behind it
 
 `audit-menu` → *It is not only class notes. ANYTHING that cites a finding goes
