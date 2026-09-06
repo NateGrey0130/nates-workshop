@@ -3015,3 +3015,82 @@ reading the book, and `claude_usage` answers "what did it cost" (F7).
   repo's own standard that makes it documentation rather than a finding. If F2
   is taken, replacing that count with a hash of the substitution table is a
   two-line addition to it.
+
+---
+
+## Filed by META-AUDIT A16, 2026-09-06
+
+### F26 — low — the 105 page-less skill rows have never had a number, and the backlog grew rather than shrank
+
+**Deferred twice, by `F6` and by `F18`.** `## Status, 2026-08-27` says *"Its 105
+page-less rows need their own finding"*; `F6`'s note restates it as *"Its 105
+page-less rows are a different finding"*; the retirement table adds *"still in
+the catalog and still page-less"*. **No such finding was ever filed** —
+`META-AUDIT` `A16`, which measured this as the oldest of four standing deferrals
+at ten days.
+
+**What is true today, and it does not reproduce this menu's own split.**
+Production, `node scripts/q.mjs --remote`, 2026-09-06, on the predicate
+*`source_book` is null, empty, or carries no `p.`*:
+
+| `source_book` | rows |
+|---|---|
+| *(empty)* | 52 |
+| `Rifts Skill List` | 44 |
+| `Rifts Ultimate Edition` | 5 |
+| `pantheons-of-the-megaverse` | 4 |
+| `palladium-fantasy-core`, `Rifts New West`, `Palladium Fantasy RPG 2nd Ed.` | 1 each |
+| **total** | **108** |
+
+**That is 108 against this menu's 105, and the numbers are not comparable.**
+`F18`'s note gives *"105 page-less skills split 93 / 5 / 4 / 3 across the four
+books it names"* on a predicate it does not state; the two middle buckets match
+exactly (5 and 4) and the outer two do not. **Do not read 108 − 105 as growth
+until the predicates are reconciled** — that is the first thing a taker should
+do, because of what it would mean if it is growth.
+
+**Why that matters more than the number.** `F18`'s note claims *"The backlog is
+now the only page-less skill rows there are, and **it can only shrink**: every
+skill confirmed from here on carries its pages."* If the count has genuinely
+risen, that sentence is false and something is still writing page-less rows —
+which is a live defect rather than a backlog. If it has not, the sentence holds
+and this is bookkeeping.
+
+**`Rifts Skill List` is not a book**, and 44 of the rows carry it. The memory
+store records that its skills are in no cached book and that caching it would
+make the ledger lie, so those rows cannot be given a page range by reading a
+PDF. **They are the reason this finding is `low` rather than `medium`**: nearly
+half the backlog is not backfillable in the way the other half is.
+
+**Proposal, and it is a decision rather than a mechanism.** Three options, and
+this finding does not pick one:
+
+- **(a) Reconcile the predicates, then accept the backlog** and write the
+  acceptance into `docs/importing-from-pdfs.md` where a reader of a page-less row
+  will meet it — naming `Rifts Skill List` as permanently page-less. Cheapest,
+  and the honest answer if the count is flat.
+- **(b) Backfill the backfillable half** — the RUE, Pantheons and Palladium rows
+  are 11 of 108 and their books are cached, so they are a data script.
+- **(c) If the count has grown, that is a separate and more urgent finding** and
+  this one should be re-scoped to name it.
+
+**Posture: read-only investigation first, then whichever of (a)/(b)/(c) the
+reconciliation points at. No data script proposed here, and no schema change.**
+
+**Decline it** freely if the answer is (a) and you would rather it stayed
+undocumented — nobody has reported a page-less skill row as a problem, and the
+citation ledger already reports them per catalog and per book, so the
+information is reachable without this.
+
+**Evidence:** the grouped `--remote` query above, 2026-09-06 (`--remote` per this
+repo's rule; `--local` drifts both ways and neither direction is visible from
+inside it). `F6`'s and `F18`'s text read the same day. **The 93/5/4/3 split was
+NOT reproduced** and its predicate is not stated anywhere in this menu — that is
+the finding's main uncertainty and it is named rather than papered over.
+
+**Confidence: high** that the rows exist and that no finding has ever covered
+them. **Low** on whether the backlog grew, which is exactly what option (c)
+turns on. What would raise it: the predicate behind 93/5/4/3, which may be
+recoverable from PR #351's diff.
+
+**Ongoing cost:** none for (a). For (b), one data script and nothing recurring.
