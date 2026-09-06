@@ -18,8 +18,8 @@ VALUES (1, 'test-gm@example.com', 'Test Knight', 'cyber-knight', 1, '{"IQ":12,"M
 INSERT INTO gear (slug, name, system, category, weight_lbs, cost, damage, source_book)
 VALUES ('survival-knife', 'Survival Knife', 'rifts', 'weapon', 1.0, 40, '1d6 S.D.C.', 'rifts-core');
 
-INSERT INTO character_items (character_id, item_id, qty, equipped)
-VALUES (1, 1, 2, 1);
+INSERT INTO character_items (character_id, gear_slug, qty, equipped)
+VALUES (1, 'survival-knife', 2, 1);
 
 INSERT INTO journal_entries (campaign_id, character_id, author_email, title, body)
 VALUES (1, 1, 'test-gm@example.com', 'Session 0', 'Character created. Smoke-test entry.');

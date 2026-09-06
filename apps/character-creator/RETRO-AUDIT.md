@@ -2330,6 +2330,95 @@ was its own — the payload returns `items` at the top level.
 
 ---
 
+**The drop taken, 2026-09-06 (PR #749).** Migrations `045-inventory-check-on-slug.sql`
+and `046-drop-inventory-item-id.sql`. `item_id` is gone from both tables and
+`gear_slug` is the only key. **The first of the two things left standing above is
+now done; the second, `gear.slug NOT NULL`, still is not.**
+
+### It took two migrations, and the second one is why
+
+**The ordering rule is written for additive changes.** `ship-pr` says schema goes
+to production *before* the merge, and gives the reason: *"code that expects a
+column merged first is code running against a database that does not have it"*.
+**A drop is the mirror image**, and following the rule literally would have
+broken the live app:
+
+| order | what breaks, for about one Pages deploy |
+|---|---|
+| migration first, then merge | the **character sheet 500s** — the deployed read still joins `gear.id = character_items.item_id` |
+| merge first, then migration | **adding gear and finishing a character fail** — new code writes no `item_id`, the old `CHECK` still demands one |
+
+So the change was split. `045` moves both `CHECK` constraints onto `gear_slug`
+and touches nothing else; `046` drops the column. `045` goes before the merge as
+the rule says, `046` after the deploy is live, and **at no moment is any
+deployed code running against a schema it does not expect**.
+
+**What makes that work is a decision `R21`'s first half already made.** Migration
+`044` had every write derive the slug *inside its own statement*, so the
+currently-deployed code populates `gear_slug` on every row — which is exactly
+what lets it satisfy a `CHECK` on `gear_slug` without being redeployed first.
+
+**The window was demonstrated rather than argued.** Against a scratch database at
+each stage, running the two insert shapes verbatim:
+
+| | deployed insert | merged insert |
+|---|---|---|
+| production today | accepted | **refused** — `CHECK constraint failed: item_id IS NOT NULL OR custom_name IS NOT NULL` |
+| after `045` | accepted | accepted |
+| after `046` | refused — `no column named item_id` | accepted |
+
+The bottom-left cell is the only refusal that matters and it is by then
+unreachable: that code is no longer deployed.
+
+**One honest cost:** between the two applies, `drift-check --remote` reports
+`MIGRATION NOT APPLIED: 046`. That is the tool being right.
+
+### The rule this knowingly breaks
+
+`docs/operations.md` says outright that **an applied data script is never
+edited** — and the repo has already chosen the `zz-` sort-order workaround once
+rather than edit three. **Ten scripts joined on `item_id` and all ten were
+rewritten onto the slug.** Every alternative costs a rule too: leaving the column
+in `schema.sql` while production loses it is schema drift `drift-check.mjs`
+reports by design, and `no such column` is a prepare-time error no guard can
+duck.
+
+What makes it defensible rather than merely necessary is that the rewrite is
+**provably equivalent** — `NOT EXISTS (… ci.item_id = gear.id)` and
+`NOT EXISTS (… ci.gear_slug = gear.slug)` return the same rows, checked on a
+fixture — so a rebuild produces what it always did. `rebuild-local.mjs`:
+**392 files, 4,994 statements, 0 failures.**
+
+### The defect the drop would have shipped silently
+
+**`_lib/catalog-merge.js` repoints inventory when two gear rows are merged**, and
+it bound `keepId` / `removeId` — integers, against what is now a text column.
+A mechanical rename of the column alone would have left it matching **nothing**:
+the merge would report success, delete the losing row, and leave every inventory
+line pointing at a slug that no longer exists. It now binds `keep.slug` /
+`remove.slug`, and `MERGE_REFS` carries a `key` field saying which catalog column
+the reference stores.
+
+Nothing would have caught it. Gear merges are a live admin path — twelve `merge`
+redirects exist — and no test exercises one end to end.
+
+### A read `R21`'s own PR missed
+
+`campaigns/[id]/ask.js` still joined `g.id = ci.item_id`. **PR #747's outcome
+note said the reads had moved to the slug and this one had not** — it feeds the
+campaign "ask" prompt, which is not on the path any inventory test walks. It now
+uses the same slug-plus-redirect join as the sheet.
+
+### Noted, not fixed
+
+**A gear merge repoints `character_items` and not `campaign_items`** —
+`MERGE_REFS` names one table. That predates all of this and is left alone rather
+than folded in. Worth recording that the drop *improves* it: a stash row left on
+a merged-away slug now resolves through `catalog_redirects`, where an id-keyed
+one was simply wrong.
+
+---
+
 ## Not established
 
 Recorded rather than resolved by inference.

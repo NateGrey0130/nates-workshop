@@ -438,25 +438,32 @@ check('an item with neither slug nor custom_name is refused', noRef.status === 4
 const freeform = await api('POST', `/characters/${charId}/items`, { custom_name: 'A thing from play', qty: 1 });
 check('a freeform item is accepted', freeform.status === 201, freeform.body);
 
-// ── the two inventory keys must not drift apart — RETRO-AUDIT R21 ──
+// ── inventory is keyed on the slug and on nothing else — RETRO-AUDIT R21 ──
 //
-// `gear_slug` is the portable key and `item_id` is kept beside it, so the
-// invariant the additive design rests on is that they always name the SAME gear
-// row. Every write derives the slug from the id inside one statement, which is
-// what makes drift impossible rather than merely unlikely - and this is what
-// says so out loud if a later insert forgets.
+// `gear_slug` was added beside `item_id` by migration 044 and this block used
+// to assert the two never drifted apart. Migration 046 dropped the id, so the
+// invariant is stronger and simpler: the slug is the only key there is, and a
+// row must come back carrying it and NOT carrying an id.
+//
+// The id is still what the wizard POSTs - `character_drafts.state` holds raw
+// gear ids in its JSON - so the wire format outliving the column is the point,
+// not an oversight. The slug is derived inside the insert statement.
 {
   const addedRow = added.body.item ?? added.body;
-  check('adding gear writes the portable slug, not just the id',
+  check('adding gear writes the portable slug',
     addedRow.gear_slug === gearRow.slug,
     `gear_slug ${JSON.stringify(addedRow.gear_slug)} for slug ${gearRow.slug}`);
-  check('and the freeform item gets neither key',
+  check('and the row carries no gear id at all any more',
+    !('item_id' in addedRow),
+    `item_id is still on the row: ${JSON.stringify(addedRow.item_id)}`);
+  check('and the freeform item gets no key',
     (freeform.body.item ?? freeform.body).gear_slug == null,
     JSON.stringify((freeform.body.item ?? freeform.body).gear_slug));
 
-  // The sheet's read joins on the slug now, so the item has to come BACK with
-  // its catalog row attached - a join that silently matched nothing would leave
-  // item_name null and render as a bare custom line.
+  // The sheet's read joins on the slug and has no id arm left to fall back on,
+  // so the item has to come BACK with its catalog row attached - a join that
+  // silently matched nothing would leave item_name null and render as a bare
+  // custom line.
   const sheet = await api('GET', `/characters/${charId}`);
   // `items` is returned at the TOP level of the sheet payload, not under
   // `character` - the first version of this check looked in the wrong place and

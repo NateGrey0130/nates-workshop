@@ -27,7 +27,7 @@ async function guard(env, params, email) {
 //   * four features to a suit, three to a weapon, three to a ring - carried on
 //     the enchantment row as max_per_item rather than hardcoded here.
 //
-// A FREEFORM item (item_id NULL) has no category to check against, so the
+// A FREEFORM item (gear_slug NULL) has no category to check against, so the
 // family rule is skipped for it rather than guessed at - a GM who writes in
 // "silver signet ring" should be able to enchant it. The cap still applies.
 async function validateEnchantments(env, row, value) {
@@ -56,9 +56,16 @@ async function validateEnchantments(env, row, value) {
   }
 
   // The gear row's category is what says whether this is armour or a weapon.
-  if (row.item_id) {
-    const item = await env.DB.prepare('SELECT category, name FROM gear WHERE id = ?')
-      .bind(row.item_id).first();
+  // Resolved through catalog_redirects as well as the slug itself, matching the
+  // sheet's own read: a gear row renamed after this item was added would
+  // otherwise report "uncategorised" and refuse a legitimate enchantment.
+  // RETRO-AUDIT R21.
+  if (row.gear_slug) {
+    const item = await env.DB.prepare(
+      `SELECT g.category, g.name FROM gear g
+        LEFT JOIN catalog_redirects cr ON cr.catalog = 'gear' AND cr.from_key = ?
+        WHERE g.slug = ? OR g.id = cr.to_id LIMIT 1`
+    ).bind(row.gear_slug, row.gear_slug).first();
     const category = item?.category || null;
     if (family === 'armor' && category !== 'armor') {
       return { error: `An armour feature needs a suit of armour, and ${item?.name || 'this item'} is ${category || 'uncategorised'}` };

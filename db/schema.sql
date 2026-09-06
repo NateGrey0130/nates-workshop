@@ -249,8 +249,8 @@ END;
 CREATE TABLE IF NOT EXISTS campaign_items (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-  item_id INTEGER REFERENCES gear(id),              -- NULL = freeform custom item
-  gear_slug TEXT REFERENCES gear(slug),            -- the PORTABLE key; see migration 044
+  gear_slug TEXT REFERENCES gear(slug),            -- NULL = freeform custom item, and the
+                                                   -- only key; see migrations 044-046
   custom_name TEXT,                                 -- required for freeform items
   qty INTEGER NOT NULL DEFAULT 1,
   notes TEXT,
@@ -260,7 +260,7 @@ CREATE TABLE IF NOT EXISTS campaign_items (
   removed_at TEXT,                                  -- NULL = still in the stash
   removed_by TEXT,
   claimed_by_character_id INTEGER REFERENCES characters(id) ON DELETE SET NULL,
-  CHECK (item_id IS NOT NULL OR custom_name IS NOT NULL)
+  CHECK (gear_slug IS NOT NULL OR custom_name IS NOT NULL)
 );
 CREATE INDEX IF NOT EXISTS idx_campaign_items_campaign ON campaign_items (campaign_id);
 
@@ -484,11 +484,13 @@ CREATE TABLE IF NOT EXISTS enchantments (
 CREATE TABLE IF NOT EXISTS character_items (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   character_id INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
-  item_id INTEGER REFERENCES gear(id),                -- NULL = freeform custom item
-  gear_slug TEXT REFERENCES gear(slug),              -- the PORTABLE key. A gear id is
-                                                     -- insertion order and means nothing
-                                                     -- in another database; the slug does.
-                                                     -- Migration 044, RETRO-AUDIT R21.
+  gear_slug TEXT REFERENCES gear(slug),              -- NULL = freeform custom item.
+                                                     -- The PORTABLE key, and since
+                                                     -- migration 046 the ONLY one: a gear
+                                                     -- id is insertion order and means
+                                                     -- nothing in another database, where
+                                                     -- a slug means the same thing
+                                                     -- everywhere. RETRO-AUDIT R21.
   custom_name TEXT,                                   -- required for freeform items
   qty INTEGER NOT NULL DEFAULT 1,
   equipped INTEGER NOT NULL DEFAULT 0,
@@ -500,7 +502,7 @@ CREATE TABLE IF NOT EXISTS character_items (
   journal_entry_id INTEGER REFERENCES journal_entries(id) ON DELETE SET NULL,  -- ties acquisition/loss to a session
   added_at TEXT NOT NULL DEFAULT (datetime('now')),
   removed_at TEXT,                                    -- NULL = currently in inventory
-  CHECK (item_id IS NOT NULL OR custom_name IS NOT NULL)
+  CHECK (gear_slug IS NOT NULL OR custom_name IS NOT NULL)
 );
 CREATE INDEX IF NOT EXISTS idx_character_items_character ON character_items (character_id);
 
@@ -709,6 +711,28 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '044-inventory-gear-slug.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('character_items') WHERE name = 'gear_slug')
   AND EXISTS (SELECT 1 FROM pragma_table_info('campaign_items') WHERE name = 'gear_slug');
+
+-- 045 only MOVES the CHECK, so its guard has to read the constraint itself -
+-- pragma_table_info cannot see a CHECK, and no column appears or disappears.
+-- sqlite_master's stored CREATE text is the only place it shows. True after 046
+-- as well, which is right: a fresh database built from this file has both.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '045-inventory-check-on-slug.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'character_items'
+                AND sql LIKE '%CHECK (gear_slug IS NOT NULL%')
+  AND EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'campaign_items'
+                AND sql LIKE '%CHECK (gear_slug IS NOT NULL%');
+
+-- 046 DROPS `item_id` from both tables, so its guard checks BOTH HALVES the way
+-- 004's rename does: the new column present AND the old one gone. Testing only
+-- for the absence would mark a database that never had the column as migrated,
+-- and testing only for the presence would mark 044 as 045.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '046-drop-inventory-item-id.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('character_items') WHERE name = 'gear_slug')
+  AND NOT EXISTS (SELECT 1 FROM pragma_table_info('character_items') WHERE name = 'item_id')
+  AND EXISTS (SELECT 1 FROM pragma_table_info('campaign_items') WHERE name = 'gear_slug')
+  AND NOT EXISTS (SELECT 1 FROM pragma_table_info('campaign_items') WHERE name = 'item_id');
 
 -- ═══════════════════════════════════════════════════════════════════
 -- Play mode's event log. Commentary, not a ledger: the character row stays

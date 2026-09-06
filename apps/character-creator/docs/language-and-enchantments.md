@@ -341,7 +341,7 @@ renders as a slug forever:
 - the cap comes from `max_per_item` **on the row**, not from a constant — four
   features fit in a suit and a fifth is refused.
 
-A freeform item (`item_id` NULL) has no category to check against, so the family
+A freeform item (`gear_slug` NULL) has no category to check against, so the family
 rule is skipped rather than guessed at: a GM who writes in "silver signet ring"
 should be able to enchant it. The cap still applies.
 

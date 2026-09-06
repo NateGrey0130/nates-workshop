@@ -72,8 +72,8 @@ DO UPDATE SET to_id = excluded.to_id, reason = excluded.reason;
 -- a real object and the character really has one. A character holding both
 -- keeps both lines - two of the same item is a quantity, not a duplicate.
 UPDATE character_items
-SET item_id = (SELECT id FROM gear WHERE slug = 'backpack')
-WHERE item_id = (SELECT id FROM gear WHERE slug = 'back-pack')
+SET gear_slug = 'backpack'
+WHERE gear_slug = 'back-pack'
   AND EXISTS (SELECT 1 FROM gear WHERE slug = 'backpack');
 
 -- The losing row goes, once nothing points at it any more.
@@ -83,7 +83,7 @@ WHERE slug = 'back-pack'
   AND NOT EXISTS (SELECT 1 FROM imported_classes c
                   WHERE c.deleted_at IS NULL
                     AND instr(c.markdown, 'item_id: "back-pack"') > 0)
-  AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.item_id = gear.id);
+  AND NOT EXISTS (SELECT 1 FROM character_items ci WHERE ci.gear_slug = gear.slug);
 
 -- Reports the result back, so it is read rather than assumed.
 --   duplicate_left       0 = the retired spelling is gone
@@ -104,7 +104,7 @@ SELECT (SELECT count(*) FROM gear WHERE slug = 'back-pack') AS duplicate_left,
        (SELECT count(*) FROM catalog_redirects r
          WHERE r.catalog = 'gear'
            AND NOT EXISTS (SELECT 1 FROM gear g WHERE g.id = r.to_id)) AS dangling_redirects,
-       (SELECT count(*) FROM character_items ci JOIN gear g ON g.id = ci.item_id
+       (SELECT count(*) FROM character_items ci JOIN gear g ON g.slug = ci.gear_slug
          WHERE g.slug = 'backpack') AS inv_on_keeper;
 
 -- Records this run. One row per run rather than per file: every statement

@@ -3742,10 +3742,16 @@ section('MOS');
     // spells and psionic_powers, `slug` on gear - so keying on it costs
     // nothing.
     //
-    // A JOIN ON AN id IS FINE and must stay fine: `gear.id =
-    // character_items.item_id` is a relation inside one database and says
-    // nothing about which database. Eight scripts do that and all eight are
-    // correct. Only a literal NUMBER is refused.
+    // A JOIN ON AN id IS FINE and must stay fine: a join between two id columns
+    // is a relation inside one database and says nothing about which database.
+    // Only a literal NUMBER is refused.
+    //
+    // Eight data scripts used to join `gear.id = character_items.item_id`. None
+    // does now - migration 046 dropped that column and the ten scripts touching
+    // it were rewritten onto the slug - so the negative case below is a string
+    // literal rather than anything the corpus still contains. That is why it is
+    // written out here: the guard must keep permitting the shape even once
+    // nothing in the tree uses it, or the next legitimate id join goes red.
     //
     // Asserted over the WHOLE corpus rather than over the lines a branch adds,
     // because the corpus is at zero and an invariant that is already true is
