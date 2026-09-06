@@ -1,8 +1,18 @@
 # UI-AUDIT.md — Character Creator interface
 
-> **Nothing is open.** `F1`–`F29` were re-verified closed on 2026-09-02, and
-> **`F30` was taken 2026-09-03** (PR #657). It was filed on 2026-09-02 from
-> outside the audit run, while verifying `BOOK-INGEST-AUDIT` `F18` on production.
+> **There is open work on this menu, as of 2026-09-06.** Read each finding's own
+> heading for its state; this line does not name them. **The findings filed after
+> the original run sit under their own dated `##` heading at the end of the
+> file** — `## Filed by META-AUDIT A16, 2026-09-06` — after `F30`, and they run in
+> filing order rather than in severity order.
+>
+> *(Until 2026-09-06 this paragraph read "Nothing is open" and named a closed
+> range plus `F30`. That was true from 2026-09-03 until two findings were filed
+> beneath it, and the PR that filed them did not update this line — which is the
+> failure `META-AUDIT` `A16` and `A17` are both about, occurring in the menu they
+> were filed on. `F30` was taken 2026-09-03, PR #657, filed 2026-09-02 from
+> outside the audit run while verifying `BOOK-INGEST-AUDIT` `F18` on
+> production.)*
 >
 > **The one that misreads:** `F17` closes as **moot** rather than taken — it was
 > checked against a real print render (PR #459) and the defect was not there.
@@ -2217,3 +2227,46 @@ hold it, rather than by one grep shape — which is the failure `CLASS-AUDIT`
 `F17` recorded.
 
 **Ongoing cost:** none. Seven lines that need no maintenance.
+
+**Taken, 2026-09-06 (`UI-AUDIT` `F32`). Posture held: one media block in one app
+stylesheet — `shared/` untouched, no component changed, no JS.** It sits directly
+beneath the `:focus-visible` rule `F16` shipped, which is the other half of the
+same finding, with a comment saying why it is app-local.
+
+**Four things in the text above are wrong. `audit-premise-auditor` found all
+four before the block was written.**
+
+**1. `shared/styles.css` has ONE `transition:` declaration, not four** — `:237`.
+The other line a grep finds is `:146`, the `--transition: 0.2s ease` token
+definition, which is not a declaration. The character-creator half holds exactly:
+six, at `:49`, `:157`, `:381`, `:989`, `:1089`, `:1716`.
+
+**2. This app applies NEITHER keyframe animation, so the claim that a continuous
+spinner is the case for the query is false HERE.** `spin` and `pulse` are defined
+in `shared/styles.css:302-303` under a comment saying the app sizes its own
+`.spinner` — and this app has none. `grep -rn "animation:" --include=*.css apps
+shared` finds them used in filament-forge, media-vault and pick3cut5, and **zero
+times in `apps/character-creator/styles.css` or `shared/styles.css`**. So of the
+three properties shipped, only `transition-duration` does anything today. The
+other two are a forward guard and the comment in the CSS says so rather than
+implying otherwise.
+
+**3. `F16` had already judged this, and `F32` failed to say so.** `F16`'s
+*Proposal* — not the outcome note `F32` quotes — reads
+*"`prefers-reduced-motion` is a **separate** item and genuinely low value here:
+the app's only transitions are `color`/`border-color` at 0.2s."* `audit-menu` is
+explicit that a finding may re-propose a settled judgement but **may not fail to
+say the judgement exists.** `F32` did exactly that, in the same session as
+`META-AUDIT` `A16`, whose subject is work going missing between findings.
+
+**4. The cited copy range would have shipped broken CSS.** `F32` says
+`apps/pick3cut5/styles.css:557-563`. Line `563` is `.flip-row { opacity: 1; }`,
+a pick3cut5-only selector, and the media query's closing brace is at `565` — so
+the range is **unbalanced** and drags in a class this app does not have. What
+shipped is `557-562` plus a closing brace, and the balance was checked by
+counting braces across the whole file afterwards: **0, never negative.**
+
+**So this is a smaller change than the finding claimed, and it is worth having
+anyway** — six real transitions get damped, the app stops being the only one of
+the four without the query, and the guard is in place if anything ever uses
+`shared/`'s spinner.

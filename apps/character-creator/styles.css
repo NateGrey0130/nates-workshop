@@ -173,6 +173,22 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--b
   border-radius: var(--radius-sm);
 }
 
+/* The other half of UI-AUDIT F16, filed as F32 and taken 2026-09-06. Borrowed
+   from apps/pick3cut5/styles.css, minus that app's two page-specific lines.
+   App-local for the same reason the ring above is: /shared/styles.css is loaded
+   by four apps and two of them have made no such decision.
+   Honest about its size: this app applies NO keyframe animation, so of the
+   three properties only transition-duration does anything here today - it damps
+   the six transitions in this file. The two animation properties are a forward
+   guard, for the day something uses shared/styles.css's spin or pulse. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 input[type=number] { width: 76px; }
 textarea { width: 100%; min-height: 68px; resize: vertical; }
 input[type=checkbox] { accent-color: var(--accent); cursor: pointer; }
