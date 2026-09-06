@@ -3884,6 +3884,62 @@ row's own prose identifies it as the human-sized mask.
 
 **Ongoing cost:** none.
 
+**Taken, 2026-09-06 (`zzzzzz-ingestion-f33-gas-mask.sql`), and it does one thing
+this finding did not propose.** Posture held: one data script, applied to
+production before its own merge, no schema change, no code change, **no class
+markdown touched**.
+
+**The row being retired carried the BETTER metadata, so it went with it.** This
+finding proposed a straight retire-and-redirect. Reading the two writers first —
+`audit-menu`'s rule that taking a finding is also auditing it — turned up that
+`gas-mask-human-size` held a **RUE citation** and a **`cost_note` of
+`50-80 cr. (half that used)`**, while the survivor cited
+`Web reference (not book-verified)` and had no note at all. Deleting it would
+have thrown both away.
+
+So the survivor takes them. **That also resolves, for free, the thing this
+finding explicitly dropped**: `gas-mask` no longer cites a `not_books` value, and
+it did not take a page read to get there — the citation already existed on the
+row beside it.
+
+**The citation is INHERITED, not freshly read, and the note says so.**
+`fix-rue-gear-review.sql:102` created that batch of RUE rows at the **top** of
+each printed range — the mask at 80, the oversized one at 120, sunglasses at
+300 — and `zzzz-restore-gear-values.sql:208` then corrected them to the
+**bottom** with the range preserved as a `cost_note`. That is why both rows read
+50 today, and why the note says *"half that used"*. Nobody opened the page for
+this script.
+
+**Five readbacks, all `got == want`, on production:** one human-sized mask row;
+it carries `Rifts Ultimate Edition p.261-270` and the cost note; **no** row still
+citing the web reference for this mask; the retired slug forwarding; and
+**`gas-mask-oversized` untouched at 80** — the variant this pair is *not*, and
+the obvious collateral.
+
+`drift-check --remote` prints `NO DRIFT`. Regression **269 passed**. Gear
+**1,024 → 1,023**, `docs/operations.md`'s pinned count moved with it. **21 class
+citations and 3 character holdings were untouched**, because the cited slug is
+the one that survived.
+
+**And a check was wrong about this script, which is fixed in the same PR.**
+*"Every script writing the web-source marker says so in its header"* failed on
+it. The script does not **write** the marker — it **deletes** it — but the test
+classified any occurrence of `source_book = '<marker>'` as an assignment, and a
+`WHERE` guard has the identical shape. That check already carried one recorded
+false positive of this kind, for a script that named the marker in a comment.
+
+`assigns` now ignores an occurrence preceded by `AND` or `WHERE` on the same
+line. **Proved both ways**: with the refinement in place a genuine assignment
+injected into this very script still fails the header check, and removing the
+injection passes. Every existing assigner writes it as a `SET` clause and is
+unaffected — `backfill-final-gear.sql`, `backfill-hardware-stats.sql`,
+`backfill-mundane-gear.sql`, `backfill-gas-mask-and-mallet.sql` and
+`zzzz-restore-gear-values.sql` all still register.
+
+**Fixed rather than filed**, on the precedent set earlier today for the
+`d1-apply` message `F31` carried: a check that is wrong about the PR in front of
+it is repaired by that PR.
+
 ### F34 — low — `Gas Mask and Air Filter` exists twice, and the note saying so is itself wrong
 
 | id | slug | cost | `description` | cited by |
