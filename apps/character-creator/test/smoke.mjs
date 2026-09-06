@@ -383,6 +383,7 @@ import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityOccOptions, 
 import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rollsForPsionics, withRolledPsionics } from '../js/psionics.js';
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { DatabaseSync } from 'node:sqlite';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { appDir, repoRoot, check, section, summary } from './harness.mjs';
@@ -997,6 +998,58 @@ check('class-mention lookup skips blank terms', await (async () => {
 // are the ones where it must NOT be written: a key the surviving row already
 // answers to would shadow a live key with a forwarding address.
 section('Catalog redirects');
+
+// ── the inventory join survives a gear RENAME — RETRO-AUDIT R21 ──
+//
+// Keying inventory on the slug bought portability and cost something the id
+// gave for free: a gear row's slug can be RENAMED by an admin
+// (`catalogs/rows.js`, which files a 'rename' redirect), and twenty renames
+// have already happened on skills. Held by id, a rename could not reach the
+// inventory. Held by slug it would orphan every row - the LEFT JOIN yields
+// NULL and the sheet renders a bare custom line - unless the read falls
+// through `catalog_redirects`.
+//
+// Proved on an in-memory database rather than against the real one, so it
+// can assert the FAILING direction too: the plain join really does lose the
+// row, which is the only reason to believe the redirect arm is doing work.
+{
+  const mem = new DatabaseSync(':memory:');
+  mem.exec(`CREATE TABLE gear (id INTEGER PRIMARY KEY, slug TEXT UNIQUE, name TEXT);
+    CREATE TABLE character_items (id INTEGER PRIMARY KEY, item_id INTEGER, gear_slug TEXT);
+    CREATE TABLE catalog_redirects (catalog TEXT, from_key TEXT, to_id INTEGER, reason TEXT);
+    INSERT INTO gear VALUES (7, 'long-sword', 'Long Sword');
+    INSERT INTO character_items VALUES (1, 7, 'long-sword');`);
+
+  const resolved = () => mem.prepare(
+    `SELECT g.name AS item_name FROM character_items ci
+     LEFT JOIN catalog_redirects cr ON cr.catalog = 'gear' AND cr.from_key = ci.gear_slug
+     LEFT JOIN gear g ON g.slug = ci.gear_slug OR g.id = cr.to_id
+                      OR (ci.gear_slug IS NULL AND g.id = ci.item_id)
+     WHERE ci.id = 1`).get()?.item_name ?? null;
+  const plain = () => mem.prepare(
+    `SELECT g.name AS item_name FROM character_items ci
+     LEFT JOIN gear g ON g.slug = ci.gear_slug WHERE ci.id = 1`).get()?.item_name ?? null;
+
+  check('the inventory join resolves an unrenamed slug', resolved() === 'Long Sword');
+
+  mem.exec(`UPDATE gear SET slug = 'sword-long' WHERE id = 7;
+    INSERT INTO catalog_redirects VALUES ('gear', 'long-sword', 7, 'rename');`);
+  check('a plain slug join LOSES the row after a rename', plain() === null);
+  check('and the redirect arm still resolves it', resolved() === 'Long Sword');
+
+  // The legacy arm: a row written before migration 044 has an id and no
+  // slug, and must still resolve.
+  mem.exec(`INSERT INTO character_items VALUES (2, 7, NULL);`);
+  const legacy = mem.prepare(
+    `SELECT g.name AS item_name FROM character_items ci
+     LEFT JOIN catalog_redirects cr ON cr.catalog = 'gear' AND cr.from_key = ci.gear_slug
+     LEFT JOIN gear g ON g.slug = ci.gear_slug OR g.id = cr.to_id
+                      OR (ci.gear_slug IS NULL AND g.id = ci.item_id)
+     WHERE ci.id = 2`).get()?.item_name ?? null;
+  check('and a pre-044 row with only an id still resolves', legacy === 'Long Sword');
+  mem.close();
+}
+
 
 const capturingDb = (results = []) => ({
   DB: { prepare: (sql) => ({ bind: (...args) => ({ sql, args, all: async () => ({ results }) }) }) },
