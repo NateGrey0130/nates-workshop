@@ -2733,3 +2733,124 @@ what a pick may come from; this grants the whole category outright at a fixed
 percentage and is closer to a second, parallel skill list than to a restriction.
 Check what `js/leveling.js` and `js/derive.js` do with a skill carrying no
 per-level gain before assuming a flat 38% is expressible either.
+
+### F24 - a book that ROLLS one of four psychic profiles: the powers fit, the RELATED-SKILL COUNT does not
+
+**Filed 2026-09-06, from the `triax` Gypsy batch (PR #779). Not implemented,
+per the standing constraint.** Rifts World Book 5 printed 184-185 gives the
+Gypsy - The Gifted O.C.C. (`gypsy-gifted`) a percentile table rolled once at
+creation: **01-25 and 26-50 are MAJOR psychics, 51-75 and 76-00 are MASTERS**,
+and the four bands differ in tier, in I.S.P. formula, in how many powers are
+picked and from which categories, in whether there is a per-level ladder, in
+five save bonuses, and in **whether the character gets any O.C.C. Related
+Skills at all**.
+
+**Most of that turned out to be expressible, and this finding is smaller than
+it started.** Recorded because the first two attempts were wrong and the next
+reader will make the same ones.
+
+**`variants` is the obvious home and cannot carry it.** `VARIANT_OVERRIDES`
+(`apps/character-creator/js/parser.js:57-65`) is `attribute_dice`,
+`attribute_requirements`, the four pool bases, `starting_money`, `bonuses` and
+`skill_overrides` - so a variant carries the five saves and **nothing about the
+psionics**, and `isp_base` is not reachable either, living inside `psionics`
+rather than being a pool base. `CLASS-AUDIT` `S6` already records
+*"variants still cannot carry `magic`"* as verified, and `S7` records
+*"`variants` cannot override `skills`"* on that file's *Checked and still true*
+list. This is the psionics half of the same wall.
+
+**What DOES work is an ability, and the class shipped that way.**
+`ABILITY_GRANTS` (`js/parser.js:1443`) is `['bonuses', 'psionics', 'magic']`;
+`applyAbilities` folds a chosen ability's block through `mergePsionics`
+(`js/parser.js:1544`); and `mergePsionics` returns the ability's block
+unchanged when the class states none (`js/parser.js:368`,
+`if (!born) return trained;`). So `gypsy-gifted` carries **no class-level
+`psionics` block** and each band is a named ability inside a `{ choose: 1 }`,
+holding its own `type`, `isp_base`, `powers`, `powers_starting`,
+`categories_allowed`, `powers_starting_groups` and `powers_schedule`.
+
+Composed on 2026-09-06, one band at a time, through the real `parseClassMarkdown`
+/ `applyAbilities` / `startingGroups`:
+
+| band | type | powers_starting | granted by name | starting groups | schedule |
+|---|---|---|---|---|---|
+| 01-25 | major | 6 | 0 | 6 from Healing/Sensitive/Physical | 0 |
+| 26-50 | major | 8 | 0 | 8 from Healing | 0 |
+| 51-75 | master | 10 | 1 | 5/2/2/1 across Healing, Sensitive, Physical, Super | 4 |
+| 76-00 | master | 4 | 17 | 4 from Super | 5 |
+
+Each band's saves arrive with it. **That is the tier, the I.S.P. formula, the
+counts, the category gates, the split and both Super ladders - correct, per
+band, with no over-grant.**
+
+**Three residues, and only the first can produce an illegal character.**
+
+**(a) The O.C.C. Related Skills COUNT is per-band, and nothing carries it.**
+The class lists four; a master psionic - **half the table** - gets **none**.
+Neither mechanism reaches it: `skills` is deliberately absent from
+`VARIANT_OVERRIDES` (the comment there says so in as many words) and is not one
+of `ABILITY_GRANTS`' three entries. So the picker offers four related skills to
+a character the book gives zero, and a player who rolled 51 or higher can build
+a legal-looking character with four skills their gift does not pay for. **This
+is the only one of the three that lets the app produce something the book
+forbids**, and it is the reason this finding exists rather than being a note.
+
+**(b) "One additional Super psionic power OR two lesser psi-powers" is an
+either/or, and a `powers_schedule` entry is an and.** Both master bands print
+it at every rung - levels 4/7/10/13 and 2/4/6/9/12. Each entry stores the Super
+slot and carries the alternative in its `note`, which the picker shows.
+
+**(c) "Any TWO psionic power categories, limited to healing, sensitive and
+physical" is a choose-k-of-the-gate**, and `categories_allowed` is a flat gate.
+Band 01-25 names all three and the choice of two is in the ability's own
+description.
+
+**Proposal, in three parts, and two of them recommend declining.**
+
+**(a) Let an ability state a related-skill count, as an OVERRIDE, and do NOT
+add `skills` to `ABILITY_GRANTS`.** One integer key on an ability definition -
+`related_skills_count: 0` - folded in `applyAbilities` onto
+`occ_related_skills.count` when the ability is chosen. **Posture: override a
+number, not carry a block.** The distinction is the whole proposal: an ability
+that could carry a `skills` block could rewrite what the class teaches, which
+is the power `VARIANT_OVERRIDES` refuses on purpose and `skill_overrides`
+exists to keep narrow. Restating one count is the same size of power as
+restating one percentage.
+
+**(b) Decline.** An either/or slot means the picker offering a choice between
+"one power from category X" and "two from categories Y, Z, W" - a second shape
+of grant, for one class, where the `note` already tells the player and a G.M.
+already adjudicates. **Ongoing cost exceeds the impact.**
+
+**(c) Decline.** A choose-k over the category gate is real - the Crazy's
+`categories_allowed` history (`F15`, `F16`) is the neighbouring problem - but
+this is one band of one class, the over-grant is a breadth the player can
+simply not use, and no character is made illegal by it. Revisit only if a
+second book prints the same shape.
+
+**Evidence:** the three `js/parser.js` line references above, read 2026-09-06;
+the per-band composition table, produced the same day by importing
+`parseClassMarkdown`, `applyAbilities` and `startingGroups` from the live
+`js/` and running each band through them; `class-check --remote` on the final
+draft at 0 errors and 0 warnings. `CLASS-AUDIT` `S6`/`S7` quoted from that file.
+
+**Confidence:** high that the mechanism described is what the code does - every
+claim above is a line reference or a run, not an inference. **Medium on part
+(a)'s placement**, and what would raise it is one question nobody has asked:
+**does the wizard let a player choose special abilities BEFORE it asks for
+related skills?** If abilities come later, an ability-borne count arrives after
+the picks it is meant to constrain and the override lands too late to help -
+which would make the right fix a validator refusal at save time instead, or a
+re-ordering of the wizard. Whoever takes this should establish the step order
+in `app.js` first and scope from that, not from this paragraph.
+
+**Ongoing cost of (a):** one key in `parser.js`, one line in `KNOWN_KEYS`
+(`scripts/class-check-lib.mjs`), one read in the wizard, and a smoke case -
+the shape `class-import` already lays out for a modelled key. No migration, no
+column, and nothing to keep current afterwards.
+
+**Not urgent.** One class in 184 is affected, the class is playable, and its
+`extraction_notes` and its related-skill category note both say in plain words
+that four is the major psionic's number and a master takes none. The reason to
+record it is that the number is offered by a picker rather than read off a
+page, and a picker that offers something is usually taken at its word.

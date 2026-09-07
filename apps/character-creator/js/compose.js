@@ -201,6 +201,26 @@ export const CORE_SDC_BY_CLASS = {
   'rogue-scientist': '1D6',
   'vagabond': '1D6',
   'wilderness-scout': '1D6',
+  // Triax and the NGR, the Gypsy O.C.C.s of printed 179-185. The first
+  // entries from this book on THIS side of the table: the eleven above are
+  // the Military O.C.C.s and every one of them is 3D6. These four are not
+  // military at all - printed 156's roster does not list them, and the book
+  // gives them their own section, which opens by saying a gypsy will not
+  // consider the soldier or the knight because they are too disciplined.
+  // None of the four prints an S.D.C. formula, so the core rule reaches them.
+  //
+  // The THIEF is the one worth a sentence, because the Palladium Fantasy
+  // thief four screens up is 3D6 and this one is not. That entry is 3D6 on
+  // its own book's say-so - "thieves and assassins are the rogues and
+  // cutthroats of the men of arms O.C.C.s", printed 91 - and Triax says no
+  // such thing about the gypsy thief. Without that sentence the reading falls
+  // back to where the book files the class, which is beside the fortune-teller
+  // and the healer rather than beside the infantry. It is the same answer the
+  // City Rat already gets on the Rifts side.
+  'gypsy-thief': '1D6',
+  'gypsy-wizard-thief': '1D6',
+  'gypsy-seer': '1D6',
+  'gypsy-gifted': '1D6',
   // Palladium Fantasy main book, the Optional O.C.C.s, printed 96-98. The
   // first Palladium classes on this side of the table: the previous nine are
   // all men of arms, and these three are the book's own answer to a player who
