@@ -402,6 +402,70 @@ What is deliberately left, with the reason for each:
 | 2026-09-07 | [#782](https://github.com/NateGrey0130/nates-workshop/pull/782) | **loose ends, no classes**: the two re-citations and the page range this plan asked for. `Streetwise: Drugs` cited to Triax printed 155 - `rifts-skill-list` 43 -> **42** untraceable rows; `Horsemanship: Exotic Animals` cited to RUE printed 302 with Triax's +4% in the note; `triax-pump-weapon` given p.143-144, so this book reads **39 traceable / 0 other**. Also the Gargoylite ladder, SETTLED from RUE - the Dog Pack is the Dog Boy. Applied `--remote` before the PR. |
 | 2026-09-07 | [#789](https://github.com/NateGrey0130/nates-workshop/pull/789) | **`BOOK-INGEST-AUDIT.md` F24 taken, part (a)** - the one residue of that finding that could produce an illegal character. An ability may now state `related_skills_count`, and the Gypsy - The Gifted's two MASTER psionic bands set it to zero where the class lists four; printed 185 gives a master none. Enforced on the server as well as in the wizard, which is one step past the proposal and is argued in the outcome note. No new rows - classes stay at **184**, skills **356**, gear **1137**. Applied `--remote` before the PR; production composes 4 / 4 / 0 / 0 across the four bands. |
 | 2026-09-07 | [#790](https://github.com/NateGrey0130/nates-workshop/pull/790) | **four skill rows get a real page**, from the New Skills section at printed 155 this book's batches never harvested for citations. `Basic Mechanics` and `Lore: Magic` cited NOTHING; `Recognize Enchantment` and `Recognize Wards, Runes & Circles` cited *Rifts Skill List*, which is not a publication. All four match the page's printed base and per-level exactly - 30/5, 25/5, 10/5, 15/5 - which is what identifies the page as the source. Repo-wide, rows naming the non-book fall **42 -> 40**. No new rows. Applied `--remote` before the PR. |
+| 2026-09-07 | [#791](https://github.com/NateGrey0130/nates-workshop/pull/791) | **the vessels - 55 of them, and the last thing this book was missing.** `vehicles` 0 -> **55**, `vehicle_locations` 0 -> **601**, `vehicle_weapons` 0 -> **259**, across printed 39-140 and 205-209: 8 power armour, 12 robots, 7 drones, 9 borgs, 19 vehicles. Extracted in four slices by the rule that a vessel belongs to the slice its NAME HEADING falls in, which is what kept the X-2000 and the VX-370 whole across a page boundary. No classes, skills or gear changed. Applied `--remote` before the PR. **Nothing reads these tables yet.** |
+
+
+### The 39 things the vessel readers flagged, 2026-09-07 (PR #791)
+
+**Every one of these was transcribed as printed rather than corrected**, and
+they are listed here because a flag that lives only in a scratch file is a
+flag nobody reads. They fall into four kinds: OCR misreading a letter, the
+book printing a conversion wrong, the book contradicting itself, and a page
+the OCR could not give a folio for. None of them blocked an import.
+
+**THREE VESSELS CARRY ZERO WEAPON ROWS, AND ALL THREE ARE CORRECT.** Checked
+against the pages rather than assumed: the T-21 Terrain Hopper because printed
+41 says *"Weapon Systems: None. The wearer must use a hand-held..."*, and the
+WR-1010 Land Rover and WR-2020 Shark Bullet Bike because printed 138 and 139
+both give them *"Weapons & Sensor Systems: Optional"* - no standard armament.
+A vessel with no weapons is the shape a failed reading takes too, which is why
+each was read back to the page.
+
+**ONE VESSEL HAS NO `mdc_main_body` AND THAT IS ALSO CORRECT.** The EIR-50
+Gurgoyle Android's whole M.D.C. block is printed as DICE - `2D4x10` arms,
+`1D4x100` main body - because the machine is built to match whatever gurgoyle
+it is imitating. Those 6 rows carry `mdc` NULL with the formula in `mdc_note`,
+which is what that column pair is for.
+
+- **T-550 Glitter Boy Power Armor** - Printed page 47 (folio 47 visible) is a full-page illustration with no stat text; it falls inside this vessel citation range but carries no data.
+- **X-60 Flanker Power Armor** - The Main Body M.D.C. value (380) is printed a second time on p.52, positioned after the vulnerability notes and Statistical Data block, immediately before the Weapon Systems header, rather than inside the main M.D.C. by Location list where the other locations appear.
+- **X-535 Hunter** - Restrained Punch printed as '1D6~10 S.D.C.' on p.60; the tilde is an OCR artifact, most likely for '+10', kept as raw string rather than guessed.
+- **X-1000 Ulti-Max Power Armor** - Rear Booster Jet (1) is printed with the qualifier 'each' despite only one item being listed, kept as printed rather than normalized.
+- **X-2000 Dyna-Max** - Heading falls on p.70 (the last page of this slice); read through pages 71-73 to complete the stat block, which ends just before the X-2500 Black Knight heading on p.73.
+- **X-2000 Dyna-Max** - Printed page 71 is a full-page illustration; no legible folio number was visible in the OCR text to verify against the filename, though the surrounding pages (70, 72, 73) all match the registry offset of 0.
+- **X-2000 Dyna-Max** - Forearm Lasers range printed as 6000 feet (1200 m) on p.72; 6000 feet converts to about 1830 m and 1200 m converts to about 3937 feet, so the foot and meter figures do not match each other as printed elsewhere in the book; kept as printed.
+- **X-2500 Black Knight** - p.73 M.D.C. by Location table prints 'Ton Cannon (1; shoulder) - 150'; Weapon Systems section names the same weapon 'Ion Cannon'. Confirmed as printed.
+- **EIR-15 Gargoyle Manned Robot** - Weapon Systems section for this vessel does not reprint stats; it states they are identical to the EIR-10 drone. Not duplicated here to avoid inferring unprinted numbers - see EIR-10 Gargoyle Drone entry.
+- **EIR-50 Gurgoyle Android** - p.96-97 M.D.C. by Location is printed as dice formulas (e.g. 2D4x10, 1D4x100) rather than fixed numbers, as expected per known oddity; mdc set to null for those rows with the formula recorded in mdc_note.
+- **EIR-50 Gurgoyle Android** - Classified as vehicle_class 'drone' for consistency with the other unmanned EIR designations (Crew: None; artificial intelligence), though the book calls it an 'Organic Assault Robot'/android with a living body - flagging for reconciliation.
+- **VX-320 Cyclops** - Weapon #1 grenade blast radius printed as '50 feet (30.5 m)'; 30.5 m corresponds to 100 feet, not 50 feet - an internal unit-conversion inconsistency in the book, transcribed as printed.
+- **VX-370 Stopper (Blue Type)** - p.105 M.D.C. by Location prints 'Hand (1) - 15 each' - a singular count paired with a plural 'each', unlike every other single-item entry in the book. Confirmed as printed.
+- **VX-370 Stopper (Blue Type)** - Heading for this vessel is on p.105 (the last page of this slice); its weapon systems (particle beam arm, mini-machinegun, leg laser rod, hand to hand) run onto p.106, which was read to complete this entry.
+- **VX-635 Prowler** - Page p110 of the cache is heavily scrambled OCR, the bionic-features list items 6-14 render mostly as noise/garbage glyphs; items were reconstructed from readable fragments plus the continuation on p111 where possible.
+- **VX-2020 Monster** - M.D.C. by Location column order for the VX-2020 is OCR-interleaved across p.115-116, a two-column layout apparently read out of order by the OCR, and p.115 also has large blocks of unreadable image/noise text. All location/value pairs printed on the same source line were transcribed directly and are reliable. TX-42 Laser Rifle is printed with a standalone value 30 on the immediately preceding line, but the pairing is not confirmed by layout, so mdc is set null for that row rather than assumed from the parallel VX-2010 entry, which does list TX-42 Laser Rifle at 30, per instructions not to fill a field from a similar vessel.
+- **XM-140 Infantry Support Weapon Platform** - The Statistical Data prints the hover altitude as up to 1000 feet (183 m) in the air, but 183 m converts to roughly 600 feet, matching the XM-70 identically worded up to 600 feet (183 m) line, not 1000 feet; this looks like an internal book error and is transcribed as printed.
+- **XM-170 Infantry Repair Barge** - The text also gives separate M.D.C. figures for the carried XM-171C Heavy Cargo Hauler and Crane, main body 200, crane section 150, wheels 30, cable 50, and notes 1D4 additional robots/vehicles are typically present undergoing repair; these belong to equipment/cargo carried aboard the barge, not the Repair Barge own M.D.C.-by-Location table, and were not included as locations here.
+- **XM-250 Medical Hover Station** - Single Barrel Laser Turrets range is printed as 2000 feet (614 m); other 2000-foot ranges elsewhere in the book convert to 610 m, so this metric figure is likely an internal book inconsistency, but it is transcribed as printed.
+- **XM-288 Supersonic Transport** - The M.D.C. by Location table lists Pulse Laser Turrets (2) at 100 each, but the Weapon Systems prose, item 2, describes three turrets, one on top toward the front, one directly below on the belly, and another on the belly toward the rear. Used the M.D.C. table count of 2 for the location row per instructions; both readings recorded here.
+- **XM-288 Supersonic Transport** - M.D.C. table prints Forward Cargo Bay Door/Hatch (1) at 500 each and Tail Section at 800 each, with each on what are printed as singular items; transcribed as printed.
+- **XM-330 Phantom Hover Tank** - Printed folio on this page reads 693 due to an apparent OCR misread; the cache page (p134.txt) and the registry zero offset both indicate this is printed page 134, confirmed by content continuity from p.133 (XM-300) into p.135/136 (XM-330 continues, then XM-350 begins).
+- **Triax MZ-10 Wilderness Crusader** - Dimensions print only Length; Height and Width are not given in the printed statistical data for this vehicle.
+- **WR-1010 Land Rover** - Dimensions print only Length; Height and Width are not given.
+- **WR-1010 Land Rover** - No standard weapon systems are printed for this vehicle; only Weapons and Sensor Systems: Optional is noted.
+- **WR-2020 Shark Bullet Bike** - Dimensions print only Length; Height and Width are not given.
+- **WR-2020 Shark Bullet Bike** - No standard weapon systems are printed for this vehicle; only Weapons and Sensor Systems: Optional is noted.
+- **WR-5050 Super Cargo Hauler APC** - The printed height conversion for the bunk-area figure is garbled OCR, likely intends 32 feet (9.7 m) given 20 feet equals 6 m elsewhere on the same line, but the raw fragment could not be confidently parsed; recorded in dimensions as printed rather than silently corrected.
+- **WR-5054 Mini-Cargo Hauler APC** - Market Cost is printed as 45 million credits, fair to good availability, identical to the WR-5050 Super despite this being described as a much smaller vehicle, a third the size; this may be a printing error in the book but is transcribed as printed.
+- **G-10 Gurgoyle Power Armor / G-11 Gargoyle Power Armor** - Ton Blasters in the M.D.C. by Location list is likely an OCR misread of Ion Blasters (cf. Weapon System 1); transcribed as printed.
+- **G-10 Gurgoyle Power Armor / G-11 Gargoyle Power Armor** - Folio 205 was found mid-way through the cache page text rather than at its very end, consistent with a two-column page layout being read out of visual top-to-bottom order by OCR; the folio still matches the filename.
+- **G-20 Avenger** - OCR reads Rorearms for Forearms and Jon Blasters for Ion Blasters in the M.D.C. by Location list; transcribed with the location renamed for clarity and the OCR form noted in mdc_note.
+- **G-20 Avenger** - The prose describing head destruction says Destroying the head of the power armor will eliminate... even though this entry is the G-20 Avenger robot, not the power armor - printed as-is, possibly reused text from the G-10 entry.
+- **G-20 Avenger** - No folio 206 digit was found anywhere on the cache page for printed page 206; page identity is inferred from unbroken content flow between p205.txt and p207.txt (which does carry a 207 folio).
+- **G-30 Wrecker** - Ton Cannon is likely an OCR misread of Ion Cannon (cf. Weapon System 1 name).
+- **G-30 Wrecker** - Height printed as 30 feet (6 m) from head to toe - 30 feet converts to roughly 9.1 m, not 6 m (the same 6 m figure the book gives for the 20-foot-tall G-20). Transcribed exactly as printed; likely a book or OCR error, not corrected here.
+- **G-30 Wrecker** - Weapon System 7 reads all the sel items as found in human robots in the cache text - sel is unparsed OCR noise, quoted raw in that entry note.
+- **G-30 Wrecker** - No folio 208 digit appears near the top of this vessel M.D.C. by Location list on the p208 cache page; it appears mid-list (between Legs (2) and Jet Thrusters (2; chest)), consistent with column-based OCR ordering rather than a page-mapping problem - confirmed against p207.txt and p209.txt content flow.
+- **G-30 Wrecker** - Printed page 209 is almost entirely a full-page illustration; OCR returned only garbled fragments plus the folio 209, no additional stat text was lost there.
 
 ### What remains
 
@@ -450,4 +514,18 @@ The gear pass came in at **113 new rows, not the ~55 this plan estimated** - rou
 
 **Four stubs were FILLED rather than duplicated** - the T-10, T-12 and T-13 armour suits and the TX-42 rifle, all created by the NGR class batches and cited to O.C.C. pages rather than to the chapters that stat them. The repo-wide gear-stub backlog fell from eleven to seven as a result, and none of the seven that remain is this book's.
 
-**What is still deliberately absent, and always was:** the book's ~53 vessels - power armour, robots, drones, infiltration units, borg models, combat vehicles and the gurgoyle machines, across printed 39-140 and 205-209, roughly 107 of 222 printed pages. `BOOK-INGEST-AUDIT.md` **F3**: `gear` holds one `mdc`, one `damage`, one `range` and one `payload`, and a vessel here has M.D.C. by location and several numbered weapon systems with four stats each. Nothing about F3's schema half closing in PR #616 makes these importable.
+**THE VESSELS ARE IN, and this paragraph used to say they never would be.**
+It read *"What is still deliberately absent, and always was"* and cited
+`BOOK-INGEST-AUDIT.md` **F3** for why: `gear` holds one `mdc`, one `damage`,
+one `range` and one `payload`, and a vessel here has M.D.C. by location and
+several numbered weapon systems with four stats each. That was true of `gear`
+and is still true of it. What changed is that the vessels no longer go in
+`gear`: PR #787 built `vehicles`, `vehicle_locations` and `vehicle_weapons`,
+and PR #791 filled them with **55 vessels, 601 location rows and 259 weapon
+systems** from printed 39-140 and 205-209 - the ~107 of 222 printed pages this
+survey had written off. The estimate of ~53 was close and low.
+
+**Nothing in the app reads those tables yet**, so the vessels are recorded and
+cited by page while being invisible in the wizard, the sheet and the catalog
+editor. Said here because a reader of this survey will otherwise assume that
+importing them made them appear somewhere.

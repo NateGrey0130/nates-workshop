@@ -446,6 +446,33 @@ and the count of tables in the shared database goes 33 to 36. Anyone re-running
 that measurement will get a different answer than the closure did, and the reason
 is this note rather than a drift.
 
+**The data landed, 2026-09-07 (PR #791), and it is the half PR #787 said was
+still to come.** That note ends *"No data yet. The Triax vessels are a
+separate PR"*; this is it. **55 vessels, 601 M.D.C.-by-location rows and 259
+weapon systems**, from printed 39-140 and 205-209 - 8 power armour, 12 robots,
+7 drones, 9 borgs and 19 vehicles. Applied `--remote` before the PR, and every
+readback counts rather than trusting the exit code, because `INSERT OR IGNORE`
+is silent on collision.
+
+**The survey's estimate of ~53 was close and low.** 55 is what four readers
+found by the rule that a vessel belongs to the slice its NAME HEADING falls
+in - which is what kept the X-2000 Dyna-Max (heading p.70, weapons running to
+p.73) and the VX-370 Stopper (heading p.105, weapons on p.106) whole and
+unduplicated across a boundary.
+
+**The shape held: nothing needed to change to store any of it.** No column was
+added, no CHECK was relaxed, and the two places the schema deliberately left
+loose are both used - `mdc` is NULL on 6 location rows whose M.D.C. the book
+prints as DICE rather than a number (the EIR-50 Gurgoyle Android is built to
+match whatever gurgoyle it imitates), and `vehicle_class` is free text, which
+absorbed the book's own categories without argument.
+
+**AND NOTHING READS THEM STILL.** The bullet above saying so is unchanged by
+this PR: there is no `catalogs.js` SELECT, no `catalog-fields.js` entry and no
+sheet rendering, so 55 correct, page-cited vessels are in production and
+invisible in the app. That is the honest state, it was not smuggled in with
+the data, and the reader is still its own piece of work.
+
 ### F4 — The language-pick invariant matches on prose, and missed one of three
 
 `regression.mjs` holds a good rule: an "any language" pick must offer the
