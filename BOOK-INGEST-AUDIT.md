@@ -473,6 +473,30 @@ sheet rendering, so 55 correct, page-cited vessels are in production and
 invisible in the app. That is the honest state, it was not smuggled in with
 the data, and the reader is still its own piece of work.
 
+**Correction, 2026-09-07: the rule this finding says it broke did not say what
+the note quotes, and the rule itself has since changed.** The PR #787 note above
+stands as written and is not edited; both halves of this correction are about
+the sentence it attributes to another file.
+
+**First, the quote is a splice.** It reads *"`book-survey` §8 is explicit -
+\"NO application code, schema, validator or generator changes from a book\""*.
+<!-- claim-ok: quoting the premise this note corrects -->
+Read 2026-09-07, §8 contained none of the words *application*, *validator* or
+*generator*; its rule was *"Do not stop to implement"* and *"only CODE waits"*,
+which is a sequencing rule rather than a ban. The banning sentence was in
+`BOOK-INGEST-QUEUE.md` and `docs/prompts/BOOK-INGEST-PROMPT.md`. So the note
+cited the strictest wording to the one file that did not carry it — the shape
+`audit-menu` calls *a claim about another file*, and `scripts/menu-check.mjs`
+could not catch it because its patterns fire on absence claims, not on a
+positive misquote.
+
+**Second, the ban is gone as of 2026-09-07.** `book-survey` §8 now sets three
+tiers, and this PR falls in the second: a change Nate asks for is in scope the
+moment he asks. Under the rule as it now reads, **PR #787 broke nothing** — the
+banner above it is a correct record of what the session believed and a wrong
+description of what the protocol required. It is left standing because it is
+what prompted the measurement that replaced the rule.
+
 ### F4 — The language-pick invariant matches on prose, and missed one of three
 
 `regression.mjs` holds a good rule: an "any language" pick must offer the

@@ -671,6 +671,71 @@ That division is what stops a batch turning into one enormous PR. It also means
 the one menu here where that is correct rather than a backlog — read its own
 header for where it currently stands, not this sentence.
 
+### What "no code from a book" forbids: three tiers, and this is the copy that governs
+
+**The rule binds the SESSION, not Nate**, and until 2026-09-07 it was stated as
+an absolute ban — *"No application code, schema, validator or generator changes
+from a book"* — in `BOOK-INGEST-QUEUE.md` and `docs/prompts/BOOK-INGEST-PROMPT.md`,
+neither of which a session that fires this skill from its description will
+necessarily open. Measured 2026-09-07 with `git log` and
+`gh pr view --json files`, that sentence was false on the day it was written and
+stayed false for ten days. Both files now point here.
+
+**Tier 1 — part of an import. Do it, and file nothing.** A class stating no
+`sdc_base` and no `mdc_base` needs a `CORE_SDC_BY_CLASS` entry in
+`apps/character-creator/js/compose.js`, or
+`apps/character-creator/test/checks/catalog-data.mjs` fails it — so `class-import`
+orders the edit the ban forbade, and the suite enforces the order. **Eleven
+book-session PRs made that edit**: seven in `phase-world` (#406, #409, #411,
+#412, #413, #416, #417) and four in `triax` (#776–#779), covering 15 of that
+book's 21 classes. Not one was recorded as a violation, because it is not one.
+`scripts/books.json` is the same shape. These are catalog vocabulary that
+happens to live in a `.js` file.
+
+**Tier 2 — Nate asks, and then it is in scope.** Say so in the outcome note; do
+not write it up as a rule broken. On 2026-09-07 one book produced a migration
+and three tables (#787), 55 rows of vessel data into them (#791), a
+parser-and-validator change (#789), and one change touching `app.js`,
+`sheet.js`, `js/parser.js`, `db/schema.sql`, `_lib/catalog.js` and
+`scripts/class-check-lib.mjs` at once (#794) — the complete set the ban names,
+inside a day, every piece of it asked for. Four decisions recorded as four
+violations is a worse record than four decisions.
+
+**Tier 3 — everything else still waits, and this half is unchanged.** A mechanic
+the app cannot express, a bug noticed in passing, a shape that would be nicer:
+file the finding, keep going, **do not stop to ask and do not implement**.
+
+### What the deferral was actually buying, which is not what the ban claimed
+
+Across the 25 findings on `BOOK-INGEST-AUDIT.md` the lag from filing to taking
+is under a day, and six were taken the **same day** they were filed (`git log
+-S'### Fn '` against that file for the filing date, the outcome notes for the
+take, both read 2026-09-07). `phase-world`'s last book PR merged at 09:05 on
+2026-08-31 and the first deferred-code PR merged at **10:09** — the deferral
+bought sixty-four minutes, and then 17 findings shipped across 18 PRs in one
+afternoon. Prompt C, the planning pass *"after every book is imported"*, has
+never run and now cannot: 23 of 25 findings are closed with five of seven books
+not yet surveyed.
+
+**What the wait bought was never time. It was that the session which read the
+book was not the session that wrote the code off its own reading** — and that is
+worth keeping, so keep it directly:
+
+> **A proposal written and implemented in the same session goes through
+> `audit-premise-auditor` before it is scoped.**
+
+`F23(b)` is the worked case. Its outcome note opens by saying the proposal *"was
+written this morning by the session that then implemented it - which is the
+conflict `audit-premise-auditor` exists to break, and it broke it"*, and **seven
+of that proposal's own claims did not survive the check** — including a stated
+failure direction that was inverted, so a typo it warned would grant too much
+would in fact have granted too little, silently. PR #795 then fixed three more
+defects a browser found and the suite could not.
+
+The subagent is a hand-off you can perform inside one session. The ban was a
+hand-off you could only perform by waiting, and the measurements above say
+nobody waited.
+
 ## What "surveyed" means
 
 - an inventory table of the book, by chapter, with counts

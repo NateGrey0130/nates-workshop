@@ -175,13 +175,21 @@ naming the exact filenames in prompt A.
 > One PR per coherent batch (classes / skills / spells / gear), not one giant
 > PR. Merge as you go — do not leave branches stacked.
 >
-> ### THE STANDING CONSTRAINT — no code changes from this book
+> ### THE STANDING CONSTRAINT — the book does not get to start engineering work
 >
-> **Do not change application code, schema, validators, or generators because
-> of what this book contains.** Data scripts, `scripts/books.json`, class
-> markdown and catalog rows are in scope. Anything else is not.
+> **`book-survey` §8 governs this and is the copy to read.** It sets three
+> tiers: the `CORE_SDC_BY_CLASS` and `books.json` edits that are *part of* an
+> import and are not a code change; a change **Nate asks for**, which is in
+> scope the moment he asks; and everything else, which waits. It also carries
+> the rule that a proposal written and implemented in the same session goes
+> through `audit-premise-auditor` first.
 >
-> When the book needs a mechanic the app cannot express:
+> This heading said *"no code changes from this book"* and forbade all three
+> until 2026-09-07. It was measurably false — see §8 for the PR numbers — so
+> do not restore that wording here or anywhere else.
+>
+> When the book needs a mechanic the app cannot express, and nobody has asked
+> for it:
 >
 > 1. Import the class/row with the fields the schema **does** support.
 > 2. Record precisely what was dropped in that row's `extraction_notes`.
@@ -203,6 +211,17 @@ naming the exact filenames in prompt A.
 ---
 
 ## C. Planning pass (after every book is cached and imported)
+
+**This pass has never run and, as written, no longer can. Read this before
+running it.** Measured 2026-09-07: 23 of the menu's 25 findings are already
+closed while **five of the seven books are not yet surveyed**, so the backlog it
+was written to order does not exist. Findings here are taken as they arrive,
+usually within a day of being filed, and `book-survey` §8 carries the reason
+that is now the expected shape rather than a departure from one.
+
+**Run it as a sweep, not as a plan**, if it is run at all: steps 1 and 2 —
+verify each surviving finding against reality, and merge anything filed twice —
+are still worth an hour. Steps 3 and 4 order work that has mostly shipped.
 
 > Repo is `C:\Users\natha\Projects\nates-apps` — read its `CLAUDE.md`,
 > `BOOK-INGEST-QUEUE.md` and `BOOK-INGEST-AUDIT.md`.
