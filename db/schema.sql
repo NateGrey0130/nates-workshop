@@ -186,7 +186,12 @@ CREATE TABLE IF NOT EXISTS characters (
   level INTEGER NOT NULL DEFAULT 1,
   xp INTEGER NOT NULL DEFAULT 0,
   attributes TEXT NOT NULL DEFAULT '{}',  -- JSON: {"IQ": 12, "ME": 14, ...}
-  skills TEXT NOT NULL DEFAULT '[]',      -- JSON: [{"name", "pct", "per_level", "type": "occ|related|secondary"}]
+  -- "program" is a skill granted by a chosen SKILL PROGRAM - a whole category
+  -- taken at one flat percentage (BOOK-INGEST-AUDIT.md F23(b)). "gm" is a
+  -- skill a G.M. granted directly. Not a CHECK: the sheet and the validator
+  -- read these by name, and a constraint here would refuse a saved character
+  -- rather than a bad write.
+  skills TEXT NOT NULL DEFAULT '[]',      -- JSON: [{"name", "pct", "per_level", "type": "occ|related|secondary|program|gm"}]
   powers TEXT NOT NULL DEFAULT '[]',      -- JSON: [{"type": "spell|psionic", "name", "cost", ...}]
   hp_max INTEGER,  hp_current INTEGER,
   sdc_max INTEGER, sdc_current INTEGER,

@@ -827,6 +827,14 @@ export function combineClasses(rcc, occ) {
   };
   if (occ.skills?.occ_related_skills) out.skills.occ_related_skills = occ.skills.occ_related_skills;
   if (occ.skills?.secondary_skills) out.skills.secondary_skills = occ.skills.secondary_skills;
+  // Skill programs are carried for the same reason the MOS below is, and the
+  // omission would have been worse: this rebuilds `skills` wholesale from the
+  // RACE's block, so an occupation's `skill_programs` would vanish while a
+  // race's survived - and the only class that has one is an O.C.C.
+  // (BOOK-INGEST-AUDIT.md F23(b)). The block would have done nothing for the
+  // very class it was built for, silently, with every test still passing.
+  const programs = occ.skills?.skill_programs ?? rcc.skills?.skill_programs;
+  if (programs) out.skills.skill_programs = programs;
   // An MOS belongs to the OCCUPATION - it is a military specialty, and the
   // Coalition classes that have one are all O.C.C.s. Carried across the merge
   // because this rebuilds `skills` wholesale, and without it a Technical
@@ -900,9 +908,21 @@ export function categoryLabel(entry) {
   // only half of it would be quietly lying about the other half.
   const pct = Number.isFinite(entry.bonus) && entry.bonus !== 0
     ? `${entry.bonus > 0 ? '+' : ''}${entry.bonus}%` : '';
+  // The PREFIX forms are shown too. A picker that displayed "Pilot" while
+  // silently withholding thirteen Robot Combat rows would be lying by omission
+  // in the same way the bonus case above was - which is why they are appended
+  // to the same parenthetical rather than given one of their own (F23(b)).
   const parts = [];
-  if (Array.isArray(entry.only) && entry.only.length) parts.push(`${entry.only.join(', ')} only`);
-  else if (Array.isArray(entry.except) && entry.except.length) parts.push(`except ${entry.except.join(', ')}`);
+  const onlyBits = [
+    ...(Array.isArray(entry.only) ? entry.only : []),
+    ...(Array.isArray(entry.only_prefix) ? entry.only_prefix.map((p) => `${p}...`) : []),
+  ];
+  const exceptBits = [
+    ...(Array.isArray(entry.except) ? entry.except : []),
+    ...(Array.isArray(entry.except_prefix) ? entry.except_prefix.map((p) => `${p}...`) : []),
+  ];
+  if (onlyBits.length) parts.push(`${onlyBits.join(', ')} only`);
+  else if (exceptBits.length) parts.push(`except ${exceptBits.join(', ')}`);
   if (pct) parts.push(pct);
   return parts.length ? `${name} (${parts.join('; ')})` : (name ?? '');
 }
@@ -993,11 +1013,36 @@ export function categoryAllows(categories, skill) {
   const entry = categories.find((c) => normName(categoryName(c)) === cat);
   if (entry === undefined) return false;
   if (typeof entry === 'string') return true;
-  if (Array.isArray(entry.only) && entry.only.length) {
-    return entry.only.some((n) => normName(n) === name);
+  // PREFIX FORMS, for a book that excludes a FAMILY rather than a list.
+  // BOOK-INGEST-AUDIT.md F23(b): Triax printed 170 says "Technical: All, except
+  // lore" and "Pilot: All, except pilot robots & power armor and robot combat".
+  // Those are 14 `Lore...` rows and 13 `Robot Combat...` rows, and this book
+  // alone added NINE of the latter - so an exact-name list would rot on contact
+  // and under-grant silently, which is the direction nothing reports.
+  //
+  // SCOPED TO THIS ENTRY, never applied globally. Two `Lore:` rows are filed
+  // under Cowboy rather than Technical, and a prefix reaching across categories
+  // would exclude them from a Cowboy grant that never mentioned lore. `entry`
+  // is already the one matching the skill's real category, so testing it here
+  // IS the scoping.
+  const hasPrefix = (list) => Array.isArray(list)
+    && list.some((p) => normName(p) && name.startsWith(normName(p)));
+
+  if ((Array.isArray(entry.only) && entry.only.length)
+      || (Array.isArray(entry.only_prefix) && entry.only_prefix.length)) {
+    return (entry.only || []).some((n) => normName(n) === name)
+      || hasPrefix(entry.only_prefix);
   }
-  if (Array.isArray(entry.except) && entry.except.length) {
-    return !entry.except.some((n) => normName(n) === name);
+  // `except` AND `except_prefix` TOGETHER ARE LEGAL, unlike `only` with
+  // `except`. Both point the same way - each REMOVES rows - so "these named
+  // ones, and everything starting with that" has exactly one reading, where
+  // "only these, except some of them" has none. The Pilot line needs precisely
+  // this combination and cannot be written without it: one exact name
+  // (`Robots & Power Armor`) and one family (`Robot Combat...`).
+  if ((Array.isArray(entry.except) && entry.except.length)
+      || (Array.isArray(entry.except_prefix) && entry.except_prefix.length)) {
+    return !(entry.except || []).some((n) => normName(n) === name)
+      && !hasPrefix(entry.except_prefix);
   }
   return true;
 }
@@ -1013,17 +1058,30 @@ function validateCategories(where, categories, errors) {
     if (typeof c.name !== 'string' || !c.name.trim()) {
       errors.push(`${where} object entries need a name`);
     }
-    for (const key of ['only', 'except']) {
+    for (const key of ['only', 'except', 'only_prefix', 'except_prefix']) {
       if (c[key] === undefined) continue;
       if (!Array.isArray(c[key]) || c[key].some((s) => typeof s !== 'string' || !s.trim())) {
-        errors.push(`${where}.${c.name}.${key} must be a list of skill names`);
+        errors.push(`${where}.${c.name}.${key} must be a list of `
+          + (key.endsWith('_prefix') ? 'name prefixes' : 'skill names'));
       }
     }
     // Both at once has no single reading: "only these, except some of them" is
     // just a shorter `only` list, and guessing which the author meant is worse
     // than saying so.
-    if (Array.isArray(c.only) && Array.isArray(c.except)) {
-      errors.push(`${where}.${c.name} sets both only and except; use one`);
+    //
+    // THE PREFIX FORMS ARE JUDGED THE SAME WAY, BY DIRECTION. `except` with
+    // `except_prefix` is fine - both remove rows, so the reading is one list.
+    // Anything mixing an ADMITTING form with an EXCLUDING one is refused, for
+    // the reason above (F23(b)).
+    const admits = (Array.isArray(c.only) && c.only.length)
+      || (Array.isArray(c.only_prefix) && c.only_prefix.length);
+    const excludes = (Array.isArray(c.except) && c.except.length)
+      || (Array.isArray(c.except_prefix) && c.except_prefix.length);
+    if (admits && excludes) {
+      // Wording is pinned: test/smoke.mjs matches /both only and except/ on
+      // this message, and that check predates the prefix forms. Phrased to keep
+      // it true rather than editing the test to suit a new sentence.
+      errors.push(`${where}.${c.name} sets both only and except forms; use one direction`);
     }
     // A bonus has to be a real number. The books print these as "+10%", and a
     // string "10%" or "+10" would pass `!== undefined`, fail Number.isFinite at
@@ -2099,6 +2157,53 @@ export function parseClassMarkdown(text) {
       // A per-category floor on those picks (F6). Validated after the
       // categories, because every check it makes is against them.
       validateRelatedMinimums(related, errors);
+    }
+
+    // SKILL PROGRAMS: choose N CATEGORIES, take everything each one allows, at
+    // one fixed percentage. BOOK-INGEST-AUDIT.md F23(b).
+    //
+    // Not `occ_related_skills` with a large count. That picks SKILLS from a
+    // list of categories; this picks CATEGORIES and grants their whole
+    // contents, so a count large enough to cover them would also let the player
+    // spend it inside a category the book never granted.
+    //
+    // `base` is a FIXED percentage rather than a bonus, and `per_level` is
+    // normally 0 - the Triax robot soldier's programs sit at a flat 38% with
+    // "no bonuses or improvement with experience" (printed 170). A skill with
+    // `per_level: 0` simply never advances; js/leveling.js skips it.
+    const programs = data.skills.skill_programs;
+    if (programs) {
+      if (!Number.isInteger(programs.choose) || programs.choose < 1) {
+        errors.push('skills.skill_programs.choose must be a whole number above zero');
+      }
+      if (!Number.isFinite(programs.base)) {
+        errors.push('skills.skill_programs.base must be a number - the fixed percentage '
+          + 'every skill in a chosen program is granted at');
+      }
+      if (programs.per_level !== undefined && !Number.isFinite(programs.per_level)) {
+        errors.push('skills.skill_programs.per_level must be a number');
+      }
+      validateCategories('skills.skill_programs.categories', programs.categories, errors);
+      if (!Array.isArray(programs.categories) || !programs.categories.length) {
+        errors.push('skills.skill_programs.categories must list the categories '
+          + 'that can be chosen as programs');
+      } else if (Number.isInteger(programs.choose)
+                 && programs.choose > programs.categories.length) {
+        // Offering three picks from two categories is a transcription error
+        // every time, and it fails as a silently short list rather than as
+        // anything a player would notice.
+        errors.push(`skills.skill_programs.choose is ${programs.choose} but only `
+          + `${programs.categories.length} categories are offered`);
+      }
+      // A category BONUS makes no sense against a fixed base: the whole point
+      // of a program is one flat percentage, so a per-category adjustment would
+      // be stored and never read. Same reasoning as the psionic case above.
+      for (const c of programs.categories || []) {
+        if (c && typeof c === 'object' && c.bonus !== undefined) {
+          errors.push(`skills.skill_programs.categories.${c.name} sets a bonus; `
+            + 'a program grants one fixed percentage and nothing reads it');
+        }
+      }
     }
     const secondary = data.skills.secondary_skills;
     if (secondary && typeof secondary.count !== 'number') errors.push('skills.secondary_skills.count must be a number');

@@ -1602,6 +1602,14 @@ function render() {
     ${skillBox('Class Skills', byType('occ'))}
     ${skillBox('Related Skills', byType('related'))}
     ${skillBox('Secondary Skills', byType('secondary'))}
+    ${/* BOOK-INGEST-AUDIT.md F23(b). Its OWN box, because a program skill is
+          not a class skill: it sits at one flat percentage that never advances,
+          and filed under Class Skills it would read as an ordinary grant. A
+          skillBox with nothing in it renders nothing, so every class without
+          programs is unchanged - which is all but one of them. Added here
+          because the sheet renders skills by an explicit list of types, so a
+          new type not named here would be SAVED AND INVISIBLE. */''}
+    ${skillBox('Skill Programs', byType('program'))}
   </div>
   ${/* Placed as a UNIT rather than by its contents: refreshGranted() rewrites
         this block's innerHTML long after the layout pass has run, and boxes

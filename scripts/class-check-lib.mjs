@@ -661,7 +661,12 @@ export function crossCategoryRestrictions(data, categoryOf) {
   const nameOf = (entry) => (typeof entry === 'string' ? entry : entry?.name ?? null);
   const out = { granted: [], unreachable: [], noop: [] };
 
-  for (const group of ['occ_related_skills', 'secondary_skills']) {
+  // `skill_programs` walks with them (F23(b)). Its `only` lists carry the same
+  // cross-category shape - Triax printed 170 grants "Espionage: tracking,
+  // intelligence, and wilderness survival only", and Wilderness Survival is a
+  // WILDERNESS row - so without this the one block whose restrictions matter
+  // most would be the only one nothing reported on.
+  for (const group of ['occ_related_skills', 'secondary_skills', 'skill_programs']) {
     const cats = data?.skills?.[group]?.categories || [];
     const listed = new Set(cats.map((c) => norm(nameOf(c))).filter(Boolean));
     for (const c of cats) {

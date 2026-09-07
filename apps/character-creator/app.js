@@ -821,6 +821,10 @@ function pickSystem(sys) {
 }
 function resetBuild() {
   S.attrMethods = {}; S.attrs = {}; S.attrRolls = {}; S.related = []; S.secondary = []; S.groupPicks = {}; S.mos = null;
+  // Chosen skill PROGRAMS, held by CATEGORY name rather than by skill
+  // (BOOK-INGEST-AUDIT.md F23(b)): picking one grants everything that category
+  // allows, at one fixed percentage.
+  S.programs = [];
   S.equipment = []; S.equipInit = false; S.pools = null;
   S.gearChoices = []; S.gearPicks = {};
   S.variant = null;
@@ -2311,12 +2315,50 @@ function renderSkills() {
   const relatedPool = catalogFor(relatedCfg.categories);
   const secondaryPool = catalogFor(null);
 
+  // SKILL PROGRAMS (BOOK-INGEST-AUDIT.md F23(b)). Choose N CATEGORIES; every
+  // skill each one allows is granted at one fixed percentage.
+  //
+  // The count beside each name is computed through `catalogFor`, the same
+  // function the related pool uses, so what the label promises and what the
+  // pick grants come from one place. It is shown because "Technical" and
+  // "Domestic" grant 61 skills and 9, and a player choosing three of thirteen
+  // blind would have no way to tell.
+  const programCfg = sk.skill_programs || null;
+  const programsHtml = !programCfg ? '' : (() => {
+    const offered = programCfg.categories || [];
+    const chosen = S.programs.length;
+    const rows = offered.map((entry) => {
+      const name = categoryName(entry);
+      const n = catalogFor([entry]).length;
+      const on = S.programs.includes(name);
+      const full = chosen >= programCfg.choose && !on;
+      return `<div class="chkrow">
+        <label class="${full ? 'muted' : ''}">
+          <input type="checkbox" ${on ? 'checked' : ''} ${full ? 'disabled' : ''}
+            onchange="toggleProgram('${escJs(name)}')">
+          ${esc(categoryLabel(entry))}
+        </label>
+        <span class="pct">${n} skill${n === 1 ? '' : 's'}</span></div>`;
+    }).join('');
+    return `<div style="margin-top:14px">
+      <h3>Skill programs — ${chosen}/${programCfg.choose}</h3>
+      <p class="muted small">Each chosen program grants <b>every</b> skill it lists,
+        at a flat ${esc(String(programCfg.base))}%${programCfg.per_level
+          ? ` +${esc(String(programCfg.per_level))}%/lvl` : ' with no gain per level'}.</p>
+      ${programCfg.note ? `<div class="attr-note">↳ ${esc(programCfg.note)}</div>` : ''}
+      ${rows}
+      ${chosen ? `<p class="muted small">Granting
+        <b>${programSkills().length}</b> skills.</p>` : ''}
+    </div>`;
+  })();
+
   $('app').innerHTML = `
   <div class="panel">
     <h2>Skills <span class="muted small">— ${esc(S.cls.name)}</span></h2>
     ${mosHtml}
     <h3>Class skills <span class="muted small">(automatic)</span></h3>
     ${occRows || '<p class="muted small">None listed.</p>'}
+    ${programsHtml}
     <div class="cols" style="margin-top:14px">
       <div>
         <h3>Related skills — ${S.related.length}/${relatedCfg.count}</h3>
@@ -2344,6 +2386,66 @@ function renderSkills() {
   <div class="nav"><button class="btn btn-ghost" onclick="prevStep()">&larr; Back</button>
   <button class="btn btn-primary" onclick="goStep(ST.EQUIPMENT)">Equipment &rarr;</button></div>`;
 }
+// Every skill the CHOSEN programs grant, resolved through `catalogFor` so the
+// picker's count and the saved sheet cannot disagree (F23(b)).
+//
+// Expanded at render time and never stored as a name list. The book says "all
+// the skills under that category are part of the skill program", so a category
+// that gains a skill SHOULD grant it - enumerating would freeze a set the book
+// left open, which is the opposite of the usual reason to enumerate.
+//
+// De-duplicated across programs, because two chosen categories can admit the
+// same row through a cross-category `only`.
+function programSkills() {
+  const cfg = psiClass().skills?.skill_programs;
+  if (!cfg || !S.programs.length) return [];
+  const chosen = (cfg.categories || [])
+    .filter((c) => S.programs.includes(categoryName(c)));
+
+  // EACH PROGRAM IS ITS OWN SELF-CONTAINED GRANT, matched alone, and a name its
+  // `only` list states is granted even when the catalog files it elsewhere.
+  //
+  // This is where a program differs from `occ_related_skills`, and the
+  // difference is not cosmetic. `categoryAllows` bounds a cross-category `only`
+  // by requiring the class to ALSO list the skill's real category - right for a
+  // related-skill pool, which is one grant spanning many categories. A program
+  // is one category standing alone: printed 170 grants "Espionage: tracking,
+  // intelligence, and wilderness survival only", and Wilderness Survival is a
+  // WILDERNESS row. Matching the chosen entries as a pool dropped it whenever
+  // the player did not also choose the Wilderness program - the book's own
+  // three-skill program silently paying out two.
+  const seen = new Set();
+  const out = [];
+  const add = (row) => {
+    const k = (row?.name || '').toLowerCase();
+    if (!k || seen.has(k)) return;
+    seen.add(k);
+    out.push(row);
+  };
+  for (const entry of chosen) {
+    for (const row of catalogFor([entry])) add(row);
+    // The names the entry states outright, wherever the catalog files them.
+    // Matched case-insensitively rather than through `skillByName()`, which is
+    // keyed on the exact catalog spelling - a book's capitalisation is not
+    // something to depend on here.
+    for (const named of (entry && typeof entry === 'object' && entry.only) || []) {
+      const want = String(named).trim().toLowerCase();
+      const row = S.skillCatalog.find((sk) => String(sk.name).trim().toLowerCase() === want);
+      if (row) add(row);
+    }
+  }
+  return out;
+}
+
+function toggleProgram(name) {
+  const cfg = psiClass().skills?.skill_programs;
+  if (!cfg) return;
+  const i = S.programs.indexOf(name);
+  if (i >= 0) S.programs.splice(i, 1);
+  else if (S.programs.length < (+cfg.choose || 0)) S.programs.push(name);
+  renderSkills();
+}
+
 function toggleGroupPick(groupIndex, name, limit) {
   const list = S.groupPicks[groupIndex] || (S.groupPicks[groupIndex] = []);
   // Language: Other prompts instead of toggling, and the pick is stored under
@@ -3233,6 +3335,21 @@ function skillsAtLevelOne() {
     // stopped them advancing forever, so a level 10 character's hobby skills
     // sat at their level 1 values.
     ...S.secondary.map((n) => ({ name: n, category: find(n).category, pct: skillBase(find(n), S.attrs) || 0, per_level: find(n).per_level || 0, type: 'secondary' })),
+    // Skill programs (F23(b)). The percentage is the PROGRAM's, not the
+    // catalog's: printed 170 says "Base skill: 38%; no bonuses or improvement
+    // with experience", so the row's own base and per-level are both discarded
+    // rather than added to. That is what makes this a program and not a bonus.
+    //
+    // NO `skillBase` AND NO `categoryBonus`. A formula-derived base would
+    // reintroduce the attribute the flat rate exists to ignore, and a category
+    // bonus is refused at parse time for this block for the same reason.
+    ...programSkills().map((row) => ({
+      name: row.name,
+      category: row.category,
+      pct: +psiClass().skills.skill_programs.base || 0,
+      per_level: +psiClass().skills.skill_programs.per_level || 0,
+      type: 'program',
+    })),
   ].map(withIq);
 }
 
