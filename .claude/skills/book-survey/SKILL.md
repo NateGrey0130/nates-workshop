@@ -662,9 +662,11 @@ conversation is the most expensive place to keep what a repo can hold.
 
 So a book that needs a mechanic the app cannot express does not block. The
 finding goes in `BOOK-INGEST-AUDIT.md` — code changes only — and the book ships
-without it. **Data ships with its book; only CODE waits.** Classes, skills,
-spells, psionics, gear and `books.json` entries all go in with the book they came
-from, applied `--remote` before the merge that needs them, per `ship-pr`.
+without it. **Data ships with its book; UNASKED-FOR code waits** — read the next
+two sections before treating that as "no code", because it is not, and saying it
+was is what made the old wording false. Classes, skills, spells, psionics, gear
+and `books.json` entries all go in with the book they came from, applied
+`--remote` before the merge that needs them, per `ship-pr`.
 
 That division is what stops a batch turning into one enormous PR. It also means
 `BOOK-INGEST-AUDIT.md` accumulates open findings *while* a batch runs, which is
