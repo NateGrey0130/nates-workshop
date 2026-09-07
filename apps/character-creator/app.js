@@ -19,7 +19,8 @@ import { isFamilyName, isRepeatableRow, otherRowFor, familySkillName,
 import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSIONIC_TIER_RULES,
          rollsForPsionics as classRollsForPsionics } from './js/psionics.js';
 import { isChoiceGroup, isGearChoice, applyVariant,
-         categoryAllows, categoryLabel, categoryBonus, needsOccupation, abilityOccOptions,
+         categoryAllows, categoryLabel, categoryName, categoryBonus, needsOccupation,
+         abilityOccOptions,
          occAllowedForRace, raceAllowedForOcc, relatedFloorStatus,
          bonusesFromSkills, sumBonusGroups } from './js/parser.js';
 import { composeClass } from './js/compose.js';
@@ -2329,7 +2330,7 @@ function renderSkills() {
     const chosen = S.programs.length;
     const rows = offered.map((entry) => {
       const name = categoryName(entry);
-      const n = catalogFor([entry]).length;
+      const n = programRowsFor(entry).length;
       const on = S.programs.includes(name);
       const full = chosen >= programCfg.choose && !on;
       return `<div class="chkrow">
@@ -2416,25 +2417,35 @@ function programSkills() {
   // three-skill program silently paying out two.
   const seen = new Set();
   const out = [];
-  const add = (row) => {
-    const k = (row?.name || '').toLowerCase();
-    if (!k || seen.has(k)) return;
-    seen.add(k);
-    out.push(row);
-  };
   for (const entry of chosen) {
-    for (const row of catalogFor([entry])) add(row);
-    // The names the entry states outright, wherever the catalog files them.
-    // Matched case-insensitively rather than through `skillByName()`, which is
-    // keyed on the exact catalog spelling - a book's capitalisation is not
-    // something to depend on here.
-    for (const named of (entry && typeof entry === 'object' && entry.only) || []) {
-      const want = String(named).trim().toLowerCase();
-      const row = S.skillCatalog.find((sk) => String(sk.name).trim().toLowerCase() === want);
-      if (row) add(row);
+    for (const row of programRowsFor(entry)) {
+      const k = (row?.name || '').toLowerCase();
+      if (!k || seen.has(k)) continue;
+      seen.add(k);
+      out.push(row);
     }
   }
   return out;
+}
+
+// What ONE program grants. Shared by the picker's count and by the grant
+// itself, because they are one question and answering it twice is how a label
+// comes to promise something the sheet does not deliver - which it did: the
+// Espionage program showed "2 skills" beside a pick that hands over three.
+function programRowsFor(entry) {
+  const rows = catalogFor([entry]);
+  const seen = new Set(rows.map((r) => String(r.name).trim().toLowerCase()));
+  // The names the entry states outright, wherever the catalog files them.
+  // Matched case-insensitively rather than through `skillByName()`, which is
+  // keyed on the exact catalog spelling - a book's capitalisation is not
+  // something to depend on.
+  for (const named of (entry && typeof entry === 'object' && entry.only) || []) {
+    const want = String(named).trim().toLowerCase();
+    if (seen.has(want)) continue;
+    const row = S.skillCatalog.find((sk) => String(sk.name).trim().toLowerCase() === want);
+    if (row) { seen.add(want); rows.push(row); }
+  }
+  return rows;
 }
 
 function toggleProgram(name) {
@@ -3762,6 +3773,11 @@ Object.assign(window, {
   rollBio, rollBioAll, setLongLived,
   rmEquip, addCatalog, addCustom, setBio, save, startOver,
   resumeDraft, dismissDraft, pickVariant, pickOcc, takeAbility, dropAbility,
+  // The skill-program checkboxes are inline onchange handlers, so this is what
+  // makes them callable at all. Without it the picker RENDERS correctly and
+  // every checkbox throws ReferenceError on click - which no test caught,
+  // because nothing tests a click.
+  toggleProgram,
   deleteCharacter,
 });
 
