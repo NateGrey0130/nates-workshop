@@ -2854,3 +2854,94 @@ column, and nothing to keep current afterwards.
 that four is the major psionic's number and a master takes none. The reason to
 record it is that the number is offered by a picker rather than read off a
 page, and a picker that offers something is usually taken at its word.
+
+### F25 - a class whose book defines it AS another class, and nothing records that the two must stay identical
+
+**Filed 2026-09-06, from the `triax` Euro-Juicer batch (PR #780). Not
+implemented, per the standing constraint.** Rifts World Book 5 printed 175
+gives the Euro-Juicer O.C.C. (`euro-juicer`) no mechanics of its own. Its entry
+says, in full: *"The same creation considerations, conditions, skills, bonuses
+and penalties as described in the Rifts RPG are applicable to the NGR/European
+Juicer - create the character as usual."* There is no attribute line, no skill
+list, no bonus list, no equipment and no money on the page.
+
+**It is a playable class by both of this book's authorities** - on the O.C.C.
+roster on printed 156, and with its own experience ladder on printed 224 - so
+it was imported rather than left out. **And that ladder is the Juicer's own,
+reprinted**: 0-2,140 / 2,141-4,280 / 4,281-8,560 through to 341,601-401,700,
+read off a 190 dpi render of printed 224 on 2026-09-06. The one number the
+entry could have differed on does not.
+
+**So `euro-juicer` is a hand copy of `juicer`, and the copy was verified rather
+than assumed.** Both markdowns were parsed through `parseClassMarkdown` and
+compared block by block on 2026-09-06: `hit_points_base`, `sdc_base`,
+`starting_money`, `bonuses`, `special_abilities` and `equipment_starting` are
+byte-identical; `occ_related_skills` matches on count, categories and schedule,
+`secondary_skills` matches entirely, and `race_restrictions.only` matches. The
+only intended divergences are two language entries and two added restrictions,
+all of them documented in the row's `extraction_notes`. **The comparison caught
+one unintended one** - an abbreviated IRMSS description - which is the argument
+for running it rather than trusting the transcription.
+
+**The gap is that nothing holds that state.** No field says these two rows are
+meant to be identical, and no check compares them. A correction to `juicer` -
+an edition update, a bonus fix, a renamed gear slug, a skill the catalog
+renames - lands on one row and not the other, silently, and the divergence is
+invisible to `class-check`, to the smoke suite and to `regression.mjs`, all of
+which validate each class on its own terms. `repo-vs-live.mjs` compares the
+repo against production, not one class against another.
+
+**This is NOT `F23`, and the difference is worth stating.** `F23(a)` is the NGR
+Robot Soldier inheriting a *previous* occupation's skills **frozen at the level
+the character had when the conversion happened** - two occupations in sequence,
+where the app has one. This class is not in sequence with anything and nothing
+is frozen: it simply IS the Juicer, permanently, and the app expressed it fine.
+`F23` needs a model the app lacks; this needs a **link the app lacks a place to
+write down**. Implementing either does nothing for the other.
+
+**Proposal, and the cheap half is the one to take.**
+
+**(a) A regression invariant, not a schema key. Posture: assert, do not model.**
+`test/regression.mjs` already parses every published class and asserts
+invariants across the corpus. Add one: a class whose `extraction_notes` declare
+it a copy of another names that class, and the two agree on the blocks the note
+says are copied. The declaration needs a machine-readable form - a single line
+such as `copy_of: juicer` alongside a list of the blocks that are NOT copied -
+which is the whole of the schema change, and it is a string nothing else reads.
+**Where it lands is the open question**, since `copy_of` on the class would be
+an `UNMODELLED` key by `class-check`'s own definition (nothing downstream acts
+on it) and that report exists to stop exactly this. Putting it in
+`extraction_notes` in a parseable form avoids that and is uglier. Whoever takes
+this should decide that first.
+
+**(b) Decline a general inheritance mechanism.** A class that composes from
+another - `extends: juicer`, with an override list - is a much larger change:
+it touches composition, the wizard, the sheet, the validator and every tool
+that reads a class as a self-contained document, and it would be built for
+**one** row. The catalog holds twelve Juicers and eleven of them state their
+own mechanics; this is the only class in 185 that states none. **Ongoing cost
+exceeds the impact** until a second book prints the same shape.
+
+**Evidence:** printed 175 quoted in full above, from the OCR cache and checked
+against the page; the printed 224 ladder from a 190 dpi render, 2026-09-06; the
+block-by-block parse comparison of the two markdowns, same day;
+`class-check --remote` on the draft at 0 errors and 0 warnings; the twelve
+Juicer rows counted from production with `q.mjs --remote` the same day.
+
+**Confidence:** high on the facts - the book's sentence is quoted, the ladder
+was read off a render, and the comparison was run rather than reasoned to.
+**Medium on (a) being worth building at all**, and what would raise it is
+evidence of the failure actually happening: nobody has yet corrected `juicer`
+since this row landed, so the drift this finding predicts has a sample size of
+zero. If the next Juicer correction reaches both rows because a human
+remembered, that is an argument for declining (a) too.
+
+**Ongoing cost of (a):** one invariant in a suite that already runs on every
+PR, plus one line per copied class - and there is one such class. Near zero,
+which is most of why it is the half worth taking.
+
+**Meanwhile, the mitigation is written down where someone will meet it.** The
+`euro-juicer` row's `extraction_notes` and its GM Notes both say the blocks are
+a copy taken on 2026-09-06 and that a correction to `juicer` must be applied
+here too, and the `juicer` row's own Lore already named the Euro-Juicer as a
+related O.C.C. before this import existed.
