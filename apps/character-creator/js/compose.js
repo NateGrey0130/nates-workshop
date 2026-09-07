@@ -122,6 +122,17 @@ export const CORE_SDC_BY_CLASS = {
   'ngr-power-armor-commando': '3D6',
   'ngr-robot-combat-pilot': '3D6',
   'ngr-robot-soldier': '3D6',
+  // The Intelligence Division and the police, printed 171-174. Same reading
+  // again: printed 156 files all three under Military O.C.C.s, and none prints
+  // an S.D.C. formula. The POLICE OFFICER is worth the one sentence: it is a
+  // law enforcement officer rather than a front-line soldier, and it is 3D6
+  // because its own book puts it in the Intelligence Division, gives it the
+  // military rank structure, and shares its experience ladder on printed 224
+  // with the Infantry Soldier - the table heads the two together as
+  // "Combat Soldier & Police/Enforcement".
+  'ngr-intelligence-officer': '3D6',
+  'ngr-intelligence-commando': '3D6',
+  'ngr-police': '3D6',
 
   // Practitioners of magic, psychics and scholars — 1D6.
   'burster': '1D6',
