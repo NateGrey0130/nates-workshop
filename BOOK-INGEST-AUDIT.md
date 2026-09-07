@@ -2816,6 +2816,174 @@ percentage and is closer to a second, parallel skill list than to a restriction.
 Check what `js/leveling.js` and `js/derive.js` do with a skill carrying no
 per-level gain before assuming a flat 38% is expressible either.
 
+#### Proposals, filed 2026-09-07. Two of them, and they are independent.
+
+**F23 had no `Proposal` and no posture until now**, which made it the one
+finding on this menu that could not be taken as written - there was nothing
+written to take. Twenty-four other findings here carry one. The two halves get
+one each because they share nothing but a class: **(b) is small and makes the
+class playable; (a) is a question about composition that should be ANSWERED
+before anything is built.**
+
+**The lettering is not new.** `F25` already refers to *"`F23(a)`"* in its own
+body when distinguishing itself from it, so "take F23(b)" names a thing this
+file already talks about.
+
+---
+
+#### F23(b) - skill programs. THE ONE TO TAKE FIRST.
+
+**Proposal: a `skills.skill_programs` block, plus prefix matching in the shared
+category matcher.** Printed 170 gives up to THREE skill categories, every skill
+in each at a flat **38%**, no bonuses, no per-level gain, tasks taking 1D4 times
+longer.
+
+```yaml
+skills:
+  skill_programs:
+    choose: 3
+    base: 38
+    per_level: 0
+    note: "Every skill the chosen category allows, at 38% flat. 1D4x longer."
+    categories:
+      - "Communications"
+      - { name: "Electrical", only: ["Basic Electronics", "Computer Repair"] }
+      - { name: "Physical", except: ["Acrobatics", "Gymnastics", "Wrestling", "Prowl"] }
+      - { name: "Technical", except_prefix: ["Lore"] }
+```
+
+**This finding's own body understates how close this already is**, and the
+three reasons are the argument for taking it:
+
+- **The per-category exclusions are ALREADY the catalog's shape.** *"Mechanical:
+  All, except mechanical engineer and robot mechanics"* and *"Medical: Paramedic
+  and forensics only"* are exactly the `{ name, only }` / `{ name, except }`
+  objects `occ_related_skills.categories` has always taken.
+- **All twelve of the book's categories are real catalog categories.** Checked
+  `--remote` 2026-09-07 against `SELECT category, count(*) FROM skills GROUP BY
+  category`: Communications, Domestic, Electrical, Espionage, Mechanical,
+  Medical, Military, Physical, Pilot, Rogue, Science and Technical all exist. No
+  vocabulary work.
+- **The expansion machinery exists.** `catalogFor()`
+  (`apps/character-creator/app.js:2012`) already turns a category list into every
+  matching catalog skill, through `categoryAllows` - the same matcher the server
+  validator uses.
+
+**Expanding at RENDER time rather than storing names is the point, and here it
+is correct rather than merely convenient.** The book says *"all the skills under
+that category are part of the skill program"*, so a category that gains a skill
+SHOULD grant it. That is the opposite of the `powers_from` objection this
+finding's body cites - there, enumerating froze a choice the book left open;
+here, enumerating would freeze a set the book defined as open-ended.
+
+**THE REAL WORK IS THE ONE THING THIS FINDING NEVER MENTIONED: two of the book's
+exclusions are PREFIXES, and `only`/`except` match exact names.** Counted
+`--remote` 2026-09-07:
+
+| the book says | catalog rows it means |
+|---|---|
+| Technical: all **except lore** | **14** rows named `Lore...` |
+| Pilot: all except **robot combat** | **14** rows named `Robot Combat...` |
+
+Enumerating twenty-eight names would rot on contact: **this book alone added
+eleven `Robot Combat Elite:` rows.** So the grammar needs a prefix form. That is
+one change to `categoryAllows()` in `js/parser.js`, which is a single function
+with three call sites already sharing it.
+
+**There is a direct precedent, and it is on this menu.** `F16` extended this
+exact `only`/`except` grammar to a SECOND block - `psionics.categories_allowed` -
+and was taken 2026-08-31 in PR #436, with `categoryAllows()` doing the work at
+all three call sites *"so the parse, the two wizard pickers and the server's
+grant check cannot disagree about what a category entry means"*. This is the
+same move a third time.
+
+**Two names to get right, both of which would silently fail open.** "Tracking"
+is stored as `Tracking (people)`, and "wilderness survival" is `Wilderness
+Survival` in the **Wilderness** category - so the book's *"Espionage: tracking,
+intelligence, and wilderness survival only"* is a deliberate CROSS-CATEGORY
+reference, which `class-check` reports as such. An unmatched `only`/`except`
+fails OPEN, so getting either wrong grants more than the book does and nothing
+says so.
+
+**Posture: a new grant block and a grammar extension to the SHARED matcher.
+Expanded at render time, never enumerated. NO NEW GATE** - an unmatched entry
+keeps failing open exactly as it does today, and `F16`'s posture (*"no new
+gate"*) carries over unchanged. What is being asked for is the ability to say
+this, not a check that punishes not saying it.
+
+**Evidence:** printed 170 read from `.cache/books/triax/txt/p170.txt`
+(`page_offset: 0`) 2026-09-07 - the 38% line, the 1D4x penalty, the
+three-program cap and all twelve category rules; `app.js:2012` for `catalogFor`;
+the category, `Lore`, `Robot Combat`, `Tracking (people)` and `Wilderness
+Survival` counts all from `--remote` the same day; `F16`'s outcome note quoted
+from this file.
+
+**Confidence: high** that the mechanism described is what the code does - every
+claim above is a line reference or a `--remote` count. **Medium on the exact
+form of the prefix grammar** (`except_prefix:` above is a sketch, not a
+decision), and what would raise it is one look at whether any EXISTING class
+wants the same thing - if several do, the grammar should be designed for them
+rather than for this class.
+
+**Ongoing cost:** one grammar in one shared function, and one block understood
+by `parser.js`, the wizard's skills step and the server validator. No migration,
+no column. The recurring cost is that `categoryAllows` becomes the third thing
+everyone must remember is shared - which it already is.
+
+---
+
+#### F23(a) - the inherited, frozen occupation. ANSWER A QUESTION BEFORE BUILDING.
+
+**Proposal: run one composition experiment, and propose nothing until it
+answers.** This finding says there is *"no slot for a prior occupation"*, and
+that `composeClass` takes a race and an occupation is true. But
+`compose.js:484` records that **a character with no racial class already
+carries their O.C.C. in the `rcc` slot** (`apps/character-creator/js/compose.js`
+lines 475-487, read 2026-09-07) - a comment written because attaching something
+to `occ` fired for a D-Bee Technical Officer and not for a human one.
+
+So a human NGR Robot Soldier may already be expressible as **Robot Soldier in
+the class slot, prior military O.C.C. in the occupation slot** - which is the
+book's own model, with no new architecture. `combineClasses` giving the first
+slot precedence on physiology even lands correctly here: the robot body's M.D.C.
+should be the Robot Soldier's, not the infantryman's.
+
+**The experiment:** compose `ngr-robot-soldier` against two or three NGR military
+O.C.C.s and read what comes out - whose skills, whose pools, whose `xp_table`,
+and whether `occ_id` and the sheet render sensibly. **If it works**, (a) costs an
+`occ_options` ability to gate which occupations are legal, plus documentation -
+not a third slot. **If it does not**, the third slot becomes the honest proposal
+and the experiment says exactly which part fails.
+
+**`F25` states the opposite and should be read first.** It says *"`F23` needs a
+model the app lacks"* while distinguishing itself from this finding. <!-- claim-ok: quoting F25 to argue past it, per the audit-menu rule -->
+That sentence is not being rewritten and may well be right; what this proposal
+asks is that it be TESTED rather than inherited, because the cost difference
+between the two answers is most of this finding.
+
+**THE FREEZING IS RECOMMENDED FOR DECLINE, and separately from the rest.**
+*"All skills are frozen at the level of when the soldier underwent the robot
+conversion"*, resuming when the robot-soldier level catches up, needs a per-skill
+frozen threshold threaded through `js/leveling.js` and `js/derive.js` for one
+class, where the book gives a G.M. a one-sentence procedure and the class body
+already carries it. **Ongoing cost exceeds the impact.** Recorded so it is not
+re-proposed as though nobody had weighed it.
+
+**Posture: answer a question, change nothing yet.** No schema key is being
+proposed here and none should be written until the experiment reports.
+
+**Evidence:** `composeClass`'s signature and the `rcc`-slot comment at
+`apps/character-creator/js/compose.js:475-487`, read 2026-09-07; printed 170 for
+the inheritance and freezing rules; `F25`'s body quoted from this file.
+
+**Confidence: medium, and deliberately so.** The `rcc`-slot comment is a fact
+and the reframing follows from it, but **nobody has composed the pairing** - and
+this menu's own record is that the thing found while doing the work is usually
+not the thing the finding predicted. Running it is what raises this.
+
+**Ongoing cost: none until it answers.** That is the argument for doing it in
+this order.
+
 ### F24 - a book that ROLLS one of four psychic profiles: the powers fit, the RELATED-SKILL COUNT does not
 
 **Filed 2026-09-06, from the `triax` Gypsy batch (PR #779). Not implemented,
