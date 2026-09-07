@@ -13,7 +13,7 @@ the human view of the same thing plus the import status.
 
 | slug | book | PDF pages | layer | printed | offset | status |
 |---|---|---|---|---|---|---|
-| `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 222 — see below | **+0** | **importing** — 16 of 21 classes |
+| `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 224 — corrected 2026-09-07, see below | **+0** | **importing** — all 21 classes in; gear not started |
 | `underseas` | Rifts WB 7: Underseas | 216 | SCAN (OCR) | 214 | **+0 / -1 split** | cached |
 | `new-west` | Rifts WB 14: New West | 226 | text layer | 224 | +1 | cached |
 | `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | cached |
@@ -638,3 +638,83 @@ plan covers printed 34-38, 141-154, 205 and 210-214 and none of 175-178. Whoever
 takes the gear batch should decide whether a chemical programme and a drug dose
 are `gear` rows here; neither is a weapon or a suit of armour, and both have a
 price and a described effect.
+
+### `triax` batch 6 — the five gargoyle R.C.C.s, 2026-09-07 (PR #781)
+
+Five classes, printed 197-202, under the book's own heading *Optional Player
+Characters*: Gargoyle, Gurgoyle, Gargoyle Lord, Gargoyle Mage and Gargoylite.
+**All twenty-one of this book's playable classes are now in.** Classes 185 ->
+**190**, skills 356 -> **358**, gear unmoved at **1025**.
+
+**The survey's two open questions about this section both resolved, and in
+opposite directions.**
+
+*The Gargoyle Mage's earth magic resolved cleanly.* The plan said to check
+whether the catalog's warlock rows cover levels 1-3 before granting anything,
+because a grant with no gate is the F7 shape the Time Master import refused.
+Queried against production: the catalog holds exactly **29** `Earth:` spells at
+levels 1-3 and all 29 are granted BY NAME. `spells_starting` is 0 - the mage
+POSSESSES them rather than picking any, so a count would turn a grant into a
+choice the book does not offer. The list will rot the same way the Gypsy
+Gifted's healing powers do, and the row says so.
+
+*The Gargoylite's ladder did NOT resolve, and it is still open.* Printed 202
+says player characters use the Dog Pack's experience table. There is no row
+named Dog Pack; the nearest is `dog-boy`. That is a question for RUE and NOT an
+equivalence to assume from the names. It costs nothing today - a Rifts class
+carries no `xp_table` here - and it would cost something the moment anything
+reads a ladder for this class.
+
+**"+3 on all saving throws" had to be written out as fourteen keys** on the
+Lord, the Mage and the Gargoylite. `sheet.js` draws sixteen saves from a literal
+list, so a blanket bonus appears nowhere unless it is stated against each one.
+Two are excluded deliberately every time: `horror_factor`, which those entries
+give their own +10 or +12, and `coma_death_pct`, which is a percentage rather
+than a d20 bonus.
+
+**The book writes attribute dice as "18+2D6" and `rollAttribute` parses
+"2d6+18".** Same distribution, opposite order. Written the book's way round,
+`class-check` rejects it as neither dice nor a fixed number and warns that the
+roller would silently substitute 3d6 - which is exactly the F8 failure, caught
+here by the check rather than in production. Every one of the five needed it.
+
+**Two entries do NOT grant Language: Gargoyle and that is transcribed rather
+than corrected.** The Mage's and the Gargoylite's skill lists name
+Dragonese/Elven and Gobblely at 98% and stop, where the Gargoyle, Gurgoyle and
+Lord all name Gargoyle as well. Both entries carry a Data Note saying other
+information is the same as the gargoyle - but a skill LIST is information the
+entry states in its own right, so the omission stands and is recorded in both
+rows.
+
+**No finding filed.** Nothing in this section needed a mechanic the app lacks
+that was not already recorded: the flying speed, the conditional flight dodge,
+the stone metamorphosis and the secondary-skill category exclusions are all
+prose by existing rule, and each row says which and why.
+
+### What is left on `triax` after the classes
+
+The status above says `importing` rather than `imported` on purpose. Three
+items from the survey's extraction plan are still open, and they are named here
+rather than left to be inferred from a plan five PRs old:
+
+1. **The gear pass, ~55 rows** - printed 34-38 (9 armour), 141-150 (~30 weapons
+   and ammunition), 151-154 (optics, medical, computers, cybernetics), 205 (one
+   gurgoyle armour) and 210-214 (15 gargoyle and Kittani weapons). **Plus
+   printed 175-178, which the plan does not list**: the four JAEP programs with
+   market costs and six designer drugs with per-dose costs. Recorded in batch
+   5's note.
+2. **Two re-citations**, neither done by any of the six class batches:
+   `Streetwise: Drugs` to Triax printed 155, which takes `rifts-skill-list` from
+   43 untraceable rows to 42; and `Horsemanship: Exotic Animals` to RUE printed
+   302 with Triax's +4% in `variant_note`.
+3. **One stub resolution** - `triax-pump-weapon`, this book's single `other` row
+   in `source-coverage`, cited with no page range and also one of the gear
+   stubs. Finishing it moves two lines at once.
+
+**The registry correction is DONE** and is the one plan item this batch closed
+outside its own scope: `printed_pages` 222 -> 224 in `scripts/books.json`. The
+survey asked for it in the book's FIRST data PR and four data PRs went by
+without it. Nothing broke - `printed_pages` gates the citation check by
+requiring the cache to hold at least that many pages, and the cache holds 225 -
+but a row cited to p.224 would have been citing a page the registry believed the
+book did not have, and the Euro-Juicer's notes cite that page.
