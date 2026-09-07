@@ -409,3 +409,40 @@ comparison in the app; a merge never files a redirect for a key the surviving
 row already answers to.
 
 ---
+
+## An item with no price stores no price
+
+**A `NULL` `cost` is a finished row, not an unfinished one.** Decided
+2026-09-07. Books print items with no price constantly - issued military kit, a
+unique artifact, a machine no market sells - and `vehicles` makes the case even
+better than `gear` does: several Triax vessels print *"Black Market Cost: Not
+available"*, which is a real answer and is not a number.
+
+So the rule is: **if the book printed no price, store none.** A figure invented
+to fill the column is indistinguishable from one the book gave, and nothing
+downstream can tell them apart afterwards - which is the same reason estimated
+rows are barred from carrying damage or M.D.C.
+
+`cost_note` is **welcome beside a NULL cost and never required.** A book that
+says *"priceless"*, *"not available"* or *"varies"* has given you something to
+store; a book that says nothing has not. Neither is a defect.
+
+**`source-coverage.mjs` no longer counts these as backlog.** It counted them
+until 2026-09-07 under *"rows an importer created and nobody finished"*, which
+was the wrong heading for them - the importer finished; the book was silent.
+They are still counted, under **NO PRICE, AND THAT IS FINE**, because the
+number staying visible is useful and calling it owed work is not.
+
+### This does NOT abolish the estimate tier
+
+The opposite decision exists on purpose for a narrow case, and the two are easy
+to confuse. An item a table needs to **buy** - clothing, food - that no source
+prices anywhere gets a figure plus the exact marker `Estimate - no published
+price found` in `cost_note`. That is an **opt-in, marked, replaceable** guess,
+described under *A third tier, for what nothing publishes* in the README and
+enforced by the smoke test, which refuses to let an estimated row carry a
+combat number or a weight.
+
+**`NULL` is the resting state; an estimate is an upgrade somebody chooses and
+signs.** What is never right is a bare number in `cost` for a price no book
+printed and nobody marked.
