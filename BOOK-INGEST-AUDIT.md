@@ -2910,6 +2910,84 @@ that four is the major psionic's number and a master takes none. The reason to
 record it is that the number is offered by a picker rather than read off a
 page, and a picker that offers something is usually taken at its word.
 
+**Taken, 2026-09-07 (PR #789). Part (a) only, as written. (b) and (c) stand
+declined on the grounds the proposal gives, and neither was touched.**
+
+**The open question is answered, and it answers the easy way: abilities are
+chosen THREE STEPS before skills.** `STEPS` (`apps/character-creator/app.js:32`)
+is `['System', 'Race', 'Attributes', 'Occupation', 'Skills', ...]`;
+`abilityPicker()` (`app.js:1337`) reads `S.rcc` and is drawn on **Race**, index
+1, against **Skills** at index 4. And it BLOCKS rather than merely coming
+first: `classBlocker()` (`app.js:1187`) sums what each `choose` group owes and
+returns *"Choose N more powers to continue"* (`app.js:1205`) until the picks
+are made. So an ability-borne count is in place before the picker it
+constrains is ever drawn, and the validator-refusal alternative this finding's
+confidence paragraph offered as the fallback is not needed. **Confidence on
+(a)'s placement raised from medium to high.**
+
+**What shipped is the proposal verbatim.** An ability definition may carry
+`related_skills_count`, and `applyAbilities` (`js/parser.js:1561`) folds it
+onto `occ_related_skills.count` when that ability is chosen. It overrides ONE
+NUMBER: `skills` is still not in `ABILITY_GRANTS`, an ability still cannot
+carry a skills block, and the fold cannot add a skill, change a category or
+touch what the class teaches. Copy-on-write, because `composeClass` re-runs
+`applyAbilities` on every recompose and writing through `out.skills` would
+mutate the caller's class object. Validated as a **non-negative INTEGER**
+rather than a truthy number, since zero is the entire point of it.
+
+**Two of the proposal's predicted costs were wrong, both in the cheap
+direction.** No `KNOWN_KEYS` line was needed - that list is filtered against
+`Object.keys(data)` (`scripts/class-check-lib.mjs:81`), so it holds TOP-LEVEL
+keys and this one is nested inside a `special_abilities` entry. And no wizard
+read was needed either: every call site already reads the composed class, so
+the single fold reached all of them by itself.
+
+**IT WENT ONE STEP PAST THE PROPOSAL, deliberately - this is the part to
+disagree with if any of it.** The proposal scopes to `applyAbilities`. But
+`functions/api/character-creator/_lib/validate-character.js` computed
+`relatedAllowance(cls, level)` from the class as STORED, so the wizard would
+have offered zero while that endpoint still accepted four. This finding's
+stated reason for existing is that (a) *"lets the app produce something the
+book forbids"* - and fixing only the client would have left exactly that
+reachable through the API. `abilities` was already a parameter of
+`validateCharacter`, so the change is one call (`validate-character.js:190`),
+narrowed to the allowance alone; every other check in that file still reads
+`cls` untouched. It is the same client/server disagreement `RETRO-AUDIT` `R18`
+was filed about, in the file whose own comment says so.
+
+**The data.** `fix-gypsy-gifted-related-skill-count.sql` sets
+`related_skills_count: 0` on both master bands and rewrites the three passages
+that told the player to take none by hand. Applied `--remote` before this PR;
+production composes **4 / 4 / 0 / 0** across the four bands and the class
+parses at 0 errors, 0 warnings. No saved character was affected -
+`gypsy-gifted` had none.
+
+**THE SCHEDULED PICKS ARE NOT DROPPED, and this is the one thing printed 185
+leaves genuinely ambiguous.** The line reads *"O.C.C. Related Skills: None if
+a master psionic. Select four 'other' skills from any of the available skill
+categories if a major psionic. Plus select one additional skill at levels
+three, six, nine, and twelve."* That third sentence sits after BOTH branches
+rather than inside the major-psionic clause, so it is read as applying to
+both, and `schedule` is untouched. Recorded rather than decided silently: a
+reader who takes *"None if a master psionic"* to govern the whole entry would
+zero the schedule too, and would not be obviously wrong.
+
+**One defect found in this PR's own first draft, and the readback is what
+caught it.** The two inserting `UPDATE`s were guarded on
+`instr(markdown, <anchor>) > 0`, where the anchor is the band's `- name:` line
+- which the replacement APPENDS to rather than consumes, so the guard was
+still true afterwards. Applied twice to `--local`, the readback returned four
+zero-counts instead of two. The guard now also requires the RESULT to be
+absent. **A guard on text that survives its own replacement is not a guard**,
+and it was caught only because the readback COUNTS rather than testing for
+presence.
+
+**And the first readback was wrong the other way.** It counted the bare string
+`related_skills_count: 0` and wanted 2 - but the note this script rewrites
+QUOTES that string in its prose, so a correct result contains three. It counts
+the indented key now. Both mistakes are one shape: a check written against
+what the author meant instead of against what the file would actually hold.
+
 ### F25 - a class whose book defines it AS another class, and nothing records that the two must stay identical
 
 **Filed 2026-09-06, from the `triax` Euro-Juicer batch (PR #780). Not

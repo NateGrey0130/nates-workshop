@@ -44,7 +44,8 @@
 //    as WARNINGS and never block a save.
 
 import { isChoiceGroup, categoryAllows, categoryName, needsOccupation, relatedFloorStatus,
-         isAbilityChoice, isAbilityDefinition, abilityOptions, normalizeAbilities, abilityOccOptions } from '../../../../apps/character-creator/js/parser.js';
+         isAbilityChoice, isAbilityDefinition, abilityOptions, normalizeAbilities, abilityOccOptions,
+         applyAbilities } from '../../../../apps/character-creator/js/parser.js';
 
 import { skillGrantsFor, xpTableFor, thresholdFor, perLevelDiceOf,
          startingGroups, relatedAllowance, secondaryAllowance } from './leveling.js';
@@ -174,7 +175,19 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
   const related = list.filter((s) => s.type === 'related');
   const secondary = list.filter((s) => s.type === 'secondary');
 
-  const relatedMax = relatedAllowance(cls, level);
+  // THROUGH THE CHOSEN ABILITIES, because one of them may state the count.
+  // BOOK-INGEST-AUDIT.md F24: the Gypsy - The Gifted's psionic band is picked
+  // as an ability, and a master's band sets `related_skills_count: 0` where the
+  // class itself lists four. Reading `cls` raw here would let the wizard offer
+  // zero while this endpoint still accepted four - the same client/server
+  // disagreement RETRO-AUDIT R18 was filed about, in the file that says so.
+  //
+  // Narrow on purpose: only the ALLOWANCE is computed from the composed class.
+  // `applyAbilities` also folds bonuses, psionics and magic, and every other
+  // check below still reads `cls` exactly as it did before. It returns `cls`
+  // untouched when nothing was chosen, so a character with no abilities is
+  // unaffected.
+  const relatedMax = relatedAllowance(applyAbilities(cls, abilities), level);
   if (related.length > relatedMax) {
     violations.push({ rule: 'related_count', have: related.length, allowed: relatedMax,
       message: `${related.length} related skills, but this class allows ${relatedMax} at level ${level}` });

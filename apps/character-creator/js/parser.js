@@ -1543,6 +1543,30 @@ export function applyAbilities(cls, chosen) {
     // outright replaced the class's I.S.P. formula with none at all.
     if (def.psionics) out.psionics = mergePsionics(out.psionics, def.psionics);
     if (def.magic) out.magic = out.magic || def.magic;
+    // An ability that changes HOW MANY O.C.C. Related Skills the class grants.
+    // BOOK-INGEST-AUDIT.md F24: the Gypsy Gifted rolls one of four psychic
+    // profiles, and two of the four are master psychics who get NO related
+    // skills where the other two get four. The count is a property of the
+    // branch, and neither `variants` nor ABILITY_GRANTS could carry it -
+    // VARIANT_OVERRIDES excludes the skills block on purpose, and an ability
+    // carrying a whole `skills` block would be the same power by another name.
+    //
+    // This OVERRIDES one number rather than carrying a block, which is the
+    // same size of power `skill_overrides` already has on a variant. It cannot
+    // add a skill, change a category, or touch what the class teaches.
+    //
+    // Copy-on-write: `out` is a shallow copy of the class, so writing through
+    // out.skills would mutate the caller's class object - and composeClass runs
+    // this on every recompose.
+    if (Number.isInteger(def.related_skills_count) && out.skills?.occ_related_skills) {
+      out.skills = {
+        ...out.skills,
+        occ_related_skills: {
+          ...out.skills.occ_related_skills,
+          count: def.related_skills_count,
+        },
+      };
+    }
     taken.push({ name: def.name, times: n, granted: true, ...(gm ? { gm: true } : {}),
       description: def.description, on_repeat: n > 1 ? def.on_repeat : undefined });
   }
@@ -2173,6 +2197,14 @@ export function parseClassMarkdown(text) {
       if (e[k] !== undefined && (typeof e[k] !== 'object' || Array.isArray(e[k]))) {
         errors.push(`special_abilities: ${e.name}.${k} must be a map`);
       }
+    }
+    // A per-branch related-skill count (BOOK-INGEST-AUDIT.md F24). Zero is the
+    // whole point of it - a master psionic Gifted gets none - so it is checked
+    // as a non-negative INTEGER rather than a truthy number.
+    if (e.related_skills_count !== undefined
+        && (!Number.isInteger(e.related_skills_count) || e.related_skills_count < 0)) {
+      errors.push(`special_abilities: ${e.name}.related_skills_count must be a `
+        + 'non-negative integer');
     }
   }
 

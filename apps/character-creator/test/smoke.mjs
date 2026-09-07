@@ -481,6 +481,25 @@ check('the related allowance grows with scheduled grants', (() => {
   return vio({ ...withExtra }).includes('related_count')
       && !vio({ ...withExtra, character: { level: 3 } }).includes('related_count');
 })());
+// BOOK-INGEST-AUDIT.md F24. A psionic band is picked as an ability and may
+// state the related-skill count, so the SERVER has to read it too - the wizard
+// offering zero while this endpoint still accepted four is exactly the
+// client/server disagreement RETRO-AUDIT R18 was filed about.
+const bandCls = {
+  ...vCls,
+  special_abilities: [
+    { choose: 1, from: ['Major Gift', 'Master Gift'] },
+    { name: 'Major Gift' },
+    { name: 'Master Gift', related_skills_count: 0 },
+  ],
+};
+check('an ability stating a related count is enforced server-side',
+  vio({ cls: bandCls, abilities: ['Master Gift'] }).includes('related_count'));
+check('and a band stating none leaves the class allowance alone',
+  !vio({ cls: bandCls, abilities: ['Major Gift'] }).includes('related_count'));
+check('a character holding no abilities is unaffected either way',
+  !vio({ cls: bandCls }).includes('related_count'));
+
 check('a related skill outside the allowed categories is a violation',
   vio({ skills: legal.skills.map((s) => s.name === 'Prowl' ? rel('Prowl', 'Science') : s) })
     .includes('related_category'));
@@ -3554,6 +3573,33 @@ section('Chosen ability fragments');
 
   check('no picks leaves the class untouched', applyAbilities(cls, []) === cls);
   check('and undefined picks are the same', applyAbilities(cls, undefined) === cls);
+
+  // related_skills_count: an ability that changes HOW MANY related skills the
+  // class grants. BOOK-INGEST-AUDIT.md F24 - the Gypsy Gifted rolls one of four
+  // psychic profiles, and two of them are master psionics who get NONE where
+  // the other two get four.
+  //
+  // The ZERO is the whole point, so it is pinned specifically: a truthy check
+  // would read 0 as "not set" and silently leave the class's four in place,
+  // which is the bug rather than the fix.
+  const branchCls = {
+    skills: { occ_related_skills: { count: 4, categories: ['Rogue'] } },
+    special_abilities: [
+      { choose: 1, from: ['Major Gift', 'Master Gift'] },
+      { name: 'Major Gift' },
+      { name: 'Master Gift', related_skills_count: 0 },
+    ],
+  };
+  const majorPick = applyAbilities(branchCls, ['Major Gift']);
+  const masterPick = applyAbilities(branchCls, ['Master Gift']);
+  check('an ability without related_skills_count leaves the count alone',
+    majorPick.skills.occ_related_skills.count === 4);
+  check('and one that sets it to ZERO is honoured, not read as unset',
+    masterPick.skills.occ_related_skills.count === 0);
+  check('the override is copy-on-write, so the class itself is untouched',
+    branchCls.skills.occ_related_skills.count === 4);
+  check('and it changes only the count, not what the class teaches',
+    masterPick.skills.occ_related_skills.categories.join() === 'Rogue');
 
   const one = applyAbilities(cls, ['Super-Tough']);
   check('a fragment contributes its attribute bonus', one.bonuses?.attributes?.PE === '1d6');
