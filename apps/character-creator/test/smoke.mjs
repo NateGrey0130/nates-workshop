@@ -3026,6 +3026,120 @@ section('Category restrictions');
       '_lib', 'validate-character.js'), 'utf8');
     return src.includes('categoryAllows(allowed,');
   })());
+
+  // ---- prefix forms (BOOK-INGEST-AUDIT.md F23(b)) ----
+  // A book excluding a FAMILY: "Technical: All, except lore" is 14 rows, and
+  // "Pilot: All, except robots & power armor and robot combat" is one exact
+  // name plus 13 more. Enumerating either would rot as the catalog grows.
+  const pilot = [{ name: 'Pilot', except: ['Robots & Power Armor'], except_prefix: ['Robot Combat'] }];
+  check('an except_prefix excludes the whole family',
+    !categoryAllows(pilot, { name: 'Robot Combat: Basic', category: 'Pilot' })
+    && !categoryAllows(pilot, { name: 'Robot Combat Elite: SAMAS', category: 'Pilot' }));
+  check('and leaves everything else in the category alone',
+    categoryAllows(pilot, { name: 'Airplane', category: 'Pilot' }));
+  // The Pilot line needs BOTH forms at once, and could not be written without
+  // it: one exact name and one family.
+  check('an exact except and a prefix except work together',
+    !categoryAllows(pilot, { name: 'Robots & Power Armor', category: 'Pilot' })
+    && !categoryAllows(pilot, { name: 'Robot Combat: Basic', category: 'Pilot' }));
+  // Two `Lore:` rows are filed under Cowboy. A prefix that reached across
+  // categories would strip them from a Cowboy grant that never mentioned lore.
+  check('a prefix is scoped to its own category and does not leak',
+    categoryAllows([{ name: 'Cowboy' }], { name: 'Lore: Cattle & Animals', category: 'Cowboy' })
+    && !categoryAllows([{ name: 'Technical', except_prefix: ['Lore'] }],
+      { name: 'Lore: Magic', category: 'Technical' }));
+  check('an only_prefix admits just that family',
+    categoryAllows([{ name: 'Pilot', only_prefix: ['Robot Combat'] }],
+      { name: 'Robot Combat: Basic', category: 'Pilot' })
+    && !categoryAllows([{ name: 'Pilot', only_prefix: ['Robot Combat'] }],
+      { name: 'Airplane', category: 'Pilot' }));
+  check('a label shows the prefix rather than hiding it',
+    categoryLabel(pilot[0]) === 'Pilot (except Robots & Power Armor, Robot Combat...)');
+  check('mixing an only form with an except form is still refused',
+    !mk('      - { name: "Espionage", only: ["A"], except_prefix: ["B"] }').ok
+    && !mk('      - { name: "Espionage", only_prefix: ["A"], except: ["B"] }').ok);
+  check('but two EXCLUDING forms together are legal',
+    mk('      - { name: "Pilot", except: ["A"], except_prefix: ["B"] }').ok);
+  check('a non-list prefix is rejected',
+    !mk('      - { name: "Pilot", except_prefix: "Robot Combat" }').ok);
+}
+
+// ---------- Skill programs ----------
+// BOOK-INGEST-AUDIT.md F23(b). Triax printed 170 gives the NGR Robot Soldier up
+// to THREE skill CATEGORIES, granting every skill each one allows at a flat 38%
+// with no bonuses and no gain per level. `occ_related_skills` picks skills from
+// a list of categories; this picks categories and grants their contents, and a
+// count large enough to cover them would let the player spend it anywhere.
+section('Skill programs');
+{
+  const prog = (yaml) => parseClassMarkdown(
+    `---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: occ\nskills:\n  skill_programs:\n${yaml}\n---\n\n## Lore\n\nx\n`);
+  const ok3 = '    choose: 3\n    base: 38\n    per_level: 0\n    categories:\n'
+    + '      - "Communications"\n      - "Domestic"\n      - "Military"\n';
+
+  check('a well-formed block parses', prog(ok3).ok, JSON.stringify(prog(ok3).errors));
+  check('and keeps the flat base and the zero per-level', (() => {
+    const p = prog(ok3).data.skills.skill_programs;
+    return p.base === 38 && p.per_level === 0 && p.choose === 3;
+  })());
+  check('a block with no base is rejected',
+    !prog('    choose: 1\n    categories:\n      - "Domestic"\n').ok);
+  check('choose must be a whole number above zero',
+    !prog('    choose: 0\n    base: 38\n    categories:\n      - "Domestic"\n').ok);
+  // Offering three picks from two categories is a transcription slip every
+  // time, and it fails as a quietly short list rather than as anything visible.
+  check('choosing more programs than are offered is rejected',
+    !prog('    choose: 3\n    base: 38\n    categories:\n      - "Domestic"\n').ok);
+  check('a block with no categories is rejected',
+    !prog('    choose: 1\n    base: 38\n').ok);
+  // One flat percentage is the whole idea, so a per-category adjustment would
+  // be stored and never read - the silent no-op this rejects up front.
+  check('a per-category bonus is rejected',
+    !prog('    choose: 1\n    base: 38\n    categories:\n      - { name: "Domestic", bonus: 5 }\n').ok);
+  check('the category grammar is the shared one, prefixes included',
+    prog('    choose: 1\n    base: 38\n    categories:\n'
+      + '      - { name: "Technical", except_prefix: ["Lore"] }\n').ok);
+
+  // THE CARRY. combineClasses rebuilds `skills` wholesale from the RACE's
+  // block, so without an explicit line an occupation's programs vanish while a
+  // race's survive - and the only class that has one is an O.C.C. The block
+  // would have done nothing for the class it was built for, silently.
+  check('combineClasses carries an occupation\'s programs across the merge', (() => {
+    const occ = prog(ok3).data;
+    const race = { id: 'r', name: 'R', skills: { occ_skills: [] } };
+    const merged = combineClasses(race, { ...occ, id: 'o', name: 'O' });
+    return merged.skills.skill_programs?.choose === 3
+      && merged.skills.skill_programs?.base === 38;
+  })());
+  check('and a race\'s programs survive a merge too', (() => {
+    const race = { ...prog(ok3).data, id: 'r', name: 'R' };
+    const merged = combineClasses(race, { id: 'o', name: 'O', skills: { occ_skills: [] } });
+    return merged.skills.skill_programs?.choose === 3;
+  })());
+  check('a class with no programs gains none from the merge', (() => {
+    const merged = combineClasses(
+      { id: 'r', name: 'R', skills: { occ_skills: [] } },
+      { id: 'o', name: 'O', skills: { occ_skills: [] } });
+    return merged.skills.skill_programs === undefined;
+  })());
+
+  // The sheet renders skills by an explicit list of types, so a type it does
+  // not name is SAVED AND INVISIBLE.
+  check('the sheet renders the program type', (() => {
+    const src = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    return /byType\('program'\)/.test(src);
+  })());
+  // A program's restriction names have to be checked like any other, and the
+  // `only` direction fails CLOSED - a typo grants the player nothing.
+  check('class-check walks skill_programs for restriction names', (() => {
+    const src = readFileSync(join(appDir, '..', '..', 'scripts', 'class-check-lib.mjs'), 'utf8');
+    return src.includes("'skill_programs'");
+  })());
+  check('and so does the server-side collector', (() => {
+    const src = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
+      '_lib', 'catalog.js'), 'utf8');
+    return src.includes('skill_programs');
+  })());
 }
 
 // ---------- 1c25a1. An attribute-derived skill base ----------

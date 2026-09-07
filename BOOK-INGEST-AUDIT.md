@@ -2932,6 +2932,106 @@ everyone must remember is shared - which it already is.
 
 ---
 
+**Taken, 2026-09-07 (PR #794), posture as written - a new grant block and a
+grammar extension to the shared matcher, expanded at render time, no new
+gate.** The mechanism shipped as proposed. **Seven of the proposal's own
+claims did not survive being checked, and this note leads with them**, because
+the proposal was written this morning by the session that then implemented it -
+which is the conflict `audit-premise-auditor` exists to break, and it broke it.
+
+**1. THE BOOK PRINTS FOURTEEN CATEGORY LINES, NOT TWELVE, AND THE PROPOSAL GOT
+BOTH ENDS WRONG.** It dropped `W.P. All Modern` and `Wilderness: All`, and it
+LISTED `Rogue` - where printed 170 says *"Rogue: None"*, a refusal rather than
+an offer. <!-- claim-ok: quoting the proposal's own list, which this note corrects -->
+The shipped block offers **thirteen**: the fourteen printed lines minus Rogue.
+F23's own body and the live class's `extraction_notes` both said fourteen all
+along; the proposal was the only document on the subject that said twelve.
+
+**2. "No vocabulary work" was false.** The catalog has no `W.P.` category - it
+is `Weapon Proficiencies` - so the list needed a translation the proposal said
+was unnecessary.
+
+**3. AN UNMATCHED `only` FAILS CLOSED, NOT OPEN, and the proposal's stated risk
+was inverted for its own two examples.** It said *"an unmatched `only`/`except`
+fails OPEN, so getting either wrong grants more than the book does"*. <!-- claim-ok: quoting the false premise this note corrects -->
+`js/parser.js` returns `entry.only.some(...)` - so an `only` naming nothing
+admits NOTHING. `functions/api/character-creator/_lib/catalog.js` says so in as
+many words. Both names the proposal singled out - `Tracking (people)` and
+`Wilderness Survival` - sit in an `only` line, so a typo there grants the
+player FEWER skills, silently. That is the worse direction, and it is why
+`skill_programs` was added to the restriction-name collectors in this PR.
+
+**4. `categoryAllows` has EIGHT call sites, not three.** The three came from a
+smoke comment scoped to the psionics path and was generalised to the whole
+function. The eighth is `sheet.js`, reached by a different import path and
+named nowhere in the proposal.
+
+**5. `Robot Combat` is 13 rows and this book added 9**, not 14 and 11. The
+argument - that a prefix beats enumeration - is untouched; the numbers were
+wrong.
+
+**6. THE PROPOSAL'S OWN YAML SKETCH COULD NOT EXPRESS THE PILOT LINE.** *"All,
+except pilot robots & power armor and robot combat"* is one exact name AND one
+family, and the grammar refused an entry carrying two forms at once. Resolved
+by judging the rule **by direction**: `except` with `except_prefix` is legal -
+both remove rows, so there is one reading - while anything mixing an admitting
+form with an excluding one is still refused, which is what the original rule
+was actually about.
+
+**7. `class-check` could not see the block at all.** `crossCategoryRestrictions`
+and `restrictionNames` both hard-code `occ_related_skills` and
+`secondary_skills`. Two files the ongoing-cost paragraph never named. Both now
+walk `skill_programs`, and it earned itself immediately: the first run reported
+the Espionage/`Wilderness Survival` cross-category line, which nothing would
+have reported before.
+
+**AND ONE THE AUDIT FOUND THAT THE PROPOSAL NEVER CONSIDERED, which would have
+shipped the feature doing nothing.** `combineClasses` rebuilds `skills`
+wholesale from the RACE's block and carries only what it names explicitly. An
+occupation's `skill_programs` would have been dropped on every composition -
+and the only class that has one is an O.C.C. The block would have been silently
+inert for the class it was built for, with every test passing. There is now a
+carry line and a smoke check that fails without it.
+
+**A defect found while implementing, by counting rather than by reading.** The
+Espionage program granted TWO skills where the book grants three. `categoryAllows`
+bounds a cross-category `only` by requiring the class to ALSO list the skill's
+real category - correct for a related-skill pool, which is one grant spanning
+many categories, and wrong for a program, which is one category standing alone.
+`Wilderness Survival` is a WILDERNESS row, so choosing the Espionage program
+without also choosing Wilderness dropped it. Each program is now matched alone
+and grants the names its `only` states wherever the catalog files them.
+
+**WHAT SHIPPED.** `skills.skill_programs` - `{ choose, base, per_level, note,
+categories }` - expanded at render time through `catalogFor`, never stored as a
+name list, because the book says *"all the skills under that category are part
+of the skill program"* and a category that gains a skill should grant it.
+`only_prefix` and `except_prefix` on any category entry, scoped to the entry's
+own category (two `Lore:` rows are filed under Cowboy and a global prefix would
+have stripped them from a Cowboy grant). A `program` skill type rendered in its
+own box on the sheet - added because the sheet renders by an explicit list of
+types, so a type not named there is **saved and invisible**.
+
+**THE ONE PLACE THIS GRANTS MORE THAN THE PAGE, stated rather than buried.**
+`W.P. All Modern` ships as the whole `Weapon Proficiencies` category. The
+catalog does not mark a W.P. ancient or modern; `CLASS-AUDIT.md` records that
+those splits ride in notes, and the Crazy, the Burster and both Elemental
+Fusionists all grant the whole category and say so in prose. This follows that
+convention rather than inventing a per-row flag, and the block's `note` tells
+the player. A `modern`/`ancient` flag on `skills` would fix it properly for all
+five classes and is a bigger change than this finding.
+
+**Not done, and not proposed:** no server-side violation was added. The posture
+is *no new gate*, and programs are stored under their own type, so nothing
+miscounts them as related or secondary picks.
+
+**Evidence:** printed 170 re-read from `.cache/books/triax/txt/p170.txt`
+2026-09-07 - all fourteen lines; every count above from `--remote` the same day;
+the class read from D1 rather than from its `.sql`. Production composes at 0
+errors and 0 warnings, offering thirteen categories with Rogue absent. Smoke
+**1734** checks, 23 of them new; the carry check and the prefix check were both
+made to FAIL first by reverting their fix.
+
 #### F23(a) - the inherited, frozen occupation. ANSWER A QUESTION BEFORE BUILDING.
 
 **Proposal: run one composition experiment, and propose nothing until it

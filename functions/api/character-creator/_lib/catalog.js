@@ -91,7 +91,17 @@ async function missingFrom(env, catalogKey, table, column, names) {
 // Split from the lookup so the collecting half is testable without a database.
 export function restrictionNames(data) {
   const wanted = [];
-  for (const group of [data?.skills?.occ_related_skills, data?.skills?.secondary_skills]) {
+  // `skill_programs` is walked for the same reason as the other two, and needs
+  // it more: a program's `only` list is the only thing between a chosen
+  // category and its entire contents, and an unmatched `only` fails CLOSED -
+  // the category then admits nothing. A typo there grants a player NOTHING,
+  // silently, which is the direction no report catches (F23(b)).
+  //
+  // The `_prefix` forms are deliberately not collected. They name a family
+  // rather than a row, so "does a row have this name" is the wrong question and
+  // would report every prefix as a missing skill.
+  for (const group of [data?.skills?.occ_related_skills, data?.skills?.secondary_skills,
+                       data?.skills?.skill_programs]) {
     for (const c of group?.categories || []) {
       // A bare string is "any skill in this category" and names nothing.
       if (!c || typeof c !== 'object') continue;
