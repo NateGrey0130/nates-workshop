@@ -48,6 +48,22 @@ export const KNOWN_KEYS = new Set([
   // occupation's pools and skills and the HIGHER of the two attribute dice.
   // BOOK-INGEST-AUDIT.md F11.
   'supersedes_race',
+  // A class whose BOOK defines it as another class - "create the character as
+  // usual" for the Euro-Juicer, "Same as the Ley Line Walker" for the Rifter -
+  // is stored as a full copy, because nothing here composes one class from
+  // another. `copy_of: { class: "<id>", except: [<top-level keys>] }` records
+  // the relationship so an invariant can assert the two still match.
+  //
+  // It IS read, which is why it belongs on this list: test/regression.mjs walks
+  // every declared pair against a database rebuilt from the repo. Nothing at
+  // RUNTIME reads it, and that is the posture BOOK-INGEST-AUDIT.md F25 asks for
+  // - assert, do not model.
+  //
+  // It also has to be here rather than left to report as UNMODELLED: the smoke
+  // suite FAILS a shipped class that reports an unmodelled key, so a
+  // declaration added without this entry turns the suite red rather than
+  // printing a note. F25 guessed the opposite and its outcome note corrects it.
+  'copy_of',
   // Produced by the parser from the body, never written by hand.
   'lore', 'gm_notes', 'sections',
 ]);
