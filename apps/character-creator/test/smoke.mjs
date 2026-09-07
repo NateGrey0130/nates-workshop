@@ -3064,6 +3064,36 @@ section('Category restrictions');
     !mk('      - { name: "Pilot", except_prefix: "Robot Combat" }').ok);
 }
 
+// ---------- Inline handlers are reachable ----------
+// app.js is a MODULE, so a function it declares is module-scoped and an inline
+// `onclick="fn()"` attribute is evaluated in the GLOBAL scope. The bridge is
+// one `Object.assign(window, { ... })` near the bottom, and a handler left out
+// of it renders perfectly and throws ReferenceError the moment it is clicked.
+//
+// Found the hard way: `toggleProgram` shipped in F23(b) missing from that list.
+// The picker drew thirteen checkboxes and every one of them was dead. Nothing
+// caught it because nothing in the suite CLICKS anything - the markup was
+// right, the function existed, and the two were never introduced.
+section('Inline handlers are reachable');
+{
+  const src = readFileSync(join(appDir, 'app.js'), 'utf8');
+  const exposed = (src.match(/Object\.assign\(window,\s*\{([\s\S]*?)\}\);/) || [, ''])[1];
+  const listed = new Set(exposed.replace(/\/\/[^\n]*/g, '')
+    .split(/[,\s]+/).map((s) => s.trim().replace(/:$/, '')).filter(Boolean));
+
+  // Every name called from an inline event attribute in a template literal.
+  const called = new Set();
+  for (const m of src.matchAll(/\bon[a-z]+="\s*([A-Za-z_$][\w$]*)\s*\(/g)) called.add(m[1]);
+
+  // Browser builtins that need no bridge.
+  const BUILTIN = new Set(['alert', 'confirm', 'print', 'open', 'close']);
+  const missing = [...called].filter((n) => !listed.has(n) && !BUILTIN.has(n));
+
+  check('some inline handlers were found to check', called.size > 5, `found ${called.size}`);
+  check('every inline handler is exposed on window',
+    missing.length === 0, missing.join(', '));
+}
+
 // ---------- Skill programs ----------
 // BOOK-INGEST-AUDIT.md F23(b). Triax printed 170 gives the NGR Robot Soldier up
 // to THREE skill CATEGORIES, granting every skill each one allows at a flat 38%
