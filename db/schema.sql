@@ -435,8 +435,35 @@ CREATE TABLE IF NOT EXISTS gear (
   cost INTEGER,                         -- credits (rifts) or gold (palladium-fantasy).
                                         -- A range's LOW end, the way spells.ppe holds a
                                         -- variable cost's minimum; see cost_note.
+                                        --
+                                        -- NULL IS A FINISHED ROW, NOT AN UNFINISHED ONE.
+                                        -- Books print items with no price all the time -
+                                        -- issued kit, a unique artifact, a machine no
+                                        -- market sells - and a number invented to fill
+                                        -- this column would be indistinguishable from
+                                        -- one the book actually gave. An item with no
+                                        -- printed price stores NULL and is left alone.
+                                        -- Decided 2026-09-07; source-coverage stopped
+                                        -- counting these as backlog in the same change.
+                                        --
+                                        -- THIS DOES NOT ABOLISH THE ESTIMATE TIER, which
+                                        -- is the opposite decision made deliberately for
+                                        -- a narrow case: an item a table needs to BUY -
+                                        -- clothing, food - that no source prices, gets a
+                                        -- figure plus the exact marker "Estimate - no
+                                        -- published price found" in cost_note. That is an
+                                        -- opt-in, marked, replaceable guess and it is
+                                        -- documented under "A third tier, for what
+                                        -- nothing publishes" in the README. NULL is the
+                                        -- RESTING state; an estimate is an upgrade
+                                        -- somebody chooses and signs. Never write a bare
+                                        -- number here for a price no book printed.
   cost_note TEXT,                       -- a range or qualifier the integer cannot hold:
                                         -- "20-100 cr.", "double for gold". Migration 032.
+                                        -- WELCOME BESIDE A NULL cost, never required. A
+                                        -- book that says "priceless" gives you something
+                                        -- to store; a book that says nothing does not.
+                                        -- Neither is a defect.
   -- Stat block. TEXT where books write prose as often as figures
   -- ("2D6 M.D. single shot, 6D6 M.D. burst"); ar and mdc are numbers because
   -- the sheet's armour block uses them as such. is_mega_damage is structured
@@ -512,7 +539,12 @@ CREATE TABLE IF NOT EXISTS vehicles (
   weight_tons   TEXT,
   mdc_main_body INTEGER,                -- main body ONLY; the rest are
                                         -- vehicle_locations rows
-  cost          INTEGER,                -- credits; a range's LOW end
+  cost          INTEGER,                -- credits; a range's LOW end. NULL is a
+                                        -- finished row here too - see gear.cost.
+                                        -- Vessels make the case better than gear
+                                        -- does: a book that says "Not available"
+                                        -- of a machine no market sells has given
+                                        -- a real answer, and it is not a number.
   cost_note     TEXT,
   description   TEXT,
   source_book   TEXT

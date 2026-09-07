@@ -258,9 +258,12 @@ if (process.argv.includes('--values')) {
 const backlog = [
   ['gear stubs', "SELECT count(*) AS n FROM gear WHERE description LIKE 'STUB%'",
     'description still says STUB — created by class import'],
-  ['gear with no price', 'SELECT count(*) AS n FROM gear WHERE cost IS NULL '
-    + "AND (cost_note IS NULL OR cost_note = '')",
-    'no cost and no cost_note to explain it'],
+  // 'gear with no price' USED TO BE HERE AND IS NOT BACKLOG. Decided
+  // 2026-09-07: a book that prints no price for an item is not an unfinished
+  // import, and a number invented to fill the column would be
+  // indistinguishable from one the book gave. NULL is the finished state. It
+  // is still COUNTED, below the table, because knowing how many is useful and
+  // calling them owed work is not. See the gear.cost comment in db/schema.sql.
   ['skill stubs', "SELECT count(*) AS n FROM skills WHERE source = 'import' AND base = 0 "
     + "AND per_level = 0 AND bonuses IS NULL AND (note IS NULL OR note = '') "
     + "AND name NOT LIKE 'W.P.%'",
@@ -291,6 +294,26 @@ for (const [label, sql, why] of backlog) {
   const n = d1(sql)[0]?.n ?? 0;
   console.log(`  ${pad(label, 20)}${String(n).padStart(4)}   ${why}`);
 }
+
+// ── counted, and deliberately NOT backlog ───────────────────────────────────
+// An item the book prices in nothing at all. This was a backlog line until
+// 2026-09-07 and it never belonged there: the row is finished, the book simply
+// did not give a figure. Reported so the number stays visible - if it jumped by
+// two hundred overnight somebody would want to know - and reported HERE so
+// nobody reads it as owed work again.
+const priceless = [
+  ['gear with no price', 'SELECT count(*) AS n FROM gear WHERE cost IS NULL '
+    + "AND (cost_note IS NULL OR cost_note = '')"],
+  ['vessels with no price', 'SELECT count(*) AS n FROM vehicles WHERE cost IS NULL '
+    + "AND (cost_note IS NULL OR cost_note = '')"],
+];
+console.log('\nNO PRICE, AND THAT IS FINE   the book printed none; NULL is the finished state');
+for (const [label, sql] of priceless) {
+  const n = d1(sql)[0]?.n ?? 0;
+  console.log(`  ${pad(label, 22)}${String(n).padStart(4)}`);
+}
+console.log('  Not backlog, and not to be moved back into it. See gear.cost in');
+console.log('  db/schema.sql for why a number invented here would be worse than none.');
 
 // ── the same ledger, for a database built from the repo ─────────────────────
 // `--vs-build` exists because the 148-citation regression was measured as ONE
