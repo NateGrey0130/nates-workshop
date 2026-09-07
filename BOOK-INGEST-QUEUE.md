@@ -718,3 +718,51 @@ without it. Nothing broke - `printed_pages` gates the citation check by
 requiring the cache to hold at least that many pages, and the cache holds 225 -
 but a row cited to p.224 would have been citing a page the registry believed the
 book did not have, and the Euro-Juicer's notes cite that page.
+
+### `triax` loose ends, 2026-09-07 (PR #782)
+
+No classes. The three small plan items the six class batches all skipped, plus
+one note that had gone false.
+
+**The two re-citations landed and both predictions held.** `Streetwise: Drugs`
+was cited to the phantom *Rifts Skill List*; Triax printed 155 prints it under
+the book's own New Skills section, and re-citing it takes that phantom book from
+43 untraceable rows to **42**, exactly as the survey said it would.
+`Horsemanship: Exotic Animals` had NO source_book at all; RUE printed 302 lists
+it as *(30%/20%+5%)*, which is where the catalog's 30 +5 comes from, and Triax
+printed 155 reprints it at *30% +4%*. RUE is the later book, so the citation goes
+to RUE and the Triax figure is recorded in the note rather than changing the row.
+
+**A premise in the survey's own plan was wrong, and it is worth naming.** The
+plan said to put Triax's +4% in `variant_note`. **There is no `variant_note`
+column** - `skills` has `id, name, category, base, per_level, systems, source,
+source_book, note, bonuses, level_bonuses, base_formula`. It went in `note`.
+
+**`triax-pump-weapon` has a page range and is STILL A STUB, deliberately.** It
+now cites printed 143-144, which covers both weapons the book describes - the
+TX-5 Pump Pistol and the TX-16 Pump Rifle - so this book reads **39 traceable /
+0 other**. The description keeps its STUB marker because the row still has no
+stats and the gear importer keys on that marker. **The row is a PLACEHOLDER
+standing for two weapons**, referenced by the ten Warlock classes; replacing it
+with two real rows and a choice group is gear-batch work.
+
+**The Gargoylite's ladder is SETTLED and its class note is corrected.** Printed
+202 borrows the *Dog Pack's* experience table and no catalog row carries that
+name. RUE answers it: RUE names the class *"Dog Boys (Coalition Dog Pack -
+Mutant Canines)"*, and its contents page files *Coalition Dog Pack* as a section
+INSIDE the Dog Boy O.C.C. - the pack is the unit, the Dog Boy is the class. The
+borrowed ladder is `dog-boy`'s, which RUE printed 295 heads *"CS Grunt & Dog
+Boys"* and shares with `coalition-grunt`. Both rows are published.
+
+The class note said the question was open. **A note recording a resolved
+question as open is durable and the next session believes it**, which is the
+shape `class-import` warns about, so it was rewritten rather than left. The
+survey's own paragraph is left standing with a dated note beneath it, because it
+was true when the survey ran and its reasoning - do not assume an equivalence
+from two names that look alike - is why the check was worth running.
+
+**The gear-stub count moved 7 -> 11 and none of that is these six batches.**
+The survey's figure was pasted before batch 1, which created three stubs, and
+batch 2 created a fourth. Batches 4, 5 and 6 created none: every class script
+in them emitted zero stub rows, because the skill rows they needed were applied
+first on purpose.
