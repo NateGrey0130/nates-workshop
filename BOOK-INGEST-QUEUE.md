@@ -13,7 +13,7 @@ the human view of the same thing plus the import status.
 
 | slug | book | PDF pages | layer | printed | offset | status |
 |---|---|---|---|---|---|---|
-| `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 222 — see below | **+0** | **importing** — 11 of 21 classes |
+| `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 222 — see below | **+0** | **importing** — 15 of 21 classes |
 | `underseas` | Rifts WB 7: Underseas | 216 | SCAN (OCR) | 214 | **+0 / -1 split** | cached |
 | `new-west` | Rifts WB 14: New West | 226 | text layer | 224 | +1 | cached |
 | `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | cached |
@@ -543,3 +543,58 @@ rogue skills and three others* and the Commando's *two W.P.s and three others*
 are five picks with a floor of two, not seven picks. Both are stored with
 `minimums`. Expect the Gypsy entries to print the same shape.
 
+### `triax` batch 4 — the Gypsy O.C.C.s, 2026-09-06 (PR #779)
+
+Four more classes, printed 179-185: Gypsy Thief, Gypsy Wizard Thief, Gypsy Seer
+and Gypsy - The Gifted. **Fifteen of twenty-one now in**, which closes every
+O.C.C. this book has; the six that remain are the Euro-Juicer and the five
+gargoyle R.C.C.s. Catalog totals moved 180 -> **184** classes and 355 -> **356**
+skills, and gear did not move.
+
+**The prediction at the end of batch 3 was wrong, and it is worth correcting
+here rather than quietly.** That note said *"expect the Gypsy entries to print
+the same shape"* - a related-skill FLOOR, stored with `minimums`. **None of the
+four does.** Every Gypsy entry prints a plain count: six, five, four and four,
+each with one more at levels three, six, nine and twelve. The floors were an
+Intelligence Division habit, not a book-wide one.
+
+**READ THE PERCENTAGES OFF A RENDER, NOT THE OCR - four skills in this section
+print a FIXED percentage with no plus sign.** `Lore: Demons & Monsters (20%)`
+and `Lore: Faeries (15%)` on both the Wizard Thief and the Seer,
+`Play Musical Instrument: One of choice (10%)` on the Seer, and
+`Identify Plants & Fruits (20%)` on the Gifted - every one of them beside
+entries in the same list that DO carry a plus. The OCR reproduces the absence
+faithfully, which is exactly why it could not settle the question: the same
+engine that might have dropped the sign is the only witness. Three pages were
+rendered at 200 dpi through pymupdf and read. All four are real, and all four
+sit BELOW the catalog base for that skill - the musical instrument at 10
+against a base of 35 - which is the tell. A class granting a skill below its
+own catalog base looks like a transcription error and is not.
+
+**`Language: Gypsy` is a new skill row and it is cited to TRIAX**, unlike the
+two Euro rows batch 1 added, which went to RUE because Euro is a Rifts-wide
+language RUE already names. The gypsy tongue is not: printed 179 describes it
+and its dozen symbols, and nothing earlier on this machine prints it at all. It
+is NOT one of the seven new skills printed 155 lists, which is why the survey's
+skills diff never found it - a language named only inside the O.C.C. entries.
+
+**The Gifted needed a shape nobody here had used, and `variants` was the wrong
+guess.** Its psionic profile is ROLLED from a four-band percentile table, and
+the bands differ in tier, I.S.P., counts, categories, ladders, saves and even
+in whether the character gets O.C.C. Related Skills. `VARIANT_OVERRIDES` cannot
+carry `psionics` - it carries `bonuses` and the pool bases and no more - but
+`ABILITY_GRANTS` can, and `mergePsionics` returns an ability's block unchanged
+when the class states none. So the class carries NO class-level psionics block
+and the four bands are four named abilities under one `{ choose: 1 }`, each
+with its own complete block. Verified by composing all four through the real
+parser. **`BOOK-INGEST-AUDIT.md` F24** is filed for the one thing that still
+does not fit: the related-skill count is four for a major psionic and zero for
+a master, and neither an ability nor a variant can carry a skills block.
+
+**A readback query got the class count wrong before the ledger did.** Counting
+`status = 'published'` alone returns 185; the generic warlock is retired with
+`deleted_at` and keeps its published status, so the live count needs
+`AND deleted_at IS NULL` and is 184. `docs/operations.md` calls its row
+*classes (published, live)* for exactly this reason. Production and a clean
+rebuild agree at 184 - there is no drift here, only a query that was short a
+clause.
