@@ -398,6 +398,7 @@ What is deliberately left, with the reason for each:
 | 2026-09-06 | [#779](https://github.com/NateGrey0130/nates-workshop/pull/779) | **batch 4, the Gypsy O.C.C.s (4 of 21 classes, 15 cumulative)**: Gypsy Thief, Gypsy Wizard Thief, Gypsy Seer, Gypsy - The Gifted. Classes 180 -> **184**, skills 355 -> **356** (`Language: Gypsy`, cited to this book's printed 179 rather than to RUE - unlike the Euro rows batch 1 added, nothing earlier on this machine prints it), gear unchanged at **1025**, the second batch running needing no new gear row. Filed `BOOK-INGEST-AUDIT.md` **F24** for the per-band related-skill count The Gifted cannot store. Applied `--remote` before the PR; production read back at 184/356/1025. |
 | 2026-09-06 | [#780](https://github.com/NateGrey0130/nates-workshop/pull/780) | **batch 5, the Euro-Juicer (1 of 21 classes, 16 cumulative)**. Classes 184 -> **185**; skills and gear unchanged at **356** and **1025**. The entry states NO mechanics of its own - printed 175 says to create the character as usual per the Rifts RPG - and its ladder on printed 224 is the Juicer's own, reprinted, so every mechanical block is a verified copy of the `juicer` row. Filed `BOOK-INGEST-AUDIT.md` **F25** for the fact that nothing records two rows as having to stay identical. Applied `--remote` before the PR; production read back at 185/356/1025. |
 | 2026-09-07 | [#781](https://github.com/NateGrey0130/nates-workshop/pull/781) | **batch 6, the gargoyle R.C.C.s (5 of 21 classes, 21 cumulative - ALL OF THEM)**: Gargoyle, Gurgoyle, Gargoyle Lord, Gargoyle Mage, Gargoylite. Classes 185 -> **190**, skills 356 -> **358** (`Language: Gargoyle` and `Language: Brodkil`, the two the diff found on printed 155), gear unchanged at **1025**. Also the registry correction this survey asked for in the FIRST data PR and four PRs missed: `printed_pages` 222 -> 224. Applied `--remote` before the PR; production read back at 190/358/1025. **The class work on this book is complete.** |
+| 2026-09-07 | [#786](https://github.com/NateGrey0130/nates-workshop/pull/786) | **the gear pass - 113 new rows and four stubs filled**, across seven scripts. Gear 1025 -> **1137**. This book now reads **151 traceable / 0 other** in source-coverage, and the repo-wide gear-stub backlog fell 11 -> **7**. Applied `--remote` before the PR. **THE BOOK IS COMPLETE**: every plan item in the extraction plan above is now done except the vessels, which are excluded by `BOOK-INGEST-AUDIT.md` F3 and always were. |
 | 2026-09-07 | [#782](https://github.com/NateGrey0130/nates-workshop/pull/782) | **loose ends, no classes**: the two re-citations and the page range this plan asked for. `Streetwise: Drugs` cited to Triax printed 155 - `rifts-skill-list` 43 -> **42** untraceable rows; `Horsemanship: Exotic Animals` cited to RUE printed 302 with Triax's +4% in the note; `triax-pump-weapon` given p.143-144, so this book reads **39 traceable / 0 other**. Also the Gargoylite ladder, SETTLED from RUE - the Dog Pack is the Dog Boy. Applied `--remote` before the PR. |
 
 ### What remains
@@ -432,3 +433,19 @@ them is: `Streetwise: Drugs` is re-cited by the plan above, which takes that
 count to 42. Nothing else here should move — a Triax import that changes `spell
 text missing` or `psionic text missing` has done something the survey did not ask
 for, because this book defines zero of both.
+
+### Closed out, 2026-09-07
+
+**Every numbered item in the extraction plan above is done.** The counts below replace the 2026-09-06 block, which was measured before any of it:
+
+```
+BY BOOK       traceable / other
+  triax              151 / 0
+  rifts-skill-list     0 / 42
+```
+
+The gear pass came in at **113 new rows, not the ~55 this plan estimated** - roughly double, and that is after removing about twenty-five candidates the catalog already held. The estimate was made from a page count rather than a diff; the diff is what found the duplicates.
+
+**Four stubs were FILLED rather than duplicated** - the T-10, T-12 and T-13 armour suits and the TX-42 rifle, all created by the NGR class batches and cited to O.C.C. pages rather than to the chapters that stat them. The repo-wide gear-stub backlog fell from eleven to seven as a result, and none of the seven that remain is this book's.
+
+**What is still deliberately absent, and always was:** the book's ~53 vessels - power armour, robots, drones, infiltration units, borg models, combat vehicles and the gurgoyle machines, across printed 39-140 and 205-209, roughly 107 of 222 printed pages. `BOOK-INGEST-AUDIT.md` **F3**: `gear` holds one `mdc`, one `damage`, one `range` and one `payload`, and a vessel here has M.D.C. by location and several numbered weapon systems with four stats each. Nothing about F3's schema half closing in PR #616 makes these importable.
