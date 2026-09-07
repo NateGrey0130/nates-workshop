@@ -858,3 +858,61 @@ removed more than these added.
 205-209 - roughly 107 of 222 printed pages - excluded by
 `BOOK-INGEST-AUDIT.md` **F3**, which is about the shape of the `gear` table and
 not about this book.
+
+### Three loose ends settled, 2026-09-07 (PR #788)
+
+One correction, and two questions that turned out to need no change. All
+three were on the outstanding list written at the end of the gear pass.
+
+**1. THE CYBERNETICS CATEGORY - CORRECTED.** The twenty-five Triax implants
+went in as `category = 'gear'` and `'weapon'`, and the catalog already had a
+word for them: `db/schema.sql` documents `gear.category` as *weapon | armor |
+vehicle | cybernetics | gear*, and `js/catalog-fields.js` offers exactly those
+plus `magic` as the editor's select for that field. **`cybernetics` was a
+supported value with a UI behind it, and simply unused.** The import filed its
+rows around it rather than in it, because there was no precedent in the DATA -
+but there was one in the schema comment and the editor config, and neither was
+consulted. `fix-triax-cybernetics-category.sql` moves all twenty-five.
+
+All four that do damage move too. The Laser Beam Eye, the LGL-31 Grapnel, the
+PL-31 Palm Laser Torch and the RVB-31 Concealed Vibro-Blade went in as
+`weapon`; they are still implants, the damage is in the `damage` column either
+way, and filing them by what they ARE keeps the twenty-five together. The
+SPU-5 stays `gear`: printed 152-153 sells it as a worn belt or collar for 100
+credits and as an implant for 2,000, it is one device and one row, and it is
+primarily worn.
+
+**2. THE WALKER/RIFTER `per_level` ASYMMETRY - NO DEFECT. Both resolve to the
+same number.** The Ley Line Walker's `Language: Other` choice group carries
+`per_level: 5` and the Ley Line Rifter's does not, and PR #784 left it open
+because what `per_level` means on a CHOICE group as opposed to a named skill
+was not established. It is established now:
+
+```
+app.js:2119   per_level: explicit.per_level ?? cat.per_level ?? 0,
+app.js:3206   // Choice-group picks are stored exactly like fixed class
+              // skills, inheriting the group's base/per_level.
+```
+
+So a choice group's `per_level` IS read, and it overrides the catalog row for
+every pick made from that group. The Walker states +5 explicitly; the Rifter
+omits it and falls through to the `Language: Other` catalog row, **which is
++5**. Identical outcome. **Nothing is changed**, and the honest reason to
+leave it is that the two are not actually different today - but they would
+diverge the moment `Language: Other` changed its per-level step, which is
+worth knowing and is why this paragraph exists rather than a fix.
+
+A first reading of this got it backwards - the VALIDATOR
+(`validateSkillEntries`) never looks at `per_level` on a choice group, which
+makes it look inert. The validator not checking a key is not the app not
+reading it. Two different files, two different questions.
+
+**3. THE `drift-check` CITATION ADVISORY - A FALSE POSITIVE.**
+`spells.Water: Summon Sharks/Whales` cites *Rifts Book of Magic p.87* and
+drift-check reports the name absent from that book's text. The spell is there:
+`bom` has `page_offset: 1`, so printed 87 is cache `p088.txt`, and line 43 of
+that file reads `Summon SharkslWhales` - **the OCR read the slash as a lower
+case L**. The citation is correct and the row needs nothing. Recorded so the
+next person to run drift-check does not chase it again; the advisory is
+advisory precisely because a name a book writes differently reads the same as
+one it never had.
