@@ -391,6 +391,61 @@ future `vehicles` table would start from, and that is written down where the
 next person will be standing. **Reopen it the moment something asks** — a sheet
 that renders a vessel, a GM lookup, a class that grants one beyond the Noro.
 
+
+**Reopened and taken, 2026-09-07 (PR #787) - as the FIRST option, which the
+2026-09-03 closure declined.** The closure above stands exactly as written and
+nothing in it is edited: it was true when it was made, it is the record of what
+was decided and why, and an audit file is a record.
+
+**What asked.** The closure named the trigger itself - *"Reopen it the moment
+something asks - a sheet that renders a vessel, a GM lookup, a class that grants
+one beyond the Noro."* On 2026-09-07 Nate asked for the Triax vessels to be
+imported, having just closed the rest of that book. That is the ask.
+
+**What was built: `vehicles`, `vehicle_locations` and `vehicle_weapons`,**
+migration `048-vehicles.sql`, all nine places per the `schema-change` skill.
+Three tables rather than one, because the two things this finding says a vessel
+carries are exactly the two that cannot live in a column: **M.D.C. by location**
+is one row per named part, and the **numbered weapon systems** are one row each.
+Folding either back into a single column is the loss this finding refused -
+*"picking one weapon system out of eight and dropping the rest... the row would
+read as complete."*
+
+**The JSON option stays declined**, on this finding's own argument: a JSON column
+nothing reads is the silent-storage failure `class-import` warns about. Nothing
+about reopening the first option revives the second.
+
+**THIS IS A SCHEMA CHANGE FROM A BOOK SESSION, WHICH THE BATCH PROTOCOL FORBIDS.**
+`book-survey` §8 is explicit - *"NO application code, schema, validator or
+generator changes from a book. Import what the schema supports, record what was
+dropped, file the gap, keep going."* That rule was put to Nate as the cost of
+this option before anything was written, and he took it anyway. Recorded here
+because a rule broken on someone's word and a rule broken by accident look
+identical six months later, and only one of them should.
+
+**What this does NOT do, and each is deliberate:**
+
+- **It does not touch `gear`.** The 36 rows carrying `category = 'vehicle'` stay
+  where they are, per-location breakdowns in prose and all. This finding's own
+  closure calls those 24 prose rows *"the backfill a future `vehicles` table
+  would start from"*, and backfilling them is its own job with its own
+  decisions - chiefly what happens to the class equipment lists that reference
+  those gear slugs.
+- **Nothing in the app reads the three tables.** No `catalogs.js` SELECT, no
+  `catalog-fields.js` entry, no sheet rendering. This is the shape; the reader
+  comes when something needs to render one.
+- **No data yet.** The Triax vessels are a separate PR, and the measurement that
+  matters for whoever writes it is in the survey: ~53 vessels across printed
+  39-140 and 205-209, roughly 107 of this book's 222 printed pages.
+
+**The measurement this finding rested on has now moved, and that is worth
+recording plainly.** The closure declined both schema options on the grounds that
+*"nothing has asked"*, with a table showing zero tables or columns anywhere
+naming a vehicle, vessel or ship across 40 tables. As of this PR there are three,
+and the count of tables in the shared database goes 33 to 36. Anyone re-running
+that measurement will get a different answer than the closure did, and the reason
+is this note rather than a drift.
+
 ### F4 — The language-pick invariant matches on prose, and missed one of three
 
 `regression.mjs` holds a good rule: an "any language" pick must offer the

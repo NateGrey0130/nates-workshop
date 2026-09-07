@@ -485,6 +485,67 @@ CREATE TABLE IF NOT EXISTS enchantments (
   source_book  TEXT
 );
 
+-- Vessels: power armour, robots, drones, borg models, combat vehicles and
+-- ships. Migration 048. BOOK-INGEST-AUDIT.md F3 named the gap and closed it
+-- once as keep-dropping; it was reopened on 2026-09-07 and this is F3's own
+-- first option, built as described. THREE tables because a vessel is not a
+-- row: M.D.C. arrives BY LOCATION and weapon systems arrive as a numbered
+-- list, and folding either into one column is the loss F3 refused.
+--
+-- Nothing migrates the 36 existing gear rows with category = 'vehicle'.
+-- Those stay where they are; backfilling them is its own job.
+CREATE TABLE IF NOT EXISTS vehicles (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug          TEXT NOT NULL UNIQUE,   -- the portable key, as gear.slug is
+  name          TEXT NOT NULL,
+  system        TEXT CHECK (system IN ('rifts', 'palladium-fantasy', 'both')),
+  vehicle_class TEXT,                   -- power-armor | robot | drone | borg |
+                                        -- vehicle | ship | other. Free text: a
+                                        -- CHECK would reject a book rather than
+                                        -- record it.
+  crew          TEXT,                   -- prose as often as a number
+  passengers    TEXT,
+  speed_ground  TEXT,                   -- three regimes, each printed its own
+  speed_air     TEXT,                   -- way - "Mach 1.2" and "80 mph" and
+  speed_water   TEXT,                   -- "1 light year per hour"
+  dimensions    TEXT,
+  weight_tons   TEXT,
+  mdc_main_body INTEGER,                -- main body ONLY; the rest are
+                                        -- vehicle_locations rows
+  cost          INTEGER,                -- credits; a range's LOW end
+  cost_note     TEXT,
+  description   TEXT,
+  source_book   TEXT
+);
+
+CREATE TABLE IF NOT EXISTS vehicle_locations (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  vehicle_slug TEXT NOT NULL REFERENCES vehicles(slug) ON DELETE CASCADE,
+  location     TEXT NOT NULL,           -- "Main Body", "Arms (2)"
+  mdc          INTEGER,                 -- NULL where a book prints a formula
+  mdc_note     TEXT,
+  ordinal      INTEGER,                 -- printed order
+  UNIQUE (vehicle_slug, location)
+);
+
+CREATE TABLE IF NOT EXISTS vehicle_weapons (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  vehicle_slug   TEXT NOT NULL REFERENCES vehicles(slug) ON DELETE CASCADE,
+  ordinal        INTEGER,               -- the book's own numbering
+  name           TEXT NOT NULL,
+  damage         TEXT,
+  is_mega_damage INTEGER NOT NULL DEFAULT 0,
+  range          TEXT,
+  rate_of_fire   TEXT,
+  payload        TEXT,
+  bonus          TEXT,
+  note           TEXT,
+  UNIQUE (vehicle_slug, ordinal, name)
+);
+
+CREATE INDEX IF NOT EXISTS idx_vehicle_locations_slug ON vehicle_locations(vehicle_slug);
+CREATE INDEX IF NOT EXISTS idx_vehicle_weapons_slug ON vehicle_weapons(vehicle_slug);
+
 CREATE TABLE IF NOT EXISTS character_items (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   character_id INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
@@ -926,3 +987,10 @@ WHERE EXISTS (SELECT 1 FROM pragma_table_info('media_items') WHERE name = 'sourc
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '043-character-grants.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'character_grants');
+
+-- Guarded on the table the migration creates, never unconditionally: on an
+-- existing database every CREATE above is skipped, and an unguarded row would
+-- mark an un-migrated database as migrated.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '048-vehicles.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'vehicles');
