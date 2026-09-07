@@ -13,7 +13,7 @@ the human view of the same thing plus the import status.
 
 | slug | book | PDF pages | layer | printed | offset | status |
 |---|---|---|---|---|---|---|
-| `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 222 — see below | **+0** | **importing** — 8 of 21 classes |
+| `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 222 — see below | **+0** | **importing** — 11 of 21 classes |
 | `underseas` | Rifts WB 7: Underseas | 216 | SCAN (OCR) | 214 | **+0 / -1 split** | cached |
 | `new-west` | Rifts WB 14: New West | 226 | text layer | 224 | +1 | cached |
 | `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | cached |
@@ -504,3 +504,42 @@ Field Mechanic's `Math: Advanced (10%)` is the sharp one - read as +10%, because
 a fixed 10% would be worse than the untrained base, which no Palladium class
 prints. Its laser torch and laser wand are deferred to Wilk's and are not
 stubbed.
+
+### `triax` batch 3 — the Intelligence Division and the police, 2026-09-06 (PR #778)
+
+Three more classes, printed 171-174: Intelligence Officer, Intelligence
+Commando, Police Officer. **Eleven of twenty-one now in**, which closes every
+Military O.C.C. the book has. Catalog totals moved 177 -> **180** classes,
+353 -> **355** skills, and gear did NOT move - the first batch of this book
+needing no new gear row and no stub at all.
+
+**The check caught a contradiction the reading had already talked itself into.**
+Printed 174 restricts the Police O.C.C.'s Espionage picks to disguise, sniper,
+tracking and wilderness survival, and prints "Wilderness: None" four lines
+later. Wilderness Survival is a WILDERNESS-category skill here, and a
+cross-category `only` is admitted solely when the class also lists that skill's
+real category - so transcribing both lines literally left the skill granted and
+**not takeable**, which `class-check` reports as `unreachable`. The draft's own
+extraction note had asserted the opposite in as many words: that wilderness
+survival was reachable through the Espionage line, *"which is what the book
+means"*. It was not, and nothing but the check would have said so. Resolved by
+listing Wilderness with `only: ["Wilderness Survival"]` at the Espionage line's
++10%.
+
+**That is the second time in this book a `class-check` restriction warning has
+found a real defect** - the first was the Medic's `Identify Plants & Fruits`,
+which the catalog spells singular. Both fail OPEN. **Read the restrictions
+section of every draft's report rather than skimming to `ready`.**
+
+**No finding filed.** Nothing in this division needed a mechanic the app lacks.
+Two more `Robot Combat Elite:` rows were added for the X-60 Flanker and the
+X-500 Forager, in `add-ngr-additional-elite-skills.sql` - a SIBLING of the
+armored-division file rather than an edit to it, since that one is a one-shot
+already applied everywhere.
+
+**One shape worth carrying forward:** three of these entries state a
+related-skill FLOOR rather than a plain count - the Intelligence Officer's *two
+rogue skills and three others* and the Commando's *two W.P.s and three others*
+are five picks with a floor of two, not seven picks. Both are stored with
+`minimums`. Expect the Gypsy entries to print the same shape.
+
