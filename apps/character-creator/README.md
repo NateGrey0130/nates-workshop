@@ -179,7 +179,7 @@ touches MediaVault and FilamentForge too — they use its `openModal` /
 
 ## Data model
 
-Thirty-three tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
+Thirty-six tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
 and one R2 bucket (`MEDIA`, same name) for the only binary this app stores.
 `media_items` belongs to MediaVault, and the six tables prefixed `ff_` belong
 to FilamentForge — that prefix is the collision boundary, because this app's
@@ -236,6 +236,9 @@ ppe and isp.
 |---|---|
 | `imported_classes` | Class definitions as markdown. `status` is `draft` or `published`; only published classes appear in the app. `deleted_at` NULL means live — retiring a published class hides it from the pickers without destroying it, and drafts are still deleted outright. |
 | `gear` | Gear catalog. `slug` is what `equipment_starting[].item_id` references, and since migration 046 the only key inventory holds — `NOT NULL` since 047, because `UNIQUE` alone permits any number of NULLs. Carries a stat block — damage, is_mega_damage, range, payload, rate_of_fire, ar, **sdc**, mdc — null wherever it does not apply, so one table covers weapons, armour and general kit. `sdc` is what the object TAKES before it breaks; `damage` is what it deals, and "1D6 S.D.C." on a knife is the second. `source_book` may say [not book-verified](#a-row-can-say-where-it-came-from). Named `gear`, not `items`, to stay clear of MediaVault's `media_items`. |
+| `vehicles` | Power armour, robots, drones, borg models, combat vehicles and ships - everything `gear` has never been able to hold. `mdc_main_body` is the **main body only**; every other part is a `vehicle_locations` row, so a reader wanting a total must sum them rather than trust the column. `vehicle_class` is free text on purpose: books invent categories, and a `CHECK` would reject a book rather than record it. Migration 048, from `BOOK-INGEST-AUDIT.md` F3. |
+| `vehicle_locations` | M.D.C. **by location** - one row per named part, which is the whole reason the table exists. `mdc` is NULL where a book prints a formula instead, and `mdc_note` carries it. `ordinal` preserves the printed order so a renderer can set the block the way the book does. |
+| `vehicle_weapons` | The numbered weapon systems a vessel carries - five to eight of them, each with its own damage, rate of fire, range and payload, where `gear` has one of each column. `ordinal` is the book's own numbering. |
 | `skills` | `base` 0 means non-percentile (W.P.s, hand to hand). `base_formula` overrides it with an attribute-derived percentage such as `PP*5`, for a book that states one that way; `base` stays the fallback. `systems` is a JSON array; NULL means both. `note` carries oddities like `40%/30% climb/rappel`. `bonuses` applies always; `level_bonuses` is a per-level schedule — see [A fighting style is a level schedule](docs/leveling.md#a-fighting-style-is-a-level-schedule). |
 | `spells` | `system` NULL means unrestricted. name, level, ppe, plus a stat block (range, duration, damage, saving throw, area of effect, casting time, description). The stat block is TEXT — books write "100 feet per level" as often as a number. |
 | `psionic_powers` | name, category (Healing/Physical/Sensitive/Super), isp, plus range, duration, saving throw and description — the same field names spells use. `min_tier` is the psychic tier a book states is required; NULL means no restriction beyond the category. `variant_note` carries what an older book states instead — the later book is authoritative (RUE over the Book of Magic, either over Palladium Fantasy) and the losing number is kept rather than discarded. |
