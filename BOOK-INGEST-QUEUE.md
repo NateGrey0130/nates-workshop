@@ -461,9 +461,21 @@ argument that they are worth re-reading either.
 - Read tables as rendered images at 200 dpi. A text layer gives prose, not
   chart geometry.
 - Data PRs merge as they go, applied `--remote` before merge. Nothing stacks.
-- **No application code, schema, validator or generator changes from a book.**
+- **A book does not get to start engineering work on its own — but `book-survey`
+  §8 owns that rule now, in three tiers, and it is the copy that governs.**
   Import what the schema supports, note the drop in `extraction_notes`, file the
   gap in `BOOK-INGEST-AUDIT.md`, keep going.
+
+**This bullet read *"No application code, schema, validator or generator changes
+from a book"* until 2026-09-07, and it was false for the whole ten days it
+stood.** Eleven book-session PRs edited `js/compose.js` because the smoke test
+requires it of any class stating no S.D.C. formula, and on 2026-09-07 one book
+produced a migration, three tables, a validator change and a change across six
+files — all asked for, none of it a violation of anything. The absolute wording
+is not restored; §8 carries the replacement, the PR numbers and the
+`audit-premise-auditor` rule that took its place. **The batch sections below
+this line are records and are unedited**, including the ones written while the
+old wording stood.
 
 ### `triax` batch 2 — the NGR Armored Division, 2026-09-06 (PR #777)
 
