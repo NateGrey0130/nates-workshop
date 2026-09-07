@@ -13,7 +13,7 @@ the human view of the same thing plus the import status.
 
 | slug | book | PDF pages | layer | printed | offset | status |
 |---|---|---|---|---|---|---|
-| `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 224 — corrected 2026-09-07, see below | **+0** | **importing** — all 21 classes in; gear not started |
+| `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 224 — corrected 2026-09-07, see below | **+0** | **imported** |
 | `underseas` | Rifts WB 7: Underseas | 216 | SCAN (OCR) | 214 | **+0 / -1 split** | cached |
 | `new-west` | Rifts WB 14: New West | 226 | text layer | 224 | +1 | cached |
 | `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | cached |
@@ -766,3 +766,83 @@ The survey's figure was pasted before batch 1, which created three stubs, and
 batch 2 created a fourth. Batches 4, 5 and 6 created none: every class script
 in them emitted zero stub rows, because the skill rows they needed were applied
 first on purpose.
+
+### `triax` gear pass, 2026-09-07 (PR #786) — AND THE BOOK IS CLOSED
+
+Seven scripts, **113 new gear rows and four stubs filled**. Gear 1025 ->
+**1137**. `triax` now reads **151 traceable / 0 other**, and the repo-wide
+gear-stub backlog fell from eleven to **seven** - none of the seven is this
+book's. **Status moves to `imported`.**
+
+**THE SURVEY ESTIMATED ~55 IMPORTABLE ROWS AND THE REAL FIGURE IS 113**, after
+removing about twenty-five candidates the catalog already held. The estimate
+came from a page count; the duplicates only showed up in a name-by-name diff
+against all 1,025 existing rows. Do that diff before quoting a row count.
+
+**FOUR STUBS WERE FILLED, NOT DUPLICATED.** t-10-infantry-cyclops-body-armor,
+t-12-field-medic-body-armor, t-13-field-mechanic-body-armor and
+tx-42-laser-pulse-rifle were created by the NGR class batches and cited to the
+O.C.C. pages that mention them; the armour and weapons chapters are where they
+are actually statted. Nine published classes reference those slugs, so the
+slugs are untouched and each UPDATE is guarded on the STUB marker.
+
+**`triax-pump-weapon` IS STILL A STUB ON PURPOSE.** The survey said not to
+retire or merge it - twelve Warlock classes reference it by slug, and
+rewriting a referenced slug is the catalog editor's duplicate-tool job. Both
+real weapons it stands for, the TX-5 Pump Pistol and the TX-16 Pump Rifle, are
+now imported beside it; the placeholder keeps its page range from PR #782.
+
+**A NO-OP INSERT IS HOW THE LAST DUPLICATE WAS CAUGHT.** The equipment batch
+originally carried a Palm Bio-Unit row; the catalog already held it from RUE,
+so `INSERT OR IGNORE` silently did nothing and the row count came back one
+short of the number written. **Count what you inserted against what appeared** -
+the guard prevents the duplicate but says nothing about it.
+
+**THREE THINGS THE BOOK CONTRADICTS ITSELF ON**, all recorded in the scripts
+rather than resolved:
+
+1. A pump round costs **300** credits on printed 141, **400** in the TX-5 entry
+   and **200** in the TX-16 entry. Each weapon row carries its own entry's
+   figure and the ammunition row carries the general rule.
+2. The Kittani Energy Lance prints *fair availability* beside its payload and
+   *poor availability* beside its price, two lines apart on printed 214.
+3. The Falcon 300 prints a maximum speed of 120 mph and then describes its
+   electric range as *about 200 miles an hour*.
+
+A fourth is a CONVERSION rather than a contradiction: 800 feet is printed as
+*(224 m)* throughout the pistol pages, where 800 feet is 244 m. Verified on a
+render - it repeats identically across entries, so it is the book's error and
+not the OCR's. The foot figure is what is stored.
+
+**CYBERNETICS ARE NOW IN THE CATALOG, AND THAT IS A NEW CONVENTION.** Before
+this batch a query for bionic, cyber and implant across all 1,025 gear rows
+returned exactly one row, and that was a suit of armour from a web reference.
+The twenty-five implants of printed 153-154 are filed as ordinary `gear` - and
+as `weapon` for the four that do damage - on the same reading that puts Juicer
+Uprising's designer drugs and the bio-comp system in `gear`. **Nothing in the
+app installs an implant or tracks one**, so these are purchasable items and no
+more than that; 113 published classes mention cybernetics, almost all of them
+in a restriction saying the class starts with none.
+
+**THREE OF THIS BOOK'S SIX DESIGNER DRUGS WERE ALREADY IN THE CATALOG** from
+Juicer Uprising - boing-go, crash and rush - at DIFFERENT prices (Triax prints
+20-50 where the catalog has 30-60, and so on for the other two). The catalog
+wins and a disagreement is not a gap, so nothing was overwritten and no second
+row was made; the Triax figures are in the header of
+`add-triax-gear-g-drugs-and-jaep.sql`. Only euphie, psike-B and psike-E are new.
+
+**Printed 175-178 was NOT in the survey's gear plan** and holds seven of these
+rows - the four JAEP programmes and those three drugs. It was found by reading
+the Euro-Juicer's own pages during batch 5, not by the survey's diff.
+
+**Four rows carry NO PRICE and say so in `cost_note`**: the giant Electro-Mace,
+the Blaster Neural Whip, the gargoyle Wing and Tail Blades, and the Psionic
+Electro-Magnetic Dampers. The book prints none for any of them. They do not
+land on the `gear with no price` backlog line, which counts rows with neither a
+cost nor a note - that line went DOWN, 35 to 31, because filling the four stubs
+removed more than these added.
+
+**What is still absent, and always was:** the ~53 vessels of printed 39-140 and
+205-209 - roughly 107 of 222 printed pages - excluded by
+`BOOK-INGEST-AUDIT.md` **F3**, which is about the shape of the `gear` table and
+not about this book.
