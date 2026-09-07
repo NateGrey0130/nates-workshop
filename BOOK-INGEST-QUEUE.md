@@ -13,7 +13,7 @@ the human view of the same thing plus the import status.
 
 | slug | book | PDF pages | layer | printed | offset | status |
 |---|---|---|---|---|---|---|
-| `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 222 — see below | **+0** | **importing** — 15 of 21 classes |
+| `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 222 — see below | **+0** | **importing** — 16 of 21 classes |
 | `underseas` | Rifts WB 7: Underseas | 216 | SCAN (OCR) | 214 | **+0 / -1 split** | cached |
 | `new-west` | Rifts WB 14: New West | 226 | text layer | 224 | +1 | cached |
 | `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | cached |
@@ -598,3 +598,43 @@ a master, and neither an ability nor a variant can carry a skills block.
 *classes (published, live)* for exactly this reason. Production and a clean
 rebuild agree at 184 - there is no drift here, only a query that was short a
 clause.
+
+### `triax` batch 5 — the Euro-Juicer, 2026-09-06 (PR #780)
+
+One class, printed 175, under the book's own heading *Non-Military O.C.C.s*.
+**Sixteen of twenty-one now in**; the five gargoyle R.C.C.s are all that remain.
+Classes 184 -> **185**, skills and gear unmoved.
+
+**THE ENTRY STATES NO MECHANICS AT ALL.** Printed 175 says, in full, that *"the
+same creation considerations, conditions, skills, bonuses and penalties as
+described in the Rifts RPG are applicable to the NGR/European Juicer - create the
+character as usual."* No attribute line, no skill list, no bonuses, no equipment,
+no money. It is on the printed 156 roster and has its own ladder on printed 224,
+so it is playable by both authorities and was imported rather than left out.
+
+**And the ladder is the Juicer's, reprinted** - 0-2,140 through 341,601-401,700,
+read off a 190 dpi render of printed 224. That was the check on whether the
+sentence above meant what it said, and it did. Nothing is stored from it; a Rifts
+O.C.C. carries no `xp_table` here.
+
+**So the row is a hand copy of `juicer`, and the copy was DIFFED rather than
+trusted.** Both markdowns were parsed and compared block by block:
+`hit_points_base`, `sdc_base`, `starting_money`, `bonuses`, `special_abilities`
+and `equipment_starting` came back byte-identical, and the skill and restriction
+blocks matched except where the draft intended otherwise. **The diff caught one
+unintended divergence** - an abbreviated IRMSS description - which is the whole
+argument for running it. Do this for any future copy.
+
+**`BOOK-INGEST-AUDIT.md` F25** is filed for what remains: nothing records that
+two rows must stay identical, so a correction to `juicer` will not reach this one.
+Its proposal declines the general inheritance mechanism and takes only a
+regression invariant.
+
+**FOR THE GEAR BATCH: printed 175-178 is not in the survey's gear plan and holds
+priced rows.** The JAEP programs carry market costs of 125,000, 85,000, 85,000 and
+95,000 credits, and six designer drugs - boing-go, crash, euphie, psike-B, psike-E
+and rush - carry per-dose costs from 20 to 200 credits. The survey's extraction
+plan covers printed 34-38, 141-154, 205 and 210-214 and none of 175-178. Whoever
+takes the gear batch should decide whether a chemical programme and a drug dose
+are `gear` rows here; neither is a weapon or a suit of armour, and both have a
+price and a described effect.
