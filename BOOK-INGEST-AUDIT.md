@@ -2945,3 +2945,106 @@ which is most of why it is the half worth taking.
 a copy taken on 2026-09-06 and that a correction to `juicer` must be applied
 here too, and the `juicer` row's own Lore already named the Euro-Juicer as a
 related O.C.C. before this import existed.
+
+**Taken, 2026-09-07 (PR #785).** Posture honoured: **assert, do not model.**
+(a) is taken as a regression invariant plus a declaration key that nothing at
+runtime reads; (b) is declined, as the finding asks.
+
+**This finding was wrong about its own size in three ways, and every one of
+them made it BIGGER.** The premise audit is led with, per the protocol.
+
+**1. "It would be built for ONE row" — it is eleven pairs.** The ongoing-cost
+line said *"one line per copied class - and there is one such class."* Wrong.
+`ley-line-rifter` declares itself a copy of `ley-line-walker` in its own
+`extraction_notes`, and RUE printed 118 says so outright: *"Ley Line Rifter
+Stats. Same as the Ley Line Walker."* And the ten elemental Warlocks come from a
+single book entry - Conversion Book One printed 66-71, split into ten rows by
+`RETRO-AUDIT` `R3` - and are byte-identical outside `magic`, plus
+`attribute_requirements` and `ppe_base` for the two-Force six. Eleven pairs are
+now declared: euro-juicer, ley-line-rifter, and nine Warlocks against
+`warlock-air`.
+
+**2. "The drift this finding predicts has a sample size of zero" — it was three,
+in one pair, all shipped.** The Confidence line rested on this, and it was the
+first thing the audit falsified. Found in `ley-line-rifter` / `ley-line-walker`:
+
+| what | fixed in |
+|---|---|
+| the Rifter had **none** of the seven related-skill category bonuses the Walker has, because `fix-pre-rue-class-audit.sql` applied them to the Walker and names four classes, not the Rifter | PR #783 |
+| the Rifter was missing two equipment entries the book grants it - `pen or pencil`, `note or sketch pad` | PR #784 |
+| the **Walker's** `small-sack` was a fixed `qty: 4` against RUE's printed *"1D4 small sacks"*, where the Rifter was right | PR #784 |
+
+The third is the one worth carrying forward: **the copy was right and the
+original was wrong.** Do not assume the direction of a fix on a copy pair before
+reading the page.
+
+**3. The proposal's own open question is answered, and not the way it guessed.**
+F25 said `copy_of` *"would be an `UNMODELLED` key by `class-check`'s own
+definition... and that report exists to stop exactly this."* Checked: `class-check`
+reports UNMODELLED and does **not** block - `scripts/class-check.mjs` says so in
+its own header, *"a decision to make, not a defect"*, and its exit code is errors
+and pre-flight failures only. The suite that WOULD fail is smoke, via
+`no shipped class reports an unmodelled key`
+(`test/checks/class-check-tool.mjs`). **But that check reads only
+`add-*-class.sql` files**, and these declarations are applied by a separate data
+script, so it never sees them. So the `KNOWN_KEYS` entry added here is
+**defensive rather than load-bearing today**: it stops the false alarm the next
+time a class ships with `copy_of` in its own `add-` script, which is the
+`psionics_allowed` / `xp_table` failure that file already records twice.
+
+**What holds.** The load-bearing claim - that **no cross-class equality
+invariant exists anywhere** - held under checking, across `regression.mjs`,
+`smoke.mjs`, `class-check.mjs` and `repo-vs-live.mjs`. The block-by-block copy
+claim for euro-juicer re-derived exactly. The F23 distinction holds. Two of the
+four "silent" examples turn out to be **already covered** - a renamed gear slug
+or skill goes red in `regression.mjs` - so what is actually invisible is
+narrower and sharper than the finding said: a **value** correction. Which is
+precisely what all three real divergences were.
+
+**What was built.**
+
+- `copy_of: { class: "<id>", except: [<top-level keys>] }` on eleven rows,
+  applied by `db/zzzzzz-f25-copy-of-declarations.sql`. **The except lists are
+  DERIVED from the live rows rather than typed**, so they cannot disagree with
+  the data on the day they land.
+- `copy_of` added to `KNOWN_KEYS` in `scripts/class-check-lib.mjs`.
+- Two checks in `test/regression.mjs`: every declared pair matches outside its
+  except list, and a floor asserting the sweep found the pairs at all. They run
+  against a database **rebuilt from the repo**, which is the question worth
+  asking.
+
+**`except` rather than an allowlist, deliberately.** A block added to one row
+later and not the other fails by DEFAULT; an allowlist would silently not cover
+it. The invariant also refuses a **stale except** - one naming a key the two
+rows now agree on - because that is exactly how a divergence gets re-hidden
+after someone fixes it.
+
+**The check was proved to FAIL before it was trusted.** A temporary script
+injected two defects into a rebuilt database - a changed `starting_money` on
+`warlock-earth`, and a stale `except` on `warlock-fire` - and the run went red
+naming both:
+
+```
+FAIL every declared copy pair still matches outside its except list
+  warlock-earth vs warlock-air: starting_money differs;
+  warlock-fire vs warlock-air: except lists "occ_group", but the two agree on it
+```
+
+The script was deleted and the suite went green again. A check that has only
+ever passed proves nothing.
+
+**What this deliberately does NOT cover, stated so the gap is not mistaken for
+coverage.** `euro-juicer` excepts `skills`, because its two language entries
+differ by design - so a skills-block divergence is **not** caught for that pair,
+which is the very shape the Rifter's category bonuses took. `ley-line-rifter`
+excepts the seven blocks RUE gives it in its own right. Nine Warlock pairs
+compare their skills in full.
+
+**One divergence found and left alone**, because it could not be settled: the
+Walker's `Language: Other` choice group carries `per_level: 5` and the Rifter's
+does not. Which side is right turns on what `per_level` means on a **choice
+group** as opposed to a named skill, and that was not established. It is named at
+`db/zzzzzz-ley-line-walker-rifter-equipment.sql`:34-35 (grepped for
+`per_level`, 2026-09-07), and `grep -c per_level` on
+`db/zzzzzz-f25-copy-of-declarations.sql` returns 0 - it is in no except list,
+because this pair excepts `skills` wholesale.

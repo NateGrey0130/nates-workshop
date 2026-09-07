@@ -2319,6 +2319,77 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     check('and the sweep actually looked at some',
       sweepClasses.length > 100 && cited > 500,
       `${sweepClasses.length} classes, ${cited} citations`);
+
+    // -- a declared COPY pair must still match ------------------------------
+    // BOOK-INGEST-AUDIT.md F25. Some books define a class AS another class and
+    // state nothing of their own: Triax printed 175 says of the Euro-Juicer
+    // "create the character as usual", and RUE printed 118 says "Ley Line
+    // Rifter Stats. Same as the Ley Line Walker." Nothing here composes one
+    // class from another, so those are stored as full copies - and nothing
+    // recorded that the two must stay identical, or compared them.
+    //
+    // What that cost, before this check existed: fix-pre-rue-class-audit.sql
+    // applied seven related-skill category bonuses to the Ley Line Walker and
+    // not to the Rifter, which had none at all; the Rifter was missing two
+    // equipment entries the book grants it; and the Walker's small sacks were
+    // a fixed 4 against the book's 1D4, where the Rifter was right. Three
+    // divergences in one declared pair, none of them visible to anything that
+    // ran. F25's own Confidence line said this had never happened.
+    //
+    // `except` lists the keys that legitimately differ, rather than an
+    // allowlist of what to compare, so a block added to one row later and not
+    // the other fails by DEFAULT. An allowlist would silently not cover it.
+    const NEVER_COMPARED = new Set([
+      'id', 'name', 'source_book', 'extraction_notes', 'copy_of',
+      'lore', 'gm_notes', 'sections',
+    ]);
+    const parsedById = new Map();
+    for (const c of sweepClasses) {
+      const p = parseClassMarkdown(c.markdown);
+      if (p.ok) parsedById.set(c.class_id, p.data);
+    }
+    const copyProblems = [];
+    let copyPairs = 0;
+    let copyKeys = 0;
+    for (const [id, data] of parsedById) {
+      const decl = data.copy_of;
+      if (!decl) continue;
+      copyPairs++;
+      const baseId = (decl && typeof decl === 'object') ? decl.class : decl;
+      const except = new Set((decl && typeof decl === 'object' && Array.isArray(decl.except))
+        ? decl.except : []);
+      const base = parsedById.get(baseId);
+      if (!base) {
+        copyProblems.push(`${id}: copy_of names "${baseId}", which is not a published class here`);
+        continue;
+      }
+      const keys = [...new Set([...Object.keys(data), ...Object.keys(base)])]
+        .filter((k) => !NEVER_COMPARED.has(k) && !except.has(k)).sort();
+      for (const k of keys) {
+        copyKeys++;
+        if (JSON.stringify(data[k]) !== JSON.stringify(base[k])) {
+          copyProblems.push(`${id} vs ${baseId}: ${k} differs`);
+        }
+      }
+      // A stale `except` is its own defect: it names a key the two now agree
+      // on, so it hides nothing today and will go on hiding nothing after
+      // someone makes them disagree. That is exactly how the Rifter's category
+      // bonuses would have been re-hidden.
+      for (const k of except) {
+        if (NEVER_COMPARED.has(k)) {
+          copyProblems.push(`${id} vs ${baseId}: except lists "${k}", which is never compared anyway`);
+        } else if (JSON.stringify(data[k]) === JSON.stringify(base[k])) {
+          copyProblems.push(`${id} vs ${baseId}: except lists "${k}", but the two agree on it`);
+        }
+      }
+    }
+    check('every declared copy pair still matches outside its except list',
+      copyProblems.length === 0, copyProblems.slice(0, 8).join('; '));
+    // A floor, not a count: the invariant passing because it found no pairs is
+    // the failure mode this whole check exists to avoid.
+    check('and the copy sweep examined the pairs it should',
+      copyPairs >= 11 && copyKeys >= 80,
+      `${copyPairs} pairs, ${copyKeys} keys compared`);
   }
 }
 
