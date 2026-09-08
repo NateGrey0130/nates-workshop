@@ -4681,6 +4681,7 @@ ledger line**, so the convention is near-universal and entirely unenforced.
 so a rebuild from nothing records it too. **Posture: data only, no new check.**
 
 **A check is the obvious second half and is deliberately NOT proposed here.**
+<!-- claim-ok: describes a hypothetical check's rule, not what any file says -->
 A pre-flight in `d1-apply.mjs` refusing a migration whose text does not name
 itself in `schema_migrations` would catch the next one, and it is a real
 proposal - but it is a gate on the script that writes production, it would fire
