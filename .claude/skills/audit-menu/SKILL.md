@@ -578,6 +578,7 @@ that trap one level down.
 | `apps/character-creator/REDESIGN-AUDIT.md` | `R`, `N` | `###` | severity word: `### R1 — high — …` |
 | `apps/character-creator/RETRO-AUDIT.md` | `R` | `###` | severity word: `### R1 — high — …`. **Its `R` collides with `REDESIGN-AUDIT`'s**, so a bare `R3` names neither |
 | `apps/character-creator/UI-AUDIT.md` | `F` | `###` | severity word: `### F1 — high — …` |
+| `apps/media-vault/SHARE-AUDIT.md` | `V` | `##` | `## V1 — high — …`. **No other menu here uses `V`**, chosen so a bare number is unambiguous |
 | `apps/media-vault/BULK-AUDIT.md` | `B` | `##` | `## B1 — …` |
 | `apps/media-vault/ISBN-AUDIT.md` | `F` | `##` | `## F1 — …` |
 | `apps/pick3cut5/AUDIT.md` | `F`; `T` | `###`; **not a heading** | `### F1. …`, and `**T1. … — PASSED.**` as BOLD PARAGRAPH LEADS under `## T — paths that have never run` |
