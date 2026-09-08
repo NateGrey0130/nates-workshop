@@ -14,7 +14,7 @@ the human view of the same thing plus the import status.
 | slug | book | PDF pages | layer | printed | offset | status |
 |---|---|---|---|---|---|---|
 | `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 224 — corrected 2026-09-07, see below | **+0** | **imported** |
-| `underseas` | Rifts WB 7: Underseas | 216 | SCAN (OCR) | 214 | **+0 / -1 split** | **importing** |
+| `underseas` | Rifts WB 7: Underseas | 216 | SCAN (OCR) | 214 | **+0 / -1 split** | **imported** |
 | `new-west` | Rifts WB 14: New West | 226 | text layer | 224 | +1 | cached |
 | `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | cached |
 | `mystic-russia` | Rifts WB 18: Mystic Russia | 178 | text layer | 176 | +1 | cached |
@@ -25,7 +25,9 @@ Status is `cached` -> `surveyed` -> `imported`. `phase-world` is **imported** as
 of 2026-08-31: surveyed on 2026-08-30, then shipped in ten category batches,
 and all THIRTY-FOUR of its playable classes are in. It also passed through a
 fourth state the earlier sessions did not need - `importing`, for a book
-shipping in batches across many sessions - and that state is now empty. The
+shipping in batches across many sessions. **That state is empty again as of
+2026-09-08**, `underseas` having left it; it was NOT empty while this sentence
+said it was, from the day `underseas` entered it. The
 survey at `apps/character-creator/docs/surveys/phase-world.md` remains the
 record of what went in and what was deliberately left; its ledger is the
 authority. The other six books are cache-only: the kickoff session caches and
@@ -983,3 +985,90 @@ catalog holds TWO rows for the submersible-piloting skill — `Boat: Submersible
 both Pilot, both 40% +4%. Underseas prints it once. Merging them is
 duplicate-tool work that writes redirects and rewrites characters; picking which
 name survives is a catalog decision, not a reading of this book.
+
+### `underseas` complete, 2026-09-08 (PRs #798-#810) — AND THE BOOK IS CLOSED
+
+**Thirteen PRs**, carrying **37 data scripts** between them. Twelve applied
+`--remote` before merging; exactly one, #806, carried no SQL at all and was a
+correction to this book's own survey ledger. Counted from the PRs rather than
+from memory, because the one arithmetic slip this book produced - #805 claiming
+all 25 classes when 20 were in - was a batch count nobody checked against the
+thing it described. Catalog totals moved
+**358 -> 367 skills, 607 -> 681 spells, 190 -> 215 classes, 1154 -> 1241 gear,
+55 -> 105 vessels**.
+
+| category | in | left |
+|---|---|---|
+| skills | **9** - 8 new from the skills chapter plus `Language: Dolphin/Whale`, which the chapter does NOT define and which was found in a class list on printed 75-76 | none known |
+| re-citations | **6** rows moved off the phantom `Rifts Skill List` onto this book's own pages, taking it from 40 untraceable rows to **34** | the other 34, which are not this book's |
+| spells | **74** across four traditions - 41 `Ocean:`, 21 `Spellsong:`, 10 `Dolphin:`, 2 Korallyte unprefixed. Ten collide with an existing `Water:` warlock row and are the SAME spell at another tradition's price, which was CHECKED against printed 70 line by line rather than assumed. `variant_note` on each; gap filed as **F26** | none |
+| classes | **25** of 25 - the book is complete, verified by counting `imported_classes` against the printed-214 ladder rather than by adding up batches | **none** |
+| gear | **87** - weapons, armour, bionics and the book's 33 priced sea vessels, which go in `gear` with category `vehicle` on the existing 36-row precedent and are the first rows to use `gear.sdc` | see the stub note below |
+| vessels | **50** stat blocks with 415 M.D.C. locations and 247 weapon systems, in five files split by the page each block's HEADING falls on | none |
+
+**Only ONE of the fifty vessels has a price**, and that is the section rather
+than a gap in the reading. Every other entry is military, magic or Atlantean and
+the book's own phrase is some variant of *never sold to outsiders*. Twelve
+follow that with an ESTIMATE, and an estimate is not a price, so none of them is
+stored as one. The Poseidon is the sharpest case: **4.2 billion credits to
+build** is a real, stated figure and still not a market price.
+
+**A cyborg is in the `vehicles` table, deliberately.** The VX-20,000 Barracuda
+carries a `Model Type:` line, M.D.C. by location and numbered weapon systems -
+the shape migration 048 built that table for, and the same rule the gear pass
+used to route 26 entries there. Its `Class:` line is stored verbatim.
+
+**Printed 131 is absent from the source PDF** and it IS a loss: it cuts the USS
+Ticonderoga after weapon system 2. Four OTHER pages inside stat blocks - printed
+142, 187, 194 and 208 - are blank illustration pages and lose nothing, which was
+checked field by field on each. Two of those four were not known before the
+vessel pass.
+
+**The book contradicts itself at least six times and every contradiction is
+stored rather than resolved**, because picking a winner erases it: the War Crab
+names one gun twice, the Sea Fin numbers a system "4" twice, the Poseidon's
+systems run 1-5 then 7, the Sea Bat's rail gun count disagrees with its own
+text, the Barracuda's Quad Rifle prints two laser ranges, and the Deathbringer
+repeats a system's Range and Payload lines verbatim.
+
+**Two findings came out of this book**, F26 and F27, and both are open. **F27 is
+the one that matters to the NEXT book**: `class-check` does not validate skill
+names inside an MOS option, so a typo there ships silently. Any book with a
+military career structure is exposed to it.
+
+### The CI debt this book left, and closing it (PR #810)
+
+**`regression.mjs` was red from PR #807 through #809** - three merges, the same
+eight checks failing byte for byte in every run. No one of those PRs caused it
+and no one of them fixed it, which is the part worth recording here rather than
+only in the survey: **a check that stays red across merges stops being read**,
+and the next book's session would have inherited a signal it could not use.
+
+Six were stale documented counts, one was the Navy Seaman's unregistered MOS,
+and nine were O.C.C.s shipped with no `occ_group` - which is not cosmetic, since
+a race restriction naming a missing group fails OPEN.
+
+**A rule worth carrying forward:** the grouping could not be read off a heading.
+`zz-rifts-occ-groups.sql` could cite RUE's own section headings straight into
+the five names `OCC_GROUPS` allows; **Underseas groups by NATION instead**, and
+no nation is one of the five. The evidence used was the 3D6/1D6 split already
+cited behind each class's `CORE_SDC_BY_CLASS` entry. **Any book that does not
+print the five categories will need the same substitution**, so check for it at
+survey time rather than at the end.
+
+### What is still open on this book after it closed
+
+- **18 gear stubs**, created by the class imports and not cleared by the gear
+  pass. They are mundane kit the book names in `Standard Equipment` and never
+  stats - luggage, duct tape, a fishing pole, a wet suit - and MOST are
+  duplicates of rows the catalog already holds properly under another name
+  (`flashlight-pen` against RUE's `Pen Flashlight`, `hand-computer` against
+  `Hand-Held Computer`). The class import coined a slug from the book's wording
+  instead of matching the existing row, which is a shape worth watching for on
+  the next book.
+- **F26 and F27**, both open.
+- **Nothing checks a vessel's citation.** `source-coverage.mjs` gives every
+  other catalog table a traceability row and touches `vehicles` only for a price
+  count, so 105 vessels' `source_book` values are unverified by the one ledger
+  built to verify exactly that. Not this book's doing - `triax` has the same
+  hole and it went unnoticed for a book and a half.
