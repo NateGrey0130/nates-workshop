@@ -416,6 +416,18 @@ export const CORE_SDC_BY_CLASS = {
   // not martial. 1D6, with the +2D6x10 the class grants landing on top of it
   // as a pool bonus.
   'sea-inquisitor': '1D6',
+
+  // Underseas' three spell casters, printed 56-63. All three state neither
+  // an S.D.C. nor an M.D.C. formula. 1D6 for each, and none of them is a
+  // near miss: the Whale Singer has Hand to Hand: Basic and one W.P., the
+  // Ocean Wizard has Hand to Hand: Basic and no W.P. granted at all, and the
+  // SEA DRUID IS GRANTED NO HAND TO HAND SKILL WHATSOEVER - its O.C.C. skill
+  // list runs from Basic Math to one W.P. of choice and stops. Underseas
+  // does not sort its O.C.C.s into men-of-arms sections, so there is no
+  // heading to read these off; the skill lists are the argument.
+  'whale-singer': '1D6',
+  'ocean-wizard': '1D6',
+  'sea-druid': '1D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence
