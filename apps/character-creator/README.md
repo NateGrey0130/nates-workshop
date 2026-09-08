@@ -179,7 +179,7 @@ touches MediaVault and FilamentForge too — they use its `openModal` /
 
 ## Data model
 
-Thirty-six tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
+Thirty-seven tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
 and one R2 bucket (`MEDIA`, same name) for the only binary this app stores.
 `media_items` belongs to MediaVault, and the six tables prefixed `ff_` belong
 to FilamentForge — that prefix is the collision boundary, because this app's
@@ -270,6 +270,7 @@ arrives as mojibake and the row is a stub nothing can find.
 |---|---|
 | `character_drafts` | One unfinished wizard build per person, `UNIQUE (owner_email)`. `state` is the build as JSON — deliberately not the catalogs it was built against. Its own table rather than a `draft` status on `characters`; see [Unfinished builds are saved](docs/wizard-and-sheet.md#unfinished-builds-are-saved). |
 | `catalog_redirects` | Where a retired key went. Written when a merge deletes a row or a key is renamed by hand, so class markdown citing the old slug or name keeps resolving. Polymorphic by design — `catalog` names which table `to_id` points into — so there is no foreign key. See [Retired keys keep resolving](docs/catalog.md#retired-keys-keep-resolving). |
+| `catalog_pair_dismissals` | A suggested duplicate pair somebody looked at and judged **distinct**, so `Find duplicates` stops proposing it. It records only the NO: a confirmed duplicate is merged, and the merge deletes the losing row, so that pair can never be suggested again. The two keys are stored **sorted**, because the detector walks rows in id order and which one is `a` differs between databases. No foreign key, so a dismissal survives one of its rows being merged away later. See [Retired keys keep resolving](docs/catalog.md#retired-keys-keep-resolving) for the other half, and `BOOK-INGEST-AUDIT.md` F33. |
 | `play_events` | Play mode's action log, append-only. `payload` is JSON — a note, and `{from, to}` changes for undo. `undone_at` NULL means the event stands; undo marks, never deletes. Commentary, not a ledger: the character row stays the source of truth and nothing replays events |
 | `data_script_runs` | Which `apps/character-creator/db/*.sql` data scripts have run here, and when. One row per **run**, not per file — those scripts guard every statement, so one is safe to re-run and safe to run early, and an applied-once flag would record a deliberate no-op as done. `note` non-NULL means the run was asserted rather than observed. See [Data scripts](docs/operations.md#data-scripts). |
 

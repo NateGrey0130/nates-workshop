@@ -2,12 +2,28 @@
 // POST /api/character-creator/catalogs/duplicates?catalog=skills — merge two rows
 //        { keep_id, remove_id }
 //
+// POST …?catalog=skills&dismiss=1  — these two are NOT the same row
+//        { key_a, key_b, note }
+// POST …?catalog=skills&restore=1  — undo a dismissal
+//        { key_a, key_b }
+//
 // Admin only. The importers dedupe on an exact name; this finds the pairs that
 // match only after normalising punctuation and word order, which is where the
 // real duplicates hide. Suggestions are never applied automatically.
+//
+// The POSTs are the two answers, and only one of them stores anything. YES is
+// executed: `mergeRows` repoints, redirects and deletes the losing row, so the
+// pair stops existing and there is nothing to remember. NO had nowhere to go
+// until BOOK-INGEST-AUDIT F33 - every reader re-judged the same pairs from
+// scratch, and on gear that is 589 of 591 suggestions in the loosest tier.
+//
+// The verb split follows `campaigns/[id]/npcs/sweep.js`, which had this shape
+// first: one POST route, the action in a query flag, and a dismissals table
+// consulted BEFORE anything is proposed.
 
 import { requireAdmin, json, readJson } from '../_lib/auth.js';
-import { findDuplicates, mergeRows, resolveCatalog } from '../_lib/catalog-merge.js';
+import { findDuplicates, mergeRows, dismissPair, restorePair, resolveCatalog }
+  from '../_lib/catalog-merge.js';
 
 export async function onRequestGet({ request, env }) {
   const guard = requireAdmin(request, env);
@@ -51,6 +67,18 @@ export async function onRequestPost({ request, env }) {
 
   const { key, err } = resolveCatalog(request);
   if (err) return err;
+
+  const flags = new URL(request.url).searchParams;
+  if (flags.get('dismiss') === '1') {
+    const b = await readJson(request);
+    const r = await dismissPair(env, key, b?.key_a, b?.key_b, b?.note, guard.email);
+    return r.error ? json({ error: r.error }, r.status) : json(r);
+  }
+  if (flags.get('restore') === '1') {
+    const b = await readJson(request);
+    const r = await restorePair(env, key, b?.key_a, b?.key_b);
+    return r.error ? json({ error: r.error }, r.status) : json(r);
+  }
 
   const b = await readJson(request);
   const keepId = parseInt(b?.keep_id, 10);

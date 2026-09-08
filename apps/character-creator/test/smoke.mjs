@@ -337,7 +337,7 @@ check('systems: empty and all-selected both store NULL',
 check('systems: one system stores a JSON array',
   coerceField(sysField, ['rifts']).value === '["rifts"]');
 
-import { classesMentioning, findDuplicates, normaliseName, qualifiersDisagree, similarity } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
+import { classesMentioning, findDuplicates, normaliseName, pairKey, qualifiersDisagree, similarity } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
 import { collapseStatement, keysOf, redirectStatements, resolveKeys } from '../../../functions/api/character-creator/_lib/catalog-redirects.js';
 import { buildStubStatements, referencedGear, referencedMosSkills, restrictionNames } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { comparePair, descriptionOverlap, mechanicalNumbers }
@@ -1004,7 +1004,19 @@ check('unrelated names do not match at all', similarity('Swimming', 'Sewing') < 
 // 3 I.S.P. and `Telekinesis (Super)` is Super at 10, but normaliseName strips
 // "(Super)" the same way it strips "(people)", scoring them a perfect 1. Three
 // of eight confident suggestions on that catalog were this.
-const catalogDb = (rows) => ({ DB: { prepare: () => ({ all: async () => ({ results: rows }) }) } });
+// SQL-aware, because findDuplicates now asks TWO questions: the catalog rows,
+// and the pairs a human has already dismissed. A shim that answered both with
+// the same list would hand the dismissal filter a set of catalog rows and quietly
+// mean nothing — the shape of trap this repo keeps meeting, so the fixture
+// distinguishes them rather than the caller remembering to.
+const catalogDb = (rows, dismissals = []) => ({
+  DB: {
+    prepare: (sql) => ({
+      bind: () => ({ all: async () => ({ results: /catalog_pair_dismissals/.test(sql) ? dismissals : rows }) }),
+      all: async () => ({ results: /catalog_pair_dismissals/.test(sql) ? dismissals : rows }),
+    }),
+  },
+});
 
 const psiPairs = await findDuplicates(catalogDb([
   { id: 1, name: 'Telekinesis', category: 'Physical', isp: 3 },
@@ -1099,6 +1111,45 @@ check('one system on both rows stays confident', await (async () => {
   ]), 'gear');
   return pairs.length === 1 && pairs[0].tier === 'certain' && pairs[0].system_clash === false;
 })());
+
+// ── a pair somebody already judged DISTINCT ──────────────────────────────────
+// BOOK-INGEST-AUDIT F33. The detector was never the missing part; the answer
+// had nowhere to go, so every reader re-judged the same pairs. Gear suggests
+// 591 and 589 of those are the loosest tier.
+const CAPES = [
+  { id: 1, slug: 'cape', name: 'Cape', system: 'both', category: 'gear' },
+  { id: 2, slug: 'cape-long', name: 'Cape', system: 'both', category: 'gear' },
+];
+check('a dismissed pair is not suggested again',
+  (await findDuplicates(catalogDb(CAPES, [{ key_a: 'cape', key_b: 'cape-long' }]), 'gear')).length === 0);
+// The order the panel happened to show is not the order it is stored in: the
+// detector walks rows in id order, so a dismissal keyed the way it was
+// displayed would stop matching in a rebuilt database.
+check('and the stored order does not matter',
+  (await findDuplicates(catalogDb(CAPES, [{ key_a: 'cape-long', key_b: 'cape' }]), 'gear')).length === 0);
+check('and case does not matter, matching the columns COLLATE NOCASE',
+  (await findDuplicates(catalogDb(CAPES, [{ key_a: 'CAPE', key_b: 'Cape-Long' }]), 'gear')).length === 0);
+// The half that would make this dangerous: a dismissal must silence ONE pair,
+// not the panel. A filter keyed on either row alone would hide every pair that
+// row is in, and the row with the most suggestions is the one most worth
+// reading.
+check('dismissing one pair leaves that row\'s OTHER pairs alone', await (async () => {
+  const pairs = await findDuplicates(catalogDb([
+    ...CAPES, { id: 3, slug: 'cape-short', name: 'Cape', system: 'both', category: 'gear' },
+  ], [{ key_a: 'cape', key_b: 'cape-long' }]), 'gear');
+  const slugs = pairs.map((p) => [p.a.slug, p.b.slug].sort().join('|')).sort();
+  return pairs.length === 2 && slugs.join(' ') === 'cape-long|cape-short cape|cape-short';
+})());
+check('a dismissal naming a row that no longer exists is inert', await (async () => {
+  const pairs = await findDuplicates(catalogDb(CAPES,
+    [{ key_a: 'cape', key_b: 'a-row-that-was-merged-away' }]), 'gear');
+  return pairs.length === 1;
+})());
+// pairKey is the identity both halves agree on - the writer sorts on the way in
+// so the stored row is canonical, and the reader sorts so a mis-sorted row
+// still matches. Pinned directly because everything above depends on it.
+check('pairKey is order- and case-independent',
+  pairKey('b', 'a') === pairKey('a', 'b') && pairKey('A', 'B') === pairKey('b', 'a'));
 
 // INGESTION-AUDIT F29. The all-pairs walk became a token-prefix index, and the
 // risk of an index is a pair it never compares. These are the three shapes that
