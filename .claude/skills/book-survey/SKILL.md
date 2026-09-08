@@ -170,6 +170,24 @@ changed nothing worth having. The OCR is CONFIDENT about its mistakes - `Ibs`
 scores 91-94 and `18.000` scores 93-97, and only 1.3% of words score under 70
 with none of the known misreads among them. A confidence filter finds nothing.
 
+**That measurement does not say the PAGE is unreadable.** It says a cleaner scan
+of the same layout returns the same mistakes, which is why the remedy is
+contextual rather than optical. **A page whose LAYOUT ANALYSIS failed is a
+different fault, and a render does reach it.** `triax` p110 sets a fifteen-item
+bionics list beside a full-page line-art plate: `--psm 3` loses the list to the
+hatching, and items 11, 12 and 14 are absent from the cached page entirely. A
+160 dpi render reads all ten of 6-15 without difficulty.
+
+**So do not raise the DPI, but do look at the page** - and note the two DPI
+instructions here are not in conflict: `--dpi-tables 500` buys legibility on
+small TYPE, and nothing buys layout analysis. §0c is the render, for either
+kind of cache.
+
+*(A grep of the rest of this cache also recovers those three, because Triax
+reprints the same list for its other cyborgs - `p086`, `p098`, `p100`, `p102`.
+That is a property of this book, not a method. The render answers the page you
+are actually reading.)* `BOOK-INGEST-AUDIT.md` F39.
+
 Fix it where the meaning is, not where the pixels are: contextual repairs at
 ingest, and the typed readers in `scripts/ocr-fields-lib.mjs` for the rest.
 `--renormalise` re-applies the substitution table to cached raw text without
@@ -180,7 +198,7 @@ discovering mid-task that you need geometry you did not save, or that
 `I.S.P.` reads as `LS.P.` on most pages. The cache is gitignored; it is a
 commercial book.
 
-## 0c. A text layer does not give you TABLES. Render the page and look
+## 0c. A cache of EITHER kind can lose a page. Render it and look
 
 This is the trap that costs the most time, because step 0 says "text layer" and
 you believe it. A text layer extracts *prose* faithfully and **loses the
@@ -189,11 +207,22 @@ lands somewhere else, and nothing tells you it happened.
 
 Every authority table in this repo that mattered had to be read as an image:
 
-| table | what the text layer gave |
-|---|---|
-| Attribute Bonus Chart (PF 16) | nothing findable — greps for the row values returned no page at all |
-| Types of Armor (PF 270) | column fragments on the page *after* it, headers detached from values |
-| Coalition SAMAS Pilot's skills (RUE 233) | merged with the Coalition Grunt's column beside it, six wrong numbers |
+| table | cache kind | what the cache gave |
+|---|---|---|
+| Attribute Bonus Chart (PF 16) | text layer | nothing findable — greps for the row values returned no page at all |
+| Types of Armor (PF 270) | text layer | column fragments on the page *after* it, headers detached from values |
+| Coalition SAMAS Pilot's skills (RUE 233) | **scan** | merged with the Coalition Grunt's column beside it, six wrong numbers |
+
+**The third row is a SCAN, and this table said otherwise for a long time.**
+`rue` is Rifts Ultimate Edition - `text_layer: false`, and §0b above uses
+`--slug rue` as its worked example of one. The column used to read *"what the
+text layer gave"*, which quietly filed the one scan case here under the other
+kind and is why this section read as a text-layer remedy. It is not one.
+
+**And a scan loses more than tables.** `triax` p110 sets a fifteen-item bionics
+list beside a full-page line-art plate; the cache has items 6-9, then `0.
+Gyro-compass` and glyph noise, and 11, 12 and 14 are absent from that page
+altogether. Nothing about it is a chart. §0b has the rest of that case.
 
 **Render it and read it.** This one *is* a throwaway probe — it writes a PNG you
 look at once and nothing depends on it afterwards, which is the whole difference
