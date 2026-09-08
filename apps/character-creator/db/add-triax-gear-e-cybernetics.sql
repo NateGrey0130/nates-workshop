@@ -8,11 +8,11 @@
 -- The catalog held essentially no cybernetics before this: a query for bionic,
 -- cyber and implant across all 1,025 gear rows returned one row, and that was
 -- Cyber-Armor, a suit of armour from a web reference. These twenty-five are
--- filed as ordinary "gear" - and as "weapon" for the four on printed 154 that
--- do damage - on the same reading that puts Juicer Uprising's designer drugs
--- and the bio-comp system in "gear": they are priced, purchasable augmentations
--- a character buys. A cybernetics catalog of its own would be a schema change,
--- and this batch does not make one.
+-- filed as ordinary "gear" - and as "weapon" for the four that do damage, all
+-- of them on printed 154 - on the same reading that puts Juicer Uprising's
+-- designer drugs and the bio-comp system in "gear": they are priced,
+-- purchasable augmentations a character buys. A cybernetics catalog of its
+-- own would be a schema change, and this batch does not make one.
 --
 -- WHAT THAT MEANS IN PRACTICE: 113 published classes mention cybernetics in
 -- their markdown, almost all of them in a restriction saying the class starts
@@ -29,6 +29,12 @@
 -- THE SPU-5 IS NOT REPEATED HERE. Printed 152-153 sells it both as a worn
 -- accessory and as a 2,000 credit implant; it is one device and it is one row,
 -- in add-triax-gear-d-equipment.sql, with both prices in its cost_note.
+--
+-- TWO OF THE p.153 CITATIONS BELOW ARE WRONG AND ARE CORRECTED LATER. The
+-- Extendible Hydraulic Hands/Arm and the Psionic Electro-Magnetic Dampers are
+-- printed on 154, not 153; this file assigned pages by category rather than by
+-- page. zzzzzz-triax-gear-citations.sql sets both to p.154, and it sorts after
+-- this file. BOOK-INGEST-AUDIT.md F40. The rows are left as they shipped here.
 --
 -- Sorts after add-triax-gear-d-equipment.sql.
 

@@ -5531,3 +5531,84 @@ were not checked, which is why the proposal asks for that rather than asserting
 they are fine. **What would raise it:** reading the folios for those twenty.
 
 **Ongoing cost: none.** One string, and the sweep it proposes is finite.
+
+**Taken, 2026-09-08 (PR #TBD). Posture held: a data fix, no schema change and
+no new check** - one data script of a single `UPDATE`, plus two comment
+corrections in the file that made the error.
+
+**THREE corrections, and the first is to this finding's own reasoning.**
+
+1. **The ledger CAN see a wrong citation, and it was already reporting one of
+   these two rows.** This finding said `source-coverage-lib.mjs:20`'s
+   `traceable` bucket is why the error had to be found by reading. That quote is
+   exact and `bucketFor` does only resolve slug -> offset -> window. **But the
+   same file's `summariseValues` (`:210-241`) tests each gear numeric against
+   the cited window and classifies a miss as `late`/`early`/`absent`**, it is
+   wired to `node scripts/source-coverage.mjs --values`, and it is **`F1`'s own
+   product on this menu**. Run before the fix, it printed:
+
+   ```
+   LATE  Extendible Hydraulic Hands/Arm = 150000 - cites triax p153-p153, printed one page later
+   ```
+
+   **The true statement is narrower:** the dampers row is invisible to it
+   because its `cost` is NULL, so `valueSpellings` returns nothing and the row
+   is never tested. A wrong citation on a row carrying a number is already
+   caught. **This is the shape `audit-menu` warns about** - a finding arguing
+   from a capability gap that does not exist, and the check was on this menu.
+2. **Two rows were wrong, not one.**
+   `add-triax-gear-e-cybernetics.sql:55`, the **Extendible Hydraulic Hands/Arm**,
+   is also printed on 154 - `.cache/books/triax/txt/p154.txt:10-18`, closing
+   *"Typical Arm P.S.: 10 to 20, Cost: 150,000 credits."* It is the first entry
+   under that page's *Bionic Weapons & Combat Features* header, which is how it
+   was missed.
+3. **The file's own header was false in the same way and is corrected here.** It
+   read that the four rows filed as `weapon` are *"the four on printed 154 that
+   do damage"*, which quietly asserts that only four entries are on 154.
+   **Six of the twenty-five are.** The file now says the four that do damage are
+   all on 154 without claiming they are all of it, and carries a pointer saying
+   two of its `p.153` strings are corrected later and by which script. **Its
+   rows are left exactly as they shipped** - the correction is a later script,
+   not a rewrite of what ran.
+
+**The sweep the proposal asked for was done in full, and it settles the scope
+the finding marked low.** All twenty-five rows checked against the folio printed
+on the cached page, plus an independent name-token pass: **23 correct, 2 wrong,
+0 unsettled.** The nineteen other `p.153` rows are on 153 and all four existing
+`p.154` rows are right. The same pass over all fifteen `apps/character-creator/db/*triax*.sql`
+flagged **no other file**.
+
+**Why this is not `INGESTION-AUDIT` `F20`, which is the reason to be careful
+here.** That finding also accused production rows of citing the wrong page; its
+headline was **false**, and taking it found the four rows were correct and that
+its fix *"would have destroyed a verified citation"*. The difference is the
+evidence. `F20` had a page number that looked wrong. These two have a folio
+reading **154** on the page carrying the entry, and a **stored value that
+matches the printed one** - the hydraulic arm's `150000` against *"Cost:
+150,000 credits"*, and the dampers' `+1/+2/+1` in the order the page prints
+them. That is the standard `zzzzzz-triax-skill-citations.sql` set when it
+repaired four skill rows, and it is met here.
+<!-- claim-ok: quoting INGESTION-AUDIT.md:182-185, opened and read 2026-09-08 -->
+
+**The entry directly below the dampers on that page is the RVB-31 Concealed
+Vibro-Blade, which already cited p.154.** Two adjacent entries, one filed on
+each page, which is the clearest statement of what went wrong: this file
+assigned pages by **category** rather than by page.
+
+**Measured, before and after, `--remote`.** `source-coverage.mjs --values` went
+from **241 offenders (85 absent, 156 off by a page)** to **240 (85 absent, 155
+off by a page)** - exactly the one row it could see. The dampers does not move
+that number and never did, which is correction 1 restated as an observation.
+Production reads `p.154` for both rows.
+
+**What is NOT filed, deliberately.** Those remaining **155 gear rows off by a
+page and 85 whose value is absent** are not a deferral hiding in this note: the
+ledger reports them by design, `F1` owns that surface, and a finding would add
+nothing a `--values` run does not already print. Naming them here rather than
+filing them is the complete answer.
+
+**Cite this one as `BOOK-INGEST-AUDIT` F40.** `SKILL-AUDIT` carries its own
+unrelated `F40`, and a tree grep for the bare number returns mostly that one.
+`node scripts/audit-citations.mjs --remote F40` reports **0 of 226 published
+classes** cite it - and that script sees `extraction_notes` only, so the memory
+store and the other menus were grepped by hand as well. Nothing cites it.
