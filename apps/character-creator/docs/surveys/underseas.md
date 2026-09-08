@@ -327,3 +327,4 @@ What is deliberately left, with the reason:
 | 2026-08-28 | — | cache built (216 pp), offset -1 with a `printed_through: 130` exception verified by folio |
 | 2026-09-07 | — | survey written; 26 playable classes established from the p.214 ladder |
 | 2026-09-07 | [#798](https://github.com/NateGrey0130/nates-workshop/pull/798) | 8 new skills (358 -> **366**); 6 `Rifts Skill List` rows re-cited to this book (40 -> **34**); 2 losing readings recorded on the RUE rows that won. Applied `--remote` before the PR. |
+| 2026-09-07 | [#799](https://github.com/NateGrey0130/nates-workshop/pull/799) | 74 spells across four traditions (607 -> **681**): 21 `Spellsong:`, 41 `Ocean:`, 10 `Dolphin:`, 2 Korallyte unprefixed. Ten collide with an existing row and are the SAME spell at another tradition's price - `variant_note` on each, gap filed as `BOOK-INGEST-AUDIT` F26. Applied `--remote` before the PR. |
