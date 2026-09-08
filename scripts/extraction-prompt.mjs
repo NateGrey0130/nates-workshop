@@ -89,6 +89,11 @@ ${BOOK_TITLES.map((t) => `      ${t}`).join('\n')}
 
 Optional — include only what the page actually states:
 - attribute_requirements: map of attribute → minimum (e.g. \`ME: 12\`)
+- attribute_maximums: map of attribute → MAXIMUM, for the other half of the same
+    printed line — "I.Q. 10 and M.A. 10 or higher, and a P.B. of 12 or lower"
+    is \`attribute_requirements: { IQ: 10, MA: 10 }\` and
+    \`attribute_maximums: { PB: 12 }\`. A cap written into the requirements
+    block states the exact inverse of the book and renders as "PB 12+"
 - attribute_dice: map of attribute → roll string, for RCCs with racial stats
 - hit_points_base / sdc_base / mdc_base / ppe_base: formula strings or numbers
 - starting_money: what the class starts with in gold (Palladium) or credits

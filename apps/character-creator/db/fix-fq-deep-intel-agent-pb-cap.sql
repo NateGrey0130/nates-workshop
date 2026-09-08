@@ -61,3 +61,5 @@ SELECT CASE
        END AS result
   FROM imported_classes
  WHERE class_id = 'fq-deep-intel-agent';
+
+INSERT INTO data_script_runs (filename) VALUES ('fix-fq-deep-intel-agent-pb-cap.sql');
