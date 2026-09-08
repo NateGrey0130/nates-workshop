@@ -299,7 +299,7 @@ local-only script is protected as soon as it says so.
 
 | After | Rows |
 |---|---|
-| classes (published, live) | 220 |
+| classes (published, live) | 225 |
 | skills | 367 |
 | spells | 681 |
 | psionic powers | 116 |

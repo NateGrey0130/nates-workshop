@@ -344,6 +344,7 @@ describes".*
 | #819 | gear, printed 44-51 | **17** | gear 1236 -> **1253** |
 | #820 | classes: all five O.C.C.s of printed 32-42 | **5** | classes 215 -> **220** |
 | #821 | vessels, printed 52-134, in four slices | **22** | vehicles 105 -> **127** |
+| #822 | classes: the cyborg O.C.C. and its four chassis | **5** | classes 220 -> **225** |
 
 ### Batch 2 — gear (PR #819)
 
@@ -609,3 +610,65 @@ seam, which is what made the complete row possible rather than a truncated one.
 **Printed 58's welded page cost nothing here** because F30 was already filed and
 the extraction was told about it: the GB6-96 Transport's M.D.C. footnotes were
 read from the page's word geometry rather than from the cache.
+
+
+### Batch 5 — the cyborgs, and the book is closed (PR #822)
+
+Five classes: the base **Free Quebec Cyborg Soldier** and the four full-conversion
+chassis — **Imprimer, Dervish, Slasher and Leviathan**. Applied `--remote` before
+the merge. `imported_classes` published and live 220 -> **225**, and all ten of
+this book's classes are now in.
+
+**They are five classes rather than one class with four variants, and that is
+F31.** A `variants` block may override `attribute_dice`,
+`attribute_requirements`, the four pool bases, `starting_money`, `bonuses` and
+`skill_overrides` — and `skill_overrides` restates the percentage of a skill the
+class **already grants** and explicitly cannot add one. Each chassis does two
+things a variant cannot: it **adds skills**, and it **changes the related-skill
+count**. So the twelve shared Basic O.C.C. Skills are restated four times, which
+is precisely the drift `variants` exists to prevent.
+
+**The four were generated from one source rather than copied by hand.** A small
+generator holds the shared twelve once and the per-chassis delta separately, so
+the duplication that F31 objects to is at least mechanical rather than
+transcribed four times. It is not a fix — the five rows in D1 still each carry
+their own copy, and each `extraction_notes` says so: **the five must be changed
+together.**
+
+**Only the base class needed a `CORE_SDC_BY_CLASS` entry, and the other four
+looking like omissions is the point.** `withCorePools` returns early for a class
+stating an `mdc_base`, and each chassis states one — they are machines with a
+printed main body. The base entry covers the **partial** conversion cyborg too,
+who is a living human with bionic limbs and still tracks S.D.C. 3D6, on the
+army's own roster: printed 34 lists Cyborg Strike Troopers at 10% of the Quebec
+Military.
+
+**Where the chassis M.D.C. went.** Each class stores only its base main body —
+180, 200, 180 and 220. The armor schedule, the full M.D.C. by location and every
+weapon system live in the `vehicles` row of the same name, imported in #821.
+
+**Three things read off the pages rather than inferred from the pattern:**
+
+- The **Leviathan keeps all six** related skills. Its three siblings each state a
+  reduction and it states none — *"In addition to the Basic O.C.C. Skills, these
+  additional special skills are included"*. Checked against the page.
+- The **Slasher's reduction is worded differently** from its siblings' — *"reduce
+  the selection of other O.C.C. skills by half"* rather than a number — and half
+  of six is three.
+- The **Dervish overrides the base's Climbing**: the shared skills grant Climb at
+  +10% and the Dervish's own list grants it at +20%. The chassis figure wins, and
+  the row says why.
+
+### The book is closed
+
+Ten classes, twenty-two vessels, seventeen gear rows. **Zero spells, zero psionic
+powers and zero new skills**, each confirmed by stat-block scan rather than
+assumed — and the skills answer only after a `--remote` diff whose sixteen
+"missing" rows were all false gaps.
+
+**Seven findings came out of it**, F30 through F36, and all six of F30-F35 went
+through `audit-premise-auditor` before any implementation. **Seven of my own
+claims did not survive that check** — including one quotation that existed in no
+row — and the corrections are in the menu in place. That is the same shape as
+`F23(b)`, and the reason §8 asks for the subagent when the session that wrote a
+proposal is the session about to build it.

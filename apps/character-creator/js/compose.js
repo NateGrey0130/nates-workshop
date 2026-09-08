@@ -485,6 +485,18 @@ export const CORE_SDC_BY_CLASS = {
   // like that to read, which is why its scientists went the other way.
   'fq-side-kick-rpa': '3D6',
   'fq-gb-reloader': '3D6',
+
+  // The FREE QUEBEC CYBORG SOLDIER is the only one of this book's five cyborg
+  // classes that needs an entry, and the reason is worth stating because the
+  // other four look like omissions. `withCorePools` returns early for a class
+  // stating an `mdc_base`, and the four CHASSIS - Imprimer, Dervish, Slasher
+  // and Leviathan - each state one, being machines with a printed main body.
+  // This entry covers the PARTIAL conversion cyborg as well as the full one,
+  // and a partial conversion is a living human with bionic limbs who still
+  // tracks S.D.C. 3D6, on the army's own roster: printed 34 lists Cyborg
+  // Strike Troopers at 10% of the Quebec Military, and the class is granted
+  // Hand to Hand: Expert, three W.P.s and Military at +10%.
+  'fq-cyborg-soldier': '3D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence

@@ -18,7 +18,7 @@ the human view of the same thing plus the import status.
 | `new-west` | Rifts WB 14: New West | 226 | text layer | 224 | +1 | cached |
 | `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | cached |
 | `mystic-russia` | Rifts WB 18: Mystic Russia | 178 | text layer | 176 | +1 | cached |
-| `free-quebec` | Rifts WB 22: Free Quebec | 194 | text layer | 192 | +1 | **surveyed** |
+| `free-quebec` | Rifts WB 22: Free Quebec | 194 | text layer | 192 | +1 | **imported** |
 | `phase-world` | Rifts DB 2: Phase World | 209 | SCAN (OCR) | 208 | **+0** | **imported** |
 
 Status is `cached` -> `surveyed` -> `imported`. `phase-world` is **imported** as
@@ -1151,3 +1151,45 @@ the reference chapter of printed 33-35, which lists existing O.C.C.s at
 percentages and defines none; the four named-NPC stat blocks on printed 127,
 142, 151 and 175; and the setting chapters — the war narrative (6-31), Free
 Quebec itself (133-153), Old Bones (152-184) and the adventure hooks (185-193).
+
+### `free-quebec` complete, 2026-09-08 (PRs #818-#822) — AND THE BOOK IS CLOSED
+
+Status `surveyed` -> **`imported`**. Five PRs, four of them carrying data, each
+applied `--remote` before its merge.
+
+| PR | batch | rows | catalog after |
+|---|---|---|---|
+| #818 | survey | 0 | unchanged |
+| #819 | gear, printed 44-51 | 17 | gear 1236 -> **1253** |
+| #820 | the five O.C.C.s of printed 32-42 | 5 | classes 215 -> **220** |
+| #821 | vessels, printed 52-134 | 22 | vehicles 105 -> **127** |
+| #822 | the cyborg O.C.C. and its four chassis | 5 | classes 220 -> **225** |
+
+**Ten classes, twenty-two vessels, seventeen gear rows. Zero spells, zero
+psionic powers, zero new skills** — every one of those zeros confirmed by
+stat-block scan rather than assumed, and the skills zero only after a `--remote`
+diff whose sixteen "missing" rows all turned out to be false gaps.
+
+**What is deliberately not imported** is in the survey at
+`apps/character-creator/docs/surveys/free-quebec.md`, and the one addition the
+survey did not predict is the **QR-2 Abolisher Prime**: it has a heading, a
+paragraph and a height, and no stat block anywhere in this book, only a redirect
+to Coalition War Campaign. Twenty-two vessels rather than the projected
+twenty-three.
+
+**Seven findings, F30 through F36**, and the two the queue previously described
+as pre-authorized are now six plus one. **None is implemented.** All six of
+F30-F35 went through `audit-premise-auditor` before any implementation was
+attempted, and **seven claims did not survive** — including a quotation in F33
+that exists in no row, and F34's data half shrinking from fifteen classes to
+nine because six of the fifteen turned out to be a legitimate shape. The
+corrections are in the menu in place; the scope changes are in a dated
+premise-audit section at its end. **Read that section before taking any of
+F30-F36**: two of the proposals are now different work than they describe, and
+F31 in particular asks for a key one character from one that already exists.
+
+**This supersedes the earlier line in this file saying F30 and F31 are
+pre-authorized for implementation in this book's closing PR.** They were not
+implemented, and the premise audit is why: F30's detector needs a filter it did
+not specify, and F31's proposal collides with `related_skills_count`. Both are
+better taken deliberately than folded into a data PR.
