@@ -1056,19 +1056,36 @@ cited behind each class's `CORE_SDC_BY_CLASS` entry. **Any book that does not
 print the five categories will need the same substitution**, so check for it at
 survey time rather than at the end.
 
-### What is still open on this book after it closed
+### What was still open when this book closed - and what closed it
 
-- **18 gear stubs**, created by the class imports and not cleared by the gear
-  pass. They are mundane kit the book names in `Standard Equipment` and never
-  stats - luggage, duct tape, a fishing pole, a wet suit - and MOST are
-  duplicates of rows the catalog already holds properly under another name
-  (`flashlight-pen` against RUE's `Pen Flashlight`, `hand-computer` against
-  `Hand-Held Computer`). The class import coined a slug from the book's wording
-  instead of matching the existing row, which is a shape worth watching for on
-  the next book.
-- **F26 and F27**, both open.
-- **Nothing checks a vessel's citation.** `source-coverage.mjs` gives every
-  other catalog table a traceability row and touches `vehicles` only for a price
-  count, so 105 vessels' `source_book` values are unverified by the one ledger
-  built to verify exactly that. Not this book's doing - `triax` has the same
-  hole and it went unnoticed for a book and a half.
+**All but one of these is now shut**, in PRs #811 through #814, and this section
+is kept rather than deleted because the SHAPE of each is what the next book
+needs, not the fact that it is fixed.
+
+- **18 gear stubs** - CLOSED (#814). The class imports coined a gear slug from
+  the book's own wording rather than matching an existing catalog row, and the
+  gear pass did not clear them because it extracted the entries the book PRICES
+  and none of the eighteen is one. **Five were duplicates** of rows already held
+  under another name - `flashlight-pen` against RUE's `Pen Flashlight`,
+  `hand-computer` against `Hand-Held Computer` - and were merged with a
+  forwarding redirect. **Thirteen were not**, and took a marked estimate on the
+  `estimate-mundane-gear-prices.sql` precedent: cost only, never a weight and
+  never a combat number. **This was first reported as "MOST are duplicates" and
+  that was wrong** - it was five of eighteen, and the difference only showed up
+  when each pair was checked column by column, which is why `net-fishing` did
+  NOT become a sixth: it is a `palladium-fantasy` row and the stub is `rifts`.
+- **F27** - TAKEN (#812). The one that mattered to the next book.
+- **Nothing checks a vessel's citation** - CLOSED as **F28** (#813). Filed and
+  taken in one change. `vehicles` was missing from `source-coverage.mjs`'s
+  catalog list, so 105 vessels across two books carried a `source_book` nothing
+  verified. It appeared in that file exactly once, in the no-price count, which
+  is why a grep made it look covered.
+- **F26 is the one still open**, and it is the smaller of the two spell-linking
+  designs rather than anything blocking.
+
+**The lesson worth carrying, which is none of the four individually:** every one
+of these was invisible to the thing that should have caught it, and visible
+immediately once someone asked *"what does this check NOT look at"*. The queue
+status, the stub marker, the coverage list and the MOS blind spot all reported
+healthy while being wrong. Ask that question at the END of a book, not only at
+the start.

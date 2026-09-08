@@ -485,3 +485,53 @@ tiers up to six. Six z's already sorts after every `add-*-class.sql` the script
 edits, so the seventh bought nothing and cost a docs row. Renamed. The rule in
 the `class-import` skill is *check where the name sorts*, and this is the case
 where checking says use a SHORTER prefix, not a longer one.
+
+### The eighteen gear stubs, closed (PR #814)
+
+The class imports created a gear row for every name a `Standard Equipment` line
+mentioned, and the gear pass in #808 did not clear them - it extracted the 87
+entries the book PRICES, and not one of the eighteen is among them. Checked
+rather than assumed: "wet suit", "scuba" and "snorkel" appear in this book only
+inside equipment lists and ship complements. The one wet suit it prices is the
+LEWS-9 environmental suit, which is a different object and already its own row.
+
+So the marker was wrong on all eighteen. It said *needs stats* and no stats were
+coming.
+
+**Five were duplicates** of rows the catalog already held under another wording,
+because the importer coins a slug from the book's phrasing rather than matching
+an existing row: `flashlight-pen` beside RUE's `pen-flashlight`, `hand-computer`
+beside `hand-held-computer`, `tool-kit-large` beside `large-tool-kit`,
+`tool-kit-portable` beside `portable-tool-kit`, and
+`fishing-hooks-and-lures` beside `fishing-line-and-hooks`. Merged on the
+`merge-backpack-duplicate.sql` pattern, keeper first, forwarding redirect left
+behind.
+
+**Thirteen were not duplicates** and took a marked estimate on the
+`estimate-mundane-gear-prices.sql` precedent - `source_book` reading
+*Estimate - no published price found*, cost anchored to the catalog's own scale,
+and **never a weight and never a combat number**, which the script asserts on
+itself rather than promising.
+
+**One reported claim was wrong and is corrected here.** This work was first
+described as *"most are duplicates"*. It was five of eighteen. The overstatement
+came from eyeballing a name list; the real number came from checking each pair
+column by column - which is also the check that stopped `fishing-net-small` from
+becoming a sixth. `net-fishing` looks like its match and is a
+`palladium-fantasy` row against a `rifts` stub, so merging them would have put a
+gold price on a credits item.
+
+**The keeper is the statted row in all five**, which departs from the backpack
+merge's tiebreak for a reason that only looks similar. There both rows were
+complete and identical, so *which name do references use* was the only question
+left. Here one row of each pair has a price and a book behind it and the other
+is an empty stub. It holds even for `fishing-hooks-and-lures`, which two classes
+cited against the keeper's one; those two were repointed.
+
+**No character was affected** - `character_items` was counted for all ten slugs
+first and held nothing on any of them.
+
+Gear moved 1241 -> **1236**, the five merges being deletions. That figure is
+pinned by `regression.mjs`'s clean-run table, so `docs/operations.md` moves with
+it. **This book now has zero gear stubs.** Six remain in the catalog, four from
+RUE and two from Phase World, which are those books' to clear.
