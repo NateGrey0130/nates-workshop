@@ -339,7 +339,7 @@ check('systems: one system stores a JSON array',
 
 import { classesMentioning, findDuplicates, normaliseName, qualifiersDisagree, similarity } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
 import { collapseStatement, keysOf, redirectStatements, resolveKeys } from '../../../functions/api/character-creator/_lib/catalog-redirects.js';
-import { buildStubStatements, referencedGear, restrictionNames } from '../../../functions/api/character-creator/_lib/catalog.js';
+import { buildStubStatements, referencedGear, referencedMosSkills, restrictionNames } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { CHARACTER_JSON_COLUMNS } from '../../../functions/api/character-creator/_lib/character-json.js';
 import { composeSourceBook } from '../../../scripts/source-book-lib.mjs';
 import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicGrantsFor,
@@ -3416,6 +3416,70 @@ section('Category skill bonuses');
       '_lib', 'skill-picks.js'), 'utf8');
     return wiz.includes('base ? base + categoryBonus') && srv.includes('base ? base + catBonus : 0');
   })());
+}
+
+// ---------- 1c25a2. Skill names inside an MOS option ----------
+// BOOK-INGEST-AUDIT F27. An MOS option's skills were collected by NOTHING, so a
+// name no catalog row has read as `skills ok` and shipped. Proved by putting the
+// SAME bogus name in an MOS option and in `occ_skills` and watching only the
+// second be reported - a check that has only ever passed proves nothing.
+//
+// Two things are pinned here rather than one. `referencedMosSkills` must find
+// the names; `restrictionNames` must reach an `only`/`except` nested one level
+// deeper, inside an option's own choice group. The second was NOT assumed to be
+// broken when the finding was written - it was measured, and it was.
+section('MOS option skill names are collected');
+{
+  const cls = parseClassMarkdown(`---
+id: t
+name: T
+system: rifts
+source_book: b
+category: occ
+occ_group: men-of-arms
+skills:
+  occ_skills:
+    - { name: "Radio: Basic", base: 45, per_level: 5 }
+  mos:
+    choose: 1
+    options:
+      - id: "gunner"
+        name: "Gunner"
+        skills:
+          - { name: "Weapon Systems", base: 50, per_level: 5 }
+          - { choose: 1, from: ["Demolitions", "Sniper"], bonus: 10 }
+      - id: "scout"
+        name: "Scout"
+        skills:
+          - { choose: 2, categories: [{ name: "Espionage", only: ["Tracking"] }], bonus: 5 }
+---
+
+## Lore
+
+x
+`).data;
+
+  const mos = referencedMosSkills(cls);
+  check('a plain skill inside an option is collected', mos.includes('Weapon Systems'));
+  check('and every option of a choice group inside an option is too',
+    mos.includes('Demolitions') && mos.includes('Sniper'),
+    `got: ${mos.join(', ')}`);
+  check('all of them, from every option, and nothing else', mos.length === 3,
+    `got ${mos.length}: ${mos.join(', ')}`);
+  // The separation that makes the no-stubbing structural. A caller stubs
+  // `missing.skills`; if MOS names were folded in there, a typo would become a
+  // permanent catalog row spelled the wrong way that the class then resolves
+  // against happily.
+  check('occ_skills does not swallow them, so they can be reported separately',
+    !mos.includes('Radio: Basic'));
+
+  const named = restrictionNames(cls);
+  const inMos = named.filter((n) => n.name === 'Tracking');
+  check('an only/except inside an MOS option is reached', inMos.length === 1,
+    `got ${inMos.length}`);
+  check('and it says which option it came from',
+    inMos[0]?.category === 'scout/Espionage' && inMos[0]?.kind === 'only',
+    `got ${inMos[0]?.category} ${inMos[0]?.kind}`);
 }
 
 // ---------- 1c25b. Restrictions that name nothing ----------

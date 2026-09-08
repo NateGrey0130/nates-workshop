@@ -529,6 +529,24 @@ if (noCatalog || fieldSources) {
     for (const name of missing[k]) console.log(`      ${name}`);
   }
 
+  // MOS option skills, reported on their own line and NEVER stubbed. Until
+  // BOOK-INGEST-AUDIT F27 was taken these were not collected at all, so a name
+  // no skill row has read as `skills ok` - proved by putting the SAME bogus
+  // name in an MOS option and in `occ_skills` and watching only the second be
+  // reported. They are not fed to buildStubStatements below because a missing
+  // MOS name is far likelier to be a typo than a gap, and a stub would make the
+  // typo permanent and self-resolving.
+  const mos = missing.mosSkills || [];
+  if (mos.length) {
+    console.log(`  ${'mos skills'.padEnd(14)} ${plural(mos.length, 'name')}`
+      + ` match${mos.length === 1 ? 'es' : ''} no skill row`);
+    for (const name of mos) console.log(`      ${name}`);
+    console.log('      NOT stubbed on purpose - check the spelling first. If the');
+    console.log('      book really does define a new skill here, add it deliberately.');
+  } else if (data.skills?.mos) {
+    console.log(`  ${'mos skills'.padEnd(14)} ok`);
+  }
+
   // The quiet one. `categoryAllows` compares literal names, so a restriction
   // naming a skill the catalog spells differently makes an `except` exclude
   // NOTHING — it fails open, offering skills the book forbids, and says so

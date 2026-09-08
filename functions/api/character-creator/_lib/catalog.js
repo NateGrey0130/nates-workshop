@@ -15,9 +15,9 @@ const norm = (s) => String(s ?? '').trim().toLowerCase();
 // Every skill name the class references: fixed occ_skills plus every option
 // inside an enumerated choice-group (any of them could be picked, so all must
 // exist). Category-based groups resolve against the catalog at pick time.
-function referencedSkills(data) {
+function namesFromEntries(entries) {
   const names = [];
-  for (const s of data.skills?.occ_skills || []) {
+  for (const s of entries || []) {
     if (isChoiceGroup(s)) {
       for (const opt of s.from || []) names.push(typeof opt === 'string' ? opt : opt?.name);
     } else if (s?.name) {
@@ -25,6 +25,29 @@ function referencedSkills(data) {
     }
   }
   return names.filter(Boolean);
+}
+
+function referencedSkills(data) {
+  return namesFromEntries(data.skills?.occ_skills);
+}
+
+// Every skill name inside an MOS option, collected SEPARATELY from the ones
+// above and reported on its own, which is the whole point of the split.
+//
+// `parser.js` validates an MOS option's skills through the same
+// `validateSkillEntries` as `occ_skills`, so they are the same shape and can be
+// walked by the same helper - but they must not be STUBBED like them. A missing
+// `occ_skills` row is usually a skill the book defines and the catalog lacks,
+// which a stub row is the right answer to. A missing MOS name is far more
+// likely to be a typo, and stubbing a typo creates a permanent catalog row
+// nobody meant, spelled the wrong way, that the class then resolves against
+// happily. Report it and let a person decide (BOOK-INGEST-AUDIT F27).
+export function referencedMosSkills(data) {
+  const names = [];
+  for (const opt of data.skills?.mos?.options || []) {
+    names.push(...namesFromEntries(opt?.skills));
+  }
+  return names;
 }
 
 // Every gear slug the class references: fixed entries plus every option inside
@@ -110,6 +133,25 @@ export function restrictionNames(data) {
       }
     }
   }
+  // The same restriction keys, one level deeper, inside an MOS option's own
+  // choice groups. This was NOT assumed to be in the same blind spot - it was
+  // measured, by putting a name no skill row has inside an MOS option's
+  // `categories[].only` and watching class-check report `restrictions ok`
+  // (BOOK-INGEST-AUDIT F27). The consequence is the worse of the two
+  // directions: an unmatched `only` fails CLOSED, so the option grants the
+  // player nothing at all.
+  for (const opt of data?.skills?.mos?.options || []) {
+    for (const entry of opt?.skills || []) {
+      for (const c of entry?.categories || []) {
+        if (!c || typeof c !== 'object') continue;
+        for (const kind of ['only', 'except']) {
+          for (const name of c[kind] || []) {
+            wanted.push({ category: `${opt.id || 'mos'}/${c.name}`, kind, name });
+          }
+        }
+      }
+    }
+  }
   return wanted;
 }
 
@@ -132,14 +174,18 @@ async function unresolvedRestrictions(env, data) {
 
 
 export async function crossReference(env, requestUrl, data) {
-  const [items, skills, spells, psionics, restrictions] = await Promise.all([
+  const [items, skills, spells, psionics, restrictions, mosSkills] = await Promise.all([
     missingFrom(env, 'gear', 'gear', 'slug', referencedGear(data)),
     missingFrom(env, 'skills', 'skills', 'name', referencedSkills(data)),
     missingFrom(env, 'spells', 'spells', 'name', nameList(data.magic?.spells)),
     missingFrom(env, 'psionics', 'psionic_powers', 'name', nameList(data.psionics?.powers)),
     unresolvedRestrictions(env, data),
+    missingFrom(env, 'skills', 'skills', 'name', referencedMosSkills(data)),
   ]);
-  return { items, skills, spells, psionics, restrictions };
+  // `mosSkills` is deliberately its own key rather than folded into `skills`.
+  // Callers stub `missing.skills`; nothing should stub this one. See
+  // referencedMosSkills above for why.
+  return { items, skills, spells, psionics, restrictions, mosSkills };
 }
 
 // ─── stub inference ───
