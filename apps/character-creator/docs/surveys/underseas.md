@@ -41,19 +41,23 @@ stripped before any SQL.
 
 | page | table | states |
 |---|---|---|
-| **214** | *Experience Tables* | **which classes are playable.** Twenty-six names across nine ladders. This is the list the import follows. |
+| **214** | *Experience Tables* | **which classes are playable.** Twenty-six names across nine ladders. Twenty-five of them are importable; see the Gene-Splicer note below. |
 | **57** | *Alphabetical List of Spellsongs* | the 21 Whale Singer spellsongs and each one's P.P.E. cost |
 | **63** | *Alphabetical List of Ocean Spells* | the 41 ocean spells and each one's P.P.E. cost |
 | **70** | *Alphabetical Spell List* (Dolphin Magic) | the 10 dolphin spells and each one's P.P.E. cost |
 | **210** | *Alphabetical list of new skills* | the 22 entries the skills chapter defines — 19 skills and 3 notes |
 
 **Page 214 is the most valuable page in the book**, and it is the reason the
-class count is 26 rather than the forty-odd stat blocks a marker scan finds.
+class count is 25 rather than the forty-odd stat blocks a marker scan finds.
 The creatures chapter (pp.20-46) is full of entries carrying `R.C.C. Skills of
 Note:` — a monster stat block, not a class — and page 214 settles which of them
 a player may take. Exactly two do: the **Dragon Ray** and **Gene-Splicer
 Mutants**, both of which sit in that chapter and both of which page 214 gives a
 ladder. Everything else in those pages is an NPC.
+
+**And one of those two turns out not to be a class at all.** See the
+Gene-Splicer section under *Classes* below - it has a ladder and no stat block,
+which page 214 alone cannot tell you.
 
 Page 214 also settles two names the chapter headings spell differently: the
 **Ocean Wizard O.C.C.** (p.60) is *Ocean Mage* in the ladder, and the **Sea
@@ -107,13 +111,12 @@ belongs in the class's `special_abilities`, not in `psionic_powers`.
 
 ## Classes
 
-### Playable (26) — the ladder on p.214 is the list
+### Playable (25 importable of 26 named) — the ladder on p.214 is the list
 
 | class | printed pages | XP ladder |
 |---|---|---|
 | Dragon Ray R.C.C. | 20-22 | Dragon Ray / Sperm Whale / Naut'Yll Devastator |
 | Rurlel Eelman R.C.C. | 37-38 | Killer Whale / Rurlel Eelman |
-| Gene-Splicer Mutants | 38-40 | Dolphin / Humpback Whale / Gene-Splicer Mutants |
 | Sea Inquisitor O.C.C. | 48-49 | Sea Wolf / Sea Druid / Sea Inquisitioner |
 | Pneuma-Biform Dolphin R.C.C. | 51-53 | Pneuma Biform: Dolphin / Orca / Whale |
 | Pneuma-Biform Killer Whale R.C.C. | 53-55 | Pneuma Biform: Dolphin / Orca / Whale |
@@ -137,6 +140,32 @@ belongs in the class's `special_abilities`, not in `psionic_powers`.
 | Naut'Yll Koral Shaper R.C.C. | 151-152 | Ocean Mage / Naut'Yll Koral Shaper |
 | Kreel-Lok Nomad R.C.C. | 152-153 | Salvage Expert / Kreel-Lok Warrior |
 | Horune Pirate R.C.C. | 164-165 | Horune Pirate / Naut'Yll Soldier |
+
+### Gene-Splicer Mutants has a ladder and NO class data — not imported
+
+Page 214 gives *Gene-Splicer Mutants* an experience ladder, so the survey first
+counted it among the playable classes. **Reading printed 38-40 settles it the
+other way, and the reason is worth recording because the authority table cannot
+see it.**
+
+Those pages are a **random-monster generator**, not a class entry. They carry
+six roll tables — Random Body Type/Appearance, Number of Heads, Type of Head,
+Additional Appendages, Additional Features & Abilities, and a Genetic Defect
+Table — and **no stat block of any kind**: no attribute dice, no M.D.C. formula
+of its own, no O.C.C. or R.C.C. skill list, no related or secondary skills, no
+standard equipment, no money line. Every value a class row needs comes out of a
+percentile roll, and the body-type table alone sets M.D.C., size, attacks per
+melee and combat bonuses thirteen different ways.
+
+There is nothing for `imported_classes` to hold. **Not imported, and this is
+not a deferral** — no schema change would make it importable, because the book
+supplies no values to store. A G.M. rolls one up per creature.
+
+**This is also the one case in this book where the p.214 authority is not
+sufficient by itself.** The ladder says a gene-splicer mutant can be a player
+character and the book means it; what it cannot say is that the mutant has no
+printed class. The rule that survives: **the ladder decides what is playable,
+and the entry decides what is importable.**
 
 **The Naut'Yll racial stat block is printed 148, not a class of its own.** The
 ladder names the Soldier, the Devastator and the Koral Shaper separately, and
@@ -299,7 +328,7 @@ Phase 4 costs money; everything above was free.
 2. **Spells** — 74 rows from pp.57-60, 63-72 and 151-152, batched by tradition
    (41 / 21 / 10 / 2). Cost reconciled between each list and its description;
    level taken from the description's own line.
-3. **Classes** — 26, in batches of four to six grouped by the book's own
+3. **Classes** — 25, in batches of three to six grouped by the book's own
    chapters, so a batch shares its racial preamble and its page range.
 4. **Gear, armour and vehicles** — last, because the classes' `Standard
    Equipment` lines name items that need catalog rows and the stub marker is
@@ -316,9 +345,9 @@ What is deliberately left, with the reason:
 - **Setting material** — Tritonia, the New Navy, the Naut'Yll and Horune
   nations, the Lord of the Deep, Dead Pools, Time Flux, the Cult of the Deep,
   and every named NPC including Captain Nemo-2 (pp.110-111). Lore, not rows.
-- **The Gene-Splicer random-monster generator (pp.39-40)** — the *Gene-Splicer
-  Mutants* ladder entry is imported as a class, but the six roll tables that
-  build a monster are a GM generator the app does not model.
+- **Gene-Splicer Mutants (pp.38-40) in full** — it has a p.214 ladder and no
+  stat block at all. See the section under *Classes*; the six roll tables are a
+  G.M. generator and there is no class row underneath them.
 
 ## Ledger
 
@@ -328,3 +357,4 @@ What is deliberately left, with the reason:
 | 2026-09-07 | — | survey written; 26 playable classes established from the p.214 ladder |
 | 2026-09-07 | [#798](https://github.com/NateGrey0130/nates-workshop/pull/798) | 8 new skills (358 -> **366**); 6 `Rifts Skill List` rows re-cited to this book (40 -> **34**); 2 losing readings recorded on the RUE rows that won. Applied `--remote` before the PR. |
 | 2026-09-07 | [#799](https://github.com/NateGrey0130/nates-workshop/pull/799) | 74 spells across four traditions (607 -> **681**): 21 `Spellsong:`, 41 `Ocean:`, 10 `Dolphin:`, 2 Korallyte unprefixed. Ten collide with an existing row and are the SAME spell at another tradition's price - `variant_note` on each, gap filed as `BOOK-INGEST-AUDIT` F26. Applied `--remote` before the PR. |
+| 2026-09-07 | [#800](https://github.com/NateGrey0130/nates-workshop/pull/800) | class batch 1 of 6: **Dragon Ray**, **Rurlel Eelman**, **Sea Inquisitor** (190 -> **193** live classes). Gene-Splicer Mutants dropped from the roster - a p.214 ladder with no stat block. `sea-inquisitor` needed a `CORE_SDC_BY_CLASS` entry, proved load-bearing by removing it and watching the suite fail. Applied `--remote` before the PR. |

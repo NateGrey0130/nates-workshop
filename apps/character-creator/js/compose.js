@@ -406,6 +406,16 @@ export const CORE_SDC_BY_CLASS = {
   'promethean-phase-adept': '3D6',
   'phase-mystic': '3D6',
   'promethean-time-master': '1D6',
+
+  // Rifts World Book 7: Underseas, printed 48-49. The SEA INQUISITOR is a
+  // demon hunter and it is tempting to read that as a man of arms; its own
+  // page argues otherwise. Underseas does not sort its O.C.C.s into
+  // Palladium's men-of-arms and scholar sections at all, so there is no
+  // heading to read this off - and the class's whole combat training is Hand
+  // to Hand: Basic and two W.P.s of choice. Its power is anti-supernatural,
+  // not martial. 1D6, with the +2D6x10 the class grants landing on top of it
+  // as a pool bonus.
+  'sea-inquisitor': '1D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence
