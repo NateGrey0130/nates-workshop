@@ -342,6 +342,7 @@ describes".*
 |---|---|---|---|
 | #818 | survey; queue `cached` -> `surveyed` | 0 | unchanged |
 | #819 | gear, printed 44-51 | **17** | gear 1236 -> **1253** |
+| #820 | classes: all five O.C.C.s of printed 32-42 | **5** | classes 215 -> **220** |
 
 ### Batch 2 — gear (PR #819)
 
@@ -370,3 +371,164 @@ slugs in `equipment_starting`, and `class-check --remote` emits a stub `INSERT`
 for any slug the catalog does not have. A stub written into `add-<id>-class.sql`
 sorts before `add-free-quebec-gear.sql` and would win on a clean rebuild. Gear
 applied `--remote` first means there is nothing to stub.
+
+
+
+### Batch 3 — the five O.C.C.s of printed 32-42 (PR #820)
+
+Five O.C.C.s, applied `--remote` before the merge: the SQ Deep Intel Agent,
+the "Descended" Glitter Boy Pilot, the Glitter Girl Pilot, the Side Kick RPA
+and the Glitter Boy Munitions Expert. `imported_classes` published and live
+215 -> 220, and both pinned counts move with it: the clean-run table in
+`docs/operations.md` and the README's hit-point-silence sentence, which goes
+from *one-hundred-and-ten of two-hundred-and-fifteen* to
+*one-hundred-and-fifteen of two-hundred-and-twenty* — all five state no hit
+point formula and no `mdc_base`.
+point formula and no `mdc_base`.
+
+**`CORE_SDC_BY_CLASS` gained three entries**, which is a `book-survey` §8 tier-1
+edit and not a code change: the smoke test fails any class stating neither an
+S.D.C. nor an M.D.C. formula without one. This book does not sort its O.C.C.s
+into Palladium's men-of-arms and scholar sections, so as with `underseas` the
+skill lists are the argument, and it is recorded in the table itself: **3D6** for
+both Glitter Boy pilots (Elite GB combat training, two W.P.s granted outright,
+Weapon Systems, Military open), **1D6** for the Deep Intel Agent, whose combat
+grant is Hand to Hand: Basic and two W.P.s of choice and whose own related-skill
+list reads *"Military: None"*.
+
+**Both money figures were checked against the page with `--field-sources`**, not
+just read. Each is a complete paragraph well clear of a page break: 4,200-6,000
+for the agent (low end stored, per the range convention) and 3,200 for both
+pilots. This is the check that would have caught the two Juicer Uprising errors.
+
+**Most of the Glitter Boy pilots' bonuses are NOT in `bonuses`, and that is the
+book's doing.** Both O.C.C. Bonus lines end *"All bonuses, other than H.F., apply
+only when piloting a Glitter Boy"*, and `bonuses:` is applied unconditionally —
+so the +1 strike, the roll and pull-punch bonuses, the initiative ladders and the
++1 attack at levels 5/11 and 4/10 are all `special_abilities` entries naming the
+condition. Only the Horror Factor ladder is stored as a bonus, through `at_level`.
+
+**The +10 S.D.C. is stored unconditionally and the printed sentence arguably does
+not allow it.** Read strictly, *"all bonuses other than H.F."* includes the
+S.D.C. It is stored anyway, because an S.D.C. bonus that applies only inside a
+Mega-Damage power armor is inert by construction — the character is not taking
+S.D.C. damage in there — so the conditional reading makes the line mean nothing.
+Recorded in both classes' `extraction_notes` rather than resolved.
+
+**Two findings came out of this batch:**
+
+- **F32** — `attribute_requirements` holds minimums only, and the Deep Intel
+  Agent's *"P.B. of 12 or lower"* is a **ceiling**. Writing it there would state
+  the exact inverse of the book and render to the player as `PB 12+`. It is in
+  `restrictions` instead, which displays it and enforces nothing.
+- **F33** — the gear catalog holds the same item twice under two slugs (four
+  pairs verified), found while resolving this class's `equipment_starting`. Not
+  this book's rows. Filed **without** a merge script on purpose: three detectors
+  were written this session and every one produced false positives or missed a
+  known pair.
+
+**Three `equipment_starting` slugs were corrected rather than stubbed.**
+`class-check --remote` reported `plastic-man-armor`, `bushman-armor` and
+`language-translator` missing and offered stub SQL for all three. All three
+already exist under different slugs
+(`plastic-man-full-environmental-body-armor`,
+`bushman-full-composite-environmental-body-armor`,
+`portable-language-translator`). Accepting the stubs would have created three
+duplicate rows — the exact shape F33 is about.
+
+**The Glitter Girl's "Must be female" is in `restrictions`.** The book prints it
+inside the Attribute Requirements line, and that block is a flat map of the eight
+attributes; there is no sex or gender on a character to check against. Not filed
+as a finding: unlike F32 it does not invert anything, it simply has nowhere to go.
+**`CORE_SDC_BY_CLASS` gained five entries** — a `book-survey` §8 tier-1 edit,
+not a code change: the smoke test fails any class stating neither an S.D.C. nor
+an M.D.C. formula without one. This book does not sort its O.C.C.s into
+Palladium's men-of-arms and scholar sections, so as with `underseas` the skill
+lists are the argument, and it is recorded in the table itself. **3D6** for the
+two Glitter Boy pilots, the Side Kick and the Reloader; **1D6** for the Deep
+Intel Agent, whose combat grant is Hand to Hand: Basic and two W.P.s of choice
+and whose own related-skill list reads *"Military: None"*.
+
+**The Reloader is the one that needed an argument.** By the Underseas
+reasoning — Hand to Hand: Basic, two W.P.s — it reads as 1D6. Two things
+outweigh that, and both are the book being explicit rather than a judgement
+about a skill list: printed 41 says outright that *"Loaders are also combat
+trained soldiers who will not hesitate to fight"*, and printed 34 lists Reload
+Teams on the **army's own roster** of military O.C.C.s, as *"EOD Specialists
+(includes Reload Teams)"*. Underseas had no sentence like that to read, which
+is why its scientists went the other way.
+
+**All four money figures were checked against the page with `--field-sources`.**
+4,200-6,000 for the agent (low end stored), 3,200 for both pilots, 2,400 for the
+Side Kick, and **2,100 for the Reloader, which came off a welded page** and was
+read from word geometry instead — printed 42 is one of F30's two pages, and the
+field it welds is `starting_money`. That is the Juicer Uprising failure shape
+arriving by a different route, and it is the one number in this batch that the
+cache alone would have got wrong.
+
+**Most of the Glitter Boy pilots' bonuses are NOT in `bonuses`, and that is the
+book's doing.** Both O.C.C. Bonus lines end *"All bonuses, other than H.F., apply
+only when piloting a Glitter Boy"*, and `bonuses:` is applied unconditionally —
+so the +1 strike, the roll and pull-punch bonuses, the initiative ladders and the
++1 attack at levels 5/11 and 4/10 are `special_abilities` entries naming the
+condition. Only the Horror Factor ladder is stored as a bonus, through
+`at_level`. The Reloader splits the same way and the book splits it *for* us: its
+first bonus block is explicitly limited to mechanical operations, and a second
+block headed *"Other O.C.C. bonuses"* is not.
+
+**The +10 S.D.C. is stored unconditionally and the printed sentence arguably does
+not allow it.** Read strictly, *"all bonuses other than H.F."* includes the
+S.D.C. It is stored anyway, because an S.D.C. bonus that applies only inside a
+Mega-Damage power armor is inert by construction — the character is not taking
+S.D.C. damage in there — so the conditional reading makes the line mean nothing.
+Recorded in both classes' `extraction_notes` rather than resolved.
+
+### What this batch got wrong first, and what caught it
+
+**`regression.mjs` failed the first three classes** on
+`no class GRANTS the placeholder row as a fixed skill`. `Language: Other` and
+`Literacy: Other` are placeholder rows — they exist to be picked from, and
+naming one as a fixed skill leaves the character holding a skill called,
+literally, *"Literacy: Other"*. All five classes were rewritten to offer both
+through choice groups.
+
+**The three already applied `--remote` were replaced rather than patched.** They
+were fifteen minutes old, no PR had merged, and `--remote` confirmed **zero
+characters** referenced them, so the rows were deleted and the corrected scripts
+re-applied. An `add-` plus `fix-` pair is the right shape for a class that has
+shipped; it is the wrong shape for one that never existed publicly.
+
+**Chasing it turned up F34**: the literacy family has that guard and the
+**language family does not**, twenty lines above it in the same file. Fifteen
+published classes name `Language: Other` as a fixed skill today and nothing
+says so — `ngr-police` carries the note *"Select one additional language
+(+10%)"* on an entry that offers no selection. None of the five here does.
+
+**Two more things `class-check` caught before they shipped**, both the same
+shape — a cross-category `only` that would have been *granted but not takeable*:
+the Reloader's *"Rogue: Pick Locks only"* (the catalog files Pick Locks under
+Espionage) and the Descended pilot's and Side Kick's *"Espionage: Wilderness
+Survival only"* (filed under Wilderness). Each is offered under the skill's real
+category restricted to that one name, which is what the book's two printed lines
+mean together.
+
+**Three `equipment_starting` slugs were corrected rather than stubbed.**
+`class-check --remote` reported `plastic-man-armor`, `bushman-armor` and
+`language-translator` missing and offered stub SQL for all three; all three
+already exist under different slugs. Accepting the stubs would have created three
+duplicate rows — the exact shape **F33** is about, which is how F33 was found.
+
+**Two classes ship without the vehicle their own book issues them.** The Side
+Kick RPA starts with a Side Kick power armor and the Reloader with an RHV-60
+Reloader Hover Vehicle; both are `vehicles` rows and `equipment_starting` can
+only reference `gear` slugs. Recorded in each class's `restrictions` where a
+player will see it. **F3**, and the same cost the Noro Mystic Warrior paid. The
+two Glitter Boy pilots escape it only because a pre-migration-048
+`glitter-boy-power-armor` row still exists in `gear`.
+
+**The Side Kick declares itself a copy and ships without `copy_of`.** Printed 39
+calls it *"basically the same as the Elite RPA Pilot O.C.C. described in the
+Rifts RPG, page 53"*. No such class is in this catalog, and the nearest one —
+`robot-pilot`, Rifts Ultimate Edition p.83-85 — is a different class with
+different attribute requirements, so declaring a copy of it would assert a match
+that does not hold and fail the regression's copy sweep.
