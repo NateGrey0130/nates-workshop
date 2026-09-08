@@ -4051,7 +4051,10 @@ way and recorded here so a later sweep does not merge them:
   tens-of-thousands range. **So this pair is NOT established as distinct**, and
   the paragraph that existed to stop a later sweep merging them was pointing the
   wrong way. It is not established as duplicate either; it is unresolved, and
-  `catalog_redirects` already carries `hand-computer -> hand-held-computer`.
+  `catalog_redirects` already carries a `merge` from `hand-computer` to
+  `hand-held-computer` - read `--remote` on 2026-09-08 with
+  `SELECT r.from_key, r.reason, g.slug FROM catalog_redirects r JOIN gear g
+  ON g.id = r.to_id WHERE r.catalog = 'gear' AND r.from_key LIKE '%comput%'`.
 - `dead-boy-body-armor`, `coalition-dead-boy-body-armor` and the **two** CA-N
   rows - `ca-1-heavy-dead-boy-armor` at 80 M.D.C. and `ca-2-light-dead-boy-armor`
   at 50 - all 35,000. **This said THREE CA-N rows**, a number taken from
@@ -4382,6 +4385,10 @@ the related-skill count" is already expressible; what is not expressible is
 doing it *in a variant*. **The proposal's `related_skill_count` is one character
 from the existing `related_skills_count` and means the same thing** - that
 collision is a decision to take deliberately, not to discover afterwards.
+Verified by hand rather than taken from the audit report:
+`grep -n related_skills_count apps/character-creator/js/parser.js` returns
+lines 1619, 1624, 2309, 2310 and 2311 - the ability grant that applies it and
+the validator that type-checks it, read 2026-09-08.
 
 Two files the proposal names need no edit at all. **`sheet.js` has nothing to
 touch**: its own comment says the class "comes with the character now, already
@@ -4432,4 +4439,5 @@ living somewhere the finding does not.
 
 **And a note on citing these by bare number**: a tree-wide grep for F30 through
 F35 returns mostly `UI-AUDIT` F30 and `INGESTION-AUDIT` F32, F33 and F34. This
-menu's own header already says to cite by filename; here is the case for it.
+menu's own header already says to cite by filename, at line 31; here is the
+case for it. <!-- claim-ok: this file's own header, not another file -->
