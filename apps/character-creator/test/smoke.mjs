@@ -2166,6 +2166,72 @@ check('an unknown variant id returns the class unchanged',
 check('a class with no variants is unaffected',
   applyVariant({ name: 'Juicer' }, 'adult').name === 'Juicer');
 
+// ── a variant that ADDS skills and moves the related count ──────────────────
+// F31. The shape a book uses more often than the staged dragon: one training
+// course plus a per-chassis supplement, "In addition to the Basic O.C.C.
+// Skills... but other O.C.C. skills are reduced to three (not six)".
+{
+  const base = {
+    name: 'Cyborg', skills: {
+      occ_skills: [
+        { name: 'Radio: Basic', base: 50 },
+        { name: 'Climbing', base: 40 },
+        { choose: 2, categories: ['Physical'] },
+      ],
+      occ_related_skills: { count: 6, categories: ['Technical'] },
+    },
+    variants: [{
+      id: 'dervish', name: 'FX-320C Dervish',
+      skills_additional: { occ_skills: [
+        { name: 'Acrobatics', base: 60 },
+        { name: 'Climbing', base: 70 },      // already granted, at a lower base
+      ] },
+      related_skills_count: 3,
+    }],
+  };
+  const v = applyVariant(base, 'dervish');
+  const names = v.skills.occ_skills.filter((e) => e.name).map((e) => e.name).sort();
+
+  check('a variant ADDS its own skills to the parent\'s',
+    names.join(',') === 'Acrobatics,Climbing,Radio: Basic');
+  // Union, not replace: the parent's whole list survives, which is what keeps
+  // "a variant cannot take a skill away" true by construction.
+  check('and the parent\'s skills all survive',
+    names.includes('Radio: Basic') && names.includes('Climbing'));
+  // combineClasses' policy, reused: higher base wins on a name collision.
+  check('a collision keeps the HIGHER base, as combineClasses does',
+    v.skills.occ_skills.find((e) => e.name === 'Climbing').base === 70);
+  // Choice groups have no identity to match on, so they are never deduped.
+  check('and the choice group is carried, not collapsed',
+    v.skills.occ_skills.filter((e) => !e.name).length === 1);
+  check('related_skills_count moves the related count',
+    v.skills.occ_related_skills.count === 3);
+  // The categories the count applies to are the parent's - the variant said
+  // nothing about them, so it must not have silently replaced them.
+  check('and leaves the categories the parent set',
+    JSON.stringify(v.skills.occ_related_skills.categories) === '["Technical"]');
+  // Neither key may survive onto the composed class: they are instructions,
+  // not fields, and `skill_overrides` is deleted for the same reason.
+  check('neither key is left on the composed class',
+    v.skills_additional === undefined && v.related_skills_count === undefined);
+  // The base class must be untouched - applyVariant returns a new object and
+  // every caller applies it unconditionally, often more than once.
+  check('and the parent class is not mutated',
+    base.skills.occ_skills.length === 3 && base.skills.occ_related_skills.count === 6);
+
+  const bad = (frag) => parseClassMarkdown(['---', 'id: c', 'name: C', 'system: rifts',
+    'source_book: b', 'category: occ', 'skills:', '  occ_skills:',
+    '    - { name: "Radio: Basic", base: 50 }', 'variants:', frag,
+    '---', '', '## Lore', '', 'x', ''].join(String.fromCharCode(10)));
+  check('skills_additional must carry occ_skills',
+    !bad('  - { id: a, name: A, skills_additional: { secondary_skills: { count: 2 } } }').ok);
+  check('and may not restate the related ALLOWANCE wholesale',
+    bad('  - { id: a, name: A, skills_additional: { occ_skills: [], occ_related_skills: { count: 2 } } }')
+      .errors.some((e) => /not addable/.test(e)));
+  check('related_skills_count must be a whole number',
+    !bad('  - { id: a, name: A, related_skills_count: "three" }').ok);
+}
+
 const variantErr = (yaml) => parseClassMarkdown(dragonMd.replace(/variants:[\s\S]*?---/, yaml + '\n---'));
 check('a variant without an id is rejected',
   !variantErr('variants:\n  - { name: "Nameless" }').ok);

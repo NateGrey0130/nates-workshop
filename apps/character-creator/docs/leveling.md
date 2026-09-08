@@ -187,10 +187,26 @@ variants:
 
 A variant may override **only** the keys in `VARIANT_OVERRIDES`: `attribute_dice`,
 `attribute_requirements`, `attribute_maximums`, the four pool bases (`hit_points_base`, `sdc_base`,
-`mdc_base`, `ppe_base`), `starting_money`, `bonuses`, and `skill_overrides`.
-Skills, abilities, lore and equipment stay shared on purpose: a variant that
+`mdc_base`, `ppe_base`), `starting_money`, `bonuses`, `skill_overrides`,
+`skills_additional` and `related_skills_count`.
+Abilities, lore and equipment stay shared on purpose: a variant that
 could override anything is not a variant, it is a second class wearing the
 first one's name, and the inheritance would obscure rather than explain.
+
+**The last two ADD; they do not replace, and that is what keeps the rule
+above true.** `skills_additional` carries an `occ_skills` list that is
+**unioned onto** the parent's — a variant still cannot take a skill away or
+contradict the parent, because the parent's whole list survives in every
+variant by construction — and `related_skills_count` moves only the number of
+related picks. The shape they exist for is a common training course plus a
+per-chassis supplement: *"In addition to the Basic O.C.C. Skills, the Imprimer
+gets these additional skills, but other O.C.C. skills are reduced to three (not
+six)."* Without them that book ships as five classes each restating the same
+twelve skills, which is the drift `variants` was introduced to stop.
+The union is `combineClasses`' policy, reused rather than reinvented: named
+entries dedupe by name with the higher `base` winning, and choice groups never
+collapse. `related_skills_count` is **the same key an ability grant uses**, for
+the same mechanic. `BOOK-INGEST-AUDIT.md` F31.
 Setting anything else warns and is ignored.
 
 Note what the last two are *not*. `starting_money` is there because a stage of a
