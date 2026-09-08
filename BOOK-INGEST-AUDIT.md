@@ -3953,11 +3953,13 @@ the `pages` argument, so `--page 43 --force` cannot leave a manifest claiming
 page 43 is the only weld in the book.
 
 **`drift-check` cannot carry the warning and does not get it.** The proposal
-names it beside `class-check --field-sources`. Its `CITATION_TABLES` is
-`['spells', 'psionic_powers', 'skills']` - `imported_classes` is not in it, so
-**the row this finding exists for, `starting_money` on `fq-gb-reloader`, is
-invisible to it** - and its `citationRows` carry no page at all, only a table and
-a name. `class-check --field-sources` was a clean fit and has the warning.
+names it beside `class-check --field-sources`. Read 2026-09-08:
+`scripts/drift-check.mjs:181` is
+`const CITATION_TABLES = ['spells', 'psionic_powers', 'skills'];` -
+`imported_classes` is not among them, so **the row this finding exists for,
+`starting_money` on `fq-gb-reloader`, is invisible to it** - and the
+`citationRows` built at `:182-188` carry no page, only a table and a name.
+`class-check --field-sources` was a clean fit and has the warning.
 
 **Smaller things.** `p043` holds **four** welded blocks, not one; `p059` has the
 single one. The two files are **not** *"normal-length"* - 30 and 10 lines against
