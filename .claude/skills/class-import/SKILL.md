@@ -146,7 +146,9 @@ existing, and says so in its note; the exclusions activate by themselves when
 the rows arrive. **The audit floor is TWO names, not zero** — it was three until
 `W.P. Lance` was imported and that exclusion started working by itself, which is
 the mechanism keeping its promise. The floor moves; check it rather than
-trusting this sentence.
+trusting this sentence. **Re-measured `--remote` on 2026-09-08: still exactly
+two, both the Priest of Light's, out of 1,499 restriction names across 225 live
+published classes. No dead exclusion anywhere in the live catalog.**
 
 **But "not always a bug" is not "usually not a bug", and the ratio runs the
 other way.** Sweeping every `only`/`except` name in every published class
@@ -159,10 +161,17 @@ forbids, because an unmatched `except` fails OPEN.
 A catalog rename breaks restrictions that were correct when they were written,
 and nothing routine says so. **Re-run that sweep after any rename** — it is a
 parse of every class against `SELECT name FROM skills`, and it is the only thing
-that has ever caught this. Note the asymmetry it has to respect: a GRANTED skill
-naming an old name still resolves, because redirects are consulted for
-references; only restrictions skip them. The Robot Pilot cites the same old
-string and is fine.
+that has ever caught this. **It does ship, and not as a command:**
+`apps/character-creator/test/regression.mjs:863` runs it over every class on
+every test run and pins the floor by NAME rather than by count — but against the
+scratch D1 it builds from the repo, never against `--remote`, which its own
+header says outright. If you write the `--remote` version by hand,
+`parseClassMarkdown` returns `{ ok, data, errors, warnings }`: hand
+`restrictionNames()` the **`.data`**, or it returns `[]` for every class and the
+sweep reports a clean catalog it never read. Note the asymmetry it has to
+respect: a GRANTED skill naming an old name still resolves, because redirects
+are consulted for references; only restrictions skip them. The Robot Pilot
+cites the same old string and is fine.
 
 ## Rules that are easy to get wrong
 
@@ -173,9 +182,24 @@ string and is fine.
   class file says `base: 40`. The app does not add the two at runtime.
 - **`base` fixes a percentage, `bonus` adds to each pick's own base.** A
   choice-group spanning a category almost always wants `bonus`.
-- **Pilot skills store without a `Pilot:` or `Military:` prefix.** The catalog
-  row is `Jet Fighters`, not `Military: Jet Fighters`. Naming the prefixed form
-  cost three classes a restriction that silently did nothing.
+- **Look the row up. Do not carry a name in your head, and do not infer a
+  convention from the ones you remember.** The `Pilot` category is **mixed** —
+  51 rows `--remote` on 2026-09-08, **29** carrying a `Military:`, `Boat:`,
+  `Space:` or `Robot Combat Elite:` prefix and **22** carrying none, so
+  `Helicopter` and `Jet Aircraft` sit bare beside `Military: Combat Helicopter`.
+  `class-check --remote` does the lookup for you and prints whatever matched
+  nothing. **This bullet asserted the opposite until 2026-09-08** — *"Pilot
+  skills store without a `Pilot:` or `Military:` prefix"* — which was TRUE the
+  day it was written (PR #133, 2026-08-19) and was inverted two days later by
+  PR #180, which renamed `Jet Fighters` to `Military: Jet Fighters` and rewrote
+  every class naming the old form, leaving this sentence as the last surviving
+  copy of a dead convention. It produced a dead `except` on its first use in
+  2026-09. `BOOK-INGEST-AUDIT.md` F35.
+- **The same wrong name fails in opposite directions on the two sides.** A
+  GRANT resolves through `catalog_redirects` — `Jet Fighters` still forwards to
+  `Military: Jet Fighters` today — so nothing reports it and the class works. An
+  `only`/`except` skips redirects, so that identical string matches no row and
+  dies silently, `except` failing OPEN: the class offers what its book forbids.
 - **Local D1 drifts in BOTH directions, and BEHIND is the dangerous one.**
   `ship-pr` and `CLAUDE.md` both describe it accumulating — extra rows, a false
   duplicate report, harmless. It has also been **52 skills SHORT**: 293 against

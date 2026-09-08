@@ -4266,6 +4266,86 @@ trust it, and its failure is silent at every layer except the one check that
 happens to be run. `unmatched except fails OPEN` - the class offers a skill its
 book forbids and nothing says so.
 
+**Taken, 2026-09-08 (PR #823).** Documentation only, on one skill file,
+which is the posture the proposal states - *"Correct the rule"*, *"Replace it
+with the instruction to look the row up"*. No new check, no gate, no exit code
+moved. Premises re-checked by `audit-premise-auditor` a second time before any
+edit: **20 checked, 4 wrong, 1 unsettled by it and then settled from git.**
+
+**1. Step 1 would have inverted the rule a second time, and was not
+implemented as written.** It asks for the sentence *"the catalog's Pilot rows DO
+carry `Military:`, `Boat:`, `Space:` and `Robot Combat Elite:` prefixes"*.
+<!-- claim-ok: quoting the premise this note corrects -->
+Measured `--remote` 2026-09-08 - `SELECT count(*), sum(CASE WHEN instr(name,':')
+> 0 ...) FROM skills WHERE category='Pilot'` - the category holds **51 rows, 29
+prefixed and 22 bare**: `Helicopter`, `Jet Aircraft`, `Airplane`, `Robots &
+Power Armor` and `Combat Driving` carry no prefix at all. The finding's **29 is
+exact**; the generalisation drawn from it is not. The catalog is MIXED, so that
+replacement sentence would have been as false as the one it replaces, in the
+other direction, and would have cost the next importer the same dead `except`.
+**Shipped as step 2 alone** - the bullet now names no row and asserts no
+convention, only *look it up*.
+
+**2. A redirect for the unprefixed form exists live, and the finding never
+mentions one.** `SELECT from_key, to_id FROM catalog_redirects WHERE
+catalog='skills'`, `--remote` 2026-09-08: `Jet Fighters` forwards to `Military:
+Jet Fighters`, and so do `Tanks and APCs` and `Robots and Power Armor`. So *"There
+is no `Jet Fighters` row"* <!-- claim-ok: quoting the premise this note corrects -->
+is true of `skills` and incomplete on its own - a GRANT naming the old string
+still resolves and `class-check` will not report it. That is the asymmetry F35
+identifies correctly further down, and it is now a bullet of its own rather than
+a clause six lines away in another section.
+
+**3. The history is settled, and both premise passes had recorded it as
+unverifiable.** It is not in the tree; it is in `git log`. **PR #124**
+(`6c73a29`, 2026-08-19) repaired `burster`, `wild-psi-stalker` and `warlock`
+from `Military: Jet Fighters` to `Jet Fighters` - **those are the three
+classes** - and **PR #133** (`2bbd509`, the same day) wrote the rule into
+`class-import` off the back of it. **PR #180** (`ccb44a2`, 2026-08-21) then
+renamed the row to `Military: Jet Fighters` and rewrote every class naming the
+old form in the same script. So the rule was **true when written and inverted
+two days later by the exact rename hazard the paragraph above it describes** -
+the rename fixed the data and left the instruction. That is a better account
+than *stale*, and it is now in the skill.
+
+**4. "Six lines BEFORE the rule" is 11 to 14**, across a `##` heading -
+`SKILL.md:162-165` against the bullet at `:176-178`. The finding had already
+corrected this sentence once and was still wrong on the number.
+
+**Step 3 is done, and it found nothing wrong.** The three classes, `--remote`
+2026-09-08: all three carry `"Military: Jet Fighters"` inside the Pilot
+`except`, **zero** occurrences of the bare form, and no other stale name; all
+**seven** names in that list resolve to real `Pilot` rows, so the exclusions
+bite. They are correct because PR #180's rename rewrote them, not by luck.
+(`warlock` carries `deleted_at 2026-09-04` and `status published` - the retired
+one, not drift.) The floor: a sweep of every live published class's
+`only`/`except` against `SELECT name FROM skills` returns **1,499 restriction
+names across 225 classes, 2 unmatched**, both the Priest of Light's documented
+placeholders. **The stated floor of TWO holds exactly and no dead exclusion
+exists live.** Re-measured in the skill with its date.
+
+**And the sweep advice moved into the skill, because writing that sweep has a
+trap this session fell into.** F35 calls the sweep *"the command"*; there is no
+command. It ships as a suite check - `apps/character-creator/test/regression.mjs:863`
+runs it over every class and pins the floor by NAME - but against the scratch D1
+it builds from the repo, never `--remote`. Writing the `--remote` version by
+hand, the first version of it reported **0 unmatched across all 225 classes**
+and was measuring nothing: `parseClassMarkdown` returns `{ ok, data, errors,
+warnings }`, and `restrictionNames()` handed the wrapper returns `[]` every
+time. **The injected-failure check passed while the sweep was blind** - the
+bogus name had been pushed onto the collected array, downstream of the part that
+was broken, so it proved the comparison and never touched the collection. Both
+the `.data` trap and the location of the real sweep are now in `class-import`.
+
+**Nothing else needed correcting.** `audit-citations.mjs --remote F35` lists
+five classes - the `fq-cyborg` dervish, imprimer, leviathan, slasher and soldier
+- and each scopes its claim to the combat-aircraft rows specifically (*"the
+combat-aircraft half uses the catalog's PREFIXED row names, which is how it
+actually holds them"*), which is still true after this change. **No class note
+edited.** By hand, F35 is also cited in `BOOK-INGEST-QUEUE.md`,
+`docs/surveys/free-quebec.md`, the five `db/add-fq-cyborg-*-class.sql` scripts
+and one memory file; none of them states a status this closes.
+
 ### F36 - a text-layer page can be corrupt at the GLYPH level, and the damage is not where the tell is
 
 **Filed 2026-09-08**, during the `free-quebec` vessel extraction. **This is not
