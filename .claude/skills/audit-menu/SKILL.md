@@ -141,6 +141,13 @@ nowhere", and any claim about what another **file** or finding says. **That last
 one is the shape that actually fails**, it has its own section below, and it is
 the only one of the three with something that runs.
 
+**And do the subject grep here too, not only when a proposal is written.** The
+next section owns that rule and explains why; what belongs in this one is that
+it has never actually fired at writing time. A finding proposing to build
+something the repo already has reads exactly like a finding proposing to build
+something new, and the premise audit does not catch it either — every premise
+can be true and the work still be done.
+
 ### And before WRITING a proposal, grep the other menus for its subject
 
 The rule above fires when a finding is **taken**. This one fires earlier, when
@@ -169,6 +176,31 @@ them:
 - `REPO-AUDIT` `G18` proposed the evidence line as a new convention.
   `HEALTH-AUDIT` and `SKILL-AUDIT` had been writing one on every finding since
   the previous day; its note calls it *"a convention that starts today"*.
+- `BOOK-INGEST-AUDIT` `F33` proposed building a duplicate detector for the gear
+  catalog, opening *"no single detector finds them"*. `findDuplicates` was
+  already live, and `INGESTION-AUDIT` `F29` had rewritten it for exactly that
+  catalog **two days earlier**, reading gear's output the same day. Run against
+  production when the finding was taken, the shipped detector found **three of
+  `F33`'s four pairs**.
+
+**`F33` is a different KIND from the four above it, and the difference is what
+to do about it.** Those are decisions somebody had already weighed, and reading
+settles them. `F33` is a **capability that already existed** — not a judgement to
+look up, a thing to run. So when a finding says something does not exist or
+cannot be done, what settles it is **executing the code**: import the real
+module, shim what it needs, point it at production. That is what turned *"a
+detector exists"* into *"it finds three of these four and misses the fourth by
+0.033"* — and that number is what re-scoped the work from *build a detector* to
+*add somewhere to record the answer*. Absence is already the claim most likely
+to be wrong; a claim about a capability is absence wearing a different coat.
+
+**And in practice this fires when a finding is TAKEN, not when it is written.**
+The heading says *before WRITING*, which is where it is cheapest — but `F33` was
+filed by a session that had not run it, and the three findings taken on
+2026-09-08 were the first time it had been run against any of them. **So run it
+as step one of taking a finding too**, beside the premise audit. `F33`'s hit was
+a `### F29 — high —` heading in another menu naming the exact endpoint, from one
+grep of one word.
 
 **No tally of these is kept, deliberately** — see *Never grep for the outcome
 note* below for what a maintained count of a recurring failure costs here. They
