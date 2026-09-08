@@ -1177,6 +1177,26 @@ paragraph and a height, and no stat block anywhere in this book, only a redirect
 to Coalition War Campaign. Twenty-two vessels rather than the projected
 twenty-three.
 
+**The findings this book produced are all resolved, 2026-09-08 (PRs #823-#834).**
+Nine were open at the end of the import - `F30`-`F36` from the book, plus `F37`
+and `F38` filed while taking them - and none is now. **This line says no more
+than that on purpose:** which finding got what, and which proposals turned out
+to be different work than they described, lives under each finding in
+`BOOK-INGEST-AUDIT.md`, and a per-finding roll-call here would be a second place
+for that to be wrong. `audit-menu` -> *A header MAY NOT carry a per-finding
+state*. **Read under the heading.**
+
+Two are worth knowing at queue level, because they change how the NEXT book is
+read rather than what this one shipped: `ocr-book.py` now records `welded_pages`
+and `corrupt_pages` in every text-layer cache manifest, and `class-check
+--field-sources` warns when a class was drawn from either kind of page. Run it
+on a book you cached weeks ago - the first cross-book sweep found 42 welded
+pages across ten of eleven text-layer caches, and rediscovered a scrambled `bom`
+page that had been found by hand.
+
+*(What follows is the state as it stood when the import closed, kept as the
+dated record it is.)*
+
 **Seven findings, F30 through F36**, and the two the queue previously described
 as pre-authorized are now six plus one. **None is implemented.** All six of
 F30-F35 went through `audit-premise-auditor` before any implementation was
