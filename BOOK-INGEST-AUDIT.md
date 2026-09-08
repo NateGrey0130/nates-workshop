@@ -3581,3 +3581,71 @@ Two things to settle when this is taken, not before:
   two different printings and will not be byte-identical. Comparing them exactly
   would fail on day one; not comparing them misses the drift the finding is
   about. A length-and-keyword floor may be the honest middle.
+
+### F27 - `class-check` does not validate skill names inside an MOS option, and they fail silently
+
+`class-check` reports every skill an `occ_skills` entry names that the catalog
+does not hold, and prints stub SQL for it. **It does not look inside
+`skills.mos.options[].skills` at all.** A misspelled skill name there passes as
+`skills ok`.
+
+**Proved by making the check fail first**, with the SAME bogus name in two
+positions on one draft (`navy-seaman.md`, 2026-09-07, `--remote`):
+
+```
+A  "Zzz Not A Real Skill" inside an MOS option's choice group
+     skills         ok
+     class-check: ready - 0 errors, 0 warnings
+
+B  "Zzz Not A Real Skill" as a plain occ_skills entry
+     skills         1 row missing
+         Zzz Not A Real Skill
+     INSERT OR IGNORE INTO skills (name, category, base, per_level, ...)
+```
+
+Same name, same file, same command. Only B is seen.
+
+**Why it matters more than a typo usually would.** An MOS option's skills are
+appended to `occ_skills` at compose time, so a name that matches nothing there
+behaves exactly like an unmatched name anywhere else - the pick is offered and
+resolves to nothing. But the MOS is also where the names are *least* likely to
+be right: an MOS option is a second, nested skill list, often transcribed from a
+different part of a book, and this catalog renames freely enough that
+`Surveillance Systems`, `Tracking`, `Jet Pack`, `Jet Fighter` and
+`Chemistry: Analytical` are all WRONG as printed and had to be resolved by hand
+against production.
+
+**How exposed the catalog is today**, counted 2026-09-07 rather than estimated:
+`navy-seaman` alone carries **46 skill names across nine MOS options**, none of
+which `class-check` looked at. `coalition-technical-officer` and the
+merc-soldier / robot-pilot MOS fix carry more.
+
+**What caught it here was a manual sweep**, which is not a mechanism: every one
+of those 46 names was pulled out with a regex and checked against a dump of
+`SELECT name FROM skills`. 45 resolved; the one that did not
+(`Chemistry - Analytical`) turned out to be the shell pipe mangling an em-dash
+rather than a real mismatch, confirmed by comparing code points. That is the
+right answer arrived at by hand, twice, and nothing repeats it on the next MOS
+class.
+
+**Proposal: walk the MOS options in the same pass that walks `occ_skills`.**
+`class-check-lib.mjs` already collects skill names from a parsed class; the MOS
+options are on the same parsed object, at `skills.mos.options[].skills`, in the
+same shape - `parser.js` validates both through `validateSkillEntries`, which is
+the evidence they can be collected the same way. The fix is to include them in
+the collection, not to write a second collector.
+
+Two things to settle when this is taken, not before:
+
+- **Whether the stub SQL should fire for an MOS name.** A missing `occ_skills`
+  row gets an `INSERT OR IGNORE` stub. That is right for a skill the book
+  defines and the catalog lacks; it is wrong for a typo, and an MOS name is more
+  likely to be the second. Reporting without stubbing may be the better default
+  here.
+- **Whether `only`/`except`/`only_prefix` inside an MOS option are checked too.**
+  This finding measured `from` lists and named entries. The restriction keys are
+  the same shape and are probably in the same blind spot, but that was not
+  tested and should not be assumed.
+
+**Ongoing cost of not taking it: one manual sweep per MOS class**, and a silent
+wrong grant whenever somebody forgets.
