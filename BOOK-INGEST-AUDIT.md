@@ -4794,6 +4794,81 @@ raw `page.get_text()` return the same garbage, and re-running `ocr-book.py`
 would too. The ink is fine and the encoding is not; rendering is the only route
 to it.
 
+**Taken, 2026-09-08 (PR #833).** Both halves - the detector and the rule. It
+reports a **count** and repairs nothing, exactly as proposed.
+
+**THE CORRECTED DETECTOR WAS ITSELF MEASURED WITH A BROKEN ONE, and this
+finding is about not trusting detectors.** It specifies `\`, the guillemets and
+`£`, then reports *"seven occurrences"* on printed 95 and four other pages
+carrying one stray character each. Run with the signature as specified, printed
+95 carries **17** - backslash 10, guillemet 5, `£` 2. **5 + 2 = 7 is the
+finding's number, and its page list is exactly what you get with the backslash
+absent.** The measurement was made without the character the signature names
+first, which is this menu's own `\\`-collapse trap at work in the paragraph
+correcting a previous detector.
+
+**Six pages, not five.** Full output, the shipped function, 2026-09-08:
+
+```
+p096 (printed 95)  17     p119 (printed 118)  4     p005 (printed 4)  3
+p167 (printed 166)  2     p071 (printed 70)   1     p141 (printed 140) 1
+```
+
+**And printed 118 is a second corrupt page this finding does not mention, on a
+page a shipped class was extracted from** - `p119`, the FX-320C Dervish:
+`b\omc and cybernetics common to a\\ Cyborg Soldiers, tine fo\-`.
+
+**It is also a DIFFERENT disease, which changes what the rule can promise.**
+*"The ink is fine and the encoding is not; rendering is the only route to it"*
+<!-- claim-ok: quoting the premise this note corrects -->
+is true of printed 95 and **false of printed 118**: rendered at 600 dpi that page
+shows `a\\` as two literal backslashes - the ink itself is wrong there. Both
+pages flag; only one is cured by a render. The `book-survey` rule says so.
+
+**The cross-book scan, which the finding correctly says nobody had run.** All
+sixteen caches:
+
+| kind | flagged pages | shape |
+|---|---|---|
+| eleven **text-layer** caches | 0-9 each, `cb1` clean | real damage, at counts of 1 to 30 |
+| five **OCR** caches | **24-39 each** | dot leaders read as guillemets, line art as backslash, clustered on contents pages |
+
+**So the key is scoped to `text_layer: true`, which the finding does not say and
+the numbers require.** *"Characters the clean text never uses"* is a property of
+a text layer, not of a cache format.
+
+Real damage found outside this book: **`bom` printed 84 at 30 hits** - a wholly
+scrambled page a human found by hand on 2026-09-05 and recorded in the memory
+store, which this detector rediscovers on its own - plus `bom` printed 116 and
+310 turning `1` into `\` inside spell durations and damage dice, and `ju`
+printed 55. **The premise audit checked the live rows those could have damaged,
+`--remote`, and found none wrong**: the spells hold `10 minutes per level` and
+`+10 to save`, and the Book of Magic p.84 water spells match a render exactly.
+Every one was resolved correctly at import.
+
+**A boundary of the detector, found while testing it and worth knowing.** The
+signature is non-ASCII by construction, so **ASCII-to-ASCII glyph damage is
+invisible to it.** The page beside the Dervish's corrupt one reads `!D6xlOOO`
+for `1D6x1000` - `1` as `!`, `1` as `l`, `0` as `O` - and does not flag. The
+stored value is right because a human read it right, not because anything
+caught it. A signature wide enough to catch that would match ordinary prose,
+which is the trade this finding already makes about `%` and `&`.
+
+**Smaller corrections.** The 175 lives in `vehicle_locations`, not `vehicles` or
+`gear`. The *"ranked printed 95 only eighth"* claim could not be reproduced -
+with `%` and `&` added, 124 of 194 pages flag and printed 95 ranks 4th, 6th or
+9th by method - though the substance holds, since printed 164-166 are percentile
+tables and do outrank it. And `book-survey` §0 was **not** silent on mis-set
+characters: it already named *"a mis-set digit"* with a remedy. What fails is
+the remedy, not the category, so the new rule attaches to that clause rather
+than claiming a gap.
+
+**One thing this note cannot fix.** The section below is headed *"Premise audit
+of F30-F36"* and its body audits F30 through F35 - **F36 appears in the heading
+and nowhere in the body.** The same wrong scope is repeated in
+`docs/surveys/free-quebec.md` and in the memory store. It is left standing as
+the dated record it is; this paragraph is the correction.
+
 ### Premise audit of F30-F36, 2026-09-08 - read this before taking any of them
 
 **All six of F30-F35 went through `audit-premise-auditor` BEFORE any was
