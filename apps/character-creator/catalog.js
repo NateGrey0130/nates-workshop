@@ -376,12 +376,21 @@ function dupePanel() {
         Keep this one</button>
     </div>`;
 
+  // The keys, not the ids, because that is what a dismissal stores — an id is
+  // insertion order and means nothing in another database. Written as data
+  // attributes read by addEventListener rather than into an inline onclick, so
+  // escHtml is the right escaper and there is no second, JS-shaped escape to
+  // get wrong.
+  const key = cat().uniqueField;
   const pair = (p) => `
     <div class="dupe-pair${p.same_numbers ? ' strong' : ''}">
       <span class="tag">${escHtml(p.confidence)}</span>
       ${side(p.a, p.b)}
       <span class="dupe-vs">vs</span>
       ${side(p.b, p.a)}
+      <button class="btn btn-sm btn-ghost" data-dismiss-pair="1"
+        data-key-a="${escHtml(String(p.a[key]))}" data-key-b="${escHtml(String(p.b[key]))}"
+        title="Stop suggesting this pair. Nothing is merged and no row changes.">Not a duplicate</button>
     </div>`;
 
   // Grouped because the tiers are not equally trustworthy, and one flat list
@@ -618,6 +627,10 @@ function wire() {
     el.addEventListener('click', () => mergePair(+el.dataset.keep, +el.dataset.remove));
   }
 
+  for (const el of document.querySelectorAll('[data-dismiss-pair]')) {
+    el.addEventListener('click', () => dismissPair(el.dataset.keyA, el.dataset.keyB));
+  }
+
   for (const el of document.querySelectorAll('[data-unredirect]')) {
     el.addEventListener('click', () => removeRedirect(+el.dataset.unredirect));
   }
@@ -768,6 +781,25 @@ async function mergePair(keepId, removeId) {
     if (S.redirects) await loadRedirects();
   } catch (err) {
     S.msg = { text: 'Merge failed: ' + err.message, error: true };
+    render();
+  }
+}
+
+// The other answer. Merging is destructive and asks first; this changes no
+// catalog row at all, so it does not — it only stops the panel asking again.
+// BOOK-INGEST-AUDIT F33.
+async function dismissPair(keyA, keyB) {
+  try {
+    await api('catalogs/duplicates?dismiss=1&catalog=' + encodeURIComponent(S.catalog), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key_a: keyA, key_b: keyB }),
+    });
+    S.msg = { text: `"${keyA}" and "${keyB}" recorded as different rows. Nothing was merged.` };
+    await loadRows();          // also refreshes the badge, which now excludes it
+    await loadDuplicates();
+  } catch (err) {
+    S.msg = { text: 'Could not record that: ' + err.message, error: true };
     render();
   }
 }

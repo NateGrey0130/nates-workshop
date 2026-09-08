@@ -908,6 +908,33 @@ SELECT '024-data-script-runs.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'data_script_runs');
 
 -- ═══════════════════════════════════════════════════════════════════
+-- A suggested duplicate pair that a human looked at and judged DISTINCT.
+--
+-- `findDuplicates` proposes; this is where the answer goes when the answer is
+-- no. A confirmed duplicate needs no row here - the merge deletes the losing
+-- row, so the pair cannot be suggested again - which is why there is no verdict
+-- column and no 'duplicate' value. See BOOK-INGEST-AUDIT.md F33 and migration
+-- 050 for why the keys are sorted, why they are keys rather than ids, and why
+-- there is no foreign key.
+-- ═══════════════════════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS catalog_pair_dismissals (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  catalog TEXT NOT NULL,                     -- skills | spells | psionics | gear
+  key_a TEXT NOT NULL COLLATE NOCASE,        -- the pair's two unique keys, sorted,
+  key_b TEXT NOT NULL COLLATE NOCASE,        -- so one pair has exactly one identity
+  note TEXT,                                 -- why they are distinct, in a human's words
+  dismissed_by TEXT NOT NULL,
+  dismissed_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (catalog, key_a, key_b)
+);
+CREATE INDEX IF NOT EXISTS idx_catalog_pair_dismissals_catalog
+  ON catalog_pair_dismissals (catalog);
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '050-catalog-pair-dismissals.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'catalog_pair_dismissals');
+
+-- ═══════════════════════════════════════════════════════════════════
 -- An in-progress character build. Its own table rather than a `draft` status
 -- on `characters`: a half-built character has no name, no campaign and
 -- possibly no attributes, and putting one in `characters` would make every

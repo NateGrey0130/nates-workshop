@@ -4209,6 +4209,114 @@ slug in `equipment_starting`. `node scripts/audit-citations.mjs --remote` and a
 grep of the class markdown for the slug are what size it, and that sizing is
 step one of taking this, not step two.
 
+**Taken, 2026-09-08 (PR #825).** Posture as proposed - **reporting, plus a
+place to put the answer. Nothing merges automatically, no catalog row changes,
+and no dismissal ships as data.**
+
+**THE HEADING IS WRONG, and it changed what got built.** *"no single detector
+finds them"* is true of the three detectors written for this finding and false
+of the one that ships. `findDuplicates` has been live throughout; its O(n^2)
+walk was replaced with a token index by `INGESTION-AUDIT` `F29` on
+**2026-09-06, two days before this finding was filed**, and that note records
+reading gear's output the same day.
+<!-- claim-ok: quoting this finding's own heading, above -->
+
+Run against production gear on 2026-09-08 - the shipped module, a shim for
+`env.DB`, no reimplementation:
+
+| pair | shipped detector |
+|---|---|
+| `huntsman-armor` ~ `huntsman-plate-padded-armor-non-environmental` | **found**, `contains`, score 0.75 |
+| `language-translator-portable` ~ `portable-language-translator` | **found**, `contains`, score 0.75 |
+| `large-flashlight` ~ `flashlight-large` | **found**, `likely`, score 0.95 |
+| `bio-comp-monitor` ~ `bio-comp-system` | **missed** - 0.667 against a 0.7 threshold |
+
+So *"the huntsman names differ too much"* was true of this finding's own
+normaliser and not of `normaliseName`, which scores that pair 0.75.
+<!-- claim-ok: quoting this finding's own text, above -->
+The miss is two of three tokens matching, and dropping the threshold to catch it
+would swell a tier that is already **589 of 591** suggestions.
+
+**And the proposal's closing sentence is backwards.** It says *"the mechanism is
+not the missing part; the confirmation is."*
+<!-- claim-ok: quoting this finding's own text, above -->
+Confirmation is exactly what existed - a panel listing pairs, a human deciding
+one at a time, and `mergeRows` writing the redirect inside the same batch that
+repoints and deletes. What did not exist was anywhere to put a **no**, so every
+reader re-judged the same pairs from nothing, including the 45 that `F29` read
+and judged on 2026-09-06 and which sit in today's list indistinguishable from
+pairs nobody has opened.
+
+**`catalog_pair_dismissals` is that place**, shaped after
+`npc_proposals_dismissed`. It records only the no: a confirmed duplicate is
+executed rather than remembered, because the merge deletes the losing row and
+the pair cannot be suggested again.
+
+**A hazard this finding would have shipped.** It asks for *"a
+`catalog_redirects` row per pair actually confirmed"* and says nothing about the
+losing row.
+<!-- claim-ok: quoting this finding's own text, above -->
+Every server read path for inventory joins
+`LEFT JOIN gear g ON g.slug = ci.gear_slug OR g.id = cr.to_id`, so a redirect
+written while both rows still exist matches **both arms and returns the item
+twice** - and `characters/[id]/items/[itemId].js` takes `LIMIT 1`, so it picks
+between two categories arbitrarily. Verified `--remote` on 2026-09-08 against
+`dead-boy-body-armor`, the one key in the catalog that has both a live gear row
+and a redirect, which returns 2 rows today and is harmless only because no
+inventory row carries that slug. **Hand-writing the redirect is the unsafe
+version of what `mergeRows` already does correctly**, and nothing here does it.
+
+**Two more premises did not hold.** *"and it resolves through a redirect"*, of
+`dead-boy-body-armor`: the wizard's `findItem` checks the live slug **first**,
+so that redirect is shadowed and the row resolves to itself. And the blast-radius
+instruction names a script that cannot answer it - `audit-citations.mjs` matches
+finding numbers in `extraction_notes`, takes no slug, and returns *"0 of 226
+published classes"* for `F33`. Only the markdown grep in that sentence sizes
+anything.
+
+**The sizing the finding calls step one, done.** Citer counts re-derived
+`--remote` two ways - `instr` over 225 live published classes, and an
+`equipment_starting`-only pass using `String.includes` rather than a `\b` regex,
+per this menu's own warning about the Bash tool eating the backslash. Both agree
+with the earlier table on all eight rows: `huntsman-armor` **4** against **0**,
+`portable-language-translator` **10** against **1**, `large-flashlight` **5**
+against **1**, `bio-comp-system` **8** against **1**. Every citation is inside
+`equipment_starting`; none is prose. One thing the table did not show:
+**`salvage-expert` is the single citer of two different losers**, so two of the
+four merges would touch one class.
+
+**The "cheapest possible merge" is not available as described, and this is the
+sharpest correction of the four.** The premise-audit section calls
+`huntsman-plate-padded-armor-non-environmental` a zero-citer row and therefore
+the cheap one to retire. `test/regression.mjs` **pins that slug as a row that
+must still exist**, in a check whose comment reads *"the five that only look
+like duplicates are still there"* - so retiring it turns a rebuilt database red.
+And the direction is backwards anyway: the 4-citer survivor `huntsman-armor` is
+a STUB whose own description says the other *"carries the full entry"*. Which
+row loses is a decision, not a default, and none of the four is merged here.
+
+**Proved by injection**: disabling the dismissal filter fails four of the six
+new checks. The other two - a pure-function test of the pair identity, and one
+asserting a dismissal naming a deleted row is inert - correctly do not move.
+
+**Verified in the app**, on a local server confirmed to be serving this branch:
+64 pairs on the skills catalog each gained the button, the first being
+`Gambling (Standard)` against `Gambling (Dirty Tricks)` - the false positive
+`INGESTION-AUDIT` `F27` already demoted, still being suggested. Measured at
+1280x900 and 768x1024: zero overflow against the pair's own row, no horizontal
+page scroll, and row heights **identical with the button hidden**, so the
+wrapping is the panel's own and not something this added. The dismiss/restore
+round trip ran against LOCAL only - 591 to 590 and back, the `likely` tier
+emptying and refilling - and left no rows behind.
+
+**Not done, and deliberately:** the `bio-comp` pair still falls under the
+threshold. Catching it means either lowering `THRESHOLD` for every catalog or
+adding a second signal, and `same-spell-lib.mjs`'s `descriptionOverlap` is the
+obvious candidate - it is catalog-agnostic already, and near-identical prose is
+exactly what separates that pair from `computer-portable`/`hand-held-computer`.
+That is a change to what gets SUGGESTED rather than to what happens after, so it
+is **filed as `F38` on this menu** rather than smuggled in here.
+
 ### F34 - the literacy placeholder is guarded and the LANGUAGE placeholder is not, so the same mistake fails on one and ships on the other
 
 **Filed 2026-09-08**, caught by `regression.mjs` while importing this book's
@@ -4697,3 +4805,51 @@ the migration (#815, `F26`) would have to say.
 
 **Ongoing cost:** none for the fix itself. The underlying convention stays
 unenforced, which is what the paragraph above declines to solve here.
+
+### F38 - one real duplicate scores 0.667 against a 0.7 threshold, and the names cannot settle it
+
+**Not taken.** Filed while taking `F33`, whose mechanism it does not need and
+whose posture it would change: `F33` added a place to record the answer, and
+this is about what gets ASKED.
+
+`bio-comp-monitor` and `bio-comp-system` are the same item. `bio-comp-system`'s
+own description opens *"A Bio-Comp Monitor: a portable computer and sensor
+system clipped to the ears or fingers..."*, both cost 2,500, both are `rifts`,
+and both cite Rifts Ultimate Edition. **`findDuplicates` does not suggest the
+pair and cannot**, measured 2026-09-08:
+
+```
+similarity('Bio-Comp Monitor', 'Bio-Comp System') = 0.667     THRESHOLD = 0.7
+```
+
+Two of three tokens match. It is the one pair of the four in `F33` the shipped
+detector misses, and it misses by 0.033.
+
+**Lowering `THRESHOLD` is the wrong fix and the numbers say so.** Gear already
+returns **591** suggestions of which **589** are the loosest tier; that ratio is
+what `F33` is about, and a lower threshold makes it worse on every catalog at
+once to catch one pair.
+
+**Proposal:** a SECOND signal, so a pair can clear on evidence the names do not
+carry. `descriptionOverlap(a, b)` in `scripts/same-spell-lib.mjs` already
+computes shared 4-plus-letter vocabulary as a fraction of the shorter
+description, and is **not spell-specific** - it reads two strings. A pair below
+the name threshold but with a high description overlap becomes a suggestion in
+the loosest tier, never a confident one. **Posture: it may only ADD
+suggestions, never promote a tier and never merge.**
+
+**What would make this fail, stated first:** the same signal on
+`computer-portable` / `hand-held-computer` - the pair `F33` records as
+*unresolved* - would likely also fire, since both describe a paperback-sized
+computer at 100 credits. **That is arguably correct** and is the test case
+either way: if the new signal cannot separate those two, it is a noise generator
+and this finding should be declined rather than tuned.
+
+**Evidence:** `similarity()` run directly on the two names, and the four pairs
+run through the shipped `findDuplicates` against `--remote` gear, both
+2026-09-08, recorded in `F33`'s outcome note. **Confidence: high** that the pair
+is real and missed; **low** that description overlap separates it cleanly from
+the computer pair, and that is the thing to measure before writing anything.
+
+**Ongoing cost:** one more signal to reason about when a suggestion looks wrong,
+against a detector that is already three demotion rules deep.
