@@ -550,6 +550,35 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
     }
   }
 
+  // ── class attribute maximums (advisory) ───────────────────────────────────
+  // A book that CAPS an attribute - "a P.B. of 12 or lower (they want average
+  // looking people)" - rather than requiring one. BOOK-INGEST-AUDIT.md F32.
+  //
+  // A WARNING and never a violation, matching the ceiling check above rather
+  // than `attribute_minimum`, which blocks. That is the posture Nate fixed when
+  // the finding was taken, and it is the one this app already applies to every
+  // other statement about how high an attribute may be: `apps/character-creator/
+  // AUDIT.md` F2's follow-up, 2026-08-24 - pools became a hard cap for non-GM
+  // creators and attributes deliberately did not, because Manual entry exists
+  // for numbers a table decided.
+  //
+  // So this does NOT refuse the character. What it buys over the prose in
+  // `restrictions` is that the number is structured: it renders as a cap
+  // instead of inverting to "PB 12+", it reaches admin/audit, and a later
+  // decision to enforce it has something to enforce.
+  const maxes = cls.attribute_maximums;
+  if (maxes && typeof maxes === 'object' && attributes && typeof attributes === 'object') {
+    for (const [attr, raw] of Object.entries(maxes)) {
+      const cap = parseInt(raw, 10);
+      if (!Number.isFinite(cap)) continue;
+      const have = parseInt(attributes[attr], 10);
+      if (!Number.isFinite(have) || have <= cap) continue;
+      warnings.push({ rule: 'attribute_above_class_maximum', attribute: attr, value: have, maximum: cap,
+        message: `${attr} is ${have}, above the ${cap} this class allows `
+          + '- the book caps it, so check with your GM' });
+    }
+  }
+
   return { skipped: false, violations, warnings };
 }
 

@@ -55,7 +55,7 @@ export function isChoiceGroup(entry) {
 // it is a second class wearing the first one's name, and the inheritance would
 // obscure rather than explain.
 export const VARIANT_OVERRIDES = [
-  'attribute_dice', 'attribute_requirements',
+  'attribute_dice', 'attribute_requirements', 'attribute_maximums',
   'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',
   'starting_money',
   'bonuses',
@@ -64,7 +64,7 @@ export const VARIANT_OVERRIDES = [
   'skill_overrides',
 ];
 
-// These two are flat maps of INDEPENDENT per-attribute values, so a variant
+// These three are flat maps of INDEPENDENT per-attribute values, so a variant
 // naming one attribute is saying something about that attribute and nothing
 // about the other seven. Replacing them wholesale meant an adult dragon that
 // overrode only P.S. silently lost the base's I.Q. dice and rolled a plain 3d6.
@@ -72,7 +72,11 @@ export const VARIANT_OVERRIDES = [
 // Everything else replaces. A scalar has nothing to merge, and `bonuses` is a
 // nested structure where merging would raise "which half won" on every key —
 // a variant's bonuses ARE its bonuses.
-const VARIANT_MERGED = ['attribute_dice', 'attribute_requirements'];
+//
+// A key listed HERE and not in VARIANT_OVERRIDES is never read: `applyVariant`
+// iterates the overrides and consults this list only to choose spread-vs-
+// replace. F32's proposal named this list alone, which would have been a no-op.
+const VARIANT_MERGED = ['attribute_dice', 'attribute_requirements', 'attribute_maximums'];
 
 // The class as this variant plays it. Returns the class unchanged when there is
 // no variant, so every caller can apply it unconditionally.
@@ -794,6 +798,21 @@ export function combineClasses(rcc, occ) {
   }
   if (Object.keys(reqs).length) out.attribute_requirements = reqs;
 
+  // Ceilings the same way, except "stricter" is the LOWER number. A book that
+  // caps an attribute is saying the same kind of thing as one that floors it,
+  // so both sides apply and neither replaces the other (F32).
+  //
+  // This block has to exist even though `out = { ...rcc }` above already
+  // carries the RACE's ceilings: without it the OCCUPATION's are silently
+  // dropped. That is a half-implementation failing in exactly one direction,
+  // which is the shape a merged key hides best.
+  const maxes = { ...(rcc.attribute_maximums || {}) };
+  for (const [k, v] of Object.entries(occ.attribute_maximums || {})) {
+    if (typeof v !== 'number') continue;
+    maxes[k] = typeof maxes[k] === 'number' ? Math.min(maxes[k], v) : v;
+  }
+  if (Object.keys(maxes).length) out.attribute_maximums = maxes;
+
   // Fixed skills from both; the related and secondary ALLOWANCES from the
   // O.C.C. alone, which is the whole reason a racial class lists none.
   //
@@ -1377,6 +1396,46 @@ function validateAttributeMinimums(block, errors) {
     } else if (typeof v !== 'number' || !Number.isFinite(v)) {
       errors.push(`bonuses.attribute_minimums.${k} must be a number`);
     }
+  }
+}
+
+// "A P.B. of 12 or lower (they want average looking people)" - le Surete du
+// Quebec Deep Intel Agent, Free Quebec printed 32. A CEILING on an attribute,
+// which `attribute_requirements` cannot say: that block is minimums throughout,
+// merged with `Math.max` and rendered `PB 12+`, so writing a cap there states
+// the exact inverse of the book. BOOK-INGEST-AUDIT.md F32.
+//
+// NOT `bonuses.attribute_minimums`, whose name this one echoes and whose job it
+// does not share. That is a floor applied AFTER the dice bonus lands; this
+// gates nothing and adjusts nothing, it is what the book says the character
+// may not exceed.
+function validateAttributeMaximums(block, reqs, errors, warnings) {
+  if (block === undefined || block === null) return;
+  if (typeof block !== 'object' || Array.isArray(block)) {
+    errors.push('attribute_maximums must be a map of attribute to number');
+    return;
+  }
+  for (const [k, v] of Object.entries(block)) {
+    if (!BONUS_ATTRS.includes(k)) {
+      errors.push(`attribute_maximums.${k} is not an attribute (${BONUS_ATTRS.join(', ')})`);
+      continue;
+    }
+    if (typeof v !== 'number' || !Number.isFinite(v)) {
+      errors.push(`attribute_maximums.${k} must be a number`);
+      continue;
+    }
+    // A cap below the floor for the same attribute admits nobody, and both
+    // halves usually come off one printed line - "I.Q. 10 and M.A. 10 or
+    // higher, and a P.B. of 12 or lower" - so a transposition puts them the
+    // wrong way round rather than producing anything a reader would notice.
+    const min = reqs && typeof reqs === 'object' ? reqs[k] : undefined;
+    if (typeof min === 'number' && Number.isFinite(min) && v < min) {
+      errors.push(`attribute_maximums.${k} is ${v} but attribute_requirements.${k} is ${min}`
+        + ' - no character can satisfy both');
+    }
+  }
+  if (!Object.keys(block).length) {
+    warnings.push('attribute_maximums is empty and will do nothing');
   }
 }
 
@@ -2264,6 +2323,13 @@ export function parseClassMarkdown(text) {
   // melee at level 5" were prose that nothing could act on; this is where a
   // number goes so the sheet can actually add it up.
   if (data.bonuses) validateBonuses(data.bonuses, errors, warnings);
+
+  // A book's CEILING on an attribute (F32). Validated here and not beside
+  // `attribute_requirements`, which has no shape validator of its own - a gap
+  // this finding found and did not widen: a new key with no checking at all is
+  // how "the wrong key parses, validates and is confidently wrong" happens.
+  validateAttributeMaximums(data.attribute_maximums, data.attribute_requirements,
+    errors, warnings);
 
   // An ability choice group. Unvalidated until now, which is why a `choose`
   // written into special_abilities parsed clean and then did nothing at all.

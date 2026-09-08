@@ -110,6 +110,11 @@ a:hover { text-decoration: underline; }
 .err { color: var(--danger); }
 .ok { color: var(--success); }
 .warn { color: var(--warning); font-size: 13px; margin-top: 8px; }
+/* Colour only, like .err and .ok above — NOT .warn, which also sets a 13px
+   size and a top margin for block-level warnings and would break an inline
+   11px .attr-note. Used for a class attribute cap, which is advisory: the
+   step continues and the save succeeds (BOOK-INGEST-AUDIT.md F32). */
+.caution { color: var(--warning); }
 /* Marks the one field on the Details step the book actually requires. */
 .req { color: var(--warning); font-weight: 700; }
 
