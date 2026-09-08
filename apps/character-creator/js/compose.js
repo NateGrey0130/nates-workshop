@@ -428,6 +428,17 @@ export const CORE_SDC_BY_CLASS = {
   'whale-singer': '1D6',
   'ocean-wizard': '1D6',
   'sea-druid': '1D6',
+
+  // Tritonia, printed 96-98. The SEA WOLF is this book's clearest man of
+  // arms and the only Underseas class to reach 3D6: hand to hand expert,
+  // three W.P.s granted outright, Military at +10%, and a job description
+  // that is commando operations and counter-terrorism. The TRITONIAN
+  // SCIENTIST is the opposite end of the same city - Hand to Hand: Basic,
+  // one W.P., and Military barred from its related skills entirely. The
+  // basic military training every Tritonian citizen gets in their teens is
+  // background rather than a grant, and does not move it.
+  'tritonian-sea-wolf': '3D6',
+  'tritonian-scientist': '1D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence
