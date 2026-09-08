@@ -476,10 +476,19 @@ button.chkrow {
    A single `.caution` further up the file loses on source order and renders
    muted grey - measured in the browser, where the class was on the element and
    the colour was not (BOOK-INGEST-AUDIT.md F32).
-   `.attr-note.err` and `.attr-note.ok` have the same defect and are NOT fixed
-   here: they are pre-existing, this PR takes one finding, and an unmet class
-   minimum has been rendering grey since long before it. */
+   `.attr-note.err` had the same defect and is fixed below (UI-AUDIT F33). */
 .attr-note.caution { color: var(--warning); }
+/* An unmet class minimum, and the reason it needs two classes is the one
+   directly above: `.err` at the top of this file ties `.attr-note` and loses on
+   source order, so `need 10+` beside a failing attribute has rendered the same
+   muted grey as the dice expression next to it. Measured, not read: the element
+   carried `class="attr-note err"` and computed to #84938E. UI-AUDIT F33.
+
+   `.ok` is deliberately NOT given the same treatment. A requirement that is
+   MET needs no colour - painting every satisfied row green is colour carrying
+   no information, and it would compete with the amber cap for attention. Three
+   states, three meanings: muted satisfied, red blocking, amber advisory. */
+.attr-note.err { color: var(--danger); }
 /* The wizard's primary action sticks to the bottom of the viewport rather
    than to the bottom of a long step, so Next is reachable without scrolling
    past a skill list to find it. .nav-why rides with it, unchanged - it is the

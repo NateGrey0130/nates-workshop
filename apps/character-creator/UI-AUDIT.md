@@ -2375,3 +2375,35 @@ design call and is why this is not a one-line certainty.
 
 **Ongoing cost:** none. Two static rules in the file that already owns the
 column.
+
+**Taken, 2026-09-08 (PR #827).** Presentation only, as proposed - nothing about
+what blocks or passes moved.
+
+**ONE rule, not two.** The proposal offered `.attr-note.err` and
+`.attr-note.ok`, and named the open question itself: *"whether `.ok` should
+paint green at all, or whether a met requirement is better left muted."*
+<!-- claim-ok: quoting this finding's own proposal, above -->
+**Nate settled it: only `.err`.** A requirement that is met needs no colour -
+painting every satisfied row green is colour carrying no information, and it
+would compete with the amber cap `BOOK-INGEST-AUDIT` `F32` added two lines
+above. Three states, three meanings: **muted satisfied, red blocking, amber
+advisory.** `.ok` keeps its class and keeps rendering muted, which is what it
+already did.
+
+**The premise held exactly.** `.err` is at `styles.css:110` and `.attr-note` at
+`:474` - one class each, so the tie goes to source order and `.attr-note` wins
+by 364 lines.
+
+**Verified by looking, which is the only thing that can confirm a colour.** On a
+local server confirmed to be serving this branch, the Deep Intel Agent with
+I.Q. 4 against a printed minimum of 10 and P.B. 18 against a cap of 12, at
+768x1024 with the whole step above the fold:
+
+| row | class | computed | token |
+|---|---|---|---|
+| I.Q. `need 10+`, unmet | `attr-note err` | `rgb(222, 110, 88)` | `--danger` `#DE6E58` |
+| M.A. `need 10+`, met | `attr-note ok` | `rgb(132, 147, 142)` | `--text-muted` `#84938E` |
+| P.B. `12 or less`, over | `attr-note caution` | `rgb(201, 154, 62)` | `--warning` `#C99A3E` |
+
+The `Skills` button is disabled for the unmet minimum and enabled for the
+exceeded cap, unchanged by this - which is the half that had to not move.
