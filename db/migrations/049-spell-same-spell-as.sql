@@ -1,0 +1,37 @@
+-- `spells.same_spell_as`: this row is another book's retelling of that row.
+--
+-- BOOK-INGEST-AUDIT.md F26. `spells` is keyed `name TEXT NOT NULL UNIQUE` and
+-- carries ONE `level` and ONE `ppe`. That is right for a catalog where a spell
+-- belongs to one tradition, and Rifts is not that catalog: Rifts World Book 7:
+-- Underseas prints an Ocean Magic list whose spells the Book of Magic already
+-- publishes as Water Warlock invocations, at different levels and different
+-- costs. The import shipped them under an `Ocean:` prefix on the existing
+-- `Water:`/`Fire:`/`Air:`/`Earth:` precedent, which works - an Ocean Wizard
+-- spends the ocean price, a Water Warlock the warlock price - at the cost of
+-- two rows holding the same spell, which drift the moment either is corrected.
+-- Nothing would say so: `drift-check` compares a row to its cited page, and
+-- both rows cite pages that agree with them.
+--
+-- This is F26's SMALLER option, the `copy_of` mechanism F25 built for classes
+-- applied to spells. It changes no runtime behaviour and no character: nothing
+-- reads this column at runtime, and it is the checker that reads it.
+--
+-- THE LINK POINTS FROM THE RETELLING TO THE ESTABLISHED ROW - `Ocean: Whirlpool`
+-- names `Water: Whirlpool`, not the other way round. F26 left the direction open
+-- and noted that "the canonical one is the unprefixed one" is not a rule that
+-- holds. "The newer import points at what was already there" is, it matches
+-- F25's `copy_of` direction, and it means a future book adds its own rows and
+-- touches nothing existing.
+--
+-- A `name` REFERENCE, not an id, and deliberately - the same reasoning that
+-- makes every catalog write in this repo key on `name` or `slug`. `spells.id`
+-- is `INTEGER PRIMARY KEY AUTOINCREMENT`, so it is insertion order and differs
+-- per environment; a database rebuilt from the repo matched production on 0 of
+-- 1025 gear ids when that was last measured. `name` is UNIQUE and stable.
+--
+-- No foreign key, for the same reason `catalog_redirects` has none on its
+-- from_key: the target may legitimately be created by a LATER data script than
+-- the one writing the link, and filename order is execution order.
+ALTER TABLE spells ADD COLUMN same_spell_as TEXT;
+
+CREATE INDEX IF NOT EXISTS idx_spells_same_spell_as ON spells(same_spell_as);
