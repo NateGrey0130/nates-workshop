@@ -5263,3 +5263,160 @@ it anyway, which is the argument for the check rather than against it.)*
 to catch this one pair was considered and is worse than the above: it moves
 every catalog at once, and `similarity` is what three separate demotion rules
 (`INGESTION-AUDIT` `F27`, `F30`, `F31`) are already tuned around.
+
+## Filed while reviewing the OCR pipeline, 2026-09-08
+
+### F39 - §0b's DPI paragraph and §0c's framing together read as "a render only helps a text layer", and the case that disproves it is a SCAN
+
+`book-survey` §0b says **"Do not reach for a higher DPI when the text is
+wrong."** <!-- claim-ok: quoting SKILL.md:167, opened and read 2026-09-08 -->
+That sentence is right, and so is everything under it: 300 -> 600 dpi took the
+price-unit misreads from 7 to 5, `--oem 1` changed nothing, and only 1.3% of
+words score under 70 with none of the known misreads among them. Its conclusion
+is that the leverage is not in the scan but in knowing what a field is allowed
+to look like, and §0 states the same thing about a text layer eight lines into
+its damage paragraph - **"None of it is fixed by a better reader."**
+<!-- claim-ok: quoting SKILL.md:91, opened and read 2026-09-08 -->
+
+§0c does prescribe rendering a page and looking at it. But its heading is **"A
+text layer does not give you TABLES. Render the page and look"**, and all three
+rows of the table under it are text-layer cases - the Attribute Bonus Chart at
+PF 16, Types of Armor at PF 270, and the SAMAS Pilot's skills at RUE 233.
+<!-- claim-ok: SKILL.md:183 and the table at SKILL.md:190, both read 2026-09-08 -->
+
+**So a session working a SCAN meets a DPI paragraph telling it not to touch the
+pixels, and a render section addressed to the other kind of cache.** Neither
+sentence is false. Together they read as *a render is what you do about a text
+layer*, and that is the reading this finding is about.
+
+**The case, and it is a scan.** `triax` is OCR (`text_layer: false`, `dpi: 300`
+in its manifest) and its cached p110 holds items 6-9 of the VX-635 Prowler's
+bionic features cleanly, then `0. Gyro-compass` for item 10, then a block of
+glyph noise, then `Multi-optic eyes` and `Radar detector` loose and unnumbered.
+**Three of the fifteen are in the cache nowhere**: Molecular analyzer (11),
+Modulating voice synthesizer (12), and Psionic electro-magnetic dampers (14).
+
+A 160 dpi render of the same page - PDF index 109, `triax` `page_offset` 0 -
+reads all ten of items 6 through 15 without difficulty. The page is a full-page
+line-art plate with the list set beside it, and `--psm 3`'s layout analysis
+loses to the hatching. **That is not a resolution problem and not a wordlist
+problem**, which is exactly why §0b's measurement does not reach it: raising the
+DPI would not have helped, and a render did.
+
+**Nothing was lost from the catalog.** All three items are live from printed 153
+in `apps/character-creator/db/add-triax-gear-e-cybernetics.sql`, which prices
+the first two and records that the book prints no price for the third. What it
+cost was the reconstruction: `apps/character-creator/docs/surveys/triax.md:446`
+says the items were rebuilt *"from readable fragments plus the continuation on
+p111 where possible"*, and a render would have answered the page outright.
+<!-- claim-ok: quoting triax.md:446, opened and read 2026-09-08 -->
+*(That note says items 6-14. The cache has 6-9 clean and the damage running
+10-15, so the note's range is wrong at both ends. Left as it stands - it is a
+dated record, and this paragraph is the correction.)*
+
+**Bulk OCR quality is NOT the argument here, and the measurement says so.**
+Scored on 2026-09-08 by a throwaway script - per page, the fraction of
+whitespace-separated tokens matching `[A-Za-z][A-Za-z'-.,;:!?()]*` or a numeric
+form - over every cached page of five OCR books and five text-layer books:
+
+| cache kind | books | pages | median word-like | pages under 0.60 |
+|---|---|---|---|---|
+| OCR | `rue`, `ww`, `triax`, `underseas`, `phase-world` | 1163 | 0.925 - 0.953 | 7 |
+| text layer | `pf`, `bom`, `free-quebec`, `new-west`, `potm` | 1246 | 0.947 - 0.965 | 25 |
+
+**Read that table narrowly.** It says Tesseract's bulk output on these five
+books is in the same band as a publisher's own text layer, so the engine is not
+the problem. It does **not** say text layers are worse: most of the text-layer
+outliers cluster at `p005`-`p010`, which is front matter, and the two counts are
+not measuring comparable things.
+
+**And the proxy missed the page this finding is about.** `triax` p110 does not
+appear in those 7, because the page is mostly illustration - few tokens, and the
+half that survived is clean. A token-ratio detector would not have flagged the
+one page that motivated the measurement.
+
+**Proposal - documentation only, no check, no script, no code.** Two paragraphs
+in `book-survey`:
+
+1. **In §0b, after the DPI paragraph**, one sentence bounding what that
+   measurement covers: it is about Tesseract's own parameters, and it does not
+   say that a page whose layout analysis failed cannot be read - a render can,
+   and `triax` p110 is the case.
+2. **In §0c**, widen the framing from *a text layer does not give you tables* to
+   *a cache of either kind can lose a page, and a render is the route to it* -
+   keeping every existing text-layer row, and adding the scan case beside them.
+
+Nothing is deleted and no existing sentence is contradicted. **The posture is
+prose only**: it adds no manifest key, no detector and no exit code.
+
+**Both neighbours have SHIPPED, and what they shipped covers text layers only.**
+That is the durable statement, and it is why this finding is sharper now than
+when it was drafted. `F36`'s glyph detector and its §0 render rule, and `F30`'s
+`welded_pages`, both landed on 2026-09-08. Neither reaches a scan:
+
+```
+scripts/ocr-book.py:412   if doc is not None and base.get('text_layer'):
+scripts/ocr-book.py:413       base['welded_pages'] = welded_pages(doc)
+scripts/ocr-book.py:419   if base.get('text_layer'):
+scripts/ocr-book.py:420       base['corrupt_pages'] = corrupt_pages(txt_dir, nums)
+```
+
+Read at `5feeadf`, 2026-09-08. **Both keys are gated on `text_layer`**, so no
+OCR cache gets either signal - the five here are 1163 pages with no page-level
+quality flag of any kind. The prose landed the same way: the §0 block added
+above the DPI paragraph says *"Across the eleven text-layer caches here"* and
+draws every example from `pf`, `bom` and Free Quebec.
+<!-- claim-ok: quoting SKILL.md:105, read at 5feeadf on 2026-09-08 -->
+
+**And extending the glyph detector to scans is already settled, on a
+measurement, against.** `scripts/ocr-book.py:414-416` says so in the code:
+*"Text-layer caches only: on an OCR cache the same characters are dot leaders
+and line art, and the signature fires on 11-17% of pages."*
+<!-- claim-ok: quoting the comment at ocr-book.py:414-416, read at 5feeadf on 2026-09-08 -->
+**Do not re-propose it**, and read that as support rather than as an obstacle:
+the detector route to the scan side is closed by evidence, which is precisely
+why the remedy proposed here is prose. A reader who cannot be handed a flag has
+to be told where to look.
+
+**So this finding neither duplicates nor competes with either neighbour.** It
+proposes no detector, no manifest key and no second mechanism - only the two
+prose paragraphs above - and it is now the only thing on this menu addressing
+the scan side of a question the text-layer side has answered twice.
+
+*(This paragraph replaced one calling `F36` open and `F30` unbuilt. Both were
+true when written at 14:14 and false by 19:04, and `audit-menu` forbids the
+shape outright: a sentence carrying another finding's state rots wherever it is
+written. What stands above states what the CODE does, which does not rot the
+same way. The finding had not merged, so this is a draft corrected before
+landing rather than a record rewritten - the rule against editing a measurement
+governs what is already in the file.)*
+
+**Evidence.** SKILL.md lines 91, 105, 167, 183 and 190, `scripts/ocr-book.py`
+lines 412-420, and `triax.md:446` - all opened and read at `5feeadf` on
+2026-09-08. **The four SKILL.md numbers are the second set**: the draft cited
+79, 124, 140 and 147, correct at `f802eca` and moved when `F30` and `F36`
+landed in between. `triax` p110 rendered at 160 dpi with
+`pymupdf.get_pixmap` and read, 2026-09-08. Cache kinds from each
+`.cache/books/<slug>/manifest.json`. The word-like table from the throwaway
+script described above, which is **in no commit** - the method is stated in one
+line so it can be re-derived rather than trusted.
+
+**Confidence - high on the prose claims and on the page, medium on how often
+this recurs.** The four skill lines and the p110 render are direct reads. What
+is not measured is how many other pages across the five OCR caches are lost the
+same way; the token proxy demonstrably cannot find them, and nothing else has
+looked. **What would raise it:** a pass over the illustration-heavy pages of the
+other four OCR caches, which needs a way of finding them that is not the proxy
+above.
+
+**Ongoing cost - two paragraphs to keep true, and one trap.** No check, no
+script, no CI minute. The trap is that §0b's DPI paragraph is a *measurement*:
+if it is ever re-run and moves, the sentence this finding adds beside it must be
+re-read rather than left standing.
+
+**The decline path is real.** §0c already tells you to render a page, and the
+`triax` reconstruction worked - the data is correct in production today. If the
+view is that a reader who needs the render will find §0c whatever its heading
+says, this finding is two paragraphs of maintenance for a framing problem that
+has cost one reconstruction. **It is filed as prose precisely because that is
+cheap enough to decline.**
