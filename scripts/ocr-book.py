@@ -306,6 +306,54 @@ def welded_pages(doc):
     return out
 
 
+# Characters a clean TEXT LAYER never produces. Built by codepoint rather than
+# written as literals so no shell, heredoc or editor can eat the backslash --
+# which is exactly how this finding's own measurement went wrong.
+CORRUPT_CHARS = frozenset([
+    chr(0x5C),    # \  a mis-mapped digit 1 shows up as this constantly
+    chr(0xAB),    # <<
+    chr(0xBB),    # >>
+    chr(0xA3),    # GBP, for a mis-mapped E in "P.P.E."
+])
+
+
+def corrupt_pages(txt_dir, pages):
+    """Cached page -> count of characters a clean text layer never makes.
+
+    BOOK-INGEST-AUDIT.md F36. A PDF's own font mapping can be broken, so the
+    text layer returns plausible-looking nonsense. The prose announces itself --
+    `vsv&sis. \\Vs. %\\%vausttft` -- but THE DAMAGE IS NOT WHERE THE TELL IS: on
+    the same page an M.D.C. table read `- 115` where the ink says 175, and 115
+    is a perfectly ordinary figure in a column of ordinary figures.
+
+    A COUNT, NOT A THRESHOLD, and that is the finding's instruction. Across
+    every text-layer cache here the real damage appears at counts of 3 and 4 as
+    well as 17, so any cutoff above 1 misses `bom` printed 116 and 310 and this
+    book's own printed 118. The number is for a human to weigh.
+
+    `%` AND `&` ARE DELIBERATELY ABSENT. Including them matches percentile
+    tables (`36%-40%:`) and ordinary names (`Demons & Monsters`); that is what
+    produced four false positives in this finding's first attempt, and 124 of
+    194 pages when re-run.
+
+    TEXT-LAYER CACHES ONLY, which the finding does not say and the numbers
+    require. On the six OCR caches the same signature fires on 11-17% of pages,
+    because Tesseract renders dot leaders as `<<` and line art as `\\`. The
+    premise "characters the clean text never uses" is a property of a text
+    layer, not of a cache.
+    """
+    out = {}
+    for pno in pages:
+        path = os.path.join(txt_dir, 'p%03d.txt' % pno)
+        if not os.path.exists(path):
+            continue
+        text = io.open(path, encoding='utf-8', errors='replace').read()
+        n = sum(1 for ch in text if ch in CORRUPT_CHARS)
+        if n:
+            out[str(pno)] = n
+    return out
+
+
 def cached_pages(txt_dir):
     """The pNNN.txt pages actually on disk. A `.raw.txt` is not a page."""
     out = []
@@ -363,6 +411,13 @@ def write_manifest(out, base, txt_dir, doc=None):
     # welded". BOOK-INGEST-AUDIT.md F30.
     if doc is not None and base.get('text_layer'):
         base['welded_pages'] = welded_pages(doc)
+    # Glyph-level corruption, per page, as a COUNT. F36. Text-layer caches only:
+    # on an OCR cache the same characters are dot leaders and line art, and the
+    # signature fires on 11-17% of pages. Read off the CACHE rather than the PDF
+    # -- unlike `welded_pages`, which is geometry -- because what this describes
+    # is what the extraction actually produced.
+    if base.get('text_layer'):
+        base['corrupt_pages'] = corrupt_pages(txt_dir, nums)
     io.open(os.path.join(out, 'manifest.json'), 'w', encoding='utf-8',
             newline='').write(json.dumps(base, indent=1))
     return base
@@ -481,6 +536,15 @@ def main():
             print('  WELDED   %d page(s) whose text layer holds both columns in'
                   ' one block: %s' % (len(welded), ', '.join(str(p) for p in welded)))
             print('           Read those from a RENDER, not from the cache. F30.')
+        corrupt = m.get('corrupt_pages') or {}
+        if corrupt:
+            worst = sorted(corrupt.items(), key=lambda kv: -kv[1])
+            print('  GLYPHS   %d page(s) carry characters a clean text layer never'
+                  ' makes:' % len(worst))
+            print('           %s' % ', '.join('p%s (%d)' % (p, n) for p, n in worst[:8]))
+            print('           A COUNT, not a verdict - one stray character is not seven.')
+            print('           A page with corrupt prose is corrupt EVERYWHERE, including')
+            print('           the parts that look fine. Read its numbers off a render. F36.')
         print('  text     %s   (no OCR, no geometry, no cost)' % txt_dir)
         print('  cached   %s file(s) %s; last printed folio %s, offset %s'
               % (m['cached_pages'], m['cached_range'],
