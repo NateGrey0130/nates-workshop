@@ -3851,3 +3851,128 @@ printed 119.
 **Why it was left alone in the F26 PR:** it is another book's rows, and every
 outcome changes what a Book of Magic caster spends. `Dolphin: Sonic Blast` is
 unaffected either way - it is a third, genuinely different spell.
+
+### F30 - a cached page can be WELDED across the gutter, and nothing detects it
+
+**Filed 2026-09-08**, during the `free-quebec` survey.
+
+`scripts/read-columns.py` reads a text-layer page by bucketing `pymupdf`
+BLOCKS into columns and walking each column top to bottom. That is the right
+algorithm and it works on 192 of this book's 194 pages. It cannot help on the
+other two, because on those `pymupdf` returned **one block whose own lines
+alternate between the left and right columns** - the damage is inside the unit
+the reader is sorting, so no bucketing fixes it.
+
+The cache gives no sign. `p043.txt` and `p059.txt` are normal-length files of
+ordinary sentences; the only tell is that consecutive lines do not follow one
+another, which a reader notices only if the content happens to be discontinuous
+enough to jar.
+
+**What it costs, on this book:**
+
+| cache page | printed | welded content |
+|---|---|---|
+| `p043` | 42 | the Reloader O.C.C.'s `Money:` line - **a `starting_money` field, which no test checks** |
+| `p059` | 58 | the Glitter Boy Transport's M.D.C.-by-location footnote markers |
+
+The first is the Juicer Uprising failure shape exactly: PR #280 fixed two
+`starting_money` figures that shipped wrong because a reading stopped at a page
+break, and `book-survey` §3 still leads with it. A weld is the same class of
+error arriving by a different route, and `class-check --field-sources` does not
+catch it either - it prints the cache lines a field was drawn from, and here the
+cache line itself is wrong.
+
+**Affected rows:** none yet on this book, because the survey found it first and
+both pages were de-welded by hand before extraction. That is luck rather than
+process - the detection was a session noticing that a paragraph did not follow
+itself.
+
+**How to detect it, and it is cheap.** A block is welded when the x-positions of
+its own lines straddle the gutter. Measured over all 194 pages of this book in
+under a second:
+
+```python
+d = page.get_text('dict', clip=block_rect)
+lefts = [line['bbox'][0] for blk in d['blocks'] for line in blk['lines'] if line['spans']]
+welded = (max(lefts) - min(lefts)) > page.rect.width * 0.30
+```
+
+**Proposed change:** `scripts/ocr-book.py` runs that test per page while it is
+already walking every page, and records the welded page numbers in the cache
+manifest - a `welded_pages: []` key beside `text_layer` and `page_offset`. Then
+`class-check --field-sources` and `drift-check`'s citation check both have a
+cheap thing to warn on: **this field was drawn from a page whose text does not
+read in order.** A key that is an empty list on a clean book is the point; it is
+the books where it is NOT empty that need the warning.
+
+This is worth doing for the FIVE books still to be surveyed in this batch, not
+just for this one. `new-west`, `spirit-west` and `mystic-russia` are text-layer
+books cached by the same script and have never been checked for it, and the
+other text-layer caches in the registry have not either.
+
+**What this finding is NOT.** A page that breaks mid-word across the gutter is
+normal typesetting, not a weld - printed 45 of this book reads `...weapon tech-`
+at the foot of one column and `nology. Well,...` at the head of the next, and it
+is correct. That page was misfiled as damaged once during this survey before the
+geometry was checked, and a detector keyed on prose discontinuity rather than on
+geometry would flag it and every page like it. **The test above is geometric on
+purpose.**
+
+### F31 - four chassis of one O.C.C. cannot be `variants`, because a variant may not add a skill
+
+**Filed 2026-09-08**, during the `free-quebec` survey.
+
+Free Quebec prints one cyborg O.C.C. (printed 114-115) with eleven basic skills
+and six related picks, and then four full-conversion chassis - FX-200C Imprimer,
+FX-320C Dervish, FX-340C Slasher, FX-370C Leviathan - each of which states its
+delta from that base in the book's own words:
+
+> *"In addition to the Basic O.C.C. Skills, the Imprimer gets these additional
+> skills, but other O.C.C. skills are reduced to three (not six)."*
+
+That is two operations: **add skills**, and **change the related-skill count**.
+`variants` can express neither.
+
+`VARIANT_OVERRIDES` admits `attribute_dice`, `attribute_requirements`, the four
+pool bases, `starting_money`, `bonuses` and `skill_overrides`, and
+`docs/leveling.md` is explicit that the last of those *"restates the percentage
+of a skill the class ALREADY grants. It cannot add or remove one - naming an
+ungranted skill is an error."* The related-skill count is not on the list at all.
+
+**The reasoning behind that restriction is sound and this finding does not argue
+with it.** `docs/leveling.md`: *"a variant that could override anything is not a
+variant, it is a second class wearing the first one's name."* The staged-dragon
+case it was built for genuinely does share its skills.
+
+**But the shape a book actually uses more often is the one here** - a common
+training course plus a chassis-specific supplement - and the current answer to it
+is five classes each restating the same eleven skills, which is precisely the
+drift `variants` was introduced to stop. `docs/leveling.md` on the dragons:
+*"Four unrelated class files means maintaining the shared 90% four times and
+watching it drift."* Five is worse than four.
+
+**Affected rows:** the five classes this book ships in batch 5 -
+`fq-cyborg-soldier` and the four chassis. Each will carry an `extraction_notes`
+line recording that its basic skills are a restatement of the base O.C.C.'s and
+must be changed together.
+
+**Proposed change**, and it is deliberately the smaller of the two available:
+add **`skills_additional`** to `VARIANT_OVERRIDES` - a block in the same shape as
+the class `skills` block, **unioned onto** the parent's rather than replacing it -
+plus `related_skill_count`, a scalar. Union rather than replace is what keeps the
+restriction's reasoning intact: a variant still cannot take a skill away, cannot
+contradict the parent, and cannot become a second class, because the parent's
+whole list survives in every variant by construction.
+
+That is `js/parser.js` (validate, and add both to `VARIANT_OVERRIDES`),
+`scripts/class-check-lib.mjs` (`KNOWN_KEYS`), `js/compose.js` (fold the union
+before an R.C.C./O.C.C. merge sees it), `app.js` and `sheet.js` - **both**, they
+are separate paths - and a `test/smoke.mjs` case. No migration and no column:
+`class_variant` already exists on `characters` and this changes nothing about
+how a variant is stored.
+
+**Do NOT reach for `abilities` as the workaround.** An ability grant can carry
+psionics and magic where a variant cannot, which makes it the obvious near-miss
+here - but a skill granted through an ability is not a skill the picker offers,
+does not take a per-level percentage, and does not compose. It would ship five
+classes that look right and cannot be levelled.

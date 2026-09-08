@@ -18,7 +18,7 @@ the human view of the same thing plus the import status.
 | `new-west` | Rifts WB 14: New West | 226 | text layer | 224 | +1 | cached |
 | `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | cached |
 | `mystic-russia` | Rifts WB 18: Mystic Russia | 178 | text layer | 176 | +1 | cached |
-| `free-quebec` | Rifts WB 22: Free Quebec | 194 | text layer | 192 | +1 | cached |
+| `free-quebec` | Rifts WB 22: Free Quebec | 194 | text layer | 192 | +1 | **surveyed** |
 | `phase-world` | Rifts DB 2: Phase World | 209 | SCAN (OCR) | 208 | **+0** | **imported** |
 
 Status is `cached` -> `surveyed` -> `imported`. `phase-world` is **imported** as
@@ -1089,3 +1089,65 @@ immediately once someone asked *"what does this check NOT look at"*. The queue
 status, the stub marker, the coverage list and the MOS blind spot all reported
 healthy while being wrong. Ask that question at the END of a book, not only at
 the start.
+
+### `free-quebec` survey, 2026-09-08 (PR pending)
+
+Status `cached` -> **`surveyed`**. The survey is at
+`apps/character-creator/docs/surveys/free-quebec.md` and is the authority; what
+follows is the queue's own view.
+
+**Offset confirmed +1 END TO END**, nine samples read off the folios the pages
+print, front to back — not a whole-book vote, because `underseas` proved a vote
+can hide a split. `printed_pages: 192` in the registry is **exactly right** and
+needs no correction, unlike `triax`, `bom` and `new-west`.
+
+| category | found | verdict |
+|---|---|---|
+| O.C.C.s | 6 entries, **10 classes** | import |
+| vessels | **23** | import |
+| gear | **~18** | import |
+| skills | **0 new** | nothing to import |
+| spells | **0** | the book defines none |
+| psionic powers | **0** | the book defines none |
+| R.C.C.s | **0** | the book has none |
+
+**Zero spells and zero psionics, scanned rather than assumed**: `P.P.E. Cost:`,
+`Saving Throw:`, `I.S.P.:` and `Spell Level` each appear on **0 of 194 pages**.
+The absence is editorial — printed 33 bans practitioners of magic from the
+nation and printed 34 gives psychics a roster share of `-0-`.
+
+**Zero new skills, and this is the diff's own answer rather than a shortcut.**
+Fifty-two names pulled from the six class entries, run `--remote`: 36 matched,
+2 matched by alias, **16 reported missing and all sixteen are false gaps** —
+every one a category prefix or a house spelling the catalog already holds
+(`Pilot Automobile` -> `Automobile`, `Basic Math` -> `Mathematics: Basic`,
+`Climb` -> `Climbing`, and eleven more). That is `book-survey` phase 2's
+*"a dominant single substitution is a vocabulary difference, not N
+corrections"*, and running the diff is what stopped sixteen duplicate rows.
+
+**This book has NO Experience Table** — the phrase appears nowhere in 194 pages
+— so its roster has a single authority, the Contents. `phase-world`'s Royal
+Kreeghor is the standing warning about exactly that, so every class here was
+confirmed against its own stat-block markers and its section heading rather than
+against the Contents.
+
+**Two findings filed, F30 and F31**, and both are pre-authorized for
+implementation in this book's closing PR rather than deferred:
+
+- **F30** — a cached page can be **welded** across the gutter when `pymupdf`
+  returns one block holding both columns' lines, and nothing detects it.
+  Two pages of 194 here, and one of them carries a `starting_money` field.
+  Detection is geometric and costs nothing; it should run for the three
+  text-layer books still unsurveyed in this batch.
+- **F31** — a `variants` block may not add a skill or change the related-skill
+  count, which is the shape this book's four cyborg chassis use. They ship as
+  five classes each restating eleven shared skills, which is the drift
+  `variants` exists to prevent.
+
+**What is deliberately not imported**: the old-style CS, Triax and Northern Gun
+weapons of printed 43-44 and the body armor and vehicles of printed 51-53, all
+of which the book gives **page references into other books instead of stats**;
+the reference chapter of printed 33-35, which lists existing O.C.C.s at
+percentages and defines none; the four named-NPC stat blocks on printed 127,
+142, 151 and 175; and the setting chapters — the war narrative (6-31), Free
+Quebec itself (133-153), Old Bones (152-184) and the adventure hooks (185-193).

@@ -1,0 +1,343 @@
+# Rifts World Book 22: Free Quebec — survey
+
+Slug `free-quebec`. Cached 2026-08-28 from `Rifts- World Book 22 Free Quebec.pdf`,
+194 PDF pages, **text layer** (no OCR), read with `scripts/read-columns.py`.
+
+*Facts about this book, not prose from it — see `book-survey` §7. Keep this
+line.*
+
+## Page offset
+
+**Read from `scripts/books.json`; not re-derived.**
+
+`page_offset: 1` — cache file page = printed folio + 1, so printed folio F is
+`p<F+1>.txt` and `read-columns.py <F+1>`. This is the registry's commonest
+offset and it is the one this book has.
+
+No `page_offset_exceptions`, and this was checked **end to end** rather than
+taken as a whole-book vote, because `underseas` proved a vote can hide a split.
+Nine samples spread across the book, each read off the folio the page itself
+prints:
+
+| cache page | folio printed on it | offset |
+|---|---|---|
+| `p030` | 29 | +1 |
+| `p050` | 49 | +1 |
+| `p110` | 109 | +1 |
+| `p130` | 129 | +1 |
+| `p150` | 149 | +1 |
+| `p185` | 184 | +1 |
+| `p190` | 189 | +1 |
+| `p192` | 191 | +1 |
+| `p193` | 192 | +1 |
+
+Constant at +1 from the front of the book to the last numbered page.
+
+**`printed_pages` in the registry is `192` and the book's last printed folio is
+`192`** — `p193`. `p194` is an unnumbered back-cover advertisement. Unlike the
+`triax`, `bom` and `new-west` notes, the registry is **exactly right here** and
+needs no correction.
+
+## Text-layer quality, and the two pages that are genuinely scrambled
+
+Median ~4,900 characters a page. Stat-block labels survive intact:
+`Attribute Requirements:`, `O.C.C. Skills:`, `M.D.C. by Location:`, `Weight:`,
+`Free Quebec Cost:`, `Payload:` all parse. Printed 37 is empty in the cache and
+is a full-page illustration, not damage — it falls in the middle of the
+"Descended" Glitter Boy Pilot entry, which is why that class must be read
+**36 then 38**.
+
+Curly quotes, em-dashes and the `�` replacement character are present and must
+be stripped before any SQL.
+
+**Two pages of 194 are out of reading order in the cache, and no column reader
+can fix them.** `read-columns.py` buckets *blocks*; on these two pages `pymupdf`
+returned a **single block whose own lines alternate between the two columns**,
+so the damage is inside the block the reader is sorting.
+
+| cache page | printed | what is welded | why it matters |
+|---|---|---|---|
+| `p043` | **42** | the Reloader O.C.C.'s `Money:` and `Cybernetics:` lines interleaved with its quarters prose | this is a `starting_money` field, and no test checks that field |
+| `p059` | **58** | the Glitter Boy Transport's M.D.C.-by-location footnotes interleaved with its wing-damage rule | asterisk footnotes attach to the wrong locations |
+
+Both were de-welded by reading the page's word geometry directly and re-splitting
+on the x-midpoint against the page centre. The de-welded readings:
+
+- **Printed 42, Reloader O.C.C.** — *"Monthly salary is 2100 credits. Starts off
+  with one month's pay."* and *"Cybernetics: Starts with clock calendar and
+  gyro-compass, plus select one additional cybernetic implant or bionic eye.
+  Otherwise restricted to medical implants and prosthetics."*
+- **Printed 58, GB Transport** — *"Inner Reinforced Cockpit Compartment — 100"*,
+  *"** Main Body (cargo bay to rear) — 998"*, and the single-asterisk footnote
+  *"Items marked by a single asterisk are small and/or difficult to strike. A
+  character must make a 'called shot,' but even then the attacker is -3 to
+  strike."* The wing rule is the OTHER column: *"Destroying one wing will reduce
+  speed 10% and inflict a -20% penalty to the piloting skill. Destroying both
+  wings reduces speed to 172 mph (277 km) and inflicts a -15% penalty."*
+
+This is exactly the Juicer Uprising failure shape — a `starting_money` figure
+sitting in text that does not read in the order it looks like it reads. Filed as
+`BOOK-INGEST-AUDIT.md` **F30**: nothing detects a weld, and the cache gives no
+sign that a page is wrong.
+
+**A page that merely breaks mid-word across the gutter is NOT this.** Printed 45
+reads `...Quebec weapon tech-` at the foot of column one and `nology. Well, at
+least a partial breakthrough...` at the head of column two, and that page is
+fine — it is ordinary two-column typesetting, and `book-survey` §0 already says
+so. It was misread as scrambled once during this survey before the geometry was
+checked. **Check the geometry before filing a page as damaged.**
+
+## The book's authority tables
+
+| page | table | states |
+|---|---|---|
+| **4-5** | *Content* | section ranges and per-item page numbers for the whole book |
+| **34** | *O.C.C.s of the Free Quebec Military* | the percentage roster of who serves, and what is **absent** |
+| **33** | *O.C.C. Overview & Reference* | which existing O.C.C.s are and are not found here |
+
+**This book has NO Experience Table**, and that is a real absence rather than a
+page not found: `Experience Table` appears nowhere in 194 pages, and the closest
+thing — printed 190-192 — is adventure hooks. So the roster question has a
+**single authority, the Contents**, and `phase-world` is the standing warning
+about that: its Royal Kreeghor was surveyed as playable off the Contents alone
+and the section heading said *NPC Villains*.
+
+**So every class below was confirmed against its own stat-block markers**
+(`Attribute Requirements:`, `O.C.C. Skills:`, `Standard Equipment:`) rather than
+against the Contents, and each section heading was read.
+
+The two authority tables that DO exist are worth reading for what they exclude,
+because it is unusually specific. Printed 33-34 states the book's own negative
+roster: **no practitioners of magic, no Crazies, no mutant animals or Dog Boys,
+no D-Bees, no Psi-Stalkers, no psychics, no Skelebots** in Free Quebec or its
+military. That is why the categories below come out as they do.
+
+## Inventory
+
+| category | count | where | verdict |
+|---|---|---|---|
+| **O.C.C.s** | **6 entries, 10 classes** | printed 32, 36-38, 38-39, 39-40, 41-42, 114-123 | **import** |
+| **Vessels** | **~23** | printed 53-134 | **import** |
+| **Gear** | **~18** | printed 43-51 | **import** |
+| **Skills** | **0 new** | — | nothing to import; see the diff below |
+| **Spells** | **0** | — | the book defines none |
+| **Psionic powers** | **0** | — | the book defines none |
+| **R.C.C.s** | **0** | — | the book has none; it is a human-supremacist nation book |
+
+### Spells and psionics are zero, and this was scanned rather than assumed
+
+`book-survey` phase 1 asks for this explicitly, so here is the scan:
+
+| marker | pages carrying it |
+|---|---|
+| `P.P.E. Cost:` | **0 of 194** |
+| `Saving Throw:` | **0 of 194** |
+| `I.S.P.:` | **0 of 194** |
+| `Spell Level` | **0 of 194** |
+
+There is no spell import and no psionic import from this book, and the reason is
+the book's own setting: printed 33 bans practitioners of magic from the nation
+and printed 34 gives psychics a roster share of **`-0-`**. The absence is
+editorial, not a gap in the scan.
+
+### Classes — six entries, ten classes
+
+| # | class | printed | note |
+|---|---|---|---|
+| 1 | le Surete du Quebec "Deep" (undercover) Intel Agent | 32 | complete on one page |
+| 2 | The "Descended" Glitter Boy Pilot | 36, **38** | printed 37 is a full-page illustration |
+| 3 | Glitter Girl Pilot | 38-39 | female-only by its own attribute requirement |
+| 4 | Side Kick RPA (Military Power Armor Pilot) | 39-40 | **a declared copy** — see below |
+| 5 | Glitter Boy Munitions Expert / "Reloader" | 41-**42** | printed 42 is a **welded** page |
+| 6 | Free Quebec Cyborg Soldier | 114-115 | **plus four chassis** — see below |
+| 6a | — FX-200C Imprimer | 115-116 | |
+| 6b | — FX-320C Dervish | 117-118 | |
+| 6c | — FX-340C Slasher | 119-120 | |
+| 6d | — FX-370C Leviathan | 121-123 | |
+
+**#4 is a declared copy.** Printed 39 says outright: *"These are basically the
+same as the Elite RPA Pilot O.C.C. described in the Rifts RPG, page 53, except
+their main type of power armor is the Side Kick... The stats are reprinted here
+for the reader's convenience, along with modifications appropriate to the Quebec
+Military."* Per `declared-copy-pairs` this ships as a **full class plus
+`copy_of`**, not as a pointer — and the copy is the side that carries the
+Quebec modifications, so where the two disagree the copy is the right side.
+
+**#6 is four chassis and the `variants` block cannot hold them.** The book gives
+one base O.C.C. (printed 114-115) and then four full-conversion bodies, each of
+which *adds* skills to the base list and *reduces* the related-skill picks from
+six to three. `VARIANT_OVERRIDES` admits `attribute_dice`,
+`attribute_requirements`, the four pool bases, `starting_money`, `bonuses` and
+`skill_overrides` — and `skill_overrides` restates the percentage of a skill the
+class **already grants** and explicitly cannot add one. Neither the added skills
+nor the changed pick count is expressible.
+
+So they ship as **five separate classes**, each restating the eleven shared basic
+skills. That is the duplication `variants` exists to prevent, and it is filed as
+`BOOK-INGEST-AUDIT.md` **F31**. The four bodies are ALSO vessel rows — a
+full-conversion cyborg here has M.D.C. by location and numbered weapon systems,
+exactly like a power armor.
+
+### Skills — zero new, and the diff says so with one dominant substitution
+
+Fifty-two skill names were pulled from the six class entries and run against
+production:
+
+```
+skills (--remote): 367 rows | book: 52 entries
+matched 36  disagree 0  missing 16  extra 331
+```
+
+**All sixteen "missing" resolve to rows the catalog already has.** Every one is
+a naming difference, which is `book-survey` phase 2's *"a dominant single
+substitution is a vocabulary difference, not N corrections"* in its purest form
+— here the substitution is the catalog's category prefix, or its own house
+spelling:
+
+| the book prints | the catalog holds |
+|---|---|
+| Surveillance Systems | `Surveillance` |
+| Power Armor/Robot Combat Elite: Glitter Boy | `Robot Combat Elite: Glitter Boy` |
+| Pilot Automobile | `Automobile` |
+| Pilot Hovercraft, Pilot: Hover Vehicle | `Hover Craft (ground)` |
+| Pilot Tank & APC | `Military: Tanks & APCs` |
+| Read Sensory Equipment | `Sensory Equipment` |
+| General Athletics | `Athletics (general)` |
+| Basic Math, Math: Basic | `Mathematics: Basic` |
+| Advanced Math | `Mathematics: Advanced` |
+| Underwater Demolitions | `Demolitions: Underwater` |
+| Climb | `Climbing` |
+| Field Armorer | `Field Armorer & Munitions Expert` |
+| W.P. Heavy Weapons | `W.P. Heavy Military Weapons` |
+| W.P. Heavy Energy Weapons | `W.P. Heavy M.D. Weapons` |
+
+Two more matched only through an alias and are naming drift rather than gaps:
+`Radio: Scrambler` → `Radio: Scramblers`, `Tracking` → `Tracking (people)`.
+
+**So this book adds no skills row.** It is the first book in the batch where the
+answer to phase 2 is zero across the board for skills, spells and psionics — and
+the reason the diff was worth running anyway is that sixteen false gaps is
+exactly what a session extracts sixteen unnecessary rows from.
+
+### Gear — printed 43 to 51
+
+Free Quebec's own manufacture, all of it priced:
+
+| item | printed | Free Quebec cost |
+|---|---|---|
+| Mini-HUD System | 44 | 15,000 |
+| Q1-01 Laser Pistol | 44-45 | 10,000 |
+| Q1-02 "Stopper" Ion Pistol | 45 | 12,000 |
+| Q2-10 Laser Pulse Rifle | 45 | 16,000 |
+| Q2-20 LLG "Infantry Standard" | 45-47 | 26,000 |
+| Q2-30 Rapid-Fire Heavy Laser | 46-47 | 35,000 |
+| Q4-40 "Mule" Assault Rifle | 47-48 | 15,000 |
+| Q4-44 "Drummer" Double-Barreled Shotgun | 47-49 | 4,500 |
+| Q5-50 Light Rail Gun | 48 | 32,000 |
+| QN-06 Laser Harpoon Gun | 48-49 | 15,000 |
+| — Standard harpoon | 49 | 6 |
+| — Radio/Transmitter harpoon | 49 | 200 |
+| — Flare harpoon | 49 | 15 |
+| — High Explosive harpoon | 49 | 600 |
+| QEBA-10 Environmental Battle Armor | 49-50 | 42,000 |
+| JEBA-13 Juicer EBA | 50-51 | 40,000 |
+| TX-J50 Juicer EBA | 51 | 50,000 |
+| Stun/Flash Grenade | 43 | 100 |
+| Tear Gas Grenade | 43-44 | 200 |
+
+**No Free Quebec gear or vessel row exists in the catalog today** — checked
+`--remote`, `source_book LIKE '%Quebec%'` returns zero from both `gear` and
+`vehicles`. Three published classes mention Free Quebec in prose (`glitter-boy`,
+`robot-pilot`, `coalition-juicer`) and all three are other books' rows.
+
+### Vessels — printed 53 to 134
+
+Twenty-three, and they are the centre of gravity of this book rather than an
+appendix. The `vehicles` / `vehicle_locations` / `vehicle_weapons` tables from
+migration 048 hold them; `triax` shipped 55 and `underseas` its own set through
+the same shape.
+
+| # | vessel | printed | class |
+|---|---|---|---|
+| 1 | Cougar Hover Jeep | 53-55 | vehicle |
+| 2 | Bobcat Hover Cycle | 55-56 | vehicle |
+| 3 | GB6-96 Glitter Boy Transport | 57-59 | vehicle |
+| 4 | RHV-60 Reloader Hover Vehicle | 60-61 | vehicle |
+| 5 | QR-1 Enforcer Prime | 63-65 | robot |
+| 6 | QR-2 Abolisher Prime | 65-66 | robot |
+| 7 | QR-3 Guardian Robot | 66-69 | robot |
+| 8 | Classic Glitter Boy | 81-83 | power-armor |
+| 9 | Triax Glitter Boy | 84-86 | power-armor |
+| 10 | Glitter Girl | 87-91 | power-armor |
+| 11 | Glitter Boy Side Kick | 92-94 | power-armor |
+| 12 | Tarantula Glitter Boy | 95-97 | power-armor |
+| 13 | Taurus Glitter Boy | 98-100 | power-armor |
+| 14 | Silver Wolf Glitter Boy | 101-104 | power-armor |
+| 15 | QPA-201 Power Trooper | 105-107 | power-armor |
+| 16 | QPA-101 "Pale Death" SAMAS | 107-110 | power-armor |
+| 17 | "Violator" SAMAS (V-SAM) | 111-113 | power-armor |
+| 18 | FX-200C Imprimer | 115-116 | borg |
+| 19 | FX-320C Dervish | 117-118 | borg |
+| 20 | FX-340C Slasher | 119-120 | borg |
+| 21 | FX-370C Leviathan | 121-123 | borg |
+| 22 | NS-B20 'Borg Dive Armor | 129 | borg |
+| 23 | Sea Dragon | 130-132 | power-armor |
+
+**The catalog holds one Glitter Boy vessel today and it is Triax's `T-550`.**
+The Classic Glitter Boy — the USA-G10 that the whole line descends from — is not
+in it. This book is where it arrives.
+
+## What is deliberately NOT imported
+
+Named here so it is on the record as a decision rather than an omission.
+
+**Cross-references to other books' rows.** Printed 43-44 lists the old-style CS
+weapons the Quebec Military uses (C-18, C-10, C-12, C-14, C-27, CR-1, C-40R, CS
+Vibro-Blades, CS Neural Mace) and gives **page numbers into the Rifts RPG
+instead of stats**. Printed 44 does the same for Triax's TX-5, TX-11 and TX-26
+and Northern Gun's NG-P7; printed 51-52 does it for Urban Warrior, Plastic Man,
+Huntsman and Bushman body armor; printed 52-53 does it for Mark V APCs, Spider
+Skull Walkers, Sky Cycles and the CS Command Car. **The book prints no numbers
+for any of them**, so there is nothing to extract — importing them would mean
+copying another book this catalog may or may not hold, under this book's
+citation.
+
+**Existing O.C.C.s the book merely lists.** Printed 33-35 is a reference chapter:
+which Rifts RPG, Coalition War Campaign, Rifts Canada and Rifts Mercenaries
+classes are found in Free Quebec, and at what percentage. Five Headhunter types
+are named on printed 34 with no stats. No new class is defined there.
+
+**Named NPCs.** Printed 127 (Commodore Jacques LeFevre), 142 (Prime Minister
+James Lorne), 151 (Colonel Robert Miller) and 175 (les Soldats de St. Jean's
+leader) are individual stat blocks — attributes, Hit Points, S.D.C., age,
+disposition — for specific characters, not classes. They are setting.
+
+**Setting and narrative.** The Coalition-at-war chapter (printed 6-31), Free
+Quebec's history and worldview (printed 133-153), Old Bones (printed 152-184)
+and the adventure hooks (printed 185-193).
+
+## The plan
+
+| batch | what | PR |
+|---|---|---|
+| 1 | this survey; queue → `surveyed` | — |
+| 2 | gear, printed 43-51 | |
+| 3 | classes: Deep Intel Agent, "Descended" GB Pilot, Glitter Girl Pilot | |
+| 4 | classes: Side Kick RPA, GB Munitions Expert/"Reloader" | |
+| 5 | classes: Free Quebec Cyborg Soldier + four chassis | |
+| 6-9 | vessels, in four slices by page range | |
+| 10 | findings implemented; queue → `imported` | |
+
+**A vessel belongs to the slice its NAME HEADING falls in** — the rule the
+`triax` vessel scripts state at the top of every file, and the reason no vessel
+there is split across two files or imported twice.
+
+## Ledger
+
+*What went in, in which PR, and what it moved. Appended before each PR opens,
+per `class-import` — "the ledger line goes in the same PR as the work it
+describes".*
+
+| PR | batch | rows | catalog total after |
+|---|---|---|---|
+| | | | |
