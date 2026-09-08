@@ -340,4 +340,33 @@ describes".*
 
 | PR | batch | rows | catalog total after |
 |---|---|---|---|
-| | | | |
+| #818 | survey; queue `cached` -> `surveyed` | 0 | unchanged |
+| #819 | gear, printed 44-51 | **17** | gear 1236 -> **1253** |
+
+### Batch 2 — gear (PR #819)
+
+Seventeen rows: ten weapons, three suits of body armor, the Mini-HUD optic and
+the four harpoon types the QN-06 fires. Applied `--remote` before the merge and
+read back at 17; `gear` total 1236 -> 1253.
+
+**Five rows this batch did NOT add, because the catalog already had them at the
+prices this book prints.** The grenade and flare block of printed 43-44 —
+Stun/Flash Grenade at 100, Tear Gas Grenade at 200, Flare at 1, Parachute Flare
+at 10, and Smoke Grenade — all exist and all agree. Checked `--remote` before
+the file was written. That is the gear-side twin of the skills diff: the same
+false-gap shape, and the same reason to run the check rather than extract from
+the page.
+
+**The Q4-44 "Drummer" prints a black market price ten times its own.** 4,500
+credits retail, and then *"45,000-50,000 credits"* on the black market — the
+identical figure the Q4-40 Mule two entries earlier gives for a gun that retails
+at 15,000. It reads like a copied line. **Stored as printed**, with the
+`cost_note` saying outright that the figure is suspect and why. A guess at what
+was meant would be indistinguishable from a number the book gave, which is the
+argument the `cost` column's own comment makes about inventing prices.
+
+**Gear ordering is why this batch went first.** The class scripts reference gear
+slugs in `equipment_starting`, and `class-check --remote` emits a stub `INSERT`
+for any slug the catalog does not have. A stub written into `add-<id>-class.sql`
+sorts before `add-free-quebec-gear.sql` and would win on a clean rebuild. Gear
+applied `--remote` first means there is nothing to stub.
