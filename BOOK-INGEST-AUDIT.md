@@ -5269,20 +5269,20 @@ every catalog at once, and `similarity` is what three separate demotion rules
 ### F39 - §0b's DPI paragraph and §0c's framing together read as "a render only helps a text layer", and the case that disproves it is a SCAN
 
 `book-survey` §0b says **"Do not reach for a higher DPI when the text is
-wrong."** <!-- claim-ok: quoting SKILL.md:124, opened and read 2026-09-08 -->
+wrong."** <!-- claim-ok: quoting SKILL.md:167, opened and read 2026-09-08 -->
 That sentence is right, and so is everything under it: 300 -> 600 dpi took the
 price-unit misreads from 7 to 5, `--oem 1` changed nothing, and only 1.3% of
 words score under 70 with none of the known misreads among them. Its conclusion
 is that the leverage is not in the scan but in knowing what a field is allowed
 to look like, and §0 states the same thing about a text layer eight lines into
 its damage paragraph - **"None of it is fixed by a better reader."**
-<!-- claim-ok: quoting SKILL.md:79, opened and read 2026-09-08 -->
+<!-- claim-ok: quoting SKILL.md:91, opened and read 2026-09-08 -->
 
 §0c does prescribe rendering a page and looking at it. But its heading is **"A
 text layer does not give you TABLES. Render the page and look"**, and all three
 rows of the table under it are text-layer cases - the Attribute Bonus Chart at
 PF 16, Types of Armor at PF 270, and the SAMAS Pilot's skills at RUE 233.
-<!-- claim-ok: SKILL.md:140 and the table at SKILL.md:147, both read 2026-09-08 -->
+<!-- claim-ok: SKILL.md:183 and the table at SKILL.md:190, both read 2026-09-08 -->
 
 **So a session working a SCAN meets a DPI paragraph telling it not to touch the
 pixels, and a render section addressed to the other kind of cache.** Neither
@@ -5349,24 +5349,53 @@ in `book-survey`:
 Nothing is deleted and no existing sentence is contradicted. **The posture is
 prose only**: it adds no manifest key, no detector and no exit code.
 
-**Two neighbours, named so this is not built twice.**
+**Both neighbours have SHIPPED, and what they shipped covers text layers only.**
+That is the durable statement, and it is why this finding is sharper now than
+when it was drafted. `F36`'s glyph detector and its §0 render rule, and `F30`'s
+`welded_pages`, both landed on 2026-09-08. Neither reaches a scan:
 
-- **`F36` proposes the adjacent half and is still open.** Its item 2 asks for
-  *the rule that matters more than the detector* - a page with corrupt prose is
-  corrupt everywhere, render it and read the numbers off the render - to be
-  added to **§0 beside the same text-layer damage paragraph** this finding
-  quotes at SKILL.md:79. That is the text-layer half of one idea and this is the
-  scan half. **If both are taken, they should be written together**, and
-  whichever is taken second must read the other's paragraph before adding its
-  own. This finding does not restate `F36`'s detector and does not propose one.
-- **`F30`'s manifest mechanism is being built**, so no second one is proposed
-  here. `scripts/ocr-book.py` carries an uncommitted `welded_pages(doc)` and a
-  `write_manifest` that records it, in the working tree at `f802eca` on
-  2026-09-08 - measured by `git diff scripts/ocr-book.py`, not read from a
-  commit, and on no branch that has a PR.
+```
+scripts/ocr-book.py:412   if doc is not None and base.get('text_layer'):
+scripts/ocr-book.py:413       base['welded_pages'] = welded_pages(doc)
+scripts/ocr-book.py:419   if base.get('text_layer'):
+scripts/ocr-book.py:420       base['corrupt_pages'] = corrupt_pages(txt_dir, nums)
+```
 
-**Evidence.** SKILL.md lines 79, 124, 140 and 147, and `triax.md:446`, opened
-and read 2026-09-08. `triax` p110 rendered at 160 dpi with
+Read at `5feeadf`, 2026-09-08. **Both keys are gated on `text_layer`**, so no
+OCR cache gets either signal - the five here are 1163 pages with no page-level
+quality flag of any kind. The prose landed the same way: the §0 block added
+above the DPI paragraph says *"Across the eleven text-layer caches here"* and
+draws every example from `pf`, `bom` and Free Quebec.
+<!-- claim-ok: quoting SKILL.md:105, read at 5feeadf on 2026-09-08 -->
+
+**And extending the glyph detector to scans is already settled, on a
+measurement, against.** `scripts/ocr-book.py:414-416` says so in the code:
+*"Text-layer caches only: on an OCR cache the same characters are dot leaders
+and line art, and the signature fires on 11-17% of pages."*
+<!-- claim-ok: quoting the comment at ocr-book.py:414-416, read at 5feeadf on 2026-09-08 -->
+**Do not re-propose it**, and read that as support rather than as an obstacle:
+the detector route to the scan side is closed by evidence, which is precisely
+why the remedy proposed here is prose. A reader who cannot be handed a flag has
+to be told where to look.
+
+**So this finding neither duplicates nor competes with either neighbour.** It
+proposes no detector, no manifest key and no second mechanism - only the two
+prose paragraphs above - and it is now the only thing on this menu addressing
+the scan side of a question the text-layer side has answered twice.
+
+*(This paragraph replaced one calling `F36` open and `F30` unbuilt. Both were
+true when written at 14:14 and false by 19:04, and `audit-menu` forbids the
+shape outright: a sentence carrying another finding's state rots wherever it is
+written. What stands above states what the CODE does, which does not rot the
+same way. The finding had not merged, so this is a draft corrected before
+landing rather than a record rewritten - the rule against editing a measurement
+governs what is already in the file.)*
+
+**Evidence.** SKILL.md lines 91, 105, 167, 183 and 190, `scripts/ocr-book.py`
+lines 412-420, and `triax.md:446` - all opened and read at `5feeadf` on
+2026-09-08. **The four SKILL.md numbers are the second set**: the draft cited
+79, 124, 140 and 147, correct at `f802eca` and moved when `F30` and `F36`
+landed in between. `triax` p110 rendered at 160 dpi with
 `pymupdf.get_pixmap` and read, 2026-09-08. Cache kinds from each
 `.cache/books/<slug>/manifest.json`. The word-like table from the throwaway
 script described above, which is **in no commit** - the method is stated in one
