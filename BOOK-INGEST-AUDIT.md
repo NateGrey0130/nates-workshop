@@ -3795,6 +3795,43 @@ gates nothing - the report is advisory by design and says so.
 
 ### F29 - `Air: Sonic Blast` and `Sonic Blast` look like one spell twice, inside the Book of Magic
 
+**Resolved 2026-09-08 (PR pending), and it is NOT a defect.** Filed hours
+earlier in this same menu as a suspected duplicate, on the strength of two rows
+sharing a range and a damage figure. Both pages were then read, and the
+suspicion below - *"one of the two pages is being read wrong"* - is wrong:
+
+```
+  printed 63   under "Level Five: Air"           P.P.E.: Fifteen
+  printed 119  under "Level Seven (Invocations)"  P.P.E.: Twenty-Five
+```
+
+**The two entries are word for word identical apart from that one line** -
+same 20 foot radius, same 4D6 M.D., same Instant duration, same Standard save,
+same deafening penalties, same 01-40% knockdown. The Book of Magic publishes
+one spell in two of its lists, at two levels and two prices, and **both stored
+rows agree with the page they cite**: `Air: Sonic Blast` holds level 5 and 15
+P.P.E., `Sonic Blast` holds level 7 and 25.
+
+**So the merge this finding implies would have been a mistake** - it would have
+deleted a correct row and changed what one of two kinds of caster spends. What
+this actually is, is **F26's own shape occurring inside a single book** rather
+than across two, which is why the answer is F26's mechanism: the pair is linked
+with `same_spell_as`, so `regression.mjs` compares the two rows to each other on
+every clean rebuild and reports either being gutted or edited away from the
+other. Direction follows migration 049 as closely as a within-book pair can -
+there is no newer import, both rows arrived together, so the tradition-scoped
+row points at the general Invocation list.
+
+**`Dolphin: Sonic Blast` is a third row and stays unlinked**, being a genuinely
+different spell that shares the name - 1D6 M.D. per level at 100 feet per level,
+passing a third of its damage through light armour. The script asserts that it
+has no link, so a later sweep matching on name cannot quietly acquire one.
+
+**Worth keeping from this one:** the finding was filed from a column comparison
+and resolved by reading the pages, and those gave opposite answers. Two rows
+agreeing on range and damage looked like duplication; the section headings four
+lines above each entry are what say it is not.
+
 **Filed 2026-09-08**, found while taking F26 and deliberately not fixed there.
 
 `Sonic Blast` (Rifts Book of Magic p.119) and `Air: Sonic Blast` (Rifts Book of
