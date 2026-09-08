@@ -4023,6 +4023,117 @@ that are also flavour. A requirement the app checks in one direction and ignores
 in the other is the kind of half-modelled rule that is worse than an absent one,
 because the enforced half makes the ignored half look enforced too.
 
+**Taken, 2026-09-08 (PR #824).** `attribute_maximums` exists, and the class that
+filed this finding stores its cap in it.
+
+**THE POSTURE IS NOT THE ONE THIS FINDING ASKED FOR, and that is a decision
+rather than a miss.** The proposal wanted the cap *"enforced server-side like
+its twin"* - a blocking violation. **Nate fixed it as a WARNING when the finding
+was taken.** `apps/character-creator/AUDIT.md` `F2`'s follow-up had already
+decided this exact surface on 2026-08-24: pool maxima became a hard cap for any
+creator who is not the campaign's GM, and **attribute checks deliberately stayed
+warnings for everyone**, because *"Manual entry exists precisely for numbers a
+table decided"* (`docs/wizard-and-sheet.md:481-495`). Enforcing a class cap
+would have made this app the only place an attribute number is refused.
+
+**So this finding's own argument against the cheap option is only half met, and
+the note should say so.** *"A requirement the app checks in one direction and
+ignores in the other"* is still, strictly, what ships: the minimum blocks and
+the maximum does not.
+<!-- claim-ok: quoting this finding's own text, four paragraphs above -->
+What the key buys over the `restrictions` prose it replaces is real and is not
+enforcement - the number renders as a cap instead of inverting to `PB 12+`, it
+merges with `Math.min` across race, occupation and variant, it reaches
+`admin/audit` as a structured `attribute_above_class_maximum`, and the next
+importer is no longer told to write it into the block that means the opposite.
+A later decision to enforce it now has something to enforce.
+
+**Four premises did not survive, and each changed the work.**
+
+**1. The wizard gate is not where this finding says.** It cites
+`app.js:1822-1880` as the code that *"gates whether the class may be taken at
+all"*. That range holds the shortfall panel, which explicitly lets the player
+continue. The gate is `canNext` at **`app.js:1947`**, outside the cited range,
+and the `N+` shape is rendered in **three** places - `:1109`, `:1914` and
+`:1958` - not one. **This also corrects the earlier premise-audit section at the
+end of this file**, which concluded there was no client gate at all.
+
+**2. `VARIANT_MERGED` alone would have been a no-op.** The proposal names only
+that list. `applyVariant` iterates **`VARIANT_OVERRIDES`** and consults
+`VARIANT_MERGED` only to choose spread-versus-replace, so a key in the second
+and not the first is never read. Adding it to both then turns the suite red
+until `docs/leveling.md` names it, because `test/checks/documented-counts.mjs`
+pins the override list against that file. Neither `VARIANT_OVERRIDES` nor
+`docs/leveling.md` appears in the proposal's file list.
+
+**3. There is no twin to validate alongside.** *"validate, merge, and
+`VARIANT_MERGED` alongside its twin"* assumes `attribute_requirements` has a
+shape validator. **It has none** - `parser.js` never checks that it is a map of
+attributes to numbers, and neither does `class-check-lib.mjs`, which is a
+key-NAME allowlist. So the validator written here is new work with no pattern to
+copy, and the gap it leaves untouched is worth knowing about: a garbage
+`attribute_requirements` still parses.
+
+**4. `combineClasses` drops the occupation's half for free.** It opens
+`out = { ...rcc }`, so a RACE's new key survives by spread and an OCCUPATION's
+is silently lost unless an explicit merge is written. A half-implementation here
+fails in exactly one direction, which is the shape a merged key hides best. It
+is pinned by a test naming that asymmetry.
+
+**And a fifth thing, which is a decision rather than an error.** The name
+collides with **`bonuses.attribute_minimums`**, which already exists and is a
+different mechanic - a floor applied AFTER the dice bonus lands, not a gate.
+`parser.js` already carried a comment distinguishing that key from
+`attribute_requirements`; both sites now carry one. The name shipped as the
+finding wrote it, deliberately and with this recorded, exactly as `F31`'s
+`related_skill_count` collision was flagged rather than discovered afterwards.
+
+**One number could not be settled.** *"the note reads as flavour beside sixteen
+restrictions that are also flavour"* - the class stores **three**, and no class
+in this book has sixteen. It changes nothing in the argument and it had no
+source.
+<!-- claim-ok: quoting the premise this note corrects -->
+
+**Both new checks were proven by injection before being trusted**, per the rule
+that a check which has only ever passed proves nothing. Flipping `Math.min` to
+`Math.max` fails *"both sets of maximums apply, the LOWER winning"*; pushing the
+finding into `violations` fails *"warns and never blocks"*. Reverted after each.
+
+**The UI was looked at, and looking is what caught the last bug.** On
+localhost:8795 at 768x1024 and 1280x900, scrolled to top, the whole step above
+the fold: the class detail reads *"Requirements: IQ 10+, MA 10+, PB 12 or
+less"*, the P.B. row shows `12 or less`, and with P.B. 18 against a cap of 12
+the **`Skills` button stays enabled** - the posture, confirmed in the app rather
+than only in a test. The note measures 48px inside a 542px cell,
+`table-layout: auto`, no horizontal scroll. **The first version rendered the
+right class and the wrong colour**: a bare `.caution` ties `.attr-note` on
+specificity and loses on source order, so the amber never applied. No test would
+have caught it; the computed style did.
+
+**That turned up a defect this PR does NOT fix**, filed as `UI-AUDIT` `F33`:
+`.attr-note.err` has the same problem, so **an unmet class minimum has been
+rendering muted grey rather than red** for as long as it has existed. Until that
+is taken, this PR's advisory cap is the only coloured note in that column, which
+reads louder than the blocking requirement above it.
+
+**A second deferral, filed as `F37` on this menu:** `drift-check --remote`
+reports `MIGRATION NOT APPLIED: 049-spell-same-spell-as.sql` on a clean tree.
+The migration was applied - the column exists and holds 7 rows - and only its
+`schema_migrations` line is missing. It arrived with `F26`'s PR (#815). This
+PR's own data script shipped with the same omission on the data-script side and
+was corrected before merge.
+
+**Step 5, the citation sweep.** `audit-citations.mjs --remote F32` lists two
+classes. `fq-deep-intel-agent` is rewritten by this PR's data script - the cap
+moves out of `restrictions` prose and into the key, the restriction keeps the
+book's sentence and loses the storage claim, and the note goes past-tense.
+**`fq-glitter-girl-pilot` is deliberately NOT rewritten**: it cites this finding
+for *"the neighbouring problem of a requirement the block cannot state"*, and
+its own problem is **"Must be female"**, which `attribute_maximums` does not
+solve and which `docs/surveys/free-quebec.md` records as unfiled on purpose.
+Marking it resolved would be a false claim about a requirement that still has
+nowhere to go.
+
 ### F33 - the gear catalog holds the same item twice under two slugs, and no single detector finds them
 
 **Filed 2026-09-08**, found while resolving `equipment_starting` slugs for
@@ -4521,3 +4632,67 @@ living somewhere the finding does not.
 F35 returns mostly `UI-AUDIT` F30 and `INGESTION-AUDIT` F32, F33 and F34. This
 menu's own header already says to cite by filename, at line 31; here is the
 case for it. <!-- claim-ok: this file's own header, not another file -->
+
+## Filed while taking F32, 2026-09-08
+
+### F37 - migration 049 never records itself, so `drift-check --remote` reports a false drift forever
+
+**Not taken here.** Found by running `drift-check --remote` while taking `F32`,
+and filed rather than folded in, because that PR takes one finding.
+
+`node scripts/drift-check.mjs --remote`, 2026-09-08, reports:
+
+```
+DRIFT FOUND (--remote): 1
+  MIGRATION NOT APPLIED: 049-spell-same-spell-as.sql
+```
+
+**The migration WAS applied. Only the ledger row is missing.** Measured
+`--remote` the same day:
+
+| asked | answer |
+|---|---|
+| `SELECT count(*) FROM pragma_table_info('spells') WHERE name = 'same_spell_as'` | **1** - the column exists |
+| `SELECT count(*) FROM spells WHERE same_spell_as IS NOT NULL` | **7** - and it is populated |
+| `SELECT filename FROM schema_migrations ORDER BY filename DESC LIMIT 1` | `048-vehicles.sql` |
+
+The cause is one absent line. `db/migrations/048-vehicles.sql` ends with
+`INSERT OR IGNORE INTO schema_migrations (filename) VALUES ('048-vehicles.sql');`
+and **`049-spell-same-spell-as.sql` ends with its `CREATE INDEX`** - nothing
+writes the ledger. `scripts/d1-apply.mjs` does not write it either; it is the
+script's own job, by a convention every other migration follows.
+
+**Why it matters more than a cosmetic row.** `drift-check --remote` is the
+command `ship-pr` leans on to say whether production matches the repo, and it
+now reports drift on a clean tree. **A check that always finds something is one
+you stop reading** - which is `class-import`'s own argument, made there about
+dead restriction names. The next person to run it has to re-derive that this
+one row is a lie before they can trust the other rows.
+
+**This is the same class of miss as one made in `F32`'s own PR**, caught by the
+same command: that PR's data script shipped without its
+`INSERT INTO data_script_runs` line and reported `DATA SCRIPT NOT RUN` until it
+was added. **498 of the 499 scripts in `apps/character-creator/db/` carry the
+ledger line**, so the convention is near-universal and entirely unenforced.
+
+**Proposed change:** one statement, applied `--remote` and `--local` -
+`INSERT OR IGNORE INTO schema_migrations (filename) VALUES
+('049-spell-same-spell-as.sql');` - and the same line appended to the migration
+so a rebuild from nothing records it too. **Posture: data only, no new check.**
+
+**A check is the obvious second half and is deliberately NOT proposed here.**
+A pre-flight in `d1-apply.mjs` refusing a migration whose text does not name
+itself in `schema_migrations` would catch the next one, and it is a real
+proposal - but it is a gate on the script that writes production, it would fire
+on every existing file that predates it, and `F32`'s PR shows the same gap
+exists on the data-script side, so the sensible version covers both. That is a
+different, larger finding and should be argued on its own rather than smuggled
+in beside a one-line data fix.
+
+**Evidence:** `drift-check.mjs --remote`, the three `q.mjs --remote` queries
+above, and `tail` of both migration files - all 2026-09-08. **Confidence: high**;
+the only thing not verified is *why* the line is absent, which the PR that added
+the migration (#815, `F26`) would have to say.
+
+**Ongoing cost:** none for the fix itself. The underlying convention stays
+unenforced, which is what the paragraph above declines to solve here.

@@ -2329,3 +2329,49 @@ counting braces across the whole file afterwards: **0, never negative.**
 anyway** — six real transitions get damped, the app stops being the only one of
 the four without the query, and the guard is in place if anything ever uses
 `shared/`'s spinner.
+
+## Filed while taking BOOK-INGEST-AUDIT F32, 2026-09-08
+
+### F33 — medium — an unmet class minimum has never rendered red, because `.err` loses to `.attr-note`
+
+**Not taken here.** Found while adding a sibling note to the same column in PR
+#824 and filed rather than folded in, because that PR takes one finding.
+
+The Attributes step marks an unmet minimum by switching a class:
+
+```js
+// apps/character-creator/app.js:1914
+const req = reqs[a] ? `<span class="attr-note ${v != null && v < reqs[a] ? 'err' : 'ok'}">need ${reqs[a]}+</span>` : '';
+```
+
+**Both modifiers are inert.** `.err` and `.ok` are colour-only rules at
+`apps/character-creator/styles.css:110-111`; `.attr-note` at `:475` also sets
+`color`, and the two tie on specificity (one class each), so **source order
+decides and `.attr-note` is 364 lines later.**
+
+**Measured in the browser, not reasoned from the file** — localhost, the Deep
+Intel Agent, I.Q. set to 4 against a printed minimum of 10:
+
+```
+class "attr-note err"   computed color rgb(132, 147, 142)   = --text-muted #84938E
+                        --danger is #DE6E58, and is not on the element
+```
+
+So the one visual cue that an attribute is blocking the step renders the same
+grey as the dice expression beside it. The step *is* still blocked — `canNext`
+at `app.js:1947` is unaffected, and the reason is repeated in text beside the
+button — so this is a missing signal rather than a wrong one.
+
+**Proposal:** add `.attr-note.err` and `.attr-note.ok` beside `.attr-note`,
+matching `.attr-note.caution` which PR #824 added two lines above them for
+exactly this reason. Two lines, no JS change, no new class names. **Posture:
+presentation only** — nothing about what blocks or passes moves.
+
+**Evidence:** computed styles read in the pane, 2026-09-08, on the walk
+described in `BOOK-INGEST-AUDIT.md` F32's outcome note. **Confidence: high** for
+the diagnosis and the fix; the only open question is whether `.ok` should paint
+green at all, or whether a met requirement is better left muted — which is a
+design call and is why this is not a one-line certainty.
+
+**Ongoing cost:** none. Two static rules in the file that already owns the
+column.
