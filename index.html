@@ -4,6 +4,28 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nate's Workshop</title>
+<!-- Home-screen and tab icon. The art is one square, full-bleed slate, in
+     four sizes; /favicon.ico carries 16/32/48 for the tab. iOS reads
+     apple-touch-icon for Add to Home Screen and ignores everything else here.
+
+     apps/pick3cut5 deliberately has NO icon links. Its Access bypass is a list
+     of exact paths, all five destination slots are in use, and its smoke test
+     derives the list from this very head - a link here would demand a sixth
+     slot that does not exist. See apps/pick3cut5/test/smoke.mjs. -->
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/shared/icons/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/shared/icons/apple-touch-icon.png">
+<meta name="theme-color" content="#0F1412">
+<!-- The manifest is the front door's alone: its start_url is "/", so linking
+     it from an app page would make that page's home-screen shortcut open the
+     hub instead of the app.
+
+     crossorigin="use-credentials" is load-bearing. Chrome fetches a manifest
+     with credentials OMITTED by default, and the whole site is behind Access,
+     so an uncredentialed fetch takes a 302 to the login wall and the manifest
+     silently never loads. -->
+<link rel="manifest" href="/site.webmanifest" crossorigin="use-credentials">
+<meta name="apple-mobile-web-app-title" content="Workshop">
 <style>
 /* This page is the ONE of the ten that does not load /shared/styles.css - it is
    deliberately a single self-contained file with its own tokens - so it needs

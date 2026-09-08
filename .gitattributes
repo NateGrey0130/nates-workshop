@@ -32,3 +32,11 @@ shared/fonts/*.woff2 -text
 # It also keeps this one file LF in the working tree, so what is edited and run
 # locally is byte-identical to what the runner executes. REPO-AUDIT.md G8.
 .github/workflows/*.yml text eol=lf
+
+# The home-screen icon set. Git already detects PNG and ICO as binary on its own
+# - both are full of NUL bytes - so this rules out a FUTURE core.autocrlf or
+# attribute change deciding otherwise, exactly the reasoning the woff2 rule
+# above states for itself. A rewritten byte in an ICO is not a diff you would
+# notice; it is an icon that stops decoding.
+shared/icons/*.png -text
+favicon.ico -text
