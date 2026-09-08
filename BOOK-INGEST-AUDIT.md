@@ -5532,7 +5532,7 @@ they are fine. **What would raise it:** reading the folios for those twenty.
 
 **Ongoing cost: none.** One string, and the sweep it proposes is finite.
 
-**Taken, 2026-09-08 (PR #TBD). Posture held: a data fix, no schema change and
+**Taken, 2026-09-08 (PR #837). Posture held: a data fix, no schema change and
 no new check** - one data script of a single `UPDATE`, plus two comment
 corrections in the file that made the error.
 
