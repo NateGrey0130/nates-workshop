@@ -4266,7 +4266,7 @@ trust it, and its failure is silent at every layer except the one check that
 happens to be run. `unmatched except fails OPEN` - the class offers a skill its
 book forbids and nothing says so.
 
-**Taken, 2026-09-08 (PR #PLACEHOLDER).** Documentation only, on one skill file,
+**Taken, 2026-09-08 (PR #823).** Documentation only, on one skill file,
 which is the posture the proposal states - *"Correct the rule"*, *"Replace it
 with the instruction to look the row up"*. No new check, no gate, no exit code
 moved. Premises re-checked by `audit-premise-auditor` a second time before any
