@@ -298,11 +298,11 @@ local-only script is protected as soon as it says so.
 
 | After | Rows |
 |---|---|
-| classes (published, live) | 190 |
-| skills | 358 |
-| spells | 607 |
+| classes (published, live) | 215 |
+| skills | 367 |
+| spells | 681 |
 | psionic powers | 116 |
-| gear | 1136 |
+| gear | 1241 |
 
 **These are pinned by `test/regression.mjs`**, which is the only thing that can
 honestly check them: it builds a database from nothing under a scratch directory

@@ -939,6 +939,10 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     // choice, which stopped being true when 031-character-mos.sql landed.
     'demon-goblin': 3,
     'monk': 3,
+    // Underseas, and the only one of the five that arrived WITH its MOS
+    // block rather than by a later correction - the book prints nine Navy
+    // specialties as part of the O.C.C. itself, so it needed no fixing up.
+    'navy-seaman': 9,
   };
   for (const [id, want] of Object.entries(MOS_PACKAGES)) {
     const cls = classes.find((c) => c.id === id);

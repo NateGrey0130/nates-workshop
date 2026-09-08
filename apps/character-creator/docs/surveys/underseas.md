@@ -426,3 +426,62 @@ written.
 only consumer - not `js/`, not `functions/`, not `app.js` or `sheet.js`, and not
 the test suite. That was true of the Triax import too and is worth knowing
 before anyone expects a vessel to appear in the wizard.
+
+### The debt this book's import left in CI, and closing it
+
+**`regression.mjs` went red on PR #807 and stayed red through #808 and #809**,
+failing the same eight checks byte for byte in all three runs. None of the
+three CAUSED it - the vessels PR added exactly zero failures, checked by
+diffing its run against #808's - and none of the three FIXED it either, which
+is the part worth recording. A check that has been red for three merges stops
+being read.
+
+All eight were consequences of this book's own import, and they fall in three
+groups:
+
+- **Six stale documented counts.** `docs/operations.md`'s clean-run table and
+  one README sentence still said 190 classes, 358 skills, 607 spells and 1136
+  gear - the figures from before PR #798. They are 215, 367, 681 and 1241, and
+  the hit-point sentence moves from 101-of-190 to 110-of-215. These are exactly
+  the numbers the regression pins by building a database from nothing and
+  asking the worker what it serves, which is why they are safe to correct from
+  its own output.
+- **An unregistered MOS.** The Navy Seaman is this book's only MOS class and
+  the fifth in the catalog, and `MOS_PACKAGES` in `regression.mjs` is a closed
+  list on purpose - *nothing else may claim an MOS the list does not know
+  about*. It is registered at nine packages, the count read off
+  `add-navy-seaman-class.sql` rather than off this survey, which said nine and
+  could have been wrong the way #805's arithmetic was.
+- **Nine O.C.C.s with no `occ_group`.** Every class from #800 through #807
+  shipped without one. That is not cosmetic: a race's `occ_restrictions` may
+  carry a `group:<name>` token, and an occupation with no group matches
+  nothing - so an `only` fails CLOSED and an `except` fails OPEN, the second
+  being the shape that shipped to production once before and went unnoticed
+  for months. Fixed by `zzzzzz-underseas-occ-groups.sql`.
+
+**The grouping could not be read off a heading, and that is the interesting
+part.** `zz-rifts-occ-groups.sql` could cite RUE's own section headings - men
+of arms, practitioners, psychics, adventurers - straight into the five names
+`OCC_GROUPS` allows. **Underseas groups by NATION instead**: *Tritonian
+O.C.C.s* on printed 97, the New Navy from printed 112. None of those is one of
+the five. So the evidence used is the one this book does supply and that was
+already cited when the classes were imported - the 3D6/1D6 split behind each
+class's `CORE_SDC_BY_CLASS` entry - which makes the two tables agree by
+construction, exactly as the Rifts file describes. Three men-of-arms (Sea Wolf,
+Navy Seaman, Marine), three magic (Whale Singer, Ocean Wizard, Sea Druid),
+three optional (Sea Inquisitor, Tritonian Scientist, Salvage Expert).
+
+**The Sea Inquisitor was the one that needed checking**, and it nearly went in
+wrong. A grep for `magic` in its markdown hits - so it reads as a caster. The
+hit is `spell_magic: 1` inside its **saves** block: the class is a monster
+hunter with heavy save bonuses AGAINST magic, and grants no spells and no
+psionics of its own. It is `optional`. The near-miss is in the script's header
+so nobody has to repeat it.
+
+**One thing the smoke test caught that nothing else would have.** The fix
+script was first named `zzzzzzz-` with SEVEN z's, which sorts fine and invents
+a documentation tier that does not exist - `docs/operations.md` describes the
+tiers up to six. Six z's already sorts after every `add-*-class.sql` the script
+edits, so the seventh bought nothing and cost a docs row. Renamed. The rule in
+the `class-import` skill is *check where the name sorts*, and this is the case
+where checking says use a SHORTER prefix, not a longer one.
