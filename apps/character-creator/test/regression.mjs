@@ -1111,6 +1111,40 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   check('no class GRANTS the placeholder row as a fixed skill',
     literacyFixed.length === 0, literacyFixed.join(', '));
 
+  // The same guard for the LANGUAGE family, which did not have one - so the
+  // identical mistake was fatal on literacy and invisible here. F34.
+  //
+  // NOT `=== 0`, and that is the whole design. A fixed `Language: Other` is
+  // legitimate when the book NAMES the tongue and the catalog has no row for
+  // it: the demon-hound-rider's Br'talb, the four Promethean classes'
+  // Promethean. Asserting zero would go red on those six forever, and the
+  // standing temptation would then be to weaken it to a warning.
+  //
+  // So the rule is the SHAPE, not a list of class ids. A named tongue is a
+  // FIXED percentage - `base` set, `per_level: 0` - because the character
+  // simply speaks it. A missing selection looks like the catalog row it was
+  // copied from: `per_level: 5`, climbing, with a note saying "select one" or
+  // "of choice". Nine classes had the second shape. A list of names would need
+  // editing the next time a book names a tongue; this does not.
+  const languageFixed = [];
+  for (const c of classes) {
+    for (const e of (c.skills?.occ_skills || [])) {
+      if (!e || e.name !== 'Language: Other') continue;
+      const named = typeof e.base === 'number' && e.per_level === 0;
+      if (!named) languageFixed.push(`${c.id} (base ${e.base ?? '-'}, per_level ${e.per_level ?? '-'})`);
+    }
+  }
+  check('a fixed Language: Other is a NAMED tongue, not a missing selection',
+    languageFixed.length === 0, languageFixed.join('; '));
+
+  // And the other half of the shape: the six that stay fixed must still BE
+  // there. A check that only forbids can be satisfied by deleting the thing it
+  // was protecting, which would lose six languages the books name.
+  const namedTongues = classes.flatMap((c) => (c.skills?.occ_skills || [])
+    .filter((e) => e && e.name === 'Language: Other' && e.per_level === 0).map(() => c.id));
+  check('and the named tongues survive as fixed skills', namedTongues.length >= 6,
+    `found ${namedTongues.length}: ${namedTongues.join(', ')}`);
+
   // -- every fixed skill a class names must exist -----------------------------
   //
   // The Stone Master cited "Literacy: Dragonese/Elf" - no such row, no redirect

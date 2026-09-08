@@ -1330,8 +1330,15 @@ function occPicker() {
       <select onchange="S.occVariant = this.value || null; render()">
         ${chosen.variants.map((v) => `<option value="${esc(v.id)}"${S.occVariant === v.id ? ' selected' : ''}>${esc(v.name || v.id)}</option>`).join('')}
       </select></div>` : ''}
-    ${chosen ? `<p class="small">Related skills: <b>${chosen.skills?.occ_related_skills?.count ?? 0}</b>
-      · Secondary: <b>${chosen.skills?.secondary_skills?.count ?? 0}</b></p>` : ''}
+    ${chosen ? (() => {
+      // Through the VARIANT, not the raw class. A chassis states its related
+      // count as a delta from the base - "other O.C.C. skills are reduced to
+      // three (not six)" - so a preview reading `chosen` directly shows the
+      // parent's six beside a dropdown that has just selected the three. F31.
+      const shown = applyVariant(chosen, S.occVariant) || chosen;
+      return `<p class="small">Related skills: <b>${shown.skills?.occ_related_skills?.count ?? 0}</b>
+      · Secondary: <b>${shown.skills?.secondary_skills?.count ?? 0}</b></p>`;
+    })() : ''}
   </div>`;
 }
 

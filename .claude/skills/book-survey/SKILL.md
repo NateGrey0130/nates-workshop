@@ -41,8 +41,20 @@ each, and says TEXT LAYER or SCAN. It writes nothing.
 **Use it rather than a bare `python -c`, and the reason is the cache rather than
 the keystrokes.** `ocr-book.py` is one command that also writes the
 page-addressed cache `class-check --field-sources` and `drift-check` both read,
-records `page_offset` in the manifest, resumes correctly on a re-run, and
-refuses to overwrite a text-layer cache with OCR. A hand-rolled probe does none
+records `page_offset` and `welded_pages` in the manifest, resumes correctly on a
+re-run, and refuses to overwrite a text-layer cache with OCR.
+
+**`welded_pages` is the one to read before extracting anything.** A page listed
+there has both columns in a single text block, so its cached lines **do not
+follow one another** — a `Money:` line can read on into the far column and take
+the wrong figure with it, and nothing about the file looks wrong. Re-run
+`ocr-book.py` on an already-cached book to fill the key in (it recomputes from
+the PDF and skips every page it already has), and read those pages off a
+**render**. `class-check --field-sources` prints a `WELDED` advisory when a
+class's window lands on one. Measured across the eleven text-layer caches on
+this machine: **42 welded pages in ten of them**, `cb1` the only clean book, and
+`pf` — the most-cited book in the database — carrying six.
+`BOOK-INGEST-AUDIT.md` F30. A hand-rolled probe does none
 of that, and §0b below is the cost of finding out: **seven of the first eight
 caches were built by throwaway code that is in no commit, and they do not agree
 with each other.**
@@ -82,6 +94,37 @@ mis-set digit, and the OTHER authority table has the real one.
 
 Five real examples from the Palladium book: `reference/WORKED-EXAMPLES.md` →
 *Palladium Fantasy's text layer*.
+
+**And there is a worse kind, where that remedy fails: a page whose FONT MAPPING
+is broken.** The whole page's characters are wrong, not one of them, and
+`ocr-book.py` now reports it — `GLYPHS` in its output, `corrupt_pages` in the
+manifest, as a **count per page**. `class-check --field-sources` repeats it for
+any page a class was drawn from.
+
+**The count is the point, and so is the fact that it is not a verdict.** Across
+the eleven text-layer caches here, real damage shows up at **3 and 4 hits** as
+often as at 30, so there is no threshold to set — one stray character is not
+seven, and both need a human.
+
+**THE RULE THAT MATTERS MORE THAN THE DETECTOR: a page with corrupt prose is
+corrupt EVERYWHERE, including in the parts that look fine.** Free Quebec printed
+95 announces itself — `vsv&sis. \Vs. %\%vausttft` — and on the same page an
+M.D.C. table reads `- 115` where the ink says **175**. `115` is a perfectly
+ordinary figure in a column of ordinary figures, and an extraction pass reported
+it in good faith. The remedy above does not reach this: `115` *is* what the value
+should look like, and a per-location M.D.C. has no second authority table to
+check it against. **Render the page and read the numbers off the render.**
+
+**Two failure modes, and only one of them a render cures.** Printed 95 is an
+encoding fault — the ink is right and the text layer is wrong, so a render
+fixes it, and re-caching cannot (`read-columns.py` and a raw `page.get_text()`
+return the same garbage). Free Quebec printed **118** is the other kind: the
+render shows `a\\` on the page itself. Expect both.
+
+**It is worth running on a book you did not cache today.** `bom` printed 84 is
+30 hits — a wholly scrambled page found by hand on 2026-09-05, which this
+detector rediscovers on its own — and `bom` printed 116 and 310 turn a `1` into
+`\` inside spell durations and damage dice. `BOOK-INGEST-AUDIT.md` F36.
 
 ## 0b. Cache it — the SAME command either way
 

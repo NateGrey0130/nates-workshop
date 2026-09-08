@@ -3918,6 +3918,82 @@ geometry was checked, and a detector keyed on prose discontinuity rather than on
 geometry would flag it and every page like it. **The test above is geometric on
 purpose.**
 
+**Taken, 2026-09-08 (PR #830).** Detect and warn, as proposed. Nothing repairs
+anything, no exit code moves, no cached page is rewritten.
+
+**THE SNIPPET IN THIS FINDING FLAGS THE PAGE THIS FINDING SAYS MUST NEVER BE
+FLAGGED.** The paragraph directly above defends the geometry against a
+prose-based detector and names printed 45 as the case proving it. Printed 45 is
+cache `p046`, and it is among the **82 of 194** pages the snippet returns. The
+defence was sound; the code beneath it was not.
+
+Three filters separate 82 from 2, and the finding had one:
+
+| test | flagged |
+|---|---|
+| the snippet as written - `get_text('dict', clip=block_rect)`, collecting lines from every block inside the clip | **82**, printed 45 among them |
+| a block's OWN lines only | 15 |
+| plus the block being at least 0.75 of the page wide - `read-columns.py`'s own `wide` test | **2 - p043 and p059**, the known welds |
+
+**"Measured over all 194 pages in under a second" was false of both snippets.**
+Timed here: as written **115.4s**, the dict-based fix **19.0s**, against **0.4s**
+for the entire text-layer extraction it was to ride along with. What shipped
+uses `get_text('words')`, grouping word `x0` by `(block, line)`, and returns the
+same two pages in **0.57s** - the cost the finding claimed and neither snippet
+had.
+
+**Two wiring corrections, either of which would have shipped a key that lies.**
+`ocr-book.py`'s page loop **skips anything already cached**, so a test placed
+*"per page while it is already walking every page"* computes nothing on a
+complete cache - and every cache here is complete, so the one book known to have
+two welds would have recorded `welded_pages: []`. It is computed in
+`write_manifest` instead, from the PDF, on every run, exactly as the four keys
+beside it are recomputed from disk. And it walks the whole document rather than
+the `pages` argument, so `--page 43 --force` cannot leave a manifest claiming
+page 43 is the only weld in the book.
+
+**`drift-check` cannot carry the warning and does not get it.** The proposal
+names it beside `class-check --field-sources`. Read 2026-09-08:
+`scripts/drift-check.mjs:181` is
+`const CITATION_TABLES = ['spells', 'psionic_powers', 'skills'];` -
+`imported_classes` is not among them, so **the row this finding exists for,
+`starting_money` on `fq-gb-reloader`, is invisible to it** - and the
+`citationRows` built at `:182-188` carry no page, only a table and a name.
+`class-check --field-sources` was a clean fit and has the warning.
+
+**Smaller things.** `p043` holds **four** welded blocks, not one; `p059` has the
+single one. The two files are **not** *"normal-length"* - 30 and 10 lines against
+a 96.5 median - though 35 of 194 pages are under 30 lines, so shortness is not
+itself a tell. And *"the FIVE books still to be surveyed"* is **three**;
+`BOOK-INGEST-QUEUE.md` says three and is right.
+
+**The cross-book scan this finding asks for, run for the first time.** Every
+text-layer cache whose PDF is still on this machine:
+
+```
+bom           4    cb1          10    dag           6    fom           9
+free-quebec   2    ju            3    mystic-russia 0    new-west      1
+pf            6    potm          1    spirit-west   1
+```
+
+**42 welded pages across ten of eleven books.** `cb1` is the only clean one, and
+`pf` - the most-cited book in the database - carries six.
+
+**And what it cost, which the finding could not know.** Every welded printed page
+cross-referenced against live `source_book` citations, `--remote`: **29 live rows
+were drawn from a page whose text layer welds** - 17 `ju` gear rows, the
+`delphi-juicer` and `coalition-juicer` classes, three `pf` classes and one `pf`
+spell. **That is a population to check, not 29 errors:** a weld anywhere on a
+page flags every field drawn from it. The two highest-risk were read by hand and
+are correct - the Delphi Juicer's `Money:` line really is on welded `p042`, and
+the stored `5d6x100` is what the page says.
+
+**One caveat, recorded where the key is written**, because it is the way this
+could mislead: `welded_pages` describes the **PDF's block geometry**, not the
+cache's state. A cache built by some other route - six of the first eight were -
+gets a clean list while being wholly welded. It answers *"would reading this book
+weld"*, not *"is this cache welded"*.
+
 ### F31 - four chassis of one O.C.C. cannot be `variants`, because a variant may not add a skill
 
 **Filed 2026-09-08**, during the `free-quebec` survey.
@@ -3976,6 +4052,81 @@ psionics and magic where a variant cannot, which makes it the obvious near-miss
 here - but a skill granted through an ability is not a skill the picker offers,
 does not take a per-level percentage, and does not compose. It would ship five
 classes that look right and cannot be levelled.
+
+**Taken, 2026-09-08 (PR #834).** The mechanism only, on Nate's decision. **The
+five cyborg classes are NOT restructured** - a character references its class by
+`class_id`, and collapsing the four chassis into variants would retire four ids
+that characters point at. `skills_additional` and `related_skills_count` exist;
+using them on published data is a separate decision that was not taken.
+
+**THIS FINDING MAKES THE MIRROR IMAGE OF THE MISTAKE `F32` MADE, and `parser.js`
+already carried the warning.** F31's edit list says *"`js/parser.js` (validate,
+and add both to `VARIANT_OVERRIDES`)"*. `applyVariant` only **assigns**, so both
+keys would have landed as inert top-level fields: `related_skills_count` where
+nothing reads it - the count lives at `skills.occ_related_skills.count` - and
+`skills_additional` beside the skills block rather than unioned into it. **It
+validates clean, stores clean and does nothing.** Both are handled explicitly
+below the loop, the way `skill_overrides` is, each ending in a `delete`.
+Reproduced deliberately: with only the list entries and no handlers, three of
+the new checks go red.
+
+**This finding's own file list omits `docs/leveling.md`, and the suite requires
+it.** Read 2026-09-08:
+`apps/character-creator/test/checks/documented-counts.mjs:66-69` filters
+`VARIANT_OVERRIDES` for any key the file does not mention in backticks and fails
+on the remainder, so the run goes red until the doc names both.
+
+**THE KEY IS `related_skills_count`, NOT F31's `related_skill_count`.** The
+finding proposes a name one character from one that already exists and means the
+same thing - the ability grant `F24` shipped. Two spellings would be a trap that
+points the wrong way: a variant naming the ability's spelling gets the
+ignored-key warning, while an ability naming the variant's gets **nothing at
+all**, because abilities have no unknown-key sweep. One name for one mechanic
+removes the question, and this is the one place the implementation departs from
+the finding's text.
+
+**The union is `combineClasses`' policy, reused rather than reinvented** - named
+entries dedupe by lowercased name with the higher `base` winning, choice groups
+never collapse. The repo already unions a skills block twice and F31 mentions
+neither: `applyMos` in `js/compose.js` is the naive concat and is deliberately
+not exported, its own comment arguing that *an MOS is not a variant*;
+`combineClasses` is the considered one, and it is tested.
+
+**Two files F31 names need no edit.** `sheet.js` references neither
+`applyVariant` nor a skills block - its comment says the class *"comes with the
+character now, already resolved to this character's variant"* - and `compose.js`
+already runs `applyVariant` before `combineClasses`, so a union inside
+`applyVariant` is upstream of it. `class-check-lib.mjs`'s `KNOWN_KEYS` is a set
+of **top-level** keys, so adding variant sub-keys to it would do nothing either.
+**`app.js` does need one**, and the premise audit that cleared the other two
+never checked it: the Occupation step's *"Related skills: N"* preview reads the
+raw class, so a chassis that reduces six to three showed six beside a dropdown
+that had just selected three.
+
+**"Eleven basic skills" is twelve.** All five classes' own notes say twelve, the
+memory store says twelve, and printed 115 lists eleven lines plus
+`* Hand to Hand: Expert`. The finding is the outlier; nothing here changes the
+number, and the drift claim it supports holds at twelve - all four chassis carry
+every one of the base's twelve entries.
+
+**The `abilities` warning reaches the right conclusion by a wrong mechanism.**
+It says a skill granted through an ability *"is not a skill the picker offers,
+does not take a per-level percentage, and does not compose"*. `ABILITY_GRANTS`
+is `['bonuses', 'psionics', 'magic']` - **an ability cannot grant a skill at
+all**, and the ability validator has no unknown-key sweep, so a `skills:` block
+on one produces no error and no warning. The failure is not *"look right and
+cannot be levelled"*, it is *grant nothing, say nothing*. The advice stands and
+its stated reason understates it.
+
+**Step 5, the citation sweep.** All five classes carried the same sentence
+enumerating the nine keys a variant could override and concluding neither
+operation was expressible. That enumeration was **already stale before this** -
+`attribute_maximums` landed earlier the same day - which is `audit-menu`'s
+argument for citing a finding rather than restating a mechanism. Corrected on
+all five, past-tense, recording that the mechanism now exists and that the
+classes are deliberately not restructured. `fq-cyborg-soldier` needed its own
+statement: it carries the same sentence with a different tail, and the script's
+own readback caught it at 4 of 5.
 
 ### F32 - `attribute_requirements` holds MINIMUMS only, and a book's MAXIMUM inverts silently
 
@@ -4408,6 +4559,77 @@ language at a flat percentage. `Language: Native Tongue` is a real row, and
 that figure rather than the catalog's 98%. That is fine and is untouched here.
 The defect is specific to the two rows whose names end in `: Other`.
 
+**Taken, 2026-09-08 (PR #832).** Both halves in one PR, as the finding insists -
+a **hard failing check**, not a warning, shipping with the data it goes red on.
+
+**THE CHECK THIS FINDING SPECIFIES CAN NEVER PASS, and nothing in it says so.**
+The proposal asks for `check('no class GRANTS the language placeholder as a
+fixed skill', languageFixed.length === 0)` and says it *"goes red at fifteen the
+moment it is added"*. The prose above it was corrected from fifteen to nine; the
+**Proposal was not**, and it is the half an implementer builds from. If six of
+the fifteen are legitimate, an `=== 0` check goes red at **six, forever**, and
+the standing temptation the finding itself names - weaken it to a warning -
+arrives on day one.
+
+**So the check is a SHAPE RULE, on Nate's decision, and not a list of names.** A
+fixed `Language: Other` is legitimate when the book NAMES the tongue: `base`
+set, `per_level: 0`, because the character simply speaks it. A missing selection
+looks like the catalog row it was copied from - `per_level: 5`, climbing, with a
+note saying *select one* or *of choice*. All nine defects had the second shape
+and all six named tongues the first, so no allowlist is needed and a seventh
+book naming a tongue passes without anyone editing a test. A second check
+asserts the named tongues **survive**, because a rule that only forbids can be
+satisfied by deleting what it was protecting.
+
+**And this finding's reason for protecting those six is FALSE.** It says
+*"a `from: ["Language: Other"]` group resolves off the Other row's 50%
++5%/level... The 98% cannot survive the rewrite."*
+<!-- claim-ok: quoting the premise this note corrects -->
+A choice group **inherits** `base`/`per_level` - `app.js:3332-3336` says so in
+its own comment, and `parser.js` says *"`base` fixes the percentage"* - and the
+identical shape already ships in this book: three Prometheans carry
+`{ choose: 2, from: ["Literacy: Other"], base: 98 }`. The frozen-percentage
+check cannot see any of the six either; its `ABOUT_LANGUAGES` regex requires
+*"languages"* plural or a leading `Language: Other,`, and none of their notes
+match. **The six-vs-nine split is a real semantic judgement - a named tongue is
+not a selection - and it is exactly the judgement call this finding says it is
+not.**
+
+**`godling` sits on both sides and stays fixed.** Its first entry is
+`base: 98, per_level: 0, note: "One language of choice, at 98%."` - the
+legitimate SHAPE with the defect's WORDING, the only entry of the sixteen where
+the two signals disagree. Left alone on Nate's decision, and the arithmetic
+agrees: 98% flat cannot be reproduced by a bonus on a 50% +5%/level row, so
+converting it would change what the class grants. Its **second** entry is
+converted, and it was worse than the finding says: `{ name: "Language: Other",
+choose: 2, bonus: 15 }` is not merely *"silently ignored"* - `isChoiceGroup`
+requires `!entry.name`, so it fell to the fixed path and **was granted**, giving
+the Godling a 65% skill literally called "Language: Other" and no second
+language.
+
+**The nine, converted losslessly.** `Language: Other` is 50% +5%/level and
+`bonus` adds to each pick's own base, so every conversion is `base - 50 = B`
+with `per_level` already matching: `freelancer` 65->+15, both Knights 70->+20
+and 65->+15, `ngr-medical-officer` and `ngr-robot-combat-pilot` 70->+20,
+`ngr-field-mechanic`, `ngr-police` and `ngr-power-armor-commando` 60->+10, and
+`godling`'s second entry keeping its own `choose: 2, bonus: 15`.
+
+**Proved by making it fail.** With the data script held back,
+`regression.mjs` goes **red naming all nine**; with it in place the suite is
+green and *"the named tongues survive"* stays green throughout, so the six were
+never in scope. Measured against **production** afterwards, through the shipped
+parser: 225 live published classes, **zero** wrong fixed placeholders, **7**
+named tongues kept fixed, 135 classes offering a language pick.
+
+**One mistake worth recording, caught by the suite rather than by me.** The data
+script first used box-drawing characters in its comment separators. `d1-apply`
+accepted it and I reasoned from `schema.sql`, which uses them - but the smoke
+suite is **stricter for data scripts and covers comments**, because *"wrangler
+on Windows has turned them into mojibake in production"*. It went red, the
+characters are now ASCII, and production was checked afterwards: the only
+non-ASCII in any of the nine classes is two pre-existing em dashes on
+`ngr-medical-officer`, spliced the documented way with `char(8212)`.
+
 ### F35 - `class-import` tells you to strip a prefix the catalog requires, and the advice produces the exact bug it warns about
 
 **Filed 2026-09-08**, hit while importing this book's cyborg O.C.C.
@@ -4646,6 +4868,89 @@ PDF's own embedded font mapping, not in the extraction: `read-columns.py` and a
 raw `page.get_text()` return the same garbage, and re-running `ocr-book.py`
 would too. The ink is fine and the encoding is not; rendering is the only route
 to it.
+
+**Taken, 2026-09-08 (PR #833).** Both halves - the detector and the rule. It
+reports a **count** and repairs nothing, exactly as proposed.
+
+**THE CORRECTED DETECTOR WAS ITSELF MEASURED WITH A BROKEN ONE, and this
+finding is about not trusting detectors.** It specifies `\`, the guillemets and
+`£`, then reports *"seven occurrences"* on printed 95 and four other pages
+carrying one stray character each. Run with the signature as specified, printed
+95 carries **17** - backslash 10, guillemet 5, `£` 2. **5 + 2 = 7 is the
+finding's number, and its page list is exactly what you get with the backslash
+absent.** The measurement was made without the character the signature names
+first, which is this menu's own `\\`-collapse trap at work in the paragraph
+correcting a previous detector.
+
+**Six pages, not five.** Full output, the shipped function, 2026-09-08:
+
+```
+p096 (printed 95)  17     p119 (printed 118)  4     p005 (printed 4)  3
+p167 (printed 166)  2     p071 (printed 70)   1     p141 (printed 140) 1
+```
+
+**And printed 118 is a second corrupt page this finding does not mention, on a
+page a shipped class was extracted from** - `p119`, the FX-320C Dervish:
+`b\omc and cybernetics common to a\\ Cyborg Soldiers, tine fo\-`.
+
+**It is also a DIFFERENT disease, which changes what the rule can promise.**
+*"The ink is fine and the encoding is not; rendering is the only route to it"*
+<!-- claim-ok: quoting the premise this note corrects -->
+is true of printed 95 and **false of printed 118**: rendered at 600 dpi that page
+shows `a\\` as two literal backslashes - the ink itself is wrong there. Both
+pages flag; only one is cured by a render. The `book-survey` rule says so.
+
+**The cross-book scan, which the finding correctly says nobody had run.** All
+sixteen caches:
+
+| kind | flagged pages | shape |
+|---|---|---|
+| eleven **text-layer** caches | 0-9 each, `cb1` clean | real damage, at counts of 1 to 30 |
+| five **OCR** caches | **24-39 each** | dot leaders read as guillemets, line art as backslash, clustered on contents pages |
+
+**So the key is scoped to `text_layer: true`, which the finding does not say and
+the numbers require.** *"Characters the clean text never uses"* is a property of
+a text layer, not of a cache format.
+
+Real damage found outside this book: **`bom` printed 84 at 30 hits** - a wholly
+scrambled page a human found by hand on 2026-09-05 and recorded in the memory
+store, which this detector rediscovers on its own - plus `bom` printed 116 and
+310 turning `1` into `\` inside spell durations and damage dice, and `ju`
+printed 55. **The premise audit checked the live rows those could have damaged,
+`--remote`, and found none wrong**: the spells hold `10 minutes per level` and
+`+10 to save`, and the Book of Magic p.84 water spells match a render exactly.
+Every one was resolved correctly at import.
+
+**A boundary of the detector, found while testing it and worth knowing.** The
+signature is non-ASCII by construction, so **ASCII-to-ASCII glyph damage is
+invisible to it.** The page beside the Dervish's corrupt one reads `!D6xlOOO`
+for `1D6x1000` - `1` as `!`, `1` as `l`, `0` as `O` - and does not flag. The
+stored value is right because a human read it right, not because anything
+caught it. A signature wide enough to catch that would match ordinary prose,
+which is the trade this finding already makes about `%` and `&`.
+
+**Smaller corrections.** The 175 lives in `vehicle_locations`, not `vehicles` or
+`gear`. The *"ranked printed 95 only eighth"* claim could not be reproduced -
+with `%` and `&` added, 124 of 194 pages flag and printed 95 ranks 4th, 6th or
+9th by method - though the substance holds, since printed 164-166 are percentile
+tables and do outrank it. And `book-survey` §0 was **not** silent on mis-set
+characters: it already named *"a mis-set digit"* with a remedy. What fails is
+the remedy, not the category, so the new rule attaches to that clause rather
+than claiming a gap.
+
+**One thing this note cannot fix.** The section below is headed *"Premise audit
+of F30-F36"* and its body audits F30 through F35 - **F36 is in the heading and
+nowhere in the body**, confirmed 2026-09-08 by walking every line from that
+heading to the next `###`. Its opening sentence says *"All six of F30-F35"*, so
+the body knows its own scope and only the heading overreaches. It is left
+standing as the dated record it is; this paragraph is the correction.
+
+**`docs/surveys/free-quebec.md:669` gets this RIGHT and should not be
+"corrected"** - *"Seven findings came out of it, F30 through F36, and all six of
+F30-F35 went..."* is accurate on both counts. The memory store's
+`free-quebec-import.md:41` is the one that inherits the wrong scope, saying
+seven claims failed *"across F30-F36"*; no grep of this repo reaches it, which
+is why it is named here.
 
 ### Premise audit of F30-F36, 2026-09-08 - read this before taking any of them
 
