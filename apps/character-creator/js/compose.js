@@ -450,6 +450,41 @@ export const CORE_SDC_BY_CLASS = {
   'navy-seaman': '3D6',
   'marine': '3D6',
   'salvage-expert': '1D6',
+
+  // Rifts World Book 22: Free Quebec, printed 32-42. This book does not sort
+  // its O.C.C.s into Palladium's men-of-arms and scholar sections either, so
+  // as with Underseas the skill lists are the argument.
+  //
+  // The two GLITTER BOY PILOTS are the clearest men of arms in the batch and
+  // reach 3D6 without an argument: Elite Glitter Boy combat training, W.P.
+  // Energy Rifle and W.P. Heavy Military Weapons granted outright, Weapon
+  // Systems, Military open at +5% and +10% respectively, and a whole class
+  // identity that is piloting a two-ton assault power armor into a war.
+  'fq-descended-glitter-boy-pilot': '3D6',
+  'fq-glitter-girl-pilot': '3D6',
+
+  // The DEEP INTEL AGENT is the opposite and is 1D6. It is a spy: its
+  // combat grant is Hand to Hand: Basic and two W.P.s of choice, its own
+  // book files it under le Surete du Quebec rather than the military, and
+  // its related skills bar Military outright - the one category line that
+  // reads 'Military: None (other than O.C.C. skills above)'. Its P.B. is
+  // capped rather than required because the job is to not be noticed.
+  'fq-deep-intel-agent': '1D6',
+
+  // The SIDE KICK RPA and the RELOADER are both 3D6, and the Reloader is the
+  // one worth arguing. The Side Kick is a power armor pilot with Hand to Hand:
+  // Expert and three W.P.s - no argument needed. The Reloader has Hand to
+  // Hand: BASIC and two W.P.s, which by the Underseas reasoning would read as
+  // 1D6. Two things outweigh it, and both are the book being explicit rather
+  // than a judgement about the skill list: printed 41 says outright that
+  // "Loaders are also combat trained soldiers who will not hesitate to fight",
+  // and printed 34 lists Reload Teams among the O.C.C.s OF THE QUEBEC MILITARY
+  // - "EOD Specialists (includes Reload Teams)" - on the army's own roster.
+  // Its O.C.C. bonuses are combat-survival ones too: +10 S.D.C., +2 to roll
+  // with impact, +1 to dodge, +2 vs Horror Factor. Underseas had no sentence
+  // like that to read, which is why its scientists went the other way.
+  'fq-side-kick-rpa': '3D6',
+  'fq-gb-reloader': '3D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence

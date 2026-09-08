@@ -3976,3 +3976,177 @@ psionics and magic where a variant cannot, which makes it the obvious near-miss
 here - but a skill granted through an ability is not a skill the picker offers,
 does not take a per-level percentage, and does not compose. It would ship five
 classes that look right and cannot be levelled.
+
+### F32 - `attribute_requirements` holds MINIMUMS only, and a book's MAXIMUM inverts silently
+
+**Filed 2026-09-08**, during the `free-quebec` import.
+
+The le Surete du Quebec Deep Intel Agent (printed 32) requires *"I.Q. 10 and
+M.A. 10 or higher... **and a P.B. of 12 or lower** (they want average looking
+people)"*. That last clause is a **ceiling**, and nothing in the frontmatter can
+say so.
+
+`attribute_requirements` is minimums throughout, and every reader assumes it:
+
+| where | what it does with the number |
+|---|---|
+| `js/parser.js:790-795` | combines a race's and an occupation's with `Math.max` - *"Both sets of minimums apply, so the stricter wins"* |
+| `app.js:1109` | renders it to the player as `` `${k} ${v}+` `` - literally "PB 12+" |
+| `app.js:1822-1880` | gates whether the class may be taken at all |
+
+So writing `PB: 12` there would state **the exact inverse of the book** - it
+would demand a beauty of at least 12 from a class whose whole point is looking
+unremarkable - and it would do it silently, rendering as a plain requirement
+with nothing to distinguish it from the two real ones beside it. This is the
+`sdc_base`-versus-`pools.sdc` shape: the wrong key parses, validates and is
+confidently wrong.
+
+**Affected rows:** one today, `fq-deep-intel-agent`, which carries the cap in
+`restrictions` and an `extraction_notes` line pointing here. **The shape is not
+rare in Palladium** - a class capping an attribute rather than requiring it - so
+the count should be expected to grow rather than stay at one.
+
+**Proposed change:** `attribute_maximums`, beside `attribute_requirements` and
+in the same flat-map shape, combined with `Math.min` where the minimums use
+`Math.max`, rendered as `PB 12 or less`, and checked at creation by the same
+code path. That is `js/parser.js` (validate, merge, and `VARIANT_MERGED`
+alongside its twin), `scripts/class-check-lib.mjs` (`KNOWN_KEYS`),
+`functions/api/.../validate-character.js` (a character CAN violate it, so it is
+enforced server-side like its twin), `app.js` (the wizard's requirement line and
+the roll gate), and a `test/smoke.mjs` case.
+
+**A cheaper option exists and is worse.** `restrictions` already holds the
+sentence and is displayed, which is why the class ships. But `restrictions` is
+prose nothing enforces: the wizard will happily roll a P.B. of 18 and let the
+character be built, and the note reads as flavour beside sixteen restrictions
+that are also flavour. A requirement the app checks in one direction and ignores
+in the other is the kind of half-modelled rule that is worse than an absent one,
+because the enforced half makes the ignored half look enforced too.
+
+### F33 - the gear catalog holds the same item twice under two slugs, and no single detector finds them
+
+**Filed 2026-09-08**, found while resolving `equipment_starting` slugs for
+`fq-deep-intel-agent`. **Not this book's rows** - every pair below is Rifts
+Ultimate Edition or Palladium Fantasy, and this book contributed none of them.
+
+Four pairs verified by reading the rows, `--remote`:
+
+| slug | slug | shared |
+|---|---|---|
+| `huntsman-armor` | `huntsman-plate-padded-armor-non-environmental` | M.D.C. 45, cost 24,000, RUE p.261-270 |
+| `language-translator-portable` | `portable-language-translator` | cost 9,600 |
+| `large-flashlight` | `flashlight-large` | cost 12 |
+| `bio-comp-monitor` | `bio-comp-system` | cost 2,500 - and the second's own description opens *"A Bio-Comp Monitor: a portable computer and sensor system..."* |
+
+**Two pairs that match on the numbers and are NOT duplicates**, checked the same
+way and recorded here so a later sweep does not merge them:
+
+- `computer-portable` and `hand-held-computer`, both 100 credits. The first is
+  *"about the size of an open laptop"* and the second *"about the size of a
+  paperback"*. RUE prints both.
+- `dead-boy-body-armor`, `coalition-dead-boy-body-armor` and the three CA-N
+  rows, all 35,000. `dead-boy-body-armor`'s description says outright it is
+  *"Superseded by the three armours RUE prints separately"* and it resolves
+  through a redirect. That is a managed legacy row, not an accident.
+
+**The reason this finding does NOT come with a merge script**, and it is the
+whole point of filing it rather than fixing it. Three detectors were written and
+run this session and every one was wrong:
+
+1. Grouping on `source_book` + `cost` + numbers returned 26 groups, almost all
+   of them cheap goods that legitimately share a price - twenty-two faerie foods
+   at one price is not twenty-two duplicates.
+2. Adding a normalised name and keeping `source_book` in the key found **four
+   groups, all false positives** (Large Sack vs Small Sack, Jacket (Heavy) vs
+   Jacket (Leather)) and **missed both known pairs** - because the two
+   translator rows cite the *same book with different page spans*, so the key
+   split them.
+3. Dropping `source_book` from the key found the flashlights and two plausible
+   new pairs, still produced a false positive, and **still missed the huntsman
+   and translator pairs** - the huntsman names differ too much, and stripping
+   the parenthetical from `Language Translator (Portable)` deletes exactly the
+   word that makes it match `Portable Language Translator`.
+
+So a normaliser that finds all four would have to be loose enough to have made
+the false positives worse, and **a merge run off any of these deletes a correct
+row.** `F29` is the standing case: two Book of Magic spells sharing a range and
+a damage figure looked like one spell twice, and merging them would have deleted
+a correct row and changed what one of two kinds of caster spends.
+
+**Proposed change:** not a merge script. A **reporting** check - a
+`--duplicates` mode on `scripts/source-coverage.mjs`, or a new sweep - that
+prints candidate pairs with the numbers they share, for a human to confirm one
+at a time, and a `catalog_redirects` row per pair actually confirmed. The
+redirect table already exists and is how `dead-boy-body-armor` is handled
+correctly, so the mechanism is not the missing part; the confirmation is.
+
+**Blast radius if it is ever merged:** every published class naming the losing
+slug in `equipment_starting`. `node scripts/audit-citations.mjs --remote` and a
+grep of the class markdown for the slug are what size it, and that sizing is
+step one of taking this, not step two.
+
+### F34 - the literacy placeholder is guarded and the LANGUAGE placeholder is not, so the same mistake fails on one and ships on the other
+
+**Filed 2026-09-08**, caught by `regression.mjs` while importing this book's
+first three classes - which is the good half of this finding.
+
+`Language: Other` and `Literacy: Other` are **placeholder rows**. They exist to
+be picked from, not to be held: a class grants them through a choice group so
+the player names the actual language, and `regression.mjs` says so in its own
+comment - *"A grant of the placeholder is a pick that was never offered: the
+character ends up holding a skill named, literally, 'Literacy: Other'."*
+
+The literacy family has four checks around it (lines 1082-1112): the picks
+exist, none offers a CATEGORY, every pick offers the repeatable row, and
+**`no class GRANTS the placeholder row as a fixed skill`**. That last one caught
+all three Free Quebec classes on the first run, before anything shipped.
+
+**The language family, twenty lines above, has the first three and not the
+fourth.** `languageFixed` does not exist; only `literacyFixed` does. So the
+identical mistake is fatal on one family and invisible on the other.
+
+**Measured `--remote`, 2026-09-08. Fifteen published classes name
+`Language: Other` as a fixed skill today:**
+
+```
+godling, freelancer, knight-of-the-order-of-the-hospital,
+knight-of-the-order-of-the-temple, demon-hound-rider, sky-rider,
+first-stage-promethean, promethean-phase-adept, promethean-time-master,
+phase-mystic, ngr-medical-officer, ngr-field-mechanic,
+ngr-power-armor-commando, ngr-robot-combat-pilot, ngr-police
+```
+
+**And they are the defect, not a different legitimate shape.** `ngr-police`
+carries `{ name: "Language: Other", base: 60, per_level: 5, note: "Select one
+additional language (+10%)." }` - the note says *select* and the entry does not
+offer a selection. Zero classes name `Literacy: Other` as a fixed skill, which
+is what the guarded family looks like.
+
+**Affected rows:** those fifteen. None is this book's - the three Free Quebec
+classes were corrected before they were committed, and ship as choice groups in
+both families.
+
+**Proposed change**, two halves and the second is the one that lasts:
+
+1. **The check.** A `languageFixed` collector beside `literacyFixed`, and
+   `check('no class GRANTS the language placeholder as a fixed skill', ...)`.
+   It goes red at fifteen the moment it is added, so it lands **with** the data
+   fix rather than before it.
+2. **The data.** Fifteen `fix-*.sql` rewrites turning each fixed row into
+   `{ choose: N, from: ["Language: Other"], bonus: B, ... }`, where N and B come
+   from each class's own note. **Read each note rather than assuming N is 1** -
+   `godling` and the Prometheans grant more than one, and the bonus differs per
+   class.
+
+**Why the two halves must not be separated:** a check added alone turns the
+suite red for fifteen classes nobody is currently touching, and the standing
+temptation is then to weaken it to a warning. `class-import` already records
+what that costs - six classes named `Robots and Power Armor` after a catalog
+rename to `Robots & Power Armor`, every one silently offering the Pilot skill
+its book forbids, because an unmatched `except` fails OPEN.
+
+**What this finding is NOT.** It is not an argument that a class may never fix a
+language at a flat percentage. `Language: Native Tongue` is a real row, and
+`glitter-boy` fixes it at 95% with a note because its own O.C.C. block prints
+that figure rather than the catalog's 98%. That is fine and is untouched here.
+The defect is specific to the two rows whose names end in `: Other`.
