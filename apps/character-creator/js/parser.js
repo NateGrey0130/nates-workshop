@@ -62,6 +62,17 @@ export const VARIANT_OVERRIDES = [
   // NOT the skills block. `skill_overrides` below restates numbers on skills
   // the class already grants, which is a different and much smaller power.
   'skill_overrides',
+  // Skills a variant ADDS to the parent's, and the count of related picks it
+  // gets. Both are handled explicitly below the loop, like `skill_overrides`:
+  // the loop only assigns, and neither of these means anything as a bare
+  // top-level key. BOOK-INGEST-AUDIT.md F31.
+  //
+  // UNION, never replace, which is what keeps the restriction's reasoning
+  // intact - a variant still cannot take a skill away, cannot contradict the
+  // parent, and cannot become a second class, because the parent's whole list
+  // survives in every variant by construction.
+  'skills_additional',
+  'related_skills_count',
 ];
 
 // These three are flat maps of INDEPENDENT per-attribute values, so a variant
@@ -119,6 +130,52 @@ export function applyVariant(cls, variantId) {
     };
   }
   delete out.skill_overrides;
+
+  // Skills the variant ADDS. The book's shape is a common training course plus
+  // a chassis-specific supplement - "In addition to the Basic O.C.C. Skills,
+  // the Imprimer gets these additional skills" - which `skill_overrides` cannot
+  // express, because it may only restate a number on a skill already granted.
+  //
+  // THE UNION POLICY IS `combineClasses`', not a new one. Named entries dedupe
+  // by lowercased name with the HIGHER `base` winning; choice groups never
+  // collapse, because they have no identity to match on. That policy is already
+  // tested and already the answer to "what happens when two lists overlap", and
+  // a second, subtly different one is how two paths drift apart.
+  //
+  // NOT `applyMos`, which is the naive concat and is deliberately not exported
+  // (`js/compose.js`) - an MOS is a specialty chosen at creation, and its own
+  // comment says why it is not a variant.
+  const extra = out.skills_additional;
+  if (extra && typeof extra === 'object' && Array.isArray(extra.occ_skills)) {
+    const bySkill = new Map();
+    const groups = [];
+    for (const entry of [...(out.skills?.occ_skills || []), ...extra.occ_skills]) {
+      if (!entry?.name) { groups.push(entry); continue; }
+      const key = String(entry.name).toLowerCase();
+      const seen = bySkill.get(key);
+      if (!seen || (entry.base ?? 0) > (seen.base ?? 0)) bySkill.set(key, entry);
+    }
+    out.skills = { ...out.skills, occ_skills: [...bySkill.values(), ...groups] };
+  }
+  delete out.skills_additional;
+
+  // How many O.C.C. Related Skills this chassis gets. The book states it as a
+  // delta from the base - "other O.C.C. skills are reduced to three (not six)".
+  //
+  // THE KEY IS `related_skills_count`, THE SAME NAME THE ABILITY PATH USES, and
+  // that is a deliberate departure from F31, which proposed `related_skill_count`
+  // - one character apart, meaning the same thing. Two spellings would be a trap
+  // pointing the wrong way: a variant naming the ability's spelling gets the
+  // ignored-key warning below, while an ability naming the variant's gets
+  // nothing at all, because abilities have no unknown-key sweep. One name for
+  // one mechanic removes the question. See `applyAbilities` for the twin.
+  if (Number.isInteger(out.related_skills_count) && out.skills?.occ_related_skills) {
+    out.skills = {
+      ...out.skills,
+      occ_related_skills: { ...out.skills.occ_related_skills, count: out.related_skills_count },
+    };
+  }
+  delete out.related_skills_count;
 
   // The variant's own name replaces the class's for display — "Dragon
   // Hatchling", not "Dragon" — while class_id keeps pointing at the one class.
@@ -277,6 +334,33 @@ function validateVariants(variants, errors, warnings, granted = null) {
     if (!v.name) warnings.push(`variant "${v.id}" has no name and will display as the class name`);
     if (v.bonuses) validateBonuses(v.bonuses, errors, warnings);
     validateSkillOverrides(v, granted, errors);
+
+    // F31. `skills_additional` is a skills block, and the only part of one a
+    // variant may use is `occ_skills` - the additions the book states. A
+    // variant that tried to restate `occ_related_skills` or `secondary_skills`
+    // wholesale would be replacing the parent's allowance rather than adding
+    // to it, which is the power this key is deliberately not given;
+    // `related_skills_count` is how the count moves, and it is a number.
+    if (v.skills_additional !== undefined) {
+      const sa = v.skills_additional;
+      if (!sa || typeof sa !== 'object' || Array.isArray(sa)) {
+        errors.push(`variant "${v.id}" skills_additional must be an object with occ_skills`);
+      } else {
+        if (!Array.isArray(sa.occ_skills)) {
+          errors.push(`variant "${v.id}" skills_additional needs an occ_skills list`);
+        }
+        for (const k of Object.keys(sa)) {
+          if (k !== 'occ_skills') {
+            errors.push(`variant "${v.id}" skills_additional.${k} is not addable - a variant `
+              + 'may ADD occ_skills, and change the related count with related_skills_count');
+          }
+        }
+      }
+    }
+    if (v.related_skills_count !== undefined
+        && (!Number.isInteger(v.related_skills_count) || v.related_skills_count < 0)) {
+      errors.push(`variant "${v.id}" related_skills_count must be a whole number`);
+    }
 
     // A field a variant cannot override would silently do nothing, which is
     // exactly the confusion this list exists to prevent.

@@ -4053,6 +4053,79 @@ here - but a skill granted through an ability is not a skill the picker offers,
 does not take a per-level percentage, and does not compose. It would ship five
 classes that look right and cannot be levelled.
 
+**Taken, 2026-09-08 (PR #834).** The mechanism only, on Nate's decision. **The
+five cyborg classes are NOT restructured** - a character references its class by
+`class_id`, and collapsing the four chassis into variants would retire four ids
+that characters point at. `skills_additional` and `related_skills_count` exist;
+using them on published data is a separate decision that was not taken.
+
+**THIS FINDING MAKES THE MIRROR IMAGE OF THE MISTAKE `F32` MADE, and `parser.js`
+already carried the warning.** F31's edit list says *"`js/parser.js` (validate,
+and add both to `VARIANT_OVERRIDES`)"*. `applyVariant` only **assigns**, so both
+keys would have landed as inert top-level fields: `related_skills_count` where
+nothing reads it - the count lives at `skills.occ_related_skills.count` - and
+`skills_additional` beside the skills block rather than unioned into it. **It
+validates clean, stores clean and does nothing.** Both are handled explicitly
+below the loop, the way `skill_overrides` is, each ending in a `delete`.
+Reproduced deliberately: with only the list entries and no handlers, three of
+the new checks go red.
+
+**`docs/leveling.md` is not in F31's file list and the suite requires it.**
+`test/checks/documented-counts.mjs` pins `VARIANT_OVERRIDES` against that file,
+so the run goes red until the doc names both keys.
+
+**THE KEY IS `related_skills_count`, NOT F31's `related_skill_count`.** The
+finding proposes a name one character from one that already exists and means the
+same thing - the ability grant `F24` shipped. Two spellings would be a trap that
+points the wrong way: a variant naming the ability's spelling gets the
+ignored-key warning, while an ability naming the variant's gets **nothing at
+all**, because abilities have no unknown-key sweep. One name for one mechanic
+removes the question, and this is the one place the implementation departs from
+the finding's text.
+
+**The union is `combineClasses`' policy, reused rather than reinvented** - named
+entries dedupe by lowercased name with the higher `base` winning, choice groups
+never collapse. The repo already unions a skills block twice and F31 mentions
+neither: `applyMos` in `js/compose.js` is the naive concat and is deliberately
+not exported, its own comment arguing that *an MOS is not a variant*;
+`combineClasses` is the considered one, and it is tested.
+
+**Two files F31 names need no edit.** `sheet.js` references neither
+`applyVariant` nor a skills block - its comment says the class *"comes with the
+character now, already resolved to this character's variant"* - and `compose.js`
+already runs `applyVariant` before `combineClasses`, so a union inside
+`applyVariant` is upstream of it. `class-check-lib.mjs`'s `KNOWN_KEYS` is a set
+of **top-level** keys, so adding variant sub-keys to it would do nothing either.
+**`app.js` does need one**, and the premise audit that cleared the other two
+never checked it: the Occupation step's *"Related skills: N"* preview reads the
+raw class, so a chassis that reduces six to three showed six beside a dropdown
+that had just selected three.
+
+**"Eleven basic skills" is twelve.** All five classes' own notes say twelve, the
+memory store says twelve, and printed 115 lists eleven lines plus
+`* Hand to Hand: Expert`. The finding is the outlier; nothing here changes the
+number, and the drift claim it supports holds at twelve - all four chassis carry
+every one of the base's twelve entries.
+
+**The `abilities` warning reaches the right conclusion by a wrong mechanism.**
+It says a skill granted through an ability *"is not a skill the picker offers,
+does not take a per-level percentage, and does not compose"*. `ABILITY_GRANTS`
+is `['bonuses', 'psionics', 'magic']` - **an ability cannot grant a skill at
+all**, and the ability validator has no unknown-key sweep, so a `skills:` block
+on one produces no error and no warning. The failure is not *"look right and
+cannot be levelled"*, it is *grant nothing, say nothing*. The advice stands and
+its stated reason understates it.
+
+**Step 5, the citation sweep.** All five classes carried the same sentence
+enumerating the nine keys a variant could override and concluding neither
+operation was expressible. That enumeration was **already stale before this** -
+`attribute_maximums` landed earlier the same day - which is `audit-menu`'s
+argument for citing a finding rather than restating a mechanism. Corrected on
+all five, past-tense, recording that the mechanism now exists and that the
+classes are deliberately not restructured. `fq-cyborg-soldier` needed its own
+statement: it carries the same sentence with a different tail, and the script's
+own readback caught it at 4 of 5.
+
 ### F32 - `attribute_requirements` holds MINIMUMS only, and a book's MAXIMUM inverts silently
 
 **Filed 2026-09-08**, during the `free-quebec` import.
