@@ -3584,6 +3584,41 @@ Two things to settle when this is taken, not before:
 
 ### F27 - `class-check` does not validate skill names inside an MOS option, and they fail silently
 
+**Taken, 2026-09-08 (PR pending).** Both of the questions this finding left
+"to settle when taken" are settled, and the second was settled by MEASURING
+rather than by agreeing with the guess written here.
+
+**Stub SQL does NOT fire for an MOS name**, as this finding leaned toward. A
+missing name is now reported on its own `mos skills` line that says it was
+deliberately not stubbed and to check the spelling first. The reasoning is the
+one written below - a stub for a typo is worse than no stub, because the class
+then resolves against a permanent catalog row spelled the wrong way. That is
+also why `mosSkills` is its own key on `crossReference` rather than folded into
+`skills`: the caller stubs `missing.skills`, so the split is what makes the
+no-stubbing structural rather than a rule someone has to remember.
+
+**`only`/`except` inside an MOS option WERE in the same blind spot**, and this
+finding was right to refuse to assume it. Proved the way F27 itself was proved:
+a name no skill row has, placed in an MOS option's `categories[].only`, and
+`class-check` reporting `restrictions ok`. It is the worse direction of the two
+- an unmatched `only` fails CLOSED, so the option would grant the player
+nothing at all. `restrictionNames` now walks them, tagged `<option>/<category>`
+so the report says which option.
+
+**One premise here is stale and is left standing as the record.** This finding
+describes `crossReference` as shared with the Confirm endpoint. It is not, any
+more: `_lib/catalog.js` is imported only by `scripts/class-check.mjs` and the
+test suite, and no endpoint under `functions/api/character-creator/` calls it.
+That makes the fix narrower than the finding claims - it reaches the CLI check
+and nothing else - and it does not change whether the fix is right.
+
+**The sweep it enables found nothing**, which is the honest result and is
+reported as such. All six MOS classes - Coalition Technical Officer, Merc
+Soldier, Robot Pilot, Demon-Goblin, Monk, Navy Seaman - were re-checked through
+the fixed code and every one reads `mos skills ok` and `restrictions ok`. No
+typo was hiding in the catalog. The value is preventive: the next one is
+caught, and the ongoing cost below - one manual sweep per MOS class - is gone.
+
 `class-check` reports every skill an `occ_skills` entry names that the catalog
 does not hold, and prints stub SQL for it. **It does not look inside
 `skills.mos.options[].skills` at all.** A misspelled skill name there passes as
