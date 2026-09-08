@@ -5420,3 +5420,114 @@ view is that a reader who needs the render will find §0c whatever its heading
 says, this finding is two paragraphs of maintenance for a framing problem that
 has cost one reconstruction. **It is filed as prose precisely because that is
 cheap enough to decline.**
+
+**Taken, 2026-09-08 (PR #TBD). Posture held: documentation only** - two prose
+paragraphs plus a corrected table label in `book-survey`, no manifest key, no
+detector, no script, no check, no exit code, and nothing deleted.
+
+**FOUR of this finding's premises did not survive the premise audit, and one
+changed the work.** `audit-premise-auditor` checked twelve; the corrections lead
+here because an implementer must not repeat them.
+
+1. **The catalog paragraph above is wrong.** It says all three missing items are
+   live from printed 153. Only the Psionic Electro-Magnetic Dampers is a row.
+   *Modulating voice synthesizer* is in `apps/character-creator/db/` nowhere
+   under any name, and *Molecular analyzer* survives only as a phrase inside
+   `epidermic-analyzer`'s description - a different catalog entry, the sensor-hand
+   feature of printed 153. The error was conflating the Prowler's **bionic
+   feature list of printed 110-111** with the **purchasable cybernetics
+   catalogue of printed 153-154**. The Prowler's feature list is stored nowhere,
+   which is a smaller and truer statement than the one above.
+2. **`§0c`'s table already held a scan case, so the finding's central framing
+   claim was half wrong.** `Coalition SAMAS Pilot's skills (RUE 233)` is Rifts
+   Ultimate Edition, `text_layer: false` - and §0b uses `--slug rue` as its
+   worked SCAN example. The row was filed under a column header reading *"what
+   the text layer gave"*. **The section was not missing a scan case; it was
+   mislabelling the one it had.**
+3. **The word-likeness counts are not re-derivable** from the method the finding
+   states, which was the one thing that method was for. Real cached-page totals
+   are **1193** OCR and **1329** text-layer, not 1163 and 1246; no token
+   threshold reproduces the published pair, so an exclusion rule was applied and
+   not written down. The medians and the under-0.60 counts move too. **The
+   conclusion is unaffected** - bulk OCR quality is not the problem - but the
+   numbers are not evidence anyone can reproduce and were kept out of the skill.
+4. **"In the cache nowhere" was an overclaim.** Items 11, 12 and 14 are absent
+   from **p110**, which is all the argument needs. They appear on `p086`,
+   `p098`, `p100` and `p102`, where Triax reprints the same list for its other
+   cyborgs - so a grep would also have recovered them here, and the skill now
+   says so rather than overselling the render.
+
+**The scope of item 2 changed because of correction 2, and Nate approved the
+change before it was written.** As filed, item 2 said to keep every existing
+text-layer row and add the scan case beside them; done literally that preserves
+a wrong label and adds a redundant row. What shipped instead: the table gains a
+**`cache kind`** column, its header becomes *"what the cache gave"*, `RUE 233`
+is marked **scan**, and a paragraph under the table says the column used to read
+otherwise and why that made the section read as a text-layer remedy. **No fourth
+row was added.** `triax` p110 is described in prose in both sections, because it
+is not an authority table and does not belong in a table of them.
+
+**The `§0c` heading changed, and one citation elsewhere now names wording that
+is gone.** `apps/character-creator/INGESTION-AUDIT.md:1764` - `F15`'s
+disposition - identifies this section as *"§0c 'a text layer does not give you
+TABLES'"* while classifying it among the parts of the skill that are judgement
+and should stay prose. That disposition is the reason this finding shipped as
+prose at all, and it is **not edited**: an audit file is a record. Read it as
+naming the section, not the sentence.
+
+**What this costs, against a length already noticed.** `book-survey` goes 793 ->
+823 lines. `INGESTION-AUDIT` `F15`'s adjustment records that the file grew
+rather than shrank when §0/§0b/§0d were rewritten, and ends *"If it needs to be
+shorter, that is now its own decision about which failure histories have earned
+their place."* This adds thirty lines to that decision without settling it.
+<!-- claim-ok: quoting INGESTION-AUDIT.md:1842-1843, opened and read 2026-09-08 -->
+
+**Two things the finding got right and one it left open.** The p110 case
+reproduces exactly - the auditor rendered PDF index 109 itself and read items
+6-15, three of which the cache does not have. The `ocr-book.py` gating claim is
+byte-exact, and the audit strengthened it: `welded_pages` and `corrupt_pages`
+have **no other write path**, so no OCR cache can receive either signal, and
+`class-check.mjs` treats an absent key as *not known* rather than *clean*. Still
+unmeasured, as the Confidence line said: how many other illustration-heavy pages
+across the five OCR caches are lost the same way.
+
+**Cite this one as `BOOK-INGEST-AUDIT` F39.** A bare `F39` grep returns mostly
+`SKILL-AUDIT.md`'s own unrelated F39 and a `META-AUDIT` line discussing the
+`F30`-`F39` range. Nothing outside this file cites this finding.
+
+### F40 - a Triax cybernetics row cites printed 153 and the book prints it on 154
+
+**Found while taking `F39`, and deferred rather than folded into it** - a data
+correction has nothing to do with that finding's prose, and this menu's rule is
+to file the gap and keep going.
+
+`apps/character-creator/db/add-triax-gear-e-cybernetics.sql:56` gives
+`psionic-electro-magnetic-dampers` the source `Rifts World Book 5: Triax and the
+NGR p.153`. The book prints it on **154**: the folio is at
+`.cache/books/triax/txt/p154.txt:76` and the entry at `:78`, *"Psionic
+Electro-Magnetic Dampers: Brain implants that dis-"*, with the bonuses running
+to `:81`. `triax` `page_offset` is **0**, so cache `p154` is printed 154.
+Twenty-one rows in that file cite `p.153` and four cite `p.154`; this one is in
+the wrong bucket.
+
+**Proposal:** correct the one `source` string to `p.154`, apply `--remote`
+before merging per the ordering rule, and check the other twenty rows citing
+`p.153` against the folio at the same time rather than assuming this is the only
+one. **Posture: a data fix, no schema change and no new check** - the citation
+ledger cannot see this. `scripts/source-coverage-lib.mjs:20` defines its clean
+bucket as *"traceable  the window is in the cache. Nothing to do"*, so a page
+number that is wrong but EXISTS reads as traceable - printed 153 is in the
+`triax` cache. That is why this had to be found by reading.
+<!-- claim-ok: quoting source-coverage-lib.mjs:20, opened and read 2026-09-08 -->
+
+**Evidence.** `add-triax-gear-e-cybernetics.sql:56` and the two cache pages,
+opened and read 2026-09-08. Confirmed independently after
+`audit-premise-auditor` reported it, by locating the folio rather than by
+re-running its command.
+
+**Confidence: high** on this row - the folio and the entry are on the same
+cached page. **Low on the scope**, deliberately: the other twenty `p.153` rows
+were not checked, which is why the proposal asks for that rather than asserting
+they are fine. **What would raise it:** reading the folios for those twenty.
+
+**Ongoing cost: none.** One string, and the sweep it proposes is finite.
