@@ -790,6 +790,27 @@ section('Creation validation');
       .warnings.some((w) => w.rule === 'attribute_above_ceiling');
   })());
 
+  // A CLASS's own cap on an attribute (F32), advisory for the same reason and
+  // by the same decision - AUDIT.md F2's follow-up made pools a hard cap for
+  // non-GM creators and deliberately left every attribute check a warning.
+  // The posture is the half of this worth pinning: the character still saves.
+  const capCls = { ...vCls, attribute_maximums: { PB: 12 } };
+  check('an attribute above the class maximum warns and never blocks', (() => {
+    const r = validateCharacter({ ...legal, cls: capCls, attributes: { ME: 14, PB: 18 } });
+    return r.violations.length === 0
+        && r.warnings.some((w) => w.rule === 'attribute_above_class_maximum'
+             && w.attribute === 'PB' && w.maximum === 12 && w.value === 18);
+  })());
+  check('a value exactly at the cap is not flagged',
+    !validateCharacter({ ...legal, cls: capCls, attributes: { ME: 14, PB: 12 } })
+      .warnings.some((w) => w.rule === 'attribute_above_class_maximum'));
+  check('an attribute the character does not have cannot break the cap',
+    !validateCharacter({ ...legal, cls: capCls, attributes: { ME: 14 } })
+      .warnings.some((w) => w.rule === 'attribute_above_class_maximum'));
+  check('the cap warning names the attribute and the number',
+    /PB/.test(validateCharacter({ ...legal, cls: capCls, attributes: { ME: 14, PB: 18 } })
+      .warnings.find((w) => w.rule === 'attribute_above_class_maximum').message));
+
   // The primitives, pinned directly: one parse path serves the roll and the
   // bounds, so these numbers are the contract.
   check('poolFormulaBounds brackets the Stone Master formula exactly',
@@ -2259,6 +2280,20 @@ x
 
   check('both sets of minimums apply, the stricter winning',
     both.attribute_requirements.PE === 14 && both.attribute_requirements.IQ === 10);
+
+  // F32. The direction is the point: for a CEILING the stricter number is the
+  // lower one, and the occupation's must survive a merge whose first line is
+  // `out = { ...rcc }` - the half that is dropped for free if nobody writes it.
+  const capRace = mk('capped-race', 'rcc', 'attribute_maximums: { PB: 14, PS: 20 }');
+  const capOcc = mk('capped-occ', 'occ', 'attribute_maximums: { PB: 12, IQ: 15 }');
+  const capped = combineClasses(capRace, capOcc);
+  check('both sets of maximums apply, the LOWER winning',
+    capped.attribute_maximums.PB === 12);
+  check('and a cap only the occupation states is not dropped',
+    capped.attribute_maximums.IQ === 15 && capped.attribute_maximums.PS === 20);
+  check('a class with no maximums composes without gaining an empty one',
+    combineClasses(mk('plain-race', 'rcc', "attribute_dice: { PS: '3d6' }"), wizard)
+      .attribute_maximums === undefined);
 
   // The whole reason this exists: a racial class grants no related or secondary
   // skills, so without an O.C.C. a character has none at all.
@@ -4005,6 +4040,41 @@ section('Race and occupation');
 // them: applyAbilities folds in bonuses for abilities that were CHOSEN, and
 // nothing chooses an ability no choice group offers. It parsed clean, read as
 // mechanical, and granted nothing.
+// A book that CAPS an attribute rather than requiring one - "a P.B. of 12 or
+// lower (they want average looking people)". BOOK-INGEST-AUDIT.md F32.
+//
+// The key exists because writing that cap into `attribute_requirements` states
+// the exact inverse of the book and renders as "PB 12+", so the failure it
+// prevents is a silent one. These cases are therefore about the SHAPE being
+// checked at all: `attribute_requirements` itself has no validator, which is
+// the gap that made a wrong value indistinguishable from a right one.
+section('A class attribute maximum');
+{
+  const mk = (line) => parseClassMarkdown(['---', 'id: c', 'name: C', 'system: rifts',
+    'source_book: b', 'category: occ', line]
+    .concat(['---', '', '## Lore', '', 'x', '']).join(String.fromCharCode(10)));
+
+  const ok = mk('attribute_maximums: { PB: 12 }');
+  check('a cap parses and is carried on the class',
+    ok.errors.length === 0 && ok.data.attribute_maximums.PB === 12);
+  check('a cap on something that is not an attribute is an error',
+    mk('attribute_maximums: { Charm: 12 }').errors.some((e) => /not an attribute/.test(e)));
+  check('a non-numeric cap is an error',
+    mk('attribute_maximums: { PB: "low" }').errors.some((e) => /must be a number/.test(e)));
+  check('a class with no cap at all is untouched',
+    mk('attribute_requirements: { IQ: 10 }').data.attribute_maximums === undefined);
+
+  // The two halves come off ONE printed line - "I.Q. 10 and M.A. 10 or higher,
+  // and a P.B. of 12 or lower" - so transposing them is the likely mistake, and
+  // it produces a class nobody can take rather than anything a reader notices.
+  const impossible = parseClassMarkdown(['---', 'id: c', 'name: C', 'system: rifts',
+    'source_book: b', 'category: occ',
+    'attribute_requirements: { PB: 14 }', 'attribute_maximums: { PB: 12 }',
+    '---', '', '## Lore', '', 'x', ''].join(String.fromCharCode(10)));
+  check('a cap below its own minimum is refused',
+    impossible.errors.some((e) => /no character can satisfy both/.test(e)));
+}
+
 section('Bonuses on an ability nobody picks');
 {
   const parse = (lines) => parseClassMarkdown(['---', 'id: g', 'name: G', 'system: rifts',

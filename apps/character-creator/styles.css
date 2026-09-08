@@ -110,6 +110,10 @@ a:hover { text-decoration: underline; }
 .err { color: var(--danger); }
 .ok { color: var(--success); }
 .warn { color: var(--warning); font-size: 13px; margin-top: 8px; }
+/* A class attribute cap is advisory: the step continues and the save succeeds
+   (BOOK-INGEST-AUDIT.md F32). NOT `.warn`, which also sets a 13px size and a
+   top margin for block-level warnings and would break an inline 11px note.
+   The rule that paints it lives beside `.attr-note`, not here — see there. */
 /* Marks the one field on the Details step the book actually requires. */
 .req { color: var(--warning); font-weight: 700; }
 
@@ -468,6 +472,14 @@ button.chkrow {
   font-family: inherit;
 }
 .attr-note { font-size: 11px; color: var(--text-muted); }
+/* Two classes, so this beats `.attr-note` above rather than tying with it.
+   A single `.caution` further up the file loses on source order and renders
+   muted grey - measured in the browser, where the class was on the element and
+   the colour was not (BOOK-INGEST-AUDIT.md F32).
+   `.attr-note.err` and `.attr-note.ok` have the same defect and are NOT fixed
+   here: they are pre-existing, this PR takes one finding, and an unmet class
+   minimum has been rendering grey since long before it. */
+.attr-note.caution { color: var(--warning); }
 /* The wizard's primary action sticks to the bottom of the viewport rather
    than to the bottom of a long step, so Next is reachable without scrolling
    past a skill list to find it. .nav-why rides with it, unchanged - it is the

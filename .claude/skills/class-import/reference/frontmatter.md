@@ -44,6 +44,7 @@ An O.C.C. has attribute **minimums**; an R.C.C. **rolls** its attributes.
 
 ```yaml
 attribute_requirements: { IQ: 9, ME: 9, MA: 9 }   # occ — enforced at creation
+attribute_maximums: { PB: 12 }                     # the book's CEILING, advisory
 attribute_dice:                                    # rcc — rolled at creation
   IQ: "3d6"
   PS: "4d6+30"
@@ -457,9 +458,10 @@ variants:
     bonuses: { combat: { attacks: 3 } }
 ```
 
-A variant may override only `attribute_dice`, `attribute_requirements`, the pool
-bases and `bonuses`. Skills, abilities and lore stay shared — an override naming
-anything else is reported and ignored.
+A variant may override only `attribute_dice`, `attribute_requirements`,
+`attribute_maximums`, the pool bases and `bonuses`. Skills, abilities and lore
+stay shared — an override naming anything else is reported and ignored.
+`docs/leveling.md` carries the full list, and a test pins it against the code.
 
 ## What a skill itself grants
 

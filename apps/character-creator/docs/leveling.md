@@ -186,7 +186,7 @@ variants:
 ```
 
 A variant may override **only** the keys in `VARIANT_OVERRIDES`: `attribute_dice`,
-`attribute_requirements`, the four pool bases (`hit_points_base`, `sdc_base`,
+`attribute_requirements`, `attribute_maximums`, the four pool bases (`hit_points_base`, `sdc_base`,
 `mdc_base`, `ppe_base`), `starting_money`, `bonuses`, and `skill_overrides`.
 Skills, abilities, lore and equipment stay shared on purpose: a variant that
 could override anything is not a variant, it is a second class wearing the
@@ -199,8 +199,9 @@ of a skill the class **already grants** and cannot add or remove one — a much
 smaller power than overriding the skills block, which stays forbidden. See
 [A variant may restate a skill's percentage](house-rules.md#house-rules-and-derived-values).
 
-**`attribute_dice` and `attribute_requirements` merge per key; everything else
-replaces.** Those two are flat maps of independent per-attribute values, so a
+**`attribute_dice`, `attribute_requirements` and `attribute_maximums` merge per
+key; everything else replaces.** Those three are flat maps of independent
+per-attribute values, so a
 variant naming one attribute is saying something about that attribute and
 nothing about the other seven — replacing them wholesale left an adult dragon
 that overrode only P.S. rolling a plain 3d6 for I.Q. A scalar like `mdc_base`

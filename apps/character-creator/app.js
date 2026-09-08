@@ -1105,8 +1105,13 @@ function classCard(c, score) {
   </button>`;
 }
 function classDetail(c) {
-  const reqs = c.attribute_requirements
-    ? Object.entries(c.attribute_requirements).map(([k, v]) => `${k} ${v}+`).join(', ') : 'none';
+  // Minimums read `PB 12+` and maximums `PB 12 or less`, in one list. The two
+  // are printed on one line in the books - "I.Q. 10 and M.A. 10 or higher, and
+  // a P.B. of 12 or lower" - and a cap shown in the `N+` shape would state the
+  // inverse of the book, which is the whole of F32.
+  const reqParts = Object.entries(c.attribute_requirements || {}).map(([k, v]) => `${k} ${v}+`)
+    .concat(Object.entries(c.attribute_maximums || {}).map(([k, v]) => `${k} ${v} or less`));
+  const reqs = reqParts.length ? reqParts.join(', ') : 'none';
   const sk = c.skills || {};
   return `<div id="class-detail" style="margin-top:16px; border-top:1px solid var(--border); padding-top:14px">
     <h3>${esc(c.name)}</h3>
@@ -1878,6 +1883,7 @@ function renderAttributes() {
   // one shown a step later, which is what this change set out to fix.
   const classOnlyBonus = derive.classBonuses(S.cls, 1, rolledAll());
   const reqs = S.cls.attribute_requirements || {};
+  const maxes = S.cls.attribute_maximums || {};
   const spent = pbSpent();
   const rows = ATTRS.map((a) => {
     const m = method(a);
@@ -1907,6 +1913,13 @@ function renderAttributes() {
       control = `<input type="number" min="1" max="40" value="${v ?? ''}" onchange="manualSet('${a}', this.value)">`;
     }
     const req = reqs[a] ? `<span class="attr-note ${v != null && v < reqs[a] ? 'err' : 'ok'}">need ${reqs[a]}+</span>` : '';
+    // A cap is ADVISORY here and the row says so, because the step does not
+    // block on it and the server does not refuse it (F32, taken as a warning
+    // to match `AUDIT.md` F2). `warn` rather than `err`: red beside a number
+    // the app will accept reads as "you cannot continue", which is the lie the
+    // Occupation step's own warning had to be corrected for (UI-AUDIT F2).
+    const cap = maxes[a] != null
+      ? `<span class="attr-note ${v != null && v > maxes[a] ? 'caution' : 'ok'}">${maxes[a]} or less</span>` : '';
     // "racial dice" stopped being true for a class that SUPERSEDES its race
     // (F11): the Cosmo-Knight's transformation takes whichever of the two is
     // higher per attribute, so the expression beside P.S. is usually the
@@ -1937,7 +1950,7 @@ function renderAttributes() {
         <option value="point" ${m === 'point' ? 'selected' : ''}>Point-buy</option>
         <option value="manual" ${m === 'manual' ? 'selected' : ''}>Manual entry</option>
       </select></td>
-      <td>${control}</td><td>${req}${boost}${floorNote}${dice ? ` <span class="attr-note">${diceLabel}: ${esc(dice)}</span>` : ''}</td></tr>`;
+      <td>${control}</td><td>${req}${cap ? ' ' + cap : ''}${boost}${floorNote}${dice ? ` <span class="attr-note">${diceLabel}: ${esc(dice)}</span>` : ''}</td></tr>`;
   }).join('');
 
   // An absent attribute is not "still to roll" — it is never going to have a

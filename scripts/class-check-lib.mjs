@@ -13,7 +13,7 @@
 // modelled is the honest shape for that.
 export const KNOWN_KEYS = new Set([
   'id', 'name', 'system', 'source_book', 'category',
-  'attribute_requirements', 'attribute_dice',
+  'attribute_requirements', 'attribute_maximums', 'attribute_dice',
   'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',
   'starting_money', 'skills', 'equipment_starting', 'level_progression',
   'psionics', 'magic', 'bonuses', 'special_abilities', 'natural_abilities',
