@@ -672,6 +672,13 @@ scripts/
 │                           early / absent, because a short citation on an
 │                           entry that straddles a page break is a different
 │                           defect from a wrong value
+├── same-spell-lib.mjs      Comparing a spell to the row it is a RETELLING
+│                           of, for `spells.same_spell_as`. Pure, so the
+│                           smoke test pins it against fixtures taken from
+│                           the real rows. Compares the NUMBERS rather than
+│                           the prose: two books describe one spell in their
+│                           own words, and metric conversions round
+│                           differently
 ├── source-coverage-lib.mjs Its pure half: one source_book string in, one
 │                           bucket out, so the smoke test pins the bucketing
 │                           against a fixture and never against live caches

@@ -3503,6 +3503,68 @@ because this pair excepts `skills` wholesale.
 
 ### F26 — one spell, two traditions, two costs, and one row
 
+**Taken, 2026-09-08 (PR pending), as the smaller option** - `spells.same_spell_as`
+plus a checker, not the `spell_traditions` join table. Both questions this
+finding left "to settle when taken" are settled, and **three of its own factual
+claims did not survive being checked**, which is recorded here because the
+finding is the record and a measurement is not rewritten.
+
+**Direction: the retelling points at the established row.** `Ocean: Whirlpool`
+names `Water: Whirlpool`. This finding noted that *"the canonical one is the
+unprefixed one"* does not hold; *"the newer import points at what was already
+there"* does, it matches F25's `copy_of` direction, and it means a future book
+adds its own rows and touches nothing existing.
+
+**The description is compared by a floor, not exactly** - shared vocabulary of
+at least 0.35 and a length ratio under 3. The six linked pairs score 0.53 to
+0.69 and run 1.12 to 2.03 times each other, so an exact check fails on day one
+and no check misses the gutting this is for. Proved by feeding it a gutted, an
+emptied and a swapped description.
+
+**FIRST CORRECTION: nine pairs became six.** This finding lists nine and says
+they are the same spell, on the strength of reading ONE of them - Whirlpool -
+line by line. Ten rows actually share a name across the prefixes, and reading
+all ten splits them in half. **Four are different spells wearing one name** and
+are deliberately not linked: `Ocean: Calm Waters` covers a mile per level for an
+hour where `Water: Calm Waters` covers eighty feet for thirty minutes;
+`Ride the Waves` carries two passengers at 40 mph on one side and is self-only
+on the other; `Float on Water` and `Water Seal` differ on range and duration.
+A mile against eighty feet is not a transcription difference. **Linking them
+would have made the checker assert something false on its first run.**
+
+**SECOND CORRECTION: Sonic Blast is not a retelling at all**, and this one would
+have created a wrong link rather than a failing check. This finding says Sonic
+Blast is *"a bare Book of Magic row at level 7 for 25 P.P.E. and a dolphin spell
+for 15"*. The catalog holds THREE rows: `Sonic Blast` (Book of Magic p.119, 20
+foot radius, 4D6 M.D.), `Air: Sonic Blast` (Book of Magic p.63, same radius,
+same damage), and `Dolphin: Sonic Blast` (Underseas p.71), which does 1D6 M.D.
+per level at 100 feet per level and passes a third of its damage through light
+armour to the pilot. The dolphin spell is a different spell. It gets no link.
+**The other two look like a genuine duplicate WITHIN the Book of Magic**, filed
+separately as F29.
+
+**THIRD CORRECTION: the title over-generalises.** *"Two costs"* is true of seven
+of the nine pairs listed here and false for two of them - this finding's own
+table shows `Sense Direction Underwater` at 4 P.P.E. on both sides and
+`Speak Underwater` at 10 on both. The first version of the checker required a
+linked pair to differ on level or cost and failed immediately on those two. **A
+link asserts THE SAME SPELL; a price difference is the common case and never the
+requirement.**
+
+**What the comparison actually does**, since "matching on range, duration,
+saving_throw, area_of_effect" as written here rejects every pair: it compares
+the NUMBERS, ignoring parentheses and normalising number words. Both were forced
+by real rows - `Ocean: Whirlpool` gives its radius as 36.5 m and `Water:` as
+36.6, both converting 120 feet, and one book prints "Ten minutes" where the
+other prints "10 minutes". Comparing those rejects a pair this finding itself
+verified off the page.
+
+**Nothing reads the column at runtime** - the checker reads it. Twelve smoke
+checks pin the comparison against fixtures taken from the real rows; three
+regression checks run it over a clean rebuild. All three were proved by linking
+a divergent pair on purpose and watching two of them fail with
+`range: 1 vs 80; duration: 1 vs 30; description: only 0.22 shared vocabulary`.
+
 `spells` is keyed `name TEXT NOT NULL UNIQUE` and carries a single `level` and a
 single `ppe`. That is right for a catalog where a spell belongs to one
 tradition, and Rifts is not that catalog.
@@ -3730,3 +3792,25 @@ one-word fix rather than a feature.
 **What it changes in the report:** two new rows, `vehicles` in the COVERAGE
 table and vessel counts folded into BY BOOK for `triax` and `underseas`. It
 gates nothing - the report is advisory by design and says so.
+
+### F29 - `Air: Sonic Blast` and `Sonic Blast` look like one spell twice, inside the Book of Magic
+
+**Filed 2026-09-08**, found while taking F26 and deliberately not fixed there.
+
+`Sonic Blast` (Rifts Book of Magic p.119) and `Air: Sonic Blast` (Rifts Book of
+Magic p.63) carry the same range - a 20 foot radius - and the same damage, 4D6
+M.D. They differ on level and cost: p.119 is level 7 for 25 P.P.E., p.63 is
+level 5 for 15.
+
+**This is NOT the F26 shape and must not be closed with an F26 link.** F26 is
+about one spell two BOOKS publish at two prices, where both rows are correct and
+each serves its own tradition. This is one book against itself, and one of the
+two pages is being read wrong, or the book prints the spell twice on purpose for
+two traditions and the unprefixed row is the one that should carry a prefix.
+Which of those it is decides whether the answer is a correction, a merge with a
+redirect, or a rename - and it cannot be decided without reading printed 63 and
+printed 119.
+
+**Why it was left alone in the F26 PR:** it is another book's rows, and every
+outcome changes what a Book of Magic caster spends. `Dolphin: Sonic Blast` is
+unaffected either way - it is a third, genuinely different spell.

@@ -24,6 +24,7 @@ import { tmpdir } from 'node:os';
 import { validateBonuses, occAllowedForRace, raceAllowedForOcc, OCC_GROUPS, RACE_NONE,
   parseClassMarkdown, combineClasses } from '../js/parser.js';
 import { referencedGear } from '../../../functions/api/character-creator/_lib/catalog.js';
+import { comparePair } from '../../../scripts/same-spell-lib.mjs';
 
 const testDir = dirname(fileURLToPath(import.meta.url));
 const appDir = join(testDir, '..');
@@ -2396,6 +2397,54 @@ console.log('\n' + '[7/7] Checks that only a database can make');
       `${copyPairs} pairs, ${copyKeys} keys compared`);
   }
 }
+
+// ---------- a spell against the row it retells ----------
+// BOOK-INGEST-AUDIT F26. smoke.mjs pins the COMPARISON against fixtures; this
+// runs it over the rows a clean rebuild actually produces, which is the half
+// that catches a real edit. `drift-check` cannot do it - it compares a row to
+// its cited page, and both rows of a retelling cite pages that agree with them.
+{
+  const spellRows = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--json',
+    '--command', `"SELECT name, level, ppe, range, duration, saving_throw, area_of_effect, description, same_spell_as FROM spells WHERE same_spell_as IS NOT NULL OR name IN (SELECT same_spell_as FROM spells WHERE same_spell_as IS NOT NULL)"`]);
+  let rows = null;
+  let err = '';
+  try {
+    const out = spellRows.stdout || '';
+    for (let at = out.indexOf('['); at >= 0 && !rows; at = out.indexOf('[', at + 1)) {
+      try {
+        const v = JSON.parse(out.slice(at));
+        if (Array.isArray(v)) rows = v.flatMap((b) => b.results || []);
+      } catch { /* not the array; keep looking */ }
+    }
+    if (!rows) throw new Error(cleanErr(spellRows.stderr || out));
+  } catch (e) { err = e.message; }
+
+  const byName = new Map((rows || []).map((r) => [r.name, r]));
+  const links = (rows || []).filter((r) => r.same_spell_as);
+  // A floor, not a count. The invariant passing because it found no pairs is
+  // the failure this check exists to avoid, and it is exactly what a rebuild
+  // that silently dropped the data script would look like.
+  check('the retelling links survive a clean rebuild', links.length >= 6,
+    err || `${links.length} linked rows`);
+
+  const problems = [];
+  for (const r of links) {
+    const target = byName.get(r.same_spell_as);
+    if (!target) { problems.push(`${r.name} -> ${r.same_spell_as}: target missing`); continue; }
+    for (const p of comparePair(r, target)) problems.push(`${r.name} -> ${r.same_spell_as}: ${p}`);
+  }
+  check('and every linked pair still agrees with the row it retells',
+    problems.length === 0, problems.slice(0, 6).join('; '));
+
+  // The four same-named pairs that are DIFFERENT spells must stay unlinked.
+  // Linking one would make the check above start failing, which is the point.
+  const mustNotLink = ['Ocean: Calm Waters', 'Ocean: Ride the Waves',
+    'Ocean: Float on Water', 'Ocean: Water Seal', 'Dolphin: Sonic Blast'];
+  const wronglyLinked = links.filter((r) => mustNotLink.includes(r.name)).map((r) => r.name);
+  check('and the pairs that only share a NAME are not linked',
+    wronglyLinked.length === 0, wronglyLinked.join(', '));
+}
+
 
 console.log('\n' + (failures === 0
   ? `REGRESSION PASSED (${checks} checks)`

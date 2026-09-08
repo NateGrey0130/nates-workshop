@@ -340,6 +340,8 @@ check('systems: one system stores a JSON array',
 import { classesMentioning, findDuplicates, normaliseName, qualifiersDisagree, similarity } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
 import { collapseStatement, keysOf, redirectStatements, resolveKeys } from '../../../functions/api/character-creator/_lib/catalog-redirects.js';
 import { buildStubStatements, referencedGear, referencedMosSkills, restrictionNames } from '../../../functions/api/character-creator/_lib/catalog.js';
+import { comparePair, descriptionOverlap, mechanicalNumbers }
+  from '../../../scripts/same-spell-lib.mjs';
 import { CHARACTER_JSON_COLUMNS } from '../../../functions/api/character-creator/_lib/character-json.js';
 import { composeSourceBook } from '../../../scripts/source-book-lib.mjs';
 import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicGrantsFor,
@@ -3416,6 +3418,73 @@ section('Category skill bonuses');
       '_lib', 'skill-picks.js'), 'utf8');
     return wiz.includes('base ? base + categoryBonus') && srv.includes('base ? base + catBonus : 0');
   })());
+}
+
+// ---------- 1c25a3. A spell against the row it retells ----------
+// BOOK-INGEST-AUDIT F26. `spells.same_spell_as` links a retelling to the row
+// another book already published it as, so the pair can be checked for drift -
+// which drift-check cannot do, because both rows cite pages that agree with
+// them. These fixtures are the REAL strings out of the catalog, trimmed, and
+// they are here because each one broke a simpler version of this comparison.
+section('A spell against the row it retells');
+{
+  // Metric rounding. Both convert 120 feet; one says 36.5 m and the other 36.6.
+  check('a parenthetical metric conversion is not a difference',
+    mechanicalNumbers('120 foot (36.5 m) radius; up to 500 feet (153 m) away.')
+    === mechanicalNumbers('120 foot (36.6 m) radius of effect can be cast up to 500 feet (153 m) away'));
+  // A gloss one book carries and the other does not.
+  check('nor is a parenthetical gloss',
+    mechanicalNumbers('One minute per level of the spell caster.')
+    === mechanicalNumbers('One minute (4 melee rounds) per level of the Warlock'));
+  check('a number word equals its digits',
+    mechanicalNumbers('Ten minutes per level of experience.')
+    === mechanicalNumbers('10 minutes per level of experience'));
+  // The thing it must still catch.
+  check('but a real difference in the numbers IS one',
+    mechanicalNumbers('One mile (1.6 km) radius per level of experience.')
+    !== mechanicalNumbers('80 foot (24.4 m) radius per level of experience.'));
+
+  check('overlap is scored against the shorter text',
+    descriptionOverlap('the caster floats upon the water', 'the caster floats upon the water and more words here') > 0.9);
+  check('and unrelated text scores low',
+    descriptionOverlap('the caster floats upon the water', 'lightning strikes a distant tower') < 0.2);
+
+  // A pair that really is the same spell told twice.
+  const ocean = { range: '120 foot (36.5 m) radius; can be cast up to 500 feet (153 m) away.',
+    duration: 'One minute per level of the spell caster.', saving_throw: 'None', area_of_effect: null,
+    level: 9, ppe: 50,
+    description: 'Creates a whirlpool that drags swimmers and small craft toward its centre, ten feet per melee round.' };
+  const water = { range: '120 foot (36.6 m) radius of effect can be cast up to 500 feet (153 m) away',
+    duration: 'One minute (4 melee rounds) per level of the Warlock', saving_throw: 'None.', area_of_effect: null,
+    level: 5, ppe: 40,
+    description: 'The Warlock creates a whirlpool; swimmers and small craft are dragged toward its centre at ten feet per melee round.' };
+  check('a genuine retelling reports no problems', comparePair(ocean, water).length === 0,
+    comparePair(ocean, water).join('; '));
+
+  // Same spell, same price. This must NOT be reported - F26's title says "two
+  // costs" and two of its own nine pairs have one cost.
+  const samePrice = { ...ocean, level: 5, ppe: 40 };
+  check('a retelling at the SAME level and cost is still fine',
+    comparePair(samePrice, water).length === 0, comparePair(samePrice, water).join('; '));
+
+  // The four pairs deliberately left unlinked would fail, which is why.
+  const diverged = { ...ocean, range: 'One mile (1.6 km) radius per level of experience.' };
+  check('a pair whose mechanics diverge is reported',
+    comparePair(diverged, water).some((p) => p.startsWith('range:')),
+    comparePair(diverged, water).join('; '));
+
+  // The drift the link exists to catch.
+  const gutted = { ...ocean, description: 'TODO' };
+  check('a gutted description is reported',
+    comparePair(gutted, water).some((p) => p.startsWith('description:')),
+    comparePair(gutted, water).join('; '));
+  const emptied = { ...ocean, description: '' };
+  check('and an emptied one is too',
+    comparePair(emptied, water).some((p) => p.startsWith('description:')));
+  const swapped = { ...ocean, description: 'A bolt of lightning leaps from the outstretched hand and strikes one target.' };
+  check('and a description replaced with another spell text is too',
+    comparePair(swapped, water).some((p) => p.startsWith('description:')),
+    comparePair(swapped, water).join('; '));
 }
 
 // ---------- 1c25a2. Skill names inside an MOS option ----------

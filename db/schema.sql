@@ -682,8 +682,20 @@ CREATE TABLE IF NOT EXISTS spells (
   saving_throw TEXT,
   area_of_effect TEXT,
   casting_time TEXT,
-  description TEXT
+  description TEXT,
+  same_spell_as TEXT                      -- this row is another book's RETELLING of
+                                          -- the named row: the same spell, published by
+                                          -- a second tradition at its own level and cost.
+                                          -- Points retelling -> established, by `name`
+                                          -- rather than id (ids are insertion order and
+                                          -- differ per environment). Nothing reads it at
+                                          -- runtime; it exists so the pair can be CHECKED
+                                          -- for drift, which drift-check cannot do - both
+                                          -- rows cite pages that agree with them.
+                                          -- See migration 049, BOOK-INGEST-AUDIT F26.
 );
+
+CREATE INDEX IF NOT EXISTS idx_spells_same_spell_as ON spells(same_spell_as);
 
 CREATE TABLE IF NOT EXISTS psionic_powers (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1031,3 +1043,10 @@ WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'chara
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '048-vehicles.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'vehicles');
+
+-- Guarded on the COLUMN rather than a table, 049 adding one to `spells`. Same
+-- rule as every line above it: an unguarded row would mark an un-migrated
+-- database as migrated.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '049-spell-same-spell-as.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('spells') WHERE name = 'same_spell_as');
