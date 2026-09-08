@@ -3500,3 +3500,84 @@ group** as opposed to a named skill, and that was not established. It is named a
 `per_level`, 2026-09-07), and `grep -c per_level` on
 `db/zzzzzz-f25-copy-of-declarations.sql` returns 0 - it is in no except list,
 because this pair excepts `skills` wholesale.
+
+### F26 — one spell, two traditions, two costs, and one row
+
+`spells` is keyed `name TEXT NOT NULL UNIQUE` and carries a single `level` and a
+single `ppe`. That is right for a catalog where a spell belongs to one
+tradition, and Rifts is not that catalog.
+
+**The case.** Rifts World Book 7: Underseas prints an **Ocean Magic** list on
+printed 63, 41 spells, learnable by the Ocean Wizard, the Sea Druid and the
+Whale Singer. **Nine of those 41 are spells the catalog already holds as Water
+Warlock invocations**, imported from the Book of Magic:
+
+```
+                                catalog Water:  Underseas ocean
+  Change Current                  L2 /  8 PPE     ?  / 15 PPE
+  Communicate with Sea Creature   L4 / 12 PPE     ?  / 10 PPE
+  Float on Water                  L1 /  4 PPE     ?  /  3 PPE
+  Impervious to Ocean Depths      L3 / 12 PPE     ?  / 75 PPE
+  Ride the Waves                  L2 /  7 PPE     ?  / 10 PPE
+  Sense Direction Underwater      L1 /  4 PPE     ?  /  4 PPE
+  Speak Underwater                L4 / 10 PPE     ?  / 10 PPE
+  Water Seal                      L2 /  8 PPE     ?  / 10 PPE
+  Whirlpool                       L5 / 40 PPE     L9 / 50 PPE
+```
+
+**They are the same spell, and that was checked rather than assumed.**
+`Water: Whirlpool` was read out of production and compared against printed 70
+line by line: same 120 foot radius, same 500 foot casting range, same ten feet
+per melee round drag, same 20 foot centre, same drowning percentages. The Book
+of Magic publishes it as a level 5 warlock invocation costing 40 P.P.E.;
+Underseas publishes it as a level 9 ocean spell costing 50.
+
+The same pattern runs through Dolphin Magic: `Sonic Blast` is a bare Book of
+Magic row at level 7 for 25 P.P.E. and a dolphin spell for 15.
+
+**What the app cannot express.** The sheet's use button spends `spells.ppe`, and
+a class's `magic.spells_from` names rows by `name`. So a single row can serve
+one tradition's price or the other's, never both. There is no per-tradition
+override anywhere: not on the spell, not on the class's magic block, not on the
+grant.
+
+**What the import did instead.** The 41 ocean spells ship under an `Ocean:`
+prefix and the 10 dolphin spells under `Dolphin:`, following the `Water:` /
+`Fire:` / `Air:` / `Earth:` families the catalog already uses for a scoped
+tradition. Each colliding row carries the warlock reading in `variant_note`, so
+the disagreement is on the record. **This works today and the classes are
+correct** — an Ocean Wizard granted `Ocean: Whirlpool` spends 50, a Water
+Warlock granted `Water: Whirlpool` spends 40.
+
+**So why this is filed at all**, given nothing is broken: the cost is
+duplication that grows per book. Nine near-identical rows now, plus one, and
+Lemuria and the other undersea books are in the queue behind this one. Two rows
+holding the same description drift the moment either is corrected, and nothing
+would say so — `drift-check` compares a row to its cited page, and both rows
+cite pages that agree with them.
+
+**Proposal, and it is deliberately the smaller of two.** Add
+`spells.same_spell_as TEXT` — a `name` reference to the row this one is a
+retelling of — plus a smoke check asserting that two rows so linked keep
+matching on `range`, `duration`, `saving_throw`, `area_of_effect` and
+`description`, and differ only on `level`, `ppe` and `source_book`. That is the
+`copy_of` mechanism F25 built for classes, applied to spells, and it turns the
+duplication from a silent liability into a pinned one. It changes no runtime
+behaviour and no character.
+
+The alternative — a `spell_traditions` join table with a per-tradition level and
+cost, and a single canonical spell row — is the modelling-correct answer and is
+much larger: it moves how every class's `magic` block resolves a spell, touches
+the wizard, the sheet and the server validator, and rewrites 231 existing
+warlock rows whose prefix currently carries the tradition. Not worth it for
+ten rows, and the prefix convention is doing that job adequately.
+
+Two things to settle when this is taken, not before:
+
+- **Which direction the link points.** The warlock rows came first and are more
+  numerous; the ocean rows are the retelling. But `Sonic Blast` has no prefix at
+  all, so "the canonical one is the unprefixed one" is not a rule that holds.
+- **Whether the check should compare `description`.** The two are paraphrases of
+  two different printings and will not be byte-identical. Comparing them exactly
+  would fail on day one; not comparing them misses the drift the finding is
+  about. A length-and-keyword floor may be the honest middle.
