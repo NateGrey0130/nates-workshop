@@ -4892,3 +4892,60 @@ the computer pair, and that is the thing to measure before writing anything.
 
 **Ongoing cost:** one more signal to reason about when a suggestion looks wrong,
 against a detector that is already three demotion rules deep.
+
+**CLOSED WITHOUT BEING TAKEN, 2026-09-08 (PR #829). The measurement this
+finding asked for was run, and it failed the test this finding set.**
+
+The proposal named its own kill condition: *"if the new signal cannot separate
+those two, it is a noise generator and this finding should be declined rather
+than tuned."*
+<!-- claim-ok: quoting this finding's own proposal, above -->
+Measured `--remote` on 2026-09-08, `descriptionOverlap` from
+`scripts/same-spell-lib.mjs` against the shipped `similarity`:
+
+| pair | what it is | name | description overlap |
+|---|---|---|---|
+| `bio-comp-monitor` / `bio-comp-system` | the target - a real duplicate | 0.667 | **0.741** |
+| `computer-portable` / `hand-held-computer` | the trap - `F33` records it unresolved | 0.333 | **0.750** |
+| `large-sack` / `small-sack` | obviously distinct | 0.500 | 0.583 |
+| `large-flashlight` / `flashlight-large` | a **real** duplicate | 0.950 | **0.000** |
+
+**It ranks the trap ABOVE the target.** 0.750 against 0.741. There is no
+threshold that admits the pair this finding exists for and excludes the pair it
+named as the test, because the trap scores higher. That alone closes it.
+
+**Two things the measurement added that the finding did not anticipate.**
+
+**The signal is weakest exactly where it is needed.** `large-flashlight` and
+`flashlight-large` are a real duplicate and score **0.000**, because
+`flashlight-large`'s whole description is `20 cr.` A row thin enough to be an
+accidental second copy is usually thin enough to have no prose, so a
+description-based signal is least informative on precisely the rows most likely
+to be duplicates.
+
+**And the rate is fatal on its own.** Pairs below the name threshold that a
+description rule would ADD to the panel, over the 591 already there:
+
+```
+overlap >= 0.50  ->  15,446 new suggestions
+overlap >= 0.60  ->   6,900
+overlap >= 0.70  ->   5,809
+overlap >= 0.80  ->   5,321
+```
+
+Even at 0.80 that is **nine times** the current list, to reach one pair. `F33`
+was taken because 591 suggestions is already more than anyone reads.
+
+**What stands instead.** `bio-comp-monitor` and `bio-comp-system` are still the
+same item, and nothing here disputes that - `bio-comp-system`'s description
+opens *"A Bio-Comp Monitor: a portable computer and sensor system..."*, both
+cost 2,500, both are `rifts`, both cite Rifts Ultimate Edition. **It is a merge
+a human can make in the panel today**, by slug, without any detector suggesting
+it: the pair is named here and in `F33`, which is what a finding is for. Nine
+published classes cite `bio-comp-system` and one cites `bio-comp-monitor`
+(`coalition-juicer`), so the direction is not in doubt either.
+
+**Not to be re-proposed as a threshold change.** Lowering `THRESHOLD` to 0.66
+to catch this one pair was considered and is worse than the above: it moves
+every catalog at once, and `similarity` is what three separate demotion rules
+(`INGESTION-AUDIT` `F27`, `F30`, `F31`) are already tuned around.
