@@ -4864,10 +4864,18 @@ the remedy, not the category, so the new rule attaches to that clause rather
 than claiming a gap.
 
 **One thing this note cannot fix.** The section below is headed *"Premise audit
-of F30-F36"* and its body audits F30 through F35 - **F36 appears in the heading
-and nowhere in the body.** The same wrong scope is repeated in
-`docs/surveys/free-quebec.md` and in the memory store. It is left standing as
-the dated record it is; this paragraph is the correction.
+of F30-F36"* and its body audits F30 through F35 - **F36 is in the heading and
+nowhere in the body**, confirmed 2026-09-08 by walking every line from that
+heading to the next `###`. Its opening sentence says *"All six of F30-F35"*, so
+the body knows its own scope and only the heading overreaches. It is left
+standing as the dated record it is; this paragraph is the correction.
+
+**`docs/surveys/free-quebec.md:669` gets this RIGHT and should not be
+"corrected"** - *"Seven findings came out of it, F30 through F36, and all six of
+F30-F35 went..."* is accurate on both counts. The memory store's
+`free-quebec-import.md:41` is the one that inherits the wrong scope, saying
+seven claims failed *"across F30-F36"*; no grep of this repo reaches it, which
+is why it is named here.
 
 ### Premise audit of F30-F36, 2026-09-08 - read this before taking any of them
 
