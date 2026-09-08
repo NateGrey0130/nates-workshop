@@ -14,7 +14,7 @@ the human view of the same thing plus the import status.
 | slug | book | PDF pages | layer | printed | offset | status |
 |---|---|---|---|---|---|---|
 | `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 224 — corrected 2026-09-07, see below | **+0** | **imported** |
-| `underseas` | Rifts WB 7: Underseas | 216 | SCAN (OCR) | 214 | **+0 / -1 split** | cached |
+| `underseas` | Rifts WB 7: Underseas | 216 | SCAN (OCR) | 214 | **+0 / -1 split** | **importing** |
 | `new-west` | Rifts WB 14: New West | 226 | text layer | 224 | +1 | cached |
 | `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | cached |
 | `mystic-russia` | Rifts WB 18: Mystic Russia | 178 | text layer | 176 | +1 | cached |
@@ -916,3 +916,70 @@ case L**. The citation is correct and the row needs nothing. Recorded so the
 next person to run drift-check does not chase it again; the advisory is
 advisory precisely because a name a book writes differently reads the same as
 one it never had.
+
+### `underseas` survey and skills, 2026-09-07 (PR pending)
+
+Surveyed, and the first data batch is in. The survey is
+`apps/character-creator/docs/surveys/underseas.md` and it is what the next
+session boots from. Four things it established:
+
+**The Experience Tables on printed 214 are the class authority, and they cut
+the count roughly in half.** A stat-block marker scan finds forty-odd entries;
+the ladder names **twenty-six**. The creatures chapter (pp.20-46) is the
+difference: nearly every entry there carries `R.C.C. Skills of Note:` plus
+Market Value / Habitat / Enemies / Allies, which is the book's monster shape,
+and page 214 gives exactly two of them a ladder — the **Dragon Ray** and
+**Gene-Splicer Mutants**. Everything else in those pages is an NPC by the
+book's own reckoning.
+
+That page also settles two names the chapter headings spell differently:
+the **Ocean Wizard O.C.C.** (p.60) is *Ocean Mage* in the ladder and the
+**Sea Inquisitor O.C.C.** (p.48) is *Sea Inquisitioner*.
+
+**The book adds ZERO psionic powers, and that was checked rather than
+assumed.** The `I.S.P.` scan hits ten pages, one occurrence each, and every one
+is a class's own pool line. The four cetacean psionics sections (pp.80, 88, 90,
+92) are roll tables selecting from the existing categories. No psionic import.
+
+**Nine ocean spells share a name with a Water Warlock spell the catalog already
+holds, and they are the SAME spell at a different level and cost.** Not a
+duplicate to skip and not a correction to apply. `Water: Whirlpool` was read out
+of production and compared against printed 70 line by line — same 120 foot
+radius, same 500 foot casting range, same ten feet per melee drag, same 20 foot
+centre — and the Book of Magic publishes it at level 5 for 40 P.P.E. where
+Underseas publishes it at level 9 for 50. One row cannot hold both, because the
+sheet's use button spends `ppe`. The import ships the ocean rows under an
+`Ocean:` prefix, following the `Water:` / `Fire:` / `Air:` / `Earth:` families
+already in the catalog, and records the warlock reading in `variant_note`.
+
+**Six `Rifts Skill List` rows turn out to be printed in this book**, and all six
+agree on category, base and per-level. `zzzzz-recite-underseas-skills.sql` moves
+the citations; the sheet drops from **40 rows to 34**. This is the mechanism
+`zzzzz-recite-phase-world-skills.sql` established, and it is a citation change
+and never a rename, for the `W.P. Rope` reasons above.
+
+**Skills batch.** Eight new rows — Advanced Fishing, Marine Biology, Sea
+Holistic Medicine, Track & Hunt Sea Animals, Undersea Salvage, Advanced Deep Sea
+Diving, W.P. Torpedo, W.P. Trident. Catalog moved 358 -> **366** skills.
+Applied `--remote` before the PR.
+
+**Two readings this book loses, recorded on the rows that won.** Printed 210
+gives Underwater Demolitions at 56% **+3%** where the catalog's
+`Demolitions: Underwater` cites RUE at **+4%**; printed 212 gives W.P. Harpoon
+Gun its last strike bonus at level **thirteen** where the catalog's
+`W.P. Harpoon & Spear Gun` cites RUE at **fifteen**. RUE is later and both
+catalog rows stand.
+
+**One skill this book prints with no percentage at all.** *Pilot: Advanced Deep
+Sea Diving* (printed 212) describes what the skill covers and states neither a
+base nor a per-level step. That is the book, not the OCR — the paragraph reads
+clean and ends on a complete sentence. It ships at base 0 with the omission in
+its note. **Not an audit finding:** `base_formula` exists (F2, PR #427) and does
+not help, because there is no formula either. Do not invent a number for it.
+
+**One near-duplicate noticed and left alone, on the `W.P. Rope` precedent.** The
+catalog holds TWO rows for the submersible-piloting skill — `Boat: Submersibles`
+(now cited to Underseas p.212) and `Military: Submersibles` (RUE p.302-303) —
+both Pilot, both 40% +4%. Underseas prints it once. Merging them is
+duplicate-tool work that writes redirects and rewrites characters; picking which
+name survives is a catalog decision, not a reading of this book.
