@@ -370,3 +370,59 @@ The merged PR body cannot be edited into truth retroactively and is left as the 
 
 | 2026-09-08 | [#807](https://github.com/NateGrey0130/nates-workshop/pull/807) | class batch 7 of 7: **Naut'Yll Soldier**, **Naut'Yll Devastator**, **Naut'Yll Koral Shaper**, **Kreel-Lok Nomad**, **Horune Pirate** (210 -> **215** live classes). **THE CLASS ROSTER IS COMPLETE: 25 of 25**, verified by counting `imported_classes` against the p.214 ladder rather than by adding up batches - which is the check whose absence produced the #805 miscount. Applied `--remote` before the PR. |
 | 2026-09-08 | [#808](https://github.com/NateGrey0130/nates-workshop/pull/808) | **gear**: 87 rows - weapons, armour, bionics and the book's 33 priced sea vessels (1154 -> **1241** gear). Seven of the 87 are stub upgrades that also correct auto-generated names. The boats go in `gear` with category `vehicle` on the existing 36-row precedent, and are the first vessels to use `gear.sdc`; that also makes the Salvage Expert's starting vessel storable. Applied `--remote` before the PR. |
+| 2026-09-08 | [#809](https://github.com/NateGrey0130/nates-workshop/pull/809) | **vehicles**: 50 stat blocks across five files, split by the page their HEADING falls on - `p081-105` (8), `p118-133` (9), `p139-161` (11), `p167-190` (13), `p195-210` (9). 415 M.D.C. locations and 247 weapon systems with them (55 -> **105** vessels; the other 55 are Triax). **THE BOOK IS NOW FULLY IMPORTED**: 25 classes, 8 skills, 74 spells, 87 gear, 50 vessels. Applied `--remote` before the PR. |
+
+### What the vehicle pass had to decide
+
+**Only ONE of the fifty has a price.** The Basic Underwater Sled prints 38,000
+credits for the liquid-fuel version and one million for the nuclear one, and the
+low figure is what the integer column holds. Every other entry is military,
+magic or Atlantean, and the book's own phrase is some variant of *never sold to
+outsiders*. Twelve of them follow that with an ESTIMATE - "would cost around 4
+million", "at least 40 million", "8 to 10 million on the black market" - and an
+estimate is not a price, so none of them lands in `cost`. The Poseidon is the
+sharpest case: **4.2 billion credits to build** is a real, stated figure and
+still not a market price. It is in `cost_note` with the rest.
+
+**A cyborg is in the vehicles table**, and deliberately. The VX-20,000 Barracuda
+is a full conversion cyborg, but it carries a `Model Type:` line, M.D.C. by
+location and numbered weapon systems - which is exactly the shape migration 048
+built this table for, and the same rule the gear pass used to send 26 entries
+here. Its `Class:` line reads *"Full Conversion Cyborg - Deep-Sea Heavy
+Assault"* and that string is stored verbatim, so nothing downstream has to infer
+what it is looking at.
+
+**Four blank illustration pages sit inside stat blocks** - printed 142, 187, 194
+and 208 - and nothing is lost to any of them: in each case the field before is
+complete and the field after opens cleanly. Two of the four (187 and 208) were
+not known before this pass. **Printed 131 is the exception and it IS a loss**:
+that page is absent from the source PDF, and it cuts the USS Ticonderoga after
+weapon system 2, taking that system's range and payload and every system past
+it. That is recorded on the vessel itself rather than only here.
+
+**The book contradicts itself five times** and each contradiction is stored
+rather than resolved, because picking a winner would erase it: the War Crab
+calls one gun a *Left Weapon Turret* in its M.D.C. list and a *Quad-Plasma
+Cannon Turret* in its weapon list; the Sea Fin numbers a weapon system "4"
+twice; the Poseidon's systems run 1-5 then 7, with no "6." anywhere in the cache;
+the Sea Bat's rail gun heading says five and its text says eight; and the
+Barracuda's Quad Rifle prints two different laser ranges. The Deathbringer
+prints one system's range and payload lines twice verbatim, which may be a sixth
+or may be a printing repeat - the figures are stored once and the duplication is
+noted.
+
+**One entry has no readable name.** The XS-120's heading sits in a band of
+illustration garble at the foot of cache p203. `Model Type: XS-120` on p204 is
+legible and unambiguous, so that is the name - the book's own designation, not
+an invented title. Its `Class:` line says *Military Attack Submersible* while its
+Speed line says outright that it is not a submersible; both are stored.
+
+**One row was on nobody's list**: the XS-24 Sea Bat, printed 201-202, sitting
+between the Sea Mite and the XS-30 with its own Model Type line. Found by the
+extraction rather than by the survey, and verified in the cache before it was
+written.
+
+**Nothing in the app reads these tables.** `scripts/source-coverage.mjs` is the
+only consumer - not `js/`, not `functions/`, not `app.js` or `sheet.js`, and not
+the test suite. That was true of the Triax import too and is worth knowing
+before anyone expects a vessel to appear in the wizard.
