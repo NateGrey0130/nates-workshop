@@ -4941,9 +4941,18 @@ same item, and nothing here disputes that - `bio-comp-system`'s description
 opens *"A Bio-Comp Monitor: a portable computer and sensor system..."*, both
 cost 2,500, both are `rifts`, both cite Rifts Ultimate Edition. **It is a merge
 a human can make in the panel today**, by slug, without any detector suggesting
-it: the pair is named here and in `F33`, which is what a finding is for. Nine
-published classes cite `bio-comp-system` and one cites `bio-comp-monitor`
-(`coalition-juicer`), so the direction is not in doubt either.
+it: the pair is named here and in `F33`, which is what a finding is for. The
+direction is not in doubt either - **8** published live classes cite
+`bio-comp-system` against **1** citing `bio-comp-monitor`, measured `--remote`
+2026-09-08 with `sum(instr(markdown, '<slug>') > 0)` over
+`imported_classes WHERE status = 'published' AND deleted_at IS NULL`, which
+agrees with `F33`'s own table.
+<!-- claim-ok: the count is measured in this paragraph, not read from a file -->
+
+*(This paragraph said NINE until the menu check flagged the line. It was eight
+in `F33`'s table an hour earlier and eight when re-measured; the wrong figure
+was typed here, not measured. The check fired on unrelated phrasing and caught
+it anyway, which is the argument for the check rather than against it.)*
 
 **Not to be re-proposed as a threshold change.** Lowering `THRESHOLD` to 0.66
 to catch this one pair was considered and is worse than the above: it moves
