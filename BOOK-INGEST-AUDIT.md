@@ -4070,9 +4070,11 @@ below the loop, the way `skill_overrides` is, each ending in a `delete`.
 Reproduced deliberately: with only the list entries and no handlers, three of
 the new checks go red.
 
-**`docs/leveling.md` is not in F31's file list and the suite requires it.**
-`test/checks/documented-counts.mjs` pins `VARIANT_OVERRIDES` against that file,
-so the run goes red until the doc names both keys.
+**This finding's own file list omits `docs/leveling.md`, and the suite requires
+it.** Read 2026-09-08:
+`apps/character-creator/test/checks/documented-counts.mjs:66-69` filters
+`VARIANT_OVERRIDES` for any key the file does not mention in backticks and fails
+on the remainder, so the run goes red until the doc names both.
 
 **THE KEY IS `related_skills_count`, NOT F31's `related_skill_count`.** The
 finding proposes a name one character from one that already exists and means the
