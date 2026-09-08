@@ -4484,6 +4484,77 @@ language at a flat percentage. `Language: Native Tongue` is a real row, and
 that figure rather than the catalog's 98%. That is fine and is untouched here.
 The defect is specific to the two rows whose names end in `: Other`.
 
+**Taken, 2026-09-08 (PR #832).** Both halves in one PR, as the finding insists -
+a **hard failing check**, not a warning, shipping with the data it goes red on.
+
+**THE CHECK THIS FINDING SPECIFIES CAN NEVER PASS, and nothing in it says so.**
+The proposal asks for `check('no class GRANTS the language placeholder as a
+fixed skill', languageFixed.length === 0)` and says it *"goes red at fifteen the
+moment it is added"*. The prose above it was corrected from fifteen to nine; the
+**Proposal was not**, and it is the half an implementer builds from. If six of
+the fifteen are legitimate, an `=== 0` check goes red at **six, forever**, and
+the standing temptation the finding itself names - weaken it to a warning -
+arrives on day one.
+
+**So the check is a SHAPE RULE, on Nate's decision, and not a list of names.** A
+fixed `Language: Other` is legitimate when the book NAMES the tongue: `base`
+set, `per_level: 0`, because the character simply speaks it. A missing selection
+looks like the catalog row it was copied from - `per_level: 5`, climbing, with a
+note saying *select one* or *of choice*. All nine defects had the second shape
+and all six named tongues the first, so no allowlist is needed and a seventh
+book naming a tongue passes without anyone editing a test. A second check
+asserts the named tongues **survive**, because a rule that only forbids can be
+satisfied by deleting what it was protecting.
+
+**And this finding's reason for protecting those six is FALSE.** It says
+*"a `from: ["Language: Other"]` group resolves off the Other row's 50%
++5%/level... The 98% cannot survive the rewrite."*
+<!-- claim-ok: quoting the premise this note corrects -->
+A choice group **inherits** `base`/`per_level` - `app.js:3332-3336` says so in
+its own comment, and `parser.js` says *"`base` fixes the percentage"* - and the
+identical shape already ships in this book: three Prometheans carry
+`{ choose: 2, from: ["Literacy: Other"], base: 98 }`. The frozen-percentage
+check cannot see any of the six either; its `ABOUT_LANGUAGES` regex requires
+*"languages"* plural or a leading `Language: Other,`, and none of their notes
+match. **The six-vs-nine split is a real semantic judgement - a named tongue is
+not a selection - and it is exactly the judgement call this finding says it is
+not.**
+
+**`godling` sits on both sides and stays fixed.** Its first entry is
+`base: 98, per_level: 0, note: "One language of choice, at 98%."` - the
+legitimate SHAPE with the defect's WORDING, the only entry of the sixteen where
+the two signals disagree. Left alone on Nate's decision, and the arithmetic
+agrees: 98% flat cannot be reproduced by a bonus on a 50% +5%/level row, so
+converting it would change what the class grants. Its **second** entry is
+converted, and it was worse than the finding says: `{ name: "Language: Other",
+choose: 2, bonus: 15 }` is not merely *"silently ignored"* - `isChoiceGroup`
+requires `!entry.name`, so it fell to the fixed path and **was granted**, giving
+the Godling a 65% skill literally called "Language: Other" and no second
+language.
+
+**The nine, converted losslessly.** `Language: Other` is 50% +5%/level and
+`bonus` adds to each pick's own base, so every conversion is `base - 50 = B`
+with `per_level` already matching: `freelancer` 65->+15, both Knights 70->+20
+and 65->+15, `ngr-medical-officer` and `ngr-robot-combat-pilot` 70->+20,
+`ngr-field-mechanic`, `ngr-police` and `ngr-power-armor-commando` 60->+10, and
+`godling`'s second entry keeping its own `choose: 2, bonus: 15`.
+
+**Proved by making it fail.** With the data script held back,
+`regression.mjs` goes **red naming all nine**; with it in place the suite is
+green and *"the named tongues survive"* stays green throughout, so the six were
+never in scope. Measured against **production** afterwards, through the shipped
+parser: 225 live published classes, **zero** wrong fixed placeholders, **7**
+named tongues kept fixed, 135 classes offering a language pick.
+
+**One mistake worth recording, caught by the suite rather than by me.** The data
+script first used box-drawing characters in its comment separators. `d1-apply`
+accepted it and I reasoned from `schema.sql`, which uses them - but the smoke
+suite is **stricter for data scripts and covers comments**, because *"wrangler
+on Windows has turned them into mojibake in production"*. It went red, the
+characters are now ASCII, and production was checked afterwards: the only
+non-ASCII in any of the nine classes is two pre-existing em dashes on
+`ngr-medical-officer`, spliced the documented way with `char(8212)`.
+
 ### F35 - `class-import` tells you to strip a prefix the catalog requires, and the advice produces the exact bug it warns about
 
 **Filed 2026-09-08**, hit while importing this book's cyborg O.C.C.
