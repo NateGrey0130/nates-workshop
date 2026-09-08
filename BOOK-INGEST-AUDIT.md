@@ -4806,6 +4806,45 @@ the migration (#815, `F26`) would have to say.
 **Ongoing cost:** none for the fix itself. The underlying convention stays
 unenforced, which is what the paragraph above declines to solve here.
 
+**Taken, 2026-09-08 (PR #826).** `drift-check --remote` now reports **NO
+DRIFT**, for the first time in this session.
+
+**HALF THIS FINDING'S PROPOSAL WAS WRONG, and that half was forbidden.** It
+asked for the ledger line to be appended to `049` as well, *"so a rebuild from
+nothing records it too"*.
+<!-- claim-ok: quoting the premise this note corrects -->
+
+- **A rebuild from nothing already recorded it.** `db/schema.sql:1077-1079`
+  carries the guarded seed - `INSERT OR IGNORE ... SELECT
+  '049-spell-same-spell-as.sql' WHERE EXISTS (a `pragma_table_info` check for
+  `same_spell_as`)`. That is step 3 of the five the `schema-change` skill lists,
+  and `049` did **not** skip it. A fresh database has been correct the whole
+  time, which is also why `regression.mjs` - which builds one from nothing -
+  never saw this.
+- **Editing `049` is refused anyway.** `schema-change` -> *"Migrations are never
+  edited after being applied anywhere. A mistake gets a new numbered file."*
+  `049` is applied on production and on this machine.
+
+So the finding described the gap as wider than it is. **It is exactly one row in
+one existing database**, which is a data script's job, and
+`apps/character-creator/db/fix-record-migration-049.sql` is what shipped -
+guarded by the same column check `schema.sql` uses, so a database that genuinely
+has not migrated still refuses the row and still reports drift, which is the
+correct answer for it.
+
+**What held:** the column exists on production and 7 rows carry a link, so the
+migration really did run; `048-vehicles.sql` really does end by recording itself
+and `049` really does end at its `CREATE INDEX`; and the consequence stands -
+`drift-check` is the command `ship-pr` leans on, and it was reporting drift on a
+clean tree.
+
+**The check this finding declined to propose is still not proposed**, and the
+reasoning is unchanged: a pre-flight in `d1-apply.mjs` refusing a migration whose
+text does not name itself would fire on every file that predates it, and the
+same gap exists on the data-script side - `F33`'s own script shipped without its
+`data_script_runs` line and was corrected before merge. That is a bigger finding
+than this one and should be argued on its own.
+
 ### F38 - one real duplicate scores 0.667 against a 0.7 threshold, and the names cannot settle it
 
 **Not taken.** Filed while taking `F33`, whose mechanism it does not need and
