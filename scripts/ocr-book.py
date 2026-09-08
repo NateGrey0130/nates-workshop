@@ -235,6 +235,77 @@ def detect_folios(pages):
             'printed_pages': last}
 
 
+# A block is welded when its own lines start on BOTH sides of the gutter. The
+# two constants are wide apart on purpose and neither is tuned: over this book's
+# 194 pages there are 15 wide multi-line blocks, the five welded ones score
+# 0.417-0.455 of page width and the next-highest clean one scores 0.020.
+GUTTER_SPREAD = 0.30      # of page width, between a block's own line starts
+WIDE_BLOCK = 0.75         # of page width, the same test read-columns.py uses
+
+
+def welded_pages(doc):
+    """1-based page numbers whose text layer welds the two columns into one block.
+
+    BOOK-INGEST-AUDIT.md F30. `read-columns.read` buckets BLOCKS into columns
+    and walks each column top to bottom, which is right and works everywhere
+    except where the damage is INSIDE a block: pymupdf sometimes returns one
+    block whose own lines alternate left column, right column, left column. No
+    bucketing fixes that, and the cache gives no sign -- the file is ordinary
+    sentences that simply do not follow one another.
+
+    TWO FILTERS, AND BOTH ARE LOAD-BEARING.
+
+    A block's OWN lines, not every line in its rectangle. F30's proposed
+    snippet clipped `get_text('dict')` to the block rect and collected lines
+    from every block inside it, which flags 82 of this book's 194 pages --
+    including printed 45, the mid-word `tech-`/`nology` break across the gutter
+    that the finding itself names as the thing a detector must never flag. The
+    finding's defence of its own geometry was refuted by its own snippet.
+
+    And the block must be WIDE. Restricted to a block's own lines the snippet
+    flags 14; restricted further to blocks at least 0.75 of the page wide it
+    flags 2 -- p043 and p059, the two known welds. The 12 it drops are all
+    single-column blocks 0.37-0.51 wide whose lines are ragged fragments
+    (tables, hyphenated stubs); a block that narrow cannot straddle a gutter.
+
+    `words` rather than `dict`, which is the whole reason this is affordable.
+    F30 says the test costs nothing because ocr-book already walks every page.
+    Measured on this book: the snippet as written takes 115.4s and the
+    dict-based fix 19.0s, against 0.4s for the entire text-layer extraction it
+    was to ride along with. This implementation returns the same two pages in
+    0.9s, which is the cost the finding claimed and neither of its snippets had.
+    """
+    out = []
+    for i in range(doc.page_count):
+        page = doc[i]
+        width = page.rect.width
+        if not width:
+            continue
+        # (x0, y0, x1, y1, word, block_no, line_no, word_no)
+        starts = {}                       # (block, line) -> leftmost x0
+        extent = {}                       # block -> [min x0, max x1]
+        for w in page.get_text('words'):
+            key = (w[5], w[6])
+            if key not in starts or w[0] < starts[key]:
+                starts[key] = w[0]
+            box = extent.setdefault(w[5], [w[0], w[2]])
+            box[0] = min(box[0], w[0])
+            box[1] = max(box[1], w[2])
+        by_block = {}
+        for (bno, _line), x0 in starts.items():
+            by_block.setdefault(bno, []).append(x0)
+        for bno, xs in by_block.items():
+            if len(xs) < 2:
+                continue
+            box = extent[bno]
+            if (box[1] - box[0]) < WIDE_BLOCK * width:
+                continue
+            if (max(xs) - min(xs)) > GUTTER_SPREAD * width:
+                out.append(i + 1)
+                break
+    return out
+
+
 def cached_pages(txt_dir):
     """The pNNN.txt pages actually on disk. A `.raw.txt` is not a page."""
     out = []
@@ -254,7 +325,7 @@ def prior_manifest(out):
         return None
 
 
-def write_manifest(out, base, txt_dir):
+def write_manifest(out, base, txt_dir, doc=None):
     """The manifest, plus what can only be known once the pages are written.
 
     `cached_pages` and `cached_range` say what this cache actually HOLDS, which
@@ -277,6 +348,21 @@ def write_manifest(out, base, txt_dir):
                      encoding='utf-8', errors='replace').read()) for n in nums])
     base['printed_pages'] = folios.get('printed_pages')
     base['page_offset'] = folios.get('page_offset')
+    # Welded pages, recomputed from the PDF on every run like the four keys
+    # above are recomputed from disk -- and for the same reason. The page loop
+    # in main() SKIPS anything already cached, so a test placed there computes
+    # nothing on a complete cache and would write `welded_pages: []` for the one
+    # book known to have two. It is also why this walks the whole document
+    # rather than the `pages` argument: `--page 43 --force` must not leave a
+    # manifest claiming page 43 is the only weld in the book.
+    #
+    # A caveat worth stating where the key is written: this describes the PDF's
+    # block geometry, NOT the cache's state. A cache built by some other route
+    # -- six of the first eight were -- gets a clean list while being wholly
+    # welded. It answers "would reading this book weld", not "is this cache
+    # welded". BOOK-INGEST-AUDIT.md F30.
+    if doc is not None and base.get('text_layer'):
+        base['welded_pages'] = welded_pages(doc)
     io.open(os.path.join(out, 'manifest.json'), 'w', encoding='utf-8',
             newline='').write(json.dumps(base, indent=1))
     return base
@@ -387,9 +473,14 @@ def main():
             done += 1
             if done % 50 == 0:
                 print('  %d pages...' % done, flush=True)
-        m = write_manifest(out, base, txt_dir)
+        m = write_manifest(out, base, txt_dir, doc)
         print('%s: %d page(s) read from the text layer, %d already cached -> %s'
               % (slug, done, skipped, out))
+        welded = m.get('welded_pages') or []
+        if welded:
+            print('  WELDED   %d page(s) whose text layer holds both columns in'
+                  ' one block: %s' % (len(welded), ', '.join(str(p) for p in welded)))
+            print('           Read those from a RENDER, not from the cache. F30.')
         print('  text     %s   (no OCR, no geometry, no cost)' % txt_dir)
         print('  cached   %s file(s) %s; last printed folio %s, offset %s'
               % (m['cached_pages'], m['cached_range'],
