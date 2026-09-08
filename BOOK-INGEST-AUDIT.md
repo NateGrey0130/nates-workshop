@@ -3684,3 +3684,49 @@ Two things to settle when this is taken, not before:
 
 **Ongoing cost of not taking it: one manual sweep per MOS class**, and a silent
 wrong grant whenever somebody forgets.
+
+### F28 - the coverage ledger checks five catalogs and there are six, so no vessel's citation is verified
+
+**Taken, 2026-09-08 (PR pending) - filed and taken in one change**, on the
+`SHIP-PR-AUDIT` precedent, because the fix is one line and holding it as a
+proposal would have cost more to write than to make.
+
+**The case.** `scripts/source-coverage.mjs` is the ledger that answers "can this
+row be traced back to the page it cites". It builds a coverage row for
+`imported_classes` and then for four catalogs by name:
+
+```js
+...['gear', 'skills', 'spells', 'psionic_powers'].map((t) => ({
+```
+
+`vehicles` is not in that list, and was never in it. So **105 vessels - 55 from
+Triax and 50 from Underseas - carry a `source_book` that nothing verifies**,
+while every other catalog table gets a bucket count, a per-book roll-up and an
+offender list.
+
+**Why it was easy to miss, which is the part worth keeping.** `vehicles` DOES
+appear in this file - once, near the bottom, in the `priceless` block that
+counts rows with no cost. So a grep for `vehicle` in the coverage script returns
+a hit and the table looks covered. It is present in the report and absent from
+the part of the report that checks anything.
+
+**How long it stood.** Since migration 048 created the table. The Triax import
+put 55 rows in it and closed; the Underseas import put 50 more in and closed;
+neither noticed, and both PR bodies stated - correctly - that
+`source-coverage.mjs` was the only consumer of these tables, which read as
+coverage and was not.
+
+**What it does NOT mean.** No citation is known to be wrong. Every one of the
+105 was written by a generator that stamped the book title and the printed page
+range from the same dict the row came from, and all 105 have a non-NULL
+`source_book`. The defect is that nothing checks them - and per this report's
+own standing warning, traceable means CHECKABLE and never correct.
+
+**The fix.** Add `'vehicles'` to the list. The table already has the `name` and
+`source_book` columns the other four are read through, so it needs no special
+handling and no schema change; that it needed none is why the omission is a
+one-word fix rather than a feature.
+
+**What it changes in the report:** two new rows, `vehicles` in the COVERAGE
+table and vessel counts folded into BY BOOK for `triax` and `underseas`. It
+gates nothing - the report is advisory by design and says so.
