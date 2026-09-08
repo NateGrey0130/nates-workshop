@@ -439,6 +439,17 @@ export const CORE_SDC_BY_CLASS = {
   // background rather than a grant, and does not move it.
   'tritonian-sea-wolf': '3D6',
   'tritonian-scientist': '1D6',
+
+  // The New Navy and the human salvage trade, printed 111-134. The NAVY
+  // SEAMAN and the MARINE are both men of arms - three W.P.s granted
+  // outright, Military open, and printed 111 is explicit that there are no
+  // rear echelons on Rifts Earth, so even a shipboard technician fights.
+  // The SALVAGE EXPERT is not: Hand to Hand: Basic, two W.P.s, and a skill
+  // list of tools, torches and survey work. The SEA TITAN needs no entry -
+  // it states its own mdc_base.
+  'navy-seaman': '3D6',
+  'marine': '3D6',
+  'salvage-expert': '1D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence
