@@ -379,6 +379,33 @@ if (fieldSources && data) {
     console.log('  on the page the window landed on before trusting what follows.');
   }
 
+  // A window landing on a page whose text layer welds both columns into one
+  // block. BOOK-INGEST-AUDIT.md F30: the lines printed below are the cache's,
+  // and on a welded page consecutive lines do not follow one another - a
+  // `Money:` line can read on into the far column and take the wrong figure
+  // with it, which is the shape that put two wrong `starting_money` values into
+  // live data in PR #280 by a different route.
+  //
+  // Advisory, like OFFSET above and for the same reason: the field drawn may be
+  // perfectly correct, because the weld may be nowhere near it. What this must
+  // not do is stay silent, because nothing else in this loop can see it.
+  //
+  // An ABSENT `welded_pages` means "not known", not "clean" - every manifest
+  // written before F30 lacks it, and so does every OCR cache, where the key is
+  // not computed at all.
+  const bookManifest = books.find((b) => b.slug === slug)?.manifest;
+  const welded = Array.isArray(bookManifest?.welded_pages) ? bookManifest.welded_pages : null;
+  const hitWelds = welded ? windowPages.map((p) => p.page).filter((n) => welded.includes(n)) : [];
+  if (hitWelds.length) {
+    console.log(`  WELDED (${hitWelds.length})`);
+    for (const n of hitWelds) {
+      console.log(`  ? p${String(n).padStart(3, '0')} (printed ${n - offset}) holds both `
+        + 'columns in one block, so its lines do not read in order');
+    }
+    console.log('  Advisory: it does not change the exit code. Read any field drawn');
+    console.log('  from these pages off a RENDER, not off the lines below.');
+  }
+
   if (!windowPages.length) {
     die(`pages p${pdfFirst}-p${pdfLast} are not in the ${slug} cache `
       + `(it holds p${pages[0].page}-p${pages[pages.length - 1].page})`);

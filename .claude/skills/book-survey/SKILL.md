@@ -41,8 +41,20 @@ each, and says TEXT LAYER or SCAN. It writes nothing.
 **Use it rather than a bare `python -c`, and the reason is the cache rather than
 the keystrokes.** `ocr-book.py` is one command that also writes the
 page-addressed cache `class-check --field-sources` and `drift-check` both read,
-records `page_offset` in the manifest, resumes correctly on a re-run, and
-refuses to overwrite a text-layer cache with OCR. A hand-rolled probe does none
+records `page_offset` and `welded_pages` in the manifest, resumes correctly on a
+re-run, and refuses to overwrite a text-layer cache with OCR.
+
+**`welded_pages` is the one to read before extracting anything.** A page listed
+there has both columns in a single text block, so its cached lines **do not
+follow one another** — a `Money:` line can read on into the far column and take
+the wrong figure with it, and nothing about the file looks wrong. Re-run
+`ocr-book.py` on an already-cached book to fill the key in (it recomputes from
+the PDF and skips every page it already has), and read those pages off a
+**render**. `class-check --field-sources` prints a `WELDED` advisory when a
+class's window lands on one. Measured across the eleven text-layer caches on
+this machine: **42 welded pages in ten of them**, `cb1` the only clean book, and
+`pf` — the most-cited book in the database — carrying six.
+`BOOK-INGEST-AUDIT.md` F30. A hand-rolled probe does none
 of that, and §0b below is the cost of finding out: **seven of the first eight
 caches were built by throwaway code that is in no commit, and they do not agree
 with each other.**

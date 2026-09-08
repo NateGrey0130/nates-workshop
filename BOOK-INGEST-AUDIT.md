@@ -3918,6 +3918,82 @@ geometry was checked, and a detector keyed on prose discontinuity rather than on
 geometry would flag it and every page like it. **The test above is geometric on
 purpose.**
 
+**Taken, 2026-09-08 (PR #830).** Detect and warn, as proposed. Nothing repairs
+anything, no exit code moves, no cached page is rewritten.
+
+**THE SNIPPET IN THIS FINDING FLAGS THE PAGE THIS FINDING SAYS MUST NEVER BE
+FLAGGED.** The paragraph directly above defends the geometry against a
+prose-based detector and names printed 45 as the case proving it. Printed 45 is
+cache `p046`, and it is among the **82 of 194** pages the snippet returns. The
+defence was sound; the code beneath it was not.
+
+Three filters separate 82 from 2, and the finding had one:
+
+| test | flagged |
+|---|---|
+| the snippet as written - `get_text('dict', clip=block_rect)`, collecting lines from every block inside the clip | **82**, printed 45 among them |
+| a block's OWN lines only | 15 |
+| plus the block being at least 0.75 of the page wide - `read-columns.py`'s own `wide` test | **2 - p043 and p059**, the known welds |
+
+**"Measured over all 194 pages in under a second" was false of both snippets.**
+Timed here: as written **115.4s**, the dict-based fix **19.0s**, against **0.4s**
+for the entire text-layer extraction it was to ride along with. What shipped
+uses `get_text('words')`, grouping word `x0` by `(block, line)`, and returns the
+same two pages in **0.57s** - the cost the finding claimed and neither snippet
+had.
+
+**Two wiring corrections, either of which would have shipped a key that lies.**
+`ocr-book.py`'s page loop **skips anything already cached**, so a test placed
+*"per page while it is already walking every page"* computes nothing on a
+complete cache - and every cache here is complete, so the one book known to have
+two welds would have recorded `welded_pages: []`. It is computed in
+`write_manifest` instead, from the PDF, on every run, exactly as the four keys
+beside it are recomputed from disk. And it walks the whole document rather than
+the `pages` argument, so `--page 43 --force` cannot leave a manifest claiming
+page 43 is the only weld in the book.
+
+**`drift-check` cannot carry the warning and does not get it.** The proposal
+names it beside `class-check --field-sources`. Read 2026-09-08:
+`scripts/drift-check.mjs:181` is
+`const CITATION_TABLES = ['spells', 'psionic_powers', 'skills'];` -
+`imported_classes` is not among them, so **the row this finding exists for,
+`starting_money` on `fq-gb-reloader`, is invisible to it** - and the
+`citationRows` built at `:182-188` carry no page, only a table and a name.
+`class-check --field-sources` was a clean fit and has the warning.
+
+**Smaller things.** `p043` holds **four** welded blocks, not one; `p059` has the
+single one. The two files are **not** *"normal-length"* - 30 and 10 lines against
+a 96.5 median - though 35 of 194 pages are under 30 lines, so shortness is not
+itself a tell. And *"the FIVE books still to be surveyed"* is **three**;
+`BOOK-INGEST-QUEUE.md` says three and is right.
+
+**The cross-book scan this finding asks for, run for the first time.** Every
+text-layer cache whose PDF is still on this machine:
+
+```
+bom           4    cb1          10    dag           6    fom           9
+free-quebec   2    ju            3    mystic-russia 0    new-west      1
+pf            6    potm          1    spirit-west   1
+```
+
+**42 welded pages across ten of eleven books.** `cb1` is the only clean one, and
+`pf` - the most-cited book in the database - carries six.
+
+**And what it cost, which the finding could not know.** Every welded printed page
+cross-referenced against live `source_book` citations, `--remote`: **29 live rows
+were drawn from a page whose text layer welds** - 17 `ju` gear rows, the
+`delphi-juicer` and `coalition-juicer` classes, three `pf` classes and one `pf`
+spell. **That is a population to check, not 29 errors:** a weld anywhere on a
+page flags every field drawn from it. The two highest-risk were read by hand and
+are correct - the Delphi Juicer's `Money:` line really is on welded `p042`, and
+the stored `5d6x100` is what the page says.
+
+**One caveat, recorded where the key is written**, because it is the way this
+could mislead: `welded_pages` describes the **PDF's block geometry**, not the
+cache's state. A cache built by some other route - six of the first eight were -
+gets a clean list while being wholly welded. It answers *"would reading this book
+weld"*, not *"is this cache welded"*.
+
 ### F31 - four chassis of one O.C.C. cannot be `variants`, because a variant may not add a skill
 
 **Filed 2026-09-08**, during the `free-quebec` survey.
