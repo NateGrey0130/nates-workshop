@@ -4041,11 +4041,24 @@ Four pairs verified by reading the rows, `--remote`:
 **Two pairs that match on the numbers and are NOT duplicates**, checked the same
 way and recorded here so a later sweep does not merge them:
 
-- `computer-portable` and `hand-held-computer`, both 100 credits. The first is
-  *"about the size of an open laptop"* and the second *"about the size of a
-  paperback"*. RUE prints both.
-- `dead-boy-body-armor`, `coalition-dead-boy-body-armor` and the three CA-N
-  rows, all 35,000. `dead-boy-body-armor`'s description says outright it is
+- `computer-portable` and `hand-held-computer`, both 100 credits. **THE REASON
+  ORIGINALLY GIVEN HERE WAS FABRICATED.** This paragraph said the first is
+  *"about the size of an open laptop"*; **no gear row in this catalog contains
+  the word "laptop"** (`SELECT slug FROM gear WHERE description LIKE '%laptop%'`
+  returns nothing). Both rows in fact say paperback - `computer-portable` reads
+  *"about the size of an opened paperback book"* and `hand-held-computer`
+  *"about the size of a paperback"* - and both quote the same 100-credits-to-
+  tens-of-thousands range. **So this pair is NOT established as distinct**, and
+  the paragraph that existed to stop a later sweep merging them was pointing the
+  wrong way. It is not established as duplicate either; it is unresolved, and
+  `catalog_redirects` already carries a `merge` from `hand-computer` to
+  `hand-held-computer` - read `--remote` on 2026-09-08 with
+  `SELECT r.from_key, r.reason, g.slug FROM catalog_redirects r JOIN gear g
+  ON g.id = r.to_id WHERE r.catalog = 'gear' AND r.from_key LIKE '%comput%'`.
+- `dead-boy-body-armor`, `coalition-dead-boy-body-armor` and the **two** CA-N
+  rows - `ca-1-heavy-dead-boy-armor` at 80 M.D.C. and `ca-2-light-dead-boy-armor`
+  at 50 - all 35,000. **This said THREE CA-N rows**, a number taken from
+  `dead-boy-body-armor`'s own description string rather than from the catalog. `dead-boy-body-armor`'s description says outright it is
   *"Superseded by the three armours RUE prints separately"* and it resolves
   through a redirect. That is a managed legacy row, not an accident.
 
@@ -4101,9 +4114,13 @@ exist, none offers a CATEGORY, every pick offers the repeatable row, and
 **`no class GRANTS the placeholder row as a fixed skill`**. That last one caught
 all three Free Quebec classes on the first run, before anything shipped.
 
-**The language family, twenty lines above, has the first three and not the
-fourth.** `languageFixed` does not exist; only `literacyFixed` does. So the
-identical mistake is fatal on one family and invisible on the other.
+**The language family, about ninety lines above, has more checks than the
+literacy family - and not the fourth one.** It has the two second-detector
+checks, a bonus check and a frozen-percentage check; what it does not have is a
+fixed-placeholder collector. `languageFixed` does not exist; only `literacyFixed`
+does. So the identical mistake is fatal on one family and invisible on the other.
+**This said "twenty lines above" and "the first three", and both were wrong** -
+the point survives them.
 
 **Measured `--remote`, 2026-09-08. Fifteen published classes name
 `Language: Other` as a fixed skill today:**
@@ -4116,11 +4133,25 @@ phase-mystic, ngr-medical-officer, ngr-field-mechanic,
 ngr-power-armor-commando, ngr-robot-combat-pilot, ngr-police
 ```
 
-**And they are the defect, not a different legitimate shape.** `ngr-police`
-carries `{ name: "Language: Other", base: 60, per_level: 5, note: "Select one
-additional language (+10%)." }` - the note says *select* and the entry does not
-offer a selection. Zero classes name `Literacy: Other` as a fixed skill, which
-is what the guarded family looks like.
+**Nine of the fifteen are the defect. Six are a different, legitimate shape,
+and this paragraph originally claimed all fifteen were defective.**
+`ngr-police` is the clear case: `{ name: "Language: Other", base: 60,
+per_level: 5, note: "Select one additional language (+10%)." }` - the note says
+*select* and the entry offers no selection.
+
+**But `demon-hound-rider`, `sky-rider` and the four Promethean/phase classes
+carry a FIXED NATIVE TONGUE at 98%** - *"His native tongue of Br'talb, at 98%"*,
+*"Language: Promethean at 98%. The catalog has no Promethean row and this batch
+does not invent one... The repeatable Language: Other row carries it."* That is
+the same shape this finding explicitly blesses for `glitter-boy`, differing only
+in that no catalog row exists for the tongue, which each note states as its
+reason. **Converting those six would be a REGRESSION**, and not merely a
+judgement call: a `from: ["Language: Other"]` group resolves off the Other row's
+50% +5%/level, and `regression.mjs` already forbids a language group carrying
+`base` or `per_level: 0`. The 98% cannot survive the rewrite.
+
+Zero classes name `Literacy: Other` as a fixed skill, which is what the guarded
+family looks like.
 
 **Affected rows:** those fifteen. None is this book's - the three Free Quebec
 classes were corrected before they were committed, and ship as choice groups in
@@ -4135,8 +4166,15 @@ both families.
 2. **The data.** Fifteen `fix-*.sql` rewrites turning each fixed row into
    `{ choose: N, from: ["Language: Other"], bonus: B, ... }`, where N and B come
    from each class's own note. **Read each note rather than assuming N is 1** -
-   `godling` and the Prometheans grant more than one, and the bonus differs per
-   class.
+   and note that the exception this line originally named was INVERTED: the four
+   Promethean and phase classes grant exactly ONE, fixed, at 98%, and are among
+   the six that should not be converted at all. **`godling` is the only class
+   with two entries**, and it is the worst instance in the set: its second is
+   `{ name: "Language: Other", choose: 2, bonus: 15 }`, and because
+   `isChoiceGroup` in `js/parser.js` requires `!entry.name`, **that `choose: 2`
+   is silently ignored today**. A `languageFixed` collector keyed on
+   `e.name === 'Language: Other'` will therefore report `godling` twice - sixteen
+   entries across fifteen class ids.
 
 **Why the two halves must not be separated:** a check added alone turns the
 suite red for fifteen classes nobody is currently touching, and the standing
@@ -4150,3 +4188,256 @@ language at a flat percentage. `Language: Native Tongue` is a real row, and
 `glitter-boy` fixes it at 95% with a note because its own O.C.C. block prints
 that figure rather than the catalog's 98%. That is fine and is untouched here.
 The defect is specific to the two rows whose names end in `: Other`.
+
+### F35 - `class-import` tells you to strip a prefix the catalog requires, and the advice produces the exact bug it warns about
+
+**Filed 2026-09-08**, hit while importing this book's cyborg O.C.C.
+
+`.claude/skills/class-import/SKILL.md`, under *Rules that are easy to get
+wrong*, states:
+
+> **Pilot skills store without a `Pilot:` or `Military:` prefix.** The catalog
+> row is `Jet Fighters`, not `Military: Jet Fighters`. Naming the prefixed form
+> cost three classes a restriction that silently did nothing.
+
+**Measured `--remote`, 2026-09-08: the catalog holds the PREFIXED form and
+nothing else.**
+
+```
+SELECT name, category FROM skills
+ WHERE name IN ('Jet Fighters', 'Military: Jet Fighters', ...)
+
+  Military: Jet Fighters        Pilot
+  Military: Combat Helicopter   Pilot
+  Military: Tanks & APCs        Pilot
+```
+
+There is **no** `Jet Fighters` row. There is no `Combat Helicopter` row and no
+`Tanks & APCs` row either. **Twenty-nine** rows in the `Pilot` category carry a
+prefix - the whole `Boat:`, `Military:`, `Space:`, `Fighter Combat:` and
+`Robot Combat Elite:` families.
+
+**So the rule is not merely stale, it is inverted**, and it fails in the
+direction it was written to prevent. Following it here produced exactly one dead
+`except` on the first try, reported by `class-check`:
+
+```
+  restrictions   1 name matches no skill row
+      Pilot except: "Jet Fighters"
+      These do nothing as written. An unmatched `except` excludes
+      NOTHING, so the class offers skills the book forbids.
+```
+
+**Nothing shipped wrong from it.** `class-check` caught it before the class was
+emitted, and the four Free Quebec classes already merged in #820 that name a
+prefixed Pilot row - `Military: Tanks & APCs` on **two** of them,
+`fq-descended-glitter-boy-pilot` and `fq-side-kick-rpa` - took the name from the
+catalog rather than from the skill, so they are correct. **That is luck
+about which source was consulted, not a process.**
+
+**A published class DOES carry the unprefixed form.** `glitter-boy` grants
+`Pilot Robot Combat Elite: Glitter Boy` and `Pilot Robot Combat Basic
+(general)`, neither of which is a catalog name; they resolve because redirects
+are consulted for GRANTED skills. That asymmetry is the trap and `class-import`
+already documents it - **six lines BEFORE the rule, in a different section**,
+not after it as this sentence originally said: *"a GRANTED skill naming an old
+name still resolves... only restrictions skip them."* So the prefix question is
+harmless in a grant and fatal in an `only` or `except`, which is precisely where
+the wrong rule sends you.
+
+**Proposed change**, and it is small:
+
+1. **Correct the rule** to what is true - the catalog's Pilot rows DO carry
+   `Military:`, `Boat:`, `Space:` and `Robot Combat Elite:` prefixes, and the
+   name to use is whatever `SELECT name FROM skills` returns.
+2. **Do not replace one memorised name with another.** The sentence was
+   presumably right when written; what made it dangerous is that it names a
+   specific row. Replace it with the instruction to look the row up, which is
+   what `class-check --remote` already does for you.
+3. **Check the three classes the original sentence says it cost.** If a rename
+   went the other way since, they may now be wrong in the opposite direction -
+   `class-import`'s own sweep, a parse of every class's `only`/`except` names
+   against `SELECT name FROM skills`, is the command, and its stated floor of
+   TWO unmatched names should be re-measured at the same time.
+
+**Why this is worse than an ordinary stale doc.** It is a *rule* rather than a
+count, it appears in a bulleted list of traps where a reader has every reason to
+trust it, and its failure is silent at every layer except the one check that
+happens to be run. `unmatched except fails OPEN` - the class offers a skill its
+book forbids and nothing says so.
+
+### F36 - a text-layer page can be corrupt at the GLYPH level, and the damage is not where the tell is
+
+**Filed 2026-09-08**, during the `free-quebec` vessel extraction. **This is not
+F30.** F30 is about reading ORDER - a block holding both columns, fixable by
+geometry. This is about the CHARACTERS themselves being wrong, and no reader
+fixes it because the text layer's own font mapping is broken.
+
+Printed 95 of this book, cache `p096.txt`, extracts prose like this:
+
+```
+vsv&sis. \Vs. %\%vausttft tres>«safc>\a XVsaX o£ •& <3>p\d«s ^wtok CNSsferetetad
+Aerwatet is Vncrea&«& V? 5$%, b^ ft& TK&%« o? \Yft pVaswA, \«s\
+```
+
+That is unmistakable, and a reader stops. **The problem is what is NOT
+unmistakable on the same page.** Rendered at 200 dpi, the M.D.C. block reads:
+
+```
+  QST-333 Shaker Cannon (1) - 175
+  * Vibro-Blade (1, right forearm) - 50
+```
+
+The cache gives those two lines as **`- 115`** and **`- 5Q`**. The Vibro-Blade
+announces itself: `5Q` is not a number. **The Shaker Cannon does not.** `115` is
+a perfectly plausible M.D.C. figure sitting in a clean-looking column of other
+plausible figures, and it is wrong by sixty points.
+
+**So the tell and the damage are not co-located.** The scrambled prose is in the
+middle of the page; the corrupted digit is in a table that looks fine. A reader
+who notices the garbage, reads around it, and trusts the rest of the page ships
+a wrong number - and an extraction pass run over this page did exactly that,
+reporting 115 in good faith.
+
+**How it was caught, and it was not by a check:** the corrupted prose was
+flagged, the page was rendered to resolve the two unreadable sentences, and the
+render happened to show the M.D.C. block at the same time. **That is luck.**
+
+**Affected rows:** the Tarantula Glitter Boy, which now ships 175 from the
+render.
+
+**How widespread it is, measured rather than asserted - and the first
+measurement was wrong.** This paragraph originally read *"no other page of this
+book shows the pattern - checked by scanning the whole cache"*, and **that scan
+had not been run when the sentence was written.** Run afterwards, it ranked
+printed 95 only **eighth**, behind printed 164-167 - which turned out to be
+percentile tables (`36%-40%:`), because the signature included `%`. It also
+included `&`, which matches `Demons & Monsters`. Four false positives out of
+four, from a detector written in the same breath as a finding about not trusting
+detectors. **F33's lesson, repeated by the session that wrote F33.**
+
+Re-run with a signature that cannot match a percentage - `\`, the guillemets and
+`£`, none of which occur in this book's clean text - printed 95 is the clear
+outlier at seven occurrences and a 0.0020 ratio. Four other pages carry a single
+stray character each (printed 4, 70, 140, 166) and one is not the same thing as
+seven. **No other book's cache has been scanned at all.**
+
+**Proposed change**, and the cheap half is worth doing on its own:
+
+1. **A detector, and the character set is the whole design.** Corruption of
+   this kind leaves characters the clean text never uses: `\`, `«`, `»`, `£`.
+   **`%` and `&` must NOT be in it** - they match percentile tables and ordinary
+   names, and including them is what produced the four false positives above. A
+   per-page count recorded in the cache manifest the way `welded_pages` is
+   proposed in F30 flags the page for a human. It does NOT try to repair
+   anything, and it should report a COUNT rather than a threshold, because the
+   difference between the one real page and the four innocent ones here was
+   seven occurrences against one.
+2. **The rule that matters more than the detector:** *a page with corrupt prose
+   is corrupt everywhere, including in the parts that look fine.* Render it and
+   read the numbers off the render. That belongs in `book-survey` §0 beside the
+   existing text-layer-damage paragraph, which currently describes only the
+   benign kind - missing spaces, a kept hyphen, a welded heading - and says
+   *"none of it is fixed by a better reader... it is fixed by knowing what the
+   value should look like."* **That advice fails here**, because 115 looks
+   exactly like what the value should look like.
+
+**Do not propose re-caching the page as the fix.** The corruption is in the
+PDF's own embedded font mapping, not in the extraction: `read-columns.py` and a
+raw `page.get_text()` return the same garbage, and re-running `ocr-book.py`
+would too. The ink is fine and the encoding is not; rendering is the only route
+to it.
+
+### Premise audit of F30-F36, 2026-09-08 - read this before taking any of them
+
+**All six of F30-F35 went through `audit-premise-auditor` BEFORE any was
+implemented**, which is what `book-survey` §8 asks for when the session that
+wrote a proposal is the session about to build it. **Seven claims did not
+survive**, and the corrections are already made in place above rather than only
+recorded here - a wrong sentence should not stand in the file at all. This
+section holds what the corrections do not: the scope changes, and the two
+proposals that are now different work than they said.
+
+The auditor checked **41 premises and could not settle 2**: F33's claim that
+three detectors were written and run this session, whose code is in no commit,
+and F35's claim about "the three classes the original sentence says it cost",
+which is a historical statement inside `class-import` and unverifiable from the
+current tree. Both stand as unverified rather than as facts.
+
+**F30 - the premises hold and the code block does not.** The algorithm claim is
+right, both pages are right - re-derived without using the finding's own page
+numbers - and the de-welded `Money:` line checks out. But the detector snippet
+as written flags **82 of 194 pages**, because it collects lines from every block
+inside the clip rather than the block's own. Restricted to a block's own lines
+it flags 14; restricted further to blocks **at least 0.75 of the page width**,
+which is `read-columns.py`'s own `wide` test, it flags exactly **2 - p043 and
+p059**. **The wide filter is not optional**, and without it the finding's own
+"an empty list on a clean book is the point" is false on the first book it runs
+against. Two smaller corrections: the cache files are **still welded today** -
+the de-welding happened in the reading, not in the cache - and they are not
+"normal-length files", being 30 and 10 lines against a 96-line median.
+
+**F31 - half of what it asks for already exists, built by this same menu.**
+`related_skills_count` is implemented on an **ability grant** in
+`js/parser.js`, with a comment naming `BOOK-INGEST-AUDIT.md F24`, and F24's
+outcome note records the server change and production composing it. So "change
+the related-skill count" is already expressible; what is not expressible is
+doing it *in a variant*. **The proposal's `related_skill_count` is one character
+from the existing `related_skills_count` and means the same thing** - that
+collision is a decision to take deliberately, not to discover afterwards.
+Verified by hand rather than taken from the audit report:
+`grep -n related_skills_count apps/character-creator/js/parser.js` returns
+lines 1619, 1624, 2309, 2310 and 2311 - the ability grant that applies it and
+the validator that type-checks it, read 2026-09-08.
+
+Two files the proposal names need no edit at all. **`sheet.js` has nothing to
+touch**: its own comment says the class "comes with the character now, already
+resolved to this character's variant", and it references neither `applyVariant`
+nor the skills blocks. **`compose.js` needs no edit either**, because it already
+runs `applyVariant` before `combineClasses`, so a union performed inside
+`applyVariant` is upstream of it. And `class-check-lib.mjs`'s `KNOWN_KEYS` is a
+set of **top-level class keys**; variant sub-keys are validated in `parser.js`
+and adding them there does nothing. Everything else in F31 verifies, including
+both `docs/leveling.md` quotes and the book quote.
+
+**F32 - the premises hold.** Only line numbers drift, and one distinction is
+worth carrying into the work: the `app.js` code the finding cites is the
+**warning** panel, which lets a player carry on; the actual gate is
+`validate-character.js`, which the proposal already names. No ceiling mechanism
+exists anywhere - `attribute_maximums` and `maximums` return nothing across
+`apps/`, `scripts/`, `.claude/` and `db/`.
+
+**F34's data half shrinks from fifteen to nine, and six become a decision.** See
+the corrected text above. The check half is unaffected and still goes red the
+moment it is added, so the two halves must still ship together.
+
+**F33 gained its sizing for free**, which the finding called step one of taking
+it. Published classes citing each slug, `--remote`:
+
+| slug | citers | | slug | citers |
+|---|---|---|---|---|
+| `huntsman-armor` | 4 | | `huntsman-plate-padded-armor-non-environmental` | **0** |
+| `portable-language-translator` | 10 | | `language-translator-portable` | 1 |
+| `large-flashlight` | 5 | | `flashlight-large` | 1 |
+| `bio-comp-system` | 8 | | `bio-comp-monitor` | 1 |
+
+Three of the four pairs have an obvious loser, and one - the huntsman pair - has
+a zero-citer row, which is the cheapest possible merge. **A warning for whoever
+runs that sweep**: `new RegExp('\\b' + slug + '\\b')` written through the Bash
+tool collapses its double backslash and reports 0 citers for everything. Use
+`String.includes`.
+
+**What cites these findings**, because `scripts/audit-citations.mjs` sees class
+`extraction_notes` **only** and will under-report: F30 is cited by
+`fq-gb-reloader`, F32 by `fq-deep-intel-agent` and `fq-glitter-girl-pilot`. By
+hand, the rest are cited in `docs/surveys/free-quebec.md`, in
+`BOOK-INGEST-QUEUE.md`, and in six data scripts under
+`apps/character-creator/db/`. **`BOOK-INGEST-QUEUE.md` also carries a per-finding
+STATE outside this menu** - it says F30 and F31 are pre-authorized for
+implementation - which is the shape `audit-menu` warns about, a finding's status
+living somewhere the finding does not.
+
+**And a note on citing these by bare number**: a tree-wide grep for F30 through
+F35 returns mostly `UI-AUDIT` F30 and `INGESTION-AUDIT` F32, F33 and F34. This
+menu's own header already says to cite by filename, at line 31; here is the
+case for it. <!-- claim-ok: this file's own header, not another file -->
