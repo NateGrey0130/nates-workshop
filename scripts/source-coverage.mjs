@@ -105,7 +105,14 @@ const groups = [
     rows: d1(`SELECT class_id AS label, ${FRONTMATTER} AS sb FROM imported_classes `
       + "WHERE deleted_at IS NULL AND status = 'published'"),
   },
-  ...['gear', 'skills', 'spells', 'psionic_powers'].map((t) => ({
+  // `vehicles` was NOT in this list until BOOK-INGEST-AUDIT F28. It has the
+  // same two columns as the four beside it and needed no special handling -
+  // it was simply never added, so 105 vessels across two books carried
+  // source_book values that the one ledger built to check citations did not
+  // look at. The table was touched here only for the no-price count further
+  // down, which is what made the omission easy to miss: `vehicles` appeared
+  // in this file, just not in the part that checks anything.
+  ...['gear', 'skills', 'spells', 'psionic_powers', 'vehicles'].map((t) => ({
     label: t,
     rows: d1(`SELECT name AS label, source_book AS sb FROM ${t}`),
   })),
