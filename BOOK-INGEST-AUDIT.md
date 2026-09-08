@@ -5421,7 +5421,7 @@ says, this finding is two paragraphs of maintenance for a framing problem that
 has cost one reconstruction. **It is filed as prose precisely because that is
 cheap enough to decline.**
 
-**Taken, 2026-09-08 (PR #TBD). Posture held: documentation only** - two prose
+**Taken, 2026-09-08 (PR #836). Posture held: documentation only** - two prose
 paragraphs plus a corrected table label in `book-survey`, no manifest key, no
 detector, no script, no check, no exit code, and nothing deleted.
 
