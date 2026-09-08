@@ -117,7 +117,7 @@ military. That is why the categories below come out as they do.
 | category | count | where | verdict |
 |---|---|---|---|
 | **O.C.C.s** | **6 entries, 10 classes** | printed 32, 36-38, 38-39, 39-40, 41-42, 114-123 | **import** |
-| **Vessels** | **~23** | printed 53-134 | **import** |
+| **Vessels** | **22** - the survey projected 23; the QR-2 Abolisher Prime turned out to carry no stat block at all | printed 53-134 | **import** |
 | **Gear** | **~18** | printed 43-51 | **import** |
 | **Skills** | **0 new** | — | nothing to import; see the diff below |
 | **Spells** | **0** | — | the book defines none |
@@ -343,6 +343,7 @@ describes".*
 | #818 | survey; queue `cached` -> `surveyed` | 0 | unchanged |
 | #819 | gear, printed 44-51 | **17** | gear 1236 -> **1253** |
 | #820 | classes: all five O.C.C.s of printed 32-42 | **5** | classes 215 -> **220** |
+| #821 | vessels, printed 52-134, in four slices | **22** | vehicles 105 -> **127** |
 
 ### Batch 2 — gear (PR #819)
 
@@ -532,3 +533,79 @@ Rifts RPG, page 53"*. No such class is in this catalog, and the nearest one —
 `robot-pilot`, Rifts Ultimate Edition p.83-85 — is a different class with
 different attribute requirements, so declaring a copy of it would assert a match
 that does not hold and fail the regression's copy sweep.
+
+
+
+### Batch 4 — the vessels (PR #821)
+
+Twenty-two vessels, 222 `vehicle_locations` rows and 129 `vehicle_weapons` rows,
+applied `--remote` before the merge. `vehicles` 105 -> 127.
+
+| slice | printed | rows |
+|---|---|---|
+| `p052-069` | 52-69 | 6 — Cougar, Bobcat, GB6-96 Transport, RHV-60, QR-1, QR-3 |
+| `p079-104` | 79-104 | 7 — the whole Glitter Boy line |
+| `p105-123` | 105-123 | 7 — three power armor and the four FX cyborg bodies |
+| `p124-134` | 124-134 | 2 — NS-B20 Dive Armor and the Sea Dragon |
+
+**Twenty-two, not the twenty-three the survey projected.** The QR-2 Abolisher
+Prime is deliberately not a row: printed 65-66 gives it a heading, a paragraph
+and a height, then *"For complete stats and additional information, see Rifts
+World Book 11: Coalition War Campaign, pages 134-137."* No Model Type, no Crew,
+no M.D.C. by Location, no Cost, no Weapon Systems anywhere in this book. F3's
+own reasoning applies exactly — a row keeping one field out of twenty is worse
+than no row, because it reads as complete.
+
+**The Classic Glitter Boy enters the catalog here.** Before this batch the only
+Glitter Boy vessel was Triax's T-550, imported with that book; the USA-G10 the
+whole line descends from was missing.
+
+### The number that was wrong, and how it was caught
+
+**Printed 95's text layer is corrupt, and one of the corrupted characters is a
+digit inside a table that looks fine.** The cache gives the Tarantula Glitter
+Boy's QST-333 Shaker Cannon as **115** and its Vibro-Blade as **"5Q"**. Rendered
+at 200 dpi the page reads **175** and **50**.
+
+The Vibro-Blade announces itself — `5Q` is not a number. The Shaker Cannon does
+not: 115 is a plausible M.D.C. figure in a column of plausible figures, and it
+is wrong by sixty points. **An extraction pass over the cached text reported 115
+in good faith**, and it was caught only because the same page's scrambled prose
+forced a render, which happened to show the M.D.C. block too. That is luck, and
+it is filed as **F36**.
+
+The render also resolved the entry's underwater rule, unreadable in the cache:
+**laser range underwater is increased by 50%**, while plasma, ion and rail are
+all halved.
+
+### What the extraction was told to record rather than resolve
+
+Every one of these is stored as the book prints it, with the disagreement in the
+row's own note:
+
+- The **Sea Dragon's vibro-fins** carry two different damage figures four lines
+  apart — 1D6+2 M.D. in the weapon line, 1D6/2D6 in the prose above it.
+- The **RHV-60's jet M.D.C. reads backwards**: its six "small" directional jets
+  carry 85 each and its six "main" hover jets 40.
+- The **QR-1 is the only vessel in the book with no Free Quebec price**, giving
+  a black market figure alone where every other entry leads with one.
+- The **Slasher's cost is spelled out in words** where every other vessel uses
+  numerals, and its armor note is shaped differently from its three siblings'.
+- The **Leviathan's asterisks do not resolve** — five weapon mounts carry one
+  and the entry's only footnote is the head-kill rule, which cannot apply to a
+  thruster.
+- The **QR-3's maximum depth is printed "4000 feet (1219 km)"**, where the
+  metric figure should read metres.
+- The **Classic Glitter Boy's Boom Gun is printed "RG-IS"**. It is stored as
+  **RG-15**, and the reason is internal to the book rather than a guess: the
+  Tarantula's optional replacement Boom Gun on printed 97 is printed RG-15 and
+  points back at the Classic for its stats.
+
+**The Leviathan's row is assembled from two slices.** Its heading is on printed
+121 so it belongs to the p105-123 file, but its hand-to-hand bonuses and damage
+table are on printed 124, in the next slice's range. Both readings reported the
+seam, which is what made the complete row possible rather than a truncated one.
+
+**Printed 58's welded page cost nothing here** because F30 was already filed and
+the extraction was told about it: the GB6-96 Transport's M.D.C. footnotes were
+read from the page's word geometry rather than from the cache.
