@@ -62,6 +62,7 @@ const C = { data: null, items: [], journal: [], catalog: [], cls: null, canWrite
             // Held power descriptions, and which of them are open. State for
             // the same reason as the filters above: the use button re-renders.
             powerDescriptions: {}, openPowerDescs: new Set(), openItemDescs: new Set(),
+            vehicles: [], openVessels: new Set(), vesselCatalog: null,
             // Play mode: the same data through an action-first, phone-shaped
             // lens. playAmt is the selected quick-action amount; rollLog is
             // structured from day one so phase 3 can persist it unchanged.
@@ -94,6 +95,7 @@ async function load() {
   try {
     const res = await api('characters/' + id);
     C.data = res.character; C.items = res.items; C.canWrite = res.can_write; C.isGm = res.is_gm;
+    C.vehicles = res.vehicles || [];
     // Skill picks a level-up granted and nobody has spent yet.
     C.pendingPicks = res.pending_picks || [];
     C.skillLevelNotes = res.skill_level_notes || [];
@@ -1658,6 +1660,19 @@ function render() {
           <label class="small"><input type="checkbox" id="add-log"> log it</label>
           <button class="btn btn-sm" onclick="addItem()">Add</button>
         </div></div>` : ''}`)}
+
+    ${box('Vessels', `
+      <div id="vessel-list">${vesselsHtml()}</div>
+      ${w ? `<div class="noprint" style="margin-top:8px">
+        <div class="rowline">
+          <select id="add-vessel" onfocus="openVesselPicker()"><option value="">— catalog —</option></select>
+          <input type="text" id="add-vessel-name" placeholder="or custom vessel">
+          <input type="text" id="add-vessel-nick" placeholder="Nickname" style="width:110px">
+          <button class="btn btn-sm" onclick="addVessel()">Add</button>
+        </div>
+        <p class="muted small">Power armour, robots, borgs, vehicles and ships. The catalog list
+          loads when you open it.</p></div>` : ''}`,
+      '<span class="muted small">M.D.C. BY LOCATION</span>')}
   </section>
 
   <section class="tabpanel${C.tab === 'bio' ? ' on' : ''}" data-tab="bio">
@@ -2413,6 +2428,166 @@ function itemCost(it) {
   if (it.item_cost == null) return null;
   const unit = it.item_system === 'palladium-fantasy' ? 'gold' : 'cr.';
   return `${Number(it.item_cost).toLocaleString('en-US')}${it.item_cost_note ? '+' : ''} ${unit}`;
+}
+
+// ── vessels ──
+//
+// A vessel is not an inventory line, so it does not render as one: it gets its
+// own block under the Equipment table, with M.D.C. BY LOCATION, which is the
+// thing `gear` never had a shape for and the reason `vehicles` is three tables.
+//
+// The maxima come from the catalog (`v.locations`) and the damage from the
+// character (`v.mdc_current`, keyed by location name). A location absent from
+// that object is undamaged, so the input shows the maximum and stores nothing
+// until somebody types.
+
+// One location's current M.D.C. against its printed maximum. `mdc` is NULL
+// where the book prints a formula instead, and `mdc_note` carries it - so a row
+// with no number shows the note and offers no input, rather than inviting
+// somebody to track damage against a maximum nobody knows.
+function vesselLocationHtml(v, loc) {
+  const w = C.canWrite;
+  const cur = Object.prototype.hasOwnProperty.call(v.mdc_current || {}, loc.location)
+    ? v.mdc_current[loc.location] : null;
+  const shown = cur != null ? cur : loc.mdc;
+  if (loc.mdc == null) {
+    return `<div class="field"><span class="lbl">${escHtml(loc.location)}</span><span class="dots"></span>
+      <span class="val muted small">${escHtml(loc.mdc_note || '—')}</span></div>`;
+  }
+  const val = w
+    ? `<input class="mini-in" type="number" value="${escHtml(String(shown ?? ''))}"
+         data-vessel="${v.id}" data-loc="${escHtml(loc.location)}"
+         onchange="patchVesselMdc(${v.id}, this.dataset.loc, this.value)">`
+    : escHtml(String(shown ?? '—'));
+  // The maximum is printed beside the input rather than as a placeholder: a
+  // placeholder disappears the moment anything is typed, and "180 of 270" is
+  // the number a player needs while the armour is coming apart.
+  return `<div class="field"><span class="lbl">${escHtml(loc.location)}</span><span class="dots"></span>
+    <span class="val">${val} <span class="muted small">of ${loc.mdc}</span></span></div>`;
+}
+
+function vesselHtml(v) {
+  const w = C.canWrite;
+  const name = v.vehicle_name || v.custom_name;
+  const open = C.openVessels.has(v.id);
+  const kind = v.vehicle_slug ? '<span class="tag">catalog</span>' : '<span class="tag">custom</span>';
+  const cls = v.vehicle_class ? `<span class="muted small">${escHtml(v.vehicle_class)}</span>` : '';
+  const locs = (v.locations || []).filter((l) => l.mdc != null || l.mdc_note);
+  const weps = v.weapons || [];
+  const rm = w ? `<button class="btn btn-sm btn-ghost noprint" aria-label="Remove ${escHtml(name)}"
+      title="Remove ${escHtml(name)}" onclick="removeVessel(${v.id})">✕</button>` : '';
+
+  return `<div class="vessel${open ? ' open' : ''}">
+    <div class="vessel-head">
+      <button type="button" class="power-toggle" aria-expanded="${open}" aria-controls="vessel-${v.id}"
+        onclick="toggleVessel(${v.id})">${escHtml(v.nickname || name)}</button>
+      ${v.nickname ? `<span class="muted small">${escHtml(name)}</span>` : ''}
+      ${kind} ${cls}${rm}
+    </div>
+    <div id="vessel-${v.id}"${open ? '' : ' hidden'}>
+      ${locs.length ? `<div class="codex-sub">M.D.C. by location</div>
+        ${locs.map((l) => vesselLocationHtml(v, l)).join('')}` : ''}
+      ${weps.length ? `<div class="codex-sub">Weapon systems</div>
+        ${weps.map((wp) => {
+          const bits = [['Damage', wp.damage], ['Range', wp.range], ['Rate of fire', wp.rate_of_fire],
+                        ['Payload', wp.payload], ['Bonus', wp.bonus]]
+            .filter(([, x]) => x != null && String(x).trim() !== '');
+          return `<div class="codex-weapon">
+            <div class="codex-weapon-name">${wp.ordinal != null ? escHtml(wp.ordinal + '. ') : ''}${escHtml(wp.name)}</div>
+            ${bits.length ? `<dl class="codex-stats">${bits.map(([k, x]) =>
+              `<dt>${escHtml(k)}</dt><dd>${escHtml(x)}</dd>`).join('')}</dl>` : ''}
+          </div>`;
+        }).join('')}` : ''}
+      ${v.notes ? `<p class="note small">${escHtml(v.notes)}</p>` : ''}
+      ${v.vehicle_source_book ? `<p class="muted small">${escHtml(v.vehicle_source_book)}</p>` : ''}
+    </div>
+  </div>`;
+}
+
+function vesselsHtml() {
+  const rows = (C.vehicles || []).map(vesselHtml).join('');
+  return rows || '<p class="muted small">No vessel.</p>';
+}
+
+function toggleVessel(vid) {
+  // NOT `box`: js/sheet-layout.js exports a helper of that name and the smoke
+  // test fails a sheet.js that redefines one of its names, drift being how the
+  // two files came apart last time. togglePowerDesc carries the same warning.
+  const panel = document.getElementById('vessel-' + vid);
+  if (!panel) return;
+  const opening = panel.hasAttribute('hidden');
+  if (opening) panel.removeAttribute('hidden'); else panel.setAttribute('hidden', '');
+  if (opening) C.openVessels.add(vid); else C.openVessels.delete(vid);
+  const btn = document.querySelector('[aria-controls="vessel-' + vid + '"]');
+  if (btn) btn.setAttribute('aria-expanded', String(opening));
+}
+
+// The picker's list, fetched once and only when somebody opens the control.
+// `vehicles-index` is name and class only - about 10 KB, against 106.8 KB for
+// the section carrying every location and weapon system. Putting 127 names in a
+// dropdown does not need 1,238 location rows.
+async function loadVesselCatalog() {
+  if (C.vesselCatalog) return C.vesselCatalog;
+  try {
+    const res = await api('codex?section=vehicles-index');
+    C.vesselCatalog = res['vehicles-index'] || [];
+  } catch { C.vesselCatalog = []; }
+  return C.vesselCatalog;
+}
+
+async function openVesselPicker() {
+  const list = await loadVesselCatalog();
+  const sel = $('add-vessel');
+  if (!sel) return;
+  if (!list.length) { sel.innerHTML = '<option value="">— none available —</option>'; return; }
+  sel.innerHTML = '<option value="">— catalog —</option>' + list.map((v) =>
+    `<option value="${escHtml(v.slug)}">${escHtml(v.name)}${
+      v.vehicle_class ? ` (${escHtml(v.vehicle_class)})` : ''}</option>`).join('');
+}
+
+async function addVessel() {
+  const slug = $('add-vessel')?.value || '';
+  const custom = $('add-vessel-name')?.value.trim() || '';
+  const nickname = $('add-vessel-nick')?.value.trim() || '';
+  if (!slug && !custom) { alert('Pick a vessel from the catalog, or type a name.'); return; }
+  try {
+    await api('characters/' + id + '/vehicles',
+      jsonReq('POST', slug ? { slug, nickname } : { custom_name: custom, nickname }));
+    await refreshVessels();
+  } catch (err) { alert('Failed: ' + err.message); }
+}
+
+async function removeVessel(vid) {
+  if (!confirm('Remove this vessel? (History is kept.)')) return;
+  try {
+    await api('characters/' + id + '/vehicles/' + vid, jsonReq('DELETE', undefined));
+    await refreshVessels();
+  } catch (err) { alert('Failed: ' + err.message); }
+}
+
+// One location's damage. Sent as the whole object rather than a patch of one
+// key, because that is the column's shape - and read from the DOM rather than
+// from state, so two inputs edited before either round-trips do not overwrite
+// each other with a stale copy.
+async function patchVesselMdc(vid, location, value) {
+  const v = (C.vehicles || []).find((x) => x.id === vid);
+  if (!v) return;
+  const next = { ...(v.mdc_current || {}) };
+  const n = parseInt(value, 10);
+  if (Number.isFinite(n)) next[location] = n; else delete next[location];
+  try {
+    await api('characters/' + id + '/vehicles/' + vid, jsonReq('PATCH', { mdc_current: next }));
+    v.mdc_current = next;
+  } catch (err) { alert('Failed: ' + err.message); }
+}
+
+// Repaint only the vessel block, for the reason refreshInventory exists: a full
+// load() would replace C.data and discard anything typed into the sheet.
+async function refreshVessels() {
+  const res = await api('characters/' + id);
+  C.vehicles = res.vehicles || [];
+  const list = $('vessel-list');
+  if (list) list.innerHTML = vesselsHtml();
 }
 
 // Refresh the inventory from the server and repaint only that table.

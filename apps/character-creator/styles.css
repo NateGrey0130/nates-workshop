@@ -1073,6 +1073,17 @@ body.play-mode .vital .steppers button:active { background: var(--accent-glow); 
    beat it, and a stat block that ignored its own toggle fails silently rather
    than loudly. Reuses .codex-stats and .power-desc deliberately: the same item
    read on the sheet and in the codex should not look like two different items. */
+/* A vessel on the sheet. Not an inventory row: it carries M.D.C. by location
+   and a numbered weapon list, which is the thing `gear` never had a shape for.
+   The sub-labels reuse .codex-sub, so a vessel read on the sheet and a vessel
+   read in the codex are laid out the same way. */
+.vessel { border-bottom: 1px dotted var(--border); padding: 6px 0; }
+.vessel:last-child { border-bottom: 0; }
+.vessel-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.vessel-head .power-toggle { font-size: 13px; }
+.vessel .codex-sub { margin-top: 8px; }
+.vessel .field { margin-left: 10px; }
+
 .item-desc-row[hidden] { display: none; }
 .item-desc-row > td { padding: 0 8px 8px; border-top: 0; }
 .item-desc-row .codex-stats { margin-bottom: 6px; }
