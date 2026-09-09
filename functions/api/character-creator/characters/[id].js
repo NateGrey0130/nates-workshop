@@ -27,8 +27,18 @@ export async function onRequestGet({ request, env, params }) {
   if (!character) return json({ error: 'Character not found' }, 404);
 
   const { results: items } = await env.DB.prepare(
-    // category/damage/payload ride along for play mode's weapon cards -
-    // per held item, deliberately NOT added to the /items picker projection.
+    // THE WHOLE STAT BLOCK rides along, per held item, and is deliberately NOT
+    // added to the /items picker projection. The two are sized completely
+    // differently: /items is the catalog, 1,253 rows and 32.4 KB gzipped on
+    // every wizard boot and every sheet load, where this is only what THIS
+    // character holds - 116 rows across every character on production, all of
+    // them catalog-linked. The same argument plan 20 made for power
+    // descriptions, and the same conclusion.
+    //
+    // Powers needed a separate loader (`loadPowerDescriptions`) because they
+    // live in a JSON column with nothing to join to. Items already come through
+    // this join, so the columns just ride on the row and there is nothing to
+    // build.
     // JOINED ON THE SLUG since RETRO-AUDIT R21, because a gear id is insertion
     // order and means nothing outside the database that assigned it. Two arms:
     //   1. the slug as stored;
@@ -41,7 +51,13 @@ export async function onRequestGet({ request, env, params }) {
     // `item_slug` remains the ALIAS of gear.slug, not the stored column - the
     // stored one is `gear_slug` precisely so these two cannot collide.
     `SELECT character_items.*, gear.name AS item_name, gear.slug AS item_slug,
-            gear.category AS item_category, gear.damage AS item_damage, gear.payload AS item_payload
+            gear.category AS item_category, gear.damage AS item_damage, gear.payload AS item_payload,
+            gear.is_mega_damage AS item_is_mega_damage, gear.range AS item_range,
+            gear.rate_of_fire AS item_rate_of_fire, gear.ar AS item_ar,
+            gear.sdc AS item_sdc, gear.mdc AS item_mdc,
+            gear.weight_lbs AS item_weight_lbs, gear.cost AS item_cost,
+            gear.cost_note AS item_cost_note, gear.system AS item_system,
+            gear.description AS item_description, gear.source_book AS item_source_book
      FROM character_items
      LEFT JOIN catalog_redirects cr
             ON cr.catalog = 'gear' AND cr.from_key = character_items.gear_slug

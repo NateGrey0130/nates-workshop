@@ -61,7 +61,7 @@ const C = { data: null, items: [], journal: [], catalog: [], cls: null, canWrite
             invFilter: '', pickFilter: '', skillFilter: '', pickValues: {}, pickLangs: {},
             // Held power descriptions, and which of them are open. State for
             // the same reason as the filters above: the use button re-renders.
-            powerDescriptions: {}, openPowerDescs: new Set(),
+            powerDescriptions: {}, openPowerDescs: new Set(), openItemDescs: new Set(),
             // Play mode: the same data through an action-first, phone-shaped
             // lens. playAmt is the selected quick-action amount; rollLog is
             // structured from day one so phase 3 can persist it unchanged.
@@ -786,8 +786,18 @@ function currentAmmo(it, cap) {
   return m ? Math.min(parseInt(m[1], 10), 999) : cap;
 }
 
+// `item_slug`, NOT `item_id`. This read `it.item_id` from the day play mode
+// shipped and that field has not existed since migration 046 dropped
+// `character_items.item_id` (RETRO-AUDIT R21) - the GET selects
+// `character_items.*` plus a set of `item_*` aliases, none of them `item_id`,
+// so this returned undefined for every row and NO held item has ever become a
+// weapon card. Nothing failed: the cards simply never appeared, which is the
+// shape of bug a rename leaves behind.
+//
+// `item_slug` is the alias of `gear.slug` and is non-null exactly when the join
+// resolved, which is the question this was always asking.
 function isWeapon(it) {
-  return it.item_id && (it.item_damage != null || it.item_category === 'weapon');
+  return it.item_slug && (it.item_damage != null || it.item_category === 'weapon');
 }
 // A class's trackable resources with every max_formula that CAN be resolved
 // turned into a number, and every one that cannot left exactly as written.
@@ -2202,6 +2212,22 @@ function togglePowerDesc(index) {
   if (btn) btn.setAttribute('aria-expanded', String(opening));
 }
 
+// The inventory twin of togglePowerDesc. Keyed on the character_items id rather
+// than an array index, because the inventory table is repainted on its own by
+// refreshInventory() and the rows can be re-ordered under it - an index would
+// open the wrong item after an add.
+function toggleItemDesc(itemId) {
+  const row = document.getElementById('idesc-' + itemId);
+  if (!row) return;
+  const opening = row.hasAttribute('hidden');
+  if (opening) row.removeAttribute('hidden');
+  else row.setAttribute('hidden', '');
+  if (opening) C.openItemDescs.add(itemId);
+  else C.openItemDescs.delete(itemId);
+  const btn = document.querySelector('[aria-controls="idesc-' + itemId + '"]');
+  if (btn) btn.setAttribute('aria-expanded', String(opening));
+}
+
 async function usePower(index) {
   const p = (C.data.powers || [])[index];
   if (!p || typeof p.cost !== 'number') return;
@@ -2304,7 +2330,26 @@ function inventoryRowsHtml() {
   const w = C.canWrite;
   return C.items.map((it) => {
     const name = escHtml(it.item_name || it.custom_name);
-    const kind = it.item_id ? '<span class="tag">catalog</span>' : '<span class="tag">custom</span>';
+    // `item_slug`, not `item_id` - see isWeapon() for why. Every row on this
+    // sheet has been tagged "custom" since migration 046, including the
+    // catalog-linked ones, which on production is all of them.
+    const kind = it.item_slug ? '<span class="tag">catalog</span>' : '<span class="tag">custom</span>';
+    const stats = itemStatsHtml(it);
+    // The name becomes the control rather than adding a separate chevron, the
+    // same choice the Powers tab made and for the same reason: it is the
+    // biggest target in the row and the thing a player is already looking at. A
+    // row with nothing to show keeps a plain span, so nothing offers a press
+    // that does nothing.
+    //
+    // Which rows are open is held in state rather than read off the DOM,
+    // because plenty of things repaint this table - changing a quantity does -
+    // and a stat block that closed itself when you ticked `equipped` would read
+    // as a bug. The key is the character_items id, which survives a repaint.
+    const open = C.openItemDescs.has(it.id);
+    const nameCell = stats
+      ? `<button type="button" class="power-toggle" aria-expanded="${open}"
+           aria-controls="idesc-${it.id}" onclick="toggleItemDesc(${it.id})">${name}</button>`
+      : name;
     const qty = w
       ? `<input type="number" min="1" value="${it.qty}" onchange="patchItem(${it.id}, {qty: this.value})"><span class="print-only">×${it.qty}</span>`
       : `×${it.qty}`;
@@ -2317,9 +2362,57 @@ function inventoryRowsHtml() {
     const rmLabel = `Remove ${name}`;
     const rm = w ? `<td><button class="btn btn-sm btn-ghost" aria-label="${rmLabel}" title="${rmLabel}"
       onclick="removeItem(${it.id})">✕</button></td>` : '<td></td>';
-    return `<tr><td>${name} ${kind}${enchantHtml(it)}</td><td>${qty}</td><td>${eq}</td>
-      <td class="muted small">${escHtml(it.notes || '')}</td>${rm}</tr>`;
+    // The block is its own row spanning the table rather than living inside the
+    // name cell: a stat block in a 5-column table's first column would set the
+    // column's width for every other row.
+    const statsRow = stats
+      ? `<tr class="item-desc-row" id="idesc-${it.id}"${open ? '' : ' hidden'}>
+           <td colspan="5">${stats}</td></tr>`
+      : '';
+    return `<tr><td>${nameCell} ${kind}${enchantHtml(it)}</td><td>${qty}</td><td>${eq}</td>
+      <td class="muted small">${escHtml(it.notes || '')}</td>${rm}</tr>${statsRow}`;
   }).join('');
+}
+
+// What a held catalog item IS, from the row the sheet already joined. A custom
+// item has nothing here and gets no toggle.
+//
+// This is the gear half of docs/plans/20-power-descriptions.md: the same
+// argument, one catalog over. The whole stat block rides with the character -
+// 116 held rows across every character on production - so opening one costs no
+// request, which is the point when the wifi at somebody's kitchen table does
+// not work.
+function itemStatsHtml(it) {
+  if (!it.item_slug) return '';
+  // Only the fields this row actually has; a bedroll should not print an empty
+  // A.R. Mirrors the codex's own stat block, deliberately - the same item read
+  // in two places should not look like two different items.
+  const dmg = it.item_damage && it.item_is_mega_damage && !/M\.?D\.?/i.test(String(it.item_damage))
+    ? `${it.item_damage} (M.D.)` : it.item_damage;
+  const pairs = [['Damage', dmg], ['Range', it.item_range], ['Payload', it.item_payload],
+                 ['Rate of fire', it.item_rate_of_fire], ['A.R.', it.item_ar],
+                 ['S.D.C.', it.item_sdc], ['M.D.C.', it.item_mdc],
+                 ['Weight', it.item_weight_lbs != null ? `${it.item_weight_lbs} lbs` : null],
+                 ['Cost', itemCost(it)]]
+    .filter(([, v]) => v != null && String(v).trim() !== '');
+  const desc = it.item_description && String(it.item_description).trim();
+  if (!pairs.length && !desc) return '';
+  return `${pairs.length ? `<dl class="codex-stats">${pairs
+      .map(([k, v]) => `<dt>${escHtml(k)}</dt><dd>${escHtml(v)}</dd>`).join('')}</dl>` : ''}
+    ${desc ? `<div class="power-desc">${escHtml(desc)}</div>` : ''}
+    ${it.item_cost_note ? `<p class="note small">Price: ${escHtml(it.item_cost_note)}</p>` : ''}
+    ${it.item_source_book ? `<p class="muted small">${escHtml(it.item_source_book)}</p>` : ''}`;
+}
+
+// Credits in Rifts, gold in Palladium Fantasy; a NULL or `both` system is
+// unrestricted and reads as credits, the same way every picker treats it. A
+// NULL cost is a FINISHED row - books print issued kit and unique artifacts
+// with no price at all - so it shows nothing rather than an em dash that reads
+// as missing data.
+function itemCost(it) {
+  if (it.item_cost == null) return null;
+  const unit = it.item_system === 'palladium-fantasy' ? 'gold' : 'cr.';
+  return `${Number(it.item_cost).toLocaleString('en-US')}${it.item_cost_note ? '+' : ''} ${unit}`;
 }
 
 // Refresh the inventory from the server and repaint only that table.

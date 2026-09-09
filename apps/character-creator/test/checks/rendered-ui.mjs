@@ -1104,9 +1104,49 @@ export function run() {
       /addEventListener\('online'/.test(sheet), 'a reconnect does not flush');
   }
 
+  // ---------- The sheet reads item_* fields the endpoint actually sends ----------
+  // WRITTEN FROM A LIVE BUG. sheet.js tested `it.item_id` in two places - the
+  // catalog/custom tag on every inventory row, and isWeapon(), which decides
+  // whether a held item becomes a play-mode weapon card. Migration 046 dropped
+  // `character_items.item_id` (RETRO-AUDIT R21) and the GET selects
+  // `character_items.*` plus a set of `item_*` ALIASES, none of them `item_id`.
+  // So the test was `undefined &&` for every row from that day on: every item
+  // read as "custom", and no held weapon ever produced a card.
+  //
+  // Nothing failed and nothing looked wrong, which is the shape a rename leaves
+  // behind. This derives the alias list from the endpoint rather than pinning a
+  // list here, so it keeps working when the projection changes - the failure it
+  // exists to catch is precisely somebody changing one side only.
+  section('The sheet reads only item fields its endpoint sends');
+  {
+    const idJs = readFileSync(
+      join(appDir, '..', '..', 'functions', 'api', 'character-creator', 'characters', '[id].js'), 'utf8');
+    const aliased = new Set([...idJs.matchAll(/AS\s+(item_[a-z_]+)/gi)].map((m) => m[1]));
+    // `character_items.*` is in the same SELECT, so the stored columns travel
+    // under their own names too. None of those is `item_`-prefixed, so nothing
+    // here collides with them.
+    //
+    // COMMENTS ARE STRIPPED FIRST, and that is not fussiness: the fix for the
+    // bug this check exists for carries a comment SAYING `it.item_id`, and
+    // scanning raw text failed on the prose explaining the fix. A check that
+    // cannot tell code from the note about the code is worse than none.
+    const code = readFileSync(join(appDir, 'sheet.js'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, ' ')
+      .replace(/^\s*\/\/.*$/gm, ' ');
+    const read = new Set([...code.matchAll(/\bit(?:em)?\.(item_[a-z_]+)/g)].map((m) => m[1]));
+    const phantom = [...read].filter((f) => !aliased.has(f));
+    check('every item_* field the sheet reads is one the endpoint aliases',
+      phantom.length === 0,
+      `sheet.js reads ${phantom.join(', ')} - the GET sends ${[...aliased].join(', ')}`);
+    check('and the endpoint sends the stat block, not just a name',
+      ['item_damage', 'item_range', 'item_mdc', 'item_description'].every((f) => aliased.has(f)),
+      [...aliased].join(', '));
+  }
+
   // ---------- The codex ----------
-  // Plan 20's second half: every spell and psionic power with its text, for the
-  // ones a character does NOT hold. A seventh page, read-only by construction.
+  // Plan 20's second half, widened: every spell, power, item and vessel with
+  // its text, for the ones a character does NOT hold. A seventh page, read-only
+  // by construction.
   section('The codex');
   {
     const html = readFileSync(join(appDir, 'codex.html'), 'utf8');
