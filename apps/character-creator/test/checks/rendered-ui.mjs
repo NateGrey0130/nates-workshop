@@ -1126,8 +1126,16 @@ export function run() {
       !/method:\s*'(POST|PATCH|PUT|DELETE)'/i.test(js) && !/jsonReq\(/.test(js),
       'codex.js has grown a write path; it is served to every authenticated player');
     check('and it asks for its own route, not the boot payload',
-      /api\('codex'\)/.test(js) && !/api\('catalogs'\)/.test(js),
+      /api\('codex\?section=/.test(js) && !/api\('catalogs'\)/.test(js),
       'the codex is loading /catalogs, which is the payload plan 20 kept it out of');
+    // A SECTION, not the whole route. The bare `/codex` used to serve spells
+    // and psionics together; gear and vessels made that a 261 KB fetch before
+    // the page paints, against a 25 KB boot payload, so each catalog is asked
+    // for when its tab is first opened. A page that reverted to one fetch would
+    // still pass the check above.
+    check('and it fetches one section at a time, not the whole codex',
+      !/api\('codex'\)/.test(js) && /section=' \+ encodeURIComponent/.test(js),
+      'codex.js is asking for the whole codex in one request again');
 
     // THE TRAP: .tabbar is display:none above 820px, because the SHEET's tabs
     // are a narrow-screen affordance. Reusing the class without this rule makes

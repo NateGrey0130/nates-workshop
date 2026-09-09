@@ -1982,6 +1982,25 @@ body.play-mode .skill-table .roll-btn { margin-left: 6px; vertical-align: middle
 .codex-stats dt { color: var(--text-muted); }
 .codex-stats dd { margin: 0; color: var(--text-secondary); }
 
+/* A vessel carries two blocks nothing else in the codex has: M.D.C. by
+   location, and the numbered weapon systems. Both need a label above them, and
+   the label is deliberately NOT a heading element — `UI-AUDIT` F31 closed the
+   heading-level skips across all six pages and found eight CSS rules selecting
+   headings by element name, so an <h3> dropped in here would inherit `.panel h3`
+   and resize itself. This is a styled div that reads as a label and skips
+   nothing. */
+.codex-sub {
+  font-family: var(--font-display); font-stretch: 75%;
+  font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-muted); margin: 10px 0 4px;
+}
+
+/* Each weapon system is its own small stat block, indented under the label so
+   five of them do not read as one run-on table. */
+.codex-weapon { margin: 0 0 8px 10px; }
+.codex-weapon-name { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 2px; }
+.codex-weapon .codex-stats { margin-bottom: 0; }
+
 /* pre-wrap for the same reason .power-desc uses it: the catalog holds the
    book's own paragraph breaks, and escHtml plus pre-wrap shows them without
    parsing prose that came out of a PDF. */
