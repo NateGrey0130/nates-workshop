@@ -629,6 +629,49 @@ CREATE TABLE IF NOT EXISTS character_items (
 );
 CREATE INDEX IF NOT EXISTS idx_character_items_character ON character_items (character_id);
 
+-- The vessel a character owns, and the damage it carries. Migration 052.
+--
+-- A SEPARATE TABLE FROM `character_items` rather than a column on it:
+-- that table's CHECK and its gear(slug) foreign key are load-bearing and
+-- widening them to mean "gear OR vessel" makes both weaker; the sheet's
+-- inventory table renders every row that endpoint returns, so a robot would
+-- arrive as a line item with a quantity box; and a vessel is not a thing you
+-- carry three of. `qty` and `equipped` are the wrong questions about a robot
+-- and `mdc_current` is the right one.
+--
+-- `mdc_current` IS JSON KEYED BY LOCATION NAME, because the maxima are catalog
+-- data and the damage is per-instance: two Glitter Boys in a party take
+-- different hits to the same arm. `vehicle_locations` gives the maximum for
+-- "Left Arm"; this holds {"Left Arm": 180} for THIS one. A location absent from
+-- the object is undamaged, so a fresh vessel is `{}` rather than a copy of the
+-- catalog - which also means a book correcting a location's M.D.C. does not
+-- have to rewrite every character who owns one. `_lib/character-json.js` owns
+-- the empty value: `{}`, not `[]` and not NULL.
+CREATE TABLE IF NOT EXISTS character_vehicles (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  character_id INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  vehicle_slug TEXT REFERENCES vehicles(slug),        -- NULL = freeform, custom_name required
+  custom_name TEXT,
+  nickname TEXT,                                      -- people name their machines; the catalog name is the model
+  mdc_current TEXT,                                   -- JSON object keyed by vehicle_locations.location
+  notes TEXT,
+  journal_entry_id INTEGER REFERENCES journal_entries(id) ON DELETE SET NULL,
+  added_at TEXT NOT NULL DEFAULT (datetime('now')),
+  removed_at TEXT,                                    -- NULL = still owned; removal is soft, as inventory's is
+  CHECK (vehicle_slug IS NOT NULL OR custom_name IS NOT NULL)
+);
+CREATE INDEX IF NOT EXISTS idx_character_vehicles_character
+  ON character_vehicles (character_id);
+
+-- Guarded on the table this migration adds, never unconditional: on an existing
+-- database every CREATE above is skipped, so an unguarded row would mark an
+-- un-migrated database as migrated - the exact lie schema_migrations exists to
+-- prevent. The seeding block below carries the rest of these; this one lives
+-- beside its CREATE because the table is the feature.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '052-character-vehicles.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'character_vehicles');
+
 -- Classes created by the PDF import tool, and the ONLY source of class
 -- definitions. A row goes live immediately, without a redeploy. (Committed
 -- markdown under apps/character-creator/data/classes used to win on an id
