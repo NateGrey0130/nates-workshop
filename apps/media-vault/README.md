@@ -45,6 +45,9 @@ functions/api/media-vault/
 ├── duplicates.js         GET  — the duplicate scan, read-only
 ├── shares.js             GET / POST / DELETE — who may read this caller's
 │                         library, and whose the caller may read
+├── vault.js              GET  — somebody else's library, if they said you
+│                         may. The ONE endpoint that returns rows the
+│                         caller does not own
 └── lookup.js             GET  — OpenLibrary + TMDB, proxied
 
 db/schema.sql             media_items, media_shares — see "Data model"
@@ -308,6 +311,22 @@ those two cases as one identity.
 At most **50** grants per owner. That is a ceiling rather than a policy: the
 real bound is the picker, which offers only addresses that can sign in.
 
+**One endpoint reads a library its caller does not own, and only one.**
+`/api/media-vault/vault?owner=` checks for a grant first, in its own statement,
+and answers `403` without it — the same `403` whether the grant never existed,
+was revoked a second ago, or that library does not exist at all, because a
+viewer learning which addresses have libraries is a small leak that is free not
+to have. Everything else in this app binds the caller's own email, and the
+smoke test asserts both halves: no `media_items` read, update or delete
+anywhere is missing `WHERE user_email = ?`, and `vault.js` is the only file
+that consults `media_shares` to decide whose rows to return.
+
+Neither check can prove the *caller's* email is the one bound — that is
+positional, decided by the argument order in each `.bind()`, and no reading of
+source text sees it. What they prove is that no statement can touch every
+user's rows, and that the surface which can serve another person's library is
+one file long.
+
 **`source_id` is where the row came from**, so its lookup can be run again
 exactly: the normalised ISBN for a book, `tmdb:movie:1234` / `tmdb:tv:1234` for
 video — the prefix names the lookup, the rest is that lookup's key. One generic
@@ -355,6 +374,7 @@ to that email.
 | `/api/media-vault/shares` | GET | Who may read the caller's library, and whose the caller may read |
 | `/api/media-vault/shares` | POST | `{ email }` — let that address read the caller's library |
 | `/api/media-vault/shares` | DELETE | `?email=` — stop sharing with that address |
+| `/api/media-vault/vault` | GET | `?owner=` — somebody else's library, if they said you may. **The only endpoint that returns rows the caller does not own** |
 | `/api/media-vault/lookup` | GET | Metadata proxy, below |
 
 **What is bulk-settable, and what is deliberately not.** `bulk-update`'s
@@ -492,7 +512,7 @@ that applies to a Worker's whole batch, lets the run be cancelled halfway, and
 lets the progress be watched. It calls the `isbn` lookup mode and the
 `items/bulk` endpoint that already exist — **no new endpoint and no new mode**,
 which is load-bearing, because the smoke test asserts the endpoint files are
-exactly the six documented and that the README documents every mode the proxy
+exactly the nine documented and that the README documents every mode the proxy
 implements.
 
 Nothing is written until Add selected is pressed, so cancelling, closing the

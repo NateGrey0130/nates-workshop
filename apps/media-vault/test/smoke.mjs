@@ -29,11 +29,44 @@ const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
 const schema = readFileSync(join(repoRoot, 'db', 'schema.sql'), 'utf8');
 const commonSrc = readFileSync(join(apiDir, '_lib', 'common.js'), 'utf8');
 
-const endpointFiles = ['items.js', 'migrate.js', 'lookup.js', 'duplicates.js',
-  join('items', 'bulk.js'), join('items', 'bulk-update.js'), join('items', 'bulk-delete.js')];
+// DERIVED FROM DISK, not listed. This was a hardcoded array of seven until
+// 2026-09-08, and the day a eighth endpoint landed it silently stopped covering
+// the app: `shares.js` was added by SHARE-AUDIT V1 and nobody thought to add it
+// here, so the structural checks below - the ones that exist to prove no
+// endpoint can replace or escape a library - did not read it at all, and the
+// suite passed. A list of files that must be kept in step with a directory is
+// the same shape as every count in this repo that has ever gone stale.
+//
+// _lib is excluded here because these are ENDPOINT sources, and the two checks
+// that need the shared SQL read `commonSrc` above. `allStatementSrc` below is
+// the one that must see everything.
+const walkJs = (dir, prefix = '') => {
+  const out = [];
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    if (e.isDirectory()) { if (e.name !== '_lib') out.push(...walkJs(join(dir, e.name), prefix + e.name + '/')); }
+    else if (e.name.endsWith('.js')) out.push(prefix + e.name);
+  }
+  return out;
+};
+const endpointFiles = walkJs(apiDir);
 const endpointSrc = Object.fromEntries(
   endpointFiles.map((f) => [f.replace(/\\/g, '/'), readFileSync(join(apiDir, f), 'utf8')]));
 const allEndpointSrc = Object.values(endpointSrc).join('\n');
+
+// These files explain themselves at length, and a check that reads prose is
+// reading the wrong thing: the cross-user check below reported BOTH shares.js
+// and vault.js on its first run, because shares.js carries a comment mentioning
+// media_items. Whole-line // comments and /* */ blocks only — a naive `//.*`
+// would eat the `https://` inside every upstream URL in lookup.js.
+const stripComments = (src) => src
+  .replace(/\/\*[\s\S]*?\*\//g, '')
+  .split('\n').filter((l) => !/^\s*\/\//.test(l)).join('\n');
+const endpointCode = Object.fromEntries(
+  Object.entries(endpointSrc).map(([f, src]) => [f, stripComments(src)]));
+
+// Every source that can hold a media_items statement, _lib included: two of the
+// app's statements live in _lib/common.js and would otherwise go unchecked.
+const allStatementSrc = Object.values(endpointCode).join('\n') + '\n' + stripComments(commonSrc);
 
 // A deterministic stand-in for crypto.randomUUID, so a re-id is provable.
 let idCounter = 0;
@@ -157,6 +190,37 @@ section('No endpoint replaces a library');
 }
 check('no endpoint handles PUT at all',
   !allEndpointSrc.includes('onRequestPut'));
+
+// SHARE-AUDIT V2. Sharing made one endpoint return rows the caller does not
+// own, and these two checks are what that split was for. Neither can prove the
+// CALLER'S email is the one bound - that is positional, decided by bindUpsert
+// and by the argument order in each .bind(), and no reading of source text sees
+// it. What they can prove is the two things that ARE structural.
+{
+  // 1. No statement can touch every user's rows. Verb-restricted on purpose:
+  // UPSERT_SQL is an INSERT ... ON CONFLICT and carries no WHERE clause at all,
+  // because its scoping is the user_email column it inserts. A predicate that
+  // demanded `user_email = ?` of every statement would flag the one statement
+  // behind every write in this app. HEALTH-AUDIT.md reached the same phrasing
+  // by hand, counting SELECT/UPDATE/DELETE and leaving INSERT out.
+  const scoped = [...allStatementSrc.matchAll(/\b(?:SELECT|UPDATE|DELETE)\b[^`'"]*?\bmedia_items\b[^`'"]*/g)]
+    .map((m) => m[0].replace(/\s+/g, ' ').trim());
+  check('every media_items read, update and delete is scoped to one user',
+    scoped.length > 0 && scoped.every((s) => s.includes('user_email = ?')),
+    scoped.filter((s) => !s.includes('user_email = ?')).join(' | ') || `${scoped.length} statements`);
+
+  // 2. Exactly one file decides whose rows to return by consulting a grant.
+  // media_shares is what makes a cross-user read possible, so the file that
+  // reads BOTH tables is the whole surface of it. A second one appearing is the
+  // event this check exists for - it means somewhere else has learned to serve
+  // another person's library, and that should cost a deliberate edit here.
+  const crossUser = Object.entries(endpointCode)
+    .filter(([, src]) => src.includes('media_shares') && src.includes('media_items'))
+    .map(([f]) => f);
+  check('exactly one endpoint reads rows it does not own, and it is vault.js',
+    crossUser.length === 1 && crossUser[0] === 'vault.js',
+    crossUser.join(', ') || 'none — vault.js should be the one');
+}
 check('the old whole-library endpoint is gone',
   !existsSync(join(repoRoot, 'functions', 'api', 'media.js')));
 check('and nothing still calls its path',
@@ -461,8 +525,8 @@ section('The README’s claims');
   walk(apiDir, '');
   check('the file map lists every endpoint file that exists',
     onDisk.every((f) => readme.includes(f.split('/').pop())), onDisk.join(' '));
-  check('and the endpoint files are exactly the eight documented',
-    onDisk.length === 8, onDisk.join(' '));
+  check('and the endpoint files are exactly the nine documented',
+    onDisk.length === 9, onDisk.join(' '));
 }
 {
   const documented = [...readme.matchAll(/^\| `([a-z-]+)` \| (?:OpenLibrary|TMDB) \|/gm)].map((m) => m[1]);
