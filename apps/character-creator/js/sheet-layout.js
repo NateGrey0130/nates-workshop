@@ -143,7 +143,11 @@
     attributes: 'a', vitals: 'a', experience: 'a', 'saving-throws': 'a', combat: 'a',
     resources: 'a', stage: 'a',
     'class-skills': 'b', 'related-skills': 'b', 'secondary-skills': 'b',
-    granted: 'b', armor: 'b', equipment: 'b',
+    // `vessels` sits beside `equipment` in b: it is a list you scan, and it
+    // wants the column that takes the slack - a Glitter Boy prints eight
+    // locations and four weapon systems, which is the longest thing on the
+    // Gear tab the moment a character owns one.
+    granted: 'b', armor: 'b', equipment: 'b', vessels: 'b',
     'psionics-magic': 'c', background: 'c', bearing: 'c', notes: 'c', journal: 'c',
     'session-log': 'c',
   };

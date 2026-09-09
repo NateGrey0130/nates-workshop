@@ -71,6 +71,21 @@ const SECTIONS = {
     ).first()),
   }),
 
+  // Every vessel's name and class, and nothing else. ~10 KB against the 106.8 KB
+  // the full `vehicles` section costs.
+  //
+  // This is what a PICKER needs, and it is the same split `/items` already makes
+  // for gear: the catalog's names for choosing from, the stat block only where
+  // something renders one. The sheet's "add a vessel" control fetches this; it
+  // has no use for 1,238 location rows and 635 weapon systems to put 127 names
+  // in a dropdown, and on a phone at a table that difference is the feature.
+  'vehicles-index': async (env) => ({
+    'vehicles-index': (await env.DB.prepare(
+      `SELECT slug, name, vehicle_class, system, source_book
+       FROM vehicles ORDER BY name`
+    ).all()).results,
+  }),
+
   spells: async (env) => ({
     spells: (await env.DB.prepare(
       `SELECT name, level, ppe, ppe_note, variant_note, range, duration, damage,
