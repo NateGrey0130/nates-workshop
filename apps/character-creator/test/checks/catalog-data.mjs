@@ -552,7 +552,7 @@ section('Wilderness Scout bonuses (p.99)');
 // ---------- 6. Provenance ----------
 section('Provenance of web-sourced rows');
 
-// Twenty-seven gear rows say their source was the web rather than naming a book and
+// Twenty-four gear rows say their source was the web rather than naming a book and
 // page. That value is load-bearing: it is how a reader tells a checked row
 // from an unchecked one, and how a later book correction knows what it is
 // overwriting. The near miss that produced the rule was a Glitter Boy stat

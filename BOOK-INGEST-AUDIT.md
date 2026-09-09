@@ -6696,3 +6696,54 @@ with one.**
 check was proved by failing. **Ongoing cost: one check that runs offline in the
 existing suite, and a convention that a registry note carries a date.** The
 alternative - policing the claims by hand - is what produced four false ones.
+
+### F46 - the web marker has no rule against combat numbers, and four rows held them
+
+**Found while closing `F41`, 2026-09-09**, by a readback that asserted no
+web-marked row carries a combat number and was **wrong**. Four did. Filed and
+taken the same day, on Nate's call to search the books rather than only file.
+
+The README's estimate tier forbids a row marked `Estimate - no published price
+found` from carrying M.D.C., damage or an A.R. at all. `Web reference (not
+book-verified)` carries **no equivalent rule**, and these four held combat
+numbers under it: `c-18-laser-pistol` (2D4), `cyber-armor` (mdc 50, A.R. 16),
+`hatchet` and `hand-axe` (1D6 each).
+
+**SEARCHING CLOSED THREE OF THE FOUR, which is the argument for searching rather
+than stripping.** All three are in Rifts Ultimate Edition, read from the cached
+OCR and then confirmed against a render, because `rue` is a scan:
+
+| row | printed | what the book gives | kind of evidence |
+|---|---|---|---|
+| `c-18-laser-pistol` | **257** | `Mega-Damage: 2D4 M.D.` | full stat block |
+| `cyber-armor` | **65** | `Armor Rating: 16`, `Chest Plate (main body) - 50 M.D.C.` | full stat block |
+| `hatchet` | **56** | `hatchet for cutting wood (1D6 S.D.C. damage)` | **not** a stat block |
+
+**The C-18 matched on every field, not just the one this finding is about** —
+weight 4 lbs, range 800 feet (244 m), payload 10 shots, 12,000 credits, all
+already stored. A complete and accurate transcription of a page nobody credited,
+the same shape as the Glitter Boy in `F41`'s last session.
+
+**The hatchet is the weak citation and is labelled as one.** Its figure is a
+parenthetical inside the Crazy O.C.C.'s `Standard Equipment` line, not a weapon
+entry. Printed, on a page, render-confirmed — but weaker than the other two, and
+recorded as such rather than flattened into them.
+
+**`hand-axe` keeps the marker, and it is a duplicate nobody has merged.** Every
+hit across all sixteen caches, under both spellings, is a class equipment list
+naming *"a small hand axe"* with no damage figure. **And on the evidence it is
+the same item as `hatchet`**: identical damage (1D6), weight (3), cost (40) and
+category. `F44`'s acronym fix cannot see this pair — the names share no token at
+all — so `findDuplicates` will not report it either. Not merged: that is
+duplicate-review work with two live rows and needs Nate.
+
+**So the end state is ONE web-marked row carrying a combat number, not zero**,
+and it is the one that genuinely has no book behind it. The README count moves
+27 to 24.
+
+**Posture: re-cite what the books support, mark what they do not, merge nothing.**
+No new rule was added forbidding combat numbers under the web marker — `hand-axe`
+shows why one would be wrong: the row is honest, and the marker is doing exactly
+the job the README describes. **Confidence: high** on the three citations, all
+render-confirmed; **high** on the absence for `hand-axe`, which is a search of
+every cache on this machine and therefore bounded by which books are here.
