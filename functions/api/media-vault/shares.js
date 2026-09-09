@@ -14,9 +14,11 @@
 import { getUserEmail, json } from './_lib/common.js';
 
 // A ceiling, not a policy. The real bound is the candidate list below, which
-// holds about five addresses. Kept anyway because a ceiling that is never
-// reached costs nothing, and because it is the only thing standing between a
-// misconfigured environment and an unbounded table.
+// holds one entry per person who can sign in to the Workshop - a number this
+// comment deliberately does not state, because nothing here can recompute it
+// and the last one written down was wrong within a day. Kept anyway because a
+// ceiling that is never reached costs nothing, and because it is the only
+// thing standing between a misconfigured environment and an unbounded table.
 const MAX_SHARES = 50;
 
 // Enough to reject a typo and a paste of something that is not an address at
@@ -30,7 +32,8 @@ const looksLikeEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 // - `GET /accounts/{id}/access/apps/{app}/policies` is an ordinary API call -
 // and that option was declined on cost rather than being impossible: it means a
 // standing account-scoped Cloudflare credential living in the deployment to
-// serve five addresses that change about twice a year. An earlier version of
+// serve a list short enough to read at a glance and edited by hand. An
+// earlier version of
 // this comment said no Function could read it and cited CLAUDE.md, which says
 // no such thing; CLAUDE.md's `Three credentials` table is about what an agent
 // on Nate's machine should reach for. Corrected rather than repeated.
