@@ -776,7 +776,7 @@ no longer exists.
 
 ## A row can say where it came from
 
-`source_book` normally names a book and a page. Forty gear rows instead say:
+`source_book` normally names a book and a page. Twenty-seven gear rows instead say:
 
 ```
 Web reference (not book-verified)
@@ -789,6 +789,16 @@ The reason is a near miss. The first stat block found for the Glitter Boy gave
 820 M.D.C. and a 40 million credit price, and was only obviously wrong because
 that page declared itself homebrew. The official figure is 770. Nothing about
 the numbers themselves said which was which.
+
+**And on 2026-09-09 the rule fired exactly as designed.** Rifts Ultimate
+Edition printed 71-72 turned out to stat the Glitter Boy in full, and all seven
+of the figures this row had stored from the web - 770 main body among them - are
+printed there verbatim. The row is now cited to that book, and the one number the
+book contradicted (a 20-year nuclear charge against the printed 25) was corrected
+in the same script. **The marker did the job this section claims for it: the book
+correction knew what it was overwriting.** See `BOOK-INGEST-AUDIT.md` F41.
+
+This count said *Forty* until that day and measured **28**; it is **27** now.
 
 So the rule for anything transcribed from the open web:
 
