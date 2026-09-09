@@ -949,6 +949,19 @@ check('punctuation and ampersands normalise away',
   normaliseName('Lore — Demons and Monsters') === normaliseName('Lore: Demons & Monsters'));
 check('bracketed qualifiers are ignored',
   normaliseName('Tracking (people)') === normaliseName('Tracking'));
+// A DOTTED ACRONYM IS ONE TOKEN. Without this, the separator strip turns
+// `A.T.V.` into `a t v`, which can never match the token `atv` - so the
+// acronym that makes two names obviously the same machine is the thing that
+// stops them scoring. Both pairs below are the SAME vehicle stored twice, and
+// both sat under the threshold until 2026-09-09. `BOOK-INGEST-AUDIT` F44.
+check('a dotted acronym collapses to one token',
+  normaliseName('The Big Boss A.T.V.') === 'the big boss atv');
+check('and a real duplicate pair clears the threshold because of it',
+  similarity('Big Boss ATV', 'The Big Boss A.T.V.') >= 0.7
+  && similarity('Mountaineer ATV', 'The Mountaineer A.T.V.') >= 0.7);
+// The guard is TWO OR MORE letters, so an ordinary name is untouched.
+check('an unrelated pair is still below the threshold',
+  similarity('Mountaineer ATV', "Wilk's ATV Transport Vehicle") < 0.7);
 check('an identical pair scores 1', similarity('Skin & Prepare Animal Hides', 'Skin and Prepare Animal Hides') === 1);
 // Found in the real gear catalog. These used to score 0.75 and sit in the
 // loosest tier — a genuine duplicate filed where genuine duplicates get

@@ -6457,3 +6457,69 @@ names contain a dotted acronym. **What would raise it:** counting rows matching
 **Ongoing cost: near zero.** One function, already unit-testable, and the change
 can only make the detector see MORE pairs - which a person then reads. It cannot
 merge anything on its own.
+
+**Taken, 2026-09-09 (PR #862).** Posture held: `normaliseName` only.
+`THRESHOLD` was not moved, no exit code moved, and duplicate review is still a
+report a person reads rather than a gate.
+
+**The fix is one line**, placed after the bracket and ampersand handling and
+before the separator strip:
+
+```js
+.replace(/\b(?:[a-z]\.){2,}/g, (m) => m.replace(/\./g, ''))  // A.T.V. -> atv
+```
+
+**TWO OR MORE letters**, so a trailing initial or an ordinary abbreviation is
+untouched — `St. John` normalises the same as it always did.
+
+**The two target pairs, re-measured after the change:**
+
+| pair | before | after |
+|---|---|---|
+| Big Boss ATV / The Big Boss A.T.V. | 0.500 | **0.950** |
+| Mountaineer ATV / The Mountaineer A.T.V. | 0.333 | **0.950** |
+| Mountaineer ATV / Wilk's ATV Transport Vehicle | 0.200 | 0.200 — correctly still apart |
+
+**THE SWEEP THIS FINDING ASKED FOR WAS RUN, and it is the reason to trust the
+change.** *"What would raise it: counting rows matching `%.%.%` and re-scoring
+their neighbours."* Done across all four catalogs on 2026-09-09 by importing the
+OLD module — checked out from git — beside the new one, so "before" is the
+shipped code rather than a re-implementation of it:
+
+| catalog | rows | names that normalise differently | pairs newly at or above 0.7 |
+|---|---|---|---|
+| gear | 1253 | 10 | **2** — both the intended targets |
+| skills | 367 | 39 | **1** |
+| spells | 681 | 0 | 0 |
+| psionic_powers | 116 | 5 | 0 |
+
+**Three new pairs in the whole catalog, and not one of them is false.** 54 names
+normalise differently — every `W.P.`, `M.D.C.`, `I.S.P.` and `P.P.E.` in the
+catalog — and the change is nearly inert outside the pairs it was written for.
+
+**The third pair is a real find and is NOT merged here.**
+`W.P. Heavy M.D. Weapons` / `W.P. Heavy Military Weapons` went 0.667 to 0.750.
+Both are `Weapon Proficiencies`; the second cites `Rifts Ultimate Edition p.329`
+and the first carries the bare `Rifts Ultimate Edition` that marks it as one of
+the eleven rows the 2026-08-28 re-provenance pass held back, and
+`docs/surveys/rue.md` lists `W.P. Heavy M.D. Weapons` among the skills RUE prints
+no entry for. That is duplicate-review work with a live skill on each side, not
+this finding's, and merging it would need Nate. **Recording it because the fix
+surfaced it within a minute of shipping**, which is the argument for the fix.
+
+**Three checks added to `smoke.mjs`, and two of them were proved by failing.**
+Reverting `catalog-merge.js` makes *a dotted acronym collapses to one token* and
+*a real duplicate pair clears the threshold because of it* fail, and restoring it
+makes them pass — run both ways on 2026-09-09, per this repo's rule that a check
+which has only ever passed proves nothing. **The third check passes either way**
+and is said so here: it guards against over-collapsing rather than testing the
+fix, and no injection makes it fail.
+
+**Found in passing and NOT changed:** `catalog-merge.js` contains a literal NUL
+byte at line 99, inside `pairKey`, as the delimiter between the two halves of a
+key. It is deliberate and correct — a NUL cannot occur in a name — but it is
+written as a raw byte rather than the `\0` escape, which makes the whole file
+read as *binary* to `grep` and would be silently lost by any tool that
+round-trips the file through an encoding that cannot carry it. Changing it to
+`\0` would be byte-for-byte equivalent in behaviour. Named rather than done,
+because it is not this finding.
