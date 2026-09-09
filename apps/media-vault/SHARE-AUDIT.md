@@ -241,6 +241,87 @@ and this being taken — the proposed check is also what would catch that.
 statement looks like, and will need editing the first time a legitimate endpoint
 does something it does not recognise. Cheap, and it fails closed and loudly.
 
+**Taken, 2026-09-08 (PR #TBD).** Posture held: **a structural guarantee, not a
+runtime gate** — both new checks live in the smoke test and nothing was added to
+the request path.
+
+**The check this finding is for could not have worked as described, because the
+list it would have read was already stale.** `apps/media-vault/test/smoke.mjs`
+built its endpoint sources from a **hardcoded array of seven filenames**, and
+`V1` added `shares.js` without adding it there. So the structural checks that
+already existed — *"every delete statement names item_id"*, *"no endpoint
+handles PUT at all"* — silently stopped covering the newest file, and the suite
+passed. A V2 check hung on that array would have proved nothing about the two
+files it was written for. **The array is now derived from disk**, which is the
+defect and the fix in one line.
+
+`_lib` was excluded from that walk as well, and holds two of the app's ten
+`media_items` statements, so the new check reads `_lib/common.js` too.
+
+**Both checks were proved by making them fail**, not by watching them pass:
+
+| injected defect | what fired |
+|---|---|
+| `WHERE user_email = ?` removed from `duplicates.js`'s SELECT | `FAIL … scoped to one user — SELECT * FROM media_items ORDER BY added_at` |
+| a `media_shares` statement added to `items.js` | `FAIL … exactly one endpoint reads rows it does not own — items.js, vault.js` |
+
+Both injections were reverted; the diff contains neither.
+
+**The first run of the second check was wrong, and the reason is worth keeping.**
+It reported **both** `shares.js` and `vault.js`, because `shares.js` carries a
+*comment* mentioning `media_items`. A check reading prose is reading the wrong
+thing, so both checks now run against comment-stripped source — whole-line `//`
+and `/* */` only, because a naive `//.*` eats the `https://` in `lookup.js`.
+
+**What these checks CANNOT do, stated in the README rather than implied.**
+Neither proves the *caller's* email is the one bound: that is positional, decided
+by the argument order in each `.bind()`, and invisible to any reading of source
+text. They prove no statement can touch every user's rows, and that the surface
+able to serve another person's library is one file long.
+
+**Verified against a running server**, not just read: `wrangler pages dev` on
+port **8804**, three identities, nine calls. A viewer with no grant gets `403`;
+the owner grants; the viewer reads the full record including `location` and
+`notes`; a stranger still gets `403`; the owner revokes and the viewer gets
+`403` again. `POST /api/media-vault/vault` answers **405** — the file exports
+only `onRequestGet`, so read-only is the router's answer rather than a check
+somebody maintains.
+
+**The hazard `V3` exists for was demonstrated rather than argued.** A viewer who
+POSTs an item while looking at someone else's library gets `{"ok":true}` and the
+row lands in **their own** vault: the owner's library still read 2 items, the
+viewer's own read 1, titled *"Accidental Add"*. Nothing is corrupted and nothing
+warns — which is exactly why `V3` hides the write controls.
+
+**Three corrections to this finding's own text**, from the premise pass:
+
+<!-- claim-ok: quoting the premises this note corrects -->
+
+- It says *"All five bind the caller's email"* and rests its **high confidence**
+  on *"The five call sites were read individually"*. There are **seven files and
+  ten statements** — `migrate.js:73` and two in `_lib/common.js` are not listed.
+  The conclusion holds for all ten; the count behind the confidence did not.
+- *"Two files takes it to **nine**"* — `V1` had already moved the pin to eight,
+  so this was **one** file and **one** README row, not two.
+- Every line number it cites (`items.js:16`, `items/bulk.js:45`,
+  `items/bulk-update.js:96`, `items/bulk-delete.js:33`, `duplicates.js:26`,
+  `_lib/common.js:125`, `smoke.mjs:462`, `:464`) is still exact.
+
+**A live counter-precedent, recorded because the subject grep found it and the
+finding does not mention it.** `functions/api/character-creator/characters/[id].js:2`
+— *"Reads are open to any authenticated friend"* — keeps an open cross-user read
+in the **same file** as its owner-only writes, guarded by a helper with a write
+flag. That is the shape `V2` rejects, shipped and documented, in the same repo.
+It does not overturn the split here (a character is shared with a table; a media
+library is shared with nobody until a row says so), but a reader should know the
+opposite decision exists rather than discovering it.
+
+**One piece of documented rot fixed in passing**, because it describes the very
+check this finding moves: `apps/media-vault/README.md` said the suite asserts
+*"exactly the six documented"* endpoint files. It had said six against a test
+asserting seven since before this menu was written. Nothing parses that
+sentence, which is why it rotted.
+
 ## V3 — medium — the client asks the server whether it may write
 
 **Hiding buttons is not read-only, and this repo already knows the better
