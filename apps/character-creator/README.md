@@ -622,9 +622,15 @@ scripts/
 │                           65 consecutive merges once failed with a perfectly
 │                           clear signal nobody read. Then pick3cut5-room, which
 │                           a merge does NOT deploy and which therefore has no
-│                           check-run to read: its newest commit compared against
-│                           the active deployment's timestamp. Report only, no
-│                           exit code
+│                           check-run to read. It reads the GIT_SHA binding off
+│                           the live Worker and answers with git log, falling back
+│                           to a timestamp compare only when that binding is absent
+│                           - and saying which. Report only, no exit code
+├── deploy-room.mjs         The ONE way to deploy pick3cut5-room. Always passes
+│                           --var GIT_SHA, because the flag was documented in bold
+│                           and the 2026-09-02 hand deploy dropped it anyway, and
+│                           refuses a dirty tree, because a sha that names a commit
+│                           whose content did not ship is worse than none
 ├── menu-check.mjs          Does a new claim about ANOTHER file say where it was
 │                           read? Every false premise on SHIP-PR-AUDIT was that
 │                           one shape, and audit-menu already carried five rules
