@@ -1101,10 +1101,21 @@ export function run() {
     check('and the flush replays serially, not in parallel',
       /for \(const e of pending\)/.test(sheet), 'the flush fires everything at once');
 
-    // A REFUSAL AND A SILENCE ARE DIFFERENT THINGS.
-    check('a server refusal still rolls back',
-      /if \(err\.status === undefined && await queuePoolChange/.test(sheet),
-      'anything that fails is queued, including changes the server rejected on merit');
+    // A REFUSAL AND A SILENCE ARE DIFFERENT THINGS. Counted across EVERY
+    // caller rather than matched once: the check used to name one call site,
+    // so the Damage button could queue - or not queue - without it noticing.
+    // Every queueChange call must sit behind the same `err.status === undefined`
+    // test, or something is queueing changes the server refused on merit.
+    const queueCalls = sheet.match(/await queueChange\(/g) || [];
+    const guardedQueueCalls = sheet.match(/err\.status === undefined && await queueChange\(/g) || [];
+    check('every queued write is a silence, never a refusal',
+      queueCalls.length > 0 && queueCalls.length === guardedQueueCalls.length,
+      `${queueCalls.length} queueChange call(s), ${guardedQueueCalls.length} behind the status test`);
+    // The pool steppers and the Damage button, which is the one that used to
+    // lose a hit to a dropped connection while the +/- beside it survived.
+    check('and both the steppers and Damage are among them', queueCalls.length >= 2
+      && /await queueChange\('pool'/.test(sheet) && /await queueChange\('damage'/.test(sheet),
+      'a play write that moves a pool is not queued');
     check('and a browser with no IndexedDB falls back to rolling back',
       /if \(!window\.playQueue \|\| !\(await playQueue\.available\(\)\)\) return false;/.test(sheet),
       'a private window loses the change with no rollback');
@@ -1141,6 +1152,36 @@ export function run() {
 
     check('the flush runs when the network returns',
       /addEventListener\('online'/.test(sheet), 'a reconnect does not flush');
+
+    // ONE PRESS, ONE ENTRY, ONE EVENT. A Damage that spills out of S.D.C. into
+    // H.P. moves two pools, and the queue has to carry them together: split
+    // into two entries it would put two rows in the log, let undo take back
+    // half a hit, and make the session recap count one blow as two. So the
+    // entry carries a FIELD MAP, and the replay sends it whole.
+    check('an entry carries every field of its press',
+      /await playQueue\.push\(\{ characterId: Number\(id\), kind, note, fields \}\)/.test(sheet),
+      'the queue stores one field per entry, so a two-pool press is split');
+    check('and the replay sends them in one event',
+      /changes: \{ character: entryFields\(e\) \}/.test(sheet),
+      'the replay rebuilds a single-field change and drops the rest of the press');
+    check('and the replay keeps the press\'s own kind',
+      /kind: e\.kind \|\| 'pool'/.test(sheet),
+      "a queued Damage replays as something other than a 'damage' event");
+
+    // IndexedDB OUTLIVES A DEPLOY. A player who queued a change before the
+    // field map shipped has a one-field row waiting, and the flush has to
+    // replay it rather than dropping it or throwing on a missing `fields`.
+    check('an entry queued in the older shape still replays',
+      /function entryFields\(e\) \{[\s\S]{0,200}?e\.fields \|\| \{ \[e\.key \+ '_current'\]/.test(sheet),
+      'a change queued before this shape shipped is lost on flush');
+
+    // Half an answered Damage is exactly the split the queue exists to avoid.
+    check('a press that clashed on two pools waits for both answers',
+      /Object\.values\(C\.conflicts\)\.some\(\(x\) => x\.seq === c\.seq\)/.test(sheet),
+      'answering one pool sends the press with the other still unanswered');
+    check('and an answered pool stops offering the choice',
+      /delete C\.conflicts\[key\];[\s\S]{0,300}?C\.resolved\[c\.seq\]/.test(sheet),
+      'an answered card keeps showing two halves, or the answer is lost');
   }
 
   // ---------- The sheet reads item_* fields the endpoint actually sends ----------
