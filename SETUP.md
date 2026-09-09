@@ -536,6 +536,32 @@ covered. The allow policy is a plain email list; add a friend by adding their
 email. Sessions are one-time email codes. There is **no Access policy-as-code
 in the repo** — it is dashboard-only.
 
+### Adding a friend is TWO steps, and the second one is easy to forget
+
+Adding an address to the allow policy lets that person into the Workshop. It
+does **not** let anyone share a MediaVault library with them: that list is
+`MV_SHARE_CANDIDATES`, a Pages environment variable under *Environment
+configuration* above, and it is a **hand-kept mirror of this policy**. Update
+both in the same sitting.
+
+**Nothing checks that the two agree**, and nothing can. The Pick 3 Cut 5 bypass
+is verifiable from outside because it is a *behaviour* — `node
+apps/pick3cut5/test/smoke.mjs --remote` fetches production with no session and
+sees a 200 or a 302. **There is no request that reveals who is on an email allow
+list**, so there is no equivalent here. Confirmed by search rather than assumed:
+no test file in this repo calls the Cloudflare API at all, and the only code
+that does is `scripts/deploy-sweep.mjs`, against a Workers endpoint.
+
+**A credentialed read does exist** — `GET /accounts/{id}/access/apps/{app}/policies`
+through the `cloudflare-api` MCP plugin answers it in seconds, which is how the
+policy was read on 2026-09-08. That is a person or an agent checking, not CI.
+
+**The drift fails closed, which is why this is a note and not a gate.** If the
+variable is behind, the new person simply is not offered in anyone's share
+picker, and the owner asks for them to be added. Nobody can grant a share that
+silently never works — `functions/api/media-vault/shares.js` re-checks the list
+on every grant. See `apps/media-vault/SHARE-AUDIT.md` V4.
+
 The Workers read the identity from the `Cf-Access-Authenticated-User-Email`
 header in exactly one place: `functions/api/_lib/access.js`. On localhost,
 where Access is absent, the character creator's auth falls back to
