@@ -444,11 +444,25 @@ rotating, or standing an environment up from nothing, it is these and nothing
 else.
 
 **Not all of them are encrypted secrets, which this section claimed until
-2026-09-08.** Read back from the project on that day, production holds three
-`secret_text` values (`ANTHROPIC_API_KEY`, `ADMIN_EMAIL`, `TMDB_API_KEY`) and
-two `plain_text` ones (`ACCESS_TEAM_DOMAIN`, `ACCESS_AUD`) — so the dashboard
-already carried plain variables while the note below said it held the secrets
-"and nothing else". Both halves are corrected in place.
+2026-09-08.** Read back from the project on **2026-09-09**, production holds
+four `secret_text` values (`ANTHROPIC_API_KEY`, `ADMIN_EMAIL`, `TMDB_API_KEY`,
+`MV_SHARE_CANDIDATES`) and two `plain_text` ones (`ACCESS_TEAM_DOMAIN`,
+`ACCESS_AUD`) — so the dashboard already carried plain variables while the note
+below said it held the secrets "and nothing else". Both halves are corrected in
+place.
+
+**Neither number is worth trusting from this page.** It was *three and two* when
+first written on 2026-09-08 and *four and two* a day later, because setting one
+variable moved it — nothing parses this sentence and no test pins it, unlike the
+counts in `apps/character-creator/README.md`. **The types are also a choice
+rather than a property of the variable**: a Function reads `secret_text` and
+`plain_text` through `env` identically, so the same value works either way and
+this split records what somebody clicked. Read it back rather than quoting it:
+
+```
+GET /accounts/{account_id}/pages/projects/nates-workshop
+  → deployment_configs.production.env_vars
+```
 
 - `ANTHROPIC_API_KEY` — used by the `/api/claude` proxy and the character
   creator's PDF importers. A new value takes effect on the **next deployment**.
@@ -469,11 +483,18 @@ already carried plain variables while the note below said it held the secrets
   `functions/api/media-vault/shares.js` re-checks it on every grant, so the
   closed picker cannot be bypassed by calling the endpoint directly. **Unset
   means nobody** — sharing refuses with a message naming this variable, the
-  same fail-closed posture `ADMIN_EMAIL` takes. **A plain value, and
-  deliberately in the dashboard rather than in `wrangler.jsonc` `vars` with the
-  other plain variables below**: it is a list of real people's email addresses
-  and this repository is public, so the convention below is departed from on
-  purpose. Keeping it in step with Access is under *Access (the login wall)*.
+  same fail-closed posture `ADMIN_EMAIL` takes. **Deliberately in the dashboard
+  rather than in `wrangler.jsonc` `vars` with the other plain variables below**:
+  it is a list of real people's email addresses and this repository is public,
+  so the convention below is departed from on purpose. **Stored as
+  `secret_text`**, read back from the project 2026-09-09. That is not required —
+  a Function reads `secret_text` and `plain_text` through `env` identically, so
+  the type changes nothing about the code — and it is the better default for
+  addresses belonging to other people. The consequence worth knowing: **the
+  value cannot be read back**, from the dashboard or the API, so the only way to
+  check what is in it is to open MediaVault's Share modal and see what the
+  picker offers. Keeping it in step with Access is under *Access (the login
+  wall)*.
 - `ACCESS_TEAM_DOMAIN` + `ACCESS_AUD` — turn on JWT verification of the
   Access identity on every `/api/*` route (defence in depth — the identity
   header alone is only as good as the Access application staying configured).
