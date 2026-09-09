@@ -6568,3 +6568,63 @@ rebuild. `docs/operations.md` now carries the tier and states the general form:
 when nothing about a rebuild requires it.**
 
 The clean-run `gear` count moves 1253 to 1252.
+
+**Taken, 2026-09-09 (PR #864). Nate chose RUE**, so the values move and the
+citations stay. Ten published class references become correct without a single
+class being touched, which is the argument for this direction over re-citing to
+the older book.
+
+**Five rows moved; the sixth is the control and is asserted unchanged:**
+
+| row | was | now |
+|---|---|---|
+| `a-t-v-speedster-hover-cycle` | 75 | **85** |
+| `the-wastelander-motorcycle` | 45 | **60** |
+| `the-big-boss-a-t-v` | 65 | **100** |
+| `the-mountaineer-a-t-v` | 140 | **210** |
+| `wilk-s-jet-pack` | 20 | **30** |
+| `the-highway-man-motorcycle` | 75 | 75 — unchanged in **both** editions |
+
+**THE SCOPE IS WIDER THAN THIS FINDING'S PROPOSAL, and saying so is the point.**
+The proposal says *"update the six `mdc` values"*. Three of the rows also carry
+the figure **in prose**, as a `M.D.C. by Location:` list, and moving the column
+without the prose would leave each row contradicting itself — a worse state than
+the one this finding was filed about. So the prose moved too, and with it the
+**tire counts**, because the errata changed those as well:
+
+<!-- claim-ok: quoting the premise this note widens -->
+
+- `the-wastelander-motorcycle` — `Tires (2) 1 each` to `2 each`
+- `the-mountaineer-a-t-v` — `Super Tires (3)` to `Super Tires (4)`
+- `the-big-boss-a-t-v` — tires already matched RUE
+
+`a-t-v-speedster-hover-cycle` and `wilk-s-jet-pack` carry no M.D.C. prose at all;
+the column is the only place their figure lives.
+
+**Two dash characters, and the file is pure ASCII.** `the-big-boss-a-t-v` writes
+`Main Body - 65` with an ASCII hyphen; the other two write an EM DASH, codepoint
+**8212**, measured with `unicode()` against production rather than guessed. The
+script builds it with `char(8212)`: a literal would fail `d1-apply`'s pre-flight,
+and getting it wrong would have matched nothing silently and left the prose stale
+while the column moved. Four readbacks check the prose specifically, for exactly
+that reason.
+
+**The duplicate pairs now agree and are deliberately NOT merged.**
+`speedster-hovercycle` and `a-t-v-speedster-hover-cycle` both read 85,
+`big-boss-atv` and `the-big-boss-a-t-v` both read 100, `mountaineer-atv` and
+`the-mountaineer-a-t-v` both read 210. Value-identical is what makes them cleanly
+mergeable — but merging live rows that classes cite is duplicate-review work and
+needs Nate. `F44` made two of the three visible to `findDuplicates` for the first
+time, and `F43` already retired the fourth.
+
+**Every figure was read from a render, and two were confirmed twice.** The RUE
+values came off 200 dpi renders of printed 266-267 and 71-72 during the `F41`
+sessions; the first-edition values off `Rifts Main.pdf` as throwaway probes. The
+`F43` session then re-confirmed two of them independently from a render of
+core-book printed 228 — `Wilk's Jet Pack ... Main Body - 20` and the
+Mountaineer's `Black Market Cost: 64,000` — from a different page than the one
+this finding measured.
+
+**Nine z's**, because `zzzzzzzz-rue-vessels-p266-267.sql` asserts *"the
+first-edition figures are still in gear, unaltered"* for four of these five rows.
+See the ninth-tier row in `docs/operations.md`.
