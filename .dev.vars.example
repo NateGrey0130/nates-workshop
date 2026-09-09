@@ -17,3 +17,12 @@ ADMIN_EMAIL=dev@localhost
 # MediaVault carries on, which is how its absence goes unnoticed.
 # TMDB's 32-character v3 API key, NOT a v4 read access token.
 TMDB_API_KEY=
+
+# Who MediaVault's share picker may offer (functions/api/media-vault/shares.js):
+# a hand-kept mirror of the Cloudflare Access allow policy, comma- or
+# whitespace-separated. shares.js re-checks it on every grant, so the picker
+# cannot be bypassed by calling the endpoint directly.
+# UNSET MEANS NOBODY - sharing refuses, the way ADMIN_EMAIL fails closed.
+# Locally, identity falls back to dev@localhost, which is not an email shape and
+# can never be a candidate; use a header identity to exercise sharing.
+MV_SHARE_CANDIDATES=

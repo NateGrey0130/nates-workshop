@@ -439,9 +439,16 @@ deployed; what stays here is the part that needs the Cloudflare dashboard.
 
 ## Environment configuration (Cloudflare Pages dashboard)
 
-Settings → Environment variables, each an encrypted secret. **This list is the
-whole of it** — if you are rotating, or standing an environment up from nothing,
-it is these and nothing else:
+Settings → Environment variables. **This list is the whole of it** — if you are
+rotating, or standing an environment up from nothing, it is these and nothing
+else.
+
+**Not all of them are encrypted secrets, which this section claimed until
+2026-09-08.** Read back from the project on that day, production holds three
+`secret_text` values (`ANTHROPIC_API_KEY`, `ADMIN_EMAIL`, `TMDB_API_KEY`) and
+two `plain_text` ones (`ACCESS_TEAM_DOMAIN`, `ACCESS_AUD`) — so the dashboard
+already carried plain variables while the note below said it held the secrets
+"and nothing else". Both halves are corrected in place.
 
 - `ANTHROPIC_API_KEY` — used by the `/api/claude` proxy and the character
   creator's PDF importers. A new value takes effect on the **next deployment**.
@@ -457,12 +464,22 @@ it is these and nothing else:
   rest of MediaVault carries on working, which is how this one goes unnoticed.
   It must be TMDB's **32-character v3 API key, not a v4 read access token**;
   a v4 token gets far enough to return 401s, which the route reports by name.
+- `MV_SHARE_CANDIDATES` — who MediaVault's share picker may offer, comma- or
+  whitespace-separated. A **hand-kept mirror of the Access allow policy**, and
+  `functions/api/media-vault/shares.js` re-checks it on every grant, so the
+  closed picker cannot be bypassed by calling the endpoint directly. **Unset
+  means nobody** — sharing refuses with a message naming this variable, the
+  same fail-closed posture `ADMIN_EMAIL` takes. **A plain value, and
+  deliberately in the dashboard rather than in `wrangler.jsonc` `vars` with the
+  other plain variables below**: it is a list of real people's email addresses
+  and this repository is public, so the convention below is departed from on
+  purpose. Keeping it in step with Access is under *Access (the login wall)*.
 - `ACCESS_TEAM_DOMAIN` + `ACCESS_AUD` — turn on JWT verification of the
   Access identity on every `/api/*` route (defence in depth — the identity
   header alone is only as good as the Access application staying configured).
-  **Both live in `wrangler.jsonc` `vars`, not the dashboard**: this project
-  manages plain variables through its wrangler config (the dashboard holds
-  the encrypted secrets above and nothing else), and neither value is a
+  **Both live in `wrangler.jsonc` `vars`** — this project manages plain
+  variables through its wrangler config where it can — **and both are ALSO set
+  in the dashboard**, read back 2026-09-08 as `plain_text`. Neither value is a
   secret — the
   AUD tag rides in every login redirect URL. `ACCESS_TEAM_DOMAIN` is the
   team's domain (`<team>.cloudflareaccess.com`); `ACCESS_AUD` is the Access

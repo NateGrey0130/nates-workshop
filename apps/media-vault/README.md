@@ -285,10 +285,29 @@ another app's tables by that prefix rather than by name.
 **A viewer must already be able to sign in.** The whole site sits behind
 Cloudflare Access, and a grant does not change that: it says which of the people
 who can already reach MediaVault may read *this* library as well as their own.
-An address that is not on the Access allow list can be granted and the row is
-inert — the person never arrives, so it is never read. Nothing in a Pages
-Function can check that list (`CLAUDE.md` → *Three credentials*), which is why
-the picker in front of this is built from a mirrored one instead.
+
+**So the picker is closed, and the endpoint enforces it.** `MV_SHARE_CANDIDATES`
+is a Pages environment variable holding the same addresses as the Access allow
+policy; `shares.js` offers those minus yourself and minus anyone already
+granted, and its `POST` **re-checks the same list** — a picker is UI, and a
+grant endpoint that accepts whatever it is handed makes a closed picker
+decorative. **Unset means nobody**, the same fail-closed posture `ADMIN_EMAIL`
+takes.
+
+**It is a mirror, so it can go stale, and the direction is the point.** Stale
+fails **closed**: the person just added to Access is not offered, the owner asks
+for them to be added to the variable, and the list catches up. The shape this
+replaced — free text with a *pending* badge — fails **open**, letting an owner
+grant to an address that can never sign in and produce a share that silently
+never works.
+
+A Function *could* read the live policy instead — `GET
+/accounts/{id}/access/apps/{app}/policies` is an ordinary API call. That was
+declined on cost, not because it is impossible: it means a standing
+account-scoped Cloudflare credential living in the deployment to serve five
+addresses that change about twice a year. **Nothing in CI can compare the
+mirror against the real policy**, because no request reveals who is on an email
+allow list; `SETUP.md` says so beside the step that changes them.
 
 **The grant is a row, not a token.** `(owner_email, viewer_email)` is the whole
 key, so granting twice is idempotent and revoking is a `DELETE` of one known

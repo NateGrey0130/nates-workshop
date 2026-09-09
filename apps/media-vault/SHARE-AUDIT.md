@@ -412,6 +412,74 @@ forever. It is the same shape `SETUP.md` already maintains for the pick3cut5
 Access destinations — and unlike those, **nothing in CI can check this one**.
 See `V6`.
 
+**Taken, 2026-09-08 (PR #TBD).** Posture held: **fail closed**. An address that
+is not a candidate cannot be granted, and an unset variable means **nobody**
+rather than everybody.
+
+**The finding said "a Pages environment variable" and this repo has two kinds,
+with a rule between them — so it went to Nate.** `wrangler.jsonc`'s own comment
+and `SETUP.md` both say plain, non-secret variables live in the wrangler config
+and the dashboard holds only secrets. A list of friends' addresses is not a
+secret, so the stated rule pointed at `wrangler.jsonc` — **and this repository
+is public.** Measured before asking: `nathanrapert@` and `lillcreeper@` already
+appear in tracked files, but `raewise@`, `vincewise@` and `warwood69@` appear
+**nowhere**, so following the convention would newly publish three people's
+addresses, permanently and in git history, on their behalf.
+
+**Nate chose the Pages dashboard**, 2026-09-08. `SETUP.md` records the departure
+and why, beside the variable.
+
+**And the convention it departs from was already not true.** Read back from the
+project that day through the `cloudflare-api` MCP plugin, production holds three
+`secret_text` values (`ANTHROPIC_API_KEY`, `ADMIN_EMAIL`, `TMDB_API_KEY`) **and
+two `plain_text` ones** — `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` — while
+`SETUP.md` said the dashboard held the encrypted secrets *"and nothing else"*
+and that those two lived in `wrangler.jsonc` **rather than** the dashboard. They
+live in both. Corrected in place, in this PR, because the sentence sat directly
+beside the new variable and would otherwise have contradicted it.
+
+**A false claim this menu put into shipped code has been corrected.** `V1`'s
+`shares.js` and the MediaVault README both said no Pages Function can read the
+Access allow list, citing `CLAUDE.md` → *Three credentials*. **`CLAUDE.md` says
+no such thing** — that table is about which credential an agent on Nate's
+machine should reach for, and this menu's own header says the live read was
+declined **on cost**, not as impossible. Both sentences now say declined-on-cost
+and name what the cost is.
+
+**Three checks added, two of them proved by making them fail:**
+
+| injected defect | what fired |
+|---|---|
+| the candidate re-check deleted from `POST` | `FAIL and the grant endpoint re-checks it before inserting a row` |
+| an address hardcoded in `shares.js` | `FAIL the share candidate list is read from the environment, not the source` |
+
+The re-check assertion compares **positions** — `shareCandidates(` must appear
+before `INSERT INTO media_shares` inside `onRequestPost` — because a substring
+test cannot see order, and a gate that runs after the insert is not a gate.
+
+**Exercised against a running server**, both ways. With the variable set
+(`viewer@example.com, second@example.com`): the picker offered both, granting
+one removed it from the offer, and a grant to `outsider@example.com` was refused
+with *"That address cannot sign in to the Workshop…"*. With it unset: candidates
+came back `[]` and a grant was refused naming the variable.
+
+**One behaviour worth stating because it is a decision, not an accident:** an
+unset variable refuses **new** grants and leaves **existing** ones working. A
+missing piece of configuration must not silently revoke shares somebody already
+made.
+
+**What was left to `V6`**, deliberately: the twin-step prose in `SETUP.md`'s
+*Access (the login wall)* section, and the statement that nothing checks the two
+lists agree. This PR documents the **variable**; `V6` documents the **habit**.
+
+**Not done, and not by oversight: the variable was not set in production.**
+Writing it means a `PATCH` on the project's `deployment_configs`, and if that
+replaces the env-var map rather than merging it, the three `secret_text` values
+are gone — they cannot be read back, so `TMDB_API_KEY` and `ANTHROPIC_API_KEY`
+would have to be re-issued. That is not a risk worth taking to save a paste.
+**Until Nate sets it, sharing is inert on production** — which is what fail
+closed means, and why it is the right default.
+
 ## V5 — medium — a new MediaVault table reds the character creator's suite
 
 The surprise in `V1`'s step 6, filed separately because it is a change to
