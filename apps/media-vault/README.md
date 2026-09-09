@@ -304,8 +304,8 @@ never works.
 A Function *could* read the live policy instead — `GET
 /accounts/{id}/access/apps/{app}/policies` is an ordinary API call. That was
 declined on cost, not because it is impossible: it means a standing
-account-scoped Cloudflare credential living in the deployment to serve five
-addresses that change about twice a year. **Nothing in CI can compare the
+account-scoped Cloudflare credential living in the deployment to serve a list
+short enough to read at a glance and edited by hand. **Nothing in CI can compare the
 mirror against the real policy**, because no request reveals who is on an email
 allow list; `SETUP.md` says so beside the step that changes them.
 
