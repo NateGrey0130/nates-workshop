@@ -647,6 +647,38 @@ Access API call would raise it.
 
 **Ongoing cost.** One paragraph, and the honesty that its subject is unenforced.
 
+**Taken, 2026-09-08 (PR #845).** Posture held: **documentation only. No check,
+no gate** — this PR adds prose and nothing else, and no exit code moves.
+
+**It was not optional in the way "documentation only" suggests, because `V4`
+shipped three references to a paragraph that did not exist.** `SETUP.md:476`
+says *"Keeping it in step with Access is under Access (the login wall)"*;
+`apps/media-vault/README.md:310` and `functions/api/media-vault/shares.js:43`
+both say *"SETUP.md says so beside the step that changes them."* All three
+pointed at nothing until this landed — a false claim about another file, in
+shipped code, of exactly the shape the CI check watches for on menu lines and
+cannot see in a comment. **Taking `V6` is what makes them true.**
+
+**One premise raised from medium to high by doing the search the finding asked
+for.** `V6` recorded *"inferred… not from an exhaustive search of the suites"*
+and said grepping every test would raise it. Done: no test file in this repo
+calls the Cloudflare API at all, and the only code that does is
+`scripts/deploy-sweep.mjs`, against a Workers endpoint rather than Access.
+
+**One correction.** `V6` cites the pick3cut5 `--remote` behaviour check as
+`apps/pick3cut5/test/smoke.mjs:396-444`. That range is the block's **body**,
+excluding the `if (process.argv.includes('--remote'))` at `:395` that makes it
+`--remote`-only and the `else` skip branch at `:445-448`. The claim it supports
+is right, and was re-verified live rather than read: the suite fetched
+production with no session and passed.
+
+**A distinction the new paragraph makes that `V6` did not.** *"Nothing in CI can
+watch it"* is true of **the two lists agreeing** and false of SETUP.md prose in
+general — `apps/pick3cut5/test/smoke.mjs` already asserts SETUP.md names each
+derived Access destination, and `instruction-paths.mjs` resolves every
+backticked path in the file. The new paragraph is therefore inside a file CI
+does read, and every path it names resolves.
+
 ## V7 — low — what a viewer may take away
 
 **Proposal.** Default **Export off** in view mode, and make it a flag rather than
