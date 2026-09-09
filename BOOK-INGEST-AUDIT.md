@@ -5819,3 +5819,116 @@ models with the heavier JK1B's figures in parentheses throughout. Nate settled
 the shape on 2026-09-09: one vessel for the JK1A, the B figures in each
 location's `mdc_note` and its price in `cost_note`. A second row would have
 duplicated nine locations and five weapon systems to change nine numbers.
+
+**Taken for WORMWOOD, 2026-09-09 — the second of the five book sessions, and it
+shipped TWO vessels where this finding counts nine.** Three books remain: Rifts
+Ultimate Edition 6 rows, Phase World 1, and the one row with no book behind it.
+
+**The scope changed, and the book changed it.** This finding's Wormwood share
+was measured with `category = 'vehicle' AND description LIKE '%Main Body%'`, and
+that filter is wrong in BOTH directions here:
+
+<!-- claim-ok: quoting the premises this note corrects -->
+
+- **It includes eight rows that are living monsters.** The shock parasites —
+  `battler-parasite`, `tick-parasite`, `beetle-parasite`,
+  `monster-worm-parasite`, `tangle-worm-parasite`, `krikton-flailer`,
+  `krikton-leaper`, `krikton-battle-wagon` — each print their own `Class:` line
+  in the book, and all eight read `Class: Wormwood organism: <name> Parasite.`
+  The two machines read `Class: Magic symbiotic war machine.` That is the same
+  field `vehicles.vehicle_class` exists to hold, and the book fills it in
+  differently for the two groups. Measured by grepping `^Class:` across cached
+  printed 101-108 on 2026-09-09: eight hits, eight organisms, no exception.
+- **It excludes `battle-saint-orb`, which IS one of these machines.** Its gear
+  description says "M.D.C. is the pilot's own hit points or M.D.C. times 10"
+  where the battle saint's says "main body", so the `LIKE` missed it. The book
+  prints `M.D.C. by Location: Main Body` for the orb on printed 94, under the
+  same `Class:` line as the saint. **So one of the two rows shipped here is not
+  among this finding's 24**, and the count of movers is 23 + 1 rather than 24.
+
+**This finding says `battle-saint`, `battler-parasite` and `beetle-parasite`
+"bury their numbers in narrative".** Two of those three are counterexamples: both
+parasites carry a full comma-separated per-location list in the gear description,
+differing from the seven this finding counted only in the header phrase —
+`M.D.C.:` rather than `M.D.C. by location:`. Across all 24 rows that shape holds
+for **8 more**, and every one of the 8 is Wormwood, so `"17 with M.D.C. buried in
+narrative prose"` is overstated by eight. **`battle-saint` is the real
+exception, and for a reason this finding does not anticipate** — see the M.D.C.
+paragraph below. (`node scripts/q.mjs --remote`, 2026-09-09.)
+
+**The premise audit happened the way `audit-menu` prescribes this time**, which
+the Juicer Uprising note above records it did not. `audit-premise-auditor` ran to
+completion before any file was written, checked seven claims plus the posture,
+and found three disagreements — the paraphrase-side count above, the closed
+`vehicle_class` vocabulary, and that `scripts/read-columns.py` cannot read this
+book. It reached the parasite problem from the gear rows alone and correctly
+refused to open the PDF. **The decisive evidence is the book's own `Class:`
+field, which only the implementing session could see**, so the two passes found
+the same boundary from opposite sides — which is the point of running both.
+
+**The eight parasites stay in `gear`, and that was already Nate's call.** The
+`ww` survey's ledger records it under 2026-08-27: *"The 8 parasites ARE gear —
+overriding this survey's first recommendation ... on the grounds that Ride Giant
+Parasites and Summon and Command Parasites make them player-reachable."* Moving
+them would reverse a settled decision, which is the failure `audit-menu`'s
+subject grep exists to catch. The mechanical reason is stronger than the
+taxonomic one: `vehicles` has nowhere to put a Horror Factor, an I.Q., attacks
+per melee, save-vs-magic bonuses, prowl and climb percentages, or
+bio-regeneration, and every parasite entry carries most of those. Importing one
+would DROP them, which is worse than the cosmetic split this finding set out to
+fix.
+
+**The posture held.** Both gear rows kept their slug, prose and NULL price and
+gained a pointer; no schema change came out of this session. It cost nothing
+here, unlike the Juicer Uprising import: **no Wormwood gear slug is cited by any
+class markdown at any status**, so nothing would have broken either way. The 45
+were not touched or re-proposed.
+
+**NO M.D.C. FIGURE EXISTS FOR EITHER VESSEL, and that is the book's answer
+rather than a failed extraction.** A battle saint's main body is "equal to the
+pilot's hit points/M.D.C. x 20" and every other location is a percentage of it;
+the orb is x 10. So `mdc_main_body` is NULL on both rows and all six
+`vehicle_locations.mdc` are NULL with the formula in `mdc_note`. **Nothing had
+to be widened**: `vehicle_locations.mdc` comments itself *"NULL where a book
+prints a formula"*, so migration 048 anticipated this three weeks before anyone
+needed it. A reader who wants a number gets the book's own worked examples from
+the notes — a pilot with 32 hit points instills 640 in a saint and 320 in an orb.
+
+**What shipped** (`zzzzzzz-ww-vessels-p093-095.sql`): 2 vessels, 6 M.D.C.
+locations, 4 weapon entries, 2 gear pointers. Seven z's to sort after
+`zzzzzzz-ju-vessels-p077-088.sql`, whose readback asserts a global pointer count
+of 7 and would be falsified by these two landing first.
+
+**Every figure was read from the book and then confirmed against a RENDER.**
+`ww` is a scan, so `scripts/read-columns.py` is unavailable — it needs a text
+layer. The cached OCR of printed 93-95 was read first, then all three pages were
+rendered at 200 dpi and read again; **they agree character for character on
+every number in both entries**, which is a better result than this book's cache
+had any right to give, since its manifest carries no `welded_pages` or
+`corrupt_pages` key. The offset was confirmed the free way `book-survey`
+section 0d prescribes and got three confirmations rather than one: the renders of
+93, 94 and 95 each carry that folio at the foot of the page, so `page_offset: 0`
+as `scripts/books.json` records. **The `ju` manifest disagreement does not recur
+here** — `.cache/books/ww/manifest.json` and `scripts/books.json` agree on both
+`page_offset: 0` and `printed_pages: 159`.
+
+**There was no price cross-check to be had.** The Juicer Uprising import's
+strongest evidence was seven printed prices matching seven stored ones. Wormwood
+prices nothing — it runs on barter, and the Priest of Light O.C.C. prints
+*"Money: Not applicable"* — so `cost` is NULL on every row on both sides and
+there is nothing to agree. The confirmation here is the render instead.
+
+**A spell list went into `vehicle_weapons`, and it is the one judgement call
+worth flagging.** Neither machine has a weapon system; each has a melee list and
+a `Magic Powers of Note:` list it casts a fixed number of times a day. Both are
+`vehicle_weapons` rows with a `note` saying what they are — the convention the
+Free Quebec import set for `Hand to Hand Combat` and `Combat Bonuses`. The spell
+list is the only ranged offense either vessel has, and the alternative was
+leaving it in description prose, which is the shape this finding exists to get
+structured numbers out of. **The ordinals are this file's, not the book's**,
+which is a departure from every other vessel script here and is said so in the
+file.
+
+**One correction filed in passing, in the same PR:** `docs/surveys/ww.md` cited
+the Priest of Light's `Money:` line as printed 52. It is printed **54** — cached
+`p054.txt` line 70, read 2026-09-09. The gear rows had it right all along.
