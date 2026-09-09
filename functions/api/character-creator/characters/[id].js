@@ -7,7 +7,7 @@ import { getUserEmail, unauthorized, json, readJson, requireCharacter } from '..
 import { listPending } from '../_lib/skill-picks.js';
 import { listPendingPowers, loadPowerDescriptions } from '../_lib/power-picks.js';
 import { listGrants } from '../_lib/grants.js';
-import { decodeCharacter, decodeItemEnchantments } from '../_lib/character-json.js';
+import { decodeCharacter, decodeItemEnchantments, decodeVehicleMdc } from '../_lib/character-json.js';
 import { getStored } from '../_lib/class-store.js';
 import { parseClassMarkdown } from '../../../../apps/character-creator/js/parser.js';
 import { composeClass } from '../../../../apps/character-creator/js/compose.js';
@@ -68,8 +68,77 @@ export async function onRequestGet({ request, env, params }) {
      ORDER BY character_items.id`
   ).bind(params.id).all();
 
+  // The vessels this character owns, each with its catalog row, its M.D.C. by
+  // location and its numbered weapon systems.
+  //
+  // THREE QUERIES RATHER THAN ONE JOIN, because a vessel's children multiply:
+  // one vessel with ten locations and eight weapons is eighty rows out of a
+  // single join, and the client would have to un-multiply them. They are nested
+  // below, the same shape the codex's vessels section returns - a vessel read on
+  // the sheet and a vessel read in the codex should not be two different
+  // objects.
+  //
+  // NO catalog_redirects arm, unlike the inventory join above. `catalog_redirects`
+  // is per-catalog by construction (`to_id` is "row in that catalog's table")
+  // and nothing files vessel redirects, because `vehicles` has no MERGE_REFS
+  // entry and so cannot be merged through the editor. If that changes, this
+  // join needs the second arm inventory already has.
+  const { results: vehicles } = await env.DB.prepare(
+    `SELECT character_vehicles.*, vehicles.name AS vehicle_name,
+            vehicles.vehicle_class, vehicles.system AS vehicle_system,
+            vehicles.crew, vehicles.passengers, vehicles.speed_ground,
+            vehicles.speed_air, vehicles.speed_water, vehicles.dimensions,
+            vehicles.weight_tons, vehicles.mdc_main_body, vehicles.cost AS vehicle_cost,
+            vehicles.cost_note AS vehicle_cost_note,
+            vehicles.description AS vehicle_description,
+            vehicles.source_book AS vehicle_source_book
+     FROM character_vehicles
+     LEFT JOIN vehicles ON vehicles.slug = character_vehicles.vehicle_slug
+     WHERE character_vehicles.character_id = ? AND character_vehicles.removed_at IS NULL
+     ORDER BY character_vehicles.id`
+  ).bind(params.id).all();
+
+  if (vehicles.length) {
+    const slugs = [...new Set(vehicles.map((v) => v.vehicle_slug).filter(Boolean))];
+    if (slugs.length) {
+      const qs = slugs.map(() => '?').join(', ');
+      const [locs, weps] = await Promise.all([
+        env.DB.prepare(
+          `SELECT vehicle_slug, location, mdc, mdc_note FROM vehicle_locations
+           WHERE vehicle_slug IN (${qs}) ORDER BY vehicle_slug, ordinal`
+        ).bind(...slugs).all(),
+        env.DB.prepare(
+          `SELECT vehicle_slug, ordinal, name, damage, is_mega_damage, range,
+                  rate_of_fire, payload, bonus, note FROM vehicle_weapons
+           WHERE vehicle_slug IN (${qs}) ORDER BY vehicle_slug, ordinal`
+        ).bind(...slugs).all(),
+      ]);
+      const byslug = (rows) => {
+        const m = new Map();
+        for (const r of rows) {
+          const { vehicle_slug, ...rest } = r;
+          if (!m.has(vehicle_slug)) m.set(vehicle_slug, []);
+          m.get(vehicle_slug).push(rest);
+        }
+        return m;
+      };
+      const L = byslug(locs.results), W = byslug(weps.results);
+      for (const v of vehicles) {
+        v.locations = L.get(v.vehicle_slug) || [];
+        v.weapons = W.get(v.vehicle_slug) || [];
+      }
+    }
+    // A freeform vessel joins to no catalog row, so it gets the empty arrays
+    // too rather than `undefined` - the renderer should not have to guard.
+    for (const v of vehicles) {
+      v.locations ||= [];
+      v.weapons ||= [];
+    }
+  }
+
   decodeCharacter(character);
   decodeItemEnchantments(items);
+  decodeVehicleMdc(vehicles);
   const can_write = email === character.player_email || email === character.campaign_gm;
   // So the sheet can badge unspent skill picks without a second request.
   const pending_picks = await listPending(env, params.id);
@@ -146,7 +215,7 @@ export async function onRequestGet({ request, env, params }) {
   const power_descriptions = await loadPowerDescriptions(env, character.powers);
 
   return json({
-    character, items, can_write, class: cls, skill_level_notes, weapon_bonuses,
+    character, items, vehicles, can_write, class: cls, skill_level_notes, weapon_bonuses,
     is_gm: email === character.campaign_gm,
     pending_picks,
     pending_picks_total: pending_picks.reduce((n, g) => n + g.count, 0),

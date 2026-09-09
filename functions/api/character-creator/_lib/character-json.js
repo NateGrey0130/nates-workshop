@@ -32,6 +32,32 @@ export function decodeItemEnchantments(rows) {
   return rows;
 }
 
+// A vessel's per-location damage is a JSON OBJECT keyed by location name, and a
+// vessel that has never been hit has NULL in the column. It decodes to `{}` and
+// not to `[]`, for the reason the block above gives about enchantments: the two
+// are not interchangeable and null is neither. `Object.entries(v.mdc_current)`
+// is what a renderer wants to write, and it throws on null.
+//
+// AN OBJECT RATHER THAN AN ARRAY because the maxima live in `vehicle_locations`
+// and this holds only the departures from them - {"Left Arm": 180} means that
+// arm and nothing else has taken damage. An array would have to mirror the
+// catalog's order and would go wrong the moment a book correction changed it.
+export function decodeVehicleMdc(rows) {
+  for (const row of rows || []) {
+    if (!row || !('mdc_current' in row)) continue;
+    try {
+      const v = row.mdc_current ? JSON.parse(row.mdc_current) : {};
+      // An array parses fine and is the wrong shape; treat it as empty rather
+      // than hand a renderer something that iterates but has no keys.
+      row.mdc_current = v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+    } catch {
+      // A malformed value is a broken row, not a broken response.
+      row.mdc_current = {};
+    }
+  }
+  return rows;
+}
+
 export const CHARACTER_JSON_COLUMNS = ['attributes', 'attribute_bonuses', 'rolled_bonuses', 'skills', 'powers', 'abilities', 'bio', 'combat', 'saves', 'armor'];
 
 // Parse, or fall back. Never throws — a malformed column should degrade to

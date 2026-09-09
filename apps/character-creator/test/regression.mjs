@@ -572,6 +572,82 @@ if (itemId) {
   check('a removed row leaves the active inventory', !stillThere);
 }
 
+// ── owning a vessel ─────────────────────────────────────────────────────────
+// Migration 052. Vessels have been a catalog since 048 and readable since the
+// codex learned the section, but nothing could OWN one: character_items.gear_slug
+// REFERENCES gear(slug), so a robot could not go in an inventory even in
+// principle.
+{
+  const vRows = await api('GET', '/codex?section=vehicles');
+  const vessel = (vRows.body.vehicles || []).find((v) => (v.locations || []).length > 1);
+  check('a vessel with named locations exists to own', !!vessel,
+    `${(vRows.body.vehicles || []).length} vessels, none with locations`);
+
+  if (vessel) {
+    const bad = await api('POST', `/characters/${charId}/vehicles`, { slug: 'no-such-vessel-anywhere' });
+    check('a slug the catalog does not have is refused', bad.status === 400, bad.status);
+    const neither = await api('POST', `/characters/${charId}/vehicles`, { nickname: 'nothing' });
+    check('and so is a body with neither slug nor custom_name', neither.status === 400, neither.status);
+
+    const added = await api('POST', `/characters/${charId}/vehicles`, { slug: vessel.slug, nickname: 'Betsy' });
+    check('a character can be given a vessel', added.status === 201, added.body);
+    const vid = added.body.vehicle?.id;
+
+    const sheet = await api('GET', `/characters/${charId}`);
+    const held = (sheet.body.vehicles || []).find((v) => v.id === vid);
+    check('and it arrives with the character', !!held, JSON.stringify(sheet.body.vehicles));
+    // The nesting is the point: three tables, one object, the same shape the
+    // codex returns. A client should not have to regroup 80 rows.
+    check('carrying its catalog row, its locations and its weapon systems',
+      !!held?.vehicle_name && (held?.locations || []).length === vessel.locations.length,
+      `${held?.locations?.length} locations vs ${vessel.locations.length} in the catalog`);
+    // NULL decodes to {} and not to null or []. Object.entries() is what a
+    // renderer writes, and it throws on null.
+    check('an undamaged vessel reports {} rather than null',
+      held && typeof held.mdc_current === 'object' && !Array.isArray(held.mdc_current)
+      && Object.keys(held.mdc_current).length === 0, JSON.stringify(held?.mdc_current));
+
+    // Damage is checked against THIS vessel's own locations. Stored unchecked,
+    // a typo renders as a damaged part that does not exist and no reader can
+    // tell that from a book they have not read.
+    const loc = vessel.locations[0].location;
+    const hit = await api('PATCH', `/characters/${charId}/vehicles/${vid}`,
+      { mdc_current: { [loc]: 120 } });
+    check('damage can be recorded against a named location', hit.status === 200, hit.body);
+    const ghost = await api('PATCH', `/characters/${charId}/vehicles/${vid}`,
+      { mdc_current: { 'Tail Fin Of Nowhere': 10 } });
+    check('a location this vessel does not have is refused by name',
+      ghost.status === 400 && /Tail Fin Of Nowhere/.test(ghost.body?.error || ''), ghost.body);
+    const notNumber = await api('PATCH', `/characters/${charId}/vehicles/${vid}`,
+      { mdc_current: { [loc]: 'lots' } });
+    check('and so is damage that is not a number', notNumber.status === 400, notNumber.body);
+    const asArray = await api('PATCH', `/characters/${charId}/vehicles/${vid}`,
+      { mdc_current: [1, 2] });
+    check('and an array, which parses fine and is the wrong shape',
+      asArray.status === 400, asArray.body);
+
+    const back = await api('GET', `/characters/${charId}`);
+    check('the recorded damage reads back',
+      (back.body.vehicles || []).find((v) => v.id === vid)?.mdc_current?.[loc] === 120,
+      JSON.stringify((back.body.vehicles || []).find((v) => v.id === vid)?.mdc_current));
+
+    // A freeform vessel joins to no catalog row, so it has no location list to
+    // check against and any key is allowed - the same concession a freeform
+    // item gets for enchantments.
+    const free = await api('POST', `/characters/${charId}/vehicles`, { custom_name: 'The stolen barge' });
+    check('a freeform vessel needs no catalog row', free.status === 201, free.body);
+    const freeHit = await api('PATCH', `/characters/${charId}/vehicles/${free.body.vehicle?.id}`,
+      { mdc_current: { Hull: 40 } });
+    check('and takes damage anywhere, having no locations to check',
+      freeHit.status === 200, freeHit.body);
+
+    const gone = await api('DELETE', `/characters/${charId}/vehicles/${vid}`);
+    check('a vessel is soft-removed', gone.status === 200, gone.body);
+    const afterV = await api('GET', `/characters/${charId}`);
+    check('and leaves the active list', !(afterV.body.vehicles || []).some((v) => v.id === vid));
+  }
+}
+
 // ── xp and levelling ────────────────────────────────────────────────────────
 const xp = await api('POST', `/characters/${charId}/xp`, { total: 100000 });
 check('XP can be set', xp.status === 200, xp.body);
