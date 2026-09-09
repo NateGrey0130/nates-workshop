@@ -284,9 +284,18 @@ Four things that are not obvious:
 
 The sheet through an **action-first lens**, shaped for a phone or tablet at
 the table: `sheet.html?play=1`, toggled by the header button. Same page, same
-data, same endpoints — `render()` branches to `renderPlay()` and nothing else
-changes, which is the whole design: a separate play page would duplicate the
-sheet's load/compose/derive/permissions plumbing for a different layout.
+data, same endpoints, and **one render** — the sheet draws the play controls
+and the roll buttons every time, `togglePlay()` flips `body.play-mode`, and
+CSS reveals them. That is the whole design, and it is two decisions rather
+than one. A separate play *page* would duplicate the sheet's
+load/compose/derive/permissions plumbing for a different layout. A separate
+render *path* — which this was, `renderPlay()` being the function it used to
+call — duplicates that plumbing inside one file, where the drift is silent
+instead of obvious: the two paths drew the same pools and disagreed, once.
+The class flip also means switching modes no longer rebuilds every input, so
+it can no longer eat a half-typed note. `test/checks/rendered-ui.mjs` pins all
+of it — no `renderPlay()`, no branch on the mode in `render()`, and no
+`render()` inside `togglePlay()`.
 
 What it offers (phase 1 of four):
 
@@ -323,11 +332,13 @@ What it offers (phase 1 of four):
   language-skills does: `js/dice.js` installs a `globalThis.diceRoll` mirror
   via a module tag.
 - The last result sits in a **fixed thumb-zone bar**; every roll is kept as a
-  structured object in `C.rollLog` (capped at 50), the exact shape a future
-  `play_events` row will take.
+  structured object in `C.rollLog` (capped at 50) — the shape phase 3's
+  `play_events` row was then built to take.
 
-Writes ride the existing PATCH optimistically, with revert-and-alert on
-failure. Read-only visitors can still roll — rolls write nothing.
+Writes are **optimistic**: the DOM moves first and rolls back with an alert if
+the server refuses. Phase 3 moved play mode's writes off the sheet's PATCH and
+onto the events endpoint below, and the optimism did not change. Read-only
+visitors can still roll — their rolls stay local and write nothing.
 
 **The event log (phase 3).** Every state-changing play action goes through
 `characters/[id]/events`, which applies the change and records it in one
