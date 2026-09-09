@@ -391,7 +391,7 @@ try {
       //
       // The timestamp comparison below cannot tell whether a change mattered -
       // that is stated at length above and is still true. A sha can: deploy
-      // with `--var GIT_SHA:$(git rev-parse HEAD)` and the live Worker carries
+      // through `scripts/deploy-room.mjs` and the live Worker carries
       // the commit it was built from, as a plain-text binding readable from the
       // API. Then "is it stale" stops being a guess about clocks and becomes
       // `git log <deployed>..origin/main -- workers/pick3cut5-room`, which is
@@ -453,7 +453,7 @@ try {
           if (lines.length > 5) console.log(`      ... and ${lines.length - 5} more`);
           console.log('');
           console.log('    This one is exact - it is not a timestamp guess. Deploy it:');
-          console.log(`      npx wrangler deploy --config ${WORKER_DIR}/wrangler.jsonc --var GIT_SHA:$(git rev-parse HEAD)\n`);
+          console.log(`      node scripts/deploy-room.mjs\n`);
         }
       } else if (commitAt > deployAt) {
         console.log(`    (no deployed sha to compare - ${shaNote}; falling back to timestamps)`);
@@ -464,11 +464,11 @@ try {
         console.log('    A timestamp cannot say whether that change mattered. Read the diff,');
         console.log('    then either deploy it or decide it does not need deploying:');
         console.log(`      git log --oneline ${sha} -1 -- ${WORKER_DIR}`);
-        console.log(`      npx wrangler deploy --config ${WORKER_DIR}/wrangler.jsonc --var GIT_SHA:$(git rev-parse HEAD)\n`);
+        console.log(`      node scripts/deploy-room.mjs\n`);
       } else {
         console.log(`    up to date - ${version.slice(0, 8)} deployed ${deployAt.toISOString()}`);
         console.log(`    newest commit ${sha} ${commitAt.toISOString()}`);
-        console.log(`    (by timestamp only - ${shaNote}; deploy with --var GIT_SHA:$(git rev-parse HEAD) to make this exact)\n`);
+        console.log(`    (by timestamp only - ${shaNote}; deploy with scripts/deploy-room.mjs to make this exact)\n`);
       }
     }
   }

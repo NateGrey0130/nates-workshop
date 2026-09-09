@@ -86,17 +86,43 @@ entry opens a hole in the wall and should cost a line.
 Party mode needs a Durable Object per room, and **a Pages project cannot define
 a DO class** — only bind to one exported from a standalone Worker, with
 `script_name` on the binding. So the room server is `workers/pick3cut5-room/`
-and deploys by hand:
+and deploys by hand, with ONE command:
 
 ```bash
-npx wrangler deploy --config workers/pick3cut5-room/wrangler.jsonc --var GIT_SHA:$(git rev-parse HEAD)
+node scripts/deploy-room.mjs
 ```
 
-**The `--var` is not optional decoration.** It records the commit the live
-Worker was built from as a plain-text binding, and `deploy-sweep.mjs` reads it
-back to answer *which build is live* — a question the timestamp comparison
-below cannot answer at all. Deploy without it and the binding disappears; the
-sweep says so and falls back to timestamps (`REPO-AUDIT.md` G15).
+**Do not deploy it with a bare `wrangler deploy`.** The live Worker has to carry
+a `GIT_SHA` binding naming the commit it was built from, because that is what
+`deploy-sweep.mjs` reads back to answer *which build is live* — a question the
+timestamp comparison below cannot answer at all (`REPO-AUDIT.md` G15).
+
+**This used to be a flag you were told to remember, and remembering failed.**
+The instruction here was `--var GIT_SHA:$(git rev-parse HEAD)`, in bold, called
+*not optional decoration* — and the 2026-09-02 hand deploy went out without it
+anyway. For six days the sweep could only compare timestamps, and said so on
+every run, and nobody was reading. **A flag retyped from prose is a flag that
+gets dropped; a command that cannot drop it is not.** The script is the fix, and
+it is the same move `ocr-book.py` made for the book caches.
+
+It does two things the raw command cannot:
+
+- **It refuses a dirty tree.** The sha is a claim about what is running. Deploy
+  with uncommitted changes under `workers/pick3cut5-room/` and the binding names
+  a commit whose content is not what shipped, and the sweep then reports *"up to
+  date"* off a build nobody can reconstruct — worse than the absent binding,
+  because an absent one makes the sweep say it is guessing. `--allow-dirty`
+  records `<sha>-dirty`, which is not a commit, so the sweep reports the build
+  as unplaceable instead.
+- **`--dry-run` prints the bindings and deploys nothing**, which is how to check
+  that a config change kept the three `P3C5_MODEL_*` vars before it reaches
+  production. **It does NOT show `ANTHROPIC_API_KEY`** — a secret is not in
+  `wrangler.jsonc`, it lives on the deployed Worker and survives a deploy. To
+  see it you read the settings endpoint, which is what `deploy-sweep.mjs` does.
+
+**A deploy restarts the Durable Objects, so any room in progress drops.** Rooms
+live in DO memory and nothing persists them. There is no safe window to look
+for; there is only knowing that is what happens.
 
 **Order matters and nothing enforces it.** The Worker must exist *before* the
 Pages deploy that binds it. Backwards, party mode answers 503 while the rest of
@@ -152,5 +178,7 @@ use an escape hatch and see the **`verify-ui`** skill.
   confirmed resolved — not just a 200 on the route
 - anything a stylesheet fetches curled against production by hand
 - `apps/pick3cut5/test/smoke.mjs --remote` green
-- if `workers/pick3cut5-room/` changed: deployed by hand, and the deploy sweep's
-  timestamp gap read rather than silenced
+- if `workers/pick3cut5-room/` changed: deployed with `node scripts/deploy-room.mjs`,
+  and `node scripts/deploy-sweep.mjs` read afterwards. With the sha recorded it
+  names the deployed commit outright; if it has fallen back to timestamps, the
+  binding is missing and the last deploy did not go through the script
