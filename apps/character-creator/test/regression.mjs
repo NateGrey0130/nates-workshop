@@ -237,43 +237,98 @@ check('and carries skills, spells and psionics',
   }
 }
 
-// The codex: the same two catalogs WITH their description text, for the powers
-// a character does NOT hold. Its own route rather than a wider /catalogs,
-// because that payload is paid on every wizard boot and every sheet load. See
-// docs/plans/20-power-descriptions.md.
+// Fetched before the codex block rather than after it, because the codex's
+// gear section is checked against this count — the two routes project the same
+// table and a codex missing rows the picker has is the failure worth catching.
+const items = await api('GET', '/items');
+check('/items returns the gear catalog', items.status === 200 && items.body.items.length > 0, items.body);
+
+// The codex: four catalogs WITH their description text and stat blocks, for
+// everything a character does NOT hold. Its own route rather than a wider
+// /catalogs, because that payload is paid on every wizard boot and every sheet
+// load. See docs/plans/20-power-descriptions.md.
+//
+// ONE SECTION PER REQUEST since gear and vessels joined it: all four in one
+// response is 261 KB gzipped against a 25 KB boot payload, so the page fetches
+// a section when its tab is first opened. `section` is required.
 {
-  const codex = await api('GET', '/codex');
+  const spells = await api('GET', '/codex?section=spells');
   check('/codex answers on a database built only from schema.sql',
-    codex.status === 200, codex.body);
-  check('and carries both catalogs whole',
-    (codex.body.spells || []).length === catalogs.body.spells.length
-    && (codex.body.psionics || []).length === catalogs.body.psionics.length,
-    `${(codex.body.spells || []).length}/${catalogs.body.spells.length} spells, ` +
-    `${(codex.body.psionics || []).length}/${catalogs.body.psionics.length} psionics`);
+    spells.status === 200, spells.body);
+  check('and carries the spell catalog whole',
+    (spells.body.spells || []).length === catalogs.body.spells.length,
+    `${(spells.body.spells || []).length}/${catalogs.body.spells.length} spells`);
   // The whole reason the route exists: the fields /catalogs deliberately omits.
   check('with the description and stat-block fields /catalogs leaves out',
     ['description', 'range', 'duration', 'saving_throw', 'casting_time']
-      .every((f) => f in (codex.body.spells?.[0] || {})),
-    Object.keys(codex.body.spells?.[0] || {}).join(', '));
+      .every((f) => f in (spells.body.spells?.[0] || {})),
+    Object.keys(spells.body.spells?.[0] || {}).join(', '));
+
+  const psionics = await api('GET', '/codex?section=psionics');
+  check('the psionics section carries that catalog whole',
+    (psionics.body.psionics || []).length === catalogs.body.psionics.length,
+    `${(psionics.body.psionics || []).length}/${catalogs.body.psionics.length} psionics`);
+
+  const gear = await api('GET', '/codex?section=gear');
+  check('the gear section carries the gear catalog whole',
+    gear.status === 200 && (gear.body.gear || []).length === items.body.items.length,
+    `${(gear.body.gear || []).length}/${items.body.items.length} gear`);
+  check('and the stat block /items deliberately leaves out of the picker',
+    ['damage', 'payload', 'rate_of_fire', 'ar', 'sdc', 'mdc', 'description']
+      .every((f) => f in (gear.body.gear?.[0] || {})),
+    Object.keys(gear.body.gear?.[0] || {}).join(', '));
+
+  // Vessels are THREE tables and arrive nested, which is the shape that makes
+  // them renderable at all: M.D.C. by location and a numbered weapon list
+  // cannot live in a column, and a client should not have to regroup them.
+  const vehicles = await api('GET', '/codex?section=vehicles');
+  check('the vessels section answers', vehicles.status === 200, vehicles.body);
+  check('and nests locations and weapons inside their vessel',
+    (vehicles.body.vehicles || []).every((v) => Array.isArray(v.locations) && Array.isArray(v.weapons)),
+    'a vessel came back without its two child arrays');
+
+  const index = await api('GET', '/codex?section=index');
+  check('the index section counts all four catalogs',
+    index.status === 200
+    && index.body.counts?.spells === catalogs.body.spells.length
+    && index.body.counts?.gear === items.body.items.length,
+    JSON.stringify(index.body.counts));
+
+  // A section is REQUIRED. The bare route used to serve spells and psionics
+  // together; serving one of them by default would be a second contract to keep
+  // working, and silently serving the wrong catalog is worse than a 400.
+  const bare = await api('GET', '/codex');
+  check('a request with no section is refused rather than defaulted',
+    bare.status === 400, bare.status);
+  const bogus = await api('GET', '/codex?section=wands');
+  check('and an unknown section is refused by name', bogus.status === 400
+    && Array.isArray(bogus.body.sections), JSON.stringify(bogus.body));
 
   // A player, not an admin. `catalogs/rows` is requireAdmin because it WRITES;
   // this one only reads, and a codex only an admin can open is no codex.
-  const asPlayer = await apiAs('stranger@example.com', 'GET', '/codex');
+  const asPlayer = await apiAs('stranger@example.com', 'GET', '/codex?section=spells');
   check('any authenticated friend can read it, not just an admin',
     asPlayer.status === 200, asPlayer.status);
   const rowsAsPlayer = await apiAs('stranger@example.com', 'GET', '/catalogs/rows?catalog=spells');
   check('while the editor route it replaces stays admin-only',
     rowsAsPlayer.status === 403, rowsAsPlayer.status);
 
-  const firstHit = await fetch(`${BASE}/codex`);
+  const firstHit = await fetch(`${BASE}/codex?section=spells`);
   const tag = firstHit.headers.get('ETag');
   check('/codex sends a validator', !!tag, 'no ETag header');
-  const again = await fetch(`${BASE}/codex`, { headers: { 'If-None-Match': tag || '' } });
+  const again = await fetch(`${BASE}/codex?section=spells`,
+    { headers: { 'If-None-Match': tag || '' } });
   check('and a second visit revalidates to a 304', again.status === 304, again.status);
-}
 
-const items = await api('GET', '/items');
-check('/items returns the gear catalog', items.status === 200 && items.body.items.length > 0, items.body);
+  // The section is IN the tag. Prove it by making the wrong one fail: a Gear
+  // request carrying the Spells tag must serve a body, not a 304. Two sections
+  // that serialised identically would otherwise revalidate into each other,
+  // which is exactly what two EMPTY catalogs do on a fresh database.
+  const crossed = await fetch(`${BASE}/codex?section=gear`,
+    { headers: { 'If-None-Match': tag || '' } });
+  check("and one section's validator does not satisfy another",
+    crossed.status === 200, crossed.status);
+}
 
 // ── the README's clean-run counts ───────────────────────────────────────────
 // The README prints a table of what "a clean run produces", and until now
@@ -298,12 +353,20 @@ const documented = (label) => {
   const m = new RegExp('^\\|\\s*' + lit + '[^|]*\\|\\s*(\\d+)\\s*\\|', 'm').exec(TABLE);
   return m ? Number(m[1]) : null;
 };
+// `vehicles` is counted through the codex index because it is the ONLY route
+// that reports it: the table has no picker, no boot-payload SELECT and nothing
+// in `catalogs`. That is why this row could not exist until the codex learned
+// the section, and it is the reason the pin lands in this PR rather than the
+// documentation one — a row in the table with no matching key here is silently
+// ignored by the loop below, so both halves or neither.
+const codexIndex = await api('GET', '/codex?section=index');
 const actual = {
   'classes (published, live)': classes.body.classes.length,
   skills: catalogs.body.skills.length,
   spells: catalogs.body.spells.length,
   'psionic powers': catalogs.body.psionics.length,
   gear: items.body.items.length,
+  vehicles: codexIndex.body.counts?.vehicles,
 };
 for (const [label, got] of Object.entries(actual)) {
   const want = documented(label);

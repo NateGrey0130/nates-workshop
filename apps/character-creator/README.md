@@ -62,10 +62,10 @@ apps/character-creator/
 │                             the party stash and the currency ledger
 ├── catalog.html / catalog.js Admin-only catalog editor, generated from the
 │                             field config. catalog.js is an ES module.
-├── codex.html / codex.js     Every spell and psionic power with its text, for
-│                             anyone. Read-only by construction — one GET and no
-│                             write path. NOT the editor above unlocked; see
-│                             docs/plans/20-power-descriptions.md
+├── codex.html / codex.js     Every spell, power, item and vessel with its text
+│                             and stat block, for anyone. Read-only by
+│                             construction — GETs only, no write path. One
+│                             section per request. See plan 20 in docs/plans/
 ├── styles.css                All six pages, layered on /shared/styles.css
 ├── js/parser.js              RCC/OCC markdown parser (ES module — also used by the API)
 ├── js/dice.js                Dice evaluator (ES module — also used by the API)
@@ -430,7 +430,7 @@ writes are gated (see [Permissions](#permissions)).
 | `me` | GET | Caller's email and `is_admin` |
 | `classes` | GET | Published classes, parsed. `?system=` `?category=` `?include_retired=1`; `?names=1` is the id→name label projection (unfiltered, retired included). Sends an `ETag`, so a warm boot revalidates to an empty 304 instead of re-downloading ~750KB of markdown |
 | `catalogs` | GET | Skills, spells, psionic powers in one call — trimmed projection the wizard boots on. Sends an `ETag`, so a warm load revalidates to an empty 304 instead of re-sending ~25KB gzipped. The validator is a **hash of the body**, not the count-and-`max(updated_at)` aggregate `classes` uses: no catalog table has a timestamp column, and the editor's PATCH changes a value in place without moving a count or a max id |
-| `codex` | GET | Every spell and psionic power **with its description and stat block** — what `catalogs` deliberately omits. Any authenticated reader, not just an admin: it only reads. Its own route rather than a wider `catalogs`, because that payload is paid on every wizard boot and every sheet load and this one is paid by whoever opens the codex. Same body-hash `ETag`. See [plan 20](docs/plans/20-power-descriptions.md) |
+| `codex` | GET | `?section=<name>` — one catalog **with its descriptions and stat blocks** — what `catalogs` deliberately omits. Sections are `spells`, `psionics`, `gear`, `vehicles`, and `index` (four counts, ~120 bytes, so the tab bar is labelled before any catalog is fetched). Any authenticated reader, not just an admin: it only reads. Its own route rather than a wider `catalogs`, because that payload is paid on every wizard boot and every sheet load and this one is paid by whoever opens the codex. **One section per request**, because all four in one response is 261 KB gzipped against a 25 KB boot payload. **`section` is required** — a missing or unknown one is a 400 naming the five, since a default would be a second contract to keep working and silently serving the wrong catalog is worse than an error. Body-hash `ETag` **with the section in it**, so two catalogs that serialise identically (two empty ones, on a fresh database) cannot revalidate into each other. See [plan 20](docs/plans/20-power-descriptions.md) |
 | `catalogs/rows` | GET / POST / PATCH | Admin. Whole rows for one catalog (`?catalog=`), create, and update (`&id=`). No delete |
 | `catalogs/duplicates` | GET / POST | Admin. Suggested duplicate pairs for a catalog; POST merges two rows. `?counts_only=1` returns just the per-tier counts, for the badge |
 | `catalogs/redirects` | GET / DELETE | Admin. Retired keys and where they resolve (`?catalog=`); DELETE stops forwarding one (`&id=`). No POST — redirects are written by merges and renames |
