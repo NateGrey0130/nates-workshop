@@ -497,6 +497,28 @@ check('the TMDB key is read from the environment, not the source',
   endpointSrc['lookup.js'].includes('env.TMDB_API_KEY')
   && !/['"][0-9a-f]{32}['"]/.test(endpointSrc['lookup.js']));
 {
+  // SHARE-AUDIT V4. The picker is only worth something if the endpoint enforces
+  // it: a closed list the client renders and the server ignores is decorative.
+  // Both halves are structural and both are asserted here, because the second
+  // is the one a finished-looking modal makes easy to skip.
+  const sh = endpointCode['shares.js'];
+  check('the share candidate list is read from the environment, not the source',
+    sh.includes('env.MV_SHARE_CANDIDATES')
+    && !/@[a-z0-9-]+\.(com|net|org)/i.test(sh),
+    'an address hardcoded here is a list that cannot be changed without a deploy');
+  // The POST must consult it BEFORE the INSERT. Order matters and a substring
+  // test cannot see order, so compare positions in the source.
+  const post = sh.slice(sh.indexOf('onRequestPost'));
+  const gate = post.indexOf('shareCandidates(');
+  const insert = post.indexOf('INSERT INTO media_shares');
+  check('and the grant endpoint re-checks it before inserting a row',
+    gate !== -1 && insert !== -1 && gate < insert,
+    'a picker the server does not enforce is decorative');
+  check('and an unset list means nobody, rather than everybody',
+    /MV_SHARE_CANDIDATES\s*\)\s*\|\|\s*''/.test(sh) || sh.includes("|| '')"),
+    'shareCandidates must default to an empty list');
+}
+{
   const writes = [...appSrc.matchAll(/localStorage\.setItem\(/g)];
   check('the app never writes library data to localStorage', writes.length === 0);
   const keys = [...new Set([...appSrc.matchAll(/localStorage\.\w+\(\s*'([^']+)'/g)].map((m) => m[1]))];
