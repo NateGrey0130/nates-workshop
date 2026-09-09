@@ -6747,3 +6747,81 @@ shows why one would be wrong: the row is honest, and the marker is doing exactly
 the job the README describes. **Confidence: high** on the three citations, all
 render-confirmed; **high** on the absence for `hand-axe`, which is a search of
 every cache on this machine and therefore bounded by which books are here.
+
+### F47 - three of the five duplicate pairs were duplicates; the other two were the book naming two things
+
+**Taken on Nate's word, 2026-09-09 (PR #867).** Five candidate pairs came out of
+`F42`, `F43`, `F44` and `F46`. Reading the book split them three to two, and the
+two that failed the test are the more useful half.
+
+**THREE REAL MERGES**, each retiring the `the-...` variant an earlier session
+built from the first edition, keeping the short slug whose name is what RUE
+prints and which already carried the page citation and the vessel pointer:
+
+| retired | survives | classes citing the retired row |
+|---|---|---|
+| `a-t-v-speedster-hover-cycle` | `speedster-hovercycle` | 2 |
+| `the-big-boss-a-t-v` | `big-boss-atv` | 0 |
+| `the-mountaineer-a-t-v` | `mountaineer-atv` | 0 |
+
+**The retiring rows carried weight the survivors lacked**, and it moved first -
+700 lbs, 2000 (one ton) and 12000 (six tons), all matching RUE, against three
+NULLs. A merge that dropped them would have lost data to tidy a name.
+
+**AND ONE STILL HELD A FIRST-EDITION PRICE, WHICH CORRECTS `F42`.**
+`the-mountaineer-a-t-v` carried `cost = 64000`; RUE prints 76,000. `F42` moved
+the M.D.C. and the tire counts on these rows and left the price, because its
+premise was that *"every other figure ... (speed, range, length, weight, both
+prices) matches RUE exactly"*.
+
+<!-- claim-ok: quoting the premise this note corrects -->
+
+That was true of the other rows and **false of this one** - the first edition
+prices the Mountaineer at 64,000, as the render of core-book printed 228 shows.
+The merge retires the wrong figure rather than correcting it, same outcome by a
+different route, and it is recorded because the premise stays wrong in `F42`'s
+own text.
+
+**TWO PAIRS THAT ARE NOT PAIRS.** Both were flagged on matching numbers, and the
+book names each of them separately:
+
+- **`hand-axe` and `hatchet`** have identical damage (1D6), weight (3) and cost
+  (40) - and RUE prints both, on different pages: printed **99** gives *"survival
+  knife and hand axe (both do 1D6 S.D.C. damage)"*, printed **56** gives
+  *"hatchet for cutting wood (1D6 S.D.C. damage)"*. Two simple chopping tools
+  with the same numbers are not one item. Merging would have changed what
+  **eleven** published classes hand a player.
+- **`W.P. Heavy M.D. Weapons` and `W.P. Heavy Military Weapons`** are printed on
+  the SAME page, printed **329**: `Heavy Military` covers grenade launchers,
+  mortars, machine-guns and light M.D. turrets; `Heavy Mega-Damage` covers plasma
+  ejectors, M.D. rail guns, rocket launchers and robot cannons. Different skills
+  for different weapons. Merging would have changed **twenty-seven** class
+  references.
+
+**`F44`'s detector surfaced the W.P. pair the day it shipped, and it is a FALSE
+POSITIVE - which is the detector working.** Duplicate review is a report a person
+reads, not a gate; the report was right to raise it and a person was right to
+decline it. That is the posture `F44` shipped with, tested by its first real case.
+
+**Both non-pairs were CITED instead of merged.** `hand-axe` to printed 99 and
+`W.P. Heavy M.D. Weapons` to printed 329 - the latter was one of the eleven rows
+the 2026-08-28 re-provenance pass held back under a bare book title.
+
+**And that closes what `F46` left open.** Citing the hand axe takes the count of
+web-marked rows carrying a combat number from one to **zero**. The rule the
+estimate tier states explicitly now holds for the web marker too - reached by
+searching the books rather than by adding a rule.
+
+**Two readbacks were wrong on the first `--local` apply**, and both are worth
+recording:
+
+- *"five RUE gear rows still point at a vessel"* - it is **six**. Nine
+  Ultimate-cited rows carried a pointer, not eight: the RUE vessel session set
+  eight and the Glitter Boy added a ninth when PR #861 re-cited it into this book.
+  A derived count, derived wrong.
+- *"the owned hand axe is untouched"* asserted a `character_items` row that
+  **production has and a fresh local database does not**. It was true and still
+  failed. Replaced with the invariant that actually matters - no inventory row
+  points at a deleted gear row - which holds in every environment.
+
+Clean-run `gear` count 1252 to 1249; the web-marker count 24 to 23.
