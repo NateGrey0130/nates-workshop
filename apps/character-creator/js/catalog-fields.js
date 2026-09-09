@@ -193,6 +193,72 @@ export const CATALOGS = {
       { name: 'source_book', label: 'Source book', type: 'text' },
     ],
   },
+
+  // Vessels: power armour, robots, drones, borg models, combat vehicles and
+  // ships. 127 rows that until now nothing could edit - migration 048 built the
+  // three tables and PR #787 said outright that nothing in the app read them.
+  //
+  // THIS EDITS THE VESSEL'S OWN ROW AND NOTHING ELSE. `vehicle_locations` and
+  // `vehicle_weapons` are one row per named part and per numbered weapon
+  // system, which is the whole reason a vessel is three tables rather than one,
+  // and this editor's shape is one table's columns in one form. Correcting a
+  // location's M.D.C. or a weapon's damage is still a data script. Said here
+  // because a form that silently edits two thirds of a thing is worse than one
+  // that edits a third and says so.
+  //
+  // NO `MERGE_REFS` ENTRY, DELIBERATELY, and that is what keeps the duplicate
+  // detector quiet: `resolveCatalog` requires both this config AND a
+  // `MERGE_REFS` entry, so declaring a catalog here does NOT enlist it in
+  // duplicate review. `enchantments` above has been in exactly that position
+  // since it landed. The badge fetch in catalog.js fails silently by design -
+  // "a badge that could not be computed is a missing hint" - so the panel
+  // simply does not appear. Adding a `MERGE_REFS` entry would be the decision
+  // to start proposing vessel merges, and nothing has asked for one; there is
+  // also nothing yet for a merge to REPOINT, since no character can hold a
+  // vessel and no class cites one.
+  vehicles: {
+    table: 'vehicles',
+    label: 'Vessels',
+    displayField: 'name',
+    // Slug-keyed like gear and enchantments, and for the same reason: an id is
+    // insertion order and means nothing in another database.
+    uniqueField: 'slug',
+    hasSource: false,
+    fields: [
+      { name: 'name', label: 'Name', type: 'text', required: true },
+      { name: 'slug', label: 'Slug', type: 'text', required: true,
+        help: 'The portable key, as gear.slug is. Nothing references it yet.' },
+      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'both'] },
+      { name: 'vehicle_class', label: 'Class', type: 'select', allowOther: true,
+        options: ['power-armor', 'robot', 'drone', 'borg', 'vehicle', 'ship', 'other'],
+        help: 'The column is free text so a book that invents a category is recorded rather '
+            + 'than rejected, but it is normalised to these seven by convention - it is what '
+            + 'the codex shows in its meta column. Put the phrase the book itself uses in the '
+            + 'description instead of here. allowOther keeps an unrecognised stored value '
+            + 'usable rather than silently rewriting it.' },
+      { name: 'crew', label: 'Crew', type: 'text',
+        help: 'Prose as often as a number - "one pilot", "two, plus six troops".' },
+      { name: 'passengers', label: 'Passengers', type: 'text' },
+      { name: 'speed_ground', label: 'Ground speed', type: 'text' },
+      { name: 'speed_air', label: 'Air speed', type: 'text',
+        help: 'Three regimes, each printed its own way - "Mach 1.2", "80 mph", '
+            + '"1 light year per hour". Leave a regime blank where the book gives none.' },
+      { name: 'speed_water', label: 'Water speed', type: 'text' },
+      { name: 'dimensions', label: 'Dimensions', type: 'text' },
+      { name: 'weight_tons', label: 'Weight', type: 'text' },
+      { name: 'mdc_main_body', label: 'M.D.C. (main body)', type: 'int',
+        help: 'MAIN BODY ONLY. Every other part is a vehicle_locations row, which this '
+            + 'form does not edit, so a reader wanting a total must sum them.' },
+      { name: 'cost', label: 'Cost', type: 'int',
+        help: 'Credits, and the LOW end of a range - the same convention gear.cost follows. '
+            + 'LEAVE IT EMPTY when no book prices it: a vessel no market sells is a finished '
+            + 'row, not an unfinished one.' },
+      { name: 'cost_note', label: 'Cost note', type: 'text',
+        help: 'What the integer cannot hold: a range, or "Not available on the open market".' },
+      { name: 'description', label: 'Description', type: 'longtext' },
+      { name: 'source_book', label: 'Source book', type: 'text' },
+    ],
+  },
 };
 
 export const CATALOG_KEYS = Object.keys(CATALOGS);

@@ -74,7 +74,11 @@ apps/character-creator/
 │                             start above level 1 from the same engine)
 ├── js/catalog-fields.js      What every catalog row looks like (ES module — the
 │                             editor, the write endpoints and the importers all
-│                             build themselves from it)
+│                             build themselves from it). SIX catalogs: skills,
+│                             spells, psionics, enchantments, gear, vessels. A
+│                             catalog gets duplicate review only if it also has
+│                             a MERGE_REFS entry — enchantments and vessels do
+│                             not, deliberately
 ├── js/derive.js              Attribute tables → combat bonuses, saves, percentages
 │                             (classic script; both the wizard and the sheet use it)
 ├── js/rules.js               Closed lists the book fixes — the seven alignments,
