@@ -1,0 +1,79 @@
+# Play mode's queue, executed rather than read. On EVERY pull request.
+#
+# REPORTING ONLY, the same posture as tests.yml and regression.yml. Not a
+# required status check, and `main`'s ruleset carries one `pull_request` rule
+# and ZERO required status checks, so a red run here does not stop a merge.
+# Making it required is a different decision and needs its own finding.
+#
+# WHY IT EXISTS. Everything else that checks the queue reads sheet.js as TEXT -
+# smoke.mjs's "Changes that could not be sent" section is fifteen regexes. They
+# prove the code is shaped right and cannot prove it behaves right. The
+# two-pool conflict resolution shipped in #874 with nothing able to tell a
+# working rebase from a broken one; the assertions that closed that were run by
+# hand and would have died with the session. This is them, kept and automated.
+#
+# WHY IT IS ITS OWN WORKFLOW rather than another step in regression.yml. The
+# same reason regression.yml is not a step in tests.yml, and its header spells
+# it out: separate workflows run CONCURRENTLY with distinct concurrency groups,
+# so a pull request waits for the SLOWEST job rather than for the sum. Both
+# suites boot wrangler, so folding this in would have added its whole runtime
+# to that job's wall clock instead of overlapping it.
+#
+# NO PATH FILTER, deliberately, and this is the one decision worth defending.
+# It would be tempting: this suite reads sheet.js, js/play-queue.js, the events
+# endpoint and db/schema.sql, so a four-entry filter looks obviously correct.
+# It is correct the day it is written and wrong the moment one of those moves -
+# and then the suite does not run and GREEN MEANS "NOT ASKED" RATHER THAN
+# "PASSED". SKILL-AUDIT F36 removed exactly such a filter from regression.yml
+# for exactly this reason. The saving is seconds; the failure is silent.
+#
+# WHAT IT DOES NOT COVER, so a green run is not over-read: the DOM is a stub and
+# the queue store is an in-memory fake, so this says nothing about whether a
+# control is reachable or on screen (verify-ui), and nothing about
+# play-queue.js's own IndexedDB code (smoke.mjs's text checks, and a browser).
+# The header of the suite itself carries the same three caveats at length.
+
+name: play-flow
+
+on:
+  pull_request:
+
+# A pull request pushed to twice does not need the first run finished.
+concurrency:
+  group: play-flow-${{ github.ref }}
+  cancel-in-progress: true
+
+# Read-only. This workflow inspects the tree and nothing else.
+permissions:
+  contents: read
+
+jobs:
+  play-flow:
+    runs-on: ubuntu-latest
+    # It builds a database, boots wrangler and waits for a port. Generous
+    # rather than tight - a timeout here would read as a broken suite.
+    timeout-minutes: 20
+    env:
+      # There is no package.json here by design, so `npx wrangler` resolves from
+      # the npx cache and PROMPTS to install when it cannot. A runner has no
+      # terminal to answer, so the prompt becomes a hang or a failure.
+      NPM_CONFIG_YES: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Matches the version this repo is developed on, and the suite needs a
+          # modern one: it runs the page's scripts through node:vm. No cache
+          # key - there is no lockfile to key on.
+          node-version: '24'
+
+      # WARM THE npx CACHE BEFORE ANYTHING IS TIMED. Same reason as tests.yml
+      # and regression.yml, SHIP-PR-AUDIT.md F13: this suite spawns wrangler,
+      # and a cold download inside a timed region is what turned that job red
+      # on PRs #668 and #669.
+      - name: warm the npx cache
+        run: npx wrangler --version
+
+      - name: play flow
+        run: node apps/character-creator/test/play-flow.mjs

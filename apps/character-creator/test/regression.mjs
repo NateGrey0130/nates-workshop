@@ -54,7 +54,14 @@ function cleanup() {
     try { process.platform === 'win32' ? spawnSync('taskkill', ['/pid', server.pid, '/T', '/F']) : server.kill('SIGTERM'); }
     catch { /* already gone */ }
   }
-  try { rmSync(state, { recursive: true, force: true }); } catch { /* best effort */ }
+  // RETRIES, because on Windows the workerd CHILD still holds handles under
+  // this directory for a moment after taskkill returns; rmSync fails EBUSY and
+  // the bare catch below turned that into a scratch database left in TEMP on
+  // every run. This file has promised "deleted afterwards" since it was
+  // written and was not doing it: SIXTEEN cc-regression-* directories, each a
+  // whole built database, were sitting in TEMP when it was measured.
+  try { rmSync(state, { recursive: true, force: true, maxRetries: 20, retryDelay: 150 }); }
+  catch { /* genuinely best effort now, rather than by default */ }
 }
 process.on('exit', cleanup);
 process.on('SIGINT', () => { cleanup(); process.exit(130); });

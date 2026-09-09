@@ -472,6 +472,18 @@ different when a conflict is holding the line. `test/checks/rendered-ui.mjs` →
 honest-word one: the module has to keep saying what it does **not** promise,
 or the check fails.
 
+**Those are text checks, and `test/play-flow.mjs` is the one that runs the
+thing.** It loads the real `sheet.js` — and the seven scripts the page loads
+before it — into a `node:vm` context, points its `fetch` at a real
+`wrangler pages dev` over a database built from nothing, and drives
+`quickDamage()`, `flushQueue()` and `resolveConflict()` for real, asserting
+against the rows that come back. It is what proves the half-answered press
+sends nothing and the resolved write is rebased, neither of which a regex can
+see. A separate command like `regression.mjs`, because it boots wrangler, and
+reporting-only in CI. Its own header carries the three things it does **not**
+prove: the DOM is a stub, the queue store is a fake, and it is not a merge
+gate.
+
 Deliberately out of scope at any phase: party-wide initiative (the
 dashboard's altitude) and automated combat resolution (the hand-to-hand
 tables are not modelled, and the README already says so).
