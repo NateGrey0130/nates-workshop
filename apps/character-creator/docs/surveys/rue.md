@@ -158,6 +158,7 @@ Physical.
 | 2026-08-27 | [#337](https://github.com/NateGrey0130/nates-workshop/pull/337) | `rue` registered in `books.json` |
 | 2026-08-28 | — | this file, backfilled offline |
 | 2026-08-28 | [#375](https://github.com/NateGrey0130/nates-workshop/pull/375) | `zzzz-cite-rue-rows.sql` — **304 of 327** rows cited by page: 118 spells (3 of them re-attributed to the Book of Magic), 79 psionic powers, 84 skills, 23 gear. 23 held back, listed above. Applied `--remote` before the PR. **`rue` is 647 / 23.** |
+| 2026-09-09 | #TBD | **`BOOK-INGEST-AUDIT` F41 vessels.** 5 vessels, 11 M.D.C. locations and 7 weapon entries from printed 266-267 - the whole `Common Vehicles` section bar the jet pack - plus `gear.vehicle_slug` pointers on 8 gear rows, because three of the five machines are stored twice under different slugs. **Three findings filed, not fixed**: F42 (six rows carry FIRST-EDITION M.D.C. under a RUE citation; ten class references point at them), F43 (`northern-gun-sky-king` is in the ORIGINAL core book, `wilk-s-atv-transport-vehicle` is the Mountaineer under a page-break name), F44 (`findDuplicates` splits `A.T.V.` into three tokens and misses two of three pairs). Applied `--remote` before the PR. |
 
 ### What remains
 
