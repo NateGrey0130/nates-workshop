@@ -7,7 +7,7 @@
 
 import { getUserEmail, json, sanitizeItem, rowToItem, UPSERT_SQL, bindUpsert, countItems, MAX_ITEMS } from './_lib/common.js';
 
-// GET → { email, items } — the caller's whole library
+// GET → { email, items, can_write } — the caller's whole library
 export async function onRequestGet(context) {
   const email = getUserEmail(context.request);
   if (!email) return json({ error: 'Not authenticated' }, 401);
@@ -16,7 +16,10 @@ export async function onRequestGet(context) {
       .prepare('SELECT * FROM media_items WHERE user_email = ? ORDER BY added_at')
       .bind(email)
       .all();
-    return json({ email, items: results.map(rowToItem) });
+    // Always true - this is the caller's own library. Sent anyway so the client
+    // gates on ONE flag for every library it displays rather than on which
+    // endpoint it happened to call. SHARE-AUDIT V3; vault.js answers false.
+    return json({ email, items: results.map(rowToItem), can_write: true });
   } catch (err) {
     return json({ error: 'DB error: ' + err.message }, 500);
   }

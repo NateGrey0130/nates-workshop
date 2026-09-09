@@ -21,6 +21,34 @@ let undoFailures = 0;         // one retry is allowed before the buffer is dropp
 let currentPage = 1;
 const ITEMS_PER_PAGE = 20;
 
+// ─── WHOSE LIBRARY IS ON SCREEN, AND MAY IT BE CHANGED ───
+// SHARE-AUDIT V3. currentVault is null for your own library and an owner's
+// email when you are looking at one shared with you. canWrite is NOT derived
+// from that: it is what the SERVER said in its can_write field, the same
+// contract apps/character-creator/sheet.js:96 uses. The client renders what it
+// is told rather than deciding from which URL it happened to call.
+let currentVault = null;
+let canWrite = true;
+let shares = { sharedByMe: [], sharedWithMe: [], candidates: [] };
+
+// Every way into and out of view mode goes through here, so the flag, the body
+// class and the header cannot disagree - the rule setSelectMode states for
+// select mode, applied to the same problem one level up. The body class is how
+// CSS reaches the header buttons; the JS guards are what stop a keyboard
+// shortcut or a rendered row button getting past CSS.
+function setCanWrite(v) {
+  canWrite = !!v;
+  document.body.classList.toggle('view-only', !canWrite);
+}
+
+// A last resort, not the mechanism. Every control that writes is either not
+// rendered or hidden in view mode; this catches the paths with no button of
+// their own - Ctrl+N, and anything a later edit wires up without thinking
+// about which library is on screen.
+function requireWrite() {
+  return canWrite;
+}
+
 // ─── RENDER ───
 // THE SELECTION IS ALWAYS A SUBSET OF WHAT THE VIEW SHOWS. Anything the filter
 // or the search stops showing drops out of it at that moment.
@@ -198,8 +226,8 @@ function renderLibrary() {
       <div><span class="meta-tag type-${item.type}" style="font-size:10px;padding:2px 6px;border-radius:3px;">${item.type}</span></div>
       <div class="list-row-secondary">${esc(item.location || '')}</div>
       <div class="list-row-actions">
-        <button class="list-action-btn" onclick="event.stopPropagation(); editItem('${item.id}')">✏️</button>
-        <button class="list-action-btn delete" onclick="event.stopPropagation(); deleteItem('${item.id}')">🗑</button>
+        ${canWrite ? `<button class="list-action-btn" onclick="event.stopPropagation(); editItem('${item.id}')">✏️</button>
+        <button class="list-action-btn delete" onclick="event.stopPropagation(); deleteItem('${item.id}')">🗑</button>` : ''}
       </div>
     </div>
   `).join('');
@@ -266,6 +294,8 @@ function setSortFromHeader(key) {
 
 // ─── ADD/EDIT MODAL ───
 function openAddModal() {
+  // View mode: nothing here can be saved to somebody else's library.
+  if (!requireWrite()) return;
   document.getElementById('editId').value = '';
   document.getElementById('modalTitle').textContent = 'Add to Vault';
   document.getElementById('btnSave').textContent = 'Add to Vault';
@@ -294,6 +324,7 @@ function clearForm() {
 }
 
 function editItem(id) {
+  if (!requireWrite()) return;
   const item = library.find(i => i.id === id);
   if (!item) return;
   document.getElementById('editId').value = id;
@@ -320,6 +351,7 @@ function editItem(id) {
 }
 
 async function saveItem() {
+  if (!requireWrite()) return;
   const title = document.getElementById('itemTitle').value.trim();
   if (!title) { alert('Title is required'); return; }
 
@@ -364,6 +396,7 @@ async function saveItem() {
 }
 
 async function deleteItem(id) {
+  if (!requireWrite()) return;
   if (!confirm('Delete this item?')) return;
   const ok = await apiWrite(() => apiFetch(`/api/media-vault/items?id=${encodeURIComponent(id)}`, { method: 'DELETE' }));
   if (!ok) return;
@@ -420,6 +453,11 @@ function deleteFromDetail() {
 // leaving for the Stats page used to turn nothing off, and hiding the bar alone
 // would have left the toggle still reading "✕ Cancel" on the way back.
 function setSelectMode(on) {
+  // Select mode exists to drive the bulk bar, and every one of those actions
+  // writes. Refusing to ENTER it is what makes the bulk bar, the undo window
+  // and the row checkboxes unreachable in view mode without gating each one.
+  // Turning it OFF is always allowed - that is how switching vaults cleans up.
+  if (on && !requireWrite()) return;
   // Re-entering select mode ends any pending undo: it is the user moving on,
   // and the toast and the bulk bar occupy the same corner.
   if (on) cancelUndo();
@@ -524,10 +562,21 @@ function updateBulkBar() {
 // updates, so `count` can never differ from `items.length` and comparing them
 // would be theatre. The undo restore, the pasted-ISBN commit and the CSV
 // import all go through that endpoint, and all deliberately skip this.
+// The URL of the library CURRENTLY ON SCREEN. Both recovery paths below used
+// to re-read /items unconditionally, which is correct for your own library and
+// silently wrong while a shared one is displayed: the rows would be replaced by
+// the VIEWER's own, under somebody else's name in the header, with nothing
+// saying so. SHARE-AUDIT V3.
+function currentLibraryUrl() {
+  return currentVault
+    ? '/api/media-vault/vault?owner=' + encodeURIComponent(currentVault)
+    : '/api/media-vault/items';
+}
+
 async function agreesWithServer(res, expected) {
   if (res && res.count === expected) return true;
   try {
-    const data = await apiFetch('/api/media-vault/items');
+    const data = await apiFetch(currentLibraryUrl());
     library = data.items;
   } catch {
     // The re-read failed too. Leave the dot where apiWrite put it and let the
@@ -963,6 +1012,8 @@ async function lookupISBN() {
 // modal stays open with the lookup box focused and empty, because somebody
 // cataloguing a shelf has another book in their hand.
 async function lookupAndAddISBN() {
+  // The Add modal's second, less obvious write button.
+  if (!requireWrite()) return;
   const status = document.getElementById('lookupStatus');
   // In edit mode there is a row already; minting a new id here would quietly
   // duplicate it rather than change it.
@@ -1249,6 +1300,8 @@ function exportCSV() {
 }
 
 function openImportModal() {
+  // View mode: every path out of this modal is a write.
+  if (!requireWrite()) return;
   document.getElementById('importModal').classList.add('active');
   document.getElementById('csvPreview').style.display = 'none';
   document.getElementById('btnImport').disabled = true;
@@ -1808,6 +1861,9 @@ let dupScanned = 0;
 let dupScanning = false;
 
 function openDuplicatesModal() {
+  // View mode: the scan is caller-scoped, so it would silently report on the
+  // VIEWER's own library while a shared one is on screen. Worse than refusing.
+  if (!requireWrite()) return;
   cancelUndo();
   setSelectMode(false);
   dupGroups = [];
@@ -2044,7 +2100,7 @@ async function apiWrite(fn) {
     setSaveStatus('error');
     alert('Save failed: ' + err.message + '\n\nYour change was not stored. The library will reload from the server.');
     try {
-      const data = await apiFetch('/api/media-vault/items');
+      const data = await apiFetch(currentLibraryUrl());
       library = data.items;
       renderLibrary();
     } catch { /* the dot stays red; the next action retries */ }
@@ -2076,6 +2132,163 @@ async function migrateLocalIfNeeded() {
   localStorage.removeItem('mv_library');
 }
 
+// ─── SHARING: WHOSE LIBRARY IS ON SCREEN, AND WHO MAY SEE MINE ───
+// SHARE-AUDIT V3. Everything below renders email addresses, so it builds DOM
+// nodes and sets textContent rather than interpolating into innerHTML. This
+// file's own esc() escapes &, < and > and LEAVES THE QUOTE ALONE, which is
+// right for element content and wrong for an attribute or an inline handler —
+// the o'brien@example.com problem shared/js/ui.js describes. Building nodes
+// sidesteps the question instead of answering it correctly every time.
+
+async function loadShares() {
+  try {
+    shares = await apiFetch('/api/media-vault/shares');
+  } catch (err) {
+    console.error('Could not read shares:', err);
+    shares = { sharedByMe: [], sharedWithMe: [], candidates: [] };
+  }
+  renderVaultSwitcher();
+}
+
+function renderVaultSwitcher() {
+  const wrap = document.getElementById('vaultSwitcherWrap');
+  const sel = document.getElementById('vaultSwitcher');
+  const list = shares.sharedWithMe || [];
+  // Nobody has shared with you: the control is noise, so it is not shown.
+  wrap.style.display = list.length ? 'flex' : 'none';
+  sel.textContent = '';
+  const mine = document.createElement('option');
+  mine.value = '';
+  mine.textContent = 'My vault';
+  sel.appendChild(mine);
+  for (const s of list) {
+    const o = document.createElement('option');
+    o.value = s.email;
+    o.textContent = s.email;
+    sel.appendChild(o);
+  }
+  sel.value = currentVault || '';
+}
+
+// The ONE funnel for changing which library is on screen. It ends select mode
+// and any pending undo first: both belong to the library being left, and an
+// undo buffer surviving a switch would offer to restore rows into a library
+// nobody is looking at.
+async function switchVault(owner) {
+  const target = owner || null;
+  setSelectMode(false);
+  cancelUndo();
+  document.getElementById('loadError').style.display = 'none';
+  setSaveStatus('syncing');
+  try {
+    const data = target
+      ? await apiFetch('/api/media-vault/vault?owner=' + encodeURIComponent(target))
+      : await apiFetch('/api/media-vault/items');
+    currentVault = target;
+    library = data.items;
+    // The SERVER's answer, not an inference from which branch ran above.
+    setCanWrite(data.can_write);
+    paintVaultHeader();
+    setSaveStatus('synced');
+    currentPage = 1;
+    renderLibrary();
+  } catch (err) {
+    console.error('Vault load error:', err);
+    setSaveStatus('error');
+    document.getElementById('loadErrorMsg').textContent = err.message;
+    document.getElementById('loadError').style.display = 'flex';
+  }
+  renderVaultSwitcher();
+}
+
+// The user pill shows the SIGNED-IN address. Above somebody else's library that
+// is the confusion this banner exists to end — it is what makes a stray Add
+// feel reasonable.
+function paintVaultHeader() {
+  const banner = document.getElementById('viewingBanner');
+  const who = document.getElementById('viewingWho');
+  if (currentVault) {
+    who.textContent = currentVault;
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+function openShareModal() {
+  // Sharing YOUR library is about your own rows, so it stays available while
+  // you are looking at somebody else's — it is not a write to what is on screen.
+  renderShareModal();
+  document.getElementById('shareModal').classList.add('active');
+}
+
+function closeShareModal() {
+  document.getElementById('shareModal').classList.remove('active');
+}
+
+function renderShareModal() {
+  const cur = document.getElementById('shareCurrent');
+  cur.textContent = '';
+  const granted = shares.sharedByMe || [];
+  if (!granted.length) {
+    const p = document.createElement('div');
+    p.className = 'share-empty';
+    p.textContent = 'You are not sharing your library with anyone.';
+    cur.appendChild(p);
+  }
+  for (const g of granted) {
+    const row = document.createElement('div');
+    row.className = 'share-row';
+    const name = document.createElement('span');
+    name.textContent = g.email;
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-sm btn-revoke';
+    btn.textContent = 'Revoke';
+    btn.addEventListener('click', () => revokeShare(g.email));
+    row.appendChild(name);
+    row.appendChild(btn);
+    cur.appendChild(row);
+  }
+
+  const sel = document.getElementById('shareCandidate');
+  sel.textContent = '';
+  const cands = shares.candidates || [];
+  for (const c of cands) {
+    const o = document.createElement('option');
+    o.value = c;
+    o.textContent = c;
+    sel.appendChild(o);
+  }
+  // The picker is CLOSED — it offers only addresses that can actually sign in,
+  // and the server refuses anything else. When it is empty the honest thing is
+  // to say why, rather than show a box whose every entry will be refused.
+  const empty = !cands.length;
+  sel.style.display = empty ? 'none' : '';
+  document.getElementById('btnGrantShare').style.display = empty ? 'none' : '';
+  document.getElementById('shareNoCandidates').style.display = empty ? '' : 'none';
+}
+
+async function grantShare() {
+  const email = document.getElementById('shareCandidate').value;
+  if (!email) return;
+  const res = await apiWrite(() => apiFetch('/api/media-vault/shares', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  }));
+  if (res === false) return;
+  await loadShares();
+  renderShareModal();
+}
+
+async function revokeShare(email) {
+  if (!confirm(`Stop sharing your library with ${email}?\n\nAnything already on their screen stays there until they reload.`)) return;
+  const res = await apiWrite(() => apiFetch('/api/media-vault/shares?email=' + encodeURIComponent(email), { method: 'DELETE' }));
+  if (res === false) return;
+  await loadShares();
+  renderShareModal();
+}
+
 // ─── STARTUP ───
 // Cloudflare Access authenticates every visitor before they reach the app,
 // so there is no in-app login: load the caller's library from D1, full stop.
@@ -2093,10 +2306,18 @@ async function initApp() {
     const data = await apiFetch('/api/media-vault/items');
     currentUser = data.email;
     library = data.items;
+    // Startup always lands on your OWN library, so this is always true — but it
+    // is read from the server like every other answer to this question.
+    currentVault = null;
+    setCanWrite(data.can_write);
+    paintVaultHeader();
     document.getElementById('userPill').style.display = 'flex';
     document.getElementById('userEmail').textContent = currentUser;
     setSaveStatus('synced');
     renderLibrary();
+    // Deliberately not awaited: the library is what the page is for, and a slow
+    // or failing shares call must not hold it up or blank it.
+    loadShares();
   } catch (err) {
     console.error('Load error:', err);
     setSaveStatus('error');
@@ -2264,6 +2485,7 @@ document.addEventListener('keydown', e => {
     closeImportModal();
   }
   if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+    if (!requireWrite()) return;
     e.preventDefault();
     openAddModal();
   }

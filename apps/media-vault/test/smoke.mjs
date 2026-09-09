@@ -849,10 +849,24 @@ check('and it survives a missing value rather than throwing',
   check('the two endpoints that measure their own work are both compared against',
     declOf('bulkSet').includes('agreesWithServer(res, ids.length)')
     && declOf('bulkDelete').includes('agreesWithServer(res, ids.length)'));
+  // The URL is no longer a literal, and that is the point: it re-reads whichever
+  // library is ON SCREEN. This asserted `apiFetch('/api/media-vault/items')`
+  // until 2026-09-08 — right while a caller could only ever see their own rows,
+  // and silently wrong once a shared library could be displayed, because the
+  // recovery would replace somebody else's rows with the viewer's own, under
+  // their name in the header, saying nothing. SHARE-AUDIT V3.
   check('a disagreement re-reads the library rather than alerting',
-    declOf('agreesWithServer').includes("apiFetch('/api/media-vault/items')")
+    declOf('agreesWithServer').includes('apiFetch(currentLibraryUrl())')
     && declOf('agreesWithServer').includes('library = data.items;')
     && !declOf('agreesWithServer').includes('alert('));
+  check('and the library it re-reads is the one on screen, not always your own',
+    /currentVault\s*$/m.test(declOf('currentLibraryUrl').split('?')[0])
+    || (declOf('currentLibraryUrl').includes('currentVault')
+      && declOf('currentLibraryUrl').includes('/api/media-vault/vault?owner=')
+      && declOf('currentLibraryUrl').includes("'/api/media-vault/items'")),
+    'currentLibraryUrl must follow currentVault');
+  check('and the failed-write recovery re-reads the same one',
+    declOf('apiWrite').includes('apiFetch(currentLibraryUrl())'));
   // The one that matters: `removed` names rows the server says it did not
   // delete, so restoring it would resurrect what another tab threw away.
   check('and a short delete count withdraws the undo instead of offering it',

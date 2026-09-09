@@ -41,13 +41,34 @@
       <button class="btn-signout" onclick="location.href='/cdn-cgi/access/logout'">Sign out</button>
     </div>
     <a href="/" class="home-link">← workshop</a>
+    <!-- Shown only when somebody has shared a library with you (app.js
+         renderVaultSwitcher). Its options carry email addresses and are built
+         as DOM nodes, never interpolated into innerHTML. -->
+    <div class="vault-switcher" id="vaultSwitcherWrap" style="display:none">
+      <select id="vaultSwitcher" class="toolbar-select" onchange="switchVault(this.value)" title="Whose library to show"></select>
+    </div>
+    <!-- Sharing YOUR library is about your own rows, so it stays available
+         while you are looking at somebody else's. It is not view-only. -->
+    <button class="btn btn-sm" id="btnShareHeader" onclick="openShareModal()" title="Choose who may read your library">👥 Share</button>
     <button class="btn btn-sm" id="btnImportHeader" onclick="openImportModal()">📥 Import</button>
     <button class="btn btn-sm" id="btnDupHeader" onclick="openDuplicatesModal()" title="Find items that share a title and a type, and merge the ones that are really the same">⧉ Duplicates</button>
     <button class="btn btn-sm" id="btnExportHeader" onclick="exportCSV()">📤 Export</button>
     <button class="btn btn-sm btn-select-mode" id="btnSelectMode" onclick="toggleSelectMode()">☑ Select</button>
-    <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Item</button>
+    <!-- id added by SHARE-AUDIT V3: this had none, so view mode had no way to
+         hide it by id and switchView() could not either. -->
+    <button class="btn btn-primary btn-sm" id="btnAddItem" onclick="openAddModal()">+ Add Item</button>
   </div>
 </header>
+
+<!-- ─── WHOSE LIBRARY IS ON SCREEN ─── -->
+<!-- The user pill above shows the SIGNED-IN address. Without this strip it sits
+     over somebody else's library saying nothing, which is what makes a stray
+     Add feel reasonable. SHARE-AUDIT V3. -->
+<div class="viewing-banner" id="viewingBanner" style="display:none">
+  <span class="viewing-eye">👁</span>
+  <span>You are viewing <strong id="viewingWho"></strong>'s library — read only.</span>
+  <button class="btn btn-sm" onclick="switchVault('')">Back to my vault</button>
+</div>
 
 <!-- ─── TOOLBAR ─── -->
 <div class="toolbar" id="toolbar">
@@ -114,7 +135,10 @@
   <div class="empty-icon">📀</div>
   <div class="empty-title">Your vault is empty</div>
   <div class="empty-sub">Add your first audiobook or movie to start building your collection. Use ISBN or title lookup to auto-fill details.</div>
-  <button class="btn btn-primary" onclick="openAddModal()">+ Add First Item</button>
+  <!-- Reachable on a POPULATED shared vault too: #emptyState shows whenever the
+       FILTER matches nothing, so a search with no hits puts this button on
+       screen. It carries the view-only class for that reason. -->
+  <button class="btn btn-primary writes-only" onclick="openAddModal()">+ Add First Item</button>
 </div>
 <div class="empty-state" id="loadError" style="display:none">
   <div class="empty-icon">⚠️</div>
@@ -309,14 +333,54 @@
   </div>
 </div>
 
+<!-- ─── SHARE MODAL ─── -->
+<!-- Who may READ this caller's library. The picker is CLOSED: it offers only
+     addresses that can actually sign in to the Workshop, and the server refuses
+     anything else, so a grant can never be made to somebody who would hit the
+     login wall. Both lists are built as DOM nodes by app.js because they carry
+     email addresses. SHARE-AUDIT V3. -->
+<div class="modal-overlay" id="shareModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeShareModal()">✕</button>
+    <h2>Share your library</h2>
+    <p class="share-lead">
+      Anyone you choose can <strong>read</strong> your library — every field,
+      including where physical copies live and your notes. They can never change
+      it.
+    </p>
+
+    <h3 class="share-heading">Shared with</h3>
+    <div id="shareCurrent"></div>
+
+    <h3 class="share-heading">Add someone</h3>
+    <div class="share-add">
+      <select id="shareCandidate" class="toolbar-select"></select>
+      <button class="btn btn-primary btn-sm" id="btnGrantShare" onclick="grantShare()">Share</button>
+    </div>
+    <div class="share-empty" id="shareNoCandidates" style="display:none">
+      There is nobody left to share with. Only people who can sign in to the
+      Workshop appear here — ask Nate to add someone first.
+    </div>
+
+    <p class="share-note">
+      Revoking takes effect the next time they load the page. Anything already
+      on their screen stays there until they reload.
+    </p>
+
+    <div class="modal-actions">
+      <button class="btn" onclick="closeShareModal()">Done</button>
+    </div>
+  </div>
+</div>
+
 <!-- ─── DETAIL MODAL ─── -->
 <div class="modal-overlay" id="detailModal">
   <div class="modal detail-modal">
     <button class="modal-close" onclick="closeDetailModal()">✕</button>
     <div id="detailContent"></div>
     <div class="modal-actions">
-      <button class="btn btn-danger btn-sm" onclick="deleteFromDetail()">🗑 Delete</button>
-      <button class="btn" onclick="editFromDetail()">✏️ Edit</button>
+      <button class="btn btn-danger btn-sm writes-only" onclick="deleteFromDetail()">🗑 Delete</button>
+      <button class="btn writes-only" onclick="editFromDetail()">✏️ Edit</button>
       <button class="btn" onclick="closeDetailModal()">Close</button>
     </div>
   </div>
