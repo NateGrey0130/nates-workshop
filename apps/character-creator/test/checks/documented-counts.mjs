@@ -199,16 +199,27 @@ export function run() {
     // seventeen and described fifteen — `import_sessions` and `import_staged` had
     // a migration row and an API section but no data-model row anywhere.
     const named = new Set([...readme.matchAll(/^\| `([a-z_]+)` \|/gm)].map((m) => m[1]));
-    // The three the section explicitly disclaims: not this app's tables.
-    // claude_usage belongs to the /api/claude proxy (the audit's F3 spend log),
-    // the same site-level standing media_items has.
-    const notOurs = ['media_items', 'schema_migrations', 'claude_usage'];
-    // FilamentForge's tables are all prefixed ff_ — the prefix is the collision
-    // boundary in the shared database, and that app documents its own data
-    // model rather than borrowing a table here.
+    // The two the section explicitly disclaims: site-level tables belonging to
+    // no app. claude_usage belongs to the /api/claude proxy (the audit's F3
+    // spend log); schema_migrations is database bookkeeping shared by all.
+    const notOurs = ['schema_migrations', 'claude_usage'];
+    // Another APP's tables are exempt by PREFIX, which is the collision boundary
+    // this README states: this app's tables are unprefixed, so anything another
+    // app adds must not be. FilamentForge is ff_, MediaVault is media_, and each
+    // documents its own data model rather than borrowing a row here.
+    //
+    // media_items sat in the literal list above until 2026-09-08. That worked
+    // for exactly one table and fails for the second: a new MediaVault table is
+    // not named in this README, is not in that list, and does not start with
+    // ff_, so a table documented perfectly well in apps/media-vault/README.md
+    // fails `every table has a row in a data-model table`. OBSERVED, not
+    // predicted — a media_shares CREATE appended to schema.sql failed this exact
+    // check before the prefix was widened. SHARE-AUDIT V5.
+    const notOursPrefixes = ['ff_', 'media_'];
     const undescribed = [...schema.matchAll(/CREATE TABLE IF NOT EXISTS ([a-z_]+)/g)]
       .map((m) => m[1])
-      .filter((t) => !named.has(t) && !notOurs.includes(t) && !t.startsWith('ff_'));
+      .filter((t) => !named.has(t) && !notOurs.includes(t)
+        && !notOursPrefixes.some((p) => t.startsWith(p)));
     check('every table has a row in a data-model table',
       undescribed.length === 0, undescribed.join(', '));
     check('and the two it disclaims are still disclaimed',

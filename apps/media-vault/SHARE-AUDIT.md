@@ -290,6 +290,43 @@ unambiguous; the prediction is still a prediction.
 **Ongoing cost.** None. It removes a hardcoded list entry that the next
 MediaVault table would have needed as well.
 
+**Taken, 2026-09-08 (PR #840).** Posture held: an existing exemption widened,
+**no new check and no exit code moved** — the check count in that section is 35
+before and after.
+
+**Taken FIRST, ahead of `V1`, and the running order changed because of it.** Nate
+approved `V1` → `V5`; `documented-counts.mjs` runs inside
+`apps/character-creator/test/smoke.mjs` (imported at `smoke.mjs:394`, called at
+`:6078`), which is the flagless run `ship-pr` names as the merge gate. Taking
+`V1` first would therefore have merged a red gate and left it red until this
+landed. Both findings are unchanged; only the order moved.
+
+**The prediction is now an observation, which is what this finding asked for.**
+V5 recorded its evidence as *not run*. It has been run: a `media_shares` `CREATE`
+appended to `db/schema.sql`, then
+`node apps/character-creator/test/smoke.mjs --section "Documented counts"`.
+
+| | before this change | after |
+|---|---|---|
+| `every table has a row in a data-model table` | **FAIL — `media_shares`** | ok |
+| `and it matches schema.sql` | FAIL — README says Thirty-seven (37), schema has 38 | FAIL, unchanged |
+
+The second row is **`V1`'s place 6 and is deliberately left failing here** — this
+finding widens an exemption and does not touch a count. The injected table was
+reverted; `db/schema.sql` is byte-identical to `main` in this PR.
+
+**One correction to this finding's own text.** `notOurs` is at
+`documented-counts.mjs:205`, not `:204` as the Evidence paragraph says. The
+`ff_` exemption at `:211` was right. Found by the `audit-premise-auditor` pass
+before scoping, and recorded rather than edited into the finding above, because
+these files are records.
+
+**What was NOT done, and why.** No check that the README disclaims the `media_`
+prefix, mirroring *"and the `ff_` prefix is disclaimed"*. The posture says *add
+no new check*, and a new one would have been a second thing to satisfy in the
+same breath as widening the first. `V1` is what puts `media_` in that README's
+prose.
+
 ## V6 — low — SETUP.md gains a twin step, and nothing in CI can watch it
 
 **Proposal.** In `SETUP.md`'s *Access (the login wall)* section, record that
