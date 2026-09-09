@@ -65,7 +65,7 @@ const C = { data: null, items: [], journal: [], catalog: [], cls: null, canWrite
             vehicles: [], openVessels: new Set(), vesselCatalog: null,
             // Play mode: the same data through an action-first, phone-shaped
             // lens. playAmt is the selected quick-action amount; rollLog is
-            // structured from day one so phase 3 can persist it unchanged.
+            // structured from day one, and phase 3 persists it unchanged.
             playMode: new URLSearchParams(location.search).get('play') === '1',
             playAmt: 1, lastRoll: null, rollLog: [],
             // A proposed change of stage, awaiting confirmation.
@@ -391,8 +391,11 @@ function syncPlayChrome() {
   if (t) { t.style.display = ''; t.textContent = C.playMode ? '📄 Sheet' : '▶ Play'; }
 }
 
-// One structured result per roll, newest kept, capped - the exact shape a
-// phase-3 play_events row will take, so logging is a POST away, not a rewrite.
+// One structured result per roll, newest kept, capped. The shape was chosen so
+// a play_events row could take it unchanged, and phase 3 took it: persistRoll
+// below POSTs the rollable kinds as 'roll' events and the structure never had
+// to change. A 'power' roll is recorded here and NOT persisted from here -
+// usePower posts its own 'power' event, carrying the from/to that undo needs.
 function recordRoll(kind, name, entry) {
   const r = { kind, name, ts: Date.now(), ...entry };
   C.lastRoll = r;
@@ -800,7 +803,9 @@ async function endSession() {
 // roll off the leading dice of the gear row's damage string, and an ammo
 // counter when the payload states a capacity. Ammo lives in the inventory
 // row's NOTES as "ammo 7/10" - visible on the sheet lens, editable by hand,
-// no schema change; formalising it is phase 3's event log's problem.
+// no schema change. Phase 3 landed and deliberately did NOT formalise it:
+// play_events has an 'ammo' kind recording the notes change from/to, which
+// buys undo without giving the count a column of its own.
 
 // The first dice expression in a damage string. Books write "1D6 (small),
 // 2D6 (large)" and "2D6 M.D. single shot" - the leading dice roll, the full
