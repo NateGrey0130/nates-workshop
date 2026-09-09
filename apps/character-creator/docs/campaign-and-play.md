@@ -367,6 +367,88 @@ books' recovery pages are not yet in the rules audit, and this app does not
 ship an uncited number for a table to silently trust. When those pages are
 audited, cited defaults belong in `js/rules.js`.
 
+### A change that could not be sent waits in a queue
+
+The table's wi-fi drops mid-fight and the +/− buttons keep working. What
+happens next is `js/play-queue.js`, and the name matters: **this is a queue,
+not offline support.** It survives a network drop and a reload while the tab
+is open. Nothing here serves the page, so closing the tab with no connection
+means the sheet will not load at all next time — that needs a service worker,
+which on a site that deploys on every merge brings a cache-invalidation
+problem of its own and is deliberately out of scope.
+
+**Only the pool +/− buttons queue.** `adjustPool` is the one caller of
+`queuePoolChange`, and the other play writes each fail differently: Damage,
+ammo and rest are optimistic too and **revert** on any failed write, a drop
+and a refusal alike; a power spend is **not** optimistic — it awaits the write
+before deducting, so a failure means it never applied; and a roll is
+fire-and-forget, so it stands on screen and is quietly not logged. That is the
+current state rather than a principle — pool arithmetic is what a player fires
+repeatedly during a fight, so it is where losing a change hurts most.
+
+**A refusal and a silence are different things**, and the whole design hangs
+off telling them apart:
+
+| the error | what it means | what happens |
+|---|---|---|
+| `err.status` is set | the server answered and said no | rolls back and alerts, exactly as before there was a queue |
+| `err.status` is `undefined` | the request never arrived | the change **stands on screen** and joins the queue |
+
+A browser that refuses IndexedDB — a private window, site data blocked —
+falls back to rolling back. `playQueue.available()` answers false, and the
+caller behaves as it did before the queue existed rather than erroring.
+
+**IndexedDB rather than `localStorage`**, for two reasons that are both about
+this app specifically: it is asynchronous, so a long fight's worth of queued
+entries cannot jank the thumb-sized buttons that write them; and
+`localStorage` is a per-origin string budget shared with every other app in
+this workshop, which is the wrong place for a store whose length is decided by
+how long the wi-fi is out. The object store is keyed by an `autoIncrement`
+`seq`, which is where the queue's order comes from.
+
+**Order is the contract.** Two adjustments to one pool only compose if they
+are replayed in the sequence they were made, so `flushQueue()` is a serial
+loop and never a `Promise.all`. It runs on the `online` event, and again from
+`load()` — a tab reopened after a drop has a queue and no `online` event
+coming.
+
+**Guarded replay, per field.** A change queued during a spell offline may be
+replaying onto a pool somebody else has moved, and applying its `to` blindly
+would silently discard their change — which is the failure the queue exists
+not to make worse. So the replay sets `guard: true` on the events POST, and
+the endpoint puts `field IS ?` for each pool's `from` into the `UPDATE`'s
+`WHERE`. `from` had always been sent, validated and never used; `guard` is
+what finally reads it, opt-in so every existing caller keeps the behaviour it
+has.
+
+Guarded **per field rather than per row**: two people touching different pools
+are not in conflict, and a row-level check would call that a clash. The check
+also runs *before* the batch, because a batch that applies nothing still
+inserts the event and would leave a log entry for a change that never
+happened.
+
+**A conflict is a choice, not a merge.** The 409 carries both sides — `mine`,
+`theirs` and the `base` they diverged from — and the flush **stops there**:
+the entries behind it are built on a value that is no longer true, and
+replaying them would compound the divergence rather than resolve it. The pool
+card splits into two finger-sized halves, yours and theirs, the player picks,
+and the flush resumes. Choosing theirs needs no write at all; choosing yours
+writes from the server's current value as the base, so the same conflict
+cannot refuse it twice.
+
+**The trap this repo keeps rediscovering: Access answers with HTML.** A replay
+that lands on the login page comes back as a page, `api()` answers `{}` for a
+body it cannot parse, and the replay looks exactly like success — which would
+eat the queue silently. The response's `event_id` is the proof that our API
+answered and not the wall; without one, the flush stops and says to sign in
+again.
+
+A counter near the pools says how many are waiting, and says something
+different when a conflict is holding the line. `test/checks/rendered-ui.mjs` →
+*Changes that could not be sent* pins the decisions above — including the
+honest-word one: the module has to keep saying what it does **not** promise,
+or the check fails.
+
 Deliberately out of scope at any phase: party-wide initiative (the
 dashboard's altitude) and automated combat resolution (the hand-to-hand
 tables are not modelled, and the README already says so).
