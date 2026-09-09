@@ -57,7 +57,14 @@ export async function onRequestGet(context) {
       .prepare('SELECT * FROM media_items WHERE user_email = ? ORDER BY added_at')
       .bind(owner)
       .all();
-    return json({ owner, items: results.map(rowToItem) });
+    // can_write is the SERVER's answer to a question the client would otherwise
+    // guess from which URL it happened to call. SHARE-AUDIT V3, copying
+    // apps/character-creator/sheet.js:96, where the sheet reads `res.can_write`
+    // rather than deciding for itself. It is always false here - this endpoint
+    // has no writing counterpart - and saying so explicitly means the client
+    // has one flag to gate on for every library it displays, rather than a
+    // rule about which fetch it made.
+    return json({ owner, items: results.map(rowToItem), can_write: false });
   } catch (err) {
     return json({ error: 'DB error: ' + err.message }, 500);
   }

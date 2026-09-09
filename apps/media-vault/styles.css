@@ -1212,3 +1212,81 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
 }
 .nav-tab:hover { color: var(--text-primary); }
 .nav-tab.active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+
+/* ═══ SHARING: view mode, the vault switcher, the share modal ═══
+   SHARE-AUDIT V3. `body.view-only` is set by setCanWrite() from the server's
+   can_write field, and is the ONE hook every rule below hangs on.
+
+   CSS is not the enforcement. app.js refuses the same actions in JS, because a
+   hidden button is still reachable by keyboard (Ctrl+N had no button at all)
+   and a row's action buttons are not rendered rather than hidden. This makes
+   the page honest; the guards make it correct. */
+body.view-only #btnImportHeader,
+body.view-only #btnDupHeader,
+body.view-only #btnSelectMode,
+body.view-only #btnAddItem,
+body.view-only .writes-only,
+body.view-only .card-checkbox,
+body.view-only .row-checkbox { display: none !important; }
+
+/* The banner sits between the header and the toolbar rather than inside the
+   header: the header is already crowded and wraps on a narrow window, and a
+   strip that says whose library this is must not be the thing that wraps out
+   of sight. */
+.viewing-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 20px;
+  background: var(--accent-glow);
+  border-bottom: 1px solid var(--accent);
+  color: var(--text-primary);
+  font-size: 13px;
+}
+.viewing-banner strong { color: var(--accent-link); }
+.viewing-eye { font-size: 14px; }
+.viewing-banner .btn { margin-left: auto; }
+
+.vault-switcher { display: flex; align-items: center; }
+.vault-switcher select { max-width: 220px; }
+
+.share-lead, .share-note {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0 0 14px;
+}
+.share-note { margin: 14px 0 0; font-size: 12px; color: var(--text-muted); }
+.share-heading {
+  font-family: var(--font-display);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin: 18px 0 8px;
+}
+.share-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  margin-bottom: 6px;
+  font-size: 13px;
+  /* An address is the one thing here that can be long enough to push the
+     Revoke button out of the row. */
+  overflow-wrap: anywhere;
+}
+.share-empty {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.5;
+}
+.share-add { display: flex; gap: 8px; align-items: center; }
+.share-add select { flex: 1; min-width: 0; }
+.btn-revoke { color: var(--danger); border-color: var(--danger); }
+.btn-revoke:hover { background: var(--danger); color: var(--bg-primary); }

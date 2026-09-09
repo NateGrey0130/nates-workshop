@@ -368,6 +368,83 @@ whether it survives view mode. That is a real tax and there is no check for it;
 a control that forgets fails in the safe direction (it appears, and writes to the
 viewer's own vault) which is exactly the failure this finding is about.
 
+**Taken, 2026-09-08 (PR #TBD).** Posture held: **the server is the authority;
+the client renders what it is told.** `items` answers `can_write: true`, `vault`
+answers `false`, and `setCanWrite()` is the single funnel that stores it.
+
+**THE SCOPE WAS WIDENED, ON NATE'S EXPLICIT WORD, AND THAT IS THE FIRST THING TO
+KNOW ABOUT THIS PR.** As written, `V3` gates a view mode. The premise pass
+established that **nothing could enter one**: `V1`, `V2` and `V4` shipped server
+only, and `app.js` had no Share modal, no vault switcher and no call to
+`/api/media-vault/vault`. No finding on this menu proposed building the way in —
+unnumbered work, in the shape `audit-menu` → *A deferral is work* describes. The
+options put to Nate were (a) take `V3` as written and file the UI as a new
+numbered finding, (b) widen `V3` to build all of it, (c) stop at the gating and
+leave the feature unreachable. **He chose (b).** Recorded here because a widened
+finding otherwise reads as a taker substituting their own scope, which is the one
+thing the protocol forbids.
+
+**So this PR contains the whole client:** the switcher, the Share modal, the
+view mode, and the `can_write` plumbing on both endpoints.
+
+**The finding's control list was materially incomplete, as its own Confidence
+line predicted.** It was assembled from `index.html`'s header and toolbar. What
+a walk of `app.js` added:
+
+| missed | where | why it matters |
+|---|---|---|
+| per-row ✏️ and 🗑 | `app.js:201` | rendered by `renderLibrary`, in **no** HTML file — a delete button on every row of list view |
+| `Ctrl`/`Cmd`+`N` | `app.js:2266` | a keyboard route into the Add modal that survives hiding every button |
+| `＋ Add now` | `app.js:965` | a second write button inside the Add modal that never touches Save |
+| `+ Add First Item` | `index.html:138` | `#emptyState` shows whenever the **filter** matches nothing, so it appears on a populated shared vault |
+| the Duplicates scan | `app.js:1838` | fires on modal open and is **caller-scoped**, so "scanning this vault" would silently scan the viewer's own |
+| `+ Add Item` had **no `id`** | `index.html:48` | nothing could hide it by id; `switchView()` already fails to hide it on the Stats page for the same reason |
+
+**And the sharpest one, which no button gates.** Two recovery paths — the
+bulk-write disagreement re-read (`agreesWithServer`) and the failed-write
+re-read (`apiWrite`) — fetched `/items` unconditionally. With a shared library on
+screen that replaces somebody else's rows with **the viewer's own**, under their
+name in the header, saying nothing. Both now go through `currentLibraryUrl()`.
+**The smoke test's existing assertion had to change to allow this**: it pinned
+the literal `apiFetch('/api/media-vault/items')`, which was right while a caller
+could only see their own rows. It now asserts the stronger property — that the
+re-read follows `currentVault` — plus the same for `apiWrite`.
+
+**Verified in a browser, not from the DOM alone**, per `verify-ui`. Served on
+port **8807**, confirmed by finding a string this branch added on the page
+rather than by trusting port ownership.
+
+- **own vault** — switcher, Share, and every write control present
+- **view mode** — banner reads *"You are viewing owner@example.com's library —
+  read only"*; `btnAddItem`, `btnImportHeader`, `btnDupHeader` and
+  `btnSelectMode` all `display: none`; **0** per-row action buttons rendered;
+  **0** visible row checkboxes; **0** visible detail-modal write buttons; all
+  three modals refused to open when called directly; `setSelectMode(true)`
+  refused; a dispatched Ctrl+N did **not** open the Add modal, and did open it
+  after switching back
+- **Share modal** — granted `friend@example.com` through the UI, the row
+  appeared with its Revoke, and the picker shrank to `second@example.com`
+- **tablet (768px)** and **mobile (375px)** — the banner is above the fold and
+  legible at both; it wraps to three lines at 375 with *Back to my vault* still
+  in place
+
+**A pre-existing defect seen and deliberately not fixed here.** `.bulk-bar` is
+parked at `bottom: -80px` and is taller than that, so roughly 38px of it peeks
+above the bottom edge at viewport heights near 860 — visible in every screenshot
+above, worse at mobile. `body` carries no classes when it happens and this PR's
+`styles.css` diff is a pure append, so it is not from this work. **Named rather
+than filed**: it belongs to whoever next opens a UI menu for this app, and
+inventing a finding for it inside `V3` would be the same scope drift this note
+opens by declaring.
+
+**One correction to this finding's own text, and it was mine.** `V3` says
+`REDESIGN-AUDIT.md:47` cites the pattern *"under the path
+`apps/character-creator/js/sheet.js`"* and that the path does not exist. That
+menu uses **no path prefix at all** — its cells read `sheet.js:922`. The only
+occurrence of the string `js/sheet.js` in the whole repo is inside `V3`'s own
+correction: it invented the path it then refuted. The other half stands — every
+one of those line numbers has moved.
+
 ## V4 — high — the picker is a mirror, and the server must re-check it
 
 Nate's question — *can the share options only list emails in the allow list?* —

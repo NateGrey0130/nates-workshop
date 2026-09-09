@@ -346,6 +346,48 @@ source text sees it. What they prove is that no statement can touch every
 user's rows, and that the surface which can serve another person's library is
 one file long.
 
+## Looking at a library you cannot change
+
+**A ▾ switcher appears in the header the moment somebody shares with you**, and
+is absent otherwise. Choosing a name loads their library; *My vault* comes back.
+
+**The client never decides for itself whether it may write.** Both library
+endpoints answer with `can_write` — `items` always `true`, `vault` always
+`false` — and `setCanWrite()` is the one funnel that stores it and puts
+`view-only` on `<body>`. That is the contract
+`apps/character-creator/sheet.js` uses, and it means the rule lives in one
+place instead of in every control.
+
+**CSS is not the enforcement.** `body.view-only` hides the header's write
+buttons, but a hidden button is still reachable: **Ctrl+N had no button at
+all**, and the per-row ✏️/🗑 in list view are *not rendered* rather than
+hidden. So `openAddModal`, `openImportModal`, `openDuplicatesModal`,
+`editItem`, `deleteItem`, `saveItem`, `lookupAndAddISBN` and the Ctrl+N handler
+each refuse, and `setSelectMode(true)` refuses — which is what makes the bulk
+bar, the undo window and the row checkboxes unreachable without gating each one
+separately.
+
+**Two recovery paths used to re-read the wrong library.** When a bulk write
+disagrees with the server, and when a write fails, the app re-reads and redraws.
+Both fetched `/items` unconditionally — correct while you could only ever see
+your own rows, and silently wrong with a shared library on screen: the viewer's
+own rows would appear under somebody else's name in the header, with nothing
+saying so. Both now go through `currentLibraryUrl()`, and the smoke test pins
+that they follow `currentVault`.
+
+**What stays available in view mode**, deliberately: **Share**, because sharing
+*your* library is about your own rows and is not a write to what is on screen;
+and the filters, sort, search, paging and Stats, which are reads. **Export**
+stays too — that is a separate decision, below.
+
+**The Share modal is a closed picker.** It lists who you share with, each with a
+Revoke, and offers only addresses that can actually sign in. When there are none
+left it says so rather than showing a box whose every entry the server would
+refuse. Both lists are built as DOM nodes with `textContent`, never
+interpolated: this file's `esc()` leaves the quote character alone, which is
+right for element content and wrong for an attribute — and every row here
+carries an email address.
+
 **`source_id` is where the row came from**, so its lookup can be run again
 exactly: the normalised ISBN for a book, `tmdb:movie:1234` / `tmdb:tv:1234` for
 video — the prefix names the lookup, the rest is that lookup's key. One generic
