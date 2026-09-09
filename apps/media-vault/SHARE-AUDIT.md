@@ -130,7 +130,7 @@ writing `shares.js` is what would raise it.
 migration table, and a table count that a future table has to move again. The
 count is already pinned by a test, so it cannot rot silently.
 
-**Taken, 2026-09-08 (PR #TBD).** Posture held: **additive**. No existing
+**Taken, 2026-09-08 (PR #841).** Posture held: **additive**. No existing
 endpoint changed, no existing column moved, and `media_items` is untouched —
 `db/schema.sql`'s diff is one `CREATE TABLE`, one index and one guarded seed row.
 
