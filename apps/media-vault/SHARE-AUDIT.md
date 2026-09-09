@@ -290,7 +290,7 @@ unambiguous; the prediction is still a prediction.
 **Ongoing cost.** None. It removes a hardcoded list entry that the next
 MediaVault table would have needed as well.
 
-**Taken, 2026-09-08 (PR #TBD).** Posture held: an existing exemption widened,
+**Taken, 2026-09-08 (PR #840).** Posture held: an existing exemption widened,
 **no new check and no exit code moved** — the check count in that section is 35
 before and after.
 
