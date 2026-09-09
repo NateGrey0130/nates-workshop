@@ -387,8 +387,8 @@ break** on the pages that set it in a narrow column, which is why a naive
 `^Cost:` scan finds 36 of them and misses every one on printed 119-122. Anything
 parsing this section has to join lines first.
 
-The vehicles (130-149) and starships (157-173) are a separate question and are
-**not** planned — see below.
+The vehicles (130-149) and starships (157-173) are a separate question and were
+~~**not** planned~~ - **partly done since.** `vehicles`, `vehicle_locations` and `vehicle_weapons` landed 2026-09-03 in migration 048, and the **Psionic Power Armor (128-130)** was imported 2026-09-09 as `BOOK-INGEST-AUDIT` F41's Phase World session. The other ten vessels of 130-149 and every starship of 157-173 are still out, and are not F41's scope - see below.
 
 ## Extraction plan
 
@@ -823,6 +823,12 @@ What is deliberately left, with the reason for each:
   location-by-location M.D.C. breakdown with a dozen entries. There is no table
   for a vessel and this batch does not add one. Filed as
   `BOOK-INGEST-AUDIT.md` F3.
+  **Corrected 2026-09-09:** `F3` was reopened and its first option built - migration
+  048 added the three tables on 2026-09-03 - so the sentence above is a record of
+  2026-08-31 and not the state today. One of this book's vessels is now imported, the
+  Psionic Power Armor, under `F41`. The rest of 130-149 and 157-173 remain out, and
+  `F41` covers only the gear rows that were already vessels in disguise - importing
+  this book's vessel sections whole would be a different job.
 - ~~**Phase Powers (32-35).**~~ **Imported after all, in batch 9** - fifteen
   `psionic_powers` rows in a new `Phase` category. This line said they were one
   NPC class's racial abilities and belonged in `special_abilities`; printed 32
@@ -857,6 +863,7 @@ What is deliberately left, with the reason for each:
 | 2026-08-31 | [#417](https://github.com/NateGrey0130/nates-workshop/pull/417) | **classes, batch 9 - the four Prometheans**: First Stage Promethean (printed 25-27), Promethean Phase Adept (27-28), Promethean Time Master (28-29) and Phase Mystic (29). Catalog 154 -> 158 classes, 101 -> 116 psionic powers, 1021 -> 1024 gear. The book's FIRST psionic rows and its first magic-granting class. The 15 Phase Powers of printed 32-35 went in as `psionic_powers` in a new `Phase` category, correcting this survey, which had them down as one NPC class's racial abilities; three of the four playable entries select from them. Gear: two steelcloth armors read off their class pages (A.R. 12/90 M.D.C. and A.R. 19/40 M.D.C.) plus one stub, the meditation chip. Finding F10 filed, with a 361-pair sweep behind it - a race and an O.C.C. that are both psychic keep only one block, and the race wins every tie. Three `CORE_SDC_BY_CLASS` entries in `js/compose.js`, for the three O.C.C.s. Two page-range corrections and no new skills or spells. Applied `--remote` before the PR. |
 
 | 2026-08-31 | [#418](https://github.com/NateGrey0130/nates-workshop/pull/418) | **classes, batch 10 - the two Cosmo-Knights, and the last**: Cosmo-Knight (printed 99-102) and Fallen Cosmo-Knight (102-104). Catalog 158 -> 160 classes; no new skills, gear, spells or psionics, because neither entry prints a `Money:` line anywhere in printed 99-104 and the Cosmo-Knight's Standard Equipment is prose naming no item. **34 of 34 playable classes are in and the book is closed** - `BOOK-INGEST-QUEUE.md` moves `phase-world` from `importing` to `imported`. The Fallen Knight's own prose sends level improvement to a Fallen Knight Experience Table that printed 183 does not contain; the table won, the pair share the Cosmo-Knight ladder, and the losing reading is recorded. Not a variant: `VARIANT_OVERRIDES` excludes `special_abilities`, so a variant would have kept every power the entry exists to remove. Finding F11 filed, with a 57-race sweep behind it - a class whose book says it REPLACES the race cannot say so, and exactly one race of 57 composes the Cosmo-Knight correctly. One line of code changed, the only code this book changed: `regression.mjs` required a POSITIVE bonus on every language pick and a fallen knight's is exactly zero, so the comparison moved to `>= 0`. Applied `--remote` before the PR. |
+| 2026-09-09 | #TBD | **`BOOK-INGEST-AUDIT` F41 vessels.** The **Psionic Power Armor** (printed 128-130) moved from prose in `gear` into `vehicles` + `vehicle_locations` + `vehicle_weapons`: 1 vessel, 6 M.D.C. locations, 6 weapon systems, and a `gear.vehicle_slug` pointer on the surviving gear row. **F41's count was RIGHT for this book** - the first of the four taken where it was. The gear row's stored `mdc` 210 and `cost` 4,000,000 both match the book, read before the catalog was consulted. Weapon ordinals are the book's own 1-6. The cache WELDS printed 129 - `Speed:`/`Running:` from the left column interleaves with `Flying:`/`Range:`/`Statistical Data:` from the right - so every figure was confirmed against a 200 dpi render. Applied `--remote` before the PR. |
 
 ### What remains
 

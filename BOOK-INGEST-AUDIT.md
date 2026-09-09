@@ -6027,6 +6027,109 @@ non-M.D.C. field matched RUE and inferred a different printing. Confirming that
 against the original core book, and finding the Sky King's stat block there, was
 this session's work. The two passes met in the middle, which is the shape the
 Wormwood note describes.
+
+**Taken for PHASE WORLD, 2026-09-09 — the fourth of the five book sessions, and
+the first where this finding's count was RIGHT.** One row remains: the
+web-sourced `glitter-boy-power-armor`, which is a decision rather than a book
+session.
+
+**One row, one vessel, and no correction to make.** `psionic-power-armor` is the
+only `category = 'vehicle'` gear row citing this book — checked without the
+`LIKE '%Main Body%'` filter as well, since that filter missed rows in two of the
+three books before this one, and the wider query returns the same single row
+(`--remote`, 2026-09-09). Saying so plainly matters: three consecutive
+corrections would otherwise leave the next reader assuming a fourth.
+
+**It is a machine by the test the Wormwood session established.** The book's own
+`Class:` line reads `Psionic Assault Exoskeleton`, and the entry carries a crew,
+a power system, a market cost and six numbered weapon systems. Nothing in it has
+a Horror Factor or an I.Q., so nothing `vehicles` cannot hold would be dropped.
+
+**THE STORED FIGURES WERE RIGHT ON THE FIRST READING — the first time in this
+sequence.** The gear row holds `mdc = 210` and `cost = 4000000`; the book prints
+`** Main Body - 210` and `Market Cost: Mark V: Four million credits. Mark X:
+Eight million credits.` Both were read off the book before the catalog was
+consulted, and the 4,000,000 is the low end of the two-model range, which is the
+convention `gear.cost` documents.
+
+**And this is not the evidence `F42` discredited.** That finding showed six RUE
+rows whose PRICES matched RUE exactly while every M.D.C. came from an earlier
+printing, because the errata moved combat numbers and left prices alone. Here
+the M.D.C. matches as well, which is the check that actually bears weight, and
+Phase World has had no second edition for a figure to drift between.
+
+**Two models, one row**, on the shape Nate settled for the NG-JK1 in the Juicer
+Uprising session. `Model Type: NF Model V or X (identical except for the
+contragravity flight system)`, and the book prints ONE M.D.C. table for both:
+the models differ in flight, weight, power system and price only. So the X's
+figures ride in `speed_air`, `weight_tons` and `cost_note`. It applies more
+cleanly here than it did there — the JK1B changed nine location values and still
+got one row, where the Model X changes none.
+
+**The ordinals are the book's, for the first time in this sequence.** Phase World
+prints `Weapon Systems` numbered 1 through 6, so they are transcribed rather than
+invented — unlike the Wormwood and RUE scripts, which had to number their own
+because those books print prose. Entries 5 and 6 are not guns and say so in their
+`note`, on the Free Quebec convention.
+
+**THE CACHE WELDS PRINTED 129, AND THE RENDER IS WHY THAT DID NOT MATTER.** On
+that page `Speed:` and `Running: 100 mph` from the left column interleave line by
+line with `Flying:`, `Range:` and `Statistical Data:` from the right:
+
+<!-- claim-ok: quoting the cache's own welded output -->
+
+```
+Speed: Statistical Data:
+Running: 100 mph (160 km) maximum; the act of running Height: 9 feet (2.7 m)
+```
+
+That is the corrupting read `book-survey` section 0b names, in the same page that
+carries the M.D.C. block. The figures happened to be separable by eye and would
+not be in general. A 200 dpi render of all three pages separates the columns and
+confirms every value. **The `phase-world` manifest carries no `welded_pages`
+key**, so nothing warned about this — the same tell the `ju` and `ww` caches
+gave, and the reason a render is not optional on a book cached before that
+detector existed.
+
+The offset was confirmed the free way section 0d prescribes and got three
+confirmations: the renders of printed 128, 129 and 130 each carry that folio, so
+`page_offset: 0` as `scripts/books.json` records. Zero is the awkward case
+section 0d names, because there is no offset left to explain a wrong page with.
+
+**The page citation was checked rather than copied.** The gear row cites
+`p.128-130`, and it is right: the heading `Psionic Power Armor` sits at the foot
+of printed 128 and the stat block ends on 130. Both earlier sessions found a
+citation off by one or wider than the entry, so this one was verified.
+
+**A weapon the prose names and the stat block omits.** Printed 129 says *the most
+fearsome weapon of the armor is a two-handed energy blade, an artificial version
+of a psi-sword*, and the numbered `Weapon Systems` list never mentions it, gives
+it no damage and never returns to it. It is recorded in the vessel's description
+as prose rather than as a seventh `vehicle_weapons` row, because numbering a
+system the book does not number would put a weapon in the list that no reader can
+find in the book.
+
+**What shipped** (`zzzzzzzz-pw-vessels-p128-130.sql`): 1 vessel, 6 M.D.C.
+locations, 6 weapon systems, 1 gear pointer. All ten readbacks passed on the
+first apply. Eight z's, sorting after the Juicer Uprising and Wormwood files and
+BEFORE the RUE one — the `ju` script asserts a **global** pointer count so every
+later book must sort after it, while the `rue` script's readbacks are all
+book-scoped, so `pw` sorting ahead of it alphabetically breaks nothing and a
+ninth `z` would have bought a new tier row in `docs/operations.md` for nothing.
+
+**The posture held.** The gear row kept its slug, prose and both values and
+gained only a pointer. No schema change. `noro-mystic-warrior` is the one
+published class citing it, which is fitting — the noro built the armour.
+
+**What this session did NOT do, and it is a large thing.** This book stats
+**eleven more vessels** in `Robots & Powered Armor` (printed 130-142) and
+`Tanks & Infantry Fighting Vehicles` (143-149), plus every starship of 157-173.
+`docs/surveys/phase-world.md` inventories all of them. **None is in scope**:
+`F41` covers the gear rows that were already vessels in disguise, and importing
+this book's vessel sections whole is a different job that nobody has asked for.
+The survey's claim that *"There is no table for a vessel"* was true when written
+on 2026-08-31 and is corrected in place, in this PR, with the date — migration
+048 built one on 2026-09-03.
 ### F42 - high - six Rifts Ultimate Edition gear rows carry FIRST-EDITION figures under a RUE citation, and ten published class references point at them
 
 **Found while taking `F41` for Rifts Ultimate Edition, 2026-09-09**, by reading
