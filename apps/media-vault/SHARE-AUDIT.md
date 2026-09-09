@@ -130,6 +130,74 @@ writing `shares.js` is what would raise it.
 migration table, and a table count that a future table has to move again. The
 count is already pinned by a test, so it cannot rot silently.
 
+**Taken, 2026-09-08 (PR #TBD).** Posture held: **additive**. No existing
+endpoint changed, no existing column moved, and `media_items` is untouched —
+`db/schema.sql`'s diff is one `CREATE TABLE`, one index and one guarded seed row.
+
+**Two of this finding's own premises were false, and both were the *claim about
+another file* shape this menu's own header warns about.** Found by the
+`audit-premise-auditor` pass before scoping, and corrected in the work rather
+than in the finding above, because these files are records:
+
+<!-- claim-ok: quoting the two premises this note corrects -->
+
+| the finding said | what was true |
+|---|---|
+| place 1: `db/migrations/050-media-shares.sql` | **`050` was already taken** by `050-catalog-pair-dismissals.sql`, merged 13:26 on 2026-09-08 — six hours *before* this menu was written, and an ancestor of the `110e52f` baseline it names. Shipped as `051-media-shares.sql`. Nothing in the suite checks migration-number uniqueness, and filename order is execution order, so a second `050-` would have been silently wrong |
+| place 6: *"Thirty-six tables … → thirty-seven"* | `apps/character-creator/README.md:182` already said **Thirty-seven**. The edit was thirty-seven → **thirty-eight**. Following the finding literally would have written a no-op and failed `documented-counts.mjs` |
+
+Both errors point the same way: **the menu was written against a tree one merge
+older than the one it claims.** The line number in place 6 was right; only the
+quoted words were wrong, which is exactly the shape that gets believed.
+
+**A third correction, to `V5`.** `notOurs` is at `documented-counts.mjs:205`,
+not `:204`.
+
+**The endpoint was built and exercised, which is what the Confidence line
+asked for.** `wrangler pages dev` on port **8803** (not 8788 — another worktree
+listens there), local D1 with `051` applied, fifteen calls against
+`/api/media-vault/shares`:
+
+- a grant appears in the owner's `sharedByMe` and the viewer's `sharedWithMe`,
+  read back under two different identities via `Cf-Access-Authenticated-User-Email`
+- `Friend@Example.com` is stored and returned as `friend@example.com`
+- a second identical POST leaves **one** row — the pair key makes it idempotent
+- self-share, a malformed address and an empty body are each refused 400
+- `DELETE ?email=FRIEND@example.com` revokes the lowercased row, and both sides
+  read empty afterwards
+
+**One branch was untested until it was noticed, and it is worth recording why.**
+Sharing with yourself first returned *"Needs an email address to share with"*
+rather than *"That is your own library"*: local dev's identity is
+`dev@localhost`, which has no dot after the `@` and fails the shape test before
+the self-check runs. The branch was then exercised under a real-shaped identity
+and is correct, case-insensitively. **The consequence for anyone testing locally
+is that `dev@localhost` cannot be granted to at all** — use a header identity.
+
+**Two departures from the finding as written, both declared rather than
+silent:**
+
+- **`candidates` is not in the GET yet.** The finding's proposal names
+  `{ sharedByMe, sharedWithMe, candidates }`. `candidates` is `V4`'s entire
+  subject and `V4` is later in the running order, so it arrives with `V4`
+  rather than being invented here.
+- **A cap of 50 grants per owner was added**, which the finding does not
+  mention. Until `V4` closes the list, POST accepts any address of email shape,
+  and an uncapped write endpoint is the kind of thing that is cheap now and
+  awkward later. It is a ceiling rather than a policy — the real bound is `V4`'s
+  picker, which will offer four addresses.
+
+**An unexpected check caught a real defect.** `MAX_SHARES` was first written as
+an `export`, and *"no export is named nowhere else"* failed it —
+`functions/api/media-vault/shares.js: MAX_SHARES - import it, un-export it, or
+delete it`. Un-exported.
+
+**Applied to production BEFORE the merge**, per `ship-pr`'s ordering rule, and
+verified by asking production rather than by reading an exit code:
+`media_shares` exists in `sqlite_master`, `schema_migrations` holds
+`051-media-shares.sql` at `2026-09-09 01:21:52`, the table has **0 rows**, and
+`node scripts/drift-check.mjs --remote` prints `NO DRIFT`.
+
 ## V2 — high — exactly one endpoint reads rows it does not own
 
 **This is the finding to read carefully.** Every statement in MediaVault today

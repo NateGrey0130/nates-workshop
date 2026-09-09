@@ -43,9 +43,11 @@ functions/api/media-vault/
 ├── items/bulk-delete.js  POST — delete a selection
 ├── migrate.js            POST — the one-time localStorage retirement
 ├── duplicates.js         GET  — the duplicate scan, read-only
+├── shares.js             GET / POST / DELETE — who may read this caller's
+│                         library, and whose the caller may read
 └── lookup.js             GET  — OpenLibrary + TMDB, proxied
 
-db/schema.sql             media_items — see "Data model"
+db/schema.sql             media_items, media_shares — see "Data model"
 ```
 
 Run the tests from anywhere:
@@ -259,17 +261,52 @@ the app names the items that were lost rather than dropping them silently.
 
 ## Data model
 
-One table in the site's shared D1 database.
+Two tables in the site's shared D1 database.
 
 | Table | Notes |
 |---|---|
 | `media_items` | One row per item, keyed `(user_email, item_id)`. `user_email` is the Cloudflare Access identity, so a user only ever sees their own rows. Columns: the twelve item fields (`type`, `format`, `title`, `author`, `actors`, `producers`, `genre`, `series`, `location`, `cover`, `notes`, `source_id`) plus `added_at`. |
+| `media_shares` | One row per grant, keyed `(owner_email, viewer_email)`, plus `created_at`. The owner lets the viewer **read** their library. See *Sharing a library* below. |
 
-It is **not** prefixed, unlike FilamentForge's `ff_` tables. It predates that
-convention and holds live data; renaming it would buy consistency at the price
-of a data-copy migration. `db/schema.sql` notes that the character creator's
-gear table is called `gear` rather than `items` specifically to stay clear of
-it.
+`media_items` is **not** prefixed, unlike FilamentForge's `ff_` tables. It
+predates that convention and holds live data; renaming it would buy consistency
+at the price of a data-copy migration. `db/schema.sql` notes that the character
+creator's gear table is called `gear` rather than `items` specifically to stay
+clear of it. `media_shares` is new and takes the `media_` prefix deliberately —
+the character creator's tables are unprefixed, so the prefix is the collision
+boundary, and `apps/character-creator/test/checks/documented-counts.mjs` exempts
+another app's tables by that prefix rather than by name.
+
+## Sharing a library
+
+**A viewer must already be able to sign in.** The whole site sits behind
+Cloudflare Access, and a grant does not change that: it says which of the people
+who can already reach MediaVault may read *this* library as well as their own.
+An address that is not on the Access allow list can be granted and the row is
+inert — the person never arrives, so it is never read. Nothing in a Pages
+Function can check that list (`CLAUDE.md` → *Three credentials*), which is why
+the picker in front of this is built from a mirrored one instead.
+
+**The grant is a row, not a token.** `(owner_email, viewer_email)` is the whole
+key, so granting twice is idempotent and revoking is a `DELETE` of one known
+row. Identity comes from the viewer's own Access session at read time, so there
+is no secret in a URL to leak and nothing to expire.
+
+**Revocation takes effect on the viewer's next request.** Whatever is already
+painted on their screen survives until they reload, because this app holds the
+whole library in memory — the same honest contract the bulk-delete undo toast
+makes about its buffer. There is no `revoked_at` column: revocation is the
+absence of the row, and a row claiming a share had been revoked would be a
+second copy of a fact the deletion already states.
+
+**`owner_email` is stored exactly as the identity header gives it** — that is
+what `media_items.user_email` holds, and the two are joined. `viewer_email` is
+lowercased, because it is compared against a *different* request's identity
+rather than used as a key into existing rows, and the middleware already treats
+those two cases as one identity.
+
+At most **50** grants per owner. That is a ceiling rather than a policy: the
+real bound is the picker, which offers only addresses that can sign in.
 
 **`source_id` is where the row came from**, so its lookup can be run again
 exactly: the normalised ISBN for a book, `tmdb:movie:1234` / `tmdb:tv:1234` for
@@ -315,6 +352,9 @@ to that email.
 | `/api/media-vault/items/bulk-delete` | POST | `{ ids }` — deletes exactly the named rows |
 | `/api/media-vault/migrate` | POST | The one-time localStorage merge, below |
 | `/api/media-vault/duplicates` | GET | Which rows repeat, and why — read-only, below |
+| `/api/media-vault/shares` | GET | Who may read the caller's library, and whose the caller may read |
+| `/api/media-vault/shares` | POST | `{ email }` — let that address read the caller's library |
+| `/api/media-vault/shares` | DELETE | `?email=` — stop sharing with that address |
 | `/api/media-vault/lookup` | GET | Metadata proxy, below |
 
 **What is bulk-settable, and what is deliberately not.** `bulk-update`'s
