@@ -6523,3 +6523,48 @@ read as *binary* to `grep` and would be silently lost by any tool that
 round-trips the file through an encoding that cannot carry it. Changing it to
 `\0` would be byte-for-byte equivalent in behaviour. Named rather than done,
 because it is not this finding.
+
+**Taken, 2026-09-09 (PR #863).** Posture held: a merge and a re-citation, no
+schema change, no new check. Nate settled the Sky King's half on the same day —
+re-cite rather than retire.
+
+**`northern-gun-sky-king` is re-cited to `Rifts RPG (original core book) p.228`**
+and its figures are untouched. The core book prints `Model Type: NG-A70`,
+`*Main Body - 130` and `Black Market Cost: 1.5 million credits, and up`; the row
+stored 130 and 1,500,000. That registry entry says the book is kept *"so the
+spelling stays known vocabulary if it reappears"* — this is the reappearance it
+was kept for, and nothing cached the book to do it.
+
+**THE PAGE THIS FINDING WAS FILED WITH WAS WRONG BY TEN.** The premise audit
+reported the stat block at pymupdf index **218**; searching the whole PDF puts it
+at **228**, and a 200 dpi render carries the folio 228 at the foot of the page.
+**The number that mattered — 130 — was right in both readings**, which is exactly
+how a wrong page citation survives a review: the claim it supports is true.
+
+**`wilk-s-atv-transport-vehicle` is retired into `mountaineer-atv`** through
+`catalog_redirects`, on the `zzzzzz-ingestion-f28-law-canonical.sql` pattern —
+redirect first so the slug keeps resolving, then a guarded DELETE. Nothing owned
+it: no `character_items` row, no class citation at any status, no existing
+redirect.
+
+**Its figures were carried across before it went, and that is the difference
+between a merge and a delete.** `mountaineer-atv` was a stub with `mdc` and
+`cost` both NULL; it now holds the 210 and the 76,000 the retired row had been
+carrying for the same machine. The catalog loses a fabricated name and keeps
+every number.
+
+**One page confirmed three separate claims.** The render of core-book 228 also
+shows `Wilk's Jet Pack ... Main Body — 20` against RUE's 30, and the Mountaineer's
+`Black Market Cost: 64,000` — both `F42` cases, corroborated from a different
+book than the one that finding measured.
+
+**A ninth z-tier was created, and the reason is new.** Every earlier tier existed
+because of rebuild order. This one exists because
+`zzzzzzzz-rue-vessels-p266-267.sql` **asserts the state of the rows these two
+findings change** — that four rows still carry first-edition figures, and that
+both disputed rows still exist. Deleting one makes that readback fail on a clean
+rebuild. `docs/operations.md` now carries the tier and states the general form:
+**a script that changes what an older script asserts needs a later tier, even
+when nothing about a rebuild requires it.**
+
+The clean-run `gear` count moves 1253 to 1252.
