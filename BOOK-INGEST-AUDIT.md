@@ -6837,3 +6837,66 @@ recording:
   points at a deleted gear row - which holds in every environment.
 
 Clean-run `gear` count 1252 to 1249; the web-marker count 24 to 23.
+
+### F48 - a literal NUL byte in `catalog-merge.js` made the whole file unreviewable
+
+**Found while taking `F44`, 2026-09-09, and named in that note rather than
+changed.** Taken the same day (PR #869) on Nate's word.
+
+`pairKey` joins the two halves of a duplicate-pair key with a NUL, which is the
+right separator: a NUL cannot occur in a catalog name, so no name can be mistaken
+for a pair. **It was written as a raw `0x00` byte in the source rather than the
+`\u0000` escape**, and one invisible byte changed how every tool sees the file:
+
+- `grep` skipped it entirely, reporting only *"binary file matches"*. Every
+  search of this repo's `_lib` for a function name silently missed this file.
+- **`git diff` rendered every change as `Bin 24839 -> 25820 bytes`.** `F44`'s
+  normaliser change - a one-line fix to how duplicate detection tokenises names -
+  shipped in PR #862 **with a diff no reviewer could read.** That is the cost,
+  and it had already been paid once before anyone noticed.
+
+**The fix is `\u0000`, and it is byte-for-byte identical at runtime.** Proved
+rather than asserted: `pairKey('Big Boss ATV', 'The Big Boss A.T.V.')` was
+captured before and after and the codepoint sequences match exactly, NUL
+included, and `pairKey(a,b) === pairKey(b,a)` still holds.
+
+**Nothing persisted depended on it.** `catalog_pair_dismissals` is the only table
+holding a pair key and it has **0 rows** (`--remote`, 2026-09-09) - and the
+runtime string is unchanged in any case, so a stored key would still have
+matched.
+
+**THIS PR'S OWN DIFF IS STILL BINARY, and that is the clearest demonstration of
+the problem.** Git decides text-or-binary by looking at both sides: the OLD blob
+contains the NUL, so the comparison is binary no matter what the new side looks
+like. Every diff *after* this one is text. `.gitattributes` was checked and
+applies no attribute to this file - nothing was forcing the behaviour but the
+byte itself.
+
+**A repo-wide scan found no other source file carrying a NUL** - every `.js`,
+`.mjs`, `.json`, `.md`, `.sql`, `.html`, `.css`, `.py`, `.yml` and `.txt` outside
+`.git`, `node_modules`, `.wrangler` and `.cache`. This was the only one.
+
+
+**AND THE BUG REPRODUCED ITSELF TWICE WHILE BEING FIXED, which is the most
+useful thing in this note.** Writing the paragraphs above put **two real NUL
+bytes into this file**: the note was added with an inline heredoc, the Bash
+tool collapsed the doubled backslash before Python ever saw it, and Python
+read `\u0000` as an escape rather than as six characters of text. A third
+NUL went into the pull request body the same way and the tool refused the
+command outright, which is the only reason any of it was noticed.
+
+The machine's own notes already say this: *the Bash tool eats a doubled
+backslash - write scripts with the Write tool instead*. Both repairs were made
+that way, building the escape byte by byte so no layer in between could
+collapse it, and both files were checked for NUL bytes before the commit.
+
+**So the class of bug this finding is about is not rare and not historical.**
+It arrived three times in twenty minutes, in a markdown file, a pull request
+body and a source file, from one shell behaviour - and only the instance that
+happened to hit a validation check announced itself. The other two were
+invisible and would have committed.
+
+**Posture: change the literal to an escape, change nothing else.** No behaviour
+change, no new check. A check would have to detect NUL bytes in source, which is
+one grep nobody will remember to run against a problem that now has no instances.
+**Confidence: high**, both halves executed. **Ongoing cost: none.**
