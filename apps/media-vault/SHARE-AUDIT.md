@@ -368,7 +368,7 @@ whether it survives view mode. That is a real tax and there is no check for it;
 a control that forgets fails in the safe direction (it appears, and writes to the
 viewer's own vault) which is exactly the failure this finding is about.
 
-**Taken, 2026-09-08 (PR #TBD).** Posture held: **the server is the authority;
+**Taken, 2026-09-08 (PR #844).** Posture held: **the server is the authority;
 the client renders what it is told.** `items` answers `can_write: true`, `vault`
 answers `false`, and `setCanWrite()` is the single funnel that stores it.
 
