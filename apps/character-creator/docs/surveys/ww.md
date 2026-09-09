@@ -194,7 +194,7 @@ Worm and the three Kriktons are creatures with attacks and horror factors, and
 p.157 names parasites among the things that are not player characters. They are
 monsters, not equipment.
 
-**None of these items has a price.** The book says so directly (p.52): Wormwood
+**None of these items has a price.** The book says so directly (p.54): Wormwood
 runs on barter, and the Priest of Light's `Money:` line records no figure at
 all — it states the field does not apply. `cost` stays NULL and `cost_note` records why. That is a real
 property of the book, not a failed extraction — see `book-survey` 0e on
@@ -234,6 +234,7 @@ What is deliberately left:
 | 2026-08-27 | #355 | 4 warrior O.C.C.s (113 classes): `symbiotic-warrior` p.64-65, `freelancer` p.68-70, `knight-of-the-order-of-the-temple` p.70-73, `knight-of-the-order-of-the-hospital` p.73-76. Plus 2 gear rows, `angel-hair-rope` and `resin-spike` from p.42 (975 total). Applied `--remote` before the PR. MERGED. |
 | 2026-08-27 | #356 | 5 R.C.C.s (122 classes): `holy-terror` p.66-68, `demon-goblin` p.122-124, `demon-hound-rider` p.125-126, `entrancer` p.126-127 (NOT 126-129 - 128 and the top of 129 are the NPC-only feathered serpent), `morphworm` p.129-131. NO xp_table on any of them: regression pins that a race carries none, so the p.157 ladders are recorded in extraction_notes instead. No new catalog rows. Applied `--remote` before the PR. MERGED. |
 | 2026-08-27 | #357 | 4 R.C.C.s (126 classes): `ram-rat` p.131-132, `rumbler` p.132-133, `shade` p.133-134 (NOT 133-135 - the rest of 134 and all of 135 are the NPC-only skelter bat), `sky-rider` p.135-136. No new catalog rows: the rumbler's eight earth elemental spells only LOOKED missing, because the catalog files elemental magic under an `Earth:` prefix. **THE IMPORT IS COMPLETE: 17 of 17 classes live.** Applied `--remote` before the PR. MERGED. |
+| 2026-09-09 | #TBD | **`BOOK-INGEST-AUDIT` F41 vessels.** 2 vessels, 6 M.D.C. locations and 4 weapon entries from printed 93-95, plus `gear.vehicle_slug` pointers on the two gear rows: `battle-saint` p.93 and `battle-saint-orb` p.94-95. **The eight shock parasites stayed in `gear`** - every one prints `Class: Wormwood organism:` where the two machines print `Class: Magic symbiotic war machine.`, and the 2026-08-27 decision below already settled that they are gear. NO M.D.C. figure exists for either vessel: the book prints formulas off the pilot, so every `mdc` is NULL with the formula in `mdc_note`. Applied `--remote` before the PR. |
 
 Each draft branch carries ONE EMPTY COMMIT and nothing else. That is what lets
 a PR exist before the work does; `git commit --allow-empty` keeps the scope in
