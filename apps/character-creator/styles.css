@@ -1690,6 +1690,27 @@ body.play-mode .skill-table .roll-btn { margin-left: 6px; vertical-align: middle
   border-color: var(--accent-secondary); color: var(--accent-secondary);
 }
 
+/* THE BARE PERCENTILE. Its own row rather than a fifth button on the amount
+   strip above, for two reasons that are both about what that strip is: it is
+   gated on write access, and every button on it is arithmetic against this
+   character's pools. A roll is neither - it changes nothing, and a read-only
+   viewer at the table rolls their own dice, which is the same argument that
+   leaves .roll-btn ungated.
+
+   Same 44px target and the same tones as the amount buttons, because it is the
+   same kind of control in the same strip; only the row is different. It needs
+   no hiding rule of its own - it is inside #play-controls, which
+   body:not(.play-mode) hides and the print block hides again. */
+.play-dice {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;
+}
+.play-dice button {
+  min-width: 44px; min-height: 40px; padding: 0 14px; border-radius: var(--radius-sm);
+  background: var(--bg-tertiary); border: 1px solid var(--border);
+  color: var(--text-secondary); font-size: 15px; cursor: pointer;
+}
+.play-dice button:active { background: var(--accent-glow); border-color: var(--accent); }
+
 
 .play-sec { margin-bottom: 10px; }
 .play-sec summary {

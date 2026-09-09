@@ -302,6 +302,14 @@ What it offers (phase 1 of four):
   leaves the target to the G.M. Rolls are **advisory** — the app shows the
   die, the table decides what it means — and play mode enforces no rule the
   sheet lens leaves to a human.
+- **A bare percentile**, on its own row in the control strip. A G.M. asks for
+  one by name several times a session — "give me a percentile" — and every
+  other d100 here is attached to a skill's own percentage, so the roll asked
+  for most often was the one roll the app had no button for. No bonus and no
+  target: the roll bar prints the number alone and the session log records it
+  without a verdict, because there was nothing to pass or fail against. Its
+  row is separate from the amount strip because that strip is gated on write
+  access and is arithmetic against this character's pools; a roll is neither.
 - **Powers** keep their ⚡ spend buttons; in play mode the deduction updates
   in place rather than refetching the sheet.
 - **Weapon cards** (phase 2): an equipped catalog weapon becomes an attack
