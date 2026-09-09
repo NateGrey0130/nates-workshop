@@ -6130,6 +6130,42 @@ this book's vessel sections whole is a different job that nobody has asked for.
 The survey's claim that *"There is no table for a vessel"* was true when written
 on 2026-08-31 and is corrected in place, in this PR, with the date — migration
 048 built one on 2026-09-03.
+
+**THE PREMISE AUDIT RAN CONCURRENTLY WITH THE IMPLEMENTATION, NOT AHEAD OF IT,
+and that is the same failure the Juicer Uprising note above records.** The
+`audit-premise-auditor` subagent was launched first and then not waited for: the
+book was read, the script written, applied to `--local` and committed while it
+was still running. It can date the overlap itself — two of its own greps returned
+different answers on a re-run, because this session edited the files between
+them.
+
+**So its findings are a post-hoc check of shipped work rather than an input to
+scoping.** Everything it measured independently held — the single row, the
+machine test, no duplicate, one citing class, a clean import, the registry and
+the manifest agreeing — but the conflict the subagent exists to break was not
+broken, for the second time in four sessions. **Launching it is not the same as
+using it**, and the Juicer Uprising note's lesson was about a subagent that
+stalled, where this one worked perfectly and was simply overtaken.
+
+**It caught three defects anyway, two of them written by this session:**
+
+- The survey ledger row said **`Applied --remote before the PR`** before the
+  apply had happened, copying a form of words the other ledger rows had earned.
+  Production still read 141 vessels when it checked. Reworded to say what is
+  true: the apply is the merge gate, and the row was written first.
+- `scripts/books.json` ended this book's note with *"Nothing in production cites
+  this book yet"*, false since 2026-08-30 — measured `--remote` on 2026-09-09 it
+  is **50 gear rows and 35 published classes**. It sits three lines from the
+  `page_offset: 0` a book session relies on. Corrected, and **four other book
+  notes in that file carry the same sentence**, at least one of them also stale.
+  That sweep is NOT done here and is worth its own finding.
+- `docs/operations.md`'s eighth-z row, written by the RUE session two PRs ago,
+  overstated the ordering rule and got `rue` wrong. The only global readback
+  among the vessel scripts is the Juicer Uprising one, so the whole constraint is
+  *sort after `ju`*; the row claimed the book sessions are ordered by z-count
+  from here on, which would cost a later reader a ninth `z` to buy nothing.
+  Corrected in this PR.
+
 ### F42 - high - six Rifts Ultimate Edition gear rows carry FIRST-EDITION figures under a RUE citation, and ten published class references point at them
 
 **Found while taking `F41` for Rifts Ultimate Edition, 2026-09-09**, by reading
