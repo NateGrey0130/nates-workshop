@@ -461,8 +461,8 @@ section('The README’s claims');
   walk(apiDir, '');
   check('the file map lists every endpoint file that exists',
     onDisk.every((f) => readme.includes(f.split('/').pop())), onDisk.join(' '));
-  check('and the endpoint files are exactly the seven documented',
-    onDisk.length === 7, onDisk.join(' '));
+  check('and the endpoint files are exactly the eight documented',
+    onDisk.length === 8, onDisk.join(' '));
 }
 {
   const documented = [...readme.matchAll(/^\| `([a-z-]+)` \| (?:OpenLibrary|TMDB) \|/gm)].map((m) => m[1]);

@@ -34,6 +34,27 @@ CREATE TABLE IF NOT EXISTS media_items (
 
 CREATE INDEX IF NOT EXISTS idx_media_items_user ON media_items (user_email);
 
+-- This MediaVault user lets that one READ their library. The pair is the key,
+-- so granting twice is idempotent and revoking is a DELETE of one known row.
+-- NO token: the viewer passes Cloudflare Access to reach the site at all, so
+-- the reader checks the VIEWER'S OWN Access email against viewer_email, and a
+-- leaked row identifier grants nothing. NO foreign key - this site has no users
+-- table, and a grant naming an address that cannot sign in is inert rather than
+-- broken. NO revoked_at: revocation is a DELETE, and a row claiming a share was
+-- revoked would be a second copy of what the row's absence already states.
+-- See migration 051 and apps/media-vault/SHARE-AUDIT.md V1.
+CREATE TABLE IF NOT EXISTS media_shares (
+  owner_email  TEXT NOT NULL,             -- whose library is being shared
+  viewer_email TEXT NOT NULL,             -- who may read it, Access identity
+  created_at   INTEGER NOT NULL,          -- epoch ms, like media_items.added_at
+  PRIMARY KEY (owner_email, viewer_email)
+);
+CREATE INDEX IF NOT EXISTS idx_media_shares_viewer ON media_shares (viewer_email);
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '051-media-shares.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'media_shares');
+
 -- Who is spending the Anthropic key, on what. Site-level, like media_items:
 -- it belongs to the /api/claude proxy rather than to any one app. One row per
 -- call, written fail-open (a metering failure must never break the call it
