@@ -701,7 +701,7 @@ raises it to certain.
 
 **Ongoing cost.** One flag.
 
-**Taken, 2026-09-08 (PR #TBD).** Posture held: **a default, not a
+**Taken, 2026-09-08 (PR #846).** Posture held: **a default, not a
 prohibition** — `setExportInViewMode(true)` turns it back on and the button
 returns with it.
 
