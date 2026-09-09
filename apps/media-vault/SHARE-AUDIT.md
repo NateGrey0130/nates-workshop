@@ -647,7 +647,7 @@ Access API call would raise it.
 
 **Ongoing cost.** One paragraph, and the honesty that its subject is unenforced.
 
-**Taken, 2026-09-08 (PR #TBD).** Posture held: **documentation only. No check,
+**Taken, 2026-09-08 (PR #845).** Posture held: **documentation only. No check,
 no gate** — this PR adds prose and nothing else, and no exit code moves.
 
 **It was not optional in the way "documentation only" suggests, because `V4`
