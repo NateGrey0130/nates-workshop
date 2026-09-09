@@ -787,6 +787,45 @@ export function run() {
       /body\.play-mode \.roll-btn \{ display: inline-flex/.test(css),
       'the roll controls are not gated on body.play-mode');
 
+    // THE BARE PERCENTILE. Every other d100 on this sheet is a skill's own
+    // percentage, so both the roll bar and the session-log note could assume a
+    // target and read `r.target` straight into a string. The roll a G.M. asks
+    // for by name has none, and one shared branch prints `vs null%` in the bar
+    // and `vs null% — fail` in the log - a verdict against a target nobody set,
+    // written into the character's permanent record.
+    //
+    // Four things, and the last two are the ones that would go quiet: the
+    // control exists, it rolls with no target, BOTH readers handle the null,
+    // and the button is inside #play-controls rather than loose in the sheet,
+    // which is what keeps it off paper and out of sheet mode without a rule of
+    // its own.
+    const rollNoteBody = functionBody(sheet, 'function rollNote(');
+    const rollBarBody = functionBody(sheet, 'function rollBarHtml()');
+    const recordRollBody = functionBody(sheet, 'function recordRoll(');
+    const playControlsBody = functionBody(sheet, 'function playControlsHtml(');
+    check('all four bodies the percentile checks read can be located',
+      rollNoteBody !== null && rollBarBody !== null
+      && recordRollBody !== null && playControlsBody !== null,
+      'a signature moved - the checks below would read the whole file and pass vacuously');
+    check('the sheet can roll a bare percentile',
+      /function rollPercentile\(\)/.test(sheet),
+      'rollPercentile is gone');
+    check('and it rolls with no target and no verdict',
+      /recordRoll\('percentile', 'Percentile', \{ die: 100, roll, target: null, ok: null \}\)/.test(sheet),
+      'the bare percentile acquired a target, which is a verdict nobody rolled');
+    check('the roll bar reads the null target rather than printing it',
+      /r\.target == null/.test(rollBarBody ?? ''),
+      'the roll bar will show "vs null%"');
+    check('and so does the note that reaches the session log',
+      /r\.target == null/.test(rollNoteBody ?? ''),
+      'a percentile will be logged as "vs null% — fail"');
+    check('a percentile is persisted like every other roll',
+      /kind === 'percentile'/.test(recordRollBody ?? ''),
+      'the percentile never reaches the session log');
+    check('and its control sits inside the play block, so print never sees it',
+      /rollPercentile\(\)/.test(playControlsBody ?? ''),
+      'the percentile button escaped #play-controls and will reach paper');
+
     // SHIPPED BROKEN ONCE. .skill-table is `table-layout: fixed` with its last
     // numeric column pinned at 40px, so a 44px control in that cell does not
     // widen it - it hangs out of the table and the box's overflow-x cuts it in

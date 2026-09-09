@@ -397,7 +397,8 @@ function recordRoll(kind, name, entry) {
   const r = { kind, name, ts: Date.now(), ...entry };
   C.lastRoll = r;
   C.rollLog.push(r);
-  if (kind === 'skill' || kind === 'save' || kind === 'combat' || kind === 'attack' || kind === 'damage') persistRoll(rollNote(r));
+  if (kind === 'skill' || kind === 'save' || kind === 'combat' || kind === 'attack' || kind === 'damage'
+    || kind === 'percentile') persistRoll(rollNote(r));
   if (C.rollLog.length > 50) C.rollLog.shift();
   const bar = $('play-roll-bar');
   if (bar) { bar.innerHTML = rollBarHtml(); bar.classList.remove('empty'); }
@@ -405,11 +406,17 @@ function recordRoll(kind, name, entry) {
 
 function rollBarHtml() {
   const r = C.lastRoll;
-  if (!r) return '<span class="muted">Tap a skill, save or combat bonus to roll.</span>';
+  if (!r) return '<span class="muted">Tap a skill, save or combat bonus to roll, or Percentile for a bare d100.</span>';
   if (r.note) return `<b>${escHtml(r.name)}</b> — ${escHtml(r.note)}`;
   if (r.kind === 'damage') return `<b>${escHtml(r.name)}</b> — damage ${escHtml(r.expr)} = <b>${r.total}</b>`;
   const verdict = r.ok === null ? '' : r.ok ? ' <b class="ok">✓</b>' : ' <b class="ko">✗</b>';
   if (r.die === 100) {
+    // A BARE PERCENTILE HAS NOTHING TO BEAT. Every other d100 here is a skill's
+    // own percentage, so this branch used to be able to assume a target; the
+    // one the G.M. asks for by name has none, and reading `r.target` through
+    // the same string prints `vs null%`. Null is the statement that the table
+    // decides what the number meant, which is also why `verdict` is absent.
+    if (r.target == null) return `<b>${escHtml(r.name)}</b> — rolled <b>${r.roll}</b> on d100`;
     return `<b>${escHtml(r.name)}</b> — rolled <b>${r.roll}</b> vs ${r.target}%${verdict}`;
   }
   const vs = r.target ? ` vs ${r.target}+` : '';
@@ -421,6 +428,24 @@ function rollBarHtml() {
 function rollSkill(name, pct) {
   const roll = 1 + Math.floor(Math.random() * 100);
   recordRoll('skill', name, { die: 100, roll, target: pct, ok: roll <= pct });
+}
+
+// A BARE PERCENTILE — the roll a G.M. asks for by name, several times a
+// session: "give me a percentile." No skill, no bonus, no target; the table
+// said what it was for before asking and the table reads the number.
+//
+// Until this existed the sheet could roll a d100 only as a skill's own
+// percentage, so the roll asked for most often at the table was the one roll
+// the app had no button for and the player reached for physical dice.
+//
+// It goes through recordRoll rather than rolling inline, which is what puts it
+// in the roll bar, the capped roll log and the session log on the same terms as
+// every other roll. `target` is null on purpose and `ok` with it: a roll with
+// nothing to beat has no verdict, and rollBarHtml and rollNote each read that
+// null rather than printing `vs null%`.
+function rollPercentile() {
+  const roll = 1 + Math.floor(Math.random() * 100);
+  recordRoll('percentile', 'Percentile', { die: 100, roll, target: null, ok: null });
 }
 
 // d20 + bonus, against a target where one is derived (the psionic save), and
@@ -644,7 +669,16 @@ function persistRoll(note) {
 }
 
 function rollNote(r) {
-  if (r.die === 100) return `${r.name}: ${r.roll} vs ${r.target}% — ${r.ok ? 'pass' : 'fail'}`;
+  // A targetless d100 is a bare percentile, and it has no verdict. The em-dash
+  // pass/fail is deliberately absent rather than guessed: endSession counts
+  // `— pass` and `— fail` out of these notes, so a percentile that invented one
+  // would put a verdict nobody rolled into the session recap. It still counts
+  // as a roll there, which is what "of those with a target" already allows for.
+  if (r.die === 100) {
+    return r.target == null
+      ? `${r.name}: ${r.roll} on d100`
+      : `${r.name}: ${r.roll} vs ${r.target}% — ${r.ok ? 'pass' : 'fail'}`;
+  }
   if (r.kind === 'damage') return `${r.name}: damage ${r.expr} = ${r.total}`;
   const vs = r.target ? ` vs ${r.target}+ — ${r.ok ? 'pass' : 'fail'}` : '';
   return `${r.name}: d20 ${r.roll}${r.bonus ? (r.bonus > 0 ? '+' + r.bonus : r.bonus) : ''} = ${r.total}${vs}`;
@@ -953,6 +987,10 @@ function playControlsHtml(w, combat) {
         <button onclick="newRound(${Number(combat.attacks) || 0})">New round</button>
         <button class="ghost" onclick="resetMelee(${Number(combat.attacks) || 0})">⟲</button>
       </span>
+    </div>
+    <div class="play-dice">
+      <span class="muted small">G.M. call</span>
+      <button type="button" onclick="rollPercentile()">🎲 Percentile (d100)</button>
     </div>
     ${weaponCardsHtml(w, combat.strike)}
     ${w ? restPanelHtml() : ''}
