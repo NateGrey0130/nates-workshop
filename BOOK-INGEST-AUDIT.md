@@ -5612,3 +5612,132 @@ unrelated `F40`, and a tree grep for the bare number returns mostly that one.
 `node scripts/audit-citations.mjs --remote F40` reports **0 of 226 published
 classes** cite it - and that script sees `extraction_notes` only, so the memory
 store and the other menus were grepped by hand as well. Nothing cites it.
+
+### F41 - the 24 gear rows that are really vessels span FIVE books, so the backfill is a book job and not a data script
+
+**This is `F3`'s deferral, finally given a number.** That finding's 2026-09-07
+note (line 430 of this file) says the 24 prose rows are *"the backfill a future
+`vehicles` table would start from"* and that *"backfilling them is its own job
+with its own decisions, chiefly what happens to the class equipment lists that
+reference those gear slugs."* It named work and filed nothing, which is the shape
+`audit-menu` now calls out. The decisions are settled below; the work is not
+started.
+
+**Filed while building the gear-and-vessels sequence** (PRs #848-#854), which put
+readers on both catalogs and made the split visible: the codex now shows some
+vessels in its Gear tab and some in its Vessels tab, and
+`docs/plans/21-gear-and-vessels.md` says so under *What is NOT verified* rather
+than hiding it.
+
+**The measurement that re-scoped this.** All figures `--remote`, 2026-09-09:
+
+| | |
+|---|---|
+| `gear` rows with `category = 'vehicle'` | **69** |
+| of those, carrying `Main Body` in the description | **24** |
+| the rest - stubs, mounts, worn kit | **45** |
+| the 24 with a mechanically parseable `M.D.C. by location:` list | **7** |
+| the 24 with M.D.C. buried in narrative prose | **17** |
+| **distinct source books across the 24** | **5** |
+| of the 24, carrying `Web reference (not book-verified)` | **1** |
+
+```
+node scripts/q.mjs --remote "SELECT source_book, count(*) AS n FROM gear WHERE category = 'vehicle' AND description LIKE '%Main Body%' GROUP BY source_book ORDER BY n DESC"
+```
+
+Wormwood 9, Juicer Uprising 7, Rifts Ultimate Edition 6, Phase World 1, and one
+row with no book behind it at all.
+
+**Why that changes the shape of the work.** The estimate this started from was
+"a data script over 24 rows". It is not one, for two reasons and the second is
+the serious one:
+
+- **The prose is not uniform.** `glitter-boy-power-armor` reads *"M.D.C. by
+  location: main body 770, head 290, arms 270 each, legs 450 each, hands 100
+  each, rail gun 175, reinforced pilot compartment 150"* - transcribable.
+  `battle-saint`, `battler-parasite` and `beetle-parasite` bury their numbers in
+  narrative. Only 7 of 24 are mechanical.
+- **The source would be a paraphrase, not a book.** Those descriptions were
+  written by earlier import sessions reading the books. Deriving structured
+  combat numbers from them is the thing this repo's ingestion discipline exists
+  to prevent, and `book-survey` §8's batch protocol is one session per book.
+  Twenty-four rows across five books is **five book sessions**.
+
+**Proposal:** take this as **five book sessions, one per book**, not as one data
+script - Wormwood, Juicer Uprising, Rifts Ultimate Edition, Phase World, and a
+sixth decision for the web-sourced row. Each session re-reads its own book for
+the vessels among these 24, writes `vehicles` + `vehicle_locations` +
+`vehicle_weapons` rows the way the Triax and Free Quebec vessel imports already
+do, and points the surviving gear row at the new vessel. **Posture: no schema
+change from a book session** - see the decided half below, which is the one
+schema change and belongs in its own PR ahead of them.
+
+**The 45 are NOT part of this and should not be re-proposed.** They are not thin
+vessels, they are **not vessels**: `riding-horse` is *"A trained riding horse."*,
+`hovercycle` is *"the unspecified one a class list names"*, and
+`wilk-s-jet-pack` and `tw-wing-board` are worn kit. A stub in `gear` reads as a
+stub; a stub in `vehicles` reads as a vessel somebody failed to finish. Several
+also carry `Estimate - no published price found`, and the README's estimate rule
+(under *A third tier, for what nothing publishes*) forbids an estimated row
+carrying M.D.C., damage or an A.R. at all - `samas-power-armor` is one of those,
+so it could not be given a stat block even if somebody wanted to.
+
+### The citation decision, which Nate settled on 2026-09-09
+
+**Decided, so no book session re-litigates it: the gear row SURVIVES as the
+citation target and points at the vessel.** Recorded here so it is not
+re-proposed.
+
+The problem it answers: `catalog_redirects` cannot express a cross-catalog move.
+`db/schema.sql` comments its `to_id` column as *"row in that catalog's table"*,
+and five query sites resolve a gear slug through it - `items.js`,
+`characters/[id].js`, `characters/[id]/items/[itemId].js`,
+`campaigns/[id]/items.js` and `campaigns/[id]/ask.js` - every one hard-coding
+`catalog = 'gear'`:
+
+```
+grep -rn "catalog_redirects" functions/api/character-creator/ --include=*.js
+```
+
+So a row that simply LEFT `gear` would leave its class equipment citations
+resolving to nothing, silently, in the wizard. Of the 13 slugs cited by class
+markdown, 5 are among the 24 movers and carry 14 references; the heavy citations
+- `hovercycle` at 21 classes, `riding-horse` at 12 - are all on rows that are
+not moving.
+
+The alternative, teaching the class format a vessel reference, was weighed and
+declined: it touches the format and the wizard's resolution to buy honesty about
+a row that the pointer already records.
+
+**That needs one column - `gear.vehicle_slug`, a nullable pointer - and it is a
+schema change, so it is NOT part of any book session.** It should land in its own
+PR **before** the first of them, or the sessions have nothing to point at.
+
+**Do not build that column before there is a vessel to point at**, either. A
+pointer nothing uses is the silent-storage failure `F3`'s own closure declined
+when it rejected the JSON option. The order that works is: the column and its
+rendering in one PR, immediately followed by the first book session.
+
+**Evidence:** the counts above are `scripts/q.mjs --remote`, run 2026-09-09, and
+the command for the book split is quoted in full. The five-query-site claim is
+the grep quoted directly above it, run the same day. The `to_id` wording is
+quoted from `db/schema.sql`, which was read rather than recalled.
+`docs/plans/21-gear-and-vessels.md` was written in PR #854 the same day and
+carries the same figures.
+
+**Confidence: high on the numbers, medium on the estimate of five sessions.**
+The row counts, the book split and the query sites were all measured. What is not
+measured is how much of each book still needs reading: Juicer Uprising, Phase
+World and Rifts Ultimate Edition all have OCR caches present (`drift-check
+--local`, 2026-09-09, reports 16 of 18 registered books cached), so a session
+may find the pages quickly. **What would raise it:** open one book - Juicer
+Uprising has the largest single share at 7 - and see how many of its rows have a
+printed location block the cache can be read from.
+
+**Ongoing cost: none once done, and that is the argument for doing it.** This is
+a one-time correction that ends with 24 fewer rows in the wrong table and the
+codex no longer splitting vessels across two tabs. The pointer column is one
+nullable column with one reader. **The cost of NOT doing it is also small and
+should be stated honestly**: the split is cosmetic, the data is present and
+correct where it sits, and every one of those 24 rows renders its full prose in
+the codex's Gear tab today. This finding is not urgent and says so.
