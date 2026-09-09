@@ -47,6 +47,21 @@ matching file under `functions/api/pick3cut5/`** — so it turns another app's
 suite red until that derivation is generalised. Not a reason it cannot be done;
 a reason it is a different and larger decision than the one taken here.
 
+**Adjusted 2026-09-09.** The credential half of the paragraph above has been
+overtaken, and it is left standing because this file is a record of what was
+known on 2026-09-08. `CLAUDE.md` -> *Three credentials* now splits the plugin's
+Access reach **per endpoint** rather than per product: a reusable-policy
+`DELETE` returned `202` and removed a real policy that day, verified by reading
+the account's policies back afterwards, while the application `PATCH` cited
+above is still refused. Creating and updating a policy were not tested. PR #877.
+
+**That reopens neither declined option, and this note is not an invitation to
+re-propose one.** The link-anyone-could-open option was declined on the
+destination cap and on the second public route it would add; the live-read
+option was declined on the cost of a standing account-scoped credential sitting
+in the deployment. Both reasons are about a **read** and about what the
+deployment would have to hold. A write succeeding changes neither.
+
 **Reading the Access allow list live from a Function.** It is the only option
 that cannot go stale, and it was declined because it puts a standing
 account-scoped Cloudflare API credential inside the Pages deployment to serve a
