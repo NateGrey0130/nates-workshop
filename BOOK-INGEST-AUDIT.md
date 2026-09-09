@@ -5741,3 +5741,81 @@ nullable column with one reader. **The cost of NOT doing it is also small and
 should be stated honestly**: the split is cosmetic, the data is present and
 correct where it sits, and every one of those 24 rows renders its full prose in
 the codex's Gear tab today. This finding is not urgent and says so.
+
+**Taken for JUICER UPRISING, 2026-09-09 — one of the five book sessions this
+finding proposes, not the whole of it.** Four books remain: Wormwood 9 rows,
+Rifts Ultimate Edition 6, Phase World 1, and the one row with no book behind it.
+Read under this heading rather than anywhere else for where it stands.
+
+**The posture held.** The gear rows stayed, all seven of them, keeping their
+slug, price, category and prose; each gained a `vehicle_slug` pointer. No schema
+change came out of the book session — `gear.vehicle_slug` is migration 053 and
+landed in its own PR ahead of it, which is what this finding asked for and what
+`book-survey` section 8 requires of a book session.
+
+**The premise audit did not happen the way `audit-menu` prescribes, and saying
+so is the point.** The `audit-premise-auditor` subagent was launched first and
+**stalled** — ten minutes in it had loaded its protocol and done nothing else —
+so it was stopped and the premises were checked by the same session that then
+implemented them. That is precisely the conflict the subagent exists to break,
+and it was not broken. The corrections below are therefore worth less than they
+would be from a cold reader.
+
+**Two premises did not survive, both in the direction of less work:**
+
+<!-- claim-ok: quoting the premises this note corrects -->
+
+- This finding says **"only 7 of the 24 have a mechanically parseable `M.D.C. by
+  location:` list"**. That was measured against the PARAPHRASE in the gear
+  descriptions, repo-wide, and it understates this book badly: read from the
+  book itself with `scripts/read-columns.py "<pdf>" 78 89` on 2026-09-09, **all
+  seven** Juicer Uprising vessels carry a printed `M.D.C. by Location:` block.
+  Nothing here had to be inferred. The figure may still hold for the other four
+  books; it was not re-measured for them.
+- This finding says the citation problem covers **"5 [of the 24] ... carrying 14
+  references"**. For this book it is **one row**: `road-boss-motorcycle`, cited
+  by two published classes. The other six are cited by nothing
+  (`node scripts/q.mjs --remote`, joining `imported_classes.markdown`,
+  2026-09-09). The decision to keep the gear row was still the right one — that
+  one row would have broken silently — but the risk here was narrower than this
+  finding implies.
+
+**Premises that held:** 7 gear rows carrying `category = 'vehicle'` and this
+book's `source_book`; `page_offset: 1`, confirmed the free way `book-survey`
+section 0d prescribes, by reading the folio printed on the page — cache p84
+carries printed 83; and **zero** Juicer Uprising vessels already in `vehicles`,
+so this was a clean import rather than a merge.
+
+**What shipped** (`zzzzzzz-ju-vessels-p077-088.sql`): 7 vessels, 43 M.D.C.
+locations, 21 weapon systems, and 7 gear rows pointed at them. Seven z's because
+`zzzzzz-vehicle-class-vocabulary.sql` asserts a vessel count of 127 and would be
+falsified by these rows landing before it.
+
+**The strongest evidence in the import is a coincidence nobody arranged.** Every
+price was read off the book before the catalog was consulted, and all seven match
+the `gear.cost` an earlier session stored — including `road-boss-motorcycle` at
+**90,000**, which is the stripped price rather than the 200,000 armed one, so
+that session applied the same low-end-of-a-range convention `gear.cost`
+documents. Seven independent confirmations that the transcription is right,
+which is what `book-survey` section 0c means by using the rows you already have
+as a check on the reading.
+
+**`ju`'s OCR cache was not used, and that is now recorded where a reader will
+find it.** `book-survey` section 0b names it by slug as one of the caches built
+by throwaway code, and reading it confirms the description: raw
+`page.get_text()`, columns welded across the gutter, prose from both columns
+interleaved line by line. Its manifest carries no `welded_pages` or
+`corrupt_pages` key, which is the tell. `read-columns.py` reads the same pages
+cleanly off the PDF. **The cache was left as it is** — rebuilding it is not this
+finding's business and would have been a change made from a book session.
+
+**One disagreement found in passing and not acted on:** the `ju` cache manifest
+records `printed_pages: 160` where `scripts/books.json` records **159**. Neither
+was used for anything here — the offset came from the folio — and it is filed
+nowhere yet.
+
+**The NG-JK1 is one row, not two.** The book prints one entry describing two
+models with the heavier JK1B's figures in parentheses throughout. Nate settled
+the shape on 2026-09-09: one vessel for the JK1A, the B figures in each
+location's `mdc_note` and its price in `cost_note`. A second row would have
+duplicated nine locations and five weapon systems to change nine numbers.

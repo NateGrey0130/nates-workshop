@@ -58,7 +58,10 @@ near-match was hand-checked for a false gap is not written down anywhere.
 
 ## Extraction plan
 
-Complete. Nothing outstanding.
+Complete for the book's own content. The seven vehicles of printed 77-88 were 
+re-read into `vehicles` on 2026-09-09 under `BOOK-INGEST-AUDIT` F41 — they had 
+been imported as `gear` rows in PR #283, before migration 048 gave vessels 
+three tables of their own.
 
 ## Ledger
 
@@ -73,6 +76,7 @@ Complete. Nothing outstanding.
 | — | [#284](https://github.com/NateGrey0130/nates-workshop/pull/284) | the classes wired to their gear rows |
 | — | [#285](https://github.com/NateGrey0130/nates-workshop/pull/285) | stats for the blank gear rows, and the slug-cased names fixed |
 | 2026-08-28 | — | this file, backfilled offline |
+| 2026-09-09 | — | the seven vessels of printed 77-88 re-read from the book into `vehicles` (43 M.D.C. locations, 21 weapon systems); the seven `gear` rows STAY and now point at them. `BOOK-INGEST-AUDIT` F41, taken for this book. Read from the PDF with `read-columns.py`, **not** from this book's OCR cache — `book-survey` section 0b names `ju`'s cache as one built by throwaway code, and it is welded across the gutter. |
 
 Dates are absent because these merged before the ledger existed; the PR numbers
 are the durable handle and `git log` carries the dates.
