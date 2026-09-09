@@ -191,6 +191,12 @@ export const CATALOGS = {
       { name: 'mdc', label: 'M.D.C.', type: 'int' },
       { name: 'description', label: 'Description', type: 'longtext' },
       { name: 'source_book', label: 'Source book', type: 'text' },
+      { name: 'vehicle_slug', label: 'Is really a vessel', type: 'text',
+        help: 'The vehicles slug this row is really a record of. Migration 053, '
+            + 'BOOK-INGEST-AUDIT F41. Leave BLANK for actual gear, which is almost all '
+            + 'of it. Setting it does not delete, hide or re-categorise this row: the '
+            + 'row stays because class equipment lists cite it by slug, and the pointer '
+            + 'only adds a way to reach the fuller vessel record.' },
     ],
   },
 

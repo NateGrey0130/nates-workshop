@@ -106,12 +106,22 @@ const SECTIONS = {
   // one: an id is insertion order and means nothing in another database.
   // `is_mega_damage` travels structured rather than being read back out of the
   // damage string, which is the distinction that matters most in Rifts.
+  // `vehicle_slug` and the vessel's NAME both travel, because a slug is not a
+  // name: a row rendering "ng-jk1-juicer-killer-power-armor" is worse than one
+  // rendering nothing, since it looks like a name and is not - the same
+  // argument sheet.js's enchantBySlug makes about an unresolved slug. The join
+  // is a LEFT one and `vessel_name` comes back NULL for a pointer whose vessel
+  // a later book session has not imported yet, which is a state migration 053
+  // deliberately allows, so the renderer must handle it.
   gear: async (env) => ({
     gear: (await env.DB.prepare(
-      `SELECT slug, name, category, system, weight_lbs, cost, cost_note, damage,
-              is_mega_damage, range, payload, rate_of_fire, ar, sdc, mdc,
-              description, source_book
-       FROM gear ORDER BY category, name`
+      `SELECT gear.slug, gear.name, gear.category, gear.system, gear.weight_lbs,
+              gear.cost, gear.cost_note, gear.damage, gear.is_mega_damage,
+              gear.range, gear.payload, gear.rate_of_fire, gear.ar, gear.sdc,
+              gear.mdc, gear.description, gear.source_book, gear.vehicle_slug,
+              vehicles.name AS vessel_name
+       FROM gear LEFT JOIN vehicles ON vehicles.slug = gear.vehicle_slug
+       ORDER BY gear.category, gear.name`
     ).all()).results,
   }),
 
