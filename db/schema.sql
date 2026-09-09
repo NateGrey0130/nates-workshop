@@ -509,7 +509,19 @@ CREATE TABLE IF NOT EXISTS gear (
                                         -- which is damage. Migration 034.
   mdc INTEGER,
   description TEXT,
-  source_book TEXT
+  source_book TEXT,
+  -- This gear row is really a VESSEL, and the vessel is in `vehicles` under
+  -- this slug. Migration 053, BOOK-INGEST-AUDIT.md F41.
+  --
+  -- The row stays here rather than moving, because class markdown cites gear
+  -- by slug and `catalog_redirects` cannot forward a key out of its own
+  -- catalog - its `to_id` is "row in that catalog's table". Moving one would
+  -- leave those citations resolving to nothing, silently, in the wizard.
+  --
+  -- NULL is the normal state: almost all gear is gear. NO foreign key, so a
+  -- pointer naming a vessel a later book session has not imported yet is
+  -- inert rather than broken - the 24 rows this exists for span five books.
+  vehicle_slug TEXT
 );
 
 -- What an alchemist puts INTO an object, as opposed to the object. THREE
@@ -660,6 +672,10 @@ CREATE TABLE IF NOT EXISTS character_vehicles (
   removed_at TEXT,                                    -- NULL = still owned; removal is soft, as inventory's is
   CHECK (vehicle_slug IS NOT NULL OR custom_name IS NOT NULL)
 );
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '053-gear-vehicle-slug.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('gear') WHERE name = 'vehicle_slug');
+
 CREATE INDEX IF NOT EXISTS idx_character_vehicles_character
   ON character_vehicles (character_id);
 

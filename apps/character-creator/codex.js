@@ -75,7 +75,19 @@ const SECTIONS = [
     // issued kit and unique artifacts with no price at all, and the schema says
     // so at length. The entry says nothing rather than showing an em dash that
     // reads as missing data.
-    notes: (r) => [r.cost_note && `Price: ${r.cost_note}`],
+    // A row that is really a VESSEL says so, and names the vessel rather than
+    // its slug. 24 rows carry `category = 'vehicle'` and a full stat block from
+    // before `vehicles` existed; as each book session transcribes one, the gear
+    // row stays put — class markdown cites it by slug — and gains a pointer.
+    // `vessel_name` is NULL when the pointer names a vessel not yet imported,
+    // which migration 053 allows on purpose, so that case says the honest thing
+    // instead of printing a slug that looks like a name.
+    notes: (r) => [
+      r.cost_note && `Price: ${r.cost_note}`,
+      r.vehicle_slug && (r.vessel_name
+        ? `Also recorded as a vessel — see ${r.vessel_name} under Vessels, which carries its M.D.C. by location and its weapon systems.`
+        : 'Recorded as a vessel, which has not been imported yet.'),
+    ],
     hay: (r) => `${r.name} ${r.source_book || ''} ${r.category || ''}`,
   },
   {

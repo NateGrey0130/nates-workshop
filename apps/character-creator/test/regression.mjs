@@ -244,6 +244,49 @@ check('and carries skills, spells and psionics',
     // special case built for vessels.
     const ench = await api('GET', '/catalogs/duplicates?counts_only=1&catalog=enchantments');
     check('the same way it already declines enchantments', ench.status === 400, ench.status);
+
+    // `gear.vehicle_slug` - migration 053, BOOK-INGEST-AUDIT F41. A gear row
+    // that is really a vessel points at it and STAYS, because class markdown
+    // cites gear by slug and catalog_redirects cannot forward a key out of its
+    // own catalog.
+    //
+    // The whole path is exercised rather than the column: set it through the
+    // editor, read it back through the codex, and require the vessel's NAME to
+    // resolve. A slug alone renders as something that looks like a name and is
+    // not.
+    const someVessel = (vessels.body.rows || [])[0];
+    const gearRows = await api('GET', '/catalogs/rows?catalog=gear');
+    const someGear = (gearRows.body.rows || [])[0];
+    if (someVessel && someGear) {
+      const point = await api('PATCH', `/catalogs/rows?catalog=gear&id=${someGear.id}`,
+        { vehicle_slug: someVessel.slug });
+      check('a gear row can be pointed at a vessel', point.status === 200, point.body);
+
+      const gearSection = await api('GET', '/codex?section=gear');
+      const pointed = (gearSection.body.gear || []).find((g) => g.slug === someGear.slug);
+      check('and the codex resolves the pointer to the vessel NAME, not its slug',
+        pointed?.vessel_name === someVessel.name,
+        `vehicle_slug=${pointed?.vehicle_slug} vessel_name=${pointed?.vessel_name}`);
+      // The row is not moved, hidden or re-categorised - the citation target has
+      // to keep existing, or the class equipment lists it answers for break.
+      check('while the gear row itself stays exactly where it was',
+        !!pointed && pointed.name === someGear.name,
+        'the pointed row left the gear catalog');
+
+      // NULL is the normal state, and there is no foreign key: a pointer naming
+      // a vessel no book session has imported yet must be INERT, not an error.
+      // The 24 rows this exists for span five books.
+      const dangling = await api('PATCH', `/catalogs/rows?catalog=gear&id=${someGear.id}`,
+        { vehicle_slug: 'a-vessel-no-book-has-imported' });
+      check('a pointer to a vessel that does not exist is accepted',
+        dangling.status === 200, dangling.body);
+      const after = await api('GET', '/codex?section=gear');
+      const orphan = (after.body.gear || []).find((g) => g.slug === someGear.slug);
+      check('and comes back with no vessel name rather than failing the section',
+        after.status === 200 && orphan?.vessel_name == null, orphan?.vessel_name);
+
+      await api('PATCH', `/catalogs/rows?catalog=gear&id=${someGear.id}`, { vehicle_slug: null });
+    }
   }
 
   // Change a percentage in place: no row added, no id moved, nothing a count

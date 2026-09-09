@@ -1,0 +1,36 @@
+-- `gear.vehicle_slug`: this gear row is really a vessel, and the vessel is over
+-- there.
+--
+-- BOOK-INGEST-AUDIT.md F41. 24 rows in `gear` carry `category = 'vehicle'` and a
+-- real per-location stat block, written before migration 048 gave vessels three
+-- tables of their own. They cannot simply MOVE, because class markdown cites
+-- gear by slug in `equipment_starting[].item_id` and `catalog_redirects` cannot
+-- forward a key out of its own catalog: `to_id` is documented there as "row in
+-- that catalog's table", and five query sites resolve a gear slug through it,
+-- every one binding `catalog = 'gear'`.
+--
+-- So the gear row STAYS as the citation target and points at the vessel. Nate
+-- settled that on 2026-09-09, over the alternative of teaching the class format
+-- a vessel reference; F41 records both and the reasoning.
+--
+-- NULLABLE, and NULL is the normal state. 1,253 gear rows are gear. Only the
+-- handful that are really vessels carry a pointer, and only after the book
+-- session that transcribes one has run.
+--
+-- NO FOREIGN KEY, deliberately, and for the reason `media_shares` gives for the
+-- same choice: a pointer naming a vessel that has not been imported yet is
+-- INERT rather than broken, and this column is filled in book by book across
+-- five separate sessions. A constraint here would mean the column could only be
+-- added at the same moment as the last book's data. It is also consistent with
+-- `character_items.gear_slug`, which does carry one - the difference being that
+-- an inventory row is written by a user against a catalog that already exists,
+-- where this is written by an import that is deliberately incremental.
+--
+-- WHAT THIS DOES NOT DO. It does not delete, hide or re-categorise the gear
+-- row, and nothing reads the pointer to decide what a thing IS. The gear row
+-- keeps its own description, its own price and its own stat prose; the pointer
+-- adds a way to reach the fuller vessel record, and the codex renders it as
+-- exactly that.
+ALTER TABLE gear ADD COLUMN vehicle_slug TEXT;
+
+INSERT OR IGNORE INTO schema_migrations (filename) VALUES ('053-gear-vehicle-slug.sql');
