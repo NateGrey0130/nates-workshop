@@ -241,7 +241,7 @@ and this being taken — the proposed check is also what would catch that.
 statement looks like, and will need editing the first time a legitimate endpoint
 does something it does not recognise. Cheap, and it fails closed and loudly.
 
-**Taken, 2026-09-08 (PR #TBD).** Posture held: **a structural guarantee, not a
+**Taken, 2026-09-08 (PR #842).** Posture held: **a structural guarantee, not a
 runtime gate** — both new checks live in the smoke test and nothing was added to
 the request path.
 
