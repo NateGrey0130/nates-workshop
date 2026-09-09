@@ -187,7 +187,7 @@ fact about this token, and it is no longer a fact about Pages.**
 | D1 — read or write, local or `--remote` | `npx wrangler`, under `CLOUDFLARE_API_TOKEN` |
 | a Pages question, or a deployment | the **`cloudflare-api` MCP plugin** |
 | an Access **question** — who is allowed, which IdPs, how long a session lasts | the **plugin**. It reads Access |
-| an Access **change**, destinations, the dashboard | Nate's Chrome |
+| an Access **change** | **per endpoint** — one write is measured to work, one to fail. Read the block below before assuming either |
 
 The plugin authenticates **separately from the environment token** and is enabled
 in `~/.claude/settings.json`. On 2026-09-02 it served the project, the full
@@ -196,37 +196,41 @@ and a `DELETE` on a wedged deployment — which is how a stalled build was
 diagnosed and cleared in one call, where this file's advice was a hand-off. See
 `HEALTH-AUDIT.md` F24.
 
-**Access is now tested, and it splits: the plugin READS it and cannot WRITE it.**
-This line said "Access was NOT tested and stays Chrome work" until 2026-09-05,
-which was a recorded unknown rather than a known no — and reading it turned out
-to work on the first try.
+**Access has now been tested twice, and the second test broke the first one's
+conclusion.** This block said *"the plugin READS it and cannot WRITE it"* from
+2026-09-05 until 2026-09-09, when a reusable-policy `DELETE` went straight
+through. **The blanket was wrong, and the replacement is not another blanket:
+the boundary is per ENDPOINT**, and only three have ever been tried.
 
-What the plugin served, unprompted by any dashboard session:
+| call | result | measured |
+|---|---|---|
+| `GET` — apps, an app's policies, identity providers, organizations | serves, unprompted by any dashboard session | 2026-09-05 |
+| `DELETE /accounts/{id}/access/policies/{id}` | **`202`, and a read-back showed the policy gone** | 2026-09-09 |
+| `PATCH /accounts/{id}/access/apps/{app}` | `10405: Method not allowed for this authentication scheme`, app unchanged afterwards | 2026-09-05 |
 
-- `GET /accounts/{id}/access/apps` — all three applications, with
-  `session_duration`, `allowed_idps` and `auto_redirect_to_identity`
-- `GET /accounts/{id}/access/apps/{app}/policies` — the *Friends Only* policy
-  and the four addresses it admits
-- `GET /accounts/{id}/access/identity_providers` — the configured IdPs
-- `GET /accounts/{id}/access/organizations` — the team domain,
-  `fatmans.cloudflareaccess.com`, which is what a new IdP's redirect URI is
-  built from
+What the `GET`s serve: all three applications with `session_duration`,
+`allowed_idps` and `auto_redirect_to_identity`; an app's policies and the
+addresses they admit; the configured IdPs; and the team domain from
+`access/organizations`, which is what a new IdP's redirect URI is built from.
+**The address count moves whenever Nate adds someone — read it, do not quote a
+number back out of this file.**
 
-The write is refused, and it fails cleanly rather than silently:
+**Everything else is UNTESTED**, and the list is longer than the tested one:
+creating a policy, updating one, changing an IdP, changing a session duration,
+touching a destination. A probe of create-and-update against a throwaway policy
+attached to no application was **refused by this machine's own permission
+classifier** on 2026-09-09, so that gap is recorded rather than closed. It is a
+gap in what anyone here knows, not evidence of a limit.
 
-```
-PATCH /accounts/{id}/access/apps/{app}
-  → 10405: Method not allowed for this authentication scheme
-```
+**`10405` is about the credential and not the endpoint**, which is why one
+refusal never generalised to the rest of Access — and a refused write costs the
+call and nothing else, because it fails before it changes anything.
 
-**That error is about the credential, not the endpoint.** The app was read back
-afterwards and was unchanged, so a refused Access write costs nothing but the
-call. Changing an IdP, a session duration or a policy is still Chrome.
-
-The practical shape: **diagnose Access here, change it there.** A question like
-"why does the phone ask for a code every day" is now answerable in one call —
-it was `session_duration: 24h` with `onetimepin` as the only provider — without
-anyone opening a browser.
+The practical shape is therefore no longer *diagnose here, change there*. It is:
+**ask the endpoint you actually need.** A read is free. A write may work, and
+the failure mode is a clean refusal rather than a half-done change. Reach for
+Chrome when the write is one you would not want to discover the hard way — an
+IdP, a session duration, the policy the whole site logs in through.
 
 This changes nothing about the token and widens nothing — the plugin's reach
 already existed and this file was simply wrong about it. It does mean the
