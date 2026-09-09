@@ -412,7 +412,7 @@ forever. It is the same shape `SETUP.md` already maintains for the pick3cut5
 Access destinations — and unlike those, **nothing in CI can check this one**.
 See `V6`.
 
-**Taken, 2026-09-08 (PR #TBD).** Posture held: **fail closed**. An address that
+**Taken, 2026-09-08 (PR #843).** Posture held: **fail closed**. An address that
 is not a candidate cannot be granted, and an unset variable means **nobody**
 rather than everybody.
 
