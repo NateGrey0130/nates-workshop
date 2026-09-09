@@ -53,6 +53,10 @@ function otherSaves(cls) {
 const id = new URLSearchParams(location.search).get('id');
 
 const C = { data: null, items: [], journal: [], catalog: [], cls: null, canWrite: false, isGm: false, conflicts: {},
+  // Clashes the player has ALREADY answered, by queue seq. They leave
+  // `conflicts` the moment they are answered so the pool card stops offering
+  // the choice, and wait here until the rest of the same press is answered too.
+            resolved: {},
   // What the character's Hand to Hand training grants in words, by level.
             skillLevelNotes: [], weaponBonuses: [],
             proposal: null, nextThreshold: null,
@@ -491,7 +495,9 @@ async function adjustPool(key, delta) {
     // change was never valid, so it rolls back the way it always did. No
     // status means the request never arrived: the change is fine and the
     // wi-fi is not, so it stands on screen and waits in the queue.
-    if (err.status === undefined && await queuePoolChange(key, prev, next, delta)) {
+    if (err.status === undefined && await queueChange('pool',
+      `${key.toUpperCase()} ${delta > 0 ? '+' : ''}${delta}`,
+      { [key + '_current']: { from: prev, to: next } })) {
       renderQueueState();
       return;
     }
@@ -507,18 +513,28 @@ async function adjustPool(key, delta) {
 // version: it survives a network drop and a reload with the tab open, and it
 // is not offline support.
 
-// A pool change that could not be sent. Returns false if the queue is not
-// usable at all - a private window, site data blocked - in which case the
-// caller rolls back exactly as it did before there was a queue.
-async function queuePoolChange(key, from, to, delta) {
+// A change that could not be sent. ONE ENTRY PER PRESS, however many pools the
+// press moved: a Damage that spills out of S.D.C. into H.P. is ONE event, and
+// queueing it as two would put two rows in the log, let undo take back half a
+// hit, and make the session recap count one blow as two.
+//
+// Returns false if the queue is not usable at all - a private window, site
+// data blocked - in which case the caller rolls back exactly as it did before
+// there was a queue.
+async function queueChange(kind, note, fields) {
   if (!window.playQueue || !(await playQueue.available())) return false;
   try {
-    await playQueue.push({
-      characterId: Number(id), key, from, to,
-      note: `${key.toUpperCase()} ${delta > 0 ? '+' : ''}${delta}`,
-    });
+    await playQueue.push({ characterId: Number(id), kind, note, fields });
     return true;
   } catch { return false; }
+}
+
+// AN ENTRY CAN OUTLIVE THE SHAPE IT WAS WRITTEN IN. IndexedDB survives a
+// deploy, so a player who queued a pool change before this shipped has a
+// one-field `{key, from, to}` row waiting; it replays as the 'pool' change it
+// always was rather than being dropped or crashing the flush.
+function entryFields(e) {
+  return e.fields || { [e.key + '_current']: { from: e.from, to: e.to } };
 }
 
 // Replay everything queued for this character, oldest first. ORDER IS THE
@@ -534,24 +550,25 @@ async function flushQueue() {
     let res;
     try {
       res = await api(`characters/${id}/events`, jsonReq('POST', {
-        kind: 'pool',
+        kind: e.kind || 'pool',
         note: e.note,
         guard: true,
-        changes: { character: { [e.key + '_current']: { from: e.from, to: e.to } } },
+        changes: { character: entryFields(e) },
       }));
     } catch (err) {
       if (err.status === 409 && err.detail?.conflict) {
-        // Someone else moved this pool while we were away. Stop here: the
+        // Someone else moved these pools while we were away. Stop here: the
         // entries behind this one are built on a value that is no longer
         // true, and replaying them would compound the divergence rather
         // than resolve it. The player chooses, then the flush resumes.
-        const f = err.detail.fields?.[e.key + '_current'];
-        if (f) {
-          C.conflicts[e.key] = { mine: f.mine, theirs: f.theirs, seq: e.seq };
-          paintPool(e.key);
-          renderQueueState();
-        }
-        return;
+        //
+        // ONE PRESS CAN CLASH ON TWO POOLS - a Damage that spilled into H.P.
+        // while somebody else was healing. Each gets its own choice, all of
+        // them carrying this entry's seq, and the entry is not resolved until
+        // the last one is answered. A 409 naming none of our fields is not
+        // something the player can act on, so it falls through and is treated
+        // as the refusal it is.
+        if (noteConflicts(e, err.detail.fields)) return;
       }
       if (err.status === undefined) { renderQueueState(); return; }  // still offline
       // The server refused it on its merits. It will never succeed, so it
@@ -575,6 +592,24 @@ async function flushQueue() {
   await load();
 }
 
+// Both sides of every pool this entry clashed on, each answerable on its own
+// card. Returns whether anything was recorded: a 409 that names none of the
+// fields we sent is not a choice the player can make, and the caller treats it
+// as a refusal rather than stalling the queue on a conflict nobody can see.
+function noteConflicts(entry, reported) {
+  let any = false;
+  for (const field of Object.keys(entryFields(entry))) {
+    const f = reported?.[field];
+    if (!f) continue;
+    const key = field.replace('_current', '');
+    C.conflicts[key] = { mine: f.mine, theirs: f.theirs, seq: entry.seq, field };
+    paintPool(key);
+    any = true;
+  }
+  if (any) renderQueueState();
+  return any;
+}
+
 // How many are waiting, said once, near the pools they belong to.
 async function renderQueueState() {
   const el = $('queue-state');
@@ -584,32 +619,68 @@ async function renderQueueState() {
   const conflicts = Object.keys(C.conflicts).length;
   el.className = n ? 'queue-state on' : 'queue-state';
   el.textContent = !n ? ''
-    : conflicts ? `${n} change${n === 1 ? '' : 's'} waiting — resolve the highlighted pool`
+    // Plural because one Damage can clash on two pools at once, and being told
+    // to resolve "the" highlighted pool while two are lit is a small lie.
+    : conflicts ? `${n} change${n === 1 ? '' : 's'} waiting — resolve the highlighted pool${conflicts === 1 ? '' : 's'}`
     : `${n} change${n === 1 ? '' : 's'} waiting for the network`;
 }
 
-// The player picked a side. Their value is written from the server's current
-// one as the base, so the write cannot fail on the same conflict twice.
+// The player picked a side for ONE pool. Their value is written from the
+// server's current one as the base, so the write cannot fail on the same
+// conflict twice.
+//
+// A press that clashed on two pools has two choices to make, and nothing is
+// written until the last of them is in - the entry then replays as ONE event,
+// the way it would have arrived had the wi-fi held. Answering half a Damage
+// and sending it would be the split this queue exists to avoid.
 async function resolveConflict(key, side) {
   const c = C.conflicts[key];
   if (!c) return;
   const chosen = side === 'mine' ? c.mine : c.theirs;
+
+  // Answered: it leaves `conflicts` so the card stops offering the choice, and
+  // waits in `resolved` for the rest of its press.
+  delete C.conflicts[key];
+  const answers = C.resolved[c.seq] || (C.resolved[c.seq] = {});
+  answers[c.field] = { base: c.theirs, to: chosen };
+  C.data[key + '_current'] = chosen;
+  paintPool(key);
+  if (Object.values(C.conflicts).some((x) => x.seq === c.seq)) {
+    renderQueueState();
+    return;
+  }
+
+  const entry = (await playQueue.all(Number(id))).find((x) => x.seq === c.seq);
   try {
-    if (side === 'mine') {
-      await api(`characters/${id}/events`, jsonReq('POST', {
-        kind: 'pool', note: `${key.toUpperCase()} resolved to ${chosen}`, guard: true,
-        changes: { character: { [key + '_current']: { from: c.theirs, to: chosen } } },
-      }));
+    if (entry) {
+      // Rebased on what the server holds NOW. A field the player answered is
+      // based on `theirs`; a field nobody moved keeps the `from` it was queued
+      // with, because its guard matched and that IS what the server holds.
+      // A field that ends where it already is needs no write at all, which is
+      // what makes "theirs" free.
+      const changes = {};
+      for (const [field, fv] of Object.entries(entryFields(entry))) {
+        const a = answers[field];
+        const from = a ? a.base : fv.from;
+        const to = a ? a.to : fv.to;
+        if (from !== to) changes[field] = { from, to };
+      }
+      if (Object.keys(changes).length) {
+        await api(`characters/${id}/events`, jsonReq('POST', {
+          kind: entry.kind || 'pool', note: `${entry.note} (resolved)`, guard: true,
+          changes: { character: changes },
+        }));
+      }
+      await playQueue.remove(c.seq);
     }
-    // Choosing theirs needs no write: the server already holds it.
-    await playQueue.remove(c.seq);
   } catch (err) {
+    // The entry is still queued and the answers are dropped, so the next flush
+    // asks again rather than leaving a half-answered press in limbo.
+    delete C.resolved[c.seq];
     alert('Could not resolve: ' + err.message);
     return;
   }
-  delete C.conflicts[key];
-  C.data[key + '_current'] = chosen;
-  paintPool(key);
+  delete C.resolved[c.seq];
   await flushQueue();
 }
 
@@ -635,9 +706,19 @@ async function quickDamage() {
     C.data[k] = patch[k];
     paintPool(k.replace('_current', ''));
   }
+  const fields = Object.fromEntries(Object.keys(patch).map((k) => [k, { from: prev[k], to: patch[k] }]));
   try {
-    await postEvent('damage', `took ${amt}`, { character: Object.fromEntries(Object.keys(patch).map((k) => [k, { from: prev[k], to: patch[k] }])) });
+    await postEvent('damage', `took ${amt}`, { character: fields });
   } catch (err) {
+    // THE SAME SPLIT THE +/- BUTTONS MAKE, and for the same reason: a hit that
+    // the server refused was never valid and rolls back, but a hit the wi-fi
+    // ate happened at the table and stands. Damage is the press this matters
+    // most for - it is the one a player cannot simply do again, because doing
+    // it again means deciding a second time how much came off.
+    if (err.status === undefined && await queueChange('damage', `took ${amt}`, fields)) {
+      renderQueueState();
+      return;
+    }
     for (const k of Object.keys(prev)) {
       C.data[k] = prev[k];
       paintPool(k.replace('_current', ''));

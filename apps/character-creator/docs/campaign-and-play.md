@@ -377,14 +377,27 @@ means the sheet will not load at all next time — that needs a service worker,
 which on a site that deploys on every merge brings a cache-invalidation
 problem of its own and is deliberately out of scope.
 
-**Only the pool +/− buttons queue.** `adjustPool` is the one caller of
-`queuePoolChange`, and the other play writes each fail differently: Damage,
-ammo and rest are optimistic too and **revert** on any failed write, a drop
-and a refusal alike; a power spend is **not** optimistic — it awaits the write
-before deducting, so a failure means it never applied; and a roll is
-fire-and-forget, so it stands on screen and is quietly not logged. That is the
-current state rather than a principle — pool arithmetic is what a player fires
-repeatedly during a fight, so it is where losing a change hurts most.
+**What queues is the pool +/− buttons and Damage** — the two presses that move
+a pool, and the two a player fires repeatedly mid-fight. Damage was the
+notable omission for a while: the +/− beside it survived a drop and the hit
+itself did not, which is the worse of the two to lose, because repeating it
+means deciding a second time how much came off. The other play writes still
+each fail their own way, and none of them queues:
+
+| the write | on a failed send |
+|---|---|
+| pool +/−, **Damage** | a refusal reverts; **a drop queues** |
+| ammo, rest | optimistic, and revert either way |
+| a power spend | not optimistic — it awaits the write before deducting, so a failure never applied |
+| a roll | fire-and-forget: it stands on screen and is quietly not logged |
+
+**One press is one entry is one event.** A Damage that spills out of S.D.C.
+into H.P. moves two pools, so an entry carries a **field map** rather than one
+value. Split into two entries it would put two rows in the log, let undo take
+back half a hit, and make the session recap count one blow as two. An entry
+queued before that map existed still replays as the single-pool change it was:
+IndexedDB outlives a deploy, so the flush has to read both shapes rather than
+dropping the older one.
 
 **A refusal and a silence are different things**, and the whole design hangs
 off telling them apart:
@@ -432,9 +445,19 @@ happened.
 the entries behind it are built on a value that is no longer true, and
 replaying them would compound the divergence rather than resolve it. The pool
 card splits into two finger-sized halves, yours and theirs, the player picks,
-and the flush resumes. Choosing theirs needs no write at all; choosing yours
-writes from the server's current value as the base, so the same conflict
-cannot refuse it twice.
+and the flush resumes.
+
+**One press can clash on two pools** — a Damage that reached H.P. while
+somebody else was healing — so each pool gets its own choice, and the press is
+not sent until the last of them is answered. An answered card stops offering
+the choice immediately, and its answer waits with the others; sending half an
+answered Damage would be the very split the entry shape exists to prevent.
+When the last answer lands the whole press goes as **one** event, rebased on
+what the server holds now: a pool the player answered is based on `theirs`, a
+pool nobody moved keeps the `from` it was queued with, because its guard
+matched and that *is* what the server holds. A field that ends where it
+already sits is dropped, which is what makes "theirs" free — choosing it
+writes nothing.
 
 **The trap this repo keeps rediscovering: Access answers with HTML.** A replay
 that lands on the login page comes back as a page, `api()` answers `{}` for a

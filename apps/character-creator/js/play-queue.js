@@ -1,4 +1,7 @@
-// Pool changes that could not reach the server yet.
+// Play-mode changes that could not reach the server yet: the pool steppers and
+// the Damage button. One row per PRESS, carrying a map of every field that
+// press moved - a hit that spills out of S.D.C. into H.P. is one event, and
+// two rows would let undo take back half of it.
 //
 // WHAT THIS DOES AND DOES NOT PROMISE. It survives a network drop and a reload
 // while the tab is open, and it does NOT make the app work offline: nothing
