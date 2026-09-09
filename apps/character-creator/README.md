@@ -776,7 +776,7 @@ no longer exists.
 
 ## A row can say where it came from
 
-`source_book` normally names a book and a page. Twenty-seven gear rows instead say:
+`source_book` normally names a book and a page. Twenty-four gear rows instead say:
 
 ```
 Web reference (not book-verified)
@@ -798,7 +798,7 @@ book contradicted (a 20-year nuclear charge against the printed 25) was correcte
 in the same script. **The marker did the job this section claims for it: the book
 correction knew what it was overwriting.** See `BOOK-INGEST-AUDIT.md` F41.
 
-This count said *Forty* until that day and measured **28**; it is **27** now.
+This count said *Forty* until that day and measured **28**. `F46` then found three more of them in Rifts Ultimate Edition - the C-18 laser pistol on printed 257, Cyber-Armor on 65 and the hatchet on 56 - so it is **24** now. **Of those 24, exactly one still carries a combat number**: `hand-axe`, whose damage no book on this machine states.
 
 So the rule for anything transcribed from the open web:
 
