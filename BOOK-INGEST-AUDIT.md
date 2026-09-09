@@ -5932,3 +5932,288 @@ file.
 **One correction filed in passing, in the same PR:** `docs/surveys/ww.md` cited
 the Priest of Light's `Money:` line as printed 52. It is printed **54** — cached
 `p054.txt` line 70, read 2026-09-09. The gear rows had it right all along.
+
+
+**Taken for RIFTS ULTIMATE EDITION, 2026-09-09 — the third of the five book
+sessions. It shipped FIVE vessels where this finding counts six, and it filed
+three findings on the way.** Two books remain: Phase World 1 row, and the one row
+with no book behind it.
+
+**The count was wrong again, in both directions again.** This finding's RUE share
+comes from `category = 'vehicle' AND description LIKE '%Main Body%'`, which
+returns six. The book's `Common Vehicles` section on printed 266-267 is **five
+machines and a jet pack**, and the filter:
+
+<!-- claim-ok: quoting the premises this note corrects -->
+
+- **includes `wilk-s-atv-transport-vehicle`, which is not a machine.** It is the
+  Mountaineer ATV's stat block under a name assembled across a page break. `F43`.
+- **includes `northern-gun-sky-king`, which this book does not print.** It is in
+  the ORIGINAL core book, at the row's own stored 130. `F43`.
+- **misses seven rows**, four of them the same five machines stored under a
+  second slug: `speedster-hovercycle`, `big-boss-atv`, `mountaineer-atv`,
+  `a-t-v-speedster-hover-cycle`. The `LIKE` selected the prose-rich copy of each
+  machine rather than the book-correct one — the same asymmetry the Wormwood
+  note records.
+
+**The measurement to carry forward: `LIKE '%Main Body%'` has now been wrong for
+all three books it has been tested against.** It counted 7 for Juicer Uprising
+and understated the mechanical share; 9 for Wormwood where 2 were vessels; 6 here
+where 5 are. It is a prose-shape filter, not a vessel test.
+
+**Three findings came out of reading the book, and none of them was fixed here.**
+`F41` is about moving vessels; rewriting catalog values from a book session is
+not something this finding asked for:
+
+- **`F42`** — six rows carry FIRST-EDITION M.D.C. under a RUE citation, and ten
+  published class references point at them. Every divergence lands exactly on
+  the older printing.
+- **`F43`** — the two rows above, citing RUE for machines it does not carry.
+- **`F44`** — `findDuplicates` scores two of the three duplicate pairs at 0.500
+  and 0.333 against a 0.7 threshold, because `normaliseName` splits `A.T.V.`
+  into three tokens.
+
+**Filing three findings inside a take is this finding's own precedent** — `F41`
+was itself filed while building the gear-and-vessels sequence, in the PRs that
+shipped it. They ride in this PR rather than a separate one because a stacked PR
+dies here when its base is deleted.
+
+**THE PRICE CROSS-CHECK PASSED AND WAS WRONG, which is the most useful thing this
+session learned.** The Juicer Uprising note above calls seven matching prices
+*"the strongest evidence in this file"*, and `book-survey` section 0c prescribes
+exactly that check. Here all six prices matched RUE and **six of six rows were
+still wrong**, because RUE's errata moved the M.D.C. and left the prices alone.
+A price agreeing across two editions says nothing about a combat number. `F42`
+carries the table.
+
+**The posture held.** All eight pointed gear rows kept their slug, prose and
+values — including the four wrong ones, deliberately, so `F42` stays visible
+rather than being quietly resolved by a session that had no mandate to. No
+schema change came out of this session.
+
+**Every gear row naming a machine points at that machine's vessel — eight rows,
+five vessels.** A departure from the two earlier imports, where each vessel had
+exactly one gear row, and it is what makes the duplication legible rather than
+hidden. `wilk-s-atv-transport-vehicle` gets no pointer even though its figures
+are the Mountaineer's, because its NAME is what `F43` disputes.
+
+**What shipped** (`zzzzzzzz-rue-vessels-p266-267.sql`): 5 vessels, 11 M.D.C.
+locations, 7 weapon entries, 8 gear pointers. Eight z's to sort after
+`zzzzzzz-ju-vessels-p077-088.sql`, whose readback asserts a **global** pointer
+count and would be falsified by these landing first.
+
+**Read twice, because this one is a scan.** `rue` is `text_layer: false`, so
+`scripts/read-columns.py` is unavailable exactly as it was for Wormwood. Every
+figure was read from the cached OCR of printed 266-267 and confirmed against a
+200 dpi render of both pages, with 500-600 dpi crops for the three numbers `F42`
+turns on. The offset was confirmed the free way `book-survey` section 0d
+prescribes — both renders carry their folio — so `page_offset: 3` as the
+registry records, and the cache manifest agrees with it on `printed_pages` too.
+
+**One printed value is missing from the book and is stored as missing.** The
+Highway-Man's line reads `M.D.C. by Location: Main Body: 75, Tires (2)` and
+stops; the motorcycle illustration overlaps where the number belongs, a 600 dpi
+crop shows no digit under the art, and the OCR renders the same truncation. Its
+`mdc` is NULL with the reason in `mdc_note`. Every other vehicle in the section
+prints its tire figure.
+
+**One readback was wrong on first apply** — `their weapon entries` asserted 8
+against a file containing 7. Re-derived by counting the `VALUES` rows in the
+file, which is the distinction the Juicer Uprising session got wrong three times.
+
+**The premise audit ran to completion and found the edition mismatch from the
+gear rows alone**, before the book was opened for it — it noticed that every
+non-M.D.C. field matched RUE and inferred a different printing. Confirming that
+against the original core book, and finding the Sky King's stat block there, was
+this session's work. The two passes met in the middle, which is the shape the
+Wormwood note describes.
+### F42 - high - six Rifts Ultimate Edition gear rows carry FIRST-EDITION figures under a RUE citation, and ten published class references point at them
+
+**Found while taking `F41` for Rifts Ultimate Edition, 2026-09-09**, by reading
+the book the rows cite. Filed rather than fixed, because `F41` is about moving
+vessels and a book session that quietly rewrote catalog values would be doing
+something nobody agreed to.
+
+RUE's `Common Vehicles` section is five vehicles and a jet pack on printed
+266-267. Six catalog rows citing this book disagree with it on `mdc`, and every
+one of the six matches the **original Rifts core book** instead - which
+`scripts/books.json` already describes as the edition RUE revises: *"This is the
+ORIGINAL Rifts core book; Rifts Ultimate Edition is its errata'd revision - the
+same book, a later edition."*
+
+| machine | original core book | RUE, printed 266-267 | the row carrying the old figure | classes citing it |
+|---|---|---|---|---|
+| Speedster Hovercycle | 75 | **85** | `a-t-v-speedster-hover-cycle` = 75 | **2** |
+| Wastelander Motorcycle | 45 | **60** | `the-wastelander-motorcycle` = 45 | **4** |
+| Big Boss ATV | 65 | **100** | `the-big-boss-a-t-v` = 65 | 0 |
+| Mountaineer ATV | 140 | **210** | `the-mountaineer-a-t-v` = 140 | 0 |
+| Wilk's Jet Pack | 20 | **30** | `wilk-s-jet-pack` = 20 | **1** |
+| Highway-Man Motorcycle | 75 | 75 | `the-highway-man-motorcycle` = 75 | 4 |
+
+The Highway-Man row is in the table because it is the control: its main body did
+not change between editions, and its row is right in both. **Ten published class
+references point at rows whose figure RUE errata'd** - `cyber-knight`,
+`mind-melter`, `combat-cyborg` and `juicer-wannabe` cite the Wastelander;
+`cyber-knight` and `mind-melter` also cite the Speedster duplicate.
+
+**Every other field in these rows matches RUE exactly** - speed, range, length,
+weight, and both prices. That is what makes this an edition mismatch rather than
+a transcription error: RUE's errata moved the M.D.C. and the tire counts and
+left the prices alone.
+
+**AND THAT IS WHY THE OBVIOUS CHECK PASSED.** `book-survey` section 0c says to use
+the rows you already have as a check on the reading, and the Juicer Uprising
+import above calls seven matching prices *"the strongest evidence in this
+file"*. Here **all six prices matched and every one of the six rows was still
+wrong**, because price is exactly the field the errata did not touch. A price
+agreeing across two editions is not evidence that a combat number did.
+
+**Proposal:** decide which edition the catalog states for these six rows, then
+make the citation and the value agree. Two coherent answers, and this finding
+does not pick one:
+
+- **RUE wins** - update the six `mdc` values to 85 / 60 / 100 / 210 / 30, keep
+  the `Rifts Ultimate Edition` citations, and the ten class references silently
+  become correct. Simplest, and matches what the rest of the catalog cites.
+- **The original edition wins for these rows** - keep the values and re-cite
+  them to the original core book. Honest about provenance, but `books.json`
+  records that book as *"Cited by NOTHING since 2026-08-28"* and deliberately
+  not cached, so this would reopen a spelling the repo retired.
+
+**Posture: a decision, then a data script. Not an automatic overwrite**, and not
+something a book session should have done on its own. The vessel rows shipped by
+`F41`'s RUE session already carry RUE's figures and cite printed 266-267, so
+until this is settled the codex shows both numbers - a Wastelander gear row
+reading 45 beside a Wastelander vessel reading 60. That visibility is
+deliberate.
+
+**Evidence:** RUE figures read from the cached OCR of printed 266-267 and
+confirmed against a 200 dpi render of both pages, with 500-600 dpi crops for the
+Wastelander and Mountaineer, 2026-09-09. Original-edition figures read the same
+day from `Rifts Main-206-230.pdf` pages 21-23 as a throwaway probe - that book is
+registered `page_offset: null` and its `books.json` note says not to cache it, so
+nothing was cached. Citation counts from `imported_classes.markdown`, `--remote`.
+
+**Confidence: high** on every number and on the edition diagnosis - five of five
+divergences land exactly on the older printing, which is not a coincidence
+available to a transcription error. **Medium on the remedy**, because which
+edition the catalog should state is Nate's call and not a measurement. **What
+would raise it:** checking whether other RUE-cited gear outside the vehicle
+section shows the same pattern; this finding measured only the vehicles.
+
+**Ongoing cost: none once decided.** One data script over six rows, and no new
+check to maintain. **The cost of NOT doing it** is that four published classes
+hand a player a motorcycle with 25% less M.D.C. than the cited book gives it,
+which is the kind of error nothing in this repo would ever surface on its own.
+
+### F43 - two gear rows cite Rifts Ultimate Edition for machines it does not print
+
+**Found the same way, 2026-09-09**, and separate from `F42` because the remedy is
+different: these rows are not carrying the wrong *value*, they are carrying the
+wrong *book*.
+
+**`northern-gun-sky-king` is in the ORIGINAL core book, and RUE dropped it.**
+`Rifts Main-206-230.pdf` page 23 prints its stat block - `Main Body - 130`, and
+*"Depleting the M.D.C. of the main body will destroy the Sky King"* - which is
+the row's stored `mdc` exactly. In RUE the only occurrence across all 382 cached
+pages is a passing aside inside a skill description on cache `p321` line 121,
+*"bike, skycycle (like the Sky King) or jet propelled one- or two-man"*. So the
+row is real, correctly transcribed, and cited to the one edition that does not
+contain it.
+
+**Half of this was already known and the other half was not.** The 2026-08-28
+re-provenance pass held this row back as one of eleven RUE rows under names the
+book does not print - `apps/character-creator/db/zzzz-cite-rue-rows.sql` and
+`apps/character-creator/docs/surveys/rue.md` both record the eleven, and
+`SELECT count(*) FROM gear WHERE source_book = 'Rifts Ultimate Edition'` returns
+exactly 11 today. That pass correctly declined to cite it by page. **What it did
+not do is take the citation away**, so the row still asserts a book that does not
+carry it. `catalog-reprovenance-passes` in the memory store makes the general
+version of this point: the ledger sees an absent citation, never a wrong one.
+
+**`wilk-s-atv-transport-vehicle` is not a machine at all.** It is the Mountaineer
+ATV's stat block under a name assembled across a page break. The Mountaineer's
+heading sits at the foot of printed 266 and its stat block continues at the top
+of 267, opening `Vehicle Type: Three wheeled armored ATV transport vehicle.`;
+the next heading below that is `Wilk's Jet Pack`. The row's `mdc` 210 and `cost`
+76,000 are the Mountaineer's figures digit for digit. Grepping all sixteen
+cached books for `ATV Transport` returns one file - `rue` cache `p270` - and
+that hit is the Mountaineer's own `Vehicle Type:` line. There is no such entry
+in any book here.
+
+This is the same page-break failure recorded for Juicer Uprising, which put two
+wrong `starting_money` figures into live data: **a value read above a break and a
+name read below it.**
+
+**Proposal:** re-cite `northern-gun-sky-king` to the original core book, or
+retire it - it is cited by **0** classes at any status, so either is cheap.
+Retire `wilk-s-atv-transport-vehicle` through `catalog_redirects` to
+`mountaineer-atv`, which is the row that names what the book prints; it too is
+cited by **0** classes. **Posture: a merge and a re-citation, no schema change,
+and no new check.** Both rows keep their history in `catalog_redirects` rather
+than being deleted.
+
+**Evidence:** the greps and page reads above, all 2026-09-09. Citation counts
+from `imported_classes.markdown`, `--remote`, at any status. The eleven-row count
+is the `--remote` query quoted above.
+
+**Confidence: high** on both diagnoses - the Sky King's stat block was read off
+the original book and the `ATV Transport` grep covers every cached book on this
+machine. **What would raise it:** nothing for the Sky King. For the transport
+vehicle, confirming no OTHER Palladium book prints a Wilk's ATV - only the
+sixteen cached here were searched, and the registry lists eighteen.
+
+**Ongoing cost: none.** Two rows, one redirect and one citation change.
+
+### F44 - `findDuplicates` cannot see an acronym written two ways, so two of three real duplicate pairs are invisible
+
+**Found while taking `F41` for Rifts Ultimate Edition, 2026-09-09.** `F42` and
+`F43` together describe five RUE machines stored under nine gear slugs. Three of
+those are duplicate pairs, and the detector reports one of them.
+
+Scored by importing the live module and calling it directly -
+`node --input-type=module` against
+`functions/api/character-creator/_lib/catalog-merge.js`, 2026-09-09, with
+`THRESHOLD = 0.7` at line 168:
+
+| pair | `normaliseName` output | score | reported? |
+|---|---|---|---|
+| Speedster Hovercycle / A.T.V. Speedster Hover Cycle | `speedster hovercycle` vs `a t v speedster hover cycle` | **0.750** | yes |
+| Big Boss ATV / The Big Boss A.T.V. | `big boss atv` vs `the big boss a t v` | **0.500** | no |
+| Mountaineer ATV / The Mountaineer A.T.V. | `mountaineer atv` vs `the mountaineer a t v` | **0.333** | no |
+| Mountaineer ATV / Wilk's ATV Transport Vehicle | `mountaineer atv` vs `wilk s atv transport vehicle` | **0.200** | no |
+
+**The cause is one line of normalisation.** `A.T.V.` becomes the three tokens
+`a t v`, which can never match the single token `atv`, so the acronym that makes
+the two names obviously the same machine is the exact thing that stops them
+scoring. The pair that IS reported passes on the words around the acronym rather
+than on the acronym, and it is reported in the weakest tier.
+
+**This is not `F33` and not `INGESTION-AUDIT` `F29`, and both were checked before
+filing.** `F33` proposed building a gear duplicate detector and its outcome note
+records that one already existed and found three of its four pairs; `F29`
+rewrote that detector for the gear catalog. Neither touches acronym tokenisation,
+and neither mentions any of these six slugs - grepping both menus for
+`speedster|mountaineer|big-boss|wastelander|highway-man|sky-king` returns no
+hits, 2026-09-09. This finding is about a specific normalisation gap those two
+left in place.
+
+**Proposal:** in `normaliseName`, collapse a run of single letters separated by
+periods into one token - `A.T.V.` to `atv`, `M.D.C.` to `mdc` - before
+tokenising. **Posture: change the normaliser only. Do NOT move `THRESHOLD`**,
+which would raise the false-positive rate across every catalog to fix a
+tokenisation bug; and duplicate review stays a report a person reads, not a gate.
+
+**Evidence:** the table above, produced by executing the shipped module rather
+than by reasoning about it - which is what `audit-menu` says settles a claim
+about a capability. The three pairs are live in production, 2026-09-09;
+`catalog_redirects` and `catalog_pair_dismissals` hold no row for any of them.
+
+**Confidence: high** on the mechanism and the scores, both executed. **Medium on
+the impact beyond these rows** - no census was run of how many other catalog
+names contain a dotted acronym. **What would raise it:** counting rows matching
+`%.%.%` in `gear.name` and `skills.name` and re-scoring their neighbours.
+
+**Ongoing cost: near zero.** One function, already unit-testable, and the change
+can only make the detector see MORE pairs - which a person then reads. It cannot
+merge anything on its own.
