@@ -222,6 +222,30 @@ check('and carries skills, spells and psionics',
   check('a warm load revalidates to a 304', again.status === 304, again.status);
   check('with no body to re-download', (await again.text()).length === 0);
 
+  // Vessels became an editable catalog by declaring one config entry - no new
+  // endpoint, no new UI - which is the property `catalog-fields.js` exists to
+  // have. 127 rows that nothing could edit before.
+  //
+  // AND THE DUPLICATE DETECTOR STAYS OUT OF IT, which is the half worth
+  // pinning. `resolveCatalog` requires both the config entry AND a `MERGE_REFS`
+  // entry, so declaring a catalog does not enlist it in duplicate review;
+  // `enchantments` has been in that position since it landed. Get this wrong
+  // and 127 vessels arrive in a review queue nobody asked for. The route must
+  // decline by NAME - a 400 - rather than 500 on a missing ref.
+  {
+    const vessels = await api('GET', '/catalogs/rows?catalog=vehicles');
+    check('the editor can list vessels', vessels.status === 200
+      && Array.isArray(vessels.body.rows), vessels.status);
+    const dupes = await api('GET', '/catalogs/duplicates?counts_only=1&catalog=vehicles');
+    check('and duplicate review declines vessels cleanly rather than crashing',
+      dupes.status === 400, dupes.status);
+    // The precedent, asserted rather than described: enchantments is in exactly
+    // the same position, so this is a shape the codebase already has and not a
+    // special case built for vessels.
+    const ench = await api('GET', '/catalogs/duplicates?counts_only=1&catalog=enchantments');
+    check('the same way it already declines enchantments', ench.status === 400, ench.status);
+  }
+
   // Change a percentage in place: no row added, no id moved, nothing a count
   // or a max(id) could see. The validator has to move anyway.
   const rows = await api('GET', '/catalogs/rows?catalog=skills');
