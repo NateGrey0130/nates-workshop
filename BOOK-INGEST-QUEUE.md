@@ -15,7 +15,7 @@ the human view of the same thing plus the import status.
 |---|---|---|---|---|---|---|
 | `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 224 — corrected 2026-09-07, see below | **+0** | **imported** |
 | `underseas` | Rifts WB 7: Underseas | 216 | SCAN (OCR) | 214 | **+0 / -1 split** | **imported** |
-| `new-west` | Rifts WB 14: New West | 226 | text layer | 224 | +1 | cached |
+| `new-west` | Rifts WB 14: New West | 226 | text layer | 224 | +1 | **surveyed** |
 | `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | cached |
 | `mystic-russia` | Rifts WB 18: Mystic Russia | 178 | text layer | 176 | +1 | cached |
 | `free-quebec` | Rifts WB 22: Free Quebec | 194 | text layer | 192 | +1 | **imported** |
@@ -1213,3 +1213,67 @@ pre-authorized for implementation in this book's closing PR.** They were not
 implemented, and the premise audit is why: F30's detector needs a filter it did
 not specify, and F31's proposal collides with `related_skills_count`. Both are
 better taken deliberately than folded into a data PR.
+
+### `new-west` survey, 2026-09-09 (PR pending)
+
+Status `cached` -> **`surveyed`**. No data shipped; the survey is at
+`apps/character-creator/docs/surveys/new-west.md` and is the file the import
+sessions boot from.
+
+**This is the largest book left in the batch by playable roster: 26 classes**,
+against `phase-world`'s 34 and `triax`'s 21. Also 50 new spells, 4 new skills,
+79 priced gear entries and ~15 vessels. Nothing of it is in the catalog — the
+one row citing this book is `skills.W.P. Rope`, which has no page range and
+predates the cache.
+
+**Run `ocr-book.py` again on any book cached before 2026-09-08 before surveying
+it.** This cache was built 2026-08-28, so its manifest had neither
+`welded_pages` nor `corrupt_pages`; a plain re-run recomputed both in seconds
+and skipped all 226 already-cached pages. It found **one welded page and three
+glyph-corrupt ones**, and two of the four sit on pages data will be read from —
+printed 130 (Keepers of the Desert) and printed 217 (three Techno-Wizard
+prices). `spirit-west` and `mystic-russia` were cached the same day and have
+not had this done.
+
+**Three findings from the survey that change how a Rifts book is scanned, not
+just this one:**
+
+- **A roster scan keyed on `O.C.C.` and `R.C.C.` misses classes.** The
+  Psi-Slinger is a **`P.C.C.`** and has no other heading; Cactus People and
+  Mountain Giant carry no class suffix at all. Three of 26 invisible to the
+  marker scan that every previous book in this batch used.
+- **The playable/NPC line is stated per entry, on the entry's own tag line**,
+  and this book tags all 30 racial and creature entries that way. Scanning for
+  that tag found the 8 playable ones directly. It is much cheaper than reading
+  the section and much more reliable than the section boundary — Psi-Ponies is
+  playable and sits 20 pages inside the creature chapter.
+- **An experience ladder is NOT evidence of playability.** Three NPC creatures
+  here have one. A session that inferred the roster from the experience-table
+  page — which is otherwise the best authority in the book, and settles which
+  classes borrow a ladder from the core rules — would have imported three
+  monsters.
+
+**Nothing was filed on `BOOK-INGEST-AUDIT.md`, and the reason is that the one
+mechanic this book looked like it needed already SHIPPED.** The CyberSlinger is
+three chassis of one full-conversion cyborg, the same shape as Free Quebec's
+cyborg and its four — which was `F31`, and `F31` was **taken on 2026-09-08 in
+PR #834**. `skills_additional` and `related_skills_count` are both in
+`VARIANT_OVERRIDES` and both have handlers in `js/parser.js`. A chassis can add
+skills and move the related-skill count today.
+
+**The half of `F31` that was deliberately not done does not bite here.** Its
+outcome note is explicit that the five Free Quebec cyborg classes are *not*
+restructured, because characters reference a class by `class_id` and collapsing
+four chassis into variants would retire four ids that are pointed at. The
+CyberSlinger chassis are new and unpublished, so there is nothing to retire and
+the mechanism is available from the first PR.
+
+**This paragraph said the opposite for the length of one commit** — that F31 was
+open and the rows should be added to it. Checking F31's outcome note rather than
+its heading is what corrected it, which is the `audit-menu` rule about reading
+to the next `###`, met from the direction it is usually missed.
+
+Two decisions are left open in the survey rather than settled here, because both
+are cheaper to make once with the first spell PR in hand than to guess at now:
+whether the 50 Cloud Magic rows take a tradition prefix in `name`, and where the
+seven cloud categories live given that `spells` has no `category` column.
