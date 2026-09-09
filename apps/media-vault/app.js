@@ -49,6 +49,20 @@ function requireWrite() {
   return canWrite;
 }
 
+// SHARE-AUDIT V7. May a viewer take a COPY of the library they are looking at?
+// Off by default, and a flag rather than a deletion so the answer can change
+// without the code changing. Same house style as selectMode: one module-level
+// boolean, one setter that owns every transition, one body class for CSS.
+//
+// It is not a secrecy measure - a viewer can read every field on screen, which
+// Nate settled. It is about what survives the share being revoked.
+let exportInViewMode = false;
+
+function setExportInViewMode(on) {
+  exportInViewMode = !!on;
+  document.body.classList.toggle('allow-export', exportInViewMode);
+}
+
 // ─── RENDER ───
 // THE SELECTION IS ALWAYS A SUBSET OF WHAT THE VIEW SHOWS. Anything the filter
 // or the search stops showing drops out of it at that moment.
@@ -1272,6 +1286,13 @@ async function selectTMDBResult(tmdbId, mediaType) {
 
 // ─── CSV IMPORT/EXPORT ───
 function exportCSV() {
+  // SHARE-AUDIT V7. Export turns "look at" into "keep a copy of" — including
+  // `location`, which is where every physical item lives in somebody's house,
+  // and `notes`. A viewer already sees both on screen; a file they still have
+  // after the share is revoked is a different question, and this is the answer.
+  // A DEFAULT, NOT A PROHIBITION: setExportInViewMode(true) turns it back on
+  // and the button reappears with it.
+  if (!canWrite && !exportInViewMode) return;
   if (library.length === 0) { alert('Nothing to export.'); return; }
   // source_id last, so an existing consumer reading by position is unaffected.
   // It is here because a round trip through export and import would otherwise

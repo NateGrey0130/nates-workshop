@@ -867,6 +867,17 @@ check('and it survives a missing value rather than throwing',
     'currentLibraryUrl must follow currentVault');
   check('and the failed-write recovery re-reads the same one',
     declOf('apiWrite').includes('apiFetch(currentLibraryUrl())'));
+  // SHARE-AUDIT V7. A viewer sees `location` and `notes` on screen, which is
+  // settled; a CSV they still hold after the share is revoked is a different
+  // question. Off by DEFAULT and reversible — so this asserts the default and
+  // the reversibility, not that export is impossible.
+  check('export is off by default while viewing somebody else’s library',
+    /let exportInViewMode = false;/.test(appSrc)
+    && declOf('exportCSV').includes('!canWrite && !exportInViewMode'),
+    'the guard must read the flag, not merely the mode');
+  check('and it is a flag that can be turned back on, not a deletion',
+    /function setExportInViewMode/.test(appSrc)
+    && appSrc.includes("classList.toggle('allow-export'"));
   // The one that matters: `removed` names rows the server says it did not
   // delete, so restoring it would resurrect what another tab threw away.
   check('and a short delete count withdraws the undo instead of offering it',
