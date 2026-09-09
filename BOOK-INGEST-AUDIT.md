@@ -6346,6 +6346,66 @@ check to maintain. **The cost of NOT doing it** is that four published classes
 hand a player a motorcycle with 25% less M.D.C. than the cited book gives it,
 which is the kind of error nothing in this repo would ever surface on its own.
 
+**Taken, 2026-09-09 (PR #864). Nate chose RUE**, so the values move and the
+citations stay. Ten published class references become correct without a single
+class being touched, which is the argument for this direction over re-citing to
+the older book.
+
+**Five rows moved; the sixth is the control and is asserted unchanged:**
+
+| row | was | now |
+|---|---|---|
+| `a-t-v-speedster-hover-cycle` | 75 | **85** |
+| `the-wastelander-motorcycle` | 45 | **60** |
+| `the-big-boss-a-t-v` | 65 | **100** |
+| `the-mountaineer-a-t-v` | 140 | **210** |
+| `wilk-s-jet-pack` | 20 | **30** |
+| `the-highway-man-motorcycle` | 75 | 75 — unchanged in **both** editions |
+
+**THE SCOPE IS WIDER THAN THIS FINDING'S PROPOSAL, and saying so is the point.**
+The proposal says *"update the six `mdc` values"*. Three of the rows also carry
+the figure **in prose**, as a `M.D.C. by Location:` list, and moving the column
+without the prose would leave each row contradicting itself — a worse state than
+the one this finding was filed about. So the prose moved too, and with it the
+**tire counts**, because the errata changed those as well:
+
+<!-- claim-ok: quoting the premise this note widens -->
+
+- `the-wastelander-motorcycle` — `Tires (2) 1 each` to `2 each`
+- `the-mountaineer-a-t-v` — `Super Tires (3)` to `Super Tires (4)`
+- `the-big-boss-a-t-v` — tires already matched RUE
+
+`a-t-v-speedster-hover-cycle` and `wilk-s-jet-pack` carry no M.D.C. prose at all;
+the column is the only place their figure lives.
+
+**Two dash characters, and the file is pure ASCII.** `the-big-boss-a-t-v` writes
+`Main Body - 65` with an ASCII hyphen; the other two write an EM DASH, codepoint
+**8212**, measured with `unicode()` against production rather than guessed. The
+script builds it with `char(8212)`: a literal would fail `d1-apply`'s pre-flight,
+and getting it wrong would have matched nothing silently and left the prose stale
+while the column moved. Four readbacks check the prose specifically, for exactly
+that reason.
+
+**The duplicate pairs now agree and are deliberately NOT merged.**
+`speedster-hovercycle` and `a-t-v-speedster-hover-cycle` both read 85,
+`big-boss-atv` and `the-big-boss-a-t-v` both read 100, `mountaineer-atv` and
+`the-mountaineer-a-t-v` both read 210. Value-identical is what makes them cleanly
+mergeable — but merging live rows that classes cite is duplicate-review work and
+needs Nate. `F44` made two of the three visible to `findDuplicates` for the first
+time, and `F43` already retired the fourth.
+
+**Every figure was read from a render, and two were confirmed twice.** The RUE
+values came off 200 dpi renders of printed 266-267 and 71-72 during the `F41`
+sessions; the first-edition values off `Rifts Main.pdf` as throwaway probes. The
+`F43` session then re-confirmed two of them independently from a render of
+core-book printed 228 — `Wilk's Jet Pack ... Main Body - 20` and the
+Mountaineer's `Black Market Cost: 64,000` — from a different page than the one
+this finding measured.
+
+**Nine z's**, because `zzzzzzzz-rue-vessels-p266-267.sql` asserts *"the
+first-edition figures are still in gear, unaltered"* for four of these five rows.
+See the ninth-tier row in `docs/operations.md`.
+
 ### F43 - two gear rows cite Rifts Ultimate Edition for machines it does not print
 
 **Found the same way, 2026-09-09**, and separate from `F42` because the remedy is
@@ -6404,6 +6464,51 @@ vehicle, confirming no OTHER Palladium book prints a Wilk's ATV - only the
 sixteen cached here were searched, and the registry lists eighteen.
 
 **Ongoing cost: none.** Two rows, one redirect and one citation change.
+
+**Taken, 2026-09-09 (PR #863).** Posture held: a merge and a re-citation, no
+schema change, no new check. Nate settled the Sky King's half on the same day —
+re-cite rather than retire.
+
+**`northern-gun-sky-king` is re-cited to `Rifts RPG (original core book) p.228`**
+and its figures are untouched. The core book prints `Model Type: NG-A70`,
+`*Main Body - 130` and `Black Market Cost: 1.5 million credits, and up`; the row
+stored 130 and 1,500,000. That registry entry says the book is kept *"so the
+spelling stays known vocabulary if it reappears"* — this is the reappearance it
+was kept for, and nothing cached the book to do it.
+
+**THE PAGE THIS FINDING WAS FILED WITH WAS WRONG BY TEN.** The premise audit
+reported the stat block at pymupdf index **218**; searching the whole PDF puts it
+at **228**, and a 200 dpi render carries the folio 228 at the foot of the page.
+**The number that mattered — 130 — was right in both readings**, which is exactly
+how a wrong page citation survives a review: the claim it supports is true.
+
+**`wilk-s-atv-transport-vehicle` is retired into `mountaineer-atv`** through
+`catalog_redirects`, on the `zzzzzz-ingestion-f28-law-canonical.sql` pattern —
+redirect first so the slug keeps resolving, then a guarded DELETE. Nothing owned
+it: no `character_items` row, no class citation at any status, no existing
+redirect.
+
+**Its figures were carried across before it went, and that is the difference
+between a merge and a delete.** `mountaineer-atv` was a stub with `mdc` and
+`cost` both NULL; it now holds the 210 and the 76,000 the retired row had been
+carrying for the same machine. The catalog loses a fabricated name and keeps
+every number.
+
+**One page confirmed three separate claims.** The render of core-book 228 also
+shows `Wilk's Jet Pack ... Main Body — 20` against RUE's 30, and the Mountaineer's
+`Black Market Cost: 64,000` — both `F42` cases, corroborated from a different
+book than the one that finding measured.
+
+**A ninth z-tier was created, and the reason is new.** Every earlier tier existed
+because of rebuild order. This one exists because
+`zzzzzzzz-rue-vessels-p266-267.sql` **asserts the state of the rows these two
+findings change** — that four rows still carry first-edition figures, and that
+both disputed rows still exist. Deleting one makes that readback fail on a clean
+rebuild. `docs/operations.md` now carries the tier and states the general form:
+**a script that changes what an older script asserts needs a later tier, even
+when nothing about a rebuild requires it.**
+
+The clean-run `gear` count moves 1253 to 1252.
 
 ### F44 - `findDuplicates` cannot see an acronym written two ways, so two of three real duplicate pairs are invisible
 
@@ -6524,111 +6629,6 @@ round-trips the file through an encoding that cannot carry it. Changing it to
 `\0` would be byte-for-byte equivalent in behaviour. Named rather than done,
 because it is not this finding.
 
-**Taken, 2026-09-09 (PR #863).** Posture held: a merge and a re-citation, no
-schema change, no new check. Nate settled the Sky King's half on the same day —
-re-cite rather than retire.
-
-**`northern-gun-sky-king` is re-cited to `Rifts RPG (original core book) p.228`**
-and its figures are untouched. The core book prints `Model Type: NG-A70`,
-`*Main Body - 130` and `Black Market Cost: 1.5 million credits, and up`; the row
-stored 130 and 1,500,000. That registry entry says the book is kept *"so the
-spelling stays known vocabulary if it reappears"* — this is the reappearance it
-was kept for, and nothing cached the book to do it.
-
-**THE PAGE THIS FINDING WAS FILED WITH WAS WRONG BY TEN.** The premise audit
-reported the stat block at pymupdf index **218**; searching the whole PDF puts it
-at **228**, and a 200 dpi render carries the folio 228 at the foot of the page.
-**The number that mattered — 130 — was right in both readings**, which is exactly
-how a wrong page citation survives a review: the claim it supports is true.
-
-**`wilk-s-atv-transport-vehicle` is retired into `mountaineer-atv`** through
-`catalog_redirects`, on the `zzzzzz-ingestion-f28-law-canonical.sql` pattern —
-redirect first so the slug keeps resolving, then a guarded DELETE. Nothing owned
-it: no `character_items` row, no class citation at any status, no existing
-redirect.
-
-**Its figures were carried across before it went, and that is the difference
-between a merge and a delete.** `mountaineer-atv` was a stub with `mdc` and
-`cost` both NULL; it now holds the 210 and the 76,000 the retired row had been
-carrying for the same machine. The catalog loses a fabricated name and keeps
-every number.
-
-**One page confirmed three separate claims.** The render of core-book 228 also
-shows `Wilk's Jet Pack ... Main Body — 20` against RUE's 30, and the Mountaineer's
-`Black Market Cost: 64,000` — both `F42` cases, corroborated from a different
-book than the one that finding measured.
-
-**A ninth z-tier was created, and the reason is new.** Every earlier tier existed
-because of rebuild order. This one exists because
-`zzzzzzzz-rue-vessels-p266-267.sql` **asserts the state of the rows these two
-findings change** — that four rows still carry first-edition figures, and that
-both disputed rows still exist. Deleting one makes that readback fail on a clean
-rebuild. `docs/operations.md` now carries the tier and states the general form:
-**a script that changes what an older script asserts needs a later tier, even
-when nothing about a rebuild requires it.**
-
-The clean-run `gear` count moves 1253 to 1252.
-
-**Taken, 2026-09-09 (PR #864). Nate chose RUE**, so the values move and the
-citations stay. Ten published class references become correct without a single
-class being touched, which is the argument for this direction over re-citing to
-the older book.
-
-**Five rows moved; the sixth is the control and is asserted unchanged:**
-
-| row | was | now |
-|---|---|---|
-| `a-t-v-speedster-hover-cycle` | 75 | **85** |
-| `the-wastelander-motorcycle` | 45 | **60** |
-| `the-big-boss-a-t-v` | 65 | **100** |
-| `the-mountaineer-a-t-v` | 140 | **210** |
-| `wilk-s-jet-pack` | 20 | **30** |
-| `the-highway-man-motorcycle` | 75 | 75 — unchanged in **both** editions |
-
-**THE SCOPE IS WIDER THAN THIS FINDING'S PROPOSAL, and saying so is the point.**
-The proposal says *"update the six `mdc` values"*. Three of the rows also carry
-the figure **in prose**, as a `M.D.C. by Location:` list, and moving the column
-without the prose would leave each row contradicting itself — a worse state than
-the one this finding was filed about. So the prose moved too, and with it the
-**tire counts**, because the errata changed those as well:
-
-<!-- claim-ok: quoting the premise this note widens -->
-
-- `the-wastelander-motorcycle` — `Tires (2) 1 each` to `2 each`
-- `the-mountaineer-a-t-v` — `Super Tires (3)` to `Super Tires (4)`
-- `the-big-boss-a-t-v` — tires already matched RUE
-
-`a-t-v-speedster-hover-cycle` and `wilk-s-jet-pack` carry no M.D.C. prose at all;
-the column is the only place their figure lives.
-
-**Two dash characters, and the file is pure ASCII.** `the-big-boss-a-t-v` writes
-`Main Body - 65` with an ASCII hyphen; the other two write an EM DASH, codepoint
-**8212**, measured with `unicode()` against production rather than guessed. The
-script builds it with `char(8212)`: a literal would fail `d1-apply`'s pre-flight,
-and getting it wrong would have matched nothing silently and left the prose stale
-while the column moved. Four readbacks check the prose specifically, for exactly
-that reason.
-
-**The duplicate pairs now agree and are deliberately NOT merged.**
-`speedster-hovercycle` and `a-t-v-speedster-hover-cycle` both read 85,
-`big-boss-atv` and `the-big-boss-a-t-v` both read 100, `mountaineer-atv` and
-`the-mountaineer-a-t-v` both read 210. Value-identical is what makes them cleanly
-mergeable — but merging live rows that classes cite is duplicate-review work and
-needs Nate. `F44` made two of the three visible to `findDuplicates` for the first
-time, and `F43` already retired the fourth.
-
-**Every figure was read from a render, and two were confirmed twice.** The RUE
-values came off 200 dpi renders of printed 266-267 and 71-72 during the `F41`
-sessions; the first-edition values off `Rifts Main.pdf` as throwaway probes. The
-`F43` session then re-confirmed two of them independently from a render of
-core-book printed 228 — `Wilk's Jet Pack ... Main Body - 20` and the
-Mountaineer's `Black Market Cost: 64,000` — from a different page than the one
-this finding measured.
-
-**Nine z's**, because `zzzzzzzz-rue-vessels-p266-267.sql` asserts *"the
-first-edition figures are still in gear, unaltered"* for four of these five rows.
-See the ninth-tier row in `docs/operations.md`.
-
 ### F45 - six book notes in the registry made a standing claim about live data, and four of the six were false
 
 **Found while taking `F41` for Phase World, 2026-09-09**, by a premise audit that
@@ -6747,6 +6747,18 @@ shows why one would be wrong: the row is honest, and the marker is doing exactly
 the job the README describes. **Confidence: high** on the three citations, all
 render-confirmed; **high** on the absence for `hand-axe`, which is a search of
 every cache on this machine and therefore bounded by which books are here.
+
+
+**Taken, 2026-09-09 (PR #866).** Posture held: re-cite what the books support,
+mark what they do not, merge nothing, and add no new rule - `hand-axe` was left
+marked precisely because a rule banning combat numbers under the web marker
+would have been wrong about an honest row.
+
+**Then `F47` closed the last of it.** RUE prints the hand axe on printed 99 too,
+so that row was cited rather than left marked, and **no web-marked row carries a
+combat number any more.** The count this finding opened at four is now zero, and
+every one of the four was closed by searching the books rather than by stripping
+a value or adding a prohibition.
 
 ### F47 - three of the five duplicate pairs were duplicates; the other two were the book naming two things
 
