@@ -6166,6 +6166,107 @@ stalled, where this one worked perfectly and was simply overtaken.
   from here on, which would cost a later reader a ninth `z` to buy nothing.
   Corrected in this PR.
 
+
+**Taken for THE WEB-SOURCED ROW, 2026-09-09 — the last item, and F41 IS NOW
+COMPLETE.** Five sessions, PRs #856-#857, #858, #859, #860 and this one.
+
+**This was not the decision this finding expected, because its premise was
+false.** F41 sets the row aside as *"a sixth decision for the web-sourced row"* —
+a judgement about whether to trust an unverifiable figure — and all four earlier
+notes repeat *"the one row with no book behind it"*.
+
+<!-- claim-ok: quoting the premise this note corrects -->
+
+**Three books on this machine stat the Glitter Boy, and one of them is a book
+this very sequence had already opened.** Rifts Ultimate Edition printed 71-72
+carries the entry under the row's own model designation, `USA-G10`, and prints
+every one of the seven M.D.C. figures the row stored:
+
+| the gear row, from the web | RUE printed 71 |
+|---|---|
+| main body 770, head 290, arms 270 each, legs 450 each, hands 100 each, rail gun 175, reinforced pilot compartment 150 | identical, all seven |
+| "10 feet 5 inches, 1.2 tons loaded" | Height 10 ft 5 in (3.1 m); Weight 1.2 tons fully loaded |
+| "60 mph; leaps 12 feet, or 22 with a running start" | Running 60 mph (96 km); leap 12 ft (3.6 m), plus 10 ft (3 m) running |
+| "Laser weapons do HALF damage to it" | *"Laser weapons do half damage to the Glitter Boy!"* |
+
+The original core book and Free Quebec printed 82 carry it too. **The RUE
+session read only `Common Vehicles` on printed 266-267; this stat block sits 195
+pages earlier in the O.C.C. chapter and was never in that session's filter.**
+
+**ONE FIGURE WAS WRONG, and it is the kind the marker exists to catch.** The row
+said `nuclear power (20 year charge)`; RUE printed 72 and the original core book
+both print **25 years**, and Free Quebec prints 20 — so it was a blended reading
+across editions. Corrected here.
+
+**Correcting a gear value here is not what `F42` declined, and the difference is
+the point.** `F42` left six RUE rows alone because *which edition the catalog
+states* is a real decision with two coherent answers. This row stated no edition
+and claimed no book at all; leaving a figure that contradicts the book it is now
+cited to would have MANUFACTURED an `F42`. The repo already had the pattern —
+`backfill-rue-equipment.sql` re-cites eleven web-sourced rows to RUE pages and
+corrects what the book contradicts, each `UPDATE` guarded on the marker.
+
+**A Glitter Boy was already in `vehicles`, and Nate chose not to point at it.**
+The Free Quebec sequence imported `classic-glitter-boy-qgb-100` carrying all
+seven figures **plus an eighth** — the Rimouski Left Forearm Weapon Package at
+110, which the USA-G10 does not have, alongside a different Boom Gun model, a
+20-year power system and Quebec's own price. Settled 2026-09-09: **import RUE's
+USA-G10 as its own vessel** rather than send a RUE-cited row to Quebec's
+production model. They are two machines, the books print them as separate
+entries, and the catalog already holds five other Quebec variants beside the
+classic. **The price was filled in on the same call** — RUE's 25 million for a
+new complete machine, the 15-20 million band being a rebuilt or gunless suit
+rather than the low end of one range.
+
+**What shipped** (`zzzzzzzz-web-glitter-boy-p071-072.sql`): 1 vessel, 7 M.D.C.
+locations, 3 weapon systems with the book's own ordinals, and one gear row
+re-cited, priced, corrected and pointed.
+
+**THE FILENAME IS THE ORDERING TRAP, HIT FOR REAL.** This file re-cites a ninth
+gear row into `source_book LIKE '%Ultimate%'` and points it — and
+`zzzzzzzz-rue-vessels-p266-267.sql` asserts that count is **8**. Named `gb-` it
+would have sorted before that script and falsified its readback on a clean
+rebuild; `web-` sorts after it at the same tier. Caught by reading the earlier
+script's readbacks before choosing a name, which is the only thing that catches
+it.
+
+**One readback was wrong on first apply, and the error is worth recording.** It
+asserted that no web-sourced row carries a combat number, on the strength of a
+report rather than a measurement. **Four do** — `c-18-laser-pistol` (2D4),
+`cyber-armor` (mdc 50, ar 16), `hand-axe` and `hatchet` (1D6 each). The true
+claim is narrower: the Glitter Boy was the only web-sourced row with a
+per-location M.D.C. stat block. The assertion now says four.
+
+**And that turns up something this finding does not cover.** The README's
+estimate tier forbids an ESTIMATED row from carrying M.D.C., damage or an A.R.
+at all; the web marker carries no equivalent rule, and those four rows hold
+combat numbers no book has been shown to back. Named here rather than filed.
+
+**The README's own worked example is this row**, and it has been updated: it
+argued the marker exists *"so a book correction knows what it is overwriting"*,
+and on 2026-09-09 that is exactly what happened. Its count also said *Forty*,
+measured 28, and is 27 now.
+
+---
+
+## F41 is closed, 2026-09-09
+
+Twenty-four rows, five sessions, **fifteen vessels** imported and **nineteen gear
+pointers** set. What the five sessions actually established, none of which this
+finding predicted:
+
+- **`LIKE '%Main Body%'` is a prose-shape filter, not a vessel test.** It was
+  wrong for four of the five books — understating Juicer Uprising, counting 9
+  Wormwood rows where 2 were vessels, 6 RUE rows where 5 are, and calling this
+  row unverifiable. Only Phase World's count held.
+- **The book's own `Class:` line settles what a thing is** — `Wormwood organism`
+  against `Magic symbiotic war machine`, `Psionic Assault Exoskeleton`, `Laser
+  Resistant Infantry Personnel Assault Unit`.
+- **A matching price is not evidence the combat numbers are right.** `F42` is
+  the case: six RUE rows whose prices matched exactly and whose every M.D.C.
+  came from an earlier printing.
+- **Three findings came out of the work** — `F42`, `F43`, `F44` — none of which
+  this finding anticipated, all from reading books it assumed had been read.
 ### F42 - high - six Rifts Ultimate Edition gear rows carry FIRST-EDITION figures under a RUE citation, and ten published class references point at them
 
 **Found while taking `F41` for Rifts Ultimate Edition, 2026-09-09**, by reading
