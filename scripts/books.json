@@ -130,7 +130,7 @@
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": 159,
       "page_offset": 1,
-      "note": "Nothing in production cites this book yet. Its cache stopped at file p073 - printed 72, mid-word and mid-class - until the resume fix in F2 read the remaining 88 pages off the source PDF; it now holds all 161."
+      "note": "As of 2026-09-09 production held 13 published classes citing this book, and no catalog rows. Its cache stopped at file p073 - printed 72, mid-word and mid-class - until the resume fix in F2 read the remaining 88 pages off the source PDF; it now holds all 161."
     },
 
     "ju": {
@@ -169,7 +169,7 @@
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": null,
       "page_offset": null,
-      "note": "NOT A MISSING BOOK AND NOT ONE TO CACHE. This is the ORIGINAL Rifts core book; Rifts Ultimate Edition is its errata'd revision - the same book, a later edition. Cited by NOTHING since 2026-08-28: the last row citing it, the dragon-hatchling class, was re-cited to RUE p.156-159 alongside its six variants (REBUILD-AUDIT.md F17). Kept in the registry so the spelling stays known vocabulary if it reappears. The earlier note here said two classes cited it and that it was the next book to cache; one did, and it is not."
+      "note": "NOT A MISSING BOOK AND NOT ONE TO CACHE. This is the ORIGINAL Rifts core book; Rifts Ultimate Edition is its errata'd revision - the same book, a later edition. Cited by exactly ONE row as of 2026-09-09: northern-gun-sky-king, re-cited here by BOOK-INGEST-AUDIT F43 because RUE does not print the Sky King and this book does, on printed 228 - which is the reappearance the next sentence was written for. Nothing cited it between 2026-08-28, when the dragon-hatchling class was re-cited to RUE p.156-159 alongside its six variants (REBUILD-AUDIT.md F17), and then. Kept in the registry so the spelling stays known vocabulary if it reappears. The earlier note here said two classes cited it and that it was the next book to cache; one did, and it is not."
     },
 
     "rifts-skill-list": {
@@ -202,7 +202,7 @@
       "page_offset_exceptions": [
         { "printed_through": 130, "offset": 0 }
       ],
-      "note": "Cached 2026-08-28 from a SCAN - --probe medians 0 chars/page, OCR medians 5,668. THE SECOND BOOK HERE WITH A SPLIT OFFSET, after pf, and the first with a NEGATIVE one: printed 1-130 sit at +0 and printed 132-216 at -1, 101 pages against 74. A single number cannot describe it and a majority vote picks +0, which sends every lookup past 130 one page early. ocr-book.py measured -1 for the whole book, which is the same error from the other side. THE CAUSE IS A MISSING PAGE: printed 131 is absent from the PDF. File p130 carries folio 130 and ends mid weapons stat block; p131 carries folio 132 and opens mid-sentence. Printed 131 falls through to the -1 rule and lands on p130, which is printed 130 - wrong, but it is the nearest page that exists and nothing can cite a page the scan does not hold. printed_pages is 214, the last page of book content (the Experience Tables); printed 215-216 are numbered Palladium house ads. Nothing in production cites this book yet."
+      "note": "Cached 2026-08-28 from a SCAN - --probe medians 0 chars/page, OCR medians 5,668. THE SECOND BOOK HERE WITH A SPLIT OFFSET, after pf, and the first with a NEGATIVE one: printed 1-130 sit at +0 and printed 132-216 at -1, 101 pages against 74. A single number cannot describe it and a majority vote picks +0, which sends every lookup past 130 one page early. ocr-book.py measured -1 for the whole book, which is the same error from the other side. THE CAUSE IS A MISSING PAGE: printed 131 is absent from the PDF. File p130 carries folio 130 and ends mid weapons stat block; p131 carries folio 132 and opens mid-sentence. Printed 131 falls through to the -1 rule and lands on p130, which is printed 130 - wrong, but it is the nearest page that exists and nothing can cite a page the scan does not hold. printed_pages is 214, the last page of book content (the Experience Tables); printed 215-216 are numbered Palladium house ads. As of 2026-09-09 production held 87 gear rows, 74 spells, 50 vessels, 15 skills and 30 published classes citing this book."
     },
 
     "new-west": {
@@ -222,7 +222,7 @@
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": 208,
       "page_offset": 1,
-      "note": "Cached 2026-08-28 from its TEXT LAYER, median 5,468 chars/page. Offset verified by folio: 190 pages agree, the 2 that do not are contents pages. Nothing in production cites this book yet."
+      "note": "Cached 2026-08-28 from its TEXT LAYER, median 5,468 chars/page. Offset verified by folio: 190 pages agree, the 2 that do not are contents pages. No production row cited this book as of 2026-09-09."
     },
 
     "mystic-russia": {
@@ -232,7 +232,7 @@
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": 176,
       "page_offset": 1,
-      "note": "Cached 2026-08-28 from its TEXT LAYER, median 5,102 chars/page. The cleanest offset measurement in the batch - 157 pages agree at +1 and NONE disagree. The last three cache pages are Palladium house ads for The Rifter, which the book does not number. Nothing in production cites this book yet."
+      "note": "Cached 2026-08-28 from its TEXT LAYER, median 5,102 chars/page. The cleanest offset measurement in the batch - 157 pages agree at +1 and NONE disagree. The last three cache pages are Palladium house ads for The Rifter, which the book does not number. No production row cited this book as of 2026-09-09."
     },
 
     "free-quebec": {
@@ -242,7 +242,7 @@
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": 192,
       "page_offset": 1,
-      "note": "Cached 2026-08-28 from its TEXT LAYER, median 4,801 chars/page. Offset verified by folio, 165 pages agreeing against 4; two of those are contents pages and two (p86, p181) are stray numbers in prose on pages whose folio did not survive as a bare line. Nothing in production cites this book yet."
+      "note": "Cached 2026-08-28 from its TEXT LAYER, median 4,801 chars/page. Offset verified by folio, 165 pages agreeing against 4; two of those are contents pages and two (p86, p181) are stray numbers in prose on pages whose folio did not survive as a bare line. As of 2026-09-09 production held 17 gear rows, 22 vessels and 13 published classes citing this book."
     },
 
     "phase-world": {
@@ -252,7 +252,7 @@
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": 208,
       "page_offset": 0,
-      "note": "Cached 2026-08-28 from a SCAN - --probe medians 0 chars/page, OCR medians 4,119. The FOURTH zero-offset book here, after potm, ww and triax: printed N is cache pNNN, and read-columns.py N (verified 2026-08-30 by render - printed 150 is doc[149]; this note said N+1 and was wrong by one. Moot for this book, which has no text layer for read-columns.py to read, but the triax note carries the same sentence and it is wrong there too). Verified by folio and decisive - 166 pages agree at +0 against 3, one region from p010 to p208 with no split. printed_pages is 208, the last page of content; p209 is a Palladium house ad the book does not number. Printed 184-208 are blank character record sheets - three generic (184-186) and twenty-two per class (187-208); this note recorded 203-208 and the range was re-measured 2026-08-30. They name twenty-two of the book's forty-two classes without defining them - a mention is not a definition, so survey from the stat blocks rather than from those sheets. THIS NOTE USED TO END 'Nothing in production cites this book yet' and that stopped being true on 2026-08-30: measured --remote on 2026-09-09 it is 50 gear rows and 35 published classes, plus one vessel as of BOOK-INGEST-AUDIT F41's Phase World session. Four other book notes in this file carry the same sentence and at least one of them is stale too - check before quoting it."
+      "note": "Cached 2026-08-28 from a SCAN - --probe medians 0 chars/page, OCR medians 4,119. The FOURTH zero-offset book here, after potm, ww and triax: printed N is cache pNNN, and read-columns.py N (verified 2026-08-30 by render - printed 150 is doc[149]; this note said N+1 and was wrong by one. Moot for this book, which has no text layer for read-columns.py to read, but the triax note carries the same sentence and it is wrong there too). Verified by folio and decisive - 166 pages agree at +0 against 3, one region from p010 to p208 with no split. printed_pages is 208, the last page of content; p209 is a Palladium house ad the book does not number. Printed 184-208 are blank character record sheets - three generic (184-186) and twenty-two per class (187-208); this note recorded 203-208 and the range was re-measured 2026-08-30. They name twenty-two of the book's forty-two classes without defining them - a mention is not a definition, so survey from the stat blocks rather than from those sheets. THIS NOTE USED TO END with a standing claim that no production row cited the book, and that stopped being true on 2026-08-30: measured --remote on 2026-09-09 it is 50 gear rows and 35 published classes, plus one vessel as of BOOK-INGEST-AUDIT F41's Phase World session. Four other book notes in this file carry the same sentence and at least one of them is stale too - check before quoting it."
     }
   }
 }

@@ -84,6 +84,24 @@ export function run() {
     check('no two books in scripts/books.json claim the same spelling',
       clashes.length === 0, clashes.join(', '));
 
+    // A NOTE MAY NOT MAKE A STANDING CLAIM ABOUT LIVE DATA. Six notes ended
+    // "Nothing in production cites this book yet" and FOUR of the six were false
+    // when measured on 2026-09-09 - underseas by 87 gear rows, 74 spells, 50
+    // vessels, 15 skills and 30 classes. Each stopped being true the day its
+    // book was imported, and nothing updates a registry note. The sentence sits
+    // three lines from the page_offset a book session reads, so a reader meets a
+    // false claim while looking up a true one. `BOOK-INGEST-AUDIT.md` F45.
+    //
+    // A DATED MEASUREMENT IS FINE and is what the corrected notes carry - "No
+    // production row cited this book as of 2026-09-09" cannot rot, because it
+    // says when it was true. Only the timeless present tense is banned.
+    const standing = Object.entries(registry)
+      .filter(([, b]) => /cites this book yet|[Cc]ited by NOTHING/.test(b.note || ''))
+      .map(([slug]) => slug);
+    check('no book note makes a standing claim about what cites it',
+      standing.length === 0,
+      standing.join(', ') + ' - state a DATED measurement instead, or drop the sentence');
+
     const shapeBad = Object.entries(registry).filter(([slug, b]) =>
       !/^[a-z0-9-]+$/.test(slug) || typeof b.title !== 'string' || !b.title
       || !Array.isArray(b.aliases)

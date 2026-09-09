@@ -6628,3 +6628,71 @@ this finding measured.
 **Nine z's**, because `zzzzzzzz-rue-vessels-p266-267.sql` asserts *"the
 first-edition figures are still in gear, unaltered"* for four of these five rows.
 See the ninth-tier row in `docs/operations.md`.
+
+### F45 - six book notes in the registry made a standing claim about live data, and four of the six were false
+
+**Found while taking `F41` for Phase World, 2026-09-09**, by a premise audit that
+noticed one such sentence three lines from the `page_offset` that session
+depended on. Filed and taken the same day.
+
+`scripts/books.json` is the registry three mechanisms read as a contract. Six of
+its `note` fields ended with the sentence:
+
+<!-- claim-ok: quoting the sentence this finding is about -->
+
+> Nothing in production cites this book yet.
+
+**It is a claim about the live database, written into a static file, in the
+timeless present tense.** It stops being true the moment its book is imported,
+and nothing updates it. Measured `--remote` on 2026-09-09:
+
+| book | what the note claimed | what production held |
+|---|---|---|
+| `underseas` | nothing cites it | **87 gear, 74 spells, 50 vessels, 15 skills, 30 classes** |
+| `free-quebec` | nothing cites it | **17 gear, 22 vessels, 13 classes** |
+| `fom` | nothing cites it | **13 classes** |
+| `rifts-core` | *"Cited by NOTHING since 2026-08-28"* | **1 gear row** — falsified by `F43` the same day |
+| `spirit-west` | nothing cites it | nothing. **True.** |
+| `mystic-russia` | nothing cites it | nothing. **True.** |
+
+**Four of six false, and one of the four was falsified by this session's own
+work.** `F43` re-cited `northern-gun-sky-king` to the original core book that
+morning, which made `rifts-core`'s note wrong within the hour — and the note's
+very next sentence explains that the book is kept *"so the spelling stays known
+vocabulary if it reappears"*. It reappeared, and the sentence before it still
+said it had not.
+
+**THE COUNT IN THIS FINDING'S FIRST TELLING WAS ALSO WRONG.** The `F41` Phase
+World note says *"four other book notes in that file carry the same sentence, at
+least one of them also stale"*. It is **six** notes, and **four** are stale. That
+figure came from a grep windowed on a substring position, which found three of
+the six; the honest way is to parse the JSON and read every `note`, which is what
+the check below does.
+
+**Taken, 2026-09-09 (PR #865). Posture: correct the notes, and make the shape
+impossible rather than the instances correct.**
+
+- The four false notes now state a **dated measurement** — *"As of 2026-09-09
+  production held 87 gear rows..."* — which cannot rot, because it says when it
+  was true.
+- The two TRUE notes were rewritten the same way rather than left alone. *"No
+  production row cited this book as of 2026-09-09"* is the same fact with a date
+  on it, and it will not become a lie the day someone imports the book.
+- `rifts-core` now records the Sky King and keeps its history.
+- **A check in `book-registry.mjs` refuses the sentence shape**: any `note`
+  matching `cites this book yet` or `Cited by NOTHING` fails, naming the slugs.
+  Proved by injecting the old sentence into `spirit-west` and watching it fail
+  by name, then restoring - per this repo's rule that a check which has only ever
+  passed proves nothing.
+
+**One quotation had to be paraphrased to make the rule mechanical.** The
+`phase-world` note, corrected earlier the same day, QUOTED the banned sentence
+while explaining that it used to say it - the same collision `menu-check.mjs`
+handles with a `claim-ok` marker. Rather than build an exemption for one case,
+the quotation was reworded. **A rule with no exceptions is cheaper than a rule
+with one.**
+
+**Confidence: high.** Every count is a `--remote` query on 2026-09-09 and the
+check was proved by failing. **Ongoing cost: one check that runs offline in the
+existing suite, and a convention that a registry note carries a date.** The
+alternative - policing the claims by hand - is what produced four false ones.
