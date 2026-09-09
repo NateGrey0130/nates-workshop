@@ -1229,6 +1229,13 @@ body.view-only .writes-only,
 body.view-only .card-checkbox,
 body.view-only .row-checkbox { display: none !important; }
 
+/* SHARE-AUDIT V7. Export is hidden in view mode BY DEFAULT and comes back with
+   `allow-export`, which setExportInViewMode() puts on <body>. It is a separate
+   class from `view-only` on purpose: the question "may they look" and the
+   question "may they keep a copy" have different answers and should not share
+   a switch. */
+body.view-only:not(.allow-export) #btnExportHeader { display: none !important; }
+
 /* The banner sits between the header and the toolbar rather than inside the
    header: the header is already crowded and wraps on a narrow window, and a
    strip that says whose library this is must not be the thing that wraps out

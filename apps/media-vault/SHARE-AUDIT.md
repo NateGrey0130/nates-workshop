@@ -701,6 +701,37 @@ raises it to certain.
 
 **Ongoing cost.** One flag.
 
+**Taken, 2026-09-08 (PR #TBD).** Posture held: **a default, not a
+prohibition** — `setExportInViewMode(true)` turns it back on and the button
+returns with it.
+
+**A separate body class from `view-only`, deliberately.** *May they look* and
+*may they keep a copy* have different answers and should not share a switch;
+`allow-export` is what the CSS reads. The flag follows the house style its
+neighbour set — one module-level boolean, one setter owning every transition,
+one body class — which is `selectMode`'s shape.
+
+**The guard is on the CALL, not the columns.** `apps/media-vault/test/smoke.mjs`
+pins the tail of `exportCSV`'s header array (`'notes', 'source_id'`) to prove a
+CSV round trip keeps `source_id`, so restructuring those headers would have
+turned an unrelated check red.
+
+**Proved by making it fail**: flipping the default to `true` fails *"export is
+off by default while viewing somebody else's library"*. Reverted.
+
+**One correction.** The Evidence line says `exportCSV` *"writes every field of
+the in-memory `library` array"*. It writes a fixed **twelve-column** list —
+every content column, but **not** `id` or `addedAt`, which every item also
+carries. The load-bearing half survives: `location` and `notes` are both in it,
+so the export does hand a viewer where every physical item lives.
+
+**And the finding is now what it could not have been when written.** Its
+Confidence line said *"low, and it is a preference rather than a fact"*, and the
+premise pass confirmed that with `V3` unbuilt there was no view mode to default
+anything off in — everything `V7` could have shipped would have been a flag
+against a mode nothing could enter. `V3` landed in PR #844, so this gates
+something real.
+
 ## Deferred deliberately, so nobody looks for a finding
 
 **A link the owner can send is not filed as work.** Once grants live server-side,

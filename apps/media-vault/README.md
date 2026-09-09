@@ -377,8 +377,16 @@ that they follow `currentVault`.
 
 **What stays available in view mode**, deliberately: **Share**, because sharing
 *your* library is about your own rows and is not a write to what is on screen;
-and the filters, sort, search, paging and Stats, which are reads. **Export**
-stays too — that is a separate decision, below.
+and the filters, sort, search, paging and Stats, which are reads.
+
+**Export is off in view mode, by default and reversibly.** A viewer sees
+`location` and `notes` on screen — that is settled — but a CSV they still hold
+after the share is revoked is a different question, and this is the answer to
+it: export turns *look at* into *keep a copy of*. `setExportInViewMode(true)`
+turns it back on and the button returns with it, because the right answer here
+is a preference rather than a rule. It is a **separate** body class from
+`view-only`: *may they look* and *may they keep a copy* have different answers
+and should not share a switch.
 
 **The Share modal is a closed picker.** It lists who you share with, each with a
 Revoke, and offers only addresses that can actually sign in. When there are none
