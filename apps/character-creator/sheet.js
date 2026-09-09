@@ -72,6 +72,8 @@ const C = { data: null, items: [], journal: [], catalog: [], cls: null, canWrite
             // structured from day one, and phase 3 persists it unchanged.
             playMode: new URLSearchParams(location.search).get('play') === '1',
             playAmt: 1, lastRoll: null, rollLog: [],
+            // Rolls that never reached the log. Not a queue - see persistRoll.
+            rollsNotLogged: 0,
             // A proposed change of stage, awaiting confirmation.
             variantProposal: null,
             // What a table handed this character outside its class schedule.
@@ -521,10 +523,22 @@ async function adjustPool(key, delta) {
 // Returns false if the queue is not usable at all - a private window, site
 // data blocked - in which case the caller rolls back exactly as it did before
 // there was a queue.
-async function queueChange(kind, note, fields) {
+// `item` is the inventory-row change an ammo write makes, carried beside the
+// pools rather than instead of them, because the endpoint applies a whole
+// entry in one batch.
+//
+// AN ITEM CHANGE IS NOT GUARDED ON REPLAY, and that is worth knowing rather
+// than discovering. The guard is per POOL: the endpoint compares each numeric
+// `from` and refuses if it moved. `character_items.notes` has no such check -
+// online either, today - so a replayed ammo write overwrites whatever the notes
+// say when it lands. Queueing does not introduce that; it lengthens the window
+// from milliseconds to however long the wi-fi is out. The alternative was
+// losing the shots a player fired offline, which is worse and far likelier
+// than somebody hand-editing that row's notes mid-fight.
+async function queueChange(kind, note, fields, item) {
   if (!window.playQueue || !(await playQueue.available())) return false;
   try {
-    await playQueue.push({ characterId: Number(id), kind, note, fields });
+    await playQueue.push({ characterId: Number(id), kind, note, fields, item });
     return true;
   } catch { return false; }
 }
@@ -533,8 +547,15 @@ async function queueChange(kind, note, fields) {
 // deploy, so a player who queued a pool change before this shipped has a
 // one-field `{key, from, to}` row waiting; it replays as the 'pool' change it
 // always was rather than being dropped or crashing the flush.
+// THREE SHAPES now. The third is defensive rather than load-bearing: an ammo
+// entry passes an empty field map explicitly, so it does not reach that branch
+// today. It is there because falling through to `e.key` on an entry with no
+// pools would build a field literally named `undefined_current`, which the
+// endpoint refuses outright - a whole entry lost to a shape nobody meant.
 function entryFields(e) {
-  return e.fields || { [e.key + '_current']: { from: e.from, to: e.to } };
+  if (e.fields) return e.fields;
+  if (e.key) return { [e.key + '_current']: { from: e.from, to: e.to } };
+  return {};
 }
 
 // Replay everything queued for this character, oldest first. ORDER IS THE
@@ -553,7 +574,7 @@ async function flushQueue() {
         kind: e.kind || 'pool',
         note: e.note,
         guard: true,
-        changes: { character: entryFields(e) },
+        changes: e.item ? { character: entryFields(e), item: e.item } : { character: entryFields(e) },
       }));
     } catch (err) {
       if (err.status === 409 && err.detail?.conflict) {
@@ -615,14 +636,23 @@ async function renderQueueState() {
   const el = $('queue-state');
   if (!el || !window.playQueue) return;
   let n = 0;
-  try { n = await playQueue.count(Number(id)); } catch { return; }
+  // n = 0 rather than an early return: a browser that refuses IndexedDB has no
+  // queue to count and can still have lost rolls to report.
+  try { n = await playQueue.count(Number(id)); } catch { n = 0; }
   const conflicts = Object.keys(C.conflicts).length;
-  el.className = n ? 'queue-state on' : 'queue-state';
-  el.textContent = !n ? ''
-    // Plural because one Damage can clash on two pools at once, and being told
-    // to resolve "the" highlighted pool while two are lit is a small lie.
-    : conflicts ? `${n} change${n === 1 ? '' : 's'} waiting — resolve the highlighted pool${conflicts === 1 ? '' : 's'}`
-    : `${n} change${n === 1 ? '' : 's'} waiting for the network`;
+  const lost = C.rollsNotLogged || 0;
+  el.className = (n || lost) ? 'queue-state on' : 'queue-state';
+
+  const parts = [];
+  // Plural because one Damage can clash on two pools at once, and being told to
+  // resolve "the" highlighted pool while two are lit is a small lie.
+  if (n) parts.push(conflicts
+    ? `${n} change${n === 1 ? '' : 's'} waiting — resolve the highlighted pool${conflicts === 1 ? '' : 's'}`
+    : `${n} change${n === 1 ? '' : 's'} waiting for the network`);
+  // NOT "waiting" - these are gone. Said plainly, because the alternative is a
+  // player wondering why the session recap is thin.
+  if (lost) parts.push(`${lost} roll${lost === 1 ? '' : 's'} not logged`);
+  el.textContent = parts.join(' · ');
 }
 
 // The player picked a side for ONE pool. Their value is written from the
@@ -747,9 +777,26 @@ async function postEvent(kind, note, changes) {
 
 // Rolls are pure records: fire-and-forget, never blocking the table on a
 // network hiccup, and skipped entirely for read-only visitors.
+//
+// A ROLL IS DELIBERATELY NOT QUEUED. It carries no state change, so there is
+// nothing to replay and nothing to guard, and queueing every tap of an offline
+// fight would fill the queue with commentary while the pools it exists for
+// waited behind it.
+//
+// IT NO LONGER FAILS IN SILENCE, THOUGH, which is the part that was wrong.
+// This was a bare console.warn - not a place a player looks - so a whole
+// fight's rolls could be missing from the end-of-session recap with nothing on
+// screen having said so. The count is shown beside the waiting changes now. It
+// only ever grows within a session, on purpose: a roll that did not log is
+// GONE, not pending, and clearing the notice when the network returned would
+// hide exactly the loss it is there to report.
 function persistRoll(note) {
   if (!C.canWrite) return;
-  postEvent('roll', note).catch((e) => console.warn('roll not logged:', e.message));
+  postEvent('roll', note).catch((e) => {
+    C.rollsNotLogged = (C.rollsNotLogged || 0) + 1;
+    console.warn('roll not logged:', e.message);
+    renderQueueState();
+  });
 }
 
 function rollNote(r) {
@@ -966,6 +1013,15 @@ async function writeAmmo(invId, next, cap, ammoNote) {
   try {
     await postEvent('ammo', ammoNote, { item: { id: invId, notes: { from: prev || '', to: notes } } });
   } catch (err) {
+    // Shots fired offline are the case this exists for: without it the counter
+    // snaps back to full while the player knows they emptied the magazine, and
+    // firing them again means inventing a number. Queued as an ITEM change
+    // carrying no pools - see queueChange on why it replays unguarded.
+    if (err.status === undefined && await queueChange('ammo', ammoNote, {},
+      { id: invId, notes: { from: prev || '', to: notes } })) {
+      renderQueueState();
+      return;
+    }
     it.notes = prev;
     if (el) el.textContent = `${currentAmmo(it, cap)}/${cap}`;
     alert('Failed: ' + err.message);
@@ -1167,6 +1223,15 @@ async function applyRest() {
     await postEvent('pool', `rested ${hours}h: ${applied.join(', ')}`, changes);
     recordRoll('rest', `Rested ${hours}h`, { note: applied.join(', ') });
   } catch (err) {
+    // Rest is several pools at once, which is the shape a queue entry already
+    // takes, so it queues for the same reason Damage does: a refusal was never
+    // valid and rolls back, a drop happened at the table and stands.
+    if (err.status === undefined && await queueChange('pool',
+      `rested ${hours}h: ${applied.join(', ')}`, changes.character)) {
+      recordRoll('rest', `Rested ${hours}h`, { note: applied.join(', ') });
+      renderQueueState();
+      return;
+    }
     for (const [field, v] of Object.entries(prev)) {
       C.data[field] = v;
       paintPool(field.replace('_current', ''));
@@ -2374,23 +2439,48 @@ async function usePower(index) {
   const cur = C.data[pool + '_current'];
   if (cur == null) return;
   if (cur < p.cost) { alert(`Not enough ${pool === 'ppe' ? 'P.P.E.' : 'I.S.P.'} (${cur} left, ${p.name} costs ${p.cost}).`); return; }
-  try {
-    if (C.playMode) {
-      await postEvent('power', `${p.name} −${p.cost} ${pool === 'ppe' ? 'P.P.E.' : 'I.S.P.'}`,
-        { character: { [pool + '_current']: { from: cur, to: cur - p.cost } } });
-    } else {
+  const label = pool === 'ppe' ? 'P.P.E.' : 'I.S.P.';
+
+  // THE SHEET LENS IS UNCHANGED: write, then reload the page around it. There
+  // is no queue outside play mode and nothing here is optimistic.
+  if (!C.playMode) {
+    try {
       await api('characters/' + id, jsonReq('PATCH', { [pool + '_current']: cur - p.cost }));
+      C.data[pool + '_current'] = cur - p.cost;
+      await load();
+    } catch (err) { alert('Failed: ' + err.message); }
+    return;
+  }
+
+  // AT THE TABLE IT IS OPTIMISTIC NOW, like every other press in play mode. It
+  // used to await the write before deducting, which made it the one play action
+  // a dropped connection silently swallowed: the spell was cast, the table
+  // moved on, and the sheet still showed the P.P.E. unspent. The cost comes off
+  // first and the write follows it.
+  const next = cur - p.cost;
+  const note = `${p.name} −${p.cost} ${label}`;
+  const spent = { [pool + '_current']: { from: cur, to: next } };
+  C.data[pool + '_current'] = next;
+  paintPool(pool);
+  // Spending is the commonest way to make the next ⚡ unaffordable, and play
+  // mode never re-renders, so the buttons are re-read here.
+  syncPowerBtns();
+  const logSpend = () => recordRoll('power', p.name,
+    { die: 0, roll: 0, target: null, ok: null, note: `-${p.cost} ${label}` });
+  try {
+    await postEvent('power', note, { character: spent });
+    logSpend();
+  } catch (err) {
+    if (err.status === undefined && await queueChange('power', note, spent)) {
+      logSpend();
+      renderQueueState();
+      return;
     }
-    C.data[pool + '_current'] = cur - p.cost;
-    if (C.playMode) {
-      paintPool(pool);
-      // Spending is the commonest way to make the next ⚡ unaffordable, and
-      // play mode never re-renders, so the buttons are re-read here.
-      syncPowerBtns();
-      recordRoll('power', p.name, { die: 0, roll: 0, target: null, ok: null,
-        note: `-${p.cost} ${pool === 'ppe' ? 'P.P.E.' : 'I.S.P.'}` });
-    } else await load();
-  } catch (err) { alert('Failed: ' + err.message); }
+    C.data[pool + '_current'] = cur;
+    paintPool(pool);
+    syncPowerBtns();
+    alert('Failed: ' + err.message);
+  }
 }
 
 // One armour slot. Hoisted out of render() so addArmor can append a slot

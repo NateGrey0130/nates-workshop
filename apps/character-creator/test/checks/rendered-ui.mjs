@@ -1111,11 +1111,22 @@ export function run() {
     check('every queued write is a silence, never a refusal',
       queueCalls.length > 0 && queueCalls.length === guardedQueueCalls.length,
       `${queueCalls.length} queueChange call(s), ${guardedQueueCalls.length} behind the status test`);
-    // The pool steppers and the Damage button, which is the one that used to
-    // lose a hit to a dropped connection while the +/- beside it survived.
-    check('and both the steppers and Damage are among them', queueCalls.length >= 2
-      && /await queueChange\('pool'/.test(sheet) && /await queueChange\('damage'/.test(sheet),
-      'a play write that moves a pool is not queued');
+    // EVERY play write that changes state, named. The steppers and Damage came
+    // first; rest, ammo and a power spend followed, each having lost its change
+    // to a dropped connection until it did. Named individually rather than
+    // counted, because a count says nothing about WHICH one stopped queueing.
+    // A roll is deliberately absent - it carries no state change, and queueing
+    // every tap of an offline fight would fill the queue with commentary. It
+    // reports its own failures instead.
+    for (const kind of ['pool', 'damage', 'ammo', 'power']) {
+      check(`a ${kind} change queues`, new RegExp(`await queueChange\\('${kind}'`).test(sheet),
+        `nothing queues a '${kind}' change, so a dropped one is lost`);
+    }
+    check('and rest queues among the pool changes',
+      /queueChange\('pool',\s*\n?\s*`rested/.test(sheet),
+      'a rest lost to a dropped connection is not recoverable');
+    check('a roll is NOT queued', !/await queueChange\('roll'/.test(sheet),
+      'rolls queue now - deliberate? they carry no change and can flood the queue');
     check('and a browser with no IndexedDB falls back to rolling back',
       /if \(!window\.playQueue \|\| !\(await playQueue\.available\(\)\)\) return false;/.test(sheet),
       'a private window loses the change with no rollback');
@@ -1158,11 +1169,20 @@ export function run() {
     // into two entries it would put two rows in the log, let undo take back
     // half a hit, and make the session recap count one blow as two. So the
     // entry carries a FIELD MAP, and the replay sends it whole.
+    // LOOSER THAN IT WAS, on purpose. These three pinned the exact call text,
+    // and all three broke the day ammo learned to queue - the shape changed
+    // and the BEHAVIOUR did not, which is a false alarm and the precise
+    // weakness this section has. play-flow.mjs asserts the behaviour by running
+    // it; what is worth pinning here is only that the field map and the item
+    // change reach the queue and the replay at all.
     check('an entry carries every field of its press',
-      /await playQueue\.push\(\{ characterId: Number\(id\), kind, note, fields \}\)/.test(sheet),
+      /playQueue\.push\(\{[^}]*\bfields\b[^}]*\}\)/.test(sheet),
       'the queue stores one field per entry, so a two-pool press is split');
+    check('and an item change rides beside them',
+      /playQueue\.push\(\{[^}]*\bitem\b[^}]*\}\)/.test(sheet),
+      'an ammo write cannot be queued, because an entry cannot carry one');
     check('and the replay sends them in one event',
-      /changes: \{ character: entryFields\(e\) \}/.test(sheet),
+      /character: entryFields\(e\)/.test(sheet),
       'the replay rebuilds a single-field change and drops the rest of the press');
     check('and the replay keeps the press\'s own kind',
       /kind: e\.kind \|\| 'pool'/.test(sheet),
@@ -1172,8 +1192,8 @@ export function run() {
     // field map shipped has a one-field row waiting, and the flush has to
     // replay it rather than dropping it or throwing on a missing `fields`.
     check('an entry queued in the older shape still replays',
-      /function entryFields\(e\) \{[\s\S]{0,200}?e\.fields \|\| \{ \[e\.key \+ '_current'\]/.test(sheet),
-      'a change queued before this shape shipped is lost on flush');
+      /if \(e\.key\) return \{ \[e\.key \+ '_current'\]/.test(sheet),
+      'a change queued before the field map shipped is lost on flush');
 
     // Half an answered Damage is exactly the split the queue exists to avoid.
     check('a press that clashed on two pools waits for both answers',

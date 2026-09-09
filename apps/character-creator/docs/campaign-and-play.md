@@ -377,19 +377,39 @@ means the sheet will not load at all next time — that needs a service worker,
 which on a site that deploys on every merge brings a cache-invalidation
 problem of its own and is deliberately out of scope.
 
-**What queues is the pool +/− buttons and Damage** — the two presses that move
-a pool, and the two a player fires repeatedly mid-fight. Damage was the
-notable omission for a while: the +/− beside it survived a drop and the hit
-itself did not, which is the worse of the two to lose, because repeating it
-means deciding a second time how much came off. The other play writes still
-each fail their own way, and none of them queues:
+**Every play write that changes state queues now.** They arrived one at a time,
+each after noticing that a dropped connection quietly ate it, and the list is
+worth reading as a table rather than a sentence because the interesting column
+is what happens when the send *fails*:
 
-| the write | on a failed send |
-|---|---|
-| pool +/−, **Damage** | a refusal reverts; **a drop queues** |
-| ammo, rest | optimistic, and revert either way |
-| a power spend | not optimistic — it awaits the write before deducting, so a failure never applied |
-| a roll | fire-and-forget: it stands on screen and is quietly not logged |
+| the write | on a refusal | on a drop |
+|---|---|---|
+| pool +/− | reverts | **queues** |
+| **Damage** | reverts | **queues** — one entry, both pools |
+| **rest** | reverts | **queues** — every pool it recovered, in one entry |
+| **a power spend** | reverts | **queues** |
+| **ammo** | reverts | **queues** as an item change carrying no pools |
+| a roll | — | stands on screen, and **says** it was not logged |
+
+Two of those rows are less obvious than they look. **A power spend had to
+become optimistic first:** it used to await the write before deducting, which
+made it the one play action a drop swallowed in silence — the spell was cast,
+the table moved on, and the sheet still showed the P.P.E. unspent. You cannot
+queue a change you never applied locally.
+
+**And ammo replays UNGUARDED.** The guard is per pool: the endpoint compares
+each numeric `from` and refuses if it moved. `character_items.notes` has no
+such check — online either, today — so a replayed ammo write overwrites
+whatever the notes say when it lands. Queueing does not introduce that; it
+stretches the window from milliseconds to however long the wi-fi is out. The
+alternative was losing the shots a player fired offline, which is worse and far
+likelier than somebody hand-editing that row's notes mid-fight. Guarding a text
+field would also need a conflict UI that two numeric halves cannot express.
+
+**A roll is deliberately not queued.** It carries no state change, the die was
+already seen at the table, and queueing every tap of an offline fight would
+fill the queue with commentary. What it does instead is stop failing silently —
+see below.
 
 **One press is one entry is one event.** A Damage that spills out of S.D.C.
 into H.P. moves two pools, so an entry carries a **field map** rather than one
@@ -465,6 +485,14 @@ body it cannot parse, and the replay looks exactly like success — which would
 eat the queue silently. The response's `event_id` is the proof that our API
 answered and not the wall; without one, the flush stops and says to sign in
 again.
+
+**A roll that could not be logged says so.** This was a bare `console.warn`,
+which is not a place a player looks — so a whole fight's rolls could be missing
+from the end-of-session recap with nothing on screen having said anything. The
+count now sits beside the waiting changes: *"3 rolls not logged"*. It only ever
+grows within a session, deliberately, because a roll that did not log is
+**gone** rather than pending, and clearing the notice when the network came
+back would hide exactly the loss it exists to report.
 
 A counter near the pools says how many are waiting, and says something
 different when a conflict is holding the line. `test/checks/rendered-ui.mjs` →

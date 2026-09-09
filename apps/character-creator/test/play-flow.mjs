@@ -62,6 +62,7 @@ const PORT = 8797;
 const ORIGIN = `http://127.0.0.1:${PORT}`;
 const BASE = `${ORIGIN}/api/character-creator`;
 const CHAR = 901;
+const ITEM = 901;
 
 let failures = 0;
 let checks = 0;
@@ -150,6 +151,10 @@ INSERT INTO characters (id, campaign_id, player_email, name, class_id, level, at
 VALUES (${CHAR}, ${CHAR}, 'dev@localhost', 'Play Flow', 'cyber-knight', 1,
   '{"IQ":12,"ME":12,"MA":12,"PS":12,"PP":12,"PE":12,"PB":12,"SPD":12}',
   20, 20, 30, 5, NULL, NULL, 20, 20);
+-- A freeform inventory row, for the ammo path. Custom rather than catalog gear
+-- so the fixture does not depend on a particular slug surviving in the seed.
+INSERT INTO character_items (id, character_id, custom_name, qty, equipped, notes)
+VALUES (${ITEM}, ${CHAR}, 'Repro Rifle', 1, 1, 'ammo 10/10');
 `;
 const bootstrap = join(state, 'bootstrap.sql');
 writeFileSync(bootstrap, [
@@ -494,6 +499,121 @@ section('An entry queued before the field map still replays');
   check('it applied rather than being dropped', (await pools()).hp === 16, JSON.stringify(await pools()));
   check('as a pool event', (await events()).length === before + 1, (await events()).length);
   check('and it left the queue', (await fakeQueue.count(CHAR)) === 0);
+}
+
+// ── the other play writes ───────────────────────────────────────────────────
+// Damage and the steppers were the first two. These three followed, each for
+// its own reason, and each is here because "it queues" is exactly the kind of
+// claim that reads true and is not.
+section('Rest queues too, all its pools in one entry');
+{
+  resetPools(10, 10);
+  await run('await load();');
+  const before = (await events()).length;
+  mode = 'drop';
+  // The panel's inputs do not exist under a stub DOM, so the rates and hours
+  // are put in where restPreview() reads them from.
+  await run(`
+    document.getElementById('rest-hours').value = '2';
+    document.getElementById('rest-rate-hp').value = '2';
+    document.getElementById('rest-rate-sdc').value = '3';
+    await applyRest();
+  `);
+  const q = await fakeQueue.all(CHAR);
+  check('one entry for the whole rest', q.length === 1, q.length + ' entries');
+  check('carrying every pool it recovered', q[0] && q[0].fields
+    && Object.keys(q[0].fields).sort().join(',') === 'hp_current,sdc_current',
+    JSON.stringify(q[0] && q[0].fields));
+  check('the recovery stands on screen',
+    evalIn('C.data.hp_current') === 14 && evalIn('C.data.sdc_current') === 16,
+    JSON.stringify(evalIn('({hp: C.data.hp_current, sdc: C.data.sdc_current})')));
+  mode = 'live';
+  await run('await flushQueue();');
+  check('and it replays as one event',
+    (await events()).length === before + 1, (await events()).length);
+  check('landing on the recovered values',
+    JSON.stringify(await pools()) === JSON.stringify({ hp: 14, sdc: 16 }),
+    JSON.stringify(await pools()));
+}
+
+section('A power spend is optimistic now, and queues');
+{
+  resetPools(20, 30);
+  await run('await load();');
+  // A spendable power, put on the character the way the sheet reads it.
+  sql(`UPDATE characters SET powers = '[{"type":"spell","name":"Repro Bolt","cost":5}]',
+       ppe_current = 20 WHERE id = ${CHAR};`);
+  await run('await load();');
+  const before = (await events()).length;
+  mode = 'drop';
+  await run('await usePower(0);');
+  check('THE COST COMES OFF WITHOUT WAITING FOR THE WRITE',
+    evalIn('C.data.ppe_current') === 15, evalIn('C.data.ppe_current'));
+  const q = await fakeQueue.all(CHAR);
+  check('and the spend is queued', q.length === 1 && q[0].kind === 'power',
+    JSON.stringify(q.map((x) => x.kind)));
+  mode = 'live';
+  await run('await flushQueue();');
+  check('it replays as a power event', (await events()).length === before + 1);
+  check('and the P.P.E. is spent in the database',
+    (await (await fetch(`${BASE}/characters/${CHAR}`)).json()).character.ppe_current === 15);
+}
+
+section('Ammo queues as an item change with no pools');
+{
+  const before = (await events()).length;
+  mode = 'drop';
+  await run(`await writeAmmo(${ITEM}, 7, 10, 'Repro Rifle: 3 fired');`);
+  const q = await fakeQueue.all(CHAR);
+  check('one entry', q.length === 1, q.length + ' entries');
+  check('carrying the item change', q[0] && q[0].item
+    && q[0].item.id === ITEM && /ammo 7\/10/.test(q[0].item.notes.to),
+    JSON.stringify(q[0] && q[0].item));
+  // THE SHAPE THAT WOULD HAVE BROKEN IT: no pools at all. entryFields must
+  // answer {} rather than building a field named `undefined_current`, which the
+  // endpoint refuses outright.
+  check('and NO pool fields', q[0] && JSON.stringify(q[0].fields) === '{}',
+    JSON.stringify(q[0] && q[0].fields));
+  check('which entryFields reports as no fields, not a broken one',
+    JSON.stringify(evalIn(`entryFields({characterId: ${CHAR}, item: {id: 1}})`)) === '{}',
+    JSON.stringify(evalIn(`entryFields({characterId: ${CHAR}, item: {id: 1}})`)));
+  mode = 'live';
+  await run('await flushQueue();');
+  check('it replays as an ammo event', (await events()).length === before + 1,
+    (await events()).length);
+  const item = (await (await fetch(`${BASE}/characters/${CHAR}`)).json())
+    .items.find((x) => x.id === ITEM);
+  check('and the magazine is written to the inventory row',
+    item && /ammo 7\/10/.test(item.notes || ''), item && item.notes);
+  check('the queue drained', (await fakeQueue.count(CHAR)) === 0);
+}
+
+section('A roll is not queued, and does not fail in silence');
+{
+  resetPools(20, 30);
+  await run('await load();');
+  const before = (await events()).length;
+  mode = 'drop';
+  await run('rollPercentile(); await new Promise((r) => setTimeout(r, 300));');
+  check('the roll is NOT queued - it carries no change to replay',
+    (await fakeQueue.count(CHAR)) === 0, await fakeQueue.count(CHAR));
+  check('nothing reached the log', (await events()).length === before);
+  check('AND THE PLAYER IS TOLD, rather than a console.warn nobody reads',
+    /1 roll not logged/.test(byId('queue-state').textContent),
+    byId('queue-state').textContent);
+  // It is a loss, not a backlog: a second one counts, and coming back online
+  // does NOT clear the notice, because the rolls are gone rather than pending.
+  await run('rollPercentile(); await new Promise((r) => setTimeout(r, 300));');
+  check('a second one counts', /2 rolls not logged/.test(byId('queue-state').textContent),
+    byId('queue-state').textContent);
+  mode = 'live';
+  await run('await flushQueue();');
+  check('and the notice survives the network coming back',
+    /2 rolls not logged/.test(byId('queue-state').textContent),
+    byId('queue-state').textContent);
+  await run('rollPercentile(); await new Promise((r) => setTimeout(r, 400));');
+  check('while a roll that DOES log still reaches the log',
+    (await events()).length === before + 1, (await events()).length);
 }
 
 // ── done ────────────────────────────────────────────────────────────────────
