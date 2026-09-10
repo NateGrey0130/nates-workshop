@@ -1015,6 +1015,18 @@ body.play-mode .vital .steppers button:active { background: var(--accent-glow); 
    sized against 13px checkbox rows; a card title is 15px, so the same label
    over the class grid came out SMALLER than the classes it was grouping. */
 .pick-group.over-grid { font-size: 15px; margin-bottom: 10px; }
+/* A category heading that folds (UI-AUDIT F43). The same heading, as a button:
+   the browser's button chrome taken off, a disclosure mark added, and a 40px
+   floor so it can be tapped. \25B8 and \25BE are the small right- and
+   down-pointing triangles. */
+.pick-group.pg-toggle {
+  display: block; width: 100%; min-height: 40px; margin: 6px 0 2px; padding: 12px 0 6px;
+  background: none; border: 0; border-bottom: 1px solid var(--border);
+  font: inherit; font-size: 13px; font-weight: 600; letter-spacing: 0.02em;
+  color: var(--text-primary); text-align: left; cursor: pointer;
+}
+.pick-group.pg-toggle::before { content: '\25B8'; margin-right: 8px; color: var(--text-muted); }
+.pick-group.pg-toggle[aria-expanded="true"]::before { content: '\25BE'; }
 
 .power-row {
   display: grid;
@@ -1828,6 +1840,12 @@ body.play-mode .skill-table .roll-btn { margin-left: 6px; vertical-align: middle
 
 /* The standing level-up offer (UI-AUDIT F42): one line, above the sticky pools. */
 .levelup-ready { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+
+/* A folded Skills-step pick group, and the controls that open and close one
+   (UI-AUDIT F43). Indented to the option rows' 18px so a fold reads as the
+   group's own contents rather than a new heading. */
+.grp-done { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 2px 0 10px 18px; }
+.grp-more { margin: 4px 0 10px 18px; }
 
 .tabbar {
   display: flex; gap: 6px; margin-top: 12px;
