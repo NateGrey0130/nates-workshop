@@ -272,9 +272,15 @@ wants the entry names, which is extraction work.
 
 Phase 4 costs money; everything above was free.
 
-1. **Cloud Magic, printed 37-45** — 50 new spells at level 0, plus the 7
-   existing rows left alone. Two readings of every cost (index on printed 37 and
-   the entry's own `P.P.E.:` line). Reconcile before writing.
+1. ~~**Cloud Magic, printed 37-45**~~ — **DONE, PR #881. 58 rows, not the 50
+   projected here**, and the difference is the whole of what the category prefix
+   costs: a prefix on the category rather than the tradition makes the seven
+   spells this book reprints from other traditions into new rows of their own,
+   and makes Globe of Daylight **two** rows, because printed 37 lists it under
+   both Clouds of Survival and Clouds of Creation. Printed 45 prints the
+   Creation heading with a redirect to the survival entry and no stat block —
+   verified on a render, not inferred. All 58 costs have two readings and all
+   58 agree.
 2. **New skills** — 4 rows only. Cheap; can ride with another batch.
 3. **The 18 occupations, printed 83-125** — batched by section, ~4 per PR.
    Read every entry onto the following page; `Money:` sits at the end of each.
@@ -294,14 +300,21 @@ What is deliberately left, with the reason:
 
 ### Open questions for the class batches
 
-- **Whether the 50 Cloud Magic rows take a name prefix.** Underseas' Spellsongs
-  carry one; Wormwood's symbiotic spells do not. A prefix keeps the tradition
-  legible and costs a `catalog-diff` match against the name the book prints —
-  which is `BOOK-INGEST-AUDIT` F21 — and F35 is the same edge from the other
-  side. Decide once, before the first spell PR.
-- **How the seven cloud categories are stored.** `spells` has no `category`
-  column; `psionic_powers` does. The categories are how the book grants the
-  magic, so a class granting *Clouds of War* has nothing to point at.
+**Both spell questions were settled on 2026-09-09 and are recorded here as
+answers, not questions.** Nate chose the **category** as the name prefix —
+`Clouds of War: Cloud Blast` — over a `Cloud Magic:` tradition prefix and over
+adding a `spells.category` column.
+
+That single choice answers both. The categories live in the name, which is where
+`Air:`/`Earth:`/`Fire:`/`Water:` already put the Warlock spheres, and it is the
+only option that leaves the Sky-Knight's grant rebuildable from the catalog: he
+gets all of Clouds of War and Clouds of Peace, then one spell per level from any
+category **except** Clouds of Creation (printed 134), and `magic.spells_from` is
+an explicit list of names with no category column behind it.
+
+The cost is two rows for Globe of Daylight, which the book lists in two
+categories — see the import note below. `BOOK-INGEST-AUDIT` F21 and F35 are the
+standing edges of prefixed names and are unchanged by this.
 - **Nothing on the CyberSlinger chassis** — F31 shipped the mechanism they
   need. Listed here only so a later session does not re-derive the question.
 
@@ -311,19 +324,23 @@ What is deliberately left, with the reason:
 |---|---|---|
 | 2026-08-28 | [#400](https://github.com/NateGrey0130/nates-workshop/pull/400) | cached (226 pp, text layer), registered in `books.json`, offset +1 verified |
 | 2026-09-09 | — | cache re-run for `welded_pages`/`corrupt_pages`; survey written; no data shipped |
+| 2026-09-09 | [#881](https://github.com/NateGrey0130/nates-workshop/pull/881) | Cloud Magic, printed 37-45: **58 spells** at level 0, prefixed by category (spells 681 -> **739**). All 58 costs reconciled against the printed 37 index, 58/58 agree. 3 `same_spell_as` links of 8 candidates. Applied `--remote` before the PR. |
 
 ### What remains
 
-`node scripts/source-coverage.mjs --remote`, 2026-09-09, before any New West
-data:
+`node scripts/source-coverage.mjs --remote`, 2026-09-09, **after the Cloud Magic
+import**:
 
 ```
-  new-west             0 / 1
+  new-west            58 / 1
 ```
 
-The `1` is `skills.W.P. Rope` — a row citing this book with no page range,
-created before the book was cached. Nothing else in the catalog comes from New
-West.
+All 58 are the cloud spells, and all 58 are traceable. The `1` is
+`skills.W.P. Rope` — a row citing this book with no page range, created before
+the book was cached, and still unresolved: whether this book prints a W.P. Rope
+at all is the open question in the skills diff above.
+
+The spells table now reads `739 traceable ... of 739`.
 
 ```
   BACKLOG       rows an importer created and nobody finished
@@ -335,8 +352,8 @@ West.
     psionic text missing   0   nothing for the codex to show
 ```
 
-None of these is this book's. They are the baseline to compare against after the
-first New West PR — `spell stubs` is the line the Cloud Magic import can move
-without anything else noticing, since a level-0 row with a real P.P.E. cost is
-correct here and a level-0 row with **0** P.P.E. is a stub. `BOOK-INGEST-AUDIT`
-F22.
+None of these is this book's. **Re-read after the Cloud Magic import and every
+line is unchanged**, which is the answer to "did we finish?" for that batch:
+`spell stubs` is still 2 and `spell text missing` still 0, so none of the 58
+landed as a stub. Checked directly as well — all 58 carry a non-empty
+description and a non-zero P.P.E. `BOOK-INGEST-AUDIT` F22.
