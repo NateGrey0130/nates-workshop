@@ -2507,6 +2507,55 @@ shape. No check to remember, nothing to keep current.
 
 ---
 
+**Taken, 2026-09-10 (PR #893). Posture held: shared stylesheet, all four apps, no
+component change and no JS.** `.btn-primary:hover` added to `shared/styles.css`
+beside the disabled pair, as proposed.
+
+**Three things in the text above are wrong. `audit-premise-auditor` found all
+three before the rule was written.**
+
+**1. The ratio was never 1.17.** The pair `#0F1412` on `#1B2320` measures **1.16**,
+so the finding was 0.01 high the day it was filed. It is now **1.26** — PR #891
+(Bench) moved `--bg-primary` to `#0A0F0E` and `--bg-input` to `#1E2724` on
+2026-09-10, between the filing and the taking. Both numbers are far under 4.5 and
+the substance is untouched; the heading is left as filed, because an audit file is
+a record and this note is where the correction belongs.
+
+**2. The proposal was insufficient, and `color` was never the declaration at**
+**risk.** `.btn:hover` sets `border-color: var(--text-muted)` as well as
+`background`, and sets no `color` at all. Implemented literally — restating
+`background` and `color` — a hovered primary button would have kept a grey
+`#84938E` hairline around an accent plate, which falsifies the finding's own
+stated goal of surviving `.btn:hover` "at every specificity". The rule as shipped
+restates `border-color`, `background` and `color`, which is the shape the adjacent
+disabled pair already uses and which the finding itself points at as its model.
+
+**3. The explanatory paragraph misattributed the comment it cited.** It said
+`shared/styles.css` carries the reasoning that white on the new `--accent`
+measures 4.09:1 and the dark tone 4.60. Those are **Rust & Ash's** figures against
+`#C4622D` — correct when written at `75a0205`, never re-measured through the
+retone. Against `#35A0AE` the real values are **3.09** and **6.24**, and the same
+file already recorded 6.24 for that pair two hundred lines up in the `::selection`
+note, so it disagreed with itself. **Corrected in this PR**, because the stale
+sentence sits in the four lines directly above where the new rule goes and leaving
+it would have meant shipping a rule beside two numbers that describe nothing.
+
+**The tie-break was the risk and it is settled.** The new rule is (0,2,0) and
+`.btn:hover` is (0,2,0), so specificity does not separate them and **source order
+does**. Anywhere after `.btn:hover` wins; anywhere before it loses silently. The
+position the finding proposed is a winning one.
+
+**Verified on production after the merge**, not just locally: `--bg-primary` on
+`--accent` at 6.24 under the pointer, on both affected apps.
+
+`media-vault` and `filament-forge` were unaffected and are unchanged. One thing
+seen and NOT fixed here: `apps/media-vault/styles.css:41` pins its own
+`.btn-primary:hover` to a hardcoded `#c86a2e`, a rust literal surviving a
+verdigris scheme. It clears AA at 5.11 against `--bg-primary` so it is not this
+defect, and it is out of scope for this finding.
+
+---
+
 ### F35 — high — One `font` shorthand takes the wizard stepper out of its own typography, and deletes six of ten steps at phone width
 
 **Step: responsive sweep at 390×844.**
