@@ -15,7 +15,7 @@ the human view of the same thing plus the import status.
 |---|---|---|---|---|---|---|
 | `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 224 — corrected 2026-09-07, see below | **+0** | **imported** |
 | `underseas` | Rifts WB 7: Underseas | 216 | SCAN (OCR) | 214 | **+0 / -1 split** | **imported** |
-| `new-west` | Rifts WB 14: New West | 226 | text layer | 224 | +1 | **surveyed** |
+| `new-west` | Rifts WB 14: New West | 226 | text layer | 224 | +1 | **imported** |
 | `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | cached |
 | `mystic-russia` | Rifts WB 18: Mystic Russia | 178 | text layer | 176 | +1 | cached |
 | `free-quebec` | Rifts WB 22: Free Quebec | 194 | text layer | 192 | +1 | **imported** |
@@ -1214,7 +1214,7 @@ implemented, and the premise audit is why: F30's detector needs a filter it did
 not specify, and F31's proposal collides with `related_skills_count`. Both are
 better taken deliberately than folded into a data PR.
 
-### `new-west` survey, 2026-09-09 (PR pending)
+### `new-west` survey, 2026-09-09 (PR #880) - and FULLY IMPORTED 2026-09-10
 
 Status `cached` -> **`surveyed`**. No data shipped; the survey is at
 `apps/character-creator/docs/surveys/new-west.md` and is the file the import
@@ -1277,3 +1277,44 @@ Two decisions are left open in the survey rather than settled here, because both
 are cheaper to make once with the first spell PR in hand than to guess at now:
 whether the 50 Cloud Magic rows take a tradition prefix in `name`, and where the
 seven cloud categories live given that `spells` has no `category` column.
+
+### `new-west` is FULLY IMPORTED, 2026-09-10
+
+Status `surveyed` -> **`imported`**, across fourteen PRs: #881 (58 Cloud Magic
+spells), #882 (skills), #883/#885/#886/#887/#888/#890/#892 (all 25 playable
+classes), #895/#896/#897/#898/#901 (100 gear rows) and #899/#900 (15 vessels).
+
+**Catalog movement:** classes 225 -> **250**, skills 367 -> **370**, spells
+681 -> **739**, gear 1249 -> **1349**, vehicles 143 -> **158**.
+
+**The roster was 25, not the 26 this section claims above.** The CyberSlinger is
+not a class - printed 189-193 gives the three chassis a `Model Type`, a `Class:`
+line reading "Full Conversion Cyborg", an `M.D.C. by Location` block and a cost
+in millions, and NO class block on any of the three pages. Printed 190 says they
+are cyborg BODIES whose recipients fall into the existing 'Borg O.C.C. They
+shipped as vessels in #899.
+
+**A FOURTH SCAN TRAP, on top of the three this section already records: COUNT
+THE ENTRIES, NOT THE HEADINGS.** The RH-1001A Appaloosa is the fourth robot
+horse and both the survey and a later heading scan found only three, because
+its heading is "Appaloosa or Pony" and carries no model number.
+
+**THE BIGGEST FINDING IS ABOUT `corrupt_pages`, AND IT IS NOT ABOUT THIS BOOK.**
+New West renders the digit **1 as `!` or `l`** and **0 as `O` or `Q`** inside
+almost every `NDNx10` / `NDNx100` construction - `!D4xlO`, `3D4xlOO`, `10Q`.
+**It affects roughly sixty pages; the manifest lists three.** The detector looks
+for glyphs that FAIL TO MAP, and these map to perfectly valid characters, so a
+substitution cipher is invisible to it. It is also **in the ink** - confirmed at
+600 dpi - so a render does not cure it, unlike printed 217, which is the other
+kind. **This book is the reference case for both halves of `book-survey` 0a's
+distinction.**
+
+It reaches `Money: Starts with 3D4xlOO credits` on almost every O.C.C. page.
+Nothing leaked: swept `--remote` afterwards and no row in `imported_classes`,
+`gear` or `vehicles` contains `xlO`, `xlOO` or `!D`. **Check the other text-layer
+caches for the same pattern before trusting a dice figure read from one.**
+
+**Left for a decision, all recorded in the survey's own findings section**: the
+Black Market price divergence on three CS armours RUE already holds; the
+`regression.mjs` check that refuses a grenade carrying both an `sdc` and a
+damage die; and the `corrupt_pages` blind spot above.
