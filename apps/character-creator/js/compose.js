@@ -166,6 +166,7 @@ export const CORE_SDC_BY_CLASS = {
   'preacher': '1D6',
   'professional-gambler': '1D6',
   'saloon-bum': '1D6',
+  'saloon-girl': '1D6',
   'burster': '1D6',
   'elemental-fusionist-earth-air': '1D6',
   'elemental-fusionist-fire-water': '1D6',
