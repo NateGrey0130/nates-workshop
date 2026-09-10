@@ -239,8 +239,16 @@ another name — hand-checked one at a time against the catalog:
 | Hovercycle | Hovercycles, Skycycles & Rocket Bikes | none |
 | Safecracking | Safe-Cracking | none |
 
-**Four are real gaps: History of the West, Prospecting, W.P. Bola, W.P.
-Snapshooting Specialty.**
+**Three are real gaps: History of the West, Prospecting, W.P. Bola.**
+
+**This said FOUR until the import, and `W.P. Snapshooting Specialty` was the
+fourth.** It is not a skill this book adds — it is `W.P. Sharpshooting`, which
+the catalog already holds from Juicer Uprising p.57. The heading on printed 79
+and both indexes spell it *Snapshooting*; the body of that same entry says
+*Sharpshooting* throughout, and so do the classes that grant it — printed 108
+writes both spellings in one line. Counted across the book: **Snapshooting 9,
+Sharpshooting 48.** A name that a book spells two ways is not two skills, and
+the diff cannot see that. PR #882 enriches the existing row instead.
 
 **Almost the whole New Skills section is already in the catalog, cited to Rifts
 Ultimate Edition p.302-303.** RUE reprints this book's cowboy and horsemanship
@@ -256,11 +264,17 @@ non-percentile skill, and New West prints a percentage for it on printed 71.
 **Check before changing anything**: `base 0` is shared with every W.P. and every
 physical skill, so this may be correct rather than a stub.
 
-`skills.W.P. Rope` is the single row already citing this book, and it has no
-page range — it is the whole of `new-west 0 / 1` in the coverage ledger. The
-book's W.P. list on printed 71 names Bola, Snapshooting Specialty and Whip.
-**Whether this book prints a W.P. Rope at all is unresolved** and needs the
-render of printed 71-72 before the row is given a page range.
+**`skills.W.P. Rope` was never this book's, and that is now settled (PR #882).**
+It carried `source_book = 'Rifts New West'` with no page range — the whole of
+`new-west 0 / 1` in the coverage ledger, and the reason it read 0: an
+un-rangeable citation is not checkable. The book's W.P. section on printed 79
+defines exactly three — Bola, Whip, Snapshooting Specialty — its skill list on
+printed 71 names the same three, and **a grep of all 226 cached pages finds no
+`W.P. Rope` anywhere.**
+
+It is Rifts Ultimate Edition's: listed on printed 302 among the Cowboy skills
+and 303 among the W.P.s, and **described on printed 306**. Re-cited there. Its
+`level_bonuses` already matched RUE's description and were not touched.
 
 ### gear and vehicles: not diffed
 
@@ -281,7 +295,9 @@ Phase 4 costs money; everything above was free.
    Creation heading with a redirect to the survival entry and no stat block —
    verified on a render, not inferred. All 58 costs have two readings and all
    58 agree.
-2. **New skills** — 4 rows only. Cheap; can ride with another batch.
+2. ~~**New skills**~~ — **DONE, PR #882. Three rows, not four**, plus two
+   corrections to rows other books own: `W.P. Rope` re-cited to RUE p.306, and
+   `W.P. Sharpshooting` given New West's definition and its P.P.-scaled bonuses.
 3. **The 18 occupations, printed 83-125** — batched by section, ~4 per PR.
    Read every entry onto the following page; `Money:` sits at the end of each.
 4. **The 8 racial classes, printed 125-158** — printed 130 off a render.
