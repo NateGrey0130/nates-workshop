@@ -7065,6 +7065,80 @@ where the choice is made. **Check before scoping:** whether `equipment_starting`
 choice options are resolved at creation or re-derived per render, because the
 reference says a choice's `qty` is re-derived and a granted skill must not be.
 
+**HELD, 2026-09-10 (PR #910). The premises are corrected and the capability is
+NOT built, because neither class that wants it could use it.** Posture:
+documentation only. No key added, no schema, no data change.
+
+**THE CHECK-BEFORE-SCOPING QUESTION IS ANSWERED, AND THE ANSWER IS THE ONE THAT
+CONSTRAINS A TAKER.** `equipment_starting` choice options ARE re-derived on
+every render: `initEquipment` (`app.js:2545-2573`) rebuilds `S.gearChoices` each
+time and is deliberately NOT guarded by `equipInit`, with the comment *"A
+restored draft brings back which options were TICKED but not what the options
+were."* **Only the tick is persisted.** So a granted skill must be resolved FROM
+the persisted tick and never re-derived beside the options. The finding was
+right to ask. (It attributes the `qty` claim to `docs/wizard-and-sheet.md`; the
+sentence actually lives at `js/parser.js:2386-2392`. The claim is true, the
+citation is not.)
+
+**The ORDERING works, which the finding does not raise and a taker would
+worry about.** Equipment is step 6 and skills are step 5, so an
+equipment-granted skill arrives after the skills step - but `skillsAtLevelOne()`
+is called from `characterAtLevelOne()` (`app.js:1798-1805`), which builds the
+SAVE payload. By then the tick exists.
+
+**WHY IT IS HELD: BOTH CLASSES THAT WANT IT STAY UNMODELLABLE ANYWAY.** The
+skill is one of several things their choice needs, and it is not the only
+missing one:
+
+| Bounty Hunter / Justice Ranger option | what it needs | available? |
+|---|---|---|
+| armour or TW weapon **plus 2D6x1000 credits** | a sum of money in `equipment_starting` | **no** |
+| light or medium power armour, **granting Pilot Robots and Power Armor** | the skill grant | **no - this finding** |
+| TW or magic armour and a magic weapon, or a bio-wizard parasite | catalog rows that do not exist | **no** |
+| a souped-up vehicle, or a robot horse | a gear row pointing at a vessel | **yes, see below** |
+
+So `grants_skill` would ship as a key **no live class could use**, because
+adding it still leaves three of the four options unexpressible and both classes
+recorded the whole choice in `extraction_notes` rather than half-modelling it.
+That is the trade `F55` was filed to name, and it applies here for the same
+reason.
+
+**A CLAIM I NEARLY MADE AND CHECKED FIRST: `equipment_starting` CAN reference a
+vehicle.** It resolves slugs against the gear catalog through `findItem`
+(`app.js:2533-2539`), which reads only `S.items` - so the obvious conclusion is
+that power armour and robot horses are out of reach. **They are not.**
+`gear.vehicle_slug` exists from migration 053 and **16 live gear rows point at a
+vessel**, `glitter-boy-power-armor` among them (`--remote`, 2026-09-10). F41
+built that bridge. An absence claim about a capability is the shape most likely
+to be wrong, and this one was.
+
+**Two more corrections to the finding's own text:**
+
+- **"Affected rows: `bounty-hunter` today" points at the wrong row.**
+  `node scripts/audit-citations.mjs --remote F50` returns **`justice-ranger`**
+  only - and `bounty-hunter`, the class this finding is *about*, does not cite
+  F50 at all. A taker following the script finds the second class and not the
+  first.
+- **"Two of the four options have no catalog shape either" miscounts the
+  options.** Those two are the two BRANCHES of option 3 (printed 91: *"Magic
+  Armor: One Techno-Wizard or other type of magic armor and one magic weapon...
+  Or one major bio-wizard parasite, plus 1D4 microbes"*). The `bounty-hunter`
+  row itself says it correctly - *"Only the third and fourth have no catalog
+  shape at all"*.
+
+**One thing a taker needs that the finding does not say:** neither validator
+rejects unknown keys, so a `grants_skill` written today **parses clean, stores,
+and is silently ignored** - the exact shape `F52` was filed about and the reason
+this must not be half-shipped. The obvious alternative route is closed on
+purpose: `ABILITY_GRANTS = ['bonuses', 'psionics', 'magic']`
+(`js/parser.js:1644`), and `js/parser.js:1751-1757` records that an ability
+carrying a skills block was rejected as *"the same power by another name"*.
+
+**What would change this.** A way to express the other three options - money in
+starting equipment, and catalog rows for the TW and magic items - or a decision
+that a PARTIAL model is better than none, which both classes' notes currently
+reject. Either makes `grants_skill` worth the key it costs. **Reopen on either.**
+
 ### F51 - `race_restrictions` matches a race by ID, and a book bars races by KIND
 
 **Filed 2026-09-09**, during the `new-west` class import, batch 2.
@@ -7623,4 +7697,17 @@ is the nearest precedent and it points the other way - it declined to widen
 melee, on the grounds that importing one *"would DROP them, which is worse than
 the cosmetic split this finding set out to fix."* That decision is named here
 rather than re-litigated, per the rule about re-proposing settled questions.
+
+**HELD, 2026-09-10 (PR #910), which is what this finding recommended for
+itself.** Posture: documentation only. No columns, no migration, no data change.
+
+**Nothing has changed the argument.** The twelve Techno-Wizard rows still carry
+their creation stats as prose, nothing in the app reads them, and no consumer
+has appeared. The schema was re-read `--remote` on 2026-09-10 while closing
+`F50` and `gear` is unchanged at eighteen columns.
+
+**It is now one of a PAIR and they should be decided together.** `F50` was held
+the same day for the same reason: a small, correct frontmatter key with no live
+class able to use it. If the answer to one is *"build it anyway, the cost is
+low"*, it is probably the answer to both.
 
