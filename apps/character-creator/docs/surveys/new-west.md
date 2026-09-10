@@ -402,6 +402,7 @@ standing edges of prefixed names and are unchanged by this.
 | 2026-09-10 | [#898](https://github.com/NateGrey0130/nates-workshop/pull/898) | Gear batch D, printed 213-218: **12 Techno-Wizard weapons** (gear 1324 -> **1336**). **THE BOOK'S GEAR IS DONE.** Printed 217 is glyph-corrupt and carries three of the twelve prices; all read off a render. Applied `--remote` before the PR. |
 | 2026-09-10 | [#899](https://github.com/NateGrey0130/nates-workshop/pull/899) | Vessels 1 of 2, printed 183-195: **6 vehicles, 57 M.D.C. locations, 16 weapon entries** (vehicles 143 -> **149**) - the two Bandito SAMAS, the three CyberSlinger bodies and the Tarantula ATV. The CyberSlingers land here rather than as classes. The Tarantula has TWO main bodies, so `mdc_main_body` is NULL. Applied `--remote` before the PR. |
 | 2026-09-10 | [#900](https://github.com/NateGrey0130/nates-workshop/pull/900) | Vessels 2 of 2, printed 196-223: **9 vehicles, 46 M.D.C. locations, 7 weapon entries** (vehicles 149 -> **158**) - FOUR robot horses (not three), the K-9, the Bronco Scooter, the War Wagon, the Glittermount and the TW Ironhorse. Found the book-wide glyph substitution `corrupt_pages` cannot see. Applied `--remote` before the PR. |
+| 2026-09-10 | [#901](https://github.com/NateGrey0130/nates-workshop/pull/901) | Gear batch E, printed 196 and 200: **13 robot animal options** (gear 1336 -> **1349**) - the entries the earlier "all accounted for" summary missed. **THE BOOK IS FULLY IMPORTED.** Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -871,3 +872,29 @@ two batches meet inside the same hundred.** Count by slug.
 The lesson is not to count more carefully. It is that **the assertion is worth
 writing even when you are confident**, because being wrong about your own file
 is the common case and it costs one line to find out.
+
+## The book is fully imported
+
+**Every section this survey identified is in**, as of 2026-09-10.
+
+| what | printed | rows | PRs |
+|---|---|---|---|
+| Cloud Magic spells | 37-45 | 58 | #881 |
+| Skills | 78-82 | 3 new, 2 corrected | #882 |
+| Playable classes | 83-158 | 25 | #883, #885, #886, #887, #888, #890, #892 |
+| Gear | 173-218 | 87 | #895, #896, #897, #898 |
+| Robot animal options | 196, 200 | 13 | #901 |
+| Vessels | 183-223 | 15 vehicles, 103 locations, 23 weapons | #899, #900 |
+
+**Catalog movement:** classes 225 -> **250**, skills 367 -> **370**, spells
+681 -> **739**, gear 1249 -> **1349**, vehicles 143 -> **158**.
+
+**Nine entries were deliberately NOT imported, all of them reprints of rows the
+catalog already holds** - two CS armours and a Dog Pack suit from RUE (#895),
+and five Wilk's products from RUE (#897). Each is named with its slug in the
+script that skipped it.
+
+**What is still open is in the findings section above**, not in the data: the
+Black Market price question on the three CS armours, the grenade `sdc` the
+regression check refuses, and the `corrupt_pages` detector that cannot see a
+substitution cipher.
