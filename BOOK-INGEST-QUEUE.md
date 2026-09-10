@@ -16,7 +16,7 @@ the human view of the same thing plus the import status.
 | `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 224 — corrected 2026-09-07, see below | **+0** | **imported** |
 | `underseas` | Rifts WB 7: Underseas | 216 | SCAN (OCR) | 214 | **+0 / -1 split** | **imported** |
 | `new-west` | Rifts WB 14: New West | 226 | text layer | 224 | +1 | **imported** |
-| `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | cached |
+| `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | **surveyed** |
 | `mystic-russia` | Rifts WB 18: Mystic Russia | 178 | text layer | 176 | +1 | cached |
 | `free-quebec` | Rifts WB 22: Free Quebec | 194 | text layer | 192 | +1 | **imported** |
 | `phase-world` | Rifts DB 2: Phase World | 209 | SCAN (OCR) | 208 | **+0** | **imported** |
@@ -1318,3 +1318,42 @@ caches for the same pattern before trusting a dice figure read from one.**
 Black Market price divergence on three CS armours RUE already holds; the
 `regression.mjs` check that refuses a grenade carrying both an `sdc` and a
 damage die; and the `corrupt_pages` blind spot above.
+
+### `spirit-west` survey, 2026-09-10
+
+Status `cached` -> **`surveyed`**. The survey is at
+`apps/character-creator/docs/surveys/spirit-west.md` and is the authority; what
+follows is the queue's own view.
+
+**Cache re-run first**, per the `new-west` instruction above: one welded page
+(printed 201, the War Chief power armor), eight glyph-corrupt pages (four on
+pages data comes from) and **85 pages of `substituted_digits`** - every O.C.C.'s
+trade-goods allowance prints as `2D6xlOO` or `3D6xlOO`.
+
+| category | found | verdict |
+|---|---|---|
+| O.C.C.s | **11** - four warriors, seven shamans | import |
+| R.C.C.s | **1** - the Wendigo, tagged NPC *and* optional R.C.C. | import |
+| spells | **34** shaman invocations, levels 1-13, cost printed four times each | import |
+| gear | ~12 on printed 203, plus ~45 **unpriced** fetishes | import |
+| vessels | **6** robots and power armor, none sold on any market | import |
+| skills | **0** - no new-skills section | nothing to import |
+| psionic powers | **0** | nothing to import |
+
+**The experience tables are not the roster here either** - the third book to
+show it, after `new-west`. Printed 7 gives ladders to six NPC entries (Great
+Little Ones, Two-Faced Star People, Man-Monsters, Man-Eagles, Stone Giants,
+Black-Winged Monster Men) and sends the Ukt Water Serpent to the dragon table.
+Every one is tagged NPC on its own heading.
+
+**Two findings filed, F56 and F57, neither implemented.** F56 is the 48 totem
+animals nine of the eleven O.C.C.s must pick from: a totem grants skills as well
+as bonuses, abilities carry no skills, and the table would repeat in every
+class. F57 is not this book's alone - a class whose spell pool is a level range
+already admits every leveled spell of every tradition, and the 34 shaman spells
+will join the 167 warlock, `Ocean:` and `Dolphin:` rows the Ley Line Walker is
+offered today.
+
+**What is deliberately not imported**: the Kachina Dancer (a role layered on an
+O.C.C., not one), every NPC monster, spirit and god on printed 106-188, the
+totems as catalog rows (F56), and the setting.

@@ -7719,3 +7719,116 @@ low"*, it is probably the answer to both.
 
 **Nate's decision, 2026-09-10 (PR #933): leave it held**, as the finding itself recommended.
 
+### F56 - medium - a TOTEM is a 48-entry choice table nine classes share, and it grants SKILLS, which no choice a class can offer is able to carry
+
+**Found surveying `spirit-west`, 2026-09-10.**
+
+Spirit West printed 96-105 describes **48 totem animals**, and printed 96 sets
+out what each grants: **skills** (natural aptitudes, and +10% where the skill
+is already an O.C.C. skill), **bonuses** applied at creation and kept for life,
+and **powers** usable only by the Totem Warrior in giant animal form.
+
+**Nine of the book's eleven O.C.C.s must pick one**, each on its own page:
+Tribal Warrior (printed 37), Mystic Warrior (40), Totem Warrior (43, where the
+totem is also the shape it takes), Animal Shaman (53), Mask Shaman (59), Fetish
+Shaman (68), and the general shaman rule on printed 49 covering the rest. The
+Elemental Shaman picks one of **four elements** instead (printed 65). Printed 37
+says every Native American on Rifts Earth has a totem, so the table is a trait
+of the character rather than of any one trade.
+
+**What the app can express, and where it stops.** A choice over named
+abilities is the Keeper of the Desert's shape (`new-west`, PR #890), and an
+ability may carry `bonuses`, `psionics` and `magic` -
+`ABILITY_GRANTS = ['bonuses', 'psionics', 'magic']` at
+`apps/character-creator/js/parser.js:1659`, read 2026-09-10. **Skills are not
+on that list**, so a totem's skills cannot ride its ability. And there is no
+shared table to point at: the same 48 entries written into nine classes is 432
+ability definitions that must stay identical, which is `F25`'s drift shape at a
+larger scale.
+
+**What the imports will do instead.** Each class states the pick in prose -
+*one totem animal of choice, printed 96-105* - and cites this finding. The Totem
+Warrior's own class abilities (supernatural P.S. and P.E., the heightened-sense
+bonuses, the two transformations) are stored normally; only the per-totem
+table is missing.
+
+**Proposal:** a `totems` catalog - one row per animal, carrying its `bonuses`
+as JSON, its skills as names, and its Totem Warrior powers as text - plus a
+class key such as `totem: { from: "animal" }` that the wizard resolves into a
+pick, applying the chosen row's bonuses and skills. The Totem Warrior would add
+`powers: true` to show the third column. Evidence for the gap:
+`parser.js:1659` above, and a grep of the Spirit West cache for `[Tt]otem`
+across printed 37-70, both 2026-09-10. **The proposed shape is inferred, not
+measured** - nothing here has been built or tried.
+
+**Posture:** a new, opt-in class key and a new catalog table. No existing class
+changes, and a class without the key behaves exactly as today. This is
+`schema-change` work, so the five places a column lands (nine for a table)
+apply.
+
+**Confidence: high on the gap** (the grant list is quoted from the code),
+**medium on the shape.** What would raise it: a second book printing a shared
+selection table of the same kind, which would show whether `totems` should be
+general (`selection_tables`?) rather than named for one book's mechanic.
+
+**Ongoing cost:** a table and its importer; a wizard step; `derive.js` and the
+sheet applying a third source of bonuses beside race and occupation. Against
+that, nine classes ship without the one choice their book says every character
+makes.
+
+**Subject grep, 2026-09-10:** this file for `shared`, `cross-class` and
+`tradition`, and `MEMORY.md`'s index. The nearest decision is `F25`, which
+declined general class inheritance and took only an invariant; this proposal
+does not re-open that - it shares a TABLE, not a class.
+
+### F57 - low - a spell pool stated as a LEVEL RANGE admits every tradition's leveled spells, and the Ley Line Walker is offered 167 warlock and ocean spells today
+
+**Found surveying `spirit-west`, 2026-09-10**, while deciding whether its 34
+shaman spells needed a name prefix to stay out of other casters' pickers. They
+do not, because a prefix keeps nothing out.
+
+**Evidence, all read 2026-09-10:**
+
+- the starting picker's pool is `S.spellCatalog.filter(...)` on system and on
+  `g.spell_levels.includes(sp.level)`, and on nothing else -
+  `apps/character-creator/app.js:3151-3154`;
+- `js/leveling.js:276-286` says so in as many words - spells carry no category
+  or tag, only a name, a level and a cost;
+- production's `ley-line-walker` states `spells_starting: 12` and
+  `spell_levels_allowed: [1, 2, 3, 4]` with no `spells_from`
+  (`node scripts/q.mjs`, substr of its `magic:` block);
+- `node scripts/q.mjs` counting spells at levels 1-4 in the Rifts system by name
+  prefix: **150** warlock (`Air:`, `Earth:`, `Fire:`, `Water:`), **12**
+  `Ocean:`, **5** `Dolphin:`, and **76** other.
+
+So a new Ley Line Walker is offered 167 spells from three traditions its book
+does not grant, beside the 76 it should see. The Mystic's `[1, 2]` has the same
+shape. **The shaman import will add to it**: printed 72 says shamans may learn
+Ley Line Walker spells and says nothing of the reverse, and the 34 shaman spells
+at levels 1-13 will enter every level-gated pool. Cloud Magic and the
+Spellsongs are level 0 and fall outside every range by accident, not by design.
+
+**Proposal:** a nullable `spells.tradition` column - NULL for general
+invocations - backfilled for the prefixed families and for the shaman spells.
+A level-gated pool then excludes any spell with a tradition unless the class
+names it (`spell_traditions_allowed: ["shaman"]`). A named `spells_from` list is
+untouched, because it already REPLACES the level gate (`leveling.js:324`).
+**Inferred, not measured**: nothing has been built, and whether
+`validate-character.js` enforces the pool on the server was not checked.
+
+**Posture:** narrows a picker; changes no stored character. A character who
+already took a warlock spell as a Ley Line Walker keeps it. No new gate on
+import.
+
+**Confidence: high that the pool admits them** (the filter is quoted above),
+**medium that each tradition is exclusive to its own casters.** What would raise
+it: reading each family's own book on who may learn it - the Book of Magic for
+the warlock spheres, `underseas` for Ocean and Dolphin magic - before the
+backfill, rather than inferring exclusivity from a prefix.
+
+**Ongoing cost:** one column every spell import must fill, and a backfill.
+**`F26` is the neighbour and is not re-opened**: it declined a
+`spell_traditions` join table for PER-TRADITION COSTS of one spell. This is a
+different question - which casters may learn a spell at all - and a single
+column answers it.
+
