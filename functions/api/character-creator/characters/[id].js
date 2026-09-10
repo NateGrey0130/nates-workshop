@@ -13,6 +13,7 @@ import { parseClassMarkdown } from '../../../../apps/character-creator/js/parser
 import { composeClass } from '../../../../apps/character-creator/js/compose.js';
 import { loadSkillBonuses } from '../_lib/skill-bonuses.js';
 import { skillLevelNotes, skillConditionalBonuses } from '../../../../apps/character-creator/js/parser.js';
+import { xpTableFor, levelForXp, thresholdFor } from '../_lib/leveling.js';
 
 export async function onRequestGet({ request, env, params }) {
   const email = getUserEmail(request);
@@ -202,6 +203,18 @@ export async function onRequestGet({ request, env, params }) {
   // this the sheet could show a 7th level Expert's numbers while saying nothing
   // about the four moves the character earned along the way.
   const skill_level_notes = skillLevelNotes(skillRows, character.level);
+
+  // Where the next level is, and whether the XP already pays for it (UI-AUDIT
+  // F42). The sheet learned both only from POST /xp, so a character holding
+  // enough XP opened with no sign of it, and "Not now" lost the offer until
+  // somebody logged XP again. The same three helpers xp.js uses, on the same
+  // composed class, so the two cannot disagree about a threshold.
+  let next_threshold = null, level_up_ready = false;
+  if (cls) {
+    const table = xpTableFor(cls);
+    next_threshold = thresholdFor(table, character.level + 1);
+    level_up_ready = levelForXp(table, character.xp) > character.level;
+  }
   // A W.P.'s bonuses apply only while that weapon is in hand, so they are
   // deliberately kept OUT of the combat block above. They are still real and
   // still accumulate by level, so they come back separately — a player who
@@ -223,6 +236,8 @@ export async function onRequestGet({ request, env, params }) {
     pending_powers_total: pending_powers.reduce((n, g) => n + g.count, 0),
     grants,
     power_descriptions,
+    next_threshold,
+    level_up_ready,
   });
 }
 

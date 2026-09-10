@@ -119,6 +119,9 @@ async function load() {
     // classic script.
     C.cls = res.class || null;
     campaignLink();
+    // Known on load now, not only after an XP log (UI-AUDIT F42).
+    C.nextThreshold = res.next_threshold ?? null;
+    C.levelUpReady = !!res.level_up_ready;
 
     const [journal, catalog, catalogs] = await Promise.all([
       api(`journal?campaign_id=${C.data.campaign_id}&character_id=${id}&include_campaign=1`),
@@ -1663,6 +1666,7 @@ function render() {
     `)}
 
   ${w && C.proposal ? levelUpPanel() : ''}
+  ${w && !C.proposal && C.levelUpReady && !C.levelUpDeferred ? levelUpReadyBanner() : ''}
   ${w && C.variantProposal ? variantProposalPanel() : ''}
   ${w && !C.proposal && C.pendingPicksTotal ? pendingPicksPanel() : ''}
   ${w && !C.proposal && C.pendingPowersTotal ? pendingPowersPanel() : ''}
@@ -1709,7 +1713,8 @@ function render() {
     ${box('Experience', `
       ${field('Level', c.level)}
       ${field('Points', c.xp)}
-      ${C.nextThreshold != null ? field('Next level at', `${C.nextThreshold} XP`, true) : ''}
+      ${C.nextThreshold != null ? field('Next level at', `${C.nextThreshold} XP${
+        C.nextThreshold > c.xp ? ` <span class="muted small">(${C.nextThreshold - c.xp} to go)</span>` : ''}`, true) : ''}
       ${w ? `<div class="rowline noprint" style="margin-top:6px">
         <input type="number" id="xp-delta" placeholder="+XP" style="width:78px">
         <button class="btn btn-sm" onclick="logXp()">Log XP</button></div>` : ''}`)}
@@ -1987,6 +1992,32 @@ function wirePickers() {
   }
 }
 
+// The standing offer, shown on load whenever the XP already pays for a level
+// (UI-AUDIT F42). "Not now" puts it away for this visit and no longer - the
+// level is still owed, so the next visit says so again.
+function levelUpReadyBanner() {
+  return `<div class="levelup levelup-ready noprint">
+    <b>⬆ Level up ready</b>
+    <span class="muted small">${escHtml(String(C.data.xp))} XP pays for level ${C.data.level + 1}.</span>
+    <button class="btn btn-sm btn-primary" onclick="openLevelUp()">Review the level-up</button>
+    <button class="btn btn-sm btn-ghost" onclick="C.levelUpDeferred=true; render()">Not now</button>
+  </div>`;
+}
+
+// The proposal itself comes from the XP route, the one place that builds it:
+// a zero delta is the re-check Log XP has always offered, without the player
+// having to know to type 0.
+async function openLevelUp() {
+  try {
+    const res = await api(`characters/${id}/xp`, jsonReq('POST', { delta: 0 }));
+    C.data.xp = res.xp;
+    C.nextThreshold = res.next_threshold;
+    C.proposal = res.proposal;
+    if (!res.proposal) { C.levelUpReady = false; flash('No level-up is due after all.'); }
+    render();
+  } catch (err) { alert('Could not open the level-up: ' + err.message); }
+}
+
 function levelUpPanel() {
   const p = C.proposal;
   const poolRows = Object.entries(p.pools).map(([field, v]) =>
@@ -2007,7 +2038,7 @@ function levelUpPanel() {
     ${powerPickerBlock(p)}
     <div class="rowline" style="margin-top:10px">
       <button class="btn btn-primary" onclick="confirmLevelUp()">✅ Confirm level-up</button>
-      <button class="btn btn-sm btn-ghost" onclick="C.proposal=null; render()">Not now</button>
+      <button class="btn btn-sm btn-ghost" onclick="C.proposal=null; C.levelUpDeferred=true; render()">Not now</button>
       <span class="muted small">Nothing is applied until you confirm.</span>
     </div>
   </div>`;
@@ -2370,6 +2401,8 @@ async function logXp() {
     C.data.xp = res.xp;
     C.nextThreshold = res.next_threshold;
     C.proposal = res.proposal;
+    C.levelUpReady = !!res.proposal;
+    C.levelUpDeferred = false;
     render();
   } catch (err) { alert('XP update failed: ' + err.message); }
 }

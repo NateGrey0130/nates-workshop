@@ -704,6 +704,13 @@ check('XP can be set', xp.status === 200, xp.body);
 check('crossing a threshold returns a PROPOSAL rather than applying it',
   !!xp.body.proposal, JSON.stringify(xp.body).slice(0, 200));
 
+// UI-AUDIT F42: a level that is owed is known on LOAD, not only from POST /xp,
+// so a sheet opened with enough XP says so before anybody logs any.
+const owed = await api('GET', `/characters/${charId}`);
+check('the character GET says a level is owed once XP pays for one',
+  owed.body.level_up_ready === true && typeof owed.body.next_threshold === 'number',
+  JSON.stringify({ ready: owed.body.level_up_ready, next: owed.body.next_threshold }));
+
 if (xp.body.proposal) {
   const target = xp.body.proposal.to_level ?? xp.body.level + 1;
   const confirmed = await api('POST', `/characters/${charId}/level-confirm`, {
@@ -714,6 +721,8 @@ if (xp.body.proposal) {
   check('and the character is actually at the new level',
     levelled.body.character.level === target,
     'level is ' + levelled.body.character?.level + ', expected ' + target);
+  check('and stops saying a level is owed once it is taken',
+    levelled.body.level_up_ready === false, levelled.body.level_up_ready);
 }
 
 const picks = await api('GET', `/characters/${charId}/picks`);

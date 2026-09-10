@@ -3322,6 +3322,37 @@ taken.**
 
 **Ongoing cost:** one more field in a response.
 
+---
+
+**Taken, 2026-09-10 (PR #922). Posture held: extends one GET; no schema.** The premise
+the finding marked *to verify* held: `characters/[id].js` returned no threshold and no
+readiness, and the `audit-premise-auditor` found none by grep before the edit.
+
+- The character GET returns `next_threshold` and `level_up_ready`, from `xpTableFor`,
+  `levelForXp` and `thresholdFor` on the composed class the GET already builds — the
+  three helpers `xp.js` uses, so the two routes cannot disagree about a threshold.
+- The sheet sets both on load. *Next level at* now appears on every sheet, with how
+  far there is to go.
+- When the XP already pays for a level, a banner reads *Level up ready* with **Review the
+  level-up**, which asks the XP route for the proposal with `{delta: 0}` — the re-check
+  Log XP always offered, without the player having to know to type 0.
+- **Both** *Not now* buttons — the banner's and the level-up panel's — put the offer
+  away for the visit only; a reload brings it back, because the level is still owed.
+
+**Measured on 8801, local character 1, 2026-09-10.** Before any change the GET had
+neither field. At 0 XP it returned `level_up_ready: false`, `next_threshold: 225921`;
+with XP set to 225921 through the real route, `true`. On the sheet the banner read
+*225921 XP pays for level 13*; Review opened the proposal to level 13; *Not now* cleared
+both; a reload brought the banner back. XP was restored to 0 afterwards.
+
+`regression.mjs` gains the pair: owed after crossing a threshold, and **not** owed once
+the level is confirmed. The first was shown to fail against the pre-F42 server, whose
+GET carried no such field.
+
+**One interaction worth knowing:** `{delta: 0}` still moves `updated_at`, like every XP
+write. Under `F38` that costs a sheet with pending edits one per-field retry, not a
+refusal.
+
 ### F43 — medium — The Skills step is 13,978px of checkboxes
 
 Measured live on local draft 19 (a Gunfighter, step 5) at 1280px, 2026-09-10: the
