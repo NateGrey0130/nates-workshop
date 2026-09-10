@@ -427,6 +427,9 @@ function syncPlayChrome() {
 // to change. A 'power' roll is recorded here and NOT persisted from here -
 // usePower posts its own 'power' event, carrying the from/to that undo needs.
 function recordRoll(kind, name, entry) {
+  // Any new result retires an armour-overflow offer (UI-AUDIT F40): once the
+  // table has moved on, "Apply N to body" would be answering an older hit.
+  C.overflow = null;
   const r = { kind, name, ts: Date.now(), ...entry };
   C.lastRoll = r;
   C.rollLog.push(r);
@@ -450,7 +453,10 @@ function rollBarHtml() {
   const hist = C.showRollHist
     ? `<ol class="roll-hist">${C.rollLog.slice(-10).reverse().map((x) => `<li>${rollLineHtml(x)}</li>`).join('')}</ol>`
     : '';
-  return hist + rollLineHtml(r) + toggle;
+  const offer = C.overflow
+    ? ` <button type="button" class="rb-hist rb-apply" onclick="applyOverflow()">Apply ${C.overflow.amount} to body</button>`
+    : '';
+  return hist + rollLineHtml(r) + offer + toggle;
 }
 
 // One roll as a line - the bar's latest, and each entry of its history.
@@ -578,10 +584,13 @@ async function adjustPool(key, delta) {
 // from milliseconds to however long the wi-fi is out. The alternative was
 // losing the shots a player fired offline, which is worse and far likelier
 // than somebody hand-editing that row's notes mid-fight.
-async function queueChange(kind, note, fields, item) {
+// `extra` is an armour or vessel hit (UI-AUDIT F40) - `{armor}` or `{vehicle}`
+// - carried beside the pools for the same reason `item` is, and replayed
+// UNGUARDED for the same reason too: the guard is per pool.
+async function queueChange(kind, note, fields, item, extra) {
   if (!window.playQueue || !(await playQueue.available())) return false;
   try {
-    await playQueue.push({ characterId: Number(id), kind, note, fields, item });
+    await playQueue.push({ characterId: Number(id), kind, note, fields, item, ...(extra || {}) });
     return true;
   } catch { return false; }
 }
@@ -617,7 +626,12 @@ async function flushQueue() {
         kind: e.kind || 'pool',
         note: e.note,
         guard: true,
-        changes: e.item ? { character: entryFields(e), item: e.item } : { character: entryFields(e) },
+        changes: {
+          character: entryFields(e),
+          ...(e.item ? { item: e.item } : {}),
+          ...(e.armor ? { armor: e.armor } : {}),
+          ...(e.vehicle ? { vehicle: e.vehicle } : {}),
+        },
       }));
     } catch (err) {
       if (err.status === 409 && err.detail?.conflict) {
@@ -757,12 +771,20 @@ async function resolveConflict(key, side) {
   await flushQueue();
 }
 
-// The book's damage flow, offered as one button: M.D.C. beings take it on
-// M.D.C.; everyone else runs S.D.C. down first and the remainder reaches
-// H.P. Armour is deliberately not in the cascade - which armour absorbed a
-// hit is a table decision, and its M.D.C. is edited on its own card.
+// Damage, to wherever the Hit to picker says it landed (UI-AUDIT F40). Body is
+// the default and is the book's flow below, unchanged.
 async function quickDamage() {
-  const amt = C.playAmt;
+  const target = C.hitTo || 'body';
+  if (target !== 'body') return hitTarget(target, C.playAmt);
+  return bodyDamage(C.playAmt);
+}
+
+// The book's damage flow: M.D.C. beings take it on M.D.C.; everyone else runs
+// S.D.C. down first and the remainder reaches H.P. Armour is still not in the
+// cascade - which armour absorbed a hit is a table decision - and since
+// UI-AUDIT F40 the table makes it on the Hit to picker rather than by leaving
+// play mode to type on the armour's card. See hitTarget below.
+async function bodyDamage(amt) {
   const patch = {};
   if (C.data.mdc_max != null) {
     patch.mdc_current = (C.data.mdc_current ?? 0) - amt;
@@ -798,6 +820,142 @@ async function quickDamage() {
     }
     alert('Failed: ' + err.message);
   }
+}
+
+// ── Hit to: armour and vessel locations (UI-AUDIT F40) ──
+//
+// Which armour absorbed a hit is a table decision, and it used to be one made
+// OUTSIDE play mode: find the armour on the Core tab, type, save - no event, no
+// undo, no queue. The picker beside Damage makes it in one tap, and the hit goes
+// through the events route like every other press.
+//
+// ARMOUR STOPS AT 0, and what it could not absorb is OFFERED to the body - an
+// "Apply N to body" button on the roll bar - never applied (Nate's call,
+// 2026-09-10): an S.D.C. wearer hit by M.D. is a conversion this app should not
+// guess. A VESSEL LOCATION keeps its own route's rule and goes below zero,
+// because Palladium blows straight through it, and its excess is nobody's H.P.
+const intOrNull = (v) => { const n = parseInt(v, 10); return Number.isFinite(n) ? n : null; };
+// Armour M.D.C. is stored as typed text, and blank means undamaged - full.
+const armorNow = (a) => intOrNull(a?.mdc_current) ?? intOrNull(a?.mdc_max);
+const hasKey = (o, k) => Object.prototype.hasOwnProperty.call(o || {}, k);
+
+function hitTargets() {
+  const out = [];
+  (C.data.armor || []).forEach((a, i) => {
+    const cur = armorNow(a);
+    if (cur == null) return;
+    const max = intOrNull(a.mdc_max);
+    out.push({ value: `armor:${i}`, label: `${a.name || `Armour ${i + 1}`} (${cur}${max != null ? `/${max}` : ''})` });
+  });
+  for (const v of C.vehicles || []) {
+    for (const loc of v.locations || []) {
+      if (loc.mdc == null) continue;
+      const cur = hasKey(v.mdc_current, loc.location) ? v.mdc_current[loc.location] : loc.mdc;
+      out.push({
+        value: `vessel:${v.id}:${encodeURIComponent(loc.location)}`,
+        label: `${v.vehicle_name || v.custom_name}: ${loc.location} (${cur}/${loc.mdc})`,
+      });
+    }
+  }
+  return out;
+}
+
+// Only drawn when there is somewhere other than the body for a hit to go.
+function hitToHtml() {
+  const targets = hitTargets();
+  if (!targets.length) { C.hitTo = 'body'; return ''; }
+  if (!targets.some((t) => t.value === C.hitTo)) C.hitTo = 'body';
+  return `<select id="play-hit-to" class="play-hit-to" aria-label="Where the hit lands" onchange="C.hitTo = this.value">
+      <option value="body"${C.hitTo === 'body' ? ' selected' : ''}>Hit to: body</option>
+      ${targets.map((t) => `<option value="${escHtml(t.value)}"${C.hitTo === t.value ? ' selected' : ''}>${escHtml(t.label)}</option>`).join('')}
+    </select>`;
+}
+function repaintHitTo() { const el = $('play-hit-to'); if (el) el.outerHTML = hitToHtml(); }
+
+function paintArmorInput(i) {
+  const el = document.querySelector(`input[data-armor="${i}"][data-key="mdc_current"]`);
+  if (el) el.value = C.data.armor?.[i]?.mdc_current ?? '';
+}
+function paintVesselInput(vid, location) {
+  const v = (C.vehicles || []).find((x) => x.id === vid);
+  const loc = v?.locations?.find((l) => l.location === location);
+  const el = [...document.querySelectorAll(`input[data-vessel="${vid}"]`)].find((x) => x.dataset.loc === location);
+  if (el && loc) el.value = hasKey(v.mdc_current, location) ? v.mdc_current[location] : loc.mdc;
+}
+
+async function hitTarget(target, amt) {
+  const [kind, a, b] = String(target).split(':');
+  if (kind === 'armor') return hitArmor(Number(a), amt);
+  if (kind === 'vessel') return hitVessel(Number(a), decodeURIComponent(b || ''), amt);
+  return bodyDamage(amt);
+}
+
+// A hit that could not be sent waits in the queue like any other press; one
+// the server refused was never valid and comes off the screen again.
+async function sendHit(note, change, undo) {
+  try {
+    await postEvent('damage', note, change);
+    return true;
+  } catch (err) {
+    if (err.status === undefined && await queueChange('damage', note, {}, null, change)) {
+      renderQueueState();
+      return true;
+    }
+    undo();
+    alert('Failed: ' + err.message);
+    return false;
+  }
+}
+
+async function hitArmor(i, amt) {
+  const a = (C.data.armor || [])[i];
+  const from = armorNow(a);
+  if (!a || from == null) return;
+  const raw = a.mdc_current ?? '';
+  const to = Math.max(from - amt, 0);
+  const took = from - to;
+  const excess = amt - took;
+  const label = a.name || `Armour ${i + 1}`;
+  a.mdc_current = String(to);
+  paintArmorInput(i); repaintHitTo();
+  const note = `${label} took ${took}${excess ? `, ${excess} not absorbed` : ''}`;
+  const sent = await sendHit(note,
+    { armor: { index: i, mdc_current: { from, to, raw_from: String(raw) } } },
+    () => { a.mdc_current = raw; paintArmorInput(i); repaintHitTo(); });
+  if (!sent) return;
+  recordRoll('overflow', label, { note: excess > 0 ? `absorbed ${took}; ${excess} not absorbed` : `absorbed ${took} (${to} left)` });
+  // After recordRoll, which clears any older offer: this one is the live one.
+  C.overflow = excess > 0 ? { amount: excess, label } : null;
+  const bar = $('play-roll-bar');
+  if (bar) bar.innerHTML = rollBarHtml();
+}
+
+async function hitVessel(vid, location, amt) {
+  const v = (C.vehicles || []).find((x) => x.id === vid);
+  const loc = v?.locations?.find((l) => l.location === location);
+  if (!v || !loc || loc.mdc == null) return;
+  v.mdc_current ||= {};
+  const had = hasKey(v.mdc_current, location);
+  const from = had ? v.mdc_current[location] : loc.mdc;
+  const to = from - amt;
+  v.mdc_current[location] = to;
+  paintVesselInput(vid, location); repaintHitTo();
+  const name = `${v.vehicle_name || v.custom_name}: ${location}`;
+  const sent = await sendHit(`${name} took ${amt}`,
+    { vehicle: { id: vid, location, mdc: { from, to, absent: !had } } },
+    () => { if (had) v.mdc_current[location] = from; else delete v.mdc_current[location];
+      paintVesselInput(vid, location); repaintHitTo(); });
+  if (!sent) return;
+  recordRoll('overflow', name, { note: `took ${amt} (${to} of ${loc.mdc} left)` });
+}
+
+// What armour could not absorb, applied to the body only when asked.
+async function applyOverflow() {
+  const o = C.overflow;
+  if (!o) return;
+  C.overflow = null;
+  await bodyDamage(o.amount);
+  recordRoll('overflow', 'Body', { note: `took the ${o.amount} that got past ${o.label}` });
 }
 
 // A chip clears the typed amount; the typed amount lights whichever chip it
@@ -871,6 +1029,21 @@ async function undoLast() {
       C.data[field] = v;
       paintPool(field.replace('_current', ''));
     }
+    // An armour or vessel hit, put back exactly (UI-AUDIT F40).
+    if (res.restored.armor) {
+      const { index, mdc_current: back } = res.restored.armor;
+      if (C.data.armor?.[index]) { C.data.armor[index].mdc_current = back; paintArmorInput(index); }
+    }
+    if (res.restored.vehicle) {
+      const { id: vid, location, mdc } = res.restored.vehicle;
+      const v = (C.vehicles || []).find((x) => x.id === vid);
+      if (v) {
+        v.mdc_current ||= {};
+        if (mdc == null) delete v.mdc_current[location]; else v.mdc_current[location] = mdc;
+        paintVesselInput(vid, location);
+      }
+    }
+    if (res.restored.armor || res.restored.vehicle) repaintHitTo();
     if (res.restored.item) {
       const it = C.items.find((x) => x.id === res.restored.item.id);
       if (it) {
@@ -1324,6 +1497,7 @@ function playControlsHtml(w, combat) {
     ${w ? `<div class="play-amt"><span class="muted small">Amount</span>${amts}
       <input type="number" id="play-amt-custom" class="play-amt-custom" min="1" inputmode="numeric"
         value="${typed}" placeholder="#" aria-label="Any other amount; Enter applies Damage">
+      ${hitToHtml()}
       <button class="dmg" onclick="quickDamage()">💥 Damage</button>
       <button onclick="undoLast()" aria-label="Undo the last change" title="Undo the last change">↶</button>
       <button onclick="endSession()">✎ End session</button></div>` : ''}

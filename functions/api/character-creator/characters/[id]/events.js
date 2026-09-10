@@ -5,7 +5,9 @@
 // POST /api/character-creator/characters/:id/events — apply a play action and
 //      record it, in ONE batch: {kind, note?, changes?}. `changes` carries
 //      absolute from/to values — {character: {sdc_current: {from, to}}} and/or
-//      {item: {id, notes: {from, to}}} — applied as given. The trust model is
+//      {item: {id, notes: {from, to}}} — applied as given. Since UI-AUDIT F40
+//      also {armor: {index, mdc_current: {from, to, raw_from}}} and
+//      {vehicle: {id, location, mdc: {from, to, absent}}}. The trust model is
 //      the sheet's existing PATCH (client-side arithmetic, owner/GM enforced
 //      server-side); what the event adds is atomicity and the undo trail. A
 //      roll has no changes and is a pure record.
@@ -115,6 +117,50 @@ export async function onRequestPost({ request, env, params }) {
     statements.push(env.DB.prepare(
       'UPDATE character_items SET notes = ? WHERE id = ?'
     ).bind(notes.to, itemId));
+  }
+
+  // WHERE A HIT LANDED (UI-AUDIT F40): an armour entry, or one location of a
+  // vessel. Each carries the value it replaced - `raw_from` for armour, whose
+  // M.D.C. is stored as typed text and may have been blank; `absent` for a
+  // location that had taken no damage yet - so undo can put back exactly what
+  // was there. Not guarded on replay, the standing an item change already has:
+  // the guard above is per pool.
+  if (changes.armor) {
+    const { index, mdc_current: m } = changes.armor;
+    if (!Number.isInteger(index) || typeof m?.to !== 'number' || typeof m?.from !== 'number') {
+      return json({ error: 'armor change needs an integer index and numeric from and to' }, 400);
+    }
+    const row = await env.DB.prepare('SELECT armor FROM characters WHERE id = ?').bind(params.id).first();
+    let armor;
+    try { armor = JSON.parse(row?.armor || '[]'); } catch { armor = []; }
+    if (!Array.isArray(armor) || !armor[index]) return json({ error: 'No such armour on this character' }, 404);
+    armor[index] = { ...armor[index], mdc_current: String(Math.trunc(m.to)) };
+    statements.push(env.DB.prepare(
+      "UPDATE characters SET armor = ?, updated_at = datetime('now') WHERE id = ?"
+    ).bind(JSON.stringify(armor), params.id));
+  }
+  if (changes.vehicle) {
+    const { id: vid, location, mdc: m } = changes.vehicle;
+    if (typeof location !== 'string' || !location || typeof m?.to !== 'number' || typeof m?.from !== 'number') {
+      return json({ error: 'vehicle change needs a location and numeric from and to' }, 400);
+    }
+    const v = await env.DB.prepare(
+      'SELECT id, vehicle_slug, mdc_current FROM character_vehicles WHERE id = ? AND character_id = ? AND removed_at IS NULL'
+    ).bind(vid, params.id).first();
+    if (!v) return json({ error: 'No such vessel on this character' }, 404);
+    // The same check the vessel route makes: a location this vessel does not
+    // have would render as a damaged part that does not exist.
+    if (v.vehicle_slug) {
+      const known = await env.DB.prepare(
+        'SELECT 1 AS ok FROM vehicle_locations WHERE vehicle_slug = ? AND location = ?'
+      ).bind(v.vehicle_slug, location).first();
+      if (!known) return json({ error: `Not a location on this vessel: ${location}` }, 400);
+    }
+    let cur;
+    try { cur = JSON.parse(v.mdc_current || '{}') || {}; } catch { cur = {}; }
+    cur[location] = Math.trunc(m.to);
+    statements.push(env.DB.prepare('UPDATE character_vehicles SET mdc_current = ? WHERE id = ?')
+      .bind(JSON.stringify(cur), v.id));
   }
 
   const payload = JSON.stringify({ note: typeof b.note === 'string' ? b.note.slice(0, 300) : undefined, changes });

@@ -303,8 +303,13 @@ What it offers (phase 1 of four):
   amount, plus a **Damage** button applying the book's flow: M.D.C. beings
   take it on M.D.C., everyone else runs S.D.C. down first with the remainder
   reaching H.P. Nothing clamps — negative H.P. is a real state (coma), and a
-  G.M. may allow over-maximum. Armour is deliberately not in the cascade:
-  which armour absorbed a hit is a table decision.
+  G.M. may allow over-maximum. Armour is still not in the cascade, because
+  which armour absorbed a hit is a table decision — and since UI-AUDIT F40 the
+  table makes it on a **Hit to** picker beside Damage: the body, each armour
+  piece, each vessel location. Armour stops at 0 and *offers* what it could not
+  absorb to the body (**Apply N to body** on the roll bar) rather than applying
+  it; a vessel location goes below zero, as its own route has always allowed.
+  Both go through the events route, so both undo and queue.
 - **Every derived number is a tappable roll.** Skills roll d100 against the
   percentage; saves and combat bonuses roll d20 + bonus, against a target
   where one is derived (the psionic save) and bonus-only where the book
@@ -327,13 +332,15 @@ What it offers (phase 1 of four):
   the 1D6 and the table adjudicates the rest), and an ammo counter when the
   payload states a capacity. Ammo lives in the inventory row's **notes** as
   `ammo 7/10` — visible on the sheet lens, editable by hand, no schema
-  change. Unequipped weapons are listed, not carded; equipping is the sheet
-  lens's job. The dice evaluator reaches this classic-script page the same way
+  change. Unequipped weapons are listed with a **Draw** button that equips one
+  without leaving play mode (UI-AUDIT F45). The dice evaluator reaches this
+  classic-script page the same way
   language-skills does: `js/dice.js` installs a `globalThis.diceRoll` mirror
   via a module tag.
 - The last result sits in a **fixed thumb-zone bar**; every roll is kept as a
   structured object in `C.rollLog` (capped at 50) — the shape phase 3's
-  `play_events` row was then built to take.
+  `play_events` row was then built to take. The bar opens the last ten
+  (UI-AUDIT F44).
 
 Writes are **optimistic**: the DOM moves first and rolls back with an alert if
 the server refuses. Phase 3 moved play mode's writes off the sheet's PATCH and
@@ -386,6 +393,7 @@ is what happens when the send *fails*:
 |---|---|---|
 | pool +/− | reverts | **queues** |
 | **Damage** | reverts | **queues** — one entry, both pools |
+| **a hit on armour or a vessel location** | reverts | **queues** — replayed unguarded, like ammo (UI-AUDIT F40) |
 | **rest** | reverts | **queues** — every pool it recovered, in one entry |
 | **a power spend** | reverts | **queues** |
 | **ammo** | reverts | **queues** as an item change carrying no pools |

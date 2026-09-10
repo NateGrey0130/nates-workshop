@@ -772,6 +772,69 @@ const restored = await api('GET', `/characters/${charId}`);
 check('and the pool is restored', restored.body.character.hp_current === hpBefore,
   'hp is ' + restored.body.character.hp_current + ', expected ' + hpBefore);
 
+// UI-AUDIT F40: a hit that lands on armour, through the same route, and back.
+// The armour starts BLANK - undamaged, full - which is the case undo has to
+// restore exactly rather than as the number the hit started from.
+const armorSet = await api('PATCH', `/characters/${charId}`, {
+  armor: [{ name: 'Regression Plate', ar: '', mdc_current: '', mdc_max: '50', weight: '', cost: '', prowl: '' }],
+});
+check('armour can be set for the hit test', armorSet.status === 200, armorSet.body);
+const armorHit = await api('POST', `/characters/${charId}/events`, {
+  kind: 'damage', note: 'regression armour hit',
+  changes: { armor: { index: 0, mdc_current: { from: 50, to: 30, raw_from: '' } } },
+});
+check('a hit can land on armour through the events route', armorHit.status === 200, armorHit.body);
+const afterArmor = await api('GET', `/characters/${charId}`);
+check('and the armour took it', afterArmor.body.character.armor?.[0]?.mdc_current === '30',
+  JSON.stringify(afterArmor.body.character.armor));
+const armorUndo = await api('POST', `/characters/${charId}/events/undo`);
+check('and undo reports what it put back',
+  armorUndo.status === 200 && armorUndo.body.restored?.armor?.mdc_current === '', armorUndo.body);
+const afterArmorUndo = await api('GET', `/characters/${charId}`);
+check('which is exactly what was there - blank, not the 50 the hit started from',
+  afterArmorUndo.body.character.armor?.[0]?.mdc_current === '',
+  JSON.stringify(afterArmorUndo.body.character.armor));
+const noArmor = await api('POST', `/characters/${charId}/events`, {
+  kind: 'damage', changes: { armor: { index: 7, mdc_current: { from: 1, to: 0 } } },
+});
+check('a hit on armour the character does not have is refused', noArmor.status === 404, noArmor.status);
+
+// ...and one that lands on a vessel location. A vessel arrives undamaged - no
+// key for the location at all - and undo has to leave it that way, not write
+// the maximum back in. The codex nests each vessel's locations; the first with
+// a printed maximum is the target.
+{
+  const codexVessels = await api('GET', '/codex?section=vehicles');
+  const targetVessel = (codexVessels.body.vehicles || [])
+    .find((v) => (v.locations || []).some((l) => l.mdc != null));
+  if (targetVessel) {
+    const loc = targetVessel.locations.find((l) => l.mdc != null);
+    const added = await api('POST', `/characters/${charId}/vehicles`, { slug: targetVessel.slug });
+    check('a vessel can be added for the hit test', added.status === 201, added.body);
+    const vid = added.body.vehicle?.id;
+    const vHit = await api('POST', `/characters/${charId}/events`, {
+      kind: 'damage', note: 'regression vessel hit',
+      changes: { vehicle: { id: vid, location: loc.location, mdc: { from: loc.mdc, to: loc.mdc - 10, absent: true } } },
+    });
+    check('a hit can land on a vessel location', vHit.status === 200, vHit.body);
+    const vAfter = (await api('GET', `/characters/${charId}`)).body.vehicles?.find((v) => v.id === vid);
+    check('and the location took it', vAfter?.mdc_current?.[loc.location] === loc.mdc - 10,
+      JSON.stringify(vAfter?.mdc_current));
+    const vUndo = await api('POST', `/characters/${charId}/events/undo`);
+    const vBack = (await api('GET', `/characters/${charId}`)).body.vehicles?.find((v) => v.id === vid);
+    check('and undo leaves the location untouched again, not written back at its maximum',
+      vUndo.status === 200 && !Object.prototype.hasOwnProperty.call(vBack?.mdc_current || {}, loc.location),
+      JSON.stringify(vBack?.mdc_current));
+    const badLoc = await api('POST', `/characters/${charId}/events`, {
+      kind: 'damage', changes: { vehicle: { id: vid, location: 'No Such Part', mdc: { from: 1, to: 0 } } },
+    });
+    check('a hit on a location the vessel does not have is refused', badLoc.status === 400, badLoc.status);
+  } else {
+    check('the scratch catalog has a vessel with a numbered location to hit', false,
+      'no vessel with a numeric location maximum');
+  }
+}
+
 const events = await api('GET', `/characters/${charId}/events`);
 check('the event log still holds the undone event',
   events.status === 200 && events.body.events.some((e) => e.undone_at), events.body.events?.length);
