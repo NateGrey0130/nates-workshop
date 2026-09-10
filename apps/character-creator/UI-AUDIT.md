@@ -2956,3 +2956,99 @@ Screenshotting the two apps under keyboard focus is what would raise it.
 
 **Ongoing cost:** none beyond the rule itself. A doubled pseudo-class is ugly and wants
 the comment to say why, which is cheaper than the `!important` it replaces.
+
+---
+
+**Taken, 2026-09-10 (PR #913). Posture held: shared stylesheet only, no app edits, no
+new token.** The selector is now
+`:where(button, input, select, textarea, a, summary, [tabindex]):focus-visible:focus-visible`
+and `border-radius` is gone from the block — the first of the two remedies this finding
+offered, chosen on the measurements below.
+
+**Six corrections. `audit-premise-auditor` found all six before the edit.**
+
+**1. The headline sentence is false for one of the four apps.** It says a keyboard user
+gets *"nothing at all on any input, select or textarea, in any of the four apps"*.
+<!-- claim-ok: quoting the premise this note corrects -->
+pick3cut5 sets no `outline: none` anywhere, so its thirteen `.panel input` controls have
+carried the ring since `F16`. Measured before any change, all thirteen read
+`solid 3px rgb(217,160,91)`. The correct scope is **three of four apps**.
+
+**2. `apps/character-creator/styles.css:167` is off by one — the rule is at `:168`.**
+`:167` is the closing brace of the block above it. Wrong at `fbfed8d` too, so it is not
+drift, and **`F36`'s outcome note carries the same wrong number**. Corrected here rather
+than by editing that note, because an audit file is a record.
+
+**3. The control counts undercount by roughly half.** This finding says eleven MediaVault
+controls and seven FilamentForge ones. Measured against the real pages, with modals
+force-unhidden so their controls are focusable: **23** and **12**. The finding's own
+Evidence line explains why — the probe drove the real stylesheets against synthetic
+markup — but the number is used without that caveat attached.
+
+**4. "Four of the ten are (0,1,0)" conflates declarations and selectors.** Three
+*declarations* are (0,1,0); one of them carries two selectors, making four *selectors*.
+More usefully: of the fourteen selectors in those ten declarations, only **seven target
+`input`** and were being defeated on specificity. The other seven target `select` or
+`textarea`, which the old ring never matched at all — they were not defeating anything.
+Two different mechanisms, and this finding merged them.
+
+**5. The stated regression is real and it is NOT the only one.** The search box splits
+exactly as described. Six further controls also change, and this finding names none of
+them: `button.list-action-btn` ×2 in media-vault, `#btnGenerate` in filament-forge, five
+`.tile`/`.choice` buttons in pick3cut5, and `.pick` and `.imp-tab` in the character
+creator all shift 4px to 3px — invisible. **The one that is visible is the wizard's
+`.toggle button` pair**, the *Browse all / Help me choose* control: deliberately square
+at `apps/character-creator/styles.css:451-453` inside an `overflow: hidden` wrapper, it
+gains 3px corners on focus. **So the change as proposed alters all four apps, not the
+two the Proposal names.** The posture holds as a statement about files edited; it was
+not a statement about apps affected.
+
+**6. Dropping `border-radius` has a cost of its own, which this finding does not**
+**mention.** Roughly eighteen controls across three apps have no radius of their own and
+were borrowing that line for their focus corner — seven in media-vault, eight in
+filament-forge, three in the character creator. They are square when focused now.
+
+**Why dropping it is still the right remedy of the two offered.** Measured both ways:
+raising the specificity *and* dropping `border-radius` cures the search-box split,
+removes the `.toggle button` shape change and every 4px→3px shift, and leaves
+**pick3cut5 byte-identical** — zero of fourteen focus signatures differ. Keeping the
+declaration app-local would have meant an app edit, which the posture forbids.
+
+**Verified after the change, with real `Input.dispatchKeyEvent` Tab through CDP and a
+450ms settle before every read** (`.btn` carries `transition: all`, so `outline-color`
+animates and an early read returns each element's own `currentColor`):
+
+| app | controls that gained the ring |
+|---|---|
+| media-vault | 23, every previously ringless input, select and textarea |
+| filament-forge | 12 |
+| character creator | `#codex-filter`, `#codex-system` — confirming `styles.css:168` was the blocker |
+| pick3cut5 | 0 — it already had them |
+
+Every `select` and `textarea` also moved from `outline-offset: 0px` to `2px`, having been
+outside the old selector entirely.
+
+**The selector is exactly (0,2,0), confirmed rather than assumed.**
+`CSS.supports('selector(...)')` returns true in Chrome 153; the rule beats
+`input:focus-visible` at (0,1,1) declared later, ties `.probe:focus-visible` at (0,2,0)
+and loses to it on order, and loses to `.a.b:focus-visible` at (0,3,0).
+
+**pick3cut5's duplicate ring is now superseded but every declaration is identical, so
+nothing moves.** Its `.panel input:focus { outline-offset: 0 }` at (0,2,1) still wins;
+all thirteen `.panel input` measured byte-identical before and after.
+
+**A near-miss worth recording, because nothing in this repo could have caught it.** The
+first version of this change shipped a **second `*/`** into the comment above the rule —
+one edit rewrote a paragraph and closed the comment, another kept the original
+terminator. The comment then ended early, every line after it parsed as garbage, and
+**the browser silently discarded the ring rule**: `::selection` was followed straight by
+the `@media` block in `document.styleSheets`. All four smoke suites passed, the file was
+served correctly by `curl`, and `grep` found the selector exactly where it belonged. Only
+reading the rendered CSSOM showed the rule was gone. A balance check —
+`(/\\*/g).length === (\\*\\//g).length` over the file — is one line and would have caught
+it; there is no such check today and this note is not proposing one.
+
+**One thing left, deliberately.** `apps/character-creator/styles.css:182` refers to this
+finding as a bare `F37` in a cross-file comment, which `audit-menu` says should name its
+menu — three other menus carry an `F37`. Fixing it would be an app edit and the posture
+forbids one, so it is named here rather than done.
