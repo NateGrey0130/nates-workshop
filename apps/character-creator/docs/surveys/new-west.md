@@ -300,7 +300,7 @@ Phase 4 costs money; everything above was free.
    `W.P. Sharpshooting` given New West's definition and its P.P.-scaled bonuses.
 3. **The 18 occupations, printed 83-125** — batched by section, ~4 per PR.
    **Batch 1 DONE (PR #883): Bandit 83, Highwayman 85, Bounty Hunter 87, Gunfighter 90.**
-   **Batch 2 DONE (PR #884): Gunslinger 92, Justice Ranger 96, Psi-Slinger 98, Saddle Tramp 101.**
+   **Batch 2 DONE (PR #885): Gunslinger 92, Justice Ranger 96, Psi-Slinger 98, Saddle Tramp 101.**
    **Remaining, printed 102-125: Sheriff/Lawman, Sheriff's Deputy, Wired Gunslinger,
    Cowboy, Mining 'Borg, Preacher, Professional Gambler, Saloon Bum, Saloon Girl -
    plus the CyberSlinger at printed 189.**
@@ -348,7 +348,7 @@ standing edges of prefixed names and are unchanged by this.
 | 2026-09-09 | [#881](https://github.com/NateGrey0130/nates-workshop/pull/881) | Cloud Magic, printed 37-45: **58 spells** at level 0, prefixed by category (spells 681 -> **739**). All 58 costs reconciled against the printed 37 index, 58/58 agree. 3 `same_spell_as` links of 8 candidates. Applied `--remote` before the PR. |
 | 2026-09-09 | [#882](https://github.com/NateGrey0130/nates-workshop/pull/882) | Skills: **3 new rows** (skills 367 -> **370**), plus `W.P. Rope` re-cited to RUE p.306 and `W.P. Sharpshooting` given this book's definition. Applied `--remote` before the PR. |
 | 2026-09-09 | [#883](https://github.com/NateGrey0130/nates-workshop/pull/883) | Classes batch 1, printed 83-92: **Bandit, Highwayman, Bounty Hunter, Gunfighter** (classes 225 -> **229**). One new catalog row, `Language: Spanish`. Filed `BOOK-INGEST-AUDIT` F49 and F50. Applied `--remote` before the PR. |
-| 2026-09-09 | [#884](https://github.com/NateGrey0130/nates-workshop/pull/884) | Classes batch 2, printed 92-102: **Gunslinger, Justice Ranger, Psi-Slinger, Saddle Tramp** (classes 229 -> **233**). No new catalog rows. Filed `BOOK-INGEST-AUDIT` F51. Applied `--remote` before the PR. |
+| 2026-09-09 | [#885](https://github.com/NateGrey0130/nates-workshop/pull/885) | Classes batch 2, printed 92-102: **Gunslinger, Justice Ranger, Psi-Slinger, Saddle Tramp** (classes 229 -> **233**). No new catalog rows. Filed `BOOK-INGEST-AUDIT` F51. Applied `--remote` before the PR. |
 
 ### What remains
 
