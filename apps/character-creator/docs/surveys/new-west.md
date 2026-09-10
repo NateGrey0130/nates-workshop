@@ -400,6 +400,7 @@ standing edges of prefixed names and are unchanged by this.
 | 2026-09-10 | [#896](https://github.com/NateGrey0130/nates-workshop/pull/896) | Gear batch B, printed 187-189: **25 cybernetics rows** - 15 Mining Borg attachments and 10 other bionic items (gear 1264 -> **1289**). All 25 new; the generic names were checked a second way against the 29 existing cybernetics rows. Chemical Spray carries NO price and none was invented. Applied `--remote` before the PR. |
 | 2026-09-10 | [#897](https://github.com/NateGrey0130/nates-workshop/pull/897) | Gear batch C, printed 203-213: **35 rows** - 9 Wilk's laser weapons, 7 Wilk's-Remi, 5 other Wilk's products, 8 conventional firearms, 6 CFT (gear 1289 -> **1324**). FIVE reprints of RUE rows skipped, and their five matching prices are the batch's own calibration. The 447 is a FALSE GAP at name distance 12. Grenade `sdc` refused by regression; filed rather than loosened. Applied `--remote` before the PR. |
 | 2026-09-10 | [#898](https://github.com/NateGrey0130/nates-workshop/pull/898) | Gear batch D, printed 213-218: **12 Techno-Wizard weapons** (gear 1324 -> **1336**). **THE BOOK'S GEAR IS DONE.** Printed 217 is glyph-corrupt and carries three of the twelve prices; all read off a render. Applied `--remote` before the PR. |
+| 2026-09-10 | [#899](https://github.com/NateGrey0130/nates-workshop/pull/899) | Vessels 1 of 2, printed 183-195: **6 vehicles, 57 M.D.C. locations, 16 weapon entries** (vehicles 143 -> **149**) - the two Bandito SAMAS, the three CyberSlinger bodies and the Tarantula ATV. The CyberSlingers land here rather than as classes. The Tarantula has TWO main bodies, so `mdc_main_body` is NULL. Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -807,5 +808,19 @@ across #895, #896, #897 and #898:
 | C | 203-213 | 35 | 5 Wilk's reprints of RUE rows |
 | D | 213-218 | 12 | none |
 
-**87 rows in, 7 entries skipped as reprints.** Gear 1249 -> **1336**. What
-remains of printed 171-223 is the VESSELS.
+**87 rows in, 7 entries skipped as reprints.** Gear 1249 -> **1336**.
+
+**A CORRECTION TO THIS TABLE, made 2026-09-10 while starting the vessels.**
+It first read *"78 lines counted off the cache, ALL ACCOUNTED FOR"*, and that
+was wrong. The 78 is a count across printed 171-223, which INCLUDES the vessel
+pages, and those prices were still outstanding when the sentence was written -
+the Sidewinder's 3.6 million on printed 184, the Wild Weasel's 4.8 million on
+186, the three CyberSlinger costs on 190-193, the Tarantula's 18 million on 195,
+and the robot horses, K-9, Bronco and War Wagon beyond that. What the four gear
+batches finished is the **gear** chapter; the vessel prices live in
+`vehicles.cost`, in a different table, and land with the vessels.
+
+The sentence was true of every page the four batches touched and false about
+the range it named. **A count taken over a page range answers for that whole
+range, and claiming it is discharged means checking every page in it** - not
+the pages the work happened to cover.
