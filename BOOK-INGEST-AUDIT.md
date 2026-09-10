@@ -7043,6 +7043,59 @@ are derivable from fields races already carry (`psionics.type`, an
 needs a new field on 79 rows. If it is the latter, the honest answer may be that
 prose is correct and this finding should close undone.
 
+**CLOSED UNDONE, 2026-09-10 (PR #907), which is the outcome this proposal
+authorised in its own last sentence.** Posture was
+investigate-then-possibly-decline; it declines. No code, no schema, no new
+field, no data change.
+
+**The check-before-scoping question was RUN rather than reasoned about.**
+Parsed every live published class `--remote` on 2026-09-10 with the real
+`parseClassMarkdown` and asked what each R.C.C. actually declares:
+
+| signal | how it is carried | R.C.C.s |
+|---|---|---|
+| master psionic | a real FIELD - `psionics.type` | **4** |
+| supernatural | prose only | 34 by regex |
+| creature of magic | prose only | 24 by regex |
+| nothing at all | - | **39 of 86** |
+
+**The derivation FAILS, and it fails in the direction that would ship a bug.**
+The 24 "creatures of magic" include **`human`, `elf`, `dwarf`, `goblin` and
+`hob-goblin`**. The regex is matching *restriction* lines - a class that BARS
+creatures of magic says the phrase too - not a declaration that the race is one.
+So a `kinds` list derived from prose would bar Humans from the Gunslinger for
+being creatures of magic. **Only one of the three kinds is derivable from a
+field, and it is the rarest of the three.**
+
+**Which leaves the option the proposal itself called the honest one:** a new
+field on **86** rows, 39 of which carry no signal at all and would have to be
+decided by hand against their books. That is a book-by-book research job across
+every race in the catalog, to serve **three** class restrictions.
+
+**Two numbers in this finding have moved, both upward:**
+
+- *"79 live published R.C.C.s as of 2026-09-09"* is **86** as of 2026-09-10.
+  Seven landed in one day - which is this finding's own argument against writing
+  the list out as ids, strengthened.
+- *"the count is two"* is **three**. `node scripts/audit-citations.mjs --remote
+  F51` returns `gunslinger, psi-slinger, wired-gunslinger`; the third was
+  created on 2026-09-10, after this was filed. The finding said outright that
+  two was a floor because two classes had been read for it, and it was right to.
+
+**What stays true, and is why this is closed rather than deleted.** Every
+premise holds, re-verified rather than taken on the page's word:
+`raceAllowedForOcc` matches `race?.id` with `none` reserved for humans
+(`js/parser.js:2097-2115`); `psi-stalker` and `wild-psi-stalker` are
+`category: occ` in the live catalog, so naming them in `race_restrictions` is
+refused by `regression.mjs:2264-2272`; and **nothing on a race declares its
+kind** - a grep of `js/parser.js` for `supernatural`, `creature_of_magic` and
+`race_kind` on 2026-09-10 returns nothing, so the key is absent from the
+frontmatter contract entirely.
+
+**Reopen this if a race ever gains a kind field for another reason.** The three
+restrictions become cheap to express the moment one exists; what is expensive is
+creating it for them alone.
+
 ### F52 - high - a DICE STRING in `bonuses` parses clean, stores, and is silently dropped, and 34 published classes carry one
 
 **Filed 2026-09-09**, while writing up the `new-west` class import. It was going
