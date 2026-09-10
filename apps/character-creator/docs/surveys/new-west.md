@@ -401,6 +401,7 @@ standing edges of prefixed names and are unchanged by this.
 | 2026-09-10 | [#897](https://github.com/NateGrey0130/nates-workshop/pull/897) | Gear batch C, printed 203-213: **35 rows** - 9 Wilk's laser weapons, 7 Wilk's-Remi, 5 other Wilk's products, 8 conventional firearms, 6 CFT (gear 1289 -> **1324**). FIVE reprints of RUE rows skipped, and their five matching prices are the batch's own calibration. The 447 is a FALSE GAP at name distance 12. Grenade `sdc` refused by regression; filed rather than loosened. Applied `--remote` before the PR. |
 | 2026-09-10 | [#898](https://github.com/NateGrey0130/nates-workshop/pull/898) | Gear batch D, printed 213-218: **12 Techno-Wizard weapons** (gear 1324 -> **1336**). **THE BOOK'S GEAR IS DONE.** Printed 217 is glyph-corrupt and carries three of the twelve prices; all read off a render. Applied `--remote` before the PR. |
 | 2026-09-10 | [#899](https://github.com/NateGrey0130/nates-workshop/pull/899) | Vessels 1 of 2, printed 183-195: **6 vehicles, 57 M.D.C. locations, 16 weapon entries** (vehicles 143 -> **149**) - the two Bandito SAMAS, the three CyberSlinger bodies and the Tarantula ATV. The CyberSlingers land here rather than as classes. The Tarantula has TWO main bodies, so `mdc_main_body` is NULL. Applied `--remote` before the PR. |
+| 2026-09-10 | [#900](https://github.com/NateGrey0130/nates-workshop/pull/900) | Vessels 2 of 2, printed 196-223: **9 vehicles, 46 M.D.C. locations, 7 weapon entries** (vehicles 149 -> **158**) - FOUR robot horses (not three), the K-9, the Bronco Scooter, the War Wagon, the Glittermount and the TW Ironhorse. Found the book-wide glyph substitution `corrupt_pages` cannot see. Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -824,3 +825,49 @@ The sentence was true of every page the four batches touched and false about
 the range it named. **A count taken over a page range answers for that whole
 range, and claiming it is discharged means checking every page in it** - not
 the pages the work happened to cover.
+
+### The vessels: a fourth robot horse, and a corruption the detector cannot see
+
+**THERE ARE FOUR ROBOT HORSES.** This survey said three, and so did the heading
+scan that checked it - both looked for `Model Type:` lines, and the **RH-1001A
+Appaloosa's heading is "Appaloosa or Pony", with no model number**, on printed
+196, a page otherwise full of accessory prices. It is the LIGHT horse, the
+cheapest of the four at 2.5 million. Same shape as the `P.C.C.` trap in the
+class roster: **count the entries, not the headings.**
+
+**A BOOK-WIDE GLYPH SUBSTITUTION, AND `corrupt_pages` REPORTS THREE PAGES.**
+This book renders the digit **1 as `!` or `l`** and **0 as `O` or `Q`** inside
+almost every `NDNx10` / `NDNx100` construction - `!D4xlO` for 1D4x10, `3D4xlOO`
+for 3D4x100, `10Q` for 100.
+
+- **It is in the INK.** Clipped printed 223 at 600 dpi to check, and the page
+  itself prints `!D4xlO`. **A render does not cure it**, unlike printed 217,
+  which is the other kind. This book has one clean example of each, which makes
+  it the reference case for `book-survey` 0a's distinction.
+- **Roughly SIXTY pages are affected** and the manifest lists three (cache
+  p031, p143, p218). The detector looks for glyphs that FAIL TO MAP; these map
+  to perfectly valid characters. **A substitution cipher is invisible to a
+  bad-glyph detector.**
+- **What gives it away is the dice grammar**, not the characters: `!D4xlO`
+  cannot be read any other way than 1D4x10. Every affected figure across all six
+  batches was read that way, and the sweep afterwards confirms it - no row in
+  `imported_classes`, `gear` or `vehicles` contains `xlO`, `xlOO` or `!D`, and
+  23 of the 27 class rows citing this book carry a correct `x100`.
+
+**It reaches STARTING MONEY**, which is the part that would have mattered most:
+almost every O.C.C. on printed 85-124 prints `Money: Starts with 3D4xlOO
+credits`. Those batches read them correctly; the sweep is what proves it rather
+than my memory of it.
+
+### A hand-counted assertion was wrong three times
+
+`INSERT OR IGNORE` is silent on a collision, so the vessel scripts count what
+they wrote. The counts caught **my own arithmetic, never a lost row** - 44
+against an actual 57, 15 against 16, 41 against 46 - and once caught a wrong
+FILTER: a `source_book LIKE '%New West p.19%'` returned 12 vessels because the
+other batch cites p.189-195. **A page-range pattern is not a batch boundary when
+two batches meet inside the same hundred.** Count by slug.
+
+The lesson is not to count more carefully. It is that **the assertion is worth
+writing even when you are confident**, because being wrong about your own file
+is the common case and it costs one line to find out.
