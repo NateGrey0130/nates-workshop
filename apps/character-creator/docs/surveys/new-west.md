@@ -738,6 +738,15 @@ Recording New West's figures would mean either overwriting RUE's or creating a
 second row with identical stats and a different price. **Neither was done** - it
 is a catalog-shape question rather than something an import should settle.
 
+**SETTLED 2026-09-10, PR #908: one row with a richer note**, which is the shape
+`BOOK-INGEST-AUDIT` F42 already chose for this table when two readings of one
+machine disagreed. No `cost` was overwritten and no row was duplicated - the New
+West figures sit in `cost_note`, cited to printed 178, and `source_book` names
+both books. **The Dog Pack is the exception and it is not an overwrite:** that
+row carried no cost at all, so 12,000 fills an empty column. It is also the one
+row where New West has MORE than RUE, splitting the suit into light and heavy;
+the RUE M.D.C. stands and the split is recorded beside it.
+
 **The stats disagree too, and RUE is the fuller reading in both directions.**
 New West prints ONE `M.D.C. by Location` block covering both Dead Boy suits, so
 its helmet/arms/legs figures are the HEAVY suit's; RUE states the light suit's
