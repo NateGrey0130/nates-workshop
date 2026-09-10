@@ -297,10 +297,42 @@ body {
   background: var(--accent);
 }
 
+/* The LIVE primary button needs the same pinning, one layer up, and for a
+   worse reason. `.btn:hover` at (0,2,0) outranks `.btn-primary` at (0,1,0),
+   so hovering a primary control replaced its fill AND its border while the
+   label stayed --bg-primary: the button went to --bg-primary on --bg-input,
+   measured 1.26:1. The label disappeared under the pointer.
+
+   UI-AUDIT F28 recorded this exact collision on 2026-09-01 and judged it
+   harmless — correctly. The label was WHITE then, and white on --bg-input is
+   comfortable. The retone changed the foreground to the dark tone for its own
+   good reasons and armed the defect without touching it. Neither PR was wrong.
+
+   THIS RULE TIES `.btn:hover` AT (0,2,0), so source order decides and it has
+   to sit after it. It does. The disabled pair above stays unreachable from
+   here on specificity rather than order: (0,3,0) beats (0,2,0), so a dead
+   primary button still does not light up.
+
+   border-color is restated as well as background because `.btn:hover` sets
+   both. UI-AUDIT F34 named background and color; color was never at risk —
+   `.btn:hover` does not set it — and border-color was. Restated anyway, so
+   the rule states the whole resting appearance rather than a subset of it. */
+.btn-primary:hover {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--bg-primary);
+}
+
 /* The foreground is --bg-primary, not white. White on --accent measures
-   4.09:1 and this is 13px at weight 600, which is not large text, so it wants
-   4.5. The dark tone on the same fill is 4.60. It is also what .dupe-badge
-   already does with --warning, for the same reason. */
+   3.09:1 and this is 13px at weight 600, which is not large text, so it wants
+   4.5. The dark tone on the same fill is 6.24. It is also what .dupe-badge
+   already does with --warning, for the same reason.
+
+   THOSE TWO NUMBERS READ 4.09 AND 4.60 UNTIL 2026-09-10, and both were Rust
+   & Ash's — measured against #C4622D, correct the day they were written, and
+   never re-measured through the verdigris retone. The file already carried the
+   right figure for the same pair two hundred lines up, in the ::selection
+   note, so it disagreed with itself. Re-measured while taking UI-AUDIT F34. */
 .btn-primary {
   background: var(--accent);
   border-color: var(--accent);
