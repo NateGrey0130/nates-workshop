@@ -3281,6 +3281,55 @@ that decides the route's shape.
 
 **Ongoing cost:** a third change type in the events route and in undo.
 
+---
+
+**Taken, 2026-09-10 (PR #927). Posture held: extends one route; no schema** — confirmed
+before the edit: armour is the `characters.armor` JSON array (`db/schema.sql`), vessel
+damage is `character_vehicles.mdc_current` keyed by location, and `play_events.payload`
+is JSON, so neither change type needed a column.
+
+**Two corrections, both from `audit-premise-auditor`.**
+
+**1. "A third change type" is two, in two routes.** Armour and a vessel location are
+different rows — one a JSON array on the character, the other a JSON object on a second
+table — so the events route gained **two** change types, and `events/undo.js` gained both,
+since it reversed only pools and item notes. The *Ongoing cost* line above understates
+it by one of each.
+
+**2. "Its M.D.C. is edited on its own card" was true of armour and not of vessels.**
+<!-- claim-ok: quoting the premise this note corrects -->
+Armour went through the sheet's PATCH on Save; a vessel location already had its own
+route (`vehicles/[vehicleId].js`). Both now go through the events route from play mode,
+and the vessel route stays for the card's own inputs.
+
+**What shipped.** A *Hit to* picker beside Damage — the body, each armour piece, each
+vessel location with a printed maximum — drawn only when there is somewhere other than the
+body. Body is unchanged: `quickDamage` became a switch, and the cascade moved to
+`bodyDamage`, so `play-flow.mjs`'s calls still land where they did. **Armour stops at 0
+and offers the rest** — *Apply N to body* on the roll bar, retired by the next result —
+never applies it (Nate's call). A vessel location goes below zero, as its route always
+allowed; its excess is nobody's H.P. Each change carries the value it replaced —
+`raw_from` for armour, which is stored as typed text and may have been blank, `absent`
+for a location with no damage yet — so undo restores **exactly**, and both queue on a
+drop, replayed unguarded like ammo.
+
+**Measured on 8801, local character 1, 2026-09-10**, with a test plate (blank of 50)
+added and removed again: the picker offered *Test Plate (50/50)*; 20 took it to 30 and
+repainted both the input and the picker; 40 stopped it at 0 with *absorbed 30; 10 not
+absorbed* and **Apply 10 to body**; applying took S.D.C. 11 → 1. Three undos walked it
+back — S.D.C. 11, armour 30, armour **blank** — and the server agreed. The character was
+restored to no armour, S.D.C. 11, H.P. 14.
+
+`regression.mjs` now drives both halves through the real routes: armour hit, undo back to
+blank rather than to the 50 the hit started from, a refused index; and a catalog vessel
+added, a location hit, undo back to *absent* rather than to its maximum, a refused
+location. **The vessel half was not walked in the browser** — no local character carries
+one — so the regression run is its only exercise.
+
+`docs/campaign-and-play.md` says so, and two of its sentences that `F44` and `F45` had
+made false are corrected in the same edit: *"equipping is the sheet lens's job"* and a
+roll bar with no history.
+
 ### F41 — medium — A weapon card's Strike ignores the weapon's own bonuses
 
 `weaponCardsHtml(w, combat.strike)` (`sheet.js:1137`) hands one bonus to every card,

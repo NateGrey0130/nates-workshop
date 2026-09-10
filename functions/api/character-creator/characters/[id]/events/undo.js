@@ -31,7 +31,7 @@ export async function onRequestPost({ request, env, params }) {
   try { payload = JSON.parse(ev.payload); } catch { payload = {}; }
   const changes = payload.changes || {};
   const statements = [];
-  const restored = { character: {}, item: null };
+  const restored = { character: {}, item: null, armor: null, vehicle: null };
 
   const charFields = changes.character || {};
   const sets = [], binds = [];
@@ -51,6 +51,37 @@ export async function onRequestPost({ request, env, params }) {
       'UPDATE character_items SET notes = ? WHERE id = ? AND character_id = ?'
     ).bind(changes.item.notes.from, changes.item.id, params.id));
     restored.item = { id: changes.item.id, notes: changes.item.notes.from };
+  }
+
+  // An armour or vessel hit (UI-AUDIT F40): the value the hit replaced, exactly
+  // - blank armour back to blank, an untouched location back to absent.
+  if (changes.armor && Number.isInteger(changes.armor.index)) {
+    const { index, mdc_current: m } = changes.armor;
+    const row = await env.DB.prepare('SELECT armor FROM characters WHERE id = ?').bind(params.id).first();
+    let armor;
+    try { armor = JSON.parse(row?.armor || '[]'); } catch { armor = []; }
+    if (Array.isArray(armor) && armor[index]) {
+      const back = typeof m?.raw_from === 'string' ? m.raw_from : String(m?.from ?? '');
+      armor[index] = { ...armor[index], mdc_current: back };
+      statements.push(env.DB.prepare(
+        "UPDATE characters SET armor = ?, updated_at = datetime('now') WHERE id = ?"
+      ).bind(JSON.stringify(armor), params.id));
+      restored.armor = { index, mdc_current: back };
+    }
+  }
+  if (changes.vehicle && typeof changes.vehicle.location === 'string') {
+    const { id: vid, location, mdc: m } = changes.vehicle;
+    const v = await env.DB.prepare(
+      'SELECT id, mdc_current FROM character_vehicles WHERE id = ? AND character_id = ?'
+    ).bind(vid, params.id).first();
+    if (v) {
+      let cur;
+      try { cur = JSON.parse(v.mdc_current || '{}') || {}; } catch { cur = {}; }
+      if (m?.absent) delete cur[location]; else cur[location] = m?.from;
+      statements.push(env.DB.prepare('UPDATE character_vehicles SET mdc_current = ? WHERE id = ?')
+        .bind(JSON.stringify(cur), v.id));
+      restored.vehicle = { id: v.id, location, mdc: m?.absent ? null : m?.from };
+    }
   }
 
   statements.push(env.DB.prepare(

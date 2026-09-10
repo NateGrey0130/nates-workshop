@@ -1729,6 +1729,9 @@ body.play-mode .skill-table .roll-btn { margin-left: 6px; vertical-align: middle
 }
 .play-dice button:active { background: var(--accent-glow); border-color: var(--accent); }
 
+/* UI-AUDIT F40: where the hit lands, beside Damage. */
+.play-hit-to { min-height: 40px; max-width: 240px; }
+#play-roll-bar .rb-apply { color: var(--text-primary); border-color: var(--accent-secondary); }
 /* UI-AUDIT F44: any other amount, beside the chips, at their row height. */
 .play-amt-custom { width: 64px; min-height: 40px; text-align: center; }
 /* The key list: shown where there is a keyboard to press them, and by `?`
