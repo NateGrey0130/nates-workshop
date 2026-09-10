@@ -397,6 +397,7 @@ standing edges of prefixed names and are unchanged by this.
 | 2026-09-10 | [#890](https://github.com/NateGrey0130/nates-workshop/pull/890) | Racial classes 1 of 2, printed 125-134: **Cactus People, Fennodi, Keeper of the Desert, Lyn-Srial** (classes 242 -> **246**). First class to consume the Cloud Magic spells. No new catalog rows, no new findings. Applied `--remote` before the PR. |
 | 2026-09-10 | [#892](https://github.com/NateGrey0130/nates-workshop/pull/892) | Racial classes 2 of 2, printed 134-158: **Sky-Knight, Cloudweaver, Mountain Giant, Psi-Pony** (classes 246 -> **250**). **ALL 25 PLAYABLE CLASSES ARE IN.** First use of `copy_of` in this book. Applied `--remote` before the PR. |
 | 2026-09-10 | [#895](https://github.com/NateGrey0130/nates-workshop/pull/895) | Gear batch A, printed 173-181: **8 Bandito Arms weapons and 7 suits of western body armour** (gear 1249 -> **1264**). Every number read off a RENDER; the cache cannot associate a cost with its entry on these pages. Two of the section's suits were NOT imported because RUE already holds them. Applied `--remote` before the PR. |
+| 2026-09-10 | [#896](https://github.com/NateGrey0130/nates-workshop/pull/896) | Gear batch B, printed 187-189: **25 cybernetics rows** - 15 Mining Borg attachments and 10 other bionic items (gear 1264 -> **1289**). All 25 new; the generic names were checked a second way against the 29 existing cybernetics rows. Chemical Spray carries NO price and none was invented. Applied `--remote` before the PR. |
 
 ### What remains
 
