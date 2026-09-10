@@ -702,10 +702,14 @@ Same reason: `variants` may not override `psionics` and an ability may.
 
 **Left deliberately unmodelled, for a later pass:**
 
-- The Sky-Knight's `+1D6 to P.S.` — `bonuses.attributes` drops a dice string
-  (**F52**). The `+2D6` M.D.C. and `+1D4x10` P.P.E. from the same paragraph *are*
-  in `bonuses.pools`, which does take dice (`js/dice.js:221`,
-  `js/parser.js:1454`).
+- ~~The Sky-Knight's `+1D6 to P.S.` — `bonuses.attributes` drops a dice
+  string (**F52**).~~ **WRONG, and corrected 2026-09-10.** `bonuses.attributes`
+  does NOT drop a dice string: it is rolled once at creation and stored on the
+  character (`app.js:232-250`, `js/derive.js:274-322`). `BOOK-INGEST-AUDIT` F52
+  was FALSIFIED and closed. The bonus now sits in `bonuses.attributes` where it
+  works, and this class shipped short of a P.S. bonus its book grants outright
+  until then. The `+2D6` M.D.C. and `+1D4x10` P.P.E. from the same paragraph are
+  in `bonuses.pools`, which was always right.
 - The Cloudweaver's **impervious to Horror Factor and possession** — an immunity,
   not a number; `bonuses.saves` holds numbers and there is no field for an
   immunity, so it is in `restrictions`.
