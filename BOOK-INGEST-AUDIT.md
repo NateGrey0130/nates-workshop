@@ -7136,3 +7136,194 @@ them, not that nothing anywhere reads them - and whether any of the 103 is a
 deliberate placeholder rather than a mistake. **Both halves of that are
 unmeasured**, and the second is why this finding proposes a warning rather than
 a migration.
+
+### F53 - high - `corrupt_pages` detects glyphs that FAIL to map, and the commoner fault maps to a VALID character
+
+**Found while importing `new-west` gear and vessels, 2026-09-10.** This is not
+`F36`, and the difference is the whole finding. `F36` is about a page whose text
+comes out as visible nonsense - `vsv&sis. \Vs. %\%vausttft` - which announces
+itself. This is about a page whose text comes out **readable and wrong**.
+
+New West renders the digit **1 as `!` or `l`** and **0 as `O` or `Q`** inside
+almost every `NDNx10` / `NDNx100` construction: `!D4xlO` where the book means
+1D4x10, `3D4xlOO` for 3D4x100, `10Q` for 100. Nothing about those strings is
+unmappable, so the detector `F36` produced does not count them.
+
+**Evidence, all 2026-09-10:**
+
+- A regex sweep over `.cache/books/new-west/txt/*.txt` for a dice-shaped token
+  containing `!`, `l`, `O` or `Q` returns **roughly sixty pages**. The manifest's
+  `corrupt_pages` for the same cache holds **three** entries - cache `p031`,
+  `p143` and `p218` - none of which is a page the sweep is reporting for this
+  reason.
+- The fault is in the **ink, not the text layer**. Clipped printed 223 (cache
+  `p224`) at 600 dpi with `pymupdf` `get_pixmap(dpi=600, clip=...)` and read it:
+  the page itself prints `!D4xlO million credits` and `10Q P.P.E.`, two words
+  after a correctly-set `4D6`. **So a render does not cure this**, which is the
+  opposite of New West printed 217, where the ink is right and the text layer is
+  wrong. This book carries one clean example of each, which makes it the
+  reference case for both halves of `book-survey` 0a.
+- It reaches **starting money**: almost every O.C.C. on printed 85-124 prints
+  `Money: Starts with 3D4xlOO credits`.
+
+**Nothing leaked into live data, and that is measured rather than assumed.**
+`node scripts/q.mjs --remote` over `imported_classes`, `gear` and `vehicles` on
+2026-09-10 returns zero rows containing `xlO`, `xlOO` or `!D`, and 23 of the 27
+class rows whose markdown mentions this book carry a correct `x100`. Every
+affected figure was read as a dice expression by a human reading a render, which
+is the control that happened to be in place and is not a control anything
+enforces.
+
+**Proposal:** teach `scripts/ocr-book.py` to report this class of damage
+alongside the glyph one, as a **separate manifest key** rather than folding it
+into `corrupt_pages` - the two need different remedies and merging them would
+tell a reader to render a page a render cannot fix. Detect it by GRAMMAR rather
+than by character: a token matching `[0-9!lOQ]*[Dd][0-9!lOQ]{1,2}([xX][0-9!lOQ]+)?`
+that contains at least one of `!lOQ`. Report a per-page count, as
+`corrupt_pages` already does.
+
+**Posture: warn, do not block. Report only - no exit code, no refusal to
+cache.** `ocr-book.py` must still produce the cache; this key is advisory, the
+same posture `corrupt_pages` and `welded_pages` already have. It should also
+surface in `class-check --field-sources` for a class whose window lands on such
+a page, which is where `corrupt_pages` already prints its advisory.
+
+**Evidence for the proposal itself: the regex above was RUN**, on this cache, on
+2026-09-10, and its output is what the sixty-page figure comes from. **It has
+not been run against the other fifteen caches**, which is the confidence gap
+below.
+
+**Beware one false positive, found the first time it ran:** the English word
+`Old` matches a looser version of the pattern and produced twenty spurious pages.
+The word-boundary guard `(?<![A-Za-z])...(?![A-Za-z])` is what removes it.
+
+**Confidence: high that the fault exists and is under-reported 20x in this book;
+MEDIUM that it generalises.** What would raise it: running the sweep against the
+other fifteen caches under `.cache/books/`. `spirit-west` and `mystic-russia`
+are the two untouched text-layer books in this batch and are the obvious first
+check.
+
+**Ongoing cost:** one regex and one manifest key in a script that already
+computes two similar keys, plus a line in `class-check --field-sources`. No new
+file, no new command to remember, no CI minute. The recurring cost is that a
+second advisory key is a second thing a reader must know to look at.
+
+**Subject grep, 2026-09-10:** `corrupt_pages`, `glyph`, `substitut` across every
+menu the `find` glob returns plus `SETUP-v2-CHANGES.md`, and across
+`~/.claude/.../memory/`. The only menu hits are in this file - `F30` (welded
+pages, a reading-ORDER fault), `F36` (glyph corruption, the visible kind) and
+`F39` (a render fixes a failed layout analysis). None of the three covers a
+substitution that maps to a valid character; `F36` is the one this extends and it
+is named above.
+
+### F54 - low - a gear row may not carry both an S.D.C. and a damage die, and a grenade legitimately does
+
+**Found while importing `new-west` gear, 2026-09-10, when it failed the run.**
+
+`apps/character-creator/test/regression.mjs:1577` refuses any `gear` row that
+has a non-null `sdc` alongside a dice expression in `damage`:
+
+```js
+const damageAsSdc = rows.filter((r) => r.sdc != null && /\dD\d/.test(r.damage || ''));
+check('and no weapon was given its own damage as durability', damageAsSdc.length === 0, ...);
+```
+
+**The check guards a real trap and should not be removed.** Its own comment says
+so: *"does 1D6 S.D.C." on a knife is DAMAGE, and a regex over descriptions would
+file it as durability - a knife that can absorb six points of punishment because
+it deals six.*
+
+**But a grenade has both.** New West printed 209 gives the Wilk's Beehive and
+Blinder an **S.D.C. of 20 and an A.R. of 10** - the durability of the grenade
+casing - alongside a blast of 3D6 M.D. The check cannot tell that from the knife
+it exists to catch.
+
+**Shipped in PR #897 with `sdc` NULL and the 20 in the `description`**, because
+loosening a guard in the same change that first trips it is how a guard stops
+guarding. The `ar` is stored normally; the check does not read that column.
+
+**Proposal:** scope the check the way its own sibling one line above is already
+scoped. `regression.mjs:1569` restricts the both-scales check to `category =
+'armor'` with the comment *"A row that CONFLATES two products can legitimately
+carry both - polarized goggles are 15 S.D.C. ordinary and 1 M.D.C. high-impact -
+which is why this is scoped to armour."* The same reasoning applies here: an
+explicit, named allowance for rows whose S.D.C. is the object's own toughness.
+Then restore `sdc = 20` on `wilk-s-beehive-laser-grenade` and
+`wilk-s-blinder-laser-grenade` in a `fix-` script.
+
+**Posture: keep the check and narrow it. No new gate, no exit-code change,
+nothing relaxed for rows outside the named allowance.** A blanket removal is
+explicitly not what this proposes.
+
+**Evidence: RUN.** The check fired on this data on 2026-09-10; the quoted source
+is `regression.mjs` at the lines given, read the same day. The two grenade rows
+are live and carry `sdc` NULL today.
+
+**Confidence: high.** The failure is reproducible by restoring either `sdc`
+value and re-running `node apps/character-creator/test/regression.mjs`. What is
+NOT measured: whether any other live gear row would want the same allowance - a
+sweep of `gear` for rows whose description states a self-S.D.C. would settle it
+and has not been done.
+
+**Ongoing cost:** near zero. One predicate on one check, plus whatever names the
+allowance - a category, a column, or a slug list, and a slug list is the shape
+this menu has previously disliked.
+
+**Subject grep, 2026-09-10:** no other menu mentions this check or the
+`gear.sdc`/`damage` pair; `durability` returns nothing in any menu, and the only
+`sdc` discussions in this file are `F42`'s edition figures and `F41`'s vessel
+split, neither of which touches the both-columns question.
+
+### F55 - low - `gear` has nowhere to record a CREATION cost, and RECOMMENDS BEING DECLINED for now
+
+**Found while importing `new-west` Techno-Wizard weapons, PR #898, 2026-09-10.**
+
+All twelve TW weapons state four things a Techno-Wizard character needs and the
+`gear` table has no column for any of them: an **initial P.P.E. cost** (40 to
+195), the **spells needed** with their own P.P.E. costs, a **physical
+requirement** including a gem of stated value (300 to 10,000 credits), and the
+**hours of work** (3D4 hours to 120). The Ironhorse's is 9,540 P.P.E. and 3700
+to 4000 hours.
+
+**Evidence:** `gear`'s schema read `--remote` on 2026-09-10 via
+`node scripts/q.mjs --remote "SELECT sql FROM sqlite_master WHERE name='gear'"`
+- eighteen columns: `id, slug, name, system, category, weight_lbs, cost,
+cost_note, damage, is_mega_damage, range, payload, rate_of_fire, ar, sdc, mdc,
+description, source_book, vehicle_slug`. None of the four fits any of them.
+All twelve rows put the whole block in `description` instead, prefixed
+`CREATION:`.
+
+**Proposal, and it recommends declining itself for now.** The mechanical answer
+is four columns or a `gear_creation` child table. The honest answer is that
+**nothing in the app reads any of it**, and neither does anything read the
+`vehicles` tables that have carried richer structure since migration 048. Adding
+columns means a migration, a backfill across every book that prints TW or
+alchemical creation stats, and a permanent obligation on every future gear
+import to fill them - for data with no consumer.
+
+So: **file it, store the prose, and hold.** What would change the recommendation
+is a consumer - a Techno-Wizard creation view, or a search that wants "items I
+can build with 60 P.P.E." If one is ever built, this is the finding to take
+first, and the twelve rows are already consistent enough to parse.
+
+**Posture: documentation of the gap only. No schema change, no migration, no
+new gate.** This finding exists so the next importer knows the prose is a
+decision rather than laziness, and so the gap is reachable by number.
+
+**Confidence: high on the absence** - the schema is quoted above from the live
+database. **The judgement that it should be held is a judgement, not a
+measurement**, and what would raise it is somebody wanting the data.
+
+**Ongoing cost of taking it:** four columns, one migration, a backfill across at
+least Triax, Free Quebec and New West, and a field every future gear import must
+consider. **Ongoing cost of declining it:** the prose stays unparseable, and a
+future consumer pays to extract it.
+
+**Subject grep, 2026-09-10:** `creation`, `P.P.E. cost` and `gear` schema
+questions across every menu plus the memory store. `F41`'s Wormwood outcome note
+is the nearest precedent and it points the other way - it declined to widen
+`vehicles` for parasite entries carrying Horror Factor, I.Q. and attacks per
+melee, on the grounds that importing one *"would DROP them, which is worse than
+the cosmetic split this finding set out to fix."* That decision is named here
+rather than re-litigated, per the rule about re-proposing settled questions.
+
