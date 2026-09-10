@@ -7042,3 +7042,97 @@ are derivable from fields races already carry (`psionics.type`, an
 `attributes are supernatural` restriction line, `mdc_base`), or whether this
 needs a new field on 79 rows. If it is the latter, the honest answer may be that
 prose is correct and this finding should close undone.
+
+### F52 - high - a DICE STRING in `bonuses` parses clean, stores, and is silently dropped, and 34 published classes carry one
+
+**Filed 2026-09-09**, while writing up the `new-west` class import. It was going
+to be a small note about that book dropping six attribute bonuses. It is not
+that.
+
+**`js/derive.js` `addBonus` skips anything that is not a finite number**, read
+2026-09-09 at `apps/character-creator/js/derive.js:344-352`:
+
+    for (const [k, v] of Object.entries(block)) {
+      if (typeof v !== 'number' || !Number.isFinite(v)) continue;
+
+**`validateBonuses` only rejects a dice string when `opts.flatOnly` is set**
+(`js/parser.js:1537-1545`), and `flatOnly` is the SKILL path. A class may carry
+one freely.
+
+**Reproduced rather than reasoned about.** A throwaway class with
+`bonuses: { attributes: { MA: "1d4" }, combat: { initiative: "1d4", strike: 2 } }`
+through the real `parseClassMarkdown` and then the real `addBonus`:
+
+    parse ok      : true
+    errors        : []
+    warnings      : []
+    stored bonuses: {"attributes":{"MA":"1d4"},"combat":{"initiative":"1d4","strike":2}}
+    combat after addBonus : {"strike":2}
+    attrs  after addBonus : {}
+
+`strike: 2` survives. Both dice strings vanish. Nothing anywhere rolls them:
+a grep of `js/derive.js` and `js/compose.js` for `rollDice`, `rollAttribute` and
+`parseDice` on 2026-09-09 returns nothing in either file.
+
+**THE EXPOSURE IS 103 ENTRIES ACROSS 34 OF 242 LIVE PUBLISHED CLASSES**, swept
+`--remote` on 2026-09-09 by parsing every one with `parseClassMarkdown` and
+walking `bonuses`, `bonuses.at_level`, `variants[].bonuses` and
+`special_abilities[].bonuses`. By block: **98 in `bonuses.attributes`, 4 in
+`bonuses.saves`, 1 in `bonuses.combat`.** `bonuses.pools` is excluded from the
+sweep on purpose - pools legitimately take a dice expression and are rolled once
+into a maximum.
+
+The worst affected are not obscure:
+
+| class | entries | includes |
+|---|---|---|
+| `cyber-knight` | 6 | `1d4` on M.A., M.E., P.S., P.P., P.E. and Spd - every attribute it raises |
+| `psycho-stalker` | 5 | |
+| `godling` | 5 | `combat.initiative: "1d4"`, plus four inside `special_abilities` |
+| `crazy` | 4 | |
+| eight juicer variants | 3-4 each | `juicer` carries `PS: "2d6"`, `PE: "2d6"`, `Spd: "2d4x10"` |
+| `ley-line-walker`, `dog-boy`, `freelancer` | 3 each | |
+
+**A Juicer's +2D6 P.S. is the defining feature of the class and it does nothing
+on the sheet.** Neither does a Cyber-Knight's entire attribute block.
+
+**F12'S TABLE HAS THIS BACKWARDS, and correcting it is part of this finding.**
+Read at `BOOK-INGEST-AUDIT.md:1489`, F12 lists:
+
+| class | asserted | falsified by |
+|---|---|---|
+| `apok` | `bonuses.attributes` takes flat numbers only | the Godling's +1D4 initiative |
+
+The apok's note is **TRUE**. The Godling's `+1D4 initiative` does not falsify it:
+that entry is itself one of the 103 and is inert. F12 read a class carrying a
+dice string as evidence that dice strings work. It is the exact shape F12 is
+about - a perishable claim about the app inside a permanent record - arrived at
+from the other side.
+
+**What the `new-west` import did, and why it needs no correction.** Six of its
+classes print a dice attribute bonus - `saddle-tramp` +1D4 M.A., `preacher`
++1D4+2 M.A., `saloon-bum` +1D4 P.E., `saloon-girl` +1D4+1 M.A., and
+`wired-gunslinger` P.S. +1D4, Speed +2D6 and initiative +3+1D4 - and all six put
+it in prose to be rolled at creation rather than into `bonuses`. That was the
+right call for the wrong reason: it was made from the reference's wording rather
+than from this measurement, and it is why none of those six is in the 103.
+
+**Proposed change, NOT implemented.** Two halves, and the second is the one that
+matters:
+
+1. **Make it loud.** `validateBonuses` should warn on a dice string outside
+   `pools` for a CLASS as it already errors for a skill, and `class-check`
+   should report it. That stops the 104th.
+2. **Decide what the 103 should be.** Rolling them properly means a bonus that
+   is rolled once and stored, which is what `pools` already does and what
+   `attribute_dice` does for a race - so the mechanism exists twice and neither
+   is wired to `bonuses.attributes`. The alternative is converting all 103 to
+   prose, which is honest, loses the numbers from the sheet, and is a large data
+   change across 34 classes including the headline ones.
+
+**Check before scoping:** whether the wizard rolls `bonuses.attributes` at
+CREATION somewhere other than `derive.js` - the sweep proves the sheet drops
+them, not that nothing anywhere reads them - and whether any of the 103 is a
+deliberate placeholder rather than a mistake. **Both halves of that are
+unmeasured**, and the second is why this finding proposes a warning rather than
+a migration.
