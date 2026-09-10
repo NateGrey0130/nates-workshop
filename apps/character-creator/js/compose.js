@@ -158,6 +158,14 @@ export const CORE_SDC_BY_CLASS = {
   'ngr-police': '3D6',
 
   // Practitioners of magic, psychics and scholars — 1D6.
+  // Rifts World Book 14: New West, printed 115-123. The Preacher is clergy,
+  // and the Gambler and the Saloon Bum are filed under Adventurers of the New
+  // West rather than among the gunfighters, so all three take 1D6 off the
+  // book's own section headings. The Mining 'Borg from the same batch needs no
+  // entry at all: it states an `mdc_base`.
+  'preacher': '1D6',
+  'professional-gambler': '1D6',
+  'saloon-bum': '1D6',
   'burster': '1D6',
   'elemental-fusionist-earth-air': '1D6',
   'elemental-fusionist-fire-water': '1D6',
