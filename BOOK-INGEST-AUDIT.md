@@ -7137,6 +7137,98 @@ deliberate placeholder rather than a mistake. **Both halves of that are
 unmeasured**, and the second is why this finding proposes a warning rather than
 a migration.
 
+**CLOSED AS FALSIFIED, 2026-09-10 (PR #905). NOT IMPLEMENTED, and that is a
+deliberate departure from "take as written" - see the last paragraph.**
+
+**This finding's own `Check before scoping` question is the one that kills it.**
+It asks *whether the wizard rolls `bonuses.attributes` at CREATION somewhere
+other than `derive.js`*. **It does. `app.js:232-250`.**
+
+**A DICE STRING IN `bonuses` IS NOT DROPPED. It is rolled ONCE AT CREATION and
+stored on the character**, which is exactly what `attribute_dice` does for a
+race and for the same stated reason:
+
+| where | what it does |
+|---|---|
+| `js/derive.js:274-322` | `diceBonusesByGroup` / `diceBonuses` collect every dice entry in `attributes`, `combat` and `saves` |
+| `app.js:232-250` | `rollDiceBonusesOf` calls `evalDice` on each one |
+| `app.js:3622-3623` | stores them as `attribute_bonuses` and `rolled_bonuses` |
+| `js/derive.js:216-246` | `classBonuses` turns the stored roll back into the number the sheet renders |
+| `sheet.js:1489-1501` | passes them in, with the comment *"Without them a Juicer's +2D6 P.S. would silently contribute nothing here"* |
+
+**`validateBonusGroup` ACCEPTS dice on purpose** - `js/parser.js:1393`, and its
+own error text reads *"must be a number or a dice expression like 2d6"*. So does
+the smoke suite, which uses **the Cyber-Knight's five `1d4` attribute bonuses**
+as its worked example that dice roll through composition
+(`test/smoke.mjs:3830-3868`). That path shipped 2026-08-17 and 2026-08-20 -
+three weeks before this finding was filed.
+
+**PRODUCTION SETTLES IT.** `--remote`, 2026-09-10: a live Juicer carries
+`attribute_bonuses = {"PS":9,"PE":7,"Spd":70}`, which is that class's `2d6`,
+`2d6` and `2d4x10`, rolled and stored.
+
+**How the finding got it wrong, precisely, because the shape recurs.** Its
+evidence line says *"a grep of `js/derive.js` and `js/compose.js` for `rollDice`,
+`rollAttribute` and `parseDice` on 2026-09-09 returns nothing in either file."*
+**That grep is TRUE.** The roller is in `app.js` and `js/dice.js`, and the
+function is called `evalDice`. A true grep over the wrong two files, for a name
+the code does not use, read as an absence. It also reproduced the bug by calling
+`addBonus` on the raw frontmatter - which nothing in the app ever does, because
+`classBonuses` resolves dice to the stored roll first and hands `addBonus` an
+all-numeric block.
+
+**The counts reproduce exactly and are not the problem.** Re-swept `--remote`
+2026-09-10 with the real `parseClassMarkdown`: 103 dice entries across 34
+classes, `{attributes: 98, combat: 1, saves: 4}`. All 17 distinct expressions
+evaluate under `evalDice`. The denominator moved - **34 of 250 live published
+classes, not 242.** Every one of the 103 works.
+
+**WHY IT WAS NOT IMPLEMENTED ANYWAY.** Half 1 asks for a warning on every dice
+string outside `pools` for a class. That would fire on **103 correct, working
+entries** and contradict a design `js/parser.js:1526-1531` states outright:
+*"A class rolls its dice bonuses once at creation and stores the result on the
+character; a skill can be taken at any level, so there is no equivalent
+moment."* Half 2 asks what the 103 *should* be; they are already right, so it
+has no subject. Taking this as written would ship a defect. **The protocol's
+options are implement-anyway or stop-and-ask, and this note takes neither -
+Nate should know that.**
+
+**ITS PROPOSED CORRECTION TO `F12` MUST NOT BE MADE.** This finding says
+*"`F12`'S TABLE HAS THIS BACKWARDS"* and asks that the `apok` row be reversed to
+call that class's note TRUE. `F12`'s table lists **false claims and what
+falsified them**; the `apok` note asserted *"`bonuses.attributes` takes flat
+numbers only"* and the Godling's `+1D4 initiative` does falsify it, because
+`combat.initiative: "1d4"` is rolled and stored like the rest. **`F12` is right
+and was left untouched.**
+
+**Two class notes repeated the false claim in live data and are corrected** in
+`fix-f52-false-dice-claims.sql`, applied `--remote` in the same PR:
+
+- **`lyn-srial-sky-knight` had been made WORSE by this finding.** Its `+1D6 to
+  P.S.` was put in `special_abilities` prose *because* F52 said a dice bonus
+  would do nothing, so the class shipped short a P.S. bonus its book grants
+  outright. The bonus now sits in `bonuses.attributes` where it rolls.
+  Verified: the corrected markdown parses with no errors and stores
+  `{"PS":"1d6"}`. `special_abilities` also left its `copy_of` except list,
+  because the two classes now agree on it - `regression.mjs` caught that within
+  one run of the first edit.
+- **`keeper-of-the-desert`** cited F52 for *"why a dice bonus there would be
+  silently dropped even if written as one"*. The class's abilities genuinely are
+  not enumerated against the catalog, which is true and stays; only the reason
+  was false.
+
+`apps/character-creator/docs/surveys/new-west.md` and the memory store carried it
+too and are corrected in the same PR.
+
+**What survives, and it is small.** Of the 103, **15 sit inside
+`special_abilities[].bonuses`**, and 6 of those are on classes filed
+`category: occ` - `ley-line-walker` and `freelancer`. `abilityPicker`
+(`app.js:1345-1348`) reads `S.rcc` only, so for a D-bee taking a racial class
+*plus* one of those O.C.C.s the ability is never offered. **That is an
+ability-PICKING limitation, not a dropped dice string, and it is 6 entries
+rather than 103.** Not filed as a finding here: it belongs to the wizard's
+ability step, and nobody has reported it.
+
 ### F53 - high - `corrupt_pages` detects glyphs that FAIL to map, and the commoner fault maps to a VALID character
 
 **Found while importing `new-west` gear and vessels, 2026-09-10.** This is not
