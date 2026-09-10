@@ -78,6 +78,13 @@ export const CORE_SDC_BY_CLASS = {
   'mystic-warrior': '3D6',
   'totem-warrior': '3D6',
   'spirit-warrior': '3D6',
+  // Rifts World Book 15: Spirit West, printed 48-62 - Shaman O.C.C.s, which
+  // are practitioners of magic, so 1D6. The Plant Shaman prints its own
+  // S.D.C. (P.E. x2) and needs no entry; the Mask and Healing Shamans' +10
+  // and +20 are pool bonuses on top of this.
+  'animal-shaman': '1D6',
+  'mask-shaman': '1D6',
+  'healing-shaman': '1D6',
   // Men of arms — 3D6.
   'glitter-boy': '3D6',
   'headhunter-techno-warrior': '3D6',
