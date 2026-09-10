@@ -1,6 +1,6 @@
 # UI-AUDIT.md — Character Creator interface
 
-> **There is open work on this menu, as of 2026-09-09.** Read each finding's own
+> **There is open work on this menu, as of 2026-09-10.** Read each finding's own
 > heading for its state; this line does not name them. **The findings filed after
 > the original run sit under their own dated `##` headings at the end of the
 > file**, after `F30`, and they run in filing order rather than in severity
@@ -3052,3 +3052,321 @@ it; there is no such check today and this note is not proposing one.
 finding as a bare `F37` in a cross-file comment, which `audit-menu` says should name its
 menu — three other menus carry an `F37`. Fixing it would be an app edit and the posture
 forbids one, so it is named here rather than done.
+---
+
+## Filed by an Impeccable design critique, 2026-09-10
+
+**Method.** A dual-assessment critique (a code-trace design review and the Impeccable
+detector, run as isolated sub-agents) plus a live walk on a server of my own —
+`wrangler pages dev --port 8801`, main checkout at `35afcbd`, local D1 — on
+2026-09-10. Scope was **functionality and ease of use**, not the visual standards
+`F34`–`F37` just closed. Every premise below that cites a line was opened on that day;
+the ones that were not are marked *to verify when taken*. A separate sweep of every
+character-creator menu checked that none of these repeats a finding already taken,
+declined or recorded as deliberately unbuilt.
+
+**Nate took all fifteen the same day**, with four decisions that are part of the
+proposals below rather than open questions: the sheet **autosaves** (`F38`), the
+landing roster shows **only the signed-in player's** characters (`F39`), damage that
+overflows armour is **offered, not applied** (`F40`), and campaign rest rates are
+**in scope** despite needing a column (`F52`).
+
+The detector's own result is recorded here so it is not re-run for the same answer:
+the six page shells are clean, one real finding (`F51`, 10.5px group headings), four
+false positives — and markup built in JS is invisible to it, which is nearly all of
+this app, so "clean" describes the shells and not the rendered UI.
+
+### F38 — high — Typed sheet edits are discarded by any action that redraws the sheet
+
+The sheet's section inputs are read back out of the DOM only when Save is pressed —
+`collectSections()` (`sheet.js:2865`), called from `saveStats()` (`sheet.js:2882`).
+Several actions reload or re-render first: `addItem` → `load()` (`sheet.js:2974`),
+`addJournal` → `load()` (`sheet.js:2990`), and — per the code-trace review, *to verify
+when taken* — `logXp` → `render()` (`:2351`), `claimPicks` → `load()` (`:2392`) and a
+sheet-mode power use → `load()` (`:2450`). A half-typed bio, armour M.D.C. or combat
+override is overwritten by the stored copy with nothing said. The app's one
+`beforeunload` is the wizard's (`app.js:3796`, grep of `apps/character-creator/*.js`,
+2026-09-10), so closing the tab loses them too.
+
+**Proposal:** autosave. Each section input saves about 1.5 seconds after the last
+keystroke, through the PATCH `saveStats` sends today and carrying its
+`expect_updated_at` (`sheet.js:2892`), so two people on one sheet still get the
+server's refusal rather than a silent overwrite. Pending edits flush before any redraw
+and on `pagehide`. A small status reads saving / saved / refused; a refusal keeps the
+typed values on screen and offers to reload the other side's version. The Save button
+goes. **Posture: no schema, no new route, the same conflict check; no new gate.**
+Nate chose this over "keep edits and warn" on 2026-09-10.
+
+**Evidence:** code read 2026-09-10 at `35afcbd`. **Reasoned from the handlers, not
+reproduced in a browser.**
+
+**Confidence:** high on the mechanism — both halves were read. Medium on the list of
+redrawing actions being complete; a read of every `load()` and `render()` caller in
+`sheet.js` is what raises it, and autosave makes the list matter less.
+
+**Ongoing cost:** more PATCH writes per session, and simultaneous edits now surface as
+visible refusals — which is the point, but it is new friction someone will see.
+
+### F39 — high — The character creator has no home: the roster lives on wizard step 1, and a draft hides it
+
+The characters and campaigns list is drawn by `renderSystem()` (`app.js:780-828`), the
+wizard's first step. When a draft exists, `renderDraftOffer()` (`app.js:545-561`)
+replaces that step with a Resume/Discard choice — seen live on 2026-09-10, where the
+landing page carried those two buttons and nothing else. And selecting a class card is
+enough to create a draft: `pickClass` sets `S.rcc` (`app.js:1174`), which is all
+`draftWorthSaving()` asks for (`app.js:441-443`), so reading one class brings the gate
+back on the next visit.
+
+Three more gaps around it, each read on the same day:
+
+- `GET /characters` filters by `campaign_id` and nothing else
+  (`functions/api/character-creator/characters.js:31`), so *Existing characters* is
+  every character on the site.
+- The campaign list is `gmCampaigns()` (`app.js:795`), so a player is never shown the
+  campaigns their characters are in. The sheet's header links codex, creator and
+  workshop (`sheet.html`, *to verify the line when taken*), and `sheet.js` contains no
+  `campaign.html` link (grep, 2026-09-10) — while the campaign page admits members
+  (`campaign.js:40`).
+- `dashboard.html` and `campaign.html` opened without a `campaign_id` end on an error
+  (`dashboard.js:141`; the campaign page read "No campaign_id in the URL." live).
+
+**Proposal:** (a) a home view ahead of the wizard — **Your characters**, the signed-in
+player's only (Nate's choice, over folding the others away), each with Sheet and
+▶ Play; **Your campaigns**, for a GM and a player alike; the draft as a card with
+Resume and Discard; and *New character* to start the wizard. (b) the filter server-side,
+`GET /characters?mine=1`, so the 200-row page cannot push someone's own character off
+it. (c) no draft until the player leaves the class step, rather than on selecting a
+card. (d) a Campaign link in the sheet header when the character has one. (e) the two
+campaign pages list your campaigns instead of erroring when no id is given.
+**Posture: no schema; one query parameter on an existing route.**
+
+**Evidence:** live walk on 8801 and code read, 2026-09-10.
+
+**Confidence:** high.
+
+**Ongoing cost:** one more view; the step-1 lists move rather than duplicate.
+
+### F40 — medium — Play mode cannot put a hit on armour or a vessel location
+
+`quickDamage()` leaves armour out on purpose — *"which armour absorbed a hit is a
+table decision, and its M.D.C. is edited on its own card"* (`sheet.js:717-720`). That
+card is a sheet-lens input read by `collectSections()` (`sheet.js:2873-2878`), so an
+armour hit means leaving play mode, typing, and saving: no event, no undo, no offline
+queue. The events route accepts pool fields and item notes only (`events.js:20`,
+`:53`, `:108-117`).
+
+**Proposal:** a *Hit to* choice beside Damage — Body (the cascade as it is), each
+armour entry, each vessel location — so the table decision is one tap and not a mode
+switch. Armour stops at 0; any excess is shown as *N not absorbed* with an **Apply to
+body** button and is **never applied automatically** (Nate's choice: an S.D.C. wearer
+hit by M.D. is a conversion this app should not guess). The events route gains an
+armour change carrying `from`/`to`, recorded as a `damage` event so it is undoable and
+queueable. **Posture: extends one route; no schema if armour and vessel locations live
+in stored JSON on existing rows — to be confirmed when taken.**
+
+**Evidence:** code read 2026-09-10.
+
+**Confidence:** medium — where armour and vessel locations are stored was not read, and
+that decides the route's shape.
+
+**Ongoing cost:** a third change type in the events route and in undo.
+
+### F41 — medium — A weapon card's Strike ignores the weapon's own bonuses
+
+`weaponCardsHtml(w, combat.strike)` (`sheet.js:1137`) hands one bonus to every card,
+and each card's Strike rolls with it (`sheet.js:1060`). The conditional bonuses are
+listed on the same sheet under *Conditional bonuses — these apply only in the
+situation named* — seen live on local character 1, e.g. *Sword with a sword +5 strike,
++4 parry* — and never reach a roll.
+
+**Proposal:** on each weapon card, a chip per conditional strike bonus, off by
+default, remembered per item on the device; the roll bar shows the breakdown.
+**Posture: opt-in on every roll, never automatic** — which keeps *"only in the
+situation named"* true.
+
+**Evidence:** code and live DOM, 2026-09-10.
+
+**Confidence:** high for chips built from the conditionals the sheet already lists.
+Matching a gear item to its W.P. automatically is **not** proposed; nothing maps one to
+the other today, and a guess would put a wrong bonus on a roll.
+
+**Ongoing cost:** one localStorage key per character.
+
+### F42 — medium — A pending level-up is invisible until someone logs XP
+
+`C.nextThreshold` and `C.proposal` start null (`sheet.js:62`) and are set only inside
+`logXp` (`sheet.js:2349-2350`); *Next level at* renders only when the first is set
+(`sheet.js:1690`). *Not now* nulls the proposal (`sheet.js:1988`) and nothing brings it
+back until XP is logged again. So a character with enough XP opens with no sign of it.
+
+**Proposal:** the character GET returns the next threshold and whether the XP already
+qualifies; the sheet shows *N XP to level L+1* on load and, when it qualifies, a banner
+that opens the level-up panel. *Not now* hides it for the visit, not for good.
+**Posture: extends one GET; no schema.**
+
+**Evidence:** sheet code read 2026-09-10. That the GET returns neither field is the
+code-trace review's search of `characters/[id].js`, **not repeated — to verify when
+taken.**
+
+**Confidence:** medium until that GET is read.
+
+**Ongoing cost:** one more field in a response.
+
+### F43 — medium — The Skills step is 13,978px of checkboxes
+
+Measured live on local draft 19 (a Gunfighter, step 5) at 1280px, 2026-09-10: the
+document is **13,978px** tall and carries **811 checkboxes** in **32 groups**. The
+34-item W.P. list is drawn in full **twice**, once for the *pick 2* group and again for
+*pick 1*, and the Pilot pick draws every pilot skill.
+
+**Proposal:** a satisfied pick group collapses to its chosen skills and a *Change*
+button; an unsatisfied one gets the filter box the related-skills list already has
+(`Picker.inputHtml`, `app.js:2409`) and shows a short list until filtered or expanded.
+The automatic class skills fold to a one-line summary. **Posture: presentation only —
+nothing about what may be picked, or the rules behind it, changes.**
+
+**Evidence:** live DOM measurement, 2026-09-10, one class.
+
+**Confidence:** high on the numbers for that class; other classes differ in size, not
+in shape.
+
+**Ongoing cost:** a collapsed/expanded state per group, held in memory and not in the
+draft.
+
+### F44 — medium — Play mode has no fast path: fixed amounts, no keys, one visible roll
+
+The amount chips are 1, 5, 10 and 20 (`sheet.js:1118`); a 37-point hit is several
+presses and several events, and ↶ reverses one. The app's keyboard handling is Enter in
+the picker (`js/picker.js:92`) and the catalog's rows (`catalog.js:648`) — a grep for
+`keydown` on 2026-09-10 found those two. The roll bar shows `C.lastRoll` (`sheet.js:416-434`)
+while `C.rollLog` keeps fifty (`sheet.js:405-411`), and a natural 20 or 1 is not marked.
+
+**Proposal:** (a) a number field beside the chips, where Enter applies Damage; (b)
+play-mode keys when no field has focus — `D` damage, `U` undo, `P` percentile, `N` next
+attack, `R` new round, `?` for the list; (c) tap the roll bar to open the last ten
+rolls; (d) mark a natural 20 and a natural 1 on any d20. **Posture: client only; no new
+event kind, no rule change — a natural 20 is labelled, not given an effect.**
+
+**Evidence:** code read and grep, 2026-09-10.
+
+**Confidence:** high.
+
+**Ongoing cost:** a key map to keep clear of browser and screen-reader shortcuts.
+
+### F45 — low — Drawing a carried weapon means leaving play mode
+
+An unequipped weapon gets a line reading *"equip on the sheet lens for cards"*
+(`sheet.js:1067-1068`): out of play mode, find it in Gear, tick it, come back.
+
+**Proposal:** a *Draw* button beside each carried weapon that sets it equipped through
+the item PATCH the Gear tab uses, and the card appears. **Posture: same route as the
+Gear tab's equip control; no schema.**
+
+**Evidence:** code read and live DOM, 2026-09-10.
+
+**Confidence:** high; the PATCH helper's line is *to verify when taken*.
+
+**Ongoing cost:** none.
+
+### F46 — medium — The campaign dashboard is read-only, so running a session means a tab per character
+
+`dashboard.js` loads once (`:12-33`) and draws the roster as text (`:46-53`): no
+refresh, no controls. A GM tracking five characters opens five sheets.
+
+**Proposal:** for the GM only — each roster row gets its pool bars with −, + and Damage,
+posting through the events route so every change lands in that character's own log and
+undo; the roster refreshes when the tab regains focus; **Award XP to party** applies one
+amount to each character through the XP route. **No initiative tracker** — party-wide
+initiative is recorded as deliberately unbuilt in `docs/campaign-and-play.md`, and this
+does not reopen it. **Posture: GM-only controls, existing routes only.**
+
+**Evidence:** code read 2026-09-10.
+
+**Confidence:** medium — the XP route's shape was not read.
+
+**Ongoing cost:** a second place that writes play events, which must stay in step with
+the sheet's.
+
+### F47 — low — The party stash takes free text only, so claimed loot can never be a weapon card
+
+The stash endpoint accepts a gear-catalog `item_id` or a `custom_name`
+(`functions/api/character-creator/campaigns/[id]/items.js:58-61`), and the stash's add
+form sends free text (`campaign.js`, *line to verify when taken*). A weapon card needs
+a catalog match, so looted weapons stay text forever.
+
+**Proposal:** the gear picker in the stash's add form, with free text kept as the
+fallback. **Posture: UI only; the endpoint already takes the id.**
+
+**Evidence:** endpoint read 2026-09-10; the form's shape is the code-trace review's.
+
+**Confidence:** medium until the form is read.
+
+**Ongoing cost:** none.
+
+### F48 — low — The codex has no Skills or Classes
+
+The codex's tabs are Spells, Psionics, Gear and Vessels (live, 2026-09-10). A class can
+be read only inside the wizard, where selecting it saves a draft (`F39`).
+
+**Proposal:** a Skills tab (category, base %, per level, source) and a Classes tab
+showing each class's summary read-only, from the catalog data the wizard already
+fetches. **Skill descriptions are out of scope** — the catalog carries none, and adding
+them is a column and an import, which is its own decision. **Posture: read-only; no
+schema.**
+
+**Evidence:** live page, 2026-09-10.
+
+**Confidence:** high.
+
+**Ongoing cost:** two more tabs that must follow the catalog's fields as they change.
+
+### F49 — low — The related-skills allowance sentence contradicts itself
+
+`app.js:2407-2408` reads *"a character at level three is measured against
+${relatedAllowance(effective, S.level)} picks rather than ${relatedCfg.count}"* — the
+example names level three and computes at the character's current level. A level-1
+Gunfighter reads *"measured against 4 picks rather than 4"* (live, 2026-09-10).
+
+**Proposal:** compute the example at level three. **Posture: copy only.**
+
+**Evidence:** code and live page, 2026-09-10. **Confidence:** high. **Ongoing cost:** none.
+
+### F50 — low — On a phone, play mode's controls push every tab down, and Rest is a small target below the fold
+
+Measured at 375×812 on local character 1, 2026-09-10: Damage, ↶ and End session at
+y=680; Percentile at y=829; **Rest at y=1271 and 27px tall**; the first save roll at
+y=1471. The controls sit outside the tab panels, with Weapons open by default
+(`sheet.js:1070`), so every tab starts below them.
+
+**Proposal:** each play section remembers open or closed per device, and the Rest
+summary gets a 44px minimum height. **Posture: CSS and one localStorage key.**
+
+**Evidence:** live DOM measurement, 2026-09-10. **Confidence:** high. **Ongoing cost:** none.
+
+### F51 — low — Three small accessibility and legibility gaps
+
+- ↶ has no accessible name (`sheet.js:1123`) — a screen reader announces a glyph.
+- `.power-group` headings are 10.5px (`styles.css:992`), the detector's one real
+  finding on 2026-09-10; they head every spell and psionic group.
+- `styles.css:182` names a bare `F37` in a cross-file comment, recorded in `F37`'s own
+  note as named rather than done.
+
+**Proposal:** an `aria-label` on ↶, the group headings to 12px, and the comment to
+`UI-AUDIT F37`. **Posture: markup, CSS and a comment.**
+
+**Evidence:** code read and detector run, 2026-09-10. **Confidence:** high. **Ongoing cost:** none.
+
+### F52 — low — Rest rates are remembered per device, so a new phone starts blank
+
+Rates are stored under `cc-play-rest-<id>` in localStorage (`sheet.js:1168-1176`), and
+the app ships no default on purpose — the books' recovery pages are not audited
+(`sheet.js:1079-1085`).
+
+**Proposal:** a nullable rest-rates column on `campaigns`, set by the GM on the
+dashboard; the sheet prefers the campaign's rates and falls back to the device's.
+**Still no default numbers.** **Posture: a schema change — one nullable column,
+applied to production before the merge, per `ship-pr`.** In scope by Nate's decision,
+2026-09-10.
+
+**Evidence:** code read 2026-09-10. **Confidence:** high. **Ongoing cost:** one column,
+through the five places `schema-change` names.
