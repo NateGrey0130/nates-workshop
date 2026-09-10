@@ -907,7 +907,10 @@ catalog already holds** - two CS armours and a Dog Pack suit from RUE (#895),
 and five Wilk's products from RUE (#897). Each is named with its slug in the
 script that skipped it.
 
-**What is still open is in the findings section above**, not in the data: the
-Black Market price question on the three CS armours, the grenade `sdc` the
-regression check refuses, and the `corrupt_pages` detector that cannot see a
-substitution cipher.
+**Nothing from this book is still open, as of 2026-09-10.** This paragraph
+used to list three open items, and all three were closed that day: the Black
+Market prices on the three CS armours (PR #908), the grenade `sdc` the
+regression check refused (`BOOK-INGEST-AUDIT` F54, PR #906), and the
+`corrupt_pages` detector that could not see a substitution cipher (F53, PR
+#904). `BOOK-INGEST-AUDIT` F50 and F55 are HELD rather than open - their
+outcome notes name what would reopen them.

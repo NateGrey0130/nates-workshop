@@ -3795,7 +3795,7 @@ gates nothing - the report is advisory by design and says so.
 
 ### F29 - `Air: Sonic Blast` and `Sonic Blast` look like one spell twice, inside the Book of Magic
 
-**Resolved 2026-09-08 (PR pending), and it is NOT a defect.** Filed hours
+**Resolved 2026-09-08 (PR #816), and it is NOT a defect.** Filed hours
 earlier in this same menu as a suspected duplicate, on the strength of two rows
 sharing a range and a damage figure. Both pages were then read, and the
 suspicion below - *"one of the two pages is being read wrong"* - is wrong:
