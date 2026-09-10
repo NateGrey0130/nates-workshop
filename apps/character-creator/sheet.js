@@ -1617,16 +1617,20 @@ async function applyRest() {
 
 function restPanelHtml() {
   const prefs = restPrefs();
-  const rates = prefs.rates || {};
+  // The campaign's rates win when its G.M. has set them (UI-AUDIT F52); the
+  // device's typed rates are the fallback, as they were the whole story before.
+  const fromCampaign = C.data.campaign_rest_rates && Object.keys(C.data.campaign_rest_rates).length
+    ? C.data.campaign_rest_rates : null;
+  const rates = fromCampaign || prefs.rates || {};
   const rows = POOLS.filter(([key]) => C.data[key + '_max'] != null).map(([key, label]) =>
     `<label class="rest-row"><span>${label} per hour</span>
       <input type="number" min="0" id="rest-rate-${key}" value="${rates[key] ?? ''}" placeholder="0" oninput="updateRestPreview()"></label>`).join('');
   return `<details class="play-sec" data-play-sec="rest" ontoggle="rememberPlaySec(this)"${
     playSecOpen('rest', false) ? ' open' : ''}><summary>Rest &amp; recovery</summary>
-    <p class="muted small">Your table's rates — the books' recovery pages are not yet in the
-    rules audit, so nothing here ships a number for you. Set a per-hour rate per pool
-    (for a per-day rule, divide or set hours to the days). Applied as one undoable event,
-    clamped at each pool's max.</p>
+    <p class="muted small">${fromCampaign
+      ? "Your G.M. set this campaign's rates, so they are filled in here; change one and it applies to this rest."
+      : "Your table's rates — the books' recovery pages are not yet in the rules audit, so nothing here ships a number for you. Set a per-hour rate per pool (for a per-day rule, divide or set hours to the days)."}
+    Applied as one undoable event, clamped at each pool's max.</p>
     <label class="rest-row"><span>Hours rested</span>
       <input type="number" min="0" id="rest-hours" value="${prefs.hours ?? 8}" oninput="updateRestPreview()"></label>
     ${rows}

@@ -369,7 +369,9 @@ how a log inherits every consistency bug forever. What the log buys:
 derived attacks-per-melee and is deliberately client-only ephemera — a round
 in progress is not character data. **Rest** applies rate × hours per pool as
 one undoable event, clamped at each pool's max. The rates are **the
-table's own**, typed in and remembered per character on the device: the
+table's own** — set once by the G.M. on the campaign dashboard and preferred by
+every sheet in the campaign (UI-AUDIT F52), or else typed in and remembered per
+character on the device: the
 books' recovery pages are not yet in the rules audit, and this app does not
 ship an uncited number for a table to silently trust. When those pages are
 audited, cited defaults belong in `js/rules.js`.

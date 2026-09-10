@@ -244,6 +244,7 @@ function render() {
       Open to new characters
       <span class="muted">— anyone on the site can join this campaign by creating one here; unticked, only you and current players can</span>
       <span id="open-msg" class="muted small"></span></label>
+    ${restRatesHtml(camp)}
   </div>` : ''}
   </div>
 
@@ -271,6 +272,43 @@ async function saveOpen(open) {
   } catch (err) {
     $('open-msg').textContent = 'Save failed: ' + err.message;
     $('open-msg').className = 'err small';
+  }
+}
+
+// The table's rest rates, set once here for everyone in the campaign
+// (UI-AUDIT F52). They lived in one device's localStorage, so a player on a new
+// phone started blank. Blank or 0 means the table has no rate for that pool;
+// the app still ships no default.
+const REST_POOLS = [['hp', 'H.P.'], ['sdc', 'S.D.C.'], ['mdc', 'M.D.C.'], ['ppe', 'P.P.E.'], ['isp', 'I.S.P.']];
+function restRatesHtml(camp) {
+  let rates = {};
+  try { rates = camp.rest_rates ? JSON.parse(camp.rest_rates) : {}; } catch { rates = {}; }
+  return `<div class="gm-rest">
+      <h4 style="margin:12px 0 4px">Rest rates <span class="muted small">— per hour, for every sheet in this campaign</span></h4>
+      <div class="gm-rest-rows">${REST_POOLS.map(([k, label]) => `<label class="small">${label}
+        <input type="number" min="0" step="any" id="rest-${k}" value="${rates[k] ?? ''}" placeholder="0" style="width:70px"></label>`).join('')}</div>
+      <div class="rowline"><button class="btn btn-sm" onclick="saveRestRates()">Save rest rates</button>
+        <span id="rest-msg" class="muted small"></span></div>
+    </div>`;
+}
+
+async function saveRestRates() {
+  const rest_rates = {};
+  for (const [k] of REST_POOLS) {
+    const v = $('rest-' + k)?.value;
+    if (v !== '' && v != null) rest_rates[k] = Number(v);
+  }
+  try {
+    await api('campaigns/' + campaignId, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rest_rates }),
+    });
+    D.campaign.rest_rates = Object.values(rest_rates).some((n) => n > 0) ? JSON.stringify(rest_rates) : null;
+    $('rest-msg').textContent = 'Saved.';
+    $('rest-msg').className = 'muted small';
+  } catch (err) {
+    $('rest-msg').textContent = 'Save failed: ' + err.message;
+    $('rest-msg').className = 'err small';
   }
 }
 

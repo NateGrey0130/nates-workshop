@@ -180,6 +180,9 @@ CREATE TABLE IF NOT EXISTS campaigns (
   gm_email TEXT NOT NULL,
   description TEXT,
   gm_notes TEXT,                        -- GM-only; stripped from non-GM API responses
+  rest_rates TEXT,                      -- JSON {pool: per-hour recovery}, set by the GM,
+                                        -- or NULL for none. The table's OWN rates: the
+                                        -- app ships no default. Migration 054.
   open INTEGER NOT NULL DEFAULT 1,      -- 1 = anyone on the site may join by creating a
                                         -- character in it; 0 = GM and existing members
                                         -- only. Joining IS creating a character, so this
@@ -675,6 +678,9 @@ CREATE TABLE IF NOT EXISTS character_vehicles (
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '053-gear-vehicle-slug.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('gear') WHERE name = 'vehicle_slug');
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '054-campaign-rest-rates.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('campaigns') WHERE name = 'rest_rates');
 
 CREATE INDEX IF NOT EXISTS idx_character_vehicles_character
   ON character_vehicles (character_id);
