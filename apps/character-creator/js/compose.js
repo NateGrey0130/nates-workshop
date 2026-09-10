@@ -70,6 +70,14 @@ export const CORE_SDC_BY_CLASS = {
   'sheriffs-deputy': '3D6',
   'wired-gunslinger': '3D6',
   'cowboy': '3D6',
+  // Rifts World Book 15: Spirit West, printed 36-47 - the four Traditional
+  // Warrior O.C.C.s. None prints an S.D.C. formula. The Tribal Warrior's +5D6
+  // and the Mystic Warrior's +30 are pool bonuses on top of this, and the
+  // Totem and Spirit Warriors convert the total to M.D.C., which is prose.
+  'tribal-warrior': '3D6',
+  'mystic-warrior': '3D6',
+  'totem-warrior': '3D6',
+  'spirit-warrior': '3D6',
   // Men of arms — 3D6.
   'glitter-boy': '3D6',
   'headhunter-techno-warrior': '3D6',
