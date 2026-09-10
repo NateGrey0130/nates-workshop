@@ -302,9 +302,9 @@ Phase 4 costs money; everything above was free.
    **Batch 1 DONE (PR #883): Bandit 83, Highwayman 85, Bounty Hunter 87, Gunfighter 90.**
    **Batch 2 DONE (PR #885): Gunslinger 92, Justice Ranger 96, Psi-Slinger 98, Saddle Tramp 101.**
    **Batch 3 DONE (PR #886): Sheriff/Lawman 102, Sheriff's Deputy 105, Wired Gunslinger 107, Cowboy 110.**
-   **Remaining, printed 113-125: Mining 'Borg/Prospector, Preacher, Professional
-   Gambler, Saloon Bum/Stoolie, Saloon Girl/Barmaid - plus the CyberSlinger's three
-   chassis at printed 189-193. Five occupations and one cyborg.**
+   **Batch 4 DONE (PR #887): Mining 'Borg 113, Preacher 115, Professional Gambler 117, Saloon Bum 120.**
+   **Remaining: the Saloon Girl/Barmaid at printed 123-125, and the CyberSlinger's
+   three chassis at printed 189-193. One occupation and one cyborg.**
    Read every entry onto the following page; `Money:` sits at the end of each.
 4. **The 8 racial classes, printed 125-158** — printed 130 off a render.
 5. **Gear and vessels, printed 171-223** — last, and diffed first. Printed 217
@@ -351,6 +351,7 @@ standing edges of prefixed names and are unchanged by this.
 | 2026-09-09 | [#883](https://github.com/NateGrey0130/nates-workshop/pull/883) | Classes batch 1, printed 83-92: **Bandit, Highwayman, Bounty Hunter, Gunfighter** (classes 225 -> **229**). One new catalog row, `Language: Spanish`. Filed `BOOK-INGEST-AUDIT` F49 and F50. Applied `--remote` before the PR. |
 | 2026-09-09 | [#885](https://github.com/NateGrey0130/nates-workshop/pull/885) | Classes batch 2, printed 92-102: **Gunslinger, Justice Ranger, Psi-Slinger, Saddle Tramp** (classes 229 -> **233**). No new catalog rows. Filed `BOOK-INGEST-AUDIT` F51. Applied `--remote` before the PR. |
 | 2026-09-09 | [#886](https://github.com/NateGrey0130/nates-workshop/pull/886) | Classes batch 3, printed 102-113: **Sheriff/Lawman, Sheriff's Deputy, Wired Gunslinger, Cowboy** (classes 233 -> **237**). No new catalog rows, no new findings. Applied `--remote` before the PR. |
+| 2026-09-09 | [#887](https://github.com/NateGrey0130/nates-workshop/pull/887) | Classes batch 4, printed 113-123: **Mining 'Borg/Prospector, Preacher, Professional Gambler, Saloon Bum/Stoolie** (classes 237 -> **241**). First use of `variants` and `skills_additional` in this book. No new catalog rows, no new findings. Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -504,3 +505,44 @@ related skills respectively.
 Highwayman's on printed 86.** Read off a 320 dpi render of printed 109 before
 transcribing. Two of this book's eighteen class skill lists are set that way so
 far, and the text layer interleaves both.
+
+### Batch 4 added to the "what the classes needed" list
+
+**This is the batch that used `variants`, and both uses are new to this book.**
+
+- **The Mining 'Borg's two chassis are `variants` overriding `mdc_base` only** —
+  130 for the Partial Reconstruction, 200 for the Full Construction. Their fixed
+  P.S., P.P. and Speed are **not** stored: an O.C.C.'s attribute block is
+  minimums rather than rolls, a full conversion *replaces* attributes rather
+  than setting a floor, and the Full Construction chassis prints P.S. as a
+  **range**, 28-30, which is neither a fixed value nor dice. Free Quebec set the
+  precedent on printed 114-116 — the chassis body, its M.D.C. by location, its
+  armour and its weapons are a **`vehicles` row**, and the class carries
+  `mdc_base` plus a pointer. **New West's vessel import has not run**, so there
+  is nothing to point at yet and the figures are in the ability text.
+- **The Preacher's two types are `variants` using `skills_additional`** — the
+  first use in this book of the mechanism **F31 shipped in PR #834**. The base
+  class is the Peacemaker and carries no hand to hand at all, which is what the
+  book's list prints; the Fire and Brimstone variant adds Hand to Hand: Basic
+  and one more W.P., and carries the extra +10 S.D.C. **A variant's `bonuses`
+  REPLACE rather than merge**, so the variant restates the shared figures.
+- **`CORE_SDC_BY_CLASS`**: three at `1D6`, not four and not `3D6`. The Preacher
+  is clergy; the Gambler and the Saloon Bum are filed under *Adventurers of the
+  New West* rather than among the gunfighters. **The Mining 'Borg needs no entry
+  at all** — it states an `mdc_base`, and the rule only fires on a class with
+  neither.
+
+**A fourth and fifth dice-attribute drop**: the Preacher's `+1D4+2 to M.A.` and
+the Saloon Bum's `+1D4 to P.E.`, joining the Saddle Tramp and the Wired
+Gunslinger. Five classes in this book now carry an attribute bonus the schema
+will not take. That is enough of a pattern to be worth a finding if it recurs in
+the next book.
+
+**The Professional Gambler's skill list is the THIRD two-column one** (after the
+Highwayman on printed 86 and the Wired Gunslinger on 109), confirmed on a 320
+dpi render of printed 119 before transcribing.
+
+**Two `occ_group` calls worth knowing**: the Gambler and the Saloon Bum are
+`optional`. The five legal values are clergy, men-of-arms, optional, magic and
+psychic, and the book's own *Adventurers of the New West* heading has no closer
+fit than `optional`.
