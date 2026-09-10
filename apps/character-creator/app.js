@@ -780,11 +780,27 @@ function wirePickers() {
     },
   });
 
+  // One filter per Skills-step pick group (UI-AUDIT F43), keyed by the group's
+  // index in the class's occ_skills.
+  for (const el of document.querySelectorAll('[id^="grp-filter-"]')) {
+    const gi = +el.id.slice('grp-filter-'.length);
+    Picker.wire(el.id, { onInput: (v) => { groupUi(gi, 'filter', v, true); } });
+  }
+
   for (const [id, key] of [['class-filter', 'classFilter'],
     ['related-filter', 'relatedFilter'], ['secondary-filter', 'secondaryFilter'],
     ['spell-filter', 'spellFilter'], ['psi-filter', 'psiFilter']]) {
     Picker.wire(id, { onInput: (v) => { S[key] = v; render(); } });
   }
+}
+
+// Fold, open or filter one Skills-step pick group (UI-AUDIT F43); `gi` is the
+// group's index, or 'occ' for the automatic skills.
+function groupUi(gi, key, val) {
+  S.groupUi ||= {};
+  const ui = S.groupUi[gi] || (S.groupUi[gi] = { open: false, all: false, filter: '' });
+  ui[key] = val;
+  render();
 }
 
 function goStep(i) { if (stepApplies(i)) { S.step = i; render(); } }
@@ -900,6 +916,8 @@ function pickSystem(sys) {
 }
 function resetBuild() {
   S.attrMethods = {}; S.attrs = {}; S.attrRolls = {}; S.related = []; S.secondary = []; S.groupPicks = {}; S.mos = null;
+  // Group indices belong to one class's occ_skills, so their folds do too.
+  S.groupUi = {};
   // Chosen skill PROGRAMS, held by CATEGORY name rather than by skill
   // (BOOK-INGEST-AUDIT.md F23(b)): picking one grants everything that category
   // allows, at one fixed percentage.
@@ -2294,7 +2312,18 @@ function renderSkills() {
 
   // Fixed skills auto-populate; choice-groups ("pick N of these") get an inline
   // pick control. Either kind may carry an advisory `note`.
-  const occRows = (sk.occ_skills || []).map((s, gi) => {
+  //
+  // UI-AUDIT F43. Every option of every group used to be drawn in full - 811
+  // checkboxes and 13,978px for a Gunfighter, whose 34 W.P.s appeared twice. A
+  // satisfied group now folds to what it chose and a Change button; an
+  // unsatisfied one gets the filter box the related list already has and a
+  // short list until filtered or opened; the automatic skills fold to one line.
+  // PRESENTATION ONLY: what may be picked, and every rule behind it, is
+  // unchanged. The fold state lives in S.groupUi, which is not a draft key -
+  // how a list was folded is not part of the character.
+  S.groupUi ||= {};
+  const GROUP_SHORT = 8;
+  const occParts = (sk.occ_skills || []).map((s, gi) => {
     const noteHtml = s.note ? `<div class="attr-note" style="margin:0 0 4px 18px">↳ ${esc(s.note)}</div>` : '';
     if (!isGroup(s)) {
       const r = resolveSkill(s.name, s);
@@ -2305,8 +2334,8 @@ function renderSkills() {
       const times = s.choose || (Array.isArray(s.with) ? s.with.length : 0);
       const withHtml = Array.isArray(s.with) && s.with.length
         ? `<div class="attr-note" style="margin:0 0 4px 18px">↳ ${esc(pairedWith(s.with))}</div>` : '';
-      return `<div class="chkrow">✔ <span>${esc(s.name)}${times > 1 ? ` ×${times}` : ''}</span>
-        <span class="pct">${r.base ? r.base + '%' + (r.per_level ? ' +' + r.per_level + '/lvl' : '') : '—'}</span></div>${withHtml}${noteHtml}`;
+      return { fixed: true, noted: !!(s.note || withHtml), html: `<div class="chkrow">✔ <span>${esc(s.name)}${times > 1 ? ` ×${times}` : ''}</span>
+        <span class="pct">${r.base ? r.base + '%' + (r.per_level ? ' +' + r.per_level + '/lvl' : '') : '—'}</span></div>${withHtml}${noteHtml}` };
     }
     const picked = S.groupPicks[gi] || [];
     // Either an enumerated `from` list, or `categories` — "two piloting skills
@@ -2334,7 +2363,24 @@ function renderSkills() {
     // unticked.
     const mine = new Set((S.groupPicks[gi] || []).map((n) => String(n).toLowerCase()));
     const alreadyHeld = new Set([...takenNames()].filter((n) => !mine.has(n)));
-    const opts = optionNames.filter((name) => name && !alreadyHeld.has(String(name).toLowerCase())).map((name) => {
+    const available = optionNames.filter((name) => name && !alreadyHeld.has(String(name).toLowerCase()));
+    const ui = S.groupUi[gi] || (S.groupUi[gi] = { open: false, all: false, filter: '' });
+    const done = picked.length >= s.choose;
+    const head = `<div class="chkrow"><b>Pick ${s.choose}</b>
+      <span class="pct">${esc((s.categories || []).map(categoryLabel).join(', '))} ${picked.length}/${s.choose} chosen</span></div>`;
+    // Satisfied and not reopened: what it chose, and the way back in.
+    if (done && !ui.open) {
+      return { fixed: false, html: `${head}${noteHtml}<div class="grp-done">
+        <span>✔ ${esc(picked.join(', '))}</span>
+        <button type="button" class="btn btn-sm btn-ghost" onclick="groupUi(${gi}, 'open', true)">Change</button></div>` };
+    }
+    const hits = new Set(Picker.filter(available.map((name) => ({ name })), ui.filter).map((r) => r.name));
+    // A ticked option always stays visible, or filtering would look like
+    // un-picking it - the same rule the related list follows.
+    const visible = available.filter((n) => hits.has(n) || picked.includes(n));
+    const capped = !ui.filter && !ui.all && visible.length > GROUP_SHORT;
+    const list = capped ? visible.filter((n, i) => i < GROUP_SHORT || picked.includes(n)) : visible;
+    const opts = list.map((name) => {
       // The Other row is taken once PER LANGUAGE and never reads as already
       // picked, exactly as it does on the related/secondary picker. Without
       // this it is a plain checkbox, and "two languages of choice" produces a
@@ -2351,9 +2397,32 @@ function renderSkills() {
         <span>${esc(name)}${hint}</span>
         <span class="pct">${s.base ? s.base + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—'}</span></label>`;
     }).join('');
-    return `<div class="chkrow"><b>Pick ${s.choose}</b>
-      <span class="pct">${esc((s.categories || []).map(categoryLabel).join(', '))} ${picked.length}/${s.choose} chosen</span></div>${noteHtml}${opts}`;
-  }).join('');
+    const filterBox = available.length > GROUP_SHORT
+      ? Picker.inputHtml({ id: `grp-filter-${gi}`, value: ui.filter, shown: visible.length, total: available.length })
+      : '';
+    const more = capped
+      ? `<button type="button" class="btn btn-sm btn-ghost grp-more" onclick="groupUi(${gi}, 'all', true)">Show all ${visible.length}</button>`
+      : '';
+    const close = done
+      ? `<button type="button" class="btn btn-sm btn-ghost grp-more" onclick="groupUi(${gi}, 'open', false)">Done</button>`
+      : '';
+    return { fixed: false, html: `${head}${noteHtml}${filterBox}${opts}${more}${close}` };
+  });
+
+  // The automatic skills fold to one line. They are not choices, and a
+  // Gunfighter's thirteen sat above every group that was one. The count of
+  // noted rows is on the fold so a note is never silently out of sight.
+  const fixedParts = occParts.filter((p) => p.fixed);
+  const noted = fixedParts.filter((p) => p.noted).length;
+  const occOpen = !!S.groupUi.occ?.open;
+  const fixedHtml = !fixedParts.length ? '' : occOpen
+    ? fixedParts.map((p) => p.html).join('')
+      + `<button type="button" class="btn btn-sm btn-ghost grp-more" onclick="groupUi('occ', 'open', false)">Hide the automatic skills</button>`
+    : `<div class="grp-done">
+        <span>✔ ${fixedParts.length} skill${fixedParts.length === 1 ? '' : 's'} granted by the class${
+          noted ? ` <span class="muted small">· ${noted} with a note</span>` : ''}</span>
+        <button type="button" class="btn btn-sm btn-ghost" onclick="groupUi('occ', 'open', true)">Show</button></div>`;
+  const occRows = fixedHtml + occParts.filter((p) => !p.fixed).map((p) => p.html).join('');
 
   const schedule = relatedCfg.schedule || [];
 
@@ -2381,13 +2450,31 @@ function renderSkills() {
       || (a.name || '').localeCompare(b.name || ''));
     const sizes = ordered.reduce((m, x) => { const g = x.category || 'Uncategorized';
       return m.set(g, (m.get(g) || 0) + 1); }, new Map());
+    // EACH CATEGORY FOLDS (UI-AUDIT F43, widened while taking it). The "Pick N"
+    // groups held 117 of the step's 811 checkboxes; this list and the secondary
+    // one held nearly all the rest, every skill of every category drawn at once.
+    // A category opens by itself when the filter has text - so typing still
+    // reaches everything - or when it holds a skill already chosen, so a tick is
+    // never out of sight. Otherwise its heading is a button, and opening one is
+    // remembered in S.groupUi with the pick groups' folds. Presentation only.
+    const q = String(query || '').trim();
+    const chosenCats = new Set(shown.filter((s) => chosen.includes(s.name))
+      .map((s) => s.category || 'Uncategorized'));
     let lastCat = null;
     return ordered.map((s) => {
       const cat = s.category || 'Uncategorized';
-      const head = cat !== lastCat
-        ? `<div class="pick-group">${esc(cat)}<span class="pick-group-n">${sizes.get(cat)}</span></div>`
-        : '';
+      const uiKey = `${kind}:${cat}`;
+      const forced = !!q || chosenCats.has(cat);
+      const open = forced || !!S.groupUi[uiKey]?.open;
+      let head = '';
+      if (cat !== lastCat) {
+        head = forced
+          ? `<div class="pick-group">${esc(cat)}<span class="pick-group-n">${sizes.get(cat)}</span></div>`
+          : `<button type="button" class="pick-group pg-toggle" aria-expanded="${open}"
+              onclick="groupUi('${escJs(uiKey)}', 'open', ${!open})">${esc(cat)}<span class="pick-group-n">${sizes.get(cat)}</span></button>`;
+      }
       lastCat = cat;
+      if (!open) return head;
       const on = chosen.includes(s.name);
       // Two reasons a row is blocked, and they used to render identically. The
       // cap explains itself: the counter above the list reads N/M chosen and
@@ -3897,6 +3984,7 @@ Object.assign(window, {
   toggleProgram,
   deleteCharacter,
   goHome, newCharacter, continueBuild,
+  groupUi,
 });
 
 boot();

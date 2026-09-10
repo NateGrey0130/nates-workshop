@@ -3374,6 +3374,44 @@ in shape.
 **Ongoing cost:** a collapsed/expanded state per group, held in memory and not in the
 draft.
 
+---
+
+**Taken, 2026-09-10 (PR #923), and WIDENED — the finding blamed the wrong part of the
+step. Posture held: presentation only — nothing about what may be picked, or the rules
+behind it, changes.**
+
+**As written.** A satisfied "Pick N" group folds to its choices and **Change**; reopened,
+it offers **Done**. An unsatisfied one gets the filter box the related list has
+(`Picker.inputHtml` / `Picker.wire`) and a short list of eight until filtered or **Show
+all N**. The automatic class skills fold to one line — *16 skills granted by the class ·
+12 with a note* — so a note is never out of sight without saying so.
+
+**That moved the number very little, and the measurement is the correction.** The three
+pick groups held **117** of the step's 811 checkboxes. Taken as written, on the same draft
+at the same width: **13,978px / 811 → 11,357px / 718.** The rest were in the related and
+secondary lists, which drew every skill of every category at once — 323 related, and the
+whole catalog for secondary. The finding's *Evidence* line measured the whole step and its
+proposal named only the groups; the gap between the two is where the wall was.
+
+**So every category in those two lists folds too** — 32 headings, each a button with its
+count. A category opens by itself when the filter has text, so typing still reaches
+everything, or when it holds a skill already chosen, so a tick is never hidden. The fold
+state lives in `S.groupUi` beside the groups', not in the draft, and resets when the class
+changes.
+
+**Measured on local draft 19 (a Gunfighter, step 5) at 1280px, 2026-09-10:**
+
+| | height | checkboxes |
+|---|---|---|
+| before | 13,978px | 811 |
+| the finding as written | 11,357px | 718 |
+| widened | **2,439px** | **24** |
+
+Opening *Communications* draws its 19; *radio* in the related filter shows *3 of 323*
+with their categories open by themselves; a group given two picks folds to *✔ W.P.
+Rifles, W.P. Shotgun · Change*, and Change reopens it with Done. The draft was restored
+byte for byte by a guarded PUT after each walk.
+
 ### F44 — medium — Play mode has no fast path: fixed amounts, no keys, one visible roll
 
 The amount chips are 1, 5, 10 and 20 (`sheet.js:1118`); a 37-point hit is several
