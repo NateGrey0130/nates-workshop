@@ -1,7 +1,8 @@
 // GET /api/character-creator/codex?section=<name> — one catalog, WITH the text
 // and the stat block that say what a thing is.
 //
-// Four sections: `spells`, `psionics`, `gear`, `vehicles`.
+// Six sections: `spells`, `psionics`, `gear`, `vehicles`, and since UI-AUDIT F48
+// `skills` and `classes`.
 //
 // The second half of docs/plans/20-power-descriptions.md, widened to the two
 // catalogs that had no reader at all. The first half put a held power's
@@ -47,6 +48,21 @@
 // Fire Bolt. This route only reads, and answers any authenticated friend.
 
 import { getUserEmail, unauthorized, json } from './_lib/auth.js';
+import { loadPublished } from './_lib/class-store.js';
+
+// A class's lore, trimmed to a reading excerpt (UI-AUDIT F48). The whole class
+// markdown is ~750KB parsed and the codex wants none of the mechanics - a
+// player browsing classes wants what the thing IS, and the sheet and wizard
+// already carry everything else. Markdown emphasis is stripped because the
+// codex prints text, and a paragraph boundary is preferred to a mid-word cut.
+function loreExcerpt(text, max = 700) {
+  if (!text) return null;
+  const plain = String(text).replace(/[*_#>`]/g, '').replace(/\s+/g, ' ').trim();
+  if (plain.length <= max) return plain;
+  const cut = plain.slice(0, max);
+  const stop = cut.lastIndexOf('. ');
+  return (stop > max * 0.6 ? cut.slice(0, stop + 1) : cut.replace(/\s+\S*$/, '')) + ' …';
+}
 
 // The whole printed entry, not the trimmed projection `catalogs` sends: a codex
 // that omitted range or duration would send you back to the book, which is the
@@ -67,7 +83,10 @@ const SECTIONS = {
       `SELECT (SELECT count(*) FROM spells)         AS spells,
               (SELECT count(*) FROM psionic_powers) AS psionics,
               (SELECT count(*) FROM gear)           AS gear,
-              (SELECT count(*) FROM vehicles)       AS vehicles`
+              (SELECT count(*) FROM vehicles)       AS vehicles,
+              (SELECT count(*) FROM skills)         AS skills,
+              (SELECT count(*) FROM imported_classes
+                 WHERE status = 'published' AND deleted_at IS NULL) AS classes`
     ).first()),
   }),
 
@@ -124,6 +143,38 @@ const SECTIONS = {
        ORDER BY gear.category, gear.name`
     ).all()).results,
   }),
+
+  // Skills, as the catalogs route projects them (UI-AUDIT F48), less the
+  // bonuses a picker needs and a reader does not. `systems` is a JSON list,
+  // NULL meaning both; the codex filters on a single `system`, so one listed
+  // system becomes that system and anything else reads as unrestricted - the
+  // same way a NULL system reads everywhere else in this route. Skills carry no
+  // description; the catalog has never held one.
+  skills: async (env) => ({
+    skills: (await env.DB.prepare(
+      `SELECT name, category, base, base_formula, per_level, systems, source_book
+       FROM skills ORDER BY category, name`
+    ).all()).results.map(({ systems, ...s }) => {
+      let list = null;
+      try { list = systems ? JSON.parse(systems) : null; } catch { list = null; }
+      return { ...s, system: Array.isArray(list) && list.length === 1 ? list[0] : null };
+    }),
+  }),
+
+  // Every published class, as a SUMMARY: what it is, which system and book, and
+  // an excerpt of its lore (UI-AUDIT F48). Parsed through the same cache the
+  // classes route uses, so this costs no second parse on a warm isolate. A
+  // class could until now be read only inside the wizard, where selecting one
+  // started a draft.
+  classes: async (env) => {
+    const { classes } = await loadPublished(env);
+    return {
+      classes: classes.map((c) => ({
+        slug: c.id, name: c.name, category: c.category, system: c.system,
+        source_book: c.source_book, description: loreExcerpt(c.lore),
+      })).sort((a, b) => String(a.name).localeCompare(String(b.name))),
+    };
+  },
 
   // THREE tables, because a vessel is not a row: M.D.C. arrives BY LOCATION and
   // weapon systems arrive as a numbered list. They are NESTED into their vessel

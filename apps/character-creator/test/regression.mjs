@@ -835,6 +835,28 @@ check('a hit on armour the character does not have is refused', noArmor.status =
   }
 }
 
+// UI-AUDIT F48: the codex reads skills and classes as well. Classes travel as a
+// SUMMARY - the check that no row carries its markdown is the one that keeps
+// ~750KB of class text out of a page meant for reading.
+{
+  const cxIndex = await api('GET', '/codex?section=index');
+  check('the codex counts skills and classes',
+    typeof cxIndex.body.counts?.skills === 'number' && typeof cxIndex.body.counts?.classes === 'number',
+    cxIndex.body.counts);
+  const cxSkills = await api('GET', '/codex?section=skills');
+  check('the codex serves every skill it counts',
+    cxSkills.status === 200 && cxSkills.body.skills?.length === cxIndex.body.counts?.skills,
+    `${cxSkills.body.skills?.length} vs ${cxIndex.body.counts?.skills}`);
+  const cxClasses = await api('GET', '/codex?section=classes');
+  const first = cxClasses.body.classes?.[0] || {};
+  check('and every published class it counts',
+    cxClasses.status === 200 && cxClasses.body.classes?.length === cxIndex.body.counts?.classes,
+    `${cxClasses.body.classes?.length} vs ${cxIndex.body.counts?.classes}`);
+  check('as a summary - a name and a type on every row, and no markdown',
+    (cxClasses.body.classes || []).every((c) => c.name && c.category) && !('markdown' in first),
+    JSON.stringify(first).slice(0, 200));
+}
+
 const events = await api('GET', `/characters/${charId}/events`);
 check('the event log still holds the undone event',
   events.status === 200 && events.body.events.some((e) => e.undone_at), events.body.events?.length);

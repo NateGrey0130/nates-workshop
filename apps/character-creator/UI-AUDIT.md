@@ -3651,6 +3651,43 @@ schema.**
 
 **Ongoing cost:** two more tabs that must follow the catalog's fields as they change.
 
+---
+
+**Taken, 2026-09-10 (PR #929). Posture held: read-only; no schema.** Two sections on each
+side of the codex, appended after Vessels so the default tab and every `#spells` link
+already sent keep opening where they did.
+
+**One correction, from `audit-premise-auditor`:** *"from the catalog data the wizard
+already fetches"* was wrong about delivery. <!-- claim-ok: quoting the premise this note corrects -->
+The codex loads each section through its own `codex?section=` route, not the wizard's
+boot calls, and the wizard's class list is the ~750KB parsed markdown — so both tabs
+needed a **server section of their own**, which is what shipped. The data itself was
+enough.
+
+- **Skills** — the catalogs route's projection less the bonuses a picker needs and a
+  reader does not. `systems` is a JSON list; one listed system becomes the codex's
+  `system`, anything else reads as unrestricted, the way a NULL system reads everywhere
+  else in that route. The catalog has never held skill descriptions, so a section flag
+  drops the *"No description imported yet"* line and the *"with text"* count, which would
+  both have read as an import still to do.
+- **Classes** — every published class as a **summary**: name, O.C.C. or R.C.C., system,
+  book, and a lore excerpt of at most ~700 characters, parsed through the same cache the
+  classes route uses. The markdown never travels.
+
+**Measured on 8801, local D1, 2026-09-10.** The index counted 371 skills and 250 classes
+and each section returned exactly that many — the check the tab labels rely on. Classes:
+**174.2 KB raw, 57.5 KB gzipped**; skills **55.6 KB raw, 5.2 KB gzipped** — both well
+inside the ~250 KB gzipped line the route's own comment sets for revisiting. In the page,
+`#skills` opened the Skills tab, *radio* filtered to 3 of 371, and an opened skill showed
+its base and per-level with no import line; the Classes tab marked each row O.C.C. or
+R.C.C., the Rifts filter took it to 210 of 250, and *Amphib* opened to its type, system
+and lore. `regression.mjs` checks both counts against the index and that no class row
+carries markdown.
+
+**The README's codex row was already wrong before this change**: an unknown section was
+*"a 400 naming the five"* while the route knew six, `vehicles-index` included. It now
+says *"naming every section"* rather than trading one stale count for another.
+
 ### F49 — low — The related-skills allowance sentence contradicts itself
 
 `app.js:2407-2408` reads *"a character at level three is measured against
