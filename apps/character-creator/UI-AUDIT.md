@@ -1,12 +1,20 @@
 # UI-AUDIT.md — Character Creator interface
 
-> **There is open work on this menu, as of 2026-09-10.** Read each finding's own
-> heading for its state; this line does not name them. **The findings filed after
-> the original run sit under their own dated `##` headings at the end of the
-> file**, after `F30`, and they run in filing order rather than in severity
+> **No numbered finding on this menu is open, as of 2026-09-10.** A finding's
+> state is its outcome note, directly under its proposal; the headings carry only
+> severity. Checked 2026-09-10, after PR #931, by matching every `### F` heading
+> in this file to the `**Taken` or `**Closed` note beneath it. **The findings
+> filed after the original run sit under their own dated `##` headings at the end
+> of the file**, after `F30`, and they run in filing order rather than in severity
 > order. This line deliberately neither names nor counts those headings — it
 > named exactly one until 2026-09-09, by which time there were three, which is
 > the same trap the paragraph below describes one level down.
+>
+> **Three remarks were left open inside closed findings, and none was ever given
+> a number**, which is why this line does not say "nothing is open": `F2`'s note
+> leaves reconciling its behaviours (1) and (2) unstarted, `F6`'s leaves
+> `--border` untouched, and `F17`'s leaves its print-ink observation standing.
+> Each needs filing as a finding of its own before it can be taken.
 >
 > *(Until 2026-09-06 this paragraph read "Nothing is open" and named a closed
 > range plus `F30`. That was true from 2026-09-03 until two findings were filed
@@ -14,7 +22,9 @@
 > failure `META-AUDIT` `A16` and `A17` are both about, occurring in the menu they
 > were filed on. `F30` was taken 2026-09-03, PR #657, filed 2026-09-02 from
 > outside the audit run while verifying `BOOK-INGEST-AUDIT` `F18` on
-> production.)*
+> production. It then read *"There is open work on this menu"* until
+> 2026-09-10, when PR #931 took the last open finding and did not update it
+> either; this line was corrected in a separate PR the same day.)*
 >
 > **The one that misreads:** `F17` closes as **moot** rather than taken — it was
 > checked against a real print render (PR #459) and the defect was not there.
