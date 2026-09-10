@@ -281,11 +281,37 @@ It is Rifts Ultimate Edition's: listed on printed 302 among the Cowboy skills
 and 303 among the W.P.s, and **described on printed 306**. Re-cited there. Its
 `level_bonuses` already matched RUE's description and were not touched.
 
-### gear and vehicles: not diffed
+### gear and vehicles: diffed as each batch is extracted
 
-79 priced entries and ~15 `M.D.C. by Location` blocks, printed 171-223. Not
-diffed in this session — the class and spell batches come first, and a gear diff
-wants the entry names, which is extraction work.
+**78 `Cost:`/`Market Price:` lines and 17 `M.D.C. by Location` blocks, printed
+171-223**, counted off the cache on 2026-09-10 - close to the 79 and ~15 this
+survey projected. The diff wants the entry names, which is extraction work, so
+it happens per batch rather than up front, and each batch's result is recorded
+in the ledger below.
+
+**THE CACHE CANNOT BE TRUSTED FOR A GEAR NUMBER IN THIS BOOK.** The weapon
+entries are set in boxed panels and the armour pages carry blocks of
+illustration captions, and both break the text layer's column analysis without
+looking wrong. Two proven cases:
+
+- printed 173 - the Bandit IP-10's `Cost: 12,000 credits` is separated from its
+  own stat block by an unrelated *Black Market Prices for E-Clips* sidebar, so
+  cache order does not associate a cost with its weapon.
+- printed 180 - four illustration captions (`NG Range Rider Riding Armor`,
+  `NG Maverick Riding Armor`, `NG Buffalo Riding Armor`, `Ml Vaqueros Armor`)
+  sit between the Range Rider's `Main Body - 30` and its `Market Price`.
+
+This is the same fault already recorded three times here for class skill lists.
+**Render every gear page before transcribing it.** The renders have also settled
+two strings the text layer gets wrong: `Ml Vaqueros` is **MI** for Manistique
+Imperium, and the Bandit 6000's price prints as `80,000-100.000`, a period where
+a comma belongs.
+
+**Batch A, printed 173-181 - 17 names checked, 15 imported, 2 already held.**
+`Dead Boy Body Armor` and `Dog Pack DPM Light Riot Armor` are Black Market
+knock-offs of rows RUE already has (`ca-1-heavy-dead-boy-armor`,
+`ca-2-light-dead-boy-armor`, `dog-pack-dpm-riot-armor`) and neither was
+duplicated - see the finding below.
 
 ## Extraction plan
 
@@ -316,8 +342,14 @@ Phase 4 costs money; everything above was free.
    **ALL EIGHT DONE. PR #890: Cactus People 127, Fennodi 128, Keeper of the Desert
    130, Lyn-Srial 133. PR #892: Sky-Knight 134, Cloudweaver 135, Mountain Giant 136,
    Psi-Pony 156.**
-5. **Gear and vessels, printed 171-223** — last, and diffed first. Printed 217
-   off a render.
+5. **Gear and vessels, printed 171-223** - last, and diffed per batch.
+   **IN PROGRESS.** Batch A (Bandito Arms weapons and the western body armour
+   line, printed 173-181) is in. Remaining: bionics and cybernetics 187-189,
+   Wilk's Laser Technologies 203-209, conventional revolvers 210-213,
+   Techno-Wizard weapons 213-221, and the vessels. **Printed 217 is
+   glyph-corrupt and carries three Techno-Wizard prices - read it off a
+   render.** Every other gear page needs a render too; see the diff section
+   above.
 
 What is deliberately left, with the reason:
 
@@ -364,6 +396,7 @@ standing edges of prefixed names and are unchanged by this.
 | 2026-09-09 | [#888](https://github.com/NateGrey0130/nates-workshop/pull/888) | Classes batch 5, printed 123-125: **Saloon Girl/Barmaid** (classes 241 -> **242**). **ALL SEVENTEEN OCCUPATIONS ARE IN.** Also corrects this survey: the CyberSlinger is NOT a class. Applied `--remote` before the PR. |
 | 2026-09-10 | [#890](https://github.com/NateGrey0130/nates-workshop/pull/890) | Racial classes 1 of 2, printed 125-134: **Cactus People, Fennodi, Keeper of the Desert, Lyn-Srial** (classes 242 -> **246**). First class to consume the Cloud Magic spells. No new catalog rows, no new findings. Applied `--remote` before the PR. |
 | 2026-09-10 | [#892](https://github.com/NateGrey0130/nates-workshop/pull/892) | Racial classes 2 of 2, printed 134-158: **Sky-Knight, Cloudweaver, Mountain Giant, Psi-Pony** (classes 246 -> **250**). **ALL 25 PLAYABLE CLASSES ARE IN.** First use of `copy_of` in this book. Applied `--remote` before the PR. |
+| 2026-09-10 | [#895](https://github.com/NateGrey0130/nates-workshop/pull/895) | Gear batch A, printed 173-181: **8 Bandito Arms weapons and 7 suits of western body armour** (gear 1249 -> **1264**). Every number read off a RENDER; the cache cannot associate a cost with its entry on these pages. Two of the section's suits were NOT imported because RUE already holds them. Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -674,3 +707,33 @@ Same reason: `variants` may not override `psionics` and an ability may.
   attribute supernatural, so it is a natural ability.
 - The book's skill called **Write** has no catalog row; `Calligraphy` is the
   nearest and is what the Cloudweaver stores, with the book's word in the note.
+
+## What the gear batches turned up
+
+### Batch A: three CS armours this book reprints at Black Market prices
+
+The Black Market sells knock-offs of the old Coalition armour, and printed 178
+says outright they are *"identical to the old CS body armor in every way, except
+the standard colors"*. Three rows already exist from RUE, so **nothing was
+duplicated** - but the New West price is not the RUE price, and the gear table
+holds one `cost` per row:
+
+| row | RUE | New West |
+|---|---|---|
+| `ca-2-light-dead-boy-armor` | 35,000 | 40,000 |
+| `ca-1-heavy-dead-boy-armor` | 35,000 | 50,000 |
+| `dog-pack-dpm-riot-armor` | no cost at all | light 12,000, heavy 18,000 |
+
+Recording New West's figures would mean either overwriting RUE's or creating a
+second row with identical stats and a different price. **Neither was done** - it
+is a catalog-shape question rather than something an import should settle.
+
+**The stats disagree too, and RUE is the fuller reading in both directions.**
+New West prints ONE `M.D.C. by Location` block covering both Dead Boy suits, so
+its helmet/arms/legs figures are the HEAVY suit's; RUE states the light suit's
+separately at 35/15/24. Its heavy figures match RUE exactly (18 lbs, main body
+80, helmet 50, arms 35, legs 50), which is a five-way independent confirmation
+that the render was read correctly. The Dog Pack is the one place New West has
+MORE than RUE: it splits the suit into light and heavy (main body 35 or 50, arms
+10+3, legs 15+5, 10 lbs) where the RUE row is a single 8 lb suit at main body
+30, arms 10, legs 20.
