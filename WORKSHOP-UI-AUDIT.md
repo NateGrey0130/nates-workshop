@@ -1,7 +1,7 @@
 # WORKSHOP-UI-AUDIT.md — the interface, across apps
 
-> **Two findings are open, as of 2026-09-10.** Read each finding's own heading for
-> its state; this line does not name them.
+> **There is open work on this menu, as of 2026-09-10.** Read each finding's own
+> heading for its state; this line does not name them and does not count them.
 >
 > **This menu's prefix is `W`, and nothing else in the tree uses it.** Ten letters
 > were already taken as `##`/`###` finding prefixes when this file was written —
@@ -13,7 +13,9 @@
 > trusting this sentence.
 >
 > **Findings are `### W1 — high — …`** — severity word in the heading, `###` level,
-> numbered most severe first. Nothing here has been changed.
+> numbered most severe first. Numbering and severity happen to agree here; when a
+> later finding outranks an earlier one, severity wins the order and the number
+> stays where it was issued.
 
 Written 2026-09-10 against `origin/main` at `004e5c1`, served from
 `wrangler pages dev --port 8795` — **not** 8788, which belongs to another worktree.
@@ -142,6 +144,83 @@ one, which is the half of this that stops recurring.
 
 ---
 
+**Taken, 2026-09-10 (PR #915). Posture held: one app stylesheet, no markup change,
+no JS, no new token.** Four declarations in `apps/media-vault/styles.css`.
+
+**The Proposal as written did not work, and `audit-premise-auditor` measured that
+before anything was edited.** Both halves applied together still left `Apply` — the
+button this finding was written about — off-screen at 390. Corrections, in the order
+they matter:
+
+**1. The two proposed declarations do not reach the blocker.** Measured at 390×844,
+each half applied separately through the CSSOM:
+
+| variant | box width | buttons past 390 |
+|---|---|---|
+| shipped | 442 | 3 — Series, Physical, **Apply** |
+| `max-width` only | 358 | 2 — Series, **Apply** |
+| `white-space: normal` only | 438 | 3 |
+| **both, i.e. the Proposal** | 358 | **1 — `Apply`** |
+
+`.bulk-group` is a `nowrap` flex row and `.bulk-field-input` was `width: 170px`, so
+the field group's min-content is **396px** against 358px of available width. Nothing
+set on the *bar* can shrink a child that will not wrap. The Proposal needed a third
+declaration and did not have one.
+
+**2. Of the two halves proposed, `max-width` is load-bearing and `white-space` is
+nearly not** — 442→358 against 442→438. This finding presented them as a pair.
+
+**3. The transform half would have silently killed the slide-in.**
+`transition: bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)` animates nothing once
+`bottom` is static. Measured with the park changed and the transition left alone:
+**zero frames of motion across 166ms** — the bar snapped. The finding never mentions
+the transition. It now reads `transition: transform`, and the bounce is intact.
+
+**4. The defect is not phone-only, and the heading under-scopes it.** The bar is
+never 80px tall at any width, so `bottom: -80px` never fully parked it: **34px**
+showing at 1440, **91px** at 768, **177px** at 390. The transform fixes all three.
+`SHARE-AUDIT`'s independently recorded *"roughly 38px … at viewport heights near
+<!-- claim-ok: quoting SHARE-AUDIT, cited at :446-453 in the Scope section above -->
+860"* matches the 34px measured at 900.
+
+**5. This finding's own medium-confidence worry was unfounded** — dropping `nowrap`
+costs nothing at 768 or 1440; both render identical to shipped. So the *"below 640px"*
+media query the Proposal asked for buys nothing and was not written.
+
+**6. Two small ones.** `.undo-toast` is at `:818-839`, not `:819-841`. And the
+`document.scrollWidth` in the table above evaluates to `undefined` — the 390 is
+correct for `document.documentElement.scrollWidth`.
+
+**The route taken, and the one refused.** Two third declarations reach zero clipped.
+`.bulk-group { flex-wrap: wrap }` does — **and it reverses an explicit written
+decision**: the comment at `apps/media-vault/styles.css:897-900`, the markup comment
+at `apps/media-vault/index.html:438-441`, and the assertions at
+`apps/media-vault/test/smoke.mjs:275-289` all exist to keep a label with its controls,
+and measured, it puts `Change type to →` on a line away from its buttons. Refused.
+Narrowing `.bulk-field-input` from 170px to **100px** reaches zero clipped with the
+groups intact, and the comment at `:906-913` defends a **fixed** width rather than
+that number, so its reasoning survives.
+
+**Verified at all three widths, after the change:**
+
+| | parked, select OFF | in use, select ON |
+|---|---|---|
+| 390×844 | top 844 = viewport, **0px showing** (was 177) | 358×354, **0 clipped** (was 3) |
+| 768×1024 | **0px showing** (was 91) | 736×167, 0 clipped |
+| 1440×900 | **0px showing** (was 34) | 1408×114, 0 clipped |
+
+Slide-in at 390: **19 distinct positions**, overshoot to 425 past a settled 462 — the
+bounce is preserved. Four smoke suites pass; the assertions at `smoke.mjs:275-289` are
+markup-shape and a CSS-only change cannot reach them.
+
+**One consequence, stated rather than buried: the bar is now 354px tall at 390 in use,
+up from 257.** That is not a regression — it is content that was previously off-screen
+now being on it — but it is 42% of the viewport while select mode is on. Filed as `W3`
+below rather than left in this note.
+
+---
+
+
 ### W2 — medium — The whole workshop's icon layer is the operating system's emoji font, and the repo contains no icon of its own
 
 **Counted 2026-09-10 across the shipped tree** — `apps/`, `shared/` and
@@ -211,6 +290,40 @@ icon that does not exist yet — the first real design-system artefact in the re
 beyond tokens. Against that, it removes a per-platform rendering difference that
 nothing can test for. **Worth stating plainly: this is the only finding in this
 menu that costs more forever than it costs once.**
+
+---
+
+### W3 — low — The bulk bar takes 42% of a phone viewport while select mode is on
+
+**Filed 2026-09-10 while taking `W1`, from measurements made during it.**
+
+With every control now reachable, the bar measures **358×354 at 390×844** — five
+wrapped rows, 42% of the viewport, over the library it is acting on. Before `W1` it
+was 257px, but only because three controls were off-screen; the height is the honest
+cost of fitting them.
+
+At 768 it is 167px and at 1440 it is 114px, so this is a phone-shaped problem only.
+
+**Proposal:** none offered, deliberately — this is a design decision rather than a
+defect, and the shapes that would fix it differ in kind. A bottom sheet that the user
+opens, a disclosure that keeps the field form collapsed until wanted, and a
+two-row layout that drops the labels below 640px are all plausible and none is
+obviously right. **Posture: undecided. This finding exists to hold the measurement,
+not to prescribe.**
+
+**Evidence:** `getBoundingClientRect` at 390×844, 768×1024 and 1440×900 through CDP
+device emulation, 2026-09-10, on `apps/media-vault/styles.css` as `W1` left it.
+
+**Confidence:** high on the numbers. **Low on whether it is worth fixing at all** —
+nobody has used bulk edit on a phone and said it was a problem, and 42% of the screen
+for the control surface of an action in progress may simply be correct. Someone
+actually editing a few rows on a phone is what would settle it, and that is cheaper
+than any of the three fixes.
+
+**Ongoing cost:** whichever shape is chosen becomes a second layout to maintain for
+this bar. **A proposal whose ongoing cost exceeds its impact should recommend
+declining itself, and this one might: the measurement is worth having, the change may
+not be.**
 
 ---
 
