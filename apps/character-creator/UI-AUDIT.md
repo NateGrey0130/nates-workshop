@@ -1,10 +1,12 @@
 # UI-AUDIT.md — Character Creator interface
 
-> **There is open work on this menu, as of 2026-09-06.** Read each finding's own
+> **There is open work on this menu, as of 2026-09-09.** Read each finding's own
 > heading for its state; this line does not name them. **The findings filed after
-> the original run sit under their own dated `##` heading at the end of the
-> file** — `## Filed by META-AUDIT A16, 2026-09-06` — after `F30`, and they run in
-> filing order rather than in severity order.
+> the original run sit under their own dated `##` headings at the end of the
+> file**, after `F30`, and they run in filing order rather than in severity
+> order. This line deliberately neither names nor counts those headings — it
+> named exactly one until 2026-09-09, by which time there were three, which is
+> the same trap the paragraph below describes one level down.
 >
 > *(Until 2026-09-06 this paragraph read "Nothing is open" and named a closed
 > range plus `F30`. That was true from 2026-09-03 until two findings were filed
@@ -2407,3 +2409,256 @@ I.Q. 4 against a printed minimum of 10 and P.B. 18 against a cap of 12, at
 
 The `Skills` button is disabled for the unmet minimum and enabled for the
 exceeded cap, unchanged by this - which is the half that had to not move.
+
+## Filed by an Impeccable design critique, 2026-09-09
+
+Run 2026-09-09 against the working tree at `C:\Users\natha\Projects\nates-apps`,
+served from `wrangler pages dev --port 8791` (the `nates-apps-8791` launch config —
+**not** 8788, which belongs to another worktree). Two independent assessments: an
+unanchored design review, and a mechanical detector plus browser measurement, kept
+isolated from each other until synthesis. Nothing here has been changed. Take
+findings one at a time.
+
+**Both `F34` and `F35` are cascade collisions rather than design choices, and this
+file recorded half of each before today.** `F28`'s outcome note describes `F34`'s
+exact mechanism and judged it harmless — correctly, for the palette of the day.
+`F5`'s outcome note describes the rule `F35` is about, and names only half of what
+that rule shipped.
+
+**Two further findings from the same run are deliberately NOT filed here**, because
+this menu's scope is the character creator and neither is scoped to it: an
+emoji-to-SVG icon layer spanning all four apps and the landing page, and MediaVault's
+`.bulk-bar` at phone width. The second is already named at
+`apps/media-vault/SHARE-AUDIT.md:446-453`, which records it as
+<!-- claim-ok: quoting SHARE-AUDIT's own deferral wording, cited by line above -->
+*"named rather than filed"* and hands it to whoever next opens a UI menu for that
+app. Both are awaiting a placement decision from Nate rather than dropped — per
+`audit-menu` → *A deferral is work*, they are named here so neither goes missing.
+
+---
+
+### F34 — high — Every primary button drops to 1.17:1 on hover, and this file recorded the mechanism while it was still harmless
+
+**Step: contrast sweep of interactive states.**
+
+`shared/styles.css:240` is `.btn:hover { border-color: var(--text-muted); background:
+var(--bg-input); }` at specificity (0,2,0). `shared/styles.css:274` is `.btn-primary`
+at (0,1,0), setting `background: var(--accent)` and `color: var(--bg-primary)`. The
+hover rule therefore replaces the primary button's fill while its foreground stays the
+dark tone. Grepping `btn-primary:hover` across `shared/styles.css` and all four
+`apps/*/styles.css` on 2026-09-09 returns exactly two hits —
+`apps/media-vault/styles.css:41` and `apps/filament-forge/styles.css:34` — so those
+two apps override it and the character creator and pick3cut5 do not. The nearest
+thing in the shared file is `.btn-primary:disabled:hover` at `:264-265`, which pins a
+*dead* button back to `--accent` and leaves the live one alone.
+
+Measured live in the page on 2026-09-09, hovering a real pointer over an injected
+`.btn.btn-primary` probe and reading `getComputedStyle` after the 0.2s transition
+settles: `color rgb(15,20,18)` on `background rgb(27,35,32)` — `--bg-primary` on
+`--bg-input`, **1.17:1**. Both character-creator and pick3cut5 return the same pair.
+Reading the value before the transition settles returns the accent and looks fine,
+which is worth knowing for anyone re-measuring.
+
+**This file already contains the mechanism.** `F28`'s outcome note (2026-09-01) closes
+with a paragraph headed *"Recorded, not fixed — one thing found while measuring"*,
+which names the same specificity collision and then says:
+<!-- claim-ok: quoting the F28 premise this finding supersedes -->
+
+> No contrast failure results — white on `--bg-input` is comfortable — but it is not
+> what either rule intends, and it is outside this finding's scope.
+
+That was true and is now false, and **nothing was careless in between.** `F28` shipped
+white-on-accent for the palette of the day. When the scheme moved to Ley Verdigris the
+primary button's foreground was changed to `--bg-primary` — `shared/styles.css:268-273`
+carries the reasoning, that white on the new `--accent` measures 4.09:1 at 13px/600 and
+the dark tone measures 4.60. That change is independently correct and it silently
+invalidated the "no contrast failure results" half of `F28`'s note, because the
+comfortable pairing it relied on was white.
+
+**So the interesting part of this finding is not the bug.** It is that a defect was
+observed, correctly judged harmless, written down, and then armed by a later change
+that had no reason to look at it. Neither PR was wrong.
+
+**Proposal:** add `.btn-primary:hover` to `shared/styles.css`, beside the
+`.btn-primary:disabled:hover` pair at `shared/styles.css:264-265` (read 2026-09-09),
+restating `background: var(--accent)` and `color: var(--bg-primary)` by name so the
+primary variant survives `.btn:hover` at every specificity. **Posture: shared stylesheet, all four apps, no component and no JS
+change.** This is the one place in this menu where touching `shared/` is the *narrow*
+option rather than the broad one — the two apps that already carry their own override
+are unaffected by it, and the two that do not are the two that are broken.
+
+Whether hovering a primary button should also darken it is a separate question and
+this finding does not propose an answer; restating the resting colours is enough to
+close the contrast failure.
+
+**Evidence:** live pointer hover plus `getComputedStyle` on both affected apps,
+2026-09-09; `grep -n "btn-primary:hover" shared/styles.css apps/*/styles.css`,
+2026-09-09; line numbers in `shared/styles.css` read the same day at 303 lines.
+
+**Confidence:** high on the measurement and on the cascade. Medium on the claim that
+no other `:hover`, `:active` or `:disabled` pair in the repo fails the same way — the
+2026-09-09 sweep enumerated **resting** states across five surfaces and found zero AA
+failures, and did not enumerate interactive states. Running that sweep over hover and
+active states across all four apps is what would raise it, and would probably be worth
+more than this finding.
+
+**Ongoing cost:** one rule in a file already carrying an adjacent rule of the same
+shape. No check to remember, nothing to keep current.
+
+---
+
+### F35 — high — One `font` shorthand takes the wizard stepper out of its own typography, and deletes six of ten steps at phone width
+
+**Step: responsive sweep at 390×844.**
+
+`apps/character-creator/styles.css:311` is:
+
+```css
+.stepper .step-rail button.st { line-height: inherit; font: inherit; }
+```
+
+The `font` **shorthand** resets family, size, stretch, weight, line-height and
+variant together. At (0,3,1) that selector outranks both rules that style the step
+pills — the desktop `.stepper .step-rail .st` at `:290` and the
+`@media (max-width: 900px)` one at `:387`, each (0,3,0). Completed steps render as
+`<button>`; the current, future and `.na` steps render as `<span>`.
+
+Verified on 2026-09-09 by a method independent of the review that raised it: with the
+wizard loaded, a `button` carrying `class="st done"` was appended to the live
+`.step-rail` in the DOM only — no server write — and both computed styles read side by
+side.
+
+| element | family | size | stretch | weight |
+|---|---|---|---|---|
+| `span.st` sibling | `Saira` | **0px** | 75% | 900 |
+| injected `button.st.done` | `IBM Plex Sans` | **16px** | 100% | 600 |
+
+At desktop the same probe returns `Saira / 15px / 75%` for the span against
+`IBM Plex Sans / 16px / 100%` for the button, so completed steps render in the body
+face, one size up and roughly a quarter wider than the rail was set for.
+
+The phone consequence is the severe one. `:378` carries a comment explaining that
+`font-size: 0` at `:388` *"hides the text without display:none, so the `<button>` keeps"*
+its hit area — the rule that turns the rail into ten anonymous progress bars. Buttons
+never receive it, so their tracks get sized by min-content instead. The review measured
+`grid-template-columns` at 390px as `64px 43px 103px 107px 0 0 0 0 0 0` on a
+mid-wizard page: **steps five through ten are zero pixels wide**, and the four
+survivors overprint their own bars. A fresh draft with no completed steps has no
+`<button>` in the rail at all and computes ten equal 30.7px tracks, which is why this
+does not reproduce on a first load — it needs at least one completed step, which is
+every state after step one.
+
+**This file describes the rule and names only half of it.** `F5`'s outcome note
+(the keyboard-access finding) lists the stepper among the elements it touched and
+writes the rule as `.stepper button.st { line-height: inherit }`, explaining that a
+button's own line-height sat the pill off the line. Its **very next bullet**, on the
+NPC row, says the conversion there was *"deliberately **not** `font: inherit`, which
+would also overwrite `.chkrow`'s own 13px."*
+<!-- claim-ok: quoting F5's own outcome note, which is in this file above -->
+So the trap is understood in this repo, was avoided by name one bullet later, and the
+stepper rule carries the shorthand anyway. Whether it arrived in that PR or a later
+one, `F5`'s note is the record of what that rule was for, and line-height is all of it.
+
+**Proposal:** delete `font: inherit` from `:311` and keep `line-height: inherit`.
+`.st` at `:290` already declares family, stretch, size, weight and letter-spacing at
+author origin, which beats the user-agent button shorthand unaided — no `!important`
+and no extra specificity needed. **Posture: one declaration removed from one app
+stylesheet. No markup change, no new rule, no token touched.**
+
+**Verification for whoever takes it:** re-read `getComputedStyle` on a `.done` step —
+it must report `Saira`, `75%`, and `15px` at desktop, `0px` under 900px — and confirm
+`grid-template-columns` at 390px computes ten equal tracks on a page with completed
+steps. A screenshot at 390px is the honest check; the DOM number alone is what let
+this stand.
+
+**Evidence:** DOM-injected computed-style probe at 390px and 1440px, 2026-09-09;
+`grid-template-columns` read from the live rail the same day; line numbers read from
+a 2072-line `apps/character-creator/styles.css` the same day.
+
+**Confidence:** high. The cascade is arithmetic and the computed styles were read
+twice at two widths. What is **not** established is the rendered appearance after the
+fix — nothing has been changed, so the ten-equal-tracks claim is a prediction from the
+cascade rather than a measurement. Taking it and screenshotting at 390px raises that
+half.
+
+**Ongoing cost:** none. One declaration fewer.
+
+---
+
+### F36 — medium — The focus ring and the reduced-motion block were each scoped to one app on purpose, and the promotion neither of them made was never given a number
+
+**Step: cross-app consistency sweep.**
+
+`F16` shipped `:where(button, input, a, summary, [tabindex]):focus-visible` into
+`apps/character-creator/styles.css` on 2026-08-31 (PR #444), and its *Proposal* says
+why it went no further:
+<!-- claim-ok: quoting F16's own proposal, which is in this file above -->
+
+> **App stylesheet only** — promoting it to `shared/styles.css` would give three other
+> apps a focus ring overnight and is a bigger finding than it looks.
+
+`F32` shipped `prefers-reduced-motion` into the same file on 2026-09-06 and held the
+same posture — its note opens *"one media block in one app stylesheet — `shared/`
+untouched"*.
+<!-- claim-ok: quoting F32's own outcome note, which is in this file above -->
+
+**Both were right, and neither filed the bigger finding.** That is the gap this one
+closes: `audit-menu` → *A deferral is work. Give it a number or say you are dropping
+it.* The promotion has been named twice, ten days apart, and has never been open,
+because open is a property of findings and it had no number.
+
+What the deferral costs today, measured 2026-09-09 across the four apps:
+
+| | focus ring | `prefers-reduced-motion` |
+|---|---|---|
+| character-creator | yes | yes |
+| pick3cut5 | yes | yes |
+| media-vault | **no** | **no** |
+| filament-forge | **no** | **no** |
+
+The two without are not merely un-styled. Both set `outline: none` and supply no
+replacement on named controls: MediaVault's `#searchInput` (via `.search-box input`)
+and FilamentForge's `#printerModel` (via `.field select, .field input`) were each
+blurred, then focused after a real `Tab` keypress to put Chrome in keyboard modality,
+then compared on all four of `outline`, `box-shadow`, `border-color` and `background` —
+all four identical before and after. A programmatic `.focus()` never matches
+`:focus-visible` and produces a false negative here, which is the same trap `F16`'s own
+note records.
+
+The motion half lands the same way round. Both bounce-easing transitions
+(`cubic-bezier(0.34, 1.56, 0.64, 1)` at `apps/media-vault/styles.css:838` and `:875`)
+and the `transition: width 0.4s ease` at `:1182` are in MediaVault, which is one of the
+two apps with no reduced-motion guard. `grep -rn "prefers-color-scheme"` across the
+repo on 2026-09-09 returns nothing at all, so dark is hard-coded rather than a scheme —
+noted as context, not proposed as work.
+
+**Proposal:** move the `:focus-visible` block and the `prefers-reduced-motion` block
+from `apps/character-creator/styles.css` into `shared/styles.css`, deleting the app-local
+copies, and screenshot all four apps afterwards at 1440×900. **Posture: shared
+stylesheet, no component change, no JS, no new token.** The ring's colour resolves
+through `--accent-secondary`, which each app's `:root` already sets, so the four apps
+each get the ring in their own colour without any of them naming it — which is the
+mechanism that made `F16` cautious and is also what makes this safe to do in one PR.
+
+**The caution in `F16` is the thing to honour, not to argue past.** *"A focus ring
+overnight"* is a real change to three apps' appearance, and the reason it is worth
+taking now rather than then is that two of those three have since been measured to have
+no keyboard focus indicator at all. If the screenshots show the ring landing badly
+anywhere, the right outcome is to say so in the note and stop, not to widen the PR.
+
+**Evidence:** focus-state comparison on both named controls after a real `Tab`,
+2026-09-09; `grep -rn "focus-visible\|prefers-reduced-motion\|prefers-color-scheme"`
+across `apps/` and `shared/` the same day; `F16` and `F32` read under their headings in
+this file the same day.
+
+**Confidence:** high that the two apps have no focus indicator on those two controls,
+and that the promotion was deferred twice without a number. **Medium on the claim that
+one shared block is sufficient for all four apps** — the receiving apps' controls were
+not enumerated, only the two named ones, and MediaVault sets `outline: none` in six
+rules by the same sweep. Enumerating every `outline: none` in the two receiving apps is
+what would raise it, and may turn this into a larger PR than the proposal implies.
+
+**Ongoing cost:** one block in `shared/` instead of one in an app, so slightly less to
+keep in step. The real ongoing cost is the one `F16` named: a shared rule means a
+change to it is a change to four apps, and the four are not screenshotted together by
+anything today.
