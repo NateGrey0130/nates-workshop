@@ -444,5 +444,24 @@
       const v = stored?.[key];
       return v === null || v === undefined || v === '';
     },
+    // The book's damage flow as ONE pure function, called by the sheet's Damage
+    // and by the G.M.'s on the dashboard (UI-AUDIT F46) - two copies of a rule
+    // are two rules. M.D.C. beings take it on M.D.C.; everyone else runs S.D.C.
+    // down first and the remainder reaches H.P. Returns the new value of each
+    // pool it moved. Nothing clamps: negative H.P. is a real Palladium state,
+    // and which armour took a hit is the table's call, not this function's.
+    damageCascade: (data, amt) => {
+      const patch = {};
+      if (data?.mdc_max != null) {
+        patch.mdc_current = (data.mdc_current ?? 0) - amt;
+      } else {
+        const sdc = data?.sdc_current ?? 0;
+        const offSdc = Math.min(Math.max(sdc, 0), amt);
+        if (offSdc > 0) patch.sdc_current = sdc - offSdc;
+        const rest = amt - offSdc;
+        if (rest > 0) patch.hp_current = (data?.hp_current ?? 0) - rest;
+      }
+      return patch;
+    },
   };
 })(globalThis);

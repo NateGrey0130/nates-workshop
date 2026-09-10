@@ -405,7 +405,7 @@ exactly that, read off the table with no parsing.
 | `js/parser.js` | ~2,225 | **third** largest, and not a page script at all |
 | `catalog.js` | ~800 | |
 | `campaign.js` | ~685 | |
-| `dashboard.js` | ~140 | |
+| `dashboard.js` | ~300 | |
 
 **A smoke check now holds these to 25%**, because the previous two sets of
 figures both went stale in the same way. The set before this one said `app.js`

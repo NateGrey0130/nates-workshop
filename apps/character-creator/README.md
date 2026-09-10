@@ -57,7 +57,8 @@ Everything the app reads at runtime is in D1. There are no static content files
 apps/character-creator/
 ├── index.html / app.js       Creation wizard (10 steps). app.js is an ES module.
 ├── sheet.html / sheet.js     Character sheet, laid out after the printed Rifts sheet
-├── dashboard.html / dashboard.js  GM dashboard: roster, GM notes, campaign journal
+├── dashboard.html / dashboard.js  GM dashboard: roster (with the G.M.'s pool, damage,
+│                             undo and party-XP controls), GM notes, campaign journal
 ├── campaign.html / campaign.js  Campaign notes: the log with search and Ask,
 │                             the party stash and the currency ledger
 ├── catalog.html / catalog.js Admin-only catalog editor, generated from the
