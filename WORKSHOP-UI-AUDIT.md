@@ -398,6 +398,84 @@ against the markup at the three cited lines.
 
 ---
 
+**Taken, 2026-09-10 (PR #917), as re-scoped. Posture held: additive, one closed set,
+no shared convention, no sprite discipline.** The five landing-page cards carry drawn
+SVG; the other 46 glyphs are untouched.
+
+**Mechanism: the SVG lives in `apps/manifest.json`, in the `icon` field it replaces.**
+The alternative — an icon *name* plus a lookup in `index.html` — was rejected on one
+measured ground: `SETUP.md:879` promises that adding an app means editing the manifest
+and that **"The dashboard renders its cards from the manifest — no HTML edits"**. A
+<!-- claim-ok: quoting SETUP.md, cited by line number in the same sentence -->
+lookup keyed by name breaks that for every future app. Keeping the markup in the data
+file keeps the promise true. SVG attributes are single-quoted, which is valid HTML and
+means no `\"` escaping inside JSON, so the manifest stays readable.
+
+**That rests on one deliberate inconsistency, and it is now asserted rather than**
+**hoped for.** `icon` is the only manifest field `index.html` does not pass through
+`esc()`. Escaping it would print SVG source as text on all five cards, and nothing
+else would look wrong. Three checks were added to the *front door* section of
+`apps/character-creator/test/checks/rendered-ui.mjs`: that every card icon is drawn
+markup, that the renderer still does not escape it, and that `name` and `description`
+still are. **All three were made to fail first** — reverting one icon to an emoji,
+wrapping `app.icon` in `esc()`, and stripping `esc()` from `app.name` each failed
+exactly one check and no others.
+
+**Five things `audit-premise-auditor` found before the edit.**
+
+**1. A constraint I was budgeting for does not exist.** `apps/pick3cut5/test/smoke.mjs`
+reads its OWN shell — `readFileSync(join(appDir, 'index.html'))`, `appDir` not
+`repoRoot` — so nothing done to the hub can reach it. **And the comment at
+`index.html:11-14` said the opposite**, claiming that test derives its list "from this
+very head". Wrong about the file it sits in. Corrected in this PR, since the file was
+already open and the claim is exactly the shape this repo loses to.
+
+**2. A constraint that IS real, and rules out one mechanism.** The Access bypass is at
+**5 of 5** destinations (`apps/pick3cut5/test/smoke.mjs:64`, `MAX_ACCESS_DESTINATIONS`),
+and that suite scans `url()` inside every absolute stylesheet the app loads — including
+`shared/styles.css`. **Any sprite or icon asset referenced by `url()` from `shared/`
+would fail CI immediately.** The original full-sprite proposal would have hit this.
+
+**3. The `no box-shadow` check reads the raw file, comments included.** So a comment
+in `index.html` explaining an icon shadow decision **fails CI**, while
+`filter: drop-shadow()` **passes** — the check cannot protect the rule it exists for.
+Recorded here rather than fixed: it is not this finding's subject, and no comment
+written for this change needed the phrase.
+
+**4. `aria-hidden` is not neutral.** The emoji is part of each card link's accessible
+name today — measured through `Accessibility.getFullAXTree` as
+`link: "🧵 FilamentForge AI-powered…"`. The drawn icons carry `aria-hidden="true"`, so
+that name is now `link: "FilamentForge AI-powered…"`. A screen reader stops announcing
+a glyph name before every app. That is an improvement and it is a **decision**, not a
+mechanical carry-over. The precedent followed is `apps/pick3cut5/index.html:133`, the
+one existing `aria-hidden` in the repo, on a decorative spinner; `UI-AUDIT` `F22` is
+the other side of the same line — glyph-only *buttons* got names rather than hiding.
+
+**5. A dormant rule went live.** `index.html:209` —
+`.card-soon h2, .card-soon .card-icon { color: var(--text-sub) }` — has never affected
+the icon, because a colour emoji ignores `color` (proven: the five glyphs render
+identically at `#FF0000`). With `stroke: currentColor` it now applies: measured after
+the change, the four live cards stroke `rgb(226,233,229)` and the *soon* card
+`rgb(147,162,157)`. Almost certainly what whoever wrote that line intended, and it had
+never fired.
+
+**`apps/_template/manifest-entry.example.json` was updated too**, because `SETUP.md`
+names it as the source for a new app's manifest entry. Without it, app six arrives as
+the one emoji card among six. That is the sixth glyph the Adjusted note above set
+aside, and it cost one line.
+
+**Verified:** five inline SVGs at 28×28 inside the unchanged 56×56 tint box; no
+horizontal overflow at 390; no emoji left anywhere in the rendered hub;
+`font-size: 36px` removed from `.card-icon`, which sized a glyph and now sizes nothing.
+Four smoke suites pass — the character-creator suite at **1813** checks, up from 1810 by
+the three added here.
+
+**Still open on this menu: nothing from W2.** The other 46 glyphs stay as they are, by
+the Adjusted note's recommendation, and this change is explicitly not a precedent for
+converting them.
+
+---
+
 ### W3 — low — The bulk bar takes 42% of a phone viewport while select mode is on
 
 **Filed 2026-09-10 while taking `W1`, from measurements made during it.**

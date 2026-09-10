@@ -9,9 +9,16 @@
      apple-touch-icon for Add to Home Screen and ignores everything else here.
 
      apps/pick3cut5 deliberately has NO icon links. Its Access bypass is a list
-     of exact paths, all five destination slots are in use, and its smoke test
-     derives the list from this very head - a link here would demand a sixth
-     slot that does not exist. See apps/pick3cut5/test/smoke.mjs. -->
+     of exact paths and all five destination slots are in use, so an icon link
+     IN THAT APP would demand a sixth that does not exist.
+
+     This paragraph used to end "its smoke test derives the list from this very
+     head", which is wrong about the file it sits in and was corrected while
+     taking WORKSHOP-UI-AUDIT W2. apps/pick3cut5/test/smoke.mjs reads its OWN
+     shell - `readFileSync(join(appDir, 'index.html'))`, appDir not repoRoot -
+     so nothing in the head you are reading now can reach that test, and the
+     four links below cost pick3cut5 nothing. The constraint is real; it just
+     lives one directory over. -->
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/shared/icons/icon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="/shared/icons/apple-touch-icon.png">
@@ -149,8 +156,10 @@ body {
   transform: translateY(-3px);
 }
 .card:hover::before { opacity: 1; }
+/* The icon is drawn markup now, not a glyph, so it carries its own 28px and
+   `font-size` here sized nothing. Removed rather than left, because a dead
+   sizing rule is what someone reaches for first when an icon looks wrong. */
 .card-icon {
-  font-size: 36px;
   width: 56px;
   height: 56px;
   display: flex;
@@ -239,6 +248,14 @@ fetch('/apps/manifest.json')
   .then(res => res.json())
   .then(({ apps }) => {
     document.getElementById('appGrid').innerHTML = apps.map(app => {
+      // `icon` is the ONE field not passed through esc(), and that is
+      // deliberate: since WORKSHOP-UI-AUDIT W2 it holds inline SVG rather
+      // than an emoji, so escaping it would print the markup as text on all
+      // five cards. name, description and status stay escaped — they are the
+      // fields a person types. The manifest is served from this origin and
+      // is not user input; if that ever changes, this line changes with it.
+      // A check in apps/character-creator/test/checks/rendered-ui.mjs asserts
+      // both halves, so a well-meant "fix" here fails rather than shipping.
       const inner = `
         <div class="card-icon">${app.icon}</div>
         <h2>${esc(app.name)}</h2>

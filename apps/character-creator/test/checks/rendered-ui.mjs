@@ -1071,6 +1071,23 @@ export function run() {
     check('the coming-soon card is not dimmed below readable',
       !/\.card-soon \{[^}]*opacity/.test(landing),
       'opacity on that card measured 2.48:1 on its description text');
+
+    // WORKSHOP-UI-AUDIT W2. The cards are drawn icons now, and that rests on
+    // ONE deliberate inconsistency: `icon` is the only manifest field the
+    // renderer does not pass through esc(). Escaping it would print the markup
+    // as text on every card, and nothing else would look wrong — so the
+    // omission is asserted here rather than left to a comment. index.html
+    // points at this check by name; if it moves, fix that comment too.
+    const manifest = JSON.parse(readFileSync(join(repoRoot, 'apps', 'manifest.json'), 'utf8'));
+    check('every card icon is drawn markup rather than an emoji glyph',
+      manifest.apps.length > 0 && manifest.apps.every((a) => /^<svg\b/.test(a.icon || '')),
+      manifest.apps.map((a) => `${a.slug || '(soon)'}=${(a.icon || '').slice(0, 12)}`).join(' '));
+    check('and the renderer still does not escape it, which is what makes that work',
+      /<div class="card-icon">\$\{app\.icon\}<\/div>/.test(landing),
+      'esc() around app.icon would print five cards of SVG source');
+    check('while the fields a person types stay escaped',
+      /\$\{esc\(app\.name\)\}/.test(landing) && /\$\{esc\(app\.description\)\}/.test(landing),
+      'name or description lost its esc()');
   }
 
   // ---------- Changes that could not be sent ----------
