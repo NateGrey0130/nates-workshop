@@ -179,7 +179,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--b
    even from 20 lines further down. Measured through CDP with real Tab keypresses
    while taking F36: button and a get the ring, input and select get nothing.
    That is unchanged by the move, in this app and in the two that receive it, and
-   it is filed as F37 rather than fixed here. */
+   it is filed as UI-AUDIT F37 rather than fixed here. */
 /* UI-AUDIT F31. sheet.js emitted h3 under the shell's h1 with no h2 between,
    so the sheet ran H1 -> H3. Those headings are now h2 and carry .sub-h, which
    holds the size they had - UA h3 is 1.17em, UA h2 is 1.5em, and nothing in
@@ -405,8 +405,8 @@ th {
 }
 .lvl-row > summary { cursor: pointer; list-style: none; }
 .lvl-row > summary::-webkit-details-marker { display: none; }
-.lvl-row > summary::before { content: 'B8 '; color: var(--text-muted); }
-.lvl-row[open] > summary::before { content: 'BE '; }
+.lvl-row > summary::before { content: '\25B8 '; color: var(--text-muted); }
+.lvl-row[open] > summary::before { content: '\25BE '; }
 
 /* Class cards. The gap and the padding both went up: at 12px and 16px the
    cards read as one dense block rather than as separate things to choose
@@ -989,7 +989,9 @@ body.play-mode .vital .steppers button:active { background: var(--accent-glow); 
 /* Group headings inside the Psionics & Magic box: "Spells — Level 3",
    "Psionics — Healing". Rendered by sheet.js when the group changes. */
 .power-group {
-  margin: 8px 0 2px; font-size: 10.5px; font-weight: 600;
+  /* 12px, from 10.5 (UI-AUDIT F51): the one size the 2026-09-10 detector run
+     flagged as real. It heads every spell and psionic group on the sheet. */
+  margin: 8px 0 2px; font-size: 12px; font-weight: 600;
   text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted);
 }
 .power-group:first-child { margin-top: 0; }

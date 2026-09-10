@@ -2558,8 +2558,8 @@ function renderSkills() {
         ${floorsHtml(effective)}
         ${schedule.length ? `<p class="attr-note">Also grants ${schedule.map((s) => `+${s.count} at level ${s.level}`).join(', ')}
           — asked for on the Advancement step, and banked until spent if you skip them.
-          They count toward the floors above, so a character at level three is measured
-          against ${relatedAllowance(effective, S.level)} picks rather than ${relatedCfg.count}.</p>` : ''}
+          They count toward the floors above, so a character at level ${Math.min(...schedule.map((s) => s.level))} is measured
+          against ${relatedAllowance(effective, Math.min(...schedule.map((s) => s.level)))} picks rather than ${relatedCfg.count}.</p>` : ''}
         ${Picker.inputHtml({ id: 'related-filter', value: S.relatedFilter,
           placeholder: 'Filter…', shown: Picker.filter(relatedPool, S.relatedFilter).length,
           total: relatedPool.length })}
