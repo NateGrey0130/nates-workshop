@@ -1106,11 +1106,12 @@ function weaponCardsHtml(w, strikeBonus) {
       <div class="pw-head"><b>${escHtml(name)}</b>${it.qty > 1 ? ` <span class="muted small">×${it.qty}</span>` : ''}
         ${it.item_damage ? `<span class="muted small">${escHtml(it.item_damage)}</span>` : ''}</div>
       <div class="pw-btns">
-        <button onclick="rollD20('attack', '${safe} — strike', ${Number(strikeBonus) || 0}, null)">🎯 Strike</button>
+        <button onclick="strikeWith(${it.id}, '${safe}')">🎯 Strike</button>
         ${dice ? `<button onclick="rollWeaponDamage('${safe}', '${escHtml(dice)}')">💥 ${escHtml(dice)}</button>` : ''}
         ${cap != null && w ? `<button onclick="fireShot(${it.id}, ${cap}, '${safe}')">🔫 <span id="play-ammo-${it.id}">${ammo}/${cap}</span></button>
         <button class="ghost" onclick="reloadAmmo(${it.id}, ${cap}, '${safe}')">↻</button>` : ''}
       </div>
+      ${strikeChipsHtml(it.id)}
     </div>`;
   }).join('');
   // Drawn from here (UI-AUDIT F45). It used to say "equip on the sheet lens
@@ -1132,6 +1133,77 @@ function weaponCardsHtml(w, strikeBonus) {
 async function drawWeapon(rowId) {
   await patchItem(rowId, { equipped: true });
   repaintPlayWeapons();
+}
+
+// ── A weapon's own strike bonuses (UI-AUDIT F41) ──
+//
+// Strike used to roll every weapon with the same unarmed number. The W.P. and
+// situational bonuses were listed under "Conditional bonuses - these apply only
+// in the situation named" and reached no roll. Each one that carries a strike
+// value is a chip on each weapon card now: OFF by default, turned on by the
+// player for the weapon in hand, and remembered per weapon on this device.
+// Opt-in on every card, never automatic - which is what keeps "only in the
+// situation named" true. Nothing maps a gear row to its W.P., and a guess would
+// put a wrong bonus on a roll, so no chip is ever pre-lit.
+const STRIKE_CHIPS_KEY = () => `cc-strike-chips-${id}`;
+const strikeBonusKey = (b) => `${b.skill}|${b.applies_when}`;
+const strikeRows = () => (C.weaponBonuses || []).filter((b) => Number(b.combat?.strike));
+// The skill's name - and its condition too, when two strike bonuses come from
+// the same skill. W.P. Sword carries +3 throwing a sword and +5 with a sword;
+// labelled "Sword" and "Sword", only a tooltip told them apart, and a phone
+// shows no tooltip.
+const chipLabel = (b) => {
+  const name = String(b.skill).replace(/^W\.P\. /, '');
+  const shared = strikeRows().filter((x) => String(x.skill) === String(b.skill)).length > 1;
+  return shared ? `${name} (${b.applies_when})` : name;
+};
+
+function strikeChipState() {
+  try { return JSON.parse(localStorage.getItem(STRIKE_CHIPS_KEY())) || {}; } catch { return {}; }
+}
+
+function strikeChipsOn(itemId) {
+  const on = new Set(strikeChipState()[itemId] || []);
+  return strikeRows().filter((b) => on.has(strikeBonusKey(b)));
+}
+
+function strikeChipsHtml(itemId) {
+  const rows = strikeRows();
+  if (!rows.length) return '';
+  const on = new Set(strikeChipsOn(itemId).map(strikeBonusKey));
+  return `<div class="pw-chips">${rows.map((b) => {
+    const lit = on.has(strikeBonusKey(b));
+    const bi = C.weaponBonuses.indexOf(b);
+    return `<button type="button" class="pw-chip${lit ? ' on' : ''}" aria-pressed="${lit}"
+      title="${escHtml(`${b.skill} ${b.applies_when}`)}"
+      onclick="toggleStrikeChip(${itemId}, ${bi}, this)">+${Number(b.combat.strike)} ${escHtml(chipLabel(b))}</button>`;
+  }).join('')}</div>`;
+}
+
+// In place: the chip's own class and aria-pressed, no re-render - the Strike
+// button reads the state when it is pressed, so nothing else needs to know.
+function toggleStrikeChip(itemId, bi, el) {
+  const b = C.weaponBonuses[bi];
+  if (!b) return;
+  const key = strikeBonusKey(b);
+  const all = strikeChipState();
+  const set = new Set(all[itemId] || []);
+  if (set.has(key)) set.delete(key); else set.add(key);
+  all[itemId] = [...set];
+  try { localStorage.setItem(STRIKE_CHIPS_KEY(), JSON.stringify(all)); } catch { /* the chip still works for this visit */ }
+  const lit = set.has(key);
+  if (el) { el.classList.toggle('on', lit); el.setAttribute('aria-pressed', String(lit)); }
+}
+
+// The base strike plus whatever this weapon's lit chips add. The chips are named
+// in the roll's label, so the bar says what the total was made of.
+function strikeWith(itemId, name) {
+  const lit = strikeChipsOn(itemId);
+  const extra = lit.reduce((n, b) => n + Number(b.combat.strike), 0);
+  const label = lit.length
+    ? `${name} — strike (${lit.map((b) => `+${Number(b.combat.strike)} ${chipLabel(b)}`).join(', ')})`
+    : `${name} — strike`;
+  rollD20('attack', label, (Number(C.playStrike) || 0) + extra, null);
 }
 
 function repaintPlayWeapons() {

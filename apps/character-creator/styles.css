@@ -1802,6 +1802,15 @@ body.show-play-keys .play-keys { display: block; }
 }
 .play-weapon .pw-btns button:active { background: var(--accent-glow); }
 .play-weapon .pw-btns button.ghost { color: var(--text-secondary); min-width: 44px; }
+/* A weapon's own strike bonuses (UI-AUDIT F41): off until the player lights
+   one for the weapon in hand. The lit state borrows the amount chips' tones. */
+.pw-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.pw-chip {
+  min-height: 40px; padding: 0 12px; border-radius: var(--radius-sm); font-size: 13px;
+  background: var(--bg-tertiary); border: 1px solid var(--border);
+  color: var(--text-secondary); cursor: pointer;
+}
+.pw-chip.on { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
 /* Carried weapons, each with its Draw button (UI-AUDIT F45). */
 .pw-carried { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 8px 0; }
 .pw-carry { display: inline-flex; align-items: center; gap: 6px; }

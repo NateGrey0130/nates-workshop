@@ -3302,6 +3302,34 @@ the other today, and a guess would put a wrong bonus on a roll.
 
 **Ongoing cost:** one localStorage key per character.
 
+---
+
+**Taken, 2026-09-10 (PR #926). Posture held: opt-in on every roll, never automatic.**
+Each equipped weapon card carries a chip for every conditional bonus that has a strike
+value — the rows the sheet already prints under *Conditional bonuses* — off until the
+player lights one. The state is remembered per weapon on the device, keyed by skill and
+condition rather than by position, so a reordered list cannot light the wrong chip.
+Strike reads it when pressed: the base bonus plus whatever is lit, with the lit chips
+named in the roll's label, so the bar says what the total was made of.
+
+**One thing the first walk turned up and this PR fixes.** W.P. Sword carries two strike
+bonuses — +3 throwing a sword, +5 with one — and both chips read *Sword*; only the tooltip
+told them apart, and a phone shows none. Where two strike bonuses share a skill, the chip
+now names its condition as well.
+
+**Measured on 8801, local character 1, 2026-09-10**, with *Daggers and Knives* drawn:
+five chips, none lit, each carrying its condition as a title. On a forced 10, Strike
+rolled *Daggers and Knives — strike*, 10 + 0 = 10. With *+1 Fencing* lit — `aria-pressed`
+true, stored under that weapon — it rolled *Daggers and Knives — strike (+1 Fencing)*,
+10 + 1 = 11, and the bar printed the breakdown. Lit across a reload. With the labels
+fixed, the two Sword chips read *+3 Sword (throwing a sword)* and *+5 Sword (with a
+sword)*, and the +5 lit rolled *… (+5 Sword (with a sword))*, 10 + 5 = 15. The dagger was
+put back and the stored state cleared afterwards.
+
+**What the chips do not do, by the finding's own terms:** nothing lights one for you.
+Fighter Combat and Robot Combat chips appear on a dagger too, because nothing maps a gear
+row to a W.P. or a situation, and a guess would put a wrong bonus on a roll.
+
 ### F42 — medium — A pending level-up is invisible until someone logs XP
 
 `C.nextThreshold` and `C.proposal` start null (`sheet.js:62`) and are set only inside
