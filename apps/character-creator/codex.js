@@ -107,6 +107,37 @@ const SECTIONS = [
     notes: (r) => [r.cost_note && `Price: ${r.cost_note}`],
     hay: (r) => `${r.name} ${r.source_book || ''} ${r.vehicle_class || ''}`,
   },
+  // UI-AUDIT F48. Appended rather than placed first so the default tab and every
+  // #spells / #gear link already sent keep opening where they did.
+  {
+    id: 'skills',
+    label: 'Skills',
+    key: (r) => String(r.name).toLowerCase(),
+    title: (r) => r.name,
+    meta: (r) => r.category || 'Uncategorised',
+    cost: (r) => (r.base ? `${r.base}%${r.per_level ? ` +${r.per_level}/lvl` : ''}` : (r.base_formula ? 'formula' : '')),
+    stats: (r) => [['Base', r.base ? `${r.base}%` : null], ['Per level', r.per_level ? `+${r.per_level}%` : null],
+                   ['From attributes', r.base_formula]],
+    notes: () => [],
+    // The catalog has never held skill descriptions, so an empty text line would
+    // read as "not imported yet" when there is nothing to import.
+    noText: true,
+    hay: (r) => `${r.name} ${r.source_book || ''} ${r.category || ''}`,
+  },
+  {
+    id: 'classes',
+    label: 'Classes',
+    key: (r) => String(r.slug).toLowerCase(),
+    title: (r) => r.name,
+    meta: (r) => (r.category === 'rcc' ? 'R.C.C.' : r.category === 'occ' ? 'O.C.C.' : (r.category || '')),
+    cost: () => '',
+    stats: (r) => [
+      ['Type', r.category === 'rcc' ? 'Racial character class' : r.category === 'occ' ? 'Occupational character class' : null],
+      ['System', r.system === 'rifts' ? 'Rifts' : r.system === 'palladium-fantasy' ? 'Palladium Fantasy' : r.system],
+    ],
+    notes: () => [],
+    hay: (r) => `${r.name} ${r.source_book || ''} ${r.category || ''}`,
+  },
 ];
 
 const byId = (id) => SECTIONS.find((s) => s.id === id) || SECTIONS[0];
@@ -265,7 +296,7 @@ function entry(sec, r) {
       ${statBlock(sec, r)}
       ${sec.extra ? sec.extra(r) : ''}
       ${text ? `<p class="codex-text">${escHtml(r.description)}</p>`
-             : '<p class="codex-text muted">No description imported yet.</p>'}
+             : sec.noText ? '' : '<p class="codex-text muted">No description imported yet.</p>'}
       ${sec.notes(r).filter(Boolean)
         .map((n) => `<p class="note small">${escHtml(n)}</p>`).join('')}
       <p class="muted small">${escHtml(r.source_book || 'source not recorded')}</p>
@@ -304,7 +335,7 @@ function listHtml(sec) {
         <option value="palladium-fantasy"${S.system === 'palladium-fantasy' ? ' selected' : ''}>Palladium Fantasy</option>
       </select>
       <span class="muted small">${shown.length} of ${total}${
-        shown.length ? ` · ${withText} with text` : ''}</span>
+        shown.length && !sec.noText ? ` · ${withText} with text` : ''}</span>
     </div>
 
     <div class="panel codex-list" id="codex-list">
@@ -357,7 +388,7 @@ document.addEventListener('change', (e) => {
   if (e.target.id === 'codex-system') { S.system = e.target.value; S.filterFocused = false; render(); }
 });
 
-// A link may arrive pointed at any of the four.
+// A link may arrive pointed at any of the six.
 const fromHash = location.hash.replace(/^#/, '');
 if (SECTIONS.some((s) => s.id === fromHash)) S.tab = fromHash;
 
