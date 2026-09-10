@@ -3432,6 +3432,39 @@ event kind, no rule change — a natural 20 is labelled, not given an effect.**
 
 **Ongoing cost:** a key map to keep clear of browser and screen-reader shortcuts.
 
+---
+
+**Taken, 2026-09-10 (PR #924), in one PR with `F45` and `F50`** — all three change
+`playControlsHtml` and the play CSS, and Nate left the grouping to judgement. **Posture
+held: client only; no new event kind, no rule change — a natural 20 is labelled, not given
+an effect.**
+
+- **(a)** A number field beside the chips. Any whole number above zero becomes the amount,
+  for Damage and the steppers alike; a chip clears it; Enter in it applies Damage.
+- **(b)** `D` damage, `U` undo, `P` percentile, `N` next attack, `R` new round, `?` the list
+  — in play mode only, never while a field has the focus, and never with a modifier. The
+  line naming them shows where there is a fine pointer to press them with, and anywhere
+  after `?`.
+- **(c)** The roll bar carries **Last N**, opening the last ten rolls newest first.
+- **(d)** A natural 20 or 1 is labelled on the bar, in the two tones this file already
+  measured against the bar's ground, and in the logged note *after* the verdict — so
+  `endSession`'s count of `— pass` / `— fail` reads the notes it always did.
+
+**Measured on 8801, local character 1, 2026-09-10.** Typing 7 turned every chip off, and
+Enter took S.D.C. 11 → 4 as ONE event, not two presses of 5 and 2; `U` put it back to 11.
+`N` and `R` moved the melee counter; `P` rolled; `P` typed into the notes field rolled
+nothing. A forced natural 20 read *d20 20 + 2 = 22 natural 20* and logged
+*· natural 20*. The history opened with three rolls. At 375px the key line is
+`display: none`. The walk left one damage event, its undo and a few roll events in that
+local character's log.
+
+**Two smoke checks tripped, and neither was the change being wrong.** A local variable
+named `box` matched the guard that keeps `js/sheet-layout.js`'s helpers out of `sheet.js`
+— renamed. And *"the roll bar reads the null target"* read `rollBarHtml`'s body alone,
+where the per-roll rendering no longer lives: it now reads `rollLineHtml`, which the bar
+calls for every roll, and the guard that each body the checks read can be found now names
+five, so a moved signature still fails loudly instead of passing on nothing.
+
 ### F45 — low — Drawing a carried weapon means leaving play mode
 
 An unequipped weapon gets a line reading *"equip on the sheet lens for cards"*
@@ -3446,6 +3479,20 @@ Gear tab's equip control; no schema.**
 **Confidence:** high; the PATCH helper's line is *to verify when taken*.
 
 **Ongoing cost:** none.
+
+---
+
+**Taken, 2026-09-10 (PR #924, with `F44` and `F50`). Posture held: the Gear tab's own
+equip PATCH; no schema.** Each carried weapon gets a **Draw** button beside its name.
+
+**One correction, from `audit-premise-auditor` before the edit:** *"and the card appears"*
+was not true of the helper alone. `patchItem` (`sheet.js`) repaints the inventory rows and
+nothing else, so the weapon cards now sit in their own `#play-weapons` block and are
+repainted after it. <!-- claim-ok: quoting the premise this note corrects -->
+
+**Measured on 8801, local character 1, 2026-09-10:** two carried weapons, two Draw
+buttons; Draw on *Daggers and Knives* took the section from 0 cards to 1. It was put back
+in the bag afterwards.
 
 ### F46 — medium — The campaign dashboard is read-only, so running a session means a tab per character
 
@@ -3521,6 +3568,17 @@ y=1471. The controls sit outside the tab panels, with Weapons open by default
 summary gets a 44px minimum height. **Posture: CSS and one localStorage key.**
 
 **Evidence:** live DOM measurement, 2026-09-10. **Confidence:** high. **Ongoing cost:** none.
+
+---
+
+**Taken, 2026-09-10 (PR #924, with `F44` and `F45`). Posture held: CSS and one
+localStorage key.** Weapons and Rest remember whether they were open, per device
+(`cc-play-secs`); Weapons still opens by default the first time. The section summaries
+went from 8px to 12px of padding, and the Rest button gained a 44px floor.
+
+**Measured on 8801, 2026-09-10:** Weapons closed, reloaded, still closed; the Rest button
+**44px** tall where it was 27; a section summary **45px**. The stored key was cleared after
+the walk.
 
 ### F51 — low — Three small accessibility and legibility gaps
 

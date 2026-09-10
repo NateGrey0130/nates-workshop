@@ -440,6 +440,21 @@ function recordRoll(kind, name, entry) {
 function rollBarHtml() {
   const r = C.lastRoll;
   if (!r) return '<span class="muted">Tap a skill, save or combat bonus to roll, or Percentile for a bare d100.</span>';
+  // UI-AUDIT F44: the log kept fifty rolls and the bar showed one. The last ten
+  // open from the bar itself, newest first, and close the same way.
+  const n = Math.min(C.rollLog.length, 10);
+  const toggle = C.rollLog.length > 1
+    ? ` <button type="button" class="rb-hist" aria-expanded="${!!C.showRollHist}" onclick="toggleRollHistory()">${
+      C.showRollHist ? 'Hide' : `Last ${n}`}</button>`
+    : '';
+  const hist = C.showRollHist
+    ? `<ol class="roll-hist">${C.rollLog.slice(-10).reverse().map((x) => `<li>${rollLineHtml(x)}</li>`).join('')}</ol>`
+    : '';
+  return hist + rollLineHtml(r) + toggle;
+}
+
+// One roll as a line - the bar's latest, and each entry of its history.
+function rollLineHtml(r) {
   if (r.note) return `<b>${escHtml(r.name)}</b> — ${escHtml(r.note)}`;
   if (r.kind === 'damage') return `<b>${escHtml(r.name)}</b> — damage ${escHtml(r.expr)} = <b>${r.total}</b>`;
   const verdict = r.ok === null ? '' : r.ok ? ' <b class="ok">✓</b>' : ' <b class="ko">✗</b>';
@@ -454,7 +469,11 @@ function rollBarHtml() {
   }
   const vs = r.target ? ` vs ${r.target}+` : '';
   const bonus = r.bonus ? (r.bonus > 0 ? ` + ${r.bonus}` : ` − ${-r.bonus}`) : '';
-  return `<b>${escHtml(r.name)}</b> — d20 ${r.roll}${bonus} = <b>${r.total}</b>${vs}${verdict}`;
+  // A natural 20 or 1 is LABELLED and given no effect (UI-AUDIT F44): what it
+  // does is the table's rule, and the total above is still the total.
+  const nat = r.roll === 20 ? ' <b class="nat">natural 20</b>'
+    : r.roll === 1 ? ' <b class="nat nat1">natural 1</b>' : '';
+  return `<b>${escHtml(r.name)}</b> — d20 ${r.roll}${bonus} = <b>${r.total}</b>${vs}${verdict}${nat}`;
 }
 
 // d100 roll-under against a percentage.
@@ -781,11 +800,14 @@ async function quickDamage() {
   }
 }
 
-function setPlayAmt(n) {
+// A chip clears the typed amount; the typed amount lights whichever chip it
+// happens to equal (UI-AUDIT F44).
+function setPlayAmt(n, fromField) {
   C.playAmt = n;
-  document.querySelectorAll('.play-amt button').forEach((b) => {
+  document.querySelectorAll('.play-amt button[data-amt]').forEach((b) => {
     b.classList.toggle('on', Number(b.dataset.amt) === n);
   });
+  if (!fromField) { const f = $('play-amt-custom'); if (f) f.value = ''; }
 }
 
 // ── Play mode phase 3: the event log ──
@@ -836,7 +858,10 @@ function rollNote(r) {
   }
   if (r.kind === 'damage') return `${r.name}: damage ${r.expr} = ${r.total}`;
   const vs = r.target ? ` vs ${r.target}+ — ${r.ok ? 'pass' : 'fail'}` : '';
-  return `${r.name}: d20 ${r.roll}${r.bonus ? (r.bonus > 0 ? '+' + r.bonus : r.bonus) : ''} = ${r.total}${vs}`;
+  // After the verdict, so endSession's count of "— pass" / "— fail" reads the
+  // same notes it always did.
+  const nat = r.roll === 20 || r.roll === 1 ? ` · natural ${r.roll}` : '';
+  return `${r.name}: d20 ${r.roll}${r.bonus ? (r.bonus > 0 ? '+' + r.bonus : r.bonus) : ''} = ${r.total}${vs}${nat}`;
 }
 
 async function undoLast() {
@@ -1088,11 +1113,89 @@ function weaponCardsHtml(w, strikeBonus) {
       </div>
     </div>`;
   }).join('');
+  // Drawn from here (UI-AUDIT F45). It used to say "equip on the sheet lens
+  // for cards": out of play mode, find it in Gear, tick it, come back.
   const carriedLine = carried.length
-    ? `<p class="muted small">Carried, not equipped: ${carried.map((it) => escHtml(it.item_name || it.custom_name)).join(' · ')} — equip on the sheet lens for cards.</p>`
+    ? `<div class="pw-carried"><span class="muted small">Carried:</span>${carried.map((it) =>
+      `<span class="pw-carry">${escHtml(it.item_name || it.custom_name)}${w
+        ? ` <button type="button" class="btn btn-sm" onclick="drawWeapon(${it.id})">Draw</button>` : ''}</span>`).join('')}</div>`
     : '';
-  return `<details class="play-sec" open><summary>Weapons</summary>${cards || '<p class="muted small">No equipped weapons.</p>'}${carriedLine}</details>`;
+  return `<details class="play-sec" data-play-sec="weapons" ontoggle="rememberPlaySec(this)"${
+    playSecOpen('weapons', true) ? ' open' : ''}><summary>Weapons</summary>${
+    cards || '<p class="muted small">No equipped weapons.</p>'}${carriedLine}</details>`;
 }
+
+// ── Play mode: the fast path (UI-AUDIT F44, F45, F50) ──
+
+// The Gear tab's own equip PATCH, then the cards repainted: patchItem repaints
+// the inventory rows alone, so the play section would not have noticed.
+async function drawWeapon(rowId) {
+  await patchItem(rowId, { equipped: true });
+  repaintPlayWeapons();
+}
+
+function repaintPlayWeapons() {
+  // Not `box`: js/sheet-layout.js exports one, and the smoke test fails a
+  // sheet.js that redefines any of its names.
+  const holder = $('play-weapons');
+  if (holder) holder.innerHTML = weaponCardsHtml(C.canWrite, C.playStrike);
+}
+
+// Which play sections are open, remembered per device (F50) - the weapon cards
+// pushed every tab down on a phone, open by default on every visit. A
+// convenience rather than character data, the same standing as the rest rates.
+const PLAY_SECS_KEY = 'cc-play-secs';
+function playSecOpen(key, dflt) {
+  try {
+    const v = JSON.parse(localStorage.getItem(PLAY_SECS_KEY) || '{}')[key];
+    return typeof v === 'boolean' ? v : dflt;
+  } catch { return dflt; }
+}
+function rememberPlaySec(el) {
+  try {
+    const all = JSON.parse(localStorage.getItem(PLAY_SECS_KEY) || '{}');
+    all[el.dataset.playSec] = el.open;
+    localStorage.setItem(PLAY_SECS_KEY, JSON.stringify(all));
+  } catch { /* private window, blocked storage: the default stands */ }
+}
+
+function toggleRollHistory() {
+  C.showRollHist = !C.showRollHist;
+  const bar = $('play-roll-bar');
+  if (bar) bar.innerHTML = rollBarHtml();
+}
+
+// Keys at the table (F44): play mode only, and never while a field has the
+// focus, so typing a note cannot fire one. No modifier combinations - those
+// belong to the browser and to screen readers.
+const PLAY_KEYS = {
+  d: () => C.canWrite && quickDamage(),
+  u: () => C.canWrite && undoLast(),
+  p: () => rollPercentile(),
+  n: () => nextAttack(C.meleeAttacks),
+  r: () => newRound(C.meleeAttacks),
+  '?': () => document.body.classList.toggle('show-play-keys'),
+};
+document.addEventListener('keydown', (ev) => {
+  if (!C.playMode || ev.ctrlKey || ev.metaKey || ev.altKey || ev.repeat) return;
+  const t = ev.target;
+  if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) {
+    // The one field that wants a key: Enter in the typed amount applies it.
+    if (t.id === 'play-amt-custom' && ev.key === 'Enter') { ev.preventDefault(); if (C.canWrite) quickDamage(); }
+    return;
+  }
+  const fn = PLAY_KEYS[ev.key.length === 1 ? ev.key.toLowerCase() : ''];
+  if (fn) { ev.preventDefault(); fn(); }
+});
+
+// Any whole number above zero becomes the amount the chips set - for Damage and
+// the steppers alike (F44). A 37-point hit was several presses and several
+// events, and undo took back only one of them.
+document.addEventListener('input', (ev) => {
+  if (ev.target?.id !== 'play-amt-custom') return;
+  const n = Math.trunc(Number(ev.target.value));
+  if (n > 0) setPlayAmt(n, true);
+});
 
 
 // ── Play mode phase 4: melee round counter + rest ──
@@ -1139,10 +1242,16 @@ function rollBtn(r) {
 // togglePlay stop rebuilding the page and stop eating a half-typed note, the
 // same reason pickTab toggles classes instead of re-rendering.
 function playControlsHtml(w, combat) {
+  // What the keys and a redrawn weapon section need, without a render (F44/F45).
+  C.meleeAttacks = Number(combat.attacks) || 0;
+  C.playStrike = Number(combat.strike) || 0;
   const amts = [1, 5, 10, 20].map((n) =>
     `<button data-amt="${n}" class="${n === C.playAmt ? 'on' : ''}" onclick="setPlayAmt(${n})">${n}</button>`).join('');
+  const typed = [1, 5, 10, 20].includes(C.playAmt) ? '' : C.playAmt;
   return `<div id="play-controls" class="noprint">
     ${w ? `<div class="play-amt"><span class="muted small">Amount</span>${amts}
+      <input type="number" id="play-amt-custom" class="play-amt-custom" min="1" inputmode="numeric"
+        value="${typed}" placeholder="#" aria-label="Any other amount; Enter applies Damage">
       <button class="dmg" onclick="quickDamage()">💥 Damage</button>
       <button onclick="undoLast()">↶</button>
       <button onclick="endSession()">✎ End session</button></div>` : ''}
@@ -1158,7 +1267,9 @@ function playControlsHtml(w, combat) {
       <span class="muted small">G.M. call</span>
       <button type="button" onclick="rollPercentile()">🎲 Percentile (d100)</button>
     </div>
-    ${weaponCardsHtml(w, combat.strike)}
+    <p class="muted small play-keys">Keys: <kbd>D</kbd> damage · <kbd>U</kbd> undo ·
+      <kbd>P</kbd> percentile · <kbd>N</kbd> next attack · <kbd>R</kbd> new round · <kbd>?</kbd> this list</p>
+    <div id="play-weapons">${weaponCardsHtml(w, combat.strike)}</div>
     ${w ? restPanelHtml() : ''}
   </div>`;
 }
@@ -1271,7 +1382,8 @@ function restPanelHtml() {
   const rows = POOLS.filter(([key]) => C.data[key + '_max'] != null).map(([key, label]) =>
     `<label class="rest-row"><span>${label} per hour</span>
       <input type="number" min="0" id="rest-rate-${key}" value="${rates[key] ?? ''}" placeholder="0" oninput="updateRestPreview()"></label>`).join('');
-  return `<details class="play-sec"><summary>Rest &amp; recovery</summary>
+  return `<details class="play-sec" data-play-sec="rest" ontoggle="rememberPlaySec(this)"${
+    playSecOpen('rest', false) ? ' open' : ''}><summary>Rest &amp; recovery</summary>
     <p class="muted small">Your table's rates — the books' recovery pages are not yet in the
     rules audit, so nothing here ships a number for you. Set a per-hour rate per pool
     (for a per-day rule, divide or set hours to the days). Applied as one undoable event,
