@@ -293,6 +293,111 @@ menu that costs more forever than it costs once.**
 
 ---
 
+**Adjusted 2026-09-10 (PR #916). The `Confidence` field above did its job, and the
+answer went the wrong way. RE-SCOPED to the five landing-page cards; the full
+replacement is now recommended against.**
+
+This finding shipped with one low-confidence claim — *"twenty or so symbols will
+<!-- claim-ok: quoting this finding's own Proposal, four paragraphs above -->
+cover most of the 51, because the distinct glyphs collapse hard once synonyms are
+merged"* — and named the work that would settle it: group the glyphs by meaning
+on paper first, about an hour. That grouping has now been done, against every
+occurrence in context.
+
+**The set does not collapse. It slightly expands.** Three pairs genuinely merge:
+
+| merge | evidence |
+|---|---|
+| `⭐` + `💾` → **save** | `⭐ Save` ×5 in filament-forge against `💾 Save character` / `Save GM notes` / `Save to My Filaments` |
+| `📜` + `📄` → **document** | `📜 Open full sheet`, `📄 Sheet`, `📄 CSV file` |
+| `📋` + `🕐` → **history** | `📋 History` and `🕐 Recent History`, both filament-forge |
+
+**And four glyphs carry more than one meaning, which costs five symbols back:**
+
+| glyph | meanings |
+|---|---|
+| `💾` | save ×4 — **and `💾 Digital`**, media-vault's digital-format button |
+| `📋` | `📋 History` — **and** `📋 Copy` / `Copy to Clipboard` |
+| `🎯` | `🎯 Strike` in combat — **and** `🎯 Print Intent` |
+| `✨` | AI action (`Ask`, `Sweep the notes`, `Fill blanks`) — **and** `✨ N unspent powers` — **and** `✨ Quality`, one of filament-forge's three print intents |
+
+**51 glyphs − 3 merges + 5 extra symbols = about 53.** The Proposal's "twenty or
+so" is wrong by more than 2.5×, and wrong in the direction that matters.
+
+**The structural reason: 29 of the 51 glyphs are used exactly once** — 57% of the
+set — and 37 are used twice or fewer. A set that is mostly singletons has no
+redundancy to squeeze.
+
+**Nor can most of the benefit be bought cheaply.** Coverage of all 133 rendered
+occurrences by the top N glyphs: 5 → 38%, 10 → 58%, 20 → **76%**, 51 → 100%. A long
+flat tail rather than a short head. Twenty symbols leaves a quarter of the uses on
+emoji, and a half-drawn, half-emoji system is worse than either pure one — which is
+the risk the Ongoing cost line above already named.
+
+**Three occurrences are structurally unconvertible.** `📍`, `📚` and `🏷️` sit inside
+`<option>` elements at `apps/media-vault/index.html:458-460`, whose content model is
+text-only. SVG cannot go there without replacing the control.
+
+**`filament-forge` alone accounts for 25 of the 51**, and 14 of those are
+settings-section headers used exactly once each — `🌡️` temperature, `📏` layers,
+`🔲` infill, `❄️` cooling, `🏗️` support, `📎` adhesion and the rest. That is a domain
+vocabulary for 3D-printing parameters, not interface chrome, and drawing it is a
+different project from replacing an icon layer.
+
+**The count in the table above is three too high.** It reads 136 colour-emoji
+occurrences; **133 render**. The other three are prose inside CSS comments —
+`apps/character-creator/styles.css:1025` and `:1577`, `apps/media-vault/styles.css:538`
+— and never reach a screen. The distinct-glyph count of 51 is unaffected, because all
+three glyphs also appear in markup.
+
+**And this finding's own "first step" was 21 symbols, not a handful.** The Proposal
+says to start with the landing page's five cards and media-vault's toolbar. The hub
+is 5 — but `apps/media-vault/index.html` carries **17** distinct glyphs, so that
+starting point is 21: larger than the number the same paragraph claims would cover
+the whole job.
+
+---
+
+**RE-SCOPED PROPOSAL, superseding the one above: the five landing-page cards, and
+nothing else.**
+
+`🧵` `📀` `🎲` `✂️` `🔧` — the five app icons in `apps/manifest.json`, which the hub
+renders into its cards. Five symbols, one meaning each, no splits, no merges.
+
+Why this survives when the full replacement does not:
+
+- **It is the front door** — the first surface anyone sees, and the one where a
+  per-platform rendering difference is most visible.
+- **It is a closed set.** It changes only when an app is added, which is rare and
+  already touches that file.
+- **It needs no convention and no system.** Five drawings in one file is not an icon
+  language; there is no "what do we do when the icon does not exist" question,
+  because the set is enumerated by `apps/manifest.json` itself.
+- **Its ongoing cost is therefore near zero**, which is the whole reason the original
+  Proposal's Ongoing cost paragraph does not apply to it.
+
+**Posture: additive, one closed set, no shared convention, no sprite discipline.**
+Explicitly NOT the start of an icon system, and explicitly not a precedent for the
+other 46 glyphs.
+
+**The full replacement is recommended against**, on the evidence above: ~53 symbols
+spanning combat verbs, media types and 3D-printing parameters, a permanent tax on
+every future feature, three occurrences that cannot be converted at all, and nothing
+in the repo able to test any of it for consistency. `audit-menu` says a proposal
+whose ongoing cost exceeds its impact should recommend declining itself. For the
+full version, this one now does.
+
+**Severity is unchanged at medium.** It describes the observation — that the whole
+workshop's icon layer is the OS emoji font — which is as true as it was. Only the
+proposal got smaller.
+
+**Evidence:** every occurrence extracted with its surrounding line and grouped by
+meaning, 2026-09-10, at `origin/main` `c07fef8`; coverage curve and per-surface
+counts computed over the same extraction; the `<option>` content model checked
+against the markup at the three cited lines.
+
+---
+
 ### W3 — low — The bulk bar takes 42% of a phone viewport while select mode is on
 
 **Filed 2026-09-10 while taking `W1`, from measurements made during it.**
