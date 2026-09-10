@@ -3107,6 +3107,74 @@ redrawing actions being complete; a read of every `load()` and `render()` caller
 **Ongoing cost:** more PATCH writes per session, and simultaneous edits now surface as
 visible refusals — which is the point, but it is new friction someone will see.
 
+---
+
+**Taken, 2026-09-10 (PR #920). Posture held: no schema, no new route, the same
+conflict check, no new gate.** The Save button is gone; the section inputs, the notes
+and the pool numbers save themselves — text 1.5 seconds after the last keystroke, a pool
+when its field is left, so a pause half-way through typing `14` cannot write `1`.
+
+**Two corrections, both from `audit-premise-auditor` before the edit.**
+
+**1. The list of redrawing actions was about half of them.** Besides the five named, the
+inventory filter calls `render()` on every keystroke (`sheet.js:1962`), and *Not now*,
+the claim toggles, `proposeVariant`, `flushQueue`, `claimPowers`, `confirmLevelUp` and
+`confirmVariant` all redraw. **None of them needed touching**: `render()` now puts
+whatever is typed and unsaved into `C.data` before rebuilding, and `load()` saves first
+and carries anything it could not save across the reload — one place each, rather than
+the per-caller participation `keepEdits()` asked for and why it was retired.
+
+**2. Autosave would have been refused by its own tab.** The finding said the PATCH's
+version check meant only two *people* get refused. Seven routes move
+`characters.updated_at` — `events.js:80`, `xp.js:25`, `picks.js:88`,
+`power-picks.js:87`, `grants.js:61`, `level-confirm.js:148`, `variant.js:137` — and the
+sheet learned the new value only from its own PATCH. **So the Save button was already
+being refused after any damage, stepper or rest in play mode.** Rather than widen seven
+responses, a refusal re-reads the character and compares only the fields being saved
+with what they held when editing began: untouched by anyone else, it retries against the
+new version; changed, the status offers **Keep mine** or **Use theirs** with the typed
+values still on screen. Only edited fields are sent now — Save sent every pool with
+every bio edit.
+
+**Measured on `wrangler pages dev --port 8801`, local D1, local character 1,
+2026-09-10**, driving the real handlers from the page and reading the result back from
+the API:
+
+| check | result |
+|---|---|
+| type into Height | status *Unsaved changes…* → *All changes saved*; stored |
+| type into Weight, then `render()` at once | the rebuilt input still held it; stored |
+| type into Money, then `load()` at once | saved before the refetch; stored |
+| S.D.C. −1 through the events route, then type into Age | network log: `POST events 200`, `PATCH 409`, `GET 200`, `PATCH 200` — the retry, not a lucky second |
+| type into Environment while another writer changes the bio | *Not saved: Bio changed somewhere else* with both buttons; the typed text stayed; *Keep mine* stored it |
+
+Character 1 was restored to its snapshot afterwards. One `pool` event from the S.D.C.
+check remains in its local session log.
+
+**Two smoke checks pinned the Save button's source text** —
+`rendered-ui.mjs`'s *"the sheet sends the version it loaded"* and *"and asks before
+throwing away what is on screen"* matched `body.expect_updated_at = C.data?.updated_at`
+and `confirm(msg)`, and both failed when that code went on purpose. They pin the intent
+now: version sent, conflict answered with Keep mine / Use theirs rather than a reload
+over the typing. A third pins the per-field retry. All three were proven by running
+their patterns against `HEAD:sheet.js` (fail) and this branch (pass).
+
+**Adding an item had regressed.** `docs/wizard-and-sheet.md` has said since PR #27 that
+it refreshes only the inventory rows; `addItem` called `load()`. It refreshes the rows
+again, and reloads only when it also wrote a journal entry. The doc's section now
+describes autosave.
+
+**Not covered, deliberately:** text typed into the journal, add-item and level-up forms
+is still rebuilt by a `render()`. Those are actions, not fields, and keeping their text
+across a render would re-fill a form its own submit had just consumed unless every
+submit opted out — the per-caller shape this finding's fix avoids. **Dropped rather than
+deferred.**
+
+**Found while taking this, and carried by `F51`:** `styles.css:408-409` hold a raw
+`0x15` byte where the `\25B8` / `\25BE` escapes belong — something read `\25` as an
+octal escape in `14b5ab4` — so the level-row disclosure marks draw a control character
+and the letters `B8` / `BE`.
+
 ### F39 — high — The character creator has no home: the roster lives on wizard step 1, and a draft hides it
 
 The characters and campaigns list is drawn by `renderSystem()` (`app.js:780-828`), the

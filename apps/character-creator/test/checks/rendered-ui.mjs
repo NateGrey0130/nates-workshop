@@ -1012,14 +1012,23 @@ export function run() {
       /return json\(\{ ok: true, updated_at:/.test(src),
       'a caller must re-read the character to make a second guarded write');
 
-    // The sheet's Save is the write most likely to clobber someone: it sends the
-    // whole editable sheet at once.
+    // The sheet's autosave is the write most likely to clobber someone: it runs
+    // unasked, every time a field is left alone for a moment (UI-AUDIT F38).
+    // These pinned the Save button's shape until F38 removed it; they pin the
+    // INTENT now - version sent, typing never reloaded over, choice offered.
     check('the sheet sends the version it loaded',
-      /body\.expect_updated_at = C\.data\?\.updated_at/.test(sheet),
-      'Save still overwrites blindly');
+      /expect_updated_at: C\.data\.updated_at/.test(sheet),
+      'autosave overwrites blindly');
     check('and asks before throwing away what is on screen',
-      /err\.status === 409 && err\.detail\?\.conflict/.test(sheet) && /confirm\(msg\)/.test(sheet),
+      /err\.status === 409 && err\.detail\?\.conflict/.test(sheet)
+        && /Keep mine/.test(sheet) && /Use theirs/.test(sheet),
       'a conflict either reloads over the typing or reports as a generic failure');
+    // Every play event moves updated_at and the sheet never learns the new value
+    // from one, so a guard judged on the version alone refuses the tab's own
+    // saves after any damage. Judged per field against what editing began from.
+    check('and a refusal caused only by its own tab retries instead of asking',
+      /keys\.filter\(\(k\) => !sameValue\(fresh\[k\], AS\.base\[k\]\)\)/.test(sheet),
+      'every pool change in play mode makes the next autosave a false conflict');
   }
 
   // ---------- The front door agrees with the rooms ----------

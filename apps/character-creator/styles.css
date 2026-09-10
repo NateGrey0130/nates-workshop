@@ -1809,6 +1809,9 @@ body.play-mode .skill-table .roll-btn { margin-left: 6px; vertical-align: middle
 }
 .vitals-strip { padding-top: 10px; }
 .vitals-save { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+/* The autosave status carries its own Keep mine / Use theirs pair on a
+   conflict (UI-AUDIT F38); the row's gap does not reach inside the span. */
+.vitals-save .autosave .btn { margin-left: 6px; }
 
 .tabbar {
   display: flex; gap: 6px; margin-top: 12px;
