@@ -1,8 +1,14 @@
-/* App-specific styles. Override the shared accent to give the app its own color. */
+/* App-specific styles. These repeat the shared defaults so a new app scaffolds
+   in the CURRENT palette; change them to give the app its own colour.
+
+   They were #C4622D — Rust & Ash — for the whole of Ley Verdigris, so an app
+   scaffolded from here started two palettes behind. Nothing catches that: the
+   smoke suite compares index.html to shared/ by role and does not read this
+   file. */
 
 :root {
-  --accent: #C4622D;
-  --accent-glow: rgba(196, 98, 45, 0.15);
+  --accent: #35A0AE;
+  --accent-glow: rgba(53, 160, 174, 0.15);
   --accent-secondary: #D9A05B;
   --border-focus: var(--accent);
 }

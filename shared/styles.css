@@ -100,34 +100,50 @@
 
    --accent-link exists because --accent is the one place it is a small glyph
    rather than a surface; it is used by the `a` rule alone. --border-strong is
-   the heavier rule the sheet's sticky vitals strip wants.
+   THE LIT EDGE — the top border of a raised plate — and the heavier rule the
+   sheet's sticky vitals strip wants. One token, both jobs: a plate edge and a
+   rule are the same line of light.
 
-   Contrast, re-measured against these values rather than carried over. On
-   --bg-primary: --text-primary 15.07, --text-secondary 6.99, --text-muted
-   5.80, --accent 6.01, --accent-link 8.16, --accent-secondary 8.09,
-   --success 5.91, --warning 7.24, --danger 5.74. The floor is 4.5 and NOTHING
-   is under it: --text-muted reaches 5.00 on --bg-tertiary/--bg-input and 5.40
-   on --bg-secondary/--bg-card, --accent 5.19 and 5.60 on the same two.
+   BENCH, 2026-09-10. The LADDER moved and the PALETTE did not: --bg-primary is
+   deeper and --bg-tertiary is lighter, so a raised plate reads as sitting ON
+   the ground rather than beside it. Every text and accent token below is
+   byte-identical to Ley Verdigris. Ley Verdigris kept its three grounds inside
+   twelve units of lightness, which is why the app had no depth budget to spend.
 
-   That is the other half of the argument. Rust & Ash had three pairs below the
-   floor — --text-muted on --bg-tertiary at 4.32, --accent on --bg-secondary at
-   4.35, --accent on --bg-tertiary at 4.08 — and passed only because those
-   combinations are not used. This palette has none, so the pass no longer
-   depends on which rules happen to exist.
+   Contrast, re-measured for this ladder rather than carried over. On
+   --bg-primary: --text-primary 15.65, --text-secondary 7.26, --text-muted
+   6.02, --accent 6.24, --accent-link 8.47, --accent-secondary 8.39,
+   --success 6.13, --warning 7.52, --danger 5.96. The floor is 4.5 and NOTHING
+   is under it.
 
-   --danger is #DE6E58, a step up from Rust & Ash's #D9614A. On the cooler
-   --bg-tertiary the old value measured 4.40 and would have been the one pair
-   under the floor; #DE6E58 is 4.61 there and 5.74 on --bg-primary. It is TEXT
-   in fourteen rules across all four apps at 12-13px, so the 3.0 large-text
-   allowance never applies to it. */
+   Every ratio IMPROVES on --bg-primary and --bg-secondary, because those got
+   darker. The cost lands on --bg-tertiary/--bg-input, which got lighter:
+   --text-muted 4.77, --accent 4.95, --success 4.87, --danger 4.72.
+
+   --danger IS THE FLOOR CASE AND ITS HEADROOM SHRANK — 4.95 to 4.72 on
+   --bg-tertiary. It clears 4.5 and it is the first pair to re-measure if
+   --bg-tertiary is ever raised again. It is TEXT in fourteen rules across all
+   four apps at 12-13px, so the 3.0 large-text allowance never applies to it.
+
+   ONE NUMBER THIS BLOCK USED TO STATE WAS WRONG, and it is recorded rather
+   than quietly dropped: it gave --danger on --bg-tertiary as 4.61 under the
+   Ley Verdigris ladder, where the measured value was 4.95. Wrong in the safe
+   direction. Found by re-running the whole table through a calculator instead
+   of reading it; five other ratios the block stated were confirmed exact.
+
+   DEPTH IS A LIT EDGE, NOT A SHADOW. --shadow stays none and nothing here
+   casts one: a raised plate takes --border-strong on its top edge and --border
+   on the other three. That is the machined-plate idiom, it costs no
+   compositing layer, and it is the only depth mechanism available anyway —
+   the smoke suite asserts index.html contains no box-shadow at all. */
 :root {
-  --bg-primary:       #0F1412;
-  --bg-secondary:     #151C19;
-  --bg-tertiary:      #1B2320;
-  --bg-card:          #151C19;
-  --bg-input:         #1B2320;
-  --border:           #29332F;
-  --border-strong:    #35423D;
+  --bg-primary:       #0A0F0E;
+  --bg-secondary:     #141B19;
+  --bg-tertiary:      #1E2724;
+  --bg-card:          #141B19;
+  --bg-input:         #1E2724;
+  --border:           #2C3733;
+  --border-strong:    #46554F;
   --border-focus:     var(--accent);
   --text-primary:     #E2E9E5;
   --text-secondary:   #93A29D;
@@ -174,6 +190,7 @@ body {
   color: var(--text-primary);
   min-height: 100vh;
   overflow-x: hidden;
+  caret-color: var(--accent);
 }
 
 /* ─── SCROLLBAR ─── */
@@ -182,10 +199,23 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
+/* ─── SELECTION AND CARET ───
+   The parts nobody draws still carry the design. Chrome paints its own blue
+   selection over this palette whatever the page does, and the caret is left at
+   the browser default in all four apps. Both are token-level, so they land
+   everywhere at once.
+
+   The selection pairing is deliberately the SAME one .btn-primary uses —
+   --bg-primary on --accent, measured 6.24 — rather than a new colour, so
+   selected text and the primary control read as the same material. */
+::selection { background: var(--accent); color: var(--bg-primary); }
+
 /* ─── HEADER (app adds its own padding) ─── */
+/* The header reads as a bezel over the content rather than a band beside it,
+   so its one edge is the strong rule. */
 .header {
   background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-strong);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -291,9 +321,12 @@ body {
 
 .modal-overlay.active { display: flex; }
 
+/* A raised plate: lit on the top edge, hairline on the other three. This is
+   the whole depth mechanism — see the LIT EDGE note in the token block. */
 .modal {
   background: var(--bg-secondary);
   border: 1px solid var(--border);
+  border-top-color: var(--border-strong);
   border-radius: var(--radius-lg);
   padding: 28px;
 }
