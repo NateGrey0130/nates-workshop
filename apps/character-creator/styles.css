@@ -1727,10 +1727,24 @@ body.play-mode .skill-table .roll-btn { margin-left: 6px; vertical-align: middle
 }
 .play-dice button:active { background: var(--accent-glow); border-color: var(--accent); }
 
+/* UI-AUDIT F44: any other amount, beside the chips, at their row height. */
+.play-amt-custom { width: 64px; min-height: 40px; text-align: center; }
+/* The key list: shown where there is a keyboard to press them, and by `?`
+   anywhere. A phone gets no line of shortcuts it cannot use. */
+.play-keys { display: none; margin: -4px 0 10px; }
+.play-keys kbd {
+  font: inherit; border: 1px solid var(--border); border-radius: 3px;
+  padding: 0 5px; background: var(--bg-tertiary); color: var(--text-primary);
+}
+@media (hover: hover) and (pointer: fine) { .play-keys { display: block; } }
+body.show-play-keys .play-keys { display: block; }
+
 
 .play-sec { margin-bottom: 10px; }
 .play-sec summary {
-  cursor: pointer; font-weight: 600; padding: 8px 2px;
+  /* 12px top and bottom: a 44px target (UI-AUDIT F50), the size of every
+     other control in play mode. It was 8px, about 36px tall. */
+  cursor: pointer; font-weight: 600; padding: 12px 2px;
   border-bottom: 1px solid var(--border); user-select: none;
 }
 
@@ -1752,6 +1766,20 @@ body.play-mode .skill-table .roll-btn { margin-left: 6px; vertical-align: middle
    them from 0.78 to 0.16. */
 #play-roll-bar .ok { color: var(--success); }
 #play-roll-bar .ko { color: var(--danger); }
+/* A natural 20 or 1 (UI-AUDIT F44), in the two tones measured above against
+   this bar's ground - 5.50:1 and 5.34:1 at 16px. */
+#play-roll-bar .nat { margin-left: 6px; color: var(--success); }
+#play-roll-bar .nat1 { color: var(--danger); }
+#play-roll-bar .rb-hist {
+  margin-left: 10px; min-height: 36px; padding: 0 10px; font-size: 13px;
+  background: var(--bg-tertiary); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text-secondary); cursor: pointer;
+}
+#play-roll-bar .roll-hist {
+  list-style: none; margin: 0 0 8px; padding: 0 0 8px; border-bottom: 1px solid var(--border);
+  max-height: 40vh; overflow-y: auto; text-align: left; font-size: 14px;
+}
+#play-roll-bar .roll-hist li { padding: 3px 0; }
 
 /* Nothing play mode adds reaches paper. Both blocks carry .noprint as well;
    this is the belt to that braces, and it is the rule that used to hide the
@@ -1772,6 +1800,9 @@ body.play-mode .skill-table .roll-btn { margin-left: 6px; vertical-align: middle
 }
 .play-weapon .pw-btns button:active { background: var(--accent-glow); }
 .play-weapon .pw-btns button.ghost { color: var(--text-secondary); min-width: 44px; }
+/* Carried weapons, each with its Draw button (UI-AUDIT F45). */
+.pw-carried { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 8px 0; }
+.pw-carry { display: inline-flex; align-items: center; gap: 6px; }
 
 /* Play mode phase 4: melee counter + rest */
 .play-melee {
@@ -1797,6 +1828,8 @@ body.play-mode .skill-table .roll-btn { margin-left: 6px; vertical-align: middle
   display: flex; justify-content: space-between; align-items: center;
   gap: 8px; padding: 8px 2px;
 }
+/* 44px (UI-AUDIT F50). A btn-sm, it measured 55x27 on a phone. */
+.rest-apply .btn { min-height: 44px; padding: 0 16px; }
 
 /* ---- Tabs -----------------------------------------------------------------
    The sheet runs ~4100px, roughly six screens on a tablet, and a player at the

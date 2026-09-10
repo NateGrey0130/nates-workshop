@@ -801,10 +801,14 @@ export function run() {
     // its own.
     const rollNoteBody = functionBody(sheet, 'function rollNote(');
     const rollBarBody = functionBody(sheet, 'function rollBarHtml()');
+    // One roll as the bar draws it. UI-AUDIT F44 split the bar into the latest
+    // line plus a history of ten, so the per-roll rendering - and the null
+    // target it must read - moved out of rollBarHtml into this.
+    const rollLineBody = functionBody(sheet, 'function rollLineHtml(');
     const recordRollBody = functionBody(sheet, 'function recordRoll(');
     const playControlsBody = functionBody(sheet, 'function playControlsHtml(');
-    check('all four bodies the percentile checks read can be located',
-      rollNoteBody !== null && rollBarBody !== null
+    check('all five bodies the percentile checks read can be located',
+      rollNoteBody !== null && rollBarBody !== null && rollLineBody !== null
       && recordRollBody !== null && playControlsBody !== null,
       'a signature moved - the checks below would read the whole file and pass vacuously');
     check('the sheet can roll a bare percentile',
@@ -814,7 +818,7 @@ export function run() {
       /recordRoll\('percentile', 'Percentile', \{ die: 100, roll, target: null, ok: null \}\)/.test(sheet),
       'the bare percentile acquired a target, which is a verdict nobody rolled');
     check('the roll bar reads the null target rather than printing it',
-      /r\.target == null/.test(rollBarBody ?? ''),
+      /r\.target == null/.test(rollLineBody ?? ''),
       'the roll bar will show "vs null%"');
     check('and so does the note that reaches the session log',
       /r\.target == null/.test(rollNoteBody ?? ''),
