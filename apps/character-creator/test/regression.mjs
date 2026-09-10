@@ -2582,13 +2582,32 @@ console.log('\n' + '[7/7] Checks that only a database can make');
 
     const unparsed = [];
     const unresolved = [];
+    const danglingWith = [];
     let cited = 0;
+    let withLists = 0;
     for (const c of sweepClasses) {
       const p = parseClassMarkdown(c.markdown);
       if (!p.ok) { unparsed.push(c.class_id); continue; }
       for (const slug of referencedGear(p.data)) {
         cited++;
         if (!known.has(String(slug).toLowerCase())) unresolved.push(`${c.class_id} -> ${slug}`);
+      }
+      // A `with` list names OTHER skills this class grants - the Gunfighter
+      // takes W.P. Sharpshooting once per weapon, and the weapons are grants of
+      // its own. Naming one it does not grant would put a weapon on the sheet
+      // the character never had. BOOK-INGEST-AUDIT.md F49.
+      const occSkills = p.data.skills?.occ_skills || [];
+      const grantedNames = new Set(occSkills
+        .filter((e) => e && typeof e.name === 'string')
+        .map((e) => e.name.trim().toLowerCase()));
+      for (const e of occSkills) {
+        if (!Array.isArray(e?.with)) continue;
+        withLists++;
+        for (const n of e.with) {
+          if (!grantedNames.has(String(n).trim().toLowerCase())) {
+            danglingWith.push(`${c.class_id}: ${e.name} is paired with ${n}, which the class does not grant`);
+          }
+        }
       }
     }
     check('every published class in a rebuilt database parses',
@@ -2598,6 +2617,13 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     check('and the sweep actually looked at some',
       sweepClasses.length > 100 && cited > 500,
       `${sweepClasses.length} classes, ${cited} citations`);
+    // The pairing must reference grants the class actually has, or the sheet
+    // shows a weapon the character never took. Both directions are checked:
+    // no dangling name, AND the sweep found some lists to check.
+    check('every paired-skill `with` names a skill the class grants',
+      danglingWith.length === 0, danglingWith.slice(0, 6).join('; '));
+    check('and the pairing sweep found some to check',
+      withLists >= 3, `${withLists} with-list(s) seen`);
 
     // -- a declared COPY pair must still match ------------------------------
     // BOOK-INGEST-AUDIT.md F25. Some books define a class AS another class and

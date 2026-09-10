@@ -194,6 +194,21 @@ export function applyVariant(cls, variantId) {
 export function validateSkillEntries(where, entries, errors, warnings) {
   for (const s of entries || []) {
     if (!s || typeof s !== 'object') { errors.push(`${where} entries must be objects`); continue; }
+    // `with` names the OTHER skills a repeated skill is paired with - the
+    // Gunfighter takes W.P. Sharpshooting once for each of three weapons, and
+    // the pairing is the part a bare count cannot carry. It annotates a NAMED
+    // entry only: on a choice group there is no single skill to pair.
+    // BOOK-INGEST-AUDIT.md F49.
+    if (s.with !== undefined) {
+      if (isChoiceGroup(s)) {
+        errors.push(`${where} choice-group cannot take a with list; it annotates a named skill`);
+      } else if (!Array.isArray(s.with) || s.with.length < 2
+                 || s.with.some((n) => typeof n !== 'string' || !n.trim())) {
+        errors.push(`${where}.with must be a list of two or more skill names`);
+      } else if (new Set(s.with.map((n) => n.trim().toLowerCase())).size !== s.with.length) {
+        errors.push(`${where}.with lists the same skill twice`);
+      }
+    }
     if (isChoiceGroup(s)) {
       // Two flavours: an enumerated `from` list, or `categories` when the book
       // says "any N skills from <category>" (e.g. "two piloting skills of choice").
