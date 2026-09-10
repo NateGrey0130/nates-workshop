@@ -6952,6 +6952,84 @@ it over three rows. **Check before scoping:** whether any published class
 already grants `W.P. Sharpshooting` alongside a named W.P. in prose, and what
 the sheet does with a skill granted twice today.
 
+**Taken, 2026-09-10 (PR #909). Posture held: a display and composition change,
+no new catalog concept.** `with` annotates an `occ_skills` entry, the wizard and
+the sheet render it, and no catalog row, gear row or validator gate was added.
+
+**ONE DEVIATION FROM THE PROPOSAL, AND IT IS FORCED.** The proposal asks for
+*"one row per pairing on the sheet"*. That cannot ship: three rows named
+`W.P. Sharpshooting` are refused with **HTTP 422 `duplicate_skill`** by
+`functions/api/character-creator/_lib/validate-character.js:276-285`, which
+keys on `norm(s.name)`. **Every Gunfighter would be unsaveable.** So the pairing
+annotates ONE row instead - `W.P. Sharpshooting x3` with a sub-line reading
+*"Taken once for each of: W.P. Revolver, W.P. Energy Pistol and W.P. Energy
+Rifle."* The finding's goal is met; its stated shape is not.
+
+**Four premises corrected, and three of them make the finding STRONGER:**
+
+1. **"Granting it three times would be three identical entries the sheet renders
+   once" is wrong, in the direction that matters.** Nothing collapses them for a
+   single class - the by-name collapse at `js/parser.js:918-930` runs only when
+   an R.C.C. and an O.C.C. are combined. The naive workaround does not render
+   once; it makes the character unsaveable.
+2. **"Nothing is lost to a reader" is FALSE for the character sheet.** The
+   `occ_skills` `note` renders only in the wizard (`app.js:2220`) and was never
+   carried onto the saved character - `skillsAtLevelOne` emitted
+   `{name, category, pct, per_level, type}` and nothing else. **On a finished
+   Gunfighter sheet the three weapons appeared NOWHERE.** That is the real bug
+   this finding was describing, and it is what the fix repairs.
+3. **The proposal names the wrong file.** It says the list would be *"read by
+   `derive.js`"*; `derive.js` contains no `occ_skills` and builds no skill rows,
+   and says so itself at `js/derive.js:183-185`. The surfaces are
+   `app.js:2219-2225` (wizard), `app.js:3318-3350` (`skillsAtLevelOne`) and
+   `sheet.js`.
+4. **"There is nowhere to put 'this skill, three times'" is too strong.** The
+   COUNT was already expressible - `{ name, choose: 3 }` is a fixed entry and
+   the wizard already rendered `x3`. The PAIRING was the gap.
+
+**FIVE AFFECTED ROWS BECOME THREE.** `with` requires two or more names, because
+pairing one skill to one weapon is not a repetition:
+
+| class | specialties | `with` |
+|---|---|---|
+| `gunfighter` | Revolver, Energy Pistol, Energy Rifle | yes |
+| `gunslinger` | Revolver, Energy Pistol | yes |
+| `wired-gunslinger` | Revolver, Energy Pistol | yes |
+| `juicer-assassin` | Energy Rifle only | **no** |
+| `psi-slinger` | a RESTRICTION, not a repetition | **no** |
+
+The Psi-Slinger is the one to read twice: its Sharpshooting is automatic but
+works ONLY for projectile revolvers and pistols it is psionically linked to.
+That narrows one grant; `with` would misdescribe it. Both exclusions are
+asserted in the data script so a later pass does not "finish the job".
+
+**The `with` list REFERENCES grants the class already has** - all three classes
+grant the paired W.P.s as separate `occ_skills` entries - so it adds no rows and
+cannot trip `duplicate_skill`. **A regression check enforces that**: a `with`
+naming a skill the class does not grant fails the suite, and a second check
+asserts the sweep found some lists to look at. Proved by running the predicate
+against a synthetic pairing of `W.P. Bazooka`, which it caught.
+
+**The validator was proved to reject bad input rather than assumed to.** A
+one-name list, a non-array, a list with a repeat and an empty list are all
+refused with named errors; a valid two-name list is accepted.
+
+**Verified in the running app, not only in tests.** Walked a real Gunfighter to
+the skills step on a local server confirmed to be serving this branch, and the
+DOM carries `W.P. Sharpshooting x3` followed by the pairing line, 353px down a
+720px viewport - in view, not below the fold. **The browser pane could not
+screenshot it**: it blanks after a programmatic scroll, which is a recorded
+defect of that tool rather than of the page. The markup is byte-identical to the
+`note` sub-line rendered directly beneath it, which already ships, so the two
+cannot render differently.
+
+**Deliberately NOT done, and named rather than left implied:** the entry's own
+`note` is still not carried onto the saved character in general - only a
+`with`-derived one is. Carrying every skill note to the sheet is a larger change
+than this finding asks for and would alter every class at once. **Filed nowhere,
+dropped on purpose**, because nobody has asked for it and the F49 case is now
+covered.
+
 ### F50 - `equipment_starting` cannot grant a SKILL, and one book's gear choice does
 
 **Filed 2026-09-09**, during the `new-west` class import, batch 1.

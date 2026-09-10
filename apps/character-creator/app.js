@@ -229,6 +229,17 @@ const rolledAll = () => ({
 // Combat and save bonuses roll here alongside the attribute ones, because both
 // are read at render time and a roll re-evaluated per render moves under the
 // player.
+// One skill taken once per weapon, or per whatever the book pairs it with.
+// Phrased in ONE place because the wizard and the saved character must not
+// drift apart. BOOK-INGEST-AUDIT.md F49.
+function pairedWith(list) {
+  const names = (list || []).filter(Boolean);
+  if (!names.length) return '';
+  const last = names[names.length - 1];
+  const head = names.slice(0, -1).join(', ');
+  return `Taken once for each of: ${names.length > 1 ? `${head} and ${last}` : last}.`;
+}
+
 function rollDiceBonusesOf(cls) {
   const roll = (dice) => {
     const rolls = [dice].flat().map((d) => (typeof d === 'number' ? d : evalDice(d))).filter((v) => v != null);
@@ -2220,9 +2231,15 @@ function renderSkills() {
     const noteHtml = s.note ? `<div class="attr-note" style="margin:0 0 4px 18px">↳ ${esc(s.note)}</div>` : '';
     if (!isGroup(s)) {
       const r = resolveSkill(s.name, s);
-      // A named skill with `choose` is taken that many times.
-      return `<div class="chkrow">✔ <span>${esc(s.name)}${s.choose > 1 ? ` ×${s.choose}` : ''}</span>
-        <span class="pct">${r.base ? r.base + '%' + (r.per_level ? ' +' + r.per_level + '/lvl' : '') : '—'}</span></div>${noteHtml}`;
+      // A named skill with `choose` is taken that many times. `with` says what
+      // each of those times is FOR - the Gunfighter's three W.P. Sharpshooting
+      // specialties are one per weapon - and supplies the count when `choose`
+      // is absent. BOOK-INGEST-AUDIT.md F49.
+      const times = s.choose || (Array.isArray(s.with) ? s.with.length : 0);
+      const withHtml = Array.isArray(s.with) && s.with.length
+        ? `<div class="attr-note" style="margin:0 0 4px 18px">↳ ${esc(pairedWith(s.with))}</div>` : '';
+      return `<div class="chkrow">✔ <span>${esc(s.name)}${times > 1 ? ` ×${times}` : ''}</span>
+        <span class="pct">${r.base ? r.base + '%' + (r.per_level ? ' +' + r.per_level + '/lvl' : '') : '—'}</span></div>${withHtml}${noteHtml}`;
     }
     const picked = S.groupPicks[gi] || [];
     // Either an enumerated `from` list, or `categories` — "two piloting skills
@@ -3346,7 +3363,15 @@ function skillsAtLevelOne() {
   return [
     ...occ.filter((s) => !isGroup(s)).map((s) => {
       const r = resolveSkill(s.name, s);
-      return { name: s.name, category: 'Class', pct: r.base, per_level: r.per_level, type: 'occ' };
+      const row = { name: s.name, category: 'Class', pct: r.base, per_level: r.per_level, type: 'occ' };
+      // The pairing travels with the character, or the sheet loses it: a
+      // Gunfighter's three Sharpshooting specialties appeared NOWHERE on a
+      // finished sheet before this. Carried as `note`, which the sheet already
+      // renders as a sub-row, so no new render path is needed. One row, not
+      // three - three rows of the same name are refused with HTTP 422 by
+      // validate-character.js `duplicate_skill`. BOOK-INGEST-AUDIT.md F49.
+      if (Array.isArray(s.with) && s.with.length) row.note = pairedWith(s.with);
+      return row;
     }),
     ...groupPicks,
     // The class's own per-category bonus — "Technical: Any (+10%)" — added to
