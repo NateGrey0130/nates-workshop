@@ -64,6 +64,12 @@ export const CORE_SDC_BY_CLASS = {
   'justice-ranger': '3D6',
   'psi-slinger': '3D6',
   'saddle-tramp': '3D6',
+  // Printed 102-113, the same section. Four more that print an S.D.C. bonus
+  // and no formula.
+  'sheriff-lawman': '3D6',
+  'sheriffs-deputy': '3D6',
+  'wired-gunslinger': '3D6',
+  'cowboy': '3D6',
   // Men of arms — 3D6.
   'glitter-boy': '3D6',
   'headhunter-techno-warrior': '3D6',

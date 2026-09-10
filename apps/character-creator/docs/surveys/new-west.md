@@ -301,9 +301,10 @@ Phase 4 costs money; everything above was free.
 3. **The 18 occupations, printed 83-125** — batched by section, ~4 per PR.
    **Batch 1 DONE (PR #883): Bandit 83, Highwayman 85, Bounty Hunter 87, Gunfighter 90.**
    **Batch 2 DONE (PR #885): Gunslinger 92, Justice Ranger 96, Psi-Slinger 98, Saddle Tramp 101.**
-   **Remaining, printed 102-125: Sheriff/Lawman, Sheriff's Deputy, Wired Gunslinger,
-   Cowboy, Mining 'Borg, Preacher, Professional Gambler, Saloon Bum, Saloon Girl -
-   plus the CyberSlinger at printed 189.**
+   **Batch 3 DONE (PR #886): Sheriff/Lawman 102, Sheriff's Deputy 105, Wired Gunslinger 107, Cowboy 110.**
+   **Remaining, printed 113-125: Mining 'Borg/Prospector, Preacher, Professional
+   Gambler, Saloon Bum/Stoolie, Saloon Girl/Barmaid - plus the CyberSlinger's three
+   chassis at printed 189-193. Five occupations and one cyborg.**
    Read every entry onto the following page; `Money:` sits at the end of each.
 4. **The 8 racial classes, printed 125-158** — printed 130 off a render.
 5. **Gear and vessels, printed 171-223** — last, and diffed first. Printed 217
@@ -349,6 +350,7 @@ standing edges of prefixed names and are unchanged by this.
 | 2026-09-09 | [#882](https://github.com/NateGrey0130/nates-workshop/pull/882) | Skills: **3 new rows** (skills 367 -> **370**), plus `W.P. Rope` re-cited to RUE p.306 and `W.P. Sharpshooting` given this book's definition. Applied `--remote` before the PR. |
 | 2026-09-09 | [#883](https://github.com/NateGrey0130/nates-workshop/pull/883) | Classes batch 1, printed 83-92: **Bandit, Highwayman, Bounty Hunter, Gunfighter** (classes 225 -> **229**). One new catalog row, `Language: Spanish`. Filed `BOOK-INGEST-AUDIT` F49 and F50. Applied `--remote` before the PR. |
 | 2026-09-09 | [#885](https://github.com/NateGrey0130/nates-workshop/pull/885) | Classes batch 2, printed 92-102: **Gunslinger, Justice Ranger, Psi-Slinger, Saddle Tramp** (classes 229 -> **233**). No new catalog rows. Filed `BOOK-INGEST-AUDIT` F51. Applied `--remote` before the PR. |
+| 2026-09-09 | [#886](https://github.com/NateGrey0130/nates-workshop/pull/886) | Classes batch 3, printed 102-113: **Sheriff/Lawman, Sheriff's Deputy, Wired Gunslinger, Cowboy** (classes 233 -> **237**). No new catalog rows, no new findings. Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -467,3 +469,38 @@ written the "correct" way first and refused by the regression run.
 **`bonuses.attributes` takes a fixed number, so the Saddle Tramp's `+1D4 to
 M.A.` is not stored as one** — it is in `extraction_notes`, to be rolled at
 creation. Rounding it to an invented figure would have been worse.
+
+### Batch 3 added to the "what the classes needed" list
+
+- **`CORE_SDC_BY_CLASS`**: four more at `3D6`. Twelve of this book's classes
+  now have an entry and none has printed an S.D.C. formula yet.
+- **No new catalog rows and no new findings.** Everything these four needed was
+  already expressible, already in the catalog, or already filed.
+
+**The Wired Gunslinger is the most heavily dropped class in this book, and all
+of it is recorded rather than rounded.** Four of its augmentation bonuses are
+**dice**, which `bonuses.attributes` and `bonuses.combat` do not take: P.S.
+`+1D4`, Speed `+2D6`, initiative `+3+1D4`, and **P.P. SET to `17+1D6`** — which
+is not a bonus at all but an assignment, and nothing in the schema expresses
+one. All four are in a `special_abilities` entry to be rolled at creation. The
+extra attack and the automatic dodge from the same paragraph *are* fixed and are
+in `bonuses`.
+
+**Its twenty-entry insanity table (printed 108-109, rolled at levels 3, 5, 7,
+10 and 13) is not stored either** — there is no insanity mechanic in this app at
+all. The fact of the table and its trigger levels are in `side_effects`; the
+entries are not. That is a deliberate omission rather than a gap: half-storing
+it would put a list on the sheet that nothing rolls.
+
+**The Cowboy's Quick-Draw Initiative is an OPTION, not a grant.** The book
+prints it under the W.P. related-skill line and says outright it must be bought
+as one of the O.C.C. Related selections and is not available as a secondary
+skill. Stored as an ability describing the option — it is the Sheriff/Lawman's
+P.P.-scaled bonus, so it would not be applied automatically in any case. The
+Sheriff and the Deputy have the same shape for Paired Weapons, at two and three
+related skills respectively.
+
+**The Wired Gunslinger's O.C.C. Skills list is two-column, like the
+Highwayman's on printed 86.** Read off a 320 dpi render of printed 109 before
+transcribing. Two of this book's eighteen class skill lists are set that way so
+far, and the text layer interleaves both.
