@@ -3795,7 +3795,7 @@ gates nothing - the report is advisory by design and says so.
 
 ### F29 - `Air: Sonic Blast` and `Sonic Blast` look like one spell twice, inside the Book of Magic
 
-**Resolved 2026-09-08 (PR pending), and it is NOT a defect.** Filed hours
+**Resolved 2026-09-08 (PR #816), and it is NOT a defect.** Filed hours
 earlier in this same menu as a suspected duplicate, on the strength of two rows
 sharing a range and a damage figure. Both pages were then read, and the
 suspicion below - *"one of the two pages is being read wrong"* - is wrong:
@@ -7030,6 +7030,8 @@ than this finding asks for and would alter every class at once. **Filed nowhere,
 dropped on purpose**, because nobody has asked for it and the F49 case is now
 covered.
 
+**Nate's decision, 2026-09-10 (PR #933): keep the one annotated row.** The deviation above is accepted; `duplicate_skill` stays as it is.
+
 ### F50 - `equipment_starting` cannot grant a SKILL, and one book's gear choice does
 
 **Filed 2026-09-09**, during the `new-west` class import, batch 1.
@@ -7138,6 +7140,8 @@ carrying a skills block was rejected as *"the same power by another name"*.
 starting equipment, and catalog rows for the TW and magic items - or a decision
 that a PARTIAL model is better than none, which both classes' notes currently
 reject. Either makes `grants_skill` worth the key it costs. **Reopen on either.**
+
+**Nate's decision, 2026-09-10 (PR #933): leave it held.** Not open - reopen only on the trigger named above.
 
 ### F51 - `race_restrictions` matches a race by ID, and a book bars races by KIND
 
@@ -7434,6 +7438,8 @@ ability-PICKING limitation, not a dropped dice string, and it is 6 entries
 rather than 103.** Not filed as a finding here: it belongs to the wizard's
 ability step, and nobody has reported it.
 
+**Nate's decision, 2026-09-10 (PR #933): the closure stands, and the six-entry ability-picking leftover stays unfiled.**
+
 ### F53 - high - `corrupt_pages` detects glyphs that FAIL to map, and the commoner fault maps to a VALID character
 
 **Found while importing `new-west` gear and vessels, 2026-09-10.** This is not
@@ -7710,4 +7716,6 @@ has appeared. The schema was re-read `--remote` on 2026-09-10 while closing
 the same day for the same reason: a small, correct frontmatter key with no live
 class able to use it. If the answer to one is *"build it anyway, the cost is
 low"*, it is probably the answer to both.
+
+**Nate's decision, 2026-09-10 (PR #933): leave it held**, as the finding itself recommended.
 
