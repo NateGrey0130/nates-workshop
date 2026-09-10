@@ -278,7 +278,8 @@ What is deliberately left, with the reason for each:
 |---|---|---|
 | 2026-08-28 | [#400](https://github.com/NateGrey0130/nates-workshop/pull/400) | cached (210 pp, text layer), registered in `books.json`, offset +1 verified |
 | 2026-09-10 | [#934](https://github.com/NateGrey0130/nates-workshop/pull/934) | cache re-run for `welded_pages`/`corrupt_pages`/`substituted_digits`; survey written; no data shipped. Filed `BOOK-INGEST-AUDIT` F56 and F57 |
-| 2026-09-10 | this PR | Shaman spells, printed 72-82: **34 rows** at their printed levels, unprefixed (spells 739 -> **773**). 33 of 34 agree across all four cost readings; Nose of the Wolf's stat block prints 4 against the index's 6, confirmed in the ink, 6 stored. Applied `--remote` before the PR. |
+| 2026-09-10 | [#935](https://github.com/NateGrey0130/nates-workshop/pull/935) | Shaman spells, printed 72-82: **34 rows** at their printed levels, unprefixed (spells 739 -> **773**). 33 of 34 agree across all four cost readings; Nose of the Wolf's stat block prints 4 against the index's 6, confirmed in the ink, 6 stored. Applied `--remote` before the PR. |
+| 2026-09-10 | this PR | Fetishes, printed 85-94: **46 `magic` gear rows** - 18 minor, 18 major (three tattoos), 10 legendary (gear 1349 -> **1395**). None priced and none given a price; each `cost_note` cites printed 84. Landed before the classes so their starting-fetish lines have rows to point at. Applied `--remote` before the PR. |
 
 ### What remains
 
