@@ -313,6 +313,9 @@ Phase 4 costs money; everything above was free.
    classes and belong to item 5, the gear and vessel pass.
    Read every entry onto the following page; `Money:` sits at the end of each.
 4. **The 8 racial classes, printed 125-158** — printed 130 off a render.
+   **FOUR DONE (PR #890): Cactus People 127, Fennodi 128, Keeper of the Desert 130,
+   Lyn-Srial 133. Remaining: Sky-Knight 134, Cloudweaver 135, Mountain Giant 136,
+   Psi-Ponies 156.**
 5. **Gear and vessels, printed 171-223** — last, and diffed first. Printed 217
    off a render.
 
@@ -359,6 +362,7 @@ standing edges of prefixed names and are unchanged by this.
 | 2026-09-09 | [#886](https://github.com/NateGrey0130/nates-workshop/pull/886) | Classes batch 3, printed 102-113: **Sheriff/Lawman, Sheriff's Deputy, Wired Gunslinger, Cowboy** (classes 233 -> **237**). No new catalog rows, no new findings. Applied `--remote` before the PR. |
 | 2026-09-09 | [#887](https://github.com/NateGrey0130/nates-workshop/pull/887) | Classes batch 4, printed 113-123: **Mining 'Borg/Prospector, Preacher, Professional Gambler, Saloon Bum/Stoolie** (classes 237 -> **241**). First use of `variants` and `skills_additional` in this book. No new catalog rows, no new findings. Applied `--remote` before the PR. |
 | 2026-09-09 | [#888](https://github.com/NateGrey0130/nates-workshop/pull/888) | Classes batch 5, printed 123-125: **Saloon Girl/Barmaid** (classes 241 -> **242**). **ALL SEVENTEEN OCCUPATIONS ARE IN.** Also corrects this survey: the CyberSlinger is NOT a class. Applied `--remote` before the PR. |
+| 2026-09-10 | [#890](https://github.com/NateGrey0130/nates-workshop/pull/890) | Racial classes 1 of 2, printed 125-134: **Cactus People, Fennodi, Keeper of the Desert, Lyn-Srial** (classes 242 -> **246**). First class to consume the Cloud Magic spells. No new catalog rows, no new findings. Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -580,3 +584,49 @@ West's three are bodies, and Free Quebec's own precedent puts a chassis body in
 
 That moves the roster from **26 to 25**: seventeen occupations and eight racial.
 The eight racial classes, printed 125-158, are the next class work.
+
+### The racial classes, first four
+
+**No `CORE_SDC_BY_CLASS` entries at all.** Every one of the four states its own
+`sdc_base` or `mdc_base`, and the rule only fires on a class stating neither.
+
+**The Lyn-Srial is the first class to consume the Cloud Magic spells**, and it
+is where the category prefix earns its keep. Four spells are granted by name —
+`Clouds of Travel: Cloud of Ascension`, `Clouds of Travel: Cloud Surfing`,
+`Clouds of Survival: Aerial Navigation`, `Clouds of Survival: Globe of
+Daylight` — and the additional picks come from Clouds of Defense, Travel and
+Survival, which is a `spells_from` list of exactly those three categories'
+24 rows. Under a `Cloud Magic:` prefix that list could not have been built
+without reopening printed 37.
+
+**What is still prose there**: the pick COUNT is *one per 3 points of I.Q.*, an
+attribute-derived number that `spells_starting` cannot hold. The pool is exact;
+only the count is in `extraction_notes`.
+
+**The Fennodi's male and female psionic profiles are two `special_abilities`
+entries behind a `choose: 1`** — because `variants` may not override `psionics`
+and an ability may. `ABILITY_GRANTS` in `js/parser.js:1644` is
+`['bonuses', 'psionics', 'magic']`. The two differ in I.S.P. formula (M.E. ×2
+against ×3), in the fifth granted power, and in the category the per-level pick
+draws from (Healing against Physical).
+
+**The Keeper of the Desert's random mutation table is a `choose: 3` over
+seventeen ability entries** — the book rolls at levels 1, 6 and 12 and lets a
+G.M. allow selection instead, which is what a choice group is. The percentile
+band stays at the head of each entry so a d100 still works at the table.
+**The substantial drop is that eight of the seventeen grant SPELLS**, six of
+them by naming a list rather than the spells — *all the fire magic spells
+usually available to the Ley Line Walker* and the like. An ability CAN carry a
+`magic` block, but resolving that list means deriving something the book does
+not print, and doing six of the eight would look complete and be half.
+
+**Three traps this batch hit, all caught by the tooling:**
+
+- **A `special_abilities` entry wrapped across two lines** killed all eighteen
+  of the Keeper's definitions at once — the parser read the opener as text and
+  reported eighteen "offered but nothing defines it" warnings. **An inline
+  `{...}` must close on the same line, however long.**
+- **`Skin and Prepare Animal Hides` is `Skin & Prepare Animal Hides`** in the
+  catalog, at 30% not 40%. The stub would have created a duplicate row.
+- **`Read Sensory Equipment` is `Sensory Equipment`.** An unmatched name in an
+  `only` list fails CLOSED, so that category would have granted nothing.
