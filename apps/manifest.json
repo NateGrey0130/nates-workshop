@@ -3,35 +3,35 @@
     {
       "slug": "filament-forge",
       "name": "FilamentForge",
-      "icon": "🧵",
+      "icon": "<svg viewBox='0 0 24 24' width='28' height='28' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M6.4 3.2h11.2v3l-3.6 2.3v7l3.6 2.3v3H6.4v-3l3.6-2.3v-7L6.4 6.2z'/></svg>",
       "description": "AI-powered 3D print settings engine. Pick your printer and filament, get optimized slicer settings in seconds.",
       "status": "live"
     },
     {
       "slug": "media-vault",
       "name": "MediaVault",
-      "icon": "📀",
+      "icon": "<svg viewBox='0 0 24 24' width='28' height='28' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><circle cx='12' cy='12' r='9'/><circle cx='12' cy='12' r='2.4'/><path d='M15.9 6.6a6 6 0 0 1 1.6 2.6'/></svg>",
       "description": "Personal media library. Catalog your audiobooks and movies with ISBN and title lookup, search, sort, and filter.",
       "status": "live"
     },
     {
       "slug": "character-creator",
       "name": "Character Creator",
-      "icon": "🎲",
+      "icon": "<svg viewBox='0 0 24 24' width='28' height='28' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M12 2.4 20.7 7.2v9.6L12 21.6 3.3 16.8V7.2z'/><path d='M12 6.6 17.4 15.6H6.6z'/><path d='M12 2.4v4.2M20.7 7.2 17.4 15.6M3.3 7.2l3.3 8.4'/></svg>",
       "description": "Palladium Fantasy & Rifts character builder and campaign journal. Roll a character, log your sessions, level up.",
       "status": "live"
     },
     {
       "slug": "pick3cut5",
       "name": "Pick 3 Cut 5",
-      "icon": "✂️",
+      "icon": "<svg viewBox='0 0 24 24' width='28' height='28' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><circle cx='6.2' cy='18.2' r='2.6'/><circle cx='17.8' cy='18.2' r='2.6'/><path d='M16.4 16.1 5.6 3.6M7.6 16.1 18.4 3.6'/></svg>",
       "description": "Party game. Eight items revealed one at a time, three keeps and five cuts, no take-backs. Play in a room together or on your own.",
       "status": "live"
     },
     {
       "slug": null,
       "name": "More Coming Soon",
-      "icon": "🔧",
+      "icon": "<svg viewBox='0 0 24 24' width='28' height='28' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M17.6 3.6a5 5 0 0 0-5.9 6.7l-7 7a2.3 2.3 0 1 0 3.2 3.2l7-7a5 5 0 0 0 6.7-5.9l-3.1 3.1-3-.8-.8-3z'/></svg>",
       "description": "Model Router and more — stay tuned.",
       "status": "soon"
     }
