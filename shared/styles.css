@@ -223,14 +223,34 @@ body {
    specificity, so this selector is (0,1,0) — the weakest a real rule can be.
    Every `outline: none` in an app stylesheet is (0,1,0) or (0,1,1) and loads
    later, so it wins. media-vault has six such rules and filament-forge four,
-   and this ring reaches none of the controls they cover. It reaches bare
-   button, a, summary and [tabindex] in all four apps, which is real and is not
-   what F36 claimed. `select` and `textarea` are not in the list at all.
+   and this ring reached none of the controls they cover. It reached bare button,
+   a, summary and [tabindex] only, which is real and is not what F36 claimed.
+   THAT IS THE STATE F37 ENDED — see the next paragraph. pick3cut5 was never in
+   it: that app sets no `outline: none` at all, so its inputs have carried the
+   ring since F16, which is the one thing F37 got wrong about its own scope.
 
-   Raising it to (0,2,0) — a doubled `:focus-visible`, plus select and textarea —
-   lands it on every control in both apps, and drags `border-radius` along with
-   it, which visibly splits media-vault's joined search box on focus. That is a
-   different change with a decision in it, and it is filed as UI-AUDIT F37.
+   RAISED TO (0,2,0) ON 2026-09-10, taking UI-AUDIT F37, and that is what the
+   doubled `:focus-visible` below is for. It is legal CSS — Chrome accepts it and
+   `CSS.supports(selector(...))` returns true — and repeating the pseudo-class is
+   the only way to gain a specificity point without inventing a class or reaching
+   for !important. At (0,2,0) it beats the seven `input` selectors that sit at
+   (0,1,1), and the three declarations at (0,1,0) that were beating it on load
+   order alone. `select` and `textarea` joined the list at the same time; the ring
+   had never matched them at all.
+
+   DO NOT PUT `border-radius` BACK. It was here until F37 and it lost harmlessly
+   at (0,1,0). At (0,2,0) it wins, and it starts reshaping controls on focus:
+   media-vault's joined search box splits (`3px 0 0 3px` becomes `3px`, and the
+   select ANIMATES it, because media-vault/styles.css:89 is `transition: all`),
+   and the wizard's `.toggle button` pair — deliberately square at
+   character-creator/styles.css:451-453 inside an `overflow: hidden` wrapper —
+   gains 3px corners. Six further controls shifted 4px to 3px.
+
+   Removing it has its own cost, stated so nobody restores it by surprise:
+   eighteen or so controls across three apps had no radius of their own and were
+   borrowing this one for their focus corner. They are square when focused now.
+   That is the smaller of the two changes and it is the one that leaves pick3cut5
+   byte-identical.
 
    The colour is --accent-secondary and NO app overrides it: all four resolve to
    #D9A05B, measured 8.39 on --bg-primary, 7.60 on --bg-secondary and 6.66 on
@@ -238,10 +258,9 @@ body {
    the ring reads in "this app's --accent-secondary, which its :root overrides";
    that was true on 2026-08-31 and the retone falsified it. There is no per-app
    colour here and there has not been one for some time. */
-:where(button, input, a, summary, [tabindex]):focus-visible {
+:where(button, input, select, textarea, a, summary, [tabindex]):focus-visible:focus-visible {
   outline: 3px solid var(--accent-secondary);
   outline-offset: 2px;
-  border-radius: var(--radius-sm);
 }
 
 /* ─── REDUCED MOTION ───
