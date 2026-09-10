@@ -320,18 +320,36 @@ Three paths update in place instead, because they used to destroy work:
 | Remove armour | removes that slot, then renumbers the rest |
 | Inventory add / remove / qty / equipped | refreshes `#inv-rows` only |
 
-**Why it matters.** The section inputs (bio, combat, saves, armour) are only
-read back at Save, by `collectSections()`. A full re-render rebuilt them from
-stored state, so anything typed and not yet saved vanished. Armour add/remove
-used to work around that with a `keepEdits()` call that copied the DOM into
-state first — a patch every new interactive block had to remember to join in on.
+**Why it matters.** The section inputs (bio, combat, saves, armour), the notes
+and the pool numbers are read back by `collectSections()` and **saved
+automatically** — about 1.5 seconds after the last keystroke, or when a pool
+field is left (`UI-AUDIT` F38; there is no Save button). A full re-render
+rebuilt them from stored state, so anything typed and not yet saved vanished.
+Armour add/remove used to work around that with a `keepEdits()` call that
+copied the DOM into state first — a patch every new interactive block had to
+remember to join in on.
 
 The inventory paths were worse: they called `load()`, which **refetches the
 character and replaces state wholesale**, so `keepEdits()` could not have helped
 even if they had used it. Adding an item silently discarded your typing.
 
 Now nothing else is touched, so unsaved edits simply survive — the DOM is the
-source of truth for them until Save reads it back. `keepEdits()` is gone.
+source of truth for them until autosave reads it back. `keepEdits()` is gone.
+
+**The paths that still redraw no longer lose them either** (F38). `render()`
+first puts whatever is typed and unsaved into state, in one place rather than
+in every caller, and `load()` saves it before refetching — carrying it across
+the reload when it cannot be saved. Adding an item had quietly gone back to
+calling `load()`; it refreshes the rows again, as the table above says, and
+reloads only when it also wrote a journal entry.
+
+**Only what was edited is sent, and the version guard is judged per field.**
+The PATCH still carries `expect_updated_at`. A refusal re-reads the character
+and retries when nobody else touched the fields being saved; otherwise the
+status offers *Keep mine* or *Use theirs* with the typed values still on
+screen. It has to work that way because every play event that moves a pool
+also moves the version, and the sheet never learns the new one from an event —
+so the old Save button was refused after any damage, stepper or rest.
 
 **If you add another in-place path**, remember `collectSections()` reads
 `data-armor` as an array index. Removing a slot has to renumber the ones after

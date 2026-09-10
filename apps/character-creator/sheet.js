@@ -98,6 +98,10 @@ const paintPool = (key) => sheetLayout.paintPool(key, C.data, C.conflicts);
 const jsonReq = (method, body) => ({ method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
 async function load() {
+  // Whatever is typed is saved before the reload replaces C.data, or carried
+  // across it when it cannot be (settleEdits, below). load() used to be the
+  // thing that silently discarded it - UI-AUDIT F38.
+  const held = await settleEdits();
   try {
     const res = await api('characters/' + id);
     C.data = res.character; C.items = res.items; C.canWrite = res.can_write; C.isGm = res.is_gm;
@@ -141,6 +145,7 @@ async function load() {
     // Kept so the sheet can say when it is showing fewer entries than exist,
     // rather than quietly ending the log at the page boundary.
     C.journalTotal = journal.total ?? journal.entries.length;
+    if (held) carryHeldEdits(held);
     render();
   } catch (err) {
     $('app').innerHTML = `<div class="panel"><p class="err">Failed to load: ${escHtml(err.message)}</p></div>`;
@@ -1322,6 +1327,7 @@ window.addEventListener('hashchange', () => {
 // phone; it has sticky vitals, tabs below 820px and 44px targets throughout,
 // so the second layout was answering a question that had stopped being asked.
 function render() {
+  holdTypedEdits();
   syncPlayChrome();
   const c = C.data, w = C.canWrite;
   if (!C.tab) C.tab = readTab();
@@ -1649,7 +1655,7 @@ function render() {
     ${vitals ? `<div class="vitals vitals-strip">${vitals}</div>
       <div id="queue-state" class="queue-state noprint"></div>
       <div class="rowline noprint vitals-save">
-        ${w ? `<button class="btn btn-sm btn-primary" onclick="saveStats()">Save</button>
+        ${w ? `<span id="autosave" class="autosave muted small" role="status" aria-live="polite">${autosaveText()}</span>
         <span id="msg"></span>` : ''}
         <span class="muted small">current / max</span></div>` : ''}
     <nav class="tabbar noprint" role="tablist">
@@ -2828,7 +2834,7 @@ async function refreshInventory() {
 //
 // These two paths update in place instead. Nothing else is touched, so unsaved
 // edits elsewhere simply survive: the DOM is the source of truth for them until
-// Save reads it back with collectSections().
+// autosave reads it back with collectSections() - UI-AUDIT F38.
 //
 // Everything else — load, save, level-up, switching character — still does a
 // full render. Correctness over cleverness.
@@ -2849,6 +2855,8 @@ function removeArmor(i) {
   // collectSections() reads data-armor as an array index, so the slots after
   // the removed one have to close the gap.
   reindexArmor();
+  // Removing a slot is an edit with no keystroke behind it.
+  markDirty('armor');
 }
 
 function reindexArmor() {
@@ -2879,39 +2887,255 @@ function collectSections() {
   return out;
 }
 
-async function saveStats() {
-  const body = { notes: $('stat-notes').value, ...collectSections() };
-  for (const [key] of POOLS) {
-    const el = $('stat-' + key);
-    if (el) body[key + '_current'] = el.value === '' ? null : +el.value;
-  }
-  // Which version this tab believes it is changing. Two people on one
-  // character - a player and a G.M. at the same table, or the same person in
-  // two tabs - used to overwrite each other silently, last write winning with
-  // nothing said. The server refuses a write against a version that has moved.
-  body.expect_updated_at = C.data?.updated_at || undefined;
-  try {
-    const res = await api('characters/' + id, jsonReq('PATCH', body));
-    if (res?.updated_at) C.data.updated_at = res.updated_at;
-    flash('Saved.');
-    await load();
-  } catch (err) {
-    if (err.status === 409 && err.detail?.conflict) {
-      // Nothing was written, so nothing is lost on the server. What is at risk
-      // is what is typed on this screen, which is why this asks rather than
-      // reloading over it.
-      flash('Not saved: this character changed somewhere else since you opened it.', true);
-      const msg = 'This character was changed somewhere else. Reload to see the '
-        + 'current version? Your unsaved edits on this screen will be lost.';
-      if (confirm(msg)) {
-        await load();
-      }
-      return;
+// ─── Autosave (UI-AUDIT F38) ───
+//
+// The section inputs (bio, combat, saves, armour), the notes and the pool
+// numbers save themselves. There was a Save button, and every action that
+// redrew the sheet first - adding an item or a journal entry, logging XP,
+// spending a banked pick, a sheet-mode power use - rebuilt those inputs from
+// the stored copy, so anything typed and not yet saved vanished without a word.
+//
+// Text saves AS_DELAY after the last keystroke. A pool number saves when the
+// field is LEFT, because a pause half-way through typing "14" would otherwise
+// write 1 into a pool the whole table can see.
+//
+// ONLY WHAT WAS EDITED IS SENT. The server replaces a JSON section whole, so a
+// section is the unit; a pool is its own field. Save sent everything at once,
+// which put this tab's idea of every pool into every bio edit.
+//
+// THE VERSION GUARD STAYS, AND IS JUDGED PER FIELD. The PATCH carries
+// expect_updated_at, so two people on one sheet still cannot overwrite each
+// other in silence. But every play event that moves a pool moves updated_at
+// too (events.js), and this tab never learns the new value from one - so Save
+// was refused after any damage, stepper or rest in play mode. A refusal now
+// re-reads the character and compares only the fields being saved with what
+// they held when editing began: untouched by anyone else, it retries against
+// the new version; changed, it stops and asks - Keep mine or Use theirs - with
+// the typed values still on screen. The same yours-or-theirs choice a
+// conflicting pool already offers (js/sheet-layout.js).
+const AS_DELAY = 1500;
+const AS_SECTIONS = ['bio', 'combat', 'saves', 'armor'];
+const AS = { dirty: new Set(), base: {}, timer: null, busy: null, state: 'idle', detail: '', conflict: null };
+const AS_LABELS = {
+  bio: 'Bio', combat: 'Combat', saves: 'Saving throws', armor: 'Armour', notes: 'Notes',
+  ...Object.fromEntries(POOLS.map(([k, l]) => [k + '_current', l])),
+};
+
+const sameValue = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+const cloneValue = (v) => (v == null ? v : JSON.parse(JSON.stringify(v)));
+
+// The stored field an input feeds, or null for one autosave does not own - the
+// journal, the add-item form and the level-up inputs are actions, not fields.
+function autosaveKey(el) {
+  if (!C.canWrite || !el || !el.dataset) return null;
+  if (el.dataset.sec) return el.dataset.sec;
+  if (el.dataset.armor != null) return 'armor';
+  if (el.id === 'stat-notes') return 'notes';
+  const m = /^stat-(\w+)$/.exec(el.id || '');
+  return m && POOLS.some(([k]) => k === m[1]) ? m[1] + '_current' : null;
+}
+
+// delay null marks the field without scheduling a save - a pool mid-typing.
+function markDirty(key, delay = AS_DELAY) {
+  if (!key) return;
+  if (!(key in AS.base)) AS.base[key] = cloneValue(C.data?.[key]);
+  AS.dirty.add(key);
+  if (!AS.conflict) setAutosave('pending');
+  if (delay != null) scheduleAutosave(delay);
+}
+
+function scheduleAutosave(delay = AS_DELAY) {
+  clearTimeout(AS.timer);
+  AS.timer = setTimeout(() => { AS.timer = null; saveNow(); }, delay);
+}
+
+// What the DOM holds for these fields, in the shape the PATCH takes. A field
+// whose inputs are not on the page is left out rather than read as empty: an
+// empty read of the bio would be a request to erase it.
+function pendingValues(keys) {
+  const out = {};
+  const present = (k) => (k === 'armor' ? !!$('armor-list') : !!document.querySelector(`[data-sec="${k}"]`));
+  const sections = keys.some((k) => AS_SECTIONS.includes(k)) ? collectSections() : null;
+  for (const k of keys) {
+    if (AS_SECTIONS.includes(k)) {
+      if (present(k)) out[k] = sections[k];
+    } else if (k === 'notes') {
+      const el = $('stat-notes');
+      if (el) out.notes = el.value;
+    } else {
+      const el = $('stat-' + k.replace(/_current$/, ''));
+      if (el) out[k] = el.value === '' ? null : Math.trunc(Number(el.value));
     }
-    const details = errorDetails(err);
-    flash('Save failed: ' + err.message + (details.length ? ' — ' + details.join('; ') : ''), true);
+  }
+  return out;
+}
+
+// Mirror a write into C.data. Pools are clamped exactly as the PATCH clamps
+// them (0 to the pool's max), so the screen shows what was stored.
+function applyToData(vals) {
+  for (const [k, v] of Object.entries(vals)) {
+    if (k.endsWith('_current') && v != null && Number.isFinite(v)) {
+      const max = C.data[k.replace(/_current$/, '_max')];
+      C.data[k] = Math.max(0, typeof max === 'number' ? Math.min(v, max) : v);
+    } else {
+      C.data[k] = v;
+    }
   }
 }
+
+// First thing render() does: whatever is typed and unsaved goes into C.data,
+// so the rebuilt inputs come back holding it rather than the stored copy.
+// Centralised here rather than asked of every caller of render(), which is the
+// shape keepEdits() had and why it was retired.
+function holdTypedEdits() {
+  if (AS.dirty.size && C.data) applyToData(pendingValues([...AS.dirty]));
+}
+
+async function saveNow() {
+  if (AS.busy) await AS.busy;
+  if (!AS.dirty.size) return true;
+  if (AS.conflict || !C.canWrite) return false;
+  clearTimeout(AS.timer); AS.timer = null;
+  const vals = pendingValues([...AS.dirty]);
+  const keys = Object.keys(vals);
+  AS.dirty.clear();
+  if (!keys.length) return true;
+  setAutosave('saving');
+  AS.busy = sendEdits(keys, vals).finally(() => { AS.busy = null; });
+  const ok = await AS.busy;
+  if (ok && AS.dirty.size && !AS.conflict) scheduleAutosave();
+  return ok && !AS.dirty.size;
+}
+
+async function sendEdits(keys, vals, retried = false) {
+  try {
+    const res = await api('characters/' + id, jsonReq('PATCH', {
+      ...vals, expect_updated_at: C.data.updated_at || undefined,
+    }));
+    if (res?.updated_at) C.data.updated_at = res.updated_at;
+    applyToData(vals);
+    // Typed into again while this was in flight: the new baseline is what was
+    // just stored, not what it was before.
+    for (const k of keys) {
+      if (AS.dirty.has(k)) AS.base[k] = cloneValue(C.data[k]);
+      else delete AS.base[k];
+      if (k.endsWith('_current')) paintPool(k.replace(/_current$/, ''));
+    }
+    setAutosave(AS.dirty.size ? 'pending' : 'saved');
+    return true;
+  } catch (err) {
+    for (const k of keys) AS.dirty.add(k);
+    if (err.status === 409 && err.detail?.conflict && !retried) {
+      let fresh;
+      try { fresh = (await api('characters/' + id)).character; } catch {
+        setAutosave('offline'); scheduleAutosave(5000); return false;
+      }
+      const clash = keys.filter((k) => !sameValue(fresh[k], AS.base[k]));
+      if (!clash.length) {
+        C.data.updated_at = fresh.updated_at;
+        for (const k of keys) AS.dirty.delete(k);
+        return sendEdits(keys, vals, true);
+      }
+      holdConflict(clash, fresh);
+      return false;
+    }
+    if (err.status === undefined) {
+      // Never arrived. Nothing is lost - it is still typed and still dirty.
+      setAutosave('offline');
+      scheduleAutosave(5000);
+      return false;
+    }
+    const details = errorDetails(err);
+    setAutosave('error', err.message + (details.length ? ' — ' + details.join('; ') : ''));
+    return false;
+  }
+}
+
+function holdConflict(fields, fresh) {
+  const theirs = { updated_at: fresh.updated_at };
+  for (const k of fields) theirs[k] = cloneValue(fresh[k]);
+  AS.conflict = { fields, theirs };
+  setAutosave('conflict');
+}
+
+// An explicit overwrite of the other side's change to these fields.
+async function keepMyEdits() {
+  const c = AS.conflict;
+  if (!c) return;
+  AS.conflict = null;
+  C.data.updated_at = c.theirs.updated_at;
+  for (const k of c.fields) AS.base[k] = cloneValue(c.theirs[k]);
+  await saveNow();
+}
+
+async function useTheirEdits() {
+  AS.conflict = null;
+  AS.dirty.clear();
+  AS.base = {};
+  setAutosave('idle');
+  await load();
+}
+
+// Before load() replaces C.data: save what is typed. If it cannot be saved,
+// hand it back so it can be carried across the reload instead of dropped.
+async function settleEdits() {
+  if (!AS.dirty.size || !C.data) return null;
+  const held = pendingValues([...AS.dirty]);
+  return (await saveNow()) ? null : held;
+}
+
+// After a reload, with edits that could not be saved: the reload has just moved
+// C.data.updated_at to the server's, so the version guard can no longer see a
+// change somebody else made. Judge the held fields against their baseline here,
+// the same test a refusal gets, and put the typed values back on top.
+function carryHeldEdits(held) {
+  const clash = Object.keys(held).filter((k) => !sameValue(C.data[k], AS.base[k]));
+  if (clash.length && !AS.conflict) holdConflict(clash, C.data);
+  applyToData(held);
+}
+
+function autosaveText() {
+  switch (AS.state) {
+    case 'pending': return 'Unsaved changes…';
+    case 'saving': return 'Saving…';
+    case 'saved': return 'All changes saved';
+    case 'offline': return 'Not saved yet — no connection. Retrying.';
+    case 'error': return 'Not saved: ' + escHtml(AS.detail);
+    case 'conflict': return `Not saved: ${escHtml(AS.conflict.fields.map((k) => AS_LABELS[k] || k).join(', '))}
+      changed somewhere else.
+      <button type="button" class="btn btn-sm" onclick="keepMyEdits()">Keep mine</button>
+      <button type="button" class="btn btn-sm btn-ghost" onclick="useTheirEdits()">Use theirs</button>`;
+    default: return 'Changes save automatically';
+  }
+}
+
+function setAutosave(state, detail = '') {
+  AS.state = state;
+  AS.detail = detail;
+  const el = $('autosave');
+  if (!el) return;
+  el.innerHTML = autosaveText();
+  el.classList.toggle('err', state === 'conflict' || state === 'error' || state === 'offline');
+}
+
+document.addEventListener('input', (ev) => {
+  const k = autosaveKey(ev.target);
+  if (k) markDirty(k, k.endsWith('_current') ? null : AS_DELAY);
+});
+document.addEventListener('change', (ev) => {
+  const k = autosaveKey(ev.target);
+  if (k) markDirty(k, k.endsWith('_current') ? 0 : AS_DELAY);
+});
+// A phone switching apps is the common way a tab goes away mid-edit.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') saveNow();
+});
+window.addEventListener('beforeunload', (ev) => {
+  if (!AS.dirty.size && !AS.busy) return;
+  saveNow();
+  ev.preventDefault();
+  ev.returnValue = '';
+});
 
 async function patchItem(rowId, fields) {
   try { await api(`characters/${id}/items/${rowId}`, jsonReq('PATCH', fields)); await refreshInventory(); }
@@ -2971,7 +3195,17 @@ async function addItem() {
     await api(`characters/${id}/items`, jsonReq('POST', {
       slug, custom_name: slug ? null : name, qty, notes, journal_entry_id: journalId,
     }));
-    await load();
+    // The inventory rows alone, which docs/wizard-and-sheet.md has said this
+    // did since PR #27 - it had gone back to a whole reload. A reload only when
+    // a journal entry went with it, because that one has to reach the Notes tab.
+    if (journalId) {
+      await load();
+    } else {
+      await refreshInventory();
+      for (const f of ['add-name', 'add-notes']) { if ($(f)) $(f).value = ''; }
+      if ($('add-qty')) $('add-qty').value = 1;
+      if ($('add-slug')) $('add-slug').value = '';
+    }
   } catch (err) { alert('Add failed: ' + err.message); }
 }
 
