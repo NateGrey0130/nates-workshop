@@ -3606,6 +3606,34 @@ fallback. **Posture: UI only; the endpoint already takes the id.**
 
 **Ongoing cost:** none.
 
+---
+
+**Taken, 2026-09-10 (PR #928). Posture held: UI only; the endpoint already takes the id.**
+The stash's add form offers the gear catalog first — a filter box and a select, loaded
+for the campaign's own system the first time the tab is drawn — and keeps free text as
+the fallback for loot no book lists. It sends `item_id` when a catalog row is chosen,
+which `campaigns/[id]/items.js` has always accepted. `D.gear`, declared on this page
+since it was written and never filled, finally holds something.
+
+**One correction, from `audit-premise-auditor`:** *"claimed loot can never be a weapon
+card"* overstated it. <!-- claim-ok: quoting the premise this note corrects --> A catalog
+row in the stash already copies its `gear_slug` onto the character when claimed
+(`campaigns/[id]/items/[itemId].js`). What was true is that the form could only send
+free text, so no stash row ever WAS catalog-linked — the endpoint's half had simply never
+been reachable.
+
+**Measured on 8801, local campaign 2 (Palladium Fantasy), 2026-09-10:** the tab loaded
+544 gear rows and the select showed *300 of 544* until filtered — a stated cap, so a
+phone is not handed a 544-option list; *dagger* narrowed it to *1 of 1* with the caret
+still in the filter. Added from the catalog, the row came back as *Daggers and Knives*,
+slug `daggers-and-knives`; a typed *F47 test crate* came back as a custom item exactly as
+before. Both were removed afterwards and the stash is empty again.
+
+**Not taken, and recorded so it is not mistaken for done:** the auditor also found that an
+unknown `item_id` sent with no name fails the table's CHECK as a 500 rather than a 400.
+This form only ever sends an id it was handed by `/items`, so it cannot reach that path,
+and fixing a server response no client produces is dropped rather than deferred.
+
 ### F48 — low — The codex has no Skills or Classes
 
 The codex's tabs are Spells, Psionics, Gear and Vessels (live, 2026-09-10). A class can
