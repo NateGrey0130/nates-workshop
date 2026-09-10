@@ -306,9 +306,31 @@ th {
   margin-bottom: 2px;
 }
 /* A COMPLETED step is a <button> and the rest are spans — only the completed
-   ones go anywhere. A button carries its own line-height, which sits the pill a
-   pixel off its neighbours; inheriting puts it back on the line with them. */
-.stepper .step-rail button.st { line-height: inherit; font: inherit; }
+   ones go anywhere.
+
+   THIS RULE CARRIED `font: inherit` UNTIL 2026-09-10, and it took every
+   completed step out of the rail's typography. The shorthand resets family,
+   size, stretch, weight and style together, and at (0,3,1) it outranked both
+   `.st` rules — the desktop one above and the phone one in the max-width: 900
+   block. So a `<button>` step rendered IBM Plex Sans 16px at 100% width where
+   its `<span>` neighbours rendered Saira 15px at 75%, and on a phone it never
+   received the `font-size: 0` that turns this rail into ten bars: its track
+   sized by min-content instead. Six completed steps put 500px of labels into a
+   334px rail, clipped by `body { overflow-x: hidden }`, and the ten-bar design
+   was not degraded but absent. UI-AUDIT F35.
+
+   `line-height: inherit` STAYS, and it is inert — measured, not assumed.
+   The shorthand absorbed it at parse time, so it has been dead text rather
+   than a working declaration; and nothing declares `line-height` on any
+   ancestor, so `inherit` resolves to `normal`, which is what a button gets
+   anyway. Removing it changes nothing at 1440 or at 390. It is kept because
+   F35 scoped this change to one declaration, and because a future ancestor
+   line-height is exactly what it would guard against.
+
+   The pill offset the old comment blamed on line-height was 0.5px of FONT
+   mismatch: it closes because family and size now match, not because this
+   declaration survives. */
+.stepper .step-rail button.st { line-height: inherit; }
 .stepper .step-rail .st.done {
   font-weight: 600; color: var(--text-primary);
   border-bottom-color: var(--border-strong); cursor: pointer;
