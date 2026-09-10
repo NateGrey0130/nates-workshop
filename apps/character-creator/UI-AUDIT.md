@@ -2634,6 +2634,78 @@ half.
 
 ---
 
+**Taken, 2026-09-10 (PR #894). Posture held: one declaration removed from one app
+stylesheet — no markup change, no new rule, no token touched.** `font: inherit` is
+gone from `apps/character-creator/styles.css`; `line-height: inherit` stays, as
+proposed.
+
+**Four things in the text above are wrong or imprecise. `audit-premise-auditor`
+found all four before the edit was made.**
+
+**1. `line-height: inherit` is INERT, so "line-height is all of it" is false.**
+Chrome drops the longhand at parse time — the rule as parsed today is
+`{ font: inherit; }` alone, so the declaration this finding says to keep has been
+dead text. Nothing declares `line-height` on any ancestor either, so `inherit`
+resolves to `normal`, which is what a `<button>` gets anyway. Measured three ways
+at 1440 and again at 390 — as shipped, with the shorthand removed, and with the
+rule emptied entirely: the last two are byte-identical. **The 0.5px pill offset
+the old comment blamed on line-height was font mismatch**, and it closes because
+family and size now match. The declaration is kept anyway, because the finding
+scoped this to one declaration and because the comment above it now says what is
+true instead of what was assumed.
+
+**2. `font: inherit` was NOT added by `F5`.** The finding says "whether it arrived
+in that PR or a later one" and leaves it open; `git log -S 'stepper button.st' --
+`apps/character-creator/styles.css` closes it in one command. `911da22`
+(2026-08-31, `F5`) added `.stepper button.st { line-height: inherit; }` — the
+line-height alone, exactly as `F5`'s note describes. `cabcdc3` (2026-09-01, Rust &
+Ash phase 5, the wizard rail) replaced it with the two-declaration form and
+introduced the shorthand. **`F5` is exonerated on the point this finding
+half-implies**, and the trap was walked into by a redesign the day after, not by
+the keyboard work.
+
+**3. The `64px 43px 103px 107px 0 0 0 0 0 0` figure is state-dependent.** It
+describes a page with FOUR completed steps. Measured on the local draft resumed at
+step 7 (six completed): `64.05 43.41 102.64 106.95 57.69 98.27 0 0 0 0` — four zero
+tracks, not six, with the first four matching to rounding. The general statement is
+**the number of zero-width tracks equals ten minus the completed-step count**, so
+the heading's "deletes six of ten" is one state rather than the rule.
+
+**4. The symptom was worse than described, in the direction that helps.** The six
+surviving tracks totalled 473px plus 27px of gaps — **500px inside a 334px rail**,
+166px of overflow, clipped by `body { overflow-x: hidden }` so `scrollWidth` still
+read 390. And completed steps kept `font-size: 16px` at phone width, so their
+labels rendered: the rail read `SYSTEM RACE ATTRIBUTES OCCUPATION SKI…` at full
+size, running off the right edge, **with no bars visible at all**. The finding says
+the survivors "overprint their own bars"; the ten-bar design was absent rather than
+degraded.
+
+**Two smaller corrections.** The finding's probe table labels its comparison
+element `span.st` and gives it weight 900 — that is `.st.cur`; base `.st` is weight
+300, so the weight column was not comparing like with like. And its evidence line
+says a 2072-line stylesheet; `wc -l` gives **2071**.
+
+**One thing the finding did not know, which makes the fix safer than it argued.**
+`apps/character-creator/styles.css:139` is `button { font-family:
+var(--font-display); font-stretch: 75%; cursor: pointer; }`. The finding cites only
+`.st` as the author-origin source that beats the user-agent shorthand. Both are
+author origin and both set the same values, so family and stretch are declared
+twice over — confirmed by emptying the rule entirely and still reading Saira 75%.
+
+**Verified after the fix, at 390px on a six-completed-step state:**
+`grid-template-columns` computes **ten equal tracks** (`30.69px`, then `30.70px`
+×9), and a completed step reads `Saira / 0px / 75%` like its neighbours. At 1440 a
+completed step reads `Saira / 15px / 75%`. Desktop distinctness survives: `.st.done`
+keeps `font-weight: 600` against `.st`'s 300 and `.st.cur`'s 900, plus
+`--text-primary` and `border-bottom-color: var(--border-strong)`.
+
+**A comment elsewhere became true.** `apps/character-creator/test/checks/rendered-ui.mjs`
+explains its `font-size: 0` assertion as "rather than `display: none`, so the button
+keeps its accessible name". That was false while the buttons never received
+`font-size: 0`. It is true now, and needed no edit.
+
+---
+
 ### F36 — medium — The focus ring and the reduced-motion block were each scoped to one app on purpose, and the promotion neither of them made was never given a number
 
 **Step: cross-app consistency sweep.**
