@@ -1253,7 +1253,7 @@ function playControlsHtml(w, combat) {
       <input type="number" id="play-amt-custom" class="play-amt-custom" min="1" inputmode="numeric"
         value="${typed}" placeholder="#" aria-label="Any other amount; Enter applies Damage">
       <button class="dmg" onclick="quickDamage()">💥 Damage</button>
-      <button onclick="undoLast()">↶</button>
+      <button onclick="undoLast()" aria-label="Undo the last change" title="Undo the last change">↶</button>
       <button onclick="endSession()">✎ End session</button></div>` : ''}
     <div class="play-melee">
       <span id="play-melee-label">${meleeLabel(combat.attacks)}</span>

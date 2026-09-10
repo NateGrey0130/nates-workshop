@@ -3557,6 +3557,18 @@ Gunfighter reads *"measured against 4 picks rather than 4"* (live, 2026-09-10).
 
 **Evidence:** code and live page, 2026-09-10. **Confidence:** high. **Ongoing cost:** none.
 
+---
+
+**Taken, 2026-09-10 (PR #925, with `F51`). Posture held: copy only.** One correction to
+its own proposal: *"compute the example at level three"* would still read *"4 picks
+rather than 4"* for any class whose first related-skill grant comes after level three.
+The sentence now names the **lowest level the class's schedule grants at**, and computes
+the allowance there — so the two numbers it compares always differ.
+
+**Measured on 8801, local draft 19 (a Gunfighter), 2026-09-10:** *"…so a character at
+level 2 is measured against 5 picks rather than 4."* The draft was restored byte for byte
+afterwards.
+
 ### F50 — low — On a phone, play mode's controls push every tab down, and Rest is a small target below the fold
 
 Measured at 375×812 on local character 1, 2026-09-10: Damage, ↶ and End session at
@@ -3592,6 +3604,22 @@ the walk.
 `UI-AUDIT F37`. **Posture: markup, CSS and a comment.**
 
 **Evidence:** code read and detector run, 2026-09-10. **Confidence:** high. **Ongoing cost:** none.
+
+---
+
+**Taken, 2026-09-10 (PR #925, with `F49`). Posture held: markup, CSS and a comment** —
+all three, plus the fourth item `F38`'s note handed here.
+
+- ↶ carries `aria-label` and `title` *"Undo the last change"* — measured on the live sheet.
+- `.power-group` is 12px, measured computing to 12px on *Spells — Level 1*.
+- `styles.css`'s cross-file comment now reads *"UI-AUDIT F37"*.
+- **The two raw `0x15` bytes are gone.** `14b5ab4` had turned the `\25B8` / `\25BE` escapes
+  into a control character plus the letters `B8` / `BE`, so the level-row disclosure marks
+  on the wizard's Advancement step (`app.js`, the `lvl-row` rows) drew garbage. Restored by
+  a script that matched each byte exactly once; `styles.css` now carries **no** control
+  characters at all. Checked by rendering a probe row against the live stylesheet: closed
+  draws `▸` (U+25B8), open draws `▾` (U+25BE). **Not seen on a real Advancement row** —
+  neither local character nor draft reaches that step — which is why the probe was used.
 
 ### F52 — low — Rest rates are remembered per device, so a new phone starts blank
 
