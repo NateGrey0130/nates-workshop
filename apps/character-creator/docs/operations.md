@@ -305,7 +305,7 @@ local-only script is protected as soon as it says so.
 |---|---|
 | classes (published, live) | 225 |
 | skills | 367 |
-| spells | 681 |
+| spells | 739 |
 | psionic powers | 116 |
 | gear | 1249 |
 | vehicles | 143 |
