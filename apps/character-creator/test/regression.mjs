@@ -824,6 +824,25 @@ const nonsense = await api('GET', '/characters?limit=banana');
 check('a nonsense limit falls back rather than 400ing',
   nonsense.status === 200 && nonsense.body.limit === 200, nonsense.body.limit);
 
+// ?mine=1 keeps the caller's own (UI-AUDIT F39) - the home view's list. Every
+// other call in this file is the same caller, so the first check alone would
+// pass with the filter doing nothing; the second identity is what proves it.
+const mineList = await api('GET', '/characters?mine=1');
+check('?mine=1 lists only the caller\'s own characters',
+  mineList.status === 200 && mineList.body.characters.length > 0
+    && mineList.body.characters.every((c) => c.player_email === me.body.email),
+  mineList.body.characters?.map((c) => c.player_email));
+const asStranger = (path) => fetch(BASE + path, {
+  headers: { 'Cf-Access-Authenticated-User-Email': 'nobody-f39@example.com' },
+}).then((r) => r.json());
+const strangerAll = await asStranger('/characters');
+const strangerMine = await asStranger('/characters?mine=1');
+check('someone with no characters sees everyone\'s unfiltered',
+  strangerAll.total > 0, strangerAll.total);
+check('and none of them with ?mine=1',
+  Array.isArray(strangerMine.characters) && strangerMine.characters.length === 0
+    && strangerMine.total === 0, strangerMine);
+
 // ── creation-time validation (the audit's F2) ───────────────────────────────
 // The powers a character is created holding get the boundary level-up picks
 // always had; pool maxima and attributes get advisory range checks that

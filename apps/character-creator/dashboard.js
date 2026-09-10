@@ -138,7 +138,15 @@ async function saveNotes() {
 }
 
 if (!campaignId) {
-  $('app').innerHTML = '<div class="panel"><p class="err">No campaign_id — open a dashboard from the Character Creator landing page.</p></div>';
+  // Opened with no campaign: list the caller's own instead of ending on an
+  // error (UI-AUDIT F39). A player had no other road to this page.
+  campaignList.load()
+    .then((list) => {
+      $('app').innerHTML = `<div class="panel"><h2>Your campaigns</h2>${campaignList.html(list)}</div>`;
+    })
+    .catch((err) => {
+      $('app').innerHTML = `<div class="panel"><p class="err">Failed to load: ${escHtml(err.message)}</p></div>`;
+    });
 } else {
   load();
 }

@@ -65,6 +65,8 @@ const S = {
   step: 0, system: null, classMode: 'browse', quiz: [null, null, null],
   // An unfinished build found on the server, awaiting resume-or-discard.
   draftOffer: null,
+  // Showing the home view rather than a wizard step - UI-AUDIT F39.
+  home: false,
   // The updated_at of the draft this tab believes it owns, sent with every
   // save so the server can refuse to overwrite someone else's newer one.
   // null means "there is no draft and I expect to create it".
@@ -438,8 +440,13 @@ let draftTimer = null;
 
 // Nothing is worth saving until a class is picked — before that a "draft" is a
 // radio button, and offering to resume one would be noise.
+//
+// And not until the class step is LEFT (UI-AUDIT F39). Selecting a card sets
+// S.rcc, so reading one class used to be enough to save a draft and put a
+// resume-or-discard question in front of the next visit. confirmRace() is the
+// class step's only way forward, and it lands on Attributes.
 function draftWorthSaving() {
-  return !!S.rcc && !S.savedId && !S.draftOffer;
+  return !!S.rcc && S.step > ST.RACE && !S.savedId && !S.draftOffer;
 }
 
 // The class is stored as an ID and re-resolved on restore, so a draft never
@@ -506,6 +513,7 @@ async function discardDraft() {
 function resumeDraft() {
   const d = S.draftOffer;
   S.draftOffer = null;
+  S.home = false;
   // Adopt the version this build was loaded at, so the first save replaces
   // exactly the row it came from and nothing newer.
   S.draftVersion = d.updated_at ?? null;
@@ -533,31 +541,113 @@ async function dismissDraft() {
   const what = d?.class_name || d?.class_id || 'unfinished';
   const rolled = Object.values(d?.state?.attrs || {}).some((v) => v != null);
   if (!confirm(`Discard the ${what} build${d?.char_name ? ` for ${d.char_name}` : ''}`
-    + `${rolled ? ', including its rolled attributes' : ''}? This cannot be undone.`)) return;
+    + `${rolled ? ', including its rolled attributes' : ''}? This cannot be undone.`)) return false;
   S.draftOffer = null;
   await discardDraft();
   render();
+  return true;
 }
 
-// Shown before the wizard rather than over it: resuming into step 4 of someone
-// else's half-finished build with no explanation is worse than the data loss
-// this feature exists to prevent.
-function renderDraftOffer() {
+// ---------- home (UI-AUDIT F39) ----------
+// What the page opens on. It used to open on the wizard's first step, which was
+// also the ONLY place a player's characters and a G.M.'s campaigns were listed
+// - and a saved draft replaced that step wholesale with a Resume/Discard
+// question, so a returning player could not reach a character they had already
+// made without first deciding the fate of a build they may only have browsed.
+//
+// The draft is a card on it now, not a gate in front of it. "Your characters"
+// is the caller's own (Nate's call, 2026-09-10) - a friend's sheet is still one
+// link away through the campaign they share. "Your campaigns" is every campaign
+// the caller runs or has a character in; step 1 listed only the ones they ran,
+// so a player was never shown theirs at all.
+function renderHome() {
   const d = S.draftOffer;
-  const when = d.updated_at ? d.updated_at.replace('T', ' ').replace('Z', '') : 'earlier';
+  const building = !d && S.rcc && !S.savedId;
+  let card = '';
+  if (d) {
+    const when = d.updated_at ? d.updated_at.replace('T', ' ').replace('Z', '') : 'earlier';
+    card = `<div class="panel home-draft">
+      <h2>Unfinished character</h2>
+      <p>${esc(d.char_name || 'Unnamed')} — <b>${esc(d.class_name || d.class_id || 'unknown class')}</b>,
+         stopped at step ${d.step + 1} of ${STEPS.length} (${esc(STEPS[d.step] || '?')}).</p>
+      <p class="muted small">Last saved ${esc(when)} UTC.</p>
+      <div class="nav">
+        <button class="btn btn-primary" onclick="resumeDraft()">Resume this build</button>
+        <button class="btn btn-ghost" onclick="dismissDraft()">Discard it</button>
+      </div>
+      <p class="muted small">There is one draft at a time, so starting a new character discards this one.</p>
+    </div>`;
+  } else if (building) {
+    card = `<div class="panel home-draft">
+      <h2>Build in progress</h2>
+      <p><b>${esc(S.rcc.name)}</b>, on step ${S.step + 1} of ${STEPS.length} (${esc(STEPS[S.step] || '?')}).</p>
+      <div class="nav"><button class="btn btn-primary" onclick="continueBuild()">Continue this build</button></div>
+    </div>`;
+  }
+
+  const rows = S.existing.map((c) => `<li class="home-row">
+      <span class="home-what">
+        <a href="sheet.html?id=${c.id}"><b>${esc(c.name)}</b></a>
+        <span class="muted small">${esc(className(c.class_id))}${c.occ_class_id ? ' ' + esc(className(c.occ_class_id)) : ''}
+          · L${c.level} · ${esc(c.campaign_name)}</span>
+      </span>
+      <span class="home-acts">
+        <a class="btn btn-sm" href="sheet.html?id=${c.id}&amp;play=1">▶ Play</a>
+        ${canDeleteCharacter(c) ? `<button type="button" class="btn btn-sm btn-danger"
+          onclick="deleteCharacter(${c.id})" aria-label="Delete ${esc(c.name)}">Delete</button>` : ''}
+      </span>
+    </li>`).join('');
+
   $('app').innerHTML = `
+  ${card}
   <div class="panel">
-    <h2>You have an unfinished character</h2>
-    <p>${esc(d.char_name || 'Unnamed')} — <b>${esc(d.class_name || d.class_id || 'unknown class')}</b>,
-       stopped at step ${d.step + 1} of ${STEPS.length} (${esc(STEPS[d.step] || '?')}).</p>
-    <p class="muted small">Last saved ${esc(when)} UTC.</p>
-    <div class="nav">
-      <button class="btn btn-primary" onclick="resumeDraft()">Resume this build</button>
-      <button class="btn btn-ghost" onclick="dismissDraft()">Discard and start fresh</button>
+    <div class="home-head">
+      <h2>Your characters</h2>
+      <button type="button" class="btn ${card ? '' : 'btn-primary'}" onclick="newCharacter()">+ New character</button>
     </div>
-    <p class="muted small">There is one draft at a time, so there is no third option here:
-      starting fresh discards this build.</p>
+    ${rows ? `<ul class="home-list">${rows}</ul>`
+      : '<p class="muted">No characters yet. <b>New character</b> starts one.</p>'}
+    <h2>Your campaigns</h2>
+    ${campaignList.html(campaignList.pick(S.campaigns, S.existing, S.me), shortDate)}
+    ${S.isAdmin ? `<h3>Admin</h3>
+    <p class="small"><a href="catalog.html">✏️ Edit catalogs</a>
+      <span class="muted">— fix skills, spells, psionics and gear by hand</span></p>` : ''}
   </div>`;
+}
+
+// Out of the home view and into a fresh build. A draft on the server, or a build
+// already under way in this tab, is discarded first - and asked about, because
+// there is one draft at a time and this is the moment it goes.
+async function newCharacter() {
+  if (S.draftOffer) {
+    if (!(await dismissDraft())) return;
+  } else if (S.rcc && !S.savedId) {
+    if (!confirm(`Start a new character? The ${S.rcc.name} build in progress is discarded.`)) return;
+    await discardDraft();
+  }
+  S.home = false;
+  S.savedId = null; S.step = ST.SYSTEM; S.rcc = null; S.charName = ''; S.campaignId = null; S.newCampaign = '';
+  resetBuild();
+  render();
+}
+
+function continueBuild() {
+  S.home = false;
+  render();
+}
+
+// Back to the home view from anywhere. A build under way stays in this tab and
+// comes back as "Build in progress". A character just SAVED is finished, so it
+// is cleared and the lists are fetched again - they now include it.
+function goHome() {
+  if (S.savedId) {
+    S.savedId = null; S.step = ST.SYSTEM; S.rcc = null; S.charName = ''; S.campaignId = null; S.newCampaign = '';
+    resetBuild();
+    S.home = true;
+    boot(false);
+  }
+  S.home = true;
+  render();
 }
 
 // ---------- rendering ----------
@@ -606,6 +696,13 @@ function summaryItems() {
   return out;
 }
 function renderStepper() {
+  // The home view is not a step, so it gets no rail - and no sticky bar either.
+  // Emptying the rail alone left the bar's own padding and border standing: a
+  // blank band ~100px tall under the header, visible in the first screenshot
+  // and in no measurement taken before it.
+  const bar = document.querySelector('.wizard-sticky');
+  if (bar) bar.style.display = S.home ? 'none' : '';
+  if (S.home) { $('stepper').innerHTML = ''; sticky.sizeSticky(); return; }
   const steps = STEPS.map((name, i) => {
     // A step that does not apply is shown greyed rather than removed: the
     // numbering stays stable between characters, and "there is no occupation
@@ -652,7 +749,10 @@ function renderStepper() {
 }
 
 function render() {
-  if (S.draftOffer) { renderStepper(); return renderDraftOffer(); }
+  // The draft offer is a card on the home view now (UI-AUDIT F39); nothing
+  // reaches a wizard step while one is pending, because the only ways out of
+  // home are Resume, which clears it, and New character, which discards it.
+  if (S.home) { renderStepper(); return renderHome(); }
   if (S.savedId) { renderStepper(); return renderSaved(); }
   // Reached by any path that does not go through goStep — a resumed draft, or
   // an ability dropped on a step that made the next one moot.
@@ -789,43 +889,10 @@ function renderSystem() {
         <h3>☢️ Rifts</h3><p class="muted">Mega-damage, magic, and machines on post-apocalyptic Earth.</p>
       </button>
     </div>
-    ${S.isAdmin ? `<h3>Admin</h3>
-    <p class="small"><a href="catalog.html">✏️ Edit catalogs</a>
-      <span class="muted">— fix skills, spells, psionics and gear by hand</span></p>` : ''}
-    ${gmCampaigns().length ? `<h3>Your campaigns (GM)</h3>
-    ${gmCampaigns().map((c) => {
-      // One per line, and each one says how many characters it holds and when
-      // it was made. Run together on one line separated by dots, as this used
-      // to be, two campaigns of the same name are one string.
-      const n = c.character_count;
-      const when = shortDate(c.created_at);
-      const bits = [
-        n === undefined || n === null ? null
-          : `${n} character${n === 1 ? '' : 's'}`,
-        when,
-      ].filter(Boolean);
-      return `<p class="small" style="margin:4px 0">
-        <a href="dashboard.html?campaign_id=${c.id}">🗺 ${esc(c.name)}</a>
-        <span class="muted">(${esc(c.system)})${bits.length ? ' · ' + esc(bits.join(' · ')) : ''}</span>
-      </p>`;
-    }).join('')}` : ''}
-    ${S.existing.length ? `<h3>Existing characters</h3>
-    ${S.existing.map((c) =>
-      // One per line, for the reason the campaign list above already carries.
-      // Run together and separated by dots, as this used to be, the separator
-      // is the same middot each entry already uses INSIDE its own parenthesis
-      // — so the boundary between two characters looks exactly like the
-      // boundary between a level and a campaign name, and a name is only a
-      // name if you can see where it starts.
-      `<p class="small" style="margin:4px 0">
-        <a href="sheet.html?id=${c.id}">${esc(c.name)}</a>
-        <span class="muted">(${esc(className(c.class_id))}${c.occ_class_id ? ' ' + esc(className(c.occ_class_id)) : ''} L${c.level} · ${esc(c.campaign_name)})</span>
-        ${canDeleteCharacter(c) ? `<button type="button" class="btn btn-sm btn-danger"
-          onclick="deleteCharacter(${c.id})"
-          aria-label="Delete ${esc(c.name)}">Delete</button>` : ''}
-      </p>`
-    ).join('')}` : ''}
   </div>`;
+  // The character and campaign lists that sat here moved to the home view
+  // (UI-AUDIT F39), where they no longer disappear behind a draft. Each still
+  // gets a line of its own, for the reason these rows first did - UI-AUDIT F9.
 }
 function pickSystem(sys) {
   if (S.system !== sys) { S.rcc = null; S.quiz = [null, null, null]; resetBuild(); }
@@ -3697,6 +3764,7 @@ async function renderSaved() {
     <div class="nav">
       <a class="btn btn-primary" href="sheet.html?id=${c.id}">📜 Open full sheet</a>
       <button class="btn" onclick="startOver()">+ Create another character</button>
+      <button class="btn btn-ghost" onclick="goHome()">Your characters</button>
     </div>`;
   } catch (err) {
     $('app').innerHTML = `<div class="panel"><p class="err">Failed to load: ${esc(err.message)}</p></div>`;
@@ -3741,7 +3809,8 @@ async function boot(first = true) {
       api('catalogs'),
       api('items'),
       api('campaigns'),
-      api('characters'),
+      // The caller's own - see characters.js for why the server filters it.
+      api('characters?mine=1'),
       api('me').catch(() => ({})),
     ]);
     S.classes = classesRes.classes;
@@ -3761,6 +3830,7 @@ async function boot(first = true) {
     // deliberately clearing the build, and re-offering the draft it just
     // finished would be the opposite of helpful.
     if (first) {
+      S.home = true;
       const { draft } = await api('draft').catch(() => ({ draft: null }));
       // A draft naming a class that no longer resolves — retired, renamed,
       // re-imported under a different id — cannot be restored into anything
@@ -3768,7 +3838,9 @@ async function boot(first = true) {
       if (draft && S.classes.some((c) => c.id === draft.class_id)) S.draftOffer = migrateDraft(draft);
       else if (draft) await discardDraft();
     }
-    if (first) render();
+    // goHome() after a save refreshes the lists through here, and the home view
+    // it is showing has to catch up when they land.
+    if (first || S.home) render();
   } catch (err) {
     $('app').innerHTML = `<div class="panel"><p class="err">Failed to load app data: ${esc(err.message)}</p></div>`;
   }
@@ -3824,6 +3896,7 @@ Object.assign(window, {
   // because nothing tests a click.
   toggleProgram,
   deleteCharacter,
+  goHome, newCharacter, continueBuild,
 });
 
 boot();
