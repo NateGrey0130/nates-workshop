@@ -435,6 +435,17 @@
   <div class="bulk-bar-count" id="bulkCount">0 selected</div>
   <button class="bulk-select-all" id="bulkSelectAllBtn" onclick="bulkSelectAll()">Select All</button>
   <div class="bulk-bar-divider"></div>
+  <!-- WORKSHOP-UI-AUDIT W3. On a phone the three change-groups below fold behind
+       this toggle, so select mode opens the bar at two rows instead of five and
+       the library keeps most of the screen. Delete, Cancel and Fill blanks are in
+       the fourth group, OUTSIDE the fold, so the way out never hides. Above 768px
+       the toggle is display:none and #bulkMore is display:contents, which makes
+       the groups direct flex items of the bar exactly as before. The open state
+       lives only in aria-expanded, and the CSS reads it. -->
+  <button type="button" class="btn btn-sm bulk-more-toggle" id="bulkMoreToggle"
+          aria-expanded="false" aria-controls="bulkMore"
+          onclick="toggleBulkMore()">Change…</button>
+  <div class="bulk-more" id="bulkMore">
   <!-- Each label and the controls it introduces are ONE flex child of the bar,
        so a wrap can never leave "Change type to →" on one line with its buttons
        on the next. The bar wraps at any width narrow enough, and it used to
@@ -466,6 +477,7 @@
            onkeydown="if(event.key==='Enter')bulkSetField()">
     <button class="btn btn-sm" onclick="bulkSetField()">Apply</button>
   </div>
+  </div><!-- /#bulkMore -->
   <div class="bulk-bar-divider"></div>
   <div class="bulk-group">
     <button class="btn btn-sm" onclick="openEnrichModal()" title="Fill in missing covers, authors and genres from where each item came from">✨ Fill blanks</button>

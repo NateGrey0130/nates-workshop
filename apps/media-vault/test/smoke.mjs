@@ -276,16 +276,35 @@ check('and nothing still calls its path',
   // a flex child like any other, so it wraps away from the buttons it
   // introduces. Measured at 768px before this: the three "Change … to →"
   // labels sat on a line of their own. Every label and its controls are one
-  // child now, and each direct child of the bar must be a group, a divider, or
-  // one of the two standalone controls.
+  // group now.
   const bar = (html.match(/<div class="bulk-bar"[\s\S]*?\n<\/div>/) || [''])[0];
-  const barChildren = [...bar.matchAll(/^  <(\w+)[^>]*class="([^"]+)"/gm)].map((m) => m[2].split(' ')[0]);
-  check('every control on the bulk bar is inside a group, a divider, or standalone by design',
-    barChildren.length > 0
-    && barChildren.every((c) => ['bulk-group', 'bulk-bar-divider', 'bulk-bar-count', 'bulk-select-all'].includes(c)),
-    barChildren.join(' '));
-  check('and the four groups are the type buttons, the format buttons, the field form and the two actions',
-    (bar.match(/class="bulk-group"/g) || []).length === 4);
+  // WORKSHOP-UI-AUDIT W3 put the three change-groups inside #bulkMore, a
+  // wrapper that folds behind a toggle on a phone. This used to scan the bar's
+  // DIRECT children at two spaces of indent, which cannot see inside a wrapper —
+  // and measured, a classless wrapper hid an ORPHANED label from it entirely and
+  // passed. So the check is now the intent rather than the nesting: every label
+  // on the bar sits inside some group, wherever that group is.
+  const groups = [...bar.matchAll(/<div class="bulk-group">([\s\S]*?)<\/div>/g)].map((m) => m[1]);
+  const labelsInBar = (bar.match(/class="bulk-bar-label"/g) || []).length;
+  const labelsInGroups = groups.reduce((n, g) => n + (g.match(/class="bulk-bar-label"/g) || []).length, 0);
+  check('every label on the bulk bar sits inside a group with the controls it introduces',
+    labelsInBar > 0 && labelsInGroups === labelsInBar,
+    labelsInGroups + ' of ' + labelsInBar + ' labels are inside a group');
+  // "the two actions" until W3: it has held Fill blanks, Delete and Cancel since
+  // the day it was written.
+  check('and the four groups are the type buttons, the format buttons, the field form and the actions',
+    groups.length === 4);
+  // The fold must never take the way out with it. Delete and Cancel live in the
+  // fourth group, which stays OUTSIDE #bulkMore.
+  const more = (bar.match(/<div class="bulk-more" id="bulkMore">([\s\S]*?)<\/div><!-- \/#bulkMore -->/) || ['', ''])[1];
+  const foldedGroups = (more.match(/class="bulk-group"/g) || []).length;
+  check('the fold holds the three change-groups and never the delete group',
+    foldedGroups === 3 && !/bulkDelete\(\)/.test(more),
+    'bulkMore holds ' + foldedGroups + ' groups');
+  // pick3cut5/AUDIT.md records a toggle that had no aria-expanded until it was
+  // first pressed. This one carries its state in the markup at rest.
+  check('and the fold toggle announces its state before it has ever been pressed',
+    /id="bulkMoreToggle"[\s\S]*?aria-expanded="false"[\s\S]*?aria-controls="bulkMore"/.test(bar));
 }
 {
   const declOf = (name) => {

@@ -482,6 +482,10 @@ function setSelectMode(on) {
   btn.classList.toggle('active', selectMode);
   btn.textContent = selectMode ? '✕ Cancel' : '☑ Select';
   updateBulkBar();
+  // Every entry to select mode starts with the change-groups folded, and every
+  // exit leaves them folded for next time (W3). Deliberately not an assignment
+  // to selectMode: the smoke suite pins exactly one of those, in this function.
+  toggleBulkMore(false);
 }
 
 function toggleSelectMode() {
@@ -552,6 +556,19 @@ function updateBulkBar() {
   const allSelected = inFilter.length > 0 && inFilter.every((id) => selectedIds.has(id));
   document.getElementById('bulkSelectAllBtn').textContent =
     allSelected ? `Deselect all ${inFilter.length}` : `Select all ${inFilter.length}`;
+}
+
+// WORKSHOP-UI-AUDIT W3. On a phone the type, format and field groups fold behind
+// #bulkMoreToggle, so the bar opens at two rows instead of five. The open state
+// is the toggle's aria-expanded and nothing else — the stylesheet reads it with
+// an adjacent-sibling rule — so what is on screen and what a screen reader
+// announces cannot disagree. Above 768px the toggle is hidden and the groups
+// always show, so calling this there changes nothing visible.
+function toggleBulkMore(open) {
+  const btn = document.getElementById('bulkMoreToggle');
+  if (!btn) return;
+  const next = typeof open === 'boolean' ? open : btn.getAttribute('aria-expanded') !== 'true';
+  btn.setAttribute('aria-expanded', String(next));
 }
 
 // ─── TAKING THE SERVER'S WORD FOR IT ───
