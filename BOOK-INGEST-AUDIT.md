@@ -6900,3 +6900,89 @@ invisible and would have committed.
 change, no new check. A check would have to detect NUL bytes in source, which is
 one grep nobody will remember to run against a problem that now has no instances.
 **Confidence: high**, both halves executed. **Ongoing cost: none.**
+
+### F49 - one skill taken THREE TIMES for three different weapons, and a class may grant it once
+
+**Filed 2026-09-09**, during the `new-west` class import, batch 1.
+
+New West's Gunfighter (printed 91) grants **three** W.P. Sharpshooting
+specialties, and names the weapon each one sharpens: Revolver, Energy Pistol,
+Energy Rifle. The book is explicit that this is how the skill works - printed
+79-81 says Sharpshooting is bought once per weapon type, at a cost of two
+O.C.C. Related picks each time, and that a character with
+Sharpshooting: Revolver gets none of the bonuses when firing an energy pistol.
+
+The catalog holds **one** row, `W.P. Sharpshooting`, and a class's
+`occ_skills` is a list of skills granted once each. There is nowhere to put
+"this skill, three times, for these three weapons". Granting it three times
+would be three identical entries the sheet renders once; three catalog rows
+named `W.P. Sharpshooting: Revolver` and so on would fragment a skill the books
+treat as one, and would not compose with the Juicer Assassin, who takes the
+same skill paired with W.P. Energy Rifle.
+
+**Stored as:** one grant of `W.P. Sharpshooting`, with the three weapons in its
+`note` and again in a `special_abilities` entry. Nothing is lost to a reader;
+nothing is a number.
+
+**Affected rows.** `gunfighter` today, and **three more classes in this book
+will hit it before the import closes** - a grep of all 226 cached pages for
+"Sharpshooting", run 2026-09-09 rather than assumed:
+
+| class | printed | specialties |
+|---|---|---|
+| Gunfighter | 91 | 3 - Revolver, Energy Pistol, Energy Rifle |
+| Gunslinger | 94 | 2 - Revolver and Energy Pistol |
+| Psi-Slinger | 99 | revolvers and pistols |
+| Wired Gunslinger | 108 | stated weapon by weapon |
+
+**This paragraph first said "the Gunslinger, the Sheriff/Lawman and the
+Psi-Slinger" at "printed 100 and printed 108", and three of those five facts
+were wrong** - the Sheriff/Lawman gets no Sharpshooting at all, the Psi-Slinger's
+grant is on printed 99, and the Wired Gunslinger was missing. The grep is above
+because the guess was not worth keeping. Outside this book, `W.P. Sharpshooting`
+carries the pairing rule in its own catalog note, from Juicer Uprising p.57 and
+New West printed 79-81.
+
+**Proposed change, NOT implemented.** The smallest shape that fits is a
+`with:` list on an `occ_skills` entry - `{ name: "W.P. Sharpshooting",
+with: ["W.P. Revolver", "W.P. Energy Pistol", "W.P. Energy Rifle"] }` - read by
+`derive.js` into one row per pairing on the sheet. It is a display and
+composition change rather than a new catalog concept, which is the argument for
+it over three rows. **Check before scoping:** whether any published class
+already grants `W.P. Sharpshooting` alongside a named W.P. in prose, and what
+the sheet does with a skill granted twice today.
+
+### F50 - `equipment_starting` cannot grant a SKILL, and one book's gear choice does
+
+**Filed 2026-09-09**, during the `new-west` class import, batch 1.
+
+New West's Bounty Hunter (printed 89-90) ends with **Special Equipment: Pick
+one**, and offers four packages. The second reads: a suit of light to medium
+power armour, and *"Automatically gets the basic pilot robots and Power Armor
+skill."*
+
+`equipment_starting` takes gear slugs and quantities. It has no way to say that
+choosing an option also grants a skill, and `occ_skills` has no way to say that
+a skill is granted only if a particular equipment option was taken. The two
+blocks do not see each other.
+
+**Two of the four options have no catalog shape either** - a Techno-Wizard or
+magic armour plus a magic weapon, or a bio-wizard parasite with 1D4 microbes -
+so this is not a case where three of four could be modelled and one noted.
+
+**Stored as:** the whole four-way choice is in `extraction_notes` on
+`bounty-hunter`, and nothing from it is in `equipment_starting`. That is
+deliberate: half-modelling it would put armour on the sheet and silently drop
+the skill that comes with it, which reads as complete and is not.
+
+**Affected rows.** `bounty-hunter` today. A grant of gear-and-a-skill together
+is a common Palladium shape and this is unlikely to be the only one; **the count
+here is one because one book has been read for it, not because a sweep found
+one.** No sweep has been run.
+
+**Proposed change, NOT implemented.** Either a `grants_skill` key on an
+`equipment_starting` choice option, or the inverse - an `occ_skills` entry
+conditional on an equipment pick. The first is smaller and keeps the condition
+where the choice is made. **Check before scoping:** whether `equipment_starting`
+choice options are resolved at creation or re-derived per render, because the
+reference says a choice's `qty` is re-derived and a granted skill must not be.
