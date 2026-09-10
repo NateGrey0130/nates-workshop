@@ -2556,6 +2556,60 @@ defect, and it is out of scope for this finding.
 
 ---
 
+**Adjusted 2026-09-10 (PR #912). The Confidence line above is settled, and the
+answer is that this defect was the only one of its kind.**
+
+This finding shipped at medium confidence on one point: whether any other `:hover`,
+`:active` or `:disabled` pair in the repo failed the same way. It named the work that
+would settle it — sweeping interactive states across all four apps, which the
+2026-09-09 critique had not done, having enumerated **resting** states only.
+
+That sweep has now run. Every `button`, `a`, `.btn`, `[role=button]` and `summary`
+with visible text was forced into `:hover` through CDP `CSS.forcePseudoState`, and its
+text measured against the nearest opaque ancestor background at the WCAG floor for its
+own size and weight:
+
+| surface | hovered elements | failing |
+|---|---|---|
+| character creator (wizard) | 4 | 0 |
+| character sheet, `?id=1` | 108 | 0 |
+| codex | 745 | 0 |
+| catalog | 2 | 0 |
+| campaign dashboard | 5 | 0 |
+| media-vault | 27 | 0 |
+| filament-forge | 14 | 0 |
+| pick3cut5 | 4 | 0 |
+| **total** | **909** | **0** |
+
+**The zero is only worth reading because the instrument was made to fail first.** Each
+run injects a canary button whose `:hover` is this finding's exact failure —
+`--bg-primary` on `--bg-input` — and the run is reported as broken unless the sweep
+flags it. The canary was caught at **1.26** on all eight surfaces, which is this
+finding's own measured ratio.
+
+**Two bugs in the sweep were caught that way, and both would have produced a
+confident wrong answer:**
+
+- **A false positive.** `color-mix()` computes to `color(srgb 0.18 0.55 0.60)`, whose
+  components are 0-1. Parsed as 0-255 they read as near-black, and the sweep reported
+  filament-forge's `.btn-primary` hover at 1.08:1. That button is fine.
+- **A false negative, and the reason the canary exists.** `offsetParent` is `null` for
+  `position: fixed`, so the first visibility test silently skipped every fixed control
+  in every app — including the canary. The first clean run came from a partly blind
+  instrument and looked identical to a healthy one.
+
+**What this does NOT cover**, so the silence is not read as coverage: `:active` and
+`:disabled` were not swept, only `:hover`. Only the first rendered state of each
+surface was measured — no modal, no play mode, no later wizard step, and not
+media-vault's bulk bar, which needs select mode on. Form controls were out of scope
+because they carry no text of their own. A surface reached only by clicking through
+is unmeasured.
+
+**Nothing is filed from this.** The sweep found no defect, and a finding with no
+defect behind it is not worth a number.
+
+---
+
 ### F35 — high — One `font` shorthand takes the wizard stepper out of its own typography, and deletes six of ten steps at phone width
 
 **Step: responsive sweep at 390×844.**
