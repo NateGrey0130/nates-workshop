@@ -314,7 +314,7 @@ Phase 4 costs money; everything above was free.
    Read every entry onto the following page; `Money:` sits at the end of each.
 4. **The 8 racial classes, printed 125-158** — printed 130 off a render.
    **ALL EIGHT DONE. PR #890: Cactus People 127, Fennodi 128, Keeper of the Desert
-   130, Lyn-Srial 133. PR #891: Sky-Knight 134, Cloudweaver 135, Mountain Giant 136,
+   130, Lyn-Srial 133. PR #892: Sky-Knight 134, Cloudweaver 135, Mountain Giant 136,
    Psi-Pony 156.**
 5. **Gear and vessels, printed 171-223** — last, and diffed first. Printed 217
    off a render.
@@ -363,7 +363,7 @@ standing edges of prefixed names and are unchanged by this.
 | 2026-09-09 | [#887](https://github.com/NateGrey0130/nates-workshop/pull/887) | Classes batch 4, printed 113-123: **Mining 'Borg/Prospector, Preacher, Professional Gambler, Saloon Bum/Stoolie** (classes 237 -> **241**). First use of `variants` and `skills_additional` in this book. No new catalog rows, no new findings. Applied `--remote` before the PR. |
 | 2026-09-09 | [#888](https://github.com/NateGrey0130/nates-workshop/pull/888) | Classes batch 5, printed 123-125: **Saloon Girl/Barmaid** (classes 241 -> **242**). **ALL SEVENTEEN OCCUPATIONS ARE IN.** Also corrects this survey: the CyberSlinger is NOT a class. Applied `--remote` before the PR. |
 | 2026-09-10 | [#890](https://github.com/NateGrey0130/nates-workshop/pull/890) | Racial classes 1 of 2, printed 125-134: **Cactus People, Fennodi, Keeper of the Desert, Lyn-Srial** (classes 242 -> **246**). First class to consume the Cloud Magic spells. No new catalog rows, no new findings. Applied `--remote` before the PR. |
-| 2026-09-10 | [#891](https://github.com/NateGrey0130/nates-workshop/pull/891) | Racial classes 2 of 2, printed 134-158: **Sky-Knight, Cloudweaver, Mountain Giant, Psi-Pony** (classes 246 -> **250**). **ALL 25 PLAYABLE CLASSES ARE IN.** First use of `copy_of` in this book. Applied `--remote` before the PR. |
+| 2026-09-10 | [#892](https://github.com/NateGrey0130/nates-workshop/pull/892) | Racial classes 2 of 2, printed 134-158: **Sky-Knight, Cloudweaver, Mountain Giant, Psi-Pony** (classes 246 -> **250**). **ALL 25 PLAYABLE CLASSES ARE IN.** First use of `copy_of` in this book. Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -635,7 +635,7 @@ not print, and doing six of the eight would look complete and be half.
 ### The racial classes, last four — and the book's classes are done
 
 **All 25 playable classes from this book are in**: seventeen occupations and
-eight racial, across PRs #883, #885, #886, #887, #888, #890 and #891.
+eight racial, across PRs #883, #885, #886, #887, #888, #890 and #892.
 `source-coverage --remote` reads **`new-west 88 / 0`**.
 
 **`copy_of` gets its first use in this book.** Printed 134 and 135 both define
