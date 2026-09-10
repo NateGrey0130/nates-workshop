@@ -121,6 +121,40 @@ fixes it, and re-caching cannot (`read-columns.py` and a raw `page.get_text()`
 return the same garbage). Free Quebec printed **118** is the other kind: the
 render shows `a\\` on the page itself. Expect both.
 
+### And there is a THIRD kind, which neither of those detectors sees
+
+**`corrupt_pages` looks for characters a clean text layer never makes.** A fault
+that swaps a digit for a letter that LOOKS like it produces perfectly ordinary
+characters, so that detector cannot count it and does not.
+
+`ocr-book.py` reports this one separately, as **`DIGITS`** in its output and
+**`substituted_digits`** in the manifest. It is a **separate key on purpose**:
+the two faults need OPPOSITE remedies, and folding them together would tell a
+reader to render a page a render cannot fix.
+
+New West is the reference case, and it renders **1 as `!` or `l`** and **0 as
+`O` or `Q`** inside almost every `NDNx10` construction - `!D4xlO` for 1D4x10,
+`3D4xlOO` for 3D4x100, `10Q` for 100. Measured 2026-09-10:
+
+| cache | `corrupt_pages` | `substituted_digits` |
+|---|---|---|
+| `new-west` | 3 | **75** |
+| `cb1` | 0 | **69** |
+| `bom` | 9 | **116** |
+
+**It is NOT a New West quirk.** `cb1` prints `lD6`, `lD4xl00` and `lD20`; `bom`
+carries more of it than either. Assume any Palladium text layer has it.
+
+**The damage is in the INK.** Clipping New West printed 223 at 600 dpi shows the
+page itself printing `!D4xlO`, two words after a correctly-set `4D6`. So the
+remedy above - render it - does not work here, and that is the whole reason for
+the third category. **Read the token as the dice expression it can only be**:
+`!D4xlO` has no other reading.
+
+**It reaches STARTING MONEY**, which is where it costs the most: almost every
+New West O.C.C. prints `Money: Starts with 3D4xlOO credits`.
+`BOOK-INGEST-AUDIT.md` F53.
+
 **It is worth running on a book you did not cache today.** `bom` printed 84 is
 30 hits — a wholly scrambled page found by hand on 2026-09-05, which this
 detector rediscovers on its own — and `bom` printed 116 and 310 turn a `1` into

@@ -7216,6 +7216,48 @@ pages, a reading-ORDER fault), `F36` (glyph corruption, the visible kind) and
 substitution that maps to a valid character; `F36` is the one this extends and it
 is named above.
 
+**Taken, 2026-09-10 (PR #904).** Posture held: **warn, do not block.**
+`substituted_digits` is a separate manifest key, advisory, no exit code, and
+`ocr-book.py` still writes the cache. It reports as `DIGITS` beside the existing
+`WELDED` and `GLYPHS` lines.
+
+**THE FINDING UNDERSTATED ITSELF TWICE, and both corrections make it bigger.**
+
+**One: this book is 75 pages, not the "roughly sixty" filed above.** The sweep
+quoted in the finding was written with a `\b` word boundary, which cannot match
+before a leading `!` - so every `!D4xlO` token was invisible to the measurement
+that produced the number. The shipped detector uses a `(?<![A-Za-z])` lookbehind
+and finds them. Against `corrupt_pages`' 3, the ratio is 25x rather than 20x.
+
+**Two, and this is the real correction: IT IS NOT A NEW WEST FAULT.** The
+finding says nothing about other books because none was checked. Run on two more
+text-layer caches the same day:
+
+| cache | `corrupt_pages` | `substituted_digits` |
+|---|---|---|
+| `new-west` | 3 | **75** |
+| `cb1` | 0 | **69** |
+| `bom` | 9 | **116** |
+
+`cb1` is the cache the survey notes call the clean one - it is the only book here
+with zero welded pages - and it prints `lD6` for 1D6, `lD4xl00` for 1D4x100 and
+`lD20` for 1D20. Every hit inspected was a true positive. **So the confidence gap
+this finding named as MEDIUM is closed in the direction that widens it**: this is
+a property of Palladium's typesetting, not of one book, and the two untouched
+text-layer caches in this batch (`spirit-west`, `mystic-russia`) should be
+assumed to carry it.
+
+**Proved silent before being trusted.** A synthetic page holding `Old`, `Gold`,
+`bold`, `cold`, `hold`, `sold`, `told`, `world`, clean `1D6`, `2D4x10`,
+`2D6x100`, `1D20`, `100`, `110`, `1200`, `24,000`, `RH-1001A` and `K-9R-1100`
+scores **0**; a page holding `lD6`, `2D4xlO`, `lD4xl00`, `!D6xlOO` and `10Q`
+scores **5**. The `Old` case is the one that matters - a looser pattern matched
+it and reported twenty spurious pages on the first attempt, and the word
+boundaries are what remove it.
+
+**`book-survey` 0a gained a third category in the same PR**, with the table
+above and the instruction that a render does not fix this one.
+
 ### F54 - low - a gear row may not carry both an S.D.C. and a damage die, and a grenade legitimately does
 
 **Found while importing `new-west` gear, 2026-09-10, when it failed the run.**

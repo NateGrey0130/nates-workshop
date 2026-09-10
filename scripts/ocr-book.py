@@ -354,6 +354,68 @@ def corrupt_pages(txt_dir, pages):
     return out
 
 
+# A digit slot holding a letter that LOOKS like the digit. Built as a grammar
+# rather than a character set, which is the whole difference from CORRUPT_CHARS
+# above: `!`, `l`, `O` and `Q` are ordinary characters a clean text layer makes
+# constantly, so no set of "characters the clean text never uses" can ever see
+# this. What is wrong is the SHAPE of the token, not any character in it.
+#
+# The token must look like Palladium dice -- NdM, optionally xN -- and hold at
+# least one look-alike in a slot where a digit belongs.
+SUBSTITUTED_DIE = re.compile(
+    r'(?<![A-Za-z])[0-9!lOQ]{0,3}[Dd][0-9!lOQ]{1,2}(?:[xX][0-9!lOQ]{1,3})?(?![A-Za-z])')
+# `NNNO` / `NNNQ` -- a trailing zero eaten the same way, outside a dice token.
+SUBSTITUTED_ZERO = re.compile(r'(?<![A-Za-z0-9])[0-9]+[OQ](?![A-Za-z0-9])')
+_LOOKALIKES = frozenset('!lOQ')
+
+
+def substituted_digits(txt_dir, pages):
+    """Cached page -> count of dice tokens holding a letter in a digit slot.
+
+    BOOK-INGEST-AUDIT.md F53, and it is NOT F36. F36 is a broken font mapping
+    producing visible nonsense, which `corrupt_pages` finds by looking for
+    characters a clean text layer never makes. THIS fault produces text that
+    reads perfectly well and is wrong: `!D4xlO` for 1D4x10, `3D4xlOO` for
+    3D4x100, `10Q` for 100. Every character in those is ordinary, so
+    `corrupt_pages` cannot count them and does not.
+
+    Measured on `new-west` 2026-09-10: this returns roughly sixty pages where
+    `corrupt_pages` returns three. It reaches `Money: Starts with 3D4xlOO
+    credits` on almost every O.C.C. page in that book.
+
+    A DIFFERENT REMEDY, WHICH IS WHY IT IS A SEPARATE KEY. F36's advice is to
+    read the page off a render. That is wrong here: this damage is in the INK,
+    confirmed by clipping new-west printed 223 at 600 dpi, so the render shows
+    the same `!D4xlO`. The remedy is to read the token as the dice expression
+    it can only be.
+
+    A COUNT, NOT A THRESHOLD, for the same reason F36 gives.
+
+    THE WORD `Old` IS WHY THE WORD BOUNDARIES ARE THERE. A looser pattern
+    matches it -- O, l, d -- and reported twenty spurious pages on the first
+    attempt.
+
+    TEXT-LAYER CACHES ONLY, for a different reason than F36's: OCR confuses `1`
+    with `l` and `0` with `O` as a matter of course, so on a scan this measures
+    Tesseract rather than the book.
+    """
+    out = {}
+    for pno in pages:
+        path = os.path.join(txt_dir, 'p%03d.txt' % pno)
+        if not os.path.exists(path):
+            continue
+        text = io.open(path, encoding='utf-8', errors='replace').read()
+        n = 0
+        for rx in (SUBSTITUTED_DIE, SUBSTITUTED_ZERO):
+            for m in rx.finditer(text):
+                # A clean `2D6` or `100` matches the shape and is not damage.
+                if any(ch in _LOOKALIKES for ch in m.group(0)):
+                    n += 1
+        if n:
+            out[str(pno)] = n
+    return out
+
+
 def cached_pages(txt_dir):
     """The pNNN.txt pages actually on disk. A `.raw.txt` is not a page."""
     out = []
@@ -418,6 +480,13 @@ def write_manifest(out, base, txt_dir, doc=None):
     # is what the extraction actually produced.
     if base.get('text_layer'):
         base['corrupt_pages'] = corrupt_pages(txt_dir, nums)
+    # A digit slot holding a look-alike LETTER. F53. Deliberately a SEPARATE key
+    # rather than folded into corrupt_pages: the two faults need opposite
+    # remedies, and merging them would tell a reader to render a page that a
+    # render cannot fix. Text-layer caches only -- on a scan this measures
+    # Tesseract's `1`/`l` confusion rather than the book's.
+    if base.get('text_layer'):
+        base['substituted_digits'] = substituted_digits(txt_dir, nums)
     io.open(os.path.join(out, 'manifest.json'), 'w', encoding='utf-8',
             newline='').write(json.dumps(base, indent=1))
     return base
@@ -545,6 +614,15 @@ def main():
             print('           A COUNT, not a verdict - one stray character is not seven.')
             print('           A page with corrupt prose is corrupt EVERYWHERE, including')
             print('           the parts that look fine. Read its numbers off a render. F36.')
+        subbed = m.get('substituted_digits') or {}
+        if subbed:
+            worst = sorted(subbed.items(), key=lambda kv: -kv[1])
+            print('  DIGITS   %d page(s) hold a LETTER in a digit slot'
+                  ' (!D4xlO for 1D4x10):' % len(worst))
+            print('           %s' % ', '.join('p%s (%d)' % (p, n) for p, n in worst[:8]))
+            print('           NOT the same fault as GLYPHS above, and A RENDER DOES NOT')
+            print('           FIX IT - the damage is in the ink. Read the token as the')
+            print('           dice expression it can only be. F53.')
         print('  text     %s   (no OCR, no geometry, no cost)' % txt_dir)
         print('  cached   %s file(s) %s; last printed folio %s, offset %s'
               % (m['cached_pages'], m['cached_range'],
