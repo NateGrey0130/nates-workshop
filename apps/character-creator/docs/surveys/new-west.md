@@ -299,6 +299,7 @@ Phase 4 costs money; everything above was free.
    corrections to rows other books own: `W.P. Rope` re-cited to RUE p.306, and
    `W.P. Sharpshooting` given New West's definition and its P.P.-scaled bonuses.
 3. **The 18 occupations, printed 83-125** — batched by section, ~4 per PR.
+   **Batch 1 DONE (PR #883): Bandit 83, Highwayman 85, Bounty Hunter 87, Gunfighter 90.**
    Read every entry onto the following page; `Money:` sits at the end of each.
 4. **The 8 racial classes, printed 125-158** — printed 130 off a render.
 5. **Gear and vessels, printed 171-223** — last, and diffed first. Printed 217
@@ -341,6 +342,8 @@ standing edges of prefixed names and are unchanged by this.
 | 2026-08-28 | [#400](https://github.com/NateGrey0130/nates-workshop/pull/400) | cached (226 pp, text layer), registered in `books.json`, offset +1 verified |
 | 2026-09-09 | — | cache re-run for `welded_pages`/`corrupt_pages`; survey written; no data shipped |
 | 2026-09-09 | [#881](https://github.com/NateGrey0130/nates-workshop/pull/881) | Cloud Magic, printed 37-45: **58 spells** at level 0, prefixed by category (spells 681 -> **739**). All 58 costs reconciled against the printed 37 index, 58/58 agree. 3 `same_spell_as` links of 8 candidates. Applied `--remote` before the PR. |
+| 2026-09-09 | [#882](https://github.com/NateGrey0130/nates-workshop/pull/882) | Skills: **3 new rows** (skills 367 -> **370**), plus `W.P. Rope` re-cited to RUE p.306 and `W.P. Sharpshooting` given this book's definition. Applied `--remote` before the PR. |
+| 2026-09-09 | [#883](https://github.com/NateGrey0130/nates-workshop/pull/883) | Classes batch 1, printed 83-92: **Bandit, Highwayman, Bounty Hunter, Gunfighter** (classes 225 -> **229**). One new catalog row, `Language: Spanish`. Filed `BOOK-INGEST-AUDIT` F49 and F50. Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -373,3 +376,61 @@ line is unchanged**, which is the answer to "did we finish?" for that batch:
 `spell stubs` is still 2 and `spell text missing` still 0, so none of the 58
 landed as a stub. Checked directly as well — all 58 carry a non-empty
 description and a non-zero P.P.E. `BOOK-INGEST-AUDIT` F22.
+
+## What the classes needed from the app
+
+Recorded here because it is the answer to "what has to change to take these
+O.C.C.s", and because batches 2-5 will meet the same list.
+
+**Done as part of the import, and not a code change in the sense the batch rule
+means (`book-survey` §8, tier 1):**
+
+- **`CORE_SDC_BY_CLASS` in `js/compose.js`** — four entries at `3D6`. None of
+  the four prints an S.D.C. formula, and the smoke test fails a class that
+  states none and is missing from the map. The Bandit and Highwayman print an
+  S.D.C. **bonus** (`+2D6+10`, `+2D6+6`), which is `bonuses.pools.sdc` on top of
+  this rather than a replacement for it.
+- **One new catalog row, `Language: Spanish`** — Technical, 50% +5%, matching
+  the twenty-odd other `Language:` rows. `class-check --emit-script` writes this
+  stub as **Communications, base 0, per_level 0**, which is wrong for the family
+  and would have shipped a permanent bad row; both emitted copies were corrected
+  by hand before applying.
+- **Pinned counts**: classes 225 → 229 and skills 370 → 371 in
+  `docs/operations.md`, and the README's *"of two-hundred-and-twenty-five
+  published classes"* sentence, which `regression.mjs` parses as WORDS.
+
+**A rule the suite enforces that is easy to get wrong the first time:** a
+"speak one other language of choice" line must be a choice group offering
+`from: ["Language: Other"]`. Offering a **category** is refused outright —
+`regression.mjs` has three separate checks on this — and granting the
+placeholder as a fixed skill is the F34 defect. Two of these four classes were
+written the wrong way and caught by the regression run, not by `class-check`.
+
+**Filed, not implemented** (`BOOK-INGEST-AUDIT.md`):
+
+- **F49** — one skill taken several times for several weapons. The Gunfighter
+  gets three W.P. Sharpshooting specialties and a class may grant a skill once.
+  Three more classes in this book hit it: Gunslinger (94), Psi-Slinger (99),
+  Wired Gunslinger (108).
+- **F50** — `equipment_starting` cannot grant a skill, and the Bounty Hunter's
+  Special Equipment choice does.
+
+**Handled by existing convention, so nothing was filed:**
+
+- The Gunfighter's Quick-Draw Initiative scales on **P.P.**, not on level →
+  prose, like `W.P. Quick Draw`.
+- The Gunfighter's Horror Factor of 8 at 6th level is one he **projects**;
+  `bonuses.saves.horror_factor` is the save against one → prose, like the
+  demigod.
+- "+1 attack when using any gun" and "+3 to disarm on a called shot" are
+  conditional on holding a gun → `special_abilities`, not `bonuses.combat`.
+- The Bounty Hunter's *"two piloting skills and five other skills, at least two
+  from espionage or military"* is `occ_related_skills.minimums`, which **F6
+  shipped** in PR #428.
+
+**A caveat on `class-check --field-sources` worth knowing for batch 2:** where
+two classes' page ranges overlap, it can lock onto the neighbour's `Money:`
+line. The Highwayman's report pointed at the Bandit's figure on printed 85. All
+four were confirmed against their own pages instead — and every one of the four
+has its `Money:` line on the page **after** the class opens, which is exactly
+the page-break miss the check exists for.

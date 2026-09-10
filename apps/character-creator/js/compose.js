@@ -47,6 +47,15 @@ const CORE_HIT_POINTS = 'P.E. + 1D6 per level';
 // this table fails the smoke test rather than defaulting, because defaulting to
 // 1D6 would quietly under-roll every new man of arms.
 export const CORE_SDC_BY_CLASS = {
+  // Rifts World Book 14: New West, printed 83-92 - the O.C.C.s and NPC
+  // villains section. None of the four prints an S.D.C. formula of its own.
+  // The Bandit and the Highwayman each print an S.D.C. BONUS instead
+  // (+2D6+10 and +2D6+6), which is a pool bonus on top of this, not a
+  // replacement for it.
+  'bandit': '3D6',
+  'highwayman': '3D6',
+  'bounty-hunter': '3D6',
+  'gunfighter': '3D6',
   // Men of arms — 3D6.
   'glitter-boy': '3D6',
   'headhunter-techno-warrior': '3D6',
