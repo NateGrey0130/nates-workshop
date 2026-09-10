@@ -398,6 +398,7 @@ standing edges of prefixed names and are unchanged by this.
 | 2026-09-10 | [#892](https://github.com/NateGrey0130/nates-workshop/pull/892) | Racial classes 2 of 2, printed 134-158: **Sky-Knight, Cloudweaver, Mountain Giant, Psi-Pony** (classes 246 -> **250**). **ALL 25 PLAYABLE CLASSES ARE IN.** First use of `copy_of` in this book. Applied `--remote` before the PR. |
 | 2026-09-10 | [#895](https://github.com/NateGrey0130/nates-workshop/pull/895) | Gear batch A, printed 173-181: **8 Bandito Arms weapons and 7 suits of western body armour** (gear 1249 -> **1264**). Every number read off a RENDER; the cache cannot associate a cost with its entry on these pages. Two of the section's suits were NOT imported because RUE already holds them. Applied `--remote` before the PR. |
 | 2026-09-10 | [#896](https://github.com/NateGrey0130/nates-workshop/pull/896) | Gear batch B, printed 187-189: **25 cybernetics rows** - 15 Mining Borg attachments and 10 other bionic items (gear 1264 -> **1289**). All 25 new; the generic names were checked a second way against the 29 existing cybernetics rows. Chemical Spray carries NO price and none was invented. Applied `--remote` before the PR. |
+| 2026-09-10 | [#897](https://github.com/NateGrey0130/nates-workshop/pull/897) | Gear batch C, printed 203-213: **35 rows** - 9 Wilk's laser weapons, 7 Wilk's-Remi, 5 other Wilk's products, 8 conventional firearms, 6 CFT (gear 1289 -> **1324**). FIVE reprints of RUE rows skipped, and their five matching prices are the batch's own calibration. The 447 is a FALSE GAP at name distance 12. Grenade `sdc` refused by regression; filed rather than loosened. Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -738,3 +739,41 @@ that the render was read correctly. The Dog Pack is the one place New West has
 MORE than RUE: it splits the suit into light and heavy (main body 35 or 50, arms
 10+3, legs 15+5, 10 lbs) where the RUE row is a single 8 lb suit at main body
 30, arms 10, legs 20.
+
+### Batch C: a name-diff gap that was not a gap
+
+New West heads its 447 entry **"Wilk's 447 Traditional Laser Rifle"**. The
+catalog holds **"Wilk's 447 Laser Rifle"**, from RUE p.269. That is a name
+distance of **12** - `catalog-diff` reported it MISSING and offered the existing
+row only as a nearest neighbour, which is exactly what it does for genuinely new
+entries.
+
+It is the same rifle: 5 lbs, 18,000 credits, 3D6 M.D., 2000 feet, and a payload
+string that is word for word identical in both. **A name-diff gap is not
+evidence of a missing row; the stats are.** This is the gear-table sibling of
+the `W.P. Snapshooting`/`Sharpshooting` trap in the skills diff above - the same
+book, the same failure, a different catalog.
+
+**Four other reprints matched by name and confirm the reading.** The 320, the
+Laser Scalpel, the Laser Wand and the Portable Laser Torch all carry the price
+this book prints - 11,000, 2500, 2000 and 7000 - against rows entered from RUE
+by a different session. Five independent prices agreeing is the only external
+check any figure in these gear batches gets.
+
+### Batch C: a grenade legitimately has BOTH durability and damage
+
+`regression.mjs:1577` refuses any gear row carrying an `sdc` alongside a dice
+expression in `damage`, and its comment says why: *"does 1D6 S.D.C." on a knife
+is DAMAGE, and a regex over descriptions would file it as durability - a knife
+that can absorb six points of punishment because it deals six.*
+
+Printed 209 gives the Beehive and Blinder grenades an **S.D.C. of 20 and an A.R.
+of 10** - the durability of the grenade itself - alongside a blast of 3D6 M.D.
+**A grenade is the honest counter-example the check cannot distinguish.**
+
+Not resolved here, and deliberately so: loosening a guard in the same change
+that first trips it is how a guard stops guarding. The 20 is in each row's
+`description`, the A.R. is stored normally in `ar` (the check does not read that
+column), and `sdc` is `NULL`. The sibling armour check one line above is
+already scoped - *"a row that CONFLATES two products can legitimately carry
+both"* - so a scope is the shape a fix would probably take.
