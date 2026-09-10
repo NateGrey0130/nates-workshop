@@ -167,15 +167,19 @@ input[type=text], input[type=number], select, textarea {
 }
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--border-focus); }
 
-/* Every interactive element gets a focus ring you can actually see. The default
-   is a hairline against a near-black background, which on this palette reads as
-   no focus state at all — and the rule above had removed even that from every
-   text control, leaving a 1px border colour change as the only keyboard
-   affordance in the app. Lifted verbatim from apps/pick3cut5/styles.css, which
-   solved this first; borrowing it rather than inventing a second convention.
-   The border change above stays as the pointer-and-typing affordance.
-   Deliberately NOT promoted to /shared/styles.css: that would hand three other
-   apps a focus ring overnight, which is a bigger change than it looks. */
+/* The focus ring and the reduced-motion block that used to live here MOVED TO
+   /shared/styles.css on 2026-09-10, taking UI-AUDIT F36. F16 deferred that move
+   in 2026-08-31 and F32 held the same line on 2026-09-06; neither filed a number
+   for it, which is what F36 was.
+
+   The rule above — `input:focus, select:focus, textarea:focus { outline: none }`
+   at (0,1,1) — STAYS, and it is why the ring has never reached a text control in
+   this app. The ring is `:where(...):focus-visible`, and `:where()` contributes
+   zero specificity, so the whole selector is (0,1,0) and loses to the line above
+   even from 20 lines further down. Measured through CDP with real Tab keypresses
+   while taking F36: button and a get the ring, input and select get nothing.
+   That is unchanged by the move, in this app and in the two that receive it, and
+   it is filed as F37 rather than fixed here. */
 /* UI-AUDIT F31. sheet.js emitted h3 under the shell's h1 with no h2 between,
    so the sheet ran H1 -> H3. Those headings are now h2 and carry .sub-h, which
    holds the size they had - UA h3 is 1.17em, UA h2 is 1.5em, and nothing in
@@ -184,28 +188,6 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--b
    fragments, and a bare `h2` rule would also catch campaign.js and
    dashboard.js, whose h2s render at 1.5em today and must keep doing so. */
 .sub-h { font-size: 1.17em; }
-
-:where(button, input, a, summary, [tabindex]):focus-visible {
-  outline: 3px solid var(--accent-secondary);
-  outline-offset: 2px;
-  border-radius: var(--radius-sm);
-}
-
-/* The other half of UI-AUDIT F16, filed as F32 and taken 2026-09-06. Borrowed
-   from apps/pick3cut5/styles.css, minus that app's two page-specific lines.
-   App-local for the same reason the ring above is: /shared/styles.css is loaded
-   by four apps and two of them have made no such decision.
-   Honest about its size: this app applies NO keyframe animation, so of the
-   three properties only transition-duration does anything here today - it damps
-   the six transitions in this file. The two animation properties are a forward
-   guard, for the day something uses shared/styles.css's spin or pulse. */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
 
 input[type=number] { width: 76px; }
 textarea { width: 100%; min-height: 68px; resize: vertical; }

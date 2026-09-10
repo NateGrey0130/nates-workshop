@@ -2783,3 +2783,122 @@ what would raise it, and may turn this into a larger PR than the proposal implie
 keep in step. The real ongoing cost is the one `F16` named: a shared rule means a
 change to it is a change to four apps, and the four are not screenshotted together by
 anything today.
+
+---
+
+**Taken, 2026-09-10 (PR #911). Posture held: shared stylesheet, no component change,
+no JS, no new token.** Both blocks moved to `shared/styles.css`; both app-local copies
+deleted from `apps/character-creator/styles.css`.
+
+**The central claim of this finding is FALSE, and it was taken anyway because the
+move is still worth making.** `audit-premise-auditor` built the post-promotion cascade
+and drove real `Tab` keypresses through CDP before anything was edited.
+
+**1. The promoted ring reaches NONE of the controls this finding was filed about.**
+The ring is `:where(button, input, a, summary, [tabindex]):focus-visible`, and
+`:where()` contributes zero specificity — the whole selector is **(0,1,0)**. Every
+`outline: none` in a receiving app is (0,1,0) or (0,1,1) and its stylesheet loads
+after `shared/`, so all ten of them win. Measured after the promotion:
+`#searchInput` and `#printerModel` — the two controls this finding names — still
+compute `outline: none`. What the move DOES buy is a ring on bare `button`, `a`,
+`summary` and `[tabindex]` in media-vault and filament-forge, which is real and is
+not what the proposal says it delivers.
+
+**2. `select` and `textarea` are not in the selector at all**, so FilamentForge's
+`#printerModel` — a `<select>` — is unreachable by this rule before specificity even
+enters.
+
+**3. "which each app's `:root` already sets" is false for all four apps.** No shipping
+app overrides `--accent-secondary`; only `apps/_template/styles.css` does. All four
+resolve to `#D9A05B` and always did. The per-app-colour mechanism this finding calls
+"what makes this safe to do in one PR" does not exist. The error came from `F16`'s own
+outcome note, which recorded a per-app colour that was true on 2026-08-31 and was
+falsified by the retone; this finding read it as present tense.
+
+**4. The ring has been inert on every text control in the character creator since the
+day `F16` shipped it, and nothing recorded that.** `styles.css:167`
+`input:focus, select:focus, textarea:focus { outline: none }` is (0,1,1) and beats the
+ring at (0,1,0) from 20 lines above it. `F16` verified its ring on a tab control — a
+`[tabindex]`, one of the cases that does work. **The character creator is byte-for-byte
+unchanged by this PR**, so nothing regressed; but the block being promoted is one that
+never worked on the control class the finding cares about.
+
+**5. pick3cut5 was left alone.** The proposal says "deleting the app-local copies" and
+names only the character creator's. pick3cut5's ring is byte-identical to the shared
+one (`diff` clean) and its motion block is a superset carrying two page-specific lines,
+so deleting it would lose them. Verified no conflict and no visual change: identical
+declarations, and its own `.panel input:focus { outline-offset: 0 }` at (0,2,1) already
+overrode the offset before this PR. Redundant rather than wrong, and left for a
+decision rather than swept up here.
+
+**6. The receiving surface is ten pages, not four apps.** `shared/styles.css` is linked
+by the five character-creator shells, the three other apps, and `apps/_template`. The
+root `index.html` deliberately does not load it, so the landing page gets neither block
+— a fifth surface the proposal's screenshot instruction does not cover.
+
+**What was verified.** Ring colour clears the 3.0 floor on every ground —
+`#D9A05B` measures 8.39 on `--bg-primary`, 7.60 on `--bg-secondary`, 6.66 on
+`--bg-tertiary`. No test in the repo asserts on `outline`, `:focus-visible` or
+`prefers-reduced-motion`. Four smoke suites pass. All four apps screenshotted at
+1440×900 and keyboard-focused through CDP.
+
+**The motion half is the stronger half and it works everywhere.** `*, *::before,
+*::after` with `!important` is untouchable by app rules, and it now damps 24
+transitions and three animations in media-vault and 12 transitions and two animations
+in filament-forge — against six transitions and zero animations in the app it came
+from.
+
+**The selector rewrite that would actually deliver what this finding claimed is filed
+as `F37` below**, with the measured recipe and the regression it carries. It is not
+taken here: it is a different change with a decision in it, and `F36`'s own text says
+that if the ring lands badly the right outcome is to say so and stop rather than widen
+the PR.
+
+---
+
+### F37 — medium — The shared focus ring cannot reach a text control in any app, because `:where()` makes it the weakest selector in the cascade
+
+**Filed 2026-09-10 while taking `F36`, from measurements made before that change.**
+
+`shared/styles.css` now carries
+`:where(button, input, a, summary, [tabindex]):focus-visible`. `:where()` contributes
+zero specificity, so the rule is **(0,1,0)**. Ten `outline: none` declarations across
+two app stylesheets defeat it — six in `apps/media-vault/styles.css` (`:73`, `:87`,
+`:193`, `:448`, `:559`, `:924`) and four in `apps/filament-forge/styles.css` (`:126`,
+`:153`, `:562`, `:984`). Four of the ten are (0,1,0) and win on load order alone;
+the rest are (0,1,1) and win on specificity. `apps/character-creator/styles.css:167`
+does the same thing inside the app the ring was written for.
+
+So today a keyboard user gets a visible ring on buttons and links, and **nothing at
+all on any input, select or textarea, in any of the four apps.**
+
+**Proposal:** raise the shared rule to (0,2,0) with a doubled pseudo-class —
+`:where(button, input, select, textarea, a, summary, [tabindex]):focus-visible:focus-visible`
+— which beats (0,1,1) without `!important` and without touching an app stylesheet.
+**Posture: shared stylesheet only, no app edits, no new token.** Measured to land the
+ring on all eleven MediaVault controls and all seven FilamentForge controls.
+
+**It carries one regression that has to be handled in the same change.** The ring
+block's third declaration is `border-radius: var(--radius-sm)`. At (0,1,0) it loses
+harmlessly; at (0,2,0) it wins, and MediaVault's joined search box splits visibly on
+keyboard focus — `#searchInput` goes from `3px 0 0 3px` to `3px`, and
+`.search-field-select` animates the change because `apps/media-vault/styles.css:89` is
+`transition: all var(--transition)`. **Drop the `border-radius` line when raising the
+specificity, or keep it app-local.** Deleting the ten `outline: none` rules instead is
+NOT an alternative: with no app rule, `select` and `textarea` fall to the UA default,
+measured as `outline: auto 1px rgb(16,16,16)` — a near-black hairline on a near-black
+ground, which is the exact failure `F16` and pick3cut5 both exist to fix.
+
+**Evidence:** post-promotion cascade built from the real stylesheets in load order and
+driven with `Input.dispatchKeyEvent` Tab through CDP so `:focus-visible` genuinely
+matched, 2026-09-10; `getComputedStyle` read for every control; line numbers read the
+same day at `fbfed8d`.
+
+**Confidence:** high on the cascade, the ten line numbers and the measured fix — all
+three were rendered rather than reasoned. Medium on completeness: the probe drove the
+real stylesheets against synthetic markup, so every selector was exercised but not
+every one was confirmed to have a live element behind it on a production page.
+Screenshotting the two apps under keyboard focus is what would raise it.
+
+**Ongoing cost:** none beyond the rule itself. A doubled pseudo-class is ugly and wants
+the comment to say why, which is cheaper than the `!important` it replaces.

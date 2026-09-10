@@ -210,6 +210,61 @@ body {
    selected text and the primary control read as the same material. */
 ::selection { background: var(--accent); color: var(--bg-primary); }
 
+/* ─── FOCUS RING ───
+   Promoted from apps/character-creator/styles.css on 2026-09-10, taking
+   UI-AUDIT F36. It was written for the character creator by F16 (2026-08-31,
+   borrowed from pick3cut5), and F16 deliberately kept it app-local because
+   promoting it would "hand three other apps a focus ring overnight". F32 held
+   the same line on 2026-09-06. Neither filed a number for the promotion, so it
+   was never open; F36 is that deferral, numbered and taken.
+
+   WHAT THIS DOES AND DOES NOT REACH, measured through CDP with real Tab
+   keypresses rather than reasoned about. `:where()` contributes ZERO
+   specificity, so this selector is (0,1,0) — the weakest a real rule can be.
+   Every `outline: none` in an app stylesheet is (0,1,0) or (0,1,1) and loads
+   later, so it wins. media-vault has six such rules and filament-forge four,
+   and this ring reaches none of the controls they cover. It reaches bare
+   button, a, summary and [tabindex] in all four apps, which is real and is not
+   what F36 claimed. `select` and `textarea` are not in the list at all.
+
+   Raising it to (0,2,0) — a doubled `:focus-visible`, plus select and textarea —
+   lands it on every control in both apps, and drags `border-radius` along with
+   it, which visibly splits media-vault's joined search box on focus. That is a
+   different change with a decision in it, and it is filed as UI-AUDIT F37.
+
+   The colour is --accent-secondary and NO app overrides it: all four resolve to
+   #D9A05B, measured 8.39 on --bg-primary, 7.60 on --bg-secondary and 6.66 on
+   --bg-tertiary, against a 3.0 floor for a non-text indicator. F16's note says
+   the ring reads in "this app's --accent-secondary, which its :root overrides";
+   that was true on 2026-08-31 and the retone falsified it. There is no per-app
+   colour here and there has not been one for some time. */
+:where(button, input, a, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--accent-secondary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ─── REDUCED MOTION ───
+   The other half of F36, and the half that works everywhere. `*, *::before,
+   *::after` with !important reaches every element in every app regardless of
+   specificity or load order, so unlike the ring above there is nothing for an
+   app rule to defeat — the only !important declarations in either receiving app
+   are `display`, not motion.
+
+   It damps materially more here than it ever did app-local: 24 transitions and
+   three keyframe animations in media-vault (fadeIn on the card and list rows,
+   spin, pulse), 12 transitions and two animations in filament-forge, against
+   the six transitions and ZERO animations it damped in the character creator.
+   Both of media-vault's bounce-easing transitions and its `transition: width`
+   are in that count. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* ─── HEADER (app adds its own padding) ─── */
 /* The header reads as a bezel over the content rather than a band beside it,
    so its one edge is the strong rule. */
