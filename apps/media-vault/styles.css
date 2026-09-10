@@ -840,10 +840,28 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
 
 .undo-toast.visible { bottom: 28px; }
 
-/* Floating bulk action bar */
+/* Floating bulk action bar.
+
+   PARKED BY TRANSFORM, NOT BY AN OFFSET — WORKSHOP-UI-AUDIT W1. It used to sit
+   at `bottom: -80px`, which hides a bar 80px tall. This bar is never 80px tall:
+   114 at 1440, 171 at 768, 257 at 390. So it never fully parked, and 34 / 91 /
+   177px of it sat over the library at those widths before anyone had selected
+   anything. `translateY(calc(100% + 28px))` is 100% of whatever it actually is,
+   so the number stops needing maintenance. At-rest `top` measures 844.000 in an
+   844px viewport — flush, no sliver.
+
+   DO NOT copy this to .undo-toast. That one measures 61px, so its own -80px
+   genuinely hides it, and the two rules are only cousins. */
 .bulk-bar {
   position: fixed;
-  bottom: -80px;
+  bottom: 28px;
+  transform: translateY(calc(100% + 28px));
+  /* The clamp .undo-toast has carried at :825 all along. Without it the box
+     sized to its content and ran 68px past a 390px viewport, and
+     `body { overflow-x: hidden }` in shared/ suppressed the scrollbar that
+     would have shown it — so nothing that asks "does the page scroll
+     sideways?" could see it. */
+  max-width: calc(100vw - 32px);
   /* Inset from both edges and auto-margined rather than `left: 50%` plus a
      translate. The translate gave the box no containing width to size against,
      so `fit-content` had nothing to clamp to and the bar collapsed to 343px —
@@ -872,10 +890,13 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
   width: fit-content;
   z-index: 300;
   box-shadow: 0 0 0 1px var(--accent-glow);
-  transition: bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  white-space: nowrap;
+  /* Follows the property that now moves. Left on `bottom` this animates
+     nothing and the bar snaps: measured zero frames of motion across 166ms
+     before this line changed with the park. The bounce overshoot is preserved
+     — the slide passes 531 on its way to a settled 559. */
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.bulk-bar.visible { bottom: 28px; }
+.bulk-bar.visible { transform: translateY(0); }
 .bulk-bar-count {
   font-family: var(--font-display);
   font-stretch: 75%;
@@ -924,7 +945,15 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
   outline: none;
   transition: border-color var(--transition);
 }
-.bulk-field-input { width: 170px; }
+/* 170px until WORKSHOP-UI-AUDIT W1. The field group is a nowrap flex row, so
+   its min-content was 396px against 358px of available width at 390 — and no
+   `max-width` or `white-space` on the BAR can shrink a child that will not
+   wrap, which is why clamping the bar alone still left Apply off-screen. The
+   comment above defends a FIXED width, not this number; 100px keeps the
+   reasoning and fits. The group stays one unwrapped unit, which is what the
+   .bulk-group comment and apps/media-vault/test/smoke.mjs both exist to
+   protect. */
+.bulk-field-input { width: 100px; }
 .bulk-field-select:focus,
 .bulk-field-input:focus { border-color: var(--accent); }
 .bulk-field-input::placeholder {
