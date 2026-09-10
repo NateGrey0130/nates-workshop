@@ -876,9 +876,11 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
   display: flex;
   align-items: center;
   gap: 14px;
-  /* The bar is centred with a translate and has no width of its own, so it
-     grows in BOTH directions and runs off both edges once it outgrows the
-     viewport. Adding the format group took it from 864px to 1237px, which
+  /* It USED TO BE centred with a translate, with no width of its own, so it
+     grew in BOTH directions and ran off both edges once it outgrew the
+     viewport — the inset-and-auto-margin block above replaced that, and this
+     sentence stayed in the present tense until WORKSHOP-UI-AUDIT W3 corrected
+     it. Adding the format group took it from 864px to 1237px, which
      overflows anything narrower than a maximised laptop: Delete and Cancel
      ended up off-screen and the page scrolled sideways.
      `width: fit-content` is not decoration — a wrapping flex container with no
@@ -897,6 +899,36 @@ body.select-mode .list-row.selected { background: var(--accent-glow); }
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .bulk-bar.visible { transform: translateY(0); }
+
+/* THE FOLD — WORKSHOP-UI-AUDIT W3. Measured before this at 390×844 with select
+   mode on: a 197px sticky header above and a 354px bar below left 60px of the
+   first card visible at the top of the page, and — by arithmetic, bar top
+   minus the sticky header — 0.77 of a card once the toolbar scrolls away. List view managed 5.5 rows; grid view never showed
+   a whole item while you were choosing which items to change.
+
+   Folded, the bar is two rows: 106px against 354. Open, it is 358px — four
+   pixels more than before — because the toggle shares the first row with the
+   count and Select all rather than taking a row of its own. The premise audit
+   predicted 366px for a prototype where the toggle did take its own row; on
+   this markup the open state costs almost nothing over the old bar, and the
+   folded state gives the library 1.49 cards of room where it had 0.77.
+
+   Phone-only on purpose, at the app's existing 768px breakpoint rather than a
+   new one. At 1440 the whole bar is 114px and needs no fold; there,
+   display: contents dissolves the wrapper so the three groups are direct flex
+   items of the bar, byte-for-byte the layout it had.
+
+   The state is aria-expanded on the toggle and nothing else. The adjacent-
+   sibling rule below reads it, so there is no class to drift out of step with
+   what a screen reader announces. */
+.bulk-more { display: contents; }
+.bulk-more-toggle { display: none; }
+@media (max-width: 768px) {
+  .bulk-more-toggle { display: inline-block; }
+  .bulk-more { display: none; }
+  .bulk-more-toggle[aria-expanded="true"] + .bulk-more { display: contents; }
+  .bulk-more-toggle[aria-expanded="true"] { border-color: var(--accent); color: var(--accent); }
+}
 .bulk-bar-count {
   font-family: var(--font-display);
   font-stretch: 75%;

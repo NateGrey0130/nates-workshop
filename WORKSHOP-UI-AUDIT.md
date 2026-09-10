@@ -1,6 +1,6 @@
 # WORKSHOP-UI-AUDIT.md — the interface, across apps
 
-> **There is open work on this menu, as of 2026-09-10.** Read each finding's own
+> **Nothing is open on this menu, as of 2026-09-10.** Read each finding's own
 > heading for its state; this line does not name them and does not count them.
 >
 > **This menu's prefix is `W`, and nothing else in the tree uses it.** Ten letters
@@ -507,6 +507,91 @@ than any of the three fixes.
 this bar. **A proposal whose ongoing cost exceeds its impact should recommend
 declining itself, and this one might: the measurement is worth having, the change may
 not be.**
+
+---
+
+**Taken, 2026-09-10 (PR #918). The shape is Nate's, because this finding offered
+none** — its posture was *undecided*. Of the four put to him — a disclosure, a bottom
+sheet, declining, or shrinking the sticky header instead — he chose the disclosure. On
+a phone the type, format and field groups fold behind a toggle; the count, Select all,
+Fill blanks, Delete and Cancel stay visible. The change lives in
+`apps/media-vault/index.html`, `styles.css`, `app.js` and `test/smoke.mjs`.
+
+**Re-measuring before choosing corrected this finding in two ways.** It said the bar
+takes 42% of the viewport and stopped there. **The sticky header takes another 23%**
+— 197px, because it wraps six controls at 390 — and the finding never measured it.
+And the problem is specific to **grid view**: while selecting, the library showed
+**0.77 of a card** but **5.5 list rows**, so list view was usable before this change
+and grid view never showed a whole item. At the top of the page it was worse — the
+first card showed **60px** (an earlier figure of 76 included the grid's 16px padding).
+**The scrolled figures are arithmetic, not a scrolled measurement:** bar top minus the
+sticky header's bottom. The local library is one item and cannot scroll.
+
+**Mechanism: a button with `aria-expanded`, a wrapper, and a few lines of JS — not
+`<details>`.** Keeping `<details>` open on desktop needs `::details-content`,
+and where that is unsupported a closed `<details>` hides its content in a way CSS
+cannot override, so desktop would lose the change controls entirely. On an audience of
+mixed devices that is not a risk worth a saved function. The open state is the
+toggle's `aria-expanded` and nothing else; the stylesheet reads it with an
+adjacent-sibling rule, so the screen and the screen reader cannot disagree. It is set
+in the markup at rest, which is the trap `apps/pick3cut5/AUDIT.md:203-205` records.
+
+**Phone-only, at the app's existing 768px breakpoint** rather than the 640px this
+finding named — no new breakpoint value. At 1440, `display: contents` dissolves the
+wrapper and the bar is the same 114px it was.
+
+**Verified in headless Chrome over CDP, 2026-09-10** — the in-app pane reported the
+bar parked while its own screenshot showed it up, because it does not advance a CSS
+transition until something forces a paint:
+
+| | folded | open | before |
+|---|---|---|---|
+| 390×844 | **106px** — 1.49 cards / 10.7 rows of library | 358px — 0.76 cards / 5.4 rows | 354px — 0.77 cards / 5.5 rows |
+| 768×1024 | **61px** | 167px | 167px |
+| 1440×900 | 114px, toggle hidden | 114px | 114px |
+
+Delete on screen in every state at every width, nothing off-screen, every select-mode
+entry starts folded, the bar still parks fully hidden (W1), and the slide-in still
+animates — 18 distinct positions with the overshoot intact.
+
+**The open state costs almost nothing, which is not what I first wrote.** My first
+draft of the stylesheet comment said the open bar was taller than before because the
+toggle takes a row of its own. Measured, it shares the first row with the count and
+Select all: **358px against 354**. The premise audit's 366px came from a prototype where
+the toggle did take its own row. The comment was corrected before commit.
+
+**Six things `audit-premise-auditor` found before the edit.**
+
+1. **The fourth group holds three buttons, not two.** `smoke.mjs` called it "the two
+   actions"; Fill blanks joined it fifty minutes after that comment was written, the
+   same day. It stays visible with Delete and Cancel — it costs no height, since the
+   folded bar is two rows either way — and the check's wording is corrected.
+2. **An always-visible Cancel already existed.** The sticky header's
+   `#btnSelectMode` becomes "✕ Cancel" in select mode, and Escape exits too. The
+   bar's own Cancel is a second copy; left alone, since removing it changes behaviour
+   and was not asked for.
+3. **The smoke check could not see inside a wrapper, and a classless one hid an
+   orphaned label from it** — measured. It scanned the bar's direct children at two
+   spaces of indent. It is rewritten to the intent — every label sits inside a group,
+   wherever that group is — plus three more: four groups, the fold never holds the
+   delete group, and the toggle carries `aria-expanded` at rest. **All four were made
+   to fail first**, each failing alone: an orphaned label, a fifth group, a delete
+   control inside the fold, and the toggle losing `aria-expanded`.
+4. **W1's outcome note no longer holds on one point.** It says a CSS-only change
+   cannot reach these smoke assertions. This change adds markup, so it does; the note
+   is left standing as the record of the day it was written.
+5. **A stale comment inside the `.bulk-bar` rule** said the bar "is centred with a
+   translate". The block above it already recorded removing the translate. Corrected
+   to past tense.
+6. **The 1440 bar is two rows, not one** — Fill blanks, Delete and Cancel wrap. No
+   effect on scope; desktop needs no fold.
+
+**One thing measured and deliberately not filed.** The 197px sticky header is now the
+largest single element on a phone in select mode. Shrinking it was the fourth option
+put to Nate and he chose the bar instead, so it is recorded here, with its number, so
+nobody measures it from scratch — and not given a finding he did not ask for.
+
+**MediaVault's suite is 211 checks**, up from 209: two replaced, four added.
 
 ---
 
