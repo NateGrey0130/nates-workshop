@@ -1573,9 +1573,36 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // The trap this column invites. "Does 1D6 S.D.C." on a knife is DAMAGE, and a
   // regex over descriptions would file it as durability - a knife that can
   // absorb six points of punishment because it deals six.
-  const damageAsSdc = rows.filter((r) => r.sdc != null && /\dD\d/.test(r.damage || ''));
+  //
+  // NAMED EXCEPTIONS, because a THROWN object legitimately has both: its own
+  // structure, and what it does when it goes off. BOOK-INGEST-AUDIT.md F54.
+  // Scoped the way the armour check above is scoped rather than relaxed - an
+  // unlisted row still fails, so the knife case is untouched. Listed by SLUG
+  // and not by category, because `weapon` is where the knife lives too; the
+  // Palladium armour map twenty lines up is the same shape for the same reason.
+  const SELF_SDC = new Set([
+    // Rifts New West printed 209 gives both Wilk's grenades S.D.C. 20 and
+    // A.R. 10 - the casing - but only the BEEHIVE also does dice damage. The
+    // Blinder's damage reads "None; it blinds rather than injures", so it never
+    // tripped the check and is deliberately NOT listed here. The narrowness
+    // check below is what found that, on the first run after this list was
+    // written.
+    'wilk-s-beehive-laser-grenade',
+  ]);
+  const damageAsSdc = rows.filter((r) => r.sdc != null && /\dD\d/.test(r.damage || '')
+    && !SELF_SDC.has(r.slug));
   check('and no weapon was given its own damage as durability',
     damageAsSdc.length === 0, damageAsSdc.map((r) => `${r.slug} sdc=${r.sdc} damage=${r.damage}`).join(', '));
+
+  // The allowance must stay NARROW, so it is checked in both directions: every
+  // slug in it has to exist and has to actually carry both columns. A stale
+  // name here would silently widen the check it is exempting.
+  const staleExempt = [...SELF_SDC].filter((slug) => {
+    const row = rows.find((r) => r.slug === slug);
+    return !row || row.sdc == null || !/\dD\d/.test(row.damage || '');
+  });
+  check('and every named exception still needs to be one',
+    staleExempt.length === 0, `no longer carries both: ${staleExempt.join(', ')}`);
 
   // The check that used to sit here asked whether the gear IMPORTER could write
   // this column. That importer is gone - gear rows are written by data script -

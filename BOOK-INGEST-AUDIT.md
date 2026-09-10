@@ -7408,6 +7408,38 @@ this menu has previously disliked.
 `sdc` discussions in this file are `F42`'s edition figures and `F41`'s vessel
 split, neither of which touches the both-columns question.
 
+**Taken, 2026-09-10 (PR #906). Posture held: the check is SCOPED, not relaxed.**
+An unlisted row still fails exactly as before, no exit code moved, and nothing
+outside the named allowance changed.
+
+**Listed by SLUG rather than by category, and the reason is in the trap.**
+`weapon` is where the knife lives too, so a category exemption would open the
+hole this check exists to close. The Palladium armour map twenty lines above is
+an explicit slug list for the same reason, which makes this the house style of
+the section rather than a new shape.
+
+**THE FINDING SAID TWO GRENADES AND THE ANSWER IS ONE.** Only the **Beehive**
+does dice damage. The Blinder's `damage` reads *"None; it blinds rather than
+injures"*, so it never tripped the check at all and is deliberately NOT in the
+allowance - which also means its `sdc` was nulled in PR #897 for no reason.
+Both rows get their 20 back; only one is exempt.
+
+**That was found by a check written in the same PR, on its first run.** The
+allowance is verified in both directions: every slug in it must exist AND must
+actually carry both columns, so a stale name silently widening the exemption
+fails the suite. It fired immediately on `wilk-s-blinder-laser-grenade`. **A
+list of exceptions needs a check that the exceptions are still needed**, and
+this one earned its place before it was committed.
+
+**Proved the scope did not open the hole.** Run against synthetic rows: a
+`survival-knife` with `sdc: 6` and `damage: "1D6 S.D.C."` is still flagged; the
+Beehive is exempt; the Blinder matches no dice pattern either way. The check is
+314 checks now rather than 313 - the extra one is the narrowness guard.
+
+`fix-f54-grenade-self-sdc.sql` restores `sdc = 20` on both rows, guarded on
+`sdc IS NULL`. The `ar` was never affected: the check does not read that
+column.
+
 ### F55 - low - `gear` has nowhere to record a CREATION cost, and RECOMMENDS BEING DECLINED for now
 
 **Found while importing `new-west` Techno-Wizard weapons, PR #898, 2026-09-10.**
