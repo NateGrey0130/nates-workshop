@@ -582,13 +582,15 @@ function stashView() {
     <h3>Party stash <span class="muted small">— what the group holds together</span></h3>
     ${held.length ? held.map(stashRow).join('') : '<p class="muted">Nothing in the stash.</p>'}
     <h4 style="margin-top:16px">Add something</h4>
+    ${stashGearHtml()}
     <div class="rowline">
-      <input type="text" id="stash-name" class="picker-input" placeholder="Item name">
+      <input type="text" id="stash-name" class="picker-input" placeholder="${D.gear.length ? 'or a custom item' : 'Item name'}">
       <input type="number" id="stash-qty" value="1" min="1" style="width:80px">
       <button class="btn btn-sm" onclick="addStash()">Add</button>
     </div>
-    <p class="muted small">Added as a freeform item. Claiming one moves it onto a character's sheet
-      and records that it left the stash — the row stays either way.</p>
+    <p class="muted small">Pick from the catalog and a claimed weapon arrives on the sheet as a
+      weapon card, with its damage and payload; a custom item arrives as a name. Claiming moves it
+      onto a character's sheet and records that it left the stash — the row stays either way.</p>
     <p id="stash-msg" class="small"></p>
   </div>
   ${gone.length ? `<div class="panel">
@@ -613,15 +615,74 @@ function stashRow(i) {
   </div>`;
 }
 
+// ---------- the stash's catalog picker (UI-AUDIT F47) ----------
+// The stash took free text only, though its endpoint has always accepted a
+// gear-catalog id. Free text stays text: a weapon claimed from the stash could
+// never become a weapon card, because a card needs the catalog row's damage and
+// payload. So the catalog is offered first, and a custom name stays the fallback
+// for loot no book lists.
+//
+// Loaded the first time the stash tab is drawn, for this campaign's system, into
+// D.gear - declared on this page from the start and never filled until now. The
+// filter rebuilds the select's options in place rather than re-rendering, so the
+// caret stays where it was.
+const STASH_GEAR_CAP = 300;
+
+function stashGearOptions(q) {
+  const hits = Picker.filter(D.gear, q);
+  const shown = hits.slice(0, STASH_GEAR_CAP);
+  return {
+    total: hits.length,
+    html: `<option value="">— from the catalog —</option>${shown.map((g) =>
+      `<option value="${g.id}">${esc(g.name)}${g.category ? ` (${esc(g.category)})` : ''}</option>`).join('')}`,
+  };
+}
+
+function stashGearHtml() {
+  if (!D.gearLoaded) {
+    if (!D.gearLoading && D.campaign) {
+      D.gearLoading = true;
+      api('items?system=' + encodeURIComponent(D.campaign.system))
+        .then((res) => { D.gear = res.items || []; })
+        .catch(() => { D.gear = []; })
+        .finally(() => { D.gearLoaded = true; D.gearLoading = false; if (D.tab === 'stash') render(); });
+    }
+    return '<p class="muted small">Loading the gear catalog…</p>';
+  }
+  if (!D.gear.length) return '';
+  const { total, html } = stashGearOptions(D.stashFilter || '');
+  return `${Picker.inputHtml({ id: 'stash-filter', value: D.stashFilter || '',
+      placeholder: 'Filter the gear catalog by name, category or book…', shown: Math.min(total, STASH_GEAR_CAP), total })}
+    <div class="rowline"><select id="stash-gear" style="max-width:100%">${html}</select></div>`;
+}
+
+function filterStashGear(q) {
+  D.stashFilter = q;
+  const { total, html } = stashGearOptions(q);
+  const sel = $('stash-gear');
+  if (sel) sel.innerHTML = html;
+  const count = $('stash-filter')?.parentElement?.querySelector('.pick-count');
+  if (count) count.textContent = `${Math.min(total, STASH_GEAR_CAP)} of ${total}`;
+}
+
+document.addEventListener('input', (ev) => {
+  if (ev.target?.id === 'stash-filter') filterStashGear(ev.target.value);
+});
+
 async function addStash() {
+  const itemId = parseInt($('stash-gear')?.value, 10) || null;
   const name = ($('stash-name')?.value || '').trim();
   const qty = parseInt($('stash-qty')?.value, 10) || 1;
-  if (!name) { $('stash-msg').textContent = 'Give it a name.'; return; }
+  if (!itemId && !name) {
+    $('stash-msg').textContent = D.gear.length ? 'Pick something from the catalog, or give it a name.' : 'Give it a name.';
+    return;
+  }
   try {
     await api(`campaigns/${campaignId}/items`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ custom_name: name, qty }),
+      body: JSON.stringify(itemId ? { item_id: itemId, qty } : { custom_name: name, qty }),
     });
+    D.stashFilter = '';
     await load();
   } catch (err) { $('stash-msg').textContent = 'Failed: ' + err.message; }
 }
