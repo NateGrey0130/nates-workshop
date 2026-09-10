@@ -6986,3 +6986,59 @@ conditional on an equipment pick. The first is smaller and keeps the condition
 where the choice is made. **Check before scoping:** whether `equipment_starting`
 choice options are resolved at creation or re-derived per render, because the
 reference says a choice's `qty` is re-derived and a granted skill must not be.
+
+### F51 - `race_restrictions` matches a race by ID, and a book bars races by KIND
+
+**Filed 2026-09-09**, during the `new-west` class import, batch 2.
+
+New West's Gunslinger (printed 95) carries a Racial Restrictions line barring
+dragons and other creatures of magic, master psionics, supernatural beings such
+as demons, partial and full conversion cyborgs, androids and robots - and adds
+that many optional D-bee R.C.C.s will preclude the class as well.
+
+`raceAllowedForOcc` in `apps/character-creator/js/parser.js` matches
+`race_restrictions.only` / `.except` against `race.id`, with the reserved entry
+`none` meaning no R.C.C. at all, which is the human case. Read 2026-09-09 at
+`js/parser.js:2097-2115`. So the block expresses *these races* and cannot
+express *races of this kind*.
+
+**Writing it out as ids is possible and is the wrong answer.** There are **79
+live published R.C.C.s** as of 2026-09-09 (`--remote`, `deleted_at IS NULL`,
+`category: rcc`), the categories the book names cut across most of them, and the
+list would silently go stale every time a race is imported - which this batch of
+books is doing continuously. An `except` that misses a newly added dragon fails
+**OPEN**, which is the direction `class-import` records as the expensive one.
+
+**Stored as:** a `restrictions` prose line on `gunslinger`, naming the
+categories the book names and citing this finding.
+
+**Affected rows: `gunslinger` AND `psi-slinger`, for two different reasons, and
+the second one is the more interesting.**
+
+The Psi-Slinger (printed 100) restricts to *"Humans and Psi-Stalkers only"* -
+two named races, which looks like exactly what `race_restrictions.only` is for.
+It was written that way, as `only: ["none", "psi-stalker"]`, and
+**`regression.mjs` refused it**: *"and names only real races, or the reserved
+`none` - psi-slinger -> psi-stalker"*. Read `--remote` 2026-09-09, this catalog
+holds `psi-stalker` (*Psi-Stalker (Civilized)*) and `wild-psi-stalker` as
+**`category: occ`**, not as R.C.C.s. So there is no race id to name, and a
+restriction that is two plain names in the book is still not expressible.
+
+**That is a second, narrower gap wearing the same coat**: not "the schema cannot
+say KIND", but "the thing the book calls a race, this catalog calls an
+occupation." Both are stored as `restrictions` prose. **This paragraph first
+claimed the Psi-Slinger was the contrast case and needed nothing** - written
+without checking what `psi-stalker` actually is. The regression run is what
+corrected it.
+
+No sweep of other books has been run, so the count is two because two classes
+have been read for it.
+
+**Proposed change, NOT implemented.** A `kinds` list beside `only`/`except`,
+matched against something a race already declares, would be the shape - but
+**nothing on a race declares its kind today**, and that is the real work. Check
+before scoping: whether `supernatural`, `creature of magic` and `master psionic`
+are derivable from fields races already carry (`psionics.type`, an
+`attributes are supernatural` restriction line, `mdc_base`), or whether this
+needs a new field on 79 rows. If it is the latter, the honest answer may be that
+prose is correct and this finding should close undone.
