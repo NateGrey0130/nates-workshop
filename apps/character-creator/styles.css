@@ -1813,6 +1813,19 @@ body.play-mode .skill-table .roll-btn { margin-left: 6px; vertical-align: middle
    conflict (UI-AUDIT F38); the row's gap does not reach inside the span. */
 .vitals-save .autosave .btn { margin-left: 6px; }
 
+/* ---------- home view (UI-AUDIT F39) ----------
+   One row per character or campaign, a line each for the reason UI-AUDIT F9
+   gave: run together, two names become one string. */
+.home-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.home-list { list-style: none; margin: 0 0 18px; padding: 0; }
+.home-row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+}
+.home-row:last-child { border-bottom: none; }
+.home-what { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.home-acts { margin-left: auto; display: flex; gap: 6px; }
+
 .tabbar {
   display: flex; gap: 6px; margin-top: 12px;
   padding: 8px 0; overflow-x: auto;

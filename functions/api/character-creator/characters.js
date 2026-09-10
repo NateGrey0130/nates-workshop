@@ -15,10 +15,18 @@ import { insertGrantStatements, remainingGrants } from './_lib/skill-picks.js';
 import { parseClassMarkdown, occAllowedForRace, raceAllowedForOcc } from '../../../apps/character-creator/js/parser.js';
 
 // GET /api/character-creator/characters — list for linking to sheets.
-// ?campaign_id= filters; ?limit= and ?offset= page (default 200, max 500).
+// ?campaign_id= filters; ?mine=1 keeps only the caller's own characters;
+// ?limit= and ?offset= page (default 200, max 500).
+//
+// `mine` is filtered HERE rather than by the page (UI-AUDIT F39): the list is
+// paged at 200 and ordered newest first, so a client-side filter over one page
+// can push somebody's own oldest character off the end of it.
 export async function onRequestGet({ request, env }) {
-  if (!getUserEmail(request)) return unauthorized();
-  const campaignId = new URL(request.url).searchParams.get('campaign_id');
+  const email = getUserEmail(request);
+  if (!email) return unauthorized();
+  const params = new URL(request.url).searchParams;
+  const campaignId = params.get('campaign_id');
+  const mine = params.get('mine') === '1';
   const { limit, offset } = paging(request);
 
   const base = `SELECT characters.id, characters.name, characters.class_id, characters.occ_class_id, characters.level,
@@ -28,11 +36,13 @@ export async function onRequestGet({ request, env }) {
                        characters.isp_current, characters.isp_max,
                        campaigns.name AS campaign_name, campaigns.system AS campaign_system
                 FROM characters JOIN campaigns ON campaigns.id = characters.campaign_id`;
-  const where = campaignId ? ' WHERE campaign_id = ?' : '';
-  const binds = campaignId ? [campaignId] : [];
+  const conds = [], binds = [];
+  if (campaignId) { conds.push('characters.campaign_id = ?'); binds.push(campaignId); }
+  if (mine) { conds.push('characters.player_email = ?'); binds.push(email); }
+  const where = conds.length ? ' WHERE ' + conds.join(' AND ') : '';
 
   const page = await pagedQuery(env, {
-    countSql: `SELECT count(*) AS n FROM characters${campaignId ? ' WHERE campaign_id = ?' : ''}`,
+    countSql: `SELECT count(*) AS n FROM characters${where}`,
     countBinds: binds,
     rowsSql: base + where + ' ORDER BY characters.id DESC',
     rowsBinds: binds,

@@ -118,6 +118,7 @@ async function load() {
     // a variant: applyVariant lives in parser.js, a module, and this file is a
     // classic script.
     C.cls = res.class || null;
+    campaignLink();
 
     const [journal, catalog, catalogs] = await Promise.all([
       api(`journal?campaign_id=${C.data.campaign_id}&character_id=${id}&include_campaign=1`),
@@ -150,6 +151,21 @@ async function load() {
   } catch (err) {
     $('app').innerHTML = `<div class="panel"><p class="err">Failed to load: ${escHtml(err.message)}</p></div>`;
   }
+}
+
+// The campaign this character is in, from the header (UI-AUDIT F39). The sheet
+// linked codex, creator and workshop, so a player reached the campaign's stash,
+// ledger, NPCs and Ask only by typing its URL. Added once the character has
+// loaded, since the header is static and the campaign is not known before.
+function campaignLink() {
+  if (!C.data?.campaign_id || $('campaign-link')) return;
+  const a = document.createElement('a');
+  a.id = 'campaign-link';
+  a.className = 'home-link';
+  a.href = `dashboard.html?campaign_id=${C.data.campaign_id}`;
+  a.textContent = 'campaign';
+  a.title = C.data.campaign_name || '';
+  $('codex-link')?.insertAdjacentElement('beforebegin', a);
 }
 
 function flash(text, isError) {

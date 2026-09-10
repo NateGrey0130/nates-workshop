@@ -31,7 +31,13 @@ const D = {
 
 async function load() {
   if (!campaignId) {
-    $('app').innerHTML = `<div class="panel"><p class="err">No campaign_id in the URL.</p></div>`;
+    // The caller's campaigns rather than an error (UI-AUDIT F39).
+    try {
+      const list = await campaignList.load();
+      $('app').innerHTML = `<div class="panel"><h2>Your campaigns</h2>${campaignList.html(list)}</div>`;
+    } catch (err) {
+      $('app').innerHTML = `<div class="panel"><p class="err">Failed to load: ${esc(err.message)}</p></div>`;
+    }
     return;
   }
   $('dash-link').href = `/apps/character-creator/dashboard.html?campaign_id=${campaignId}`;

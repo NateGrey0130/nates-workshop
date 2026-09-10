@@ -3214,6 +3214,48 @@ campaign pages list your campaigns instead of erroring when no id is given.
 
 **Ongoing cost:** one more view; the step-1 lists move rather than duplicate.
 
+---
+
+**Taken, 2026-09-10 (PR #921). Posture held: no schema; one query parameter on an
+existing route.** All five parts, as written:
+
+- **(a)** The page opens on a home view. The draft is a card on it — *Resume this build*
+  / *Discard it*, with `F26`'s one-draft sentence kept — not a gate in front of it.
+  **Your characters** lists the caller's own, each with its sheet and ▶ Play; **Your
+  campaigns** lists every campaign the caller runs *or has a character in*, each to its
+  dashboard with its notes beside it; **+ New character** starts the wizard and asks
+  before discarding a draft. Going home mid-build shows the build as *Build in
+  progress* with *Continue*; the saved-character screen and the wizard's header both
+  gain a way back. Step 1 no longer carries the lists.
+- **(b)** `GET /characters?mine=1`, filtered in the query, and combinable with
+  `campaign_id`.
+- **(c)** `draftWorthSaving()` also requires `S.step > ST.RACE`, so selecting a class card
+  no longer creates a draft; `confirmRace()` is the step's only exit, as the premise
+  audit confirmed.
+- **(d)** The sheet header gains *campaign*, to the character's dashboard, added once the
+  character has loaded; *← character creator* reads *← your characters*.
+- **(e)** `dashboard.html` and `campaign.html` opened without a `campaign_id` list the
+  caller's campaigns instead of an error. The list is one shared classic script,
+  `js/campaign-list.js`, because `app.js` is a module and the other two are not.
+
+**Membership is derived from the caller's own characters**, not asked of the server:
+`GET /campaigns` returns every campaign with a `can_join` flag that also counts open
+ones, so it cannot answer "which am I in".
+
+**Measured on 8801, local D1, 2026-09-10.** `?mine=1` as `dev@localhost`: 1 of 1, all
+theirs. As `nobody-f39@example.com`, sent in the Access header: 0 with the filter, 1
+without it — the exclusion, which the regression suite cannot see on its own because
+every call there is one caller, so it gains the same second-identity check. The home
+view, Resume → *your characters* → *Build in progress* → *Continue* back to step 5, both
+id-less pages and the sheet's new link were all driven in the browser.
+
+**The first screenshot caught what no check had.** Emptying the rail left the sticky
+bar's padding and border standing, a blank band about 100px tall under the header at
+both widths; the home view now hides the bar. `screenshot-before-declaring-done` again.
+
+**By decision, not omission:** a G.M.'s *Your characters* holds only their own
+characters; their players' are one click away on the campaign dashboard.
+
 ### F40 — medium — Play mode cannot put a hit on armour or a vessel location
 
 `quickDamage()` leaves armour out on purpose — *"which armour absorbed a hit is a
