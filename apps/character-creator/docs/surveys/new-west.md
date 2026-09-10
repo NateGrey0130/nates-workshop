@@ -313,9 +313,9 @@ Phase 4 costs money; everything above was free.
    classes and belong to item 5, the gear and vessel pass.
    Read every entry onto the following page; `Money:` sits at the end of each.
 4. **The 8 racial classes, printed 125-158** — printed 130 off a render.
-   **FOUR DONE (PR #890): Cactus People 127, Fennodi 128, Keeper of the Desert 130,
-   Lyn-Srial 133. Remaining: Sky-Knight 134, Cloudweaver 135, Mountain Giant 136,
-   Psi-Ponies 156.**
+   **ALL EIGHT DONE. PR #890: Cactus People 127, Fennodi 128, Keeper of the Desert
+   130, Lyn-Srial 133. PR #891: Sky-Knight 134, Cloudweaver 135, Mountain Giant 136,
+   Psi-Pony 156.**
 5. **Gear and vessels, printed 171-223** — last, and diffed first. Printed 217
    off a render.
 
@@ -363,6 +363,7 @@ standing edges of prefixed names and are unchanged by this.
 | 2026-09-09 | [#887](https://github.com/NateGrey0130/nates-workshop/pull/887) | Classes batch 4, printed 113-123: **Mining 'Borg/Prospector, Preacher, Professional Gambler, Saloon Bum/Stoolie** (classes 237 -> **241**). First use of `variants` and `skills_additional` in this book. No new catalog rows, no new findings. Applied `--remote` before the PR. |
 | 2026-09-09 | [#888](https://github.com/NateGrey0130/nates-workshop/pull/888) | Classes batch 5, printed 123-125: **Saloon Girl/Barmaid** (classes 241 -> **242**). **ALL SEVENTEEN OCCUPATIONS ARE IN.** Also corrects this survey: the CyberSlinger is NOT a class. Applied `--remote` before the PR. |
 | 2026-09-10 | [#890](https://github.com/NateGrey0130/nates-workshop/pull/890) | Racial classes 1 of 2, printed 125-134: **Cactus People, Fennodi, Keeper of the Desert, Lyn-Srial** (classes 242 -> **246**). First class to consume the Cloud Magic spells. No new catalog rows, no new findings. Applied `--remote` before the PR. |
+| 2026-09-10 | [#891](https://github.com/NateGrey0130/nates-workshop/pull/891) | Racial classes 2 of 2, printed 134-158: **Sky-Knight, Cloudweaver, Mountain Giant, Psi-Pony** (classes 246 -> **250**). **ALL 25 PLAYABLE CLASSES ARE IN.** First use of `copy_of` in this book. Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -630,3 +631,46 @@ not print, and doing six of the eight would look complete and be half.
   catalog, at 30% not 40%. The stub would have created a duplicate row.
 - **`Read Sensory Equipment` is `Sensory Equipment`.** An unmatched name in an
   `only` list fails CLOSED, so that category would have granted nothing.
+
+### The racial classes, last four — and the book's classes are done
+
+**All 25 playable classes from this book are in**: seventeen occupations and
+eight racial, across PRs #883, #885, #886, #887, #888, #890 and #891.
+`source-coverage --remote` reads **`new-west 88 / 0`**.
+
+**`copy_of` gets its first use in this book.** Printed 134 and 135 both define
+their class as the Average Lyn-Srial for *alignment, attributes and all basic
+stats*, then replace magic, skills, bonuses and equipment. Both are stored as
+full copies with `copy_of: { class: "lyn-srial", except: [...] }`, because
+nothing composes one class from another.
+
+**`regression.mjs` checks the copy is real, and caught two mistakes:** the
+Cloudweaver had no `natural_abilities` at all, and the Sky-Knight's had drifted
+by four words from the parent's. **A copied block must be byte-identical** —
+paste it, do not retype it. It also rejected `extraction_notes` in the `except`
+list, which is never compared anyway.
+
+**The Sky-Knight and the Cloudweaver are what the Cloud Magic import was for.**
+The Sky-Knight gets all thirteen Clouds of War and all six Clouds of Peace, then
+one per level from **any category except Clouds of Creation** — 50 of the 58
+rows. The Cloudweaver gets all of Defense, Travel and Creation (22 spells), then
+**two** per level from any category **except Clouds of War** — 45 rows. Both
+exclusions are only expressible because the spells carry their category in the
+name.
+
+**Two more `choose: 1` psionic splits by sex** — the Psi-Pony joins the Fennodi.
+Same reason: `variants` may not override `psionics` and an ability may.
+
+**Left deliberately unmodelled, for a later pass:**
+
+- The Sky-Knight's `+1D6 to P.S.` — `bonuses.attributes` drops a dice string
+  (**F52**). The `+2D6` M.D.C. and `+1D4x10` P.P.E. from the same paragraph *are*
+  in `bonuses.pools`, which does take dice (`js/dice.js:221`,
+  `js/parser.js:1454`).
+- The Cloudweaver's **impervious to Horror Factor and possession** — an immunity,
+  not a number; `bonuses.saves` holds numbers and there is no field for an
+  immunity, so it is in `restrictions`.
+- The Mountain Giant's **supernatural P.S. and P.E.** — no field marks an
+  attribute supernatural, so it is a natural ability.
+- The book's skill called **Write** has no catalog row; `Calligraphy` is the
+  nearest and is what the Cloudweaver stores, with the book's word in the note.
