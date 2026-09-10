@@ -56,6 +56,14 @@ export const CORE_SDC_BY_CLASS = {
   'highwayman': '3D6',
   'bounty-hunter': '3D6',
   'gunfighter': '3D6',
+  // Printed 92-102, the same section. The Psi-Slinger is the book's own
+  // P.C.C. and sits in the psychic group, but it is armed and fights as a
+  // gunslinger does, so it takes the men-of-arms 3D6 the way psi-stalker
+  // does below. All four print an S.D.C. BONUS and no formula.
+  'gunslinger': '3D6',
+  'justice-ranger': '3D6',
+  'psi-slinger': '3D6',
+  'saddle-tramp': '3D6',
   // Men of arms — 3D6.
   'glitter-boy': '3D6',
   'headhunter-techno-warrior': '3D6',

@@ -300,6 +300,10 @@ Phase 4 costs money; everything above was free.
    `W.P. Sharpshooting` given New West's definition and its P.P.-scaled bonuses.
 3. **The 18 occupations, printed 83-125** — batched by section, ~4 per PR.
    **Batch 1 DONE (PR #883): Bandit 83, Highwayman 85, Bounty Hunter 87, Gunfighter 90.**
+   **Batch 2 DONE (PR #885): Gunslinger 92, Justice Ranger 96, Psi-Slinger 98, Saddle Tramp 101.**
+   **Remaining, printed 102-125: Sheriff/Lawman, Sheriff's Deputy, Wired Gunslinger,
+   Cowboy, Mining 'Borg, Preacher, Professional Gambler, Saloon Bum, Saloon Girl -
+   plus the CyberSlinger at printed 189.**
    Read every entry onto the following page; `Money:` sits at the end of each.
 4. **The 8 racial classes, printed 125-158** — printed 130 off a render.
 5. **Gear and vessels, printed 171-223** — last, and diffed first. Printed 217
@@ -344,6 +348,7 @@ standing edges of prefixed names and are unchanged by this.
 | 2026-09-09 | [#881](https://github.com/NateGrey0130/nates-workshop/pull/881) | Cloud Magic, printed 37-45: **58 spells** at level 0, prefixed by category (spells 681 -> **739**). All 58 costs reconciled against the printed 37 index, 58/58 agree. 3 `same_spell_as` links of 8 candidates. Applied `--remote` before the PR. |
 | 2026-09-09 | [#882](https://github.com/NateGrey0130/nates-workshop/pull/882) | Skills: **3 new rows** (skills 367 -> **370**), plus `W.P. Rope` re-cited to RUE p.306 and `W.P. Sharpshooting` given this book's definition. Applied `--remote` before the PR. |
 | 2026-09-09 | [#883](https://github.com/NateGrey0130/nates-workshop/pull/883) | Classes batch 1, printed 83-92: **Bandit, Highwayman, Bounty Hunter, Gunfighter** (classes 225 -> **229**). One new catalog row, `Language: Spanish`. Filed `BOOK-INGEST-AUDIT` F49 and F50. Applied `--remote` before the PR. |
+| 2026-09-09 | [#885](https://github.com/NateGrey0130/nates-workshop/pull/885) | Classes batch 2, printed 92-102: **Gunslinger, Justice Ranger, Psi-Slinger, Saddle Tramp** (classes 229 -> **233**). No new catalog rows. Filed `BOOK-INGEST-AUDIT` F51. Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -434,3 +439,31 @@ line. The Highwayman's report pointed at the Bandit's figure on printed 85. All
 four were confirmed against their own pages instead — and every one of the four
 has its `Money:` line on the page **after** the class opens, which is exactly
 the page-break miss the check exists for.
+
+### Batch 2 added to the "what the classes needed" list
+
+- **`CORE_SDC_BY_CLASS`**: four more at `3D6`, including the **Psi-Slinger**,
+  which is `occ_group: psychic` and still takes the men-of-arms value — the same
+  call `psi-stalker` and `wild-psi-stalker` already carry, and for the same
+  reason. All four print an S.D.C. bonus and no formula.
+- **No new catalog rows.** Every skill these four grant already existed. Two
+  names needed looking up rather than guessing: the book's *"Hover Vehicles"* is
+  `Hover Craft (ground)`, and its *"Track Animals"* is `Track & Trap Animals`.
+- **A language choice must state a `bonus`, and `regression.mjs` enforces it.**
+  The Gunslinger and Psi-Slinger both print *"American and one language of
+  choice at 96%"* with no bonus printed at all. The catalog holds
+  `Language: Other` at 50%, so 96% is stored as **`bonus: 46`**. An absent bonus
+  is what that check exists to catch, and both classes failed it first time.
+
+**`race_restrictions` could not take either of this batch's two racial
+restrictions, for two different reasons — `BOOK-INGEST-AUDIT` F51.** The
+Gunslinger bars races by **kind** (dragons, creatures of magic, master psionics,
+supernatural beings, cyborgs, androids, robots), and the block matches ids. The
+Psi-Slinger names two plain races, *humans and Psi-Stalkers* — and **this
+catalog files `psi-stalker` and `wild-psi-stalker` as `category: occ`**, so
+there is no race id to name. Both are `restrictions` prose. The second was
+written the "correct" way first and refused by the regression run.
+
+**`bonuses.attributes` takes a fixed number, so the Saddle Tramp's `+1D4 to
+M.A.` is not stored as one** — it is in `extraction_notes`, to be rolled at
+creation. Rounding it to an invented figure would have been worse.
