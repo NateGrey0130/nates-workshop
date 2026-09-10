@@ -1834,6 +1834,8 @@ body.show-play-keys .play-keys { display: block; }
 .gm-pools { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
 .gm-pool { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
 .gm-acts { display: inline-flex; gap: 6px; }
+/* The table's rest rates, on the G.M.'s panel (UI-AUDIT F52). */
+.gm-rest-rows { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 6px; }
 /* Five columns and the G.M.'s controls do not fit a phone. The roster scrolls
    inside its own box so the PAGE never does - measured at 375px, the page
    scrolled 160px sideways before this. */

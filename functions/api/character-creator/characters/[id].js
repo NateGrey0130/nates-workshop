@@ -21,7 +21,7 @@ export async function onRequestGet({ request, env, params }) {
 
   const character = await env.DB.prepare(
     `SELECT characters.*, campaigns.name AS campaign_name, campaigns.system AS campaign_system,
-            campaigns.gm_email AS campaign_gm
+            campaigns.gm_email AS campaign_gm, campaigns.rest_rates AS campaign_rest_rates
      FROM characters JOIN campaigns ON campaigns.id = characters.campaign_id
      WHERE characters.id = ?`
   ).bind(params.id).first();
@@ -138,6 +138,11 @@ export async function onRequestGet({ request, env, params }) {
   }
 
   decodeCharacter(character);
+  // The campaign's rest rates ride along, decoded, so the rest panel can prefer
+  // them without a second request (UI-AUDIT F52). NULL stays NULL.
+  try {
+    character.campaign_rest_rates = character.campaign_rest_rates ? JSON.parse(character.campaign_rest_rates) : null;
+  } catch { character.campaign_rest_rates = null; }
   decodeItemEnchantments(items);
   decodeVehicleMdc(vehicles);
   const can_write = email === character.player_email || email === character.campaign_gm;

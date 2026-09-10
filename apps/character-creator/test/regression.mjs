@@ -937,6 +937,29 @@ check('and none of them with ?mine=1',
   Array.isArray(strangerMine.characters) && strangerMine.characters.length === 0
     && strangerMine.total === 0, strangerMine);
 
+// UI-AUDIT F52: the table's rest rates live on the campaign, set by its G.M.
+// A zero is dropped, a pool that is not one is refused, and null clears.
+{
+  const setRates = await api('PATCH', `/campaigns/${campaignId}`, { rest_rates: { hp: 2, ppe: 5, isp: 0 } });
+  check('a GM can set the campaign\'s rest rates', setRates.status === 200, setRates.body);
+  const camp = await api('GET', `/campaigns/${campaignId}`);
+  check('and they are stored without the zero',
+    camp.body.campaign?.rest_rates === JSON.stringify({ hp: 2, ppe: 5 }), camp.body.campaign?.rest_rates);
+  const inCamp = (await api('GET', `/characters?campaign_id=${campaignId}`)).body.characters?.[0];
+  if (inCamp) {
+    const sheet = await api('GET', `/characters/${inCamp.id}`);
+    check('and a sheet in that campaign receives them, decoded',
+      sheet.body.character?.campaign_rest_rates?.hp === 2 && sheet.body.character?.campaign_rest_rates?.ppe === 5,
+      JSON.stringify(sheet.body.character?.campaign_rest_rates));
+  }
+  const badPool = await api('PATCH', `/campaigns/${campaignId}`, { rest_rates: { stamina: 3 } });
+  check('a rate for something that is not a pool is refused', badPool.status === 400, badPool.status);
+  const cleared = await api('PATCH', `/campaigns/${campaignId}`, { rest_rates: null });
+  const after = await api('GET', `/campaigns/${campaignId}`);
+  check('and null clears them', cleared.status === 200 && after.body.campaign?.rest_rates === null,
+    after.body.campaign?.rest_rates);
+}
+
 // ── creation-time validation (the audit's F2) ───────────────────────────────
 // The powers a character is created holding get the boundary level-up picks
 // always had; pool maxima and attributes get advisory range checks that

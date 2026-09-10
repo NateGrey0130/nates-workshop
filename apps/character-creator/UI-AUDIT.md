@@ -3824,3 +3824,45 @@ applied to production before the merge, per `ship-pr`.** In scope by Nate's deci
 
 **Evidence:** code read 2026-09-10. **Confidence:** high. **Ongoing cost:** one column,
 through the five places `schema-change` names.
+
+---
+
+**Taken, 2026-09-10 (PR #931). Posture held: a schema change — one nullable column,
+applied to production before the merge, per `ship-pr`.** Still **no default numbers**:
+NULL means the table has not said, and the sheet falls back to the device's own rates
+exactly as it always did.
+
+**Migration `054-campaign-rest-rates.sql`** adds `campaigns.rest_rates`, JSON of per-hour
+recovery by pool, through all five places `schema-change` names — the migration, the
+`CREATE` in `db/schema.sql`, a guarded seed line testing for the column, a row in
+`docs/operations.md`, and the `campaigns` row of the README's data model. Pure ASCII and
+LF, which is what `d1-apply.mjs` pre-flights.
+
+**The premise auditor's one note held and was acted on:** the campaign PATCH accepted
+only `gm_notes` and `open`, so it was extended. It takes only the five pool names and
+numbers of zero or more, drops a zero rather than storing it, and clears the column on
+`null` or an object with nothing left. The character GET carries the campaign's rates,
+decoded, beside the campaign's name and system, so the rest panel needs no second
+request.
+
+**Measured on 8801, local campaign 2, 2026-09-10** (its rates were NULL before and are
+NULL again): the G.M.'s dashboard offered five fields; H.P. 2 and P.P.E. 5 saved and came
+back stored as `{"hp":2,"ppe":5}`; a rate for *stamina* was refused **400**, *Not a pool:
+stamina*; the character GET carried `{hp: 2, ppe: 5}`. On the sheet the rest panel said
+*"Your G.M. set this campaign's rates, so they are filled in here"*, filled H.P. 2 and
+P.P.E. 5, and previewed eight hours as *P.P.E. +12* — 40 clamped to the 12 missing, with
+H.P. already full. Cleared from the dashboard, the column went back to NULL and the sheet
+fell back to the device's rates and its original wording. Rest itself was not pressed:
+it writes an event, and the preview is the arithmetic.
+
+`regression.mjs` sets, reads back, refuses a non-pool, and clears — and, since it builds
+its database from `schema.sql`, exercises the guarded seed line on a fresh environment.
+
+**Applied to production before the merge, 2026-09-10 18:04:11**, by
+`node scripts/d1-apply.mjs --remote db/migrations/054-campaign-rest-rates.sql`, after
+every suite had passed on the branch: `changed_db: true`, 3 rows written. **Read back
+from production rather than from the script's own report:** `schema_migrations` records
+`054-campaign-rest-rates.sql`; `sqlite_master`'s `CREATE` for `campaigns` carries
+`rest_rates TEXT`; all 3 live campaigns hold NULL, which is the normal state until a G.M.
+saves rates. `drift-check.mjs --remote` read **NO DRIFT** immediately before the apply,
+53 migrations recorded of 53, so anything it reports afterwards belongs to this change.

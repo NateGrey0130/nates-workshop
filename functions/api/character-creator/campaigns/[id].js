@@ -3,12 +3,15 @@
 //       spoilers/secrets and is stripped unless the caller is the GM.
 //       Also reports `is_member`, which the campaign page uses to decide
 //       whether to offer a composer at all.
-// PATCH /api/character-creator/campaigns/:id — GM only; gm_notes and open.
+// PATCH /api/character-creator/campaigns/:id — GM only; gm_notes, open and
+//       rest_rates (UI-AUDIT F52: the table's per-hour recovery, by pool).
 //       `open` is the join gate: joining a campaign IS creating a character in
 //       it, so whether creation is open to the site is the GM's call and
 //       nobody else's. See POST /characters for where it is enforced.
 
 import { getUserEmail, unauthorized, json, forbidden, campaignAccess, readJson } from '../_lib/auth.js';
+
+const REST_POOLS = ['hp', 'sdc', 'mdc', 'ppe', 'isp'];
 
 export async function onRequestGet({ request, env, params }) {
   const email = getUserEmail(request);
@@ -35,7 +38,26 @@ export async function onRequestPatch({ request, env, params }) {
   const sets = [], binds = [];
   if ('gm_notes' in body) { sets.push('gm_notes = ?'); binds.push(body.gm_notes ?? null); }
   if ('open' in body) { sets.push('open = ?'); binds.push(body.open ? 1 : 0); }
-  if (!sets.length) return json({ error: 'gm_notes and open are the only editable fields' }, 400);
+  // The table's rest rates (UI-AUDIT F52). Only the five pools, only numbers of
+  // zero or more; a zero is dropped rather than stored, and an object with
+  // nothing left - or null - clears the column. Still no default: NULL means
+  // the table has not said, and the sheet falls back to the device's own.
+  if ('rest_rates' in body) {
+    const v = body.rest_rates;
+    if (v !== null && (typeof v !== 'object' || Array.isArray(v))) {
+      return json({ error: 'rest_rates must be an object of per-hour rates, or null' }, 400);
+    }
+    const out = {};
+    for (const [k, r] of Object.entries(v || {})) {
+      if (!REST_POOLS.includes(k)) return json({ error: `Not a pool: ${k}` }, 400);
+      const n = Number(r);
+      if (!Number.isFinite(n) || n < 0) return json({ error: `The ${k} rate must be a number of 0 or more` }, 400);
+      if (n > 0) out[k] = n;
+    }
+    sets.push('rest_rates = ?');
+    binds.push(Object.keys(out).length ? JSON.stringify(out) : null);
+  }
+  if (!sets.length) return json({ error: 'gm_notes, open and rest_rates are the editable fields' }, 400);
   await env.DB.prepare(`UPDATE campaigns SET ${sets.join(', ')} WHERE id = ?`)
     .bind(...binds, params.id).run();
   return json({ ok: true });
