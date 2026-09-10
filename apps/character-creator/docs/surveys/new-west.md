@@ -396,6 +396,7 @@ standing edges of prefixed names and are unchanged by this.
 | 2026-09-09 | [#888](https://github.com/NateGrey0130/nates-workshop/pull/888) | Classes batch 5, printed 123-125: **Saloon Girl/Barmaid** (classes 241 -> **242**). **ALL SEVENTEEN OCCUPATIONS ARE IN.** Also corrects this survey: the CyberSlinger is NOT a class. Applied `--remote` before the PR. |
 | 2026-09-10 | [#890](https://github.com/NateGrey0130/nates-workshop/pull/890) | Racial classes 1 of 2, printed 125-134: **Cactus People, Fennodi, Keeper of the Desert, Lyn-Srial** (classes 242 -> **246**). First class to consume the Cloud Magic spells. No new catalog rows, no new findings. Applied `--remote` before the PR. |
 | 2026-09-10 | [#892](https://github.com/NateGrey0130/nates-workshop/pull/892) | Racial classes 2 of 2, printed 134-158: **Sky-Knight, Cloudweaver, Mountain Giant, Psi-Pony** (classes 246 -> **250**). **ALL 25 PLAYABLE CLASSES ARE IN.** First use of `copy_of` in this book. Applied `--remote` before the PR. |
+| 2026-09-10 | [#895](https://github.com/NateGrey0130/nates-workshop/pull/895) | Gear batch A, printed 173-181: **8 Bandito Arms weapons and 7 suits of western body armour** (gear 1249 -> **1264**). Every number read off a RENDER; the cache cannot associate a cost with its entry on these pages. Two of the section's suits were NOT imported because RUE already holds them. Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -706,3 +707,33 @@ Same reason: `variants` may not override `psionics` and an ability may.
   attribute supernatural, so it is a natural ability.
 - The book's skill called **Write** has no catalog row; `Calligraphy` is the
   nearest and is what the Cloudweaver stores, with the book's word in the note.
+
+## What the gear batches turned up
+
+### Batch A: three CS armours this book reprints at Black Market prices
+
+The Black Market sells knock-offs of the old Coalition armour, and printed 178
+says outright they are *"identical to the old CS body armor in every way, except
+the standard colors"*. Three rows already exist from RUE, so **nothing was
+duplicated** - but the New West price is not the RUE price, and the gear table
+holds one `cost` per row:
+
+| row | RUE | New West |
+|---|---|---|
+| `ca-2-light-dead-boy-armor` | 35,000 | 40,000 |
+| `ca-1-heavy-dead-boy-armor` | 35,000 | 50,000 |
+| `dog-pack-dpm-riot-armor` | no cost at all | light 12,000, heavy 18,000 |
+
+Recording New West's figures would mean either overwriting RUE's or creating a
+second row with identical stats and a different price. **Neither was done** - it
+is a catalog-shape question rather than something an import should settle.
+
+**The stats disagree too, and RUE is the fuller reading in both directions.**
+New West prints ONE `M.D.C. by Location` block covering both Dead Boy suits, so
+its helmet/arms/legs figures are the HEAVY suit's; RUE states the light suit's
+separately at 35/15/24. Its heavy figures match RUE exactly (18 lbs, main body
+80, helmet 50, arms 35, legs 50), which is a five-way independent confirmation
+that the render was read correctly. The Dog Pack is the one place New West has
+MORE than RUE: it splits the suit into light and heavy (main body 35 or 50, arms
+10+3, legs 15+5, 10 lbs) where the RUE row is a single 8 lb suit at main body
+30, arms 10, legs 20.
