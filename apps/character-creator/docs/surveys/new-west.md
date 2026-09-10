@@ -281,11 +281,37 @@ It is Rifts Ultimate Edition's: listed on printed 302 among the Cowboy skills
 and 303 among the W.P.s, and **described on printed 306**. Re-cited there. Its
 `level_bonuses` already matched RUE's description and were not touched.
 
-### gear and vehicles: not diffed
+### gear and vehicles: diffed as each batch is extracted
 
-79 priced entries and ~15 `M.D.C. by Location` blocks, printed 171-223. Not
-diffed in this session — the class and spell batches come first, and a gear diff
-wants the entry names, which is extraction work.
+**78 `Cost:`/`Market Price:` lines and 17 `M.D.C. by Location` blocks, printed
+171-223**, counted off the cache on 2026-09-10 - close to the 79 and ~15 this
+survey projected. The diff wants the entry names, which is extraction work, so
+it happens per batch rather than up front, and each batch's result is recorded
+in the ledger below.
+
+**THE CACHE CANNOT BE TRUSTED FOR A GEAR NUMBER IN THIS BOOK.** The weapon
+entries are set in boxed panels and the armour pages carry blocks of
+illustration captions, and both break the text layer's column analysis without
+looking wrong. Two proven cases:
+
+- printed 173 - the Bandit IP-10's `Cost: 12,000 credits` is separated from its
+  own stat block by an unrelated *Black Market Prices for E-Clips* sidebar, so
+  cache order does not associate a cost with its weapon.
+- printed 180 - four illustration captions (`NG Range Rider Riding Armor`,
+  `NG Maverick Riding Armor`, `NG Buffalo Riding Armor`, `Ml Vaqueros Armor`)
+  sit between the Range Rider's `Main Body - 30` and its `Market Price`.
+
+This is the same fault already recorded three times here for class skill lists.
+**Render every gear page before transcribing it.** The renders have also settled
+two strings the text layer gets wrong: `Ml Vaqueros` is **MI** for Manistique
+Imperium, and the Bandit 6000's price prints as `80,000-100.000`, a period where
+a comma belongs.
+
+**Batch A, printed 173-181 - 17 names checked, 15 imported, 2 already held.**
+`Dead Boy Body Armor` and `Dog Pack DPM Light Riot Armor` are Black Market
+knock-offs of rows RUE already has (`ca-1-heavy-dead-boy-armor`,
+`ca-2-light-dead-boy-armor`, `dog-pack-dpm-riot-armor`) and neither was
+duplicated - see the finding below.
 
 ## Extraction plan
 
@@ -316,8 +342,14 @@ Phase 4 costs money; everything above was free.
    **ALL EIGHT DONE. PR #890: Cactus People 127, Fennodi 128, Keeper of the Desert
    130, Lyn-Srial 133. PR #892: Sky-Knight 134, Cloudweaver 135, Mountain Giant 136,
    Psi-Pony 156.**
-5. **Gear and vessels, printed 171-223** — last, and diffed first. Printed 217
-   off a render.
+5. **Gear and vessels, printed 171-223** - last, and diffed per batch.
+   **IN PROGRESS.** Batch A (Bandito Arms weapons and the western body armour
+   line, printed 173-181) is in. Remaining: bionics and cybernetics 187-189,
+   Wilk's Laser Technologies 203-209, conventional revolvers 210-213,
+   Techno-Wizard weapons 213-221, and the vessels. **Printed 217 is
+   glyph-corrupt and carries three Techno-Wizard prices - read it off a
+   render.** Every other gear page needs a render too; see the diff section
+   above.
 
 What is deliberately left, with the reason:
 
