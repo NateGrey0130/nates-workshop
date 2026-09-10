@@ -785,16 +785,9 @@ async function quickDamage() {
 // UI-AUDIT F40 the table makes it on the Hit to picker rather than by leaving
 // play mode to type on the armour's card. See hitTarget below.
 async function bodyDamage(amt) {
-  const patch = {};
-  if (C.data.mdc_max != null) {
-    patch.mdc_current = (C.data.mdc_current ?? 0) - amt;
-  } else {
-    const sdc = C.data.sdc_current ?? 0;
-    const offSdc = Math.min(Math.max(sdc, 0), amt);
-    if (offSdc > 0) patch.sdc_current = sdc - offSdc;
-    const rest = amt - offSdc;
-    if (rest > 0) patch.hp_current = (C.data.hp_current ?? 0) - rest;
-  }
+  // The rule itself lives in js/derive.js since UI-AUDIT F46, because the G.M.
+  // dashboard applies it too and two copies would drift.
+  const patch = derive.damageCascade(C.data, amt);
   const prev = {};
   for (const k of Object.keys(patch)) {
     prev[k] = C.data[k];

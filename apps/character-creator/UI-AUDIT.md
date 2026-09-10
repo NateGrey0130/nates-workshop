@@ -3590,6 +3590,53 @@ does not reopen it. **Posture: GM-only controls, existing routes only.**
 **Ongoing cost:** a second place that writes play events, which must stay in step with
 the sheet's.
 
+---
+
+**Taken, 2026-09-10 (PR #930). Posture held: GM-only controls, existing routes only.**
+For the G.M. — and only for them, on `D.isGm` — each roster row carries its pools with −
+and + at a chosen amount, a **Damage**, and ↶ for that character's last change; a toolbar
+sets the amount and **awards XP to the party**. Every press goes through the character's
+own events or XP route, so it lands in *their* session log and undo exactly as a press on
+their sheet would, with the note saying the G.M. made it. The roster refreshes when the
+tab comes back into view, repainting only its rows. No initiative tracker —
+`docs/campaign-and-play.md` records it as deliberately unbuilt and this does not reopen it.
+
+**The *Ongoing cost* above is paid down rather than accepted.** The sheet's damage rule —
+M.D.C. beings on M.D.C., everyone else S.D.C. first and the rest to H.P. — moved into
+`js/derive.js` as `damageCascade`, and both the sheet's `bodyDamage` and the dashboard's
+Damage call it. Two copies of a rule are two rules; there is now one, and
+`play-flow.mjs`, which loads `derive.js` among its fixed script list, still drives the
+sheet's Damage through it.
+
+**Premises that held** (`audit-premise-auditor`): the XP route takes `{delta}` or `{total}`
+and proposes rather than applies a level-up; a G.M. may write any character in their
+campaign; party initiative is on the deliberately-unbuilt list.
+
+**Measured on 8801, local campaign 2, 2026-09-10**, character 1 snapshotted and restored
+(H.P. 14, S.D.C. 11, P.P.E. 1, XP 0):
+
+| press | result |
+|---|---|
+| H.P. − at 5 | 14 → 9, logged on that character as *G.M.: HP −5*, actor the G.M.; ↶ back to 14 |
+| Damage at 5 | S.D.C. 11 → 6 through `derive.damageCascade`; ↶ back to 11 |
+| Award XP to party, 100 | *Awarded 100 XP to 1 of 1*; reversed with −100 |
+| a pool moved behind the page's back, then refresh | the row repainted P.P.E. 1 → 3 and a half-typed G.M. note survived |
+
+**The refresh needed a second measurement, and the first was the pane's fault.**
+`refreshRoster` returns early while the page reports itself hidden, and the Browser pane
+reports hidden; with `visibilityState` forced visible it repainted as above.
+
+**Two layout defects the first screenshot found, both fixed here.** At 375px the page
+scrolled **160px** sideways: five columns and the new controls do not fit a phone. A
+scrolling wrapper alone changed nothing — measured, it came out exactly as wide as the
+table — because a grid item's minimum width is its content's, so the roster panel
+stretched and took the page with it. `.dash-grid > * { min-width: 0 }` let the panel be
+narrower than its table: **page overflow 0**, the table scrolling inside a 273px box. At
+desktop width the controls fit their cell with 133px to spare.
+
+`docs/known-limitations.md`'s file-size table had `dashboard.js` at ~140 lines; it is
+~300 now, and the smoke check that holds those figures to 25% said so.
+
 ### F47 — low — The party stash takes free text only, so claimed loot can never be a weapon card
 
 The stash endpoint accepts a gear-catalog `item_id` or a `custom_name`

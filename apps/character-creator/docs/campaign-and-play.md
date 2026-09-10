@@ -520,6 +520,12 @@ reporting-only in CI. Its own header carries the three things it does **not**
 prove: the DOM is a stub, the queue store is a fake, and it is not a merge
 gate.
 
+The dashboard's altitude did gain the G.M.'s own controls (UI-AUDIT F46): each
+roster row carries its pools with − and +, a Damage running the same
+`derive.damageCascade` the sheet does, and ↶ for that character's last change,
+all through that character's events route; a toolbar awards XP to the whole
+party through each character's XP route, reporting any level-up it proposes.
+
 Deliberately out of scope at any phase: party-wide initiative (the
 dashboard's altitude) and automated combat resolution (the hand-to-hand
 tables are not modelled, and the README already says so).

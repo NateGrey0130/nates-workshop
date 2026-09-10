@@ -1818,6 +1818,33 @@ body.show-play-keys .play-keys { display: block; }
 .pw-carried { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 8px 0; }
 .pw-carry { display: inline-flex; align-items: center; gap: 6px; }
 
+/* The G.M.'s controls on the dashboard roster (UI-AUDIT F46). The chips and
+   steppers take the play-mode amount chips' tones, at a size a table row can
+   carry. */
+.gm-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 6px 0 10px; }
+.gm-amt, .gm-step {
+  min-width: 36px; min-height: 36px; border-radius: var(--radius-sm);
+  background: var(--bg-tertiary); border: 1px solid var(--border);
+  color: var(--text-secondary); cursor: pointer;
+}
+.gm-amt.on { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+.gm-amt-custom { width: 64px; min-height: 36px; text-align: center; }
+.gm-xp { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; }
+.gm-xp input { width: 90px; }
+.gm-pools { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.gm-pool { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.gm-acts { display: inline-flex; gap: 6px; }
+/* Five columns and the G.M.'s controls do not fit a phone. The roster scrolls
+   inside its own box so the PAGE never does - measured at 375px, the page
+   scrolled 160px sideways before this. */
+.roster-scroll { overflow-x: auto; max-width: 100%; }
+/* ...and the box can only scroll if its panel is allowed to be narrower than
+   the table. A grid item's min-width defaults to its content's, so the roster
+   panel stretched to the table's full width and took the page with it - the
+   first measurement of the wrapper above found it exactly as wide as the table
+   it was meant to scroll. */
+.dash-grid > * { min-width: 0; }
+
 /* Play mode phase 4: melee counter + rest */
 .play-melee {
   display: flex; justify-content: space-between; align-items: center; gap: 8px;
