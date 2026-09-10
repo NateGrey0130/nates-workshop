@@ -91,7 +91,7 @@ Counted by structure over all 226 cached pages, not by reading prose.
 | **Cloud Magic** | **37-45** | index + **58 index entries** (57 distinct), 58 `P.P.E.` lines, 44 `Saving Throw` lines |
 | Colorado, baronies, rodeos, medicine shows | 45-69 | setting; rodeo event resolution rules |
 | **New Skills** | **70-81** | **38 `Base Skill:` definitions**, plus W.P.s, snapshooting bonuses and combat notes |
-| **O.C.C.s and P.C.C.** | **83-125** | **18 playable occupations** |
+| **O.C.C.s and P.C.C.** | **83-125** | **17 playable occupations** |
 | **Racial classes and creatures** | **125-170** | **30 entries**, of which **8 are playable** |
 | **Gear, armour, bionics, cyborgs, vehicles** | **171-223** | **79 priced entries**; ~15 `M.D.C. by Location` blocks; 3 cyborg chassis |
 | experience tables | 223-224 | the ladders |
@@ -108,7 +108,7 @@ Counted by structure over all 226 cached pages, not by reading prose.
 
 ## Classes
 
-### Playable occupations (18) — printed 83-125
+### Playable occupations (17) — printed 83-125
 
 | class | printed | ladder (p.223-224) |
 |---|---|---|
@@ -129,7 +129,6 @@ Counted by structure over all 226 cached pages, not by reading prose.
 | Professional Gambler O.C.C. | 117-120 | shared with Professional Thief & Smuggler |
 | Saloon Bum/Stoolie O.C.C. | 120-123 | shared with Saloon Girl |
 | Saloon Girl/Barmaid O.C.C. | 123-125 | shared with Saloon Bum |
-| CyberSlinger cyborg | 189-193 | 'Borg tables, core rules |
 
 **`Psi-Slinger` is a P.C.C., and a scan keyed on `O.C.C.`/`R.C.C.` misses it
 entirely.** It was found only because a marker page at printed 98-100 had a stat
@@ -141,19 +140,25 @@ book must include `P.C.C.`
 pages and neither appears on the experience tables, where every other playable
 class does. Treat both as variants of the class they sit under.
 
-**The CyberSlinger is three chassis of one full-conversion cyborg** — CSLNGR
-Mark I (printed 190), Mark II (191), Mark III (192-193), each with its own
-`M.D.C. by Location` block and cost. This is the same shape as Free Quebec's
-cyborg and its four chassis, which was **`BOOK-INGEST-AUDIT` F31 — and F31 was
-taken on 2026-09-08 in PR #834.** `skills_additional` and
-`related_skills_count` are in `VARIANT_OVERRIDES` with handlers in
-`js/parser.js`, so a chassis can add skills and move the related-skill count.
-Nothing needs filing.
+**THE CYBERSLINGER IS NOT A CLASS, and this survey said it was until 2026-09-09.**
+CSLNGR Mark I (printed 190), Mark II (191) and Mark III (192-193) each carry an
+`M.D.C. by Location` block, a `Model Type`, bionic attributes and a cost — and
+**no class block at all.** Checked on all three pages: no `O.C.C. Skills`, no
+`O.C.C. Related Skills`, no `Secondary Skills`, no `Money:`, no
+`Attribute Requirements`, no `Alignment`. Printed 190 says outright that these
+are different types of cyborg body and that all of them fall into the existing
+'Borg O.C.C.
 
-F31 deliberately did **not** restructure Free Quebec's five published cyborg
-classes, because a character references its class by `class_id`. That reservation
-does not reach these three: they are new, nothing points at them, and they can
-be variants from the first PR.
+**So the resemblance to Free Quebec's cyborg was the wrong way round.** Free
+Quebec's four chassis ARE classes — `fq-cyborg-imprimer` and its three siblings
+are `imported_classes` rows, each with its own skill list. New West's three are
+bodies, and under that same book's precedent a chassis body belongs in
+**`vehicles`**, which is where these go: with the gear and vessel import from
+printed 171-223, not with the classes. `BOOK-INGEST-AUDIT` F31 is irrelevant to
+them.
+
+**The roster is therefore 25 playable classes, not 26** — 17 occupations and 8
+racial.
 
 The text layer sets *Saddle Tramp* as `Saddle TVamp` — a ligature fault, not a
 second name.
@@ -200,7 +205,7 @@ Run against **production** (`--remote`). Catalog at survey time: 225 classes,
 
 ### classes: 26 missing, 0 false gaps
 
-None of this book's 26 playable classes is in the catalog. `gambler`, `ranger`
+None of this book's 25 playable classes was in the catalog at survey time. (This read 26 until 2026-09-09; the CyberSlinger is not a class - see the correction under *Playable occupations*.) `gambler`, `ranger`
 and `murder-wraith` exist under similar names and are different classes from
 other books — check for an id collision at import time, not a name collision.
 
@@ -303,8 +308,9 @@ Phase 4 costs money; everything above was free.
    **Batch 2 DONE (PR #885): Gunslinger 92, Justice Ranger 96, Psi-Slinger 98, Saddle Tramp 101.**
    **Batch 3 DONE (PR #886): Sheriff/Lawman 102, Sheriff's Deputy 105, Wired Gunslinger 107, Cowboy 110.**
    **Batch 4 DONE (PR #887): Mining 'Borg 113, Preacher 115, Professional Gambler 117, Saloon Bum 120.**
-   **Remaining: the Saloon Girl/Barmaid at printed 123-125, and the CyberSlinger's
-   three chassis at printed 189-193. One occupation and one cyborg.**
+   **Batch 5 DONE (PR #888): Saloon Girl 123. ALL SEVENTEEN OCCUPATIONS ARE IN.**
+   **NOTHING REMAINS in this item.** The CyberSlinger's three chassis are not
+   classes and belong to item 5, the gear and vessel pass.
    Read every entry onto the following page; `Money:` sits at the end of each.
 4. **The 8 racial classes, printed 125-158** — printed 130 off a render.
 5. **Gear and vessels, printed 171-223** — last, and diffed first. Printed 217
@@ -337,8 +343,8 @@ an explicit list of names with no category column behind it.
 The cost is two rows for Globe of Daylight, which the book lists in two
 categories — see the import note below. `BOOK-INGEST-AUDIT` F21 and F35 are the
 standing edges of prefixed names and are unchanged by this.
-- **Nothing on the CyberSlinger chassis** — F31 shipped the mechanism they
-  need. Listed here only so a later session does not re-derive the question.
+- **Nothing on the CyberSlinger chassis** — they are not classes at all. See
+  the correction under *Playable occupations*; they are vessel work.
 
 ## Ledger
 
@@ -352,6 +358,7 @@ standing edges of prefixed names and are unchanged by this.
 | 2026-09-09 | [#885](https://github.com/NateGrey0130/nates-workshop/pull/885) | Classes batch 2, printed 92-102: **Gunslinger, Justice Ranger, Psi-Slinger, Saddle Tramp** (classes 229 -> **233**). No new catalog rows. Filed `BOOK-INGEST-AUDIT` F51. Applied `--remote` before the PR. |
 | 2026-09-09 | [#886](https://github.com/NateGrey0130/nates-workshop/pull/886) | Classes batch 3, printed 102-113: **Sheriff/Lawman, Sheriff's Deputy, Wired Gunslinger, Cowboy** (classes 233 -> **237**). No new catalog rows, no new findings. Applied `--remote` before the PR. |
 | 2026-09-09 | [#887](https://github.com/NateGrey0130/nates-workshop/pull/887) | Classes batch 4, printed 113-123: **Mining 'Borg/Prospector, Preacher, Professional Gambler, Saloon Bum/Stoolie** (classes 237 -> **241**). First use of `variants` and `skills_additional` in this book. No new catalog rows, no new findings. Applied `--remote` before the PR. |
+| 2026-09-09 | [#888](https://github.com/NateGrey0130/nates-workshop/pull/888) | Classes batch 5, printed 123-125: **Saloon Girl/Barmaid** (classes 241 -> **242**). **ALL SEVENTEEN OCCUPATIONS ARE IN.** Also corrects this survey: the CyberSlinger is NOT a class. Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -546,3 +553,30 @@ dpi render of printed 119 before transcribing.
 `optional`. The five legal values are clergy, men-of-arms, optional, magic and
 psychic, and the book's own *Adventurers of the New West* heading has no closer
 fit than `optional`.
+
+### Batch 5, and the correction it turned up
+
+**All seventeen occupations are in.** The Saloon Girl needed nothing new:
+`occ_group: optional` like the Gambler and the Saloon Bum, `1D6` in
+`CORE_SDC_BY_CLASS`, and one `occ_related_skills.minimums` floor of 2 Rogue for
+her *"two rogue skills plus six other skills"* line. Her `+1D4+1 to M.A.` is the
+sixth dice-attribute drop in this book.
+
+**THE CYBERSLINGER IS NOT A CLASS, and this survey claimed it was from the day
+it was written.** Reading printed 189-193 to import it is what found that out:
+the three chassis carry an `M.D.C. by Location` block, a `Model Type`, bionic
+attributes and a cost, and **no class block at all** — checked on all three
+pages for `O.C.C. Skills`, `O.C.C. Related Skills`, `Secondary Skills`,
+`Money:`, `Attribute Requirements` and `Alignment`, and none of the six appears.
+Printed 190 states outright that they are cyborg *bodies* and that all of them
+fall into the existing 'Borg O.C.C.
+
+**The resemblance to Free Quebec's cyborg ran the opposite way to what this file
+said.** Free Quebec's four chassis really are classes — `fq-cyborg-imprimer` and
+its three siblings are `imported_classes` rows with their own skill lists. New
+West's three are bodies, and Free Quebec's own precedent puts a chassis body in
+**`vehicles`**. So they belong to the gear and vessel pass, printed 171-223, and
+`BOOK-INGEST-AUDIT` F31 has nothing to do with them.
+
+That moves the roster from **26 to 25**: seventeen occupations and eight racial.
+The eight racial classes, printed 125-158, are the next class work.
