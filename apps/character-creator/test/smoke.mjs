@@ -5221,11 +5221,37 @@ section('Audit citation sweep');
     !/process\.exit|process\.exitCode|exitCode\s*=/.test(code),
     'a gate here fires on every class citing a still-open finding');
 
-  // It has to know BOTH shapes the corpus uses. The Galactic Tracer writes
-  // "Filed as F6 in the Empire batch" and everything else writes the path;
-  // matching only the path missed a real citer.
-  check('and knows both citation shapes the corpus uses',
-    cites.includes('BOOK-INGEST-AUDIT') && cites.includes('Filed as'));
+  // It has to know EVERY shape the corpus uses, and there are three. The
+  // Galactic Tracer writes "Filed as F6 in the Empire batch"; most notes write
+  // the path, "BOOK-INGEST-AUDIT.md F3"; and the notes F53, F56 and F61-F63
+  // wrote cite the bare menu, "BOOK-INGEST-AUDIT F61". On 2026-09-11 the script
+  // answered "0 of 267" for F61 and F63 while production held their citers.
+  //
+  // So these run the script's OWN patterns, lifted out of its source. The check
+  // they replace asked only that the file CONTAIN "BOOK-INGEST-AUDIT", and it
+  // passed the whole time the bare form was invisible.
+  const patterns = eval(cites.match(/const PATTERNS = (\[[\s\S]*?\n\];)/)?.[1]
+    ?.replace(/\/\/[^\n]*/g, '').replace(/;$/, '') || 'null');
+  const found = (text) => JSON.stringify(Array.isArray(patterns)
+    ? patterns.flatMap((rx) => [...text.matchAll(rx)].map((m) => m[1].toUpperCase()))
+    : null);
+  check('the citation patterns are found',
+    Array.isArray(patterns) && patterns.length > 0 && patterns.every((rx) => rx instanceof RegExp));
+  check('and they match the bare-menu form the Spirit West notes use',
+    found('capped at level 3 (BOOK-INGEST-AUDIT F61). Paradox') === '["F61"]',
+    found('capped at level 3 (BOOK-INGEST-AUDIT F61). Paradox'));
+  // ONCE: a class's Set dedupes a finding, but the LIMIT passages are collected
+  // per match, so two patterns reading the same text would list it twice.
+  check('and the path form, ONCE - no second pattern reads the same citation',
+    found('The app has no way to say that; see BOOK-INGEST-AUDIT.md F23(a).') === '["F23"]',
+    found('The app has no way to say that; see BOOK-INGEST-AUDIT.md F23(a).'));
+  check('and the "Filed as" form',
+    found('Filed as F6 in the Empire batch') === '["F6"]',
+    found('Filed as F6 in the Empire batch'));
+  // The script answers for BOOK-INGEST alone, and eleven menus number with F.
+  check('and no other menu\'s F-number',
+    found('see INGESTION-AUDIT F8 and SKILL-AUDIT F30') === '[]',
+    found('see INGESTION-AUDIT F8 and SKILL-AUDIT F30'));
 
   // The protocol half. Taking a finding already required an outcome note in the
   // same PR; the step that was skipped is correcting the classes that cite it.
