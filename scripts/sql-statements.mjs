@@ -100,6 +100,61 @@ export function statements(sql) {
   return out.map((t) => t.trim()).filter(Boolean);
 }
 
+// D1 refuses an expression tree deeper than 100 ("Expression tree is too large
+// (maximum depth 100)"). Measured on local D1, 2026-09-11: `length(` + a
+// 98-link `'a' || 'a' || ...` chain + `)` runs; 99 links fail. A left-
+// associative `||` chain is one level per link, and every call or parenthesis
+// around it adds one - so the estimate is the longest chain plus the nesting
+// it sits in, and 99 is the most D1 accepts.
+//
+// It is an ESTIMATE, not a parser: the chain resets at a comma, at a
+// parenthesis boundary, and at a keyword or comparison, which is where a chain
+// ends in the SQL this repo writes. It exists because the failure is late and
+// looks like bad data - BOOK-INGEST-AUDIT F59's first script wrote a 70-line
+// block as 'a' || char(10) || 'b' || ... and D1 refused it only at apply time.
+// The fix for a long text is ONE literal and one replace():
+//   replace('line one~~line two~~line three', '~~', char(10))
+export const D1_MAX_EXPR_DEPTH = 99;
+
+const CHAIN_BREAKERS = new Set(['and', 'or', 'where', 'set', 'when', 'then', 'else',
+  'end', 'from', 'select', 'values', 'is', 'not', 'in', 'like', 'as', 'on', 'by',
+  'case', 'group', 'order', 'having', 'limit', 'into', 'insert', 'update', 'delete']);
+
+export function expressionDepth(stmt) {
+  const links = [0];
+  let depth = 0;
+  let max = 0;
+  for (let i = 0; i < stmt.length; i++) {
+    const c = stmt[i];
+    if (c === "'") {                               // skip a string literal whole
+      for (i++; i < stmt.length; i++) {
+        if (stmt[i] === "'") { if (stmt[i + 1] === "'") i++; else break; }
+      }
+      continue;
+    }
+    if (c === '-' && stmt[i + 1] === '-') {        // and a line comment
+      while (i < stmt.length && stmt[i] !== '\n') i++;
+      continue;
+    }
+    if (c === '(') { depth++; links[depth] = 0; continue; }
+    if (c === ')') { links[depth] = 0; depth = Math.max(0, depth - 1); continue; }
+    if (c === '|' && stmt[i + 1] === '|') {
+      i++;
+      links[depth] = (links[depth] || 0) + 1;
+      max = Math.max(max, links[depth] + depth);
+      continue;
+    }
+    if (c === ',' || c === '=' || c === '<' || c === '>' || c === '!') { links[depth] = 0; continue; }
+    if (/[A-Za-z_]/.test(c)) {
+      let j = i;
+      while (j < stmt.length && /[A-Za-z0-9_]/.test(stmt[j])) j++;
+      if (CHAIN_BREAKERS.has(stmt.slice(i, j).toLowerCase())) links[depth] = 0;
+      i = j - 1;
+    }
+  }
+  return max;
+}
+
 // EVERY statement, single-line and semicolon-terminated: trailingSelects()
 // without the SELECT filter. `q.mjs --batch` hands these to ONE --command
 // invocation, so the single-line property is load-bearing here for the same

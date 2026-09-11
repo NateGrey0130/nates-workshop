@@ -371,7 +371,7 @@ import { bookSpellings, bookTitles, cacheCoverage, loadBookRegistry, loadNotBook
 import { bucketFor, summarise, summariseValues, valuePresent, valueSpellings }
   from '../../../scripts/source-coverage-lib.mjs';
 import { buildUserPrompt, SYSTEM_PROMPT_CACHE } from '../../../scripts/extraction-prompt.mjs';
-import { collapseWhitespace, statements, stripComments, trailingSelects } from '../../../scripts/sql-statements.mjs';
+import { collapseWhitespace, statements, stripComments, trailingSelects, expressionDepth, D1_MAX_EXPR_DEPTH } from '../../../scripts/sql-statements.mjs';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import { composeClass } from '../js/compose.js';
 import { evalDice, fixedFormulaValue, rollAttribute, rollPoolFormula, rollQuantity,
@@ -4451,6 +4451,36 @@ section('MOS');
     check('while leaving an id JOIN alone',
       !LITERAL_ID.test('UPDATE character_items SET custom_name = '
         + '(SELECT name FROM gear WHERE gear.id = character_items.item_id);'));
+
+    // D1 refuses an expression tree deeper than 100, and only when a statement
+    // reaches it. BOOK-INGEST-AUDIT F59's first script wrote a 70-line block as
+    // 'a' || char(10) || 'b' || ... and failed at apply time. d1-apply's
+    // pre-flight now refuses such a file first; this keeps the corpus clean and
+    // pins the estimate to what D1 was measured to do.
+    const deepest = files.flatMap((f) => statements(read(f)).map((s) => [expressionDepth(s), f]))
+      .sort((a, b) => b[0] - a[0])[0] || [0, ''];
+    check(`no data script nests an expression past D1's limit (deepest ${deepest[0]}, ${deepest[1]})`,
+      deepest[0] <= D1_MAX_EXPR_DEPTH);
+    const chainOf = (n) => 'SELECT length(' + Array.from({ length: n + 1 }, () => "'a'").join(' || ') + ')';
+    check('and the estimate matches D1 as measured 2026-09-11 - 98 links in a call ran, 99 did not',
+      expressionDepth(chainOf(98)) === 99 && expressionDepth(chainOf(99)) === 100,
+      `${expressionDepth(chainOf(98))} / ${expressionDepth(chainOf(99))}`);
+    const lines = Array.from({ length: 70 }, (_, i) => `line ${i}`);
+    const asChain = "UPDATE t SET m = replace(m, 'x', " + lines.map((l) => `'${l}'`).join(' || char(10) || ') + ');';
+    const asOne = "UPDATE t SET m = replace(m, 'x', replace('" + lines.join('~~') + "', '~~', char(10)));";
+    check('F59\'s first shape is refused', expressionDepth(asChain) > D1_MAX_EXPR_DEPTH);
+    check('while the same text as one literal and one replace() is nothing',
+      expressionDepth(asOne) <= 3, String(expressionDepth(asOne)));
+
+    // d1Query must not hand its SQL to a shell: an odd number of double quotes
+    // in the SQL closed the shell's quoting, and a trailing `> 0` became a
+    // redirect into a file named 0 (reproduced 2026-09-11).
+    const queryLib = readFileSync(join(appDir, '..', '..', 'scripts', 'd1-query-lib.mjs'), 'utf8');
+    // Asked of the CODE, not the prose: the file's own comment quotes the old
+    // `--command "${sql}"` string to explain the bug, so a text match on it
+    // would fail on the explanation. execSync was only ever the shelled form.
+    check('d1Query runs wrangler without a shell string',
+      !/\bexecSync\s*\(/.test(queryLib) && /d1Query[\s\S]{0,400}?runWrangler\(\[/.test(queryLib));
   }
 
   const names = (c) => (c.skills.occ_skills || []).map((x) => x.name).filter(Boolean);

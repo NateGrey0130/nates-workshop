@@ -46,7 +46,7 @@
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
-import { trailingSelects, stripComments } from './sql-statements.mjs';
+import { trailingSelects, stripComments, statements, expressionDepth, D1_MAX_EXPR_DEPTH } from './sql-statements.mjs';
 
 const args = process.argv.slice(2);
 const remote = args.includes('--remote');
@@ -138,6 +138,18 @@ for (const f of files) {
     die(`${f}: contains non-ASCII in executable SQL (${JSON.stringify(offending.join(''))}) `
       + '— wrangler on Windows has mangled these into mojibake in production before. '
       + 'Splice it instead: \'a \' || char(8212) || \' b\'. Comments are exempt.');
+  }
+  // D1 refuses an expression tree deeper than 100, and refuses it only when
+  // the statement reaches it - late, and reading like bad data. Caught here,
+  // before any statement in any file has run (see expressionDepth).
+  const deep = statements(buf.toString('utf8'))
+    .map((s) => [expressionDepth(s), s]).filter(([d]) => d > D1_MAX_EXPR_DEPTH);
+  if (deep.length) {
+    die(`${f}: a statement nests about ${deep[0][0]} levels deep, and D1 refuses more than `
+      + `${D1_MAX_EXPR_DEPTH} ("Expression tree is too large"). A long text written as `
+      + "'a' || char(10) || 'b' || ... nests one level per link; write ONE literal with a "
+      + "placeholder instead: replace('a~~b~~c', '~~', char(10)). Statement begins: "
+      + JSON.stringify(deep[0][1].slice(0, 120)));
   }
 }
 
