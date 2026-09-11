@@ -8569,3 +8569,119 @@ check composing the class with each realm.
 **Subject grep, 2026-09-11:** every `*AUDIT*.md` for "Spirit Warrior", "Earth
 Realm" and "ABILITY_GRANTS": F24 (skills kept off abilities) and F56's outcome
 note (which argued past F24 for totems with a table rather than a grant).
+
+**Taken, 2026-09-11 (PR #954). Option A, in the shape Nate chose after the
+premise audit: F24's, not the posture's wording.**
+
+**The premise audit (`audit-premise-auditor`, 2026-09-11) found A's mechanism
+would not work as written.**
+
+- **Adding the key to `ABILITY_GRANTS` breaks parsing.** The list is read by
+  one check, which refuses any listed key whose value is not a map
+  (`js/parser.js:2522-2526` on this branch), so `mdc_from_hp_sdc: true` on a
+  realm would stop the class parsing. `applyAbilities` never loops over the
+  list (`parser.js:1775-1838`), so widening it would fold nothing, and smoke
+  pins it at three keys (`test/smoke.mjs:4128-4129`). Nate chose the F24 shape:
+  a single value on the ability definition with its own fold and its own type
+  check, as `related_skills_count` has (`parser.js:1822-1830` and
+  `:2531-2535`). **`ABILITY_GRANTS` is unchanged, which departs from the
+  posture's words** - "one key added to `ABILITY_GRANTS`" - but not from its
+  substance: no schema, and no class change but the two realms.
+- **"A chosen ability grants only `bonuses`, `psionics` and `magic`" was
+  already false.** F24 (PR #789) added `related_skills_count`. This finding's
+  for-column called "a flag, not a block" the argument to make; F24 had made
+  it and shipped it.
+- **`ABILITY_GRANTS` is at `parser.js:1704` on this branch**, not 1699, which
+  is main's line.
+
+**What shipped.**
+
+- `applyAbilities` sets `mdc_from_hp_sdc` on the composed class when a chosen
+  ability carries it, and the validator refuses any value but `true` on an
+  ability. Every reader F62 wrote already reads the composed class - the
+  wizard's pool roll, the server validator's bounds, the level-up proposal - so
+  none of them changed. The audit traced each caller to one that composes with
+  the character's chosen abilities.
+- `zzzzzzzzz-f64-spirit-warrior-realm-mdc.sql`: the Earth and Plant realms each
+  gain the flag and `bonuses.pools.mdc: "1d4x10"`, and the class notes stop
+  saying no field expresses the conversion. The +1D6 P.E. stays unstored, for
+  the reason the note already gives. Before it was applied, its three
+  replacements were run against production's markdown. Each matched once, the
+  class parses with no new warning, Earth or Plant converts and Air, Fire and
+  Water do not, and Earth with Plant carries both 1D4x10s.
+- Docs: `docs/leveling.md`, `docs/race-and-occupation.md`, the frontmatter
+  reference (two places), `js/class-template.js` and
+  `scripts/extraction-prompt.mjs`.
+
+**Tests.** A smoke section of eight checks, four of which failed before the fix:
+the only-true check, Earth converting, the combined bounds and the server's
+bounds. The regression composes the production Spirit Warrior with converting
+and non-converting sets of realms.
+
+**Posture said back:** one new thing an ability may carry, no schema, and no
+class change but the Spirit Warrior's two realms. It held. The one departure is
+where the key lives, and Nate chose it.
+
+**Confidence on ordering: raised to high.** The smoke checks compose a class
+with each realm, which is the check the finding named.
+
+**The pool-staleness gap the audit spotted was checked, as Nate asked, and is
+real. It is filed below as F67** rather than fixed here, because it predates
+F64 and reaches every ability that changes a pool.
+
+### F67 - low - changing a chosen ability after the pools are rolled leaves them stale, and a character who now converts saves with S.D.C. and hit points
+
+**Found 2026-09-11** by F64's premise audit: `takeAbility` and `dropAbility` do
+not clear the rolled pools the way `pickTotem` does. Confirmed the same day in
+the wizard, as Nate asked when F64 was taken.
+
+**The code.** `pickTotem` recomposes and sets `S.pools = null`
+(`apps/character-creator/app.js:1597-1602`), so the next step rolls again.
+`takeAbility` and `dropAbility` (`app.js:1509-1530`) change `S.abilities` and
+render, and `confirmRace` recomposes without clearing the pools
+(`app.js:1605-1611`). The later steps roll only when `S.pools` is empty
+(`app.js:1910`, `:3398` and `:3756`, each `if (!S.pools) computePools()`).
+
+**The walk**, on 2026-09-11: a local server on F64's branch, against a copy of
+local D1 with F64's script applied. It was driven through the wizard's own
+handlers in the page - `pickSystem`, `pickClass`, `takeAbility`,
+`confirmRace`, `computePools`, `goStep` and `dropAbility` - not by clicking.
+
+1. A Spirit Warrior with Earth, Air and Fire, pools rolled: it converts, hit
+   points and S.D.C. are empty, and M.D.C. is 70.
+2. Back to Race, Earth swapped for Water, race confirmed again: the class no
+   longer converts, and the pools still read M.D.C. 70, with no hit points and
+   no S.D.C.
+3. The later steps' lazy roll leaves that as it is. Only Review's Reroll
+   (`computePools(true)`) rolls again.
+
+**What the server does with it**, asked of the real `validateCharacter` with the
+composed class. The state from step 2 is refused: `pool_out_of_range` on
+`hp_max` and `sdc_max`, whose message already says to reroll on the Review step.
+**The reverse is accepted silently.** Pools rolled for Air, Fire and Water
+(hit points 15, S.D.C. 10, no M.D.C.), then Earth taken: a converting class's
+bounds skip hit points and S.D.C., and there is no M.D.C. to bound. So the
+character saves as the S.D.C. being the book says it no longer is.
+
+**Reach:** every chosen ability that changes a pool. That is F64's two realms,
+and the Godling's Super-Tough (`bonuses.pools.mdc`), which the audit named.
+Not measured beyond those.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | clear `S.pools` in `takeAbility` and `dropAbility` when the ability taken or dropped touches a pool - a `bonuses.pools` entry or `mdc_from_hp_sdc` - as `pickTotem` does, so the next step rolls again | the existing pattern; fresh pools the player can see; only abilities that change a pool pay for it | a pool the player liked is rolled again when they change a realm, as a totem change already does |
+| B | clear on every take and drop | simpler | rolls pools again for abilities that never touch them |
+| C | have the validator refuse a converting class that submits no M.D.C. | the server catches the silent direction | the wizard still shows stale numbers until the save is refused |
+
+**Proposal:** A. **Posture:** code only; no data, no schema.
+
+**Confidence: high on the gap**, because it was walked and validated. **Medium**
+that no other path clears the pools between Race and Review. What would raise
+it is the same walk done by clicking.
+
+**Ongoing cost:** one smoke pin on the two handlers.
+
+**Subject grep, 2026-09-11:** every `*AUDIT*.md` for "S.pools = null",
+`takeAbility`, `dropAbility`, and "stale" or "reroll" near "pool": no hits.
