@@ -475,7 +475,20 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
               message: `${e.name} belongs to ${row.system}, not this campaign's system` });
             continue;
           }
-          if (listNames[kind].has(norm(e.name))) continue;
+          if (listNames[kind].has(norm(e.name))) {
+            // On a list. A list slot that also carries a level cap (F61) must
+            // fit it - but ONE pool that takes the spell is enough, so a spell
+            // on an uncapped list, or inside any capped one's range, passes.
+            const onLists = pool[kind].filter((g) => (g.from || []).some((n) => norm(n) === norm(e.name)));
+            const fits = kind !== 'spell' || !Number.isFinite(row.level)
+              || onLists.some((g) => !Array.isArray(g.spell_levels) || g.spell_levels.includes(row.level));
+            if (fits) continue;
+            const caps = [...new Set(onLists.flatMap((g) => g.spell_levels || []))].sort((a, b) => a - b);
+            violations.push({ rule: 'power_level_cap', name: e.name, level: row.level,
+              message: `${e.name} is a level ${row.level} spell; the list it is on allows spell `
+                + `level${caps.length === 1 ? '' : 's'} ${caps.join(', ')}` });
+            continue;
+          }
           if (kind === 'spell') {
             if (!capPools.length) {
               violations.push({ rule: 'power_not_on_list', kind, name: e.name,

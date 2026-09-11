@@ -151,7 +151,9 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
       continue;
     }
     // A named list is the tightest restriction there is, so it is checked
-    // first: a grant that names its spells is not also asking about levels.
+    // first. Its entry may also carry a level cap (BOOK-INGEST-AUDIT F61), and
+    // the cap test below runs for a list grant too - which this path always
+    // did, being the one reader that never dropped the cap beside a list.
     const list = fromFor.get(k);
     if (list && !list.some((n) => n.toLowerCase() === name.toLowerCase())) {
       errors.push(`${name} is not on the list the level ${level} grant draws from`);

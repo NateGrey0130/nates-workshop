@@ -1399,6 +1399,27 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     !classes.some((c) => c.magic?.spells_per_level_from === true),
     classes.filter((c) => c.magic?.spells_per_level_from === true).map((c) => c.id).join(', '));
 
+  // -- a list-bound pick keeps its level cap where the book states one (F61) --
+  //
+  // Three Spirit West shamans pick later spells from their Shamanistic list,
+  // no higher than their own level. Asked of the real cap function, so the
+  // data and the rule are checked together.
+  const { spellLevelsForGrant } = await import(pathToFileURL(join(appDir, 'js', 'leveling.js')).href);
+  const upTo = (lv) => JSON.stringify(Array.from({ length: lv }, (_, i) => i + 1));
+  for (const [id, from, to] of [['plant-shaman', 3, 15], ['animal-shaman', 3, 15], ['elemental-shaman', 2, 15]]) {
+    const c = classes.find((x) => x.id === id);
+    const capped = [];
+    for (let lv = from; lv <= to; lv++) if (c && JSON.stringify(spellLevelsForGrant(c, lv, 0)) === upTo(lv)) capped.push(lv);
+    check(`${id} caps its list picks at the character's level, levels ${from}-${to}`,
+      capped.length === to - from + 1, `capped at: ${capped.join(', ')}`);
+  }
+  // "Every remaining Shamanistic spell" spans spell levels 1-11 and 1-12; a cap
+  // there would make the grant impossible to fill.
+  for (const id of ['plant-shaman', 'animal-shaman']) {
+    const c = classes.find((x) => x.id === id);
+    check(`and ${id}'s level-2 remaining-spells grant stays uncapped`, !!c && spellLevelsForGrant(c, 2, 0) === null);
+  }
+
   // -- languages of choice come from languages ------------------------------
   //
   // Seven classes said "two languages of choice" and offered the whole

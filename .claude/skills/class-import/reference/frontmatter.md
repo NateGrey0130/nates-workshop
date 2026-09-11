@@ -276,7 +276,9 @@ magic:
   narrowing;
 - `from` (inline list) or `from_list` (`true` for `spells_per_level_from`, or a
   string naming an entry in `spell_lists`) is the tightest restriction there is
-  and replaces the level cap outright;
+  and replaces the level cap - unless the same entry also states `spell_levels`,
+  an array or `"up_to_character_level"`, which then applies beside the list. Use
+  it only where the book bounds a pick by both (`BOOK-INGEST-AUDIT` F61);
 - `note` is shown to the player at the pick. It is the home for a rule the
   catalog **cannot** enforce — spells carry no category, only a name, level and
   cost, so *"non-dimension related or control based"* has nothing to filter on.

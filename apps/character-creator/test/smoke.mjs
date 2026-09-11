@@ -1503,6 +1503,56 @@ section('Per-level spells and psionics');
   check('and the counts are the varying ones, not a flat rule',
     JSON.stringify(mysticGrants.grants.map((g) => g.count)) === '[4,3,2,2,2]',
     JSON.stringify(mysticGrants.grants.map((g) => g.count)));
+
+  // BOOK-INGEST-AUDIT F61: a list-bound entry may ALSO keep a level cap, by
+  // saying so. Three Spirit West shamans' books cap their list picks at the
+  // character's own level; the Shifter's and the Lyn-Srial's do not, so the cap
+  // is opt-in and a list that asks for none stays uncapped.
+  {
+    const books = ['Spell One', 'Spell Three', 'Spell Five'];
+    const shaman = { magic: { spell_lists: { B: books }, spells_schedule: [
+      { level: 2, count: 1, from_list: 'B' },
+      { level: 3, count: 1, from_list: 'B', spell_levels: 'up_to_character_level' },
+      { level: 4, count: 1, from_list: 'B', spell_levels: [1, 2] }] } };
+    check('a list entry asking for the character-level cap gets it',
+      JSON.stringify(spellLevelsForGrant(shaman, 3)) === '[1,2,3]', JSON.stringify(spellLevelsForGrant(shaman, 3)));
+    check('a list entry asking for nothing stays uncapped', spellLevelsForGrant(shaman, 2) === null);
+    check('and an explicit array beside a list is its cap too',
+      JSON.stringify(spellLevelsForGrant(shaman, 4)) === '[1,2]');
+    const listGrants = spellGrantsFor(shaman, 1, 4).grants;
+    check('a from_list grant carries its resolved list, so the sheet has one to offer',
+      listGrants.length === 3 && listGrants.every((g) => Array.isArray(g.from) && g.from.length === 3),
+      JSON.stringify(listGrants.map((g) => g.from)));
+
+    // The create validator: a spell over its list's cap is refused, one inside
+    // it is not, and a list that asks for no cap still takes anything on it.
+    const capped = { magic: { spell_lists: { B: books }, spells_schedule: [
+      { level: 2, count: 1, from_list: 'B', spell_levels: 'up_to_character_level' },
+      { level: 3, count: 1, from_list: 'B', spell_levels: 'up_to_character_level' }] } };
+    const spellRows = { spell: new Map([['spell one', { name: 'Spell One', level: 1 }],
+      ['spell three', { name: 'Spell Three', level: 3 }], ['spell five', { name: 'Spell Five', level: 5 }]]),
+      psionic: new Map() };
+    const capRule = (cls, level, name) => validateCharacter({ character: { level }, cls, skills: [],
+      attributes: {}, powers: [{ type: 'spell', name }], powerCatalog: spellRows })
+      .violations.filter((v) => v.rule === 'power_level_cap');
+    check('a spell over its list\'s cap is refused', capRule(capped, 3, 'Spell Five').length > 0);
+    check('one inside the cap is not', capRule(capped, 3, 'Spell Three').length === 0);
+    check('and a list asking for no cap still takes anything on it', capRule(shaman, 2, 'Spell Five').length === 0);
+
+    // The wizard and the sheet cannot share the filter - the sheet is a classic
+    // script - so their shapes are pinned: a list AND its cap, both.
+    const appText = readFileSync(join(appDir, 'app.js'), 'utf8');
+    const sheetText = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    check('the wizard\'s level-up picker applies a list and its cap together',
+      /named \? \(named\.has\(String\(sp\.name\)\.toLowerCase\(\)\) && \(!levels \|\| levels\.includes\(sp\.level\)\)\)/.test(appText));
+    check('so does the sheet\'s live level-up picker',
+      /named \? \(named\.has\(String\(x\.name\)\.toLowerCase\(\)\) && \(!levels \|\| levels\.includes\(x\.level\)\)\)/.test(sheetText));
+    check('and its banked-pick panel',
+      /named \? \(named\.has\(String\(x\.name\)\.toLowerCase\(\)\)\s*&& \(!g\.spell_levels \|\| g\.spell_levels\.includes\(x\.level\)\)\)/.test(sheetText));
+    check('and the sheet\'s copy of the cap rule knows the string and from_list',
+      /entry\.spell_levels === 'up_to_character_level'/.test(sheetText)
+      && /entry\.from_list\)+ return null/.test(sheetText));
+  }
   check('totalling what the book adds up to', mysticGrants.total === 13);
 
   // An explicit list is honoured, and a class stating neither falls back.
