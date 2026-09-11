@@ -426,6 +426,12 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
       const capPools = pool.spell.filter((g) => !(g.from && g.from.length));
       const spellLevelsOpen = capPools.some((g) => !g.spell_levels);
       const allowedLevels = new Set(capPools.flatMap((g) => g.spell_levels || []));
+      // The same pools gate a spell's TRADITION (BOOK-INGEST-AUDIT F57): a
+      // level-gated pick reaches warlock, ocean, dolphin, spellsong, cloud or
+      // shaman spells only where the class allows that tradition. NULL on a pool
+      // is a pre-055 banked grant and stays unrestricted.
+      const traditionsOpen = capPools.some((g) => g.traditions == null);
+      const allowedTraditions = new Set(capPools.flatMap((g) => (g.traditions || []).map(norm)));
       const catPools = pool.psionic.filter((g) => !(g.from && g.from.length));
       const categoriesOpen = catPools.some((g) => !g.categories);
       const allowedCats = new Set(catPools.flatMap((g) => (g.categories || []).map(norm)));
@@ -455,6 +461,10 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
                 message: `${e.name} is a level ${row.level} spell; this class's picks allow `
                   + `spell level${allowedLevels.size === 1 ? '' : 's'} `
                   + [...allowedLevels].sort((a, b) => a - b).join(', ') });
+            } else if (row.tradition && !traditionsOpen && !allowedTraditions.has(norm(row.tradition))) {
+              violations.push({ rule: 'power_tradition', kind, name: e.name, tradition: row.tradition,
+                message: `${e.name} is ${row.tradition} magic, and this class's spell picks do not draw `
+                  + 'from that tradition' });
             }
           } else if (!catPools.length) {
             violations.push({ rule: 'power_not_on_list', kind, name: e.name,

@@ -591,6 +591,14 @@ function mergeMagic(born, trained) {
     .filter((n) => Number.isFinite(n)).sort((a, b) => a - b);
   if (levels.length) out.spell_levels_allowed = levels;
 
+  // Traditions a level-gated pick may reach are UNIONED for the same reason
+  // levels are: an ocean-magic race studying as an occupation that states its
+  // own allowance must not lose the race's. BOOK-INGEST-AUDIT F57.
+  const traditions = [...new Set([...(born.spell_traditions_allowed || []),
+                                  ...(trained.spell_traditions_allowed || [])]
+    .map((t) => String(t).trim().toLowerCase()).filter(Boolean))];
+  if (traditions.length) out.spell_traditions_allowed = traditions;
+
   // A count takes the higher, the same reading F10 arrived at: 108 pairs state
   // `spells_starting` on both sides and the occupation's is LOWER in 35 of
   // them, so preferring it would cut a royal frilled dragon hatchling from six

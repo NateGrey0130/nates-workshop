@@ -48,7 +48,7 @@ export async function onRequestPost({ request, env, params }) {
   // against — including the cap each one carried.
   const grants = pending.map((g) => ({
     level: g.granted_at_level, slot: g.slot, count: g.count, kind: g.kind,
-    spell_levels: g.spell_levels, categories: g.categories,
+    spell_levels: g.spell_levels, traditions: g.traditions, categories: g.categories,
     from: g.from, note: g.note,
   }));
 

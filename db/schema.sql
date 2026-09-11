@@ -398,6 +398,11 @@ CREATE TABLE IF NOT EXISTS pending_power_picks (
   -- and always NULL for a psionic grant. Copied from the class at grant time,
   -- as pending_skill_picks copies its categories.
   spell_levels TEXT,
+  -- JSON array of spell TRADITIONS a level-gated grant may reach, copied from
+  -- the class's magic.spell_traditions_allowed at grant time like the cap
+  -- above. [] is general spells only; NULL - a row banked before migration 055,
+  -- and every psionic row - is unrestricted. BOOK-INGEST-AUDIT F57.
+  spell_traditions TEXT,
   -- JSON array of psionic CATEGORIES this grant may draw from; NULL is
   -- unrestricted, and always NULL for a spell grant. A grant's categories
   -- REPLACE the class's: the Mystic's level-4 power comes from Super, which a
@@ -681,6 +686,10 @@ WHERE EXISTS (SELECT 1 FROM pragma_table_info('gear') WHERE name = 'vehicle_slug
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '054-campaign-rest-rates.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('campaigns') WHERE name = 'rest_rates');
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '055-spell-tradition.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('spells') WHERE name = 'tradition')
+  AND EXISTS (SELECT 1 FROM pragma_table_info('pending_power_picks') WHERE name = 'spell_traditions');
 
 CREATE INDEX IF NOT EXISTS idx_character_vehicles_character
   ON character_vehicles (character_id);
@@ -769,7 +778,7 @@ CREATE TABLE IF NOT EXISTS spells (
   area_of_effect TEXT,
   casting_time TEXT,
   description TEXT,
-  same_spell_as TEXT                      -- this row is another book's RETELLING of
+  same_spell_as TEXT,                     -- this row is another book's RETELLING of
                                           -- the named row: the same spell, published by
                                           -- a second tradition at its own level and cost.
                                           -- Points retelling -> established, by `name`
@@ -779,6 +788,14 @@ CREATE TABLE IF NOT EXISTS spells (
                                           -- for drift, which drift-check cannot do - both
                                           -- rows cite pages that agree with them.
                                           -- See migration 049, BOOK-INGEST-AUDIT F26.
+  tradition TEXT                          -- the family a spell belongs to: warlock,
+                                          -- ocean, dolphin, spellsong, cloud, shaman.
+                                          -- NULL is a general invocation. A class whose
+                                          -- pick is a LEVEL RANGE reaches a tradition
+                                          -- only if its magic block names it in
+                                          -- spell_traditions_allowed; a named list is
+                                          -- unaffected. A new spell import must set it.
+                                          -- See migration 055, BOOK-INGEST-AUDIT F57.
 );
 
 CREATE INDEX IF NOT EXISTS idx_spells_same_spell_as ON spells(same_spell_as);

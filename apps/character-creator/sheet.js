@@ -2544,8 +2544,15 @@ function pendingPowersPanel() {
     const pool = (isSpell ? C.spellCatalog : C.psiCatalog)
       .filter((x) => !held.has(String(x.name).toLowerCase()))
       .filter((x) => !x.system || x.system === C.data.campaign_system)
+      // The banked row's tradition allowance too (BOOK-INGEST-AUDIT F57), inlined
+      // because this file cannot import js/leveling.js - the same test as
+      // spellTraditionAllowed there. A row banked before migration 055 carries
+      // none and stays unrestricted.
       .filter((x) => !isSpell || (named ? named.has(String(x.name).toLowerCase())
-                                        : (!g.spell_levels || g.spell_levels.includes(x.level))))
+                                        : ((!g.spell_levels || g.spell_levels.includes(x.level))
+                                           && (!x.tradition || !Array.isArray(g.traditions)
+                                               || g.traditions.some((t) => String(t).toLowerCase()
+                                                    === String(x.tradition).toLowerCase())))))
       .filter((x) => isSpell || !g.categories || g.categories.includes(x.category));
     // The banked row's own restriction, not the class's as it stands today.
     const cap = named ? `a list of ${g.from.length}`

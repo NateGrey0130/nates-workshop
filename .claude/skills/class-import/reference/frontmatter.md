@@ -238,6 +238,22 @@ the cap on which spell levels a per-level grant may pick from —
 above your own level"*. **`spells_per_level_from`** is the single list form of
 `spell_lists`.
 
+**`spell_traditions_allowed`** (since `BOOK-INGEST-AUDIT` F57, migration 055)
+names the spell traditions a LEVEL-GATED pick may reach - `["ocean"]`,
+`["cloud"]`. Every spell carries `spells.tradition` - `warlock`, `ocean`,
+`dolphin`, `spellsong`, `cloud`, `shaman`, or NULL for a general invocation -
+and a pick stated only as spell levels reaches a tradition's spells only if the
+class names it here. **A named list (`spells_from`, `from`, `from_list`) is
+unaffected**: naming a warlock spell still grants it. State this key when a
+class's OWN tradition is reached through a level range rather than a list -
+the Ocean Wizard levels up through `up_to_character_level` and says
+`["ocean"]`. Omit it and the class sees general invocations only, which is the
+point: a Ley Line Walker is no longer offered the warlock catalog. `mergeMagic`
+unions it across a race and an occupation, like `spell_levels_allowed`.
+
+**A new spell import must set `spells.tradition`** when the spells belong to a
+tradition, or they land as general invocations in every level-gated pool.
+
 That is nine psionics keys and eleven magic keys in the live catalog as of
 2026-09-02; `mergePsionics` and `mergeMagic` in `parser.js` both say so in
 their own comments, and both spread unknown keys through rather than

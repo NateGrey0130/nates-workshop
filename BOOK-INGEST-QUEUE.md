@@ -1397,3 +1397,7 @@ vessels), which closed the book. Each data PR was applied `--remote` before its 
 **Findings from this book: F56, F57, F58**, none implemented. F56 (totems) is
 the one that costs players something today - nine classes carry the pick in
 prose.
+
+*Dated 2026-09-10, written the day the book closed and before any of the three
+was taken. This line does not track them: read each one's outcome note under
+its heading in `BOOK-INGEST-AUDIT.md`. F59 was filed from F57's premise audit.*

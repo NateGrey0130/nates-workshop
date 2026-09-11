@@ -7896,3 +7896,49 @@ reads like a SQL fault, which is what cost a reproduction to diagnose. (a) is
 now a convenience for local runs on a slow machine rather than a correctness
 fix, and CI's regression job is the tiebreak when a local run says "cannot
 build a database".
+
+### F59 - low - `spells_per_level_from: true` is read by nothing, and two class notes say a list carries a pick that it does not
+
+**Found by `audit-premise-auditor` while premise-auditing F57, 2026-09-10; filed
+here rather than left inside F57's outcome note, per `audit-menu` -> *A
+deferral is work*.**
+
+**Two shapes, one defect: a class states how its level-up spells are bounded,
+and the app ignores it.**
+
+- **`spells_per_level_from: true`** is on exactly two live classes,
+  `ocean-wizard` and `nautyll-koral-shaper` (`node scripts/q.mjs "SELECT
+  class_id FROM imported_classes WHERE deleted_at IS NULL AND instr(markdown,
+  'spells_per_level_from: true') > 0"`, 2026-09-10). The reader wants an ARRAY:
+  `apps/character-creator/js/leveling.js:269` returns
+  `magic.spells_per_level_from` only when `Array.isArray(...)`, and only for a
+  schedule entry saying `from_list: true` - neither class has one.
+  `apps/character-creator/test/regression.mjs:1197` skips non-arrays too, so no
+  check fails. Both classes level up through `spells_per_level_levels:
+  "up_to_character_level"` alone, which is what F57 had to give an `ocean`
+  allowance to keep their own magic reachable.
+- **The Sky-Knight and the Cloudweaver** (`lyn-srial-sky-knight`,
+  `lyn-srial-cloudweaver`) carry notes saying their 50- and 45-name
+  `spells_from` *"carries the per-level pick"*. It does not: `spells_from`
+  bounds the STARTING pick (`leveling.js` `startingGroups`), and their level-up
+  grants carry no list and no cap, so each level's pick reaches every spell the
+  system holds. F57 gave both a `cloud` allowance; that keeps Cloud magic
+  reachable, and does not bound the pick to the book's categories.
+
+**What the books say is NOT measured.** Underseas printed 60 is cited by the
+Ocean Wizard's own note for *"one new spell per level equal or below his own
+experience level"* - whether that means from the Ocean list or from any spell
+was not checked against the page. New West printed 134-135 set the Lyn-Srial
+pair's per-level terms and were not re-read for this.
+
+**Proposal:** read Underseas printed 60 and New West printed 134-135. Where the
+book binds the per-level pick to a list, give the class a `spells_schedule` of
+`{ level: N, count: 1, from_list: "ocean" }` entries (or the Lyn-Srial
+categories' names) - the shape the Shifter and the Rifter already use, which
+leveling.js reads - and delete the dead `spells_per_level_from: true`. Where it
+does not, delete the dead key and correct the two notes. **Posture:** data and
+class notes only; no code, no new key.
+
+**Confidence: high that the key is dead and the notes are wrong** (the reader
+is quoted above); **low on what the books intend** until the three pages are
+read. **Ongoing cost:** none.

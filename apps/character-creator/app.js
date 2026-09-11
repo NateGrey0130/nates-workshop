@@ -27,7 +27,8 @@ import { composeClass } from './js/compose.js';
 import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant,
          spellNamesForGrant, grantNote,
          skillGrantsFor, spellGrantsFor, psionicGrantsFor, startingGroups,
-         startingPicksFor, relatedAllowance } from './js/leveling.js';
+         startingPicksFor, relatedAllowance, spellTraditionsAllowed,
+         spellTraditionAllowed } from './js/leveling.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
 const STEPS = ['System', 'Race', 'Attributes', 'Occupation', 'Skills', 'Equipment', 'Powers',
@@ -1735,8 +1736,12 @@ function spellGrantBlock(grant) {
     // A named list is the tightest restriction and replaces the level cap: a
     // grant that names its spells is not also asking about levels.
     const named = names && new Set(names.map((n) => n.toLowerCase()));
+    // A level-gated grant reaches a tradition's spells only where the class
+    // allows it (BOOK-INGEST-AUDIT F57); a named list is untouched.
+    const traditions = spellTraditionsAllowed(S.cls);
     const pool = S.spellCatalog.filter((sp) => inSystem(sp)
-      && (named ? named.has(String(sp.name).toLowerCase()) : (!levels || levels.includes(sp.level)))
+      && (named ? named.has(String(sp.name).toLowerCase())
+                : ((!levels || levels.includes(sp.level)) && spellTraditionAllowed(sp, traditions)))
       && !heldElsewhere.has(String(sp.name).toLowerCase()));
     // A name the catalog does not carry would silently shrink the list, so say
     // so — the same reasoning the psionic named list already uses.
@@ -3150,7 +3155,8 @@ function startingSpellHtml() {
       .map((n) => String(n).toLowerCase()));
     const pool = S.spellCatalog.filter((sp) => inSystem(sp)
       && (named ? named.has(String(sp.name).toLowerCase())
-                : (!g.spell_levels || g.spell_levels.includes(sp.level)))
+                : ((!g.spell_levels || g.spell_levels.includes(sp.level))
+                   && spellTraditionAllowed(sp, g.traditions)))
       && !elsewhere.has(String(sp.name).toLowerCase()));
     // A chosen spell stays visible whatever the filter says, or narrowing the
     // list would look like it had un-picked something.
