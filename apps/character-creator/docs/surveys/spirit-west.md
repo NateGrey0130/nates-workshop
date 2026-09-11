@@ -49,8 +49,9 @@ and printed 44 prints the Totem Warrior's P.P.E. as `!D4xlO+P.E.`.
 each token is read as the only dice expression it can be — `2D6x100`,
 `1D4x10`.
 
-**Cache `p046` (printed 45) is empty**, inside the Spirit Warrior's range.
-Render it during that class's batch rather than assuming it is a plate.
+**Cache `p046` (printed 45) is empty**, inside the Spirit Warrior's range. It
+was rendered during that class's batch (#937): a full-page plate, and the entry
+runs from printed 44 straight to 46.
 
 ## The book's authority tables
 
