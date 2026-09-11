@@ -3886,6 +3886,57 @@ x
   check('a lone dice bonus is not double counted',
     near(roll(compose2('  attributes: { PS: "1d4" }', '  combat: { attacks: 1 }'), 'PS'), 2.5));
 
+  // BOOK-INGEST-AUDIT F60. The checks above roll the COMPOSED class, a path the
+  // wizard stopped taking on 2026-08-20: it rolls the race half, the occupation
+  // alone and the totem row alone, each on its own, and sums them (rolledAll).
+  // A mixed list's flat half is in none of those rolls, so it has to be counted
+  // at render - which these ask, the way the wizard actually rolls.
+  const rollOf = (cls) => {
+    const out = { attributes: {}, combat: {}, saves: {} };
+    const byGroup = derive.diceBonusesByGroup(cls);
+    for (const g of ['attributes', 'combat', 'saves']) {
+      for (const [k, d] of Object.entries(byGroup[g] || {})) {
+        const rolls = [d].flat().map((x) => (typeof x === 'number' ? x : evalDice(x))).filter((v) => v != null);
+        if (rolls.length) out[g][k] = rolls.reduce((a, b) => a + b, 0);
+      }
+    }
+    return out;
+  };
+  const sumHalves = (...halves) => {
+    const out = { attributes: {}, combat: {}, saves: {} };
+    for (const h of halves) for (const g of Object.keys(out)) {
+      for (const [k, v] of Object.entries(h[g])) out[g][k] = (out[g][k] || 0) + v;
+    }
+    return out;
+  };
+  const splitRoll = (composed, halves, group, key, N = 20000) => {
+    let total = 0;
+    for (let i = 0; i < N; i++) {
+      total += derive.classBonuses(composed, 1, sumHalves(...halves.map(rollOf)))[group][key] || 0;
+    }
+    return total / N;
+  };
+  const split2 = (a, b, group, key) => {
+    const race = mk('rcc', a);
+    const occ = mk('occ', b);
+    return splitRoll(combineClasses(race, occ), [race, occ], group, key);
+  };
+  check('rolled apart, a race\'s flat P.S. beside an occupation\'s dice is kept',
+    near(split2('  attributes: { PS: 2 }', '  attributes: { PS: "1d4" }', 'attributes', 'PS'), 4.5));
+  check('and a race\'s dice beside an occupation\'s flat, the direction production has',
+    near(split2('  attributes: { PS: "1d4" }', '  attributes: { PS: 2 }', 'attributes', 'PS'), 4.5));
+  check('and a flat PENALTY beside dice is kept too, not dropped in the character\'s favour',
+    near(split2('  attributes: { PS: "1d4" }', '  attributes: { PS: -2 }', 'attributes', 'PS'), 0.5));
+  check('a combat key the same way - a Godling\'s 1D4 initiative beside a flat +3',
+    near(split2('  combat: { initiative: "1d4" }', '  combat: { initiative: 3 }', 'combat', 'initiative'), 5.5));
+  // Hin-Ri's shape: a Juicer's 2D6 P.S. is rolled from the class alone, and a
+  // skill's flat +5 arrives through composition (sumBonusGroups) and is never
+  // rolled at all - catalog.md said it was, and no code path ever did it.
+  const juicer = { bonuses: { attributes: { PS: '2d6' } } };
+  const withSkills = { bonuses: sumBonusGroups(juicer.bonuses, { attributes: { PS: 5 } }) };
+  check('a class\'s dice beside a skill\'s flat bonus counts both',
+    near(splitRoll(withSkills, [juicer], 'attributes', 'PS'), 12));
+
   // The same collect-not-overwrite rule inside one class: a bonus at level 1 and
   // another at_level for the same attribute both count once the level is reached.
   const twice = mk('rcc', ['  attributes: { PS: "1d4" }',
