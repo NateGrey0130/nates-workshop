@@ -894,6 +894,11 @@ export function combineClasses(rcc, occ) {
   // it to stop calling the merged expressions "racial dice" when half of them
   // are the occupation's.
   if (superseded) out.supersedes_race = true;
+  // A mega-damage conversion is the OCCUPATION's when it states one - the Totem
+  // Warrior's supernatural P.E. comes from its infusion, not from a race - and
+  // `out` starts as the race spread, so it is carried (BOOK-INGEST-AUDIT F62).
+  // An M.D.C. race still keeps its own pool: convertsToMdc yields to mdc_base.
+  if (occ.mdc_from_hp_sdc === true) out.mdc_from_hp_sdc = true;
   for (const key of ['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',
                      'starting_money', 'xp_table']) {
     if (superseded && occ[key] != null) out[key] = occ[key];
@@ -2292,6 +2297,16 @@ export function parseClassMarkdown(text) {
     }
     if (data.category !== 'occ') {
       warnings.push('supersedes_race is set on something that is not an O.C.C. and will do nothing');
+    }
+  }
+  // F62. A mega-damage creature whose S.D.C. and hit points ARE its M.D.C. -
+  // the Totem Warrior's supernatural P.E. Opt-in, and only for a PERMANENT
+  // conversion; a temporary one (the Psycho-Stalker's) is an ability.
+  if (data.mdc_from_hp_sdc !== undefined) {
+    if (data.mdc_from_hp_sdc !== true) {
+      errors.push('mdc_from_hp_sdc is a flag and may only be true; omit it otherwise');
+    } else if (data.mdc_base != null) {
+      warnings.push('mdc_from_hp_sdc is set beside an mdc_base, which wins; the flag does nothing');
     }
   }
   if (data.occ_restrictions !== undefined && data.category !== 'rcc') {

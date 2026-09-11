@@ -1372,6 +1372,16 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   check('and only the Totem Warrior sees its powers',
     classes.filter((c) => c.totem?.powers === true).map((c) => c.id).join() === 'totem-warrior');
 
+  // -- mega-damage conversion (BOOK-INGEST-AUDIT F62) -------------------------
+  //
+  // The Totem Warrior's supernatural P.E. turns its S.D.C. and hit points into
+  // one M.D.C. total, permanently. The Psycho-Stalker's conversion is temporary
+  // and the Spirit Warrior's rides on two of its realms (F64), so neither may
+  // carry the class-wide flag.
+  const converting = classes.filter((c) => c.mdc_from_hp_sdc === true).map((c) => c.id).sort();
+  check('only the Totem Warrior turns S.D.C. and hit points into M.D.C.',
+    converting.join() === 'totem-warrior', 'classes with the flag: ' + converting.join(', '));
+
   // -- per-level spell lists (BOOK-INGEST-AUDIT F59) ---------------------------
   //
   // New West printed 135 binds both Lyn-Srial picks to a category set, from

@@ -96,6 +96,9 @@ Optional — include only what the page actually states:
     block states the exact inverse of the book and renders as "PB 12+"
 - attribute_dice: map of attribute → roll string, for RCCs with racial stats
 - hit_points_base / sdc_base / mdc_base / ppe_base: formula strings or numbers
+- mdc_from_hp_sdc: true only when the book PERMANENTLY turns the character's
+    combined S.D.C. and hit points into one M.D.C. total (a supernatural P.E.).
+    A temporary conversion bought with I.S.P. or P.P.E. is an ability, not this
 - starting_money: what the class starts with in gold (Palladium) or credits
     (Rifts), as the book writes it — a formula string like "2d6x10" or a flat
     number. Record ONLY the coin. Saleable goods, gems and artifacts the entry

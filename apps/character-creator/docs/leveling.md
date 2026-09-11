@@ -447,6 +447,19 @@ bonuses:
   pools: { ppe: "4d6", isp: "4d6" }   # and leave ppe_base absent
 ```
 
+**A mega-damage creature whose S.D.C. and hit points ARE its M.D.C. says so with
+`mdc_from_hp_sdc: true`** (`BOOK-INGEST-AUDIT.md` F62). The Totem Warrior's
+supernatural P.E. *"turns the warrior into a mega-damage creature. Simply change
+his combined S.D.C. and hit points into an M.D.C. total"* - permanently, even in
+human form. Hit points and S.D.C. are rolled from the formulas the class or the
+core defaults state, their sum plus any `bonuses.pools.mdc` is the M.D.C.
+maximum, and the two are left empty. Each level adds the hit point formula's
+per-level dice to M.D.C. `convertsToMdc` in `js/leveling.js` is the one
+definition the wizard, the validator and the level-up proposal all read, and it
+yields to a stated `mdc_base`. **Not for a temporary conversion** - the
+Psycho-Stalker spends I.S.P. to become M.D.C. for a minute and stays an S.D.C.
+being, which is an ability.
+
 Four things follow from pools being rolled once rather than derived per render:
 
 - **It is the only bonus group that takes dice as well as a number.** Combat and

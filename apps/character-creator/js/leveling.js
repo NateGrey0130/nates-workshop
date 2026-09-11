@@ -14,7 +14,7 @@
 // required for level index+1). Doubling to level 5, then flattening,
 // roughly tracking the shape of the official charts. Max level 15.
 
-import { evalDice } from './dice.js';
+import { evalDice, rollPoolFormula, poolFormulaBounds, diceBounds } from './dice.js';
 
 const DEFAULT_XP_TABLE = [
   0, 2000, 4000, 8000, 16000, 25000, 35000, 50000,
@@ -547,6 +547,59 @@ export function psionicCategoriesForGrant(cls, level, slot = 0) {
     : null;
 }
 
+// A MEGA-DAMAGE CONVERSION - BOOK-INGEST-AUDIT F62. The Totem Warrior's
+// supernatural P.E. "turns the warrior into a mega-damage creature. Simply
+// change his combined S.D.C. and hit points into an M.D.C. total. This is a
+// constant state of being, even when in human form" (Spirit West printed 42).
+// `mdc_from_hp_sdc: true` says so: hit points and S.D.C. are rolled from the
+// formulas the class - or compose.js's core defaults - state, and their SUM is
+// the M.D.C. maximum.
+//
+// OPT-IN, and it yields to a stated `mdc_base`: an M.D.C. race composed with a
+// converting occupation keeps its own pool. One definition, read by the
+// wizard's roll, the validator's bounds and the level-up proposal, so the three
+// cannot disagree. NOT for a temporary conversion - the Psycho-Stalker spends
+// I.S.P. to become M.D.C. for a minute, and stays an S.D.C. being.
+export function convertsToMdc(cls) {
+  return cls?.mdc_from_hp_sdc === true && cls.mdc_base == null;
+}
+
+// The wizard's rolled pools, converted: hit points and S.D.C. become one M.D.C.
+// maximum, plus any `bonuses.pools.mdc`, and the two are left EMPTY - the sheet
+// already hides a null pool and damageCascade already sends damage to M.D.C.
+// when there is one. An unflagged class comes back exactly as it went in.
+export function convertedPools(cls, pools, attrs = {}) {
+  if (!convertsToMdc(cls) || !pools) return pools;
+  if (pools.hp == null && pools.sdc == null) return pools;
+  return { ...pools, hp: null, sdc: null,
+    mdc: rollPoolFormula((pools.hp ?? 0) + (pools.sdc ?? 0), attrs, cls.bonuses?.pools?.mdc ?? null) };
+}
+
+// The range that converted maximum can legitimately hold at `level`: both
+// formulas' bounds with their own pool bonuses and their per-level dice for
+// each level after the first, plus the M.D.C. bonus. null when a formula cannot
+// be read - an unreadable formula is a note, not a bound, as the validator has
+// it for every other pool.
+export function convertedMdcBounds(cls, attrs = {}, level = 1) {
+  if (!convertsToMdc(cls)) return null;
+  let min = 0;
+  let max = 0;
+  let any = false;
+  for (const [formula, key] of [[cls.hit_points_base, 'hp'], [cls.sdc_base, 'sdc']]) {
+    if (formula == null) continue;
+    const b = poolFormulaBounds(formula, attrs, cls.bonuses?.pools?.[key] ?? null);
+    if (!b) return null;
+    const per = perLevelDiceOf(formula);
+    const perB = per ? diceBounds(per) : null;
+    min += b.min + (perB ? perB.min * (level - 1) : 0);
+    max += b.max + (perB ? perB.max * (level - 1) : 0);
+    any = true;
+  }
+  if (!any) return null;
+  const bonus = poolFormulaBounds(0, attrs, cls.bonuses?.pools?.mdc ?? null);
+  return { min: min + (bonus?.min ?? 0), max: max + (bonus?.max ?? 0) };
+}
+
 // Proposed (not yet applied) diff for character reaching toLevel.
 // `character` must carry parsed skills and the pool max columns.
 export function buildProposal(character, cls, toLevel) {
@@ -554,10 +607,11 @@ export function buildProposal(character, cls, toLevel) {
   const gained = toLevel - fromLevel;
   const proposal = { from_level: fromLevel, to_level: toLevel, pools: {}, skills: [], grants: [] };
 
+  const convert = convertsToMdc(cls);
   const poolFormulas = {
-    hp_max: cls.hit_points_base,
-    sdc_max: cls.sdc_base,
-    mdc_max: cls.mdc_base,
+    hp_max: convert ? null : cls.hit_points_base,
+    sdc_max: convert ? null : cls.sdc_base,
+    mdc_max: convert ? null : cls.mdc_base,
     ppe_max: cls.ppe_base,
     isp_max: cls.psionics?.isp_base,
   };
@@ -567,6 +621,17 @@ export function buildProposal(character, cls, toLevel) {
     let add = 0;
     for (let i = 0; i < gained; i++) add += evalDice(dice);
     proposal.pools[field] = { from: character[field], to: character[field] + add };
+  }
+  // A converted class grows its M.D.C. by what hit points and S.D.C. would have
+  // grown by (F62). Those two pools are empty and a null `mdc_base` has no
+  // per-level dice of its own, so without this the M.D.C. never grew at all.
+  if (convert && character.mdc_max != null) {
+    let add = 0;
+    for (const formula of [cls.hit_points_base, cls.sdc_base]) {
+      const dice = perLevelDiceOf(formula);
+      if (dice) for (let i = 0; i < gained; i++) add += evalDice(dice);
+    }
+    if (add) proposal.pools.mdc_max = { from: character.mdc_max, to: character.mdc_max + add };
   }
 
   for (const s of Array.isArray(character.skills) ? character.skills : []) {

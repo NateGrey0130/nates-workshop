@@ -57,6 +57,7 @@ and stored — it cannot be re-rolled per render.
 hit_points_base: "P.E. + 1d6 per level"   # occ
 sdc_base: 20
 mdc_base: "1d4x100"                        # M.D.C. beings use this instead
+mdc_from_hp_sdc: true                      # OR: S.D.C. + hit points become one M.D.C. total (F62)
 ppe_base: "1d6x10+20, +2d6 per additional level starting at level two"
 starting_money: "2d4x1000"                 # coin only, never gear
 ```
