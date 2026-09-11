@@ -709,6 +709,7 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '055-spell-tradition.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('spells') WHERE name = 'tradition')
   AND EXISTS (SELECT 1 FROM pragma_table_info('pending_power_picks') WHERE name = 'spell_traditions');
+INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '056-totems.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'totems')
   AND EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'totem');
