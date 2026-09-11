@@ -4,7 +4,7 @@
 // this, down to the buffer size and the slice trick. Each line of it is load
 // bearing and none of it is obvious, which is exactly the kind of thing that
 // should exist once.
-import { execSync, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,18 +24,37 @@ export const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
  * @param {object} opts
  * @param {'--local'|'--remote'} opts.target  defaults to --remote
  */
+//
+// WITHOUT A SHELL, for the reason d1Batch below gives. This used to build
+// `--command "${sql}"` and hand it to a shell, and an ODD number of double
+// quotes in the SQL - `instr(markdown, '"')`, or a class line's `"slug` cut in
+// half - closed that quoting early. Whatever followed was shell syntax, so a
+// trailing `> 0` became a REDIRECT: wrangler's output went into a file named
+// `0` in the repo root and the caller saw "Unexpected end of JSON input". A
+// stray `0` holding wrangler's usage text turned up that way on 2026-09-11;
+// reproduced the same day with `instr(markdown, '"') > 0`.
 export function d1Query(sql, { target = '--remote', db = DB } = {}) {
-  const out = execSync(
-    `npx wrangler d1 execute ${db} ${target} --json --command "${sql}"`,
-    // maxBuffer: wrangler prints the whole result set, and the gear catalog
-    // alone overruns the 1 MB default.
-    // stdio: stderr is swallowed because wrangler writes its banner there on
-    // every successful call, and inheriting it buries the script's own output.
-    { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1e9,
-      stdio: ['ignore', 'pipe', 'ignore'] });
+  const r = runWrangler(['wrangler', 'd1', 'execute', db, target, '--json', '--command', sql]);
+  if (r.status !== 0) {
+    throw new Error('wrangler d1 execute failed:\n'
+      + ((r.stderr || '') + (r.stdout || '')).slice(-2000));
+  }
   // wrangler prefixes the JSON with a human banner, so the payload starts at
   // the first '['. Parsing `out` directly fails on every call.
+  const out = r.stdout || '';
   return JSON.parse(out.slice(out.indexOf('['))).flatMap((b) => b.results || []);
+}
+
+// npm's own npx-cli.js under this Node, so the child gets a real argv array:
+// Windows npx is a .cmd that Node refuses to spawn unshelled, and a shell string
+// cannot carry an embedded double quote. maxBuffer because wrangler prints the
+// whole result set, and the gear catalog alone overruns the 1 MB default.
+function runWrangler(args) {
+  const npxCli = join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npx-cli.js');
+  return existsSync(npxCli)
+    ? spawnSync(process.execPath, [npxCli, ...args],
+        { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1e9 })
+    : spawnSync('npx', args, { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1e9, shell: true });
 }
 
 /**

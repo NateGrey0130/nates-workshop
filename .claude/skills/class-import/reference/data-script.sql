@@ -10,6 +10,12 @@
 -- bases are computed as catalog base + the printed O.C.C. bonus. Missing
 -- catalog references get the standard stub rows. Non-ASCII characters are
 -- spliced in with char() - see PR #101's pre-flight.
+--
+-- A multi-line text inside an UPDATE (a replace() on stored markdown) is ONE
+-- literal with a placeholder, never a chain of 'a' || char(10) || 'b' || ...:
+-- D1 refuses an expression deeper than 100, a chain nests one level per link,
+-- and d1-apply's pre-flight now refuses the file before anything runs.
+--   replace('line one~~line two~~line three', '~~', char(10))
 
 
 -- Stub rows for anything the class references that the catalog lacks.
