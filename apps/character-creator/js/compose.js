@@ -85,6 +85,13 @@ export const CORE_SDC_BY_CLASS = {
   'animal-shaman': '1D6',
   'mask-shaman': '1D6',
   'healing-shaman': '1D6',
+  // Printed 62-69, the rest of the Shaman O.C.C.s, also 1D6. The Fetish
+  // Shaman fights as a War Shaman but the book files it among the Shamans;
+  // its +5D6 is a pool bonus on top. The Wendigo R.C.C. states M.D.C. and
+  // needs no entry.
+  'paradox-shaman': '1D6',
+  'elemental-shaman': '1D6',
+  'fetish-shaman': '1D6',
   // Men of arms — 3D6.
   'glitter-boy': '3D6',
   'headhunter-techno-warrior': '3D6',
