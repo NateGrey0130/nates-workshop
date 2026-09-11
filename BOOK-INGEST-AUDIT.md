@@ -7881,3 +7881,18 @@ again after the next book, to see the growth rate.
 **Subject grep, 2026-09-10:** every `*AUDIT*.md` for `cannot build a
 database`, `180000` and regression timeouts, and `MEMORY.md`'s index. Nothing
 found.
+
+**CORRECTED, 2026-09-10, same session - severity medium -> low.** The CI
+`regression` job passed every spirit-west PR (#934-#939) with the 180 s
+timeout unmodified, each run about a minute. The job log of #939's run
+(`gh run view 34547250233 --log`) puts step [1/7] at **17.8 s** - 00:37:20.7 to
+00:37:38.5 UTC - against 251.4 s on this machine. **The build has not outgrown
+the harness; this machine, busy with a slow production apply, had.** The
+paragraph above that says the build "was already running close to the limit"
+generalised one machine's number, and CI is the counter-example.
+
+What survives is (b): a killed build still reports only npm's notice lines and
+reads like a SQL fault, which is what cost a reproduction to diagnose. (a) is
+now a convenience for local runs on a slow machine rather than a correctness
+fix, and CI's regression job is the tiebreak when a local run says "cannot
+build a database".

@@ -32,7 +32,7 @@ with a letter in a digit slot.
 
 | cache | printed | fault | matters? |
 |---|---|---|---|
-| `p202` | **201** | WELDED | **yes** — the War Chief power armor's second page |
+| `p202` | 201 | WELDED | no — the Iron Bear's introduction and plate, which carry no figure. **This row said "the War Chief's second page" until the vessel import**; the War Chief's stat block is all on printed 200 |
 | `p052` | **51** | GLYPHS (1) | **yes** — Plant Shaman O.C.C. abilities |
 | `p085` | **84** | GLYPHS (1) | **yes** — fetish general rules |
 | `p106` | **105** | GLYPHS (1) | **yes** — the Turtle, Whale and Wolf totems |
@@ -235,8 +235,10 @@ shaman grants are explicit name lists, which work unprefixed.
 ### vessels: 6, none priced
 
 Uktena Combat Robot (189), Thunderbird Assault Robot (192), Wolf Assault Robot
-(194), U.S.A. SAMAS (197), War Chief (200-201, **welded page 201**), Iron Bear
-(202). Each `Market Cost:` line says the machine is not sold outside the
+(194), U.S.A. SAMAS (197), War Chief (199-200), Iron Bear (201-202). **This
+said the War Chief ran onto welded page 201; it does not** - printed 201 is the
+Iron Bear's introduction and plate, and the War Chief's stat block is entirely
+on printed 200. Each `Market Cost:` line says the machine is not sold outside the
 preserves, and most give a figure it **would** sell for. Following `underseas`,
 an estimate is not a price: `cost` stays NULL and the figure goes in
 `cost_note`.
@@ -282,7 +284,8 @@ What is deliberately left, with the reason for each:
 | 2026-09-10 | [#936](https://github.com/NateGrey0130/nates-workshop/pull/936) | Fetishes, printed 85-94: **46 `magic` gear rows** - 18 minor, 18 major (three tattoos), 10 legendary (gear 1349 -> **1395**). None priced and none given a price; each `cost_note` cites printed 84. Landed before the classes so their starting-fetish lines have rows to point at. Applied `--remote` before the PR. |
 | 2026-09-10 | [#937](https://github.com/NateGrey0130/nates-workshop/pull/937) | The four warriors, printed 36-47: **Tribal, Mystic, Totem and Spirit Warrior** (classes 250 -> **254**), plus **W.P. Tomahawk** (skills 371 -> **372**) - the one skill this book grants that the catalog lacked, which the survey's zero-skills count could not see. Four `CORE_SDC_BY_CLASS` entries at 3D6. Every totem pick is prose citing F56. Applied `--remote` before the PR. |
 | 2026-09-10 | [#938](https://github.com/NateGrey0130/nates-workshop/pull/938) | Shamans 1 of 2, printed 48-62: **Plant, Animal, Mask and Healing Shaman** (classes 254 -> **258**). The first consumers of the #935 spells: Plant and Animal pick five of their own Shamanistic spells at level 1 and get the rest at level 2, then one a level from the book's list; the Healing Shaman's master psionics run a 33-entry schedule. Printed 51 is glyph-corrupt and its hit point multiplier was read off a render (P.E. x5). Three `CORE_SDC_BY_CLASS` entries at 1D6; the Plant Shaman states its own. Applied `--remote` before the PR. |
-| 2026-09-10 | this PR | The last four classes: **Paradox, Elemental and Fetish Shaman** (printed 62-69) and the **Wendigo R.C.C.** (printed 126-128) (classes 258 -> **262**). **ALL TWELVE PLAYABLE CLASSES ARE IN.** The Paradox Shaman is granted the five Paradox spells and draws on a 35-spell list; the Rifts England temporal spells it may also take are not held (the Time Master precedent). The Elemental Shaman picks one element as its totem; its three starting Warlock spells are offered from all four elements with a note, because a pick cannot be tied to the element chosen. The Wendigo's M.D.C. line prints `P.E.xS` and was read off a render as P.E. x5. Three `CORE_SDC_BY_CLASS` entries at 1D6. Applied `--remote` before the PR. `regression.mjs` failed twice with "cannot build a database": the bootstrap build now takes 251 s and the harness kills it at 180 s - filed as `BOOK-INGEST-AUDIT` F58, not fixed here; the pins were verified by one run with the timeout raised in the working tree only. |
+| 2026-09-10 | [#939](https://github.com/NateGrey0130/nates-workshop/pull/939) | The last four classes: **Paradox, Elemental and Fetish Shaman** (printed 62-69) and the **Wendigo R.C.C.** (printed 126-128) (classes 258 -> **262**). **ALL TWELVE PLAYABLE CLASSES ARE IN.** The Paradox Shaman is granted the five Paradox spells and draws on a 35-spell list; the Rifts England temporal spells it may also take are not held (the Time Master precedent). The Elemental Shaman picks one element as its totem; its three starting Warlock spells are offered from all four elements with a note, because a pick cannot be tied to the element chosen. The Wendigo's M.D.C. line prints `P.E.xS` and was read off a render as P.E. x5. Three `CORE_SDC_BY_CLASS` entries at 1D6. Applied `--remote` before the PR. `regression.mjs` failed twice with "cannot build a database": the bootstrap build now takes 251 s and the harness kills it at 180 s - filed as `BOOK-INGEST-AUDIT` F58, not fixed here; the pins were verified by one run with the timeout raised in the working tree only. (The CI regression job builds the same database in 18 s and passed this PR unmodified - the 251 s is this machine, under load; see F58's correction.) |
+| 2026-09-10 | this PR | Weapons of Note, printed 203: **13 gear rows** (gear 1395 -> **1408**) - the two Modern Indian bows and the NA-SW4's M.D.C. arrows, two new arrowheads, six bows and crossbows priced in credits, and two vibro weapons; seven arrowheads already held from Triax were not duplicated, and the smoke arrowhead's 80 credits went in `cost_note` beside Triax's 60. Vessels, printed 189-202: **6 vehicles, 60 M.D.C. locations, 32 weapon entries** (vehicles 158 -> **164**), none priced. **THE BOOK IS FULLY IMPORTED.** Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -301,3 +304,36 @@ What is deliberately left, with the reason for each:
 
 None of these is this book's. This is the baseline the imports are measured
 against: a line that moves after a Spirit West PR is that PR's.
+
+**After the last PR, 2026-09-10:**
+
+```
+  spirit-west        112 / 0
+```
+
+112 is exactly what shipped - 12 classes, 34 spells, 1 skill, 59 gear rows
+(46 fetishes and 13 Weapons of Note) and 6 vessels - and every one is
+traceable. **Every BACKLOG line is unchanged from the baseline above**, which is
+the answer to "did we finish?": no row from this book landed as a stub, and no
+spell without text.
+
+The `NO PRICE` counters did not move either (gear 29, vessels 0), although
+46 fetishes and 6 vessels have no `cost`. That is correct rather than missed:
+every one of them carries a `cost_note` saying why, and those counters count
+unpriced rows with nothing said.
+
+## The book is fully imported
+
+| what | printed | rows | PRs |
+|---|---|---|---|
+| Shaman spells | 72-82 | 34 | #935 |
+| Fetishes | 85-94 | 46 | #936 |
+| Warrior O.C.C.s, and W.P. Tomahawk | 36-47 | 4 classes, 1 skill | #937 |
+| Shaman O.C.C.s | 48-69 | 7 | #938, #939 |
+| Wendigo R.C.C. | 126-128 | 1 | #939 |
+| Weapons of Note | 203 | 13 | the last PR |
+| Robots and power armor | 189-202 | 6 vehicles, 60 locations, 32 weapons | the last PR |
+
+**Still open, and none of it this book's to fix:** `BOOK-INGEST-AUDIT` F56
+(the totem table nine classes carry as prose), F57 (level-gated spell pools
+admit every tradition) and F58 (the regression harness's local timeout).

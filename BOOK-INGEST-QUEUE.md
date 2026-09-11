@@ -16,7 +16,7 @@ the human view of the same thing plus the import status.
 | `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 224 — corrected 2026-09-07, see below | **+0** | **imported** |
 | `underseas` | Rifts WB 7: Underseas | 216 | SCAN (OCR) | 214 | **+0 / -1 split** | **imported** |
 | `new-west` | Rifts WB 14: New West | 226 | text layer | 224 | +1 | **imported** |
-| `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | **surveyed** |
+| `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | **imported** |
 | `mystic-russia` | Rifts WB 18: Mystic Russia | 178 | text layer | 176 | +1 | cached |
 | `free-quebec` | Rifts WB 22: Free Quebec | 194 | text layer | 192 | +1 | **imported** |
 | `phase-world` | Rifts DB 2: Phase World | 209 | SCAN (OCR) | 208 | **+0** | **imported** |
@@ -1357,3 +1357,43 @@ offered today.
 **What is deliberately not imported**: the Kachina Dancer (a role layered on an
 O.C.C., not one), every NPC monster, spirit and god on printed 106-188, the
 totems as catalog rows (F56), and the setting.
+
+### `spirit-west` is FULLY IMPORTED, 2026-09-10
+
+Status `surveyed` -> **`imported`**, across seven PRs, all in one session: #934
+(survey), #935 (34 shaman spells), #936 (46 fetishes), #937 (the four warriors
+and W.P. Tomahawk), #938 (Plant, Animal, Mask and Healing Shaman), #939
+(Paradox, Elemental and Fetish Shaman and the Wendigo), and the gear-and-vessel
+PR that closed the book. Each data PR was applied `--remote` before its merge.
+
+**Catalog movement:** classes 250 -> **262**, skills 371 -> **372**, spells
+739 -> **773**, gear 1349 -> **1408**, vehicles 158 -> **164**.
+
+| category | in | not in, and why |
+|---|---|---|
+| classes | **12 of 12** - 11 O.C.C.s and the Wendigo R.C.C. | none |
+| spells | **34**, unprefixed, at their printed levels | the Paradox Shaman's Rifts England temporal spells, which the catalog does not hold |
+| skills | **1** - W.P. Tomahawk | the survey's "zero new skills" was right about the book's definitions and blind to a class granting one, which is the Triax lesson again |
+| gear | **59** - 46 unpriced fetishes and 13 Weapons of Note | seven arrowheads already held from Triax |
+| vessels | **6**, 60 locations, 32 weapons, none priced | none |
+
+**Three things this book established that the next one needs:**
+
+- **Named spell lists match by exact string.** `catalog-diff` normalizes `&` to
+  `and` and ignores case, so it reported `Summon & Control Rodents` as matched
+  while the wizard, which compares lowercased names exactly, would have dropped
+  the pick. Six list names had to take the catalog's spelling. **Check a list
+  with a plain `IN (...)` query, not with the diff.**
+- **A remote apply can hang for an hour with the database half written.** It
+  happened twice here - three of four classes in, the fourth call never
+  returning. Read production, kill only the stuck process tree, and re-apply
+  what is missing; the class scripts' `WHERE NOT EXISTS` makes that safe, and
+  the footer rows say which files landed.
+- **`regression.mjs` can fail locally for a reason that is not the data** -
+  `BOOK-INGEST-AUDIT` F58. On this machine the bootstrap took 251 s against a
+  180 s timeout while CI builds it in 18 s. A "cannot build a database" with
+  only npm notice lines is that; CI's regression job is the tiebreak.
+
+**Findings from this book: F56, F57, F58**, none implemented. F56 (totems) is
+the one that costs players something today - nine classes carry the pick in
+prose.
