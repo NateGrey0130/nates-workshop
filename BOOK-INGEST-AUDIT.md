@@ -8130,6 +8130,80 @@ class notes only; no code, no new key.
 is quoted above); **low on what the books intend** until the three pages are
 read. **Ongoing cost:** none.
 
+**Taken, 2026-09-11 (PR #945).** As written, both branches of the proposal,
+after reading the three pages it asked for. **Posture, said back:** data and
+class notes only - no code, no new key; `spell_lists`, `spells_starting_groups`
+and `spells_schedule` all existed, and the Shifter and both Elemental
+Fusionists already use this shape.
+
+**What the pages say**, read from the cache 2026-09-11:
+
+- **Underseas printed 60, item 7:** the Ocean Wizard gains *"one new spell equal
+  or below his own experience level"* each level. **Printed 151, item 5:** the
+  Koral Shaper's new spells *"cannot exceed the character's current level of
+  experience"*. Neither names the ocean list for that pick, so both take the
+  second branch: the dead key goes, and the pick is unchanged - capped by
+  `spells_per_level_levels: up_to_character_level`, reaching the ocean spells
+  and the general invocations through F57's allowance.
+- **New West printed 135:** the Sky-Knight's extra spell comes *"from any
+  category except Clouds of Creation"*, the Cloudweaver's two *"from any
+  category except Clouds of War"*, both *"starting with level one"*. Those take
+  the first branch. Each 50- and 45-name list is declared once in `spell_lists`,
+  read by a level-one starting group and by `spells_schedule` entries for levels
+  2-15, which replace `spells_per_level`.
+
+**Three premises were wrong** (`audit-premise-auditor`, 2026-09-11):
+
+- **The proposal's shape for the ocean pair would have dropped the level cap**
+  the classes' own notes quote from printed 60. A named list replaces the cap in
+  the wizard picker (`app.js:1780-1781`), the sheet's banked picks
+  (`sheet.js:2565-2566`) and the validator (`validate-character.js:478`), and
+  only the server's claim check honours both (`power-picks.js:155-166`), as read
+  2026-09-11. No data-only change can bind a list and a cap together. The pages
+  name no list, so the choice never had to be forced - but a book that did would
+  need code, and this is where that would start.
+- **The quoted Lyn-Srial phrase is true.** <!-- claim-ok: quoting the premise this note corrects -->
+  *"carries the per-level pick"* is said of `spells_per_level: N`, which it did
+  carry; the false clause was *"given as `spells_from`"*.
+- **`spells_from` bounded nothing on those two classes, not even the starting
+  pick.** Neither stated `spells_starting`, so `startingGroups` returned an
+  empty list and **level one granted no pick at all** - worse than the finding
+  said, and fixed by the same change. F57's data script comment ("start from
+  named Cloud lists", `zzzzzzzzz-f57-spell-traditions.sql:38`) repeats the false
+  premise; an applied script is not edited, so it stands and this note corrects
+  it.
+- Minor: since #943 a Lyn-Srial level-up reached the general invocations and the
+  58 cloud spells, not *"every spell the system holds"*. The defect was reaching
+  the one category the book excludes.
+
+**Found while doing it, recorded rather than changed where it is not F59's:**
+
+- **The Ocean Wizard's notes read the pick as ocean-list-only** - *"It is the
+  ocean list and nothing else"*, and its GM notes' *"a spell every level drawn
+  from the whole ocean list"* - while the class starts with Breathe Without Air,
+  a general invocation, and printed 60 names no list. Both corrected to what the
+  book and the app do.
+- **The Koral Shaper's STARTING six are "selected from levels 1-6"** on printed
+  151, with no list named, and the class binds them to the ocean list
+  (`from_list: "ocean"`). Not this finding's pick; unchanged.
+- **`spell_traditions_allowed: ["cloud"]` now affects nothing on the Lyn-Srial
+  pair**, since every one of their picks is list-bound. Left as F57 wrote it;
+  harmless.
+- **D1 caps an expression tree at depth 100.** The first version of the script
+  wrote its 70-line block as `'a' || char(10) || ...` and failed; each
+  multi-line text is now one literal and a single `replace()`.
+
+**Corrected where the finding was cited:** the two Lyn-Srial notes and the
+Ocean Wizard's two sentences, by `zzzzzzzzz-f59-per-level-lists.sql`. The
+survey's closing paragraph and the queue's dated note name F59 without claiming
+a status, and are unchanged.
+
+**Production, 2026-09-11, before merge:** the data script applied, all four
+readbacks at their wanted values - no live class carries the dead key, both
+Lyn-Srial classes draw every pick from a declared list, neither says a flat
+count carries the pick, and the Ocean Wizard no longer reads its pick as the
+ocean list alone.
+
 ### F60 - low - a race's FLAT attribute bonus is lost when an occupation grants DICE to the same attribute, because the wizard rolls the two halves apart
 
 **Found taking F56, 2026-09-10.**

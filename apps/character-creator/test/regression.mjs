@@ -1372,6 +1372,33 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   check('and only the Totem Warrior sees its powers',
     classes.filter((c) => c.totem?.powers === true).map((c) => c.id).join() === 'totem-warrior');
 
+  // -- per-level spell lists (BOOK-INGEST-AUDIT F59) ---------------------------
+  //
+  // New West printed 135 binds both Lyn-Srial picks to a category set, from
+  // level one: the Sky-Knight one spell a level from any category but Clouds
+  // of Creation, the Cloudweaver two from any but Clouds of War. The list sat in
+  // `spells_from` with no starting count, so it bounded nothing. Asked of the
+  // real leveling module, so a shape it cannot read fails here.
+  const { startingGroups, spellGrantsFor, spellNamesForGrant } = await import(
+    pathToFileURL(join(appDir, 'js', 'leveling.js')).href);
+  for (const [id, per, excluded] of [['lyn-srial-sky-knight', 1, 'Clouds of Creation:'],
+                                     ['lyn-srial-cloudweaver', 2, 'Clouds of War:']]) {
+    const c = classes.find((x) => x.id === id);
+    const start = c ? startingGroups(c, 'spell') : [];
+    const listed = c ? spellNamesForGrant(c, 2, 0) || [] : [];
+    check(`${id} picks ${per} at level one from a list without ${excluded}`,
+      start.length === 1 && start[0].count === per && start[0].from?.length > 0
+      && !start[0].from.some((n) => n.startsWith(excluded)), JSON.stringify(start.map((g) => g.count)));
+    check(`and ${per} a level at 2-15 from the same list`,
+      c && spellGrantsFor(c, 1, 15).grants.length === 14
+      && spellGrantsFor(c, 1, 15).grants.every((g) => g.count === per)
+      && listed.length === start[0]?.from?.length && !listed.some((n) => n.startsWith(excluded)));
+  }
+  // `true` is read by nothing; the key is an ARRAY paired with `from_list: true`.
+  check('no class carries spells_per_level_from: true',
+    !classes.some((c) => c.magic?.spells_per_level_from === true),
+    classes.filter((c) => c.magic?.spells_per_level_from === true).map((c) => c.id).join(', '));
+
   // -- languages of choice come from languages ------------------------------
   //
   // Seven classes said "two languages of choice" and offered the whole
