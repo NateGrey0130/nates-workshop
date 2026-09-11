@@ -2451,15 +2451,17 @@ function powerKindBlock(grant, kind) {
     // A named list is the tightest restriction; its cap applies beside it only
     // where the entry asks for one (BOOK-INGEST-AUDIT F61) - spellLevelCap is
     // null for every other list slot. `g.from` is resolved from a from_list by
-    // perLevelGrants, which this picker had no list for until F61.
-    const named = isSpell && Array.isArray(g.from) && g.from.length
+    // perLevelGrants, which this picker had no list for until F61. A psionic
+    // grant's list is read too since F65, and replaces its categories.
+    const named = Array.isArray(g.from) && g.from.length
       ? new Set(g.from.map((n) => String(n).toLowerCase())) : null;
     const pool = (isSpell ? C.spellCatalog : C.psiCatalog)
       .filter((x) => !held.has(String(x.name).toLowerCase()))
       .filter((x) => !x.system || x.system === C.data.campaign_system)
       .filter((x) => !isSpell || (named ? (named.has(String(x.name).toLowerCase()) && (!levels || levels.includes(x.level)))
                                         : (!levels || levels.includes(x.level))))
-      .filter((x) => isSpell || !cats || cats.includes(x.category));
+      .filter((x) => isSpell || (named ? named.has(String(x.name).toLowerCase())
+                                        : (!cats || cats.includes(x.category))));
     const cap = named ? `a list of ${g.from.length}${levels ? `, spell levels ${levels.join(', ')}` : ''}`
       : isSpell
         ? (levels ? `spell levels ${levels.join(', ')}` : 'any spell level')
@@ -2564,7 +2566,9 @@ function pendingPowersPanel() {
   const held = new Set((C.data.powers || []).map((x) => String(x.name).toLowerCase()));
   const rows = C.pendingPowers.map((g) => {
     const isSpell = g.kind === 'spell';
-    const named = isSpell && Array.isArray(g.from) && g.from.length
+    // A banked psionic grant keeps its list too (BOOK-INGEST-AUDIT F65), and it
+    // replaces the grant's categories, which powerGrantsFor banked as null.
+    const named = Array.isArray(g.from) && g.from.length
       ? new Set(g.from.map((n) => String(n).toLowerCase())) : null;
     const pool = (isSpell ? C.spellCatalog : C.psiCatalog)
       .filter((x) => !held.has(String(x.name).toLowerCase()))
@@ -2581,7 +2585,8 @@ function pendingPowersPanel() {
                                            && (!x.tradition || !Array.isArray(g.traditions)
                                                || g.traditions.some((t) => String(t).toLowerCase()
                                                     === String(x.tradition).toLowerCase())))))
-      .filter((x) => isSpell || !g.categories || g.categories.includes(x.category));
+      .filter((x) => isSpell || (named ? named.has(String(x.name).toLowerCase())
+                                        : (!g.categories || g.categories.includes(x.category))));
     // The banked row's own restriction, not the class's as it stands today.
     const cap = named ? `a list of ${g.from.length}${g.spell_levels ? `, spell levels ${g.spell_levels.join(', ')}` : ''}`
       : isSpell

@@ -229,7 +229,7 @@ are read. `STARTING_SPEC` there pairs the two blocks name for name:
 | `categories_allowed` | `spell_levels_allowed` | the class-wide gate |
 | `powers` | `spells` | granted outright, by name |
 | `powers_per_level` | `spells_per_level` | a flat number gained each level |
-| `powers_schedule` | `spells_schedule` | per-level grants, when a flat number will not do |
+| `powers_schedule` | `spells_schedule` | per-level grants, when a flat number will not do; an entry's `from` is a named list that REPLACES that grant's gate (F65) |
 
 Magic has two more that psionics has no equivalent for: **`spell_lists`**, a map
 of named lists a schedule entry draws from, and **`spells_per_level_levels`,**

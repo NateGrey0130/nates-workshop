@@ -83,9 +83,16 @@ export function powerGrantsFor(cls, fromLevel, toLevel) {
   const psionics = psionicGrantsFor(cls, fromLevel, toLevel);
   if (psionics.applicable && !psionics.unknown) {
     for (const g of psionics.grants) {
+      // A named list on the entry rides onto the grant and REPLACES its
+      // categories, as a starting group's does in startingGroups: the list is
+      // the restriction, and the Healing Shaman's eight listed Super powers sit
+      // under a class gate with no Super in it. BOOK-INGEST-AUDIT F65 - this
+      // wrote `from: null` over the list, so the claim check, the validator and
+      // the sheet saw only the gate, which refused every listed power.
+      const from = Array.isArray(g.from) && g.from.length ? g.from.map(String) : null;
       out.push({ ...g, kind: 'psionic', spell_levels: null, traditions: null,
-                 categories: psionicCategoriesForGrant(cls, g.level, g.slot),
-                 from: null,
+                 categories: from ? null : psionicCategoriesForGrant(cls, g.level, g.slot),
+                 from,
                  note: grantNote(cls, 'psionic', g.level, g.slot) });
     }
   }

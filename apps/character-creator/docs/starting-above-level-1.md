@@ -238,6 +238,18 @@ which level a given power had to be learned at. The Mystic states exactly that.
 `pending_power_picks.categories` carries it for a banked grant, copied at grant
 time for the same reason `spell_levels` is.
 
+**A named list on a psionic grant replaces its categories in turn**
+(`BOOK-INGEST-AUDIT.md` F65). The Healing Shaman's class gate is Healing,
+Physical and Sensitive, and at levels 3, 6, 9 and 12 it gains one super power
+from a list of eight the book names:
+`- { level: 3, count: 1, from: ["Bio-Manipulation (the evil eye)", ...] }`.
+`powerGrantsFor` carries the list onto the grant and drops the grant's
+categories when it does, as `startingGroups` does for a starting group. Gating
+the list by category as well would refuse every power on it. Until F65 the list
+was the half dropped instead, so those picks offered the class's categories and
+never a power the book names. A banked grant keeps its list in
+`pending_power_picks.from_names`.
+
 **Which is why the spell picker is per grant, not one batched set.** Each level's
 spells are chosen from the levels *that* level allows, the way skill picks are
 already chosen from the categories their grant allows. Batching them would

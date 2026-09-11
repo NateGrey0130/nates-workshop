@@ -1825,10 +1825,11 @@ function psiGrantBlock(grant) {
     const note = grantNote(S.cls, 'psionic', g.level, g.slot);
     const heldElsewhere = new Set([...S.psi, ...taken.filter((n) => !chosen.includes(n))]
       .map((n) => n.toLowerCase()));
-    const pool = advPsiPool(cats).filter((x) => !heldElsewhere.has(String(x.name).toLowerCase()));
+    const pool = advPsiPool(cats, g.from).filter((x) => !heldElsewhere.has(String(x.name).toLowerCase()));
+    const listed = Array.isArray(g.from) && g.from.length;
     return `<p class="small" style="margin-top:12px"><b>Level ${g.level}</b> — ${g.count}
       ${g.count === 1 ? 'power' : 'powers'}
-      <span class="muted">from ${esc(cats ? cats.join(', ') : 'any category')}</span></p>
+      <span class="muted">from ${esc(listed ? `a list of ${g.from.length}` : cats ? cats.join(', ') : 'any category')}</span></p>
       ${note ? `<p class="attr-note">${esc(note)} — the catalog cannot check this one.</p>` : ''}
       ${psiGroupRows(pool, g.count, 'psi-adv', gi)}`;
   }).join('');
@@ -1844,8 +1845,10 @@ function psiGrantBlock(grant) {
 // The psionic pool a grant may draw from, minus what the character already
 // holds — a power cannot be learned twice.
 //
-// `cats` overrides the class's own when a grant names its own categories.
-function advPsiPool(cats = null) {
+// `cats` overrides the class's own when a grant names its own categories, and
+// `from`, the grant's own named list, replaces both (BOOK-INGEST-AUDIT F65): the
+// Healing Shaman's listed Super powers sit outside every category it has.
+function advPsiPool(cats = null, from = null) {
   const cls = psiClass();
   const psi = psiConfig(cls);
   if (!psi) return [];
@@ -1853,8 +1856,11 @@ function advPsiPool(cats = null) {
   const allowed = cats || psi.cats;
   // A named list is the class saying exactly which powers its STARTING picks
   // come from; a grant naming its own categories is a later, different rule and
-  // is not narrowed by that list.
-  const named = !cats && psi.from && new Set(psi.from.map((n) => n.toLowerCase()));
+  // is not narrowed by that list. A grant naming its own LIST is that rule
+  // stated by name.
+  const listed = Array.isArray(from) && from.length ? from : null;
+  const named = listed ? new Set(listed.map((n) => String(n).toLowerCase()))
+    : !cats && psi.from && new Set(psi.from.map((n) => n.toLowerCase()));
   // categoryAllows rather than a plain includes: a category entry may narrow
   // itself with `only` / `except` since F16, and that is the same grammar and
   // the same function the skill pickers use.
