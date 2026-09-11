@@ -48,10 +48,18 @@
 
 import { d1Query, targetFromArgv } from './d1-query-lib.mjs';
 
-// The two shapes the corpus actually uses, measured rather than assumed:
-// the full path, and the Galactic Tracer's "Filed as F6 in the Empire batch".
+// The three shapes the corpus actually uses, measured rather than assumed: the
+// full path, "BOOK-INGEST-AUDIT.md F3"; the bare menu, "BOOK-INGEST-AUDIT F61",
+// which the Spirit West notes write; and the Galactic Tracer's "Filed as F6 in
+// the Empire batch". The bare form went unmatched until 2026-09-11, when
+// `--remote F61` and `F63` answered 0 while production held their citers.
+//
+// The first two cannot read the same citation - the menu name is followed by
+// `.md` or by whitespace, never both - so no citation is counted twice. That
+// matters below the per-class Set: the LIMIT passages are collected per match.
 const PATTERNS = [
   /BOOK-INGEST-AUDIT\.md\s+(F\d+)/gi,
+  /BOOK-INGEST-AUDIT\s+(F\d+)/gi,
   /\bFiled as\s+(F\d+)\b/gi,
 ];
 
@@ -79,9 +87,10 @@ if (wrongMenu || wrongPrefix) {
   console.log(`This script cannot answer for ${subject}.`);
   console.log('');
   console.log('It reads class `extraction_notes` for citations of BOOK-INGEST-AUDIT');
-  console.log('findings, and matches only two shapes: "BOOK-INGEST-AUDIT.md F<n>" and');
-  console.log('"Filed as F<n>". No other menu is reachable from here, and a class note is');
-  console.log('one of four kinds of file that cite a finding - see `audit-menu`.');
+  console.log('findings, and matches only three shapes: "BOOK-INGEST-AUDIT.md F<n>",');
+  console.log('"BOOK-INGEST-AUDIT F<n>" and "Filed as F<n>". No other menu is reachable');
+  console.log('from here, and a class note is one of four kinds of file that cite a');
+  console.log('finding - see `audit-menu`.');
   console.log('');
   console.log('Refusing rather than printing the unfiltered list, which is what this did');
   console.log('before SKILL-AUDIT F30 and which reads as an answer. Grep the tree for the');
