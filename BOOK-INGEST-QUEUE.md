@@ -1363,8 +1363,8 @@ totems as catalog rows (F56), and the setting.
 Status `surveyed` -> **`imported`**, across seven PRs, all in one session: #934
 (survey), #935 (34 shaman spells), #936 (46 fetishes), #937 (the four warriors
 and W.P. Tomahawk), #938 (Plant, Animal, Mask and Healing Shaman), #939
-(Paradox, Elemental and Fetish Shaman and the Wendigo), and the gear-and-vessel
-PR that closed the book. Each data PR was applied `--remote` before its merge.
+(Paradox, Elemental and Fetish Shaman and the Wendigo), and #940 (gear and
+vessels), which closed the book. Each data PR was applied `--remote` before its merge.
 
 **Catalog movement:** classes 250 -> **262**, skills 371 -> **372**, spells
 739 -> **773**, gear 1349 -> **1408**, vehicles 158 -> **164**.
