@@ -5239,6 +5239,37 @@ section('Audit citation sweep');
   const importSkill = readFileSync(join(repoRoot, '.claude', 'skills', 'class-import', 'SKILL.md'), 'utf8');
   check('the class-import skill separates the permanent half from the perishable',
     /extraction_notes/.test(importSkill) && /perishable/i.test(importSkill));
+
+  // The denominator. A retired class stays in imported_classes with deleted_at
+  // set and status still 'published' - the generic warlock since 2026-09-04,
+  // elemental-shaman since F63 split it on 2026-09-11 - so the unfiltered query
+  // printed "of 267 published classes" when 265 could be picked, and would list
+  // a retired class beside the live citers. Status alone is not the test;
+  // drift-check, retro-check and source-coverage all ask both columns.
+  //
+  // So this runs the script's OWN live-row test, lifted out of its source,
+  // rather than asking that the file mention deleted_at - a comment would.
+  const liveSrc = code.match(/const isLive = ([^\n]+);/)?.[1];
+  const isLive = liveSrc ? new Function(`return ${liveSrc}`)() : null;
+  check('the citation sweep has a live-class test',
+    typeof isLive === 'function', 'expected `const isLive = (r) => ...;` on one executable line');
+  check('and it refuses a retired class that kept status published',
+    typeof isLive === 'function'
+      && isLive({ status: 'published', deleted_at: null }) === true
+      && isLive({ status: 'published', deleted_at: '2026-09-11 00:00:00' }) === false
+      && isLive({ status: 'draft', deleted_at: null }) === false);
+  // A column the SELECT never asked for reads undefined, and a test written as
+  // `== null` would then call every retired row live.
+  check('and a row without the column is not live by default',
+    typeof isLive === 'function' && isLive({ status: 'published' }) === false);
+  const select = code.match(/d1Query\(\s*'(SELECT [^']*)'/)?.[1] ?? '';
+  check('and the query selects both columns that test reads',
+    /\bstatus\b/.test(select) && /\bdeleted_at\b/.test(select), select || 'no d1Query SELECT found');
+  // The retired rows are FETCHED and set aside, never filtered in SQL: a
+  // retired class's note is still a note, and hiding it silently is the
+  // failure this script exists to prevent. It lists them after the live ones.
+  check('and it keeps retired rows so it can list them, not drop them',
+    select !== '' && !/\bWHERE\b/i.test(select), select);
 }
 
 section('A class that supersedes its race');
