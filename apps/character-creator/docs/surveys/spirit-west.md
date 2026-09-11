@@ -336,4 +336,5 @@ unpriced rows with nothing said.
 
 **Still open, and none of it this book's to fix:** `BOOK-INGEST-AUDIT` F56
 (the totem table nine classes carry as prose), F57 (level-gated spell pools
-admit every tradition) and F58 (the regression harness's local timeout).
+admit every tradition). F58 (the regression harness's local timeout) was taken
+in PR #942 - the timeout now says it is one; the 180 s limit stays.
