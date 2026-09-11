@@ -2376,6 +2376,48 @@ section('Mega-damage conversion (BOOK-INGEST-AUDIT F62)');
     && !prop.pools.hp_max && !prop.pools.sdc_max, JSON.stringify(prop.pools));
 }
 
+section('Mega-damage conversion from a chosen ability (BOOK-INGEST-AUDIT F64)');
+{
+  // The Spirit Warrior converts only through its Earth or Plant realm, and
+  // chooses three of six, so the flag rides on the ABILITY and is folded onto
+  // the composed class when that ability is taken - the way F24's
+  // related_skills_count is, and outside ABILITY_GRANTS, whose three keys are
+  // maps (pinned in 'Chosen abilities').
+  const LV = await import('../js/leveling.js');
+  const realm = (name, extra) => [`  - name: "${name}"`, '    description: "x"', ...extra];
+  const md = (defs) => parseClassMarkdown(['---', 'id: t', 'name: T', 'system: rifts', 'source_book: b',
+    'category: occ', 'hit_points_base: "P.E. + 1D6 per level"', 'sdc_base: "3D6"', 'special_abilities:',
+    '  - { choose: 2, from: ["Earth", "Plant", "Air"] }', ...defs,
+    '---', '', '## Lore', '', 'x', ''].join(String.fromCharCode(10)));
+  const CONVERTS = ['    mdc_from_hp_sdc: true', '    bonuses: { pools: { mdc: "1d4x10" } }'];
+  const sw = md([...realm('Earth', CONVERTS), ...realm('Plant', CONVERTS), ...realm('Air', [])]);
+  check('a chosen ability may carry the conversion flag', sw.ok, sw.errors.join('; '));
+  check('and it may only be true',
+    md(realm('Earth', ['    mdc_from_hp_sdc: yes'])).errors.some((e) => /Earth\.mdc_from_hp_sdc/.test(e)));
+
+  const as = (...abilities) => composeClass({ rcc: sw.data, character: { abilities } });
+  check('the class alone does not convert', LV.convertsToMdc(composeClass({ rcc: sw.data })) === false);
+  check('choosing the Earth realm converts it', LV.convertsToMdc(as('Earth', 'Air')) === true);
+  check('choosing neither Earth nor Plant does not', LV.convertsToMdc(as('Air')) === false);
+  check('and the fold leaves the class it was given untouched', sw.data.mdc_from_hp_sdc === undefined);
+
+  // P.E. 10: hit points 11-16 and S.D.C. 3-18 make 14-34, and each converting
+  // realm adds 1D4x10. Printed 47: taken together the two "do not combine the
+  // bonuses to the P.E. attribute, but do combine the M.D.C."
+  const one = LV.convertedMdcBounds(as('Earth', 'Air'), { PE: 10 }, 1);
+  const two = LV.convertedMdcBounds(as('Earth', 'Plant'), { PE: 10 }, 1);
+  check('a converting realm adds its 1D4x10, and two of them combine',
+    one?.min === 24 && one?.max === 74 && two?.min === 34 && two?.max === 114, JSON.stringify({ one, two }));
+
+  const outOfRange = (cls, mdc) => validateCharacter({ character: { level: 1 }, cls, skills: [],
+    attributes: { PE: 10 }, pools: { hp_max: null, sdc_max: null, mdc_max: mdc }, enforcePools: true })
+    .violations.filter((x) => x.rule === 'pool_out_of_range');
+  check('the server bounds the converted M.D.C.: in range passes, past it is refused',
+    outOfRange(as('Earth', 'Air'), 50).length === 0
+    && outOfRange(as('Earth', 'Air'), 200).some((x) => x.field === 'mdc_max'),
+    JSON.stringify(outOfRange(as('Earth', 'Air'), 200)));
+}
+
 section('Pool formulas');
 {
   const attrs = { PE: 10, ME: 20 };

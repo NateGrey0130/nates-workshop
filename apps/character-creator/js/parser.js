@@ -1828,6 +1828,15 @@ export function applyAbilities(cls, chosen) {
         },
       };
     }
+    // An ability that turns S.D.C. and hit points into M.D.C. - F62's flag,
+    // carried by a CHOICE. BOOK-INGEST-AUDIT F64: the Spirit Warrior converts
+    // only through its Earth or Plant realm, three of six chosen, so a class key
+    // would convert the four combinations with neither. A flag rather than a
+    // block, folded on its own like related_skills_count above and for the same
+    // reason kept out of ABILITY_GRANTS, whose keys are maps. The realm's extra
+    // M.D.C. rides beside it as an ordinary pools.mdc bonus, so two converting
+    // realms combine theirs, as printed 47 says they do.
+    if (def.mdc_from_hp_sdc === true) out.mdc_from_hp_sdc = true;
     taken.push({ name: def.name, times: n, granted: true, ...(gm ? { gm: true } : {}),
       description: def.description, on_repeat: n > 1 ? def.on_repeat : undefined });
   }
@@ -2531,6 +2540,11 @@ export function parseClassMarkdown(text) {
         && (!Number.isInteger(e.related_skills_count) || e.related_skills_count < 0)) {
       errors.push(`special_abilities: ${e.name}.related_skills_count must be a `
         + 'non-negative integer');
+    }
+    // F64: F62's conversion flag, carried by a chosen ability. True or absent.
+    if (e.mdc_from_hp_sdc !== undefined && e.mdc_from_hp_sdc !== true) {
+      errors.push(`special_abilities: ${e.name}.mdc_from_hp_sdc is a flag and may only be true; `
+        + 'omit it otherwise');
     }
   }
 

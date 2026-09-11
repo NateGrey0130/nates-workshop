@@ -57,7 +57,8 @@ and stored — it cannot be re-rolled per render.
 hit_points_base: "P.E. + 1d6 per level"   # occ
 sdc_base: 20
 mdc_base: "1d4x100"                        # M.D.C. beings use this instead
-mdc_from_hp_sdc: true                      # OR: S.D.C. + hit points become one M.D.C. total (F62)
+mdc_from_hp_sdc: true                      # OR: S.D.C. + hit points become one M.D.C. total (F62);
+                                           # on a chosen ability when only some choices convert (F64)
 ppe_base: "1d6x10+20, +2d6 per additional level starting at level two"
 starting_money: "2d4x1000"                 # coin only, never gear
 ```
@@ -434,8 +435,9 @@ totem: { from: "animal", powers: true }   # the Totem Warrior: its giant-form po
 ```
 
 Spirit West's totem-picking O.C.C.s carry this rather than an ability choice,
-because a totem grants SKILLS and a chosen ability may grant only `bonuses`,
-`psionics` and `magic`. The forty animals are rows in `totems`, not entries in
+because a totem grants SKILLS and a chosen ability never does: it grants the
+`bonuses`, `psionics` and `magic` blocks and two single values,
+`related_skills_count` (F24) and `mdc_from_hp_sdc` (F64). The forty animals are rows in `totems`, not entries in
 the class, and `composeClass` folds the chosen row in: its skills are added to
 `occ_skills`, or +10% where the class already has one (printed 96), and its
 bonuses are summed. `from` must be `"animal"` - the Elemental Shaman picks an

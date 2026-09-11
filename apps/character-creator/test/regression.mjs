@@ -1381,6 +1381,19 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   const converting = classes.filter((c) => c.mdc_from_hp_sdc === true).map((c) => c.id).sort();
   check('only the Totem Warrior turns S.D.C. and hit points into M.D.C.',
     converting.join() === 'totem-warrior', 'classes with the flag: ' + converting.join(', '));
+  // F64: the Spirit Warrior's rides on its Earth and Plant realms instead, and
+  // arrives only when one is chosen. Asked of the real composer.
+  {
+    const { composeClass: compose } = await import(pathToFileURL(join(appDir, 'js', 'compose.js')).href);
+    const { convertsToMdc } = await import(pathToFileURL(join(appDir, 'js', 'leveling.js')).href);
+    const sw = classes.find((x) => x.id === 'spirit-warrior');
+    const converts = (...realms) => !!sw
+      && convertsToMdc(compose({ rcc: sw, character: { abilities: realms.map((r) => `Powers of the ${r} Realm`) } }));
+    check('a Spirit Warrior with the Earth or Plant realm converts S.D.C. and hit points into M.D.C.',
+      converts('Earth', 'Air', 'Fire') && converts('Plant', 'Water', 'Animal') && converts('Earth', 'Plant', 'Air'));
+    check('and one with neither does not',
+      !!sw && !converts('Air', 'Fire', 'Water') && !convertsToMdc(compose({ rcc: sw })));
+  }
 
   // -- per-level spell lists (BOOK-INGEST-AUDIT F59) ---------------------------
   //
