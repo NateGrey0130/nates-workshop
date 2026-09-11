@@ -562,7 +562,7 @@ differs from the standard:
 | S.D.C. | **3D6** for men of arms, **1D6** for practitioners of magic, scholars and everyone else |
 
 The app used to read that silence as "this character has none" and store
-`hp_max` NULL. One-hundred-and-twenty-six of two-hundred-and-sixty-two published classes state no hit point
+`hp_max` NULL. One-hundred-and-twenty-nine of two-hundred-and-sixty-five published classes state no hit point
 formula, so this was the common path, not an edge case — two Priests of Light
 reached production with no hit points and no S.D.C., and nothing on the sheet
 suggested anything was missing.
@@ -617,10 +617,11 @@ scripts/
 │                           reads the snapshot; only this script talks to OFD
 ├── ofd-refresh-lib.mjs     Its deterministic half — CSV in, ASCII SQL out —
 │                           so FilamentForge's smoke test can run it
-├── audit-citations.mjs     Which published classes cite which audit finding, and
+├── audit-citations.mjs     Which live classes cite which audit finding, and
 │                           which of those passages describe an app LIMIT that a
-│                           taken finding may have lifted. Parses no outcome
-│                           notes and sets no exit code, deliberately
+│                           taken finding may have lifted. Retired citers are
+│                           listed apart, not dropped. Parses no outcome notes
+│                           and sets no exit code, deliberately
 ├── drift-check.mjs         Repo vs live database: migrations, data scripts,
 │                           tables, columns, classes, and an advisory citation
 │                           check against every cached book books.json knows

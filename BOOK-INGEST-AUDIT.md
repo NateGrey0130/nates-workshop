@@ -8317,3 +8317,662 @@ could move the reach numbers, not the mechanism.
 `derive.js` comment, both of which described the old behaviour without naming
 a finding. F56's outcome note is a dated record naming F60 as found, and the
 survey names it without a status; both stand.
+
+### F61 - low - a spell pick drawn from a NAMED LIST loses the class's LEVEL CAP, and three Spirit West shamans' books state both
+
+**Found 2026-09-11**, listing what Spirit West left outstanding after F56-F60;
+first seen by F59's premise audit, whose outcome note says a book binding both
+*"would need code, and this is where that would start"*.
+
+**The books.** The Plant Shaman (printed 50-53), Animal Shaman (53-56) and
+Elemental Shaman (65-67) each gain later spells from a named list - the book's
+own Shamanistic list - and each caps every such pick at the character's own
+level. The Elemental Shaman's schedule entries carry that as a note: *"Two
+Shamanistic spells, none higher than the character's own level."*
+
+**The app keeps the list and drops the cap.** A list-bound slot is deliberately
+not level-capped: `spellLevelsForGrant` returns null for any entry with `from`
+or `from_list` (`js/leveling.js:225-228`, read 2026-09-11), the wizard's
+level-up picker reads both answers side by side (`app.js:1766-1767`), the
+validator excludes list-bound pools from its level check (`validate-character.js:450`),
+and the server's claim path takes the same null (`power-picks.js:75-79`). The
+three classes' notes say the cap *"is shown to the player as a note on each
+grant rather than enforced"*.
+
+**Reach.** Three live classes by their notes (`plant-shaman`, `animal-shaman`,
+`elemental-shaman`, production 2026-09-11). Measured structurally - every live
+class whose list-bound schedule entries sit beside a stated
+`spells_per_level_levels` rule - the only other is `shifter`, whose book leaves
+its list slots uncapped on purpose (the `leveling.js:225-228` comment). A class
+whose importer wrote the cap nowhere is invisible to both measures.
+
+**The rule this has to argue past.** `docs/starting-above-level-1.md` states it
+in bold: *"A slot bounded by a named list is not also bounded by a spell level -
+the list is the restriction."* It is right for the Shifter and the Lyn-Srial
+(F59), whose books bound by list alone. These three books bound by both, so the
+answer is an opt-in, not a reversal.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | a schedule entry may say `spell_levels: "up_to_character_level"` beside its list, and `spellLevelsForGrant` returns that cap instead of null when it does | exact to the books; opt-in, so every list-bound class without it is unchanged; one rule, read through the function all four paths already call | four read paths to confirm (wizard, sheet, validator, claims), and the sheet inlines its own copy of the test (`sheet.js:2508`) that must be kept in step - a smoke check pins them together |
+| B | data only: fourteen pre-filtered lists per class, `S_2` ... `S_15`, each holding the list's spells up to that level | no code | some forty lists and several hundred repeated names across three classes; every spell-level correction re-applied to each; the declare-once rule exists to prevent exactly this |
+| C | keep the note | nothing to build | the validator accepts an over-level pick, and the app knowingly gives the wrong answer |
+
+**Proposal:** A. **Posture:** a new opt-in value on an existing key; no schema,
+no new key; a class without it behaves as today.
+
+**Confidence: high on the gap** (the rule is quoted above); **medium on the
+reach** - what would raise it is grepping the cached books for "no higher than"
+beside a spell grant, since only three importers wrote it down.
+
+**Ongoing cost:** one rule, read in four places and pinned by smoke.
+
+**Subject grep, 2026-09-11:** every `*AUDIT*.md` for "named list replaces",
+"list and a cap" and "cap is a note": one hit, F59's outcome note in this file,
+which names this gap and files nothing. `docs/starting-above-level-1.md` holds
+the rule quoted above.
+
+**Taken, 2026-09-11 (PR #951).** Option A: `spell_levels:
+"up_to_character_level"` - or an array - on a schedule entry beside its list
+caps the pick as well as listing it. **Posture, said back:** a new opt-in value
+on an existing key; no schema, no new key; every list-bound entry without it is
+unchanged, so the Shifter and the Lyn-Srial still pick from their lists alone.
+
+**What the premise audit corrected** (`audit-premise-auditor`, 2026-09-11):
+
+- **"One rule, read through the function all four paths already call" was
+  wrong.** `spellLevelsForGrant` already returned an ARRAY cap on a list entry
+  before its list test, and the server's claim check (`power-picks.js`) always
+  tested list and cap both. What dropped the cap were the READERS: the wizard's
+  level-up picker, the sheet's live level-up picker and banked-pick panel each
+  took `named ? onList : levels`, and the create validator `continue`d for any
+  name on any list. All four now apply both.
+- **Not every list-bound pick is capped.** The Plant and Animal Shamans'
+  level-2 grant - "every remaining Shamanistic spell", from lists spanning
+  spell levels 1-11 and 1-12 - carries no cap in the book, and a cap of 2 would
+  make it impossible to fill. The value is on **40 entries, not 42**: levels
+  3-15 for those two, 2-15 for the Elemental Shaman.
+- **The claim that a smoke check pinned the sheet's copy together was false**,
+  and the copy had drifted: it tested only an inline `from`, never
+  `from_list`. It now tests both, and smoke pins the wizard's and the sheet's
+  filter shapes.
+- **Worse than the finding said: the sheet's live level-up picker offered EVERY
+  spell for a from_list grant.** The grant it reads never carried the list -
+  `perLevelGrants` copied only an inline `from` - so the three shamans'
+  level-ups offered the whole catalog and `level-confirm` then refused anything
+  off the list. `perLevelGrants` now resolves a `from_list` into its names.
+- **The subject grep missed a shipped precedent.** `RETRO-AUDIT` R3 (PR #723)
+  gives the ten Warlocks list-plus-cap as this finding's option B - pre-filtered
+  lists per level - because a named list replaced the cap. They keep that shape;
+  it works, and nothing here reverses R3's reasoning.
+- **Psionic lists are dropped too, in the inverse shape** - the list goes, the
+  category gate stays. Outside this finding; filed below as F65.
+
+**What changed.** `spellLevelsForGrant` and the sheet's copy accept the string
+on an entry; the four readers apply a list and its cap together and caption
+both; the validator refuses a spell over its list's cap, with one pool that
+takes it being enough; `perLevelGrants` resolves `from_list`. The three docs and
+the extraction prompt that stated "a named list replaces the cap" now say a
+schedule entry may keep one. **Data:** the 40 entries carry the value and lose
+the "the catalog cannot check this one" notes, which `grantNote` would otherwise
+have shown beside an enforced cap; the three class notes are rewritten.
+
+**Tests:** eleven smoke checks, seven seen failing on the unchanged code; the
+regression asks each of the three classes' caps of the real function, and that
+the two level-2 grants stay uncapped.
+
+**Production, 2026-09-11, before merge:** the data script applied, all six
+readbacks at their wanted values. No character or banked grant holds any of the
+three classes.
+
+### F62 - low - a supernatural P.E. that turns S.D.C. and hit points into M.D.C. has no field, so three classes carry it as prose
+
+**Found 2026-09-11**, listing what Spirit West left outstanding.
+
+**The books.** The Totem Warrior (Spirit West printed 42-44), the Spirit
+Warrior (44-47) and the Psycho-Stalker (Juicer Uprising printed 45-47) have a
+supernatural P.E. that makes them mega-damage creatures: their combined S.D.C.
+and hit points become one M.D.C. total. The Totem Warrior's and Spirit
+Warrior's notes both say *"which no field expresses"*; all three store it as a
+special ability's text.
+
+**The app rolls three separate pools.** The wizard rolls hit points, S.D.C. and
+M.D.C. each from its own formula (`app.js:351-353`, read 2026-09-11), and the
+validator bounds each maximum against its own formula (`validate-character.js:552`).
+Nothing adds two pools into a third. So the sheet tracks S.D.C. and hit points
+the book says the character no longer has, and damage lands on the wrong pool.
+
+**Reach.** Three live classes by their notes (production, 2026-09-11). No live
+class writes an `mdc_base` built from hit points or S.D.C. - the data-only form
+has never been tried.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | an opt-in class flag - say `mdc_from_hp_sdc: true` - under which the wizard rolls hit points and S.D.C. as it does now, stores their SUM as the M.D.C. maximum and leaves the two empty; the validator bounds M.D.C. against the sum of the two formulas | keeps each formula exactly as the book or the core rules state it; the sheet's existing M.D.C. pool does the rest | code in three places - the pool roll, the validator's bounds, and per-level growth, since hit points gained at a level must reach M.D.C. (`js/leveling.js` rolls pool growth) |
+| B | data only: write the sum as `mdc_base` and drop `hit_points_base` and `sdc_base` | no code | two of the three classes print no hit point or S.D.C. formula of their own - `compose.js` supplies the core defaults - so each class would restate the core rules inside its own M.D.C. formula and drift if those change; per-level growth has to fit the formula too |
+| C | keep the prose | nothing to build | the sheet shows the wrong pools for all three classes |
+
+**Proposal:** A. **Posture:** a new opt-in class key; no schema; classes
+without it are unchanged. Adds one key to `KNOWN_KEYS`.
+
+**Confidence: high on the gap; medium on A's cost** - what would raise it is
+reading how level-up grows the pools before scoping.
+
+**Ongoing cost:** one flag and three readers.
+
+**Subject grep, 2026-09-11:** every `*AUDIT*.md` for "into M.D.C.",
+"hit points into M" and "mega-damage creature": no hits.
+
+**Taken, 2026-09-11 (PR #950).** Option A as written - an opt-in class flag,
+`mdc_from_hp_sdc: true` - for **one class, not three**, because the premise
+audit found the other two were not this. **Posture, said back:** a new opt-in
+class key; no schema; a class without it is unchanged. It is on `KNOWN_KEYS`.
+
+**Two of the three classes were wrong** (`audit-premise-auditor`, 2026-09-11):
+
+- **The Psycho-Stalker's conversion is TEMPORARY.** Juicer Uprising printed 46
+  (cache p047): *"By refocusing psychic energy (I.S.P.) points, the
+  Psycho-Stalker can temporarily become an M.D.C. creature!"* - 25 I.S.P., one
+  minute per level. It has no supernatural P.E., its own hit point and S.D.C.
+  formulas are right, and its note records that on purpose: *"a Psycho-Stalker
+  is an S.D.C. being who can spend I.S.P. to stop being one."* It was never in
+  scope, and it is unchanged.
+- **The Spirit Warrior converts only through its Earth or Plant realm** -
+  printed 44 and 47 - one of three realms chosen from six, and gains an extra
+  1D4x10 M.D.C. with each. A class-wide flag would convert Spirit Warriors who
+  took neither. **Filed as F64**, below.
+- **Reach is therefore one class.** The audit swept all 262 live classes for a
+  permanent conversion and found no other; the rest are temporary, already
+  state an `mdc_base`, or convert at a different ratio.
+
+**What had to change, and why it is more than "three places".** One definition
+in `js/leveling.js` - `convertsToMdc`, `convertedPools`, `convertedMdcBounds` -
+read by:
+
+- **the wizard's pool roll**, which rolls hit points and S.D.C. as the class or
+  `compose.js`'s core defaults state them, stores their sum plus any
+  `bonuses.pools.mdc` as the M.D.C. maximum, and leaves the two empty;
+- **the validator**, which had to SKIP the emptied pools: `Number(null)` is 0,
+  so under `enforcePools` every such character would have been refused - the
+  new smoke check failed with exactly that message first;
+- **`buildProposal`**, since the emptied pools have no formula to grow and a
+  null `mdc_base` has no per-level dice: M.D.C. now grows by the hit point
+  formula's per-level dice, which covers the wizard's Advancement step and the
+  server's XP proposal alike;
+- **`combineClasses`**, which starts from the race spread and would have
+  dropped an occupation's flag. The flag yields to a stated `mdc_base`, so an
+  M.D.C. race composed with a converting occupation keeps its own pool.
+
+`variant.js`, `level-confirm.js`, the sheet, `damageCascade` and the dashboard
+needed nothing: none of the three classes has variants, and every one of those
+already hides or skips an empty pool and sends damage to M.D.C. when there is
+one. No production character holds any of the three classes.
+
+**Tests:** fourteen smoke checks, thirteen seen failing on the unchanged code;
+a regression invariant that only the Totem Warrior carries the flag.
+
+**Corrected where the finding was cited:** the Totem Warrior's note loses
+*"which no field expresses"*. The Spirit Warrior's same phrase stays true -
+nothing expresses an ability-borne conversion yet - and F64 now cites it.
+
+**Production, 2026-09-11, before merge:** the data script applied, all three
+readbacks at their wanted values.
+
+### F63 - low - an ELEMENT choice cannot steer the Elemental Shaman's spells or grant its skill, so the class offers all four elements' spells with a note
+
+**Found 2026-09-11**, listing what Spirit West left outstanding. F56 recorded
+that this class picks an element instead of a totem and left it out of that
+finding.
+
+**The book.** Spirit West printed 65-67: the Elemental Shaman chooses one of
+four elements. The element sets three Warlock spells at level one, drawn from
+that element only, and a skill at 98% (the class note names astronomy,
+holistic medicine and swimming).
+
+**The app offers every element.** The element is a `choose: 1` over four
+abilities; the level-one group offers all 38 elemental rows with a note to pick
+from one's own element, *"since a pick cannot be tied to the element chosen"*;
+and the skill sits in the ability's text, because a chosen ability grants only
+`bonuses`, `psionics` and `magic` (`ABILITY_GRANTS`, `js/parser.js:1699`) -
+and even its `magic` applies only to a class that has none
+(`js/parser.js:1801`, `out.magic = out.magic || def.magic`). So the wizard
+permits three Fire spells for a Water shaman, and the 98% skill is on no skill
+list at all.
+
+**Precedent.** The catalog already splits a class by element: the four Warlock
+classes are copy pairs - `warlock-water` is `copy_of: { class: "warlock-air",
+except: ["magic"] }` (production, 2026-09-11) - and `regression.mjs` walks every
+declared pair. No production character holds `elemental-shaman` (queried
+2026-09-11), so a split strands no one.
+
+**The decisions this has to argue past.** F24 kept skills off abilities on
+purpose; its outcome note (Taken, PR #789) declined the skills-bearing parts.
+F50, a gear choice that grants a skill, is HELD (PR #910) because nothing could
+use it yet.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | split into `elemental-shaman-air`, `-earth`, `-fire` and `-water`, copy pairs of the first, each with its own element's spells and its 98% skill in `occ_skills`; retire `elemental-shaman` | data only; exact spells and skill; the regression's copy-pair walk keeps the shared halves identical; the Warlocks already work this way; touches neither F24 nor F50 | four entries in the class picker instead of one; the retired id stays loadable for any character that ever holds it; a correction to the shared half is made once and copied |
+| B | code: let a chosen ability narrow the class's starting spell group and grant a skill | one class, one picker entry | reverses F24's deliberate decision and overlaps F50's held one; changes a composition rule every ability-bearing class shares |
+| C | keep the note | nothing to build | 38 spells offered for three picks, and the skill missing from the sheet |
+
+**Proposal:** A. **Posture:** data only; no code, no schema, no new key.
+
+**Confidence: high** on the gap and the precedent; **medium on the picker** -
+what would raise it is looking at how four Warlock entries read in the wizard
+today.
+
+**Ongoing cost:** four classes kept in step, which the copy-pair check already
+enforces.
+
+**Subject grep, 2026-09-11:** every `*AUDIT*.md` for "elemental shaman": two
+hits, both in F56 of this file - its premise that the class picks an element,
+and its outcome note's citation count. `ABILITY_GRANTS` and F24/F50 are cited
+above.
+
+**Taken, 2026-09-11 (PR #952). Option A, with one departure from its posture:
+four lines of code.**
+
+**Six corrections: five from the premise audit (`audit-premise-auditor`,
+2026-09-11) and one from the smoke run.**
+
+- **Not quite data only.** The class prints no hit point or S.D.C. formula, so
+  `compose.js` supplies its 1D6 from `CORE_SDC_BY_CLASS`, and smoke fails any
+  `add-*-class.sql` id that states neither and has no entry
+  (`test/checks/catalog-data.mjs:60-65`). The four ids got `'1D6'` entries
+  (`js/compose.js:94-101`) - a table that lives in code, not logic. The retired
+  id keeps its entry, as the generic Warlock's did, because its add script
+  stays and the reverse check (`catalog-data.mjs:69-75`) reads the scripts.
+- **37 elemental rows, not 38:** 7 Air, 11 Earth, 9 Fire, 10 Water.
+- **Three 98% skills, not four.** The book gives the Fire Shaman none (printed
+  66), and the Fire class adds none.
+- **The copy-pair walk excepts whole top-level keys**, so "keeps the shared
+  halves identical" is true only outside the excepted ones. Each copy's
+  `except` came out as `magic`, `skills` and `special_abilities` - derived by
+  diffing the parsed classes, not typed - and inside those three keys the
+  shared parts (the Shamanistic list and its schedule, twelve common skills,
+  four common abilities) are walked by nothing. They are identical today
+  because all four were generated from the one live row. A later correction to
+  them has to be made four times, unchecked.
+- **F24 was taken in part, not declined.** Its note (line 3232, PR #789) took
+  part (a), which lets an ability set `related_skills_count`, and declined (b)
+  and (c). `skills` is still not in `ABILITY_GRANTS`, which is what this
+  finding needed, so the argument stands.
+- **A retire script needs a docs row.** Smoke's data-scripts table check
+  failed on `retire-elemental-shaman-generic.sql` until it was added beside
+  `retire-warlock-generic.sql` (`docs/operations.md:574`). A pinned README
+  count moved too: 126 of 262 to 129 of 265 published classes that state no hit
+  point formula (`README.md:565`). So did the clean-run table's live class
+  count, 262 to 265 (`docs/operations.md:309`). That one is read only by the
+  regression's clean build, and CI's regression job caught it on this PR's
+  first run (1 of 372 failed), after smoke had passed.
+
+**What shipped.** Four `add-elemental-shaman-<element>-class.sql`, generated
+from production's `elemental-shaman` markdown, which already carried F61's cap,
+so everything but the element is identical. Each has its own id and name, a
+three-pick group holding only its element's level-one rows, and its 98% skill
+in `occ_skills` (Air Astronomy, Earth Holistic Medicine, Water Swimming - the
+catalog's exact names). The `choose: 1` line and the other three elements'
+abilities are gone, and the two note sentences are rewritten. Earth, Fire and
+Water are `copy_of: { class: "elemental-shaman-air", except: [...] }`. Each
+parses with no new warning, and `class-check --remote` gives all four 0 errors,
+0 warnings. `retire-elemental-shaman-generic.sql` soft-deletes the one class
+and sorts after the four; its readback found no character holding it.
+
+**Left in ability text.** The Earth Shaman's land navigation, 60% +4% per
+level, stays in the Earth Shaman ability: it is not the element's 98% skill,
+which is all the proposal moved. Each element ability lost its "at 98%" clause
+instead, so the skill is stated once.
+
+**Citations.** Each new class's `extraction_notes` cites "BOOK-INGEST-AUDIT
+F63", and the retired row cited nothing to correct.
+`node scripts/audit-citations.mjs --remote F63` reported **0** anyway on
+2026-09-11, and **0 for F61 as well**, even though production's four rows
+contain both citations (queried the same day). Its two patterns
+(`scripts/audit-citations.mjs:53-56`) match only the `.md` form and "Filed as
+F<n>". The notes that F56, F61 and this finding wrote all use the bare-menu
+form, which is the shape F56's note recorded (line 7823). That is a gap in the
+script, outside this finding, and it is flagged separately rather than fixed
+here.
+
+**Tests.** In `regression.mjs`, F61's cap check names the four ids (line 1409).
+New checks (line 1426) cover each class: three picks from its own element's
+level-one rows only, its 98% skill (Fire has none), no element choice, and the
+one-class id no longer offered. The predicates were first run against
+production's one-class markdown, and fail 11 of 12 on it. Fire's no-skill check
+passes there as well, since the old row had no 98% skill either.
+
+**Posture said back:** data only, no schema, no new key. It held, except for
+the four table lines above.
+
+**Confidence on the picker stays medium:** the wizard was not opened. The four
+are named "Elemental Shaman (Air)" and so on, unlike the Warlocks, which all
+read "Warlock". That difference predates this finding and is not touched here.
+
+### F64 - low - the Spirit Warrior's mega-damage conversion rides on two of its six realms, and a chosen ability cannot carry F62's flag
+
+**Found 2026-09-11**, by F62's premise audit.
+
+**The book.** The Spirit Warrior (Spirit West printed 44-47) chooses three of
+six realms. The Earth Realm (printed 44, cache p045) *"will convert the
+character's hit points and S.D.C. to M.D.C., plus an additional 1D4x10
+M.D.C."*; the Plant Realm (printed 47, cache p048) is *"Identical to the ability
+listed above under the Earth Realm Powers. If the two are taken together, do
+not combine the bonuses to the P.E. attribute, but do combine the M.D.C."* So a
+Spirit Warrior with either realm is a mega-damage creature, and one with
+neither - four of the twenty possible choices - is not.
+
+**The app.** The realms are a `choose: 3` over six abilities, and the
+conversion is text inside two of them. F62's `mdc_from_hp_sdc` is a CLASS key:
+set on the class, it would convert the four choices that should not convert. A
+chosen ability grants only `bonuses`, `psionics` and `magic`
+(`ABILITY_GRANTS`, `js/parser.js:1699`), so it cannot carry the flag either. The
+extra 1D4x10 could ride on each ability as `bonuses.pools.mdc`, the Super-Tough
+precedent - but a pool bonus is dropped when the pool has no formula
+(`rollPoolFormula`, `js/dice.js:238-241`), so it lands only if the conversion
+does. The class's note says the conversion *"no field expresses"*, which is
+still true.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | widen `ABILITY_GRANTS` by one key, `mdc_from_hp_sdc`, and have `applyAbilities` set it on the composed class when a chosen ability carries it; put `bonuses.pools.mdc: "1d4x10"` on both realms | exact to the book, including the doubled 1D4x10 for both realms; reuses F62's whole conversion path - the flag is read off the composed class, which is where applyAbilities already writes | widens a list kept deliberately narrow (`ABILITY_GRANTS`' own comment: *"a chosen ability that could restate attribute_dice or starting_money is not an ability"*); F24 declined adding `skills` to it - this adds a flag, not a block, which is the argument to make |
+| B | split the Spirit Warrior by realm combination, as F63 splits the Elemental Shaman | data only | twenty combinations; not a real option |
+| C | keep the note | nothing to build | a Spirit Warrior with Earth or Plant keeps S.D.C. and hit points the book says it no longer has |
+
+**Proposal:** A. **Posture:** one key added to `ABILITY_GRANTS`; no schema; no
+class changes except the Spirit Warrior's two realms.
+
+**Confidence: high on the gap** (the book and the grant list are quoted);
+**medium on A's ordering** - abilities are applied before skills and before a
+rolled psychic tier (`composeClass`), and the conversion must be visible to the
+pool roll, which reads the composed class - what would raise it is a smoke
+check composing the class with each realm.
+
+**Ongoing cost:** one more key the ability grant list carries.
+
+**Subject grep, 2026-09-11:** every `*AUDIT*.md` for "Spirit Warrior", "Earth
+Realm" and "ABILITY_GRANTS": F24 (skills kept off abilities) and F56's outcome
+note (which argued past F24 for totems with a table rather than a grant).
+
+**Taken, 2026-09-11 (PR #954). Option A, in the shape Nate chose after the
+premise audit: F24's, not the posture's wording.**
+
+**The premise audit (`audit-premise-auditor`, 2026-09-11) found A's mechanism
+would not work as written.**
+
+- **Adding the key to `ABILITY_GRANTS` breaks parsing.** The list is read by
+  one check, which refuses any listed key whose value is not a map
+  (`js/parser.js:2522-2526` on this branch), so `mdc_from_hp_sdc: true` on a
+  realm would stop the class parsing. `applyAbilities` never loops over the
+  list (`parser.js:1775-1838`), so widening it would fold nothing, and smoke
+  pins it at three keys (`test/smoke.mjs:4128-4129`). Nate chose the F24 shape:
+  a single value on the ability definition with its own fold and its own type
+  check, as `related_skills_count` has (`parser.js:1822-1830` and
+  `:2531-2535`). **`ABILITY_GRANTS` is unchanged, which departs from the
+  posture's words** - "one key added to `ABILITY_GRANTS`" - but not from its
+  substance: no schema, and no class change but the two realms.
+- **"A chosen ability grants only `bonuses`, `psionics` and `magic`" was
+  already false.** F24 (PR #789) added `related_skills_count`. This finding's
+  for-column called "a flag, not a block" the argument to make; F24 had made
+  it and shipped it.
+- **`ABILITY_GRANTS` is at `parser.js:1704` on this branch**, not 1699, which
+  is main's line.
+
+**What shipped.**
+
+- `applyAbilities` sets `mdc_from_hp_sdc` on the composed class when a chosen
+  ability carries it, and the validator refuses any value but `true` on an
+  ability. Every reader F62 wrote already reads the composed class - the
+  wizard's pool roll, the server validator's bounds, the level-up proposal - so
+  none of them changed. The audit traced each caller to one that composes with
+  the character's chosen abilities.
+- `zzzzzzzzz-f64-spirit-warrior-realm-mdc.sql`: the Earth and Plant realms each
+  gain the flag and `bonuses.pools.mdc: "1d4x10"`, and the class notes stop
+  saying no field expresses the conversion. The +1D6 P.E. stays unstored, for
+  the reason the note already gives. Before it was applied, its three
+  replacements were run against production's markdown. Each matched once, the
+  class parses with no new warning, Earth or Plant converts and Air, Fire and
+  Water do not, and Earth with Plant carries both 1D4x10s.
+- Docs: `docs/leveling.md`, `docs/race-and-occupation.md`, the frontmatter
+  reference (two places), `js/class-template.js` and
+  `scripts/extraction-prompt.mjs`.
+
+**Tests.** A smoke section of eight checks, four of which failed before the fix:
+the only-true check, Earth converting, the combined bounds and the server's
+bounds. The regression composes the production Spirit Warrior with converting
+and non-converting sets of realms.
+
+**Posture said back:** one new thing an ability may carry, no schema, and no
+class change but the Spirit Warrior's two realms. It held. The one departure is
+where the key lives, and Nate chose it.
+
+**Confidence on ordering: raised to high.** The smoke checks compose a class
+with each realm, which is the check the finding named.
+
+**The pool-staleness gap the audit spotted was checked, as Nate asked, and is
+real. It is filed below as F67** rather than fixed here, because it predates
+F64 and reaches every ability that changes a pool.
+
+### F65 - medium - a psionic level-up grant drawn from a NAMED LIST loses the list, so ten classes' named psionic picks are not enforced
+
+**Found 2026-09-11** by F61's premise audit, which flagged it outside that
+finding's scope; filed from F61's outcome note.
+
+**The books.** A class can name the powers a level grants. The Healing Shaman
+(Spirit West printed 60-62) gains "all the remaining Healing powers" at level 2
+- stored as `powers_schedule: [{ level: 2, count: 10, from: [ten names] }]` -
+and one super power from the book's list of eight at levels 3, 6, 9 and 12.
+
+**The app drops the list and keeps only the category gate.** `perLevelGrants`
+carries an entry's `from` onto the grant, but `powerGrantsFor` then writes
+`from: null` on every psionic grant (`power-picks.js:86-88`, read 2026-09-11),
+so neither the banked row nor the claim check has the list. The wizard's
+psionic level-up picker reads only the grant's categories (`psiGrantBlock`,
+`app.js:1820`), and the sheet's list tests are spells-only (`const named =
+isSpell && ...`, `sheet.js:2455` and `:2567`). So a list-bound psionic grant
+offers - and accepts - any power in the class's allowed categories: the Healing
+Shaman's ten named Healing powers can be spent on Physical or Sensitive ones.
+
+**Reach.** 38 list-bound psionic schedule entries across ten live classes -
+healing-shaman 15, gypsy-seer 7, fetish-shaman 5, mask-shaman 3, mystic-warrior
+2, totem-warrior 2, and one each on mystic, mind-mage, delphi-juicer and
+noro-mystic-warrior (production, 2026-09-11). A STARTING psionic group is
+unaffected: `startingGroups` carries a group's list for psionics too.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | carry the list through, as F61 did for spells: `powerGrantsFor` keeps `from` on a psionic grant, and the wizard's psionic picker, the sheet's two pickers and the create validator filter by it when present | one shape for spells and psionics; the claim check already tests a grant's list once it is not nulled; `pending_power_picks.from` already stores it; no data change | four readers again, pinned by smoke as F61's are |
+| B | keep categories only and turn the named psionic lists into notes | nothing to build | the books name the powers, and a note is a rule the catalog cannot check |
+
+**Proposal:** A. **Posture:** code only; no data, no schema, no new key.
+
+**Confidence: high on the gap** (the three readers are cited above); **medium
+on reach** - what would raise it is checking whether any class states its
+psionic list through `powers_from` on a level-up rather than an entry's `from`.
+
+**Ongoing cost:** four readers kept in step, the same as F61's.
+
+**Subject grep, 2026-09-11:** every `*AUDIT*.md` for "powers_schedule",
+"psionic list" and "from: null": F61's outcome note above, which records the
+audit's flag; no finding.
+
+**Taken, 2026-09-11 (PR #955). Option A, code only as the posture says, with
+one change to its mechanism that the premise audit showed A needs.**
+
+**Four corrections from the premise audit (`audit-premise-auditor`,
+2026-09-11).**
+
+- **Carrying the list was not enough.** With `from` carried and nothing else
+  changed, the claim check tests the list and then still applies the grant's
+  category gate (`functions/api/character-creator/_lib/power-picks.js:175-189`
+  on this branch). The spell side skips its gate when a list is present
+  (`:171`); the psionic side had no such skip. 34 of the 40 names on the level
+  3-12 lists are Super powers, under gates with no Super in them. So "as F61 did
+  for spells" - list AND cap - would have refused them at level-up while the
+  validator accepted them. The precedent is `startingGroups`
+  (`js/leveling.js:411`), where a named list replaces the category gate
+  outright. `powerGrantsFor` now drops a grant's categories when it carries a
+  list. That is still code only.
+- **The reach is 7 grants on 2 classes, not 38 on 10.** Only the Healing Shaman
+  (5) and the Fetish Shaman (2) carry a psionic `from` on a schedule entry,
+  measured against production on 2026-09-11 with the real parser. The other
+  eight classes named use bare counts or per-entry categories, and gypsy-seer's
+  list entries are on `spells_schedule`, which is F61's ground. The 38 could not
+  be reconstructed. The confidence line's question is settled too:
+  `powers_from` is on one live class, the Burster, and it is a starting list.
+- **The harm was worse than stated.** The finding said the lists could be spent
+  on Physical or Sensitive powers. In fact the listed Super powers were never
+  offered at all, so the Healing Shaman could never take any of its eight, and
+  the Fetish Shaman never got Psi-Sword or Psi-Shield.
+- **The validator needed no edit, only a test.** It builds its pools from
+  `powerGrantsFor` (`validate-character.js:415`). And the banked column is
+  `pending_power_picks.from_names` (migration 030); `from` is only the name
+  `listPendingPowers` maps it to.
+
+**What shipped.**
+
+- `powerGrantsFor` carries a psionic entry's list and nulls the categories
+  beside it.
+- The wizard's Advancement pool takes the grant's list
+  (`advPsiPool(cats, from)`) and captions it "a list of N".
+- The sheet's live level-up picker and its banked panel read a list for psionic
+  grants as well as spells.
+- Docs: `docs/starting-above-level-1.md`, `docs/leveling.md` and the frontmatter
+  reference.
+- No class note changed. Neither cites F65, and both describe the book, which
+  the app now enforces: the Healing Shaman's "one super power from the book's
+  list of eight at levels 3, 6, 9 and 12", and the Fetish Shaman's "Psi-Sword
+  at 3 and Psi-Shield at 6, granted by name". Production holds no character of
+  either class and no banked power pick (queried 2026-09-11), so no old grant
+  is left without its list.
+
+**Tests.** Smoke gained three `powerGrantsFor` checks, three source pins for the
+wizard and the sheet, and a validator check: a listed Super power fills a
+level-up slot under a Sensitive gate, and an unlisted Healing power cannot. Six
+failed before the fix. The regression asks the real `powerGrantsFor` of the
+production Healing Shaman (five lists: ten names at level 2, then eight at 3, 6,
+9 and 12, with no gate) and Fetish Shaman (Psi-Sword at 3, Psi-Shield at 6).
+
+**Posture said back:** code only; no data, no schema, no new key. It held.
+
+**Found beside the lines this rewrote, and filed below as F66:** the sheet's
+non-list psionic filters match a category with a plain `includes`, which never
+matches an object gate entry.
+
+### F66 - low - the sheet's psionic level-up pickers match a category with a plain `includes`, so an object gate entry offers nothing
+
+**Found 2026-09-11** by F65's premise audit, beside the lines F65 rewrote.
+Confirmed the same day against production data.
+
+**The code.** Both of the sheet's psionic level-up pickers filter a grant that
+has no list by `includes`. The live picker tests `cats.includes(x.category)`,
+with `cats` from `psiCategoryCap`, which returns the entry's categories raw
+(`apps/character-creator/sheet.js:2495-2502`). The banked panel tests
+`g.categories.includes(x.category)`. Since F16 a gate entry may be an object -
+`{ name: "Physical", except: ["Telekinesis"] }` - and `includes` compares the
+power's category string against it and never matches. The wizard (`advPsiPool`)
+and the server's claim check (`power-picks.js`) both use `categoryAllows`, and
+the sheet already reaches that function for skills
+(`sheet.js:2699-2704`, `globalThis.skillCats.categoryAllows`).
+
+**Reach**, measured 2026-09-11 over all 265 live classes with the real parser
+and `powerGrantsFor`: three classes carry an object entry in
+`categories_allowed` (crazy, totem-warrior and healing-shaman), and 19 of 302
+psionic level-up grants are gated by one - totem-warrior's 5 of 5 and
+healing-shaman's 14 of 33. The Crazy has no level-up psionic grants. On the
+sheet, a level-up for either of the other two offers an empty picker for those
+grants, while the server would accept a legal pick the picker never shows. This
+was not seen in a browser. It was read from the code and the banked shape, and
+the production Healing Shaman's Physical grant banks as
+`[{"name":"Physical","except":["Telekinesis"]}]`.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | use `globalThis.skillCats.categoryAllows` in both psionic filters, as the sheet's skill picker already does | one matcher for every reader, which is what the claim check's comment asks for; two lines | a smoke pin to keep |
+| B | leave it | nothing to build | two classes' level-ups offer an empty picker for a third of their psionic grants or more |
+
+**Proposal:** A. **Posture:** code only; no data, no schema.
+
+**Confidence: high** that the filter never matches: a string `includes`
+against an object is false. **Medium** that nothing else on the sheet fills
+the gap. What would raise it is a render of a Healing Shaman's level-up on the
+sheet.
+
+**Ongoing cost:** one smoke pin.
+
+**Subject grep, 2026-09-11:** every `*AUDIT*.md` for `categoryAllows`,
+`cats.includes` and "sheet" near "categor". UI-AUDIT F30
+(`apps/character-creator/UI-AUDIT.md:1937-1954`, 2026-09-03) moved the sheet's
+SKILL picker to `categoryAllows` through the `sheet.html` module bridge for
+this same reason, and did not reach the psionic pickers. This finding is F30's
+rule applied to the two filters it missed; there is no decision to argue
+past.
+
+### F67 - low - changing a chosen ability after the pools are rolled leaves them stale, and a character who now converts saves with S.D.C. and hit points
+
+**Found 2026-09-11** by F64's premise audit: `takeAbility` and `dropAbility` do
+not clear the rolled pools the way `pickTotem` does. Confirmed the same day in
+the wizard, as Nate asked when F64 was taken.
+
+**The code.** `pickTotem` recomposes and sets `S.pools = null`
+(`apps/character-creator/app.js:1597-1602`), so the next step rolls again.
+`takeAbility` and `dropAbility` (`app.js:1509-1530`) change `S.abilities` and
+render, and `confirmRace` recomposes without clearing the pools
+(`app.js:1605-1611`). The later steps roll only when `S.pools` is empty
+(`app.js:1910`, `:3398` and `:3756`, each `if (!S.pools) computePools()`).
+
+**The walk**, on 2026-09-11: a local server on F64's branch, against a copy of
+local D1 with F64's script applied. It was driven through the wizard's own
+handlers in the page - `pickSystem`, `pickClass`, `takeAbility`,
+`confirmRace`, `computePools`, `goStep` and `dropAbility` - not by clicking.
+
+1. A Spirit Warrior with Earth, Air and Fire, pools rolled: it converts, hit
+   points and S.D.C. are empty, and M.D.C. is 70.
+2. Back to Race, Earth swapped for Water, race confirmed again: the class no
+   longer converts, and the pools still read M.D.C. 70, with no hit points and
+   no S.D.C.
+3. The later steps' lazy roll leaves that as it is. Only Review's Reroll
+   (`computePools(true)`) rolls again.
+
+**What the server does with it**, asked of the real `validateCharacter` with the
+composed class. The state from step 2 is refused: `pool_out_of_range` on
+`hp_max` and `sdc_max`, whose message already says to reroll on the Review step.
+**The reverse is accepted silently.** Pools rolled for Air, Fire and Water
+(hit points 15, S.D.C. 10, no M.D.C.), then Earth taken: a converting class's
+bounds skip hit points and S.D.C., and there is no M.D.C. to bound. So the
+character saves as the S.D.C. being the book says it no longer is.
+
+**Reach:** every chosen ability that changes a pool. That is F64's two realms,
+and the Godling's Super-Tough (`bonuses.pools.mdc`), which the audit named.
+Not measured beyond those.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | clear `S.pools` in `takeAbility` and `dropAbility` when the ability taken or dropped touches a pool - a `bonuses.pools` entry or `mdc_from_hp_sdc` - as `pickTotem` does, so the next step rolls again | the existing pattern; fresh pools the player can see; only abilities that change a pool pay for it | a pool the player liked is rolled again when they change a realm, as a totem change already does |
+| B | clear on every take and drop | simpler | rolls pools again for abilities that never touch them |
+| C | have the validator refuse a converting class that submits no M.D.C. | the server catches the silent direction | the wizard still shows stale numbers until the save is refused |
+
+**Proposal:** A. **Posture:** code only; no data, no schema.
+
+**Confidence: high on the gap**, because it was walked and validated. **Medium**
+that no other path clears the pools between Race and Review. What would raise
+it is the same walk done by clicking.
+
+**Ongoing cost:** one smoke pin on the two handlers.
+
+**Subject grep, 2026-09-11:** every `*AUDIT*.md` for "S.pools = null",
+`takeAbility`, `dropAbility`, and "stale" or "reroll" near "pool": no hits.

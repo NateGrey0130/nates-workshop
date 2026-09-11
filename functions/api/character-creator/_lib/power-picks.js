@@ -83,9 +83,16 @@ export function powerGrantsFor(cls, fromLevel, toLevel) {
   const psionics = psionicGrantsFor(cls, fromLevel, toLevel);
   if (psionics.applicable && !psionics.unknown) {
     for (const g of psionics.grants) {
+      // A named list on the entry rides onto the grant and REPLACES its
+      // categories, as a starting group's does in startingGroups: the list is
+      // the restriction, and the Healing Shaman's eight listed Super powers sit
+      // under a class gate with no Super in it. BOOK-INGEST-AUDIT F65 - this
+      // wrote `from: null` over the list, so the claim check, the validator and
+      // the sheet saw only the gate, which refused every listed power.
+      const from = Array.isArray(g.from) && g.from.length ? g.from.map(String) : null;
       out.push({ ...g, kind: 'psionic', spell_levels: null, traditions: null,
-                 categories: psionicCategoriesForGrant(cls, g.level, g.slot),
-                 from: null,
+                 categories: from ? null : psionicCategoriesForGrant(cls, g.level, g.slot),
+                 from,
                  note: grantNote(cls, 'psionic', g.level, g.slot) });
     }
   }
@@ -151,7 +158,9 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
       continue;
     }
     // A named list is the tightest restriction there is, so it is checked
-    // first: a grant that names its spells is not also asking about levels.
+    // first. Its entry may also carry a level cap (BOOK-INGEST-AUDIT F61), and
+    // the cap test below runs for a list grant too - which this path always
+    // did, being the one reader that never dropped the cap beside a list.
     const list = fromFor.get(k);
     if (list && !list.some((n) => n.toLowerCase() === name.toLowerCase())) {
       errors.push(`${name} is not on the list the level ${level} grant draws from`);

@@ -316,9 +316,9 @@ export function validateMos(mos, errors, warnings) {
 //   totem: { from: "animal", powers: true }   # the Totem Warrior: its giant-form powers too
 //
 // `from` names the catalog's only kind. It is required rather than implied so a
-// class whose book offers something else - the Elemental Shaman picks one of
-// four ELEMENTS instead, printed 65 - cannot borrow the key and be handed forty
-// animals.
+// class whose book offers something else - the Elemental Shaman has one of four
+// ELEMENTS instead, printed 65, and is one class per element since
+// BOOK-INGEST-AUDIT F63 - cannot borrow the key and be handed forty animals.
 export function validateTotem(t, errors, warnings) {
   if (t === undefined || t === null) return;
   if (typeof t !== 'object' || Array.isArray(t)) {
@@ -894,6 +894,11 @@ export function combineClasses(rcc, occ) {
   // it to stop calling the merged expressions "racial dice" when half of them
   // are the occupation's.
   if (superseded) out.supersedes_race = true;
+  // A mega-damage conversion is the OCCUPATION's when it states one - the Totem
+  // Warrior's supernatural P.E. comes from its infusion, not from a race - and
+  // `out` starts as the race spread, so it is carried (BOOK-INGEST-AUDIT F62).
+  // An M.D.C. race still keeps its own pool: convertsToMdc yields to mdc_base.
+  if (occ.mdc_from_hp_sdc === true) out.mdc_from_hp_sdc = true;
   for (const key of ['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',
                      'starting_money', 'xp_table']) {
     if (superseded && occ[key] != null) out[key] = occ[key];
@@ -1823,6 +1828,15 @@ export function applyAbilities(cls, chosen) {
         },
       };
     }
+    // An ability that turns S.D.C. and hit points into M.D.C. - F62's flag,
+    // carried by a CHOICE. BOOK-INGEST-AUDIT F64: the Spirit Warrior converts
+    // only through its Earth or Plant realm, three of six chosen, so a class key
+    // would convert the four combinations with neither. A flag rather than a
+    // block, folded on its own like related_skills_count above and for the same
+    // reason kept out of ABILITY_GRANTS, whose keys are maps. The realm's extra
+    // M.D.C. rides beside it as an ordinary pools.mdc bonus, so two converting
+    // realms combine theirs, as printed 47 says they do.
+    if (def.mdc_from_hp_sdc === true) out.mdc_from_hp_sdc = true;
     taken.push({ name: def.name, times: n, granted: true, ...(gm ? { gm: true } : {}),
       description: def.description, on_repeat: n > 1 ? def.on_repeat : undefined });
   }
@@ -2294,6 +2308,16 @@ export function parseClassMarkdown(text) {
       warnings.push('supersedes_race is set on something that is not an O.C.C. and will do nothing');
     }
   }
+  // F62. A mega-damage creature whose S.D.C. and hit points ARE its M.D.C. -
+  // the Totem Warrior's supernatural P.E. Opt-in, and only for a PERMANENT
+  // conversion; a temporary one (the Psycho-Stalker's) is an ability.
+  if (data.mdc_from_hp_sdc !== undefined) {
+    if (data.mdc_from_hp_sdc !== true) {
+      errors.push('mdc_from_hp_sdc is a flag and may only be true; omit it otherwise');
+    } else if (data.mdc_base != null) {
+      warnings.push('mdc_from_hp_sdc is set beside an mdc_base, which wins; the flag does nothing');
+    }
+  }
   if (data.occ_restrictions !== undefined && data.category !== 'rcc') {
     warnings.push('occ_restrictions is set on something that is not a race and will do nothing');
   }
@@ -2516,6 +2540,11 @@ export function parseClassMarkdown(text) {
         && (!Number.isInteger(e.related_skills_count) || e.related_skills_count < 0)) {
       errors.push(`special_abilities: ${e.name}.related_skills_count must be a `
         + 'non-negative integer');
+    }
+    // F64: F62's conversion flag, carried by a chosen ability. True or absent.
+    if (e.mdc_from_hp_sdc !== undefined && e.mdc_from_hp_sdc !== true) {
+      errors.push(`special_abilities: ${e.name}.mdc_from_hp_sdc is a flag and may only be true; `
+        + 'omit it otherwise');
     }
   }
 

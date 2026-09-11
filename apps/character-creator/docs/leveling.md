@@ -447,6 +447,27 @@ bonuses:
   pools: { ppe: "4d6", isp: "4d6" }   # and leave ppe_base absent
 ```
 
+**A mega-damage creature whose S.D.C. and hit points ARE its M.D.C. says so with
+`mdc_from_hp_sdc: true`** (`BOOK-INGEST-AUDIT.md` F62). The Totem Warrior's
+supernatural P.E. *"turns the warrior into a mega-damage creature. Simply change
+his combined S.D.C. and hit points into an M.D.C. total"* - permanently, even in
+human form. Hit points and S.D.C. are rolled from the formulas the class or the
+core defaults state, their sum plus any `bonuses.pools.mdc` is the M.D.C.
+maximum, and the two are left empty. Each level adds the hit point formula's
+per-level dice to M.D.C. `convertsToMdc` in `js/leveling.js` is the one
+definition the wizard, the validator and the level-up proposal all read, and it
+yields to a stated `mdc_base`. **Not for a temporary conversion** - the
+Psycho-Stalker spends I.S.P. to become M.D.C. for a minute and stays an S.D.C.
+being, which is an ability.
+
+**A chosen ability may carry the same flag** (`BOOK-INGEST-AUDIT.md` F64), for
+a conversion only some choices bring. The Spirit Warrior takes three of six
+realms, and only its Earth and Plant realms convert, so the flag sits on those
+two abilities and `applyAbilities` folds it onto the composed class when one is
+taken. Everything above then reads it unchanged. Each realm's extra 1D4x10 is
+its own `bonuses.pools.mdc`, so a character taking both adds both, as the book
+says they combine.
+
 Four things follow from pools being rolled once rather than derived per render:
 
 - **It is the only bonus group that takes dice as well as a number.** Combat and
@@ -559,7 +580,9 @@ than a category gate, so it replaces it** — exactly as a skill choice-group's
 catalog does not carry is **reported** under the picker rather than silently
 shrinking the list, the same reasoning the skill cross-reference uses. The tier
 gate still applies on top, so a book that names a power above the character's
-tier still says so.
+tier still says so. A level-up `powers_schedule` entry names its list the same
+way, as `from`, and it replaces that grant's categories just as `powers_from`
+replaces the class's (`BOOK-INGEST-AUDIT.md` F65).
 
 **Powers a class grants outright now reach the character.** `psionics.powers`
 and `magic.spells` name what the class simply knows — the Mind Melter's four

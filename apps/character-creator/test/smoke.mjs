@@ -670,6 +670,20 @@ section('Creation validation');
     const off = validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat, powers: [psi('Mend')] });
     return on.violations.length === 0 && off.violations.some((v) => v.rule === 'power_not_on_list');
   })());
+  // BOOK-INGEST-AUDIT F65: the same at level-up. A list on a schedule entry
+  // replaces that grant's categories, so a listed Super power fills it under a
+  // Sensitive gate - the Healing Shaman's eight, levels 3-12 - and an unlisted
+  // Healing power cannot. Nothing in the validator changed: it reads the grants
+  // powerGrantsFor builds, which used to drop the list.
+  check('a level-up grant\'s named list replaces its category gate, both ways', (() => {
+    const cls2 = { ...vCls, psionics: { type: 'major', powers_starting: 1, categories_allowed: ['Sensitive'],
+      powers_schedule: [{ level: 3, count: 1, from: ['Crush'] }] } };
+    const at3 = (names) => validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat,
+      character: { level: 3 }, powers: names.map(psi) });
+    const on = at3(['See', 'Crush']);
+    const off = at3(['See', 'Mend']);
+    return on.violations.length === 0 && off.violations.some((v) => v.rule === 'power_category');
+  })());
   // The starting pick used to be ONE count and ONE gate, so a spell pick could
   // not be bounded by a name at all and a split pick had to be flattened into
   // its widest gate - which is how the Delphi Juicer came to allow four Super
@@ -1503,6 +1517,56 @@ section('Per-level spells and psionics');
   check('and the counts are the varying ones, not a flat rule',
     JSON.stringify(mysticGrants.grants.map((g) => g.count)) === '[4,3,2,2,2]',
     JSON.stringify(mysticGrants.grants.map((g) => g.count)));
+
+  // BOOK-INGEST-AUDIT F61: a list-bound entry may ALSO keep a level cap, by
+  // saying so. Three Spirit West shamans' books cap their list picks at the
+  // character's own level; the Shifter's and the Lyn-Srial's do not, so the cap
+  // is opt-in and a list that asks for none stays uncapped.
+  {
+    const books = ['Spell One', 'Spell Three', 'Spell Five'];
+    const shaman = { magic: { spell_lists: { B: books }, spells_schedule: [
+      { level: 2, count: 1, from_list: 'B' },
+      { level: 3, count: 1, from_list: 'B', spell_levels: 'up_to_character_level' },
+      { level: 4, count: 1, from_list: 'B', spell_levels: [1, 2] }] } };
+    check('a list entry asking for the character-level cap gets it',
+      JSON.stringify(spellLevelsForGrant(shaman, 3)) === '[1,2,3]', JSON.stringify(spellLevelsForGrant(shaman, 3)));
+    check('a list entry asking for nothing stays uncapped', spellLevelsForGrant(shaman, 2) === null);
+    check('and an explicit array beside a list is its cap too',
+      JSON.stringify(spellLevelsForGrant(shaman, 4)) === '[1,2]');
+    const listGrants = spellGrantsFor(shaman, 1, 4).grants;
+    check('a from_list grant carries its resolved list, so the sheet has one to offer',
+      listGrants.length === 3 && listGrants.every((g) => Array.isArray(g.from) && g.from.length === 3),
+      JSON.stringify(listGrants.map((g) => g.from)));
+
+    // The create validator: a spell over its list's cap is refused, one inside
+    // it is not, and a list that asks for no cap still takes anything on it.
+    const capped = { magic: { spell_lists: { B: books }, spells_schedule: [
+      { level: 2, count: 1, from_list: 'B', spell_levels: 'up_to_character_level' },
+      { level: 3, count: 1, from_list: 'B', spell_levels: 'up_to_character_level' }] } };
+    const spellRows = { spell: new Map([['spell one', { name: 'Spell One', level: 1 }],
+      ['spell three', { name: 'Spell Three', level: 3 }], ['spell five', { name: 'Spell Five', level: 5 }]]),
+      psionic: new Map() };
+    const capRule = (cls, level, name) => validateCharacter({ character: { level }, cls, skills: [],
+      attributes: {}, powers: [{ type: 'spell', name }], powerCatalog: spellRows })
+      .violations.filter((v) => v.rule === 'power_level_cap');
+    check('a spell over its list\'s cap is refused', capRule(capped, 3, 'Spell Five').length > 0);
+    check('one inside the cap is not', capRule(capped, 3, 'Spell Three').length === 0);
+    check('and a list asking for no cap still takes anything on it', capRule(shaman, 2, 'Spell Five').length === 0);
+
+    // The wizard and the sheet cannot share the filter - the sheet is a classic
+    // script - so their shapes are pinned: a list AND its cap, both.
+    const appText = readFileSync(join(appDir, 'app.js'), 'utf8');
+    const sheetText = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    check('the wizard\'s level-up picker applies a list and its cap together',
+      /named \? \(named\.has\(String\(sp\.name\)\.toLowerCase\(\)\) && \(!levels \|\| levels\.includes\(sp\.level\)\)\)/.test(appText));
+    check('so does the sheet\'s live level-up picker',
+      /named \? \(named\.has\(String\(x\.name\)\.toLowerCase\(\)\) && \(!levels \|\| levels\.includes\(x\.level\)\)\)/.test(sheetText));
+    check('and its banked-pick panel',
+      /named \? \(named\.has\(String\(x\.name\)\.toLowerCase\(\)\)\s*&& \(!g\.spell_levels \|\| g\.spell_levels\.includes\(x\.level\)\)\)/.test(sheetText));
+    check('and the sheet\'s copy of the cap rule knows the string and from_list',
+      /entry\.spell_levels === 'up_to_character_level'/.test(sheetText)
+      && /entry\.from_list\)+ return null/.test(sheetText));
+  }
   check('totalling what the book adds up to', mysticGrants.total === 13);
 
   // An explicit list is honoured, and a class stating neither falls back.
@@ -2326,6 +2390,98 @@ check('the count is omitted when there is no total', !Picker.inputHtml({ id: 'y'
 // Every one of these is a real formula from a sourcebook. Three of the five
 // returned NULL before, which meant a character imported from that class was
 // created with no hit points, no P.P.E. and no I.S.P. at all.
+section('Mega-damage conversion (BOOK-INGEST-AUDIT F62)');
+{
+  // Loaded as a namespace so a check fails on its own, rather than the whole
+  // run failing at import, when a function is missing - which is exactly what
+  // these must do before the fix exists.
+  const LV = await import('../js/leveling.js');
+  const md = (extra) => parseClassMarkdown(['---', 'id: t', 'name: T', 'system: rifts', 'source_book: b',
+    'category: occ', ...extra, '---', '', '## Lore', '', 'x', ''].join(String.fromCharCode(10)));
+  const tw = md(['mdc_from_hp_sdc: true', 'hit_points_base: "P.E. + 1D6 per level"', 'sdc_base: "3D6"']);
+  check('the flag parses', tw.ok && tw.data.mdc_from_hp_sdc === true, tw.errors.join('; '));
+  check('and may only be true', md(['mdc_from_hp_sdc: yes']).errors.some((e) => /mdc_from_hp_sdc/.test(e)));
+  const converts = (c) => (typeof LV.convertsToMdc === 'function' ? LV.convertsToMdc(c) : undefined);
+  check('a flagged class converts', converts(tw.data) === true);
+  check('an unflagged class does not', converts(md([]).data) === false);
+  check('and a class stating its own M.D.C. keeps that pool', converts({ ...tw.data, mdc_base: '1d4x100' }) === false);
+
+  const pools = LV.convertedPools?.(tw.data, { hp: 14, sdc: 12, mdc: null, ppe: 5 }, {});
+  check('the two rolls become ONE M.D.C. maximum and the pools they came from are emptied',
+    pools?.mdc === 26 && pools.hp === null && pools.sdc === null && pools.ppe === 5, JSON.stringify(pools));
+  const bonused = LV.convertedPools?.({ ...tw.data, bonuses: { pools: { mdc: 10 } } }, { hp: 14, sdc: 12, mdc: null }, {});
+  check('with any M.D.C. bonus added on top', bonused?.mdc === 36, JSON.stringify(bonused));
+  check('an unflagged class keeps its pools untouched',
+    JSON.stringify(LV.convertedPools?.(md([]).data, { hp: 14, sdc: 12, mdc: null }, {})) === '{"hp":14,"sdc":12,"mdc":null}');
+
+  const race = { id: 'r', name: 'R', system: 'rifts', category: 'rcc' };
+  check('an occupation\'s flag survives being composed with a racial class',
+    combineClasses(race, tw.data).mdc_from_hp_sdc === true);
+  check('but an M.D.C. race keeps its own pool',
+    converts(combineClasses({ ...race, mdc_base: '1d4x100' }, tw.data)) === false);
+
+  // P.E. 10: hit points 'P.E. + 1D6 per level' are 11-16 at level one, S.D.C.
+  // 3D6 is 3-18, so the M.D.C. maximum is 14-34, +1-6 a level after the first.
+  const cls = composeClass({ rcc: tw.data });
+  const poolFindings = (mdc, level = 1) => validateCharacter({ character: { level }, cls, skills: [],
+    attributes: { PE: 10 }, pools: { hp_max: null, sdc_max: null, mdc_max: mdc }, enforcePools: true })
+    .violations.filter((x) => x.rule === 'pool_out_of_range');
+  check('the emptied hit point and S.D.C. pools raise nothing, and an M.D.C. in range passes',
+    poolFindings(20).length === 0, JSON.stringify(poolFindings(20)));
+  check('an M.D.C. past what the two formulas can roll is refused',
+    poolFindings(200).some((x) => x.field === 'mdc_max'));
+  check('and the range grows by the hit point dice each level',
+    poolFindings(40, 1).length > 0 && poolFindings(40, 3).length === 0);
+
+  const prop = buildProposal({ level: 1, hp_max: null, sdc_max: null, mdc_max: 26, ppe_max: null,
+    isp_max: null, skills: [] }, cls, 3);
+  check('a level-up grows M.D.C. by the hit point dice, and touches no emptied pool',
+    prop.pools.mdc_max && prop.pools.mdc_max.to >= 28 && prop.pools.mdc_max.to <= 38
+    && !prop.pools.hp_max && !prop.pools.sdc_max, JSON.stringify(prop.pools));
+}
+
+section('Mega-damage conversion from a chosen ability (BOOK-INGEST-AUDIT F64)');
+{
+  // The Spirit Warrior converts only through its Earth or Plant realm, and
+  // chooses three of six, so the flag rides on the ABILITY and is folded onto
+  // the composed class when that ability is taken - the way F24's
+  // related_skills_count is, and outside ABILITY_GRANTS, whose three keys are
+  // maps (pinned in 'Chosen abilities').
+  const LV = await import('../js/leveling.js');
+  const realm = (name, extra) => [`  - name: "${name}"`, '    description: "x"', ...extra];
+  const md = (defs) => parseClassMarkdown(['---', 'id: t', 'name: T', 'system: rifts', 'source_book: b',
+    'category: occ', 'hit_points_base: "P.E. + 1D6 per level"', 'sdc_base: "3D6"', 'special_abilities:',
+    '  - { choose: 2, from: ["Earth", "Plant", "Air"] }', ...defs,
+    '---', '', '## Lore', '', 'x', ''].join(String.fromCharCode(10)));
+  const CONVERTS = ['    mdc_from_hp_sdc: true', '    bonuses: { pools: { mdc: "1d4x10" } }'];
+  const sw = md([...realm('Earth', CONVERTS), ...realm('Plant', CONVERTS), ...realm('Air', [])]);
+  check('a chosen ability may carry the conversion flag', sw.ok, sw.errors.join('; '));
+  check('and it may only be true',
+    md(realm('Earth', ['    mdc_from_hp_sdc: yes'])).errors.some((e) => /Earth\.mdc_from_hp_sdc/.test(e)));
+
+  const as = (...abilities) => composeClass({ rcc: sw.data, character: { abilities } });
+  check('the class alone does not convert', LV.convertsToMdc(composeClass({ rcc: sw.data })) === false);
+  check('choosing the Earth realm converts it', LV.convertsToMdc(as('Earth', 'Air')) === true);
+  check('choosing neither Earth nor Plant does not', LV.convertsToMdc(as('Air')) === false);
+  check('and the fold leaves the class it was given untouched', sw.data.mdc_from_hp_sdc === undefined);
+
+  // P.E. 10: hit points 11-16 and S.D.C. 3-18 make 14-34, and each converting
+  // realm adds 1D4x10. Printed 47: taken together the two "do not combine the
+  // bonuses to the P.E. attribute, but do combine the M.D.C."
+  const one = LV.convertedMdcBounds(as('Earth', 'Air'), { PE: 10 }, 1);
+  const two = LV.convertedMdcBounds(as('Earth', 'Plant'), { PE: 10 }, 1);
+  check('a converting realm adds its 1D4x10, and two of them combine',
+    one?.min === 24 && one?.max === 74 && two?.min === 34 && two?.max === 114, JSON.stringify({ one, two }));
+
+  const outOfRange = (cls, mdc) => validateCharacter({ character: { level: 1 }, cls, skills: [],
+    attributes: { PE: 10 }, pools: { hp_max: null, sdc_max: null, mdc_max: mdc }, enforcePools: true })
+    .violations.filter((x) => x.rule === 'pool_out_of_range');
+  check('the server bounds the converted M.D.C.: in range passes, past it is refused',
+    outOfRange(as('Earth', 'Air'), 50).length === 0
+    && outOfRange(as('Earth', 'Air'), 200).some((x) => x.field === 'mdc_max'),
+    JSON.stringify(outOfRange(as('Earth', 'Air'), 200)));
+}
+
 section('Pool formulas');
 {
   const attrs = { PE: 10, ME: 20 };
@@ -5109,6 +5265,37 @@ section('Audit citation sweep');
   const importSkill = readFileSync(join(repoRoot, '.claude', 'skills', 'class-import', 'SKILL.md'), 'utf8');
   check('the class-import skill separates the permanent half from the perishable',
     /extraction_notes/.test(importSkill) && /perishable/i.test(importSkill));
+
+  // The denominator. A retired class stays in imported_classes with deleted_at
+  // set and status still 'published' - the generic warlock since 2026-09-04,
+  // elemental-shaman since F63 split it on 2026-09-11 - so the unfiltered query
+  // printed "of 267 published classes" when 265 could be picked, and would list
+  // a retired class beside the live citers. Status alone is not the test;
+  // drift-check, retro-check and source-coverage all ask both columns.
+  //
+  // So this runs the script's OWN live-row test, lifted out of its source,
+  // rather than asking that the file mention deleted_at - a comment would.
+  const liveSrc = code.match(/const isLive = ([^\n]+);/)?.[1];
+  const isLive = liveSrc ? new Function(`return ${liveSrc}`)() : null;
+  check('the citation sweep has a live-class test',
+    typeof isLive === 'function', 'expected `const isLive = (r) => ...;` on one executable line');
+  check('and it refuses a retired class that kept status published',
+    typeof isLive === 'function'
+      && isLive({ status: 'published', deleted_at: null }) === true
+      && isLive({ status: 'published', deleted_at: '2026-09-11 00:00:00' }) === false
+      && isLive({ status: 'draft', deleted_at: null }) === false);
+  // A column the SELECT never asked for reads undefined, and a test written as
+  // `== null` would then call every retired row live.
+  check('and a row without the column is not live by default',
+    typeof isLive === 'function' && isLive({ status: 'published' }) === false);
+  const select = code.match(/d1Query\(\s*'(SELECT [^']*)'/)?.[1] ?? '';
+  check('and the query selects both columns that test reads',
+    /\bstatus\b/.test(select) && /\bdeleted_at\b/.test(select), select || 'no d1Query SELECT found');
+  // The retired rows are FETCHED and set aside, never filtered in SQL: a
+  // retired class's note is still a note, and hiding it silently is the
+  // failure this script exists to prevent. It lists them after the live ones.
+  check('and it keeps retired rows so it can list them, not drop them',
+    select !== '' && !/\bWHERE\b/i.test(select), select);
 }
 
 section('A class that supersedes its race');
@@ -6249,6 +6436,30 @@ section('Power grants');
   const psi = powerGrantsFor({ psionics: { type: 'major', powers_per_level: 1 } }, 1, 3);
   check('psionic grants carry no spell cap',
     psi.length === 2 && psi.every((g) => g.kind === 'psionic' && g.spell_levels === null));
+
+  // A level-up psionic grant drawn from a NAMED LIST (BOOK-INGEST-AUDIT F65).
+  // perLevelGrants carried the list; powerGrantsFor wrote `from: null` over
+  // it, so the claim check, the validator and both sheet pickers saw only the
+  // category gate - which refuses every listed Super power the Healing Shaman
+  // and Fetish Shaman are granted by name. The list now rides, and replaces
+  // the grant's categories, as a starting group's does in startingGroups.
+  const listed = powerGrantsFor({ psionics: { type: 'major', categories_allowed: ['Sensitive'],
+    powers_schedule: [{ level: 3, count: 1, from: ['Crush'] }, { level: 4, count: 1, categories: ['Healing'] }] } }, 1, 4);
+  check('a psionic grant from a named list carries the list',
+    JSON.stringify(listed[0]?.from) === '["Crush"]', JSON.stringify(listed));
+  check('and drops the category gate the list replaces', listed.length === 2 && listed[0].categories === null);
+  check('while a grant with no list keeps its own categories and no list',
+    listed[1]?.from == null && JSON.stringify(listed[1]?.categories) === '["Healing"]', JSON.stringify(listed[1]));
+
+  // The two readers that cannot import the grant builder read `from` off the
+  // grant: the wizard's Advancement pool and the sheet's two pickers.
+  const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+  const sheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  check('the wizard hands a psionic grant\'s list to its pool', /advPsiPool\(cats, g\.from\)/.test(appSrc));
+  check('and the pool offers only the list when there is one',
+    /function advPsiPool\(cats = null, from = null\)/.test(appSrc));
+  check('both sheet pickers read a list for psionic grants as well as spells',
+    (sheetSrc.match(/const named = Array\.isArray\(g\.from\) && g\.from\.length/g) || []).length === 2);
 
   // Banking consumes per grant, not from one pool. Spending both level-4 spells
   // must not leave the level-5 grant looking half spent.

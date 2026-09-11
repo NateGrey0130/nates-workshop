@@ -27,7 +27,7 @@ import { composeClass } from './js/compose.js';
 import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant,
          spellNamesForGrant, grantNote,
          skillGrantsFor, spellGrantsFor, psionicGrantsFor, startingGroups,
-         startingPicksFor, relatedAllowance, spellTraditionsAllowed,
+         startingPicksFor, relatedAllowance, spellTraditionsAllowed, convertedPools,
          spellTraditionAllowed } from './js/leveling.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
@@ -347,13 +347,16 @@ function computePools(force = false) {
   // "plus 4D6" over whatever the occupation gives, so the bonus rides along with
   // the roll and lands in the stored maximum.
   const pb = c.bonuses?.pools || {};
-  S.pools = {
+  // A mega-damage conversion (BOOK-INGEST-AUDIT F62) turns the hit points and
+  // S.D.C. just rolled into one M.D.C. maximum; convertedPools leaves every
+  // other class's pools exactly as rolled.
+  S.pools = convertedPools(c, {
     hp: rollPoolFormula(c.hit_points_base, S.attrs, pb.hp),
     sdc: rollPoolFormula(c.sdc_base, S.attrs, pb.sdc),
     mdc: rollPoolFormula(c.mdc_base, S.attrs, pb.mdc),
     ppe: rollPoolFormula(c.ppe_base, S.attrs, pb.ppe),
     isp: pc.psionics ? rollPoolFormula(pc.psionics.isp_base, S.attrs, pb.isp) : null,
-  };
+  }, S.attrs);
   // Step 5 is "Equipment AND Money" (p.22) — every class starts with a sum of
   // coin as well as its kit. Rolled from the same formula parser as the pools,
   // so the Reroll button on Review covers it, and stored in bio because it is a
@@ -1770,14 +1773,16 @@ function spellGrantBlock(grant) {
     // other grant's. A spell is learned once.
     const heldElsewhere = new Set([...S.spells, ...taken.filter((n) => !chosen.includes(n))]
       .map((n) => n.toLowerCase()));
-    // A named list is the tightest restriction and replaces the level cap: a
-    // grant that names its spells is not also asking about levels.
+    // A named list is the tightest restriction. It carries a level cap as well
+    // only where its entry asks for one - spellLevelsForGrant returns null for
+    // every other list slot - so `levels` is applied beside the list rather
+    // than dropped (BOOK-INGEST-AUDIT F61).
     const named = names && new Set(names.map((n) => n.toLowerCase()));
     // A level-gated grant reaches a tradition's spells only where the class
     // allows it (BOOK-INGEST-AUDIT F57); a named list is untouched.
     const traditions = spellTraditionsAllowed(S.cls);
     const pool = S.spellCatalog.filter((sp) => inSystem(sp)
-      && (named ? named.has(String(sp.name).toLowerCase())
+      && (named ? (named.has(String(sp.name).toLowerCase()) && (!levels || levels.includes(sp.level)))
                 : ((!levels || levels.includes(sp.level)) && spellTraditionAllowed(sp, traditions)))
       && !heldElsewhere.has(String(sp.name).toLowerCase()));
     // A name the catalog does not carry would silently shrink the list, so say
@@ -1785,7 +1790,7 @@ function spellGrantBlock(grant) {
     const unknownNamed = names
       ? names.filter((n) => !S.spellCatalog.some((x) => String(x.name).toLowerCase() === n.toLowerCase()))
       : [];
-    const cap = named ? `a list of ${names.length}`
+    const cap = named ? `a list of ${names.length}${levels ? `, spell levels ${levels.join(', ')}` : ''}`
       : levels ? `spell levels ${levels.join(', ')}` : 'any spell level';
     return `<p class="small" style="margin-top:12px"><b>Level ${g.level}</b> — ${g.count}
       ${g.count === 1 ? 'spell' : 'spells'} <span class="muted">from ${esc(cap)}</span></p>
@@ -1823,10 +1828,11 @@ function psiGrantBlock(grant) {
     const note = grantNote(S.cls, 'psionic', g.level, g.slot);
     const heldElsewhere = new Set([...S.psi, ...taken.filter((n) => !chosen.includes(n))]
       .map((n) => n.toLowerCase()));
-    const pool = advPsiPool(cats).filter((x) => !heldElsewhere.has(String(x.name).toLowerCase()));
+    const pool = advPsiPool(cats, g.from).filter((x) => !heldElsewhere.has(String(x.name).toLowerCase()));
+    const listed = Array.isArray(g.from) && g.from.length;
     return `<p class="small" style="margin-top:12px"><b>Level ${g.level}</b> — ${g.count}
       ${g.count === 1 ? 'power' : 'powers'}
-      <span class="muted">from ${esc(cats ? cats.join(', ') : 'any category')}</span></p>
+      <span class="muted">from ${esc(listed ? `a list of ${g.from.length}` : cats ? cats.join(', ') : 'any category')}</span></p>
       ${note ? `<p class="attr-note">${esc(note)} — the catalog cannot check this one.</p>` : ''}
       ${psiGroupRows(pool, g.count, 'psi-adv', gi)}`;
   }).join('');
@@ -1842,8 +1848,10 @@ function psiGrantBlock(grant) {
 // The psionic pool a grant may draw from, minus what the character already
 // holds — a power cannot be learned twice.
 //
-// `cats` overrides the class's own when a grant names its own categories.
-function advPsiPool(cats = null) {
+// `cats` overrides the class's own when a grant names its own categories, and
+// `from`, the grant's own named list, replaces both (BOOK-INGEST-AUDIT F65): the
+// Healing Shaman's listed Super powers sit outside every category it has.
+function advPsiPool(cats = null, from = null) {
   const cls = psiClass();
   const psi = psiConfig(cls);
   if (!psi) return [];
@@ -1851,8 +1859,11 @@ function advPsiPool(cats = null) {
   const allowed = cats || psi.cats;
   // A named list is the class saying exactly which powers its STARTING picks
   // come from; a grant naming its own categories is a later, different rule and
-  // is not narrowed by that list.
-  const named = !cats && psi.from && new Set(psi.from.map((n) => n.toLowerCase()));
+  // is not narrowed by that list. A grant naming its own LIST is that rule
+  // stated by name.
+  const listed = Array.isArray(from) && from.length ? from : null;
+  const named = listed ? new Set(listed.map((n) => String(n).toLowerCase()))
+    : !cats && psi.from && new Set(psi.from.map((n) => n.toLowerCase()));
   // categoryAllows rather than a plain includes: a category entry may narrow
   // itself with `only` / `except` since F16, and that is the same grammar and
   // the same function the skill pickers use.

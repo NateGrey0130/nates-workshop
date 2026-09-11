@@ -507,8 +507,10 @@ totem: { from: "animal", powers: true }   # the Totem Warrior
 **It is not an MOS and not an ability choice**, and each near miss is the reason.
 An MOS is written inside the class that offers it; the same forty animals written
 into nine classes would be 360 definitions that must stay identical, which is the
-drift `F25` declined to model. A chosen ability may grant only `bonuses`,
-`psionics` and `magic` (`ABILITY_GRANTS`), and a totem's first grant is skills.
+drift `F25` declined to model. A chosen ability grants the three blocks in
+`ABILITY_GRANTS` - `bonuses`, `psionics` and `magic` - and two single values
+folded on their own, F24's `related_skills_count` and F64's `mdc_from_hp_sdc`;
+never skills, and a totem's first grant is skills.
 So the animals are rows in `totems`, and the class carries only the key.
 
 `applyTotem()` runs in `composeClass`, straight after the MOS and on the composed
@@ -531,5 +533,6 @@ totem, so the race roll cannot count them twice.
 
 **Unchosen is a warning**, `totem_unchosen`, and a stored slug the catalog no
 longer has is `totem_unknown` - the MOS's two, for the MOS's reasons. The
-Elemental Shaman picks one of four *elements* instead (printed 65) and does not
-take the key; `from` must say `"animal"` so it cannot borrow it.
+Elemental Shaman has one of four *elements* instead (printed 65) - one class per
+element since `BOOK-INGEST-AUDIT` F63 - and does not take the key; `from` must
+say `"animal"` so it cannot borrow it.

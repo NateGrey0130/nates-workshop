@@ -2448,16 +2448,21 @@ function powerKindBlock(grant, kind) {
     const slot = g.slot ?? 0;
     const levels = isSpell ? spellLevelCap(g.level, slot) : null;
     const cats = isSpell ? null : psiCategoryCap(g.level, slot);
-    // A named list is the tightest restriction and replaces the level cap.
-    const named = isSpell && Array.isArray(g.from) && g.from.length
+    // A named list is the tightest restriction; its cap applies beside it only
+    // where the entry asks for one (BOOK-INGEST-AUDIT F61) - spellLevelCap is
+    // null for every other list slot. `g.from` is resolved from a from_list by
+    // perLevelGrants, which this picker had no list for until F61. A psionic
+    // grant's list is read too since F65, and replaces its categories.
+    const named = Array.isArray(g.from) && g.from.length
       ? new Set(g.from.map((n) => String(n).toLowerCase())) : null;
     const pool = (isSpell ? C.spellCatalog : C.psiCatalog)
       .filter((x) => !held.has(String(x.name).toLowerCase()))
       .filter((x) => !x.system || x.system === C.data.campaign_system)
-      .filter((x) => !isSpell || (named ? named.has(String(x.name).toLowerCase())
+      .filter((x) => !isSpell || (named ? (named.has(String(x.name).toLowerCase()) && (!levels || levels.includes(x.level)))
                                         : (!levels || levels.includes(x.level))))
-      .filter((x) => isSpell || !cats || cats.includes(x.category));
-    const cap = named ? `a list of ${g.from.length}`
+      .filter((x) => isSpell || (named ? named.has(String(x.name).toLowerCase())
+                                        : (!cats || cats.includes(x.category))));
+    const cap = named ? `a list of ${g.from.length}${levels ? `, spell levels ${levels.join(', ')}` : ''}`
       : isSpell
         ? (levels ? `spell levels ${levels.join(', ')}` : 'any spell level')
         : (cats ? cats.join(', ') : 'any category');
@@ -2514,8 +2519,16 @@ function spellLevelCap(level, slot = 0) {
   if (entry && Array.isArray(entry.spell_levels) && entry.spell_levels.length) {
     return entry.spell_levels;
   }
-  // A slot bounded by a named list is not also bounded by a spell level.
-  if (entry && Array.isArray(entry.from) && entry.from.length) return null;
+  // The class-wide rule stated on one entry - how a list slot keeps a cap too
+  // (BOOK-INGEST-AUDIT F61).
+  if (entry && entry.spell_levels === 'up_to_character_level') {
+    return Array.from({ length: Math.max(0, level) }, (_, i) => i + 1);
+  }
+  // Otherwise a slot bounded by a named list is not also bounded by a spell
+  // level. `from_list` counts as a list here too, as it does in leveling.js;
+  // this copy used to test only `from`, and gave a from_list slot the class
+  // rule the original returns null for.
+  if (entry && ((Array.isArray(entry.from) && entry.from.length) || entry.from_list)) return null;
   const rule = magic.spells_per_level_levels;
   if (rule === 'up_to_character_level') {
     return Array.from({ length: Math.max(0, level) }, (_, i) => i + 1);
@@ -2553,7 +2566,9 @@ function pendingPowersPanel() {
   const held = new Set((C.data.powers || []).map((x) => String(x.name).toLowerCase()));
   const rows = C.pendingPowers.map((g) => {
     const isSpell = g.kind === 'spell';
-    const named = isSpell && Array.isArray(g.from) && g.from.length
+    // A banked psionic grant keeps its list too (BOOK-INGEST-AUDIT F65), and it
+    // replaces the grant's categories, which powerGrantsFor banked as null.
+    const named = Array.isArray(g.from) && g.from.length
       ? new Set(g.from.map((n) => String(n).toLowerCase())) : null;
     const pool = (isSpell ? C.spellCatalog : C.psiCatalog)
       .filter((x) => !held.has(String(x.name).toLowerCase()))
@@ -2562,14 +2577,18 @@ function pendingPowersPanel() {
       // because this file cannot import js/leveling.js - the same test as
       // spellTraditionAllowed there. A row banked before migration 055 carries
       // none and stays unrestricted.
-      .filter((x) => !isSpell || (named ? named.has(String(x.name).toLowerCase())
+      // A banked list-bound grant keeps the cap it was granted with, when its
+      // entry had one (BOOK-INGEST-AUDIT F61).
+      .filter((x) => !isSpell || (named ? (named.has(String(x.name).toLowerCase())
+                                           && (!g.spell_levels || g.spell_levels.includes(x.level)))
                                         : ((!g.spell_levels || g.spell_levels.includes(x.level))
                                            && (!x.tradition || !Array.isArray(g.traditions)
                                                || g.traditions.some((t) => String(t).toLowerCase()
                                                     === String(x.tradition).toLowerCase())))))
-      .filter((x) => isSpell || !g.categories || g.categories.includes(x.category));
+      .filter((x) => isSpell || (named ? named.has(String(x.name).toLowerCase())
+                                        : (!g.categories || g.categories.includes(x.category))));
     // The banked row's own restriction, not the class's as it stands today.
-    const cap = named ? `a list of ${g.from.length}`
+    const cap = named ? `a list of ${g.from.length}${g.spell_levels ? `, spell levels ${g.spell_levels.join(', ')}` : ''}`
       : isSpell
         ? (g.spell_levels ? `spell levels ${g.spell_levels.join(', ')}` : 'any')
         : (g.categories ? g.categories.join(', ') : 'any');

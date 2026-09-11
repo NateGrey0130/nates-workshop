@@ -96,6 +96,11 @@ Optional — include only what the page actually states:
     block states the exact inverse of the book and renders as "PB 12+"
 - attribute_dice: map of attribute → roll string, for RCCs with racial stats
 - hit_points_base / sdc_base / mdc_base / ppe_base: formula strings or numbers
+- mdc_from_hp_sdc: true only when the book PERMANENTLY turns the character's
+    combined S.D.C. and hit points into one M.D.C. total (a supernatural P.E.).
+    A temporary conversion bought with I.S.P. or P.P.E. is an ability, not this.
+    When only SOME choices convert (one realm of several), put
+    \`mdc_from_hp_sdc: true\` on those special_abilities entries instead
 - starting_money: what the class starts with in gold (Palladium) or credits
     (Rifts), as the book writes it — a formula string like "2d6x10" or a flat
     number. Record ONLY the coin. Saleable goods, gems and artifacts the entry
@@ -193,6 +198,10 @@ Optional — include only what the page actually states:
     An entry's own \`spell_levels\` wins over the class-wide rule, which is what
     entries lacking one fall back to. Books do this: a class can gain more
     spells at levels 2 and 3 than it does afterwards, from a wider range.
+    An entry drawing from a NAMED LIST (\`from\` / \`from_list\`) is bounded by
+    the list alone - unless the book ALSO caps that pick by level, in which case
+    give the entry \`spell_levels: "up_to_character_level"\` (or an array) beside
+    the list and the cap is enforced too. Only where the book says both.
     A schedule must list EVERY level that grants something, up to the class's
     level cap - "and each level after that" means writing those levels out.
     Omit them if the book does not say. A class that states no per-level rule
