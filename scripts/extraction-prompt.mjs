@@ -196,6 +196,10 @@ Optional — include only what the page actually states:
     An entry's own \`spell_levels\` wins over the class-wide rule, which is what
     entries lacking one fall back to. Books do this: a class can gain more
     spells at levels 2 and 3 than it does afterwards, from a wider range.
+    An entry drawing from a NAMED LIST (\`from\` / \`from_list\`) is bounded by
+    the list alone - unless the book ALSO caps that pick by level, in which case
+    give the entry \`spell_levels: "up_to_character_level"\` (or an array) beside
+    the list and the cap is enforced too. Only where the book says both.
     A schedule must list EVERY level that grants something, up to the class's
     level cap - "and each level after that" means writing those levels out.
     Omit them if the book does not say. A class that states no per-level rule

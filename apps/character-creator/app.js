@@ -1773,14 +1773,16 @@ function spellGrantBlock(grant) {
     // other grant's. A spell is learned once.
     const heldElsewhere = new Set([...S.spells, ...taken.filter((n) => !chosen.includes(n))]
       .map((n) => n.toLowerCase()));
-    // A named list is the tightest restriction and replaces the level cap: a
-    // grant that names its spells is not also asking about levels.
+    // A named list is the tightest restriction. It carries a level cap as well
+    // only where its entry asks for one - spellLevelsForGrant returns null for
+    // every other list slot - so `levels` is applied beside the list rather
+    // than dropped (BOOK-INGEST-AUDIT F61).
     const named = names && new Set(names.map((n) => n.toLowerCase()));
     // A level-gated grant reaches a tradition's spells only where the class
     // allows it (BOOK-INGEST-AUDIT F57); a named list is untouched.
     const traditions = spellTraditionsAllowed(S.cls);
     const pool = S.spellCatalog.filter((sp) => inSystem(sp)
-      && (named ? named.has(String(sp.name).toLowerCase())
+      && (named ? (named.has(String(sp.name).toLowerCase()) && (!levels || levels.includes(sp.level)))
                 : ((!levels || levels.includes(sp.level)) && spellTraditionAllowed(sp, traditions)))
       && !heldElsewhere.has(String(sp.name).toLowerCase()));
     // A name the catalog does not carry would silently shrink the list, so say
@@ -1788,7 +1790,7 @@ function spellGrantBlock(grant) {
     const unknownNamed = names
       ? names.filter((n) => !S.spellCatalog.some((x) => String(x.name).toLowerCase() === n.toLowerCase()))
       : [];
-    const cap = named ? `a list of ${names.length}`
+    const cap = named ? `a list of ${names.length}${levels ? `, spell levels ${levels.join(', ')}` : ''}`
       : levels ? `spell levels ${levels.join(', ')}` : 'any spell level';
     return `<p class="small" style="margin-top:12px"><b>Level ${g.level}</b> — ${g.count}
       ${g.count === 1 ? 'spell' : 'spells'} <span class="muted">from ${esc(cap)}</span></p>

@@ -316,9 +316,9 @@ export function validateMos(mos, errors, warnings) {
 //   totem: { from: "animal", powers: true }   # the Totem Warrior: its giant-form powers too
 //
 // `from` names the catalog's only kind. It is required rather than implied so a
-// class whose book offers something else - the Elemental Shaman picks one of
-// four ELEMENTS instead, printed 65 - cannot borrow the key and be handed forty
-// animals.
+// class whose book offers something else - the Elemental Shaman has one of four
+// ELEMENTS instead, printed 65, and is one class per element since
+// BOOK-INGEST-AUDIT F63 - cannot borrow the key and be handed forty animals.
 export function validateTotem(t, errors, warnings) {
   if (t === undefined || t === null) return;
   if (typeof t !== 'object' || Array.isArray(t)) {

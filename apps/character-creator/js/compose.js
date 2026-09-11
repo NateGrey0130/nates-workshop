@@ -91,6 +91,14 @@ export const CORE_SDC_BY_CLASS = {
   // needs no entry.
   'paradox-shaman': '1D6',
   'elemental-shaman': '1D6',
+  // BOOK-INGEST-AUDIT F63 splits the Elemental Shaman by element, as RETRO-AUDIT
+  // R3 split the Warlock; each keeps the practitioner-of-magic 1D6. The retired
+  // one-class entry above stays, as the generic Warlock's did, because its add
+  // script does.
+  'elemental-shaman-air': '1D6',
+  'elemental-shaman-earth': '1D6',
+  'elemental-shaman-fire': '1D6',
+  'elemental-shaman-water': '1D6',
   'fetish-shaman': '1D6',
   // Men of arms — 3D6.
   'glitter-boy': '3D6',
