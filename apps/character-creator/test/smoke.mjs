@@ -347,7 +347,8 @@ import { composeSourceBook } from '../../../scripts/source-book-lib.mjs';
 import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicGrantsFor,
          xpTableFor, thresholdFor, spellLevelsForGrant,
          psionicCategoriesForGrant, spellNamesForGrant,
-         grantNote, startingPicksFor } from '../../../functions/api/character-creator/_lib/leveling.js';
+         grantNote, startingPicksFor, spellTraditionAllowed,
+         spellTraditionsAllowed } from '../../../functions/api/character-creator/_lib/leveling.js';
 import { toMatchQuery } from '../../../functions/api/character-creator/campaigns/[id]/search.js';
 import { powerGrantsFor, remainingPowerGrants } from '../../../functions/api/character-creator/_lib/power-picks.js';
 import { resolvePicks } from '../../../functions/api/character-creator/_lib/skill-picks.js';
@@ -1452,6 +1453,29 @@ section('Per-level spells and psionics');
   // level-4 spell, which is over-permissive in a way nobody would notice.
   check('the per-level cap is not the starting list',
     JSON.stringify(spellLevelsForGrant(llw, 2)) !== JSON.stringify(llw.magic.spell_levels_allowed));
+
+  // A SPELL'S TRADITION (BOOK-INGEST-AUDIT F57). A level-gated pool used to
+  // admit every tradition's leveled spells, so the walker above was offered the
+  // warlock and ocean catalogs. Every pool builder asks spellTraditionAllowed.
+  const general = { name: 'Blinding Flash', level: 1 };
+  const warlockSpell = { name: 'Earth: Dowsing', level: 1, tradition: 'warlock' };
+  check('an untagged spell is reachable by any level-gated pick',
+    spellTraditionAllowed(general, []) && spellTraditionAllowed(general, ['ocean']));
+  check('a tagged spell is NOT reachable when the class allows no traditions',
+    spellTraditionAllowed(warlockSpell, []) === false);
+  check('and IS when the class names its tradition, whatever the case',
+    spellTraditionAllowed(warlockSpell, ['Warlock']) === true);
+  check('a pre-055 banked grant (NULL allowance) keeps its old, unrestricted reach',
+    spellTraditionAllowed(warlockSpell, null) === true);
+  check('a class allowance is read, trimmed and lower-cased',
+    JSON.stringify(spellTraditionsAllowed({ magic: { spell_traditions_allowed: [' Ocean', 'ocean', 'Cloud'] } }))
+      === '["ocean","cloud"]');
+  check('and a class stating none allows none',
+    JSON.stringify(spellTraditionsAllowed(llw)) === '[]');
+  const oceanStart = startingPicksFor({ magic: { spells_starting: 2, spell_levels_allowed: [1],
+    spell_traditions_allowed: ['ocean'] } }, 'spell');
+  check('a starting group carries the class allowance to the picker and the validator',
+    JSON.stringify(oceanStart.groups[0].traditions) === '["ocean"]');
 
   // A SCHEDULE ENTRY OVERRIDES THE CLASS-WIDE RULE, because some books vary the
   // cap per level rather than by one rule. The Mystic gains four spells at
@@ -5176,6 +5200,21 @@ section('Magic composition');
   // Warlock would lose levels 2, 3 and 4 from its own page.
   check('the allowed spell levels are unioned and sorted',
     JSON.stringify(both.spell_levels_allowed) === JSON.stringify([1, 2, 3, 4]));
+
+  // So are the TRADITIONS a level-gated pick may reach (BOOK-INGEST-AUDIT F57),
+  // for the same reason: an ocean-magic race must not lose its allowance to an
+  // occupation that states its own.
+  const oceanRace = mk('rcc', `  type: "spell"
+  spells_starting: 2
+  spell_levels_allowed: [1]
+  spell_traditions_allowed: ["ocean"]`);
+  const cloudOcc = mk('occ', `  type: "spell"
+  spells_starting: 1
+  spell_levels_allowed: [1]
+  spell_traditions_allowed: ["Cloud", "ocean"]`);
+  check('the allowed spell traditions are unioned, deduplicated and lower-cased',
+    JSON.stringify(combineClasses(oceanRace, cloudOcc).magic.spell_traditions_allowed)
+      === JSON.stringify(['ocean', 'cloud']));
 
   check('one side alone is untouched', (() => {
     const bare = parseClassMarkdown('---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: occ\n---\n\n## Lore\n\nx\n').data;

@@ -273,9 +273,46 @@ export function spellNamesForGrant(cls, level, slot = 0) {
   return null;
 }
 
+// WHICH SPELL TRADITIONS A LEVEL-GATED POOL MAY REACH. BOOK-INGEST-AUDIT F57.
+//
+// A pool stated only as spell levels used to admit every leveled spell in the
+// catalog, whatever tradition it belonged to: a new Ley Line Walker, whose pool
+// is levels 1-4, was offered 150 warlock spells, 12 Ocean and 5 Dolphin ones
+// beside the invocations its book grants (measured --remote, 2026-09-10).
+//
+// `spells.tradition` now names the family a spell belongs to - warlock, ocean,
+// dolphin, spellsong, cloud, shaman - and NULL for a general invocation. A
+// level-gated pick reaches a tradition's spells only when the class names it in
+// `magic.spell_traditions_allowed`. A NAMED LIST IS UNTOUCHED: it already
+// replaces the level gate, and a class that names a warlock spell gets it.
+//
+// `traditions` is the allowed list for one pick, lower-cased. [] means "general
+// spells only". NULL means NO RESTRICTION, and exists for one case only: a
+// level-up banked before this column did (pending_power_picks.spell_traditions
+// NULL), which keeps the reach it was granted with - the same reading a NULL
+// spell_levels already gets.
+//
+// One rule, and every pool builder asks it: the wizard's starting and level-up
+// pickers, the server's creation validator and level-up claims. The sheet
+// cannot import this module and inlines the same test.
+export function spellTraditionsAllowed(cls) {
+  const list = cls?.magic?.spell_traditions_allowed;
+  return Array.isArray(list)
+    ? [...new Set(list.map((t) => String(t).trim().toLowerCase()).filter(Boolean))]
+    : [];
+}
+
+export function spellTraditionAllowed(spell, traditions) {
+  const t = spell?.tradition ? String(spell.tradition).trim().toLowerCase() : '';
+  if (!t) return true;
+  if (traditions == null) return true;
+  return traditions.some((x) => String(x).trim().toLowerCase() === t);
+}
+
 // A restriction the CATALOG CANNOT ENFORCE, shown to the player instead.
 //
-// Spells carry no category or tag — only a name, a level and a cost — so
+// Spells carry no category — only a name, a level, a cost and, since F57, the
+// tradition a prefixed family belongs to (above) — so
 // "non-dimension related or control based" and "any Summoning spell" have
 // nothing to filter on. Inventing a classification for three hundred spells by
 // reading their names would be exactly the guessing the import rules forbid, so
@@ -345,10 +382,14 @@ export function startingGroups(cls, kind) {
 
   const blockFrom = nonEmpty(block[spec.from])?.map(String) ?? null;
   const blockGate = blockFrom ? null : nonEmpty(block[spec.gate]);
+  // Which spell traditions a level-gated pick may reach - class-wide, the same
+  // for every group. A named `from` still wins; see spellTraditionAllowed.
+  const blockTraditions = kind === 'spell' ? spellTraditionsAllowed(cls) : null;
   const shape = (count, from, gate, note) => ({
     count,
     spell_levels: kind === 'spell' ? (from ? null : gate) : null,
     categories: kind === 'psionic' ? (from ? null : gate) : null,
+    traditions: blockTraditions,
     from,
     ...(note ? { note } : {}),
   });
