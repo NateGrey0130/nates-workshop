@@ -27,7 +27,7 @@ import { composeClass } from './js/compose.js';
 import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant,
          spellNamesForGrant, grantNote,
          skillGrantsFor, spellGrantsFor, psionicGrantsFor, startingGroups,
-         startingPicksFor, relatedAllowance, spellTraditionsAllowed,
+         startingPicksFor, relatedAllowance, spellTraditionsAllowed, convertedPools,
          spellTraditionAllowed } from './js/leveling.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
@@ -347,13 +347,16 @@ function computePools(force = false) {
   // "plus 4D6" over whatever the occupation gives, so the bonus rides along with
   // the roll and lands in the stored maximum.
   const pb = c.bonuses?.pools || {};
-  S.pools = {
+  // A mega-damage conversion (BOOK-INGEST-AUDIT F62) turns the hit points and
+  // S.D.C. just rolled into one M.D.C. maximum; convertedPools leaves every
+  // other class's pools exactly as rolled.
+  S.pools = convertedPools(c, {
     hp: rollPoolFormula(c.hit_points_base, S.attrs, pb.hp),
     sdc: rollPoolFormula(c.sdc_base, S.attrs, pb.sdc),
     mdc: rollPoolFormula(c.mdc_base, S.attrs, pb.mdc),
     ppe: rollPoolFormula(c.ppe_base, S.attrs, pb.ppe),
     isp: pc.psionics ? rollPoolFormula(pc.psionics.isp_base, S.attrs, pb.isp) : null,
-  };
+  }, S.attrs);
   // Step 5 is "Equipment AND Money" (p.22) — every class starts with a sum of
   // coin as well as its kit. Rolled from the same formula parser as the pools,
   // so the Reroll button on Review covers it, and stored in bio because it is a

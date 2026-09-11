@@ -8467,6 +8467,61 @@ reading how level-up grows the pools before scoping.
 **Subject grep, 2026-09-11:** every `*AUDIT*.md` for "into M.D.C.",
 "hit points into M" and "mega-damage creature": no hits.
 
+**Taken, 2026-09-11 (PR #950).** Option A as written - an opt-in class flag,
+`mdc_from_hp_sdc: true` - for **one class, not three**, because the premise
+audit found the other two were not this. **Posture, said back:** a new opt-in
+class key; no schema; a class without it is unchanged. It is on `KNOWN_KEYS`.
+
+**Two of the three classes were wrong** (`audit-premise-auditor`, 2026-09-11):
+
+- **The Psycho-Stalker's conversion is TEMPORARY.** Juicer Uprising printed 46
+  (cache p047): *"By refocusing psychic energy (I.S.P.) points, the
+  Psycho-Stalker can temporarily become an M.D.C. creature!"* - 25 I.S.P., one
+  minute per level. It has no supernatural P.E., its own hit point and S.D.C.
+  formulas are right, and its note records that on purpose: *"a Psycho-Stalker
+  is an S.D.C. being who can spend I.S.P. to stop being one."* It was never in
+  scope, and it is unchanged.
+- **The Spirit Warrior converts only through its Earth or Plant realm** -
+  printed 44 and 47 - one of three realms chosen from six, and gains an extra
+  1D4x10 M.D.C. with each. A class-wide flag would convert Spirit Warriors who
+  took neither. **Filed as F64**, below.
+- **Reach is therefore one class.** The audit swept all 262 live classes for a
+  permanent conversion and found no other; the rest are temporary, already
+  state an `mdc_base`, or convert at a different ratio.
+
+**What had to change, and why it is more than "three places".** One definition
+in `js/leveling.js` - `convertsToMdc`, `convertedPools`, `convertedMdcBounds` -
+read by:
+
+- **the wizard's pool roll**, which rolls hit points and S.D.C. as the class or
+  `compose.js`'s core defaults state them, stores their sum plus any
+  `bonuses.pools.mdc` as the M.D.C. maximum, and leaves the two empty;
+- **the validator**, which had to SKIP the emptied pools: `Number(null)` is 0,
+  so under `enforcePools` every such character would have been refused - the
+  new smoke check failed with exactly that message first;
+- **`buildProposal`**, since the emptied pools have no formula to grow and a
+  null `mdc_base` has no per-level dice: M.D.C. now grows by the hit point
+  formula's per-level dice, which covers the wizard's Advancement step and the
+  server's XP proposal alike;
+- **`combineClasses`**, which starts from the race spread and would have
+  dropped an occupation's flag. The flag yields to a stated `mdc_base`, so an
+  M.D.C. race composed with a converting occupation keeps its own pool.
+
+`variant.js`, `level-confirm.js`, the sheet, `damageCascade` and the dashboard
+needed nothing: none of the three classes has variants, and every one of those
+already hides or skips an empty pool and sends damage to M.D.C. when there is
+one. No production character holds any of the three classes.
+
+**Tests:** fourteen smoke checks, thirteen seen failing on the unchanged code;
+a regression invariant that only the Totem Warrior carries the flag.
+
+**Corrected where the finding was cited:** the Totem Warrior's note loses
+*"which no field expresses"*. The Spirit Warrior's same phrase stays true -
+nothing expresses an ability-borne conversion yet - and F64 now cites it.
+
+**Production, 2026-09-11, before merge:** the data script applied, all three
+readbacks at their wanted values.
+
 ### F63 - low - an ELEMENT choice cannot steer the Elemental Shaman's spells or grant its skill, so the class offers all four elements' spells with a note
 
 **Found 2026-09-11**, listing what Spirit West left outstanding. F56 recorded
@@ -8599,6 +8654,53 @@ the four table lines above.
 **Confidence on the picker stays medium:** the wizard was not opened. The four
 are named "Elemental Shaman (Air)" and so on, unlike the Warlocks, which all
 read "Warlock". That difference predates this finding and is not touched here.
+
+### F64 - low - the Spirit Warrior's mega-damage conversion rides on two of its six realms, and a chosen ability cannot carry F62's flag
+
+**Found 2026-09-11**, by F62's premise audit.
+
+**The book.** The Spirit Warrior (Spirit West printed 44-47) chooses three of
+six realms. The Earth Realm (printed 44, cache p045) *"will convert the
+character's hit points and S.D.C. to M.D.C., plus an additional 1D4x10
+M.D.C."*; the Plant Realm (printed 47, cache p048) is *"Identical to the ability
+listed above under the Earth Realm Powers. If the two are taken together, do
+not combine the bonuses to the P.E. attribute, but do combine the M.D.C."* So a
+Spirit Warrior with either realm is a mega-damage creature, and one with
+neither - four of the twenty possible choices - is not.
+
+**The app.** The realms are a `choose: 3` over six abilities, and the
+conversion is text inside two of them. F62's `mdc_from_hp_sdc` is a CLASS key:
+set on the class, it would convert the four choices that should not convert. A
+chosen ability grants only `bonuses`, `psionics` and `magic`
+(`ABILITY_GRANTS`, `js/parser.js:1699`), so it cannot carry the flag either. The
+extra 1D4x10 could ride on each ability as `bonuses.pools.mdc`, the Super-Tough
+precedent - but a pool bonus is dropped when the pool has no formula
+(`rollPoolFormula`, `js/dice.js:238-241`), so it lands only if the conversion
+does. The class's note says the conversion *"no field expresses"*, which is
+still true.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | widen `ABILITY_GRANTS` by one key, `mdc_from_hp_sdc`, and have `applyAbilities` set it on the composed class when a chosen ability carries it; put `bonuses.pools.mdc: "1d4x10"` on both realms | exact to the book, including the doubled 1D4x10 for both realms; reuses F62's whole conversion path - the flag is read off the composed class, which is where applyAbilities already writes | widens a list kept deliberately narrow (`ABILITY_GRANTS`' own comment: *"a chosen ability that could restate attribute_dice or starting_money is not an ability"*); F24 declined adding `skills` to it - this adds a flag, not a block, which is the argument to make |
+| B | split the Spirit Warrior by realm combination, as F63 splits the Elemental Shaman | data only | twenty combinations; not a real option |
+| C | keep the note | nothing to build | a Spirit Warrior with Earth or Plant keeps S.D.C. and hit points the book says it no longer has |
+
+**Proposal:** A. **Posture:** one key added to `ABILITY_GRANTS`; no schema; no
+class changes except the Spirit Warrior's two realms.
+
+**Confidence: high on the gap** (the book and the grant list are quoted);
+**medium on A's ordering** - abilities are applied before skills and before a
+rolled psychic tier (`composeClass`), and the conversion must be visible to the
+pool roll, which reads the composed class - what would raise it is a smoke
+check composing the class with each realm.
+
+**Ongoing cost:** one more key the ability grant list carries.
+
+**Subject grep, 2026-09-11:** every `*AUDIT*.md` for "Spirit Warrior", "Earth
+Realm" and "ABILITY_GRANTS": F24 (skills kept off abilities) and F56's outcome
+note (which argued past F24 for totems with a table rather than a grant).
 
 ### F65 - medium - a psionic level-up grant drawn from a NAMED LIST loses the list, so ten classes' named psionic picks are not enforced
 

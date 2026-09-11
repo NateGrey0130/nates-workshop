@@ -117,6 +117,7 @@ attribute_dice:                   # a race ROLLS its attributes from these
   PB: "3d6"
   Spd: "3d6"
 mdc_base: "1d4x100"               # M.D.C. beings use this instead of hp/sdc
+# mdc_from_hp_sdc: true           # or: S.D.C. + hit points become ONE M.D.C. total, permanently
 ppe_base: "2d6"
 starting_money: "2d6x10"          # gold (Palladium) or credits (Rifts); coin only
 # Stages of the same creature — a hatchling and an adult. Each overrides only

@@ -2390,6 +2390,56 @@ check('the count is omitted when there is no total', !Picker.inputHtml({ id: 'y'
 // Every one of these is a real formula from a sourcebook. Three of the five
 // returned NULL before, which meant a character imported from that class was
 // created with no hit points, no P.P.E. and no I.S.P. at all.
+section('Mega-damage conversion (BOOK-INGEST-AUDIT F62)');
+{
+  // Loaded as a namespace so a check fails on its own, rather than the whole
+  // run failing at import, when a function is missing - which is exactly what
+  // these must do before the fix exists.
+  const LV = await import('../js/leveling.js');
+  const md = (extra) => parseClassMarkdown(['---', 'id: t', 'name: T', 'system: rifts', 'source_book: b',
+    'category: occ', ...extra, '---', '', '## Lore', '', 'x', ''].join(String.fromCharCode(10)));
+  const tw = md(['mdc_from_hp_sdc: true', 'hit_points_base: "P.E. + 1D6 per level"', 'sdc_base: "3D6"']);
+  check('the flag parses', tw.ok && tw.data.mdc_from_hp_sdc === true, tw.errors.join('; '));
+  check('and may only be true', md(['mdc_from_hp_sdc: yes']).errors.some((e) => /mdc_from_hp_sdc/.test(e)));
+  const converts = (c) => (typeof LV.convertsToMdc === 'function' ? LV.convertsToMdc(c) : undefined);
+  check('a flagged class converts', converts(tw.data) === true);
+  check('an unflagged class does not', converts(md([]).data) === false);
+  check('and a class stating its own M.D.C. keeps that pool', converts({ ...tw.data, mdc_base: '1d4x100' }) === false);
+
+  const pools = LV.convertedPools?.(tw.data, { hp: 14, sdc: 12, mdc: null, ppe: 5 }, {});
+  check('the two rolls become ONE M.D.C. maximum and the pools they came from are emptied',
+    pools?.mdc === 26 && pools.hp === null && pools.sdc === null && pools.ppe === 5, JSON.stringify(pools));
+  const bonused = LV.convertedPools?.({ ...tw.data, bonuses: { pools: { mdc: 10 } } }, { hp: 14, sdc: 12, mdc: null }, {});
+  check('with any M.D.C. bonus added on top', bonused?.mdc === 36, JSON.stringify(bonused));
+  check('an unflagged class keeps its pools untouched',
+    JSON.stringify(LV.convertedPools?.(md([]).data, { hp: 14, sdc: 12, mdc: null }, {})) === '{"hp":14,"sdc":12,"mdc":null}');
+
+  const race = { id: 'r', name: 'R', system: 'rifts', category: 'rcc' };
+  check('an occupation\'s flag survives being composed with a racial class',
+    combineClasses(race, tw.data).mdc_from_hp_sdc === true);
+  check('but an M.D.C. race keeps its own pool',
+    converts(combineClasses({ ...race, mdc_base: '1d4x100' }, tw.data)) === false);
+
+  // P.E. 10: hit points 'P.E. + 1D6 per level' are 11-16 at level one, S.D.C.
+  // 3D6 is 3-18, so the M.D.C. maximum is 14-34, +1-6 a level after the first.
+  const cls = composeClass({ rcc: tw.data });
+  const poolFindings = (mdc, level = 1) => validateCharacter({ character: { level }, cls, skills: [],
+    attributes: { PE: 10 }, pools: { hp_max: null, sdc_max: null, mdc_max: mdc }, enforcePools: true })
+    .violations.filter((x) => x.rule === 'pool_out_of_range');
+  check('the emptied hit point and S.D.C. pools raise nothing, and an M.D.C. in range passes',
+    poolFindings(20).length === 0, JSON.stringify(poolFindings(20)));
+  check('an M.D.C. past what the two formulas can roll is refused',
+    poolFindings(200).some((x) => x.field === 'mdc_max'));
+  check('and the range grows by the hit point dice each level',
+    poolFindings(40, 1).length > 0 && poolFindings(40, 3).length === 0);
+
+  const prop = buildProposal({ level: 1, hp_max: null, sdc_max: null, mdc_max: 26, ppe_max: null,
+    isp_max: null, skills: [] }, cls, 3);
+  check('a level-up grows M.D.C. by the hit point dice, and touches no emptied pool',
+    prop.pools.mdc_max && prop.pools.mdc_max.to >= 28 && prop.pools.mdc_max.to <= 38
+    && !prop.pools.hp_max && !prop.pools.sdc_max, JSON.stringify(prop.pools));
+}
+
 section('Pool formulas');
 {
   const attrs = { PE: 10, ME: 20 };

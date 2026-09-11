@@ -68,6 +68,10 @@ export const KNOWN_KEYS = new Set([
   // composeClass, which folds the chosen row's skills and bonuses in, and by
   // the wizard, the validator and the sheet.
   'totem',
+  // A mega-damage creature whose S.D.C. and hit points become one M.D.C. total
+  // (BOOK-INGEST-AUDIT F62). Read by js/leveling.js's convertsToMdc, which the
+  // wizard's pool roll, the validator and the level-up proposal all call.
+  'mdc_from_hp_sdc',
   // Produced by the parser from the body, never written by hand.
   'lore', 'gm_notes', 'sections',
 ]);

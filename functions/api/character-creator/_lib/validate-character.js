@@ -48,7 +48,8 @@ import { isChoiceGroup, categoryAllows, categoryName, needsOccupation, relatedFl
          applyAbilities } from '../../../../apps/character-creator/js/parser.js';
 
 import { skillGrantsFor, xpTableFor, thresholdFor, perLevelDiceOf,
-         startingGroups, relatedAllowance, secondaryAllowance } from './leveling.js';
+         startingGroups, relatedAllowance, secondaryAllowance,
+         convertsToMdc, convertedMdcBounds } from './leveling.js';
 
 // RE-EXPORTED, NOT DEFINED HERE, since RETRO-AUDIT R18. Both allowances moved to
 // `js/leveling.js` so the wizard can read the same implementation - it cannot
@@ -552,10 +553,18 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
   // characters are not retro-validated, and the level-up flow's sanctioned
   // "tweak if your GM says so" is a different door on purpose.
   if (pools && typeof pools === 'object') {
+    // A mega-damage conversion (BOOK-INGEST-AUDIT F62) rolls hit points and
+    // S.D.C. into ONE M.D.C. maximum and leaves those two empty - and
+    // Number(null) is 0, so judging them against their formulas would refuse
+    // every such character. Its M.D.C. is judged against both formulas
+    // together instead, below the loop.
+    const convert = convertsToMdc(cls);
     const formulas = {
-      hp_max: ['hp', cls.hit_points_base],
-      sdc_max: ['sdc', cls.sdc_base],
-      mdc_max: ['mdc', cls.mdc_base],
+      ...(convert ? {} : {
+        hp_max: ['hp', cls.hit_points_base],
+        sdc_max: ['sdc', cls.sdc_base],
+        mdc_max: ['mdc', cls.mdc_base],
+      }),
       ppe_max: ['ppe', cls.ppe_base],
       isp_max: ['isp', cls.psionics?.isp_base],
     };
@@ -572,6 +581,16 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
         const finding = { rule: 'pool_out_of_range', field, value: v, min, max,
           message: `${field} is ${v}; the class formulas allow ${min}-${max} at level ${level}`
             + (enforcePools ? ' - reroll it on the Review step' : '') };
+        (enforcePools ? violations : warnings).push(finding);
+      }
+    }
+    if (convert && pools.mdc_max != null && Number.isFinite(Number(pools.mdc_max))) {
+      const v = Number(pools.mdc_max);
+      const b = convertedMdcBounds(cls, attributes || {}, level);
+      if (b && (v < b.min || v > b.max)) {
+        const finding = { rule: 'pool_out_of_range', field: 'mdc_max', value: v, min: b.min, max: b.max,
+          message: `mdc_max is ${v}; this class's hit points and S.D.C. together allow ${b.min}-${b.max} `
+            + `at level ${level}` + (enforcePools ? ' - reroll it on the Review step' : '') };
         (enforcePools ? violations : warnings).push(finding);
       }
     }
