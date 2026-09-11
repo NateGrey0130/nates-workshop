@@ -7832,3 +7832,52 @@ backfill, rather than inferring exclusivity from a prefix.
 different question - which casters may learn a spell at all - and a single
 column answers it.
 
+
+### F58 - medium - `regression.mjs` kills the bootstrap build at 180 seconds, the build now takes longer, and the failure reads as "cannot build a database" with no reason
+
+**Found importing `spirit-west`'s last four classes, 2026-09-10.**
+
+`regression.mjs` step [1/7] concatenates `db/schema.sql`, `db/seed-catalogs.sql`
+and every data script into one `bootstrap.sql` and applies it with a single
+`spawnSync('npx', ['wrangler', ...], { timeout: 180000 })` -
+`apps/character-creator/test/regression.mjs:74-76` and `:106`, read 2026-09-10.
+When the child outlives the timeout, spawnSync kills it, `status` is null, and
+the check's detail is `(applied.stderr || applied.stdout || '').slice(-400)`
+(`:108`) - which is npm's two `npm notice run ...` lines, because wrangler was
+killed before it printed anything. The run then ends
+`REGRESSION FAILED (cannot build a database)`, which reads exactly like a SQL
+fault in a data script.
+
+**Evidence:** a reproduction of step [1/7] with the same inputs and no
+timeout, run 2026-09-10 on this branch: 565 data scripts, a 7,804,541-byte
+bootstrap, **elapsed 251.4 s, status 0, signal null** - the SQL composes, and
+the harness gave up 71 seconds early. Two regression runs failed that way the
+same afternoon; the same run with the timeout raised in the working tree only
+(not committed) is what verified the pinned counts of the last spirit-west class batch.
+
+**Why it only bit now:** every book adds scripts, and the build was already
+running close to the limit - a regression earlier the same day went past the
+Bash tool's own 600 s window and finished in the background. **Measured on one
+busy machine** with a production apply running concurrently; a quiet machine
+may be well under 180 s, which is the part not measured.
+
+**Proposal:** two small changes to the harness, and no change to any check.
+(a) Raise the step [1/7] timeout - or give that one call its own, since the
+180 s default also guards the other wrangler calls, where it is fine. (b) When
+the child is killed, say so: report `signal`, `status` and the elapsed time in
+the check's detail, so a timeout reads as a timeout. **Inferred, not
+measured**: the right new number was not measured on a quiet machine.
+
+**Posture:** test harness only. No check added, removed or loosened; no exit
+code changed.
+
+**Confidence: high on the cause** (the reproduction above), **medium on the
+new number.** What would raise it: timing step [1/7] on a quiet machine, and
+again after the next book, to see the growth rate.
+
+**Ongoing cost:** one constant, and a hung wrangler would take longer to fail
+- which (b) makes cheaper to diagnose when it happens.
+
+**Subject grep, 2026-09-10:** every `*AUDIT*.md` for `cannot build a
+database`, `180000` and regression timeouts, and `MEMORY.md`'s index. Nothing
+found.
