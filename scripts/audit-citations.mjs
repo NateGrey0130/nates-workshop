@@ -1,4 +1,4 @@
-// Which published classes cite which audit finding?
+// Which live classes cite which audit finding? Retired ones are listed apart.
 //
 //   node scripts/audit-citations.mjs --remote
 //   node scripts/audit-citations.mjs --remote F10
@@ -89,15 +89,36 @@ if (wrongMenu || wrongPrefix) {
   console.log('reaches it.');
 } else {
 
-const rows = d1Query('SELECT class_id, markdown FROM imported_classes ORDER BY class_id', { target });
+const rows = d1Query('SELECT class_id, status, deleted_at, markdown FROM imported_classes ORDER BY class_id', { target });
+
+// LIVE means a picker offers it: published AND not deleted. A retired class
+// keeps its row, with deleted_at set and status still 'published' - the
+// generic warlock since 2026-09-04, elemental-shaman since BOOK-INGEST-AUDIT
+// F63 split it into four on 2026-09-11 - so this used to print "of 267
+// published classes" where 265 were live, and would name a retired class as a
+// citer nobody can pick. drift-check, retro-check and source-coverage all ask
+// both columns; status alone is not the test.
+//
+// Retired rows are still READ, and listed apart after the live ones rather
+// than filtered out in SQL. Whether a retired class's stale note is worth
+// correcting is the taker's call; a sweep that hid a citer silently would be
+// the failure this script exists to prevent. `=== null` rather than `== null`,
+// so a column the SELECT dropped makes every row not-live, loudly, instead of
+// every row live.
+const isLive = (r) => r.status === 'published' && r.deleted_at === null;
 
 const byFinding = new Map();
 const passages = [];
+const notLive = [];
 for (const r of rows) {
   const md = String(r.markdown || '');
   const seen = new Set();
   for (const rx of PATTERNS) {
     for (const m of md.matchAll(rx)) seen.add(m[1].toUpperCase());
+  }
+  if (!isLive(r)) {
+    notLive.push({ id: r.class_id, row: r, cites: [...seen].filter((f) => !only || f === only) });
+    continue;
   }
   for (const f of seen) {
     if (only && f !== only) continue;
@@ -120,14 +141,14 @@ for (const r of rows) {
 const findings = [...byFinding.keys()].sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)));
 const cited = new Set([...byFinding.values()].flat());
 
-console.log(`${cited.size} of ${rows.length} published classes cite a finding`
+console.log(`${cited.size} of ${rows.length - notLive.length} live classes cite a finding`
   + (only ? ` (filtered to BOOK-INGEST-AUDIT ${only})` : '') + `, from ${target}\n`);
 
 // A zero used to read as "nothing cites this finding". It only ever meant
 // "nothing cites the BOOK-INGEST one", and every prefix here is shared across
 // menus - `audit-menu` -> "a bare number defeats it". SKILL-AUDIT F30.
 if (only && cited.size === 0) {
-  console.log(`No class cites BOOK-INGEST-AUDIT ${only}.`);
+  console.log(`No live class cites BOOK-INGEST-AUDIT ${only}.`);
   console.log(`If you meant ${only} on another menu, this script never saw it: grep the`);
   console.log('tree for the number, and check ~/.claude/.../memory/ separately.\n');
 }
@@ -135,6 +156,22 @@ if (only && cited.size === 0) {
 for (const f of findings) {
   const ids = [...new Set(byFinding.get(f))];
   console.log(`${f.padEnd(5)} ${String(ids.length).padStart(2)}  ${ids.join(', ')}`);
+}
+
+// Every row the count above left out, by name, whether or not it cites
+// anything - so the gap between the two denominators is always accounted for.
+if (notLive.length) {
+  const width = Math.max(...notLive.map((x) => x.id.length));
+  if (findings.length) console.log('');
+  console.log(`${notLive.length} row(s) NOT LIVE - no one can pick these, and every count above`);
+  console.log(`leaves them out. Their citations${only ? ` of ${only}` : ''} are listed so none is hidden;`);
+  console.log('their passages are not scanned below. Correcting a retired note is optional.\n');
+  for (const { id, row, cites } of notLive) {
+    const why = row.deleted_at !== null ? `deleted ${String(row.deleted_at).slice(0, 10)}` : `status ${row.status}`;
+    const sorted = [...cites].sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)));
+    console.log(`  ${id.padEnd(width)}  ${why.padEnd(18)}  ${sorted.length ? `cites ${sorted.join(', ')}` : 'cites nothing'}`);
+  }
+  if (!passages.length) console.log('');
 }
 
 if (passages.length) {
