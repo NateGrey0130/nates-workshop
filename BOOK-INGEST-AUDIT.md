@@ -7832,6 +7832,70 @@ backfill, rather than inferring exclusivity from a prefix.
 different question - which casters may learn a spell at all - and a single
 column answers it.
 
+**Taken, 2026-09-10 (PR #943) - built fully on Nate's word, which is wider than
+the proposal as written.** Posture as proposed: *"narrows a picker; changes no
+stored character. ... No new gate on import."* Said back below, with one
+qualification.
+
+**What shipped:** migration `055` (`spells.tradition`,
+`pending_power_picks.spell_traditions`); `zzzzzzzzz-f57-spell-traditions.sql`
+tags 395 rows - warlock 231, ocean 41, dolphin 10, spellsong 21, cloud 58,
+shaman 34 - and gives four classes `magic.spell_traditions_allowed`; one rule,
+`spellTraditionAllowed` in `apps/character-creator/js/leveling.js`, in every
+place a spell pool is built; `mergeMagic` unions the key.
+
+**`audit-premise-auditor` corrected this finding in four places before it was
+implemented, and the build follows the corrections, not the text above:**
+- *"A named `spells_from` list is untouched"* holds at creation only. Four
+  classes reached their OWN tradition through a level-gated level-up -
+  `ocean-wizard` and `nautyll-koral-shaper` (Ocean, via
+  `spells_per_level_levels`), `lyn-srial-sky-knight` and
+  `lyn-srial-cloudweaver` (Cloud, uncapped). As written the proposal would have
+  stripped it from them; each has an allowance.
+- The reach was 19 live classes and FIVE pool builders - the wizard's starting
+  and level-up pickers, the sheet's banked picks, the server's level-up claims
+  and its creation validator - not one picker. The question left open above:
+  the validator runs on create, level-up, picks and variant writes, and now
+  checks tradition with the same footprint as the level cap.
+- The level-UP reach was wider than the 167 counted: a walker's level-ups
+  reached all 231 warlock, 41 ocean, 10 dolphin and 34 shaman spells.
+- It did not name Nate's 2026-09-09 choice of category-in-name for Cloud Magic
+  (`apps/character-creator/docs/surveys/new-west.md`). **This does not reverse
+  it**: names still carry the category, which the Sky-Knight's exclusions depend
+  on, and the column beside them answers a different question.
+
+**`pending_power_picks.spell_traditions` was not in the proposal.** It is the
+only way the sheet and the server's claims can read an allowance frozen at grant
+time, the way `spell_levels` is. A row banked before `055` is NULL and keeps its
+old reach.
+
+**Measured afterwards, `--remote`, 2026-09-10:** all eight readbacks match; an
+independent read shows `055` recorded, the six counts above, 378 general
+invocations, four classes with the key. **A before/after run of this branch's
+real grant functions over production** found 22 live classes with a level-gated
+pick, every one losing only foreign traditions, and the four with an allowance
+keeping their own. The one it flagged, the Shifter, names a single warlock spell
+(`Air: Phantom Mount`) on its list - which stays reachable, because a named list
+is untouched.
+
+**The posture, with its qualification.** No stored character changed. But a
+character already holding a foreign-tradition spell would now be refused on its
+next validated write until the spell was removed - which is what the server
+refusing what the picker hides means. **Production holds 3 characters and none
+is on a gated class** (premise audit, 2026-09-10), so nothing is refused today.
+
+**Not tagged:** Wormwood's level-0 prayers and Underseas' two unprefixed
+Korallyte spells - the proposal names the prefixed families and the shaman
+spells. **Still medium:** whether each family is exclusive to its own casters
+per its book. The proposal's own way to raise that - read the Book of Magic and
+Underseas on who may learn them - was not done; nothing in the repo contradicts
+it, and every legitimate cross-tradition grant found goes through a named list.
+
+**Ongoing cost, as stated:** a spell import must set `tradition` -
+`.claude/skills/class-import/reference/frontmatter.md` now says so. **Filed from
+this audit: F59** (a dead `spells_per_level_from: true`, and two class notes
+claiming a list bounds a pick it does not).
+
 
 ### F58 - medium - `regression.mjs` kills the bootstrap build at 180 seconds, the build now takes longer, and the failure reads as "cannot build a database" with no reason
 
