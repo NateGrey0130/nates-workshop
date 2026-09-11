@@ -439,8 +439,9 @@ because a totem grants SKILLS and a chosen ability may grant only `bonuses`,
 `psionics` and `magic`. The forty animals are rows in `totems`, not entries in
 the class, and `composeClass` folds the chosen row in: its skills are added to
 `occ_skills`, or +10% where the class already has one (printed 96), and its
-bonuses are summed. `from` must be `"animal"` - the Elemental Shaman picks an
-element instead and does not take the key. A class without it is untouched.
+bonuses are summed. `from` must be `"animal"` - the Elemental Shaman has an
+element instead, one class per element since F63, and does not take the key. A
+class without it is untouched.
 `BOOK-INGEST-AUDIT.md` F56.
 
 ## Prose and display

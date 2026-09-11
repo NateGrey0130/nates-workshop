@@ -1406,7 +1406,10 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // data and the rule are checked together.
   const { spellLevelsForGrant } = await import(pathToFileURL(join(appDir, 'js', 'leveling.js')).href);
   const upTo = (lv) => JSON.stringify(Array.from({ length: lv }, (_, i) => i + 1));
-  for (const [id, from, to] of [['plant-shaman', 3, 15], ['animal-shaman', 3, 15], ['elemental-shaman', 2, 15]]) {
+  // The Elemental Shaman is four classes since F63, each carrying the cap.
+  for (const [id, from, to] of [['plant-shaman', 3, 15], ['animal-shaman', 3, 15],
+    ['elemental-shaman-air', 2, 15], ['elemental-shaman-earth', 2, 15],
+    ['elemental-shaman-fire', 2, 15], ['elemental-shaman-water', 2, 15]]) {
     const c = classes.find((x) => x.id === id);
     const capped = [];
     for (let lv = from; lv <= to; lv++) if (c && JSON.stringify(spellLevelsForGrant(c, lv, 0)) === upTo(lv)) capped.push(lv);
@@ -1418,6 +1421,31 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   for (const id of ['plant-shaman', 'animal-shaman']) {
     const c = classes.find((x) => x.id === id);
     check(`and ${id}'s level-2 remaining-spells grant stays uncapped`, !!c && spellLevelsForGrant(c, 2, 0) === null);
+  }
+
+  // -- the Elemental Shaman is one class per element (F63) --------------------
+  //
+  // An element CHOICE could neither narrow the three starting spells nor grant
+  // the element's 98% skill, so the one class offered all 37 elemental spells
+  // and kept the skill in ability text. Split per element as the Warlocks were
+  // (RETRO-AUDIT R3); the one-class row is retired, not deleted.
+  check('the one-class elemental shaman is no longer offered', !classes.some((c) => c.id === 'elemental-shaman'));
+  for (const [el, spells, skill] of [['air', 7, 'Astronomy'], ['earth', 11, 'Holistic Medicine'],
+                                     ['fire', 9, null], ['water', 10, 'Swimming']]) {
+    const c = classes.find((x) => x.id === `elemental-shaman-${el}`);
+    const E = el[0].toUpperCase() + el.slice(1);
+    const three = (c ? startingGroups(c, 'spell') : []).find((g) => g.count === 3);
+    check(`elemental-shaman-${el} picks three from its ${spells} level-one ${E} spells and no other element's`,
+      !!three && three.from.length === spells && three.from.every((n) => n.startsWith(`${E}: `)),
+      three ? `${three.from.length} offered` : 'no three-pick group');
+    const at98 = (c?.skills?.occ_skills || [])
+      .filter((s) => s.name && s.base === 98 && !s.name.startsWith('Language')).map((s) => s.name);
+    check(`and ${skill ? `knows ${skill} at 98% as a skill` : 'has no 98% element skill, as printed'}`,
+      !!c && JSON.stringify(at98) === JSON.stringify(skill ? [skill] : []), at98.join(', '));
+    const abilities = c?.special_abilities || [];
+    check('and offers no choice of element',
+      abilities.length > 0 && !abilities.some((a) => a.choose)
+      && abilities.filter((a) => / Shaman$/.test(a.name || '')).map((a) => a.name).join() === `${E} Shaman`);
   }
 
   // -- languages of choice come from languages ------------------------------

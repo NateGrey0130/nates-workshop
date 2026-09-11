@@ -176,7 +176,7 @@ spirits are not recommended as player characters, and every spirit entry
 
 **Totems — `BOOK-INGEST-AUDIT` F56.** Nine of the eleven O.C.C.s must pick one
 of 40 totem animals (printed 96-105; first counted as 48), and the Elemental Shaman picks one of four
-elements instead. A totem grants skills and bonuses to the character, plus
+elements instead (one class per element since F63). A totem grants skills and bonuses to the character, plus
 giant-form powers to the Totem Warrior alone. Abilities can carry bonuses but
 not skills, and the table would have to be repeated in every class that uses
 it. Each class records the pick in prose and cites the finding.

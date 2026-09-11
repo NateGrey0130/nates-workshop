@@ -531,5 +531,6 @@ totem, so the race roll cannot count them twice.
 
 **Unchosen is a warning**, `totem_unchosen`, and a stored slug the catalog no
 longer has is `totem_unknown` - the MOS's two, for the MOS's reasons. The
-Elemental Shaman picks one of four *elements* instead (printed 65) and does not
-take the key; `from` must say `"animal"` so it cannot borrow it.
+Elemental Shaman has one of four *elements* instead (printed 65) - one class per
+element since `BOOK-INGEST-AUDIT` F63 - and does not take the key; `from` must
+say `"animal"` so it cannot borrow it.
