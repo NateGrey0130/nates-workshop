@@ -8317,3 +8317,153 @@ could move the reach numbers, not the mechanism.
 `derive.js` comment, both of which described the old behaviour without naming
 a finding. F56's outcome note is a dated record naming F60 as found, and the
 survey names it without a status; both stand.
+
+### F61 - low - a spell pick drawn from a NAMED LIST loses the class's LEVEL CAP, and three Spirit West shamans' books state both
+
+**Found 2026-09-11**, listing what Spirit West left outstanding after F56-F60;
+first seen by F59's premise audit, whose outcome note says a book binding both
+*"would need code, and this is where that would start"*.
+
+**The books.** The Plant Shaman (printed 50-53), Animal Shaman (53-56) and
+Elemental Shaman (65-67) each gain later spells from a named list - the book's
+own Shamanistic list - and each caps every such pick at the character's own
+level. The Elemental Shaman's schedule entries carry that as a note: *"Two
+Shamanistic spells, none higher than the character's own level."*
+
+**The app keeps the list and drops the cap.** A list-bound slot is deliberately
+not level-capped: `spellLevelsForGrant` returns null for any entry with `from`
+or `from_list` (`js/leveling.js:225-228`, read 2026-09-11), the wizard's
+level-up picker reads both answers side by side (`app.js:1766-1767`), the
+validator excludes list-bound pools from its level check (`validate-character.js:450`),
+and the server's claim path takes the same null (`power-picks.js:75-79`). The
+three classes' notes say the cap *"is shown to the player as a note on each
+grant rather than enforced"*.
+
+**Reach.** Three live classes by their notes (`plant-shaman`, `animal-shaman`,
+`elemental-shaman`, production 2026-09-11). Measured structurally - every live
+class whose list-bound schedule entries sit beside a stated
+`spells_per_level_levels` rule - the only other is `shifter`, whose book leaves
+its list slots uncapped on purpose (the `leveling.js:225-228` comment). A class
+whose importer wrote the cap nowhere is invisible to both measures.
+
+**The rule this has to argue past.** `docs/starting-above-level-1.md` states it
+in bold: *"A slot bounded by a named list is not also bounded by a spell level -
+the list is the restriction."* It is right for the Shifter and the Lyn-Srial
+(F59), whose books bound by list alone. These three books bound by both, so the
+answer is an opt-in, not a reversal.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | a schedule entry may say `spell_levels: "up_to_character_level"` beside its list, and `spellLevelsForGrant` returns that cap instead of null when it does | exact to the books; opt-in, so every list-bound class without it is unchanged; one rule, read through the function all four paths already call | four read paths to confirm (wizard, sheet, validator, claims), and the sheet inlines its own copy of the test (`sheet.js:2508`) that must be kept in step - a smoke check pins them together |
+| B | data only: fourteen pre-filtered lists per class, `S_2` ... `S_15`, each holding the list's spells up to that level | no code | some forty lists and several hundred repeated names across three classes; every spell-level correction re-applied to each; the declare-once rule exists to prevent exactly this |
+| C | keep the note | nothing to build | the validator accepts an over-level pick, and the app knowingly gives the wrong answer |
+
+**Proposal:** A. **Posture:** a new opt-in value on an existing key; no schema,
+no new key; a class without it behaves as today.
+
+**Confidence: high on the gap** (the rule is quoted above); **medium on the
+reach** - what would raise it is grepping the cached books for "no higher than"
+beside a spell grant, since only three importers wrote it down.
+
+**Ongoing cost:** one rule, read in four places and pinned by smoke.
+
+**Subject grep, 2026-09-11:** every `*AUDIT*.md` for "named list replaces",
+"list and a cap" and "cap is a note": one hit, F59's outcome note in this file,
+which names this gap and files nothing. `docs/starting-above-level-1.md` holds
+the rule quoted above.
+
+### F62 - low - a supernatural P.E. that turns S.D.C. and hit points into M.D.C. has no field, so three classes carry it as prose
+
+**Found 2026-09-11**, listing what Spirit West left outstanding.
+
+**The books.** The Totem Warrior (Spirit West printed 42-44), the Spirit
+Warrior (44-47) and the Psycho-Stalker (Juicer Uprising printed 45-47) have a
+supernatural P.E. that makes them mega-damage creatures: their combined S.D.C.
+and hit points become one M.D.C. total. The Totem Warrior's and Spirit
+Warrior's notes both say *"which no field expresses"*; all three store it as a
+special ability's text.
+
+**The app rolls three separate pools.** The wizard rolls hit points, S.D.C. and
+M.D.C. each from its own formula (`app.js:351-353`, read 2026-09-11), and the
+validator bounds each maximum against its own formula (`validate-character.js:552`).
+Nothing adds two pools into a third. So the sheet tracks S.D.C. and hit points
+the book says the character no longer has, and damage lands on the wrong pool.
+
+**Reach.** Three live classes by their notes (production, 2026-09-11). No live
+class writes an `mdc_base` built from hit points or S.D.C. - the data-only form
+has never been tried.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | an opt-in class flag - say `mdc_from_hp_sdc: true` - under which the wizard rolls hit points and S.D.C. as it does now, stores their SUM as the M.D.C. maximum and leaves the two empty; the validator bounds M.D.C. against the sum of the two formulas | keeps each formula exactly as the book or the core rules state it; the sheet's existing M.D.C. pool does the rest | code in three places - the pool roll, the validator's bounds, and per-level growth, since hit points gained at a level must reach M.D.C. (`js/leveling.js` rolls pool growth) |
+| B | data only: write the sum as `mdc_base` and drop `hit_points_base` and `sdc_base` | no code | two of the three classes print no hit point or S.D.C. formula of their own - `compose.js` supplies the core defaults - so each class would restate the core rules inside its own M.D.C. formula and drift if those change; per-level growth has to fit the formula too |
+| C | keep the prose | nothing to build | the sheet shows the wrong pools for all three classes |
+
+**Proposal:** A. **Posture:** a new opt-in class key; no schema; classes
+without it are unchanged. Adds one key to `KNOWN_KEYS`.
+
+**Confidence: high on the gap; medium on A's cost** - what would raise it is
+reading how level-up grows the pools before scoping.
+
+**Ongoing cost:** one flag and three readers.
+
+**Subject grep, 2026-09-11:** every `*AUDIT*.md` for "into M.D.C.",
+"hit points into M" and "mega-damage creature": no hits.
+
+### F63 - low - an ELEMENT choice cannot steer the Elemental Shaman's spells or grant its skill, so the class offers all four elements' spells with a note
+
+**Found 2026-09-11**, listing what Spirit West left outstanding. F56 recorded
+that this class picks an element instead of a totem and left it out of that
+finding.
+
+**The book.** Spirit West printed 65-67: the Elemental Shaman chooses one of
+four elements. The element sets three Warlock spells at level one, drawn from
+that element only, and a skill at 98% (the class note names astronomy,
+holistic medicine and swimming).
+
+**The app offers every element.** The element is a `choose: 1` over four
+abilities; the level-one group offers all 38 elemental rows with a note to pick
+from one's own element, *"since a pick cannot be tied to the element chosen"*;
+and the skill sits in the ability's text, because a chosen ability grants only
+`bonuses`, `psionics` and `magic` (`ABILITY_GRANTS`, `js/parser.js:1699`) -
+and even its `magic` applies only to a class that has none
+(`js/parser.js:1801`, `out.magic = out.magic || def.magic`). So the wizard
+permits three Fire spells for a Water shaman, and the 98% skill is on no skill
+list at all.
+
+**Precedent.** The catalog already splits a class by element: the four Warlock
+classes are copy pairs - `warlock-water` is `copy_of: { class: "warlock-air",
+except: ["magic"] }` (production, 2026-09-11) - and `regression.mjs` walks every
+declared pair. No production character holds `elemental-shaman` (queried
+2026-09-11), so a split strands no one.
+
+**The decisions this has to argue past.** F24 kept skills off abilities on
+purpose; its outcome note (Taken, PR #789) declined the skills-bearing parts.
+F50, a gear choice that grants a skill, is HELD (PR #910) because nothing could
+use it yet.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | split into `elemental-shaman-air`, `-earth`, `-fire` and `-water`, copy pairs of the first, each with its own element's spells and its 98% skill in `occ_skills`; retire `elemental-shaman` | data only; exact spells and skill; the regression's copy-pair walk keeps the shared halves identical; the Warlocks already work this way; touches neither F24 nor F50 | four entries in the class picker instead of one; the retired id stays loadable for any character that ever holds it; a correction to the shared half is made once and copied |
+| B | code: let a chosen ability narrow the class's starting spell group and grant a skill | one class, one picker entry | reverses F24's deliberate decision and overlaps F50's held one; changes a composition rule every ability-bearing class shares |
+| C | keep the note | nothing to build | 38 spells offered for three picks, and the skill missing from the sheet |
+
+**Proposal:** A. **Posture:** data only; no code, no schema, no new key.
+
+**Confidence: high** on the gap and the precedent; **medium on the picker** -
+what would raise it is looking at how four Warlock entries read in the wizard
+today.
+
+**Ongoing cost:** four classes kept in step, which the copy-pair check already
+enforces.
+
+**Subject grep, 2026-09-11:** every `*AUDIT*.md` for "elemental shaman": two
+hits, both in F56 of this file - its premise that the class picks an element,
+and its outcome note's citation count. `ABILITY_GRANTS` and F24/F50 are cited
+above.
