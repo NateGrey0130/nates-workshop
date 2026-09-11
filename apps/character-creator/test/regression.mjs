@@ -1448,6 +1448,33 @@ console.log('\n' + '[7/7] Checks that only a database can make');
       && abilities.filter((a) => / Shaman$/.test(a.name || '')).map((a) => a.name).join() === `${E} Shaman`);
   }
 
+  // -- a psionic level-up grant keeps its named list (F65) --------------------
+  //
+  // The Healing Shaman takes its remaining ten Healing powers at level 2 and
+  // one super power from a named eight at levels 3, 6, 9 and 12; the Fetish
+  // Shaman gains Psi-Sword at 3 and Psi-Shield at 6 by name. Its gates hold no
+  // Super category, so the list has to REPLACE the gate or none could be taken.
+  // Asked of the real grant builder, so the data and the carry are checked
+  // together.
+  {
+    const { powerGrantsFor } = await import(pathToFileURL(join(appDir, '..', '..', 'functions',
+      'api', 'character-creator', '_lib', 'power-picks.js')).href);
+    const psiListed = (id) => {
+      const c = classes.find((x) => x.id === id);
+      return c ? powerGrantsFor(c, 1, 15).filter((g) => g.kind === 'psionic' && Array.isArray(g.from) && g.from.length) : [];
+    };
+    const hs = psiListed('healing-shaman');
+    check('the Healing Shaman\'s five listed psionic grants carry their lists, with no category gate',
+      hs.length === 5 && hs.every((g) => g.categories === null)
+      && JSON.stringify(hs.map((g) => [g.level, g.from.length])) === '[[2,10],[3,8],[6,8],[9,8],[12,8]]',
+      JSON.stringify(hs.map((g) => [g.level, g.from.length, g.categories])));
+    const fsh = psiListed('fetish-shaman');
+    check('and the Fetish Shaman\'s two name Psi-Sword and Psi-Shield',
+      JSON.stringify(fsh.map((g) => [g.level, g.from])) === '[[3,["Psi-Sword"]],[6,["Psi-Shield"]]]'
+      && fsh.every((g) => g.categories === null),
+      JSON.stringify(fsh.map((g) => [g.level, g.from, g.categories])));
+  }
+
   // -- languages of choice come from languages ------------------------------
   //
   // Seven classes said "two languages of choice" and offered the whole
