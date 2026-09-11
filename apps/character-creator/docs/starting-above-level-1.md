@@ -187,8 +187,13 @@ It takes two forms, because a class can have one list or several:
 Repeating a thirty-four name list on every entry would put it in the class
 definition fourteen times and make one correction fourteen edits. **A slot
 bounded by a named list is not also bounded by a spell level** — the list is the
-restriction. A `from_list` naming a list that does not exist restricts nothing
-rather than everything, which is the safer direction to fail.
+restriction — **unless the entry says so.** `spell_levels: "up_to_character_level"`,
+or an explicit array, beside the list keeps the cap as well, for a book that
+bounds a pick by both: the Plant, Animal and Elemental Shamans pick from their
+Shamanistic list, no higher than their own level (`BOOK-INGEST-AUDIT.md` F61).
+The Shifter's list slots state no cap and stay uncapped. A `from_list` naming a
+list that does not exist restricts nothing rather than everything, which is the
+safer direction to fail.
 
 **Modelled as two grants, not three**, because the difference between the book's
 first two is a restriction nothing can check.

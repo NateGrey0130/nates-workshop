@@ -175,7 +175,21 @@ function perLevelGrants(block, flatKey, scheduleKey, fromLevel, toLevel) {
         count: Number.isFinite(e.count) && e.count > 0 ? e.count : 1,
         // Carried through rather than looked up later: a banked grant keeps the
         // restriction it was granted with, and the class can be re-imported.
-        ...(Array.isArray(e.from) && e.from.length ? { from: e.from.map(String) } : {}),
+        //
+        // A `from_list` is RESOLVED here into its names (BOOK-INGEST-AUDIT F61).
+        // Only an inline `from` used to ride along, so the sheet's live level-up
+        // picker - which reads `from` off the grant, being unable to import this
+        // module - had no list at all for a from_list grant and offered every
+        // spell in the system, while level-confirm refused anything off the list.
+        ...(() => {
+          const names = Array.isArray(e.from) && e.from.length ? e.from.map(String)
+            : typeof e.from_list === 'string' && Array.isArray(block.spell_lists?.[e.from_list])
+              && block.spell_lists[e.from_list].length ? block.spell_lists[e.from_list].map(String)
+              : e.from_list === true && Array.isArray(block.spells_per_level_from)
+                && block.spells_per_level_from.length ? block.spells_per_level_from.map(String)
+                : null;
+          return names ? { from: names } : {};
+        })(),
         ...(typeof e.note === 'string' && e.note.trim() ? { note: e.note.trim() } : {}),
       });
     }
@@ -222,9 +236,15 @@ export function spellLevelsForGrant(cls, level, slot = 0) {
   if (entry && Array.isArray(entry.spell_levels) && entry.spell_levels.length) {
     return entry.spell_levels;
   }
-  // A slot bounded by a NAMED LIST is not also bounded by a spell level: the
-  // Shifter's list slots are bounded by the list, and only its third slot is
-  // capped at the character's own level.
+  // The same rule the class-wide key takes, stated on ONE entry - and the way a
+  // list-bound entry keeps a cap as well as its list (BOOK-INGEST-AUDIT F61).
+  if (entry && entry.spell_levels === 'up_to_character_level') {
+    return Array.from({ length: Math.max(0, level) }, (_, i) => i + 1);
+  }
+  // Otherwise a slot bounded by a NAMED LIST is not also bounded by a spell
+  // level: the Shifter's list slots are bounded by the list alone, and only its
+  // third slot is capped at the character's own level. A book that bounds a
+  // pick by both - the Plant, Animal and Elemental Shamans - says so above.
   if (entry && ((Array.isArray(entry.from) && entry.from.length) || entry.from_list)) return null;
 
   const rule = magic.spells_per_level_levels;
