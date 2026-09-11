@@ -8374,6 +8374,59 @@ beside a spell grant, since only three importers wrote it down.
 which names this gap and files nothing. `docs/starting-above-level-1.md` holds
 the rule quoted above.
 
+**Taken, 2026-09-11 (PR #951).** Option A: `spell_levels:
+"up_to_character_level"` - or an array - on a schedule entry beside its list
+caps the pick as well as listing it. **Posture, said back:** a new opt-in value
+on an existing key; no schema, no new key; every list-bound entry without it is
+unchanged, so the Shifter and the Lyn-Srial still pick from their lists alone.
+
+**What the premise audit corrected** (`audit-premise-auditor`, 2026-09-11):
+
+- **"One rule, read through the function all four paths already call" was
+  wrong.** `spellLevelsForGrant` already returned an ARRAY cap on a list entry
+  before its list test, and the server's claim check (`power-picks.js`) always
+  tested list and cap both. What dropped the cap were the READERS: the wizard's
+  level-up picker, the sheet's live level-up picker and banked-pick panel each
+  took `named ? onList : levels`, and the create validator `continue`d for any
+  name on any list. All four now apply both.
+- **Not every list-bound pick is capped.** The Plant and Animal Shamans'
+  level-2 grant - "every remaining Shamanistic spell", from lists spanning
+  spell levels 1-11 and 1-12 - carries no cap in the book, and a cap of 2 would
+  make it impossible to fill. The value is on **40 entries, not 42**: levels
+  3-15 for those two, 2-15 for the Elemental Shaman.
+- **The claim that a smoke check pinned the sheet's copy together was false**,
+  and the copy had drifted: it tested only an inline `from`, never
+  `from_list`. It now tests both, and smoke pins the wizard's and the sheet's
+  filter shapes.
+- **Worse than the finding said: the sheet's live level-up picker offered EVERY
+  spell for a from_list grant.** The grant it reads never carried the list -
+  `perLevelGrants` copied only an inline `from` - so the three shamans'
+  level-ups offered the whole catalog and `level-confirm` then refused anything
+  off the list. `perLevelGrants` now resolves a `from_list` into its names.
+- **The subject grep missed a shipped precedent.** `RETRO-AUDIT` R3 (PR #723)
+  gives the ten Warlocks list-plus-cap as this finding's option B - pre-filtered
+  lists per level - because a named list replaced the cap. They keep that shape;
+  it works, and nothing here reverses R3's reasoning.
+- **Psionic lists are dropped too, in the inverse shape** - the list goes, the
+  category gate stays. Outside this finding; filed below as F65.
+
+**What changed.** `spellLevelsForGrant` and the sheet's copy accept the string
+on an entry; the four readers apply a list and its cap together and caption
+both; the validator refuses a spell over its list's cap, with one pool that
+takes it being enough; `perLevelGrants` resolves `from_list`. The three docs and
+the extraction prompt that stated "a named list replaces the cap" now say a
+schedule entry may keep one. **Data:** the 40 entries carry the value and lose
+the "the catalog cannot check this one" notes, which `grantNote` would otherwise
+have shown beside an enforced cap; the three class notes are rewritten.
+
+**Tests:** eleven smoke checks, seven seen failing on the unchanged code; the
+regression asks each of the three classes' caps of the real function, and that
+the two level-2 grants stay uncapped.
+
+**Production, 2026-09-11, before merge:** the data script applied, all six
+readbacks at their wanted values. No character or banked grant holds any of the
+three classes.
+
 ### F62 - low - a supernatural P.E. that turns S.D.C. and hit points into M.D.C. has no field, so three classes carry it as prose
 
 **Found 2026-09-11**, listing what Spirit West left outstanding.
@@ -8467,3 +8520,48 @@ enforces.
 hits, both in F56 of this file - its premise that the class picks an element,
 and its outcome note's citation count. `ABILITY_GRANTS` and F24/F50 are cited
 above.
+
+### F65 - medium - a psionic level-up grant drawn from a NAMED LIST loses the list, so ten classes' named psionic picks are not enforced
+
+**Found 2026-09-11** by F61's premise audit, which flagged it outside that
+finding's scope; filed from F61's outcome note.
+
+**The books.** A class can name the powers a level grants. The Healing Shaman
+(Spirit West printed 60-62) gains "all the remaining Healing powers" at level 2
+- stored as `powers_schedule: [{ level: 2, count: 10, from: [ten names] }]` -
+and one super power from the book's list of eight at levels 3, 6, 9 and 12.
+
+**The app drops the list and keeps only the category gate.** `perLevelGrants`
+carries an entry's `from` onto the grant, but `powerGrantsFor` then writes
+`from: null` on every psionic grant (`power-picks.js:86-88`, read 2026-09-11),
+so neither the banked row nor the claim check has the list. The wizard's
+psionic level-up picker reads only the grant's categories (`psiGrantBlock`,
+`app.js:1820`), and the sheet's list tests are spells-only (`const named =
+isSpell && ...`, `sheet.js:2455` and `:2567`). So a list-bound psionic grant
+offers - and accepts - any power in the class's allowed categories: the Healing
+Shaman's ten named Healing powers can be spent on Physical or Sensitive ones.
+
+**Reach.** 38 list-bound psionic schedule entries across ten live classes -
+healing-shaman 15, gypsy-seer 7, fetish-shaman 5, mask-shaman 3, mystic-warrior
+2, totem-warrior 2, and one each on mystic, mind-mage, delphi-juicer and
+noro-mystic-warrior (production, 2026-09-11). A STARTING psionic group is
+unaffected: `startingGroups` carries a group's list for psionics too.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | carry the list through, as F61 did for spells: `powerGrantsFor` keeps `from` on a psionic grant, and the wizard's psionic picker, the sheet's two pickers and the create validator filter by it when present | one shape for spells and psionics; the claim check already tests a grant's list once it is not nulled; `pending_power_picks.from` already stores it; no data change | four readers again, pinned by smoke as F61's are |
+| B | keep categories only and turn the named psionic lists into notes | nothing to build | the books name the powers, and a note is a rule the catalog cannot check |
+
+**Proposal:** A. **Posture:** code only; no data, no schema, no new key.
+
+**Confidence: high on the gap** (the three readers are cited above); **medium
+on reach** - what would raise it is checking whether any class states its
+psionic list through `powers_from` on a level-up rather than an entry's `from`.
+
+**Ongoing cost:** four readers kept in step, the same as F61's.
+
+**Subject grep, 2026-09-11:** every `*AUDIT*.md` for "powers_schedule",
+"psionic list" and "from: null": F61's outcome note above, which records the
+audit's flag; no finding.
