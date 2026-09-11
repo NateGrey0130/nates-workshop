@@ -235,11 +235,23 @@
           // a zero — harmless arithmetic, and a key called `other` sitting in
           // the numeric saves alongside `horror_factor`.
           if (group === 'saves' && k === 'other') continue;
-          // A number counts itself; a dice expression — or a list of them, once
-          // two classes have been composed — counts what it actually rolled.
-          const isDice = typeof v === 'string' || Array.isArray(v);
-          const val = typeof v === 'number' ? v
-            : (isDice ? n(grouped[group]?.[k]) : NaN);
+          // A number counts itself; a dice expression counts what it rolled.
+          // A LIST - two halves composed onto one key - counts both: its flat
+          // members here, as a bare number would, and its dice by what they
+          // rolled. BOOK-INGEST-AUDIT F60: the wizard rolls each half on its own
+          // (race, occupation, totem) and none of those rolls holds the other
+          // half's flat number, so reading the list's total off `rolled` alone
+          // dropped a race's +2 P.S. beside an occupation's 1D4, a skill's +5
+          // beside a Juicer's 2D6, and a flat initiative beside a Godling's die.
+          let val;
+          if (typeof v === 'number') val = v;
+          else if (typeof v === 'string') val = n(grouped[group]?.[k]);
+          else if (Array.isArray(v)) {
+            const flat = v.filter((x) => typeof x === 'number' && Number.isFinite(x))
+              .reduce((a, b) => a + b, 0);
+            const hasDice = v.some((x) => typeof x === 'string' && x.trim());
+            val = flat + (hasDice ? n(grouped[group]?.[k]) : 0);
+          } else val = NaN;
           if (Number.isFinite(val)) out[group][k] = (out[group][k] || 0) + val;
         }
       }
@@ -287,9 +299,12 @@
       for (const g of ['combat', 'saves']) {
         for (const [k, v] of Object.entries(block?.[g] || {})) {
           // Only dice need rolling and storing; a flat combat bonus is read
-          // straight off the class every render and must not be double-counted.
-          if (typeof v === 'string' || Array.isArray(v)) {
-            for (const one of [v].flat()) add(g, k, one);
+          // straight off the class every render and must not be double-counted -
+          // and that includes a flat member of a composed list, which
+          // classBonuses now counts itself (F60).
+          if (typeof v === 'string') add(g, k, v);
+          else if (Array.isArray(v)) {
+            for (const one of v) if (typeof one === 'string') add(g, k, one);
           }
         }
       }
@@ -311,11 +326,13 @@
     for (const block of [src, ...(src.at_level || [])]) {
       for (const [k, v] of Object.entries(block?.attributes || {})) {
         if (typeof v === 'string') add(k, v);
-        // A composed list may mix the two — a race's flat +2 beside an
-        // occupation's +1d4. The FLAT parts come along, because classBonuses
-        // reads a list's total off `rolled` and would otherwise lose them.
-        // A bare number is not collected here: classBonuses counts that itself.
-        else if (Array.isArray(v)) for (const one of v) add(k, one);
+        // A composed list may mix the two - a race's flat +2 beside an
+        // occupation's +1d4. Only its DICE are collected: classBonuses counts a
+        // list's flat members itself, exactly as it counts a bare number.
+        // BOOK-INGEST-AUDIT F60: this used to collect the flat parts too, so
+        // they would ride in the roll - but the wizard rolls each half on its
+        // own and never this composed list, so they rode in nothing.
+        else if (Array.isArray(v)) for (const one of v) if (typeof one === 'string') add(k, one);
       }
     }
     return out;

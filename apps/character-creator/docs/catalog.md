@@ -294,15 +294,21 @@ twice, because the two halves cannot be recovered from the total.
 PARRY          +2 from skills taken
 ```
 
-**One case blurs, and only the attribution.** Where a class grants an attribute
-as DICE and a skill grants the same attribute FLAT, the two merge into one list
-and are rolled together into `attribute_bonuses` — by design, so the flat half
-is not lost (see `diceBonuses`). The stored roll then carries both, and nothing
-downstream can say which part was the skill's, so the chip credits the class.
-The TOTAL is right; only the label is imprecise, and only there. Separating them
-would mean counting the flat half outside the roll, which would double-count it
-for every character whose stored roll already includes it. Combat and save
-bonuses are unaffected — those keys are flat on both sides.
+**A dice bonus and a flat one on the same key are counted in two parts.** Where
+a class grants an attribute as DICE and a skill grants the same attribute FLAT,
+the two merge into one list. The dice are rolled once at creation into
+`attribute_bonuses`; the flat half is counted at render by `classBonuses`, the
+way a bare number is. Combat and save keys follow the same rule - a Godling's
+1D4 initiative is rolled and stored, and a flat +3 beside it counts at render.
+
+**This paragraph said the opposite until `BOOK-INGEST-AUDIT.md` F60:** that the
+flat half was *rolled together* with the dice so it would not be lost, and that
+combat and save bonuses were flat on both sides. No code path ever rolled a
+skill's bonus, and the wizard rolls the race half, the occupation and the totem
+each on its own, so a list's flat half was in no roll and the total dropped it
+- a Juicer's skills-granted +5 P.S. among them. Three published classes carry
+combat or save dice. Counting the flat half at render cannot double-count a
+stored roll, because no stored roll in production held one (checked 2026-09-11).
 
 ---
 
