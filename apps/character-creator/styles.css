@@ -1348,6 +1348,7 @@ pre.snippet {
 .cat-field[data-type="systems"] { grid-column: span 6; }
 .cat-field[data-type="longtext"],
 .cat-field[data-type="bonuses"],
+.cat-field[data-type="skill_list"],
 .cat-field[data-type="kv"] { grid-column: span 12; }
 
 /* Help text is what actually sets a field's height. `cost` is an integer with
@@ -1363,6 +1364,7 @@ pre.snippet {
 .cat-field[data-type="systems"][data-help] { grid-column: span 6; }
 .cat-field[data-type="longtext"][data-help],
 .cat-field[data-type="bonuses"][data-help],
+.cat-field[data-type="skill_list"][data-help],
 .cat-field[data-type="kv"][data-help] { grid-column: span 12; }
 
 .cat-field > label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
@@ -1382,6 +1384,7 @@ pre.snippet {
   .cat-form .cat-field[data-type="systems"],
   .cat-form .cat-field[data-type="longtext"],
   .cat-form .cat-field[data-type="bonuses"],
+  .cat-form .cat-field[data-type="skill_list"],
   .cat-form .cat-field[data-type="kv"] { grid-column: 1 / -1; }
 }
 @media (max-width: 700px) {

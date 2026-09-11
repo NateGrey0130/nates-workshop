@@ -211,6 +211,12 @@ check('and carries skills, spells and psionics',
   catalogs.status === 200 && catalogs.body.skills?.length > 0
   && catalogs.body.spells?.length > 0 && catalogs.body.psionics?.length > 0,
   Object.keys(catalogs.body || {}));
+// The wizard's totem pick reads these (BOOK-INGEST-AUDIT F56), and a totem
+// whose skills or bonuses failed to decode would grant nothing silently.
+check('and the forty totems, their JSON decoded',
+  catalogs.body.totems?.length === 40
+  && catalogs.body.totems.every((t) => Array.isArray(t.skills) && t.skills.length > 0),
+  `${catalogs.body.totems?.length} totems`);
 
 // The wizard boots on this and the sheet fetches it again on every load, so it
 // carries a validator the way /classes does. Its validator is a hash of the
@@ -1311,6 +1317,19 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   check('and no other class has one',
     withMos.join() === Object.keys(MOS_PACKAGES).sort().join(),
     'classes with an MOS: ' + withMos.join(', '));
+
+  // -- totems (BOOK-INGEST-AUDIT F56) ----------------------------------------
+  //
+  // The nine Spirit West O.C.C.s that pick a totem carry the key - the Totem
+  // Warrior alone with powers - and nothing else claims one. The Elemental
+  // Shaman picks an ELEMENT (printed 65) and must not be among them.
+  const TOTEM_CLASSES = ['animal-shaman', 'fetish-shaman', 'healing-shaman', 'mask-shaman',
+    'mystic-warrior', 'paradox-shaman', 'plant-shaman', 'totem-warrior', 'tribal-warrior'];
+  const withTotem = classes.filter((c) => c.totem).map((c) => c.id).sort();
+  check('exactly the nine Spirit West classes pick a totem',
+    withTotem.join() === TOTEM_CLASSES.join(), 'classes with a totem: ' + withTotem.join(', '));
+  check('and only the Totem Warrior sees its powers',
+    classes.filter((c) => c.totem?.powers === true).map((c) => c.id).join() === 'totem-warrior');
 
   // -- languages of choice come from languages ------------------------------
   //

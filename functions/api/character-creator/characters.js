@@ -112,6 +112,10 @@ export async function onRequestPost({ request, env }) {
   // declares, exactly like a variant - the granted skills are already in
   // `skills`, but which package produced them is not recoverable from that.
   const mos = typeof b.mos === 'string' && b.mos.trim() ? b.mos.trim() : null;
+  // Which totem animal, by `totems.slug` (BOOK-INGEST-AUDIT.md F56), stored for
+  // the MOS's reason: the skills it granted are in `skills`, but which animal
+  // produced them is not recoverable from that, and its bonuses are not there.
+  const totem = typeof b.totem === 'string' && b.totem.trim() ? b.totem.trim().toLowerCase() : null;
 
   // Psionics rolled on the table (p.21). Only 'minor' and 'major' are reachable
   // by rolling — master comes from a psychic O.C.C., so anything else is
@@ -131,7 +135,7 @@ export async function onRequestPost({ request, env }) {
     // a magic or psionics block and pool bonuses, and without them here the
     // powers a chosen ability legitimately grants would read as over-allowance
     // and a Super-Tough M.D.C. roll as out of range.
-    abilities: b.abilities || [], mos,
+    abilities: b.abilities || [], mos, totem,
   });
   // A race may bar an occupation outright: a dwarf takes no magic O.C.C., a
   // kobold no knight or palladin. The wizard disables those options, and a
@@ -149,6 +153,9 @@ export async function onRequestPost({ request, env }) {
   // A class that grants psionics has already answered the question, so a rolled
   // tier is not recorded alongside it — the two would contradict each other.
   const tier = cls?.psionics?.from_roll ? rolledTier : null;
+  // Likewise a totem on a class that picks none: composition would ignore it,
+  // and a stored value would read as a choice the character made.
+  const totemKept = cls?.totem ? totem : null;
   // A character may START above level 1 - a player joining an established
   // party, or one built to match the table. Bounded by the class's own XP
   // table, so a class whose curve stops at 10 cannot be asked for 12, and
@@ -177,7 +184,7 @@ export async function onRequestPost({ request, env }) {
   const powerNames = [...new Set((b.powers || [])
     .map((pw) => String(pw?.name || '').trim()).filter(Boolean))];
   const { violations } = validateCharacter({
-    character: { level, psychic_shape: psychicShape, mos, occ_class_id: occId },
+    character: { level, psychic_shape: psychicShape, mos, totem: totemKept, occ_class_id: occId },
     cls,
     skills: b.skills || [],
     abilities: b.abilities || [],
@@ -204,15 +211,15 @@ export async function onRequestPost({ request, env }) {
   const row = await env.DB.prepare(
     `INSERT INTO characters (
        campaign_id, player_email, name, class_id, class_variant, occ_class_id, occ_class_variant,
-       mos, psychic_tier, psychic_shape, level, xp,
+       mos, totem, psychic_tier, psychic_shape, level, xp,
        attributes, attribute_bonuses, rolled_bonuses, skills, powers, abilities,
        hp_max, hp_current, sdc_max, sdc_current, mdc_max, mdc_current,
        ppe_max, ppe_current, isp_max, isp_current,
        bio, combat, saves, armor, notes
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      RETURNING id`
   ).bind(
-    b.campaign_id, email, b.name, b.class_id, variant, occId, occVariant, mos, tier, tier ? psychicShape : null,
+    b.campaign_id, email, b.name, b.class_id, variant, occId, occVariant, mos, totemKept, tier, tier ? psychicShape : null,
     level, xp,
     JSON.stringify(b.attributes || {}), JSON.stringify(b.attribute_bonuses || {}),
     JSON.stringify(b.rolled_bonuses || {}),

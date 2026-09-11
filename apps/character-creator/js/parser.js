@@ -308,6 +308,32 @@ export function validateMos(mos, errors, warnings) {
   }
 }
 
+// `totem` - the class picks one animal from the `totems` catalog
+// (BOOK-INGEST-AUDIT.md F56). Spirit West printed 96-105 prints forty, and nine
+// of its O.C.C.s pick one, so the table is shared rather than written into each.
+//
+//   totem: { from: "animal" }                 # skills and bonuses
+//   totem: { from: "animal", powers: true }   # the Totem Warrior: its giant-form powers too
+//
+// `from` names the catalog's only kind. It is required rather than implied so a
+// class whose book offers something else - the Elemental Shaman picks one of
+// four ELEMENTS instead, printed 65 - cannot borrow the key and be handed forty
+// animals.
+export function validateTotem(t, errors, warnings) {
+  if (t === undefined || t === null) return;
+  if (typeof t !== 'object' || Array.isArray(t)) {
+    errors.push('totem must be a map, e.g. { from: "animal" }');
+    return;
+  }
+  if (t.from !== 'animal') errors.push(`totem.from must be "animal", got: ${t.from}`);
+  if (t.powers !== undefined && t.powers !== true) {
+    errors.push('totem.powers is a flag and may only be true; omit it otherwise');
+  }
+  for (const k of Object.keys(t)) {
+    if (!['from', 'powers', 'note'].includes(k)) warnings.push(`totem.${k} is not read and will be ignored`);
+  }
+}
+
 function validateSkillOverrides(v, granted, errors) {
   if (v.skill_overrides === undefined) return;
   if (!Array.isArray(v.skill_overrides)) {
@@ -960,6 +986,12 @@ export function combineClasses(rcc, occ) {
   // The race's own is the fallback, for a racial class that ever gains one.
   const mos = occ.skills?.mos ?? rcc.skills?.mos;
   if (mos) out.skills.mos = mos;
+  // A totem pick is an OCCUPATION's in every class that has one (Spirit West,
+  // BOOK-INGEST-AUDIT.md F56), and `out` starts as the race spread, so an
+  // O.C.C.'s key is carried here or a D-Bee Tribal Warrior loses the pick. Top
+  // level rather than under `skills`, because a totem grants bonuses as well.
+  const totem = occ.totem ?? rcc.totem;
+  if (totem) out.totem = totem;
 
   out.bonuses = sumBonusGroups(rcc.bonuses, occ.bonuses);
 
@@ -2287,6 +2319,7 @@ export function parseClassMarkdown(text) {
     warnings.push('race_restrictions is set on something that is not an O.C.C. and will do nothing');
   }
   validateRaceRestrictions(data.race_restrictions, errors);
+  validateTotem(data.totem, errors, warnings);
 
   // Shape checks on optional structures
   if (data.skills) {

@@ -14,6 +14,7 @@ import { validateCharacter, loadSkillCategories } from '../_lib/validate-charact
 import { loadPowerCatalog } from '../_lib/power-picks.js';
 import { paging } from '../_lib/paging.js';
 import { decodeCharacter } from '../_lib/character-json.js';
+import { loadTotems } from '../_lib/class-loader.js';
 
 export async function onRequestGet({ request, env }) {
   const guard = requireAdmin(request, env);
@@ -26,11 +27,14 @@ export async function onRequestGet({ request, env }) {
   const { classes } = await loadPublished(env, { includeRetired: true });
   const catalog = await loadSkillCategories(env);
   const byId = new Map(classes.map((c) => [c.id, c]));
+  // Once for the whole page, like the classes. Without the rows a character's
+  // totem skills audit as ungranted (BOOK-INGEST-AUDIT.md F56).
+  const totems = await loadTotems(env);
 
   const { results } = await env.DB.prepare(
     `SELECT characters.id, characters.name, characters.class_id, characters.class_variant,
             characters.occ_class_id, characters.occ_class_variant, characters.psychic_tier,
-            characters.psychic_shape, characters.mos,
+            characters.psychic_shape, characters.mos, characters.totem,
             characters.level, characters.xp, characters.attributes, characters.skills,
             characters.abilities, characters.powers,
             characters.hp_max, characters.sdc_max, characters.mdc_max,
@@ -66,13 +70,14 @@ export async function onRequestGet({ request, env }) {
       rcc: byId.get(row.class_id) || null,
       occ: row.occ_class_id ? byId.get(row.occ_class_id) || null : null,
       character: row,
+      totem: row.totem ? totems.get(String(row.totem).toLowerCase()) || null : null,
     });
 
     const { skipped, violations, warnings } = validateCharacter({
       // xp as well as level: a character whose XP is behind its level warns,
       // and a validator that is never handed the number can never say so.
       character: { level: row.level, xp: row.xp, psychic_shape: row.psychic_shape,
-                   mos: row.mos, occ_class_id: row.occ_class_id },
+                   mos: row.mos, totem: row.totem, occ_class_id: row.occ_class_id },
       cls, skills: row.skills, attributes: row.attributes,
       abilities: row.abilities, catalog,
       // The F2 additions: creation-time powers, pool maxima against the class

@@ -64,6 +64,10 @@ export const KNOWN_KEYS = new Set([
   // declaration added without this entry turns the suite red rather than
   // printing a note. F25 guessed the opposite and its outcome note corrects it.
   'copy_of',
+  // A pick from the shared `totems` catalog (BOOK-INGEST-AUDIT.md F56). Read by
+  // composeClass, which folds the chosen row's skills and bonuses in, and by
+  // the wizard, the validator and the sheet.
+  'totem',
   // Produced by the parser from the body, never written by hand.
   'lore', 'gm_notes', 'sections',
 ]);

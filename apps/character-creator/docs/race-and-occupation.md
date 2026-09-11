@@ -489,3 +489,47 @@ has five specialties; read in column order it has **seven**. See
 `scripts/read-columns.py` — this line pointed at a copy of that script under
 `.claude/skills/book-survey/reference/` until the copy was deleted for being a
 diverged fork of the real one.
+
+---
+
+## A totem animal is a shared table
+
+Spirit West printed 96-105 describes forty totem animals, and nine of the book's
+O.C.C.s pick one - printed 37 says every Native American on Rifts Earth has one.
+A totem grants **skills**, **bonuses** kept for life, and, for the Totem Warrior
+alone, **powers** in giant animal form (printed 96). `BOOK-INGEST-AUDIT.md` F56.
+
+```yaml
+totem: { from: "animal" }                 # the eight that take skills and bonuses
+totem: { from: "animal", powers: true }   # the Totem Warrior
+```
+
+**It is not an MOS and not an ability choice**, and each near miss is the reason.
+An MOS is written inside the class that offers it; the same forty animals written
+into nine classes would be 360 definitions that must stay identical, which is the
+drift `F25` declined to model. A chosen ability may grant only `bonuses`,
+`psionics` and `magic` (`ABILITY_GRANTS`), and a totem's first grant is skills.
+So the animals are rows in `totems`, and the class carries only the key.
+
+`applyTotem()` runs in `composeClass`, straight after the MOS and on the composed
+class for the same reason. The chosen row's skills are appended to `occ_skills`;
+where the O.C.C. already has one **by name**, printed 96's *"special bonus of
++10%"* is added to that entry instead, and replaces the totem's own bonus for it.
+The row's `bonuses` are summed through `sumBonusGroups`. `combineClasses` carries
+the key across the merge, because it rebuilds from the race spread and a D-Bee
+Tribal Warrior would otherwise lose the pick.
+
+**The row is handed in by the caller**, because `compose.js` does no I/O:
+`loadTotem()` in `_lib/class-loader.js`, `loadTotems()` for the audit page, and
+the boot catalog in the wizard. It applies only when its slug is the one
+`characters.totem` holds, and only on a class with the key.
+
+**Its dice roll on their own.** The Bear's +1D4 P.S. is rolled from the row
+alone into `S.totemAttrBonuses`, beside the race's and the occupation's rolls,
+so a different animal re-rolls only its own - and `S.raceCls` never carries the
+totem, so the race roll cannot count them twice.
+
+**Unchosen is a warning**, `totem_unchosen`, and a stored slug the catalog no
+longer has is `totem_unknown` - the MOS's two, for the MOS's reasons. The
+Elemental Shaman picks one of four *elements* instead (printed 65) and does not
+take the key; `from` must say `"animal"` so it cannot borrow it.

@@ -201,6 +201,7 @@ CREATE TABLE IF NOT EXISTS characters (
   occ_class_id TEXT,                    -- the O.C.C. taken alongside an R.C.C.; NULL = none
   occ_class_variant TEXT,
   mos TEXT,                             -- which `skills.mos` option was taken; NULL = the class offers none
+  totem TEXT,                           -- which `totems.slug` a class's `totem:` key had picked; NULL = none
 
   psychic_tier TEXT,                    -- rolled on the Random Psionics Table; NULL = none, or psychic by class
   psychic_shape TEXT,                   -- which power allowance was taken ('focused' | 'broad')
@@ -619,6 +620,24 @@ CREATE TABLE IF NOT EXISTS vehicle_weapons (
 CREATE INDEX IF NOT EXISTS idx_vehicle_locations_slug ON vehicle_locations(vehicle_slug);
 CREATE INDEX IF NOT EXISTS idx_vehicle_weapons_slug ON vehicle_weapons(vehicle_slug);
 
+-- A totem animal: the forty Spirit West prints on printed 96-105, one row each,
+-- shared by every class whose frontmatter says `totem:` (BOOK-INGEST-AUDIT.md
+-- F56). `skills` is JSON shaped like an occ_skills list and `bonuses` a class
+-- bonuses block, dice and pools allowed; `powers` is prose, shown only to a
+-- class whose key says `powers: true`. Slug-keyed, because `characters.totem`
+-- has to name the same animal in every database.
+CREATE TABLE IF NOT EXISTS totems (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug        TEXT NOT NULL UNIQUE,
+  name        TEXT NOT NULL,
+  skills      TEXT,                     -- JSON: [{"name": "Swimming", "bonus": 10}, ...]
+  bonuses     TEXT,                     -- JSON: a class bonuses block
+  bonus_note  TEXT,                     -- what the block cannot hold
+  powers      TEXT,                     -- the Totem Warrior's giant-form powers
+  description TEXT,                     -- the animal's traits
+  source_book TEXT
+);
+
 CREATE TABLE IF NOT EXISTS character_items (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   character_id INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
@@ -681,6 +700,10 @@ WHERE EXISTS (SELECT 1 FROM pragma_table_info('gear') WHERE name = 'vehicle_slug
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '054-campaign-rest-rates.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('campaigns') WHERE name = 'rest_rates');
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '056-totems.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'totems')
+  AND EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'totem');
 
 CREATE INDEX IF NOT EXISTS idx_character_vehicles_character
   ON character_vehicles (character_id);

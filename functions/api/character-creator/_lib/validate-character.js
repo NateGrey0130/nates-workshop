@@ -143,6 +143,30 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
       });
     }
   }
+  // A totem animal (BOOK-INGEST-AUDIT.md F56). Warned rather than refused, like
+  // the MOS: Spirit West printed 37 says every Native American has one, and a
+  // character with none is missing skills and bonuses nothing else mentions.
+  // composeClass sets `totem_chosen` only when the row resolved, so a stored
+  // slug without it means the catalog no longer has that animal.
+  if (cls.totem) {
+    const chosen = character?.totem;
+    if (!chosen) {
+      warnings.push({
+        rule: 'totem_unchosen',
+        class_id: cls.id ?? null,
+        message: `${cls.name || 'This class'} picks a totem animal and none is chosen, `
+          + 'so its skills and bonuses are missing.',
+      });
+    } else if (!cls.totem_chosen) {
+      warnings.push({
+        rule: 'totem_unknown',
+        class_id: cls.id ?? null,
+        totem: String(chosen),
+        message: `"${chosen}" is not a totem in the catalog, so none of its skills or bonuses `
+          + 'are being granted.',
+      });
+    }
+  }
 
   const list = Array.isArray(skills) ? skills : [];
   const level = Number.isFinite(character?.level) ? character.level : 1;

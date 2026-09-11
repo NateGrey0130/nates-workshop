@@ -1346,13 +1346,17 @@ Little Ones, Two-Faced Star People, Man-Monsters, Man-Eagles, Stone Giants,
 Black-Winged Monster Men) and sends the Ukt Water Serpent to the dragon table.
 Every one is tagged NPC on its own heading.
 
-**Two findings filed, F56 and F57, neither implemented.** F56 is the 48 totem
-animals nine of the eleven O.C.C.s must pick from: a totem grants skills as well
-as bonuses, abilities carry no skills, and the table would repeat in every
-class. F57 is not this book's alone - a class whose spell pool is a level range
-already admits every leveled spell of every tradition, and the 34 shaman spells
-will join the 167 warlock, `Ocean:` and `Dolphin:` rows the Ley Line Walker is
-offered today.
+**Two findings filed, F56 and F57, neither implemented.** F56 is the 40 totem
+animals (first counted as 48) nine of the eleven O.C.C.s must pick from: a
+totem grants skills as well as bonuses, abilities carry no skills, and the table
+would repeat in every class. F57 is not this book's alone - a class whose spell
+pool is a level range already admits every leveled spell of every tradition, and
+the 34 shaman spells will join the 167 warlock, `Ocean:` and `Dolphin:` rows the
+Ley Line Walker is offered today.
+
+*2026-09-10: F56 was taken. The forty totems are rows in `totems` (migration
+056), and the nine classes carry a `totem` key the wizard resolves into a pick;
+see its outcome note.*
 
 **What is deliberately not imported**: the Kachina Dancer (a role layered on an
 O.C.C., not one), every NPC monster, spirit and god on printed 106-188, the

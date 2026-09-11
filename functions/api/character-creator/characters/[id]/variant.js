@@ -20,7 +20,7 @@ import { parseClassMarkdown, applyVariant } from '../../../../../apps/character-
 import { composeClass } from '../../../../../apps/character-creator/js/compose.js';
 import { evalDice, rollPoolFormula } from '../../../../../apps/character-creator/js/dice.js';
 import { loadCharacter } from '../../_lib/character-json.js';
-import { loadClass } from '../../_lib/class-loader.js';
+import { loadClass, loadTotem } from '../../_lib/class-loader.js';
 import { validateCharacter, loadSkillCategories } from '../../_lib/validate-character.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
@@ -121,7 +121,10 @@ export async function onRequestPost({ request, env, params }) {
     : null;
   // `next` is already the target stage and `occ` already has its own variant
   // applied, so the variants are blanked here rather than applied twice.
-  const target = composeClass({ rcc: next, occ, character: { ...character, class_variant: null, occ_class_variant: null } });
+  // The totem row as well (BOOK-INGEST-AUDIT.md F56), or the skills a totem
+  // granted read here as skills the class never gave.
+  const target = composeClass({ rcc: next, occ, totem: await loadTotem(env, character.totem),
+    character: { ...character, class_variant: null, occ_class_variant: null } });
   const { violations } = validateCharacter({
     character: { level: character.level },
     cls: target,
