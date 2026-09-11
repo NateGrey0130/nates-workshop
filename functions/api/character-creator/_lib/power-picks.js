@@ -17,7 +17,7 @@ import { resolveKeys } from './catalog-redirects.js';
 import { safeParse } from './character-json.js';
 import { categoryAllows, categoryLabel } from '../../../../apps/character-creator/js/parser.js';
 import { spellLevelsForGrant, psionicCategoriesForGrant, spellNamesForGrant, grantNote,
-         spellGrantsFor, psionicGrantsFor } from './leveling.js';
+         spellGrantsFor, psionicGrantsFor, spellTraditionsAllowed, spellTraditionAllowed } from './leveling.js';
 
 export async function listPendingPowers(env, characterId) {
   // No catch here. An earlier version swallowed failures into an empty list to
@@ -26,7 +26,7 @@ export async function listPendingPowers(env, characterId) {
   // powers and nothing said why. A missing migration is a prerequisite, and it
   // should fail loudly like every other one.
   const { results } = await env.DB.prepare(
-    `SELECT id, granted_at_level, slot, count, kind, spell_levels, categories,
+    `SELECT id, granted_at_level, slot, count, kind, spell_levels, spell_traditions, categories,
             from_names, note, created_at
      FROM pending_power_picks
      WHERE character_id = ? AND claimed_at IS NULL
@@ -39,6 +39,9 @@ export async function listPendingPowers(env, characterId) {
     kind: r.kind,
     slot: r.slot ?? 0,
     spell_levels: r.spell_levels ? safeParse(r.spell_levels) : null,
+    // NULL for a row banked before migration 055: unrestricted, the reach it was
+    // granted with. See spellTraditionAllowed in js/leveling.js.
+    traditions: r.spell_traditions ? safeParse(r.spell_traditions) : null,
     categories: r.categories ? safeParse(r.categories) : null,
     from: r.from_names ? safeParse(r.from_names) : null,
     note: r.note ?? null,
@@ -48,10 +51,11 @@ export async function listPendingPowers(env, characterId) {
 export function insertPowerGrantStatements(env, characterId, grants) {
   return grants.map((g) => env.DB.prepare(
     `INSERT INTO pending_power_picks
-       (character_id, granted_at_level, slot, count, kind, spell_levels, categories, from_names, note)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+       (character_id, granted_at_level, slot, count, kind, spell_levels, spell_traditions, categories, from_names, note)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).bind(characterId, g.level, g.slot ?? 0, g.count, g.kind,
     g.spell_levels ? JSON.stringify(g.spell_levels) : null,
+    g.kind === 'spell' && Array.isArray(g.traditions) ? JSON.stringify(g.traditions) : null,
     g.categories ? JSON.stringify(g.categories) : null,
     g.from ? JSON.stringify(g.from) : null,
     g.note ?? null));
@@ -69,6 +73,8 @@ export function powerGrantsFor(cls, fromLevel, toLevel) {
     for (const g of spells.grants) {
       out.push({ ...g, kind: 'spell',
                  spell_levels: spellLevelsForGrant(cls, g.level, g.slot),
+                 // Frozen with the grant, like its level cap: BOOK-INGEST-AUDIT F57.
+                 traditions: spellTraditionsAllowed(cls),
                  categories: null,
                  from: spellNamesForGrant(cls, g.level, g.slot),
                  note: grantNote(cls, 'spell', g.level, g.slot) });
@@ -77,7 +83,7 @@ export function powerGrantsFor(cls, fromLevel, toLevel) {
   const psionics = psionicGrantsFor(cls, fromLevel, toLevel);
   if (psionics.applicable && !psionics.unknown) {
     for (const g of psionics.grants) {
-      out.push({ ...g, kind: 'psionic', spell_levels: null,
+      out.push({ ...g, kind: 'psionic', spell_levels: null, traditions: null,
                  categories: psionicCategoriesForGrant(cls, g.level, g.slot),
                  from: null,
                  note: grantNote(cls, 'psionic', g.level, g.slot) });
@@ -114,6 +120,7 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
   const capFor = new Map(grants.map((g) => [key(g.kind, g.level, g.slot), g.spell_levels]));
   const catFor = new Map(grants.map((g) => [key(g.kind, g.level, g.slot), g.categories]));
   const fromFor = new Map(grants.map((g) => [key(g.kind, g.level, g.slot), g.from]));
+  const tradFor = new Map(grants.map((g) => [key(g.kind, g.level, g.slot), g.traditions]));
 
   const names = [...new Set(picks.map((p) => String(p?.name || '').trim()).filter(Boolean))];
   const catalog = await loadPowerCatalog(env, names, system);
@@ -155,6 +162,12 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
       if (cap && !cap.includes(row.level)) {
         errors.push(
           `${name} is a level ${row.level} spell; the level ${level} grant allows ${cap.join(', ')}`);
+        continue;
+      }
+      // Refused here because the picker no longer offers it - one rule, both
+      // sides (BOOK-INGEST-AUDIT F57). A named list already decided above.
+      if (!list && !spellTraditionAllowed(row, tradFor.get(k))) {
+        errors.push(`${name} is ${row.tradition} magic; the level ${level} grant does not draw from that tradition`);
         continue;
       }
     } else {
@@ -204,7 +217,7 @@ export async function loadPowerCatalog(env, names, system) {
     const placeholders = batch.map(() => '?').join(', ');
     const [s, p] = await env.DB.batch([
       env.DB.prepare(
-        `SELECT name, level, ppe, ppe_note, system FROM spells WHERE name COLLATE NOCASE IN (${placeholders})`
+        `SELECT name, level, ppe, ppe_note, system, tradition FROM spells WHERE name COLLATE NOCASE IN (${placeholders})`
       ).bind(...batch),
       env.DB.prepare(
         `SELECT name, category, isp, isp_note, system FROM psionic_powers WHERE name COLLATE NOCASE IN (${placeholders})`

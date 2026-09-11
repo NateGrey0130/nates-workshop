@@ -7832,6 +7832,70 @@ backfill, rather than inferring exclusivity from a prefix.
 different question - which casters may learn a spell at all - and a single
 column answers it.
 
+**Taken, 2026-09-10 (PR #943) - built fully on Nate's word, which is wider than
+the proposal as written.** Posture as proposed: *"narrows a picker; changes no
+stored character. ... No new gate on import."* Said back below, with one
+qualification.
+
+**What shipped:** migration `055` (`spells.tradition`,
+`pending_power_picks.spell_traditions`); `zzzzzzzzz-f57-spell-traditions.sql`
+tags 395 rows - warlock 231, ocean 41, dolphin 10, spellsong 21, cloud 58,
+shaman 34 - and gives four classes `magic.spell_traditions_allowed`; one rule,
+`spellTraditionAllowed` in `apps/character-creator/js/leveling.js`, in every
+place a spell pool is built; `mergeMagic` unions the key.
+
+**`audit-premise-auditor` corrected this finding in four places before it was
+implemented, and the build follows the corrections, not the text above:**
+- *"A named `spells_from` list is untouched"* holds at creation only. Four
+  classes reached their OWN tradition through a level-gated level-up -
+  `ocean-wizard` and `nautyll-koral-shaper` (Ocean, via
+  `spells_per_level_levels`), `lyn-srial-sky-knight` and
+  `lyn-srial-cloudweaver` (Cloud, uncapped). As written the proposal would have
+  stripped it from them; each has an allowance.
+- The reach was 19 live classes and FIVE pool builders - the wizard's starting
+  and level-up pickers, the sheet's banked picks, the server's level-up claims
+  and its creation validator - not one picker. The question left open above:
+  the validator runs on create, level-up, picks and variant writes, and now
+  checks tradition with the same footprint as the level cap.
+- The level-UP reach was wider than the 167 counted: a walker's level-ups
+  reached all 231 warlock, 41 ocean, 10 dolphin and 34 shaman spells.
+- It did not name Nate's 2026-09-09 choice of category-in-name for Cloud Magic
+  (`apps/character-creator/docs/surveys/new-west.md`). **This does not reverse
+  it**: names still carry the category, which the Sky-Knight's exclusions depend
+  on, and the column beside them answers a different question.
+
+**`pending_power_picks.spell_traditions` was not in the proposal.** It is the
+only way the sheet and the server's claims can read an allowance frozen at grant
+time, the way `spell_levels` is. A row banked before `055` is NULL and keeps its
+old reach.
+
+**Measured afterwards, `--remote`, 2026-09-10:** all eight readbacks match; an
+independent read shows `055` recorded, the six counts above, 378 general
+invocations, four classes with the key. **A before/after run of this branch's
+real grant functions over production** found 22 live classes with a level-gated
+pick, every one losing only foreign traditions, and the four with an allowance
+keeping their own. The one it flagged, the Shifter, names a single warlock spell
+(`Air: Phantom Mount`) on its list - which stays reachable, because a named list
+is untouched.
+
+**The posture, with its qualification.** No stored character changed. But a
+character already holding a foreign-tradition spell would now be refused on its
+next validated write until the spell was removed - which is what the server
+refusing what the picker hides means. **Production holds 3 characters and none
+is on a gated class** (premise audit, 2026-09-10), so nothing is refused today.
+
+**Not tagged:** Wormwood's level-0 prayers and Underseas' two unprefixed
+Korallyte spells - the proposal names the prefixed families and the shaman
+spells. **Still medium:** whether each family is exclusive to its own casters
+per its book. The proposal's own way to raise that - read the Book of Magic and
+Underseas on who may learn them - was not done; nothing in the repo contradicts
+it, and every legitimate cross-tradition grant found goes through a named list.
+
+**Ongoing cost, as stated:** a spell import must set `tradition` -
+`.claude/skills/class-import/reference/frontmatter.md` now says so. **Filed from
+this audit: F59** (a dead `spells_per_level_from: true`, and two class notes
+claiming a list bounds a pick it does not).
+
 
 ### F58 - medium - `regression.mjs` kills the bootstrap build at 180 seconds, the build now takes longer, and the failure reads as "cannot build a database" with no reason
 
@@ -7934,3 +7998,49 @@ and 900 s). play-flow builds a small database (schema, seed, fixture) that has
 never approached its limit; environment.mjs's timeout is F13's own subject; the
 two scripts have budgets several times the build time. None has produced a
 misleading failure, and a finding for each would cost more than it returns.
+
+### F59 - low - `spells_per_level_from: true` is read by nothing, and two class notes say a list carries a pick that it does not
+
+**Found by `audit-premise-auditor` while premise-auditing F57, 2026-09-10; filed
+here rather than left inside F57's outcome note, per `audit-menu` -> *A
+deferral is work*.**
+
+**Two shapes, one defect: a class states how its level-up spells are bounded,
+and the app ignores it.**
+
+- **`spells_per_level_from: true`** is on exactly two live classes,
+  `ocean-wizard` and `nautyll-koral-shaper` (`node scripts/q.mjs "SELECT
+  class_id FROM imported_classes WHERE deleted_at IS NULL AND instr(markdown,
+  'spells_per_level_from: true') > 0"`, 2026-09-10). The reader wants an ARRAY:
+  `apps/character-creator/js/leveling.js:269` returns
+  `magic.spells_per_level_from` only when `Array.isArray(...)`, and only for a
+  schedule entry saying `from_list: true` - neither class has one.
+  `apps/character-creator/test/regression.mjs:1197` skips non-arrays too, so no
+  check fails. Both classes level up through `spells_per_level_levels:
+  "up_to_character_level"` alone, which is what F57 had to give an `ocean`
+  allowance to keep their own magic reachable.
+- **The Sky-Knight and the Cloudweaver** (`lyn-srial-sky-knight`,
+  `lyn-srial-cloudweaver`) carry notes saying their 50- and 45-name
+  `spells_from` *"carries the per-level pick"*. It does not: `spells_from`
+  bounds the STARTING pick (`leveling.js` `startingGroups`), and their level-up
+  grants carry no list and no cap, so each level's pick reaches every spell the
+  system holds. F57 gave both a `cloud` allowance; that keeps Cloud magic
+  reachable, and does not bound the pick to the book's categories.
+
+**What the books say is NOT measured.** Underseas printed 60 is cited by the
+Ocean Wizard's own note for *"one new spell per level equal or below his own
+experience level"* - whether that means from the Ocean list or from any spell
+was not checked against the page. New West printed 134-135 set the Lyn-Srial
+pair's per-level terms and were not re-read for this.
+
+**Proposal:** read Underseas printed 60 and New West printed 134-135. Where the
+book binds the per-level pick to a list, give the class a `spells_schedule` of
+`{ level: N, count: 1, from_list: "ocean" }` entries (or the Lyn-Srial
+categories' names) - the shape the Shifter and the Rifter already use, which
+leveling.js reads - and delete the dead `spells_per_level_from: true`. Where it
+does not, delete the dead key and correct the two notes. **Posture:** data and
+class notes only; no code, no new key.
+
+**Confidence: high that the key is dead and the notes are wrong** (the reader
+is quoted above); **low on what the books intend** until the three pages are
+read. **Ongoing cost:** none.

@@ -998,7 +998,12 @@ check('and none of them with ?mine=1',
   const auto = new Set((llw?.magic?.spells || []).map((n) => String(n).toLowerCase()));
   const usable = (s) => (!s.system || s.system === 'rifts' || s.system === 'both')
     && !auto.has(String(s.name).toLowerCase());
-  const inCap = catalogs.body.spells.filter((s) => usable(s) && allowedLevels.has(s.level));
+  // Legal means inside the level cap AND outside every spell tradition: the
+  // walker states no spell_traditions_allowed, so a warlock or ocean spell at
+  // level 1-4 is refused (BOOK-INGEST-AUDIT F57). Before F57 this pool was
+  // levels only, and its first two picks were warlock spells.
+  const inCap = catalogs.body.spells.filter((s) => usable(s) && allowedLevels.has(s.level) && !s.tradition);
+  const foreign = catalogs.body.spells.find((s) => usable(s) && allowedLevels.has(s.level) && s.tradition);
   const overCap = catalogs.body.spells.find((s) => usable(s) && s.level > Math.max(...allowedLevels));
   const spell = (s) => ({ type: 'spell', name: s.name, level: s.level, cost: s.ppe });
   const base = (extra) => ({
@@ -1024,6 +1029,15 @@ check('and none of them with ?mine=1',
   check('a spell the catalog does not hold is refused',
     fake.status === 422 && fake.body.violations?.some((v) => v.rule === 'power_unknown'),
     JSON.stringify(fake.body).slice(0, 250));
+
+  // The server refuses what the picker hides (BOOK-INGEST-AUDIT F57): a
+  // warlock spell inside the walker's levels is a tradition it does not allow.
+  check('the catalog carries a tagged spell inside the walker\'s levels', !!foreign, 'no tagged spell at levels 1-4');
+  const foreignPick = foreign && await api('POST', '/characters',
+    base({ name: 'Borrowing Caster', powers: [spell(foreign)] }));
+  check('a spell from a tradition the class does not allow is refused',
+    foreignPick?.status === 422 && foreignPick.body.violations?.some((v) => v.rule === 'power_tradition'),
+    JSON.stringify(foreignPick?.body).slice(0, 250));
 
   const legit = await api('POST', '/characters',
     base({ name: 'Honest Caster', powers: inCap.slice(0, Math.min(2, starting)).map(spell),

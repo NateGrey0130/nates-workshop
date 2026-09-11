@@ -214,10 +214,13 @@ Wolf` against RUE's `Eyes of the Wolf` (distance 2), `Contact Spirits` against
 `Dowsing` row exists for this one to collide with.
 
 **No name prefix.** These are leveled invocations, like the Book of Magic's, and
-no name collides. A prefix would not keep them out of other casters' pickers
-either: spells carry no category, so a class whose pool is a level range already
-admits every leveled spell from every tradition — `BOOK-INGEST-AUDIT` F57. The
-shaman grants are explicit name lists, which work unprefixed.
+no name collides. A prefix would not have kept them out of other casters'
+pickers either: spells carried no category, so a class whose pool was a level
+range admitted every leveled spell from every tradition. `BOOK-INGEST-AUDIT`
+F57 closed that on 2026-09-10 with `spells.tradition`: the 34 are tagged
+`shaman`, and a level-gated pick reaches them only where a class allows the
+tradition. The shaman grants are explicit name lists, which work unprefixed and
+are unaffected.
 
 ### gear, printed 203: diffed by name
 
@@ -335,6 +338,7 @@ unpriced rows with nothing said.
 | Robots and power armor | 189-202 | 6 vehicles, 60 locations, 32 weapons | #940 |
 
 **Still open, and none of it this book's to fix:** `BOOK-INGEST-AUDIT` F56
-(the totem table nine classes carry as prose), F57 (level-gated spell pools
-admit every tradition). F58 (the regression harness's local timeout) was taken
-in PR #942 - the timeout now says it is one; the 180 s limit stays.
+(the totem table nine classes carry as prose). F57 (level-gated spell pools
+admitted every tradition) was taken on 2026-09-10 - read its outcome note -
+and F58 (the regression harness's local timeout) in PR #942: the timeout now
+says it is one, and the 180 s limit stays.
