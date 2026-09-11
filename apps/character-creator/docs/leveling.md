@@ -580,7 +580,9 @@ than a category gate, so it replaces it** — exactly as a skill choice-group's
 catalog does not carry is **reported** under the picker rather than silently
 shrinking the list, the same reasoning the skill cross-reference uses. The tier
 gate still applies on top, so a book that names a power above the character's
-tier still says so.
+tier still says so. A level-up `powers_schedule` entry names its list the same
+way, as `from`, and it replaces that grant's categories just as `powers_from`
+replaces the class's (`BOOK-INGEST-AUDIT.md` F65).
 
 **Powers a class grants outright now reach the character.** `psionics.powers`
 and `magic.spells` name what the class simply knows — the Mind Melter's four

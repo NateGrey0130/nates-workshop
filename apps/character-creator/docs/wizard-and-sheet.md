@@ -446,7 +446,8 @@ grants are; only the two builders had to move.
   `zzz-wizard-the-seventh-spell-pick.sql`.
 - `magic.spells_from` is the twin of `psionics.powers_from`, which spells never
   had: a named list bounds the starting spell pick and replaces the spell-level
-  cap outright.
+  cap outright. A LEVEL-UP schedule entry may keep its cap beside its list by
+  stating `spell_levels` (`BOOK-INGEST-AUDIT.md` F61); a starting group may not.
 - The wizard keeps writing a single group into the flat `S.spells` / `S.psi` it
   always used, so no saved draft changes shape; only a class that splits its
   pick writes into the per-group `S.spellGroups` / `S.psiGroups`, keyed by group

@@ -231,7 +231,7 @@ are read. `STARTING_SPEC` there pairs the two blocks name for name:
 | `categories_allowed` | `spell_levels_allowed` | the class-wide gate |
 | `powers` | `spells` | granted outright, by name |
 | `powers_per_level` | `spells_per_level` | a flat number gained each level |
-| `powers_schedule` | `spells_schedule` | per-level grants, when a flat number will not do |
+| `powers_schedule` | `spells_schedule` | per-level grants, when a flat number will not do; an entry's `from` is a named list that REPLACES that grant's gate (F65) |
 
 Magic has two more that psionics has no equivalent for: **`spell_lists`**, a map
 of named lists a schedule entry draws from, and **`spells_per_level_levels`,**
@@ -278,7 +278,9 @@ magic:
   narrowing;
 - `from` (inline list) or `from_list` (`true` for `spells_per_level_from`, or a
   string naming an entry in `spell_lists`) is the tightest restriction there is
-  and replaces the level cap outright;
+  and replaces the level cap - unless the same entry also states `spell_levels`,
+  an array or `"up_to_character_level"`, which then applies beside the list. Use
+  it only where the book bounds a pick by both (`BOOK-INGEST-AUDIT` F61);
 - `note` is shown to the player at the pick. It is the home for a rule the
   catalog **cannot** enforce — spells carry no category, only a name, level and
   cost, so *"non-dimension related or control based"* has nothing to filter on.
@@ -440,8 +442,9 @@ because a totem grants SKILLS and a chosen ability never does: it grants the
 `related_skills_count` (F24) and `mdc_from_hp_sdc` (F64). The forty animals are rows in `totems`, not entries in
 the class, and `composeClass` folds the chosen row in: its skills are added to
 `occ_skills`, or +10% where the class already has one (printed 96), and its
-bonuses are summed. `from` must be `"animal"` - the Elemental Shaman picks an
-element instead and does not take the key. A class without it is untouched.
+bonuses are summed. `from` must be `"animal"` - the Elemental Shaman has an
+element instead, one class per element since F63, and does not take the key. A
+class without it is untouched.
 `BOOK-INGEST-AUDIT.md` F56.
 
 ## Prose and display

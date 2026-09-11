@@ -49,8 +49,9 @@ and printed 44 prints the Totem Warrior's P.P.E. as `!D4xlO+P.E.`.
 each token is read as the only dice expression it can be — `2D6x100`,
 `1D4x10`.
 
-**Cache `p046` (printed 45) is empty**, inside the Spirit Warrior's range.
-Render it during that class's batch rather than assuming it is a plate.
+**Cache `p046` (printed 45) is empty**, inside the Spirit Warrior's range. It
+was rendered during that class's batch (#937): a full-page plate, and the entry
+runs from printed 44 straight to 46.
 
 ## The book's authority tables
 
@@ -176,7 +177,7 @@ spirits are not recommended as player characters, and every spirit entry
 
 **Totems — `BOOK-INGEST-AUDIT` F56.** Nine of the eleven O.C.C.s must pick one
 of 40 totem animals (printed 96-105; first counted as 48), and the Elemental Shaman picks one of four
-elements instead. A totem grants skills and bonuses to the character, plus
+elements instead (one class per element since F63). A totem grants skills and bonuses to the character, plus
 giant-form powers to the Totem Warrior alone. Abilities can carry bonuses but
 not skills, and the table would have to be repeated in every class that uses
 it. Each class records the pick in prose and cites the finding.
@@ -291,6 +292,7 @@ What is deliberately left, with the reason for each:
 | 2026-09-10 | [#938](https://github.com/NateGrey0130/nates-workshop/pull/938) | Shamans 1 of 2, printed 48-62: **Plant, Animal, Mask and Healing Shaman** (classes 254 -> **258**). The first consumers of the #935 spells: Plant and Animal pick five of their own Shamanistic spells at level 1 and get the rest at level 2, then one a level from the book's list; the Healing Shaman's master psionics run a 33-entry schedule. Printed 51 is glyph-corrupt and its hit point multiplier was read off a render (P.E. x5). Three `CORE_SDC_BY_CLASS` entries at 1D6; the Plant Shaman states its own. Applied `--remote` before the PR. |
 | 2026-09-10 | [#939](https://github.com/NateGrey0130/nates-workshop/pull/939) | The last four classes: **Paradox, Elemental and Fetish Shaman** (printed 62-69) and the **Wendigo R.C.C.** (printed 126-128) (classes 258 -> **262**). **ALL TWELVE PLAYABLE CLASSES ARE IN.** The Paradox Shaman is granted the five Paradox spells and draws on a 35-spell list; the Rifts England temporal spells it may also take are not held (the Time Master precedent). The Elemental Shaman picks one element as its totem; its three starting Warlock spells are offered from all four elements with a note, because a pick cannot be tied to the element chosen. The Wendigo's M.D.C. line prints `P.E.xS` and was read off a render as P.E. x5. Three `CORE_SDC_BY_CLASS` entries at 1D6. Applied `--remote` before the PR. `regression.mjs` failed twice with "cannot build a database": the bootstrap build now takes 251 s and the harness kills it at 180 s - filed as `BOOK-INGEST-AUDIT` F58, not fixed here; the pins were verified by one run with the timeout raised in the working tree only. (The CI regression job builds the same database in 18 s and passed this PR unmodified - the 251 s is this machine, under load; see F58's correction.) |
 | 2026-09-10 | [#940](https://github.com/NateGrey0130/nates-workshop/pull/940) | Weapons of Note, printed 203: **13 gear rows** (gear 1395 -> **1408**) - the two Modern Indian bows and the NA-SW4's M.D.C. arrows, two new arrowheads, six bows and crossbows priced in credits, and two vibro weapons; seven arrowheads already held from Triax were not duplicated, and the smoke arrowhead's 80 credits went in `cost_note` beside Triax's 60. Vessels, printed 189-202: **6 vehicles, 60 M.D.C. locations, 32 weapon entries** (vehicles 158 -> **164**), none priced. **THE BOOK IS FULLY IMPORTED.** Applied `--remote` before the PR. |
+| 2026-09-11 | [#952](https://github.com/NateGrey0130/nates-workshop/pull/952) | `BOOK-INGEST-AUDIT` F63: the Elemental Shaman split into **Air, Earth, Fire and Water** classes (live classes 262 -> **265**: four added, the one-class row retired, not deleted). Each offers three picks from only its element's level-one spells and carries its 98% skill as a skill; the Fire Shaman prints none. Earth, Fire and Water are declared copies of Air. Four `CORE_SDC_BY_CLASS` entries at 1D6. Applied `--remote` before the PR. |
 
 ### What remains
 

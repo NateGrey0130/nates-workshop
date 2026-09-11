@@ -670,6 +670,20 @@ section('Creation validation');
     const off = validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat, powers: [psi('Mend')] });
     return on.violations.length === 0 && off.violations.some((v) => v.rule === 'power_not_on_list');
   })());
+  // BOOK-INGEST-AUDIT F65: the same at level-up. A list on a schedule entry
+  // replaces that grant's categories, so a listed Super power fills it under a
+  // Sensitive gate - the Healing Shaman's eight, levels 3-12 - and an unlisted
+  // Healing power cannot. Nothing in the validator changed: it reads the grants
+  // powerGrantsFor builds, which used to drop the list.
+  check('a level-up grant\'s named list replaces its category gate, both ways', (() => {
+    const cls2 = { ...vCls, psionics: { type: 'major', powers_starting: 1, categories_allowed: ['Sensitive'],
+      powers_schedule: [{ level: 3, count: 1, from: ['Crush'] }] } };
+    const at3 = (names) => validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat,
+      character: { level: 3 }, powers: names.map(psi) });
+    const on = at3(['See', 'Crush']);
+    const off = at3(['See', 'Mend']);
+    return on.violations.length === 0 && off.violations.some((v) => v.rule === 'power_category');
+  })());
   // The starting pick used to be ONE count and ONE gate, so a spell pick could
   // not be bounded by a name at all and a split pick had to be flattened into
   // its widest gate - which is how the Delphi Juicer came to allow four Super
@@ -1503,6 +1517,56 @@ section('Per-level spells and psionics');
   check('and the counts are the varying ones, not a flat rule',
     JSON.stringify(mysticGrants.grants.map((g) => g.count)) === '[4,3,2,2,2]',
     JSON.stringify(mysticGrants.grants.map((g) => g.count)));
+
+  // BOOK-INGEST-AUDIT F61: a list-bound entry may ALSO keep a level cap, by
+  // saying so. Three Spirit West shamans' books cap their list picks at the
+  // character's own level; the Shifter's and the Lyn-Srial's do not, so the cap
+  // is opt-in and a list that asks for none stays uncapped.
+  {
+    const books = ['Spell One', 'Spell Three', 'Spell Five'];
+    const shaman = { magic: { spell_lists: { B: books }, spells_schedule: [
+      { level: 2, count: 1, from_list: 'B' },
+      { level: 3, count: 1, from_list: 'B', spell_levels: 'up_to_character_level' },
+      { level: 4, count: 1, from_list: 'B', spell_levels: [1, 2] }] } };
+    check('a list entry asking for the character-level cap gets it',
+      JSON.stringify(spellLevelsForGrant(shaman, 3)) === '[1,2,3]', JSON.stringify(spellLevelsForGrant(shaman, 3)));
+    check('a list entry asking for nothing stays uncapped', spellLevelsForGrant(shaman, 2) === null);
+    check('and an explicit array beside a list is its cap too',
+      JSON.stringify(spellLevelsForGrant(shaman, 4)) === '[1,2]');
+    const listGrants = spellGrantsFor(shaman, 1, 4).grants;
+    check('a from_list grant carries its resolved list, so the sheet has one to offer',
+      listGrants.length === 3 && listGrants.every((g) => Array.isArray(g.from) && g.from.length === 3),
+      JSON.stringify(listGrants.map((g) => g.from)));
+
+    // The create validator: a spell over its list's cap is refused, one inside
+    // it is not, and a list that asks for no cap still takes anything on it.
+    const capped = { magic: { spell_lists: { B: books }, spells_schedule: [
+      { level: 2, count: 1, from_list: 'B', spell_levels: 'up_to_character_level' },
+      { level: 3, count: 1, from_list: 'B', spell_levels: 'up_to_character_level' }] } };
+    const spellRows = { spell: new Map([['spell one', { name: 'Spell One', level: 1 }],
+      ['spell three', { name: 'Spell Three', level: 3 }], ['spell five', { name: 'Spell Five', level: 5 }]]),
+      psionic: new Map() };
+    const capRule = (cls, level, name) => validateCharacter({ character: { level }, cls, skills: [],
+      attributes: {}, powers: [{ type: 'spell', name }], powerCatalog: spellRows })
+      .violations.filter((v) => v.rule === 'power_level_cap');
+    check('a spell over its list\'s cap is refused', capRule(capped, 3, 'Spell Five').length > 0);
+    check('one inside the cap is not', capRule(capped, 3, 'Spell Three').length === 0);
+    check('and a list asking for no cap still takes anything on it', capRule(shaman, 2, 'Spell Five').length === 0);
+
+    // The wizard and the sheet cannot share the filter - the sheet is a classic
+    // script - so their shapes are pinned: a list AND its cap, both.
+    const appText = readFileSync(join(appDir, 'app.js'), 'utf8');
+    const sheetText = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    check('the wizard\'s level-up picker applies a list and its cap together',
+      /named \? \(named\.has\(String\(sp\.name\)\.toLowerCase\(\)\) && \(!levels \|\| levels\.includes\(sp\.level\)\)\)/.test(appText));
+    check('so does the sheet\'s live level-up picker',
+      /named \? \(named\.has\(String\(x\.name\)\.toLowerCase\(\)\) && \(!levels \|\| levels\.includes\(x\.level\)\)\)/.test(sheetText));
+    check('and its banked-pick panel',
+      /named \? \(named\.has\(String\(x\.name\)\.toLowerCase\(\)\)\s*&& \(!g\.spell_levels \|\| g\.spell_levels\.includes\(x\.level\)\)\)/.test(sheetText));
+    check('and the sheet\'s copy of the cap rule knows the string and from_list',
+      /entry\.spell_levels === 'up_to_character_level'/.test(sheetText)
+      && /entry\.from_list\)+ return null/.test(sheetText));
+  }
   check('totalling what the book adds up to', mysticGrants.total === 13);
 
   // An explicit list is honoured, and a class stating neither falls back.
@@ -6315,6 +6379,30 @@ section('Power grants');
   const psi = powerGrantsFor({ psionics: { type: 'major', powers_per_level: 1 } }, 1, 3);
   check('psionic grants carry no spell cap',
     psi.length === 2 && psi.every((g) => g.kind === 'psionic' && g.spell_levels === null));
+
+  // A level-up psionic grant drawn from a NAMED LIST (BOOK-INGEST-AUDIT F65).
+  // perLevelGrants carried the list; powerGrantsFor wrote `from: null` over
+  // it, so the claim check, the validator and both sheet pickers saw only the
+  // category gate - which refuses every listed Super power the Healing Shaman
+  // and Fetish Shaman are granted by name. The list now rides, and replaces
+  // the grant's categories, as a starting group's does in startingGroups.
+  const listed = powerGrantsFor({ psionics: { type: 'major', categories_allowed: ['Sensitive'],
+    powers_schedule: [{ level: 3, count: 1, from: ['Crush'] }, { level: 4, count: 1, categories: ['Healing'] }] } }, 1, 4);
+  check('a psionic grant from a named list carries the list',
+    JSON.stringify(listed[0]?.from) === '["Crush"]', JSON.stringify(listed));
+  check('and drops the category gate the list replaces', listed.length === 2 && listed[0].categories === null);
+  check('while a grant with no list keeps its own categories and no list',
+    listed[1]?.from == null && JSON.stringify(listed[1]?.categories) === '["Healing"]', JSON.stringify(listed[1]));
+
+  // The two readers that cannot import the grant builder read `from` off the
+  // grant: the wizard's Advancement pool and the sheet's two pickers.
+  const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+  const sheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  check('the wizard hands a psionic grant\'s list to its pool', /advPsiPool\(cats, g\.from\)/.test(appSrc));
+  check('and the pool offers only the list when there is one',
+    /function advPsiPool\(cats = null, from = null\)/.test(appSrc));
+  check('both sheet pickers read a list for psionic grants as well as spells',
+    (sheetSrc.match(/const named = Array\.isArray\(g\.from\) && g\.from\.length/g) || []).length === 2);
 
   // Banking consumes per grant, not from one pool. Spending both level-4 spells
   // must not leave the level-5 grant looking half spent.
