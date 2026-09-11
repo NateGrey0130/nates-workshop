@@ -706,10 +706,6 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '054-campaign-rest-rates.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('campaigns') WHERE name = 'rest_rates');
 INSERT OR IGNORE INTO schema_migrations (filename)
-SELECT '055-spell-tradition.sql'
-WHERE EXISTS (SELECT 1 FROM pragma_table_info('spells') WHERE name = 'tradition')
-  AND EXISTS (SELECT 1 FROM pragma_table_info('pending_power_picks') WHERE name = 'spell_traditions');
-INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '056-totems.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'totems')
   AND EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'totem');
@@ -1203,3 +1199,14 @@ WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'vehic
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '049-spell-same-spell-as.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('spells') WHERE name = 'same_spell_as');
+
+-- 055 adds a column to `spells` as 049 does, so its row lives here, AFTER the
+-- `spells` CREATE, for the same reason. It first sat beside 054's in the block
+-- above, where on a single pass `spells` does not exist yet: the guard found no
+-- column and a database built from this file alone never recorded 055 - the
+-- opposite lie from an unguarded row, and one that makes the migration fail
+-- with "duplicate column name" if anyone then runs it.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '055-spell-tradition.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('spells') WHERE name = 'tradition')
+  AND EXISTS (SELECT 1 FROM pragma_table_info('pending_power_picks') WHERE name = 'spell_traditions');
