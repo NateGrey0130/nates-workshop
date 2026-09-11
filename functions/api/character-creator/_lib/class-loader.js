@@ -41,6 +41,25 @@ export async function loadCharacterClass(env, requestUrl, character) {
   // Loaded here so the validator and the level-up diff see the same totals the
   // sheet does; they disagreeing is the class of bug composeClass() exists for.
   const skillRows = await loadSkillBonuses(env, character);
-  return composeClass({ rcc, occ, skillRows,
+  const totem = await loadTotem(env, character.totem);
+  return composeClass({ rcc, occ, skillRows, totem,
     character: { ...character, class_variant: null, occ_class_variant: null } });
+}
+
+// A character's totem row (BOOK-INGEST-AUDIT.md F56), or null. Looked up here
+// because composeClass does no I/O; a slug the catalog no longer has comes back
+// null, and the validator reports that as `totem_unknown`.
+export async function loadTotem(env, slug) {
+  if (!slug) return null;
+  return (await env.DB.prepare(
+    'SELECT slug, name, skills, bonuses, bonus_note, powers FROM totems WHERE slug = ?'
+  ).bind(String(slug).toLowerCase()).first()) ?? null;
+}
+
+// Every totem by slug, for a caller composing many characters in one request.
+export async function loadTotems(env) {
+  const { results } = await env.DB.prepare(
+    'SELECT slug, name, skills, bonuses, bonus_note, powers FROM totems'
+  ).all();
+  return new Map((results || []).map((t) => [String(t.slug).toLowerCase(), t]));
 }

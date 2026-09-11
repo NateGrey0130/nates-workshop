@@ -22,12 +22,15 @@
 //             usable instead of silently rewriting it
 //   systems   the skills.systems JSON array — NULL/absent means "both systems"
 //   kv        a flat JSON object of arbitrary keys, e.g. gear.stats
+//   bonuses   a class-shaped `bonuses` block, through validateBonuses. Flat
+//             numbers only, unless the field says `flatOnly: false`
+//   skill_list an `occ_skills`-shaped JSON list, through validateSkillEntries
 //
 // `blankAs` mirrors a NOT NULL DEFAULT in the schema. Several numeric columns
 // are NOT NULL DEFAULT 0, so coercing an empty form field to NULL fails the
 // insert. Where the column cannot hold NULL, say what empty means instead.
 
-import { validateBonuses } from './parser.js';
+import { validateBonuses, validateSkillEntries } from './parser.js';
 
 export const CATALOGS = {
   skills: {
@@ -265,6 +268,40 @@ export const CATALOGS = {
       { name: 'source_book', label: 'Source book', type: 'text' },
     ],
   },
+
+  // Totem animals, Spirit West printed 96-105 (BOOK-INGEST-AUDIT.md F56). One
+  // row per animal, shared by every class whose frontmatter says `totem:`, so
+  // the forty entries live once rather than written into nine classes.
+  //
+  // NO `MERGE_REFS` ENTRY, for the reason vehicles gives above. And no redirect
+  // either: `characters.totem` holds a slug, so RENAMING one orphans every
+  // character holding it - the validator then says so as `totem_unknown`
+  // rather than the totem silently granting nothing.
+  totems: {
+    table: 'totems',
+    label: 'Totems',
+    displayField: 'name',
+    uniqueField: 'slug',
+    hasSource: false,
+    fields: [
+      { name: 'name', label: 'Name', type: 'text', required: true },
+      { name: 'slug', label: 'Slug', type: 'text', required: true,
+        help: 'What characters.totem stores. Renaming it orphans every character holding the old one.' },
+      { name: 'skills', label: 'Skills', type: 'skill_list',
+        help: 'JSON, shaped like occ_skills: [{"name":"Swimming","bonus":10},{"name":"Hunting"}]. A bonus '
+          + 'adds to the catalog base. Where the O.C.C. already has the skill, printed 96 gives +10% instead, '
+          + 'and composition does that - do not write it here.' },
+      { name: 'bonuses', label: 'Bonuses', type: 'bonuses', flatOnly: false,
+        help: 'JSON, a class bonuses block. Dice and pools are allowed, since these apply at creation the '
+          + 'way a class\'s do: {"attributes":{"PS":"1d4"},"pools":{"sdc":15},"saves":{"horror_factor":2}}' },
+      { name: 'bonus_note', label: 'Bonus note', type: 'longtext',
+        help: 'What the block cannot hold - "rarely surprised", "+2 to dodge underwater".' },
+      { name: 'powers', label: 'Totem Warrior powers', type: 'longtext',
+        help: 'Giant animal form only. Shown only by a class whose key says powers: true.' },
+      { name: 'description', label: 'Traits', type: 'longtext' },
+      { name: 'source_book', label: 'Source book', type: 'text' },
+    ],
+  },
 };
 
 export const CATALOG_KEYS = Object.keys(CATALOGS);
@@ -338,9 +375,26 @@ export function coerceField(field, raw) {
       // Warnings are dropped deliberately - "PS: 0 will do nothing" is worth
       // saying about a class file someone is writing by hand, and is noise in a
       // catalog form where the field is optional anyway.
-      validateBonuses(obj, errors, [], { flatOnly: true });
+      // Flat-only by default because a SKILL's bonuses are re-read on every
+      // render. A totem's apply at creation the way a class's do, dice and
+      // pools included, so its field opts out (BOOK-INGEST-AUDIT.md F56).
+      validateBonuses(obj, errors, [], { flatOnly: field.flatOnly !== false });
       if (errors.length) return { error: `${field.label}: ${errors[0]}` };
       return { value: JSON.stringify(obj) };
+    }
+    case 'skill_list': {
+      // Validated by the parser's own validator, so a row cannot hold an entry
+      // composition would misread. NULL when blank, as bonuses is.
+      if (blank) return { value: null };
+      let list = raw;
+      if (typeof raw === 'string') {
+        try { list = JSON.parse(raw); } catch { return { error: `${field.label} is not valid JSON` }; }
+      }
+      if (!Array.isArray(list)) return { error: `${field.label} must be a list` };
+      const errors = [];
+      validateSkillEntries(field.label, list, errors, []);
+      if (errors.length) return { error: errors[0] };
+      return { value: JSON.stringify(list) };
     }
     case 'select': {
       if (blank) return { value: null };

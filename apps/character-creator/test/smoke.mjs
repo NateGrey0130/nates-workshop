@@ -377,7 +377,7 @@ import { composeClass } from '../js/compose.js';
 import { evalDice, fixedFormulaValue, rollAttribute, rollPoolFormula, rollQuantity,
          poolFormulaBounds, diceBounds, attributeCeiling,
          isAttributeExpr, isAbsentAttribute } from '../js/dice.js';
-import { validateMos } from '../js/parser.js';
+import { validateMos, validateTotem } from '../js/parser.js';
 import { skillBase, isBaseFormula } from '../js/skill-base.js';
 import { chunks, D1_MAX_BINDS, BIND_CHUNK } from '../../../functions/api/character-creator/_lib/sql-chunk.js';
 import { LANGUAGE_OTHER, LITERACY_OTHER, isFamilyName, isRepeatableRow,
@@ -3157,10 +3157,13 @@ section('Dice combat and save bonuses');
     /rolled_bonuses: \{ combat: rolled\.combat, saves: rolled\.saves \}/.test(appSrc));
   check('and the attribute bonuses are the summed ones too',
     /attribute_bonuses: rolled\.attributes/.test(appSrc));
-  check('rolledAll sums the race and the occupation',
-    /attributes: sumRolled\(S\.attrBonuses, S\.occAttrBonuses\)/.test(appSrc));
+  // A third half since BOOK-INGEST-AUDIT F56: the totem animal's dice roll on
+  // their own, and a sum that dropped them would lose the Bear's +1D4 P.S.
+  check('rolledAll sums the race, the occupation and the totem',
+    /attributes: sumRolled\(sumRolled\(S\.attrBonuses, S\.occAttrBonuses\), S\.totemAttrBonuses\)/.test(appSrc));
   check('and keeps them across a draft',
-    /'rolledBonuses'/.test(appSrc) && /'occRolledBonuses'/.test(appSrc));
+    /'rolledBonuses'/.test(appSrc) && /'occRolledBonuses'/.test(appSrc)
+    && /'totemRolledBonuses'/.test(appSrc));
 }
 
 // ---------- 1c25. Per-category skill restrictions ----------
@@ -4515,6 +4518,87 @@ section('MOS');
   validateMos(badGroup, gErrs, []);
   check('an over-asking choice group inside an MOS fails like one in occ_skills',
     gErrs.some((e) => /asks for 3 of only 2/.test(e)), gErrs.join('; '));
+}
+
+section('Totem animals (BOOK-INGEST-AUDIT F56)');
+{
+  const md = (extra) => ['---', 'id: t', 'name: T', 'system: rifts', 'source_book: b', 'category: occ',
+    ...extra, 'skills:', '  occ_skills:', '    - { name: "Swimming", base: 50, per_level: 5 }',
+    '    - { name: "Math: Basic", bonus: 10 }', '---', '', '## Lore', '', 'x', ''].join(String.fromCharCode(10));
+  const plain = parseClassMarkdown(md(['totem: { from: "animal" }']));
+  check('the totem key parses', plain.ok && plain.data.totem?.from === 'animal', plain.errors.join('; '));
+  const tw = parseClassMarkdown(md(['totem: { from: "animal", powers: true }']));
+  check('and so does its powers flag', tw.ok && tw.data.totem?.powers === true, tw.errors.join('; '));
+
+  // A row as the catalog stores it: skills and bonuses are JSON TEXT.
+  const row = { slug: 'otter', name: 'Otter',
+    skills: JSON.stringify([{ name: 'Swimming', bonus: 15 }, { name: 'Prowl', bonus: 5 }]),
+    bonuses: JSON.stringify({ attributes: { IQ: 1, PS: '1d4' }, pools: { sdc: 10 } }),
+    bonus_note: 'An excellent diver.', powers: 'Holds its breath.' };
+  const entries = (c) => c.skills.occ_skills || [];
+  const find = (c, n) => entries(c).filter((s) => s.name === n);
+  const got = composeClass({ rcc: plain.data, character: { totem: 'otter' }, totem: row });
+  check('a skill the class lacks is appended with the totem\'s bonus',
+    find(got, 'Prowl').length === 1 && find(got, 'Prowl')[0].bonus === 5, JSON.stringify(entries(got)));
+  // Printed 96: "If they are included in O.C.C. skills, the player gets a
+  // special bonus of +10%" - held once, raised ten, and the totem's own +15 is
+  // not stacked on top.
+  check('a skill the O.C.C. already has is held once and raised +10%',
+    find(got, 'Swimming').length === 1 && find(got, 'Swimming')[0].base === 60,
+    JSON.stringify(find(got, 'Swimming')));
+  const onBonus = composeClass({ rcc: plain.data, character: { totem: 'otter' },
+    totem: { ...row, skills: JSON.stringify([{ name: 'Math: Basic', bonus: 5 }]) } });
+  check('and an entry stated as a bonus gains the ten on its bonus',
+    find(onBonus, 'Math: Basic')[0]?.bonus === 20, JSON.stringify(find(onBonus, 'Math: Basic')));
+  check('its bonuses are summed in, dice and pools included',
+    got.bonuses?.attributes?.IQ === 1 && got.bonuses?.attributes?.PS === '1d4' && got.bonuses?.pools?.sdc === 10,
+    JSON.stringify(got.bonuses));
+  check('the choice is recorded for the sheet',
+    got.totem_chosen?.name === 'Otter' && got.totem_chosen.bonus_note === 'An excellent diver.');
+  check('and the powers stay hidden from a class without powers: true', got.totem_chosen?.powers === null);
+  const twGot = composeClass({ rcc: tw.data, character: { totem: 'otter' }, totem: row });
+  check('while the Totem Warrior sees them', twGot.totem_chosen?.powers === 'Holds its breath.');
+
+  const noKey = parseClassMarkdown(md([])).data;
+  const untouched = composeClass({ rcc: noKey, character: { totem: 'otter' }, totem: row });
+  check('a class without the key ignores the row entirely',
+    !untouched.totem_chosen && !find(untouched, 'Prowl').length && !untouched.bonuses?.pools);
+  check('a row for some other slug is ignored',
+    !composeClass({ rcc: plain.data, character: { totem: 'bear' }, totem: row }).totem_chosen);
+  check('and no row at all leaves the class as it was',
+    !composeClass({ rcc: plain.data, character: { totem: 'otter' } }).totem_chosen);
+  // combineClasses rebuilds from the race spread, so the O.C.C.'s key has to be
+  // carried or a D-Bee Tribal Warrior silently loses the pick.
+  const asOcc = composeClass({ rcc: { id: 'r', name: 'R', system: 'rifts', category: 'rcc' },
+    occ: plain.data, character: { totem: 'otter' }, totem: row });
+  check('the key survives being merged with a racial class', asOcc.totem_chosen?.slug === 'otter');
+
+  const warn = (character, totem) => validateCharacter({ character, cls: composeClass({
+    rcc: plain.data, character, totem }), skills: [], attributes: {} });
+  const unchosen = warn({ level: 1 }, null);
+  check('none chosen is a warning, never a violation',
+    unchosen.warnings.some((w) => w.rule === 'totem_unchosen')
+    && !unchosen.violations.some((v) => /totem/.test(v.rule)));
+  check('a slug the catalog no longer has is named',
+    warn({ level: 1, totem: 'dodo' }, null).warnings.some((w) => w.rule === 'totem_unknown' && w.totem === 'dodo'));
+  check('and a resolved one says nothing',
+    !warn({ level: 1, totem: 'otter' }, row).warnings.some((w) => /^totem_/.test(w.rule)));
+
+  const e1 = [];
+  validateTotem({ from: 'element' }, e1, []);
+  check('from must say animal', e1.some((e) => /totem\.from must be "animal"/.test(e)), e1.join('; '));
+  const e2 = [];
+  validateTotem({ from: 'animal', powers: 'yes' }, e2, []);
+  check('powers is a flag', e2.some((e) => /powers is a flag/.test(e)), e2.join('; '));
+
+  const tf = (n) => CATALOGS.totems.fields.find((f) => f.name === n);
+  check('the totems catalog accepts dice and pools in its bonuses',
+    !coerceField(tf('bonuses'), '{"attributes":{"PS":"1d4"},"pools":{"sdc":15}}').error);
+  check('and refuses a skill list that is not a list', !!coerceField(tf('skills'), '{"name":"X"}').error);
+  check('or one composition would misread',
+    !!coerceField(tf('skills'), '[{"name":"X","base":5,"bonus":5}]').error);
+  check('while a skill\'s own bonuses stay flat-only',
+    !!coerceField(CATALOGS.skills.fields.find((f) => f.name === 'bonuses'), '{"attributes":{"PS":"1d4"}}').error);
 }
 
 section('Ability validation');

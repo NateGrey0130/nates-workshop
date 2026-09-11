@@ -183,7 +183,19 @@ function flash(text, isError) {
 // offers. A repeated pick shows what the second one bought — the books give a
 // second take a different meaning rather than a doubled one.
 function abilitiesTaken(cls) {
-  return `<div id="powers-block">${powersHtml(cls)}</div>`;
+  return `${totemBlockHtml(cls)}<div id="powers-block">${powersHtml(cls)}</div>`;
+}
+
+// The chosen totem animal (BOOK-INGEST-AUDIT.md F56): what its bonuses could not
+// say as numbers, and - for the Totem Warrior alone - its giant-form powers,
+// which compose.js leaves null on every other class.
+function totemBlockHtml(cls) {
+  const t = cls?.totem_chosen;
+  if (!t || (!t.powers && !t.bonus_note)) return '';
+  return `<h2 class="sub-h">Totem: ${escHtml(t.name)}</h2>
+    ${t.bonus_note ? `<p class="small">${escHtml(t.bonus_note)}</p>` : ''}
+    ${t.powers ? `<p class="small"><b>Totem Warrior powers</b>, giant animal form only:
+      ${escHtml(t.powers)}</p>` : ''}`;
 }
 
 // What the class simply HAS, as opposed to what was chosen — the Ley Line
@@ -2009,6 +2021,8 @@ function render() {
               specialties share no MOS skills at all. Shown beside the O.C.C.
               for that reason, and only when the class offers one. */''}
         ${cls.mos_chosen ? field('M.O.S.', escHtml(cls.mos_chosen.name)) : ''}
+        ${/* The totem animal, for the same reason (BOOK-INGEST-AUDIT.md F56). */''}
+        ${cls.totem_chosen ? field('Totem', escHtml(cls.totem_chosen.name)) : ''}
         ${field('Level', c.level)}
         ${field('Experience', `${c.xp} XP`)}
       </div>

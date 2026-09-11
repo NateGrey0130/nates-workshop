@@ -9,7 +9,7 @@ import { getUserEmail, unauthorized } from './_lib/auth.js';
 export async function onRequestGet({ request, env }) {
   if (!getUserEmail(request)) return unauthorized();
 
-  const [skills, spells, psionics, enchantments] = await Promise.all([
+  const [skills, spells, psionics, enchantments, totems] = await Promise.all([
     // source_book rides along in all three so the pickers can filter on it —
     // typing "rifts main" should narrow a list the same way a name does.
     // `bonuses` travels with the row so the wizard can apply what a skill grants
@@ -41,6 +41,11 @@ export async function onRequestGet({ request, env }) {
     // `bonuses` rides along for the same reason skills' does, so whatever shows
     // an enchanted weapon can say what it adds without a second request.
     env.DB.prepare('SELECT slug, name, applies_to, cost, cost_note, max_per_item, limits, bonuses, description, system, source_book FROM enchantments ORDER BY applies_to, name').all(),
+    // The animals a class with `totem:` picks from (BOOK-INGEST-AUDIT.md F56).
+    // The WIZARD needs them: the pick is made mid-build, and it shows what each
+    // grants and folds the chosen row into the composed class. The sheet does
+    // not - the server composes the character it shows.
+    env.DB.prepare('SELECT slug, name, skills, bonuses, bonus_note, powers, description, source_book FROM totems ORDER BY name').all(),
   ]);
 
   const body = JSON.stringify({
@@ -56,6 +61,11 @@ export async function onRequestGet({ request, env }) {
     enchantments: enchantments.results.map((e) => ({
       ...e,
       bonuses: e.bonuses ? JSON.parse(e.bonuses) : undefined,
+    })),
+    totems: totems.results.map((t) => ({
+      ...t,
+      skills: t.skills ? JSON.parse(t.skills) : [],
+      bonuses: t.bonuses ? JSON.parse(t.bonuses) : undefined,
     })),
   });
 

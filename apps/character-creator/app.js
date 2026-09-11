@@ -88,7 +88,7 @@ const S = {
   // re-roll a number the player has already seen.
   raceCls: null,
   attrMethods: {}, attrs: {}, attrRolls: {},
-  related: [], secondary: [], groupPicks: {}, mos: null,
+  related: [], secondary: [], groupPicks: {}, mos: null, totem: null,
   // Starting-gear choices the class leaves open, and the slugs picked for each,
   // keyed by the entry's index in equipment_starting.
   gearChoices: [], gearPicks: {},
@@ -119,6 +119,7 @@ const S = {
   // from the race's — so switching occupation re-rolls its half and leaves the
   // race's alone. rolledAll() is the only thing that sees them summed.
   occAttrBonuses: {}, occRolledBonuses: { combat: {}, saves: {} },
+  totemAttrBonuses: {}, totemRolledBonuses: { combat: {}, saves: {} },
   // A character may start above level 1. Everything the levels earn is resolved
   // on the Advancement step, which exists only while this is above 1.
   level: 1,
@@ -220,9 +221,13 @@ const sumRolled = (a, b) => {
   return out;
 };
 const rolledAll = () => ({
-  attributes: sumRolled(S.attrBonuses, S.occAttrBonuses),
-  combat: sumRolled(S.rolledBonuses?.combat, S.occRolledBonuses?.combat),
-  saves: sumRolled(S.rolledBonuses?.saves, S.occRolledBonuses?.saves),
+  // And a third, the totem animal's (BOOK-INGEST-AUDIT.md F56), kept apart for
+  // the same reason: a different animal re-rolls only its own.
+  attributes: sumRolled(sumRolled(S.attrBonuses, S.occAttrBonuses), S.totemAttrBonuses),
+  combat: sumRolled(sumRolled(S.rolledBonuses?.combat, S.occRolledBonuses?.combat),
+    S.totemRolledBonuses?.combat),
+  saves: sumRolled(sumRolled(S.rolledBonuses?.saves, S.occRolledBonuses?.saves),
+    S.totemRolledBonuses?.saves),
 });
 
 // Everything one class states as dice, rolled once. A list arrives when a class
@@ -263,6 +268,17 @@ function rollDiceBonusesOf(cls) {
   return out;
 }
 
+// The totem's dice bonuses - the Bear's +1D4 P.S. - rolled from the ROW alone,
+// for rollOccBonuses' reason. S.raceCls never carries the totem, so the race
+// roll cannot count them a second time.
+function rollTotemBonuses() {
+  const row = S.cls?.totem ? totemRow() : null;
+  const bonuses = row?.bonuses && typeof row.bonuses === 'object' ? row.bonuses : null;
+  const r = bonuses ? rollDiceBonusesOf({ bonuses }) : null;
+  S.totemAttrBonuses = r ? r.attributes : {};
+  S.totemRolledBonuses = r ? { combat: r.combat, saves: r.saves } : { combat: {}, saves: {} };
+}
+
 function rollAttrBonuses(force = false) {
   // Idempotent unless forced. computePools() is called lazily whenever a later
   // step needs pools, and without this guard simply walking to Details silently
@@ -276,7 +292,7 @@ function rollAttrBonuses(force = false) {
   S.attrBonuses = r.attributes;
   S.rolledBonuses = { combat: r.combat, saves: r.saves };
   // Review's Reroll button re-rolls the whole character, occupation included.
-  if (force) rollOccBonuses();
+  if (force) { rollOccBonuses(); rollTotemBonuses(); }
 }
 
 // The occupation's dice bonuses, rolled from the occupation ALONE rather than
@@ -390,11 +406,11 @@ function quizScore(c) {
 // they are written down. Everything here is the build itself.
 const DRAFT_KEYS = [
   'step', 'system', 'classMode', 'quiz', 'variant', 'occ', 'occVariant', 'attrMethods', 'attrs',
-  'related', 'secondary', 'groupPicks', 'gearPicks', 'mos',
+  'related', 'secondary', 'groupPicks', 'gearPicks', 'mos', 'totem',
   'equipment', 'equipInit', 'charName', 'campaignId', 'newCampaign',
   'spells', 'psi', 'bio', 'pools', 'longLived', 'bioRolls',
   'psiRoll', 'psiShape', 'psiCategory', 'attrBonuses', 'rolledBonuses', 'abilities',
-  'occAttrBonuses', 'occRolledBonuses', 'minRerolls',
+  'occAttrBonuses', 'occRolledBonuses', 'totemAttrBonuses', 'totemRolledBonuses', 'minRerolls',
   'level', 'levelPools', 'levelSpells', 'levelPsi', 'levelPicks',
   'spellGroups', 'psiGroups',
 ];
@@ -916,7 +932,7 @@ function pickSystem(sys) {
   S.system = sys; S.step = ST.RACE; render();
 }
 function resetBuild() {
-  S.attrMethods = {}; S.attrs = {}; S.attrRolls = {}; S.related = []; S.secondary = []; S.groupPicks = {}; S.mos = null;
+  S.attrMethods = {}; S.attrs = {}; S.attrRolls = {}; S.related = []; S.secondary = []; S.groupPicks = {}; S.mos = null; S.totem = null;
   // Group indices belong to one class's occ_skills, so their folds do too.
   S.groupUi = {};
   // Chosen skill PROGRAMS, held by CATEGORY name rather than by skill
@@ -933,6 +949,7 @@ function resetBuild() {
   S.rolledBonuses = { combat: {}, saves: {} };
   S.raceCls = null; S.cls = null;
   S.occAttrBonuses = {}; S.occRolledBonuses = { combat: {}, saves: {} };
+  S.totemAttrBonuses = {}; S.totemRolledBonuses = { combat: {}, saves: {} };
   S.minRerolls = [];
   S.level = 1; S.levelPools = {}; S.levelSpells = {}; S.levelPsi = {}; S.levelPicks = {};
   S.spellGroups = {}; S.psiGroups = {};
@@ -1538,13 +1555,16 @@ function pickOcc(id) {
 // exactly the bug compose.js exists to prevent.
 function recompose() {
   const character = { class_variant: S.variant, occ_class_variant: S.occVariant,
-    abilities: S.abilities, mos: S.mos };
+    abilities: S.abilities, mos: S.mos, totem: S.totem };
   // The race half alone, kept because its dice bonuses were rolled off it and
   // must not be re-rolled when an occupation arrives.
   S.raceCls = composeClass({ rcc: S.rcc, occ: null, character });
   S.cls = composeClass({
     rcc: S.rcc,
     occ: S.occ ? S.classes.find((c) => c.id === S.occ) || null : null,
+    // The totem row here and NOT on S.raceCls above: the race half is what the
+    // race's dice roll from, and a totem's dice roll on their own.
+    totem: totemRow(),
     // No psychic tier here: the roll happens on the Powers step, and psiClass()
     // folds it in from there while a build is in progress.
     character,
@@ -1559,6 +1579,23 @@ function pickMos(id) {
   S.mos = String(S.mos || '').toLowerCase() === String(id).toLowerCase() ? null : id;
   S.groupPicks = {};
   recompose();
+  render();
+}
+
+// The chosen totem's catalog row, or null (BOOK-INGEST-AUDIT.md F56).
+function totemRow() {
+  return S.totem ? (S.totemCatalog || []).find((t) => t.slug === S.totem) || null : null;
+}
+
+// A totem replaces the last one, as an MOS does. Its dice re-roll with the
+// animal, and the pools are dropped so the next step that needs them rolls them
+// again with the new bonuses - the Turtle's +2D6 S.D.C. - down the lazy path
+// every later step already takes.
+function pickTotem(slug) {
+  S.totem = slug ? String(slug) : null;
+  recompose();
+  rollTotemBonuses();
+  S.pools = null;
   render();
 }
 
@@ -2311,6 +2348,42 @@ function renderSkills() {
         }).join('')}
       </div>
     </div>`;
+  // A totem animal (BOOK-INGEST-AUDIT.md F56), asked here beside the MOS because
+  // what it grants first is skills, and the list below shows them. A select, not
+  // forty buttons: UI-AUDIT F43 is what drawing every option in full costs.
+  const totemCfg = effective.totem;
+  const totemPick = totemRow();
+  const totemSkills = (t) => (Array.isArray(t?.skills) ? t.skills : [])
+    .map((x) => x.name + (x.bonus ? ` (+${x.bonus}%)` : '')).join(', ');
+  const totemBonuses = (b) => {
+    const out = [];
+    const plus = (v) => (typeof v === 'number' && v < 0 ? String(v) : `+${v}`);
+    for (const [k, v] of Object.entries(b?.attributes || {})) out.push(`${plus(v)} ${k}`);
+    for (const [k, v] of Object.entries(b?.pools || {})) out.push(`${plus(v)} ${k.toUpperCase()}`);
+    for (const [k, v] of Object.entries(b?.combat || {})) out.push(`${plus(v)} ${k.replace(/_/g, ' ')}`);
+    for (const [k, v] of Object.entries(b?.saves || {})) {
+      if (k !== 'other') out.push(`${plus(v)} vs ${k.replace(/_pct$/, '').replace(/_/g, ' ')}`);
+    }
+    for (const o of b?.saves?.other || []) out.push(`${plus(o.bonus)} ${o.label}`);
+    return out.join(', ');
+  };
+  const totemHtml = !totemCfg ? '' : `
+    <div class="block">
+      <h3>Totem animal</h3>
+      <div class="attr-note">${esc(totemCfg.note || 'Pick one. Its skills are added to the O.C.C. skills, '
+        + 'or +10% where the class already has one, and its bonuses apply for life.')}</div>
+      <select onchange="pickTotem(this.value)">
+        <option value=""${totemPick ? '' : ' selected'}>Choose a totem</option>
+        ${(S.totemCatalog || []).map((t) => `<option value="${esc(t.slug)}"${totemPick?.slug === t.slug
+          ? ' selected' : ''}>${esc(t.name)}</option>`).join('')}
+      </select>
+      ${!totemPick ? '' : `
+        <div class="attr-note"><b>Skills:</b> ${esc(totemSkills(totemPick) || 'none')}</div>
+        <div class="attr-note"><b>Bonuses:</b> ${esc(totemBonuses(totemPick.bonuses) || 'none')}</div>
+        ${totemPick.bonus_note ? `<div class="attr-note">${esc(totemPick.bonus_note)}</div>` : ''}
+        ${totemCfg.powers && totemPick.powers ? `<div class="attr-note"><b>Totem Warrior powers,</b>
+          giant animal form only: ${esc(totemPick.powers)}</div>` : ''}`}
+    </div>`;
   const relatedCfg = sk.occ_related_skills || { count: 0, categories: [] };
   const secondaryCfg = sk.secondary_skills || { count: 0 };
   const taken = takenNames();
@@ -2553,6 +2626,7 @@ function renderSkills() {
   <div class="panel">
     <h2>Skills <span class="muted small">— ${esc(S.cls.name)}</span></h2>
     ${mosHtml}
+    ${totemHtml}
     <h3>Class skills <span class="muted small">(automatic)</span></h3>
     ${occRows || '<p class="muted small">None listed.</p>'}
     ${programsHtml}
@@ -3793,6 +3867,7 @@ async function save() {
       occ_class_id: S.occ || undefined,
       occ_class_variant: S.occVariant || undefined,
       mos: S.mos || undefined,
+      totem: S.totem || undefined,
       psychic_tier: S.psiRoll?.tier || undefined,
       psychic_shape: S.psiRoll?.tier ? (S.psiShape || undefined) : undefined,
       // Both halves summed. Sending S.attrBonuses alone would drop every dice
@@ -3911,6 +3986,7 @@ async function boot(first = true) {
     _skillIndex = null;
     S.spellCatalog = catalogsRes.spells;
     S.psiCatalog = catalogsRes.psionics;
+    S.totemCatalog = catalogsRes.totems || [];
     S.items = itemsRes.items;
     S.itemRedirects = itemsRes.redirects || {};
     S.campaigns = campaignsRes.campaigns;
@@ -3978,7 +4054,7 @@ Object.assign(window, {
   // ST would be a ReferenceError on every Back button.
   S, ST, render, computePools, goStep, nextStep, prevStep, pickSystem, classMode, quizPick, pickClass,
   confirmRace, rerollForMinimum, setMethod, setAllMethod, doRoll, rollAll, manualSet, pbAdj,
-  setStartingLevel, rerollAdvancement, setLevelPick, pickMos,
+  setStartingLevel, rerollAdvancement, setLevelPick, pickMos, pickTotem,
   doPsiRoll, skipPsiRoll, setPsiShape, setPsiCategory,
   rollBio, rollBioAll, setLongLived,
   rmEquip, addCatalog, addCustom, setBio, save, startOver,

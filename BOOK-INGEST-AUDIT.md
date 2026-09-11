@@ -7781,6 +7781,91 @@ makes.
 declined general class inheritance and took only an invariant; this proposal
 does not re-open that - it shares a TABLE, not a class.
 
+**Taken, 2026-09-10 (PR #944).** As written: a `totems` catalog (migration
+056), the opt-in class key `totem: { from: "animal" }` with `powers: true` on
+the Totem Warrior, and a wizard pick that applies the chosen row's skills and
+bonuses. **Posture, said back:** a new opt-in key and a new table. A class
+without the key behaves exactly as before, the create endpoint stores no totem
+for a class that picks none, and nothing is refused - an unchosen totem and an
+unknown slug are warnings (`totem_unchosen`, `totem_unknown`), the MOS's two.
+
+**Five premises were wrong, and the premise audit found them before any code
+was written** (`audit-premise-auditor`, 2026-09-10):
+
+- **Forty, not 48.** The book's "Totem Animal Descriptions" run Alligator to
+  Wolf, forty headings on printed 96-105. Crow/Raven's traits sit after Dog on
+  printed 99 because of the two-column layout, and are one entry. So the drift
+  this finding sized is 360 definitions, not 432. Corrected in the survey (three
+  places) and the queue; the heading is left as filed and corrected here.
+- **The heading's claim that no choice a class can offer is able to carry
+  skills** <!-- claim-ok: quoting the premise this note corrects --> is false:
+  an MOS option carries them (`validateMos` and `applyMos`, `js/parser.js:273`
+  and `js/compose.js:596` as read 2026-09-10), and so does a variant. What is
+  true is narrower - an MOS lives inside one class, so nine classes sharing forty
+  options would repeat them, and that repetition is what the table answers.
+- **Two decisions the proposal did not name.** A list resolved from another
+  class existed once and was removed: `from_class`, PR #80, recorded in the
+  "shared ability lists" comment above `isAbilityChoice` in `js/parser.js` and
+  in `docs/leveling.md:376-381`. And F24 kept skills off abilities on purpose -
+  its comment in `applyAbilities` says an ability carrying a whole `skills`
+  block "would be the same power by another name" - with F50 the held sibling.
+  **This take argues past both:** the table belongs to no class, so nothing is
+  resolved from another class; and a totem is not an ability, it rides its own
+  key, so `ABILITY_GRANTS` is unchanged.
+- **The cost was overstated in one place and missing in another.** The proposal
+  named "`derive.js` and the sheet applying a third source of bonuses". Folding
+  in at composition leaves `derive.js` untouched: the row's bonuses are summed
+  into the composed class, which every reader already reads. What did need new
+  code is printed 96's +10% for a skill the O.C.C. already has (`applyTotem`),
+  which the proposal did not mention.
+- **Two smaller ones.** The Spirit Warrior states no totem pick, so it is not a
+  tenth. And `scripts/audit-citations.mjs --remote F56` lists nine classes, not
+  ten, because the Elemental Shaman cites "BOOK-INGEST-AUDIT F56" without `.md`;
+  its note says F56 does not apply to it, which stays true, and it is unchanged.
+
+**Readings this take made, so they can be disagreed with.**
+
+- Printed 96's +10% for a skill the O.C.C. already has **replaces** the totem's
+  own bonus for it rather than adding to it: the sentence gives the +10% as what
+  the character gets when the skill is already held. Swimming at 50% with a
+  Dolphin totem is 60%, not 80%.
+- Only a **named** O.C.C. skill counts, an MOS skill included since the totem
+  lands after the MOS. A choice group has no single skill to raise, and a
+  related or secondary pick is not an O.C.C. skill.
+- A plain totem skill carries no percentage and starts at the catalog base; 48
+  entries are bare that way, and the generator accepted only that one warning.
+- Tracking is Tracking (people), the row for the skill Rifts calls Tracking.
+  Owl's "lore: magic/geomancy and lines of power" is Lore: Magic, and
+  Rattlesnake's paired handguns and quickdraw are W.P. Paired Weapons and W.P.
+  Quick Draw, each noted on its entry.
+- "Save vs magic" is `spell_magic` plus `ritual_magic`, as 44 of the 73 classes
+  with a spell-magic save write it (production, 2026-09-10). Crow/Raven's
+  magical mind control and Opossum's paralysis are labelled `saves.other`.
+- Situational bonuses - "+2 to dodge underwater", "+1 to all combat rolls while
+  in the water", "+5% to medicine skills" - are `bonus_note` prose, not numbers.
+
+**Read from the ink, 2026-09-10.** Crawfish's shell is +1D4x10+10: the cache
+prints "+104x10+10", on a page `substituted_digits` does not list. Whale's
+"1000 feet (205 m)" is in the ink as well, the book's own slip, and is stored as
+printed with that said. Buffalo prints "Bonuses:" twice; the second is inside
+its Powers and giant-form only.
+
+**Found while doing it, not fixed here: F60.** The wizard rolls the race's and
+the occupation's dice apart, so a race's FLAT attribute bonus composed with an
+occupation's DICE bonus to the same attribute is in neither roll and the total
+drops it. A totem's dice reach the same path - a race's flat P.S. beside the
+Bear's +1D4 - and this take mirrors the occupation's roll rather than fixing it
+for the totem alone.
+
+**Corrected where the finding was cited:** the nine classes' "Animal Totem"
+ability and extraction notes, by `zzzzzzzzz-f56-totems.sql`; the survey's three
+counts and its still-open line; the queue paragraph.
+
+**Production, 2026-09-10, before merge:** migration 056 and the data script
+applied, all six readbacks at their wanted values - 40 totems, 40 cited to a
+printed page, 0 skill names missing from the catalog, 9 classes with the key, 1
+with powers, and 0 sentences still saying the pick is not stored.
+
 ### F57 - low - a spell pool stated as a LEVEL RANGE admits every tradition's leveled spells, and the Ley Line Walker is offered 167 warlock and ocean spells today
 
 **Found surveying `spirit-west`, 2026-09-10**, while deciding whether its 34
@@ -8044,3 +8129,54 @@ class notes only; no code, no new key.
 **Confidence: high that the key is dead and the notes are wrong** (the reader
 is quoted above); **low on what the books intend** until the three pages are
 read. **Ongoing cost:** none.
+
+### F60 - low - a race's FLAT attribute bonus is lost when an occupation grants DICE to the same attribute, because the wizard rolls the two halves apart
+
+**Found taking F56, 2026-09-10.**
+
+`combineClasses` merges a race's `PS: 2` and an occupation's `PS: "1d4"` into
+`[2, "1d4"]`, and `docs/race-and-occupation.md:282` is right that the merged
+list keeps both halves. What drops one is the ROLL. `classBonuses`
+(`js/derive.js:216-246`) counts a list by what was rolled for it, and
+`diceBonuses` (`js/derive.js:301-322`) collects a list's flat members precisely
+so that the roll includes them - its own comment says so. But the wizard never
+rolls the composed list. `rollAttrBonuses` rolls `S.raceCls`, whose `PS: 2` is a
+bare number `diceBonuses` does not collect, and `rollOccBonuses` rolls the
+occupation alone, which holds only the die (`app.js:265-295`, read 2026-09-10).
+The +2 is in neither roll, and the sheet reads the same stored sum.
+
+**Evidence, 2026-09-10.** A script against the real `composeClass` and `derive`:
+composed `[2,"1d4"]`, race half rolls `{}`, occupation half rolls
+`{"PS":"1d4"}`, and `classBonuses` with the die rolled as 3 returns **3**, not
+5. Reach, over production's 262 published classes: **19 same-system pairings**
+mix a flat and a dice bonus on one attribute - 18 on P.S., 1 on Spd - across 3
+races (lyn-srial-sky-knight, murder-wraith, warrior-of-valhalla) and 9
+occupations (body-fixer, fetish-shaman, maxi-killer, operator, phase-mystic,
+plant-shaman, sea-inquisitor, vagabond, wormspeaker). Production holds 3
+characters; whether any is one of these pairings was not checked. F56's totems
+with attribute dice (Bear, Blue-Jay, Horse, Rabbit) join the same path.
+
+**Proposal:** count a list's FLAT members in `classBonuses` itself and have
+`diceBonuses` stop collecting them, so a stored roll holds only dice results
+and a list's flat half is added at render - the rule a bare number already
+follows. **Check before scoping:** a stored `attribute_bonuses` that already
+includes a flat half would then count it twice. `docs/catalog.md:297-304`
+describes exactly that case on purpose - a skill's flat bonus rolled together
+with a class's dice - and is the counter-argument this proposal has to answer,
+either by rewriting such stored rolls once or by keeping the collection for
+that direction only.
+
+**Posture:** a correctness fix in the wizard and `derive.js`; no schema change.
+
+**Confidence: high on the defect**, which reproduces; **medium on the
+proposal**, and what would raise it is listing which stored rolls already carry
+a flat half.
+
+**Ongoing cost:** none once fixed; any rewrite of stored rolls is one-off.
+
+**Subject grep, 2026-09-10:** this file and `apps/character-creator/docs/` for
+`diceBonuses`, `rollOccBonuses`, `sumRolled`, "flat parts" and "mixed list".
+Three hits: `race-and-occupation.md:282`, true of the merge; `catalog.md:297-304`,
+the deliberate opposite direction above; and the finding closed by #905 at line
+7349 of this file, which established that dice roll at creation and did not
+weigh this case.

@@ -86,7 +86,7 @@ Counted by structure over all 210 cached pages, not by reading prose.
 | Bad Medicine | 70-71 | shaman rules, prose |
 | **Shaman spells** | **72-82** | index + **34 invocations**, levels 1-13 |
 | **Fetishes** | **82-94** | ~45 magic items in four tiers — minor, major, tattoo, legendary — **none priced** |
-| **Totems** | **94-105** | rules + **48 totem animals**, each with skills, bonuses and Totem Warrior powers |
+| **Totems** | **94-105** | rules + **40 totem animals**, each with skills, bonuses and Totem Warrior powers (first counted as 48; see F56's outcome note) |
 | Monsters | 106-127 | 11 entries; **one playable** (Wendigo, 126-128) |
 | Spirits | 128-171 | lesser and greater spirits, all NPC |
 | Gods | 172-188 | 7 entries, all NPC |
@@ -175,7 +175,7 @@ spirits are not recommended as player characters, and every spirit entry
 ## What the classes will need
 
 **Totems — `BOOK-INGEST-AUDIT` F56.** Nine of the eleven O.C.C.s must pick one
-of 48 totem animals (printed 96-105), and the Elemental Shaman picks one of four
+of 40 totem animals (printed 96-105; first counted as 48), and the Elemental Shaman picks one of four
 elements instead. A totem grants skills and bonuses to the character, plus
 giant-form powers to the Totem Warrior alone. Abilities can carry bonuses but
 not skills, and the table would have to be repeated in every class that uses
@@ -268,7 +268,9 @@ and every one of the 61 carries a `cost_note`.
 
 What is deliberately left, with the reason for each:
 
-- **The 48 totems as catalog rows** — F56; each class carries the pick in prose.
+- **The totems as catalog rows** — left at import and filed as F56, which was
+  taken on 2026-09-10: the forty are rows in `totems`, and the nine classes
+  carry the `totem` key.
 - **The Kachina Dancer** — a role on top of an O.C.C., not an O.C.C.
 - **Every NPC monster, spirit and god, printed 106-188** — the book tags each
   one NPC.
@@ -337,8 +339,8 @@ unpriced rows with nothing said.
 | Weapons of Note | 203 | 13 | #940 |
 | Robots and power armor | 189-202 | 6 vehicles, 60 locations, 32 weapons | #940 |
 
-**Still open, and none of it this book's to fix:** `BOOK-INGEST-AUDIT` F56
-(the totem table nine classes carry as prose). F57 (level-gated spell pools
-admitted every tradition) was taken on 2026-09-10 - read its outcome note -
-and F58 (the regression harness's local timeout) in PR #942: the timeout now
-says it is one, and the 180 s limit stays.
+**Nothing is still open.** `BOOK-INGEST-AUDIT` F56 (the totem table nine
+classes carried as prose), F57 (level-gated spell pools admitted every
+tradition) and F58 (the regression harness's local timeout) were all taken on
+2026-09-10 - PRs #944, #943 and #942 - and F59 and F60, filed while taking
+them, are their own findings. Read the outcome notes.

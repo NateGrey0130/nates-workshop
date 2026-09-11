@@ -609,15 +609,77 @@ function applyMos(cls, mosId) {
   };
 }
 
+// A totem animal, folded into a class that picks one (BOOK-INGEST-AUDIT.md
+// F56). Spirit West printed 96 says what one grants: skills "in addition to
+// O.C.C. skills", with "a special bonus of +10%" where the O.C.C. already has
+// the skill; bonuses "cumulative with all bonuses from O.C.C., attributes, and
+// physical skills"; and powers that only the Totem Warrior can use, in giant
+// animal form.
+//
+// The ROW comes from the `totems` catalog and is handed in, because this module
+// does no I/O. Like applyMos it fires only on a class that declares the choice,
+// so a class without `totem:` is untouched whatever the character holds.
+//
+// The +10% lands on a NAMED O.C.C. skill only. A choice group has no single
+// skill to raise, and a related or secondary pick is not an O.C.C. skill. It
+// REPLACES the totem's own bonus for that skill rather than adding to it: the
+// sentence gives the +10% as what the character gets when the skill is
+// already held, and nothing grants the skill twice.
+function applyTotem(cls, row) {
+  if (!cls?.totem || !row) return cls;
+  const parse = (v) => {
+    if (typeof v !== 'string') return v ?? null;
+    try { return JSON.parse(v); } catch { return null; }
+  };
+  const skills = Array.isArray(parse(row.skills)) ? parse(row.skills) : [];
+  const bonuses = parse(row.bonuses);
+  const occ = [...(cls.skills?.occ_skills || [])];
+  const at = new Map();
+  occ.forEach((s, i) => { if (s?.name) at.set(String(s.name).trim().toLowerCase(), i); });
+  const added = [];
+  const raised = [];
+  for (const s of skills) {
+    if (!s?.name) continue;
+    const key = String(s.name).trim().toLowerCase();
+    const i = at.get(key);
+    if (i === undefined) {
+      occ.push({ ...s });
+      at.set(key, occ.length - 1);
+      added.push(s.name);
+      continue;
+    }
+    const have = occ[i];
+    occ[i] = typeof have.base === 'number'
+      ? { ...have, base: have.base + 10 }
+      : { ...have, bonus: (have.bonus || 0) + 10 };
+    raised.push(have.name);
+  }
+  return {
+    ...cls,
+    skills: { ...(cls.skills || {}), occ_skills: occ },
+    bonuses: bonuses && typeof bonuses === 'object' ? sumBonusGroups(cls.bonuses, bonuses) : cls.bonuses,
+    // What was chosen, for the sheet. Powers only for the class that can USE
+    // them - printed 96 says only the Totem Warrior can, and only as a giant
+    // animal - so every other class's sheet never shows them.
+    totem_chosen: {
+      slug: row.slug, name: row.name, skills_added: added, skills_raised: raised,
+      bonus_note: row.bonus_note || null,
+      powers: cls.totem.powers === true ? (row.powers || null) : null,
+    },
+  };
+}
+
 // `rcc` and `occ` are raw parsed classes, before any variant is applied.
 // `character` supplies class_variant, occ_class_variant, and the rolled psychic
 // tier; a plain object works, which is what the wizard passes mid-build.
+// `totem` is the character's `totems` row, resolved by the caller. Omitted, the
+// totem simply does not apply - the same contract `skillRows` has.
 //
 // Returns null only when there is no race and no occupation. A missing O.C.C.
 // is not fatal: the race alone is still a usable character, and refusing to
 // resolve because one of two classes was retired would be worse than showing
 // the half that works.
-export function composeClass({ rcc, occ = null, character = {}, skillRows = null } = {}) {
+export function composeClass({ rcc, occ = null, character = {}, skillRows = null, totem = null } = {}) {
   if (!rcc && !occ) return null;
 
   const race = applyVariant(rcc, character.class_variant);
@@ -628,9 +690,15 @@ export function composeClass({ rcc, occ = null, character = {}, skillRows = null
   // MOS lands on the COMPOSED class, not on the occupation slot. A character
   // with no racial class carries their O.C.C. in the `rcc` slot, so attaching
   // it to `occ` fired for a D-Bee Technical Officer and not for a human one.
-  const composed = applyMos(
+  // The totem lands straight after, on the composed class for the same reason,
+  // and after the MOS so printed 96's +10% sees an MOS skill as the O.C.C. skill
+  // it is. The row counts only when it is the one the character holds: a row for
+  // any other slug leaves the class untouched.
+  const totemRow = totem && character.totem
+    && String(totem.slug).toLowerCase() === String(character.totem).toLowerCase() ? totem : null;
+  const composed = applyTotem(applyMos(
     withCorePools(job ? combineClasses(race, job) : race, job?.id ?? race?.id),
-    character.mos);
+    character.mos), totemRow);
 
   // Abilities are chosen FOR the character rather than contributed by either
   // half, so they land after the two classes are one — and before any rolled

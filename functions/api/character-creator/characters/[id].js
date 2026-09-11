@@ -12,6 +12,7 @@ import { getStored } from '../_lib/class-store.js';
 import { parseClassMarkdown } from '../../../../apps/character-creator/js/parser.js';
 import { composeClass } from '../../../../apps/character-creator/js/compose.js';
 import { loadSkillBonuses } from '../_lib/skill-bonuses.js';
+import { loadTotem } from '../_lib/class-loader.js';
 import { skillLevelNotes, skillConditionalBonuses } from '../../../../apps/character-creator/js/parser.js';
 import { xpTableFor, levelForXp, thresholdFor } from '../_lib/leveling.js';
 
@@ -185,6 +186,10 @@ export async function onRequestGet({ request, env, params }) {
     rcc: parsed?.ok ? parsed.data : null,
     occ: occParsed?.ok ? occParsed.data : null,
     character,
+    // The chosen totem animal's row (BOOK-INGEST-AUDIT.md F56). In the class
+    // half deliberately: its bonuses are the character's for life, like the
+    // class's, and not a skill's.
+    totem: await loadTotem(env, character.totem),
   };
   let cls = composeClass({ ...composeArgs, skillRows });
 

@@ -425,6 +425,22 @@ natural_abilities:                # rcc — display only
 An option named in a `choose` but never defined is a warning: it can be picked
 and grants nothing.
 
+### `totem` — one animal from the shared `totems` catalog
+
+```yaml
+totem: { from: "animal" }                 # its skills and bonuses
+totem: { from: "animal", powers: true }   # the Totem Warrior: its giant-form powers too
+```
+
+Spirit West's totem-picking O.C.C.s carry this rather than an ability choice,
+because a totem grants SKILLS and a chosen ability may grant only `bonuses`,
+`psionics` and `magic`. The forty animals are rows in `totems`, not entries in
+the class, and `composeClass` folds the chosen row in: its skills are added to
+`occ_skills`, or +10% where the class already has one (printed 96), and its
+bonuses are summed. `from` must be `"animal"` - the Elemental Shaman picks an
+element instead and does not take the key. A class without it is untouched.
+`BOOK-INGEST-AUDIT.md` F56.
+
 ## Prose and display
 
 ```yaml
