@@ -8521,6 +8521,82 @@ hits, both in F56 of this file - its premise that the class picks an element,
 and its outcome note's citation count. `ABILITY_GRANTS` and F24/F50 are cited
 above.
 
+**Taken, 2026-09-11 (PR #952). Option A, with one departure from its posture:
+four lines of code.**
+
+**Six corrections: five from the premise audit (`audit-premise-auditor`,
+2026-09-11) and one from the smoke run.**
+
+- **Not quite data only.** The class prints no hit point or S.D.C. formula, so
+  `compose.js` supplies its 1D6 from `CORE_SDC_BY_CLASS`, and smoke fails any
+  `add-*-class.sql` id that states neither and has no entry
+  (`test/checks/catalog-data.mjs:60-65`). The four ids got `'1D6'` entries
+  (`js/compose.js:94-101`) - a table that lives in code, not logic. The retired
+  id keeps its entry, as the generic Warlock's did, because its add script
+  stays and the reverse check (`catalog-data.mjs:69-75`) reads the scripts.
+- **37 elemental rows, not 38:** 7 Air, 11 Earth, 9 Fire, 10 Water.
+- **Three 98% skills, not four.** The book gives the Fire Shaman none (printed
+  66), and the Fire class adds none.
+- **The copy-pair walk excepts whole top-level keys**, so "keeps the shared
+  halves identical" is true only outside the excepted ones. Each copy's
+  `except` came out as `magic`, `skills` and `special_abilities` - derived by
+  diffing the parsed classes, not typed - and inside those three keys the
+  shared parts (the Shamanistic list and its schedule, twelve common skills,
+  four common abilities) are walked by nothing. They are identical today
+  because all four were generated from the one live row. A later correction to
+  them has to be made four times, unchecked.
+- **F24 was taken in part, not declined.** Its note (line 3232, PR #789) took
+  part (a), which lets an ability set `related_skills_count`, and declined (b)
+  and (c). `skills` is still not in `ABILITY_GRANTS`, which is what this
+  finding needed, so the argument stands.
+- **A retire script needs a docs row.** Smoke's data-scripts table check
+  failed on `retire-elemental-shaman-generic.sql` until it was added beside
+  `retire-warlock-generic.sql` (`docs/operations.md:574`). A pinned README
+  count moved too: 126 of 262 to 129 of 265 published classes that state no hit
+  point formula (`README.md:565`).
+
+**What shipped.** Four `add-elemental-shaman-<element>-class.sql`, generated
+from production's `elemental-shaman` markdown, which already carried F61's cap,
+so everything but the element is identical. Each has its own id and name, a
+three-pick group holding only its element's level-one rows, and its 98% skill
+in `occ_skills` (Air Astronomy, Earth Holistic Medicine, Water Swimming - the
+catalog's exact names). The `choose: 1` line and the other three elements'
+abilities are gone, and the two note sentences are rewritten. Earth, Fire and
+Water are `copy_of: { class: "elemental-shaman-air", except: [...] }`. Each
+parses with no new warning, and `class-check --remote` gives all four 0 errors,
+0 warnings. `retire-elemental-shaman-generic.sql` soft-deletes the one class
+and sorts after the four; its readback found no character holding it.
+
+**Left in ability text.** The Earth Shaman's land navigation, 60% +4% per
+level, stays in the Earth Shaman ability: it is not the element's 98% skill,
+which is all the proposal moved. Each element ability lost its "at 98%" clause
+instead, so the skill is stated once.
+
+**Citations.** Each new class's `extraction_notes` cites "BOOK-INGEST-AUDIT
+F63", and the retired row cited nothing to correct.
+`node scripts/audit-citations.mjs --remote F63` reported **0** anyway on
+2026-09-11, and **0 for F61 as well**, even though production's four rows
+contain both citations (queried the same day). Its two patterns
+(`scripts/audit-citations.mjs:53-56`) match only the `.md` form and "Filed as
+F<n>". The notes that F56, F61 and this finding wrote all use the bare-menu
+form, which is the shape F56's note recorded (line 7823). That is a gap in the
+script, outside this finding, and it is flagged separately rather than fixed
+here.
+
+**Tests.** In `regression.mjs`, F61's cap check names the four ids (line 1409).
+New checks (line 1426) cover each class: three picks from its own element's
+level-one rows only, its 98% skill (Fire has none), no element choice, and the
+one-class id no longer offered. The predicates were first run against
+production's one-class markdown, and fail 11 of 12 on it. Fire's no-skill check
+passes there as well, since the old row had no 98% skill either.
+
+**Posture said back:** data only, no schema, no new key. It held, except for
+the four table lines above.
+
+**Confidence on the picker stays medium:** the wizard was not opened. The four
+are named "Elemental Shaman (Air)" and so on, unlike the Warlocks, which all
+read "Warlock". That difference predates this finding and is not touched here.
+
 ### F65 - medium - a psionic level-up grant drawn from a NAMED LIST loses the list, so ten classes' named psionic picks are not enforced
 
 **Found 2026-09-11** by F61's premise audit, which flagged it outside that
