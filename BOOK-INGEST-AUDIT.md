@@ -8553,7 +8553,10 @@ four lines of code.**
   failed on `retire-elemental-shaman-generic.sql` until it was added beside
   `retire-warlock-generic.sql` (`docs/operations.md:574`). A pinned README
   count moved too: 126 of 262 to 129 of 265 published classes that state no hit
-  point formula (`README.md:565`).
+  point formula (`README.md:565`). So did the clean-run table's live class
+  count, 262 to 265 (`docs/operations.md:309`). That one is read only by the
+  regression's clean build, and CI's regression job caught it on this PR's
+  first run (1 of 372 failed), after smoke had passed.
 
 **What shipped.** Four `add-elemental-shaman-<element>-class.sql`, generated
 from production's `elemental-shaman` markdown, which already carried F61's cap,
