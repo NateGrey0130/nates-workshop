@@ -8180,3 +8180,66 @@ Three hits: `race-and-occupation.md:282`, true of the merge; `catalog.md:297-304
 the deliberate opposite direction above; and the finding closed by #905 at line
 7349 of this file, which established that dice roll at creation and did not
 weigh this case.
+
+**Taken, 2026-09-11 (PR #946).** As written - `classBonuses` counts a list's
+flat members itself, and the collectors stop gathering them - and wider than
+filed, because the premise audit found three more paths into the same loss.
+**Posture, said back:** a correctness fix with no schema change. It landed
+entirely in `js/derive.js`, which the wizard and the sheet share; `app.js` did
+not need to change, and nothing in production data does either.
+
+**Five premises were wrong or short** (`audit-premise-auditor`, 2026-09-11,
+against `main` at c5418d8):
+
+- **The counter-argument was false, so the skill case is the same bug.**
+  <!-- claim-ok: quoting the premise this note corrects -->
+  `catalog.md:297-304` said a skill's flat bonus is *"rolled together"* with a
+  class's dice so it is not lost. No code path ever rolled a skill's bonus: the
+  wizard rolls the race half, the occupation alone and the totem row alone
+  (`app.js:277-312`), and `git log -G` finds no roll of `skillBonusClass` in
+  its history. Hin-Ri, a Juicer in production, composes to P.S. `["2d6",5]` and
+  P.E. `["2d6",4]` and has been shown the 2D6 alone - +5 P.S. and +4 P.E. short.
+- **No stored roll holds a flat half, so neither escape route this proposal
+  offered is needed.** The wizard rolled the composed class only between
+  2026-08-17 and 2026-08-20, and production's three characters were all created
+  after. Nothing to rewrite.
+- **Combat and saves lose a flat the same way**, through `diceBonusesByGroup`,
+  which the proposal did not name. A Godling Cyber-Knight's 1D4 initiative
+  beside the Cyber-Knight's +3 showed 3 where the book gives 6. The same
+  `catalog.md` paragraph said those keys are flat on both sides; three
+  published classes carry combat or save dice.
+- **Every production pairing runs the other way from this heading**: a race's
+  DICE beside an occupation's FLAT - lyn-srial-sky-knight and murder-wraith on
+  P.S., warrior-of-valhalla on Spd. The mechanism is the same. Only 17 of the 19
+  are reachable (maxi-killer's `race_restrictions` bar both P.S. races), one
+  dropped value is wormspeaker's -2 P.S. - a penalty the character escaped - and
+  ten of the 19 exist because F52's fix moved the Sky-Knight's 1D6 into
+  `bonuses.attributes`.
+- **The totem half was understated and partly aimed wrong.** Blue-Jay's and
+  Horse's dice are on P.B. and Spd; what they lose is a flat +1 P.S. beside a
+  race's P.S. dice. The larger reach is flat totem bonuses beside a race's dice
+  - reachable, not yet happened, since no character holds a totem - and a lone
+  Plant or Fetish Shaman who picks Bear composes `[4,"1d4"]` or `[2,"1d4"]` with
+  no race involved at all.
+
+**What changed.** `classBonuses` counts a list's numbers plus what its dice
+rolled; `diceBonuses` and `diceBonusesByGroup` collect only a list's dice, so a
+flat half is never both rolled and counted. `catalog.md`'s two false sentences
+and the `derive.js` comment that said the flat parts ride in the roll are
+rewritten. **Five smoke checks roll the halves apart the way `rolledAll` does**,
+and all five failed on the unchanged code (`--section "Composing dice"`, 5 of
+16) before passing. The checks already there rolled the composed class - a path
+the wizard left on 2026-08-20 - which is why they passed throughout.
+
+**What a user sees, on deploy:** Hin-Ri's sheet gains +5 P.S. and +4 P.E., the
+skills' share it should always have shown. Every future character in one of
+these pairings gets its full bonus, and wormspeaker's -2 P.S. applies.
+
+**Left open:** the audit composed its pairings without variants, and the wizard
+defaults an occupation to its first variant; a variant that changes a bonus
+could move the reach numbers, not the mechanism.
+
+**Corrected where the finding was cited:** `catalog.md:297-305` and the
+`derive.js` comment, both of which described the old behaviour without naming
+a finding. F56's outcome note is a dated record naming F60 as found, and the
+survey names it without a status; both stand.
