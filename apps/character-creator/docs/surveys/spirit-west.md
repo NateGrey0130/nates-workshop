@@ -338,6 +338,7 @@ unpriced rows with nothing said.
 | Robots and power armor | 189-202 | 6 vehicles, 60 locations, 32 weapons | #940 |
 
 **Still open, and none of it this book's to fix:** `BOOK-INGEST-AUDIT` F56
-(the totem table nine classes carry as prose) and F58 (the regression harness's
-local timeout). F57 (level-gated spell pools admitted every tradition) was
-taken on 2026-09-10 - read its outcome note.
+(the totem table nine classes carry as prose). F57 (level-gated spell pools
+admitted every tradition) was taken on 2026-09-10 - read its outcome note -
+and F58 (the regression harness's local timeout) in PR #942: the timeout now
+says it is one, and the 180 s limit stays.

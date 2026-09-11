@@ -7961,6 +7961,44 @@ now a convenience for local runs on a slow machine rather than a correctness
 fix, and CI's regression job is the tiebreak when a local run says "cannot
 build a database".
 
+**Taken, 2026-09-10 (PR #942) - part (b) as written; part (a) declined on
+Nate's word.** Posture as proposed and kept: test harness only - no check
+added, removed or loosened, no timeout value changed, no exit code changed.
+
+**(b):** `wrangler()` in `apps/character-creator/test/regression.mjs` now reads
+`error.code === 'ETIMEDOUT'` and puts one line FIRST in `stderr` - elapsed, the
+limit, "a timeout, not a SQL error", and that on Windows wrangler may still be
+running. All seven call sites read `stderr` (the raw tail at step [1/7],
+`cleanErr()` at the other six), so one change reaches all of them. **Proven by
+injecting a 3 s limit in the working tree and restoring it**: the step [1/7]
+detail went from `npm notice run npx` to `error: wrangler timed out after 3s
+(limit 3s) - this is a timeout, not a SQL error. ...`. **The first attempt
+appended the line and it did not show**: `check()` keeps a detail's first 260
+characters, and npm's notices plus the bootstrap path filled them.
+
+**(a) declined.** `SHIP-PR-AUDIT` F13 (PR #670) declined raising the sibling
+harness's 120 s timeout because *"a bigger number hides the next real
+slowdown"*, and `.github/workflows/tests.yml:86-89` records the same decision.
+With CI building this database in 17.8 s, (a) was exactly that move.
+
+**Two premises above were wrong, found by `audit-premise-auditor` before
+implementing:**
+- the subject grep reported nothing, and F13 was there - the grep searched
+  `180000`, F13's number is `120000`, and `tests.yml` is not a menu;
+- "wrangler was killed" is false on Windows: with `shell: true` the timeout
+  stops the shell and the grandchild keeps running. Observed here: after the
+  injected run, three node processes were still building a scratch database
+  whose directory had been deleted. Hence "may still be running", not
+  "killed".
+
+**Dropped, not filed:** the same message gap in `apps/character-creator/test/
+play-flow.mjs` (`:132-136`, `:166-169`, `:218-221`), `checks/environment.mjs`
+(120 s) and `scripts/repo-vs-live.mjs` / `scripts/source-coverage.mjs` (300 s
+and 900 s). play-flow builds a small database (schema, seed, fixture) that has
+never approached its limit; environment.mjs's timeout is F13's own subject; the
+two scripts have budgets several times the build time. None has produced a
+misleading failure, and a finding for each would cost more than it returns.
+
 ### F59 - low - `spells_per_level_from: true` is read by nothing, and two class notes say a list carries a pick that it does not
 
 **Found by `audit-premise-auditor` while premise-auditing F57, 2026-09-10; filed

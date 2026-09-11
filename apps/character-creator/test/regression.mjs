@@ -66,14 +66,41 @@ function cleanup() {
 process.on('exit', cleanup);
 process.on('SIGINT', () => { cleanup(); process.exit(130); });
 
+const WRANGLER_TIMEOUT_MS = 180000;
+
 function wrangler(args) {
   // maxBuffer: the gear-citation sweep at the end pulls every published class's
   // whole markdown back as JSON, which overruns spawnSync's 1 MB default - the
   // output is then truncated mid-JSON and the parse fails with no hint that
   // SIZE was the problem. This setting moved here with that sweep.
-  return spawnSync('npx', ['wrangler', ...args], {
-    cwd: repoRoot, shell: true, encoding: 'utf8', timeout: 180000, maxBuffer: 1e9,
+  const started = Date.now();
+  const r = spawnSync('npx', ['wrangler', ...args], {
+    cwd: repoRoot, shell: true, encoding: 'utf8', timeout: WRANGLER_TIMEOUT_MS, maxBuffer: 1e9,
   });
+  // A TIMEOUT USED TO READ EXACTLY LIKE A SQL FAULT. spawnSync reports it as
+  // error.code ETIMEDOUT with status null, and nothing here read `error`: every
+  // call site shows stderr, which by then holds only npm's two "npm notice run"
+  // lines. Step [1/7] printed "cannot build a database" with those as its only
+  // reason while the bootstrap was fine and merely slow (BOOK-INGEST-AUDIT F58).
+  //
+  // So say it, in stderr, where all seven call sites already look - the raw tail
+  // at step [1/7] and cleanErr() everywhere else, which keeps lines containing
+  // "error". FIRST, not last: check() shows only the first 260 characters of a
+  // detail, and appending put the line after npm's notices and the bootstrap
+  // path, where it was cut off - measured by injecting a 3 s limit. It says
+  // "timed out", not "killed": with shell: true the timeout stops the shell, and
+  // on Windows wrangler itself keeps running.
+  //
+  // This changes no check, no timeout and no exit code. Whether the limit itself
+  // should move is a separate question - SHIP-PR-AUDIT F13 declined to raise the
+  // sibling harness's for a reason that applies here too.
+  if (r.error && r.error.code === 'ETIMEDOUT') {
+    const secs = Math.round((Date.now() - started) / 1000);
+    r.stderr = `error: wrangler timed out after ${secs}s (limit ${WRANGLER_TIMEOUT_MS / 1000}s) - `
+      + 'this is a timeout, not a SQL error. On Windows the shell is stopped and wrangler may still be running.\n'
+      + (r.stderr || '');
+  }
+  return r;
 }
 
 // wrangler paints its errors with ANSI colour and wraps them in a box; a check
