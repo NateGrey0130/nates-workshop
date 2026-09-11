@@ -460,6 +460,14 @@ yields to a stated `mdc_base`. **Not for a temporary conversion** - the
 Psycho-Stalker spends I.S.P. to become M.D.C. for a minute and stays an S.D.C.
 being, which is an ability.
 
+**A chosen ability may carry the same flag** (`BOOK-INGEST-AUDIT.md` F64), for
+a conversion only some choices bring. The Spirit Warrior takes three of six
+realms, and only its Earth and Plant realms convert, so the flag sits on those
+two abilities and `applyAbilities` folds it onto the composed class when one is
+taken. Everything above then reads it unchanged. Each realm's extra 1D4x10 is
+its own `bonuses.pools.mdc`, so a character taking both adds both, as the book
+says they combine.
+
 Four things follow from pools being rolled once rather than derived per render:
 
 - **It is the only bonus group that takes dice as well as a number.** Combat and

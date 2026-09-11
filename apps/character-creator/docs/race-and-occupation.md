@@ -507,8 +507,10 @@ totem: { from: "animal", powers: true }   # the Totem Warrior
 **It is not an MOS and not an ability choice**, and each near miss is the reason.
 An MOS is written inside the class that offers it; the same forty animals written
 into nine classes would be 360 definitions that must stay identical, which is the
-drift `F25` declined to model. A chosen ability may grant only `bonuses`,
-`psionics` and `magic` (`ABILITY_GRANTS`), and a totem's first grant is skills.
+drift `F25` declined to model. A chosen ability grants the three blocks in
+`ABILITY_GRANTS` - `bonuses`, `psionics` and `magic` - and two single values
+folded on their own, F24's `related_skills_count` and F64's `mdc_from_hp_sdc`;
+never skills, and a totem's first grant is skills.
 So the animals are rows in `totems`, and the class carries only the key.
 
 `applyTotem()` runs in `composeClass`, straight after the MOS and on the composed

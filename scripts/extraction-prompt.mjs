@@ -98,7 +98,9 @@ Optional — include only what the page actually states:
 - hit_points_base / sdc_base / mdc_base / ppe_base: formula strings or numbers
 - mdc_from_hp_sdc: true only when the book PERMANENTLY turns the character's
     combined S.D.C. and hit points into one M.D.C. total (a supernatural P.E.).
-    A temporary conversion bought with I.S.P. or P.P.E. is an ability, not this
+    A temporary conversion bought with I.S.P. or P.P.E. is an ability, not this.
+    When only SOME choices convert (one realm of several), put
+    \`mdc_from_hp_sdc: true\` on those special_abilities entries instead
 - starting_money: what the class starts with in gold (Palladium) or credits
     (Rifts), as the book writes it — a formula string like "2d6x10" or a flat
     number. Record ONLY the coin. Saleable goods, gems and artifacts the entry
