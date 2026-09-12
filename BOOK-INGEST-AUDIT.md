@@ -9900,3 +9900,60 @@ format - but it is a state migration and saved drafts carry the integer keys.
 of the six fails if a second caller is ever added.
 Smoke 1972 -> **1978**, regression 385 unchanged; there is still no data check
 here, for the reason the adjustment gives - this lives entirely in wizard state.
+
+**AND TAKEN AS OPTION A, 2026-09-12 (PR #F72APR), on Nate's word.** E stays
+underneath it and is no longer a separate mechanism: **the prune became the
+migration.**
+
+**`grantKey(kind, g)` is `kind:level:slot`**, exported from `js/leveling.js`,
+and every level-up pick is stored under it - `S.levelPicks`, `S.levelSpells`,
+`S.levelPsi`, at every read and every write.
+
+**The argument for A over a key of its own, now verified rather than asserted:
+that string is character-for-character what the live level-up path already puts
+on the wire at BOTH ends** - `sheet.js` builds its controls from level and slot,
+and `functions/api/character-creator/characters/[id]/level-confirm.js` reads
+`\`${p.type === 'psionic' ? 'psionic' : 'spell'}:${p.gained_at_level}:${p.slot ?? 0}\``.
+The wizard was the only part of the app naming a grant by its position. **Two
+representations of one concept became one**, and a pin now fails if either side
+is re-spelled, so they cannot drift apart again.
+
+**One thing that had to be built rather than reused: skill grants had no slot at
+all.** `perLevelGrants` has assigned one to spells and psionics since it was
+written - its own comment calls `slot` *"what everything downstream keys on
+alongside the level"* - and `skillGrantsFor` never did, which is why option A
+looked like it needed a key invented. It now assigns one per level, **after the
+sort**, so the identity is stable; two skill grants really can share a level, a
+related and a secondary pick both landing at 3.
+
+**The migration is the prune, and that is the whole of it.** A draft saved before
+today carries integer keys; no integer is a grant key; so they are dropped by
+`pruneOrphanLevelPicks` on the first recompose after the draft is resumed. No
+second code path, no version flag, nothing to remove later.
+
+**Why now and not after the book.** Measured `--remote` before shipping:
+production holds **one** draft above level 1 and its three pick maps are
+**empty**, so the migration discards nothing real. That is the cheapest this
+change will ever be, and the window narrows with every draft saved. The
+correctness argument alone would not have justified going first; the timing one
+does.
+
+**A starting GROUP is still positional and must stay that way.**
+`S.spellGroups` and `S.psiGroups` index `startingGroups`, which is not derived
+from a schedule and has no level or slot. The delegated click handler therefore
+coerces `data-gi` to a number **only when it is one** - a pin holds that,
+because the obvious tidy is to coerce everything.
+
+**What it cost elsewhere, recorded because it is the real price of a rename:**
+three pins written before today asserted the SUBSCRIPT VARIABLE's name -
+`levelSpells[gi]`, `levelPsi[gi]` - as a way of saying "held per grant". They
+had to be repointed. A pin on a name is a pin on the wrong thing, and these are
+now on `gk`, which is no better; what would survive is a pin on the behaviour.
+Left as they are rather than rewritten, since rewriting them is not this
+finding's scope.
+
+**F72 is now CLOSED.** The mis-binding option E left open is gone: a pick is
+found by the grant's identity or it is not found at all.
+
+**Tests:** fourteen pins, **ten of them failing against the files as they
+were**. Smoke 1978 -> **1986**, regression **385** unchanged.

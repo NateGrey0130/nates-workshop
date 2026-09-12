@@ -116,9 +116,35 @@ export function skillGrantsFor(cls, fromLevel, toLevel) {
         kind,
       }));
 
-  return [...from(related?.schedule, relatedCats, 'related'),
-          ...from(secondary?.schedule, null, 'secondary')]
+  // Slots are assigned AFTER the sort, so a grant's identity is stable: two
+  // grants can share a level - a related and a secondary pick both land at 3 on
+  // some classes - and `slot` is what tells them apart. Same counter
+  // perLevelGrants uses for spells and psionics, so all three families key the
+  // same way. BOOK-INGEST-AUDIT.md F72.
+  const sorted = [...from(related?.schedule, relatedCats, 'related'),
+                  ...from(secondary?.schedule, null, 'secondary')]
     .sort((a, b) => a.level - b.level);
+  const slots = new Map();
+  for (const g of sorted) {
+    const slot = slots.get(g.level) ?? 0;
+    slots.set(g.level, slot + 1);
+    g.slot = slot;
+  }
+  return sorted;
+}
+
+// A grant's IDENTITY, and the thing every level-up pick is stored under.
+//
+// It is deliberately the same string the live level-up path already puts on the
+// wire - sheet.js builds it and functions/api/character-creator/characters/
+// [id]/level-confirm.js reads it - so the wizard and the sheet name a grant the
+// same way instead of the wizard using its position in a list.
+//
+// Position was the bug: the list is derived from the composed class, so
+// changing an occupation or an ability re-derives it and index 0 can come to
+// mean a different grant. BOOK-INGEST-AUDIT.md F72.
+export function grantKey(kind, g) {
+  return `${kind}:${g?.level ?? 0}:${g?.slot ?? 0}`;
 }
 
 // New spells and psionic powers a class learns for crossing levels.
