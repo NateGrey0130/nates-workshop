@@ -8920,6 +8920,57 @@ this same reason, and did not reach the psionic pickers. This finding is F30's
 rule applied to the two filters it missed; there is no decision to argue
 past.
 
+**Taken, 2026-09-11 (PR #958). Option A, code only as the posture says, plus
+the caption on the same two lines.**
+
+**Three corrections from the premise audit (`audit-premise-auditor`,
+2026-09-11).**
+
+- **The harm is stated backwards for the CREATE path, and that half is worse.**
+  This finding says the sheet offers nothing while the server would accept a
+  legal pick. On creation the server is the stricter of the two: the create
+  validator builds its allowed set with `norm()`
+  (`functions/api/character-creator/_lib/validate-character.js:462` and
+  `:510`), an object entry normalises to the string `[object object]`, and
+  `characters.js:186-188` answers **422** on any violation. Run against the
+  production Crazy with three legal Sensitive powers, the real
+  `validateCharacter` refuses all three - *"this class's picks allow [object
+  object]"*. So the Crazy cannot be saved at all. That is a different reader
+  from the two this finding names, and it is filed below as **F69** rather than
+  folded in.
+- **There is a third plain `includes`, in the WIZARD.** `startingPsiHtml`
+  (`apps/character-creator/app.js:3304`) gates a split starting psionic pick the
+  same way, and the Healing Shaman has two starting groups, the first of them
+  object-gated. Also F69.
+- **The reach measurement reproduced exactly** - 3 classes with an object entry,
+  19 of 302 level-up grants, totem-warrior 5 of 5, healing-shaman 14 of 33 - and
+  the audit re-derived it with its own script rather than re-running this
+  finding's. The spell side is clean: no live class has an object entry in any
+  spell gate, so this is a psionic-only shape today.
+
+**What shipped.** One matcher in `sheet.js`, `psiAdmits`, reached through the
+`sheet.html` bridge exactly as the skill picker's `admits` is, and used by both
+psionic pickers - the live level-up one and the banked panel.
+
+**Beyond the letter, on the same two lines:** each picker's caption printed the
+same entries with `join(', ')`, which renders an object as `[object Object]` in
+front of the player. `psiCatLabel` labels them through `categoryLabel`, which
+the bridge already exports. Fixing the filter and leaving the caption printing
+`[object Object]` would have been a half-change to one expression.
+
+**Tests.** Nine smoke checks: four on the matcher itself against the exact
+`{ name, except }` shape (including that a plain `includes` matches neither
+half, which is the defect), four source pins on `sheet.js`, and one that the
+bridge still exports the label helper. **Four fail against the file as it was**,
+shown by stashing `sheet.js` and running the section. `sheet.js` is a classic
+script and cannot be imported, which is why the pickers are pinned as source.
+
+**Posture said back:** code only; no data, no schema. It held.
+
+**Not verified in a browser.** The finding said a render of a Healing Shaman
+level-up would raise its confidence, and that is still true; F69 has to land
+before such a character can be created at all.
+
 ### F67 - low - changing a chosen ability after the pools are rolled leaves them stale, and a character who now converts saves with S.D.C. and hit points
 
 **Found 2026-09-11** by F64's premise audit: `takeAbility` and `dropAbility` do
@@ -8976,3 +9027,64 @@ it is the same walk done by clicking.
 
 **Subject grep, 2026-09-11:** every `*AUDIT*.md` for "S.pools = null",
 `takeAbility`, `dropAbility`, and "stale" or "reroll" near "pool": no hits.
+
+### F69 - medium - an object category gate is refused outright by the create validator, so three classes cannot be saved with their own starting psionics
+
+**Found 2026-09-11** by F66's premise audit, which proved it by execution rather
+than by reading. Filed rather than folded into F66: it is a different reader,
+on the create path, and it BLOCKS where F66 merely hid.
+
+**The code.** `validate-character.js:462` builds the allowed set as
+`new Set(catPools.flatMap((g) => (g.categories || []).map(norm)))` and `:510`
+tests `allowedCats.has(norm(row.category))`, where
+`norm = (s) => String(s ?? '').trim().toLowerCase()` (`:65`). A category entry
+may be an OBJECT since F16 - `{ name: "Physical", except: ["Telekinesis"] }` -
+and `String()` turns that into `[object object]`, which no power's category
+equals. `functions/api/character-creator/characters.js:186-188` returns **422
+"This character breaks its class rules"** on any violation, so the save is
+refused rather than warned.
+
+**Proven by execution, 2026-09-11:** the real `validateCharacter`, given the
+production Crazy and three legal Sensitive powers, returns three
+`power_category` violations reading *"Clairvoyance is a Sensitive power; this
+class's picks allow [object object]"*. The Healing Shaman's level-1 Physical
+pick and the Totem Warrior's Sensitive pick are refused the same way.
+
+**A third reader, in the wizard.** `startingPsiHtml`
+(`apps/character-creator/app.js:3304`) filters a SPLIT starting psionic pick
+with `g.categories.includes(p.category)`. The Healing Shaman has two starting
+groups and the first is object-gated, so its level-1 Physical picker is empty in
+the wizard too - not only on the sheet, which is what F66 covered. The Crazy and
+the Totem Warrior have one group each and take the `categoryAllows` branch at
+`app.js:3362`, which is why the wizard looked complete.
+
+**Reach:** the same three classes an object gate reaches - `crazy`,
+`totem-warrior`, `healing-shaman` - measured over all 265 live classes on
+2026-09-11. No production character holds any of them, and
+`pending_power_picks` is empty, which is consistent with the create path having
+refused them.
+
+**Why nothing caught it:** every `power_category` check in the smoke suite uses
+plain-string categories (`test/smoke.mjs:663`, `:671`, `:682`, `:701`,
+`:718`). Not one uses an object entry.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | use `categoryAllows` in the create validator's category test, and in `startingPsiHtml` | the matcher the wizard, the claim check and now the sheet all share; F20 is what two copies of a matcher cost | the validator imports from `js/parser.js` already, so nothing new is wired; a smoke check per reader |
+| B | normalise gates to plain strings when a class is parsed | one shape everywhere downstream | throws away the `only`/`except` the entry exists to carry, which is F16 undone |
+| C | leave it | nothing to build | three classes cannot be saved with the psionics their own books grant |
+
+**Proposal:** A. **Posture:** code only; no data, no schema.
+
+**Confidence: high.** The refusal was reproduced by calling the real validator
+with production data, and the wizard reader was read in place.
+
+**Ongoing cost:** one smoke check per reader, and the standing rule that a
+category is matched with `categoryAllows` and never with `includes`.
+
+**Subject grep, 2026-09-11:** every `*AUDIT*.md` for `power_category`,
+`allowedCats` and `startingPsiHtml`: no hits. UI-AUDIT F30 moved the sheet's
+SKILL picker to `categoryAllows` and weighed psionics nowhere; F66 did the
+sheet's psionic pickers. This is the two readers neither reached.
