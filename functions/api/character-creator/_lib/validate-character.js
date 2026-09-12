@@ -43,7 +43,7 @@
 //    category both over- and under-counts. Choice groups are therefore reported
 //    as WARNINGS and never block a save.
 
-import { isChoiceGroup, categoryAllows, categoryName, needsOccupation, relatedFloorStatus,
+import { isChoiceGroup, categoryAllows, categoryLabel, categoryName, needsOccupation, relatedFloorStatus,
          isAbilityChoice, isAbilityDefinition, abilityOptions, normalizeAbilities, abilityOccOptions,
          applyAbilities } from '../../../../apps/character-creator/js/parser.js';
 
@@ -459,7 +459,18 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
       const allowedTraditions = new Set(capPools.flatMap((g) => (g.traditions || []).map(norm)));
       const catPools = pool.psionic.filter((g) => !(g.from && g.from.length));
       const categoriesOpen = catPools.some((g) => !g.categories);
-      const allowedCats = new Set(catPools.flatMap((g) => (g.categories || []).map(norm)));
+      // categoryAllows per POOL rather than over a flattened list: it takes the
+      // FIRST entry whose name matches, so flattening would consult one pool's
+      // `except` for another pool's category. Per pool is also the rule stated
+      // above - a pick passes if ANY applicable pool admits it.
+      //
+      // BOOK-INGEST-AUDIT F69: this was a Set of norm()'d entries, and a
+      // category entry may be an OBJECT narrowing what it admits since F16, so
+      // an object became the string "[object object]", no power ever matched,
+      // and the create endpoint answered 422. Three classes could not be saved
+      // with the starting psionics their own books grant.
+      const catAdmits = (row) => catPools.some((g) => !g.categories || categoryAllows(g.categories, row));
+      const allowedCatNames = [...new Set(catPools.flatMap((g) => (g.categories || []).map(categoryLabel)))];
 
       for (const kind of ['spell', 'psionic']) {
         // With no pool at all, the count violation above already says it all.
@@ -507,10 +518,10 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
           } else if (!catPools.length) {
             violations.push({ rule: 'power_not_on_list', kind, name: e.name,
               message: `${e.name} is not on the list this class's psionic picks draw from` });
-          } else if (!categoriesOpen && row.category && !allowedCats.has(norm(row.category))) {
+          } else if (!categoriesOpen && row.category && !catAdmits(row)) {
             violations.push({ rule: 'power_category', name: e.name, category: row.category,
               message: `${e.name} is a ${row.category} power; this class's picks allow `
-                + [...allowedCats].join(', ') });
+                + allowedCatNames.join(', ') });
           }
         }
       }

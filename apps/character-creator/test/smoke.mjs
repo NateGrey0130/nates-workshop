@@ -707,6 +707,35 @@ section('Creation validation');
     const off = at3(['See', 'Mend']);
     return on.violations.length === 0 && off.violations.some((v) => v.rule === 'power_category');
   })());
+  // BOOK-INGEST-AUDIT F69: a category entry may be an OBJECT narrowing what it
+  // admits (F16), and the allowed set was built by String()-ing each entry, so
+  // an object became the literal "[object object]", no power's category ever
+  // matched, and the CREATE endpoint answered 422. Three live classes could not
+  // be saved with the starting psionics their own books grant.
+  check('an object category gate admits a power in it, and still refuses the one it excepts', (() => {
+    const pcat2 = { spell: pcat.spell, psionic: new Map([...pcat.psionic,
+      ['sense', { name: 'Sense', category: 'Sensitive', isp: 2, system: null }]]) };
+    const cls2 = { ...vCls, psionics: { type: 'major', powers_starting: 1,
+      powers_starting_groups: [{ count: 1, categories: [{ name: 'Sensitive', except: ['See'] }] }] } };
+    const run = (n) => validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat2, powers: [psi(n)] });
+    return run('Sense').violations.length === 0
+      && run('See').violations.some((v) => v.rule === 'power_category');
+  })());
+  check('and a refusal names the category rather than [object Object]', (() => {
+    const cls2 = { ...vCls, psionics: { type: 'major', powers_starting: 1,
+      powers_starting_groups: [{ count: 1, categories: [{ name: 'Sensitive', except: ['See'] }] }] } };
+    const v = validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat, powers: [psi('Mend')] })
+      .violations.find((x) => x.rule === 'power_category');
+    return !!v && v.message.includes('Sensitive') && !v.message.toLowerCase().includes('[object');
+  })());
+  // A string gate has to behave exactly as it did - the whole point of using
+  // the shared matcher rather than a second rule.
+  check('a plain string gate is unchanged by that', (() => {
+    const cls2 = { ...vCls, psionics: { type: 'major', powers_starting: 2, categories_allowed: ['Sensitive', 'Healing'] } };
+    const ok = validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat, powers: [psi('See'), psi('Mend')] });
+    const no = validateCharacter({ ...legal, cls: cls2, powerCatalog: pcat, powers: [psi('Crush')] });
+    return ok.violations.length === 0 && no.violations.some((v) => v.rule === 'power_category');
+  })());
   // The starting pick used to be ONE count and ONE gate, so a spell pick could
   // not be bounded by a name at all and a split pick had to be flattened into
   // its widest gate - which is how the Delphi Juicer came to allow four Super
@@ -4363,6 +4392,20 @@ section('Chosen ability fragments');
 // at all, a Godling grants its own skills and stands alone - but the pairing is
 // the normal case, and a racial class with nothing to CHOOSE is not a playable
 // character by itself.
+section("The wizard's split starting picker matches the same gate (BOOK-INGEST-AUDIT F69)");
+{
+  // app.js boots on import, so this is a source pin - and the entry-point parse
+  // check above is what keeps a pin from passing against a file that cannot
+  // parse at all.
+  const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+  check('startingPsiHtml matches its categories with categoryAllows',
+    /categoryAllows\(g\.categories, p\)/.test(appSrc));
+  check('and no psionic picker matches a category with a plain includes',
+    !/g\.categories\.includes\(p\.category\)/.test(appSrc));
+  check('its caption labels the entries rather than joining objects',
+    /g\.categories\.map\(categoryLabel\)/.test(appSrc));
+}
+
 section("The sheet's psionic pickers match an object category gate (BOOK-INGEST-AUDIT F66)");
 {
   // The matcher itself, on the shape that broke the pickers: a category entry

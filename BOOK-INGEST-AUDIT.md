@@ -9276,3 +9276,69 @@ category is matched with `categoryAllows` and never with `includes`.
 `allowedCats` and `startingPsiHtml`: no hits. UI-AUDIT F30 moved the sheet's
 SKILL picker to `categoryAllows` and weighed psionics nowhere; F66 did the
 sheet's psionic pickers. This is the two readers neither reached.
+
+**Taken, 2026-09-11 (PR #962). Option A, code only as the posture says, plus
+the two places the same entries are PRINTED.**
+
+**Four corrections from the premise audit (`audit-premise-auditor`,
+2026-09-11).**
+
+- **Every line number in this finding was stale when it was written**, because
+  it was written on F66's branch while F67 was changing `app.js` on another.
+  On main: `startingPsiHtml` is at `app.js:3315`, its plain `includes` at
+  `:3327`, and the `categoryAllows` branch the other two classes take at
+  `:3385`. The smoke citations move too: the `power_category` checks are at
+  `:665`, `:685`, `:708` and `:721`. The claim they support holds - not one
+  of them uses an object entry.
+- **`characters.js:186-188` is the call site, not the refusal.** The 422 is at
+  `:208-209`. The substance holds, and is worth stating exactly: the
+  `power_category` violation is pushed unconditionally, unlike the pool bounds,
+  which `enforcePools` gates - so this one refuses every creator, GM or not.
+- **`categoryAllows` takes the FIRST entry whose name matches**
+  (`js/parser.js:1176`), so flattening every pool's categories into one list
+  would consult one pool's `except` for another pool's category. The fix asks
+  each pool in turn, which is also the rule this file already states: a pick
+  passes if ANY applicable pool admits it. No live class has two psionic pools
+  naming the same category, so the two forms agree today; only one keeps
+  agreeing.
+- **The blast radius is narrower than "the server", in the finding's favour.**
+  Five callers of `validateCharacter` exist; only the create endpoint and the
+  admin audit pass `powers` and `powerCatalog` at all, so the picks, the
+  level-confirm and the variant paths never reach this rule.
+
+**What shipped.**
+
+- The create validator asks `categoryAllows` per pool, and prints
+  `categoryLabel` in the refusal message. Both were `String()`-ing an object.
+- `startingPsiHtml` matches with `categoryAllows`, and its caption labels the
+  entries - it read "1 power from [object Object]" for the Healing Shaman, one
+  line from the filter. F66 made the same call on the sheet's captions for the
+  same reason.
+
+**A string gate cannot move.** The audit checked this exhaustively before the
+change: 39 live classes with a category-gated psionic pool against 116 catalog
+powers, 4,524 verdicts, comparing the old test with the new. **Only the three
+object-gated classes move, all of them from refused to allowed** (95
+power-and-class pairs), and every `except` name stays refused - the Crazy's
+Telekinesis, Ectoplasm, Astral Projection and Object Read, and the Healing
+Shaman's Telekinesis. A smoke check pins the string case too.
+
+**Tests.** Six checks: three in the create validator - an object gate admits a
+power in its category, still refuses the one it excepts, and names the category
+rather than `[object Object]` - plus the string-gate case, and three source
+pins on the wizard. **Five of the six fail against the code as it was**, shown
+by stashing the two changed files; the string-gate check passes both ways,
+which is what it is for.
+
+**Posture said back:** code only; no data, no schema. It held.
+
+**Named and not taken:** `validate-character.js`'s `matchesGroup` and
+`describeGroup` compare an `occ_skills` CHOICE GROUP's categories the same
+plain way. **Zero of 265 live classes put an object entry there** (199 do in
+`occ_related_skills.categories`, which already goes through `categoryAllows`),
+and those two produce a warning rather than a violation. Latent, measured, and
+left alone deliberately rather than swept in unmeasured.
+
+**Still not verified in a browser**, as F66 said of its half: what a Healing
+Shaman's level-1 picker renders now needs `verify-ui`, not a grep. The server
+half is proven by running the real validator.
