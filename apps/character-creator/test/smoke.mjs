@@ -4623,6 +4623,28 @@ section('A border that identifies a control clears 3:1 (UI-AUDIT F55)');
     (appCss.match(/var\(--border\)/g) || []).length > 10);
 }
 
+section('An O.C.C. is warned about what a race will discard (BOOK-INGEST-AUDIT F11)');
+{
+  // F11 shipped supersedes_race and left its cheaper alternative unbuilt for
+  // twelve days. The warning is what would have caught the Kreeghor
+  // Cosmo-Knight on the day it was imported.
+  const cc = readFileSync(join(repoRoot, 'scripts', 'class-check.mjs'), 'utf8');
+  check('class-check knows the seven keys combineClasses hands to the race',
+    /const LOST_TO_RACE = \['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base',\s*\n?\s*'ppe_base', 'starting_money', 'xp_table'\];/.test(cc));
+  check('and warns only for an O.C.C. that has not claimed supersedes_race',
+    /data\?\.category === 'occ' && data\?\.supersedes_race !== true/.test(cc));
+  check('it is a WARNING, so it cannot fire the exit code on the common case',
+    /warnings\.push\(stated\.length/.test(cc));
+  // The list is the one the parser actually branches on. If someone adds an
+  // eighth key there, this fails rather than the warning going quietly stale.
+  const parser = readFileSync(join(appDir, 'js', 'parser.js'), 'utf8');
+  const branch = /for \(const key of \['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',\s*\n\s*'starting_money', 'xp_table'\]\) \{/.exec(parser);
+  check('and the parser still hands exactly those seven to the race', !!branch);
+  check('occ_skills is deliberately NOT among them, because the lists union',
+    !/LOST_TO_RACE[\s\S]{0,200}occ_skills/.test(cc)
+    && /const pastLife = superseded \? \[\] : \(rcc\.skills\?\.occ_skills \|\| \[\]\);/.test(parser));
+}
+
 section('Race and occupation');
 {
   const mk = (cat, skills) => parseClassMarkdown(
