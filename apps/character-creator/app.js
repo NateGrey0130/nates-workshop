@@ -3324,7 +3324,10 @@ function startingPsiHtml(cls, groups) {
       .map((n) => String(n).toLowerCase()));
     const inCategory = S.psiCatalog.filter((p) => inSystem(p)
       && (named ? named.has(String(p.name).toLowerCase())
-                : (!g.categories || g.categories.includes(p.category)))
+                // categoryAllows, not a plain includes: an entry may be an
+                // object narrowing what it admits (F16), and this picker is the
+                // one the single-group one is not (BOOK-INGEST-AUDIT F69).
+                : (!g.categories || categoryAllows(g.categories, p)))
       && !elsewhere.has(String(p.name).toLowerCase()));
     // The per-power tier gate, exactly as the single-group picker applies it:
     // a book can say an individual power needs a higher tier than its category.
@@ -3333,7 +3336,8 @@ function startingPsiHtml(cls, groups) {
     const list = Picker.filter(pool, S.psiFilter)
       .concat(pool.filter((p) => chosen.includes(p.name) && !Picker.match(p, S.psiFilter)));
     const gate = named ? `a list of ${g.from.length}`
-      : g.categories ? g.categories.join(', ') : 'any category';
+      : g.categories && g.categories.length
+        ? g.categories.map(categoryLabel).join(', ') : 'any category';
     return `<p class="small" style="margin-top:12px"><b>${g.count}
       ${g.count === 1 ? 'power' : 'powers'}</b> <span class="muted">from ${esc(gate)}</span>
       <span class="muted">— ${chosen.length}/${g.count}</span></p>`
