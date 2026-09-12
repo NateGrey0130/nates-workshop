@@ -214,6 +214,41 @@ check('the app is called Pick 3 Cut 5 and keeps 3', KEEPS === 3);
 check('...and cuts 5', CUTS === 5);
 check('...across 8 items', KEEPS + CUTS === ITEMS_PER_ROUND);
 
+// ---------- 5. The room caps, which no test could afford to drive ----------
+//
+// AUDIT.md T7 left the 30-round cap "STILL UNTESTED" and priced the test at
+// "thirty real generations to reach". That is thirty Claude calls to exercise
+// three lines, and the replay cap beside it - the same shape, in the same
+// function - was driven live and passed. So this pins the shape instead.
+//
+// room.js cannot be imported: it exports a Durable Object class that expects a
+// runtime. Read as source, which is what this repo does for app.js for the same
+// reason.
+section('The room caps');
+{
+  const room = readFileSync(join(appDir, '..', '..', 'workers', 'pick3cut5-room', 'src', 'room.js'), 'utf8');
+  const decl = /const MAX_ROUNDS = (\d+);/.exec(room);
+  check('MAX_ROUNDS is declared once, as a number', !!decl, decl?.[1]);
+  check('and it is 30, which is what AUDIT.md T7 and the roundsLeft readout both say',
+    decl?.[1] === '30');
+
+  // Two guards, and they are deliberately different: the player-facing one
+  // throws a message, the prefetch one returns silently.
+  check('start_round refuses past the cap, with a message naming it',
+    /if \(this\.game\.roundsPlayed >= MAX_ROUNDS\) \{\s*throw new Error\(.This room has played its \$\{MAX_ROUNDS\} rounds/.test(room));
+  check('and the prefetch path stops silently at the same cap',
+    /if \(this\.game\.roundsPlayed >= MAX_ROUNDS\) return;/.test(room));
+  check('both guards compare the same counter, so they cannot drift apart',
+    (room.match(/this\.game\.roundsPlayed >= MAX_ROUNDS/g) || []).length === 2);
+  check('and the client is told how many are left from the same constant',
+    /roundsLeft: MAX_ROUNDS - g\.roundsPlayed/.test(room));
+
+  // The sibling cap this one is modelled on, which WAS driven live (T7's own
+  // "REPLAY CAP PASSED"). Pinned here so the pair stays the same shape.
+  check('the replay cap sits in the same function and reads the same way',
+    />= MAX_REPLAYS_PER_CATEGORY/.test(room));
+}
+
 const html = readFileSync(join(appDir, 'index.html'), 'utf8');
 check('the page tells the player the same numbers',
   /three keeps\.\s*five cuts/i.test(html));

@@ -129,7 +129,7 @@ what this one is. On a finite factual category the honest advice is to tick
 *double-check this list*; the swap and the on-demand check are the backstop when
 nobody does. Recorded in `generate.js` next to the check itself.
 
-**T7. The caps. — REPLAY CAP PASSED; ROUND CAP STILL UNTESTED.**
+**T7. The caps. — REPLAY CAP PASSED; ROUND CAP PINNED IN SOURCE 2026-09-12, NOT DRIVEN.**
 
 Three full rounds of one category in one room, then a fourth attempt:
 
@@ -143,6 +143,25 @@ The **20-second cooldown** is confirmed only indirectly: every driver in this
 session had to sleep 21s between generations or the next `start_round` failed.
 The **30-round cap** is still untested and would need thirty real generations to
 reach; it is three lines and the same shape as the replay cap above.
+
+**PINNED IN SOURCE INSTEAD, 2026-09-12 (PR #975), and the reasoning is the
+point.** Thirty real generations is thirty Claude calls to exercise three lines,
+and the sentence above already says the cap is *the same shape as the replay
+cap* - which WAS driven live, in this very entry, and passed. So what was worth
+buying was not a thirty-round game; it was a guarantee that the shape does not
+drift. `apps/pick3cut5/test/game.mjs` gained a **The room caps** section: seven
+checks over `workers/pick3cut5-room/src/room.js` read as source - the file
+exports a Durable Object class and cannot be imported - asserting that
+`MAX_ROUNDS` is declared once and is 30, that **both** guards compare the same
+counter (`start_round` throwing with a message that names it, the prefetch path
+returning silently), and that the `roundsLeft` the client is sent is computed
+from the same constant.
+
+**What this does NOT prove**, stated so the entry is not read as more than it
+is: that a room actually stops at thirty. It proves the guard exists, is
+singular, and is wired to the number the UI reports. **A live thirty-round run
+is still the only thing that would close that**, and it is not worth thirty
+generations today.
 
 **T8. The solo rate limiter in production. — PASSED, with a caveat worth
 keeping.** 24 requests down a single connection gave **9 allowed / 15 denied**,
@@ -236,6 +255,13 @@ settles, is that CDP does both.
 **T10's own shipped fix was re-checked in the same run and holds:** all three
 tiles carry `aria-expanded` **and** `aria-controls` at rest —
 `formHost`, `formJoin`, `formSolo`.
+
+**RESOLVED AS FAR AS A MACHINE CAN TAKE IT, 2026-09-12.** The keyboard half is
+done and recorded above; what is left needs a person at a screen reader, and no
+tool on this machine substitutes for one. **Left for Nate or anyone with NVDA or
+VoiceOver**, against the three tiles and the live region this entry already
+names. It is not tracked as outstanding work for a session, because no session
+can do it.
 
 **The screen-reader half is still not run, and CDP does not substitute for
 it.** Driving keys proves the controls are operable; it says nothing about what
