@@ -9735,3 +9735,105 @@ filter that runs on every advancement render.
 `levelSpells`, `levelPsi`, `levelPicks` and `spellGrantBlock`: nothing outside
 F71's note above, which names this as its deliberate omission. The memory store
 has none of the four. No decision to argue past.
+
+**Adjusted 2026-09-12 (PR #967), before being taken, from
+`audit-premise-auditor`. Six corrections - and the finding is NOT taken, for
+the reason at the end.**
+
+- **The save path already refuses these characters, and this finding never
+  mentions it.** <!-- claim-ok: quoting the premise this note corrects -->
+  Option D prices the cost of leaving it at *"a sheet can show a level-4 spell
+  pick the class never granted"*. For spells and psionics the character usually
+  **cannot be saved at all**: the create validator builds its pool from
+  `powerGrantsFor(cls, 1, level)`
+  (`functions/api/character-creator/_lib/validate-character.js:416`) and a pick
+  no re-derived pool admits becomes a `power_not_on_list` violation (`:506`,
+  `:519`), which `characters.js:209` answers as
+  `422 "This character breaks its class rules"`. The real cost is **a save
+  refusal the player cannot explain**, which is worse to meet and better for
+  the data - nothing wrong is stored.
+- **Two of the four vectors this finding names cannot happen.**
+  <!-- claim-ok: quoting the premise this note corrects -->
+  It says *"a character above level 1 who changes variant, occupation, race or
+  an ability"*. **Race** is already covered: `pickClass` calls `resetBuild()`
+  whenever the id differs (`apps/character-creator/app.js:1307-1312`), which
+  empties all three maps and sets `S.level = 1` (`:987`). **Variant** cannot
+  reach them at all: `VARIANT_OVERRIDES`
+  (`apps/character-creator/js/parser.js:57-76`, read 2026-09-12) carries no
+  `magic`, no `psionics` and no schedule key, and the parser refuses a variant
+  that restates the skills block - so `pickVariant` and `pickOccVariant`
+  re-derive an **identical** grant list. What is left is **occupation and
+  ability**, which is half the reach claimed.
+- **The ability vector is real, and there is live data behind it.** Two shipped
+  `choose: 1` groups carry per-ability `powers_schedule` of different lengths
+  at different levels: `db/add-gypsy-gifted-class.sql:135` (levels 4, 7, 10,
+  13) against `:150` (2, 4, 6, 9, 12), and `db/add-operator-class.sql:88`
+  (4, 8, 12) against an ability granting no psionics block at all. Switching
+  the Operator's ability leaves `S.levelPsi` keyed to grants that no longer
+  exist.
+- **Option B, written literally "at the three render sites", is a no-op in
+  exactly the case that matters.** `advPowerBlock` returns `''` before either
+  grant block runs when `!grant.applicable` or `!grant.total`
+  (`app.js:1842`, `:1856`), and `skillPickBlock` returns `''` on an empty
+  grant list (`:1787`). The Operator case above - the one that produces the
+  422 - renders no block, so a render-site filter never fires. B also has to
+  decide what happens to **orphan indices** `gi >= grants.length`, which have
+  no grant to test against, and render is currently side-effect-free.
+- **Option A's premise is wrong in the useful direction: the stable key already
+  exists.** <!-- claim-ok: quoting the premise this note corrects -->
+  A is priced on *"grants have no guaranteed unique name today"*. Power grants
+  carry `slot`, assigned by a per-level counter
+  (`apps/character-creator/js/leveling.js:165-174`), whose own comment says it
+  is *"what everything downstream keys on alongside the level"* - and
+  `${kind}:${level}:${slot}` is already the wire format the live level-up path
+  uses at both ends (`sheet.js:2495-2496`,
+  `functions/api/character-creator/characters/[id]/level-confirm.js:176`). Only
+  `S.levelPicks` lacks one, and production repeats a level in a POWER schedule
+  (the shifter, twice each at levels 2, 3 and 4, `--remote` 2026-09-12) which
+  is what `slot` exists for. **So A is cheaper than this finding priced it and
+  B is broken, which inverts the recommendation.**
+- **Three of this finding's own citations are wrong, and one is invented.**
+  `heldSpells` **exists nowhere in the repo** - grepped across every `.js`,
+  `.mjs` and `.md` on 2026-09-12, and the only occurrence is the sentence in
+  this finding that names it. `:3662-3663` does not read by index: it is
+  `Object.values(byGroup).flat().filter(Boolean)`, which is index-agnostic and
+  is precisely how an orphaned pick reaches the server. `:3804` is
+  `levelPowerPicks`, which reads by index and has **zero callers** - dead code
+  that whoever takes this should delete. Only `:3819` (`levelPickRows`, via
+  `skillsPayload` at `:3794`) is both correct and live.
+
+**What the damage actually is, now that it has been read.** An orphan key
+(`gi >= grants.length`) is flattened into the save payload by `powersPayload`
+(`app.js:3659-3663`) and refused with a 422, while `levelPickRows` (`:3818`)
+silently drops the skill equivalent. Before the save, three visible symptoms:
+`picksSpent()` (`:3835`) and `taken` (`:1873`, `:1931`) count orphans, so a
+header reads "3 of 2 chosen"; `heldElsewhere` (`:1881`) treats an orphaned
+spell as already known, so it cannot be re-picked anywhere; and
+`spellGroupRows` (`:3234`) disables every row once the count is reached, so
+the player is shown a picker with nothing ticked and everything greyed.
+
+**Reachability is confirmed and it is one click.** The step breadcrumb renders
+`<button ... onclick="goStep(${i})">` for every completed step
+(`app.js:764`), `goStep` gates only on `stepApplies` (`:856`), and the
+ability picker and starting-level selector both live on the **Race** step
+(`:1060`, `:1178`). So: reach Advancement, pick, click back to Race or
+Occupation, change an ability or the occupation, return. Read from the step
+machinery on 2026-09-12; **not driven in a browser**, which is the one thing
+that would settle what the player sees.
+
+| | what | for | against |
+|---|---|---|---|
+| **E** (added by this pass) | prune orphan keys - those with `gi >= grants.length` - in `pickOcc`, `takeAbility` and `dropAbility`, where the grant list actually shrinks, rather than at render | kills the 422 and all three visible symptoms, in the handlers where B's blind spot does not exist; no key chosen, no state migrated | does not fix the mis-BINDING, where index 0 of the new list holds a pick made against index 0 of the old one; a floor, like B was meant to be |
+
+**NOT TAKEN, 2026-09-12. This one needs a decision rather than a taker.** The
+proposal recommends **B first**, and B does not fire in the case that produces
+the reported failure. Its fallback **A** is now the cheaper option on its
+merits, but it is a state migration - three in-wizard maps re-keyed, and drafts
+already saved carry the integer keys (`DRAFT_KEYS`, `app.js:440-448`). **E**
+is this pass's own invention and is not what the finding asked for. Taking any
+of the three would be substituting a scope rather than implementing one, which
+is what this menu's protocol forbids.
+
+**Nothing here blocks the last book.** F72 is the wizard's Advancement step and
+has no bearing on ingesting `mystic-russia`; it is recorded so the next reader
+starts from the measurements rather than from the six wrong sentences above.
