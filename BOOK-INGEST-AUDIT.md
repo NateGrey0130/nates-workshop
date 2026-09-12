@@ -9870,7 +9870,7 @@ is what this menu's protocol forbids.
 has no bearing on ingesting `mystic-russia`; it is recorded so the next reader
 starts from the measurements rather than from the six wrong sentences above.
 
-**TAKEN as option E, 2026-09-12 (PR #F72EPR), on Nate's word.** The floor, not
+**TAKEN as option E, 2026-09-12 (PR #978), on Nate's word.** The floor, not
 the fix, and the note above already says which is which.
 
 `pruneOrphanLevelPicks()` drops any `S.levelSpells`, `S.levelPsi` or
@@ -9896,6 +9896,7 @@ the stable key already exists and is already the live level-up path's wire
 format - but it is a state migration and saved drafts carry the integer keys.
 **F72 stays open on A**, with E underneath it as the floor.
 
-**Tests:** six pins, and one of them fails if a second caller is ever added.
+**Tests:** six pins, **five of which fail against the file as it was**, and one
+of the six fails if a second caller is ever added.
 Smoke 1972 -> **1978**, regression 385 unchanged; there is still no data check
 here, for the reason the adjustment gives - this lives entirely in wizard state.
