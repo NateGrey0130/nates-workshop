@@ -144,7 +144,7 @@ session had to sleep 21s between generations or the next `start_round` failed.
 The **30-round cap** is still untested and would need thirty real generations to
 reach; it is three lines and the same shape as the replay cap above.
 
-**PINNED IN SOURCE INSTEAD, 2026-09-12 (PR #T7PR), and the reasoning is the
+**PINNED IN SOURCE INSTEAD, 2026-09-12 (PR #975), and the reasoning is the
 point.** Thirty real generations is thirty Claude calls to exercise three lines,
 and the sentence above already says the cap is *the same shape as the replay
 cap* - which WAS driven live, in this very entry, and passed. So what was worth
