@@ -9608,7 +9608,7 @@ menu names them, and the memory store has none either. F67, F68 and F70 above
 are the same rule applied one level down; none of the three mentions the level
 pools, which is how this survived all three.
 
-**Taken, 2026-09-12 (PR #F71PR). Option A as written - one helper - and the
+**Taken, 2026-09-12 (PR #966). Option A as written - one helper - and the
 sibling state deliberately left alone, filed below as F72.**
 
 **Four of this finding's own claims did not survive the premise audit
