@@ -19,6 +19,29 @@ function parseFile(name) {
 }
 
 // ---------- 1. Parser ----------
+section('The browser entry points parse');
+{
+  // NOTHING imports app.js or sheet.js - the wizard boots on import - so this
+  // suite reads them as TEXT, for its source pins. That left a hole, and on
+  // 2026-09-11 a missing comma in an import list walked straight through it:
+  // `node --check` reads a .js file as a SCRIPT and said nothing, the whole
+  // suite and CI were green, and the module would have failed to parse in the
+  // browser - which is the wizard not loading at all. Parsed here as what each
+  // one actually is: app.js an ES module, sheet.js a classic script.
+  const stem = join(process.env.TEMP || process.env.TMPDIR || '/tmp', 'smoke-parse-' + process.pid);
+  const parses = (file, ext) => {
+    const copy = stem + '-' + file.replace(/\W/g, '-') + '.' + ext;
+    writeFileSync(copy, readFileSync(join(appDir, file), 'utf8'));
+    const r = spawnSync(process.execPath, ['--check', copy], { encoding: 'utf8' });
+    rmSync(copy, { force: true });
+    return { ok: r.status === 0, err: (r.stderr || '').split('\n').find((l) => /Error/.test(l)) || '' };
+  };
+  const app = parses('app.js', 'mjs');
+  check('app.js parses as the ES module the wizard loads', app.ok, app.err);
+  const sheet = parses('sheet.js', 'cjs');
+  check('and sheet.js parses as the classic script the sheet loads', sheet.ok, sheet.err);
+}
+
 section('Parser');
 
 // Custom languages: three consumers (wizard, sheet, server validator) share
