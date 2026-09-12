@@ -4069,7 +4069,7 @@ behaviour (1) in passing. The memory store has no hit for any of the three.
 in a code comment and two doc files, which is why the grep that matters here was
 the tree one and not the menu one.
 
-**Taken as option A, 2026-09-12 (PR #F54APR), on Nate's word. Both steps block.**
+**Taken as option A, 2026-09-12 (PR #981), on Nate's word. Both steps block.**
 
 **This finding offered no recommendation and that was fence-sitting.** The
 tie-breaker is something it establishes itself and then does not use: **the save
