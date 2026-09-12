@@ -1567,8 +1567,9 @@ of borrowed ladders.**
 
 **The book is GREEN-LIT for ingestion, 2026-09-12.** Five decisions are recorded
 in the survey — D1 spell namespacing, D2 the withdrawn level dispute, D3 the
-experience tables, D4 import all seven creatures, D5 the five-batch plan in its
-stated order. **Nothing is outstanding.**
+experience tables, D4 import **six** creatures — the Rusalka is filtered at
+import, the book's other refusals being the Firebird and the eighteen demons —
+D5 the five-batch plan in its stated order. **Nothing is outstanding.**
 
 **With this, no book in the batch is at `cached`.** Seven handed over on
 2026-08-28: six imported, this one surveyed.
