@@ -1395,6 +1395,27 @@ console.log('\n' + '[7/7] Checks that only a database can make');
       !!sw && !converts('Air', 'Fire', 'Water') && !convertsToMdc(compose({ rcc: sw })));
   }
 
+  // -- and changing that choice has to re-roll the pools (F67) ----------------
+  //
+  // Whether the wizard clears them is pinned in smoke; what this checks is the
+  // DATA half - that the shared predicate and the live classes agree about
+  // which abilities move a pool. The Spirit Warrior's realms are F64's case,
+  // and the Gypsy Gifted's Gifts each state their own I.S.P. formula.
+  {
+    const { abilityTouchesPool } = await import(pathToFileURL(join(appDir, 'js', 'parser.js')).href);
+    const defs = (id) => (classes.find((x) => x.id === id)?.special_abilities || []).filter((d) => d?.name);
+    const named = (id, name) => defs(id).find((d) => d.name === name);
+    const earth = named('spirit-warrior', 'Powers of the Earth Realm');
+    const air = named('spirit-warrior', 'Powers of the Air Realm');
+    check('a realm that converts hit points and S.D.C. moves a pool',
+      !!earth && abilityTouchesPool(earth) === true);
+    check('and a realm that grants no pool does not', !!air && abilityTouchesPool(air) === false);
+    const gifts = defs('gypsy-gifted').filter((d) => d.psionics?.isp_base != null);
+    check("the Gypsy Gifted's Gifts each state an I.S.P. formula, so swapping one re-rolls it",
+      gifts.length > 0 && gifts.every((d) => abilityTouchesPool(d) === true),
+      gifts.length + ' gift(s) with an isp_base');
+  }
+
   // -- per-level spell lists (BOOK-INGEST-AUDIT F59) ---------------------------
   //
   // New West printed 135 binds both Lyn-Srial picks to a category set, from
