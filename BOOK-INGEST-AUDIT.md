@@ -9607,3 +9607,131 @@ the count from mattering.
 menu names them, and the memory store has none either. F67, F68 and F70 above
 are the same rule applied one level down; none of the three mentions the level
 pools, which is how this survived all three.
+
+**Taken, 2026-09-12 (PR #F71PR). Option A as written - one helper - and the
+sibling state deliberately left alone, filed below as F72.**
+
+**Four of this finding's own claims did not survive the premise audit
+(`audit-premise-auditor`, 2026-09-12), which is the worst record of any finding
+on this menu.** It was filed and implemented in the same session, which
+`book-survey` §8 is explicit about, and this is what that rule exists for.
+
+- **The Reach paragraph's production measurement is WRONG.**
+  <!-- claim-ok: quoting the premise this note corrects -->
+  It says *"production holds three, all level 1 - so this is a mechanism
+  finding, not a live-damage one"*. Production holds three characters and
+  **one of them is level 5** - `Donald`, id 9914, on `chiang-ku-dragon`
+  (`--remote`, re-measured 2026-09-12), which is one of the two classes whose
+  variants restate all eight attribute dice. The single live draft is level 3.
+  `characters` has no soft-delete column, so those three rows are the table.
+  The mechanism spoils a build in progress rather than a saved row, so nothing
+  stored is retroactively wrong - but the population above level 1 is not
+  empty, and the sentence claiming it was is struck.
+- **"Eleven of the thirteen" is wrong by one, and the thirteen is wrong too.**
+  `setStartingLevel` clears `S.levelPools` and never nulls `S.pools`, so it
+  was never in the set being subtracted from. The real shape: **nine literal
+  `S.pools = null` statements**, and only `resetBuild` cleared both halves.
+  The "thirteen" came from expanding `attrsChanged` into its five callers
+  while not expanding `poolsMayHaveChanged`, which has two - expand both and
+  it is fourteen handlers, expand neither and it is nine statements. The smoke
+  section now counts the statements, so the number cannot drift again.
+- **`app.js:328` is a comment, not the declaration.** `S.levelPools` is
+  declared at `app.js:137` and written per level at `:2030`. That comment
+  now sits at `:345`, this PR having added lines above it.
+
+**And one trap the finding did not name, which would have broken a working
+feature.** The helper must NOT be called from `computePools()`.
+`rerollAdvancement(lvl)` calls `rollAdvancement(false, lvl)`, which passes the
+early return on `onlyLevel` and then reaches `computePools()` through
+`if (!S.pools)` (`app.js:2025`) - a clear in there would wipe every other
+level, against that step's own promise that *"Rolling one level leaves every
+other level exactly as it stands."* A smoke pin holds `computePools` clean and
+a second pin holds the comment that explains why.
+
+**What shipped.** `clearRolledPools()`, one line
+(`S.pools = null; S.levelPools = {};`), and all nine sites call it -
+`attrsChanged`, `resetBuild`, `pickVariant`, `pickOccVariant`,
+`poolsMayHaveChanged`, `pickOcc`, `pickTotem`, `doPsiRoll`, `skipPsiRoll`.
+`S.pools = null` now appears exactly once in the file, inside the helper, and a
+pin asserts that - which is the part of the proposal that was about the shape
+rather than the bug. `docs/leveling.md` records it.
+
+**What was deliberately NOT cleared, and the reasoning is the point.**
+`S.levelSpells`, `S.levelPsi` and `S.levelPicks` are emptied at the same two
+sites as `S.levelPools` today, so sweeping them in would have looked natural.
+They are **what the player chose**, not what the dice produced, and
+`rollAdvancement` does not write them - it writes `S.levelPools` and nothing
+else (`app.js:2030`). Clearing a choice is a different act from re-rolling a
+die, and F70 drew exactly this line when it left typed and point-bought
+attributes alone. They ARE stale in their own way, because they are keyed by
+grant index off the current class: filed below as **F72**, where the remedy is
+re-keying or validating rather than clearing.
+
+**Tests.** Seven source pins, **five of which fail against the file as it was**;
+the two that pass both ways are guards on behaviour that was already correct -
+that `computePools` does not clear, and that `rollAdvancement` still
+short-circuits on a non-empty `S.levelPools`. Those two are the ones that will
+catch a future refactor, which is why they are here despite proving nothing
+today. Seven pins written by F67, F68 and F70 were updated to the new call, and
+that is the real ongoing cost of routing nine sites through a helper. Smoke
+1951 -> **1958**, regression **385**, unchanged - **no data check, and this
+finding does not get one**: the staleness lives entirely in wizard state, and
+the only measurement that would have made a data check is the level of a live
+character, which rots.
+
+**Posture said back:** code only; no data, no schema. It held.
+
+### F72 - low - the level SPELLS, PSIONICS and SKILL PICKS are keyed by grant index, and nothing re-keys them when the class changes
+
+**Found 2026-09-12** by F71's premise audit, and left out of F71 on purpose:
+the remedy is not the one F71 was about.
+
+**The code.** `S.levelSpells`, `S.levelPsi` and `S.levelPicks` are all keyed by
+a **grant index** `gi` derived from the class as it stands when the step
+renders - `grants.map((g, gi) => …)` in `spellGrantBlock`
+(`apps/character-creator/app.js:1874`), `S.levelPicks[gi]` (`:1830`),
+`powerList` (`:3619`, `:3625`). They are emptied at exactly two places,
+`resetBuild` (`app.js:987`) and `setStartingLevel` (`:1213`), both read
+2026-09-12.
+
+**So** a character above level 1 who changes variant, occupation, race or an
+ability keeps its level-2..N spell, psionic and skill picks **bound to grant
+slots the new class re-derives**. Index 0 of the old class's grant list is
+index 0 of the new one, whatever either contains. `heldSpells` and the sheet
+read them back by index (`:3662-3663`, `:3804`, `:3819`).
+
+**Why this is NOT F71's fix.** F71 clears what the DICE produced. These are
+what the PLAYER chose, and clearing a choice on a variant change costs the
+player work they did deliberately - the same line F70 drew when it left typed
+and point-bought attributes standing.
+
+**Reach:** any character above level 1 whose class composition changes
+mid-build. Not measured against real characters: production holds one character
+above level 1 (`Donald`, level 5, `--remote` 2026-09-12) and one draft at level
+3, and neither is evidence that anyone has hit this.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | key the picks by a STABLE identifier - the grant's own name or slug rather than its position - so a re-derived list re-attaches the picks that still apply and orphans only the ones that do not | the picks survive a change that did not affect them, which is the whole reason not to clear | grants have no guaranteed unique name today; this needs a key chosen and the three maps migrated in state |
+| B | validate on render: drop a pick whose grant no longer offers it, keep the rest | much smaller, and it fails safe | a pick can still land on the WRONG grant when both offer it |
+| C | clear all three whenever `clearRolledPools()` fires | one line, consistent with F71 | throws away deliberate choices on every variant click, which F70 and F71 both declined to do |
+| D | leave it | nothing to build | a sheet can show a level-4 spell pick the class never granted |
+
+**Proposal:** B first, as the cheap correctness floor, and A only if a stable
+key turns out to exist. **Posture:** code only; no data, no schema.
+
+**Confidence: high that the keying is positional** - the three map writes and
+the four read sites were read on this branch. **Low on whether it is reachable
+in practice**, which was not walked: it needs a build above level 1 that reaches
+the Advancement step and then goes back and changes the class, and nobody has
+driven that.
+
+**Ongoing cost:** a source pin on whichever key is chosen. Option B costs one
+filter that runs on every advancement render.
+
+**Subject grep, 2026-09-12:** every `*AUDIT*.md` plus `SETUP-v2-CHANGES.md` for
+`levelSpells`, `levelPsi`, `levelPicks` and `spellGrantBlock`: nothing outside
+F71's note above, which names this as its deliberate omission. The memory store
+has none of the four. No decision to argue past.

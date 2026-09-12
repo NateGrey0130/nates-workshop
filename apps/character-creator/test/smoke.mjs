@@ -4477,7 +4477,7 @@ section('A variant or an occupation change re-rolls the pools (BOOK-INGEST-AUDIT
   const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
   const clearsAndRecomposes = (fn) => {
     const body = new RegExp('function ' + fn + '\\(id\\) \\{([\\s\\S]{0,400}?)\\n\\}').exec(appSrc);
-    return !!body && /S\.pools = null;/.test(body[1]) && /recompose\(\);/.test(body[1]);
+    return !!body && /clearRolledPools\(\);/.test(body[1]) && /recompose\(\);/.test(body[1]);
   };
   check('pickVariant clears the rolled pools and recomposes', clearsAndRecomposes('pickVariant'));
   check('pickOccVariant does the same for the occupation stage', clearsAndRecomposes('pickOccVariant'));
@@ -4486,10 +4486,10 @@ section('A variant or an occupation change re-rolls the pools (BOOK-INGEST-AUDIT
   check('and it is exported to the global scope the inline handler evaluates in',
     /pickVariant, pickOccVariant, pickOcc/.test(appSrc));
   check('pickOcc clears them too, after rolling its own bonuses',
-    /rollOccBonuses\(\);[\s\S]{0,400}?S\.pools = null;/.test(appSrc));
+    /rollOccBonuses\(\);[\s\S]{0,400}?clearRolledPools\(\);/.test(appSrc));
   // pickTotem is the pattern all of this cites and was never pinned.
   check('and pickTotem, the handler this pattern came from, still does',
-    /function pickTotem\(slug\) \{[\s\S]{0,300}?S\.pools = null;/.test(appSrc));
+    /function pickTotem\(slug\) \{[\s\S]{0,300}?clearRolledPools\(\);/.test(appSrc));
 }
 
 section('An attribute or a psionic tier re-rolls the pools (BOOK-INGEST-AUDIT F70)');
@@ -4505,7 +4505,7 @@ section('An attribute or a psionic tier re-rolls the pools (BOOK-INGEST-AUDIT F7
   const oneLiner = (fn) => (new RegExp('function ' + fn + '\\([^)]*\\) \\{.*').exec(appSrc) || [''])[0];
 
   check('attrsChanged() is the one place the attribute handlers clear the pools',
-    /function attrsChanged\(\) \{ S\.pools = null; \}/.test(appSrc));
+    /function attrsChanged\(\) \{ clearRolledPools\(\); \}/.test(appSrc));
   check('setRoll calls it, so every rolled attribute is covered by one line',
     /attrsChanged\(\);/.test(body('setRoll')));
   for (const fn of ['setMethod', 'setAllMethod', 'manualSet']) {
@@ -4514,15 +4514,15 @@ section('An attribute or a psionic tier re-rolls the pools (BOOK-INGEST-AUDIT F7
   check('pbAdj calls it after the point-buy budget guard, not before',
     /S\.attrs\[a\] = cur; return; \}\s+attrsChanged\(\);/.test(appSrc));
   check('doPsiRoll clears them, because the rolled TIER is where isp_base comes from',
-    /S\.pools = null;/.test(body('doPsiRoll')));
+    /clearRolledPools\(\);/.test(body('doPsiRoll')));
   check('and skipPsiRoll, which moves the same input the other way',
-    /S\.pools = null;/.test(body('skipPsiRoll')));
+    /clearRolledPools\(\);/.test(body('skipPsiRoll')));
   // The correction F70 itself got wrong, and the one most likely to be
   // "fixed" back: a shape selects powers_starting and categories_allowed and
   // moves no pool formula, so clearing there would re-roll the pools and the
   // starting money for nothing.
   check('setPsiShape deliberately does NOT, and says so in a comment',
-    !/S\.pools = null/.test(oneLiner('setPsiShape'))
+    !/clearRolledPools/.test(oneLiner('setPsiShape'))
     && /setPsiShape below is deliberately NOT given this line/.test(appSrc));
 
   check('clearAttrsWhoseDiceChanged compares the dice by VALUE and only where they moved',
@@ -4536,6 +4536,36 @@ section('An attribute or a psionic tier re-rolls the pools (BOOK-INGEST-AUDIT F7
       && /clearAttrsWhoseDiceChanged\(dice\);/.test(b)
       && b.indexOf('const dice') < b.indexOf('recompose()'));
   }
+}
+
+section('The level pools are cleared with the pools they sit on (BOOK-INGEST-AUDIT F71)');
+{
+  // Source pins, same standing as F67/F68/F70's: app.js boots on import, and
+  // 'The browser entry points parse' above is what makes a text match mean the
+  // file can actually load.
+  const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+  check('one helper clears both halves of the sheet maximum',
+    /function clearRolledPools\(\) \{ S\.pools = null; S\.levelPools = \{\}; \}/.test(appSrc));
+  // The count is the point of the finding: nine statements, and a tenth that
+  // forgets S.levelPools is exactly what this shape exists to prevent.
+  const bare = (appSrc.match(/S\.pools = null/g) || []).length;
+  check('and it is the ONLY place S.pools is nulled', bare === 1, 'sites: ' + bare);
+  check('every clear site calls it - nine of them',
+    (appSrc.match(/clearRolledPools\(\);/g) || []).length === 9,
+    'calls: ' + (appSrc.match(/clearRolledPools\(\);/g) || []).length);
+  // rerollAdvancement(lvl) reaches computePools() through rollAdvancement's
+  // lazy branch, so a clear inside computePools would wipe the other levels.
+  const cp = /function computePools\(force = false\) \{([\s\S]*?)\n\}/.exec(appSrc);
+  check('computePools does NOT call it, or rolling one level would wipe the rest',
+    !!cp && !/clearRolledPools/.test(cp[1]));
+  check('and the reason is written where the helper is',
+    /Deliberately NOT called from computePools\(\)/.test(appSrc));
+  // The level picks are choices, not rolls. F72.
+  check('the level spells, psionics and skill picks are left standing, and say why',
+    !/clearRolledPools\(\) \{[^}]*levelSpells/.test(appSrc)
+    && /what the player CHOSE, not what the dice produced/.test(appSrc));
+  check('rollAdvancement still short-circuits on a non-empty S.levelPools',
+    /if \(!force && !onlyLevel && Object\.keys\(S\.levelPools\)\.length\) return;/.test(appSrc));
 }
 
 section('Race and occupation');
