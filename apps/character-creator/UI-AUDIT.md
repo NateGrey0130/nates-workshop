@@ -4079,7 +4079,7 @@ fill identified the control. **That raises the severity and not the size.**
 shape.** Walking the hue up, the first value clearing 3:1 on all three grounds
 is `#66716d`, and `#5C736B` clears it at 3.79 / 3.43 / 3.01. **Both are lighter
 than `--border-strong` `#46554F`** - so raising `--border` collapses the
-`--border`/`--border-strong` pair, and `shared/styles.css:136-138` makes that
+`--border`/`--border-strong` pair, and `shared/styles.css:134-138` makes that
 pair the whole depth mechanism (*"DEPTH IS A LIT EDGE, NOT A SHADOW"*, with
 `--shadow: none` and a smoke check forbidding the alternative). Same shape as
 `F6`'s own conclusion about `--text-muted`: closing the gap costs the tier its
