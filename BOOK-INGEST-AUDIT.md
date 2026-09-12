@@ -1474,6 +1474,33 @@ WITHOUT the flag still loses its pools to the race, which is the posture.
 is still worth having: it would cover the fields this flag does not, and would
 have said something on the day the class was imported.
 
+**BUILT 2026-09-12 (PR #977), which closes this finding's last open half.**
+`scripts/class-check.mjs` now warns when a class is `category: occ`, does NOT
+carry `supersedes_race`, and states any of the seven keys `combineClasses`
+hands to the race (`js/parser.js:902-906`): `attribute_dice`,
+`hit_points_base`, `sdc_base`, `mdc_base`, `ppe_base`, `starting_money`,
+`xp_table`. It names which ones and says what happens to each.
+
+**A warning that moves no exit code**, which is the posture the alternative
+asked for and also the only workable one: most O.C.C.s are MEANT to lose these
+to a race - that IS the composition rule - so a blocking version would fire on
+the common case. Run against the shipped classes on 2026-09-12 it says nothing
+about `cyber-doc`, one field about `operator` (`starting_money`) and three
+about `juicer` (`hit_points_base`, `sdc_base`, `starting_money`) - which is
+the shape a judgement-call warning should have.
+
+**One correction to the alternative as written.** It asks for `occ_skills` to
+be covered too. **They must not be**: without the flag the two skill lists
+UNION (`js/parser.js:974-975`), so nothing of the occupation's is discarded -
+the loss runs the other way and only when the flag IS set. Warning about it
+would have been noise on every O.C.C. in the catalog.
+
+**What it still does not do**, stated so the entry is not read as more than it
+is: it does not count HOW MANY races would discard each field, which would need
+the catalog pass. The offline version fires on every run, including
+`--no-catalog`, which is when a class is first transcribed and when this is
+worth the most.
+
 ### F12 - a class note that records the app's limits ages badly, and nothing sweeps the citers
 
 An `extraction_notes` entry does two jobs at once. One is permanent - **what the

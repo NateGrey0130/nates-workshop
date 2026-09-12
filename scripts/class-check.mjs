@@ -188,6 +188,42 @@ for (const [attr, expr] of Object.entries(data?.attribute_dice ?? {})) {
   }
 }
 
+// An O.C.C. that states a pool, a money roll, an experience ladder or attribute
+// dice loses ALL of them to any race that states its own. combineClasses is one
+// branch - js/parser.js:902-906 - so without supersedes_race the race wins every
+// one of the seven, every time it has a value of its own.
+//
+// This is BOOK-INGEST-AUDIT F11's cheaper alternative, built 2026-09-12. F11
+// shipped the flag; this is the half that "would have said something on the day
+// the class was imported rather than on the day someone rolls one". A Kreeghor
+// Cosmo-Knight came out with roughly half its printed strength and a fiftieth of
+// its P.P.E., and nothing said a word.
+//
+// A WARNING and never an error, and it moves no exit code. Most O.C.C.s are
+// MEANT to lose these to a race - that IS the composition rule - so this would
+// fire on the common case if it blocked. It asks a question; it does not answer
+// one.
+//
+// occ_skills are deliberately NOT included, though F11's alternative names them:
+// without the flag the two skill lists UNION (js/parser.js:974-975), so nothing
+// of the occupation's is discarded. The loss runs the other way, and only when
+// the flag IS set.
+{
+  const LOST_TO_RACE = ['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base',
+    'ppe_base', 'starting_money', 'xp_table'];
+  if (data?.category === 'occ' && data?.supersedes_race !== true) {
+    const stated = LOST_TO_RACE.filter((k) => data?.[k] != null);
+    if (stated.length) {
+      warnings.push(stated.length + ' field(s) a racial class would discard - '
+        + stated.join(', ') + '. Taken with a race that states its own,'
+        + ' combineClasses keeps the RACE value and this class\'s is dropped;'
+        + ' taken alone (a human character) they all apply. If the book says this'
+        + ' class REPLACES what the character was, it wants supersedes_race: true'
+        + ' (BOOK-INGEST-AUDIT F11). If it does not, this is correct as it stands.');
+    }
+  }
+}
+
 const list = (label, items) => {
   if (!items.length) return;
   console.log(`\n${label} (${items.length})`);
