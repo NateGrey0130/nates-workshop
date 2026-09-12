@@ -3922,7 +3922,7 @@ copy was fixed by `F2`.
 
 | | what | for | against |
 |---|---|---|---|
-| **A (recommended)** | replace the paragraph with the true one, and POINT at `wizard-and-sheet.md` for the detail rather than restating it | one account of the rule, in one file; the other file already carries it and is already linked | the doc gets shorter and a reader has one more hop |
+| **A (recommended)** | replace the paragraph with the true one, and POINT at `wizard-and-sheet.md` for the detail rather than restating it | one account of the rule, in one file; `wizard-and-sheet.md:280-292` already carries it (read 2026-09-12) and `:278-280` already links here | the doc gets shorter and a reader has one more hop |
 | B | restate the full account here too | no hop | two copies of a rule that has already diverged once, which is how this finding happened |
 | C | delete the paragraph | shortest | the question "can I decline?" is a real one and deserves an answer where it is asked |
 
