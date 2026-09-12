@@ -1633,11 +1633,11 @@ section('Per-level spells and psionics');
   // The picker holds each grant separately, because the caps differ per grant.
   const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
   check('level spells are held per grant, not as one list',
-    /levelSpells\[gi\]/.test(appSrc));
+    /levelSpells\[gk\]/.test(appSrc));
   // Psionics too, once a book stated a per-level category. The old comment
   // claimed no book says which level a power was learned at; the Mystic does.
   check('and so are level psionic powers',
-    /levelPsi\[gi\]/.test(appSrc));
+    /levelPsi\[gk\]/.test(appSrc));
   check('each psionic grant asks for its own categories',
     /psionicCategoriesForGrant\(S\.cls, g\.level, g\.slot\)/.test(appSrc));
   check('the batched-psionics claim is gone',
@@ -4645,28 +4645,53 @@ section('An O.C.C. is warned about what a race will discard (BOOK-INGEST-AUDIT F
     && /const pastLife = superseded \? \[\] : \(rcc\.skills\?\.occ_skills \|\| \[\]\);/.test(parser));
 }
 
-section('A level-up pick whose grant slot is gone is dropped (BOOK-INGEST-AUDIT F72)');
+section('A level-up pick is keyed by its grant, not by its position (BOOK-INGEST-AUDIT F72)');
 {
   const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
-  check('pruneOrphanLevelPicks drops keys past the end of each grant list',
-    /function pruneOrphanLevelPicks\(\) \{[\s\S]{0,700}?if \(Number\(k\) >= n\) delete map\[k\];/.test(appSrc));
-  check('and covers all three maps, not just the one the 422 comes from',
-    /keep\(S\.levelPicks,[\s\S]{0,300}?keep\(S\.levelSpells,[\s\S]{0,300}?keep\(S\.levelPsi,/.test(appSrc));
-  check('it reads the SAME grant helpers the render sites do',
-    /skillGrantsFor\(S\.cls, 1, S\.level\)\.length/.test(appSrc)
-    && /spellGrantsFor\(S\.cls, 1, S\.level\)\.grants \|\| \[\]\)\.length/.test(appSrc)
-    && /psionicGrantsFor\(S\.cls, 1, S\.level\)\.grants \|\| \[\]\)\.length/.test(appSrc));
-  check('and does nothing at level 1, where there are no level picks at all',
-    /if \(!S\.cls \|\| S\.level <= 1\) return;/.test(appSrc));
-  // It sits in recompose and not in the three handlers F72 names, because
-  // takeAbility and dropAbility do not recompose - pruning there would read the
-  // previous class's grant counts.
-  const rc = /function recompose\(\) \{([\s\S]*?)\n\}/.exec(appSrc);
-  check('recompose calls it, after the class it prunes against is built',
-    !!rc && /pruneOrphanLevelPicks\(\);/.test(rc[1])
-    && rc[1].lastIndexOf('composeClass(') < rc[1].indexOf('pruneOrphanLevelPicks();'));
-  check('and it is the only caller, so the grant list has one gatekeeper',
+  const lvl = readFileSync(join(appDir, 'js', 'leveling.js'), 'utf8');
+  const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  const confirm = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator',
+    'characters', '[id]', 'level-confirm.js'), 'utf8');
+
+  check('grantKey is kind:level:slot',
+    /export function grantKey\(kind, g\) \{[\s\S]{0,80}?\$\{kind\}:\$\{g\?\.level \?\? 0\}:\$\{g\?\.slot \?\? 0\}/.test(lvl));
+  // The whole argument for option A over a key of its own: this string is
+  // already what the live level-up path puts on the wire at BOTH ends. If either
+  // side is ever re-spelled, this fails rather than the two drifting apart.
+  check('and it is the SAME shape the server already reads on level-confirm',
+    /'psionic' : 'spell'\}:\$\{p\.gained_at_level\}:\$\{p\.slot \?\? 0\}/.test(confirm));
+  check('and the sheet builds its level-up controls off level and slot too',
+    /lu-power-\$\{kind\}-\$\{g\.level\}-\$\{slot\}/.test(sheet));
+
+  // Skill grants had no slot before F72; two can share a level.
+  check('skillGrantsFor assigns a slot per level, after the sort',
+    /const slots = new Map\(\);\s*\n\s*for \(const g of sorted\) \{[\s\S]{0,200}?g\.slot = slot;/.test(lvl));
+
+  // Every site that stores or reads a pick.
+  check('the skill picker stores under a grant key', /const gk = grantKey\('skill', g\);/.test(appSrc));
+  check('and its inline handler passes that key, not an index',
+    /onchange="setLevelPick\('\$\{gk\}', \$\{slot\}, this\.value\)"/.test(appSrc));
+  check('the spell and psionic pickers do the same',
+    /const gk = grantKey\('spell', g\);/.test(appSrc) && /const gk = grantKey\('psionic', g\);/.test(appSrc));
+  check('and the skills payload reads back by key',
+    /S\.levelPicks\[grantKey\('skill', g\)\]/.test(appSrc));
+  check('no pick map is indexed by a bare loop counter any more',
+    !/S\.level(Picks|Spells|Psi)\[gi\] \|\| \[\];/.test(appSrc));
+
+  // A starting GROUP is still positional - it indexes startingGroups, which is
+  // not derived from a schedule - so the handler must not coerce a grant key.
+  check('the click handler coerces only what is actually a number',
+    /\/\^\\d\+\$\/\.test\(el\.dataset\.gi\) \? \+el\.dataset\.gi : el\.dataset\.gi/.test(appSrc));
+
+  // The prune is now the migration: an integer key is no grant's key.
+  check('the prune keeps only keys the composed class still derives',
+    /const live = new Set\(\(grants \|\| \[\]\)\.map\(\(g\) => grantKey\(kind, g\)\)\);[\s\S]{0,160}?if \(!live\.has\(k\)\) delete map\[k\];/.test(appSrc));
+  check('and it covers all three maps',
+    /keep\(S\.levelPicks, 'skill'[\s\S]{0,260}?keep\(S\.levelSpells, 'spell'[\s\S]{0,260}?keep\(S\.levelPsi, 'psionic'/.test(appSrc));
+  check('recompose is still its only caller',
     (appSrc.match(/pruneOrphanLevelPicks\(\);/g) || []).length === 1);
+  check('and it still does nothing at level 1',
+    /if \(!S\.cls \|\| S\.level <= 1\) return;/.test(appSrc));
 }
 
 section('Race and occupation');

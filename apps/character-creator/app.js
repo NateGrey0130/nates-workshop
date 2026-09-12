@@ -26,7 +26,7 @@ import { isChoiceGroup, isGearChoice, applyVariant,
 import { composeClass } from './js/compose.js';
 import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant,
          spellNamesForGrant, grantNote,
-         skillGrantsFor, spellGrantsFor, psionicGrantsFor, startingGroups,
+         skillGrantsFor, spellGrantsFor, psionicGrantsFor, grantKey, startingGroups,
          startingPicksFor, relatedAllowance, spellTraditionsAllowed, convertedPools,
          spellTraditionAllowed } from './js/leveling.js';
 
@@ -1663,33 +1663,36 @@ function pickOcc(id) {
 // Both go through js/compose.js and neither reaches for combineClasses — a
 // smoke check fails the build for that, because re-implementing the order is
 // exactly the bug compose.js exists to prevent.
-// A level-up pick is stored under the INDEX of the grant it was made against -
-// S.levelSpells[gi], S.levelPsi[gi], S.levelPicks[gi]. The grant list is derived
-// from the composed class, so changing the occupation or an ability can make it
-// shorter, and any pick past the new end belongs to a slot that no longer
-// exists. powersPayload flattens the maps index-agnostically, so an orphan
-// reaches the server and comes back as a 422 the player cannot explain; before
-// that it inflates the "n of m chosen" header, makes its own name unpickable
-// through heldElsewhere, and can grey out a picker with nothing ticked.
+// A level-up pick is stored under its grant's KEY - grantKey(kind, g), which is
+// kind:level:slot. Anything in the map whose key is not a grant the composed
+// class currently derives is dropped here.
 //
-// BOOK-INGEST-AUDIT.md F72, option E. It is a FLOOR and not the fix: a pick at
-// an index that still exists stays where it is, against whatever grant now
-// occupies that slot. Option A - re-keying by kind, level and slot, which is
-// already the wire format the live level-up path uses - is what closes that,
-// and it is a state migration.
+// This replaced an INDEX, which was the bug (BOOK-INGEST-AUDIT.md F72). The
+// grant list is derived from the composed class, so changing an occupation or
+// an ability re-derives it - and under positions that silently re-pointed every
+// pick at whatever grant had moved into its slot, or past the end of the list
+// entirely. An orphan reached the server through powersPayload, which flattens
+// the maps, and came back as a 422 the player could not explain.
 //
-// Called from recompose() rather than from the three handlers the finding names.
-// That is where the grant list is actually derived, so it cannot be forgotten by
-// a fourth caller - and takeAbility/dropAbility do NOT recompose today, so
-// pruning in them would read the previous class's grant counts.
+// UNDER A KEY, THIS IS ALSO THE MIGRATION. A draft saved before F72 carries
+// integer keys, no integer is a grant key, and so they are dropped on the first
+// recompose after it is resumed. Measured before shipping: production held ONE
+// draft above level 1 and its three pick maps were empty, so nothing real is
+// discarded - and that window only narrows as drafts accumulate.
+//
+// Called from recompose() rather than from a handler: that is where the grant
+// list is derived, so it cannot be forgotten by a later caller - and
+// takeAbility/dropAbility do NOT recompose, so pruning in them would read the
+// previous class's grants.
 function pruneOrphanLevelPicks() {
   if (!S.cls || S.level <= 1) return;
-  const keep = (map, n) => {
-    for (const k of Object.keys(map || {})) if (Number(k) >= n) delete map[k];
+  const keep = (map, kind, grants) => {
+    const live = new Set((grants || []).map((g) => grantKey(kind, g)));
+    for (const k of Object.keys(map || {})) if (!live.has(k)) delete map[k];
   };
-  keep(S.levelPicks, skillGrantsFor(S.cls, 1, S.level).length);
-  keep(S.levelSpells, (spellGrantsFor(S.cls, 1, S.level).grants || []).length);
-  keep(S.levelPsi, (psionicGrantsFor(S.cls, 1, S.level).grants || []).length);
+  keep(S.levelPicks, 'skill', skillGrantsFor(S.cls, 1, S.level));
+  keep(S.levelSpells, 'spell', spellGrantsFor(S.cls, 1, S.level).grants);
+  keep(S.levelPsi, 'psionic', psionicGrantsFor(S.cls, 1, S.level).grants);
 }
 
 function recompose() {
@@ -1821,8 +1824,9 @@ function skillPickBlock(grants) {
   const spent = picksSpent();
   const total = grants.reduce((n, g) => n + g.count, 0);
 
-  const body = grants.map((g, gi) => {
-    const chosen = S.levelPicks[gi] || [];
+  const body = grants.map((g) => {
+    const gk = grantKey('skill', g);
+    const chosen = S.levelPicks[gk] || [];
     const slots = Array.from({ length: g.count }, (_, slot) => {
       const mine = new Set(chosen.filter((_, i) => i !== slot).map((n) => String(n).toLowerCase()));
       const options = S.skillCatalog
@@ -1834,7 +1838,7 @@ function skillPickBlock(grants) {
         })
         .sort((a, b) => (a.category || '').localeCompare(b.category || '') || a.name.localeCompare(b.name));
       return `<div class="rowline">
-        <select onchange="setLevelPick(${gi}, ${slot}, this.value)">
+        <select onchange="setLevelPick('${gk}', ${slot}, this.value)">
           <option value="">— leave for later —</option>
           ${options.map((sk) => `<option value="${esc(sk.name)}"${
             chosen[slot] === sk.name ? ' selected' : ''}>${esc(sk.name)}${
@@ -1858,8 +1862,8 @@ function skillPickBlock(grants) {
   </div>`;
 }
 
-function setLevelPick(gi, slot, name) {
-  const list = S.levelPicks[gi] || (S.levelPicks[gi] = []);
+function setLevelPick(gk, slot, name) {
+  const list = S.levelPicks[gk] || (S.levelPicks[gk] = []);
   list[slot] = name || null;
   render();
 }
@@ -1903,8 +1907,9 @@ function advPowerBlock(kind, grant) {
 // spells are not in the list at all.
 function spellGrantBlock(grant) {
   const taken = Object.values(S.levelSpells).flat().filter(Boolean);
-  const blocks = grant.grants.map((g, gi) => {
-    const chosen = S.levelSpells[gi] || [];
+  const blocks = grant.grants.map((g) => {
+    const gk = grantKey('spell', g);
+    const chosen = S.levelSpells[gk] || [];
     const levels = spellLevelsForGrant(S.cls, g.level, g.slot);
     const names = spellNamesForGrant(S.cls, g.level, g.slot);
     const note = grantNote(S.cls, 'spell', g.level, g.slot);
@@ -1938,7 +1943,7 @@ function spellGrantBlock(grant) {
       ${unknownNamed.length ? `<p class="attr-note">${unknownNamed.length} named
         ${unknownNamed.length === 1 ? 'spell is' : 'spells are'} not in the catalog yet:
         ${esc(unknownNamed.join(', '))}.</p>` : ''}
-      ${spellGroupRows(pool, g.count, 'spell-adv', gi)}`;
+      ${spellGroupRows(pool, g.count, 'spell-adv', gk)}`;
   }).join('');
 
   return `<div class="panel-inset">
@@ -1961,8 +1966,9 @@ function spellGrantBlock(grant) {
 // major psychic an exception to it - intersecting would throw that away.
 function psiGrantBlock(grant) {
   const taken = Object.values(S.levelPsi).flat().filter(Boolean);
-  const blocks = grant.grants.map((g, gi) => {
-    const chosen = S.levelPsi[gi] || [];
+  const blocks = grant.grants.map((g) => {
+    const gk = grantKey('psionic', g);
+    const chosen = S.levelPsi[gk] || [];
     const cats = psionicCategoriesForGrant(S.cls, g.level, g.slot);
     const note = grantNote(S.cls, 'psionic', g.level, g.slot);
     const heldElsewhere = new Set([...S.psi, ...taken.filter((n) => !chosen.includes(n))]
@@ -1973,7 +1979,7 @@ function psiGrantBlock(grant) {
       ${g.count === 1 ? 'power' : 'powers'}
       <span class="muted">from ${esc(listed ? `a list of ${g.from.length}` : cats ? cats.join(', ') : 'any category')}</span></p>
       ${note ? `<p class="attr-note">${esc(note)} — the catalog cannot check this one.</p>` : ''}
-      ${psiGroupRows(pool, g.count, 'psi-adv', gi)}`;
+      ${psiGroupRows(pool, g.count, 'psi-adv', gk)}`;
   }).join('');
 
   return `<div class="panel-inset">
@@ -3643,23 +3649,23 @@ function setBio(key, value) {
 // above it earned. Kept apart so each picker counts against its own budget —
 // folding the level-6 spells into S.spells would put the Powers step over its
 // starting allowance and read as a bug.
-function powerList(kind, gi = null) {
+function powerList(kind, at = null) {
   switch (kind) {
     case 'spell': return S.spells;
     case 'psi': return S.psi;
     // Per grant, because each level's spells are capped by that level.
-    case 'spell-adv': return S.levelSpells[gi] || (S.levelSpells[gi] = []);
+    case 'spell-adv': return S.levelSpells[at] || (S.levelSpells[at] = []);
     // The -start pair is to the flat `spells`/`psi` what -adv is to them: the
     // same level, a different rule, so each group keeps its own budget. Only a
     // class that SPLITS its level-1 pick uses them.
-    case 'spell-start': return S.spellGroups[gi] || (S.spellGroups[gi] = []);
-    case 'psi-start': return S.psiGroups[gi] || (S.psiGroups[gi] = []);
-    default: return S.levelPsi[gi] || (S.levelPsi[gi] = []);
+    case 'spell-start': return S.spellGroups[at] || (S.spellGroups[at] = []);
+    case 'psi-start': return S.psiGroups[at] || (S.psiGroups[at] = []);
+    default: return S.levelPsi[at] || (S.levelPsi[at] = []);
   }
 }
 
-function togglePower(kind, name, gi = null) {
-  const list = powerList(kind, gi);
+function togglePower(kind, name, at = null) {
+  const list = powerList(kind, at);
   const i = list.indexOf(name);
   if (i >= 0) list.splice(i, 1); else list.push(name);
   render();
@@ -3835,8 +3841,8 @@ function levelPickRows() {
   const find = (n) => skillByName().get(n)
     || (isFamilyName(n) ? { ...(skillByName().get(otherRowFor(n)) || {}), name: n } : {});
   const out = [];
-  skillGrantsFor(S.cls, 1, S.level).forEach((g, gi) => {
-    for (const name of (S.levelPicks[gi] || []).filter(Boolean)) {
+  skillGrantsFor(S.cls, 1, S.level).forEach((g) => {
+    for (const name of (S.levelPicks[grantKey('skill', g)] || []).filter(Boolean)) {
       const r = find(name);
       out.push({
         name, category: r.category, pct: r.base || 0, per_level: r.per_level || 0,
@@ -4179,8 +4185,11 @@ $('app').addEventListener('change', (ev) => {
     case 'skill': return toggleSkill(el.dataset.kind, el.dataset.name);
     case 'group': return toggleGroupPick(+el.dataset.group, el.dataset.name, +el.dataset.limit);
     case 'gear': return toggleGearPick(+el.dataset.group, el.dataset.slug, +el.dataset.limit);
+    // A -start group is still an INDEX into startingGroups; a -adv pick is a
+    // grant key (F72). Coerce only what is actually a number.
     case 'power': return togglePower(el.dataset.kind, el.dataset.name,
-      el.dataset.gi == null ? null : +el.dataset.gi);
+      el.dataset.gi == null ? null
+        : (/^\d+$/.test(el.dataset.gi) ? +el.dataset.gi : el.dataset.gi));
   }
 });
 
