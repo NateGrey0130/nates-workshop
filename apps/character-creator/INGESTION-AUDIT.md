@@ -3182,6 +3182,83 @@ five books' pages open; the bounded task is 12 citations. The 52 book-less rows
 are **not** part of it and would need their own finding if anyone wants them
 examined.
 
+**Taken in part, 2026-09-12 (PR #968). Three of the ten cited; the other seven
+are a different job than this finding describes.**
+
+**The (b) half's premise is wrong twice, and the second way matters.**
+<!-- claim-ok: quoting the premise this note corrects -->
+It says *"the bounded task is 12 citations"*.
+
+- **The count is ten, not twelve, and the backlog shrank on its own.** Measured
+  `--remote` 2026-09-12: the `skills` catalog is **372** rows — 279 with pages,
+  44 naming a book and no page, 49 with no book at all — against the 237 / 56 /
+  52 = 345 this finding recorded on 2026-09-06. Of the 44, **34 cite
+  `Rifts Skill List`**, which is the phantom sheet this finding already holds
+  apart. Ten are left.
+- **Seven of the ten are not missing a page. They name a book that does not
+  define the skill.** That is an attribution error, not a citation gap, and no
+  amount of reading those books fixes it by adding a number.
+
+**The four `pantheons-of-the-megaverse` rows were already answered, in this
+repo, before this finding was written.**
+`apps/character-creator/docs/surveys/potm.md:43-49` is headed *"This book
+defines ZERO new skills, spells or psionic powers"* and says of these exact
+rows that they are *"catalog rows the classes use, not new definitions"*.
+Confirmed independently off the cache 2026-09-12: `Language: Ancient Greek` and
+`Language: Troll/Giant` occur once each, on cache p093, inside
+*"Skills of Note: Speak Troll/Giant, Dragonese/Elf and Ancient Greek 98%"* — an
+NPC's skill line; `Language: Dwarven` likewise on cache p108-109, and
+`Language: Old Norse` across eleven pages, never as a definition. **A class
+granting a skill is not a book defining it**, and the survey saying so is the
+kind of hit the subject grep is for.
+
+**Three of the four `Rifts Ultimate Edition` rows are not in RUE's skill list
+either.** That list is printed 302-303 (cache p305-p306) and was read in full on
+2026-09-12:
+
+| catalog row | catalog values | what RUE prints |
+|---|---|---|
+| `Helicopter` | Pilot, 35% +5% | no such entry; RUE has `Military: Combat Helicopter (52%+3%)` |
+| `M.D. in Cybernetics` | Medical, 40% +5% | no such entry; RUE has `Cybernetic Medicine (40%/60%+5%)` |
+| `Lore: Dimensions` | Technical, 15% +5% | no such entry; RUE's Lore list is American Indians, Cattle & Animals, D-Bee, Demons & Monsters, Faeries & Creatures of Magic, Juicers, Magic, Psychics & Psionics |
+
+`Lore: Dimensions` occurs exactly once in the whole RUE cache, on cache p129
+(printed 126), reading *"Lore: Dimensions (+20%; Special)"* — a class's skill
+line with a bonus, the same shape as the four above.
+
+**These three are Rifts Main Book names.** RUE renamed or dropped all three, and
+**Rifts Main Book is not cached**: the PDF is on the machine and no cache
+directory exists for it (every `manifest.json` under `.cache/books/` was read on
+2026-09-12 while taking `BOOK-INGEST-AUDIT` F70's neighbours). So the seven
+cannot be cited today by anyone, at any cost, without caching another book.
+
+**What shipped.** The three that ARE citable, in
+`apps/character-creator/db/zzzzzzzzzz-f26b-skill-page-citations.sql`, applied
+`--remote` before this PR merged and read back:
+
+| row | citation | where it was read |
+|---|---|---|
+| `Robot Combat: Basic` | `Rifts Ultimate Edition p.319` | the description, cache p322; also listed `(SPECIAL)` on printed 303, which agrees with the catalog's base 0 / per-level 0 |
+| `W.P. Lance` | `Palladium Fantasy RPG Main Book p.60` | cache p062, between `W.P. Battle Axe` and `W.P. Shield` |
+| `Language: Native Tongue` | `Palladium Fantasy RPG Main Book p.50` | cache p052, the Communication Skills section |
+
+The two Palladium Fantasy rows also took the book's canonical title; they
+carried `palladium-fantasy-core` and `Palladium Fantasy RPG 2nd Ed.`, both
+registered aliases of the same book. `Sign Language` already cited
+`Palladium Fantasy RPG Main Book p.50`, which is the independent check on the
+`+2` offset — two rows read off the same section agree.
+
+**Production after: 10 book-without-page rows became 7**, read back `--remote`.
+
+**`F26` keeps its (b) number for those seven, and the work is different.** It is
+not *"read five books' pages"*; it is **correct seven attributions**, and it is
+blocked on either caching Rifts Main Book or deciding that a wrong book is worse
+than no book. Neither is a citation task and neither should be attempted inside
+one. The 49 rows with no book at all are still not part of it.
+
+**Posture said back:** data only — `source_book` moves and one `note` is
+written; no name, no category, no base, no per-level, no schema. It held.
+
 ---
 
 ## Filed 2026-09-06, from the catalog's own duplicate suggestions
