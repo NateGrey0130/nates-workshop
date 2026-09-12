@@ -4340,6 +4340,36 @@ section('Chosen ability fragments');
 // at all, a Godling grants its own skills and stands alone - but the pairing is
 // the normal case, and a racial class with nothing to CHOOSE is not a playable
 // character by itself.
+section("The sheet's psionic pickers match an object category gate (BOOK-INGEST-AUDIT F66)");
+{
+  // The matcher itself, on the shape that broke the pickers: a category entry
+  // that narrows itself with an except list, which a string never equals.
+  const GATE = [{ name: 'Physical', except: ['Telekinesis'] }, 'Sensitive'];
+  check('the shared matcher admits a power in an object-gated category',
+    categoryAllows(GATE, { name: 'Alter Aura', category: 'Physical' }) === true);
+  check('and refuses the one the entry excepts',
+    categoryAllows(GATE, { name: 'Telekinesis', category: 'Physical' }) === false);
+  check('a plain includes matches neither, which is the defect', GATE.includes('Physical') === false);
+  check('and the entry has a label rather than printing as an object',
+    categoryLabel(GATE[0]).includes('Physical'));
+
+  // sheet.js is a classic script that cannot be imported, so its two pickers
+  // are pinned as source - the shape F61 and F65 pinned for the same reason.
+  const sheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  check('the sheet has one psionic category matcher, reached through the bridge',
+    /const psiAdmits = \(cats, power\)/.test(sheetSrc)
+    && /globalThis\.skillCats[\s\S]{0,40}categoryAllows\(cats, power\)/.test(sheetSrc));
+  check('both psionic pickers use it', (sheetSrc.match(/psiAdmits\(/g) || []).length === 2);
+  check('and neither matches a category with a plain includes any more',
+    !/cats\.includes\(x\.category\)/.test(sheetSrc)
+    && !/g\.categories\.includes\(x\.category\)/.test(sheetSrc));
+  check('both captions label the entries rather than joining objects',
+    (sheetSrc.match(/psiCatLabel\(/g) || []).length === 2);
+  check('and the bridge exports the label helper those captions need',
+    /globalThis\.skillCats = \{ categoryAllows, categoryLabel \}/
+      .test(readFileSync(join(appDir, 'sheet.html'), 'utf8')));
+}
+
 section('Race and occupation');
 {
   const mk = (cat, skills) => parseClassMarkdown(
