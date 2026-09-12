@@ -9736,7 +9736,7 @@ filter that runs on every advancement render.
 F71's note above, which names this as its deliberate omission. The memory store
 has none of the four. No decision to argue past.
 
-**Adjusted 2026-09-12 (PR #F72PR), before being taken, from
+**Adjusted 2026-09-12 (PR #967), before being taken, from
 `audit-premise-auditor`. Six corrections - and the finding is NOT taken, for
 the reason at the end.**
 
