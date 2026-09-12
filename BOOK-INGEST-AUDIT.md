@@ -3109,7 +3109,7 @@ not the thing the finding predicted. Running it is what raises this.
 this order.
 
 
-**Taken, 2026-09-11 (PR #F23PR). The experiment, run and reported. Nothing is
+**Taken, 2026-09-11 (PR #959). The experiment, run and reported. Nothing is
 proposed beyond what it answers, and the freezing half stays declined - with
 its arithmetic corrected below.**
 
