@@ -3998,9 +3998,9 @@ reasons. That is why this is a decision and not a defect.**
   with no reason, or a reason beside a live button, are each worse than either
   alone."*
 
-**What is NOT in question.** The save refuses either way —
-`_lib/validate-character.js:193` returns `attribute_minimum` as a blocking
-violation and `characters.js:209` answers 422. `F53` fixed the doc that said
+**What is NOT in question.** The save refuses either way, read 2026-09-12 at
+`_lib/validate-character.js:193`, which returns `attribute_minimum` as a
+blocking violation, and `characters.js:209`, which answers 422. `F53` fixed the doc that said
 otherwise. So this is about **where a player is told**, never about what is
 allowed.
 
