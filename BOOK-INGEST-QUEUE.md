@@ -1405,3 +1405,83 @@ prose.
 *Dated 2026-09-10, written the day the book closed and before any of the three
 was taken. This line does not track them: read each one's outcome note under
 its heading in `BOOK-INGEST-AUDIT.md`. F59 was filed from F57's premise audit.*
+
+### `mystic-russia` cache re-run, 2026-09-12 - and every other text-layer cache with it
+
+Status stays **`cached`**. No survey, no data; this is the one prep step the
+`new-west` section above asks for, run at last, plus the sweep it implies.
+
+**The instruction, from that section:** *"Run `ocr-book.py` again on any book
+cached before 2026-09-08 before surveying it"*, ending
+*"`spirit-west` and `mystic-russia` were cached the same day and have not had
+this done."* `spirit-west` had it done on 2026-09-10, as its own section
+records. `mystic-russia` is the last one, and it is now done:
+
+| | |
+|---|---|
+| welded pages | **0** |
+| glyph-corrupt | **1** - cache p175, and it is a **Heroes Unlimited house ad**, not a page of the book. Cache p175-p177 are ads and p178 is blank; the last page of the book is cache p174, *Ley Lines of Russia* |
+| substituted digits | **72 pages** |
+
+**Seventy-two, and they land on the two page kinds an import reads.** Cache
+p108 (printed 107) is the bio-wizardry price list and prints
+`Claw: Animal - !D6xlOO credits`, `Horn: Supernatural Being - 2D4xlOOO`, a
+dozen rows of it. Cache p122 (printed 121) is the supernatural P.S. damage
+table - `!D4xlO M.D. on a power punch`, `!D6xlO+10 on a full strength punch`.
+Both were read off the cache on 2026-09-12. The offset holds at +1 by the
+folios printed on those two pages: cache p108 ends `107`, cache p122 ends
+`121`.
+
+**A render does not cure this** - it is in the ink, which is the half of
+`book-survey` 0a's distinction that `new-west` is the reference case for. Read
+the token as the dice expression it can only be.
+
+### The six text-layer caches with no digit measurement at all
+
+Found while doing the above, by reading every `manifest.json` under
+`.cache/books/` on 2026-09-12 rather than trusting any list. **Six of the
+eleven text-layer caches had no `substituted_digits` key**, and five of those
+six had none of the three, so every book below had been extracted from with no
+idea whether its digits were intact. All six were re-run the same day; the run
+is free, since every page is already cached.
+
+| slug | welded | glyph-corrupt | substituted digits |
+|---|---|---|---|
+| `dag` | 6 | 2 | **40** |
+| `fom` | 9 | 4 | 2 |
+| `free-quebec` | 2 | 6 | **30** |
+| `ju` | 3 | 7 | **44** |
+| `pf` | 6 | 1 | **28** |
+| `potm` | 1 | 3 | 11 |
+
+`free-quebec` is the one to notice: it had `welded_pages` and
+`corrupt_pages` already and no `substituted_digits`, so it was re-run once
+before the digit detector existed and looked measured. **A manifest with two of
+the three keys is not a measured cache.**
+
+**Every text-layer cache in the tree carries the substitution to some degree**,
+from 2 pages (`fom`) to 116 (`bom`). The five scan caches - `rue`,
+`phase-world`, `triax`, `underseas`, `ww` - correctly carry none of the three:
+the digit detector is text-layer only, by the script's own design.
+
+### Nothing leaked into production, swept 2026-09-12
+
+The `new-west` sweep is the precedent and this one is wider: a **case-sensitive**
+`GLOB` (`LIKE` is case-insensitive in SQLite and reports matches that are not
+there) for `xlO`, `!D<digit>`, `<digit>DlO` and `x<digit>O` over every
+numeric-bearing column of `gear`, `vehicles`, `spells`, `skills`,
+`psionic_powers` and `vehicle_weapons`, `--remote`:
+
+```
+gear 0 | vehicles 0 | spells 0 | skills 0 | psionic_powers 0 | vehicle_weapons 0
+```
+
+`imported_classes` returns **10** rows, and all ten are the Spirit West classes
+**quoting the corrupted token beside the reading** in their notes - *"The trade
+goods print as 2D6xlOO and are read as 2D6x100"*. That is the shape that book
+established and it is the right one: the note records what the page says, the
+data records what it means.
+
+**What this does not prove.** The sweep finds the cipher's own tokens. A figure
+misread into a plausible number - `!D4` read as `1D4` where the page meant
+something else - leaves no token to find, and nothing here reaches that.
