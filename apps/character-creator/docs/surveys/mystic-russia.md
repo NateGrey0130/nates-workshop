@@ -297,16 +297,39 @@ becomes its own tradition row at the level this book prints, linked by
 `same_spell_as`. `variant_note` is **not** the mechanism here: it records what an
 older book prints *instead*, and these are not competing readings of one row.
 
-**D3 — the six playable creatures with no experience table borrow one**,
-following the precedent the book itself sets by sending the Man-Wolf to the
-Dragon Hatchling's table. **Propose a specific existing ladder per creature and
-show Nate the list of six before writing any of it** — the borrowing is agreed,
-the particular ladders are not.
+**D3 — all seven playable creatures OMIT `xp_table` and take the house
+default.** Settled 2026-09-12, and it replaces an earlier D3 that promised Nate
+a list of six proposed ladders. **There is nothing to propose.** `xp_table` is
+not a named reference — it is a literal cumulative-XP array in class
+frontmatter, and `xpTableFor()` in `apps/character-creator/js/leveling.js`
+falls back to `DEFAULT_XP_TABLE` when a class omits it. **All seven Dragon
+Hatchling classes in this catalog use that default**, so the pointer the book
+itself gives the Man-Wolf — *"the same experience table as the Dragon
+Hatchling"* — resolves HERE to the default. The other six state no ladder, so
+they land in the same place. **172 of 265 live classes already use it.** Zero
+invention, and the "six need a decision before they can be imported" framing
+turns out to have been too strong: they need no ladder at all.
+
+**D4 — import all seven creatures**: Domovoi, Leshii, Polevoi, Rusalka,
+Vodianoi, Spirit Wolf, Man-Wolf. **Each entry's GM-permission caveat goes into
+`extraction_notes` verbatim**, including Rusalka's *"not recommended as player
+characters ... best suited as a villain"* and the Domovoi/Leshii *95% abstain
+from adventure*. Precedent: **eight live classes already carry
+"optional player character" language**, creatures among them — Vacuum Wasp,
+Termite Engineer, Gargoyle, Dragon Ray, Rurlel Eelman. The Firebird is excluded
+(*"Not applicable as a player character"*), as are the eighteen demons.
+
+**D5 — the five-batch plan below is GREEN-LIT, in its stated order.** Spells,
+then classes, then creatures, then gear, then vessels. The spells-before-classes
+ordering is not a preference: a class citing a spell the catalog does not hold
+fails its check.
 
 ## Extraction plan
 
-Nothing below is committed to except the three decisions above. The rest is the
-proposal to agree on.
+**Green-lit by D5 on 2026-09-12, in this order.** This section is no longer a
+proposal. Roughly 180 rows across several sessions; the `book-survey` skill
+§7/§8 is the authority on how they are split, and its rule is one session per
+book, booted from this file.
 
 | # | batch | size | notes |
 |---|---|---|---|

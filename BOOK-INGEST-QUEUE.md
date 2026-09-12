@@ -1554,10 +1554,21 @@ Hound** (printed 40) is the one entry carrying no tag at all.
 creature-field pages across the WHOLE book, and twenty-four of them are in the
 classes section at printed 75-155. The bestiary is printed 16-71, 56 pages.
 
-**The blocker that reading found:** six of the seven playable entries state no
-experience table anywhere in the book, and no spirit appears on the printed-172
-ladder. Only the Man-Wolf says how to level, borrowing the Dragon Hatchling's.
-That is a decision to settle before the batch, not a reading.
+**The "blocker" that reading found was not one, and it is worth saying why.**
+Six of the seven playable entries state no experience table anywhere in the
+book, and only the Man-Wolf says how to level — *"the same experience table as
+the Dragon Hatchling"*. That reads like a decision to settle. It is not:
+`xp_table` is a literal array in class frontmatter with a **house-rule default**
+when it is absent, **all seven Dragon Hatchling classes here use that default**,
+and so do 172 of 265 live classes. The book's own pointer therefore resolves to
+the default, and the other six land in the same place. Settled as **D3** in the
+survey: all seven omit `xp_table`. **Checking the catalog beat proposing a list
+of borrowed ladders.**
+
+**The book is GREEN-LIT for ingestion, 2026-09-12.** Five decisions are recorded
+in the survey — D1 spell namespacing, D2 the withdrawn level dispute, D3 the
+experience tables, D4 import all seven creatures, D5 the five-batch plan in its
+stated order. **Nothing is outstanding.**
 
 **With this, no book in the batch is at `cached`.** Seven handed over on
 2026-08-28: six imported, this one surveyed.
