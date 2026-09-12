@@ -767,3 +767,68 @@ row that is missing has twice been the reader’s own”* — so this paragraph 
 the row while no PR existed, and the PR that first committed this file added it
 to `.claude/skills/audit-menu/SKILL.md`, beside the other `apps/media-vault`
 rows. The row records the `V` prefix and the `##` heading level this file uses.
+
+## V8 — medium — the allow policy holds seven addresses, the mirror holds an unknown number, and nothing can compare them
+
+**Filed 2026-09-12, NOT taken.** Found while checking whether
+`MV_SHARE_CANDIDATES` was ever set — it was, on 2026-09-09, and that is not the
+problem.
+
+**The measurement.** Read through the `cloudflare-api` plugin on **2026-09-12**,
+which is how `V4` and `V6` read the same policy:
+
+| | |
+|---|---|
+| *Friends Only* Access policy on `nates-workshop.pages.dev` | **7** email rules |
+| `MV_SHARE_CANDIDATES` in Pages production | present, type `secret_text`, **value redacted by the API and by the dashboard** |
+| what this file says | *"the five addresses in the allow policy"* (`SHARE-AUDIT.md:492`, `:499`, `:652`) <!-- claim-ok: quoting this file's own dated evidence line --> |
+
+So the policy has grown by two since `V4` was written, and **whether the mirror
+followed cannot be established from here by anyone**. `secret_text` returns the
+key and no value over both the API and the dashboard.
+
+**This is exactly the drift `V6` documented and declined to check**, arriving.
+`V6` shipped the `SETUP.md` twin-step paragraph and recorded that nothing
+watches the two agree, on the ground that *"There is no request that reveals who
+is on an email allow list, so there is no equivalent here."*
+<!-- claim-ok: quoting V6's stated reason, cited at SHARE-AUDIT.md:648-652 -->
+
+**That reason is sound and it does not cover a COUNT.** A response of
+`{ candidates: 7 }` reveals no address, and compared against the policy's rule
+count it answers the only question anyone has: *did the mirror keep up?* That is
+the argument for re-proposing, and `V6`'s decision is named here rather than
+quietly stepped over.
+
+**Consequence if it has NOT kept up:** a friend who can sign in does not appear
+in the Share picker, and `shares.js` re-checks the same list on `POST`, so the
+grant cannot be made by hand either. It fails closed, which is the right
+direction — and silently, which is the problem. Nobody gets an error that says
+*"this person can sign in but cannot be offered a share."*
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | `GET` returns the candidate **count** beside the list it already returns, and `SETUP.md` records that it should equal the Access policy's rule count | makes the drift visible forever, reveals no address, and is a few lines on an endpoint that already computes the list | one more number in a response, and a person still has to compare it |
+| B | Nate opens the Share modal once and the answer goes in this note | free, today | answers it once; the same question returns the next time an address is added |
+| C | move the mirror to a readable `plain_text` variable | readable by the plugin forever | the repo is public and the variable is a list of friends' email addresses - this is why it is a secret |
+| D | leave it | nothing to build | the two lists drift silently and the failure mode is a friend quietly missing from a picker |
+
+**Proposal:** A, with B done first because it costs nothing and tells us whether
+there is a live problem right now. **Posture:** one added field on an existing
+response plus documentation. No new endpoint, no new variable, no address ever
+returned.
+
+**Confidence: high on the seven and on the redaction** — both read through the
+plugin on 2026-09-12. **Unknown, and unknowable from here, whether the mirror
+holds five or seven**, which is the finding.
+
+**Ongoing cost:** A costs one field and one sentence in `SETUP.md`. Nothing runs
+on a schedule.
+
+**Subject grep, 2026-09-12:** `MV_SHARE_CANDIDATES` across every `*AUDIT*.md`,
+`SETUP.md` and `apps/media-vault/README.md`: `V4` (which created it), `V6`
+(which declined the check, argued past above) and `SETUP.md:481-484`, which
+already describes it as a hand-kept mirror and says unset means nobody. The
+memory store's `share-audit-menu.md` carries the 2026-09-09 reading of seven and
+names this as *"the standing problem"* without a number; this is that number.
