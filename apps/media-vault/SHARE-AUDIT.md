@@ -833,7 +833,7 @@ already describes it as a hand-kept mirror and says unset means nobody. The
 memory store's `share-audit-menu.md` carries the 2026-09-09 reading of seven and
 names this as *"the standing problem"* without a number; this is that number.
 
-**Taken as option A, 2026-09-12 (PR #V8PR), on Nate's word.** Posture held: one
+**Taken as option A, 2026-09-12 (PR #982), on Nate's word.** Posture held: one
 added field on an existing response plus documentation. No new endpoint, no new
 variable, **no address returned**.
 
