@@ -9238,8 +9238,8 @@ THREE handlers, because the finding named two and there are three.**
   compose to a different pool signature from their siblings, so a
   "does this variant override a pool key" test saves nothing - and it would
   answer FALSE for the case that matters most: switching *away from*
-  `witch/gift-of-union` drops an I.S.P. and S.D.C. bonus the incoming variant
-  never mentions. F67's `abilityTouchesPool` cannot be reused either: it tests
+  `witch/gift-of-union` drops an I.S.P. and S.D.C. bonus its sibling does not
+  carry - both variants parsed from production with the real parser, 2026-09-12. F67's `abilityTouchesPool` cannot be reused either: it tests
   `bonuses.pools`, `mdc_from_hp_sdc` and `psionics.isp_base`, none of which is
   how a variant restates `hit_points_base` or `mdc_base`.
 - **`pickOcc`'s reach is far wider than the "4 live R.C.C.s" this finding
