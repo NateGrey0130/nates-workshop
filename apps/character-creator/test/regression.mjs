@@ -1492,6 +1492,30 @@ console.log('\n' + '[7/7] Checks that only a database can make');
       && abilities.filter((a) => / Shaman$/.test(a.name || '')).map((a) => a.name).join() === `${E} Shaman`);
   }
 
+  // -- a variant or an occupation moves the pools (F68) -----------------------
+  //
+  // Whether the wizard clears them is pinned in smoke; this is the half that
+  // says the staleness MATTERS. Composed from the live classes: the Mining
+  // 'Borg's two chassis differ by 70 M.D.C., and the Chiang-Ku's two stages by
+  // their whole hit point formula, so a pool rolled under one is wrong under
+  // the other.
+  {
+    const { composeClass: composeFor } = await import(pathToFileURL(join(appDir, 'js', 'compose.js')).href);
+    const sig = (c) => JSON.stringify([c?.hit_points_base ?? null, c?.sdc_base ?? null,
+      c?.mdc_base ?? null, c?.ppe_base ?? null, c?.bonuses?.pools ?? null]);
+    const borg = classes.find((x) => x.id === 'mining-borg');
+    const race = classes.find((x) => x.id === 'space-wolfen');
+    const occSigs = (borg?.variants || []).map((v) =>
+      sig(composeFor({ rcc: race, occ: borg, character: { occ_class_variant: v.id } })));
+    check("the Mining 'Borg's two chassis compose to different pools",
+      occSigs.length === 2 && occSigs[0] !== occSigs[1], occSigs.join(' | '));
+    const dragon = classes.find((x) => x.id === 'chiang-ku-dragon');
+    const raceSigs = (dragon?.variants || []).map((v) =>
+      sig(composeFor({ rcc: dragon, character: { class_variant: v.id } })));
+    check("and the Chiang-Ku's two stages likewise",
+      raceSigs.length === 2 && raceSigs[0] !== raceSigs[1], raceSigs.join(' | '));
+  }
+
   // -- a psionic level-up grant keeps its named list (F65) --------------------
   //
   // The Healing Shaman takes its remaining ten Healing powers at level 2 and

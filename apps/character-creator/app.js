@@ -1365,7 +1365,32 @@ function variantPicker() {
   </div>`;
 }
 
-function pickVariant(id) { S.variant = id; render(); }
+// A variant restates the pool formulas themselves - VARIANT_OVERRIDES carries
+// hit_points_base, sdc_base, mdc_base, ppe_base and bonuses - so switching one
+// after the pools are rolled leaves numbers the class no longer states. Clear
+// them and the next step rolls again, which is what pickTotem does and what F67
+// gave takeAbility and dropAbility. BOOK-INGEST-AUDIT.md F68.
+//
+// It recomposes too: the Race step renders S.cls, and until now nothing rebuilt
+// it here - the forward path only recomposed because confirmRace does.
+function pickVariant(id) {
+  S.variant = id;
+  recompose();
+  S.pools = null;
+  render();
+}
+
+// The same for the OCCUPATION's variant, which is a different handler and was
+// an inline one - the Mining 'Borg's two chassis differ by 70 M.D.C., and four
+// of the six classes that have variants at all are O.C.C.s. F68 named
+// pickVariant and pickOcc; this third handler is where an occ variant actually
+// changes, and it neither cleared nor recomposed.
+function pickOccVariant(id) {
+  S.occVariant = id || null;
+  recompose();
+  S.pools = null;
+  render();
+}
 
 // An O.C.C. alongside a racial class. Offered only for an R.C.C., because that
 // is the pairing the books describe: the race is what you are, the occupation
@@ -1444,7 +1469,7 @@ function occPicker() {
     ? ` — ${esc(S.rcc.occ_restrictions.note)}` : '.'}</p>` : ''}
     ${chosen?.variants?.length ? `<div class="rowline">
       <span class="muted small">Which ${esc(chosen.name)}?</span>
-      <select onchange="S.occVariant = this.value || null; render()">
+      <select onchange="pickOccVariant(this.value)">
         ${chosen.variants.map((v) => `<option value="${esc(v.id)}"${S.occVariant === v.id ? ' selected' : ''}>${esc(v.name || v.id)}</option>`).join('')}
       </select></div>` : ''}
     ${chosen ? (() => {
@@ -1569,6 +1594,10 @@ function pickOcc(id) {
   // Its dice bonuses are its own, and a different occupation is a different
   // bonus — so they re-roll here while the race's stay exactly as rolled.
   rollOccBonuses();
+  // And the pools: a race that states no formula takes the occupation's, an
+  // occupation's bonuses.pools are summed in, and the core S.D.C. default is
+  // keyed off the occupation's id once there is one (BOOK-INGEST-AUDIT.md F68).
+  S.pools = null;
   render();
 }
 
@@ -4096,7 +4125,7 @@ Object.assign(window, {
   doPsiRoll, skipPsiRoll, setPsiShape, setPsiCategory,
   rollBio, rollBioAll, setLongLived,
   rmEquip, addCatalog, addCustom, setBio, save, startOver,
-  resumeDraft, dismissDraft, pickVariant, pickOcc, takeAbility, dropAbility,
+  resumeDraft, dismissDraft, pickVariant, pickOccVariant, pickOcc, takeAbility, dropAbility,
   // The skill-program checkboxes are inline onchange handlers, so this is what
   // makes them callable at all. Without it the picker RENDERS correctly and
   // every checkbox throws ReferenceError on click - which no test caught,
