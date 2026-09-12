@@ -371,9 +371,46 @@ and a class citing a spell the catalog does not hold fails its check.
 
 ## Ledger
 
-Nothing shipped yet. The book is at **`surveyed`**.
+**Batch 1 of 5 has shipped.** The book stays at **`surveyed`** because the
+queue's status vocabulary has no partial state, and calling it `imported` with
+one batch of five in would be the worse lie.
 
-### What remains
+| batch | what | status |
+|---|---|---|
+| 1 | **Spoiling Magic, 18 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 773 -> 791 spells |
+| 1 | Bone Magic, ~59 spells | not started |
+| 1 | Living Fire, ~39 spells | not started |
+| 1 | Nature Magic, ~30 spells | not started |
+| 2 | the O.C.C.s, ~15 classes | not started |
+| 3 | six playable creatures | not started |
+| 4 | gear, ~20 rows | not started |
+| 5 | vessels, 8 | not started |
 
-Everything. `source-coverage.mjs --remote` (2026-09-12) does not list
-`mystic-russia` — no production row cites this book.
+**What batch 1 established, so the other three traditions do not re-derive it:**
+
+- **D1's naming works and cost nothing.** All 18 were new; no collision, no
+  `same_spell_as`, and **no existing row changed value**.
+- **`tradition` is a second, separate thing from the name prefix**, and the
+  schema says a new import must set it. `spoiling` is its own value because the
+  book gates the tradition outright — *"Spoiling magic is exclusive to the
+  various Witch O.C.C.s and no other"* (printed 76). The other three traditions
+  get their own values for the same reason: one shared value would hand Fire
+  magic to the Necromancer.
+- **Three parse traps, all real properties of this text layer**, and the next
+  tradition will hit them: a field's continuation can be a complete capitalised
+  sentence (so a field runs to the next field LABEL, not to the first capital);
+  **`P.P.E.Cost:13` appears with no spaces**, on five of these eighteen; and
+  **`Note:` is not a field** — it appears mid-description as a prose aside, and
+  listing it as one makes it the block's last field and swallows the cost.
+- **A tradition's last spell block runs to the end of the band** unless it is
+  given a terminator, and the heading that ends Spoiling Magic is
+  `The Hidden` / `Witch O.C.C.` — **split across two lines**, the same trap
+  this survey records for the Experience Tables. A phrase grep will not find it.
+- **The book skips Level Nine here**, going Level Eight then Level Ten. Verified
+  against every `Level N` heading in the band; nothing was dropped.
+
+**Verify a data script by BUILDING a database**, not by reading an exit code: a
+fresh worktree's local D1 is empty, so `d1-apply --local` fails with *"no such
+table: spells"* and proves nothing. `node:sqlite` applies `db/schema.sql` in one
+pass and then the script, and the script's own `got`/`want` rows can then be
+checked rather than eyeballed.
