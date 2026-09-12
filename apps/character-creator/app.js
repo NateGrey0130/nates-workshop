@@ -193,6 +193,23 @@ function setRoll(a) {
   S.attrRolls[a] = r.exceptional.length ? r : null;
 }
 
+// S.pools is what the class rolled at level 1; S.levelPools is what levels 2+
+// added on top of it, and poolsPayload() sums the two. Clearing one without the
+// other leaves a maximum that is part new and part old, which is what every
+// clear site did before F71 — so there is one helper and no site can take half
+// of it. BOOK-INGEST-AUDIT.md F71.
+//
+// Deliberately NOT called from computePools(): rerollAdvancement(lvl) reaches
+// computePools() through rollAdvancement's lazy "if (!S.pools)", and a clear in
+// there would wipe every other level — breaking that step's own promise that
+// rolling one level leaves the others exactly as they stand.
+//
+// The level SPELLS, PSIONICS and SKILL PICKS are deliberately left standing.
+// They are what the player CHOSE, not what the dice produced, and clearing a
+// choice is a different act from re-rolling. They are stale in their own way
+// after a class change, because they are keyed by grant index — filed as F72.
+function clearRolledPools() { S.pools = null; S.levelPools = {}; }
+
 // Every pool formula reads the attributes — computePools() rolls hit points,
 // S.D.C., M.D.C., P.P.E. and I.S.P. out of S.attrs — so an attribute that moves
 // after the pools are rolled leaves numbers no formula in the class would now
@@ -203,7 +220,7 @@ function setRoll(a) {
 // including the point-buy buttons: the Attributes step renders no pool, and
 // computePools() is lazy — the re-roll happens when Details is first reached,
 // once, whatever was done here.
-function attrsChanged() { S.pools = null; }
+function attrsChanged() { clearRolledPools(); }
 
 // ---------- point-buy ----------
 function pbCost(v) {
@@ -955,7 +972,7 @@ function resetBuild() {
   // (BOOK-INGEST-AUDIT.md F23(b)): picking one grants everything that category
   // allows, at one fixed percentage.
   S.programs = [];
-  S.equipment = []; S.equipInit = false; S.pools = null;
+  S.equipment = []; S.equipInit = false; clearRolledPools();
   S.gearChoices = []; S.gearPicks = {};
   S.variant = null;
   S.occ = null; S.occVariant = null;
@@ -1411,7 +1428,7 @@ function pickVariant(id) {
   const dice = S.cls?.attribute_dice;
   S.variant = id;
   recompose();
-  S.pools = null;
+  clearRolledPools();
   clearAttrsWhoseDiceChanged(dice);
   render();
 }
@@ -1425,7 +1442,7 @@ function pickOccVariant(id) {
   const dice = S.cls?.attribute_dice;
   S.occVariant = id || null;
   recompose();
-  S.pools = null;
+  clearRolledPools();
   clearAttrsWhoseDiceChanged(dice);
   render();
 }
@@ -1587,7 +1604,7 @@ function abilityDef(name) {
 // who swaps it IN keeps the hit points and S.D.C. it no longer has - which the
 // server stores without complaint.
 function poolsMayHaveChanged(name) {
-  if (abilityTouchesPool(abilityDef(name))) S.pools = null;
+  if (abilityTouchesPool(abilityDef(name))) clearRolledPools();
 }
 
 function takeAbility(name) {
@@ -1635,7 +1652,7 @@ function pickOcc(id) {
   // And the pools: a race that states no formula takes the occupation's, an
   // occupation's bonuses.pools are summed in, and the core S.D.C. default is
   // keyed off the occupation's id once there is one (BOOK-INGEST-AUDIT.md F68).
-  S.pools = null;
+  clearRolledPools();
   render();
 }
 
@@ -1688,7 +1705,7 @@ function pickTotem(slug) {
   S.totem = slug ? String(slug) : null;
   recompose();
   rollTotemBonuses();
-  S.pools = null;
+  clearRolledPools();
   render();
 }
 
@@ -3111,7 +3128,7 @@ function trimRelatedToAllowance() {
 // move any pool. Clearing there would re-roll every pool, and the starting
 // money with them, for a choice no formula reads.
 function doPsiRoll() {
-  S.pools = null;
+  clearRolledPools();
   S.psiRoll = rollPsionics();
   trimRelatedToAllowance();
   // A new roll invalidates whatever the previous one allowed.
@@ -3123,7 +3140,7 @@ function doPsiRoll() {
 // "A player may skip step three entirely if he or she does not want a character
 // with psionics." Recorded as a deliberate no rather than an unrolled blank.
 function skipPsiRoll() {
-  S.pools = null;
+  clearRolledPools();
   S.psiRoll = { roll: null, tier: null, skipped: true };
   trimRelatedToAllowance();
   S.psiShape = null; S.psiCategory = null; S.psi = [];

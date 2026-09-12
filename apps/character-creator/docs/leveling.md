@@ -517,6 +517,19 @@ the step asks for them again, but only the ones whose dice actually moved
 (`attribute_dice` is merged per attribute) and only where the value was rolled,
 since point-buy and manual entry ignore the racial dice by design.
 
+**Since F71 all of that goes through one helper, `clearRolledPools()`, which
+clears `S.levelPools` with `S.pools`.** A character starting above level 1
+grows its pools level by level, and the sheet maximum is the sum of the two —
+so clearing the level-1 roll and leaving the growth standing produces a maximum
+that is part new and part old. `rollAdvancement` short-circuits on a non-empty
+`S.levelPools`, so nothing else would have re-rolled it. The helper is
+deliberately not called from `computePools()`: rolling a single level reaches
+it through the lazy branch, and a clear there would wipe every other level.
+
+**What it does not clear is the level SPELLS, PSIONICS and SKILL PICKS.** Those
+are what the player chose rather than what the dice produced, and clearing a
+choice is a different act from re-rolling one.
+
 When two classes both grant one, the bonuses are **collected, not summed** — two
 dice expressions have no arithmetic sum, so `["4d6", "2d6"]` means both are
 rolled. Flat numbers still add. This is deliberately not the merge the other
