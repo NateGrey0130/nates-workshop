@@ -9461,7 +9461,7 @@ reached the equivalent state through the Race step.
 are this rule applied to two other families of handler. No decision to argue
 past.
 
-**Taken, 2026-09-12 (PR #F70PR). Option A, both halves, code only as the posture
+**Taken, 2026-09-12 (PR #964). Option A, both halves, code only as the posture
 says - with the psionic-SHAPE handler left out and the variant half narrowed,
 each on a measurement below.**
 
