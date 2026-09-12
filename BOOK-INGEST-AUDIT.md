@@ -9216,6 +9216,74 @@ not walked; F67's walk reached the equivalent state through the Race step.
 `VARIANT_OVERRIDES` and "stale" near "pool": no finding. `CLASS-AUDIT` `S6`/`S7`
 record what `variants` cannot carry, which is a different subject.
 
+**Taken, 2026-09-12 (PR #963). Option A, code only as the posture says - on
+THREE handlers, because the finding named two and there are three.**
+
+**Five corrections from the premise audit (`audit-premise-auditor`,
+2026-09-12).**
+
+- **The occupation's VARIANT is changed by neither handler this finding
+  names.** It was an inline `onchange="S.occVariant = this.value || null;
+  render()"` in `occPicker`, which cleared nothing AND did not recompose - so
+  the composed class kept the previous chassis until something else happened to
+  recompose. It matters most, not least: **four of the six classes that have
+  variants at all are O.C.C.s** (stone-master, witch, mining-borg, preacher),
+  so 7 of the 11 pool-moving variants are reached through it. It is now
+  `pickOccVariant`, which clears and recomposes like the other two.
+- **Eleven variants across SIX classes, not seven.** The finding's own list
+  names six, and production has exactly six classes with variants
+  (chiang-ku-dragon, stone-master, witch, daitya, mining-borg, preacher), 13
+  variants between them.
+- **Option B is not a poor trade, it is wrong.** All **13 of 13** live variants
+  compose to a different pool signature from their siblings, so a
+  "does this variant override a pool key" test saves nothing - and it would
+  answer FALSE for the case that matters most: switching *away from*
+  `witch/gift-of-union` drops an I.S.P. and S.D.C. bonus its sibling does not
+  carry - both variants parsed from production with the real parser, 2026-09-12. F67's `abilityTouchesPool` cannot be reused either: it tests
+  `bonuses.pools`, `mdc_from_hp_sdc` and `psionics.isp_base`, none of which is
+  how a variant restates `hit_points_base` or `mdc_base`.
+- **`pickOcc`'s reach is far wider than the "4 live R.C.C.s" this finding
+  quotes.** That count is right (chiang-ku-dragon, warrior-of-valhalla,
+  space-wolfen, pleasurer) and is a sub-case: composing every live R.C.C.
+  against every live O.C.C., **every** race has at least one occupation that
+  moves a composed pool input, median 126 of 178. `sdc_base`, `ppe_base`,
+  `starting_money` and `attribute_dice` fall through too
+  (`js/parser.js:902-906`), 40 live O.C.C.s carry `bonuses.pools`, and the core
+  S.D.C. default is keyed off the occupation's id once there is one
+  (`js/compose.js:708`). The chiang-ku-dragon never even reaches the sub-case:
+  both its variants state `hit_points_base`, and the step blocks until one is
+  chosen.
+- **Three citations in this finding do not land.** `pickOcc` is at
+  `app.js:1555` and is nineteen lines, not three; `VARIANT_OVERRIDES` spans
+  `js/parser.js:57-76` and `bonuses` sits at `:61`, outside the range cited;
+  and `js/dice.js:225-229` is a COMMENT about a different rule - the
+  fallthrough this finding describes is `js/parser.js:902-906` with
+  `js/compose.js:708`.
+
+**What shipped.** `pickVariant`, the new `pickOccVariant` and `pickOcc` each
+clear `S.pools`; the first two also recompose, which nothing on those steps did
+before. No predicate: unlike an ability, what these three change can always move
+a pool, and the 13-of-13 measurement says so. `docs/leveling.md` records it
+beside F67's paragraph, including that a cleared pool re-rolls starting money.
+
+**Tests.** Six source pins, five of which fail against the file as it was
+(shown by stashing `app.js`); the sixth pins `pickTotem`, the handler this
+whole pattern cites and which was never pinned, and passes both ways. A
+regression check composes the production Mining 'Borg under a race at each
+chassis and the Chiang-Ku at each stage, and asserts the composed pools differ -
+the half that says the staleness matters, in data that cannot rot into a
+tautology. app.js is pinned as source because it boots on import; the
+entry-point parse check added on 2026-09-11 is what keeps such a pin from
+passing against a file the browser cannot load.
+
+**Posture said back:** code only; no data, no schema. It held.
+
+**Filed below as F70:** the audit found the same defect outside this finding's
+family - every handler that re-rolls an ATTRIBUTE, and the psionic tier roll,
+leaves the pools standing too; and a variant that restates `attribute_dice`
+leaves the attributes themselves rolled from the old dice, which this fix does
+not address.
+
 ### F69 - medium - an object category gate is refused outright by the create validator, so three classes cannot be saved with their own starting psionics
 
 **Found 2026-09-11** by F66's premise audit, which proved it by execution rather
@@ -9342,3 +9410,53 @@ left alone deliberately rather than swept in unmeasured.
 **Still not verified in a browser**, as F66 said of its half: what a Healing
 Shaman's level-1 picker renders now needs `verify-ui`, not a grep. The server
 half is proven by running the real validator.
+
+### F70 - low - re-rolling an attribute, or the psionic tier, leaves the pools stale; and a variant that restates attribute_dice leaves the attributes stale
+
+**Found 2026-09-12** by F68's premise audit, outside F68's family and left for
+its own number rather than swept in.
+
+**The code.** Every pool formula reads the attributes:
+`computePools` rolls `rollPoolFormula(c.hit_points_base, S.attrs, ...)`
+(`apps/character-creator/app.js:354-358`). So every handler that changes an
+attribute leaves the rolled pools standing - `rerollForMinimum`
+(`app.js:2044`) and the Attributes step's own `setMethod`, `setAllMethod`,
+`doRoll`, `rollAll`, `manualSet` and `pbAdj` (`app.js:2178-2186`). The same
+holds for the psionic tier: `doPsiRoll`, `skipPsiRoll` and `setPsiShape`
+(`app.js:3036`, `:3047`, `:3053`) change what `psiClass()` resolves, and
+`computePools` rolls I.S.P. off that (`app.js:345`, `:358`).
+
+**And the other direction, which F68 makes reachable.** `attribute_dice` is in
+`VARIANT_OVERRIDES`, and **four live variants restate it** -
+chiang-ku-dragon hatchling and adult, daitya average and royal. F68 clears the
+pools when a variant changes, but nothing re-rolls `S.attrs`, so those pools
+are rolled again against attributes the new variant's dice never produced.
+`confirmRace` re-rolls the bonus dice (`rollAttrBonuses(true)`) and never the
+attributes themselves.
+
+**Reach:** most classes, since a hit point formula naming P.E. is the common
+shape, and 39 live classes state an `isp_base`. Not measured per class, because
+the mechanism is not per class: any pool whose formula names an attribute moves
+when that attribute does.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | clear `S.pools` in the attribute handlers and the psionic-roll handlers, as F67 and F68 did for theirs; and when a variant restates `attribute_dice`, clear the attribute rolls so the step asks for them again | one rule everywhere: whatever moves an input to a roll clears the roll | the Attributes step re-rolls pools on every adjustment, which is correct but chatty; clearing attribute rolls on a variant change costs the player a re-roll they did not ask for |
+| B | the attribute handlers only, leaving the variant half | smaller | the variant half is the one F68 just made reachable |
+| C | leave it | nothing to build | the sheet keeps numbers no formula in the class could produce |
+
+**Proposal:** A. **Posture:** code only; no data, no schema.
+
+**Confidence: high on the mechanism** - every handler above was read on
+`origin/main`, and `computePools`' dependence on `S.attrs` is one line.
+**Medium on how a player reaches each one**, which was not walked; F67's walk
+reached the equivalent state through the Race step.
+
+**Ongoing cost:** source pins on the handlers, as F68 has.
+
+**Subject grep, 2026-09-12:** every `*AUDIT*.md` for `computePools`, `S.attrs`,
+`rollAttrBonuses` and "stale" near "pool": F67's and F68's notes above, which
+are this rule applied to two other families of handler. No decision to argue
+past.

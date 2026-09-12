@@ -491,6 +491,15 @@ ability taken or dropped touches a pool - a `bonuses.pools` entry,
 the tests cannot disagree about it. A cleared pool is re-rolled, which also
 re-rolls starting money, exactly as a totem change already did.
 
+**Three more handlers do it since F68**, and they need no predicate because
+what they change always can move a pool: `pickVariant` and `pickOccVariant`
+(a variant may restate every pool formula through `VARIANT_OVERRIDES`, and all
+thirteen live variants compose to a different pool signature from their
+siblings) and `pickOcc` (a race stating no formula takes the occupation's, an
+occupation's `bonuses.pools` are summed in, and the core S.D.C. default is
+keyed off the occupation's id). `pickVariant` and `pickOccVariant` now
+recompose as well, which nothing on the Race or Occupation step did before.
+
 When two classes both grant one, the bonuses are **collected, not summed** — two
 dice expressions have no arithmetic sum, so `["4d6", "2d6"]` means both are
 rolled. Flat numbers still add. This is deliberately not the merge the other

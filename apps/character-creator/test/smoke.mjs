@@ -4468,6 +4468,30 @@ section('An ability that changes a pool clears the rolled pools (BOOK-INGEST-AUD
     /d\.name\.trim\(\)\.toLowerCase\(\) === key/.test(appSrc));
 }
 
+section('A variant or an occupation change re-rolls the pools (BOOK-INGEST-AUDIT F68)');
+{
+  // app.js boots on import, so these are source pins. They are only worth
+  // anything because 'The browser entry points parse' above now proves the file
+  // the pins matched can actually load - on 2026-09-11 three pins passed
+  // against an app.js that could not parse at all.
+  const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+  const clearsAndRecomposes = (fn) => {
+    const body = new RegExp('function ' + fn + '\\(id\\) \\{([\\s\\S]{0,400}?)\\n\\}').exec(appSrc);
+    return !!body && /S\.pools = null;/.test(body[1]) && /recompose\(\);/.test(body[1]);
+  };
+  check('pickVariant clears the rolled pools and recomposes', clearsAndRecomposes('pickVariant'));
+  check('pickOccVariant does the same for the occupation stage', clearsAndRecomposes('pickOccVariant'));
+  check('the occupation variant select calls it instead of assigning S.occVariant inline',
+    /onchange="pickOccVariant\(this\.value\)"/.test(appSrc) && !/S\.occVariant = this\.value/.test(appSrc));
+  check('and it is exported to the global scope the inline handler evaluates in',
+    /pickVariant, pickOccVariant, pickOcc/.test(appSrc));
+  check('pickOcc clears them too, after rolling its own bonuses',
+    /rollOccBonuses\(\);[\s\S]{0,400}?S\.pools = null;/.test(appSrc));
+  // pickTotem is the pattern all of this cites and was never pinned.
+  check('and pickTotem, the handler this pattern came from, still does',
+    /function pickTotem\(slug\) \{[\s\S]{0,300}?S\.pools = null;/.test(appSrc));
+}
+
 section('Race and occupation');
 {
   const mk = (cat, skills) => parseClassMarkdown(
