@@ -4144,3 +4144,70 @@ convention, `--border` and `--border-strong` unchanged. It held.
 The memory store's `bench-redesign-and-landing-page-constraints.md` carries the
 lit-edge rule this finding is shaped around and no decision about `--border`'s
 ratio. Nothing to argue past.
+
+### F56 - low - F17's print-ink remainder, re-measured: half of it is moot and the rest has no way to be printed
+
+**Filed and CLOSED 2026-09-12, on the re-measurement.** This is `F17`'s
+remainder — its note ends *"**The ink observation stands and was not taken.**
+`.stepper .st`, `.lvl-row`, `pre.snippet` and `.cat-row.open` still get no
+light background in the print block."*
+<!-- claim-ok: quoting the premise this finding inherits -->
+
+**Filed rather than left as a remark**, per `META-AUDIT` `A16`: work handed to
+the future gets a number or is dropped. This is the second half of that — it
+gets a number **and** is dropped, with the reason on the record so the four
+selectors are not re-derived a third time.
+
+**Two of the four are gone.** Read on `origin/main` at `91839bc`, 2026-09-12:
+
+| selector | state |
+|---|---|
+| `.stepper .st` | **moot.** `F35`'s stepper rewrite removed the fill — `apps/character-creator/styles.css:273-276` now reads `background: transparent; border: 0;`. There is nothing to reset |
+| `pre.snippet` | **dead CSS.** The rule is at `styles.css:1157` and **nothing renders it**: no `class="snippet"` and no `<pre class=` anywhere under `apps/character-creator/`. The `snippet` hits in `campaign.js` are a search-result STRING, a different thing |
+| `.lvl-row` | still `background: var(--bg-secondary)` (`styles.css:407-410`), unreset |
+| `.cat-row.open` | still `background: var(--bg-secondary)` (`styles.css:1307-1311`), unreset |
+
+**The two that remain cannot be reached by anything that prints.** `.lvl-row`
+renders on the wizard's Advancement step and `.cat-row.open` in the catalog, and
+**the only `window.print()` in the app is `sheet.html:34`** — the character
+sheet, which is a different page. Reaching dark ink on paper needs Ctrl+P on a
+page the app never offers to print **and** *Background graphics* ticked, which
+is off by default.
+
+**Two of `F17`'s surrounding counts are also stale**, recorded so neither is
+quoted forward: it says *"five `@media print` blocks"* and there are now
+**seven** (`grep -c '@media print' apps/character-creator/styles.css`,
+2026-09-12); and its *"exactly one `<thead>` in `sheet.js`"* is now four, since
+`F29` made the skills list a real table. Neither bears on the ink.
+
+**Why this closes instead of shipping two lines.** The fix is ~2 lines in the
+print block at `styles.css`, and this app has a written rule against exactly
+that: `F16`'s note declines to copy an unused `.sr-only` helper because
+*"copying an unused rule is how `.cols-5` (F15) happened"*. Adding print resets
+for two selectors that no print path renders is the same trade — a rule nothing
+exercises, which the next reader has to work out the purpose of. **Reopen it the
+moment the wizard or the catalog gains a print affordance**, which is a real
+trigger and not a hypothetical: the sheet has one.
+
+**Not folded in, and named so it is not lost:** `pre.snippet` is dead CSS and
+should be deleted. That is a cleanup rather than a print fix and goes with the
+other dead code found in this sweep.
+
+**Posture:** none — nothing is built. **Confidence: high on all four selectors
+and on the print entry point**, every one read rather than recalled.
+**Not settled: whether those two backgrounds actually paint on paper**, which
+was established from source — no print rule resets them and the print blocks
+consume no tokens — rather than from a render. A CDP render with
+`printBackground: true` would settle it; `--print-to-pdf` defaults that off, so
+the recipe in `print-render-headless-chrome.md` cannot see it. That gap does not
+change the outcome, because the trigger above is about reachability rather than
+about the ink.
+
+**Ongoing cost:** none.
+
+**Subject grep, 2026-09-12:** every `*AUDIT*.md` (root and under `apps/`) plus
+`SETUP-v2-CHANGES.md` for `@media print`, `printBackground` and `snippet`:
+`F17` itself and `REDESIGN-AUDIT` `R6`, which is about accent colour on screen.
+The memory store has `print-render-headless-chrome.md`, cited above, which
+records that the headless method **falsified `F17` outright** and says nothing
+about the ink remainder. Nothing to argue past.
