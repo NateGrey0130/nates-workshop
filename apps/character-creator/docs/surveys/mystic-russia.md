@@ -297,8 +297,9 @@ becomes its own tradition row at the level this book prints, linked by
 `same_spell_as`. `variant_note` is **not** the mechanism here: it records what an
 older book prints *instead*, and these are not competing readings of one row.
 
-**D3 — all seven playable creatures OMIT `xp_table` and take the house
-default.** Settled 2026-09-12, and it replaces an earlier D3 that promised Nate
+**D3 — every imported creature OMITS `xp_table` and takes the house
+default.** (Written when all seven were in scope; **D4** has since filtered the
+Rusalka, so it governs the six that remain. Nothing about the reasoning changes.) Settled 2026-09-12, and it replaces an earlier D3 that promised Nate
 a list of six proposed ladders. **There is nothing to propose.** `xp_table` is
 not a named reference — it is a literal cumulative-XP array in class
 frontmatter, and `xpTableFor()` in `apps/character-creator/js/leveling.js`
@@ -310,14 +311,32 @@ they land in the same place. **172 of 265 live classes already use it.** Zero
 invention, and the "six need a decision before they can be imported" framing
 turns out to have been too strong: they need no ladder at all.
 
-**D4 — import all seven creatures**: Domovoi, Leshii, Polevoi, Rusalka,
-Vodianoi, Spirit Wolf, Man-Wolf. **Each entry's GM-permission caveat goes into
-`extraction_notes` verbatim**, including Rusalka's *"not recommended as player
-characters ... best suited as a villain"* and the Domovoi/Leshii *95% abstain
-from adventure*. Precedent: **eight live classes already carry
-"optional player character" language**, creatures among them — Vacuum Wasp,
-Termite Engineer, Gargoyle, Dragon Ray, Rurlel Eelman. The Firebird is excluded
-(*"Not applicable as a player character"*), as are the eighteen demons.
+**D4 — import SIX creatures; the Rusalka is filtered at import.** Amended
+2026-09-12 on Nate's word; the first D4 imported all seven with Rusalka's caveat
+merely noted.
+
+**Import:** Domovoi, Leshii, Polevoi, Vodianoi, Spirit Wolf, Man-Wolf.
+
+**Excluded, and why each:**
+
+| entry | the book's words |
+|---|---|
+| **Rusalka** | *"not recommended as player characters ... best suited as a villain"* — **filtered by D4**, not by the book's tag, which does stat it as playable |
+| Firebird | *"Not applicable as a player character."* — the book's own refusal |
+| the eighteen demons | all tagged NPC Villain |
+| Serpent Hound | a demon among demons; the one entry the book never tagged at all |
+
+**The remaining six keep their GM-permission caveat in `extraction_notes`
+verbatim** — the Domovoi/Leshii *95% abstain from adventure*, the Vodianoi
+*"not suitable ... unless it is one of the rare good or anarchist ones"*.
+Precedent for importing an optional-PC creature: **eight live classes already
+carry "optional player character" language** — Vacuum Wasp, Termite Engineer,
+Gargoyle, Dragon Ray, Rurlel Eelman among them.
+
+**Do not read "six" as the bestiary reading's result.** The reading found
+**seven** entries the book tags playable, and that stands unchanged in the
+bestiary section above. Six is what D4 chooses to import. The two numbers answer
+different questions and both are correct.
 
 **D5 — the five-batch plan below is GREEN-LIT, in its stated order.** Spells,
 then classes, then creatures, then gear, then vessels. The spells-before-classes
@@ -335,7 +354,7 @@ book, booted from this file.
 |---|---|---|---|
 | 1 | the four spell traditions | **131 rows**, count verified | one batch per tradition, each carrying its own `Level N` headings as the authority. Spoiling and Nature are small enough to pair. **Names take the D1 prefixes**, and a retelling links with `same_spell_as` |
 | 2 | the O.C.C.s | ~15 classes | `class-import`, one PR per two or three |
-| 3 | the playable bestiary entries | **7 rows** | unblocked — read 2026-09-12, see above. Six of the seven state no experience table; **D3 settles that they borrow one**, with the six proposed ladders shown to Nate first. The Man-Wolf borrows the Dragon Hatchling's, as the book itself says |
+| 3 | the playable bestiary entries | **6 rows** | the book tags seven; **D4 filters the Rusalka**. None needs an `xp_table` — **D3** settles that all take the house default, which is what the book's own Man-Wolf pointer resolves to here |
 | 4 | gear | ~20 | the bio-wizardry list at printed 107 needs its numbers read as dice expressions, not as printed |
 | 5 | vessels | ~8 | same shape as Triax, Free Quebec and Spirit West |
 
