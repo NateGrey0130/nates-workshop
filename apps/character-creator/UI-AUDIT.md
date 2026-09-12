@@ -3876,3 +3876,89 @@ from production rather than from the script's own report:** `schema_migrations` 
 `rest_rates TEXT`; all 3 live campaigns hold NULL, which is the normal state until a G.M.
 saves rates. `drift-check.mjs --remote` read **NO DRIFT** immediately before the apply,
 53 migrations recorded of 53, so anything it reports afterwards belongs to this change.
+
+## Opened by the F2 remainder, 2026-09-12
+
+`F2`'s outcome note ends *"Neither gate moved, and reconciling (1) and (2)
+remains open and unstarted."* Checking what that remainder is worth today turned
+up something else: a live false sentence in a doc `F2` never touched.
+
+### F53 - medium - `race-and-occupation.md` says a missed attribute minimum is never a refusal, and it has blocked the save since before that sentence was written
+
+**Found 2026-09-12** while scoping `F2`'s remainder.
+
+**The sentence.** `apps/character-creator/docs/race-and-occupation.md:72-75`
+reads *"**It is never a refusal.** A player may decline and continue with the
+minimum unmet; `validate-character.js` warns on save and the admin audit lists
+it under *worth a look*..."*
+<!-- claim-ok: quoting the sentence this finding is about, cited by line above -->
+
+**Both clauses are false, and the code says so in its own comment.**
+
+- `functions/api/character-creator/_lib/validate-character.js:193` pushes
+  `attribute_minimum` into **`violations`**, not warnings, and
+  `functions/api/character-creator/characters.js:209` turns any violation into
+  `422 "This character breaks its class rules"`.
+- `apps/character-creator/catalog.js:257` renders violations under
+  **"Would be refused on save"**; *"Worth a look"* is `catalog.js:262`, the
+  warnings bucket. The doc names the wrong one of the two.
+- `validate-character.js:635` already records the fact, in a comment about a
+  different rule: *"A WARNING and never a violation, matching the ceiling check
+  above rather than `attribute_minimum`, **which blocks**. That is the posture
+  Nate fixed when the finding was taken."*
+
+**This is not rot — the sentence was wrong when it was written.**
+`git log -L72,77:apps/character-creator/docs/race-and-occupation.md` puts it in
+`0ac2a9f`, 2026-08-26, five days before `F2`. `F2` (PR #441) corrected
+`wizard-and-sheet.md` and the step-4 panel copy and left this file alone, so
+one of the two docs has been right and the other wrong ever since.
+
+**Reach:** a reader of the race/occupation doc, which is the file
+`wizard-and-sheet.md` sends people to for this exact subject
+(`wizard-and-sheet.md:278-280`). Not a player-facing string: the wizard's own
+copy was fixed by `F2`.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | replace the paragraph with the true one, and POINT at `wizard-and-sheet.md` for the detail rather than restating it | one account of the rule, in one file; `wizard-and-sheet.md:280-292` already carries it (read 2026-09-12) and `:278-280` already links here | the doc gets shorter and a reader has one more hop |
+| B | restate the full account here too | no hop | two copies of a rule that has already diverged once, which is how this finding happened |
+| C | delete the paragraph | shortest | the question "can I decline?" is a real one and deserves an answer where it is asked |
+
+**Proposal:** A. **Posture:** documentation only. No gate moves, no code, no
+data. This is explicitly **not** the `F2` remainder — that is a decision about
+the two gates and is filed separately as `F54`.
+
+**Confidence: high.** Every line above was read on `origin/main` at `0d13dbf`
+on 2026-09-12, and the two buckets were read in `catalog.js` rather than
+inferred from the rule name.
+
+**Ongoing cost:** none. The paragraph stops making a claim that can go stale.
+
+**Subject grep, 2026-09-12:** every `*AUDIT*.md` (root and under `apps/`) plus
+`SETUP-v2-CHANGES.md` for `attribute_minimum`, `race-and-occupation` and
+"worth a look". **No menu in the tree mentions `attribute_minimum` at all** —
+the only hits are this finding's own text. `RETRO-AUDIT` `R15` carries
+`attribute_minimums`, which is the class frontmatter KEY and a different thing.
+`F2` above is what sent me here and does not say the doc is wrong. The memory
+store has one hit, `character-creator-docs-split.md:26`, which names
+`docs/race-and-occupation.md` as the pin for the MOS sentence — a pointer, not
+a decision about this subject. Nothing to argue past.
+
+*(This paragraph first claimed `BOOK-INGEST-AUDIT` F32 cites `attribute_minimum`
+as a blocking counter-example. It does not — that sentence is in
+`validate-character.js:635`, quoted above, and the menu carries no such line.
+Corrected before this PR was opened, by running the grep instead of trusting the
+note that had just quoted the comment.)*
+
+**Taken, 2026-09-12 (PR #969). Option A, as written.**
+
+**One thing the finding did not say, found while writing the replacement.** The
+link it hands to already exists in the other direction:
+`wizard-and-sheet.md:278-280` sends a reader here for the re-roll, and this file
+sent them nowhere back. The replacement closes the loop, which is why A is a
+smaller change than it looks.
+
+**Posture said back:** documentation only; no gate moved, no code, no data. It
+held.

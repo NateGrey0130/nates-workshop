@@ -69,10 +69,17 @@ Three alternatives were rejected on purpose:
 - **Offering a choice between re-rolling and raising** is two mechanisms where
   one will do.
 
-**It is never a refusal.** A player may decline and continue with the minimum
-unmet; `validate-character.js` warns on save and the admin audit lists it under
-*worth a look*, which is the existing doctrine for occupations rather than a
-stricter rule invented for the same class of problem.
+**This step does not refuse, and the SAVE does.** A player may decline the
+re-roll and keep going through the wizard — nothing here blocks — but
+`_lib/validate-character.js` returns `attribute_minimum` as a **blocking
+violation**, the create endpoint answers **422**, and the admin audit lists the
+character under *Would be refused on save* rather than *Worth a look*. The
+warning is about where the problem is surfaced, never about whether it is
+allowed.
+
+[A blocked step says why](wizard-and-sheet.md#a-blocked-step-says-why) carries the full
+account, including why the Attributes step deliberately is not gated on this and
+how the two class-order paths differ. It is not restated here.
 
 Each re-roll is recorded and posted as a `roll` play event once the character
 exists — the events API already defines that kind as a pure record with no state
