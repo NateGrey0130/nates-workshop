@@ -9901,7 +9901,7 @@ of the six fails if a second caller is ever added.
 Smoke 1972 -> **1978**, regression 385 unchanged; there is still no data check
 here, for the reason the adjustment gives - this lives entirely in wizard state.
 
-**AND TAKEN AS OPTION A, 2026-09-12 (PR #F72APR), on Nate's word.** E stays
+**AND TAKEN AS OPTION A, 2026-09-12 (PR #980), on Nate's word.** E stays
 underneath it and is no longer a separate mechanism: **the prune became the
 migration.**
 
