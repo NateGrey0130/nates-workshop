@@ -3108,6 +3108,85 @@ not the thing the finding predicted. Running it is what raises this.
 **Ongoing cost: none until it answers.** That is the argument for doing it in
 this order.
 
+
+**Taken, 2026-09-11 (PR #959). The experiment, run and reported. Nothing is
+proposed beyond what it answers, and the freezing half stays declined - with
+its arithmetic corrected below.**
+
+**Six corrections from the premise audit (`audit-premise-auditor`,
+2026-09-11).**
+
+- **This is no longer one class.** `audit-citations.mjs --remote F23` lists
+  **seven** live classes citing it - `amphib`, `horune-pirate`,
+  `kreel-lok-nomad`, `nautyll-devastator`, `ngr-robot-soldier`,
+  `sea-inquisitor`, `sea-titan` - six of them imported after this finding was
+  written, and they are not one shape: reduce an O.C.C.'s skills by three;
+  borrow related and secondary from a named set; roll the occupation on
+  percentages; keep the magic class and take this list instead.
+- **The freeze itself recurs, so the decline's arithmetic changes.** The
+  recommendation rests on threading a frozen threshold through the leveling and
+  derive modules *"for one class"*. `sea-titan` (created 2026-09-08, a
+  different book) prints the same rule for a second O.C.C. taken after 250
+  years. **The decline still stands** - two classes is not the cost of a new
+  per-skill threshold either - but it is two, not one, and a third will not
+  change that answer by itself.
+- **"The only published O.C.C. in the catalog in that state" is false, and was
+  when filed.** `coalition-grunt` also carries no skills block of any kind
+  (created 2026-08-21). Its cause is different: an incomplete import, not a book
+  rule. The Robot Soldier is the only one where the BOOK is the reason.
+- **"It parses, validates and composes; it simply grants nothing" is out of
+  date.** F23(b) (PR #794) gave the class `skills.skill_programs`, and that is
+  its whole skills block today: `choose: 3` over 13 categories.
+- **The "if it works" branch is data and documentation, not code.**
+  `abilityOccOptions` exists (`js/parser.js:1720`), and `stepApplies`
+  (`app.js:841`) already lets an ability that names occupations claim the
+  Occupation step *whatever the class's category* - which is exactly what an
+  O.C.C.-category class in the race slot needs. Only `godling` uses
+  `occ_options` today, and it is an R.C.C., so that override has never been
+  exercised by an O.C.C. in production.
+- **The book resumes one level later than this finding says, and does not
+  restrict the prior occupation.** Triax printed 169: *"A soldier who was sixth
+  level will not improve/increase his skill proficiencies until he reaches
+  seventh level as a robot soldier"*, and the prior training is *"presumably one
+  of the military O.C.C.s"* - presumably, not a rule. An `occ_options`
+  allowlist of military O.C.C.s would be stricter than the page.
+
+**The experiment, as the proposal specified it.** `ngr-robot-soldier` composed
+in the `rcc` slot against three NGR military O.C.C.s, through the real
+`parseClassMarkdown` and `composeClass`, on markdown read from production on
+2026-09-11. Nothing was written to the repo to run it. The proposal's own
+pairing cannot answer the `xp_table` question, because no NGR class carries
+one, so `freelancer` - a Rifts O.C.C. that does - was composed as a fourth
+pairing.
+
+| question | answer |
+|---|---|
+| whose skills | the prior occupation's, whole: 16, 22 and 21 `occ_skills` for infantry soldier, power armor commando and robot combat pilot, with their related counts (6, 5, 4) and secondary counts (0, 2, 2) |
+| the class's own `skill_programs` | survives all four pairings, `choose: 3` over 13 categories |
+| whose pools | neither class states any, so the core defaults fill them - hit points `P.E. + 1D6 per level` and S.D.C. `3D6`, classified by the prior occupation. Against `freelancer`, which states `mdc_base`, the character becomes an M.D.C. being on the occupation's `1d4x10+20` |
+| whose `xp_table` | **the prior occupation's**, when it has one. The Robot Soldier stores none, so nothing of its own competes |
+| identity | `occ_id` and `occ_name` are the PRIOR occupation's, and the composed name reads "NGR Robot Soldier NGR Infantry Soldier" |
+| money, bonuses | the Robot Soldier's own `2d6x1000`, and its combat, save and `at_level` bonuses, kept in every pairing |
+
+**So it works, and the honest next step is the one the proposal named:** an
+`occ_options` ability on the class naming the occupations a Robot Soldier may
+have been - data and documentation, no schema key and no third slot. **It is
+not done here**, because this finding's posture is *answer a question, change
+nothing yet*, and because the page says "presumably", so which occupations
+belong on that list is a reading decision rather than a transcription.
+
+**Two things the experiment does not settle**, named rather than left implied:
+
+- **The identity fields read as the prior occupation.** `occ_name` has no
+  reader anywhere in `apps/` or `functions/`, and `occ_id` has one
+  (`validate-character.js:111`, guarding `needsOccupation`, which is false for
+  anything not an R.C.C.), so nothing renders it wrong today. A sheet that
+  starts showing `occ_name` would.
+- **Whether the reframing reaches the other six citing classes.** Their shapes
+  differ from this one, and none of them was composed.
+
+**Posture said back:** answer a question, change nothing. Held - this PR
+contains this note and nothing else.
 ### F24 - a book that ROLLS one of four psychic profiles: the powers fit, the RELATED-SKILL COUNT does not
 
 **Filed 2026-09-06, from the `triax` Gypsy batch (PR #779). Not implemented,
