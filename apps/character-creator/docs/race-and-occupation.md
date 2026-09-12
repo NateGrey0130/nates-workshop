@@ -69,13 +69,17 @@ Three alternatives were rejected on purpose:
 - **Offering a choice between re-rolling and raising** is two mechanisms where
   one will do.
 
-**This step does not refuse, and the SAVE does.** A player may decline the
-re-roll and keep going through the wizard — nothing here blocks — but
-`_lib/validate-character.js` returns `attribute_minimum` as a **blocking
-violation**, the create endpoint answers **422**, and the admin audit lists the
-character under *Would be refused on save* rather than *Worth a look*. The
-warning is about where the problem is surfaced, never about whether it is
-allowed.
+**This step refuses, and so does the save.** `_lib/validate-character.js`
+returns `attribute_minimum` as a **blocking violation**, the create endpoint
+answers **422**, and the admin audit lists the character under *Would be refused
+on save* rather than *Worth a look* — so the wizard stops here rather than
+letting a player build something it already knows the server will reject
+(UI-AUDIT F54). Re-roll the attribute, or choose an occupation this character
+meets.
+
+**It warned rather than blocked until 2026-09-12**, which meant a race-first
+player was told they could continue and an O.C.C.-first player was not, for the
+same character.
 
 [A blocked step says why](wizard-and-sheet.md#a-blocked-step-says-why) carries the full
 account, including why the Attributes step deliberately is not gated on this and

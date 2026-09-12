@@ -2022,13 +2022,27 @@ section('Wizard steps');
   check('but a version-2 Occupation step stays where it is',
     migrate(occupation, 2) === occupation);
 
-  // A missed minimum warns and offers a re-roll; it never refuses. Same rule
-  // the occupation warning already follows, and the reason the Attributes step
-  // can no longer be the only gate.
+  // A missed minimum BLOCKS here, since UI-AUDIT F54. It used to warn, which
+  // meant the gate a player met depended only on the order they chose their
+  // classes in - and the save refuses it either way, so "you may continue" was
+  // telling them something untrue.
+  //
+  // These three checks asserted the OPPOSITE until 2026-09-12. They are inverted
+  // rather than deleted, because the thing worth pinning is that the two gates
+  // AGREE, and that is exactly what a future tidy would undo.
   const occBlocker = src.match(/function occBlocker\(\)[\s\S]*?\n}/)?.[0] || '';
   check('occBlocker is found', occBlocker.length > 0);
-  check('only an ability blocks the Occupation step', /abilityOccOptions/.test(occBlocker));
-  check('a missed minimum does not', !/minimumShortfall|attribute_requirements/.test(occBlocker));
+  check('an ability without its occupation blocks the Occupation step', /abilityOccOptions/.test(occBlocker));
+  check('and so does a missed class minimum', /minimumShortfalls\(\)/.test(occBlocker));
+  // Without an occupation there is no shortfall panel and no re-roll button, so
+  // a block there would be a disabled button with nowhere to go.
+  check('but only once an occupation is chosen, where the re-roll lives',
+    /S\.occ \? minimumShortfalls\(\) : \[\]/.test(occBlocker));
+  check('and it says the save would refuse, which is the reason it blocks',
+    /the save would be refused/.test(occBlocker));
+  // The other half of the pair: the Attributes step has always gated on it.
+  check('the Attributes step still gates on the same shortfall',
+    /const canNext = missing\.length === 0 && unmet\.length === 0 && !over;/.test(src));
 
   // One attribute, with its own dice. Not the whole block, and never raised to
   // the minimum without dice - see docs/plans/13-rcc-first-wizard.md.

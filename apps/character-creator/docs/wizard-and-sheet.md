@@ -275,10 +275,14 @@ button**, and the race step also scrolls the outstanding picker into view. The
 reason and the disabled state come from ONE function per step — `classBlock()`
 and its equivalents — so they cannot disagree.
 
-**A missed attribute minimum is deliberately NOT one of them.** It warns and
-offers a re-roll on the Occupation step; see
+**A missed attribute minimum gates BOTH of them, since UI-AUDIT F54.** It used
+to gate Attributes and only warn on Occupation, so which a player met depended
+on the order they chose their classes in. The save refuses it either way, so a
+step saying "you may continue" was telling them something untrue. The Occupation
+step still offers the re-roll beside the block; see
 [The race is chosen first](race-and-occupation.md#the-race-is-chosen-first). A greyed button with no reason,
-or a reason beside a live button, are each worse than either alone.
+or a reason beside a live button, are each worse than either alone - which is
+why the block and the re-roll ship together.
 
 **Not gated is not the same as allowed, and the two paths surface it at
 different steps.** Where the class is already known by the Attributes step — the

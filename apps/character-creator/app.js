@@ -2110,13 +2110,42 @@ function renderOccupation() {
   <button class="btn btn-primary" ${blocker ? 'disabled' : ''} onclick="nextStep()">Skills &rarr;</button></div>`;
 }
 
-// The ONLY thing that blocks this step. A missed minimum deliberately does not:
-// the app's standing rule for occupations is that a mismatch warns and never
-// refuses, and this is the same class of problem.
+// What blocks this step: the ability's occupation pick, and a class minimum the
+// dice did not meet.
+//
+// THE MINIMUM USED TO WARN HERE AND BLOCK ON THE ATTRIBUTES STEP, so which of
+// the two a player met depended only on the order they chose their classes in -
+// O.C.C.-first knew the class by step 2 and blocked, race-first did not learn it
+// until step 4 and warned. Same character, same shortfall, two experiences.
+// UI-AUDIT F54.
+//
+// It blocks in both places now, for one reason: **the save refuses it either
+// way.** `_lib/validate-character.js` returns `attribute_minimum` as a blocking
+// violation and the create endpoint answers 422. A step that says "you may
+// continue" and then cannot save is the same defect F53 corrected in the docs,
+// one level up.
+//
+// THIS DOES NOT REVERSE THE OCCUPATION DOCTRINE that a mismatch warns and never
+// refuses, which is what made it look like a dilemma. That doctrine is about
+// pairings the SERVER ALLOWS - a race and an occupation a book discourages. An
+// attribute minimum is not one of those. Hard rule, soft rule; the wizard now
+// draws the line where the server draws it.
+//
+// It is not a dead end either: shortfallPanel() below offers a re-roll of the
+// failing attribute and has since it was written, which is why the block can
+// land here at all.
 function occBlocker() {
   const need = abilityOccOptions(S.rcc, S.abilities);
   if (need && (!S.occ || !need.options.includes(S.occ))) {
     return `Choose an occupation for ${need.name} to continue.`;
+  }
+  // Guarded on S.occ to match shortfallPanel: without an occupation there is no
+  // panel and no re-roll button, so blocking would be a disabled button with
+  // nowhere to go - the exact thing wizard-and-sheet.md warns against.
+  const short = S.occ ? minimumShortfalls() : [];
+  if (short.length) {
+    const names = short.map((s) => s.attr).join(', ');
+    return `${names} ${short.length === 1 ? 'is' : 'are'} below the minimum, and the save would be refused. Re-roll below, or choose another occupation.`;
   }
   return '';
 }
