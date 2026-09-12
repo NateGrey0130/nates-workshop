@@ -9802,6 +9802,11 @@ the reason at the end.**
   that whoever takes this should delete. Only `:3819` (`levelPickRows`, via
   `skillsPayload` at `:3794`) is both correct and live.
 
+  **Deleted 2026-09-12 (PR #DEADPR), and worth knowing before option A is
+  taken:** that dead function was already building
+  `{kind, name, granted_at_level, slot}` - the slot-keyed shape option A needs,
+  written and never wired up. `git show` on that PR has it.
+
 **What the damage actually is, now that it has been read.** An orphan key
 (`gi >= grants.length`) is flattened into the save payload by `powersPayload`
 (`app.js:3659-3663`) and refused with a 422, while `levelPickRows` (`:3818`)

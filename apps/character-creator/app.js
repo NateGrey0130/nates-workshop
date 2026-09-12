@@ -3799,18 +3799,6 @@ function skillsPayload() {
 // Which slot each level-gained power filled, so the server can check it
 // against the right grant. The wizard's grant index IS the order
 // spellGrantsFor returned, so the slot rides along from there.
-function levelPowerPicks(kind) {
-  const grants = (kind === 'spell' ? spellGrantsFor : psionicGrantsFor)(S.cls, 1, S.level);
-  const chosenBy = kind === 'spell' ? S.levelSpells : S.levelPsi;
-  const out = [];
-  (grants.grants || []).forEach((g, gi) => {
-    for (const name of (chosenBy[gi] || []).filter(Boolean)) {
-      out.push({ kind, name, granted_at_level: g.level, slot: g.slot ?? 0 });
-    }
-  });
-  return out;
-}
-
 function levelPickRows() {
   const find = (n) => skillByName().get(n)
     || (isFamilyName(n) ? { ...(skillByName().get(otherRowFor(n)) || {}), name: n } : {});
