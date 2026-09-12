@@ -4097,7 +4097,7 @@ identity.
 **Proposal:** A. **Posture:** tokens and call sites only. No palette re-tone, no
 new convention, no change to `--border` or `--border-strong`.
 
-**Taken, 2026-09-12 (PR #F55PR). Option A.**
+**Taken, 2026-09-12 (PR #972). Option A.**
 
 **`--border-control: #5C736B`**, and three call sites: `.btn` in
 `shared/styles.css`, the text-entry controls in the app's own stylesheet, and
