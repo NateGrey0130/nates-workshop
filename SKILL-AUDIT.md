@@ -1,6 +1,6 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **`F44` was taken 2026-09-11 (PR #F44PR)**, filed 2026-09-04 — the three ways
+> **`F44` was taken 2026-09-11 (PR #957)**, filed 2026-09-04 — the three ways
 > a worker cannot learn a book's page offset from the two sources both agents
 > send it to. **One of its three parts is a cost `F43` created**, so read
 > `F43`'s note with it. The live wrong number it named and deliberately
@@ -4244,7 +4244,7 @@ finding's structural subject. It is a live wrong number and needs its own
 number or a one-line fix; `A5` is the record of what happens when a defect is
 noted in passing and never filed.
 
-**Taken, 2026-09-11 (PR #F44PR). Documentation only, three files, as the
+**Taken, 2026-09-11 (PR #957). Documentation only, three files, as the
 posture says; the `books.json` half took the variant this finding preferred,
 naming neither book.**
 
