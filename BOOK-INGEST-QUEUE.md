@@ -1524,10 +1524,17 @@ pointer to the Rifts® RPG rather than a definition. So `new-west`'s and
 `spirit-west`'s trap does **not** recur in this book. The **Born Mystic does
 still appear as a `P.C.C.`**, and that half stands.
 
-**Five spells disagree with the catalog on LEVEL**, and none of them is a
-correction to make blind — the catalog holds each from another book, four are
-cheaper here and one dearer, so it is not a systematic offset. Settle with the
-first spell PR and keep the losing reading in `variant_note`.
+**The "five spells disagree on LEVEL" reading is WITHDRAWN, 2026-09-12 (PR
+#985).** All five sit inside a named Mystic Russia tradition, and this catalog
+already holds tradition spells as their own row at their own level beside the
+common invocation — `Fire: Circle of Flame` is level 3 where `Circle of Flame`
+is 5, and three more fire spells pair the same way. The first pass compared this
+book's tradition spells against the common-invocation rows and so reported a
+conflict wherever the two tiers differ, which is by design. **`Circle of Flame`
+turns out to AGREE exactly**, and two of the five were never name matches
+(`Fire Fist` singular; `Ocean: Healing Waters`). Settled by decision **D1** in
+the survey: four tradition prefixes, retellings linked with `same_spell_as`, and
+**no existing row changes value**.
 
 **Spells before classes.** Most of the eighteen laddered classes cast — the
 ratio previously quoted here rested on the wrong denominator and was never

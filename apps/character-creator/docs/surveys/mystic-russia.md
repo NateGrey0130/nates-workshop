@@ -224,26 +224,44 @@ O.C.C. with a ladder.
 | Fire Magic | 111–120 | 39 | 1–12 |
 | Nature Magic | 129–140 | 30 | 1–12 |
 
-**The five disagreements are levels, not names, and they are a decision rather
-than a correction** — `book-survey` §4c. The catalog holds each of these from
-another book:
+### The "five disagreements" were measured against the wrong rows
 
-| spell | catalog level | this book |
+**CORRECTED 2026-09-12 (PR #985). This section previously called five spells a
+level dispute to arbitrate. They are not one, and the catalog's own convention
+is why.**
+
+Every one of the five sits inside a **named Mystic Russia tradition** — Living
+Fire (printed 112-115) or Nature (printed 134) — and this catalog already holds
+tradition spells as **their own row at their own level**, beside the common
+invocation:
+
+| spell | common invocation | the `Fire:` tradition row |
 |---|---|---|
-| Circle of Flame | 5 | 3 |
-| Fire Fists | 6 | 3 |
-| Fire Ball | 6 | 5 |
-| Swords to Snakes | 9 | 8 |
-| Healing Water | 6 | 10 |
+| Circle of Flame | 5 — Rifts Ultimate Edition p.207 | **3** — Book of Magic p.76 |
+| Fire Ball | 6 — RUE p.210 | **3** — Book of Magic p.77 |
+| Fire Bolt | 4 — RUE p.205 | **1** — Book of Magic p.75 |
+| Impervious to Fire | 3 — RUE p.202 | **1** — Book of Magic p.75 |
 
-Four of the five are cheaper here and one dearer, so this is not a single
-systematic offset. **Settle it with the first spell PR, with both readings in
-hand**, and record the losing number in `variant_note` rather than discarding it.
+The tradition version is **consistently cheaper**, which is a Palladium design
+pattern rather than a discrepancy. The first reading compared this book's
+tradition spells against the *common-invocation* rows, and so reported a
+conflict wherever the two tiers differ — which is everywhere, by design.
 
-**The 131 are not hand-checked for false gaps yet.** The nearest-candidate
-column shows no obvious mis-parse — the distances are large and the names are
-plainly Russian-flavoured — but `book-survey` §3 says roughly one in twenty is a
-false gap, so budget for ~6.
+**The clearest consequence: Circle of Flame is not a disagreement at all.**
+`Fire: Circle of Flame` is already level 3, exactly what this book prints. That
+is agreement, read as conflict.
+
+**Two of the five were never name matches either.** `Fire Fists` here is
+`Fire Fist` — singular, Palladium Fantasy Main Book p.199 — and `Healing Water`
+is `Ocean: Healing Waters`, Underseas p.65, already namespaced to a different
+tradition.
+
+**The 131 IS hand-checked now, and it holds.** Re-diffed 2026-09-12 with
+tradition prefixes and trailing plurals folded: 147 distinct titles parsed, **16
+matched, 131 absent** — and one of the sixteen (`Fumigate: Insects` ->
+`Metamorphosis: Insect`) is the checker being too eager, not a real match. Fifteen
+real matches, exactly what the first pass reported. `book-survey` §3 budgets ~6
+false gaps out of 131; **there are none.** Do not re-spend this check.
 
 ### Skills, psionics, gear, vessels
 
@@ -260,15 +278,41 @@ false gap, so budget for ~6.
   bionic horses, Hell Horses and Serpent Hounds — **not yet classified** as
   vessels, creatures or gear.
 
+## Decisions settled with Nate, 2026-09-12
+
+**These are agreed, not proposed. Implement them; do not re-litigate them.**
+
+**D1 — the 146 spells take four tradition prefixes:** `Spoiling:`, `Bone:`,
+`Living Fire:`, `Nature:`. **Precedent, in this catalog, from two earlier
+imports:** New West's seven `Clouds of ...` traditions and Underseas' `Spellsong`
+and `Dolphin` were all namespaced the same way, and **378 of the 773 spell names
+carry a `Tradition: Name` prefix**. Where a prefixed row retells an established
+spell, point `same_spell_as` at the established row and let each keep **its own
+level and PPE** — the column exists for exactly this, and ten rows already use
+it. **No existing row changes value**, so nothing a live character can cast moves
+under them.
+
+**D2 — the five "disagreements" need no ruling**, and fall out of D1. Each
+becomes its own tradition row at the level this book prints, linked by
+`same_spell_as`. `variant_note` is **not** the mechanism here: it records what an
+older book prints *instead*, and these are not competing readings of one row.
+
+**D3 — the six playable creatures with no experience table borrow one**,
+following the precedent the book itself sets by sending the Man-Wolf to the
+Dragon Hatchling's table. **Propose a specific existing ladder per creature and
+show Nate the list of six before writing any of it** — the borrowing is agreed,
+the particular ladders are not.
+
 ## Extraction plan
 
-Nothing below is committed to. This is the proposal to agree on.
+Nothing below is committed to except the three decisions above. The rest is the
+proposal to agree on.
 
 | # | batch | size | notes |
 |---|---|---|---|
-| 1 | the four spell traditions | ~131 rows | one batch per tradition, each carrying its own `Level N` headings as the authority. Spoiling and Nature are small enough to pair |
+| 1 | the four spell traditions | **131 rows**, count verified | one batch per tradition, each carrying its own `Level N` headings as the authority. Spoiling and Nature are small enough to pair. **Names take the D1 prefixes**, and a retelling links with `same_spell_as` |
 | 2 | the O.C.C.s | ~15 classes | `class-import`, one PR per two or three |
-| 3 | the playable bestiary entries | **7 rows** | unblocked — read 2026-09-12, see above. **Six of the seven have no experience table in this book**, which is a decision to settle before the batch, not a reading. The Man-Wolf borrows the Dragon Hatchling's |
+| 3 | the playable bestiary entries | **7 rows** | unblocked — read 2026-09-12, see above. Six of the seven state no experience table; **D3 settles that they borrow one**, with the six proposed ladders shown to Nate first. The Man-Wolf borrows the Dragon Hatchling's, as the book itself says |
 | 4 | gear | ~20 | the bio-wizardry list at printed 107 needs its numbers read as dice expressions, not as printed |
 | 5 | vessels | ~8 | same shape as Triax, Free Quebec and Spirit West |
 
