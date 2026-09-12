@@ -4645,6 +4645,30 @@ section('An O.C.C. is warned about what a race will discard (BOOK-INGEST-AUDIT F
     && /const pastLife = superseded \? \[\] : \(rcc\.skills\?\.occ_skills \|\| \[\]\);/.test(parser));
 }
 
+section('A level-up pick whose grant slot is gone is dropped (BOOK-INGEST-AUDIT F72)');
+{
+  const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+  check('pruneOrphanLevelPicks drops keys past the end of each grant list',
+    /function pruneOrphanLevelPicks\(\) \{[\s\S]{0,700}?if \(Number\(k\) >= n\) delete map\[k\];/.test(appSrc));
+  check('and covers all three maps, not just the one the 422 comes from',
+    /keep\(S\.levelPicks,[\s\S]{0,300}?keep\(S\.levelSpells,[\s\S]{0,300}?keep\(S\.levelPsi,/.test(appSrc));
+  check('it reads the SAME grant helpers the render sites do',
+    /skillGrantsFor\(S\.cls, 1, S\.level\)\.length/.test(appSrc)
+    && /spellGrantsFor\(S\.cls, 1, S\.level\)\.grants \|\| \[\]\)\.length/.test(appSrc)
+    && /psionicGrantsFor\(S\.cls, 1, S\.level\)\.grants \|\| \[\]\)\.length/.test(appSrc));
+  check('and does nothing at level 1, where there are no level picks at all',
+    /if \(!S\.cls \|\| S\.level <= 1\) return;/.test(appSrc));
+  // It sits in recompose and not in the three handlers F72 names, because
+  // takeAbility and dropAbility do not recompose - pruning there would read the
+  // previous class's grant counts.
+  const rc = /function recompose\(\) \{([\s\S]*?)\n\}/.exec(appSrc);
+  check('recompose calls it, after the class it prunes against is built',
+    !!rc && /pruneOrphanLevelPicks\(\);/.test(rc[1])
+    && rc[1].lastIndexOf('composeClass(') < rc[1].indexOf('pruneOrphanLevelPicks();'));
+  check('and it is the only caller, so the grant list has one gatekeeper',
+    (appSrc.match(/pruneOrphanLevelPicks\(\);/g) || []).length === 1);
+}
+
 section('Race and occupation');
 {
   const mk = (cat, skills) => parseClassMarkdown(

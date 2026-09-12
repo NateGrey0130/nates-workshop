@@ -9869,3 +9869,34 @@ is what this menu's protocol forbids.
 **Nothing here blocks the last book.** F72 is the wizard's Advancement step and
 has no bearing on ingesting `mystic-russia`; it is recorded so the next reader
 starts from the measurements rather than from the six wrong sentences above.
+
+**TAKEN as option E, 2026-09-12 (PR #978), on Nate's word.** The floor, not
+the fix, and the note above already says which is which.
+
+`pruneOrphanLevelPicks()` drops any `S.levelSpells`, `S.levelPsi` or
+`S.levelPicks` key whose index is past the end of the grant list the composed
+class now derives. That kills the 422 - `powersPayload` flattens the maps
+index-agnostically, so an orphan was reaching the server - and the three visible
+symptoms with it: the inflated "n of m chosen" count, `heldElsewhere` treating
+an orphaned spell as already known, and a picker greyed with nothing ticked.
+
+**It sits in `recompose()`, not in the three handlers option E names, and that
+is a correction rather than a liberty.** `takeAbility` and `dropAbility` **do
+not recompose** - they call `poolsMayHaveChanged` and `render`, and `S.cls`
+still holds the previous composition when they return. Pruning there would have
+read the OLD grant counts and done nothing, or the wrong thing.
+`recompose()` is where the grant list is actually derived, so it is the one
+place the prune cannot be forgotten by a fourth caller. A pin asserts it is the
+only call site.
+
+**What is still open, unchanged:** the mis-BINDING. A pick at an index that
+still exists stays where it is, against whatever grant now occupies that slot.
+**Option A closes that** and is now cheaper than this finding first priced it -
+the stable key already exists and is already the live level-up path's wire
+format - but it is a state migration and saved drafts carry the integer keys.
+**F72 stays open on A**, with E underneath it as the floor.
+
+**Tests:** six pins, **five of which fail against the file as it was**, and one
+of the six fails if a second caller is ever added.
+Smoke 1972 -> **1978**, regression 385 unchanged; there is still no data check
+here, for the reason the adjustment gives - this lives entirely in wizard state.

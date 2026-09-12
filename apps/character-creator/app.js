@@ -1663,6 +1663,35 @@ function pickOcc(id) {
 // Both go through js/compose.js and neither reaches for combineClasses — a
 // smoke check fails the build for that, because re-implementing the order is
 // exactly the bug compose.js exists to prevent.
+// A level-up pick is stored under the INDEX of the grant it was made against -
+// S.levelSpells[gi], S.levelPsi[gi], S.levelPicks[gi]. The grant list is derived
+// from the composed class, so changing the occupation or an ability can make it
+// shorter, and any pick past the new end belongs to a slot that no longer
+// exists. powersPayload flattens the maps index-agnostically, so an orphan
+// reaches the server and comes back as a 422 the player cannot explain; before
+// that it inflates the "n of m chosen" header, makes its own name unpickable
+// through heldElsewhere, and can grey out a picker with nothing ticked.
+//
+// BOOK-INGEST-AUDIT.md F72, option E. It is a FLOOR and not the fix: a pick at
+// an index that still exists stays where it is, against whatever grant now
+// occupies that slot. Option A - re-keying by kind, level and slot, which is
+// already the wire format the live level-up path uses - is what closes that,
+// and it is a state migration.
+//
+// Called from recompose() rather than from the three handlers the finding names.
+// That is where the grant list is actually derived, so it cannot be forgotten by
+// a fourth caller - and takeAbility/dropAbility do NOT recompose today, so
+// pruning in them would read the previous class's grant counts.
+function pruneOrphanLevelPicks() {
+  if (!S.cls || S.level <= 1) return;
+  const keep = (map, n) => {
+    for (const k of Object.keys(map || {})) if (Number(k) >= n) delete map[k];
+  };
+  keep(S.levelPicks, skillGrantsFor(S.cls, 1, S.level).length);
+  keep(S.levelSpells, (spellGrantsFor(S.cls, 1, S.level).grants || []).length);
+  keep(S.levelPsi, (psionicGrantsFor(S.cls, 1, S.level).grants || []).length);
+}
+
 function recompose() {
   const character = { class_variant: S.variant, occ_class_variant: S.occVariant,
     abilities: S.abilities, mos: S.mos, totem: S.totem };
@@ -1679,6 +1708,9 @@ function recompose() {
     // folds it in from there while a build is in progress.
     character,
   });
+  // The grant list is rebuilt above; anything pointing past its end is now an
+  // orphan. F72.
+  pruneOrphanLevelPicks();
 }
 
 // Choosing again replaces rather than adds: an MOS is one specialty, and the
