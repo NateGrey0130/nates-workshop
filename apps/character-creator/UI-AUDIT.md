@@ -3962,3 +3962,83 @@ smaller change than it looks.
 
 **Posture said back:** documentation only; no gate moved, no code, no data. It
 held.
+
+### F54 - low - the two attribute-minimum gates disagree by design, and reconciling them reverses a written decision whichever way it goes
+
+**Filed 2026-09-12, NOT taken.** This is `F2`'s actual remainder — its note
+ends *"Neither gate moved, and reconciling (1) and (2) remains open and
+unstarted."* <!-- claim-ok: quoting the premise this finding inherits -->
+`F53` above took the one part of it that was a measurement. What is left is a
+decision, and it is filed as one.
+
+**The two behaviours, both read on `origin/main` at `b6ee6cc`, 2026-09-12.**
+
+1. **The Attributes step HARD-BLOCKS.** `const canNext = missing.length === 0 &&
+   unmet.length === 0 && !over;` (`apps/character-creator/app.js:2227`), with
+   the reason rendered in a `.nav-why` span beside the disabled button.
+2. **The Occupation step WARNS and offers a re-roll.** `occBlocker()`
+   (`app.js:2078-2084`) returns a blocking reason only for an unchosen
+   practitioner occupation; the minimum shortfall is not in it.
+
+Which one a player meets depends only on **class order**: O.C.C.-first knows the
+class by step 2 and blocks; race-first does not learn the occupation until step
+4 and warns. Same character, same shortfall, two different experiences.
+
+**Both are deliberate, and each direction reverses something written down with
+reasons. That is why this is a decision and not a defect.**
+
+- **Making (2) block** reverses `app.js:2075-2077`, which says in code: *"The
+  ONLY thing that blocks this step. A missed minimum deliberately does not: the
+  app's standing rule for occupations is that a mismatch warns and never
+  refuses"* — and `docs/race-and-occupation.md:63-69`, which records three
+  alternatives rejected on purpose (re-roll the whole block, auto-raise to the
+  minimum, offer a choice between them).
+- **Making (1) warn** reverses `docs/wizard-and-sheet.md:267-283`, which names
+  Attributes as one of four deliberately gated steps and adds *"A greyed button
+  with no reason, or a reason beside a live button, are each worse than either
+  alone."*
+
+**What is NOT in question.** The save refuses either way —
+`_lib/validate-character.js:193` returns `attribute_minimum` as a blocking
+violation and `characters.js:209` answers 422. `F53` fixed the doc that said
+otherwise. So this is about **where a player is told**, never about what is
+allowed.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A** | both steps BLOCK | the wizard never lets a player build something the server will refuse; matches what the save actually does | reverses the occupation doctrine and the three rejected alternatives, and a blocked step-4 with no re-roll left is a dead end |
+| **B** | both steps WARN | the player keeps agency, and the 422 is the single point of truth | reverses `wizard-and-sheet.md`'s gating rule, and lets a player finish a wizard that cannot save |
+| **C** | leave them disagreeing, and say so in the docs | costs a paragraph; both behaviours are individually defended | the inconsistency is still reachable and still undocumented as intentional |
+| **D** | leave it entirely | nothing to do | `F2`'s remainder stays open forever, which is what this finding exists to stop |
+
+**No recommendation, deliberately.** Each of A and B reverses a decision the
+other half of the app is built on, and neither is a reading of the code — it is
+a call about how much the wizard should protect a player from the save. **C is
+the cheapest honest outcome** if the answer is "not now".
+
+**One thing to fix whichever way it goes.** The comment at `app.js:2075-2077`
+says the standing rule *"warns and never refuses"*. That is true of the STEP and
+false of the SAVE, which is the exact shape `F53` just corrected in
+`race-and-occupation.md`. One clause, whoever takes this.
+
+**Posture:** the option chosen decides it. A and B are code; C is documentation
+only.
+
+**Confidence: high on both behaviours and on the two decisions they reverse** —
+every line above was read rather than recalled, and `F33`'s own note
+independently re-confirmed behaviour (1) on 2026-09-08
+(`UI-AUDIT.md`, *"The `Skills` button is disabled for the unmet minimum"*).
+**Not measured: how often a real player meets either**, which would need the
+class-order split across real builds and production holds three characters.
+
+**Ongoing cost:** none for C. A or B costs one source pin on the gate that moved.
+
+**Subject grep, 2026-09-12:** every `*AUDIT*.md` (root and under `apps/`) plus
+`SETUP-v2-CHANGES.md` for `occBlocker`, `canNext` and `.nav-why`: nothing
+outside this menu. Inside it, `F2` is the parent and `F33` re-confirms
+behaviour (1) in passing. The memory store has no hit for any of the three.
+**The two decisions this finding would reverse are not on any menu** — they are
+in a code comment and two doc files, which is why the grep that matters here was
+the tree one and not the menu one.
