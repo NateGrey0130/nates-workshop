@@ -4069,6 +4069,58 @@ behaviour (1) in passing. The memory store has no hit for any of the three.
 in a code comment and two doc files, which is why the grep that matters here was
 the tree one and not the menu one.
 
+**Taken as option A, 2026-09-12 (PR #F54APR), on Nate's word. Both steps block.**
+
+**This finding offered no recommendation and that was fence-sitting.** The
+tie-breaker is something it establishes itself and then does not use: **the save
+refuses either way.** That makes option B - both steps warn - actively wrong. It
+would let a player spend six more steps and meet a 422 at the end, which is the
+worst place to learn. Option A is the only one where what the wizard says and
+what the server does are the same sentence.
+
+**And it does NOT reverse the occupation doctrine**, which is what made this look
+like a dilemma rather than a decision. `app.js`'s comment said *"the app's
+standing rule for occupations is that a mismatch warns and never refuses, and
+this is the same class of problem."*
+<!-- claim-ok: quoting the comment this note corrects, cited by path above -->
+**It is not the same class of problem.** That doctrine is about pairings the
+SERVER ALLOWS - a race and an occupation a book discourages. An
+`attribute_minimum` is a blocking violation and a 422. Hard rule, soft rule; the
+wizard now draws the line where the server draws it, and the comment says so.
+
+**What shipped.** `occBlocker()` returns the shortfall as a blocking reason,
+**guarded on `S.occ`** - without an occupation there is no `shortfallPanel` and
+no re-roll button, so blocking there would be a disabled button with nowhere to
+go, which is the exact failure `docs/wizard-and-sheet.md` warns about. With one
+chosen, the re-roll sits directly beneath the block; it has since the panel was
+written, which is why the block can land on this step at all. The reason text
+says the save would be refused, so the player is told *why*.
+
+**Both docs that described the old rule are corrected in the same PR** -
+`wizard-and-sheet.md`'s gating list and the paragraph `F53` rewrote in
+`race-and-occupation.md` five hours earlier, which had just been made true and
+is now true in a different way. That is the cost of a doc that states a rule
+rather than pointing at one, and it is the second time today.
+
+**Tests: three pins asserted the OPPOSITE and are inverted rather than
+deleted** - `'a missed minimum does not'` was a check that the Occupation step
+did not gate on it. Inverting was the right move because the durable thing to
+pin is that the **two gates agree**, which is exactly what a later tidy would
+undo. Six checks now, including one that the Attributes step still gates on the
+same shortfall.
+
+**Not walked in a browser, deliberately, and here is the argument rather than an
+apology:** this changes what `occBlocker()` RETURNS, not how it is rendered. The
+`.nav-why` span and the `disabled` attribute are the same machinery that has
+rendered the ability blocker since the step was written, unchanged by this PR
+and pinned. Reaching the new state by hand needs a character that rolls under a
+class minimum, which is dice.
+
+**The remaining clause this finding flagged is fixed here too:** the comment no
+longer says the rule *"warns and never refuses"*.
+
+Smoke 1986 -> **1989**.
+
 ### F55 - medium - `--border` never cleared 3:1, and since N4 it carries a STATE as well as decorating a panel
 
 **Filed and taken 2026-09-12.** This is `F6`'s remainder — its note ends
