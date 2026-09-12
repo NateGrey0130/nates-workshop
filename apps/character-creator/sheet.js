@@ -2429,6 +2429,26 @@ function powerPickerBlock(p) {
   return blocks;
 }
 
+// A psionic grant's categories, matched the way every other reader matches
+// them. A gate entry may be an OBJECT narrowing what it admits since F16 -
+// { name: "Physical", except: ["Telekinesis"] } - and a category string never
+// equals one, so a plain includes dropped the entry and the picker came up
+// empty: the Totem Warrior's whole gate, and 14 of the Healing Shaman's 33
+// level-up grants (BOOK-INGEST-AUDIT F66). UI-AUDIT F30 did this for the skill
+// pickers; these are the psionic two. Defensive ternary like admits() below,
+// because the bridge in sheet.html is a deferred module and this is a classic
+// script.
+const psiAdmits = (cats, power) => !cats || !cats.length
+  || (globalThis.skillCats
+    ? globalThis.skillCats.categoryAllows(cats, power)
+    : cats.includes(power.category));
+
+// The same entries are PRINTED in each picker's caption, where an object joins
+// as "[object Object]".
+const psiCatLabel = (cats) => (cats || []).map((c) => (globalThis.skillCats
+  ? globalThis.skillCats.categoryLabel(c)
+  : (typeof c === 'string' ? c : c?.name ?? ''))).join(', ');
+
 function powerKindBlock(grant, kind) {
   if (!grant || !grant.applicable) return '';
   const isSpell = kind === 'spell';
@@ -2461,11 +2481,11 @@ function powerKindBlock(grant, kind) {
       .filter((x) => !isSpell || (named ? (named.has(String(x.name).toLowerCase()) && (!levels || levels.includes(x.level)))
                                         : (!levels || levels.includes(x.level))))
       .filter((x) => isSpell || (named ? named.has(String(x.name).toLowerCase())
-                                        : (!cats || cats.includes(x.category))));
+                                        : psiAdmits(cats, x)));
     const cap = named ? `a list of ${g.from.length}${levels ? `, spell levels ${levels.join(', ')}` : ''}`
       : isSpell
         ? (levels ? `spell levels ${levels.join(', ')}` : 'any spell level')
-        : (cats ? cats.join(', ') : 'any category');
+        : (cats && cats.length ? psiCatLabel(cats) : 'any category');
     const note = g.note
       ? `<p class="small warn" style="margin:2px 0">${escHtml(g.note)} — the catalog cannot check
          this one, so it is yours to honour.</p>` : '';
@@ -2586,12 +2606,12 @@ function pendingPowersPanel() {
                                                || g.traditions.some((t) => String(t).toLowerCase()
                                                     === String(x.tradition).toLowerCase())))))
       .filter((x) => isSpell || (named ? named.has(String(x.name).toLowerCase())
-                                        : (!g.categories || g.categories.includes(x.category))));
+                                        : psiAdmits(g.categories, x)));
     // The banked row's own restriction, not the class's as it stands today.
     const cap = named ? `a list of ${g.from.length}${g.spell_levels ? `, spell levels ${g.spell_levels.join(', ')}` : ''}`
       : isSpell
         ? (g.spell_levels ? `spell levels ${g.spell_levels.join(', ')}` : 'any')
-        : (g.categories ? g.categories.join(', ') : 'any');
+        : (g.categories && g.categories.length ? psiCatLabel(g.categories) : 'any');
     const note = g.note
       ? `<p class="small warn" style="margin:2px 0">${escHtml(g.note)} — not checked here.</p>` : '';
     return note + Array.from({ length: g.count }, (_, i) => `
