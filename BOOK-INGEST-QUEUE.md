@@ -17,7 +17,7 @@ the human view of the same thing plus the import status.
 | `underseas` | Rifts WB 7: Underseas | 216 | SCAN (OCR) | 214 | **+0 / -1 split** | **imported** |
 | `new-west` | Rifts WB 14: New West | 226 | text layer | 224 | +1 | **imported** |
 | `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | **imported** |
-| `mystic-russia` | Rifts WB 18: Mystic Russia | 178 | text layer | 176 | +1 | cached |
+| `mystic-russia` | Rifts WB 18: Mystic Russia | 178 | text layer | 176 | +1 | **surveyed** |
 | `free-quebec` | Rifts WB 22: Free Quebec | 194 | text layer | 192 | +1 | **imported** |
 | `phase-world` | Rifts DB 2: Phase World | 209 | SCAN (OCR) | 208 | **+0** | **imported** |
 
@@ -1485,3 +1485,53 @@ data records what it means.
 **What this does not prove.** The sweep finds the cipher's own tokens. A figure
 misread into a plausible number - `!D4` read as `1D4` where the page meant
 something else - leaves no token to find, and nothing here reaches that.
+
+### `mystic-russia` survey, 2026-09-12 — and the batch has no book left at `cached`
+
+Status `cached` -> **`surveyed`**. No data shipped. The survey is at
+`apps/character-creator/docs/surveys/mystic-russia.md` and is the authority;
+what follows is the queue's own view.
+
+**The cache re-run was done first**, per the `new-west` instruction — it is the
+section above this one, and it is why this survey could trust its own page
+numbers.
+
+| category | found | verdict |
+|---|---|---|
+| spells | **146** parsed across four traditions; **131 missing** from the catalog | import |
+| classes | ~15 O.C.C.s, printed 75-155 | import |
+| playable creatures | **at most 7**, tagged per entry; not yet counted properly | import what the tags allow |
+| gear | ~20, printed 107 and 159-170 | import |
+| vessels | **8** Sovietski pages, printed 159-171 | import |
+| skills | **0** — no new-skills section exists | nothing to import, with the `spirit-west` caveat |
+| psionic powers | **0** — not one `I.S.P.` stat line in 178 pages | nothing to import |
+
+**THE TRAP THIS BOOK ADDS TO THE LIST, and it is a new one: a two-word heading
+can be split across two lines by the column reader.** The Experience Tables page
+is printed 172, and the cache has `Experience` on one line and `Tables` on the
+next — so `grep -i 'Experience Table'` over the whole cache returns **zero
+hits** for it and finds only the contents entry. The single most valuable page
+in the book is invisible to the obvious search. Search one word, or search the
+class names.
+
+**The experience table is not the roster, for the third book running** — after
+`new-west` and `spirit-west`. It carries eight ladders covering fourteen
+classes, and the book defines more than fourteen: the Gifted One and the Born
+Mystic have no ladder. The **Born Mystic also appears as a `P.C.C.`**, which is
+`new-west`'s trap arriving in a second book.
+
+**Five spells disagree with the catalog on LEVEL**, and none of them is a
+correction to make blind — the catalog holds each from another book, four are
+cheaper here and one dearer, so it is not a systematic offset. Settle with the
+first spell PR and keep the losing reading in `variant_note`.
+
+**Spells before classes.** Nine of the fourteen laddered classes cast, and a
+class citing a spell the catalog does not hold fails its check.
+
+**One thing deliberately left unfinished, and it is the biggest open question:**
+how many of the ~69 bestiary pages hold a PLAYABLE entry. The book tags
+playability per entry and seven were found by a pattern sweep — that is a sweep,
+not a reading, and reading them is free. Do it before extraction, not during.
+
+**With this, no book in the batch is at `cached`.** Seven handed over on
+2026-08-28: six imported, this one surveyed.
