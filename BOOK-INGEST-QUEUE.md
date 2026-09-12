@@ -1500,7 +1500,7 @@ numbers.
 |---|---|---|
 | spells | **146** parsed across four traditions; **131 missing** from the catalog | import |
 | classes | ~15 O.C.C.s, printed 75-155 | import |
-| playable creatures | **at most 7**, tagged per entry; not yet counted properly | import what the tags allow |
+| playable creatures | **7**, read 2026-09-12 (PR #984) | import the seven; six of them state no experience table anywhere in the book |
 | gear | ~20, printed 107 and 159-170 | import |
 | vessels | **8** Sovietski pages, printed 159-171 | import |
 | skills | **0** — no new-skills section exists | nothing to import, with the `spirit-west` caveat |
@@ -1514,24 +1514,43 @@ hits** for it and finds only the contents entry. The single most valuable page
 in the book is invisible to the obvious search. Search one word, or search the
 class names.
 
-**The experience table is not the roster, for the third book running** — after
-`new-west` and `spirit-west`. It carries eight ladders covering fourteen
-classes, and the book defines more than fourteen: the Gifted One and the Born
-Mystic have no ladder. The **Born Mystic also appears as a `P.C.C.`**, which is
-`new-west`'s trap arriving in a second book.
+**The experience table IS the roster here — and the paragraph this replaces said
+it was not.** Corrected 2026-09-12 (PR #984). The first reading counted eight
+ladders, listed nine, and missed a tenth: `Born Mystic,` / `The Gifted Ones &` /
+`Gypsy Fortune Teller` at `p173` lines 120-122. It then concluded from its own
+gap that those two classes had no ladder. **Ten ladders name eighteen classes,
+and every class the book defines has one** — the Russian Shifter/Summoner is a
+pointer to the Rifts® RPG rather than a definition. So `new-west`'s and
+`spirit-west`'s trap does **not** recur in this book. The **Born Mystic does
+still appear as a `P.C.C.`**, and that half stands.
 
 **Five spells disagree with the catalog on LEVEL**, and none of them is a
 correction to make blind — the catalog holds each from another book, four are
 cheaper here and one dearer, so it is not a systematic offset. Settle with the
 first spell PR and keep the losing reading in `variant_note`.
 
-**Spells before classes.** Nine of the fourteen laddered classes cast, and a
-class citing a spell the catalog does not hold fails its check.
+**Spells before classes.** Most of the eighteen laddered classes cast — the
+ratio previously quoted here rested on the wrong denominator and was never
+measured — and a class citing a spell the catalog does not hold fails its check.
 
-**One thing deliberately left unfinished, and it is the biggest open question:**
-how many of the ~69 bestiary pages hold a PLAYABLE entry. The book tags
-playability per entry and seven were found by a pattern sweep — that is a sweep,
-not a reading, and reading them is free. Do it before extraction, not during.
+**That open question is now closed, 2026-09-12 (PR #984): seven entries are
+playable, and the pattern sweep had the list inverted.** The tag HEADING is not
+the authority — the `Player Note:` paragraph under it is, and the two disagree on
+four of the eight Woodland Spirits. Two headed *Player Character* (Polevoi,
+Rusalka) turn out to be GM-optional with Rusalka expressly *"not recommended"*,
+while the **Man-Wolf, headed *Non*-Player Character, gets the warmest
+endorsement in the book** — *"a fun and challenging character to play"*. Only the
+**Firebird** is refused outright. All eighteen demons are NPC, and the **Serpent
+Hound** (printed 40) is the one entry carrying no tag at all.
+
+**And `~69 bestiary pages` was wrong by 24** — that was the count of
+creature-field pages across the WHOLE book, and twenty-four of them are in the
+classes section at printed 75-155. The bestiary is printed 16-71, 56 pages.
+
+**The blocker that reading found:** six of the seven playable entries state no
+experience table anywhere in the book, and no spirit appears on the printed-172
+ladder. Only the Man-Wolf says how to level, borrowing the Dragon Hatchling's.
+That is a decision to settle before the batch, not a reading.
 
 **With this, no book in the batch is at `cached`.** Seven handed over on
 2026-08-28: six imported, this one surveyed.
