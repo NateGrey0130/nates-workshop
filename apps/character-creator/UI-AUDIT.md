@@ -2445,6 +2445,32 @@ emoji-to-SVG icon layer spanning all four apps and the landing page, and MediaVa
 app. Both are awaiting a placement decision from Nate rather than dropped — per
 `audit-menu` → *A deferral is work*, they are named here so neither goes missing.
 
+**Both were placed and both were TAKEN, on 2026-09-10, two days after the
+paragraph above was written — which is now the stale half of it.** They went to
+`WORKSHOP-UI-AUDIT.md`, the cross-app menu created for exactly this:
+
+| deferred here as | landed as | outcome |
+|---|---|---|
+| the emoji-to-SVG icon layer across four apps and the landing page | `WORKSHOP-UI-AUDIT` `W2` (`:224`) | **Taken, PR #917**, as re-scoped |
+| MediaVault's `.bulk-bar` at phone width | `WORKSHOP-UI-AUDIT` `W3` (`:479`) | **Taken, PR #918**, the disclosure shape Nate chose |
+
+**And `W3` covers the specific defect `SHARE-AUDIT` named**, which is worth
+saying because the two describe it differently: `SHARE-AUDIT` recorded the bar
+*peeking above the bottom edge* when parked, and `W3` is headed *"takes 42% of a
+phone viewport while select mode is on"* — different symptoms of one bar.
+`WORKSHOP-UI-AUDIT.md:91` calls `bottom: -80px` *"a magic number that stopped
+being true"* and `:136` names the peek explicitly as pointing the same way, both
+read 2026-09-12. Nothing of either deferral is left.
+
+**The sentence above is left standing rather than edited**, because this file is
+a record and the deferral was correct when it was made. What it teaches is the
+cost: **a deferral to "a placement decision" is invisible to every sweep once the
+decision is made somewhere else.** Neither `W2` nor `W3` cites this paragraph,
+`scripts/audit-citations.mjs` reads only class notes, and `menu-check.mjs`
+checks phrasing rather than truth — so this stayed open-looking for two days and
+was found by a census rather than by anything that runs. **A deferral naming the
+menu it expects to land on would have closed itself.**
+
 ---
 
 ### F34 — high — Every primary button drops to 1.17:1 on hover, and this file recorded the mechanism while it was still harmless
