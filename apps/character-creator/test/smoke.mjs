@@ -4568,6 +4568,61 @@ section('The level pools are cleared with the pools they sit on (BOOK-INGEST-AUD
     /if \(!force && !onlyLevel && Object\.keys\(S\.levelPools\)\.length\) return;/.test(appSrc));
 }
 
+section('A border that identifies a control clears 3:1 (UI-AUDIT F55)');
+{
+  // The first contrast arithmetic in this suite. It exists because F6 shipped a
+  // token raise, recorded the measured ratios in a comment, and the comment was
+  // the only thing holding them - by 2026-09-12 every figure in F6's own text
+  // was stale and the substance still held, which is the worst combination to
+  // read. This recomputes from the declared values.
+  const sharedCss = readFileSync(join(repoRoot, 'shared', 'styles.css'), 'utf8');
+  const appCss = readFileSync(join(appDir, 'styles.css'), 'utf8');
+  const noComments = (src) => src.replace(/\/\*[\s\S]*?\*\//g, '');
+  const token = (name) =>
+    (noComments(sharedCss).match(new RegExp('--' + name + ':\\s*(#[0-9a-fA-F]{6});')) || [])[1];
+
+  const lum = (h) => {
+    const c = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255)
+      .map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  };
+  // 0 for anything that is not a six-digit hex, so a DELETED token fails these
+  // checks instead of throwing and taking the other 1958 down with it. Proven
+  // by stashing the stylesheets: the section reports nine failures, not a stack
+  // trace.
+  const ratio = (a, b) => {
+    if (!/^#[0-9a-fA-F]{6}$/.test(a || '') || !/^#[0-9a-fA-F]{6}$/.test(b || '')) return 0;
+    const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
+    return (hi + 0.05) / (lo + 0.05);
+  };
+
+  const grounds = ['bg-primary', 'bg-secondary', 'bg-tertiary'].map((n) => [n, token(n)]);
+  check('every ground and both border tokens are declared as hex',
+    grounds.every(([, v]) => !!v) && !!token('border') && !!token('border-control'),
+    JSON.stringify(grounds));
+
+  // The point of the finding: a control edge owes 3:1 on every ground it can be
+  // drawn on, and --border cannot carry one.
+  for (const [name, bg] of grounds) {
+    const r = ratio(token('border-control'), bg);
+    check('--border-control clears 3:1 on --' + name, r >= 3, r.toFixed(2));
+  }
+  // And the pair that IS the depth idiom is deliberately still below it, so a
+  // later "tidy" that points a control at --border-strong fails here.
+  check('--border-strong is still NOT a control colour, which is why F55 added a third token',
+    ratio(token('border-strong'), token('bg-tertiary')) < 3,
+    ratio(token('border-strong'), token('bg-tertiary')).toFixed(2));
+
+  // The three call sites the finding moved, and the ones it deliberately did not.
+  check('the shared button takes it', /\.btn \{[\s\S]{0,400}?border: 1px solid var\(--border-control\);/.test(sharedCss));
+  check('every text-entry control takes it',
+    /input\[type=text\], input\[type=number\], select, textarea \{[\s\S]{0,400}?border: 1px solid var\(--border-control\);/.test(appCss));
+  check('and the stepper state that N4 left carrying itself',
+    /\.st\.na \{ border-bottom-style: dashed; border-bottom-color: var\(--border-control\);/.test(appCss));
+  check('plate edges are left on --border, so the lit-edge idiom survives',
+    (appCss.match(/var\(--border\)/g) || []).length > 10);
+}
+
 section('Race and occupation');
 {
   const mk = (cat, skills) => parseClassMarkdown(

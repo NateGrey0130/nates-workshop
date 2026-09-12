@@ -4042,3 +4042,105 @@ behaviour (1) in passing. The memory store has no hit for any of the three.
 **The two decisions this finding would reverse are not on any menu** — they are
 in a code comment and two doc files, which is why the grep that matters here was
 the tree one and not the menu one.
+
+### F55 - medium - `--border` never cleared 3:1, and since N4 it carries a STATE as well as decorating a panel
+
+**Filed and taken 2026-09-12.** This is `F6`'s remainder — its note ends
+*"`--border` was not touched and stays open."*
+<!-- claim-ok: quoting the premise this finding inherits -->
+
+**Every number in `F6`'s remark is stale and the substance is intact, which is
+the worst combination to read.** `F6` says *"`--border` `#2a2f3e` sits at
+**1.19-1.47**"*. `#2a2f3e` exists nowhere in the tree - three redesigns have
+been through since. Recomputed 2026-09-12 from the declared values in
+`shared/styles.css:140-146`:
+
+| | `--bg-primary` `#0A0F0E` | `--bg-secondary`/`card` `#141B19` | `--bg-tertiary`/`input` `#1E2724` |
+|---|---|---|---|
+| `--border` `#2C3733` | 1.56 | 1.42 | 1.24 |
+| `--border-strong` `#46554F` | 2.46 | 2.23 | 1.95 |
+
+Still below 3:1 everywhere, and `--border-strong` - which did not exist when
+`F6` was written and which the remark therefore has no view on - does not reach
+it either.
+
+**What changed since the remark is the KIND of thing `--border` does.**
+`REDESIGN-AUDIT` `N4` deleted the opacity on the not-applicable wizard step and
+left the dashed edge as the only marker, saying so in its own text. So
+`apps/character-creator/styles.css:339` is **state information carried by a
+border at 1.56:1**, which is the half of WCAG 1.4.11 with no large-text escape.
+The same is true of control boundaries: every text input and `select`
+(`styles.css:164`) and every `.btn` (`shared/styles.css:337`) draws
+`--border` on `--bg-tertiary` - **1.24:1 against the control's own fill**, and
+that fill is only 1.42:1 from the panel behind it, so neither the border nor the
+fill identified the control. **That raises the severity and not the size.**
+
+**A blanket raise is not available, and this is the measurement that decided the
+shape.** Walking the hue up, the first value clearing 3:1 on all three grounds
+is `#66716d`, and `#5C736B` clears it at 3.79 / 3.43 / 3.01. **Both are lighter
+than `--border-strong` `#46554F`** - so raising `--border` collapses the
+`--border`/`--border-strong` pair, and `shared/styles.css:136-138` makes that
+pair the whole depth mechanism (*"DEPTH IS A LIT EDGE, NOT A SHADOW"*, with
+`--shadow: none` and a smoke check forbidding the alternative). Same shape as
+`F6`'s own conclusion about `--text-muted`: closing the gap costs the tier its
+identity.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (taken)** | a THIRD token, `--border-control`, on the edges that identify a control or carry a state; plate edges keep `--border` | the only version that fixes the accessibility failure without collapsing the depth pair | one more token, and a reader has to know which of three to reach for |
+| B | raise `--border` itself | one token | collapses the pair and takes the lit edge with it, per the measurement above |
+| C | raise only the stepper state | smallest | leaves every input and button at 1.24:1, which is the larger half |
+| D | leave it | nothing to build | a control the user cannot find the edge of |
+
+**Proposal:** A. **Posture:** tokens and call sites only. No palette re-tone, no
+new convention, no change to `--border` or `--border-strong`.
+
+**Taken, 2026-09-12 (PR #F55PR). Option A.**
+
+**`--border-control: #5C736B`**, and three call sites: `.btn` in
+`shared/styles.css`, the text-entry controls in the app's own stylesheet, and
+the `.st.na` dashed edge N4 left carrying itself.
+
+**It lands in `shared/`, which is the "bigger than it looks" flag `F6` raised,
+and the escape hatch Nate used in PR #451 is gone.**
+`apps/character-creator/styles.css:7-13` records that this app's `:root` was
+deleted - *"the overrides are gone rather than retoned"* - so there is no
+app-local scope left to make this change in. `.btn` is used by the character
+creator and filament-forge among others, and all of them had the same 1.24:1
+edge, so the reach is correct rather than incidental.
+
+**`index.html` is deliberately untouched and the front-door pin still passes.**
+It carries its own `--border: #2C3733`, and `rendered-ui.mjs` compares that
+against shared's by ROLE - unchanged either side. The landing page has **zero**
+`<button>`, `<input>` or `<select>` elements (grepped 2026-09-12); its one
+`var(--border)` is a card edge, which is decoration.
+
+**Tests, and this is the suite's first contrast arithmetic.** Nine checks, and
+**seven fail against the stylesheets as they were**. It recomputes the ratios
+from the declared token values rather than trusting the comment beside them -
+which is the direct lesson of this finding, since `F6` recorded its measured
+ratios in prose and every one of them was stale within days. `ratio()` returns
+0 for anything that is not a six-digit hex, so **deleting a token fails these
+checks rather than throwing** - the first version crashed the whole suite on a
+missing token, which was found by running the fail-first proof.
+
+**Verified in a browser**, not only in arithmetic: served from this branch on
+port 8791 (confirmed by grepping the SERVED `shared/styles.css` for the new
+token, per the `launch.json` warning about another worktree answering on 8788),
+and the Race step read correctly - the filter input and both `.btn`s have
+findable edges, the dashed ADVANCEMENT step still reads as not-applicable, and
+the panel edge stays quiet, so controls now sit ABOVE decoration in the
+hierarchy rather than below it.
+
+**Posture said back:** tokens and call sites only; no palette re-tone, no
+convention, `--border` and `--border-strong` unchanged. It held.
+
+**Subject grep, 2026-09-12:** every `*AUDIT*.md` (root and under `apps/`) plus
+`SETUP-v2-CHANGES.md` for `--border`, `border-strong` and "contrast":
+`REDESIGN-AUDIT` `N4` (which created the state case and is cited above),
+`WORKSHOP-UI-AUDIT` `W1`-`W3` (phone layout, not colour) and `F6` itself.
+The memory store's `bench-redesign-and-landing-page-constraints.md` carries the
+lit-edge rule this finding is shaped around and no decision about `--border`'s
+ratio. Nothing to argue past.

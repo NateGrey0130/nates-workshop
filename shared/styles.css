@@ -144,6 +144,21 @@
   --bg-input:         #1E2724;
   --border:           #2C3733;
   --border-strong:    #46554F;
+  /* A border that IDENTIFIES A CONTROL or CARRIES A STATE is non-text contrast
+     (WCAG 1.4.11) and owes 3:1, with no large-text escape. --border is 1.56 on
+     --bg-primary, 1.42 on --bg-secondary and 1.24 on --bg-tertiary, and
+     --border-strong only reaches 2.46 / 2.23 / 1.95 - so neither can carry a
+     control edge. Measured 2026-09-12; the smoke suite recomputes all three
+     rather than trusting this comment. UI-AUDIT F55.
+
+     It is a THIRD token rather than a raise of --border because --border and
+     --border-strong together ARE the depth idiom above: the first value on this
+     hue that clears 3:1 everywhere is lighter than --border-strong, so raising
+     --border would collapse the pair and take the lit edge with it.
+
+     Plate edges, table rules and dotted leaders are decoration and keep
+     --border. */
+  --border-control:   #5C736B;
   --border-focus:     var(--accent);
   --text-primary:     #E2E9E5;
   --text-secondary:   #93A29D;
@@ -334,7 +349,9 @@ body {
   font-size: 13px;
   font-weight: 500;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
+  /* 1.24:1 against this button's own fill before F55, so neither the border nor
+     the fill identified the control. */
+  border: 1px solid var(--border-control);
   background: var(--bg-tertiary);
   color: var(--text-primary);
   cursor: pointer;

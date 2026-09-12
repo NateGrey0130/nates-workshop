@@ -161,7 +161,8 @@ button { font-family: var(--font-display); font-stretch: 75%; cursor: pointer; }
 input[type=text], input[type=number], select, textarea {
   font-family: var(--font-body); font-size: 13px;
   background: var(--bg-input); color: var(--text-primary);
-  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  /* A control boundary, so --border-control rather than --border. UI-AUDIT F55. */
+  border: 1px solid var(--border-control); border-radius: var(--radius-sm);
   padding: 7px 10px;
   transition: border-color var(--transition);
 }
@@ -336,7 +337,11 @@ th {
    saying so in words, by the sentence naming the step - which now lives in the
    summary strip below rather than as its own paragraph. It is still not a
    control: no pointer, no focus, and it is a <span>. */
-.stepper .step-rail .st.na { border-bottom-style: dashed; border-bottom-color: var(--border); cursor: default; }
+/* N4 deleted the opacity here, which left this dashed edge as the ONLY thing
+   separating a not-applicable step from a plain future one - state information
+   carried by a border, at 1.56:1. --border-control is what makes it visible.
+   UI-AUDIT F55. */
+.stepper .step-rail .st.na { border-bottom-style: dashed; border-bottom-color: var(--border-control); cursor: default; }
 
 /* ─── SUMMARY STRIP ───
    What the character is so far, under the rail and sticky with it, so the
