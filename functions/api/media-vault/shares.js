@@ -42,9 +42,16 @@ const looksLikeEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 // person just added to Access is not offered, the owner asks Nate, the variable
 // catches up. The alternative shape - free text with a "pending" badge - fails
 // OPEN, letting an owner grant to an address that can never sign in and produce
-// a share that silently never works. Nothing in CI can compare the two lists;
-// there is no request that reveals who is on an email allow list. SETUP.md says
-// so beside the step that changes them.
+// a share that silently never works.
+//
+// NOTHING CAN COMPARE THE TWO LISTS, AND SOMETHING CAN COMPARE THEIR LENGTHS.
+// `V6` declined a check on the ground that "there is no request that reveals who
+// is on an email allow list", which is true and does not cover a COUNT: the GET
+// below reports `candidateCount`, the number of addresses the mirror holds, and
+// that is compared by hand against the Access policy's rule count. No address
+// leaves the deployment. SHARE-AUDIT V8, filed when the policy had grown to
+// seven while this file still described five. SETUP.md carries the comparison
+// beside the step that changes them.
 //
 // UNSET MEANS NOBODY, deliberately, the same posture isAdminEmail takes for
 // ADMIN_EMAIL: a missing variable must not mean "allow anyone".
@@ -88,6 +95,13 @@ export async function onRequestGet(context) {
       // endpoint that accepts whatever it is handed makes a closed picker
       // decorative.
       candidates: shareCandidates(context.env).filter((c) => c !== self && !granted.has(c)),
+      // How many addresses the MIRROR holds, before yourself and the existing
+      // grants are taken out - so it can be compared against the Access policy's
+      // rule count, which is the only way to see that the hand-kept mirror has
+      // fallen behind. A number, never the addresses: `MV_SHARE_CANDIDATES` is
+      // `secret_text` precisely so the list does not leave the deployment, and a
+      // length does not. SHARE-AUDIT V8.
+      candidateCount: shareCandidates(context.env).length,
     });
   } catch (err) {
     return json({ error: 'DB error: ' + err.message }, 500);

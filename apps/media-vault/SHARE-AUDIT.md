@@ -832,3 +832,43 @@ on a schedule.
 already describes it as a hand-kept mirror and says unset means nobody. The
 memory store's `share-audit-menu.md` carries the 2026-09-09 reading of seven and
 names this as *"the standing problem"* without a number; this is that number.
+
+**Taken as option A, 2026-09-12 (PR #982), on Nate's word.** Posture held: one
+added field on an existing response plus documentation. No new endpoint, no new
+variable, **no address returned**.
+
+`GET /api/media-vault/shares` now reports **`candidateCount`** — the length of
+`MV_SHARE_CANDIDATES`, before the caller and their existing grants are taken
+out. `SETUP.md` records that it **should equal the number of email rules on the
+*Friends Only* Access policy**, which is seconds of work through the
+`cloudflare-api` plugin. Two numbers, and the list still never leaves the
+deployment.
+
+**`V6`'s decline is not overturned, it is bounded.** Its ground was *"There is
+no request that reveals who is on an email allow list, so there is no equivalent
+here."* <!-- claim-ok: quoting V6's stated reason, cited at SHARE-AUDIT.md:648-652 -->
+That is true, and **a count is not who**. What `V6` ruled out was a check that
+would have to expose the list; what this adds cannot expose it, because a length
+is not a membership. The comment in `shares.js` that carried `V6`'s sentence is
+rewritten in place to say both halves.
+
+**Two pins, and the second is the one that matters.** The first holds that the
+GET reports the count. The second holds that it is a **`.length`** and that no
+field named for the addresses themselves has appeared beside it — because the
+obvious "improvement" to this, six months from now, is to return the list so a
+UI can show it, and that would quietly undo the reason `MV_SHARE_CANDIDATES` is
+`secret_text` at all. A third pin holds that `SETUP.md` still says what the
+count should equal.
+
+**What this does NOT do**, so the entry is not read as more than it is: it does
+not compare the two numbers, and nothing on a schedule ever will. It makes the
+comparison **possible in seconds** where it was impossible; a person or an agent
+still has to make it. That is the same posture `V6` shipped for the twin step,
+and the reason no check is proposed here either.
+
+**And it does not answer today's question.** Whether the mirror currently holds
+five or seven is still unknown at the time of writing: it needs one signed-in
+request, which is Nate's to make. **From the next one onwards it is a number
+anyone can read.**
+
+MediaVault smoke 211 -> **214**.
