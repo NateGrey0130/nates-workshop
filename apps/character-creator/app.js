@@ -22,7 +22,7 @@ import { isChoiceGroup, isGearChoice, applyVariant,
          categoryAllows, categoryLabel, categoryName, categoryBonus, needsOccupation,
          abilityOccOptions,
          occAllowedForRace, raceAllowedForOcc, relatedFloorStatus,
-         bonusesFromSkills, sumBonusGroups   abilityTouchesPool } from './js/parser.js';
+         bonusesFromSkills, sumBonusGroups, abilityTouchesPool } from './js/parser.js';
 import { composeClass } from './js/compose.js';
 import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant,
          spellNamesForGrant, grantNote,
