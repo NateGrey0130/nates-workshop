@@ -33,7 +33,11 @@ cache page = printed folio + page_offset
 
 `scripts/books.json` records `page_offset` per slug and the cache's own
 `manifest.json` records what was measured when it was built. **Read it from one
-of those; do not derive it.**
+of those; do not derive it.** They are not equal authorities: only
+the registry carries the exception list below, a `manifest.json` has no key for
+one, and where the two disagree the registry wins (`INGESTION-AUDIT` F4). **A
+zero offset means the cache page IS the printed folio** - there is no offset
+left to hunt, so a mismatch has nowhere else to hide.
 
 **Two books change offset partway through.** `pf` and `underseas` carry a
 `page_offset_exceptions` list — `[{ printed_through, offset }]`, first match

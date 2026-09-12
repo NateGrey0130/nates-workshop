@@ -22,7 +22,7 @@ import { isChoiceGroup, isGearChoice, applyVariant,
          categoryAllows, categoryLabel, categoryName, categoryBonus, needsOccupation,
          abilityOccOptions,
          occAllowedForRace, raceAllowedForOcc, relatedFloorStatus,
-         bonusesFromSkills, sumBonusGroups } from './js/parser.js';
+         bonusesFromSkills, sumBonusGroups   abilityTouchesPool } from './js/parser.js';
 import { composeClass } from './js/compose.js';
 import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant,
          spellNamesForGrant, grantNote,
@@ -1506,10 +1506,32 @@ function abilityPicker() {
   }).join('');
 }
 
+// The definition behind a pick, keyed the way abilityPicker and applyAbilities
+// key theirs - on the trimmed, lower-cased name. A choose group's `from` string
+// can differ in case from the definition's own `name`, and an exact-case lookup
+// would miss it.
+function abilityDef(name) {
+  const key = String(name || '').trim().toLowerCase();
+  return (S.rcc?.special_abilities || [])
+    .find((d) => d && typeof d.name === 'string' && !d.choose
+      && d.name.trim().toLowerCase() === key) || null;
+}
+
+// Taking or dropping an ability that changes a pool clears the rolled pools, so
+// the next step rolls them again down the lazy path - what pickTotem does, and
+// for the same reason (BOOK-INGEST-AUDIT.md F67). Without it a Spirit Warrior
+// who swaps the Earth realm away keeps the M.D.C. that realm converted, and one
+// who swaps it IN keeps the hit points and S.D.C. it no longer has - which the
+// server stores without complaint.
+function poolsMayHaveChanged(name) {
+  if (abilityTouchesPool(abilityDef(name))) S.pools = null;
+}
+
 function takeAbility(name) {
   const limit = abilityGroups(S.rcc).reduce((n, g) => n + (+g.choose || 0), 0);
   if (S.abilities.length >= limit) return;
   S.abilities.push(name);
+  poolsMayHaveChanged(name);
   render();
 }
 
@@ -1526,6 +1548,7 @@ function dropAbility(name) {
       S.occ = null; S.occVariant = null;
     }
   }
+  poolsMayHaveChanged(name);
   render();
 }
 

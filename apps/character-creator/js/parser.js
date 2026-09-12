@@ -1760,6 +1760,26 @@ export function normalizeAbilities(list) {
   return out;
 }
 
+// Whether taking or dropping this ability changes a pool the wizard has ALREADY
+// ROLLED. Pools are rolled once and the later steps roll again only when there
+// are none, so an ability swapped after the roll otherwise leaves the old
+// numbers standing - BOOK-INGEST-AUDIT.md F67.
+//
+// Three shapes reach a pool: a `bonuses.pools` entry, F62/F64's
+// `mdc_from_hp_sdc` (hit points and S.D.C. become one M.D.C. maximum), and a
+// `psionics.isp_base`, which applyAbilities merges in and computePools rolls off
+// the composed block - the Gypsy Gifted's four Gifts each state a different one.
+// F67 named the first two; the third is the same defect, found by its premise
+// audit, and leaving it out would have fixed six classes of the ten that have
+// an ability of this kind.
+export function abilityTouchesPool(def) {
+  if (!def || typeof def !== 'object') return false;
+  const pools = def.bonuses?.pools;
+  return (!!pools && typeof pools === 'object' && Object.keys(pools).length > 0)
+    || def.mdc_from_hp_sdc === true
+    || def.psionics?.isp_base != null;
+}
+
 // Folds the abilities a character actually chose into its class.
 //
 // `chosen` is a list of names and DUPLICATES ARE MEANINGFUL: the Godling's Shape

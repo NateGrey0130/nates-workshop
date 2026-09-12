@@ -4370,6 +4370,38 @@ section("The sheet's psionic pickers match an object category gate (BOOK-INGEST-
       .test(readFileSync(join(appDir, 'sheet.html'), 'utf8')));
 }
 
+section('An ability that changes a pool clears the rolled pools (BOOK-INGEST-AUDIT F67)');
+{
+  // Loaded as a NAMESPACE so a missing export fails a check rather than the
+  // whole run at import - which is what these had to do before the fix existed.
+  const P = await import('../js/parser.js');
+  const touches = (def) => (typeof P.abilityTouchesPool === 'function' ? P.abilityTouchesPool(def) : undefined);
+
+  check('a pool bonus counts', touches({ name: 'Super-Tough', bonuses: { pools: { mdc: '3d4x10' } } }) === true);
+  check('so does the mega-damage conversion flag (F62/F64)',
+    touches({ name: 'Powers of the Earth Realm', mdc_from_hp_sdc: true }) === true);
+  // computePools rolls I.S.P. off the COMPOSED psionics block, which
+  // applyAbilities merges an ability's into - so a Gift carrying its own
+  // formula moves a rolled pool exactly as a pool bonus does.
+  check('and so does an I.S.P. formula',
+    touches({ name: 'The Gift', psionics: { type: 'major', isp_base: '2d6x10 + M.E. attribute' } }) === true);
+  check('an ability granting none of the three does not', touches({ name: 'Nightvision', description: 'x' }) === false);
+  check('an empty pools map does not', touches({ name: 'x', bonuses: { pools: {} } }) === false);
+  check('a bonus to something else does not', touches({ name: 'x', bonuses: { attributes: { PS: '1d6' } } }) === false);
+  check('and nothing at all is false rather than a crash', touches(null) === false && touches(undefined) === false);
+
+  // app.js boots on import, so its two call sites are pinned as SOURCE - the
+  // shape F61 and F65 pinned for the same reason.
+  const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+  check('the wizard reads the shared predicate rather than keeping its own copy',
+    /abilityTouchesPool\b/.test(appSrc));
+  check('taking an ability clears the rolled pools',
+    /S\.abilities\.push\(name\);\s*\n\s*poolsMayHaveChanged\(name\);/.test(appSrc));
+  check('and both handlers do it', (appSrc.match(/poolsMayHaveChanged\(name\);/g) || []).length === 2);
+  check('the definition lookup is case-folded, as applyAbilities keys its own',
+    /d\.name\.trim\(\)\.toLowerCase\(\) === key/.test(appSrc));
+}
+
 section('Race and occupation');
 {
   const mk = (cat, skills) => parseClassMarkdown(

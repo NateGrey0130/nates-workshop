@@ -1,10 +1,12 @@
 # Instruction-layer audit — the skills, the agent, CLAUDE.md, memory and settings, 2026-09-02
 
-> **`F44` IS OPEN**, filed 2026-09-04 — the three ways a worker cannot learn a
-> book's page offset from the two sources both agents send it to. **One of its
-> three parts is a cost `F43` created**, so read `F43`'s note with it. It also
-> names, and deliberately excludes, a live wrong number in
-> `BOOK-INGEST-QUEUE.md`. `F41`, `F42` and `F43` were all taken
+> **`F44` was taken 2026-09-11 (PR #957)**, filed 2026-09-04 — the three ways
+> a worker cannot learn a book's page offset from the two sources both agents
+> send it to. **One of its three parts is a cost `F43` created**, so read
+> `F43`'s note with it. The live wrong number it named and deliberately
+> excluded in `BOOK-INGEST-QUEUE.md` was corrected four minutes after this
+> finding was filed, on 2026-09-04 (commit `8309b76`), so nothing is left
+> there. **THIS MENU HAS NO OPEN WORK.** `F41`, `F42` and `F43` were all taken
 > 2026-09-04 (PRs #704, #705, #707); `F43` was filed and taken the same day, in
 > separate PRs. Three notes carry things a citer needs: `F41`'s posture was
 > **widened on Nate's word** from one agent file to four, `F42` corrected a
@@ -4241,6 +4243,60 @@ split. **Scoped out on Nate's word** as ordinary staleness rather than this
 finding's structural subject. It is a live wrong number and needs its own
 number or a one-line fix; `A5` is the record of what happens when a defect is
 noted in passing and never filed.
+
+**Taken, 2026-09-11 (PR #957). Documentation only, three files, as the
+posture says; the `books.json` half took the variant this finding preferred,
+naming neither book.**
+
+**Five corrections from the premise audit (`audit-premise-auditor`,
+2026-09-11).**
+
+- **The excluded number was already fixed, four minutes after this finding was
+  filed.** Commit `8309b76` on 2026-09-04 corrected `BOOK-INGEST-QUEUE.md`'s
+  zero-offset paragraph, saying in its own message that F44's exclusion was
+  about scope rather than about leaving the number wrong; that file now carries
+  a "Corrected 2026-09-04" banner. Nothing was re-fixed here and no finding was
+  filed for it. **The closing paragraph above is left standing as filed**, which
+  is what a dated record is for.
+- **(b) is smaller than it reads.** Both agent files already carry a paragraph
+  naming `pf` and `underseas` and describing the exception list, immediately
+  below the lines this finding quotes (`book-extract-worker.md:38-42`,
+  `book-reconcile.md:48-52`). What was genuinely missing is only WHICH source
+  holds that list and that a manifest cannot express one, so each file gained a
+  sentence rather than a paragraph.
+- **Two `book-survey` citations in this finding no longer resolve.**
+  `SKILL.md:210-215` and `:235-240` were right on 2026-09-04 and are 318-328
+  and 341-346 today, the file having grown by three takes since. The quoted text
+  is unchanged, and nothing was edited there.
+- **A bare `F44` names three findings** - this one, `BOOK-INGEST-AUDIT` F44 and
+  `UI-AUDIT` F44 - and `audit-citations.mjs --remote F44` answers for the
+  BOOK-INGEST one without being asked. The branch and the commit name the menu.
+- **`META-AUDIT.md:2778` stays as it is.** Its "one numbered finding is open in
+  the entire corpus" is a dated measurement from 2026-09-06, and it stopped
+  being true when `BOOK-INGEST-AUDIT` F66 and F67 were filed on 2026-09-11.
+
+**What shipped, one edit per file.**
+
+- `scripts/books.json`: the `_doc` names neither book and no count. The entries
+  beneath it are the list, and the comment now says a cache `manifest.json`
+  cannot express the key at all. Naming neither is the variant the proposal
+  preferred, and the one shape that cannot go stale when the next split book is
+  registered - nothing pins `_doc` (`test/checks/book-registry.mjs` scans a
+  registry entry's `note`).
+- Both agent files: the two sources are not equal authorities. Only the registry
+  carries the exception list, a `manifest.json` has no key for one, and the
+  registry wins where they differ - citing `INGESTION-AUDIT` F4's outcome note,
+  which decided exactly that, rather than re-deriving it.
+- (c) as the proposal asked, **carrying no frequency**: a zero offset means the
+  cache page IS the printed folio, so a mismatch has nowhere else to hide. The
+  clause `F43` cut is not restored.
+
+**Posture said back:** documentation only; no frontmatter or tools change, no
+check, no schema change, and no count of books anywhere. It held.
+
+**Confidence on (c) stays medium**, exactly as filed. What would settle it is
+whether a spawned worker has ever mis-cited against a zero-offset book, and
+that needs a transcript search nobody has run.
 
 ---
 
