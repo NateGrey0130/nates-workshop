@@ -3952,7 +3952,7 @@ as a blocking counter-example. It does not — that sentence is in
 Corrected before this PR was opened, by running the grep instead of trusting the
 note that had just quoted the comment.)*
 
-**Taken, 2026-09-12 (PR #F53PR). Option A, as written.**
+**Taken, 2026-09-12 (PR #969). Option A, as written.**
 
 **One thing the finding did not say, found while writing the replacement.** The
 link it hands to already exists in the other direction:
