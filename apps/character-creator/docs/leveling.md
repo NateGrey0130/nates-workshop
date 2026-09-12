@@ -500,6 +500,23 @@ occupation's `bonuses.pools` are summed in, and the core S.D.C. default is
 keyed off the occupation's id). `pickVariant` and `pickOccVariant` now
 recompose as well, which nothing on the Race or Occupation step did before.
 
+**And the attribute handlers since F70**, which is the same rule one input
+further back: every pool formula reads `S.attrs`, so `setRoll` — the one place
+a rolled attribute is written — and the four step handlers that write one
+directly (`setMethod`, `setAllMethod`, `manualSet`, `pbAdj`) all clear the
+pools through `attrsChanged()`. It costs nothing visible: the Attributes step
+renders no pool and `computePools()` is lazy, so the re-roll happens once, when
+Details is first reached. `doPsiRoll` and `skipPsiRoll` clear them too, because
+the rolled TIER is where `isp_base` comes from; `setPsiShape` deliberately does
+not, because a shape moves no pool formula.
+
+**F70 also runs the other way.** `attribute_dice` is in `VARIANT_OVERRIDES`,
+so a variant can restate the dice the attributes were already rolled from — four
+live variants do. `pickVariant` and `pickOccVariant` clear those attributes so
+the step asks for them again, but only the ones whose dice actually moved
+(`attribute_dice` is merged per attribute) and only where the value was rolled,
+since point-buy and manual entry ignore the racial dice by design.
+
 When two classes both grant one, the bonuses are **collected, not summed** — two
 dice expressions have no arithmetic sum, so `["4d6", "2d6"]` means both are
 rolled. Flat numbers still add. This is deliberately not the merge the other

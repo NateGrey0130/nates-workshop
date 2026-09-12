@@ -4492,6 +4492,52 @@ section('A variant or an occupation change re-rolls the pools (BOOK-INGEST-AUDIT
     /function pickTotem\(slug\) \{[\s\S]{0,300}?S\.pools = null;/.test(appSrc));
 }
 
+section('An attribute or a psionic tier re-rolls the pools (BOOK-INGEST-AUDIT F70)');
+{
+  // Source pins again, for the reason the F68 section gives: app.js boots on
+  // import. 'The browser entry points parse' above is what makes them mean
+  // something.
+  const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+  const body = (fn) => {
+    const m = new RegExp('function ' + fn + '\\(([^)]*)\\) \\{([\\s\\S]{0,600}?)\\n\\}').exec(appSrc);
+    return m ? m[2] : '';
+  };
+  const oneLiner = (fn) => (new RegExp('function ' + fn + '\\([^)]*\\) \\{.*').exec(appSrc) || [''])[0];
+
+  check('attrsChanged() is the one place the attribute handlers clear the pools',
+    /function attrsChanged\(\) \{ S\.pools = null; \}/.test(appSrc));
+  check('setRoll calls it, so every rolled attribute is covered by one line',
+    /attrsChanged\(\);/.test(body('setRoll')));
+  for (const fn of ['setMethod', 'setAllMethod', 'manualSet']) {
+    check(fn + ' calls it too', /attrsChanged\(\);/.test(oneLiner(fn)));
+  }
+  check('pbAdj calls it after the point-buy budget guard, not before',
+    /S\.attrs\[a\] = cur; return; \}\s+attrsChanged\(\);/.test(appSrc));
+  check('doPsiRoll clears them, because the rolled TIER is where isp_base comes from',
+    /S\.pools = null;/.test(body('doPsiRoll')));
+  check('and skipPsiRoll, which moves the same input the other way',
+    /S\.pools = null;/.test(body('skipPsiRoll')));
+  // The correction F70 itself got wrong, and the one most likely to be
+  // "fixed" back: a shape selects powers_starting and categories_allowed and
+  // moves no pool formula, so clearing there would re-roll the pools and the
+  // starting money for nothing.
+  check('setPsiShape deliberately does NOT, and says so in a comment',
+    !/S\.pools = null/.test(oneLiner('setPsiShape'))
+    && /setPsiShape below is deliberately NOT given this line/.test(appSrc));
+
+  check('clearAttrsWhoseDiceChanged compares the dice by VALUE and only where they moved',
+    /const moved = ATTRS\.filter\(\(a\) => method\(a\) === 'roll' && !same\(a\)\);/.test(appSrc));
+  check('and drops the minimum-reroll log entries that would name cleared attributes',
+    /S\.minRerolls = \(S\.minRerolls \|\| \[\]\)\.filter\(\(r\) => !moved\.includes\(r\.attr\)\);/.test(appSrc));
+  for (const fn of ['pickVariant', 'pickOccVariant']) {
+    const b = body(fn);
+    check(fn + ' reads the dice BEFORE recompose and clears after',
+      /const dice = S\.cls\?\.attribute_dice;/.test(b)
+      && /clearAttrsWhoseDiceChanged\(dice\);/.test(b)
+      && b.indexOf('const dice') < b.indexOf('recompose()'));
+  }
+}
+
 section('Race and occupation');
 {
   const mk = (cat, skills) => parseClassMarkdown(
