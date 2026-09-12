@@ -1474,7 +1474,7 @@ WITHOUT the flag still loses its pools to the race, which is the posture.
 is still worth having: it would cover the fields this flag does not, and would
 have said something on the day the class was imported.
 
-**BUILT 2026-09-12 (PR #F11PR), which closes this finding's last open half.**
+**BUILT 2026-09-12 (PR #977), which closes this finding's last open half.**
 `scripts/class-check.mjs` now warns when a class is `category: occ`, does NOT
 carry `supersedes_race`, and states any of the seven keys `combineClasses`
 hands to the race (`js/parser.js:902-906`): `attribute_dice`,
