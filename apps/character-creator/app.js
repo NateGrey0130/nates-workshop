@@ -183,6 +183,7 @@ function rollAttr(attr) {
 // treats as a violation if some occupation requires it.
 const attrAbsent = (a) => isAbsentAttribute(S.cls?.attribute_dice?.[a]);
 function setRoll(a) {
+  attrsChanged();
   const r = rollAttr(a);
   // rollAttribute returns null ONLY for an absent attribute. Storing the null
   // is the whole point: a fallback here would put back the rolled ten the book
@@ -191,6 +192,18 @@ function setRoll(a) {
   S.attrs[a] = r.total;
   S.attrRolls[a] = r.exceptional.length ? r : null;
 }
+
+// Every pool formula reads the attributes — computePools() rolls hit points,
+// S.D.C., M.D.C., P.P.E. and I.S.P. out of S.attrs — so an attribute that moves
+// after the pools are rolled leaves numbers no formula in the class would now
+// produce. Clearing them is what pickVariant, pickOcc and pickTotem already do
+// for their own inputs. BOOK-INGEST-AUDIT.md F70.
+//
+// It costs the player nothing, which is why it can sit on every handler
+// including the point-buy buttons: the Attributes step renders no pool, and
+// computePools() is lazy — the re-roll happens when Details is first reached,
+// once, whatever was done here.
+function attrsChanged() { S.pools = null; }
 
 // ---------- point-buy ----------
 function pbCost(v) {
@@ -1365,6 +1378,27 @@ function variantPicker() {
   </div>`;
 }
 
+// And the attributes themselves, which is the half F68 made reachable and did
+// not fix. attribute_dice is in VARIANT_OVERRIDES, so a variant may restate the
+// dice the attributes were already rolled from — but it is also in
+// VARIANT_MERGED, merged PER ATTRIBUTE, so the daitya's two variants move five
+// of the eight and leave M.A., P.P. and P.E. exactly as the parent states them.
+// Only the ones that actually moved are cleared.
+//
+// And only where the value came from those dice: the Attributes step itself
+// prints "point-buy/manual ignore racial attribute dice", so a typed or
+// point-bought number is not invalidated by a dice change and is left alone.
+// BOOK-INGEST-AUDIT.md F70.
+function clearAttrsWhoseDiceChanged(before) {
+  const after = S.cls?.attribute_dice || {};
+  const same = (a) => JSON.stringify((before || {})[a] ?? null) === JSON.stringify(after[a] ?? null);
+  const moved = ATTRS.filter((a) => method(a) === 'roll' && !same(a));
+  if (!moved.length) return;
+  for (const a of moved) { S.attrs[a] = null; S.attrRolls[a] = null; }
+  // The re-roll log would otherwise name values that are no longer on the sheet.
+  S.minRerolls = (S.minRerolls || []).filter((r) => !moved.includes(r.attr));
+}
+
 // A variant restates the pool formulas themselves - VARIANT_OVERRIDES carries
 // hit_points_base, sdc_base, mdc_base, ppe_base and bonuses - so switching one
 // after the pools are rolled leaves numbers the class no longer states. Clear
@@ -1374,9 +1408,11 @@ function variantPicker() {
 // It recomposes too: the Race step renders S.cls, and until now nothing rebuilt
 // it here - the forward path only recomposed because confirmRace does.
 function pickVariant(id) {
+  const dice = S.cls?.attribute_dice;
   S.variant = id;
   recompose();
   S.pools = null;
+  clearAttrsWhoseDiceChanged(dice);
   render();
 }
 
@@ -1386,9 +1422,11 @@ function pickVariant(id) {
 // pickVariant and pickOcc; this third handler is where an occ variant actually
 // changes, and it neither cleared nor recomposed.
 function pickOccVariant(id) {
+  const dice = S.cls?.attribute_dice;
   S.occVariant = id || null;
   recompose();
   S.pools = null;
+  clearAttrsWhoseDiceChanged(dice);
   render();
 }
 
@@ -2204,14 +2242,14 @@ function renderAttributes() {
 }
 // A roll's breakdown is cleared whenever the value stops being that roll —
 // otherwise "exceptional +4" hangs beside a number the player typed by hand.
-function setMethod(a, m) { S.attrMethods[a] = m; if (m !== 'roll') S.attrRolls[a] = null; if (m === 'point') S.attrs[a] = S.attrs[a] ?? PB_BASE; render(); }
+function setMethod(a, m) { S.attrMethods[a] = m; if (m !== 'roll') S.attrRolls[a] = null; if (m === 'point') S.attrs[a] = S.attrs[a] ?? PB_BASE; attrsChanged(); render(); }
 // The bulk buttons skip an absent attribute, or "Point-buy" would hand a
 // machine person the PB_BASE constitution its book denies it, and "Roll all"
 // would leave it holding a value from a method it has no row for.
-function setAllMethod(m) { ATTRS.filter((a) => !attrAbsent(a)).forEach((a) => { S.attrMethods[a] = m; if (m !== 'roll') S.attrRolls[a] = null; if (m === 'point') S.attrs[a] = S.attrs[a] ?? PB_BASE; }); render(); }
+function setAllMethod(m) { ATTRS.filter((a) => !attrAbsent(a)).forEach((a) => { S.attrMethods[a] = m; if (m !== 'roll') S.attrRolls[a] = null; if (m === 'point') S.attrs[a] = S.attrs[a] ?? PB_BASE; }); attrsChanged(); render(); }
 function doRoll(a) { setRoll(a); render(); }
 function rollAll() { ATTRS.filter((a) => !attrAbsent(a)).forEach((a) => { S.attrMethods[a] = 'roll'; setRoll(a); }); render(); }
-function manualSet(a, v) { const n = parseInt(v, 10); S.attrs[a] = Number.isFinite(n) && n > 0 ? n : null; S.attrRolls[a] = null; render(); }
+function manualSet(a, v) { const n = parseInt(v, 10); S.attrs[a] = Number.isFinite(n) && n > 0 ? n : null; S.attrRolls[a] = null; attrsChanged(); render(); }
 function pbAdj(a, delta) {
   const cur = S.attrs[a] ?? PB_BASE;
   const next = cur + delta;
@@ -2219,6 +2257,7 @@ function pbAdj(a, delta) {
   S.attrs[a] = next;
   S.attrRolls[a] = null;
   if (pbSpent() > PB_POOL && delta > 0) { S.attrs[a] = cur; return; }
+  attrsChanged();
   render();
 }
 
@@ -3062,7 +3101,17 @@ function trimRelatedToAllowance() {
   S.related = S.related.slice(0, limit);
 }
 
+// The tier decides isp_base — PSIONIC_TIER_RULES gives minor and major
+// different formulas and the rolled tier is what psiClass() resolves, so a roll
+// or a skip moves an input computePools() has already read. BOOK-INGEST-AUDIT.md
+// F70.
+//
+// setPsiShape below is deliberately NOT given this line, though F70 names it:
+// the shape selects powers_starting and categories_allowed only, and cannot
+// move any pool. Clearing there would re-roll every pool, and the starting
+// money with them, for a choice no formula reads.
 function doPsiRoll() {
+  S.pools = null;
   S.psiRoll = rollPsionics();
   trimRelatedToAllowance();
   // A new roll invalidates whatever the previous one allowed.
@@ -3074,6 +3123,7 @@ function doPsiRoll() {
 // "A player may skip step three entirely if he or she does not want a character
 // with psionics." Recorded as a deliberate no rather than an unrolled blank.
 function skipPsiRoll() {
+  S.pools = null;
   S.psiRoll = { roll: null, tier: null, skipped: true };
   trimRelatedToAllowance();
   S.psiShape = null; S.psiCategory = null; S.psi = [];

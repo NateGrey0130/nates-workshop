@@ -1516,6 +1516,41 @@ console.log('\n' + '[7/7] Checks that only a database can make');
       raceSigs.length === 2 && raceSigs[0] !== raceSigs[1], raceSigs.join(' | '));
   }
 
+  // -- which attributes a variant actually moves (F70) -------------------------
+  //
+  // F70 asked for "clear the attribute rolls" when a variant restates
+  // attribute_dice. These are the two measurements that made it narrower:
+  // attribute_dice is in VARIANT_MERGED, so a variant may move a SUBSET; and a
+  // variant may restate the block with the parent's own values, moving nothing
+  // at all. Clearing on presence would throw away rolls in both cases.
+  {
+    const { composeClass: composeFor } = await import(pathToFileURL(join(appDir, 'js', 'compose.js')).href);
+    const ATTR_KEYS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
+    const dice = (c) => c?.attribute_dice || {};
+    const movedBetween = (a, b) => ATTR_KEYS.filter((k) =>
+      JSON.stringify(dice(a)[k] ?? null) !== JSON.stringify(dice(b)[k] ?? null));
+
+    const daitya = classes.find((x) => x.id === 'daitya');
+    const asVariant = (cls, id) => composeFor({ rcc: cls, character: { class_variant: id } });
+    const dParent = composeFor({ rcc: daitya, character: {} });
+    const dAverage = asVariant(daitya, 'average');
+    const dRoyal = asVariant(daitya, 'royal');
+    check('the daitya royal moves five of the eight attribute dice and leaves MA, PP and PE',
+      movedBetween(dParent, dRoyal).join(',') === 'IQ,ME,PS,PB,Spd',
+      movedBetween(dParent, dRoyal).join(',') || '(none)');
+    check('and its average restates the block with the parent\'s own values, moving none',
+      (daitya?.variants || []).some((v) => v.id === 'average' && v.attribute_dice)
+      && movedBetween(dParent, dAverage).length === 0,
+      movedBetween(dParent, dAverage).join(',') || '(none)');
+
+    const dragon = classes.find((x) => x.id === 'chiang-ku-dragon');
+    const hatch = asVariant(dragon, 'hatchling');
+    const adult = asVariant(dragon, 'adult');
+    check("and the Chiang-Ku's two stages move all eight, the class stating none itself",
+      movedBetween(hatch, adult).length === 8 && Object.keys(dice(dragon)).length === 0,
+      movedBetween(hatch, adult).join(','));
+  }
+
   // -- a psionic level-up grant keeps its named list (F65) --------------------
   //
   // The Healing Shaman takes its remaining ten Healing powers at level 2 and

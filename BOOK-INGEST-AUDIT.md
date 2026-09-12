@@ -9460,3 +9460,150 @@ reached the equivalent state through the Race step.
 `rollAttrBonuses` and "stale" near "pool": F67's and F68's notes above, which
 are this rule applied to two other families of handler. No decision to argue
 past.
+
+**Taken, 2026-09-12 (PR #F70PR). Option A, both halves, code only as the posture
+says - with the psionic-SHAPE handler left out and the variant half narrowed,
+each on a measurement below.**
+
+**Six corrections from the premise audit (`audit-premise-auditor`, 2026-09-12)
+and the work that followed it.**
+
+- **`setPsiShape` cannot move a pool, and was not given the clear.**
+  <!-- claim-ok: quoting the premise this note corrects -->
+  This finding groups it with `doPsiRoll` and `skipPsiRoll` as handlers that
+  *"change what `psiClass()` resolves"*. The shape selects `powers_starting`
+  and `categories_allowed` only; `isp_base` comes from the TIER, through
+  `PSIONIC_TIER_RULES` (`js/psionics.js:46-53`, read 2026-09-12), which
+  `psionicShape` does not touch (`js/psionics.js:82-88`). Switching
+  `focused` to `broad` on a major psychic would have re-rolled every pool and
+  the starting money with them, for a choice no formula reads. A smoke pin now
+  holds it out, with the comment, because it is the kind of omission a later
+  reader tidies away.
+- **The Reach paragraph names the one population the psionic half cannot
+  reach.** <!-- claim-ok: quoting the premise this note corrects -->
+  It says *"39 live classes state an `isp_base`"*. Measured with the real
+  parser over all 265 live rows (`--remote`, 2026-09-12): **56** carry a
+  class-level `psionics.isp_base`, and four more carry one inside an ability
+  grant, which is F67's territory rather than this one's. But
+  `rollsForPsionics` is `!cls?.psionics && cls?.psionics_allowed !== false`
+  (`js/psionics.js:124`), so on those 56 the psionic step never runs at all.
+  The half that shipped reaches the **197** live classes that state no psionics
+  block; 12 more are barred outright, and 56 + 197 + 12 is the whole 265.
+- **Every handler line number in this finding is stale by about +29**, because
+  it was filed from the pre-F68 file hours after F68's code landed. `pickOcc`
+  and its neighbours moved. The `computePools` citations (`app.js:354-358`,
+  `:345`) are exact and were the only ones that mattered.
+- **`attribute_dice` is merged PER ATTRIBUTE, so "clear the attribute rolls"
+  is too wide.** `VARIANT_MERGED` carries it (`js/parser.js:90`), and the
+  daitya's `royal` restates five of the eight - I.Q., M.E., P.S., P.B. and
+  Spd - leaving M.A., P.P. and P.E. exactly as the parent states them. A block
+  clear throws away three attributes whose dice did not move. Only the ones
+  that changed are cleared, and `regression.mjs` pins the measurement.
+- **And a variant can restate the block with the PARENT'S OWN VALUES and move
+  nothing at all.** `daitya/average` does: all five keys it restates are
+  character-for-character what the parent already states (composed with the
+  real parser, `--remote`, 2026-09-12). Clearing on *presence* of
+  `attribute_dice` would have cost that player a full re-roll for a variant
+  that changed no dice. The comparison is by value. This one is not in the
+  premise audit either; it turned up measuring the previous correction.
+- **The second half of Option A would have discarded typed and point-bought
+  values, which the app itself says the dice never produced.** The Attributes
+  step prints *"point-buy/manual ignore racial attribute dice"*
+  (`app.js:2236`), and `S.attrMethods` already records which is which, so the
+  clear is roll-only.
+
+**And the against-column cost is not real.** This finding expects the Attributes
+step to *"re-roll pools on every adjustment, which is correct but chatty"*.
+<!-- claim-ok: quoting the premise this note corrects -->
+It does not: that step renders no pool, and `computePools()` is lazy - the three
+call sites are `renderDetails`, `renderReview` and `rollAdvancement`
+(`app.js:3512`, `:3870`, `:2008`, read 2026-09-12). Whatever a player does on
+the Attributes step, the re-roll happens once, when Details is first reached.
+That is why the clear can sit on `pbAdj`, which fires on every point-buy click.
+
+**What shipped.** One helper, `attrsChanged()`, and `setRoll` calls it - which
+is the whole rolled path, since `doRoll`, `rollAll` and `rerollForMinimum` all
+go through it, and so will anything added later. The four step handlers that
+write an attribute without it - `setMethod`, `setAllMethod`, `manualSet`,
+`pbAdj` - call it directly. `doPsiRoll` and `skipPsiRoll` clear the pools;
+`setPsiShape` does not. On the other side, `pickVariant` and `pickOccVariant`
+read `attribute_dice` before recomposing and clear, per attribute, only the
+rolled values whose dice actually changed - dropping the matching
+`S.minRerolls` entries, which would otherwise name numbers no longer on the
+sheet. `docs/leveling.md` records all of it beside F67's and F68's paragraphs.
+
+**The handler list in this finding is COMPLETE, which is worth saying because
+the premise audit usually finds one missing.** Every write to `S.attrs` is in
+`setRoll`, one of the four step handlers, `resetBuild` (which already cleared
+the pools) or `resumeDraft`, which restores attributes and pools from one
+snapshot and is therefore consistent rather than a gap.
+`rollAttrBonuses`/`rollOccBonuses`/`rollTotemBonuses` are correctly absent:
+`rollPoolFormula(expr, attrs, bonus)` reads `S.attrs` and the class's
+`bonuses.pools`, never the rolled attribute bonuses.
+
+**Tests.** Thirteen source pins, **all thirteen of which fail against the file
+as it was** (shown by stashing `app.js` and running `--section`) - including the
+negative pin on `setPsiShape`. Three regression checks carry the data half: the
+daitya's `royal` moving exactly those five attributes, its `average` moving
+none, and the Chiang-Ku's two stages moving all eight because the class states
+no dice of its own. Smoke 1938 -> **1951**, regression 382 -> **385**.
+
+**Posture said back:** code only; no data, no schema. It held.
+
+**Filed below as F71:** clearing `S.pools` does not clear `S.levelPools`, so on
+a character starting above level 1 the levels keep what they grew off the pools
+that were just thrown away. That is inherited from F67 and F68 rather than
+introduced here, and it is now thirteen clear sites wide.
+
+### F71 - medium - thirteen handlers clear `S.pools` and none clears `S.levelPools`, so a character above level 1 keeps growth rolled off pools that are gone
+
+**Found 2026-09-12** while taking F70, and left for its own number rather than
+swept in - it belongs to F67 and F68 as much as to F70.
+
+**The code.** `S.levelPools` is what the levels above the first added
+(`app.js:328`), and it is rolled once: `rollAdvancement` returns immediately
+`if (!force && !onlyLevel && Object.keys(S.levelPools).length)`
+(`app.js:2004`). Only two handlers ever empty it - `resetBuild`
+(`app.js:970`) and `setStartingLevel` (`app.js:1196`), both read 2026-09-12.
+
+Meanwhile **thirteen sites now set `S.pools = null`**: `resetBuild`,
+`pickVariant`, `pickOccVariant`, `poolsMayHaveChanged` (F67's, on
+`takeAbility` and `dropAbility`), `pickOcc`, `pickTotem`, `attrsChanged`
+(F70's, reached by `setRoll` and four step handlers), `doPsiRoll` and
+`skipPsiRoll`. Eleven of the thirteen leave `S.levelPools` standing.
+
+**So:** a level 5 character who changes a variant, an ability, an occupation, a
+totem, an attribute or the psionic tier re-rolls the level 1 pools against the
+new inputs and keeps levels 2-5 exactly as they were - grown from a hit point
+formula, an I.S.P. base or a set of attributes that is no longer the character's.
+`poolsPayload` sums the two (`app.js:340`), so the maximum on the sheet is part
+new and part old.
+
+**Reach:** every class, but only above level 1. Not measured as a share of real
+characters - production holds three, all level 1 - so this is a mechanism
+finding, not a live-damage one.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | clear `S.levelPools` wherever `S.pools` is cleared, by making the clear one helper both halves go through | one rule, and the thirteenth site cannot forget it | the level-up proposals re-roll, which for a level 15 character is a visible change to fourteen rows they may have been reading |
+| B | clear it only on the handlers that change a POOL FORMULA (variant, occupation, ability, totem), leaving the attribute and psionic handlers | smaller | the attributes are an input to every level formula too, which is the whole of F70 |
+| C | leave it | nothing to build | the sheet keeps a maximum that is part new and part old, and nothing says which |
+
+**Proposal:** A, with the clear moved into one helper so this cannot recur.
+**Posture:** code only; no data, no schema.
+
+**Confidence: high on the mechanism** - the early return, the two clear sites
+and the thirteen `S.pools = null` sites were all read on this branch.
+**Low on what a player sees**, which was not walked: how much of the difference
+is visible depends on which pools the class states.
+
+**Ongoing cost:** one more source pin, and the helper is the thing that keeps
+the count from mattering.
+
+**Subject grep, 2026-09-12:** every `*AUDIT*.md` plus `SETUP-v2-CHANGES.md` for
+`levelPools`, `rollAdvancement` and `characterAtLevelOne`: no finding on any
+menu names them, and the memory store has none either. F67, F68 and F70 above
+are the same rule applied one level down; none of the three mentions the level
+pools, which is how this survived all three.
