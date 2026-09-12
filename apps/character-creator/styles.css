@@ -1154,16 +1154,6 @@ body.play-mode .vital .steppers button:active { background: var(--accent-glow); 
   line-height: 1.5;
 }
 textarea.mono { min-height: 460px; }
-pre.snippet {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 12px 14px;
-  overflow-x: auto;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  line-height: 1.5;
-}
 /* Import mode tabs. Deliberately prominent: the page does two different jobs
    and the skills one was easy to miss when this was a small pill toggle. */
 .imp-tabs {
