@@ -51,8 +51,8 @@ reading.
 
 ## The book's authority tables
 
-**Experience Tables — printed 172 (cache `p173`).** Eight ladders covering
-fourteen classes, several of them shared:
+**Experience Tables — printed 172 (cache `p173`).** **Ten** ladders naming
+**eighteen** classes, several of them shared:
 
 | ladder | covers |
 |---|---|
@@ -63,8 +63,9 @@ fourteen classes, several of them shared:
 | 5 | Old Believer |
 | 6 | The Slayer, Gypsy Layer of Laws |
 | 7 | Gypsy Thief, Gypsy Enforcer |
-| 8 | Fire Sorcerer, Gypsy Seer |
-| 9 | Gypsy Beguiler, Gypsy Wizard-Thief |
+| 8 | Born Mystic, The Gifted Ones, Gypsy Fortune Teller |
+| 9 | Fire Sorcerer, Gypsy Seer |
+| 10 | Gypsy Beguiler, Gypsy Wizard-Thief |
 
 **A TRAP WORTH THE WHOLE SECTION: the heading is split across two lines.** The
 column reader put `Experience` on line 1 and `Tables` on line 2, so
@@ -73,9 +74,24 @@ finds only the contents entry at printed 4 and a mention at printed 71. The
 single most valuable page in the book is invisible to the obvious search. Search
 for one word, or for the class names.
 
-**And the experience table is NOT the roster** — the third book in a row where
-that holds, after `new-west` and `spirit-west`. It lists fourteen and the book
-defines more; the Gifted One and the Born Mystic have no ladder here.
+**CORRECTED 2026-09-12 (PR #984): the experience table IS the roster here, and
+this section previously said the opposite.** The first reading dropped ladder 8
+— `Born Mystic,` / `The Gifted Ones &` / `Gypsy Fortune Teller`, three label
+lines at `p173` lines 120-122 — and then reasoned from the hole it had left,
+concluding that the Gifted One and the Born Mystic had no ladder. They share one.
+**Every class this book actually defines has a ladder.** The two entries that
+look like exceptions are not classes: the **Russian Shifter/Summoner** (printed
+127) is a pointer — *"The original description for the Shifter is found in the
+Rifts® RPG, page 87"*, and the author says space prevented more — and **The Pact
+Witch** (printed 73) is a concept heading above the Night Witch. So
+`new-west`/`spirit-west`'s trap does **not** recur here, which is worth as much
+as finding it would have been.
+
+**The shape of the error is the lesson, not the number.** Nothing about a
+nine-row table looks wrong; it was checked against a prose count written from the
+same reading, so both halves agreed and were both wrong. **Count the label lines
+on the page** — `grep -vnE '^[0-9 ,.-]*$' p173.txt` prints all twenty of them in
+one command, and the ladders are whatever those resolve into.
 
 **Magic levels come from `Level N` headings**, not from descriptions — five
 `Level One` headings mark the five tradition starts, at cache `p077`, `p093`,
@@ -126,27 +142,66 @@ which appears as both `O.C.C.` and **`P.C.C.`** — the `new-west` P.C.C. trap i
 present in this book too, so a roster scan keyed on `O.C.C.`/`R.C.C.` alone will
 miss it. **Count the entries, not the headings.**
 
-### The book tags playability per entry, and several creatures are playable
+### The book tags playability per entry — READ 2026-09-12 (PR #984)
 
-Same shape as `spirit-west`. Tags found across the bestiary:
+**Settled. The answer is eight entries, and the tag headings the first sweep
+read are not the authority — the `Player Note:` paragraphs are, and on four
+entries the two disagree.**
 
-| entry | tag |
-|---|---|
-| Polevoi | player character or villain |
-| Rusalka | player character and villain |
-| Domovoi | NPC or villain, with an optional-player-character paragraph |
-| Leshii | same |
-| Spirit Wolf | NPC and villain, with an optional-player-character paragraph |
-| Man-Wolf | NPC and villain |
-| Vodianoi | NPC and villain |
+The bestiary is **printed 16-71**, and the contents page at printed 4 is its
+index: **28 named entries, 26 with stat blocks.** The two without are
+`Werebeasts` and `Vampires`, both at printed 71 and both pointers — to
+Conversion Book One p191 and to Vampire Kingdoms. Every entry carries a heading
+of the form `<name> ... NPC Villain` or `<name> ... Player Character or
+Villain` sitting above its `Also Known as` line.
+
+**The eighteen demons (printed 19-54) are NPC, all of them**, and none carries a
+`Player Note:` at all — `Player Note:` occurs exactly **eight** times in the
+book and every one is a Woodland Spirit. **One demon has no tag whatsoever:** the
+**Serpent Hound** (printed 40) goes straight from prose to `Also Known as the
+Fire Hound`, with a bare `Serpent Hound` heading. Its intent is not in doubt
+among seventeen siblings marked NPC Villain, but the book does not say so, and an
+importer should record that as untagged rather than inferred.
+
+**The eight Woodland Spirits (printed 57-70) each carry a `Player Note:`, and
+that note is the verdict:**
+
+| entry | printed | the heading says | the `Player Note:` says |
+|---|---|---|---|
+| Domovoi | 57 | **Non**-Player Character or Villain | GM *"can allow ... as an optional player character"*; 95% abstain from adventure |
+| Leshii | 59 | **Non**-Player Character or Villain | GM *"can allow ... as an optional player character"* |
+| Polevoi | 61 | Player Character or Villain | *"can allow a Polevoi as an **optional** player character"* |
+| Rusalka | 63 | Player Character & Villain | optional, *"but such cruel and petty creatures are **not recommended**"*; best as a villain |
+| Vodianoi | 64 | **Non**-Player Character & Villain | *"not suitable ... **unless it is one of the rare good or anarchist ones**"* — conditional, not a refusal |
+| Firebird | 67 | **Non**-Player Character/Animal | **"Not applicable as a player character."** — the only flat no in the book |
+| Spirit Wolf | 68 | **Non**-Player Character & Villain | GM *"may allow ... as an optional player character"* |
+| Man-Wolf | 69 | **Non**-Player Character & Villain | *"can be used as a player character ... a fun and challenging character to play"* — the **warmest** endorsement of the eight |
+
+**So seven of eight are playable to some degree and only the Firebird is
+refused** — and the heading is wrong in **both** directions. Two headed *Player
+Character* (Polevoi, Rusalka) are merely optional, Rusalka actively discouraged;
+four headed *Non-Player Character* are GM-allowable, and the Man-Wolf — headed
+NPC — gets the most enthusiastic playability note in the book. **A sweep over the
+headings does not merely undercount, it inverts the top and the bottom of the
+list.**
+
+**The import blocker nobody would have predicted: only ONE of the seven says how
+to level.** The Man-Wolf's `Level of Experience:` line sends a player character
+to *"the same experience table as the Dragon Hatchling"*; the other six state no
+ladder anywhere in the book, and the printed-172 table has no spirit on it. A
+playable row needs an `xp_table`, so six of these need a decision before they can
+be imported at all — not a reading, a decision.
+
+**And `~69 bestiary pages` was wrong, by 24.** That figure is the count of pages
+carrying `Horror Factor`/`Natural Abilities`/`Habitat:` **anywhere in the
+book**, and twenty-four of them sit in the classes section at printed 75-155 —
+the Night Witch's demon helpers, the Necromancer's animated dead, class entries
+with a `Habitat:` line. The bestiary is **56 printed pages**, 45 of which carry
+creature fields.
 
 The Necromancer's entry carries a line saying a player character of that class
 is not recommended — a recommendation rather than a rule, and it is a full
 O.C.C. with a ladder.
-
-**How many of the ~69 bestiary pages are playable is NOT settled here.** The
-tags above came from a pattern sweep, not from reading every entry, and that is
-the single biggest open question before extraction.
 
 ## Catalog diff
 
@@ -213,16 +268,20 @@ Nothing below is committed to. This is the proposal to agree on.
 |---|---|---|---|
 | 1 | the four spell traditions | ~131 rows | one batch per tradition, each carrying its own `Level N` headings as the authority. Spoiling and Nature are small enough to pair |
 | 2 | the O.C.C.s | ~15 classes | `class-import`, one PR per two or three |
-| 3 | the playable bestiary entries | unknown, ≤7 | **blocked on reading the tags properly**, which is free and not yet done |
+| 3 | the playable bestiary entries | **7 rows** | unblocked — read 2026-09-12, see above. **Six of the seven have no experience table in this book**, which is a decision to settle before the batch, not a reading. The Man-Wolf borrows the Dragon Hatchling's |
 | 4 | gear | ~20 | the bio-wizardry list at printed 107 needs its numbers read as dice expressions, not as printed |
 | 5 | vessels | ~8 | same shape as Triax, Free Quebec and Spirit West |
 
-**Left out, and why:** every bestiary entry the book tags NPC-only; the setting
-and history chapters; the Steeds table until it is classified.
+**Left out, and why:** the eighteen demons and the Firebird — the demons all
+tagged NPC Villain, the Firebird *"not applicable as a player character"*; the
+setting and history chapters; the Steeds table until it is classified. The
+**Serpent Hound** is left out as a demon among demons, noting that it is the one
+entry the book never tagged.
 
-**The order that matters:** spells before classes. Nine of the fourteen classes
-are spell casters, and a class citing a spell the catalog does not hold fails
-its check.
+**The order that matters:** spells before classes. Most of the eighteen classes
+cast — the count was never measured and the ratio this line used to quote was
+written against the wrong denominator, so take it as "most, verify per class" —
+and a class citing a spell the catalog does not hold fails its check.
 
 ## Ledger
 
