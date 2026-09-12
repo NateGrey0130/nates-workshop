@@ -1571,5 +1571,12 @@ experience tables, D4 import **six** creatures — the Rusalka is filtered at
 import, the book's other refusals being the Firebird and the eighteen demons —
 D5 the five-batch plan in its stated order. **Nothing is outstanding.**
 
+**INGESTION STARTED 2026-09-12. Batch 1a — Spoiling Magic, 18 spells — is
+SHIPPED**, applied `--remote` before merge; production went 773 -> 791 spells.
+**The status stays `surveyed`**, deliberately: this table has no partial state
+and `imported` with one batch of five in would read as finished. The survey's
+Ledger is the authority on what has landed, and it now carries the five parse
+traps batch 1 paid for so the other three traditions do not pay again.
+
 **With this, no book in the batch is at `cached`.** Seven handed over on
 2026-08-28: six imported, this one surveyed.
