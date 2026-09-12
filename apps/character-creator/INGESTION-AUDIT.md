@@ -3182,7 +3182,7 @@ five books' pages open; the bounded task is 12 citations. The 52 book-less rows
 are **not** part of it and would need their own finding if anyone wants them
 examined.
 
-**Taken in part, 2026-09-12 (PR #F26PR). Three of the ten cited; the other seven
+**Taken in part, 2026-09-12 (PR #968). Three of the ten cited; the other seven
 are a different job than this finding describes.**
 
 **The (b) half's premise is wrong twice, and the second way matters.**
