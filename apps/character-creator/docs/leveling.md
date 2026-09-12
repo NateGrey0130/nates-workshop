@@ -482,6 +482,15 @@ Four things follow from pools being rolled once rather than derived per render:
   growth belongs in the formula (`"P.E. x 5 plus 2D6 per level"`), which is where
   `perLevelDiceOf` already reads it from.
 
+**Rolled once means an ability that changes one has to clear it.** `pickTotem`
+sets `S.pools` to null and the next step rolls again; since
+`BOOK-INGEST-AUDIT.md` F67, `takeAbility` and `dropAbility` do the same when the
+ability taken or dropped touches a pool - a `bonuses.pools` entry,
+`mdc_from_hp_sdc`, or a `psionics.isp_base`. `abilityTouchesPool` in
+`js/parser.js` is the single definition of "touches a pool", so the wizard and
+the tests cannot disagree about it. A cleared pool is re-rolled, which also
+re-rolls starting money, exactly as a totem change already did.
+
 When two classes both grant one, the bonuses are **collected, not summed** — two
 dice expressions have no arithmetic sum, so `["4d6", "2d6"]` means both are
 rolled. Flat numbers still add. This is deliberately not the merge the other

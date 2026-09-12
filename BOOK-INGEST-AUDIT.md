@@ -9055,3 +9055,112 @@ it is the same walk done by clicking.
 
 **Subject grep, 2026-09-11:** every `*AUDIT*.md` for "S.pools = null",
 `takeAbility`, `dropAbility`, and "stale" or "reroll" near "pool": no hits.
+
+**Taken, 2026-09-11 (PR #960). Option A, code only as the posture says, with
+its predicate corrected: a third shape reaches a pool.**
+
+**Five corrections from the premise audit (`audit-premise-auditor`,
+2026-09-11).**
+
+- **A's predicate was incomplete, and taking it verbatim would have fixed six
+  classes of ten.** `computePools` rolls I.S.P. off the COMPOSED psionics block
+  (`app.js:341-359`), and `applyAbilities` merges an ability's `psionics` into
+  the class (`js/parser.js:1799`), so an ability carrying `psionics.isp_base`
+  moves a rolled pool exactly as `bonuses.pools` does. Measured against
+  production with the real parser on 2026-09-11: 11 abilities on 6 classes carry
+  `bonuses.pools` or `mdc_from_hp_sdc` (godling, demigod, witch, norse-giant,
+  freelancer, spirit-warrior) and 9 abilities on 4 more carry `isp_base`
+  (operator, gypsy-gifted, fennodi, psi-pony). The Gypsy Gifted's four Gifts
+  state two different I.S.P. formulas, so swapping one leaves a stale pool - and
+  the validator cannot see that one at all, because a class with no formula
+  skips the bound (`validate-character.js:571-572`). All three shapes are in the
+  predicate.
+- **"The state from step 2 is refused" is conditional.** `enforcePools` is set
+  only when the creator is not the campaign's GM
+  (`functions/api/character-creator/characters.js:201`); otherwise the finding
+  becomes a warning and the create endpoint refuses on violations alone. Two of
+  the three characters in production were created on the non-enforcing path
+  (queried 2026-09-11), so for a GM BOTH directions save silently, and the
+  wizard-side fix is the only guard. It also weakens option C, which was not
+  taken.
+- **Three line numbers had drifted by +8** since the finding was filed: the lazy
+  `if (!S.pools) computePools()` calls are at `app.js:1918`, `:3406` and
+  `:3764` on main today, not 1910/3398/3756. F61 and F65 added the lines. Every
+  other range the finding cites is exact.
+- **Clearing the pools also re-rolls starting money.** `computePools` ends by
+  writing `S.bio.money` (`app.js:369-370`), and money is hand-editable on the
+  Details step, which comes after the lazy roll. `pickTotem` has done this since
+  it was written, so the behaviour is inherited rather than introduced here, and
+  it is named in `docs/leveling.md` now rather than left to be discovered.
+- **The subject grep missed the memory store**, which no repo grep reaches:
+  `spirit-west-import.md` carries a line saying F67 is filed. Updated with this.
+
+**What shipped.**
+
+- `abilityTouchesPool(def)` in `js/parser.js`: one exported definition of
+  "changes a pool", so the wizard and the tests cannot disagree about it. It is
+  a pure function on a definition, which is what let the tests check it against
+  live classes rather than pin source text alone.
+- `takeAbility` and `dropAbility` clear `S.pools` through it, as `pickTotem`
+  does. The definition is looked up on the trimmed, lower-cased name, the way
+  `abilityPicker` and `applyAbilities` key theirs - `dropAbility`'s existing
+  exact-case `find` would miss a `from` string whose case differs from the
+  definition's own name.
+- `docs/leveling.md` says what clears a rolled pool and that a cleared pool
+  re-rolls money.
+
+**Tests.** A smoke section of 11 checks: seven on the predicate itself (all
+three shapes, an empty pools map, a bonus to something else, and null), and four
+source pins on the two handlers, because `app.js` boots on import and cannot be
+imported. **All 11 fail against the code as it was**, shown by stashing the two
+changed files and running the section. The regression asks the real predicate
+about the production Spirit Warrior's realms and the Gypsy Gifted's Gifts.
+
+**Posture said back:** code only; no data, no schema. It held.
+
+**What this does NOT fix, found by the same audit and filed below as F68:**
+`pickVariant` and `pickOcc` leave the same pools stale.
+
+### F68 - low - changing a VARIANT or an occupation after the pools are rolled leaves them stale, the same way an ability did
+
+**Found 2026-09-11** by F67's premise audit, which measured the two handlers
+beside the two F67 names. Filed rather than folded in: F67's proposal named
+`takeAbility` and `dropAbility`, and this is two more handlers and a different
+set of classes.
+
+**The code.** `pickVariant` (`apps/character-creator/app.js:1368`) is
+`S.variant = id; render();` - it neither clears the rolled pools nor recomposes.
+`VARIANT_OVERRIDES` (`js/parser.js:57-60`) includes `hit_points_base`,
+`sdc_base`, `mdc_base`, `ppe_base` and `bonuses`, so a variant swap can change
+every pool formula the character has. `pickOcc` (`app.js:1545`) recomposes and
+does not clear either; a race stating no `hit_points_base` and no `mdc_base`
+takes its pools from the occupation (`js/dice.js:225-229`). Both are reachable
+by walking Back after a later step has rolled, which is the same path F67's walk
+took.
+
+**Reach**, measured against production on 2026-09-11 with the real parser: **11
+variants across 7 classes** override a pool formula - chiang-ku-dragon
+(hatchling/adult), daitya (average/royal), mining-borg (partial/full),
+stone-master (two), witch (two), preacher - and **4 live R.C.C.s** state neither
+`hit_points_base` nor `mdc_base`, so their pools come from whichever occupation
+is chosen.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | clear `S.pools` in `pickVariant` and `pickOcc`, and have `pickVariant` recompose as `pickTotem` and `pickOcc` already do | the same one-line shape F67 shipped, on the two handlers it did not name; a variant that changes a pool formula is the clearest case of all | a pool the player liked is rolled again on a variant change, as it now is on an ability change |
+| B | extend F67's predicate to variants, clearing only when the variant overrides a pool key | re-rolls nothing unnecessarily | `VARIANT_OVERRIDES` includes `bonuses`, so the predicate is nearly always true; the saving is small |
+| C | leave it | nothing to build | the wizard keeps showing pools the class no longer has, and for a GM the server stores them without complaint |
+
+**Proposal:** A. **Posture:** code only; no data, no schema.
+
+**Confidence: high** that neither handler clears the pools - both are three
+lines and were read whole. **Medium** on how a player reaches it, since it was
+not walked; F67's walk reached the equivalent state through the Race step.
+
+**Ongoing cost:** two more source pins beside F67's.
+
+**Subject grep, 2026-09-11:** every `*AUDIT*.md` for `pickVariant`, `pickOcc`,
+`VARIANT_OVERRIDES` and "stale" near "pool": no finding. `CLASS-AUDIT` `S6`/`S7`
+record what `variants` cannot carry, which is a different subject.
