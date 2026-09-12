@@ -536,6 +536,23 @@ check('the TMDB key is read from the environment, not the source',
   check('and an unset list means nobody, rather than everybody',
     /MV_SHARE_CANDIDATES\s*\)\s*\|\|\s*''/.test(sh) || sh.includes("|| '')"),
     'shareCandidates must default to an empty list');
+
+  // SHARE-AUDIT V8. The mirror is secret_text and cannot be read back, so the
+  // only way to see it has fallen behind the Access policy is to compare their
+  // LENGTHS. V6 declined a check because "there is no request that reveals who
+  // is on an email allow list" - true, and a count is not who.
+  const get = sh.slice(sh.indexOf('onRequestGet'), sh.indexOf('onRequestPost'));
+  check('the GET reports how many addresses the mirror holds',
+    /candidateCount: shareCandidates\(context\.env\)\.length/.test(get),
+    'without it nothing can tell that the hand-kept mirror has fallen behind Access');
+  // The whole reason this is safe: a length, never the addresses. If someone
+  // ever "helpfully" returns the raw list beside it, this fails.
+  check('and it is a LENGTH, so no address leaves the deployment',
+    /candidateCount:[^\n]*\.length/.test(get)
+    && !/candidateEmails|allCandidates|candidateList/.test(sh));
+  check('SETUP.md says what the count should equal',
+    readFileSync(join(repoRoot, 'SETUP.md'), 'utf8')
+      .includes('should equal the number of email rules on the *Friends Only* Access'));
 }
 {
   const writes = [...appSrc.matchAll(/localStorage\.setItem\(/g)];

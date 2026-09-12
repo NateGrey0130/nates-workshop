@@ -492,9 +492,22 @@ GET /accounts/{account_id}/pages/projects/nates-workshop
   the type changes nothing about the code — and it is the better default for
   addresses belonging to other people. The consequence worth knowing: **the
   value cannot be read back**, from the dashboard or the API, so the only way to
-  check what is in it is to open MediaVault's Share modal and see what the
-  picker offers. Keeping it in step with Access is under *Access (the login
+  see WHICH addresses are in it is to open MediaVault's Share modal and look at
+  the picker. Keeping it in step with Access is under *Access (the login
   wall)*.
+
+  **HOW MANY it holds is readable, and that is how you catch it falling
+  behind.** `GET /api/media-vault/shares` returns `candidateCount` — the length
+  of this variable, before the caller and their existing grants are taken out.
+  **It should equal the number of email rules on the *Friends Only* Access
+  policy**, which an agent reads in seconds through the `cloudflare-api` plugin.
+  Two numbers, no address: the list still never leaves the deployment.
+
+  This was added by `SHARE-AUDIT` `V8` after the policy reached **seven**
+  addresses while `shares.js` and `SHARE-AUDIT` both still described five, and
+  nothing could tell whether the mirror had followed. **When they disagree the
+  mirror is the one to fix**, and it fails closed in the meantime: the person
+  who was added to Access simply is not offered.
 - `ACCESS_TEAM_DOMAIN` + `ACCESS_AUD` — turn on JWT verification of the
   Access identity on every `/api/*` route (defence in depth — the identity
   header alone is only as good as the Access application staying configured).
