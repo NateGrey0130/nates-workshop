@@ -160,16 +160,21 @@ citations, not a missing mechanic.
 
 ## Extraction plan
 
-Gated on **D3** (the `super_abilities` table) and on **D0**, both in
-`heroes-unlimited-core.md`. Nothing here is extractable today.
+**D0 is answered and this book is IN.** The two halves of it are gated
+differently, and conflating them is what an earlier draft of this section did:
 
-When both are settled, in this order:
+**1. The 8 psionic powers, printed 87-95 — NOT gated on anything, and
+importable now.** `psionic_powers` exists, the eight are hand-checked as real
+gaps, and their Sensitive / Healing / Super categories are already this
+catalog's vocabulary. This is the smallest complete unit in the whole Heroes
+Unlimited batch and the natural first data PR.
 
-1. **8 psionic powers** from printed 87-95 — the only rows this book can add to
-   a table that exists. Category maps straight onto the catalog's existing
-   Sensitive/Healing/Super vocabulary.
-2. **125 minor + 45 major super abilities** from printed 6-86, batched by
-   letter, once `super_abilities` exists.
+**2. The 170 super abilities, printed 6-86 — gated on D3**, because
+`super_abilities` does not exist. Batch by letter when it does.
+
+*This section previously read "Gated on D3 and on D0 ... nothing here is
+extractable today." The D0 half is settled, and the psionics were never gated
+on D3 at all — they go in a table that has been there all along.*
 
 Deliberately left:
 

@@ -392,9 +392,13 @@ three the moment one exists, which is why its cache and registry entry stay.
 
 ### Sequencing this answer implies
 
-**D3 gates everything.** 295 of the 296 new abilities cannot be imported until
-`super_abilities` exists; the catalog has no shape for a permanent trait with a
-Range and a Damage and no cost and no level.
+**D3 gates the ABILITIES, and nothing else.** 295 of the 296 new super
+abilities cannot be imported until `super_abilities` exists; the catalog has no
+shape for a permanent trait with a Range and a Damage and no cost and no level.
+
+**PU1's eight new psionic powers are NOT gated on it** and can ship as soon as
+this survey merges - `psionic_powers` has been there all along. They are the
+smallest complete unit in the batch and the natural first data PR.
 
 1. D3's table.
 2. The Revised core's own 69 abilities, 10 categories and 14 sub-types.
