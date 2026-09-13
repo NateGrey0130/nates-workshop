@@ -408,7 +408,7 @@ across the four traditions produced **7 links**.
 | 1 | **Bone Magic, 59 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 791 -> 850 spells. All fourteen levels, no gaps |
 | 1 | **Living Fire, 39 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 850 -> 889 spells. **7 retellings linked with `same_spell_as`** - 14 name matches, 6 rejected on mechanics |
 | 1 | **Nature Magic, 30 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 889 -> 919 spells. **Batch 1 COMPLETE: all 131 in** |
-| 2 | the O.C.C.s, **18 classes** | **STARTED** 2026-09-12. **Night Witch**, **Hidden Witch**, **Necromancer** **Born Mystic** and **Russian Fire Sorcerer** and **Russian Mystic Kuznya** SHIPPED, each applied `--remote` before merge. **10 remain** - the roster is 18 named but three are POINTERS, not definitions: the Gypsy Witch is the Hidden Witch (already in), the Shifter/Summoner is the author saying he ran out of space, and the Russian Ley Line Walker is a declared modification of the standard one |
+| 2 | the O.C.C.s, **18 classes** | **STARTED** 2026-09-12. **Night Witch**, **Hidden Witch**, **Necromancer** **Born Mystic** and **Russian Fire Sorcerer** **Russian Mystic Kuznya** and **Old Believer** SHIPPED, each applied `--remote` before merge. **9 remain** - the roster is 18 named but three are POINTERS, not definitions: the Gypsy Witch is the Hidden Witch (already in), the Shifter/Summoner is the author saying he ran out of space, and the Russian Ley Line Walker is a declared modification of the standard one |
 | 3 | six playable creatures | not started |
 | 4 | gear, ~20 rows | not started |
 | 5 | vessels, 8 | not started |
