@@ -53,6 +53,11 @@ export const CORE_SDC_BY_CLASS = {
   // which carry an mdc_base and so need no entry here. Its +10 S.D.C. is a
   // pool BONUS on top of this, not a replacement for it.
   'necromancer-russian': '1D6',
+  // Printed 107-109, the same book - the Born Mystic, which the book heads a
+  // P.C.C. rather than an O.C.C. A psychic is not a man of arms, so 1D6. Like
+  // the Necromancer it states neither an S.D.C. formula nor an mdc_base, which
+  // is what makes an entry here necessary rather than optional.
+  'born-mystic': '1D6',
   // Rifts World Book 14: New West, printed 83-92 - the O.C.C.s and NPC
   // villains section. None of the four prints an S.D.C. formula of its own.
   // The Bandit and the Highwayman each print an S.D.C. BONUS instead

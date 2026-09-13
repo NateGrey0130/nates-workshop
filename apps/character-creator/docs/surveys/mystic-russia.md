@@ -408,7 +408,7 @@ across the four traditions produced **7 links**.
 | 1 | **Bone Magic, 59 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 791 -> 850 spells. All fourteen levels, no gaps |
 | 1 | **Living Fire, 39 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 850 -> 889 spells. **7 retellings linked with `same_spell_as`** - 14 name matches, 6 rejected on mechanics |
 | 1 | **Nature Magic, 30 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 889 -> 919 spells. **Batch 1 COMPLETE: all 131 in** |
-| 2 | the O.C.C.s, **18 classes** | **STARTED** 2026-09-12. **Night Witch**, **Hidden Witch** and **Necromancer** SHIPPED, each applied `--remote` before merge. 15 remain |
+| 2 | the O.C.C.s, **18 classes** | **STARTED** 2026-09-12. **Night Witch**, **Hidden Witch**, **Necromancer** and **Born Mystic** SHIPPED, each applied `--remote` before merge. 14 remain |
 | 3 | six playable creatures | not started |
 | 4 | gear, ~20 rows | not started |
 | 5 | vessels, 8 | not started |
