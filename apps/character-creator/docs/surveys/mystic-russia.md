@@ -371,16 +371,43 @@ and a class citing a spell the catalog does not hold fails its check.
 
 ## Ledger
 
-**Batch 1 of 5 has shipped.** The book stays at **`surveyed`** because the
-queue's status vocabulary has no partial state, and calling it `imported` with
-one batch of five in would be the worse lie.
+**BATCH 1 IS COMPLETE.** **146 rows** are in production across four traditions —
+Spoiling 18, Bone 59, Living Fire 39, Nature 30 — and the catalog went
+**773 -> 919**. **Two counts, and they are not the same one:** 146 is what this
+book prints, **131** is how many of those names the catalog did not already
+hold, and the remaining **15 share a name** with an existing row. All 146 are
+stored, because under D1 a tradition gets its own row at its own level and cost
+even when the name exists — that is what the namespace is for, and 7 of the 15
+carry `same_spell_as` while 8 are different spells that happen to share a name.
+
+The book stays at **`surveyed`** because the queue's status
+vocabulary has no partial state, and calling it `imported` with one batch of
+five in would be the worse lie.
+
+**D2 IS NOW FULLY ACCOUNTED FOR, and not one of the five "disagreements" needed
+a ruling.** The survey shipped a list of five spells said to disagree with the
+catalog on level. Reading each against the row it should actually have been
+compared with:
+
+| the "disagreement" | what it really was |
+|---|---|
+| Circle of Flame | **agreement** — `Fire: Circle of Flame` is already level 3, exactly what this book prints |
+| Fire Fists | a **real retelling** of `Fire Fist`, linked; the mechanics line up |
+| Fire Ball | a **different spell** — this one adds 20 feet of range per level for Fire Sorcerers |
+| Swords to Snakes | a **different spell** — 0.33 shared vocabulary against a floor of 0.35 |
+| Healing Water | a **different spell** — one description is 5.4x the length of the other |
+
+**A name match is not a retelling, and this repo already knew that.**
+`scripts/same-spell-lib.mjs` (BOOK-INGEST-AUDIT F26) is the judgement and
+`regression.mjs` runs it over every link on a clean rebuild. 16 name matches
+across the four traditions produced **7 links**.
 
 | batch | what | status |
 |---|---|---|
 | 1 | **Spoiling Magic, 18 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 773 -> 791 spells |
 | 1 | **Bone Magic, 59 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 791 -> 850 spells. All fourteen levels, no gaps |
 | 1 | **Living Fire, 39 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 850 -> 889 spells. **7 retellings linked with `same_spell_as`** - 14 name matches, 6 rejected on mechanics |
-| 1 | Nature Magic, ~30 spells | not started |
+| 1 | **Nature Magic, 30 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 889 -> 919 spells. **Batch 1 COMPLETE: all 131 in** |
 | 2 | the O.C.C.s, ~15 classes | not started |
 | 3 | six playable creatures | not started |
 | 4 | gear, ~20 rows | not started |
@@ -438,6 +465,20 @@ two traditions can still hit:**
   and 24 hit points are permanently spent"* — `ppe` takes the 60 and the note
   keeps the sentence, because the hit-point half is a second cost nothing
   models. 23 of the 59 carry a schedule.
+**What batch 1d (Nature Magic, 30 spells) added:**
+
+- **A spell can legitimately cost NOTHING.** `Sacred Oath` prints
+  *"P.P.E. Cost: None"* — it is a vow sworn on Moist Mother Earth, not a
+  casting. Stored as 0 and **asserted by name**, so a future parse failure that
+  produces a 0 cannot hide behind it.
+- **A cost of "Varies" may be priced in the DESCRIPTION.** `Magic Knots` prices
+  ten knots individually from 3 to 75; `ppe` holds the minimum, which is what
+  migration 021 says the column is for.
+- **A cost can lead with a word:** *"Self 24; transforming another costs 50."*
+  The first number is what the caster pays for themselves.
+- **Nature Magic carries no links at all**, and that is a result rather than an
+  omission — both of its name matches were put to the library and rejected.
+
 - **Move the pinned spell count in `docs/operations.md` in the same PR.**
   `regression.mjs` rebuilds from every data script and compares; `smoke.mjs`
   does not, so a local smoke pass says nothing about it. Batch 1a learned this
