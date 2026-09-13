@@ -65,6 +65,10 @@ export const CORE_SDC_BY_CLASS = {
   // and the source of Nature Magic. Not a man of arms, so 1D6. Like the three
   // above it states neither an S.D.C. formula nor an mdc_base.
   'old-believer': '1D6',
+  // Printed 150-153, the same book - The Gifted One (Russian), a psychic healer
+  // whose tier is rolled. Not a man of arms, so 1D6. Suffixed because
+  // `gypsy-gifted` belongs to Triax.
+  'gifted-one-russian': '1D6',
   // Printed 148-152, the same book - the Gypsy Fortune Teller, or Gypsy Medium.
   // A master psionic who also casts; not a man of arms, so 1D6. No suffix: this
   // one is new to the catalog rather than a Triax reprint.
