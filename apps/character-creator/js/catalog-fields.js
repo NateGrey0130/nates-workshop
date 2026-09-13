@@ -75,8 +75,8 @@ export const CATALOGS = {
       // says the schedule in a few words. Mirrors psionics' isp_note.
       { name: 'ppe_note', label: 'P.P.E. varies', type: 'text',
         help: 'Blank for a flat cost. Otherwise the schedule in a few words.' },
-      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'both'],
-        help: 'Blank means unrestricted — offered to characters in either system.' },
+      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'nightbane', 'both'],
+        help: 'Blank means unrestricted — offered to characters in any system.' },
       // Stat block. Text, not numbers — books write "100 feet per level of
       // experience" and "2D6 melee rounds" as often as they write a figure.
       { name: 'range', label: 'Range', type: 'text' },
@@ -109,8 +109,8 @@ export const CATALOGS = {
       // says the schedule in a few words.
       { name: 'isp_note', label: 'I.S.P. varies', type: 'text',
         help: 'Blank for a flat cost. Otherwise the schedule in a few words, e.g. "more for more damage".' },
-      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'both'],
-        help: 'Blank means unrestricted — offered to characters in either system.' },
+      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'nightbane', 'both'],
+        help: 'Blank means unrestricted — offered to characters in any system.' },
       // Same field names as spells, so the sheet renders both the same way.
       { name: 'range', label: 'Range', type: 'text' },
       { name: 'duration', label: 'Duration', type: 'text' },
@@ -155,7 +155,12 @@ export const CATALOGS = {
         help: 'JSON, the same shape a class or skill uses: {"combat":{"initiative":3,"strike":2}}. '
           + 'A dice expression is allowed here - the Thunder Hammer is {"combat":{"damage":"2d6"}}' },
       { name: 'description', label: 'Description', type: 'longtext' },
-      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'both'] },
+      // `enchantments.system` is bare TEXT (db/schema.sql), so a third value
+      // stores. `gear` and `vehicles` below are NOT widened: their `system`
+      // columns carry a SQLite CHECK naming two values, and offering a third
+      // here would put a value in the editor that the database refuses.
+      // BOOK-INGEST-AUDIT F73.
+      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'nightbane', 'both'] },
       { name: 'source_book', label: 'Source book', type: 'text' },
     ],
   },
@@ -342,10 +347,19 @@ export function coerceField(field, raw) {
       return { value: (s === 'true' || s === '1' || s === 'yes' || s === 'on') ? 1 : 0 };
     }
     case 'systems': {
-      // NULL means "applies to both systems" — an empty array would mean
-      // "applies to neither", which is never what anyone intends.
+      // NULL means "applies to EVERY system" — an empty array would mean
+      // "applies to none", which is never what anyone intends.
+      //
+      // This read "both systems" until Nightbane made it three
+      // (BOOK-INGEST-AUDIT F73), and the rule below changed meaning with it:
+      // picking rifts and palladium-fantasy used to be all of them and stored
+      // NULL, and now stores the pair, because it has become a real
+      // restriction that excludes the third. Existing NULL rows are NOT
+      // migrated and now read as "all three" — deliberate, and inert today
+      // because the wizard's system picker still offers two, so nothing
+      // resolves a skill against `nightbane` yet.
       if (!Array.isArray(raw) || raw.length === 0) return { value: null };
-      const allowed = ['rifts', 'palladium-fantasy'];
+      const allowed = ['rifts', 'palladium-fantasy', 'nightbane'];
       const picked = raw.filter((s) => allowed.includes(s));
       if (picked.length === 0 || picked.length === allowed.length) return { value: null };
       return { value: JSON.stringify(picked) };

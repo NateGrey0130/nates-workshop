@@ -133,7 +133,7 @@ const SECTIONS = [
     cost: () => '',
     stats: (r) => [
       ['Type', r.category === 'rcc' ? 'Racial character class' : r.category === 'occ' ? 'Occupational character class' : null],
-      ['System', r.system === 'rifts' ? 'Rifts' : r.system === 'palladium-fantasy' ? 'Palladium Fantasy' : r.system],
+      ['System', SYSTEM_LABEL[r.system] || r.system],
     ],
     notes: () => [],
     hay: (r) => `${r.name} ${r.source_book || ''} ${r.category || ''}`,
@@ -158,14 +158,33 @@ const rowsFor = (id) => S.rows[id] || [];
 
 // ── formatting helpers ──
 
-// Credits in Rifts, gold in Palladium Fantasy. A row marked `both` or left NULL
-// is unrestricted, and the overwhelming bulk of this catalog is Rifts, so it
-// reads as credits — the same reading every picker already applies to a NULL
-// system. `cost` is a range's LOW end and `cost_note` carries the rest, so a
-// row with a note is marked rather than quoted precisely.
+// This file is a classic script and imports nothing (see the header), so it
+// cannot reach app.js's map of the same name and keeps its own. Two copies of
+// three strings, deliberately, rather than a module boundary this page does not
+// otherwise need — smoke.mjs pins the two against each other so they cannot
+// drift. It replaced a two-arm ternary that printed the raw slug for anything
+// else, which is what a Nightbane row would have shown. BOOK-INGEST-AUDIT F73.
+const SYSTEM_LABEL = {
+  rifts: 'Rifts',
+  'palladium-fantasy': 'Palladium Fantasy',
+  nightbane: 'Nightbane',
+};
+
+// Credits in Rifts, gold in Palladium Fantasy, dollars in Nightbane — which is
+// set on present-day Earth and prices everything in them. A row marked `both`
+// or left NULL is unrestricted, and the overwhelming bulk of this catalog is
+// Rifts, so it still reads as credits — the same reading every picker already
+// applies to a NULL system. `cost` is a range's LOW end and `cost_note` carries
+// the rest, so a row with a note is marked rather than quoted precisely.
+//
+// The Nightbane arm is NEW, and its absence is what BOOK-INGEST-AUDIT F73
+// should have named: the fallback here is credits, not a neutral word, so a
+// dollar price read as a Rifts price. `js/rules.js` — which F73 blamed instead
+// — already had a third arm. See F73's outcome note.
 function money(cost, system, note) {
   if (cost == null) return '';
-  const unit = system === 'palladium-fantasy' ? 'gold' : 'cr.';
+  const unit = system === 'palladium-fantasy' ? 'gold'
+    : system === 'nightbane' ? 'dollars' : 'cr.';
   return `${Number(cost).toLocaleString('en-US')}${note ? '+' : ''} ${unit}`;
 }
 
@@ -330,9 +349,10 @@ function listHtml(sec) {
       <input type="search" id="codex-filter" class="pick-filter" placeholder="Filter by name or book…"
         value="${escHtml(S.filter)}" autocomplete="off">
       <select id="codex-system">
-        <option value=""${S.system ? '' : ' selected'}>Both systems</option>
+        <option value=""${S.system ? '' : ' selected'}>All systems</option>
         <option value="rifts"${S.system === 'rifts' ? ' selected' : ''}>Rifts</option>
         <option value="palladium-fantasy"${S.system === 'palladium-fantasy' ? ' selected' : ''}>Palladium Fantasy</option>
+        <option value="nightbane"${S.system === 'nightbane' ? ' selected' : ''}>Nightbane</option>
       </select>
       <span class="muted small">${shown.length} of ${total}${
         shown.length && !sec.noText ? ` · ${withText} with text` : ''}</span>

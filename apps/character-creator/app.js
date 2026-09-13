@@ -707,7 +707,14 @@ function goHome() {
 // so the tenth step does not shift its column.
 const stepNum = (i) => `<span class="n">${String(i + 1).padStart(2, "0")}</span>`;
 
-const SYSTEM_LABEL = { 'palladium-fantasy': 'Palladium Fantasy', rifts: 'Rifts' };
+// Nightbane is here so a saved draft or a class carrying it renders with a
+// name rather than blank. It is deliberately ABSENT from renderSystem()'s
+// picker below: S.system feeds the campaign POST, and
+// functions/api/character-creator/campaigns.js allowlists two values against a
+// SQLite CHECK this change does not widen. Offering a third button would give
+// the player a system they cannot create a campaign in.
+// BOOK-INGEST-AUDIT F73.
+const SYSTEM_LABEL = { 'palladium-fantasy': 'Palladium Fantasy', rifts: 'Rifts', nightbane: 'Nightbane' };
 
 // What the character is so far, under the rail. Every value is read from S
 // at render - nothing is stored for this - and every settled one is a button

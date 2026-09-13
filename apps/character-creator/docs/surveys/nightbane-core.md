@@ -401,6 +401,24 @@ answered in this survey and none should be assumed by a later session.
 ten vocabulary sites, as one PR or several, and whether it ships before any
 Nightbane data at all. Nothing else in the book can be imported first.
 
+**DECIDED 2026-09-12 (PR #PRNUM), and the question as written above is wrong in
+two places.** Nate had already answered it for the Heroes Unlimited batch the
+same day: catalog and classes first, the `campaigns.system` CHECK left alone.
+**So there is no migration** — `VALID_SYSTEMS`, the coercion allowlist, three of
+the five editor dropdowns, the currency, and the documented vocabulary. Nothing
+else. `BOOK-INGEST-AUDIT` F73's outcome note carries the five premises that did
+not survive its own audit.
+
+The claim that nothing else in the book could be imported first was the second
+error. `source_book` is free text, so a Nightbane spell or skill row could
+always have been written with `system` NULL. What was gated is system-tagging a
+row, creating a Nightbane campaign, and passing a class through the parser.
+
+**What the decision leaves standing:** the wizard's system picker still offers
+two, because `S.system` feeds the campaign POST. A Nightbane class validates and
+stores; it cannot yet be built in the wizard. Lifting that is `campaigns.js:56`,
+the CHECK on `campaigns.system`, and `renderSystem()` — F73 stays open for it.
+
 **D2 — the four Nightbane skill packages.** `VARIANT_OVERRIDES` deliberately
 excludes skills, so Basic, Resistance/Spook Squad-Trained,
 Nocturne/Seeker/Lightbringer and Warlord cannot be variants of one class. Four

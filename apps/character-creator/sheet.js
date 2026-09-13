@@ -3110,7 +3110,11 @@ function itemStatsHtml(it) {
 // as missing data.
 function itemCost(it) {
   if (it.item_cost == null) return null;
-  const unit = it.item_system === 'palladium-fantasy' ? 'gold' : 'cr.';
+  // Three systems, three coins; the fallback stays credits because a NULL or
+  // `both` system is overwhelmingly Rifts here. Same fix as codex.js's
+  // money(), and for the same reason - BOOK-INGEST-AUDIT F73.
+  const unit = it.item_system === 'palladium-fantasy' ? 'gold'
+    : it.item_system === 'nightbane' ? 'dollars' : 'cr.';
   return `${Number(it.item_cost).toLocaleString('en-US')}${it.item_cost_note ? '+' : ''} ${unit}`;
 }
 

@@ -76,7 +76,7 @@ absence adds a field a human then has to delete.
 Required:
 - id: kebab-case slug (e.g. \`juicer\`)
 - name: display name (e.g. \`Juicer O.C.C.\` → use \`Juicer\`)
-- system: \`rifts\` or \`palladium-fantasy\`
+- system: \`rifts\`, \`palladium-fantasy\` or \`nightbane\`
 - source_book: the book's title, then the PRINTED page range this class occupies,
     in the shape \`<Title> p.N-M\` — e.g. \`Rifts Ultimate Edition p.100-104\`, or
     \`Rifts Ultimate Edition p.141\` for a single page. Take N and M from the page

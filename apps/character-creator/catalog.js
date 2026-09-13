@@ -127,8 +127,8 @@ function inputFor(f, value) {
       const box = (sys, label) => `<label class="inline-check">
         <input type="checkbox" data-systems="${sys}"${picked.includes(sys) ? ' checked' : ''}> ${label}</label>`;
       return `<div class="sys-picker">
-        ${box('rifts', 'Rifts')}${box('palladium-fantasy', 'Palladium Fantasy')}
-        <span class="muted small">neither ticked = both systems</span>
+        ${box('rifts', 'Rifts')}${box('palladium-fantasy', 'Palladium Fantasy')}${box('nightbane', 'Nightbane')}
+        <span class="muted small">none ticked = all systems</span>
       </div>`;
     }
     case 'kv': {

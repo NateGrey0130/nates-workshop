@@ -9962,12 +9962,24 @@ were**. Smoke 1978 -> **1986**, regression **385** unchanged.
 
 ## Nightbane, 2026-09-12 — F73-F78
 
-Six gaps from surveying the Nightbane core book, filed per `book-survey` §8 and
-taken by nobody. **F73 blocks the other five**: until a third system exists, no
-Nightbane row can be written at all, so F74-F78 cannot be reached even by a
-session that wants them. The survey is
-`apps/character-creator/docs/surveys/nightbane-core.md` and carries the
-measurements each of these quotes.
+Six gaps from surveying the Nightbane core book, filed per `book-survey` §8. The
+survey is `apps/character-creator/docs/surveys/nightbane-core.md` and carries the
+measurements each of these quotes. **Status lives under each finding; read to the
+next `###`.**
+
+**Corrected 2026-09-12, the same day it was written.** This lead claimed F73
+blocked the other five, on the ground that
+<!-- claim-ok: quoting the overstated lead this paragraph replaces -->
+*"until a third system exists, no Nightbane row can be written at all"*. That is
+wrong, and F73's own outcome note carries the measurement: `source_book` is bare
+TEXT in every table that holds it, so a Nightbane spell, skill or psionic row
+could always have been written with `system` NULL — production holds
+`Lore: Nightbane` that way already. What F73 really gated was system-TAGGING a
+row, creating a Nightbane campaign, and passing a class through the parser.
+
+**It was also a claim about other findings' state carrying no finding number**,
+which `audit-menu` names as invisible to every sweep here: a taker of F74
+grepping for `F74` never meets the line that is wrong about it.
 
 ### F73 - high - `system` is a two-value enum in three CHECK constraints and in the parser, so a book from a THIRD Palladium game cannot be cited by any catalog row
 
@@ -10033,6 +10045,109 @@ for a system branch that does not name either value.
 **Ongoing cost:** a third arm on every system branch forever, and one more value
 in five `options:` arrays. Real, and the alternative is that this catalog holds
 one game family.
+
+**Taken, 2026-09-12 (PR #PRNUM) — and NOT as Option A. Nate chose the route he
+had already recorded, and this finding did not know it existed.**
+
+**Posture as shipped:** catalog and classes only. **No migration, no table
+rebuild, and `campaigns.system` untouched** — enabling only, no new gate, no
+behaviour change for either existing system, and no Nightbane data.
+
+**The premise audit found five things wrong, and one of them decided the
+scope.** `audit-premise-auditor` was run before scoping, per `audit-menu`, for
+the reason `book-survey` §8 gives: this finding was written by the session that
+then implemented it.
+
+**1. A decision already existed, from the same day.**
+`~/.claude/.../memory/heroes-unlimited-batch.md`, written 22:33 on 2026-09-12 —
+after this finding's own memory grep, which is why F73 does not name it — records
+Nate's answer for the Heroes Unlimited batch: catalog and classes first,
+<!-- claim-ok: quoting the recorded decision this note implements -->
+*"`campaigns.system` CHECK left alone"*. That is **Option C of this finding's own
+table**, the one it argues against. Confirmed 2026-09-12 as governing Nightbane
+too. Heroes Unlimited is the second game to need this and hit it one book later.
+
+**2. There is a FOURTH gate, and this finding's title is wrong about the count.**
+`functions/api/character-creator/campaigns.js:56` hard-allowlists two values on
+the only route that creates a campaign. The grep behind this finding was scoped
+to `apps/character-creator/`, so it could not see it. **Option A as written would
+have shipped a widened schema and a still-400ing API** — the exact failure this
+finding assigns to Option C.
+
+**3. "a table rebuild on `campaigns`" is not one table.** Measured `--remote`
+2026-09-12: `campaigns` has **six `ON DELETE CASCADE` children**, and
+`db/migrations/047-gear-slug-not-null.sql:45-58` already records that D1
+**ignores `PRAGMA foreign_keys = OFF`** and honours-but-still-fails
+`defer_foreign_keys`. 047's technique needs the parent unreferenced at drop
+time, so the rebuild cascades through `characters` — itself parent to ten more
+tables. Roughly **3 parents and 11 children**, around live characters, journal
+entries and 57 `character_items`. The options table described this as three
+tables and was wrong.
+
+**4. The currency premise was FALSE about the file it named.**
+<!-- claim-ok: quoting the false premise this note corrects -->
+This finding said `js/rules.js:64` means *"a third system that is only added to
+the enum would ship prices labelled in credits."* `currencyLabel` has had a third
+arm since it was written and returns `Money`. The two places that really did fall
+through to credits are `codex.js` and `sheet.js`, which this finding filed as
+mere vocabulary. All three now carry a `nightbane` arm; `rules.js` says
+`Dollars`.
+
+**5. The blockage was overstated, and the section lead above says so too.**
+`source_book` is bare TEXT in every table that holds it, so a Nightbane spell,
+skill or psionic row could have been written at any time with `system` NULL —
+production already holds `Lore: Nightbane` that way. What was really blocked is
+system-TAGGING a row, a Nightbane campaign, and a Nightbane class through the
+parser. That distinction is what makes Nate's ordering coherent rather than
+impossible.
+
+**What shipped**, all of it vocabulary and none of it schema:
+
+| | |
+|---|---|
+| `js/parser.js` | `VALID_SYSTEMS` takes `nightbane`, so a class file validates |
+| `js/catalog-fields.js` | `nightbane` added to the `systems` coercion allowlist, and to **three of the five** `system` dropdowns |
+| `catalog.js`, `codex.js` | a Nightbane tick-box and filter option; "both systems" becomes "all systems" |
+| `js/rules.js`, `codex.js`, `sheet.js` | dollars |
+| `app.js` | `SYSTEM_LABEL` only |
+| `class-template.js`, `extraction-prompt.mjs`, `classes.js`, README, `docs/catalog.md`, `class-import/reference/frontmatter.md` | the allowed values as documented |
+
+**Three of five, not five of five, and that is the load-bearing detail.**
+`spells.system`, `psionic_powers.system` and `enchantments.system` are bare TEXT
+and take the value. **`gear.system` and `vehicles.system` carry the CHECK**, so
+widening their dropdowns would have offered the editor a value the database
+refuses. `enchantments` is a column this finding never named at all — it counted
+three free-text `system` columns and there are six.
+
+**The wizard's system picker is deliberately NOT widened.** `S.system` feeds the
+campaign POST at `app.js:4046`, so a third button would offer a player a system
+they cannot create a campaign in. That is the visible cost of leaving the CHECK
+alone, and it is the thing to change first when Nate wants the other half:
+`campaigns.js:56`, the CHECK on `campaigns.system`, and `renderSystem()`.
+
+**Tests: nine new checks, and every one was proved to FAIL before being trusted.**
+Six breakages injected one at a time — widening the gear/vehicles dropdowns,
+dropping `nightbane` from the spells dropdowns, dropping it from the coercion
+allowlist, drifting `codex.js`'s `SYSTEM_LABEL` from `app.js`'s, adding a
+Nightbane button to the wizard picker, and quietly widening the campaigns
+endpoint — all six caught, baseline and restore clean. **The falsifier itself was
+wrong twice first**, and both are worth the sentence: `harness.mjs` writes
+failures to **stderr** and reading only stdout reported every injection as a
+miss, and the worktree is CRLF so every multi-line anchor matched nothing. A
+harness that reports "nothing failed" is indistinguishable from a check that
+cannot fail.
+
+**One behaviour change, stated rather than buried.** `['rifts',
+'palladium-fantasy']` used to be *all* systems and coerced to NULL; it is now a
+restriction excluding the third and stores the pair. Existing NULL rows are not
+migrated and now read as "all three". **Inert today** — the wizard cannot be set
+to `nightbane`, so nothing resolves a skill against it — and pinned both ways in
+`smoke.mjs`.
+
+**F73 is NOT closed.** What remains is the half Nate deferred: the three CHECK
+constraints, the campaigns endpoint, and the wizard picker. Reopen against §3
+above rather than against this finding's original options table, which
+under-counted the work by eight tables.
 
 ### F74 - medium - a class states one attribute block, one `sdc_base` and one `hit_points_base`, so a character with two bodies can only describe the second in prose
 

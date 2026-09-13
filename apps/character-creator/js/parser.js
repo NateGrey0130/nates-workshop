@@ -12,7 +12,12 @@ import { diceBounds, isAbsentAttribute } from './dice.js';
 //   - [a, "b", c]          (inline arrays)
 //   - # comments
 
-const VALID_SYSTEMS = ['rifts', 'palladium-fantasy'];
+// Nightbane is a THIRD Palladium game on the same engine, not a Rifts world
+// book, so its classes need a system of their own. Added with the catalog half
+// of BOOK-INGEST-AUDIT F73. `campaigns.system` is a SQLite CHECK and is
+// deliberately NOT widened in the same change, which is why the wizard's own
+// system picker in app.js still offers two: S.system feeds the campaign POST.
+const VALID_SYSTEMS = ['rifts', 'palladium-fantasy', 'nightbane'];
 const VALID_CATEGORIES = ['rcc', 'occ'];
 
 // YAML block scalar introducers: | and > with optional chomping/indent modifiers.
