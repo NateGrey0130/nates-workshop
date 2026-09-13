@@ -408,7 +408,7 @@ across the four traditions produced **7 links**.
 | 1 | **Bone Magic, 59 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 791 -> 850 spells. All fourteen levels, no gaps |
 | 1 | **Living Fire, 39 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 850 -> 889 spells. **7 retellings linked with `same_spell_as`** - 14 name matches, 6 rejected on mechanics |
 | 1 | **Nature Magic, 30 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 889 -> 919 spells. **Batch 1 COMPLETE: all 131 in** |
-| 2 | the O.C.C.s, ~15 classes | not started |
+| 2 | the O.C.C.s, **18 classes** | **STARTED** 2026-09-12. **Night Witch SHIPPED**, applied `--remote` before merge. 17 remain |
 | 3 | six playable creatures | not started |
 | 4 | gear, ~20 rows | not started |
 | 5 | vessels, 8 | not started |
@@ -465,6 +465,37 @@ two traditions can still hit:**
   and 24 hit points are permanently spent"* — `ppe` takes the 60 and the note
   keeps the sentence, because the hit-point half is a second cost nothing
   models. 23 of the 59 carry a schedule.
+**What the FIRST CLASS (Night Witch) established for the other seventeen:**
+
+- **This book prints skill names the catalog does not use, and the book itself
+  supplies the mapping.** It grants `Herbology`, which belongs to Rifts World
+  Book Three: England and is not held here - and printed 153 says outright that
+  *"the Holistic Medicine skill can include the skills and powers of the
+  Herbalist/Herbology skill"*. **Search the book before inventing a percentage.**
+- **`Language: Russian` and `Literacy: Russian` now exist**, created with the
+  catalog's own convention rather than as stubs - Technical 50/+5 and
+  Communications 30/+5. **`class-check --emit-script` writes both at base 0 and
+  files the language under Communications**, which is wrong twice, and a stub
+  percentage is a number nothing ever flags again. Every remaining class in this
+  book will reference them; they are in production now.
+- **The book prints `Basic Math`, which the catalog renamed to
+  `Mathematics: Basic`.** A GRANT resolves through `catalog_redirects` so the old
+  spelling would work - but an `only`/`except` skips redirects and fails silently,
+  so the current name is stored. BOOK-INGEST-AUDIT F35.
+- **A rolled count of starting spells cannot be expressed.** `spells_starting`
+  takes an integer, and the Night Witch gets *"2D4 wizard spells or 1D4 Bone
+  Magic spells"*. That allotment is prose in `special_abilities`; writing a fixed
+  number would invent a figure the page does not give.
+- **All 18 Spoiling spells are granted by NAME and all 18 resolve**, which is the
+  first proof that batch 1's prefixes work as a named list. Two carry an `&` and
+  one an apostrophe - the exact strings matter.
+- **DO NOT TRUST A node:sqlite REBUILD FOR CATALOG QUESTIONS.** Replaying the
+  data scripts that way produced **327 skills against production's 372**: the
+  splitter drops statements a real wrangler apply runs, and the missing rows look
+  exactly like a class referencing skills that do not exist. It is good for
+  asserting a script's own readbacks and useless for "does this name resolve".
+  **`class-check --remote` is the authority**, because it asks production.
+
 **What batch 1d (Nature Magic, 30 spells) added:**
 
 - **A spell can legitimately cost NOTHING.** `Sacred Oath` prints
