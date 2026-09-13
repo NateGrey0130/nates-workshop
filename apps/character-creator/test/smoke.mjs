@@ -441,14 +441,21 @@ for (const cat of ['gear', 'vehicles']) {
   const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
   const picker = appSrc.slice(appSrc.indexOf('function renderSystem()'),
     appSrc.indexOf('function renderSystem()') + 900);
-  check('renderSystem() offers exactly the systems a campaign can be created in',
-    picker.includes("pickSystem('rifts')") && picker.includes("pickSystem('palladium-fantasy')")
-    && !picker.includes("pickSystem('nightbane')")
-    && !picker.includes("pickSystem('heroes-unlimited')"));
+  // DERIVED from the endpoint rather than naming systems, so it cannot rot as
+  // systems are added. It named `nightbane` when written and needed a second
+  // clause one day later for `heroes-unlimited` - two systems, two edits to a
+  // check whose whole job is to notice a third. Comparing the two lists needs
+  // no edit at all, and it also catches the endpoint being widened without the
+  // picker, which the old form could not see.
+  const offered = [...picker.matchAll(/pickSystem\('([a-z-]+)'\)/g)].map((m) => m[1]).sort();
   const campaignsApi = readFileSync(join(appDir, '..', '..', 'functions', 'api',
     'character-creator', 'campaigns.js'), 'utf8');
-  check('and the campaigns endpoint still allowlists those same two',
-    campaignsApi.includes("['rifts', 'palladium-fantasy'].includes(body.system)"));
+  const gate = campaignsApi.match(/\[([^\]]*)\]\.includes\(body\.system\)/);
+  const allowed = gate ? [...gate[1].matchAll(/'([a-z-]+)'/g)].map((m) => m[1]).sort() : [];
+  check('the campaigns endpoint has a readable system allowlist', allowed.length > 0);
+  check('renderSystem() offers exactly the systems a campaign can be created in',
+    offered.length > 0 && JSON.stringify(offered) === JSON.stringify(allowed),
+    `picker [${offered}] vs endpoint [${allowed}]`);
 }
 
 import { classesMentioning, findDuplicates, normaliseName, pairKey, qualifiersDisagree, similarity } from '../../../functions/api/character-creator/_lib/catalog-merge.js';

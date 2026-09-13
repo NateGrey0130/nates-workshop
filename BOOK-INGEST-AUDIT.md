@@ -10149,6 +10149,33 @@ constraints, the campaigns endpoint, and the wizard picker. Reopen against §3
 above rather than against this finding's original options table, which
 under-counted the work by eight tables.
 
+**Amended 2026-09-13: a FOURTH system rode along in the same PR, and it was not
+planned.** Heroes Unlimited was added on exactly these terms - catalog and
+classes only, the two CHECK-constrained dropdowns and the wizard picker
+untouched - by a second session working in the same checkout at the same time.
+Its own commit on that branch is the record and says so plainly; a `git add -A`
+here had already swept part of it into a commit whose message did not describe
+it. Nate's call was to ship both rather than untangle them.
+
+**Two things that follow, both about the checks rather than the systems.**
+
+The cross-file `SYSTEM_LABEL` pin is the one piece of this that worked exactly
+as intended across a boundary nobody designed for: two sessions edited `app.js`
+and `codex.js` independently and the maps still agree, because a check would
+have failed if they did not.
+
+The picker check is the opposite lesson. It was written naming `nightbane`, and
+one day later it needed a second clause naming `heroes-unlimited` - two systems,
+two edits, to a check whose entire job is to notice a third. It now **derives**
+both lists, the picker's and the endpoint's, and compares them; that form needs
+no edit per system and additionally catches the endpoint being widened without
+the picker, which the old form could not see. Both directions were falsified.
+
+**A fourth system changed the `systems` coercion again, in the same direction.**
+Picking three used to store NULL because three WAS all of them; it now stores a
+restriction. That rule is right and its output moves every time a system is
+added, which is worth knowing before the fifth.
+
 ### F74 - medium - a class states one attribute block, one `sdc_base` and one `hit_points_base`, so a character with two bodies can only describe the second in prose
 
 **Found 2026-09-12** in the Nightbane R.C.C., printed 87.
