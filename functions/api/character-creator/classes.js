@@ -1,5 +1,5 @@
 // GET /api/character-creator/classes — all published RCC/OCC definitions.
-// Optional filters: ?system=rifts|palladium-fantasy  ?category=rcc|occ
+// Optional filters: ?system=rifts|palladium-fantasy|nightbane|heroes-unlimited  ?category=rcc|occ
 //
 // ?include_retired=1 also returns classes that have been retired, flagged with
 // `_retired: true`. Exclusion is the default so a caller that forgets the

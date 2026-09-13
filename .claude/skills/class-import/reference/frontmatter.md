@@ -33,7 +33,7 @@ Inline maps and lists (`{ a: 1 }`, `[1, 2]`) work; anchors, multi-line scalars
 ```yaml
 id: mystic                        # kebab-case slug, unique, never changes
 name: Mystic
-system: rifts                     # rifts | palladium-fantasy
+system: rifts                     # rifts | palladium-fantasy | nightbane
 source_book: Rifts Ultimate Edition p.118-120
 category: occ                     # occ | rcc
 ```

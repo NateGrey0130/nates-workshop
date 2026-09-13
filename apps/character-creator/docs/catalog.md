@@ -57,12 +57,29 @@ spell lists.
 | Catalog | Column | Shape |
 |---|---|---|
 | skills | `systems` | JSON array — `["rifts"]` |
-| spells, psionics, gear | `system` | one of `rifts`, `palladium-fantasy`, `both` |
+| spells, psionics, enchantments | `system` | one of `rifts`, `palladium-fantasy`, `nightbane`, `heroes-unlimited`, `both` |
+| gear, vehicles | `system` | one of `rifts`, `palladium-fantasy`, `both` — **these two carry a SQLite CHECK** |
 
 **NULL means unrestricted, everywhere.** That is how `skills.systems` has always
 read, and it is the honest answer when the operator does not know or the book
-covers both — `both` and *unset* both store NULL rather than inventing a
+covers every system — `both` and *unset* both store NULL rather than inventing a
 restriction.
+
+**There are FOUR systems as of 2026-09-13, and the last row above is why they
+are split.** `gear.system` and `vehicles.system` are the only two catalog
+columns with a `CHECK` constraint naming the allowed values, and SQLite cannot
+alter one without rebuilding the table — so their editor dropdowns deliberately
+stop at two while the other three take `nightbane` and `heroes-unlimited`. The
+same rule keeps the wizard's system picker at two: `S.system` feeds the campaign
+POST, and `campaigns.system` is a third CHECK. `BOOK-INGEST-AUDIT` F73 has the
+decision and what it would take to lift it.
+
+**Heroes Unlimited was added the same way and on the same terms**, one day
+later: catalog and classes only, no migration, the two CHECK-constrained
+dropdowns and the wizard picker untouched. Its survey is
+`docs/surveys/heroes-unlimited-core.md`. A fourth value changed one thing
+rather than extending it - picking three systems used to store NULL because
+three WAS all of them, and now stores a restriction.
 
 Starting an import asks which system the book is for. Every row confirmed out of
 that session inherits it, with two deliberate limits:

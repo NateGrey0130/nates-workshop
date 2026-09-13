@@ -11,8 +11,15 @@ line.*
 from `BOOK-INGEST-QUEUE.md`, which is the roster for seven Rifts world books.
 Nightbane is a **separate game**, published by the same house on the same
 engine, and that single fact is what makes this import unlike the eighteen
-before it: **nothing in the catalog can cite this book until `system` accepts a
-third value.** The gap analysis is in *What the app cannot express yet*, below.
+before it. The gap analysis is in *What the app cannot express yet*, below.
+
+**CORRECTED 2026-09-12 (PR #996).** This paragraph ended by saying nothing in
+the catalog could cite this book until `system` accepted a third value. That was
+wrong: `source_book` is free text in every table that holds it, and production
+has held `Lore: Nightbane` with a NULL system since long before this survey. What
+was actually gated was system-TAGGING a row, creating a Nightbane campaign, and
+passing a class through the parser — and the first and third of those are open as
+of that PR. See D1.
 
 Slug `nightbane-core`. Cached 2026-09-12 from `Nightbane - Core.pdf`, 248 PDF
 pages, **text layer** (median 3,925 chars/page — no OCR, no cost, seconds for
@@ -151,8 +158,13 @@ Counted by structure over all 248 cached pages, not by reading prose.
 ### Currency is US dollars
 
 Every price in the book is a dollar figure, and the class `Money:` lines are
-cash and possessions in dollars. `js/rules.js` returns Gold for
-`palladium-fantasy` and credits for everything else; neither is right here.
+cash and possessions in dollars.
+
+**CORRECTED 2026-09-12 (PR #996).** This said `js/rules.js` returns Gold for
+`palladium-fantasy` and credits for everything else, and that neither was right
+here. `currencyLabel` had a third arm from the day it was written and returned
+`Money` for an unknown system; the files that really fell through to credits
+were `codex.js` and `sheet.js`. All three now say **Dollars** for `nightbane`.
 
 ## Classes
 
@@ -360,6 +372,25 @@ in `app.js`, the filter in `catalog.js`, the label and currency in `codex.js`,
 five `options:` arrays plus an `allowed` list in `js/catalog-fields.js`,
 `js/class-template.js`, `js/rules.js`, and the README and `docs/catalog.md`.
 
+**HALF OF THIS SHIPPED 2026-09-12 (PR #996), and three sentences above are wrong
+about the rest.** Left standing as the record; what is true now:
+
+- **`VALID_SYSTEMS` takes `nightbane`**, so a Nightbane class validates. The
+  three CHECK constraints are untouched, by Nate's decision — see D1.
+- **There are SIX free-text `system` columns, not three.** This paragraph missed
+  `enchantments.system`, `imported_classes.system` and `character_drafts.system`.
+  `enchantments` mattered: it has one of the five editor dropdowns.
+- **"a third value lands in them the day it is written" was true of a data
+  script and false of the editor.** `js/catalog-fields.js` filtered an unknown
+  system out of `skills.systems` silently and hard-rejected it on a `select`.
+- **A FOURTH gate was missed entirely** —
+  `functions/api/character-creator/campaigns.js:56` allowlists two values on the
+  only route that creates a campaign, which is why the wizard's picker still
+  offers two and a Nightbane character cannot be built there yet.
+- **Two of the five `options:` arrays deliberately still say two.**
+  `gear.system` and `vehicles.system` are the CHECK-constrained columns, so
+  offering a third value would put something in the editor the database refuses.
+
 ### 2. There is no P.C.C.
 
 `VALID_CATEGORIES` in `parser.js` is `['rcc', 'occ']`. The Psychic at printed 68
@@ -400,6 +431,24 @@ answered in this survey and none should be assumed by a later session.
 **D1 — how does a third system land?** The CHECK-constraint migration and the
 ten vocabulary sites, as one PR or several, and whether it ships before any
 Nightbane data at all. Nothing else in the book can be imported first.
+
+**DECIDED 2026-09-12 (PR #996), and the question as written above is wrong in
+two places.** Nate had already answered it for the Heroes Unlimited batch the
+same day: catalog and classes first, the `campaigns.system` CHECK left alone.
+**So there is no migration** — `VALID_SYSTEMS`, the coercion allowlist, three of
+the five editor dropdowns, the currency, and the documented vocabulary. Nothing
+else. `BOOK-INGEST-AUDIT` F73's outcome note carries the five premises that did
+not survive its own audit.
+
+The claim that nothing else in the book could be imported first was the second
+error. `source_book` is free text, so a Nightbane spell or skill row could
+always have been written with `system` NULL. What was gated is system-tagging a
+row, creating a Nightbane campaign, and passing a class through the parser.
+
+**What the decision leaves standing:** the wizard's system picker still offers
+two, because `S.system` feeds the campaign POST. A Nightbane class validates and
+stores; it cannot yet be built in the wizard. Lifting that is `campaigns.js:56`,
+the CHECK on `campaigns.system`, and `renderSystem()` — F73 stays open for it.
 
 **D2 — the four Nightbane skill packages.** `VARIANT_OVERRIDES` deliberately
 excludes skills, so Basic, Resistance/Spook Squad-Trained,

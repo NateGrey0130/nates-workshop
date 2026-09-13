@@ -57,12 +57,19 @@
   }
 
   // What a character's money is called. Palladium Fantasy counts gold, Rifts
-  // counts credits — the same convention the gear catalog's `cost` field
-  // already documents. An unknown system gets the neutral word rather than
-  // being guessed into one of the two.
+  // counts credits, Nightbane is set on present-day Earth and counts dollars —
+  // the same convention the gear catalog's `cost` field already documents. An
+  // unknown system gets the neutral word rather than being guessed into one.
+  //
+  // The fallback is why BOOK-INGEST-AUDIT F73 was WRONG to say a third system
+  // would ship prices labelled in credits: this function has had a third arm
+  // since it was written, and would have said "Money". The two places that
+  // really did fall through to credits are codex.js and sheet.js, both fixed
+  // in the same change.
   function currencyLabel(system) {
     if (system === 'palladium-fantasy') return 'Gold';
     if (system === 'rifts') return 'Credits';
+    if (system === 'nightbane' || system === 'heroes-unlimited') return 'Dollars';
     return 'Money';
   }
 

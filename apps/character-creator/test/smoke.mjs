@@ -40,6 +40,16 @@ section('The browser entry points parse');
   check('app.js parses as the ES module the wizard loads', app.ok, app.err);
   const sheet = parses('sheet.js', 'cjs');
   check('and sheet.js parses as the classic script the sheet loads', sheet.ok, sheet.err);
+  // codex.js and catalog.js are the other two browser entry points and were
+  // NOT covered here, which is the same hole in two more pages: nothing
+  // imports them either, so a syntax error ships a blank page with the whole
+  // suite green. The extension is what each HTML actually asks for -
+  // codex.html loads codex.js bare, catalog.html loads catalog.js as a module.
+  // Added while editing both for BOOK-INGEST-AUDIT F73.
+  const codex = parses('codex.js', 'cjs');
+  check('and codex.js parses as the classic script the codex loads', codex.ok, codex.err);
+  const catalog = parses('catalog.js', 'mjs');
+  check('and catalog.js parses as the ES module the catalog editor loads', catalog.ok, catalog.err);
 }
 
 section('Parser');
@@ -353,12 +363,100 @@ check('blank NOT NULL fields coerce to their default', notNullBlanks.length === 
 // Required fields must be rejected when empty rather than silently nulled.
 const req = CATALOGS.skills.fields.find((f) => f.name === 'name');
 check('required field rejects blank', !!coerceField(req, '').error);
-// systems: neither system picked and both picked both mean "applies to both".
+// systems: nothing picked and everything picked both mean "applies to all".
+//
+// This pinned TWO systems until Nightbane made it three (BOOK-INGEST-AUDIT
+// F73), and the change it forced is a real one rather than a renumbering:
+// ['rifts', 'palladium-fantasy'] used to BE all of them and stored NULL, and
+// now stores the pair, because it has become a restriction that excludes the
+// others. Both halves are pinned below so neither can drift back.
+//
+// THIS PIN MOVES EVERY TIME A SYSTEM IS ADDED, and that is the point rather
+// than a maintenance cost: `coerceField` stores NULL when the picked set is
+// the WHOLE allowlist, so all-three stopped meaning "all" the moment Heroes
+// Unlimited became the fourth. A pin that did not move would be asserting a
+// meaning the code no longer has.
 const sysField = CATALOGS.skills.fields.find((f) => f.name === 'systems');
-check('systems: empty and all-selected both store NULL',
-  coerceField(sysField, []).value === null && coerceField(sysField, ['rifts', 'palladium-fantasy']).value === null);
+check('systems: empty and all-FOUR-selected both store NULL',
+  coerceField(sysField, []).value === null
+  && coerceField(sysField, ['rifts', 'palladium-fantasy', 'nightbane',
+    'heroes-unlimited']).value === null);
+check('systems: all-THREE is now a RESTRICTION, because a fourth system exists',
+  coerceField(sysField, ['rifts', 'palladium-fantasy', 'nightbane']).value
+    === '["rifts","palladium-fantasy","nightbane"]');
+check('systems: the two older systems are now a RESTRICTION, not "all"',
+  coerceField(sysField, ['rifts', 'palladium-fantasy']).value === '["rifts","palladium-fantasy"]');
 check('systems: one system stores a JSON array',
   coerceField(sysField, ['rifts']).value === '["rifts"]');
+check('systems: nightbane is an accepted value and is not filtered out',
+  coerceField(sysField, ['nightbane']).value === '["nightbane"]');
+check('systems: heroes-unlimited is an accepted value and is not filtered out',
+  coerceField(sysField, ['heroes-unlimited']).value === '["heroes-unlimited"]');
+// The THREE-of-five split, pinned because it is the thing a later session will
+// "tidy" into consistency. `spells.system`, `psionic_powers.system` and
+// `enchantments.system` are bare TEXT and take a third value; `gear.system` and
+// `vehicles.system` carry a SQLite CHECK naming two, so offering `nightbane`
+// there would put a value in the editor that the database refuses.
+// BOOK-INGEST-AUDIT F73.
+for (const cat of ['spells', 'psionics', 'enchantments']) {
+  const f = CATALOGS[cat].fields.find((x) => x.name === 'system');
+  check(`${cat}: the system dropdown offers nightbane (no CHECK on that column)`,
+    !!f && f.options.includes('nightbane'));
+  check(`${cat}: and offers heroes-unlimited, for the same reason`,
+    !!f && f.options.includes('heroes-unlimited'));
+}
+for (const cat of ['gear', 'vehicles']) {
+  const f = CATALOGS[cat].fields.find((x) => x.name === 'system');
+  check(`${cat}: the system dropdown does NOT offer nightbane (its column has a CHECK)`,
+    !!f && !f.options.includes('nightbane'));
+  check(`${cat}: and does NOT offer heroes-unlimited, for the same reason`,
+    !!f && !f.options.includes('heroes-unlimited'));
+  check(`${cat}: and db/schema.sql still constrains it to two values`,
+    /system\s+TEXT\s+CHECK \(system IN \('rifts', 'palladium-fantasy', 'both'\)\)/
+      .test(readFileSync(join(appDir, '..', '..', 'db', 'schema.sql'), 'utf8')));
+}
+
+// codex.js is a classic script and imports nothing, so it keeps its OWN copy of
+// SYSTEM_LABEL. Two copies of three strings is the deliberate trade; this is
+// what stops them drifting, and codex.js's comment promises this check exists.
+{
+  const keysOfLabelMap = (src) => {
+    const m = src.match(/const SYSTEM_LABEL = \{([\s\S]*?)\};/);
+    return m ? [...m[1].matchAll(/(?:'([a-z-]+)'|\b([a-z-]+))\s*:/g)]
+      .map((x) => x[1] || x[2]).sort() : null;
+  };
+  const appKeys = keysOfLabelMap(readFileSync(join(appDir, 'app.js'), 'utf8'));
+  const codexKeys = keysOfLabelMap(readFileSync(join(appDir, 'codex.js'), 'utf8'));
+  check('both SYSTEM_LABEL maps were found', !!appKeys && !!codexKeys);
+  check('app.js and codex.js name the same systems',
+    JSON.stringify(appKeys) === JSON.stringify(codexKeys), `${appKeys} vs ${codexKeys}`);
+  check('and nightbane is one of them', (appKeys || []).includes('nightbane'));
+  check('and heroes-unlimited is too', (appKeys || []).includes('heroes-unlimited'));
+}
+
+// The wizard picker is deliberately NOT widened: S.system feeds the campaign
+// POST, which allowlists two values against a CHECK this change leaves alone.
+// A third button there would offer a system no campaign can be created in.
+{
+  const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+  const picker = appSrc.slice(appSrc.indexOf('function renderSystem()'),
+    appSrc.indexOf('function renderSystem()') + 900);
+  // DERIVED from the endpoint rather than naming systems, so it cannot rot as
+  // systems are added. It named `nightbane` when written and needed a second
+  // clause one day later for `heroes-unlimited` - two systems, two edits to a
+  // check whose whole job is to notice a third. Comparing the two lists needs
+  // no edit at all, and it also catches the endpoint being widened without the
+  // picker, which the old form could not see.
+  const offered = [...picker.matchAll(/pickSystem\('([a-z-]+)'\)/g)].map((m) => m[1]).sort();
+  const campaignsApi = readFileSync(join(appDir, '..', '..', 'functions', 'api',
+    'character-creator', 'campaigns.js'), 'utf8');
+  const gate = campaignsApi.match(/\[([^\]]*)\]\.includes\(body\.system\)/);
+  const allowed = gate ? [...gate[1].matchAll(/'([a-z-]+)'/g)].map((m) => m[1]).sort() : [];
+  check('the campaigns endpoint has a readable system allowlist', allowed.length > 0);
+  check('renderSystem() offers exactly the systems a campaign can be created in',
+    offered.length > 0 && JSON.stringify(offered) === JSON.stringify(allowed),
+    `picker [${offered}] vs endpoint [${allowed}]`);
+}
 
 import { classesMentioning, findDuplicates, normaliseName, pairKey, qualifiersDisagree, similarity } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
 import { collapseStatement, keysOf, redirectStatements, resolveKeys } from '../../../functions/api/character-creator/_lib/catalog-redirects.js';
