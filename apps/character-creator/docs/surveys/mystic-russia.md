@@ -379,7 +379,7 @@ one batch of five in would be the worse lie.
 |---|---|---|
 | 1 | **Spoiling Magic, 18 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 773 -> 791 spells |
 | 1 | **Bone Magic, 59 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 791 -> 850 spells. All fourteen levels, no gaps |
-| 1 | **Living Fire, 39 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 850 -> 889 spells. **13 retellings linked with `same_spell_as`** |
+| 1 | **Living Fire, 39 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 850 -> 889 spells. **7 retellings linked with `same_spell_as`** - 14 name matches, 6 rejected on mechanics |
 | 1 | Nature Magic, ~30 spells | not started |
 | 2 | the O.C.C.s, ~15 classes | not started |
 | 3 | six playable creatures | not started |
@@ -453,9 +453,18 @@ it settled them in production:**
   `Fire: Circle of Flame` (3) exactly, and the price for everyone else matches
   the bare `Circle of Flame` (10). There was never a disagreement; there was a
   two-tier price and a comparison against the wrong row.
-- **13 rows carry `same_spell_as`**, pointing at the established row by name,
-  following `Air: Sonic Blast` -> `Sonic Blast`. Each keeps its own level and
-  cost, and **no existing row changed value.**
+- **THE LINKS MUST BE DECIDED BY `scripts/same-spell-lib.mjs`, NOT BY NAME**, and
+  this batch learned it the expensive way. 14 of the 39 are name matches; the
+  first version linked all of them, was applied `--remote`, and was then refused
+  by CI - `regression.mjs` runs that library over every link on a clean rebuild
+  and it **rejects 6 of the 14**. In this repo `same_spell_as` asserts THE SAME
+  SPELL at its own level and cost; a pair disagreeing on mechanics is two spells
+  sharing a name, exactly as the library's own header records for the
+  Ocean/Water pairs. **7 links survive.** The six rejected are now named in
+  `regression.mjs`'s `mustNotLink` list so nobody re-links them from the name.
+- **The repo already shipped the judgement** (BOOK-INGEST-AUDIT F26) and a
+  hand-rolled name match was used instead. Before inventing a comparison, look
+  for the one that exists.
 - **Two of the fourteen are judgement, not a name match**, and both are written
   into the script: `Fire Fists` is linked to `Fire Fist` (Palladium Fantasy) -
   same magic, level 3/cost 8/M.D. both hands here against level 6/cost 15/S.D.C.
