@@ -379,7 +379,7 @@ one batch of five in would be the worse lie.
 |---|---|---|
 | 1 | **Spoiling Magic, 18 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 773 -> 791 spells |
 | 1 | **Bone Magic, 59 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 791 -> 850 spells. All fourteen levels, no gaps |
-| 1 | Living Fire, ~39 spells | not started |
+| 1 | **Living Fire, 39 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 850 -> 889 spells. **13 retellings linked with `same_spell_as`** |
 | 1 | Nature Magic, ~30 spells | not started |
 | 2 | the O.C.C.s, ~15 classes | not started |
 | 3 | six playable creatures | not started |
@@ -442,3 +442,37 @@ two traditions can still hit:**
   `regression.mjs` rebuilds from every data script and compares; `smoke.mjs`
   does not, so a local smoke pass says nothing about it. Batch 1a learned this
   from a red CI run.
+
+**Batch 1c (Living Fire, 39 spells) is the one D1 and D2 were argued over, and
+it settled them in production:**
+
+- **14 of the 39 share a name with an existing row**, which is where the
+  withdrawn "five spells disagree on level" reading came from. **D2 is now
+  demonstrated rather than argued.** This book's `Circle of Flame` is **level 3,
+  "6 for Fire Sorcerers, 10 for other magic O.C.C.s"** - the LEVEL matches
+  `Fire: Circle of Flame` (3) exactly, and the price for everyone else matches
+  the bare `Circle of Flame` (10). There was never a disagreement; there was a
+  two-tier price and a comparison against the wrong row.
+- **13 rows carry `same_spell_as`**, pointing at the established row by name,
+  following `Air: Sonic Blast` -> `Sonic Blast`. Each keeps its own level and
+  cost, and **no existing row changed value.**
+- **Two of the fourteen are judgement, not a name match**, and both are written
+  into the script: `Fire Fists` is linked to `Fire Fist` (Palladium Fantasy) -
+  same magic, level 3/cost 8/M.D. both hands here against level 6/cost 15/S.D.C.
+  one fist there - and **`Fumigate: Insects` is deliberately NOT linked**, though
+  a normaliser that strips any `Word: ` prefix matches it to
+  `Metamorphosis: Insect`. One drives insects out of a building, the other turns
+  the caster into one. **The same normaliser will offer that false positive
+  again.**
+- **`tradition` is `living-fire`, the first hyphenated value here, and
+  deliberately not `fire`:** the catalog's `Fire:` family are WARLOCK spells
+  carrying `tradition = 'warlock'`, so `fire` would assert these are the same
+  tradition. They are not.
+- **The book jumps Level Nine to Level Twelve**, no Ten or Eleven - the same
+  shape as Spoiling Magic having no Level Nine. Verified against every heading.
+- **VERIFY AGAINST A FULL REBUILD, not just the sibling batches.** A script that
+  links a retelling asserts the established row EXISTS, and those rows arrive
+  from the ordinary catalog scripts - so a database holding only this book's
+  scripts fails that assertion for the wrong reason, and a dangling link looks
+  identical to it. Replaying **all 581** prior data scripts into `node:sqlite`
+  takes seconds and applied with **zero** statement failures.
