@@ -1580,3 +1580,97 @@ traps batch 1 paid for so the other three traditions do not pay again.
 
 **With this, no book in the batch is at `cached`.** Seven handed over on
 2026-08-28: six imported, this one surveyed.
+
+---
+
+# A THIRD batch — Heroes Unlimited, opened 2026-09-12
+
+**A different GAME, not a seventh Rifts book.** Everything above this line is
+the seven-book Rifts batch of 2026-08-28 plus `nightbane-core` (PR #991), which
+reached this file first and is the second game here. Four Heroes Unlimited books were
+handed over on 2026-09-12 and cached in one session; they share this file
+because the ladder and the one-session-per-book rule are the same, and they
+share nothing else.
+
+## The books
+
+| slug | book | PDF pages | layer | printed | offset | status |
+|---|---|---|---|---|---|---|
+| `heroes-unlimited-core` | Revised Heroes Unlimited (1987) | 240 | SCAN (OCR) | 238 | **+0** | **surveyed** |
+| `powers-unlimited-1` | Powers Unlimited One (2003) | 99 | SCAN (OCR) | 95 | **+2** | **cached** |
+| `powers-unlimited-2` | Powers Unlimited Two (2004) | 98 | SCAN (OCR) | 96 | **+1** | **cached** |
+| `powers-unlimited-3` | Powers Unlimited Three (2017) | 120 | **corrupt text layer, FORCE-OCR'd** | 112 | **+1** | **cached** |
+
+Survey: `apps/character-creator/docs/surveys/heroes-unlimited-core.md`. It is the
+boot file for this batch and it carries the decision record.
+
+## The edition problem, which is this batch's D0 and is OPEN
+
+**The core book on hand is the 1987 REVISED FIRST EDITION. All three Powers
+Unlimited books are written for 2nd Edition**, by their own copyright pages. The
+structural proof that does not rest on a copyright line: PU2 lays its new power
+categories out as Step 3, Step 5 and **Step 6**, and the Revised core defines
+**five** steps and stops at Step 5.
+
+**This does not condemn all three supplements.** PU1 and PU3 are catalogues of
+super abilities with self-contained stat blocks, and a stat block does not care
+which edition's category list may take it; PU2 is six new POWER CATEGORIES and
+is the one that cannot be ported without rewriting. The survey's edition section
+carries the evidence per book.
+
+**Nothing is extracted until Nate answers D0.**
+
+## What this game is, in one paragraph, because it is not the others
+
+There is **no O.C.C. and no R.C.C.** — `O.C.C.`, `R.C.C.` and
+`Attribute Requirement` return **zero hits across all 240 cached pages**. A
+character is a **Power Category** (ten, printed 12) crossed with an
+**Educational Level** (eleven rows, printed 27), and four of the ten categories
+carry a sub-type as well. Skills come from **skill programs** — whole bundles at
+one flat educational bonus — which the frontmatter contract already supports as
+`skill_programs`, built for the Triax NGR Robot Soldier under F23(b). Attributes,
+alignments, S.D.C., hit points and percentile skills are the same Palladium
+chassis. There is **no P.P.E.** (zero hits) and no M.D.C. system.
+
+## Decisions already taken, 2026-09-12
+
+Answered by Nate before the survey was written:
+
+- **D1** — integrate as a **third `system` value reusing the class chassis**:
+  Power Category in the R.C.C. slot, Educational Level in the O.C.C. slot,
+  sub-type as the variant.
+- **D2** — **catalog and classes first, campaigns later.** `campaigns.system`'s
+  `CHECK` is left alone for now, so HU rows will exist before an HU campaign can.
+- **D3** — super abilities get a **new `super_abilities` table** with a
+  minor/major tier column. A schema change, deliberately not this session's.
+
+D0 and D4-D8 are open and live in the survey.
+
+## What the first session produced, and what it deliberately did not
+
+Cached all four (557 pages), registered all four in `scripts/books.json` with
+offsets verified by folio **and** by the smoke suite's own independent
+derivation, wrote the core survey, and filed **F79**.
+
+**It was filed as F73 and renumbered.** The Nightbane survey took F73-F78 in
+PR #991 while this branch was open, which is the collision a second batch in one
+file was always going to produce. This menu's F73 is now Nightbane's `system`
+enum finding, and it is the same gap this batch's survey lists as its own G1 -
+Heroes Unlimited is the SECOND game to need it, not a new report.
+
+**No data was applied, no schema was changed and no class was imported.** That
+was the agreed scope.
+
+## F79 came out of this batch, and it is about the tooling rather than a book
+
+`ocr-book.py --probe` classifies a book by **character count alone**, so Powers
+Unlimited Three — whose text layer is glyph-dropped garbage rendering Kevin
+Siembieda as `Kev Sebea` — probes at median **5505 chars/page** and is called a
+clean TEXT LAYER at a 400-char threshold. Neither `corrupt_pages` nor
+`substituted_digits` can see it, because what survives is ordinary letters. It
+is a **fourth** kind of text-layer damage beyond the three `book-survey` §0
+names, and its remedy is the opposite of §0's: `--force-ocr` for the whole book,
+not a render of one page.
+
+**`powers-unlimited-3` is cached correctly** because the fault was caught by hand
+before caching. **Do not re-cache it without `--force-ocr`.**

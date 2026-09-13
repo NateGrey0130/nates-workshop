@@ -261,10 +261,50 @@
       "title": "Nightbane RPG",
       "aliases": ["Nightbane", "Nightbane Core", "nightbane-core"],
       "source_pdf": "Nightbane - Core.pdf",
-      "source_pdf_dir": "C:\\Users\\natha\\Downloads",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": 240,
       "page_offset": 1,
-      "note": "Cached 2026-09-12 from its TEXT LAYER, median 3,925 chars/page. Offset verified by folio at three points rather than taken from the vote - cache p005 reads 4, p121 reads 120, p241 reads 240. printed_pages is 240, the last NUMBERED folio, and the book's own content ends well before it: printed 233 is the Experience Tables and 234-240 are blank character record sheets and a trademark page. Cache p242-p248 are Palladium house ads the book does not number. THE FIRST BOOK HERE THAT IS NEITHER RIFTS NOR PALLADIUM FANTASY - Nightbane is its own game, and no catalog row can cite it until `system` accepts a third value; see apps/character-creator/docs/surveys/nightbane-core.md. substituted_digits is 45 PAGES, the third fault class in book-survey 0 - a render does not fix it, the damage is in the ink - and it lands on the gear prices of printed 204-232 and on the Money: lines of the class entries. welded_pages is 8 and corrupt_pages 12 pages, four of them (205, 206, 209, 216) inside the weapons chapter. source_pdf_dir is Downloads and NOT the workshop books directory every OTHER entry here names; the PDF has not been moved, and a count is deliberately not stated because it moves with the next book."
+      "note": "Cached 2026-09-12 from its TEXT LAYER, median 3,925 chars/page. Offset verified by folio at three points rather than taken from the vote - cache p005 reads 4, p121 reads 120, p241 reads 240. printed_pages is 240, the last NUMBERED folio, and the book's own content ends well before it: printed 233 is the Experience Tables and 234-240 are blank character record sheets and a trademark page. Cache p242-p248 are Palladium house ads the book does not number. THE FIRST BOOK HERE THAT IS NEITHER RIFTS NOR PALLADIUM FANTASY - Nightbane is its own game, and no catalog row can cite it until `system` accepts a third value; see apps/character-creator/docs/surveys/nightbane-core.md. substituted_digits is 45 PAGES, the third fault class in book-survey 0 - a render does not fix it, the damage is in the ink - and it lands on the gear prices of printed 204-232 and on the Money: lines of the class entries. welded_pages is 8 and corrupt_pages 12 pages, four of them (205, 206, 209, 216) inside the weapons chapter. source_pdf_dir was Downloads and NOT the workshop books directory every OTHER entry here names; the PDF was MOVED there on 2026-09-12 in PR #992 and this field was repointed with it, so all twenty-three entries now name one directory and every recorded source_pdf resolves to a file on disk. A count is still deliberately not stated, because it moves with the next book."
+    },
+
+    "heroes-unlimited-core": {
+      "title": "Revised Heroes Unlimited",
+      "aliases": [],
+      "source_pdf": "93229611-Heroes-Unlimited-Core-Book-Revised.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 238,
+      "page_offset": 0,
+      "note": "NOT Heroes Unlimited 2nd Edition. This is the 1987 REVISED first edition, 9th printing January 1993, and the three Powers Unlimited books registered below are all written for 2nd Edition - see their notes. A SEPARATE GAME from Rifts and Palladium Fantasy: no O.C.C., no R.C.C. A character is a Power Category (ten of them, printed 12 and 162) crossed with an Educational Level (eleven rows, printed 27), and six of the ten categories carry sub-types. Cached 2026-09-12 from a SCAN - --probe medians 0 chars/page across all twenty samples, OCR medians 4,593. THE CLEANEST OFFSET MEASUREMENT IN THE REGISTRY: 160 pages carry a folio, ALL 160 agree at +0, none disagree, one region p010-p237 with no split. So printed N is cache pNNN and read-columns.py N. Corroborated four more ways by section ranges landing exactly where the printed Contents says they do - magic 96-105, psionics 128-134, super abilities 164-191, equipment 213-221. ocr-book.py measured printed_pages 248 and that is WRONG: cache p239 is a comic panel whose sound effect OCR'd as a folio. The registry outranks the manifest, as it does for bom. printed_pages is 238, which the printed Contents gives for the character sheets; the last folio that actually surfaces is 237, and p238-p239 carry comic art rather than the sheets the Contents names. p240 is the back cover. No production row cited this book as of 2026-09-12."
+    },
+
+    "powers-unlimited-1": {
+      "title": "Powers Unlimited One",
+      "aliases": [],
+      "source_pdf": "236094939-Powers-Unlimited-1-0.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 95,
+      "page_offset": 2,
+      "note": "A sourcebook for Heroes Unlimited 2ND EDITION, by its own copyright page (cache p004), NOT for the Revised first edition registered above. Cached 2026-09-12 from a SCAN - --probe medians 0 chars/page, OCR medians 4,960. Offset verified by folio: 83 pages agree at +2, one disagrees at -3 and is noise, one region p003-p098. printed_pages is 95, the last page of content at cache p097; cache p098-p099 are Palladium house ads. ocr-book.py measured 79 and that is a max-folio misread, the same fault as the core book's 248. CONTENT: almost entirely NEW SUPER ABILITIES - a minor list and a major list with self-contained Range/Duration/Damage stat blocks, printed 9-86 - plus psionics at cache p090-p097. Being self-contained is what makes this book largely EDITION-PORTABLE where Powers Unlimited Two is not."
+    },
+
+    "powers-unlimited-2": {
+      "title": "Powers Unlimited Two",
+      "aliases": [],
+      "source_pdf": "97891933-Powers-Unlimited-2.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 96,
+      "page_offset": 1,
+      "note": "A sourcebook for Heroes Unlimited 2ND EDITION by its own copyright page (cache p003), and THE ONE OF THE THREE THAT CANNOT BE PORTED to the Revised first edition without rewriting it. Cached 2026-09-12 from a SCAN - --probe medians 0 chars/page, OCR medians 5,490. Offset verified by folio: 86 pages agree at +1 and NONE disagree, one region p002-p097. printed_pages 96, last content at cache p097; p098 is a house ad. CONTENT: six NEW POWER CATEGORIES - Empowered, Eugenic Heroes, four kinds of Gestalt Superhuman, Imbued Heroes, Immortals - each with attribute bonuses, an experience ladder and an equipment budget, and almost no Range/Duration stat blocks. THE EDITION EVIDENCE IS STRUCTURAL: its categories are laid out as Step 3, Step 5 and STEP 6, and the Revised core defines FIVE steps and stops at Step 5 (its printed 8 and its Contents). A Step 6 does not exist in the Revised book."
+    },
+
+    "powers-unlimited-3": {
+      "title": "Powers Unlimited Three",
+      "aliases": [],
+      "source_pdf": "793577120-HU-Powers-Unlimited-3-PAL523P.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 112,
+      "page_offset": 1,
+      "note": "A sourcebook for Heroes Unlimited 2nd Edition, per its credits page. THE ONLY BOOK IN THIS REGISTRY CACHED WITH --force-ocr, AND THE REASON IS BOOK-INGEST-AUDIT F73. Its text layer probes at median 5505 chars/page, 13.7x the 400-char threshold, and ocr-book.py --probe calls it a TEXT LAYER. That layer is glyph-dropped garbage: its credits page renders Kevin Siembieda as Kev Sebea, Wayne Smith as Waye S, Alex Marciniszyn as Alex acszy. A font-encoding fault maps many glyphs to nothing, so the CHARACTER COUNT survives and the WORDS do not - which is invisible to both corrupt_pages and substituted_digits, because what is left is ordinary letters. DO NOT re-cache this book without --force-ocr; a plain run would take the cheap path and refuse to overwrite only because the kinds now differ. Cached 2026-09-12 by OCR, medians 5,525. Offset verified by folio: 98 pages agree at +1 and NONE disagree, one region p002-p113. printed_pages 112, last content at cache p113; p114-p120 are house ads and an order form. CONTENT: new minor and major super abilities with self-contained stat blocks, printed 6-104, some marked Reprinted. Edition-portable for the same reason Powers Unlimited One is."
     }
   }
 }
