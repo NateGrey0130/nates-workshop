@@ -255,6 +255,13 @@ export const CORE_SDC_BY_CLASS = {
   'elemental-fusionist-fire-water': '1D6',
   'ley-line-rifter': '1D6',
   'ley-line-walker': '1D6',
+  // Rifts World Book 18: Mystic Russia printed 126-127, a DECLARED COPY of
+  // 'ley-line-walker' whose only difference is its spell selection. It inherits
+  // the parent's silence about S.D.C. along with everything else, so it takes
+  // the parent's figure - a practitioner of magic, never a man of arms. The
+  // entry is needed rather than optional: the class states neither an S.D.C.
+  // formula nor an mdc_base, exactly as its parent does.
+  'russian-ley-line-walker': '1D6',
   'mind-melter': '1D6',
   'mystic': '1D6',
   'priest-of-light': '1D6',
