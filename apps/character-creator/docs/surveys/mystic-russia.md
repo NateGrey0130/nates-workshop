@@ -378,7 +378,7 @@ one batch of five in would be the worse lie.
 | batch | what | status |
 |---|---|---|
 | 1 | **Spoiling Magic, 18 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 773 -> 791 spells |
-| 1 | Bone Magic, ~59 spells | not started |
+| 1 | **Bone Magic, 59 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 791 -> 850 spells. All fourteen levels, no gaps |
 | 1 | Living Fire, ~39 spells | not started |
 | 1 | Nature Magic, ~30 spells | not started |
 | 2 | the O.C.C.s, ~15 classes | not started |
@@ -414,3 +414,31 @@ fresh worktree's local D1 is empty, so `d1-apply --local` fails with *"no such
 table: spells"* and proves nothing. `node:sqlite` applies `db/schema.sql` in one
 pass and then the script, and the script's own `got`/`want` rows can then be
 checked rather than eyeballed.
+
+**What batch 1b (Bone Magic, 59 spells) added, and both are traps the remaining
+two traditions can still hit:**
+
+- **A SUMMONING spell prints the summoned creature's whole stat block inside its
+  description** — `Damage:`, `Horror Factor:`, `M.D.C.:` — and `Damage:` is
+  also a spell-header field. Read as one, it made Summon Magot's cost swallow
+  the thirteen lines between. **The header is the run of labels up to and
+  INCLUDING the cost**, which is always last; a label after it is prose. A
+  line-gap threshold cannot do this job: a real `Damage:` field runs ten lines
+  in Accelerated Decay and the stray one sits thirteen lines down, so any
+  threshold would be tuned to this book's luck.
+- **A CROSS-BATCH ASSERTION IS AN ASSERTION ABOUT EXECUTION ORDER.** This script
+  first asserted the Spoiling batch still held its 18 rows. That passes against
+  production and **can never pass in a clean rebuild**: data scripts run in
+  filename order, and `...-mr-bone-spells.sql` sorts **before**
+  `...-mr-spoiling-spells.sql`, so on a fresh database the Spoiling rows do not
+  exist yet. `regression.mjs` does exactly that rebuild, so it would have failed
+  CI. **Each batch asserts its own rows and nothing else.**
+- **The costs are not all numerals.** The book spells small ones as words
+  ("Two points"), and Return from the Grave is *"Special; a total of 60 P.P.E.
+  and 24 hit points are permanently spent"* — `ppe` takes the 60 and the note
+  keeps the sentence, because the hit-point half is a second cost nothing
+  models. 23 of the 59 carry a schedule.
+- **Move the pinned spell count in `docs/operations.md` in the same PR.**
+  `regression.mjs` rebuilds from every data script and compares; `smoke.mjs`
+  does not, so a local smoke pass says nothing about it. Batch 1a learned this
+  from a red CI run.
