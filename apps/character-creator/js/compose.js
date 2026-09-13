@@ -65,6 +65,12 @@ export const CORE_SDC_BY_CLASS = {
   // and the source of Nature Magic. Not a man of arms, so 1D6. Like the three
   // above it states neither an S.D.C. formula nor an mdc_base.
   'old-believer': '1D6',
+  // Printed 136-140, the same book - the Slayer, and the ONE class in Mystic
+  // Russia that takes 3D6. It is the book's only men-of-arms: a demon hunter
+  // with Boxing, Hand to Hand: Expert and six weapon proficiencies who casts
+  // sixteen spells on the side. Every other class here is a caster or a
+  // psychic and takes 1D6.
+  'slayer-russian': '3D6',
   // Rifts World Book 14: New West, printed 83-92 - the O.C.C.s and NPC
   // villains section. None of the four prints an S.D.C. formula of its own.
   // The Bandit and the Highwayman each print an S.D.C. BONUS instead
