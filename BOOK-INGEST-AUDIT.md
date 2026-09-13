@@ -3607,6 +3607,14 @@ group** as opposed to a named skill, and that was not established. It is named a
 `db/zzzzzz-f25-copy-of-declarations.sql` returns 0 - it is in no except list,
 because this pair excepts `skills` wholesale.
 
+**SETTLED 2026-09-13 by `F80`, and the paragraph above stays as the measurement
+it was.** The group's own figure wins and an absent one falls through to the
+catalog row, so the Walker's explicit `5` and the Rifter's silence produce the
+same number: `Language: Other` is `base 50, per_level 5` (read `--remote`
+2026-09-13). **The pair agrees, no correction is needed and none was made** -
+but it agrees by coincidence. A catalog row advancing at 4, or at 0, would have
+made those same two class files mean different things.
+
 ### F26 — one spell, two traditions, two costs, and one row
 
 **Taken, 2026-09-08 (PR pending), as the smaller option** - `spells.same_spell_as`
@@ -10468,3 +10476,84 @@ measurement, not an assumption, and it belongs to whoever takes this.
 **Ongoing cost:** one wordlist read per probe, on twenty sampled pages. A pin
 that makes the check FAIL on known-bad input - this repo's rule that a check
 which only ever passed proves nothing - which this book now provides.
+
+### F80 - medium - `per_level` is READ on a skill entry and validated on neither branch, and this settles the question F25 left open
+
+**Taken, 2026-09-13 (PR #1020), as proposed, in one PR with this filing.**
+Posture as stated: a type check, ERROR, and no behaviour change for anything
+that parsed before.
+
+**The gap.** `validateSkillEntries` in `js/parser.js` has two branches. The
+choice-group branch checks `choose`, that a `from` or `categories` list is
+non-empty, that `base` and `bonus` are not both set, and that `bonus` is a
+finite number. The named-skill branch checks the same `base`/`bonus` pair and
+warns when neither is numeric. **Neither branch looked at `per_level`** -
+`grep -n per_level js/parser.js` on 2026-09-13 returned it only in
+`validateSkillOverrides` (variants) and `skill_programs`, never in this
+function.
+
+**And it IS read.** `app.js` `resolveSkill` returns
+`per_level: explicit.per_level ?? cat.per_level ?? 0`, and the `groupPicks` map
+beside it hands each pick's resolved figure straight onto the character as
+`per_level: r.per_level`. So a value here **overrides the catalog row's own
+figure for every pick in the group**. Unvalidated, a string or a typo fell
+through to the catalog rate and a class silently advanced skills its book
+freezes - the failure is a number quietly growing on a sheet, which nothing
+reports and nobody reads as a defect.
+
+**THIS SETTLES F25's ONE UNRESOLVED DIVERGENCE.** That finding's outcome note
+says: *"the Walker's `Language: Other` choice group carries `per_level: 5` and
+the Rifter's does not. Which side is right turns on what `per_level` means on a
+choice group as opposed to a named skill, and that was not established."* It is
+established above - the group's figure wins, and an absent one falls through.
+
+**The divergence is harmless, and harmless by coincidence rather than by
+design.** `Language: Other` carries `base 50, per_level 5` in the live catalog
+(read `--remote` 2026-09-13), so the Walker's explicit `5` and the Rifter's
+fall-through produce the same number. Had the catalog row advanced at 4, or at
+0, the same two class files would have meant different things. **No correction
+is needed and none is made** - the record is that the pair agrees, not that the
+question did not matter.
+
+**Evidence and size.** 63 choice groups across 29 data scripts already carry
+the key (`grep -rlE '\{ choose: [0-9]+[^}]*per_level' apps/character-creator/db/*.sql`,
+2026-09-13). Named skills carrying it are far more numerous again. This is not
+one book's problem, though one book is what surfaced it: the six Mystic Russia
+Woodland Spirits use `per_level: 0` on every granted skill to carry *"these
+skills do not advance"*, which is the book's own wording, over catalog rows
+that otherwise would.
+
+**Proposal:** one numeric check in each branch, ERROR, matching the shape
+`bonus` already has. **Posture: refuse a non-number, change nothing about what
+a number means.** No data script is edited and no stored value moves.
+
+**Confidence: high.** Both halves were read rather than inferred - the
+validator's two branches and `resolveSkill`'s fallback chain - and the count was
+measured against the tree. What would have raised it further, and was done:
+proving the check fails on bad input before trusting it.
+
+**Ongoing cost:** two lines in a validator that already checks four other keys
+on the same entries. Effectively zero.
+
+**WHAT SHIPPED.** Both branches now refuse a non-finite `per_level`, naming the
+key in the message so a data-script author can find it. Nine smoke checks in a
+new `per_level on a skill entry` section: three rejections, four shapes that
+must still be legal (`0`, a positive number, omitting it, and combining it with
+`bonus`), and **two pins on the behaviour the validator exists to protect** -
+`resolveSkill`'s fallback chain, and the `groupPicks` map carrying the resolved
+figure onto the character. The second pin deliberately reads the CODE and not
+the comment beside it, so rewording the comment cannot fail it.
+
+**The check was proved to FAIL before it was trusted**, per this repo's rule
+that a check which has only ever passed proves nothing. A scratch script fed the
+parser a string, a null and a boolean `per_level` on a choice group and on a
+named skill; all were rejected, the message named the key, and `per_level: 0`,
+`per_level: 5`, omitting it, and pairing it with `bonus` all still parsed. Then
+`regression.mjs` rebuilt the catalog from the repo and **all 287 published
+classes still parse**, which is what says the new ERROR catches no existing row.
+
+**What this does NOT cover, so the gap is not mistaken for coverage.** It is a
+TYPE check. A per_level that is a perfectly good number and the wrong one - a 5
+where the book freezes a skill, or a 0 where it does not - is invisible to it
+and always will be, because nothing in the repo knows what the book printed.
+That is what a readback assertion in a data script is for.
