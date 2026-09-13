@@ -1597,28 +1597,53 @@ share nothing else.
 | slug | book | PDF pages | layer | printed | offset | status |
 |---|---|---|---|---|---|---|
 | `heroes-unlimited-core` | Revised Heroes Unlimited (1987) | 240 | SCAN (OCR) | 238 | **+0** | **surveyed** |
-| `powers-unlimited-1` | Powers Unlimited One (2003) | 99 | SCAN (OCR) | 95 | **+2** | **cached** |
-| `powers-unlimited-2` | Powers Unlimited Two (2004) | 98 | SCAN (OCR) | 96 | **+1** | **cached** |
-| `powers-unlimited-3` | Powers Unlimited Three (2017) | 120 | **corrupt text layer, FORCE-OCR'd** | 112 | **+1** | **cached** |
+| `powers-unlimited-1` | Powers Unlimited One (2003) | 99 | SCAN (OCR) | 95 | **+2** | **surveyed** |
+| `powers-unlimited-2` | Powers Unlimited Two (2004) | 98 | SCAN (OCR) | 96 | **+1** | **surveyed** |
+| `powers-unlimited-3` | Powers Unlimited Three (2017) | 120 | **corrupt text layer, FORCE-OCR'd** | 112 | **+1** | **surveyed** |
 
 Survey: `apps/character-creator/docs/surveys/heroes-unlimited-core.md`. It is the
 boot file for this batch and it carries the decision record.
 
-## The edition problem, which is this batch's D0 and is OPEN
+## The edition problem, which is this batch's D0 and is ANSWERED
 
 **The core book on hand is the 1987 REVISED FIRST EDITION. All three Powers
-Unlimited books are written for 2nd Edition**, by their own copyright pages. The
-structural proof that does not rest on a copyright line: PU2 lays its new power
-categories out as Step 3, Step 5 and **Step 6**, and the Revised core defines
-**five** steps and stops at Step 5.
+Unlimited books are written for 2nd Edition**, by their own copyright pages.
 
-**This does not condemn all three supplements.** PU1 and PU3 are catalogues of
-super abilities with self-contained stat blocks, and a stat block does not care
-which edition's category list may take it; PU2 is six new POWER CATEGORIES and
-is the one that cannot be ported without rewriting. The survey's edition section
-carries the evidence per book.
+**D0, answered 2026-09-13 after all three supplements were surveyed in full:
+build against the Revised core, take PU1 and PU3, EXCLUDE PU2.** The reasoning,
+the per-book measurements and what would reopen it are in
+`apps/character-creator/docs/surveys/heroes-unlimited-core.md` under *D0,
+answered*; each supplement has its own survey beside it.
 
-**Nothing is extracted until Nate answers D0.**
+The measurement it rests on - coupling to the 2nd Edition rule book, per page:
+
+| | PU1 | PU3 | **PU2** |
+|---|---|---|---|
+| pages mentioning HU2 | 6% | 16% | **45%** |
+| `page N of HU2` citations | 2 | 7 | **42** |
+| pages using P.P.E. (the Revised core: 0 of 240) | 2 | 3 | **15** |
+
+**PU2's citations are load-bearing where the others' are not.** PU1 and PU3 cite
+HU2 for reference tables whose content the Revised core carries under different
+pagination; PU2's 42 name the specific super abilities its categories GRANT, so
+a category cannot be transcribed until every ability it names is resolved.
+
+**Two things this section said before are corrected rather than quietly edited.**
+PU2 has **twelve** new power categories, not six - the count came from one
+contents page before the second was read. And PU1/PU3's portability was argued
+from "self-contained stat blocks", which is not true of them: their abilities
+are prose entries with the stat lines buried inside, and the real argument is
+the measured coupling above. **The `Step 6` proof this section led with is the
+weakest of the three arguments**, not the strongest: PU2's Steps 5 and 6 cover
+material the Revised core does carry, so it is a numbering mismatch more than a
+missing mechanic.
+
+**What the answer costs:** PU2's twelve categories are the only new character
+TYPES in the batch. An HU2 core would reopen it, which is why its cache and
+registry entry stay.
+
+**D3 now gates the batch, not D0.** 295 of the 296 new super abilities cannot be
+imported until a `super_abilities` table exists.
 
 ## What this game is, in one paragraph, because it is not the others
 

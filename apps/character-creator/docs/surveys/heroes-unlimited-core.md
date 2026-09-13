@@ -38,8 +38,9 @@ contains rather than by the edition label:
 | PU3 | same shape, printed 6-104, some entries marked Reprinted | **largely yes**, same argument |
 | PU2 | six new POWER CATEGORIES with attribute bonuses, experience ladders and equipment budgets | **no** - see the Step 6 argument above |
 
-**Decision D0 is therefore open and is not this session's to make.** See
-Decisions.
+**D0 is ANSWERED, 2026-09-13, after all three supplements were surveyed in
+full** — `powers-unlimited-1.md`, `powers-unlimited-2.md`,
+`powers-unlimited-3.md`. See *D0, answered* below.
 
 ## Page offset
 
@@ -293,12 +294,13 @@ The mapping is **not** one program to one category — see G2.
 
 ## Decisions
 
-Recorded for a green-light pass, not settled here. D1-D3 were answered by Nate
-on 2026-09-12 before the survey was written; D0 and D4-D8 are open.
+D0-D3 are answered; D4-D8 are open. D1-D3 were answered by Nate on 2026-09-12
+before the survey was written, and D0 on 2026-09-13 once all three supplements
+had been surveyed in full.
 
 | id | question | status |
 |---|---|---|
-| **D0** | **which edition** - Revised only, get an HU2 core, or adapt | **OPEN.** All four books are surveyed so this can be decided on content. See the edition section |
+| **D0** | **which edition** - Revised only, get an HU2 core, or adapt | **ANSWERED 2026-09-13** - build against the Revised core; take PU1 and PU3; EXCLUDE PU2. See *D0, answered* |
 | **D1** | how deep to integrate | **ANSWERED** - a third `system` value reusing the class chassis: Power Category in the R.C.C. slot, Educational Level in the O.C.C. slot, sub-type as the variant |
 | **D2** | campaigns or catalog first | **ANSWERED** - catalog and classes first; `campaigns.system` `CHECK` is left alone, so HU rows exist before an HU campaign can |
 | **D3** | where super abilities live | **ANSWERED** - a new `super_abilities` table with a minor/major tier column. A schema change, so NOT this session |
@@ -308,10 +310,106 @@ on 2026-09-12 before the survey was written; D0 and D4-D8 are open.
 | **D7** | the two construction systems (G7) - deliberately not imported, as `BOOK-INGEST-AUDIT` F3 decided for vessels | OPEN. Recommend the same answer, for the same reason |
 | **D8** | W.P. Ancient/Modern split (G5) - two categories, or one with a tag | OPEN |
 
+## D0, answered
+
+**Build against the Revised core. Import Powers Unlimited One and Three.
+EXCLUDE Powers Unlimited Two.** Decided 2026-09-13 after surveying all three
+supplements in full.
+
+### What the three books actually are
+
+| book | new super abilities | new psionics | new power CATEGORIES |
+|---|---|---|---|
+| PU1 | **170** (125 minor, 45 major) | **21** | 0 |
+| PU3 | **125** (46 minor, 79 major) | 0 | 0 |
+| PU2 | **2** | 0 | **12** |
+
+Each roster was read twice - the book's Contents and its own alphabetical list
+page - and the two agree exactly for PU1 and resolve to a one-entry
+explanation for PU3.
+
+### The measurement the answer rests on
+
+Coupling to the 2nd Edition rule book, counted per page over each cache:
+
+| measure | PU1 | PU3 | **PU2** | Revised core |
+|---|---|---|---|---|
+| pages mentioning HU2 | 6% | 16% | **45%** | — |
+| `page N of HU2` citations | 2 | 7 | **42** | — |
+| `Step 6` references | 0 | 0 | **5** | — |
+| pages using P.P.E. | 2 | 3 | **15** | **0 of 240** |
+| pages using S.D.C. | 61 | 63 | 63 | 108 |
+
+### Why PU1 and PU3 come in
+
+1. **They are additive, not structural.** Both are rosters of super abilities.
+   They add rows; they do not touch how a character is built.
+2. **They are S.D.C.-based, like the Revised core.** PU3 mentions M.D.C. on
+   **zero** of its 120 pages.
+3. **Their few HU2 citations point at content the Revised core HAS** under
+   different pagination: P.S. damage, lifting and carrying (HU2 p.294; Revised
+   printed 9), animal damage (HU2 p.251; Revised printed 111-123), Underwater
+   abilities (one of the Revised core's own 31 minor abilities). Nine citations
+   between the two books, each a one-time translation.
+
+### Why PU2 stays out
+
+1. **Its 42 citations are load-bearing in a way the others' are not.** They name
+   the specific super abilities its categories GRANT - Plant Control at HU2
+   p.285, Energy Expulsion at p.293, Tentacles at p.294 - so a category cannot
+   be transcribed until every ability it names is resolved against a roster this
+   catalog is still building.
+2. **Its categories are class-shaped**, and under D1 a Power Category occupies
+   the R.C.C. slot. A class is the most expensive thing in this catalog to get
+   wrong, and there is not yet a single Heroes Unlimited class to compare one to.
+3. **It assumes P.P.E.** - 6D6 for every superbeing, on 15 of its pages. The
+   Revised core uses P.P.E. on none of its 240.
+
+### What is NOT a reason, stated because it was the first reading and it was weak
+
+**The category roster is not the problem.** PU2's own Random Power Category
+Table (printed 7) lists twenty categories, and its ten unmarked rows are
+**exactly the Revised core's ten**. Mega-Hero - which the Revised core refuses
+outright in a section headed for it on printed 12 - is excluded from PU2's table
+by the book itself, as is the Crazy Hero, which the Revised core does carry.
+
+**The `Step 6` mismatch is real but narrow.** PU2's Steps 5 and 6 cover
+alignment, experience and equipment, all of which the Revised core carries in
+its own Step 5 and its per-category equipment lines. It is a numbering mismatch
+more than a missing mechanic, and it is the weakest of the three arguments
+above. It was the first evidence found and it should not be the one quoted.
+
+### What the answer costs
+
+**PU2's twelve categories are the single largest content loss in the batch**,
+and the only new character TYPES in any of the four books: Empowered, Eugenic
+Heroes, four Gestalt Superhumans, Imbued Heroes, Immortals, Personal Weapon,
+Super-Invention, Minor Heroes, Natural Genius, Supersoldier, Symbiotic
+Superhuman, Ancient Weapons Master.
+
+**What would reopen it:** an HU2 core book. PU2 becomes the most valuable of the
+three the moment one exists, which is why its cache and registry entry stay.
+
+### Sequencing this answer implies
+
+**D3 gates the ABILITIES, and nothing else.** 295 of the 296 new super
+abilities cannot be imported until `super_abilities` exists; the catalog has no
+shape for a permanent trait with a Range and a Damage and no cost and no level.
+
+**PU1's eight new psionic powers are NOT gated on it** and can ship as soon as
+this survey merges - `psionic_powers` has been there all along. They are the
+smallest complete unit in the batch and the natural first data PR.
+
+1. D3's table.
+2. The Revised core's own 69 abilities, 10 categories and 14 sub-types.
+3. PU1's 170 abilities and 8 new psionics.
+4. PU3's 125 abilities, de-duplicated against PU1 and against its own seven
+   `(Reprinted)` markers.
+
 ## Extraction plan
 
-Phase 4 costs money; everything above was free. **Nothing is extracted until D0
-is answered**, because the edition decides whether the supplements join it.
+Phase 4 costs money; everything above was free. **D0 is answered, so the scope is
+now fixed: this core book, plus PU1 and PU3. D3 is what gates the start.**
 
 Proposed order once green-lit:
 
