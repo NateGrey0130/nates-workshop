@@ -92,12 +92,12 @@ special_abilities:
       isp_base: "2d6x10 plus the M.E. attribute number, and 10 more per level of experience"
       powers: ["Bio-Regeneration (Super)"]
       powers_starting: 10
-      categories_allowed: ["Healing", "Sensitive", "Physical", "Super Psionic"]
+      categories_allowed: ["Healing", "Sensitive", "Physical", "Super"]
       powers_schedule:
-        - { level: 4, count: 1, categories: ["Super Psionic"] }
-        - { level: 7, count: 1, categories: ["Super Psionic"] }
-        - { level: 10, count: 1, categories: ["Super Psionic"] }
-        - { level: 13, count: 1, categories: ["Super Psionic"] }
+        - { level: 4, count: 1, categories: ["Super"] }
+        - { level: 7, count: 1, categories: ["Super"] }
+        - { level: 10, count: 1, categories: ["Super"] }
+        - { level: 13, count: 1, categories: ["Super"] }
     bonuses:
       saves: { disease: 2, toxins_poisons: 2, spell_magic: 1, ritual_magic: 1, curses: 1, horror_factor: 3 }
   - name: "The Gift: Master, 76-00"
@@ -106,13 +106,13 @@ special_abilities:
       type: "master"
       isp_base: "2d6x10 plus the M.E. attribute number, and 10 more per level of experience"
       powers_starting: 4
-      categories_allowed: ["Super Psionic"]
+      categories_allowed: ["Super"]
       powers_schedule:
-        - { level: 2, count: 1, categories: ["Super Psionic"] }
-        - { level: 4, count: 1, categories: ["Super Psionic"] }
-        - { level: 6, count: 1, categories: ["Super Psionic"] }
-        - { level: 9, count: 1, categories: ["Super Psionic"] }
-        - { level: 12, count: 1, categories: ["Super Psionic"] }
+        - { level: 2, count: 1, categories: ["Super"] }
+        - { level: 4, count: 1, categories: ["Super"] }
+        - { level: 6, count: 1, categories: ["Super"] }
+        - { level: 9, count: 1, categories: ["Super"] }
+        - { level: 12, count: 1, categories: ["Super"] }
     bonuses:
       saves: { disease: 4, toxins_poisons: 4, spell_magic: 1, ritual_magic: 1, curses: 2, horror_factor: 4 }
 restrictions:
