@@ -61,6 +61,10 @@ export const CORE_SDC_BY_CLASS = {
   // Printed 109-111, the same book - the Russian Fire Sorcerer. A mage, so 1D6,
   // and it states neither an S.D.C. formula nor an mdc_base like the two above.
   'russian-fire-sorcerer': '1D6',
+  // Printed 127-131, the same book - the Old Believer, a shaman-sage-sorcerer
+  // and the source of Nature Magic. Not a man of arms, so 1D6. Like the three
+  // above it states neither an S.D.C. formula nor an mdc_base.
+  'old-believer': '1D6',
   // Rifts World Book 14: New West, printed 83-92 - the O.C.C.s and NPC
   // villains section. None of the four prints an S.D.C. formula of its own.
   // The Bandit and the Highwayman each print an S.D.C. BONUS instead
