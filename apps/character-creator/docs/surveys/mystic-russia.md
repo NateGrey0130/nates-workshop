@@ -408,7 +408,7 @@ across the four traditions produced **7 links**.
 | 1 | **Bone Magic, 59 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 791 -> 850 spells. All fourteen levels, no gaps |
 | 1 | **Living Fire, 39 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 850 -> 889 spells. **7 retellings linked with `same_spell_as`** - 14 name matches, 6 rejected on mechanics |
 | 1 | **Nature Magic, 30 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 889 -> 919 spells. **Batch 1 COMPLETE: all 131 in** |
-| 2 | the O.C.C.s, **18 classes** | **STARTED** 2026-09-12. **Night Witch**, **Hidden Witch**, **Necromancer** **Born Mystic** and **Russian Fire Sorcerer** **Russian Mystic Kuznya** **Old Believer** and **Slayer** SHIPPED, each applied `--remote` before merge. **8 remain** - the roster is 18 named but three are POINTERS, not definitions: the Gypsy Witch is the Hidden Witch (already in), the Shifter/Summoner is the author saying he ran out of space, and the Russian Ley Line Walker is a declared modification of the standard one |
+| 2 | the O.C.C.s, **18 classes** | **STARTED** 2026-09-12. **Night Witch**, **Hidden Witch**, **Necromancer** **Born Mystic** and **Russian Fire Sorcerer** **Russian Mystic Kuznya** **Old Believer** **Slayer** and **Traditional Gypsy Thief (Russian)** SHIPPED, each applied `--remote` before merge. **7 remain**. **FOUR OF THE EIGHT GYPSY O.C.C.s ALREADY EXIST FROM TRIAX AND THE NGR** - Thief, Wizard-Thief, Seer and the Gifted One - so this book reprints them with changes rather than introducing them; see the id-collision note below - the roster is 18 named but three are POINTERS, not definitions: the Gypsy Witch is the Hidden Witch (already in), the Shifter/Summoner is the author saying he ran out of space, and the Russian Ley Line Walker is a declared modification of the standard one |
 | 3 | six playable creatures | not started |
 | 4 | gear, ~20 rows | not started |
 | 5 | vessels, 8 | not started |
@@ -465,6 +465,18 @@ two traditions can still hit:**
   and 24 hit points are permanently spent"* — `ppe` takes the 60 and the note
   keeps the sentence, because the hit-point half is a second cost nothing
   models. 23 of the 59 carry a schedule.
+**AN ID COLLISION INSERTS NOTHING AND SAYS NOTHING - check before emitting.**
+`gypsy-thief` already belonged to Rifts World Book 5: Triax and the NGR, and two
+things followed silently. `--emit-script gypsy-thief` wrote to
+`add-gypsy-thief-class.sql`, **which was Triax's existing file**, and overwrote
+it. Applying it `--remote` **inserted nothing**: the class INSERT is
+`INSERT ... WHERE NOT EXISTS` on class_id, which makes a re-run a no-op and an id
+collision a no-op too, with no error. **The only symptom is that the live class
+count does not move.** Four of this book's eight Gypsy O.C.C.s are already in the
+catalog from Triax; the Russian printings differ (Gypsy at 63% against 98%, two
+languages against three, plus Horsemanship: Exotic), so they land as
+`-russian` rows beside them rather than as corrections.
+
 **What the FIRST CLASS (Night Witch) established for the other seventeen:**
 
 - **This book prints skill names the catalog does not use, and the book itself
