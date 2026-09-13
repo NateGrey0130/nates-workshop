@@ -408,7 +408,7 @@ across the four traditions produced **7 links**.
 | 1 | **Bone Magic, 59 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 791 -> 850 spells. All fourteen levels, no gaps |
 | 1 | **Living Fire, 39 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 850 -> 889 spells. **7 retellings linked with `same_spell_as`** - 14 name matches, 6 rejected on mechanics |
 | 1 | **Nature Magic, 30 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 889 -> 919 spells. **Batch 1 COMPLETE: all 131 in** |
-| 2 | the O.C.C.s, **18 classes** | **STARTED** 2026-09-12. **Night Witch**, **Hidden Witch**, **Necromancer** **Born Mystic** and **Russian Fire Sorcerer** SHIPPED, each applied `--remote` before merge. **11 remain** - the roster is 18 named but three are POINTERS, not definitions: the Gypsy Witch is the Hidden Witch (already in), the Shifter/Summoner is the author saying he ran out of space, and the Russian Ley Line Walker is a declared modification of the standard one |
+| 2 | the O.C.C.s, **18 classes** | **STARTED** 2026-09-12. **Night Witch**, **Hidden Witch**, **Necromancer** **Born Mystic** and **Russian Fire Sorcerer** and **Russian Mystic Kuznya** SHIPPED, each applied `--remote` before merge. **10 remain** - the roster is 18 named but three are POINTERS, not definitions: the Gypsy Witch is the Hidden Witch (already in), the Shifter/Summoner is the author saying he ran out of space, and the Russian Ley Line Walker is a declared modification of the standard one |
 | 3 | six playable creatures | not started |
 | 4 | gear, ~20 rows | not started |
 | 5 | vessels, 8 | not started |
@@ -486,6 +486,15 @@ two traditions can still hit:**
   takes an integer, and the Night Witch gets *"2D4 wizard spells or 1D4 Bone
   Magic spells"*. That allotment is prose in `special_abilities`; writing a fixed
   number would invent a figure the page does not give.
+- **THE SURVEY'S "ZERO NEW SKILLS" READING IS WRONG, and its own caveat is what
+  caught it.** That zero was measured from the absence of a new-skills SECTION;
+  this book defines skills INSIDE A CLASS. The Mystic Kuznya carries three
+  Special O.C.C. Skills with printed percentages - `Gemology` at 50%/+5% where
+  the catalog row is 25%, plus `Metalwork and Forge` (60%/+3%) and
+  `Shape, Engrave, Etch & Emboss Metal` (70%/+3%), neither of which existed.
+  The survey carried a caveat from [[spirit-west-import]] saying to read the
+  zero as "the book defines none" and never "none will be needed". **Read the
+  class blocks for skills, not just the skills section.**
 - **All 18 Spoiling spells are granted by NAME and all 18 resolve**, which is the
   first proof that batch 1's prefixes work as a named list. Two carry an `&` and
   one an apostrophe - the exact strings matter.
