@@ -5,14 +5,19 @@
 | | | production |
 |---|---|---|
 | **146 spells** in four traditions | batch 1 | 773 → 919 |
-| **16 classes** of eighteen named | batch 2 | 265 → 281 |
+| **17 classes** of eighteen named | batch 2, plus #1022 | 265 → 281, then 288 |
 | **6 creatures** of seven tagged playable | batch 3 | 281 → 287 |
 | **53 gear rows** | batch 4 | 1408 → 1461 |
 | **7 vessels**, 100 M.D.C. locations, 28 weapon entries | batch 5 | 164 → 171 |
 
-Every data script was applied `--remote` **before** its merge. **One thing is
-deliberately left open — the Russian Ley Line Walker — and it is listed with
-everything else worth revisiting under *What remains*, below the ledger.**
+Every data script was applied `--remote` **before** its merge.
+
+**NOTHING IS OUTSTANDING as of 2026-09-13.** The one decision left open — the
+Russian Ley Line Walker — was taken as a declared copy in #1022, bringing the
+book to **17 classes** and production to 288; the Natural Abilities seam was
+taken in #1023; and five judgement calls are CLOSED, not to be re-proposed. Two
+repo bugs surfaced while taking them and shipped as #1020 and #1021. All of it
+is under *What remains*, below the ledger.
 
 **Surveyed 2026-09-12**, offline, off the cache: the sections below are what
 phases 1–3 of `book-survey` produced, with the corrections each batch turned up
@@ -440,7 +445,7 @@ across the four traditions produced **7 links**.
 | 1 | **Bone Magic, 59 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 791 -> 850 spells. All fourteen levels, no gaps |
 | 1 | **Living Fire, 39 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 850 -> 889 spells. **7 retellings linked with `same_spell_as`** - 14 name matches, 6 rejected on mechanics |
 | 1 | **Nature Magic, 30 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 889 -> 919 spells. **Batch 1 COMPLETE: all 131 in** |
-| 2 | the O.C.C.s, **18 named / 16 real** | **COMPLETE 2026-09-13.** All sixteen shipped, each applied `--remote` before merge; production went **265 -> 281** live classes. Order: Night Witch, Hidden Witch, Necromancer, Born Mystic, Russian Fire Sorcerer, Russian Mystic Kuznya, Old Believer, Slayer, and the eight Gypsy O.C.C.s. **Two of the eighteen names are POINTERS** - the Gypsy Witch IS the Hidden Witch, and the Shifter/Summoner is the author stating that time and space prevented him writing it. **The Russian Ley Line Walker is a declared MODIFICATION** of the standard class, not a definition, and is the one thing in this batch deliberately left for Nate. **FOUR OF THE EIGHT GYPSY O.C.C.s ALREADY EXISTED** from Triax and the NGR - Thief, Wizard-Thief, Seer and the Gifted One - and this book's printings DIFFER, so they landed as `-russian` rows beside them |
+| 2 | the O.C.C.s, **18 named / 16 real** | **COMPLETE 2026-09-13.** All sixteen shipped, each applied `--remote` before merge; production went **265 -> 281** live classes. Order: Night Witch, Hidden Witch, Necromancer, Born Mystic, Russian Fire Sorcerer, Russian Mystic Kuznya, Old Believer, Slayer, and the eight Gypsy O.C.C.s. **Two of the eighteen names are POINTERS** - the Gypsy Witch IS the Hidden Witch, and the Shifter/Summoner is the author stating that time and space prevented him writing it. **The Russian Ley Line Walker is a declared MODIFICATION** of the standard class rather than a definition; it was held back, then **TAKEN 2026-09-13 (#1022) as the catalog's seventeenth declared copy**, `copy_of: { class: "ley-line-walker", except: ["magic"] }`, bringing this book to **seventeen classes** and production to 288. **FOUR OF THE EIGHT GYPSY O.C.C.s ALREADY EXISTED** from Triax and the NGR - Thief, Wizard-Thief, Seer and the Gifted One - and this book's printings DIFFER, so they landed as `-russian` rows beside them |
 | 3 | six playable creatures | **COMPLETE 2026-09-13.** All six shipped, each applied `--remote` before merge; production **281 -> 287** live classes. Domovoi, Leshii and Polevoi first, then Vodianoi, Spirit Wolf and Man-Wolf. **The Rusalka is filtered by D4 and the Firebird by the book itself**, so seven tagged playable became six imported. All six are `category: rcc` and **none carries an `xp_table`** (D3; `regression.mjs` refuses one that does). **THE BOOK SEPARATES `Natural Abilities` FROM `R.C.C. Skills` AND THE IMPORT KEEPS THAT SEAM** - prowl, climb, swim and tracking percentages printed under Natural Abilities are recorded as prose and NOT granted as catalog skills; the Spirit Wolf is the exception because that entry puts Prowl in its skills line. Every granted skill carries **`per_level: 0`**, which is how the book's "these skills do not advance" is expressed, and a choice group honours it (`app.js` resolveSkill: *"Choice-group picks are stored exactly like fixed class skills, inheriting the group's base/per_level"*). **`all level one Earth Warlock spells` IS ENUMERATED, NOT GATED** - `spell_traditions_allowed` governs a level-gated PICK and these are outright grants, so the rows were read off production by name. **THE MAN-WOLF IS THE ODD ONE**: its skills DO advance ("Selected skills increase by level"), it is the only one with no magic at all, the only one with eight psionic powers, and the only one the book gives an experience ladder - which points at the Dragon Hatchling and therefore resolves here to the same default the other five take by omitting the key |
 | 4 | gear, **53 rows** | **COMPLETE 2026-09-13.** **THE SURVEY'S GEAR READING WAS WRONG AND IS CORRECTED BELOW.** The twelve **Mystic Kuznya magic items** at printed 125-126, then the **41 necromancy component prices** at printed 107; each applied `--remote` before merge, production gear **1408 -> 1461**. There is no gear on printed 159-170 at all - those pages are the vessels and their own weapon systems. **TEN OF THE 41 PRICES ARE ROLLED AND ALL TEN ARE CIPHERED** (`!D6xlOO`, `2D4xlOOO`); a dice price is not a number, so those rows carry `cost` NULL with the expression in `cost_note`. **The two wrong claims that shipped were caught by the script's own readback assertions** and corrected by `fix-mystic-russia-component-price-claims.sql`: one was a false superlative, the other a row name read through a `sed 's/[",]//g'` pipeline that ate its comma |
 | 5 | vessels, **SEVEN** | **COMPLETE 2026-09-13.** The three transports - **Thunderbolt Artillery Truck**, **Bull Dog** and **Thundersword Multi-Combat Platform** - then the three tanks - **Groundthunder**, **Hailstorm** and **Maelstrom** - then the **Gypsy Wagon**, each applied `--remote` before merge; production vehicles **164 -> 171**, with 100 M.D.C. locations and 28 weapon entries. **THE GYPSY WAGON IS THE ODD ONE**: every M.D.C. figure on it is a RANGE, it has no weapons at all (its armament is magic - a permanent Sanctum, a Circle of Protection, Circle of Travel and Watchguard) and the book prints no price. Ranges store their LOW END with the full range in `mdc_note`, the convention `gear.cost` documents. **THE COUNT HAS BEEN WRONG TWICE.** The survey said eight, counting PAGES carrying `M.D.C. by Location` rather than entries; PR #1015 then said nine, adding the Gypsy Wagon to that eight. The book has **eight such blocks and only seven are vessels** - the eighth, at cache p022 / printed 21, is the **Demon Claw**, a bestiary NPC whose main body is "P.E. number x3". `grep -c "M.D.C. by Location"` over the cache is the check, and `^Model Type:` returns exactly the six military ones. **`mdc_main_body` is NULL where a book prints more than one main body** - the column's own schema comment says it holds the main body only and that a reader wanting a total must sum the locations, so a derived total would contradict it |
@@ -451,7 +456,7 @@ across the four traditions produced **7 links**.
 decisions, judgement calls and one repo-level observation, recorded here because
 each one is invisible from the catalog alone.
 
-### One decision, and it is Nate's
+### The one decision — TAKEN 2026-09-13 as a declared copy (PR #1022)
 
 **The Russian Ley Line Walker** (printed 126, the book calls it the Russian Line
 Walker or simply the Sorcerer) is **a declared MODIFICATION of a class that
@@ -462,43 +467,83 @@ then replaces item 8, Initial Spell Knowledge, with two common Wizard spells
 from each of levels 1 to 4, plus four more from Nature or Bone Magic under 8th
 level.
 
-Three ways to take it, and none of them is obviously right:
+**It shipped as `russian-ley-line-walker`, a FULL COPY of `ley-line-walker`
+carrying `copy_of: { class: "ley-line-walker", except: ["magic"] }`.** The
+seventeenth declared copy in the catalog, and the second against this parent:
+`ley-line-rifter` already carries one for RUE printed 118's *"Same as the Ley
+Line Walker"*. Nothing in this app composes one class from another, so the copy
+is full and `copy_of` records the relationship; `regression.mjs` then holds the
+pair together on every key outside the except list, against a database rebuilt
+from the repo.
 
-1. **A `-russian` suffixed row** beside the standard Ley Line Walker, the shape the four reprinted Gypsy O.C.C.s took in batch 2 — but those DIFFER in their printed numbers, and this one differs only in a spell list.
-2. **A variant** on the existing class.
-3. **Nothing** — record it in the standard class's notes and leave it.
+**The except list was DERIVED by diffing the two parsed rows, never typed.** 12
+keys compared, exactly one differs. A stale except — one naming a key the two
+agree on — is its own defect and the sweep refuses it.
 
-**Not taken, deliberately.** The eighteenth name, the **Russian
-Shifter/Summoner** (printed 127), needs no decision: the author states that time
-and space prevented him writing it and points at the Rifts RPG page 87.
+**The two alternatives, and why neither was taken.** A **variant** is ruled out
+by the code rather than by preference: `VARIANT_OVERRIDES` in `js/parser.js`
+lists attribute dice, pools, `bonuses`, `skill_overrides`, `skills_additional`
+and `related_skills_count`, and **not `magic`** — which is the entire delta.
+**Leaving it as a note** on the standard class would have kept a playable class
+the book defines out of the catalog.
 
-### Judgement calls worth revisiting
+**The eighteenth name needs no decision.** The **Russian Shifter/Summoner**
+(printed 127) is the author saying time and space prevented him writing it, with
+a pointer to the Rifts RPG page 87.
 
-- **The Natural Abilities / R.C.C. Skills seam on the creatures.** Five of the six imported Woodland Spirits print prowl, climb, swim and tracking percentages under **Natural Abilities**, and the import keeps them there as prose rather than granting them as catalog skills. They are real skill percentages and a player would want them on the sheet. **The Spirit Wolf is the tell**: it puts Prowl in its *R.C.C. Skills* line, so Prowl IS granted there — the seam is the book's, and it is inconsistent within one bestiary.
-- **`Dowsing` is printed among the Leshii's psionics and is not a psionic power in Palladium.** Checked three ways (the live catalog's 116 psionic rows, RUE printed 306 where it is a Wilderness skill, Palladium Fantasy printed 221/229 where it is a level one Earth Warlock invocation at 2 P.P.E.). It is granted in **neither** block: moving it to `magic.spells` would move it out of the block the book put it in, and adding a psionic row would invent a power Palladium does not print.
-- **The Spirit Wolf's psionic line is word for word the Vodianoi's**, which gives a land wolf the water-moving `Hydrokinesis`. Transcribed as printed, because a plausible correction is still an invention.
-- **The Hailstorm's mini-missile launchers** are introduced as *"a pair of six shot"* and then given *"48 total; 24 per each launcher"*. Both figures are recorded and neither is chosen; it needs a GM ruling, not a reading.
-- **The Groundthunder's main gun is headed `SGT-SO`**, almost certainly SGT-50. Left as printed: a model designation has no forced reading the way a ciphered dice expression does.
-- **The Man-Wolf's Devil-Wolf** (+3D6 M.D.C., six attacks, +6 vs Horror Factor) is framed as what the worst of them become rather than as a build option, and is **not modelled**.
+### Judgement calls — the Natural Abilities seam TAKEN, the rest CLOSED
 
-### One thing about the repo, not the book
+**The Natural Abilities / R.C.C. Skills seam: TAKEN 2026-09-13 (PR #1023).**
+Five of the six imported Woodland Spirits printed prowl, climb, swim and
+tracking percentages under *Natural Abilities*, and the first import kept them
+there as prose. `natural_abilities` is **display-only**, so a Domovoi player
+character had no Prowl on their sheet despite the book printing 70%. Following
+the book exactly does not settle it either, because **the book is inconsistent**:
+the Spirit Wolf puts Prowl in its *R.C.C. Skills* line and the other five do
+not. They are now granted as catalog skills with `per_level: 0`.
 
-**`per_level` on an `occ_skills` CHOICE GROUP is read but never validated.**
-`app.js` `resolveSkill` is explicit — *"Choice-group picks are stored exactly
-like fixed class skills, inheriting the group's base/per_level"* — and
-`validateSkillEntries` in `parser.js` checks `choose`, `from`, `categories`,
-`base` and `bonus` on a choice group and **not** `per_level`. It is the key
-that carries the six creatures' "these skills do not advance", so a typo there
-would be silent. Worth a validator line.
+**CLOSED, and not to be re-proposed.** Each of these is the same shape: the book
+is wrong or ambiguous, the data records what it prints, and any "fix" would
+invent something the book does not say.
 
-**And the thing that actually caught mistakes in this batch was the readback
-assertions.** Three wrong claims shipped or nearly shipped, and all three were
-caught by a `SELECT` whose `want` came off the page: two in the necromancy
-components (a false superlative, and a row name read through a `sed 's/[",]//g'`
-pipeline that ate its comma) and one in the tanks (Close Combat counted as a
-non-Mega-Damage entry when it does 1D6x10 M.D.). A fourth — a malformed
-`INSERT`, 17 values for 16 columns — was caught by `regression.mjs` **before**
-the apply, which is the argument for running it first.
+- **`Dowsing` on the Leshii.** Printed among its psionics, and it is not a psionic power anywhere in Palladium — checked three ways: the live catalog's 116 psionic rows hold nothing of that name under any spelling; RUE printed 306 files it as a **Wilderness skill**; Palladium Fantasy printed 221 and 229 file it as a **level one Earth Warlock invocation** at 2 P.P.E. Granted in **neither** block. Moving it to `magic.spells` would move it out of the block the book put it in; adding a psionic row would invent a power Palladium does not print.
+- **`Hydrokinesis` on the Spirit Wolf.** Its psionic line is word for word the Vodianoi's, which gives a land wolf a water-moving Super psionic. Transcribed as printed: a plausible correction is still an invention.
+- **The Hailstorm's mini-missile launchers.** Introduced as *"a pair of six shot"* and then given *"48 total; 24 per each launcher"*. Both figures are recorded, neither is chosen, and a readback asserts the contradiction survives. It needs a GM ruling, not a reading.
+- **The Groundthunder's `SGT-SO`.** Almost certainly SGT-50. Left as printed: a model designation has no forced reading the way a ciphered dice expression does.
+- **The Man-Wolf's Devil-Wolf.** +3D6 M.D.C., six attacks, +6 vs Horror Factor. The book frames it as what the worst of them become rather than as a build option, so it is not modelled.
+
+### The repo finding — TAKEN as BOOK-INGEST-AUDIT F80 (PR #1020)
+
+**`per_level` on a skill entry was read at composition and validated on neither
+branch of `validateSkillEntries`.** `app.js` `resolveSkill` takes
+`explicit.per_level ?? cat.per_level ?? 0`, so a value on the entry overrides
+the catalog row's own figure for every pick — which is exactly how the six
+creatures carry *"these skills do not advance"*. 63 choice groups across 29 data
+scripts already relied on it. Both branches now refuse a non-number.
+
+**F80 also settled the one divergence `F25` left open** — *"what `per_level`
+means on a choice group ... was not established"* — and found the Walker/Rifter
+pair agrees, by coincidence rather than by design.
+
+**And taking the decision above exposed a second repo bug (PR #1021).**
+`fix-nature-glimpse-of-the-future-name.sql` sorts at 436 against 619 for the
+file that creates the row it renames, so it had been **a no-op on every clean
+rebuild** since 2026-09-12 — production right, repo wrong, silently. Nothing
+named that spell until the Russian Ley Line Walker's `russian-magic` list did.
+That is the mechanism the fix's own header describes: *"a class that cites a
+spell is a check on the spell import"*.
+
+### What actually caught mistakes in this book
+
+**The readback assertions.** Three wrong claims shipped or nearly shipped, and
+all three were caught by a `SELECT` whose `want` came off the page: two in the
+necromancy components (a false superlative, and a row name read through a
+`sed 's/[",]//g'` pipeline that ate its comma) and one in the tanks (Close
+Combat counted as a non-Mega-Damage entry when it does 1D6x10 M.D.).
+
+**And `regression.mjs`, twice, before an apply** — a malformed `INSERT` (17
+values for 16 columns) and the Glimpse divergence above. Which is the argument
+for running it first.
 
 **What batch 1 established, so the other three traditions do not re-derive it:**
 
