@@ -47,6 +47,12 @@ const CORE_HIT_POINTS = 'P.E. + 1D6 per level';
 // this table fails the smoke test rather than defaulting, because defaulting to
 // 1D6 would quietly under-roll every new man of arms.
 export const CORE_SDC_BY_CLASS = {
+  // Rifts World Book 18: Mystic Russia, printed 83-91 - the Necromancer.
+  // Not a man of arms, so 1D6 rather than 3D6. It prints no S.D.C. formula and
+  // is not a Mega-Damage being either, unlike this book's two Witch O.C.C.s,
+  // which carry an mdc_base and so need no entry here. Its +10 S.D.C. is a
+  // pool BONUS on top of this, not a replacement for it.
+  'necromancer-russian': '1D6',
   // Rifts World Book 14: New West, printed 83-92 - the O.C.C.s and NPC
   // villains section. None of the four prints an S.D.C. formula of its own.
   // The Bandit and the Highwayman each print an S.D.C. BONUS instead
