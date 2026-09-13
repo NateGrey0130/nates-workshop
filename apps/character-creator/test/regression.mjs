@@ -3138,10 +3138,23 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   check('and every linked pair still agrees with the row it retells',
     problems.length === 0, problems.slice(0, 6).join('; '));
 
-  // The four same-named pairs that are DIFFERENT spells must stay unlinked.
-  // Linking one would make the check above start failing, which is the point.
+  // The same-named pairs that are DIFFERENT spells must stay unlinked. Linking
+  // one would make the check above start failing, which is the point - this
+  // list is the belt to that braces, naming the pairs somebody has already
+  // looked at and ruled on, so a later session does not re-litigate them from
+  // the name alone. No count is quoted here: it grows every time a book lands.
+  //
+  // The Living Fire six were added 2026-09-12, and they are the case the list
+  // is for. That batch was first written with its links chosen BY NAME and this
+  // check refused the merge; the judgement belongs to
+  // scripts/same-spell-lib.mjs, which rejects six of the fourteen candidates on
+  // mechanics - a range that covers one more person, a per-level bonus the
+  // established row does not have, a saving throw on one side only.
   const mustNotLink = ['Ocean: Calm Waters', 'Ocean: Ride the Waves',
-    'Ocean: Float on Water', 'Ocean: Water Seal', 'Dolphin: Sonic Blast'];
+    'Ocean: Float on Water', 'Ocean: Water Seal', 'Dolphin: Sonic Blast',
+    'Living Fire: Cloud of Smoke', 'Living Fire: Extinguish Fire',
+    'Living Fire: Impervious to Fire', 'Living Fire: Fire Ball',
+    'Living Fire: Ballistic Fire', 'Living Fire: Fire Gout'];
   const wronglyLinked = links.filter((r) => mustNotLink.includes(r.name)).map((r) => r.name);
   check('and the pairs that only share a NAME are not linked',
     wronglyLinked.length === 0, wronglyLinked.join(', '));
