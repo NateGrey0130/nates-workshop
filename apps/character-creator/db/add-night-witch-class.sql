@@ -11,18 +11,22 @@
 -- fires against the real artifact.
 
 
--- Two skill rows this book needs, written with REAL VALUES rather than left as
--- stubs. class-check emitted both at base 0 and filed the language under
--- Communications; both are wrong against the catalog's own convention, and a
--- stub percentage is the kind of number nothing ever flags again.
+-- Two skill rows this book needs, with REAL VALUES rather than stubs.
 --
 --   Language: Russian   Technical, 50/+5 - matching Language: Other and
 --                       Language: Gypsy, and every other ordinary language.
 --   Literacy: Russian   Communications, 30/+5 - matching Literacy: Other.
 --
--- Eighteen classes in this book will reference them. The values come from the
--- convention, not from a page: this book states no skill percentages at all,
--- which is why its survey records zero new skills.
+-- WRITTEN BY HAND, AND THEY HAVE TO BE. class-check --emit-script first wrote
+-- them as stubs at base 0 with the language filed under Communications, wrong
+-- against the catalog's own convention twice over. Then, once these rows were
+-- applied --remote, RE-EMITTING THE SCRIPT DROPPED THEM ENTIRELY: the emitter
+-- lists what production LACKS at the moment it runs, so a regenerated script
+-- silently stops creating the rows it created the first time. A clean rebuild
+-- would then have no Language: Russian at all, and eighteen classes in this
+-- book reference it. The values come from the convention, not from a page -
+-- this book states no skill percentages, which is why its survey records zero
+-- new skills.
 INSERT OR IGNORE INTO skills (name, category, base, per_level, source, source_book) VALUES ('Language: Russian', 'Technical', 50, 5, 'import', 'Rifts World Book 18: Mystic Russia p.73-78');
 INSERT OR IGNORE INTO skills (name, category, base, per_level, source, source_book) VALUES ('Literacy: Russian', 'Communications', 30, 5, 'import', 'Rifts World Book 18: Mystic Russia p.73-78');
 
@@ -47,7 +51,7 @@ skills:
     - { name: "Mathematics: Basic", bonus: 20, note: "The book prints ''Basic Math (+20%)''. The catalog renamed that row to Mathematics: Basic and keeps a redirect, so the book''s spelling would still resolve as a GRANT - but only as a grant. The current name is stored so the string stays live if it is ever used in an only/except, where redirects are skipped and a stale name fails silently." }
     - { name: "Language: Russian", base: 98, per_level: 0, note: "Speaks Russian at 98%" }
     - { name: "Language: Euro", bonus: 20, note: "Speaks Euro (+20%)" }
-    - { choose: 2, categories: ["Technical"], only: ["Language: Other"], bonus: 20, note: "Two other languages of choice (+20%)" }
+    - { choose: 2, from: ["Language: Other"], bonus: 20, note: "Two other languages of choice (+20%)" }
     - { name: "Literacy: Russian", bonus: 10, note: "Literacy: Russian (+10%)" }
     - { name: "Lore: Demons & Monsters", bonus: 20, note: "Lore: Demons & Monsters (+20%)" }
     - { choose: 2, categories: ["Technical"], only: ["Lore: Demons & Monsters", "Lore: Faeries & Creatures of Magic", "Lore: Magic", "Lore: Religion"], bonus: 10, note: "Lore: two of choice (+10%)" }
