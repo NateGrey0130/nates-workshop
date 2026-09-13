@@ -1596,10 +1596,10 @@ share nothing else.
 
 | slug | book | PDF pages | layer | printed | offset | status |
 |---|---|---|---|---|---|---|
-| `heroes-unlimited-core` | Revised Heroes Unlimited (1987) | 240 | SCAN (OCR) | 238 | **+0** | **surveyed** |
-| `powers-unlimited-1` | Powers Unlimited One (2003) | 99 | SCAN (OCR) | 95 | **+2** | **surveyed** |
+| `heroes-unlimited-core` | Revised Heroes Unlimited (1987) | 240 | SCAN (OCR) | 238 | **+0** | **imported** (abilities) |
+| `powers-unlimited-1` | Powers Unlimited One (2003) | 99 | SCAN (OCR) | 95 | **+2** | **imported** (abilities + psionics) |
 | `powers-unlimited-2` | Powers Unlimited Two (2004) | 98 | SCAN (OCR) | 96 | **+1** | **surveyed** |
-| `powers-unlimited-3` | Powers Unlimited Three (2017) | 120 | **corrupt text layer, FORCE-OCR'd** | 112 | **+1** | **surveyed** |
+| `powers-unlimited-3` | Powers Unlimited Three (2017) | 120 | **corrupt text layer, FORCE-OCR'd** | 112 | **+1** | **imported** (abilities) |
 
 Survey: `apps/character-creator/docs/surveys/heroes-unlimited-core.md`. It is the
 boot file for this batch and it carries the decision record.
@@ -1642,8 +1642,32 @@ missing mechanic.
 TYPES in the batch. An HU2 core would reopen it, which is why its cache and
 registry entry stay.
 
-**D3 now gates the batch, not D0.** 295 of the 296 new super abilities cannot be
-imported until a `super_abilities` table exists.
+**NOTHING GATES THE BATCH NOW.** `super_abilities` was created by migration 057,
+wired into `js/catalog-fields.js`, and holds **364 rows** - the Revised core's 69,
+Powers Unlimited One's 170 and Powers Unlimited Three's 125 - which is exactly the
+total this survey predicted was waiting on it. **All eight decisions D0-D8 are
+answered.**
+
+## What is imported, and what is deliberately not
+
+**Imported:** 364 super abilities (69 core, 170 PU1, 125 PU3) and 8 new psionic
+powers from PU1. `super_abilities` is a catalog in `js/catalog-fields.js`, so
+the editor, the write endpoints and the importers all read it.
+
+**Deliberately not imported, each with a decision behind it:**
+
+- **Powers Unlimited Two entirely** - D0. Twelve power categories bound to 2nd
+  Edition by 42 citations naming the abilities they grant.
+- **The robot and super-vehicle builders** - D7, on `BOOK-INGEST-AUDIT` F3's
+  reasoning: the catalog has no builder and `gear` holds one `mdc`.
+- **PU3's replacement random tables** - they roll on HU2's category roster.
+- **The GM material and insanity tables.**
+
+**Still to do, and neither is blocked:** the core book's spells (about twelve
+new rows, five of which are general invocations this catalog has only ever held
+in Warlock form - see D4) and the ten Power Categories as classes, which needs
+D1's slot mapping built. `campaigns.system` is still two values, so a Heroes
+Unlimited CAMPAIGN cannot be created yet - that was D2.
 
 ## What this game is, in one paragraph, because it is not the others
 

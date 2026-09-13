@@ -304,11 +304,11 @@ had been surveyed in full.
 | **D1** | how deep to integrate | **ANSWERED** - a third `system` value reusing the class chassis: Power Category in the R.C.C. slot, Educational Level in the O.C.C. slot, sub-type as the variant |
 | **D2** | campaigns or catalog first | **ANSWERED** - catalog and classes first; `campaigns.system` `CHECK` is left alone, so HU rows exist before an HU campaign can |
 | **D3** | where super abilities live | **ANSWERED** - a new `super_abilities` table with a minor/major tier column. A schema change, so NOT this session |
-| **D4** | the 6 unsafe alias matches above - rename, new row, or `same_spell_as` | OPEN. Affects ~6 rows |
-| **D5** | spells-per-day and the 2/3 pick cost (G9) - model, or record in `extraction_notes` | OPEN |
-| **D6** | the offensive-spell asterisk - a tag, or dropped | OPEN. Recommend dropped; nothing reads it |
-| **D7** | the two construction systems (G7) - deliberately not imported, as `BOOK-INGEST-AUDIT` F3 decided for vessels | OPEN. Recommend the same answer, for the same reason |
-| **D8** | W.P. Ancient/Modern split (G5) - two categories, or one with a tag | OPEN |
+| **D4** | the 6 unsafe alias matches above - rename, new row, or `same_spell_as` | **ANSWERED 2026-09-13.** Five are the SAME row under a different spelling; five more are NEW general rows the catalog holds only in tradition form. See *D4-D8, answered* |
+| **D5** | spells-per-day and the 2/3 pick cost (G9) - model, or record in `extraction_notes` | **ANSWERED** - recorded, not modelled |
+| **D6** | the offensive-spell asterisk - a tag, or dropped | **ANSWERED** - dropped |
+| **D7** | the two construction systems (G7) - deliberately not imported, as `BOOK-INGEST-AUDIT` F3 decided for vessels | **ANSWERED** - not imported |
+| **D8** | W.P. Ancient/Modern split (G5) - two categories, or one with a tag | **ANSWERED** - one category; the split is a PROGRAM's named list |
 
 ## D0, answered
 
@@ -405,6 +405,87 @@ smallest complete unit in the batch and the natural first data PR.
 3. PU1's 170 abilities and 8 new psionics.
 4. PU3's 125 abilities, de-duplicated against PU1 and against its own seven
    `(Reprinted)` markers.
+
+## D4-D8, answered
+
+Decided 2026-09-13, after the super-ability import closed out D0's scope.
+
+### D4 - the unsafe alias matches
+
+`catalog-diff`'s alias bucket was wrong on six of seven entries for this book,
+so every one was resolved against production by hand. They split two ways, and
+the split is the answer:
+
+**Five are the SAME row the catalog already holds**, under a spelling
+difference. No new row; the importer cites the existing one.
+
+| the book prints | the catalog holds |
+|---|---|
+| `Invisibility (self)` | **`Invisibility: Simple`** L3/6 - NOT `Invisibility (Superior)` L7/20, which is what the matcher chose |
+| `Dispel Magic Barrier` | `Dispel Magic Barriers` |
+| `Breath Without Air` | `Breathe Without Air` L3/5 |
+| `Sword to Snakes` | `Swords to Snakes` L9/50 |
+| `Expel Devils/Demons` | `Expel Demons` L8/35 |
+
+**Five more are NEW general rows**, and this is the substantive half. For each of
+these the catalog holds ONLY a tradition-namespaced row - a Warlock spell, which
+is a separate and cheaper row, not the general invocation:
+
+| the book prints | all the catalog has | so |
+|---|---|---|
+| `Levitate (self or others)` | `Air: Levitate` L2/7 | no general `Levitate` exists |
+| `Mesmerism` | `Air: Mesmerism` L2/7 | no general `Mesmerism` exists |
+| `Wall of Flame` | `Fire: Wall of Flame` L3/15 | no general `Wall of Flame` exists |
+| `Spontaneous Combustion` | `Fire: Spontaneous Combustion` L2/5 | none general |
+| `Swirling Lights` | `Fire: Swirling Lights` L2/8 | none general |
+
+**So the Heroes Unlimited spell import ADDS five general spells this catalog has
+only ever held in Warlock form.** That is worth knowing independently of this
+book: a Rifts Ley Line Walker cannot reach `Wall of Flame` today either.
+
+`same_spell_as` is NOT the mechanism for the second group. It links two
+retellings of one spell; a general invocation and its tradition counterpart are
+different rows with different levels and costs, which is exactly why the
+tradition namespace exists.
+
+### D5 - spells per day, and the 2/3 pick cost
+
+**Recorded, not modelled.** Printed 96's footnote makes a powerful spell count
+as two or three of a character's spell SELECTIONS, and printed 92-95 give
+capacity as spells PER DAY rather than as a P.P.E. pool - the Revised core uses
+P.P.E. on none of its 240 pages.
+
+Neither has a column, and inventing one now would be a schema change in service
+of a class import that has not happened. The facts go in the class's own prose
+when the Magic category is imported. Revisit if and when a Heroes Unlimited
+caster is actually built.
+
+### D6 - the offensive-spell asterisk
+
+**Dropped.** Printed 96 marks some spells as strictly offensive. Nothing in the
+catalog or the wizard reads such a tag, no class restriction depends on it, and
+a column written once and read never is the shape `claim-audit` keeps finding.
+
+### D7 - the robot and super-vehicle construction systems
+
+**Not imported**, on the same reasoning `BOOK-INGEST-AUDIT` F3 used for Phase
+World's vessels. Both are point-budget BUILDERS - robots at printed 141-152,
+super-vehicles at 80-87 - and the catalog has no builder of any kind; `gear`
+holds one `mdc`, one `damage`, one `range`. Importing the parts lists without
+the budget rules would produce rows nothing can assemble.
+
+### D8 - the W.P. Ancient/Modern split
+
+**One category, as today.** The catalog holds 38 rows under a single
+`Weapon Proficiencies`, and Heroes Unlimited's split is not a property of a
+weapon proficiency - it is which ones a PROGRAM may draw from: printed 28 gives
+a `W.P. Ancient Weapons Program` and a `W.P. Modern Weapons Program`, each
+"select three".
+
+That is a named list on the program, which `skill_programs` can already express,
+and it is the same shape as a class's `spell_traditions_allowed`. Splitting the
+category would change 38 existing rows to model a restriction that belongs one
+level up.
 
 ## Extraction plan
 
