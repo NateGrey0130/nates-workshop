@@ -237,6 +237,21 @@ export function validateSkillEntries(where, entries, errors, warnings) {
       if (s.bonus !== undefined && (typeof s.bonus !== 'number' || !Number.isFinite(s.bonus))) {
         errors.push(`${where} choice-group bonus must be a number`);
       }
+      // `per_level` IS READ on a choice group and was the one key here nothing
+      // checked. `resolveSkill` in app.js takes `explicit.per_level ??
+      // cat.per_level ?? 0`, so a number here OVERRIDES the catalog row's own
+      // figure for every pick in the group - which is how a class says "these
+      // skills do not advance" over rows that otherwise would.
+      //
+      // Unvalidated, a string or a typo fell through to the catalog rate and
+      // the class silently advanced skills its book freezes. 63 choice groups
+      // across 29 data scripts carry the key (measured 2026-09-13), so this is
+      // not one book's problem. BOOK-INGEST-AUDIT.md F80, which also settles
+      // the question F25's note left open.
+      if (s.per_level !== undefined
+          && (typeof s.per_level !== 'number' || !Number.isFinite(s.per_level))) {
+        errors.push(`${where} choice-group per_level must be a number`);
+      }
     } else if (!s.name) {
       errors.push(`${where} entries need a name (or choose/from for a choice-group)`);
     } else {
@@ -259,6 +274,15 @@ export function validateSkillEntries(where, entries, errors, warnings) {
         warnings.push(`${where} "${s.name}" has no numeric base % or bonus`);
       } else if (s.base !== undefined && typeof s.base !== 'number') {
         warnings.push(`${where} "${s.name}" has no numeric base %`);
+      }
+      // Outside the chain above, because `per_level` is independent of which of
+      // base/bonus the entry uses - and it was unchecked on a NAMED skill for
+      // the same reason it was unchecked on a choice group: nothing read the
+      // two halves of this function looking for the same key twice.
+      // BOOK-INGEST-AUDIT.md F80.
+      if (s.per_level !== undefined
+          && (typeof s.per_level !== 'number' || !Number.isFinite(s.per_level))) {
+        errors.push(`${where} "${s.name}" per_level must be a number`);
       }
     }
   }

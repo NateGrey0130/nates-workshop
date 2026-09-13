@@ -3686,6 +3686,60 @@ section('Skill programs');
   })());
 }
 
+// ---------- 1c25a0. `per_level` is READ on a choice group ----------
+// BOOK-INGEST-AUDIT.md F80, which also settles the question F25's outcome note
+// left open: "which side is right turns on what `per_level` means on a CHOICE
+// group as opposed to a named skill, and that was not established".
+//
+// It is established here. `resolveSkill` takes `explicit.per_level ??
+// cat.per_level ?? 0`, so a number on the GROUP overrides the catalog row's own
+// figure for every pick in it. That is how a class says "these skills do not
+// advance" over rows that otherwise would - the six Mystic Russia creatures
+// rely on it - and it was the one key in this validator nothing checked, on
+// either the choice-group or the named branch.
+section('per_level on a skill entry');
+{
+  const entry = (e) => parseClassMarkdown(
+    `---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: rcc\nskills:\n`
+    + `  occ_skills:\n    - ${e}\n---\n\n## Lore\n\nx\n`);
+
+  check('a non-numeric per_level on a CHOICE GROUP is rejected',
+    !entry('{ choose: 2, categories: ["Rogue"], per_level: "five" }').ok);
+  check('and the message names the key, or an author cannot find it',
+    entry('{ choose: 2, categories: ["Rogue"], per_level: "five" }')
+      .errors.join(' ').includes('per_level'));
+  check('a non-numeric per_level on a NAMED skill is rejected too',
+    !entry('{ name: "Prowl", base: 70, per_level: "none" }').ok);
+
+  // The legal shapes, because a type check that also refuses valid data is
+  // worse than no type check. `per_level: 0` is the whole point of the key.
+  check('per_level: 0 still parses', entry('{ choose: 2, categories: ["Rogue"], per_level: 0 }').ok);
+  check('and survives into the parsed data', (() => {
+    const g = entry('{ choose: 2, categories: ["Rogue"], per_level: 0 }').data.skills.occ_skills[0];
+    return g.per_level === 0;
+  })());
+  check('a positive per_level still parses',
+    entry('{ choose: 2, from: ["Language: Other"], bonus: 20, per_level: 5 }').ok);
+  check('and omitting it is still legal - it falls through to the catalog row',
+    entry('{ choose: 2, categories: ["Rogue"] }').ok);
+
+  // THE PIN. A validator outlives the behaviour it protects unless something
+  // says the behaviour is still there. If resolveSkill stops reading the
+  // group's own figure, `per_level: 0` silently starts meaning nothing.
+  check('resolveSkill still prefers the entry\'s per_level over the catalog row\'s', (() => {
+    const src = readFileSync(join(appDir, 'app.js'), 'utf8');
+    return /per_level:\s*explicit\.per_level\s*\?\?\s*cat\.per_level\s*\?\?\s*0/.test(src);
+  })());
+  // Pins the CODE rather than the comment beside it: a comment can be reworded
+  // without changing anything, which would fail this for no reason. The group's
+  // entry is what `resolveSkill` is handed, and its per_level is what the pick
+  // carries onto the character.
+  check('and a choice-group pick carries the resolved per_level onto the character', (() => {
+    const src = readFileSync(join(appDir, 'app.js'), 'utf8');
+    return /const r = resolveSkill\(name, s\);[\s\S]{0,200}?per_level: r\.per_level/.test(src);
+  })());
+}
+
 // ---------- 1c25a1. An attribute-derived skill base ----------
 // BOOK-INGEST-AUDIT.md F2. Phase World states Zero Gravity Movement & Combat as
 // "the P.P. attribute number x5%, plus 4% per level". `per_level` held the 4;
