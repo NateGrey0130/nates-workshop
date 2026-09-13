@@ -10046,7 +10046,7 @@ for a system branch that does not name either value.
 in five `options:` arrays. Real, and the alternative is that this catalog holds
 one game family.
 
-**Taken, 2026-09-12 (PR #PRNUM) — and NOT as Option A. Nate chose the route he
+**Taken, 2026-09-12 (PR #996) — and NOT as Option A. Nate chose the route he
 had already recorded, and this finding did not know it existed.**
 
 **Posture as shipped:** catalog and classes only. **No migration, no table

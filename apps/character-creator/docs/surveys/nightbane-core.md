@@ -401,7 +401,7 @@ answered in this survey and none should be assumed by a later session.
 ten vocabulary sites, as one PR or several, and whether it ships before any
 Nightbane data at all. Nothing else in the book can be imported first.
 
-**DECIDED 2026-09-12 (PR #PRNUM), and the question as written above is wrong in
+**DECIDED 2026-09-12 (PR #996), and the question as written above is wrong in
 two places.** Nate had already answered it for the Heroes Unlimited batch the
 same day: catalog and classes first, the `campaigns.system` CHECK left alone.
 **So there is no migration** — `VALID_SYSTEMS`, the coercion allowlist, three of
