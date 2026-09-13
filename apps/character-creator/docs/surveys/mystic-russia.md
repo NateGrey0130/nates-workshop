@@ -371,9 +371,16 @@ and a class citing a spell the catalog does not hold fails its check.
 
 ## Ledger
 
-**BATCH 1 IS COMPLETE.** All **131** new spells are in production across four
-traditions — Spoiling 18, Bone 59, Living Fire 39, Nature 30 — and the catalog
-went **773 -> 919**. The book stays at **`surveyed`** because the queue's status
+**BATCH 1 IS COMPLETE.** **146 rows** are in production across four traditions —
+Spoiling 18, Bone 59, Living Fire 39, Nature 30 — and the catalog went
+**773 -> 919**. **Two counts, and they are not the same one:** 146 is what this
+book prints, **131** is how many of those names the catalog did not already
+hold, and the remaining **15 share a name** with an existing row. All 146 are
+stored, because under D1 a tradition gets its own row at its own level and cost
+even when the name exists — that is what the namespace is for, and 7 of the 15
+carry `same_spell_as` while 8 are different spells that happen to share a name.
+
+The book stays at **`surveyed`** because the queue's status
 vocabulary has no partial state, and calling it `imported` with one batch of
 five in would be the worse lie.
 
