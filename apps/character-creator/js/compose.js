@@ -65,6 +65,11 @@ export const CORE_SDC_BY_CLASS = {
   // and the source of Nature Magic. Not a man of arms, so 1D6. Like the three
   // above it states neither an S.D.C. formula nor an mdc_base.
   'old-believer': '1D6',
+  // Printed 155-157, the same book - the Gypsy Enforcer, and the SECOND of the
+  // two men-of-arms in Mystic Russia after the Slayer, so 3D6. A bodyguard with
+  // Boxing, Hand to Hand: Expert, four weapon proficiencies and a three-skill
+  // Military floor. Its +3D6 S.D.C. is a pool bonus on top of this.
+  'gypsy-enforcer': '3D6',
   // Printed 152-154, the same book - the Layer of Laws, a Gypsy Elder. Not a
   // man of arms, so 1D6 - and the book reduces its P.S., P.P., P.B. and Spd by
   // 20% for old age besides.
