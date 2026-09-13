@@ -69,6 +69,10 @@ export const CORE_SDC_BY_CLASS = {
   // thief is not a man of arms, so 1D6. The id carries a suffix because
   // `gypsy-thief` belongs to Triax and the NGR; the two printings differ.
   'gypsy-thief-russian': '1D6',
+  // Printed 146-149, the same book - the Traditional Gypsy Seer (Russian), a
+  // master psionic who also casts. Not a man of arms, so 1D6. Suffixed because
+  // `gypsy-seer` belongs to Triax.
+  'gypsy-seer-russian': '1D6',
   // Printed 145-147, the same book - the Traditional Gypsy Wizard-Thief
   // (Russian). A burglar who casts; not a man of arms, so 1D6. Suffixed for
   // the same reason as the Thief above: `gypsy-wizard-thief` belongs to Triax.
