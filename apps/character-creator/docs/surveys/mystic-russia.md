@@ -270,13 +270,30 @@ false gaps out of 131; **there are none.** Do not re-spend this check.
   survey said before one of its classes turned out to grant `W.P. Tomahawk`** —
   so treat it as "the book defines none", never as "none will be needed".
 - **Psionics: zero.** No `I.S.P.` stat line anywhere in 178 pages.
-- **Gear: priced entries on printed 159–170**, inside the vehicles chapter, plus
-  the bio-wizardry price list at printed 107 — which is one of the pages the
-  digit substitution eats.
-- **Vessels: printed 159–171**, Sovietski military, eight pages carrying
-  `M.D.C. by Location`. A Steeds table at printed 142 lists Burkov Mastodon,
-  bionic horses, Hell Horses and Serpent Hounds — **not yet classified** as
-  vessels, creatures or gear.
+- **Gear — this bullet was WRONG in two ways and was corrected 2026-09-13 while
+  batch 4 was being extracted. Do not carry the old reading:**
+  - It said *"priced entries on printed 159–170, inside the vehicles chapter"*.
+    **There is no gear on those pages.** Every price there is a vessel's
+    `Sovietski Cost`, and every `Weapon Systems` block belongs to the vessel
+    above it — the same shape Triax, Free Quebec and Spirit West all import
+    inside the vessel row rather than beside it.
+  - It called printed 107 a **bio-wizardry** price list. It is a **necromancy
+    component** list: 41 body parts a Necromancer buys, priced in Rifts
+    credits. The digit substitution does eat it — `!D6xlOO`, `2D4xlOOO`,
+    `!D4xlOO` — which is the one thing that bullet had right.
+  - **The book's real gear is the twelve named magic items of the Mystic
+    Kuznya at printed 125-126**, which no earlier pass had counted: five
+    *Notable Lesser Magic Items*, then seven *Greater Magical Metal Items*.
+    The enchantments beside them on printed 124-125 — Indestructible, Flaming
+    Weapon, Silent Armor, Fast Forge, the per-metal bonuses — are **not** gear:
+    they are things the class does to an item that already exists.
+  - So the total is **53 rows, not ~20**.
+- **Vessels: printed 159–171**, Sovietski military, eight entries carrying
+  `M.D.C. by Location` — **plus a ninth at printed 142**. The thing the survey
+  called *"a Steeds table at printed 142"* is the **Gypsy Wagon**: the steeds
+  are one line of percentages inside it, and the entry itself has
+  `M.D.C. by Location`, Speed, Size, Width, Height and Cargo. **It is a
+  vessel**, and that is what the "not yet classified" note resolves to.
 
 ## Decisions settled with Nate, 2026-09-12
 
@@ -410,8 +427,8 @@ across the four traditions produced **7 links**.
 | 1 | **Nature Magic, 30 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 889 -> 919 spells. **Batch 1 COMPLETE: all 131 in** |
 | 2 | the O.C.C.s, **18 named / 16 real** | **COMPLETE 2026-09-13.** All sixteen shipped, each applied `--remote` before merge; production went **265 -> 281** live classes. Order: Night Witch, Hidden Witch, Necromancer, Born Mystic, Russian Fire Sorcerer, Russian Mystic Kuznya, Old Believer, Slayer, and the eight Gypsy O.C.C.s. **Two of the eighteen names are POINTERS** - the Gypsy Witch IS the Hidden Witch, and the Shifter/Summoner is the author stating that time and space prevented him writing it. **The Russian Ley Line Walker is a declared MODIFICATION** of the standard class, not a definition, and is the one thing in this batch deliberately left for Nate. **FOUR OF THE EIGHT GYPSY O.C.C.s ALREADY EXISTED** from Triax and the NGR - Thief, Wizard-Thief, Seer and the Gifted One - and this book's printings DIFFER, so they landed as `-russian` rows beside them |
 | 3 | six playable creatures | **COMPLETE 2026-09-13.** All six shipped, each applied `--remote` before merge; production **281 -> 287** live classes. Domovoi, Leshii and Polevoi first, then Vodianoi, Spirit Wolf and Man-Wolf. **The Rusalka is filtered by D4 and the Firebird by the book itself**, so seven tagged playable became six imported. All six are `category: rcc` and **none carries an `xp_table`** (D3; `regression.mjs` refuses one that does). **THE BOOK SEPARATES `Natural Abilities` FROM `R.C.C. Skills` AND THE IMPORT KEEPS THAT SEAM** - prowl, climb, swim and tracking percentages printed under Natural Abilities are recorded as prose and NOT granted as catalog skills; the Spirit Wolf is the exception because that entry puts Prowl in its skills line. Every granted skill carries **`per_level: 0`**, which is how the book's "these skills do not advance" is expressed, and a choice group honours it (`app.js` resolveSkill: *"Choice-group picks are stored exactly like fixed class skills, inheriting the group's base/per_level"*). **`all level one Earth Warlock spells` IS ENUMERATED, NOT GATED** - `spell_traditions_allowed` governs a level-gated PICK and these are outright grants, so the rows were read off production by name. **THE MAN-WOLF IS THE ODD ONE**: its skills DO advance ("Selected skills increase by level"), it is the only one with no magic at all, the only one with eight psionic powers, and the only one the book gives an experience ladder - which points at the Dragon Hatchling and therefore resolves here to the same default the other five take by omitting the key |
-| 4 | gear, ~20 rows | not started |
-| 5 | vessels, 8 | not started |
+| 4 | gear | **STARTED** 2026-09-13. **THE SURVEY'S GEAR READING WAS WRONG AND IS CORRECTED BELOW.** The twelve **Mystic Kuznya magic items** at printed 125-126 SHIPPED, applied `--remote` before merge; production gear **1408 -> 1420**. **Remaining: the 41 necromancy component prices at printed 107.** There is no gear on printed 159-170 at all - those pages are the vessels and their own weapon systems |
+| 5 | vessels, 8 | not started. **NINE, not eight**: the Gypsy Wagon at printed 142 carries its own `M.D.C. by Location` and is a vessel |
 
 **What batch 1 established, so the other three traditions do not re-derive it:**
 
