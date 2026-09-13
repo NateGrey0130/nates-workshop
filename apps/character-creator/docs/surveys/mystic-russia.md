@@ -408,7 +408,7 @@ across the four traditions produced **7 links**.
 | 1 | **Bone Magic, 59 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 791 -> 850 spells. All fourteen levels, no gaps |
 | 1 | **Living Fire, 39 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 850 -> 889 spells. **7 retellings linked with `same_spell_as`** - 14 name matches, 6 rejected on mechanics |
 | 1 | **Nature Magic, 30 spells** | **SHIPPED** 2026-09-12, applied `--remote` before merge. Production 889 -> 919 spells. **Batch 1 COMPLETE: all 131 in** |
-| 2 | the O.C.C.s, **18 classes** | **STARTED** 2026-09-12. **Night Witch**, **Hidden Witch**, **Necromancer** **Born Mystic** and **Russian Fire Sorcerer** **Russian Mystic Kuznya** **Old Believer** **Slayer** **Traditional Gypsy Thief (Russian)** **Gypsy Wizard-Thief (Russian)** and **Gypsy Seer (Russian)** SHIPPED, each applied `--remote` before merge. **5 remain**. **FOUR OF THE EIGHT GYPSY O.C.C.s ALREADY EXIST FROM TRIAX AND THE NGR** - Thief, Wizard-Thief, Seer and the Gifted One - so this book reprints them with changes rather than introducing them; see the id-collision note below - the roster is 18 named but three are POINTERS, not definitions: the Gypsy Witch is the Hidden Witch (already in), the Shifter/Summoner is the author saying he ran out of space, and the Russian Ley Line Walker is a declared modification of the standard one |
+| 2 | the O.C.C.s, **18 classes** | **STARTED** 2026-09-12. **Night Witch**, **Hidden Witch**, **Necromancer** **Born Mystic** and **Russian Fire Sorcerer** **Russian Mystic Kuznya** **Old Believer** **Slayer** **Traditional Gypsy Thief (Russian)** **Gypsy Wizard-Thief (Russian)** **Gypsy Seer (Russian)** and **Gypsy Fortune Teller** SHIPPED, each applied `--remote` before merge. **4 remain**. **FOUR OF THE EIGHT GYPSY O.C.C.s ALREADY EXIST FROM TRIAX AND THE NGR** - Thief, Wizard-Thief, Seer and the Gifted One - so this book reprints them with changes rather than introducing them; see the id-collision note below - the roster is 18 named but three are POINTERS, not definitions: the Gypsy Witch is the Hidden Witch (already in), the Shifter/Summoner is the author saying he ran out of space, and the Russian Ley Line Walker is a declared modification of the standard one |
 | 3 | six playable creatures | not started |
 | 4 | gear, ~20 rows | not started |
 | 5 | vessels, 8 | not started |
@@ -465,6 +465,18 @@ two traditions can still hit:**
   and 24 hit points are permanently spent"* — `ppe` takes the 60 and the note
   keeps the sentence, because the hit-point half is a second cost nothing
   models. 23 of the 59 carry a schedule.
+**THE BOOK HAS ITS OWN SPELL INDEX AT PRINTED 6-7, and batch 1 did not use it.**
+It lists every spell as `Name (cost) . . . page`, grouped by tradition and level -
+the authority table `book-survey` §2 says to find. Auditing the 146 imported
+rows against it found **one real error**: `Glimpse of the Future` shipped under
+its SUBTITLE, `A Wood & Water Divination`, because printed 132 sets the name
+above the subtitle above `Range:` and the reader walks back to the NEAREST
+line. Corrected in PR #1007. It also showed **four Nature spells the reader
+could never see** - `Speed of the Snail`, `Summon Fog`, `Calm Storms`,
+`Summon Rain` - which are ONE-LINE CROSS-REFERENCES with no stat block at all
+(*"Identical to the spell found on page 186 of Rifts"*). Three already exist
+here at exactly the stated level and cost; none needs a row. **Use the index.**
+
 **AN ID COLLISION INSERTS NOTHING AND SAYS NOTHING - check before emitting.**
 `gypsy-thief` already belonged to Rifts World Book 5: Triax and the NGR, and two
 things followed silently. `--emit-script gypsy-thief` wrote to
