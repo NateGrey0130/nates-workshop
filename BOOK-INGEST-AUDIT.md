@@ -9957,3 +9957,291 @@ found by the grant's identity or it is not found at all.
 
 **Tests:** fourteen pins, **ten of them failing against the files as they
 were**. Smoke 1978 -> **1986**, regression **385** unchanged.
+
+---
+
+## Nightbane, 2026-09-12 — F73-F78
+
+Six gaps from surveying the Nightbane core book, filed per `book-survey` §8 and
+taken by nobody. **F73 blocks the other five**: until a third system exists, no
+Nightbane row can be written at all, so F74-F78 cannot be reached even by a
+session that wants them. The survey is
+`apps/character-creator/docs/surveys/nightbane-core.md` and carries the
+measurements each of these quotes.
+
+### F73 - high - `system` is a two-value enum in three CHECK constraints and in the parser, so a book from a THIRD Palladium game cannot be cited by any catalog row
+
+**Found 2026-09-12** while surveying `nightbane-core`, the first book cached
+here that is neither Rifts nor Palladium Fantasy.
+
+**The code, all read on this branch 2026-09-12.**
+`apps/character-creator/js/parser.js:15` is
+`const VALID_SYSTEMS = ['rifts', 'palladium-fantasy'];`, and three tables carry
+a CHECK constraint naming the same two values: `db/schema.sql:179`
+(`campaigns.system`, `NOT NULL`), `:467` (`gear.system`) and `:575`
+(`vehicles.system`), the last two also admitting `'both'`.
+
+**Three catalog tables are already free text and need nothing.**
+`skills.systems` is a JSON array (`db/schema.sql:764`), `spells.system`
+(`:790`) and `psionic_powers.system` (`:837`) are bare `TEXT` with a comment
+naming the two values and no constraint behind it. A third value lands in those
+three the day it is written.
+
+**So the blocking half is small and the vocabulary half is wide.** The
+vocabulary sites, each read 2026-09-12:
+`apps/character-creator/app.js:710` (`SYSTEM_LABEL`) and `:951` (the system
+picker button), `catalog.js:130` (the filter boxes), `codex.js:136` (the label),
+`:168` (the currency unit) and `:335` (the select), `js/catalog-fields.js:78`,
+`:112`, `:158`, `:174`, `:240` (five `options:` arrays) and `:348` (an `allowed`
+list), `js/class-template.js:27`, `js/rules.js:64`, `sheet.js:3113`, plus
+`apps/character-creator/README.md:295` and `docs/catalog.md:60`.
+
+**And the currency is a third thing, not a label.** `js/rules.js:64` reads
+`if (system === 'palladium-fantasy') return 'Gold';` and everything else falls
+through to credits. Nightbane prices in **US dollars** throughout - the whole
+equipment chapter at printed 204-232 and every class `Money:` line. Neither
+existing branch is right, so a third system that is only added to the enum
+would ship prices labelled in credits.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | a migration rebuilding the three CHECK-constrained tables with the third value, plus the vocabulary sites, as ONE PR, and no data | the enum is the thing that blocks; doing it once and completely means the next book of a fourth game is vocabulary only | a table rebuild on `campaigns`, which holds real user rows |
+| B | drop the three CHECK constraints entirely and let `parser.js` be the only validator | no rebuild ever again | the database stops refusing a typo, and `campaigns.system` is `NOT NULL` precisely because it is load-bearing |
+| C | add the value to `parser.js` and the vocabulary only, and leave the constraints | no migration | `gear` and `vehicles` silently refuse every Nightbane row, and `campaigns` refuses a Nightbane campaign - the app would offer a system no character can be saved under |
+| D | leave it, and do not import Nightbane | nothing to build | the book is surveyed and unreachable |
+
+**Proposal:** A. One PR, applied `--remote` before the merge per `ship-pr`, with
+the currency branch in `js/rules.js` extended in the same change rather than
+left for a later one. **Posture: enabling only - no new gate, no behaviour
+change for either existing system, and NO Nightbane data in the same PR.**
+
+**Evidence:** every line number above read on this branch, 2026-09-12. The
+free-text claim about the three catalog tables is from reading
+`db/schema.sql:754-845`, not from a grep for the word `CHECK`. Not measured:
+whether a `campaigns` rebuild is safe against the live table - that needs a row
+count and a look at the foreign keys pointing at it.
+
+**Confidence: high on the mechanism**, which is four files read end to end.
+**Medium on scope** - the vocabulary list came from
+`grep -rn "palladium-fantasy" --include=*.js --include=*.html apps/character-creator/`
+and a grep finds the sites that spell the string, not the ones that branch on
+`system` some other way. Raised by reading `js/derive.js` and `js/compose.js`
+for a system branch that does not name either value.
+
+**Ongoing cost:** a third arm on every system branch forever, and one more value
+in five `options:` arrays. Real, and the alternative is that this catalog holds
+one game family.
+
+### F74 - medium - a class states one attribute block, one `sdc_base` and one `hit_points_base`, so a character with two bodies can only describe the second in prose
+
+**Found 2026-09-12** in the Nightbane R.C.C., printed 87.
+
+**The book.** That entry gives the class **twice**: a Facade with attributes
+rolled normally at 3D6 and S.D.C. 30, and a Morphus with +10 to P.S., P.E. and
+Spd, +6 to P.P., +2D6x10 S.D.C., and hit points on a different formula
+(`P.E. x2` plus 2D6 per level against the Facade's `P.E.` plus 1D6). Changing
+between them takes one melee round, and most of the book's 25 Talents work only
+in the Morphus.
+
+**The code.** A class carries one `attribute_dice`, one `sdc_base`, one
+`mdc_base`, one `hit_points_base`. The nearest mechanism is `variants`, and
+`VARIANT_OVERRIDES` in `apps/character-creator/js/parser.js:58-62` (read
+2026-09-12) lists exactly what a variant may override - `attribute_dice`,
+`hit_points_base`, `sdc_base`, `mdc_base`, `ppe_base`, `starting_money` and the
+attribute requirement and maximum blocks. **Skills, abilities and lore are
+shared by design**, and the comment above that list says a variant that could
+override anything is a second class wearing the first one's name.
+
+**So a variant is nearly the right shape and is the wrong one.** It overrides
+the six fields that differ, which is exactly the Facade/Morphus delta - but a
+variant is a CHOICE made once at creation, and these are two states of one
+character that swap during play. Picking `Morphus` as a variant would give a
+character that is never in its human form.
+
+**Reach: one class, and it is the book's title class.** No published class
+today states two bodies - checked by reading `VARIANT_OVERRIDES` and the
+variant comment rather than by grepping, because absence is the claim most
+likely to be wrong.
+
+**Proposal:** not scoped here deliberately, because the shape depends on F73 and
+on whether the sheet is meant to show a live toggle or two printed blocks. What
+is in scope is stating that **`variants` must not be reached for**: it is
+mechanically close and semantically wrong, and it is what a session under time
+pressure will use. **Posture: record and stop.** If Nightbane ships before this
+is built, the Nightbane R.C.C. carries the Facade block, states the Morphus
+delta in `natural_abilities`, and cites this finding in `extraction_notes` per
+`class-import`.
+
+**Evidence:** the book's printed 87, read off the cache. `VARIANT_OVERRIDES`
+read 2026-09-12. Not measured: what the sheet would have to do.
+
+**Confidence: high that the gap is real. Low on the remedy**, which nobody has
+designed. Raised by deciding whether a form is a toggle on the character or a
+second stat block on the sheet - a product question, not a code one.
+
+**Ongoing cost:** unknown until the remedy is chosen. Recording it costs
+nothing.
+
+### F75 - low - a Horror Factor a character PROJECTS has no field; the only `horror_factor` here is the save against someone else's
+
+**Found 2026-09-12** in the Nightbane R.C.C., printed 87.
+
+**The code.** `horror_factor` is a **save**: `apps/character-creator/js/derive.js:170`
+assigns it the psionic M.E. bonus alongside the other numeric saves, and
+`sheet.js:20` renders it as `vs Horror Factor`. Both read 2026-09-12. That is a
+bonus to resist one, and it is correct for every class in the catalog today.
+
+**The book.** A Nightbane has a Horror Factor of its own - base 6 in the
+Morphus, none in the human form, raised by the Morphus tables at printed 91-105
+to a maximum of 18. Printed 234's own character sheet prints `Horror Factor:` as
+a top-line field beside Alignment and S.D.C., which is the book saying it is a
+stat rather than a bonus.
+
+**This is adjacent to F7 and is not F7.** F7 on this menu is the save list being
+sixteen fixed fields with no way to add a seventeenth. This is the opposite
+direction: the field exists and means the other thing.
+
+**Proposal:** a nullable `horror_factor` on the class, rendered on the sheet
+beside the pools, and **no interaction with the save of the same name** - two
+numbers, two meanings, and conflating them would give a Nightbane a bonus to
+resist itself. **Posture: display only; nothing rolls against it.**
+
+**Evidence:** `derive.js:170` and `sheet.js:20` read 2026-09-12; the book's
+printed 87 and 234 read off the cache the same day. Not measured: how many of
+the 265 published classes state one in prose today.
+
+**Confidence: high on the gap, high on the remedy**, which is one nullable
+column and one sheet row. Raised further by the count above, which would say
+whether this is one book's problem or an existing one nobody named.
+
+**Ongoing cost:** one column, one sheet row, one more field a class import can
+forget.
+
+### F76 - low - a power that costs P.P.E. permanently to ACQUIRE and again to USE fits neither `spells` nor `psionic_powers`
+
+**Found 2026-09-12** in the Nightbane Talents, printed 106-114.
+
+**The book.** 25 Talents, 21 Common and 4 Elite. Each states a permanent P.P.E.
+cost to acquire it for life and a second P.P.E. cost every time it is
+activated; several gate on a minimum character level, and most work only in the
+Morphus form (F74's other half).
+
+**The code, read 2026-09-12.** `spells` has one cost column, `ppe`
+(`db/schema.sql:778`), and its `level` column (`:777`) means the spell's own
+level on a ladder, not a minimum character level. `psionic_powers` costs `isp`
+(`db/schema.sql:826`) and carries `min_tier` (`:846`) for minor/major/master,
+which is a tier and not a level. Neither table has a second cost column of any
+kind.
+
+**So a Talent stored in either table loses a number.** Put in `spells` it loses
+the acquisition cost; put in `psionic_powers` it loses that and pays the wrong
+currency.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| A | two columns on `spells` - an `acquire_cost` and a `min_character_level` - and Talents as spell rows | smallest change; the sheet already renders spells | a Talent is not a spell, and every spell row gains two columns it will never use |
+| **B (recommended)** | a `talents` table of its own, shaped like `psionic_powers` with two cost columns | the fields match the thing; nothing existing changes | a ninth catalog table, a picker, and a sheet section |
+| C | prose in `natural_abilities` | free | 25 rows of real mechanics unreachable by any picker, which is what a catalog is for |
+
+**Proposal:** B, and **not before F73**, since a `talents` row would have no
+system to carry. **Posture: additive; no existing table or picker changes.**
+
+**Evidence:** the four `db/schema.sql` line numbers read 2026-09-12; the Talent
+roster counted off the cache at printed 107 the same day. Not measured: whether
+any other book here has a two-cost power, which would change B's case from one
+book to a shape.
+
+**Confidence: high that neither table fits** - the columns were read, not
+inferred. **Low on B being right**, because one book is thin evidence for a
+table. Raised by the not-measured line above.
+
+**Ongoing cost:** a table, a picker and a sheet section to keep working, for 25
+rows from one book. If the answer to the not-measured question is "no other
+book", this proposal recommends declining itself in favour of C.
+
+### F77 - low - `VALID_CATEGORIES` is `['rcc', 'occ']`, and the one P.C.C. in the catalog says so in a `restrictions:` line
+
+**Found 2026-09-12.** The Nightbane Psychic at printed 68 is a P.C.C., a
+Psychic Character Class, and printed 233's experience table gives it a ladder.
+
+**A decision already exists and this finding does not reverse it.**
+`apps/character-creator/CLASS-AUDIT.md:1115` lists *mind-mage's P.C.C. category
+note stands* among eight things checked and not to be "fixed", and `:1167-1169`
+adds that it and one other *"were never verifiable against the current code as
+the lead-in claims - they are decisions, not capability checks."* Read
+2026-09-12. So prose is the settled answer, taken deliberately.
+
+**What is stored.** `mind-mage` is `system: palladium-fantasy` with
+`category: occ`, and carries a `restrictions:` line stating it is a P.C.C. and
+not an O.C.C. - read `--remote` 2026-09-12. `VALID_CATEGORIES` in
+`apps/character-creator/js/parser.js:16` is `['rcc', 'occ']`, read the same day.
+
+**What is new is only the arithmetic.** One P.C.C. filed as an O.C.C. with a
+prose caveat is a rounding error. Nightbane makes it two, and the survey's
+extraction plan reaches it at the same time as four O.C.C.s and sixteen
+R.C.C.s, so the question is whether a second instance changes a decision taken
+on one.
+
+**Proposal:** **leave it.** `CLASS-AUDIT`'s decision stands, the Nightbane
+Psychic is imported as `category: occ` with the same `restrictions:` line, and
+this finding exists so the next session finds the decision instead of
+re-proposing a third category. **Posture: documentation only; no code.** Revisit
+only if a third book brings a P.C.C. whose mechanics differ from an O.C.C.'s in
+something the app actually branches on - which neither of these two does.
+
+**Evidence:** `CLASS-AUDIT.md:1115` and `:1167-1169` read 2026-09-12;
+`parser.js:16` the same day; `mind-mage` read `--remote` the same day. Not
+measured: whether anything in the app branches on `category` in a way a P.C.C.
+would want differently.
+
+**Confidence: high**, and this is the one finding here recommending its own
+declining. Raised, if anyone wants to, by the not-measured line.
+
+**Ongoing cost:** none. That is the argument for it.
+
+### F78 - low - a creation-time roll table that permanently modifies the character has no home, and Nightbane ships nineteen of them
+
+**Found 2026-09-12** in *Creating the Nightbane*, printed 91-105.
+
+**The book.** Nineteen tables - Appearance, Nightbane Characteristics,
+Unearthly Beauty, Animal Form, Arachnid, Avian, Bat, Canine, Equine, Feline,
+Insectoid, Reptilian, Rodent, Snake, Stigmata, Unusual Facial Features, Alien
+Shape, Unnatural Limbs, Biomechanical - rolled percentile at creation. They are
+not flavour: a single result on the Unearthly Beauty table at printed 92 raises
+P.B. by 6 and sets a Horror Factor; another raises P.B., P.E. and P.S. by 1D4
+each and S.D.C. by 4D6; another grants flight at 4D6. Printed 91 states three
+ways to use them - roll, pick, or a mix - so a generator would have to offer all
+three.
+
+**The code.** A class's dice are rolled from `attribute_dice` and the pools
+from the pool bases; there is no creation-time table that alters either. The
+nearest thing is `totems` (`db/schema.sql:634`, read 2026-09-12), which is a
+lookup a class points at rather than a roll that modifies the roller.
+
+**Reach: one book, and it is the mechanic the book is named for.** A Nightbane
+built without it is a Nightbane with no Morphus.
+
+**Proposal:** **not before F73 and F75**, both of which it depends on - the
+tables write a Horror Factor, which F75 says has no field. Scope is not proposed
+here. **Posture: record and stop**, per the standing rule that data ships with
+its book and unasked-for code waits. If the Nightbane R.C.C. ships before this,
+it cites this finding in `extraction_notes` and the tables stay in the book.
+
+**Evidence:** printed 91-105 read off the cache 2026-09-12; the three worked
+examples are from printed 92. `db/schema.sql:634` read the same day. Not
+measured: whether any other book here has a creation-time roll table, which is
+the same question F76 asks and would answer both.
+
+**Confidence: high that there is no home for it. Low on whether it should be
+built**, which is a product decision about how much of one book's character
+generator this app wants to be. Raised by Nate saying so; nothing else reaches
+it.
+
+**Ongoing cost:** nineteen data tables and a generator UI, maintained for one
+book, against a catalog whose other eighteen books need none. **This proposal
+does not recommend itself** on the evidence available - it is filed so the gap
+is numbered rather than lost inside a survey.
