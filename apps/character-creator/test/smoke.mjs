@@ -398,12 +398,31 @@ check('systems: heroes-unlimited is an accepted value and is not filtered out',
 // `vehicles.system` carry a SQLite CHECK naming two, so offering `nightbane`
 // there would put a value in the editor that the database refuses.
 // BOOK-INGEST-AUDIT F73.
-for (const cat of ['spells', 'psionics', 'enchantments']) {
+for (const cat of ['spells', 'psionics', 'enchantments', 'superAbilities']) {
   const f = CATALOGS[cat].fields.find((x) => x.name === 'system');
   check(`${cat}: the system dropdown offers nightbane (no CHECK on that column)`,
     !!f && f.options.includes('nightbane'));
   check(`${cat}: and offers heroes-unlimited, for the same reason`,
     !!f && f.options.includes('heroes-unlimited'));
+}
+
+// `super_abilities` exists BECAUSE a Heroes Unlimited super ability has neither
+// a cost nor a level - it is a permanent trait, and the stat block describes it
+// in use rather than pricing it. A spell needs a level and a P.P.E.; a psionic
+// power needs an I.S.P. Put either on this catalog and the reason for migration
+// 057 is gone, so the absence is pinned rather than left to be tidied away.
+{
+  const sa = CATALOGS.superAbilities;
+  check('superAbilities exists and points at super_abilities',
+    !!sa && sa.table === 'super_abilities');
+  const names = (sa ? sa.fields : []).map((f) => f.name);
+  check('superAbilities has NO cost and NO level field',
+    !names.some((n) => /^(isp|ppe|level|cost)$/.test(n)), names.join(','));
+  check('and it does carry the stat block spells and psionics use',
+    ['range', 'duration', 'damage', 'saving_throw', 'description']
+      .every((n) => names.includes(n)));
+  check('and `tier` allows an unrecognised stored value',
+    !!(sa && sa.fields.find((f) => f.name === 'tier') || {}).allowOther);
 }
 for (const cat of ['gear', 'vehicles']) {
   const f = CATALOGS[cat].fields.find((x) => x.name === 'system');

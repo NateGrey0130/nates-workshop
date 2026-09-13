@@ -124,6 +124,37 @@ export const CATALOGS = {
       { name: 'source_book', label: 'Source book', type: 'text' },
     ],
   },
+  superAbilities: {
+    table: 'super_abilities',
+    label: 'Super abilities',
+    displayField: 'name',
+    uniqueField: 'name',
+    hasSource: true,
+    // NO cost field and NO level field, and their absence is the entire reason
+    // this is not `spells` or `psionic_powers`. A Heroes Unlimited super ability
+    // is a permanent trait the character simply has; the stat block below
+    // describes it in use rather than pricing it. Migration 057.
+    fields: [
+      { name: 'name', label: 'Name', type: 'text', required: true },
+      // allowOther for the same reason psionics' category has it: a later book
+      // may print a division these two do not cover, and a stored value must
+      // never be silently rewritten to fit the list.
+      { name: 'tier', label: 'Tier', type: 'select', allowOther: true,
+        options: ['minor', 'major'],
+        help: 'The only division these have. Blank when the book does not say.' },
+      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both'],
+        help: 'Blank means unrestricted — offered to characters in any system.' },
+      // Same field names as spells and psionic powers, so the sheet renders all
+      // three the same way. TEXT because books write "100 feet per level of
+      // experience" as often as a number.
+      { name: 'range', label: 'Range', type: 'text' },
+      { name: 'duration', label: 'Duration', type: 'text' },
+      { name: 'damage', label: 'Damage', type: 'text' },
+      { name: 'saving_throw', label: 'Saving throw', type: 'text' },
+      { name: 'description', label: 'Description', type: 'longtext' },
+      { name: 'source_book', label: 'Source book', type: 'text' },
+    ],
+  },
 
   // What an alchemist puts INTO a sword, as opposed to a sword. A catalog
   // declared here arrives with the editor, the write endpoints and the importer
