@@ -311,7 +311,7 @@ local-only script is protected as soon as it says so.
 | spells | 919 |
 | psionic powers | 116 |
 | gear | 1461 |
-| vehicles | 170 |
+| vehicles | 171 |
 
 **These are pinned by `test/regression.mjs`**, which is the only thing that can
 honestly check them: it builds a database from nothing under a scratch directory
