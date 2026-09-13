@@ -10245,3 +10245,84 @@ it.
 book, against a catalog whose other eighteen books need none. **This proposal
 does not recommend itself** on the evidence available - it is filed so the gap
 is numbered rather than lost inside a survey.
+
+### F79 - high - `--probe` classifies a book by character COUNT alone, so a text layer whose glyphs are dropped reads as clean and caches as garbage
+
+**Found 2026-09-12** by the Heroes Unlimited batch, on its first probe.
+Filed as F73 and renumbered to F79: the Nightbane survey took F73-F78 in
+PR #991 while that branch was open. Unrelated to this menu's F73, which is
+the `system` enum and which the Heroes Unlimited survey cites as its own G1.
+
+**The measurement.** `python scripts/ocr-book.py "...Powers-Unlimited-3...pdf"
+--probe` reports **median 5505 chars/page -> TEXT LAYER (threshold 400)**, 13.7x
+over the line, with 18 of 20 sampled pages between 1801 and 6135. What that
+layer actually contains, read off PDF p4, its credits page:
+
+| the layer says | the page says |
+|---|---|
+| `Kev Sebea` | Kevin Siembieda |
+| `Waye S` | Wayne Smith |
+| `Alex acszy` | Alex Marciniszyn |
+| `Cae eae` | Carmen Bellaire |
+| `allau Bks` | Palladium Books |
+
+A font-encoding fault maps a large share of glyphs to nothing. **The characters
+that survive are ordinary letters in ordinary positions**, so the count is
+healthy and the words are gone.
+
+**The code.** `ocr-book.py:528-536` is the whole of `--probe`'s verdict:
+`sample_text_lengths(doc)` then `has_text_layer(samples)`, which compares the
+median against `TEXT_LAYER_MIN_CHARS`. **Length is the only thing measured.**
+There is no dictionary check, no vowel-ratio check, and no check that the
+sampled text contains a single word the `scripts/palladium-words.txt` wordlist
+already on disk would recognise.
+
+**Why the existing detectors do not catch it, and this is the point.** The
+manifest carries two corruption keys and neither can see this fault:
+
+| key | looks for | why it misses |
+|---|---|---|
+| `corrupt_pages` | characters a clean text layer never makes - `\Vs.`, `%\%vausttft` | dropped glyphs produce **no such character**; they produce shorter real words |
+| `substituted_digits` | a digit rendered as a letter that looks like it - `!D4xlO` | this is not a digit fault, and the damage is in the **encoding**, not the ink |
+
+`book-survey` §0 already names three kinds of text-layer damage. This is a
+**fourth**, and the skill's own framing is what made it findable: the section
+warns that a substitution cipher is invisible to a character-class detector, and
+the same argument applies one level up, to the classifier itself.
+
+**And the remedy is the opposite of the one a reader would reach for.** §0's
+advice for a corrupt text layer is *render the page and read it*. That is right
+for an encoding fault on one page and useless here: **every page is affected**,
+so the answer is `--force-ocr` for the whole book. A session following §0
+literally would render 120 pages one at a time.
+
+**Reach.** One book on this machine today, cached correctly at 2026-09-12
+because the fault was caught by hand before caching. **The exposure is every
+future book**, and the cost is not a visible failure - it is a cache that
+reads as clean, rows extracted from it in good faith, and a citation check that
+passes because the page exists and holds text. Not re-run against the eleven
+existing text-layer caches; that sweep is part of any fix.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | in `--probe` and in the caching path, check the sampled text against `scripts/palladium-words.txt` (already loaded for Tesseract) plus a small stop-word list, and report a **recognised-word rate** beside the median. Refuse the text-layer path below a floor, naming `--force-ocr` | the wordlist is already on disk and already read by this script; the check is free and it measures the thing that actually matters | a floor is a threshold, and this menu's own F36 argues thresholds mislead - needs to report the rate rather than only a verdict |
+| B | vowel-ratio / mean-word-length heuristic, no wordlist | no dependency on the wordlist's coverage | `Kev Sebea` and `Waye S` both have ordinary vowel ratios; it would not have caught this book |
+| C | print the first ~200 sampled characters in `--probe` output and let a human read them | two lines, catches this instantly, and a person reading `Kev Sebea` needs no threshold at all | relies on the reader looking; silent when nobody does |
+| D | leave it, and note the trap in `book-survey` §0 | nothing to build | the skill is already long, and a warning that fires only when read is what C at least puts in front of the eyes |
+
+**Proposal:** A **and** C together - report the recognised-word rate *and* show a
+sample, since the two fail in different directions and C is what makes A's
+number checkable. **Posture:** code only, one script, no data and no schema.
+
+**Confidence: high on the fault** - the probe output and the credits page were
+both read on 2026-09-12, and the same PDF's pages 3 and 4 were extracted twice
+by different readers with the same result. **High that `--probe` cannot see it**:
+`has_text_layer` was read and it compares one median to one constant.
+**Untested: whether any of the eleven existing caches carries it.** That is a
+measurement, not an assumption, and it belongs to whoever takes this.
+
+**Ongoing cost:** one wordlist read per probe, on twenty sampled pages. A pin
+that makes the check FAIL on known-bad input - this repo's rule that a check
+which only ever passed proves nothing - which this book now provides.
