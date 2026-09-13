@@ -65,6 +65,10 @@ export const CORE_SDC_BY_CLASS = {
   // and the source of Nature Magic. Not a man of arms, so 1D6. Like the three
   // above it states neither an S.D.C. formula nor an mdc_base.
   'old-believer': '1D6',
+  // Printed 143-144, the same book - the Traditional Gypsy Thief (Russian). A
+  // thief is not a man of arms, so 1D6. The id carries a suffix because
+  // `gypsy-thief` belongs to Triax and the NGR; the two printings differ.
+  'gypsy-thief-russian': '1D6',
   // Printed 136-140, the same book - the Slayer, and the ONE class in Mystic
   // Russia that takes 3D6. It is the book's only men-of-arms: a demon hunter
   // with Boxing, Hand to Hand: Expert and six weapon proficiencies who casts
