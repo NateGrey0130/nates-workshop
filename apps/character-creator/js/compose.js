@@ -65,6 +65,10 @@ export const CORE_SDC_BY_CLASS = {
   // and the source of Nature Magic. Not a man of arms, so 1D6. Like the three
   // above it states neither an S.D.C. formula nor an mdc_base.
   'old-believer': '1D6',
+  // Printed 148-152, the same book - the Gypsy Fortune Teller, or Gypsy Medium.
+  // A master psionic who also casts; not a man of arms, so 1D6. No suffix: this
+  // one is new to the catalog rather than a Triax reprint.
+  'gypsy-fortune-teller': '1D6',
   // Printed 143-144, the same book - the Traditional Gypsy Thief (Russian). A
   // thief is not a man of arms, so 1D6. The id carries a suffix because
   // `gypsy-thief` belongs to Triax and the NGR; the two printings differ.
