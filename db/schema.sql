@@ -710,6 +710,10 @@ SELECT '056-totems.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'totems')
   AND EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'totem');
 
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '057-super-abilities.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'super_abilities');
+
 CREATE INDEX IF NOT EXISTS idx_character_vehicles_character
   ON character_vehicles (character_id);
 
@@ -846,6 +850,31 @@ CREATE TABLE IF NOT EXISTS psionic_powers (
   -- this yet — that needs real imported data behind it first.
   min_tier TEXT
 );
+
+-- Super abilities: the fifth kind of power here, after spells, psionics, skills
+-- and enchantments, and the one that has NEITHER a cost NOR a level. A Heroes
+-- Unlimited super ability is a permanent trait the character simply has; what it
+-- prints instead is a stat block describing the trait in use. See migration 057
+-- for why it is not stored in `spells` or `psionic_powers`, and D3 in
+-- apps/character-creator/docs/surveys/heroes-unlimited-core.md for the decision.
+CREATE TABLE IF NOT EXISTS super_abilities (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
+  tier TEXT,                              -- minor | major; NULL = the book does not say
+  source TEXT NOT NULL DEFAULT 'seed',
+  source_book TEXT,
+  system TEXT,                            -- NULL = unrestricted, as everywhere else
+  -- Field names match `spells` and `psionic_powers` on purpose, so the sheet
+  -- renders all three the same way.
+  range TEXT,
+  duration TEXT,
+  damage TEXT,
+  saving_throw TEXT,
+  description TEXT,
+  variant_note TEXT                       -- what an EARLIER book prints instead
+);
+
+CREATE INDEX IF NOT EXISTS idx_super_abilities_tier ON super_abilities (tier);
 
 -- ═══════════════════════════════════════════════════════════════════
 -- Migration seeding. The CREATEs above already contain the columns that

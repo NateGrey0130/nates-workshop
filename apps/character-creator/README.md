@@ -184,7 +184,7 @@ touches MediaVault and FilamentForge too — they use its `openModal` /
 
 ## Data model
 
-Forty tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
+Forty-one tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
 and one R2 bucket (`MEDIA`, same name) for the only binary this app stores.
 The two prefixed `media_` belong to MediaVault and the six prefixed `ff_` belong
 to FilamentForge — that prefix is the collision boundary, because this app's
@@ -249,6 +249,7 @@ ppe and isp.
 | `skills` | `base` 0 means non-percentile (W.P.s, hand to hand). `base_formula` overrides it with an attribute-derived percentage such as `PP*5`, for a book that states one that way; `base` stays the fallback. `systems` is a JSON array; NULL means both. `note` carries oddities like `40%/30% climb/rappel`. `bonuses` applies always; `level_bonuses` is a per-level schedule — see [A fighting style is a level schedule](docs/leveling.md#a-fighting-style-is-a-level-schedule). |
 | `spells` | `system` NULL means unrestricted. name, level, ppe, plus a stat block (range, duration, damage, saving throw, area of effect, casting time, description). The stat block is TEXT — books write "100 feet per level" as often as a number. `tradition` (migration 055) names the family - warlock, ocean, dolphin, spellsong, cloud, shaman - and NULL is a general invocation; a level-gated pick reaches a tradition only if the class's `magic.spell_traditions_allowed` names it. |
 | `psionic_powers` | name, category (Healing/Physical/Sensitive/Super), isp, plus range, duration, saving throw and description — the same field names spells use. `min_tier` is the psychic tier a book states is required; NULL means no restriction beyond the category. `variant_note` carries what an older book states instead — the later book is authoritative (RUE over the Book of Magic, either over Palladium Fantasy) and the losing number is kept rather than discarded. |
+| `super_abilities` | name, tier (minor/major), plus range, duration, damage, saving throw and description - the same field names spells and psionic powers use. **Neither a cost nor a level**, which is what separates these from both: a Heroes Unlimited super ability is a permanent trait, and the stat block describes it in use rather than pricing it. `variant_note` carries what an earlier book states instead, as in `psionic_powers`. Added by migration 057 for decision D3 of the Heroes Unlimited batch; **storage only** until it is declared in `js/catalog-fields.js`. |
 
 Every catalog carries `source_book`, so an entry's provenance is visible and
 the same skill from two books can coexist under distinguished names. The
