@@ -369,17 +369,29 @@ check('required field rejects blank', !!coerceField(req, '').error);
 // F73), and the change it forced is a real one rather than a renumbering:
 // ['rifts', 'palladium-fantasy'] used to BE all of them and stored NULL, and
 // now stores the pair, because it has become a restriction that excludes the
-// third. Both halves are pinned below so neither can drift back.
+// others. Both halves are pinned below so neither can drift back.
+//
+// THIS PIN MOVES EVERY TIME A SYSTEM IS ADDED, and that is the point rather
+// than a maintenance cost: `coerceField` stores NULL when the picked set is
+// the WHOLE allowlist, so all-three stopped meaning "all" the moment Heroes
+// Unlimited became the fourth. A pin that did not move would be asserting a
+// meaning the code no longer has.
 const sysField = CATALOGS.skills.fields.find((f) => f.name === 'systems');
-check('systems: empty and all-THREE-selected both store NULL',
+check('systems: empty and all-FOUR-selected both store NULL',
   coerceField(sysField, []).value === null
-  && coerceField(sysField, ['rifts', 'palladium-fantasy', 'nightbane']).value === null);
+  && coerceField(sysField, ['rifts', 'palladium-fantasy', 'nightbane',
+    'heroes-unlimited']).value === null);
+check('systems: all-THREE is now a RESTRICTION, because a fourth system exists',
+  coerceField(sysField, ['rifts', 'palladium-fantasy', 'nightbane']).value
+    === '["rifts","palladium-fantasy","nightbane"]');
 check('systems: the two older systems are now a RESTRICTION, not "all"',
   coerceField(sysField, ['rifts', 'palladium-fantasy']).value === '["rifts","palladium-fantasy"]');
 check('systems: one system stores a JSON array',
   coerceField(sysField, ['rifts']).value === '["rifts"]');
 check('systems: nightbane is an accepted value and is not filtered out',
   coerceField(sysField, ['nightbane']).value === '["nightbane"]');
+check('systems: heroes-unlimited is an accepted value and is not filtered out',
+  coerceField(sysField, ['heroes-unlimited']).value === '["heroes-unlimited"]');
 // The THREE-of-five split, pinned because it is the thing a later session will
 // "tidy" into consistency. `spells.system`, `psionic_powers.system` and
 // `enchantments.system` are bare TEXT and take a third value; `gear.system` and
@@ -390,11 +402,15 @@ for (const cat of ['spells', 'psionics', 'enchantments']) {
   const f = CATALOGS[cat].fields.find((x) => x.name === 'system');
   check(`${cat}: the system dropdown offers nightbane (no CHECK on that column)`,
     !!f && f.options.includes('nightbane'));
+  check(`${cat}: and offers heroes-unlimited, for the same reason`,
+    !!f && f.options.includes('heroes-unlimited'));
 }
 for (const cat of ['gear', 'vehicles']) {
   const f = CATALOGS[cat].fields.find((x) => x.name === 'system');
   check(`${cat}: the system dropdown does NOT offer nightbane (its column has a CHECK)`,
     !!f && !f.options.includes('nightbane'));
+  check(`${cat}: and does NOT offer heroes-unlimited, for the same reason`,
+    !!f && !f.options.includes('heroes-unlimited'));
   check(`${cat}: and db/schema.sql still constrains it to two values`,
     /system\s+TEXT\s+CHECK \(system IN \('rifts', 'palladium-fantasy', 'both'\)\)/
       .test(readFileSync(join(appDir, '..', '..', 'db', 'schema.sql'), 'utf8')));
@@ -415,6 +431,7 @@ for (const cat of ['gear', 'vehicles']) {
   check('app.js and codex.js name the same systems',
     JSON.stringify(appKeys) === JSON.stringify(codexKeys), `${appKeys} vs ${codexKeys}`);
   check('and nightbane is one of them', (appKeys || []).includes('nightbane'));
+  check('and heroes-unlimited is too', (appKeys || []).includes('heroes-unlimited'));
 }
 
 // The wizard picker is deliberately NOT widened: S.system feeds the campaign
@@ -426,7 +443,8 @@ for (const cat of ['gear', 'vehicles']) {
     appSrc.indexOf('function renderSystem()') + 900);
   check('renderSystem() offers exactly the systems a campaign can be created in',
     picker.includes("pickSystem('rifts')") && picker.includes("pickSystem('palladium-fantasy')")
-    && !picker.includes("pickSystem('nightbane')"));
+    && !picker.includes("pickSystem('nightbane')")
+    && !picker.includes("pickSystem('heroes-unlimited')"));
   const campaignsApi = readFileSync(join(appDir, '..', '..', 'functions', 'api',
     'character-creator', 'campaigns.js'), 'utf8');
   check('and the campaigns endpoint still allowlists those same two',

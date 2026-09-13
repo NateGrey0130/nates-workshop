@@ -69,7 +69,7 @@
   function currencyLabel(system) {
     if (system === 'palladium-fantasy') return 'Gold';
     if (system === 'rifts') return 'Credits';
-    if (system === 'nightbane') return 'Dollars';
+    if (system === 'nightbane' || system === 'heroes-unlimited') return 'Dollars';
     return 'Money';
   }
 

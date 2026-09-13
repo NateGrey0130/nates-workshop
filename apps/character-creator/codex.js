@@ -168,10 +168,12 @@ const SYSTEM_LABEL = {
   rifts: 'Rifts',
   'palladium-fantasy': 'Palladium Fantasy',
   nightbane: 'Nightbane',
+  'heroes-unlimited': 'Heroes Unlimited',
 };
 
-// Credits in Rifts, gold in Palladium Fantasy, dollars in Nightbane — which is
-// set on present-day Earth and prices everything in them. A row marked `both`
+// Credits in Rifts, gold in Palladium Fantasy, dollars in Nightbane AND in
+// Heroes Unlimited — both are set on present-day Earth and price everything in
+// them. A row marked `both`
 // or left NULL is unrestricted, and the overwhelming bulk of this catalog is
 // Rifts, so it still reads as credits — the same reading every picker already
 // applies to a NULL system. `cost` is a range's LOW end and `cost_note` carries
@@ -184,7 +186,7 @@ const SYSTEM_LABEL = {
 function money(cost, system, note) {
   if (cost == null) return '';
   const unit = system === 'palladium-fantasy' ? 'gold'
-    : system === 'nightbane' ? 'dollars' : 'cr.';
+    : system === 'nightbane' || system === 'heroes-unlimited' ? 'dollars' : 'cr.';
   return `${Number(cost).toLocaleString('en-US')}${note ? '+' : ''} ${unit}`;
 }
 
@@ -353,6 +355,7 @@ function listHtml(sec) {
         <option value="rifts"${S.system === 'rifts' ? ' selected' : ''}>Rifts</option>
         <option value="palladium-fantasy"${S.system === 'palladium-fantasy' ? ' selected' : ''}>Palladium Fantasy</option>
         <option value="nightbane"${S.system === 'nightbane' ? ' selected' : ''}>Nightbane</option>
+        <option value="heroes-unlimited"${S.system === 'heroes-unlimited' ? ' selected' : ''}>Heroes Unlimited</option>
       </select>
       <span class="muted small">${shown.length} of ${total}${
         shown.length && !sec.noText ? ` · ${withText} with text` : ''}</span>

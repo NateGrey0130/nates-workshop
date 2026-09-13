@@ -24,7 +24,7 @@
   // of your own edits broke it.
   const shared = ({ id, name, system, sourceBook }) => `id: ${id}
 name: ${name}
-system: ${system}                 # rifts | palladium-fantasy | nightbane
+system: ${system}                 # rifts | palladium-fantasy | nightbane | heroes-unlimited
 source_book: "${sourceBook}"`;
 
   const skillsBlock = `skills:

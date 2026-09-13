@@ -714,7 +714,7 @@ const stepNum = (i) => `<span class="n">${String(i + 1).padStart(2, "0")}</span>
 // SQLite CHECK this change does not widen. Offering a third button would give
 // the player a system they cannot create a campaign in.
 // BOOK-INGEST-AUDIT F73.
-const SYSTEM_LABEL = { 'palladium-fantasy': 'Palladium Fantasy', rifts: 'Rifts', nightbane: 'Nightbane' };
+const SYSTEM_LABEL = { 'palladium-fantasy': 'Palladium Fantasy', rifts: 'Rifts', nightbane: 'Nightbane', 'heroes-unlimited': 'Heroes Unlimited' };
 
 // What the character is so far, under the rail. Every value is read from S
 // at render - nothing is stored for this - and every settled one is a button

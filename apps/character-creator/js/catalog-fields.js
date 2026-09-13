@@ -75,7 +75,7 @@ export const CATALOGS = {
       // says the schedule in a few words. Mirrors psionics' isp_note.
       { name: 'ppe_note', label: 'P.P.E. varies', type: 'text',
         help: 'Blank for a flat cost. Otherwise the schedule in a few words.' },
-      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'nightbane', 'both'],
+      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both'],
         help: 'Blank means unrestricted — offered to characters in any system.' },
       // Stat block. Text, not numbers — books write "100 feet per level of
       // experience" and "2D6 melee rounds" as often as they write a figure.
@@ -109,7 +109,7 @@ export const CATALOGS = {
       // says the schedule in a few words.
       { name: 'isp_note', label: 'I.S.P. varies', type: 'text',
         help: 'Blank for a flat cost. Otherwise the schedule in a few words, e.g. "more for more damage".' },
-      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'nightbane', 'both'],
+      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both'],
         help: 'Blank means unrestricted — offered to characters in any system.' },
       // Same field names as spells, so the sheet renders both the same way.
       { name: 'range', label: 'Range', type: 'text' },
@@ -160,7 +160,7 @@ export const CATALOGS = {
       // columns carry a SQLite CHECK naming two values, and offering a third
       // here would put a value in the editor that the database refuses.
       // BOOK-INGEST-AUDIT F73.
-      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'nightbane', 'both'] },
+      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both'] },
       { name: 'source_book', label: 'Source book', type: 'text' },
     ],
   },
@@ -351,15 +351,16 @@ export function coerceField(field, raw) {
       // "applies to none", which is never what anyone intends.
       //
       // This read "both systems" until Nightbane made it three
-      // (BOOK-INGEST-AUDIT F73), and the rule below changed meaning with it:
-      // picking rifts and palladium-fantasy used to be all of them and stored
-      // NULL, and now stores the pair, because it has become a real
-      // restriction that excludes the third. Existing NULL rows are NOT
-      // migrated and now read as "all three" — deliberate, and inert today
-      // because the wizard's system picker still offers two, so nothing
-      // resolves a skill against `nightbane` yet.
+      // (BOOK-INGEST-AUDIT F73) and Heroes Unlimited made it FOUR, and the
+      // rule below changes meaning every time one is added: picking rifts and
+      // palladium-fantasy used to be all of them and stored NULL, and now
+      // stores the pair, because it has become a real restriction that
+      // excludes the others. Existing NULL rows are NOT migrated and now read
+      // as "all four" — deliberate, and inert today because the wizard's
+      // system picker still offers two, so nothing resolves a skill against
+      // `nightbane` or `heroes-unlimited` yet.
       if (!Array.isArray(raw) || raw.length === 0) return { value: null };
-      const allowed = ['rifts', 'palladium-fantasy', 'nightbane'];
+      const allowed = ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited'];
       const picked = raw.filter((s) => allowed.includes(s));
       if (picked.length === 0 || picked.length === allowed.length) return { value: null };
       return { value: JSON.stringify(picked) };

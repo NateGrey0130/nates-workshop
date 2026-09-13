@@ -3114,7 +3114,7 @@ function itemCost(it) {
   // `both` system is overwhelmingly Rifts here. Same fix as codex.js's
   // money(), and for the same reason - BOOK-INGEST-AUDIT F73.
   const unit = it.item_system === 'palladium-fantasy' ? 'gold'
-    : it.item_system === 'nightbane' ? 'dollars' : 'cr.';
+    : it.item_system === 'nightbane' || it.item_system === 'heroes-unlimited' ? 'dollars' : 'cr.';
   return `${Number(it.item_cost).toLocaleString('en-US')}${it.item_cost_note ? '+' : ''} ${unit}`;
 }
 
