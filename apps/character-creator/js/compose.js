@@ -65,6 +65,10 @@ export const CORE_SDC_BY_CLASS = {
   // and the source of Nature Magic. Not a man of arms, so 1D6. Like the three
   // above it states neither an S.D.C. formula nor an mdc_base.
   'old-believer': '1D6',
+  // Printed 152-154, the same book - the Layer of Laws, a Gypsy Elder. Not a
+  // man of arms, so 1D6 - and the book reduces its P.S., P.P., P.B. and Spd by
+  // 20% for old age besides.
+  'layer-of-laws': '1D6',
   // Printed 150-153, the same book - The Gifted One (Russian), a psychic healer
   // whose tier is rolled. Not a man of arms, so 1D6. Suffixed because
   // `gypsy-gifted` belongs to Triax.
