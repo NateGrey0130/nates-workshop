@@ -637,6 +637,7 @@ ability carries `related_skills_count` and nothing else. Both were tried.
 | 2026-09-14 | this PR | **THE ALIEN'S FIVE EDUCATION PACKAGES**, printed 56, which replace the table on 27 for that Power Category alone. Classes **302 -> 318**. Plus `occ_restrictions` on nine Power Categories, which needed the sixteen ids to exist first. **`BOOK-INGEST-AUDIT` F83 filed.** |
 | 2026-09-14 | this PR | **`BOOK-INGEST-AUDIT` F83 TAKEN** - migration **061**, `skill_system_bases`, and **59** rows: this book prints its own percentage for every skill and 59 of the 68 names it shares with the catalog disagree. A skill the PLAYER picks now arrives at the book's number. Plus two data corrections the extraction turned up - `Locksmith` in ten classes (the book prints TWO lock skills) and `Weapon Systems` in four (50%/+2, not 30%/+5). **`BOOK-INGEST-AUDIT` F84 filed** - a restriction written on the choice GROUP is stored and never read. |
 | 2026-09-14 | this PR | **F83's override table was SHORT, and completing it is this row.** Printed 30-36 re-read with a reader rebuilt from scratch and made to prove itself first: it reproduces all **59** rows already shipped, reaches every one, and contradicts none. **Five skills no pass had read** - `Basic Mechanics`, `Pathology`, `Land Navigation`, `Medical Doctor`, `Impersonation` - plus **the language rule** printed 35 states once for the whole family, 23 rows. Per-system bases **59 -> 87**, applied `--remote` before the merge. The marker is spelled **five** ways on those seven pages and two further heading shapes steal a percentage; all of it is in the data script's header. |
+| 2026-09-14 | this PR | **F83 LEFTOVER CLOSED - the SEVENTEEN named entries, not thirty classes.** `hu-hardware` (14) and `hu-hunter` (3) rewritten from an absolute `base:` to the `bonus:` the book prints, so the figure comes from `skill_system_bases` and cannot go stale. `per_level` dropped from all seventeen, which repaired the three that disagreed. Eleven classes had no named entry at all and the thirteen education classes already stated this book base - implementing the finding as written would have made 323 correct entries wrong. |
 
 Earlier also, ahead of the ledger: Powers Unlimited One's new psionic powers
 (`af196d9`), which is why the psionic count moves from 125 rather than from 116.
@@ -695,10 +696,21 @@ and `hu-hunter`**, plus three `per_level` disagreements, and
 in its own header - *"don't redo Weapon Systems"* is not *"Weapon Systems is
 done"*.
 
+**THE SEVENTEEN ARE DONE, 2026-09-14**, and written as `bonus:` rather than as a
+recomputed absolute: `{ name: "Electrical Engineer", bonus: 30 }`, because
+printed 73 prints *+30%* and `resolveSkill` adds it to the row AFTER
+`skill_system_bases` has been substituted in. So the class states what the book
+states and never has to be revisited when an override row is corrected.
+`per_level` is dropped from all seventeen for the same reason, which is what
+silently repaired the three that disagreed - Mathematics: Advanced to +4%,
+Weapon Systems to +2%, Basic Mechanics to +4%. `hu-hardware`'s Weapon Systems,
+the one `zzzzzzzz-fix-hu-weapon-systems-base.sql` deliberately left, is among
+them. **`BOOK-INGEST-AUDIT` F83 has nothing outstanding.**
+
 **What is left of this book:** the equipment chapter (printed 193-220, zero
-Heroes Unlimited gear rows and zero vehicles), the two point-budget builders
-(G7), the Powers Unlimited One and Three classes, and the seventeen named
-entries above.
+Heroes Unlimited gear rows and zero vehicles on printed 221-227), the two
+point-budget builders (G7, deliberately out per D7), and the Powers Unlimited
+One and Three classes.
 
 **G10 is answered and shipped, and this survey's gap table is stale about it.**
 `js/rules.js` returns `Dollars` for `heroes-unlimited`, and `codex.js`'s
