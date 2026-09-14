@@ -12,7 +12,7 @@ import { json } from './auth.js';
 import { safeParse } from './character-json.js';
 import { categoryAllows, categoryBonus } from '../../../../apps/character-creator/js/parser.js';
 import { REPEATABLE_ROWS, isFamilyName, otherRowFor } from '../../../../apps/character-creator/js/language-skills.js';
-import { skillBase } from '../../../../apps/character-creator/js/skill-base.js';
+import { skillBase, applySystemBases } from '../../../../apps/character-creator/js/skill-base.js';
 import { selectInChunks } from './sql-chunk.js';
 
 export async function listPending(env, characterId) {
@@ -100,7 +100,7 @@ export function dedupeCategories(entries) {
 // is P.P. x5 (BOOK-INGEST-AUDIT F2). Without it that skill is stored at 0 and,
 // because js/leveling.js advances from the stored `pct`, climbs from 0 forever
 // (F18). Both callers already have the character loaded, so this costs no query.
-export async function resolvePicks(env, { picks, existingSkills, allowance, categories, level, secondaryAllowance = 0, attributes = {} }) {
+export async function resolvePicks(env, { picks, existingSkills, allowance, categories, level, secondaryAllowance = 0, attributes = {}, systemBases = null }) {
   if (!Array.isArray(picks) || !picks.length) return { skills: [], errors: [] };
   if (picks.length > allowance) {
     return { errors: [`That is ${picks.length} picks but only ${allowance} are available`] };
@@ -135,7 +135,13 @@ export async function resolvePicks(env, { picks, existingSkills, allowance, cate
     `SELECT name, category, base, base_formula, per_level FROM skills
      WHERE name COLLATE NOCASE IN (${[...batch, ...REPEATABLE_ROWS].map(() => '?').join(',')})`
   ).bind(...batch, ...REPEATABLE_ROWS));
-  const catalog = new Map(results.map((r) => [r.name.toLowerCase(), r]));
+  // ONE GAME'S OWN PERCENTAGES, substituted before anything reads a row
+  // (BOOK-INGEST-AUDIT.md F83). It happens HERE, on the rows, rather than
+  // where `pct` is computed, because `per_level` is copied straight off the
+  // row a few lines down and never passes through `skillBase()` - and a value
+  // that only one of two paths knows about is exactly what F18 was.
+  const catalog = new Map(applySystemBases(results, systemBases)
+    .map((r) => [r.name.toLowerCase(), r]));
 
   const skills = [];
   const errors = [];

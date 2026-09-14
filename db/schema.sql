@@ -742,6 +742,14 @@ WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE name = 'vehicles'
                 AND instr(sql, '''nightbane''') > 0
                 AND instr(sql, '''heroes-unlimited''') > 0);
 
+-- Guarded on the TABLE this migration adds, which is the schema feature it is
+-- responsible for. An unconditional row here would mark an un-migrated database
+-- as migrated, which is precisely the lie the record exists to prevent.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '061-skill-system-bases.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master
+               WHERE type = 'table' AND name = 'skill_system_bases');
+
 CREATE INDEX IF NOT EXISTS idx_character_vehicles_character
   ON character_vehicles (character_id);
 
@@ -802,6 +810,37 @@ CREATE TABLE IF NOT EXISTS skills (
   -- Hand to Hand tables are level-by-level and accumulative; see migration 025.
   level_bonuses TEXT
 );
+
+-- A skill's percentage where one GAME prints a different one (migration 061,
+-- BOOK-INGEST-AUDIT.md F83). The catalog holds one `base` per skill, which was
+-- true enough while every book in it was Palladium's own; Heroes Unlimited
+-- prints its own figure for every skill and 48 of the 55 names it shares with
+-- the catalog disagree.
+--
+-- A CLASS CAN ALREADY STATE AN ABSOLUTE for a skill it NAMES. What it cannot do
+-- is state one for a skill the PLAYER picks: a choice group's `bonus:` adds to
+-- whatever the picked row holds, and a quarter of what this book's classes
+-- grant is choice groups. The divergence belongs to (skill, system) rather than
+-- to any class, which is what the key here says.
+--
+-- Keyed on `name` and not `id`, because `skills.id` is AUTOINCREMENT and so is
+-- insertion order - it differs per environment. ON UPDATE CASCADE so a catalog
+-- rename carries the override with it rather than stranding it.
+CREATE TABLE IF NOT EXISTS skill_system_bases (
+  skill_name TEXT NOT NULL
+    REFERENCES skills(name) ON DELETE CASCADE ON UPDATE CASCADE,
+  system TEXT NOT NULL
+    CHECK (system IN ('rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited')),
+  base INTEGER,                           -- NULL = this game does not change it
+  per_level INTEGER,                      -- NULL = same
+  note TEXT,
+  source_book TEXT,
+  CHECK (base IS NOT NULL OR per_level IS NOT NULL),
+  PRIMARY KEY (skill_name, system)
+);
+
+CREATE INDEX IF NOT EXISTS idx_skill_system_bases_system
+  ON skill_system_bases(system);
 
 CREATE TABLE IF NOT EXISTS spells (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

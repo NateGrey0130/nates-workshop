@@ -6,11 +6,25 @@
 // endpoint rather than three because the wizard needs all of them at boot.
 
 import { getUserEmail, unauthorized } from './_lib/auth.js';
+import { applySystemBases, systemBaseMap } from '../../../apps/character-creator/js/skill-base.js';
 
 export async function onRequestGet({ request, env }) {
   if (!getUserEmail(request)) return unauthorized();
 
-  const [skills, spells, psionics, supers, enchantments, totems] = await Promise.all([
+  // `?system=` substitutes THAT GAME's own skill percentages into the rows
+  // before they are sent (BOOK-INGEST-AUDIT.md F83). Two callers, two needs:
+  //
+  //   the SHEET passes one - it knows the character's campaign, and it is a
+  //     classic script that cannot import the helper to do it itself;
+  //   the WIZARD passes none - it boots before the player has picked a game,
+  //     so it takes the raw rows plus `skillSystemBases` and derives whenever
+  //     the system becomes known.
+  //
+  // One implementation either way: both sides call `applySystemBases`. The
+  // ETag is a hash of the BODY, so the two answers cache apart on their own.
+  const system = new URL(request.url).searchParams.get('system') || null;
+
+  const [skills, spells, psionics, supers, enchantments, totems, systemBases] = await Promise.all([
     // source_book rides along in all three so the pickers can filter on it —
     // typing "rifts main" should narrow a list the same way a name does.
     // `bonuses` travels with the row so the wizard can apply what a skill grants
@@ -61,14 +75,25 @@ export async function onRequestGet({ request, env }) {
     // grants and folds the chosen row into the composed class. The sheet does
     // not - the server composes the character it shows.
     env.DB.prepare('SELECT slug, name, skills, bonuses, bonus_note, powers, description, source_book FROM totems ORDER BY name').all(),
+    // A skill's percentage where one GAME prints a different one
+    // (BOOK-INGEST-AUDIT.md F83). EVERY system's rows ship, not one system's,
+    // because this endpoint is called ONCE at boot and the wizard does not yet
+    // know which game the player is about to build in - the same reason
+    // `skills.systems` is filtered client-side rather than in the query.
+    // Small: 48 rows for Heroes Unlimited and none for anything else today.
+    env.DB.prepare('SELECT skill_name, system, base, per_level, note, source_book FROM skill_system_bases ORDER BY system, skill_name').all(),
   ]);
 
   const body = JSON.stringify({
     // `systems` is stored as a JSON array; NULL means the skill applies to both.
-    skills: skills.results.map((s) => ({
+    skills: applySystemBases(skills.results, systemBaseMap(
+      system ? systemBases.results.filter((b) => b.system === system) : [],
+    )).map((s) => ({
       ...s,
       systems: s.systems ? JSON.parse(s.systems) : undefined,
     })),
+    // Ordered by system, so a reader building one system's map walks a run.
+    skillSystemBases: systemBases.results,
     spells: spells.results,
     psionics: psionics.results,
     superAbilities: supers.results,
