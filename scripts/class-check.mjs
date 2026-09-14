@@ -606,7 +606,13 @@ if (noCatalog || fieldSources) {
   console.log('\nCATALOG          skipped (nothing parsed)');
 } else {
   const missing = await crossReference(env, null, data);
-  const counts = ['items', 'skills', 'spells', 'psionics', 'superAbilities']
+  // `spellLists` and `psionicLists` are the names a RESTRICTION cites -
+  // `spells_from`, `powers_from`, a starting group's or a schedule entry's
+  // `from`, and all of those inside an ability option. They are reported beside
+  // the grants and NEVER stubbed: a list naming nothing is a misspelling, and it
+  // fails CLOSED - the picker simply comes up short.
+  const counts = ['items', 'skills', 'spells', 'psionics', 'superAbilities',
+                  'spellLists', 'psionicLists']
     .map((k) => [k, missing[k].length]);
   const total = counts.reduce((s, [, n]) => s + n, 0);
 
@@ -701,11 +707,17 @@ if (noCatalog || fieldSources) {
   // app creates these itself on Confirm; a data script has to carry its own,
   // and writing them by hand is where the STUB marker and the char(8212) splice
   // get forgotten.
-  if (total) {
-    const { statements } = buildStubStatements(env, missing, {
+  // Gated on the STATEMENTS, not on `total`. Two of the reported keys -
+  // `spellLists` and `psionicLists` - are deliberately not stubbable, so a
+  // draft whose only fault is a misspelled list entry used to print this
+  // heading with nothing under it.
+  const { statements } = total
+    ? buildStubStatements(env, missing, {
       system: data.system,
       sourceBook: data.source_book ?? null,
-    });
+    })
+    : { statements: [] };
+  if (statements.length) {
     for (const s of statements) {
       stubSql.push(s.toSql().replace(/\s+/g, ' ').trim()
         .replace(/'STUB — /, "'STUB ' || char(8212) || ' ") + ';');
